@@ -1729,7 +1729,7 @@ DriftDiffusion::build_densities(vector<double>& densities,
         local[id + 1] +=
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
 
-        nodal_val = properties.net_recombination_rate;
+        nodal_val = properties.net_electron_recombination_rate;
         local[id + 2] +=
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
       }
@@ -2013,7 +2013,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
   const vector<Real>& JxW = fe->get_JxW();
   //
   // physical coordinates of the quadrature points
-  //const vector<Point>& q_point = fe->get_xyz();
+  const vector<Point>& q_point = fe->get_xyz();
   //
   // element shape functions
   const vector<vector<Real> >& phi = fe->get_phi();
@@ -2058,15 +2058,9 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
 
   // this will hold the calculated properties of the semiconductor
   SemiconductorModel::CalculatedProperties properties;
-  // with this references we can easily access the calculated properties
+  // with this we can easily access the calculated properties
   double& n  = properties.electron_density;
   double& p  = properties.hole_density;
-  double& Nd = properties.ionized_donor_density;
-  double& Na = properties.ionized_acceptor_density;
-  double& dn  = properties.electron_density_derivative;
-  double& dp  = properties.hole_density_derivative;
-  double& dNd = properties.ionized_donor_density_derivative;
-  double& dNa = properties.ionized_acceptor_density_derivative;
 
 
   MeshBase::const_element_iterator el =
@@ -2157,17 +2151,9 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       n_max = (n_max > n) ? n_max : n;
       p_max = (p_max > p) ? p_max : p;
 
-      //Real n = properties.electron_density / C0;
-      //Real p = properties.hole_density / C0;
-      //Real dn = properties.electron_density_derivative;
-      //Real dp = properties.hole_density_derivative;
-
-      Real D_e = properties.electron_diffusivity;
-      Real D_h = properties.hole_diffusivity;
-
-      // NOTE: cond_e = mu_e * n = e * D_n * dn
-      Real cond_e = D_e * dn / (mu0 * C0_e);
-      Real cond_h = -D_h * dp / (mu0 * C0_h);
+      // NOTE: sigma_e = mu_e * n is the electron conductivity
+      Real sigma_e = properties.electron_conductivity / (mu0 * C0_e);
+      Real sigma_h = properties.hole_conductivity / (mu0 * C0_h);
     
       //
       // The residual looks like this:
@@ -2198,10 +2184,10 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
             Kuu(i,j) += l2_eps * laplace;
           
           if (T & ECURRENT)
-              Knn(i,j) += cond_e * laplace;
+              Knn(i,j) += sigma_e * laplace;
           
           if (T & HCURRENT)
-              Kpp(i,j) += cond_h * laplace;
+              Kpp(i,j) += sigma_h * laplace;
         }
 
         if (!(T & POISSON))
@@ -2222,22 +2208,23 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
         vector<double>& drho =
           properties.charge_density_derivatives;
 
-        vector<double>& dR =
-          properties.net_recombination_rate_derivatives;
+        vector<double>& dRn =
+          properties.net_electron_recombination_rate_derivatives;
+
+        vector<double>& dRp =
+          properties.net_hole_recombination_rate_derivatives;
 
         for (int id = 0; id < 3; id++)
         {
           drho[id] *= phi0 / C0;
-          //dR[id] *= phi0 / R0;
-          dR[id] *= phi0;
+          dRn[id] *= phi0 / R0_e;
+          dRp[id] *= phi0 / R0_h;
         }
 
-        Real dn2 = properties.electron_density_2nd_derivative;
-        Real dp2 = properties.hole_density_2nd_derivative;
-
-        // d(mu * n)/du * element-jacobian
-        Real mue_x_dn = J * D_e * dn2 * phi0 / (mu0 * C0_e);
-        Real muh_x_dp = -J * D_h * dp2 * phi0 / (mu0 * C0_h);
+        // d(sigma_n)/du * element-jacobian
+        // sigma_n = mu_n * n means the conductivity of electrons
+        Real dsigma_e = J * properties.electron_conductivity_derivative * phi0 / (mu0 * C0_e);
+        Real dsigma_h = J * properties.hole_conductivity_derivative * phi0 / (mu0 * C0_h);
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
@@ -2246,8 +2233,9 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
             // first the dKe_il/dX_j * X_l part
             // (for X_l = u_l we dont get anything, i.e. the
             // contributions to Kuu, Kun, Kup are zero)
-            Real mue_x_dn_x_phi = mue_x_dn * phi[j][qp];
-            Real muh_x_dp_x_phi = muh_x_dp * phi[j][qp];
+            
+            Real dsigma_e_x_phi = dsigma_e * phi[j][qp];
+            Real dsigma_h_x_phi = dsigma_h * phi[j][qp];
             for (unsigned int k = 0; k < n_dofs; k++)
             {
               Real laplace = -(dphi[i][qp] * dphi[k][qp]) * x0_mesh * x0_mesh;
@@ -2255,7 +2243,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
               if (T & ECURRENT)
               {
                 Real elem_contrib =
-                  mue_x_dn_x_phi * laplace * Xn(k);
+                  dsigma_e_x_phi * laplace * Xn(k);
 
                 if (T & POISSON)
                   Knu(i,j) += elem_contrib;
@@ -2266,7 +2254,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
               if (T & HCURRENT)
               {
                 Real elem_contrib =
-                  muh_x_dp_x_phi * laplace * Xp(k);
+                  dsigma_h_x_phi * laplace * Xp(k);
                 
                 if (T & POISSON)
                   Kpu(i,j) += elem_contrib;
@@ -2292,23 +2280,23 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
             if (T & ECURRENT)
             {
               if (T & POISSON)
-                Knu(i,j) -= dR[0] * phi_i_x_phi_j / R0_e;
+                Knu(i,j) -= dRn[0] * phi_i_x_phi_j;
 
-              Knn(i,j) -= dR[1] * phi_i_x_phi_j / R0_e;
+              Knn(i,j) -= dRn[1] * phi_i_x_phi_j;
 
               if (T & HCURRENT)
-                Knp(i,j) -= dR[2] * phi_i_x_phi_j / R0_e;
+                Knp(i,j) -= dRn[2] * phi_i_x_phi_j;
             }
 
             if (T & HCURRENT)
             {
               if (T & POISSON)
-                Kpu(i,j) += dR[0] * phi_i_x_phi_j / R0_h;
+                Kpu(i,j) += dRp[0] * phi_i_x_phi_j;
 
               if (T & ECURRENT)
-                Kpn(i,j) += dR[1] * phi_i_x_phi_j / R0_h;
+                Kpn(i,j) += dRp[1] * phi_i_x_phi_j;
               
-              Kpp(i,j) += dR[2] * phi_i_x_phi_j / R0_h;
+              Kpp(i,j) += dRp[2] * phi_i_x_phi_j;
             }
 
           }
@@ -2324,8 +2312,8 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
         Real J_x_P0 = J / P0;
 
         // net recombination rate
-        //Real J_x_R = J * properties.net_recombination_rate / R0;
-        Real J_x_R = J * properties.net_recombination_rate;
+        Real J_x_Rn = J * properties.net_electron_recombination_rate / R0_e;
+        Real J_x_Rp = J * properties.net_hole_recombination_rate / R0_h;
 
         const vector<double>& polarization = properties.polarization;
         RealVectorValue P(J_x_P0 * polarization[0],
@@ -2334,7 +2322,8 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
-          Real net_recomb = J_x_R * phi[i][qp];
+          Real net_recomb_e = J_x_Rn * phi[i][qp];
+          Real net_recomb_h = J_x_Rp * phi[i][qp];
           
           if (T & POISSON)
             Fu(i) += J_x_rho * phi[i][qp] + (P * dphi[i][qp]) * x0_mesh;
@@ -2342,12 +2331,12 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
             Fu(i) -= Xu(i);
           
           if (T & ECURRENT)
-            Fn(i) -= net_recomb / R0_e;
+            Fn(i) -= net_recomb_e;
           else
             Fn(i) -= Xn(i);
 
           if (T & HCURRENT)
-            Fp(i) += net_recomb / R0_h;
+            Fp(i) += net_recomb_h;
           else
             Fp(i) -= Xp(i);
         }

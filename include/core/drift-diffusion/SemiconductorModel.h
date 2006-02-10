@@ -50,12 +50,19 @@ class SemiconductorModel
       double hole_mobility;
       double hole_diffusivity;
       double dp_over_p;
+      
+      double electron_conductivity;
+      double electron_conductivity_derivative;
+      double hole_conductivity;
+      double hole_conductivity_derivative;
 
       double charge_density;
       std::vector<double> charge_density_derivatives;
 
-      double net_recombination_rate;
-      std::vector<double> net_recombination_rate_derivatives;
+      double net_electron_recombination_rate;
+      std::vector<double> net_electron_recombination_rate_derivatives;
+      double net_hole_recombination_rate;
+      std::vector<double> net_hole_recombination_rate_derivatives;
 
       std::vector<double> polarization;
     };
@@ -406,7 +413,8 @@ class SemiconductorModel
 inline
 SemiconductorModel::CalculatedProperties::CalculatedProperties(void)
   : charge_density_derivatives(3),
-    net_recombination_rate_derivatives(3, 0.0),
+    net_electron_recombination_rate_derivatives(3, 0.0),
+    net_hole_recombination_rate_derivatives(3, 0.0),
     polarization(3, 0.0)
 {
 }
@@ -735,10 +743,14 @@ SemiconductorModel::calculate_SRH_recombination(CalculatedProperties& result)
   double SRH = (n * p - ni2) / denom;
   double a = (p - tp * SRH) * dn / denom;
   double b = (n - tn * SRH) * dp / denom; 
-  result.net_recombination_rate += SRH;
-  result.net_recombination_rate_derivatives[1] += a;
-  result.net_recombination_rate_derivatives[2] += b;
-  result.net_recombination_rate_derivatives[0] += a + b;
+  result.net_electron_recombination_rate += SRH;
+  result.net_electron_recombination_rate_derivatives[1] += a;
+  result.net_electron_recombination_rate_derivatives[2] += b;
+  result.net_electron_recombination_rate_derivatives[0] += a + b;
+  result.net_hole_recombination_rate += SRH;
+  result.net_hole_recombination_rate_derivatives[1] += a;
+  result.net_hole_recombination_rate_derivatives[2] += b;
+  result.net_hole_recombination_rate_derivatives[0] += a + b;
 }
 
 inline

@@ -1,4 +1,4 @@
-// $Id: BoundaryData.C 4 2005-10-28 12:05:05Z maufder $
+// $Id$
 
 #include "BoundaryData.h"
 

@@ -1,4 +1,4 @@
-// $Id: SemiconductorModel.C 14 2006-01-27 11:44:23Z maufder $
+// $Id$
 
 #include "SemiconductorModel.h"
 #include "Constants.h"
@@ -94,6 +94,8 @@ SemiconductorModel::calculate_all(double potential, double Ef_e, double Ef_h,
   double& p  = result.hole_density;
   double& dn  = result.electron_density_derivative;
   double& dp  = result.hole_density_derivative;
+  double& dn2  = result.electron_density_2nd_derivative;
+  double& dp2  = result.hole_density_2nd_derivative;
 
   // 4.) mobilities
   // For both statistics:
@@ -105,12 +107,22 @@ SemiconductorModel::calculate_all(double potential, double Ef_e, double Ef_h,
   result.hole_diffusivity = kT * vb.low_field_mobility;
   result.electron_mobility = result.electron_diffusivity * result.dn_over_n;
   result.hole_mobility = -result.hole_diffusivity * result.dp_over_p;
+  
+  // 5.) conductivities
+  result.electron_conductivity = result.electron_diffusivity * dn;
+  result.hole_conductivity = -result.hole_diffusivity * dp;
+  result.electron_conductivity_derivative = result.electron_diffusivity * dn2;
+  result.hole_conductivity_derivative = -result.hole_diffusivity * dp2;
 
-  // 5.) Recombination
-  result.net_recombination_rate = 0;
-  result.net_recombination_rate_derivatives[0] = 0;
-  result.net_recombination_rate_derivatives[1] = 0;
-  result.net_recombination_rate_derivatives[2] = 0;
+  // 6.) Recombination
+  result.net_electron_recombination_rate = 0;
+  result.net_electron_recombination_rate_derivatives[0] = 0;
+  result.net_electron_recombination_rate_derivatives[1] = 0;
+  result.net_electron_recombination_rate_derivatives[2] = 0;
+  result.net_hole_recombination_rate = 0;
+  result.net_hole_recombination_rate_derivatives[0] = 0;
+  result.net_hole_recombination_rate_derivatives[1] = 0;
+  result.net_hole_recombination_rate_derivatives[2] = 0;
   if (_recombination && SRH)
     calculate_SRH_recombination(result);
   if (_recombination && AUGER)

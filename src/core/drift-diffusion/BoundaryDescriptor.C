@@ -1,4 +1,4 @@
-// $Id: BoundaryDescriptor.C 14 2006-01-27 11:44:23Z maufder $
+// $Id$
 
 #include "BoundaryDescriptor.h"
 
