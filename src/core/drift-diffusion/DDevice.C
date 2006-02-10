@@ -1,6 +1,6 @@
 // $Id: Device.C 4 2005-10-28 12:05:05Z maufder $
 
-#include "Device.h"
+#include "DDevice.h"
 #include "ElementData.h"
 #include "SemiconductorModel.h"
 #include "BoundaryData.h"
@@ -10,7 +10,9 @@
 #include "mesh.h"
 #include "elem.h"
 
-Device::Device(Mesh* mesh, ElementData* element_data,
+
+
+DD::Device::Device(Mesh* mesh, ElementData* element_data,
     BoundaryData* boundary_data)
 {
   _mesh = mesh;
@@ -35,14 +37,14 @@ Device::Device(Mesh* mesh, ElementData* element_data,
   }
 }
 
-Device::~Device(void)
+DD::Device::~Device(void)
 {
   delete _materials;
   delete _boundaries;
 }
 
 bool
-Device::check_integrity(void) const
+DD::Device::check_integrity(void) const
 {
   bool is_ok = true;
   
@@ -77,7 +79,7 @@ Device::check_integrity(void) const
 }
 
 BoundaryDescriptor*
-Device::get_boundary(const std::string& name) const
+DD::Device::get_boundary(const std::string& name) const
 {
   BoundaryDescriptor* boundary = NULL;
 

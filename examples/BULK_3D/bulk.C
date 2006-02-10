@@ -4,7 +4,7 @@
 #include "ElementData.h"
 #include "BoundaryDescriptor.h"
 #include "BoundaryData.h"
-#include "Device.h"
+#include "DDevice.h"
 #include "DriftDiffusion.h"
 #include "SemiconductorModel.h"
 
@@ -23,7 +23,7 @@ using namespace std;
 void setup_boundary_desc(BoundaryDescriptor& desc,
     SemiconductorModel& sc_model);
 
-void set_boundary(BoundaryData& data, const vector<int>& nodes,
+void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
     BoundaryDescriptor& desc, const Mesh& mesh);
 
 void print_boundary_data(const BoundaryData& data, const Mesh& mesh);
@@ -69,11 +69,11 @@ int main (int argc, char** argv)
     double refine_frac = input_file("refine_fraction", 0.7);
     double coarsen_frac = input_file("coarsen_fraction", 0.3);
 
-    vector<int> phys_reg_ID(1);
+    vector<unsigned int> phys_reg_ID(1);
     phys_reg_ID[0] = 1; // p
     //phys_reg_ID[1] = 2; // n
     
-    vector<int> BC_reg_ID(2);
+    vector<unsigned int> BC_reg_ID(2);
     BC_reg_ID[0] = 3; // anode
     BC_reg_ID[1] = 4; // cathode
 
@@ -85,7 +85,7 @@ int main (int argc, char** argv)
     
     cerr << "Read meshfile: " << meshfile << "\n";
     Read_MSH readmesh(meshfile, phys_reg_ID, BC_reg_ID, dim, mesh, meshdata);
-    map<int, vector<int> > boundary_nodes;
+    map<unsigned int, vector<unsigned int> > boundary_nodes;
     readmesh.get_BC_data(boundary_nodes);
     /*
     {
@@ -179,12 +179,14 @@ int main (int argc, char** argv)
 
     BoundaryData boundary_data;
     {
-      map<int, vector<int> >::const_iterator it = boundary_nodes.begin();
-      const map<int, vector<int> >::const_iterator end = boundary_nodes.end();
+      map<unsigned int, vector<unsigned int> >::const_iterator it =
+        boundary_nodes.begin();
+      const map<unsigned int, vector<unsigned int> >::const_iterator end =
+        boundary_nodes.end();
 
       for ( ; it != end; ++it)
       {
-        const vector<int>& nodes = it->second;
+        const vector<unsigned int>& nodes = it->second;
 
         if (it->first == BC_reg_ID[0])
           set_boundary(boundary_data, nodes, anode, mesh);
@@ -197,7 +199,7 @@ int main (int argc, char** argv)
     //print_boundary_data(boundary_data, mesh);
 
 
-    Device device(&mesh, &element_data, &boundary_data);
+    DD::Device device(&mesh, &element_data, &boundary_data);
     bool device_integrity = device.check_integrity();
     if (device_integrity)
       cout << "Device ok.\n\n";
@@ -407,12 +409,12 @@ void setup_boundary_desc(BoundaryDescriptor& desc,
 }
 
 
-void set_boundary(BoundaryData& data, const vector<int>& nodes,
+void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
     BoundaryDescriptor& desc, const Mesh& mesh)
 {
-  vector<int>::const_iterator n_it;
-  const vector<int>::const_iterator n_begin = nodes.begin();
-  const vector<int>::const_iterator n_end = nodes.end();
+  vector<unsigned int>::const_iterator n_it;
+  const vector<unsigned int>::const_iterator n_begin = nodes.begin();
+  const vector<unsigned int>::const_iterator n_end = nodes.end();
 
   Mesh::const_element_iterator el = mesh.elements_begin();
   const Mesh::const_element_iterator el_end = mesh.elements_end();

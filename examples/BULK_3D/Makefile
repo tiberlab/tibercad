@@ -16,6 +16,7 @@ objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
 # dimension of the example
 DIM := 3
 
+LIBS += $(topdir)/lib/libtensor.a
 
 
 .PHONY: all clean run

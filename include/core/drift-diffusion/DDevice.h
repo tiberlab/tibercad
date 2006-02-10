@@ -1,7 +1,7 @@
 // $Id$
 
-#ifndef _DEVICE_H_
-#define _DEVICE_H_
+#ifndef _DDEVICE_H_
+#define _DDEVICE_H_
 
 #include <vector>
 #include <set>
@@ -15,6 +15,7 @@ class BoundaryData;
 class SemiconductorModel;
 class BoundaryDescriptor;
 
+namespace DD {
 class Device
 {
   public:
@@ -119,5 +120,6 @@ Device::get_boundaries(void) const
   return *_boundaries;
 }
 
+};
 
-#endif // _DEVICE_H_
+#endif // _DDEVICE_H_

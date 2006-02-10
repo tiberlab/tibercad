@@ -1,8 +1,8 @@
-// $Id: DriftDiffusion.C 14 2006-01-27 11:44:23Z maufder $
+// $Id$
 
 // module includes
 #include "DriftDiffusion.h"
-#include "Device.h"
+#include "DDevice.h"
 #include "Scaling.h"
 #include "ElementData.h"
 #include "BoundaryData.h"
@@ -158,7 +158,7 @@ DriftDiffusion::SolverParameters::operator=(const SolverParameters& rhs)
 
 
 // TODO add integrity test
-DriftDiffusion::DriftDiffusion(Device* device)
+DriftDiffusion::DriftDiffusion(DD::Device* device)
   : _eq_system(NULL),
     _rebuild_eq_system(true)
 {
@@ -170,7 +170,7 @@ DriftDiffusion::DriftDiffusion(Device* device)
 }
 
 // TODO add integrity test
-DriftDiffusion::DriftDiffusion(Device* device,
+DriftDiffusion::DriftDiffusion(DD::Device* device,
     DriftDiffusion::Options& params)
   : _eq_system(NULL),
     _rebuild_eq_system(true)
@@ -190,7 +190,7 @@ DriftDiffusion::~DriftDiffusion(void)
  
 // TODO add integrity test
 void
-DriftDiffusion::set_device(Device* device)
+DriftDiffusion::set_device(DD::Device* device)
 {
   // should throw exception
   assert(device->check_integrity());
@@ -235,8 +235,8 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
   
   // find minimum or maximum by looping over all elements
   set<SemiconductorModel*>& materials = _device->get_materials();
-  Device::const_material_iterator it = materials.begin();
-  const Device::const_material_iterator end = materials.end();
+  DD::Device::const_material_iterator it = materials.begin();
+  const DD::Device::const_material_iterator end = materials.end();
   while (it != end)
   {
     SemiconductorModel* sc = *it;
@@ -404,7 +404,7 @@ DriftDiffusion::find_boundary(const Elem* elem, int side,
 {
   int top_side = -1;
 
-  Device& device = *(_static_parameters.device);
+  DD::Device& device = *(_static_parameters.device);
 
   vector<int> top_sides =
     device.get_boundary_data().find_element(top_parent);
@@ -433,9 +433,9 @@ DriftDiffusion::find_dirichlet_nodes(void)
   // this should make the rest somewhat faster
   set<BoundaryDescriptor*> dirichlet_boundaries;
 
-  Device::BoundaryList& boundaries = _device->get_boundaries();
-  Device::const_boundary_iterator it = boundaries.begin();
-  const Device::const_boundary_iterator end = boundaries.end();
+  DD::Device::BoundaryList& boundaries = _device->get_boundaries();
+  DD::Device::const_boundary_iterator it = boundaries.begin();
+  const DD::Device::const_boundary_iterator end = boundaries.end();
   for ( ; it != end; ++it)
   {
     if (((*it)->get_type("potential") == BoundaryDescriptor::DIRICHLET)
@@ -498,9 +498,9 @@ DriftDiffusion::prepare_solver(void)
     assert(_eq_system == NULL);
     _eq_system = new EquationSystems(_device->get_mesh());
 
-    Device::BoundaryList& boundaries = _device->get_boundaries();
-    Device::const_boundary_iterator it = boundaries.begin();
-    const Device::const_boundary_iterator end = boundaries.end();
+    DD::Device::BoundaryList& boundaries = _device->get_boundaries();
+    DD::Device::const_boundary_iterator it = boundaries.begin();
+    const DD::Device::const_boundary_iterator end = boundaries.end();
     const map<const BoundaryDescriptor*,
           double>::const_iterator bc_end = _simulation_voltages.end();
     for ( ; it != end; ++it)
@@ -638,11 +638,11 @@ DriftDiffusion::calculate_new_simulation_voltages(void)
   double step;
   double max_diff = 0;
 
-  Device::BoundaryList& boundaries = _device->get_boundaries();
-  Device::const_boundary_iterator it = boundaries.begin();
-  const Device::const_boundary_iterator end = boundaries.end();
+  DD::Device::BoundaryList& boundaries = _device->get_boundaries();
+  DD::Device::const_boundary_iterator it = boundaries.begin();
+  const DD::Device::const_boundary_iterator end = boundaries.end();
 
-  Device::const_boundary_iterator max_id = end;
+  DD::Device::const_boundary_iterator max_id = end;
 
   for ( ; it != end; ++it)
   {
@@ -782,7 +782,7 @@ DriftDiffusion::solve_newton(bool restart)
   Options& params = _options;
   SolverParameters& solver_params = params.solver_params;
   
-  Device& device = *_device;
+  DD::Device& device = *_device;
   Mesh& mesh = _device->get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
   EquationSystems& equation_systems = *_eq_system;
@@ -830,8 +830,8 @@ DriftDiffusion::solve_newton(bool restart)
 
     // the simulation voltages for equilibrium are 0.0 ...
     _old_sim_voltages = _simulation_voltages;
-    Device::BoundaryList& boundaries = _device->get_boundaries();
-    Device::const_boundary_iterator it = boundaries.begin();
+    DD::Device::BoundaryList& boundaries = _device->get_boundaries();
+    DD::Device::const_boundary_iterator it = boundaries.begin();
     for ( ; it != boundaries.end(); ++it)
     {
       _simulation_voltages[*it] = 0.0;
@@ -922,8 +922,8 @@ DriftDiffusion::solve_newton(bool restart)
       *(system.solution) = system.get_vector("equilibrium solution");
 
       // the simulation voltages for equilibrium are 0.0 ...
-      Device::BoundaryList& boundaries = _device->get_boundaries();
-      Device::const_boundary_iterator it = boundaries.begin();
+      DD::Device::BoundaryList& boundaries = _device->get_boundaries();
+      DD::Device::const_boundary_iterator it = boundaries.begin();
       for ( ; it != boundaries.end(); ++it)
       {
         _old_sim_voltages[*it] = 0.0;
@@ -1268,7 +1268,7 @@ DriftDiffusion::get_artificial_boundary_current(void)
   const NumericVector<Number>& solution_u = *(poisson->solution);
   const NumericVector<Number>& solution_en = *(ecurrent->solution);
   const NumericVector<Number>& solution_ep = *(hcurrent->solution);
-  const Device& device = *(_device);
+  const DD::Device& device = *(_device);
 
   const DofMap& dof_map_u = poisson->get_dof_map();
   const DofMap& dof_map_en = ecurrent->get_dof_map();
@@ -1414,7 +1414,7 @@ DriftDiffusion::calculate_currents(void)
   // aliases for nicer code
   const Mesh& mesh = system->get_mesh();
   const NumericVector<Number>& solution = *(system->solution);
-  const Device& device = *(_device);
+  const DD::Device& device = *(_device);
 
   const DofMap& dof_map = system->get_dof_map();
 
@@ -1611,7 +1611,7 @@ DriftDiffusion::build_densities(vector<double>& densities,
       "drift-diffusion coupled");
 
   // aliases for nicer code
-  const Device& device = *(_device);
+  const DD::Device& device = *(_device);
   const Mesh& mesh = _device->get_mesh();
   const NumericVector<Number>& solution = *(system->solution);
 
@@ -1759,7 +1759,7 @@ DriftDiffusion::build_band_edges(vector<double>& band_edges,
       "drift-diffusion coupled");
 
   // aliases for nicer code
-  const Device& device = *(_device);
+  const DD::Device& device = *(_device);
   const Mesh& mesh = _device->get_mesh();
   const NumericVector<Number>& solution = *(system->solution);
 
@@ -1912,7 +1912,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
 
   const unsigned int dim = mesh.mesh_dimension();
   
-  const Device& device = *(_static_parameters.device);
+  const DD::Device& device = *(_static_parameters.device);
   const Options& params = *(_static_parameters.params);
 
   ContactData& simulation_voltages =
@@ -2765,7 +2765,7 @@ DriftDiffusion::build_field(vector<double>& densities,
       "drift-diffusion coupled");
 
   // aliases for nicer code
-  const Device& device = *(_device);
+  const DD::Device& device = *(_device);
   const Mesh& mesh = _device->get_mesh();
   const NumericVector<Number>& solution = *(system->solution);
 

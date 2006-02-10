@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _MATERIAL_H_
 #define _MATERIAL_H_
 
@@ -51,12 +53,15 @@ class Material
     /*!
      * Add a new \c PhysicalProperties object for this material
      *
+     * \param properties the properties to add
      */
     void add_properties(PhysicalProperties* properties);
 
     //! Get physical properties of a given type
     /*!
-     * Get the physical properties of type \c id
+     * Get the physical properties of type \c id.
+     * It will return the \c NULL pointer if the requested properties
+     * are not in the list.
      *
      * \param id the identifier for the set of properties
      * \return a const pointer to the property object
@@ -70,12 +75,22 @@ class Material
     typedef std::map<const std::string, PhysicalProperties*> PropertyMap;
 
     //! the material name
+    /*!
+     * The name of the material as GaAs, Si etc.
+     */
     const std::string _name;
 
     //! the crystal structure
+    /*!
+     * The crystal structure as wz, zb etc
+     */
     const std::string _structure;
 
     //! the map containing all \c PhysicalProperties objects
+    /*!
+     * This map containes the physical properties of any simulation type
+     * requested.
+     */
     PropertyMap _properties;
 
 };

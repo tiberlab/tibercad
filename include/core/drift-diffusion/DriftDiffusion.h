@@ -5,6 +5,7 @@
 
 #include "SimulationOptions.h"
 #include "Scaling.h"
+#include "DDevice.h"
 
 // Libmesh includes
 #include "libmesh_common.h"
@@ -24,7 +25,7 @@ extern "C" {
 #include <map>
 
 // forward declarations
-class Device;
+class DD::Device;
 class BoundaryDescriptor;
 class Mesh;
 class Elem;
@@ -215,16 +216,16 @@ class DriftDiffusion
     };
 
       
-    DriftDiffusion(Device* device);
+    DriftDiffusion(DD::Device* device);
 
-    DriftDiffusion(Device* device, DriftDiffusion::Options& params);
+    DriftDiffusion(DD::Device* device, DriftDiffusion::Options& params);
 
     ~DriftDiffusion(void);
     
     /**
      * @returns a reference to the device to be solved
      */
-    const Device& get_device(void) const;
+    const DD::Device& get_device(void) const;
     
     /**
      * Set a new device to be simulated
@@ -233,7 +234,7 @@ class DriftDiffusion
      * and the simulation voltages map are cleared and have to be
      * rebuilt in the \p solve method.
      */
-    void set_device(Device* device);
+    void set_device(DD::Device* device);
 
     /**
      * @returns a reference to the simulation options
@@ -402,7 +403,7 @@ class DriftDiffusion
       DriftDiffusion* dd_obj;
 
       EquationSystems* eq_system;
-      Device* device;
+      DD::Device* device;
       Options* params;
 
       ContactData* simulation_voltages;
@@ -416,7 +417,7 @@ class DriftDiffusion
     /**
      * The device to be solved by this DriftDiffusion object
      */
-    Device* _device;
+    DD::Device* _device;
 
     /**
      * A list of nodes with dirichlet boundary conditions
@@ -667,7 +668,7 @@ class DriftDiffusion
 // 
 
 inline
-const Device&
+const DD::Device&
 DriftDiffusion::get_device(void) const
 {
   return *_device;
