@@ -1,0 +1,18 @@
+# $Id$
+
+# Useful rules
+
+.PHONY: $(subdirs)
+$(subdirs):
+	@$(MAKE) -C $@ $(target)
+
+%.d: %.C
+	@$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+
+%.msh: %.geo
+	@$(GMSH) -format msh -order 1 -$(DIM) -o $<.msh $<
+	@$(topdir)/bin/renumber_msh $<.msh $@
+	@rm $<.msh

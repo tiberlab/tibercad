@@ -1,0 +1,102 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+if ($#ARGV != 1) {
+  print "usage: renumber_mesh inputfile outputfile\n";
+  exit 1;
+}
+
+our $mshfile = $ARGV[0];
+our $outfile = $ARGV[1];
+
+
+sub cleanup() {
+  close OUT;
+  close IN;
+};
+
+
+open IN,'<',$mshfile;
+open OUT,'>',$outfile;
+
+our $line = <IN>;
+chomp $line;
+if ($line ne '$NOD') {
+  print "Wrong file format\n";
+  cleanup();
+  exit 1;
+}
+
+$line = <IN>;
+chomp $line;
+our $n_nodes = sprintf '%u', $line;
+print "Mesh contains $n_nodes nodes.\n";
+
+printf OUT '$NOD'."\n";
+printf OUT "$n_nodes\n";
+
+# the hash list which assigns node numbers
+our %nodelist;
+
+for (our $i = 1; $i <= $n_nodes; $i++) {
+  $line = <IN>;
+  chomp $line;
+  our @content = split ' ', $line;
+  $nodelist{$content[0]} = $i;
+
+  # get old node number
+  $line =~ s/\d+/$i/;
+  printf OUT "$line\n";
+}
+
+$line = <IN>;
+chomp $line;
+if ($line ne '$ENDNOD') {
+  print "Wrong file format\n";
+  cleanup();
+  exit 1;
+}
+$line = <IN>;
+chomp $line;
+if ($line ne '$ELM') {
+  print "Wrong file format\n";
+  cleanup();
+  exit 1;
+}
+
+$line = <IN>;
+chomp $line;
+our $n_elem = sprintf '%u', $line;
+print "Mesh contains $n_elem elements.\n";
+
+printf OUT '$ENDNOD'."\n";
+printf OUT '$ELM'."\n";
+printf OUT "$n_elem\n";
+
+for (our $i = 1; $i <= $n_elem; $i++) {
+  $line = <IN>;
+  chomp $line;
+  our @content = split ' ', $line;
+  our $nn = $content[4];
+   
+  printf OUT $content[0];
+  shift @content;
+  for (our $j = 0; $j < 4; $j++) {
+    our $value = shift @content;
+    printf OUT " $value";
+  }
+  for (our $j = 0; $j < $nn; $j++) {
+    our $value = shift @content;
+    printf OUT " $nodelist{$value}";
+  }
+  printf OUT "\n";
+}
+printf OUT '$ENDELM'."\n";
+
+
+cleanup();
+exit 0;
+
+
+
