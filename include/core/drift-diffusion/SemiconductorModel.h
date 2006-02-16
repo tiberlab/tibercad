@@ -5,6 +5,8 @@
 
 #include "SimulationOptions.h"
 #include "Dopant.h"
+#include "DriftDiffusionProperties.h"
+#include "TiberCad.h"
 
 // GNU scientific library
 #include <gsl/gsl_sf_fermi_dirac.h>
@@ -20,7 +22,7 @@ extern "C" {
 //class Point;
 class Elem;
 
-class SemiconductorModel
+class SemiconductorModel : public DriftDiffusionProperties
 {
   public:
 
@@ -119,14 +121,6 @@ class SemiconductorModel
 
 
     /**
-     * Set the statistics to be used.
-     * 
-     * The statistics can be one of \p SimulationOptions::BOLTZMANN or
-     * \p SimulationOptions::FERMIDIRAC
-     */
-    void set_statistics(SimulationOptions::Statistics statistics);
-
-    /**
      * Set conduction band properties
      */
     void set_conduction_band_properties(double band_edge,
@@ -172,12 +166,6 @@ class SemiconductorModel
 
 
     /**
-     * @returns the statistics used for this model
-     */
-    SimulationOptions::Statistics get_statistics(void) const;
-
-
-    /**
      * Calculates the equilibrium properties.
      *
      * This method has to be called before any call to \p calculate_all()
@@ -186,6 +174,7 @@ class SemiconductorModel
     virtual void calculate_equilibrium_properties(double temperature =
         SimulationOptions::T);
 
+    virtual void read_database(const Dummy&) {};
 
     /**
      * Assume strained semiconductor.
@@ -202,6 +191,15 @@ class SemiconductorModel
      */
     virtual void calculate_all(double potential, double Ef_e, double Ef_h,
         CalculatedProperties& result);
+        
+    //! \copydoc DDSemiconductor::calculate_all()
+    /*! \copydoc DDSemiconductor::calculate_all()
+     * 
+     * This implementation models the most simple semiconductor equations
+     */
+    virtual void calculate_all(double potential,
+      double fermi_e, double fermi_h,
+      const Point& p, const Elem* elem);
     
     /**
      * @returns the thermal voltage
@@ -320,6 +318,12 @@ class SemiconductorModel
      */
     void calculate_ionized_dopants(double arg_e, double arg_h, double kT,
         CalculatedProperties& result);
+    
+    void SemiconductorModel::calculate_ionized_donors(double arg_e, double kT,
+        double& Nd, double& dNd);
+
+    void SemiconductorModel::calculate_ionized_acceptors(double arg_h, double kT,
+        double& Na, double& dNa);
 
     /**
      * Calculate total charge densitiy and derivatives
@@ -330,23 +334,21 @@ class SemiconductorModel
      * Calculate Shockley-Read-Hall recombination
      */
     void calculate_SRH_recombination(CalculatedProperties& result);
+    void calculate_SRH_recombination(void);
 
     /**
      * Calculate Auger recombination
      */
     void calculate_Auger_recombination(CalculatedProperties& result);
+    void calculate_Auger_recombination(void);
 
     /**
      * Calculate direct recombination
      */
     void calculate_direct_recombination(CalculatedProperties& result);
+    void calculate_direct_recombination(void);
 
   private:
-
-    /**
-     * The statistics used for this model
-     */
-    SimulationOptions::Statistics _statistics;
 
     /**
      * The recombination models used
@@ -393,7 +395,7 @@ class SemiconductorModel
      * The method also returns the ratio 'first derivative over density'
      * which is used for the mobility.
      */
-    template<SimulationOptions::Statistics S>
+    template<TiberCad::Statistics S>
     void density_and_derivatives(double arg, double& density,
         double& derivative, double& _2nd_derivative,
         double& derivative_over_density) const;
@@ -424,20 +426,6 @@ void
 SemiconductorModel::set_material_descriptor(const MaterialDescriptor& desc)
 {
   _material = desc;
-}
-
-inline
-void
-SemiconductorModel::set_statistics(SimulationOptions::Statistics statistics)
-{
-  _statistics = statistics;
-}
-
-inline
-SimulationOptions::Statistics
-SemiconductorModel::get_statistics(void) const
-{
-  return _statistics;
 }
 
 inline
@@ -628,23 +616,23 @@ SemiconductorModel::calculate_e_h_densities(double arg_e, double arg_h,
   double Nc = _conduction_band.effective_DOS;
   double Nv = _valence_band.effective_DOS;
 
-  if (_statistics == SimulationOptions::FERMIDIRAC)
+  if (get_statistics() == TiberCad::FERMIDIRAC)
   {
-    density_and_derivatives<SimulationOptions::FERMIDIRAC>(arg_e,
+    density_and_derivatives<TiberCad::FERMIDIRAC>(arg_e,
         result.electron_density, result.electron_density_derivative,
         result.electron_density_2nd_derivative, result.dn_over_n);
 
-    density_and_derivatives<SimulationOptions::FERMIDIRAC>(arg_h,
+    density_and_derivatives<TiberCad::FERMIDIRAC>(arg_h,
         result.hole_density, result.hole_density_derivative,
         result.hole_density_2nd_derivative, result.dp_over_p);
   }
   else
   {
-    density_and_derivatives<SimulationOptions::BOLTZMANN>(arg_e,
+    density_and_derivatives<TiberCad::BOLTZMANN>(arg_e,
         result.electron_density, result.electron_density_derivative,
         result.electron_density_2nd_derivative, result.dn_over_n);
 
-    density_and_derivatives<SimulationOptions::BOLTZMANN>(arg_h,
+    density_and_derivatives<TiberCad::BOLTZMANN>(arg_h,
         result.hole_density, result.hole_density_derivative,
         result.hole_density_2nd_derivative, result.dp_over_p);
   }
@@ -659,6 +647,58 @@ SemiconductorModel::calculate_e_h_densities(double arg_e, double arg_h,
   result.hole_density_2nd_derivative *= Nv / (kT * kT);
   result.dp_over_p /= -kT;
 }
+
+inline
+void
+SemiconductorModel::calculate_ionized_donors(double arg_e, double kT,
+    double& Nd, double& dNd)
+{
+  const double arg_max = 150;
+
+  double Ed = _material.n_dopant.get_ionisation_energy();
+  double arg = arg_e + Ed / kT;
+  if (arg > arg_max)
+  {
+    Nd = 0.0;
+    dNd = 0.0;
+  }
+  else
+  {
+    double tmp = std::exp(arg);
+    double g  = _material.n_dopant.get_g_factor();
+    double denom = 1 + g * tmp;
+
+    Nd = _material.n_dopant.get_doping_density() / denom;
+    dNd = -g * tmp * Nd / (kT * denom);
+  }
+}
+
+inline
+void
+SemiconductorModel::calculate_ionized_acceptors(double arg_h, double kT,
+    double& Na, double& dNa)
+{
+  const double arg_max = 150;
+
+  double Ed = _material.p_dopant.get_ionisation_energy();
+  double arg = arg_h + Ed / kT;
+  if (arg > arg_max)
+  {
+    Na = 0.0;
+    dNa = 0.0;
+  }
+  else
+  {
+    double tmp = std::exp(arg);
+    double g  = _material.p_dopant.get_g_factor();
+    double denom = 1 + g * tmp;
+
+    Na = _material.p_dopant.get_doping_density() / denom;
+    dNa = g * tmp * Na / (kT * denom);
+  }
+
+}
+
 
 inline
 void
@@ -729,6 +769,45 @@ SemiconductorModel::calculate_charge_density(CalculatedProperties& result)
 
 inline
 void
+SemiconductorModel::calculate_SRH_recombination(void)
+{
+  double& n  = electron_density;
+  double& p  = hole_density;
+  double& dn  = electron_density_derivative;
+  double& dp  = hole_density_derivative;
+  double tn  = _material.electron_recombination_time;
+  double tp  = _material.hole_recombination_time;
+  double ni2 = get_intrinsic_density_squared();
+  double ni  = std::sqrt(ni2);
+  double denom = tp * (n + ni) + tn * (p + ni);
+  double SRH = (n * p - ni2) / denom;
+  double a = (p - tp * SRH) * dn / denom;
+  double b = (n - tn * SRH) * dp / denom; 
+  electron_recombination_rate += SRH;
+  electron_recombination_rate_derivatives[1] += a;
+  electron_recombination_rate_derivatives[2] += b;
+  electron_recombination_rate_derivatives[0] += a + b;
+  hole_recombination_rate += SRH;
+  hole_recombination_rate_derivatives[1] += a;
+  hole_recombination_rate_derivatives[2] += b;
+  hole_recombination_rate_derivatives[0] += a + b;
+}
+
+inline
+void
+SemiconductorModel::calculate_Auger_recombination(void)
+{
+}
+
+inline
+void
+SemiconductorModel::calculate_direct_recombination(void)
+{
+}
+
+
+inline
+void
 SemiconductorModel::calculate_SRH_recombination(CalculatedProperties& result)
 {
   double& n  = result.electron_density;
@@ -765,7 +844,7 @@ SemiconductorModel::calculate_direct_recombination(CalculatedProperties& result)
 {
 }
 
-template<SimulationOptions::Statistics S>
+template<TiberCad::Statistics S>
 inline
 void
 SemiconductorModel::density_and_derivatives(double arg, double& density,
@@ -778,7 +857,7 @@ SemiconductorModel::density_and_derivatives(double arg, double& density,
 
   switch (S)
   {
-    case SimulationOptions::FERMIDIRAC:
+    case TiberCad::FERMIDIRAC:
       if (arg < arg_max)
       {
         if (arg < arg_min)

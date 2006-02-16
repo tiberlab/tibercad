@@ -107,9 +107,9 @@ int main (int argc, char** argv)
 
     SemiconductorModel nside;    
     if (statistics == "FD")
-      nside.set_statistics(SimulationOptions::FERMIDIRAC);
+      nside.set_statistics(TiberCad::FERMIDIRAC);
     else
-      nside.set_statistics(SimulationOptions::BOLTZMANN);
+      nside.set_statistics(TiberCad::BOLTZMANN);
 
     nside.add_recombination_model(SemiconductorModel::SRH);
 
@@ -211,6 +211,9 @@ int main (int argc, char** argv)
     
   
     DriftDiffusion dd(&device);
+
+    //SemiconductorModel sc_model;
+    //dd.set_semiconductor_model(&sc_model);
 
     DriftDiffusion::Options& params = dd.get_options();
     params.max_refinement_steps = refinement_steps;

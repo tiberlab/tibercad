@@ -29,4 +29,5 @@ clean:
 	@rm -f *.o *~ *.d
 
 
-
+test:
+	@$(CXX) $(CXXFLAGS) $(INCLUDE) -S DriftDiffusion.C

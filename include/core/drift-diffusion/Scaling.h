@@ -5,6 +5,8 @@
 
 #include <cassert>
 
+#include "Constants.h"
+
 class Scaling
 {
 
@@ -23,10 +25,6 @@ class Scaling
 
     ScalingType get_scaling_type(void) const;
 
-    void invert(void);
-
-    bool is_inverted(void) const;
-    
 
     double get_potential_scaling(void) const;
 
@@ -41,6 +39,8 @@ class Scaling
     double get_recombination_scaling(void) const;
 
     double get_current_density_scaling(void) const;
+
+    double get_lambda_squared(void) const;
 
     
     void set_scaling_type(ScalingType type);
@@ -57,7 +57,6 @@ class Scaling
   private:
 
     ScalingType _type;
-    bool _is_inverted;
     
     double _potential;
     double _length;
@@ -70,13 +69,6 @@ class Scaling
 //
 // inline member functions
 // 
-
-inline
-bool
-Scaling::is_inverted(void) const
-{
-  return _is_inverted;
-}
 
 inline
 Scaling::ScalingType
@@ -134,6 +126,13 @@ Scaling::get_current_density_scaling(void) const
   return _potential * _mobility * _density / _length;
 }
 
+inline
+double
+Scaling::get_lambda_squared(void) const
+{
+  double tmp = _length * _length * _density * Constants::e;
+  return _potential / tmp;
+}
 
 inline
 void

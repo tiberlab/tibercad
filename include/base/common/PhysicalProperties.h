@@ -20,12 +20,18 @@ class PhysicalProperties
 
   public:
 
+    //! The empty destructor
+    /*!
+     * should be implemented in the derived classes if needed
+     */
+    virtual ~PhysicalProperties(void) {};
+    
     //! Get the identifier of the property object
     /*!
      * The identifier is a unique string which identifies each type
      * of physical properties.
      */
-    virtual const std::string get_id(void) const = 0;
+    const std::string& get_id(void) const;
 
     //! Set a pointer to the \c Material object this properties belong to
     /*!
@@ -47,15 +53,13 @@ class PhysicalProperties
     /*!
      * \c PhysicalProperties should not be instantiated directly
      */
-    PhysicalProperties(void);
+    PhysicalProperties(const std::string& id);
 
-    //! The empty destructor
-    /*!
-     * should be implemented in the derived classes if needed
-     */
-    virtual ~PhysicalProperties(void) {};
 
   private:
+
+    //! The id of this properties
+    const std::string _id;
 
     //! The material this properties belong to
     const Material* _material;
@@ -68,15 +72,23 @@ class PhysicalProperties
 //--------------------------------------------------------------
 
 inline
-PhysicalProperties::PhysicalProperties(void)
-  : _material(0)
+PhysicalProperties::PhysicalProperties(const std::string& id)
+  : _id(id), _material(0)
 {
 }
 
-inline void
+inline
+void
 PhysicalProperties::set_material(const Material* material)
 {
   _material = material;
+}
+
+inline
+const std::string&
+PhysicalProperties::get_id(void) const
+{
+  return _id;
 }
 
 

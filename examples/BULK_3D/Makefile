@@ -15,8 +15,10 @@ objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
 
 # dimension of the example
 DIM := 3
+# order of the mesh elements (1 or 2)
+ORDER := 1
 
-LIBS += $(topdir)/lib/libtensor.a
+#LIBS += $(topdir)/lib/libtensor.a
 
 
 .PHONY: all clean run
@@ -34,7 +36,10 @@ run: all bulk.msh
 
 
 clean:
-	@rm -f *.o *~ main *.xda *.xta *.msh
+	@rm -f *.o *~ main *.xda *.xta
+
+distclean: clean
+	@rm -f *.msh
 
 
 include $(topdir)/Make.rules

@@ -38,8 +38,9 @@
 using namespace std;
 
 
-DriftDiffusion::StaticParameters
-DriftDiffusion::_static_parameters;
+DriftDiffusion*
+DriftDiffusion::_this;
+
 
 DriftDiffusion::Options::Options(void)
   : mesh_refinement(false),
@@ -203,12 +204,6 @@ DriftDiffusion::set_device(DD::Device* device)
 
 }
 
-const Mesh&
-DriftDiffusion::get_mesh(void) const
-{
-  return _device->get_mesh();
-}
-
 
 void
 DriftDiffusion::compute_scaling(Scaling::ScalingType type)
@@ -276,8 +271,9 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     default: // UNITS
       C0 = (C0 > ni0) ? C0 : ni0;
 
-      MeshBase::const_node_iterator it = get_mesh().nodes_begin();
-      const MeshBase::const_node_iterator end = get_mesh().nodes_end();
+      const Mesh& mesh = get_mesh();
+      MeshBase::const_node_iterator it = mesh.nodes_begin();
+      const MeshBase::const_node_iterator end = mesh.nodes_end();
 
       assert(it != end);
 
@@ -343,29 +339,11 @@ DriftDiffusion::remember_current_solution(void)
 {
   _remembered_voltages = _simulation_voltages;
 
-  if (_options.solver_method == NEWTON)
-  {
-    NonlinearImplicitSystem& system =
-      _eq_system->get_system<NonlinearImplicitSystem>(
-          "drift-diffusion coupled");
-    system.get_vector("remembered solution") = *(system.solution);
-    system.get_vector("remembered solution").close();
-  }
-  else
-  {
-    NonlinearImplicitSystem& poisson =
-      _eq_system->get_system<NonlinearImplicitSystem>(
-          "poisson");
-    NonlinearImplicitSystem& ecurrent =
-      _eq_system->get_system<NonlinearImplicitSystem>(
-          "ecurrent");
-    NonlinearImplicitSystem& hcurrent =
-      _eq_system->get_system<NonlinearImplicitSystem>(
-          "hcurrent");
-    poisson.get_vector("remembered solution") = *(poisson.solution);
-    ecurrent.get_vector("remembered solution") = *(ecurrent.solution);
-    hcurrent.get_vector("remembered solution") = *(hcurrent.solution);
-  }
+  NonlinearImplicitSystem& system =
+    _eq_system->get_system<NonlinearImplicitSystem>(
+        "drift-diffusion coupled");
+  system.get_vector("remembered solution") = *(system.solution);
+  system.get_vector("remembered solution").close();
 }
 
 void
@@ -374,28 +352,11 @@ DriftDiffusion::set_to_remembered_solution(void)
   assert(_old_sim_voltages.size() == _remembered_voltages.size());
   _old_sim_voltages = _remembered_voltages;
 
-  if (_options.solver_method == NEWTON)
-  {
-    NonlinearImplicitSystem& system =
-      _eq_system->get_system<NonlinearImplicitSystem>(
-          "drift-diffusion coupled");
-    *(system.solution) = system.get_vector("remembered solution");
-  }
-  else
-  {
-    NonlinearImplicitSystem& poisson =
-      _eq_system->get_system<NonlinearImplicitSystem>(
-          "poisson");
-    NonlinearImplicitSystem& ecurrent =
-      _eq_system->get_system<NonlinearImplicitSystem>(
-          "ecurrent");
-    NonlinearImplicitSystem& hcurrent =
-      _eq_system->get_system<NonlinearImplicitSystem>(
-          "hcurrent");
-    *(poisson.solution) = poisson.get_vector("remembered solution");
-    *(ecurrent.solution) = ecurrent.get_vector("remembered solution");
-    *(ecurrent.solution) = hcurrent.get_vector("remembered solution");
-  }
+  NonlinearImplicitSystem& system =
+    _eq_system->get_system<NonlinearImplicitSystem>(
+        "drift-diffusion coupled");
+  *(system.solution) = system.get_vector("remembered solution");
+
 }
 
 int
@@ -404,7 +365,7 @@ DriftDiffusion::find_boundary(const Elem* elem, int side,
 {
   int top_side = -1;
 
-  DD::Device& device = *(_static_parameters.device);
+  const DD::Device& device = _this->get_device();
 
   vector<int> top_sides =
     device.get_boundary_data().find_element(top_parent);
@@ -495,6 +456,7 @@ DriftDiffusion::prepare_solver(void)
 
   if (_rebuild_eq_system)
   {
+    // we assume that _eq_system was deleted before
     assert(_eq_system == NULL);
     _eq_system = new EquationSystems(_device->get_mesh());
 
@@ -512,22 +474,9 @@ DriftDiffusion::prepare_solver(void)
     }
   }
 
-  _static_parameters.dd_obj = this;
-  _static_parameters.device = _device;
-  _static_parameters.eq_system = _eq_system;
-  _static_parameters.params = &_options;
-  _static_parameters.dirichlet_nodes = &_dirichlet_nodes;
-  _static_parameters.simulation_voltages = &_simulation_voltages;
+  _this = this;
 
   compute_scaling(_options.scaling_type);
-
-  // the factor lambda^2 appearing in the Poisson equation
-  const Scaling& s = get_scaling();
-  double l_sq = s.get_potential_scaling() /
-    (s.get_length_scaling() * s.get_length_scaling() *
-     s.get_density_scaling() * Constants::e);
-  _static_parameters.lambda_squared = l_sq;
-
 }
 
 void
@@ -535,7 +484,7 @@ DriftDiffusion::initialize_eq_system(EquationSystems& system)
 {
 
   SolverParameters& solver_params =
-    _static_parameters.params->solver_params;
+    (_this->get_options()).solver_params;
 
   system.parameters.set<unsigned int>(
     "nonlinear solver maximum iterations") = 
@@ -621,7 +570,7 @@ DriftDiffusion::solve(bool restart)
   }
 
   // aliases for nicer code
-  EquationSystems& equation_systems = *(_static_parameters.eq_system);
+  EquationSystems& equation_systems = get_equation_system();
   
   // should perhaps only be done when the solution is requested
   equation_systems.build_solution_vector(_solution);
@@ -779,13 +728,13 @@ void
 DriftDiffusion::solve_newton(bool restart)
 {
   // aliases for nicer code
-  Options& params = _options;
+  Options& params = get_options();
   SolverParameters& solver_params = params.solver_params;
   
   DD::Device& device = *_device;
   Mesh& mesh = _device->get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
-  EquationSystems& equation_systems = *_eq_system;
+  EquationSystems& equation_systems = get_equation_system();
   Order approx_order = params.approximation_order;
 
   if (dim == 1)
@@ -797,7 +746,6 @@ DriftDiffusion::solve_newton(bool restart)
   if (_rebuild_eq_system)
   {
     // the coupled DD system
-    _static_parameters.eq_system = &equation_systems;
     equation_systems.add_system<NonlinearImplicitSystem>(
         "drift-diffusion coupled");
 
@@ -1748,153 +1696,6 @@ DriftDiffusion::build_densities(vector<double>& densities,
 
 }
 
-// implementation taken from libmesh equation_systems.C
-void
-DriftDiffusion::build_band_edges(vector<double>& band_edges,
-    vector<string>& names)
-{
-  NonlinearImplicitSystem* system;
-
-  system = &_eq_system->get_system<NonlinearImplicitSystem>(
-      "drift-diffusion coupled");
-
-  // aliases for nicer code
-  const DD::Device& device = *(_device);
-  const Mesh& mesh = _device->get_mesh();
-  const NumericVector<Number>& solution = *(system->solution);
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int dim = mesh.mesh_dimension();
-  const unsigned int nn  = mesh.n_nodes();
-
-  const unsigned int n_vars  = 2;
-  names.resize(n_vars);
-  names[0] = "conduction_band_edge";
-  names[1] = "valence_band_edge";
-
-  band_edges.resize(nn * n_vars);
-
-  vector<double> local(band_edges.size());
-  vector<unsigned short int> node_conn(nn);
-  
-  vector<double> nodal_val;
-
-  // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
-
-
-  fill(band_edges.begin(), band_edges.end(), 0.0);
-  fill(local.begin(), local.end(), 0.0);
-  
-  // Get the number of elements that share each node.  We will
-  // compute the average value at each node.
-  {
-    vector<unsigned short int> node_conn_local(node_conn.size());
-    
-    MeshBase::const_element_iterator it =
-      mesh.active_local_elements_begin();
-    const MeshBase::const_element_iterator end =
-      mesh.active_local_elements_end(); 
-
-    for ( ; it != end; ++it)
-      for (unsigned int n=0; n<(*it)->n_nodes(); n++)
-	node_conn_local[(*it)->node(n)]++;
-
-#ifdef HAVE_MPI
-    // Gather the distributed node_conn arrays in the case of
-    // multiple processors
-    //
-    // (Note that we use an unsigned short int here even though an
-    // unsigned char would be more that sufficient.  The MPI 1.1
-    // standard does not require that MPI_SUM, MPI_PROD etc... be
-    // implemented for char data types. 12/23/2003 - BSK)  
-    MPI_Allreduce (&node_conn_local[0], &node_conn[0], node_conn.size(),
-		   MPI_UNSIGNED_SHORT, MPI_SUM, libMesh::COMM_WORLD);
-    
-#else
-    // Without MPI the node_conn_local and the node_conn arrays
-    // are necessarily identical
-    node_conn = node_conn_local;
-    
-#endif
-  }
-
-  const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
-  
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-  
-  DenseVector<Number> local_sol;
-
-  // this will hold the calculated properties of the semiconductor
-  SemiconductorModel::CalculatedProperties properties;
-
-  MeshBase::const_element_iterator it =
-    mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end =
-    mesh.active_local_elements_end(); 
-
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-#ifdef ENABLE_INFINITE_ELEMENTS
-    // infinite elements should be skipped...
-    if (!elem->infinite())
-#endif
-    {
-      dof_map.dof_indices(elem, dof_indices_u, u_var);
-      dof_map.dof_indices(elem, dof_indices_en, en_var);
-      dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-      SemiconductorModel* sc =
-        device.get_element_data().get_data(elem->top_parent());
-      assert(sc != NULL);
-
-      assert(elem->n_nodes() == dof_indices_u.size());
-
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      {
-        Real u  = phi0 * solution(dof_indices_u[n]);
-        Real en = phi0 * solution(dof_indices_en[n]);
-        Real ep = phi0 * solution(dof_indices_ep[n]);
-        
-        sc->calculate_all(u, en, ep, properties);
-
-        assert (node_conn[elem->node(n)] != 0);
-
-        unsigned int id = n_vars * elem->node(n);
-        const SemiconductorModel::BandProperties& cb =
-          sc->get_conduction_band_properties();
-        double nodal_val = cb.band_edge - u;
-        local[id] +=
-          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
-
-        const SemiconductorModel::BandProperties& vb =
-          sc->get_valence_band_properties();
-        nodal_val = vb.band_edge - u;
-        local[id + 1] +=
-          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
-      }
-
-    }
-  }
-
-#ifdef HAVE_MPI
-  // Now each processor has computed contriburions to the
-  // soln vector.  Gather them all up.
-  MPI_Allreduce (&local[0], &band_edges[0], band_edges.size(),
-		 MPI_REAL, MPI_SUM, libMesh::COMM_WORLD);
-#else
-  band_edges = local;
-#endif
-
-}
-
 
 //template <DriftDiffusion::EquationType T, int dim>
 template <int T>
@@ -1905,20 +1706,20 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
 {
   
   // references for nicer code
-  const Mesh& mesh = _static_parameters.eq_system->get_mesh();
+  const Mesh& mesh = _this->get_mesh();
+  EquationSystems& eq_sys = _this->get_equation_system();
   NonlinearImplicitSystem& system =
-    _static_parameters.eq_system->get_system<NonlinearImplicitSystem>(
+    eq_sys.get_system<NonlinearImplicitSystem>(
         "drift-diffusion coupled");
 
   const unsigned int dim = mesh.mesh_dimension();
   
-  const DD::Device& device = *(_static_parameters.device);
-  const Options& params = *(_static_parameters.params);
+  const DD::Device& device = _this->get_device();
+  const Options& params = _this->get_options();
+  Options& options = _this->get_options();
 
-  ContactData& simulation_voltages =
-    *_static_parameters.simulation_voltages;
-  BoundaryNodeList& dirichlet_nodes = 
-    *(_static_parameters.dirichlet_nodes);
+  ContactData& simulation_voltages = _this->_simulation_voltages;
+  BoundaryNodeList& dirichlet_nodes = _this->_dirichlet_nodes;
 
 
   //
@@ -1927,18 +1728,21 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
   // NOTE: the mesh and all paramters were not explicitly scaled, so
   //       we have to treat scaling by explicit division/multiplication
   //       
-  double& C0_e = _static_parameters.params->C0_e;
-  double& C0_h = _static_parameters.params->C0_h;
-  double& n_max = _static_parameters.params->n_max;
-  double& p_max = _static_parameters.params->p_max;
+  // density scaling for electrons
+  double C0_e = options.C0_e;
+  // density scaling for holes
+  double C0_h = options.C0_h;
+  // maximum density of electrons
+  double n_max = options.n_max;
+  // maximum density of holes
+  double p_max = options.p_max;
+  // the scaling parameters
+  const Scaling& scaling = _this->get_scaling();
   // the scaling parameter for the poisson eq.
   // The factor 1e-2 comes from the fact, that we are calculating in cm!
-  const double l2 = _static_parameters.lambda_squared * Constants::e0 * 1e-2;
-  // the scaling parameters
-  const Scaling& scaling = _static_parameters.dd_obj->get_scaling();
+  const double l2 = scaling.get_lambda_squared() * Constants::e0 * 1e-2;
   const double x0 = scaling.get_length_scaling();
   const double phi0 = scaling.get_potential_scaling();
-  // the following ones are inverted because like that we can use multiplication
   const double C0 = scaling.get_density_scaling();
   const double mu0 = scaling.get_mobility_scaling();
   // x 1e4 because we calculate in cm
@@ -2056,12 +1860,6 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
   if (jacobian != NULL)
     jacobian->zero();
 
-  // this will hold the calculated properties of the semiconductor
-  SemiconductorModel::CalculatedProperties properties;
-  // with this we can easily access the calculated properties
-  double& n  = properties.electron_density;
-  double& p  = properties.hole_density;
-
 
   MeshBase::const_element_iterator el =
                                   mesh.active_local_elements_begin();
@@ -2122,13 +1920,9 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
     Xp.reposition(2 * n_dofs, n_dofs);
 
 
-    SemiconductorModel* sc =
+    DriftDiffusionProperties* sc =
       device.get_element_data().get_data(top_parent);
     assert(sc != NULL);
-
-    double epsilon = sc->get_relative_permittivity();
-    double l2_eps = l2 * epsilon;
-    sc->calculate_strained_properties(elem_tmp);
 
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
@@ -2145,15 +1939,19 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       }
 
       // calculate densities etc.
-      sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep, properties);
+      sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep, q_point[qp], elem);
+      double n  = sc->get_electron_density();
+      double p  = sc->get_hole_density();
+      double epsilon = sc->get_relative_permittivity();
+      double l2_eps = l2 * epsilon;
       
       // remember the maximum densities
       n_max = (n_max > n) ? n_max : n;
       p_max = (p_max > p) ? p_max : p;
 
       // NOTE: sigma_e = mu_e * n is the electron conductivity
-      Real sigma_e = properties.electron_conductivity / (mu0 * C0_e);
-      Real sigma_h = properties.hole_conductivity / (mu0 * C0_h);
+      Real sigma_e = sc->get_electron_conductivity() / (mu0 * C0_e);
+      Real sigma_h = sc->get_hole_conductivity() / (mu0 * C0_h);
     
       //
       // The residual looks like this:
@@ -2205,26 +2003,24 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       // 
       if (jacobian != NULL)
       {
-        vector<double>& drho =
-          properties.charge_density_derivatives;
-
-        vector<double>& dRn =
-          properties.net_electron_recombination_rate_derivatives;
-
-        vector<double>& dRp =
-          properties.net_hole_recombination_rate_derivatives;
-
+        double drho[3];
+        double dRn[3];
+        double dRp[3];
         for (int id = 0; id < 3; id++)
         {
-          drho[id] *= phi0 / C0;
-          dRn[id] *= phi0 / R0_e;
-          dRp[id] *= phi0 / R0_h;
+          drho[id] = phi0 / C0 * sc->get_charge_density_derivatives()[id];
+          dRn[id] = phi0 / R0_e
+            * sc->get_net_electron_recombination_rate_derivatives()[id];
+          dRp[id] = phi0 / R0_h
+            * sc->get_net_hole_recombination_rate_derivatives()[id];
         }
 
         // d(sigma_n)/du * element-jacobian
         // sigma_n = mu_n * n means the conductivity of electrons
-        Real dsigma_e = J * properties.electron_conductivity_derivative * phi0 / (mu0 * C0_e);
-        Real dsigma_h = J * properties.hole_conductivity_derivative * phi0 / (mu0 * C0_h);
+        Real dsigma_e = J * phi0 / (mu0 * C0_e)
+          * sc->get_electron_conductivity_derivatives()[0];
+        Real dsigma_h = J * phi0 / (mu0 * C0_h)
+          * sc->get_hole_conductivity_derivatives()[0];
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
@@ -2307,18 +2103,15 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       if (residual != NULL)
       {
         // charge density
-        //double rho = p - n - Na + Nd;
-        Real J_x_rho = J * properties.charge_density / C0;
+        Real J_x_rho = J * sc->get_charge_density() / C0;
         Real J_x_P0 = J / P0;
 
         // net recombination rate
-        Real J_x_Rn = J * properties.net_electron_recombination_rate / R0_e;
-        Real J_x_Rp = J * properties.net_hole_recombination_rate / R0_h;
+        Real J_x_Rn = J * sc->get_net_electron_recombination_rate() / R0_e;
+        Real J_x_Rp = J * sc->get_net_hole_recombination_rate() / R0_h;
 
-        const vector<double>& polarization = properties.polarization;
-        RealVectorValue P(J_x_P0 * polarization[0],
-            J_x_P0 * polarization[1], J_x_P0 * polarization[2]);
-        
+        RealVectorValue P(sc->get_total_polarization());
+        P *= J_x_P0;
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
@@ -2413,6 +2206,9 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
         //
         const vector<vector<Real> >&  phi_face =
           fe_face->get_phi();
+          
+        // physical coordinates of the quadrature points
+        const vector<Point>& q_point = fe_face->get_xyz();
 
         const vector<Point>& face_normals = fe_face->get_normals();
 
@@ -2430,18 +2226,20 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
           {
 
             // get the solution values at the quadrature points
-            //Real u  = 0.0;
-            //Real en = 0.0;
-            //Real ep = 0.0;
-            //for (unsigned int i = 0; i < n_dofs; i++)
-            //{
-            //  u  += phi_face[i][qp] * Xu(i);
-            //  en += phi_face[i][qp] * Xn(i);
-            //  ep += phi_face[i][qp] * Xp(i);
-            //}
+            Real u  = 0.0;
+            Real en = 0.0;
+            Real ep = 0.0;
+            for (unsigned int i = 0; i < n_dofs; i++)
+            {
+              u  += phi_face[i][qp] * Xu(i);
+              en += phi_face[i][qp] * Xn(i);
+              ep += phi_face[i][qp] * Xp(i);
+            }
 
             // calculate densities etc.
-            //sc->calculate_all(u, en, ep, properties);
+            sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep, q_point[qp], elem);
+            double epsilon = sc->get_relative_permittivity();
+            double l2_eps = l2 * epsilon;
 
             // the jacobian x weight x scaling
             double J = JxW_face[qp] / Jface_scale;
@@ -2469,9 +2267,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
             // contribution to -Fe_i
             if (residual != NULL)
             {
-              const vector<double>& polarization = properties.polarization;
-              RealVectorValue P(polarization[0], polarization[1],
-                  polarization[2]);
+              RealVectorValue P(sc->get_total_polarization());
               double Pn = (P * face_normals[qp]) / P0;
               double value_u = J * (l2_eps * value[0] - Pn);
               double value_n = J * value[1];
@@ -2494,12 +2290,15 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
         else // i.e. dim == 1
         {
           // s is the node of the element lying on the boundary
-          //Real u  = Xu(s);
-          //Real en = Xn(s);
-          //Real ep = Xp(s);
+          Real u  = Xu(s);
+          Real en = Xn(s);
+          Real ep = Xp(s);
 
           // calculate densities etc.
-          //sc->calculate_all(u, en, ep, properties);
+          sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep,
+            elem->point(s), elem);
+          double epsilon = sc->get_relative_permittivity();
+          double l2_eps = l2 * epsilon;
 
           // first the contributions to Ke_ij
           if (T & POISSON)
@@ -2514,8 +2313,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
           // contribution to -Fe_i
           if (residual != NULL)
           {
-            const vector<double>& polarization = properties.polarization;
-            double Pn = polarization[0] / P0;
+            double Pn =  sc->get_total_polarization()(0) / P0;
             double value_u = l2_eps * value[0] - Pn;
             double value_n = value[1];
             double value_p = value[2];
@@ -2742,166 +2540,9 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       jacobian->add_matrix(Ke, dof_indices);
 
   } // end loop over elements
+
+  // put the maximum densities back into the options
+  options.n_max = n_max;
+  options.p_max = p_max;
 } 
-
-void
-DriftDiffusion::build_field(vector<double>& densities,
-    vector<string>& names)
-{
-  NonlinearImplicitSystem* system;
-
-  system = &_eq_system->get_system<NonlinearImplicitSystem>(
-      "drift-diffusion coupled");
-
-  // aliases for nicer code
-  const DD::Device& device = *(_device);
-  const Mesh& mesh = _device->get_mesh();
-  const NumericVector<Number>& solution = *(system->solution);
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int dim = mesh.mesh_dimension();
-  const unsigned int nn  = mesh.n_nodes();
-
-  const unsigned int n_vars  = 3;
-  names.resize(n_vars);
-  names[0] = "E_x";
-  names[1] = "E_y";
-  names[2] = "E_z";
-
-  densities.resize(nn * n_vars);
-
-  vector<double> local(densities.size());
-  vector<unsigned short int> node_conn(nn);
-  
-  vector<double> nodal_val;
-
-  // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
-
-
-  fill(densities.begin(), densities.end(), 0.0);
-  fill(local.begin(), local.end(), 0.0);
-  
-  // Get the number of elements that share each node.  We will
-  // compute the average value at each node.
-  {
-    vector<unsigned short int> node_conn_local(node_conn.size());
-    
-    MeshBase::const_element_iterator it =
-      mesh.active_local_elements_begin();
-    const MeshBase::const_element_iterator end =
-      mesh.active_local_elements_end(); 
-
-    for ( ; it != end; ++it)
-      for (unsigned int n=0; n<(*it)->n_nodes(); n++)
-	node_conn_local[(*it)->node(n)]++;
-
-#ifdef HAVE_MPI
-    // Gather the distributed node_conn arrays in the case of
-    // multiple processors
-    //
-    // (Note that we use an unsigned short int here even though an
-    // unsigned char would be more that sufficient.  The MPI 1.1
-    // standard does not require that MPI_SUM, MPI_PROD etc... be
-    // implemented for char data types. 12/23/2003 - BSK)  
-    MPI_Allreduce (&node_conn_local[0], &node_conn[0], node_conn.size(),
-		   MPI_UNSIGNED_SHORT, MPI_SUM, libMesh::COMM_WORLD);
-    
-#else
-    // Without MPI the node_conn_local and the node_conn arrays
-    // are necessarily identical
-    node_conn = node_conn_local;
-    
-#endif
-  }
-
-  const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
-
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-  
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-  // this will hold the calculated properties of the semiconductor
-  SemiconductorModel::CalculatedProperties properties;
-
-  MeshBase::const_element_iterator it =
-    mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end =
-    mesh.active_local_elements_end(); 
-
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-#ifdef ENABLE_INFINITE_ELEMENTS
-    // infinite elements should be skipped...
-    if (!elem->infinite())
-#endif
-    {
-      vector<Point> vertices(elem->n_nodes());
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      {
-        vertices.push_back(elem->point(n));
-      }
-      fe->reinit(elem, &vertices);
-
-      dof_map.dof_indices(elem, dof_indices_u, u_var);
-      dof_map.dof_indices(elem, dof_indices_en, en_var);
-      dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-      SemiconductorModel* sc =
-        device.get_element_data().get_data(elem->top_parent());
-      assert(sc != NULL);
-
-      assert(elem->n_nodes() == dof_indices_u.size());
-
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      {
-        Real u  = solution(dof_indices_u[n]);
-        Real en = solution(dof_indices_en[n]);
-        Real ep = solution(dof_indices_ep[n]);
-        
-        sc->calculate_all(u, en, ep, properties);
-
-        assert (node_conn[elem->node(n)] != 0);
-
-        for (unsigned int i = 0; i < elem->n_nodes(); i++)
-        {
-          unsigned int id = n_vars * elem->node(i);
-          
-          double E_x = u * dphi[i][n](0);
-          double E_y = u * dphi[i][n](1);
-          double E_z = u * dphi[i][n](2);
-          
-          local[id] +=
-            E_x * phi0 / static_cast<Real>(node_conn[elem->node(n)]);
-
-          local[id + 1] +=
-            E_y * phi0 / static_cast<Real>(node_conn[elem->node(n)]);
-
-          local[id + 2] +=
-            E_z * phi0 / static_cast<Real>(node_conn[elem->node(n)]);
-        }
-      }
-
-    }
-  }
-
-#ifdef HAVE_MPI
-  // Now each processor has computed contriburions to the
-  // soln vector.  Gather them all up.
-  MPI_Allreduce (&local[0], &densities[0], densities.size(),
-		 MPI_REAL, MPI_SUM, libMesh::COMM_WORLD);
-#else
-  densities = local;
-#endif
-
-}
 

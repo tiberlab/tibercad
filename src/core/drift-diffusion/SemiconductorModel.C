@@ -5,7 +5,7 @@
 #include "iostream"
 
 SemiconductorModel::SemiconductorModel(void)
-  : _statistics(SimulationOptions::BOLTZMANN),
+  : DriftDiffusionProperties(),
     _recombination(0),
     _thermal_voltage(SimulationOptions::T * Constants::k_B),
     polarization(3, 0.0)
@@ -15,7 +15,7 @@ SemiconductorModel::SemiconductorModel(void)
 }
 
 SemiconductorModel::SemiconductorModel(const SemiconductorModel& model)
-  : _statistics(model._statistics),
+  : DriftDiffusionProperties(),
     _recombination(model._recombination),
     _thermal_voltage(model._thermal_voltage),
     _DOS_factor(model._DOS_factor),
@@ -65,6 +65,111 @@ SemiconductorModel::calculate_equilibrium_properties(double temperature)
   _equilibrium_hole_density = prop.hole_density;
 }
     
+void
+SemiconductorModel::calculate_all(double potential, double fermi_e, double fermi_h,
+    const Point& coord, const Elem* elem)
+{
+
+  double kT = get_thermal_voltage();
+  
+  const BandProperties& cb = get_conduction_band_properties();
+  const BandProperties& vb = get_valence_band_properties();
+
+  double Ec = cb.band_edge;
+  double Ev = vb.band_edge;
+  
+  // 1.) electron and hole density
+  double n, p, dn, dp, dn2, dp2, dn_over_n, dp_over_p;
+  double arg_e = (fermi_e + potential - Ec) / kT;
+  double arg_h = -(fermi_h + potential - Ev) / kT;
+  if (get_statistics() == TiberCad::FERMIDIRAC)
+  {
+    density_and_derivatives<TiberCad::FERMIDIRAC>(arg_e,
+        n, dn, dn2, dn_over_n);
+
+    density_and_derivatives<TiberCad::FERMIDIRAC>(arg_h,
+        p, dp, dp2, dp_over_p);
+  }
+  else
+  {
+    density_and_derivatives<TiberCad::BOLTZMANN>(arg_e,
+        n, dn, dn2, dn_over_n);
+
+    density_and_derivatives<TiberCad::BOLTZMANN>(arg_h,
+        p, dp, dp2, dp_over_p);
+  }
+  
+  double Nc = _conduction_band.effective_DOS;
+  n *= Nc;
+  dn *= Nc / kT;
+  dn2 *= Nc / (kT * kT);
+  dn_over_n /= kT;
+
+  double Nv = _valence_band.effective_DOS;
+  p *= Nv;
+  dp *= -Nv / kT;
+  dp2 *= Nv / (kT * kT);
+  dp_over_p /= -kT;
+
+  electron_density = n;
+  electron_density_derivative = dn;
+  hole_density = p;
+  hole_density_derivative = dp;
+
+  // 2.) ionized dopant densities
+  double Nd, Na, dNd, dNa;
+  calculate_ionized_donors(arg_e, kT, Nd, dNd);
+  calculate_ionized_acceptors(arg_h, kT, Na, dNa);
+
+  // 3.) total charge density
+  charge_density = p - n + Nd - Na;
+  charge_density_derivatives[0] = dp - dn + dNd - dNa;
+  charge_density_derivatives[1] =    - dn + dNd;
+  charge_density_derivatives[2] = dp            - dNa;
+  
+  // 4.) mobilities
+  // For both statistics:
+  // 
+  //   mu_n = e * D_n * (1 / n) * (dn / dEf_e)
+  //
+  // NOTE: kT := kB * T / e includes already e
+  double electron_diffusivity = kT * cb.low_field_mobility;
+  double hole_diffusivity = kT * vb.low_field_mobility;
+  electron_mobility = electron_diffusivity * dn_over_n;
+  hole_mobility = -hole_diffusivity * dp_over_p;
+  
+  // 5.) conductivities
+  electron_conductivity = electron_diffusivity * dn;
+  hole_conductivity = -hole_diffusivity * dp;
+  electron_conductivity_derivatives[0] = electron_diffusivity * dn2;
+  electron_conductivity_derivatives[1] = electron_diffusivity * dn2;
+  hole_conductivity_derivatives[0] = -hole_diffusivity * dp2;
+  hole_conductivity_derivatives[2] = -hole_diffusivity * dp2;
+
+  // 6.) Recombination
+  electron_recombination_rate = 0;
+  electron_recombination_rate_derivatives[0] = 0;
+  electron_recombination_rate_derivatives[1] = 0;
+  electron_recombination_rate_derivatives[2] = 0;
+  hole_recombination_rate = 0;
+  hole_recombination_rate_derivatives[0] = 0;
+  hole_recombination_rate_derivatives[1] = 0;
+  hole_recombination_rate_derivatives[2] = 0;
+  if (_recombination && SRH)
+    calculate_SRH_recombination();
+  if (_recombination && AUGER)
+    calculate_Auger_recombination();
+  if (_recombination && DIRECT)
+    calculate_direct_recombination();
+
+
+  DriftDiffusionProperties::polarization(0) = polarization[0];
+  DriftDiffusionProperties::polarization(1) = polarization[1];
+  DriftDiffusionProperties::polarization(2) = polarization[2];
+  
+  permittivity = get_relative_permittivity();
+}
+
 void
 SemiconductorModel::calculate_all(double potential, double Ef_e, double Ef_h,
     CalculatedProperties& result)

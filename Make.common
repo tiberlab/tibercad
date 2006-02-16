@@ -8,7 +8,7 @@
 ##
 ##
 
-# $(modules) are the subdirectories in $(topdir)/include
+# $(tibermodules) are the subdirectories in $(topdir)/include
 tibermodules := $(shell find $(topdir)/include -type d)
 
 # libmesh can be found here
@@ -31,6 +31,10 @@ GMSH := /usr/sepp/bin/gmsh-1.62.0-ma
 ##
 ##
 
+# some handy defaults
+DIM := 2
+ORDER := 1
+
 
 # TIBERCAD includes
 TIBER_INCLUDES += $(foreach module,$(tibermodules),-I$(module))
@@ -44,6 +48,8 @@ CXXFLAGS += -I$(miniboost) -I$(spirit)
 CXXFLAGS += -I$(gsl)/include
 
 LDFLAGS += -Wl,-rpath,$(gsl)/lib -L$(gsl)/lib -lgsl -lgslcblas
+LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib
+LDFLAGS += $(topdir)/lib/libtensor.a
 
 TIBER_OBJECTS := $(shell find $(topdir)/src -name "*.$(obj-suffix)")
 

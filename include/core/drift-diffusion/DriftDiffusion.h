@@ -256,11 +256,12 @@ class DriftDiffusion
      */
     void set_options(const Options& options);
 
-    /**
-     * @returns a constant reference to the simulation mesh
+    //! Get the mesh
+    /*!
+     * \return a constant reference to the simulation mesh
      */
-    const Mesh& get_mesh(void) const;
-
+    Mesh& get_mesh(void) const;
+    
     /**
      * @returns a constant reference to the current scaling parameters
      */
@@ -352,17 +353,6 @@ class DriftDiffusion
     void build_densities(std::vector<double>& densities,
         std::vector<std::string>& names);
 
-    /**
-     * fill @c band_edges with conduction and valence band edge energies
-     *
-     */
-    void build_band_edges(std::vector<double>& band_edges,
-        std::vector<std::string>& names);
-
-    void build_field(std::vector<double>& field,
-        std::vector<std::string>& names);
-
-
 
   private:
 
@@ -395,24 +385,11 @@ class DriftDiffusion
     typedef std::map<const Node*, const BoundaryDescriptor*> BoundaryNodeList;
     typedef TiberPetscNonlinearSolver<Real> SolverClass;
 
-    /**
-     * The @c StaticParameters are needed in the assembly method
+    //! A static reference to \c this
+    /*!
+     * This is needed during matrix assembly, which is a static method.
      */
-    struct StaticParameters
-    {
-      DriftDiffusion* dd_obj;
-
-      EquationSystems* eq_system;
-      DD::Device* device;
-      Options* params;
-
-      ContactData* simulation_voltages;
-
-      BoundaryNodeList* dirichlet_nodes;
-
-      double lambda_squared;
-    };
-
+    static DriftDiffusion* _this;
 
     /**
      * The device to be solved by this DriftDiffusion object
@@ -438,7 +415,7 @@ class DriftDiffusion
      * The @c Options to be used
      */
     Options _options;
-
+    
     /**
      * The scaling parameters
      */
@@ -505,13 +482,7 @@ class DriftDiffusion
     void compute_scaling(Scaling::ScalingType type = Scaling::UNITS);
 
     /**
-     * Scale using the scaling given in s
-     */
-    void do_scaling(const Scaling& s);
-    
-    /**
      * prepare data structures used for solving a system
-     * (e.g. \p _static_parameters)
      */
     void prepare_solver(void);
 
@@ -552,6 +523,9 @@ class DriftDiffusion
      */
     void initialize_eq_system(EquationSystems& system);
 
+    //! Get the equation system
+    EquationSystems& get_equation_system(void);
+
     void solve_newton(bool restart);
 
     void solve_gummel(bool restart);
@@ -565,12 +539,6 @@ class DriftDiffusion
      */
     double calculate_new_simulation_voltages(void);
 
-
-    /**
-     * The static assembly functions need static pointers
-     * to several system data structures
-     */
-    static StaticParameters _static_parameters;
 
     /**
      * @returns the side number of the top level element, if the side
@@ -763,5 +731,18 @@ DriftDiffusion::assign_boundary_values(double& coeff, double& value,
 }
 
 
+inline
+EquationSystems&
+DriftDiffusion::get_equation_system(void)
+{
+  return *_eq_system;
+}
+
+inline
+Mesh& 
+DriftDiffusion::get_mesh(void) const
+{
+  return _device->get_mesh();
+}
 
 #endif //_DRIFTDIFFUSION_H_
