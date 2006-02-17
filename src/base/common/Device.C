@@ -6,19 +6,18 @@
 #include <map>
 #include "Device.h"
 
+
+
+
 Device::Device()
 {
-
-  //  device_regions.clear();
-  material_regions.clear();
-
+  material_regions.clear();	
 }
 
+ Device::~Device()
+ {
 
-// Device::~Device()
-// {
-
-// }
+ }
 
 
 
@@ -76,15 +75,115 @@ void Device::set_material_regions( const  vector<RegionDefinition>& dev_reg)
 
 
 
+// NEW  14/2/06
+// ********************************
+
+//in  .h
+//map < string ,Material* > name_mat_map;
+//Material* matpoint, matpoint_alloy 
+
+
+void Device::set_materials()
+{
+  string mat_name;
+	
+  int number_material_regions = material_regions.size();
+  map < string ,Material* >::iterator p;
+
+
+  for  (int i = 0; i < number_material_regions; i++)
+    {
+    	
+      mat_name = material_regions[i].get_material_name();
+    	
+      p = name_mat_map.find(mat_name);
+    	
+      if (p == name_mat_map.end())
+	// not found in  map
+	{
+	  // crystal_struct = material_regions[i].get_crystal_struct(); // TO BE IMPLEMENTED!
+	  //if call_db(database,mat_name,crystal_struct, alloy ) !=  fail
+	  if (true)
+	    //mat_name is  alloy  !!!
+	    {
+  			
+  			
+	      matpoint_alloy = new Alloy(mat_name); 
+	      name_mat_map.insert(make_pair(mat_name,matpoint_alloy ));
+  			
+	      // call_db -> vector<string> = vector(alloy components)
+	      for (int i = 0; i < alloy_components.size(); i++)
+		{
+		  p = name_mat_map.find(alloy_components[i]);
+    	
+		  if (p == name_mat_map.end())
+		    //	not yet present
+		    {
+		      matpoint = new Material( alloy_components[i]); 
+		      name_mat_map.insert(make_pair(mat_name,matpoint ));
+  					
+		      // put mat.  components in  alloy  object
+		      matpoint_alloy->set_components(matpoint);
+  					
+		    }
+  				
+		  else
+		    // comp. mat.. already  present   in  map
+		    {
+		      // put Material*  in alloy  as  a  component
+		      matpoint_alloy->set_components(p->second) ;
+  					
+		    }
+    				
+    				
+  					
+		}
+    			
+    			 			
+	    }
+  		
+	  else
+ 		 
+	    {	
+	      // mat_name is  not alloy 
+ 		 	
+ 		 	
+	      matpoint = new Material( mat_name); 
+	      name_mat_map.insert(make_pair(mat_name,matpoint ));
+  		
+	    }
+  				
+	}
+    	
+    	
+    }
+    	
+
+	
+}
+
+
+
+
+
+
+
+
+// *******************************
+
+
+
+// NEW  14/2/06
+// ********************************
 // instatiate an object MaterialRegion for  each  RegionDefinition present in vector 
 //  material_regions, then makes a map <MaterialRegion * , 
 // fai  una  mappa <reg ID,  MaterialRegion>  
 void Device::set_map_ID_material_region()
 {
-
-
+  Material*  mat_point;	
+  string mat_name;
   int number_material_regions = material_regions.size();
-
+  map < string ,Material* >::iterator p;
   unsigned int reg_ID;
 
   for  (int i = 0; i < number_material_regions; i++)
@@ -92,8 +191,21 @@ void Device::set_map_ID_material_region()
 
 
       // pointer to a MaterialRegion object 
-      mat_reg_point  = new MaterialRegion (material_regions[i]);
-
+      
+      // pass  also  Material* !!
+      mat_name = material_regions[i].get_material_name();
+    	
+      p = name_mat_map.find(mat_name);
+    	
+      if (p != name_mat_map.end())
+	{mat_point = p->second ;}
+      //  		else
+      //  		{ //  ERROR}}
+      //  		}
+  		
+      //  mat_reg_point  = new MaterialRegion (material_regions[i]);
+      // makes object MaterialRegion which points to Material*
+      mat_reg_point  = new MaterialRegion( material_regions[i], mat_point);
 
 
       reg_ID = mat_reg_point -> get_region_number();
@@ -104,6 +216,15 @@ void Device::set_map_ID_material_region()
 
 
 }
+
+
+
+
+
+
+
+
+// ********************************************************************************************************
 
 
 
@@ -138,7 +259,7 @@ MaterialRegion* Device::get_material_region(unsigned int  ID)
 
   p = ID_mat_reg_map.find(ID);
   if (p != ID_mat_reg_map.end())
-  return p->second ;
+    return p->second ;
   else
     {
       cerr << "ID not found in Material Regions";
@@ -148,6 +269,10 @@ MaterialRegion* Device::get_material_region(unsigned int  ID)
 
 }
 
+
+// ************************************************
+//  TO BE IMPLEMENTED 
+// ************************************************
 
 
 // DopingRegion* Device::get_doping_region(unsigned int  ID)
@@ -188,10 +313,12 @@ MaterialRegion* Device::get_material_region(unsigned int  ID)
 // }
 
 
+// **********************************************************
 
 
 
 
+// OLD  OBSOLETE ????
 // void Device::set_device_structure(vector<string>&  region_name_v, vector<unsigned int>& region_number_v,
 // 				  vector<string>&  material_name_v, vector<double>& doping_concentration_v, 
 // 				  vector<string>& doping_type_v   )
@@ -272,7 +399,7 @@ MaterialRegion* Device::get_material_region(unsigned int  ID)
 
 
 
-
+// ?????????????????????????
 // ***************************************************************
 // in main : ref_reg_struct = device_object.get_device_data(reg_query)
 //  value = ref_reg_struct.get_reg_name();
@@ -298,12 +425,12 @@ const  RegionDefinition& Device::get_device_data(unsigned int region_query)
 	}
     }
 }
-
+//????????????????????????????????????
 
 // **********************************************************************
 
 
-//  BC regions
+//  BC regions:   TO  BE  PUT  IN  "SolverEnvironment"  object (?)
 
 void Device::set_device_boundary_cond(vector<string>&  BC_region_name_v,
 				      vector<unsigned int>& BC_region_number_v,
@@ -314,7 +441,7 @@ void Device::set_device_boundary_cond(vector<string>&  BC_region_name_v,
 
   BC_device_regions.resize(BC_region_number_v.size()); // allocate  correct  number of  objects BcRegionDefinition
 
-   for (int i =0; i< BC_region_number_v.size();++i)
+  for (int i =0; i< BC_region_number_v.size();++i)
     {
 
       BC_device_regions[i].set_BC_region_name(BC_region_name_v[i]);
@@ -352,74 +479,74 @@ const  BcRegionDefinition& Device::get_device_boundary_cond(unsigned int region_
 }
 
 
+// *************************************************************
 
 
 
 
 
 
-
-
+//  OLD *****************************************************
 //************************************************************
 
-// string  Device::get_device_data(unsigned int reg_query, string& field)
+  // string  Device::get_device_data(unsigned int reg_query, string& field)
 
-// // const  RegionDefinition&                                                           
+  // // const  RegionDefinition&                                                           
 
-// {
+  // {
 
-//   unsigned int  numb;
-//   string field_value, null;
-//   string reg_numb = "reg_numb";
+  //   unsigned int  numb;
+  //   string field_value, null;
+  //   string reg_numb = "reg_numb";
 
-//   null = "";
+  //   null = "";
 
-//   for (int i =0; i< device_regions.size();++i)
-//     {
+  //   for (int i =0; i< device_regions.size();++i)
+  //     {
 
-//       numb = device_regions[i].find_field2(reg_numb);
+  //       numb = device_regions[i].find_field2(reg_numb);
 
-//       // if (device_regions[i].reg_numb == reg_query)
-//       if  (numb == reg_query) 
-// 	{
+  //       // if (device_regions[i].reg_numb == reg_query)
+  //       if  (numb == reg_query) 
+  // 	{
 
-// 	  field_value = device_regions[i].find_field(field);
-// 	  return   field_value;
+  // 	  field_value = device_regions[i].find_field(field);
+  // 	  return   field_value;
 
-// 	}
+  // 	}
 	 
    	  
-//     }
+  //     }
 
-//    cerr <<  "Error : wrong  value  of query "; 
-//    return null;
+  //    cerr <<  "Error : wrong  value  of query "; 
+  //    return null;
 
-// }
+  // }
 
 
 
-// double  Device::get_device_data2(unsigned int reg_query, string& field)
+  // double  Device::get_device_data2(unsigned int reg_query, string& field)
 
-// {
+  // {
 
-//   double  field_value, null;
-//   null = 0.0;
+  //   double  field_value, null;
+  //   null = 0.0;
 
-//   for (int i =0; i< device_regions.size();++i)
-//     {
+  //   for (int i =0; i< device_regions.size();++i)
+  //     {
 
-//       if (device_regions[i].reg_numb == reg_query)
-// 	{
+  //       if (device_regions[i].reg_numb == reg_query)
+  // 	{
 
-// 	  field_value = device_regions[i].find_field(field);
-// 	  return   field_value;
+  // 	  field_value = device_regions[i].find_field(field);
+  // 	  return   field_value;
 
-// 	}
+  // 	}
 	 
    	  
-//     }
+  //     }
 
-//    cerr <<  "Error : wrong  value  of query "; 
-//    return null;
+  //    cerr <<  "Error : wrong  value  of query "; 
+  //    return null;
 
-// }
+  // }

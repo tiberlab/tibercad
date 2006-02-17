@@ -18,7 +18,8 @@ class Material;
 class PhysicalProperties
 {
 
-  public:
+ public:
+
 
     //! The empty destructor
     /*!
@@ -33,22 +34,32 @@ class PhysicalProperties
      */
     const std::string& get_id(void) const;
 
-    //! Set a pointer to the \c Material object this properties belong to
-    /*!
-     * \param material a constant pointer to a material
-     */
-    void set_material(const Material* material);
 
-    //! Read the properties from the database
-    /*!
-     * Reads all needed physical properties from the database.
-     * \param db a const reference to the database
-     */
-    virtual void read_database(const Dummy& db) = 0;
+  //! Set a pointer to the \c Material object this properties belong to
+  /*!
+   * \param material a constant pointer to a material
+   */
+  void set_material(const Material* material);
 
-
-  protected:
+  //! Read the properties from the database
+  /*!
+   * Reads all needed physical properties from the database.
+   * \param db a const reference to the database
+   */
+  virtual void read_database(const Dummy& db) = 0;
     
+    
+  virtual void read_database_bowing_parameters(const Dummy& db ) = 0;
+    
+    
+  virtual void set_properties_alloy(const  PhysicalProperties* prop_comp1, 
+				    const  PhysicalProperties* prop_comp2, 
+				    double molar_fraction) = 0;
+
+
+ protected:
+    
+
     //! The empty constructor
     /*!
      * \c PhysicalProperties should not be instantiated directly
@@ -56,13 +67,18 @@ class PhysicalProperties
     PhysicalProperties(const std::string& id);
 
 
-  private:
+
+
+
+ private:
+
 
     //! The id of this properties
     const std::string _id;
 
     //! The material this properties belong to
     const Material* _material;
+
 };
 
 

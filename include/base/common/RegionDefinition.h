@@ -12,37 +12,37 @@ class RegionDefinition{
 
  public:
 
-  RegionDefinition::RegionDefinition();
+  RegionDefinition();
 
-  RegionDefinition::~RegionDefinition();
-
-
+  ~RegionDefinition();
 
 
-  void RegionDefinition::set_region_name(string& field_value);
-  void RegionDefinition::set_region_number(unsigned int field_value);
-  void RegionDefinition::set_material_name(string& field_value);
-  void RegionDefinition::set_doping_concentration(double field_value);
-  void RegionDefinition::set_doping_type(string& field_value);
+// ADD crystal_struct !!!!!!!!
 
-  void RegionDefinition::set_BC_region_name(string& field_value);
-  void RegionDefinition::set_BC_region_number(unsigned int field_value);
-  void RegionDefinition::set_BC_type(string& field_value);
-  void RegionDefinition::set_BC_value(double field_value);
+  void set_region_name(string& field_value);
+  void set_region_number(unsigned int field_value);
+  void set_material_name(string& field_value);
+  void set_doping_concentration(double field_value);
+  void set_doping_type(string& field_value);
+
+//  void RegionDefinition::set_BC_region_name(string& field_value);
+//  void RegionDefinition::set_BC_region_number(unsigned int field_value);
+//  void RegionDefinition::set_BC_type(string& field_value);
+//  void RegionDefinition::set_BC_value(double field_value);
 
 
 
 
-  unsigned int RegionDefinition::get_region_number() const;
-  string  RegionDefinition::get_region_name() const;
-  string  RegionDefinition::get_material_name()const ;
-  double  RegionDefinition::get_doping_concentration() const ;
-  string  RegionDefinition::get_doping_type() const ;
+  unsigned int get_region_number() const;
+  string  get_region_name() const;
+  string  get_material_name()const ;
+  double  get_doping_concentration() const ;
+  string  get_doping_type() const ;
 
-  unsigned int RegionDefinition::get_BC_region_number() const;
-  string  RegionDefinition::get_BC_region_name() const;
-  string  RegionDefinition::get_BC_type() const;
-  double  RegionDefinition::get_BC_value() const;
+//  unsigned int RegionDefinition::get_BC_region_number() const;
+//  string  RegionDefinition::get_BC_region_name() const;
+//  string  RegionDefinition::get_BC_type() const;
+//  double  RegionDefinition::get_BC_value() const;
 
 
 
@@ -56,7 +56,9 @@ class RegionDefinition{
  private:
 
 
-  /* struct RegionDefinition { */     //     ->   class   RegionDefinition
+  
+
+// ADD crystal_struct !!!!!!!!
 
   string region_name ;
   unsigned int  region_number;
@@ -64,14 +66,6 @@ class RegionDefinition{
   double  doping_concentration  ;
   string doping_type;
 
-
-
-  //  BC regions
-
- string BC_region_name ;
- unsigned int BC_region_number;
- string  BC_type;
- double BC_value;
 
 
 
@@ -173,80 +167,80 @@ inline void RegionDefinition::set_doping_type(string& field_value)
 // BC regions inline  members
 
 
-
-inline unsigned int RegionDefinition::get_BC_region_number() const
-
-{
-
-  return BC_region_number;
-
-}
-
-inline string  RegionDefinition::get_BC_region_name() const
-
-{
-
-  return BC_region_name;
-
-}
-
-inline string  RegionDefinition::get_BC_type() const
-
-{
-
-  return BC_type;
-
-}
-
-inline double  RegionDefinition::get_BC_value() const
-
-{
-
-  return  BC_value;
-
-}
-
-
-
-
-
-
-// ------------------------------------------------
-
-
-
-inline void RegionDefinition::set_BC_region_name(string& field_value)
-
-{
-
-  BC_region_name = field_value;
-
-}
-
-inline void RegionDefinition::set_BC_region_number(unsigned int field_value)
-
-{
-
-  BC_region_number = field_value;
-
-}
-
-inline void RegionDefinition::set_BC_type(string& field_value)
-
-{
-
-  BC_type = field_value;
-
-}
-
-inline void RegionDefinition::set_BC_value(double field_value)
-
-{
-
-  BC_value   = field_value;
-
-}
-
+//
+//inline unsigned int RegionDefinition::get_BC_region_number() const
+//
+//{
+//
+//  return BC_region_number;
+//
+//}
+//
+//inline string  RegionDefinition::get_BC_region_name() const
+//
+//{
+//
+//  return BC_region_name;
+//
+//}
+//
+//inline string  RegionDefinition::get_BC_type() const
+//
+//{
+//
+//  return BC_type;
+//
+//}
+//
+//inline double  RegionDefinition::get_BC_value() const
+//
+//{
+//
+//  return  BC_value;
+//
+//}
+//
+//
+//
+//
+//
+//
+//// ------------------------------------------------
+//
+//
+//
+//inline void RegionDefinition::set_BC_region_name(string& field_value)
+//
+//{
+//
+//  BC_region_name = field_value;
+//
+//}
+//
+//inline void RegionDefinition::set_BC_region_number(unsigned int field_value)
+//
+//{
+//
+//  BC_region_number = field_value;
+//
+//}
+//
+//inline void RegionDefinition::set_BC_type(string& field_value)
+//
+//{
+//
+//  BC_type = field_value;
+//
+//}
+//
+//inline void RegionDefinition::set_BC_value(double field_value)
+//
+//{
+//
+//  BC_value   = field_value;
+//
+//}
+//
 
 //**************************************************
 

@@ -12,9 +12,9 @@ class BcRegionDefinition{
 
  public:
 
-  BcRegionDefinition::BcRegionDefinition();
+  BcRegionDefinition();
 
-  BcRegionDefinition::~BcRegionDefinition();
+  ~BcRegionDefinition();
 
 
 
@@ -25,10 +25,10 @@ class BcRegionDefinition{
 /*   void BcRegionDefinition::set_doping_concentration(double field_value); */
 /*   void BcRegionDefinition::set_doping_type(string& field_value); */
 
-  void BcRegionDefinition::set_BC_region_name(string& field_value);
-  void BcRegionDefinition::set_BC_region_number(unsigned int field_value);
-  void BcRegionDefinition::set_BC_type(string& field_value);
-  void BcRegionDefinition::set_BC_value(double field_value);
+  void set_BC_region_name(string& field_value);
+  void set_BC_region_number(unsigned int field_value);
+  void set_BC_type(string& field_value);
+  void set_BC_value(double field_value);
 
 
 
@@ -39,10 +39,10 @@ class BcRegionDefinition{
 /*   double  RegionDefinition::get_doping_concentration() const ; */
 /*   string  RegionDefinition::get_doping_type() const ; */
 
-  unsigned int BcRegionDefinition::get_BC_region_number() const;
-  string  BcRegionDefinition::get_BC_region_name() const;
-  string  BcRegionDefinition::get_BC_type() const;
-  double  BcRegionDefinition::get_BC_value() const;
+  unsigned int get_BC_region_number() const;
+  string  get_BC_region_name() const;
+  string  get_BC_type() const;
+  double  get_BC_value() const;
 
 
 

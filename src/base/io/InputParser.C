@@ -1,46 +1,51 @@
 /*=============================================================================
-    Copyright (c) 2002-2003 Joel de Guzman
-    http://spirit.sourceforge.net/
+  Copyright (c) 2002-2003 Joel de Guzman
+  http://spirit.sourceforge.net/
 
-    Use, modification and distribution is subject to the Boost Software
-    License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
-    http://www.boost.org/LICENSE_1_0.txt)
-=============================================================================*/
-///////////////////////////////////////////////////////////////////////////////
-//
-//  This sample demontrates a parser for a comma separated list of numbers
-//  This is discussed in the "Quick Start" chapter in the Spirit User's Guide.
-//
-//  [ JDG 5/10/2002 ]
-//
-///////////////////////////////////////////////////////////////////////////////
+  Use, modification and distribution is subject to the Boost Software
+  License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt)
+  =============================================================================*/
 
+#include <boost/spirit/core.hpp>
+#include <boost/spirit/actor/push_back_actor.hpp>
+#include <boost/spirit/dynamic.hpp>
+#include <iostream>
+#include <fstream>
 
+#include <vector>
+#include <string>
 
 #include "InputParser.h"
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
 using namespace std;
 using namespace boost::spirit;
 
-///////////////////////////////////////////////////////////////////////////////
-//
-//  Our comma separated list parser
-//
-///////////////////////////////////////////////////////////////////////////////
 
-InputParser::InputParser(string filename)
+
+//InputParser::InputParser(string filename, string section_n)
+InputParser::InputParser(string& input_file_name)
+
 {
 
+  //  section_name =  section_n;
+  filename = input_file_name;
+
   initialize_vectors(); // 
-//  reg_values.clear();
-  scan_input(filename);
- // counter = 0;
+  //  reg_values.clear();
 
-  //  a = x;
 
-  //std::ifstream  in_stream (file_name.c_str());
+  //  find_section(filename);
+
+ 
+
+  //	cout << device_regions[0].reg_name << endl;
+  //  get_device_data();
+
+ 
 
 }
 
@@ -52,25 +57,27 @@ InputParser::~InputParser()
 void InputParser::initialize_vectors()
 {
   command_values.clear();
-    reg_values.clear();
-    reg_id.clear();
-    mat.clear();
-    // counter = 0;
+  reg_values.clear();
+  reg_id.clear();
+  mat.clear();
+ 
 
 }
 
 
 // *********************************
-// NEW: COMMAND  SECTION
+// OPTIONS (COMMAND)  SECTION
 // *********************************
 
-void InputParser::parse_command(ifstream& in_stream )
+//void InputParser::parse_command(ifstream& in_stream )
+void InputParser::parse_options(ifstream& in_stream )
+
 
 
 {
 
   // *******************************************************************************************************
-  //  ***** IDEA:  nome=valore  ->  map <string,double>  o map <string,string>  , map <string, bool> 
+  //  ***** IDEA:  label = value  ->  map <string,double>  o map <string,string>  , map <string, string> 
   // variable = inp_file.read("prop", int Default)
   //   int  inp_file::read ( string,  int  Default);
   //    find string   in  map  <string,prop_value>  ->  return  value 
@@ -84,405 +91,274 @@ void InputParser::parse_command(ifstream& in_stream )
   name = "Start";
   int id;
 
-  // **********************
+  // ****************************
   //  assigned   values (local)
   // ****************************
   vector<double> v;              //  scalar  and   vector  values
+  vector<int> v_int; 
   //  vector<double>  vect;
-  vector<string>  v_bool;
-  v_bool.clear();
+  vector<string>  v_string;
+  v_string.clear();
   //  vect.clear();
   v.clear();
+  v_int.clear();
   //******************
 
 
-  //------------------------
-  //  labels of  properties
-  //------------------------
+      //------------------------
+      //  labels of  properties
+      //------------------------
 
-    vector<string> v_label;
-    vector<string>vect_label;
-    vector<string> v_label_bool;  //  label  for  string  value
-    v_label_bool.clear();
-    vect_label.clear();
-    v_label.clear();
+      vector<string> v_label;
+  vector<string>vect_label;
+  vector<string> v_label_string;  //  label  for  string  value
+  v_label_string.clear();
+  vect_label.clear();
+  v_label.clear();
 
-    //  vect.push_back(0);
-
-   
-    // *************************************************************************************************
-    //  rule<phrase_scanner_t>  for  phrase level parsing (e.g. with a  separator character (comma) )
-    // rule <> for  space  separated  list (character level parsing) : NEEDS  TO READ  EXPLICITLY SPACES !!!
-    // *************************************************************************************************
-
- //  NEW  *********************
-    // rule<>list_of_numbers_space_sep = real_p[push_back_a(vect)] >> *( *(space_p) >> real_p[push_back_a(vect)]);
-    //  try  with  ( 4.5  6.7  8.98)
-    rule<>list_of_numbers_space_sep = ch_p('(')>> *(space_p) >>real_p[push_back_a(v)] >> *( *(space_p) >> real_p[push_back_a(v)])>> *(space_p)>> ch_p(')')  ;
-
-    rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/') );
-
-    // rule<>label  = (+alnum_p)>>   * ( ch_p('_') >> *(+alnum_p) ) ;
- rule<>label  = (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
-
-
-
- // rule<>label_file  = (+alnum_p)>>   * ( (( ch_p('_'))|( ch_p('.') ) | ( ch_p('/') ) )    >> *(+alnum_p) ) ;
- rule<>label_file  = (+alnum_p)>>   * (  (special_char )      >> *(+alnum_p) ) ;
-
-
-
-
+  //  vect.push_back(0);
 
    
- // rule<>assignement  =  (+alnum_p)[push_back_a(v_label)] >> *(space_p) >> ch_p('=')>> *(space_p) >> ( real_p[push_back_a(v)])  ; //ok !!
- rule<>assignement  =  (label)[push_back_a(v_label)] >> *(space_p) >> ch_p('=')>> *(space_p) >> ( real_p[push_back_a(v)])  ; // with _ !!
+  // *************************************************************************************************
+  //  rule<phrase_scanner_t>  for  phrase level parsing (e.g. with a  separator character (comma) )
+  // rule <> for  space  separated  list (character level parsing) : NEEDS  TO READ  EXPLICITLY SPACES !!!
+  // *************************************************************************************************
 
 
 
 
- //  label  instead  of +alnum_p !!! 
- // rule<>assignement_bool  =  (label)[push_back_a(v_label_bool)] >> *(space_p) >> ch_p('=')>> *(space_p) >> ((+alnum_p)[push_back_a(v_bool)])   ;
+  rule<>list_of_numbers_space_sep = ch_p('(')>> *(space_p) >>*real_p[push_back_a(v)] >>
+    *( *(space_p) >> real_p[push_back_a(v)])>> *(space_p)>> ch_p(')')  ;
 
- rule<>assignement_bool  =  (label)[push_back_a(v_label_bool)] >> *(space_p) >> ch_p('=')>> *(space_p) >> ((label_file )[push_back_a(v_bool)])   ;
-
-
-
- rule<>assignement_vector =  (label)[push_back_a(vect_label)] >> *(space_p) >> ch_p('=')>> *(space_p) >> list_of_numbers_space_sep;
-
- // rule<>list_of_assignement = assignement >> *( *(space_p) >> assignement  );
- rule<>list_of_assignement = (assignement | assignement_bool)  >> *( *(space_p) >> (assignement| assignement_bool)       );
+  // rule<>list_of_numbers_space_sep = ch_p('(')>> *(space_p) >>real_p[push_back_a(v)] >>
+  //  *( *(separator) >> real_p[push_back_a(v)])>> *(separator)>> ch_p(')')  ;
 
 
-  //rule<>
+  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+')   );
 
- // rule<> r_command  = *(space_p) >> (list_of_assignement | assignement_vector)    >> *(anychar_p);
-
- rule<> r_command  = *(space_p) >> (list_of_assignement )    >> *(anychar_p);
-
- rule<> r_command_vector  = *(space_p) >> (assignement_vector)    >> *(anychar_p);
+  // rule<>label  = (+alnum_p)>>   * ( ch_p('_') >> *(+alnum_p) ) ;
+  rule<>label  = (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
 
 
- // ******************
- //  END  NEW  
- // ********************
-
-
-//  //  rule<phrase_scanner_t>composition = ch_p('(') >> real_p >> ch_p(')');
-// //   rule<phrase_scanner_t>material = (+alnum_p)>> *(composition) >> *(alnum_p);
-
-// //  rules  for  space  separated  list  (character level parsing)  !!!!!
-//  rule<>composition = ch_p('(') >> real_p >> ch_p(')');
-//   rule<>material = (+alnum_p)>> *(composition) >> *(alnum_p);
+  // *** one  can  use $ to distinguish  string_label from label of  numerical prop,
+  //  otherwise  one  line  can  contain only  numeric or only string  values !!!
+  //  
+ //    rule<>label_string  =  (ch_p('$'))>> (+alnum_p)>>   * ( ch_p('_') >> *(+alnum_p) ) ; 
+//   //   (+alnum_p)>> ;//  * ( (special_char ) >> *(+alnum_p) ) ;
 
 
 
-//   //ok !!  //  rule<phrase_scanner_t>list_of_numbers = real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)]);
-//   //  rule<phrase_scanner_t> r = uint_p >> ch_p(',')>> material[assign_a(name)] >> *(ch_p(','))>>list_of_numbers >> *(ch_p('#'))>>*(alpha_p);
+
+
+   
+  // rule<>assignement  =  (+alnum_p)[push_back_a(v_label)] >> *(space_p) >> ch_p('=')>>
+  //  *(space_p) >> ( real_p[push_back_a(v)])  ; //ok !!
+  // strict_real_p  for real with . !!!!
+  rule<>assignement  =  (label)[push_back_a(v_label)] >> *(space_p) >> ch_p('=')>>
+    *(space_p) >> ( real_p[push_back_a(v)])  ; // with _ !!
+
+  // for  int
+  //  rule<>assignement_int  =  (label)[push_back_a(v_label)] >> *(space_p) >> ch_p('=')>>
+  //   *(space_p) >> ( int_p[push_back_a(v_int)])  ;
+
+
+
+  //   rule<>assignement_string  =  (label_string)[push_back_a(v_label_bool)] >> *(space_p) >>
+  //    ch_p('=')>> *(space_p) >> ((label )[push_back_a(v_bool)])   ; //  ok!!!
+
+   rule<>assignement_string  =  (label)[push_back_a(v_label_string)] >> 
+     *(space_p) >> ch_p('=')>> *(space_p) >> ((label)[push_back_a(v_string)])   ;
+
+
+  rule<>assignement_vector =  (label)[push_back_a(vect_label)] >> *(space_p) >> 
+    ch_p('=')>> *(space_p) >> list_of_numbers_space_sep;
 
  
-//   //  space  separated  list (instead  of  comma  separated)
-//   // rule<>list_of_numbers_space_sep = real_p[push_back_a(v)] >> *( *(space_p) >> real_p[push_back_a(v)]);
-//  rule<> r = *(space_p)   >> uint_p[assign_a(id)] >> *(space_p)   >> material[assign_a(mat_name)] >> *(space_p)>>list_of_numbers_space_sep  >> *(anychar_p);
-
-//     //(space_p)>>*(ch_p('#'))>> *(alpha_p);
+  //  rule<>assignement = (assignement_double |  assignement_int); 
 
 
+  //  rule<>list_of_assignement = (assignement | assignement_string)  >> 
+  //   *( *(space_p) >> (assignement | assignement_string) ); //  ok
 
 
-//  // rule<phrase_scanner_t>r = real_p >> *(ch_p(',') >> real_p);
+  // ******************************************************************* 
+  //list of  only numeric  OR  list  of only  strings !!
+  // 
+ rule<>list_of_assignement = (assignement )  >>
+   *( *(space_p) >> (assignement ) )   | (  assignement_string) >> 
+   *( *(space_p) >> (assignement_string ) );
 
-//  //  OK  ***************
-//  //  getline(in_stream, str);
+ // ************************************************************************
 
-//   //  while (!(str.empty()))
-//  //  OK  ***************
+ 
+  // rule<> r_command  = *(space_p) >> (list_of_assignement | assignement_vector)    >> *(anychar_p);
+
+ rule<> r_command  = *(space_p) >> (list_of_assignement )    >>   *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
+ // *(anychar_p);  
+
+  //  possibly COMMENTs after list_of_assignement !
+
+
+  rule<> r_command_vector  = *(space_p) >> (assignement_vector)    >> *(anychar_p);
 
 
 
-    while ( getline(in_stream, str) )
+
+
+  while ( getline(in_stream, str) )
     {
 
-      //    if ( (!(parse(str.c_str(), *(ch_p('#')), space_p).full) )   /// not a comment !! comment_p("//")
-      if ( (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
-	   && (! (parse(str.c_str(), (*alpha_p)[assign_a(name)]   , space_p).full) ) ) // not  End !
-
-
+   
+      if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
 
 	{ // if !  comment_p("#")  
 
-	  //  cout << name<< "  ???????????    " << endl;
+	 
 
 	  if (  parse(str.c_str(),
 
 		      //  Begin  grammar
-		      // (
-		       //     real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)])
-		       //  (+alpha_p)[assign_a(name)] >> real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)])
-
-		       //  (+alnum_p)[assign_a(name)] >> *(ch_p(','))>> real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)]) >> *(ch_p('#'))>>*(alpha_p) 
-			//  (+alnum_p)[assign_a(name)] >> *(ch_p(','))>> list_of_numbers >> *(ch_p('#'))>>*(alpha_p)
-		      //	r
+		      
 		      r_command 
-		       )
 
-		      //  ,
-		      //  End grammar
+		      )
 
-		      //  space_p).full )
-		      .full )           //  not skipping spaces
+		//  ,
+		//  End grammar
+
+		//  space_p).full )
+		.full )           //  not skipping spaces
 
 
 	    { // if parse
 
-	      //   cout << name<< "  material    " << endl;
-	      // counter++;
-
-	     
-	      //   reg_values.push_back(v);
-	      //   command_values.push_back(v);
-	      //    cout << "*******" << v[0]<< v[1] << v[2]<<endl;
-
-
-	      ////     cout << "labels   " << v_label[0]<< endl ;  //v_label[1] << v_label[2]<< endl;
-	      ////	     cout << "labels_bool   " << v_label_bool[0]<< endl ;  //v_label[1] << v_label[2]<< endl;
-
-	      ////	     cout << " ************* v_label.size(), v_label_bool.size()   " << v_label.size()<<"  "<< v_label_bool.size()<< endl;
-
-	      for (int i =0; i< v.size();++i)
-		{
-		  prop_labels.push_back(v_label[i]);
-		  prop_labels_map.insert(make_pair(v_label[i], v[i]) );
-		}
-
-	      for (int i =0; i< v_label_bool.size();++i)
-		{
-		  bool_prop_labels.push_back(v_label_bool[i]);
-		  bool_prop_labels_map.insert(make_pair(v_label_bool[i], v_bool[i]) );
-		}
-
 	     
 
+	      if ( !(v.empty()) )
 
-	      //   cout << "scalar  data   " << v[0] << "  " << v[1]<< "  "  << v[2]<< endl ; //<< "  "  << vect[3] <<  endl ;
-	      //   cout  <<  "  v_bool ---------  "  << v_bool[0]<<  endl ;
+		{
 
-		     //   cout << "vector  data   " << vect[0] ;
+		  if ( !(v_int.empty()) )
+		    {
+		      cout << "v_int[0-------------- "<< v_int[0]<< endl;
+		    }
 
-	      //  mat.push_back(mat_name);
-	      //  reg_id.push_back(id);
-
-
-	      //  cout << reg_values.size();
-	      //   cout << reg_values[0][0] << " reg_values[0][0]     " << endl;
-
-	   //    v.clear();
-// 	      v_label.clear();
-// 	      //   vect.clear();
-// 	      vect_label.clear();
-// 	      v_label_bool.clear();
-// 	      v_bool.clear();
+		  for (int i =0; i< v.size();++i)
+		    {
+		      prop_labels.push_back(v_label[i]);
+		      
+		      prop_labels_map.insert(make_pair(v_label[i], v[i]) );
+		    }
+		}
 
 
-	      v_label_bool.clear();
+	      if ( !(v_string.empty()) )
+		{
+
+		  for (int i =0; i< v_label_string.size();++i)
+		    {
+		      string_prop_labels.push_back(v_label_string[i]);
+		      string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
+		    }
+		}
+	     
+
+
+	      
+
+	      v_label_string.clear();
 	      vect_label.clear();
 	      v_label.clear();
-	      v_bool.clear();
+	      v_string.clear();
  	      v.clear();
+	      v_int.clear();
 
 
-
-	     //  mat_name= "";
-// 	      id = 0;
+	    
 
 	    }
 
-	  else if(  parse(str.c_str(),  r_command_vector   )   .full )           //  not skipping spaces
+	  else if(  parse(str.c_str(),  r_command_vector   )   .full ) //  not skipping spaces
 	    //  reads  list of  values (vector)
 
 	    {
 
+	      if ( !(v.empty()) )
+		{
+		  vector_prop_labels.push_back(vect_label[0]);
+		  
+		  vector_prop_labels_map.insert(make_pair(vect_label[0], v) );
 
-	      vector_prop_labels.push_back(vect_label[0]);
-	      //  for (int i =0; i< v.size();++i)
-	      //  	{
-		 
-	      vector_prop_labels_map.insert(make_pair(vect_label[0], v) );
-
-		  // 	}
-
-	      ////	     cout << " v_label[0]  " << v_label[0]<< endl ; 
-	      ////   cout << " vect_label  " << vect_label[0]<< endl ;
-	      ////    cout << "vector  data   " << v[0] << "  " << v[1]<< "  "  << v[2]<< endl ; //<< "  "  << vect[3] <<  endl ;
-
-	     //  v.clear();
-// 	      v_label.clear();
-// 	      vect_label.clear();
-
-	      
-	      v_label_bool.clear();
-	      vect_label.clear();
-	      v_label.clear();
-	      v_bool.clear();
- 	      v.clear();
-
-
-
-
-
-	    }
-
-
-	}
-
-
-     
-
-      if (name == "End")
-	{  
-	  //cout << name  << endl ;
-	  break;
-	}
-
- //  OK  ***************
-    //   else
-// 	{
-// 	  getline(in_stream, str);
-// 	}
- //  OK  ***************
-
-
-
-      
-
-    }  //  end  while
-
-
-}
-
-
-// *********************************
-// END  NEW: COMMAND  SECTION
-// *********************************
-
-
-
-// ******************************************
-//  CASE WITH  SPACE SEPARATED  LIST !!
-// ******************************************
-//void InputParser::parse_1(ifstream& in_stream )
-void InputParser::parse_regions(ifstream& in_stream )
-
-
-  //void parse_1(ifstream& in_stream )
-
-{
-
- 
-
-  string name, str, mat_name ;
-  name = "Start";
-  int id;
-
-    vector<double> v;
-    v.clear();
-
-  
-   
- 
-
- //  rule<phrase_scanner_t>composition = ch_p('(') >> real_p >> ch_p(')');
-//   rule<phrase_scanner_t>material = (+alnum_p)>> *(composition) >> *(alnum_p);
-
-//  rules  for  space  separated  list  (character level parsing)  !!!!!
- rule<>composition = ch_p('(') >> real_p >> ch_p(')');
-  rule<>material = (+alnum_p)>> *(composition) >> *(alnum_p);
-
-
-
-  //ok !!  //  rule<phrase_scanner_t>list_of_numbers = real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)]);
-  //  rule<phrase_scanner_t> r = uint_p >> ch_p(',')>> material[assign_a(name)] >> *(ch_p(','))>>list_of_numbers >> *(ch_p('#'))>>*(alpha_p);
-
- 
-  //  space  separated  list (instead  of  comma  separated)
- rule<>list_of_numbers_space_sep = real_p[push_back_a(v)] >> *( *(space_p) >> real_p[push_back_a(v)]);
- rule<> r = *(space_p)   >> uint_p[assign_a(id)] >> *(space_p)   >> material[assign_a(mat_name)] >> *(space_p)>>list_of_numbers_space_sep  >> *(anychar_p);
-
-    //(space_p)>>*(ch_p('#'))>> *(alpha_p);
-
-
-
-
- // rule<phrase_scanner_t>r = real_p >> *(ch_p(',') >> real_p);
-
-  getline(in_stream, str);
-
-  while (!(str.empty()))
-    {
-
-      //    if ( (!(parse(str.c_str(), *(ch_p('#')), space_p).full) )   /// not a comment !! comment_p("//")
-      if ( (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
-	   && (! (parse(str.c_str(), (*alpha_p)[assign_a(name)]   , space_p).full) ) ) // not  End !
-
-
-
-	{
-
-	  //  cout << name<< "  ???????????    " << endl;
-
-	  if (  parse(str.c_str(),
-
-		      //  Begin  grammar
-		      // (
-		       //     real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)])
-		       //  (+alpha_p)[assign_a(name)] >> real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)])
-
-		       //  (+alnum_p)[assign_a(name)] >> *(ch_p(','))>> real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)]) >> *(ch_p('#'))>>*(alpha_p) 
-			//  (+alnum_p)[assign_a(name)] >> *(ch_p(','))>> list_of_numbers >> *(ch_p('#'))>>*(alpha_p)
-			r
-
-		       )
-		      //  ,
-		      //  End grammar
-
-		      //  space_p).full )
-		      .full )           //  not skipping spaces
-
-
-	    {
-
-	      //   cout << name<< "  material    " << endl;
-	      // counter++;
+		}
 
 	     
-	      reg_values.push_back(v);
-	      mat.push_back(mat_name);
-	      reg_id.push_back(id);
+
+	      
+	      v_label_string.clear();
+	      vect_label.clear();
+	      v_label.clear();
+	      v_string.clear();
+ 	      v.clear();
+
+	    }
 
 
-	      //  cout << reg_values.size();
-	      //   cout << reg_values[0][0] << " reg_values[0][0]     " << endl;
-	      v.clear();
-	      mat_name= "";
-	      id = 0;
+	  //	  else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)]]  , space_p).full)
+	  else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >>
+						 ch_p("$")  ] , space_p ).full)
 
+
+	    {
+	      if (name == "End")
+
+		{  
+		  cout << name  << endl ;
+		  break;
+		}
+
+
+	    }
+
+
+
+	  else  
+
+	    {
+	      cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+	      cerr << " Correct syntax is : 'label' = 'value' 'label' = 'value' .......# 'comment' " 
+		   << endl;
+	      cerr << " A comment line  must be preceded by '#' "<< endl;
+	      cerr << " BEWARE: numerical and string values cannot  be  mixed  in  the  same line !"
+		   << endl;
+	      exit(1); 
 	    }
 
 
 	}
 
 
+      v_label_string.clear();
+      vect_label.clear();
+      v_label.clear();
+      v_string.clear();
+      v.clear();
+      v_int.clear();
      
 
-      if (name == "End")
-	{  
-	  cout << name  << endl ;
-	  break;
-	}
-      else
-	{
-	  getline(in_stream, str);
-	}
+      //    if (name == "End")
+      // 	{  
+      // 	  cout << name  << endl ;
+      // 	  break;
+      // 	}
+
+
+
+      //  OK  ***************
+      //   else
+      // 	{
+      // 	  getline(in_stream, str);
+      // 	}
+      //  OK  ***************
 
 
 
@@ -491,290 +367,31 @@ void InputParser::parse_regions(ifstream& in_stream )
     }  //  end  while
 
 
-
-
-  // cout << reg_values[1].size() << endl;
-   
-
- //  for (vector<double>::size_type i = 0; i < v.size(); ++i)
- //               cout << i << ": " << v[i] << endl;
-
-
-//   for (int i =0; i< reg_values.size();++i)
-// {
-
-//   cout <<  "reg # " <<  reg_id[i]<< "   " <<  mat[i]<< "  material    " << endl;
-//    for (int j = 0; j< reg_values[i].size();++j)
-//   cout << i<< "  "<< j << ": " << reg_values[i][j] << endl;
-
-// }
-
-
-
 }
 
 
-
-
-// ******************************************
-//  CASE WITH  COMMA SEPARATED  LIST !!
 // *********************************
-//void InputParser::parse_2(ifstream& in_stream )
-void InputParser::parse_comma(ifstream& in_stream )
+// END  OPTIONS(COMMAND)  SECTION
+// *********************************
 
 
-{
+// find section = section name (from input) and  parses  just  that  section
 
- 
-
-  string name, str;
-  name = "Start";
-
-    vector<double> v;
-
-  getline(in_stream, str);
-
-  while (!(str.empty()))
-    {
-
-      //    if (!(parse(str.c_str(), *(ch_p('#')), space_p).full) )   /// not a comment !!
-
-      if ( (!(parse(str.c_str(), *(ch_p('#')), space_p).full) )   /// not a comment !!
-	   && (! (parse(str.c_str(), (*alpha_p)[assign_a(name)]   , space_p).full) ) )
-
-
-
-	{
-
-	  if (  parse(str.c_str(),
-
-		      //  Begin  grammar
-		      (
-		       //     real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)])
-		       //  (+alpha_p)[assign_a(name)] >> real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)])
-
-		       (real_p[push_back_a(v)])  >>  *(space_p) >> real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)]) >> *(ch_p('#'))>>*(alpha_p) 
-
-
-		       )
-		      ,
-		      //  End grammar
-
-		      space_p).full )
-	    {
-
-	      cout << name<< "  B.C.    " << endl;
-
-	
-
-
-	    }
-
-
-	}
-
-
-     
-
-      if (name == "End")
-	{  
-	  cout << name  << endl ;
-	  break;
-	}
-      else
-	{
-	  getline(in_stream, str);
-	}
-
-
-
-      
-
-    }  //  end  while
-
-
-
-
-   
-
-  for (vector<double>::size_type i = 0; i < v.size(); ++i)
-                cout << i << ": " << v[i] << endl;
-
-
-}
-
-
-
-
-
-// parse  BC  section with  space  separation
-void InputParser::parse_BC(ifstream& in_stream )
-
- 
+//void InputParser::find_section(string file_name)
+void InputParser::read_section(string& section_name)
 
 {
 
-  int id;
+  bool found = false;
+  std::string str;
 
-  string name, str, BC_type;
-  name = "Start";
+  //  std::ifstream in_stream (file_name.c_str());
+  std::ifstream in_stream (filename.c_str());
 
-    vector<double> v;
 
-    rule<> BC_type_name = (str_p("Dir") | str_p("Neum") | str_p("Mixed"));
+  string name;
 
-  //  space  separated  list (instead  of  comma  separated)
- rule<>list_of_numbers_space_sep = real_p[push_back_a(v)] >> *( *(space_p) >> real_p[push_back_a(v)]);
- // rule<> r = *(space_p)   >> uint_p[assign_a(id)] >> *(space_p)   >>  list_of_numbers_space_sep  >> *(space_p) >>(+alpha_p)>> *(comment_p("#"));
- rule<> r = *(space_p)   >> uint_p[assign_a(id)] >> *(space_p)   >>  list_of_numbers_space_sep  >> *(space_p) >> (+BC_type_name)[assign_a(BC_type)]  >> *(space_p) >>  *(comment_p("#"));
-
-
-
-
-
-  getline(in_stream, str);
-
-  while (!(str.empty()))
-    {
-
-      //    if (!(parse(str.c_str(), *(ch_p('#')), space_p).full) )   /// not a comment !!
-
-      if ( (!(parse(str.c_str(), *(ch_p('#')), space_p).full) )   /// not a comment !!
-	   && (! (parse(str.c_str(), (*alpha_p)[assign_a(name)]   , space_p).full) ) )
-
-
-
-	{
-
-	  if (  parse(str.c_str(),
-
-		      //  Begin  grammar
-		      //  (
-		       //     real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)])
-		       //  (+alpha_p)[assign_a(name)] >> real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)])
-
-		      //   (real_p[push_back_a(v)])  >>  *(space_p) >> real_p[push_back_a(v)] >> *(',' >> real_p[push_back_a(v)]) >> *(ch_p('#'))>>*(alpha_p) 
-
-
-		      //  )
-		      // ,
-		      r )
-		      //  End grammar
-
-		//   space_p)
-		.full )
-	    {
-
-	      cout << name<< "  B.C.    "<< BC_type << endl;
-
-	
-
-
-	    }
-
-
-	}
-
-
-     
-
-      if (name == "End")
-	{  
-	  cout << name  << endl ;
-	  break;
-	}
-      else
-	{
-	  getline(in_stream, str);
-	}
-
-
-
-      
-
-    }  //  end  while
-
-
-
-
-   
-
-  for (vector<double>::size_type i = 0; i < v.size(); ++i)
-                cout << i << ": " << v[i] << endl;
-
-
-}
-
-
-
-
-
-
-
-
-void InputParser::read_data_section(char const* str,ifstream& in_stream )
-// void InputParser::read_data_section(char const* str)
-
-
-   // void read_data_section(char const* str,ifstream& in_stream )
-
-{
-
- string name;
-
- if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p]  , space_p).full)
-   {
-     //cout << name<< endl;
-     if (name == "Regions")
-       //	if (name == name_data )
-       {
-	 //  parse_1(in_stream);
-	 parse_regions(in_stream);
-
-       }
-
-     else if  (name == "Boundary")
-       {
-	 //  parse_2(in_stream);
-	 // parse_comma(in_stream);
-	 parse_BC(in_stream);
-
-       }
-
-     else if  (name == "Options")
-       {
-	 //  parse_2(in_stream);
-	 // parse_comma(in_stream);
-	 parse_command(in_stream);
-
-       }
-
-
-
-
-
-
-   }
-
-
-
-}
-
-
-
-
-
-void InputParser::scan_input(string file_name)
-
-{
-
- std::string str;
-
-  std::ifstream in_stream (file_name.c_str());
-
-
-
- if ( !in_stream.good() )
+  if ( !in_stream.good() )
     {
       std::cerr << "ERROR: Input file not good." 
 		<< std::endl;
@@ -782,39 +399,72 @@ void InputParser::scan_input(string file_name)
     }
 
 
-  //cout << "/////////////////////////////////////////////////////////\n\n";
-  //cout << "\t\tA space  separated list parser for Spirit...\n\n";
-  //cout << "\t\t read  from file in  section Data section \n\n";
-  //
-  //cout << "/////////////////////////////////////////////////////////\n\n";
-
-
-  getline(in_stream, str);
-  while (str.empty() )
-    {
-      getline(in_stream, str);
-    }
-
-    read_data_section(str.c_str(),in_stream);
-    //  read_data_section(str.c_str());
-
 
   while (getline(in_stream, str))  //   
-    {
-           read_data_section(str.c_str(),in_stream);
-	   //  read_data_section(str.c_str());
+    { //while
 
+      //  if  (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)]>> ch_p("$")].else_p[nothing_p] ).full)
+      if  (parse(str.c_str(), if_p("$")[(+(~ch_p('$')))[assign_a(name)]>>
+					ch_p("$")].else_p[nothing_p] ).full)
+
+
+	{
+	  cout << name<< endl;
+
+	  //	  if ((name == section_name) && (name == "Regions"))
+	  if  (name == section_name) 
+	    {
+	      found = true;
+
+	      if  (section_name == "Regions")
+
+		//	  if (  (section_name == "Regions") && (name == section_name))
+
+		{
+		  parse_device(in_stream);
+		}
+	      else if  (section_name == "BC_Regions")
+
+		{
+		  parse_device_BC(in_stream);
+		}
+
+	      else 
+		//if (name == section_name)
+      
+		//   {parse_command(in_stream);}
+		{
+		  parse_options(in_stream);
+		}
+
+	    }
+
+
+	}
 
     }
 
+  if (found == false)
 
+    {
+      cerr << " Error: Section not  found  " << endl ;
+      exit(1);
+
+    }
+
+  in_stream.close();
 
 
 
 }
 
 
-void  InputParser::get_data ( vector< vector<double> >& glob_reg_values, vector< vector<double> >& glob_comm_values  , vector<int>& glob_reg_id,  vector<string>& glob_mat    )
+
+
+
+void  InputParser::get_data ( vector< vector<double> >& glob_reg_values,
+			      vector< vector<double> >& glob_comm_values,
+			      vector<int>& glob_reg_id,  vector<string>& glob_mat)
 {
   glob_reg_values = reg_values;
   glob_reg_id = reg_id;
@@ -837,36 +487,27 @@ double InputParser::read_input( string label , double  Default)
 
   //  for (int i =0; i< prop_labels.size();++i)
   //   {
-      p = prop_labels_map.find( label  );
+  p = prop_labels_map.find( label  );
 
-      if  (p != prop_labels_map.end() )
+  if  (p != prop_labels_map.end() )
 
-	{  
-	  value  =  (p -> second) ;
+    {  
+      value  =  (p -> second) ;
 	
 
-	  //  cout << endl <<  "BC #"<< BC_reg_numbers[i] << "   " << endl; 
-	  // 	for (int i =0; i< temp.size();++i)
-	  // 		  {
+     
+      return value ;
 
-	  // 		    if ( (i % 3) ==  0)     cout << endl; 
+    }
 
-	  // 		    cout <<  temp[i] << "   " ;  //<< endl; 
+  else 
+    { 
+      cout  <<  "*** Default ***  ";
 
-	  // 		  }
-	  // 		cout << endl; 
-	  return value ;
-
-	}
-
-      else 
-	{ 
-	  //cout  <<  "*** Default ***  ";
-
-	  return Default;
-	  //  cout  <<  "error"  ;
-	}
-      //  }
+      return Default;
+      //  cout  <<  "error"  ;
+    }
+  //  }
 
 }
 
@@ -881,26 +522,26 @@ int  InputParser::read_input( string label , int  Default)
 
   //  for (int i =0; i< prop_labels.size();++i)
   //    {
-      p = prop_labels_map.find( label  );
+  p = prop_labels_map.find( label  );
 
-      if  (p != prop_labels_map.end() )
+  if  (p != prop_labels_map.end() )
 
-	{  
-	  value  =  (int)(p -> second) ;
+    {  
+      value  =  (int)(p -> second) ;
 	
 
 	 
-	  return value ;
+      return value ;
 
-	}
+    }
 
-      else
-	{
-	  //cout  <<  "*** Default ***  ";
-	  return Default;
-	  //	  cout  <<  "error"  ;
-	}
-      //   }
+  else
+    {
+      cout  <<  "*** Default ***  ";
+      return Default;
+      //	  cout  <<  "error"  ;
+    }
+  //   }
 
 }
 
@@ -915,127 +556,127 @@ string   InputParser::read_input( string label , string  Default)
 
   //  for (int i =0; i< prop_labels.size();++i)
   //    {
-      p = bool_prop_labels_map.find( label  );
+  p = string_prop_labels_map.find( label  );
 
-      if  (p != bool_prop_labels_map.end() )
-
-	{  
-	  value  =  (p -> second) ;
-	
-
-	 
-	  return value ;
-
-	}
-
-      else
-	{
-	  //cout  <<  "*** Default ***  ";
-	  return Default;
-	  //  cout  <<  "error"  ;
-	}
-      //   }
-
-}
-
-
-
-// // *****  bool  return
-// bool   InputParser::read_input( string label , bool  Default)
-// {
-//   string  value;
-//   map <string,string>  :: iterator  p;
-//   bool true;
-//   bool  false;
-
-
-
-
-//   //  for (int i =0; i< prop_labels.size();++i)
-//   //    {
-//   p = bool_prop_labels_map.find( label  );
-
-//   if  (p != bool_prop_labels_map.end() )
-
-//     {  
-//       value  =  (p -> second) ;
-	 
-//       //	if ( strncmp (str[n],"C3**",2) == 0)
-
-//       if ( (strncmp ( value ,"true") == 0) )
-
-// 	{ 
-// 	  return true;
-
-// 	}
-//       else if  ( (strncmp ( value ,"false") == 0) )
-// 	{ 
-// 	  return false;
-
-// 	}
-
-
-	 
-//       return value ;
-
-//     }
-
-//   else
-//     {
-//       cout  <<  "*** Default ***  ";
-//       return Default;
-//       //  cout  <<  "error"  ;
-//     }
-//   //   }
-
-// }
-
-
-
-
-
-
-
-void InputParser::read_input_vector( string label , vector<double>& return_vector)
-
-{
- 
-  map <string, vector<double> >   :: iterator  p;
-
-
-  //  for (int i =0; i< vector_prop_labels.size();++i)
-  //   {
-  p = vector_prop_labels_map.find( label  );
-
-  if  (p != vector_prop_labels_map.end() )
+  if  (p != string_prop_labels_map.end() )
 
     {  
-      return_vector    =  (p -> second) ;
+      value  =  (p -> second) ;
 	
 
+	 
+      return value ;
 
     }
 
   else
-    cout  <<  "error --- read_input_vector  " << endl ;
+    {
+      cout  <<  "*** Default ***  ";
+      return Default;
+      //  cout  <<  "error"  ;
+    }
   //   }
 
 }
 
 
 
-
-void InputParser::read_input_vector( string label , vector<int>& return_vector)
+////*****  bool  return  :  overload  not  possible :  why  ???
+//bool   InputParser::read_input( string label_bool , bool  default_bool)
+bool   InputParser::read_input( string label_string )
 
 {
- 
+  string  value;
+  map <string,string>  :: iterator  p;
+  bool flag;
+  flag = 0;//default_bool ;
+
+
+
+
+  //  for (int i =0; i< prop_labels.size();++i)
+  //    {
+  p = string_prop_labels_map.find( label_string  );
+
+  if  (p != string_prop_labels_map.end() )
+
+    {  
+      value  =  (p -> second) ;
+	 
+      //	if ( strncmp (str[n],"C3**",2) == 0)
+
+
+      // s.compare(s1);
+
+      if  (  (value.compare("true")) == 0 )  
+
+	{ 
+	  flag = 1 ;//true;
+	  return flag;
+
+	}
+      else if  (  (value.compare("false")) == 0 ) 
+	{ 
+	  flag = 0;// false;
+	  return flag;
+
+	}
+
+
+	 
+      //     return value ;
+
+    }
+
+  else
+    {
+      cout  <<  "*** Default ***  ";
+      return flag ;
+      //  cout  <<  "error"  ;
+    }
+  //   }
+
+}
+
+
+
+//  NEW  *********************
+// overload  for   vector 
+
+vector<double> InputParser::read_input( string label, vector<double> def_vector)
+{
+
   map <string, vector<double> >   :: iterator  p;
 
+  vector<double>  return_vector;
+
+  p = vector_prop_labels_map.find( label  );
+
+  if  (p != vector_prop_labels_map.end() )
+
+    {  
+      return_vector    =  (p -> second) ;
+      return  return_vector;
+
+    }
+
+  else
+    cout  <<  "Warning --- read_input_vector double: vector data empty or  missing  " << endl ;
+
+
+}
+
+
+vector<unsigned int> InputParser::read_input( string label, vector<unsigned int> def_vector)
+{
+
+  map <string, vector<double> >   :: iterator  p;
+
+  vector<unsigned int>  return_vector;
   vector<double> temp;
   return_vector.clear();
 
-  //  for (int i =0; i< vector_prop_labels.size();++i)
-  //   {
+
   p = vector_prop_labels_map.find( label  );
 
   if  (p != vector_prop_labels_map.end() )
@@ -1053,11 +694,392 @@ void InputParser::read_input_vector( string label , vector<int>& return_vector)
 
 	}
 
+      return  return_vector;
 	
     }
 
   else
-    cout  <<  "error --- read_input_vector  "  ;
-  //  }
+    cout  <<  "Warning --- read_input_vector int: vector data empty or  missing " << endl ;
+
 
 }
+
+
+
+//  END  NEW for  vectors  *********************
+// ************************************************
+
+
+
+
+void InputParser::read_data_maps( map <string,double>& num_map, map <string,string>&  string_map, 
+				  map <string, vector<double> >&  vector_map) const
+
+{
+
+  num_map = prop_labels_map;
+  string_map =string_prop_labels_map ;
+  vector_map = vector_prop_labels_map ;
+
+
+}
+
+
+
+
+
+
+
+void InputParser::parse_device(ifstream& in_stream )
+
+{
+
+  // *******************************************************************************************************
+  //  ***** IDEA:  List  of regions :
+  //  $Regions$
+  //  Reg 1 name {  reg_numb = 1  mat= Si  doping = 1e18 dop_type = donor}
+  // .....................................................
+  // $End$
+
+  // $Bound_cond$
+  // BC_name {  BC_numb = 1  type = dirichlet  value =  1.0 }
+  //   $End$
+  //
+  //  vector<struct> ,   struct  ={  reg_n , reg_name, mat, dop_conc , dop type } 
+
+  //   struct region_definition {
+
+  //     unsigned int  reg_numb;
+  //     string  reg_name;
+  //     double  dop_conc  ;
+  //     string dop_type;
+
+  //   };
+
+  //   region_definition reg_def;
+
+  //   vector<reg_def> device_regions;
+
+  vector<double> v_real; 
+  vector<int> v_int;
+  vector<string> v_string;
+
+  string  name,str;
+
+  RegionDefinition  current_region;  //   struct *************
+  device_regions.clear();
+
+
+  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/') | ch_p('+')  );
+  rule<>region_name = (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
+  rule<>string_value     = (+alnum_p)>>   * (  (special_char )      >> *(+alnum_p) ) ;
+
+
+  rule<>assignement_double  =   *(space_p) >> ch_p('=')>> *(space_p) >> 
+    ( real_p[push_back_a(v_real)])>>*(space_p)   ; // with _ !!
+  rule<>assignement_int  =   *(space_p) >> ch_p('=')>> *(space_p) >>
+    ( int_p[push_back_a(v_int)])>>*(space_p)  ; // with _ !!
+  rule<>assignement_string  =   *(space_p) >> ch_p('=')>> *(space_p) >>
+    ( (string_value)[push_back_a(v_string)])>>*(space_p)  ; 
+
+
+//   string label1, label2, label3, label4;
+//   label1 = "reg_numb";
+//   label2 = "mat";
+
+// ******************************
+//  TO DO:  add label  "crystal_struct" 
+// ****************************
+//   label3 = "doping";
+//   label4 = "dop_type";
+
+  rule<>label1_p = str_p("reg_numb");
+  rule<>label2_p = str_p("mat");
+  rule<>label3_p = str_p("doping");
+  rule<>label4_p = str_p("dop_type");
+
+  rule<> reg_prop = *(space_p) >>(label1_p) >> assignement_int >> 
+    (label2_p) >>  assignement_string  >> (label3_p)>> 
+    assignement_double >>  (label4_p) >> assignement_string;   
+
+  rule<> r_region = *(space_p)>>region_name[push_back_a(v_string)] >> 
+    *(space_p) >> (ch_p('{'))>>  reg_prop >>*(space_p) >> (ch_p('}'))>> *(space_p) ; 
+
+
+  while ( getline(in_stream, str) )
+    {
+
+
+      if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
+
+	{ // if !  comment_p("#")  
+
+	 
+
+	  if (  parse(str.c_str(),
+		      r_region
+		      )
+		.full )  
+	    {
+	     //  //   cout << "v_real[0] " << v_real[0]<< endl;
+// 	      current_region.reg_name = v_string[0];
+// 	      current_region.reg_numb = v_int[0];
+// 	      current_region.mat_name = v_string[1];
+// 	      current_region.dop_conc = v_real[0];
+// 	      current_region.dop_type = v_string[2];
+
+	      // using  class  RegionDefinition 
+	      current_region.set_region_name(v_string[0]);
+	      current_region.set_region_number(v_int[0]);
+	      current_region.set_material_name(v_string[1]);
+	      current_region.set_doping_concentration( v_real[0]);
+	      current_region.set_doping_type(v_string[2]);
+
+
+
+	      device_regions.push_back(current_region); // vector  of  RegionDefinition objects
+
+	      //   cout << "device_regions[0].mat_name  " <<device_regions[0].mat_name  << endl;
+
+	      //    cout << "current_region.mat_name " <<current_region.mat_name << endl;
+	      //    cout << v_int.size()<< endl;
+	      //   cout << "in parse_device: device_regions.size()  " << device_regions.size();
+
+
+	    }
+
+
+	  else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >> 
+						 ch_p("$")  ] , space_p ).full)
+
+
+	    {
+	      if (name == "End")
+		{  
+		  cout << name  << endl ;
+		  break;
+		}
+
+
+	    }
+
+	  else 
+	    {
+	      cerr <<  "  SYNTAX ERROR in input  file (section device structure)   " <<  endl;
+	      exit(1); 
+	    }
+
+
+
+
+
+	}
+
+
+      v_real.clear();
+      v_int.clear();
+      v_string.clear();
+
+
+    }  //  end  while
+
+
+
+}
+
+
+
+const  vector<RegionDefinition>&   InputParser::get_device_regions()
+
+{
+
+  return  device_regions;
+
+
+}
+
+
+
+
+
+// void InputParser::get_device_data( vector<string>& reg_name_v,vector<unsigned int>& reg_numb_v,
+// 				   vector<string>& mat_name_v, vector<double>& dop_conc_v, 
+// 				   vector<string>&  dop_type_v   )
+
+// {
+
+//   //  cout << "device_regions.size()" << device_regions.size();
+
+//   for (int i =0; i< device_regions.size();++i)
+//     {
+
+//       reg_name_v.push_back(device_regions[i].reg_name);
+//       reg_numb_v.push_back(device_regions[i].reg_numb);
+//       //  cout << "device_regions[i].mat_name" << 
+//       //	device_regions[i].mat_name<< endl;
+	
+
+//       mat_name_v.push_back(device_regions[i].mat_name);
+//       //  cout << " mat_name_v "<< mat_name_v[i]<< endl ; 
+
+//       dop_conc_v.push_back(device_regions[i].dop_conc);
+//       dop_type_v.push_back(device_regions[i].dop_type);
+
+//     }
+
+
+// }
+
+
+
+
+
+
+
+
+
+void InputParser::parse_device_BC(ifstream& in_stream )
+
+{
+
+  // *******************************************************************************************************
+  //  ***** IDEA:  List  of regions :
+ 
+
+  // $Bound_cond$
+  // BC_name {  BC_numb = 1  type = dirichlet  value =  1.0 }
+  //   $End$
+  //
+ 
+
+  //   region_definition reg_def;
+
+  //   vector<reg_def> device_regions;
+
+  vector<double> v_real; 
+  vector<int> v_int;
+  vector<string> v_string;
+
+  string  name,str;
+
+ //  RegionDefinition  current_region;  //   struct *************
+//   device_regions.clear();
+
+
+  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/') | ch_p('+')  );
+  rule<>region_name = (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
+  rule<>string_value     = (+alnum_p)>>   * (  (special_char )      >> *(+alnum_p) ) ;
+
+
+  rule<>assignement_double  =   *(space_p) >> ch_p('=')>> *(space_p) >> 
+    ( real_p[push_back_a(v_real)])>>*(space_p)   ; // with _ !!
+  rule<>assignement_int  =   *(space_p) >> ch_p('=')>> *(space_p) >>
+    ( int_p[push_back_a(v_int)])>>*(space_p)  ; // with _ !!
+  rule<>assignement_string  =   *(space_p) >> ch_p('=')>> *(space_p) >>
+    ( (string_value)[push_back_a(v_string)])>>*(space_p)  ; 
+
+
+//   string label1, label2, label3, label4;
+//   label1 = "BC_reg_numb";
+//   label2 = "type";
+//   label3 = "value";
+//   // label4 = "dop_type";
+
+  rule<>label1_p = str_p("BC_reg_numb");
+  rule<>label2_p = str_p("type");
+  rule<>label3_p = str_p("value");
+  //  rule<>label4_p = str_p("dop_type");
+
+  rule<> reg_prop = *(space_p) >>(label1_p) >> assignement_int >> 
+    (label2_p) >>  assignement_string  >> (label3_p)>> 
+    assignement_double; 
+    // >> (label4_p) >> assignement_string;   
+
+  rule<> r_region = *(space_p)>>region_name[push_back_a(v_string)] >> 
+    *(space_p) >> (ch_p('{'))>>  reg_prop >>*(space_p) >> (ch_p('}'))>> *(space_p) ; 
+
+
+  while ( getline(in_stream, str) )
+    {
+
+
+      if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
+
+	{ // if !  comment_p("#")  
+
+	 
+
+	  if (  parse(str.c_str(),
+		      r_region
+		      )
+		.full )  
+	    {
+	      //   cout << "v_real[0] " << v_real[0]<< endl;
+
+	      BC_region_name_v.push_back(v_string[0]);
+	      BC_region_number_v.push_back(v_int[0]);
+	      BC_type_v.push_back(v_string[1]);
+	      BC_value_v.push_back(v_real[0]);
+
+
+
+	    }
+
+
+	  else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >> 
+						 ch_p("$")  ] , space_p ).full)
+
+
+	    {
+	      if (name == "End")
+		{  
+		  cout << name  << endl ;
+		  break;
+		}
+
+
+	    }
+
+	  else 
+	    {
+	      cerr <<  "  SYNTAX ERROR in input  file (section device boundary cond. )   " <<  endl;
+	      exit(1); 
+	    }
+
+	 
+
+
+	}
+
+
+      v_real.clear();
+      v_int.clear();
+      v_string.clear();
+
+
+    }  //  end  while
+
+
+
+}
+
+
+
+
+void InputParser::get_BC_data( vector<string>& BC_region_name_v_out,
+			       vector<unsigned int>& BC_region_numb_v_out,
+			       vector<string>& BC_type_v_out, vector<double>& BC_value_v_out  )
+
+
+{
+
+
+  BC_region_name_v_out=BC_region_name_v ;
+  BC_region_numb_v_out=BC_region_number_v ;
+  BC_type_v_out = BC_type_v;
+  BC_value_v_out = BC_value_v;
+
+
+
+}
+
