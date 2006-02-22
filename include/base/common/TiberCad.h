@@ -7,9 +7,9 @@ namespace TiberCad
   //! The statistics to be used
   enum Statistics
   {
-    BOLTZMANN,     //! < Boltzmann statistics
-    FERMIDIRAC,    //! < Fermi-Dirac statistics
-    BOSEEINSTEIN   //! < Bose-Einstein statistics
+    BOLTZMANN,     /*!< Boltzmann statistics */
+    FERMIDIRAC,    /*!< Fermi-Dirac statistics */
+    BOSEEINSTEIN   /*!< Bose-Einstein statistics */
   };
 
 };

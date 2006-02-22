@@ -4,6 +4,7 @@
 #define _DRIFTDIFFUSION_H_
 
 #include "SimulationOptions.h"
+#include "DriftDiffusionDefs.h"
 #include "Scaling.h"
 #include "DDevice.h"
 
@@ -39,22 +40,28 @@ template<typename T> class SparseMatrix;
 template<typename T> class TiberPetscNonlinearSolver;
 template<typename T> class NonlinearSolver;
 
+//! The main class to perform standard drift-diffusion calculations
+/*!
+ * TODO
+ * Some more details
+ */
 class DriftDiffusion
 {
   public:
  
-    /**
-     * The solver methods that can be used
-     */
+    //! The solver methods that can be used
     enum SolverMethod
     {
       NEWTON,
       GUMMEL
     };
     
-    /**
-     * This class defines parameters used by the underlying
-     * nonlinear solver
+    //! This class defines parameters used by the underlying
+    //! nonlinear solver
+    /*!
+     *  For details refer to the
+     * <A HREF="http://www-unix.mcs.anl.gov/petsc/petsc-2">online
+     * PETSc documentation</A>.
      */
     class SolverParameters
     {
@@ -72,22 +79,37 @@ class DriftDiffusion
         double linear_abs_tolerance;
         unsigned int linear_max_iterations;
         
-        /**
-         * The line search maximum step size per grid point
-         */
+        //! The line search maximum step size per grid point
         double ls_maxstep;
 
-      private:
-
-        /**
-         * The linear (KSP) solver type
+        //! The linear (KSP) solver type
+        /*!
+         * This defines what type of linear solver to be used. For
+         * details refer to the
+         * <A HREF="http://www-unix.mcs.anl.gov/petsc/petsc-2">online
+         * PETSc documentation</A>.
+         *
+         * \note
+         * Usually \c KSPBCGS or \c KSPBCGSL seem to be the most stable
+         * solver types
          */
         KSPType ksp_type;
 
-        /**
-         * The preconditioner (PC)
+        //! The preconditioner (PC)
+        /*!
+         * This defines the type of preconditioner to be used. For
+         * details refer to the
+         * <A HREF="http://www-unix.mcs.anl.gov/petsc/petsc-2">online
+         * PETSc documentation</A>.
+         *
+         * \note
+         * In most cases \c PCILU seems to be a good choice, but sometimes
+         * there are problems with zero pivot values. In this case, the use of
+         * \c PCJACOBI can solve it.
          */
         PCType pc_type;
+
+      private:
 
         friend class DriftDiffusion;
     };
@@ -99,6 +121,7 @@ class DriftDiffusion
     class Options
     {
       public:
+
         Options(void);
         
         Options(const Options& rhs);
@@ -189,6 +212,13 @@ class DriftDiffusion
          * Can be one of @c NONE, @c UNITS or @c DEMARI
          */
         Scaling::ScalingType scaling_type;
+
+        //! The type of coupling to be used
+        /*!
+         * We safe it as int, because we want to assign values by
+         * using logic operators, e.g. \code ELECTRONS | POISSON \endcode
+         */
+        int coupling;
 
       private:
         
@@ -355,21 +385,6 @@ class DriftDiffusion
 
 
   private:
-
-    /**
-     * To decide for which type of equation to assemble the matrix
-     *
-     * They are hardcoded to hex values so we can check them easily
-     * using logical operators @c | and @c &
-     */
-    enum EquationType
-    {
-      POISSON = 0x01,
-      ECURRENT = 0x02,
-      HCURRENT = 0x04,
-      FULLYCOUPLED = 0x07,
-      CURRENTS = 0x06
-    };
 
     /**
      * Are we doing equilibrium or nonequilibrium calculation?
@@ -550,7 +565,8 @@ class DriftDiffusion
     static int find_boundary(const Elem* elem, int side,
       const Elem* top_parent);
 
-    /**
+    //! Assign boundary value coefficients
+    /*!
      * Assigns boundary value coefficient in a form
      *
      *   du/dn = - coeff * u + value
@@ -560,70 +576,23 @@ class DriftDiffusion
     static void assign_boundary_values(double& coeff, double& value,
         const std::vector<double>& coefficients);
 
+    //! Makes a first guess of the equilibrium potential
     /**
-     * Makes a first guess of the equilibrium potential
-     *
      * It sets every node to its equilibrium potential.
      * TODO: find a better guess...
      */
     void guess_equilibrium(NonlinearImplicitSystem& poisson) const;
 
-    /**
+    //! Assembles the residual vector or the jacobian matrix
+    /*!
      * Assembles the residual vector or the jacobian matrix for
-     * the equation system of @c EquationType T.
+     * the equation system with @c Coupling T.
      *
      * This method gets called from the underlying nonlinear solver
      * library
      */
-    //template <EquationType T, int dim>
     template <int T>
     static void assemble(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
-
-
-    /**
-     * Assembles the residual vector or the jacobian matrix for
-     * the poisson equation in the equilibrium case, i.e. the quasi
-     * fermi levels are set to zero.
-     *
-     * This method gets called from the underlying nonlinear solver
-     * library
-     */
-    static void assemble_equilibrium(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
-
-    /**
-     * Assembles the residual vector or the jacobian matrix for
-     * the poisson equation.
-     *
-     * This method gets called from the underlying nonlinear solver
-     * library
-     */
-    static void assemble_poisson(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
-
-    /**
-     * Assembles the residual vector or the jacobian matrix for
-     * the electron current equation.
-     *
-     * This method gets called from the underlying nonlinear solver
-     * library
-     */
-    static void assemble_ecurrent(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
-
-    /**
-     * Assembles the residual vector or the jacobian matrix for
-     * the hole current equation.
-     *
-     * This method gets called from the underlying nonlinear solver
-     * library
-     */
-    static void assemble_hcurrent(const NumericVector<Number>& x,
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
 

@@ -1,27 +1,23 @@
-# pn-junction definition
+# $Id$
+
+$Options$
+
+# a 3D piece of bulk semiconductor
 
 
 n_doping = 1e18
 p_doping = 0
 temperature = 300
 
-#polarization_x = 0.0
-#polarization_y = 0.0
-
 #statistics = FD
-#approximation_order = SECOND
 
 meshfile=bulk.msh
 mesh_units = 1e-4
 
-#start_voltage = -0.9
-#stop_voltage = 0.9
-#voltage_steps = 50
-start_voltage = 0.0
-stop_voltage = 0.1
-voltage_steps = 1
+start_voltage = -0.5
+stop_voltage = 0.5
+voltage_steps = 10
 
-#simulation_method = GUMMEL
 
 nonlinear_tolerance = 1e-12
 nonlinear_ls_maxstep = 0.05
@@ -37,8 +33,9 @@ max_refinement_steps=0
 
 uniform_refinement=0
 
-refine_fraction=0.95
+refine_fraction=0.7
 coarsen_fraction=0.0
 max_ref_level=10
 
 
+$End$

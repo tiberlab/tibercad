@@ -2,7 +2,6 @@
 
 #include "DDevice.h"
 #include "ElementData.h"
-#include "SemiconductorModel.h"
 #include "BoundaryData.h"
 #include "BoundaryDescriptor.h"
 

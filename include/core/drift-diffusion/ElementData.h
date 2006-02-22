@@ -7,7 +7,7 @@
 
 // forward declarations
 class Elem;
-class SemiconductorModel;
+class DriftDiffusionProperties;
 
 
 class ElementData
@@ -16,10 +16,10 @@ class ElementData
   public:
 
     typedef std::map<const Elem*,
-            SemiconductorModel*>::iterator iterator;
+            DriftDiffusionProperties*>::iterator iterator;
 
     typedef std::map<const Elem*,
-            SemiconductorModel*>::const_iterator const_iterator;
+            DriftDiffusionProperties*>::const_iterator const_iterator;
 
     const_iterator end(void) const;
 
@@ -28,28 +28,28 @@ class ElementData
     const_iterator find(const Elem* element) const;
   
     void set_data(const Elem* element,
-                  SemiconductorModel* descriptor);
+                  DriftDiffusionProperties* descriptor);
                   
-    SemiconductorModel* get_data(const Elem* element);
+    DriftDiffusionProperties* get_data(const Elem* element);
 
     int get_size(void) const;
     
   private:
   
-    std::map<const Elem*, SemiconductorModel*> _data;
+    std::map<const Elem*, DriftDiffusionProperties*> _data;
     
 };
 
 inline
 void
 ElementData::set_data(const Elem* element,
-                      SemiconductorModel* descriptor)
+                      DriftDiffusionProperties* descriptor)
 {
   _data[element] = descriptor;
 }
 
 inline
-SemiconductorModel*
+DriftDiffusionProperties*
 ElementData::get_data(const Elem* element)
 {
   assert(_data.find(element) != _data.end());

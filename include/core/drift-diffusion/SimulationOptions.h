@@ -8,8 +8,6 @@ class SimulationOptions
 
   public:
 
-    enum Statistics { BOLTZMANN, FERMIDIRAC, BOSEEINSTEIN };
-
     static double temperature;
     static double& temp;
     static double& T;

@@ -12,7 +12,7 @@
 class Mesh;
 class ElementData;
 class BoundaryData;
-class SemiconductorModel;
+class DriftDiffusionProperties;
 class BoundaryDescriptor;
 
 namespace DD {
@@ -20,7 +20,7 @@ class Device
 {
   public:
 
-    typedef std::set<SemiconductorModel*> MaterialList;
+    typedef std::set<DriftDiffusionProperties*> MaterialList;
     typedef MaterialList::iterator material_iterator;
     typedef MaterialList::const_iterator const_material_iterator;
 

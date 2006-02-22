@@ -14,7 +14,7 @@ srcfiles 	:= $(wildcard *.C)
 objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
 
 # dimension of the example
-DIM := 3
+DIM := 2
 # order of the mesh elements (1 or 2)
 ORDER := 1
 
@@ -30,7 +30,7 @@ main: $(objects)
 	@echo "Linking main..."
 	@$(CXX) $(CXXFLAGS) $(objects) $(TIBER_OBJECTS) -o main $(LIBS) $(LDFLAGS) 
 
-run: all bulk.msh
+run: all mesfet.msh
 	@echo "Running example..."
 	@[ -d output ] || mkdir output
 	./main

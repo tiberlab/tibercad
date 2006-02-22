@@ -27,57 +27,10 @@ class SemiconductorModel : public DriftDiffusionProperties
   public:
 
     /**
-     * This structure holds the properties that are calculated by
-     * \p calculate_all()
-     */
-    struct CalculatedProperties
-    {
-      CalculatedProperties(void);
-
-      double ionized_donor_density;
-      double ionized_donor_density_derivative;
-      double ionized_acceptor_density;
-      double ionized_acceptor_density_derivative;
-
-      double electron_density;
-      double electron_density_derivative;
-      double electron_density_2nd_derivative;
-      double electron_mobility;
-      double electron_diffusivity;
-      double dn_over_n;
-
-      double hole_density;
-      double hole_density_derivative;
-      double hole_density_2nd_derivative;
-      double hole_mobility;
-      double hole_diffusivity;
-      double dp_over_p;
-      
-      double electron_conductivity;
-      double electron_conductivity_derivative;
-      double hole_conductivity;
-      double hole_conductivity_derivative;
-
-      double charge_density;
-      std::vector<double> charge_density_derivatives;
-
-      double net_electron_recombination_rate;
-      std::vector<double> net_electron_recombination_rate_derivatives;
-      double net_hole_recombination_rate;
-      std::vector<double> net_hole_recombination_rate_derivatives;
-
-      std::vector<double> polarization;
-    };
-
-    /**
      * This contains all reference material properties for this model
      */
     struct MaterialDescriptor
     {
-      Dopant n_dopant;
-      Dopant p_dopant;
-
-      double relative_permittivity;
 
       double valence_band_edge;
       double conduction_band_edge;
@@ -104,11 +57,6 @@ class SemiconductorModel : public DriftDiffusionProperties
       double low_field_mobility;
     };
 
-
-    /**
-     * The known recombination models
-     */
-    enum RecombinationModels { SRH = 1, AUGER = 2, DIRECT = 4 };
 
     SemiconductorModel(void);
     SemiconductorModel(const SemiconductorModel& model);
@@ -152,12 +100,14 @@ class SemiconductorModel : public DriftDiffusionProperties
     /**
      * Add recombination model to be used.
      */
-    void add_recombination_model(RecombinationModels recomb_model);
+    void add_recombination_model(
+        DriftDiffusionDefs::RecombinationModels recomb_model);
 
     /**
      * Remove a recombination model.
      */
-    void remove_recombination_model(RecombinationModels recomb_model);
+    void remove_recombination_model(
+        DriftDiffusionDefs::RecombinationModels recomb_model);
 
     /**
      * Set Shockley-Read-Hall recombination parameters
@@ -184,33 +134,15 @@ class SemiconductorModel : public DriftDiffusionProperties
      */
     //virtual void calculate_strained_properties(const Elem* elem) {};
     virtual void calculate_strained_properties(Elem* elem) {};
-
-    /**
-     * Calulate all densities, recombination rates, mobilities
-     *
-     */
-    virtual void calculate_all(double potential, double Ef_e, double Ef_h,
-        CalculatedProperties& result);
         
-    //! \copydoc DDSemiconductor::calculate_all()
     /*! \copydoc DDSemiconductor::calculate_all()
      * 
      * This implementation models the most simple semiconductor equations
      */
     virtual void calculate_all(double potential,
       double fermi_e, double fermi_h,
-      const Point& p, const Elem* elem);
+      const Point& p, const Elem* elem, int coupling);
     
-    /**
-     * @returns the thermal voltage
-     */
-    double get_thermal_voltage(void) const;
-
-    /**
-     * @returns the relative dielectric constant
-     */
-    double get_relative_permittivity(void) const;
-
     /**
      * Get the conduction band properties
      */
@@ -234,33 +166,17 @@ class SemiconductorModel : public DriftDiffusionProperties
     /**
      * @returns the intrinsic density n_i
      */
-    double get_intrinsic_density(void) const;
+    //double get_intrinsic_density(void) const;
 
     /**
      * @returns the square of the intrinsic density n_i
      */
-    double get_intrinsic_density_squared(void) const;
+    //double get_intrinsic_density_squared(void) const;
 
     /**
      * @returns the band gap
      */
     double get_band_gap(void) const;
-
-    /**
-     * @returns the equilibrium Fermi level
-     */
-    double get_equilibrium_fermi_level(void) const;
-
-    /**
-     * @returns the equilibrium electron density
-     */
-    double get_equilibrium_electron_density(void) const;
-
-    /**
-     * @returns the equilibrium hole density
-     */
-    double get_equilibrium_hole_density(void) const;
-
 
     /**
      * Calculates and returns the equilibrium electric potential with
@@ -299,26 +215,6 @@ class SemiconductorModel : public DriftDiffusionProperties
      */
     double get_DOS_factor(void) const;
     
-    /**
-     * Calculate electron and hole densities and derivatives
-     *
-     * The arguments are:
-     *   arg_e = (Ef_e - Ec + potential) / kT
-     *   arg_h = (Ev - Ef_h - potential) / kT
-     */
-    void calculate_e_h_densities(double arg_e, double arg_h, double kT,
-        CalculatedProperties& result);
-
-    /**
-     * Calculate ionized donor and acceptor densities and derivatives
-     *
-     * The arguments are:
-     *   arg_e = (Ef_e - Ec + potential) / kT
-     *   arg_h = (Ev - Ef_h - potential) / kT
-     */
-    void calculate_ionized_dopants(double arg_e, double arg_h, double kT,
-        CalculatedProperties& result);
-    
     void SemiconductorModel::calculate_ionized_donors(double arg_e, double kT,
         double& Nd, double& dNd);
 
@@ -326,26 +222,18 @@ class SemiconductorModel : public DriftDiffusionProperties
         double& Na, double& dNa);
 
     /**
-     * Calculate total charge densitiy and derivatives
-     */
-    void calculate_charge_density(CalculatedProperties& result);
-
-    /**
      * Calculate Shockley-Read-Hall recombination
      */
-    void calculate_SRH_recombination(CalculatedProperties& result);
     void calculate_SRH_recombination(void);
 
     /**
      * Calculate Auger recombination
      */
-    void calculate_Auger_recombination(CalculatedProperties& result);
     void calculate_Auger_recombination(void);
 
     /**
      * Calculate direct recombination
      */
-    void calculate_direct_recombination(CalculatedProperties& result);
     void calculate_direct_recombination(void);
 
   private:
@@ -356,26 +244,10 @@ class SemiconductorModel : public DriftDiffusionProperties
     int _recombination;
 
     /**
-     * The thermal voltage Vt = kB * T
-     */
-    double _thermal_voltage;
-
-    /**
      * The factor 2 * pow(2 * PI / h^2)^1.5
      * for calculating the effective density of states
      */
     double _DOS_factor;
-
-    /**
-     * The equilibrium densities
-     */
-    double _equilibrium_electron_density;
-    double _equilibrium_hole_density;
-
-    /**
-     * The equilibrium Fermi level
-     */
-    double _equilibrium_fermi_level;
 
     /**
      * The band properties
@@ -387,6 +259,12 @@ class SemiconductorModel : public DriftDiffusionProperties
      * The basic (reference) material properties
      */
     MaterialDescriptor _material;
+
+    //! The n-type doping
+    Dopant _n_dopant;
+    
+    //! The p-type doping
+    Dopant _p_dopant;
 
 
     /**
@@ -411,15 +289,6 @@ class SemiconductorModel : public DriftDiffusionProperties
 //
 // inline member functions
 //
-
-inline
-SemiconductorModel::CalculatedProperties::CalculatedProperties(void)
-  : charge_density_derivatives(3),
-    net_electron_recombination_rate_derivatives(3, 0.0),
-    net_hole_recombination_rate_derivatives(3, 0.0),
-    polarization(3, 0.0)
-{
-}
 
 inline
 void
@@ -452,35 +321,37 @@ inline
 void
 SemiconductorModel::set_n_dopant(const Dopant& dopant)
 {
-  _material.n_dopant = dopant;
-  _material.n_dopant.set_type(Dopant::N_TYPE);
+  _n_dopant = dopant;
+  _n_dopant.set_type(Dopant::N_TYPE);
 }
 
 inline
 void
 SemiconductorModel::set_p_dopant(const Dopant& dopant)
 {
-  _material.p_dopant = dopant;
-  _material.p_dopant.set_type(Dopant::P_TYPE);
+  _p_dopant = dopant;
+  _p_dopant.set_type(Dopant::P_TYPE);
 }
 
 inline
 void
 SemiconductorModel::set_relative_permittivity(double epsilon_r)
 {
-  _material.relative_permittivity = epsilon_r;
+  permittivity = epsilon_r;
 }
 
 inline
 void
-SemiconductorModel::add_recombination_model(RecombinationModels recomb_model)
+SemiconductorModel::add_recombination_model(
+        DriftDiffusionDefs::RecombinationModels recomb_model)
 {
   _recombination |= recomb_model;
 }
 
 inline
 void
-SemiconductorModel::remove_recombination_model(RecombinationModels recomb_model)
+SemiconductorModel::remove_recombination_model(
+        DriftDiffusionDefs::RecombinationModels recomb_model)
 {
   _recombination &= !recomb_model;
 }
@@ -495,45 +366,16 @@ SemiconductorModel::set_SRH_parameters(double tau_n, double tau_p)
 
 inline
 double
-SemiconductorModel::get_thermal_voltage(void) const
-{
-  return _thermal_voltage;
-}
-
-inline
-double
-SemiconductorModel::get_relative_permittivity(void) const
-{
-  return _material.relative_permittivity;
-}
-
-inline
-double
 SemiconductorModel::get_donor_density(void) const
 {
-  return _material.n_dopant.get_doping_density();
+  return _n_dopant.get_doping_density();
 }
 
 inline
 double
 SemiconductorModel::get_acceptor_density(void) const
 {
-  return _material.p_dopant.get_doping_density();
-}
-
-
-inline
-double
-SemiconductorModel::get_intrinsic_density(void) const
-{
-  return std::sqrt(get_intrinsic_density_squared());
-}
-
-inline
-double
-SemiconductorModel::get_intrinsic_density_squared(void) const
-{
-  return _equilibrium_electron_density * _equilibrium_hole_density;
+  return _p_dopant.get_doping_density();
 }
 
 inline
@@ -541,27 +383,6 @@ double
 SemiconductorModel::get_band_gap(void) const
 {
   return _conduction_band.band_edge - _valence_band.band_edge;
-}
-
-inline
-double
-SemiconductorModel::get_equilibrium_fermi_level(void) const
-{
-  return _equilibrium_fermi_level;
-}
-
-inline
-double
-SemiconductorModel::get_equilibrium_electron_density(void) const
-{
-  return _equilibrium_electron_density;
-}
-
-inline
-double
-SemiconductorModel::get_equilibrium_hole_density(void) const
-{
-  return _equilibrium_hole_density;
 }
 
 inline
@@ -607,46 +428,6 @@ SemiconductorModel::get_DOS_factor(void) const
   return _DOS_factor;
 }
 
-inline
-void
-SemiconductorModel::calculate_e_h_densities(double arg_e, double arg_h,
-        double kT, CalculatedProperties& result)
-{
-
-  double Nc = _conduction_band.effective_DOS;
-  double Nv = _valence_band.effective_DOS;
-
-  if (get_statistics() == TiberCad::FERMIDIRAC)
-  {
-    density_and_derivatives<TiberCad::FERMIDIRAC>(arg_e,
-        result.electron_density, result.electron_density_derivative,
-        result.electron_density_2nd_derivative, result.dn_over_n);
-
-    density_and_derivatives<TiberCad::FERMIDIRAC>(arg_h,
-        result.hole_density, result.hole_density_derivative,
-        result.hole_density_2nd_derivative, result.dp_over_p);
-  }
-  else
-  {
-    density_and_derivatives<TiberCad::BOLTZMANN>(arg_e,
-        result.electron_density, result.electron_density_derivative,
-        result.electron_density_2nd_derivative, result.dn_over_n);
-
-    density_and_derivatives<TiberCad::BOLTZMANN>(arg_h,
-        result.hole_density, result.hole_density_derivative,
-        result.hole_density_2nd_derivative, result.dp_over_p);
-  }
-  
-  result.electron_density *= Nc;
-  result.electron_density_derivative *= Nc / kT;
-  result.electron_density_2nd_derivative *= Nc / (kT * kT);
-  result.dn_over_n /= kT;
-
-  result.hole_density *= Nv;
-  result.hole_density_derivative *= -Nv / kT;
-  result.hole_density_2nd_derivative *= Nv / (kT * kT);
-  result.dp_over_p /= -kT;
-}
 
 inline
 void
@@ -655,7 +436,7 @@ SemiconductorModel::calculate_ionized_donors(double arg_e, double kT,
 {
   const double arg_max = 150;
 
-  double Ed = _material.n_dopant.get_ionisation_energy();
+  double Ed = _n_dopant.get_ionisation_energy();
   double arg = arg_e + Ed / kT;
   if (arg > arg_max)
   {
@@ -665,10 +446,10 @@ SemiconductorModel::calculate_ionized_donors(double arg_e, double kT,
   else
   {
     double tmp = std::exp(arg);
-    double g  = _material.n_dopant.get_g_factor();
+    double g  = _n_dopant.get_g_factor();
     double denom = 1 + g * tmp;
 
-    Nd = _material.n_dopant.get_doping_density() / denom;
+    Nd = _n_dopant.get_doping_density() / denom;
     dNd = -g * tmp * Nd / (kT * denom);
   }
 }
@@ -680,7 +461,7 @@ SemiconductorModel::calculate_ionized_acceptors(double arg_h, double kT,
 {
   const double arg_max = 150;
 
-  double Ed = _material.p_dopant.get_ionisation_energy();
+  double Ed = _p_dopant.get_ionisation_energy();
   double arg = arg_h + Ed / kT;
   if (arg > arg_max)
   {
@@ -690,82 +471,15 @@ SemiconductorModel::calculate_ionized_acceptors(double arg_h, double kT,
   else
   {
     double tmp = std::exp(arg);
-    double g  = _material.p_dopant.get_g_factor();
+    double g  = _p_dopant.get_g_factor();
     double denom = 1 + g * tmp;
 
-    Na = _material.p_dopant.get_doping_density() / denom;
+    Na = _p_dopant.get_doping_density() / denom;
     dNa = g * tmp * Na / (kT * denom);
   }
 
 }
 
-
-inline
-void
-SemiconductorModel::calculate_ionized_dopants(double arg_e, double arg_h,
-        double kT, CalculatedProperties& result)
-{
-  
-  const double arg_max = 150;
-  
-  // ionized donor density
-  double Ed = _material.n_dopant.get_ionisation_energy();
-  double arg = arg_e + Ed / kT;
-  if (arg > arg_max)
-  {
-    result.ionized_donor_density = 0.0;
-    result.ionized_donor_density_derivative = 0.0;
-  }
-  else
-  {
-    double tmp = std::exp(arg);
-    double g  = _material.n_dopant.get_g_factor();
-    double denom = 1 + g * tmp;
-    double Nd = _material.n_dopant.get_doping_density();
-
-    result.ionized_donor_density = Nd / denom;
-    result.ionized_donor_density_derivative =
-          -g * tmp * result.ionized_donor_density / (kT * denom);
-  }
-
-  // ionized acceptor density
-  Ed = _material.p_dopant.get_ionisation_energy();
-  arg = arg_h + Ed / kT;
-  if (arg > arg_max)
-  {
-    result.ionized_acceptor_density = 0.0;
-    result.ionized_acceptor_density_derivative = 0.0;
-  }
-  else
-  {
-    double tmp = std::exp(arg);
-    double g  = _material.p_dopant.get_g_factor();
-    double denom = 1 + g * tmp;
-    double Na = _material.p_dopant.get_doping_density();
-
-    result.ionized_acceptor_density = Na / denom;
-    result.ionized_acceptor_density_derivative =
-          g * tmp * result.ionized_acceptor_density / (kT * denom);
-  }
-}
-
-inline
-void
-SemiconductorModel::calculate_charge_density(CalculatedProperties& result)
-{
-  double& n  = result.electron_density;
-  double& p  = result.hole_density;
-  double& Nd = result.ionized_donor_density;
-  double& Na = result.ionized_acceptor_density;
-  double& dn  = result.electron_density_derivative;
-  double& dp  = result.hole_density_derivative;
-  double& dNd = result.ionized_donor_density_derivative;
-  double& dNa = result.ionized_acceptor_density_derivative;
-  result.charge_density = p - n - Na + Nd;
-  result.charge_density_derivatives[0] = dp - dn - dNa + dNd; // d / dpotential
-  result.charge_density_derivatives[1] =    - dn       + dNd; // d / dfermi_e
-  result.charge_density_derivatives[2] = dp      - dNa;       // d / dfermi_h
-}
 
 inline
 void
@@ -805,44 +519,6 @@ SemiconductorModel::calculate_direct_recombination(void)
 {
 }
 
-
-inline
-void
-SemiconductorModel::calculate_SRH_recombination(CalculatedProperties& result)
-{
-  double& n  = result.electron_density;
-  double& p  = result.hole_density;
-  double& dn  = result.electron_density_derivative;
-  double& dp  = result.hole_density_derivative;
-  double tn  = _material.electron_recombination_time;
-  double tp  = _material.hole_recombination_time;
-  double ni2 = get_intrinsic_density_squared();
-  double ni  = std::sqrt(ni2);
-  double denom = tp * (n + ni) + tn * (p + ni);
-  double SRH = (n * p - ni2) / denom;
-  double a = (p - tp * SRH) * dn / denom;
-  double b = (n - tn * SRH) * dp / denom; 
-  result.net_electron_recombination_rate += SRH;
-  result.net_electron_recombination_rate_derivatives[1] += a;
-  result.net_electron_recombination_rate_derivatives[2] += b;
-  result.net_electron_recombination_rate_derivatives[0] += a + b;
-  result.net_hole_recombination_rate += SRH;
-  result.net_hole_recombination_rate_derivatives[1] += a;
-  result.net_hole_recombination_rate_derivatives[2] += b;
-  result.net_hole_recombination_rate_derivatives[0] += a + b;
-}
-
-inline
-void
-SemiconductorModel::calculate_Auger_recombination(CalculatedProperties& result)
-{
-}
-
-inline
-void
-SemiconductorModel::calculate_direct_recombination(CalculatedProperties& result)
-{
-}
 
 template<TiberCad::Statistics S>
 inline

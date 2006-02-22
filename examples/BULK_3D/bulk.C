@@ -6,7 +6,7 @@
 #include "BoundaryData.h"
 #include "DDevice.h"
 #include "DriftDiffusion.h"
-#include "SemiconductorModel.h"
+#include "SimpleSemiconductorModel.h"
 
 #include "mesh.h"
 #include "mesh_modification.h"
@@ -19,9 +19,10 @@
 #include <algorithm>
 
 using namespace std;
+using namespace DriftDiffusionDefs;
 
 void setup_boundary_desc(BoundaryDescriptor& desc,
-    SemiconductorModel& sc_model);
+    DriftDiffusionProperties& sc_model);
 
 void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
     BoundaryDescriptor& desc, const Mesh& mesh);
@@ -35,39 +36,40 @@ int main (int argc, char** argv)
   libMesh::init(argc, argv);
   {
 
-    double fac = 1e-0;
+    GetPot input("bulk.in");
+
+    const string meshfile = input("meshfile", "");
+
+    double temperature = input("temperature", 300.0);
+
+    double start_voltage = input("start_voltage", 0.0);
+    double stop_voltage = input("stop_voltage", 0.0);
+    unsigned int voltage_steps = input("voltage_steps", 1);
+
+
+    const string method = input("simulation_method", "NEWTON");
+    const string statistics = input("statistics", "B");
+
+    double nonlin_rtol = input("nonlinear_tolerance", 1e-9);
+    double lin_rtol = input("linear_tolerance", 1e-12);
+    int integration_order = input("integration_order", 5);
+    int nonlin_max_it = input("nonlinear_max_it", 15);
+    int lin_max_it = input("linear_max_it", 500);
+    double nonlin_ls_maxstep =
+      input("nonlinear_ls_maxstep", 0.025);
+
+    double n_doping = input("n_doping", 1e15);
+    double p_doping = input("p_doping", 0.0);
+    double polarization_x = input("polarization_x", 0.0);
+    double polarization_y = input("polarization_y", 0.0);
     
-    GetPot input_file("bulk.in");
-
-    const string meshfile = input_file("meshfile", "");
-    const string approx_order = input_file("approximation_order", "FIRST");
-
-    double start_voltage = input_file("start_voltage", 0.0);
-    double stop_voltage = input_file("stop_voltage", 0.0);
-    unsigned int voltage_steps = input_file("voltage_steps", 1);
+    double mesh_units = input("mesh_units", 0.0);
 
 
-    const string method = input_file("simulation_method", "NEWTON");
-    const string statistics = input_file("statistics", "B");
-
-    double nonlin_rtol = input_file("nonlinear_tolerance", 1e-9);
-    double lin_rtol = input_file("linear_tolerance", 1e-12);
-    int integration_order = input_file("integration_order", 5);
-    int nonlin_max_it = input_file("nonlinear_max_it", 15);
-    int lin_max_it = input_file("linear_max_it", 500);
-    double nonlin_ls_maxstep = input_file("nonlinear_ls_maxstep", 0.025);
-
-    double n_doping = input_file("n_doping", 1e15);
-    double p_doping = input_file("p_doping", 0.0);
-    double polarization_x = input_file("polarization_x", 0.0);
-    double polarization_y = input_file("polarization_y", 0.0);
-    
-    double mesh_units = input_file("mesh_units", 0.0);
-
-
-    unsigned int refinement_steps = input_file("max_refinement_steps", 0);
-    double refine_frac = input_file("refine_fraction", 0.7);
-    double coarsen_frac = input_file("coarsen_fraction", 0.3);
+    unsigned int refinement_steps =
+      input("max_refinement_steps", 0);
+    double refine_frac = input("refine_fraction", 0.7);
+    double coarsen_frac = input("coarsen_fraction", 0.3);
 
     vector<unsigned int> phys_reg_ID(1);
     phys_reg_ID[0] = 1; // p
@@ -87,50 +89,32 @@ int main (int argc, char** argv)
     Read_MSH readmesh(meshfile, phys_reg_ID, BC_reg_ID, dim, mesh, meshdata);
     map<unsigned int, vector<unsigned int> > boundary_nodes;
     readmesh.get_BC_data(boundary_nodes);
-    /*
-    {
-      map<int, vector<int> >::iterator it = boundary_nodes.begin();
-      map<int, vector<int> >::iterator end = boundary_nodes.end();
-      for ( ; it != end; ++it)
-      {
-        int n = (it->second).size();
-        for (int k = 0; k < n; k++)
-        {
-          cout << (it->second)[k] << " : " << it->first << "\n";
-        }
-      }
-    }
-    */
 
     mesh.print_info();
 
-
-    SemiconductorModel nside;    
+    SimpleSemiconductorModel nside;    
     if (statistics == "FD")
       nside.set_statistics(TiberCad::FERMIDIRAC);
     else
       nside.set_statistics(TiberCad::BOLTZMANN);
 
-    nside.add_recombination_model(SemiconductorModel::SRH);
+    nside.add_recombination_model(SRH);
 
     nside.set_relative_permittivity(11.7);
-    nside.set_valence_band_properties(-0.5, 0.81, 200*fac*fac);
-    nside.set_conduction_band_properties(0.62, 1.18, 800*fac*fac);
+    nside.set_valence_band_properties(-0.5, 0.81, 200);
+    nside.set_conduction_band_properties(0.62, 1.18, 800);
     nside.set_SRH_parameters(1e-8, 1e-8);
 
-    SemiconductorModel pside(nside);
+    SimpleSemiconductorModel pside(nside);
     pside.set_SRH_parameters(1e-8, 1e-8);
 
-    nside.set_n_dopant(Dopant(n_doping/(fac*fac*fac), 0.025, 2));
-    pside.set_n_dopant(Dopant(n_doping/(fac*fac*fac), 0.025, 2));
-    nside.set_p_dopant(Dopant(p_doping/(fac*fac*fac), 0.01, 4));
-    pside.set_p_dopant(Dopant(p_doping/(fac*fac*fac), 0.01, 4));
+    nside.set_n_dopant(Dopant(n_doping, 0.025, 2));
+    pside.set_n_dopant(Dopant(n_doping, 0.025, 2));
+    nside.set_p_dopant(Dopant(p_doping, 0.01, 4));
+    pside.set_p_dopant(Dopant(p_doping, 0.01, 4));
 
-    pside.polarization[0] = polarization_x;
-    pside.polarization[1] = polarization_y;
-
-    nside.calculate_equilibrium_properties();
-    pside.calculate_equilibrium_properties();
+    nside.calculate_equilibrium_properties(BOTH);
+    pside.calculate_equilibrium_properties(BOTH);
 
 
     ElementData element_data;
@@ -235,13 +219,9 @@ int main (int argc, char** argv)
     else
       params.solver_method = DriftDiffusion::NEWTON;
 
+    params.coupling = FULLYCOUPLED;
 
-    if (approx_order == "FIRST")
-      params.approximation_order = FIRST;
-    else if (approx_order == "SECOND")
-      params.approximation_order = SECOND;
-    else if (approx_order == "THIRD")
-      params.approximation_order = THIRD;
+    params.approximation_order = FIRST;
 
     // mesh drawn in um
     params.mesh_units = mesh_units;
@@ -329,7 +309,7 @@ int main (int argc, char** argv)
       iv_char[*it][0] = (*curr.find(&cathode)).second;
       iv_char[*it][1] = (*curr.find(&anode)).second;
       iv_char[*it][2] = dd.get_artificial_boundary_current();
-      cerr << "    I = " << (iv_char[*it][1] * fac) << " A\n";
+      cerr << "    I = " << (iv_char[*it][1]) << " A\n";
     }
 
     vector<double>::iterator zero =
@@ -370,7 +350,7 @@ int main (int argc, char** argv)
         iv_char[*it][0] = (*curr.find(&cathode)).second;
         iv_char[*it][1] = (*curr.find(&anode)).second;
         iv_char[*it][2] = dd.get_artificial_boundary_current();
-        cerr << "    I = " << (iv_char[*it][1] * fac) << " A\n";
+        cerr << "    I = " << (iv_char[*it][1]) << " A\n";
       }
       while (it != voltages.begin());
     }
@@ -396,7 +376,7 @@ int main (int argc, char** argv)
 }
 
 void setup_boundary_desc(BoundaryDescriptor& desc,
-    SemiconductorModel& sc)
+    DriftDiffusionProperties& sc)
 {
   std::vector<double> coeff(3, 0);
   coeff[0] = 1.0;

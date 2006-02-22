@@ -7,7 +7,11 @@
 #include "vector_value.h"
 
 #include "PhysicalProperties.h"
+#include "DriftDiffusionDefs.h"
 #include "TiberCad.h"
+
+// GNU scientific library
+#include <gsl/gsl_sf_fermi_dirac.h>
 
 #include <vector>
 
@@ -34,7 +38,6 @@ class DriftDiffusionProperties : public PhysicalProperties
      * \return the statistics
      */
     TiberCad::Statistics get_statistics(void) const;
-      
 
     //! The method that will calculate all needed properties
     /*!
@@ -60,10 +63,15 @@ class DriftDiffusionProperties : public PhysicalProperties
      * \param fermi_h the hole electro-chemical potential
      * \param p the coordinates in real space
      * \param elem the pointer to the element which contains \c p
+     * \param coupling the type of coupling
+     *
+     * The type of coupling can be a combination of the values as given
+     * in \c DriftDiffusionDefs::Coupling
      */
     virtual void calculate_all(double potential,
       double fermi_e, double fermi_h,
-      const Point& coord, const Elem* elem) = 0;
+      const Point& coord, const Elem* elem,
+      int coupling = DriftDiffusionDefs::BOTH) = 0;
       
 
     //! Get the electron density
@@ -135,9 +143,13 @@ class DriftDiffusionProperties : public PhysicalProperties
     //! Get the total charge density
     /*!
      * Get the total charge density as calculated by \c calculate_all(...)
-     * \f[ \rho = e(p - n + N_D^+ - N_A^-) \f]
+     * \f$ \rho = p - n + N_D^+ - N_A^- \f$
      * 
-     * \return the total charge density
+     * \return the total charge density \f$\rho\f$
+     *
+     * \note
+     * The charge density is returned in units of the elementary charge
+     * \f$e\f$, \em not in Coulomb (= As)!
      */
     double get_charge_density(void) const;
     
@@ -160,9 +172,9 @@ class DriftDiffusionProperties : public PhysicalProperties
      * Get the derivatives of the total charge density with respect to the 
      * electric potential one of the two electro-chemical potentials:
      * \f{eqnarray*}
-     *   \frac{\partial\rho}{\partial\varphi} & \mathsf{if} i=0, \\
-     *   \frac{\partial\rho}{\partial\phi_n} & \mathsf{if} i=1, \\
-     *   \frac{\partial\rho}{\partial\phi_p} & \mathsf{if} i=2
+     *   \frac{\partial\rho}{\partial\varphi} & \mathsf{if}\, i=0, \\
+     *   \frac{\partial\rho}{\partial\phi_n} & \mathsf{if}\, i=1, \\
+     *   \frac{\partial\rho}{\partial\phi_p} & \mathsf{if}\, i=2
      * \f}
      */
     double get_charge_density_derivative(int i) const;
@@ -177,7 +189,7 @@ class DriftDiffusionProperties : public PhysicalProperties
       
     //! Get the net electron recombination rate derivative
     /*!
-     * Get \f$frac{\partial R_{net}}{\partial\varphi}\f$
+     * Get \f$\frac{\partial R_{net}}{\partial\varphi}\f$
      *
      * \return the derivatives as a const vector reference
      */
@@ -196,7 +208,7 @@ class DriftDiffusionProperties : public PhysicalProperties
       
     //! Get the net hole recombination rate derivative
     /*!
-     * Get \f$frac{\partial R_{net}}{\partial\varphi}\f$
+     * Get \f$\frac{\partial R_{net}}{\partial\varphi}\f$
      *
      * \return the derivatives as a const vector reference
      */
@@ -230,6 +242,21 @@ class DriftDiffusionProperties : public PhysicalProperties
      */
     double get_hole_conductivity(void) const
       { return hole_conductivity; };
+      
+    //! Get the electron mobility
+    /*!
+     * \return the electron mobility
+     */
+    double get_electron_mobility(void) const
+      { return electron_mobility; };
+      
+    //! Get the hole mobility
+    /*!
+     * \return the hole mobility
+     */
+    double get_hole_mobility(void) const
+      { return hole_mobility; };
+
 
     //! Get the electron conductivity derivatives
     const std::vector<double>& get_electron_conductivity_derivatives(void) const
@@ -238,6 +265,26 @@ class DriftDiffusionProperties : public PhysicalProperties
     //! Get the hole conductivity derivatives
     const std::vector<double>& get_hole_conductivity_derivatives(void) const
       { return hole_conductivity_derivatives; };
+
+    //! Get the equilibrium electron density
+    double get_equilibrium_electron_density(void) const
+      { return equilibrium_electron_density; };
+
+    //! Get the equilibrium hole density
+    double get_equilibrium_hole_density(void) const
+      { return equilibrium_hole_density; };
+
+    //! Get the square of the intrinsic density
+    double get_intrinsic_density_squared(void) const
+      { return equilibrium_electron_density * equilibrium_hole_density; };
+
+    //! Get the intrinsic density
+    double get_intrinsic_density(void) const
+      { return std::sqrt(get_intrinsic_density_squared()); };
+
+    //! Get equilibrium fermi level
+    double get_equilibrium_fermi_level(void) const
+      { return equilibrium_fermi_level; };
 
   
 
@@ -312,6 +359,36 @@ class DriftDiffusionProperties : public PhysicalProperties
     //! The relative permittivity tensor
     //RealTensorValue permittivity;
     double permittivity;
+
+    //! The equilibrium electron density
+    /*!
+     * \f$n_i = n_0 p_0\f$
+     */
+    double equilibrium_electron_density;
+
+    //! The equilibrium hole density
+    /*!
+     * \f$n_i = n_0 p_0\f$
+     */
+    double equilibrium_hole_density;
+
+    //! The equilibrium fermi level
+    /*!
+     * The fermi level such that \f$n=n_0,\,p=p_0\f$
+     */
+    double equilibrium_fermi_level;
+        
+    //! Calculate the density and its derivatives
+    /*! 
+     * The method also returns the ratio 'first derivative over density'
+     * which is used for the mobility.
+     */
+    template<TiberCad::Statistics S>
+    void density_and_derivatives(double arg, double& density,
+        double& derivative, double& _2nd_derivative,
+        double& derivative_over_density) const;
+    
+
 
   private:
 
@@ -391,6 +468,88 @@ DriftDiffusionProperties::get_statistics(void) const
 {
   return _statistics;
 }
+
+template<TiberCad::Statistics S>
+inline
+void
+DriftDiffusionProperties::density_and_derivatives(double arg, double& density,
+    double& derivative, double& _2nd_derivative,
+    double& derivative_over_density) const
+{
+  
+  const double arg_max = 50;
+  const double arg_min = -10;
+
+  switch (S)
+  {
+    case TiberCad::FERMIDIRAC:
+      if (arg < arg_max)
+      {
+        if (arg < arg_min)
+        {
+          density = std::exp(arg);
+          derivative = density;
+          _2nd_derivative = density;
+          derivative_over_density = 1;
+        }
+        else
+        {
+          density = gsl_sf_fermi_dirac_half(arg);
+          derivative = gsl_sf_fermi_dirac_mhalf(arg);
+          // TODO implement d/dx F_-1/2(x)
+          double step = 1e-2 * std::fabs(arg) + 1e-2;
+          const double eps = 1e-6;
+          double error = 1;
+          _2nd_derivative = 0.5 * (gsl_sf_fermi_dirac_mhalf(arg + step)
+              - gsl_sf_fermi_dirac_mhalf(arg - step)) / step;
+          double old_d;
+          while (std::fabs(error) > eps)
+          {
+            old_d = _2nd_derivative;
+            step *= 0.5;
+            _2nd_derivative = 0.5 * (gsl_sf_fermi_dirac_mhalf(arg + step)
+                - gsl_sf_fermi_dirac_mhalf(arg - step)) / step;
+            error = _2nd_derivative - old_d;
+            if (std::fabs(_2nd_derivative) > eps)
+              error /= _2nd_derivative;
+          }
+          derivative_over_density = derivative / density;
+        }
+      }
+      else
+      {
+        density = 2 * M_2_SQRTPI / 3 * std::pow(arg, 1.5);
+        derivative = M_2_SQRTPI * std::sqrt(arg);
+        _2nd_derivative = 0.5 * M_2_SQRTPI / std::sqrt(arg);
+        derivative_over_density = derivative / density;
+      }
+      break;
+
+    default:
+      if (arg < arg_max)
+      {
+        density = std::exp(arg);
+        derivative = density;
+        _2nd_derivative = density;
+        derivative_over_density = 1;
+      }
+      else
+      {
+        density = std::exp(arg_max);
+        derivative = density;
+        _2nd_derivative = density;
+        derivative_over_density = 1;
+        //density = 2 * M_2_SQRTPI / 3 * std::pow(arg, 1.5);
+        //derivative = M_2_SQRTPI * std::sqrt(arg);
+        //_2nd_derivative = 0.5 * M_2_SQRTPI / std::sqrt(arg);
+        //derivative_over_density = derivative / density;
+      }
+      break;
+  }
+}
+
+
+
 
 
 #endif /* _DRIFTDIFFUSIONPROPERTIES_H_*/

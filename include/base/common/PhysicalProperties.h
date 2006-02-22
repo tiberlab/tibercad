@@ -49,12 +49,12 @@ class PhysicalProperties
   virtual void read_database(const Dummy& db) = 0;
     
     
-  virtual void read_database_bowing_parameters(const Dummy& db ) = 0;
+  virtual void read_database_bowing_parameters(const Dummy& db ) {};
     
     
   virtual void set_properties_alloy(const  PhysicalProperties* prop_comp1, 
 				    const  PhysicalProperties* prop_comp2, 
-				    double molar_fraction) = 0;
+				    double molar_fraction) {};
 
 
  protected:
