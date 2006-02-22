@@ -9,14 +9,12 @@ Alloy::~Alloy()
 }
 
 
-void Alloy::set_components(Material* matpoint)
-
-{
-	
+void 
+Alloy::set_components(Material* matpoint)
+{	
   //  vector<Material*> components .push_back(matpoint)
   components.push_back(matpoint);
-	
-	
+		
 }
 
 
@@ -37,11 +35,9 @@ Alloy::init(const Dummy& database)
 
 
 // virtual  in base class (Material)
-const  PhysicalProperties* Alloy::get_properties(const std::string& id,  const Point& coord) 
-
-{
-	
-	
+const  PhysicalProperties* 
+Alloy::get_properties(const std::string& id,  const Point& coord) 
+{		
   // calculates a possibly position_dependent molar fraction x =f(r)
   molar_fraction = calculate_molar_fraction(coord);
 	
@@ -59,9 +55,7 @@ const  PhysicalProperties* Alloy::get_properties(const std::string& id,  const P
     }
   else
     return NULL;
-    
-  
-	
+      	
 }
 	
 	

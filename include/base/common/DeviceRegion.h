@@ -30,7 +30,7 @@ class DeviceRegion{
 
  // virtual void init() = 0;
 
- virtual unsigned int get_region_number() = 0;
+ virtual unsigned int get_region_number() const= 0;
 
 
 };

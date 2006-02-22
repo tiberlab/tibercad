@@ -23,7 +23,7 @@ class Dummy;
 class Material
 {
 
- public:
+  public:
 
   //! Construct a material with a given structure
   /*!
@@ -51,6 +51,8 @@ class Material
    * \param database the database to read from
    */
   virtual void init(const Dummy& database);
+  
+
 
   //! Add new physical properties
   /*!
@@ -71,8 +73,11 @@ class Material
    */
   //const PhysicalProperties* get_properties(const std::string& id) const;
   virtual const  PhysicalProperties* get_properties(const std::string& id,  const Point&  coord)  ; 
+  
+  string get_name(void) const;
+  string get_structure(void) const;
 
- protected:
+  protected:
 
   //! a typedef for convenience
   typedef std::map<const std::string, PhysicalProperties*> PropertyMap;
@@ -96,7 +101,7 @@ class Material
    */
   PropertyMap _properties;
     
- private:
+  private:
     
 
 };
@@ -133,22 +138,42 @@ Material::get_properties(const std::string& id, const Point&  coord )
 inline void
 Material::add_properties(PhysicalProperties* properties)
 {
+ 
   const std::string& id = properties->get_id();
+ 
   _properties[id] = properties;
 }
 
 inline void
 Material::init(const Dummy& database)
 {
+ 
   PropertyMap::iterator it = _properties.begin();
   const PropertyMap::const_iterator end = _properties.end();
 
   for ( ; it != end; ++it)
     {
       (it->second)->set_material(this);
+     
       (it->second)->read_database(database);
+      
+
     }
 }
+
+
+inline string
+    Material::get_name(void) const
+{
+  return  _name;
+}
+
+inline string
+    Material::get_structure(void) const
+{
+  return  _structure;
+}
+
 
 
 

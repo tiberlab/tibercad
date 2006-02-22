@@ -795,12 +795,14 @@ void InputParser::parse_device(ifstream& in_stream )
 
   rule<>label1_p = str_p("reg_numb");
   rule<>label2_p = str_p("mat");
-  rule<>label3_p = str_p("doping");
-  rule<>label4_p = str_p("dop_type");
+  rule<>label3_p = str_p("crystal_struct");
+  rule<>label4_p = str_p("doping");
+  rule<>label5_p = str_p("dop_type");
 
   rule<> reg_prop = *(space_p) >>(label1_p) >> assignement_int >> 
-    (label2_p) >>  assignement_string  >> (label3_p)>> 
-    assignement_double >>  (label4_p) >> assignement_string;   
+      (label2_p) >>  assignement_string  >> (label3_p)>> 
+      assignement_string  >> (label4_p) >> 
+      assignement_double >>  (label5_p) >> assignement_string;   
 
   rule<> r_region = *(space_p)>>region_name[push_back_a(v_string)] >> 
     *(space_p) >> (ch_p('{'))>>  reg_prop >>*(space_p) >> (ch_p('}'))>> *(space_p) ; 
@@ -832,8 +834,9 @@ void InputParser::parse_device(ifstream& in_stream )
 	      current_region.set_region_name(v_string[0]);
 	      current_region.set_region_number(v_int[0]);
 	      current_region.set_material_name(v_string[1]);
+              current_region.set_crystal_name(v_string[2]);
 	      current_region.set_doping_concentration( v_real[0]);
-	      current_region.set_doping_type(v_string[2]);
+	      current_region.set_doping_type(v_string[3]);
 
 
 

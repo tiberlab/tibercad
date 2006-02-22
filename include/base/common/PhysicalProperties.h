@@ -21,18 +21,18 @@ class PhysicalProperties
  public:
 
 
-    //! The empty destructor
-    /*!
-     * should be implemented in the derived classes if needed
-     */
-    virtual ~PhysicalProperties(void) {};
-    
-    //! Get the identifier of the property object
-    /*!
-     * The identifier is a unique string which identifies each type
-     * of physical properties.
-     */
-    const std::string& get_id(void) const;
+  //! The empty destructor
+  /*!
+   * should be implemented in the derived classes if needed
+   */
+  virtual ~PhysicalProperties(void) {};
+
+  //! Get the identifier of the property object
+  /*!
+   * The identifier is a unique string which identifies each type
+   * of physical properties.
+   */
+  const std::string& get_id(void) const;
 
 
   //! Set a pointer to the \c Material object this properties belong to
@@ -47,24 +47,45 @@ class PhysicalProperties
    * \param db a const reference to the database
    */
   virtual void read_database(const Dummy& db) = 0;
-    
-    
+
+
+
+  //! Read the bowing parameters  from the database
+  /*!
+   * Read the bowing parameters for an alloy material from the database.
+   * \param db a const reference to the database
+   */
   virtual void read_database_bowing_parameters(const Dummy& db ) {};
-    
+
+   
+  //! Constructs  \c PhysicalProperties for  an  alloy.
+  /*!
+   * Constructs  \c PhysicalProperties for  an  alloy, basing on  properties of  component materials
+   * and on alloy composition \param molar_fraction.
+   */ 
     
   virtual void set_properties_alloy(const  PhysicalProperties* prop_comp1, 
 				    const  PhysicalProperties* prop_comp2, 
 				    double molar_fraction) {};
 
 
- protected:
-    
 
-    //! The empty constructor
-    /*!
-     * \c PhysicalProperties should not be instantiated directly
-     */
-    PhysicalProperties(const std::string& id);
+
+
+  //! Returns pointer to the  material these properties belong  to.
+  /*!
+   * 
+   */
+  const Material*  PhysicalProperties::get_material(void) const;
+
+ protected:
+
+
+  //! The empty constructor
+  /*!
+   * \c PhysicalProperties should not be instantiated directly
+   */
+  PhysicalProperties(const std::string& id);
 
 
 
@@ -73,11 +94,11 @@ class PhysicalProperties
  private:
 
 
-    //! The id of this properties
-    const std::string _id;
+  //! The id of this properties
+  const std::string _id;
 
-    //! The material this properties belong to
-    const Material* _material;
+  //! The material this properties belong to
+  const Material* _material;
 
 };
 
@@ -90,8 +111,7 @@ class PhysicalProperties
 inline
 PhysicalProperties::PhysicalProperties(const std::string& id)
   : _id(id), _material(0)
-{
-}
+{}
 
 inline
 void
@@ -107,5 +127,17 @@ PhysicalProperties::get_id(void) const
   return _id;
 }
 
+inline
+const Material*
+PhysicalProperties::get_material(void) const
+{
+  return  _material;
+}
+
+
+
+
 
 #endif // _PHYSICALPROPERTIES_H_
+
+
