@@ -1,4 +1,5 @@
 #include "macrostrain.h"
+
 //-----------------------------------------------------------------//
 //Static objects must be "mentioned" here! 
 
@@ -152,8 +153,8 @@ Macrostrain::Macrostrain(const options& opt,   Mesh&  mesh )
 
   intermediate_output = opt.intermediate_output;
 
-  output_strain_on_atoms = true;
-
+  output_strain_on_atoms = false;
+  atom_output_type = "uptight";
 
   //------------------------------------------------------------------//
   if ((opt.output_type == "GMV")|| (opt.output_type == "tecplot"))
@@ -2351,7 +2352,7 @@ void Macrostrain::move_nodes()
 //-------------------------------------------------------------------------------------//
 
 
-Tensor2Sym Macrostrain::get_strain(Elem* elem, bool crystal_system )
+Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 {
 
   Tensor2Sym eps0;
@@ -2380,7 +2381,7 @@ Tensor2Sym Macrostrain::get_strain(Elem* elem, bool crystal_system )
   std::vector<Point> point_vec(1);
 
 
-  map<Elem*, unsigned int> :: iterator el_numb_it;
+  map<const Elem*, unsigned int> :: iterator el_numb_it;
 
   el_numb_it = elem_numbers.find(elem);
   
@@ -2451,14 +2452,14 @@ Tensor2Sym Macrostrain::get_strain(Elem* elem, bool crystal_system )
 }
 
 //-------------------------------------------------------------------------------------------/
-Tensor1 Macrostrain::get_piezopolarization(Elem* el)
+Tensor1 Macrostrain::get_piezopolarization(const Elem* el)
 {
   //---------------calculate strain in crystal system---------------------------
   Tensor2Sym strain_cr= get_strain( el, true);
 
   //---------------get material number -----------------------------------------
 
-  map<Elem*, unsigned int> :: iterator el_numb_it;
+  map<const Elem*, unsigned int> :: iterator el_numb_it;
 
   el_numb_it = elem_numbers.find(el);
   
@@ -2958,6 +2959,8 @@ void Macrostrain::read_atom_structure(const std::string filename)
       coordinate[0] = x; coordinate[1] = y; coordinate[2] = z;
       
     
+
+      //   cerr << x << "    "<< y <<"   "<< z <<"\n";
       
 
 
@@ -3008,6 +3011,7 @@ void Macrostrain::read_atom_structure(const std::string filename)
 	  //atom is not found and will be ignored
 	  cerr << "WARNING: atom does not belong to the macroscopic domain\n";
 	  cerr << "The atom number  " << i << "  will be ignored\n";  
+	  cerr << x <<"   "<< y <<"   " << z <<"   "<<  mat <<"   "<< t <<"\n"; 
 	    
 	}
       else
@@ -3041,7 +3045,7 @@ void Macrostrain::read_atom_structure(const std::string filename)
 	  
     }
 
-     
+  atoms_file1.close(); 
   
 
 }
@@ -3053,7 +3057,7 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
 
  //file opening
   string  string_from_file;
-
+  std::ifstream atom_in_file;
   std::ofstream displacement_file;
 
   displacement_file.open(filename.c_str());
@@ -3066,8 +3070,22 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
     }
 
   //--------------------------------------------------------------------
+ if (atom_output_type=="uptight")
+   {
+     //for uptight we have output displacements.
+     //therefore we need also the initial positions
+    
+     atom_in_file.open(atom_structure_filename.c_str());
 
-  
+     if ( ! atom_in_file.good () )
+       {
+	 cerr << "Error: file with atom positions can not be opened\n";
+	 cerr << atom_structure_filename.c_str() << "\n";
+	 error();
+       }
+    
+   }
+  //-------------------------------------------------------------------
   const Mesh& mesh =  equation_systems->get_mesh();
 
 
@@ -3189,29 +3207,63 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
 	  //-------------------------------------------------------------------
 	  //output of new coordinates
 	  
-	 
-	  displacement_file <<  setw(20) <<  atom_structure[i].mat_number << ",";
-	  displacement_file <<  setw(20) <<  atom_structure[i].type << ",";
-	  
-	  
-	  displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[0]<< ","  ;
-	  displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[1]<< ","  ;
-	  displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[2]<< ","  ;
-
-	  if (output_strain_on_atoms)
+	  if (atom_output_type=="povray")
 	    {
-	      Tensor2Sym epsilon = get_strain(atom_structure[i].element);
-	      displacement_file <<  setw(20) <<  setprecision(12) << epsilon(1,1) << "," ;
-	      displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,2) << "," ;
-	      displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,3) << "," ;
-	      displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,1) << "," ;
-	      displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,1) << "," ;
-	      displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,2) << "," ;
+	      displacement_file <<  setw(20) <<  atom_structure[i].mat_number << ",";
+	      displacement_file <<  setw(20) <<  atom_structure[i].type << ",";
+	  
+	  
+	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[0]<< ","  ;
+	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[1]<< ","  ;
+	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[2]<< ","  ;
+
+	      if (output_strain_on_atoms)
+		{
+		  Tensor2Sym epsilon = get_strain(atom_structure[i].element);
+		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(1,1) << "," ;
+		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,2) << "," ;
+		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,3) << "," ;
+		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,1) << "," ;
+		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,1) << "," ;
+		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,2) << "," ;
+		}
 	    }
 
 
+	  if (atom_output_type=="uptight")
+	    {
 
 
+	      getline(atom_in_file, string_from_file );
+
+	   
+	      istringstream input_string(string_from_file);
+	      
+
+	      int t ;
+	      int mat;
+	      double x;
+	      double y;
+	      double z;
+	      input_string >>mat >> t >> x >> y >> z ;
+	  
+	    
+
+	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[0] - x << ","  ;
+	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[1] - y << ","  ;
+	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[2] - z << ","  ;
+
+	      if (output_strain_on_atoms)
+		{
+		  Tensor2Sym epsilon = get_strain(atom_structure[i].element);
+		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(1,1)  ;
+		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,2)  ;
+		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,3)  ;
+		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,1)  ;
+		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,1)  ;
+		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,2)  ;
+		}
+	    }
 
 	  displacement_file <<  '\n';
 	  

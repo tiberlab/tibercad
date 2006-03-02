@@ -4,8 +4,8 @@
 topdir := ../
 include $(topdir)/Make.common
 
-subdirs := utils/Tensor base/io base/common core/drift-diffusion core/macrostrain
-
+# we have to compile each module
+subdirs := $(tibermodules)
 
 
 .PHONY: all clean

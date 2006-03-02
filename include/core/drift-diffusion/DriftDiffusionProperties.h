@@ -39,6 +39,30 @@ class DriftDiffusionProperties : public PhysicalProperties
      */
     TiberCad::Statistics get_statistics(void) const;
 
+    //! (Re-)Initialize for the given element
+    /*!
+     * This method has to be called before \c calculate_all() or
+     * \c calculate_equilibrium_properties().
+     *
+     * \c reinit() calls \c prepare_element_data() which needs to be
+     * implemented in derived classes
+     */
+    void reinit(const Elem* elem);
+    
+    //! Calculates the equilibrium properties.
+    /*!
+     *
+     * This method has to be called before any call to \p calculate_all()
+     * but after setting up all material parameters
+     *
+     * \pre { \c reinit() has to be called before }
+     * \post { all equilibrium properties are accessible without
+     *  explicitly calling \c calculate_all() }
+     */
+    virtual void calculate_equilibrium_properties(
+        int coupling = DriftDiffusionDefs::BOTH,
+        double temperature = SimulationOptions::T) = 0;
+
     //! The method that will calculate all needed properties
     /*!
      * This method needs to be implemented by a derived class. It has to
@@ -46,6 +70,8 @@ class DriftDiffusionProperties : public PhysicalProperties
      * 
      * \li the dielectric tensor
      * \li the total electric polarization
+     * \li the thermal voltage \f$v_T=k_BT/e\f$ for the electrons
+     * \li the thermal voltage \f$v_T=k_BT/e\f$ for the holes
      * \li the electron density and its derivative
      * \li the hole density and its derivative
      * \li the ionized donor density and its derivative
@@ -70,8 +96,8 @@ class DriftDiffusionProperties : public PhysicalProperties
      */
     virtual void calculate_all(double potential,
       double fermi_e, double fermi_h,
-      const Point& coord, const Elem* elem,
-      int coupling = DriftDiffusionDefs::BOTH) = 0;
+      //const Point& coord, const Elem* elem,
+      const Point& coord, int coupling = DriftDiffusionDefs::BOTH) = 0;
       
 
     //! Get the electron density
@@ -286,12 +312,27 @@ class DriftDiffusionProperties : public PhysicalProperties
     double get_equilibrium_fermi_level(void) const
       { return equilibrium_fermi_level; };
 
-  
 
   protected:
   
     //! The empty constructor.
     DriftDiffusionProperties(void);
+
+    //! This method gets called from reinit()
+    /*!
+     * It can be used to setup data that is constant in an element, e.g.
+     * strain related stuff.
+     */
+    virtual void prepare_element_data(void) {};
+
+    //! The element we are currently working on
+    const Elem* elem;
+
+    //! The thermal voltage for the electrons
+    double electron_vt;
+
+    //! The thermal voltage for the holes
+    double hole_vt;
 
     //! The electron density
     double electron_density;
@@ -410,6 +451,7 @@ DriftDiffusionProperties::~DriftDiffusionProperties(void)
 inline
 DriftDiffusionProperties::DriftDiffusionProperties(void)
   : PhysicalProperties("DriftDiffusionProperties"),
+    elem(NULL),
     charge_density_derivatives(3, 0.0),
     electron_conductivity_derivatives(3, 0.0),
     hole_conductivity_derivatives(3, 0.0),
@@ -417,6 +459,14 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     hole_recombination_rate_derivatives(3, 0.0),
     _statistics(TiberCad::BOLTZMANN)
 {
+}
+
+inline
+void
+DriftDiffusionProperties::reinit(const Elem* elem)
+{
+  this->elem = elem;
+  this->prepare_element_data();
 }
     
 inline

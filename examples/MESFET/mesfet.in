@@ -1,4 +1,5 @@
 # $Id$
+
 $Options
 
 # mesfet example
@@ -14,6 +15,9 @@ statistics = B
 # = 0 means solve only for electrons
 # = 1 means solve electrons and holes
 fully_coupled = 1
+
+# apply unit scaling
+scaling = 1
 
 # calculate output characteristic (1) or
 # transcharacteristic (0)
@@ -35,6 +39,10 @@ linear_max_it = 1000
 nonlinear_max_it = 15
 integration_order = 5
 
-scaling = 1
+max_refinement_steps=1
+refine_fraction=0.7
+coarsen_fraction=0.0
+max_ref_level=4
+
 
 $End

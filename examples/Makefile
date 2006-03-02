@@ -4,18 +4,16 @@
 topdir := ../
 include $(topdir)/Make.common
 
-subdirs := BULK_3D
+subdirs := BULK_3D MESFET
 
-
-
-LDFLAGS += -Wl,-rpath,/usr/pack/gsl-1.6-ma/lib -L/usr/pack/gsl-1.6-ma/lib
-LDFLAGS += -lgsl -lgslcblas
 
 
 .PHONY: all clean
 
+# sets the target for the subdirs
 all: target := all
 clean: target := clean
+distclean: target := distclean
 
 all: $(subdirs)
 
@@ -26,6 +24,8 @@ run: all
 	done
 
 clean: $(subdirs)
+
+distclean: $(subdirs)
 
 
 

@@ -204,9 +204,9 @@ class Macrostrain
   //---------------------------------------------------------------------
 
 
-  Tensor2Sym get_strain(Elem* el, bool crystal_system = false); //calculate strain
+  Tensor2Sym get_strain(const Elem* el, bool crystal_system = false); //calculate strain
   
-  Tensor1 get_piezopolarization(Elem* el);
+  Tensor1 get_piezopolarization(const Elem* el);
   //---------------------------------------------------------------------
   void output_strain(std::string filename ); //output strain for gmv
 
@@ -280,9 +280,9 @@ class Macrostrain
 
   std::vector<Piezoelectricity> piezo; //piezoelectricity constants of a meterial   
 
-  std :: map <Elem*, unsigned int > elem_numbers;  //map between element pointers and their numbers
+  std :: map <const Elem*, unsigned int > elem_numbers;  //map between element pointers and their numbers
 
-  std :: map <Node*,  unsigned int > active_node_number;    //map between active node pointers and their numbers
+  std :: map <const Node*,  unsigned int > active_node_number;    //map between active node pointers and their numbers
 
   std :: vector< std :: vector <const Node*> >  nodes_periodic; //dim node list's: each contains list of nodes that periodic b.c
                                                                 //must be applied to
@@ -416,10 +416,11 @@ class Macrostrain
 
   bool calculate_atom_displacements;
  
-  string   atom_structure_filename;
+  string atom_structure_filename;
  
-  string   atom_displacements_filename;  
+  string atom_displacements_filename;  
 
+  string atom_output_type;
 
   bool output_strain_on_atoms;
 

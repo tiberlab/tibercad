@@ -231,18 +231,21 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
   double ni0 = 1; // let 1 be the minimum for ni0
   double eps0 = -1;
   
-  Point p;
   // find minimum or maximum by looping over all elements
-  set<DriftDiffusionProperties*>& materials = _device->get_materials();
-  DD::Device::const_material_iterator it = materials.begin();
-  const DD::Device::const_material_iterator end = materials.end();
-  while (it != end)
+  MeshBase::const_element_iterator el =
+                                  get_mesh().active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el =
+                                  get_mesh().active_local_elements_end();
+  for ( ; el != end_el ; ++el) 
   {
-    DriftDiffusionProperties* sc = *it;
-    // TODO
-    // Calculate the equilibrium properties
-    sc->calculate_all(sc->get_equilibrium_fermi_level(), 0, 0,
-        p, NULL, _options.coupling);
+    const Elem* elem = *el;
+    const Elem* top_parent = (*el)->top_parent();
+
+    DriftDiffusionProperties* sc =
+      _device->get_element_data().get_data(top_parent);
+
+    sc->reinit(elem);
+    sc->calculate_equilibrium_properties(_options.coupling);
     
     double mu = sc->get_hole_mobility();
     mu0 = (mu0 > mu) ? mu0 : mu;
@@ -260,8 +263,6 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
 
     double eps = sc->get_relative_permittivity();
     eps0 = (eps0 > eps) ? eps0 : eps;
-
-    ++it;
   }
 
   switch (type)
@@ -477,11 +478,15 @@ DriftDiffusion::prepare_solver(void)
 
       _old_sim_voltages[*it] = 0.0;
     }
+
+    // we do this only once
+    compute_scaling(_options.scaling_type);
   }
 
+  // set a static pointer to ourselves
+  // this is needed in the static assembly routine
   _this = this;
 
-  compute_scaling(_options.scaling_type);
 }
 
 void
@@ -1316,6 +1321,8 @@ DriftDiffusion::get_artificial_boundary_current(void)
       device.get_element_data().get_data((*el)->top_parent());
     assert(sc != NULL);
 
+    sc->reinit(elem);
+
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
       if (elem->neighbor(s) == NULL)
@@ -1345,7 +1352,7 @@ DriftDiffusion::get_artificial_boundary_current(void)
 
           // calculate densities etc.
           sc->calculate_all(u * phi0, en * phi0, ep * phi0,
-              q_point[qp], elem, _options.coupling);
+              q_point[qp], _options.coupling);
         
           Real cond_e = Constants::e * sc->get_electron_conductivity();
           Real cond_h = Constants::e * sc->get_hole_conductivity();
@@ -1508,7 +1515,7 @@ DriftDiffusion::calculate_currents(void)
 
             // calculate densities etc.
             sc->calculate_all(u * phi0, en * phi0, ep * phi0,
-                q_point[qp], elem, _options.coupling);
+                q_point[qp], _options.coupling);
         
             Real cond_e = Constants::e * sc->get_electron_conductivity();
             Real cond_h = Constants::e * sc->get_hole_conductivity();
@@ -1540,7 +1547,7 @@ DriftDiffusion::calculate_currents(void)
 
           // calculate densities etc.
           sc->calculate_all(u * phi0, en * phi0, ep * phi0,
-              elem->point(s), elem, _options.coupling);
+              elem->point(s), _options.coupling);
 
           Real cond_e = Constants::e * sc->get_electron_conductivity();
           Real cond_h = Constants::e * sc->get_hole_conductivity();
@@ -1660,7 +1667,9 @@ DriftDiffusion::build_densities(vector<double>& densities,
 
       DriftDiffusionProperties* sc =
         device.get_element_data().get_data(elem->top_parent());
-      assert(sc != NULL);
+      assert(sc != NULL); 
+
+      sc->reinit(elem);
 
       assert(elem->n_nodes() == dof_indices_u.size());
 
@@ -1672,7 +1681,7 @@ DriftDiffusion::build_densities(vector<double>& densities,
         Real en = phi0 * solution(dof_indices_en[n]);
         Real ep = phi0 * solution(dof_indices_ep[n]);
         
-        sc->calculate_all(u, en, ep, elem->point(n), elem, _options.coupling);
+        sc->calculate_all(u, en, ep, elem->point(n), _options.coupling);
 
         assert (node_conn[elem->node(n)] != 0);
 
@@ -1877,7 +1886,6 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
   for ( ; el != end_el ; ++el) 
   {
     const Elem* elem = *el;
-    Elem* elem_tmp = *el;
     const Elem* top_parent = (*el)->top_parent();
 
     // get DOF indices
@@ -1931,6 +1939,8 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       device.get_element_data().get_data(top_parent);
     assert(sc != NULL);
 
+    sc->reinit(elem);
+
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
@@ -1946,8 +1956,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       }
 
       // calculate densities etc.
-      sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep,
-          q_point[qp], elem, coupling);
+      sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep, q_point[qp], coupling);
       double n  = sc->get_electron_density();
       double p  = sc->get_hole_density();
       double epsilon = sc->get_relative_permittivity();
@@ -2165,6 +2174,10 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
         BoundaryData::ElementSide side(top_parent, s_top);
         BoundaryDescriptor* boundary_desc =
           device.get_boundary_data().get_data(side);
+        // TODO
+        //ElectricalContact* contact = 
+        //  static_cast<ElectricalContact*>(
+        //    device.get_boundary_data().get_data(side));
 
         vector<double> coeff(3, 0.0);
         vector<double> value(3, 0.0);
@@ -2246,7 +2259,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
 
             // calculate densities etc.
             sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep,
-                q_point[qp], elem, coupling);
+                q_point[qp], coupling);
             double epsilon = sc->get_relative_permittivity();
             double l2_eps = l2 * epsilon;
 
@@ -2271,6 +2284,11 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
                 if (coupling & HCURRENT)
                   Kpp(i,j) -= coeff[2] * phi_i_x_phi_j;
               }
+            }
+
+            // contribution to the jacobian
+            if (jacobian != NULL)
+            {
             }
 
             // contribution to -Fe_i
@@ -2305,7 +2323,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
 
           // calculate densities etc.
           sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep,
-            elem->point(s), elem, coupling);
+            elem->point(s), coupling);
           double epsilon = sc->get_relative_permittivity();
           double l2_eps = l2 * epsilon;
 

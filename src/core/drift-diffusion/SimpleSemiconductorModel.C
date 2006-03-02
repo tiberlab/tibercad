@@ -3,6 +3,7 @@
 #include "SimpleSemiconductorModel.h"
 
 #include "point.h"
+#include "elem.h"
 
 #include <iostream>
 
@@ -11,7 +12,8 @@ using namespace DriftDiffusionDefs;
 
 SimpleSemiconductorModel::SimpleSemiconductorModel(void)
   : DriftDiffusionProperties(),
-    _recombination(0)
+    _recombination(0),
+    _is_prepared(false)
 {
   _DOS_factor = 2 * std::pow(2 * M_PI * Constants::me /
       (Constants::h * Constants::h) * Constants::e, 1.5) / 1e6;
@@ -23,47 +25,32 @@ SimpleSemiconductorModel::SimpleSemiconductorModel(
     _recombination(model._recombination),
     _DOS_factor(model._DOS_factor),
     _conduction_band(model._conduction_band),
-    _valence_band(model._valence_band)
+    _valence_band(model._valence_band),
+    _is_prepared(model._is_prepared)
 {
 }
 
-
 void
-SimpleSemiconductorModel::calculate_equilibrium_properties(int coupling,
-    double temperature)
+SimpleSemiconductorModel::prepare_element_data(void)
 {
-  double thermal_voltage = Constants::k_B * temperature;
+  double kT = SimulationOptions::T * Constants::k_B;
+  electron_vt = hole_vt = kT;
   
   BandProperties& cb = _conduction_band;
   BandProperties& vb = _valence_band;
 
   cb.effective_DOS =
-    get_DOS_factor() * std::pow(thermal_voltage * cb.effective_mass, 1.5);
+    get_DOS_factor() * std::pow(kT * cb.effective_mass, 1.5);
 
   vb.effective_DOS =
-    get_DOS_factor() * std::pow(thermal_voltage * vb.effective_mass, 1.5);
-  
-  switch (coupling & BOTH)
-  {
-    case ELECTRONS:
-      equilibrium_fermi_level = calculate_equilibrium_potential<ELECTRONS>();
-      break;
-    case HOLES:
-      equilibrium_fermi_level = calculate_equilibrium_potential<HOLES>();
-      break;
-    default:
-      equilibrium_fermi_level = calculate_equilibrium_potential<BOTH>();
-      break;
-  }
-  // they are calculated during 'calculate_equilibrium_potential()'
-  equilibrium_electron_density = electron_density;
-  equilibrium_hole_density = hole_density;
+    get_DOS_factor() * std::pow(kT * vb.effective_mass, 1.5);
+
 }
 
 void
 SimpleSemiconductorModel::calculate_all(
     double potential, double fermi_e, double fermi_h,
-    const Point& coord, const Elem* elem, int coupling)
+    const Point& coord, int coupling)
 {
   switch (coupling & BOTH)
   {
@@ -80,10 +67,30 @@ SimpleSemiconductorModel::calculate_all(
 }
 
 
-template <int coupling>
-double
-SimpleSemiconductorModel::calculate_equilibrium_potential(void) const
+void
+SimpleSemiconductorModel::calculate_equilibrium_properties(int coupling,
+    double temperature)
 {
+
+  // if equilibrium properties were already calculated, we
+  // just update all properties to equilibrium ones
+  if (_is_prepared)
+  {
+    switch (coupling & BOTH)
+    {
+      case ELECTRONS:
+        calculate_all<ELECTRONS>(get_equilibrium_fermi_level(), 0, 0);
+        break;
+      case HOLES:
+        calculate_all<HOLES>(get_equilibrium_fermi_level(), 0, 0);
+        break;
+      default:
+        calculate_all<BOTH>(get_equilibrium_fermi_level(), 0, 0);
+        break;
+    }
+    return;
+  }
+
   SNES           snes;
   KSP            ksp;
   PC             pc;
@@ -114,8 +121,21 @@ SimpleSemiconductorModel::calculate_equilibrium_potential(void) const
       PETSC_DEFAULT);
 
 
-  ierr = SNESSetFunction(snes, r, function<coupling>, (void *) this);
-  ierr = SNESSetJacobian(snes, J, J, jacobian<coupling>, (void *) this);
+  switch (coupling & BOTH)
+  {
+    case ELECTRONS:
+      ierr = SNESSetFunction(snes, r, function<ELECTRONS>, (void *) this);
+      ierr = SNESSetJacobian(snes, J, J, jacobian<ELECTRONS>, (void *) this);
+      break;
+    case HOLES:
+      ierr = SNESSetFunction(snes, r, function<HOLES>, (void *) this);
+      ierr = SNESSetJacobian(snes, J, J, jacobian<HOLES>, (void *) this);
+      break;
+    default:
+      ierr = SNESSetFunction(snes, r, function<BOTH>, (void *) this);
+      ierr = SNESSetJacobian(snes, J, J, jacobian<BOTH>, (void *) this);
+      break;
+  }
 
   // calculate first guess according to doping
   // assume complete ionization
@@ -138,6 +158,9 @@ SimpleSemiconductorModel::calculate_equilibrium_potential(void) const
     guess = vb.band_edge + kT
       * std::log(vb.effective_DOS / (Na + ni));
   }
+  // we take the current value value
+  guess = get_equilibrium_fermi_level();
+
   ierr = VecSet(&guess, x);
 
   ierr = SNESSolve(snes, x);
@@ -151,13 +174,18 @@ SimpleSemiconductorModel::calculate_equilibrium_potential(void) const
 */
 
   ierr = VecGetArray(x, &result);
-  double eq_pot = result[0];
+
+  equilibrium_fermi_level =  result[0];
+
+  equilibrium_electron_density = electron_density;
+  equilibrium_hole_density = hole_density;
+
   ierr = VecRestoreArray(x, &result);
 
   ierr = VecDestroy(x);
   ierr = MatDestroy(J);
 
-  return eq_pot;
+  _is_prepared = true;
 }
 
 template <int coupling>
@@ -172,8 +200,7 @@ SimpleSemiconductorModel::jacobian(SNES snes, Vec x,
   ierr = VecGetArray(x, &xx);
 
   SimpleSemiconductorModel* s = static_cast<SimpleSemiconductorModel*>(sc);
-  Point p;
-  s->calculate_all(xx[0], 0.0, 0.0, p, NULL, coupling);
+  s->calculate_all(xx[0], 0.0, 0.0, (s->elem)->centroid(), coupling);
 
   A[0] = s->get_charge_density_derivatives()[0];
 /*
@@ -202,8 +229,7 @@ SimpleSemiconductorModel::function(SNES snes, Vec x, Vec f, void *sc)
   ierr = VecGetArray(f, &ff);
 
   SimpleSemiconductorModel* s = static_cast<SimpleSemiconductorModel*>(sc);
-  Point p;
-  s->calculate_all(xx[0], 0.0, 0.0, p, NULL, coupling);
+  s->calculate_all(xx[0], 0.0, 0.0, (s->elem)->centroid(), coupling);
 
   ff[0] = s->get_charge_density();
 

@@ -119,6 +119,10 @@ int main (int argc, char** argv)
     contact.set_n_dopant(Dopant(5e19, 0.025, 2));
     contact.set_SRH_parameters(1e-9, 1e-9);
 
+    const Elem* elem = meshdata.elem_data_begin()->first;
+    sub.reinit(elem);
+    schottky.reinit(elem);
+    contact.reinit(elem);
     sub.calculate_equilibrium_properties();
     schottky.calculate_equilibrium_properties();
     contact.calculate_equilibrium_properties();
@@ -520,7 +524,6 @@ void setup_boundary_desc(BoundaryDescriptor& desc,
   {
     const SimpleSemiconductorModel& m =
       static_cast<const SimpleSemiconductorModel&>(sc);
-    //double ec = m.get_conduction_band_properties().band_edge;
     double ec = m.get_conduction_band_edge();
     double barrier = 0.8;
     coeff[2] = ec - barrier;    

@@ -113,6 +113,8 @@ int main (int argc, char** argv)
     nside.set_p_dopant(Dopant(p_doping, 0.01, 4));
     pside.set_p_dopant(Dopant(p_doping, 0.01, 4));
 
+    nside.reinit(meshdata.elem_data_begin()->first);
+    pside.reinit(meshdata.elem_data_begin()->first);
     nside.calculate_equilibrium_properties(BOTH);
     pside.calculate_equilibrium_properties(BOTH);
 

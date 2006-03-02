@@ -1,0 +1,17 @@
+$Options
+
+  meshfile = hemt.msh
+  mesh_units = 1e-4
+
+  approximation_order = FIRST
+
+  dimension = 2
+
+  fully_coupled = 0
+
+  material_system = 0
+  al_content = 0.3
+  # only used when material_system == 1
+  growth_dir = 4
+
+End

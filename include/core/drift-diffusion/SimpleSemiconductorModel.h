@@ -59,7 +59,10 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
      */
     void set_relative_permittivity(double epsilon_r);
     
-
+    //! \copydoc DriftDiffusionProperties::calculate_equilibrium_properties()
+    virtual void calculate_equilibrium_properties(
+        int coupling = DriftDiffusionDefs::BOTH,
+        double temperature = SimulationOptions::T);
 
     /**
      * Add recombination model to be used.
@@ -79,18 +82,7 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
     void set_SRH_parameters(double tau_n, double tau_p);
 
 
-    /**
-     * Calculates the equilibrium properties.
-     *
-     * This method has to be called before any call to \p calculate_all()
-     * but after setting up all material parameters
-     */
-    virtual void calculate_equilibrium_properties(
-        int coupling = DriftDiffusionDefs::BOTH,
-        double temperature = SimulationOptions::T);
-
     virtual void read_database(const Dummy&) {};
-
 
     /*! \copydoc DriftDiffusionProperties::calculate_all()
      * 
@@ -98,8 +90,8 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
      */
     virtual void calculate_all(double potential,
       double fermi_e, double fermi_h,
-      const Point& p, const Elem* elem,
-      int coupling = DriftDiffusionDefs::BOTH);
+      //const Point& p, const Elem* elem,
+      const Point& p, int coupling = DriftDiffusionDefs::BOTH);
     
     /**
      * @returns the donor density
@@ -130,18 +122,25 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
     
   protected:
 
-    /**
-     * @returns the factor 2 * pow(2 * PI / h^2)^1.5
-     * for calculating the effective density of states
+    //! \copydoc DriftDiffusionProperties::calculate_all()
+    /*!
+     * This implementation calculates the effective density of states
+     */
+    virtual void prepare_element_data(void);
+
+    //! Get the constant factor to calculate the effective density of states
+    /*!
+     * \return the factor 2 * pow(2 * PI / h^2)^1.5
      */
     double get_DOS_factor(void) const;
     
-    /**
-     * Calculate ionized donor and acceptor densities and derivatives
-     *
-     * The arguments are:
-     *   arg_e = (Ef_e - Ec + potential) / kT
-     *   arg_h = (Ev - Ef_h - potential) / kT
+    //! Calculate ionized donor and acceptor densities and derivatives
+    /*!
+     * \param[in] arg_e = (Ef_e - Ec + potential) / kT
+     * \param[in] arg_h = (Ev - Ef_h - potential) / kT
+     * \param[in] kT the thermal voltage
+     * \param[out] Nd the ionized donor density
+     * \param[out] dNd the derivative of \p Nd
      */
     void calculate_ionized_donors(double arg_e, double kT,
         double& Nd, double& dNd);
@@ -149,20 +148,21 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
     void calculate_ionized_acceptors(double arg_h, double kT,
         double& Na, double& dNa);
 
-    /**
-     * Calculate Shockley-Read-Hall recombination
-     */
+    //! Calculate Shockley-Read-Hall recombination
     void calculate_SRH_recombination(void);
 
-    /**
-     * Calculate Auger recombination
-     */
+    //! Calculate Auger recombination
     void calculate_Auger_recombination(void);
 
-    /**
-     * Calculate direct recombination
-     */
+    //! Calculate direct recombination
     void calculate_direct_recombination(void);
+
+    //! Calculates all properties according to the type of coupling
+    /*!
+     * In this simple model we assume no dependence on the coordinates
+     */
+    template <int coupling>
+    void calculate_all(double potential, double fermi_e, double fermi_h);
 
 
   private:
@@ -190,6 +190,9 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
      */
     double _DOS_factor;
 
+    //! \c true if equilibrium properties are calculated
+    bool _is_prepared;
+
 
     /**
      * The band properties
@@ -202,17 +205,6 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
 
     double _electron_recombination_time;
     double _hole_recombination_time;
-
-    //! Calculates all properties according to the type of coupling
-    template <int coupling>
-    void calculate_all(double potential, double fermi_e, double fermi_h);
-
-    /**
-     * Calculates and returns the equilibrium electric potential with
-     * respect to a quasi fermi level of 0 eV
-     */
-    template <int coupling>
-    double calculate_equilibrium_potential(void) const;
 
 
     template <int coupling>
@@ -437,7 +429,8 @@ SimpleSemiconductorModel::calculate_all(double potential,
     double fermi_e, double fermi_h)
 {
 
-  double kT = SimulationOptions::T * Constants::k_B;
+  // in this simple model all temperatures are equal
+  double kT = electron_vt;
   
   const BandProperties& cb = _conduction_band;
   const BandProperties& vb = _valence_band;
