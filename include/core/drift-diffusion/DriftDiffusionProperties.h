@@ -96,7 +96,6 @@ class DriftDiffusionProperties : public PhysicalProperties
      */
     virtual void calculate_all(double potential,
       double fermi_e, double fermi_h,
-      //const Point& coord, const Elem* elem,
       const Point& coord, int coupling = DriftDiffusionDefs::BOTH) = 0;
       
 
@@ -312,6 +311,14 @@ class DriftDiffusionProperties : public PhysicalProperties
     double get_equilibrium_fermi_level(void) const
       { return equilibrium_fermi_level; };
 
+    //! Get the conduction band edge
+    double get_conduction_band_edge(void) const
+      { return conduction_band_edge; };
+
+    //! Get the valence band edge
+    double get_valence_band_edge(void) const
+      { return valence_band_edge; };
+
 
   protected:
   
@@ -321,7 +328,7 @@ class DriftDiffusionProperties : public PhysicalProperties
     //! This method gets called from reinit()
     /*!
      * It can be used to setup data that is constant in an element, e.g.
-     * strain related stuff.
+     * strain related stuff, band edges.
      */
     virtual void prepare_element_data(void) {};
 
@@ -412,6 +419,18 @@ class DriftDiffusionProperties : public PhysicalProperties
      * \f$n_i = n_0 p_0\f$
      */
     double equilibrium_hole_density;
+
+    //! The conduction band edge
+    /*!
+     * The band edge is an element data
+     */
+    double conduction_band_edge;
+
+    //! The valence band edge
+    /*!
+     * The band edge is an element data
+     */
+    double valence_band_edge;
 
     //! The equilibrium fermi level
     /*!
@@ -527,8 +546,8 @@ DriftDiffusionProperties::density_and_derivatives(double arg, double& density,
     double& derivative_over_density) const
 {
   
-  const double arg_max = 50;
-  const double arg_min = -10;
+  const double arg_max = 150;
+  const double arg_min = -100;
 
   switch (S)
   {

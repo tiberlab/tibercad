@@ -1220,6 +1220,7 @@ DriftDiffusion::set_dirichlet_values(void)
 double
 DriftDiffusion::get_artificial_boundary_current(void)
 {
+
   NonlinearImplicitSystem* poisson;
   NonlinearImplicitSystem* ecurrent;
   NonlinearImplicitSystem* hcurrent;
@@ -1377,6 +1378,10 @@ void
 DriftDiffusion::calculate_currents(void)
 {
 
+  // we only do something if we are on processor 0
+  if (libMesh::processor_id() != 0)
+    return;
+  
   // reset currents
   ContactData::iterator it =
     _boundary_currents.begin();
@@ -1584,6 +1589,7 @@ DriftDiffusion::build_densities(vector<double>& densities,
   const DofMap& dof_map = system->get_dof_map();
 
   const unsigned int dim = mesh.mesh_dimension();
+  // TODO if some elements were coarsened, does this still work??
   const unsigned int nn  = mesh.n_nodes();
 
   const unsigned int n_vars  = 3;
@@ -1713,12 +1719,316 @@ DriftDiffusion::build_densities(vector<double>& densities,
 
 }
 
+void
+DriftDiffusion::build_electric_field(vector<double>& field,
+    vector<string>& names)
+{
+  // we only do something if we are on processor 0
+  if (libMesh::processor_id() != 0)
+    return;
+  
+  NonlinearImplicitSystem* system;
+
+  system = &_eq_system->get_system<NonlinearImplicitSystem>(
+      "drift-diffusion coupled");
+
+  // aliases for nicer code
+  const DD::Device& device = *(_device);
+  const Mesh& mesh = _device->get_mesh();
+  const NumericVector<Number>& solution = *(system->solution);
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+  const unsigned int nn  = mesh.n_elem();
+
+  const unsigned int n_vars  = 3;
+  names.resize(n_vars);
+  names[0] = "electric_field_x";
+  names[1] = "electric_field_y";
+  names[2] = "electric_field_z";
+
+  field.resize(nn * n_vars);
+
+  // the scaling parameters to scale back the result
+  double phi0 = get_scaling().get_potential_scaling();
+  const double x0 = get_options().mesh_units;
+
+  const unsigned int u_var = system->variable_number("potential");
+  
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  QGauss qrule(dim, libMeshEnums::CONSTANT);
+  fe->attach_quadrature_rule(&qrule);
+
+  vector<unsigned int> dof_indices_u;
+
+  // element shape function gradients
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+  MeshBase::const_element_iterator it =
+    mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end =
+    mesh.active_elements_end(); 
+
+  unsigned int elem_number = 0;
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    dof_map.dof_indices(elem, dof_indices_u, u_var);
+
+    DriftDiffusionProperties* sc =
+      device.get_element_data().get_data(elem->top_parent());
+    assert(sc != NULL); 
+
+    sc->reinit(elem);
+
+    //vector<Point> centroid(1, elem->centroid());
+    fe->reinit(elem);
+    
+    unsigned int n_dofs = dof_indices_u.size();
+    // get the solution values at the centroid
+    Real Ex = 0.0;
+    Real Ey = 0.0;
+    Real Ez = 0.0;
+    for (unsigned int i = 0; i < n_dofs; i++)
+    {
+      Ex  += dphi[i][0](0) * solution(dof_indices_u[i]);
+      Ey  += dphi[i][0](1) * solution(dof_indices_u[i]);
+      Ez  += dphi[i][0](2) * solution(dof_indices_u[i]);
+    }
+
+    unsigned int id = n_vars * elem_number;
+    field[id] = phi0 * Ex / x0;
+    field[id + 1] = phi0 * Ey / x0;
+    field[id + 2] = phi0 * Ez / x0;
+
+    elem_number++;
+  }
+  field.resize(elem_number * n_vars);
+}
+
+
+void
+DriftDiffusion::build_band_edges(vector<double>& band_edges,
+    vector<string>& names)
+{
+  // we only do something if we are on processor 0
+  if (libMesh::processor_id() != 0)
+    return;
+  
+  NonlinearImplicitSystem* system;
+
+  system = &_eq_system->get_system<NonlinearImplicitSystem>(
+      "drift-diffusion coupled");
+
+  // aliases for nicer code
+  const DD::Device& device = *(_device);
+  const Mesh& mesh = _device->get_mesh();
+  const NumericVector<Number>& solution = *(system->solution);
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+  const unsigned int nn  = mesh.n_nodes();
+
+  const unsigned int n_vars  = 4;
+  names.resize(n_vars);
+  names[0] = "conduction_band_edge";
+  names[1] = "valence_band_edge";
+  names[2] = "electron_quasi_fermi_level";
+  names[3] = "hole_quasi_fermi_level";
+
+  band_edges.resize(nn * n_vars);
+
+  vector<double> local(band_edges.size());
+  vector<unsigned short int> node_conn(nn);
+
+  vector<double> nodal_val;
+
+  fill(band_edges.begin(), band_edges.end(), 0.0);
+  fill(local.begin(), local.end(), 0.0);
+
+  // the scaling parameters to scale back the result
+  double phi0 = get_scaling().get_potential_scaling();
+
+  // Get the number of elements that share each node.  We will
+  // compute the average value at each node.
+  {
+    vector<unsigned short int> node_conn_local(node_conn.size());
+    
+    MeshBase::const_element_iterator it =
+      mesh.active_local_elements_begin();
+    const MeshBase::const_element_iterator end =
+      mesh.active_local_elements_end(); 
+
+    for ( ; it != end; ++it)
+      for (unsigned int n=0; n<(*it)->n_nodes(); n++)
+	node_conn_local[(*it)->node(n)]++;
+
+#ifdef HAVE_MPI
+    // Gather the distributed node_conn arrays in the case of
+    // multiple processors
+    //
+    // (Note that we use an unsigned short int here even though an
+    // unsigned char would be more that sufficient.  The MPI 1.1
+    // standard does not require that MPI_SUM, MPI_PROD etc... be
+    // implemented for char data types. 12/23/2003 - BSK)  
+    MPI_Allreduce (&node_conn_local[0], &node_conn[0], node_conn.size(),
+		   MPI_UNSIGNED_SHORT, MPI_SUM, libMesh::COMM_WORLD);
+    
+#else
+    // Without MPI the node_conn_local and the node_conn arrays
+    // are necessarily identical
+    node_conn = node_conn_local;
+    
+#endif
+  }
+
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_e");
+  const unsigned int ep_var = system->variable_number("fermi_h");
+  
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  MeshBase::const_element_iterator it =
+    mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end =
+    mesh.active_local_elements_end(); 
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+#ifdef ENABLE_INFINITE_ELEMENTS
+    // infinite elements should be skipped...
+    if (!elem->infinite())
+#endif
+    {
+      dof_map.dof_indices(elem, dof_indices_u, u_var);
+      dof_map.dof_indices(elem, dof_indices_en, en_var);
+      dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+      DriftDiffusionProperties* sc =
+        device.get_element_data().get_data(elem->top_parent());
+      assert(sc != NULL); 
+
+      sc->reinit(elem);
+
+      assert(elem->n_nodes() == dof_indices_u.size());
+
+      //sol.resize(dof_indices.size());
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
+        Real u  = phi0 * solution(dof_indices_u[n]);
+        Real en = phi0 * solution(dof_indices_en[n]);
+        Real ep = phi0 * solution(dof_indices_ep[n]);
+        
+        sc->calculate_all(u, en, ep, elem->point(n), _options.coupling);
+
+        assert (node_conn[elem->node(n)] != 0);
+
+        unsigned int id = n_vars * elem->node(n);
+        double nodal_val = sc->get_conduction_band_edge() - u;
+        local[id] +=
+          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+
+        nodal_val = sc->get_valence_band_edge() - u;
+        local[id + 1] +=
+          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+
+        local[id + 2] = en;
+        local[id + 3] = ep;
+      }
+    }
+  }
+
+#ifdef HAVE_MPI
+  // Now each processor has computed contriburions to the
+  // soln vector.  Gather them all up.
+  MPI_Allreduce (&local[0], &band_edges[0], band_edges.size(),
+		 MPI_REAL, MPI_SUM, libMesh::COMM_WORLD);
+#else
+  densities = local;
+#endif
+
+/*
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_e");
+  const unsigned int ep_var = system->variable_number("fermi_h");
+  
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  QGauss qrule(dim, libMeshEnums::CONSTANT);
+  fe->attach_quadrature_rule(&qrule);
+
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+
+  MeshBase::const_element_iterator it =
+    mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end =
+    mesh.active_elements_end(); 
+
+  unsigned int elem_number = 0;
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    dof_map.dof_indices(elem, dof_indices_u, u_var);
+    dof_map.dof_indices(elem, dof_indices_en, en_var);
+    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+    DriftDiffusionProperties* sc =
+      device.get_element_data().get_data(elem->top_parent());
+    assert(sc != NULL); 
+
+    sc->reinit(elem);
+
+    //vector<Point> centroid(1, elem->centroid());
+    fe->reinit(elem);
+    
+    unsigned int n_dofs = dof_indices_u.size();
+    // get the solution values at the centroid
+    Real u   = 0.0;
+    Real en  = 0.0;
+    Real ep  = 0.0;
+    for (unsigned int i = 0; i < n_dofs; i++)
+    {
+      u  += phi[i][0] * solution(dof_indices_u[i]);
+      en += phi[i][0] * solution(dof_indices_en[i]);
+      ep += phi[i][0] * solution(dof_indices_ep[i]);
+    }
+
+    double Ec = sc->get_conduction_band_edge() - phi0 * u;
+    double Ev = sc->get_valence_band_edge() - phi0 * u;
+
+    unsigned int id = n_vars * elem_number;
+    band_edges[id] = Ec;
+    band_edges[id + 1] = Ev;
+    band_edges[id + 2] = phi0 * en;
+    band_edges[id + 3] = phi0 * ep;
+
+    elem_number++;
+  }
+  band_edges.resize(elem_number * n_vars);
+*/
+}
+
 
 template <int coupling>
-void
+  void
 DriftDiffusion::assemble(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian)
+    NumericVector<Number>* residual,
+    SparseMatrix<Number>* jacobian)
 {
   
   // references for nicer code
@@ -1744,10 +2054,6 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
   // NOTE: the mesh and all paramters were not explicitly scaled, so
   //       we have to treat scaling by explicit division/multiplication
   //       
-  // density scaling for electrons
-  double C0_e = options.C0_e;
-  // density scaling for holes
-  double C0_h = options.C0_h;
   // maximum density of electrons
   double n_max = options.n_max;
   // maximum density of holes
@@ -1763,6 +2069,11 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
   const double mu0 = scaling.get_mobility_scaling();
   // x 1e4 because we calculate in cm
   const double P0 = (Constants::e * x0 * C0) * 1e4;
+  // density scaling for electrons
+  double C0_e = options.C0_e;
+  // density scaling for holes
+  double C0_h = options.C0_h;
+  // scaling for recombination rates
   const double R0_e = C0_e / scaling.get_time_scaling();
   const double R0_h = C0_h / scaling.get_time_scaling();
   //

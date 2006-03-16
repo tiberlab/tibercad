@@ -1,5 +1,11 @@
 #include "GMVIO_cell.h"
 
+//#include <iomanip>
+#include <fstream>
+
+#include "mesh_base.h"
+#include "elem.h"
+
 // anonymous namespace to hold local data
 namespace
 {
@@ -173,6 +179,10 @@ void GMVIO_cell::write_ascii_cell_data (const std::string& fname,
 				  const std::vector<std::string>& solution_names1)
 
 {
+  // we only write something if we are on processor 0
+  if (libMesh::processor_id() != 0)
+    return;
+      
   const std::vector<Number>* v = &v1;
   const std::vector<std::string>* solution_names = &solution_names1;
   
@@ -187,21 +197,22 @@ void GMVIO_cell::write_ascii_cell_data (const std::string& fname,
   const MeshBase& mesh = MeshOutput<MeshBase>::mesh();
 
 
+  unsigned int n_nodes = mesh.n_nodes();
   // Begin interfacing with the GMV data file
   {
     out << "gmvinput ascii\n\n";
 
     // write the nodes
-    out << "nodes " << mesh.n_nodes() << "\n";
+    out << "nodes " << n_nodes << "\n";
     for (unsigned int v=0; v<mesh.n_nodes(); v++)
       out << mesh.point(v)(0) << " ";
     out << "\n";
     
-    for (unsigned int v=0; v<mesh.n_nodes(); v++)
+    for (unsigned int v=0; v<n_nodes; v++)
       out << mesh.point(v)(1) << " ";
     out << "\n";
     
-    for (unsigned int v=0; v<mesh.n_nodes(); v++)
+    for (unsigned int v=0; v<n_nodes; v++)
       out << mesh.point(v)(2) << " ";
     out << "\n\n";
   }

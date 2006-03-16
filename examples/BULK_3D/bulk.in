@@ -5,8 +5,8 @@ $Options$
 # a 3D piece of bulk semiconductor
 
 
-n_doping = 1e18
-p_doping = 0
+n_doping = 0
+p_doping = 1e18
 temperature = 300
 
 #statistics = FD

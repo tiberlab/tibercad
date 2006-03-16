@@ -1,16 +1,11 @@
+#ifndef _GMVIO_CELL_H
+#define _GMVIO_CELL_H
 
- #include <iomanip>
- #include <fstream>
- #include <cstring> // for strcpy, memcpy
- #include <cstdio>  // for sprintf
- #include <vector>
+#include <vector>
 
+#include "gmv_io.h"
 
- #include "libmesh_config.h"
- #include "gmv_io.h"
- #include "mesh_base.h"
- #include "elem.h"
- #include "equation_systems.h"
+class MeshBase;
 
 class GMVIO_cell : public GMVIO
 {
@@ -23,3 +18,4 @@ class GMVIO_cell : public GMVIO
  private:
 };
 
+#endif // _GMVIO_CELL_H

@@ -45,6 +45,9 @@ SimpleSemiconductorModel::prepare_element_data(void)
   vb.effective_DOS =
     get_DOS_factor() * std::pow(kT * vb.effective_mass, 1.5);
 
+  conduction_band_edge = cb.band_edge;
+  valence_band_edge = vb.band_edge;
+
 }
 
 void
@@ -109,9 +112,9 @@ SimpleSemiconductorModel::calculate_equilibrium_properties(int coupling,
   ierr = SNESGetKSP(snes, &ksp);
   ierr = KSPGetPC(ksp, &pc);
   ierr = PCSetType(pc, PCNONE);
-  ierr = KSPSetTolerances(ksp, 1.e-4, 1e-12, PETSC_DEFAULT, 500);
+  ierr = KSPSetTolerances(ksp, 1.e-9, 1e-12, PETSC_DEFAULT, 1500);
   ierr = SNESSetTolerances(snes, PETSC_DEFAULT,
-      1.e-12, PETSC_DEFAULT, 50, 500);
+      1.e-12, PETSC_DEFAULT, 50, 5000);
 
   double kT = SimulationOptions::T * Constants::k_B;
 
@@ -158,20 +161,19 @@ SimpleSemiconductorModel::calculate_equilibrium_properties(int coupling,
     guess = vb.band_edge + kT
       * std::log(vb.effective_DOS / (Na + ni));
   }
-  // we take the current value value
-  guess = get_equilibrium_fermi_level();
 
   ierr = VecSet(&guess, x);
 
   ierr = SNESSolve(snes, x);
-/*
+///*
   SNESConvergedReason reason;
   ierr = SNESGetConvergedReason(snes, &reason);
   int n_iterations = 0;
   ierr = SNESGetIterationNumber(snes, &n_iterations);
-  std::cerr << "iterations: "  << n_iterations
-    << "  converged reason: " << reason << "\n";
-*/
+  std::cerr << "Equilibrium properties calculation:\n";
+  std::cerr << "  # iterations: "  << n_iterations
+    << ", converged reason: " << reason << "\n";
+//*/
 
   ierr = VecGetArray(x, &result);
 
@@ -203,10 +205,10 @@ SimpleSemiconductorModel::jacobian(SNES snes, Vec x,
   s->calculate_all(xx[0], 0.0, 0.0, (s->elem)->centroid(), coupling);
 
   A[0] = s->get_charge_density_derivatives()[0];
-/*
+///*
   std::cerr << "u = " << xx[0] << ", n = " << s->get_charge_density()
     << ", dn = " << A[0] << "\n";
-*/
+//*/
   ierr = MatSetValues(*jac, 1, idx, 1, idx, A, INSERT_VALUES);
   *flag = SAME_NONZERO_PATTERN;
 

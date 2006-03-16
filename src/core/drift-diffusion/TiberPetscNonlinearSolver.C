@@ -47,7 +47,7 @@ extern "C"
      std::cerr << "it " << its << ", fnorm = " << fnorm << "\n";
 
     // check for convergence
-    if (reason < 0)
+    if ((reason < 0) && (reason != -3))
       throw(KSPDivergedError(reason, its, fnorm));
 
     return ierr;
@@ -99,9 +99,9 @@ extern "C"
     PetscMatrix<Number> PC(*pc);
     PetscMatrix<Number> Jac(*jac);
     PetscVector<Number> X_global(x);
-    PetscVector<Number> X_local (X_global.size());
+    PetscVector<Number> X_local(X_global.size());
 
-    X_global.localize (X_local);
+    X_global.localize(X_local);
 
     if (solver->jacobian != NULL) solver->jacobian(X_local, PC);
     if (solver->matvec   != NULL) solver->matvec(X_local, NULL, &PC);
@@ -264,8 +264,8 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
 
   // to override options from command line
   // TODO this will be delete in future
-  ierr = SNESSetFromOptions(_snes);
-  _checkerr(ierr);
+  //ierr = SNESSetFromOptions(_snes);
+  //_checkerr(ierr);
 
 
   // set functions

@@ -90,7 +90,6 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
      */
     virtual void calculate_all(double potential,
       double fermi_e, double fermi_h,
-      //const Point& p, const Elem* elem,
       const Point& p, int coupling = DriftDiffusionDefs::BOTH);
     
     /**
@@ -122,7 +121,7 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
     
   protected:
 
-    //! \copydoc DriftDiffusionProperties::calculate_all()
+    //! \copydoc DriftDiffusionProperties::prepare_element_data()
     /*!
      * This implementation calculates the effective density of states
      */
@@ -435,8 +434,8 @@ SimpleSemiconductorModel::calculate_all(double potential,
   const BandProperties& cb = _conduction_band;
   const BandProperties& vb = _valence_band;
 
-  double Ec = cb.band_edge;
-  double Ev = vb.band_edge;
+  double Ec = conduction_band_edge;
+  double Ev = valence_band_edge;
   
   // 1.) electron and hole density
   double n = 0, dn = 0, dn2 = 0, dn_over_n = 0, arg_e;

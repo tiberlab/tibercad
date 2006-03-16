@@ -125,10 +125,11 @@ void TecplotIO_cell::write_ascii_cell (const std::string& fname,
 
 
   // writes values of  variable x,  y,  z ; there should  be  always 3  coord. whatever the  simulation dim  
+  unsigned int n_nodes = mesh.n_nodes();
   for (unsigned int alpha=0; alpha<3; alpha++)
     {
 
-      for (unsigned int i=0; i<mesh.n_nodes(); i++)
+      for (unsigned int i=0; i<n_nodes; i++)
 	{
 
 	  double coord = mesh.point(i)(alpha);

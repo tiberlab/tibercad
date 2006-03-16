@@ -171,6 +171,18 @@ void  rotated_crystal::calculate_lat_consts()
 
   if (crystal_type.compare("hex")==0)
     {
+
+
+      for (short i = 0; i<3; i++)
+	lat_const_calc[i] = a_lat;
+
+      if (z_miller[3] != 0) lat_const_calc[2] = c_lat;
+      if (y_miller[3] != 0) lat_const_calc[1] = c_lat;
+      if (x_miller[3] != 0) lat_const_calc[0] = c_lat;
+    
+    /*
+
+
       mil1=Tensor1(0); mil1(1) = a_lat;
       
       mil2=Tensor1(0); mil2(1) = -0.5*a_lat; mil2(2) = std::sqrt(3.0)/2.0*a_lat;
@@ -209,7 +221,7 @@ void  rotated_crystal::calculate_lat_consts()
        
 
 
-      
+      */
 
     }
 
@@ -234,6 +246,10 @@ Tensor2Sym rotated_crystal::get_const_eps0(double lat_cont_substrate[3], Tensor2
 {
   Tensor2Sym const_eps0;
   const_eps0 = Tensor2Sym(0);
+
+ 
+
+
   for (int i = 1; i <=3; i++)
     {
       if (eps0_var_log(i,i) == 1)
@@ -242,6 +258,7 @@ Tensor2Sym rotated_crystal::get_const_eps0(double lat_cont_substrate[3], Tensor2
 	}
       else
 	{
+	  
 	  const_eps0(i,i) = (lat_cont_substrate[i-1] - lat_const_calc[i-1])/lat_const_calc[i-1];
 	}
     }
