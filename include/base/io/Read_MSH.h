@@ -1,17 +1,18 @@
 /*=============================================================================
-    Copyright (c) 2002-2003 Joel de Guzman
-    http://spirit.sourceforge.net/
+  Copyright (c) 2002-2003 Joel de Guzman
+  http://spirit.sourceforge.net/
 
-    Use, modification and distribution is subject to the Boost Software
-    License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
-    http://www.boost.org/LICENSE_1_0.txt)
-=============================================================================*/
+
+  Use, modification and distribution is subject to the Boost Software
+  License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt)
+  =============================================================================*/
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  This sample demontrates a parser for a comma separated list of numbers
-//  This is discussed in the "Quick Start" chapter in the Spirit User's Guide.
+// 
 //
-//  [ JDG 5/10/2002 ]
+//  
+//
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <boost/spirit/core.hpp>
@@ -37,13 +38,51 @@ using namespace boost::spirit;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Our comma separated list parser
+//  
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-class Read_MSH{
+class Read_MSH
+{
 
-  // private:
+ public:
+
+  //  MSH_parser(string filename , vector<int>& BC_reg_ID, int sim_dim );
+  
+  //  Read_MSH(string filename, vector<int>& phys_reg_ID, vector<int>& BC_reg_ID, int sim_dim  );
+
+  Read_MSH(string filename, vector<unsigned int>& phys_reg_ID,
+           vector<unsigned int>& BC_reg_ID, unsigned int sim_dim, 
+           Mesh& mesh, MeshData_elements&  mesh_data);
+
+
+  ~Read_MSH();
+
+
+  // void  MSH_parser::get_data ( vector< vector<double> >& glob_reg_values,
+  // vector<int>& glob_reg_id,  vector<string>& glob_mat);
+
+  void  get_data ( vector< vector<unsigned int> >& glob_elem_values);
+
+
+  // public  method  to  get  map    <BC_region, BC_nodes> 
+  void  get_BC_data (   map<unsigned int, vector<unsigned int> >&  BoundCond_map);
+
+  void  get_BC_data (   map<unsigned int, vector<unsigned int> >&  BoundCond_map,
+                        map<unsigned int, vector<unsigned int> >&  BoundCond_el_map);
+
+  void  get_elem_data (map<unsigned int, vector<unsigned int> >& PhysReg_elements_map);
+
+  void  get_elem_phys_map (map<unsigned int,unsigned int> &elem_phys  );
+
+
+
+
+ private:
+
+  /* int count_ok ; */
+  /*   int count_swap; */
+
 
   unsigned int dim;
 
@@ -61,117 +100,99 @@ class Read_MSH{
 
   vector< vector<double> > node_entry  ;
 
- vector< vector<double> >  node_coord ;
+  vector< vector<double> >  node_coord ;
 
 
 
- vector< vector<unsigned int> > elem_nodes  ;
+  vector< vector<unsigned int> > elem_nodes  ;
 
- vector<double> node_label;
-
-
- unsigned int  el_weight, num_of_elem, num_of_nodes,  num_bc,  num_mesh_block ; //, num_elem_per_type;
-
- vector<unsigned int> gmsh_elem_type;
-
- vector<unsigned int> elem_type;
-
- vector<unsigned int> num_elem_per_type ;
+  vector<double> node_label;
 
 
+  unsigned int  el_weight, num_of_elem, num_of_nodes,  num_bc, 
+    num_mesh_block ; //, num_elem_per_type;
 
- struct Element {
+  vector<unsigned int> gmsh_elem_type;
 
-   vector<unsigned int> nodes;
-   unsigned int type;
-   unsigned int phys_id  ;
+  vector<unsigned int> elem_type;
 
- };
-
-
- vector<Element> All_elements;
-
- vector<Element>  list_elements;  //  list for   .xta  file  
+  vector<unsigned int> num_elem_per_type ;
 
 
 
+  struct Element {
+
+    vector<unsigned int> nodes;
+    unsigned int type;
+    unsigned int phys_id  ;
+
+  };
 
 
-  void Read_MSH::initialize_vectors();
+  vector<Element> All_elements;
+
+  vector<Element>  list_elements;  //  list for   .xta  file  
+
+
+
+
+
+  void initialize_vectors();
 
   
-  void Read_MSH::parse_elem_section(ifstream& in_stream );
+  void parse_elem_section(ifstream& in_stream );
 
 
-  void Read_MSH::find_elem_section(char const* str, ifstream& in_stream);
+  void find_elem_section(char const* str, ifstream& in_stream);
 
 
-  void Read_MSH::scan_input(string file_name);
+  void scan_input(string file_name);
 
 
 
-  unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   vector<unsigned int>& BC_reg_ID );
+  //  unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   vector<unsigned int>& BC_reg_ID );
+  unsigned int  find_pos( unsigned int  reg_id , 
+                          vector<unsigned int>& user_reg_ID );
 
-  void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID );
 
-// get  physical  regions
-   void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID);
+  void get_BC_info( vector<unsigned int>& BC_reg_ID );
 
-// write  .xda  file
-   void  Read_MSH::write_xda ( );
+  // get  physical  regions
+  void get_physical_elem(vector<unsigned int>& phys_reg_ID);
+
+  // write  .xda  file
+  void  write_xda ( );
 
    
-// get  element data  for  each  element
-   void Read_MSH::get_elem_nodes();
+  // get  element data  for  each  element
+  void get_elem_nodes();
 
 
-//  parser of  NODES  section of  .msh  file  (version 1)
-   void Read_MSH::parse_node_section(ifstream& in_stream );
+  //  parser of  NODES  section of  .msh  file  (version 1)
+  void parse_node_section(ifstream& in_stream );
 
-//  check if  $NOD  header  is  found 
-   void Read_MSH::find_node_section(char const* str, ifstream& in_stream);
+  //  check if  $NOD  header  is  found 
+  void find_node_section(char const* str, ifstream& in_stream);
 
-// get  node  data  for  each  node
-   void Read_MSH::get_nodes_coord();
-
-
-   void Read_MSH::read_data_section(char const* str,ifstream& in_stream );
-
-//  write  .xta file (data file for  meshdata (elem_data.xta )  
-   void  Read_MSH::write_xta();
-
-//  write  mesh  and  meshdata from  .xda and  .xta  files
-   void   Read_MSH::read_mesh_and_data(Mesh& mesh, MeshData_elements&  mesh_data );
+  // get  node  data  for  each  node
+  void get_nodes_coord();
 
 
+  void read_data_section(char const* str,ifstream& in_stream );
 
- public:
+  //  write  .xta file (data file for  meshdata (elem_data.xta )  
+  void  write_xta();
 
-//  MSH_parser(string filename , vector<int>& BC_reg_ID, int sim_dim );
-  
-//  Read_MSH(string filename, vector<int>& phys_reg_ID, vector<int>& BC_reg_ID, int sim_dim  );
+  //  write  mesh  and  meshdata from  .xda and  .xta  files
+  void   read_mesh_and_data(Mesh& mesh, MeshData_elements&  mesh_data );
 
-   Read_MSH(string filename, vector<unsigned int>& phys_reg_ID, vector<unsigned int>& BC_reg_ID, unsigned int sim_dim, Mesh& mesh, MeshData_elements&  mesh_data);
+  //  check if orientation  of  nodes  is  positive,  otherwise swap  nodes  of  element
+  void  check_orientation( vector<unsigned int>&  node_id_list,  unsigned  int type );
 
+  ////  cross check between physic_id_vec and phys_reg_ID
+  void  cross_check_regions( vector<unsigned int>&  user_reg_list 
+                             ,vector<unsigned int>&  gmsh_reg_list, string type );
 
-  ~Read_MSH();
-
-
-
-
-  // void  MSH_parser::get_data ( vector< vector<double> >& glob_reg_values,  vector<int>& glob_reg_id,  vector<string>& glob_mat);
-
-  void  Read_MSH::get_data ( vector< vector<unsigned int> >& glob_elem_values);
-
-  //  void  Read_MSH::get_BC_data (   map<int, vector<int> >&  BoundCond_map);
-
-  void  Read_MSH::get_BC_data (   map<unsigned int, vector<unsigned int> >&  BoundCond_map);
-
-  void  Read_MSH::get_BC_data (   map<unsigned int, vector<unsigned int> >&  BoundCond_map, map<unsigned int, vector<unsigned int> >&  BoundCond_el_map   );
-
-  void  Read_MSH::get_elem_data (map<unsigned int, vector<unsigned int> >& PhysReg_elements_map);
-
-  void  Read_MSH::get_elem_phys_map (map<unsigned int,unsigned int> &elem_phys  );
 
 
 };
