@@ -1,11 +1,11 @@
 /*=============================================================================
-    Copyright (c) 2002-2003 Joel de Guzman
-    http://spirit.sourceforge.net/
+  Copyright (c) 2002-2003 Joel de Guzman
+  http://spirit.sourceforge.net/
 
-    Use, modification and distribution is subject to the Boost Software
-    License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
-    http://www.boost.org/LICENSE_1_0.txt)
-=============================================================================*/
+  Use, modification and distribution is subject to the Boost Software
+  License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt)
+  =============================================================================*/
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <boost/spirit/core.hpp>
@@ -15,6 +15,7 @@
 #include <iomanip>
 #include <fstream>
 #include <map>
+
 
 #include <vector>
 #include <string>
@@ -30,6 +31,9 @@ using namespace boost::spirit;
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Class  for  parser of  GMSH  .MSH file (v. 1) :   get  nodes of  BC regions (1D  physical regions)
+//
+//   and  creates .xta and  .xda  files for  mesh and  meshdata in Libmesh 
+//
 //   -------------------------------------------
 //  MUST   include  SPIRIT  libraries !
 // -----------------------------------------------
@@ -39,40 +43,42 @@ using namespace boost::spirit;
 
 //  constructor:  scan  .msh  file,  parse it, get info on BC,  writes .xda and  .xta  file for  Libmesh
 //  needs physical region ID,  bound. conditions region  ID (2D or 1D), dim. of  simulation 
-Read_MSH::Read_MSH(string filename, vector<unsigned int>& phys_reg_ID, vector<unsigned int>& BC_reg_ID, unsigned int sim_dim, Mesh& mesh, MeshData_elements&  mesh_data)
-
-
-  //Read_MSH::Read_MSH(string filename, vector<unsigned int>& phys_reg_ID, vector<unsigned int>& BC_reg_ID, int sim_dim  )
-
+Read_MSH::Read_MSH(string filename, vector<unsigned int>& phys_reg_ID, 
+                   vector<unsigned int>& BC_reg_ID, unsigned int sim_dim, 
+                   Mesh& mesh, MeshData_elements&  mesh_data)
 {
 
   dim =  sim_dim; 
 
-  initialize_vectors(); 
+  initialize_vectors();   //  to  be  continued...
 
 
+  // call parser of  .msh  file
   scan_input(filename);
 
-  //  get_BC_info();
-
-  get_BC_info(BC_reg_ID); //  ->  after   write_xda(); ?????
-
-  //  get_physical_elem(phys_reg_ID);  //  ->  after   write_xda();  !!!!!
+  //  get_BC_info(BC_reg_ID); //  ->  after   write_xda(); 
 
 
-  //  get_elem_nodes();
-
+  // put  nodes and  elements in data structures
   get_nodes_coord();
   get_elem_nodes();
 
 
-
+  // write .xda file of mesh (elements and  nodes :  only elements with correct dim are considered)
   write_xda();
 
+
+  // extract nodes which  belong to  bound cond reg. (DIM-1 phys.reg.) and associate them with 
+  // user defined BC regions
+  get_BC_info(BC_reg_ID);
+
+  // associate elements to corrispondent physical region (as defined in user's phys region settings)
   get_physical_elem(phys_reg_ID);
 
+  // write  .xta file with  meshdata info for  Libmesh (here ID of  phys regions)  
   write_xta();
 
+  // read .xta and  .xda files  in  Libmesh  data structures
   read_mesh_and_data(mesh,mesh_data );
 
 
@@ -88,6 +94,7 @@ void Read_MSH::initialize_vectors()
 {
 
   elem_values.clear();
+  // ......................
   
 }
 
@@ -113,31 +120,31 @@ void Read_MSH::parse_elem_section(ifstream& in_stream )
   //  reads  elements' total number (one  integer)
   getline(in_stream, str);
   if (parse(str.c_str(), uint_p[assign_a(n_elem)] >> *(space_p)   , space_p).full) 
-    {
-      // //cout << n_elem<<endl ;
-    } 
+  {
+    // cout << n_elem<<endl ;
+  } 
       
       
   // reads  element   line : elem number, type of  elem, phys reg,  geom reg, number "n" of nodes in elem, "n" nodes
   //  and  put it in vector elem_values 
   while (getline(in_stream, str))  //   
-    {
+  {
       
-      if (  parse(str.c_str(), r) .full )
+    if (  parse(str.c_str(), r) .full )
            
-	{
+    {
 	  
-	  elem_values.push_back(v);
+      elem_values.push_back(v);
 	                          
 	
-          v.clear();
+      v.clear();
 	     
                              
                              
-	} 
-
-
     } 
+
+
+  } 
       
      
 }
@@ -151,16 +158,16 @@ void Read_MSH::find_elem_section(char const* str, ifstream& in_stream)
   string name;
     
   if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p]  , space_p).full)
-    {
-      // //cout << name<< endl;
-      if (name == "ELM")
+  {
+    // cout << name<< endl;
+    if (name == "ELM")
 
-    	{
-    	  parse_elem_section(in_stream);
-    	}
-         
-         
+    {
+      parse_elem_section(in_stream);
     }
+         
+         
+  }
 }                                                                     
 
 
@@ -181,18 +188,18 @@ void Read_MSH::scan_input(string file_name)
 
 
   if ( !in_stream.good() )
-    {
-      std::cerr << "ERROR: Input file not good." 
-		<< std::endl;
-      //   error();
-    }
+  {
+    std::cerr << "ERROR: Input file not good." 
+              << std::endl;
+    //   error();
+  }
 
 
-  //cout << "/////////////////////////////////////////////////////////\n\n";
-  //cout << "\t\tA space  separated list parser for Spirit...\n\n";
-  //cout << "\t\t read  from .msh  file ELEM and NODES section \n\n";
+  cout << "/////////////////////////////////////////////////////////\n\n";
+  cout << "\t\tA space  separated list parser for Spirit...\n\n";
+  cout << "\t\t read  from .msh  file ELEM and NODES section \n\n";
   //
-  //cout << "/////////////////////////////////////////////////////////\n\n";
+  cout << "/////////////////////////////////////////////////////////\n\n";
 
 
   //getline(in_stream, str);
@@ -204,10 +211,10 @@ void Read_MSH::scan_input(string file_name)
 
 
   while (getline(in_stream, str))  //   
-    {
-      read_data_section(str.c_str(),in_stream);
+  {
+    read_data_section(str.c_str(),in_stream);
 	   
-    }
+  }
 
 
 
@@ -224,7 +231,7 @@ void Read_MSH::scan_input(string file_name)
 
   //     }
 
-  //  //cout << "fine  node section"<< endl;
+  //  cout << "fine  node section"<< endl;
 
   //    while (getline(in_stream, str))  // 
   //     {
@@ -267,10 +274,10 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
   vector< vector<unsigned int> > BC_elem_line;  // 
 
-  //  for (unsigned int i =0; i< elem_values.size();++i)
+  //  for (int i =0; i< elem_values.size();++i)
   //     {
 
-  //       //  //cout <<  global_elem_values[i][1] << "   " ; 
+  //       //  cout <<  global_elem_values[i][1] << "   " ; 
   //       if (elem_values[i][1] == 1) 
   // 	{
   // 	  BC_elem_line.push_back(elem_values[i]);
@@ -279,82 +286,76 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
   //     }
 
 
-  int el_type;
+  unsigned int el_type;
  
   //
   //
   //  makes vector with lines of BC elements   
   for (unsigned int i =0; i< elem_values.size();++i)
-    {
+  {
 
-      el_type = elem_values[i][1];
+    el_type = elem_values[i][1];
 
-      switch(dim) {
-      case 1:
-	// 1D  sim ................
-	break;
-      case 2:
-	if ( (elem_values[i][1] == 1) || (elem_values[i][1] == 8) )
-	  {
-	    BC_elem_line.push_back(elem_values[i]);
-	  }
-
-	break;
-      case 3:
-	if ( (elem_values[i][1] == 2) || (elem_values[i][1] == 3) || (elem_values[i][1] == 9) || (elem_values[i][1] == 10) )
-	  {
-	    BC_elem_line.push_back(elem_values[i]);
-	  }
-
-	break;
-      default:
-	cout <<  "Error : wrong  value  of  dim"; 
-
+    switch(dim) {
+    case 1:
+      // 1D  sim ................
+      break;
+    case 2:
+      if ( (elem_values[i][1] == 1) || (elem_values[i][1] == 8) )
+      {
+        BC_elem_line.push_back(elem_values[i]);
       }
+
+      break;
+    case 3:
+      if ( (elem_values[i][1] == 2) || (elem_values[i][1] == 3) || (elem_values[i][1] == 9) || (elem_values[i][1] == 10) )
+      {
+        BC_elem_line.push_back(elem_values[i]);
+      }
+
+      break;
+    default:
+      cout <<  "Error : wrong  value  of  dim"; 
 
     }
 
+  }
 
 
+  unsigned int   BC_id;
+  BC_id = 0;
+  vector<unsigned int> BC_id_vec;
+  vector<unsigned int> :: iterator p1;
 
-  //  ***************************************************************************************
+  // makes  a  vector  of  all different BC  id  from  gmsh  file,  to  compare with user's BC_reg_ID
+  for (unsigned int i =0; i< BC_elem_line.size(); ++i)
+  {
 
-  //  BEWARE  !!!!  passed   from  calling  routine (BC  reg. ID  are read  from input file)
+    BC_id = BC_elem_line[i][2]  ;
+    p1 = find(BC_id_vec.begin(), BC_id_vec.end(), BC_id );  // find if physic_id has  been already taken
 
-  //  ***************************************************************************************
-  //   // creates vector of  BC regions
+    if (p1 ==  BC_id_vec.end())   //  not  found
+    {
+      BC_id_vec.push_back(BC_id);
+   	 
+    }
 
-  //   vector<int> BC_reg_ID ;
-  //   vector<int> :: iterator p;
-  //   int id;
-  //   id = 0;
+  }
 
+  // cout << " BC_id_vec " << BC_id_vec[0]<< "   " << BC_id_vec[1]<< "   " <<BC_id_vec[2]<<endl;
 
-  //   for (int i =0; i< BC_elem_line.size();++i)
-  //     {
-
-  //       id = BC_elem_line[i][2];
-  //       p = find(BC_reg_ID.begin(), BC_reg_ID.end(), id );  // find  BC ID
-
-  //       if (p == BC_reg_ID.end())   //  not  found
-  // 	{
-  // 	  BC_reg_ID.push_back(id);
-  // 	  //  //cout<< BC_reg_ID[0]  << endl ;
-
-  // 	}
-
-  //       id = 0;
-  //     }
-
-
+  // NEW  
+  // ************************************************************
+  //  cross check between BC_id_vec and BC_reg_ID
+  cross_check_regions( BC_reg_ID,BC_id_vec, "BC");
 
   //  p_2 = BC_reg_ID.begin();
 
-  //  //cout<< endl  << " BC  regions ....   "  << endl ;
+  //  cout<< endl  << " BC  regions ....   "  << endl ;
 
 
   //  while (p_2 != BC_reg_ID.end())  //display 
-  //    //cout<<*p_2++ << endl ;
+  //    cout<<*p_2++ << endl ;
 
 
   // **********************************
@@ -368,20 +369,24 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
   // initialization of BC_nodes vector
   vector<unsigned int> null_vector;
   for (unsigned int i =0; i< BC_reg_ID.size(); ++i)
-    {
-      BC_nodes.push_back(null_vector);
-    }
+  {
+    BC_nodes.push_back(null_vector);
+  }
 
 
 
   //  int  node1,  node2,  pos, id;
   unsigned int  pos, id, number_of_nodes ;
+  unsigned int new_node_id;
+  double old_node_id = 0.0;
+
+  vector<unsigned int> node_id;
 
   id = 0;
   //  node1 = 0;
   //  node2 =0;
 
-  vector<unsigned int> node_id;
+  //  vector<int> node_id;
 
   //  null_vector.push_back(0);
 
@@ -391,71 +396,93 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
 
   for (unsigned int i =0; i< BC_elem_line.size(); ++i)
+  {
+
+    id = BC_elem_line[i][2]  ;
+
+    number_of_nodes = BC_elem_line[i][4];
+    //   cout<< " number_of_nodes  = " << number_of_nodes<< endl;
+
+    for (unsigned int j =0; j<  number_of_nodes; ++j)
     {
 
-      id = BC_elem_line[i][2]  ;
-
-      number_of_nodes = BC_elem_line[i][4];
-      //   //cout<< " number_of_nodes  = " << number_of_nodes<< endl;
-
-      for (unsigned int j =0; j<  number_of_nodes; ++j)
-	{
-
-	  //  //cout<< " (BC_elem_line[i][5+j]  = " << BC_elem_line[i][5+j]<< endl ;
-
-	  node_id.push_back(BC_elem_line[i][5+j]) ;
+      //  cout<< " (BC_elem_line[i][5+j]  = " << BC_elem_line[i][5+j]<< endl ;
 
 
+      // ************************************
+      // NEW  CHANGE :  13.12.05
+      //  convert  to  new  node  numeration :
+      // ************************************
 
-	  //  node1 = BC_elem_line[i][5]  ;
-	  // //cout<<  node1  << endl ;
+      old_node_id = (double)(BC_elem_line[i][5+j]);
+      for (unsigned int k =0; k<num_of_nodes ; ++k)
+      { 
+	     
+        if  (node_label[k] ==  old_node_id)
+        { new_node_id = k; }
 
-	  //   node2 = BC_elem_line[i][6]  ;
-	  // //cout<<  node2  << endl ;
+        //  	{ new_node_id = k+1; }
+        // +1  -1  -> +0 ,  to  get  nodes  starting  from  zero [ see write_xda ( )]
+      }
 
-	}
-   
-      pos = find_pos(id,BC_reg_ID);
- 
 
-      //   if (BC_nodes[pos].size() == 1)
-      //        	{
-      //        	  BC_nodes[pos].pop_back();  //  remove  initialization null
-      //        	}
+      //	  node_id.push_back(BC_elem_line[i][5+j]) ;
+      node_id.push_back( new_node_id);
 
-      //   //cout<< " node_id.size()  = " << node_id.size() << endl ;
-      for (unsigned int i =0; i< node_id.size(); ++i)
-	{ 
-
-	  //  BC_nodes[pos].push_back(node1);
-	  //  BC_nodes[pos].push_back(node2);
-
-	  //	  //cout<< " node_id[i]  = " << node_id[i] << endl ;
-
-	  BC_nodes[pos].push_back(node_id[i]);
-	}
+      old_node_id = 0;
+      new_node_id =0;
 
 
 
-      //   p = BC_nodes.begin();
-      //   p += pos+1;
+      //  node1 = BC_elem_line[i][5]  ;
+      // cout<<  node1  << endl ;
 
-      //   BC_nodes.insert(p,1,node_id);
-
-
-
-
-      //   BC_nodes[pos].push_back(node_id);
-      node_id.clear();
-
-      //  node1 = 0;
-      //  node2 =0;
-
+      //   node2 = BC_elem_line[i][6]  ;
+      // cout<<  node2  << endl ;
 
     }
+   
+    pos = find_pos(id,BC_reg_ID);
+ 
 
-  //  //cout<< " BC_nodes.size()  = " << BC_nodes.size()  << endl ;
-  //  //cout<< " BC_nodes[0].size()  = " << BC_nodes[0].size()  << endl ;
+    //   if (BC_nodes[pos].size() == 1)
+    //        	{
+    //        	  BC_nodes[pos].pop_back();  //  remove  initialization null
+    //        	}
+
+    //   cout<< " node_id.size()  = " << node_id.size() << endl ;
+    for (unsigned int i =0; i< node_id.size(); ++i)
+    { 
+
+      //  BC_nodes[pos].push_back(node1);
+      //  BC_nodes[pos].push_back(node2);
+
+      //	  cout<< " node_id[i]  = " << node_id[i] << endl ;
+
+      BC_nodes[pos].push_back(node_id[i]);
+    }
+
+
+
+    //   p = BC_nodes.begin();
+    //   p += pos+1;
+
+    //   BC_nodes.insert(p,1,node_id);
+
+
+
+
+    //   BC_nodes[pos].push_back(node_id);
+    node_id.clear();
+
+    //  node1 = 0;
+    //  node2 =0;
+
+
+  }
+
+  //  cout<< " BC_nodes.size()  = " << BC_nodes.size()  << endl ;
+  //  cout<< " BC_nodes[0].size()  = " << BC_nodes[0].size()  << endl ;
 
 
 
@@ -465,7 +492,7 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
   //       for (int j =0; j< BC_nodes[i].size(); ++j)
   // 	{
 
-  // 	  //cout<< " BC_nodes[i][j]  = " <<BC_nodes[i][j] << endl;
+  // 	  cout<< " BC_nodes[i][j]  = " <<BC_nodes[i][j] << endl;
   // 	}
   //     }
 
@@ -482,12 +509,12 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
 
   for (unsigned int i =0; i< BC_nodes.size();++i)
-    {
-      new_end_BC = unique(BC_nodes[i].begin(), BC_nodes[i].end());
+  {
+    new_end_BC = unique(BC_nodes[i].begin(), BC_nodes[i].end());
 
-      BC_nodes[i].erase(new_end_BC, BC_nodes[i].end());
+    BC_nodes[i].erase(new_end_BC, BC_nodes[i].end());
 
-    }
+  }
 
 
   //   END creates vector of BC_nodes vectors (one for each  BC  region) 
@@ -503,72 +530,73 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
 
   if  (dim == 3) 
-    {  //if
+  {  //if
 
-      unsigned int el_id=0;
-      id = 0;
+    unsigned int el_id=0;
+    id = 0;
 
-      vector< vector<unsigned int> > BC_elements;
+    vector< vector<unsigned int> > BC_elements;
 
-      // initialization of BC_nodes vector
-      //  vector<int> null_vector;
-      for (unsigned int i =0; i< BC_reg_ID.size(); ++i)
-	{
-	  BC_elements.push_back(null_vector);
-	}
-
-
-      for (unsigned int i =0; i< BC_elem_line.size(); ++i)
-	{
-
-	  id = BC_elem_line[i][2]  ;
+    // initialization of BC_nodes vector
+    //  vector<int> null_vector;
+    for (unsigned int i =0; i< BC_reg_ID.size(); ++i)
+    {
+      BC_elements.push_back(null_vector);
+    }
 
 
-	  el_id = BC_elem_line[i][0]  ;
+    for (unsigned int i =0; i< BC_elem_line.size(); ++i)
+    {
 
-	  pos = find_pos(id,BC_reg_ID);
-
-	  BC_elements[pos].push_back(el_id);
-	  el_id = 0;
-
-	}
+      id = BC_elem_line[i][2]  ;
 
 
+      el_id = BC_elem_line[i][0]  ;
 
-      //  creates  map  <BC_region, BC_elements >      //   for   dim = 3
+      pos = find_pos(id,BC_reg_ID);
 
-      //  map<int, vector<int> >  // BoundCond_elem   in  .h  !!!
-
-      for (unsigned int i =0; i< BC_elements.size();++i)
-	{
-	  BoundCond_elements.insert(make_pair(BC_reg_ID[i], BC_elements[i]) );
-	  //   //cout << BC_reg_ID[i]<< endl ;
-	  // //cout << BC_nodes[i][0]<< endl ;
-
-	}
+      BC_elements[pos].push_back(el_id);
+      el_id = 0;
 
     }
 
-  //   END  BC_elements
+
+
+
+    //  creates  map  <BC_region, BC_elements >      //   for   dim = 3
+
+    //  map<int, vector<int> >  // BoundCond_elem   in  .h  !!!
+
+    for (unsigned int i =0; i< BC_elements.size();++i)
+    {
+      BoundCond_elements.insert(make_pair(BC_reg_ID[i], BC_elements[i]) );
+      //   cout << BC_reg_ID[i]<< endl ;
+      // cout << BC_nodes[i][0]<< endl ;
+
+    }
+
+  }
+
+  //   END  BC_elements (only if   dim=3 )
 
   // ****************************************
 
 
 
-
-
+  // ++++++++++++++++++++++++++++++++++++++++
+  // FOR  2D  !!!!!!!!!!
+  //+++++++++++++++++++++++++++++++++
   //  creates  map  <BC_region, BC_nodes>
 
   //  map<int, vector<int> >  BoundCond   in  .h  !!!
 
   for (unsigned int i =0; i< BC_nodes.size();++i)
-    {
-      BoundCond.insert(make_pair(BC_reg_ID[i], BC_nodes[i]) );
-      //   //cout << BC_reg_ID[i]<< endl ;
-      // //cout << BC_nodes[i][0]<< endl ;
+  {
+    BoundCond.insert(make_pair(BC_reg_ID[i], BC_nodes[i]) );
+    //   cout << BC_reg_ID[i]<< endl ;
+    // cout << BC_nodes[i][0]<< endl ;
 
-    }
-
+  }
 
 }
 
@@ -576,8 +604,12 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
 
 
+
+
 //  utility  function 
-unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   vector<unsigned int>& BC_reg_ID )
+//unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   vector<unsigned int>& BC_reg_ID )
+unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   vector<unsigned int>& user_reg_ID )
+
 {
 
   unsigned int  pos;
@@ -587,20 +619,30 @@ unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   vector<unsigned int>&
 
   while (found == false)  {
      
-    if  (  (BC_reg_ID[count]) != reg_id)
-      {
-	count++; 
-      }
+    if  (  (user_reg_ID[count]) != reg_id)
+    {
+      count++; 
+    }
     else 
-      {
-	found = true;
-      }
+    {
+      found = true;
+    }
 
 
   }  //  end  while
 
-  pos =  count;
-  return  pos;
+  if  (found == true)
+
+  {
+
+    pos =  count;
+    return  pos;
+
+  }
+
+  else  cerr  <<  "Error :  inconsistent  Physical or  BC  region definition !! " << endl ;
+  // physic ID  not  found in  user's  list 
+
 
 }
 
@@ -609,7 +651,7 @@ unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   vector<unsigned int>&
 
 
 // public  method  to  get  map    <BC_region, BC_nodes> 
-void  Read_MSH::get_BC_data (    map<unsigned  int, vector<unsigned int> >&  BoundCond_map    )
+void  Read_MSH::get_BC_data (    map<unsigned int, vector<unsigned int> >&  BoundCond_map    )
 {
 
   BoundCond_map = BoundCond;
@@ -635,7 +677,7 @@ void  Read_MSH::get_BC_data (map<unsigned int, vector<unsigned int> >&  BoundCon
 void  Read_MSH::get_elem_data (map<unsigned int, vector<unsigned int> >& PhysReg_elements_map)
 { 
       
-PhysReg_elements_map = PhysReg_elements;  
+  PhysReg_elements_map = PhysReg_elements;  
 }
 
 
@@ -649,24 +691,10 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
 	
   //  get   elements  associated  to  each  physical  region
 
+  // ******************************************************************
   //  works  only  for  .msh file  format  v.1  !!!
+  // *********************************************************
   //  elem_id , el_type, phys_reg, geom_reg, number of  nodes, list of  nodes
-
- 
-
-  vector< vector<unsigned int> > phys_elem_line;  //  ->  rename  ok!   BC_elem_line !
-
-  //  for (int i =0; i< elem_values.size();++i)
-  //     {
-
-  //       //  //cout <<  global_elem_values[i][1] << "   " ; 
-  //       if (elem_values[i][1] == 1) 
-  // 	{
-  // 	  BC_elem_line.push_back(elem_values[i]);
-  // 	}
-
-  //     }
-
  
   unsigned int el_type;
 
@@ -677,45 +705,7 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
   //   list_elements  has  already  the  elements with dim  =  sim_dim !!
   // **********************************************
 
-  for (unsigned int i =0; i< elem_values.size();++i)
-    {
-
-      el_type = elem_values[i][1];
-
-      switch(dim) {
-      case 1:
-	// 1D  sim ................elem_values[i][1] == 1) || (elem_values[i][1] == 8)
-	break;
-	
-      case 2:
-	if ( (el_type == 2) || (el_type == 3) || (el_type == 9) || (el_type == 10) )
-	  {
-	    phys_elem_line.push_back(elem_values[i]);
-	  }
-
-	break;
-      case 3:
-	if ( (el_type == 4) || (el_type == 5) || (el_type == 6) || (el_type == 7)|| (el_type == 11)|| 
-	     (el_type == 12)|| (el_type == 13) || (el_type == 14))
-	  {
-	    phys_elem_line.push_back(elem_values[i]);
-	  }
-
-	break;
-	
-      default:
-	//cout <<  "Error : wrong  value  of  dim"; 
-	break;
-
-      }
-
-    }
-
-
-  // ****************************************
  
-  // creates   vector of BC_elements
-  // ****************************************
 
 
   unsigned int id;  // physical reg id
@@ -727,54 +717,91 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
 
   vector< vector<unsigned int> > phys_elements;  //get_physical_elem
 
+
+
+  unsigned int  physic_id;
+
+  vector<unsigned int> physic_id_vec;
+  physic_id = 0;
+  // int id = 0;
+  vector<unsigned int> :: iterator p;
+  vector<unsigned int> :: iterator p1;
+  vector<unsigned int> :: iterator p2;
+
+
+
+
+
+  // makes  a  vector  of  all different phisic  id  from  gmsh  file,  to  compare with user's phys_reg_ID
+  for (unsigned int i =0; i< list_elements.size(); ++i)
+  {
+    physic_id = list_elements[i].phys_id;
+
+    // IDEA :  put physic_id in  vector  
+    p = find(physic_id_vec.begin(), physic_id_vec.end(), physic_id );  // find if physic_id has  been already taken
+
+    if (p ==  physic_id_vec.end())   //  not  found
+    {
+      physic_id_vec.push_back(physic_id);
+   	 
+    }
+
+  }
+
+  // cout << " physic_id_vec " << physic_id_vec[0]<< "   " << physic_id_vec[1]<< "   " <<physic_id_vec[2]<<endl;
+
+  // NEW  
+  // ************************************************************
+  //  cross check between physic_id_vec and phys_reg_ID
+
+  if  (phys_reg_ID.empty() ) 
+  {
+    cerr  <<  " ERROR : No Physical  region has   been    defined !! " <<  endl;
+    exit(1);
+  }
+
+  cross_check_regions( phys_reg_ID,physic_id_vec, "phys");
+
+
+
+
+  // **************************************************************
+  // creates   vector of  physical elements
+  // ****************************************
+
   // initialization of phys_elements vector
   //  vector<int> null_vector;
   for (unsigned int i =0; i< phys_reg_ID.size(); ++i)
-    {
-      phys_elements.push_back(null_vector);
-    }
+  {
+    phys_elements.push_back(null_vector);
+  }
 
 
- //  for (unsigned int i =0; i< phys_elem_line.size(); ++i)
-//     {
 
-//       id = phys_elem_line[i][2]  ;
-
-
-//       //	  if  (id != 100)     //  OLD   FOR  PYTHON SCRIPT  !!!
-//       //	    {
-//       //   el_id = phys_elem_line[i][0]  ;  //  !!!!!!!!!!!!!!!!!    ATTENZIONE  !!!!  SE SALTA  NUM ORDINE  ELEMENTI !!??
-//       el_id = (i +1);  // renumber elements (BC_elements excluded !)  (i  starts  from zero !!)
-	   
-//       //   if  (el_id != (i+1))
-//       // 		{ //cout <<  "******** WARNING !!!! : i-th element id != i (break in  element list of  GMSH)"<< el_id <<endl<< endl; }  
-
-
-//       pos = find_pos(id,phys_reg_ID);
-
-//       phys_elements[pos].push_back(el_id);
-//       //	    }
-//       el_id = 0;
-
-//     }
 
   // *******************************************************
   //***************************************************
-  //  with  vector<Element>  list_elements;
+      //  with  vector<Element>  list_elements;
 
-  unsigned int  physic_id;
-  physic_id = 0;
+ 
 
- for (unsigned int i =0; i< list_elements.size(); ++i)
+      for (unsigned int i =0; i< list_elements.size(); ++i)
     {
       physic_id = list_elements[i].phys_id;
 
       pos = find_pos(physic_id,phys_reg_ID);
+
+      // if  not  found ->  error  inconsistency
+
       el_id = (i +1);
       phys_elements[pos].push_back(el_id);
       //	    
       el_id = 0;
     }
+
+
+  // **************************************************************
+
 
   // *******************************************************
   //************************************************
@@ -782,16 +809,16 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
 
 
 
-  //  ??????????????????????????
-  //  creates  map  <phys_region, phys_elements >      //  
+      //  ??????????????????????????
+      //  creates  map  <phys_region, phys_elements >      //  
 
-  //  map<int, vector<int> >  // PhysReg_elem   in  .h  !!!
+      //  map<int, vector<int> >  // PhysReg_elem   in  .h  !!!
 
-  for (unsigned int i =0; i< phys_elements.size();++i)
+      for (unsigned int i =0; i< phys_elements.size();++i)
     {
       PhysReg_elements.insert(make_pair(phys_reg_ID[i], phys_elements[i]) );
-      //   //cout << BC_reg_ID[i]<< endl ;
-      // //cout << BC_nodes[i][0]<< endl ;
+      //   cout << BC_reg_ID[i]<< endl ;
+      // cout << BC_nodes[i][0]<< endl ;
 
     }
 	
@@ -807,85 +834,28 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
  	 
   //	map<int, int >   elem_region_map;  in  .h  !!!
 
-  //	//cout << endl <<  "phys_elements.size()" << phys_elements.size()  <<endl<< endl ;
+  //	cout << endl <<  "phys_elements.size()" << phys_elements.size()  <<endl<< endl ;
 	
   for (unsigned int i =0; i< phys_elements.size();++i)
+  {
+    for (unsigned int j =0; j< phys_elements[i].size();++j)
     {
-      for (unsigned int j =0; j< phys_elements[i].size();++j)
-	{
 	  
-	  elem_region_map.insert(make_pair( phys_elements[i][j],phys_reg_ID[i] ) );
-	}
+      elem_region_map.insert(make_pair( phys_elements[i][j],phys_reg_ID[i] ) );
     }
+  }
         
         
-  ////cout << endl <<  "content of  map elem / PhysReg " << endl<< endl ;
+  // cout << endl <<  "content of  map elem / PhysReg " << endl<< endl ;
        
-
-
-  unsigned int  temp;
-  map <unsigned int, unsigned int>   :: iterator  p_el_data;
-
-
-
-  //  *********************************************
-  //    DELETE  !!!
-      
-  //  display  map
-    
-  for (unsigned int i =0; i< phys_elements.size();++i)
-    { // display
-
-      for (unsigned int j =0; j< phys_elements[i].size();++j)
-        {
-        
-	  p_el_data = elem_region_map.find(phys_elements[i][j]);
-    
-	  if  (p_el_data != elem_region_map.end() )
-    
-	    {  
-	      temp  =  (p_el_data -> second) ;
-	      ////cout << endl <<  "BC #"<< phys_reg_numbers[i] << "   " << endl; 
-	      //for (int i =0; i< temp_3.size();++i)
-	      //    	      {
-	      //    
-	      //    		if ( (i % 3) ==  0)     //cout << endl; 
-    
-	      // //cout << phys_elements[i][j]<< "   "  << temp ;  //<< endl; 
-    
-	      //   }
-	      ////cout << endl; 
-    
-    
-	    }
-    
-	  else
-	    cout  <<  "error elem_region_map" << endl ;
-    	  	  
-	}
-  
-      //   }    
-        
-      //  
-					
-    }
-
-  // ***************************************
-
-
-  //  
- //    DELETE  !!!
-  // ****************************************
-
-
   //  END  get_physical_elem  () !!!
 	
 }
 
 
 
-
-//  to  make  private !!!
+//  not  used ???
+//  
 // public  method  to  get  map  <phys_region, elements>  
 void  Read_MSH::get_elem_phys_map (map<unsigned int,unsigned int> &elem_phys  )
 { 
@@ -896,7 +866,7 @@ void  Read_MSH::get_elem_phys_map (map<unsigned int,unsigned int> &elem_phys  )
 
 
 
-// write  .xda  file
+// write Libmesh  .xda  file
 void  Read_MSH::write_xda ( )
 { // xda
   // 
@@ -952,142 +922,142 @@ void  Read_MSH::write_xda ( )
     // ************************************************************
 
     //**************************************************************************
-    // GMSH  ELEM TYPES
-    //**************************************************************************
+      // GMSH  ELEM TYPES
+      //**************************************************************************
 
 
-    // 1 Line (2 nodes).
-    //  2 Triangle (3 nodes).
-    //  3 Quadrangle (4 nodes). 
-    // 4 Tetrahedron (4 nodes). 
-    // 5 Hexahedron (8 nodes). 
-    // 6 Prism (6 nodes). 
-    // 7 Pyramid (5 nodes).
-    //  8 Second order line (3 nodes: 2 associated with the vertices and 1 with the edge). 
-    // 9 Second order triangle (6 nodes: 3 associated with the vertices and 3 with the edges). 
-    // 10 Second order quadrangle (9 nodes: 4 associated with the vertices, 4 with the edges and 1 with the face).
-    //  11 Second order tetrahedron (10 nodes: 4 associated with the vertices and 6 with the edges). 
-    // 12 Second order hexahedron (27 nodes: 8 associated with the vertices, 12 with the edges, 6 with the faces and 1 with the volume). 
-    // 13 Second order prism (18 nodes: 6 associated with the vertices, 9 with the edges and 3 with the quadrangular faces).
-    //  14 Second order pyramid (14 nodes: 5 associated with the vertices, 8 with the edges and 1 with the quadrangular face). 
-    // 15 Pounsigned int (1 node).
+      // 1 Line (2 nodes).
+      //  2 Triangle (3 nodes).
+      //  3 Quadrangle (4 nodes). 
+      // 4 Tetrahedron (4 nodes). 
+      // 5 Hexahedron (8 nodes). 
+      // 6 Prism (6 nodes). 
+      // 7 Pyramid (5 nodes).
+      //  8 Second order line (3 nodes: 2 associated with the vertices and 1 with the edge). 
+      // 9 Second order triangle (6 nodes: 3 associated with the vertices and 3 with the edges). 
+      // 10 Second order quadrangle (9 nodes: 4 associated with the vertices, 4 with the edges and 1 with the face).
+      //  11 Second order tetrahedron (10 nodes: 4 associated with the vertices and 6 with the edges). 
+      // 12 Second order hexahedron (27 nodes: 8 associated with the vertices, 12 with the edges, 6 with the faces and 1 with the volume). 
+      // 13 Second order prism (18 nodes: 6 associated with the vertices, 9 with the edges and 3 with the quadrangular faces).
+      //  14 Second order pyramid (14 nodes: 5 associated with the vertices, 8 with the edges and 1 with the quadrangular face). 
+      // 15 Point (1 node).
 
 
 
 
 	
-    // elem_type_conversion from GMSH_type to  xda (libmesh) type 
-    //  ??
-    //  gmsh_elem_type  is  a  vector
-// 	for (int i =0; i< gmsh_elem_type.size();++i)
-// 	  { switch(gmsh_elem_type[i]) {
-// case 
-//  elem_type.push_back[...] 
+      // elem_type_conversion from GMSH_type to  xda (libmesh) type 
+      //  ??
+      //  gmsh_elem_type  is  a  vector
+      // 	for (int i =0; i< gmsh_elem_type.size();++i)
+      // 	  { switch(gmsh_elem_type[i]) {
+      // case 
+      //  elem_type.push_back[...] 
 
-    elem_type.clear();
+      elem_type.clear();
 
     for (unsigned int i =0; i< gmsh_elem_type.size();++i)
-      { //for
-	switch(gmsh_elem_type[i]) {
-	  //   switch(gmsh_elem_type) {
+    { //for
+      switch(gmsh_elem_type[i]) {
+        //   switch(gmsh_elem_type) {
 
-	case 1:
-	  // 1D  sim ................  line
-	  break;
+      case 1:
+        // 1D  sim ................  line
+        break;
 	
-	case 2:
-	  //   TRI3       // 3
-	  //    elem_type = 3; 
-	  elem_type.push_back(3);
-	  break;
+      case 2:
+        //   TRI3       // 3
+        //    elem_type = 3; 
+        elem_type.push_back(3);
+        break;
 
-	case 3:
-	  //QUAD4,      // 5
-	  //   elem_type = 5; 
-	  elem_type.push_back(5);
-	  break;
+      case 3:
+        //QUAD4,      // 5
+        //   elem_type = 5; 
+        elem_type.push_back(5);
+        break;
 
-	case 4:
-	  //    TET4,       // 8 
-	  //     elem_type = 8;  
-	  elem_type.push_back(8);
-	  break;
+      case 4:
+        //    TET4,       // 8 
+        //     elem_type = 8;  
+        elem_type.push_back(8);
+        break;
 
-	case 5:
-	  // HEX8,       // 10
-	  //  elem_type = 10 ; 
-	  elem_type.push_back(10);
-	  break;
+      case 5:
+        // HEX8,       // 10
+        //  elem_type = 10 ; 
+        elem_type.push_back(10);
+        break;
 
-	case 6:
-	  //  PRISM6,     // 13
-	  //   elem_type = 13;    
-	  elem_type.push_back(13);
-	  break;
+      case 6:
+        //  PRISM6,     // 13
+        //   elem_type = 13;    
+        elem_type.push_back(13);
+        break;
 
-	case 7:
-	  //  PYRAMID5,   // 16
-	  //  elem_type = 16 ;
-	  elem_type.push_back(16);
-	  break;
+      case 7:
+        //  PYRAMID5,   // 16
+        //  elem_type = 16 ;
+        elem_type.push_back(16);
+        break;
 
-	case 8:
-	  // 1D   second order line  ........
-	  //  elem_type = ; 
+      case 8:
+        // 1D   second order line  ........
+        //  elem_type = ; 
      
-	  break;
+        break;
 
-	case 9:
-	  //  TRI6,       // 4
-	  //   elem_type = 4 ; 
-	  elem_type.push_back(4);
-	  break;
-
-
-	case 10:
-	  //    QUAD9,      // 7
-	  //  elem_type = 7; 
-	  elem_type.push_back(7);
-	  break;
-
-	case 11:
-	  // TET10,      // 9
-	  //  elem_type = 9  ; 
-	  elem_type.push_back(9);
-	  break;
+      case 9:
+        //  TRI6,       // 4
+        //   elem_type = 4 ; 
+        elem_type.push_back(4);
+        break;
 
 
-	case 12:
-	  //      HEX27,      // 12
-	  //     elem_type = 12; 
-	  elem_type.push_back(12);
-	  break;
+      case 10:
+        //    QUAD9,      // 7
+        //  elem_type = 7; 
+        elem_type.push_back(7);
+        break;
+
+      case 11:
+        // TET10,      // 9
+        //  elem_type = 9  ; 
+        elem_type.push_back(9);
+        break;
 
 
-	case 13:
-	  //  PRISM18,    // 15
-	  //  elem_type = 15 ; 
-	  elem_type.push_back(15);
-	  break;
+      case 12:
+        //      HEX27,      // 12
+        //     elem_type = 12; 
+        elem_type.push_back(12);
+        break;
 
-	case 14:
-	  // Second order pyramid (14 nodes)  not  present  in  xda format !!!!
-	  //  elem_type = ;      
-	  break;
 
-	case 15:
-	  // 15 Point (1 node).
-	  //   elem_type = ;    ........................  0 D  
-	  break;
+      case 13:
+        //  PRISM18,    // 15
+        //  elem_type = 15 ; 
+        elem_type.push_back(15);
+        break;
+
+      case 14:
+        // Second order pyramid (14 nodes)  not  present  in  xda format !!!!
+        //  elem_type = ;      
+        break;
+
+      case 15:
+        // 15 Point (1 node).
+        //   elem_type = ;    ........................  0 D  
+        break;
 
 	
-	default:
-	  cout <<  "Error : wrong  value  of gmsh_elem_type  "; 
-
-	}
-
+      default:
+        cout <<  "Error : wrong  value  of gmsh_elem_type  "; 
 
       }
+
+
+    }
 
 
     string fname;
@@ -1130,7 +1100,7 @@ void  Read_MSH::write_xda ( )
 
     num_mesh_block =  elem_type.size();
 
- /**
+    /**
      * A mesh block by definition contains
      * only a single type of element.
      *
@@ -1140,7 +1110,7 @@ void  Read_MSH::write_xda ( )
     //  elem_type = 3;  //4 ; //3;
     // num_elem_per_type  must  be  a  vector  !!
 
-/**
+    /**
      * The size of each element block is
      * the total number of a given type of
      * element in the mesh.
@@ -1151,7 +1121,7 @@ void  Read_MSH::write_xda ( )
 
 
 
-//   num_elem_per_type =  num_of_elem ;
+    //   num_elem_per_type =  num_of_elem ;
     //  num_elem_per_type =  to  be  calculated  !!
 
 
@@ -1160,48 +1130,45 @@ void  Read_MSH::write_xda ( )
     //  and  of  num_elem_per_type =  num  of  elements of  each of the  types in elem_type
 
    
- for (unsigned int i =0; i< gmsh_elem_type.size();++i)
-   { //for i
+    for (unsigned int i =0; i< gmsh_elem_type.size();++i)
+    { //for i
 
-     for (unsigned int j =0; j< All_elements.size();++j)
-       {//for j
-
-
-	 if (All_elements[j].type == gmsh_elem_type[i])
-	   {
-	     // //cout << "All_elements[j].type " << All_elements[j].type << endl;
-
-	     list_elements.push_back(All_elements[j]);
-	     count++;
-
-	   }
-
-       }
-
-     num_elem_per_type.push_back(count);
-     count = 0;
+      for (unsigned int j =0; j< All_elements.size();++j)
+      {//for j
 
 
-   }
+        if (All_elements[j].type == gmsh_elem_type[i])
+        {
+          //    cout << "All_elements[j].type " << All_elements[j].type << endl;
+
+          list_elements.push_back(All_elements[j]);
+          count++;
+
+        }
+
+      }
+
+      num_elem_per_type.push_back(count);
+      count = 0;
 
 
-
-
-
-
- // ************************************************************
+    }
 
 
 
 
 
 
+    // ************************************************************
 
-    //  int el_id = 0 ;
-    //   double  reg_id= 0.0;  // = 101.0; 
 
-    //    int n_elem = 30 ; //33313;
-    //cout << " num_of_nodes" <<  num_of_nodes;
+
+
+
+
+
+  
+    cout << " num_of_nodes" <<  num_of_nodes<< endl;
     
 
 
@@ -1218,22 +1185,22 @@ void  Read_MSH::write_xda ( )
     out <<  num_mesh_block  <<   "	 # Num. Element Blocks.	\n";
     // elem_type = vector of  elem types present in  mesh
     for (unsigned int i =0; i< elem_type.size();++i)
-      {
+    {
 
-	out <<  elem_type[i]<< "   ";
+      out <<  elem_type[i]<< "   ";
 
-      }
+    }
     //   out <<  elem_type << " 	 # Element types in each block. \n";
     out << " 	 # Element types in each block. \n";
 
     //   out << num_elem_per_type << "  	 # Num. of elements in each block. \n"; 
 
     for (unsigned int i =0; i< elem_type.size();++i)
-      {
+    {
 
-	out <<  num_elem_per_type[i]<< "   ";
+      out <<  num_elem_per_type[i]<< "   ";
 
-      }
+    }
     out << "  	 # Num. of elements in each block. \n"; 
 
     out << "Id String  \n";
@@ -1243,7 +1210,7 @@ void  Read_MSH::write_xda ( )
 
 
 
-//  element  section 
+    //  element  section 
     // ******************************
     unsigned int size_element_list;
     unsigned int nodes_size;
@@ -1254,68 +1221,69 @@ void  Read_MSH::write_xda ( )
 
     //   for (unsigned int i =0; i<list_elements.size() ; i++)
     for (unsigned int i =0; i<size_element_list  ; i++)
-      {
-	nodes_size=list_elements[i].nodes.size();
+    {
+      nodes_size=list_elements[i].nodes.size();
 
       //	for (unsigned int j =0; j<list_elements[i].nodes.size(); j++)
-	for (unsigned int j =0; j< nodes_size; j++)
+      for (unsigned int j =0; j< nodes_size; j++)
 
-	  {
+      {
 
-	    node = list_elements[i].nodes[j] - 1;
-	    //   out << ( list_elements[i].nodes[j] - 1)   << "  " ;
-	    out << node  << "  " ;
-
-	  }
-
-	out << "\n";
+        node = list_elements[i].nodes[j] - 1; //  -1  ->   .xda  starts  from  zero
+        //   out << ( list_elements[i].nodes[j] - 1)   << "  " ;
+        out << node  << "  " ;
 
       }
 
- // ******************************
+      out << "\n";
+
+    }
+
+    // ******************************
 
 
 
-	
-//     //  element  section 
-//     for (unsigned int el_id =0; el_id<num_of_elem ; el_id++)
-//       {
-// 	for (unsigned int i =0; i<elem_nodes[el_id].size() ; i++)
-// 	  {
+    //    OLD
+    //	
+    //     //  element  section 
+    //     for (unsigned int el_id =0; el_id<num_of_elem ; el_id++)
+    //       {
+    // 	for (unsigned int i =0; i<elem_nodes[el_id].size() ; i++)
+    // 	  {
 
 
 
-// 	    out << (elem_nodes[el_id][i]-1)    << "  ";
+    // 	    out << (elem_nodes[el_id][i]-1)    << "  ";
 	   
-// 	    //    out << std::setprecision(10) << reg_id   << "  	   # Values   ";
+    // 	    //    out << std::setprecision(10) << reg_id   << "  	   # Values   ";
 	  
-// 	  }
+    // 	  }
 
-// 	out << "\n";
+    // 	out << "\n";
 
-//       }
+    //       }
 
 
 
 
     // nodes  section 
 
-    for (unsigned int node_id =0; node_id<num_of_nodes ; node_id++)
+    for (unsigned  int node_id =0; node_id<num_of_nodes ; node_id++)
+    {
+      for (unsigned int i =0; i<node_coord[node_id].size() ; i++)
       {
-	for (unsigned int i =0; i<node_coord[node_id].size() ; i++)
-	  {
 	     
-	    out << std::setprecision(10) << node_coord[node_id][i]   << "  ";
-	    //  out <<  node_coord[node_id][i]   << "  ";
+        out << std::setprecision(10) << node_coord[node_id][i]   << "  ";
+        //  out <<  node_coord[node_id][i]   << "  ";
 
 	   
-	    //    out << std::setprecision(10) << reg_id   << "  	   # Values   ";
+        //    out << std::setprecision(10) << reg_id   << "  	   # Values   ";
 	  
-	  }
-
-	out << "\n";
-
       }
+
+      out << "\n";
+
+    }
 
 
 
@@ -1331,9 +1299,17 @@ void  Read_MSH::write_xda ( )
    
 }
 
+// write  .xda  file
+
+
+
 
 
 // get  element data  for  each  element
+// BEWARE ! we  select ONLY  the  elements relevant to the  simulation dimension (dim):
+// e.g. if  dim = 2 ->  here we take  only  2D elements,  which correspond to  phys. regions
+//   1D elements,  if  present, are processed  separately to  get bound. cond. reg.
+
 void Read_MSH::get_elem_nodes()
 { //get_elem_nodes
 
@@ -1347,98 +1323,98 @@ void Read_MSH::get_elem_nodes()
   gmsh_elem_type.clear();
 
   for (unsigned int i =0; i< elem_values.size();++i)
-    { //for
+  { //for
 
-      el_type = elem_values[i][1];
+    el_type = elem_values[i][1];
 
     
-      //    gmsh_elem_type = el_type;
+    //    gmsh_elem_type = el_type;
 
 
 
-      // 
+    // 
 
-      //   vector<int> BC_reg_ID ;
-      //  vector<int> :: iterator p;
-      // if (! find (el_type) in  gmsh_elem_type_vector
-      //      gmsh_elem_type_vector.push_back(el_type)
-
-
-      //  ******  put in  switch *****************
-
-   //    p = find(gmsh_elem_type.begin(), gmsh_elem_type.end(),el_type  );  // 
-
-//       if (p == gmsh_elem_type.end())   //  not  found
-//  	{
-//  	  gmsh_elem_type.push_back(el_type);
-// 	  // 	  //  //cout<< BC_reg_ID[0]  << endl ;
-
-// 	}
+    //   vector<int> BC_reg_ID ;
+    //  vector<int> :: iterator p;
+    // if (! find (el_type) in  gmsh_elem_type_vector
+    //      gmsh_elem_type_vector.push_back(el_type)
 
 
-      //.......................
+    //  ******  put in  switch *****************
+
+    //    p = find(gmsh_elem_type.begin(), gmsh_elem_type.end(),el_type  );  // 
+
+    //       if (p == gmsh_elem_type.end())   //  not  found
+    //  	{
+    //  	  gmsh_elem_type.push_back(el_type);
+    // 	  // 	  //  cout<< BC_reg_ID[0]  << endl ;
+
+    // 	}
 
 
-      switch(dim) {
-      case 1:
-	// 1D  sim ................elem_values[i][1] == 1) || (elem_values[i][1] == 8)
-	break;
+    //.......................
+
+
+    switch(dim) {
+    case 1:
+      // 1D  sim ................elem_values[i][1] == 1) || (elem_values[i][1] == 8)
+      break;
 	
-      case 2:
-	if ( (el_type == 2) || (el_type == 3) || (el_type == 9) || (el_type == 10) )
-	  {
-	    elem_line.push_back(elem_values[i]);
-	    p = find(gmsh_elem_type.begin(), gmsh_elem_type.end(),el_type  );
+    case 2:
+      if ( (el_type == 2) || (el_type == 3) || (el_type == 9) || (el_type == 10) )
+      {
+        elem_line.push_back(elem_values[i]);
+        p = find(gmsh_elem_type.begin(), gmsh_elem_type.end(),el_type  );
 
-	    if (p == gmsh_elem_type.end())   //  not  found
-	      {
-		gmsh_elem_type.push_back(el_type);
+        if (p == gmsh_elem_type.end())   //  not  found
+        {
+          gmsh_elem_type.push_back(el_type);
 
-		////cout<< "el_type*************"<<  el_type   << endl ;
+          //	cout<< "el_type*************"<<  el_type   << endl ;
 
-	      }
+        }
 
-
-	  }
-
-	break;
-      case 3:
-	if ( (el_type == 4) || (el_type == 5) || (el_type == 6) || (el_type == 7)|| (el_type == 11)|| 
-	     (el_type == 12)|| (el_type == 13) || (el_type == 14))
-	  {
-	    elem_line.push_back(elem_values[i]);
-	    p = find(gmsh_elem_type.begin(), gmsh_elem_type.end(),el_type  );
-
-	    if (p == gmsh_elem_type.end())   //  not  found
-	      {
-		gmsh_elem_type.push_back(el_type);
-
-		////cout<< "el_type*************"<<  el_type   << endl ;
-
-	      }
-
-
-
-	  }
-
-	break;
-	
-      default:
-	cout <<  "Error :    wrong  value  of  dim"; 
 
       }
 
-    //   if (p == gmsh_elem_type.end())   //  not  found
-//  	{
-//  	  gmsh_elem_type.push_back(el_type);
+      break;
+    case 3:
+      if ( (el_type == 4) || (el_type == 5) || (el_type == 6) || (el_type == 7)|| (el_type == 11)|| 
+           (el_type == 12)|| (el_type == 13) || (el_type == 14))
+      {
+        elem_line.push_back(elem_values[i]);
+        p = find(gmsh_elem_type.begin(), gmsh_elem_type.end(),el_type  );
 
-// 	  //cout<< "el_type*************"<<  el_type   << endl ;
+        if (p == gmsh_elem_type.end())   //  not  found
+        {
+          gmsh_elem_type.push_back(el_type);
 
-// 	}
+          //	cout<< "el_type*************"<<  el_type   << endl ;
+
+        }
 
 
+
+      }
+
+      break;
+	
+    default:
+      cout <<  "Error :    wrong  value  of  dim"; 
 
     }
+
+    //   if (p == gmsh_elem_type.end())   //  not  found
+    //  	{
+    //  	  gmsh_elem_type.push_back(el_type);
+
+    // 	  cout<< "el_type*************"<<  el_type   << endl ;
+
+    // 	}
+
+
+
+  }
 
 
 
@@ -1448,67 +1424,148 @@ void Read_MSH::get_elem_nodes()
   unsigned int  number_of_nodes_in_elem = 0;
   vector<unsigned int> node_id_list;
 
+  //  int count_ok = 0;
+  //   int count_swap= 0;
+  //  count_ok = 0;
+  //  count_swap= 0;
+
+  //  unsigned int temp,type ;
+  unsigned int type;
+
   for (unsigned int i =0; i< elem_line.size(); ++i)
-    {  
+  {  // list of lines
 
-      number_of_nodes_in_elem = elem_line[i][4];
+    number_of_nodes_in_elem = elem_line[i][4];
 
-    
-
-      for (unsigned int j =0; j<  number_of_nodes_in_elem; ++j)
-	{
-
-
-	  node_id  = (double)(elem_line[i][5+j]);    //  ??????   change  node_label and  node_entry to  int !!!
-	  for (unsigned int k =0; k<num_of_nodes ; ++k)
-	    { 
-	      //  //cout << " node_label[k]" <<  node_label[k]<< endl;
-	      if  (node_label[k] ==  node_id)
-		{ new_node_id = k+1; }
-	    }
-	  node_id_list.push_back( new_node_id) ;
-	  //	 //cout << "new_node_id " << new_node_id<< endl ;
-
-	  //	 node_id_list.push_back(elem_line[i][5+j]) ;
-
-	  count ++;
-	  new_node_id = 0;
-	  node_id  =0;
-
-	}
-
-      //*********************
-
-      current_element.nodes = node_id_list;
-      current_element.type =  elem_line[i][1];
-
-      current_element.phys_id =  elem_line[i][2];
-
-      All_elements.push_back(current_element);
-      // //cout << "******************" << current_element.type<< endl ;
-      current_element.nodes.clear();
-      current_element.type = 0;
-
-
-      //****************
+                  
+    type =  elem_line[i][1];
 
 
 
-      elem_nodes.push_back(node_id_list);
 
-      node_id_list.clear();
+    for (unsigned int j =0; j<  number_of_nodes_in_elem; ++j)
+    {
+
+
+      node_id  = (double)(elem_line[i][5+j]);// ?????? TO DO: change  node_label and  node_entry to  int !!!
+      for (unsigned int k =0; k<num_of_nodes ; ++k)
+      { 
+        //  cout << " node_label[k]" <<  node_label[k]<< endl;
+        if  (node_label[k] ==  node_id)
+        { new_node_id = k+1; }  //   +1  ->  starts from  1
+      }
+      node_id_list.push_back( new_node_id) ;
+      //	 cout << "new_node_id " << new_node_id<< endl ;
+
+      //	 node_id_list.push_back(elem_line[i][5+j]) ;
+
+      count ++;
+      new_node_id = 0;
+      node_id  =0;
 
     }
+
+    //*********************
+        //  NEW   10.1.06
+
+        //  HERE CHECK  ORIENTATION OF  ELEMENT :
+
+        // for each element: calculate determinant delta on node = (node_id_list[i]-1)
+        // coord are given  by node_coord[node][j]
+        // if  delta > 0 -> ok,   else swap nodes in  node_id_list
+
+        //	  cout << "**********"<< endl;
+        //   cout << node_id_list[0]-1 << "  " << node_id_list[1]-1 << "  " << node_id_list[2]-1 << endl ;
+        //   cout <<   node_coord[1][0]<< endl ;
+
+        // **********************************************
+        check_orientation(node_id_list,type);
+    //*****************************************************
+
+        //    cout << "+++++++++++++++++++    CHECK orient +++++++++++++" << endl;
+
+
+        //    if ( check_orientation(node_id_list) ) 
+        // 	{
+        // 	  cout << " check_orientation OK  !!!  " << endl;
+        // 	  count_ok++;
+
+        // 	}
+        //       else 
+        // 	{
+        // 	  cout  << " SWAP NODES  !!!  " << endl;
+        // 	  count_swap++;
+
+        // 	  if (dim == 2)
+        // 	    {
+
+        // 	      // swap node_id_list[0] and  node_id_list[2]
+        // 	      temp = node_id_list[0];
+        // 	      node_id_list[0] = node_id_list[2];
+        // 	      node_id_list[2] = temp;
+        // 	    }
+        // 	  else if (dim == 3)
+        // 	    {
+
+        // 	      if (type == 6)   // gmsh  PRISM6
+
+        // 		{
+        // 		  // swap
+        // 		}
+        // 	  //  
+
+
+
+
+        // 	    }
+
+
+
+        // 	}
+
+
+  
+
+
+
+
+        // *******************************************************
+
+
+        current_element.nodes = node_id_list;
+    current_element.type =  elem_line[i][1];
+
+    current_element.phys_id =  elem_line[i][2];
+
+    All_elements.push_back(current_element);
+    // cout << "******************" << current_element.type<< endl ;
+    current_element.nodes.clear();
+    current_element.type = 0;
+
+
+    //****************
+
+
+
+        elem_nodes.push_back(node_id_list);
+
+    node_id_list.clear();
+
+  }
+
+  // end list of  (elem)lines
 
 
 
   el_weight = count ;
   num_of_elem = elem_nodes.size();
 
+  //   cout << "   count_ok = " << count_ok << endl;
+  //   cout << "   count_swap = " <<  count_swap << endl;
+
+}  //  end  get_elem_nodes
 
 
-
-} //  end  get_elem_nodes
 
 
 
@@ -1536,47 +1593,47 @@ void Read_MSH::parse_node_section(ifstream& in_stream )
   //  reads  nodes  total number (one  integer)
   getline(in_stream, str);
   if (parse(str.c_str(), uint_p[assign_a(num_of_nodes)] >> *(space_p)   , space_p).full) 
-    {
-      //cout << " NUMERO  NODI *********"<< num_of_nodes  <<endl ;
-    } 
+  {
+    cout << " NUMERO  NODI *********"<< num_of_nodes  <<endl ;
+  } 
       
       
   // reads  NODE   line : NODE  number, 3  coordinates
   //  and  put it in vector node_entry
  
   while  (getline(in_stream, str))      //   
-    {
+  {
       
-      if (  parse(str.c_str(), r) .full )
+    if (  parse(str.c_str(), r) .full )
            
-	{
+    {
 	  
-	  node_entry.push_back(v);
-	  //     //cout << v[0] <<endl ;                
+      node_entry.push_back(v);
+      //     cout << v[0] <<endl ;                
 	
-          v.clear();
+      v.clear();
 	     
                              
                              
-	} 
-
-      if (parse(str.c_str(), str_p("$ENDNOD") ).full) 
-
-	//    if (  parse(str.c_str(), r) .full )
-           
-	{
-
-	  //cout << " BREAK   "  <<endl ;  
-	  end_nodes = true; 
-  	  break;
-	}
-
-      // if     trovato $ENDNOD 
-      //   {exit
-      //      }
-
-
     } 
+
+    if (parse(str.c_str(), str_p("$ENDNOD") ).full) 
+
+      //    if (  parse(str.c_str(), r) .full )
+           
+    {
+
+      //	  cout << " BREAK   "  <<endl ;  
+      end_nodes = true; 
+      break;
+    }
+
+    // if     trovato $ENDNOD 
+    //   {exit
+    //      }
+
+
+  } 
       
      
 } // end  parse nodes
@@ -1591,16 +1648,16 @@ void Read_MSH::find_node_section(char const* str, ifstream& in_stream)
   string name;
     
   if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p]  , space_p).full)
-    {
-      //    //cout << name<< endl;
-      if (name == "NOD")
+  {
+    //    cout << name<< endl;
+    if (name == "NOD")
 
-    	{
-    	  parse_node_section(in_stream);
-    	}
-         
-         
+    {
+      parse_node_section(in_stream);
     }
+         
+         
+  }
 }                                                                     
 
 
@@ -1613,28 +1670,28 @@ void Read_MSH::get_nodes_coord()
 
   node_label.clear();
   for (unsigned int i =0; i<num_of_nodes ; ++i)
-    {  
+  {  
 
-      //     //cout << "(node_entry[i][0] " <<node_entry[i][0]<< endl ;
-      node_label.push_back(node_entry[i][0]) ; // ????
-
-
-      //   //cout << " node_label[i]" <<  node_label[i];
-
-      for (unsigned int j =0; j<3 ; ++j)
-	{ 
-
-	  temp.push_back(node_entry[i][j+1]);
-	}
-
-      //  node_coord[i].push_back(temp);
-      node_coord.push_back(temp);
+    //     cout << "(node_entry[i][0] " <<node_entry[i][0]<< endl ;
+    node_label.push_back(node_entry[i][0]) ; // ????
 
 
-      temp.clear();
+    //   cout << " node_label[i]" <<  node_label[i];
 
+    for (unsigned int j =0; j<3 ; ++j)
+    { 
 
+      temp.push_back(node_entry[i][j+1]);
     }
+
+    //  node_coord[i].push_back(temp);
+    node_coord.push_back(temp);
+
+
+    temp.clear();
+
+
+  }
 
 
 } // end get_nodes_coord
@@ -1645,34 +1702,36 @@ void Read_MSH::get_nodes_coord()
 
 
 void Read_MSH::read_data_section(char const* str,ifstream& in_stream )
-  // void InputParser::read_data_section(char const* str)
+// void InputParser::read_data_section(char const* str)
 
 
-  // void read_data_section(char const* str,ifstream& in_stream )
+// void read_data_section(char const* str,ifstream& in_stream )
 
 {
 
   string name;
 
   if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p]  , space_p).full)
+  {
+    cout << name<< endl;
+    if (name == "ELM")
+      //	if (name == name_data )
     {
-      //cout << name<< endl;
-      if (name == "ELM")
-	//	if (name == name_data )
-	{
-	  parse_elem_section(in_stream);
-	}
-
-      else if  (name == "NOD")
-	{
-	  //  parse_2(in_stream);
-	  parse_node_section(in_stream);
-
-	}
-
-
+      cout << " ********* Wait for  .msh file processing ..........  "<< endl;
+      parse_elem_section(in_stream);
 
     }
+
+    else if  (name == "NOD")
+    {
+      //  parse_2(in_stream);
+      parse_node_section(in_stream);
+
+    }
+
+
+
+  }
 
 
 
@@ -1740,33 +1799,33 @@ void  Read_MSH::write_xta()
   out << "0	 # No. of nodes for which data is stored     \n";
   out << num_of_elem  << "	 # No. of elements for which data is stored    \n";
 
-  for (unsigned  int el_id =0; el_id<num_of_elem; el_id++)
-    {
+  for (unsigned int el_id =0; el_id<num_of_elem; el_id++)
+  {
 
-      p_el_data =elem_region_map.find((el_id+1)  );
+    p_el_data =elem_region_map.find((el_id+1)  );
 
-      //   p_el_data = elem_phys_map.find((el_id+1)  );
+    //   p_el_data = elem_phys_map.find((el_id+1)  );
 
-      //   if  (p_el_data != elem_phys_map.end() )
+    //   if  (p_el_data != elem_phys_map.end() )
 
-      if  (p_el_data != elem_region_map.end() )
+    if  (p_el_data != elem_region_map.end() )
     
-	{ 
-	  reg_id	  =  (double) (p_el_data -> second) ;
-	}
-      else
-	cout  <<  "error  write_xta "<< endl  ;
-
-      out << el_id   << "     # Foreign element id ";
-
-      out << "\n";
-      out << "1	 # vector length    ";
-      out << "\n";
-      out << std::setprecision(10) << reg_id   << "  	   # Values   ";
-      out << "\n";
-
-
+    { 
+      reg_id	  =  (double) (p_el_data -> second) ;
     }
+    else
+      cout  <<  "error  write_xta "<< endl  ;
+
+    out << el_id   << "     # Foreign element id ";
+
+    out << "\n";
+    out << "1	 # vector length    ";
+    out << "\n";
+    out << std::setprecision(10) << reg_id   << "  	   # Values   ";
+    out << "\n";
+
+
+  }
 
 }
 
@@ -1810,7 +1869,7 @@ void   Read_MSH::read_mesh_and_data(Mesh& mesh, MeshData_elements&  mesh_data )
 
   mesh.read (mesh_file_inp,&mesh_data  ); 
   
-   mesh_data.read(mesh_file_data);
+  mesh_data.read(mesh_file_data);
 
 
 }
@@ -1818,4 +1877,349 @@ void   Read_MSH::read_mesh_and_data(Mesh& mesh, MeshData_elements&  mesh_data )
 
 
 
+//  check if orientation  of  nodes  is  positive,  otherwise swap  nodes  of  element
+void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsigned  int type )
 
+{
+
+
+  vector<unsigned int> temp_nodes_list;
+  bool swap;
+  unsigned int temp  ;
+  unsigned int temp_list[3];
+
+  swap = false;
+
+
+  double det  ;    //    determinant
+  double x0,x1,z0, y0,y1,z1,  x2,y2, z2, x3, y3, z3 ,x4,y4,z4,  a11,a21, a12, a22, a31, a32, a13, a23, a33;
+
+  unsigned int  size_node_list ;
+
+  size_node_list =  node_id_list.size();
+
+  for (unsigned int i =0; i< size_node_list ; ++i)
+  {
+    temp_nodes_list.push_back(node_id_list[i]-1 );
+  }
+
+
+
+
+  // OK  FOR  FIRST  ORDER ELEMENTS
+  //   SECOND ORDER ...............TO  DO  !!?
+
+
+
+
+
+ 
+  if  (dim == 2)
+    //  ok for  TRI4  AND  QUAD4 
+
+  {
+
+    x0 = node_coord[( temp_nodes_list[0]) ][0];
+    x1 = node_coord[( temp_nodes_list[1]) ][0];
+
+
+
+    y0 = node_coord[( temp_nodes_list[0]) ][1];
+    y1 = node_coord[( temp_nodes_list[1]) ][1];
+
+    x2 = node_coord[( temp_nodes_list[2]) ][0];
+    y2  = node_coord[( temp_nodes_list[2]) ][1];
+
+    a11 = x1-x0;
+    a21 =   y1-y0;
+
+    a12 = x2 - x0;
+    a22 = y2-y0;
+
+
+    det = a11 * a22  - (a21*a12) ;
+
+    assert(abs(det)> 1e-12);
+
+    if  (det > 0.0)
+    {swap = false;}
+    else swap = true;
+
+    if (swap)
+    {
+      cout << " check_orientation OK  !!!  " << endl;
+      //	  count_ok++;
+
+    }
+    else 
+    {
+      //  cout  << " SWAP NODES  !!!  " << endl;
+      //  count_swap++;
+
+      // swap node_id_list[0] and  node_id_list[2]
+      temp = node_id_list[0];
+      node_id_list[0] = node_id_list[2];
+      node_id_list[2] = temp;
+
+
+    }
+
+
+
+  }
+
+
+  if (dim == 3)
+
+  { // dim=3
+
+
+    x0 = node_coord[( temp_nodes_list[0]) ][0];
+    y0 = node_coord[( temp_nodes_list[0]) ][1];
+    z0 =  node_coord[( temp_nodes_list[0]) ][2];
+
+
+    x1 = node_coord[( temp_nodes_list[1]) ][0];     
+    y1 = node_coord[( temp_nodes_list[1]) ][1];
+    z1 = node_coord[( temp_nodes_list[1]) ][2];
+
+    x2 = node_coord[( temp_nodes_list[2]) ][0];
+    y2  = node_coord[( temp_nodes_list[2]) ][1];
+    z2 = node_coord[( temp_nodes_list[2]) ][2];
+
+    x3 =  node_coord[( temp_nodes_list[3]) ][0];
+    y3 =  node_coord[( temp_nodes_list[3]) ][1];
+    z3 = node_coord[( temp_nodes_list[3]) ][2];
+
+    //     x4 =  node_coord[( temp_nodes_list[4]) ][0];
+    //       y4 =  node_coord[( temp_nodes_list[4]) ][1];
+    //       z4 =  node_coord[( temp_nodes_list[4]) ][2];
+
+
+    if (type == 5)  //  HEX8
+    {
+
+      x4 =  node_coord[( temp_nodes_list[4]) ][0];
+      y4 =  node_coord[( temp_nodes_list[4]) ][1];
+      z4 =  node_coord[( temp_nodes_list[4]) ][2];
+
+ 
+      a11 = x1-x0;
+      a21 =   y1-y0;
+      a31 = z1-z0;
+
+      a12 = x3-x0;
+      a22 = y3 - y0;
+      a32 = z3- z0;
+
+      a13 =x4 - x0;
+      a23 = y4 - y0;
+      a33 = z4 - z0;
+
+    }
+
+    else  //    TET4 , PRISM6
+
+    {
+      a11 = x1-x0;
+      a21 =   y1-y0;
+      a31 = z1-z0;
+
+      a12 = x2 - x0;
+      a22 = y2-y0;
+      a32 = z2-z0;
+
+      a13 = x3-x0 ;
+      a23 = y3-y0;
+      a33= z3-z0;
+    }
+
+    // det 
+
+    det =  a11 * (a22*a33 - a23*a32 ) - a12 * (a21*a33 - a23*a31)+ a13 * (a21*a32 - a22*a31);
+
+    //|a_1 a_2 a_3; b_1 b_2 b_3; c_1 c_2 c_3| ==a_1b_2c_3-a_1b_3c_2-a_2b_1c_3+a_2b_3c_1+a_3b_1c_2-a_3b_2c_1
+
+          
+    assert(abs(det)> 1e-12);
+
+    if  (det > 0.0)
+    {swap = false;}
+    else 
+    {
+
+      swap = true;
+
+      // cout <<  "  SWAP !!!  " ; //<< endl ;
+    }
+
+    if (swap) 
+    {// if  swap
+
+      switch(type) {
+        //   switch(gmsh_elem_type) 
+      case 4: //  TET4
+
+        // swap node_id_list[1] and  node_id_list[3]
+        temp = 0;
+        temp = node_id_list[1];
+        node_id_list[1] = node_id_list[3];
+        node_id_list[3] = temp;
+
+
+
+        break;
+
+      case 6: // gmsh  PRISM6
+        // swap   (0 1 2) -> (3 4 5 )
+
+
+        for (unsigned int i=0; i<3; i++)
+        {
+
+          temp_list[i] = node_id_list[i];
+
+        }
+
+        for (unsigned int i=0; i<3; i++)
+
+        {
+          node_id_list[i] =node_id_list[i+3] ;
+        }
+
+        for (unsigned int i=0; i<3; i++)
+
+        {
+          node_id_list[i+3] = temp_list[i]  ;
+
+        }
+
+        break;
+
+      case 5: // gmsh  HEX8
+        // swap   (0 1 2 3) -> ( 4 5  6  7  )
+
+        for (unsigned int i=0; i<4; i++)
+        {
+
+          temp_list[i] = node_id_list[i];
+
+        }
+
+        for (unsigned int i=0; i<4; i++)
+
+        {
+          node_id_list[i] =node_id_list[i+4] ;
+        }
+
+        for (unsigned int i=0; i<4; i++)
+
+        {
+          node_id_list[i+4] = temp_list[i]  ;
+
+        }
+
+
+        break;
+
+	   
+        // 
+
+      default:
+        cout <<  "Error : gmsh_elem_type NOT YET IMPLEMENTED "; 
+
+      }
+
+    }
+
+
+  }
+
+
+  // return swap;
+
+
+
+
+
+
+}
+
+
+
+void   Read_MSH:: cross_check_regions( vector<unsigned int>&  user_reg_list ,vector<unsigned int>&  gmsh_reg_list, string type )
+
+{
+  unsigned int id;
+  vector<unsigned int> :: iterator p1,p2;
+
+  string error_text1_phys,  error_text2_phys,  error_text1_BC,  error_text2_BC;
+
+  error_text1_phys = "ERROR : inconsistent Physical  regions. Physical region in  user's defined list not  found  in  GMSH  file";
+  error_text2_phys = " ERROR :  inconsistent Physical  regions.  GMSH region not  found in user's defined physical region list";
+  error_text1_BC = "ERROR : inconsistent BC  regions. BC region in  user's defined list not  found  in  GMSH  file";
+
+  error_text2_BC = " ERROR :  inconsistent BC  regions.  GMSH region not  found in user's defined BC region list";
+
+  for (int i =0; i< user_reg_list.size();++i)
+  {
+
+    id = user_reg_list[i];
+    //  cout << " phys_reg_ID =  " << id << endl;
+    p1 = find(gmsh_reg_list.begin(), gmsh_reg_list.end(), id );  // find  phys_reg_ID (user's id) in id list from file
+
+    if (p1 == gmsh_reg_list.end())   //  not  found
+
+    {
+
+      if (type == "phys")
+      {
+        //   cerr  <<  " ERROR2 : inconsistent Physical  regions. Physical region in  user's defined list not  found  in  GMSH  file   " <<  endl;
+        cerr << error_text1_phys  <<  endl;
+        exit (1);
+      }
+      else if (type == "BC")
+      {
+        cerr << error_text1_BC  <<  endl;
+        exit (1);
+
+      }
+
+    }
+
+  }
+
+
+  id = 0;
+  for (int i =0; i< gmsh_reg_list.size();++i)
+  {
+
+    id = gmsh_reg_list[i];
+    p2 = find(user_reg_list.begin(), user_reg_list.end(), id );  // find  phys_id from GMSH file in  (user's id list)
+
+    if (p2 == user_reg_list.end())   //  not  found
+
+    {
+
+      if (type == "phys")
+      {
+
+        // cerr  <<  " ERROR2 :  inconsistent Physical  regions.  GMSH region not  found in user's defined physical region list " <<  endl;
+        cerr <<  error_text2_phys <<  endl;
+        exit(1);
+      }
+      else if (type == "BC")
+      {
+        cerr << error_text2_BC  <<  endl;
+        exit (1);
+
+      }
+
+    }
+
+  }
+
+  // **************************************************************
+
+
+}
