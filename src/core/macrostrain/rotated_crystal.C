@@ -144,12 +144,7 @@ void  rotated_crystal::calculate_lat_consts()
   Tensor1  Ry;  
   Tensor1  Rz;
   //---------------------------------------------------------
-  // Miller basis
-  Tensor1 mil1;
-  Tensor1 mil2;
-  Tensor1 mil3;
-
-  
+  // Reciprocal  basis
   Tensor1 rec_basis1;
   Tensor1 rec_basis2;
   Tensor1 rec_basis3;
@@ -171,31 +166,20 @@ void  rotated_crystal::calculate_lat_consts()
 
   if (crystal_type.compare("hex")==0)
     {
+     
+
+     
+
+     
 
 
-      for (short i = 0; i<3; i++)
-	lat_const_calc[i] = a_lat;
-
-      if (z_miller[3] != 0) lat_const_calc[2] = c_lat;
-      if (y_miller[3] != 0) lat_const_calc[1] = c_lat;
-      if (x_miller[3] != 0) lat_const_calc[0] = c_lat;
-    
-    /*
-
-
-      mil1=Tensor1(0); mil1(1) = a_lat;
-      
-      mil2=Tensor1(0); mil2(1) = -0.5*a_lat; mil2(2) = std::sqrt(3.0)/2.0*a_lat;
-      
-      mil3=Tensor1(0); mil3(3) = c_lat;
+      Rx = Tensor1(0); Rx(1) = a_lat;
+      Ry = Tensor1(0); Ry(1) = -0.5*a_lat; Ry(2) = std::sqrt(3.0)/2.0*a_lat;
+      Rz = Tensor1(0); Rz(3) = c_lat;
 
       
+     
 
-      Rx =(x_miller[0] - x_miller[2]) * mil1 + (x_miller[1]-x_miller[2]) * mil2 + x_miller[3]*mil3;
-      Ry =(y_miller[0] - y_miller[2]) * mil1 + (y_miller[1]-y_miller[2]) * mil2 + y_miller[3]*mil3;
-      Rz =(z_miller[0] - z_miller[2]) * mil1 + (z_miller[1]-z_miller[2]) * mil2 + z_miller[3]*mil3;
-
-      
       const double volume =Rx *vectorProduct(Ry, Rz);
 
       rec_basis1 = vectorProduct(Ry, Rz)/volume;      
@@ -221,7 +205,7 @@ void  rotated_crystal::calculate_lat_consts()
        
 
 
-      */
+     
 
     }
 
