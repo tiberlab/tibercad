@@ -2031,21 +2031,27 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
     {swap = false;}
     else swap = true;
 
-    if (swap)
+    if (swap)   // if  swap = true  (det <= 0 )   then  reorder nodes of  element
     {
+      
+      // swap node_id_list[0] and  node_id_list[2]
+      temp = node_id_list[0];
+      node_id_list[0] = node_id_list[2];
+      node_id_list[2] = temp;
+      
       //  cout << " check_orientation OK  !!!  " << endl;
       //	  count_ok++;
 
     }
-    else 
+    else  // swap = false  (det >  0 )  
     {
       //  cout  << " SWAP NODES  !!!  " << endl;
       //  count_swap++;
 
       // swap node_id_list[0] and  node_id_list[2]
-      temp = node_id_list[0];
-      node_id_list[0] = node_id_list[2];
-      node_id_list[2] = temp;
+//      temp = node_id_list[0];
+//      node_id_list[0] = node_id_list[2];
+//      node_id_list[2] = temp;
 
 
     }
@@ -2141,8 +2147,8 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
       // cout <<  "  SWAP !!!  " ; //<< endl ;
     }
 
-    if (swap) 
-    {// if  swap
+    if (swap)     
+    {// if  swap = true  (det <= 0 )   then  reorder nodes of  element
 
       switch(type) {
         //   switch(gmsh_elem_type) 
