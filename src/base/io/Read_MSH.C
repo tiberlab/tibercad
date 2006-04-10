@@ -30,7 +30,8 @@ using namespace boost::spirit;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Class  for  parser of  GMSH  .MSH file (v. 1) :   get  nodes of  BC regions (1D  physical regions)
+//  Class  for  parser of  GMSH  .MSH file (v. 1) :   get  nodes of  BC regions 
+// (1D  physical regions)
 //
 //   and  creates .xta and  .xda  files for  mesh and  meshdata in Libmesh 
 //
@@ -41,8 +42,10 @@ using namespace boost::spirit;
 ///////////////////////////////////////////////////////////////////////////////
 
 
-//  constructor:  scan  .msh  file,  parse it, get info on BC,  writes .xda and  .xta  file for  Libmesh
-//  needs physical region ID,  bound. conditions region  ID (2D or 1D), dim. of  simulation 
+//  constructor:  scan  .msh  file,  parse it, get info on BC,  writes .xda and  
+// .xta  file for  Libmesh
+//  needs physical region ID,  bound. conditions region  ID (2D or 1D), dim. of  
+// simulation 
 Read_MSH::Read_MSH(string filename, vector<unsigned int>& phys_reg_ID, 
                    vector<unsigned int>& BC_reg_ID, unsigned int sim_dim, 
                    Mesh& mesh, MeshData_elements&  mesh_data)
@@ -64,15 +67,18 @@ Read_MSH::Read_MSH(string filename, vector<unsigned int>& phys_reg_ID,
   get_elem_nodes();
 
 
-  // write .xda file of mesh (elements and  nodes :  only elements with correct dim are considered)
+  // write .xda file of mesh (elements and  nodes :  
+  // only elements with correct dim are considered)
   write_xda();
 
 
-  // extract nodes which  belong to  bound cond reg. (DIM-1 phys.reg.) and associate them with 
+  // extract nodes which  belong to  bound cond reg. (DIM-1 phys.reg.) and 
+  // associate them with 
   // user defined BC regions
   get_BC_info(BC_reg_ID);
 
-  // associate elements to corrispondent physical region (as defined in user's phys region settings)
+  // associate elements to corrispondent physical region (as defined in user's 
+  // phys region settings)
   get_physical_elem(phys_reg_ID);
 
   // write  .xta file with  meshdata info for  Libmesh (here ID of  phys regions)  
@@ -110,22 +116,25 @@ void Read_MSH::parse_elem_section(ifstream& in_stream )
   v.clear();
      
   //  rule  for element  line  (list  of  integers uint)
-  rule<>list_of_numbers_space_sep = uint_p[push_back_a(v)] >> *( *(space_p) >> uint_p[push_back_a(v)]);
+  rule<>list_of_numbers_space_sep = uint_p[push_back_a(v)] >> 
+    *( *(space_p) >> uint_p[push_back_a(v)]);
      
-  //rule<> r = *(space_p)>> uint_p[assign_a(id)] >> *(space_p) >>list_of_numbers_space_sep  >> *(anychar_p);
+  //rule<> r = *(space_p)>> uint_p[assign_a(id)] >> *(space_p) >>
+  // list_of_numbers_space_sep  >> *(anychar_p);
 
   rule<> r = list_of_numbers_space_sep; 
 
 
   //  reads  elements' total number (one  integer)
   getline(in_stream, str);
-  if (parse(str.c_str(), uint_p[assign_a(n_elem)] >> *(space_p)   , space_p).full) 
+  if (parse(str.c_str(), uint_p[assign_a(n_elem)] >> *(space_p), space_p).full) 
   {
     // cout << n_elem<<endl ;
   } 
       
       
-  // reads  element   line : elem number, type of  elem, phys reg,  geom reg, number "n" of nodes in elem, "n" nodes
+  // reads  element   line : elem number, type of  elem, phys reg,  geom reg, 
+  // number "n" of nodes in elem, "n" nodes
   //  and  put it in vector elem_values 
   while (getline(in_stream, str))  //   
   {
@@ -157,7 +166,7 @@ void Read_MSH::find_elem_section(char const* str, ifstream& in_stream)
          
   string name;
     
-  if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p]  , space_p).full)
+  if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p], space_p).full)
   {
     // cout << name<< endl;
     if (name == "ELM")
@@ -195,11 +204,11 @@ void Read_MSH::scan_input(string file_name)
   }
 
 
-  cout << "/////////////////////////////////////////////////////////\n\n";
-  cout << "\t\tA space  separated list parser for Spirit...\n\n";
-  cout << "\t\t read  from .msh  file ELEM and NODES section \n\n";
+  //cout << "/////////////////////////////////////////////////////////\n\n";
+  //cout << "\t\tA space  separated list parser for Spirit...\n\n";
+  //cout << "\t\t read  from .msh  file ELEM and NODES section \n\n";
   //
-  cout << "/////////////////////////////////////////////////////////\n\n";
+  //cout << "/////////////////////////////////////////////////////////\n\n";
 
 
   //getline(in_stream, str);
@@ -257,7 +266,8 @@ void  Read_MSH::get_data ( vector< vector<unsigned int> >& glob_elem_values )
 
 
 
-//   processes    elements lines :  extracts   (dim-1)D elements and associates   nodes of  each (dim-1)D element 
+//   processes    elements lines :  extracts   (dim-1)D elements and associates 
+//  nodes of  each (dim-1)D element 
 // to its own physical region number 
 
 void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
@@ -299,6 +309,11 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
     switch(dim) {
     case 1:
       // 1D  sim ................
+      if  (elem_values[i][1] == 15)   //   BC = 0D  point (1 node)
+      {
+        BC_elem_line.push_back(elem_values[i]);
+      }
+
       break;
     case 2:
       if ( (elem_values[i][1] == 1) || (elem_values[i][1] == 8) )
@@ -308,7 +323,8 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
       break;
     case 3:
-      if ( (elem_values[i][1] == 2) || (elem_values[i][1] == 3) || (elem_values[i][1] == 9) || (elem_values[i][1] == 10) )
+      if ( (elem_values[i][1] == 2) || (elem_values[i][1] == 3) || 
+           (elem_values[i][1] == 9) || (elem_values[i][1] == 10) )
       {
         BC_elem_line.push_back(elem_values[i]);
       }
@@ -327,12 +343,14 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
   vector<unsigned int> BC_id_vec;
   vector<unsigned int> :: iterator p1;
 
-  // makes  a  vector  of  all different BC  id  from  gmsh  file,  to  compare with user's BC_reg_ID
+  // makes  a  vector  of  all different BC  id  from  gmsh  file,  
+  // to  compare with user's BC_reg_ID
   for (unsigned int i =0; i< BC_elem_line.size(); ++i)
   {
 
     BC_id = BC_elem_line[i][2]  ;
-    p1 = find(BC_id_vec.begin(), BC_id_vec.end(), BC_id );  // find if physic_id has  been already taken
+    p1 = find(BC_id_vec.begin(), BC_id_vec.end(), BC_id );  
+    // find if physic_id has  been already taken
 
     if (p1 ==  BC_id_vec.end())   //  not  found
     {
@@ -342,7 +360,8 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
   }
 
-  // cout << " BC_id_vec " << BC_id_vec[0]<< "   " << BC_id_vec[1]<< "   " <<BC_id_vec[2]<<endl;
+  // cout << " BC_id_vec " << BC_id_vec[0]<< "   " << BC_id_vec[1]<< "   " 
+  // <<BC_id_vec[2]<<endl;
 
   // NEW  
   // ************************************************************
@@ -400,7 +419,8 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
     id = BC_elem_line[i][2]  ;
 
-    number_of_nodes = BC_elem_line[i][4];
+    number_of_nodes = BC_elem_line[i][4];  //  number  of  nodes  
+    // belonging  to current  element
     //   cout<< " number_of_nodes  = " << number_of_nodes<< endl;
 
     for (unsigned int j =0; j<  number_of_nodes; ++j)
@@ -413,6 +433,8 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
       // NEW  CHANGE :  13.12.05
       //  convert  to  new  node  numeration :
       // ************************************
+
+      //  num_of_nodes = total  number  of  nodes in the  mesh
 
       old_node_id = (double)(BC_elem_line[i][5+j]);
       for (unsigned int k =0; k<num_of_nodes ; ++k)
@@ -607,8 +629,10 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
 
 //  utility  function 
-//unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   vector<unsigned int>& BC_reg_ID )
-unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   vector<unsigned int>& user_reg_ID )
+//unsigned int  Read_MSH::find_pos( unsigned int  reg_id , 
+//  vector<unsigned int>& BC_reg_ID )
+unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,
+                                  vector<unsigned int>& user_reg_ID )
 
 {
 
@@ -640,7 +664,8 @@ unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   vector<unsigned int>&
 
   }
 
-  else  cerr  <<  "Error :  inconsistent  Physical or  BC  region definition !! " << endl ;
+  else  cerr  <<  "Error :  inconsistent  Physical or  BC  region definition !! " 
+              << endl ;
   // physic ID  not  found in  user's  list 
 
 
@@ -651,7 +676,7 @@ unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   vector<unsigned int>&
 
 
 // public  method  to  get  map    <BC_region, BC_nodes> 
-void  Read_MSH::get_BC_data (    map<unsigned int, vector<unsigned int> >&  BoundCond_map    )
+void  Read_MSH::get_BC_data (map<unsigned int, vector<unsigned int> >& BoundCond_map )
 {
 
   BoundCond_map = BoundCond;
@@ -659,8 +684,10 @@ void  Read_MSH::get_BC_data (    map<unsigned int, vector<unsigned int> >&  Boun
 }
 
 
-// public  method  to  get  map  <BC_region, BC_nodes> and map   <BC_region, BC_elements> 
-void  Read_MSH::get_BC_data (map<unsigned int, vector<unsigned int> >&  BoundCond_map, map<unsigned int, vector<unsigned int> >&  BoundCond_el_map      )
+// public  method  to  get  map  <BC_region, BC_nodes> and map <BC_region, BC_elements> 
+void  Read_MSH::get_BC_data (map<unsigned int, vector<unsigned int> >& 
+                             BoundCond_map, map<unsigned int, vector<unsigned int> >&
+                             BoundCond_el_map      )
 {
 
   BoundCond_map = BoundCond;
@@ -674,7 +701,8 @@ void  Read_MSH::get_BC_data (map<unsigned int, vector<unsigned int> >&  BoundCon
 
 
 // public  method  to  get  map  <phys_region, elements>  
-void  Read_MSH::get_elem_data (map<unsigned int, vector<unsigned int> >& PhysReg_elements_map)
+void  Read_MSH::get_elem_data (map<unsigned int, vector<unsigned int> >& 
+                               PhysReg_elements_map)
 { 
       
   PhysReg_elements_map = PhysReg_elements;  
@@ -701,8 +729,10 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
  
   // **********************************************
 
-  //  idea  !:  work  on    vector<Element>  list_elements   instead   of phys_elem_lines
-  //   list_elements  has  already  the  elements with dim  =  sim_dim !!
+  //  idea  !:  work  on    vector<Element>  list_elements   instead   
+  // of phys_elem_lines
+  //   list_elements  has been  already created [in  write_xda() ] with  
+  // the  elements with dim  =  sim_dim !!
   // **********************************************
 
  
@@ -732,13 +762,15 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
 
 
 
-  // makes  a  vector  of  all different phisic  id  from  gmsh  file,  to  compare with user's phys_reg_ID
+  // makes  a  vector  of  all different phisic  id  from  gmsh  file,  
+  // to  compare with user's phys_reg_ID
   for (unsigned int i =0; i< list_elements.size(); ++i)
   {
     physic_id = list_elements[i].phys_id;
 
     // IDEA :  put physic_id in  vector  
-    p = find(physic_id_vec.begin(), physic_id_vec.end(), physic_id );  // find if physic_id has  been already taken
+    p = find(physic_id_vec.begin(), physic_id_vec.end(), physic_id );  
+    // find if physic_id has  been already taken
 
     if (p ==  physic_id_vec.end())   //  not  found
     {
@@ -748,7 +780,8 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
 
   }
 
-  // cout << " physic_id_vec " << physic_id_vec[0]<< "   " << physic_id_vec[1]<< "   " <<physic_id_vec[2]<<endl;
+  // cout << " physic_id_vec " << physic_id_vec[0]<< "   " << physic_id_vec[1]<< 
+  // "   " <<physic_id_vec[2]<<endl;
 
   // NEW  
   // ************************************************************
@@ -891,7 +924,7 @@ void  Read_MSH::write_xda ( )
     // elem_type_conversion from GMSH_type to  xda (libmesh) type 
 
     // ************************************************************
-    //  xda (libmesh)  ELEM TYPES 
+    //  xda (libmesh)  ELEM TYPES  [see enum_elem_type.h] 
     // ************************************************************
 
     //                  EDGE2=0,    // 0
@@ -926,21 +959,35 @@ void  Read_MSH::write_xda ( )
       //**************************************************************************
 
 
-      // 1 Line (2 nodes).
-      //  2 Triangle (3 nodes).
-      //  3 Quadrangle (4 nodes). 
+      // 1 Line (2 nodes).  [ -> EDGE2 = 0] 
+      // 2 Triangle (3 nodes).
+      // 3 Quadrangle (4 nodes). 
       // 4 Tetrahedron (4 nodes). 
       // 5 Hexahedron (8 nodes). 
       // 6 Prism (6 nodes). 
       // 7 Pyramid (5 nodes).
-      //  8 Second order line (3 nodes: 2 associated with the vertices and 1 with the edge). 
-      // 9 Second order triangle (6 nodes: 3 associated with the vertices and 3 with the edges). 
-      // 10 Second order quadrangle (9 nodes: 4 associated with the vertices, 4 with the edges and 1 with the face).
-      //  11 Second order tetrahedron (10 nodes: 4 associated with the vertices and 6 with the edges). 
-      // 12 Second order hexahedron (27 nodes: 8 associated with the vertices, 12 with the edges, 6 with the faces and 1 with the volume). 
-      // 13 Second order prism (18 nodes: 6 associated with the vertices, 9 with the edges and 3 with the quadrangular faces).
-      //  14 Second order pyramid (14 nodes: 5 associated with the vertices, 8 with the edges and 1 with the quadrangular face). 
-      // 15 Point (1 node).
+      //  8 Second order line (3 nodes: 2 associated with 
+      // the vertices and 1 with the edge).  [ -> EDGE3 = 1]
+      //  
+      // 9 Second order triangle (6 nodes: 3 associated with 
+      // the vertices and 3 with the edges). 
+      //
+      // 10 Second order quadrangle (9 nodes: 4 associated with 
+      // the vertices, 4 with the edges and 1 with the face).
+      //
+      //  11 Second order tetrahedron (10 nodes: 4 associated with 
+      // the vertices and 6 with the edges). 
+      //
+      // 12 Second order hexahedron (27 nodes: 8 associated with 
+      // the vertices, 12 with the edges, 6 with the faces and 1 with the volume). 
+      //
+      // 13 Second order prism (18 nodes: 6 associated with the vertices, 
+      // 9 with the edges and 3 with the quadrangular faces).
+      //
+      //  14 Second order pyramid (14 nodes: 5 associated with the vertices, 
+      // 8 with the edges and 1 with the quadrangular face). 
+      //
+      // 15 Point (1 node).  [no  correspondance in  Libmesh !]
 
 
 
@@ -962,7 +1009,9 @@ void  Read_MSH::write_xda ( )
         //   switch(gmsh_elem_type) {
 
       case 1:
-        // 1D  sim ................  line
+        // 1D  sim ................  line EDGE2 = 0 (2 nodes)
+        elem_type.push_back(0);
+
         break;
 	
       case 2:
@@ -1002,8 +1051,9 @@ void  Read_MSH::write_xda ( )
         break;
 
       case 8:
-        // 1D   second order line  ........
-        //  elem_type = ; 
+        // 1D   second order line (3 nodes) ........ EDGE3 = 1
+        //  elem_type =1 ; 
+        elem_type.push_back(1);
      
         break;
 
@@ -1079,12 +1129,15 @@ void  Read_MSH::write_xda ( )
     //DEAL 003:003
     //30	 # Num. Elements  =  num of  elements
     //20	 # Num. Nodes  =  num of  nodes
-    //90	 # Sum of Element Weights= sum of nodes of  all the  elements = Sigma(i=Nel)[ nodes(i)]
+    //90	 # Sum of Element Weights= sum of nodes of  all the  
+    //             elements = Sigma(i=Nel)[ nodes(i)]
     //0	 # Num. Boundary Conds.
     //65536	 # String Size (ignore)
     //1	 # Num. Element Blocks. = "number  of  mesh  blocks" =  1 !
-    //3 	 # Element types in each block. = vector of  element types (TRI = 3) (see  elem_type.h)
-    //30 	 # Num. of elements in each block = total number of elements of a given type
+    //3 	 # Element types in each block. = vector of  element types 
+    //             (TRI = 3) (see  elem_type.h)
+    //30 	 # Num. of elements in each block = total number of elements 
+    //            of a given type
     //Id String
     //Title String
     //  for  (all elements)
@@ -1168,7 +1221,7 @@ void  Read_MSH::write_xda ( )
 
 
   
-    cout << " num_of_nodes" <<  num_of_nodes<< endl;
+    // cout << " num_of_nodes" <<  num_of_nodes<< endl;
     
 
 
@@ -1294,21 +1347,24 @@ void  Read_MSH::write_xda ( )
   // ************************************************************************
 
 
-  // END  
+  // END  write  .xda  file
 
    
 }
 
-// write  .xda  file
+//
 
 
 
 
 
 // get  element data  for  each  element
-// BEWARE ! we  select ONLY  the  elements relevant to the  simulation dimension (dim):
-// e.g. if  dim = 2 ->  here we take  only  2D elements,  which correspond to  phys. regions
+// BEWARE ! we  select ONLY  the  elements relevant to the  
+// simulation dimension (dim):
+// e.g. if  dim = 2 ->  here we take  only  2D elements,  
+// which correspond to  phys. regions;
 //   1D elements,  if  present, are processed  separately to  get bound. cond. reg.
+//
 
 void Read_MSH::get_elem_nodes()
 { //get_elem_nodes
@@ -1358,6 +1414,26 @@ void Read_MSH::get_elem_nodes()
     switch(dim) {
     case 1:
       // 1D  sim ................elem_values[i][1] == 1) || (elem_values[i][1] == 8)
+      if ( (el_type == 1) || (el_type == 8)  )
+      {
+        elem_line.push_back(elem_values[i]);
+        p = find(gmsh_elem_type.begin(), gmsh_elem_type.end(),el_type  );
+
+        if (p == gmsh_elem_type.end())   //  not  found
+        {
+          gmsh_elem_type.push_back(el_type);
+
+          //	cout<< "el_type*************"<<  el_type   << endl ;
+
+        }
+
+
+      }
+
+
+
+
+
       break;
 	
     case 2:
@@ -1379,7 +1455,8 @@ void Read_MSH::get_elem_nodes()
 
       break;
     case 3:
-      if ( (el_type == 4) || (el_type == 5) || (el_type == 6) || (el_type == 7)|| (el_type == 11)|| 
+      if ( (el_type == 4) || (el_type == 5) || (el_type == 6) || 
+           (el_type == 7)|| (el_type == 11)|| 
            (el_type == 12)|| (el_type == 13) || (el_type == 14))
       {
         elem_line.push_back(elem_values[i]);
@@ -1447,7 +1524,8 @@ void Read_MSH::get_elem_nodes()
     {
 
 
-      node_id  = (double)(elem_line[i][5+j]);// ?????? TO DO: change  node_label and  node_entry to  int !!!
+      node_id  = (double)(elem_line[i][5+j]);// ?????? TO DO: change  node_label 
+      //                                      and  node_entry to  int !!!
       for (unsigned int k =0; k<num_of_nodes ; ++k)
       { 
         //  cout << " node_label[k]" <<  node_label[k]<< endl;
@@ -1475,7 +1553,8 @@ void Read_MSH::get_elem_nodes()
         // if  delta > 0 -> ok,   else swap nodes in  node_id_list
 
         //	  cout << "**********"<< endl;
-        //   cout << node_id_list[0]-1 << "  " << node_id_list[1]-1 << "  " << node_id_list[2]-1 << endl ;
+        //   cout << node_id_list[0]-1 << "  " << node_id_list[1]-1 << 
+        // "  " << node_id_list[2]-1 << endl ;
         //   cout <<   node_coord[1][0]<< endl ;
 
         // **********************************************
@@ -1532,7 +1611,7 @@ void Read_MSH::get_elem_nodes()
         // *******************************************************
 
 
-        current_element.nodes = node_id_list;
+    current_element.nodes = node_id_list;
     current_element.type =  elem_line[i][1];
 
     current_element.phys_id =  elem_line[i][2];
@@ -1547,7 +1626,7 @@ void Read_MSH::get_elem_nodes()
 
 
 
-        elem_nodes.push_back(node_id_list);
+    elem_nodes.push_back(node_id_list);
 
     node_id_list.clear();
 
@@ -1582,9 +1661,11 @@ void Read_MSH::parse_node_section(ifstream& in_stream )
   v.clear();
      
   //  rule  for node  line  (list  of  real)
-  rule<>list_of_numbers_space_sep = real_p[push_back_a(v)] >> *( *(space_p) >> real_p[push_back_a(v)]);
+  rule<>list_of_numbers_space_sep = real_p[push_back_a(v)] >> 
+    *( *(space_p) >> real_p[push_back_a(v)]);
      
-  //rule<> r = *(space_p)>> uint_p[assign_a(id)] >> *(space_p) >>list_of_numbers_space_sep  >> *(anychar_p);
+  //rule<> r = *(space_p)>> uint_p[assign_a(id)] >> *(space_p) 
+  // >>list_of_numbers_space_sep  >> *(anychar_p);
 
   rule<> r = list_of_numbers_space_sep; 
 
@@ -1592,9 +1673,10 @@ void Read_MSH::parse_node_section(ifstream& in_stream )
 
   //  reads  nodes  total number (one  integer)
   getline(in_stream, str);
-  if (parse(str.c_str(), uint_p[assign_a(num_of_nodes)] >> *(space_p)   , space_p).full) 
+  if (parse(str.c_str(), uint_p[assign_a(num_of_nodes)] >> 
+            *(space_p)   , space_p).full) 
   {
-    cout << " NUMERO  NODI *********"<< num_of_nodes  <<endl ;
+    //   cout << " NUMERO  NODI *********"<< num_of_nodes  <<endl ;
   } 
       
       
@@ -1647,7 +1729,8 @@ void Read_MSH::find_node_section(char const* str, ifstream& in_stream)
          
   string name;
     
-  if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p]  , space_p).full)
+  if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p],
+             space_p).full)
   {
     //    cout << name<< endl;
     if (name == "NOD")
@@ -1711,13 +1794,15 @@ void Read_MSH::read_data_section(char const* str,ifstream& in_stream )
 
   string name;
 
-  if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p]  , space_p).full)
+  if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p],
+             space_p).full)
   {
-    cout << name<< endl;
+    //  cout << name<< endl;
     if (name == "ELM")
       //	if (name == name_data )
     {
-      cout << " ********* Wait for  .msh file processing ..........  "<< endl;
+      cout << " ********* Please wait for  .msh file processing ..........  "<< 
+        endl;
       parse_elem_section(in_stream);
 
     }
@@ -1790,7 +1875,7 @@ void  Read_MSH::write_xta()
   //  int el_id = 0 ;
   double  reg_id= 0.0;  // = 101.0; 
 
-  // int n_elem = 150963; // 524;  // 248 ; //30 ; //33313;
+ 
 
   //  num_of_elem is  a  member data
   
@@ -1892,7 +1977,8 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
 
 
   double det  ;    //    determinant
-  double x0,x1,z0, y0,y1,z1,  x2,y2, z2, x3, y3, z3 ,x4,y4,z4,  a11,a21, a12, a22, a31, a32, a13, a23, a33;
+  double x0,x1,z0, y0,y1,z1,  x2,y2, z2, x3, y3, z3 ,x4,y4,z4, 
+           a11,a21, a12, a22, a31, a32, a13, a23, a33;
 
   unsigned int  size_node_list ;
 
@@ -1947,7 +2033,7 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
 
     if (swap)
     {
-      cout << " check_orientation OK  !!!  " << endl;
+      //  cout << " check_orientation OK  !!!  " << endl;
       //	  count_ok++;
 
     }
@@ -2036,9 +2122,11 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
 
     // det 
 
-    det =  a11 * (a22*a33 - a23*a32 ) - a12 * (a21*a33 - a23*a31)+ a13 * (a21*a32 - a22*a31);
+    det =  a11 * (a22*a33 - a23*a32 ) - a12 * (a21*a33 - a23*a31)+ 
+          a13 * (a21*a32 - a22*a31);
 
-    //|a_1 a_2 a_3; b_1 b_2 b_3; c_1 c_2 c_3| ==a_1b_2c_3-a_1b_3c_2-a_2b_1c_3+a_2b_3c_1+a_3b_1c_2-a_3b_2c_1
+    //|a_1 a_2 a_3; b_1 b_2 b_3; c_1 c_2 c_3| ==
+    // a_1b_2c_3-a_1b_3c_2-a_2b_1c_3+a_2b_3c_1+a_3b_1c_2-a_3b_2c_1
 
           
     assert(abs(det)> 1e-12);
@@ -2147,7 +2235,9 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
 
 
 
-void   Read_MSH:: cross_check_regions( vector<unsigned int>&  user_reg_list ,vector<unsigned int>&  gmsh_reg_list, string type )
+void   Read_MSH:: cross_check_regions( vector<unsigned int>&  user_reg_list,
+                                       vector<unsigned int>&  gmsh_reg_list, 
+                                       string type )
 
 {
   unsigned int id;
@@ -2166,7 +2256,8 @@ void   Read_MSH:: cross_check_regions( vector<unsigned int>&  user_reg_list ,vec
 
     id = user_reg_list[i];
     //  cout << " phys_reg_ID =  " << id << endl;
-    p1 = find(gmsh_reg_list.begin(), gmsh_reg_list.end(), id );  // find  phys_reg_ID (user's id) in id list from file
+    p1 = find(gmsh_reg_list.begin(), gmsh_reg_list.end(), id );  
+    // find  phys_reg_ID (user's id) in id list from file
 
     if (p1 == gmsh_reg_list.end())   //  not  found
 
@@ -2174,7 +2265,9 @@ void   Read_MSH:: cross_check_regions( vector<unsigned int>&  user_reg_list ,vec
 
       if (type == "phys")
       {
-        //   cerr  <<  " ERROR2 : inconsistent Physical  regions. Physical region in  user's defined list not  found  in  GMSH  file   " <<  endl;
+        //   cerr  <<  " ERROR2 : inconsistent Physical  regions. 
+        // Physical region in  user's defined list not  found  in  GMSH  file   " 
+        // <<  endl;
         cerr << error_text1_phys  <<  endl;
         exit (1);
       }
@@ -2195,7 +2288,8 @@ void   Read_MSH:: cross_check_regions( vector<unsigned int>&  user_reg_list ,vec
   {
 
     id = gmsh_reg_list[i];
-    p2 = find(user_reg_list.begin(), user_reg_list.end(), id );  // find  phys_id from GMSH file in  (user's id list)
+    p2 = find(user_reg_list.begin(), user_reg_list.end(), id );  
+  // find  phys_id from GMSH file in  (user's id list)
 
     if (p2 == user_reg_list.end())   //  not  found
 
@@ -2204,7 +2298,8 @@ void   Read_MSH:: cross_check_regions( vector<unsigned int>&  user_reg_list ,vec
       if (type == "phys")
       {
 
-        // cerr  <<  " ERROR2 :  inconsistent Physical  regions.  GMSH region not  found in user's defined physical region list " <<  endl;
+        // cerr  <<  " ERROR2 :  inconsistent Physical  regions.  
+        // GMSH region not  found in user's defined physical region list " <<  endl;
         cerr <<  error_text2_phys <<  endl;
         exit(1);
       }
