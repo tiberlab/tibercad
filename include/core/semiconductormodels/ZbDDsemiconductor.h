@@ -4,6 +4,8 @@
 
 #include "DDsemiconductor.h"
 #include<vector>
+#include <complex>
+#include "KPbulkHamiltonian.h" 
 
 //! A class to provide all neccessary parameters for drift-diffusion calculation for a zinc-blend (or diamond) crystal
 class ZbDDsemiconductor  : public DDsemiconductor
@@ -18,6 +20,8 @@ class ZbDDsemiconductor  : public DDsemiconductor
   //! data structure  for zinc-blende structure parameters
   struct ZbDDparameters
   {
+   
+
     double       Ev;//!< valence band top energy \f$  E_v^{\Gamma} \f$ [eV]
     double EgGamma; //!< band gap \f$ E_c^{\Gamma} - E_v^{\Gamma} \f$  [eV]    
     double EgL;     //!< band gap \f$ E_c^{L} - E_v^{\Gamma} \f$  [eV]    
@@ -40,6 +44,10 @@ class ZbDDsemiconductor  : public DDsemiconductor
     double def_uniax_L; //!< uniaxial deformation potential for L point \f$ \Xi_u \f$ [eV]
     double delta; //!< spin-orbit \f$ \Delta \f$ [eV]
   };
+
+  
+
+
   //!Constructor  
   ZbDDsemiconductor(void);
   
@@ -49,6 +57,9 @@ class ZbDDsemiconductor  : public DDsemiconductor
    */
   ZbDDsemiconductor(const ZbDDparameters& params);
 
+  //!sets valence band top energy
+  void set_Ev(const double Ev);
+
 
   //! sets 3 bandgaps
   /*!
@@ -56,6 +67,8 @@ class ZbDDsemiconductor  : public DDsemiconductor
       \param EgL \f$ E_g^{L} = E_c^{L} - E_v^{\Gamma} \f$
       \param EgX \f$ E_g^{X} = E_c^{X} - E_v^{\Gamma} \f$ 
   */
+
+
   void set_Eg(double EgGamma, double EgL, double EgX);
 
   
@@ -112,73 +125,80 @@ class ZbDDsemiconductor  : public DDsemiconductor
   /*!
     Uses 6 band Luttinger kp theory 
   */
-  virtual void  calculate_valence_band_energy_extremum(void);
+  virtual void  calculate_valence_band_extremum(void);
+
+
+
+  //! Calculates k.p parameters in atomic units for 6 band valence band calculation
+
+  /*! Valence band k.p parameters:
+
+      \f$
+
+          L = \frac{1}{2} (-\gamma_1 - 4 \gamma_2 - 1)  ; \\
+
+          M = \frac{1}{2} ( 2\gamma_2 - \gamma_1  - 1 ) ;  \\
+
+          N = 3\gamma_3; \\
+
+          N_{yx} = M; \\
+
+          N_{xy} = N -  N_{yx};
+          
+      \f$
+
+      Valence band deformation potential:
+
+      \f$
+        l  =  a_v + 2b; \\
+        m  =  a_v  - b; \\
+        n  =  \sqrt{3} d. \\
+      \f$
+
+     
+      Averaged valence band energy:
+
+      \f$
+      \bar{E}_v = E_v - \frac{\Delta}{3};
+      \f$
+
+  */
+ 
+  KPbulkHamiltonian::KPparams calculate_6x6_kp_params (void );
+
+  //! calculates valence bnad eigenenergies from 6 band kp model
+  /*!
+    \param k_vector  vector of k-vectors in crystal system
+  */
+  //std::vector< std::vector<double> >  calculate_vb_bulk_states(std::vector<Tensor1> & k_vector);
+  
+
+ 
 
  private:
 
   //-------------------------------------------------------------------------------//
   //material data block:
 
-  //! band gap \f$ E_c^{\Gamma} - E_v^{\Gamma} \f$  [eV] 
-  double EgGamma; 
 
-  //! band gap \f$ E_c^{L} - E_v^{\Gamma} \f$  [eV] 
-  double EgL;
-  
-  //! band gap \f$ E_c^{X} - E_v^{\Gamma} \f$  [eV] 
-  double EgX;
+  ZbDDparameters  par;
 
-  //!Luttinger \f$ \gamma_1 \f$
-  double gamma1;   
-
-  //!Luttinger \f$ \gamma_2 \f$
-  double gamma2; 
-
-  //!Luttinger \f$ \gamma_3 \f$     
-  double gamma3;         
-
-  //!transversal mass in L point of conduction band [free electron mass]
-  double m_t_L;
-
-  //!logitudinal mass in L point of conduction band [free electron mass]
-  double m_l_L;
-
-  //!  transversal mass in X point of conduction band [free electron mass] 
-  double m_t_X;
-
-  //! logitudinal mass in X point of conduction band [free electron mass]
-  double m_l_X;   
  
- // mass in \f$ \Gamma \f$ minimum  point of conduction band 
-  double m_G;    
+  //---------------------------------------------------------------------------------//
+  // k.p Hamiltonian section
 
-  // conduction band deformation potential [eV]
-  double a_c;    
+  //! Hartree energy in eV
+  static const double Hartree = 27.2113961;
+  
+  //! k.p Hamiltonian matrix
+  std::complex<double>  Ham[6][6] ;
 
-  // valence band deformation potential (hydrostatic) [eV]
-  double a_v;    
+  //! builds Hamiltonian matrix
+  void build_Hamiltonian(std::vector<double> k);
 
-  // valence band deformation potential b (uniaxial) [eV] 
-  double b;       
 
-  // valence band deformation potential d (uniaxial) [eV] 
-  double d;      
 
-  //   volume deformation potential for X point \f$ \Xi_d \f$ [eV]
-  double def_vol_X; 
-
-  // uniaxial deformation potential for X point \f$ \Xi_u \f$ [eV]
-  double def_uniax_X; 
-
-  //  volume deformation potential for L point \f$ \Xi_d \f$ [eV]
-  double def_vol_L; 
-
-  // uniaxial deformation potential for L point \f$ \Xi_u \f$ [eV]
-  double def_uniax_L;
-
-  // spin-orbit \f$ \Delta \f$ [eV]
-  double delta;
-  // end of material data block
+  //--------------------------------------------------------------------------------//
  
 };
 

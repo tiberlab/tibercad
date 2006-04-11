@@ -10,6 +10,8 @@
 
 #include "tensor.h"
 #include <vector>
+#include "EFAbulkHamiltonian.h"
+#include "KPbulkHamiltonian.h"
 
 class DDsemiconductor
 {
@@ -24,7 +26,7 @@ class DDsemiconductor
     \param energy_cutoff if the conduction (valence) band edge is higher (lower) than the lowest
     (highest) band edge by more than energy_cuttoff, then the band edge is ignored
   */
-  DDsemiconductor(const double Ev, const Tensor2Sym& strain, const double energy_cutoff);
+  DDsemiconductor( const Tensor2Sym& strain, const double energy_cutoff);
   
   //!sets strain tensor
   /*!
@@ -45,8 +47,7 @@ class DDsemiconductor
   double energy_cutoff;
   
 
-  //!Valence band top energy
-  double       Ev;
+ 
 
   //!Desctructor
   virtual ~DDsemiconductor(void);
@@ -74,12 +75,27 @@ class DDsemiconductor
   //! calculate information about conduction bands
   virtual void  calculate_conduction_band_extremum(void) = 0;
 
-   //! calculate information about valence bands
-  virtual void  calculate_valence_band_energy_extremum(void) = 0;
+  //! calculate information about valence bands
+  virtual void  calculate_valence_band_extremum(void) = 0;
+
+  std::vector< std::vector<double> >   calculate_vb_bulk_states(const std::vector<Tensor1>& k_vector) ; 
+
+
+   //! absolute value of k-vector for DOS mass calculation [a.u.]
+  double k_max;
 
  private:
 
+  //! Hartree energy in eV
+  static const double Hartree = 27.2113961;
+   
+
+  virtual KPbulkHamiltonian::KPparams calculate_6x6_kp_params(void) = 0;
+
  protected:
+
+  
+
 
   //!  if \f$ ||\varepsilon_{ij}|| > 10^{-5} \f$, then true 
   bool strained ;

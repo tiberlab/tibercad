@@ -3,6 +3,8 @@
 
 
 #include "DDsemiconductor.h"
+#include "KPbulkHamiltonian.h"
+
 #include<vector>
 //! A class to provide all neccessary parameters for drift-diffusion calculation for a wurtzite  crystal.
 class  WzDDsemiconductor : public DDsemiconductor
@@ -92,6 +94,9 @@ class  WzDDsemiconductor : public DDsemiconductor
   //Constrauctor. Sets all necessary parameters
   WzDDsemiconductor(const WzDDparameters& params );
 
+  //!sets valence band top energy
+  void set_Ev(const double Ev);
+
 
   //!set band gap in \f$ \Gamma \f$ point
   void set_Eg(const double EgGamma);
@@ -112,10 +117,19 @@ class  WzDDsemiconductor : public DDsemiconductor
   /*!
     Uses 6 band Luttinger kp theory 
   */
-  virtual void  calculate_valence_band_energy_extremum(void);
+  virtual void  calculate_valence_band_extremum(void);
  
+  KPbulkHamiltonian::KPparams calculate_6x6_kp_params (void );
+
  
  private:
+
+  WzDDparameters par; 
+
+  //! Hartree energy in eV
+  static const double Hartree = 27.2113961;
+  
+  /*
 
     //!band gap  [eV]
     double       EgGamma;
@@ -178,7 +192,7 @@ class  WzDDsemiconductor : public DDsemiconductor
     //!crystal field spliting energy [eV]
     double  delta_cr; 
  
-  
+    */
 
 
 };
