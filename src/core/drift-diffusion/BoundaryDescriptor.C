@@ -2,6 +2,8 @@
 
 #include "BoundaryDescriptor.h"
 
+#include <iostream>
+
 const double
 BoundaryDescriptor::_penalty_value = 1e6;
 
@@ -24,4 +26,33 @@ BoundaryDescriptor::get_scaled_to_normal_derivative(
   return coeff;
 }
 
+void
+BoundaryDescriptor::print_info() const
+{
+  const_iterator it = begin();
+  const const_iterator it_end = end();
 
+  for ( ; it != it_end; ++it)
+  {
+
+    const std::vector<double>& coeff = it->second;
+    std::cout << it->first << ": "
+      << " a = " << coeff[0]
+      << " b = " << coeff[1]
+      << " c = " << coeff[2]
+      << " (";
+    switch (get_type(it->first))
+    {
+      case DIRICHLET:
+        std::cout << "Dirichlet";
+        break;
+      case NEUMANN:
+        std::cout << "Neumann";
+        break;
+      default:
+        std::cout << "Mixed";
+        break;
+    }
+    std::cout << ")" << std::endl;
+  }
+}

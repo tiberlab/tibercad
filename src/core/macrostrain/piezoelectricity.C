@@ -17,7 +17,7 @@ void Piezoelectricity :: set_moduli(double  e14)
 
 //----------------------------------------------------------------//
 
-void Piezoelectricity :: set_moduli(double  e31, double e15, double e33)
+void Piezoelectricity :: set_moduli(double  e33, double e31, double e15)
 {
   moduli.clear();
   type = "wz";

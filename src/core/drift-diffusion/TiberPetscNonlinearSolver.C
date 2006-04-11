@@ -44,7 +44,7 @@ extern "C"
     ierr = KSPGetConvergedReason(ksp, &reason);
     if (ierr != 0) throw(PetscRuntimeError(ierr));
 
-     std::cerr << "it " << its << ", fnorm = " << fnorm << "\n";
+    std::cerr << "it " << its << ", fnorm = " << fnorm << "\n";
 
     // check for convergence
     if ((reason < 0) && (reason != -3))
@@ -109,7 +109,8 @@ extern "C"
     PC.close();
     Jac.close();
     
-    *msflag = SAME_NONZERO_PATTERN;
+    //*msflag = SAME_NONZERO_PATTERN;
+    *msflag = DIFFERENT_NONZERO_PATTERN;
     
     return ierr;
   }
@@ -139,9 +140,9 @@ TiberPetscNonlinearSolver<T>::TiberPetscNonlinearSolver(void)
     _linear_max_it(500),
     _ls_maxstep(1e3),
     _ksp_type(KSPBCGSL),
-    _pc_type(PCJACOBI)
+    _pc_type(PCILU)
 {
-  this->init();
+  //this->init();
 }
 
 
@@ -196,7 +197,6 @@ void TiberPetscNonlinearSolver<T>::init(void) throw (PetscRuntimeError)
     ierr = PetscPushErrorHandler(__tiber_petsc_snes_error_handler, this);
     _checkerr(ierr);
 
-
     ierr = SNESSetType(_snes, SNESLS);
     _checkerr(ierr);
 
@@ -205,12 +205,6 @@ void TiberPetscNonlinearSolver<T>::init(void) throw (PetscRuntimeError)
     _checkerr(ierr);
     ierr = KSPSetInitialGuessKnoll(ksp, PETSC_TRUE);
 
-    PC pc;
-    ierr = KSPGetPC(ksp, &pc);
-    _checkerr(ierr);
-    ierr = PCSetType(pc, _pc_type);
-    _checkerr(ierr);
-    ierr = PCILUSetZeroPivot(pc, 1e-32);
     _checkerr(ierr);
   }
 }
@@ -260,6 +254,14 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
   
   ierr = KSPSetTolerances(ksp, _linear_rtol,
       _linear_atol, PETSC_DEFAULT, _linear_max_it);
+  _checkerr(ierr);
+
+  PC pc;
+  ierr = KSPGetPC(ksp, &pc);
+  _checkerr(ierr);
+  ierr = PCSetType(pc, _pc_type);
+  _checkerr(ierr);
+  ierr = PCILUSetZeroPivot(pc, 1e-32);
   _checkerr(ierr);
 
   // to override options from command line
@@ -312,6 +314,7 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
 
   // reason < 0 means that the solver diverged. In this case we
   // throw an exception.
+  //if ((reason < 0) && (reason != -5))
   if (reason < 0)
     throw (SNESDivergedError(reason, n_iterations, fnorm));
 

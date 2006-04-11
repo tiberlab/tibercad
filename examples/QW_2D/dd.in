@@ -3,29 +3,23 @@ $Options
 temperature = 300
 
 statistics = FD
-n_doping = 5e19
+n_doping = 1e19
+p_doping = 1e19
 
 
-vg = 0.0;
-vds = 0.005;
-characteristic = 1
-vg_start = -0.4;
-vg_stop =  -0.2;
-vg_steps = 2;
-vds_stop = 10.0;
-vds_steps = 100;
+vg_start = 0.0;
+vg_stop =  3.5;
+vg_steps = 70;
 
-
-nonlinear_tolerance = 1e-7
-nonlinear_abs_tolerance = 1e-10
+nonlinear_tolerance = 1e-9
+nonlinear_abs_tolerance = 1e-15
 nonlinear_ls_maxstep = 0.025
-linear_tolerance = 1e-5
-linear_abs_tolerance = 1e-7
+linear_tolerance = 1e-9
+linear_abs_tolerance = 1e-15
 nonlinear_max_it = 25
 linear_max_it = 1000
 integration_order = 5
 
-recombination_time = 1e-8;
 
 scaling = 1
 

@@ -1,0 +1,17 @@
+$Options
+
+  meshfile = qw.msh
+
+  mesh_units = 1e-7
+
+  approximation_order = FIRST
+
+  # the coupling should be 1 because we have p doping
+  fully_coupled = 1
+
+  in_content = 0.15
+  growth_dir = 1
+
+  solve_strain = 1
+
+End

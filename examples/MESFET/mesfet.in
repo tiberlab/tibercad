@@ -28,9 +28,9 @@ vds = 2;
 vg_start = -1.0;
 vg_stop =  0.1;
 vg_steps = 11;
-# for oyput characteristic
-vds_stop = 4.0;
-vds_steps = 80;
+# for output characteristic
+vds_stop = 8.0;
+vds_steps = 160;
 
 nonlinear_tolerance = 1e-12
 nonlinear_ls_maxstep = 0.025
@@ -39,7 +39,7 @@ linear_max_it = 1000
 nonlinear_max_it = 15
 integration_order = 5
 
-max_refinement_steps=1
+max_refinement_steps=0
 refine_fraction=0.7
 coarsen_fraction=0.0
 max_ref_level=4

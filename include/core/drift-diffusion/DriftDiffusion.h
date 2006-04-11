@@ -7,6 +7,9 @@
 #include "DriftDiffusionDefs.h"
 #include "Scaling.h"
 #include "DDevice.h"
+#include "PetscRuntimeError.h"
+#include "KSPDivergedError.h"
+#include "SNESDivergedError.h"
 
 // Libmesh includes
 #include "libmesh_common.h"
@@ -220,6 +223,20 @@ class DriftDiffusion
          */
         int coupling;
 
+        //! Include artificial drift in continuity equations
+        /*!
+         * This can be helpful in materials of high bandgap, but it is
+         * a somewhat dirty trick.
+         */
+        bool artificial_drift;
+
+        //! Use a local (nodal based) scaling for continuity equations
+        /*!
+         * This probably should be the default and should replace the global
+         * scaling factors for the continuity equations
+         */
+        bool local_scaling;
+
       private:
         
         /**
@@ -241,6 +258,9 @@ class DriftDiffusion
          * The density scaling factor for the hole current equation
          */
         double C0_h;
+
+        //! linearize continuity equations
+        bool linearize_continuity_eq;
 
         friend class DriftDiffusion;
     };
@@ -297,6 +317,15 @@ class DriftDiffusion
      */
     const Scaling& get_scaling(void) const;
 
+    //! Calculate the nodal scaling factors for the continuity equations
+    /*!
+     * This method currently calculates the densities on each node as scaling
+     * factors for the electron and hole continuity equations.
+     * A better way would be to use some potential based values which can be
+     * calculated from nodal potential values during matrix assembly.
+     */
+    void build_scaling(void);
+
     /**
      * Set the simulation voltage for the boundary named \p boundary.
      */
@@ -334,8 +363,6 @@ class DriftDiffusion
      */
     void solve(bool restart);
    
-//    void solve(SolverMethod method);
-
     /**
      * @returns the variable names in a vector.
      */
@@ -380,6 +407,10 @@ class DriftDiffusion
      * TODO add other values
      */
     void build_densities(std::vector<double>& densities,
+        std::vector<std::string>& names);
+
+    //! Fill a vector with the electric field data
+    void build_current_density(std::vector<double>& current,
         std::vector<std::string>& names);
 
     //! Fill a vector with the electric field data
@@ -487,15 +518,23 @@ class DriftDiffusion
      */
     double _final_residual;
 
-    // disable the copy constructor and assignment operator
+    //! disable the copy constructor and assignment operator
     DriftDiffusion(const DriftDiffusion& rhs);
     DriftDiffusion& operator=(const DriftDiffusion& rhs);
+
+    //! Do a number of Gummel iterations
+    /*!
+     * \return the final residual
+     * \param the maximum number of iterations
+     */
+    double do_gummel_iterations(int max_it)
+      throw (PetscRuntimeError, KSPDivergedError, SNESDivergedError);
 
     /**
      * Set the options for the PETSc solver as given in @c SolverParameters
      */
     void set_solver_params(NonlinearSolver<Number>& solver,
-        CalculationType calc_type);
+        CalculationType calc_type = NONEQUILIBRIUM);
 
     /**
      * Computes the scaling parameters according to the
@@ -603,7 +642,6 @@ class DriftDiffusion
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
 
-    
 };
 
 

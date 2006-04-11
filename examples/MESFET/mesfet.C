@@ -15,6 +15,7 @@
 #include "elem.h"
 #include "getpot.h"
 #include "gmv_io.h"
+#include "GMVIO_cell.h"
 
 #include <algorithm>
 
@@ -101,6 +102,11 @@ int main (int argc, char** argv)
       sub.set_statistics(TiberCad::FERMIDIRAC);
     else
       sub.set_statistics(TiberCad::BOLTZMANN);
+    
+    if (fully)
+      sub.set_coupling_type(BOTH);
+    else
+      sub.set_coupling_type(ELECTRONS);
 
     sub.add_recombination_model(SRH);
 
@@ -222,6 +228,8 @@ int main (int argc, char** argv)
     params.max_refinement_steps = refinement_steps;
     params.refine_fraction = refine_frac;
     params.coarsen_fraction = coarsen_frac;
+
+    params.local_scaling = true;
 
     if (method == "GUMMEL")
     {
@@ -417,25 +425,6 @@ int main (int argc, char** argv)
       }
 
     }
-
-
-/*
-   const map<const BoundaryDescriptor*, double>& curr =
-   dd.get_boundary_currents();
-   double is = curr.find(&source)->second;
-   double ig = curr.find(&gate)->second;
-   double id = curr.find(&drain)->second;
-   double check = dd.get_artificial_boundary_current();
-
-   cout << "Currents:\n";
-   cout << " is = " << is << "\n";
-   cout << " ig = " << ig << "\n";
-    cout << " id = " << id << "\n";
-    cout << " (is + ig + id = " << is + ig + id << ")\n";
-    cout << " (artificial boundary: i = " << check << ")\n";
-*/
-
-
   }
 
   return libMesh::close();
@@ -466,7 +455,7 @@ void sweep_drain(double stop, int steps,
     voltages[i] = start + i * step;
   }
 
-  vector<double> densities;
+  vector<double> data;
   vector<string> names;
 
   bool remember = true;
@@ -496,11 +485,18 @@ void sweep_drain(double stop, int steps,
     ostringstream f;
     f.precision(3);
     f << "_" << fixed << vg << "V_" << fixed << *it << "V.gmv";
-    GMVIO(dd.get_mesh()).write_nodal_data("output/potentials"+f.str(),
-        dd.get_solution(), dd.get_variable_names());
-    dd.build_densities(densities, names);
+    dd.build_band_edges(data, names);
+    GMVIO(dd.get_mesh()).write_nodal_data("output/bands"+f.str(),
+        data, names);
+    dd.build_densities(data, names);
     GMVIO(dd.get_mesh()).write_nodal_data("output/densities"+f.str(),
-        densities, names);
+        data, names);
+    dd.build_electric_field(data, names);
+    GMVIO_cell(dd.get_mesh()).write_ascii_cell_data("output/field"+f.str(),
+        data, names);
+    dd.build_current_density(data, names);
+    GMVIO_cell(dd.get_mesh()).write_ascii_cell_data("output/current"+f.str(),
+        data, names);
   }
   
   file.close();

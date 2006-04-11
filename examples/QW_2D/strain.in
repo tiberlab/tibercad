@@ -11,19 +11,11 @@ max_ref_level=10
 max_shape_steps=0
 
 
-initial_density=9
-
-approx_order=FIRST
-
-elem_shape=QUAD
-
 tolerance=1e-8
 
 read_regions_from_mesh=1
 
-number_of_regions=2
-
-dimension=2
+dimension=1
 
 calculate_atom_displacements=false
 
@@ -35,7 +27,7 @@ atom_displacements_filename=atom_files/disp_test
 
 grown_on_substrate=1
 
-substrate_material=1
+substrate_material=0
 
 x-periodic=1
 y-periodic=0
@@ -43,10 +35,10 @@ z-periodic=0
 
 #-------Substrate boundary-----------
 
-xmin_s=-0.8
-xmax_s=0.8
-ymin_s=-0.75
-ymax_s=-0.5
+xmin_s=-10
+xmax_s=10
+ymin_s=-51.5
+ymax_s=-45
 zmin_s=0
 zmax_s=0
 

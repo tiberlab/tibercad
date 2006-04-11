@@ -22,7 +22,7 @@ class Elem;
 //! A simple semiconductor model
 /*!
  * This simple model implements Boltzmann or Fermi-Dirac statistics,
- * constant mobility and SRH recombination
+ * constant mobility and SRH and direct recombination
  */
 class SimpleSemiconductorModel : public DriftDiffusionProperties
 {
@@ -32,31 +32,21 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
     SimpleSemiconductorModel(const SimpleSemiconductorModel& model);
     virtual ~SimpleSemiconductorModel(void) {};
 
-    /**
-     * Set conduction band properties
-     */
+    //! Set conduction band properties
     void set_conduction_band_properties(double band_edge,
         double effective_mass, double mobility);
 
-    /**
-     * Set valence band properties
-     */
+    //! Set valence band properties
     void set_valence_band_properties(double band_edge,
         double effective_mass, double mobility);
     
-    /**
-     * Set n-type doping
-     */
+    //! Set n-type doping
     void set_n_dopant(const Dopant& dopant);
 
-    /**
-     * Set p-type doping
-     */
+    //! Set p-type doping
     void set_p_dopant(const Dopant& dopant);
 
-    /**
-     * Set the relative permittivity
-     */
+    //! Set the relative permittivity
     void set_relative_permittivity(double epsilon_r);
     
     //! \copydoc DriftDiffusionProperties::calculate_equilibrium_properties()
@@ -64,22 +54,24 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
         int coupling = DriftDiffusionDefs::BOTH,
         double temperature = SimulationOptions::T);
 
-    /**
-     * Add recombination model to be used.
-     */
+    //! Add recombination model to be used.
     void add_recombination_model(DriftDiffusionDefs::RecombinationModels
         recomb_model);
 
-    /**
-     * Remove a recombination model.
-     */
+    //! Remove a recombination model.
     void remove_recombination_model(DriftDiffusionDefs::RecombinationModels
         recomb_model);
 
-    /**
-     * Set Shockley-Read-Hall recombination parameters
-     */
+    //! Set Shockley-Read-Hall recombination parameters
     void set_SRH_parameters(double tau_n, double tau_p);
+
+    //! Set Direct Recombination parameters
+    void set_direct_rec_parameters(double C)
+      { _direct_rec_param = C; };
+
+    //! Set the coupling type
+    void set_coupling_type(DriftDiffusionDefs::Coupling coupling)
+      { _coupling = coupling; };
 
 
     virtual void read_database(const Dummy&) {};
@@ -89,20 +81,19 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
      * This implementation models the most simple semiconductor equations
      */
     virtual void calculate_all(double potential,
-      double fermi_e, double fermi_h,
-      const Point& p, int coupling = DriftDiffusionDefs::BOTH);
+      double fermi_e, double fermi_h, const Point& p);
     
-    /**
+    /*!
      * @returns the donor density
      */
     double get_donor_density(void) const;
 
-    /**
+    /*!
      * @returns the acceptor density
      */
     double get_acceptor_density(void) const;
 
-    /**
+    /*!
      * @returns the band gap
      */
     double get_band_gap(void) const;
@@ -192,6 +183,12 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
     //! \c true if equilibrium properties are calculated
     bool _is_prepared;
 
+    //! Type of coupling (particles) we want to study
+    /*!
+     * This can be one of \c ELECTRONS, \c HOLES or \c BOTH
+     */
+    int _coupling;
+
 
     /**
      * The band properties
@@ -205,12 +202,12 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
     double _electron_recombination_time;
     double _hole_recombination_time;
 
+    double _direct_rec_param;
 
-    template <int coupling>
+
     static PetscErrorCode jacobian(SNES snes, Vec x,
         Mat *jac, Mat *B, MatStructure *flag, void *sc);
 
-    template <int coupling>
     static PetscErrorCode function(SNES snes, Vec x, Vec f, void *sc);
 };
 
@@ -337,7 +334,7 @@ void
 SimpleSemiconductorModel::calculate_ionized_donors(double arg_e, double kT,
     double& Nd, double& dNd)
 {
-  const double arg_max = 150;
+  const double arg_max = 100;
 
   double Ed = _n_dopant.get_ionisation_energy();
   double arg = arg_e + Ed / kT;
@@ -353,7 +350,7 @@ SimpleSemiconductorModel::calculate_ionized_donors(double arg_e, double kT,
     double denom = 1 + g * tmp;
 
     Nd = _n_dopant.get_doping_density() / denom;
-    dNd = -g * tmp * Nd / (kT * denom);
+    dNd = -(g * tmp * Nd) / (kT * denom);
   }
 }
 
@@ -362,7 +359,7 @@ void
 SimpleSemiconductorModel::calculate_ionized_acceptors(double arg_h, double kT,
     double& Na, double& dNa)
 {
-  const double arg_max = 150;
+  const double arg_max = 100;
 
   double Ed = _p_dopant.get_ionisation_energy();
   double arg = arg_h + Ed / kT;
@@ -378,7 +375,7 @@ SimpleSemiconductorModel::calculate_ionized_acceptors(double arg_h, double kT,
     double denom = 1 + g * tmp;
 
     Na = _p_dopant.get_doping_density() / denom;
-    dNa = g * tmp * Na / (kT * denom);
+    dNa = (g * tmp * Na) / (kT * denom);
   }
 
 }
@@ -387,16 +384,19 @@ inline
 void
 SimpleSemiconductorModel::calculate_SRH_recombination(void)
 {
-  double& n  = electron_density;
-  double& p  = hole_density;
-  double& dn  = electron_density_derivative;
-  double& dp  = hole_density_derivative;
+  double n  = electron_density;
+  double p  = hole_density;
+  double dn  = electron_density_derivative;
+  double dp  = hole_density_derivative;
   double tn  = _electron_recombination_time;
   double tp  = _hole_recombination_time;
   double ni2 = get_intrinsic_density_squared();
   double ni  = std::sqrt(ni2);
   double denom = tp * (n + ni) + tn * (p + ni);
-  double SRH = (n * p - ni2) / denom;
+  double SRH = ni2 / denom;
+  double nn = n / ni;
+  double pp = p / ni;
+  SRH *= (nn * pp - 1);
   double a = (p - tp * SRH) * dn / denom;
   double b = (n - tn * SRH) * dp / denom; 
   electron_recombination_rate += SRH;
@@ -411,15 +411,35 @@ SimpleSemiconductorModel::calculate_SRH_recombination(void)
 
 inline
 void
+SimpleSemiconductorModel::calculate_direct_recombination(void)
+{
+  double n  = electron_density;
+  double p  = hole_density;
+  double dn  = electron_density_derivative;
+  double dp  = hole_density_derivative;
+  double C  = _direct_rec_param;
+  double ni2 = get_intrinsic_density_squared();
+
+  double rec = C * (n * p - ni2);
+  double a = C * (dn * p);
+  double b = C * (n * dp);
+  electron_recombination_rate += rec;
+  electron_recombination_rate_derivatives[1] += a;
+  electron_recombination_rate_derivatives[2] += b;
+  electron_recombination_rate_derivatives[0] += a + b;
+  hole_recombination_rate += rec;
+  hole_recombination_rate_derivatives[1] += a;
+  hole_recombination_rate_derivatives[2] += b;
+  hole_recombination_rate_derivatives[0] += a + b;
+}
+  
+
+inline
+void
 SimpleSemiconductorModel::calculate_Auger_recombination(void)
 {
 }
 
-inline
-void
-SimpleSemiconductorModel::calculate_direct_recombination(void)
-{
-}
 
 template <int coupling>
 inline
@@ -532,17 +552,17 @@ SimpleSemiconductorModel::calculate_all(double potential,
     hole_conductivity_derivatives[2] = -hole_diffusivity * dp2;
   }
   
+  electron_recombination_rate = 0;
+  electron_recombination_rate_derivatives[0] = 0;
+  electron_recombination_rate_derivatives[1] = 0;
+  electron_recombination_rate_derivatives[2] = 0;
+  hole_recombination_rate = 0;
+  hole_recombination_rate_derivatives[0] = 0;
+  hole_recombination_rate_derivatives[1] = 0;
+  hole_recombination_rate_derivatives[2] = 0;
   // 5.) Recombination
   if (coupling & DriftDiffusionDefs::BOTH)
   {
-    electron_recombination_rate = 0;
-    electron_recombination_rate_derivatives[0] = 0;
-    electron_recombination_rate_derivatives[1] = 0;
-    electron_recombination_rate_derivatives[2] = 0;
-    hole_recombination_rate = 0;
-    hole_recombination_rate_derivatives[0] = 0;
-    hole_recombination_rate_derivatives[1] = 0;
-    hole_recombination_rate_derivatives[2] = 0;
     if (_recombination & DriftDiffusionDefs::SRH)
       calculate_SRH_recombination();
     if (_recombination & DriftDiffusionDefs::AUGER)

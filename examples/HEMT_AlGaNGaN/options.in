@@ -10,7 +10,7 @@ $Options
   fully_coupled = 0
 
   material_system = 0
-  al_content = 0.3
+  al_content = 0.39
   # only used when material_system == 1
   growth_dir = 4
 

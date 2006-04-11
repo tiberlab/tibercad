@@ -12,7 +12,7 @@ class Piezoelectricity
 
   void set_moduli(double e14);
 
-  void set_moduli(double  e31, double e15, double e33);
+  void set_moduli(double  e33, double e31, double e15);
 
 
   void set_pyro_module(double p);

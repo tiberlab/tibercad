@@ -30,10 +30,10 @@ main: $(objects)
 	@echo "Linking main..."
 	@$(CXX) $(CXXFLAGS) $(objects) $(TIBER_OBJECTS) -o main $(LIBS) $(LDFLAGS) 
 
-run: all hemt.msh
+run: all qw.msh
 	@echo "Running example..."
 	@[ -d output ] || mkdir output
-	./main -ksp_type bcgs
+	./main -ksp_type bcgs -pc_ilu_zeropivot 1e-32
 
 
 clean:

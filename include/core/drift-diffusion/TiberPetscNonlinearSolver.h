@@ -116,7 +116,7 @@ class TiberPetscNonlinearSolver : public NonlinearSolver<T>
      */
     SNES _snes;
 
-    void _checkerr(int errorcode) throw (PetscRuntimeError);
+    static void _checkerr(int errorcode) throw (PetscRuntimeError);
 
 };
 

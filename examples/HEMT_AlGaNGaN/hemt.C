@@ -174,7 +174,7 @@ int main (int argc, char** argv)
       cryst.set_cryst_type("hex");
       cryst.set_xyz_mil_direction("x", 1,  0, -1, 0) ;
       cryst.set_xyz_mil_direction("z", 1,  -2, 1, 0) ;
-      cryst.set_xyz_mil_direction("y",  0,  0, 0,  -1) ;
+      cryst.set_xyz_mil_direction("y",  0,  0, 0,  1) ;
     }
 
     Piezoelectricity piezo1;
@@ -259,7 +259,7 @@ int main (int argc, char** argv)
       std::vector<int> y_dir(4);
 
       x_dir[0] = -1;  x_dir[1] = 0;  x_dir[2] =  1;  x_dir[3] = 0;
-      y_dir[0] =  0;  y_dir[1] = 0;  y_dir[2] =  0;  y_dir[3] = -1;
+      y_dir[0] =  0;  y_dir[1] = 0;  y_dir[2] =  0;  y_dir[3] = 1;
 
       crystal[1].set_lat_const(0.3189, 0.5185); //GaN
       crystal[1].calculate_lat_consts();
@@ -356,6 +356,12 @@ int main (int argc, char** argv)
     strain_calculation.define_piezo_moduli(piezo_data);
     strain_calculation.define_external_stress(stress_vector_in, boundary_nodes);
 
+
+    // solve strain
+    cout << "Solving strain... \n" << flush;
+    strain_calculation.solve();
+    strain_calculation.output_piezo("Piezo.gmv");
+
     /*****************************************************/
 
 
@@ -370,6 +376,7 @@ int main (int argc, char** argv)
       barrier.set_statistics(TiberCad::FERMIDIRAC);
     else
       barrier.set_statistics(TiberCad::BOLTZMANN);
+    
 
     barrier.add_recombination_model(SRH);
     double bg_doping = 1e16;
@@ -417,6 +424,8 @@ int main (int argc, char** argv)
     StrainedSemiconductorModel barrier_doped(barrier);
     barrier_doped.set_n_dopant(Dopant(n_doping, 0.025, 2));
     channel_doped.set_n_dopant(Dopant(n_doping, 0.025, 2));
+    barrier_doped.set_SRH_parameters(1e-10, 1e-10);
+    channel_doped.set_SRH_parameters(1e-10, 1e-10);
 
 
     const Elem* elem = meshdata.elem_data_begin()->first;
@@ -428,8 +437,21 @@ int main (int argc, char** argv)
     channel.calculate_equilibrium_properties();
     barrier_doped.calculate_equilibrium_properties();
     channel_doped.calculate_equilibrium_properties();
-    cerr << barrier_doped.get_donor_density() << "\n";
 
+    if (fully)
+    {
+      barrier.set_coupling_type(BOTH);
+      channel.set_coupling_type(BOTH);
+      barrier_doped.set_coupling_type(BOTH);
+      channel_doped.set_coupling_type(BOTH);
+    }
+    else
+    {
+      barrier.set_coupling_type(ELECTRONS);
+      channel.set_coupling_type(ELECTRONS);
+      barrier_doped.set_coupling_type(ELECTRONS);
+      channel_doped.set_coupling_type(ELECTRONS);
+    }
 
     ElementData element_data;
 
@@ -528,6 +550,10 @@ int main (int argc, char** argv)
     params.integration_order =
       static_cast<libMeshEnums::Order>(integration_order);
 
+    params.solver_params.pc_type = PCILU;
+    params.local_scaling = true;
+    //params.artificial_drift = true;
+
     if (method == "GUMMEL")
     {
       params.solver_method = DriftDiffusion::GUMMEL;
@@ -562,11 +588,6 @@ int main (int argc, char** argv)
 
     
 
-    // solve strain
-    cout << "Solving strain... \n" << flush;
-    strain_calculation.solve();
-    strain_calculation.output_piezo("Piezo.gmv");
-
 
 
     cout << "Solving drift-diffusion... \n" << flush;
@@ -585,16 +606,14 @@ int main (int argc, char** argv)
     cout << "     t0  : " << sc.get_time_scaling() << "\n";
     cout << "     R0  : " << sc.get_recombination_scaling() << "\n\n";
     dd.remember_current_solution();
-    GMVIO(dd.get_mesh()).write_nodal_data("output/eq_potentials.gmv",
-        dd.get_solution(), dd.get_variable_names());
     vector<double> densities;
     vector<string> names;
     dd.build_densities(densities, names);
     GMVIO(dd.get_mesh()).write_nodal_data("output/eq_densities.gmv",
         densities, names);
-    //dd.build_band_edges(densities, names);
-    //GMVIO(dd.get_mesh()).write_nodal_data("output/eq_band_edges.gmv",
-    //    densities, names);
+    dd.build_band_edges(densities, names);
+    GMVIO(dd.get_mesh()).write_nodal_data("output/eq_band_edges.gmv",
+        densities, names);
 
     params.solver_params.ls_maxstep = dd_nonlin_ls_maxstep;
 
@@ -801,14 +820,18 @@ void sweep_drain(double stop, int steps,
     ostringstream f;
     f.precision(3);
     f << "_" << fixed << vg << "V_" << fixed << *it << "V.gmv";
-    GMVIO(dd.get_mesh()).write_nodal_data("output/potentials"+f.str(),
-        dd.get_solution(), dd.get_variable_names());
     dd.build_densities(densities, names);
     GMVIO(dd.get_mesh()).write_nodal_data("output/densities"+f.str(),
         densities, names);
-    //dd.build_band_edges(densities, names);
-    //GMVIO(dd.get_mesh()).write_nodal_data("output/band_edges"+f.str(),
-    //    densities, names);
+    dd.build_band_edges(densities, names);
+    GMVIO(dd.get_mesh()).write_nodal_data("output/band_edges"+f.str(),
+        densities, names);
+    dd.build_electric_field(densities, names);
+    GMVIO_cell(dd.get_mesh()).write_ascii_cell_data("output/field"+f.str(),
+        densities, names);
+    dd.build_current_density(densities, names);
+    GMVIO_cell(dd.get_mesh()).write_ascii_cell_data("output/current"+f.str(),
+        densities, names);
   }
   
   file.close();
@@ -836,8 +859,8 @@ void setup_boundary_desc(BoundaryDescriptor& desc,
     coeff[2] = ec - schottky_barrier;    
   }
 
-  cout << desc.get_id() << ": " << coeff[2] << "\n";
   desc.set_coefficients("potential", coeff);
+  cout << desc.get_id() << ": " << coeff[2] << "\n";
 
 }
 

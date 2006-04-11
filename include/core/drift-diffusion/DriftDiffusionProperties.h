@@ -95,8 +95,7 @@ class DriftDiffusionProperties : public PhysicalProperties
      * in \c DriftDiffusionDefs::Coupling
      */
     virtual void calculate_all(double potential,
-      double fermi_e, double fermi_h,
-      const Point& coord, int coupling = DriftDiffusionDefs::BOTH) = 0;
+      double fermi_e, double fermi_h, const Point& coord) = 0;
       
 
     //! Get the electron density

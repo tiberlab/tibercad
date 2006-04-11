@@ -60,6 +60,8 @@ class BoundaryDescriptor
      */
     const std::vector<double>
       get_scaled_to_normal_derivative(const std::string& variable) const;
+
+    void print_info(void) const;
       
 
   private:

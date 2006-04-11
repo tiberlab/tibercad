@@ -13,7 +13,8 @@ using namespace DriftDiffusionDefs;
 SimpleSemiconductorModel::SimpleSemiconductorModel(void)
   : DriftDiffusionProperties(),
     _recombination(0),
-    _is_prepared(false)
+    _is_prepared(false),
+    _coupling(BOTH)
 {
   _DOS_factor = 2 * std::pow(2 * M_PI * Constants::me /
       (Constants::h * Constants::h) * Constants::e, 1.5) / 1e6;
@@ -26,7 +27,11 @@ SimpleSemiconductorModel::SimpleSemiconductorModel(
     _DOS_factor(model._DOS_factor),
     _conduction_band(model._conduction_band),
     _valence_band(model._valence_band),
-    _is_prepared(model._is_prepared)
+    _is_prepared(model._is_prepared),
+    _coupling(model._coupling),
+    _electron_recombination_time(model._electron_recombination_time),
+    _hole_recombination_time(model._hole_recombination_time),
+    _direct_rec_param(model._direct_rec_param)
 {
 }
 
@@ -47,15 +52,14 @@ SimpleSemiconductorModel::prepare_element_data(void)
 
   conduction_band_edge = cb.band_edge;
   valence_band_edge = vb.band_edge;
-
 }
 
 void
 SimpleSemiconductorModel::calculate_all(
     double potential, double fermi_e, double fermi_h,
-    const Point& coord, int coupling)
+    const Point& coord)
 {
-  switch (coupling & BOTH)
+  switch (_coupling & BOTH)
   {
     case ELECTRONS:
       calculate_all<ELECTRONS>(potential, fermi_e, fermi_h);
@@ -79,7 +83,7 @@ SimpleSemiconductorModel::calculate_equilibrium_properties(int coupling,
   // just update all properties to equilibrium ones
   if (_is_prepared)
   {
-    switch (coupling & BOTH)
+    switch (_coupling & BOTH)
     {
       case ELECTRONS:
         calculate_all<ELECTRONS>(get_equilibrium_fermi_level(), 0, 0);
@@ -93,6 +97,10 @@ SimpleSemiconductorModel::calculate_equilibrium_properties(int coupling,
     }
     return;
   }
+
+  // remember the coupling
+  int coupling_bkp = _coupling;
+  _coupling = BOTH;
 
   SNES           snes;
   KSP            ksp;
@@ -124,21 +132,8 @@ SimpleSemiconductorModel::calculate_equilibrium_properties(int coupling,
       PETSC_DEFAULT);
 
 
-  switch (coupling & BOTH)
-  {
-    case ELECTRONS:
-      ierr = SNESSetFunction(snes, r, function<ELECTRONS>, (void *) this);
-      ierr = SNESSetJacobian(snes, J, J, jacobian<ELECTRONS>, (void *) this);
-      break;
-    case HOLES:
-      ierr = SNESSetFunction(snes, r, function<HOLES>, (void *) this);
-      ierr = SNESSetJacobian(snes, J, J, jacobian<HOLES>, (void *) this);
-      break;
-    default:
-      ierr = SNESSetFunction(snes, r, function<BOTH>, (void *) this);
-      ierr = SNESSetJacobian(snes, J, J, jacobian<BOTH>, (void *) this);
-      break;
-  }
+  ierr = SNESSetFunction(snes, r, function, (void *) this);
+  ierr = SNESSetJacobian(snes, J, J, jacobian, (void *) this);
 
   // calculate first guess according to doping
   // assume complete ionization
@@ -188,9 +183,12 @@ SimpleSemiconductorModel::calculate_equilibrium_properties(int coupling,
   ierr = MatDestroy(J);
 
   _is_prepared = true;
+
+  // restore original coupling
+  _coupling = coupling_bkp;
 }
 
-template <int coupling>
+
 PetscErrorCode
 SimpleSemiconductorModel::jacobian(SNES snes, Vec x,
     Mat *jac, Mat *B, MatStructure *flag, void *sc)
@@ -202,7 +200,7 @@ SimpleSemiconductorModel::jacobian(SNES snes, Vec x,
   ierr = VecGetArray(x, &xx);
 
   SimpleSemiconductorModel* s = static_cast<SimpleSemiconductorModel*>(sc);
-  s->calculate_all(xx[0], 0.0, 0.0, (s->elem)->centroid(), coupling);
+  s->calculate_all(xx[0], 0.0, 0.0, (s->elem)->centroid());
 
   A[0] = s->get_charge_density_derivatives()[0];
 ///*
@@ -220,7 +218,6 @@ SimpleSemiconductorModel::jacobian(SNES snes, Vec x,
   return ierr;
 }
 
-template <int coupling>
 PetscErrorCode
 SimpleSemiconductorModel::function(SNES snes, Vec x, Vec f, void *sc)
 {
@@ -231,7 +228,7 @@ SimpleSemiconductorModel::function(SNES snes, Vec x, Vec f, void *sc)
   ierr = VecGetArray(f, &ff);
 
   SimpleSemiconductorModel* s = static_cast<SimpleSemiconductorModel*>(sc);
-  s->calculate_all(xx[0], 0.0, 0.0, (s->elem)->centroid(), coupling);
+  s->calculate_all(xx[0], 0.0, 0.0, (s->elem)->centroid());
 
   ff[0] = s->get_charge_density();
 
