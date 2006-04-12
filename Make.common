@@ -10,7 +10,7 @@
 
 # $(tibermodules) are the subdirectories in $(topdir)/include
 tibermodules := base/common base/io utils/Tensor
-tibermodules += core/drift-diffusion core/macrostrain core/semiconductormodels
+tibermodules += core/drift-diffusion core/macrostrain core/semiconductormodels core/quantumEFAmodels
 
 # libmesh can be found here
 libmesh := /usr/pack/libmesh-0.5.0_20051010cvs-ma
