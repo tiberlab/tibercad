@@ -1,0 +1,384 @@
+using namespace std;
+#include "KPbulkHamiltonian.h"
+//==================================================================
+
+void KPbulkHamiltonian::nullify_parameters(void)
+{
+
+  par.L1 = 0.0;
+  par.L2 = 0.0;
+  par.M1 = 0.0;
+  par.M2 = 0.0;
+  par.M3 = 0.0;
+  par.N1 = 0.0;
+  par.N2 = 0.0;    
+  par.P1 = 0.0;
+  par.P2 = 0.0;
+  par.s1 = 0.0;
+  par.s2 = 0.0;
+  par.E_c = 0.0;
+  par.E_v = 0.0;
+  par.d1 = 0.0;
+  par.d2 = 0.0;
+  par.d3 = 0.0;
+  par.N1_xy = 0.0;
+  par.N1_yx = 0.0; 
+  par.N2_xy = 0.0; 
+  par.N2_yx = 0.0;
+  par.l1s = 0.0;
+  par.l2s = 0.0;
+  par.n1s = 0.0;  
+  par.n2s = 0.0;
+  par.m1s = 0.0;
+  par.m2s = 0.0;
+  par.m3s = 0.0;
+
+  kpVVtermSymmetric = false;
+  kpCVtermSymmetric = true;
+
+  strainM = Tensor2Sym(0);
+}
+
+
+//=================================================================
+
+KPbulkHamiltonian::KPbulkHamiltonian(const string model)
+{
+  nullify_parameters();
+
+  if (model == "6x6")
+    {
+      band_min = 2;
+      band_max = 7;
+    }
+  else
+    { 
+      if (model == "8x8")
+	{
+	  band_min = 0;
+	  band_max = 7;
+	}
+      else
+	{
+	  cerr << "Wrong kp model:  " << model << "\n";
+	  exit(1);
+	}
+    }
+
+    
+}
+//=================================================================
+
+KPbulkHamiltonian::KPbulkHamiltonian(void)
+{
+  nullify_parameters();
+
+  band_min = 0;
+  band_max = 7;
+
+}
+
+ 
+void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
+{
+  //=================================================================
+
+  
+
+  //Initialization
+  //--------------------------------------------------
+  //create matrix 8x8
+  const vector<KPbulkHamiltonian::MatrixElement>  temp(8);
+
+  Ham.resize(8,temp);
+  //--------------------------------------------------
+
+  for (short i = 0; i < 8; i++)
+    for (short j = 0; j < 8; j++)
+      {
+	//--------constant
+	Ham[i][j].constant =  Complex(0.0,0.0);
+
+	//--------linear
+	for (short i1 = 0; i1 < 3; i1++)  
+	  {
+	    Ham[i][j].linear_left[i1] =  Complex(0.0, 0.0);
+	    Ham[i][j].linear_right[i1] =  Complex(0.0, 0.0);
+	  }
+        //--------quadratic
+	for (short i1 = 0; i1 < 3; i1++)
+	  for (short j1 = 0; j1 < 3; j1++)
+	    Ham[i][j].quad[i1][j1] =  Complex(0.0, 0.0);
+
+      }
+
+ 
+  //=================================================================
+  //-------H_vv + h^2/2m(kx^2+ky^2+kz^2) in crystal system-----------//
+  Ham[2][2].quad[0][0]  = par.L1  + 0.5;
+  Ham[2][2].quad[1][1]  = par.M1  + 0.5;
+  Ham[2][2].quad[2][2]  = par.M2  + 0.5;
+
+  Ham[3][3].quad[0][0] = par.M1 + 0.5;
+  Ham[3][3].quad[1][1] = par.L1 + 0.5;
+  Ham[3][3].quad[2][2] = par.M2 + 0.5;
+
+  Ham[4][4].quad[0][0] = par.M3 + 0.5;
+  Ham[4][4].quad[1][1] = par.M3 + 0.5;
+  Ham[4][4].quad[2][2] = par.L2 + 0.5;
+  
+  if (kpVVtermSymmetric)
+    {
+      Ham[2][3].quad[0][1] = par.N1/2.0;  Ham[2][3].quad[1][0]= par.N1/2.0;
+      Ham[2][4].quad[0][2] = par.N2/2.0;  Ham[2][4].quad[2][0]= par.N2/2.0;
+      Ham[3][4].quad[1][2] = par.N2/2.0;  Ham[3][4].quad[2][1]= par.N2/2.0;
+    }
+  else
+    {
+      Ham[2][3].quad[0][1] = par.N1_xy;  Ham[2][3].quad[1][0]= par.N1_yx;
+      Ham[2][4].quad[0][2] = par.N2_xy;  Ham[2][4].quad[2][0]= par.N2_yx;
+      Ham[3][4].quad[1][2] = par.N2_xy;  Ham[3][4].quad[2][1]= par.N2_yx;
+     
+    }
+
+  /*
+   was in fortran
+    Ham_quad(4,3,:,:) = TRANSPOSE(CONJG(Ham_quad(3,4,:,:)))
+    Ham_quad(5,4,:,:) = TRANSPOSE(CONJG(Ham_quad(4,5,:,:)))
+    Ham_quad(5,3,:,:) = TRANSPOSE(CONJG(Ham_quad(3,5,:,:)))
+  */
+  
+  for (short i = 0; i< 3; i++)
+     for (short j = 0; j< 3; j++)
+       {
+	 Ham[3][2].quad[i][j] = conj(Ham[2][3].quad[j][i]);
+	 Ham[4][3].quad[i][j] = conj(Ham[3][4].quad[j][i]);
+	 Ham[4][2].quad[i][j] = conj(Ham[2][4].quad[j][i]);
+       }
+  //=====================================================================!
+  //--------Valence band strain ------------------------------------
+
+ 
+
+  Ham[2][2].constant = par.l1s*strainM(1,1)+par.m1s*strainM(2,2)+par.m2s*strainM(3,3);
+  Ham[3][3].constant = par.m1s*strainM(1,1)+par.l1s*strainM(2,2)+par.m2s*strainM(3,3); 
+  Ham[4][4].constant = par.m3s*strainM(1,1)+par.m3s*strainM(2,2)+par.l2s*strainM(3,3); 
+  Ham[2][3].constant = par.n1s*strainM(2,1) ; 
+  Ham[3][2].constant = par.n1s*strainM(2,1) ;
+  Ham[2][4].constant = par.n2s*strainM(3,1) ;  
+  Ham[4][2].constant = par.n2s*strainM(3,1) ;
+  Ham[3][4].constant = par.n2s*strainM(3,2) ;  
+  Ham[4][3].constant = par.n2s*strainM(3,2) ;
+
+
+ 
+
+  //=================================================================
+  // Crystal field splitting
+  Ham[2][2].constant +=  par.d1 ; 
+  Ham[3][3].constant +=  par.d1 ; 
+  //=================================================================
+  
+  //  !---------Valence part without spin-orbit-------------------------!
+
+  /*
+    Ham_quad(6:8,6:8,:,:)=Ham_quad(3:5,3:5,:,:)
+    Ham_const(6:8,6:8)=Ham_const(3:5,3:5)
+  */
+  
+  for (short i = 5 ; i <= 7; i++)
+    for (short j = 5 ; j <= 7; j++)
+      {
+       
+	Ham[i][j].constant = Ham[i-3][j-3].constant;
+
+	for (short i1 = 0; i1 < 3; i1++)
+	  for (short j1 = 0; j1 < 3; j1++)
+	    Ham[i][j].quad[i1][j1] = Ham[i-3][j-3].quad[i1][j1];
+      }
+
+  //=======================================================================//
+  //-------------H_cc------------------------------------------------------//
+  Ham[0][0].quad[0][0]= par.s2*0.5;       
+  Ham[0][0].quad[1][1]= par.s2*0.5;     
+  Ham[0][0].quad[2][2]= par.s1*0.5;
+
+  Ham[1][1].quad[0][0]= par.s2*0.5;       
+  Ham[1][1].quad[1][1]= par.s2*0.5;     
+  Ham[1][1].quad[2][2]= par.s1*0.5;
+
+  //-----------------------------------------------------------------------//
+  //cv part
+  if (kpCVtermSymmetric)
+    {
+      Ham[0][2].linear_left[0] = par.P2* 0.5 *  Complex(0.0, 1.0);
+      Ham[0][3].linear_left[1] = par.P2* 0.5 *  Complex(0.0, 1.0);
+      Ham[0][4].linear_left[2] = par.P1* 0.5 *  Complex(0.0, 1.0);
+
+      Ham[0][2].linear_left[0] = par.P2* 0.5 *  Complex(0.0, 1.0);
+      Ham[0][3].linear_left[1] = par.P2* 0.5 *  Complex(0.0, 1.0);
+      Ham[0][4].linear_left[2] = par.P1* 0.5 *  Complex(0.0, 1.0);
+
+
+      for (short i = 0; i < 3; i++)
+	{
+	  Ham[1][5].linear_left[i] = Ham[0][2].linear_left[i];
+	  Ham[1][6].linear_left[i] = Ham[0][3].linear_left[i];
+	  Ham[1][7].linear_left[i] = Ham[0][4].linear_left[i];
+
+	  Ham[1][5].linear_right[i] = Ham[0][2].linear_right[i];
+	  Ham[1][6].linear_right[i] = Ham[0][3].linear_right[i];
+	  Ham[1][7].linear_right[i] = Ham[0][4].linear_right[i];
+	  
+	}
+      
+      for (short i = 2; i<=7; i++)
+	for (short j = 2; j<=7; j++)
+	  for (short  i1 = 0; i1<=2; i1++)
+	    {
+	      Ham[i][j].linear_left[i1] =  conj(Ham[j][i].linear_left[i1]);
+	      Ham[i][j].linear_right[i1] = conj(Ham[j][i].linear_right[i1]);
+	    }
+
+
+    }
+  else
+    {
+      Ham[0][2].linear_left[0]= par.P2 *  Complex(0, 1.0);  Ham[1][5].linear_left[0]= par.P2 *  Complex(0, 1.0); 
+      Ham[0][3].linear_left[1]= par.P2 *  Complex(0, 1.0);  Ham[1][5].linear_left[1]= par.P2 *  Complex(0, 1.0);
+      Ham[0][4].linear_left[2]= par.P1 *  Complex(0, 1.0);  Ham[1][7].linear_left[1]= par.P2 *  Complex(0, 1.0);
+     
+      for (short i = 2; i<=7; i++)
+	for (short j = 2; j<=7; j++)
+	  for (short  i1 = 0; i1<=2; i1++)
+	    Ham[i][j].linear_right[i1] = conj(Ham[j][i].linear_left[i1]);
+
+    }
+  //-----------------------------------------------------------------------//
+  // absolute band edges 
+  //
+
+  //conduction band with strain
+  Ham[0][0].constant +=  par.E_c;   Ham[1][1].constant +=  par.E_c;
+
+  //valence band without strain
+ 
+
+  for (short i = 2; i < 8; i++)
+    { 
+     
+      Ham[i][i].constant += par.E_v; //E_v is averaged
+     
+    }
+  //-----------------------------------------------------------------------//
+  
+  //------------------spin-orbit interaction------------------------//
+
+  /*Ham_const(3,4) = Ham_const(3,4)  + (0d0,-1d0)*d2*/  Ham[2][3].constant   += Complex(0.0,-1.0)*par.d2; 
+
+
+
+  /*Ham_const(4,3) = Ham_const(4,3)  + (0d0, 1d0)*d2*/  Ham[3][2].constant   +=  Complex(0.0, 1.0)*par.d2;
+
+  /*Ham_const(3,8) = Ham_const(3,8)  +  d3*/     Ham[2][7].constant += par.d3;
+  /*Ham_const(8,3) = Ham_const(8,3)  +  d3*/     Ham[7][2].constant += par.d3;
+
+  /*Ham_const(6,5) = Ham_const(6,5)  -  d3*/     Ham[5][4].constant += -par.d3;
+  /*Ham_const(5,6) = Ham_const(5,6)  -  d3*/     Ham[4][5].constant += -par.d3;
+
+  /* Ham_const(7,5) = Ham_const(7,5)  + (0d0,-1d0)*d3*/ Ham[6][4].constant +=  Complex(0.0,-1.0)*par.d3;
+  /* Ham_const(5,7) = Ham_const(5,7)  + (0d0, 1d0)*d3*/ Ham[4][6].constant +=  Complex(0.0,1.0)*par.d3;
+
+  /* Ham_const(7,6) = Ham_const(7,6)  + (0d0,-1d0)*d2*/ Ham[6][5].constant +=  Complex(0.0,-1.0)*par.d2;
+  /* Ham_const(6,7) = Ham_const(6,7)  + (0d0, 1d0)*d2*/ Ham[5][6].constant +=  Complex(0.0,1.0)*par.d2;
+
+  /* Ham_const(8,4) = Ham_const(8,4)  + (0d0, 1d0)*d3*/ Ham[7][3].constant +=  Complex(0.0,1.0)*par.d3;
+  /* Ham_const(4,8) = Ham_const(4,8)  + (0d0,-1d0)*d3*/ Ham[3][7].constant +=  Complex(0.0,-1.0)*par.d3;
+  //-----------------------------------------------------------------!
+  //Transformation from crystal to calculation system
+
+
+
+  for (short i = 0; i < 8; i++)
+    {
+    
+      for (short j = 0; j < 8; j++)
+	{
+	  rotate_linear( Ham[i][j].linear_left);
+	  rotate_linear( Ham[i][j].linear_right);
+	  rotate_quad(Ham[i][j].quad);
+	
+	}
+    }
+
+ 
+  //-----------------------------------------------------------------!
+
+}
+
+
+
+
+//-------------------------------------------------------//
+
+void KPbulkHamiltonian:: calculate_Hamiltonian_k_par (void)
+{
+  //allocation of the result
+  //Initialization
+   vector< vector<MatrixElement > > result = Ham;
+  //--------------------------------------------------//
+
+
+  for (short i = band_min; i <= band_max; i++)
+     for (short j = band_min; j <= band_max; j++)
+       {
+	 
+	 //------we have to change constant term
+	 for (short i1 = 0; i1 < 3; i1++)
+	   {
+	     result[i][j].constant += Ham[i][j].linear_left[i1]  * k_vector[i1];
+	     result[i][j].constant += Ham[i][j].linear_right[i1] * k_vector[i1];
+	     for (short j1 = 0; j1 < 3; j1++)
+	       {
+		 result[i][j].constant += Ham[i][j].quad[i1][j1] * k_vector[i1] * k_vector[j1]; 
+	       }
+	   }
+
+ 	 //------we have to change linear term
+
+	  for (short i1 = 0; i1 < 3; i1++)
+ 	    for (short j1 = 0; j1 < 3; j1++)
+	      {
+		result[i][j].linear_left[i1]  += Ham[i][j].quad[i1][j1] * k_vector[j1];
+		result[i][j].linear_right[j1] += Ham[i][j].quad[i1][j1] * k_vector[i1];
+	      }
+
+       }
+  
+
+  //-------------------------------------------------//
+
+  Hamiltonian.resize(band_max - band_min + 1);
+  for (short i = 0; i <= band_max - band_min; i++)  Hamiltonian[i].resize(band_max - band_min + 1);
+
+
+  for (short i = 0; i <= band_max - band_min; i++)
+     for (short j = 0; j <= band_max - band_min; j++)
+       Hamiltonian[i][j] = result[i + band_min][j + band_min];
+  
+  
+  
+  
+  
+
+}
+
+
+
+//-------------------------------------------------------//
+void KPbulkHamiltonian::set_parameters(const KPbulkHamiltonian::KPparams&  par1)
+{
+  par = par1;
+}
+
+//-------------------------------------------------------//

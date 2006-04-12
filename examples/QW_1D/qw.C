@@ -6,7 +6,7 @@
 #include "BoundaryData.h"
 #include "DDevice.h"
 #include "DriftDiffusion.h"
-#include "StrainedSemiconductorModel.h"
+#include "SemiconductorModel.h"
 
 #include "macrostrain.h"
 #include "mesh_data_elements.h"

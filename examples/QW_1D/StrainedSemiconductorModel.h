@@ -25,6 +25,7 @@ class StrainedSemiconductorModel : public SimpleSemiconductorModel
     Macrostrain* _strain;
     bool _ignore_strain;
 
+
 };
 
 inline
