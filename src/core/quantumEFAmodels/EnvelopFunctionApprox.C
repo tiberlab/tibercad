@@ -1,7 +1,7 @@
 
 #include "EnvelopFunctionApprox.h"
 using namespace std;
-EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh)
+EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshData& mesh_data_in)
 {
   //Initoalization
   opt = opt1;
@@ -50,12 +50,19 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh)
      my_Jacobian *= opt.length_scale;
 
    //--------------------------------------------------------------------------------------------------------//
-   //material list
-   assemble_material_list();
+  
 
    es->init();
 
    //-------------------------------------------------------------------------------------------------------//
+
+   //material list
+
+   meshdata = &mesh_data_in;
+   assemble_material_list();
+
+   //------------------------------------------------------------------------------------------------------//
+   
 }
 
 //============================================================//
@@ -266,6 +273,8 @@ Mesh& mesh = es->get_mesh();
 
   const unsigned int N_elem = mesh.n_active_elem();
 
+  cerr << " N_elem " << N_elem << "\n";
+
   material_of_elem.resize( N_elem );
 
  
@@ -282,22 +291,13 @@ Mesh& mesh = es->get_mesh();
       const Elem* elem = *el;
       unsigned int mat;
       //-------------------------------------
-      //temporal solution--------------------
-      Point p = elem->centroid();
-      if ((p(0) > 3) && (p(0) < 6))
-	{
-	  mat = 1;
-	}
-      else
-	{
-	  mat = 0;
-	}
-
-      //-------------------------------------
       
+      mat  = ( (unsigned int) (*meshdata)(elem->top_parent(),0) )  - 1;
       material_of_elem[el_number] = mat;
+      Point p = elem->centroid();
+      cerr << el_number << "   "<< mat << "  " <<  p(0) << "\n";
       el_number++;
-
+      
     }
 
 }
@@ -717,7 +717,7 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 }
 //===============================================================================//
 
-void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, std::vector<eigen_propblem_solution>& solution)
+void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 {
 
   calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
@@ -733,7 +733,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, st
   command_line <<  "eigen_solver  -f1 H.out   -f2 S.out  -eps_gen_hermitian -eps_smallest_magnitude ";
   command_line <<  "   -eps_nev   " << ev_number;
   command_line <<  "   -eps_type  " << opt.solver;
-  command_line <<  "   -eps_tol   " << opt.eignen_solver_tolerance;
+  command_line <<  "   -eps_tol   " << opt.eigen_solver_tolerance;
   command_line <<  "   -eps_monitor \n";
 
   system( (command_line.str()).c_str());
@@ -754,7 +754,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 
   std::ifstream file_eigvals ( fname_eigvals.c_str() );
 
-  assert (file_eivals.good());
+  assert (file_eigvals.good());
 
   char buffer[int_size];
   char buffer_double[double_size];
@@ -828,8 +828,8 @@ void EnvelopFunctionApprox::output_eigen_functions(unsigned int state_number,  s
 {
   //===========================================
   const Mesh& mesh = es->get_mesh();
-
- 
+  LinearImplicitSystem& system = es->get_system<LinearImplicitSystem>("Schroedinger");
+  DofMap& dof_map = system.get_dof_map();
 
   MeshBase::const_node_iterator       nd     = mesh.active_nodes_begin();
   const MeshBase::const_node_iterator nd_el  = mesh.active_nodes_end();
@@ -856,26 +856,43 @@ void EnvelopFunctionApprox::output_eigen_functions(unsigned int state_number,  s
   
  
   //vector 
+  unsigned int  point_index = 0;
   
   unsigned int output_size = ( solution[state_number].eigen_vector.size()) * 2;
 
   vector<double>  psi_data(output_size);
+ 
+ 
+  MeshBase::const_element_iterator it = mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end =  mesh.active_local_elements_end();
 
-  for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
-     for (short point_index = 0; point_index < number_of_points; point_index++)
-       {
+  std::vector<unsigned int> dof_indices;
 
-	 Complex value =  (solution[state_number].eigen_vector[psi_index * number_of_points + point_index]);
+  for ( ; it != end; ++it)
+    {
+      const Elem* elem = *it;
+      
 
-	 psi_data[psi_index*2 + point_index*number_output_data] = value.real();
+      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+	{
+	  dof_map.dof_indices (elem, dof_indices, psi_index);
+	  for (unsigned int n = 0; n < elem->n_nodes(); n++)
+	    { 
+	      unsigned int  node_id =  elem->node(n);
+	      Complex value =  (solution[state_number].eigen_vector[psi_index * number_of_points + dof_indices[n] ]);
+	      
+	      psi_data[psi_index*2 + node_id*number_output_data] = value.real();
+	      
+	      psi_data[psi_index*2 + 1  + node_id*number_output_data] = value.imag();
+	      
+	      
+	      
+	    }
+	}
+    }
 
 
-
-	 psi_data[psi_index*2 + 1  + point_index*number_output_data] = value.imag(); 
-	  
-
-       }
-
+    
 
 
   //std :: cout << filename << "\n";
@@ -890,7 +907,14 @@ void EnvelopFunctionApprox::output_eigen_functions(unsigned int state_number,  s
 }
 
 //=======================================================================//
+void EnvelopFunctionApprox::assign_mesh_data(MeshData& mesh_data_in)
+{
+   meshdata = &mesh_data_in;
+   assemble_material_list();
+}
 
+
+//=======================================================================//
 EnvelopFunctionApprox:: ~EnvelopFunctionApprox(void)
 {
   delete(es);

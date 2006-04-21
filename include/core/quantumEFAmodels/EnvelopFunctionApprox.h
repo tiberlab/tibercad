@@ -56,7 +56,7 @@
 #include <algorithm>
 #include <set>
 #include <tecplot_io.h>
-
+#include "mesh_data.h"
 
 class EnvelopFunctionApprox
 {
@@ -80,7 +80,7 @@ class EnvelopFunctionApprox
 
     std::string solver;  //!< solver type
 
-    double eignen_solver_tolerance; //!< tolerance for eigenvalue solver [Ha]
+    double eigen_solver_tolerance; //!< tolerance for eigenvalue solver [Ha]
 
     std::string output_type; //!< output type
 
@@ -101,8 +101,9 @@ class EnvelopFunctionApprox
   /*!
     \param opt  parameters  of the model
     \param mesh simulation domain mesh 
+    \param mesh_data_input informations about materials and bondary conditions
   */
-  EnvelopFunctionApprox(options& opt, Mesh& mesh);
+  EnvelopFunctionApprox(options& opt, Mesh& mesh, MeshData& mesh_data_input);
 
 
   //!destructor
@@ -123,7 +124,7 @@ class EnvelopFunctionApprox
     \param ev_number number of eigenvalues requested
     \param solution  eigenvectors and eigenvalues
   */
-  void solve_eigen_value_problem(unsigned int ev_number, std::vector<eigen_propblem_solution>& solution);
+  void solve_eigen_value_problem(unsigned int ev_number );
 
   //!writes on disk the eigenfunction
   /*!
@@ -133,6 +134,14 @@ class EnvelopFunctionApprox
   void output_eigen_functions(unsigned int state_number,  std::string& filename);
 
 
+  //! assigned mesh_data_objects
+  /*!
+    \param  mesh_data_in mesh data that contains material information and Dirichlet conditions
+   */
+  void assign_mesh_data(MeshData& mesh_data_in);
+
+  std::vector<eigen_propblem_solution> solution;
+
  private:
 
   options opt;
@@ -141,7 +150,7 @@ class EnvelopFunctionApprox
 
   EquationSystems* es;
 
-  std::vector<eigen_propblem_solution> solution;
+ 
   
 
   //!my Jacobian because I calculate everything in atomic units
@@ -191,7 +200,7 @@ class EnvelopFunctionApprox
   void read_SLEPC_solution();
 
  
-
+  //!swaps 4 byte variable for output
   inline void endian_swap(unsigned int& x)
     {
       x = (x>>24) | 
@@ -201,7 +210,7 @@ class EnvelopFunctionApprox
     }
 
 
-
+  //!swaps 8 byte variable for output
   // __int64 for MSVC, "long long" for gcc
   inline void endian_swap(unsigned long long& x)
     {
