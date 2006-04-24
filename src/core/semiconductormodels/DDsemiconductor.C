@@ -14,6 +14,7 @@ DDsemiconductor::DDsemiconductor()
   strain = Tensor2Sym(0);
   energy_cutoff=1.0; //1eV default value
   strained = false;
+  k_max  = 0.01;//default value
 }
 
 
@@ -34,6 +35,7 @@ DDsemiconductor::DDsemiconductor(const  Tensor2Sym& strain_1, const double energ
     }
   
   energy_cutoff = energy_cutoff_1;
+  k_max  = 0.01;//default value
 }
 //----------------------------------------------------------------------------------------------//
 void DDsemiconductor::set_strain(const Tensor2Sym& strain_1)

@@ -273,7 +273,7 @@ Mesh& mesh = es->get_mesh();
 
   const unsigned int N_elem = mesh.n_active_elem();
 
-  cerr << " N_elem " << N_elem << "\n";
+ 
 
   material_of_elem.resize( N_elem );
 
@@ -295,7 +295,7 @@ Mesh& mesh = es->get_mesh();
       mat  = ( (unsigned int) (*meshdata)(elem->top_parent(),0) )  - 1;
       material_of_elem[el_number] = mat;
       Point p = elem->centroid();
-      cerr << el_number << "   "<< mat << "  " <<  p(0) << "\n";
+   
       el_number++;
       
     }
@@ -913,6 +913,77 @@ void EnvelopFunctionApprox::assign_mesh_data(MeshData& mesh_data_in)
    assemble_material_list();
 }
 
+//=======================================================================//
+
+void EnvelopFunctionApprox::define_diriclet_nodes(std::vector<unsigned int>&  dirichlet_nodes_input)
+{
+  dirichlet_nodes = dirichlet_nodes_input;
+}
+
+//======================================================================//
+void  EnvelopFunctionApprox::create_dirichlet_dofs( )
+{
+  const Mesh& mesh = es->get_mesh();
+  LinearImplicitSystem& system = es->get_system<LinearImplicitSystem>("Schroedinger");
+  DofMap& dof_map = system.get_dof_map();
+
+  MeshBase::const_element_iterator it = mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end =  mesh.active_local_elements_end();
+
+  dirichlet_dofs.clear();
+  // insert_iterator<set<int> >  dir_ins(dirichlet_dofs,dirichlet_dof.begin() ); 
+
+
+  const std::vector<unsigned int> :: const_iterator  n_begin = dirichlet_nodes.begin();
+  const std::vector<unsigned int> :: const_iterator  n_end   = dirichlet_nodes.end();
+  std::vector<unsigned int> :: const_iterator n_it;
+
+
+  std::vector<unsigned int> dof_indices;
+
+  for ( ; it != end; ++it)
+    {
+      const Elem* elem = *it;
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+	{ 
+	  unsigned int  node_id =  elem->node(n);
+	  //does a node belong to a a dirichlet nodes set?
+	  if (find(n_begin, n_end, node_id) != n_end)
+	    {
+	      dof_map.dof_indices (elem, dof_indices); 
+	      const unsigned int n1 =  dof_indices.size();
+	      for (unsigned int i = 0; i < n1; i++) dirichlet_dofs.insert(dof_indices[i]);
+	    }
+
+	  
+	}
+      
+    }
+  
+
+}
+//=======================================================================//
+void EnvelopFunctionApprox::make_constraints(void)
+{
+  const Mesh& mesh = es->get_mesh();
+  LinearImplicitSystem& system = es->get_system<LinearImplicitSystem>("Schroedinger");
+  DofMap& dof_map = system.get_dof_map();
+  
+  DofConstraintRow constraint;
+  constraint.clear();
+  
+  std::set<unsigned int> :: const_iterator dof_begin = dirichlet_dofs.begin();
+  std::set<unsigned int> :: const_iterator dof_end   = dirichlet_dofs.end();
+  std::set<unsigned int> :: iterator dof_it;
+
+  for (dof_it = dof_begin; dof_it !=  dof_end; dof_it++)
+    {
+      unsigned int n_dof = *dof_it;      
+      dof_map.add_constraint_row (n_dof, constraint) ; 
+    }
+
+}
+//=======================================================================//
 
 //=======================================================================//
 EnvelopFunctionApprox:: ~EnvelopFunctionApprox(void)

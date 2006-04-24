@@ -454,7 +454,7 @@ void ZbDDsemiconductor::calculate_valence_band_extremum(void)
   vector< vector<double> >  eigenvalue = calculate_vb_bulk_states(k_vector);
     
 
-  Tensor2Gen imass;
+  Tensor2Sym imass;
   for (short ind = 0; ind < 3; ind++)
     {
       if (eigenvalue[0][ind*2] + energy_cutoff > eigenvalue[0][5]) 

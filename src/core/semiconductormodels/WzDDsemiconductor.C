@@ -72,7 +72,7 @@ void WzDDsemiconductor::calculate_conduction_band_extremum(void)
 
 void  WzDDsemiconductor::calculate_valence_band_extremum(void)
 {
- vector<DDsemiconductor::band_extremum>   result;
+  vector<DDsemiconductor::band_extremum>   result;
 
   DDsemiconductor::band_extremum extremum;
 
@@ -100,20 +100,23 @@ void  WzDDsemiconductor::calculate_valence_band_extremum(void)
 
   k(1) =0.0    ; k(2) = k_max; k(3) = k_max;
   k_vector.push_back(k);
+
+
   //--------------------------------------------------
   vector< vector<double> >  eigenvalue = calculate_vb_bulk_states(k_vector);
     
 
-  Tensor2Gen imass;
+  Tensor2Sym imass;
   for (short ind = 0; ind < 6; ind++)
     {
       if (eigenvalue[0][ind] + energy_cutoff > eigenvalue[0][5]) 
 	{
 	  extremum.degeneracy = 1;
+
 	  extremum.energy  =eigenvalue[0][ind] ;
 	  
 	  imass(1,1) = (2.0 *(eigenvalue[0][ind] - eigenvalue[1][ind] )) / Hartree /(k_max * k_max);
-
+	 
 	 
 	  imass(2,2) = (2.0 *(eigenvalue[0][ind] - eigenvalue[2][ind] )) / Hartree /(k_max * k_max);
 	 
@@ -135,6 +138,8 @@ void  WzDDsemiconductor::calculate_valence_band_extremum(void)
 	  double imass_DOS;
 	  double temp1, temp2;
 	  imass.invariants(&temp1, &temp2,&imass_DOS);
+
+	 
 	  
 	  extremum.mass_DOS = std::pow(1.0/imass_DOS,1.0/3.0);
 	  result.push_back(extremum);

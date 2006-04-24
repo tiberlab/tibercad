@@ -142,6 +142,14 @@ class EnvelopFunctionApprox
 
   std::vector<eigen_propblem_solution> solution;
 
+
+  //! define Dirichlet boundary condition
+  /*!
+    \param dirichlet_nodes_input nodes where \f$ \psivar({\bf r}) = 0 \f$
+  */
+  void define_diriclet_nodes(std::vector<unsigned int>&  dirichlet_nodes_input);
+
+
  private:
 
   options opt;
@@ -150,9 +158,12 @@ class EnvelopFunctionApprox
 
   EquationSystems* es;
 
- 
-  
+  //!diriclet nodes vector
+  std::vector<unsigned int>  dirichlet_nodes;
 
+  //!diriclet DOFS
+  std::set<unsigned int>  dirichlet_dofs;
+  
   //!my Jacobian because I calculate everything in atomic units
   double my_Jacobian; 
 
@@ -199,6 +210,9 @@ class EnvelopFunctionApprox
   //!read SLEPc solutions
   void read_SLEPC_solution();
 
+
+  
+
  
   //!swaps 4 byte variable for output
   inline void endian_swap(unsigned int& x)
@@ -225,7 +239,13 @@ class EnvelopFunctionApprox
     }
 
   
+  //!creates dirichlet dofs
+  void create_dirichlet_dofs(void);
 
+
+
+  //!creates constraints
+  void make_constraints(void);
 
 };
 #endif
