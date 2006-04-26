@@ -55,7 +55,26 @@ void WzDDsemiconductor::calculate_conduction_band_extremum(void)
 {
   vector<DDsemiconductor::band_extremum> result;
   
-  double energy = par.Ev + par.EgGamma;
+  double Ev_top;
+  //---------------------------------
+  //valence top reference energy
+  //-------------------------------
+  double d1 =  par.delta_cr;
+  double d2 =  par.delta_s;
+  double d3 = d2;
+  
+  double E1 = d1 + d2;
+
+  double E2 = (d1 - d2)/2.0 + sqrt( (d1-  d2/2.0)*( d1- d2/2.0) + 2.0 * d3 * d3 );
+
+  if (E1 > E2)
+    Ev_top = par.Ev + E1;
+  else
+    Ev_top = par.Ev + E2;
+
+  //------------------------------
+
+  double energy = Ev_top + par.EgGamma;
  
   if (strained) energy += (strain(1,1) + strain(2,2))* par.a_x + par.a_z *  strain(3,3);
    
@@ -215,16 +234,11 @@ KPbulkHamiltonian::KPparams WzDDsemiconductor::calculate_6x6_kp_params (void )
 
 
   //valence band reference energy
-  
-  double E1 = result.d1 + result.d2;
 
-  double E2 = (result.d1 - result.d2)/2.0 + sqrt( (result.d1-result.d2/2.0)*(result.d1-result.d2/2.0) + 2.0 * result.d3 * result.d3 );
-
-  if (E1 > E2)
-    result.E_v = par.Ev/Hartree - E1;
-  else
-    result.E_v = par.Ev/Hartree -E2;
+  result.E_v = par.Ev/Hartree;
   
+  
+ 
   
 
 

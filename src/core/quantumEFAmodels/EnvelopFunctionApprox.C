@@ -249,9 +249,19 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 	}
 
-      S_real->add_matrix(s_real,dof_indices);
-      Ham_real->add_matrix(ham_real,dof_indices);
-      Ham_imag->add_matrix(ham_imag,dof_indices);
+      vector<unsigned int> dof_indices_tmp;
+
+      dof_indices_tmp = dof_indices;
+      dof_map.constrain_element_matrix(s_real, dof_indices_tmp);
+      S_real->add_matrix(s_real,dof_indices_tmp);
+
+      dof_indices_tmp = dof_indices;
+      dof_map.constrain_element_matrix(ham_real, dof_indices_tmp);
+      Ham_real->add_matrix(ham_real,dof_indices_tmp);
+
+      dof_indices_tmp = dof_indices;
+      dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp);
+      Ham_imag->add_matrix(ham_imag,dof_indices_tmp);
 
       el_number++;
 
@@ -263,7 +273,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   Ham_imag->print_matlab("ham_i_matlab.m");
   S_real->print_matlab("s.m");
 
-  
+
+  dof_map.print_dof_constraints();
+     
 }
 //============================================================//
 void EnvelopFunctionApprox::assemble_material_list(void)
@@ -720,6 +732,14 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 {
 
+  create_dirichlet_dofs();
+
+  make_constraints();
+
+
+  
+
+
   calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
 
   //----------------------------------------------------------------
@@ -918,6 +938,8 @@ void EnvelopFunctionApprox::assign_mesh_data(MeshData& mesh_data_in)
 void EnvelopFunctionApprox::define_diriclet_nodes(std::vector<unsigned int>&  dirichlet_nodes_input)
 {
   dirichlet_nodes = dirichlet_nodes_input;
+
+
 }
 
 //======================================================================//
@@ -950,9 +972,13 @@ void  EnvelopFunctionApprox::create_dirichlet_dofs( )
 	  //does a node belong to a a dirichlet nodes set?
 	  if (find(n_begin, n_end, node_id) != n_end)
 	    {
-	      dof_map.dof_indices (elem, dof_indices); 
-	      const unsigned int n1 =  dof_indices.size();
-	      for (unsigned int i = 0; i < n1; i++) dirichlet_dofs.insert(dof_indices[i]);
+
+	      for (short band = 0 ; band <  opt.number_of_bands; band++)
+		{
+		  dof_map.dof_indices (elem, dof_indices,band); 
+		  dirichlet_dofs.insert(dof_indices[n]);
+		}
+	     
 	    }
 
 	  

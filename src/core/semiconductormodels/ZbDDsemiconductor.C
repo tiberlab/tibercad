@@ -110,7 +110,9 @@ void ZbDDsemiconductor::calculate_conduction_band_extremum(void)
   //Gamma minima
   //---------------------------------------------------------
 
-  double Ec_G = par.Ev + par.EgGamma;
+  double Ev_top = par.Ev + ((1.0/3.0) * par.delta );
+
+  double Ec_G = Ev_top + par.EgGamma;
  
 
   if (strained)  Ec_G  += par.a_c * trace(strain);
@@ -124,7 +126,7 @@ void ZbDDsemiconductor::calculate_conduction_band_extremum(void)
   //----------------------------------------------------------------
   //L minima
   //----------------------------------------------------------------
-  double Ec_L = par.Ev + par.EgL;
+  double Ec_L = Ev_top + par.EgL;
   if (strained)
     {
       
@@ -180,7 +182,7 @@ void ZbDDsemiconductor::calculate_conduction_band_extremum(void)
   //------------------------------------------------------------------
   //X-minima
   //------------------------------------------------------------------
-  double Ec_X = par.Ev + par.EgX;
+  double Ec_X = Ev_top + par.EgX;
   if (strained)
     {
       //Hydrostatic strain part--------------------------------
@@ -309,12 +311,12 @@ KPbulkHamiltonian::KPparams ZbDDsemiconductor::calculate_6x6_kp_params (void )
   result.n1s = (sqrt(3.0) * par.d)/Hartree; result.n2s = result.n1s;  
   //------------------------------------------------------------------------------//
   //------------------------------------------------------------------------------//
-  //  Averaged valence band energy: \bar{E}_v = E_v - \frac{\Delta}{3};
+  //  Averaged valence band energy 
 
-  result.E_v = ( par.Ev - (1.0/3.0) * par.delta )/Hartree;
+  
   
 
- 
+  result.E_v = par.Ev / Hartree;
 
   //------------------------------------------------------------------------------//
 

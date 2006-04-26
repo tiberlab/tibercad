@@ -22,7 +22,7 @@ class ZbDDsemiconductor  : public DDsemiconductor
   {
    
 
-    double       Ev;//!< valence band top energy \f$  E_v^{\Gamma} \f$ [eV]
+    double       Ev;//!< valence band averaged energy \f$  E_v^{\Gamma} \f$ [eV]
     double EgGamma; //!< band gap \f$ E_c^{\Gamma} - E_v^{\Gamma} \f$  [eV]    
     double EgL;     //!< band gap \f$ E_c^{L} - E_v^{\Gamma} \f$  [eV]    
     double EgX;     //!< band gap \f$ E_c^{X} - E_v^{\Gamma} \f$   [eV]  
