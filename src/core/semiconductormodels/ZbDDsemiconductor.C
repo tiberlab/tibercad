@@ -34,7 +34,7 @@ ZbDDsemiconductor::ZbDDsemiconductor(void): DDsemiconductor()
   par.delta = 0;
 
 
-  k_max = 0.001;
+  
 
 } 
 
@@ -46,7 +46,7 @@ ZbDDsemiconductor::ZbDDsemiconductor(const ZbDDparameters& params): DDsemiconduc
 
   par = params;
 
-  k_max = 0.001;
+ 
  
 }
 
@@ -486,7 +486,12 @@ void ZbDDsemiconductor::calculate_valence_band_extremum(void)
 	 
 	  double imass_DOS;
 	  double temp1, temp2;
+	  cerr << "imass\n";
+	  cerr << setw(14) << imass << "\n";
+
 	  imass.invariants(&temp1, &temp2,&imass_DOS);
+
+	  cerr << "imass_DOS  " << imass_DOS << "\n";
 	  
 	  extremum.mass_DOS = std::pow(1.0/imass_DOS,1.0/3.0);
 	  result.push_back(extremum);

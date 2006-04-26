@@ -97,6 +97,15 @@ class EnvelopFunctionApprox
     std::vector< std::complex<double>  > eigen_vector; //< eigen vector
   };
 
+
+  //! data structure that contain information about if the dof is independent or not
+  struct dof_new
+  {
+    bool independent;  //!< true if it is and independent dof
+    unsigned int new_number;  //!< new number in the independent dofs list
+  };
+
+
   //!constructor
   /*!
     \param opt  parameters  of the model
@@ -210,8 +219,8 @@ class EnvelopFunctionApprox
   //!read SLEPc solutions
   void read_SLEPC_solution();
 
-
-  
+  //!vector: each element contains information about dof
+  std::vector<EnvelopFunctionApprox::dof_new> new_dofs;
 
  
   //!swaps 4 byte variable for output
@@ -246,6 +255,9 @@ class EnvelopFunctionApprox
 
   //!creates constraints
   void make_constraints(void);
+
+  //!creates new_dofs vector
+  void make_new_dofs(void)
 
 };
 #endif

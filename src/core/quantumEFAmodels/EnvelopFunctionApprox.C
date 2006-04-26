@@ -734,7 +734,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 
   create_dirichlet_dofs();
 
-  make_constraints();
+  //  make_constraints();
 
 
   
