@@ -338,11 +338,13 @@ void EnvelopFunctionApprox::save_S_matrix(const std::string & fname)
 
  
 
-  int size_matrix = S_real->n();
-  out_int = *(reinterpret_cast<unsigned int*> (& size_matrix) );  endian_swap(out_int);
+  int size_matrix = S_real->m() ;
+
+
+  out_int = *(reinterpret_cast<unsigned int*> (& number_of_new_dofs) );  endian_swap(out_int);
   out.write(  reinterpret_cast<char *>( & out_int ), int_size);
 
-  out_int = *(reinterpret_cast<unsigned int*> (& size_matrix) );  endian_swap(out_int);
+  out_int = *(reinterpret_cast<unsigned int*> (& number_of_new_dofs) );  endian_swap(out_int);
   out.write(  reinterpret_cast<char *>( & out_int ), int_size);
  
   PetscMatrix<Number>* p_matrix = static_cast<PetscMatrix<Number>* >(S_real);
@@ -357,20 +359,27 @@ void EnvelopFunctionApprox::save_S_matrix(const std::string & fname)
 
   for (int row = 0 ; row < size_matrix; row++)
     {
-      int ierr = 0;
-      const  PetscScalar *petsc_row_vals;
-      const  PetscInt *petsc_cols;
-      int n_cols = 0;
+      if (new_dofs[row].independent)
+	{
+	  int ierr = 0;
+	  const  PetscScalar *petsc_row_vals;
+	  const  PetscInt *petsc_cols;
+	  int n_cols = 0;
+	  
+	  ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
 
-      ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-      Number_of_elements += n_cols;
+       
+	  for (int i1 = 0; i1 < n_cols; i1++) 
+	    if (new_dofs[petsc_cols[i1]].independent)  Number_of_elements++;
+	       
+	   
       
 
-      ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
 
+	}
     }
 
   std::cout << "We have got " << Number_of_elements << " non-zero elements in S matrix\n"; 
@@ -380,75 +389,94 @@ void EnvelopFunctionApprox::save_S_matrix(const std::string & fname)
   //-----------------------------------------------------------------------------------
   //write number of columns in each row
   for (int row = 0 ; row < size_matrix; row++)
-    {
-      int ierr = 0;
-      const  PetscScalar *petsc_row_vals;
-      const  PetscInt *petsc_cols;
-      int n_cols = 0;
+    { 
+      if (new_dofs[row].independent)
+	{
+	  int ierr = 0;
+	  const  PetscScalar *petsc_row_vals;
+	  const  PetscInt *petsc_cols;
+	  int n_cols = 0;
+	  int n_new_cols = 0;
 
-      ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
 
-      out_int = *(reinterpret_cast<unsigned int*> (& n_cols) );  endian_swap(out_int);
-      out.write(  reinterpret_cast<char *>( & out_int ), int_size);
+	  for (int i1 = 0; i1 < n_cols; i1++) 
+	    if (new_dofs[petsc_cols[i1]].independent) n_new_cols++ ;
 
-      ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  out_int = *(reinterpret_cast<unsigned int*> (& n_new_cols) );  endian_swap(out_int);
+	  out.write(  reinterpret_cast<char *>( & out_int ), int_size);
+	  
+	  
 
+	  ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	}
     }
   //===============================================================//
   //write number of columns in each row
   for (int row = 0 ; row < size_matrix; row++)
     {
-      int ierr = 0;
-      const  PetscScalar *petsc_row_vals;
-      const PetscInt *petsc_cols;
-      int n_cols = 0;
-
-      ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-      for (short col = 0; col < n_cols; col++)
+      if (new_dofs[row].independent)
 	{
-	  int col_number = petsc_cols[col];
-	  out_int = *(reinterpret_cast<unsigned int*> (& col_number) );  endian_swap(out_int);
-	  out.write(  reinterpret_cast<char *>( & out_int ), int_size);
+	  int ierr = 0;
+	  const  PetscScalar *petsc_row_vals;
+	  const PetscInt *petsc_cols;
+	  int n_cols = 0;
+	  
+	  ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  
+	  for (int col = 0; col < n_cols; col++)
+	    {
+	      if (new_dofs[petsc_cols[col]].independent)
+		{
+		  int col_number = new_dofs[petsc_cols[col]].new_number;
+		  out_int = *(reinterpret_cast<unsigned int*> (& col_number) );  endian_swap(out_int);
+		  out.write(  reinterpret_cast<char *>( & out_int ), int_size);
+		}
+	    }
+	  
+	  ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  
 	}
-
-      ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
     }
 
   //write data
   for (int row = 0 ; row < size_matrix; row++)
     {
-      int ierr = 0;
-      const  PetscScalar *petsc_row_vals;
-      const PetscInt *petsc_cols;
-      int n_cols = 0;
-
-      ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-      for (short col = 0; col < n_cols; col++)
+      if (new_dofs[row].independent)
 	{
-	  double value = petsc_row_vals[col];
-	  double zero = 0.0;
-	  
-	  out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
-	  out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
+	  int ierr = 0;
+	  const  PetscScalar *petsc_row_vals;
+	  const PetscInt *petsc_cols;
+	  int n_cols = 0;
+      
+	  ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
 
-	  out_long_long = *(reinterpret_cast<unsigned long long*> (& zero) );  endian_swap(out_long_long);
-	  out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
+	  for (int col = 0; col < n_cols; col++)
+	    {
+	      if (new_dofs[petsc_cols[col]].independent)
+		{
+	      
+		  double value = petsc_row_vals[col];
+		  double zero = 0.0;
 	  
+		  out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
+		  out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
+		  
+		  out_long_long = *(reinterpret_cast<unsigned long long*> (& zero) );  endian_swap(out_long_long);
+		  out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
+		}
+	    }
+	  
+	  ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+
 	}
-
-      ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
     }
-
 
 }
 
@@ -476,10 +504,10 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 
   int size_matrix = Ham_real->n();
 
-  out_int = *(reinterpret_cast<unsigned int*> (& size_matrix) );  endian_swap(out_int);
+  out_int = *(reinterpret_cast<unsigned int*> (& number_of_new_dofs) );  endian_swap(out_int);
   out.write(  reinterpret_cast<char *>( & out_int ), int_size);
 
-  out_int = *(reinterpret_cast<unsigned int*> (& size_matrix) );  endian_swap(out_int);
+  out_int = *(reinterpret_cast<unsigned int*> (& number_of_new_dofs) );  endian_swap(out_int);
   out.write(  reinterpret_cast<char *>( & out_int ), int_size);
 
   
@@ -501,41 +529,45 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 
   for (int row = 0 ; row < size_matrix; row++)
     {
-      int ierr = 0;
-      const  PetscScalar *petsc_row_vals_real;
-      const  PetscInt *petsc_cols_real;
-      int n_cols_real = 0;
+      if (new_dofs[row].independent)
+	{
+	  int ierr = 0;
+	  const  PetscScalar *petsc_row_vals_real;
+	  const  PetscInt *petsc_cols_real;
+	  int n_cols_real = 0;
+	  
+	  const  PetscScalar *petsc_row_vals_imag;
+	  const  PetscInt *petsc_cols_imag;
+	  int n_cols_imag = 0;
+	  
+	  set<int> real_column, imag_column, complex_column;
+	  //  set<int>::iterator com_col_it, com_col_end;
+	  insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
+	  
+	  ierr = MatGetRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  real_column.clear();
+	  
+	  for (int i = 0; i < n_cols_real; i++) 
+	    if  (new_dofs[petsc_cols_real[i]].independent)  real_column.insert(petsc_cols_real[i]);
+	  
+	  ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  
+	  imag_column.clear();
+	  for (int i = 0; i < n_cols_real; i++) 
+	    if  (new_dofs[petsc_cols_imag[i]].independent) imag_column.insert(petsc_cols_imag[i]);
+	  
+	  set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
+	  
+	  Number_of_elements += complex_column.size();
+	  
+	  ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
 
-      const  PetscScalar *petsc_row_vals_imag;
-      const  PetscInt *petsc_cols_imag;
-      int n_cols_imag = 0;
-
-      set<int> real_column, imag_column, complex_column;
-      //  set<int>::iterator com_col_it, com_col_end;
-      insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
-
-      ierr = MatGetRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-      real_column.clear();
-
-      for (int i = 0; i < n_cols_real; i++) real_column.insert(petsc_cols_real[i]);
-
-      ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-      imag_column.clear();
-      for (int i = 0; i < n_cols_real; i++) imag_column.insert(petsc_cols_imag[i]);
-
-      set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
-
-      Number_of_elements += complex_column.size();
-
-      ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-      ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-      
+	  ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	}
 
     }
   std::cout << "We have got " << Number_of_elements << " non-zero elements in the Hamiltonian matrix\n"; 
@@ -546,185 +578,203 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
   //write number of columns in each row
   for (int row = 0 ; row < size_matrix; row++)
     {
-      int ierr = 0;
-      const  PetscScalar *petsc_row_vals_real;
-      const  PetscInt *petsc_cols_real;
-      int n_cols_real = 0;
+      if (new_dofs[row].independent)
+	{
+	  int ierr = 0;
+	  const  PetscScalar *petsc_row_vals_real;
+	  const  PetscInt *petsc_cols_real;
+	  int n_cols_real = 0;
 
-      const  PetscScalar *petsc_row_vals_imag;
-      const  PetscInt *petsc_cols_imag;
-      int n_cols_imag = 0;
+	  const  PetscScalar *petsc_row_vals_imag;
+	  const  PetscInt *petsc_cols_imag;
+	  int n_cols_imag = 0;
 
-      set<int> real_column, imag_column, complex_column;
-      //  set<int>::iterator com_col_it, com_col_end;
-      insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
+	  set<int> real_column, imag_column, complex_column;
+	  //  set<int>::iterator com_col_it, com_col_end;
+	  insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
+	  
+	  ierr = MatGetRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  real_column.clear();
 
-      ierr = MatGetRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-      real_column.clear();
+	  for (int i = 0; i < n_cols_real; i++) 
+	    if (new_dofs[petsc_cols_real[i]].independent) real_column.insert(petsc_cols_real[i]);
+	  
+	  ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  
+	  imag_column.clear();
+	  for (int i = 0; i < n_cols_real; i++) 
+	    if (new_dofs[petsc_cols_imag[i]].independent) imag_column.insert(petsc_cols_imag[i]);
+	  
+	  set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
 
-      for (int i = 0; i < n_cols_real; i++) real_column.insert(petsc_cols_real[i]);
+	  int n1 = complex_column.size();
 
-      ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  out_int = *(reinterpret_cast<unsigned int*> (& n1) );  endian_swap(out_int);
+	  out.write(  reinterpret_cast<char *>( & out_int ), int_size);
+	  
+	  
+	  ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
 
-      imag_column.clear();
-      for (int i = 0; i < n_cols_real; i++) imag_column.insert(petsc_cols_imag[i]);
-
-      set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
-
-      int n1 = complex_column.size();
-
-      out_int = *(reinterpret_cast<unsigned int*> (& n1) );  endian_swap(out_int);
-      out.write(  reinterpret_cast<char *>( & out_int ), int_size);
-
-    
-      ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-      ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-      
+	  ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	}
 
     }    
   //-----------------------------------------------------------------------------------------------------//
   //write number of columns in each row
   for (int row = 0 ; row < size_matrix; row++)
     {
-      int ierr = 0;
-      const  PetscScalar *petsc_row_vals_real;
-      const  PetscInt *petsc_cols_real;
-      int n_cols_real = 0;
+      if (new_dofs[row].independent)
+	{
+	  int ierr = 0;
+	  const  PetscScalar *petsc_row_vals_real;
+	  const  PetscInt *petsc_cols_real;
+	  int n_cols_real = 0;
+      
+	  const  PetscScalar *petsc_row_vals_imag;
+	  const  PetscInt *petsc_cols_imag;
+	  int n_cols_imag = 0;
 
-      const  PetscScalar *petsc_row_vals_imag;
-      const  PetscInt *petsc_cols_imag;
-      int n_cols_imag = 0;
+	  set<int> real_column, imag_column, complex_column;
+	  set<int>::iterator com_col_it;
+	  insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
+	  
+	  ierr = MatGetRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  real_column.clear();
 
-      set<int> real_column, imag_column, complex_column;
-      set<int>::iterator com_col_it;
-      insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
+	  for (int i = 0; i < n_cols_real; i++) 
+	    if (new_dofs[petsc_cols_real[i]].independent) real_column.insert(new_dofs[petsc_cols_real[i]].new_number);
 
-      ierr = MatGetRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-      real_column.clear();
+	  ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
 
-      for (int i = 0; i < n_cols_real; i++) real_column.insert(petsc_cols_real[i]);
+	  imag_column.clear();
 
-      ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  for (int i = 0; i < n_cols_real; i++) 
+	    if (new_dofs[petsc_cols_imag[i]].independent) imag_column.insert(new_dofs[petsc_cols_imag[i]].new_number);
 
-      imag_column.clear();
-      for (int i = 0; i < n_cols_real; i++) imag_column.insert(petsc_cols_imag[i]);
-
-      set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
+	  set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
 
    
-      for (com_col_it = complex_column.begin(); com_col_it != complex_column.end(); com_col_it++)
-	{
-	  int n1 = *com_col_it;
-	  out_int = *(reinterpret_cast<unsigned int*> (& n1) );  endian_swap(out_int);
-	  out.write(  reinterpret_cast<char *>( & out_int ), int_size);
-	}
+	  for (com_col_it = complex_column.begin(); com_col_it != complex_column.end(); com_col_it++)
+	    {
+	      int n1 = *com_col_it;
+	      out_int = *(reinterpret_cast<unsigned int*> (& n1) );  endian_swap(out_int);
+	      out.write(  reinterpret_cast<char *>( & out_int ), int_size);
+	    }
      
 
     
-      ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
 
-      ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
       
 
-    } 
+	} 
+    }
   //-------------------------------------------------------------------------------
   //write data of columns in each row
   
   for (int row = 0 ; row < size_matrix; row++)
     {
-      int ierr = 0;
-      const  PetscScalar *petsc_row_vals_real;
-      const  PetscInt *petsc_cols_real;
-      int n_cols_real = 0;
-
-      const  PetscScalar *petsc_row_vals_imag;
-      const  PetscInt *petsc_cols_imag;
-      int n_cols_imag = 0;
-
-      set<int> real_column, imag_column, complex_column;
-      set<int>::iterator com_col_it;
-
-
-      map<int,double> real_values, imag_values;
-      map<int, double>::iterator  position;
-
-
-      insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
-
-      ierr = MatGetRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-      real_column.clear();
-      real_values.clear();
-      for (int i = 0; i < n_cols_real; i++)
+      if (new_dofs[row].independent)
 	{
-	  real_column.insert(petsc_cols_real[i]);
-	  real_values.insert(make_pair(petsc_cols_real[i],petsc_row_vals_real[i] ));
-	}
+	  int ierr = 0;
+	  const  PetscScalar *petsc_row_vals_real;
+	  const  PetscInt *petsc_cols_real;
+	  int n_cols_real = 0;
+	  
+	  const  PetscScalar *petsc_row_vals_imag;
+	  const  PetscInt *petsc_cols_imag;
+	  int n_cols_imag = 0;
 
-      ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-      imag_column.clear();
-      imag_values.clear();
-      for (int i = 0; i < n_cols_real; i++)
-	{ 
-	  imag_column.insert(petsc_cols_imag[i]);
-	  imag_values.insert(make_pair(petsc_cols_imag[i],petsc_row_vals_imag[i] ));
-	}
+	  set<int> real_column, imag_column, complex_column;
+	  set<int>::iterator com_col_it;
 
 
-      set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
+	  map<int,double> real_values, imag_values;
+	  map<int, double>::iterator  position;
 
+
+	  insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
+
+	  ierr = MatGetRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  real_column.clear();
+	  real_values.clear();
+	  for (int i = 0; i < n_cols_real; i++)
+	    {
+	      if (new_dofs[petsc_cols_real[i]].independent)
+		{
+		  real_column.insert(petsc_cols_real[i]);
+		  real_values.insert(make_pair(petsc_cols_real[i],petsc_row_vals_real[i] ));
+		}
+	    }
+
+	  ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+
+	  imag_column.clear();
+	  imag_values.clear();
+	  for (int i = 0; i < n_cols_real; i++)
+	    { 
+	      if (new_dofs[petsc_cols_imag[i]].independent)
+		{
+		  imag_column.insert(petsc_cols_imag[i]);
+		  imag_values.insert(make_pair(petsc_cols_imag[i],petsc_row_vals_imag[i] ));
+		}
+	    }
+
+
+	  set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
+	  
    
-      for (com_col_it = complex_column.begin(); com_col_it != complex_column.end(); com_col_it++)
-	{
-	  int n1 = *com_col_it;
-	  double value;
+	  for (com_col_it = complex_column.begin(); com_col_it != complex_column.end(); com_col_it++)
+	    {
+	      int n1 = *com_col_it;
+	      double value;
 
-	  //real part------	 
-	  position = real_values.find(n1);
-	  if (position != real_values.end()) 
-	      value = position->second;
-	  else 
-	    value = 0.0;
+	      //real part------	 
+	      position = real_values.find(n1);
+	      if (position != real_values.end()) 
+		value = position->second;
+	      else 
+		value = 0.0;
 
-	  out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
-	  out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
+	      out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
+	      out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
 	  
-	  //----------------
-	  //imag part 
-	  position = imag_values.find(n1);
-	  if (position != imag_values.end()) 
-	      value = position->second;
-	  else 
-	    value = 0.0;
-	  
-	  out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
-	  out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
-	  
-	  //----------------
-	}
+	      //----------------
+	      //imag part 
+	      position = imag_values.find(n1);
+	      if (position != imag_values.end()) 
+		value = position->second;
+	      else 
+		value = 0.0;
+	      
+	      out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
+	      out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
+	      
+	      //----------------
+	    }
      
 
     
-      ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
 
-      ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-      
+	  ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  
 
-    } 
-  
+	} 
+    }
   //------------------------------------------------------------------------------
 }
 //===============================================================================//
@@ -736,9 +786,9 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 
   //  make_constraints();
 
-
+  make_new_dofs();
   
-
+ 
 
   calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
 
@@ -800,7 +850,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
       file_eigvals.read(buffer_double, double_size);
       fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap(fict);
       solution[i].eigen_energy = *(  reinterpret_cast<double*>( &fict ) );
-      cerr << solution[i].eigen_energy << "\n";
+    
 
       file_eigvals.read(buffer_double, double_size);
       
@@ -816,13 +866,18 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 
   assert (file_eigvects.good());
 
+  //read solutions - only independent dofs
+  //----------------------------------------------------------------------
   for (unsigned i = 0; i < number_of_converged_solutions; i++)
     {
       file_eigvects.read(buffer, int_size);
       file_eigvects.read(buffer, int_size);
       unsigned int vector_size =  *(reinterpret_cast<unsigned int*> ( buffer));  endian_swap(vector_size);
-      (solution[i].eigen_vector).resize(vector_size);
+      assert( vector_size == number_of_new_dofs);
+      (solution[i].eigen_vector).resize(number_of_all_dofs, Complex(0.0, 0.0));
 
+      vector<Complex> temp(vector_size); //only independent dofs
+     
       for (unsigned j = 0; j < vector_size; j++)
 	{
           double re, im;
@@ -833,9 +888,25 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 	  file_eigvects.read(buffer_double, double_size);
 	  fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap(fict);
 	  im   = *(  reinterpret_cast<double*>( &fict ) );
+	  temp[j] = Complex(re,im);
+	  //solution[i].eigen_vector[j] = Complex(re,im);
 
-	  solution[i].eigen_vector[j] = Complex(re,im);
+	 
 	}
+
+      
+
+      //-----------------------------------------------------------------------------
+      //put independent dofs in the eigenvectors that may contain also non independent dofs
+      for (unsigned j = 0; j < number_of_all_dofs; j++)
+	{
+	  if (new_dofs[j].independent)
+	    {
+	      solution[i].eigen_vector[j] = temp[new_dofs[j].new_number];
+	    }
+	}
+      //-----------------------------------------------------------------------------
+
     }
   
 }
@@ -1010,6 +1081,47 @@ void EnvelopFunctionApprox::make_constraints(void)
 
 }
 //=======================================================================//
+
+void EnvelopFunctionApprox::make_new_dofs( )
+{
+  new_dofs.clear();
+
+  const Mesh& mesh = es->get_mesh();
+  LinearImplicitSystem& system = es->get_system<LinearImplicitSystem>("Schroedinger");
+  DofMap& dof_map = system.get_dof_map();
+
+  
+  number_of_all_dofs  =   dof_map.n_dofs();
+  
+  new_dofs.resize(number_of_all_dofs);
+  const std::set<unsigned int> :: const_iterator  n_begin = dirichlet_dofs.begin();
+  const std::set<unsigned int> :: const_iterator  n_end   = dirichlet_dofs.end();
+  std::set<unsigned int> :: const_iterator n_it;
+
+  unsigned int number_it = 0;
+
+  for (unsigned int i = 0; i < number_of_all_dofs ; i++)
+    {
+        if (find(n_begin, n_end, i) == n_end)
+	  {
+	    new_dofs[i].independent = true;
+	    new_dofs[i].new_number = number_it;
+	    number_it++;
+
+	  }
+	else
+	  {
+	    new_dofs[i].independent = false;
+	  }
+    }
+
+  
+  number_of_new_dofs = number_it;
+
+  
+
+}
+
 
 //=======================================================================//
 EnvelopFunctionApprox:: ~EnvelopFunctionApprox(void)

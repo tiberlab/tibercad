@@ -257,7 +257,14 @@ class EnvelopFunctionApprox
   void make_constraints(void);
 
   //!creates new_dofs vector
-  void make_new_dofs(void)
+  void make_new_dofs(void);
+
+  //!number of independent dofs
+  int number_of_new_dofs;
+
+
+  //!total number of dofs 
+  int number_of_all_dofs;
 
 };
 #endif

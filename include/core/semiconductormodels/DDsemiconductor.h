@@ -78,6 +78,15 @@ class DDsemiconductor
   //! calculate information about valence bands
   virtual void  calculate_valence_band_extremum(void) = 0;
 
+
+  //! calculates dispersion along a line in k-space
+  /*!
+    \param  k_i - initial k-point
+    \param  k_f - final k-point
+    \param  number_of_points number k-points between the initial and the final point 
+   */
+  std::vector<std::vector<double> > get_valence_kp_dispersion(Tensor1 k_i, Tensor1 k_f, unsigned int number_of_points);
+
   std::vector< std::vector<double> >   calculate_vb_bulk_states(const std::vector<Tensor1>& k_vector) ; 
 
 

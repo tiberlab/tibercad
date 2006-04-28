@@ -14,7 +14,7 @@ DDsemiconductor::DDsemiconductor()
   strain = Tensor2Sym(0);
   energy_cutoff=1.0; //1eV default value
   strained = false;
-  k_max  = 0.01;//default value
+  k_max = 1e-4;
 }
 
 
@@ -35,7 +35,7 @@ DDsemiconductor::DDsemiconductor(const  Tensor2Sym& strain_1, const double energ
     }
   
   energy_cutoff = energy_cutoff_1;
-  k_max  = 0.01;//default value
+  k_max = 1e-4;
 }
 //----------------------------------------------------------------------------------------------//
 void DDsemiconductor::set_strain(const Tensor2Sym& strain_1)
@@ -159,9 +159,15 @@ vector< vector<double> > DDsemiconductor::calculate_vb_bulk_states(const vector<
       zheev_(jobs, UPLO, N, ham6x6matrix, N, eigvals, WORK, LWORK, RWORK, info); 
       if (info !=0 ) exit(1);
 
-
+     
       for (short i = 0; i < 6; i++)
-	eigvals_calculated[i] = eigvals[i]*Hartree;
+	{
+	  
+	  eigvals_calculated[i] = eigvals[i]*Hartree;
+	 
+	}
+
+     
 
       result.push_back(eigvals_calculated);
       
@@ -173,6 +179,33 @@ vector< vector<double> > DDsemiconductor::calculate_vb_bulk_states(const vector<
 }
 
 //--------------------------------------------------------//
+
+
+vector<vector<double> > DDsemiconductor::get_valence_kp_dispersion(Tensor1 k_i, Tensor1 k_f, unsigned int number_of_points)
+{
+  if (number_of_points < 2) number_of_points = 2;
+
+  Tensor1 dk = (k_f - k_i)/(number_of_points - 1);
+
+  vector<Tensor1> k_points(number_of_points);
+
+  
+  for (unsigned int point = 0 ; point < number_of_points; point++)
+    {
+      k_points[point] = k_i +  point * dk;
+     
+    }
+
+
+  vector<vector<double> > result = calculate_vb_bulk_states(k_points);
+
+ 
+  
+
+  return(result);
+
+}
+
 
 //---------------------------------------------------------------------------------------------//
 DDsemiconductor::~DDsemiconductor (void)

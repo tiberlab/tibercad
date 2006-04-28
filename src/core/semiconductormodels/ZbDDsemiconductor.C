@@ -274,7 +274,7 @@ KPbulkHamiltonian::KPparams ZbDDsemiconductor::calculate_6x6_kp_params (void )
 
           M = \frac{1}{2} ( 2\gamma_2 - \gamma_1  - 1 ) ;  
 
-          N = 3\gamma_3
+          N = -3\gamma_3;
 
 	  N_{yx} = M; 
 
@@ -288,7 +288,7 @@ KPbulkHamiltonian::KPparams ZbDDsemiconductor::calculate_6x6_kp_params (void )
   result.M1 = 0.5 * (2 * par.gamma2 - par.gamma1 - 1.0); result.M2 = result.M1;        
   result.M3 = result.M1;
 
-  result.N1 = 3.0 * par.gamma3; result.N2 = 3.0 * par.gamma3;
+  result.N1 = -3.0 * par.gamma3; result.N2 = -3.0 * par.gamma3;
 
   result.N1_yx = result.M1;  result.N2_yx = result.N1_yx;
 

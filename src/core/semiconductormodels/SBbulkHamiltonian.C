@@ -37,6 +37,8 @@ void SBbulkHamiltonian::set_diag_mass_tensor(double m_xx, double m_yy, double m_
 void SBbulkHamiltonian::calculate_Hamiltonian_gen(void)
 {
  
+  //Hamiltonian is H = 1/2 * (1/m_{ij})d/dx_i d/dx_j + E0
+ 
   single_band_ham.constant =  edge;
   
 
@@ -49,8 +51,8 @@ void SBbulkHamiltonian::calculate_Hamiltonian_gen(void)
   for (short i = 0; i < 3; i++) 
     for (short j = 0; i >= j; j++)
       {  
-	single_band_ham.quad[i][j] = imass(i+1,j+1);
-	single_band_ham.quad[j][i] = imass(i+1,j+1);
+	single_band_ham.quad[i][j] = 0.5*imass(i+1,j+1);
+	single_band_ham.quad[j][i] = 0.5*imass(i+1,j+1);
       }
 
    rotate_quad(single_band_ham.quad);
