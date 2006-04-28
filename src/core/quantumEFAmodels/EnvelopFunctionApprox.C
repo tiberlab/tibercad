@@ -800,11 +800,14 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 
   std::ostringstream  command_line;
 
-  command_line <<  "eigen_solver  -f1 H.out   -f2 S.out  -eps_gen_hermitian -eps_smallest_magnitude ";
-  command_line <<  "   -eps_nev   " << ev_number;
-  command_line <<  "   -eps_type  " << opt.solver;
-  command_line <<  "   -eps_tol   " << opt.eigen_solver_tolerance;
-  command_line <<  "   -eps_monitor \n";
+  command_line <<  "eigen_solver  -f1 H.out   -f2 S.out  -eps_gen_hermitian -eps_largest_magnitude ";
+  command_line <<  "   -eps_nev     " << ev_number;
+  command_line <<  "   -eps_ncv     " << 2 * ev_number;
+  command_line <<  "   -eps_type    " << opt.solver;
+  command_line <<  "   -eps_tol     " << opt.eigen_solver_tolerance;
+  command_line <<  "   -eps_max_it  " << opt.max_iteration_number;
+  command_line <<  "   -st_type sinvert ";
+  command_line <<  "    \n";
 
   system( (command_line.str()).c_str());
 
@@ -841,6 +844,9 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
   cout << " Number of converged solutions  " << number_of_converged_solutions << "\n";
 
   solution.resize(number_of_converged_solutions);
+
+ 
+
   //--------------------------------------------------------------------
   //read eigenvalues
   for (unsigned i = 0; i < number_of_converged_solutions; i++)
@@ -849,13 +855,17 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
       
       file_eigvals.read(buffer_double, double_size);
       fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap(fict);
-      solution[i].eigen_energy = *(  reinterpret_cast<double*>( &fict ) );
+
+
+      //we have to reorder eigensolutions in order to have the smallest eigenvalue first
+      solution[number_of_converged_solutions - i - 1].eigen_energy = *(  reinterpret_cast<double*>( &fict ) );
     
 
       file_eigvals.read(buffer_double, double_size);
       
       
     }
+  
   
   //--------------------------------------------------------------------
   //read eigenvectors
@@ -868,13 +878,17 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 
   //read solutions - only independent dofs
   //----------------------------------------------------------------------
-  for (unsigned i = 0; i < number_of_converged_solutions; i++)
+  for (unsigned int i = 0; i < number_of_converged_solutions; i++)
     {
+
+      //we have to reorder eigensolutions in order to have the smallest eigenvalue first
+      unsigned int ind = number_of_converged_solutions - i - 1; 
+
       file_eigvects.read(buffer, int_size);
       file_eigvects.read(buffer, int_size);
       unsigned int vector_size =  *(reinterpret_cast<unsigned int*> ( buffer));  endian_swap(vector_size);
       assert( vector_size == number_of_new_dofs);
-      (solution[i].eigen_vector).resize(number_of_all_dofs, Complex(0.0, 0.0));
+      (solution[ind].eigen_vector).resize(number_of_all_dofs, Complex(0.0, 0.0));
 
       vector<Complex> temp(vector_size); //only independent dofs
      
@@ -889,7 +903,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 	  fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap(fict);
 	  im   = *(  reinterpret_cast<double*>( &fict ) );
 	  temp[j] = Complex(re,im);
-	  //solution[i].eigen_vector[j] = Complex(re,im);
+	 
 
 	 
 	}
@@ -902,12 +916,16 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 	{
 	  if (new_dofs[j].independent)
 	    {
-	      solution[i].eigen_vector[j] = temp[new_dofs[j].new_number];
+	      solution[ind].eigen_vector[j] = temp[new_dofs[j].new_number];
 	    }
 	}
       //-----------------------------------------------------------------------------
 
     }
+
+
+
+
   
 }
 //=============================================================//

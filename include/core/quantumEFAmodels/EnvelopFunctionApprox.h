@@ -84,6 +84,7 @@ class EnvelopFunctionApprox
 
     std::string output_type; //!< output type
 
+    unsigned int max_iteration_number; //!< maximum number of iterations for the eigenvalue solver 
   };
 
 
