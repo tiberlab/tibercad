@@ -6,7 +6,7 @@
 #include "BoundaryData.h"
 #include "DDevice.h"
 #include "DriftDiffusion.h"
-#include "SemiconductorModel.h"
+#include "StrainedSemiconductorModel.h"
 
 #include "macrostrain.h"
 #include "mesh_data_elements.h"
@@ -18,6 +18,7 @@
 #include "elem.h"
 #include "getpot.h"
 #include "gnuplot_io.h"
+#include "WzDDsemiconductor.h"
 
 #include <algorithm>
 
@@ -39,12 +40,14 @@ double alloy(double a, double b, double xa, double bowing = 0.0)
   return b + (a - b) * xa - bowing * xa *  (1 - xa);
 };
 
+class Dummy {};
 
 double schottky_barrier;
 
 
 int main (int argc, char** argv)
 {
+
   libMesh::init(argc, argv);
   {
 
@@ -61,6 +64,8 @@ int main (int argc, char** argv)
 
     int mat_sys = input_file("material_system",0);
     double in_content = input_file("in_content", 0.15);
+    double al_content = input_file("al_content", 0.48);
+    double ga_content = input_file("ga_content", 0.47);
     int growth_dir = input_file("growth_dir",1);
     int solve_strain = input_file("solve_strain", 0);
 
@@ -131,15 +136,44 @@ int main (int argc, char** argv)
     unsigned int dim = 1;
     Mesh mesh(1);
     MeshTools::Generation::build_line(mesh, 
-        103,
+        2060,
         -51.5, 51.5,
         EDGE2);
+/*
+    {
+      MeshRefinement ref(mesh);
+      ref.uniformly_refine();
+      ref.uniformly_refine();
+      ref.uniformly_refine();
+      ref.uniformly_refine();
+      //ref.uniformly_refine();
+
+      //for (int i = 0; i < 3; i++)
+      for (int i = 0; i < 0; i++)
+      {
+        {
+          MeshBase::element_iterator it = mesh.elements_begin();
+          const MeshBase::element_iterator end = mesh.elements_end();
+          for ( ; it != end; ++it)
+          {
+            Elem* elem = *it;
+
+            double y = elem->centroid()(0);
+            if ((y > -2) && (y < 2))
+              elem->set_refinement_flag(Elem::REFINE);
+          }
+          ref.refine_elements();
+        }
+      }
+    }
+*/
+
 
     MeshData_elements meshdata(mesh);
     meshdata.enable_compatibility_mode();
     
     map<unsigned int, vector<unsigned int> > boundary_nodes;
-    boundary_nodes[1] = vector<unsigned int>(1, 104);
+    boundary_nodes[1] = vector<unsigned int>(1, 2061);
     boundary_nodes[2] = vector<unsigned int>(1, 1);
 
     {
@@ -180,11 +214,22 @@ int main (int argc, char** argv)
     stiffness C1;
     rotated_crystal cryst;
 
-    // AlGaN - GaN
-    cryst.set_cryst_type("hex");
-    cryst.set_xyz_mil_direction("y", 1,  0, -1, 0) ;
-    cryst.set_xyz_mil_direction("z", 1,  -2, 1, 0) ;
-    cryst.set_xyz_mil_direction("x",  0,  0, 0,  1) ;
+    if (mat_sys != 0)
+    {
+      // InAs - GaAs
+      cryst.set_cryst_type("cub");
+      cryst.set_xyz_mil_direction("x",  1,  0, 0);
+      cryst.set_xyz_mil_direction("y",  0,  1, 0);
+      cryst.set_xyz_mil_direction("z",  0,  0, 1);
+    }
+    else
+    {
+      // AlGaN - GaN
+      cryst.set_cryst_type("hex");
+      cryst.set_xyz_mil_direction("y", 1,  0, -1, 0) ;
+      cryst.set_xyz_mil_direction("z", 1,  -2, 1, 0) ;
+      cryst.set_xyz_mil_direction("x",  0,  0, 0,  1) ;
+    }
 
     Piezoelectricity piezo1;
 
@@ -192,54 +237,188 @@ int main (int argc, char** argv)
     std::vector<rotated_crystal> crystal(number_of_regions, cryst);
     std::vector<Piezoelectricity> piezo_data(number_of_regions, piezo1);
 
-    std::vector<int> x_dir(4);
-    std::vector<int> y_dir(4);
-
-    y_dir[0] =  1;  y_dir[1] = 0;  y_dir[2] = -1;  y_dir[3] =  0;
-    x_dir[0] =  0;  x_dir[1] = 0;  x_dir[2] =  0;  x_dir[3] =  1;
-
-
-    // GaN
-    C_tensor[0].set_moduli(390.0, 145.0, 106.0, 398.0, 105.0);
-    C_tensor[2].set_moduli(390.0, 145.0, 106.0, 398.0, 105.0);
-    //
-    piezo_data[0].set_moduli(1.27, -0.35, -0.3); // C/m^2
-    piezo_data[2].set_moduli(1.27, -0.35, -0.3); // C/m^2
-    //
-    piezo_data[0].set_pyro_module(-0.034);
-    piezo_data[2].set_pyro_module(-0.034);
-    //
-    crystal[0].set_lat_const(0.3189, 0.5185);
-    crystal[2].set_lat_const(0.3189, 0.5185);
-    crystal[0].calculate_lat_consts();
-    crystal[2].calculate_lat_consts();
-    crystal[0].calculate_rot_matrix(x_dir, y_dir); 
-    crystal[2].calculate_rot_matrix(x_dir, y_dir); 
-    C_tensor[0].rotate_to_calc_system(crystal[0].RotMatrix);
-    C_tensor[2].rotate_to_calc_system(crystal[2].RotMatrix);
+    double x_al = al_content;
+    double x_ga = ga_content;
+    double x_in = 1 - al_content;
     
-    // InGaN
-    // first value: InN, second value: GaN
-    C_tensor[1].set_moduli(
-        alloy(223.0, 390.0, in_content),
-        alloy(115.0, 145.0, in_content),
-        alloy(92.0, 106.0, in_content),
-        alloy(224.0, 398.0, in_content),
-        alloy(48.0, 105.0, in_content));
+    if (mat_sys == 2)
+    {
+      // GaInAs - AlInAs
+      cout << "Using GaInAs - AlInAs\n" << flush;
 
-    piezo_data[1].set_moduli(
-        alloy(0.97, 1.27, in_content),
-        alloy(-0.57, -0.35, in_content),
-        alloy(-0.4, -0.3, in_content));
-    piezo_data[1].set_pyro_module(
-        alloy(-0.042, -0.034, in_content, -0.037));
+      C_tensor[0].set_moduli(
+          alloy(83.290, 125.0, x_in),
+          alloy(45.260, 53.4, x_in),
+          alloy(39.590, 54.2, x_in)); //InAlAs
+      C_tensor[1].set_moduli(
+          alloy(122.1, 83.290, x_ga),
+          alloy(56.6, 45.260, x_ga),
+          alloy(60.0, 39.590, x_ga)); //GaInAs
+      C_tensor[2].set_moduli(
+          alloy(83.290, 125.0, x_in),
+          alloy(45.260, 53.4, x_in),
+          alloy(39.590, 54.2, x_in)); //InAlAs
 
-    crystal[1].set_lat_const(
-        alloy(0.3545, 0.3189, in_content),
-        alloy(0.5703, 0.5185, in_content));
-    crystal[1].calculate_lat_consts();
-    crystal[1].calculate_rot_matrix(x_dir, y_dir);
-    C_tensor[1].rotate_to_calc_system(crystal[1].RotMatrix);
+      piezo_data[0].set_moduli(alloy(-0.044, -0.015, x_in)); //InAs
+      piezo_data[1].set_moduli(alloy(-0.16, -0.044, x_ga)); //GaAs  C/m^2
+      piezo_data[2].set_moduli(alloy(-0.044, -0.015, x_in)); //InAs
+      piezo_data[0].set_pyro_module(0.0);
+      piezo_data[1].set_pyro_module(0.0);
+      piezo_data[2].set_pyro_module(0.0);
+
+
+      std::vector<int> x_dir(3);
+      std::vector<int> y_dir(3);
+      // growth direction
+      x_dir[0] = growth_dir;  x_dir[1] = 1;  x_dir[2] =   1;
+      //x_dir[0] = 1;  x_dir[1] = growth_dir;  x_dir[2] =   growth_dir;
+      y_dir[0] = 0;  y_dir[1] = 1;  y_dir[2] =  -1;
+
+      crystal[0].set_lat_const(alloy(6.05830, 5.6611, x_in));
+      crystal[0].calculate_lat_consts();
+      crystal[0].calculate_rot_matrix(x_dir, y_dir);
+      C_tensor[0].rotate_to_calc_system(crystal[0].RotMatrix);
+      
+      crystal[1].set_lat_const(alloy(5.65325, 6.05830, x_ga));
+      crystal[1].calculate_lat_consts();
+      crystal[1].calculate_rot_matrix(x_dir, y_dir);
+      C_tensor[1].rotate_to_calc_system(crystal[1].RotMatrix);
+
+      crystal[2].set_lat_const(alloy(6.05830, 5.6611, x_in));
+      crystal[2].calculate_lat_consts();
+      crystal[2].calculate_rot_matrix(x_dir, y_dir);
+      C_tensor[2].rotate_to_calc_system(crystal[2].RotMatrix);
+
+    }
+    else if (mat_sys == 1)
+    {
+      // GaAs - InAs
+      cout << "Using GaAs - InAs\n" << flush;
+
+      C_tensor[0].set_moduli(122.1,  56.6,   60.0); //GaAs
+      C_tensor[1].set_moduli(83.290,  45.260,  39.590); //InAs
+      C_tensor[2].set_moduli(122.1,  56.6,   60.0); //GaAs
+
+      piezo_data[0].set_moduli(-0.16); //GaAs  C/m^2
+      piezo_data[1].set_moduli(-0.044); //InAs
+      piezo_data[2].set_moduli(-0.16); //GaAs
+      piezo_data[0].set_pyro_module(0.0);
+      piezo_data[1].set_pyro_module(0.0);
+      piezo_data[2].set_pyro_module(0.0);
+
+
+      std::vector<int> x_dir(3);
+      std::vector<int> y_dir(3);
+      // growth direction
+      x_dir[0] = growth_dir;  x_dir[1] = 1;  x_dir[2] =   1;
+      //x_dir[0] = 1;  x_dir[1] = growth_dir;  x_dir[2] =   growth_dir;
+      y_dir[0] = 0;  y_dir[1] = 1;  y_dir[2] =  -1;
+
+      crystal[0].set_lat_const(5.65325);
+      crystal[0].calculate_lat_consts();
+      crystal[0].calculate_rot_matrix(x_dir, y_dir);
+      C_tensor[0].rotate_to_calc_system(crystal[0].RotMatrix);
+
+      crystal[1].set_lat_const(6.05830);
+      crystal[1].calculate_lat_consts();
+      crystal[1].calculate_rot_matrix(x_dir, y_dir);
+      C_tensor[1].rotate_to_calc_system(crystal[1].RotMatrix);
+
+      crystal[2].set_lat_const(5.65325);
+      crystal[2].calculate_lat_consts();
+      crystal[2].calculate_rot_matrix(x_dir, y_dir);
+      C_tensor[2].rotate_to_calc_system(crystal[2].RotMatrix);
+    }
+    else if (mat_sys == 3)
+    {
+      // GaAs - InAs
+      cout << "Using GaAs - InAs\n" << flush;
+
+      C_tensor[0].set_moduli(83.290,  45.260,  39.590); //InAs
+      C_tensor[1].set_moduli(122.1,  56.6,   60.0); //GaAs
+      C_tensor[2].set_moduli(83.290,  45.260,  39.590); //InAs
+
+      piezo_data[0].set_moduli(-0.044); //InAs
+      piezo_data[1].set_moduli(-0.16); //GaAs  C/m^2
+      piezo_data[2].set_moduli(-0.044); //InAs
+      piezo_data[0].set_pyro_module(0.0);
+      piezo_data[1].set_pyro_module(0.0);
+      piezo_data[2].set_pyro_module(0.0);
+
+
+      std::vector<int> x_dir(3);
+      std::vector<int> y_dir(3);
+      // growth direction
+      x_dir[0] = 1;  x_dir[1] = 0;  x_dir[2] =   0;
+      y_dir[0] = 0;  y_dir[1] = 1;  y_dir[2] =  0;
+
+      crystal[0].set_lat_const(6.05830);
+      crystal[0].calculate_lat_consts();
+      crystal[0].calculate_rot_matrix(x_dir, y_dir);
+      C_tensor[0].rotate_to_calc_system(crystal[0].RotMatrix);
+
+      crystal[1].set_lat_const(5.65325);
+      crystal[1].calculate_lat_consts();
+      crystal[1].calculate_rot_matrix(x_dir, y_dir);
+      C_tensor[1].rotate_to_calc_system(crystal[1].RotMatrix);
+
+      crystal[2].set_lat_const(6.05830);
+      crystal[2].calculate_lat_consts();
+      crystal[2].calculate_rot_matrix(x_dir, y_dir);
+      C_tensor[2].rotate_to_calc_system(crystal[2].RotMatrix);
+    }
+    else
+    {
+      std::vector<int> x_dir(4);
+      std::vector<int> y_dir(4);
+
+      y_dir[0] =  1;  y_dir[1] = 0;  y_dir[2] = -1;  y_dir[3] =  0;
+      x_dir[0] =  0;  x_dir[1] = 0;  x_dir[2] =  0;  x_dir[3] =  1;
+
+
+      // GaN
+      C_tensor[0].set_moduli(390.0, 145.0, 106.0, 398.0, 105.0);
+      C_tensor[2].set_moduli(390.0, 145.0, 106.0, 398.0, 105.0);
+      //
+      piezo_data[0].set_moduli(1.27, -0.35, -0.3); // C/m^2
+      piezo_data[2].set_moduli(1.27, -0.35, -0.3); // C/m^2
+      //
+      piezo_data[0].set_pyro_module(-0.034);
+      piezo_data[2].set_pyro_module(-0.034);
+      //
+      crystal[0].set_lat_const(0.3189, 0.5185);
+      crystal[2].set_lat_const(0.3189, 0.5185);
+      crystal[0].calculate_lat_consts();
+      crystal[2].calculate_lat_consts();
+      crystal[0].calculate_rot_matrix(x_dir, y_dir); 
+      crystal[2].calculate_rot_matrix(x_dir, y_dir); 
+      C_tensor[0].rotate_to_calc_system(crystal[0].RotMatrix);
+
+      C_tensor[2].rotate_to_calc_system(crystal[2].RotMatrix);
+
+      // InGaN
+      // first value: InN, second value: GaN
+      C_tensor[1].set_moduli(
+          alloy(223.0, 390.0, in_content),
+          alloy(115.0, 145.0, in_content),
+          alloy(92.0, 106.0, in_content),
+          alloy(224.0, 398.0, in_content),
+          alloy(48.0, 105.0, in_content));
+
+      piezo_data[1].set_moduli(
+          alloy(0.97, 1.27, in_content),
+          alloy(-0.57, -0.35, in_content),
+          alloy(-0.4, -0.3, in_content));
+      piezo_data[1].set_pyro_module(
+          alloy(-0.042, -0.034, in_content, -0.037));
+
+      crystal[1].set_lat_const(
+          alloy(0.3545, 0.3189, in_content),
+          alloy(0.5703, 0.5185, in_content));
+      crystal[1].calculate_lat_consts();
+      crystal[1].calculate_rot_matrix(x_dir, y_dir);
+      C_tensor[1].rotate_to_calc_system(crystal[1].RotMatrix);
+    }
 
     Macrostrain::options opt;
   
@@ -298,7 +477,6 @@ int main (int argc, char** argv)
     /*****************************************************/
 
 
-
     /****************************************************************
      *
      * Drift diffusion definitions
@@ -306,49 +484,67 @@ int main (int argc, char** argv)
      ****************************************************************/
 
     StrainedSemiconductorModel n_gan(&strain_calculation);    
-    if (!solve_strain)
-      n_gan.ignore_strain();
+    //SemiconductorModel n_gan;
+    if (mat_sys == 1)
+      n_gan.set_data_file("GaAs.dat");
+    else if (mat_sys == 2)
+      n_gan.set_data_file("InAs.dat");
+    else if (mat_sys == 3)
+      n_gan.set_data_file("InAs.dat");
+    else
+      n_gan.set_data_file("GaN.dat");
+
 
     if (statistics == "FD")
       n_gan.set_statistics(TiberCad::FERMIDIRAC);
     else
       n_gan.set_statistics(TiberCad::BOLTZMANN);
+    
+    if (!solve_strain)
+      n_gan.ignore_strain();
 
     // n-GaN
-    n_gan.set_relative_permittivity(9.5);
-    n_gan.set_valence_band_properties(-0.72, 1.6, 200);
-    n_gan.set_conduction_band_properties(2.789, 0.23, 1000);
     n_gan.add_recombination_model(SRH);
-    n_gan.set_SRH_parameters(1e-8, 1e-8);
+    n_gan.set_SRH_parameters(1e-7, 1e-7);
     n_gan.add_recombination_model(DIRECT);
-    n_gan.set_direct_rec_parameters(1e-12);
+    n_gan.set_direct_rec_parameters(1e-15);
 
     // p-GaN
+    //SemiconductorModel p_gan(n_gan);
     StrainedSemiconductorModel p_gan(n_gan);
     
     // InGaN
+    //SemiconductorModel ingan(n_gan);
     StrainedSemiconductorModel ingan(n_gan);
-    ingan.set_relative_permittivity(alloy(14.0, 9.5, in_content));
-    ingan.set_valence_band_properties(
-        alloy(-0.462, -0.72, in_content),
-        alloy(1.65, 1.6, in_content),
-        alloy(200, 200, in_content));
-    ingan.set_conduction_band_properties(
-        alloy(0.318, 2.789, in_content, 1.4),
-        alloy(0.11, 0.23, in_content),
-        alloy(1000, 1000, in_content));
-    ingan.set_SRH_parameters(1e-8, 1e-8);
+    if (mat_sys == 1)
+      ingan.set_data_file("InAs.dat");
+    else if (mat_sys == 3)
+      ingan.set_data_file("GaAs.dat");
+
+    ingan.set_SRH_parameters(1e-7, 1e-7);
     ingan.add_recombination_model(DIRECT);
-    ingan.set_direct_rec_parameters(1e-12);
-    //ingan.set_relative_permittivity(9.5);
-    //ingan.set_valence_band_properties(-0.72, 1.6, 200);
-    //ingan.set_conduction_band_properties(2.789, 0.23, 1000);
+    ingan.set_direct_rec_parameters(1e-15);
 
     n_gan.set_n_dopant(Dopant(n_doping, 0.025, 2));
     p_gan.set_p_dopant(Dopant(p_doping, 0.01, 4));
-    //ingan.set_p_dopant(Dopant(1e17, 0.01, 4));
 
+    Dummy d;
+    n_gan.read_database(d);
+    p_gan.read_database(d);
+    ingan.read_database(d);
 
+    if (mat_sys == 2)
+    {
+      n_gan.build_alloy("AlAs.dat", "AlInAs_bow.dat", x_al);
+      p_gan.build_alloy("AlAs.dat", "AlInAs_bow.dat", x_al);
+      ingan.build_alloy("GaAs.dat", "GaInAs_bow.dat", x_ga);
+    }
+    else if (mat_sys == 0)
+      ingan.build_alloy("InN.dat", "InGaN_bow.dat", in_content);
+
+    const Elem* ingan_elem;
+    const Elem* n_gan_elem;
+    const Elem* p_gan_elem;
     ElementData element_data;
     {
       MeshData::const_elem_data_iterator it = meshdata.elem_data_begin();
@@ -367,74 +563,21 @@ int main (int argc, char** argv)
         {
           case 1:
             element_data.set_data(elem, &n_gan);
+            n_gan_elem = elem;
             break;
           case 2:
             element_data.set_data(elem, &ingan);
+            ingan_elem = elem;
             break;
           case 3:
             element_data.set_data(elem, &p_gan);
+            p_gan_elem = elem;
             break;
         }
       }
     }
 
 
-///*
-    {
-      MeshRefinement ref(mesh);
-      ref.uniformly_refine();
-      ref.uniformly_refine();
-      ref.uniformly_refine();
-      ref.uniformly_refine();
-      //ref.uniformly_refine();
-
-      //for (int i = 0; i < 3; i++)
-      for (int i = 0; i < 0; i++)
-      {
-        {
-          MeshBase::element_iterator it = mesh.elements_begin();
-          const MeshBase::element_iterator end = mesh.elements_end();
-          for ( ; it != end; ++it)
-          {
-            Elem* elem = *it;
-
-            double y = elem->centroid()(0);
-            if ((y > -2) && (y < 2))
-              elem->set_refinement_flag(Elem::REFINE);
-          }
-          ref.refine_elements();
-        }
-        /*
-        {
-          MeshBase::element_iterator it = mesh.elements_begin();
-          const MeshBase::element_iterator end = mesh.elements_end();
-          for ( ; it != end; ++it)
-          {
-            Elem* elem = *it;
-
-            double y = elem->centroid()(0);
-            if ((y > -10.0) && (y < 10.0))
-              elem->set_refinement_flag(Elem::REFINE);
-          }
-          ref.refine_elements();
-        }
-        {
-          MeshBase::element_iterator it = mesh.elements_begin();
-          const MeshBase::element_iterator end = mesh.elements_end();
-          for ( ; it != end; ++it)
-          {
-            Elem* elem = *it;
-
-            double y = elem->centroid()(0);
-            if ((y > -2.5) && (y < 2.5))
-              elem->set_refinement_flag(Elem::REFINE);
-          }
-          ref.refine_elements();
-        }
-        */
-      }
-    }
-//*/
 
     // solve strain
     if (solve_strain)
@@ -445,34 +588,33 @@ int main (int argc, char** argv)
     }
 
 
-    const Elem* elem = meshdata.elem_data_begin()->first;
-    n_gan.reinit(elem);
-    p_gan.reinit(elem);
-    ingan.reinit(elem);
+    if (solve_strain)
+    {
+      n_gan.include_strain();
+      p_gan.include_strain();
+      ingan.include_strain();
+    }
 
-    cout << "  n-GaN:" << endl;
+    //const Elem* elem = meshdata.elem_data_begin()->first;
+    n_gan.reinit(n_gan_elem);
+    p_gan.reinit(p_gan_elem);
+    ingan.reinit(ingan_elem);
+
+    cout << "n-GaN:" << endl;
     n_gan.calculate_equilibrium_properties();
-    cout << "       " << n_gan.get_equilibrium_fermi_level() << " eV, "
-      << "ni = " << n_gan.get_intrinsic_density()
-      << " n0 = " << n_gan.get_equilibrium_electron_density()
-      << " p0 = " << n_gan.get_equilibrium_hole_density() << endl;
+    n_gan.print_info();
 
-    cout << "  p-GaN:" << endl;
+    cout << "p-GaN:" << endl;
     p_gan.calculate_equilibrium_properties();
-    cout << "       " << p_gan.get_equilibrium_fermi_level() << " eV, "
-      << "ni = " << p_gan.get_intrinsic_density()
-      << " n0 = " << p_gan.get_equilibrium_electron_density()
-      << " p0 = " << p_gan.get_equilibrium_hole_density() << endl;
+    p_gan.print_info();
 
-    cout << "  InGaN:" << endl;
+    cout << "InGaN:" << endl;
     ingan.calculate_equilibrium_properties();
-    cout << "       " << ingan.get_equilibrium_fermi_level() << " eV, "
-      << "ni = " << ingan.get_intrinsic_density()
-      << " n0 = " << ingan.get_equilibrium_electron_density()
-      << " p0 = " << ingan.get_equilibrium_hole_density() << endl;
+    ingan.print_info();
 
-
-
+    n_gan.ignore_strain();
+    p_gan.ignore_strain();
+    ingan.ignore_strain();
 
     BoundaryDescriptor anode("anode");
     BoundaryDescriptor cathode("cathode");
@@ -524,12 +666,13 @@ int main (int argc, char** argv)
     params.solver_params.linear_max_iterations = dd_lin_max_it;
     params.solver_params.nonlinear_tolerance = dd_nonlin_rtol;
     params.solver_params.nonlinear_abs_tolerance = dd_nonlin_atol;
-    params.solver_params.ls_maxstep = 0.1;
+    params.solver_params.ls_maxstep = 0.05;
     params.solver_params.linear_tolerance = dd_lin_rtol;
     params.solver_params.linear_abs_tolerance = dd_lin_atol;
     params.integration_order =
       static_cast<libMeshEnums::Order>(integration_order);
 
+    params.solver_params.ksp_type = KSPBCGS;
     params.solver_params.pc_type = PCILU;
     params.artificial_drift = true;
     params.local_scaling = true;
@@ -746,8 +889,9 @@ void setup_boundary_desc(BoundaryDescriptor& desc,
     desc.set_coefficients("fermi_h", coeff);
   }
 
-  coeff[1] = 0.0; coeff[0] = 1.0;
-  coeff[2] = sc.get_equilibrium_fermi_level();
+  // zero field
+  //coeff[1] = 0.0; coeff[0] = 1.0;
+  //coeff[2] = sc.get_equilibrium_fermi_level();
   desc.set_coefficients("potential", coeff);
 }
 

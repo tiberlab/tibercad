@@ -553,7 +553,7 @@ void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
         AutoPtr<Elem> side = elem->build_side(s);
         for (int i = 0; i < side->n_nodes(); i++)
         {
-          if (find(n_begin, n_end, side->node(i) + 1) == n_end)
+          if (find(n_begin, n_end, side->node(i)) == n_end)
             found = false;
         }
         if (found)

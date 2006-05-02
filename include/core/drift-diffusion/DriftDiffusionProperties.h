@@ -89,10 +89,7 @@ class DriftDiffusionProperties : public PhysicalProperties
      * \param fermi_h the hole electro-chemical potential
      * \param p the coordinates in real space
      * \param elem the pointer to the element which contains \c p
-     * \param coupling the type of coupling
      *
-     * The type of coupling can be a combination of the values as given
-     * in \c DriftDiffusionDefs::Coupling
      */
     virtual void calculate_all(double potential,
       double fermi_e, double fermi_h, const Point& coord) = 0;
@@ -111,8 +108,8 @@ class DriftDiffusionProperties : public PhysicalProperties
     /*!
      * \return the electron density derivative with respect to the potential
      */
-    //double get_electron_density_derivative(void) const
-    //  { return electron_density_derivative; };
+    double get_electron_density_derivative(void) const
+      { return electron_density_derivative; };
     
     //! Get the hole density
     /*!
@@ -127,8 +124,8 @@ class DriftDiffusionProperties : public PhysicalProperties
     /*!
      * \return the hole density derivative with respect to the potential
      */
-    //double get_hole_density_derivative(void) const
-    //  { return hole_density_derivative; };
+    double get_hole_density_derivative(void) const
+      { return hole_density_derivative; };
     
     //! Get the ionized donor density
     /*!
@@ -143,8 +140,8 @@ class DriftDiffusionProperties : public PhysicalProperties
     /*!
      * \return the ionized donor density derivative with respect to the potential
      */
-    //double get_ionized_donor_density_derivative(void) const
-    //  { return ionized_donor_density_derivative; };
+    double get_ionized_donor_density_derivative(void) const
+      { return ionized_donor_density_derivative; };
         
     //! Get the ionized acceptor density
     /*!
@@ -160,8 +157,8 @@ class DriftDiffusionProperties : public PhysicalProperties
      * \return the ionized acceptor density derivative with respect to the
      * potential
      */
-    //double get_ionized_acceptor_density_derivative(void) const
-    //  { return ionized_acceptor_density_derivative; };
+    double get_ionized_acceptor_density_derivative(void) const
+      { return ionized_acceptor_density_derivative; };
     
     
     //! Get the total charge density
@@ -356,13 +353,13 @@ class DriftDiffusionProperties : public PhysicalProperties
     double ionized_donor_density;
 
     //! The ionized donor density derivative
-    //double ionized_donor_density_derivative;
+    double ionized_donor_density_derivative;
         
     //! The ionized acceptor density
     double ionized_acceptor_density;
 
     //! The ionized acceptor density derivative
-    //double ionized_acceptor_density_derivative;
+    double ionized_acceptor_density_derivative;
 
     //! The total charge density
     double charge_density;
@@ -407,18 +404,6 @@ class DriftDiffusionProperties : public PhysicalProperties
     //RealTensorValue permittivity;
     double permittivity;
 
-    //! The equilibrium electron density
-    /*!
-     * \f$n_i = n_0 p_0\f$
-     */
-    double equilibrium_electron_density;
-
-    //! The equilibrium hole density
-    /*!
-     * \f$n_i = n_0 p_0\f$
-     */
-    double equilibrium_hole_density;
-
     //! The conduction band edge
     /*!
      * The band edge is an element data
@@ -436,6 +421,18 @@ class DriftDiffusionProperties : public PhysicalProperties
      * The fermi level such that \f$n=n_0,\,p=p_0\f$
      */
     double equilibrium_fermi_level;
+
+    //! The equilibrium electron density
+    /*!
+     * \f$n_i = n_0 p_0\f$
+     */
+    double equilibrium_electron_density;
+
+    //! The equilibrium hole density
+    /*!
+     * \f$n_i = n_0 p_0\f$
+     */
+    double equilibrium_hole_density;
         
     //! Calculate the density and its derivatives
     /*! 
@@ -447,6 +444,12 @@ class DriftDiffusionProperties : public PhysicalProperties
         double& derivative, double& _2nd_derivative,
         double& derivative_over_density) const;
     
+    //! Calculate the density for a given argument
+    /*!
+     * Basically an approximation for the Fermi integral with index 0.5 is
+     * returned if statistics is Fermi-Dirac
+     */
+    template<TiberCad::Statistics S> double density(double arg) const;
 
 
   private:
@@ -536,6 +539,41 @@ DriftDiffusionProperties::get_statistics(void) const
 {
   return _statistics;
 }
+
+template<TiberCad::Statistics S>
+inline
+double
+DriftDiffusionProperties::density(double arg) const
+{
+  
+  const double arg_max = 150;
+  const double arg_min = -100;
+
+  double dens;
+  switch (S)
+  {
+    case TiberCad::FERMIDIRAC:
+      if (arg < arg_max)
+      {
+        if (arg < arg_min)
+          dens = std::exp(arg);
+        else
+          dens = gsl_sf_fermi_dirac_half(arg);
+      }
+      else
+        dens = 2 * M_2_SQRTPI / 3 * std::pow(arg, 1.5);
+
+      break;
+
+    default:
+      if (arg < arg_max)
+        dens = std::exp(arg);
+      else
+        dens = std::exp(arg_max);
+  }
+  return dens;
+}
+
 
 template<TiberCad::Statistics S>
 inline

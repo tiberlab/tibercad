@@ -70,10 +70,26 @@ class Alloy : public Material
    */
     const  PhysicalProperties*  get_properties(const std::string& id,  const Point& coord)  ; 
     
-	
-	
+
+    //! Build virtual cristal approximation of a parameter including bowing
+    /*!
+     * In a ternary or quaternary compound semiconductor
+     * \f$Q = A_xB_{1-x}C\f$ the value of a
+     * material parameter can (in the virtual crystal approximation) be
+     * calculated as
+     * \f[\alpha_Q = x\alpha_{AC} + (1-x)\alpha_{BC} - bx(1-x)\f]
+     * where \em b is called bowing parameter and describes deviation
+     * from the nonlinear behaviour.
+     *
+     * \param the p
+     */
+    static double calculate_VCA_parameter(double ac, double bc,
+        double x, double bowing = 0.0);
+
+
+
   private:
-    
+
     //! Component material of  the   \c Alloy
     /*!
    * A  vector of  pointers  to  \c Material objects.
@@ -105,6 +121,15 @@ double
 Alloy::calculate_molar_fraction(const Point& coord) 
 {
 	return 0.0;
+}
+
+
+inline
+double
+Alloy::calculate_VCA_parameter(double ac, double bc,
+    double x, double bowing)
+{
+  return bc + (ac - bc) * x - bowing * x *  (1 - x);
 }
 
 

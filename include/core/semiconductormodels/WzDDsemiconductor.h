@@ -121,6 +121,11 @@ class  WzDDsemiconductor : public DDsemiconductor
  
   KPbulkHamiltonian::KPparams calculate_6x6_kp_params (void );
 
+  //! Get a writeable reference to the physical parameters
+  WzDDparameters& get_parameters(void);
+
+  //! Set the physical parameters
+  void set_parameters(const WzDDparameters& parameters);
  
  private:
 
@@ -133,4 +138,22 @@ class  WzDDsemiconductor : public DDsemiconductor
 
 
 };
+
+
+inline
+WzDDsemiconductor::WzDDparameters&
+WzDDsemiconductor::get_parameters(void)
+{
+  return par;
+}
+
+inline
+void
+WzDDsemiconductor::set_parameters(const WzDDparameters& parameters)
+{
+  par = parameters;
+}
+
+
+
 #endif 

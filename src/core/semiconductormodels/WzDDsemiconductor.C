@@ -81,7 +81,7 @@ void WzDDsemiconductor::calculate_conduction_band_extremum(void)
   DDsemiconductor::band_extremum band_ext;
   band_ext.energy = energy;
   band_ext.degeneracy = 2;
-  band_ext.mass_DOS = pow(par.m_c_xx * par.m_c_xx * par.m_c_zz, 1/3) ;
+  band_ext.mass_DOS = pow(par.m_c_xx * par.m_c_xx * par.m_c_zz, 1.0/3.0) ;
 
   result.push_back(band_ext);
 

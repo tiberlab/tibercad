@@ -236,7 +236,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
   double x0 = -1;
   double phi0 = SimulationOptions::T * Constants::k_B;
   double mu0 = -1;
-  double C0 = -1;
+  double C0 = 1;
   double ni0 = 1; // let 1 be the minimum for ni0
   double eps0 = -1;
   
@@ -759,9 +759,12 @@ DriftDiffusion::solve_newton(bool restart)
   Order approx_order = params.approximation_order;
 
   if (dim == 1)
-    solver_params.ksp_type = KSPBCGS;
-  else
-    solver_params.ksp_type = KSPBCGSL;
+    if (solver_params.ksp_type == KSPBCGSL)
+      solver_params.ksp_type = KSPBCGS;
+  //if (dim == 1)
+  //  solver_params.ksp_type = KSPBCGS;
+  //else
+  //  solver_params.ksp_type = KSPBCGSL;
 
 
   if (_rebuild_eq_system)
@@ -2871,10 +2874,6 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
           fe_face->reinit(elem, s);
 
           int phi_size = phi_face.size();
-          //Point c = elem->centroid();
-          //cerr << "c = (" << c(0) << ", " << c(1) << ")"
-          //  << " n = ("
-          //  << face_normals[0](0) << ", " << face_normals[0](1) << ")\n";
 
           // now integrate to include von Neumann and mixed type BCs
           // and polarization

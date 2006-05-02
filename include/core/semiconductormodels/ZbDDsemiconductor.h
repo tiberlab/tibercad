@@ -127,7 +127,12 @@ class ZbDDsemiconductor  : public DDsemiconductor
   */
   virtual void  calculate_valence_band_extremum(void);
 
+  //! Get a writeable reference to the physical parameters
+  ZbDDparameters& get_parameters(void);
 
+  //! Set the physical parameters
+  void set_parameters(const ZbDDparameters& parameters);
+  
 
   //! Calculates k.p parameters in atomic units for 6 band valence band calculation
 
@@ -201,6 +206,20 @@ class ZbDDsemiconductor  : public DDsemiconductor
   //--------------------------------------------------------------------------------//
  
 };
+
+inline
+ZbDDsemiconductor::ZbDDparameters&
+ZbDDsemiconductor::get_parameters(void)
+{
+  return par;
+}
+
+inline
+void
+ZbDDsemiconductor::set_parameters(const ZbDDparameters& parameters)
+{
+  par = parameters;
+}
 
 
 #endif 

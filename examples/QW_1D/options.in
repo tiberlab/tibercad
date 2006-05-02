@@ -1,16 +1,18 @@
 $Options
 
-  meshfile = qw.msh
-
   mesh_units = 1e-7
-
-  approximation_order = FIRST
 
   # the coupling should be 1 because we have p doping
   fully_coupled = 1
 
-  in_content = 0.1501
-  growth_dir = 1
+  material_system = 0
+  # only if material_system == 0
+  in_content = 0.15
+  # only if material_system == 1
+  growth_dir = 2
+  # only if material_system == 2
+  al_content = 0.48
+  ga_content = 0.47
 
   solve_strain = 1
 

@@ -15,5 +15,4 @@ namespace TiberCad
 };
 
 
-
 #endif // _TIBERCAD_H_
