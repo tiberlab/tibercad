@@ -69,7 +69,7 @@ void SBbulkHamiltonian::calculate_Hamiltonian_k_par(void)
   MatrixElement result;
   result = single_band_ham;
 
-  cerr << "uuu " << "k_vector    " << k_vector[0] << "   "<< k_vector[1] << "   " << k_vector[2] << "\n";
+ 
 
   //------we have to change constant term
   for (short i1 = 0; i1 < 3; i1++)

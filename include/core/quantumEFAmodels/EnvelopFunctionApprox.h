@@ -84,7 +84,10 @@ class EnvelopFunctionApprox
 
     std::string output_type; //!< output type
 
-    unsigned int max_iteration_number; //!< maximum number of iterations for the eigenvalue solver 
+    unsigned int max_iteration_number; //!< maximum number of iterations for the eigenvalue solver
+
+    double spectrum_shift; //!< shift of spectrum [eV]
+    
   };
 
 
@@ -141,8 +144,15 @@ class EnvelopFunctionApprox
     \param state_number eigenstate number
     \param filename name of file
   */
-  void output_eigen_functions(unsigned int state_number,  std::string& filename);
+  void output_eigen_function(unsigned int state_number,  std::string& filename);
 
+
+  //!writes on disk the probability function \f$  \sum_i |\psi({\bf r})|^2   \f$
+  /*!
+    \param state_number eigenstate number
+    \param filename name of file
+  */
+  void output_probability_function(unsigned int state_number,  std::string& filename);
 
   //! assigned mesh_data_objects
   /*!
@@ -266,6 +276,10 @@ class EnvelopFunctionApprox
 
   //!total number of dofs 
   int number_of_all_dofs;
+
+
+  //! Hartree energy in eV
+  static const double Hartree = 27.2113961;
 
 };
 #endif

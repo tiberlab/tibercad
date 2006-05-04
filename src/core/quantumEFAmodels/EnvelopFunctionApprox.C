@@ -1,6 +1,8 @@
 
 #include "EnvelopFunctionApprox.h"
 using namespace std;
+const double EnvelopFunctionApprox::Hartree;
+
 EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshData& mesh_data_in)
 {
   //Initoalization
@@ -161,7 +163,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       ham_imag.resize(n_dofs, n_dofs);
       s_real.resize(n_dofs, n_dofs);
 
-      complex<double> operator_sign;
+      // complex<double> operator_sign = Complex(0.0, -1.0);
 
       for (unsigned int qp=0; qp<qrule.n_points(); qp++)
 	{//qp
@@ -172,12 +174,12 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
  
 	       for (unsigned int band2 = 0; band2 < opt.number_of_bands; band2++)
 		 {//band2
-		   
+		   /*
 		   if (band1 < band2)
-		     operator_sign = Complex(0.0, -1.0);
+		     operator_sign = Complex(0.0, 1.0);//test was Complex(0.0, -1.0) /ONLY TEST
 		   else
 		     operator_sign = Complex(0.0, 1.0);
-
+		   */
 		   //Hamiltonian
 		  
 
@@ -195,13 +197,13 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 			
 			   for (short i = 0; i < dim; i++)
 			     value -= JxW[qp]* dphi[p1][qp](i) * phi[p2][qp] * model_Ham[band1][band2].linear_left[i]
-			       * operator_sign /opt.length_scale;
+			       * Complex(0.0, -1.0) /opt.length_scale;
 
                            //linear right
 
 			   for (short i = 0; i < dim; i++)
 			     value += JxW[qp]* dphi[p2][qp](i) * phi[p1][qp] * model_Ham[band1][band2].linear_right[i] 
-			       * operator_sign /opt.length_scale;
+			       * Complex(0.0, -1.0) /opt.length_scale;
 			
 			   //quadratic
 			   
@@ -267,13 +269,13 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
     }
 
-
-
+ /*
+//this is only to test
   Ham_real->print_matlab("ham_r_matlab.m");
   Ham_imag->print_matlab("ham_i_matlab.m");
   S_real->print_matlab("s.m");
 
-
+*/
   dof_map.print_dof_constraints();
      
 }
@@ -802,12 +804,17 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 
   command_line <<  "eigen_solver  -f1 H.out   -f2 S.out  -eps_gen_hermitian -eps_largest_magnitude ";
   command_line <<  "   -eps_nev     " << ev_number;
-  command_line <<  "   -eps_ncv     " << 2 * ev_number;
+  command_line <<  "   -eps_ncv     " << 10 * ev_number;
   command_line <<  "   -eps_type    " << opt.solver;
   command_line <<  "   -eps_tol     " << opt.eigen_solver_tolerance;
   command_line <<  "   -eps_max_it  " << opt.max_iteration_number;
   command_line <<  "   -st_type sinvert ";
+  command_line <<  "   -st_shift    " << opt.spectrum_shift/Hartree;
+  //  command_line <<  " -st_ksp_type bcgsl  -st_pc_type jacobi";
   command_line <<  "    \n";
+
+
+  cerr << command_line.str()<<"\n";
 
   system( (command_line.str()).c_str());
 
@@ -857,10 +864,25 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
       fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap(fict);
 
 
-      //we have to reorder eigensolutions in order to have the smallest eigenvalue first
-      solution[number_of_converged_solutions - i - 1].eigen_energy = *(  reinterpret_cast<double*>( &fict ) );
+      
+
+      unsigned int ind;
+      if (opt.particle == "el")
+	{
+	//we have to reorder eigensolutions in order to have the smallest eigenvalue first
+	  ind = number_of_converged_solutions - i - 1;
+	}
+      else
+	{
+	  ind = i;
+	}
+	
+      solution[ind].eigen_energy = *(  reinterpret_cast<double*>( &fict ) ) * Hartree;
     
 
+     
+
+      //read dummy imaginary part
       file_eigvals.read(buffer_double, double_size);
       
       
@@ -881,8 +903,18 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
   for (unsigned int i = 0; i < number_of_converged_solutions; i++)
     {
 
-      //we have to reorder eigensolutions in order to have the smallest eigenvalue first
-      unsigned int ind = number_of_converged_solutions - i - 1; 
+      unsigned int ind;
+
+      if (opt.particle == "el")
+	{
+	  //we have to reorder eigensolutions in order to have the smallest eigenvalue first
+	  ind = number_of_converged_solutions - i - 1;
+	}
+      else
+	{
+	  ind = i;
+	}
+
 
       file_eigvects.read(buffer, int_size);
       file_eigvects.read(buffer, int_size);
@@ -933,7 +965,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 
 //=======================================================================//
 
-void EnvelopFunctionApprox::output_eigen_functions(unsigned int state_number,  std::string& filename)
+void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  std::string& filename)
 {
   //===========================================
   const Mesh& mesh = es->get_mesh();
@@ -988,7 +1020,7 @@ void EnvelopFunctionApprox::output_eigen_functions(unsigned int state_number,  s
 	  for (unsigned int n = 0; n < elem->n_nodes(); n++)
 	    { 
 	      unsigned int  node_id =  elem->node(n);
-	      Complex value =  (solution[state_number].eigen_vector[psi_index * number_of_points + dof_indices[n] ]);
+	      Complex value =  (solution[state_number].eigen_vector[ dof_indices[n] ]);
 	      
 	      psi_data[psi_index*2 + node_id*number_output_data] = value.real();
 	      
@@ -1014,6 +1046,100 @@ void EnvelopFunctionApprox::output_eigen_functions(unsigned int state_number,  s
   
 
 }
+
+//=======================================================================//
+void EnvelopFunctionApprox::output_probability_function(unsigned int state_number,  std::string& filename)
+{
+  //===========================================
+  const Mesh& mesh = es->get_mesh();
+  LinearImplicitSystem& system = es->get_system<LinearImplicitSystem>("Schroedinger");
+  DofMap& dof_map = system.get_dof_map();
+
+  MeshBase::const_node_iterator       nd     = mesh.active_nodes_begin();
+  const MeshBase::const_node_iterator nd_el  = mesh.active_nodes_end();
+
+  unsigned int number_of_points = 0;
+
+  for ( ; nd != nd_el ; ++nd)  number_of_points++;
+    
+
+
+  //vector of names
+  vector<string> output_names(1);
+  output_names[0] = "|psi|^2";
+
+  
+
+ 
+  
+
+  
+ 
+  
+  unsigned int  point_index = 0;
+  
+  
+
+  vector< vector<Complex> >  psi_data;
+  psi_data.resize(number_of_points);
+  for (unsigned int i = 0; i < number_of_points; i++) psi_data[i].resize( opt.number_of_bands, Complex(0.0, 0.0) ); 
+ 
+  vector<double>  probability_data(number_of_points, 0.0);
+ 
+  MeshBase::const_element_iterator it = mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end =  mesh.active_local_elements_end();
+
+  std::vector<unsigned int> dof_indices;
+
+
+  //!calculation of psi
+
+  for ( ; it != end; ++it)
+    {
+      const Elem* elem = *it;
+      
+
+      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+	{
+	  dof_map.dof_indices (elem, dof_indices, psi_index);
+	  for (unsigned int n = 0; n < elem->n_nodes(); n++)
+	    { 
+	      unsigned int  node_id =  elem->node(n);
+	      Complex value =  (solution[state_number].eigen_vector[ dof_indices[n] ]);
+	      
+	      psi_data[node_id][psi_index] = value;
+	      
+	    
+	      
+	      
+	      
+	    }
+	}
+    }
+
+
+  //calculation of |psi|^2
+  double t1;
+  for (unsigned int i = 0; i < number_of_points; i++)
+    for (unsigned int j = 0; j < opt.number_of_bands; j++)
+      {
+	t1 = std::abs(psi_data[i][j]);
+	probability_data[i] += t1 * t1; 
+      }
+
+
+  //std :: cout << filename << "\n";
+
+
+  if (opt.output_type == "GMV")     GMVIO(mesh).write_nodal_data(filename, probability_data, output_names);
+
+  if (opt.output_type == "tecplot") TecplotIO(mesh,false).write_nodal_data(filename, probability_data,output_names);
+
+  
+
+}
+
+
 
 //=======================================================================//
 void EnvelopFunctionApprox::assign_mesh_data(MeshData& mesh_data_in)

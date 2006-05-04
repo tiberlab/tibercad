@@ -144,7 +144,7 @@ class ZbDDsemiconductor  : public DDsemiconductor
 
           M = \frac{1}{2} ( 2\gamma_2 - \gamma_1  - 1 ) ;  \\
 
-          N = 3\gamma_3; \\
+          N = -3\gamma_3; \\
 
           N_{yx} = M; \\
 
