@@ -36,6 +36,13 @@ class EFAbulkHamiltonian
   //! apply k|| to the Hamiltonian
   virtual void calculate_Hamiltonian_k_par(void) = 0;
 
+  //! apply strain and potential to the EFA Hamiltonian
+  /*!
+    \param strain_crystal strain tensor in crystal system
+    \param el_potentia electric potential [V]
+  */
+  virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential) = 0;
+
   std::vector< std::vector<MatrixElement > >& get_Hamiltonian(void); 
 
   //!destructor

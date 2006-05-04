@@ -37,113 +37,113 @@ Macrostrain::Macrostrain(const options& opt,   Mesh&  mesh )
   
  
     max_r_steps = opt.max_r_steps;
-  uniform_refinement = opt.uniform_refinement;
-  refine_fraction = opt.refine_fraction;
-  coarsen_fraction = opt.coarsen_fraction;
-  max_ref_level = opt.max_ref_level;
-  tolerance  = opt.tolerance  ;
-  max_shape_steps = opt.max_shape_steps;
+    uniform_refinement = opt.uniform_refinement;
+    refine_fraction = opt.refine_fraction;
+    coarsen_fraction = opt.coarsen_fraction;
+    max_ref_level = opt.max_ref_level;
+    tolerance  = opt.tolerance  ;
+    max_shape_steps = opt.max_shape_steps;
  
-  mesh_input_file = opt.mesh_input_file;
-  grown_on_substrate = opt.grown_on_substrate;
-  calculate_atom_displacements = opt.calculate_atom_displacements;
-  atom_structure_filename = opt.atom_structure_filename;
-  atom_displacements_filename = opt.atom_displacements_filename;
+    mesh_input_file = opt.mesh_input_file;
+    grown_on_substrate = opt.grown_on_substrate;
+    calculate_atom_displacements = opt.calculate_atom_displacements;
+    atom_structure_filename = opt.atom_structure_filename;
+    atom_displacements_filename = opt.atom_displacements_filename;
   
 
-  for (unsigned int i =0; i <=2; i ++ ) periodicity[i] = opt.periodicity[i];
-  substr_mat = opt.substr_mat;
+    for (unsigned int i =0; i <=2; i ++ ) periodicity[i] = opt.periodicity[i];
+    substr_mat = opt.substr_mat;
 
       
-  dim = mesh.mesh_dimension();
-  uname_vec[0]="ux";
-  uname_vec[1]="uy";
-  uname_vec[2]="uz";
+    dim = mesh.mesh_dimension();
+    uname_vec[0]="ux";
+    uname_vec[1]="uy";
+    uname_vec[2]="uz";
 
-  //define additional parameters-------------------------------------------
+    //define additional parameters-------------------------------------------
 
-  define_additional_variables();
+    define_additional_variables();
 
 
-  // Create an equation systems object.
-  equation_systems = new EquationSystems(mesh);
-
-  // Declare the Poisson system and its variables.
-  // The Poisson system is another example of a steady system.
-  equation_systems->add_system<LinearImplicitSystem> ("Strain");
+    // Create an equation systems object.
+    equation_systems = new EquationSystems(mesh);
+    
+    // Declare the Poisson system and its variables.
+    // The Poisson system is another example of a steady system.
+    equation_systems->add_system<LinearImplicitSystem> ("Strain");
 
 
     
       
-  equation_systems->parameters.set<Real>("linear solver tolerance") = tolerance; 
-  // Adds the variable "u" to "Poisson".  "u"
-  // will be approximated using second-order approximation.
+    equation_systems->parameters.set<Real>("linear solver tolerance") = tolerance; 
+    // Adds the variable "u" to "Poisson".  "u"
+    // will be approximated using second-order approximation.
   
-  dim = mesh.mesh_dimension();
+    dim = mesh.mesh_dimension();
 
-  //---------------------------------------------------------------------------------------
-  //add normal variables
+    //---------------------------------------------------------------------------------------
+    //add normal variables
 	
-  for (unsigned int i = 0; i <  3 ; i++)  
-    {  
-      equation_systems->get_system("Strain").add_variable(uname_vec[i], FIRST);
-    }
-
+    for (unsigned int i = 0; i <  3 ; i++)  
+      {  
+	equation_systems->get_system("Strain").add_variable(uname_vec[i], FIRST);
+      }
+    
  
-  //---------------------------------------------------------------------------------------
-  //add aditional varables 
+    //---------------------------------------------------------------------------------------
+    //add aditional varables 
 
 
-  if (number_of_add_var != 0)
-    {
-      FEType fe_type(CONSTANT,MONOMIAL);
-      equation_systems->get_system("Strain").add_variable("fict", fe_type);
-    }
-  //-----------------------------------------------------------------------------------
+    if (number_of_add_var != 0)
+      {
+	FEType fe_type(CONSTANT,MONOMIAL);
+	equation_systems->get_system("Strain").add_variable("fict", fe_type);
+      }
+    //-----------------------------------------------------------------------------------
       
 
-  // Give the system a pointer to the matrix assembly
-  // function.  This will be called when needed by the
-  // library.
+    // Give the system a pointer to the matrix assembly
+    // function.  This will be called when needed by the
+    // library.
 
    
 
 
 
-  equation_systems->get_system("Strain").attach_assemble_function (assemble_strain_matrix);
+    equation_systems->get_system("Strain").attach_assemble_function (assemble_strain_matrix);
   
-  //---------------------------------------------------------------------------------------
+    //---------------------------------------------------------------------------------------
  
-  for (unsigned int i=0 ; i < 3; i++) 
-    {
-      fixed_point1(i) = opt.fixed_point1[i];
-      fixed_point2(i) = opt.fixed_point2[i];
-      fixed_point3(i) = opt.fixed_point3[i];
-    }
+    for (unsigned int i=0 ; i < 3; i++) 
+      {
+	fixed_point1(i) = opt.fixed_point1[i];
+	fixed_point2(i) = opt.fixed_point2[i];
+	fixed_point3(i) = opt.fixed_point3[i];
+      }
 
-  //-------------------------------------------------------------------//
+    //-------------------------------------------------------------------//
 
-  //define  max and min coordinates 
-  
-  unsigned int num_nodes = mesh.n_nodes();
-  const Node& nd = mesh.node(0);
-  for (unsigned i = 0; i < 3; i++)
-    {
-      min_coord[i] = nd(i);
-      max_coord[i] = nd(i);
-    }
+    //define  max and min coordinates 
+    
+    unsigned int num_nodes = mesh.n_nodes();
+    const Node& nd = mesh.node(0);
+    for (unsigned i = 0; i < 3; i++)
+      {
+	min_coord[i] = nd(i);
+	max_coord[i] = nd(i);
+      }
 
-  for (unsigned i = 1; i < num_nodes; i++)
-    {
-      const Node& nd = mesh.node(i);
-      for (unsigned i = 0; i < 3; i++)
-	{
-	  if (min_coord[i] < nd(i)) min_coord[i] = nd(i);
-	  if (max_coord[i] > nd(i)) max_coord[i] = nd(i);
+    for (unsigned i = 1; i < num_nodes; i++)
+      {
+	const Node& nd = mesh.node(i);
+	for (unsigned i = 0; i < 3; i++)
+	  {
+	    if (min_coord[i] < nd(i)) min_coord[i] = nd(i);
+	    if (max_coord[i] > nd(i)) max_coord[i] = nd(i);
 	  
-	}
+	  }
 
-    }
+      }
    
 
   //-------------------------------------------------------------------//
@@ -151,23 +151,23 @@ Macrostrain::Macrostrain(const options& opt,   Mesh&  mesh )
   
 
 
-  intermediate_output = opt.intermediate_output;
+    intermediate_output = opt.intermediate_output;
 
-  output_strain_on_atoms = false;
-  atom_output_type = "uptight";
+    output_strain_on_atoms = false;
+    atom_output_type = "uptight";
 
-  //------------------------------------------------------------------//
-  if ((opt.output_type == "GMV")|| (opt.output_type == "tecplot"))
-    {
-      output_type = opt.output_type;
+    //------------------------------------------------------------------//
+    if ((opt.output_type == "GMV")|| (opt.output_type == "tecplot"))
+      {
+	output_type = opt.output_type;
+      }
+    else
+      {
+	cerr << "Strange output type: " << opt.output_type << "\n";
+	cerr << "We set it to GMV\n";
+	output_type = "GMV";
     }
-  else
-    {
-      cerr << "Strange output type: " << opt.output_type << "\n";
-      cerr << "We set it to GMV\n";
-      output_type = "GMV";
-    }
-  
+    
                      
 }
 //--------------------------------------------------------------------//
@@ -267,7 +267,7 @@ void Macrostrain::create_bondary_conditions_map()
 		  AutoPtr<Elem> side = elem->build_side(s);
 		  for (int i = 0; i < side->n_nodes(); i++)
 		    {
-		      if (find(n_begin, n_end,side->node(i) + 1 ) == n_end)
+		      if (find(n_begin, n_end,side->node(i) ) == n_end)
 			{ found = false;}		    
 		    }
 		  if (found) 

@@ -220,9 +220,10 @@ KPbulkHamiltonian::KPparams WzDDsemiconductor::calculate_6x6_kp_params (void )
   result.n1s = 2.0 * par.D5/Hartree; result.n2s = sqrt(2.0) * par.D6/Hartree;  
   //------------------------------------------------------------------------------//
   //------------------------------------------------------------------------------//
- 
+  // conduction band strain
+  result.axs = par.a_x / Hartree;
+  result.azs = par.a_z / Hartree;
   
-
  
 
   //------------------------------------------------------------------------------//

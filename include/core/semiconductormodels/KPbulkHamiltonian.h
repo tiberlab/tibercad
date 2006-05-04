@@ -46,6 +46,8 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
     double m1s;
     double m2s;
     double m3s;
+    double axs;
+    double azs;
   };
 
 
@@ -73,6 +75,10 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
  
 
   virtual void calculate_Hamiltonian_gen(void); 
+
+
+
+  virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
 
 
   bool kpVVtermSymmetric;

@@ -1,5 +1,5 @@
-using namespace std;
 #include "KPbulkHamiltonian.h"
+using namespace std;
 //==================================================================
 
 void KPbulkHamiltonian::nullify_parameters(void)
@@ -32,6 +32,8 @@ void KPbulkHamiltonian::nullify_parameters(void)
   par.m1s = 0.0;
   par.m2s = 0.0;
   par.m3s = 0.0;
+  par.axs = 0.0;
+  par.azs = 0.0;
 
   kpVVtermSymmetric = false;
   kpCVtermSymmetric = true;
@@ -373,7 +375,47 @@ void KPbulkHamiltonian:: calculate_Hamiltonian_k_par (void)
 
 }
 
+//-------------------------------------------------------//
+void KPbulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential)
+{
+  //---------------------------------------------------------------
+  //  strain 
+  //---------------------------------------------------------------
+  //valence band
+  Ham[2][2].constant += par.l1s*strainM(1,1)+par.m1s*strainM(2,2)+par.m2s*strainM(3,3);
+  Ham[3][3].constant += par.m1s*strainM(1,1)+par.l1s*strainM(2,2)+par.m2s*strainM(3,3); 
+  Ham[4][4].constant += par.m3s*strainM(1,1)+par.m3s*strainM(2,2)+par.l2s*strainM(3,3); 
+  Ham[2][3].constant += par.n1s*strainM(2,1) ; 
+  Ham[3][2].constant += par.n1s*strainM(2,1) ;
+  Ham[2][4].constant += par.n2s*strainM(3,1) ;  
+  Ham[4][2].constant += par.n2s*strainM(3,1) ;
+  Ham[3][4].constant += par.n2s*strainM(3,2) ;  
+  Ham[4][3].constant += par.n2s*strainM(3,2) ;
 
+  Ham[5][5].constant += par.l1s*strainM(1,1)+par.m1s*strainM(2,2)+par.m2s*strainM(3,3);
+  Ham[6][6].constant += par.m1s*strainM(1,1)+par.l1s*strainM(2,2)+par.m2s*strainM(3,3); 
+  Ham[7][7].constant += par.m3s*strainM(1,1)+par.m3s*strainM(2,2)+par.l2s*strainM(3,3); 
+  Ham[5][6].constant += par.n1s*strainM(2,1) ; 
+  Ham[6][5].constant += par.n1s*strainM(2,1) ;
+  Ham[5][7].constant += par.n2s*strainM(3,1) ;  
+  Ham[7][5].constant += par.n2s*strainM(3,1) ;
+  Ham[6][7].constant += par.n2s*strainM(3,2) ;  
+  Ham[7][6].constant += par.n2s*strainM(3,2) ;
+  //conduction band
+  Ham[0][0].constant += par.axs * ( strainM(1,1) + strainM(2,2) ) + par.azs * strainM(3,3);
+  Ham[1][1].constant += par.axs * ( strainM(1,1) + strainM(2,2) ) + par.azs * strainM(3,3);
+  
+
+  //------------------------------------------------
+  //potential
+  //------------------------------------------------
+
+
+  for (short i = 0; i < 8 ; i++)
+    {
+      Ham[i][i].constant -= el_potential/Hartree;
+    }
+}
 
 //-------------------------------------------------------//
 void KPbulkHamiltonian::set_parameters(const KPbulkHamiltonian::KPparams&  par1)

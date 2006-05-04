@@ -310,6 +310,10 @@ KPbulkHamiltonian::KPparams ZbDDsemiconductor::calculate_6x6_kp_params (void )
 
   result.n1s = (sqrt(3.0) * par.d)/Hartree; result.n2s = result.n1s;  
   //------------------------------------------------------------------------------//
+  //Conduction band deformation potential
+  
+  result.axs = par.a_c / Hartree;
+  result.azs = result.axs;
   //------------------------------------------------------------------------------//
   //  Averaged valence band energy 
 
