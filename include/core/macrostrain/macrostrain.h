@@ -55,7 +55,7 @@ using namespace std;
 #include "rotated_crystal.h"
 #include "tensor.h"
 #include "GMVIO_cell.h"
-#include "BC_region_type.h"
+
 #include "piezoelectricity.h"
 
 #include "mesh_data.h"
@@ -67,28 +67,34 @@ using namespace std;
 
 
 
-struct atom
-{
-  int mat_number;
-  int type;
-  Elem* element;
-  Point relative_point;
-
-};
 
 
-struct external_stress
-{
-  unsigned int bc_region_number;
-  double stress_value;
-};
 
-
+//! A class to calculate strain and shape
 class Macrostrain
+/*!
+  Class uses the macroscopic strain theory
+*/
+
 {
  public:
 
-//data structure type
+
+  struct atom
+  {
+    int mat_number;
+    int type;
+    Elem* element;
+    Point relative_point;
+
+  };
+
+
+
+
+
+
+   //data structure type
 
 
   struct options {
@@ -157,36 +163,50 @@ class Macrostrain
   
  
   //---------------------------------------------------------------------
-  /*
-    Constructor. Input arguments:
-    pointer to the equation system
-    options
-
+  
+  //! Constructor
+  /*!
+    \param opt options
+    \mesh  reference to a mesh object
   */
-
   Macrostrain(const options& opt,  Mesh& mesh); //gets mesh 
-
+  
 
   //----------------------------------------------------------------------
+
+  //!set information about crystal orientation and elastisity moduli
+  /*!
+    \param C_tensor_in vector of objects that can provide elasticity moduli information
+    \param crystal_in ector of objects that can provide information about crystals
+  */
 
   void define_strain_parameters(const std::vector<stiffness>&        C_tensor_in,
 				const std::vector<rotated_crystal>&  crystal_in);
 
-  //--------------------------------------------------------------------
-
-  void define_substrate_region(BC_region_type substate_region_in);
+  
 
   //--------------------------------------------------------------------
+  //! passes a number of substrate boundary condition
+  void define_substrate_bc(unsigned int substrate_bc_number);
 
+  //--------------------------------------------------------------------
+  
   void define_piezo_moduli(std::vector<Piezoelectricity>&  piezo_in);
   //---------------------------------------------------------------------
 
-  void define_external_stress(const vector<external_stress>&, const map <unsigned int , vector<unsigned int> > & );
+  //! passes a reference to a boundary conditions map  
+  void define_BC_map (const map <unsigned int , vector<unsigned int> > & bc_cond  );
 
   //---------------------------------------------------------------------
+  //! passes a value for the stress 
+  /*!
+    \param stress_map is a map between boundary condition number and stress value
+  */
+  void define_stress_value (const map <unsigned int, double> & stress_map_in);
+
 
   void assign_mesh_data(MeshData& mesh_data_in);
-
+  
 
   //---------------------------------------------------------------------
   /*
@@ -297,14 +317,14 @@ class Macrostrain
 
   static bool grown_on_substrate; //if there is a substrate
 
-  static BC_region_type substrate_region; // substrate region size
+
 
   void refer_objects(); //refer static pointers to dinamical objects
 
   void assemble_material_list(); // create material_of_elem at the beginning
 
 
-  void  update_eps0_list();  // update eps0_of_elem // !check!!!!
+  void update_eps0_list();  // update eps0_of_elem // !check!!!!
 
   void initialize_eps0_list(); //initialize eps0_of_elem !check!!!!
 
@@ -391,6 +411,8 @@ class Macrostrain
   Point fixed_point3 ;
 
   //------------------------------------------------------------------
+  //!number of boundary condition that defines substrate
+  unsigned int substrate_bc_number;
 
   static double substrate_lat_const[3];
 
@@ -402,15 +424,16 @@ class Macrostrain
 
   unsigned int get_number_of_the_fixed_node(Point point); //returns node number, closest to point 
 
-
-  void create_zero_set_dofs(); //creates a list of dofs that have to be set to zero
-
+  void Macrostrain::create_substate_nodes_set();
+ 
+  void Macrostrain::update_substrate_nodes_set();
   //------------atomic description------------------
 
   std::vector<atom> atom_structure;  
 
   void read_atom_structure(const std::string filename);
   
+
 
   void write_atom_displacements(const std::string filename);
 
@@ -442,14 +465,23 @@ class Macrostrain
 
   //-------------------------------------------------------------------
 
-  vector<external_stress> stress; //vector of structures (boundary condition inndex,  normal stress value)
+
+  
 
   map <unsigned int , vector<unsigned int> >   boundary_cond_nodes; //map between b.c. number and a set of nodes 
 
 
-  map <const Elem*, map <unsigned int, double> >   boundary_cond_elem; //map between Elem  and (map between side and stress)
+  map <const Elem*, map <unsigned int, double>  >   boundary_cond_elem; //map between Elem  and (map between side and stress value)
 
-  static map <const Elem*, map <unsigned int, double> >* boundary_cond_elem_temp; //static pointer to boundary_cond_elem
+  static map <const Elem*, map <unsigned int, double>  >* boundary_cond_elem_temp; //static pointer to boundary_cond_elem
+
+
+  map <unsigned int, double>   stress_values; //map between stress number and stress values
+  
+
+  set <unsigned int> substrate_nodes; //contains nodes that belong to substrate
+  static set <unsigned int>* substrate_nodes_temp; //static pointer to substate_nodes
+   
 
   void create_bondary_conditions_map(); // create map boundary_cond_elem from boundary_cond_nodes;
    

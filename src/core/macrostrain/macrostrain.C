@@ -6,7 +6,7 @@
 std::string    Macrostrain:: uname_vec[3];
 unsigned int   Macrostrain:: dim;
 bool           Macrostrain:: grown_on_substrate;
-BC_region_type Macrostrain:: substrate_region;
+
 unsigned  int  Macrostrain:: substr_mat;
 
 
@@ -21,6 +21,8 @@ std::vector<Macrostrain::add_variable>*    Macrostrain:: add_var_temp;
 std::vector<unsigned int>     Macrostrain:: add_dofs_vector;
 std::vector<unsigned int>*    Macrostrain:: zero_set_dofs_temp;
 std::map<const Elem*, map <unsigned int, double> >* Macrostrain::boundary_cond_elem_temp;
+
+std::set <unsigned int>* Macrostrain::substrate_nodes_temp;
 
 double Macrostrain::substrate_lat_const[3];
 
@@ -179,13 +181,24 @@ void Macrostrain::define_fixed_nodes()
   fixed_node3 = find_nearest_node(fixed_point3);
 }
 
-//--------------------------------------------------------------------//
-void Macrostrain::define_external_stress(const vector<external_stress>& stress_data_in, 
-					 const map <unsigned int , vector<unsigned int> > & map_bc_nodes_in )
+//-------------------------------------------------------------------//
+void Macrostrain::define_substrate_bc(unsigned int substrate_bc_number_in)
 {
-  stress = stress_data_in;
-  boundary_cond_nodes =  map_bc_nodes_in;
+  substrate_bc_number = substrate_bc_number_in;
 }
+
+//--------------------------------------------------------------------//
+void Macrostrain::define_stress_value (const map <unsigned int, double> & stress_map_in)
+{
+  stress_values = stress_map_in;
+}
+
+//-------------------------------------------------------------------//
+void Macrostrain::define_BC_map (const map <unsigned int , vector<unsigned int> > & bc_cond_in  )
+{
+  boundary_cond_nodes = bc_cond_in;
+}
+ 
 
 
 //-------------------------------------------------------------------//
@@ -206,15 +219,45 @@ void Macrostrain::define_strain_parameters(const std::vector<stiffness>&        
 
 //------------------------------------------------------------------//
 
-void Macrostrain::define_substrate_region(BC_region_type substate_region_in)
-{
-  substrate_region = substate_region_in;
-}
+
 //------------------------------------------------------------------//
 
 void Macrostrain::define_piezo_moduli(std::vector<Piezoelectricity>&  piezo_in)
 {
   piezo = piezo_in; 
+}
+//------------------------------------------------------------------//
+void Macrostrain::create_substate_nodes_set()
+{
+  if (grown_on_substrate)
+    {
+
+      map <unsigned int , vector<unsigned int> >   :: iterator bc_pos;
+  
+      bc_pos =  boundary_cond_nodes.find(substrate_bc_number);
+      if (bc_pos == boundary_cond_nodes.end()) 
+	{
+	  cerr << "Can not find boundary condition for substrate #  "<< substrate_bc_number  <<"  \n";
+	  exit(1);
+	}
+  
+      vector<unsigned int> sub_nodes = bc_pos->second;
+      unsigned int num_nodes = sub_nodes.size();
+
+      substrate_nodes.clear();
+      
+      for (unsigned int i = 0; i <  num_nodes; i++)
+	{
+	  substrate_nodes.insert(sub_nodes[i]);
+	}
+      
+    }
+}
+//------------------------------------------------------------------//
+void Macrostrain::update_substrate_nodes_set()
+{
+
+
 }
 
 //-----------------------------------------------------------------//
@@ -225,16 +268,22 @@ void Macrostrain::create_bondary_conditions_map()
 
   boundary_cond_elem.clear();
 
-  const unsigned int number_of_bc =  stress.size();
-
+ 
+  map <unsigned int, double>::iterator   stress_bc;
+  map <unsigned int, double>::iterator   stress_bc_end = stress_values.end();
   
-  for (unsigned int stress_number = 0 ;  stress_number < number_of_bc; stress_number++)
+  stress_bc = stress_values.begin();
+  
+  for (       ;  stress_bc != stress_bc_end ; ++stress_bc)
     { //boundary conditions loop
       //----------------------------------------------------------------
       //we have to find if there is information in a mesh file for this stress applied
+
+      unsigned int stress_number = stress_bc->first;
+
       map <unsigned int , vector<unsigned int> >   :: iterator bc_pos;
 
-      bc_pos =  boundary_cond_nodes.find(stress[stress_number].bc_region_number);
+      bc_pos =  boundary_cond_nodes.find(stress_number);
 
       if (bc_pos == boundary_cond_nodes.end()) 
 	{
@@ -273,7 +322,7 @@ void Macrostrain::create_bondary_conditions_map()
 		  if (found) 
 		    {
 		    
-		      element_map.insert(pair<unsigned int, double>(s,stress[stress_number].stress_value));
+		      element_map.insert(pair<unsigned int, double>(s,stress_bc->second) );
 		    }
 		}
 	    } 
@@ -997,22 +1046,18 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 
    if (grown_on_substrate)
      {
-      bool flag = true;
- 
-       Point p1 = elem->point(n);
-  
+     
+       set<unsigned int>::iterator substr_nodes_it;
+
+
+
+       substr_nodes_it = substrate_nodes_temp->find( elem->node(n) );
+
+       if (substr_nodes_it != substrate_nodes_temp->end())
+	 return(true);
+       else
+	 return(false);
        
- 
-       for (int j = 0; j<=dim-1; j++)
-	 {
-	   if (!( ( substrate_region.coord_max[j] -  p1(j) >= -1e-5) && (substrate_region.coord_min[j] - p1(j) <=1e-5) ) )
-	     {
-	       flag = false;
-	       break;
-	       
-	     }
-	 }
-       return(flag);
 
 
         
@@ -1061,6 +1106,9 @@ void Macrostrain::refer_objects()
   
 
   boundary_cond_elem_temp = &boundary_cond_elem;
+
+  substrate_nodes_temp = &substrate_nodes;
+  
   //------------------------------------------------------
 }
 //-----------------------------------------------------------------//
@@ -1101,9 +1149,14 @@ void Macrostrain::solve()
   //init_u_node(); //not necessary
   
   init_substrate();
+
+  create_substate_nodes_set();
+  
   
   create_bondary_conditions_map();
 
+
+  
 
   refer_objects();
 
@@ -1217,6 +1270,8 @@ void Macrostrain::solve()
 
 
       define_fixed_nodes();
+
+      update_substrate_nodes_set();
   
       update_bondary_conditions_map();
 
@@ -3321,13 +3376,7 @@ bool Macrostrain::may_belong_to_element(const Elem* element, Point& point)
 
 
 //-------------------------------------------------------------------------------------------/
-void Macrostrain::create_zero_set_dofs() //creates a list of dofs that have to be set to zero
-{
-  zero_set_dofs.clear();
-  //  const Mesh& mesh = equation_systems->get_mesh();
 
-  
-}
 //-------------------------------------------------------------------------------------------/
 unsigned int Macrostrain::find_nearest_node(Point& point)
 {

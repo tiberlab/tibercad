@@ -135,7 +135,7 @@ class EnvelopFunctionApprox
   //!solves eigenvalue problem
   /*!
     \param ev_number number of eigenvalues requested
-    \param solution  eigenvectors and eigenvalues
+   
   */
   void solve_eigen_value_problem(unsigned int ev_number );
 
@@ -165,7 +165,7 @@ class EnvelopFunctionApprox
 
   //! define Dirichlet boundary condition
   /*!
-    \param dirichlet_nodes_input nodes where \f$ \psivar({\bf r}) = 0 \f$
+    \param dirichlet_nodes_input nodes where \f$ \psi({\bf r}) = 0 \f$
   */
   void define_diriclet_nodes(std::vector<unsigned int>&  dirichlet_nodes_input);
 
