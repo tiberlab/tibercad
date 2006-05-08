@@ -143,8 +143,8 @@ void InputParser::parse_options(ifstream& in_stream )
   // *** one  can  use $ to distinguish  string_label from label of  numerical prop,
   //  otherwise  one  line  can  contain only  numeric or only string  values !!!
   //  
- //    rule<>label_string  =  (ch_p('$'))>> (+alnum_p)>>   * ( ch_p('_') >> *(+alnum_p) ) ; 
-//   //   (+alnum_p)>> ;//  * ( (special_char ) >> *(+alnum_p) ) ;
+  //    rule<>label_string  =  (ch_p('$'))>> (+alnum_p)>>   * ( ch_p('_') >> *(+alnum_p) ) ; 
+  //   //   (+alnum_p)>> ;//  * ( (special_char ) >> *(+alnum_p) ) ;
 
 
 
@@ -166,8 +166,8 @@ void InputParser::parse_options(ifstream& in_stream )
   //   rule<>assignement_string  =  (label_string)[push_back_a(v_label_bool)] >> *(space_p) >>
   //    ch_p('=')>> *(space_p) >> ((label )[push_back_a(v_bool)])   ; //  ok!!!
 
-   rule<>assignement_string  =  (label)[push_back_a(v_label_string)] >> 
-     *(space_p) >> ch_p('=')>> *(space_p) >> ((label)[push_back_a(v_string)])   ;
+  rule<>assignement_string  =  (label)[push_back_a(v_label_string)] >> 
+    *(space_p) >> ch_p('=')>> *(space_p) >> ((label)[push_back_a(v_string)])   ;
 
 
   rule<>assignement_vector =  (label)[push_back_a(vect_label)] >> *(space_p) >> 
@@ -184,17 +184,17 @@ void InputParser::parse_options(ifstream& in_stream )
   // ******************************************************************* 
   //list of  only numeric  OR  list  of only  strings !!
   // 
- rule<>list_of_assignement = (assignement )  >>
-   *( *(space_p) >> (assignement ) )   | (  assignement_string) >> 
-   *( *(space_p) >> (assignement_string ) );
+  rule<>list_of_assignement = (assignement )  >>
+    *( *(space_p) >> (assignement ) )   | (  assignement_string) >> 
+    *( *(space_p) >> (assignement_string ) );
 
- // ************************************************************************
+  // ************************************************************************
 
  
   // rule<> r_command  = *(space_p) >> (list_of_assignement | assignement_vector)    >> *(anychar_p);
 
- rule<> r_command  = *(space_p) >> (list_of_assignement )    >>   *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
- // *(anychar_p);  
+  rule<> r_command  = *(space_p) >> (list_of_assignement )    >>   *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
+  // *(anychar_p);  
 
   //  possibly COMMENTs after list_of_assignement !
 
@@ -206,165 +206,165 @@ void InputParser::parse_options(ifstream& in_stream )
 
 
   while ( getline(in_stream, str) )
-    {
+  {
 
    
-      if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
+    if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
 
-	{ // if !  comment_p("#")  
+    { // if !  comment_p("#")  
 
 	 
 
-	  if (  parse(str.c_str(),
+      if (  parse(str.c_str(),
 
-		      //  Begin  grammar
+                  //  Begin  grammar
 		      
-		      r_command 
+                  r_command 
 
-		      )
+                  )
 
-		//  ,
-		//  End grammar
+            //  ,
+            //  End grammar
 
-		//  space_p).full )
-		.full )           //  not skipping spaces
+            //  space_p).full )
+            .full )           //  not skipping spaces
 
 
-	    { // if parse
+      { // if parse
 
 	     
 
-	      if ( !(v.empty()) )
+        if ( !(v.empty()) )
 
-		{
+        {
 
-		  if ( !(v_int.empty()) )
-		    {
-		      cout << "v_int[0-------------- "<< v_int[0]<< endl;
-		    }
+          if ( !(v_int.empty()) )
+          {
+            cout << "v_int[0-------------- "<< v_int[0]<< endl;
+          }
 
-		  for (int i =0; i< v.size();++i)
-		    {
-		      prop_labels.push_back(v_label[i]);
+          for (int i =0; i< v.size();++i)
+          {
+            prop_labels.push_back(v_label[i]);
 		      
-		      prop_labels_map.insert(make_pair(v_label[i], v[i]) );
-		    }
-		}
+            prop_labels_map.insert(make_pair(v_label[i], v[i]) );
+          }
+        }
 
 
-	      if ( !(v_string.empty()) )
-		{
+        if ( !(v_string.empty()) )
+        {
 
-		  for (int i =0; i< v_label_string.size();++i)
-		    {
-		      string_prop_labels.push_back(v_label_string[i]);
-		      string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
-		    }
-		}
+          for (int i =0; i< v_label_string.size();++i)
+          {
+            string_prop_labels.push_back(v_label_string[i]);
+            string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
+          }
+        }
 	     
 
 
 	      
 
-	      v_label_string.clear();
-	      vect_label.clear();
-	      v_label.clear();
-	      v_string.clear();
- 	      v.clear();
-	      v_int.clear();
+        v_label_string.clear();
+        vect_label.clear();
+        v_label.clear();
+        v_string.clear();
+        v.clear();
+        v_int.clear();
 
 
 	    
 
-	    }
+      }
 
-	  else if(  parse(str.c_str(),  r_command_vector   )   .full ) //  not skipping spaces
-	    //  reads  list of  values (vector)
+      else if(  parse(str.c_str(),  r_command_vector   )   .full ) //  not skipping spaces
+        //  reads  list of  values (vector)
 
-	    {
+      {
 
-	      if ( !(v.empty()) )
-		{
-		  vector_prop_labels.push_back(vect_label[0]);
+        if ( !(v.empty()) )
+        {
+          vector_prop_labels.push_back(vect_label[0]);
 		  
-		  vector_prop_labels_map.insert(make_pair(vect_label[0], v) );
+          vector_prop_labels_map.insert(make_pair(vect_label[0], v) );
 
-		}
+        }
 
 	     
 
 	      
-	      v_label_string.clear();
-	      vect_label.clear();
-	      v_label.clear();
-	      v_string.clear();
- 	      v.clear();
+        v_label_string.clear();
+        vect_label.clear();
+        v_label.clear();
+        v_string.clear();
+        v.clear();
 
-	    }
-
-
-	  //	  else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)]]  , space_p).full)
-	  else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >>
-						 ch_p("$")  ] , space_p ).full)
+      }
 
 
-	    {
-	      if (name == "End")
-
-		{  
-		  cout << name  << endl ;
-		  break;
-		}
+      //	  else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)]]  , space_p).full)
+      else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >>
+                                             ch_p("$")  ] , space_p ).full)
 
 
-	    }
+      {
+        if (name == "End")
+
+        {  
+          cout << name  << endl ;
+          break;
+        }
+
+
+      }
 
 
 
-	  else  
+      else  
 
-	    {
-	      cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
-	      cerr << " Correct syntax is : 'label' = 'value' 'label' = 'value' .......# 'comment' " 
-		   << endl;
-	      cerr << " A comment line  must be preceded by '#' "<< endl;
-	      cerr << " BEWARE: numerical and string values cannot  be  mixed  in  the  same line !"
-		   << endl;
-	      exit(1); 
-	    }
-
-
-	}
+      {
+        cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+        cerr << " Correct syntax is : 'label' = 'value' 'label' = 'value' .......# 'comment' " 
+             << endl;
+        cerr << " A comment line  must be preceded by '#' "<< endl;
+        cerr << " BEWARE: numerical and string values cannot  be  mixed  in  the  same line !"
+             << endl;
+        exit(1); 
+      }
 
 
-      v_label_string.clear();
-      vect_label.clear();
-      v_label.clear();
-      v_string.clear();
-      v.clear();
-      v_int.clear();
+    }
+
+
+    v_label_string.clear();
+    vect_label.clear();
+    v_label.clear();
+    v_string.clear();
+    v.clear();
+    v_int.clear();
      
 
-      //    if (name == "End")
-      // 	{  
-      // 	  cout << name  << endl ;
-      // 	  break;
-      // 	}
+    //    if (name == "End")
+    // 	{  
+    // 	  cout << name  << endl ;
+    // 	  break;
+    // 	}
 
 
 
-      //  OK  ***************
-      //   else
-      // 	{
-      // 	  getline(in_stream, str);
-      // 	}
-      //  OK  ***************
+    //  OK  ***************
+    //   else
+    // 	{
+    // 	  getline(in_stream, str);
+    // 	}
+    //  OK  ***************
 
 
 
       
 
-    }  //  end  while
+  }  //  end  while
 
 
 }
@@ -392,65 +392,72 @@ void InputParser::read_section(string& section_name)
   string name;
 
   if ( !in_stream.good() )
-    {
-      std::cerr << "ERROR: Input file not good." 
-		<< std::endl;
-      //   error();
-    }
+  {
+    std::cerr << "ERROR: Input file not good." 
+              << std::endl;
+    //   error();
+  }
 
 
 
   while (getline(in_stream, str))  //   
-    { //while
+  { //while
 
-      //  if  (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)]>> ch_p("$")].else_p[nothing_p] ).full)
-      if  (parse(str.c_str(), if_p("$")[(+(~ch_p('$')))[assign_a(name)]>>
-					ch_p("$")].else_p[nothing_p] ).full)
+    //  if  (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)]>> ch_p("$")].else_p[nothing_p] ).full)
+    if  (parse(str.c_str(), if_p("$")[(+(~ch_p('$')))[assign_a(name)]>>
+                                      ch_p("$")].else_p[nothing_p] ).full)
 
 
-	{
-	  cout << name<< endl;
+    {
+      cout << name<< endl;
 
-	  //	  if ((name == section_name) && (name == "Regions"))
-	  if  (name == section_name) 
-	    {
-	      found = true;
+      //	  if ((name == section_name) && (name == "Regions"))
+      if  (name == section_name) 
+      {
+        found = true;
 
-	      if  (section_name == "Regions")
+        if  (section_name == "Regions")
 
-		//	  if (  (section_name == "Regions") && (name == section_name))
+          //	  if (  (section_name == "Regions") && (name == section_name))
 
-		{
-		  parse_device(in_stream);
-		}
-	      else if  (section_name == "BC_Regions")
+        {
+          parse_device(in_stream);
+        }
+        else if  (section_name == "BC_Regions")
 
-		{
-		  parse_device_BC(in_stream);
-		}
-
-	      else 
-		//if (name == section_name)
+        {
+          parse_device_BC(in_stream);
+        }
+    
+        else if (section_name == "Alloy")
+        
+        {
+          parse_alloy(in_stream);
+        }
+    
+   
+        else 
+          //if (name == section_name)
       
-		//   {parse_command(in_stream);}
-		{
-		  parse_options(in_stream);
-		}
+          //   {parse_command(in_stream);}
+        {
+          parse_options(in_stream);
+        }
 
-	    }
+      }
 
-
-	}
 
     }
+
+  }
 
   if (found == false)
 
-    {
-      cerr << " Error: Section not  found  " << endl ;
-      exit(1);
+  {
+    cerr << " Error: Section not  found  " << endl ;
+    exit(1);
 
-    }
+  }
 
   in_stream.close();
 
@@ -491,22 +498,22 @@ double InputParser::read_input( string label , double  Default)
 
   if  (p != prop_labels_map.end() )
 
-    {  
-      value  =  (p -> second) ;
+  {  
+    value  =  (p -> second) ;
 	
 
      
-      return value ;
+    return value ;
 
-    }
+  }
 
   else 
-    { 
-      cout  <<  "*** Default ***  ";
+  { 
+    cout  <<  "*** Default ***  ";
 
-      return Default;
-      //  cout  <<  "error"  ;
-    }
+    return Default;
+    //  cout  <<  "error"  ;
+  }
   //  }
 
 }
@@ -526,21 +533,21 @@ int  InputParser::read_input( string label , int  Default)
 
   if  (p != prop_labels_map.end() )
 
-    {  
-      value  =  (int)(p -> second) ;
+  {  
+    value  =  (int)(p -> second) ;
 	
 
 	 
-      return value ;
+    return value ;
 
-    }
+  }
 
   else
-    {
-      cout  <<  "*** Default ***  ";
-      return Default;
-      //	  cout  <<  "error"  ;
-    }
+  {
+    cout  <<  "*** Default ***  ";
+    return Default;
+    //	  cout  <<  "error"  ;
+  }
   //   }
 
 }
@@ -560,21 +567,21 @@ string   InputParser::read_input( string label , string  Default)
 
   if  (p != string_prop_labels_map.end() )
 
-    {  
-      value  =  (p -> second) ;
+  {  
+    value  =  (p -> second) ;
 	
 
 	 
-      return value ;
+    return value ;
 
-    }
+  }
 
   else
-    {
-      cout  <<  "*** Default ***  ";
-      return Default;
-      //  cout  <<  "error"  ;
-    }
+  {
+    cout  <<  "*** Default ***  ";
+    return Default;
+    //  cout  <<  "error"  ;
+  }
   //   }
 
 }
@@ -600,40 +607,40 @@ bool   InputParser::read_input( string label_string )
 
   if  (p != string_prop_labels_map.end() )
 
-    {  
-      value  =  (p -> second) ;
+  {  
+    value  =  (p -> second) ;
 	 
-      //	if ( strncmp (str[n],"C3**",2) == 0)
+    //	if ( strncmp (str[n],"C3**",2) == 0)
 
 
-      // s.compare(s1);
+    // s.compare(s1);
 
-      if  (  (value.compare("true")) == 0 )  
+    if  (  (value.compare("true")) == 0 )  
 
-	{ 
-	  flag = 1 ;//true;
-	  return flag;
-
-	}
-      else if  (  (value.compare("false")) == 0 ) 
-	{ 
-	  flag = 0;// false;
-	  return flag;
-
-	}
-
-
-	 
-      //     return value ;
+    { 
+      flag = 1 ;//true;
+      return flag;
 
     }
+    else if  (  (value.compare("false")) == 0 ) 
+    { 
+      flag = 0;// false;
+      return flag;
+
+    }
+
+
+	 
+    //     return value ;
+
+  }
 
   else
-    {
-      cout  <<  "*** Default ***  ";
-      return flag ;
-      //  cout  <<  "error"  ;
-    }
+  {
+    cout  <<  "*** Default ***  ";
+    return flag ;
+    //  cout  <<  "error"  ;
+  }
   //   }
 
 }
@@ -654,11 +661,11 @@ vector<double> InputParser::read_input( string label, vector<double> def_vector)
 
   if  (p != vector_prop_labels_map.end() )
 
-    {  
-      return_vector    =  (p -> second) ;
-      return  return_vector;
+  {  
+    return_vector    =  (p -> second) ;
+    return  return_vector;
 
-    }
+  }
 
   else
     cout  <<  "Warning --- read_input_vector double: vector data empty or  missing  " << endl ;
@@ -681,28 +688,70 @@ vector<unsigned int> InputParser::read_input( string label, vector<unsigned int>
 
   if  (p != vector_prop_labels_map.end() )
 
-    {  
+  {  
 
-      temp    =  (p -> second) ;
+    temp    =  (p -> second) ;
 
 
-      for (int i =0; i< temp.size();++i)
-	{
-	  //    cout <<  "temp.size()  " <<  temp.size();
-	  //     return_vector[i]    = (int)(temp[i]); 
-	  return_vector.push_back( (int)(temp[i]) );
+    for (int i =0; i< temp.size();++i)
+    {
+      //    cout <<  "temp.size()  " <<  temp.size();
+      //     return_vector[i]    = (int)(temp[i]); 
+      return_vector.push_back( (int)(temp[i]) );
 
-	}
-
-      return  return_vector;
-	
     }
+
+    return  return_vector;
+	
+  }
 
   else
     cout  <<  "Warning --- read_input_vector int: vector data empty or  missing " << endl ;
 
 
 }
+
+
+
+
+vector<int> InputParser::read_input( string label, vector<int> def_vector)
+{
+
+  map <string, vector<double> >   :: iterator  p;
+
+  vector<int>  return_vector;
+  vector<double> temp;
+  return_vector.clear();
+
+
+  p = vector_prop_labels_map.find( label  );
+
+  if  (p != vector_prop_labels_map.end() )
+
+  {  
+
+    temp    =  (p -> second) ;
+
+
+    for (int i =0; i< temp.size();++i)
+    {
+      //    cout <<  "temp.size()  " <<  temp.size();
+      //     return_vector[i]    = (int)(temp[i]); 
+      return_vector.push_back( (int)(temp[i]) );
+
+    }
+
+    return  return_vector;
+  
+  }
+
+  else
+    cout  <<  "Warning --- read_input_vector int: vector data empty or  missing " << endl ;
+
+
+}
+
+
 
 
 
@@ -783,15 +832,15 @@ void InputParser::parse_device(ifstream& in_stream )
     ( (string_value)[push_back_a(v_string)])>>*(space_p)  ; 
 
 
-//   string label1, label2, label3, label4;
-//   label1 = "reg_numb";
-//   label2 = "mat";
+  //   string label1, label2, label3, label4;
+  //   label1 = "reg_numb";
+  //   label2 = "mat";
 
-// ******************************
-//  TO DO:  add label  "crystal_struct" 
-// ****************************
-//   label3 = "doping";
-//   label4 = "dop_type";
+  // ******************************
+  //  TO DO:  add label  "crystal_struct" 
+  // ****************************
+  //   label3 = "doping";
+  //   label4 = "dop_type";
 
   rule<>label1_p = str_p("reg_numb");
   rule<>label2_p = str_p("mat");
@@ -800,91 +849,91 @@ void InputParser::parse_device(ifstream& in_stream )
   rule<>label5_p = str_p("dop_type");
 
   rule<> reg_prop = *(space_p) >>(label1_p) >> assignement_int >> 
-      (label2_p) >>  assignement_string  >> (label3_p)>> 
-      assignement_string  >> (label4_p) >> 
-      assignement_double >>  (label5_p) >> assignement_string;   
+    (label2_p) >>  assignement_string  >> (label3_p)>> 
+    assignement_string  >> (label4_p) >> 
+    assignement_double >>  (label5_p) >> assignement_string;   
 
   rule<> r_region = *(space_p)>>region_name[push_back_a(v_string)] >> 
     *(space_p) >> (ch_p('{'))>>  reg_prop >>*(space_p) >> (ch_p('}'))>> *(space_p) ; 
 
 
   while ( getline(in_stream, str) )
-    {
+  {
 
 
-      if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
+    if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
 
-	{ // if !  comment_p("#")  
+    { // if !  comment_p("#")  
 
 	 
 
-	  if (  parse(str.c_str(),
-		      r_region
-		      )
-		.full )  
-	    {
-	     //  //   cout << "v_real[0] " << v_real[0]<< endl;
-// 	      current_region.reg_name = v_string[0];
-// 	      current_region.reg_numb = v_int[0];
-// 	      current_region.mat_name = v_string[1];
-// 	      current_region.dop_conc = v_real[0];
-// 	      current_region.dop_type = v_string[2];
+      if (  parse(str.c_str(),
+                  r_region
+                  )
+            .full )  
+      {
+        //  //   cout << "v_real[0] " << v_real[0]<< endl;
+        // 	      current_region.reg_name = v_string[0];
+        // 	      current_region.reg_numb = v_int[0];
+        // 	      current_region.mat_name = v_string[1];
+        // 	      current_region.dop_conc = v_real[0];
+        // 	      current_region.dop_type = v_string[2];
 
-	      // using  class  RegionDefinition 
-	      current_region.set_region_name(v_string[0]);
-	      current_region.set_region_number(v_int[0]);
-	      current_region.set_material_name(v_string[1]);
-              current_region.set_crystal_name(v_string[2]);
-	      current_region.set_doping_concentration( v_real[0]);
-	      current_region.set_doping_type(v_string[3]);
-
-
-
-	      device_regions.push_back(current_region); // vector  of  RegionDefinition objects
-
-	      //   cout << "device_regions[0].mat_name  " <<device_regions[0].mat_name  << endl;
-
-	      //    cout << "current_region.mat_name " <<current_region.mat_name << endl;
-	      //    cout << v_int.size()<< endl;
-	      //   cout << "in parse_device: device_regions.size()  " << device_regions.size();
-
-
-	    }
-
-
-	  else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >> 
-						 ch_p("$")  ] , space_p ).full)
-
-
-	    {
-	      if (name == "End")
-		{  
-		  cout << name  << endl ;
-		  break;
-		}
-
-
-	    }
-
-	  else 
-	    {
-	      cerr <<  "  SYNTAX ERROR in input  file (section device structure)   " <<  endl;
-	      exit(1); 
-	    }
+        // using  class  RegionDefinition 
+        current_region.set_region_name(v_string[0]);
+        current_region.set_region_number(v_int[0]);
+        current_region.set_material_name(v_string[1]);
+        current_region.set_crystal_name(v_string[2]);
+        current_region.set_doping_concentration( v_real[0]);
+        current_region.set_doping_type(v_string[3]);
 
 
 
+        device_regions.push_back(current_region); // vector  of  RegionDefinition objects
+
+        //   cout << "device_regions[0].mat_name  " <<device_regions[0].mat_name  << endl;
+
+        //    cout << "current_region.mat_name " <<current_region.mat_name << endl;
+        //    cout << v_int.size()<< endl;
+        //   cout << "in parse_device: device_regions.size()  " << device_regions.size();
 
 
-	}
+      }
 
 
-      v_real.clear();
-      v_int.clear();
-      v_string.clear();
+      else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >> 
+                                             ch_p("$")  ] , space_p ).full)
 
 
-    }  //  end  while
+      {
+        if (name == "End")
+        {  
+          cout << name  << endl ;
+          break;
+        }
+
+
+      }
+
+      else 
+      {
+        cerr <<  "  SYNTAX ERROR in input  file (section device structure)   " <<  endl;
+        exit(1); 
+      }
+
+
+
+
+
+    }
+
+
+    v_real.clear();
+    v_int.clear();
+    v_string.clear();
+
+
+  }  //  end  while
 
 
 
@@ -965,8 +1014,8 @@ void InputParser::parse_device_BC(ifstream& in_stream )
 
   string  name,str;
 
- //  RegionDefinition  current_region;  //   struct *************
-//   device_regions.clear();
+  //  RegionDefinition  current_region;  //   struct *************
+  //   device_regions.clear();
 
 
   rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/') | ch_p('+')  );
@@ -982,11 +1031,11 @@ void InputParser::parse_device_BC(ifstream& in_stream )
     ( (string_value)[push_back_a(v_string)])>>*(space_p)  ; 
 
 
-//   string label1, label2, label3, label4;
-//   label1 = "BC_reg_numb";
-//   label2 = "type";
-//   label3 = "value";
-//   // label4 = "dop_type";
+  //   string label1, label2, label3, label4;
+  //   label1 = "BC_reg_numb";
+  //   label2 = "type";
+  //   label3 = "value";
+  //   // label4 = "dop_type";
 
   rule<>label1_p = str_p("BC_reg_numb");
   rule<>label2_p = str_p("type");
@@ -996,71 +1045,71 @@ void InputParser::parse_device_BC(ifstream& in_stream )
   rule<> reg_prop = *(space_p) >>(label1_p) >> assignement_int >> 
     (label2_p) >>  assignement_string  >> (label3_p)>> 
     assignement_double; 
-    // >> (label4_p) >> assignement_string;   
+  // >> (label4_p) >> assignement_string;   
 
   rule<> r_region = *(space_p)>>region_name[push_back_a(v_string)] >> 
     *(space_p) >> (ch_p('{'))>>  reg_prop >>*(space_p) >> (ch_p('}'))>> *(space_p) ; 
 
 
   while ( getline(in_stream, str) )
-    {
+  {
 
 
-      if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
+    if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
 
-	{ // if !  comment_p("#")  
-
-	 
-
-	  if (  parse(str.c_str(),
-		      r_region
-		      )
-		.full )  
-	    {
-	      //   cout << "v_real[0] " << v_real[0]<< endl;
-
-	      BC_region_name_v.push_back(v_string[0]);
-	      BC_region_number_v.push_back(v_int[0]);
-	      BC_type_v.push_back(v_string[1]);
-	      BC_value_v.push_back(v_real[0]);
-
-
-
-	    }
-
-
-	  else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >> 
-						 ch_p("$")  ] , space_p ).full)
-
-
-	    {
-	      if (name == "End")
-		{  
-		  cout << name  << endl ;
-		  break;
-		}
-
-
-	    }
-
-	  else 
-	    {
-	      cerr <<  "  SYNTAX ERROR in input  file (section device boundary cond. )   " <<  endl;
-	      exit(1); 
-	    }
+    { // if !  comment_p("#")  
 
 	 
 
+      if (  parse(str.c_str(),
+                  r_region
+                  )
+            .full )  
+      {
+        //   cout << "v_real[0] " << v_real[0]<< endl;
 
-	}
+        BC_region_name_v.push_back(v_string[0]);
+        BC_region_number_v.push_back(v_int[0]);
+        BC_type_v.push_back(v_string[1]);
+        BC_value_v.push_back(v_real[0]);
 
 
-      v_real.clear();
-      v_int.clear();
-      v_string.clear();
+
+      }
 
 
-    }  //  end  while
+      else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >> 
+                                             ch_p("$")  ] , space_p ).full)
+
+
+      {
+        if (name == "End")
+        {  
+          cout << name  << endl ;
+          break;
+        }
+
+
+      }
+
+      else 
+      {
+        cerr <<  "  SYNTAX ERROR in input  file (section device boundary cond. )   " <<  endl;
+        exit(1); 
+      }
+
+	 
+
+
+    }
+
+
+    v_real.clear();
+    v_int.clear();
+    v_string.clear();
+
+
+  }  //  end  while
 
 
 
@@ -1085,4 +1134,121 @@ void InputParser::get_BC_data( vector<string>& BC_region_name_v_out,
 
 
 }
+
+
+void
+InputParser::parse_alloy(ifstream& in_stream)
+{// method  for   parsing  of  alloy model section
+
+  // vector <AlloyModel>  alloy_model ;
+
+
+  string  item, region_keyword, alloy_model_keyword, equal, model_type, start_symbol , end_symbol, x;
+  double molar_fraction, start_molar_fraction, end_molar_fraction;
+  unsigned int reg_numb;
+  
+  string dummy;
+  char c;
+  
+  //alloy_model.clear();
+  
+  //AlloyModel current_alloy_model;
+  
+  
+  
+  // while (!in_stream.eof()) 
+  
+  //getline (in_stream, str))	  
+  
+  
+  
+  in_stream >> region_keyword;
+  cout << region_keyword<< endl;
+  
+// if (region_keyword == "#")
+// {
+//  while (dummy != "\n")
+//  {
+//    c=getchar();
+//  }
+//  in_stream >> region_keyword;
+// }
+ 
+    
+  while (  (region_keyword != "End") && (!in_stream.eof()) ) 
+    
+    
+  {
+
+    // Region n
+    in_stream >>  reg_numb;
+    in_stream >> start_symbol >> alloy_model_keyword >> equal >> model_type;
+    alloy_model_pointer = new AlloyModel;
+
+    //  if  (std::strncmp (model_type, "constant") = 0) 
+    if (model_type == "constant")
+    {
+
+      in_stream >> x >> equal >> molar_fraction >> end_symbol;
+      cout << " Region1  " << endl;
+      alloy_model_pointer->set_x_constant (molar_fraction);
+    }
+
+
+    else
+      //  if (std::strncmp (model_type, "linear") = 0)
+      if (model_type =="linear")
+
+      {
+        in_stream >> x >> equal >> start_molar_fraction >>
+          x >> equal >> end_molar_fraction >> end_symbol;                 
+
+        alloy_model_pointer->set_x_min (start_molar_fraction);
+        alloy_model_pointer->set_x_max (end_molar_fraction);
+        cout << " Region2  " << endl;
+
+      }
+
+    alloy_model_pointer-> set_model (model_type);
+
+    // alloy_model_pointer-> alloy_model_pointer = &current_alloy_model;
+
+
+    // alloy_model.push_back (current_alloy_model);
+    
+    
+
+
+    // map reg_alloy_model_map map <int reg_numb, AlloyModel&  current_alloy_model>
+    cout << reg_numb << "   "  << model_type<< endl;
+    reg_alloy_model_map.insert (make_pair (reg_numb, alloy_model_pointer));
+    
+    in_stream >> region_keyword;
+    cout << region_keyword<< endl;
+
+	      
+  }// end while != "end"
+      
+  cout <<   "  Out of  while "<< endl;
+
+
+  //  } // end while != "eof"
+
+} //  end  method
+
+
+
+
+
+const   map <unsigned int, AlloyModel*>&  
+InputParser::get_alloy_model_map()
+{
+  
+  return  reg_alloy_model_map;
+  
+}
+
+
+
+
 

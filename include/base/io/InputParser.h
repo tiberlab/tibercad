@@ -23,6 +23,7 @@
 #include <string>
 
 #include "RegionDefinition.h"
+#include "AlloyModel.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,7 +42,7 @@ using namespace boost::spirit;
   These assignements can be placed everywhere inside the  section defined by "section_name" and should be  separated by  spaces.
   Everything following a '#' is  a  comment and  is  disregarded.
   A vector of  values can be  read in  the  same  way if  it  is  written in the  format: tagname = ( value1  value2 .... valueN ).  Only  one  vector  value  per  line  is   allowed.
-  $/alpha^x = 3$
+  
 
 */
 
@@ -72,13 +73,13 @@ class InputParser{
     Returns   a  double if  "label"  is  found; otherwise returns Default .
   */
 
-  double InputParser::read_input( string label , double  Default);
+  double read_input( string label , double  Default);
 
   //!  Overloaded  method  to  read input 
   /*!
     Returns   an  int  if  "label"  is  found; otherwise returns Default .
   */
-  int  InputParser::read_input( string label , int  Default);
+  int  read_input( string label , int  Default);
  
   //    bool   InputParser::read_input2( string label_bool , bool  default_bool );
 
@@ -87,7 +88,7 @@ class InputParser{
   /*!
     Returns   a string   if  "label"  is  found; otherwise returns Default .
   */
-  string   InputParser::read_input( string label , string  Default);
+  string   read_input( string label , string  Default);
 
   //  bool   InputParser::read_input( string label_bool , bool  default_bool );
 
@@ -95,7 +96,7 @@ class InputParser{
   /*!
     Returns   a  boolean value  if  "label_bool"  is  found .
   */
-  bool   InputParser::read_input( string label_bool );
+  bool   read_input( string label_bool );
 
 
 
@@ -108,24 +109,27 @@ class InputParser{
   /*!
     Returns   a  vector of  double   if  "label"  is  found; return_vector is  a  dummy vector
   */
-  vector<double>  InputParser::read_input( string label, vector<double> return_vector );
+  vector<double>  read_input( string label, vector<double> return_vector );
 
+
+  //!  Overloaded  method  to  read input 
+  /*!
+    Returns   a  vector of  unsigned int   if  "label"  is  found; def_vector  is  a  dummy vector
+  */
+  vector<unsigned int> read_input( string label, vector<unsigned int> def_vector);
 
   //!  Overloaded  method  to  read input 
   /*!
     Returns   a  vector of  int   if  "label"  is  found; def_vector  is  a  dummy vector
   */
-  vector<unsigned int> InputParser::read_input( string label, vector<unsigned int> def_vector);
-
-
-
+  vector<int>  read_input( string label, vector<int> def_vector);
 
 
   // void  InputParser::get_data ( vector< vector<double> >& glob_reg_values,
   //  vector<int>& glob_reg_id,  vector<string>& glob_mat);
 
   // OLD  !!!
-  void  InputParser::get_data ( vector< vector<double> >& glob_reg_values,
+  void  get_data ( vector< vector<double> >& glob_reg_values,
 				vector< vector<double> >& glob_comm_values,
 				vector<int>& glob_reg_id,  vector<string>& glob_mat );
 
@@ -140,22 +144,25 @@ class InputParser{
     Returns   five  vectors  with values of fields for  each physical region of the device: region name,
     region number, material name, doping concentration, doping  type.
   */
-  void InputParser::get_device_data( vector<string>& reg_name_v,vector<unsigned int>&  reg_numb_v,
+  void get_device_data( vector<string>& reg_name_v,vector<unsigned int>&  reg_numb_v,
 				     vector<string>&  mat_name_v, vector<double>& dop_conc_v, 
 				     vector<string>&  dop_type_v   );
 
-  void InputParser::read_section(string& section_name); 
+  void read_section(string& section_name); 
 
-  void InputParser::get_BC_data( vector<string>& BC_region_name_v_out,
+  void get_BC_data( vector<string>& BC_region_name_v_out,
 				 vector<unsigned int>& BC_region_numb_v_out,
 				 vector<string>& BC_type_v_out, vector<double>& BC_value_v_out  );
 
-  void InputParser::read_data_maps( map <string,double>& num_map, map <string,string>&  string_map, 
+  void  read_data_maps( map <string,double>& num_map, map <string,string>&  string_map, 
 				    map <string, vector<double> >&  vector_map) const  ;
 
-  const  vector<RegionDefinition>&   InputParser::get_device_regions();
+  const  vector<RegionDefinition>&  get_device_regions();
 
-
+   const   map <unsigned int, AlloyModel*>&  get_alloy_model_map(); 
+   
+   
+   
   //----------------------------------------------------------------------------------
 
  private:
@@ -219,14 +226,21 @@ class InputParser{
   /*   vector<int> reg_id; */
   /*  vector<string> mat; */
 
-  void InputParser::initialize_vectors();
+  void initialize_vectors();
 
  
-  void InputParser::parse_options(ifstream& in_stream );
+  void parse_options(ifstream& in_stream );
 
-  void InputParser::parse_device(ifstream& in_stream );
+  void parse_device(ifstream& in_stream );
 
-  void InputParser::parse_device_BC(ifstream& in_stream );
+  void parse_device_BC(ifstream& in_stream );
+  
+  //vector <AlloyModel>  alloy_model;
+  AlloyModel* alloy_model_pointer ;
+   
+  void parse_alloy(ifstream& in_stream);
+  
+  map <unsigned int, AlloyModel*> reg_alloy_model_map;
 
 };
 
