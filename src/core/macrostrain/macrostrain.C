@@ -253,47 +253,55 @@ void Macrostrain::create_substate_nodes_set()
 	}
       
       //-------------------------------------------------------------
-      // we create substrate_faces
+      // we create substrate_faces (2D/3D only)
 
-
-    
-      set<unsigned int>:: iterator  node_begin = substrate_nodes.begin();
-      set<unsigned int>:: iterator  node_end = substrate_nodes.end();
-
-      substrate_faces.clear();
-
-      const Mesh& mesh = equation_systems->get_mesh();
-
-      MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-      const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-
-      for ( ; el != end_el ; ++el) 
+      if (dim > 1)
 	{
-	
-	  const Elem* elem = *el;
-	  unsigned int n_sides = elem -> n_sides();
-	  set<unsigned int> s_faces;
+	  set<unsigned int>:: iterator  node_begin = substrate_nodes.begin();
+	  set<unsigned int>:: iterator  node_end = substrate_nodes.end();
+
+	  substrate_faces.clear();
+
+	  const Mesh& mesh = equation_systems->get_mesh();
+
+	  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+	  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+	  
+	  for ( ; el != end_el ; ++el) 
+	    {
+	      
+	      const Elem* elem = *el;
+	      
+	      
+	      unsigned int n_sides = elem -> n_sides();
+	      set<unsigned int> s_faces;
  
 
-	  for (unsigned int s = 0; s < n_sides; s++)
-	    {
-	      AutoPtr<Elem> side = elem->build_side(s);
-	      bool found = true;
-	      for (int i = 0; i < side->n_nodes(); i++)
+	      for (unsigned int s = 0; s < n_sides; s++)
 		{
-		  if (substrate_nodes.find(side->node(i)) == node_end)       found = false;
+		  
+		  
+		  AutoPtr<Elem> side = elem->build_side(s);
+		  bool found = true;
+		  for (int i = 0; i < side->n_nodes(); i++)
+		    {
+		      if (substrate_nodes.find(side->node(i)) == node_end)       found = false;
+		    }
+		  if (found)
+		    {
+		      s_faces.insert(s);
+		    }
 		}
-	      if (found)
-		{
-		  s_faces.insert(s);
-		}
+
+	    
+
+	 
+
+	      if (!(s_faces.empty() )) substrate_faces.insert(pair < const Elem*, set<unsigned int> > (elem, s_faces ))  ;
 
 	    }
-
-	  if (!(s_faces.empty() )) substrate_faces.insert(pair < const Elem*, set<unsigned int> > (elem, s_faces ))  ;
-
+	  
 	}
-
     }
 }
 //------------------------------------------------------------------//
@@ -301,81 +309,82 @@ void Macrostrain::update_substrate_nodes_set()
 {
   if (grown_on_substrate)
     {//grown on substrate
+      if (dim > 1) //only in this case we have to update
+	{
+	  map<const Elem*, std::set <unsigned int > >  new_map;
+	  new_map.clear();
 
-      map<const Elem*, std::set <unsigned int > >  new_map;
-      new_map.clear();
+	  substrate_nodes.clear();
+	  const Mesh& mesh = equation_systems->get_mesh();
 
-      substrate_nodes.clear();
-      const Mesh& mesh = equation_systems->get_mesh();
-
-      MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-      const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+	  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+	  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
       
-      for ( ; el != end_el ; ++el) 
-	{ //--el_loop
-	   const Elem* elem = *el;
-	   //---does this element belong to the map?----
-	   map<const Elem*, std::set <unsigned int > > :: iterator it;
-	   it = substrate_faces.find(elem);
-	   if (it != substrate_faces.end())
-	     {//----yes, it belongs to the map
-	       set<unsigned int> el_sides = it -> second;
-
-	       new_map.insert(pair<const Elem*, std::set <unsigned int > > (elem, el_sides)); //copy it to the new map
-	       set<unsigned int> :: iterator  side_it = el_sides.begin();
-	       for ( ; side_it != el_sides.end() ; ++side_it)
-		 {
-		   unsigned int side_number = *side_it;
-		   AutoPtr<Elem> side = elem->build_side(side_number);
-		   for (int i = 0; i < side->n_nodes(); i++) substrate_nodes.insert(side->node(i));
+	  for ( ; el != end_el ; ++el) 
+	    { //--el_loop
+	      const Elem* elem = *el;
+	      //---does this element belong to the map?----
+	      map<const Elem*, std::set <unsigned int > > :: iterator it;
+	      it = substrate_faces.find(elem);
+	      if (it != substrate_faces.end())
+		{//----yes, it belongs to the map
+		  set<unsigned int> el_sides = it -> second;
+		  
+		  new_map.insert(pair<const Elem*, std::set <unsigned int > > (elem, el_sides)); //copy it to the new map
+		  set<unsigned int> :: iterator  side_it = el_sides.begin();
+		  for ( ; side_it != el_sides.end() ; ++side_it)
+		    {
+		      unsigned int side_number = *side_it;
+		      AutoPtr<Elem> side = elem->build_side(side_number);
+		      for (int i = 0; i < side->n_nodes(); i++) substrate_nodes.insert(side->node(i));
 
 		   
 		      
-		 }
-	     }
-	   else 
-	     {//---no, it does not belong to the map
-	       //let us check its parent 
-	       const Elem* elem_parent = elem->parent();
-	       map<const Elem*, std::set <unsigned int > > :: iterator it;
-	       it = substrate_faces.find(elem_parent);
-	       if (it !=  substrate_faces.end())
-		 { //top parent belongs to a map
-		   set <unsigned int> new_sides;
-		   std::set <unsigned int > parent_el_sides;
-		   parent_el_sides = it -> second;
-		   //now we check if a child lies on a necessary side
-
-		   set <unsigned int, double> :: iterator par_it  =  parent_el_sides.begin();
-		   set <unsigned int, double> :: iterator par_end =  parent_el_sides.end();
-		   for ( ; par_it != par_end; ++par_it) 
-		     {
-		       unsigned int side_number = *par_it;
-		        /* I assume that side number i of an element and its parent are parallel faces */
-		       /* I hope this is correct */
+		    }
+		}
+	      else 
+		{//---no, it does not belong to the map
+		  //let us check its parent 
+		  const Elem* elem_parent = elem->parent();
+		  map<const Elem*, std::set <unsigned int > > :: iterator it;
+		  it = substrate_faces.find(elem_parent);
+		  if (it !=  substrate_faces.end())
+		    { //top parent belongs to a map
+		      set <unsigned int> new_sides;
+		      std::set <unsigned int > parent_el_sides;
+		      parent_el_sides = it -> second;
+		      //now we check if a child lies on a necessary side
+		      
+		      set <unsigned int, double> :: iterator par_it  =  parent_el_sides.begin();
+		      set <unsigned int, double> :: iterator par_end =  parent_el_sides.end();
+		      for ( ; par_it != par_end; ++par_it) 
+			{
+			  unsigned int side_number = *par_it;
+			  /* I assume that side number i of an element and its parent are parallel faces */
+			  /* I hope this is correct */
 		       
-		       if ((elem->neighbor(side_number) == NULL)) // on boundary
-			 {
-			   AutoPtr<Elem> side = elem->build_side(side_number);
-			   new_sides.insert(side_number);
-			   for (int i = 0; i < side->n_nodes(); i++) substrate_nodes.insert(side->node(i));
+			  if ((elem->neighbor(side_number) == NULL)) // on boundary
+			    {
+			      AutoPtr<Elem> side = elem->build_side(side_number);
+			      new_sides.insert(side_number);
+			      for (int i = 0; i < side->n_nodes(); i++) substrate_nodes.insert(side->node(i));
 
 
-			 }
-		       
-		     }
-		   if (!(new_sides.empty()))  new_map.insert(pair< const Elem*, set <unsigned int>  > (elem, new_sides));
-		   
-		 }
-	     }
-
-
-	} 
-      
-
-      substrate_faces = new_map;
+			    }
+			  
+			}
+		      if (!(new_sides.empty()))  new_map.insert(pair< const Elem*, set <unsigned int>  > (elem, new_sides));
+		      
+		    }
+		}
+	      
+	      
+	    } 
+	  
+	  
+	  substrate_faces = new_map;
+	}
     }
-  
 
 }
 
