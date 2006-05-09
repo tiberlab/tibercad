@@ -466,7 +466,7 @@ class Macrostrain
   //-------------------------------------------------------------------
 
 
-  
+  map<const Elem*, set<unsigned int> > substrate_faces; // map between Elem* and set of substrate faces
 
   map <unsigned int , vector<unsigned int> >   boundary_cond_nodes; //map between b.c. number and a set of nodes 
 
