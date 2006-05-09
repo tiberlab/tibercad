@@ -131,7 +131,7 @@ void ZbDDsemiconductor::calculate_conduction_band_extremum(void)
     {
       
       //Hydrostatic strain part--------------------------------
-      Ec_L  += par.def_vol_L * trace(strain);
+      Ec_L  += (par.def_vol_L - (1.0/3.0)*par.def_uniax_L ) * trace(strain);
       //Uniaxial strain part----------------------------------
       Tensor1 k;
       vector<double> dE_uniax(4);
@@ -186,7 +186,7 @@ void ZbDDsemiconductor::calculate_conduction_band_extremum(void)
   if (strained)
     {
       //Hydrostatic strain part--------------------------------
-      Ec_X  += par.def_vol_X * trace(strain);
+      Ec_X  += (par.def_vol_X - (1.0/3.0)*par.def_uniax_X) * trace(strain);
       //-------------------------------------------------------
       //Uniaxial strain part----------------------------------
       Tensor1 k;

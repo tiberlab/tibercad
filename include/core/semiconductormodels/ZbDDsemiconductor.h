@@ -38,9 +38,9 @@ class ZbDDsemiconductor  : public DDsemiconductor
     double a_v;     //!< valence band deformation potential (hydrostatic) [eV]
     double b;       //!< valence band deformation potential b (uniaxial) [eV] 
     double d;       //!< valence band deformation potential d (uniaxial) [eV] 
-    double def_vol_X; //!<   volume deformation potential for X point \f$ \Xi_d \f$ [eV]
+    double def_vol_X; //!<   volume deformation potential for X point \f$ \Xi_d + \frac{1}{3}\Xi_u  \f$ [eV]
     double def_uniax_X; //!< uniaxial deformation potential for X point \f$ \Xi_u \f$ [eV]
-    double def_vol_L;  //!<  volume deformation potential for L point \f$ \Xi_d \f$ [eV]
+    double def_vol_L;  //!<  volume deformation potential for L point \f$ \Xi_d + \frac{1}{3}\Xi_u \f$ [eV]
     double def_uniax_L; //!< uniaxial deformation potential for L point \f$ \Xi_u \f$ [eV]
     double delta; //!< spin-orbit \f$ \Delta \f$ [eV]
   };
@@ -111,11 +111,11 @@ class ZbDDsemiconductor  : public DDsemiconductor
   /*!
     \f$ E_c^{\Gamma} = E_{c0}^{\Gamma} + a_c  \mathop{\rm Tr} (\varepsilon_{ij}) ;\f$
 
-    \f$ E_c^{X} = E_{c0}^{X} + \Xi_d^{X}  \mathop{\rm Tr} (\varepsilon_{ij}) +
-     \Xi_d^{X} k_i k_j \varepsilon_{ij} ;\f$
+    \f$ E_c^{X} = E_{c0}^{X} + \Xi_v^{X}  \mathop{\rm Tr} (\varepsilon_{ij}) +
+     \Xi_u^{X} k_i k_j \varepsilon_{ij} ;\f$
 
-    \f$ E_c^{L} = E_{c0}^{L} + \Xi_d^{L}  \mathop{\rm Tr} (\varepsilon_{ij}) +
-     \Xi_d^{L} k_i k_j \varepsilon_{ij} ,\f$
+    \f$ E_c^{L} = E_{c0}^{L} + \Xi_v^{L}  \mathop{\rm Tr} (\varepsilon_{ij}) +
+     \Xi_u^{L} k_i k_j \varepsilon_{ij} ,\f$
 
     where k is a unit vector from the Brillouin zone center to a minimum point 
   */
