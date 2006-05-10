@@ -433,27 +433,43 @@ void Macrostrain::create_bondary_conditions_map()
 	{
 	
 	  const Elem* elem = *el;
-	  unsigned int n_sides = elem -> n_sides();
 	  map <unsigned int, double>  element_map;
-	  element_map.clear();
-	  for (unsigned int s = 0; s < n_sides; s++)
+	  
+	  if (dim > 1)
 	    {
-	      if (elem->neighbor(s) == NULL)
+	      unsigned int n_sides = elem -> n_sides();
+	      
+
+
+	      for (unsigned int s = 0; s < n_sides; s++)
 		{
-		  bool found = true;
-		  AutoPtr<Elem> side = elem->build_side(s);
-		  for (int i = 0; i < side->n_nodes(); i++)
+		  if (elem->neighbor(s) == NULL)
 		    {
-		      if (find(n_begin, n_end,side->node(i) ) == n_end)
-			{ found = false;}		    
+		      bool found = true;
+		      AutoPtr<Elem> side = elem->build_side(s);
+		      for (int i = 0; i < side->n_nodes(); i++)
+			{
+			  if (find(n_begin, n_end,side->node(i) ) == n_end)
+			    { found = false;}		    
+			}
+		      if (found) 
+			{
+			  
+			  element_map.insert(pair<unsigned int, double>(s,stress_bc->second) );
+			}
 		    }
-		  if (found) 
-		    {
-		    
-		      element_map.insert(pair<unsigned int, double>(s,stress_bc->second) );
-		    }
+		} 
+	    }
+	  else
+	    {
+	      for (int i = 0; i < 2; i++)
+		{
+		   if (find(n_begin, n_end, elem->node(i) ) != n_end) 
+		     {
+		       element_map.insert(pair<unsigned int, double>(i,stress_bc->second) );
+		     }
 		}
-	    } 
+	    }
 
 	  if (!(element_map.empty())) 
 	    {
@@ -474,75 +490,78 @@ void Macrostrain::create_bondary_conditions_map()
 //-----------------------------------------------------------------//
 void Macrostrain::update_bondary_conditions_map()
 {
-  map <const Elem*, map <unsigned int, double> > new_map;
 
-  new_map.clear();
+  if (dim > 1)
+    {
+      map <const Elem*, map <unsigned int, double> > new_map;
 
-  const Mesh& mesh = equation_systems->get_mesh();
+      new_map.clear();
 
-  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-  for ( ; el != end_el ; ++el) 
-    { //--el_loop
-      const Elem* elem = *el;
-      if (elem -> on_boundary()) 
-	{//element is on boundary
-	  //---does this element belong to the map?----
-	  map<const Elem*, std::map <unsigned int , double > > :: iterator it_bc;
-	  map <unsigned int, double>  element_map;
-	  it_bc = boundary_cond_elem.find(elem);
-	  if (it_bc !=  boundary_cond_elem.end())
-	    {//----yes, it belongs to the map
-	      element_map = it_bc->second ;
-	      new_map.insert(pair<const Elem*, map<unsigned int, double> > (elem,element_map));
-	    }
-	  else
-	    {//---no, it does not belong to the map
-	  
-	      //let us check its parent 
-	      const Elem* elem_parent = elem->parent();
+      const Mesh& mesh = equation_systems->get_mesh();
+
+      MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+      const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+      for ( ; el != end_el ; ++el) 
+	{ //--el_loop
+	  const Elem* elem = *el;
+	  if (elem -> on_boundary()) 
+	    {//element is on boundary
+	      //---does this element belong to the map?----
 	      map<const Elem*, std::map <unsigned int , double > > :: iterator it_bc;
-	  
-	      it_bc = boundary_cond_elem.find(elem_parent);
+	      map <unsigned int, double>  element_map;
+	      it_bc = boundary_cond_elem.find(elem);
 	      if (it_bc !=  boundary_cond_elem.end())
-		{ //top parent belongs to a map
+		{//----yes, it belongs to the map
+		  element_map = it_bc->second ;
+		  new_map.insert(pair<const Elem*, map<unsigned int, double> > (elem,element_map));
+		}
+	      else
+		{//---no, it does not belong to the map
 		  
-		  map <unsigned int, double>  parent_element_map;
-		  parent_element_map = it_bc->second ;
+		  //let us check its parent 
+		  const Elem* elem_parent = elem->parent();
+		  map<const Elem*, std::map <unsigned int , double > > :: iterator it_bc;
 		  
-		  
-		  map <unsigned int, double>  element_map;
-
-		  element_map.clear();
-		  
-		  
-		  //now we check if a child lies on a necessary side
-		  map <unsigned int, double> :: iterator par_it  =  parent_element_map.begin();
-		  map <unsigned int, double> :: iterator par_end =  parent_element_map.end();
-		  
-		  for ( ; par_it != par_end; ++par_it) 
-		    {
-		      unsigned int side = par_it->first;
-		      /* I assume that side number i of an element and its parent are parallel faces */
-		      /* I hope this is correct */
+		  it_bc = boundary_cond_elem.find(elem_parent);
+		  if (it_bc !=  boundary_cond_elem.end())
+		    { //top parent belongs to a map
 		      
-		      if ((elem->neighbor(side) == NULL)) // on boundary
+		      map <unsigned int, double>  parent_element_map;
+		      parent_element_map = it_bc->second ;
+		      
+		      
+		      map <unsigned int, double>  element_map;
+		      
+		      element_map.clear();
+		      
+		      
+		      //now we check if a child lies on a necessary side
+		      map <unsigned int, double> :: iterator par_it  =  parent_element_map.begin();
+		      map <unsigned int, double> :: iterator par_end =  parent_element_map.end();
+		      
+		      for ( ; par_it != par_end; ++par_it) 
 			{
-			  const double stress =  par_it->second;
-			  element_map.insert(pair<unsigned int, double>  (side,stress));
+			  unsigned int side = par_it->first;
+			  /* I assume that side number i of an element and its parent are parallel faces */
+			  /* I hope this is correct */
 			  
+			  if ((elem->neighbor(side) == NULL)) // on boundary
+			    {
+			      const double stress =  par_it->second;
+			      element_map.insert(pair<unsigned int, double>  (side,stress));
+			      
+			    }
 			}
-		    }
 	     	      
-		  if (! element_map.empty() ) new_map.insert(pair<const Elem*, map<unsigned int, double> > (elem,element_map));
-		  
-		}  
+		      if (! element_map.empty() ) new_map.insert(pair<const Elem*, map<unsigned int, double> > (elem,element_map));
+		      
+		    }  
+		}
 	    }
 	}
+      
+      boundary_cond_elem = new_map;
     }
-
-  boundary_cond_elem = new_map;
-
 }
 
 
@@ -854,46 +873,65 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 			 
 			  element_map = it_bc->second ;
 
-			  map <unsigned int, double> :: iterator side_it  =  element_map.begin();
-			  map <unsigned int, double> :: iterator side_end =  element_map.end();
-			  for ( ; side_it != side_end; ++side_it) 
-			    {//loop over strained sides
-			      unsigned int side = side_it->first;
-			      assert(elem->neighbor(side) == NULL); //safety check if side is on boundary
-			     
+			  if (dim > 1)
+			    {//2D, 3D case 
+
+			      map <unsigned int, double> :: iterator side_it  =  element_map.begin();
+			      map <unsigned int, double> :: iterator side_end =  element_map.end();
+			      for ( ; side_it != side_end; ++side_it) 
+				{//loop over stressed sides
+				  unsigned int side = side_it->first;
 			     	
-			      const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
+				  const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
 				  
-			      const std::vector<Real>& JxW_face = fe_face->get_JxW();
+				  const std::vector<Real>& JxW_face = fe_face->get_JxW();
 				
-			      const std::vector<Point >& qface_point = fe_face->get_xyz();
-				
-			      const std::vector<Point> & normal = fe_face->get_normals();
+				  const std::vector<Point >& qface_point = fe_face->get_xyz();
 				  
-			      double stress_value = side_it->second ;
+				  const std::vector<Point> & normal = fe_face->get_normals();
+				  
+				  double stress_value = side_it->second ;
 
 
-			      fe_face->reinit(elem, side);
+				  fe_face->reinit(elem, side);
 
-			      if (dim > 1)
-				{
+				 
 				  for (unsigned int qp=0; qp<qface.n_points(); qp++)
 				    {				  
 				      Fe_sub(p1) += ((JxW_face[qp] * phi_face[p1][qp]) * stress_value) * normal[qp](j);
 				    } 
-				}
-			      else
-				{//dim = 1
 				  
-				  for (unsigned int qp=0; qp<qface.n_points(); qp++)
-				    {				  
-				      Fe_sub(p1) += phi_face[p1][qp] * stress_value ;
-				    } 
-				  
+				    
 				}
 			    }
+			  else
+			    { //1D case 
+			      if (j == 0) //the only non-zero component of the normal
+				{
+				  map <unsigned int, double> :: iterator node_it  =  element_map.begin();
+				  map <unsigned int, double> :: iterator node_end =  element_map.end();
+				  for ( ; node_it != node_end; ++node_it) 
+				    {//loop over stressed nodes
+				      unsigned int node_number = node_it -> first;
+				      if (p1 == node_number)
+					{
+					  double stress_value = node_it->second ;
+					  double normal;
+					  Point p = elem->point(node_number);
+					  Point pc = elem->centroid();
+					  if (p(0) > pc(0)) 
+					    normal = 1.0;
+					  else
+					    normal = -1.0;
+                                          cerr << "stress_value   " <<  stress_value << "\n";
+
+					  Fe_sub(p1) += stress_value * normal;
+					} 
+				    }
+				}
+			    }
+			  
 			}
-		    
 			
 		      //---RHS of master equation is done---------------------------------------------------
 

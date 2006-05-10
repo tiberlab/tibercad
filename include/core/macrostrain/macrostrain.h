@@ -465,13 +465,13 @@ class Macrostrain
 
   //-------------------------------------------------------------------
 
-
-  map<const Elem*, set<unsigned int> > substrate_faces; // map between Elem* and set of substrate faces
+  //! 2D/3D:  map between Elem* and set of substrate faces; 1D map between Elem* and set of substrate nodes
+  map<const Elem*, set<unsigned int> > substrate_faces; 
 
   map <unsigned int , vector<unsigned int> >   boundary_cond_nodes; //map between b.c. number and a set of nodes 
 
-
-  map <const Elem*, map <unsigned int, double>  >   boundary_cond_elem; //map between Elem  and (map between side and stress value)
+  //! 2D/3D: map between Elem  and (map between side and stress value); 1D map between Elem  and (map between node and stress value)
+  map <const Elem*, map <unsigned int, double>  >   boundary_cond_elem; 
 
   static map <const Elem*, map <unsigned int, double>  >* boundary_cond_elem_temp; //static pointer to boundary_cond_elem
 
