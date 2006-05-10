@@ -35,12 +35,14 @@ void print_boundary_data(const BoundaryData& data, const Mesh& mesh);
 void sweep_drain(double stop, int steps, DriftDiffusion& dd, double vg,
     bool restart = false);
 
-double alloy(double a, double b, double xa)
+double alloy(double a, double b, double xa, double bowing = 0.0)
 {
-  return b + (a - b) * xa;
+  return b + (a - b) * xa - bowing * xa *  (1 - xa);
 };
 
 double schottky_barrier;
+
+class Dummy {};
 
 
 int main (int argc, char** argv)
@@ -129,10 +131,11 @@ int main (int argc, char** argv)
     phys_reg_ID[2] = 3; // AlN doped
     phys_reg_ID[3] = 4; // GaN doped
     
-    vector<unsigned int> BC_reg_ID(3);
+    vector<unsigned int> BC_reg_ID(4);
     BC_reg_ID[0] = 1; // gate and stress
     BC_reg_ID[1] = 2; // source
     BC_reg_ID[2] = 3; // drain
+    BC_reg_ID[3] = 4; // substrate
 
     
     Mesh mesh(dim);
@@ -151,10 +154,6 @@ int main (int argc, char** argv)
      * Setup of strain parameters
      *
      *****************************************************/
-    BC_region_type substrate_region;
-
-    std::vector<BC_region_type> material_region;
-
     bool periodicity[3];
 
     stiffness C1;
@@ -172,8 +171,8 @@ int main (int argc, char** argv)
     {
       // AlGaN - GaN
       cryst.set_cryst_type("hex");
-      cryst.set_xyz_mil_direction("x", 1,  0, -1, 0) ;
-      cryst.set_xyz_mil_direction("z", 1,  -2, 1, 0) ;
+      cryst.set_xyz_mil_direction("z", 1,  0, -1, 0) ;
+      cryst.set_xyz_mil_direction("x", 1,  -2, 1, 0) ;
       cryst.set_xyz_mil_direction("y",  0,  0, 0,  1) ;
     }
 
@@ -251,15 +250,16 @@ int main (int argc, char** argv)
           alloy(-0.5, -0.35, al_content),
           alloy(-0.48, -0.3, al_content)); //AlN
       piezo_data[0].set_pyro_module(
-          alloy(-0.09, -0.034, al_content)); //AlN
+          alloy(-0.09, -0.034, al_content, -0.021)); //AlN
 
 
 
       std::vector<int> x_dir(4);
       std::vector<int> y_dir(4);
 
-      x_dir[0] = -1;  x_dir[1] = 0;  x_dir[2] =  1;  x_dir[3] = 0;
-      y_dir[0] =  0;  y_dir[1] = 0;  y_dir[2] =  0;  y_dir[3] = 1;
+      //x_dir[0] = 1;  x_dir[1] = 0;  x_dir[2] =  -1;  x_dir[3] = 0;
+      x_dir[0] = 1;  x_dir[1] = -2;  x_dir[2] = 1;  x_dir[3] = 0;
+      y_dir[0] = 0;  y_dir[1] = 0;  y_dir[2] =  0;  y_dir[3] = 1;
 
       crystal[1].set_lat_const(0.3189, 0.5185); //GaN
       crystal[1].calculate_lat_consts();
@@ -289,7 +289,7 @@ int main (int argc, char** argv)
           alloy(-0.5, -0.35, al_content),
           alloy(-0.48, -0.3, al_content)); //AlN
       piezo_data[2].set_pyro_module(
-          alloy(-0.09, -0.034, al_content)); //AlN
+          alloy(-0.09, -0.034, al_content, -0.021)); //AlN
 
       crystal[3].set_lat_const(0.3189, 0.5185); //GaN
       crystal[3].calculate_lat_consts();
@@ -327,12 +327,6 @@ int main (int argc, char** argv)
     opt.periodicity[1] = strain_opt("y-periodic", 0);
     opt.periodicity[2] = strain_opt("z-periodic", 0);
 
-    for(int i = 0; i<=2; i++)
-      substrate_region.coord_min[i] = min_coord_substrate[i];
-    for(int i = 0; i<=2; i++)
-      substrate_region.coord_max[i] = max_coord_substrate[i];
-
-
     vector<double> fp(3);
 
     fp[0] = fp[1] = fp[2] = 0.0;
@@ -343,24 +337,19 @@ int main (int argc, char** argv)
     opt.fixed_point3 = fp;
 
     double stress_value = strain_opt( "stress",0.0);
-    vector<external_stress>  stress_vector_in(1);
-    stress_vector_in[0].bc_region_number = 1;
-    stress_vector_in[0].stress_value = stress_value;
-
+    map<unsigned int, double> stress_map;
+    stress_map[5] = stress_value;
 
     Macrostrain strain_calculation(opt, mesh);
 
+    strain_calculation.define_substrate_bc(4);
+    strain_calculation.define_BC_map(boundary_nodes);
+    strain_calculation.define_stress_value(stress_map);
+
     strain_calculation.assign_mesh_data(meshdata);
     strain_calculation.define_strain_parameters(C_tensor, crystal);
-    strain_calculation.define_substrate_region(substrate_region);
     strain_calculation.define_piezo_moduli(piezo_data);
-    strain_calculation.define_external_stress(stress_vector_in, boundary_nodes);
 
-
-    // solve strain
-    cout << "Solving strain... \n" << flush;
-    strain_calculation.solve();
-    strain_calculation.output_piezo("Piezo.gmv");
 
     /*****************************************************/
 
@@ -372,6 +361,7 @@ int main (int argc, char** argv)
      *
      ****************************************************************/
     StrainedSemiconductorModel barrier(&strain_calculation);    
+
     if (statistics == "FD")
       barrier.set_statistics(TiberCad::FERMIDIRAC);
     else
@@ -385,58 +375,45 @@ int main (int argc, char** argv)
     StrainedSemiconductorModel channel(barrier);
     channel.set_n_dopant(Dopant(0, 0.025, 2));
 
+    Dummy d;
     if (mat_sys == 1)
     {
       // GaAs
-      barrier.set_relative_permittivity(12.9);
-      barrier.set_valence_band_properties(1.4597, 0.53, 400);
-      barrier.set_conduction_band_properties(2.9787, 0.063, 8500);
       barrier.set_SRH_parameters(1e-8, 1e-8);
 
       // InAs
-      channel.set_relative_permittivity(15.15);
-      channel.set_valence_band_properties(1.52, 0.41, 500);
-      channel.set_conduction_band_properties(1.937, 0.023, 40000);
       channel.set_SRH_parameters(1e-8, 1e-8);
     }
     else
     {
       // AlN
-      barrier.set_relative_permittivity(alloy(8.67, 9.5, al_content));
-      barrier.set_valence_band_properties(
-          alloy(-1.526, -0.72, al_content),
-          alloy(1.0, 1.6, al_content),
-          alloy(200, 200, al_content));
-      barrier.set_conduction_band_properties(
-        alloy(4.712, 2.789, al_content),
-        alloy(0.3, 0.23, al_content),
-        alloy(1000, 1000, al_content));
+      barrier.set_data_file("materials/GaN.dat");
       barrier.set_SRH_parameters(1e-8, 1e-8);
+      barrier.set_mobilities(1000, 300);
+      barrier.read_database(d);
+      barrier.build_alloy("materials/AlN.dat",
+          "materials/AlGaN_bow.dat", al_content);
 
       // GaN
-      channel.set_relative_permittivity(9.5);
-      channel.set_valence_band_properties(-0.72, 1.6, 200);
-      channel.set_conduction_band_properties(2.789, 0.23, 1000);
+      channel.set_data_file("materials/GaN.dat");
       channel.set_SRH_parameters(1e-8, 1e-8);
+      channel.set_mobilities(1000, 300);
+      channel.read_database(d);
     }
 
     StrainedSemiconductorModel channel_doped(channel);
+    channel_doped.set_data_file("materials/GaN.dat");
+    channel_doped.read_database(d);
     StrainedSemiconductorModel barrier_doped(barrier);
+    barrier_doped.set_data_file("materials/GaN.dat");
+    barrier_doped.read_database(d);
+    barrier_doped.build_alloy("materials/AlN.dat",
+        "materials/AlGaN_bow.dat", al_content);
     barrier_doped.set_n_dopant(Dopant(n_doping, 0.025, 2));
     channel_doped.set_n_dopant(Dopant(n_doping, 0.025, 2));
     barrier_doped.set_SRH_parameters(1e-10, 1e-10);
     channel_doped.set_SRH_parameters(1e-10, 1e-10);
 
-
-    const Elem* elem = meshdata.elem_data_begin()->first;
-    barrier.reinit(elem);
-    channel.reinit(elem);
-    barrier_doped.reinit(elem);
-    channel_doped.reinit(elem);
-    barrier.calculate_equilibrium_properties();
-    channel.calculate_equilibrium_properties();
-    barrier_doped.calculate_equilibrium_properties();
-    channel_doped.calculate_equilibrium_properties();
 
     if (fully)
     {
@@ -453,6 +430,10 @@ int main (int argc, char** argv)
       channel_doped.set_coupling_type(ELECTRONS);
     }
 
+    const Elem* barrier_elem;
+    const Elem* channel_elem;
+    const Elem* barrier_doped_elem;
+    const Elem* channel_doped_elem;
     ElementData element_data;
 
     {
@@ -472,19 +453,43 @@ int main (int argc, char** argv)
         {
           case 1:
             element_data.set_data(elem, &barrier);
+            barrier_elem = elem;
             break;
           case 2:
             element_data.set_data(elem, &channel);
+            channel_elem = elem;
             break;
           case 3:
             element_data.set_data(elem, &barrier_doped);
+            barrier_doped_elem = elem;
             break;
           case 4:
             element_data.set_data(elem, &channel_doped);
+            channel_doped_elem = elem;
             break;
         }
       }
     }
+
+    // solve strain
+    {
+      cout << "Solving strain... \n" << flush;
+      strain_calculation.solve();
+      ostringstream f;
+      f.precision(5);
+      f << "Piezo.gmv";
+      strain_calculation.output_piezo(f.str());
+    }
+
+    barrier.reinit(barrier_elem);
+    channel.reinit(channel_elem);
+    barrier_doped.reinit(barrier_doped_elem);
+    channel_doped.reinit(channel_doped_elem);
+    barrier.calculate_equilibrium_properties();
+    channel.calculate_equilibrium_properties();
+    barrier_doped.calculate_equilibrium_properties();
+    channel_doped.calculate_equilibrium_properties();
+
 
     BoundaryDescriptor source("source");
     BoundaryDescriptor gate("gate");
@@ -552,7 +557,7 @@ int main (int argc, char** argv)
 
     params.solver_params.pc_type = PCILU;
     params.local_scaling = true;
-    //params.artificial_drift = true;
+    params.artificial_drift = true;
 
     if (method == "GUMMEL")
     {
@@ -887,7 +892,7 @@ void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
         AutoPtr<Elem> side = elem->build_side(s);
         for (int i = 0; i < side->n_nodes(); i++)
         {
-          if (find(n_begin, n_end, side->node(i) + 1) == n_end)
+          if (find(n_begin, n_end, side->node(i)) == n_end)
             found = false;
         }
         if (found)

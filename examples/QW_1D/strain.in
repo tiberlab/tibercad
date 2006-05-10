@@ -33,15 +33,6 @@ x-periodic=0
 y-periodic=0
 z-periodic=0
 
-#-------Substrate boundary-----------
-
-xmin_s=-51.5
-xmax_s=-55
-ymin_s=0
-ymax_s=0
-zmin_s=0
-zmax_s=0
-
 stress = -0.0
 
 fixed_point1 = (0.0 0.0 0.0)

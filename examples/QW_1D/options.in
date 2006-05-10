@@ -5,14 +5,16 @@ $Options
   # the coupling should be 1 because we have p doping
   fully_coupled = 1
 
-  material_system = 0
+  material_system = 2
   # only if material_system == 0
   in_content = 0.15
   # only if material_system == 1
   growth_dir = 2
   # only if material_system == 2
-  al_content = 0.48
-  ga_content = 0.47
+  #al_content = 0.48
+  #ga_content = 0.47
+  al_content = 0.0
+  ga_content = 1.0
 
   solve_strain = 1
 

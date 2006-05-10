@@ -421,6 +421,10 @@ class DriftDiffusion
     void build_band_edges(std::vector<double>& band_edges,
         std::vector<std::string>& names);
 
+    //! Fill a vector with the elemental band edge data
+    void build_elem_band_edges(std::vector<double>& band_edges,
+        std::vector<std::string>& names);
+
 
   private:
 

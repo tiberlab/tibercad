@@ -63,10 +63,12 @@ class BoundaryDescriptor
 
     void print_info(void) const;
       
+    double pinning;
 
   private:
 
     std::string _id;
+
 
     const static double _penalty_value;
     
@@ -85,7 +87,8 @@ class BoundaryDescriptor
 
 inline
 BoundaryDescriptor::BoundaryDescriptor(const std::string identifier)
-  : _id(identifier)
+  : _id(identifier),
+    pinning(-256.0)
 {
 }
 

@@ -88,6 +88,7 @@ SemiconductorModel::read_database(const Dummy&)
 
     ZbDDsemiconductor* zbsc = new ZbDDsemiconductor(params);
     _bulk_model = zbsc;
+    zbsc->energy_cutoff = 4.0;
 
     permittivity = data("permittivity", 12.93);
     _conduction_band.mobility = data("electron_mobility", 1000.0);
@@ -126,7 +127,7 @@ SemiconductorModel::read_database(const Dummy&)
 
     WzDDsemiconductor* wzsc = new WzDDsemiconductor(params);
     _bulk_model = wzsc;
-    wzsc->energy_cutoff = 2.0;
+    wzsc->energy_cutoff = 4.0;
 
     permittivity = data("permittivity", 9.5);
     _conduction_band.mobility = data("electron_mobility", 1000.0);
@@ -153,71 +154,50 @@ SemiconductorModel::build_alloy(const std::string& component2,
 
     params.EgGamma = alloy(data("Eg_G", 1.519), params.EgGamma, content,
        bowing("Eg_G", 0.0));
-    //cerr << "EgGamma = " << params.EgGamma << endl;
     params.EgL = alloy(data("Eg_L", 1.815), params.EgL, content,
        bowing("Eg_L", 0.0));
-    //cerr << "EgL = " << params.EgL << endl;
     params.EgX = alloy(data("Eg_X", 1.981), params.EgX, content,
        bowing("Eg_X", 0.0));
-    //cerr << "EgX = " << params.EgX << endl;
     params.Ev = alloy(data("E_v", 1.346), params.Ev, content,
        bowing("E_v", 0.0));
-    //cerr << "Ev = " << params.Ev << endl;
 
     params.m_G = alloy(data("m_G", 0.067), params.m_G, content,
        bowing("m_G", 0.0));
-    //cerr << "m_G = " << params.m_G << endl;
     params.m_t_L = alloy(data("m_L_t", 0.0754), params.m_t_L, content,
        bowing("m_L_t", 0.0));
-    //cerr << "m_t_L = " << params.m_t_L << endl;
     params.m_l_L = alloy(data("m_L_l", 1.9), params.m_l_L, content,
        bowing("m_L_l", 0.0));
-    //cerr << "m_l_L = " << params.m_l_L << endl;
     params.m_t_X = alloy(data("m_X_t", 1.3), params.m_t_X, content,
        bowing("m_X_t", 0.0));
-    //cerr << "m_t_X = " << params.m_t_X << endl;
     params.m_l_X = alloy(data("m_X_l", 0.23), params.m_l_X, content,
        bowing("m_X_l", 0.0));
-    //cerr << "m_l_X = " << params.m_l_X << endl;
 
     params.a_c = alloy(data("a_c", -9.36), params.a_c, content,
        bowing("a_c", 0.0));
-    //cerr << "a_c = " << params.a_c << endl;
     params.a_v = alloy(data("a_v", -1.21), params.a_v, content,
        bowing("a_v", 0.0));
-    //cerr << "a_v = " << params.a_v << endl;
     params.b = alloy(data("b", -2.0), params.b, content,
        bowing("b", 0.0));
-    //cerr << "b = " << params.b << endl;
     params.d = alloy(data("d", -4.8), params.d, content,
        bowing("d", 0.0));
-    //cerr << "d = " << params.d << endl;
 
     params.delta = alloy(data("delta", 0.341), params.delta, content,
        bowing("delta", 0.0));
-    //cerr << "delta = " << params.delta << endl;
     params.gamma1 = alloy(data("gamma1", 6.98), params.gamma1, content,
        bowing("gamma1", 0.0));
-    //cerr << "gamma1 = " << params.gamma1 << endl;
     params.gamma2 = alloy(data("gamma2", 2.06), params.gamma2, content,
        bowing("gamma2", 0.0));
-    //cerr << "gamma2 = " << params.gamma2 << endl;
     params.gamma3 = alloy(data("gamma3", 2.93), params.gamma3, content,
        bowing("gamma3", 0.0));
-    //cerr << "gamma3 = " << params.gamma3 << endl;
 
     params.def_vol_X = alloy(data("abs_def_pot_X", -0.16),
         params.def_vol_X, content, bowing("abs_def_pot_X", 0.0));
-    //cerr << "def_vol_X = " << params.def_vol_X << endl;
     params.def_uniax_X = alloy(data("uniax_def_pot_X", 14.26),
         params.def_uniax_X, content, bowing("uniax_def_pot_X", 0.0));
-    //cerr << "def_uniax_X = " << params.def_uniax_X << endl;
     params.def_vol_L = alloy(data("abs_def_pot_L", -4.91),
         params.def_vol_L, content, bowing("abs_def_pot_L", 0.0));
-    //cerr << "def_vol_L = " << params.def_vol_L << endl;
     params.def_uniax_L = alloy(data("uniax_def_pot_L", 6.5),
         params.def_uniax_L, content, bowing("uniax_def_pot_L", 0.0));
-    //cerr << "def_uniax_L = " << params.def_uniax_L << endl;
 
     permittivity = alloy(data("permittivity", 12.93), permittivity, content,
        bowing("permittivity", 0.0));
@@ -505,6 +485,8 @@ SemiconductorModel::calculate_equilibrium_properties(int coupling,
 
   ierr = VecDestroy(x);
   ierr = MatDestroy(J);
+
+  ierr = SNESDestroy(snes);
 
   // restore original coupling
   _coupling = coupling_bkp;

@@ -33,7 +33,7 @@ main: $(objects)
 run: all hemt.msh
 	@echo "Running example..."
 	@[ -d output ] || mkdir output
-	./main -ksp_type bcgs
+	./main -ksp_type bcgsl
 
 
 clean:

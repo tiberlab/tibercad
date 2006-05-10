@@ -17,7 +17,7 @@ approx_order=FIRST
 
 elem_shape=QUAD
 
-tolerance=1e-8
+tolerance=1e-9
 
 read_regions_from_mesh=1
 

@@ -1,7 +1,11 @@
+// $Id$
+
 #ifndef _STRAINEDSEMICONDUCTOR_H_
 #define _STRAINEDSEMICONDUCTOR_H_
 
 #include "SemiconductorModel.h"
+
+#include <map>
 
 class Elem;
 class Macrostrain;
@@ -32,9 +36,16 @@ class StrainedSemiconductorModel : public SemiconductorModel
      * This method calculates the equilibrium material properties
      * (eq. quasi Fermi level, eq. densities)
      */
-    virtual void calculate_equilibrium_properties(
-        int coupling = DriftDiffusionDefs::BOTH,
-        double temperature = SimulationOptions::T);
+    //virtual void calculate_equilibrium_properties(
+    //    int coupling = DriftDiffusionDefs::BOTH,
+    //    double temperature = SimulationOptions::T);
+
+    //! Clean the internal cache of element data
+    /*!
+     * Band and equilibrium parameters are cached for each element so they
+     * don't have to be recalculated during drift diffusion solving steps
+     */
+    void reset(void);
 
   protected:
 
@@ -42,25 +53,27 @@ class StrainedSemiconductorModel : public SemiconductorModel
 
   private:
 
+    //! The data structure for the cached data
+    struct ElementData
+    {
+      double Ec;
+      double Ev;
+      double mc;
+      double mv;
+
+      double Ef0;
+      double n0;
+      double p0;
+
+      RealVectorValue polarization;
+    };
+
+    typedef std::map<const Elem*, ElementData> DataMap;
+    
     Macrostrain* _strain;
     bool _ignore_strain;
 
-    //! Factor to calculate strain induced correction to equilibrium
-    //! Fermi level
-    /*!
-     * TODO describe mathematics
-     */
-    double gamma;
-
-    //! The unstrained equilibrium band gap
-    double Eg0;
-    
-    //! The unstrained equilibrium fermi level
-    double Ef0;
-
-    //! The unstrained equilibrium conduction band edge
-    double Ec0;
-
+    DataMap _element_data;
 
 };
 

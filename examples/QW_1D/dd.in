@@ -3,8 +3,8 @@ $Options
 temperature = 300
 
 statistics = FD
-n_doping = 1e18
-p_doping = 1e18
+n_doping = 1e15
+p_doping = 1e15
 
 
 vg_start = 0.0;

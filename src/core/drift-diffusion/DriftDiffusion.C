@@ -416,6 +416,7 @@ DriftDiffusion::find_dirichlet_nodes(void)
   for ( ; it != end; ++it)
   {
     if (((*it)->get_type("potential") == BoundaryDescriptor::DIRICHLET)
+        || ((*it)->pinning != -256.0)
         || ((*it)->get_type("fermi_e") == BoundaryDescriptor::DIRICHLET)
         || ((*it)->get_type("fermi_h") == BoundaryDescriptor::DIRICHLET))
       dirichlet_boundaries.insert(*it);
@@ -2149,6 +2150,92 @@ DriftDiffusion::build_electric_field(vector<double>& field,
 
 
 void
+DriftDiffusion::build_elem_band_edges(vector<double>& field,
+    vector<string>& names)
+{
+  // we only do something if we are on processor 0
+  if (libMesh::processor_id() != 0)
+    return;
+  
+  NonlinearImplicitSystem* system;
+
+  system = &_eq_system->get_system<NonlinearImplicitSystem>(
+      "drift-diffusion coupled");
+
+  // aliases for nicer code
+  const DD::Device& device = *(_device);
+  const Mesh& mesh = _device->get_mesh();
+  const NumericVector<Number>& solution = *(system->solution);
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+  const unsigned int nn  = mesh.n_elem();
+
+  const unsigned int n_vars  = 3;
+  names.resize(n_vars);
+  names[0] = "conduction_band_edge";
+  names[1] = "valence_band_edge";
+  names[2] = "equilibrium_fermi_level";
+
+  field.resize(nn * n_vars);
+
+  // the scaling parameters to scale back the result
+  double phi0 = get_scaling().get_potential_scaling();
+  const double x0 = get_options().mesh_units;
+
+  const unsigned int u_var = system->variable_number("potential");
+  
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  QGauss qrule(dim, libMeshEnums::CONSTANT);
+  fe->attach_quadrature_rule(&qrule);
+
+  vector<unsigned int> dof_indices_u;
+
+  // element shape function gradients
+  const vector<vector<Real> >& phi = fe->get_phi();
+
+  MeshBase::const_element_iterator it =
+    mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end =
+    mesh.active_elements_end(); 
+
+  unsigned int elem_number = 0;
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    dof_map.dof_indices(elem, dof_indices_u, u_var);
+
+    DriftDiffusionProperties* sc =
+      device.get_element_data().get_data(elem->top_parent());
+    assert(sc != NULL); 
+
+    sc->reinit(elem);
+
+    fe->reinit(elem);
+    
+    unsigned int n_dofs = dof_indices_u.size();
+    // get the solution values at the centroid
+    Real u = 0.0;
+    for (unsigned int i = 0; i < n_dofs; i++)
+      u  += phi[i][0] * solution(dof_indices_u[i]);
+
+    unsigned int id = n_vars * elem_number;
+    //field[id] = sc->get_conduction_band_edge() - phi0 * u;
+    //field[id + 1] = sc->get_valence_band_edge() - phi0 * u;
+    field[id] = sc->get_conduction_band_edge();
+    field[id + 1] = sc->get_valence_band_edge();
+    field[id + 2] = sc->get_equilibrium_fermi_level();
+
+    elem_number++;
+  }
+  field.resize(elem_number * n_vars);
+}
+
+
+void
 DriftDiffusion::build_band_edges(vector<double>& band_edges,
     vector<string>& names)
 {
@@ -2171,12 +2258,13 @@ DriftDiffusion::build_band_edges(vector<double>& band_edges,
   const unsigned int dim = mesh.mesh_dimension();
   const unsigned int nn  = mesh.n_nodes();
 
-  const unsigned int n_vars  = 4;
+  const unsigned int n_vars  = 5;
   names.resize(n_vars);
   names[0] = "conduction_band_edge";
   names[1] = "valence_band_edge";
   names[2] = "electron_quasi_fermi_level";
   names[3] = "hole_quasi_fermi_level";
+  names[4] = "electrical_potential";
 
   band_edges.resize(nn * n_vars);
 
@@ -2281,6 +2369,7 @@ DriftDiffusion::build_band_edges(vector<double>& band_edges,
 
         local[id + 2] = en;
         local[id + 3] = ep;
+        local[id + 4] = u;
       }
     }
   }
@@ -2812,6 +2901,10 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
         //ElectricalContact* contact = 
         //  static_cast<ElectricalContact*>(
         //    device.get_boundary_data().get_data(side));
+        //contact->set_material(sc);
+        //contact->get_non_dirichlet_bc(coeff, value);
+        // scale coeff and value
+        //
 
         vector<double> coeff(3, 0.0);
         vector<double> value(3, 0.0);
@@ -3022,6 +3115,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
         if (node_it != end)
         {
           const BoundaryDescriptor* boundary_desc = node_it->second;
+          //ElectricalContact* contact = node_it->second;
 
           if (coupling & POISSON)
           {
@@ -3034,6 +3128,11 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
               double val = -((*bc)[2] / (*bc)[0] +
                   simulation_voltages[boundary_desc]) / phi0;
               Ke.condense(i, i, val, Fe);
+            }
+            if (boundary_desc->pinning != -256.0)
+            {
+              Ke.condense(i, i, - boundary_desc->pinning / phi0, Fe);
+              Ke(i, i + n_dofs) = 1.0;
             }
           }
 
