@@ -504,7 +504,7 @@ void Macrostrain::update_bondary_conditions_map()
       for ( ; el != end_el ; ++el) 
 	{ //--el_loop
 	  const Elem* elem = *el;
-	  if (elem -> on_boundary()) 
+	  if (element_on_boundary(elem)) 
 	    {//element is on boundary
 	      //---does this element belong to the map?----
 	      map<const Elem*, std::map <unsigned int , double > > :: iterator it_bc;
@@ -1952,7 +1952,7 @@ void  Macrostrain::apply_periodic_bc()
 		      for ( ; ( (el3 != end_el3) ) ; ++el3)  
 			{
 			  Elem* elem = *el3;
-			  if (elem->on_boundary())
+			  if (element_on_boundary(elem))
 			    {
 			      if (elem->contains_point(point2))
 				{
@@ -1971,7 +1971,7 @@ void  Macrostrain::apply_periodic_bc()
 			  for (unsigned int i=0 ; i < elem1->n_children() ; i++)
 			    {
 			      Elem* 	child = elem1->child(i);
-			      if (child->on_boundary())
+			      if (element_on_boundary(child))
 				{
 				  if (child->contains_point(point2))
 				    {

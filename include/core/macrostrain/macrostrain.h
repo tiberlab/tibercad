@@ -187,6 +187,9 @@ class Macrostrain
 
   //--------------------------------------------------------------------
   //! passes a number of substrate boundary condition
+  /*!
+    \param  substrate_bc_number number of boundary condition that defines substrate 
+  */
   void define_substrate_bc(unsigned int substrate_bc_number);
 
   //--------------------------------------------------------------------
@@ -417,12 +420,15 @@ class Macrostrain
   static double substrate_lat_const[3];
 
   static Tensor2Sym substrate_shear;
-  
-  void update_substrate(); //updates substrate_lattice and substrate_shear
 
-  void init_substrate(); //sets substrate_lattice[3] as a reference material
+  //!updates substrate_lattice and substrate_shear
+  void update_substrate();
 
-  unsigned int get_number_of_the_fixed_node(Point point); //returns node number, closest to point 
+  //!sets substrate_lattice[3] as a reference material
+  void init_substrate();
+
+  //!returns node number, closest to point 
+  unsigned int get_number_of_the_fixed_node(Point point); 
 
   void Macrostrain::create_substate_nodes_set();
  
@@ -460,41 +466,74 @@ class Macrostrain
 
 
   //-------------------------------------------------------------------
-
-  bool intermediate_output; // to perform output after each mesh refinement and volume relaxation step
-
+  //! to perform output after each mesh refinement and volume relaxation step
+  bool intermediate_output;
   //-------------------------------------------------------------------
 
   //! 2D/3D:  map between Elem* and set of substrate faces; 1D map between Elem* and set of substrate nodes
-  map<const Elem*, set<unsigned int> > substrate_faces; 
-
-  map <unsigned int , vector<unsigned int> >   boundary_cond_nodes; //map between b.c. number and a set of nodes 
+  map<const Elem*, set<unsigned int> > substrate_faces;
+ 
+  //!map between b.c. number and a set of nodes 
+  map <unsigned int , vector<unsigned int> >   boundary_cond_nodes; 
 
   //! 2D/3D: map between Elem  and (map between side and stress value); 1D map between Elem  and (map between node and stress value)
   map <const Elem*, map <unsigned int, double>  >   boundary_cond_elem; 
-
-  static map <const Elem*, map <unsigned int, double>  >* boundary_cond_elem_temp; //static pointer to boundary_cond_elem
-
-
-  map <unsigned int, double>   stress_values; //map between stress number and stress values
   
-
-  set <unsigned int> substrate_nodes; //contains nodes that belong to substrate
-  static set <unsigned int>* substrate_nodes_temp; //static pointer to substate_nodes
-   
-
-  void create_bondary_conditions_map(); // create map boundary_cond_elem from boundary_cond_nodes;
-   
-
-  void update_bondary_conditions_map(); // update boundary_cond_elem due to mesh refinement ;
-
+  //!static pointer to boundary_cond_elem
+  static map <const Elem*, map <unsigned int, double>  >* boundary_cond_elem_temp;
+ 
+  //!map between stress number and stress values
+  map <unsigned int, double>   stress_values; 
   
-  string output_type; //"GMV" or "tecplot"
+  //!contains nodes that belong to substrate
+  set <unsigned int> substrate_nodes; 
+
+  //!static pointer to substate_nodes
+  static set <unsigned int>* substrate_nodes_temp; 
 
 
-  //-------------------------------------------------------------------
+  //! create map boundary_cond_elem from boundary_cond_nodes;
+  void create_bondary_conditions_map();
+
+  //! update boundary_cond_elem due to mesh refinement ;
+  void update_bondary_conditions_map();
+
+  //!"GMV" or "tecplot"
+  string output_type; 
+
+  //!
+  bool element_on_boundary(const Elem* element);
  
 
 };
 
 
+//-------------------------------------------------------------------
+inline bool Macrostrain::element_on_boundary(const Elem* element)
+{
+  bool result = false;
+
+  const Mesh& mesh = equation_systems->get_mesh();
+  
+    
+  unsigned int n_sides ; 
+
+  if ( dim > 1 ) 
+    n_sides = element->n_faces();
+  else
+    n_sides = element->n_nodes();
+
+
+  for (short i = 0; i < n_sides; i++)
+    {
+      Elem* el1 = element->neighbor(i);
+      if ( (el1 == NULL) || !( el1->active() )  )
+	{
+	  result = true;
+	  break;
+	}
+    }
+
+  return(result);    
+  
+};
