@@ -5,8 +5,8 @@
 #include <complex>
 #include <vector>
 #include "tensor.h"
-
-class EFAbulkHamiltonian
+#include "PhysicalProperties.h"
+class EFAbulkHamiltonian: public PhysicalProperties
 {
 
  public:
@@ -47,7 +47,14 @@ class EFAbulkHamiltonian
 
   //!destructor
   virtual ~EFAbulkHamiltonian() {};
+  //----------------------------------------------------------------------------------
+  //virtual methods of  PhysicalProperties
+  virtual void read_database (const Dummy &db);
+
+  virtual void read_database_bowing_parameters (const Dummy &db);
   
+  virtual void set_properties_alloy (const PhysicalProperties *prop_comp1, const PhysicalProperties *prop_comp2, double molar_fraction);
+  //-------------------------------------------------------------------------------
  protected:
   
 

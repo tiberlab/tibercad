@@ -1,5 +1,5 @@
 #include "macrostrain.h"
-
+using namespace std;
 //-----------------------------------------------------------------//
 //Static objects must be "mentioned" here! 
 
@@ -34,7 +34,7 @@ unsigned int Macrostrain::fixed_node3_temp;
 
 
 //-----------------------------------------------------------------//
-Macrostrain::Macrostrain(const options& opt,   Mesh&  mesh )
+Macrostrain::Macrostrain(const options& opt,   Mesh&  mesh ) 
 {
   
  
@@ -355,8 +355,8 @@ void Macrostrain::update_substrate_nodes_set()
 		      parent_el_sides = it -> second;
 		      //now we check if a child lies on a necessary side
 		      
-		      set <unsigned int, double> :: iterator par_it  =  parent_el_sides.begin();
-		      set <unsigned int, double> :: iterator par_end =  parent_el_sides.end();
+		      set <unsigned int> :: iterator par_it  =  parent_el_sides.begin();
+		      set <unsigned int> :: iterator par_end =  parent_el_sides.end();
 		      for ( ; par_it != par_end; ++par_it) 
 			{
 			  unsigned int side_number = *par_it;

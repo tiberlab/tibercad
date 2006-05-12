@@ -1,8 +1,9 @@
-using namespace std;
+using namespace std; 
 #include "EFAbulkHamiltonian.h"
 
-EFAbulkHamiltonian::EFAbulkHamiltonian()
+EFAbulkHamiltonian::EFAbulkHamiltonian() : PhysicalProperties("EFAbulkHamiltonian")
 {
+ 
  k_vector[0] =  0.0;
  k_vector[1] =  0.0;
  k_vector[2] =  0.0;

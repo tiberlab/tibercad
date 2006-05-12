@@ -1,4 +1,6 @@
-using namespace std;
+#ifndef _MACROSTRAIN_H_
+#define _MACROSTRAIN_H_
+
 
 #include <iostream>
 #include <fstream>
@@ -64,6 +66,7 @@ using namespace std;
 #include "tecplot_IO_cell.h"
 //------------------------------------------------------------------------------
 
+#include "PhysicalProperties.h"
 
 
 
@@ -198,14 +201,14 @@ class Macrostrain
   //---------------------------------------------------------------------
 
   //! passes a reference to a boundary conditions map  
-  void define_BC_map (const map <unsigned int , vector<unsigned int> > & bc_cond  );
+  void define_BC_map (const std::map <unsigned int , std::vector<unsigned int> > & bc_cond  );
 
   //---------------------------------------------------------------------
   //! passes a value for the stress 
   /*!
     \param stress_map is a map between boundary condition number and stress value
   */
-  void define_stress_value (const map <unsigned int, double> & stress_map_in);
+  void define_stress_value (const std::map <unsigned int, double> & stress_map_in);
 
 
   void assign_mesh_data(MeshData& mesh_data_in);
@@ -235,16 +238,21 @@ class Macrostrain
 
   void output_piezo(std :: string filename); //output piezo for gmv
 
-
-  void output_add_strain_variables(string filename); // output lattice matching parameters
+ //! output lattice matching parameters
+  void output_add_strain_variables(std::string filename); 
   //---------------------------------------------------------------------
 
-  void output_materials(std :: string filename); //output materials
+  void output_materials(std::string filename); //output materials
 
   //----------------------------------------------------------
  
   Mesh* get_mesh(); //get pointer to the mesh
   
+
+
+ 
+
+
 
 
   ~Macrostrain();
@@ -384,7 +392,7 @@ class Macrostrain
   
   static  unsigned int             number_of_add_var_static;
 
-  vector<add_variable>  add_var;
+  std::vector<add_variable>  add_var;
 
   void define_additional_variables();//understand which additional varables are necessary.
 
@@ -471,25 +479,25 @@ class Macrostrain
   //-------------------------------------------------------------------
 
   //! 2D/3D:  map between Elem* and set of substrate faces; 1D map between Elem* and set of substrate nodes
-  map<const Elem*, set<unsigned int> > substrate_faces;
+  std::map<const Elem*,std:: set<unsigned int> > substrate_faces;
  
   //!map between b.c. number and a set of nodes 
-  map <unsigned int , vector<unsigned int> >   boundary_cond_nodes; 
+  std::map <unsigned int , std::vector<unsigned int> >   boundary_cond_nodes; 
 
   //! 2D/3D: map between Elem  and (map between side and stress value); 1D map between Elem  and (map between node and stress value)
-  map <const Elem*, map <unsigned int, double>  >   boundary_cond_elem; 
+  std::map <const Elem*, std::map <unsigned int, double>  >   boundary_cond_elem; 
   
   //!static pointer to boundary_cond_elem
-  static map <const Elem*, map <unsigned int, double>  >* boundary_cond_elem_temp;
+  static std::map <const Elem*, std::map <unsigned int, double>  >* boundary_cond_elem_temp;
  
   //!map between stress number and stress values
-  map <unsigned int, double>   stress_values; 
+  std::map <unsigned int, double>   stress_values; 
   
   //!contains nodes that belong to substrate
-  set <unsigned int> substrate_nodes; 
+  std::set <unsigned int> substrate_nodes; 
 
   //!static pointer to substate_nodes
-  static set <unsigned int>* substrate_nodes_temp; 
+  static std::set <unsigned int>* substrate_nodes_temp; 
 
 
   //! create map boundary_cond_elem from boundary_cond_nodes;
@@ -537,3 +545,4 @@ inline bool Macrostrain::element_on_boundary(const Elem* element)
   return(result);    
   
 };
+#endif
