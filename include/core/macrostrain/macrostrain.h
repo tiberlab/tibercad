@@ -527,7 +527,7 @@ inline bool Macrostrain::element_on_boundary(const Elem* element)
   unsigned int n_sides ; 
 
   if ( dim > 1 ) 
-    n_sides = element->n_faces();
+    n_sides = element->n_sides();
   else
     n_sides = element->n_nodes();
 
@@ -535,14 +535,19 @@ inline bool Macrostrain::element_on_boundary(const Elem* element)
   for (short i = 0; i < n_sides; i++)
     {
       Elem* el1 = element->neighbor(i);
-      if ( (el1 == NULL) || !( el1->active() )  )
-	{
+      if ( (el1 == NULL)  ) 
 	  result = true;
-	  break;
-	}
+      else
+	if (!( el1 -> active() ))
+	  result = true;
+	  
+      if (result) break;
+	
+      
     }
 
-  return(result);    
+ 
+  return(result);
   
 };
 #endif

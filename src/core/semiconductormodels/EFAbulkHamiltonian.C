@@ -91,3 +91,27 @@ void EFAbulkHamiltonian::rotate_quad(std::complex<double> matrix[][3])
      
 }
 //-------------------------------------------------------//
+//virtual methods of  PhysicalProperties
+//--------------------------------------------------------//
+void EFAbulkHamiltonian::read_database (const Dummy &db)
+{
+
+
+}
+//--------------------------------------------------------//
+
+void EFAbulkHamiltonian::read_database_bowing_parameters (const Dummy &db)
+{
+
+
+}
+  
+
+//---------------------------------------------------------//
+
+void  EFAbulkHamiltonian::set_properties_alloy (const PhysicalProperties *prop_comp1, 
+						const PhysicalProperties *prop_comp2, double molar_fraction)
+{
+
+
+}
