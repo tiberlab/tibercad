@@ -162,8 +162,12 @@ class Macrostrain
     
   } ;
   
-
-  
+  //!structure that contains both crystalographic information of a material and Elasticity tensor of a material
+  struct strain_param
+  {
+    stiffness C_tensor;
+    rotated_crystal crystal;
+  };
  
   //---------------------------------------------------------------------
   
@@ -177,16 +181,16 @@ class Macrostrain
 
   //----------------------------------------------------------------------
 
-  //!set information about crystal orientation and elastisity moduli
+  //!passes information about crystal orientation and elastisity moduli
   /*!
-    \param C_tensor_in vector of objects that can provide elasticity moduli information
-    \param crystal_in ector of objects that can provide information about crystals
+    \param strain_parameters_in a map between materials and a strain parameters 
+   
   */
 
-  void define_strain_parameters(const std::vector<stiffness>&        C_tensor_in,
-				const std::vector<rotated_crystal>&  crystal_in);
+  //void define_strain_parameters(const std::vector<stiffness>&        C_tensor_in,
+  //			const std::vector<rotated_crystal>&  crystal_in);
 
-  
+  void define_strain_parameters(const std::map <unsigned int, strain_param* >&    strain_parameters_in);
 
   //--------------------------------------------------------------------
   //! passes a number of substrate boundary condition
@@ -196,8 +200,8 @@ class Macrostrain
   void define_substrate_bc(unsigned int substrate_bc_number);
 
   //--------------------------------------------------------------------
-  
-  void define_piezo_moduli(std::vector<Piezoelectricity>&  piezo_in);
+  //!passes an information about piezoelectric parameters
+  void define_piezo_moduli(const std::map<unsigned int, Piezoelectricity*>&  piezo_in);
   //---------------------------------------------------------------------
 
   //! passes a reference to a boundary conditions map  
@@ -229,8 +233,8 @@ class Macrostrain
   void solve();
   //---------------------------------------------------------------------
 
-
-  Tensor2Sym get_strain(const Elem* el, bool crystal_system = false); //calculate strain
+  //!calculate strain
+  Tensor2Sym get_strain(const Elem* el, bool crystal_system = false); 
   
   Tensor1 get_piezopolarization(const Elem* el);
   //---------------------------------------------------------------------
@@ -272,15 +276,22 @@ class Macrostrain
 
   EquationSystems*   equation_systems; //pointer to the equation system
 
+ 
+
+  
   
   //---------------------------------------------------------------------
   /*
     STATIC Pointers to the objects that are necesary to assemble strain problem matrix
 
   */
-  static std:: vector<stiffness>*        C_tensor_temp;
-  static std:: vector<rotated_crystal>*  crystal_temp;
-  static std:: vector <int>*             material_of_elem_temp;
+  //  static std:: vector<stiffness>*        C_tensor_temp;
+  //  static std:: vector<rotated_crystal>*  crystal_temp;
+
+  //! static pointer to parameters
+  static std:: map<unsigned int, strain_param* > *    strain_parameters_temp;
+
+  static std:: vector <unsigned int>*             material_of_elem_temp;
   static std:: vector <Tensor2Sym>*      eps0_of_elem_temp;
 
   static std:: vector<add_variable>*     add_var_temp; 
@@ -291,10 +302,14 @@ class Macrostrain
   /*
     DYNAMICAL objects that are necesary to assemble strain problemmatrix
   */
-  std::vector<stiffness>        C_tensor; //Elasticity tensor of a material     
-  std::vector<rotated_crystal>  crystal;  //crystalographic information of a material 
+  //  std::vector<stiffness>        C_tensor; //Elasticity tensor of a material     
+  //std::vector<rotated_crystal>  crystal;  //crystalographic information of a material
+ 
 
-  std::vector<int>              material_of_elem; // material of an element
+  //!map between material number and strain parameters 
+  std:: map<unsigned int, Macrostrain::strain_param*>    strain_parameters;
+
+  std::vector<unsigned int>              material_of_elem; // material of an element
   std::vector<Tensor2Sym>       eps0_of_elem;     // eps of an element from previous iteration
 
 
@@ -308,8 +323,8 @@ class Macrostrain
   void update_u_node(); //updates list of node displacements
 
   //---------------------------------------------------------------------
-
-  std::vector<Piezoelectricity> piezo; //piezoelectricity constants of a meterial   
+  //map between material number and piezoelectricity constants of a material  
+  std::map< unsigned int, Piezoelectricity*> piezo_parameters; 
 
   std :: map <const Elem*, unsigned int > elem_numbers;  //map between element pointers and their numbers
 

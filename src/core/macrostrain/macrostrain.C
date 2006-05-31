@@ -13,9 +13,8 @@ unsigned  int  Macrostrain:: substr_mat;
 Tensor2Sym     Macrostrain:: eps0_var_log;
 unsigned int   Macrostrain:: number_of_add_var_static;
 
-std::vector<stiffness>*       Macrostrain:: C_tensor_temp;
-std::vector<rotated_crystal>* Macrostrain:: crystal_temp;
-std::vector <int>*            Macrostrain:: material_of_elem_temp;
+std:: map<unsigned int, Macrostrain::strain_param* > *    Macrostrain::strain_parameters_temp;
+std::vector <unsigned int>*            Macrostrain:: material_of_elem_temp;
 std::vector <Tensor2Sym>*     Macrostrain:: eps0_of_elem_temp;
 std::vector<Macrostrain::add_variable>*    Macrostrain:: add_var_temp; 
 std::vector<unsigned int>     Macrostrain:: add_dofs_vector;
@@ -209,11 +208,9 @@ void Macrostrain::assign_mesh_data(MeshData& mesh_data_in)
 
 
 //-----------------------------------------------------------------//
-void Macrostrain::define_strain_parameters(const std::vector<stiffness>&        C_tensor_in,
-				const std::vector<rotated_crystal>&  crystal_in)
+void Macrostrain::define_strain_parameters(const std::map <unsigned int, Macrostrain::strain_param* > &    strain_parameters_in )
 {
-  C_tensor = C_tensor_in;
-  crystal = crystal_in;
+  strain_parameters = strain_parameters_in;
 }
 
 
@@ -222,9 +219,9 @@ void Macrostrain::define_strain_parameters(const std::vector<stiffness>&        
 
 //------------------------------------------------------------------//
 
-void Macrostrain::define_piezo_moduli(std::vector<Piezoelectricity>&  piezo_in)
+void Macrostrain::define_piezo_moduli(const std::map<unsigned int, Piezoelectricity*>&  piezo_in )
 {
-  piezo = piezo_in; 
+  piezo_parameters = piezo_in; 
 }
 //------------------------------------------------------------------//
 void Macrostrain::create_substate_nodes_set()
@@ -252,6 +249,9 @@ void Macrostrain::create_substate_nodes_set()
 	  substrate_nodes.insert(sub_nodes[i]);
 	}
       
+      cerr << " substrate_nodes.size() " << substrate_nodes.size() <<"\n";
+     
+
       //-------------------------------------------------------------
       // we create substrate_faces (2D/3D only)
 
@@ -773,8 +773,9 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
   system.matrix->zero();
 
 
-
-
+   stiffness C_tensor_el;
+   rotated_crystal crystal_el;
+  
 
 
   for ( ; el != end_el ; ++el) 
@@ -799,17 +800,32 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 
       dof_indices_total.resize(n_dofs + number_of_add_var_static);
       
+      
+      
+
+      const unsigned int material = (*material_of_elem_temp)[el_number];
+
      
+      cerr << material << "\n";
       
-
-      const int material = (*material_of_elem_temp)[el_number];
-
-
       
+     
+      C_tensor_el = 	((*strain_parameters_temp)[ material  ]) -> C_tensor ;
+      crystal_el =  	((*strain_parameters_temp)[ material  ]) -> crystal;
 
-      eps_const = (*crystal_temp)[material].get_const_eps0(substrate_lat_const, eps0_var_log) 
+	
+
+
+      eps_const =  crystal_el.get_const_eps0(substrate_lat_const, eps0_var_log) 
 	+ (*eps0_of_elem_temp)[el_number] ;//+ substrate_shear;
 
+      cerr << substrate_lat_const[0] << "\n";
+      double lat_const[3];
+      crystal_el.get_lat_const(lat_const);
+      cerr << lat_const[0] << "\n";
+      
+
+     
       
       for (unsigned int qp=0; qp<qrule.n_points(); qp++) // Scalar product integration
 	{//qp
@@ -835,9 +851,9 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 
 
 
-		  if (!belongs_to_substrate(p1, elem))
+ 		  if (!belongs_to_substrate(p1, elem))
 		    {//---------not a substrate point, so we calculte the RHS for master equation system
-     
+
 		      vec1 = 0;
 		      for (int i = 1; i<=dim; i++) vec1(i) = dphi[p1][qp](i-1);
 		      
@@ -854,7 +870,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 			    }
 			  
 			 
-			  Fe_sub(p1) -= JxW[qp]*(vec1 * ( (*C_tensor_temp)[material].get_subtensor(j+1,k+1)* vec2 ));
+			  Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el.get_subtensor(j+1,k+1)* vec2 ));
 			} 
 
 		      //------------external normal stress--------
@@ -945,7 +961,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 			  Ke_u_add_sub.reposition (uvar[j]*n_u_dofs, n_dofs, n_u_dofs, (*add_var_temp).size());
 			  
 			
-			  eps_var = (*crystal_temp)[material].get_var_eps0( (*add_var_temp)[i1].name );
+			  eps_var = crystal_el.get_var_eps0( (*add_var_temp)[i1].name );
 			  
 			  
 			  
@@ -963,7 +979,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 				    vec2(i) = eps_var(i,k+1);
 				}
 			   
-			      Ke_u_add_sub(p1,i1) += JxW[qp]*(vec1 * ( (*C_tensor_temp)[material].get_subtensor(j+1,k+1) * vec2 ));
+			      Ke_u_add_sub(p1,i1) += JxW[qp]*(vec1 * ( C_tensor_el.get_subtensor(j+1,k+1) * vec2 ));
 			    }
  
 			} 
@@ -973,7 +989,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 		    {
 		      //substrate point
 		      Fe_sub(p1) = 0.0;
-		      
+		     
 		    }
 
 
@@ -1005,7 +1021,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 			  vec2 = 0;
 			  for (int i = 1; i<=dim; i++) vec2(i) = dphi[p2][qp](i-1) ;
 			  
-			  scal_prod = vec1 * ( (*C_tensor_temp)[material].get_subtensor(j+1,k+1) * vec2);
+			  scal_prod = vec1 * ( C_tensor_el.get_subtensor(j+1,k+1) * vec2);
 			  
 			  if (!belongs_to_substrate(p1, elem))
 			    {
@@ -1040,7 +1056,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 	      if ( (*add_var_temp)[eq_number].lat_cons )
 		{
 		    unsigned int lat_index = (*add_var_temp)[eq_number].index1;
-		    double lat_const = (*crystal_temp)[material].lat_const_calc[lat_index - 1];
+		    double lat_const = crystal_el.lat_const_calc[lat_index - 1];
 		    
 		    lattice_factor = 1/lat_const;
 		 }
@@ -1053,7 +1069,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 		  unsigned int lat_index2 = (*add_var_temp)[eq_number].index2;
 		  
 		 
-		  C_kl = (*C_tensor_temp)[material].get_another_subtensor(lat_index1,lat_index2);
+		  C_kl = C_tensor_el.get_another_subtensor(lat_index1,lat_index2);
 		  //----------------RHS------------------
 		  Fe_add_sub.reposition(n_dofs + eq_number,1);
 		  
@@ -1094,7 +1110,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 		  for (unsigned int i1 = 0; i1 < (*add_var_temp).size()  ; i1++)
 		    {
 		      Ke_add_add_sub.reposition(n_dofs + eq_number,n_dofs + i1,1,1);
-		      eps_var = (*crystal_temp)[material].get_var_eps0( (*add_var_temp)[i1].name );
+		      eps_var = crystal_el.get_var_eps0( (*add_var_temp)[i1].name );
 		    
 		      Ke_add_add_sub(0,0) += JxW[qp]  * doubleContraction(eps_var,C_kl) *  lattice_factor;
 		   
@@ -1252,9 +1268,11 @@ void Macrostrain::refer_objects()
 {
 //------------------------------------------------------
   //referencing of data objects
-  C_tensor_temp = &C_tensor;
+  //C_tensor_temp = &C_tensor;
 
-  crystal_temp =  &crystal ;
+  //crystal_temp =  &crystal ;
+
+  strain_parameters_temp = &strain_parameters;
 
   material_of_elem_temp  = &material_of_elem;
  
@@ -1653,7 +1671,7 @@ void Macrostrain::assemble_material_list()
 	  
 	  
 	  
-	  material_of_elem[el_number] = mat - 1 ;
+	  material_of_elem[el_number] = mat;
 	  
 	  el_number++;
 
@@ -1754,29 +1772,7 @@ void Macrostrain::initialize_eps0_list()
 
   eps0_of_elem.resize( N_elem, Tensor2Sym(0) );
 
-  /*
 
-
-
-  MeshBase::const_element_iterator el  = mesh.active_elements_begin();
-  MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-
-  
-  double a_substrate[3];  crystal[substr_mat].get_lat_const(a_substrate);
-
-  const Tensor2Sym eps0(0);
- 
-  unsigned int el_number = 0;
- 
-
-  for ( ; el != end_el ; ++el) 
-    {
-      eps0_of_elem[el_number] = eps0;
-
-      el_number++;
-    }
-
-  */
 
 
 }
@@ -2299,7 +2295,12 @@ void Macrostrain::output_strain(std::string filename )
   char num_j[2];
   string eps_ij;
   
-  double a_substrate[3];  crystal[substr_mat].get_lat_const(a_substrate);
+  std:: map<unsigned int, Macrostrain::strain_param*>::iterator str_it =
+    strain_parameters.find( substr_mat  );
+ 
+  rotated_crystal crystal_substr =  (str_it->second)->crystal;
+
+  double a_substrate[3];  crystal_substr.get_lat_const(a_substrate);
 
   unsigned int index = 0;
 
@@ -2652,9 +2653,13 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
   //------------------------------------------------------------------
   if (crystal_system)
     {//convert to crystal system
-      const int material = material_of_elem[elem_number]; //get material number
+      const unsigned int material = material_of_elem[elem_number]; //get material number
      
-      Tensor2Gen RotM = (crystal[material].RotMatrix).transpose();//get rotation matrix
+      std:: map<unsigned int, Macrostrain::strain_param*>::iterator str_it = strain_parameters.find(material);
+      
+      rotated_crystal crystal1 =( str_it -> second ) -> crystal; 
+
+      Tensor2Gen RotM = (crystal1.RotMatrix).transpose();//get rotation matrix
       
       Tensor2Gen eps1 = (RotM*eps)*RotM.transpose();  //transform
       
@@ -2686,14 +2691,20 @@ Tensor1 Macrostrain::get_piezopolarization(const Elem* el)
   
   const unsigned int elem_number = el_numb_it->second;
 
-  const int material = material_of_elem[elem_number]; //get material number
+  const unsigned int material = material_of_elem[elem_number]; //get material number
   //----------------calculate polarization---------------------------------
 
-  Tensor1 polariz = piezo[material].get_polariz_cryst(strain_cr); //crystal system
+  std::map< unsigned int, Piezoelectricity*>::iterator piezo_it =
+    piezo_parameters.find( material) ;
 
   
 
-  polariz =(crystal[material].RotMatrix) * polariz; //calculation system
+  Tensor1 polariz = (piezo_it -> second)->get_polariz_cryst(strain_cr); //crystal system
+
+  std::map< unsigned int, Macrostrain::strain_param*>::iterator str_it =
+    strain_parameters.find( material) ;
+
+  polariz =( (str_it -> second)->crystal.RotMatrix) * polariz; //calculation system
 
   return(polariz);
 
@@ -2865,7 +2876,10 @@ void  Macrostrain::set_up_additional_dofs()
 Tensor2Sym Macrostrain::calculate_eps_lat_matching(unsigned int material)
 {
   //constant part of the lattice matching tensor
-  Tensor2Sym eps0 = (*crystal_temp)[material].get_const_eps0(substrate_lat_const, eps0_var_log);
+  std::map< unsigned int, Macrostrain::strain_param*>::iterator str_it =
+    strain_parameters.find(material);
+
+  Tensor2Sym eps0 = ((str_it -> second)->crystal).get_const_eps0(substrate_lat_const, eps0_var_log);
   //------
   //variable part:
   for (unsigned int i = 0; i < number_of_add_var; i++)
@@ -2874,7 +2888,7 @@ Tensor2Sym Macrostrain::calculate_eps_lat_matching(unsigned int material)
 
       double coeff = (*equation_systems->get_system("Strain").solution)( dof_number ); 
 
-      eps0 += coeff * crystal[material].get_var_eps0( add_var[i].name );
+      eps0 += coeff * ((str_it -> second)->crystal).get_var_eps0( add_var[i].name );
     } 
 
   return(eps0);
@@ -2884,7 +2898,11 @@ Tensor2Sym Macrostrain::calculate_eps_lat_matching(unsigned int material)
 void Macrostrain::init_substrate()
 {
   substrate_shear = Tensor2Sym(0);
-  crystal[substr_mat].get_lat_const(substrate_lat_const);
+
+  std::map< unsigned int, Macrostrain::strain_param*>::iterator str_it =
+    strain_parameters.find( substr_mat);
+  
+  ((str_it -> second)->crystal).get_lat_const(substrate_lat_const);
 }
 //--------------------------------------------------------------------------------------------/
 
@@ -3340,7 +3358,11 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
 
   //----------------------------------------------------------------------
   double substrate_lat_const_initial[3];
-  crystal[substr_mat].get_lat_const(substrate_lat_const_initial);
+
+  std::map< unsigned int, Macrostrain::strain_param*>::iterator str_it =
+    strain_parameters.find(substr_mat);
+  
+  ((str_it -> second)->crystal).get_lat_const(substrate_lat_const_initial);
   //----------------------------------------------------------------------
   
 

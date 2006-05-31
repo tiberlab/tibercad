@@ -244,8 +244,10 @@ Tensor2Sym rotated_crystal::get_const_eps0(double lat_cont_substrate[3], Tensor2
 	{
 	  
 	  const_eps0(i,i) = (lat_cont_substrate[i-1] - lat_const_calc[i-1])/lat_const_calc[i-1];
+	  
 	}
     }
+ 
 
   return(const_eps0);
 

@@ -3,6 +3,7 @@
 using namespace std;
 const double EnvelopFunctionApprox::Hartree;
 
+
 EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshData& mesh_data_in)
 {
   //Initoalization
@@ -66,9 +67,15 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshDat
    //------------------------------------------------------------------------------------------------------//
    
 }
+//===========================================================//
+void EnvelopFunctionApprox::define_strain_data( Macrostrain*  strain_in)
+{
+  strain = strain_in;
+}
+
 
 //============================================================//
-void EnvelopFunctionApprox::set_material_parameters(std::vector<EFAbulkHamiltonian*>&  bulkHamiltonian_in)
+void EnvelopFunctionApprox::set_material_parameters(std::map<unsigned int, EFAbulkHamiltonian*>&  bulkHamiltonian_in)
 {
   bulkHamiltonian = bulkHamiltonian_in;
 }
@@ -145,6 +152,11 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
 
+  Tensor2Sym strain_crystal_system(0);
+  double electric_potential = 0;
+
+  EFAbulkHamiltonian* element_hamiltonian;
+
   unsigned int el_number = 0;
   for ( ; el != end_el ; ++el) 
     {//el
@@ -153,7 +165,21 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       const Elem* elem = *el;
       const unsigned int mat = material_of_elem[el_number];
 
-      std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&  model_Ham = ( (bulkHamiltonian[mat])->get_Hamiltonian() );
+   
+      element_hamiltonian = bulkHamiltonian[mat];
+
+      if (opt.consider_strain)
+	{
+	  strain_crystal_system = strain->get_strain(elem, true);
+	}
+
+      element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
+	  
+
+
+
+      std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&  
+	model_Ham = ( element_hamiltonian->get_Hamiltonian() );
 
       dof_map.dof_indices (elem, dof_indices); 
       const unsigned int n_dofs   = dof_indices.size();
@@ -306,7 +332,7 @@ Mesh& mesh = es->get_mesh();
       unsigned int mat;
       //-------------------------------------
       
-      mat  = ( (unsigned int) (*meshdata)(elem->top_parent(),0) )  - 1;
+      mat  = ( (unsigned int) (*meshdata)(elem->top_parent(),0) );
       material_of_elem[el_number] = mat;
       Point p = elem->centroid();
    
@@ -824,7 +850,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 
 //=============================================================//
 void EnvelopFunctionApprox::read_SLEPC_solution( )
-{
+{//
   const short int_size = sizeof(int);
 
   const short double_size = sizeof(double);
@@ -856,7 +882,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 
   //--------------------------------------------------------------------
   //read eigenvalues
-  for (unsigned i = 0; i < number_of_converged_solutions; i++)
+  for (unsigned ind = 0; ind < number_of_converged_solutions; ind++)
     {
       
       
@@ -866,16 +892,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 
       
 
-      unsigned int ind;
-      if (opt.particle == "el")
-	{
-	//we have to reorder eigensolutions in order to have the smallest eigenvalue first
-	  ind = number_of_converged_solutions - i - 1;
-	}
-      else
-	{
-	  ind = i;
-	}
+     
 	
       solution[ind].eigen_energy = *(  reinterpret_cast<double*>( &fict ) ) * Hartree;
     
@@ -900,20 +917,12 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 
   //read solutions - only independent dofs
   //----------------------------------------------------------------------
-  for (unsigned int i = 0; i < number_of_converged_solutions; i++)
+  for (unsigned int ind = 0; ind < number_of_converged_solutions; ind++)
     {
 
-      unsigned int ind;
-
-      if (opt.particle == "el")
-	{
-	  //we have to reorder eigensolutions in order to have the smallest eigenvalue first
-	  ind = number_of_converged_solutions - i - 1;
-	}
-      else
-	{
-	  ind = i;
-	}
+     
+ 
+	
 
 
       file_eigvects.read(buffer, int_size);
@@ -956,8 +965,12 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
     }
 
 
+  //------------------------------------------------------------
+  //sorting of the solutions
+  if (opt.particle == "el") sort( solution.begin(), solution.end(), compare_eigen_energy_electrons );
 
-
+  if (opt.particle == "hl") sort( solution.begin(), solution.end(), compare_eigen_energy_holes );
+  //------------------------------------------------------------
   
 }
 //=============================================================//
@@ -1265,6 +1278,19 @@ void EnvelopFunctionApprox::make_new_dofs( )
   
 
 }
+//=======================================================================//
+bool EnvelopFunctionApprox::compare_eigen_energy_electrons(eigen_propblem_solution state1, eigen_propblem_solution state2)
+{
+  return(state1.eigen_energy < state2.eigen_energy );
+}
+
+
+//=======================================================================//
+bool EnvelopFunctionApprox::compare_eigen_energy_holes(eigen_propblem_solution state1, eigen_propblem_solution state2)
+{
+  return(state1.eigen_energy > state2.eigen_energy );
+}
+
 
 
 //=======================================================================//

@@ -57,7 +57,7 @@
 #include <set>
 #include <tecplot_io.h>
 #include "mesh_data.h"
-
+#include "macrostrain.h"
 class EnvelopFunctionApprox
 {
  public:
@@ -82,11 +82,13 @@ class EnvelopFunctionApprox
 
     double eigen_solver_tolerance; //!< tolerance for eigenvalue solver [Ha]
 
-    std::string output_type; //!< output type
+    std::string output_type; //!< output type 
 
     unsigned int max_iteration_number; //!< maximum number of iterations for the eigenvalue solver
 
     double spectrum_shift; //!< shift of spectrum [eV]
+
+    bool  consider_strain; //!< apply strain effect to the EFA Hamiltonian;
     
   };
 
@@ -129,7 +131,7 @@ class EnvelopFunctionApprox
 
 
   //!sets material data
-  void set_material_parameters(std::vector<EFAbulkHamiltonian*>&  bulkHamiltonian); 
+  void set_material_parameters(std::map<unsigned int, EFAbulkHamiltonian*>&  bulkHamiltonian); 
 
 
   //!solves eigenvalue problem
@@ -170,6 +172,12 @@ class EnvelopFunctionApprox
   void define_diriclet_nodes(std::vector<unsigned int>&  dirichlet_nodes_input);
 
 
+  //! Passes a pointer of a Macrostrain object
+  /*!
+    \param strain_in a pointer to Macrostrain object
+  */
+  void define_strain_data( Macrostrain*  strain_in);
+ 
  private:
 
   options opt;
@@ -177,6 +185,9 @@ class EnvelopFunctionApprox
   MeshData*  meshdata;
 
   EquationSystems* es;
+
+  Macrostrain* strain;
+
 
   //!diriclet nodes vector
   std::vector<unsigned int>  dirichlet_nodes;
@@ -200,8 +211,8 @@ class EnvelopFunctionApprox
   //!pointer to the S matrix (it's real)
   SparseMatrix<Number>* S_real;
 
-  //!vector that contains pointers to bulk Hamiltoninas
-  std::vector<EFAbulkHamiltonian*>  bulkHamiltonian;
+  //!map that contains pointers to bulk Hamiltoninas
+  std::map<unsigned int, EFAbulkHamiltonian*>  bulkHamiltonian;
 
   //!bands names
   std::vector<std::string> psi_name;
@@ -281,5 +292,11 @@ class EnvelopFunctionApprox
   //! Hartree energy in eV
   static const double Hartree = 27.2113961;
 
+
+  //! compares eigenstate energy
+  static bool compare_eigen_energy_electrons(eigen_propblem_solution state1, eigen_propblem_solution state2);
+
+  //! compares eigenstate energy  
+  static bool compare_eigen_energy_holes(eigen_propblem_solution state1, eigen_propblem_solution state2);
 };
 #endif
