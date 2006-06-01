@@ -30,7 +30,7 @@ extern "C" {
 
 // forward declarations
 class DD::Device;
-class BoundaryDescriptor;
+class ElectricalContact;
 class Mesh;
 class Elem;
 class Node;
@@ -392,7 +392,7 @@ class DriftDiffusion
      * @returns the boundary currents indexed by boundary descriptor
      * pointers.
      */
-    const std::map<const BoundaryDescriptor*, double>&
+    const std::map<const ElectricalContact*, double>&
       get_boundary_currents(void) const;
 
     /**
@@ -438,8 +438,8 @@ class DriftDiffusion
     };
 
     // for nicer code
-    typedef std::map<const BoundaryDescriptor*, double> ContactData;
-    typedef std::map<const Node*, const BoundaryDescriptor*> BoundaryNodeList;
+    typedef std::map<const ElectricalContact*, double> ContactData;
+    typedef std::map<const Node*, ElectricalContact*> BoundaryNodeList;
     typedef TiberPetscNonlinearSolver<Real> SolverClass;
 
     //! A static reference to \c this
@@ -724,7 +724,7 @@ DriftDiffusion::get_final_residual(void) const
 }
 
 inline
-const std::map<const BoundaryDescriptor*, double>&
+const std::map<const ElectricalContact*, double>&
 DriftDiffusion::get_boundary_currents() const
 {
   return _boundary_currents;

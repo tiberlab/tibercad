@@ -5,8 +5,8 @@ $Options$
 # a 3D piece of bulk semiconductor
 
 
-n_doping = 0
-p_doping = 1e18
+n_doping = 1e16
+p_doping = 0
 temperature = 300
 
 #statistics = FD
@@ -21,7 +21,7 @@ voltage_steps = 10
 
 nonlinear_tolerance = 1e-12
 nonlinear_ls_maxstep = 0.05
-linear_tolerance = 1e-3
+linear_tolerance = 1e-6
 nonlinear_max_it = 15
 linear_max_it = 1000
 integration_order = 5

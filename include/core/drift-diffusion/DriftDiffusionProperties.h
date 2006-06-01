@@ -6,6 +6,7 @@
 //#include "tensor_value.h"
 #include "vector_value.h"
 
+#include "SimulationOptions.h"
 #include "PhysicalProperties.h"
 #include "DriftDiffusionDefs.h"
 #include "TiberCad.h"
@@ -41,9 +42,6 @@ class DriftDiffusionProperties : public PhysicalProperties
 
     //! (Re-)Initialize for the given element
     /*!
-     * This method has to be called before \c calculate_all() or
-     * \c calculate_equilibrium_properties().
-     *
      * \c reinit() calls \c prepare_element_data() which needs to be
      * implemented in derived classes
      */

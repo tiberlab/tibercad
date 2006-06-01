@@ -79,7 +79,7 @@ StrainedSemiconductorModel::prepare_element_data(void)
       equilibrium_hole_density = elem_data.p0;
 
       // this sets the band edges and the effective DOS in the base class
-      SemiconductorModel::prepare_element_data();
+      setup_band_edges();
     }
 
   }

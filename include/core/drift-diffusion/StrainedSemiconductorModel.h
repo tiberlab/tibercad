@@ -31,15 +31,6 @@ class StrainedSemiconductorModel : public SemiconductorModel
     //! Include strain related effects
     void include_strain(void);
 
-    //! Calculate the equilibrium properties
-    /*!
-     * This method calculates the equilibrium material properties
-     * (eq. quasi Fermi level, eq. densities)
-     */
-    //virtual void calculate_equilibrium_properties(
-    //    int coupling = DriftDiffusionDefs::BOTH,
-    //    double temperature = SimulationOptions::T);
-
     //! Clean the internal cache of element data
     /*!
      * Band and equilibrium parameters are cached for each element so they

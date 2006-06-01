@@ -13,7 +13,7 @@ class Mesh;
 class ElementData;
 class BoundaryData;
 class DriftDiffusionProperties;
-class BoundaryDescriptor;
+class ElectricalContact;
 
 namespace DD {
 class Device
@@ -24,7 +24,7 @@ class Device
     typedef MaterialList::iterator material_iterator;
     typedef MaterialList::const_iterator const_material_iterator;
 
-    typedef std::set<BoundaryDescriptor*> BoundaryList;
+    typedef std::set<ElectricalContact*> BoundaryList;
     typedef BoundaryList::iterator boundary_iterator;
     typedef BoundaryList::const_iterator const_boundary_iterator;
 
@@ -58,7 +58,7 @@ class Device
      *
      * If @c name does not exist, @c NULL is returned
      */
-    BoundaryDescriptor* get_boundary(const std::string& name) const;
+    ElectricalContact* get_boundary(const std::string& name) const;
 
     /**
      * Checks integrity of \p this object

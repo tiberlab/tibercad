@@ -2,7 +2,7 @@
 #include "Read_MSH.h"
 
 #include "ElementData.h"
-#include "BoundaryDescriptor.h"
+#include "OhmicContact.h"
 #include "BoundaryData.h"
 #include "DDevice.h"
 #include "DriftDiffusion.h"
@@ -25,14 +25,9 @@
 using namespace std;
 using namespace DriftDiffusionDefs;
 
-void setup_boundary_desc(BoundaryDescriptor& desc,
-    DriftDiffusionProperties& sc_model);
 
 void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    BoundaryDescriptor& desc, const Mesh& mesh);
-
-void set_boundary(BoundaryData& data, double x,
-    BoundaryDescriptor& desc, const Mesh& mesh);
+    ElectricalContact* desc, const Mesh& mesh);
 
 
 double alloy(double a, double b, double xa, double bowing = 0.0)
@@ -41,8 +36,6 @@ double alloy(double a, double b, double xa, double bowing = 0.0)
 };
 
 class Dummy {};
-
-double schottky_barrier;
 
 
 int main (int argc, char** argv)
@@ -139,42 +132,14 @@ int main (int argc, char** argv)
         2060,
         -51.5, 51.5,
         EDGE2);
-/*
-    {
-      MeshRefinement ref(mesh);
-      ref.uniformly_refine();
-      ref.uniformly_refine();
-      ref.uniformly_refine();
-      ref.uniformly_refine();
-      //ref.uniformly_refine();
-
-      //for (int i = 0; i < 3; i++)
-      for (int i = 0; i < 0; i++)
-      {
-        {
-          MeshBase::element_iterator it = mesh.elements_begin();
-          const MeshBase::element_iterator end = mesh.elements_end();
-          for ( ; it != end; ++it)
-          {
-            Elem* elem = *it;
-
-            double y = elem->centroid()(0);
-            if ((y > -2) && (y < 2))
-              elem->set_refinement_flag(Elem::REFINE);
-          }
-          ref.refine_elements();
-        }
-      }
-    }
-*/
 
 
     MeshData_elements meshdata(mesh);
     meshdata.enable_compatibility_mode();
     
     map<unsigned int, vector<unsigned int> > boundary_nodes;
-    boundary_nodes[1] = vector<unsigned int>(1, 2061);
-    boundary_nodes[2] = vector<unsigned int>(1, 1);
+    boundary_nodes[1] = vector<unsigned int>(1, 2060);
+    boundary_nodes[2] = vector<unsigned int>(1, 0);
 
     {
       map<const Elem*, vector<Number> > m;
@@ -205,9 +170,6 @@ int main (int argc, char** argv)
      * Setup of strain parameters
      *
      *****************************************************/
-    //BC_region_type substrate_region;
-
-    //std::vector<BC_region_type> material_region;
 
     bool periodicity[3];
 
@@ -454,22 +416,20 @@ int main (int argc, char** argv)
     fp[1] = 0.0; fp[0] = fp[2] = 1.0;
     opt.fixed_point3 = fp;
 
-    //double stress_value = strain_opt( "stress",0.0);
-    //vector<external_stress>  stress_vector_in(1);
-    //stress_vector_in[0].bc_region_number = 1;
-    //stress_vector_in[0].stress_value = stress_value;
+    double stress_value = strain_opt( "stress",0.0);
+    map<unsigned int, double> stress_map;
+    stress_map[1] = stress_value;
 
 
     Macrostrain strain_calculation(opt, mesh);
 
     strain_calculation.define_substrate_bc(2);
     strain_calculation.define_BC_map(boundary_nodes);
+    strain_calculation.define_stress_value(stress_map);
+
     strain_calculation.assign_mesh_data(meshdata);
     strain_calculation.define_strain_parameters(C_tensor, crystal);
-    //strain_calculation.define_substrate_region(substrate_region);
     strain_calculation.define_piezo_moduli(piezo_data);
-    //strain_calculation.define_external_stress(stress_vector_in,
-    //    boundary_nodes);
 
 
     /*****************************************************/
@@ -482,7 +442,6 @@ int main (int argc, char** argv)
      ****************************************************************/
 
     StrainedSemiconductorModel n_gan(&strain_calculation);    
-    //SemiconductorModel n_gan;
     if (mat_sys == 1)
       n_gan.set_data_file("GaAs.dat");
     else if (mat_sys == 2)
@@ -508,11 +467,9 @@ int main (int argc, char** argv)
     n_gan.set_direct_rec_parameters(1e-15);
 
     // p-GaN
-    //SemiconductorModel p_gan(n_gan);
     StrainedSemiconductorModel p_gan(n_gan);
     
     // InGaN
-    //SemiconductorModel ingan(n_gan);
     StrainedSemiconductorModel ingan(n_gan);
     if (mat_sys == 1)
       ingan.set_data_file("InAs.dat");
@@ -593,32 +550,13 @@ int main (int argc, char** argv)
       ingan.include_strain();
     }
 
-    //const Elem* elem = meshdata.elem_data_begin()->first;
-    n_gan.reinit(n_gan_elem);
-    p_gan.reinit(p_gan_elem);
-    ingan.reinit(ingan_elem);
+    OhmicContact anode("anode");
+    anode.set_zero_derivative_bc(POTENTIAL);
+    anode.set_zero_derivative_bc(FERMIE);
+    OhmicContact cathode("cathode");
+    cathode.set_zero_derivative_bc(POTENTIAL);
+    cathode.set_zero_derivative_bc(FERMIH);
 
-    cout << "n-GaN:" << endl;
-    n_gan.calculate_equilibrium_properties();
-    n_gan.print_info();
-
-    cout << "p-GaN:" << endl;
-    p_gan.calculate_equilibrium_properties();
-    p_gan.print_info();
-
-    cout << "InGaN:" << endl;
-    ingan.calculate_equilibrium_properties();
-    ingan.print_info();
-
-    n_gan.ignore_strain();
-    p_gan.ignore_strain();
-    ingan.ignore_strain();
-
-    BoundaryDescriptor anode("anode");
-    BoundaryDescriptor cathode("cathode");
-    setup_boundary_desc(anode, p_gan);
-    setup_boundary_desc(cathode, n_gan);
-return 0;
 
     BoundaryData boundary_data;
     {
@@ -634,10 +572,10 @@ return 0;
         switch (it->first)
         {
           case 1:
-            set_boundary(boundary_data, nodes, anode, mesh);
+            set_boundary(boundary_data, nodes, &anode, mesh);
             break;
           case 2:
-            set_boundary(boundary_data, nodes, cathode, mesh);
+            set_boundary(boundary_data, nodes, &cathode, mesh);
             break;
         }
       }
@@ -809,7 +747,7 @@ return 0;
           GnuPlotIO::GRID_ON).write_nodal_data(filename_b.str(),
             densities, names);
 
-      const map<const BoundaryDescriptor*, double>& curr =
+      const map<const ElectricalContact*, double>& curr =
         dd.get_boundary_currents();
       file << *it << "  "
            << (*curr.find(&cathode)).second << "  "
@@ -849,7 +787,7 @@ return 0;
               densities, names);
 
         restart = false;
-        const map<const BoundaryDescriptor*, double>& curr =
+        const map<const ElectricalContact*, double>& curr =
           dd.get_boundary_currents();
         file << *it << "  "
           << (*curr.find(&cathode)).second << "  "
@@ -867,35 +805,8 @@ return 0;
 
 
 
-void setup_boundary_desc(BoundaryDescriptor& desc,
-      DriftDiffusionProperties& sc)
-{
-
-  std::vector<double> coeff(3, 0);
-
-  coeff[0] = 1.0;
-  if (desc.get_id() == "anode")
-  {
-    desc.set_coefficients("fermi_h", coeff);
-    coeff[0] = 0.0; coeff[1] = 1.0;
-    desc.set_coefficients("fermi_e", coeff);
-  }
-  else
-  {
-    desc.set_coefficients("fermi_e", coeff);
-    coeff[0] = 0.0; coeff[1] = 1.0;
-    desc.set_coefficients("fermi_h", coeff);
-  }
-
-  // zero field
-  //coeff[1] = 0.0; coeff[0] = 1.0;
-  //coeff[2] = sc.get_equilibrium_fermi_level();
-  desc.set_coefficients("potential", coeff);
-}
-
-
 void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    BoundaryDescriptor& desc, const Mesh& mesh)
+    ElectricalContact* desc, const Mesh& mesh)
 {
   vector<int>::const_iterator n_it;
   const vector<unsigned int>::const_iterator n_begin = nodes.begin();
@@ -912,37 +823,10 @@ void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
     {
       if (elem->neighbor(s) == NULL)
       {
-        if (find(n_begin, n_end, elem->node(s) + 1) != n_end)
-          data.set_data(BoundaryData::ElementSide(elem, s), &desc);
+        if (find(n_begin, n_end, elem->node(s)) != n_end)
+          data.set_data(BoundaryData::ElementSide(elem, s), desc);
       }
     }
-  }
-}
-
-void set_boundary(BoundaryData& data, double x,
-    BoundaryDescriptor& desc, const Mesh& mesh)
-{
-
-  MeshBase::const_element_iterator el = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-  while (el != end_el)
-  {
-    const Elem* elem = *el;
-
-    for (unsigned int n = 0; n < elem->n_nodes(); n++)
-    {
-      if (elem->neighbor(n) == NULL) {
-        double xcoord = (*elem->get_node(n))(0);
-        
-        if (std::fabs(xcoord - x) < 1e-15)
-        {
-          cerr << "Boundary: " << xcoord << " " << elem->node(n) << "\n";
-          data.set_data(BoundaryData::ElementSide(elem, n), &desc);
-        }
-      }
-    }
-
-    ++el;
   }
 }
 

@@ -52,11 +52,11 @@ class SemiconductorModel : public DriftDiffusionProperties
         double temperature = SimulationOptions::T);
 
     //! Add recombination model to be used.
-    void add_recombination_model(DriftDiffusionDefs::RecombinationModels
+    void add_recombination_model(DriftDiffusionDefs::RecombinationModel
         recomb_model);
 
     //! Remove a recombination model.
-    void remove_recombination_model(DriftDiffusionDefs::RecombinationModels
+    void remove_recombination_model(DriftDiffusionDefs::RecombinationModel
         recomb_model);
 
     //! Set Shockley-Read-Hall recombination parameters
@@ -165,12 +165,14 @@ class SemiconductorModel : public DriftDiffusionProperties
     void extract_band_properties(void);
 
     //! \copydoc DriftDiffusionProperties::prepare_element_data()
+    virtual void prepare_element_data(void);
+
+    //! Setup the band edge data
     /*!
      * This implementation calculates the effective density of states
      * and sets the band edges.
-     * A derived class has to call this routine!
      */
-    virtual void prepare_element_data(void);
+    void setup_band_edges(void);
 
     //! Get the constant factor to calculate the effective density of states
     /*!
@@ -208,8 +210,16 @@ class SemiconductorModel : public DriftDiffusionProperties
     template <int coupling>
     void calculate_all(double potential, double fermi_e, double fermi_h);
 
+    //! Set the object to unprepared state
+    void set_to_unprepared(void);
 
   private:
+
+    //! A flag to tell the state of this object
+    /*!
+     * \c true means that all data is prepared and ready for use
+     */
+    bool _is_prepared;
 
     //! The physical model for this semiconductor
     /*!
@@ -266,6 +276,14 @@ class SemiconductorModel : public DriftDiffusionProperties
 
 inline
 void
+SemiconductorModel::set_to_unprepared(void)
+{
+  _is_prepared = false;
+}
+
+
+inline
+void
 SemiconductorModel::set_n_dopant(const Dopant& dopant)
 {
   _n_dopant = dopant;
@@ -283,7 +301,7 @@ SemiconductorModel::set_p_dopant(const Dopant& dopant)
 inline
 void
 SemiconductorModel::add_recombination_model(
-    DriftDiffusionDefs::RecombinationModels recomb_model)
+    DriftDiffusionDefs::RecombinationModel recomb_model)
 {
   _recombination |= recomb_model;
 }
@@ -291,7 +309,7 @@ SemiconductorModel::add_recombination_model(
 inline
 void
 SemiconductorModel::remove_recombination_model(
-    DriftDiffusionDefs::RecombinationModels recomb_model)
+    DriftDiffusionDefs::RecombinationModel recomb_model)
 {
   _recombination &= !recomb_model;
 }
@@ -346,6 +364,26 @@ double
 SemiconductorModel::get_valence_band_edge(void) const
 {
   return _valence_band.band_edge;
+}
+
+inline
+void
+SemiconductorModel::setup_band_edges(void)
+{
+  double kT = SimulationOptions::T * Constants::k_B;
+  electron_vt = hole_vt = kT;
+  
+  BandProperties& cb = _conduction_band;
+  BandProperties& vb = _valence_band;
+
+  cb.effective_DOS =
+    get_DOS_factor() * std::pow(kT * cb.effective_mass, 1.5);
+
+  vb.effective_DOS =
+    get_DOS_factor() * std::pow(kT * vb.effective_mass, 1.5);
+
+  conduction_band_edge = cb.band_edge;
+  valence_band_edge = vb.band_edge;
 }
 
 

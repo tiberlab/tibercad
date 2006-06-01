@@ -25,7 +25,8 @@ SemiconductorModel::SemiconductorModel(void)
   : DriftDiffusionProperties(),
     _recombination(0),
     _coupling(BOTH),
-    _bulk_model(NULL)
+    _bulk_model(NULL),
+    _is_prepared(false)
 {
   // spin degeneracy will be included in the degeneracy from
   // DDsemiconductor
@@ -44,7 +45,8 @@ SemiconductorModel::SemiconductorModel(
     _electron_recombination_time(model._electron_recombination_time),
     _hole_recombination_time(model._hole_recombination_time),
     _direct_rec_param(model._direct_rec_param),
-    _filename(model._filename)
+    _filename(model._filename),
+    _is_prepared(false)
 {
 }
 
@@ -268,20 +270,18 @@ SemiconductorModel::build_alloy(const std::string& component2,
 void
 SemiconductorModel::prepare_element_data(void)
 {
-  double kT = SimulationOptions::T * Constants::k_B;
-  electron_vt = hole_vt = kT;
+  if (!_is_prepared)
+  {
+    try
+    {
+      calculate_equilibrium_properties(BOTH, SimulationOptions::T);
+    }
+    catch (...)
+    {
+    }
   
-  BandProperties& cb = _conduction_band;
-  BandProperties& vb = _valence_band;
-
-  cb.effective_DOS =
-    get_DOS_factor() * std::pow(kT * cb.effective_mass, 1.5);
-
-  vb.effective_DOS =
-    get_DOS_factor() * std::pow(kT * vb.effective_mass, 1.5);
-
-  conduction_band_edge = cb.band_edge;
-  valence_band_edge = vb.band_edge;
+    _is_prepared = true;
+  }
 }
 
 void
@@ -396,7 +396,7 @@ SemiconductorModel::calculate_equilibrium_properties(int coupling,
   
   // call this method to properly set conduction and valence band DOS
   // and energy
-  SemiconductorModel::prepare_element_data();
+  setup_band_edges();
 
 
   // remember the coupling

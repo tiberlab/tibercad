@@ -55,11 +55,11 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
         double temperature = SimulationOptions::T);
 
     //! Add recombination model to be used.
-    void add_recombination_model(DriftDiffusionDefs::RecombinationModels
+    void add_recombination_model(DriftDiffusionDefs::RecombinationModel
         recomb_model);
 
     //! Remove a recombination model.
-    void remove_recombination_model(DriftDiffusionDefs::RecombinationModels
+    void remove_recombination_model(DriftDiffusionDefs::RecombinationModel
         recomb_model);
 
     //! Set Shockley-Read-Hall recombination parameters
@@ -263,7 +263,7 @@ SimpleSemiconductorModel::set_relative_permittivity(double epsilon_r)
 inline
 void
 SimpleSemiconductorModel::add_recombination_model(
-    DriftDiffusionDefs::RecombinationModels recomb_model)
+    DriftDiffusionDefs::RecombinationModel recomb_model)
 {
   _recombination |= recomb_model;
 }
@@ -271,7 +271,7 @@ SimpleSemiconductorModel::add_recombination_model(
 inline
 void
 SimpleSemiconductorModel::remove_recombination_model(
-    DriftDiffusionDefs::RecombinationModels recomb_model)
+    DriftDiffusionDefs::RecombinationModel recomb_model)
 {
   _recombination &= !recomb_model;
 }

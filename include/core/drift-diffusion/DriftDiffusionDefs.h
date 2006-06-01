@@ -25,11 +25,19 @@ namespace DriftDiffusionDefs
   };
 
   //! The known basic Generation/Recombination processes
-  enum RecombinationModels
+  enum RecombinationModel
   {
-    SRH         = 0x01,
-    AUGER       = 0x02,
-    DIRECT      = 0x04
+    SRH         = 0x01, //< Shockley-Read-Hall
+    AUGER       = 0x02, //< Auger
+    DIRECT      = 0x04  //< direct (radiative)
+  };
+
+  //! The variables used in Drift-Diffusion
+  enum Variable
+  {
+    POTENTIAL = 0, //< electrical potential
+    FERMIE    = 1, //< electron electro-chemical potential
+    FERMIH    = 2  //< hole electro-chemical potential
   };
 
 };

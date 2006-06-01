@@ -6,7 +6,7 @@
 #include "Scaling.h"
 #include "ElementData.h"
 #include "BoundaryData.h"
-#include "BoundaryDescriptor.h"
+#include "ElectricalContact.h"
 #include "Constants.h"
 #include "DriftDiffusionProperties.h"
 #include "TiberPetscNonlinearSolver.h"
@@ -340,14 +340,10 @@ void
 DriftDiffusion::set_simulation_voltage(const string& boundary,
     double voltage)
 {
-  BoundaryDescriptor* desc = _device->get_boundary(boundary);
+  ElectricalContact* desc = _device->get_boundary(boundary);
 
   if (desc != NULL)
-  {
-    double phi0 = get_scaling().get_potential_scaling();
-
     _simulation_voltages[desc] = voltage;
-  }
 }
 
 void
@@ -408,21 +404,21 @@ DriftDiffusion::find_dirichlet_nodes(void)
 
   // we make a list which contains only dirichlet type boundaries
   // this should make the rest somewhat faster
-  set<BoundaryDescriptor*> dirichlet_boundaries;
+  set<ElectricalContact*> dirichlet_boundaries;
 
   DD::Device::BoundaryList& boundaries = _device->get_boundaries();
   DD::Device::const_boundary_iterator it = boundaries.begin();
   const DD::Device::const_boundary_iterator end = boundaries.end();
   for ( ; it != end; ++it)
   {
-    if (((*it)->get_type("potential") == BoundaryDescriptor::DIRICHLET)
-        || ((*it)->pinning != -256.0)
-        || ((*it)->get_type("fermi_e") == BoundaryDescriptor::DIRICHLET)
-        || ((*it)->get_type("fermi_h") == BoundaryDescriptor::DIRICHLET))
+    if (((*it)->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
+        || ((*it)->get_type(POTENTIAL) == ElectricalContact::PINNING)
+        || ((*it)->get_type(FERMIE) == ElectricalContact::DIRICHLET)
+        || ((*it)->get_type(FERMIH) == ElectricalContact::DIRICHLET))
       dirichlet_boundaries.insert(*it);
   }
 
-  set<BoundaryDescriptor*>::iterator not_dirichlet =
+  set<ElectricalContact*>::iterator not_dirichlet =
     dirichlet_boundaries.end();
 
   // loop over all level 0 boundary elements
@@ -480,7 +476,7 @@ DriftDiffusion::prepare_solver(void)
     DD::Device::BoundaryList& boundaries = _device->get_boundaries();
     DD::Device::const_boundary_iterator it = boundaries.begin();
     const DD::Device::const_boundary_iterator end = boundaries.end();
-    const map<const BoundaryDescriptor*,
+    const map<const ElectricalContact*,
           double>::const_iterator bc_end = _simulation_voltages.end();
     for ( ; it != end; ++it)
     {
@@ -616,7 +612,7 @@ DriftDiffusion::calculate_new_simulation_voltages(void)
 
   for ( ; it != end; ++it)
   {
-    BoundaryDescriptor* bd = *it;
+    ElectricalContact* bd = *it;
 
     double diff = _simulation_voltages[bd] - _old_sim_voltages[bd];
     double abs_diff = fabs(diff);
@@ -634,7 +630,7 @@ DriftDiffusion::calculate_new_simulation_voltages(void)
   cerr << "Try new voltage:\n";
   for ( it = boundaries.begin(); it != end; ++it)
   {
-    BoundaryDescriptor* bd = *it;
+    ElectricalContact* bd = *it;
     cerr << bd->get_id() << " : " << (_simulation_voltages[bd]) << " ";
   }
   cerr << "\n";
@@ -749,6 +745,9 @@ DriftDiffusion::set_solver_params(NonlinearSolver<Number>& solver,
 void
 DriftDiffusion::solve_newton(bool restart)
 {
+
+  PerfLog perf_log("solve_newton", false);
+
   // aliases for nicer code
   Options& params = get_options();
   SolverParameters& solver_params = params.solver_params;
@@ -824,7 +823,10 @@ DriftDiffusion::solve_newton(bool restart)
     // it reached the maximum nonlinear iterations we give a second chance.
     try
     {
+      perf_log.start_event("solve equilibrium");
       system.solve();
+      perf_log.stop_event("solve equilibrium");
+
       _n_nonlinear_iterations = system.n_nonlinear_iterations();
       _final_residual = system.final_nonlinear_residual();
     }
@@ -978,7 +980,9 @@ DriftDiffusion::solve_newton(bool restart)
         
         //system.nonlinear_solver->matvec = assemble<FULLYCOUPLED>;
         //_options.linearize_continuity_eq = true;
+        perf_log.start_event("solve coupled");
         system.solve();
+        perf_log.stop_event("solve coupled");
         
         retry = false;
       }
@@ -1152,143 +1156,6 @@ DriftDiffusion::do_gummel_iterations(int max_it)
 DriftDiffusion::solve_gummel(bool restart)
 {
 }
-
-
-// TODO: currently not used
-/*
-   void
-   DriftDiffusion::set_dirichlet_values(void)
-   {
-     assert(_static_parameters.simulation_voltages->size() != 0);
-
-     NonlinearImplicitSystem* poisson;
-     NonlinearImplicitSystem* ecurrent;
-  NonlinearImplicitSystem* hcurrent;
-
-  switch (_options.solver_method)
-  {
-    case GUMMEL:
-      poisson =
-        &_eq_system->get_system<NonlinearImplicitSystem>("poisson");
-      ecurrent =
-        &_eq_system->get_system<NonlinearImplicitSystem>("ecurrent");
-      hcurrent =
-        &_eq_system->get_system<NonlinearImplicitSystem>("hcurrent");
-      break;
-    default:
-      poisson = &_eq_system->get_system<NonlinearImplicitSystem>(
-        "drift-diffusion coupled");
-      ecurrent = poisson;
-      hcurrent = poisson;
-      break;
-  }
-
-  ContactData& sim_voltages =
-    *_static_parameters.simulation_voltages;
-
-  // aliases for nicer code
-  const Mesh& mesh = poisson->get_mesh();
-  NumericVector<Number>& solution_u = *(poisson->solution);
-  NumericVector<Number>& solution_en = *(ecurrent->solution);
-  NumericVector<Number>& solution_ep = *(hcurrent->solution);
-
-  const DofMap& dof_map_u = poisson->get_dof_map();
-  const DofMap& dof_map_en = ecurrent->get_dof_map();
-  const DofMap& dof_map_ep = hcurrent->get_dof_map();
-  
-  // numeric ids corresponding to the variables
-  const unsigned int u_var = poisson->variable_number("potential");
-  const unsigned int en_var = ecurrent->variable_number("fermi_e");
-  const unsigned int ep_var = hcurrent->variable_number("fermi_h");
-
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-  // find all Dirichlet type boundaries (for at least one variable)
-  set<BoundaryDescriptor*> dirichlet_boundaries;
-  Device::BoundaryList& boundaries = _device->get_boundaries();
-  Device::const_boundary_iterator it = boundaries.begin();
-  const Device::const_boundary_iterator end = boundaries.end();
-  for ( ; it != end; ++it)
-  {
-    if (((*it)->get_type("potential") == BoundaryDescriptor::DIRICHLET) ||
-        ((*it)->get_type("fermi_e") == BoundaryDescriptor::DIRICHLET) ||
-        ((*it)->get_type("fermi_h") == BoundaryDescriptor::DIRICHLET))
-      dirichlet_boundaries.insert(*it);
-  }
-
-  set<BoundaryDescriptor*>::iterator not_dirichlet =
-    dirichlet_boundaries.end();
-
-  const BoundaryData& bound_data = _device->get_boundary_data();
-
-  const BoundaryNodeList::const_iterator not_dirichlet_node =
-          _dirichlet_nodes.end();
-  BoundaryNodeList::const_iterator node_it;
-
-  // loop over all level 0 boundary elements
-  BoundaryData::const_iterator bd_it = bound_data.sides_begin();
-  const BoundaryData::const_iterator bd_end = bound_data.sides_end();
-  for ( ; bd_it != bd_end; ++bd_it)
-  {
-    if (dirichlet_boundaries.find(bd_it->second) != not_dirichlet)
-    {
-
-      // get the active family tree of this element
-      vector<const Elem*> fam_tree;
-      (bd_it->first).first->active_family_tree(fam_tree);
-
-      vector<const Elem*>::const_iterator el = fam_tree.begin();
-      for ( ; el != fam_tree.end(); ++el) 
-      {
-        const Elem* elem = *el;
-
-        if (elem->on_boundary())
-        {
-          // get DOF indices
-          dof_map_u.dof_indices(elem, dof_indices_u, u_var);
-          dof_map_en.dof_indices(elem, dof_indices_en, en_var);
-          dof_map_ep.dof_indices(elem, dof_indices_ep, ep_var);
-
-          for (unsigned int i = 0; i < elem->n_nodes(); i++)
-          {
-            node_it = _dirichlet_nodes.find(elem->get_node(i));
-            if (node_it != not_dirichlet_node)
-            {
-              const vector<double>* bc; 
-              const BoundaryDescriptor* boundary_desc = node_it->second;
-              if (boundary_desc->get_type("potential")
-                  == BoundaryDescriptor::DIRICHLET)
-              {
-                bc = boundary_desc->get_coefficients("potential");
-                solution_u.set(dof_indices_u[i],
-                    (*bc)[2] / (*bc)[0] + sim_voltages[boundary_desc]);
-              }
-
-              if (boundary_desc->get_type("fermi_e")
-                  == BoundaryDescriptor::DIRICHLET)
-              {
-                bc = node_it->second->get_coefficients("fermi_e");
-                solution_en.set(dof_indices_en[i],
-                    (*bc)[2] / (*bc)[0] - sim_voltages[boundary_desc]);
-              }
-
-              if (boundary_desc->get_type("fermi_h")
-                  == BoundaryDescriptor::DIRICHLET)
-              {
-                bc = node_it->second->get_coefficients("fermi_h");
-                solution_ep.set(dof_indices_ep[i],
-                    (*bc)[2] / (*bc)[0] - sim_voltages[boundary_desc]);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-*/
 
 
 double
@@ -1560,7 +1427,7 @@ DriftDiffusion::calculate_currents(void)
           continue; // is not on a boundary
 
         BoundaryData::ElementSide side(top_parent, s_top);
-        BoundaryDescriptor* boundary_desc =
+        ElectricalContact* boundary_desc =
           device.get_boundary_data().get_data(side);
 
 
@@ -2394,6 +2261,9 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
     NumericVector<Number>* residual,
     SparseMatrix<Number>* jacobian)
 {
+
+  PerfLog perf_log("Matrix assembly", false);
+  perf_log.start_event("assembly");
   
   // references for nicer code
   const Mesh& mesh = _this->get_mesh();
@@ -2731,8 +2601,8 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       // 
       if (jacobian != NULL)
       {
-      if (!linearize)
-      {
+      //if (!linearize)
+      //{
         double drho[3];
         double dRn[3];
         double dRp[3];
@@ -2836,7 +2706,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
 
           }
         }
-      }
+      //}
       }
 
       // if we are doing residual, calculate rhs contribution (i.e. Fe)
@@ -2895,58 +2765,12 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
         int s_top = find_boundary(elem, s, top_parent);
 
         BoundaryData::ElementSide side(top_parent, s_top);
-        BoundaryDescriptor* boundary_desc =
+        ElectricalContact* contact = 
           device.get_boundary_data().get_data(side);
-        // TODO
-        //ElectricalContact* contact = 
-        //  static_cast<ElectricalContact*>(
-        //    device.get_boundary_data().get_data(side));
-        //contact->set_material(sc);
-        //contact->get_non_dirichlet_bc(coeff, value);
-        // scale coeff and value
-        //
 
+        // for von Neumann or mixed type boundary conditions
         vector<double> coeff(3, 0.0);
         vector<double> value(3, 0.0);
-        if (boundary_desc != NULL)
-        {
-          const vector<double>* coeffs;
-          double c, v;
-
-          if (coupling & POISSON)
-          {
-            if (boundary_desc->get_type("potential") !=
-                BoundaryDescriptor::DIRICHLET)
-            {
-              coeffs =  boundary_desc->get_coefficients("potential");
-              assign_boundary_values(c, v, *coeffs);
-              coeff[0] = c * x0;
-              value[0] = v * x0 / phi0;
-            }
-          }
-          if (coupling & ECURRENT)
-          {
-            if (boundary_desc->get_type("fermi_e") !=
-                BoundaryDescriptor::DIRICHLET)
-            {
-              coeffs = boundary_desc->get_coefficients("fermi_e");
-              assign_boundary_values(c, v, *coeffs);
-              coeff[1] = c * x0;
-              value[1] = v * x0 / phi0;
-            }
-          }
-          if (coupling & HCURRENT)
-          {
-            if (boundary_desc->get_type("fermi_h") !=
-                BoundaryDescriptor::DIRICHLET)
-            {
-              coeffs = boundary_desc->get_coefficients("fermi_h");
-              assign_boundary_values(c, v, *coeffs);
-              coeff[2] = c * x0;
-              value[2] = v * x0 / phi0;
-            }
-          }
-        }
 
         //
         // NOTE: we have to integrate over the boundary also if there are
@@ -2988,6 +2812,34 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
             sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep, q_point[qp]);
             double epsilon = sc->get_relative_permittivity();
             double l2_eps = l2 * epsilon;
+
+            // get the boundary condition coefficients
+            if (contact != NULL)
+            {
+              contact->set_material(sc);
+              double a, c;
+
+              if (coupling & POISSON)
+              {
+                contact->get_normal_derivative(POTENTIAL, a, c);
+                coeff[0] = a * x0;
+                value[0] = c * x0 / phi0;
+              }
+              if (coupling & ECURRENT)
+              {
+                contact->get_normal_derivative(FERMIE, a, c);
+                coeff[1] = a * x0;
+                value[1] = c * x0 / phi0;
+              }
+              if (coupling & HCURRENT)
+              {
+                contact->get_normal_derivative(FERMIH, a, c);
+                coeff[2] = a * x0;
+                value[2] = c * x0 / phi0;
+              }
+            }
+
+
 
             // the jacobian x weight x scaling
             double J = JxW_face[qp] / Jface_scale;
@@ -3052,6 +2904,33 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
           double epsilon = sc->get_relative_permittivity();
           double l2_eps = l2 * epsilon;
 
+          // get the boundary condition coefficients
+          if (contact != NULL)
+          {
+            contact->set_material(sc);
+            double a, c;
+
+            if (coupling & POISSON)
+            {
+              contact->get_normal_derivative(POTENTIAL, a, c);
+              coeff[0] = a * x0;
+              value[0] = c * x0 / phi0;
+            }
+            if (coupling & ECURRENT)
+            {
+              contact->get_normal_derivative(FERMIE, a, c);
+              coeff[1] = a * x0;
+              value[1] = c * x0 / phi0;
+            }
+            if (coupling & HCURRENT)
+            {
+              contact->get_normal_derivative(FERMIH, a, c);
+              coeff[2] = a * x0;
+              value[2] = c * x0 / phi0;
+            }
+          }
+
+
           // first the contributions to Ke_ij
           if (coupling & POISSON)
             Kuu(s,s) += l2_eps * coeff[0];
@@ -3114,53 +2993,42 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
         node_it = dirichlet_nodes.find(elem->get_node(i));
         if (node_it != end)
         {
-          const BoundaryDescriptor* boundary_desc = node_it->second;
-          //ElectricalContact* contact = node_it->second;
+          ElectricalContact* contact = node_it->second;
+          contact->set_material(sc);
 
           if (coupling & POISSON)
           {
-            if (boundary_desc->get_type("potential") ==
-                BoundaryDescriptor::DIRICHLET)
+            if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
             {
-              const vector<double>* bc =
-                boundary_desc->get_coefficients("potential");
-
-              double val = -((*bc)[2] / (*bc)[0] +
-                  simulation_voltages[boundary_desc]) / phi0;
-              Ke.condense(i, i, val, Fe);
+              double val = (contact->get_boundary_value(POTENTIAL)
+                  + simulation_voltages[contact]) / phi0;
+              Ke.condense(i, i, -val, Fe);
             }
-            if (boundary_desc->pinning != -256.0)
+            else if (contact->get_type(POTENTIAL) == ElectricalContact::PINNING)
             {
-              Ke.condense(i, i, - boundary_desc->pinning / phi0, Fe);
+              double val = contact->get_boundary_value(POTENTIAL) / phi0;
+              Ke.condense(i, i, -val, Fe);
               Ke(i, i + n_dofs) = 1.0;
             }
           }
 
           if (coupling & ECURRENT)
           {
-            if (boundary_desc->get_type("fermi_e") ==
-                BoundaryDescriptor::DIRICHLET)
+            if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
             {
-              const vector<double>* bc =
-                node_it->second->get_coefficients("fermi_e");
-
-              double val = -((*bc)[2] / (*bc)[0] -
-                  simulation_voltages[boundary_desc]) / phi0;
-              Ke.condense(i + n_dofs, i + n_dofs, val, Fe);
+              double val = (contact->get_boundary_value(FERMIE)
+                  - simulation_voltages[contact]) / phi0;
+              Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
             }
           }
 
           if (coupling & HCURRENT)
           {
-            if (boundary_desc->get_type("fermi_h") ==
-                BoundaryDescriptor::DIRICHLET)
+            if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
             {
-              const vector<double>* bc =
-                node_it->second->get_coefficients("fermi_h");
-
-              double val = -((*bc)[2] / (*bc)[0] -
-                  simulation_voltages[boundary_desc]) / phi0;
-              Ke.condense(i + 2 * n_dofs, i + 2 * n_dofs, val, Fe);
+              double val = (contact->get_boundary_value(FERMIH)
+                  - simulation_voltages[contact]) / phi0;
+              Ke.condense(i + 2 * n_dofs, i + 2 * n_dofs, -val, Fe);
             }
           }
         }
@@ -3168,6 +3036,8 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
     }
     else
     {
+      // TODO this needs to be checked!!!
+
       // Some nodes are constrained, so we have messed up our
       // matrix and vector. In particular, we could have included
       // nodes on Dirichlet boundaries.
@@ -3197,13 +3067,14 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
         unsigned int n_nodes = parent->n_nodes();
         for (unsigned int i = 0; i < n_nodes; i++)
         {
-          //if (dof_map.is_constrained_dof(dof_indices_u[i]))
-          //  is_done = false;
+          if (dof_map.is_constrained_dof(dof_indices_u[i]))
+            is_done = false;
 
           node_it = dirichlet_nodes.find(parent->get_node(i));
           if (node_it != end)
           {
-            const BoundaryDescriptor* boundary_desc = node_it->second;
+            ElectricalContact* contact = node_it->second;
+            contact->set_material(sc);
 
             // loop over all DOFs occurring in the constrained matrix
             for (unsigned int id = 0; id < n_dofs_tot; id++)
@@ -3211,60 +3082,56 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
 
               if (coupling & POISSON)
               {
-                if (boundary_desc->get_type("potential") ==
-                    BoundaryDescriptor::DIRICHLET)
+                if (contact->get_type(POTENTIAL) ==
+                    ElectricalContact::DIRICHLET)
                 {
                   // is it a boundary DOF?
                   if (dof_indices[id] == dof_indices_u[i])
                   {
-                    for (unsigned int j = 0; j < n_dofs_tot; j++)
-                      Ke(id,j) = 0.0;
-
-                    const vector<double>* bc =
-                      boundary_desc->get_coefficients("potential");
-                    double val = -((*bc)[2] / (*bc)[0] +
-                        simulation_voltages[boundary_desc]) / phi0;
-                    Ke.condense(id, id, val, Fe);
+                    double val = (contact->get_boundary_value(POTENTIAL)
+                      + simulation_voltages[contact]) / phi0;
+                    Ke.condense(id, id, -val, Fe);
+                  }
+                }
+                else if (contact->get_type(POTENTIAL) ==
+                    ElectricalContact::PINNING)
+                {
+                  // is it a boundary DOF?
+                  if (dof_indices[id] == dof_indices_u[i])
+                  {
+                    double val = contact->get_boundary_value(POTENTIAL) / phi0;
+                    Ke.condense(i, i, -val, Fe);
+                    Ke(id, id + n_dofs) = 1.0;
                   }
                 }
               }
 
               if (coupling & ECURRENT)
               {
-                if (boundary_desc->get_type("fermi_e") ==
-                    BoundaryDescriptor::DIRICHLET)
+                if (contact->get_type(FERMIE) ==
+                    ElectricalContact::DIRICHLET)
                 {
                   // is it a boundary DOF?
                   if (dof_indices[id] == dof_indices_en[i])
                   {
-                    for (unsigned int j = 0; j < n_dofs_tot; j++)
-                      Ke(id,j) = 0.0;
-
-                    const vector<double>* bc =
-                      boundary_desc->get_coefficients("fermi_e");
-                    double val = -((*bc)[2] / (*bc)[0] -
-                        simulation_voltages[boundary_desc]) / phi0;
-                    Ke.condense(id, id, val, Fe);
+                    double val = (contact->get_boundary_value(FERMIE)
+                      - simulation_voltages[contact]) / phi0;
+                    Ke.condense(id, id, -val, Fe);
                   }
                 }
               }
 
               if (coupling & HCURRENT)
               {
-                if (boundary_desc->get_type("fermi_h") ==
-                    BoundaryDescriptor::DIRICHLET)
+                if (contact->get_type(FERMIH) ==
+                    ElectricalContact::DIRICHLET)
                 {
                   // is it a boundary DOF?
                   if (dof_indices[id] == dof_indices_ep[i])
                   {
-                    for (unsigned int j = 0; j < n_dofs_tot; j++)
-                      Ke(id,j) = 0.0;
-
-                    const vector<double>* bc =
-                      boundary_desc->get_coefficients("fermi_h");
-                    double val = -((*bc)[2] / (*bc)[0] -
-                        simulation_voltages[boundary_desc]) / phi0;
-                    Ke.condense(id, id, val, Fe);
+                    double val = (contact->get_boundary_value(FERMIE)
+                      - simulation_voltages[contact]) / phi0;
+                    Ke.condense(id, id, -val, Fe);
                   }
                 }
               }
@@ -3291,5 +3158,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
   // put the maximum densities back into the options
   options.n_max = (n_max > 1) ? n_max : 1;
   options.p_max = (p_max > 1) ? p_max : 1;
+  
+  perf_log.stop_event("assembly");
 } 
 

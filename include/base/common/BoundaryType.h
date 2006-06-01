@@ -1,5 +1,5 @@
-#ifndef _BOUNDARY_H_
-#define _BOUNDARY_H_
+#ifndef _BOUNDARYPROPERTIES_H_
+#define _BOUNDARYPROPERTIES_H_
 
 #include <string>
 
@@ -12,7 +12,7 @@
  *  module should implement its own class derived from this one to hold
  *  the properties needed for calculations.
  */
-class Boundary
+class BoundaryProperties
 {
 
   public:
@@ -45,13 +45,13 @@ class Boundary
      * \param id the unique ID for the boundary
      * \param name the name of the boundary
      */
-    Boundary(ID id, const std::string name = "");
+    BoundaryProperties(ID id, const std::string name = "");
 
     //! The empty destructor
     /*!
      * should be implemented in the derived classes if needed
      */
-    virtual ~Boundary(void) {};
+    virtual ~BoundaryProperties(void) {};
 
   private:
 
@@ -84,17 +84,17 @@ class Boundary
 //--------------------------------------------------------------
 
 inline
-Boundary::Boundary(ID id, const std::string name = "")
+BoundaryProperties::Boundary(ID id, const std::string name = "")
   : _id(id), _name(name)
 {
 }
 
 
 inline
-Boundary::set_name(const std::string name)
+BoundaryProperties::set_name(const std::string name)
 {
   _name = name;
 }
 
 
-#endif // _BOUNDARYTYPE_H_
+#endif // _BOUNDARYPROPERTIES_H_

@@ -2,11 +2,13 @@
 #include "Read_MSH.h"
 
 #include "ElementData.h"
-#include "BoundaryDescriptor.h"
+#include "OhmicContact.h"
+#include "FermiLevelPinning.h"
+#include "SchottkyContact.h"
 #include "BoundaryData.h"
 #include "DDevice.h"
 #include "DriftDiffusion.h"
-#include "SimpleSemiconductorModel.h"
+#include "SemiconductorModel.h"
 
 #include "mesh.h"
 #include "mesh_modification.h"
@@ -21,14 +23,11 @@
 using namespace std;
 using namespace DriftDiffusionDefs;
 
-void setup_boundary_desc(BoundaryDescriptor& desc,
-    DriftDiffusionProperties& sc_model);
-
 void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    BoundaryDescriptor& desc, const Mesh& mesh);
+    ElectricalContact* desc, const Mesh& mesh);
 
-void print_boundary_data(const BoundaryData& data, const Mesh& mesh);
 
+class Dummy {};
 
 
 int main (int argc, char** argv)
@@ -39,6 +38,7 @@ int main (int argc, char** argv)
     GetPot input("bulk.in");
 
     const string meshfile = input("meshfile", "");
+    const int dim = input("dimension", 3);
 
     double temperature = input("temperature", 300.0);
 
@@ -72,15 +72,13 @@ int main (int argc, char** argv)
     double coarsen_frac = input("coarsen_fraction", 0.3);
 
     vector<unsigned int> phys_reg_ID(1);
-    phys_reg_ID[0] = 1; // p
-    //phys_reg_ID[1] = 2; // n
+    phys_reg_ID[0] = 1; 
     
     vector<unsigned int> BC_reg_ID(2);
     BC_reg_ID[0] = 3; // anode
     BC_reg_ID[1] = 4; // cathode
 
     
-    int dim = 3;
     Mesh mesh(dim);
     MeshData_elements meshdata(mesh);
     meshdata.enable_compatibility_mode();
@@ -92,7 +90,8 @@ int main (int argc, char** argv)
 
     mesh.print_info();
 
-    SimpleSemiconductorModel nside;    
+    SemiconductorModel nside;    
+    nside.set_data_file("Si.dat");
     if (statistics == "FD")
       nside.set_statistics(TiberCad::FERMIDIRAC);
     else
@@ -100,23 +99,17 @@ int main (int argc, char** argv)
 
     nside.add_recombination_model(SRH);
 
-    nside.set_relative_permittivity(11.7);
-    nside.set_valence_band_properties(-0.5, 0.81, 200);
-    nside.set_conduction_band_properties(0.62, 1.18, 800);
+    Dummy d;
+    nside.read_database(d);
+
+    nside.set_mobilities(800, 200);
     nside.set_SRH_parameters(1e-8, 1e-8);
 
-    SimpleSemiconductorModel pside(nside);
-    pside.set_SRH_parameters(1e-8, 1e-8);
-
     nside.set_n_dopant(Dopant(n_doping, 0.025, 2));
-    pside.set_n_dopant(Dopant(n_doping, 0.025, 2));
     nside.set_p_dopant(Dopant(p_doping, 0.01, 4));
-    pside.set_p_dopant(Dopant(p_doping, 0.01, 4));
 
-    nside.reinit(meshdata.elem_data_begin()->first);
-    pside.reinit(meshdata.elem_data_begin()->first);
-    nside.calculate_equilibrium_properties(BOTH);
-    pside.calculate_equilibrium_properties(BOTH);
+    //nside.reinit(meshdata.elem_data_begin()->first);
+    //nside.calculate_equilibrium_properties(BOTH);
 
 
     ElementData element_data;
@@ -144,24 +137,16 @@ int main (int argc, char** argv)
       }
     }
 
-    BoundaryDescriptor anode("anode");
-    BoundaryDescriptor cathode("cathode");
-
-    setup_boundary_desc(anode, nside);
-    cerr << "p side:\n";
-    cerr << pside.get_equilibrium_fermi_level() << " eV, " << "ni = " <<
-      pside.get_intrinsic_density() << " n0 = " <<
-      pside.get_equilibrium_electron_density() << " p0 = " << 
-      pside.get_equilibrium_hole_density() << "\n";
-
-    setup_boundary_desc(cathode, nside);
-    cerr << "n side:\n";
-    cerr << nside.get_equilibrium_fermi_level() << " eV, " << "ni = " <<
-      nside.get_intrinsic_density() << " n0 = " <<
-      nside.get_equilibrium_electron_density() << " p0 = " << 
-      nside.get_equilibrium_hole_density() << "\n";
-
-
+    //BoundaryDescriptor anode("anode");
+    //BoundaryDescriptor cathode("cathode");
+    OhmicContact anode("anode");
+    //SchottkyContact anode("anode");
+    //anode.set_schottky_barrier(0.8);
+    //FermiLevelPinning anode("anode");
+    //anode.set_pinning(1.0);
+    OhmicContact cathode("cathode");
+    //FermiLevelPinning cathode("cathode");
+    //cathode.set_pinning(1.0);
 
     BoundaryData boundary_data;
     {
@@ -175,14 +160,11 @@ int main (int argc, char** argv)
         const vector<unsigned int>& nodes = it->second;
 
         if (it->first == BC_reg_ID[0])
-          set_boundary(boundary_data, nodes, anode, mesh);
+          set_boundary(boundary_data, nodes, &anode, mesh);
         else
-          set_boundary(boundary_data, nodes, cathode, mesh);
+          set_boundary(boundary_data, nodes, &cathode, mesh);
       }
     }
-
-
-    //print_boundary_data(boundary_data, mesh);
 
 
     DD::Device device(&mesh, &element_data, &boundary_data);
@@ -197,9 +179,6 @@ int main (int argc, char** argv)
     
   
     DriftDiffusion dd(&device);
-
-    //SemiconductorModel sc_model;
-    //dd.set_semiconductor_model(&sc_model);
 
     DriftDiffusion::Options& params = dd.get_options();
     params.max_refinement_steps = refinement_steps;
@@ -242,8 +221,9 @@ int main (int argc, char** argv)
       dd.solve();
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
         ", final residual: " << dd.get_final_residual() << ")\n" << flush;
-      GMVIO(dd.get_mesh()).write_nodal_data("output/nodal_eq.gmv",
-          dd.get_solution(), dd.get_variable_names());
+      dd.build_band_edges(densities, names);
+      GMVIO(dd.get_mesh()).write_nodal_data("output/bands_eq.gmv",
+          densities, names);
       dd.build_densities(densities, names);
       GMVIO(dd.get_mesh()).write_nodal_data("output/densities_eq.gmv",
           densities, names);
@@ -293,19 +273,20 @@ int main (int argc, char** argv)
       dd.solve();
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
         ", final residual: " << dd.get_final_residual() << ")\n" << flush;
-      ostringstream filename;
-      filename << "output/nodal_" << *it << ".gmv";
-      GMVIO(dd.get_mesh()).write_nodal_data(filename.str(),
-          dd.get_solution(), dd.get_variable_names());
-      ostringstream filename_d;
-      filename_d << "output/densities_" << *it << ".gmv";
       vector<double> densities;
       vector<string> names;
+      ostringstream filename;
+      filename << "output/bands_" << *it << ".gmv";
+      dd.build_band_edges(densities, names);
+      GMVIO(dd.get_mesh()).write_nodal_data(filename.str(),
+          densities, names);
+      ostringstream filename_d;
+      filename_d << "output/densities_" << *it << ".gmv";
       dd.build_densities(densities, names);
       GMVIO(dd.get_mesh()).write_nodal_data(filename_d.str(),
           densities, names);
 
-      const map<const BoundaryDescriptor*, double>& curr =
+      const map<const ElectricalContact*, double>& curr =
         dd.get_boundary_currents();
       iv_char[*it] = vector<double>(3);
       iv_char[*it][0] = (*curr.find(&cathode)).second;
@@ -331,22 +312,23 @@ int main (int argc, char** argv)
         dd.set_simulation_voltage("anode", *it);
         cout << " Solving U = " << *it << " V ... " << flush;
         dd.solve(restart);
+        vector<double> densities;
+        vector<string> names;
         cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
           ", final residual: " << dd.get_final_residual() << ")\n" << flush;
         ostringstream filename;
-        filename << "output/nodal_" << *it << ".gmv";
+        filename << "output/bands_" << *it << ".gmv";
+        dd.build_band_edges(densities, names);
         GMVIO(dd.get_mesh()).write_nodal_data(filename.str(),
-            dd.get_solution(), dd.get_variable_names());
+            densities, names);
         ostringstream filename_d;
         filename_d << "output/densities_" << *it << ".gmv";
-        vector<double> densities;
-        vector<string> names;
         dd.build_densities(densities, names);
         GMVIO(dd.get_mesh()).write_nodal_data(filename_d.str(),
             densities, names);
 
         restart = false;
-        const map<const BoundaryDescriptor*, double>& curr =
+        const map<const ElectricalContact*, double>& curr =
           dd.get_boundary_currents();
         iv_char[*it] = vector<double>(3);
         iv_char[*it][0] = (*curr.find(&cathode)).second;
@@ -377,25 +359,9 @@ int main (int argc, char** argv)
   return libMesh::close();
 }
 
-void setup_boundary_desc(BoundaryDescriptor& desc,
-    DriftDiffusionProperties& sc)
-{
-  std::vector<double> coeff(3, 0);
-  coeff[0] = 1.0;
-
-  desc.set_coefficients("fermi_e", coeff);
-  desc.set_coefficients("fermi_h", coeff);
-
-  coeff[2] = sc.get_equilibrium_fermi_level();
-
-  cout << desc.get_id() << ": " << coeff[2] << "\n";
-  desc.set_coefficients("potential", coeff);
-
-}
-
 
 void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    BoundaryDescriptor& desc, const Mesh& mesh)
+    ElectricalContact *desc, const Mesh& mesh)
 {
   vector<unsigned int>::const_iterator n_it;
   const vector<unsigned int>::const_iterator n_begin = nodes.begin();
@@ -416,44 +382,14 @@ void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
         AutoPtr<Elem> side = elem->build_side(s);
         for (int i = 0; i < side->n_nodes(); i++)
         {
-          if (find(n_begin, n_end, side->node(i) + 1) == n_end)
+          if (find(n_begin, n_end, side->node(i)) == n_end)
             found = false;
         }
         if (found)
-          data.set_data(BoundaryData::ElementSide(elem, s), &desc);
+          data.set_data(BoundaryData::ElementSide(elem, s), desc);
       }
     }
   }
 }
 
-void print_boundary_data(const BoundaryData& data, const Mesh& mesh)
-{
 
-  BoundaryData::const_iterator it = data.sides_begin();
-  const BoundaryData::const_iterator end = data.sides_end();
-  while (it != end)
-  {
-    const BoundaryData::ElementSide& s = it->first;
-    const BoundaryDescriptor* desc = it->second;
-    const vector<double>& val = *(desc->get_coefficients("potential"));
-
-    cout << desc->get_id();
-    cout << " nodes:";
-    AutoPtr<Elem> side = s.first->build_side(s.second);
-    for (int i = 0; i < side->n_nodes(); i++)
-    {
-      Point& n = side->point(i);
-      cout << "  (" << n(0) << ", " << n(1) << ", " << n(2) << ")";
-    }
-    cout << "\n";
-    /*
-    cout << "  boundary values: ";
-    cout << "a = " << val[0] << " ";
-    cout << "b = " << val[1] << " ";
-    cout << "c = " << val[2] << " ";
-    cout << "\n\n";
-    */
-
-    ++it;
-  }
-}

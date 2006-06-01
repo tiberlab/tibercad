@@ -4,6 +4,8 @@
 
 // in-plane characteristic lengths
 la = 0.25;
+// number of vertical layers
+N = 50;
 
 // device dimension
 x = 0.5;
@@ -24,7 +26,7 @@ Plane Surface(1) = {1};
 //Recombine Surface {1};
 
 Extrude Surface {1, {0.0, 0.0, 2*z}}
-	{Recombine; Layers{10, 1, 1};};
+	{Recombine; Layers{N, 1, 1};};
 
 Physical Volume(1) = {1};
 Physical Surface(3) = {26};

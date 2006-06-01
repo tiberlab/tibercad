@@ -3,7 +3,7 @@
 #include "DDevice.h"
 #include "ElementData.h"
 #include "BoundaryData.h"
-#include "BoundaryDescriptor.h"
+#include "ElectricalContact.h"
 
 // libmesh includes
 #include "mesh.h"
@@ -77,10 +77,10 @@ DD::Device::check_integrity(void) const
   return is_ok;
 }
 
-BoundaryDescriptor*
+ElectricalContact*
 DD::Device::get_boundary(const std::string& name) const
 {
-  BoundaryDescriptor* boundary = NULL;
+  ElectricalContact* boundary = NULL;
 
   BoundaryData::const_iterator it = _bound_data->sides_begin();
   const BoundaryData::const_iterator end = _bound_data->sides_end();

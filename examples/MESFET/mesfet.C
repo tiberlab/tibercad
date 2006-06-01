@@ -2,7 +2,8 @@
 #include "Read_MSH.h"
 
 #include "ElementData.h"
-#include "BoundaryDescriptor.h"
+#include "OhmicContact.h"
+#include "SchottkyContact.h"
 #include "BoundaryData.h"
 #include "DDevice.h"
 #include "DriftDiffusion.h"
@@ -15,6 +16,7 @@
 #include "elem.h"
 #include "getpot.h"
 #include "gmv_io.h"
+#include "tecplot_io.h"
 #include "GMVIO_cell.h"
 
 #include <algorithm>
@@ -22,13 +24,8 @@
 using namespace std;
 using namespace DriftDiffusionDefs;
 
-void setup_boundary_desc(BoundaryDescriptor& desc,
-    const DriftDiffusionProperties& sc_model);
-
 void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    BoundaryDescriptor& desc, const Mesh& mesh);
-
-void print_boundary_data(const BoundaryData& data, const Mesh& mesh);
+    ElectricalContact* desc, const Mesh& mesh);
 
 void sweep_drain(double stop, int steps, DriftDiffusion& dd, double vg,
     bool restart = false);
@@ -47,6 +44,8 @@ int main (int argc, char** argv)
 
     int fully = input("fully_coupled", 1);
 
+    double schottky_barrier = input("schottky_barrier", 0.8);
+    
     double vds_stop = input("vds_stop", 0.0);
     unsigned int vds_steps = input("vds_steps", 1);
     double vg_start = input("vg_start", 0.0);
@@ -125,13 +124,6 @@ int main (int argc, char** argv)
     contact.set_n_dopant(Dopant(5e19, 0.025, 2));
     contact.set_SRH_parameters(1e-9, 1e-9);
 
-    const Elem* elem = meshdata.elem_data_begin()->first;
-    sub.reinit(elem);
-    schottky.reinit(elem);
-    contact.reinit(elem);
-    sub.calculate_equilibrium_properties();
-    schottky.calculate_equilibrium_properties();
-    contact.calculate_equilibrium_properties();
 
     ElementData element_data;
     {
@@ -162,22 +154,10 @@ int main (int argc, char** argv)
     }
 
 
-    BoundaryDescriptor source("source");
-    BoundaryDescriptor gate("gate");
-    BoundaryDescriptor drain("drain");
-    setup_boundary_desc(source, contact);
-    setup_boundary_desc(drain, contact);
-    cerr << "contact:\n";
-    cerr << contact.get_equilibrium_fermi_level() << " eV, " << "ni = " <<
-      contact.get_intrinsic_density() << " n0 = " <<
-      contact.get_equilibrium_electron_density() << " p0 = " << 
-      contact.get_equilibrium_hole_density() << "\n";
-    setup_boundary_desc(gate, schottky);
-    cerr << "schottky:\n";
-    cerr << schottky.get_equilibrium_fermi_level() << " eV, " << "ni = " <<
-      schottky.get_intrinsic_density() << " n0 = " <<
-      schottky.get_equilibrium_electron_density() << " p0 = " << 
-      schottky.get_equilibrium_hole_density() << "\n";
+    OhmicContact source("source");
+    SchottkyContact gate("gate");
+    gate.set_schottky_barrier(schottky_barrier);
+    OhmicContact drain("drain");
 
     BoundaryData boundary_data;
     {
@@ -193,13 +173,13 @@ int main (int argc, char** argv)
         switch (it->first)
         {
           case 4:
-            set_boundary(boundary_data, nodes, source, mesh);
+            set_boundary(boundary_data, nodes, &source, mesh);
             break;
           case 5:
-            set_boundary(boundary_data, nodes, gate, mesh);
+            set_boundary(boundary_data, nodes, &gate, mesh);
             break;
           case 6:
-            set_boundary(boundary_data, nodes, drain, mesh);
+            set_boundary(boundary_data, nodes, &drain, mesh);
             break;
         }
       }
@@ -275,12 +255,13 @@ int main (int argc, char** argv)
       cout << "     R0  : " << sc.get_recombination_scaling() << "\n\n";
 
       dd.remember_current_solution();
-      GMVIO(dd.get_mesh()).write_nodal_data("output/eq_potentials.gmv",
+      //GMVIO(dd.get_mesh()).write_nodal_data("output/eq_potentials.gmv",
+      TecplotIO(dd.get_mesh()).write_nodal_data("output/eq_potentials.plt",
           dd.get_solution(), dd.get_variable_names());
       vector<double> densities;
       vector<string> names;
       dd.build_densities(densities, names);
-      GMVIO(dd.get_mesh()).write_nodal_data("output/eq_densities.gmv",
+      TecplotIO(dd.get_mesh()).write_nodal_data("output/eq_densities.plt",
           densities, names);
 
       // make a voltage sweep
@@ -298,7 +279,7 @@ int main (int argc, char** argv)
       int n = vg_steps + 1;
       if (step < 1e-6) n = 1;
       vector<double> voltages(n);
-      for (int i = 0; i <= vg_steps; i++)
+      for (int i = 0; i < n; i++)
       {
         voltages[i] = vg_start + i * step;
       }
@@ -383,7 +364,7 @@ int main (int argc, char** argv)
         dd.set_simulation_voltage("gate", *it);
         cout << "Vgs = " << *it << " Vds = " << vds << "\n" << flush;
         dd.solve();
-        const map<const BoundaryDescriptor*, double>& curr =
+        const map<const ElectricalContact*, double>& curr =
           dd.get_boundary_currents();
         file << *it << " "
           << (*curr.find(dd.get_device().get_boundary("gate"))).second
@@ -410,7 +391,7 @@ int main (int argc, char** argv)
           if (restart)
             dd.set_to_remembered_solution();
           dd.solve();
-          const map<const BoundaryDescriptor*, double>& curr =
+          const map<const ElectricalContact*, double>& curr =
             dd.get_boundary_currents();
           file << *it << " "
             << (*curr.find(dd.get_device().get_boundary("gate"))).second
@@ -472,7 +453,7 @@ void sweep_drain(double stop, int steps,
     }
     remember = false;
     restart = false;
-    const map<const BoundaryDescriptor*, double>& curr =
+    const map<const ElectricalContact*, double>& curr =
       dd.get_boundary_currents();
     file << *it << " "
          << (*curr.find(dd.get_device().get_boundary("gate"))).second
@@ -503,36 +484,8 @@ void sweep_drain(double stop, int steps,
 }
 
 
-void setup_boundary_desc(BoundaryDescriptor& desc,
-    const DriftDiffusionProperties& sc)
-{
-  std::vector<double> coeff(3, 0);
-  coeff[0] = 1.0;
-
-  desc.set_coefficients("fermi_e", coeff);
-  desc.set_coefficients("fermi_h", coeff);
-
-  if (desc.get_id() != "gate")
-  {
-    coeff[2] = sc.get_equilibrium_fermi_level();
-  }
-  else
-  {
-    const SimpleSemiconductorModel& m =
-      static_cast<const SimpleSemiconductorModel&>(sc);
-    double ec = m.get_conduction_band_edge();
-    double barrier = 0.8;
-    coeff[2] = ec - barrier;    
-  }
-
-  cout << coeff[2] << "\n";
-  desc.set_coefficients("potential", coeff);
-
-}
-
-
 void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    BoundaryDescriptor& desc, const Mesh& mesh)
+    ElectricalContact* desc, const Mesh& mesh)
 {
   vector<unsigned int>::const_iterator n_it;
   const vector<unsigned int>::const_iterator n_begin = nodes.begin();
@@ -557,39 +510,10 @@ void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
             found = false;
         }
         if (found)
-          data.set_data(BoundaryData::ElementSide(elem, s), &desc);
+          data.set_data(BoundaryData::ElementSide(elem, s), desc);
       }
     }
   }
 }
 
 
-void print_boundary_data(const BoundaryData& data, const Mesh& mesh)
-{
-
-  BoundaryData::const_iterator it = data.sides_begin();
-  const BoundaryData::const_iterator end = data.sides_end();
-  while (it != end)
-  {
-    const BoundaryData::ElementSide& s = it->first;
-    const BoundaryDescriptor* desc = it->second;
-    const vector<double>& val = *(desc->get_coefficients("potential"));
-
-    cout << desc->get_id();
-    cout << " nodes:";
-    AutoPtr<Elem> side = s.first->build_side(s.second);
-    for (int i = 0; i < side->n_nodes(); i++)
-    {
-      Point& n = side->point(i);
-      cout << "  (" << n(0) << ", " << n(1) << ")";
-    }
-    cout << "\n";
-    cout << "  boundary values: ";
-    cout << "a = " << val[0] << " ";
-    cout << "b = " << val[1] << " ";
-    cout << "c = " << val[2] << " ";
-    cout << "\n\n";
-
-    ++it;
-  }
-}

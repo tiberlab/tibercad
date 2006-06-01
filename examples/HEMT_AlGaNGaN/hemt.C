@@ -2,7 +2,8 @@
 #include "Read_MSH.h"
 
 #include "ElementData.h"
-#include "BoundaryDescriptor.h"
+#include "OhmicContact.h"
+#include "SchottkyContact.h"
 #include "BoundaryData.h"
 #include "DDevice.h"
 #include "DriftDiffusion.h"
@@ -24,13 +25,8 @@
 using namespace std;
 using namespace DriftDiffusionDefs;
 
-void setup_boundary_desc(BoundaryDescriptor& desc,
-    StrainedSemiconductorModel& sc_model);
-
 void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    BoundaryDescriptor& desc, const Mesh& mesh);
-
-void print_boundary_data(const BoundaryData& data, const Mesh& mesh);
+    ElectricalContact* desc, const Mesh& mesh);
 
 void sweep_drain(double stop, int steps, DriftDiffusion& dd, double vg,
     bool restart = false);
@@ -40,7 +36,6 @@ double alloy(double a, double b, double xa, double bowing = 0.0)
   return b + (a - b) * xa - bowing * xa *  (1 - xa);
 };
 
-double schottky_barrier;
 
 class Dummy {};
 
@@ -79,7 +74,7 @@ int main (int argc, char** argv)
     double vg = dd_opt("vg", 0.0);
     double vds = dd_opt("vds", 0.0);
 
-    schottky_barrier = dd_opt("schottky_barrier", 1.2);
+    double schottky_barrier = dd_opt("schottky_barrier", 1.2);
 
     const string method = dd_opt("simulation_method", "NEWTON");
     const string statistics = dd_opt("statistics", "B");
@@ -338,7 +333,7 @@ int main (int argc, char** argv)
 
     double stress_value = strain_opt( "stress",0.0);
     map<unsigned int, double> stress_map;
-    stress_map[5] = stress_value;
+    stress_map[1] = stress_value;
 
     Macrostrain strain_calculation(opt, mesh);
 
@@ -430,12 +425,7 @@ int main (int argc, char** argv)
       channel_doped.set_coupling_type(ELECTRONS);
     }
 
-    const Elem* barrier_elem;
-    const Elem* channel_elem;
-    const Elem* barrier_doped_elem;
-    const Elem* channel_doped_elem;
     ElementData element_data;
-
     {
       MeshData::const_elem_data_iterator it = meshdata.elem_data_begin();
       const MeshData::const_elem_data_iterator end =
@@ -453,19 +443,15 @@ int main (int argc, char** argv)
         {
           case 1:
             element_data.set_data(elem, &barrier);
-            barrier_elem = elem;
             break;
           case 2:
             element_data.set_data(elem, &channel);
-            channel_elem = elem;
             break;
           case 3:
             element_data.set_data(elem, &barrier_doped);
-            barrier_doped_elem = elem;
             break;
           case 4:
             element_data.set_data(elem, &channel_doped);
-            channel_doped_elem = elem;
             break;
         }
       }
@@ -481,22 +467,11 @@ int main (int argc, char** argv)
       strain_calculation.output_piezo(f.str());
     }
 
-    barrier.reinit(barrier_elem);
-    channel.reinit(channel_elem);
-    barrier_doped.reinit(barrier_doped_elem);
-    channel_doped.reinit(channel_doped_elem);
-    barrier.calculate_equilibrium_properties();
-    channel.calculate_equilibrium_properties();
-    barrier_doped.calculate_equilibrium_properties();
-    channel_doped.calculate_equilibrium_properties();
 
-
-    BoundaryDescriptor source("source");
-    BoundaryDescriptor gate("gate");
-    BoundaryDescriptor drain("drain");
-    setup_boundary_desc(source, barrier_doped);
-    setup_boundary_desc(gate, barrier);
-    setup_boundary_desc(drain, barrier_doped);
+    OhmicContact source("source");
+    SchottkyContact gate("gate");
+    gate.set_schottky_barrier(schottky_barrier);
+    OhmicContact drain("drain");
 
     BoundaryData boundary_data;
     {
@@ -512,22 +487,19 @@ int main (int argc, char** argv)
         switch (it->first)
         {
           case 1:
-            set_boundary(boundary_data, nodes, gate, mesh);
+            set_boundary(boundary_data, nodes, &gate, mesh);
             break;
           case 2:
-            set_boundary(boundary_data, nodes, source, mesh);
+            set_boundary(boundary_data, nodes, &source, mesh);
             break;
           case 3:
-            set_boundary(boundary_data, nodes, drain, mesh);
+            set_boundary(boundary_data, nodes, &drain, mesh);
             break;
           case 4:
             break;
         }
       }
     }
-
-
-    //print_boundary_data(boundary_data, mesh);
 
 
     DD::Device device(&mesh, &element_data, &boundary_data);
@@ -557,7 +529,7 @@ int main (int argc, char** argv)
 
     params.solver_params.pc_type = PCILU;
     params.local_scaling = true;
-    params.artificial_drift = true;
+    //params.artificial_drift = false;
 
     if (method == "GUMMEL")
     {
@@ -725,7 +697,7 @@ int main (int argc, char** argv)
         dd.set_simulation_voltage("gate", *it);
         cout << "Vgs = " << *it << " Vds = " << vds << "\n" << flush;
         dd.solve();
-        const map<const BoundaryDescriptor*, double>& curr =
+        const map<const ElectricalContact*, double>& curr =
           dd.get_boundary_currents();
         file << *it << " "
           << (*curr.find(dd.get_device().get_boundary("gate"))).second
@@ -752,7 +724,7 @@ int main (int argc, char** argv)
           if (restart)
             dd.set_to_remembered_solution();
           dd.solve();
-          const map<const BoundaryDescriptor*, double>& curr =
+          const map<const ElectricalContact*, double>& curr =
             dd.get_boundary_currents();
           file << *it << " "
             << (*curr.find(dd.get_device().get_boundary("gate"))).second
@@ -812,7 +784,7 @@ void sweep_drain(double stop, int steps,
       dd.remember_current_solution();
     remember = false;
     restart = false;
-    const map<const BoundaryDescriptor*, double>& curr =
+    const map<const ElectricalContact*, double>& curr =
       dd.get_boundary_currents();
     file << *it << " "
          << (*curr.find(dd.get_device().get_boundary("gate"))).second
@@ -843,35 +815,8 @@ void sweep_drain(double stop, int steps,
 }
 
 
-void setup_boundary_desc(BoundaryDescriptor& desc,
-      StrainedSemiconductorModel& sc)
-{
-
-  std::vector<double> coeff(3, 0);
-  coeff[0] = 1.0;
-
-  desc.set_coefficients("fermi_e", coeff);
-  desc.set_coefficients("fermi_h", coeff);
-
-  if (desc.get_id() != "gate")
-  {
-    coeff[2] = sc.get_equilibrium_fermi_level();
-    //coeff[0] = 0.0; coeff[1] = 1.0; coeff[2] = 0.0; 
-  }
-  else
-  {
-    const double ec = sc.get_conduction_band_edge();
-    coeff[2] = ec - schottky_barrier;    
-  }
-
-  desc.set_coefficients("potential", coeff);
-  cout << desc.get_id() << ": " << coeff[2] << "\n";
-
-}
-
-
 void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    BoundaryDescriptor& desc, const Mesh& mesh)
+    ElectricalContact* desc, const Mesh& mesh)
 {
   vector<int>::const_iterator n_it;
   const vector<unsigned int>::const_iterator n_begin = nodes.begin();
@@ -896,38 +841,10 @@ void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
             found = false;
         }
         if (found)
-          data.set_data(BoundaryData::ElementSide(elem, s), &desc);
+          data.set_data(BoundaryData::ElementSide(elem, s), desc);
       }
     }
   }
 }
 
-void print_boundary_data(const BoundaryData& data, const Mesh& mesh)
-{
 
-  BoundaryData::const_iterator it = data.sides_begin();
-  const BoundaryData::const_iterator end = data.sides_end();
-  while (it != end)
-  {
-    const BoundaryData::ElementSide& s = it->first;
-    const BoundaryDescriptor* desc = it->second;
-    const vector<double>& val = *(desc->get_coefficients("potential"));
-
-    cout << desc->get_id();
-    cout << " nodes:";
-    AutoPtr<Elem> side = s.first->build_side(s.second);
-    for (int i = 0; i < side->n_nodes(); i++)
-    {
-      Point& n = side->point(i);
-      cout << "  (" << n(0) << ", " << n(1) << ")";
-    }
-    cout << "\n";
-    cout << "  boundary values: ";
-    cout << "a = " << val[0] << " ";
-    cout << "b = " << val[1] << " ";
-    cout << "c = " << val[2] << " ";
-    cout << "\n\n";
-
-    ++it;
-  }
-}

@@ -38,20 +38,27 @@ SimpleSemiconductorModel::SimpleSemiconductorModel(
 void
 SimpleSemiconductorModel::prepare_element_data(void)
 {
-  double kT = SimulationOptions::T * Constants::k_B;
-  electron_vt = hole_vt = kT;
-  
-  BandProperties& cb = _conduction_band;
-  BandProperties& vb = _valence_band;
+  if (!_is_prepared)
+  {
+    double kT = SimulationOptions::T * Constants::k_B;
+    electron_vt = hole_vt = kT;
 
-  cb.effective_DOS =
-    get_DOS_factor() * std::pow(kT * cb.effective_mass, 1.5);
+    BandProperties& cb = _conduction_band;
+    BandProperties& vb = _valence_band;
 
-  vb.effective_DOS =
-    get_DOS_factor() * std::pow(kT * vb.effective_mass, 1.5);
+    cb.effective_DOS =
+      get_DOS_factor() * std::pow(kT * cb.effective_mass, 1.5);
 
-  conduction_band_edge = cb.band_edge;
-  valence_band_edge = vb.band_edge;
+    vb.effective_DOS =
+      get_DOS_factor() * std::pow(kT * vb.effective_mass, 1.5);
+
+    conduction_band_edge = cb.band_edge;
+    valence_band_edge = vb.band_edge;
+
+    calculate_equilibrium_properties(BOTH, SimulationOptions::T);
+
+    _is_prepared =  true;
+  }
 }
 
 void
@@ -181,8 +188,6 @@ SimpleSemiconductorModel::calculate_equilibrium_properties(int coupling,
 
   ierr = VecDestroy(x);
   ierr = MatDestroy(J);
-
-  _is_prepared = true;
 
   // restore original coupling
   _coupling = coupling_bkp;
