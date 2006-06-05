@@ -96,7 +96,7 @@ void SBbulkHamiltonian::calculate_Hamiltonian_k_par(void)
   vector<MatrixElement> temp;
   temp.push_back(result); 
   Hamiltonian.push_back(temp);
-
+  Hamiltonian_without_strain_pot = Hamiltonian;
 
 
   
@@ -106,7 +106,7 @@ void SBbulkHamiltonian::calculate_Hamiltonian_k_par(void)
 //-------------------------------------------------------//
 void SBbulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential)
 {
-  single_band_ham.constant -= el_potential/Hartree;
+  Hamiltonian[0][0].constant = Hamiltonian_without_strain_pot[0][0].constant  -  el_potential/Hartree;
 }
 
 

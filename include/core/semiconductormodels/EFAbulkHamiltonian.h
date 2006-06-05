@@ -57,9 +57,15 @@ class EFAbulkHamiltonian: public PhysicalProperties
   //-------------------------------------------------------------------------------
  protected:
   
+  
 
-  //!Hamiltonian in k representation
+
+  //!result Hamiltonian in k representation 
   std::vector< std::vector<MatrixElement > > Hamiltonian;
+
+
+  //! Hamiltonian in k representation that is used by apply_strain_and_potential
+  std::vector< std::vector<MatrixElement > > Hamiltonian_without_strain_pot;
 
   //! k-vector in simualtion system
   double k_vector[3];

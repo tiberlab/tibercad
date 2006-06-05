@@ -166,21 +166,26 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       const unsigned int mat = material_of_elem[el_number];
 
    
+   
+
       element_hamiltonian = bulkHamiltonian[mat];
 
       if (opt.consider_strain)
 	{
+          cerr << mat <<"\n";
 	  strain_crystal_system = strain->get_strain(elem, true);
+	  cerr << setw(12) << strain_crystal_system << "\n";
 	}
 
       element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
 	  
-
+    
 
 
       std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&  
 	model_Ham = ( element_hamiltonian->get_Hamiltonian() );
 
+     
       dof_map.dof_indices (elem, dof_indices); 
       const unsigned int n_dofs   = dof_indices.size();
       fe->reinit (elem);
@@ -200,12 +205,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
  
 	       for (unsigned int band2 = 0; band2 < opt.number_of_bands; band2++)
 		 {//band2
-		   /*
-		   if (band1 < band2)
-		     operator_sign = Complex(0.0, 1.0);//test was Complex(0.0, -1.0) /ONLY TEST
-		   else
-		     operator_sign = Complex(0.0, 1.0);
-		   */
+		  
 		   //Hamiltonian
 		  
 
@@ -295,13 +295,13 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
     }
 
- /*
+ 
 //this is only to test
   Ham_real->print_matlab("ham_r_matlab.m");
   Ham_imag->print_matlab("ham_i_matlab.m");
   S_real->print_matlab("s.m");
 
-*/
+
   dof_map.print_dof_constraints();
      
 }

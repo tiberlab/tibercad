@@ -368,9 +368,9 @@ void KPbulkHamiltonian:: calculate_Hamiltonian_k_par (void)
      for (short j = 0; j <= band_max - band_min; j++)
        Hamiltonian[i][j] = result[i + band_min][j + band_min];
   
+  //-----------------------------------------------//
   
-  
-  
+  Hamiltonian_without_strain_pot = Hamiltonian;
   
 
 }
@@ -378,43 +378,75 @@ void KPbulkHamiltonian:: calculate_Hamiltonian_k_par (void)
 //-------------------------------------------------------//
 void KPbulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential)
 {
+
+  
+
+  const vector<Complex>  strain_Ham_Bir_Pikus1(8,Complex(0.0,0.0));
+  vector< vector<Complex > > strain_Ham_Bir_Pikus;
+  strain_Ham_Bir_Pikus.resize(8,strain_Ham_Bir_Pikus1);
+
+
+ 
+ 
+  
+
   //---------------------------------------------------------------
   //  strain 
   //---------------------------------------------------------------
   //valence band
-  Ham[2][2].constant += par.l1s*strainM(1,1)+par.m1s*strainM(2,2)+par.m2s*strainM(3,3);
-  Ham[3][3].constant += par.m1s*strainM(1,1)+par.l1s*strainM(2,2)+par.m2s*strainM(3,3); 
-  Ham[4][4].constant += par.m3s*strainM(1,1)+par.m3s*strainM(2,2)+par.l2s*strainM(3,3); 
-  Ham[2][3].constant += par.n1s*strainM(2,1) ; 
-  Ham[3][2].constant += par.n1s*strainM(2,1) ;
-  Ham[2][4].constant += par.n2s*strainM(3,1) ;  
-  Ham[4][2].constant += par.n2s*strainM(3,1) ;
-  Ham[3][4].constant += par.n2s*strainM(3,2) ;  
-  Ham[4][3].constant += par.n2s*strainM(3,2) ;
+  
 
-  Ham[5][5].constant += par.l1s*strainM(1,1)+par.m1s*strainM(2,2)+par.m2s*strainM(3,3);
-  Ham[6][6].constant += par.m1s*strainM(1,1)+par.l1s*strainM(2,2)+par.m2s*strainM(3,3); 
-  Ham[7][7].constant += par.m3s*strainM(1,1)+par.m3s*strainM(2,2)+par.l2s*strainM(3,3); 
-  Ham[5][6].constant += par.n1s*strainM(2,1) ; 
-  Ham[6][5].constant += par.n1s*strainM(2,1) ;
-  Ham[5][7].constant += par.n2s*strainM(3,1) ;  
-  Ham[7][5].constant += par.n2s*strainM(3,1) ;
-  Ham[6][7].constant += par.n2s*strainM(3,2) ;  
-  Ham[7][6].constant += par.n2s*strainM(3,2) ;
+  strain_Ham_Bir_Pikus[2][2]  = par.l1s*strain_crystal(1,1)+par.m1s*strain_crystal(2,2)+par.m2s*strain_crystal(3,3);
+  strain_Ham_Bir_Pikus[3][3]  = par.m1s*strain_crystal(1,1)+par.l1s*strain_crystal(2,2)+par.m2s*strain_crystal(3,3); 
+  strain_Ham_Bir_Pikus[4][4]  = par.m3s*strain_crystal(1,1)+par.m3s*strain_crystal(2,2)+par.l2s*strain_crystal(3,3); 
+
+  strain_Ham_Bir_Pikus[2][3]  = par.n1s*strain_crystal(2,1) ; 
+  strain_Ham_Bir_Pikus[3][2]  = par.n1s*strain_crystal(2,1) ;
+  strain_Ham_Bir_Pikus[2][4]  = par.n2s*strain_crystal(3,1) ;  
+  strain_Ham_Bir_Pikus[4][2]  = par.n2s*strain_crystal(3,1) ;
+  strain_Ham_Bir_Pikus[3][4]  = par.n2s*strain_crystal(3,2) ;  
+  strain_Ham_Bir_Pikus[4][3]  = par.n2s*strain_crystal(3,2) ;
+
+  strain_Ham_Bir_Pikus[5][5]  = par.l1s*strain_crystal(1,1)+par.m1s*strain_crystal(2,2)+par.m2s*strain_crystal(3,3);
+  strain_Ham_Bir_Pikus[6][6]  = par.m1s*strain_crystal(1,1)+par.l1s*strain_crystal(2,2)+par.m2s*strain_crystal(3,3); 
+  strain_Ham_Bir_Pikus[7][7]  = par.m3s*strain_crystal(1,1)+par.m3s*strain_crystal(2,2)+par.l2s*strain_crystal(3,3); 
+
+  strain_Ham_Bir_Pikus[5][6]  = par.n1s*strain_crystal(2,1) ; 
+  strain_Ham_Bir_Pikus[6][5]  = par.n1s*strain_crystal(2,1) ;
+  strain_Ham_Bir_Pikus[5][7]  = par.n2s*strain_crystal(3,1) ;  
+  strain_Ham_Bir_Pikus[7][5]  = par.n2s*strain_crystal(3,1) ;
+  strain_Ham_Bir_Pikus[6][7]  = par.n2s*strain_crystal(3,2) ;  
+  strain_Ham_Bir_Pikus[7][6]  = par.n2s*strain_crystal(3,2) ;
+  
   //conduction band
-  Ham[0][0].constant += par.axs * ( strainM(1,1) + strainM(2,2) ) + par.azs * strainM(3,3);
-  Ham[1][1].constant += par.axs * ( strainM(1,1) + strainM(2,2) ) + par.azs * strainM(3,3);
+  strain_Ham_Bir_Pikus[0][0]  = par.axs * ( strain_crystal(1,1) + strain_crystal(2,2) ) + par.azs * strain_crystal(3,3);
+  strain_Ham_Bir_Pikus[1][1]  = par.axs * ( strain_crystal(1,1) + strain_crystal(2,2) ) + par.azs * strain_crystal(3,3);
   
 
   //------------------------------------------------
   //potential
   //------------------------------------------------
 
-
+  
   for (short i = 0; i < 8 ; i++)
     {
-      Ham[i][i].constant -= el_potential/Hartree;
+      strain_Ham_Bir_Pikus[i][i] -= el_potential/Hartree;
     }
+  
+
+  //--------------------------------------------------
+  //correction of the final Hamiltonian
+  //--------------------------------------------------
+
+
+
+  for (short i = 0; i <= band_max - band_min; i++)
+    for (short j = 0; j <= band_max - band_min; j++)
+      Hamiltonian[i][j].constant = Hamiltonian_without_strain_pot[i][j].constant + strain_Ham_Bir_Pikus[i + band_min][j + band_min];
+      
+
+ 
+
 }
 
 //-------------------------------------------------------//
