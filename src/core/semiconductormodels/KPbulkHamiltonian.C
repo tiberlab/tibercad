@@ -369,7 +369,6 @@ void KPbulkHamiltonian:: calculate_Hamiltonian_k_par (void)
        Hamiltonian[i][j] = result[i + band_min][j + band_min];
   
   //-----------------------------------------------//
-  
   Hamiltonian_without_strain_pot = Hamiltonian;
   
 
@@ -437,8 +436,6 @@ void KPbulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, d
   //--------------------------------------------------
   //correction of the final Hamiltonian
   //--------------------------------------------------
-
-
 
   for (short i = 0; i <= band_max - band_min; i++)
     for (short j = 0; j <= band_max - band_min; j++)

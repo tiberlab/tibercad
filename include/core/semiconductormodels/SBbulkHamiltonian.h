@@ -40,7 +40,7 @@ class SBbulkHamiltonian : public EFAbulkHamiltonian
   //! Applies ONLY potential. Strain in applied only in derived classes
   virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
 
- private:
+ protected:
 
   double edge;
 
