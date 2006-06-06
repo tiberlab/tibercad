@@ -60,12 +60,12 @@ void WzDDsemiconductor::calculate_conduction_band_extremum(void)
   //valence top reference energy
   //-------------------------------
   double d1 =  par.delta_cr;
-  double d2 =  par.delta_s;
+  double d2 =  par.delta_s/3;
   double d3 = d2;
   
   double E1 = d1 + d2;
 
-  double E2 = (d1 - d2)/2.0 + sqrt( (d1-  d2/2.0)*( d1- d2/2.0) + 2.0 * d3 * d3 );
+  double E2 = (d1 - d2)/2.0 + sqrt( (d1-  d2)*( d1- d2) / 4.0 + 2.0 * d3 * d3 );
 
   if (E1 > E2)
     Ev_top = par.Ev + E1;
