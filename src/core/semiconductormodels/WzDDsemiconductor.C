@@ -211,7 +211,7 @@ KPbulkHamiltonian::KPparams WzDDsemiconductor::calculate_6x6_kp_params (void )
   //-------------------------------------------------------------------------------//
   //-------------------------------------------------------------------------------//
  
-  result.l1s =  par.D5/Hartree; result.l2s = par.D1/Hartree;
+  result.l1s =  (par.D5 +  par.D4 + par.D2)/Hartree; result.l2s = par.D1/Hartree;
 
   result.m1s = (par.D4 + par.D2 - par.D5)/Hartree;  result.m2s = (par.D1 + par.D3)/Hartree;
 
