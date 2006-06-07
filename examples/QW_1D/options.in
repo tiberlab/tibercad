@@ -5,7 +5,7 @@ $Options
   # the coupling should be 1 because we have p doping
   fully_coupled = 1
 
-  material_system = 2
+  material_system = 0
   # only if material_system == 0
   in_content = 0.15
   # only if material_system == 1

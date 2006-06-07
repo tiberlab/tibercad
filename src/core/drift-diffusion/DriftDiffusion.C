@@ -1152,9 +1152,49 @@ DriftDiffusion::do_gummel_iterations(int max_it)
   }
 }
 
-  void
+void
 DriftDiffusion::solve_gummel(bool restart)
 {
+}
+
+void
+DriftDiffusion::get_solution(const Elem* elem,
+    std::vector<DriftDiffusion::Solution>& solution)
+{
+  NonlinearImplicitSystem* system =
+    &_eq_system->get_system<NonlinearImplicitSystem>(
+        "drift-diffusion coupled");
+
+  const DofMap& dof_map = system->get_dof_map();
+  const NumericVector<Number>& sol = *(system->solution);
+
+  const double phi0 = get_scaling().get_potential_scaling();
+  
+  // numeric ids corresponding to the variables
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_e");
+  const unsigned int ep_var = system->variable_number("fermi_h");
+
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  assert(elem != NULL);
+
+  solution.resize(elem->n_nodes());
+
+  // get DOF indices
+  dof_map.dof_indices(elem, dof_indices_u, u_var);
+  dof_map.dof_indices(elem, dof_indices_en, en_var);
+  dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+  for (unsigned int n = 0; n < elem->n_nodes(); n++)
+  {
+    solution[n].potential = phi0 * sol(dof_indices_u[n]);
+    solution[n].fermi_e = phi0 * sol(dof_indices_en[n]);
+    solution[n].fermi_h = phi0 * sol(dof_indices_ep[n]);
+  }
+
 }
 
 

@@ -11,6 +11,7 @@
 # $(tibermodules) are the subdirectories in $(topdir)/include
 tibermodules := base/common base/io utils/Tensor
 tibermodules += core/drift-diffusion core/macrostrain core/semiconductormodels core/quantumEFAmodels
+tibermodules += core/classical-transport/excitons
 tibermodules += utils/SLEPC
 
 # libmesh can be found here

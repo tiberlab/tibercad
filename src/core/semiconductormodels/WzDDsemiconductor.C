@@ -54,13 +54,13 @@ void WzDDsemiconductor::set_deform_pot_cond(const double a_x_, const double a_z_
 void WzDDsemiconductor::calculate_conduction_band_extremum(void)
 {
   vector<DDsemiconductor::band_extremum> result;
-  
+ 
   double Ev_top;
   //---------------------------------
   //valence top reference energy
   //-------------------------------
   double d1 =  par.delta_cr;
-  double d2 =  par.delta_s/3;
+  double d2 =  par.delta_s / 3.0;
   double d3 = d2;
   
   double E1 = d1 + d2;

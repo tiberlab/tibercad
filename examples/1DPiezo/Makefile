@@ -28,12 +28,12 @@ all: main
 
 main: $(objects)
 	@echo "Linking main..."
-	$(CXX) $(CXXFLAGS) $(objects) $(TIBER_OBJECTS) -o main $(LIBS) $(LDFLAGS) 
+	@$(CXX) $(CXXFLAGS) $(objects) $(TIBER_OBJECTS) -o main $(LIBS) $(LDFLAGS) 
 
 run: all
 	@echo "Running example..."
 	@[ -d output ] || mkdir output
-	./main -ksp_type gmres -pc_ilu_zeropivot 1e-32
+	./main -ksp_type gmres -ksp_xmonitor
 
 
 clean:

@@ -2,23 +2,23 @@ $Options
 
 temperature = 300
 
-statistics = FD
-n_doping = 1e19
-p_doping = 1e19
+statistics = B
+n_doping = 0e19
+p_doping = 0e19
 
 
 vg_start = 0.0;
-vg_stop =  3.5;
-vg_steps = 70;
+vg_stop =  0.0;
+vg_steps = 1;
 
 nonlinear_tolerance = 1e-9
 nonlinear_abs_tolerance = 1e-15
-nonlinear_ls_maxstep = 0.005
-linear_tolerance = 1e-6
+nonlinear_ls_maxstep = 0.025
+linear_tolerance = 1e-9
 linear_abs_tolerance = 1e-12
 nonlinear_max_it = 25
 linear_max_it = 1000
-integration_order = 5
+integration_order = 0
 
 
 scaling = 1

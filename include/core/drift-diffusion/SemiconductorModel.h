@@ -509,6 +509,7 @@ SemiconductorModel::calculate_all(double potential,
   // in this simple model all temperatures are equal
   double kT = electron_vt;
   
+  // 1 conduction band
   const BandProperties& cb = _conduction_band;
   const BandProperties& vb = _valence_band;
 

@@ -315,69 +315,70 @@ SemiconductorModel::extract_band_properties(void)
     _bulk_model->get_conduction_band_energy_mass();
   // get minimum
   int id = 0;
-  for (int i = 1 ; i < cbs.size(); i++)
+  for (int i = 1; i < cbs.size(); i++)
   {
     if (cbs[i].energy < cbs[id].energy)
       id = i;
   }
   _conduction_band.band_edge = cbs[id].energy;
   _conduction_band.effective_mass = cbs[id].mass_DOS
-      * std::pow(cbs[id].degeneracy, 2.0 / 3.0);
-
-  /*
-  cerr << "CB:\n";
-  for (int i = 0 ; i < cbs.size(); i++)
-  {
-    cerr << " Ec = " << cbs[i].energy
-      << ", m = " << cbs[i].mass_DOS
-      << ", d = " << cbs[i].degeneracy << endl;
-  }
-  */
-
+    * std::pow(cbs[id].degeneracy, 2.0 / 3.0);
   
   // treat valence band
   const std::vector<DDsemiconductor::band_extremum>& vbs =
     _bulk_model->get_valence_band_energy_mass();
   // get maximum
   id = 0;
-  int id2 = -1;
-  double delta_min = 5e-3;
-  for (int i = 1 ; i < vbs.size(); i++)
+  double kT = SimulationOptions::T * Constants::k_B;
+  double delta_max = 2.0 * kT;
+  for (int i = 1; i < vbs.size(); i++)
   {
-    // if the bands are (nearly) degenerate we have to take both into
-    // account
-    if (fabs((vbs[id].energy + delta_min) - vbs[i].energy) < 2 * delta_min)
-    {
-      id2 = id;
-      id = i;
-      break;
-    }
-    if (vbs[i].energy > (vbs[id].energy + delta_min))
+    if (vbs[i].energy > vbs[id].energy)
       id = i;
   }
   _valence_band.band_edge = vbs[id].energy;
-  if (id2 >= 0)
+  double tmp = 0;
+  // include other bands
+  for (int i = 0; i < vbs.size(); i++)
   {
-    // two degenerate bands
-    double tmp = vbs[id].degeneracy * std::pow(vbs[id].mass_DOS, 1.5)
-      + vbs[id2].degeneracy * std::pow(vbs[id2].mass_DOS, 1.5);
-    _valence_band.effective_mass = std::pow(tmp, 2.0 / 3.0);
+    double delta = _valence_band.band_edge - vbs[i].energy;
+    if (delta < delta_max)
+      tmp += vbs[i].degeneracy * std::pow(vbs[i].mass_DOS, 1.5)
+        * std::exp(-delta / kT);
   }
-  else
-    _valence_band.effective_mass = vbs[id].mass_DOS
-      * std::pow(vbs[id].degeneracy, 2.0 / 3.0);
+  _valence_band.effective_mass = std::pow(tmp, 2.0 / 3.0);
   
-  /*
-  cerr << "VB:\n";
+}
+
+void
+SemiconductorModel::print_info(void) const
+{
+  _bulk_model->calculate_conduction_band_extremum();
+  const std::vector<DDsemiconductor::band_extremum>& cbs =
+    _bulk_model->get_conduction_band_energy_mass();
+  cout << " - conduction bands:\n";
+  for (int i = 0 ; i < cbs.size(); i++)
+  {
+    cout << "   Ec = " << cbs[i].energy
+      << ", m = " << cbs[i].mass_DOS
+      << ", d = " << cbs[i].degeneracy << endl;
+  }
+
+  _bulk_model->calculate_valence_band_extremum();
+  const std::vector<DDsemiconductor::band_extremum>& vbs =
+    _bulk_model->get_valence_band_energy_mass();
+  cout << " - valence bands:\n";
   for (int i = 0 ; i < vbs.size(); i++)
   {
-    cerr << " Ev = " << vbs[i].energy
+    cout << "   Ev = " << vbs[i].energy
       << ", m = " << vbs[i].mass_DOS
       << ", d = " << vbs[i].degeneracy << endl;
   }
-  */
-}
 
+  cout << " - Ef0 = " << get_equilibrium_fermi_level()
+    << ", ni^2 = " << get_intrinsic_density_squared();
+  cout << endl;
+}
 
 void
 SemiconductorModel::calculate_equilibrium_properties(int coupling,
@@ -469,9 +470,9 @@ SemiconductorModel::calculate_equilibrium_properties(int coupling,
   ierr = SNESGetIterationNumber(snes, &n_iterations);
   if (reason < 0)
   {
-    cerr << "ATTENTION Equilibrium properties calculation:\n";
-    cerr << "  # iterations: "  << n_iterations
-      << ", converged reason: " << reason << "\n";
+    //cerr << "ATTENTION Equilibrium properties calculation:\n";
+    //cerr << "  # iterations: "  << n_iterations
+    //  << ", converged reason: " << reason << "\n";
   }
 
   ierr = VecGetArray(x, &result);
@@ -543,22 +544,3 @@ SemiconductorModel::function(SNES snes, Vec x, Vec f, void *sc)
 }
 
 
-void
-SemiconductorModel::print_info(void) const
-{
-  cout << " - conduction band:\n";
-  cout << "    Ec = " << _conduction_band.band_edge
-    << ", Nc = " << _conduction_band.effective_DOS
-    << ", n0 = " << get_equilibrium_electron_density()
-    << ", m_DOS = " << _conduction_band.effective_mass;
-  cout << endl;
-  cout << " - valence band:\n";
-  cout << "    Ev = " << _valence_band.band_edge
-    << ", Nv = " << _valence_band.effective_DOS
-    << ", p0 = " << get_equilibrium_hole_density()
-    << ", m_DOS = " << _valence_band.effective_mass;
-  cout << endl;
-  cout << " - Ef0 = " << get_equilibrium_fermi_level()
-    << ", ni^2 = " << get_intrinsic_density_squared();
-  cout << endl;
-}

@@ -35,10 +35,4 @@ z-periodic=0
 
 stress = -0.0
 
-fixed_point1 = (0.0 0.0 0.0)
-
-fixed_point2 = (0.0 -0.5 0.0)
-
-fixed_point3 = (1.0 0.0 1.0)
-
 End

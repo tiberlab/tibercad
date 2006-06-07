@@ -86,7 +86,6 @@ class DriftDiffusionProperties : public PhysicalProperties
      * \param fermi_e the electron electro-chemical potential
      * \param fermi_h the hole electro-chemical potential
      * \param p the coordinates in real space
-     * \param elem the pointer to the element which contains \c p
      *
      */
     virtual void calculate_all(double potential,

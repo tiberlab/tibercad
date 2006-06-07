@@ -249,7 +249,7 @@ void Macrostrain::create_substate_nodes_set()
 	  substrate_nodes.insert(sub_nodes[i]);
 	}
       
-      cerr << " substrate_nodes.size() " << substrate_nodes.size() <<"\n";
+      //cerr << " substrate_nodes.size() " << substrate_nodes.size() <<"\n";
      
 
       //-------------------------------------------------------------
@@ -806,7 +806,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
       const unsigned int material = (*material_of_elem_temp)[el_number];
 
      
-      cerr << material << "\n";
+      //cerr << material << "\n";
       
       
      
@@ -819,10 +819,10 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
       eps_const =  crystal_el.get_const_eps0(substrate_lat_const, eps0_var_log) 
 	+ (*eps0_of_elem_temp)[el_number] ;//+ substrate_shear;
 
-      cerr << substrate_lat_const[0] << "\n";
+      //cerr << substrate_lat_const[0] << "\n";
       double lat_const[3];
       crystal_el.get_lat_const(lat_const);
-      cerr << lat_const[0] << "\n";
+      //cerr << lat_const[0] << "\n";
       
 
      
@@ -939,7 +939,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 					    normal = 1.0;
 					  else
 					    normal = -1.0;
-                                          cerr << "stress_value   " <<  stress_value << "\n";
+                                          //cerr << "stress_value   " <<  stress_value << "\n";
 
 					  Fe_sub(p1) += stress_value * normal;
 					} 
@@ -1202,7 +1202,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
  
 
 
-  std:: cout<< "matrix is done \n";  
+  //std:: cout<< "matrix is done \n";  
    
   // system.rhs->print();
 

@@ -1,10 +1,9 @@
 // $Id$
 
-#ifndef _DRIFTDIFFUSION_H_
-#define _DRIFTDIFFUSION_H_
+#ifndef _EXCITONTRANSPORT_H_
+#define _EXCITONTRANSPORT_H_
 
 #include "SimulationOptions.h"
-#include "DriftDiffusionDefs.h"
 #include "Scaling.h"
 #include "DDevice.h"
 #include "PetscRuntimeError.h"
@@ -30,7 +29,6 @@ extern "C" {
 
 // forward declarations
 class DD::Device;
-class ElectricalContact;
 class Mesh;
 class Elem;
 class Node;
@@ -48,34 +46,10 @@ template<typename T> class NonlinearSolver;
  * TODO
  * Some more details
  */
-class DriftDiffusion
+class ExcitonTransport
 {
   public:
  
-    //! The solver methods that can be used
-    enum SolverMethod
-    {
-      NEWTON,
-      GUMMEL
-    };
-
-    //! A structure to hold the three potentials
-    /*!
-     * This structure is used for the queries of the solution in certain
-     * points or elements
-     */
-    struct Solution
-    {
-      //! The electric potential
-      double potential;
-      
-      //! The electron electro-chemical potential
-      double fermi_e;
-      
-      //! The hole electro-chemical potential
-      double fermi_h;
-    };
-    
     //! This class defines parameters used by the underlying
     //! nonlinear solver
     /*!
@@ -131,7 +105,7 @@ class DriftDiffusion
 
       private:
 
-        friend class DriftDiffusion;
+        friend class ExcitonTransport;
     };
     
     /**
@@ -189,11 +163,6 @@ class DriftDiffusion
         double refinement_tolerance;
 
         /**
-         * The minimum allowable voltage step size
-         */
-        double min_voltage_step;
-
-        /**
          * The order of gauss integration
          */
         libMeshEnums::Order integration_order;
@@ -204,19 +173,6 @@ class DriftDiffusion
         libMeshEnums::Order approximation_order;
 
         /**
-         * The solver method
-         *
-         * Can be @c NEWTON or @c GUMMEL
-         */
-        SolverMethod solver_method;
-
-        /**
-         * The maximum number of iteration steps for
-         * the Gummel method
-         */
-        int max_gummel_iterations;
-
-        /**
          * The nonlinear/linear (PETSc-)solver parameters
          */
         SolverParameters solver_params;
@@ -225,20 +181,6 @@ class DriftDiffusion
          * The units in which the mesh object is given
          */
         double mesh_units;
-
-        /**
-         * The type of scaling to be applied
-         *
-         * Can be one of @c NONE, @c UNITS or @c DEMARI
-         */
-        Scaling::ScalingType scaling_type;
-
-        //! The type of coupling to be used
-        /*!
-         * We safe it as int, because we want to assign values by
-         * using logic operators, e.g. \code ELECTRONS | POISSON \endcode
-         */
-        int coupling;
 
         //! Include artificial drift in continuity equations
         /*!
@@ -256,38 +198,15 @@ class DriftDiffusion
 
       private:
         
-        /**
-         * The maximum electron density
-         */
-        double n_max;
-        
-        /**
-         * The maximum hole density
-         */
-        double p_max;
-
-        /**
-         * The density scaling factor for the electron current equation
-         */
-        double C0_e;
-
-        /**
-         * The density scaling factor for the hole current equation
-         */
-        double C0_h;
-
-        //! linearize continuity equations
-        bool linearize_continuity_eq;
-
-        friend class DriftDiffusion;
+        friend class ExcitonTransport;
     };
 
       
-    DriftDiffusion(DD::Device* device);
+    ExcitonTransport(DD::Device* device);
 
-    DriftDiffusion(DD::Device* device, DriftDiffusion::Options& params);
+    ExcitonTransport(DD::Device* device, ExcitonTransport::Options& params);
 
-    ~DriftDiffusion(void);
+    ~ExcitonTransport(void);
     
     /**
      * @returns a reference to the device to be solved
@@ -341,14 +260,7 @@ class DriftDiffusion
      * A better way would be to use some potential based values which can be
      * calculated from nodal potential values during matrix assembly.
      */
-    void build_scaling(void);
-
-    /**
-     * Set the simulation voltage for the boundary named \p boundary.
-     */
-    // TODO throw exception if boundary non-existing
-    void set_simulation_voltage(const std::string& boundary,
-        double voltage);
+    //void build_scaling(void);
 
     /**
      * Remember the current solution for future restart
@@ -371,16 +283,6 @@ class DriftDiffusion
     void solve(void);
 
     /**
-     * Solve the drift-diffusion problem starting from the equilibrium
-     * solution.
-     *
-     * If adaptive mesh refinement was enabled for this solver
-     * run, it will be deactivated afterwards and has to be re-enabled
-     * explicitly.
-     */
-    void solve(bool restart);
-   
-    /**
      * @returns the variable names in a vector.
      */
     const std::vector<std::string>& get_variable_names(void) const;
@@ -395,14 +297,6 @@ class DriftDiffusion
      */
     const std::vector<Number>& get_solution(void) const;
 
-    //! Get the solution on the nodes of a certain element
-    /*!
-     * \param elem the pointer to the element
-     * \param solution a reference to the vector where the solution will be
-     * put into
-     */
-    void get_solution(const Elem* elem, std::vector<Solution>& solution);
-
     /**
      * @returns the number of nonlinear iterations needed for the solution
      */
@@ -412,19 +306,6 @@ class DriftDiffusion
      * @returns the final residual norm of the solution
      */
     double get_final_residual(void) const;
-
-    /**
-     * @returns the boundary currents indexed by boundary descriptor
-     * pointers.
-     */
-    const std::map<const ElectricalContact*, double>&
-      get_boundary_currents(void) const;
-
-    /**
-     * @returns the integrated current at the artificial (non-contact)
-     * boundary of the device, which should be zero.
-     */
-    double get_artificial_boundary_current(void);
 
     /**
      * fill @c densities with electron and hole densities
@@ -438,50 +319,21 @@ class DriftDiffusion
     void build_current_density(std::vector<double>& current,
         std::vector<std::string>& names);
 
-    //! Fill a vector with the electric field data
-    void build_electric_field(std::vector<double>& field,
-        std::vector<std::string>& names);
-
-    //! Fill a vector with the band edge data
-    void build_band_edges(std::vector<double>& band_edges,
-        std::vector<std::string>& names);
-
-    //! Fill a vector with the elemental band edge data
-    void build_elem_band_edges(std::vector<double>& band_edges,
-        std::vector<std::string>& names);
-
-
   private:
 
-    /**
-     * Are we doing equilibrium or nonequilibrium calculation?
-     */
-    enum CalculationType
-    {
-      EQUILIBRIUM,
-      NONEQUILIBRIUM
-    };
-
     // for nicer code
-    typedef std::map<const ElectricalContact*, double> ContactData;
-    typedef std::map<const Node*, ElectricalContact*> BoundaryNodeList;
     typedef TiberPetscNonlinearSolver<Real> SolverClass;
 
     //! A static reference to \c this
     /*!
      * This is needed during matrix assembly, which is a static method.
      */
-    static DriftDiffusion* _this;
+    static ExcitonTransport* _this;
 
     /**
-     * The device to be solved by this DriftDiffusion object
+     * The device to be solved by this ExcitonTransport object
      */
     DD::Device* _device;
-
-    /**
-     * A list of nodes with dirichlet boundary conditions
-     */
-    BoundaryNodeList _dirichlet_nodes;
 
     /**
      * The equation system for this device
@@ -502,28 +354,6 @@ class DriftDiffusion
      * The scaling parameters
      */
     Scaling _scaling;
-
-    /**
-     * The simulation voltages of the previous solve step
-     */
-    ContactData _old_sim_voltages;
-    
-    /**
-     * The simulation voltages for the next simulation
-     */
-    ContactData _simulation_voltages;
-    
-    /**
-     * The remembered simulation voltages
-     */
-    ContactData _remembered_voltages;
-
-    /**
-     * The boundary currents
-     *
-     * Currents are calculated after each solve step.
-     */
-    ContactData _boundary_currents;
 
     /**
      * The variable names in the same order as they appear in the
@@ -548,48 +378,24 @@ class DriftDiffusion
     double _final_residual;
 
     //! disable the copy constructor and assignment operator
-    DriftDiffusion(const DriftDiffusion& rhs);
-    DriftDiffusion& operator=(const DriftDiffusion& rhs);
-
-    //! Do a number of Gummel iterations
-    /*!
-     * \return the final residual
-     * \param the maximum number of iterations
-     */
-    double do_gummel_iterations(int max_it)
-      throw (PetscRuntimeError, KSPDivergedError, SNESDivergedError);
+    ExcitonTransport(const ExcitonTransport& rhs);
+    ExcitonTransport& operator=(const ExcitonTransport& rhs);
 
     /**
      * Set the options for the PETSc solver as given in @c SolverParameters
      */
-    void set_solver_params(NonlinearSolver<Number>& solver,
-        CalculationType calc_type = NONEQUILIBRIUM);
+    void set_solver_params(NonlinearSolver<Number>& solver);
 
     /**
      * Computes the scaling parameters according to the
      * scaling type \p type
      */
-    void compute_scaling(Scaling::ScalingType type = Scaling::UNITS);
+    void compute_scaling(void);
 
     /**
      * prepare data structures used for solving a system
      */
     void prepare_solver(void);
-
-    /**
-     * Fills the dirichlet nodes data structure.
-     */
-    void find_dirichlet_nodes(void);
-
-    /**
-     * Sets the boundary values for each node on a Dirichlet type
-     * boundary
-     *
-     * This function could be called after
-     * \p calculate_next_sim_voltage() and after the static parameters
-     * were set up.
-     */
-    //void set_dirichlet_values(void);
 
     /**
      * Reset solver environment.
@@ -616,48 +422,6 @@ class DriftDiffusion
     //! Get the equation system
     EquationSystems& get_equation_system(void);
 
-    void solve_newton(bool restart);
-
-    void solve_gummel(bool restart);
-
-    void calculate_currents(void);
-
-
-    /**
-     * Calculates the next simulation point and returns
-     * the voltage step
-     */
-    double calculate_new_simulation_voltages(void);
-
-
-    /**
-     * @returns the side number of the top level element, if the side
-     * \p side of element \p elem is on a boundary, -1 if not.
-     *
-     * It is supposed that \p top_parent is the top parent of \p elem
-     * and \p side lies on a device boundary
-     */
-    static int find_boundary(const Elem* elem, int side,
-      const Elem* top_parent);
-
-    //! Assign boundary value coefficients
-    /*!
-     * Assigns boundary value coefficient in a form
-     *
-     *   du/dn = - coeff * u + value
-     *
-     * NOTE: this method assumes mixed or von Neumann boundary conditions.
-     */
-    static void assign_boundary_values(double& coeff, double& value,
-        const std::vector<double>& coefficients);
-
-    //! Makes a first guess of the equilibrium potential
-    /**
-     * It sets every node to its equilibrium potential.
-     * TODO: find a better guess...
-     */
-    void guess_equilibrium(NonlinearImplicitSystem& poisson) const;
-
     //! Assembles the residual vector or the jacobian matrix
     /*!
      * Assembles the residual vector or the jacobian matrix for
@@ -666,7 +430,6 @@ class DriftDiffusion
      * This method gets called from the underlying nonlinear solver
      * library
      */
-    template <int T>
     static void assemble(const NumericVector<Number>& x,
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
@@ -680,112 +443,86 @@ class DriftDiffusion
 
 inline
 const DD::Device&
-DriftDiffusion::get_device(void) const
+ExcitonTransport::get_device(void) const
 {
   return *_device;
 }
 
 inline
-DriftDiffusion::Options&
-DriftDiffusion::get_options(void)
+ExcitonTransport::Options&
+ExcitonTransport::get_options(void)
 {
   return _options;
 }
 
 inline
 void
-DriftDiffusion::set_options(const DriftDiffusion::Options& options)
+ExcitonTransport::set_options(const ExcitonTransport::Options& options)
 {
   _options = options;
 }
 
 inline
 void
-DriftDiffusion::enable_mesh_refinement(void)
+ExcitonTransport::enable_mesh_refinement(void)
 {
   _options.mesh_refinement = true;
 }
 
 inline
 void
-DriftDiffusion::disable_mesh_refinement(void)
+ExcitonTransport::disable_mesh_refinement(void)
 {
   _options.mesh_refinement = false;
 }
 
 inline
 const Scaling&
-DriftDiffusion::get_scaling(void) const
+ExcitonTransport::get_scaling(void) const
 {
   return _scaling;
 }
 
 inline
 const std::vector<std::string>&
-DriftDiffusion::get_variable_names(void) const
+ExcitonTransport::get_variable_names(void) const
 {
   return _variables;
 }
 
 inline
 const std::vector<Number>&
-DriftDiffusion::get_solution(void) const
+ExcitonTransport::get_solution(void) const
 {
   return _solution;
 }
 
 inline
 unsigned int
-DriftDiffusion::get_n_nonlinear_iterations(void) const
+ExcitonTransport::get_n_nonlinear_iterations(void) const
 {
   return _n_nonlinear_iterations;
 }
 
 inline
 double
-DriftDiffusion::get_final_residual(void) const
+ExcitonTransport::get_final_residual(void) const
 {
   return _final_residual;
 }
 
 inline
-const std::map<const ElectricalContact*, double>&
-DriftDiffusion::get_boundary_currents() const
-{
-  return _boundary_currents;
-}
-
-inline
-void
-DriftDiffusion::solve(void)
-{
-  solve(false);
-}
-
-inline
-void
-DriftDiffusion::assign_boundary_values(double& coeff, double& value,
-        const std::vector<double>& coefficients)
-{
-  assert(coefficients[1] != 0.0);
-
-  coeff = coefficients[0] / coefficients[1];
-  value = coefficients[2] / coefficients[1];
-}
-
-
-inline
 EquationSystems&
-DriftDiffusion::get_equation_system(void)
+ExcitonTransport::get_equation_system(void)
 {
   return *_eq_system;
 }
 
 inline
 Mesh& 
-DriftDiffusion::get_mesh(void) const
+ExcitonTransport::get_mesh(void) const
 {
   return _device->get_mesh();
 }
 
-#endif //_DRIFTDIFFUSION_H_
+#endif //_EXCITONTRANSPORT_H_

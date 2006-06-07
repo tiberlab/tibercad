@@ -175,7 +175,7 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
     int _recombination;
 
     /**
-     * The factor 2 * pow(2 * PI / h^2)^1.5
+     * The factor 3 * pow(2 * PI / h^2)^1.5
      * for calculating the effective density of states
      */
     double _DOS_factor;
