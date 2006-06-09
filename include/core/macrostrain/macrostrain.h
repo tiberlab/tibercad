@@ -242,6 +242,12 @@ class Macrostrain
     \param quadratur_point quadratur point that belongs to the element
   */
   Tensor2Sym get_strain_crystal(const Elem* el, const Point& quadratur_point ); 
+  
+  //!get in crystal strain system
+  /*!
+    \param el pointer to the element
+  */
+  Tensor2Sym get_strain_crystal(const Elem* el); 
 
 
   Tensor1 get_piezopolarization(const Elem* el);
@@ -577,4 +583,15 @@ inline bool Macrostrain::element_on_boundary(const Elem* element)
   return(result);
   
 };
+
+
+inline
+Tensor2Sym
+Macrostrain::get_strain_crystal(const Elem* el)
+{
+  return get_strain_crystal(el, el->centroid());
+}
+
+
+
 #endif

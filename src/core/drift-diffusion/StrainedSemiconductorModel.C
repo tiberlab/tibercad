@@ -40,7 +40,7 @@ StrainedSemiconductorModel::prepare_element_data(void)
     if (it == end)
     {
       // set strain
-      get_physical_model()->set_strain(_strain->get_strain(elem, true));
+      get_physical_model()->set_strain(_strain->get_strain_crystal(elem));
 
       // call method of parent class
       double temp = electron_vt / Constants::k_B;

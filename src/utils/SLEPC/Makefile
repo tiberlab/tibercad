@@ -7,7 +7,7 @@ LOCDIR     = ./
 SLEPC_DIR  = /usr/pack/slepc-2.2.1-ma
 PETSC_DIR  = /usr/pack/petsc-2.2.1-ma
 
-BOPT = O_complex 
+BOPT = O_complex
 
 MANSEC           = EPS
 

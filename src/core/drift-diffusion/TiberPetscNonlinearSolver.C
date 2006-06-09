@@ -47,7 +47,7 @@ extern "C"
     std::cerr << "it " << its << ", fnorm = " << fnorm << "\n";
 
     // check for convergence
-    if ((reason < 0) && (reason != -3))
+    if ((reason < 0) && (reason != -3) && (reason != -4))
       throw(KSPDivergedError(reason, its, fnorm));
 
     return ierr;

@@ -623,7 +623,8 @@ int main (int argc, char** argv)
     params.integration_order =
       static_cast<libMeshEnums::Order>(integration_order);
 
-    params.solver_params.ksp_type = KSPGMRES;
+    //params.solver_params.ksp_type = KSPGMRES;
+    params.solver_params.ksp_type = KSPBCGSL;
     params.solver_params.pc_type = PCILU;
     //params.artificial_drift = true;
     params.local_scaling = true;

@@ -10,6 +10,8 @@
 #include "ElectricalContact.h"
 #include "Constants.h"
 #include "DriftDiffusionProperties.h"
+#include "ExcitonProperties.h"
+#include "SemiconductorModel.h"
 #include "TiberPetscNonlinearSolver.h"
 
 // libmesh includes
@@ -246,7 +248,7 @@ ExcitonTransport::set_to_remembered_solution(void)
 {
   NonlinearImplicitSystem& system =
     _eq_system->get_system<NonlinearImplicitSystem>(
-        "drift-diffusion coupled");
+        "exciton");
   *(system.solution) = system.get_vector("remembered solution");
 }
 
@@ -365,11 +367,11 @@ ExcitonTransport::solve(void)
   {
     // the coupled DD system
     equation_systems.add_system<NonlinearImplicitSystem>(
-        "drift-diffusion coupled");
+        "exciton");
 
     NonlinearImplicitSystem& system =
       equation_systems.get_system<NonlinearImplicitSystem>(
-          "drift-diffusion coupled");
+          "exciton");
 
     // we use PETSc
     system.nonlinear_solver =
@@ -379,6 +381,7 @@ ExcitonTransport::solve(void)
     set_solver_params(*system.nonlinear_solver);
 
     system.add_variable("fermi_x", approx_order);
+    system.add_variable("dummy", approx_order);
 
     // we can remember a solution for future use
     system.add_vector("remembered solution");
@@ -396,7 +399,7 @@ ExcitonTransport::solve(void)
 
   NonlinearImplicitSystem& system =
     equation_systems.get_system<NonlinearImplicitSystem>(
-        "drift-diffusion coupled");
+        "exciton");
 
   NumericVector<Number>& solution = *(system.solution);
   NumericVector<Number>& old_solution =
@@ -533,7 +536,7 @@ ExcitonTransport::build_scaling(void)
   NonlinearImplicitSystem* system;
 
   system = &_eq_system->get_system<NonlinearImplicitSystem>(
-      "drift-diffusion coupled");
+      "exciton");
 
   // aliases for nicer code
   const DD::Device& device = *(_device);
@@ -665,11 +668,11 @@ void
 ExcitonTransport::build_densities(vector<double>& densities,
     vector<string>& names)
 {
-/*
+  /*
   NonlinearImplicitSystem* system;
 
   system = &_eq_system->get_system<NonlinearImplicitSystem>(
-      "drift-diffusion coupled");
+      "exciton");
 
   // aliases for nicer code
   const DD::Device& device = *(_device);
@@ -685,7 +688,8 @@ ExcitonTransport::build_densities(vector<double>& densities,
   const unsigned int n_vars  = 3;
   names.resize(n_vars);
   names[0] = "density";
-  names[1] = "recomb_rate";
+  names[1] = "recombination_rate";
+  names[1] = "generation_rate";
 
   densities.resize(nn * n_vars);
 
@@ -696,6 +700,9 @@ ExcitonTransport::build_densities(vector<double>& densities,
 
   // the scaling parameters to scale back the result
   double phi0 = get_scaling().get_potential_scaling();
+
+  ExcitonProperties* excitonmodel = get_exciton_model();
+  DriftDiffusion* driftdiff = get_driftdiffusion();
 
 
   fill(densities.begin(), densities.end(), 0.0);
@@ -734,13 +741,12 @@ ExcitonTransport::build_densities(vector<double>& densities,
 #endif
   }
 
-  const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
+  //! for the drift-diffusion solution
+  vector<DriftDiffusion::Solution> dd_solution;
+
+  const unsigned int u_var = system->variable_number("fermi_x");
   
   vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
 
   MeshBase::const_element_iterator it =
     mesh.active_local_elements_begin();
@@ -757,26 +763,28 @@ ExcitonTransport::build_densities(vector<double>& densities,
 #endif
     {
       dof_map.dof_indices(elem, dof_indices_u, u_var);
-      dof_map.dof_indices(elem, dof_indices_en, en_var);
-      dof_map.dof_indices(elem, dof_indices_ep, ep_var);
 
-      DriftDiffusionProperties* sc =
-        device.get_element_data().get_data(elem->top_parent());
+      SemiconductorModel* sc = static_cast<SemiconductorModel*>(
+          device.get_element_data().get_data(top_parent));
       assert(sc != NULL); 
 
       sc->reinit(elem);
+      excitonmodel->reinit(elem, sc);
 
       assert(elem->n_nodes() == dof_indices_u.size());
 
-      //sol.resize(dof_indices.size());
 
+      driftdiff->get_solution(elem, dd_solution);
+      
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
-        Real u  = phi0 * solution(dof_indices_u[n]);
-        Real en = phi0 * solution(dof_indices_en[n]);
-        Real ep = phi0 * solution(dof_indices_ep[n]);
+        Real u  = dd_solution[n].potential;
+        Real en = dd_solution[n].fermi_e;
+        Real ep = dd_solution[n].fermi_h;
+        Real ex  = phi0 * solution(dof_indices_u[n]);
         
         sc->calculate_all(u, en, ep, elem->point(n));
+        excitonmodel->calculate_all(ex, q_point[qp]);
 
         assert (node_conn[elem->node(n)] != 0);
 
@@ -821,7 +829,7 @@ ExcitonTransport::build_current_density(vector<double>& current,
   NonlinearImplicitSystem* system;
 
   system = &_eq_system->get_system<NonlinearImplicitSystem>(
-      "drift-diffusion coupled");
+      "exciton");
 
   // aliases for nicer code
   const DD::Device& device = *(_device);
@@ -943,7 +951,6 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
     NumericVector<Number>* residual,
     SparseMatrix<Number>* jacobian)
 {
-/*
   PerfLog perf_log("Matrix assembly", false);
   perf_log.start_event("assembly");
   
@@ -951,19 +958,16 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
   const Mesh& mesh = _this->get_mesh();
   EquationSystems& eq_sys = _this->get_equation_system();
   NonlinearImplicitSystem& system =
-    eq_sys.get_system<NonlinearImplicitSystem>(
-        "drift-diffusion coupled");
+    eq_sys.get_system<NonlinearImplicitSystem>("exciton");
 
   const unsigned int dim = mesh.mesh_dimension();
   
   const DD::Device& device = _this->get_device();
   const Options& params = _this->get_options();
   Options& options = _this->get_options();
-  bool linearize = options.linearize_continuity_eq;
 
-  ContactData& simulation_voltages = _this->_simulation_voltages;
-  BoundaryNodeList& dirichlet_nodes = _this->_dirichlet_nodes;
-
+  ExcitonProperties* excitonmodel = _this->get_exciton_model();
+  DriftDiffusion* driftdiff = _this->get_driftdiffusion();
 
   //
   // some scaling stuff...
@@ -971,30 +975,16 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
   // NOTE: the mesh and all paramters were not explicitly scaled, so
   //       we have to treat scaling by explicit division/multiplication
   //       
-  // maximum density of electrons
-  double n_max = 1;
-  // maximum density of holes
-  double p_max = 1;
   // the scaling parameters
   const Scaling& scaling = _this->get_scaling();
   // the scaling parameter for the poisson eq.
   // The factor 1e-2 comes from the fact, that we are calculating in cm!
-  const double l2 = scaling.get_lambda_squared() * Constants::e0 * 1e-2;
   const double x0 = scaling.get_length_scaling();
   const double phi0 = scaling.get_potential_scaling();
   const double C0 = scaling.get_density_scaling();
   const double mu0 = scaling.get_mobility_scaling();
-  // x 1e4 because we calculate in cm
-  const double P0 = (Constants::e * x0 * C0) * 1e4;
-  // density scaling for electrons
-  double C0_e = options.C0_e;
-  //C0_e = 1;
-  // density scaling for holes
-  double C0_h = options.C0_h;
-  //C0_h = 1;
   // scaling for recombination rates
-  double R0_e = C0_e / scaling.get_time_scaling();
-  double R0_h = C0_h / scaling.get_time_scaling();
+  double R0 = C0 / scaling.get_time_scaling();
   //
   // we calculate on a scaled mesh with |xmax - xmin| = 1, but we did not 
   // explicitly scale the mesh, so we have to account for this in the code,
@@ -1032,11 +1022,9 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
   const DofMap& dof_map = system.get_dof_map();
   
   // numeric ids corresponding to the variables
-  const unsigned int u_var = system.variable_number("potential");
-  const unsigned int en_var = system.variable_number("fermi_e");
-  const unsigned int ep_var = system.variable_number("fermi_h");
+  const unsigned int ex_var = system.variable_number("fermi_x");
   
-  FEType fe_type = system.variable_type(u_var);
+  FEType fe_type = system.variable_type(ex_var);
 
   // the finite element
   AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
@@ -1044,15 +1032,15 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
   fe->attach_quadrature_rule(&qrule);
 
   // the finite element for boundary integration
-  AutoPtr<FEBase> fe_face(FEBase::build(dim, fe_type));
-  libMeshEnums::Order integration_order;
-  if (dim == 1)
-    integration_order = libMeshEnums::CONSTANT;
-  else
-    integration_order = params.integration_order;
-  
-  QGauss qface(dim - 1, integration_order);
-  fe_face->attach_quadrature_rule(&qface);
+  //AutoPtr<FEBase> fe_face(FEBase::build(dim, fe_type));
+  //libMeshEnums::Order integration_order;
+  //if (dim == 1)
+  //  integration_order = libMeshEnums::CONSTANT;
+  //else
+  //  integration_order = params.integration_order;
+  //
+  //QGauss qface(dim - 1, integration_order);
+  //fe_face->attach_quadrature_rule(&qface);
 
   
   // references to cell-specific data that will be used to
@@ -1079,26 +1067,10 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
   // the local solution
   DenseVector<Number> X;
 
-  DenseSubMatrix<Number>
-    Kuu(Ke), Kun(Ke), Kup(Ke),
-    Knu(Ke), Knn(Ke), Knp(Ke),
-    Kpu(Ke), Kpn(Ke), Kpp(Ke);
-
-  DenseSubVector<Number>
-    Fu(Fe),
-    Fn(Fe),
-    Fp(Fe);
-
-  DenseSubVector<Number>
-    Xu(X),
-    Xn(X),
-    Xp(X);
-
-
   vector<unsigned int> dof_indices;
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
+
+  //! for the drift-diffusion solution
+  vector<DriftDiffusion::Solution> dd_solution;
 
   // zero out residual and jacobian !! IMPORTANT !!
   if (residual != NULL)
@@ -1120,119 +1092,68 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
 
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices);
-    dof_map.dof_indices(elem, dof_indices_u, u_var);
-    dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
 
-    unsigned int n_dofs     = dof_indices_u.size();
-    unsigned int n_dofs_tot = dof_indices.size();
+    unsigned int n_dofs = dof_indices.size();
 
     fe->reinit(elem);
 
-    Ke.resize(n_dofs_tot, n_dofs_tot);
-    Fe.resize(n_dofs_tot);
-    X.resize(n_dofs_tot);
+    Ke.resize(n_dofs, n_dofs);
+    Fe.resize(n_dofs);
+    X.resize(n_dofs);
 
     // extract local solution, accounting for constraints
     dof_map.extract_local_vector(x, dof_indices, X);
 
-    // Reposition the submatrices according to this scheme:
-    //
-    //         -           -          -  -
-    //        | Kuu Kun Kup |        | Fu |
-    //   Ke = | Knu Knn Knp |;  Fe = | Fn |
-    //        | Kpu Kpn Kpp |        | Fp |
-    //         -           -          -  -
-    //
-    Kuu.reposition(0, 0, n_dofs, n_dofs);
-    Kun.reposition(0, n_dofs, n_dofs, n_dofs);
-    Kup.reposition(0, 2 * n_dofs, n_dofs, n_dofs);
-    //
-    Knu.reposition(n_dofs, 0, n_dofs, n_dofs);
-    Knn.reposition(n_dofs, n_dofs, n_dofs, n_dofs);
-    Knp.reposition(n_dofs, 2 * n_dofs, n_dofs, n_dofs);
-    //
-    Kpu.reposition(2 * n_dofs, 0, n_dofs, n_dofs);
-    Kpn.reposition(2 * n_dofs, n_dofs, n_dofs, n_dofs);
-    Kpp.reposition(2 * n_dofs, 2 * n_dofs, n_dofs, n_dofs);
-    //
-    Fu.reposition(0, n_dofs);
-    Fn.reposition(n_dofs, n_dofs);
-    Fp.reposition(2 * n_dofs, n_dofs);
-    //
-    Xu.reposition(0, n_dofs);
-    Xn.reposition(n_dofs, n_dofs);
-    Xp.reposition(2 * n_dofs, n_dofs);
-
-
-    DriftDiffusionProperties* sc =
-      device.get_element_data().get_data(top_parent);
+    SemiconductorModel* sc = static_cast<SemiconductorModel*>(
+      device.get_element_data().get_data(top_parent));
     assert(sc != NULL);
 
     sc->reinit(elem);
-
+    excitonmodel->reinit(elem, sc);
+    
+/*
     // get the nodal scaling values
     vector<double> n0(n_dofs, 1);
-    vector<double> p0(n_dofs, 1);
     if (options.local_scaling)
     {
       NumericVector<Number>& scaling = system.get_vector("scaling");
       for (unsigned int i = 0; i < n_dofs; i++)
       {
-        n0[i] = scaling(dof_indices_en[i]) / C0_e;
-        p0[i] = scaling(dof_indices_ep[i]) / C0_h;
+        n0[i] = scaling(dof_indices_en[i]) / C0;
       }
     }
+*/
 
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
-      // get the solution values at the quadrature points
+      // get the drift-diffusion solution values and the
+      // exciton electro-chemical potential at the quadrature points
+      driftdiff->get_solution(elem, dd_solution);
       Real u  = 0.0;
       Real en = 0.0;
       Real ep = 0.0;
+      Real ex = 0.0;
       for (unsigned int i = 0; i < n_dofs; i++)
       {
-        u  += phi[i][qp] * Xu(i);
-        en += phi[i][qp] * Xn(i);
-        ep += phi[i][qp] * Xp(i);
+        u  += phi[i][qp] * dd_solution[i].potential;
+        en += phi[i][qp] * dd_solution[i].fermi_e;
+        ep += phi[i][qp] * dd_solution[i].fermi_h;
+        ex += phi[i][qp] * X(i);
       }
 
       // calculate densities etc.
-      sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep, q_point[qp]);
-      double n = sc->get_electron_density();
-      double p = sc->get_hole_density();
-      double epsilon = sc->get_relative_permittivity();
-      double l2_eps = l2 * epsilon;
-
-      double Rn = sc->get_net_electron_recombination_rate();
-      Rn = (fabs(Rn) < 1.0) ? 0.0 : Rn;
-      double Rp = sc->get_net_hole_recombination_rate();
-      Rp = (fabs(Rp) < 1.0) ? 0.0 : Rp;
+      sc->calculate_all(u, en, ep, q_point[qp]);
       
-      // remember the maximum densities
-      n_max = (n_max > n) ? n_max : n;
-      p_max = (p_max > p) ? p_max : p;
+      excitonmodel->calculate_all(phi0 * ex, q_point[qp]);
 
-      double ni = sc->get_intrinsic_density();
-      double nn0 = sc->get_equilibrium_electron_density();
-      double pp0 = sc->get_equilibrium_hole_density();
-      double mue = sc->get_electron_mobility();
-      double muh = sc->get_hole_mobility();
-      double a = 0.0;
-      double b = 0.0;
-      if (options.artificial_drift)
-      {
-        a = exp(-n / nn0 * 1);
-        b = exp(-p / pp0 * 1);
-      }
+      double nx = excitonmodel->get_density() / C0;
+      double R = excitonmodel->get_recombination_rate() / R0;
+      double G = excitonmodel->get_generation_rate() / R0;
+      double mux = excitonmodel->get_mobility() / mu0;
+      // the exciton conductivity
+      double sigma_x = mux * nx;
 
-      // NOTE: sigma_e = mu_e * n is the electron conductivity
-      double sigma_e = (sc->get_electron_conductivity()
-          + mue * nn0 * a) / (mu0 * C0_e);
-      double sigma_h = (sc->get_hole_conductivity()
-          + muh * pp0 * b) / (mu0 * C0_h);
-    
       //
       // The residual looks like this:
       //
@@ -1258,24 +1179,8 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
           Real laplace =
             J * (dphi[i][qp] * dphi[j][qp]) * x0_mesh * x0_mesh;
           
-          if (coupling & POISSON)
-            Kuu(i,j) += l2_eps * laplace;
-          
-          if (coupling & ECURRENT)
-            Knn(i,j) += sigma_e * laplace / n0[i];
-          
-          if (coupling & HCURRENT)
-            Kpp(i,j) += sigma_h * laplace / p0[i];
+          Ke(i,j) += sigma_x * laplace;
         }
-
-        if (!(coupling & POISSON))
-          Kuu(i,i) += 1;
-        
-        if (!(coupling & ECURRENT))
-          Knn(i,i) += 1;
-        
-        if (!(coupling & HCURRENT))
-          Kpp(i,i) += 1;
       }
             
       // 
@@ -1283,34 +1188,11 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
       // 
       if (jacobian != NULL)
       {
-      //if (!linearize)
-      //{
-        double drho[3];
-        double dRn[3];
-        double dRp[3];
-        for (int id = 0; id < 3; id++)
-        {
-          drho[id] = phi0 / C0 * sc->get_charge_density_derivatives()[id];
-          //dRn[id] = phi0 / R0_e
-          dRn[id] = phi0 / R0_e * (1 - a)
-            * sc->get_net_electron_recombination_rate_derivatives()[id];
-          //dRp[id] = phi0 / R0_h
-          dRp[id] = phi0 / R0_h * (1 - b)
-            * sc->get_net_hole_recombination_rate_derivatives()[id];
-        }
-        if (Rn == 0.0)
-          dRn[0] = dRn[1] = dRn[2] = 0.0;
-        if (Rp == 0.0)
-          dRp[0] = dRp[1] = dRp[2] = 0.0;
+        double dnx = phi0 / C0 * excitonmodel->get_density_derivative();
+        double dR = phi0 / R0
+            * excitonmodel->get_recombination_rate_derivative();
 
-        // d(sigma_n)/du * element-jacobian
-        // sigma_n = mu_n * n means the conductivity of electrons
-        Real dsigma_e = J * phi0 / (mu0 * C0_e)
-          * sc->get_electron_conductivity_derivatives()[0]
-               * (1 - a);
-        Real dsigma_h = J * phi0 / (mu0 * C0_h)
-          * sc->get_hole_conductivity_derivatives()[0]
-               * (1 - b);
+        Real dsigma_x = J * mux * dnx;
 
 
         for (unsigned int i = 0; i < n_dofs; i++)
@@ -1321,109 +1203,35 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
             // (for X_l = u_l we dont get anything, i.e. the
             // contributions to Kuu, Kun, Kup are zero)
             
-            Real dsigma_e_x_phi = dsigma_e * phi[j][qp] / n0[i];
-            Real dsigma_h_x_phi = dsigma_h * phi[j][qp] / p0[i];
+            Real dsigma_x_phi = dsigma_x * phi[j][qp];
             for (unsigned int k = 0; k < n_dofs; k++)
             {
               Real laplace = (dphi[i][qp] * dphi[k][qp]) * x0_mesh * x0_mesh;
             
-              if (coupling & ECURRENT)
-              {
-                Real elem_contrib =
-                  dsigma_e_x_phi * laplace * Xn(k);
+              Real elem_contrib =
+                dsigma_x_phi * laplace * X(k);
 
-                if (coupling & POISSON)
-                  Knu(i,j) += elem_contrib;
-
-                Knn(i,j) += elem_contrib;
-              }
-
-              if (coupling & HCURRENT)
-              {
-                Real elem_contrib =
-                  dsigma_h_x_phi * laplace * Xp(k);
-                
-                if (coupling & POISSON)
-                  Kpu(i,j) += elem_contrib;
-
-                Kpp(i,j) += elem_contrib;
-              }
+              Ke(i,j) += elem_contrib;
             }
 
             // The dFe_i/dX_j part
             Real phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp];
 
-            if (coupling & POISSON)
-            {
-              Kuu(i,j) -= drho[0] * phi_i_x_phi_j;
-              
-              if (coupling & ECURRENT)
-                Kun(i,j) -= drho[1] * phi_i_x_phi_j;
-
-              if (coupling & HCURRENT)
-                Kup(i,j) -= drho[2] * phi_i_x_phi_j;
-            }            
-            
-            if (coupling & ECURRENT)
-            {
-              if (coupling & POISSON)
-                Knu(i,j) += dRn[0] * phi_i_x_phi_j / n0[i];
-
-              Knn(i,j) += dRn[1] * phi_i_x_phi_j / n0[i];
-
-              if (coupling & HCURRENT)
-                Knp(i,j) += dRn[2] * phi_i_x_phi_j / n0[i];
-            }
-
-            if (coupling & HCURRENT)
-            {
-              if (coupling & POISSON)
-                Kpu(i,j) -= dRp[0] * phi_i_x_phi_j / p0[i];
-
-              if (coupling & ECURRENT)
-                Kpn(i,j) -= dRp[1] * phi_i_x_phi_j / p0[i];
-              
-              Kpp(i,j) -= dRp[2] * phi_i_x_phi_j / p0[i];
-            }
-
+            Ke(i,j) += dR * phi_i_x_phi_j;
           }
         }
-      //}
       }
 
       // if we are doing residual, calculate rhs contribution (i.e. Fe)
       if (residual != NULL)
       {
-        // charge density
-        Real J_x_rho = J * sc->get_charge_density() / C0;
-        Real J_x_P0 = J / P0;
-
-        // net recombination rate
-        Real J_x_Rn = J * Rn / R0_e * (1 - a);
-        Real J_x_Rp = J * Rp / R0_h * (1 - b);
-
-        RealVectorValue P(sc->get_total_polarization());
-        P *= J_x_P0;
+        Real J_x_R = J * (R - G);
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
-          Real net_recomb_e = J_x_Rn * phi[i][qp] / n0[i];
-          Real net_recomb_h = J_x_Rp * phi[i][qp] / p0[i];
+          Real net_recomb = J_x_R * phi[i][qp];
           
-          if (coupling & POISSON)
-            Fu(i) -= J_x_rho * phi[i][qp] + (P * dphi[i][qp]) * x0_mesh;
-          else
-            Fu(i) -= Xu(i);
-          
-          if (coupling & ECURRENT)
-            Fn(i) += net_recomb_e;
-          else
-            Fn(i) -= Xn(i);
-
-          if (coupling & HCURRENT)
-            Fp(i) -= net_recomb_h;
-          else
-            Fp(i) -= Xp(i);
+          Fe(i) += net_recomb;
         }
       }
 
@@ -1436,8 +1244,8 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
 
     if (residual != NULL)
     {
-      for (unsigned int i = 0; i < n_dofs_tot; i++)
-        for (unsigned int j = 0; j < n_dofs_tot; j++)
+      for (unsigned int i = 0; i < n_dofs; i++)
+        for (unsigned int j = 0; j < n_dofs; j++)
           Fe(i) += Ke(i,j) * x(dof_indices[j]);
 
       residual->add_vector(Fe, dof_indices);
@@ -1447,11 +1255,6 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
 
   } // end loop over elements
 
-  // put the maximum densities back into the options
-  options.n_max = (n_max > 1) ? n_max : 1;
-  options.p_max = (p_max > 1) ? p_max : 1;
-  
   perf_log.stop_event("assembly");
-*/
 } 
 

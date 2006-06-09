@@ -312,6 +312,10 @@ class DriftDiffusionProperties : public PhysicalProperties
     double get_valence_band_edge(void) const
       { return valence_band_edge; };
 
+    //! Get the band gap
+    double get_band_gap(void) const
+      { return conduction_band_edge - valence_band_edge; };
+
 
   protected:
   

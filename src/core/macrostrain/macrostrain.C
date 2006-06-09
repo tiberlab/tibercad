@@ -249,7 +249,7 @@ void Macrostrain::create_substate_nodes_set()
 	  substrate_nodes.insert(sub_nodes[i]);
 	}
       
-      cerr << " substrate_nodes.size() " << substrate_nodes.size() <<"\n";
+      //cerr << " substrate_nodes.size() " << substrate_nodes.size() <<"\n";
      
 
       //-------------------------------------------------------------
@@ -1519,7 +1519,7 @@ void Macrostrain::solve()
       output_materials("materials_nondeformed.dat");
     }
 
-  cerr << atom_structure_filename << "\n";
+  //cerr << atom_structure_filename << "\n";
 
   if (calculate_atom_displacements)
     { 
@@ -2743,7 +2743,7 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 	    if (i<=dim) du_i_over_dx_j += 0.5 *  dphi[p1][0](i-1) * (*solution)(dof_indices_component2[p1]); 
 	
 
-            if ((j == 1) && (i == 1)) cerr <<  dof_indices_component1[0] << "\n";
+            //if ((j == 1) && (i == 1)) cerr <<  dof_indices_component1[0] << "\n";
 	    
 	  }
 	    
@@ -3132,7 +3132,7 @@ void Macrostrain::output_add_strain_variables(string filename)
 
       assert (out.good());
 
-      std::cerr << " number_of_add_var  = " << number_of_add_var << "\n"; 
+      //std::cerr << " number_of_add_var  = " << number_of_add_var << "\n"; 
 
 
       for (unsigned int i = 0 ; i <  number_of_add_var; i++ )

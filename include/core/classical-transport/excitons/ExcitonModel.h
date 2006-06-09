@@ -10,6 +10,7 @@
 
 // forward declarations
 class DriftDiffusionProperties;
+class Dummy;
 
 class ExcitonModel : public ExcitonProperties
 {
@@ -27,6 +28,8 @@ class ExcitonModel : public ExcitonProperties
      * This implementation models the most simple exciton model
      */
     virtual void calculate_all(double fermi_x, const Point& coord);
+
+    virtual void read_database(const Dummy&);
 
     //! Set the exciton recombination time
     void set_recombination_time(double tau)

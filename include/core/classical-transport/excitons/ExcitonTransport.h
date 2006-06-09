@@ -35,6 +35,7 @@ class Node;
 class EquationSystems;
 class NonlinearImplicitSystem;
 class DriftDiffusion;
+class ExcitonProperties;
 
 template<typename T> class NumericVector;
 template<typename T> class SparseMatrix;
@@ -223,6 +224,14 @@ class ExcitonTransport
      */
     void set_device(DD::Device* device);
 
+    //! Set the exciton model
+    void set_exciton_model(ExcitonProperties* exciton_model)
+      { _exciton_model = exciton_model; };
+
+    //! Get a pointer to the exciton model
+    ExcitonProperties* get_exciton_model(void)
+      { return _exciton_model; };
+
     /**
      * @returns a reference to the simulation options
      */
@@ -345,6 +354,8 @@ class ExcitonTransport
     DD::Device* _device;
 
     DriftDiffusion* _dd_object;
+
+    ExcitonProperties* _exciton_model;
 
     /**
      * The equation system for this device
