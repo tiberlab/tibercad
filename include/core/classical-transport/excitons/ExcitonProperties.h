@@ -46,8 +46,11 @@ class ExcitonProperties : public PhysicalProperties
     /*!
      * \c reinit() calls \c prepare_element_data() which needs to be
      * implemented in derived classes
+     *
+     * \param elem the current element
+     * \param dd_prop a pointer to the semiconductor model
      */
-    void reinit(const Elem* elem);
+    void reinit(const Elem* elem, DriftDiffusionProperties* dd_prop);
     
     //! The method that will calculate all needed properties
     /*!
@@ -152,10 +155,15 @@ class ExcitonProperties : public PhysicalProperties
     //! Calculate the density for a given argument
     double calculate_density(double arg) const;
 
+    //! Get a reference to the DriftDiffusionProperties
+    const DriftDiffusionProperties* get_driftdiffusion_properties(void) const;
+
 
   private:
 
     TiberCad::Statistics _statistics;
+
+    DriftDiffusionProperties* _dd_prop;
 
 
 };
@@ -174,15 +182,17 @@ inline
 ExcitonProperties::ExcitonProperties(void)
   : PhysicalProperties("ExcitonProperties"),
     elem(NULL),
-    _statistics(TiberCad::BOLTZMANN)
+    _statistics(TiberCad::BOLTZMANN),
+    _dd_prop(NULL)
 {
 }
 
 inline
 void
-ExcitonProperties::reinit(const Elem* elem)
+ExcitonProperties::reinit(const Elem* elem, DriftDiffusionProperties* dd_prop)
 {
   this->elem = elem;
+  this->_dd_prop = dd_prop;
   this->prepare_element_data();
 }
 
@@ -226,7 +236,12 @@ ExcitonProperties::calculate_density_and_derivatives(double arg, double& density
   density_derivative = density;
 }
 
-
+inline
+const DriftDiffusionProperties*
+ExcitonProperties::get_driftdiffusion_properties(void) const
+{
+  return _dd_prop;
+}
 
 
 

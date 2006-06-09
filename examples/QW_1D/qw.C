@@ -622,6 +622,7 @@ int main (int argc, char** argv)
       }
     }
 
+
     DD::Device device(&mesh, &element_data, &boundary_data);
     bool device_integrity = device.check_integrity();
     if (device_integrity)

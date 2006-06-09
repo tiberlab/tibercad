@@ -34,6 +34,7 @@ class Elem;
 class Node;
 class EquationSystems;
 class NonlinearImplicitSystem;
+class DriftDiffusion;
 
 template<typename T> class NumericVector;
 template<typename T> class SparseMatrix;
@@ -227,6 +228,14 @@ class ExcitonTransport
      */
     Options& get_options(void);
 
+    //! Set the DriftDiffusion object
+    void set_driftdiffusion(DriftDiffusion* dd)
+      { _dd_object = dd; };
+
+    //! Get the DriftDiffusion object
+    DriftDiffusion* get_driftdiffusion(void)
+      { return _dd_object; };
+
     /**
      * Enables adaptive mesh refinement.
      */
@@ -334,6 +343,8 @@ class ExcitonTransport
      * The device to be solved by this ExcitonTransport object
      */
     DD::Device* _device;
+
+    DriftDiffusion* _dd_obj;
 
     /**
      * The equation system for this device

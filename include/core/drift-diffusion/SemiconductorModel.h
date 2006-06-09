@@ -62,6 +62,10 @@ class SemiconductorModel : public DriftDiffusionProperties
     //! Set Shockley-Read-Hall recombination parameters
     void set_SRH_parameters(double tau_n, double tau_p);
 
+    //! Set exciton generation rate parameter
+    void set_exciton_generation_rate_parameter(double g)
+      { _exciton_gen_param = g; };
+
     //! Set Direct Recombination parameters
     void set_direct_rec_parameters(double C)
       { _direct_rec_param = C; };
@@ -116,6 +120,9 @@ class SemiconductorModel : public DriftDiffusionProperties
      * \return the valence band edge
      */
     double get_valence_band_edge(void) const;
+
+    //! Get the exciton generation rate
+    double get_exciton_generation_rate(void) const;
 
 
     void print_info(void) const;
@@ -203,6 +210,9 @@ class SemiconductorModel : public DriftDiffusionProperties
     //! Calculate direct recombination
     void calculate_direct_recombination(void);
 
+    //! Calculate exciton generation
+    void calculate_exciton_generation(void);
+
     //! Calculates all properties according to the type of coupling
     /*!
      * In this simple model we assume no dependence on the coordinates
@@ -261,6 +271,8 @@ class SemiconductorModel : public DriftDiffusionProperties
     double _hole_recombination_time;
 
     double _direct_rec_param;
+
+    double _exciton_gen_param;
 
 
     static PetscErrorCode jacobian(SNES snes, Vec x,
@@ -490,7 +502,43 @@ SemiconductorModel::calculate_direct_recombination(void)
   hole_recombination_rate_derivatives[2] += b;
   hole_recombination_rate_derivatives[0] += a + b;
 }
+ 
+inline
+void
+SemiconductorModel::calculate_exciton_generation(void)
+{
+  double n  = electron_density;
+  double p  = hole_density;
+  double dn  = electron_density_derivative;
+  double dp  = hole_density_derivative;
+  double C  = _exciton_gen_param;
+  double ni2 = get_intrinsic_density_squared();
+
+  double rec = C * (n * p - ni2);
+  double a = C * (dn * p);
+  double b = C * (n * dp);
+  electron_recombination_rate += rec;
+  electron_recombination_rate_derivatives[1] += a;
+  electron_recombination_rate_derivatives[2] += b;
+  electron_recombination_rate_derivatives[0] += a + b;
+  hole_recombination_rate += rec;
+  hole_recombination_rate_derivatives[1] += a;
+  hole_recombination_rate_derivatives[2] += b;
+  hole_recombination_rate_derivatives[0] += a + b;
+}
   
+inline
+double
+SemiconductorModel::get_exciton_generation_rate(void) const
+{
+  double n  = electron_density;
+  double p  = hole_density;
+  double ni2 = get_intrinsic_density_squared();
+
+  double rec = _exciton_gen_param * (n * p - ni2);
+  return rec;
+}
+ 
 
 inline
 void
@@ -630,6 +678,9 @@ SemiconductorModel::calculate_all(double potential,
       calculate_Auger_recombination();
     if (_recombination & DriftDiffusionDefs::DIRECT)
       calculate_direct_recombination();
+
+    if (_exciton_gen_param > 1e-56)
+      calculate_exciton_generation();
   }
 }
 

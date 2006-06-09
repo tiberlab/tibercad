@@ -26,7 +26,8 @@ SemiconductorModel::SemiconductorModel(void)
     _recombination(0),
     _coupling(BOTH),
     _bulk_model(NULL),
-    _is_prepared(false)
+    _is_prepared(false),
+    _exciton_gen_param(0.0)
 {
   // spin degeneracy will be included in the degeneracy from
   // DDsemiconductor
@@ -46,7 +47,8 @@ SemiconductorModel::SemiconductorModel(
     _hole_recombination_time(model._hole_recombination_time),
     _direct_rec_param(model._direct_rec_param),
     _filename(model._filename),
-    _is_prepared(false)
+    _is_prepared(false),
+    _exciton_gen_param(model._exciton_gen_param)
 {
 }
 

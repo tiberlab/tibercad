@@ -395,7 +395,7 @@ class DriftDiffusion
      */
     const std::vector<Number>& get_solution(void) const;
 
-    //! Get the solution on the nodes of a certain element
+    //! Get the solution on the nodes of a given element
     /*!
      * \param elem the pointer to the element
      * \param solution a reference to the vector where the solution will be

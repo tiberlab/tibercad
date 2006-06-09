@@ -3,21 +3,13 @@
 #ifndef _EXCITONMODEL_H_
 #define _EXCITONMODEL_H_
 
-#include "vector_value.h"
 
 #include "SimulationOptions.h"
-#include "PhysicalProperties.h"
-#include "DriftDiffusionDefs.h"
+#include "ExcitonProperties.h"
 #include "TiberCad.h"
 
-// GNU scientific library
-//#include <gsl/gsl_sf_fermi_dirac.h>
-
-#include <vector>
-
 // forward declarations
-class Point;
-class Elem;
+class DriftDiffusionProperties;
 
 class ExcitonModel : public ExcitonProperties
 {
@@ -25,7 +17,7 @@ class ExcitonModel : public ExcitonProperties
   public:
   
     //! The empty constructor.
-    ExcitonModel(DriftDiffusion* dd);
+    ExcitonModel(void);
        
     //! A default (empty) destructor.
     virtual ~ExcitonModel(void) {};
@@ -43,6 +35,14 @@ class ExcitonModel : public ExcitonProperties
     //! Set the exciton binding energy
     void set_binding_energy(double R)
       { _R = R; };
+
+    //! Set the exciton effective mass
+    void set_effective_mass(double m)
+      { _m = m; };
+
+    //! Set the exciton effective mass
+    void set_mobility(double mu)
+      { _mu = mu; };
       
   protected:
 
@@ -51,20 +51,20 @@ class ExcitonModel : public ExcitonProperties
 
   private:
 
-    //! The Drift-Diffusion object to get band data and densities from
-    DriftDiffusion* _drift_diffusion;
-
     //! Exciton recombination time
     double _t;
 
-    //! Exciton binding energy;
+    //! Exciton binding energy
     double _R;
 
-    /**!
-     * The factor 3 * pow(2 * PI / h^2)^1.5
-     * for calculating the effective density of states
-     */
-    double _DOS_factor;
+    //! Exciton effective mass
+    double _m;
+
+    //! Exciton mobility
+    double _mu;
+
+    //! The effective density of states
+    double _DOS;
 
 
 };

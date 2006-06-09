@@ -429,6 +429,10 @@ DriftDiffusion::find_dirichlet_nodes(void)
     if (dirichlet_boundaries.find(bd_it->second) != not_dirichlet)
     {
       const Elem* elem = (bd_it->first).first;
+
+      // dont't go on if it is an inactive element
+      if (elem->refinement_flag() == Elem::INACTIVE) continue;
+
       int side_num = (bd_it->first).second;
 
       // for 1D we are done as no new boundary nodes can be added
@@ -978,11 +982,11 @@ DriftDiffusion::solve_newton(bool restart)
         //_options.linearize_continuity_eq = true;
         //system.nonlinear_solver->matvec = assemble<ECURRENT>;
         
-        //system.nonlinear_solver->matvec = assemble<FULLYCOUPLED>;
+        system.nonlinear_solver->matvec = assemble<FULLYCOUPLED>;
         //_options.linearize_continuity_eq = true;
-        perf_log.start_event("solve coupled");
+        //perf_log.start_event("solve coupled");
         system.solve();
-        perf_log.stop_event("solve coupled");
+        //perf_log.stop_event("solve coupled");
         
         retry = false;
       }
