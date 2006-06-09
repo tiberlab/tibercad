@@ -344,7 +344,7 @@ class ExcitonTransport
      */
     DD::Device* _device;
 
-    DriftDiffusion* _dd_obj;
+    DriftDiffusion* _dd_object;
 
     /**
      * The equation system for this device

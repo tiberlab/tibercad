@@ -18,14 +18,12 @@
 // forward declarations
 class Point;
 class Elem;
+class DriftDiffusionProperties;
 
 class ExcitonProperties : public PhysicalProperties
 {
     
   public:
-  
-    //! The empty constructor.
-    ExcitonProperties(void);
        
     //! A default (empty) destructor.
     virtual ~ExcitonProperties(void);
@@ -67,7 +65,7 @@ class ExcitonProperties : public PhysicalProperties
      * \param p the coordinates in real space
      *
      */
-    virtual void calculate_all(double fermi_x, const Point& coord);
+    virtual void calculate_all(double fermi_x, const Point& coord) = 0;
       
 
     //! Get the exciton density
@@ -97,7 +95,7 @@ class ExcitonProperties : public PhysicalProperties
      * Get \f$\frac{\partial R}{\partial\phi_x}\f$
      */
     double get_recombination_rate_derivative(void) const
-        { return recombination_rate_derivatives; };
+        { return recombination_rate_derivative; };
     
     double get_generation_rate(void) const
       { return generation_rate; };
@@ -110,13 +108,16 @@ class ExcitonProperties : public PhysicalProperties
       { return mobility; };
       
   protected:
+  
+    //! The empty constructor.
+    ExcitonProperties(void);
 
     //! This method gets called from reinit()
     /*!
      * It can be used to setup data that is constant in an element, e.g.
      * strain related stuff, band edges.
      */
-    virtual void prepare_element_data(void);
+    virtual void prepare_element_data(void) {};
 
     //! The element we are currently working on
     const Elem* elem;
@@ -218,6 +219,7 @@ ExcitonProperties::calculate_density(double arg) const
   const double arg_max = 150;
   const double arg_min = -100;
 
+  double dens;
   if (arg < arg_max)
     dens = std::exp(arg);
   else
@@ -229,11 +231,11 @@ ExcitonProperties::calculate_density(double arg) const
 
 inline
 void
-ExcitonProperties::calculate_density_and_derivatives(double arg, double& density,
+ExcitonProperties::calculate_density_and_derivative(double arg, double& density,
     double& derivative) const
 {
   density = calculate_density(arg);
-  density_derivative = density;
+  derivative = density;
 }
 
 inline

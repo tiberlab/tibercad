@@ -20,7 +20,7 @@ class ExcitonModel : public ExcitonProperties
     ExcitonModel(void);
        
     //! A default (empty) destructor.
-    virtual ~ExcitonModel(void) {};
+    virtual ~ExcitonModel(void);
 
     /*! \copydoc ExcitonProperties::calculate_all()
      * 
