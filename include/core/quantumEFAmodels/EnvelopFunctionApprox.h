@@ -8,6 +8,7 @@
 #include "mesh_generation.h"
 #include "gmv_io.h"
 #include "linear_implicit_system.h"
+#include "nonlinear_implicit_system.h"
 #include "equation_systems.h"
 
 #include "getpot.h"
@@ -118,7 +119,7 @@ class EnvelopFunctionApprox
     \param mesh simulation domain mesh 
     \param mesh_data_input informations about materials and bondary conditions
   */
-  EnvelopFunctionApprox(options& opt, Mesh& mesh, MeshData& mesh_data_input);
+  EnvelopFunctionApprox(options& opt, Mesh& mesh, MeshData& mesh_data_input, Macrostrain* strain1);
 
 
   //!destructor

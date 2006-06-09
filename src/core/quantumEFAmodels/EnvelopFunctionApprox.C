@@ -4,12 +4,19 @@ using namespace std;
 const double EnvelopFunctionApprox::Hartree;
 
 
-EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshData& mesh_data_in)
+EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshData& mesh_data_in,Macrostrain* strain1 )
 {
-  //Initoalization
+
+  
+  //Initialization
   opt = opt1;
 
   es = new EquationSystems(mesh);
+
+
+
+  
+ 
 
   es->add_system<LinearImplicitSystem> ("Schroedinger");
 
@@ -30,8 +37,18 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshDat
 
   //add matrixes
 
+ 
+
   //-----------------------------------------------------------------------------------------------------//
+  
   LinearImplicitSystem& ls = static_cast<LinearImplicitSystem&>(es->get_system("Schroedinger"));
+
+
+
+  
+  DofMap& dof_map = ls.get_dof_map();
+
+
 
   ls.add_matrix("Ham_real"); //add matrix for a real part of the Hamiltonian
 
@@ -44,7 +61,7 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshDat
   ls.add_matrix("S_real"); //add matrix for S matrix
 
   S_real = &( ls.add_matrix("S_real") );
-
+  
   //---------------------------------------------------------------------------------------------------------//
   //My Jacobian 
 
@@ -55,8 +72,14 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshDat
    //--------------------------------------------------------------------------------------------------------//
   
 
-   es->init();
+  
 
+
+
+   es->init();
+  
+
+    
    //-------------------------------------------------------------------------------------------------------//
 
    //material list
@@ -66,6 +89,12 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshDat
 
    //------------------------------------------------------------------------------------------------------//
    
+
+
+
+ 
+
+
 }
 //===========================================================//
 void EnvelopFunctionApprox::define_strain_data( Macrostrain*  strain_in)
@@ -151,7 +180,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-
+ 
   Tensor2Sym strain_crystal_system(0);
   double electric_potential = 0;
 
@@ -164,28 +193,13 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       // working on.  This allows for nicer syntax later.
       const Elem* elem = *el;
       const unsigned int mat = material_of_elem[el_number];
-
+ 
    
    
 
       element_hamiltonian = bulkHamiltonian[mat];
 
-      if (opt.consider_strain)
-	{
-          cerr << mat <<"\n";
-	  strain_crystal_system = strain->get_strain(elem, true);
-	  cerr << setw(12) << strain_crystal_system << "\n";
-	}
-
-      element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
-	  
-    
-
-
-      std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&  
-	model_Ham = ( element_hamiltonian->get_Hamiltonian() );
-
-     
+   
       dof_map.dof_indices (elem, dof_indices); 
       const unsigned int n_dofs   = dof_indices.size();
       fe->reinit (elem);
@@ -198,6 +212,31 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
       for (unsigned int qp=0; qp<qrule.n_points(); qp++)
 	{//qp
+	  //--------------------------------------------------------------------------------
+	  /*
+	    We assume that strain and electric potential may be different for different quadrature points
+	    It is done for the sake of a multiscale generalization
+	  */
+	  if (opt.consider_strain)
+	    {
+	      strain_crystal_system = strain->get_strain_crystal(elem , q_point[qp]);
+	    }
+ 
+
+	  cerr << "mat " << mat << "\n";
+      
+	  cerr << setw(14) <<  strain_crystal_system << "\n";
+
+	  element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
+	  
+	  //------------------------------------------------------------------------------------------
+
+
+	  std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&  
+	    model_Ham = ( element_hamiltonian->get_Hamiltonian() );
+
+
+
 	  for (unsigned int band1 = 0; band1 < opt.number_of_bands; band1++)
 	    {//band1
 	      dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
@@ -1012,7 +1051,7 @@ void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  st
   //vector 
   unsigned int  point_index = 0;
   
-  unsigned int output_size = ( solution[state_number].eigen_vector.size()) * 2;
+  unsigned int output_size = mesh.n_nodes()  * opt.number_of_bands * 2;
 
   vector<double>  psi_data(output_size);
  
@@ -1021,6 +1060,8 @@ void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  st
   const MeshBase::const_element_iterator end =  mesh.active_local_elements_end();
 
   std::vector<unsigned int> dof_indices;
+
+ 
 
   for ( ; it != end; ++it)
     {

@@ -249,7 +249,7 @@ void Macrostrain::create_substate_nodes_set()
 	  substrate_nodes.insert(sub_nodes[i]);
 	}
       
-      //cerr << " substrate_nodes.size() " << substrate_nodes.size() <<"\n";
+      cerr << " substrate_nodes.size() " << substrate_nodes.size() <<"\n";
      
 
       //-------------------------------------------------------------
@@ -602,6 +602,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
   // Get a reference to the LinearImplicitSystem we are solving
   LinearImplicitSystem& system = es.get_system<LinearImplicitSystem> ("Strain");
 
+ 
   
   unsigned int uvar[3] ;
   unsigned int var_fict;
@@ -620,7 +621,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
   // in future examples.
   // const DofMap& dof_map = system.get_dof_map();
   DofMap& dof_map = system.get_dof_map();
-  
+ 
  
 
   FEType fe_type = dof_map.variable_type(uvar[0]);
@@ -793,7 +794,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
       const unsigned int n_dofs   = dof_indices.size(); //in fact, could be  dof_indices.size() - 1, fict is not used 
 
       fe->reinit  (elem);
-
+  
 
       Ke_total.resize (n_dofs + number_of_add_var_static, n_dofs + number_of_add_var_static);
       Fe_total.resize (n_dofs + number_of_add_var_static);
@@ -806,7 +807,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
       const unsigned int material = (*material_of_elem_temp)[el_number];
 
      
-      //cerr << material << "\n";
+    
       
       
      
@@ -819,10 +820,10 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
       eps_const =  crystal_el.get_const_eps0(substrate_lat_const, eps0_var_log) 
 	+ (*eps0_of_elem_temp)[el_number] ;//+ substrate_shear;
 
-      //cerr << substrate_lat_const[0] << "\n";
+     
       double lat_const[3];
       crystal_el.get_lat_const(lat_const);
-      //cerr << lat_const[0] << "\n";
+     
       
 
      
@@ -939,7 +940,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 					    normal = 1.0;
 					  else
 					    normal = -1.0;
-                                          //cerr << "stress_value   " <<  stress_value << "\n";
+                                          cerr << "stress_value   " <<  stress_value << "\n";
 
 					  Fe_sub(p1) += stress_value * normal;
 					} 
@@ -1202,7 +1203,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
  
 
 
-  //std:: cout<< "matrix is done \n";  
+  std:: cout<< "matrix is done \n";  
    
   // system.rhs->print();
 
@@ -1638,10 +1639,12 @@ void Macrostrain::solve()
     }
   
 
-  //------------------------------------------------------------------------------------------//
+  calculate_result_elem_strain_map();
 
+
+  //------------------------------------------------------------------------------------------//
   
-}
+ }
 
 //-------------------------------------------------------------------------------------//
 void Macrostrain::assemble_material_list()
@@ -2563,7 +2566,7 @@ void Macrostrain::move_nodes()
 
     } 
 
-
+ 
 
 
   //--------------------------------------------------------------------
@@ -2573,7 +2576,94 @@ void Macrostrain::move_nodes()
 }
 //-------------------------------------------------------------------------------------//
 
+void Macrostrain::calculate_result_elem_strain_map()
+{
+  result_strain.clear();
+  const Mesh& mesh = equation_systems->get_mesh();
+  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+  for ( ; el != end_el ; ++el) 
+    {
+      const Elem* elem = *el;
+      Tensor2Sym strain_result = get_strain(elem, true); //strain in CRYSTAL system
+      result_strain.insert(pair <const Elem*, Tensor2Sym>  (elem, strain_result));
+    }
 
+}
+//-------------------------------------------------------------------------------------//
+Tensor2Sym Macrostrain::get_strain_crystal(const Elem* elem, const Point& quadratur_point )
+{
+  Tensor2Sym eps(0);
+  map <const Elem*, Tensor2Sym> :: iterator it;
+  it = result_strain.find(elem);
+  //--------------------------------------------------------------------------------------------------
+  //if the element elem is active for the strain simulation, it must be included in the map-----------
+  if (it != result_strain.end() )
+    {
+      eps =   it->second;
+    }
+  else
+    { //if the element is not included, we have to check his childered or parents
+      //-------------------------------------------------------------------------
+      //1) may be it has a parent the belongs to the  result_strain map
+     
+      const Elem* el1 = elem->parent();
+      
+      bool out = false;
+      bool found = false;
+
+      while ( !out )
+	{
+	  if ( el1 != NULL )
+	    {
+	      it = result_strain.find(el1);
+	      if ( it != result_strain.end() )
+		{
+		  eps = it -> second;
+
+		  out = true;
+		  found = true;
+		}
+	      else
+		{
+		  el1 = el1->parent();
+		}
+	    }
+	  else
+	    {
+	      out = true;
+	    }
+	}
+      //--------------------------------------------------------  
+      if (!found)
+	{//2) may be it has a child that belongs to the result_strain map
+	  std::vector< const Elem * > active_children;
+	  elem -> active_family_tree ( active_children, true);
+	  unsigned int n = active_children.size();
+      
+	  for (unsigned int i1 = 0; ( i1 < n || found ); i1++)
+	    {
+	      it  =  result_strain.find(active_children[i1]);
+	      if (it !=  result_strain.end() )
+		{
+		  //we have to check if this child contains a quadrature point q
+		  if (active_children[i1]->contains_point(quadratur_point))
+		    {
+		      eps = it -> second;
+		      found = true;
+		    }
+		  
+		}
+	    }
+	  
+      
+	}
+    }
+  return(eps);
+ 
+}
+
+//-------------------------------------------------------------------------------------//
 Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 {
 
@@ -2606,12 +2696,26 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
   map<const Elem*, unsigned int> :: iterator el_numb_it;
 
   el_numb_it = elem_numbers.find(elem);
+
+
+ 
   
   const unsigned int elem_number = el_numb_it->second;
 
+ 
+  
+
+  
+
   eps0 = eps0_of_elem[elem_number];//this is shape deformation from previous iterations
 
+    
+ 
+
   point_vec[0]  = FEInterface::inverse_map(dim, fe_type, elem, elem->centroid());
+
+ 
+
   fe->reinit (elem, &point_vec);
 
   std::vector<unsigned int> dof_indices_component1;
@@ -2637,20 +2741,25 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 	    
 	    
 	    if (i<=dim) du_i_over_dx_j += 0.5 *  dphi[p1][0](i-1) * (*solution)(dof_indices_component2[p1]); 
-	    
+	
+
+            if ((j == 1) && (i == 1)) cerr <<  dof_indices_component1[0] << "\n";
 	    
 	  }
 	    
-	    
+	
 	  
 	eps(i,j) = eps0(i,j) + du_i_over_dx_j ; 
 	
-      }
+      } 
 
+
+ 
   //-----------------------------------------------------------------
   //we have to add lattice matching deformation
   eps += calculate_eps_lat_matching(material_of_elem[elem_number]);
   //------------------------------------------------------------------
+
   if (crystal_system)
     {//convert to crystal system
       const unsigned int material = material_of_elem[elem_number]; //get material number

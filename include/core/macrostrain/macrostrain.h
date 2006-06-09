@@ -233,9 +233,17 @@ class Macrostrain
   void solve();
   //---------------------------------------------------------------------
 
-  //!calculate strain
-  Tensor2Sym get_strain(const Elem* el, bool crystal_system = false); 
   
+  
+
+  //!get in crystal strain system
+  /*!
+    \param el pointer to the element
+    \param quadratur_point quadratur point that belongs to the element
+  */
+  Tensor2Sym get_strain_crystal(const Elem* el, const Point& quadratur_point ); 
+
+
   Tensor1 get_piezopolarization(const Elem* el);
   //---------------------------------------------------------------------
   void output_strain(std::string filename ); //output strain for gmv
@@ -254,31 +262,34 @@ class Macrostrain
   
 
 
- 
-
-
+  
+  
 
 
   ~Macrostrain();
 
 
+   
   
-
-
 
  private:
 
-  
+  EquationSystems*   equation_systems; //pointer to the equation system //for test here
 
+  //!map betwen the element and the result strain in crystal system
+  /*!
+    the map is created at the end of the method Macrostrain::solve()
+    it contains only the active elements for this strain simulation
+   */
+  std::map<const Elem*, Tensor2Sym> result_strain;
 
   MeshData*  meshdata;
 
-
-  EquationSystems*   equation_systems; //pointer to the equation system
-
+  //!calculate strain
+  Tensor2Sym get_strain(const Elem* el, bool crystal_system = false); 
  
-
-  
+  //! calculate the result_strain map
+  void calculate_result_elem_strain_map();
   
   //---------------------------------------------------------------------
   /*
@@ -310,6 +321,7 @@ class Macrostrain
   std:: map<unsigned int, Macrostrain::strain_param*>    strain_parameters;
 
   std::vector<unsigned int>              material_of_elem; // material of an element
+
   std::vector<Tensor2Sym>       eps0_of_elem;     // eps of an element from previous iteration
 
 
