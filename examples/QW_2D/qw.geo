@@ -2,7 +2,7 @@
 width = 40.0;
 well = 3.0;
 length = 100 + well;
-lc = width / 4.0;
+lc = width / 10.0;
 
 steps_doped = 1;
 steps_well = 50;

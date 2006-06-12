@@ -184,13 +184,6 @@ class ExcitonTransport
          */
         double mesh_units;
 
-        //! Include artificial drift in continuity equations
-        /*!
-         * This can be helpful in materials of high bandgap, but it is
-         * a somewhat dirty trick.
-         */
-        bool artificial_drift;
-
         //! Use a local (nodal based) scaling for continuity equations
         /*!
          * This probably should be the default and should replace the global

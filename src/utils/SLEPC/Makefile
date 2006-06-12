@@ -15,7 +15,7 @@ include ${SLEPC_DIR}/bmake/slepc_common
 
 
 all: ex7.o 
-	${CLINKER}  -o ex7 $(CXXFLAGS) $(FFLAGS) $(INCLUDE) ex7.o ${LDFLAGS} ${SLEPC_LIB}
+	@${CLINKER}  -o ex7 $(CXXFLAGS) $(FFLAGS) $(INCLUDE) ex7.o ${LDFLAGS} ${SLEPC_LIB}
 	\cp ex7 ../../../bin/
 
 
