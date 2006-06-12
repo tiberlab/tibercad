@@ -181,6 +181,10 @@ class EnvelopFunctionApprox
  
  private:
 
+
+  static const double disturb_arnoldi = 1e-10;
+
+
   options opt;
   
   MeshData*  meshdata;

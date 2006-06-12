@@ -22,7 +22,7 @@ int main( int argc, char **argv )
   PetscTruth  flg;
   Vec         eigen_vector;
   Vec         eig_vals;
-  
+  PetscMPIInt    rank,size;
 
   SlepcInitialize(&argc,&argv,(char*)0,help);
 
@@ -35,6 +35,20 @@ int main( int argc, char **argv )
   if (!flg) {
     SETERRQ(1,"Must indicate a file name for matrix A with the -f1 option.");
   }
+ 
+
+  ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);CHKERRQ(ierr);
+  ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);CHKERRQ(ierr);
+
+  /* 
+     Here we would like to print only one message that represents
+     all the processes in the group.  We use PetscPrintf() with the 
+     communicator PETSC_COMM_WORLD.  Thus, only one message is
+     printed representng PETSC_COMM_WORLD, i.e., all the processors.
+  */
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"Number of processors = %d, rank = %d\n",size,rank);CHKERRQ(ierr);
+  
+
 
 #if defined(PETSC_USE_COMPLEX)
   ierr = PetscPrintf(PETSC_COMM_WORLD," Reading COMPLEX matrices from binary files...\n");CHKERRQ(ierr);
@@ -126,6 +140,7 @@ int main( int argc, char **argv )
 
     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,"eigvects_SLEPC.out",PETSC_FILE_CREATE,&viewer_out);CHKERRQ(ierr);
     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,"eigvals_SLEPC.out",PETSC_FILE_CREATE,&viewer_eigvals);CHKERRQ(ierr);
+   
 
     ierr = PetscPrintf(PETSC_COMM_WORLD,
          "           k             ||Ax-kx||/||kx||\n"
@@ -155,18 +170,27 @@ int main( int argc, char **argv )
         ierr = PetscPrintf(PETSC_COMM_WORLD,"       % 6f      ",re); CHKERRQ(ierr);
       }
       ierr = PetscPrintf(PETSC_COMM_WORLD," % 12f\n",error);CHKERRQ(ierr);
-     
-      VecView(eigen_vector,viewer_out); //save eigen vector to disk 
+
+      ierr = VecAssemblyBegin(eigen_vector);CHKERRQ(ierr);
+      ierr = VecAssemblyEnd(eigen_vector);CHKERRQ(ierr);
+
+      VecView(eigen_vector,viewer_out); //save eigen vector to disk //should be!!! 
       ierr =  VecSetValue( eig_vals, i , kr, INSERT_VALUES);  CHKERRQ(ierr);//write eivals into the vector eig_vals
 
      
 
     }
+    ierr = VecAssemblyBegin(eig_vals);CHKERRQ(ierr);
+    ierr = VecAssemblyEnd(eig_vals);CHKERRQ(ierr);
+   
+    ierr = MPI_Barrier(PETSC_COMM_WORLD);CHKERRQ(ierr);
+   
+    VecView(eig_vals,viewer_eigvals); //save eigvals to disk  
 
-    VecView(eig_vals,viewer_eigvals); //save eigvals to disk 
+    ierr = MPI_Barrier(PETSC_COMM_WORLD);CHKERRQ(ierr);
 
     ierr = PetscViewerDestroy(viewer_out);CHKERRQ(ierr);
-    ierr = PetscPrintf(PETSC_COMM_WORLD,"\n" );CHKERRQ(ierr);
+    ierr = PetscPrintf(PETSC_COMM_WORLD,"Saved \n" );CHKERRQ(ierr);
 
 
     

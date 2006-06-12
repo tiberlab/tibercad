@@ -2,7 +2,7 @@
 #include "EnvelopFunctionApprox.h"
 using namespace std;
 const double EnvelopFunctionApprox::Hartree;
-
+const double EnvelopFunctionApprox::disturb_arnoldi;
 
 EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshData& mesh_data_in,Macrostrain* strain1 )
 {
@@ -223,10 +223,6 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	    }
  
 
-	  cerr << "mat " << mat << "\n";
-      
-	  cerr << setw(14) <<  strain_crystal_system << "\n";
-
 	  element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
 	  
 	  //------------------------------------------------------------------------------------------
@@ -263,7 +259,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 			   for (short i = 0; i < dim; i++)
 			     value -= JxW[qp]* dphi[p1][qp](i) * phi[p2][qp] * model_Ham[band1][band2].linear_left[i]
 			       * Complex(0.0, -1.0) /opt.length_scale;
-
+ 
                            //linear right
 
 			   for (short i = 0; i < dim; i++)
@@ -807,12 +803,17 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	      int n1 = *com_col_it;
 	      double value;
 
-	      //real part------	 
+	      //real part------	  
 	      position = real_values.find(n1);
 	      if (position != real_values.end()) 
 		value = position->second;
 	      else 
 		value = 0.0;
+
+	      //Distirb matrix, if necessary:
+	      if ((n1 ==  row) && ( row > size_matrix/2))
+		value += disturb_arnoldi;
+
 
 	      out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
 	      out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);

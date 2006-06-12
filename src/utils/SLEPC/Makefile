@@ -2,10 +2,11 @@ CFLAGS	   =
 FFLAGS     =
 CPPFLAGS   = 
 FPPFLAGS   =
-LOCDIR     = ./
+LOCDIR     =./
+PETSC_ARCH = linux-gnu-complex-opt
 
-SLEPC_DIR  = /usr/pack/slepc-2.2.1-ma
-PETSC_DIR  = /usr/pack/petsc-2.2.1-ma
+SLEPC_DIR  = /usr/pack/slepc-2.3.0-ma
+PETSC_DIR  = /usr/pack/petsc-2.3.0-ma
 
 BOPT = O_complex
 
@@ -19,6 +20,8 @@ all: ex7.o
 	\cp ex7 ../../../bin/
 
 
+clean:
+	rm -f *.o ex7
 
 
 
