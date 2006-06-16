@@ -7,8 +7,6 @@
 #include "PhysicalProperties.h"
 #include <point.h>
 
-using  namespace  std;
-
 
 
 //! Description of  an  alloy  material.
@@ -94,7 +92,7 @@ class Alloy : public Material
     /*!
    * A  vector of  pointers  to  \c Material objects.
    */
-    vector<Material*>  components; 
+    std::vector<Material*>  components; 
     
      //! Molar fraction  of  the   \c Alloy
     /*!

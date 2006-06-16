@@ -198,7 +198,7 @@ DriftDiffusion::DriftDiffusion(DD::Device* device,
 
 DriftDiffusion::~DriftDiffusion(void)
 {
-  delete _eq_system;
+  cleanup_solver();
 }
  
 // TODO add integrity test
@@ -473,9 +473,6 @@ DriftDiffusion::prepare_solver(void)
 
   if (_rebuild_eq_system)
   {
-    // we assume that _eq_system was deleted before
-    assert(_eq_system == NULL);
-    _eq_system = new EquationSystems(_device->get_mesh());
 
     DD::Device::BoundaryList& boundaries = _device->get_boundaries();
     DD::Device::const_boundary_iterator it = boundaries.begin();
@@ -501,41 +498,43 @@ DriftDiffusion::prepare_solver(void)
 }
 
 void
-DriftDiffusion::initialize_eq_system(EquationSystems& system)
+DriftDiffusion::initialize_eq_system(void)
 {
+  assert(_eq_system != NULL);
 
   SolverParameters& solver_params =
     (_this->get_options()).solver_params;
 
-  system.parameters.set<unsigned int>(
+  _eq_system->parameters.set<unsigned int>(
     "nonlinear solver maximum iterations") = 
       solver_params.nonlinear_max_iterations;
   
-  system.parameters.set<Real>("nonlinear solver tolerance") =
+  _eq_system->parameters.set<Real>("nonlinear solver tolerance") =
     solver_params.nonlinear_tolerance;
 
-  system.parameters.set<Real>("linear solver tolerance") =
+  _eq_system->parameters.set<Real>("linear solver tolerance") =
     solver_params.linear_tolerance;
 
-  system.init();
+  //system.init();
+  (_eq_system->get_system<NonlinearImplicitSystem>(
+                         "drift-diffusion coupled")).init();
 
 }
 
 void
 DriftDiffusion::reset_solver(void)
 {
-  delete _eq_system;
-  _eq_system = NULL;
-
-  _rebuild_eq_system = true;
+  if (!_rebuild_eq_system)
+  {
+    assert(_eq_system != NULL);
+    _eq_system->delete_system("drift-diffusion coupled");
+    _rebuild_eq_system = true;
+  }
 }
 
 void
 DriftDiffusion::cleanup_solver(void)
 {
-  delete _eq_system;
-  _eq_system = NULL;
-
   // erase old simulation voltage data structure
   _old_sim_voltages.erase(_old_sim_voltages.begin(),
       _old_sim_voltages.end());
@@ -562,7 +561,7 @@ DriftDiffusion::cleanup_solver(void)
   // clear variables vector
   _variables.erase(_variables.begin(), _variables.end());
 
-  _rebuild_eq_system = true;
+  reset_solver();
 }
 
 void
@@ -594,7 +593,7 @@ DriftDiffusion::solve(bool restart)
   EquationSystems& equation_systems = get_equation_system();
   
   // should perhaps only be done when the solution is requested
-  equation_systems.build_solution_vector(_solution);
+  build_solution_vector(_solution);
   for (int i = 0; i < _solution.size(); i++)
   {
     _solution[i] *= get_scaling().get_potential_scaling();
@@ -803,7 +802,7 @@ DriftDiffusion::solve_newton(bool restart)
 
     system.nonlinear_solver->matvec = assemble<POISSON>;
 
-    initialize_eq_system(equation_systems);
+    initialize_eq_system();
 
     // the simulation voltages for equilibrium are 0.0 ...
     _old_sim_voltages = _simulation_voltages;
@@ -930,122 +929,125 @@ DriftDiffusion::solve_newton(bool restart)
   set_solver_params(*system.nonlinear_solver);
 
 
-  // we don't simulate anything if the voltages didn't change
-  if (_simulation_voltages == _old_sim_voltages) return;
-
-  _options.C0_e = _options.n_max;
-  _options.C0_h = _options.p_max;
-
-  switch (_options.coupling)
+  // if the voltages didn't change we go on to the refinement
+  if (_simulation_voltages != _old_sim_voltages)
   {
-    case (POISSON | ECURRENT):
-      system.nonlinear_solver->matvec = assemble<POISSON | ECURRENT>;
-      break;
-    case (POISSON | HCURRENT):
-      system.nonlinear_solver->matvec = assemble<POISSON | HCURRENT>;
-      break;
-    case (CURRENTS):
-      system.nonlinear_solver->matvec = assemble<CURRENTS>;
-      break;
-    case (POISSON):
-      system.nonlinear_solver->matvec = assemble<POISSON>;
-      break;
-    case (ECURRENT):
-      system.nonlinear_solver->matvec = assemble<ECURRENT>;
-      break;
-    case (HCURRENT):
-      system.nonlinear_solver->matvec = assemble<HCURRENT>;
-      break;
-    default:
-      system.nonlinear_solver->matvec = assemble<FULLYCOUPLED>;
-  }
-
-  //
-  // solve for the desired contact voltages
-  //
-  ContactData voltages = _simulation_voltages;
-  build_scaling();
-
-  bool reached = false;
-  do
-  {
-    _simulation_voltages = voltages;
-    bool retry = true;
-    do
-    {
-      // try to solve the full step
-      try
-      {
-        //do_gummel_iterations(3);
-        //system.nonlinear_solver->matvec = assemble<POISSON>;
-        //system.solve();
-        //_options.linearize_continuity_eq = true;
-        //system.nonlinear_solver->matvec = assemble<ECURRENT>;
-        
-        system.nonlinear_solver->matvec = assemble<FULLYCOUPLED>;
-        //_options.linearize_continuity_eq = true;
-        //perf_log.start_event("solve coupled");
-        system.solve();
-        //perf_log.stop_event("solve coupled");
-        
-        retry = false;
-      }
-      // if it did not converge, so try half of the step
-      catch (PetscDivergedError& e)
-      {
-        if (e.get_solver_type() == 1) cerr << "KSP ";
-        else cerr << "SNES ";
-        cerr << "diverged: " << e.get_reason() <<
-          " at iteration " << e.get_iteration() <<
-          " (fnorm = " << e.get_fnorm() << ")\n";
-
-      }
-      catch (PetscRuntimeError& e)
-      {
-        cerr << "Petsc runtime error: " << e.get_reason();
-        if (e.get_reason() == PETSC_ERR_MAT_LU_ZRPVT)
-        {
-          // in the case of a zero pivot in (I)LU factorization
-          // we try another preconditioner
-          cerr << " (Zero pivot during ILU.)";
-          PCType old_pc = solver_params.pc_type;
-          solver_params.pc_type = PCJACOBI;
-          set_solver_params(*system.nonlinear_solver);
-          solver_params.pc_type = old_pc;
-        }
-        cerr << "\n";
-      }
-
-      if (retry)
-      {
-        double step = calculate_new_simulation_voltages();
-        if (step < params.min_voltage_step) throw 1;
-
-        // we have to clear the solver context, because the exception
-        // left it in a unknown state such that future solves would fail.
-        system.nonlinear_solver->clear();
-        solution = old_solution;
-      }
-    } while (retry);
-
-    _n_nonlinear_iterations = system.n_nonlinear_iterations();
-    _final_residual = system.final_nonlinear_residual();
-    _old_sim_voltages = _simulation_voltages;
-    old_solution = solution;
 
     _options.C0_e = _options.n_max;
     _options.C0_h = _options.p_max;
 
-    if (_simulation_voltages == voltages) reached = true;
-  } while (!reached);
+    switch (_options.coupling)
+    {
+      case (POISSON | ECURRENT):
+        system.nonlinear_solver->matvec = assemble<POISSON | ECURRENT>;
+        break;
+      case (POISSON | HCURRENT):
+        system.nonlinear_solver->matvec = assemble<POISSON | HCURRENT>;
+        break;
+      case (CURRENTS):
+        system.nonlinear_solver->matvec = assemble<CURRENTS>;
+        break;
+      case (POISSON):
+        system.nonlinear_solver->matvec = assemble<POISSON>;
+        break;
+      case (ECURRENT):
+        system.nonlinear_solver->matvec = assemble<ECURRENT>;
+        break;
+      case (HCURRENT):
+        system.nonlinear_solver->matvec = assemble<HCURRENT>;
+        break;
+      default:
+        system.nonlinear_solver->matvec = assemble<FULLYCOUPLED>;
+    }
 
+    //
+    // solve for the desired contact voltages
+    //
+    ContactData voltages = _simulation_voltages;
+    build_scaling();
+
+    bool reached = false;
+    do
+    {
+      _simulation_voltages = voltages;
+      bool retry = true;
+      do
+      {
+        // try to solve the full step
+        try
+        {
+          //do_gummel_iterations(3);
+          //system.nonlinear_solver->matvec = assemble<POISSON>;
+          //system.solve();
+          //_options.linearize_continuity_eq = true;
+          //system.nonlinear_solver->matvec = assemble<HCURRENT>;
+          //system.solve();
+
+          //system.nonlinear_solver->matvec = assemble<FULLYCOUPLED>;
+          //_options.linearize_continuity_eq = true;
+          //perf_log.start_event("solve coupled");
+          system.solve();
+          //perf_log.stop_event("solve coupled");
+
+          retry = false;
+        }
+        // if it did not converge, so try half of the step
+        catch (PetscDivergedError& e)
+        {
+          if (e.get_solver_type() == 1) cerr << "KSP ";
+          else cerr << "SNES ";
+          cerr << "diverged: " << e.get_reason() <<
+            " at iteration " << e.get_iteration() <<
+            " (fnorm = " << e.get_fnorm() << ")\n";
+
+        }
+        catch (PetscRuntimeError& e)
+        {
+          cerr << "Petsc runtime error: " << e.get_reason();
+          if (e.get_reason() == PETSC_ERR_MAT_LU_ZRPVT)
+          {
+            // in the case of a zero pivot in (I)LU factorization
+            // we try another preconditioner
+            cerr << " (Zero pivot during ILU.)";
+            PCType old_pc = solver_params.pc_type;
+            solver_params.pc_type = PCJACOBI;
+            set_solver_params(*system.nonlinear_solver);
+            solver_params.pc_type = old_pc;
+          }
+          cerr << "\n";
+        }
+
+        if (retry)
+        {
+          double step = calculate_new_simulation_voltages();
+          if (step < params.min_voltage_step) throw 1;
+
+          // we have to clear the solver context, because the exception
+          // left it in a unknown state such that future solves would fail.
+          system.nonlinear_solver->clear();
+          solution = old_solution;
+        }
+      } while (retry);
+
+      _n_nonlinear_iterations = system.n_nonlinear_iterations();
+      _final_residual = system.final_nonlinear_residual();
+      _old_sim_voltages = _simulation_voltages;
+      old_solution = solution;
+
+      _options.C0_e = _options.n_max;
+      _options.C0_h = _options.p_max;
+
+      if (_simulation_voltages == voltages) reached = true;
+    } while (!reached);
+
+  }
 
   if (params.mesh_refinement)
   {
     MeshRefinement mesh_refinement(device.get_mesh());
     ErrorVector error;
     KellyErrorEstimator error_estimator;
-    
+
     bool is_refined;
     double delta_l2_norm, l2_norm;
 
@@ -1665,7 +1667,6 @@ DriftDiffusion::build_scaling(void)
         Real u  = phi0 * solution(dof_indices_u[n]);
         Real en = phi0 * solution(dof_indices_en[n]);
         Real ep = phi0 * solution(dof_indices_ep[n]);
-        
         sc->calculate_all(u, en, ep, elem->point(n));
 
         assert (node_conn[elem->node(n)] != 0);
@@ -1679,7 +1680,7 @@ DriftDiffusion::build_scaling(void)
         double muh = sc->get_hole_mobility();
         double a = nn0 * exp(-nn / nn0 * 1);
         double b = pp0 * exp(-pp / pp0 * 1);
-
+      
         scaling.set(dof_indices_u[n], 1);
 
         double nodal_val = nn + a;
@@ -1694,6 +1695,85 @@ DriftDiffusion::build_scaling(void)
   }
 }
 
+void
+DriftDiffusion::build_solution_vector(vector<double>& solution_vector)
+{
+  NonlinearImplicitSystem* system;
+
+  system = &_eq_system->get_system<NonlinearImplicitSystem>(
+      "drift-diffusion coupled");
+
+  // aliases for nicer code
+  const DD::Device& device = *(_device);
+  const Mesh& mesh = _device->get_mesh();
+  const NumericVector<Number>& solution = *(system->solution);
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+  // TODO if some elements were coarsened, does this still work??
+  const unsigned int nn  = mesh.n_nodes();
+
+  const unsigned int n_vars  = 3;
+
+  solution_vector.resize(nn * n_vars);
+  vector<double> local(solution_vector.size());
+
+  // the scaling parameters to scale back the result
+  double phi0 = get_scaling().get_potential_scaling();
+
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_e");
+  const unsigned int ep_var = system->variable_number("fermi_h");
+  
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  MeshBase::const_element_iterator it =
+    mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end =
+    mesh.active_local_elements_end(); 
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+#ifdef ENABLE_INFINITE_ELEMENTS
+    // infinite elements should be skipped...
+    if (!elem->infinite())
+#endif
+    {
+      dof_map.dof_indices(elem, dof_indices_u, u_var);
+      dof_map.dof_indices(elem, dof_indices_en, en_var);
+      dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+      assert(elem->n_nodes() == dof_indices_u.size());
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
+        Real u  = phi0 * solution(dof_indices_u[n]);
+        Real en = phi0 * solution(dof_indices_en[n]);
+        Real ep = phi0 * solution(dof_indices_ep[n]);
+        
+        unsigned int id = n_vars * elem->node(n);
+        local[id] = u;
+        local[id + 1] = en;
+        local[id + 2] = ep;
+      }
+
+    }
+  }
+
+#ifdef HAVE_MPI
+  // Now each processor has computed contriburions to the
+  // soln vector.  Gather them all up.
+  MPI_Allreduce (&local[0], &solution_vector[0], solution_vector.size(),
+		 MPI_REAL, MPI_SUM, libMesh::COMM_WORLD);
+#else
+  solution_vector = local;
+#endif
+}
 
 // implementation taken from libmesh equation_systems.C
 void
@@ -1716,11 +1796,15 @@ DriftDiffusion::build_densities(vector<double>& densities,
   // TODO if some elements were coarsened, does this still work??
   const unsigned int nn  = mesh.n_nodes();
 
-  const unsigned int n_vars  = 3;
+  const unsigned int n_vars  = 5;
   names.resize(n_vars);
   names[0] = "e_density";
   names[1] = "h_density";
-  names[2] = "recomb_rate";
+  names[2] = "SRH";
+  names[3] = "direct";
+  names[4] = "Auger";
+
+  vector<double> recomb(3, 0.0);
 
   densities.resize(nn * n_vars);
 
@@ -1812,6 +1896,7 @@ DriftDiffusion::build_densities(vector<double>& densities,
         Real ep = phi0 * solution(dof_indices_ep[n]);
         
         sc->calculate_all(u, en, ep, elem->point(n));
+        sc->get_net_recombination_rates(recomb);
 
         assert (node_conn[elem->node(n)] != 0);
 
@@ -1824,8 +1909,17 @@ DriftDiffusion::build_densities(vector<double>& densities,
         local[id + 1] +=
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
 
-        nodal_val = sc->get_net_electron_recombination_rate();
+        //nodal_val = sc->get_net_electron_recombination_rate();
+        nodal_val = recomb[0];
         local[id + 2] +=
+          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+        
+        nodal_val = recomb[1];
+        local[id + 3] +=
+          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+
+        nodal_val = recomb[2];
+        local[id + 4] +=
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
       }
 
@@ -1848,6 +1942,7 @@ DriftDiffusion::build_current_density(vector<double>& current,
     vector<string>& names)
 {
   // we only do something if we are on processor 0
+  // TODO parallelize
   if (libMesh::processor_id() != 0)
     return;
   

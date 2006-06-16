@@ -17,6 +17,19 @@ ExcitonModel::calculate_all(double fermi_x, const Point& coord)
 {
   double kT = exciton_vt;
 
+  double arg_x = (fermi_x - band_gap + _R) / kT;
+  calculate_density_and_derivative(arg_x, density, density_derivative);
+  density *= _DOS;
+  density_derivative *= _DOS / kT;
+
+  mobility = _mu;
+  recombination_rate = density / _t;
+  recombination_rate_derivative = density_derivative / _t;
+
+  const SemiconductorModel* sc = static_cast<const SemiconductorModel*>(
+      get_driftdiffusion_properties());
+  generation_rate = sc->get_exciton_generation_rate();
+
 }
 
 void

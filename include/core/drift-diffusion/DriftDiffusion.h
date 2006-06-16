@@ -303,6 +303,9 @@ class DriftDiffusion
      */
     void set_device(DD::Device* device);
 
+    void set_equation_systems(EquationSystems* eq_systems)
+      { _eq_system = eq_systems; }
+
     /**
      * @returns a reference to the simulation options
      */
@@ -393,7 +396,7 @@ class DriftDiffusion
      * where the ordering \p var1 ... \p var2 is the same as in the
      * method \p get_variable_names()
      */
-    const std::vector<Number>& get_solution(void) const;
+    const std::vector<double>& get_solution(void) const;
 
     //! Get the solution on the nodes of a given element
     /*!
@@ -535,7 +538,7 @@ class DriftDiffusion
      * The nodal solution in the order
      * [ var1\@node1 ... varn\@node1 var1\@node2 ... varn\@node2 ... ]
      */
-    std::vector<Number> _solution;
+    std::vector<double> _solution;
 
     /**
      * The number of nonlinear iterations needed
@@ -611,7 +614,8 @@ class DriftDiffusion
      * Initializes the equation system \p system and prepares it
      * to be solved
      */
-    void initialize_eq_system(EquationSystems& system);
+    //void initialize_eq_system(EquationSystems& system);
+    void initialize_eq_system(void);
 
     //! Get the equation system
     EquationSystems& get_equation_system(void);
@@ -622,6 +626,7 @@ class DriftDiffusion
 
     void calculate_currents(void);
 
+    void build_solution_vector(std::vector<double>& vector);
 
     /**
      * Calculates the next simulation point and returns
@@ -728,7 +733,7 @@ DriftDiffusion::get_variable_names(void) const
 }
 
 inline
-const std::vector<Number>&
+const std::vector<double>&
 DriftDiffusion::get_solution(void) const
 {
   return _solution;

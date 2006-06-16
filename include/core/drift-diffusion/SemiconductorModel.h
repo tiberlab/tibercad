@@ -126,6 +126,8 @@ class SemiconductorModel : public DriftDiffusionProperties
 
 
     void print_info(void) const;
+
+    virtual void get_net_recombination_rates(std::vector<double>& rates);
     
   protected:
     
@@ -204,11 +206,20 @@ class SemiconductorModel : public DriftDiffusionProperties
     //! Calculate Shockley-Read-Hall recombination
     void calculate_SRH_recombination(void);
 
+    //! Calculate Shockley-Read-Hall recombination
+    double get_SRH_recombination(void);
+
     //! Calculate Auger recombination
     void calculate_Auger_recombination(void);
 
+    //! Calculate Auger recombination
+    double get_Auger_recombination(void);
+
     //! Calculate direct recombination
     void calculate_direct_recombination(void);
+
+    //! Calculate direct recombination
+    double get_direct_recombination(void);
 
     //! Calculate exciton generation
     void calculate_exciton_generation(void);
@@ -480,6 +491,23 @@ SemiconductorModel::calculate_SRH_recombination(void)
 }
 
 inline
+double
+SemiconductorModel::get_SRH_recombination(void)
+{
+  double n  = electron_density;
+  double p  = hole_density;
+  double tn  = _electron_recombination_time;
+  double tp  = _hole_recombination_time;
+  double ni2 = get_intrinsic_density_squared();
+  double ni  = std::sqrt(ni2);
+  double denom = tp * (n + ni) + tn * (p + ni);
+  double G = ni2 / denom;
+  double R = (n * p) / denom;
+  return (R - G);
+}
+
+
+inline
 void
 SemiconductorModel::calculate_direct_recombination(void)
 {
@@ -503,6 +531,20 @@ SemiconductorModel::calculate_direct_recombination(void)
   hole_recombination_rate_derivatives[0] += a + b;
 }
  
+inline
+double
+SemiconductorModel::get_direct_recombination(void)
+{
+  double n  = electron_density;
+  double p  = hole_density;
+  double C  = _direct_rec_param;
+  double ni2 = get_intrinsic_density_squared();
+
+  double rec = C * (n * p - ni2);
+  return rec;
+}
+ 
+
 inline
 void
 SemiconductorModel::calculate_exciton_generation(void)
@@ -545,6 +587,14 @@ void
 SemiconductorModel::calculate_Auger_recombination(void)
 {
 }
+
+inline
+double
+SemiconductorModel::get_Auger_recombination(void)
+{
+  return 0;
+}
+
 
 
 template <int coupling>
@@ -682,6 +732,20 @@ SemiconductorModel::calculate_all(double potential,
     if (_exciton_gen_param > 1e-56)
       calculate_exciton_generation();
   }
+}
+
+inline
+void
+SemiconductorModel::get_net_recombination_rates(std::vector<double>& rates)
+{
+  rates.resize(3);
+
+  if (_recombination & DriftDiffusionDefs::SRH)
+    rates[0] = get_SRH_recombination();
+  if (_recombination & DriftDiffusionDefs::DIRECT)
+    rates[1] = get_direct_recombination();
+  if (_recombination & DriftDiffusionDefs::AUGER)
+    rates[2] = get_Auger_recombination();
 }
 
 

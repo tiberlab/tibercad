@@ -505,7 +505,7 @@ int main (int argc, char** argv)
     n_gan.add_recombination_model(SRH);
     n_gan.set_SRH_parameters(1e-7, 1e-7);
     n_gan.add_recombination_model(DIRECT);
-    n_gan.set_direct_rec_parameters(1e-15);
+    n_gan.set_direct_rec_parameters(1e-10);
 
     // p-GaN
     StrainedSemiconductorModel p_gan(n_gan);
@@ -521,7 +521,7 @@ int main (int argc, char** argv)
 
     ingan.set_SRH_parameters(1e-7, 1e-7);
     ingan.add_recombination_model(DIRECT);
-    ingan.set_direct_rec_parameters(1e-15);
+    ingan.set_direct_rec_parameters(1e-10);
 
     n_gan.set_n_dopant(Dopant(n_doping, 0.025, 2));
     p_gan.set_p_dopant(Dopant(p_doping, 0.01, 4));

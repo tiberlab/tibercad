@@ -16,6 +16,13 @@ class DriftDiffusionProperties;
 class ElectricalContact
 {
   public:
+
+    //! This class is not intended for direct use
+    ElectricalContact(const std::string identifier);
+
+    //! Empty destructor
+    virtual ~ElectricalContact(void) {};
+
     
     //! The type of boundary condition
     enum BCType
@@ -70,12 +77,6 @@ class ElectricalContact
     void set_zero_derivative_bc(DriftDiffusionDefs::Variable variable);
 
   protected:
-
-    //! This class is not intended for direct use
-    ElectricalContact(const std::string identifier);
-
-    //! Empty destructor
-    virtual ~ElectricalContact(void) {};
 
     //! Set the boundary condition type for \c variable
     void set_type(DriftDiffusionDefs::Variable variable,

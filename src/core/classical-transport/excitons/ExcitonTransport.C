@@ -410,6 +410,7 @@ ExcitonTransport::solve(void)
   // solve for the desired contact voltages
   //
   //build_scaling();
+  system.solution->add(3.0);
 
   try
   {
@@ -804,7 +805,7 @@ ExcitonTransport::build_densities(vector<double>& densities,
         local[id + 2] +=
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
 
-        nodal_val = u;
+        nodal_val = ex;
         local[id + 3] +=
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
       }
@@ -957,6 +958,8 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
     NumericVector<Number>* residual,
     SparseMatrix<Number>* jacobian)
 {
+  PerfLog perf_log("Matrix assembly", false);
+  perf_log.start_event("assembly");
   
   // references for nicer code
   const Mesh& mesh = _this->get_mesh();
@@ -1085,5 +1088,188 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
     jacobian->zero();
 
 
+  MeshBase::const_element_iterator el =
+                                  mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el =
+                                  mesh.active_local_elements_end();
+
+  // loop over all active elements
+  for ( ; el != end_el ; ++el) 
+  {
+    const Elem* elem = *el;
+    const Elem* top_parent = (*el)->top_parent();
+
+    // get DOF indices
+    dof_map.dof_indices(elem, dof_indices);
+
+    unsigned int n_dofs = dof_indices.size();
+
+    fe->reinit(elem);
+
+    Ke.resize(n_dofs, n_dofs);
+    Fe.resize(n_dofs);
+    X.resize(n_dofs);
+
+    // extract local solution, accounting for constraints
+    dof_map.extract_local_vector(x, dof_indices, X);
+
+    SemiconductorModel* sc = static_cast<SemiconductorModel*>(
+      device.get_element_data().get_data(top_parent));
+    assert(sc != NULL);
+
+    sc->reinit(elem);
+    excitonmodel->reinit(elem, sc);
+    
+/*
+    // get the nodal scaling values
+    vector<double> n0(n_dofs, 1);
+    if (options.local_scaling)
+    {
+      NumericVector<Number>& scaling = system.get_vector("scaling");
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        n0[i] = scaling(dof_indices_en[i]) / C0;
+      }
+    }
+*/
+
+    // loop over the quadrature points
+    for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
+    {
+      // get the drift-diffusion solution values and the
+      // exciton electro-chemical potential at the quadrature points
+      // TODO doesn't work now
+      //driftdiff->get_solution(elem, dd_solution);
+      Real u  = 0.0;
+      Real en = 0.0;
+      Real ep = 0.0;
+      Real ex = 0.0;
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        //u  += phi[i][qp] * dd_solution[i].potential;
+        //en += phi[i][qp] * dd_solution[i].fermi_e;
+        //ep += phi[i][qp] * dd_solution[i].fermi_h;
+        unsigned int n = 3 * elem->node(i);
+        u  += phi[i][qp] * dd_solution[n];
+        en += phi[i][qp] * dd_solution[n+1];
+        ep += phi[i][qp] * dd_solution[n+2];
+        ex += phi[i][qp] * X(i);
+      }
+
+      // calculate densities etc.
+      sc->calculate_all(u, en, ep, q_point[qp]);
+      
+      excitonmodel->calculate_all(phi0 * ex, q_point[qp]);
+
+      double nx = excitonmodel->get_density() / C0;
+      double R = excitonmodel->get_recombination_rate() / R0;
+      double G = excitonmodel->get_generation_rate() / R0;
+      double mux = excitonmodel->get_mobility() / mu0;
+      // the exciton conductivity
+      double sigma_x = mux * nx;
+
+      //
+      // The residual looks like this:
+      //
+      //      r_i = Ke_ij*X_j - Fe_i
+      //
+      // The jacobian looks like this:
+      //
+      //      J_ij = dr_i/dX_j
+      //      
+      //           = Ke_ij + dKe_il/dX_j * X_l - dFe_i/dX_j
+      //   
+
+      // the jacobian x weight x scaling
+      double J = JxW[qp] / J_scale;
+
+      // 
+      // First we will build the system matrix Ke_ij
+      //
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        for (unsigned int j = 0; j < n_dofs; j++)
+        {
+          Real laplace =
+            J * (dphi[i][qp] * dphi[j][qp]) * x0_mesh * x0_mesh;
+          
+          Ke(i,j) += sigma_x * laplace;
+        }
+      }
+
+      // 
+      // for jacobian compute the other contributions
+      // 
+      if (jacobian != NULL)
+      {
+        double dnx = phi0 / C0 * excitonmodel->get_density_derivative();
+        double dR = phi0 / R0
+            * excitonmodel->get_recombination_rate_derivative();
+
+        Real dsigma_x = J * mux * dnx;
+
+
+        for (unsigned int i = 0; i < n_dofs; i++)
+        {
+          for (unsigned int j = 0; j < n_dofs; j++)
+          {
+            // first the dKe_il/dX_j * X_l part
+            // (for X_l = u_l we dont get anything, i.e. the
+            // contributions to Kuu, Kun, Kup are zero)
+            
+            Real dsigma_x_phi = dsigma_x * phi[j][qp];
+            for (unsigned int k = 0; k < n_dofs; k++)
+            {
+              Real laplace = (dphi[i][qp] * dphi[k][qp]) * x0_mesh * x0_mesh;
+            
+              Real elem_contrib =
+                dsigma_x_phi * laplace * X(k);
+
+              Ke(i,j) += elem_contrib;
+            }
+
+            // The dFe_i/dX_j part
+            Real phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp];
+
+            Ke(i,j) += dR * phi_i_x_phi_j;
+          }
+        }
+      }
+
+
+      // if we are doing residual, calculate rhs contribution (i.e. Fe)
+      if (residual != NULL)
+      {
+        Real J_x_R = J * (R - G);
+
+        for (unsigned int i = 0; i < n_dofs; i++)
+        {
+          Real net_recomb = J_x_R * phi[i][qp];
+          
+          Fe(i) += net_recomb;
+        }
+      }
+
+    } // end loop over quadrature points
+
+    // constrain the jacobian and the rhs to account for constrained
+    // DOFs
+    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
+
+
+    if (residual != NULL)
+    {
+      for (unsigned int i = 0; i < n_dofs; i++)
+        for (unsigned int j = 0; j < n_dofs; j++)
+          Fe(i) += Ke(i,j) * x(dof_indices[j]);
+
+      residual->add_vector(Fe, dof_indices);
+    }
+    else
+      jacobian->add_matrix(Ke, dof_indices);
+
+  } // end loop over elements
+
+  perf_log.stop_event("assembly");
 } 
 

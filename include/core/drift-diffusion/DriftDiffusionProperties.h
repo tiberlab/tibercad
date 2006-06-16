@@ -316,6 +316,7 @@ class DriftDiffusionProperties : public PhysicalProperties
     double get_band_gap(void) const
       { return conduction_band_edge - valence_band_edge; };
 
+    virtual void get_net_recombination_rates(std::vector<double>& rates) {};
 
   protected:
   
