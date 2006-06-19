@@ -91,6 +91,8 @@ class EnvelopFunctionApprox
 
     bool  consider_strain; //!< apply strain effect to the EFA Hamiltonian;
     
+
+    double disturb_arnoldi; //!< small disturb of the Hamiltonian matrix;
   };
 
 
@@ -115,11 +117,12 @@ class EnvelopFunctionApprox
 
   //!constructor
   /*!
+    \param equation_systems reference to the "global" equation systems object
     \param opt  parameters  of the model
-    \param mesh simulation domain mesh 
-    \param mesh_data_input informations about materials and bondary conditions
+    \param problem_nam name of the problem that will be asigned to a new system
+    \param strain1 pointer to the macrostrain model
   */
-  EnvelopFunctionApprox(options& opt, Mesh& mesh, MeshData& mesh_data_input, Macrostrain* strain1);
+  EnvelopFunctionApprox(EquationSystems&  equation_systems, std::string& problem_name, options& opt, Macrostrain* strain1);
 
 
   //!destructor
@@ -182,17 +185,26 @@ class EnvelopFunctionApprox
  private:
 
 
-  static const double disturb_arnoldi = 1e-10;
+  
 
+  //!pointer to mesh of the equation systems
+  Mesh* mesh;
 
   options opt;
-  
+
+  //!pointer to meshdata of the equation systems
   MeshData*  meshdata;
 
   EquationSystems* es;
 
+  string system_name;
+
+
+  //pointer to the macrostrain object that is used to get strain data 
   Macrostrain* strain;
 
+  //!system that we add to the equation systems
+  LinearImplicitSystem* system;
 
   //!diriclet nodes vector
   std::vector<unsigned int>  dirichlet_nodes;

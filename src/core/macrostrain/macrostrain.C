@@ -4,7 +4,7 @@ using namespace std;
 //Static objects must be "mentioned" here! 
 
 std::string    Macrostrain:: uname_vec[3];
-unsigned int   Macrostrain:: dim;
+//unsigned int   Macrostrain:: dim;
 bool           Macrostrain:: grown_on_substrate;
 
 unsigned  int  Macrostrain:: substr_mat;
@@ -31,32 +31,35 @@ unsigned int Macrostrain::fixed_node1_temp;
 unsigned int Macrostrain::fixed_node2_temp;
 unsigned int Macrostrain::fixed_node3_temp;
 
-
+LinearImplicitSystem* Macrostrain::my_system_temp;
 //-----------------------------------------------------------------//
-Macrostrain::Macrostrain(const options& opt,   Mesh&  mesh ) 
+Macrostrain::Macrostrain(const options& opt,  EquationSystems& equation_systems_in,  std::string& problem_name ) 
 {
   
- 
-    max_r_steps = opt.max_r_steps;
-    uniform_refinement = opt.uniform_refinement;
-    refine_fraction = opt.refine_fraction;
-    coarsen_fraction = opt.coarsen_fraction;
-    max_ref_level = opt.max_ref_level;
-    tolerance  = opt.tolerance  ;
-    max_shape_steps = opt.max_shape_steps;
- 
-    mesh_input_file = opt.mesh_input_file;
-    grown_on_substrate = opt.grown_on_substrate;
-    calculate_atom_displacements = opt.calculate_atom_displacements;
-    atom_structure_filename = opt.atom_structure_filename;
-    atom_displacements_filename = opt.atom_displacements_filename;
+  equation_systems = &equation_systems_in;
+   
+  max_r_steps = opt.max_r_steps;
+  uniform_refinement = opt.uniform_refinement;
+  refine_fraction = opt.refine_fraction;
+  coarsen_fraction = opt.coarsen_fraction;
+  max_ref_level = opt.max_ref_level;
+  tolerance  = opt.tolerance  ;
+  max_shape_steps = opt.max_shape_steps;
+  
+  mesh_input_file = opt.mesh_input_file;
+  grown_on_substrate = opt.grown_on_substrate;
+  calculate_atom_displacements = opt.calculate_atom_displacements;
+  atom_structure_filename = opt.atom_structure_filename;
+  atom_displacements_filename = opt.atom_displacements_filename;
   
 
-    for (unsigned int i =0; i <=2; i ++ ) periodicity[i] = opt.periodicity[i];
-    substr_mat = opt.substr_mat;
-
+  for (unsigned int i =0; i <=2; i ++ ) periodicity[i] = opt.periodicity[i];
+  substr_mat = opt.substr_mat;
+  
+  Mesh& mesh = equation_systems->get_mesh();
       
     dim = mesh.mesh_dimension();
+
     uname_vec[0]="ux";
     uname_vec[1]="uy";
     uname_vec[2]="uz";
@@ -67,13 +70,16 @@ Macrostrain::Macrostrain(const options& opt,   Mesh&  mesh )
 
 
     // Create an equation systems object.
-    equation_systems = new EquationSystems(mesh);
+    equation_systems = & equation_systems_in;
     
+
+    system_name = problem_name;
+
     // Declare the Poisson system and its variables.
     // The Poisson system is another example of a steady system.
-    equation_systems->add_system<LinearImplicitSystem> ("Strain");
+    equation_systems->add_system<LinearImplicitSystem> (system_name);
 
-
+   
     
       
     equation_systems->parameters.set<Real>("linear solver tolerance") = tolerance; 
@@ -82,12 +88,15 @@ Macrostrain::Macrostrain(const options& opt,   Mesh&  mesh )
   
     dim = mesh.mesh_dimension();
 
+
+    my_system = &( equation_systems->get_system<LinearImplicitSystem>(system_name)  );
+
     //---------------------------------------------------------------------------------------
     //add normal variables
 	
     for (unsigned int i = 0; i <  3 ; i++)  
       {  
-	equation_systems->get_system("Strain").add_variable(uname_vec[i], FIRST);
+	my_system->add_variable(uname_vec[i], FIRST);
       }
     
  
@@ -98,7 +107,7 @@ Macrostrain::Macrostrain(const options& opt,   Mesh&  mesh )
     if (number_of_add_var != 0)
       {
 	FEType fe_type(CONSTANT,MONOMIAL);
-	equation_systems->get_system("Strain").add_variable("fict", fe_type);
+	my_system->add_variable("fict", fe_type);
       }
     //-----------------------------------------------------------------------------------
       
@@ -111,7 +120,7 @@ Macrostrain::Macrostrain(const options& opt,   Mesh&  mesh )
 
 
 
-    equation_systems->get_system("Strain").attach_assemble_function (assemble_strain_matrix);
+    my_system->attach_assemble_function (assemble_strain_matrix);
   
     //---------------------------------------------------------------------------------------
  
@@ -169,7 +178,9 @@ Macrostrain::Macrostrain(const options& opt,   Mesh&  mesh )
 	output_type = "GMV";
     }
     
-                     
+    //----------------------------------------------------------------//   
+ 
+    
 }
 //--------------------------------------------------------------------//
 
@@ -577,9 +588,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
  
  
 
-  // It is a good idea to make sure we are assembling
-  // the proper system.
-  assert (system_name == "Strain");
+ 
 
   int temp_i;
   temp_i = 0;
@@ -595,12 +604,14 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
   // Get a constant reference to the mesh object.
   const Mesh& mesh = es.get_mesh();
 
+  unsigned int dim = mesh.mesh_dimension();
+
   // The dimension that we are running
    
   //dim = mesh.mesh_dimension();
 
   // Get a reference to the LinearImplicitSystem we are solving
-  LinearImplicitSystem& system = es.get_system<LinearImplicitSystem> ("Strain");
+  LinearImplicitSystem& system = *my_system_temp;
 
  
   
@@ -1294,6 +1305,8 @@ void Macrostrain::refer_objects()
 
   substrate_nodes_temp = &substrate_nodes;
   
+  my_system_temp = my_system;
+
   //------------------------------------------------------
 }
 //-----------------------------------------------------------------//
@@ -1310,10 +1323,10 @@ void Macrostrain::solve()
  
   
   NumericVector<Number>& old_solution = 
-    equation_systems->get_system("Strain").add_vector("old solution");
+    my_system->add_vector("old solution");
   
   // Initialize the data structures for the equation system.
-  equation_systems->init();	
+  my_system->init();	
 
  
   
@@ -1349,7 +1362,7 @@ void Macrostrain::solve()
 
   set_up_additional_dofs();
 
-  equation_systems->get_system("Strain").solution->zero();
+  my_system->solution->zero();
 
   apply_periodic_bc();
 
@@ -1358,11 +1371,11 @@ void Macrostrain::solve()
   
    
 
-  equation_systems->get_system("Strain").solve();
+  my_system->solve();
 
  
   
-  old_solution = *equation_systems->get_system("Strain").solution;
+  old_solution = * (my_system->solution);
  
   update_substrate();
 
@@ -1404,8 +1417,7 @@ void Macrostrain::solve()
       // \p flux_jump indicator.  Note in general you will need to
       // provide an error estimator specifically designed for your
       // application.
-      error_estimator.estimate_error (equation_systems->get_system("Strain"),
-				      error);
+      error_estimator.estimate_error (*my_system,error);
 		
       // This takes the error in \p error and decides which elements
       // will be coarsened or refined.  Any element within 20% of the
@@ -1441,7 +1453,7 @@ void Macrostrain::solve()
       // the current one.
       equation_systems->reinit();
 
-      old_solution = *equation_systems->get_system("Strain").solution;
+      old_solution = *(my_system->solution);
       
 
       assemble_material_list();
@@ -1471,12 +1483,11 @@ void Macrostrain::solve()
       
       mesh.print_info();
       
-      equation_systems->get_system("Strain").solution->zero();
+      my_system->solution->zero();
       
-      equation_systems->get_system("Strain").solve();
+      my_system->solve();
       
-      old_solution.add(-1.0, 
-		       *equation_systems->get_system("Strain").solution);
+      old_solution.add(-1.0, *(my_system->solution));
 
       old_solution.close();
 
@@ -1557,13 +1568,13 @@ void Macrostrain::solve()
       //---------------------------------------------------------
      
       //-------solve---------------------------------------------
-      equation_systems->get_system("Strain").solution->zero();
+      my_system->solution->zero();
       
       //apply_periodic_bc();
       
       equation_systems->print_info();
       
-      equation_systems->get_system("Strain").solve();
+      my_system->solve();
       if (intermediate_output)
 	{
 
@@ -1689,7 +1700,7 @@ void Macrostrain::update_eps0_list()
 
   const Mesh& mesh = equation_systems->get_mesh();
   //const unsigned int dim = mesh.mesh_dimension();
-  LinearImplicitSystem& system = equation_systems->get_system<LinearImplicitSystem> ("Strain");
+  LinearImplicitSystem& system = *my_system;
 
   AutoPtr<NumericVector<Number> >& solution = system.solution;
 
@@ -1873,7 +1884,7 @@ void  Macrostrain::apply_periodic_bc()
   //const unsigned int dim = mesh.mesh_dimension();
 
   // Get a reference to the LinearImplicitSystem we are solving
-  LinearImplicitSystem& system = equation_systems->get_system<LinearImplicitSystem> ("Strain");
+  LinearImplicitSystem& system = *my_system;
 
   unsigned int uvar[3] ;
   for (unsigned int i = 0; i<= 3 - 1; i++) 
@@ -2066,7 +2077,7 @@ The constrants are the following:
 
  const Mesh& mesh = equation_systems->get_mesh();
  // Get a reference to the LinearImplicitSystem we are solving
- LinearImplicitSystem& system = equation_systems->get_system<LinearImplicitSystem> ("Strain");
+ LinearImplicitSystem& system = *my_system;
 
  unsigned int uvar[3] ;
  for (unsigned int i = 0; i<= 3 - 1; i++) 
@@ -2311,7 +2322,7 @@ void Macrostrain::output_strain(std::string filename )
 
   //const unsigned int dim = mesh.mesh_dimension();
 
-  LinearImplicitSystem& system = equation_systems->get_system<LinearImplicitSystem> ("Strain");
+  LinearImplicitSystem& system = *my_system  ;
 
   AutoPtr<NumericVector<Number> >& solution = system.solution;
 
@@ -2475,7 +2486,7 @@ void Macrostrain::move_nodes()
 
   //const unsigned int dim = mesh.mesh_dimension();
 
-  LinearImplicitSystem& system = equation_systems->get_system<LinearImplicitSystem> ("Strain");
+  LinearImplicitSystem& system = *my_system;
 
   AutoPtr<NumericVector<Number> >& solution = system.solution;
 
@@ -2671,7 +2682,7 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
   Tensor2Sym eps;
  
 
-  LinearImplicitSystem& system = equation_systems->get_system<LinearImplicitSystem> ("Strain");
+  LinearImplicitSystem& system = *my_system;
 
   AutoPtr<NumericVector<Number> >& solution = system.solution;
 
@@ -2943,7 +2954,7 @@ void  Macrostrain::set_up_additional_dofs()
 
   const Mesh& mesh =  equation_systems->get_mesh();
 
-  LinearImplicitSystem& system = equation_systems->get_system<LinearImplicitSystem> ("Strain");
+  LinearImplicitSystem& system = *my_system;
 
   DofMap& dof_map = system.get_dof_map();
 
@@ -2995,7 +3006,7 @@ Tensor2Sym Macrostrain::calculate_eps_lat_matching(unsigned int material)
     {
       unsigned int dof_number = add_dofs_vector[i];
 
-      double coeff = (*equation_systems->get_system("Strain").solution)( dof_number ); 
+      double coeff = ( *(my_system->solution) )( dof_number ); 
 
       eps0 += coeff * ((str_it -> second)->crystal).get_var_eps0( add_var[i].name );
     } 
@@ -3018,7 +3029,7 @@ void Macrostrain::init_substrate()
 void Macrostrain::update_substrate()
 {
 
-  LinearImplicitSystem& system = equation_systems->get_system<LinearImplicitSystem> ("Strain");
+  LinearImplicitSystem& system = *my_system;
 
   AutoPtr<NumericVector<Number> >& solution = system.solution;
 
@@ -3082,7 +3093,7 @@ void Macrostrain::update_u_node()
 {
   const Mesh& mesh = equation_systems->get_mesh();
 
-  LinearImplicitSystem& system = equation_systems->get_system<LinearImplicitSystem> ("Strain");
+  LinearImplicitSystem& system = *my_system;
 
   AutoPtr<NumericVector<Number> >& solution = system.solution;
  
@@ -3123,7 +3134,7 @@ void Macrostrain::output_add_strain_variables(string filename)
 
   if (number_of_add_var !=0) 
     {
-      LinearImplicitSystem& system = equation_systems->get_system<LinearImplicitSystem> ("Strain");
+      LinearImplicitSystem& system = *my_system;
 
       AutoPtr<NumericVector<Number> >& solution = system.solution;
       
@@ -3274,7 +3285,7 @@ void Macrostrain::read_atom_structure(const std::string filename)
   //--------mesh related objects----------------------------------------
   const Mesh& mesh =  equation_systems->get_mesh();
 
-  LinearImplicitSystem& system = equation_systems->get_system<LinearImplicitSystem> ("Strain");
+  LinearImplicitSystem& system = *my_system;
 
   DofMap& dof_map = system.get_dof_map();
 
@@ -3437,7 +3448,7 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
   const Mesh& mesh =  equation_systems->get_mesh();
 
 
-  LinearImplicitSystem& system = equation_systems->get_system<LinearImplicitSystem> ("Strain");
+  LinearImplicitSystem& system = *my_system;
 
   AutoPtr<NumericVector<Number> >& solution = system.solution;
 
@@ -3734,5 +3745,5 @@ void Macrostrain::output_materials(std :: string filename)
 //-------------------------------------------------------------------------------------------/
 Macrostrain::~Macrostrain()
 {
-  delete equation_systems;
+  equation_systems->delete_system(system_name);
 }

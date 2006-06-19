@@ -2,25 +2,30 @@
 #include "EnvelopFunctionApprox.h"
 using namespace std;
 const double EnvelopFunctionApprox::Hartree;
-const double EnvelopFunctionApprox::disturb_arnoldi;
 
-EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshData& mesh_data_in,Macrostrain* strain1 )
+
+EnvelopFunctionApprox:: EnvelopFunctionApprox(EquationSystems&  equation_systems, std::string& problem_name, 
+					      options& opt1, Macrostrain* strain1 )
 {
 
   
   //Initialization
   opt = opt1;
 
-  es = new EquationSystems(mesh);
+  es = &equation_systems;
 
-
-
+  
+  mesh = &(es->get_mesh());
   
  
 
-  es->add_system<LinearImplicitSystem> ("Schroedinger");
+  system_name = problem_name;
 
-  dim = mesh.mesh_dimension();
+  es->add_system<LinearImplicitSystem> (problem_name);
+
+  system = &( es->get_system<LinearImplicitSystem>(problem_name));
+
+  dim = mesh->mesh_dimension();
   
   //---------------------------------------------------------------------------------------
   //add variables
@@ -32,7 +37,7 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshDat
       string name = var_str.str();
       psi_name.push_back(name);
 
-      es->get_system("Schroedinger").add_variable(name,FIRST);
+      system->add_variable(name,FIRST);
     } 
 
   //add matrixes
@@ -41,26 +46,26 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshDat
 
   //-----------------------------------------------------------------------------------------------------//
   
-  LinearImplicitSystem& ls = static_cast<LinearImplicitSystem&>(es->get_system("Schroedinger"));
+  //LinearImplicitSystem& ls = static_cast<LinearImplicitSystem&>(es->get_system(system_name));
 
 
 
   
-  DofMap& dof_map = ls.get_dof_map();
+  DofMap& dof_map = system->get_dof_map();
 
 
 
-  ls.add_matrix("Ham_real"); //add matrix for a real part of the Hamiltonian
+  system->add_matrix("Ham_real"); //add matrix for a real part of the Hamiltonian
 
-  Ham_real = & (ls.get_matrix("Ham_real"));
+  Ham_real = & (system->get_matrix("Ham_real"));
 
-  ls.add_matrix("Ham_imag");//add matrix for an imaginary part of the Hamiltonian
+  system->add_matrix("Ham_imag");//add matrix for an imaginary part of the Hamiltonian
 
-  Ham_imag = &(  ls .get_matrix("Ham_imag") );
+  Ham_imag = &(  system->get_matrix("Ham_imag") );
 
-  ls.add_matrix("S_real"); //add matrix for S matrix
+  system->add_matrix("S_real"); //add matrix for S matrix
 
-  S_real = &( ls.add_matrix("S_real") );
+  S_real = &( system->add_matrix("S_real") );
   
   //---------------------------------------------------------------------------------------------------------//
   //My Jacobian 
@@ -73,19 +78,19 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(options& opt1, Mesh& mesh, MeshDat
   
 
   
+ 
 
 
-
-   es->init();
+   system->init();
   
-
+ 
     
    //-------------------------------------------------------------------------------------------------------//
 
    //material list
 
-   meshdata = &mesh_data_in;
-   assemble_material_list();
+   //meshdata = &(es->get_mesh_data ());
+   //assemble_material_list();
 
    //------------------------------------------------------------------------------------------------------//
    
@@ -116,21 +121,17 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 {
 
 
-
- LinearImplicitSystem& system = es->get_system<LinearImplicitSystem>("Schroedinger");
-
- 
-
- Mesh& mesh = system.get_mesh(); 
+  //material list
+  assemble_material_list();
 
  vector<unsigned int> psivar(opt.number_of_bands);
  //get numbers of variables
  for (unsigned int i = 0; i < opt.number_of_bands; i++)
    {
-     psivar[i] = system.variable_number(psi_name[i]);
+     psivar[i] = system->variable_number(psi_name[i]);
    }
 
- DofMap& dof_map = system.get_dof_map();
+ DofMap& dof_map = system->get_dof_map();
 
  FEType fe_type = dof_map.variable_type(psivar[0]); //all the variable have the same FE representation
 
@@ -178,8 +179,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   DenseSubMatrix<Number> s_real_sub(s_real);
 
 
-  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
  
   Tensor2Sym strain_crystal_system(0);
   double electric_potential = 0;
@@ -312,13 +313,19 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 	}
 
+
+
+      ham_real.add(opt.spectrum_shift/Hartree,s_real);//apply spectrum shift.
+
       vector<unsigned int> dof_indices_tmp;
 
       dof_indices_tmp = dof_indices;
+
       dof_map.constrain_element_matrix(s_real, dof_indices_tmp);
       S_real->add_matrix(s_real,dof_indices_tmp);
 
       dof_indices_tmp = dof_indices;
+
       dof_map.constrain_element_matrix(ham_real, dof_indices_tmp);
       Ham_real->add_matrix(ham_real,dof_indices_tmp);
 
@@ -332,10 +339,11 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
  
 //this is only to test
+/*
   Ham_real->print_matlab("ham_r_matlab.m");
   Ham_imag->print_matlab("ham_i_matlab.m");
   S_real->print_matlab("s.m");
-
+*/
 
   dof_map.print_dof_constraints();
      
@@ -343,10 +351,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 //============================================================//
 void EnvelopFunctionApprox::assemble_material_list(void)
 {
-Mesh& mesh = es->get_mesh();
- 
 
-  const unsigned int N_elem = mesh.n_active_elem();
+
+  const unsigned int N_elem = mesh->n_active_elem();
 
  
 
@@ -354,8 +361,8 @@ Mesh& mesh = es->get_mesh();
 
  
   
-  MeshBase::const_element_iterator el  = mesh.active_elements_begin();
-  MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+  MeshBase::const_element_iterator el  = mesh->active_elements_begin();
+  MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
     
 
@@ -433,10 +440,10 @@ void EnvelopFunctionApprox::save_S_matrix(const std::string & fname)
 	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
 
        
-	  for (int i1 = 0; i1 < n_cols; i1++) 
-	    if (new_dofs[petsc_cols[i1]].independent)  Number_of_elements++;
-	       
-	   
+	  for (int i1 = 0; i1 < n_cols; i1++)
+	    if ((new_dofs[petsc_cols[i1]].independent) &&  (petsc_row_vals[i1] != 0.0))  Number_of_elements++;
+	    
+	
       
 
 	  ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
@@ -465,7 +472,7 @@ void EnvelopFunctionApprox::save_S_matrix(const std::string & fname)
 	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
 
 	  for (int i1 = 0; i1 < n_cols; i1++) 
-	    if (new_dofs[petsc_cols[i1]].independent) n_new_cols++ ;
+	    if ((new_dofs[petsc_cols[i1]].independent) &&  (petsc_row_vals[i1] != 0.0)) n_new_cols++ ;
 
 	  out_int = *(reinterpret_cast<unsigned int*> (& n_new_cols) );  endian_swap(out_int);
 	  out.write(  reinterpret_cast<char *>( & out_int ), int_size);
@@ -492,7 +499,7 @@ void EnvelopFunctionApprox::save_S_matrix(const std::string & fname)
 	  
 	  for (int col = 0; col < n_cols; col++)
 	    {
-	      if (new_dofs[petsc_cols[col]].independent)
+	      if ((new_dofs[petsc_cols[col]].independent) &&  (petsc_row_vals[col] != 0.0))
 		{
 		  int col_number = new_dofs[petsc_cols[col]].new_number;
 		  out_int = *(reinterpret_cast<unsigned int*> (& col_number) );  endian_swap(out_int);
@@ -521,7 +528,7 @@ void EnvelopFunctionApprox::save_S_matrix(const std::string & fname)
 
 	  for (int col = 0; col < n_cols; col++)
 	    {
-	      if (new_dofs[petsc_cols[col]].independent)
+	      if ((new_dofs[petsc_cols[col]].independent) &&  (petsc_row_vals[col] != 0.0))
 		{
 	      
 		  double value = petsc_row_vals[col];
@@ -612,14 +619,14 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	  real_column.clear();
 	  
 	  for (int i = 0; i < n_cols_real; i++) 
-	    if  (new_dofs[petsc_cols_real[i]].independent)  real_column.insert(petsc_cols_real[i]);
+	    if  ((new_dofs[petsc_cols_real[i]].independent) && (petsc_row_vals_real[i] != 0.0)) real_column.insert(petsc_cols_real[i]);
 	  
 	  ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
 	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
 	  
 	  imag_column.clear();
 	  for (int i = 0; i < n_cols_real; i++) 
-	    if  (new_dofs[petsc_cols_imag[i]].independent) imag_column.insert(petsc_cols_imag[i]);
+	    if  ( (new_dofs[petsc_cols_imag[i]].independent) &&  (petsc_row_vals_imag[i] !=0.0) ) imag_column.insert(petsc_cols_imag[i]);
 	  
 	  set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
 	  
@@ -661,14 +668,14 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	  real_column.clear();
 
 	  for (int i = 0; i < n_cols_real; i++) 
-	    if (new_dofs[petsc_cols_real[i]].independent) real_column.insert(petsc_cols_real[i]);
+	    if (new_dofs[petsc_cols_real[i]].independent  && ( petsc_row_vals_real[i] != 0.0 ) ) real_column.insert(petsc_cols_real[i]);
 	  
 	  ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
 	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
 	  
 	  imag_column.clear();
 	  for (int i = 0; i < n_cols_real; i++) 
-	    if (new_dofs[petsc_cols_imag[i]].independent) imag_column.insert(petsc_cols_imag[i]);
+	    if (new_dofs[petsc_cols_imag[i]].independent && (petsc_row_vals_imag[i] != 0.0) ) imag_column.insert(petsc_cols_imag[i]);
 	  
 	  set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
 
@@ -710,7 +717,7 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	  real_column.clear();
 
 	  for (int i = 0; i < n_cols_real; i++) 
-	    if (new_dofs[petsc_cols_real[i]].independent) real_column.insert(new_dofs[petsc_cols_real[i]].new_number);
+	    if (new_dofs[petsc_cols_real[i]].independent && (petsc_row_vals_real[i] != 0.0) ) real_column.insert(new_dofs[petsc_cols_real[i]].new_number);
 
 	  ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
 	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
@@ -718,7 +725,7 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	  imag_column.clear();
 
 	  for (int i = 0; i < n_cols_real; i++) 
-	    if (new_dofs[petsc_cols_imag[i]].independent) imag_column.insert(new_dofs[petsc_cols_imag[i]].new_number);
+	    if (new_dofs[petsc_cols_imag[i]].independent && (petsc_row_vals_imag[i] != 0.0) ) imag_column.insert(new_dofs[petsc_cols_imag[i]].new_number);
 
 	  set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
 
@@ -773,7 +780,7 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	  real_values.clear();
 	  for (int i = 0; i < n_cols_real; i++)
 	    {
-	      if (new_dofs[petsc_cols_real[i]].independent)
+	      if (new_dofs[petsc_cols_real[i]].independent && (petsc_row_vals_real[i] != 0.0))
 		{
 		  real_column.insert(petsc_cols_real[i]);
 		  real_values.insert(make_pair(petsc_cols_real[i],petsc_row_vals_real[i] ));
@@ -787,7 +794,7 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	  imag_values.clear();
 	  for (int i = 0; i < n_cols_real; i++)
 	    { 
-	      if (new_dofs[petsc_cols_imag[i]].independent)
+	      if (new_dofs[petsc_cols_imag[i]].independent && (petsc_row_vals_imag[i] != 0.0))
 		{
 		  imag_column.insert(petsc_cols_imag[i]);
 		  imag_values.insert(make_pair(petsc_cols_imag[i],petsc_row_vals_imag[i] ));
@@ -811,9 +818,10 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 		value = 0.0;
 
 	      //Distirb matrix, if necessary:
-	      if ((n1 ==  row) && ( row > size_matrix/2))
-		value += disturb_arnoldi;
 
+	      if ((n1 ==  row))
+		if ((n1 > size_matrix/2))
+		value += opt.disturb_arnoldi;
 
 	      out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
 	      out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
@@ -868,21 +876,24 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 
   std::ostringstream  command_line;
 
-  command_line <<  "eigen_solver  -f1 H.out   -f2 S.out  -eps_gen_hermitian -eps_largest_magnitude ";
+  command_line <<  "eigen_solver  -f1 H.out   -f2 S.out  -eps_gen_hermitian  "; 
+  // command_line << "  -eps_largest_magnitude ";
+  command_line << "  -eps_smallest_magnitude ";
   command_line <<  "   -eps_nev     " << ev_number;
-  command_line <<  "   -eps_ncv     " << 10 * ev_number;
+  command_line <<  "   -eps_ncv     " << 3 * ev_number;
   command_line <<  "   -eps_type    " << opt.solver;
   command_line <<  "   -eps_tol     " << opt.eigen_solver_tolerance;
   command_line <<  "   -eps_max_it  " << opt.max_iteration_number;
-  command_line <<  "   -st_type sinvert ";
-  command_line <<  "   -st_shift    " << opt.spectrum_shift/Hartree;
+  //command_line <<  "   -st_type sinvert ";
+  //command_line <<  "   -st_shift    " << opt.spectrum_shift/Hartree;
+  //command_line <<  "    -st_matmode inplace    ";
   //  command_line <<  " -st_ksp_type bcgsl  -st_pc_type jacobi";
   command_line <<  "    \n";
 
 
   cerr << command_line.str()<<"\n";
 
-  system( (command_line.str()).c_str());
+  std::system( (command_line.str()).c_str());
 
   read_SLEPC_solution();
 
@@ -934,7 +945,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 
      
 	
-      solution[ind].eigen_energy = *(  reinterpret_cast<double*>( &fict ) ) * Hartree;
+      solution[ind].eigen_energy = *(  reinterpret_cast<double*>( &fict ) ) * Hartree - opt.spectrum_shift;
     
 
      
@@ -1001,6 +1012,10 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 	    }
 	}
       //-----------------------------------------------------------------------------
+      //put constrained dofs
+      
+
+      //-----------------------------------------------------------------------------
 
     }
 
@@ -1009,7 +1024,12 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
   //sorting of the solutions
   if (opt.particle == "el") sort( solution.begin(), solution.end(), compare_eigen_energy_electrons );
 
-  if (opt.particle == "hl") sort( solution.begin(), solution.end(), compare_eigen_energy_holes );
+  if (opt.particle == "hl")
+    {
+      cerr << "sort holes\n"; 
+      sort( solution.begin(), solution.end(), compare_eigen_energy_holes );
+    }
+
   //------------------------------------------------------------
   
 }
@@ -1021,12 +1041,14 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  std::string& filename)
 {
   //===========================================
-  const Mesh& mesh = es->get_mesh();
-  LinearImplicitSystem& system = es->get_system<LinearImplicitSystem>("Schroedinger");
-  DofMap& dof_map = system.get_dof_map();
 
-  MeshBase::const_node_iterator       nd     = mesh.active_nodes_begin();
-  const MeshBase::const_node_iterator nd_el  = mesh.active_nodes_end();
+  DofMap& dof_map = system->get_dof_map();
+
+  const Mesh& mesh1 = system->get_mesh();
+ 
+  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
+  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
+  
 
   unsigned int number_of_points = 0;
 
@@ -1052,13 +1074,13 @@ void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  st
   //vector 
   unsigned int  point_index = 0;
   
-  unsigned int output_size = mesh.n_nodes()  * opt.number_of_bands * 2;
+  unsigned int output_size = mesh->n_nodes()  * opt.number_of_bands * 2;
 
   vector<double>  psi_data(output_size);
  
  
-  MeshBase::const_element_iterator it = mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end =  mesh.active_local_elements_end();
+  MeshBase::const_element_iterator it = mesh1.active_local_elements_begin();
+  const MeshBase::const_element_iterator end =  mesh1.active_local_elements_end();
 
   std::vector<unsigned int> dof_indices;
 
@@ -1094,9 +1116,9 @@ void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  st
   //std :: cout << filename << "\n";
 
 
-  if (opt.output_type == "GMV")     GMVIO(mesh).write_nodal_data(filename, psi_data, output_names);
+  if (opt.output_type == "GMV")     GMVIO(mesh1).write_nodal_data(filename, psi_data, output_names);
 
-  if (opt.output_type == "tecplot") TecplotIO(mesh,false).write_nodal_data(filename,psi_data,output_names);
+  if (opt.output_type == "tecplot") TecplotIO(mesh1,false).write_nodal_data(filename,psi_data,output_names);
 
   
 
@@ -1106,12 +1128,13 @@ void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  st
 void EnvelopFunctionApprox::output_probability_function(unsigned int state_number,  std::string& filename)
 {
   //===========================================
-  const Mesh& mesh = es->get_mesh();
-  LinearImplicitSystem& system = es->get_system<LinearImplicitSystem>("Schroedinger");
-  DofMap& dof_map = system.get_dof_map();
 
-  MeshBase::const_node_iterator       nd     = mesh.active_nodes_begin();
-  const MeshBase::const_node_iterator nd_el  = mesh.active_nodes_end();
+  DofMap& dof_map = system->get_dof_map();
+
+  const Mesh& mesh1 = system->get_mesh();
+
+  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
+  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
 
   unsigned int number_of_points = 0;
 
@@ -1141,8 +1164,8 @@ void EnvelopFunctionApprox::output_probability_function(unsigned int state_numbe
  
   vector<double>  probability_data(number_of_points, 0.0);
  
-  MeshBase::const_element_iterator it = mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end =  mesh.active_local_elements_end();
+  MeshBase::const_element_iterator it = mesh1.active_local_elements_begin();
+  const MeshBase::const_element_iterator end =  mesh1.active_local_elements_end();
 
   std::vector<unsigned int> dof_indices;
 
@@ -1186,9 +1209,9 @@ void EnvelopFunctionApprox::output_probability_function(unsigned int state_numbe
   //std :: cout << filename << "\n";
 
 
-  if (opt.output_type == "GMV")     GMVIO(mesh).write_nodal_data(filename, probability_data, output_names);
+  if (opt.output_type == "GMV")     GMVIO(mesh1).write_nodal_data(filename, probability_data, output_names);
 
-  if (opt.output_type == "tecplot") TecplotIO(mesh,false).write_nodal_data(filename, probability_data,output_names);
+  if (opt.output_type == "tecplot") TecplotIO(mesh1,false).write_nodal_data(filename, probability_data,output_names);
 
   
 
@@ -1215,12 +1238,11 @@ void EnvelopFunctionApprox::define_diriclet_nodes(std::vector<unsigned int>&  di
 //======================================================================//
 void  EnvelopFunctionApprox::create_dirichlet_dofs( )
 {
-  const Mesh& mesh = es->get_mesh();
-  LinearImplicitSystem& system = es->get_system<LinearImplicitSystem>("Schroedinger");
-  DofMap& dof_map = system.get_dof_map();
+  
+  DofMap& dof_map = system->get_dof_map();
 
-  MeshBase::const_element_iterator it = mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end =  mesh.active_local_elements_end();
+  MeshBase::const_element_iterator it = mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end =  mesh->active_local_elements_end();
 
   dirichlet_dofs.clear();
   // insert_iterator<set<int> >  dir_ins(dirichlet_dofs,dirichlet_dof.begin() ); 
@@ -1231,6 +1253,7 @@ void  EnvelopFunctionApprox::create_dirichlet_dofs( )
   std::vector<unsigned int> :: const_iterator n_it;
 
 
+ 
   std::vector<unsigned int> dof_indices;
 
   for ( ; it != end; ++it)
@@ -1239,10 +1262,10 @@ void  EnvelopFunctionApprox::create_dirichlet_dofs( )
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
 	{ 
 	  unsigned int  node_id =  elem->node(n);
+	 
 	  //does a node belong to a a dirichlet nodes set?
 	  if (find(n_begin, n_end, node_id) != n_end)
 	    {
-
 	      for (short band = 0 ; band <  opt.number_of_bands; band++)
 		{
 		  dof_map.dof_indices (elem, dof_indices,band); 
@@ -1261,23 +1284,12 @@ void  EnvelopFunctionApprox::create_dirichlet_dofs( )
 //=======================================================================//
 void EnvelopFunctionApprox::make_constraints(void)
 {
-  const Mesh& mesh = es->get_mesh();
-  LinearImplicitSystem& system = es->get_system<LinearImplicitSystem>("Schroedinger");
-  DofMap& dof_map = system.get_dof_map();
+ 
+  DofMap& dof_map = system->get_dof_map();
   
   DofConstraintRow constraint;
   constraint.clear();
-  
-  std::set<unsigned int> :: const_iterator dof_begin = dirichlet_dofs.begin();
-  std::set<unsigned int> :: const_iterator dof_end   = dirichlet_dofs.end();
-  std::set<unsigned int> :: iterator dof_it;
-
-  for (dof_it = dof_begin; dof_it !=  dof_end; dof_it++)
-    {
-      unsigned int n_dof = *dof_it;      
-      dof_map.add_constraint_row (n_dof, constraint) ; 
-    }
-
+ 
 }
 //=======================================================================//
 
@@ -1285,9 +1297,8 @@ void EnvelopFunctionApprox::make_new_dofs( )
 {
   new_dofs.clear();
 
-  const Mesh& mesh = es->get_mesh();
-  LinearImplicitSystem& system = es->get_system<LinearImplicitSystem>("Schroedinger");
-  DofMap& dof_map = system.get_dof_map();
+
+  DofMap& dof_map = system->get_dof_map();
 
   
   number_of_all_dofs  =   dof_map.n_dofs();
@@ -1301,8 +1312,8 @@ void EnvelopFunctionApprox::make_new_dofs( )
 
   for (unsigned int i = 0; i < number_of_all_dofs ; i++)
     {
-        if (find(n_begin, n_end, i) == n_end)
-	  {
+       if ( !( dof_map.is_constrained_dof(i) ) && (find(n_begin, n_end, i) == n_end))
+	{
 	    new_dofs[i].independent = true;
 	    new_dofs[i].new_number = number_it;
 	    number_it++;
@@ -1338,7 +1349,7 @@ bool EnvelopFunctionApprox::compare_eigen_energy_holes(eigen_propblem_solution s
 //=======================================================================//
 EnvelopFunctionApprox:: ~EnvelopFunctionApprox(void)
 {
-  delete(es);
+  es->delete_system(system_name);
 }
 
 

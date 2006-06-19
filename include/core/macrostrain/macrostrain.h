@@ -174,9 +174,10 @@ class Macrostrain
   //! Constructor
   /*!
     \param opt options
-    \mesh  reference to a mesh object
+    \param equation_systems  reference to EquationSystems  object
+    \param problem_name name of the problem that is given to a new system
   */
-  Macrostrain(const options& opt,  Mesh& mesh); //gets mesh 
+  Macrostrain(const options& opt,  EquationSystems& equation_systems, std::string& problem_name); //gets mesh 
   
 
   //----------------------------------------------------------------------
@@ -280,7 +281,18 @@ class Macrostrain
 
  private:
 
-  EquationSystems*   equation_systems; //pointer to the equation system //for test here
+
+  //!pointer to the equation systems 
+  EquationSystems*   equation_systems; 
+
+  //!pointer to the  system used in the simulation 
+  LinearImplicitSystem* my_system;
+  
+  //!static pointer to the  system used in the simulation 
+  static LinearImplicitSystem* my_system_temp;
+
+  //!name of my system
+  std::string system_name;
 
   //!map betwen the element and the result strain in crystal system
   /*!
@@ -357,7 +369,7 @@ class Macrostrain
  
   static inline int delta (int i, int j); //Kronecker detla
 
-  static unsigned int dim; //problem dimension
+  unsigned int dim; //problem dimension
 
   static bool grown_on_substrate; //if there is a substrate
 
