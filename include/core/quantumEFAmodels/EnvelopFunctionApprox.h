@@ -93,6 +93,9 @@ class EnvelopFunctionApprox
     
 
     double disturb_arnoldi; //!< small disturb of the Hamiltonian matrix;
+
+    bool Dirichlet_bc_everywhere;//!< apply dirichlet boundary conditions at all boundaries
+
   };
 
 
@@ -181,10 +184,14 @@ class EnvelopFunctionApprox
     \param strain_in a pointer to Macrostrain object
   */
   void define_strain_data( Macrostrain*  strain_in);
+
+
+  
  
  private:
 
-
+  //!Apply Dirichlet boundary conditions to all boundary points!
+  void apply_diriclet_bc_at_all_boundaries();
   
 
   //!pointer to mesh of the equation systems

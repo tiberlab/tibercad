@@ -55,7 +55,9 @@ void SBbulkHamiltonian::calculate_Hamiltonian_gen(void)
 	single_band_ham.quad[j][i] = 0.5*imass(i+1,j+1);
       }
 
-   rotate_quad(single_band_ham.quad);
+  std::vector<MatrixElement>  temp;
+  temp.push_back(single_band_ham);
+  Hamiltonian.push_back(temp);
 
   
    

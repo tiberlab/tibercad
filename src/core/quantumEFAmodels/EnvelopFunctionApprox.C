@@ -717,7 +717,8 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	  real_column.clear();
 
 	  for (int i = 0; i < n_cols_real; i++) 
-	    if (new_dofs[petsc_cols_real[i]].independent && (petsc_row_vals_real[i] != 0.0) ) real_column.insert(new_dofs[petsc_cols_real[i]].new_number);
+	    if (new_dofs[petsc_cols_real[i]].independent && (petsc_row_vals_real[i] != 0.0) )
+	      real_column.insert(new_dofs[petsc_cols_real[i]].new_number);
 
 	  ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
 	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
@@ -725,7 +726,8 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	  imag_column.clear();
 
 	  for (int i = 0; i < n_cols_real; i++) 
-	    if (new_dofs[petsc_cols_imag[i]].independent && (petsc_row_vals_imag[i] != 0.0) ) imag_column.insert(new_dofs[petsc_cols_imag[i]].new_number);
+	    if (new_dofs[petsc_cols_imag[i]].independent && (petsc_row_vals_imag[i] != 0.0) ) 
+	      imag_column.insert(new_dofs[petsc_cols_imag[i]].new_number);
 
 	  set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
 
@@ -820,8 +822,7 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	      //Distirb matrix, if necessary:
 
 	      if ((n1 ==  row))
-		if ((n1 > size_matrix/2))
-		value += opt.disturb_arnoldi;
+		value += opt.disturb_arnoldi * std::sin( (row/size_matrix) * 100.0);
 
 	      out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
 	      out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
@@ -857,8 +858,11 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 
 void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 {
-
-  create_dirichlet_dofs();
+  if (opt.Dirichlet_bc_everywhere)
+    apply_diriclet_bc_at_all_boundaries();
+   else
+      create_dirichlet_dofs();
+ 
 
   //  make_constraints();
 
@@ -876,7 +880,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 
   std::ostringstream  command_line;
 
-  command_line <<  "eigen_solver  -f1 H.out   -f2 S.out  -eps_gen_hermitian  "; 
+  command_line <<  "mpirun -np 3 -machinefile machines eigen_solver  -f1 H.out   -f2 S.out  -eps_gen_hermitian  "; 
   // command_line << "  -eps_largest_magnitude ";
   command_line << "  -eps_smallest_magnitude ";
   command_line <<  "   -eps_nev     " << ev_number;
@@ -1235,6 +1239,67 @@ void EnvelopFunctionApprox::define_diriclet_nodes(std::vector<unsigned int>&  di
 
 }
 
+void EnvelopFunctionApprox::apply_diriclet_bc_at_all_boundaries()
+{
+  MeshBase::const_element_iterator it = mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end =  mesh->active_local_elements_end();
+
+  dirichlet_dofs.clear();
+  DofMap& dof_map = system->get_dof_map();
+  std::vector<unsigned int> dof_indices;
+
+ 
+
+  for ( ; it != end; ++it)
+    {
+      const Elem* elem = *it;
+      unsigned int n_sides;
+
+      if ( dim > 1 ) 
+	n_sides = elem->n_sides();
+      else
+	n_sides = elem->n_nodes();
+     
+	
+      for (short i = 0; i < n_sides; i++)
+	{
+	 
+	  Elem* el1 = elem->neighbor(i);
+	  if ( (el1 == NULL) || !( el1 -> active() )  ) //check if the side is external 
+	    {
+	      if (dim > 1)
+		{//2D/3D
+		  for (unsigned int nd = 0; nd < elem->n_nodes(); nd++)
+		    {
+		     
+		      if (elem->is_node_on_side(nd, i))
+			for (short band = 0 ; band <  opt.number_of_bands; band++)
+			  {
+			    dof_map.dof_indices (elem, dof_indices,band); 
+			    dirichlet_dofs.insert(dof_indices[nd]);
+			  }
+		    }
+
+		}
+	      else
+		{//1D
+		  for (short band = 0 ; band <  opt.number_of_bands; band++)
+		     {
+		       dof_map.dof_indices (elem, dof_indices,band);
+		       dirichlet_dofs.insert(dof_indices[i]);
+		     }
+		}
+	    }
+	  
+	 
+	
+	 
+	}
+
+
+    }
+
+}
 //======================================================================//
 void  EnvelopFunctionApprox::create_dirichlet_dofs( )
 {
@@ -1281,6 +1346,10 @@ void  EnvelopFunctionApprox::create_dirichlet_dofs( )
   
 
 }
+
+//=======================================================================//
+
+
 //=======================================================================//
 void EnvelopFunctionApprox::make_constraints(void)
 {

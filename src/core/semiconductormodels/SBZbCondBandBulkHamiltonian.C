@@ -6,6 +6,7 @@ SBZbCondBandBulkHamiltonian::SBZbCondBandBulkHamiltonian(ZbDDsemiconductor::ZbDD
 {
   par = parameters;
 
+  min_name = "Gamma";
   //---------------
   if (min_name == "Gamma")
     {
@@ -15,6 +16,8 @@ SBZbCondBandBulkHamiltonian::SBZbCondBandBulkHamiltonian(ZbDDsemiconductor::ZbDD
       imass(3,3) = 1.0/par.m_G;
 
       edge = ( par.Ev + ((1.0/3.0) * par.delta ) + par.EgGamma)/Hartree;
+
+     
 
     }
   
