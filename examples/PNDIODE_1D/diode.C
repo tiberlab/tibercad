@@ -102,7 +102,7 @@ int main (int argc, char** argv)
 
     nside.set_mobilities(800, 200);
     nside.add_recombination_model(SRH);
-    nside.set_SRH_parameters(1e-8, 1e-8);
+    nside.set_SRH_parameters(1e-9, 1e-9);
 
     SemiconductorModel pside(nside);
 

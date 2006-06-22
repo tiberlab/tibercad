@@ -1,14 +1,8 @@
 #ifndef __DEVICEREGION_H__
 #define __DEVICEREGION_H__
 
-#include <iostream>  
-#include <sstream>
-#include <vector>
-#include <string>
 
 
-
-using namespace std;
 
 // base  class
 class DeviceRegion{

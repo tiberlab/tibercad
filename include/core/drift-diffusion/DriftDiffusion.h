@@ -254,6 +254,16 @@ class DriftDiffusion
          */
         bool local_scaling;
 
+        //! linearize continuity equations
+        bool linearize_continuity_eq;
+
+        //! solve quasi equilibrium
+        /*!
+         * Solve only Poisson equation, but with two different (constant)
+         * electro-chemical potentials.
+         */
+        bool quasi_equilibrium;
+
       private:
         
         /**
@@ -275,9 +285,6 @@ class DriftDiffusion
          * The density scaling factor for the hole current equation
          */
         double C0_h;
-
-        //! linearize continuity equations
-        bool linearize_continuity_eq;
 
         friend class DriftDiffusion;
     };
@@ -363,6 +370,9 @@ class DriftDiffusion
      */
     void set_to_remembered_solution(void);
 
+    void set_electron_fermi_level(double Ef_n);
+
+    void set_hole_fermi_level(double Ef_p);
 
     /**
      * Solve the drift-diffusion problem.

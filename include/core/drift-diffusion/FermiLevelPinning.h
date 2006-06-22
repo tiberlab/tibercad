@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "ElectricalContact.h"
+#include "DriftDiffusionProperties.h"
 
 using namespace DriftDiffusionDefs;
 

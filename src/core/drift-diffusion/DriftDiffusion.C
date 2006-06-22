@@ -61,7 +61,8 @@ DriftDiffusion::Options::Options(void)
     C0_e(1), C0_h(1),
     linearize_continuity_eq(false),
     artificial_drift(false),
-    local_scaling(false)
+    local_scaling(false),
+    quasi_equilibrium(false)
 {
 }
 
@@ -87,7 +88,8 @@ DriftDiffusion::Options::Options(const Options& rhs)
     C0_h(rhs.C0_h),
     linearize_continuity_eq(rhs.linearize_continuity_eq),
     artificial_drift(rhs.artificial_drift),
-    local_scaling(rhs.local_scaling)
+    local_scaling(rhs.local_scaling),
+    quasi_equilibrium(quasi_equilibrium)
 {
 }
 
@@ -118,6 +120,7 @@ DriftDiffusion::Options::operator=(const Options& rhs)
     linearize_continuity_eq = rhs.linearize_continuity_eq;
     artificial_drift = rhs.artificial_drift;
     local_scaling = rhs.local_scaling;
+    quasi_equilibrium = rhs.quasi_equilibrium;
   }
   return *this;
 }
@@ -236,8 +239,8 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
   double x0 = -1;
   double phi0 = SimulationOptions::T * Constants::k_B;
   double mu0 = -1;
-  double C0 = 1;
-  double ni0 = 1; // let 1 be the minimum for ni0
+  double C0 = 1e-12;
+  double ni0 = 1e-12; // let 1 be the minimum for ni0
   double eps0 = -1;
   
   // find minimum or maximum by looping over all elements
@@ -254,7 +257,6 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
       _device->get_element_data().get_data(top_parent);
 
     sc->reinit(elem);
-    sc->calculate_equilibrium_properties(_options.coupling);
     
     double mu = sc->get_hole_mobility();
     mu0 = (mu0 > mu) ? mu0 : mu;
@@ -370,6 +372,54 @@ DriftDiffusion::set_to_remembered_solution(void)
   *(system.solution) = system.get_vector("remembered solution");
 
 }
+
+void
+DriftDiffusion::set_electron_fermi_level(double Ef_n)
+{
+  NonlinearImplicitSystem& system =
+    _eq_system->get_system<NonlinearImplicitSystem>(
+        "drift-diffusion coupled");
+  
+  const unsigned int var = system.variable_number("fermi_e");
+  const double phi0 = _scaling.get_potential_scaling();
+  double level = -Ef_n / phi0;
+
+  Mesh& mesh = get_mesh();
+  Mesh::node_iterator it = mesh.active_nodes_begin();
+  const Mesh::node_iterator end = mesh.active_nodes_end();
+
+  for ( ; it != end; ++it)
+  {
+    const Node* node = *it;
+    unsigned int id = node->dof_number(system.number(), var, 0);
+    system.solution->set(id, level);
+  }
+}
+
+void
+DriftDiffusion::set_hole_fermi_level(double Ef_p)
+{
+  NonlinearImplicitSystem& system =
+    _eq_system->get_system<NonlinearImplicitSystem>(
+        "drift-diffusion coupled");
+  
+  const unsigned int var = system.variable_number("fermi_h");
+  const double phi0 = _scaling.get_potential_scaling();
+  double level = -Ef_p / phi0;
+
+  Mesh& mesh = get_mesh();
+  Mesh::node_iterator it = mesh.active_nodes_begin();
+  const Mesh::node_iterator end = mesh.active_nodes_end();
+
+  for ( ; it != end; ++it)
+  {
+    const Node* node = *it;
+    unsigned int id = node->dof_number(system.number(), var, 0);
+    system.solution->set(id, level);
+  }
+
+}
+
 
 int
 DriftDiffusion::find_boundary(const Elem* elem, int side,
@@ -800,8 +850,6 @@ DriftDiffusion::solve_newton(bool restart)
     system.add_vector("old solution");
     system.add_vector("scaling");
 
-    system.nonlinear_solver->matvec = assemble<POISSON>;
-
     initialize_eq_system();
 
     // the simulation voltages for equilibrium are 0.0 ...
@@ -818,6 +866,8 @@ DriftDiffusion::solve_newton(bool restart)
     // TODO: the current guess (equil. potential) is not always a good thing
     //       so it's commented out
     guess_equilibrium(system);
+
+    system.nonlinear_solver->matvec = assemble<POISSON>;
 
     // try to solve the equilibrium potential
     //
@@ -899,6 +949,7 @@ DriftDiffusion::solve_newton(bool restart)
             "drift-diffusion coupled");
     
       *(system.solution) = system.get_vector("equilibrium solution");
+      system.get_vector("old solution") = *(system.solution);
 
       // the simulation voltages for equilibrium are 0.0 ...
       DD::Device::BoundaryList& boundaries = _device->get_boundaries();
@@ -930,11 +981,8 @@ DriftDiffusion::solve_newton(bool restart)
 
 
   // if the voltages didn't change we go on to the refinement
-  if (_simulation_voltages != _old_sim_voltages)
+  if ((_simulation_voltages != _old_sim_voltages) || _options.quasi_equilibrium)
   {
-
-    _options.C0_e = _options.n_max;
-    _options.C0_h = _options.p_max;
 
     switch (_options.coupling)
     {
@@ -960,10 +1008,17 @@ DriftDiffusion::solve_newton(bool restart)
         system.nonlinear_solver->matvec = assemble<FULLYCOUPLED>;
     }
 
+    if (_options.quasi_equilibrium)
+      system.nonlinear_solver->matvec = assemble<POISSON>;
+
+
     //
     // solve for the desired contact voltages
     //
     ContactData voltages = _simulation_voltages;
+
+    _options.C0_e = _options.n_max;
+    _options.C0_h = _options.p_max;
     build_scaling();
 
     bool reached = false;
@@ -976,15 +1031,17 @@ DriftDiffusion::solve_newton(bool restart)
         // try to solve the full step
         try
         {
-          //do_gummel_iterations(3);
+          //do_gummel_iterations(1);
           //system.nonlinear_solver->matvec = assemble<POISSON>;
           //system.solve();
           //_options.linearize_continuity_eq = true;
           //system.nonlinear_solver->matvec = assemble<HCURRENT>;
           //system.solve();
+          //system.nonlinear_solver->matvec = assemble<ECURRENT>;
+          //system.solve();
 
           //system.nonlinear_solver->matvec = assemble<FULLYCOUPLED>;
-          //_options.linearize_continuity_eq = true;
+          //_options.linearize_continuity_eq = false;
           //perf_log.start_event("solve coupled");
           system.solve();
           //perf_log.stop_event("solve coupled");
@@ -1138,10 +1195,10 @@ DriftDiffusion::do_gummel_iterations(int max_it)
       solver_params.nonlinear_max_iterations = 1;
       set_solver_params(*system.nonlinear_solver);
 
-      system.nonlinear_solver->matvec = assemble<ECURRENT>;
+      system.nonlinear_solver->matvec = assemble<HCURRENT>;
       system.solve();
 
-      system.nonlinear_solver->matvec = assemble<HCURRENT>;
+      system.nonlinear_solver->matvec = assemble<ECURRENT>;
       system.solve();
 
       _options.linearize_continuity_eq = false;
@@ -1660,8 +1717,6 @@ DriftDiffusion::build_scaling(void)
 
       assert(elem->n_nodes() == dof_indices_u.size());
 
-      //sol.resize(dof_indices.size());
-
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
         Real u  = phi0 * solution(dof_indices_u[n]);
@@ -1683,11 +1738,13 @@ DriftDiffusion::build_scaling(void)
       
         scaling.set(dof_indices_u[n], 1);
 
-        double nodal_val = nn + a;
+        //double nodal_val = nn + a;
+        double nodal_val = nn;
         nodal_val /= static_cast<Real>(node_conn[elem->node(n)]);
         scaling.add(dof_indices_en[n], nodal_val);
 
-        nodal_val = pp + b;
+        //nodal_val = pp + b;
+        nodal_val = pp;
         nodal_val /= static_cast<Real>(node_conn[elem->node(n)]);
         scaling.add(dof_indices_ep[n], nodal_val);
       }
@@ -1961,7 +2018,7 @@ DriftDiffusion::build_current_density(vector<double>& current,
   const unsigned int dim = mesh.mesh_dimension();
   const unsigned int nn  = mesh.n_elem();
 
-  const unsigned int n_vars  = 6;
+  const unsigned int n_vars  = 10;
   names.resize(n_vars);
   names[0] = "Jn_x";
   names[1] = "Jn_y";
@@ -1969,6 +2026,10 @@ DriftDiffusion::build_current_density(vector<double>& current,
   names[3] = "Jp_x";
   names[4] = "Jp_y";
   names[5] = "Jp_z";
+  names[6] = "J_x";
+  names[7] = "J_y";
+  names[8] = "J_z";
+  names[9] = "J";
 
   current.resize(nn * n_vars);
 
@@ -2048,15 +2109,19 @@ DriftDiffusion::build_current_density(vector<double>& current,
     double sigma_h = sc->get_hole_conductivity() * Constants::e;
 
     unsigned int id = n_vars * elem_number;
-    //current[id] = phi0 / x0 * (sigma_e * en_x + sigma_h * ep_x);
-    //current[id + 1] = phi0 / x0 * (sigma_e * en_y + sigma_h * ep_y);
-    //current[id + 2] = phi0 / x0 * (sigma_e * en_z + sigma_h * ep_z);
     current[id]     = phi0 / x0 * sigma_e * en_x;
     current[id + 1] = phi0 / x0 * sigma_e * en_y;
     current[id + 2] = phi0 / x0 * sigma_e * en_z;
     current[id + 3] = phi0 / x0 * sigma_h * ep_x;
     current[id + 4] = phi0 / x0 * sigma_h * ep_y;
     current[id + 5] = phi0 / x0 * sigma_h * ep_z;
+    double jx = phi0 / x0 * (sigma_e * en_x + sigma_h * ep_x);
+    double jy = phi0 / x0 * (sigma_e * en_y + sigma_h * ep_y);
+    double jz = phi0 / x0 * (sigma_e * en_z + sigma_h * ep_z);
+    current[id + 6] = jx;
+    current[id + 7] = jy;
+    current[id + 8] = jz;
+    current[id + 9] = sqrt(jx * jx + jy * jy + jz * jz);
 
     elem_number++;
   }
@@ -2445,10 +2510,8 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
   const double P0 = (Constants::e * x0 * C0) * 1e4;
   // density scaling for electrons
   double C0_e = options.C0_e;
-  //C0_e = 1;
   // density scaling for holes
   double C0_h = options.C0_h;
-  //C0_h = 1;
   // scaling for recombination rates
   double R0_e = C0_e / scaling.get_time_scaling();
   double R0_h = C0_h / scaling.get_time_scaling();
@@ -2663,9 +2726,9 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       double l2_eps = l2 * epsilon;
 
       double Rn = sc->get_net_electron_recombination_rate();
-      Rn = (fabs(Rn) < 1.0) ? 0.0 : Rn;
+      //Rn = (fabs(Rn) < 1.0) ? 0.0 : Rn;
       double Rp = sc->get_net_hole_recombination_rate();
-      Rp = (fabs(Rp) < 1.0) ? 0.0 : Rp;
+      //Rp = (fabs(Rp) < 1.0) ? 0.0 : Rp;
       
       // remember the maximum densities
       n_max = (n_max > n) ? n_max : n;
@@ -2740,8 +2803,6 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       // 
       if (jacobian != NULL)
       {
-      //if (!linearize)
-      //{
         double drho[3];
         double dRn[3];
         double dRp[3];
@@ -2755,9 +2816,11 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
           dRp[id] = phi0 / R0_h * (1 - b)
             * sc->get_net_hole_recombination_rate_derivatives()[id];
         }
-        if (Rn == 0.0)
+        //if (Rn == 0.0)
+        if (fabs(Rn) < 1e-3)
           dRn[0] = dRn[1] = dRn[2] = 0.0;
-        if (Rp == 0.0)
+        //if (Rp == 0.0)
+        if (fabs(Rp) < 1e-3)
           dRp[0] = dRp[1] = dRp[2] = 0.0;
 
         // d(sigma_n)/du * element-jacobian
@@ -2769,6 +2832,12 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
           * sc->get_hole_conductivity_derivatives()[0]
                * (1 - b);
 
+        if (linearize)
+        {
+          dRn[0] = dRn[1] = dRn[2] = 0.0;
+          dRp[0] = dRp[1] = dRp[2] = 0.0;
+          dsigma_e = dsigma_h = 0.0;
+        }
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
@@ -2845,7 +2914,6 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
 
           }
         }
-      //}
       }
 
       // if we are doing residual, calculate rhs contribution (i.e. Fe)
@@ -3281,6 +3349,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       }
     }
 
+    perf_log.start_event("add");
     if (residual != NULL)
     {
       for (unsigned int i = 0; i < n_dofs_tot; i++)
@@ -3291,12 +3360,13 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
     }
     else
       jacobian->add_matrix(Ke, dof_indices);
+    perf_log.stop_event("add");
 
   } // end loop over elements
 
   // put the maximum densities back into the options
-  options.n_max = (n_max > 1) ? n_max : 1;
-  options.p_max = (p_max > 1) ? p_max : 1;
+  options.n_max = n_max;
+  options.p_max = p_max;
   
   perf_log.stop_event("assembly");
 } 

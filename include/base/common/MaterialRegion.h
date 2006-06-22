@@ -48,15 +48,15 @@ class MaterialRegion:public DeviceRegion
     //! Returns  name of  this \c MaterialRegion.
     /*!
      */
-    string get_region_name() const ;
+    std::string get_region_name() const ;
     //! Returns name of the material  of  this \c MaterialRegion.
     /*!
      */
-    string   get_material_name() const;
+    std::string   get_material_name() const;
     //! Returns name of the crystal structure  of  this \c MaterialRegion.
     /*!
      */
-    string   get_crystal_name()  const;
+    std::string   get_crystal_name()  const;
     //! Returns the doping concentration in    this \c MaterialRegion.
     /*!
      */
@@ -64,7 +64,7 @@ class MaterialRegion:public DeviceRegion
     //! Returns the type ( p or n ) of  doping in    this \c MaterialRegion.
     /*!
      */
-    string  get_doping_type()  const;
+    std::string  get_doping_type()  const;
   
 
   private:
@@ -130,7 +130,7 @@ inline
 }  
 
 inline 
-    string  MaterialRegion::get_region_name() const
+    std::string  MaterialRegion::get_region_name() const
 {
 
 
@@ -140,7 +140,7 @@ inline
 
 
 inline 
-    string MaterialRegion::get_material_name() const
+    std::string MaterialRegion::get_material_name() const
 {
 
 
@@ -150,7 +150,7 @@ inline
 
 
 inline
-    string  MaterialRegion::get_crystal_name() const
+    std::string  MaterialRegion::get_crystal_name() const
 {
   
   return material_region_definition.get_crystal_name() ;
@@ -167,7 +167,7 @@ inline
 }
 
 inline
-    string  MaterialRegion::get_doping_type()  const
+    std::string  MaterialRegion::get_doping_type()  const
 {
   
   return material_region_definition.get_doping_type();

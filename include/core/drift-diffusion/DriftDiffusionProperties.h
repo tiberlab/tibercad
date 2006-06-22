@@ -549,7 +549,7 @@ DriftDiffusionProperties::density(double arg) const
 {
   
   const double arg_max = 150;
-  const double arg_min = -100;
+  const double arg_min = -50;
 
   double dens;
   switch (S)
@@ -586,7 +586,7 @@ DriftDiffusionProperties::density_and_derivatives(double arg, double& density,
 {
   
   const double arg_max = 150;
-  const double arg_min = -100;
+  const double arg_min = -50;
 
   switch (S)
   {
