@@ -649,6 +649,8 @@ DriftDiffusion::solve(bool restart)
     _solution[i] *= get_scaling().get_potential_scaling();
   }
 
+  update_element_list();
+
 }
 
 double
@@ -792,6 +794,22 @@ DriftDiffusion::set_solver_params(NonlinearSolver<Number>& solver,
 
   solver_class.set_ksp_type(solver_params.ksp_type);
   solver_class.set_pc_type(solver_params.pc_type);
+}
+
+void
+DriftDiffusion::update_element_list(void)
+{
+
+  MeshBase::const_element_iterator el =
+                                  get_mesh().active_elements_begin();
+  const MeshBase::const_element_iterator end_el =
+                                  get_mesh().active_elements_end();
+
+  _element_list.clear();
+  for ( ; el != end_el; ++el)
+  {
+    _element_list.insert(*el);
+  }
 }
 
 
@@ -1120,7 +1138,7 @@ DriftDiffusion::solve_newton(bool restart)
 
       is_refined = mesh_refinement.refine_and_coarsen_elements();
       
-      equation_systems.reinit();
+      system.reinit();
       
       find_dirichlet_nodes();
 
@@ -1258,6 +1276,102 @@ DriftDiffusion::get_solution(const Elem* elem,
     solution[n].fermi_h = phi0 * sol(dof_indices_ep[n]);
   }
 
+}
+
+double
+DriftDiffusion::get_electric_potential(const Elem* elem, const Point& p)
+{
+  // this will contain the element in which p lies and for which
+  // DriftDiffusion knows the potential
+  const Elem* el = elem;
+  
+  // check if elem is in _element_list
+  set<const Elem*>::iterator end = _element_list.end();
+  set<const Elem*>::iterator it = _element_list.find(elem);
+
+  if (it == end)
+  {
+    // do we have a parent element in the list?
+    const Elem* parent = elem->parent();
+    while (parent != NULL)
+    {
+      it = _element_list.find(parent);
+
+      if (it != end)
+        break; // we have found it, so get out of the while loop
+
+      parent = parent->parent();
+    }
+    el = parent; // is NULL if no parent
+
+    // no parent, so check for children
+    if (el == NULL)
+    {
+      vector<const Elem*> tree;
+      elem->family_tree(tree, false);
+      
+      unsigned int len = tree.size();
+      for (unsigned int i = 0; i < len; i++)
+      {
+        it = _element_list.find(tree[i]);
+        if (it != end)
+        {
+          if (tree[i]->contains_point(p))
+          {
+            // we have found it, so get out of the for loop
+            el = tree[i];
+            break;
+          }
+        }
+      }
+    }
+  }
+  // now el points to a valid element containing p or is NULL
+
+  double u = 0;
+
+  if (el != NULL)
+  {
+    // we found an element
+
+    NonlinearImplicitSystem* system;
+    system = &_eq_system->get_system<NonlinearImplicitSystem>(
+        "drift-diffusion coupled");
+
+    const NumericVector<Number>& solution = *(system->solution);
+
+    const unsigned int dim = get_mesh().mesh_dimension();
+
+    const DofMap& dof_map = system->get_dof_map();
+
+    const unsigned int u_var = system->variable_number("potential");
+
+    FEType fe_type = system->variable_type(u_var);
+    AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+
+    vector<Point> point(1, FEInterface::inverse_map(dim, fe_type, el, p, 1e-6));
+    fe->reinit(el, &point);
+
+    vector<unsigned int> dof_indices_u;
+    const unsigned int n_dofs = dof_indices_u.size();
+
+    // element shape functions
+    const vector<vector<Real> >& phi = fe->get_phi();
+
+    dof_map.dof_indices(elem, dof_indices_u, u_var);
+
+    // the scaling parameters to scale back the result
+    double phi0 = get_scaling().get_potential_scaling();
+
+    // do interpolation
+    for (unsigned int i = 0; i < n_dofs; i++)
+      u += phi[i][0] * solution(dof_indices_u[i]);
+
+    // scale the potential back
+    u *= phi0;
+  }
+
+  return u;
 }
 
 
@@ -1832,9 +1946,9 @@ DriftDiffusion::build_solution_vector(vector<double>& solution_vector)
 #endif
 }
 
-// implementation taken from libmesh equation_systems.C
+/*
 void
-DriftDiffusion::build_densities(vector<double>& densities,
+DriftDiffusion::build_recombinations(vector<double>& densities,
     vector<string>& names)
 {
   NonlinearImplicitSystem* system;
@@ -1976,6 +2090,166 @@ DriftDiffusion::build_densities(vector<double>& densities,
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
 
         nodal_val = recomb[2];
+        local[id + 4] +=
+          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+      }
+
+    }
+  }
+
+#ifdef HAVE_MPI
+  // Now each processor has computed contriburions to the
+  // soln vector.  Gather them all up.
+  MPI_Allreduce (&local[0], &densities[0], densities.size(),
+		 MPI_REAL, MPI_SUM, libMesh::COMM_WORLD);
+#else
+  densities = local;
+#endif
+
+}
+*/
+
+
+// implementation taken from libmesh equation_systems.C
+void
+DriftDiffusion::build_densities(vector<double>& densities,
+    vector<string>& names)
+{
+  NonlinearImplicitSystem* system;
+
+  system = &_eq_system->get_system<NonlinearImplicitSystem>(
+      "drift-diffusion coupled");
+
+  // aliases for nicer code
+  const DD::Device& device = *(_device);
+  const Mesh& mesh = _device->get_mesh();
+  const NumericVector<Number>& solution = *(system->solution);
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+  // TODO if some elements were coarsened, does this still work??
+  const unsigned int nn  = mesh.n_nodes();
+
+  const unsigned int n_vars  = 5;
+  names.resize(n_vars);
+  names[0] = "electron_density";
+  names[1] = "hole_density";
+  names[2] = "ionized_donors";
+  names[3] = "ionized_acceptors";
+  names[4] = "total_charge";
+
+  densities.resize(nn * n_vars);
+
+  vector<double> local(densities.size());
+  vector<unsigned short int> node_conn(nn);
+
+  vector<double> nodal_val;
+
+  // the scaling parameters to scale back the result
+  double phi0 = get_scaling().get_potential_scaling();
+
+
+  fill(densities.begin(), densities.end(), 0.0);
+  fill(local.begin(), local.end(), 0.0);
+
+  // Get the number of elements that share each node.  We will
+  // compute the average value at each node.
+  {
+    vector<unsigned short int> node_conn_local(node_conn.size());
+    
+    MeshBase::const_element_iterator it =
+      mesh.active_local_elements_begin();
+    const MeshBase::const_element_iterator end =
+      mesh.active_local_elements_end(); 
+
+    for ( ; it != end; ++it)
+      for (unsigned int n=0; n<(*it)->n_nodes(); n++)
+	node_conn_local[(*it)->node(n)]++;
+
+#ifdef HAVE_MPI
+    // Gather the distributed node_conn arrays in the case of
+    // multiple processors
+    //
+    // (Note that we use an unsigned short int here even though an
+    // unsigned char would be more that sufficient.  The MPI 1.1
+    // standard does not require that MPI_SUM, MPI_PROD etc... be
+    // implemented for char data types. 12/23/2003 - BSK)  
+    MPI_Allreduce (&node_conn_local[0], &node_conn[0], node_conn.size(),
+		   MPI_UNSIGNED_SHORT, MPI_SUM, libMesh::COMM_WORLD);
+    
+#else
+    // Without MPI the node_conn_local and the node_conn arrays
+    // are necessarily identical
+    node_conn = node_conn_local;
+    
+#endif
+  }
+
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_e");
+  const unsigned int ep_var = system->variable_number("fermi_h");
+  
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  MeshBase::const_element_iterator it =
+    mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end =
+    mesh.active_local_elements_end(); 
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+#ifdef ENABLE_INFINITE_ELEMENTS
+    // infinite elements should be skipped...
+    if (!elem->infinite())
+#endif
+    {
+      dof_map.dof_indices(elem, dof_indices_u, u_var);
+      dof_map.dof_indices(elem, dof_indices_en, en_var);
+      dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+      DriftDiffusionProperties* sc =
+        device.get_element_data().get_data(elem->top_parent());
+      assert(sc != NULL); 
+
+      sc->reinit(elem);
+
+      assert(elem->n_nodes() == dof_indices_u.size());
+
+      //sol.resize(dof_indices.size());
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
+        Real u  = phi0 * solution(dof_indices_u[n]);
+        Real en = phi0 * solution(dof_indices_en[n]);
+        Real ep = phi0 * solution(dof_indices_ep[n]);
+        
+        sc->calculate_all(u, en, ep, elem->point(n));
+
+        assert (node_conn[elem->node(n)] != 0);
+
+        unsigned int id = n_vars * elem->node(n);
+        double nodal_val = sc->get_electron_density();
+        local[id] +=
+          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+
+        nodal_val = sc->get_hole_density();
+        local[id + 1] +=
+          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+
+        nodal_val = sc->get_ionized_donor_density();
+        local[id + 2] +=
+          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+        
+        nodal_val = sc->get_ionized_acceptor_density();
+        local[id + 3] +=
+          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+
+        nodal_val = sc->get_charge_density();
         local[id + 4] +=
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
       }

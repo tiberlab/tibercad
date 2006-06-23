@@ -26,6 +26,7 @@ extern "C" {
 
 // C++ includes
 #include <vector>
+#include <set>
 #include <map>
 
 // forward declarations
@@ -33,6 +34,7 @@ class DD::Device;
 class ElectricalContact;
 class Mesh;
 class Elem;
+class Point;
 class Node;
 class EquationSystems;
 class NonlinearImplicitSystem;
@@ -416,6 +418,13 @@ class DriftDiffusion
      */
     void get_solution(const Elem* elem, std::vector<Solution>& solution);
 
+    //! Get the electric potential at a given point in a given element
+    /*!
+     * \param elem the pointer to the element
+     * \param p the point in which the potential should be calculated
+     */
+    double get_electric_potential(const Elem* elem, const Point& p);
+
     /**
      * @returns the number of nonlinear iterations needed for the solution
      */
@@ -495,6 +504,12 @@ class DriftDiffusion
      * A list of nodes with dirichlet boundary conditions
      */
     BoundaryNodeList _dirichlet_nodes;
+
+    //! The elements that were used in the last simulation
+    std::set<const Elem*> _element_list;
+
+    //! Update the element list
+    void update_element_list(void);
 
     /**
      * The equation system for this device
