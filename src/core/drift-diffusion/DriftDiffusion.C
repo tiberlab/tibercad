@@ -2484,9 +2484,9 @@ DriftDiffusion::build_electric_field(vector<double>& field,
     }
 
     unsigned int id = n_vars * elem_number;
-    field[id] = phi0 * Ex / x0;
-    field[id + 1] = phi0 * Ey / x0;
-    field[id + 2] = phi0 * Ez / x0;
+    field[id] = -phi0 * Ex / x0;
+    field[id + 1] = -phi0 * Ey / x0;
+    field[id + 2] = -phi0 * Ez / x0;
 
     elem_number++;
   }
