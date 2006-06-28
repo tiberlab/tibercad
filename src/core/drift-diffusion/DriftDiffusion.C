@@ -644,10 +644,10 @@ DriftDiffusion::solve(bool restart)
   
   // should perhaps only be done when the solution is requested
   build_solution_vector(_solution);
-  for (int i = 0; i < _solution.size(); i++)
-  {
-    _solution[i] *= get_scaling().get_potential_scaling();
-  }
+  //for (int i = 0; i < _solution.size(); i++)
+  //{
+  //  _solution[i] *= get_scaling().get_potential_scaling();
+  //}
 
   update_element_list();
 
@@ -983,24 +983,24 @@ DriftDiffusion::solve_newton(bool restart)
         system.solve();
       //_simulation_voltages = _old_sim_voltages;
     }
-  }
 
-  NonlinearImplicitSystem& system =
-    equation_systems.get_system<NonlinearImplicitSystem>(
-        "drift-diffusion coupled");
+    NonlinearImplicitSystem& system =
+      equation_systems.get_system<NonlinearImplicitSystem>(
+          "drift-diffusion coupled");
 
-  NumericVector<Number>& solution = *(system.solution);
-  NumericVector<Number>& old_solution =
-    system.get_vector("old solution");
+    NumericVector<Number>& solution = *(system.solution);
+    NumericVector<Number>& old_solution =
+      system.get_vector("old solution");
 
-  // set the solver parameters (they could have change since we made
-  // the first calculation)
-  set_solver_params(*system.nonlinear_solver);
+    // set the solver parameters (they could have change since we made
+    // the first calculation)
+    set_solver_params(*system.nonlinear_solver);
 
 
-  // if the voltages didn't change we go on to the refinement
-  if ((_simulation_voltages != _old_sim_voltages) || _options.quasi_equilibrium)
-  {
+    // if the voltages didn't change we go on to the refinement
+    //if ((_simulation_voltages != _old_sim_voltages)
+    //  || _options.quasi_equilibrium)
+    //{
 
     switch (_options.coupling)
     {
@@ -1026,6 +1026,7 @@ DriftDiffusion::solve_newton(bool restart)
         system.nonlinear_solver->matvec = assemble<FULLYCOUPLED>;
     }
 
+    // quasi-equilibrium solves only Poisson equation
     if (_options.quasi_equilibrium)
       system.nonlinear_solver->matvec = assemble<POISSON>;
 
@@ -1117,6 +1118,17 @@ DriftDiffusion::solve_newton(bool restart)
 
   }
 
+
+  NonlinearImplicitSystem& system =
+    equation_systems.get_system<NonlinearImplicitSystem>(
+        "drift-diffusion coupled");
+
+  NumericVector<Number>& solution = *(system.solution);
+  NumericVector<Number>& old_solution =
+    system.get_vector("old solution");
+
+
+
   if (params.mesh_refinement)
   {
     MeshRefinement mesh_refinement(device.get_mesh());
@@ -1138,7 +1150,7 @@ DriftDiffusion::solve_newton(bool restart)
 
       is_refined = mesh_refinement.refine_and_coarsen_elements();
       
-      system.reinit();
+      equation_systems.reinit();
       
       find_dirichlet_nodes();
 
@@ -2131,13 +2143,18 @@ DriftDiffusion::build_densities(vector<double>& densities,
   // TODO if some elements were coarsened, does this still work??
   const unsigned int nn  = mesh.n_nodes();
 
-  const unsigned int n_vars  = 5;
+  const unsigned int n_vars  = 8;
   names.resize(n_vars);
   names[0] = "electron_density";
   names[1] = "hole_density";
   names[2] = "ionized_donors";
   names[3] = "ionized_acceptors";
   names[4] = "total_charge";
+  names[5] = "SRH";
+  names[6] = "direct";
+  names[7] = "Auger";
+
+  vector<double> recomb(3, 0.0);
 
   densities.resize(nn * n_vars);
 
@@ -2229,6 +2246,7 @@ DriftDiffusion::build_densities(vector<double>& densities,
         Real ep = phi0 * solution(dof_indices_ep[n]);
         
         sc->calculate_all(u, en, ep, elem->point(n));
+        sc->get_net_recombination_rates(recomb);
 
         assert (node_conn[elem->node(n)] != 0);
 
@@ -2251,6 +2269,18 @@ DriftDiffusion::build_densities(vector<double>& densities,
 
         nodal_val = sc->get_charge_density();
         local[id + 4] +=
+          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+
+        nodal_val = recomb[0];
+        local[id + 5] +=
+          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+        
+        nodal_val = recomb[1];
+        local[id + 6] +=
+          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+
+        nodal_val = recomb[2];
+        local[id + 7] +=
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
       }
 
@@ -3000,9 +3030,9 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       double l2_eps = l2 * epsilon;
 
       double Rn = sc->get_net_electron_recombination_rate();
-      //Rn = (fabs(Rn) < 1.0) ? 0.0 : Rn;
+      //Rn = (fabs(Rn) < 1.0e-19) ? 0.0 : Rn;
       double Rp = sc->get_net_hole_recombination_rate();
-      //Rp = (fabs(Rp) < 1.0) ? 0.0 : Rp;
+      //Rp = (fabs(Rp) < 1.0e-19) ? 0.0 : Rp;
       
       // remember the maximum densities
       n_max = (n_max > n) ? n_max : n;
@@ -3090,11 +3120,11 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
           dRp[id] = phi0 / R0_h * (1 - b)
             * sc->get_net_hole_recombination_rate_derivatives()[id];
         }
-        //if (Rn == 0.0)
-        if (fabs(Rn) < 1e-3)
+        //if (fabs(Rn) < 1e-3)
+        if (Rn == 0.0)
           dRn[0] = dRn[1] = dRn[2] = 0.0;
-        //if (Rp == 0.0)
-        if (fabs(Rp) < 1e-3)
+        //if (fabs(Rp) < 1e-3)
+        if (Rp == 0.0)
           dRp[0] = dRp[1] = dRp[2] = 0.0;
 
         // d(sigma_n)/du * element-jacobian
