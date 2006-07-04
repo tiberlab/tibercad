@@ -217,6 +217,9 @@ class ExcitonTransport
      */
     void set_device(DD::Device* device);
 
+    void set_equation_systems(EquationSystems* eq_systems)
+      { _eq_system = eq_systems; }
+
     //! Set the exciton model
     void set_exciton_model(ExcitonProperties* exciton_model)
       { _exciton_model = exciton_model; };
@@ -230,6 +233,7 @@ class ExcitonTransport
      */
     Options& get_options(void);
 
+    
     //! Set the DriftDiffusion object
     void set_driftdiffusion(DriftDiffusion* dd)
       { _dd_object = dd; };
@@ -258,6 +262,11 @@ class ExcitonTransport
      * \return a constant reference to the simulation mesh
      */
     Mesh& get_mesh(void) const;
+    
+    //! Set a initial guess
+    void set_initial_guess(double guess)
+      { _start_guess = guess; };
+
     
     /**
      * @returns a constant reference to the current scaling parameters
@@ -369,6 +378,9 @@ class ExcitonTransport
      * The scaling parameters
      */
     Scaling _scaling;
+
+    //! A start guess for the electro-chemical potential
+    double _start_guess;
 
     /**
      * The variable names in the same order as they appear in the

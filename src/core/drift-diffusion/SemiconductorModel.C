@@ -332,7 +332,7 @@ SemiconductorModel::extract_band_properties(void)
   // get maximum
   id = 0;
   double kT = SimulationOptions::T * Constants::k_B;
-  double delta_max = 2.0 * kT;
+  double delta_max = 4.0 * kT;
   for (int i = 1; i < vbs.size(); i++)
   {
     if (vbs[i].energy > vbs[id].energy)
@@ -365,6 +365,8 @@ SemiconductorModel::print_info(void) const
       << ", m = " << cbs[i].mass_DOS
       << ", d = " << cbs[i].degeneracy << endl;
   }
+  cout << "   Nc = " << _conduction_band.effective_DOS << " cm^-3"
+    << "  m_dos = " << _conduction_band.effective_mass << "\n";
 
   _bulk_model->calculate_valence_band_extremum();
   const std::vector<DDsemiconductor::band_extremum>& vbs =
@@ -376,6 +378,8 @@ SemiconductorModel::print_info(void) const
       << ", m = " << vbs[i].mass_DOS
       << ", d = " << vbs[i].degeneracy << endl;
   }
+  cout << "   Nv = " << _valence_band.effective_DOS << " cm^-3"
+    << "  m_dos = " << _valence_band.effective_mass << "\n";
 
   cout << " - Ef0 = " << get_equilibrium_fermi_level()
     << ", ni^2 = " << get_intrinsic_density_squared();

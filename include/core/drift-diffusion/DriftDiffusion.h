@@ -315,6 +315,9 @@ class DriftDiffusion
     void set_equation_systems(EquationSystems* eq_systems)
       { _eq_system = eq_systems; }
 
+    //! Initialize the equation system
+    void init(void);
+
     /**
      * @returns a reference to the simulation options
      */

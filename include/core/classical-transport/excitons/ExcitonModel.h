@@ -3,7 +3,6 @@
 #ifndef _EXCITONMODEL_H_
 #define _EXCITONMODEL_H_
 
-
 #include "SimulationOptions.h"
 #include "ExcitonProperties.h"
 #include "TiberCad.h"
@@ -43,7 +42,7 @@ class ExcitonModel : public ExcitonProperties
     void set_effective_mass(double m)
       { _m = m; };
 
-    //! Set the exciton effective mass
+    //! Set the exciton mobility
     void set_mobility(double mu)
       { _mu = mu; };
       

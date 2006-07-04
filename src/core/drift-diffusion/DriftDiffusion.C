@@ -565,7 +565,6 @@ DriftDiffusion::initialize_eq_system(void)
   _eq_system->parameters.set<Real>("linear solver tolerance") =
     solver_params.linear_tolerance;
 
-  //system.init();
   (_eq_system->get_system<NonlinearImplicitSystem>(
                          "drift-diffusion coupled")).init();
 
@@ -810,6 +809,18 @@ DriftDiffusion::update_element_list(void)
   {
     _element_list.insert(*el);
   }
+}
+
+void
+DriftDiffusion::init(void)
+{
+  EquationSystems& equation_systems = get_equation_system();
+
+  // the coupled DD system
+  NonlinearImplicitSystem& system =
+    equation_systems.add_system<NonlinearImplicitSystem>(
+        "drift-diffusion coupled");
+
 }
 
 
