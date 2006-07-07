@@ -32,29 +32,19 @@ template <typename T>
 class TiberPetscNonlinearSolver : public NonlinearSolver<T>
 {
   public:
-    /**
-     *  Constructor. Initializes Petsc data structures
-     */
+    //! Constructor. Initializes Petsc data structures
     TiberPetscNonlinearSolver(void) throw (PetscRuntimeError);
 
-    /**
-     * Destructor.
-     */
+     //! Destructor.
     ~TiberPetscNonlinearSolver(void) throw (PetscRuntimeError);
 
-    /**
-     * Release all memory and clear data structures.
-     */
+    //! Release all memory and clear data structures.
     virtual void clear(void) throw (PetscRuntimeError);
 
-    /**
-     * Initialize data structures if not done so already.
-     */
+    //! Initialize data structures if not done so already.
     virtual void init(void) throw (PetscRuntimeError);
 
-    /**
-     * Call the Petsc solver.
-     */
+    //!Call the Petsc solver.
     virtual std::pair<unsigned int, Real> solve(
         SparseMatrix<T>& jacobian,
         NumericVector<T>& solution,
@@ -63,35 +53,28 @@ class TiberPetscNonlinearSolver : public NonlinearSolver<T>
         const unsigned int iter)
       throw (PetscRuntimeError, KSPDivergedError, SNESDivergedError);
 
-    /**
-     * Set the options for the nonlinear solver
-     */
+    //! Set the options for the nonlinear solver
     void set_snes_options(double rtol = 1e-9, unsigned int max_it = 10,
         double ls_maxstep = 1e3);
 
-    /**
-     * Set the options for the nonlinear solver
-     */
+    //! Set the options for the nonlinear solver
     void set_snes_options(double rtol, double atol,
         unsigned int max_it = 10, double ls_maxstep = 1e3);
 
-    /**
-     * Set the options for the linear solver
-     */
+    //! Set the options for the linear solver
     void set_ksp_options(double rtol = 1e-6, unsigned int max_it = 1000);
 
-    /**
-     * Set the options for the linear solver
-     */
+    //! Set the options for the linear solver
     void set_ksp_options(double rtol, double atol, unsigned int max_it = 1000);
 
-    /**
-     * Set the linear solver (KSP) type
-     */
+    //! Set the linear solver (KSP) type
     void set_ksp_type(KSPType ksp_type);
 
-    /**
-     * Set the preconditioner type
+    //! Set the preconditioner type
+    /*!
+     * Multiplicative composite preconditioning is supported by setting
+     * \c PCCOMPOSITE as preconditioner type. It will use \c PCJACOBI
+     * and \c PCILU
      */
     void set_pc_type(PCType pc_type);
 

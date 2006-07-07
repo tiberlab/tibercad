@@ -170,11 +170,6 @@ class ExcitonTransport
         libMeshEnums::Order integration_order;
 
         /**
-         * The approximation order for the finite elements
-         */
-        libMeshEnums::Order approximation_order;
-
-        /**
          * The nonlinear/linear (PETSc-)solver parameters
          */
         SolverParameters solver_params;
@@ -233,6 +228,8 @@ class ExcitonTransport
      */
     Options& get_options(void);
 
+    //! Initialise the equation system
+    void init(void);
     
     //! Set the DriftDiffusion object
     void set_driftdiffusion(DriftDiffusion* dd)
@@ -263,9 +260,8 @@ class ExcitonTransport
      */
     Mesh& get_mesh(void) const;
     
-    //! Set a initial guess
-    void set_initial_guess(double guess)
-      { _start_guess = guess; };
+    //! Set an initial guess
+    void set_initial_guess(double guess);
 
     
     /**
@@ -379,21 +375,6 @@ class ExcitonTransport
      */
     Scaling _scaling;
 
-    //! A start guess for the electro-chemical potential
-    double _start_guess;
-
-    /**
-     * The variable names in the same order as they appear in the
-     * solution vector
-     */
-    std::vector<std::string> _variables;
-
-    /**
-     * The nodal solution in the order
-     * [ var1\@node1 ... varn\@node1 var1\@node2 ... varn\@node2 ... ]
-     */
-    std::vector<Number> _solution;
-
     /**
      * The number of nonlinear iterations needed
      */
@@ -419,32 +400,20 @@ class ExcitonTransport
      */
     void compute_scaling(void);
 
-    /**
-     * prepare data structures used for solving a system
-     */
-    void prepare_solver(void);
-
-    /**
-     * Reset solver environment.
-     *
-     * Deletes only the \p EquationSystems object, without
-     * touching simulation voltages and solutions.
+    //! Reset solver environment.
+    /*! 
+     * Deletes the \p EquationSystems object, the simulation voltages
+     * vector and the solution and variable vectors.
      */
     void reset_solver(void);
 
-    /**
-     * Cleanup solver environment.
-     *
+    //! Cleanup solver environment.
+    /*! 
      * Deletes the \p EquationSystems object, the simulation voltages
      * vector and the solution and variable vectors.
      */
     void cleanup_solver(void);
 
-    /**
-     * Initializes the equation system \p system and prepares it
-     * to be solved
-     */
-    void initialize_eq_system(EquationSystems& system);
 
     //! Get the equation system
     EquationSystems& get_equation_system(void);
@@ -508,20 +477,6 @@ const Scaling&
 ExcitonTransport::get_scaling(void) const
 {
   return _scaling;
-}
-
-inline
-const std::vector<std::string>&
-ExcitonTransport::get_variable_names(void) const
-{
-  return _variables;
-}
-
-inline
-const std::vector<Number>&
-ExcitonTransport::get_solution(void) const
-{
-  return _solution;
 }
 
 inline

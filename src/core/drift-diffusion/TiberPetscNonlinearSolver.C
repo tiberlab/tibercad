@@ -259,15 +259,48 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
   PC pc;
   ierr = KSPGetPC(ksp, &pc);
   _checkerr(ierr);
-  ierr = PCSetType(pc, _pc_type);
+
+  // get the type of preconditioner
+  PCType pc_type;
+  ierr = PCGetType(pc, &pc_type);
   _checkerr(ierr);
+
+  // - the very first time, there's no preconditioner yet
+  // - if we changed the preconditioner, then we create it from scratch
+  if ((pc_type == NULL) || (strcmp(_pc_type, pc_type) != 0))
+  {
+    ierr = PCSetType(pc, _pc_type);
+    _checkerr(ierr);
+    ierr = PCGetType(pc, &pc_type);
+
+    // for composite type, do some extra stuff
+    if (strcmp(pc_type, PCCOMPOSITE) == 0)
+    {
+      ierr = PCCompositeSetType(pc, PC_COMPOSITE_MULTIPLICATIVE);
+      _checkerr(ierr);
+
+      ierr = PCCompositeAddPC(pc, PCJACOBI);
+      _checkerr(ierr);
+      ierr = PCCompositeAddPC(pc, PCILU);
+      _checkerr(ierr);
+
+      PC sub_pc;
+      ierr = PCCompositeGetPC(pc, 1, &sub_pc);
+      _checkerr(ierr);
+      ierr = PCILUSetZeroPivot(sub_pc, 1e-32);
+      _checkerr(ierr);
+      ierr = PCILUSetDamping(sub_pc, 1e-3);
+      _checkerr(ierr);
+    }
+  }
+
   ierr = PCILUSetZeroPivot(pc, 1e-32);
   _checkerr(ierr);
 
   // to override options from command line
-  // TODO this will be delete in future
-  ierr = SNESSetFromOptions(_snes);
-  _checkerr(ierr);
+  // only for tests
+  //ierr = SNESSetFromOptions(_snes);
+  //_checkerr(ierr);
 
 
   // set functions

@@ -201,11 +201,6 @@ class DriftDiffusion
         libMeshEnums::Order integration_order;
 
         /**
-         * The approximation order for the finite elements
-         */
-        libMeshEnums::Order approximation_order;
-
-        /**
          * The solver method
          *
          * Can be @c NEWTON or @c GUMMEL
@@ -259,12 +254,6 @@ class DriftDiffusion
         //! linearize continuity equations
         bool linearize_continuity_eq;
 
-        //! solve quasi equilibrium
-        /*!
-         * Solve only Poisson equation, but with two different (constant)
-         * electro-chemical potentials.
-         */
-        bool quasi_equilibrium;
 
       private:
         
@@ -316,6 +305,10 @@ class DriftDiffusion
       { _eq_system = eq_systems; }
 
     //! Initialize the equation system
+    /*!
+     * This has to be called before any call to methods which access the
+     * equation system object. So do it early.
+     */
     void init(void);
 
     /**
@@ -365,43 +358,25 @@ class DriftDiffusion
     void set_simulation_voltage(const std::string& boundary,
         double voltage);
 
-    /**
-     * Remember the current solution for future restart
-     */
+    //! Remember the current solution for future restart
     void remember_current_solution(void);
 
-    /**
-     * Reset to the remembered solution
-     */
+    //! Reset to the remembered solution
     void set_to_remembered_solution(void);
 
+    //! Set the electron quasi Fermi level to \c Ef_n
     void set_electron_fermi_level(double Ef_n);
 
+    //! Set the hole quasi Fermi level to \c Ef_p
     void set_hole_fermi_level(double Ef_p);
 
-    /**
-     * Solve the drift-diffusion problem.
-     *
+    //! Solve the drift-diffusion problem.
+    /*!
      * If adaptive mesh refinement was enabled for this solver
      * run, it will be deactivated afterwards and has to be re-enabled
      * explicitly.
      */
     void solve(void);
-
-    /**
-     * Solve the drift-diffusion problem starting from the equilibrium
-     * solution.
-     *
-     * If adaptive mesh refinement was enabled for this solver
-     * run, it will be deactivated afterwards and has to be re-enabled
-     * explicitly.
-     */
-    void solve(bool restart);
-   
-    /**
-     * @returns the variable names in a vector.
-     */
-    const std::vector<std::string>& get_variable_names(void) const;
 
     /**
      * @returns the current nodal solution vector.
@@ -420,6 +395,38 @@ class DriftDiffusion
      * put into
      */
     void get_solution(const Elem* elem, std::vector<Solution>& solution);
+
+    //! Get the solution at the point p in a given element
+    /*!
+     * If \c elem is not in the list of active elements for this simulation,
+     * a parent or children which contains \p will be looked for.
+     * 
+     * \param elem the pointer to the element
+     * \param p the point in which to calculate the potentials
+     * \param solution a reference to the structure where the solution will be
+     * put into
+     *
+     * \pre
+     * The element \c elem is assumed to contain the point \c p.
+     *
+     */
+    void get_solution(const Elem* elem, const Point& p, Solution& solution);
+
+    //! Get the solution at the points p in a given element
+    /*!
+     * If \c elem is not in the list of active elements for this simulation,
+     * a parent or children which contains the points in \c p
+     * will be looked for.
+     * 
+     * \param elem the pointer to the element
+     * \param p vector with the points in which to calculate the potentials
+     * \param solution a reference to the vector where the solutions will be
+     * put into
+     *
+     */
+    void get_solution(const Elem* elem, const std::vector<Point>& p,
+        std::vector<Solution>& solution);
+
 
     //! Get the electric potential at a given point in a given element
     /*!
@@ -603,11 +610,6 @@ class DriftDiffusion
     void compute_scaling(Scaling::ScalingType type = Scaling::UNITS);
 
     /**
-     * prepare data structures used for solving a system
-     */
-    void prepare_solver(void);
-
-    /**
      * Fills the dirichlet nodes data structure.
      */
     void find_dirichlet_nodes(void);
@@ -622,37 +624,62 @@ class DriftDiffusion
      */
     //void set_dirichlet_values(void);
 
-    /**
-     * Reset solver environment.
-     *
+    //! Reset solver environment.
+    /*!
      * Deletes only the \p EquationSystems object, without
      * touching simulation voltages and solutions.
      */
     void reset_solver(void);
 
-    /**
-     * Cleanup solver environment.
-     *
+    //! Cleanup solver environment.
+    /*!
      * Deletes the \p EquationSystems object, the simulation voltages
      * vector and the solution and variable vectors.
      */
     void cleanup_solver(void);
 
-    /**
-     * Initializes the equation system \p system and prepares it
-     * to be solved
-     */
-    //void initialize_eq_system(EquationSystems& system);
-    void initialize_eq_system(void);
 
     //! Get the equation system
     EquationSystems& get_equation_system(void);
 
-    void solve_newton(bool restart);
+    //! Solve using Newton method
+    void solve_newton(void) throw (PetscRuntimeError);
 
-    void solve_gummel(bool restart);
+    //! Solve using an iterative Gummel scheme
+    void solve_gummel(void) throw (PetscRuntimeError);
 
+    //! Calculate terminal currents
     void calculate_currents(void);
+
+    //! Get the solution at the point \c p in a given element
+    /*!
+     * \param elem the pointer to the element
+     * \param p the point in which to calculate the potentials
+     * \param solution a reference to the structure where the solution will be
+     * put into
+     *
+     * \note
+     * This implementation assumes, that \c elem is one of the active elements
+     * of this simulation and that it contains \c p.
+     *
+     */
+    void get_solution_secure(const Elem* elem, const Point& p,
+        Solution& solution);
+
+    //! Get the solution at the points in \c p in a given element
+    /*!
+     * \param elem the pointer to the element
+     * \param a vector containing the points in which to calculate the potentials
+     * \param solution a vector where the solutions will be stored
+     *
+     * \note
+     * This implementation assumes, that \c elem is one of the active elements
+     * of this simulation and that it contains the points in \c p.
+     *
+     */
+    void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
+        std::vector<Solution>& solution);
+
 
     void build_solution_vector(std::vector<double>& vector);
 
@@ -687,9 +714,8 @@ class DriftDiffusion
     //! Makes a first guess of the equilibrium potential
     /**
      * It sets every node to its equilibrium potential.
-     * TODO: find a better guess...
      */
-    void guess_equilibrium(NonlinearImplicitSystem& poisson) const;
+    void guess_equilibrium(void);
 
     //! Assembles the residual vector or the jacobian matrix
     /*!
@@ -753,12 +779,6 @@ DriftDiffusion::get_scaling(void) const
   return _scaling;
 }
 
-inline
-const std::vector<std::string>&
-DriftDiffusion::get_variable_names(void) const
-{
-  return _variables;
-}
 
 inline
 const std::vector<double>&
@@ -790,13 +810,6 @@ DriftDiffusion::get_boundary_currents() const
 
 inline
 void
-DriftDiffusion::solve(void)
-{
-  solve(false);
-}
-
-inline
-void
 DriftDiffusion::assign_boundary_values(double& coeff, double& value,
         const std::vector<double>& coefficients)
 {
@@ -820,5 +833,19 @@ DriftDiffusion::get_mesh(void) const
 {
   return _device->get_mesh();
 }
+
+inline
+void
+DriftDiffusion::get_solution_secure(const Elem* elem, const Point& p,
+        Solution& solution)
+{
+  std::vector<Point> pvec(1, p);
+  std::vector<DriftDiffusion::Solution> sol(1);
+
+  get_solution_secure(elem, pvec, sol);
+
+  solution = sol[0];
+}
+
 
 #endif //_DRIFTDIFFUSION_H_
