@@ -1,5 +1,9 @@
 using namespace std;
 #include "WzDDsemiconductor.h"
+
+#include "Alloy.h"
+#include "getpot.h"
+
 const double WzDDsemiconductor::Hartree;
 //--------------------------------------------------//
 WzDDsemiconductor::WzDDsemiconductor(void): DDsemiconductor()
@@ -174,6 +178,117 @@ void  WzDDsemiconductor::set_Ev(const double Ev)
 {
   par.Ev = Ev;
 }
+//--------------------------------------------------
+
+void WzDDsemiconductor::read_database(const Dummy&)
+{
+
+  GetPot data(_filename);
+
+  const std::string structure = data("structure", "wz");
+
+  assert(structure == "wz");
+
+
+  par.EgGamma = data("Eg_G", 3.51);
+  par.Ev = data("E_v", -0.726);
+
+  par.m_c_zz = data("m_c_zz", 0.20);
+  par.m_c_xx = data("m_c_xx", 0.20);
+  
+  par.A1 = data("A1", -7.21);
+  par.A2 = data("A2", -0.44);
+  par.A3 = data("A3", 6.68);
+  par.A4 = data("A4", -3.46);
+  par.A5 = data("A5", -3.40);
+  par.A6 = data("A6", -4.90); 
+  
+  par.a_x = data("a_x", -4.9);
+  par.a_z = data("a_z", -11.3);
+  
+  par.D1 = data("D1", -3.7);
+  par.D2 = data("D2", 4.5);
+  par.D3 = data("D3", 8.2);
+  par.D4 = data("D4", -4.1);
+  par.D5 = data("D5", -4.0);
+  par.D6 = data("D6", -5.5);
+  par.delta_s = data("delta_s", 0.017);
+  par.delta_cr = data("delta_cr", 0.010);
+
+}
+
+
+//--------------------------------------------------
+void WzDDsemiconductor::build_alloy(const std::string& component2,
+		 const std::string& bowing_params, double content)
+{
+
+  GetPot data(component2);
+  GetPot bowing(bowing_params);
+
+  const std::string structure = data("structure", "wz");
+
+  assert(structure == "wz");
+
+  double (*alloy)(double, double, double, double) =
+    Alloy::calculate_VCA_parameter;
+ 
+
+  par.EgGamma = alloy(data("Eg_G", 3.51), par.EgGamma, content,
+			 bowing("Eg_G", 0.0));
+  par.Ev = alloy(data("E_v", -0.726), par.Ev, content,
+		    bowing("E_v", 0.0));
+
+  par.m_c_zz = alloy(data("m_c_zz", 0.20), par.m_c_zz, content,
+			bowing("m_c_zz", 0.0));
+  par.m_c_xx = alloy(data("m_c_xx", 0.20), par.m_c_xx, content,
+			bowing("m_c_xx", 0.0));
+  
+  par.A1 = alloy(data("A1", -7.21), par.A1, content,
+		    bowing("A1", 0.0));
+  par.A2 = alloy(data("A2", -0.44), par.A2, content,
+		    bowing("A2", 0.0));
+  par.A3 = alloy(data("A3", 6.68), par.A3, content,
+		    bowing("A3", 0.0));
+  par.A4 = alloy(data("A4", -3.46), par.A4,content, 
+		    bowing("A4", 0.0)); 
+  par.A5 = alloy(data("A5", -3.40), par.A5, content,
+		    bowing("A5", 0.0));
+  par.A6 = alloy(data("A6", -4.90), par.A6,content, 
+		    bowing("A6", 0.0));
+  
+  par.a_x = alloy(data("a_x", -4.9), par.a_x, content,
+		     bowing("a_x", 0.0));
+  par.a_z = alloy(data("a_z", -11.3), par.a_z,content, 
+		     bowing("a_z", 0.0));
+  
+  par.D1 = alloy(data("D1", -3.7), par.D1, content,
+		    bowing("D1", 0.0));
+  par.D2 = alloy(data("D2", 4.5), par.D2,content, 
+		    bowing("D2", 0.0));
+  par.D3 = alloy(data("D3", 8.2), par.D3, content,
+		    bowing("D3", 0.0));
+  par.D4 = alloy(data("D4", -4.1), par.D4, content,
+		    bowing("D4", 0.0));
+  par.D5 = alloy(data("D5", -4.0), par.D5, content,
+		    bowing("D5", 0.0));
+  par.D6 = alloy(data("D6", -5.5), par.D6, content,
+		    bowing("D6", 0.0));
+  par.delta_s = alloy(data("delta_s", 0.017), par.delta_s,
+			 content, bowing("delta_s", 0.0));
+  par.delta_cr = alloy(data("delta_cr", 0.010), par.delta_cr,
+			  content, bowing("delta_cr", 0.0));
+
+  
+
+}
+//--------------------------------------------------
+KPbulkHamiltonian::KPparams WzDDsemiconductor::calculate_8x8_kp_params (void )
+{
+
+
+}
+
 //--------------------------------------------------
 KPbulkHamiltonian::KPparams WzDDsemiconductor::calculate_6x6_kp_params (void )
 

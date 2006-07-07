@@ -1,5 +1,8 @@
 using namespace std;
 #include "ZbDDsemiconductor.h"
+#include "getpot.h"
+#include "Alloy.h"
+
 typedef std::complex<double> Complex;
 extern "C" 
 { 
@@ -37,6 +40,104 @@ ZbDDsemiconductor::ZbDDsemiconductor(void): DDsemiconductor()
   
 
 } 
+//-------------------------------------------//
+void ZbDDsemiconductor::read_database(const Dummy&)
+{
+  GetPot data(_filename);
+  const std::string structure = data("structure", "zb");
+  assert(structure == "zb");
+
+  // defaults for GaAs
+  par.EgGamma = data("Eg_G", 1.519);
+  par.EgL = data("Eg_L", 1.815);
+  par.EgX = data("Eg_X", 1.981);
+  par.Ev = data("E_v", 1.346);
+  
+  par.m_G = data("m_G", 0.067);
+  par.m_l_L = data("m_L_l", 1.9);
+  par.m_t_L = data("m_L_t", 0.0754);
+  par.m_l_X = data("m_X_l", 1.3);
+  par.m_t_X = data("m_X_t", 0.23);
+  
+  par.a_c = data("a_c", -9.36);
+  par.a_v = data("a_v", -1.21);
+  par.b = data("b", -2.0);
+  par.d = data("d", -4.8);
+  
+  par.delta = data("delta", 0.341);
+  par.gamma1 = data("gamma1", 6.98);
+  par.gamma2 = data("gamma2", 2.06);
+  par.gamma3 = data("gamma3", 2.93);
+  
+  par.def_vol_X = data("abs_def_pot_X", -0.16);
+  par.def_uniax_X = data("uniax_def_pot_X", 14.26);
+  par.def_vol_L = data("abs_def_pot_L", -4.91);
+  par.def_uniax_L = data("uniax_def_pot_L", 6.5);
+  
+}
+//---------------------------------------------//
+void ZbDDsemiconductor::build_alloy(const std::string& component2,
+			   const std::string& bowing_params, double content)
+{
+   GetPot data(component2);
+   GetPot bowing(bowing_params);
+   const std::string structure = data("structure", "zb");
+
+
+   double (*alloy)(double, double, double, double) =
+     Alloy::calculate_VCA_parameter;
+
+   assert(structure == "zb");
+
+   par.EgGamma = alloy(data("Eg_G", 1.519), par.EgGamma, content,
+			  bowing("Eg_G", 0.0));
+   par.EgL = alloy(data("Eg_L", 1.815), par.EgL, content,
+		      bowing("Eg_L", 0.0));
+   par.EgX = alloy(data("Eg_X", 1.981), par.EgX, content,
+		      bowing("Eg_X", 0.0));
+   par.Ev = alloy(data("E_v", 1.346), par.Ev, content,
+		     bowing("E_v", 0.0));
+   
+   par.m_G = alloy(data("m_G", 0.067), par.m_G, content,
+		      bowing("m_G", 0.0));
+   par.m_t_L = alloy(data("m_L_t", 0.0754), par.m_t_L, content,
+			bowing("m_L_t", 0.0));
+   par.m_l_L = alloy(data("m_L_l", 1.9), par.m_l_L, content,
+			bowing("m_L_l", 0.0));
+   par.m_t_X = alloy(data("m_X_t", 1.3), par.m_t_X, content,
+			bowing("m_X_t", 0.0));
+   par.m_l_X = alloy(data("m_X_l", 0.23), par.m_l_X, content,
+			bowing("m_X_l", 0.0));
+   
+   par.a_c = alloy(data("a_c", -9.36), par.a_c, content,
+		      bowing("a_c", 0.0));
+   par.a_v = alloy(data("a_v", -1.21), par.a_v, content,
+		      bowing("a_v", 0.0));
+   par.b = alloy(data("b", -2.0), par.b, content,
+		    bowing("b", 0.0));
+   par.d = alloy(data("d", -4.8), par.d, content,
+		    bowing("d", 0.0));
+
+   par.delta = alloy(data("delta", 0.341), par.delta, content,
+			bowing("delta", 0.0));
+   par.gamma1 = alloy(data("gamma1", 6.98), par.gamma1, content,
+			 bowing("gamma1", 0.0));
+   par.gamma2 = alloy(data("gamma2", 2.06), par.gamma2, content,
+			 bowing("gamma2", 0.0));
+   par.gamma3 = alloy(data("gamma3", 2.93), par.gamma3, content,
+			 bowing("gamma3", 0.0));
+   
+   par.def_vol_X = alloy(data("abs_def_pot_X", -0.16),
+			    par.def_vol_X, content, bowing("abs_def_pot_X", 0.0));
+   par.def_uniax_X = alloy(data("uniax_def_pot_X", 14.26),
+			      par.def_uniax_X, content, bowing("uniax_def_pot_X", 0.0));
+   par.def_vol_L = alloy(data("abs_def_pot_L", -4.91),
+			    par.def_vol_L, content, bowing("abs_def_pot_L", 0.0));
+   par.def_uniax_L = alloy(data("uniax_def_pot_L", 6.5),
+			      par.def_uniax_L, content, bowing("uniax_def_pot_L", 0.0));
+   
+
+}
 
 //--------------------------------------------//
 ZbDDsemiconductor::ZbDDsemiconductor(const ZbDDparameters& params): DDsemiconductor()
@@ -254,6 +355,12 @@ void ZbDDsemiconductor::set_Ev(const double Ev)
   par.Ev = Ev;
 }
 
+//-----------------------------------------------------------//
+
+KPbulkHamiltonian::KPparams ZbDDsemiconductor::calculate_8x8_kp_params (void )
+{
+
+}
 
 //-----------------------------------------------------------//
  

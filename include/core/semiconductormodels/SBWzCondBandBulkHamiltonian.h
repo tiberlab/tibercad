@@ -11,19 +11,38 @@ class SBWzCondBandBulkHamiltonian : public SBbulkHamiltonian
 
  public:
   //!Constructor
+
+  SBWzCondBandBulkHamiltonian( );
+
+  //!Constructor 
   /*!
     \param parameters parameters that describe a wurtzite crystal
   */
   SBWzCondBandBulkHamiltonian(WzDDsemiconductor::WzDDparameters& parameters);
   
+  //!Copy-constructor
+  SBWzCondBandBulkHamiltonian(const SBWzCondBandBulkHamiltonian &  model);
+
+
+  //!Calculates band edge and effective mass for conduction band at Gamma point
+  void calculate_edge_and_mass();
 
 
   
-  virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
+  void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
+
+
+  
 
  private:
 
+ 
+
   WzDDsemiconductor::WzDDparameters  par; 
+
+ 
+
+ 
 
 };
 

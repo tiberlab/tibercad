@@ -1,43 +1,67 @@
 using namespace std;
 #include "SBWzCondBandBulkHamiltonian.h"
+#include "getpot.h"
+#include "Alloy.h"
+
+//===========================================================//
+SBWzCondBandBulkHamiltonian::SBWzCondBandBulkHamiltonian( ):SBbulkHamiltonian()
+{
+  
+}
+
+SBWzCondBandBulkHamiltonian::SBWzCondBandBulkHamiltonian(const SBWzCondBandBulkHamiltonian &  model):SBbulkHamiltonian(model)
+{ 
+  par = model.par;
+  calculate_edge_and_mass();
+}
 
 //=======================================================================//
-SBWzCondBandBulkHamiltonian::SBWzCondBandBulkHamiltonian(WzDDsemiconductor::WzDDparameters& parameters)
+void  SBWzCondBandBulkHamiltonian::calculate_edge_and_mass()
+{
+  //--------------------------------------------------
+  //if there is a semiconductor associated with the class, we take its  parameters
+  if (semiconductor != NULL)
+    {
+           par = (dynamic_cast<WzDDsemiconductor*>(semiconductor))->get_parameters();
+    }
+
+
+  //--------------------------------------------------
+  imass = Tensor2Sym(0);
+  imass(1,1) = 1.0/par.m_c_xx;
+  imass(2,2) = 1.0/par.m_c_xx;
+  imass(3,3) = 1.0/par.m_c_zz;
+
+  //--------------------------------
+  double d1 =  par.delta_cr;
+  double d2 =  par.delta_s;
+  double d3 =  d2;
+  
+  double E1 = d1 + d2;
+
+  double E2 = (d1 - d2)/2.0 + sqrt( (d1-  d2/2.0)*( d1- d2/2.0) + 2.0 * d3 * d3 );
+
+  double Ev_top;
+
+  if (E1 > E2)
+    Ev_top = par.Ev + E1;
+  else
+    Ev_top = par.Ev + E2;
+  
+  //--------------------------------------------------------------------------------/
+
+  edge = (Ev_top + par.EgGamma)/Hartree;
+
+  //--------------------------------------------------------------------------------//
+}
+
+//=======================================================================//
+SBWzCondBandBulkHamiltonian::SBWzCondBandBulkHamiltonian(WzDDsemiconductor::WzDDparameters& parameters):SBbulkHamiltonian()
 {
   par = parameters;
-
-  
-      imass = Tensor2Sym(0);
-      imass(1,1) = 1.0/par.m_c_xx;
-      imass(2,2) = 1.0/par.m_c_xx;
-      imass(3,3) = 1.0/par.m_c_zz;
-
-      //--------------------------------
-      double d1 =  par.delta_cr;
-      double d2 =  par.delta_s;
-      double d3 =  d2;
-  
-      double E1 = d1 + d2;
-
-      double E2 = (d1 - d2)/2.0 + sqrt( (d1-  d2/2.0)*( d1- d2/2.0) + 2.0 * d3 * d3 );
-
-      double Ev_top;
-
-      if (E1 > E2)
-	Ev_top = par.Ev + E1;
-      else
-	Ev_top = par.Ev + E2;
-
-      //--------------------------------
-
-      edge = (Ev_top + par.EgGamma)/Hartree;
-
-     
-
- 
+  calculate_edge_and_mass();
   
   
-  //--------------
 }
 
 
@@ -51,3 +75,8 @@ void SBWzCondBandBulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_
     + ((strain_crystal(1,1) + strain_crystal(2,2))* par.a_x + par.a_z *  strain_crystal(3,3))/Hartree;
     
 }
+
+//============================================================================//
+
+
+

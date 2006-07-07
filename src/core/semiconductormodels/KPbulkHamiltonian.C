@@ -1,4 +1,11 @@
+#include "ZbDDsemiconductor.h"
+#include "WzDDsemiconductor.h"
 #include "KPbulkHamiltonian.h"
+#include "getpot.h"
+#include "Alloy.h"
+
+ 
+
 using namespace std;
 //==================================================================
 
@@ -40,12 +47,26 @@ void KPbulkHamiltonian::nullify_parameters(void)
 
   strainM = Tensor2Sym(0);
 }
+//================================================================
+KPbulkHamiltonian::~KPbulkHamiltonian()
+{
+  delete(semiconductor);
+}
+  
+
+
+
 
 
 //=================================================================
 
-KPbulkHamiltonian::KPbulkHamiltonian(const string model)
+KPbulkHamiltonian::KPbulkHamiltonian(const string model) : EFAbulkHamiltonian()
 {
+  
+  semiconductor = NULL;
+
+  model_name = model;
+
   nullify_parameters();
 
   if (model == "6x6")
@@ -69,17 +90,75 @@ KPbulkHamiltonian::KPbulkHamiltonian(const string model)
 
     
 }
-//=================================================================
+//=================================================================//
 
-KPbulkHamiltonian::KPbulkHamiltonian(void)
+KPbulkHamiltonian::KPbulkHamiltonian(void) : EFAbulkHamiltonian()
 {
   nullify_parameters();
-
+  semiconductor = NULL;
   band_min = 0;
   band_max = 7;
 
 }
+//==================================================================//
 
+KPbulkHamiltonian::KPbulkHamiltonian(const KPbulkHamiltonian& kp_ham)
+{
+  semiconductor = kp_ham.semiconductor;
+  par = kp_ham.par;
+  band_min = kp_ham.band_min;
+  band_max = kp_ham.band_max;
+  Ham = kp_ham.Ham;
+  _filename = kp_ham._filename;
+  model_name = kp_ham.model_name;
+
+}
+
+//==================================================================//
+void KPbulkHamiltonian::read_database(const Dummy& dd)
+{
+  
+  GetPot data(_filename);
+  const std::string structure = data("structure", "zb");
+
+  
+
+  if (structure == "zb")
+    {
+      
+      ZbDDsemiconductor* zbsc = new ZbDDsemiconductor();
+      semiconductor = zbsc;
+      
+    }
+
+  if (structure == "wz")
+    {
+      
+      
+      WzDDsemiconductor* wzsc = new WzDDsemiconductor();
+      semiconductor =  wzsc;
+
+    
+    }
+
+  semiconductor->read_database(dd);
+  par = semiconductor->calculate_kp_params (model_name);
+
+
+
+
+}
+//==================================================================//
+void KPbulkHamiltonian::build_alloy(const std::string& component2,
+			   const std::string& bowing_params, double content)
+{
+
+  semiconductor->build_alloy( component2, bowing_params, content);
+  par = semiconductor->calculate_kp_params (model_name);
+
+}
+
+//==================================================================//
  
 void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
 {

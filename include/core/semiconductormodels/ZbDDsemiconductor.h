@@ -169,16 +169,15 @@ class ZbDDsemiconductor  : public DDsemiconductor
 
   */
  
-  KPbulkHamiltonian::KPparams calculate_6x6_kp_params (void );
+  virtual KPbulkHamiltonian::KPparams calculate_6x6_kp_params (void );
 
-  //! calculates valence bnad eigenenergies from 6 band kp model
-  /*!
-    \param k_vector  vector of k-vectors in crystal system
-  */
-  //std::vector< std::vector<double> >  calculate_vb_bulk_states(std::vector<Tensor1> & k_vector);
-  
+  //! Calculates k.p parameters in atomic units for 8 band valence band calculation (not coded yet!)
+  virtual KPbulkHamiltonian::KPparams calculate_8x8_kp_params (void );
 
- 
+  void read_database(const Dummy&);
+
+  void build_alloy(const std::string& component2,
+			   const std::string& bowing_params, double content);
 
  private:
 

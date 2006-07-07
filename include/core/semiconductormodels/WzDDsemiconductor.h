@@ -118,14 +118,23 @@ class  WzDDsemiconductor : public DDsemiconductor
     Uses 6 band Luttinger kp theory 
   */
   virtual void  calculate_valence_band_extremum(void);
- 
-  KPbulkHamiltonian::KPparams calculate_6x6_kp_params (void );
+
+  //! Calculates k.p parameters in atomic units for 6 band valence band calculation (not coded yet!)
+   virtual KPbulkHamiltonian::KPparams calculate_6x6_kp_params (void );
+
+  //! Calculates k.p parameters in atomic units for 8 band valence band calculation (not coded yet!)
+   virtual KPbulkHamiltonian::KPparams calculate_8x8_kp_params (void );
 
   //! Get a writeable reference to the physical parameters
   WzDDparameters& get_parameters(void);
 
   //! Set the physical parameters
   void set_parameters(const WzDDparameters& parameters);
+
+  void read_database(const Dummy&);
+
+  void build_alloy(const std::string& component2,
+			   const std::string& bowing_params, double content);
  
  private:
 

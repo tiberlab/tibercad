@@ -1,10 +1,14 @@
 #ifndef _KPBULKHAMILTONIAN_H_
 #define _KPBULKHAMILTONIAN_H_
 //! A class that builds kp bulk Hamiltonian
+
 #include <complex>
 #include <vector>
 #include "tensor.h"
 #include "EFAbulkHamiltonian.h"
+
+
+class DDsemiconductor;
 
 typedef std::complex<double> Complex;
 
@@ -65,9 +69,27 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   KPbulkHamiltonian(const std::string model_name );
   
 
+  //!Copy-constructor
+  KPbulkHamiltonian(const KPbulkHamiltonian& kp_ham);
  
-
+  //! destructor. 
+  ~KPbulkHamiltonian(void);
   
+  virtual void read_database(const Dummy&);
+
+  //! \deprecated { Create parameters for an alloy }
+  /*!
+   * \deprecated { This method will live as long as the database is
+   * not used yet.}
+   */
+
+  virtual void build_alloy(const std::string& component2,
+			   const std::string& bowing_params, double content);
+
+
+
+  void set_data_file(const std::string& filename)
+      { _filename = filename; };
 
 
   virtual void calculate_Hamiltonian_k_par(void);
@@ -82,6 +104,7 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
 
 
   bool kpVVtermSymmetric;
+
   Tensor2Sym strainM;
 
   bool kpCVtermSymmetric;
@@ -105,12 +128,21 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   std::vector<std::vector<MatrixElement> > Ham; 
 
 
-
+  //! nullify k.p  parameters
   void   nullify_parameters(void); 
 
+  //! k.p wurztzite parameters
   KPparams par ;
 
  
-  
+  std::string _filename;
+
+  //model_name  name of the model "8x8" or "6x6"
+  std::string model_name;
+
+  //! a pointer to a semiconductor that contains parameters
+  DDsemiconductor* semiconductor;
+ 
+
 };
 #endif

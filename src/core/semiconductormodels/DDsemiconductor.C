@@ -4,17 +4,20 @@ typedef std::complex<double> Complex;
 extern "C" 
 { 
   //ZHEEV( JOBZ, UPLO,  N, A,           LDA, W, WORK, LWORK, RWORK,INFO )
-  void zheev_(char& jobs, char& UPLO, int& N, Complex* ham6x6matrix, int& N, double* eigvals,  Complex* WORK, int& LWORK, double* RWORK, int& info);
+  void zheev_(char& jobs, char& UPLO, int& N, Complex* ham6x6matrix, int& N, double* eigvals,  Complex* WORK, int& LWORK, double* RWORK, int& info); 
 };
 const double DDsemiconductor::Hartree;
-using namespace std;
+using namespace std; 
+
+ 
+
 //---------------------------------------------------------------------------------------------//
 DDsemiconductor::DDsemiconductor()
 {
   strain = Tensor2Sym(0);
   energy_cutoff=1.0; //1eV default value
   strained = false;
-  k_max = 1e-4;
+  k_max = 1e-5;
 }
 
 
@@ -204,6 +207,12 @@ vector<vector<double> > DDsemiconductor::get_valence_kp_dispersion(Tensor1 k_i, 
 
   return(result);
 
+}
+//---------------------------------------------------------------------------------------------//
+KPbulkHamiltonian::KPparams   DDsemiconductor::calculate_kp_params (std::string kp_model )
+{
+  if (kp_model == "6x6")   return(calculate_6x6_kp_params());
+  if (kp_model == "8x8")   return(calculate_8x8_kp_params());
 }
 
 

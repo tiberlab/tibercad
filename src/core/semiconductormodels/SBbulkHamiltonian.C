@@ -1,9 +1,29 @@
 using namespace std;
 #include "SBbulkHamiltonian.h"
+#include  "ZbDDsemiconductor.h"
+#include  "WzDDsemiconductor.h"
+#include "getpot.h"
+#include "Alloy.h"
+
+//======================================================================//
+SBbulkHamiltonian::~SBbulkHamiltonian()
+{
+  delete(semiconductor);
+}
+//=======================================================================//
+SBbulkHamiltonian::SBbulkHamiltonian(const SBbulkHamiltonian& model)
+{
+  edge = model.edge;
+  imass = model.imass;
+  _filename = model._filename;
+  single_band_ham = model.single_band_ham;
+  semiconductor = model.semiconductor;
+}
 
 //=======================================================================//
 void SBbulkHamiltonian::set_band_edge_energy(double energy)
 {
+  semiconductor = NULL;
   edge = energy/Hartree; 
 }
 
@@ -11,6 +31,8 @@ void SBbulkHamiltonian::set_band_edge_energy(double energy)
 SBbulkHamiltonian::SBbulkHamiltonian(void)
 {
   edge = 0.0;
+  semiconductor = NULL;
+  
   imass = Tensor2Sym(1);
 }
 //=======================================================================//
@@ -18,6 +40,7 @@ SBbulkHamiltonian::SBbulkHamiltonian(double band_edge, Tensor2Sym& imass1)
 {
   edge = band_edge/Hartree;
   imass = imass1;
+  semiconductor = NULL;
 }
 //=======================================================================//
 
@@ -36,6 +59,9 @@ void SBbulkHamiltonian::set_diag_mass_tensor(double m_xx, double m_yy, double m_
 
 void SBbulkHamiltonian::calculate_Hamiltonian_gen(void)
 {
+
+ 
+  
  
   //Hamiltonian is H = 1/2 * (1/m_{ij})d/dx_i d/dx_j + E0
  
@@ -111,5 +137,48 @@ void SBbulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, d
   Hamiltonian[0][0].constant = Hamiltonian_without_strain_pot[0][0].constant  -  el_potential/Hartree;
 }
 
+
+//======================================================================//
+void SBbulkHamiltonian::read_database(const Dummy& dd)
+{
+  GetPot data(_filename);
+  const std::string structure = data("structure", "zb");
+  cerr << "_filename " << _filename << "\n";
+  cerr << "structure  "  << structure << "\n";
+  
+  if (structure == "zb")
+    {
+      
+      ZbDDsemiconductor* zbsc = new ZbDDsemiconductor();
+      semiconductor = zbsc;
+      
+    }
+
+  if (structure == "wz")
+    {
+      
+      WzDDsemiconductor* wzsc = new WzDDsemiconductor();
+      semiconductor =  wzsc;
+    }
+
+  semiconductor->read_database(dd);
+ 
+  calculate_edge_and_mass();
+  
+
+
+}
+
+
+//======================================================================//
+
+void SBbulkHamiltonian::build_alloy(const std::string& component2,
+			   const std::string& bowing_params, double content)
+{
+  semiconductor->build_alloy( component2, bowing_params, content);
+
+  calculate_edge_and_mass();
+
+}
 
 //======================================================================//

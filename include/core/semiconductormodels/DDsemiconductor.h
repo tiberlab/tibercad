@@ -93,13 +93,33 @@ class DDsemiconductor
    //! absolute value of k-vector for DOS mass calculation [a.u.]
   double k_max;
 
+  //! Calculates k.p parameters in atomic units for 6 band valence band calculation
+  virtual KPbulkHamiltonian::KPparams   calculate_6x6_kp_params (void )=0;
+
+  //! Calculates k.p parameters in atomic units for 8 band valence band calculation
+  virtual KPbulkHamiltonian::KPparams   calculate_8x8_kp_params (void )=0;
+
+
+  //! Calculates k.p parameters in atomic units for 6 or 8 band valence band calculation
+  KPbulkHamiltonian::KPparams   calculate_kp_params (std::string kp_model );
+
+
+  
+  virtual void read_database(const Dummy&)=0;
+
+  virtual void build_alloy(const std::string& component2,
+			   const std::string& bowing_params, double content)=0;
+
+  void set_data_file(const std::string& filename)
+      { _filename = filename; };
+
  private:
 
   //! Hartree energy in eV
   static const double Hartree = 27.2113961;
    
 
-  virtual KPbulkHamiltonian::KPparams calculate_6x6_kp_params(void) = 0;
+ 
 
  protected:
 
@@ -119,7 +139,10 @@ class DDsemiconductor
 
   //! information about valence bands
   std::vector<band_extremum>  valence_band;
+
+
   
+  std::string _filename;
 
 };
 

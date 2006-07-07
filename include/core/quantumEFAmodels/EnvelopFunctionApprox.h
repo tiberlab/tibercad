@@ -59,6 +59,7 @@
 #include <tecplot_io.h>
 #include "mesh_data.h"
 #include "macrostrain.h"
+#include "DriftDiffusion.h"
 class EnvelopFunctionApprox
 {
  public:
@@ -90,7 +91,8 @@ class EnvelopFunctionApprox
     double spectrum_shift; //!< shift of spectrum [eV]
 
     bool  consider_strain; //!< apply strain effect to the EFA Hamiltonian;
-    
+
+    bool  consider_potential; //!< apply strain effect to the EFA Hamiltonian;
 
     double disturb_arnoldi; //!< small disturb of the Hamiltonian matrix;
 
@@ -123,9 +125,9 @@ class EnvelopFunctionApprox
     \param equation_systems reference to the "global" equation systems object
     \param opt  parameters  of the model
     \param problem_nam name of the problem that will be asigned to a new system
-    \param strain1 pointer to the macrostrain model
+   
   */
-  EnvelopFunctionApprox(EquationSystems&  equation_systems, std::string& problem_name, options& opt, Macrostrain* strain1);
+  EnvelopFunctionApprox(EquationSystems&  equation_systems, std::string& problem_name, options& opt);
 
 
   //!destructor
@@ -186,7 +188,10 @@ class EnvelopFunctionApprox
   void define_strain_data( Macrostrain*  strain_in);
 
 
-  
+
+  //! Passes a pointer of a Drift-Diffusion object
+  void define_Poisson_data( DriftDiffusion*  drift_in);
+
  
  private:
 
@@ -206,6 +211,8 @@ class EnvelopFunctionApprox
 
   string system_name;
 
+  //pointer to a drift-diffusion object that is used to get potential data 
+  DriftDiffusion* poisson_equation;
 
   //pointer to the macrostrain object that is used to get strain data 
   Macrostrain* strain;

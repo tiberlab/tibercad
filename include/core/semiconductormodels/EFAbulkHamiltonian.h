@@ -88,7 +88,7 @@ class EFAbulkHamiltonian: public PhysicalProperties
 
  private:
   
-  MatrixElement Ham;
+  // MatrixElement Ham;
 };
 
 #endif

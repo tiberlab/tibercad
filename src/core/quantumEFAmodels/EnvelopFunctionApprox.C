@@ -5,7 +5,7 @@ const double EnvelopFunctionApprox::Hartree;
 
 
 EnvelopFunctionApprox:: EnvelopFunctionApprox(EquationSystems&  equation_systems, std::string& problem_name, 
-					      options& opt1, Macrostrain* strain1 )
+					      options& opt1 )
 {
 
   
@@ -107,6 +107,12 @@ void EnvelopFunctionApprox::define_strain_data( Macrostrain*  strain_in)
   strain = strain_in;
 }
 
+//============================================================//
+
+void EnvelopFunctionApprox::define_Poisson_data( DriftDiffusion*  drift_in)
+{
+  poisson_equation = drift_in;
+}
 
 //============================================================//
 void EnvelopFunctionApprox::set_material_parameters(std::map<unsigned int, EFAbulkHamiltonian*>&  bulkHamiltonian_in)
@@ -216,13 +222,20 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	  //--------------------------------------------------------------------------------
 	  /*
 	    We assume that strain and electric potential may be different for different quadrature points
-	    It is done for the sake of a multiscale generalization
+	    It is done for a sake of a multiscale generalization
 	  */
-	  if (opt.consider_strain)
+	  if (opt.consider_strain) 
 	    {
 	      strain_crystal_system = strain->get_strain_crystal(elem , q_point[qp]);
 	    }
  
+
+	  if (opt.consider_potential)
+	    {
+	      electric_potential = poisson_equation -> get_electric_potential(elem, q_point[qp]);
+	     
+	    }
+
 
 	  element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
 	  
@@ -315,8 +328,12 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
 
-      ham_real.add(opt.spectrum_shift/Hartree,s_real);//apply spectrum shift.
-
+      ham_real.add(  (opt.disturb_arnoldi * (std::rand()/( (double)RAND_MAX + 1)) + 1.0)
+		   *opt.spectrum_shift/Hartree,s_real);//apply spectrum shift.
+/*
+      ham_real.scale(Hartree);
+      ham_imag.scale(Hartree);
+*/
       vector<unsigned int> dof_indices_tmp;
 
       dof_indices_tmp = dof_indices;
@@ -339,11 +356,11 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
  
 //this is only to test
-/*
+
   Ham_real->print_matlab("ham_r_matlab.m");
   Ham_imag->print_matlab("ham_i_matlab.m");
   S_real->print_matlab("s.m");
-*/
+
 
   dof_map.print_dof_constraints();
      
@@ -822,7 +839,7 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	      //Distirb matrix, if necessary:
 
 	      if ((n1 ==  row))
-		value += opt.disturb_arnoldi * std::sin( (row/size_matrix) * 100.0);
+		value += opt.disturb_arnoldi * (std::rand()/( (double)RAND_MAX + 1));
 
 	      out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
 	      out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
@@ -880,18 +897,20 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 
   std::ostringstream  command_line;
 
-  command_line <<  "mpirun -np 3 -machinefile machines eigen_solver  -f1 H.out   -f2 S.out  -eps_gen_hermitian  "; 
+  // command_line <<  "mpirun -np 3 -machinefile machines   "  ;
+  command_line <<  "eigen_solver  -f1 H.out   -f2 S.out  -eps_gen_hermitian  "; 
   // command_line << "  -eps_largest_magnitude ";
   command_line << "  -eps_smallest_magnitude ";
   command_line <<  "   -eps_nev     " << ev_number;
   command_line <<  "   -eps_ncv     " << 3 * ev_number;
-  command_line <<  "   -eps_type    " << opt.solver;
-  command_line <<  "   -eps_tol     " << opt.eigen_solver_tolerance;
-  command_line <<  "   -eps_max_it  " << opt.max_iteration_number;
+  command_line <<  "   -eps_type    " << opt.solver ;
+  // command_line <<  "   -eps_tol     " << opt.eigen_solver_tolerance;
+  // command_line <<  "   -eps_max_it  " << opt.max_iteration_number;
   //command_line <<  "   -st_type sinvert ";
   //command_line <<  "   -st_shift    " << opt.spectrum_shift/Hartree;
   //command_line <<  "    -st_matmode inplace    ";
   //  command_line <<  " -st_ksp_type bcgsl  -st_pc_type jacobi";
+  // command_line << "    -st_ksp_type preonly -st_pc_type cholesky  -st_ksp_rtol 1e-10 ";
   command_line <<  "    \n";
 
 

@@ -246,7 +246,7 @@ void Macrostrain::create_substate_nodes_set()
       bc_pos =  boundary_cond_nodes.find(substrate_bc_number);
       if (bc_pos == boundary_cond_nodes.end()) 
 	{
-	  cerr << "Can not find boundary condition for substrate #  "<< substrate_bc_number  <<"  \n";
+	  cerr << "Macrostrain::create_substate_nodes_set Can not find boundary condition for substrate #  "<< substrate_bc_number  <<"  \n";
 	  exit(1);
 	}
   
