@@ -1,5 +1,6 @@
 // the following _HAS_ to be included first
 #include "Read_MSH.h"
+#include "ReadISEGrid.h"
 
 #include "ElementData.h"
 #include "OhmicContact.h"
@@ -11,11 +12,11 @@
 #include "mesh.h"
 #include "mesh_modification.h"
 #include "mesh_data.h"
-#include "mesh_refinement.h"
 #include "mesh_generation.h"
 #include "elem.h"
 #include "getpot.h"
-#include "gnuplot_io.h"
+#include "gmv_io.h"
+#include "GMVIO_cell.h"
 #include "equation_systems.h"
 
 #include <algorithm>
@@ -25,8 +26,6 @@ using namespace DriftDiffusionDefs;
 
 void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
     ElectricalContact* desc, const Mesh& mesh);
-
-
 
 class Dummy {};
 
@@ -39,78 +38,85 @@ int main (int argc, char** argv)
     GetPot input_file("diode.in");
 
     string meshfile = input_file("meshfile", "");
+    string material = input_file("material", "Si");
+    const double mesh_units = input_file("mesh_units", 1e-4);
+    int scaling = input_file("scaling", 1);
+    bool linearize = input_file("linearize", false);
 
     double start_voltage = input_file("start_voltage", 0.0);
     double stop_voltage = input_file("stop_voltage", 0.0);
     unsigned int voltage_steps = input_file("voltage_steps", 1);
 
+    double min_voltage_step = input_file("min_voltage_step", 1e-3);
 
     const string method = input_file("simulation_method", "NEWTON");
     const string statistics = input_file("statistics", "B");
 
     double nonlin_rtol = input_file("nonlinear_tolerance", 1e-9);
+    double dd_nonlin_atol = input_file("nonlinear_abs_tolerance", 1e-12);
     double lin_rtol = input_file("linear_tolerance", 1e-12);
+    double dd_lin_atol = input_file("linear_abs_tolerance", 1e-9);
     int integration_order = input_file("integration_order", 5);
     int nonlin_max_it = input_file("nonlinear_max_it", 15);
     int lin_max_it = input_file("linear_max_it", 500);
     double nonlin_ls_maxstep = input_file("nonlinear_ls_maxstep", 0.025);
 
-    const double mesh_units = input_file("mesh_units", 1e-4);
-    double xmin = input_file("xmin", -0.5);
-    double xmax = input_file("xmax", 0.5);
-
     double n_doping = input_file("n_doping", 1e18);
     double p_doping = input_file("p_doping", 1e18);
-
-    unsigned int initial_density = input_file("initial_density", 20);
+    double mu_e = input_file("electron_mobility", 800);
+    double mu_h = input_file("hole_mobility", 200);
+    double tau_n = input_file("recombination_time_n", 1e-9);
+    double tau_p = input_file("recombination_time_p", 1e-9);
+    double C_direct = input_file("direct_recombination", 1e-8);
 
     unsigned int refinement_steps = input_file("max_refinement_steps", 0);
-    double refine_frac = input_file("refine_fraction", 0.7);
-    double coarsen_frac = input_file("coarsen_fraction", 0.3);
 
     vector<unsigned int> phys_reg_ID(2);
-    phys_reg_ID[0] = 1; // p
-    phys_reg_ID[1] = 2; // n
+    phys_reg_ID[0] = 1; // n
+    phys_reg_ID[1] = 2; // p
     
     vector<unsigned int> BC_reg_ID(2);
     BC_reg_ID[0] = 1; // anode
     BC_reg_ID[1] = 2; // cathode
 
-    unsigned int dim = 1;
+    
+    int dim = 2;
     Mesh mesh(dim);
     MeshData_elements meshdata(mesh);
     meshdata.enable_compatibility_mode();
     
-    Read_MSH readmesh(meshfile, phys_reg_ID, BC_reg_ID, dim, mesh, meshdata);
+    ReadISEGrid readmesh(meshfile.c_str(), mesh, meshdata);
     map<unsigned int, vector<unsigned int> > boundary_nodes;
     readmesh.get_BC_data(boundary_nodes);
     
-
     mesh.print_info();
 
 
     SemiconductorModel nside;    
-    nside.set_data_file("Si.dat");
+    nside.set_data_file(material+".dat");
     if (statistics == "FD")
       nside.set_statistics(TiberCad::FERMIDIRAC);
     else
       nside.set_statistics(TiberCad::BOLTZMANN);
 
-    Dummy d;
-    nside.read_database(d);
-
-    nside.set_n_dopant(Dopant(n_doping, 0.025, 2));
-    nside.set_mobilities(283.8, 160.3);
     nside.add_recombination_model(SRH);
-    nside.set_SRH_parameters(1e-7, 3e-8);
+    nside.set_SRH_parameters(tau_n, tau_p);
+    nside.add_recombination_model(DIRECT);
+    nside.set_direct_rec_parameters(C_direct);
 
     SemiconductorModel pside(nside);
-    pside.read_database(d);
+    nside.set_SRH_parameters(tau_n, tau_p);
 
-    pside.set_p_dopant(Dopant(p_doping, 0.01, 4));
-    nside.set_mobilities(283.8, 160.3);
-    nside.add_recombination_model(SRH);
-    nside.set_SRH_parameters(1e-7, 3e-8);
+    nside.set_n_dopant(Dopant(n_doping, 0.054, 2));
+    //pside.set_p_dopant(Dopant(p_doping, 0.17, 4));
+    pside.set_p_dopant(Dopant(p_doping, 0.045, 4));
+    //pside.set_n_dopant(Dopant(5e16, 0.054, 2));
+
+    Dummy d;
+    nside.read_database(d);
+    pside.read_database(d);
+    nside.set_mobilities(mu_e, mu_h);
+    pside.set_mobilities(mu_e, mu_h);
 
 
     ElementData element_data;
@@ -141,9 +147,12 @@ int main (int argc, char** argv)
     }
 
     OhmicContact anode("anode");
+    //SchottkyContact anode("anode");
+    //anode.set_schottky_barrier_height(0.8);
     anode.set_zero_derivative_bc(FERMIE);
     OhmicContact cathode("cathode");
     cathode.set_zero_derivative_bc(FERMIH);
+
 
     BoundaryData boundary_data;
     {
@@ -164,6 +173,7 @@ int main (int argc, char** argv)
     }
 
 
+
     DD::Device device(&mesh, &element_data, &boundary_data);
     bool device_integrity = device.check_integrity();
     if (device_integrity)
@@ -173,7 +183,7 @@ int main (int argc, char** argv)
       cout << "Device bad.\n\n";
       return 1;
     }
-
+    
   
     EquationSystems eqsys(mesh);
     DriftDiffusion dd(&device);
@@ -182,16 +192,25 @@ int main (int argc, char** argv)
 
     DriftDiffusion::Options& params = dd.get_options();
     params.max_refinement_steps = refinement_steps;
-    params.solver_params.nonlinear_max_iterations = nonlin_max_it;
+    params.solver_params.nonlinear_max_iterations = 25;
+    //params.solver_params.nonlinear_max_iterations = nonlin_max_it;
     params.solver_params.linear_max_iterations = lin_max_it;
     params.solver_params.nonlinear_tolerance = nonlin_rtol;
+    params.solver_params.nonlinear_abs_tolerance = dd_nonlin_atol;
     params.solver_params.ls_maxstep = nonlin_ls_maxstep;
     params.solver_params.linear_tolerance = lin_rtol;
+    params.solver_params.linear_abs_tolerance = dd_lin_atol;
+    params.min_voltage_step = min_voltage_step;
+    params.linearize_continuity_eq = linearize;
     params.integration_order =
       static_cast<libMeshEnums::Order>(integration_order);
-    params.refine_fraction = refine_frac;
-    params.coarsen_fraction = coarsen_frac;
-    params.solver_params.pc_type = PCILU;
+
+    if (!scaling)
+      params.scaling_type = Scaling::NONE;
+    //else
+    //  params.local_scaling = true;
+
+    //params.artificial_drift = true;
 
     if (method == "GUMMEL")
     {
@@ -205,28 +224,35 @@ int main (int argc, char** argv)
     // mesh drawn in um
     params.mesh_units = mesh_units;
 
-    dd.enable_mesh_refinement();
+    //dd.enable_mesh_refinement();
 
-    
+
+
     dd.set_simulation_voltage("cathode", 0.0);
     dd.set_simulation_voltage("anode", 0.0);
     {
-      vector<double> densities;
-      vector<string> names;
-      cout << "Solving equilibrium... " << flush;
+      cout << "Solving equilibrium...\n" << flush;
+      params.coupling = POISSON;
       dd.solve();
       dd.remember_current_solution();
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
         ", final residual: " << dd.get_final_residual() << ")\n" << flush;
-      dd.build_densities(densities, names);
-      GnuPlotIO(dd.get_mesh(), "Equilibrium densities",
-          GnuPlotIO::GRID_ON).write_nodal_data("output/densities_eq",
-          densities, names);
+      
+      vector<double> densities;
+      vector<string> names;
       dd.build_band_edges(densities, names);
-      GnuPlotIO(dd.get_mesh(), "Equilibrium band profile",
-          GnuPlotIO::GRID_ON).write_nodal_data("output/bands_eq",
+      GMVIO(dd.get_mesh()).write_nodal_data("output/bands_eq.gmv",
+          densities, names);
+      dd.build_densities(densities, names);
+      GMVIO(dd.get_mesh()).write_nodal_data("output/densities_eq.gmv",
+          densities, names);
+      dd.build_electric_field(densities, names);
+      GMVIO_cell(dd.get_mesh()).write_ascii_cell_data("output/field_eq.gmv",
           densities, names);
     }
+    cout << material << " properties:\n";
+    nside.print_info();
+
 
     const Scaling& sc = dd.get_scaling();
     cout << "Scaling parameters:\n";
@@ -237,7 +263,7 @@ int main (int argc, char** argv)
     cout << "     t0  : " << sc.get_time_scaling() << "\n";
     cout << "     R0  : " << sc.get_recombination_scaling() << "\n\n";
 
-
+    params.solver_params.nonlinear_max_iterations = nonlin_max_it;
 
     cout << "\nBegin sweep...\n" << flush;
     params.coupling = FULLYCOUPLED;
@@ -272,28 +298,36 @@ int main (int argc, char** argv)
     for ( ; it != voltages.end(); ++it)
     {
       dd.set_simulation_voltage("anode", *it);
-      cout << " Solving U = " << *it << " V ... " << flush;
-      dd.enable_mesh_refinement();
+      cout << " Solving U = " << *it << " V ...\n" << flush;
+      //if (*it >= 1.7)
+      //  dd.enable_mesh_refinement();
+      
       dd.solve();
+      
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
         ", final residual: " << dd.get_final_residual() << ")\n" << flush;
+      ostringstream filename;
       vector<double> densities;
       vector<string> names;
-      ostringstream filename;
-      filename << "output/bands_" << *it;
-      ostringstream title;
-      title << "Band profile for " << *it << " V";
+      ostringstream filename_b;
+      filename_b << "output/bands_" << *it << ".gmv";
       dd.build_band_edges(densities, names);
-      GnuPlotIO(dd.get_mesh(), title.str(),
-          GnuPlotIO::GRID_ON).write_nodal_data(filename.str(),
+      GMVIO(dd.get_mesh()).write_nodal_data(filename_b.str(),
           densities, names);
       ostringstream filename_d;
-      filename_d << "output/densities_" << *it;
-      ostringstream title_d;
-      title_d << "Densities for " << *it << " V";
+      filename_d << "output/densities_" << *it << ".gmv";
       dd.build_densities(densities, names);
-      GnuPlotIO(dd.get_mesh(), title_d.str(),
-          GnuPlotIO::GRID_ON).write_nodal_data(filename_d.str(),
+      GMVIO(dd.get_mesh()).write_nodal_data(filename_d.str(),
+          densities, names);
+      ostringstream filename_f;
+      filename_f << "output/field_" << *it << ".gmv";
+      dd.build_electric_field(densities, names);
+      GMVIO_cell(dd.get_mesh()).write_ascii_cell_data(filename_f.str(),
+          densities, names);
+      ostringstream filename_c;
+      filename_c << "output/current_" << *it << ".gmv";
+      dd.build_current_density(densities, names);
+      GMVIO_cell(dd.get_mesh()).write_ascii_cell_data(filename_c.str(),
           densities, names);
 
       const map<const ElectricalContact*, double>& curr =
@@ -315,38 +349,39 @@ int main (int argc, char** argv)
     it = zero;
     if (it != voltages.begin())
     {
-      bool restart = true;
+      dd.set_to_remembered_solution();
       do
       {
         --it;
         dd.set_simulation_voltage("anode", *it);
-        cout << " Solving U = " << *it << " V ... " << flush;
+        cout << " Solving U = " << *it << " V ...\n" << flush;
         dd.enable_mesh_refinement();
-        if (restart)
-          dd.set_to_remembered_solution();
         dd.solve();
         cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
           ", final residual: " << dd.get_final_residual() << ")\n" << flush;
         vector<double> densities;
         vector<string> names;
-        ostringstream filename;
-        filename << "output/bands_" << *it;
-        ostringstream title;
-        title << "Band profile for " << *it << " V";
+        ostringstream filename_b;
+        filename_b << "output/bands_" << *it << ".gmv";
         dd.build_band_edges(densities, names);
-        GnuPlotIO(dd.get_mesh(), title.str(),
-          GnuPlotIO::GRID_ON).write_nodal_data(filename.str(),
+        GMVIO(dd.get_mesh()).write_nodal_data(filename_b.str(),
             densities, names);
         ostringstream filename_d;
-        filename_d << "output/densities_" << *it;
-        ostringstream title_d;
-        title_d << "Densities for " << *it << " V";
+        filename_d << "output/densities_" << *it << ".gmv";
         dd.build_densities(densities, names);
-        GnuPlotIO(dd.get_mesh(), title_d.str(),
-          GnuPlotIO::GRID_ON).write_nodal_data(filename_d.str(),
+        GMVIO(dd.get_mesh()).write_nodal_data(filename_d.str(),
+            densities, names);
+        ostringstream filename_f;
+        filename_f << "output/field_" << *it << ".gmv";
+        dd.build_electric_field(densities, names);
+        GMVIO_cell(dd.get_mesh()).write_ascii_cell_data(filename_f.str(),
+            densities, names);
+        ostringstream filename_c;
+        filename_c << "output/current_" << *it << ".gmv";
+        dd.build_current_density(densities, names);
+        GMVIO_cell(dd.get_mesh()).write_ascii_cell_data(filename_c.str(),
             densities, names);
 
-        restart = false;
         const map<const ElectricalContact*, double>& curr =
           dd.get_boundary_currents();
         file << *it << "  "
@@ -359,6 +394,7 @@ int main (int argc, char** argv)
     }
     
     file.close();
+
   }
 
   return libMesh::close();
@@ -368,7 +404,7 @@ int main (int argc, char** argv)
 void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
     ElectricalContact* desc, const Mesh& mesh)
 {
-  vector<int>::const_iterator n_it;
+  vector<unsigned int>::const_iterator n_it;
   const vector<unsigned int>::const_iterator n_begin = nodes.begin();
   const vector<unsigned int>::const_iterator n_end = nodes.end();
 
@@ -383,12 +419,17 @@ void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
     {
       if (elem->neighbor(s) == NULL)
       {
-        if (find(n_begin, n_end, elem->node(s)) != n_end)
+        bool found = true;
+        AutoPtr<Elem> side = elem->build_side(s);
+        for (int i = 0; i < side->n_nodes(); i++)
+        {
+          if (find(n_begin, n_end, side->node(i)) == n_end)
+            found = false;
+        }
+        if (found)
           data.set_data(BoundaryData::ElementSide(elem, s), desc);
       }
     }
   }
 }
-
-
 

@@ -1088,9 +1088,10 @@ DriftDiffusion::solve_gummel(void) throw (PetscRuntimeError)
 }
 
 
+template <typename T>
 void
 DriftDiffusion::get_solution(const Elem* elem, const vector<Point>& p,
-    vector<DriftDiffusion::Solution>& solution)
+    vector<T>& solution)
 {
   unsigned int np = p.size();
   solution.resize(np);
@@ -1155,10 +1156,10 @@ DriftDiffusion::get_solution(const Elem* elem, const vector<Point>& p,
 }
 
 
-
+template <typename T>
 void
 DriftDiffusion::get_solution(const Elem* elem, const Point& p,
-    DriftDiffusion::Solution& solution)
+    T& solution)
 {
 
   // this will contain the element in which p lies and for which
@@ -1212,6 +1213,61 @@ DriftDiffusion::get_solution(const Elem* elem, const Point& p,
     get_solution_secure(el, p, solution);
 }
 
+void
+DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
+    vector<double>& solution)
+{
+  unsigned int np = p.size();
+  solution.resize(np);
+  if (np == 0) return;
+
+  NonlinearImplicitSystem* system;
+  system = &_eq_system->get_system<NonlinearImplicitSystem>(
+      "drift-diffusion coupled");
+
+  const NumericVector<Number>& ddsol = *(system->solution);
+
+  const unsigned int dim = get_mesh().mesh_dimension();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int u_var = system->variable_number("potential");
+
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+
+  vector<unsigned int> dof_indices_u;
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+
+  vector<Point> points(np);
+  FEInterface::inverse_map(dim, fe_type, elem, p, points);
+  //for (unsigned int n = 0; n < np; n++)
+  //  points[n] = FEInterface::inverse_map(dim, fe_type, elem, p[n], 1e-6);
+
+  fe->reinit(elem, &points);
+
+  dof_map.dof_indices(elem, dof_indices_u, u_var);
+
+  const unsigned int n_dofs = dof_indices_u.size();
+
+  // the scaling parameters to scale back the result
+  double phi0 = get_scaling().get_potential_scaling();
+
+  for (unsigned int n = 0; n < np; n++)
+  {
+    double u = 0;
+    // do interpolation
+    for (unsigned int i = 0; i < n_dofs; i++)
+      u  += phi[i][n] * ddsol(dof_indices_u[i]);
+
+    // scale the potential back
+    u  *= phi0;
+
+    solution[n] = u;
+  }
+}
 
 void
 DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
@@ -1326,6 +1382,17 @@ DriftDiffusion::get_solution(const Elem* elem,
 
 }
 
+/*
+void
+DriftDiffusion::get_electric_potential(const Elem* elem, const vector<Point>& p,
+    vector<double>& potential)
+{
+  unsigned int np = p.size();
+  potential.resize(np);
+  if (np == 0) return;
+
+}
+
 double
 DriftDiffusion::get_electric_potential(const Elem* elem, const Point& p)
 {
@@ -1421,7 +1488,7 @@ DriftDiffusion::get_electric_potential(const Elem* elem, const Point& p)
   }
 
   return u;
-}
+}*/
 
 
 double
@@ -3712,3 +3779,14 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
   perf_log.stop_event("assembly");
 } 
 
+
+//
+// explicit instantiations of template methods
+//
+template void
+DriftDiffusion::get_solution<double>(const Elem* elem, const vector<Point>& p,
+    vector<double>& solution);
+
+template void
+DriftDiffusion::get_solution<DriftDiffusion::Solution>(const Elem* elem,
+    const vector<Point>& p, vector<DriftDiffusion::Solution>& solution);

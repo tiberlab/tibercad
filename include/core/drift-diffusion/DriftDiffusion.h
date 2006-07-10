@@ -391,8 +391,7 @@ class DriftDiffusion
     //! Get the solution on the nodes of a given element
     /*!
      * \param elem the pointer to the element
-     * \param solution a reference to the vector where the solution will be
-     * put into
+     * \param[inout] solution the vector where the solution will be stored
      */
     void get_solution(const Elem* elem, std::vector<Solution>& solution);
 
@@ -403,14 +402,14 @@ class DriftDiffusion
      * 
      * \param elem the pointer to the element
      * \param p the point in which to calculate the potentials
-     * \param solution a reference to the structure where the solution will be
-     * put into
+     * \param[inout] solution the structure where the solution will be stored
      *
      * \pre
      * The element \c elem is assumed to contain the point \c p.
      *
      */
-    void get_solution(const Elem* elem, const Point& p, Solution& solution);
+    template <typename T>
+    void get_solution(const Elem* elem, const Point& p, T& solution);
 
     //! Get the solution at the points p in a given element
     /*!
@@ -420,18 +419,30 @@ class DriftDiffusion
      * 
      * \param elem the pointer to the element
      * \param p vector with the points in which to calculate the potentials
-     * \param solution a reference to the vector where the solutions will be
-     * put into
+     * \param[inout] solution the vector where the solutions
+     * will be stored
      *
      */
+    template <typename T>
     void get_solution(const Elem* elem, const std::vector<Point>& p,
-        std::vector<Solution>& solution);
+        std::vector<T>& solution);
+
+
+    //! Get the electric potential at a given point in a given element
+    /*!
+     * \param elem the pointer to the element
+     * \param p  vector with the points in which to calculate the potential
+     * \param[inout] potential the vector where the potential will be stored
+     */
+    void get_electric_potential(const Elem* elem, const std::vector<Point>& p,
+        std::vector<double>& potential);
 
 
     //! Get the electric potential at a given point in a given element
     /*!
      * \param elem the pointer to the element
      * \param p the point in which the potential should be calculated
+     * \return the potential in point \c p
      */
     double get_electric_potential(const Elem* elem, const Point& p);
 
@@ -653,6 +664,9 @@ class DriftDiffusion
 
     //! Get the solution at the point \c p in a given element
     /*!
+     * Depending on the template argument, get the electric potential
+     * or all three potentials.
+     *
      * \param elem the pointer to the element
      * \param p the point in which to calculate the potentials
      * \param solution a reference to the structure where the solution will be
@@ -663,8 +677,9 @@ class DriftDiffusion
      * of this simulation and that it contains \c p.
      *
      */
+    template <typename T>
     void get_solution_secure(const Elem* elem, const Point& p,
-        Solution& solution);
+        T& solution);
 
     //! Get the solution at the points in \c p in a given element
     /*!
@@ -679,6 +694,21 @@ class DriftDiffusion
      */
     void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
         std::vector<Solution>& solution);
+
+    //! Get the electric potential at the points in \c p in a given element
+    /*!
+     * \param elem the pointer to the element
+     * \param a vector containing the points in which to calculate the potentials
+     * \param solution a vector where the potential will be stored
+     *
+     * \note
+     * This implementation assumes, that \c elem is one of the active elements
+     * of this simulation and that it contains the points in \c p.
+     *
+     */
+    void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
+        std::vector<double>& solution);
+
 
 
     void build_solution_vector(std::vector<double>& vector);
@@ -834,18 +864,39 @@ DriftDiffusion::get_mesh(void) const
   return _device->get_mesh();
 }
 
+template <typename T>
 inline
 void
 DriftDiffusion::get_solution_secure(const Elem* elem, const Point& p,
-        Solution& solution)
+        T& solution)
 {
   std::vector<Point> pvec(1, p);
-  std::vector<DriftDiffusion::Solution> sol(1);
+  std::vector<T> sol(1);
 
   get_solution_secure(elem, pvec, sol);
 
   solution = sol[0];
 }
+
+inline
+double
+DriftDiffusion::get_electric_potential(const Elem* elem, const Point& p)
+{
+  double pot;
+  get_solution(elem, p, pot);
+
+  return pot;
+}
+
+inline
+void
+DriftDiffusion::get_electric_potential(const Elem* elem,
+    const std::vector<Point>& p, std::vector<double>& potential)
+{
+  get_solution(elem, p, potential);
+}
+
+
 
 
 #endif //_DRIFTDIFFUSION_H_

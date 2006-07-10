@@ -1,0 +1,75 @@
+DF-ISE text
+
+# filename: /home/nano0/maufder/Projects/TIBERCAD/tibercad/examples/PLMCN6/DIODE2/diode.bnd
+# written by the library Delaunay
+Info {
+version     =  1
+type        = boundary
+dimension   =  2
+nb_vertices =  10
+nb_edges    =  11
+nb_faces    =  0
+nb_elements =  4
+nb_regions  =  4
+regions     = [ "n_type" "p_type" "anode" "cathode" ]
+materials     = [ Silicon Silicon Contact Contact ]
+ }
+Data {
+CoordSystem {
+translate = [  0  0  0 ]
+transform = [  1  0  0  0  0  1  0  -1  0 ]
+ }
+Vertices (  10) {
+ 0 0
+ 0 50.00000000000001
+ 60.00000000000001 50.00000000000001
+ 60.00000000000001 49.50000000000001
+ 75 49.50000000000001
+ 100 49.50000000000001
+ 100 0
+ 0 75
+ 40 75
+ 60.00000000000001 75
+ }
+Edges (  11) {
+ 1 0
+ 1 2
+ 3 2
+ 4 3
+ 5 4
+ 5 6
+ 6 0
+ 1 7
+ 7 8
+ 8 9
+ 2 9
+ }
+Locations (  11) {
+e f e e e e e e e e e }
+Elements (  4) {
+ 4 7 -1 1 -3 -4 -5 5 6
+ 4 5 7 8 9 -11 -2
+ 1 7 8
+ 1 5 4
+ }
+Region ("n_type") {
+material =Silicon
+Elements ( 1) {
+ 0}
+}
+Region ("p_type") {
+material =Silicon
+Elements ( 1) {
+ 1}
+}
+Region ("anode") {
+material =Contact
+Elements ( 1) {
+ 2}
+}
+Region ("cathode") {
+material =Contact
+Elements ( 1) {
+ 3}
+}
+}

@@ -14,7 +14,7 @@ srcfiles 	:= $(wildcard *.C)
 objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
 
 # dimension of the example
-DIM := 1
+DIM := 2
 # order of the mesh elements (1 or 2)
 ORDER := 1
 
@@ -26,9 +26,9 @@ all: main
 
 main: $(objects)
 	@echo "Linking main..."
-	@$(CXX) $(CXXFLAGS) $(objects) $(TIBER_OBJECTS) -o main $(LIBS) $(LDFLAGS)
+	@$(CXX) $(CXXFLAGS) $(objects) $(TIBER_OBJECTS) -o main $(LIBS) $(LDFLAGS) 
 
-run: all diode.msh
+run: all
 	@echo "Running example..."
 	@[ -d output ] || mkdir output
 	./main
