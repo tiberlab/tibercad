@@ -458,6 +458,12 @@ class DriftDiffusionProperties : public PhysicalProperties
 
     TiberCad::Statistics _statistics;
 
+    //std::map<ID, RecombinationModel*> _recombination_models;
+
+    //std::map<ID, DopingModel*> _doping_models;
+
+    //MobilityModel* _mobility_model;
+
 
 };
 

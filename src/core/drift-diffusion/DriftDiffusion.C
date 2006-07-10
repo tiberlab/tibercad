@@ -3784,6 +3784,10 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
 // explicit instantiations of template methods
 //
 template void
+DriftDiffusion::get_solution<double>(const Elem* elem, const Point& p,
+    double& solution);
+
+template void
 DriftDiffusion::get_solution<double>(const Elem* elem, const vector<Point>& p,
     vector<double>& solution);
 
