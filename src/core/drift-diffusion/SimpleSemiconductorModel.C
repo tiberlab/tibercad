@@ -12,21 +12,18 @@ using namespace DriftDiffusionDefs;
 
 SimpleSemiconductorModel::SimpleSemiconductorModel(void)
   : Parent(),
-    _recombination(0),
     _is_prepared(false)
 {
 }
 
+/*
 SimpleSemiconductorModel::SimpleSemiconductorModel(
     const SimpleSemiconductorModel& model)
   : Parent(model),
-    _recombination(model._recombination),
-    _is_prepared(model._is_prepared),
-    _electron_recombination_time(model._electron_recombination_time),
-    _hole_recombination_time(model._hole_recombination_time),
-    _direct_rec_param(model._direct_rec_param)
+    _is_prepared(model._is_prepared)
 {
 }
+*/
 
 void
 SimpleSemiconductorModel::prepare_element_data(void)
@@ -78,25 +75,6 @@ SimpleSemiconductorModel::calculate_all(double potential,
     hole_conductivity = hole_mobility * p;
     hole_conductivity_derivatives[0] = hole_mobility * dp;
     hole_conductivity_derivatives[2] = hole_mobility * dp;
-  //}
-  
-  electron_recombination_rate = 0;
-  electron_recombination_rate_derivatives[0] = 0;
-  electron_recombination_rate_derivatives[1] = 0;
-  electron_recombination_rate_derivatives[2] = 0;
-  hole_recombination_rate = 0;
-  hole_recombination_rate_derivatives[0] = 0;
-  hole_recombination_rate_derivatives[1] = 0;
-  hole_recombination_rate_derivatives[2] = 0;
-  // 5.) Recombination
-  //if (coupling & DriftDiffusionDefs::BOTH)
-  //{
-    if (_recombination & DriftDiffusionDefs::SRH)
-      calculate_SRH_recombination();
-    if (_recombination & DriftDiffusionDefs::AUGER)
-      calculate_Auger_recombination();
-    if (_recombination & DriftDiffusionDefs::DIRECT)
-      calculate_direct_recombination();
   //}
 }
 

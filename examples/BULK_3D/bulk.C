@@ -9,14 +9,16 @@
 #include "DDevice.h"
 #include "DriftDiffusion.h"
 #include "SemiconductorModel.h"
+#include "RecombinationModelInterface.h"
 
 #include "mesh.h"
+#include "equation_systems.h"
 #include "mesh_modification.h"
 #include "mesh_data.h"
 #include "mesh_generation.h"
 #include "elem.h"
 #include "getpot.h"
-#include "gmv_io.h"
+#include "GMVIO_cell.h"
 
 #include <algorithm>
 
@@ -90,26 +92,28 @@ int main (int argc, char** argv)
 
     mesh.print_info();
 
+    Dummy d;
     SemiconductorModel nside;    
     nside.set_data_file("Si.dat");
+    nside.read_database(d);
+
     if (statistics == "FD")
       nside.set_statistics(TiberCad::FERMIDIRAC);
     else
       nside.set_statistics(TiberCad::BOLTZMANN);
 
-    nside.add_recombination_model(SRH);
+    ModelOptions opts;
+    opts["tau_n"] = "1e-7";
+    opts["tau_p"] = "3e-8";
+    RecombinationModelInterface* recomb_model =
+      RecombinationModelInterface::create("SRH", opts);
+    nside.add_recombination_model(recomb_model);
 
-    Dummy d;
-    nside.read_database(d);
 
     nside.set_mobilities(800, 200);
-    nside.set_SRH_parameters(1e-8, 1e-8);
 
-    nside.set_n_dopant(Dopant(n_doping, 0.025, 2));
-    nside.set_p_dopant(Dopant(p_doping, 0.01, 4));
-
-    //nside.reinit(meshdata.elem_data_begin()->first);
-    //nside.calculate_equilibrium_properties(BOTH);
+    nside.add_dopant(new Dopant(n_doping, 0.025, 2, Dopant::N_TYPE));
+    nside.add_dopant(new Dopant(p_doping, 0.01, 4, Dopant::P_TYPE));
 
 
     ElementData element_data;
@@ -137,8 +141,6 @@ int main (int argc, char** argv)
       }
     }
 
-    //BoundaryDescriptor anode("anode");
-    //BoundaryDescriptor cathode("cathode");
     OhmicContact anode("anode");
     //SchottkyContact anode("anode");
     //anode.set_schottky_barrier(0.8);
@@ -178,7 +180,10 @@ int main (int argc, char** argv)
     }
     
   
+    EquationSystems eqsys(mesh);
     DriftDiffusion dd(&device);
+    dd.set_equation_systems(&eqsys);
+    dd.init();
 
     DriftDiffusion::Options& params = dd.get_options();
     params.max_refinement_steps = refinement_steps;
@@ -192,17 +197,6 @@ int main (int argc, char** argv)
     params.refine_fraction = refine_frac;
     params.coarsen_fraction = coarsen_frac;
 
-    if (method == "GUMMEL")
-    {
-      params.solver_method = DriftDiffusion::GUMMEL;
-      params.max_gummel_iterations = 2;
-    }
-    else
-      params.solver_method = DriftDiffusion::NEWTON;
-
-    params.coupling = FULLYCOUPLED;
-
-    params.approximation_order = FIRST;
 
     // mesh drawn in um
     params.mesh_units = mesh_units;
@@ -219,6 +213,7 @@ int main (int argc, char** argv)
       vector<string> names;
       cout << "Solving equilibrium... " << flush;
       dd.solve();
+      dd.remember_current_solution();
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
         ", final residual: " << dd.get_final_residual() << ")\n" << flush;
       dd.build_band_edges(densities, names);
@@ -241,6 +236,10 @@ int main (int argc, char** argv)
 
 
     cout << "\nBegin sweep...\n" << flush;
+
+    // calculate for electron and holes
+    params.coupling = FULLYCOUPLED;
+    
     // make a voltage sweep
     double delta_v = 1e-6;
 
@@ -263,36 +262,54 @@ int main (int argc, char** argv)
       find_if(voltages.begin(), voltages.end(),
           bind2nd(greater<double>(), delta_v));
 
-    map<double, vector<double> > iv_char;
+
+    ofstream file;
+    file.open("output/iv_char.dat");
+    file << "# V      A/cm\n";
 
     vector<double>::iterator it = first_positive;
     for ( ; it != voltages.end(); ++it)
     {
       dd.set_simulation_voltage("anode", *it);
-      cout << " Solving U = " << *it << " V ... " << flush;
+      cout << " Solving U = " << *it << " V ...\n" << flush;
+      //if (*it >= 1.7)
+      //  dd.enable_mesh_refinement();
+      
       dd.solve();
+      
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
         ", final residual: " << dd.get_final_residual() << ")\n" << flush;
+      ostringstream filename;
       vector<double> densities;
       vector<string> names;
-      ostringstream filename;
-      filename << "output/bands_" << *it << ".gmv";
+      ostringstream filename_b;
+      filename_b << "output/bands_" << *it << ".gmv";
       dd.build_band_edges(densities, names);
-      GMVIO(dd.get_mesh()).write_nodal_data(filename.str(),
+      GMVIO(dd.get_mesh()).write_nodal_data(filename_b.str(),
           densities, names);
       ostringstream filename_d;
       filename_d << "output/densities_" << *it << ".gmv";
       dd.build_densities(densities, names);
       GMVIO(dd.get_mesh()).write_nodal_data(filename_d.str(),
           densities, names);
+      ostringstream filename_f;
+      filename_f << "output/field_" << *it << ".gmv";
+      dd.build_electric_field(densities, names);
+      GMVIO_cell(dd.get_mesh()).write_ascii_cell_data(filename_f.str(),
+          densities, names);
+      ostringstream filename_c;
+      filename_c << "output/current_" << *it << ".gmv";
+      dd.build_current_density(densities, names);
+      GMVIO_cell(dd.get_mesh()).write_ascii_cell_data(filename_c.str(),
+          densities, names);
 
       const map<const ElectricalContact*, double>& curr =
         dd.get_boundary_currents();
-      iv_char[*it] = vector<double>(3);
-      iv_char[*it][0] = (*curr.find(&cathode)).second;
-      iv_char[*it][1] = (*curr.find(&anode)).second;
-      iv_char[*it][2] = dd.get_artificial_boundary_current();
-      cerr << "    I = " << (iv_char[*it][1]) << " A\n";
+      file << *it << "  "
+           << (*curr.find(&cathode)).second << "  "
+           << (*curr.find(&anode)).second << "  "
+           << dd.get_artificial_boundary_current() << "\n" << flush;
+      cerr << "    I = " << (*curr.find(&cathode)).second << " A/cm\n";
     }
 
     vector<double>::iterator zero =
@@ -300,59 +317,57 @@ int main (int argc, char** argv)
           bind2nd(greater<double>(), -delta_v));
 
     if (zero != first_positive)
-      iv_char[0.0] = vector<double>(3, 0.0);
+      file << "0.0 0.0 0.0 0.0\n" << flush;
 
     it = zero;
     if (it != voltages.begin())
     {
-      bool restart = true;
+      dd.set_to_remembered_solution();
       do
       {
         --it;
         dd.set_simulation_voltage("anode", *it);
-        cout << " Solving U = " << *it << " V ... " << flush;
-        dd.solve(restart);
-        vector<double> densities;
-        vector<string> names;
+        cout << " Solving U = " << *it << " V ...\n" << flush;
+        dd.enable_mesh_refinement();
+        dd.solve();
         cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
           ", final residual: " << dd.get_final_residual() << ")\n" << flush;
-        ostringstream filename;
-        filename << "output/bands_" << *it << ".gmv";
+        vector<double> densities;
+        vector<string> names;
+        ostringstream filename_b;
+        filename_b << "output/bands_" << *it << ".gmv";
         dd.build_band_edges(densities, names);
-        GMVIO(dd.get_mesh()).write_nodal_data(filename.str(),
+        GMVIO(dd.get_mesh()).write_nodal_data(filename_b.str(),
             densities, names);
         ostringstream filename_d;
         filename_d << "output/densities_" << *it << ".gmv";
         dd.build_densities(densities, names);
         GMVIO(dd.get_mesh()).write_nodal_data(filename_d.str(),
             densities, names);
+        ostringstream filename_f;
+        filename_f << "output/field_" << *it << ".gmv";
+        dd.build_electric_field(densities, names);
+        GMVIO_cell(dd.get_mesh()).write_ascii_cell_data(filename_f.str(),
+            densities, names);
+        ostringstream filename_c;
+        filename_c << "output/current_" << *it << ".gmv";
+        dd.build_current_density(densities, names);
+        GMVIO_cell(dd.get_mesh()).write_ascii_cell_data(filename_c.str(),
+            densities, names);
 
-        restart = false;
         const map<const ElectricalContact*, double>& curr =
           dd.get_boundary_currents();
-        iv_char[*it] = vector<double>(3);
-        iv_char[*it][0] = (*curr.find(&cathode)).second;
-        iv_char[*it][1] = (*curr.find(&anode)).second;
-        iv_char[*it][2] = dd.get_artificial_boundary_current();
-        cerr << "    I = " << (iv_char[*it][1]) << " A\n";
+        file << *it << "  "
+          << (*curr.find(&cathode)).second << "  "
+          << (*curr.find(&anode)).second << "  "
+          << dd.get_artificial_boundary_current() << "\n" << flush;
+        cerr << "    I = " << (*curr.find(&cathode)).second << " A/cm\n";
       }
       while (it != voltages.begin());
     }
     
-    ofstream file;
-    file.open("output/iv_char.dat");
-    //file << "# V      A/cm\n";
-    map<double, vector<double> >::const_iterator iv_it = iv_char.begin();
-    for ( ; iv_it != iv_char.end(); ++iv_it)
-    {
-      //cout << (*iv_it).first << "V - "
-      //     << (*iv_it).second << " A/cm\n";
-      const vector<double>& curr = (*iv_it).second;
-      file << (*iv_it).first << "  "
-           << curr[0] << "  "
-           << curr[1] << "  "
-           << curr[2] << "\n";
-    }
+    file.close();
+
 
   }
 

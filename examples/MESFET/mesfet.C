@@ -7,7 +7,8 @@
 #include "BoundaryData.h"
 #include "DDevice.h"
 #include "DriftDiffusion.h"
-#include "SimpleSemiconductorModel.h"
+#include "SemiconductorModel.h"
+#include "RecombinationModelInterface.h"
 
 #include "mesh.h"
 #include "mesh_modification.h"
@@ -95,34 +96,67 @@ int main (int argc, char** argv)
 
     mesh.print_info();
 
-    SimpleSemiconductorModel sub;    
+    SemiconductorModel sub;    
+    sub.set_data_file("Si.dat");
+    sub.read_database(d);
+
+    ModelOptions opts;
+    opts["tau_n"] = "1e-5";
+    opts["tau_p"] = "3e-6";
+    RecombinationModelInterface* rm =
+      RecombinationModelInterface::create("SRH", opts);
+    sub.add_recombination_model(rm);
+
+
+
+    SimpleSemiconductorModel schottky;
+    schottky.set_data_file("Si.dat");
+    schottky.read_database(d);
+    
+    schottky.add_dopant(new Dopant(1e18, 0.025, 2, Dopant::N_TYPE));
+    schottky.set_mobilities(283.8, 160.3);
+    opts["tau_n"] = "1e-7";
+    opts["tau_p"] = "3e-8";
+    rm = RecombinationModelInterface::create("SRH", opts);
+    schottky.add_recombination_model(rm);
+
+
+    SimpleSemiconductorModel contact;
+    schottky.set_data_file("Si.dat");
+    schottky.read_database(d);
+
+    contact.add_dopant(new Dopant(5e19, 0.025, 2, Dopant::N_TYPE));
+    schottky.set_mobilities(283.8, 160.3);
+    opts["tau_n"] = "2e-9";
+    opts["tau_p"] = "6e-10";
+    rm = RecombinationModelInterface::create("SRH", opts);
+    contact.add_recombination_model(rm);
 
     if (statistics == "FD")
+    {
       sub.set_statistics(TiberCad::FERMIDIRAC);
+      schottky.set_statistics(TiberCad::FERMIDIRAC);
+      contact.set_statistics(TiberCad::FERMIDIRAC);
+    }
     else
+    {
       sub.set_statistics(TiberCad::BOLTZMANN);
+      schottky.set_statistics(TiberCad::BOLTZMANN);
+      contact.set_statistics(TiberCad::BOLTZMANN);
+    }
     
     if (fully)
+    {
       sub.set_coupling_type(BOTH);
+      schottky.set_coupling_type(BOTH);
+      contact.set_coupling_type(BOTH);
+    }
     else
+    {
       sub.set_coupling_type(ELECTRONS);
-
-    sub.add_recombination_model(SRH);
-
-    sub.set_relative_permittivity(11.7);
-    sub.set_valence_band_properties(-0.5, 0.81, 200);
-    sub.set_conduction_band_properties(0.62, 1.18, 800);
-    sub.set_SRH_parameters(1e-7, 1e-7);
-
-    SimpleSemiconductorModel schottky(sub);
-    
-    schottky.set_n_dopant(Dopant(1e18, 0.025, 2));
-    schottky.set_SRH_parameters(1e-8, 1e-8);
-
-    SimpleSemiconductorModel contact(sub);
-
-    contact.set_n_dopant(Dopant(5e19, 0.025, 2));
-    contact.set_SRH_parameters(1e-9, 1e-9);
+      schottky.set_coupling_type(ELECTRONS);
+      contact.set_coupling_type(ELECTRONS);
+    }
 
 
     ElementData element_data;
@@ -209,15 +243,44 @@ int main (int argc, char** argv)
     params.refine_fraction = refine_frac;
     params.coarsen_fraction = coarsen_frac;
 
-    params.local_scaling = true;
+    //params.local_scaling = true;
 
-    if (method == "GUMMEL")
-    {
-      params.solver_method = DriftDiffusion::GUMMEL;
-      params.max_gummel_iterations = 2;
-    }
-    else
-      params.solver_method = DriftDiffusion::NEWTON;
+    // mesh drawn in um
+    params.mesh_units = mesh_units;
+
+    dd.enable_mesh_refinement();
+    
+    //print_boundary_data(boundary_data, mesh);
+
+    dd.set_simulation_voltage("source", 0.0);
+    dd.set_simulation_voltage("gate", 0.0);
+    dd.set_simulation_voltage("drain", 0.0);
+
+
+    dd.solve();
+    dd.remeber_current_solution();
+
+    const Scaling& sc = dd.get_scaling();
+    cout << "Scaling parameters:\n";
+    cout << "     phi0: " << sc.get_potential_scaling() << "\n";
+    cout << "     x0  : " << sc.get_length_scaling() << "\n";
+    cout << "     mu0 : " << sc.get_mobility_scaling() << "\n";
+    cout << "     C0  : " << sc.get_density_scaling() << "\n";
+    cout << "     t0  : " << sc.get_time_scaling() << "\n";
+    cout << "     R0  : " << sc.get_recombination_scaling() << "\n\n";
+
+    vector<double> densities;
+    vector<string> names;
+    dd.build_band_edges(densities, names);
+    TecplotIO(dd.get_mesh()).write_nodal_data("output/eq_bands.plt",
+        densities, names);
+
+    dd.build_densities(densities, names);
+    TecplotIO(dd.get_mesh()).write_nodal_data("output/eq_densities.plt",
+        densities, names);
+
+
+
 
     if (fully)
     {
@@ -230,39 +293,9 @@ int main (int argc, char** argv)
       params.coupling = POISSON | ELECTRONS;
     }
 
-    // mesh drawn in um
-    params.mesh_units = mesh_units;
 
-    dd.enable_mesh_refinement();
-    
-    //print_boundary_data(boundary_data, mesh);
-
-    dd.set_simulation_voltage("source", 0.0);
-    dd.set_simulation_voltage("gate", 0.0);
-    dd.set_simulation_voltage("drain", 0.0);
-    
     if (characteristic)
     {
-      dd.solve();
-      
-      const Scaling& sc = dd.get_scaling();
-      cout << "Scaling parameters:\n";
-      cout << "     phi0: " << sc.get_potential_scaling() << "\n";
-      cout << "     x0  : " << sc.get_length_scaling() << "\n";
-      cout << "     mu0 : " << sc.get_mobility_scaling() << "\n";
-      cout << "     C0  : " << sc.get_density_scaling() << "\n";
-      cout << "     t0  : " << sc.get_time_scaling() << "\n";
-      cout << "     R0  : " << sc.get_recombination_scaling() << "\n\n";
-
-      dd.remember_current_solution();
-      //GMVIO(dd.get_mesh()).write_nodal_data("output/eq_potentials.gmv",
-      TecplotIO(dd.get_mesh()).write_nodal_data("output/eq_potentials.plt",
-          dd.get_solution(), dd.get_variable_names());
-      vector<double> densities;
-      vector<string> names;
-      dd.build_densities(densities, names);
-      TecplotIO(dd.get_mesh()).write_nodal_data("output/eq_densities.plt",
-          densities, names);
 
       // make a voltage sweep
       double delta_v = 1e-6;
@@ -445,8 +478,14 @@ void sweep_drain(double stop, int steps,
   {
     dd.set_simulation_voltage("drain", *it);
     cout << "Vgs = " << vg << " Vds = " << *it << "\n" << flush;
-    //dd.enable_mesh_refinement();
-    dd.solve(restart);
+    if (restart)
+    {
+      dd.set_electron_fermi_level(0.0);
+      dd.set_hole_fermi_level(0.0);
+      dd.solve();
+    }
+
+    dd.solve();
     if (remember)
     {
       dd.remember_current_solution();

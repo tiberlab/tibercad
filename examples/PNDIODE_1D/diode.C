@@ -7,6 +7,7 @@
 #include "DDevice.h"
 #include "DriftDiffusion.h"
 #include "SemiconductorModel.h"
+#include "RecombinationModelInterface.h"
 
 #include "mesh.h"
 #include "mesh_modification.h"
@@ -88,33 +89,44 @@ int main (int argc, char** argv)
 
     mesh.print_info();
 
+    Dummy d;
 
     SemiconductorModel nside;    
     nside.set_data_file("Si.dat");
-    if (statistics == "FD")
-      nside.set_statistics(TiberCad::FERMIDIRAC);
-    else
-      nside.set_statistics(TiberCad::BOLTZMANN);
-
-    Dummy d;
     nside.read_database(d);
 
     nside.add_dopant(new Dopant(n_doping, 0.025, 2, Dopant::N_TYPE));
     nside.set_mobilities(283.8, 160.3);
-    nside.add_recombination_model(SRH);
-    nside.set_SRH_parameters(1e-7, 3e-8);
 
-    SemiconductorModel pside(nside);
+    ModelOptions opts;
+    opts["tau_n"] = "1e-7";
+    opts["tau_p"] = "3e-8";
+    RecombinationModelInterface* rm =
+      RecombinationModelInterface::create("SRH", opts);
+    nside.add_recombination_model(rm);
+
+    SemiconductorModel pside;
+    pside.set_data_file("Si.dat");
     pside.read_database(d);
 
     pside.add_dopant(new Dopant(p_doping, 0.01, 4, Dopant::P_TYPE));
     pside.set_mobilities(283.8, 160.3);
-    pside.add_recombination_model(SRH);
-    pside.set_SRH_parameters(1e-7, 3e-8);
 
+    rm = RecombinationModelInterface::create("SRH", opts);
+    pside.add_recombination_model(rm);
+
+    if (statistics == "FD")
+    {
+      nside.set_statistics(TiberCad::FERMIDIRAC);
+      pside.set_statistics(TiberCad::FERMIDIRAC);
+    }
+    else
+    {
+      nside.set_statistics(TiberCad::BOLTZMANN);
+      pside.set_statistics(TiberCad::BOLTZMANN);
+    }
 
     ElementData element_data;
-
     {
       MeshData::const_elem_data_iterator it = meshdata.elem_data_begin();
       const MeshData::const_elem_data_iterator end =

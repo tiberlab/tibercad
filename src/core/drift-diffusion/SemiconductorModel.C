@@ -21,25 +21,22 @@ SemiconductorModel::~SemiconductorModel(void)
 
 SemiconductorModel::SemiconductorModel(void)
   : Parent(),
-    _recombination(0),
     _bulk_model(NULL),
     _is_prepared(false),
     _exciton_gen_param(0.0)
 {
 }
 
+/*
 SemiconductorModel::SemiconductorModel(
     const SemiconductorModel& model)
   : Parent(model),
-    _recombination(model._recombination),
-    _electron_recombination_time(model._electron_recombination_time),
-    _hole_recombination_time(model._hole_recombination_time),
-    _direct_rec_param(model._direct_rec_param),
     _filename(model._filename),
     _is_prepared(false),
     _exciton_gen_param(model._exciton_gen_param)
 {
 }
+*/
 
 void
 SemiconductorModel::read_database(const Dummy&)
@@ -414,27 +411,8 @@ SemiconductorModel::calculate_all(double potential,
     hole_conductivity_derivatives[0] = _h_mobility * dp;
     hole_conductivity_derivatives[2] = _h_mobility * dp;
   //}
-  
-  electron_recombination_rate = 0;
-  electron_recombination_rate_derivatives[0] = 0;
-  electron_recombination_rate_derivatives[1] = 0;
-  electron_recombination_rate_derivatives[2] = 0;
-  hole_recombination_rate = 0;
-  hole_recombination_rate_derivatives[0] = 0;
-  hole_recombination_rate_derivatives[1] = 0;
-  hole_recombination_rate_derivatives[2] = 0;
-  // 5.) Recombination
-  //if (coupling & DriftDiffusionDefs::BOTH)
-  //{
-    if (_recombination & DriftDiffusionDefs::SRH)
-      calculate_SRH_recombination();
-    if (_recombination & DriftDiffusionDefs::AUGER)
-      calculate_Auger_recombination();
-    if (_recombination & DriftDiffusionDefs::DIRECT)
-      calculate_direct_recombination();
 
     if (_exciton_gen_param > 1e-56)
       calculate_exciton_generation();
-  //}
 }
 

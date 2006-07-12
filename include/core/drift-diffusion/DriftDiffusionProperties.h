@@ -48,6 +48,12 @@ class DriftDiffusionProperties : public PhysicalProperties
     //! Add a dopant
     void add_dopant(Dopant* dopant);
 
+    //! Add a recombination model
+    /*!
+     * \param id the unique ID of this model
+     */
+    void add_recombination_model(RecombinationModelInterface* recomb_model);
+
     //! Get the statistics to be used
     /*!
      * \return the statistics
@@ -367,6 +373,9 @@ class DriftDiffusionProperties : public PhysicalProperties
     //! clear all doping
     void clear_doping(void);
 
+    //! clear all recombination rates
+    void clear_recombination(void);
+
   protected:
       
     /*!
@@ -390,9 +399,6 @@ class DriftDiffusionProperties : public PhysicalProperties
 
     //! The empty constructor.
     DriftDiffusionProperties(void);
-
-    //! The copy constructor
-    DriftDiffusionProperties(const DriftDiffusionProperties& rhs);
 
 
     //! This method gets called from reinit()
@@ -550,6 +556,9 @@ class DriftDiffusionProperties : public PhysicalProperties
     typedef std::set<Dopant*>::iterator dopant_iterator;
     typedef
       std::map<ID, RecombinationModelInterface*>::iterator recomb_iterator;
+
+    //! The copy constructor
+    DriftDiffusionProperties(const DriftDiffusionProperties& rhs);
 
 
     //! The statistics used 

@@ -21,8 +21,11 @@ class StrainedSemiconductorModel : public SemiconductorModel
 {
 
   public:
+
+    //! The default constructor
     StrainedSemiconductorModel(Macrostrain* strain);
-    StrainedSemiconductorModel(const StrainedSemiconductorModel& model);
+    
+    //! The destructor
     virtual ~StrainedSemiconductorModel(void) {};
 
     //! Ignore strain related effects
@@ -60,6 +63,8 @@ class StrainedSemiconductorModel : public SemiconductorModel
     };
 
     typedef std::map<const Elem*, ElementData> DataMap;
+    
+    StrainedSemiconductorModel(const StrainedSemiconductorModel& model);
     
     Macrostrain* _strain;
     bool _ignore_strain;

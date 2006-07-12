@@ -20,6 +20,7 @@ StrainedSemiconductorModel::StrainedSemiconductorModel(
 }
 
 
+/*
 StrainedSemiconductorModel::StrainedSemiconductorModel(
     const StrainedSemiconductorModel& model)
   : SemiconductorModel(model),
@@ -27,6 +28,7 @@ StrainedSemiconductorModel::StrainedSemiconductorModel(
     _ignore_strain(model._ignore_strain)
 {
 }
+*/
 
 void
 StrainedSemiconductorModel::prepare_element_data(void)
