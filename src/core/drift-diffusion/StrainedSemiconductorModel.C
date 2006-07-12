@@ -51,8 +51,8 @@ StrainedSemiconductorModel::prepare_element_data(void)
       ElementData& elem_data = _element_data[elem];
       elem_data.Ec = get_conduction_band_edge();
       elem_data.Ev = get_valence_band_edge();
-      elem_data.mc = get_conduction_band_properties().effective_mass;
-      elem_data.mv = get_valence_band_properties().effective_mass;
+      elem_data.mc = get_conduction_band().effective_mass;
+      elem_data.mv = get_valence_band().effective_mass;
       elem_data.Ef0 = get_equilibrium_fermi_level();
       elem_data.n0 = get_equilibrium_electron_density();
       elem_data.p0 = get_equilibrium_hole_density();
@@ -69,10 +69,10 @@ StrainedSemiconductorModel::prepare_element_data(void)
 
       polarization = elem_data.polarization;
 
-      get_conduction_band_properties().band_edge = elem_data.Ec; 
-      get_conduction_band_properties().effective_mass = elem_data.mc; 
-      get_valence_band_properties().band_edge = elem_data.Ev; 
-      get_valence_band_properties().effective_mass = elem_data.mv; 
+      get_conduction_band().band_edge = elem_data.Ec; 
+      get_conduction_band().effective_mass = elem_data.mc; 
+      get_valence_band().band_edge = elem_data.Ev; 
+      get_valence_band().effective_mass = elem_data.mv; 
 
       equilibrium_fermi_level = elem_data.Ef0;
       equilibrium_electron_density = elem_data.n0;

@@ -258,8 +258,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     mu = sc->get_electron_mobility();
     mu0 = (mu0 > mu) ? mu0 : mu;
 
-    //double C = fabs(material.n_dopant.get_doping_density() -
-    //    material.p_dopant.get_doping_density());
+    //double C = fabs(sc->get_net_doping_density());
     double C = fabs(sc->get_ionized_donor_density() -
         sc->get_ionized_acceptor_density());
     C0 = (C0 > C) ? C0 : C;
@@ -1061,10 +1060,10 @@ DriftDiffusion::do_gummel_iterations(int max_it)
       solver_params.nonlinear_max_iterations = 1;
       set_solver_params(*system.nonlinear_solver);
 
-      system.nonlinear_solver->matvec = assemble<HCURRENT>;
+      system.nonlinear_solver->matvec = assemble<ECURRENT>;
       system.solve();
 
-      system.nonlinear_solver->matvec = assemble<ECURRENT>;
+      system.nonlinear_solver->matvec = assemble<HCURRENT>;
       system.solve();
 
       _options.linearize_continuity_eq = false;

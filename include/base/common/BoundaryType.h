@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "types.h"
+#include "TypeDefs.h"
 
 
 //! Boundary properties for a certain type of simulation.

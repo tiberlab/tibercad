@@ -1,5 +1,5 @@
-#ifndef _TYPES_H_
-#define _TYPES_H_
+#ifndef _TYPEDEFS_H_
+#define _TYPEDEFS_H_
 
 #include <utility>
 
@@ -7,7 +7,7 @@ class Elem;
 
 typedef std::pair<const Elem*, unsigned int> ElemSide;
 
-typedef unsigned int Id;
+typedef unsigned int ID;
 
 
-#endif // _TYPES_H_
+#endif // _TYPEDEFS_H_

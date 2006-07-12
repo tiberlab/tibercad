@@ -6,8 +6,6 @@
 #include "ZbDDsemiconductor.h"
 #include "WzDDsemiconductor.h"
 
-#include "point.h"
-#include "elem.h"
 #include "getpot.h"
 
 #include <iostream>
@@ -22,27 +20,18 @@ SemiconductorModel::~SemiconductorModel(void)
 }
 
 SemiconductorModel::SemiconductorModel(void)
-  : DriftDiffusionProperties(),
+  : Parent(),
     _recombination(0),
-    _coupling(BOTH),
     _bulk_model(NULL),
     _is_prepared(false),
     _exciton_gen_param(0.0)
 {
-  // spin degeneracy will be included in the degeneracy from
-  // DDsemiconductor
-  _DOS_factor = std::pow(2 * M_PI * Constants::me /
-      (Constants::h * Constants::h) * Constants::e, 1.5) / 1e6;
 }
 
 SemiconductorModel::SemiconductorModel(
     const SemiconductorModel& model)
-  : DriftDiffusionProperties(model),
+  : Parent(model),
     _recombination(model._recombination),
-    _DOS_factor(model._DOS_factor),
-    _conduction_band(model._conduction_band),
-    _valence_band(model._valence_band),
-    _coupling(model._coupling),
     _electron_recombination_time(model._electron_recombination_time),
     _hole_recombination_time(model._hole_recombination_time),
     _direct_rec_param(model._direct_rec_param),
@@ -95,8 +84,8 @@ SemiconductorModel::read_database(const Dummy&)
     zbsc->energy_cutoff = 4.0;
 
     permittivity = data("permittivity", 12.93);
-    _conduction_band.mobility = data("electron_mobility", 1000.0);
-    _valence_band.mobility = data("hole_mobility", 200.0);
+    _e_mobility = data("electron_mobility", 1000.0);
+    _h_mobility = data("hole_mobility", 200.0);
 
   }
   else
@@ -134,8 +123,8 @@ SemiconductorModel::read_database(const Dummy&)
     wzsc->energy_cutoff = 4.0;
 
     permittivity = data("permittivity", 9.5);
-    _conduction_band.mobility = data("electron_mobility", 1000.0);
-    _valence_band.mobility = data("hole_mobility", 200.0);
+    _e_mobility = data("electron_mobility", 1000.0);
+    _h_mobility = data("hole_mobility", 200.0);
   }
 }
 
@@ -205,10 +194,10 @@ SemiconductorModel::build_alloy(const std::string& component2,
 
     permittivity = alloy(data("permittivity", 12.93), permittivity, content,
        bowing("permittivity", 0.0));
-    _conduction_band.mobility = alloy(data("electron_mobility", 1000.0),
-        _conduction_band.mobility, content, bowing("electron_mobility", 0.0));
-    _valence_band.mobility = alloy(data("hole_mobility", 200.0),
-        _valence_band.mobility, content, bowing("hole_mobility", 0.0));
+    _e_mobility = alloy(data("electron_mobility", 1000.0),
+        _e_mobility, content, bowing("electron_mobility", 0.0));
+    _h_mobility = alloy(data("hole_mobility", 200.0),
+        _h_mobility, content, bowing("hole_mobility", 0.0));
   }
   else
   {
@@ -262,10 +251,10 @@ SemiconductorModel::build_alloy(const std::string& component2,
 
     permittivity = alloy(data("permittivity", 9.5), permittivity,
         content, bowing("permittivity", 0.0));
-    _conduction_band.mobility = alloy(data("electron_mobility", 1000.0),
-      _conduction_band.mobility, content, bowing("electron_mobility", 0.0));
-    _valence_band.mobility = alloy(data("hole_mobility", 200.0),
-      _valence_band.mobility, content, bowing("hole_mobility", 0.0));
+    _e_mobility = alloy(data("electron_mobility", 1000.0),
+      _e_mobility, content, bowing("electron_mobility", 0.0));
+    _h_mobility = alloy(data("hole_mobility", 200.0),
+      _h_mobility, content, bowing("hole_mobility", 0.0));
   }
 }
 
@@ -286,24 +275,6 @@ SemiconductorModel::prepare_element_data(void)
   }
 }
 
-void
-SemiconductorModel::calculate_all(
-    double potential, double fermi_e, double fermi_h,
-    const Point& coord)
-{
-  switch (_coupling & BOTH)
-  {
-    case ELECTRONS:
-      calculate_all<ELECTRONS>(potential, fermi_e, fermi_h);
-      break;
-    case HOLES:
-      calculate_all<HOLES>(potential, fermi_e, fermi_h);
-      break;
-    default:
-      calculate_all<BOTH>(potential, fermi_e, fermi_h);
-      break;
-  }
-}
 
 //
 // TODO
@@ -322,8 +293,8 @@ SemiconductorModel::extract_band_properties(void)
     if (cbs[i].energy < cbs[id].energy)
       id = i;
   }
-  _conduction_band.band_edge = cbs[id].energy;
-  _conduction_band.effective_mass = cbs[id].mass_DOS
+  get_conduction_band().band_edge = cbs[id].energy;
+  get_conduction_band().effective_mass = cbs[id].mass_DOS
     * std::pow(cbs[id].degeneracy, 2.0 / 3.0);
   
   // treat valence band
@@ -338,17 +309,17 @@ SemiconductorModel::extract_band_properties(void)
     if (vbs[i].energy > vbs[id].energy)
       id = i;
   }
-  _valence_band.band_edge = vbs[id].energy;
+  get_valence_band().band_edge = vbs[id].energy;
   double tmp = 0;
   // include other bands
   for (int i = 0; i < vbs.size(); i++)
   {
-    double delta = _valence_band.band_edge - vbs[i].energy;
+    double delta = get_valence_band().band_edge - vbs[i].energy;
     if (delta < delta_max)
       tmp += vbs[i].degeneracy * std::pow(vbs[i].mass_DOS, 1.5)
         * std::exp(-delta / kT);
   }
-  _valence_band.effective_mass = std::pow(tmp, 2.0 / 3.0);
+  get_valence_band().effective_mass = std::pow(tmp, 2.0 / 3.0);
   
 }
 
@@ -365,8 +336,8 @@ SemiconductorModel::print_info(void) const
       << ", m = " << cbs[i].mass_DOS
       << ", d = " << cbs[i].degeneracy << endl;
   }
-  cout << "   Nc = " << _conduction_band.effective_DOS << " cm^-3"
-    << "  m_dos = " << _conduction_band.effective_mass << "\n";
+  cout << "   Nc = " << get_conduction_band().effective_DOS << " cm^-3"
+    << "  m_dos = " << get_conduction_band().effective_mass << "\n";
 
   _bulk_model->calculate_valence_band_extremum();
   const std::vector<DDsemiconductor::band_extremum>& vbs =
@@ -378,8 +349,8 @@ SemiconductorModel::print_info(void) const
       << ", m = " << vbs[i].mass_DOS
       << ", d = " << vbs[i].degeneracy << endl;
   }
-  cout << "   Nv = " << _valence_band.effective_DOS << " cm^-3"
-    << "  m_dos = " << _valence_band.effective_mass << "\n";
+  cout << "   Nv = " << get_valence_band().effective_DOS << " cm^-3"
+    << "  m_dos = " << get_valence_band().effective_mass << "\n";
 
   cout << " - Ef0 = " << get_equilibrium_fermi_level()
     << ", ni^2 = " << get_intrinsic_density_squared();
@@ -400,153 +371,70 @@ SemiconductorModel::calculate_equilibrium_properties(int coupling,
   // get the band properties from _bulk_model
   extract_band_properties();
 
-  
-  // call this method to properly set conduction and valence band DOS
-  // and energy
-  setup_band_edges();
+  // call the method of the parent class
+  Parent::calculate_equilibrium_properties(coupling, temperature);
 
-
-  // remember the coupling
-  int coupling_bkp = _coupling;
-  _coupling = BOTH;
-
-  SNES           snes;
-  KSP            ksp;
-  PC             pc;
-  Vec            x, r;
-  Mat            J;
-  PetscErrorCode ierr;
-  PetscScalar    guess, *result;
-
-  ierr = SNESCreate(PETSC_COMM_WORLD, &snes);
-  ierr = VecCreateSeq(PETSC_COMM_SELF, 1, &x);
-  ierr = VecDuplicate(x, &r);
-  ierr = MatCreate(PETSC_COMM_SELF,
-      PETSC_DECIDE, PETSC_DECIDE, 1, 1, &J);
-  ierr = MatSetFromOptions(J);
-
-  ierr = SNESGetKSP(snes, &ksp);
-  ierr = KSPGetPC(ksp, &pc);
-  ierr = PCSetType(pc, PCLU);
-  ierr = KSPSetTolerances(ksp, 1.e-9, 1e-12, PETSC_DEFAULT, 1500);
-  ierr = SNESSetTolerances(snes, PETSC_DEFAULT,
-      1.e-12, PETSC_DEFAULT, 50, 5000);
-
-  double kT = SimulationOptions::T * Constants::k_B;
-
-  ierr = SNESSetType(snes, SNESLS);
-  // set ls_maxstep to something reasonable
-  ierr = SNESSetLineSearchParams(snes, PETSC_DEFAULT, 100 * kT,
-      PETSC_DEFAULT);
-
-
-  ierr = SNESSetFunction(snes, r, function, (void *) this);
-  ierr = SNESSetJacobian(snes, J, J, jacobian, (void *) this);
-
-  // calculate first guess according to doping
-  // assume complete ionization
-  const BandProperties& cb = _conduction_band;
-  const BandProperties& vb = _valence_band;
-  double Nd = get_donor_density();
-  double Na = get_acceptor_density();
-
-  double ni2 = cb.effective_DOS * vb.effective_DOS
-    * std::exp(-0.5 * get_band_gap() / kT);
-  double ni = std::sqrt(ni2);
-  
-  // Hmm... Is there a better guess?
-  if (Nd > Na)
-  {
-    guess = cb.band_edge + kT
-      * std::log(cb.effective_DOS / (Nd + ni));
-  }
-  else
-  {
-    guess = vb.band_edge + kT
-      * std::log(vb.effective_DOS / (Na + ni));
-  }
-
-  ierr = VecSet(&guess, x);
-
-  ierr = SNESSolve(snes, x);
-
-  SNESConvergedReason reason;
-  ierr = SNESGetConvergedReason(snes, &reason);
-  int n_iterations = 0;
-  ierr = SNESGetIterationNumber(snes, &n_iterations);
-  if (reason < 0)
-  {
-    //cerr << "ATTENTION Equilibrium properties calculation:\n";
-    //cerr << "  # iterations: "  << n_iterations
-    //  << ", converged reason: " << reason << "\n";
-  }
-
-  ierr = VecGetArray(x, &result);
-
-  equilibrium_fermi_level =  result[0];
-
-  equilibrium_electron_density = electron_density;
-  equilibrium_hole_density = hole_density;
-
-  ierr = VecRestoreArray(x, &result);
-
-  ierr = VecDestroy(x);
-  ierr = MatDestroy(J);
-
-  ierr = SNESDestroy(snes);
-
-  // restore original coupling
-  _coupling = coupling_bkp;
 }
 
 
-PetscErrorCode
-SemiconductorModel::jacobian(SNES snes, Vec x,
-    Mat *jac, Mat *B, MatStructure *flag, void *sc)
+void
+SemiconductorModel::calculate_all(double potential,
+    double fermi_e, double fermi_h, const Point& coord)
 {
-  PetscScalar    *xx, A[1];
-  PetscErrorCode ierr;
-  PetscInt       idx[1] = {0};
+  int coupling = get_coupling_type();
 
-  ierr = VecGetArray(x, &xx);
+  // in this simple model all temperatures are equal
+  double kT = electron_vt;
 
-  SemiconductorModel* s = static_cast<SemiconductorModel*>(sc);
-  s->calculate_all(xx[0], 0.0, 0.0, (s->elem)->centroid());
+  // call the method of the parent class
+  Parent::calculate_all(potential, fermi_e, fermi_h, coord);
 
-  A[0] = s->get_charge_density_derivatives()[0];
-/*
-  std::cerr << "u = " << xx[0] << ", n = " << s->get_charge_density()
-    << ", dn = " << A[0] << "\n";
-*/
-  ierr = MatSetValues(*jac, 1, idx, 1, idx, A, INSERT_VALUES);
-  *flag = SAME_NONZERO_PATTERN;
+  double n = electron_density;
+  double dn = electron_density_derivative;
+  double p = hole_density;
+  double dp = hole_density_derivative;
 
-  ierr = VecRestoreArray(x, &xx);
+  // 4.) mobilities / conductivities
+  // For both statistics:
+  // 
+  //   mu_n = e * D_n * (1 / n) * (dn / dEf_e)
+  //
+  // NOTE: kT := kB * T / e includes already e
+  //if (coupling & DriftDiffusionDefs::ELECTRONS)
+  //{
+    electron_mobility = _e_mobility;
+    electron_conductivity = _e_mobility * n;
+    electron_conductivity_derivatives[0] = _e_mobility * dn;
+    electron_conductivity_derivatives[1] = _e_mobility * dn;
+  //}
+  //if (coupling & DriftDiffusionDefs::HOLES)
+  //{
+    hole_mobility = _h_mobility;
+    hole_conductivity = _h_mobility * p;
+    hole_conductivity_derivatives[0] = _h_mobility * dp;
+    hole_conductivity_derivatives[2] = _h_mobility * dp;
+  //}
+  
+  electron_recombination_rate = 0;
+  electron_recombination_rate_derivatives[0] = 0;
+  electron_recombination_rate_derivatives[1] = 0;
+  electron_recombination_rate_derivatives[2] = 0;
+  hole_recombination_rate = 0;
+  hole_recombination_rate_derivatives[0] = 0;
+  hole_recombination_rate_derivatives[1] = 0;
+  hole_recombination_rate_derivatives[2] = 0;
+  // 5.) Recombination
+  //if (coupling & DriftDiffusionDefs::BOTH)
+  //{
+    if (_recombination & DriftDiffusionDefs::SRH)
+      calculate_SRH_recombination();
+    if (_recombination & DriftDiffusionDefs::AUGER)
+      calculate_Auger_recombination();
+    if (_recombination & DriftDiffusionDefs::DIRECT)
+      calculate_direct_recombination();
 
-  ierr = MatAssemblyBegin(*jac, MAT_FINAL_ASSEMBLY);
-  ierr = MatAssemblyEnd(*jac, MAT_FINAL_ASSEMBLY);
-
-  return ierr;
+    if (_exciton_gen_param > 1e-56)
+      calculate_exciton_generation();
+  //}
 }
-
-PetscErrorCode
-SemiconductorModel::function(SNES snes, Vec x, Vec f, void *sc)
-{
-  PetscErrorCode ierr;
-  PetscScalar    *xx, *ff;
-
-  ierr = VecGetArray(x, &xx);
-  ierr = VecGetArray(f, &ff);
-
-  SemiconductorModel* s = static_cast<SemiconductorModel*>(sc);
-  s->calculate_all(xx[0], 0.0, 0.0, (s->elem)->centroid());
-
-  ff[0] = s->get_charge_density();
-
-  ierr = VecRestoreArray(x, &xx);
-  ierr = VecRestoreArray(f, &ff);
-
-  return ierr;
-}
-
 

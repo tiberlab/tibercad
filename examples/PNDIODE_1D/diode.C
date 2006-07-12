@@ -99,7 +99,7 @@ int main (int argc, char** argv)
     Dummy d;
     nside.read_database(d);
 
-    nside.set_n_dopant(Dopant(n_doping, 0.025, 2));
+    nside.add_dopant(new Dopant(n_doping, 0.025, 2, Dopant::N_TYPE));
     nside.set_mobilities(283.8, 160.3);
     nside.add_recombination_model(SRH);
     nside.set_SRH_parameters(1e-7, 3e-8);
@@ -107,10 +107,10 @@ int main (int argc, char** argv)
     SemiconductorModel pside(nside);
     pside.read_database(d);
 
-    pside.set_p_dopant(Dopant(p_doping, 0.01, 4));
-    nside.set_mobilities(283.8, 160.3);
-    nside.add_recombination_model(SRH);
-    nside.set_SRH_parameters(1e-7, 3e-8);
+    pside.add_dopant(new Dopant(p_doping, 0.01, 4, Dopant::P_TYPE));
+    pside.set_mobilities(283.8, 160.3);
+    pside.add_recombination_model(SRH);
+    pside.set_SRH_parameters(1e-7, 3e-8);
 
 
     ElementData element_data;
@@ -213,7 +213,7 @@ int main (int argc, char** argv)
     {
       vector<double> densities;
       vector<string> names;
-      cout << "Solving equilibrium... " << flush;
+      cout << "Solving equilibrium...\n" << flush;
       dd.solve();
       dd.remember_current_solution();
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
@@ -272,7 +272,7 @@ int main (int argc, char** argv)
     for ( ; it != voltages.end(); ++it)
     {
       dd.set_simulation_voltage("anode", *it);
-      cout << " Solving U = " << *it << " V ... " << flush;
+      cout << " Solving U = " << *it << " V ...\n" << flush;
       dd.enable_mesh_refinement();
       dd.solve();
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
@@ -320,7 +320,7 @@ int main (int argc, char** argv)
       {
         --it;
         dd.set_simulation_voltage("anode", *it);
-        cout << " Solving U = " << *it << " V ... " << flush;
+        cout << " Solving U = " << *it << " V ...\n" << flush;
         dd.enable_mesh_refinement();
         if (restart)
           dd.set_to_remembered_solution();

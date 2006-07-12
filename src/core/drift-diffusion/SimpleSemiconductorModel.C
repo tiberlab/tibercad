@@ -11,24 +11,17 @@ using namespace DriftDiffusionDefs;
 
 
 SimpleSemiconductorModel::SimpleSemiconductorModel(void)
-  : DriftDiffusionProperties(),
+  : Parent(),
     _recombination(0),
-    _is_prepared(false),
-    _coupling(BOTH)
+    _is_prepared(false)
 {
-  _DOS_factor = 2 * std::pow(2 * M_PI * Constants::me /
-      (Constants::h * Constants::h) * Constants::e, 1.5) / 1e6;
 }
 
 SimpleSemiconductorModel::SimpleSemiconductorModel(
     const SimpleSemiconductorModel& model)
-  : DriftDiffusionProperties(model),
+  : Parent(model),
     _recombination(model._recombination),
-    _DOS_factor(model._DOS_factor),
-    _conduction_band(model._conduction_band),
-    _valence_band(model._valence_band),
     _is_prepared(model._is_prepared),
-    _coupling(model._coupling),
     _electron_recombination_time(model._electron_recombination_time),
     _hole_recombination_time(model._hole_recombination_time),
     _direct_rec_param(model._direct_rec_param)
@@ -43,204 +36,68 @@ SimpleSemiconductorModel::prepare_element_data(void)
     double kT = SimulationOptions::T * Constants::k_B;
     electron_vt = hole_vt = kT;
 
-    BandProperties& cb = _conduction_band;
-    BandProperties& vb = _valence_band;
-
-    cb.effective_DOS =
-      get_DOS_factor() * std::pow(kT * cb.effective_mass, 1.5);
-
-    vb.effective_DOS =
-      get_DOS_factor() * std::pow(kT * vb.effective_mass, 1.5);
-
-    conduction_band_edge = cb.band_edge;
-    valence_band_edge = vb.band_edge;
-
     calculate_equilibrium_properties(BOTH, SimulationOptions::T);
 
     _is_prepared =  true;
   }
 }
 
-void
-SimpleSemiconductorModel::calculate_all(
-    double potential, double fermi_e, double fermi_h,
-    const Point& coord)
-{
-  switch (_coupling & BOTH)
-  {
-    case ELECTRONS:
-      calculate_all<ELECTRONS>(potential, fermi_e, fermi_h);
-      break;
-    case HOLES:
-      calculate_all<HOLES>(potential, fermi_e, fermi_h);
-      break;
-    default:
-      calculate_all<BOTH>(potential, fermi_e, fermi_h);
-      break;
-  }
-}
 
 
 void
-SimpleSemiconductorModel::calculate_equilibrium_properties(int coupling,
-    double temperature)
+SimpleSemiconductorModel::calculate_all(double potential,
+    double fermi_e, double fermi_h, const Point& coord)
 {
+  int coupling = get_coupling_type();
 
-  // if equilibrium properties were already calculated, we
-  // just update all properties to equilibrium ones
-  if (_is_prepared)
-  {
-    switch (_coupling & BOTH)
-    {
-      case ELECTRONS:
-        calculate_all<ELECTRONS>(get_equilibrium_fermi_level(), 0, 0);
-        break;
-      case HOLES:
-        calculate_all<HOLES>(get_equilibrium_fermi_level(), 0, 0);
-        break;
-      default:
-        calculate_all<BOTH>(get_equilibrium_fermi_level(), 0, 0);
-        break;
-    }
-    return;
-  }
+  // in this simple model all temperatures are equal
+  double kT = electron_vt;
 
-  // remember the coupling
-  int coupling_bkp = _coupling;
-  _coupling = BOTH;
+  // call the method of the parent class
+  Parent::calculate_all(potential, fermi_e, fermi_h, coord);
 
-  SNES           snes;
-  KSP            ksp;
-  PC             pc;
-  Vec            x, r;
-  Mat            J;
-  PetscErrorCode ierr;
-  PetscScalar    guess, *result;
+  double n = electron_density;
+  double dn = electron_density_derivative;
+  double p = hole_density;
+  double dp = hole_density_derivative;
 
-  ierr = SNESCreate(PETSC_COMM_WORLD, &snes);
-  ierr = VecCreateSeq(PETSC_COMM_SELF, 1, &x);
-  ierr = VecDuplicate(x, &r);
-  ierr = MatCreate(PETSC_COMM_SELF,
-      PETSC_DECIDE, PETSC_DECIDE, 1, 1, &J);
-  ierr = MatSetFromOptions(J);
-
-  ierr = SNESGetKSP(snes, &ksp);
-  ierr = KSPGetPC(ksp, &pc);
-  ierr = PCSetType(pc, PCNONE);
-  ierr = KSPSetTolerances(ksp, 1.e-9, 1e-12, PETSC_DEFAULT, 1500);
-  ierr = SNESSetTolerances(snes, PETSC_DEFAULT,
-      1.e-12, PETSC_DEFAULT, 50, 5000);
-
-  double kT = SimulationOptions::T * Constants::k_B;
-
-  ierr = SNESSetType(snes, SNESLS);
-  // set ls_maxstep to something reasonable
-  ierr = SNESSetLineSearchParams(snes, PETSC_DEFAULT, 100 * kT,
-      PETSC_DEFAULT);
-
-
-  ierr = SNESSetFunction(snes, r, function, (void *) this);
-  ierr = SNESSetJacobian(snes, J, J, jacobian, (void *) this);
-
-  // calculate first guess according to doping
-  // assume complete ionization
-  const BandProperties& cb = _conduction_band;
-  const BandProperties& vb = _valence_band;
-  double Nd = get_donor_density();
-  double Na = get_acceptor_density();
-
-  double ni2 = cb.effective_DOS * vb.effective_DOS
-    * std::exp(-0.5 * get_band_gap() / kT);
-  double ni = std::sqrt(ni2);
-  // Hmm... Is there a better guess?
-  if (Nd > Na)
-  {
-    guess = cb.band_edge + kT
-      * std::log(cb.effective_DOS / (Nd + ni));
-  }
-  else
-  {
-    guess = vb.band_edge + kT
-      * std::log(vb.effective_DOS / (Na + ni));
-  }
-
-  ierr = VecSet(&guess, x);
-
-  ierr = SNESSolve(snes, x);
-///*
-  SNESConvergedReason reason;
-  ierr = SNESGetConvergedReason(snes, &reason);
-  int n_iterations = 0;
-  ierr = SNESGetIterationNumber(snes, &n_iterations);
-  std::cerr << "Equilibrium properties calculation:\n";
-  std::cerr << "  # iterations: "  << n_iterations
-    << ", converged reason: " << reason << "\n";
-//*/
-
-  ierr = VecGetArray(x, &result);
-
-  equilibrium_fermi_level =  result[0];
-
-  equilibrium_electron_density = electron_density;
-  equilibrium_hole_density = hole_density;
-
-  ierr = VecRestoreArray(x, &result);
-
-  ierr = VecDestroy(x);
-  ierr = MatDestroy(J);
-
-  // restore original coupling
-  _coupling = coupling_bkp;
-}
-
-
-PetscErrorCode
-SimpleSemiconductorModel::jacobian(SNES snes, Vec x,
-    Mat *jac, Mat *B, MatStructure *flag, void *sc)
-{
-  PetscScalar    *xx, A[1];
-  PetscErrorCode ierr;
-  PetscInt       idx[1] = {0};
-
-  ierr = VecGetArray(x, &xx);
-
-  SimpleSemiconductorModel* s = static_cast<SimpleSemiconductorModel*>(sc);
-  s->calculate_all(xx[0], 0.0, 0.0, (s->elem)->centroid());
-
-  A[0] = s->get_charge_density_derivatives()[0];
-///*
-  std::cerr << "u = " << xx[0] << ", n = " << s->get_charge_density()
-    << ", dn = " << A[0] << "\n";
-//*/
-  ierr = MatSetValues(*jac, 1, idx, 1, idx, A, INSERT_VALUES);
-  *flag = SAME_NONZERO_PATTERN;
-
-  ierr = VecRestoreArray(x, &xx);
-
-  ierr = MatAssemblyBegin(*jac, MAT_FINAL_ASSEMBLY);
-  ierr = MatAssemblyEnd(*jac, MAT_FINAL_ASSEMBLY);
-
-  return ierr;
-}
-
-PetscErrorCode
-SimpleSemiconductorModel::function(SNES snes, Vec x, Vec f, void *sc)
-{
-  PetscErrorCode ierr;
-  PetscScalar    *xx, *ff;
-
-  ierr = VecGetArray(x, &xx);
-  ierr = VecGetArray(f, &ff);
-
-  SimpleSemiconductorModel* s = static_cast<SimpleSemiconductorModel*>(sc);
-  s->calculate_all(xx[0], 0.0, 0.0, (s->elem)->centroid());
-
-  ff[0] = s->get_charge_density();
-
-  ierr = VecRestoreArray(x, &xx);
-  ierr = VecRestoreArray(f, &ff);
-
-  return ierr;
+  // 4.) mobilities / conductivities
+  // For both statistics:
+  // 
+  //   mu_n = e * D_n * (1 / n) * (dn / dEf_e)
+  //
+  // NOTE: kT := kB * T / e includes already e
+  //if (coupling & DriftDiffusionDefs::ELECTRONS)
+  //{
+    electron_conductivity = electron_mobility * n;
+    electron_conductivity_derivatives[0] = electron_mobility * dn;
+    electron_conductivity_derivatives[1] = electron_mobility * dn;
+  //}
+  //if (coupling & DriftDiffusionDefs::HOLES)
+  //{
+    hole_conductivity = hole_mobility * p;
+    hole_conductivity_derivatives[0] = hole_mobility * dp;
+    hole_conductivity_derivatives[2] = hole_mobility * dp;
+  //}
+  
+  electron_recombination_rate = 0;
+  electron_recombination_rate_derivatives[0] = 0;
+  electron_recombination_rate_derivatives[1] = 0;
+  electron_recombination_rate_derivatives[2] = 0;
+  hole_recombination_rate = 0;
+  hole_recombination_rate_derivatives[0] = 0;
+  hole_recombination_rate_derivatives[1] = 0;
+  hole_recombination_rate_derivatives[2] = 0;
+  // 5.) Recombination
+  //if (coupling & DriftDiffusionDefs::BOTH)
+  //{
+    if (_recombination & DriftDiffusionDefs::SRH)
+      calculate_SRH_recombination();
+    if (_recombination & DriftDiffusionDefs::AUGER)
+      calculate_Auger_recombination();
+    if (_recombination & DriftDiffusionDefs::DIRECT)
+      calculate_direct_recombination();
+  //}
 }
 
 

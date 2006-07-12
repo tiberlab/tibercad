@@ -10,15 +10,26 @@
 #include "PhysicalProperties.h"
 #include "DriftDiffusionDefs.h"
 #include "TiberCad.h"
+#include "Constants.h"
+#include "TypeDefs.h"
 
 // GNU scientific library
 #include <gsl/gsl_sf_fermi_dirac.h>
 
 #include <vector>
+#include <set>
+#include <map>
+
+
+extern "C" {
+  #include "petscsnes.h"
+}
 
 // forward declarations
 class Point;
 class Elem;
+class Dopant;
+class RecombinationModelInterface;
 
 class DriftDiffusionProperties : public PhysicalProperties
 {
@@ -34,6 +45,9 @@ class DriftDiffusionProperties : public PhysicalProperties
      */
     void set_statistics(TiberCad::Statistics statistics);
 
+    //! Add a dopant
+    void add_dopant(Dopant* dopant);
+
     //! Get the statistics to be used
     /*!
      * \return the statistics
@@ -47,11 +61,44 @@ class DriftDiffusionProperties : public PhysicalProperties
      */
     void reinit(const Elem* elem);
     
+    //! Set the coupling type
+    void set_coupling_type(DriftDiffusionDefs::Coupling coupling)
+      { _coupling = (int) coupling; };
+    
+    //! Set the coupling type
+    void set_coupling_type(int coupling)
+      { _coupling = coupling; };
+    
+    //! Get the coupling type
+    DriftDiffusionDefs::Coupling get_coupling_type(void) const
+      { return (DriftDiffusionDefs::Coupling) _coupling; };
+
+    //! Setup the band edge data
+    /*!
+     * This implementation calculates the effective density of states
+     * and sets the band edges.
+     */
+    void setup_band_edges(void);
+
+    //! Get the total n-doping
+    double get_total_donor_density(void) const;
+
+    //! Get the total p-doping
+    double get_total_acceptor_density(void) const;
+
+    //! Get the total net doping density
+    /*!
+     * The return value is \f$N_d - N_a\f$
+     */
+    double get_net_doping_density(void) const;
+
+
     //! Calculates the equilibrium properties.
     /*!
      *
      * This method has to be called before any call to \p calculate_all()
-     * but after setting up all material parameters
+     * but after setting up all material parameters.
+     * Call this method a derived one.
      *
      * \pre { \c reinit() has to be called before }
      * \post { all equilibrium properties are accessible without
@@ -59,12 +106,11 @@ class DriftDiffusionProperties : public PhysicalProperties
      */
     virtual void calculate_equilibrium_properties(
         int coupling = DriftDiffusionDefs::BOTH,
-        double temperature = SimulationOptions::T) = 0;
+        double temperature = SimulationOptions::T);
 
     //! The method that will calculate all needed properties
     /*!
-     * This method needs to be implemented by a derived class. It has to
-     * calculate at least the following set of parameters:
+     * This method can be reimplemented in derived classes if necessary
      * 
      * \li the dielectric tensor
      * \li the total electric polarization
@@ -89,7 +135,7 @@ class DriftDiffusionProperties : public PhysicalProperties
      *
      */
     virtual void calculate_all(double potential,
-      double fermi_e, double fermi_h, const Point& coord) = 0;
+      double fermi_e, double fermi_h, const Point& coord);
       
 
     //! Get the electron density
@@ -306,33 +352,60 @@ class DriftDiffusionProperties : public PhysicalProperties
 
     //! Get the conduction band edge
     double get_conduction_band_edge(void) const
-      { return conduction_band_edge; };
+      { return conduction_band.band_edge; };
 
     //! Get the valence band edge
     double get_valence_band_edge(void) const
-      { return valence_band_edge; };
+      { return valence_band.band_edge; };
 
     //! Get the band gap
     double get_band_gap(void) const
-      { return conduction_band_edge - valence_band_edge; };
+      { return conduction_band.band_edge - valence_band.band_edge; };
 
     virtual void get_net_recombination_rates(std::vector<double>& rates) {};
 
+    //! clear all doping
+    void clear_doping(void);
+
   protected:
-  
+      
+    /*!
+     * This structure holds the basic properties of a band for given
+     * conditions (temp etc.)
+     */
+    struct BandProperties
+    {
+      //! The effective mass for the DOS
+      /*!
+       * It includes any degeneration, i.e. also spin
+       */
+      double effective_mass;
+      
+      //! The effective density of states
+      double effective_DOS;
+
+      //! The band edge energy
+      double band_edge;
+    };
+
     //! The empty constructor.
     DriftDiffusionProperties(void);
+
+    //! The copy constructor
+    DriftDiffusionProperties(const DriftDiffusionProperties& rhs);
+
 
     //! This method gets called from reinit()
     /*!
      * It can be used to setup data that is constant in an element, e.g.
      * strain related stuff, band edges.
+     * This method can be used overiden by derived classes.
      */
     virtual void prepare_element_data(void) {};
 
     //! The element we are currently working on
     const Elem* elem;
-
+    
     //! The thermal voltage for the electrons
     double electron_vt;
 
@@ -406,18 +479,6 @@ class DriftDiffusionProperties : public PhysicalProperties
     //RealTensorValue permittivity;
     double permittivity;
 
-    //! The conduction band edge
-    /*!
-     * The band edge is an element data
-     */
-    double conduction_band_edge;
-
-    //! The valence band edge
-    /*!
-     * The band edge is an element data
-     */
-    double valence_band_edge;
-
     //! The equilibrium fermi level
     /*!
      * The fermi level such that \f$n=n_0,\,p=p_0\f$
@@ -453,16 +514,81 @@ class DriftDiffusionProperties : public PhysicalProperties
      */
     template<TiberCad::Statistics S> double density(double arg) const;
 
+    //! Get the conduction band properties
+    const BandProperties& get_conduction_band(void) const
+      { return conduction_band; };
+
+    //! Get the valence band properties
+    const BandProperties& get_valence_band(void) const
+      { return valence_band; };
+
+    //! Get the conduction band properties
+    BandProperties& get_conduction_band(void)
+      { return conduction_band; };
+
+    //! Get the valence band properties
+    BandProperties& get_valence_band(void)
+      { return valence_band; };
+
+    //! Get the constant factor to calculate the effective density of states
+    /*!
+     * \return the factor pow(2 * PI / h^2)^1.5
+     *
+     * The spin degeneracy has to be included in the effective mass.
+     */
+    static double get_DOS_factor(void)
+      { return _DOS_factor; }
+
+    static PetscErrorCode jacobian(SNES snes, Vec x,
+        Mat *jac, Mat *B, MatStructure *flag, void *sc);
+
+    static PetscErrorCode function(SNES snes, Vec x, Vec f, void *sc);
+
 
   private:
 
+    typedef std::set<Dopant*>::iterator dopant_iterator;
+    typedef
+      std::map<ID, RecombinationModelInterface*>::iterator recomb_iterator;
+
+
+    //! The statistics used 
     TiberCad::Statistics _statistics;
 
-    //std::map<ID, RecombinationModel*> _recombination_models;
+    //! Type of coupling (particles) we want to study
+    /*!
+     * This can be one of \c ELECTRONS, \c HOLES or \c BOTH
+     */
+    int _coupling;
 
-    //std::map<ID, DopingModel*> _doping_models;
+    //! The conduction band properties
+    /*!
+     * Band properties are assumed to be elemental data, \em not nodal data
+     */
+    BandProperties conduction_band;
+
+    //! The conduction band properties
+    /*!
+     * Band properties are assumed to be elemental data, \em not nodal data
+     */
+    BandProperties valence_band;
+
+    //! The donors
+    std::set<Dopant*> _donors;
+
+    //! The acceptors
+    std::set<Dopant*> _acceptors;
+
+    //! The recombination models
+    std::map<ID, RecombinationModelInterface*> _recombination_models;
 
     //MobilityModel* _mobility_model;
+
+    //! The constant factor to calculate the effective density of states
+    /*!
+     * The spin degeneracy has to be included in the effective mass
+     */
+    static const double _DOS_factor;
 
 
 };
@@ -471,24 +597,6 @@ class DriftDiffusionProperties : public PhysicalProperties
 //
 // inline members
 //
-
-inline
-DriftDiffusionProperties::~DriftDiffusionProperties(void)
-{
-}
-
-inline
-DriftDiffusionProperties::DriftDiffusionProperties(void)
-  : PhysicalProperties("DriftDiffusionProperties"),
-    elem(NULL),
-    charge_density_derivatives(3, 0.0),
-    electron_conductivity_derivatives(3, 0.0),
-    hole_conductivity_derivatives(3, 0.0),
-    electron_recombination_rate_derivatives(3, 0.0),
-    hole_recombination_rate_derivatives(3, 0.0),
-    _statistics(TiberCad::BOLTZMANN)
-{
-}
 
 inline
 void
@@ -546,6 +654,13 @@ TiberCad::Statistics
 DriftDiffusionProperties::get_statistics(void) const
 {
   return _statistics;
+}
+
+inline
+double
+DriftDiffusionProperties::get_net_doping_density(void) const
+{
+  return (get_total_donor_density() - get_total_acceptor_density());
 }
 
 template<TiberCad::Statistics S>
@@ -640,27 +755,33 @@ DriftDiffusionProperties::density_and_derivatives(double arg, double& density,
       break;
 
     default:
-      if (arg < arg_max)
-      {
-        density = std::exp(arg);
-        derivative = density;
-        _2nd_derivative = density;
-        derivative_over_density = 1;
-      }
-      else
-      {
-        density = std::exp(arg_max);
-        derivative = density;
-        _2nd_derivative = density;
-        derivative_over_density = 1;
-        //density = 2 * M_2_SQRTPI / 3 * std::pow(arg, 1.5);
-        //derivative = M_2_SQRTPI * std::sqrt(arg);
-        //_2nd_derivative = 0.5 * M_2_SQRTPI / std::sqrt(arg);
-        //derivative_over_density = derivative / density;
-      }
+      arg = (arg > arg_max) ? arg_max : arg;
+
+      density = std::exp(arg);
+      derivative = density;
+      _2nd_derivative = density;
+      derivative_over_density = 1;
       break;
   }
 }
+
+inline
+void
+DriftDiffusionProperties::setup_band_edges(void)
+{
+  double kT = SimulationOptions::T * Constants::k_B;
+  electron_vt = hole_vt = kT;
+  
+  BandProperties& cb = conduction_band;
+  BandProperties& vb = valence_band;
+
+  cb.effective_DOS =
+    get_DOS_factor() * std::pow(kT * cb.effective_mass, 1.5);
+
+  vb.effective_DOS =
+    get_DOS_factor() * std::pow(kT * vb.effective_mass, 1.5);
+}
+
 
 
 

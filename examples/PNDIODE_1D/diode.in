@@ -18,8 +18,8 @@ voltage_steps = 50
 
 #simulation_method = GUMMEL
 
-nonlinear_tolerance = 1e-12
-nonlinear_ls_maxstep = 0.1
+nonlinear_tolerance = 1e-9
+nonlinear_ls_maxstep = 0.05
 linear_tolerance = 1e-9
 nonlinear_max_it = 15
 linear_max_it = 1000

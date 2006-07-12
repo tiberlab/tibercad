@@ -33,6 +33,10 @@ class Dopant
 
     void set_type(DopingType type);
 
+    double get_ionized_dopant_density(double arg, double kT);
+
+    double get_ionized_dopant_density_derivative(double arg, double kT);
+
 
   private:
 

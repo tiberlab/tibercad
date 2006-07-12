@@ -30,4 +30,4 @@ clean:
 
 
 test:
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -S SimpleSemiconductorModel.C
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -S DriftDiffusionProperties.C
