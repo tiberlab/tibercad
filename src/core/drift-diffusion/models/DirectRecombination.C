@@ -8,7 +8,6 @@ DirectRecombination::DirectRecombination(void)
   : RecombinationModelInterface(),
     _C(1e-10)
 {
-  register_model();
 }
 
 void

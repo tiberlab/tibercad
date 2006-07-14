@@ -2,6 +2,7 @@
 
 
 #include "ExcitonModel.h"
+#include "RecombinationModelInterface.h"
 
 #include "SemiconductorModel.h"
 #include "SimulationOptions.h"
@@ -38,9 +39,13 @@ ExcitonModel::calculate_all(double fermi_x, const Point& coord)
   recombination_rate_derivative = density_derivative / _t;
 
   // 4.) Generation
-  const SemiconductorModel* sc =
-    static_cast<const SemiconductorModel*>(get_driftdiffusion_properties());
-  generation_rate = sc->get_exciton_generation_rate();
+  RecombinationModelInterface* rec =
+    get_driftdiffusion_properties()->get_recombination_model(_gen_mod_id);
+  assert(rec != NULL);
+  // the Drift-Diffusion recombination models return a net recombination rate
+  // for electrons and holes.
+  double dummy;
+  rec->get_net_recombination_rates(generation_rate, dummy);
 
 }
 
@@ -61,4 +66,10 @@ ExcitonModel::prepare_element_data(void)
 void
 ExcitonModel::read_database(const Dummy& d)
 {
+  // find out which ID has the exciton generation model
+  // for now the model name is hard wired
+  _gen_mod_id = RecombinationModelInterface::get_id(_exciton_generation_model);
+
+  // TODO perhaps we should check if the exciton generation model exists?
+  assert(_gen_mod_id != 0);
 }

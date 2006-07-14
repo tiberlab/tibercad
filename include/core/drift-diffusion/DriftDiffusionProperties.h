@@ -79,6 +79,12 @@ class DriftDiffusionProperties : public PhysicalProperties
     DriftDiffusionDefs::Coupling get_coupling_type(void) const
       { return (DriftDiffusionDefs::Coupling) _coupling; };
 
+    //! Get the element we are currently working on
+    const Elem* get_element(void) const;
+
+    //! Get the coordinates of the point we are currently working on
+    const Point* get_coordinates(void) const;
+
     //! Setup the band edge data
     /*!
      * This implementation calculates the effective density of states
@@ -368,7 +374,9 @@ class DriftDiffusionProperties : public PhysicalProperties
     double get_band_gap(void) const
       { return conduction_band.band_edge - valence_band.band_edge; };
 
-    virtual void get_net_recombination_rates(std::vector<double>& rates) {};
+    void get_net_recombination_rates(std::vector<double>& rates) {};
+
+    RecombinationModelInterface* get_recombination_model(ID id);
 
     //! clear all doping
     void clear_doping(void);
@@ -408,10 +416,8 @@ class DriftDiffusionProperties : public PhysicalProperties
      * This method can be used overiden by derived classes.
      */
     virtual void prepare_element_data(void) {};
-
-    //! The element we are currently working on
-    const Elem* elem;
     
+
     //! The thermal voltage for the electrons
     double electron_vt;
 
@@ -560,6 +566,11 @@ class DriftDiffusionProperties : public PhysicalProperties
     //! The copy constructor
     DriftDiffusionProperties(const DriftDiffusionProperties& rhs);
 
+    //! The element we are currently working on
+    const Elem* _elem;
+
+    //! The coordinates of the point we are working on
+    const Point* _coord;
 
     //! The statistics used 
     TiberCad::Statistics _statistics;
@@ -611,10 +622,25 @@ inline
 void
 DriftDiffusionProperties::reinit(const Elem* elem)
 {
-  this->elem = elem;
+  _elem = elem;
   this->prepare_element_data();
 }
     
+inline
+const Elem*
+DriftDiffusionProperties::get_element(void) const
+{
+  return _elem;
+}
+    
+inline
+const Point*
+DriftDiffusionProperties::get_coordinates(void) const
+{
+  return _coord;
+}
+
+
 inline
 double
 DriftDiffusionProperties::get_charge_density(void) const
@@ -627,6 +653,18 @@ const std::vector<double>&
 DriftDiffusionProperties::get_charge_density_derivatives(void) const
 {
   return charge_density_derivatives;
+}
+
+inline
+RecombinationModelInterface*
+DriftDiffusionProperties::get_recombination_model(ID id)
+{
+  RecombinationModelInterface* rec = NULL;
+  recomb_iterator it = _recombination_models.find(id);
+  if (it != _recombination_models.end())
+    rec = it->second;
+
+  return rec;
 }
 
 inline

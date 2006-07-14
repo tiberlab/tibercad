@@ -41,20 +41,47 @@ class DriftDiffusionModelInterface
     //! Get the unique ID of this model
     ID get_id(void) const;
 
+    //! Get the ID of the model with name \c model_name
+    /*!
+     * If the model was not already registered, it gets inserted in the
+     * model list and assigned a new ID.
+     *
+     * \param model_name the name of the model
+     * \return the ID of the model or 0 if it does not exist
+     */
+    static ID get_id(const std::string& model_name);
+
+    //! Creates a new named model
+    /*!
+     * The model is created according to the given model name.
+     * If it is not known, the NULL pointer is returned.
+     * 
+     * \param name the model name
+     * \return a pointer to the newly created object
+     */
+    static DriftDiffusionModelInterface* create(const std::string& name);
+
+    //! Creates a new named model
+    /*!
+     * The model is created according to the given model name.
+     * If it is not known, the NULL pointer is returned.
+     * 
+     * \param name the model name
+     * \param options the options as given in the input file
+     * \return a pointer to the newly created object
+     */
+    static DriftDiffusionModelInterface* create(const std::string& name,
+        const ModelOptions& options);
+
+    //! Set options for this model
+    virtual void set_model_options(const ModelOptions& options) {};
+
 
   protected:
 
     //! Empty constructor
     DriftDiffusionModelInterface(void);
 
-    //! Register a new model
-    /*!
-     * This method registers every new model that gets created and assigns
-     * it a unique model ID.
-     * This method has to be called from the constructor of any model that
-     * can be instantiated
-     */
-    void register_model(void);
 
   private:
 
@@ -64,10 +91,20 @@ class DriftDiffusionModelInterface
     ID _id;
 
     //! A map with ID/model name pairs
+    /*!
+     * Models are counted starting from 1. 0 means undefined model.
+     */
     static std::map<const std::string, ID> _model_ids;
 
     //! The DriftDiffusionProperties object this model belongs to
     const DriftDiffusionProperties* _dd_prop;
+
+    //! Register a new model
+    /*!
+     * This method registers every new model that gets created and assigns
+     * it a unique model ID.
+     */
+    static void register_model(DriftDiffusionModelInterface* model);
 };
 
 

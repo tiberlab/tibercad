@@ -159,6 +159,9 @@ class ExcitonProperties : public PhysicalProperties
     //! Get a reference to the DriftDiffusionProperties
     const DriftDiffusionProperties* get_driftdiffusion_properties(void) const;
 
+    //! Get a reference to the DriftDiffusionProperties
+    DriftDiffusionProperties* get_driftdiffusion_properties(void);
+
 
   private:
 
@@ -244,6 +247,14 @@ ExcitonProperties::get_driftdiffusion_properties(void) const
 {
   return _dd_prop;
 }
+
+inline
+DriftDiffusionProperties*
+ExcitonProperties::get_driftdiffusion_properties(void)
+{
+  return _dd_prop;
+}
+
 
 
 

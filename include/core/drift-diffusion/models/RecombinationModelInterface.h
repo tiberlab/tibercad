@@ -13,7 +13,7 @@ class RecombinationModelInterface : public DriftDiffusionModelInterface
   public:
 
     //! Destructor
-    virtual ~RecombinationModelInterface(void) {};
+    virtual ~RecombinationModelInterface(void);
 
     //! Get the electron and hole net recombination rates
     /*!
@@ -28,6 +28,25 @@ class RecombinationModelInterface : public DriftDiffusionModelInterface
      */
     virtual void get_net_recombination_rate_derivatives(
         std::vector<double>& recomb_e, std::vector<double>& recomb_h) = 0;
+
+
+    //! Get the electron and hole recombination rates
+    //virtual void get_recombination_rates(double& recomb_e,
+    //    double& recomb_h) = 0;
+
+    //! Get the electron and hole net recombination rate derivatives
+    //virtual void get_recombination_rate_derivatives(
+    //    std::vector<double>& recomb_e, std::vector<double>& recomb_h) = 0;
+
+    
+    //! Get the electron and hole generation rates
+    //virtual void get_generation_rates(double& gen_e,
+    //    double& gen_h) = 0;
+
+    //! Get the electron and hole net generation rate derivatives
+    //virtual void get_generation_rate_derivatives(
+    //    std::vector<double>& gen_e, std::vector<double>& gen_h) = 0;
+
 
     //! Creates a new named recombination model
     /*!
@@ -62,6 +81,37 @@ class RecombinationModelInterface : public DriftDiffusionModelInterface
   private:
 
 };
+
+inline
+RecombinationModelInterface::RecombinationModelInterface(void)
+  : DriftDiffusionModelInterface()
+{
+}
+
+inline
+RecombinationModelInterface::~RecombinationModelInterface(void)
+{
+}
+
+
+inline
+RecombinationModelInterface*
+RecombinationModelInterface::create(const std::string& name)
+{
+  return dynamic_cast<RecombinationModelInterface*>(
+      DriftDiffusionModelInterface::create(name));
+}
+
+
+inline
+RecombinationModelInterface*
+RecombinationModelInterface::create(const std::string& name,
+    const ModelOptions& options)
+{
+  return dynamic_cast<RecombinationModelInterface*>(
+      DriftDiffusionModelInterface::create(name, options));
+}
+
 
 
 #endif // _RECOMBINATIONMODELINTERFACE_H_

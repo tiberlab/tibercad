@@ -6,6 +6,10 @@
 #include "SimulationOptions.h"
 #include "ExcitonProperties.h"
 #include "TiberCad.h"
+#include "TypeDefs.h"
+
+
+#include <string>
 
 // forward declarations
 class DriftDiffusionProperties;
@@ -29,6 +33,9 @@ class ExcitonModel : public ExcitonProperties
     virtual void calculate_all(double fermi_x, const Point& coord);
 
     virtual void read_database(const Dummy&);
+
+    //! Set the model of exciton generation to be used
+    void set_exciton_generation_model(const std::string& model_name);
 
     //! Set the exciton recombination time
     void set_recombination_time(double tau)
@@ -68,6 +75,12 @@ class ExcitonModel : public ExcitonProperties
     //! The effective density of states
     double _DOS;
 
+    //! the ID of the exciton generation model
+    ID _gen_mod_id;
+
+    //! The name of the exciton generation model to be used
+    std::string _exciton_generation_model;
+
 
 };
 
@@ -81,6 +94,13 @@ ExcitonModel::~ExcitonModel(void)
 {
 }
 
+
+inline
+void
+ExcitonModel::set_exciton_generation_model(const std::string& model_name)
+{
+  _exciton_generation_model = model_name;
+}
 
 
 

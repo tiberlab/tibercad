@@ -22,8 +22,7 @@ SemiconductorModel::~SemiconductorModel(void)
 SemiconductorModel::SemiconductorModel(void)
   : Parent(),
     _bulk_model(NULL),
-    _is_prepared(false),
-    _exciton_gen_param(0.0)
+    _is_prepared(false)
 {
 }
 
@@ -32,8 +31,7 @@ SemiconductorModel::SemiconductorModel(
     const SemiconductorModel& model)
   : Parent(model),
     _filename(model._filename),
-    _is_prepared(false),
-    _exciton_gen_param(model._exciton_gen_param)
+    _is_prepared(false)
 {
 }
 */
@@ -412,7 +410,5 @@ SemiconductorModel::calculate_all(double potential,
     hole_conductivity_derivatives[2] = _h_mobility * dp;
   //}
 
-    if (_exciton_gen_param > 1e-56)
-      calculate_exciton_generation();
 }
 

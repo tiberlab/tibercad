@@ -16,7 +16,7 @@ DriftDiffusionProperties::_DOS_factor = std::pow(2.0 * M_PI * Constants::me /
 
 DriftDiffusionProperties::DriftDiffusionProperties(void)
   : PhysicalProperties("DriftDiffusionProperties"),
-    elem(NULL),
+    _elem(NULL),
     charge_density_derivatives(3, 0.0),
     electron_conductivity_derivatives(3, 0.0),
     hole_conductivity_derivatives(3, 0.0),
@@ -30,7 +30,7 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
 DriftDiffusionProperties::DriftDiffusionProperties(
     const DriftDiffusionProperties& rhs)
   : PhysicalProperties("DriftDiffusionProperties"),
-    elem(NULL),
+    _elem(NULL),
     charge_density_derivatives(3, 0.0),
     electron_conductivity_derivatives(3, 0.0),
     hole_conductivity_derivatives(3, 0.0),
@@ -129,8 +129,11 @@ void
 DriftDiffusionProperties::calculate_all(double potential,
     double fermi_e, double fermi_h, const Point& coord)
 {
+  // remember the coordinates we are working on, models could need it
+  _coord = &coord;
 
-  // in this simple model all temperatures are equal
+  // for now, all are equal
+  double kT = electron_vt;
   double kTe = electron_vt;
   double kTh = hole_vt;
   
@@ -201,8 +204,8 @@ DriftDiffusionProperties::calculate_all(double potential,
     dopant_iterator end = _donors.end();
     for ( ; it != end; ++it)
     {
-      Nd += (*it)->get_ionized_dopant_density(arg_e, kTe);
-      dNd += (*it)->get_ionized_dopant_density_derivative(arg_e, kTe);
+      Nd += (*it)->get_ionized_dopant_density(arg_e, kT);
+      dNd += (*it)->get_ionized_dopant_density_derivative(arg_e, kT);
     }
     ionized_donor_density = Nd;
     ionized_donor_density_derivative = dNd;
@@ -211,8 +214,8 @@ DriftDiffusionProperties::calculate_all(double potential,
     end = _acceptors.end();
     for ( ; it != end; ++it)
     {
-      Na += (*it)->get_ionized_dopant_density(arg_h, kTh);
-      dNa -= (*it)->get_ionized_dopant_density_derivative(arg_h, kTh);
+      Na += (*it)->get_ionized_dopant_density(arg_h, kT);
+      dNa -= (*it)->get_ionized_dopant_density_derivative(arg_h, kT);
     }
     ionized_acceptor_density = Na;
     ionized_acceptor_density_derivative = dNa;
@@ -293,10 +296,13 @@ DriftDiffusionProperties::calculate_equilibrium_properties(int coupling,
   // and energy
   setup_band_edges();
 
+  // FIXME change this implementation, don't use PETSc
 
   // remember the coupling
   int coupling_bkp = _coupling;
   _coupling = DriftDiffusionDefs::BOTH;
+
+  double kT = SimulationOptions::T * Constants::k_B;
 
   SNES           snes;
   KSP            ksp;
@@ -320,11 +326,9 @@ DriftDiffusionProperties::calculate_equilibrium_properties(int coupling,
   ierr = SNESSetTolerances(snes, PETSC_DEFAULT,
       1.e-12, PETSC_DEFAULT, 50, 5000);
 
-  double kT = SimulationOptions::T * Constants::k_B;
-
   ierr = SNESSetType(snes, SNESLS);
   // set ls_maxstep to something reasonable
-  ierr = SNESSetLineSearchParams(snes, PETSC_DEFAULT, 100 * kT,
+  ierr = SNESSetLineSearchParams(snes, PETSC_DEFAULT, 1 * kT,
       PETSC_DEFAULT);
 
 
@@ -339,13 +343,15 @@ DriftDiffusionProperties::calculate_equilibrium_properties(int coupling,
   double Na = get_total_acceptor_density();
 
   double ni2 = cb.effective_DOS * vb.effective_DOS
-    * std::exp(-0.5 * get_band_gap() / kT);
+    * std::exp(-get_band_gap() / kT);
   double ni = std::sqrt(ni2);
+  equilibrium_electron_density = ni;
+  equilibrium_hole_density = ni;
   
   // Hmm... Is there a better guess?
   if (Nd > Na)
   {
-    guess = cb.band_edge + kT
+    guess = cb.band_edge - kT
       * std::log(cb.effective_DOS / (Nd + ni));
   }
   else
@@ -364,8 +370,8 @@ DriftDiffusionProperties::calculate_equilibrium_properties(int coupling,
   ierr = SNESGetIterationNumber(snes, &n_iterations);
   if (reason < 0)
   {
-    //cerr << "ATTENTION Equilibrium properties calculation:\n";
-    //cerr << "  # iterations: "  << n_iterations
+    //std::cerr << "ATTENTION Equilibrium properties calculation:\n";
+    //std::cerr << "  # iterations: "  << n_iterations
     //  << ", converged reason: " << reason << "\n";
   }
 
@@ -383,6 +389,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(int coupling,
 
   ierr = SNESDestroy(snes);
 
+  
   // restore original coupling
   _coupling = coupling_bkp;
 
@@ -400,9 +407,11 @@ DriftDiffusionProperties::jacobian(SNES snes, Vec x,
   ierr = VecGetArray(x, &xx);
 
   DriftDiffusionProperties* s = static_cast<DriftDiffusionProperties*>(sc);
-  s->calculate_all(xx[0], 0.0, 0.0, (s->elem)->centroid());
+  s->calculate_all(xx[0], 0.0, 0.0, (s->get_element())->centroid());
 
   A[0] = s->get_charge_density_derivatives()[0];
+  //std::cerr << xx[0] << " " << s->get_charge_density() << 
+  //  " " << A[0] << "\n";
 
   ierr = MatSetValues(*jac, 1, idx, 1, idx, A, INSERT_VALUES);
   *flag = SAME_NONZERO_PATTERN;
@@ -426,9 +435,10 @@ DriftDiffusionProperties::function(SNES snes, Vec x, Vec f, void *sc)
   ierr = VecGetArray(f, &ff);
 
   DriftDiffusionProperties* s = static_cast<DriftDiffusionProperties*>(sc);
-  s->calculate_all(xx[0], 0.0, 0.0, (s->elem)->centroid());
+  s->calculate_all(xx[0], 0.0, 0.0, (s->get_element())->centroid());
 
   ff[0] = s->get_charge_density();
+  //std::cerr << xx[0] << " " << ff[0] << "\n";
 
   ierr = VecRestoreArray(x, &xx);
   ierr = VecRestoreArray(f, &ff);

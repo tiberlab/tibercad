@@ -4,12 +4,10 @@
 #define _SEMICONDUCTORMODEL_H_
 
 #include "SimulationOptions.h"
-#include "Dopant.h"
 #include "DriftDiffusionProperties.h"
 
 #include <vector>
 #include <string>
-#include <cmath>
 
 
 // forward declarations
@@ -44,10 +42,6 @@ class SemiconductorModel : public DriftDiffusionProperties
         int coupling = DriftDiffusionDefs::BOTH,
         double temperature = SimulationOptions::T);
 
-    //! Set exciton generation rate parameter
-    void set_exciton_generation_rate_parameter(double g)
-      { _exciton_gen_param = g; };
-
     void set_data_file(const std::string& filename)
       { _filename = filename; };
 
@@ -68,9 +62,6 @@ class SemiconductorModel : public DriftDiffusionProperties
     virtual void calculate_all(double potential,
       double fermi_e, double fermi_h, const Point& coord);
     
-    //! Get the exciton generation rate
-    double get_exciton_generation_rate(void) const;
-
 
     void print_info(void) const;
 
@@ -95,8 +86,6 @@ class SemiconductorModel : public DriftDiffusionProperties
     //! \copydoc DriftDiffusionProperties::prepare_element_data()
     virtual void prepare_element_data(void);
 
-    //! Calculate exciton generation
-    void calculate_exciton_generation(void);
 
     //! Set the object to unprepared state
     void set_to_unprepared(void);
@@ -126,8 +115,6 @@ class SemiconductorModel : public DriftDiffusionProperties
     std::string _filename;
 
     
-    double _exciton_gen_param;
-
 };
 
 
@@ -142,41 +129,4 @@ SemiconductorModel::set_to_unprepared(void)
   _is_prepared = false;
 }
 
-
-inline
-void
-SemiconductorModel::calculate_exciton_generation(void)
-{
-  double n  = electron_density;
-  double p  = hole_density;
-  double dn  = electron_density_derivative;
-  double dp  = hole_density_derivative;
-  double C  = _exciton_gen_param;
-  double ni2 = get_intrinsic_density_squared();
-
-  double rec = C * (n * p - ni2);
-  double a = C * (dn * p);
-  double b = C * (n * dp);
-  electron_recombination_rate += rec;
-  electron_recombination_rate_derivatives[1] += a;
-  electron_recombination_rate_derivatives[2] += b;
-  electron_recombination_rate_derivatives[0] += a + b;
-  hole_recombination_rate += rec;
-  hole_recombination_rate_derivatives[1] += a;
-  hole_recombination_rate_derivatives[2] += b;
-  hole_recombination_rate_derivatives[0] += a + b;
-}
-  
-inline
-double
-SemiconductorModel::get_exciton_generation_rate(void) const
-{
-  double n  = electron_density;
-  double p  = hole_density;
-  double ni2 = get_intrinsic_density_squared();
-
-  double rec = _exciton_gen_param * (n * p - ni2);
-  return rec;
-}
- 
 #endif //_SEMICONDUCTORMODEL_H_

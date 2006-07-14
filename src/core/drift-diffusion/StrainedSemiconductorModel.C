@@ -35,6 +35,7 @@ StrainedSemiconductorModel::prepare_element_data(void)
 {
   if (!_ignore_strain)
   {
+    const Elem* elem = get_element();
     assert(elem != NULL);
 
     const DataMap::const_iterator end = _element_data.end();

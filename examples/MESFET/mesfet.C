@@ -19,6 +19,7 @@
 #include "gmv_io.h"
 #include "tecplot_io.h"
 #include "GMVIO_cell.h"
+#include "equation_systems.h"
 
 #include <algorithm>
 
@@ -31,6 +32,7 @@ void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
 void sweep_drain(double stop, int steps, DriftDiffusion& dd, double vg,
     bool restart = false);
 
+class Dummy {};
 
 
 int main (int argc, char** argv)
@@ -96,41 +98,59 @@ int main (int argc, char** argv)
 
     mesh.print_info();
 
+    Dummy d;
+
     SemiconductorModel sub;    
     sub.set_data_file("Si.dat");
     sub.read_database(d);
+    {
+      sub.add_dopant(new Dopant(1e13, 0.01, 4, Dopant::P_TYPE));
+      sub.set_mobilities(1416, 470);
+      ModelOptions opts;
+      opts["tau_n"] = "1e-5";
+      opts["tau_p"] = "3e-6";
+      //opts.insert(pair<const string, string>("tau_n", "1e-5"));
+      //opts.insert(pair<const string, string>("tau_p", "3e-6"));
+      RecombinationModelInterface* rm =
+        RecombinationModelInterface::create("SRH", opts);
+      sub.add_recombination_model(rm);
+    }
 
-    ModelOptions opts;
-    opts["tau_n"] = "1e-5";
-    opts["tau_p"] = "3e-6";
-    RecombinationModelInterface* rm =
-      RecombinationModelInterface::create("SRH", opts);
-    sub.add_recombination_model(rm);
 
 
-
-    SimpleSemiconductorModel schottky;
+    SemiconductorModel schottky;
     schottky.set_data_file("Si.dat");
     schottky.read_database(d);
-    
-    schottky.add_dopant(new Dopant(1e18, 0.025, 2, Dopant::N_TYPE));
-    schottky.set_mobilities(283.8, 160.3);
-    opts["tau_n"] = "1e-7";
-    opts["tau_p"] = "3e-8";
-    rm = RecombinationModelInterface::create("SRH", opts);
-    schottky.add_recombination_model(rm);
+    { 
+      schottky.add_dopant(new Dopant(1e18, 0.025, 2, Dopant::N_TYPE));
+      schottky.set_mobilities(283.8, 160.3);
+      ModelOptions opts;
+      opts["tau_n"] = "1e-7";
+      opts["tau_p"] = "3e-8";
+      //opts.insert(pair<const string, string>("tau_n", "1e-7"));
+      //opts.insert(pair<const string, string>("tau_p", "3e-8"));
+      RecombinationModelInterface* rm =
+        RecombinationModelInterface::create("SRH", opts);
+      schottky.add_recombination_model(rm);
+    }
 
 
-    SimpleSemiconductorModel contact;
-    schottky.set_data_file("Si.dat");
-    schottky.read_database(d);
+    SemiconductorModel contact;
+    contact.set_data_file("Si.dat");
+    contact.read_database(d);
+    {
+      contact.add_dopant(new Dopant(5e19, 0.025, 2, Dopant::N_TYPE));
+      contact.set_mobilities(70, 54);
+      ModelOptions opts;
+      opts["tau_n"] = "2e-9";
+      opts["tau_p"] = "6e-10";
+      //opts.insert(pair<const string, string>("tau_n", "2e-9"));
+      //opts.insert(pair<const string, string>("tau_p", "6e-10"));
+      RecombinationModelInterface* rm =
+        RecombinationModelInterface::create("SRH", opts);
+      contact.add_recombination_model(rm);
+    }
 
-    contact.add_dopant(new Dopant(5e19, 0.025, 2, Dopant::N_TYPE));
-    schottky.set_mobilities(283.8, 160.3);
-    opts["tau_n"] = "2e-9";
-    opts["tau_p"] = "6e-10";
-    rm = RecombinationModelInterface::create("SRH", opts);
-    contact.add_recombination_model(rm);
 
     if (statistics == "FD")
     {
@@ -228,10 +248,13 @@ int main (int argc, char** argv)
       cout << "Device bad.\n\n";
     
   
+    EquationSystems eqsys(mesh);
     DriftDiffusion dd(&device);
+    dd.set_equation_systems(&eqsys);
+    dd.init();
 
     DriftDiffusion::Options& params = dd.get_options();
-    params.solver_params.nonlinear_max_iterations = nonlin_max_it;
+    params.solver_params.nonlinear_max_iterations = 100;
     params.solver_params.linear_max_iterations = lin_max_it;
     params.solver_params.ls_maxstep = nonlin_ls_maxstep;
     params.solver_params.nonlinear_tolerance = nonlin_rtol;
@@ -258,7 +281,7 @@ int main (int argc, char** argv)
 
 
     dd.solve();
-    dd.remeber_current_solution();
+    dd.remember_current_solution();
 
     const Scaling& sc = dd.get_scaling();
     cout << "Scaling parameters:\n";
@@ -268,6 +291,9 @@ int main (int argc, char** argv)
     cout << "     C0  : " << sc.get_density_scaling() << "\n";
     cout << "     t0  : " << sc.get_time_scaling() << "\n";
     cout << "     R0  : " << sc.get_recombination_scaling() << "\n\n";
+
+    cout << "Material properties:\n";
+    sub.print_info();
 
     vector<double> densities;
     vector<string> names;
@@ -281,6 +307,7 @@ int main (int argc, char** argv)
 
 
 
+    params.solver_params.nonlinear_max_iterations = nonlin_max_it;
 
     if (fully)
     {
@@ -480,9 +507,15 @@ void sweep_drain(double stop, int steps,
     cout << "Vgs = " << vg << " Vds = " << *it << "\n" << flush;
     if (restart)
     {
+      DriftDiffusion::Options& params = dd.get_options();
+      int bkp = params.coupling;
+      params.coupling = POISSON;
+      dd.set_simulation_voltage("gate", 0.0);
+      dd.set_simulation_voltage("drain", 0.0);
       dd.set_electron_fermi_level(0.0);
       dd.set_hole_fermi_level(0.0);
       dd.solve();
+      params.coupling = bkp;
     }
 
     dd.solve();

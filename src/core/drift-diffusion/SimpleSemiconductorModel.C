@@ -2,8 +2,8 @@
 
 #include "SimpleSemiconductorModel.h"
 
-#include "point.h"
-#include "elem.h"
+//#include "point.h"
+//#include "elem.h"
 
 #include <iostream>
 

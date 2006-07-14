@@ -252,6 +252,8 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
       _device->get_element_data().get_data(top_parent);
 
     sc->reinit(elem);
+    sc->calculate_all(sc->get_equilibrium_fermi_level(), 0.0, 0.0,
+        elem->centroid());
     
     double mu = sc->get_hole_mobility();
     mu0 = (mu0 > mu) ? mu0 : mu;
@@ -778,8 +780,6 @@ DriftDiffusion::init(void)
   system.add_variable("fermi_e", libMeshEnums::FIRST);
   system.add_variable("fermi_h", libMeshEnums::FIRST);
 
-  // we remember the equilibrium solution for future use
-  system.add_vector("equilibrium solution");
   // we can remember a solution for future use
   system.add_vector("remembered solution");
   // for adaptive mesh refinement we need the old solution
