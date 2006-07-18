@@ -115,3 +115,10 @@ void  EFAbulkHamiltonian::set_properties_alloy (const PhysicalProperties *prop_c
 
 
 }
+
+
+//---------------------------------------------------------// 
+const std::map<short, short>&  EFAbulkHamiltonian::get_kp_bands_map(void) const
+{
+  return(kp_bands_map);
+}

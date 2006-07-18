@@ -143,9 +143,7 @@ void SBbulkHamiltonian::read_database(const Dummy& dd)
 {
   GetPot data(_filename);
   const std::string structure = data("structure", "zb");
-  cerr << "_filename " << _filename << "\n";
-  cerr << "structure  "  << structure << "\n";
-  
+
   if (structure == "zb")
     {
       

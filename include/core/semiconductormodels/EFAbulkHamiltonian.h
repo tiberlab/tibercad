@@ -4,6 +4,7 @@
 
 #include <complex>
 #include <vector>
+#include <map>
 #include "tensor.h"
 #include "PhysicalProperties.h"
 class EFAbulkHamiltonian: public PhysicalProperties
@@ -54,7 +55,10 @@ class EFAbulkHamiltonian: public PhysicalProperties
   virtual void read_database_bowing_parameters (const Dummy &db);
   
   virtual void set_properties_alloy (const PhysicalProperties *prop_comp1, const PhysicalProperties *prop_comp2, double molar_fraction);
-  //-------------------------------------------------------------------------------
+  //---------------------------------------------------------------------------------
+
+  const std::map<short, short>&  get_kp_bands_map(void) const; 
+
  protected:
   
   
@@ -84,7 +88,16 @@ class EFAbulkHamiltonian: public PhysicalProperties
   //!rotates tensor of rank 2 from crystal to calculation system
   void    rotate_quad(std::complex<double> matrix[][3]);
 
+  //!numbers of the bands in a 8x8 k.p basis
+  /*
+    0,1 - conduction bands;
+    2-7 - valence bands
+  */
+  std::vector<short> kp_bands;
 
+
+  //!map between band numbers  
+  std::map <short, short> kp_bands_map;
 
  private:
   

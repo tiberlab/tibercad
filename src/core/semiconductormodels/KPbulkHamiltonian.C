@@ -73,6 +73,7 @@ KPbulkHamiltonian::KPbulkHamiltonian(const string model) : EFAbulkHamiltonian()
     {
       band_min = 2;
       band_max = 7;
+     
     }
   else
     { 
@@ -88,6 +89,13 @@ KPbulkHamiltonian::KPbulkHamiltonian(const string model) : EFAbulkHamiltonian()
 	}
     }
 
+  short i1 = 0;
+  for (short i = band_min; i <= band_max; i++) 
+    {
+      kp_bands.push_back(i);
+      kp_bands_map.insert(make_pair (i,i1) );
+      i1++;
+    }
     
 }
 //=================================================================//
@@ -99,6 +107,13 @@ KPbulkHamiltonian::KPbulkHamiltonian(void) : EFAbulkHamiltonian()
   band_min = 0;
   band_max = 7;
 
+  short i1 = 0;
+  for (short i = band_min; i <= band_max; i++) 
+    {
+      kp_bands.push_back(i);
+      kp_bands_map.insert(make_pair (i,i1) );
+      i1++;
+    }
 }
 //==================================================================//
 
@@ -111,7 +126,8 @@ KPbulkHamiltonian::KPbulkHamiltonian(const KPbulkHamiltonian& kp_ham)
   Ham = kp_ham.Ham;
   _filename = kp_ham._filename;
   model_name = kp_ham.model_name;
-
+  kp_bands =  kp_ham.kp_bands;
+  kp_bands_map =  kp_ham.kp_bands_map; 
 }
 
 //==================================================================//
@@ -121,7 +137,7 @@ void KPbulkHamiltonian::read_database(const Dummy& dd)
   GetPot data(_filename);
   const std::string structure = data("structure", "zb");
 
-  
+   
 
   if (structure == "zb")
     {
@@ -137,22 +153,21 @@ void KPbulkHamiltonian::read_database(const Dummy& dd)
       
       WzDDsemiconductor* wzsc = new WzDDsemiconductor();
       semiconductor =  wzsc;
-
+     
     
     }
 
   semiconductor->read_database(dd);
   par = semiconductor->calculate_kp_params (model_name);
 
-
-
+ 
 
 }
 //==================================================================//
 void KPbulkHamiltonian::build_alloy(const std::string& component2,
 			   const std::string& bowing_params, double content)
 {
-
+ 
   semiconductor->build_alloy( component2, bowing_params, content);
   par = semiconductor->calculate_kp_params (model_name);
 
@@ -165,7 +180,7 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
   //=================================================================
 
   
-
+ 
   //Initialization
   //--------------------------------------------------
   //create matrix 8x8
@@ -292,33 +307,33 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
   //cv part
   if (kpCVtermSymmetric)
     {
-      Ham[0][2].linear_left[0] = par.P2* 0.5 *  Complex(0.0, 1.0);
-      Ham[0][3].linear_left[1] = par.P2* 0.5 *  Complex(0.0, 1.0);
-      Ham[0][4].linear_left[2] = par.P1* 0.5 *  Complex(0.0, 1.0);
+      Ham[0][2].linear_left[0] = par.P2 * 0.5 *  Complex(0.0, 1.0);
+      Ham[0][3].linear_left[1] = par.P2 * 0.5 *  Complex(0.0, 1.0);
+      Ham[0][4].linear_left[2] = par.P1 * 0.5 *  Complex(0.0, 1.0);
 
-      Ham[0][2].linear_left[0] = par.P2* 0.5 *  Complex(0.0, 1.0);
-      Ham[0][3].linear_left[1] = par.P2* 0.5 *  Complex(0.0, 1.0);
-      Ham[0][4].linear_left[2] = par.P1* 0.5 *  Complex(0.0, 1.0);
+      Ham[0][2].linear_right[0] = par.P2* 0.5 *  Complex(0.0, 1.0);
+      Ham[0][3].linear_right[1] = par.P2* 0.5 *  Complex(0.0, 1.0);
+      Ham[0][4].linear_right[2] = par.P1* 0.5 *  Complex(0.0, 1.0);
 
 
-      for (short i = 0; i < 3; i++)
-	{
-	  Ham[1][5].linear_left[i] = Ham[0][2].linear_left[i];
-	  Ham[1][6].linear_left[i] = Ham[0][3].linear_left[i];
-	  Ham[1][7].linear_left[i] = Ham[0][4].linear_left[i];
 
-	  Ham[1][5].linear_right[i] = Ham[0][2].linear_right[i];
-	  Ham[1][6].linear_right[i] = Ham[0][3].linear_right[i];
-	  Ham[1][7].linear_right[i] = Ham[0][4].linear_right[i];
-	  
-	}
+      Ham[1][5].linear_left[0] = par.P2* 0.5 *  Complex(0.0, 1.0);
+      Ham[1][6].linear_left[1] = par.P2* 0.5 *  Complex(0.0, 1.0);
+      Ham[1][7].linear_left[2] = par.P1* 0.5 *  Complex(0.0, 1.0);
+
+      Ham[1][5].linear_right[0] = par.P2* 0.5 *  Complex(0.0, 1.0);
+      Ham[1][6].linear_right[1] = par.P2* 0.5 *  Complex(0.0, 1.0);
+      Ham[1][7].linear_right[2] = par.P1* 0.5 *  Complex(0.0, 1.0);
+
+
+     
       
-      for (short i = 2; i<=7; i++)
-	for (short j = 2; j<=7; j++)
+      for (short i = 0; i < 2; i++)
+	for (short j = 2; j < 8; j++)
 	  for (short  i1 = 0; i1<=2; i1++)
 	    {
-	      Ham[i][j].linear_left[i1] =  conj(Ham[j][i].linear_left[i1]);
-	      Ham[i][j].linear_right[i1] = conj(Ham[j][i].linear_right[i1]);
+	      Ham[j][i].linear_left[i1] =  conj(Ham[i][j].linear_left[i1]);
+	      Ham[j][i].linear_right[i1] = conj(Ham[i][j].linear_right[i1]);
 	    }
 
 
@@ -326,13 +341,13 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
   else
     {
       Ham[0][2].linear_left[0]= par.P2 *  Complex(0, 1.0);  Ham[1][5].linear_left[0]= par.P2 *  Complex(0, 1.0); 
-      Ham[0][3].linear_left[1]= par.P2 *  Complex(0, 1.0);  Ham[1][5].linear_left[1]= par.P2 *  Complex(0, 1.0);
-      Ham[0][4].linear_left[2]= par.P1 *  Complex(0, 1.0);  Ham[1][7].linear_left[1]= par.P2 *  Complex(0, 1.0);
+      Ham[0][3].linear_left[1]= par.P2 *  Complex(0, 1.0);  Ham[1][6].linear_left[1]= par.P2 *  Complex(0, 1.0);
+      Ham[0][4].linear_left[2]= par.P1 *  Complex(0, 1.0);  Ham[1][7].linear_left[1]= par.P1 *  Complex(0, 1.0);
      
-      for (short i = 2; i<=7; i++)
-	for (short j = 2; j<=7; j++)
+      for (short i = 0; i< 2; i++)
+	for (short j = 2; j< 8; j++)
 	  for (short  i1 = 0; i1<=2; i1++)
-	    Ham[i][j].linear_right[i1] = conj(Ham[j][i].linear_left[i1]);
+	    Ham[j][i].linear_right[i1] = conj(Ham[i][j].linear_left[i1]);
 
     }
   //-----------------------------------------------------------------------//
@@ -396,6 +411,66 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
   //-----------------------------------------------------------------!
 
 }
+
+void KPbulkHamiltonian::calculate_optical_operator(void)
+{
+  //nullify P matrix
+  P.resize(3);
+  for (short i = 0 ; i < 3; i++)  
+    {
+      P[i].resize(8);
+      for (short j = 0 ; j < 8; j++)	P[i][j].resize(8);
+    }
+
+  for (short pol = 0; pol < 3; pol++)
+    for (short i = 0; i < 8; i++)
+      for (short j = 0; j < 8; j++)
+	{
+	  //--------constant
+	  P[pol][i][j].constant =  Complex(0.0,0.0);
+	  
+	  //--------linear
+	  for (short i1 = 0; i1 < 3; i1++)  
+	    {
+	      P[pol][i][j].linear_left[i1] =  Complex(0.0, 0.0);
+	      P[pol][i][j].linear_right[i1] =  Complex(0.0, 0.0);
+	    }
+	  
+	  
+	}
+
+  
+ 
+
+
+  //obtain P matrix
+  //we calculate derivative of H(k) matrix
+  for (short band1 = 0; band1 < 8; band1++)
+    for (short band2 = 0; band2 < 8; band2++)
+      {
+	//derivative of the linear term 
+	for (short polariz = 0; polariz < 3;  polariz++)
+	  P[polariz][band1][band2].constant += Ham[band1][band2].linear_left[polariz] + Ham[band1][band2].linear_right[polariz];
+	
+
+	//derivative of the quadratic term
+	for (short polariz = 0; polariz < 3;  polariz++)
+	  for (short i1= 0; i1 < 3;  i1++)
+	    {   
+	      P[polariz][band1][band2].linear_left[i1]   += Ham[band1][band2].quad[polariz][i1];
+	      P[polariz][band1][band2].linear_right[i1]  += Ham[band1][band2].quad[i1][polariz];
+	    }
+
+      }
+
+
+
+}
+  
+
+
+
+
 
 
 
@@ -532,3 +607,7 @@ void KPbulkHamiltonian::set_parameters(const KPbulkHamiltonian::KPparams&  par1)
 }
 
 //-------------------------------------------------------//
+const std::vector< std::vector <std::vector<EFAbulkHamiltonian::MatrixElement> > > & KPbulkHamiltonian::get_optical_operator() const
+{
+  return(P);
+}

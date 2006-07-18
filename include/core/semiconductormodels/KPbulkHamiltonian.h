@@ -69,8 +69,6 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   KPbulkHamiltonian(const std::string model_name );
   
 
-  //!Copy-constructor
-  KPbulkHamiltonian(const KPbulkHamiltonian& kp_ham);
  
   //! destructor. 
   ~KPbulkHamiltonian(void);
@@ -103,6 +101,10 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
 
 
+  //!calculates momentum operator P
+  void calculate_optical_operator(void);
+
+
   bool kpVVtermSymmetric;
 
   Tensor2Sym strainM;
@@ -112,7 +114,11 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   void set_parameters(const KPparams&  par1 );
 
 
+  const std::vector< std::vector <std::vector<MatrixElement> > > & get_optical_operator(void) const;
 
+
+  //! a pointer to a semiconductor that contains parameters
+  DDsemiconductor* semiconductor;
 
  private:
 
@@ -128,6 +134,17 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   std::vector<std::vector<MatrixElement> > Ham; 
 
 
+
+  //! P-operator matrixes 
+  /*
+    P[i1][i2][i3]:
+    i1 - P-vector component number in crystal system: 0 - "x", 1 - "y", 2 - "z"
+    i2, i3 - band indexes like in the Hamiltonian matrix.
+  */
+
+  std::vector< std::vector <std::vector<MatrixElement> > > P; 
+  
+
   //! nullify k.p  parameters
   void   nullify_parameters(void); 
 
@@ -140,9 +157,12 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   //model_name  name of the model "8x8" or "6x6"
   std::string model_name;
 
-  //! a pointer to a semiconductor that contains parameters
-  DDsemiconductor* semiconductor;
+  
  
 
+  //!Copy-constructor
+  KPbulkHamiltonian(const KPbulkHamiltonian& kp_ham);
+ 
+  
 };
 #endif

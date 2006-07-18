@@ -2,7 +2,7 @@ using namespace std;
 #include "SBZbCondBandBulkHamiltonian.h"
 
 //=======================================================================//
-SBZbCondBandBulkHamiltonian::SBZbCondBandBulkHamiltonian(ZbDDsemiconductor::ZbDDparameters& parameters)
+SBZbCondBandBulkHamiltonian::SBZbCondBandBulkHamiltonian(ZbDDsemiconductor::ZbDDparameters& parameters):SBbulkHamiltonian()
 {
   par = parameters;
 
@@ -17,7 +17,7 @@ SBZbCondBandBulkHamiltonian::SBZbCondBandBulkHamiltonian(ZbDDsemiconductor::ZbDD
 
       edge = ( par.Ev + ((1.0/3.0) * par.delta ) + par.EgGamma)/Hartree;
 
-     
+      kp_bands.resize(1,0);
 
     }
   

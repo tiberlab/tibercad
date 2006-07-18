@@ -1,9 +1,29 @@
 
 #include "EnvelopFunctionApprox.h"
+#include <gnuplot_io.h>
 using namespace std;
 const double EnvelopFunctionApprox::Hartree;
 
-
+const std::vector< EnvelopFunctionApprox::eigen_propblem_solution > EnvelopFunctionApprox::get_solution() const
+{
+  return(solution);
+}
+//=====================================================//
+EquationSystems* EnvelopFunctionApprox::get_equation_systems() 
+{
+  return(es);
+}
+//===================================================//
+const EnvelopFunctionApprox::options& EnvelopFunctionApprox:: get_options() const
+{
+  return(opt);
+}
+//===================================================//
+const std::vector<unsigned int>& EnvelopFunctionApprox::get_material_numbers() const
+{
+  return(material_of_elem);
+}
+//===================================================//
 EnvelopFunctionApprox:: EnvelopFunctionApprox(EquationSystems&  equation_systems, std::string& problem_name, 
 					      options& opt1 )
 {
@@ -120,6 +140,7 @@ void EnvelopFunctionApprox::set_material_parameters(std::map<unsigned int, EFAbu
   bulkHamiltonian = bulkHamiltonian_in;
 }
 
+//============================================================//
 
 
 //===========================================================//
@@ -899,11 +920,16 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 
   // command_line <<  "mpirun -np 3 -machinefile machines   "  ;
   command_line <<  "eigen_solver  -f1 H.out   -f2 S.out  -eps_gen_hermitian  "; 
-  // command_line << "  -eps_largest_magnitude ";
-  command_line << "  -eps_smallest_magnitude ";
+  
   command_line <<  "   -eps_nev     " << ev_number;
-  command_line <<  "   -eps_ncv     " << 3 * ev_number;
+  command_line <<  "   -eps_ncv     " << opt.coeff_for_ncv * ev_number;
   command_line <<  "   -eps_type    " << opt.solver ;
+
+  command_line <<  opt.solver_command_line << "  ";
+
+
+  // command_line << "  -eps_largest_magnitude ";
+  // command_line << "  -eps_smallest_magnitude ";
   // command_line <<  "   -eps_tol     " << opt.eigen_solver_tolerance;
   // command_line <<  "   -eps_max_it  " << opt.max_iteration_number;
   //command_line <<  "   -st_type sinvert ";
@@ -1139,10 +1165,14 @@ void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  st
   //std :: cout << filename << "\n";
 
 
-  if (opt.output_type == "GMV")     GMVIO(mesh1).write_nodal_data(filename, psi_data, output_names);
+  if (opt.output_type == "GMV")     
+    GMVIO(mesh1).write_nodal_data(filename, psi_data, output_names);
 
-  if (opt.output_type == "tecplot") TecplotIO(mesh1,false).write_nodal_data(filename,psi_data,output_names);
+  if (opt.output_type == "tecplot") 
+    TecplotIO(mesh1,false).write_nodal_data(filename,psi_data,output_names);
 
+  if (opt.output_type == "gnuplot" || opt.output_type == "GNUplot") 
+    GnuPlotIO(mesh1).write_nodal_data(filename, psi_data, output_names);
   
 
 }
@@ -1232,11 +1262,14 @@ void EnvelopFunctionApprox::output_probability_function(unsigned int state_numbe
   //std :: cout << filename << "\n";
 
 
-  if (opt.output_type == "GMV")     GMVIO(mesh1).write_nodal_data(filename, probability_data, output_names);
+  if (opt.output_type == "GMV")     
+    GMVIO(mesh1).write_nodal_data(filename, probability_data, output_names);
 
-  if (opt.output_type == "tecplot") TecplotIO(mesh1,false).write_nodal_data(filename, probability_data,output_names);
+  if (opt.output_type == "tecplot") 
+    TecplotIO(mesh1,false).write_nodal_data(filename, probability_data,output_names);
 
-  
+  if (opt.output_type == "gnuplot" || opt.output_type == "GNUplot") 
+    GnuPlotIO(mesh1).write_nodal_data(filename, probability_data,output_names);
 
 }
 

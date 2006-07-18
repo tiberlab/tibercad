@@ -6,13 +6,16 @@ using namespace std;
 //===========================================================//
 SBWzCondBandBulkHamiltonian::SBWzCondBandBulkHamiltonian( ):SBbulkHamiltonian()
 {
-  
+  kp_bands.resize(1,0);
+  kp_bands_map.insert(make_pair(0,0));
 }
 
 SBWzCondBandBulkHamiltonian::SBWzCondBandBulkHamiltonian(const SBWzCondBandBulkHamiltonian &  model):SBbulkHamiltonian(model)
 { 
+  kp_bands.resize(1,0);
   par = model.par;
   calculate_edge_and_mass();
+  kp_bands_map.insert(make_pair(0,0));
 }
 
 //=======================================================================//
@@ -22,7 +25,7 @@ void  SBWzCondBandBulkHamiltonian::calculate_edge_and_mass()
   //if there is a semiconductor associated with the class, we take its  parameters
   if (semiconductor != NULL)
     {
-           par = (dynamic_cast<WzDDsemiconductor*>(semiconductor))->get_parameters();
+      par = (dynamic_cast<WzDDsemiconductor*>(semiconductor))->get_parameters();
     }
 
 
@@ -58,6 +61,8 @@ void  SBWzCondBandBulkHamiltonian::calculate_edge_and_mass()
 //=======================================================================//
 SBWzCondBandBulkHamiltonian::SBWzCondBandBulkHamiltonian(WzDDsemiconductor::WzDDparameters& parameters):SBbulkHamiltonian()
 {
+  kp_bands.resize(1,0);
+  kp_bands_map.insert(make_pair(0,0));
   par = parameters;
   calculate_edge_and_mass();
   

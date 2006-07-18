@@ -69,8 +69,11 @@ class EnvelopFunctionApprox
   //! data structure that contains options for effective mass
   struct options
   {
-   
+    
     unsigned int number_of_bands; //!< number of bands in EFA 
+
+    std::map<short, short> kp_bands; //!< map between band numbers: from 8 band scheem to any band scheem
+
 
     std::string particle;   //!< particle name "el" or "hl"
 
@@ -81,6 +84,10 @@ class EnvelopFunctionApprox
     bool periodicity[3];    //!< periodic boundary conditions
 
     std::string solver;  //!< solver type
+
+    std::string solver_command_line; //!< additional line to pass parameters for the eigenvalue solver
+
+    unsigned int coeff_for_ncv; //!< eps_ncv = number_of_requested_ev * coeff_for_ncv
 
     double eigen_solver_tolerance; //!< tolerance for eigenvalue solver [Ha]
 
@@ -171,7 +178,7 @@ class EnvelopFunctionApprox
    */
   void assign_mesh_data(MeshData& mesh_data_in);
 
-  std::vector<eigen_propblem_solution> solution;
+  
 
 
   //! define Dirichlet boundary condition
@@ -192,8 +199,22 @@ class EnvelopFunctionApprox
   //! Passes a pointer of a Drift-Diffusion object
   void define_Poisson_data( DriftDiffusion*  drift_in);
 
+
+  //! returns  a pointer to the EquationSystems object
+  EquationSystems* get_equation_systems();
+
+  //! returns  a reference to the options
+  const EnvelopFunctionApprox::options& get_options()  const;
+
+  //! returns  a reference to the material_numbers object
+  const std::vector<unsigned int>& get_material_numbers() const;
+
+  //! returns a reference to solutions
+  const std::vector<eigen_propblem_solution> get_solution() const;
  
  private:
+
+
 
   //!Apply Dirichlet boundary conditions to all boundary points!
   void apply_diriclet_bc_at_all_boundaries();
@@ -329,5 +350,9 @@ class EnvelopFunctionApprox
 
   //! compares eigenstate energy  
   static bool compare_eigen_energy_holes(eigen_propblem_solution state1, eigen_propblem_solution state2);
+
+  //! solutions of the eigenvalue problem
+  std::vector<eigen_propblem_solution> solution;
+  
 };
 #endif

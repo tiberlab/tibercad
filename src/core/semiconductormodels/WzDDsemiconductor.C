@@ -28,7 +28,8 @@ WzDDsemiconductor::WzDDsemiconductor(void): DDsemiconductor()
   par.D6 =0; //deformation potentials
   par.delta_s =0;
   par.delta_cr =0; //sp
-
+  par.Ep_1 = 0;
+  par.Ep_2 = 0;
 }
 
 //--------------------------------------------------//
@@ -215,6 +216,11 @@ void WzDDsemiconductor::read_database(const Dummy&)
   par.delta_s = data("delta_s", 0.017);
   par.delta_cr = data("delta_cr", 0.010);
 
+  
+  par.Ep_1 = data("Ep_1", 14.0);
+  par.Ep_2 = data("Ep_2", 14.0);
+
+
 }
 
 
@@ -280,7 +286,12 @@ void WzDDsemiconductor::build_alloy(const std::string& component2,
 			  content, bowing("delta_cr", 0.0));
 
   
+  par.Ep_1 = alloy(data("Ep_1", 14.0), par.delta_cr,
+			  content, bowing("Ep_1", 0.0));
 
+  par.Ep_2 = alloy(data("Ep_2", 14.0), par.delta_cr,
+			  content, bowing("Ep_2", 0.0)); 
+  
 }
 //--------------------------------------------------
 KPbulkHamiltonian::KPparams WzDDsemiconductor::calculate_8x8_kp_params (void )
@@ -353,9 +364,13 @@ KPbulkHamiltonian::KPparams WzDDsemiconductor::calculate_6x6_kp_params (void )
 
   result.E_v = par.Ev/Hartree;
   
-  
+
  
   
+  
+  //conduction-valence band coupling. may be needed only for optics
+  result.P1 = std::sqrt(par.Ep_1 * 2.0 / Hartree);
+  result.P2 = std::sqrt(par.Ep_2 * 2.0 / Hartree);
 
 
   return(result);
