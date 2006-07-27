@@ -250,8 +250,21 @@ class Macrostrain
   */
   Tensor2Sym get_strain_crystal(const Elem* el); 
 
-
+  //!get polarization (piezo + pyro)
+  /*!
+    \param el pointer to the element
+  */
   Tensor1 get_piezopolarization(const Elem* el);
+
+
+  //!get built-in polarization (piezo + pyro)  
+ 
+  /*!
+    \param el pointer to the element
+    \param quadratur_point quadratur point that belongs to the element
+  */
+  Tensor1 get_built_in_polarization(const Elem* el, const Point& quadratur_point ); 
+
   //---------------------------------------------------------------------
   void output_strain(std::string filename ); //output strain for gmv
 

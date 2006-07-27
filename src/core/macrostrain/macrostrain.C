@@ -6,7 +6,7 @@ using namespace std;
 std::string    Macrostrain:: uname_vec[3];
 //unsigned int   Macrostrain:: dim;
 bool           Macrostrain:: grown_on_substrate;
-
+ 
 unsigned  int  Macrostrain:: substr_mat;
 
 
@@ -2614,7 +2614,7 @@ Tensor2Sym Macrostrain::get_strain_crystal(const Elem* elem, const Point& quadra
       eps =   it->second;
     }
   else
-    { //if the element is not included, we have to check his childered or parents
+    { //if the element is not included, we have to check his children or parents
       //-------------------------------------------------------------------------
       //1) may be it has a parent the belongs to the  result_strain map
      
@@ -2797,11 +2797,43 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 
 }
 
+//==============================================================================//
+Tensor1 Macrostrain::get_built_in_polarization(const Elem* el, const Point& quadratur_point )
+{
+  //---------------calculate strain in crystal system---------------------------
+
+
+  Tensor2Sym strain_cr = get_strain_crystal( el, quadratur_point);
+
+  //---------------get material number -----------------------------------------
+  const unsigned int material  = (unsigned int) (*meshdata)(el->top_parent(),0);
+ 
+  //----------------calculate polarization---------------------------------
+
+  std::map< unsigned int, Piezoelectricity*>::iterator piezo_it =
+    piezo_parameters.find( material) ;
+
+  
+
+  Tensor1 polariz = (piezo_it -> second)->get_polariz_cryst(strain_cr); //crystal system
+
+  std::map< unsigned int, Macrostrain::strain_param*>::iterator str_it =
+    strain_parameters.find( material) ;
+
+  polariz =( (str_it -> second)->crystal.RotMatrix) * polariz; //calculation system
+
+  return(polariz);
+
+}
+
+
 //-------------------------------------------------------------------------------------------/
 Tensor1 Macrostrain::get_piezopolarization(const Elem* el)
 {
   //---------------calculate strain in crystal system---------------------------
-  Tensor2Sym strain_cr= get_strain( el, true);
+
+
+   Tensor2Sym strain_cr= get_strain( el, true);
 
   //---------------get material number -----------------------------------------
 

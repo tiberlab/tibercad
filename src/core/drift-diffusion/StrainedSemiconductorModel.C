@@ -60,7 +60,7 @@ StrainedSemiconductorModel::prepare_element_data(void)
       elem_data.n0 = get_equilibrium_electron_density();
       elem_data.p0 = get_equilibrium_hole_density();
 
-      Tensor1 pol = _strain->get_piezopolarization(elem);
+      Tensor1 pol = _strain->get_built_in_polarization(elem, elem->centroid());
       elem_data.polarization(0) = pol(1); 
       elem_data.polarization(1) = pol(2); 
       elem_data.polarization(2) = pol(3); 

@@ -93,7 +93,7 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   virtual void calculate_Hamiltonian_k_par(void);
 
  
-
+ 
   virtual void calculate_Hamiltonian_gen(void); 
 
 
@@ -101,9 +101,11 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
 
 
-  //!calculates momentum operator P
+  //!calculates momentum operator P without k|| application
   void calculate_optical_operator(void);
 
+  //!calculates momentum operator P with k|| application
+  void calculate_optical_operator_k_par(void);
 
   bool kpVVtermSymmetric;
 
@@ -135,7 +137,7 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
 
 
 
-  //! P-operator matrixes 
+  //! P-operator matrixes with k|| applied
   /*
     P[i1][i2][i3]:
     i1 - P-vector component number in crystal system: 0 - "x", 1 - "y", 2 - "z"
@@ -143,7 +145,10 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   */
 
   std::vector< std::vector <std::vector<MatrixElement> > > P; 
-  
+
+
+  //! P-operator matrixes without k|| applied
+  std::vector< std::vector <std::vector<MatrixElement> > > P_gen; 
 
   //! nullify k.p  parameters
   void   nullify_parameters(void); 

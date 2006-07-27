@@ -56,8 +56,6 @@ KPbulkHamiltonian::~KPbulkHamiltonian()
 
 
 
-
-
 //=================================================================
 
 KPbulkHamiltonian::KPbulkHamiltonian(const string model) : EFAbulkHamiltonian()
@@ -463,7 +461,8 @@ void KPbulkHamiltonian::calculate_optical_operator(void)
 
       }
 
-
+  //----------------------------
+  P_gen = P; //k|| = 0
 
 }
   
@@ -599,6 +598,32 @@ void KPbulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, d
  
 
 }
+//======================================================//
+
+//===============================================================/
+void KPbulkHamiltonian::calculate_optical_operator_k_par(void)
+{
+
+  vector <vector< vector<MatrixElement > > > P = P_gen;
+
+   for (short i = 0; i < 8; i++)
+     for (short j = 0; j < 8; j++)
+       {
+	 //------we have to change constant term
+	 for (short p = 0; p < 3; p++) 
+	   for (short i1 = 0; i1 < 3; i1++)
+	     {
+	       P[p][i][j].constant += P_gen[p][i][j].linear_left[i1]  * k_vector[i1];
+	       P[p][i][j].constant += P_gen[p][i][j].linear_right[i1] * k_vector[i1];
+	       
+	     }
+
+       }
+
+}
+
+
+
 
 //-------------------------------------------------------//
 void KPbulkHamiltonian::set_parameters(const KPbulkHamiltonian::KPparams&  par1)

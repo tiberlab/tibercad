@@ -2645,10 +2645,16 @@ DriftDiffusion::build_elem_band_edges(vector<double>& field,
   const Mesh& mesh = _device->get_mesh();
   const NumericVector<Number>& solution = *(system->solution);
 
-  const DofMap& dof_map = system->get_dof_map();
+  //const DofMap& dof_map = system->get_dof_map();
 
   const unsigned int dim = mesh.mesh_dimension();
-  const unsigned int nn  = mesh.n_elem();
+  unsigned int nn  = 0;
+
+  MeshBase::const_element_iterator it1 =
+    mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end1 =
+    mesh.active_elements_end(); 
+  for ( ; it1 != end1; ++it1)   {nn++;}
 
   const unsigned int n_vars  = 3;
   names.resize(n_vars);
@@ -2659,20 +2665,20 @@ DriftDiffusion::build_elem_band_edges(vector<double>& field,
   field.resize(nn * n_vars);
 
   // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
-  const double x0 = get_options().mesh_units;
+  // double phi0 = get_scaling().get_potential_scaling();
+  //const double x0 = get_options().mesh_units;
 
-  const unsigned int u_var = system->variable_number("potential");
+  // const unsigned int u_var = system->variable_number("potential");
   
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::CONSTANT);
-  fe->attach_quadrature_rule(&qrule);
+  //FEType fe_type = system->variable_type(u_var);
+  //AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  // QGauss qrule(dim, libMeshEnums::CONSTANT);
+  //fe->attach_quadrature_rule(&qrule);
 
-  vector<unsigned int> dof_indices_u;
+  //vector<unsigned int> dof_indices_u;
 
   // element shape function gradients
-  const vector<vector<Real> >& phi = fe->get_phi();
+  //const vector<vector<Real> >& phi = fe->get_phi();
 
   MeshBase::const_element_iterator it =
     mesh.active_elements_begin();
@@ -2684,21 +2690,24 @@ DriftDiffusion::build_elem_band_edges(vector<double>& field,
   {
     const Elem* elem = *it;
 
-    dof_map.dof_indices(elem, dof_indices_u, u_var);
+    //dof_map.dof_indices(elem, dof_indices_u, u_var);
 
     DriftDiffusionProperties* sc =
       device.get_element_data().get_data(elem->top_parent());
+
     assert(sc != NULL); 
 
     sc->reinit(elem);
 
-    fe->reinit(elem);
+    //    fe->reinit(elem);
+
     
-    unsigned int n_dofs = dof_indices_u.size();
+    
+    // unsigned int n_dofs = dof_indices_u.size();
     // get the solution values at the centroid
-    Real u = 0.0;
-    for (unsigned int i = 0; i < n_dofs; i++)
-      u  += phi[i][0] * solution(dof_indices_u[i]);
+    // Real u = 0.0;
+    // for (unsigned int i = 0; i < n_dofs; i++)
+    //  u  += phi[i][0] * solution(dof_indices_u[i]);
 
     unsigned int id = n_vars * elem_number;
     //field[id] = sc->get_conduction_band_edge() - phi0 * u;

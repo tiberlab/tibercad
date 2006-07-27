@@ -24,6 +24,100 @@ const std::vector<unsigned int>& EnvelopFunctionApprox::get_material_numbers() c
   return(material_of_elem);
 }
 //===================================================//
+void EnvelopFunctionApprox::set_spectrum_shift(double energy)
+{
+  opt.spectrum_shift   =  energy;
+}
+//====================================================//
+double EnvelopFunctionApprox::get_band_edge() const
+{
+
+
+  
+  
+
+  vector<double> band_edges;
+  vector<string> names;
+
+  poisson_equation -> build_elem_band_edges( band_edges,  names);
+
+ 
+ 
+
+  double cond_band_edge = band_edges[0];
+  double valence_band_edge = band_edges[1] ;
+  
+  DofMap& dof_map = system->get_dof_map();
+
+  FEType fe_type = dof_map.variable_type(0); 
+
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+
+  QGauss qrule (dim, FIFTH);
+
+  fe -> attach_quadrature_rule (&qrule);
+
+  const std::vector<Point>& q_point = fe->get_xyz();
+
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+
+
+ 
+
+  vector <double> electric_potential(1, 0.0);
+  unsigned int el_number = 0;
+  
+  cond_band_edge = band_edges[el_number * 3] - electric_potential[0];
+  valence_band_edge = band_edges[el_number * 3 + 1] - electric_potential[0];
+
+ 
+ 
+  for (; el != end_el ; ++el )
+    {
+      const Elem* elem = *el;
+     
+      fe->reinit (elem);
+
+      if (opt.consider_potential)
+	{
+	  poisson_equation -> get_electric_potential(elem, q_point, electric_potential);
+	  
+	}
+      
+      short n1 = electric_potential.size();
+
+      if (el_number == 0)
+	{
+	  cond_band_edge = band_edges[el_number * 3] - electric_potential[0];
+	  valence_band_edge = band_edges[el_number * 3 + 1] - electric_potential[0];
+	}
+
+      for (unsigned int i = 0; i < n1; i++) 
+	{     
+	
+	  if (cond_band_edge > band_edges[el_number * 3] - electric_potential[i]) 
+	    cond_band_edge = band_edges[el_number * 3] - electric_potential[i];
+
+	  if (valence_band_edge < band_edges[el_number * 3 + 1] - electric_potential[i] ) 
+	    valence_band_edge = band_edges[el_number * 3 + 1] - electric_potential[i];
+	}
+      el_number++;
+
+    }
+
+
+  
+ 
+  if (opt.particle == "el")
+    return(cond_band_edge);
+  else
+    return(valence_band_edge);
+  
+
+}
+
+//===================================================//
 EnvelopFunctionApprox:: EnvelopFunctionApprox(EquationSystems&  equation_systems, std::string& problem_name, 
 					      options& opt1 )
 {
@@ -347,10 +441,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 	}
 
+      ham_real.add(  opt.disturb_arnoldi * (std::rand()/( (double)RAND_MAX + 1) )   ,s_real);//apply disturb
 
-
-      ham_real.add(  (opt.disturb_arnoldi * (std::rand()/( (double)RAND_MAX + 1)) + 1.0)
-		   *opt.spectrum_shift/Hartree,s_real);//apply spectrum shift.
+      ham_real.add(  opt.spectrum_shift/Hartree, s_real);//apply spectrum shift.
 /*
       ham_real.scale(Hartree);
       ham_imag.scale(Hartree);
@@ -377,11 +470,15 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
  
 //this is only to test
-
+/*
   Ham_real->print_matlab("ham_r_matlab.m");
   Ham_imag->print_matlab("ham_i_matlab.m");
   S_real->print_matlab("s.m");
 
+*/
+
+  save_S_matrix("S.out");
+  save_H_matrix("H.out");
 
   dof_map.print_dof_constraints();
      
@@ -611,6 +708,8 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
   out.write( reinterpret_cast<char *>(& out_int), int_size);
 
   int size_matrix = Ham_real->n();
+
+  cerr << "Ham_real->n()  " <<  size_matrix << "\n";
 
   out_int = *(reinterpret_cast<unsigned int*> (& number_of_new_dofs) );  endian_swap(out_int);
   out.write(  reinterpret_cast<char *>( & out_int ), int_size);
@@ -910,24 +1009,57 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 
   calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
 
-  //----------------------------------------------------------------
-  //write matrixes
-  save_S_matrix("S.out");
-  save_H_matrix("H.out");
-  //----------------------------------------------------------------
+
+  double st_shift_value = 0.0;
+
+  if (opt.solve_ev_problem_twice)
+    {
+
+      std::ostringstream  command_line_0;
+
+      command_line_0 <<     opt.mpi_command_line   ;
+
+      command_line_0 <<  "  eigen_solver  -f1 H.out   -f2 S.out "; 
+      
+      command_line_0 <<  "   -eps_nev     " << 1;
+    
+      command_line_0 <<  "   -eps_type    " << opt.solver ;
+      
+      command_line_0 <<  opt.solver_command_line << "  ";
+
+      command_line_0 <<   " -eps_tol  1e-5  -eps_max_it 3000 ";
+ 
+      command_line_0 <<  "    \n";
+
+      cerr << command_line_0.str()<<"\n";
+
+      std::system( (command_line_0.str()).c_str());
+
+      read_SLEPC_solution(1);
+
+      assert(solution.size() == 1);
+
+      st_shift_value = (solution[0].eigen_energy + opt.spectrum_shift)/Hartree;
+
+     
+      
+    }
 
   std::ostringstream  command_line;
 
-  // command_line <<  "mpirun -np 3 -machinefile machines   "  ;
-  command_line <<  "eigen_solver  -f1 H.out   -f2 S.out  -eps_gen_hermitian  "; 
+  command_line << opt.mpi_command_line   ;
+  
+  command_line <<  "  eigen_solver  -f1 H.out   -f2 S.out "; 
   
   command_line <<  "   -eps_nev     " << ev_number;
-  command_line <<  "   -eps_ncv     " << opt.coeff_for_ncv * ev_number;
+  
   command_line <<  "   -eps_type    " << opt.solver ;
+
+  command_line << " -st_shift  " <<  st_shift_value;
 
   command_line <<  opt.solver_command_line << "  ";
 
-
+  // command_line <<  "   -eps_ncv     " << opt.coeff_for_ncv * ev_number;
   // command_line << "  -eps_largest_magnitude ";
   // command_line << "  -eps_smallest_magnitude ";
   // command_line <<  "   -eps_tol     " << opt.eigen_solver_tolerance;
@@ -937,6 +1069,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
   //command_line <<  "    -st_matmode inplace    ";
   //  command_line <<  " -st_ksp_type bcgsl  -st_pc_type jacobi";
   // command_line << "    -st_ksp_type preonly -st_pc_type cholesky  -st_ksp_rtol 1e-10 ";
+
   command_line <<  "    \n";
 
 
@@ -944,13 +1077,25 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 
   std::system( (command_line.str()).c_str());
 
-  read_SLEPC_solution();
+  read_SLEPC_solution(ev_number);
+
+ 
+
+  
+  
 
 }
 
 //=============================================================//
-void EnvelopFunctionApprox::read_SLEPC_solution( )
+void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 {//
+  /*
+  1) Read all eigenvalues
+  2) Sort the eigenvalues and select those we want 
+  3) Read eigenvectors that correspond to the eigenvalues we want
+  */
+
+
   const short int_size = sizeof(int);
 
   const short double_size = sizeof(double);
@@ -976,9 +1121,16 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
   number_of_converged_solutions =  *(reinterpret_cast<unsigned int*> ( buffer));  endian_swap(number_of_converged_solutions);
   cout << " Number of converged solutions  " << number_of_converged_solutions << "\n";
 
-  solution.resize(number_of_converged_solutions);
-
- 
+  unsigned int solution_size;
+  if (number_of_converged_solutions < number_of_ev)
+    solution_size = number_of_converged_solutions;
+  else
+    solution_size = number_of_ev;
+    
+  solution.resize(solution_size);
+  vector<EnvelopFunctionApprox::eigen_energy>   ev(number_of_converged_solutions);
+  
+  
 
   //--------------------------------------------------------------------
   //read eigenvalues
@@ -994,8 +1146,8 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 
      
 	
-      solution[ind].eigen_energy = *(  reinterpret_cast<double*>( &fict ) ) * Hartree - opt.spectrum_shift;
-    
+      ev[ind].energy = *(  reinterpret_cast<double*>( &fict ) ) * Hartree - opt.spectrum_shift;
+      ev[ind].global_number = ind;
 
      
 
@@ -1005,7 +1157,23 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
       
     }
   
+  //--------------------------------------------------------------------
+
   
+  //sorting of the solutions
+  if (opt.particle == "el") sort( ev.begin(), ev.end(), compare_eigen_energy_electrons1);
+
+  if (opt.particle == "hl") sort( ev.begin(), ev.end(), compare_eigen_energy_holes1 );
+   
+
+
+  map<unsigned int, unsigned int>  global_to_sol_index;
+  map<unsigned int, unsigned int> :: iterator it;
+  for (unsigned int i = 0; i < solution_size; i++)
+    {
+      global_to_sol_index.insert( make_pair(ev[i].global_number, i)  );
+      solution[i].eigen_energy = ev[i].energy;
+    } 
   //--------------------------------------------------------------------
   //read eigenvectors
   string fname_eigvects = "eigvects_SLEPC.out";
@@ -1029,7 +1197,8 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
       file_eigvects.read(buffer, int_size);
       unsigned int vector_size =  *(reinterpret_cast<unsigned int*> ( buffer));  endian_swap(vector_size);
       assert( vector_size == number_of_new_dofs);
-      (solution[ind].eigen_vector).resize(number_of_all_dofs, Complex(0.0, 0.0));
+    
+    
 
       vector<Complex> temp(vector_size); //only independent dofs
      
@@ -1049,37 +1218,34 @@ void EnvelopFunctionApprox::read_SLEPC_solution( )
 	 
 	}
 
-      
-
-      //-----------------------------------------------------------------------------
-      //put independent dofs in the eigenvectors that may contain also non independent dofs
-      for (unsigned j = 0; j < number_of_all_dofs; j++)
+      it = global_to_sol_index.find(ind);
+      if (  it  !=  global_to_sol_index.end() )
 	{
-	  if (new_dofs[j].independent)
+	  unsigned int solution_number = it->second;
+	 
+	  (solution[solution_number].eigen_vector).resize(number_of_all_dofs, Complex(0.0, 0.0));
+	  //-----------------------------------------------------------------------------
+	  //put independent dofs in the eigenvectors that may contain also non independent dofs
+	  for (unsigned j = 0; j < number_of_all_dofs; j++)
 	    {
-	      solution[ind].eigen_vector[j] = temp[new_dofs[j].new_number];
+	      if (new_dofs[j].independent)
+		{
+		  solution[solution_number].eigen_vector[j] = temp[new_dofs[j].new_number];
+		}
 	    }
-	}
-      //-----------------------------------------------------------------------------
-      //put constrained dofs
+	 
+	  //TODO put constrained dofs
       
 
-      //-----------------------------------------------------------------------------
+	 
+
+	}
+      //------------------------------------------------------------------------
 
     }
 
 
-  //------------------------------------------------------------
-  //sorting of the solutions
-  if (opt.particle == "el") sort( solution.begin(), solution.end(), compare_eigen_energy_electrons );
-
-  if (opt.particle == "hl")
-    {
-      cerr << "sort holes\n"; 
-      sort( solution.begin(), solution.end(), compare_eigen_energy_holes );
-    }
-
-  //------------------------------------------------------------
+ 
   
 }
 //=============================================================//
@@ -1465,6 +1631,18 @@ bool EnvelopFunctionApprox::compare_eigen_energy_holes(eigen_propblem_solution s
   return(state1.eigen_energy > state2.eigen_energy );
 }
 
+//=======================================================================//
+
+bool EnvelopFunctionApprox::compare_eigen_energy_holes1(eigen_energy state1, eigen_energy state2)
+{
+  return(state1.energy> state2.energy );
+}
+
+//=======================================================================//
+bool EnvelopFunctionApprox::compare_eigen_energy_electrons1(eigen_energy state1, eigen_energy state2)
+{
+  return(state1.energy<  state2.energy );
+}
 
 
 //=======================================================================//

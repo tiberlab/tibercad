@@ -85,6 +85,8 @@ class EnvelopFunctionApprox
 
     std::string solver;  //!< solver type
 
+    std::string mpi_command_line; //!< something like:  mpirun -np 5 -machinefile machines
+
     std::string solver_command_line; //!< additional line to pass parameters for the eigenvalue solver
 
     unsigned int coeff_for_ncv; //!< eps_ncv = number_of_requested_ev * coeff_for_ncv
@@ -95,7 +97,7 @@ class EnvelopFunctionApprox
 
     unsigned int max_iteration_number; //!< maximum number of iterations for the eigenvalue solver
 
-    double spectrum_shift; //!< shift of spectrum [eV]
+    double spectrum_shift; //!< shift of spectrum ised in matrix assembly[eV]
 
     bool  consider_strain; //!< apply strain effect to the EFA Hamiltonian;
 
@@ -105,9 +107,18 @@ class EnvelopFunctionApprox
 
     bool Dirichlet_bc_everywhere;//!< apply dirichlet boundary conditions at all boundaries
 
+
+    bool solve_ev_problem_twice;//!< if true, calculate the first eigenvalue only and then run again
+ 
   };
 
 
+
+  struct eigen_energy
+  {
+    double energy; //!< eigen energy [eV]
+    unsigned int global_number; //< eigen vector
+  };
 
 
 
@@ -212,6 +223,12 @@ class EnvelopFunctionApprox
   //! returns a reference to solutions
   const std::vector<eigen_propblem_solution> get_solution() const;
  
+  //! set spectrum shift  
+  void set_spectrum_shift(double energy);
+
+  //! returns conduction band minima for holes and valence band maximum for holes 
+  double get_band_edge() const;
+
  private:
 
 
@@ -291,7 +308,10 @@ class EnvelopFunctionApprox
   void save_H_matrix(const std::string & file_name);
 
   //!read SLEPc solutions
-  void read_SLEPC_solution();
+  /*!
+    \param number_of_ev number of eigen functions to read
+  */
+  void read_SLEPC_solution(unsigned int number_of_ev);
 
   //!vector: each element contains information about dof
   std::vector<EnvelopFunctionApprox::dof_new> new_dofs;
@@ -345,11 +365,19 @@ class EnvelopFunctionApprox
   static const double Hartree = 27.2113961;
 
 
-  //! compares eigenstate energy
+  //! compares eigenstate energy for electrons 
   static bool compare_eigen_energy_electrons(eigen_propblem_solution state1, eigen_propblem_solution state2);
 
-  //! compares eigenstate energy  
+  //! compares eigenstate energy for holes 
   static bool compare_eigen_energy_holes(eigen_propblem_solution state1, eigen_propblem_solution state2);
+
+  
+  //! compares eigenstate energy for electrons 
+  static bool compare_eigen_energy_electrons1(eigen_energy state1, eigen_energy state2);
+
+  //! compares eigenstate energy for holes 
+  static bool compare_eigen_energy_holes1(eigen_energy state1, eigen_energy state2);
+  
 
   //! solutions of the eigenvalue problem
   std::vector<eigen_propblem_solution> solution;
