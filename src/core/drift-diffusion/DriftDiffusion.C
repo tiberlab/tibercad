@@ -2718,7 +2718,7 @@ DriftDiffusion::build_elem_band_edges(vector<double>& field,
 
     elem_number++;
   }
-  field.resize(elem_number * n_vars);
+  //field.resize(elem_number * n_vars);
 }
 
 

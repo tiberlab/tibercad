@@ -36,7 +36,7 @@ double EnvelopFunctionApprox::get_band_edge() const
   
   
 
-  vector<double> band_edges;
+ vector<double> band_edges;
   vector<string> names;
 
   poisson_equation -> build_elem_band_edges( band_edges,  names);
@@ -309,6 +309,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   EFAbulkHamiltonian* element_hamiltonian;
 
   unsigned int el_number = 0;
+
+
+
   for ( ; el != end_el ; ++el) 
     {//el
       // Store a pointer to the element we are currently
@@ -352,6 +355,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	    }
 
 
+
+
+
 	  element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
 	  
 	  //------------------------------------------------------------------------------------------
@@ -359,8 +365,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 	  std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&  
 	    model_Ham = ( element_hamiltonian->get_Hamiltonian() );
+	  
 
-
+	
 
 	  for (unsigned int band1 = 0; band1 < opt.number_of_bands; band1++)
 	    {//band1
@@ -382,6 +389,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 			   complex<double> value = (0.0, 0.0);
 			   //constant
 			   value += JxW[qp] * phi[p1][qp] * phi[p2][qp] * model_Ham[band1][band2].constant ;
+			   
+
 			  
 			   //linear left
 			
@@ -443,7 +452,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
       ham_real.add(  opt.disturb_arnoldi * (std::rand()/( (double)RAND_MAX + 1) )   ,s_real);//apply disturb
 
-      ham_real.add(  opt.spectrum_shift/Hartree, s_real);//apply spectrum shift.
+      ham_real.add( - opt.spectrum_shift/Hartree, s_real);//apply spectrum shift.
 /*
       ham_real.scale(Hartree);
       ham_imag.scale(Hartree);
