@@ -245,8 +245,10 @@ class EnvelopFunctionApprox
   //!pointer to meshdata of the equation systems
   MeshData*  meshdata;
 
+  //!pointer the equation systems object
   EquationSystems* es;
 
+  
   string system_name;
 
   //pointer to a drift-diffusion object that is used to get potential data 
@@ -279,6 +281,12 @@ class EnvelopFunctionApprox
 
   //!pointer to the S matrix (it's real)
   SparseMatrix<Number>* S_real;
+
+
+ 
+
+
+
 
   //!map that contains pointers to bulk Hamiltoninas
   std::map<unsigned int, EFAbulkHamiltonian*>  bulkHamiltonian;
@@ -382,5 +390,68 @@ class EnvelopFunctionApprox
   //! solutions of the eigenvalue problem
   std::vector<eigen_propblem_solution> solution;
   
+
+
+  //! my copy of DofMap::_dof_constraints (I have to recalculate it because it is private)
+  DofConstraints 	my_dof_constraints;
+
+  //! Apply periodic boundary conditions
+  void apply_periodic_bc();
+
+  //! create list of nodes that lies at the periodic boundary
+  void make_nodes_periodic();
+
+
+  //!list of periodic nodes
+  std :: vector< std :: vector <const Node*> >  nodes_periodic; //dim node list's: each contains list of nodes that periodic b.c
+                                                                //must be applied to
+  
+
+
+  //!simulation domain boundary
+  double min_coord[3];
+  
+  //!simulation domain boundary
+  double max_coord[3];
+  
+  //! cheks if element lies on boundary
+  bool element_on_boundary(const Elem* element);
+  
 };
+
+
+//-------------------------------------------------------------------
+inline bool EnvelopFunctionApprox::element_on_boundary(const Elem* element)
+{
+  bool result = false;
+
+
+    
+  unsigned int n_sides ; 
+
+  if ( dim > 1 ) 
+    n_sides = element->n_sides();
+  else
+    n_sides = element->n_nodes();
+
+
+  for (short i = 0; i < n_sides; i++)
+    {
+      Elem* el1 = element->neighbor(i);
+      if ( (el1 == NULL)  ) 
+	  result = true;
+      else
+	if (!( el1 -> active() ))
+	  result = true;
+	  
+      if (result) break;
+	
+      
+    }
+
+ 
+  return(result);
+  
+};
+
 #endif

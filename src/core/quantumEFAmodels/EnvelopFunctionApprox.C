@@ -8,6 +8,9 @@ const std::vector< EnvelopFunctionApprox::eigen_propblem_solution > EnvelopFunct
 {
   return(solution);
 }
+
+
+
 //=====================================================//
 EquationSystems* EnvelopFunctionApprox::get_equation_systems() 
 {
@@ -168,6 +171,11 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(EquationSystems&  equation_systems
   DofMap& dof_map = system->get_dof_map();
 
 
+  
+
+
+  
+   
 
   system->add_matrix("Ham_real"); //add matrix for a real part of the Hamiltonian
 
@@ -181,6 +189,8 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(EquationSystems&  equation_systems
 
   S_real = &( system->add_matrix("S_real") );
   
+ 
+
   //---------------------------------------------------------------------------------------------------------//
   //My Jacobian 
 
@@ -189,23 +199,46 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(EquationSystems&  equation_systems
      my_Jacobian *= opt.length_scale;
 
    //--------------------------------------------------------------------------------------------------------//
-  
+   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
-  
+   bool temp = true;
+
+   for ( ; el != end_el ; ++el) 
+    {
+      const Elem* elem = *el;
+      short n1 = elem->n_nodes();
+      for (short i1 = 0; i1 < n1 ; i1++)
+	{
+
+
+	  const Point& p = elem->point(i1);
+	  for (unsigned i = 0; i < 3; i++)
+	  {
+
+	    if (temp)
+	      {
+		min_coord[i] = p(i);
+		max_coord[i] = p(i);
+		temp = false;
+	      }
+
+
+	    if (min_coord[i] < p(i)) min_coord[i] = p(i);
+	    if (max_coord[i] > p(i)) max_coord[i] = p(i);
+	  
+	  }
+	  
+	}
+
+    }
  
-
+   //-------------------------------------------------------------------------------------------------------//
 
    system->init();
   
  
-    
-   //-------------------------------------------------------------------------------------------------------//
-
-   //material list
-
-   //meshdata = &(es->get_mesh_data ());
-   //assemble_material_list();
-
+ 
    //------------------------------------------------------------------------------------------------------//
    
 
@@ -344,6 +377,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	  */
 	  if (opt.consider_strain) 
 	    {
+             
 	      strain_crystal_system = strain->get_strain_crystal(elem , q_point[qp]);
 	    }
  
@@ -462,14 +496,25 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       dof_indices_tmp = dof_indices;
 
       dof_map.constrain_element_matrix(s_real, dof_indices_tmp);
-      S_real->add_matrix(s_real,dof_indices_tmp);
 
+
+      S_real->add_matrix(s_real,dof_indices_tmp);
+/*
+      if ( dof_indices.size() !=  dof_indices_tmp.size() )
+	{
+	  for (unsigned int i1 = 0 ; i1 < dof_indices.size() ; i1++) cerr << dof_indices[i1] << "   ";
+	  cerr << "\n";
+	  for (unsigned int i1 = 0 ; i1 < dof_indices_tmp.size() ; i1++) cerr << dof_indices_tmp[i1] << "   ";
+	  cerr << "\n";
+	}
+*/
       dof_indices_tmp = dof_indices;
 
       dof_map.constrain_element_matrix(ham_real, dof_indices_tmp);
       Ham_real->add_matrix(ham_real,dof_indices_tmp);
 
       dof_indices_tmp = dof_indices;
+     
       dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp);
       Ham_imag->add_matrix(ham_imag,dof_indices_tmp);
 
@@ -1010,11 +1055,15 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
       create_dirichlet_dofs();
  
 
-  //  make_constraints();
+  make_constraints();
+
+  
+  
+  make_nodes_periodic();
+  
+  apply_periodic_bc();
 
   make_new_dofs();
-  
- 
 
   calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
 
@@ -1048,10 +1097,14 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
 
       assert(solution.size() == 1);
 
-      st_shift_value = (solution[0].eigen_energy + opt.spectrum_shift)/Hartree;
-
-     
       
+
+      st_shift_value = (solution[0].eigen_energy - opt.spectrum_shift)/Hartree;
+
+      if (opt.particle == "el")
+	 st_shift_value -= 0.01/Hartree;
+      else
+	st_shift_value += 0.01/Hartree;
     }
 
   std::ostringstream  command_line;
@@ -1064,7 +1117,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number)
   
   command_line <<  "   -eps_type    " << opt.solver ;
 
-  command_line << " -st_shift  " <<  st_shift_value;
+  command_line << " -st_shift  " <<  st_shift_value ;
 
   command_line <<  opt.solver_command_line << "  ";
 
@@ -1155,7 +1208,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
      
 	
-      ev[ind].energy = *(  reinterpret_cast<double*>( &fict ) ) * Hartree - opt.spectrum_shift;
+      ev[ind].energy = *(  reinterpret_cast<double*>( &fict ) ) * Hartree + opt.spectrum_shift;
       ev[ind].global_number = ind;
 
      
@@ -1232,19 +1285,43 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 	{
 	  unsigned int solution_number = it->second;
 	 
-	  (solution[solution_number].eigen_vector).resize(number_of_all_dofs, Complex(0.0, 0.0));
+	  (solution[solution_number].eigen_vector).resize(number_of_all_dofs);
+	  (solution[solution_number].eigen_vector).assign(number_of_all_dofs, Complex(0.0, 0.0));
+
+	 
+	  
 	  //-----------------------------------------------------------------------------
 	  //put independent dofs in the eigenvectors that may contain also non independent dofs
 	  for (unsigned j = 0; j < number_of_all_dofs; j++)
 	    {
 	      if (new_dofs[j].independent)
 		{
+		
 		  solution[solution_number].eigen_vector[j] = temp[new_dofs[j].new_number];
 		}
 	    }
-	 
+	
 	  //TODO put constrained dofs
-      
+	  //put constrained dofs
+	  for (unsigned j = 0; j < number_of_all_dofs; j++)
+	    {
+
+	      std::map<unsigned int, DofConstraintRow> :: iterator it;
+	      it = my_dof_constraints.find(j);
+	      if (it != my_dof_constraints.end() )
+		{
+		  DofConstraintRow constr_row = it->second;
+		  std::map<unsigned int, Real>::iterator  c =  constr_row.begin();
+		
+		  for ( ; c != constr_row.end() ; ++c )
+		    {
+		      solution[solution_number].eigen_vector[j] +=  solution[solution_number].eigen_vector[(c->first)]
+			* (c->second);
+		    }
+		  
+		}
+	   
+	    }
 
 	 
 
@@ -1487,18 +1564,40 @@ void EnvelopFunctionApprox::apply_diriclet_bc_at_all_boundaries()
       else
 	n_sides = elem->n_nodes();
      
-	
+	 	
       for (short i = 0; i < n_sides; i++)
 	{
 	 
+	  //check if the side is external -------------------------
 	  Elem* el1 = elem->neighbor(i);
-	  if ( (el1 == NULL) || !( el1 -> active() )  ) //check if the side is external 
+	  bool side_is_external = false;
+	  if (el1 == NULL) 
+	    side_is_external = true;
+	  else
 	    {
+	      std::vector< const Elem * > active_family;
+	      el1->active_family_tree (active_family);
+	      if (active_family.size() == 0)
+		  side_is_external = true;
+	      //TODO
+              /*
+		has to be corrected because it may contain active child that does not belong to boundary
+	      */
+
+	    }
+	  //-------------------------------------------------------
+	
+
+
+
+	   if (   side_is_external   ) //check if the side is external 
+	    {
+	      
 	      if (dim > 1)
 		{//2D/3D
 		  for (unsigned int nd = 0; nd < elem->n_nodes(); nd++)
 		    {
-		     
+		      
 		      if (elem->is_node_on_side(nd, i))
 			for (short band = 0 ; band <  opt.number_of_bands; band++)
 			  {
@@ -1506,26 +1605,26 @@ void EnvelopFunctionApprox::apply_diriclet_bc_at_all_boundaries()
 			    dirichlet_dofs.insert(dof_indices[nd]);
 			  }
 		    }
-
+		      
 		}
 	      else
 		{//1D
 		  for (short band = 0 ; band <  opt.number_of_bands; band++)
-		     {
-		       dof_map.dof_indices (elem, dof_indices,band);
-		       dirichlet_dofs.insert(dof_indices[i]);
-		     }
+		    {
+		      dof_map.dof_indices (elem, dof_indices,band);
+		      dirichlet_dofs.insert(dof_indices[i]);
+		    }
 		}
 	    }
-	  
-	 
-	
-	 
+	      
+	      
+	      
+	      
 	}
-
-
+	   
+	   
     }
-
+    
 }
 //======================================================================//
 void  EnvelopFunctionApprox::create_dirichlet_dofs( )
@@ -1583,9 +1682,30 @@ void EnvelopFunctionApprox::make_constraints(void)
  
   DofMap& dof_map = system->get_dof_map();
   
-  DofConstraintRow constraint;
-  constraint.clear();
  
+  //----------------------------------------------------------------------------//
+  //I recalculate my copy of the dof constraints because I need them explicitely!
+  my_dof_constraints.clear();
+
+  // Look at all the variables in the system
+  for (unsigned int variable_number=0; variable_number < dof_map.n_variables();
+        ++variable_number)
+    {
+      
+
+      MeshBase::const_element_iterator       elem_it  = mesh->elements_begin();
+      const MeshBase::const_element_iterator elem_end = mesh->elements_end(); 
+      
+      for ( ; elem_it != elem_end; ++elem_it)
+        FEInterface::compute_constraints (my_dof_constraints,
+                                          dof_map,
+                                          variable_number,
+                                          *elem_it);
+     }
+ 
+  //-----------------------------------------------------------------------//
+  //TODO: add periodic boundary conditions constraints
+
 }
 //=======================================================================//
 
@@ -1606,9 +1726,10 @@ void EnvelopFunctionApprox::make_new_dofs( )
 
   unsigned int number_it = 0;
 
+
   for (unsigned int i = 0; i < number_of_all_dofs ; i++)
     {
-       if ( !( dof_map.is_constrained_dof(i) ) && (find(n_begin, n_end, i) == n_end))
+      if ( !( dof_map.is_constrained_dof(i) ) && (find(n_begin, n_end, i) == n_end))
 	{
 	    new_dofs[i].independent = true;
 	    new_dofs[i].new_number = number_it;
@@ -1617,6 +1738,7 @@ void EnvelopFunctionApprox::make_new_dofs( )
 	  }
 	else
 	  {
+	  
 	    new_dofs[i].independent = false;
 	  }
     }
@@ -1660,5 +1782,211 @@ EnvelopFunctionApprox:: ~EnvelopFunctionApprox(void)
   es->delete_system(system_name);
 }
 
+//=======================================================================//
+void EnvelopFunctionApprox::apply_periodic_bc()
+{
+
+  
+
+  // Declare a performance log.  Give it a descriptive
+  // string to identify what part of the code we are
+  // logging, since there may be many PerfLogs in an
+  // application.
+  PerfLog perf_log ("Periodic bc. Assembly",false);
 
 
+  
+ 
+  // The dimension that we are running
+  //const unsigned int dim = mesh.mesh_dimension();
+
+  // Get a reference to the LinearImplicitSystem we are solving
+
+
+  vector<unsigned int> uvar(opt.number_of_bands);
+
+  for (unsigned int i = 0; i < opt.number_of_bands; i++) 
+    {
+      uvar[i] = system->variable_number(psi_name[i]);
+    }
+
+  unsigned int system_number=system->number();
+  
+  DofMap& dof_map = system->get_dof_map();
+  
+  FEType fe_type = dof_map.variable_type(uvar[0]);
+  
+ 
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+   
+
+  
+
+  // The element shape functions evaluated at the quadrature points.
+  const std::vector<std::vector<Real> >& phi = fe->get_phi();
+
+ 
+  std::vector<unsigned int> dof_indices;
+  std::vector<unsigned int> dof_indices_component;
+  
+  const double pos_tol = 1e-10;
+  const double func_tol = 1e-10;
+ 
+  //dof_map.print_dof_constraints();  
+
+  for (int i = 0; i < mesh->mesh_dimension(); i++) //Loop over all the mesh directions
+    { 
+      if  (opt.periodicity[i]) //Check if the periodic b.c. are applied along the direction i
+	
+	{
+	 
+	  std :: vector <const Node*>& vec =  nodes_periodic[i];
+
+	  for (unsigned int n = 0; n < vec.size(); n++) // Loop over all the nodes
+	    {
+	      const Node* node1 = vec[n];
+	      
+	    
+		 
+	      for (unsigned int var_index = 0 ; var_index  < opt.number_of_bands ;  var_index ++)
+		{//let us find dof for it-----------------
+		  
+
+		 // const Node& node = mesh.node(n);
+		  
+		  const unsigned int  n_dof = node1->dof_number(system_number,uvar[var_index],0);
+		  
+		  //dof is found-------------------------------
+		 
+		  
+		  if (! dof_map.is_constrained_dof(n_dof) ) //only if the dof is not constrained do the job
+		    {
+		      //let us make a  point that lies at the opposite side
+		      Point point2(*node1);
+		
+		      point2(i) = point2(i) + max_coord[i] - min_coord[i];
+		  
+		      
+		      //corresponding point is created
+		      
+		      
+		      //let us find an element this point belongs to and calculate the constraints
+		      //the most coarse element first
+		      unsigned int refinement_level = 0; 
+		      MeshBase::const_element_iterator el3  = mesh->level_elements_begin(refinement_level);
+		      MeshBase::const_element_iterator end_el3 = mesh->level_elements_end(refinement_level);
+		      
+		      Elem*  elem1;
+		      for ( ; ( (el3 != end_el3) ) ; ++el3)  
+			{
+			  Elem* elem = *el3;
+			  if (element_on_boundary(elem))
+			    {
+			      if (elem->contains_point(point2))
+				{
+				  elem1 = elem;
+				  
+				  break;
+				  
+				}
+			    }
+			}
+		      
+		      //children of the  most coarse element 
+		      while ( !( elem1->active() ) )
+			{
+			  
+			  for (unsigned int i=0 ; i < elem1->n_children() ; i++)
+			    {
+			      Elem* 	child = elem1->child(i);
+			      if (element_on_boundary(child))
+				{
+				  if (child->contains_point(point2))
+				    {
+				      elem1 = child;
+				      break;
+				    }
+				}
+			    }
+			}
+			
+		      
+
+		      
+		      //active elem1 contains the opposite  point, we can constrain it now
+		      
+		      DofConstraintRow constraint;
+		      constraint.clear();
+		      
+		      dof_map.dof_indices (elem1, dof_indices_component, uvar[var_index]);
+		      
+		      std::vector<Point> point2_vec(1);
+		      
+		      point2_vec[0] = point2;
+		      
+		      std::vector<Point> point2_ref_vec(1);
+			  
+			  
+		      FEInterface::inverse_map (elem1->dim(), fe_type , elem1,  point2_vec,  point2_ref_vec)  ;
+		      
+		      fe->reinit (elem1, &point2_ref_vec);
+
+		      Point point_temp = point2_ref_vec[0];
+		     
+		      
+		      for (int i1 = 0; i1 < phi.size(); i1++)
+			{
+			
+			  if ( std::abs(phi[i1][0]) >  func_tol )  
+			    {
+			     
+			      constraint[dof_indices_component[i1]] = phi[i1][0];
+			    }
+			}
+		       
+
+		      dof_map.add_constraint_row (n_dof,  constraint); 
+                      my_dof_constraints.insert(pair<unsigned int, DofConstraintRow>(n_dof,  constraint));
+		      
+		    }
+		     
+		    
+		}
+	    }
+	  
+	  
+	}
+    }  
+ 
+}
+//---------------------------------------------------------------------------------------------
+
+void EnvelopFunctionApprox::make_nodes_periodic()
+{
+  const double pos_tol = 1e-10;
+ 
+  nodes_periodic.clear();
+
+ 
+  
+
+  for (unsigned dir = 0; dir <=dim-1; dir++)
+    {//directions
+      std::vector < const Node*> temp_vec;
+      temp_vec.clear();
+    
+      if (opt.periodicity[dir]) 
+	{
+	  
+	  for (unsigned int n = 0; n < mesh->n_nodes(); n++) // Loop over all the nodes
+	    {
+	      const Node* node1 = & (mesh->node(n));
+	      if (node1->active())
+		{		
+		  if ( std::abs( (*node1)(dir) - min_coord[dir]) < pos_tol)  temp_vec.push_back(node1);
+		}
+	    }
+	}
+      nodes_periodic.push_back(temp_vec);
+    }
+}

@@ -68,8 +68,8 @@ class SBbulkHamiltonian : public EFAbulkHamiltonian
 
   
   //! here does nothing but may be  overloaded in the derived classes.
-  virtual void  calculate_edge_and_mass()
-  { };
+  virtual void  calculate_edge_and_mass() = 0;
+  
 
 
 

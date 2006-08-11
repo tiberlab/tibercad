@@ -5,11 +5,16 @@
 #include "SBbulkHamiltonian.h"
 #include "ZbDDsemiconductor.h"
 
+
 //! A class to calculate single band Hamiltonian of zinc-blende material
 class SBZbCondBandBulkHamiltonian : public SBbulkHamiltonian
 {
 
  public:
+
+  //!Constructor
+  SBZbCondBandBulkHamiltonian( );
+
   //!Constructor
   /*!
     \param parameters parameters that describe a zinc-blende crystal
@@ -28,9 +33,10 @@ class SBZbCondBandBulkHamiltonian : public SBbulkHamiltonian
   unsigned int min_number;
 
  
+  void  calculate_edge_and_mass();
 
   
-  virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
+  void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
 
  private:
 

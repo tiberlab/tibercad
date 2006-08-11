@@ -149,7 +149,7 @@ void SBbulkHamiltonian::read_database(const Dummy& dd)
       
       ZbDDsemiconductor* zbsc = new ZbDDsemiconductor();
       semiconductor = zbsc;
-      
+    
     }
 
   if (structure == "wz")

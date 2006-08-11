@@ -3,6 +3,9 @@ using namespace std;
 #include "getpot.h"
 #include "Alloy.h"
 
+
+
+
 //===========================================================//
 SBWzCondBandBulkHamiltonian::SBWzCondBandBulkHamiltonian( ):SBbulkHamiltonian()
 {
