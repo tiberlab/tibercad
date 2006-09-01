@@ -37,14 +37,15 @@ class TecplotIO_cell : public TecplotIO
    * output files.
    */
   // TecplotIO_cell (const MeshBase&, const bool binary=false); 
-  TecplotIO_cell (const MeshBase& mesh, const bool binary=false):TecplotIO(mesh,binary){} ; 
+  TecplotIO_cell (const MeshBase& mesh, const bool binary=false)
+    : TecplotIO(mesh, binary) {} ; 
 
 
-void TecplotIO_cell::write_cell_data (const std::string& fname,
+  void write_cell_data (const std::string& fname,
 				  const std::vector<Number>& soln,
 				 const std::vector<std::string>& names);
 
-void TecplotIO_cell::write_ascii_cell (const std::string& fname,
+  void write_ascii_cell (const std::string& fname,
 			     const std::vector<Number>* v,
 				  const std::vector<std::string>* solution_names);
 

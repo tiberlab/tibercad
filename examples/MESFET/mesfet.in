@@ -24,25 +24,27 @@ scaling = 1
 characteristic = 1
 
 # for transcharacteristic
-vds = 2;
+vds = 1.5;
 vg_start = -1.0;
-vg_stop =  0.1;
-vg_steps = 11;
+vg_stop =  0.2;
+vg_steps = 12;
+#vg_stop = 1.0;
+#vg_steps = 50;
 # for output characteristic
-vds_stop = 8.0;
-vds_steps = 160;
+vds_stop = 3.0;
+vds_steps = 60;
 
 nonlinear_tolerance = 1e-12
-nonlinear_ls_maxstep = 0.025
+nonlinear_ls_maxstep = 0.1
 linear_tolerance = 1e-6
 linear_max_it = 1000
 nonlinear_max_it = 15
-integration_order = 5
+integration_order = 2
 
 max_refinement_steps=0
-refine_fraction=0.7
-coarsen_fraction=0.0
-max_ref_level=4
+refine_fraction=0.8
+coarsen_fraction=0.4
+max_ref_level=5
 
 
 $End

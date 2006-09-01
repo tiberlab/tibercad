@@ -277,7 +277,7 @@ ExcitonTransport::set_solver_params(NonlinearSolver<Number>& solver)
 
   unsigned int nonlin_max_its = solver_params.nonlinear_max_iterations;
 
-  double sqrt_n = sqrt(get_mesh().n_nodes());
+  double sqrt_n = sqrt((double) get_mesh().n_nodes());
 
   solver_class.set_snes_options(solver_params.nonlinear_tolerance,
       solver_params.nonlinear_abs_tolerance * sqrt_n, nonlin_max_its,

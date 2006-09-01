@@ -1,10 +1,14 @@
-using namespace std;
 #include "WzDDsemiconductor.h"
 
 #include "Alloy.h"
 #include "getpot.h"
 
-const double WzDDsemiconductor::Hartree;
+using namespace std;
+
+
+const double WzDDsemiconductor::Hartree = 27.2113961;
+
+
 //--------------------------------------------------//
 WzDDsemiconductor::WzDDsemiconductor(void): DDsemiconductor()
 {

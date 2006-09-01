@@ -1,6 +1,7 @@
 // the following _HAS_ to be included first
 #include "Read_MSH.h"
 
+#include "Dopant.h"
 #include "ElementData.h"
 #include "OhmicContact.h"
 #include "SchottkyContact.h"
@@ -29,8 +30,7 @@ using namespace DriftDiffusionDefs;
 void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
     ElectricalContact* desc, const Mesh& mesh);
 
-void sweep_drain(double stop, int steps, DriftDiffusion& dd, double vg,
-    bool restart = false);
+void sweep_drain(double stop, int steps, DriftDiffusion& dd, double vg);
 
 class Dummy {};
 
@@ -104,13 +104,12 @@ int main (int argc, char** argv)
     sub.set_data_file("Si.dat");
     sub.read_database(d);
     {
-      sub.add_dopant(new Dopant(1e13, 0.01, 4, Dopant::P_TYPE));
-      sub.set_mobilities(1416, 470);
+      sub.add_dopant(new Dopant(1e17, 0.01, 4, Dopant::P_TYPE));
+      //sub.set_mobilities(1416, 470);
+      sub.set_mobilities(560, 280);
       ModelOptions opts;
-      opts["tau_n"] = "1e-5";
-      opts["tau_p"] = "3e-6";
-      //opts.insert(pair<const string, string>("tau_n", "1e-5"));
-      //opts.insert(pair<const string, string>("tau_p", "3e-6"));
+      opts["tau_n"] = "1e-6";
+      opts["tau_p"] = "3e-7";
       RecombinationModelInterface* rm =
         RecombinationModelInterface::create("SRH", opts);
       sub.add_recombination_model(rm);
@@ -127,8 +126,6 @@ int main (int argc, char** argv)
       ModelOptions opts;
       opts["tau_n"] = "1e-7";
       opts["tau_p"] = "3e-8";
-      //opts.insert(pair<const string, string>("tau_n", "1e-7"));
-      //opts.insert(pair<const string, string>("tau_p", "3e-8"));
       RecombinationModelInterface* rm =
         RecombinationModelInterface::create("SRH", opts);
       schottky.add_recombination_model(rm);
@@ -144,8 +141,6 @@ int main (int argc, char** argv)
       ModelOptions opts;
       opts["tau_n"] = "2e-9";
       opts["tau_p"] = "6e-10";
-      //opts.insert(pair<const string, string>("tau_n", "2e-9"));
-      //opts.insert(pair<const string, string>("tau_p", "6e-10"));
       RecombinationModelInterface* rm =
         RecombinationModelInterface::create("SRH", opts);
       contact.add_recombination_model(rm);
@@ -280,6 +275,7 @@ int main (int argc, char** argv)
     dd.set_simulation_voltage("drain", 0.0);
 
 
+    dd.guess_equilibrium();
     dd.solve();
     dd.remember_current_solution();
 
@@ -353,30 +349,43 @@ int main (int argc, char** argv)
       vector<double>::iterator it = first_positive;
       for ( ; it != voltages.end(); ++it)
       {
-        dd.set_to_remembered_solution();
         dd.set_simulation_voltage("gate", *it);
         sweep_drain(vds_stop, vds_steps, dd, *it);
+        dd.set_to_remembered_solution();
       }
 
       vector<double>::iterator zero =
         find_if(voltages.begin(), first_positive,
             bind2nd(greater<double>(), -delta_v));
 
-      if (zero != first_positive)
-        sweep_drain(vds_stop, vds_steps, dd, 0.0);
+      //if (zero != first_positive)
+      //  sweep_drain(vds_stop, vds_steps, dd, 0.0);
 
       it = zero;
       if (it != voltages.begin())
       {
-        bool restart = true;
+        // recalculate equilibrium
+        DriftDiffusion::Options& params = dd.get_options();
+        int bkp = params.coupling;
+        params.coupling = POISSON;
+        params.solver_params.nonlinear_max_iterations = 100;
+        dd.set_simulation_voltage("gate", 0.0);
+        dd.set_simulation_voltage("drain", 0.0);
+        dd.set_electron_fermi_level(0.0);
+        dd.set_hole_fermi_level(0.0);
+        dd.set_electric_potential(0.0);
+        dd.guess_equilibrium();
+        dd.solve();
+        dd.remember_current_solution();
+        params.coupling = bkp;
+        params.solver_params.nonlinear_max_iterations = nonlin_max_it;
+
         do
         {
           --it;
-          if (!restart)
-            dd.set_to_remembered_solution();
           dd.set_simulation_voltage("gate", *it);
-          sweep_drain(vds_stop, vds_steps, dd, *it, restart);
-          restart = false;
+          sweep_drain(vds_stop, vds_steps, dd, *it);
+          dd.set_to_remembered_solution();
         }
         while (it != voltages.begin());
       }
@@ -393,6 +402,7 @@ int main (int argc, char** argv)
       filename << "output/id_vg_" << fixed << vds << "V.dat";
       ofstream file;
       file.open(filename.str().c_str());
+      file << "# Id-Vg characteristic\n# Vg\tIg\tId\tIs\n";
       
       // make a voltage sweep
       double delta_v = 1e-6;
@@ -473,7 +483,7 @@ int main (int argc, char** argv)
 
 
 void sweep_drain(double stop, int steps,
-    DriftDiffusion& dd, double vg, bool restart)
+    DriftDiffusion& dd, double vg)
 {
 
   ostringstream filename;
@@ -481,6 +491,7 @@ void sweep_drain(double stop, int steps,
   filename << "output/ids_" << fixed << vg << "V.dat";
   ofstream file;
   file.open(filename.str().c_str());
+  file << "# Id-Vds characteristic for Vg = " << vg << "V\n# Vds\tIg\tId\tIs\n";
 
   // make a voltage sweep
   double delta_v = 1e-6;
@@ -505,26 +516,13 @@ void sweep_drain(double stop, int steps,
   {
     dd.set_simulation_voltage("drain", *it);
     cout << "Vgs = " << vg << " Vds = " << *it << "\n" << flush;
-    if (restart)
-    {
-      DriftDiffusion::Options& params = dd.get_options();
-      int bkp = params.coupling;
-      params.coupling = POISSON;
-      dd.set_simulation_voltage("gate", 0.0);
-      dd.set_simulation_voltage("drain", 0.0);
-      dd.set_electron_fermi_level(0.0);
-      dd.set_hole_fermi_level(0.0);
-      dd.solve();
-      params.coupling = bkp;
-    }
-
+    dd.enable_mesh_refinement();
     dd.solve();
     if (remember)
     {
       dd.remember_current_solution();
     }
     remember = false;
-    restart = false;
     const map<const ElectricalContact*, double>& curr =
       dd.get_boundary_currents();
     file << *it << " "

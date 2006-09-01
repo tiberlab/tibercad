@@ -62,7 +62,7 @@ void ReadISEGrid::scan_grid_file()
     
     
   // array  of  strings  for  "region" and  "material" labels
-  string  regions[nb_regions], materials[nb_regions];
+  vector<string>  regions(nb_regions), materials(nb_regions);
     
   ISE_INPUT >> qualifier >> equal >> dummy;
     

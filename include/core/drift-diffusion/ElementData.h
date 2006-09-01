@@ -4,6 +4,7 @@
 #define _ELEMENTDATA_H_
 
 #include <map>
+#include <cassert>
 
 // forward declarations
 class Elem;

@@ -26,7 +26,8 @@ all: main
 
 main: $(objects)
 	@echo "Linking main..."
-	@$(CXX) $(CXXFLAGS) $(objects) $(TIBER_OBJECTS) -o main $(LIBS) $(LDFLAGS)
+	@$(CXX) $(CXXFLAGS) $(objects) $(TIBER_OBJECTS) -o main $(LIBS) $(LDFLAGS) $(EXTERNAL_FLAGS)
+
 
 run: all diode.msh
 	@echo "Running example..."

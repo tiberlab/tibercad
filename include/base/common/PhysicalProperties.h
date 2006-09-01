@@ -76,7 +76,7 @@ class PhysicalProperties
   /*!
    * 
    */
-  const Material*  PhysicalProperties::get_material(void) const;
+  const Material*  get_material(void) const;
 
  protected:
 

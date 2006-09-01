@@ -33,7 +33,8 @@ unsigned int Macrostrain::fixed_node3_temp;
 
 LinearImplicitSystem* Macrostrain::my_system_temp;
 //-----------------------------------------------------------------//
-Macrostrain::Macrostrain(const options& opt,  EquationSystems& equation_systems_in,  std::string& problem_name ) 
+Macrostrain::Macrostrain(const options& opt,  EquationSystems& equation_systems_in,
+    const std::string& problem_name ) 
 {
   
   equation_systems = &equation_systems_in;

@@ -116,7 +116,7 @@ class DDsemiconductor
  private:
 
   //! Hartree energy in eV
-  static const double Hartree = 27.2113961;
+  static const double Hartree;
    
 
  

@@ -1,5 +1,9 @@
-using namespace std; 
 #include "EFAbulkHamiltonian.h"
+
+using namespace std; 
+
+const double
+EFAbulkHamiltonian::Hartree = 27.2113961;
 
 EFAbulkHamiltonian::EFAbulkHamiltonian() : PhysicalProperties("EFAbulkHamiltonian")
 {

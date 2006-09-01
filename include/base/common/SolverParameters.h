@@ -13,17 +13,17 @@ class SolverParameters{
 
  public:
 
-  SolverParameters::SolverParameters();
-  SolverParameters::~SolverParameters();
+  SolverParameters();
+  ~SolverParameters();
 
-  void SolverParameters::set_parameters( map <string,double>& num_map, map <string,string>&  string_map, 
+  void set_parameters( map <string,double>& num_map, map <string,string>&  string_map, 
 				    map <string, vector<double> >&  vector_map   );
 
 
   // *************************************************************
 
   template <typename T> 
-    T  SolverParameters::get_parameters_tmp(string&  label) 
+    T  get_parameters_tmp(string&  label) 
 
 {
 
@@ -70,14 +70,14 @@ class SolverParameters{
   // ****************************************************************
 
   
-  int   SolverParameters::get_parameters(string&  label, int  Default)  ;
+  int   get_parameters(string&  label, int  Default)  ;
 
-  double  SolverParameters::get_parameters(string&  label, double  Default) ;
+  double  get_parameters(string&  label, double  Default) ;
 
-  string  SolverParameters::get_parameters(string&  label, string  Default ) ;
+  string  get_parameters(string&  label, string  Default ) ;
 
-  vector<double>  SolverParameters::get_parameters(string&  label,vector<double>& def_vector);
-  vector<unsigned int>  SolverParameters::get_parameters(string&  label,vector<unsigned int>& def_vector);
+  vector<double>  get_parameters(string&  label,vector<double>& def_vector);
+  vector<unsigned int>  get_parameters(string&  label,vector<unsigned int>& def_vector);
 
 
 

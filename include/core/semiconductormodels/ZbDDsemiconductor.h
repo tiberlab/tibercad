@@ -192,7 +192,7 @@ class ZbDDsemiconductor  : public DDsemiconductor
   // k.p Hamiltonian section
 
   //! Hartree energy in eV
-  static const double Hartree = 27.2113961;
+  static const double Hartree;
   
   //! k.p Hamiltonian matrix
   std::complex<double>  Ham[6][6] ;

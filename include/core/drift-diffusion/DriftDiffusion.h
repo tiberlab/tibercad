@@ -196,6 +196,11 @@ class DriftDiffusion
         double min_voltage_step;
 
         /**
+         * The maximum allowable voltage step size
+         */
+        //double max_voltage_step;
+
+        /**
          * The order of gauss integration
          */
         libMeshEnums::Order integration_order;
@@ -370,6 +375,15 @@ class DriftDiffusion
     //! Set the hole quasi Fermi level to \c Ef_p
     void set_hole_fermi_level(double Ef_p);
 
+    //! Set the electric potential everywhere to \c pot
+    void set_electric_potential(double pot);
+
+    //! Makes a first guess of the equilibrium potential
+    /**
+     * It sets every node to its equilibrium potential.
+     */
+    void guess_equilibrium(void);
+
     //! Solve the drift-diffusion problem.
     /*!
      * If adaptive mesh refinement was enabled for this solver
@@ -496,15 +510,6 @@ class DriftDiffusion
 
   private:
 
-    /**
-     * Are we doing equilibrium or nonequilibrium calculation?
-     */
-    enum CalculationType
-    {
-      EQUILIBRIUM,
-      NONEQUILIBRIUM
-    };
-
     // for nicer code
     typedef std::map<const ElectricalContact*, double> ContactData;
     typedef std::map<const Node*, ElectricalContact*> BoundaryNodeList;
@@ -611,8 +616,7 @@ class DriftDiffusion
     /**
      * Set the options for the PETSc solver as given in @c SolverParameters
      */
-    void set_solver_params(NonlinearSolver<Number>& solver,
-        CalculationType calc_type = NONEQUILIBRIUM);
+    void set_solver_params(NonlinearSolver<Number>& solver);
 
     /**
      * Computes the scaling parameters according to the
@@ -740,12 +744,6 @@ class DriftDiffusion
      */
     static void assign_boundary_values(double& coeff, double& value,
         const std::vector<double>& coefficients);
-
-    //! Makes a first guess of the equilibrium potential
-    /**
-     * It sets every node to its equilibrium potential.
-     */
-    void guess_equilibrium(void);
 
     //! Assembles the residual vector or the jacobian matrix
     /*!

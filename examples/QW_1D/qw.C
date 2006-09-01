@@ -1,6 +1,8 @@
 // the following _HAS_ to be included first
 #include "Read_MSH.h"
 
+#include "Dopant.h"
+#include "RecombinationModelInterface.h"
 #include "ElementData.h"
 #include "OhmicContact.h"
 #include "BoundaryData.h"
@@ -52,15 +54,11 @@ int main (int argc, char** argv)
 
     int fully = input_file("fully_coupled", 1);
 
-    const string approx_order =
-      input_file("approximation_order", "FIRST");
-
     int mat_sys = input_file("material_system",0);
     double in_content = input_file("in_content", 0.15);
     double al_content = input_file("al_content", 0.48);
     double ga_content = input_file("ga_content", 0.47);
     int growth_dir = input_file("growth_dir",1);
-    int solve_strain = input_file("solve_strain", 0);
 
     // drift-diffusion options
     GetPot dd_opt("dd.in");
@@ -72,8 +70,6 @@ int main (int argc, char** argv)
     double stop_voltage = dd_opt("vg_stop", 0.0);
     unsigned int voltage_steps = dd_opt("vg_steps", 1);
 
-    const string method = dd_opt("simulation_method", "NEWTON");
-    const string statistics = dd_opt("statistics", "FD");
     double dd_nonlin_rtol = dd_opt("nonlinear_tolerance", 1e-9);
     double dd_nonlin_atol = dd_opt("nonlinear_abs_tolerance", 1e-12);
     double dd_lin_rtol = dd_opt("linear_tolerance", 1e-6);
@@ -462,7 +458,8 @@ int main (int argc, char** argv)
     stress_map[1] = stress_value;
 
 
-    Macrostrain strain_calculation(opt, mesh);
+    EquationSystems eqsys(mesh);
+    Macrostrain strain_calculation(opt, eqsys, "strainsys");
 
     strain_calculation.define_substrate_bc(2);
     strain_calculation.define_BC_map(boundary_nodes);
@@ -483,35 +480,46 @@ int main (int argc, char** argv)
      ****************************************************************/
 
     StrainedSemiconductorModel n_gan(&strain_calculation);    
+    StrainedSemiconductorModel p_gan(&strain_calculation);
     if (mat_sys == 1)
+    {
       n_gan.set_data_file("materials/GaAs.dat");
+      p_gan.set_data_file("materials/GaAs.dat");
+    }
     else if (mat_sys == 2)
+    {
       n_gan.set_data_file("materials/InAs.dat");
+      p_gan.set_data_file("materials/InAs.dat");
+    }
     else if (mat_sys == 3)
+    {
       n_gan.set_data_file("materials/InAs.dat");
+      p_gan.set_data_file("materials/InAs.dat");
+    }
     else
+    {
       n_gan.set_data_file("materials/GaN.dat");
+      p_gan.set_data_file("materials/GaN.dat");
+    }
 
-
-    if (statistics == "FD")
-      n_gan.set_statistics(TiberCad::FERMIDIRAC);
-    else
-      n_gan.set_statistics(TiberCad::BOLTZMANN);
     
-    if (!solve_strain)
-      n_gan.ignore_strain();
+    ModelOptions opts;
+    opts["tau_n"] = "1e-10";
+    opts["tau_p"] = "1e-10";
+    opts["C"] = "1e-10";
+    RecombinationModelInterface* rm =
+      RecombinationModelInterface::create("SRH", opts);
+    n_gan.add_recombination_model(rm);
+    rm = RecombinationModelInterface::create("direct", opts);
+    n_gan.add_recombination_model(rm);
 
-    // n-GaN
-    n_gan.add_recombination_model(SRH);
-    n_gan.set_SRH_parameters(1e-7, 1e-7);
-    n_gan.add_recombination_model(DIRECT);
-    n_gan.set_direct_rec_parameters(1e-10);
-
-    // p-GaN
-    StrainedSemiconductorModel p_gan(n_gan);
+    rm = RecombinationModelInterface::create("SRH", opts);
+    p_gan.add_recombination_model(rm);
+    rm = RecombinationModelInterface::create("direct", opts);
+    p_gan.add_recombination_model(rm);
     
     // InGaN
-    StrainedSemiconductorModel ingan(n_gan);
+    StrainedSemiconductorModel ingan(&strain_calculation);
     if (mat_sys == 1)
       ingan.set_data_file("materials/InAs.dat");
     else if (mat_sys == 3)
@@ -519,12 +527,20 @@ int main (int argc, char** argv)
     else if (mat_sys == 4)
       ingan.set_data_file("materials/AlN.dat");
 
-    ingan.set_SRH_parameters(1e-7, 1e-7);
-    ingan.add_recombination_model(DIRECT);
-    ingan.set_direct_rec_parameters(1e-10);
+    opts["tau_n"] = "1e-7";
+    opts["tau_p"] = "1e-7";
+    opts["C"] = "1e-10";
+    rm = RecombinationModelInterface::create("SRH", opts);
+    ingan.add_recombination_model(rm);
+    rm = RecombinationModelInterface::create("direct", opts);
+    ingan.add_recombination_model(rm);
 
-    n_gan.set_n_dopant(Dopant(n_doping, 0.025, 2));
-    p_gan.set_p_dopant(Dopant(p_doping, 0.01, 4));
+    n_gan.add_dopant(new Dopant(n_doping, 0.025, 2, Dopant::N_TYPE));
+    p_gan.add_dopant(new Dopant(p_doping, 0.01, 4, Dopant::P_TYPE));
+
+    n_gan.set_statistics(TiberCad::FERMIDIRAC);
+    p_gan.set_statistics(TiberCad::FERMIDIRAC);
+    ingan.set_statistics(TiberCad::FERMIDIRAC);
 
     Dummy d;
     n_gan.read_database(d);
@@ -543,6 +559,10 @@ int main (int argc, char** argv)
     else if (mat_sys == 0)
       ingan.build_alloy("materials/InN.dat",
           "materials/InGaN_bow.dat", in_content);
+    
+    n_gan.set_mobilities(200, 50);
+    p_gan.set_mobilities(200, 50);
+    ingan.set_mobilities(200, 50);
 
     ElementData element_data;
     {
@@ -575,21 +595,10 @@ int main (int argc, char** argv)
 
 
 
-    // solve strain
-    if (solve_strain)
-    {
-      cout << "Solving strain... \n" << flush;
-      strain_calculation.solve();
-      strain_calculation.output_piezo("Piezo.gmv");
-    }
+    cout << "Solving strain... \n" << flush;
+    strain_calculation.solve();
+    strain_calculation.output_piezo("Piezo.gmv");
 
-
-    if (solve_strain)
-    {
-      n_gan.include_strain();
-      p_gan.include_strain();
-      ingan.include_strain();
-    }
 
     OhmicContact anode("anode");
     anode.set_zero_derivative_bc(POTENTIAL);
@@ -637,10 +646,12 @@ int main (int argc, char** argv)
     
   
     DriftDiffusion dd(&device);
+    dd.set_equation_systems(&eqsys);
+    dd.init();
 
     DriftDiffusion::Options& params = dd.get_options();
     params.max_refinement_steps = dd_max_r_steps;
-    params.solver_params.nonlinear_max_iterations = 25;
+    params.solver_params.nonlinear_max_iterations = 100;
     params.solver_params.linear_max_iterations = dd_lin_max_it;
     params.solver_params.nonlinear_tolerance = dd_nonlin_rtol;
     params.solver_params.nonlinear_abs_tolerance = dd_nonlin_atol;
@@ -655,31 +666,6 @@ int main (int argc, char** argv)
     //params.artificial_drift = true;
     params.local_scaling = true;
     
-
-    if (method == "GUMMEL")
-    {
-      params.solver_method = DriftDiffusion::GUMMEL;
-      params.max_gummel_iterations = 2;
-    }
-    else
-      params.solver_method = DriftDiffusion::NEWTON;
-
-    if (fully)
-    {
-      cout << "Solving for electrons and holes.\n" << flush;
-      params.coupling = FULLYCOUPLED;
-    }
-    else
-    {
-      cout << "Solving for electrons only.\n" << flush;
-      params.coupling = POISSON | ELECTRONS;
-    }
-
-
-    if (approx_order == "FIRST")
-      params.approximation_order = FIRST;
-    else if (approx_order == "SECOND")
-      params.approximation_order = SECOND;
 
     // mesh drawn in um
     params.mesh_units = mesh_units;
@@ -697,6 +683,7 @@ int main (int argc, char** argv)
     dd.set_simulation_voltage("anode", 0.0);
     
     cout << "Solving equilibrium... " << flush;
+    params.coupling = POISSON;
     dd.solve();
     const Scaling& sc = dd.get_scaling();
     cout << "Scaling parameters:\n";
@@ -730,6 +717,18 @@ int main (int argc, char** argv)
 
     params.solver_params.nonlinear_max_iterations = dd_nonlin_max_it;
     params.solver_params.ls_maxstep = dd_nonlin_ls_maxstep;
+
+    if (fully)
+    {
+      cout << "Solving for electrons and holes.\n" << flush;
+      params.coupling = FULLYCOUPLED;
+    }
+    else
+    {
+      cout << "Solving for electrons only.\n" << flush;
+      params.coupling = POISSON | ELECTRONS;
+    }
+
 
     cout << "\nBegin sweep...\n" << flush;
     // make a voltage sweep
@@ -806,13 +805,13 @@ int main (int argc, char** argv)
     it = zero;
     if (it != voltages.begin())
     {
-      bool restart = true;
+      dd.set_to_remembered_solution();
       do
       {
         --it;
         dd.set_simulation_voltage("anode", *it);
         cout << " Solving U = " << *it << " V ... " << flush;
-        dd.solve(restart);
+        dd.solve();
         cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
           ", final residual: " << dd.get_final_residual() << ")\n" << flush;
 
@@ -832,7 +831,6 @@ int main (int argc, char** argv)
             GnuPlotIO::GRID_ON).write_nodal_data(filename_b.str(),
               densities, names);
 
-        restart = false;
         const map<const ElectricalContact*, double>& curr =
           dd.get_boundary_currents();
         file << *it << "  "

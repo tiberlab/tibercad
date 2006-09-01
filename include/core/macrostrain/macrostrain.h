@@ -177,7 +177,8 @@ class Macrostrain
     \param equation_systems  reference to EquationSystems  object
     \param problem_name name of the problem that is given to a new system
   */
-  Macrostrain(const options& opt,  EquationSystems& equation_systems, std::string& problem_name); //gets mesh 
+  Macrostrain(const options& opt,  EquationSystems& equation_systems,
+      const std::string& problem_name); //gets mesh 
   
 
   //----------------------------------------------------------------------
@@ -496,9 +497,9 @@ class Macrostrain
   //!returns node number, closest to point 
   unsigned int get_number_of_the_fixed_node(Point point); 
 
-  void Macrostrain::create_substate_nodes_set();
+  void create_substate_nodes_set();
  
-  void Macrostrain::update_substrate_nodes_set();
+  void update_substrate_nodes_set();
   //------------atomic description------------------
 
   std::vector<atom> atom_structure;  

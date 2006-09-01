@@ -2,7 +2,6 @@ $Options
 
 temperature = 300
 
-statistics = FD
 n_doping = 1e19
 p_doping = 1e19
 
@@ -18,7 +17,7 @@ linear_tolerance = 1e-6
 linear_abs_tolerance = 1e-12
 nonlinear_max_it = 25
 linear_max_it = 1000
-integration_order = 5
+integration_order = 2
 
 
 scaling = 1

@@ -2,7 +2,6 @@
 #include "DriftDiffusionProperties.h"
 
 
-#include <typeinfo>
 
 SRHRecombination::SRHRecombination(void)
   : RecombinationModelInterface(),

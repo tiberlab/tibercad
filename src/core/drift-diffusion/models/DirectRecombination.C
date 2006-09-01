@@ -2,7 +2,6 @@
 #include "DriftDiffusionProperties.h"
 
 
-#include <typeinfo>
 
 DirectRecombination::DirectRecombination(void)
   : RecombinationModelInterface(),

@@ -59,7 +59,7 @@ class InputParser{
   */
 
   //  InputParser(string filename , string section_name   );
-  InputParser::InputParser(string& input_file_name);
+  InputParser(string& input_file_name);
 
   //!  Destructor 
   /*!

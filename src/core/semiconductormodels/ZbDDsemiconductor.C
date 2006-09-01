@@ -1,7 +1,9 @@
-using namespace std;
 #include "ZbDDsemiconductor.h"
 #include "getpot.h"
 #include "Alloy.h"
+
+
+using namespace std;
 
 typedef std::complex<double> Complex;
 extern "C" 
@@ -9,7 +11,8 @@ extern "C"
   //ZHEEV( JOBZ, UPLO,  N, A,           LDA, W, WORK, LWORK, RWORK,INFO )
   void zheev_(char& jobs, char& UPLO, int& N, Complex* ham6x6matrix, int& N, double* eigvals,  Complex* WORK, int& LWORK, double* RWORK, int& info);
 };
-const double ZbDDsemiconductor::Hartree;
+
+const double ZbDDsemiconductor::Hartree = 27.2113961;
 //---------------------------------------------//
 
 ZbDDsemiconductor::ZbDDsemiconductor(void): DDsemiconductor()

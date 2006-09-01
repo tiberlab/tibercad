@@ -234,8 +234,8 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
   double x0 = -1;
   double phi0 = SimulationOptions::T * Constants::k_B;
   double mu0 = -1;
-  double C0 = 1e-12;
-  double ni0 = 1e-12; // let 1 be the minimum for ni0
+  double C0 = 1;
+  double ni0 = 1; // let 1 be the minimum for ni0
   double eps0 = -1;
   
   // find minimum or maximum by looping over all elements
@@ -254,15 +254,17 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     sc->reinit(elem);
     sc->calculate_all(sc->get_equilibrium_fermi_level(), 0.0, 0.0,
         elem->centroid());
+
+    // TODO get max of polarisation
     
     double mu = sc->get_hole_mobility();
     mu0 = (mu0 > mu) ? mu0 : mu;
     mu = sc->get_electron_mobility();
     mu0 = (mu0 > mu) ? mu0 : mu;
 
-    //double C = fabs(sc->get_net_doping_density());
-    double C = fabs(sc->get_ionized_donor_density() -
-        sc->get_ionized_acceptor_density());
+    double C = fabs(sc->get_net_doping_density());
+    //double C = fabs(sc->get_ionized_donor_density() -
+    //    sc->get_ionized_acceptor_density());
     C0 = (C0 > C) ? C0 : C;
 
     double ni = sc->get_intrinsic_density();
@@ -415,8 +417,31 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
     unsigned int id = node->dof_number(system.number(), var, 0);
     system.solution->set(id, level);
   }
-
 }
+
+void
+DriftDiffusion::set_electric_potential(double pot)
+{
+  NonlinearImplicitSystem& system =
+    _eq_system->get_system<NonlinearImplicitSystem>(
+        "drift-diffusion coupled");
+  
+  const unsigned int var = system.variable_number("potential");
+  const double phi0 = _scaling.get_potential_scaling();
+  double level = -pot / phi0;
+
+  Mesh& mesh = get_mesh();
+  Mesh::node_iterator it = mesh.active_nodes_begin();
+  const Mesh::node_iterator end = mesh.active_nodes_end();
+
+  for ( ; it != end; ++it)
+  {
+    const Node* node = *it;
+    unsigned int id = node->dof_number(system.number(), var, 0);
+    system.solution->set(id, level);
+  }
+}
+
 
 
 int
@@ -713,8 +738,7 @@ DriftDiffusion::guess_equilibrium(void)
 }
 
 void
-DriftDiffusion::set_solver_params(NonlinearSolver<Number>& solver,
-    CalculationType calc_type)
+DriftDiffusion::set_solver_params(NonlinearSolver<Number>& solver)
 {
   SolverClass& solver_class =
     static_cast<SolverClass&>(solver);
@@ -724,13 +748,8 @@ DriftDiffusion::set_solver_params(NonlinearSolver<Number>& solver,
   const double phi0 = _scaling.get_potential_scaling();
   
   unsigned int nonlin_max_its = solver_params.nonlinear_max_iterations;
-  // NOTE: we set nonlinear_max_iterations higher for equilibrium case
-  //       because we assume that we need more to get the equilibrium
-  //       solution than to get to a non-eq. solution
-  if (calc_type == EQUILIBRIUM)
-    nonlin_max_its *= 2;
 
-  double sqrt_n = sqrt(get_mesh().n_nodes());
+  double sqrt_n = sqrt((double) get_mesh().n_nodes());
       
   solver_class.set_snes_options(solver_params.nonlinear_tolerance,
       solver_params.nonlinear_abs_tolerance * sqrt_n, nonlin_max_its,
@@ -811,7 +830,9 @@ DriftDiffusion::init(void)
   compute_scaling(get_options().scaling_type);
   
   // make a rough guess of the equilibrium potential
-  guess_equilibrium();
+  // NOTE: for now this has to be done outside because it is not clear
+  //       if it is always a good idea
+  //guess_equilibrium();
 
   // prepare a list for the boundary voltages
   DD::Device::BoundaryList& boundaries = _device->get_boundaries();
@@ -2888,9 +2909,10 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
   // references for nicer code
   const Mesh& mesh = _this->get_mesh();
   EquationSystems& eq_sys = _this->get_equation_system();
-  NonlinearImplicitSystem& system =
-    eq_sys.get_system<NonlinearImplicitSystem>(
-        "drift-diffusion coupled");
+  NonlinearImplicitSystem& system = static_cast<NonlinearImplicitSystem&>(
+      eq_sys.get_system("drift-diffusion coupled"));
+  //NonlinearImplicitSystem& system = eq_sys.get_system<NonlinearImplicitSystem>(
+  //    "drift-diffusion coupled");
 
   const unsigned int dim = mesh.mesh_dimension();
   
@@ -3776,6 +3798,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
     }
     else
       jacobian->add_matrix(Ke, dof_indices);
+
     perf_log.stop_event("add");
 
   } // end loop over elements

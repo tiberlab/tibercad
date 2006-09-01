@@ -6,8 +6,6 @@ n_doping = 1e18
 p_doping = 1e18
 temperature = 300
 
-#approximation_order = SECOND
-
 statistics = B
 
 mesh_units = 1e-4
