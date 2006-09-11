@@ -181,6 +181,23 @@ ExcitonTransport::set_device(DD::Device* device)
   _device = device;
 }
 
+void
+ExcitonTransport::update_element_list(void)
+{
+
+  MeshBase::const_element_iterator el =
+                                  get_mesh().active_elements_begin();
+  const MeshBase::const_element_iterator end_el =
+                                  get_mesh().active_elements_end();
+
+  _element_list.clear();
+  for ( ; el != end_el; ++el)
+  {
+    _element_list.insert(*el);
+  }
+}
+
+
 
 void
 ExcitonTransport::compute_scaling(void)
@@ -499,9 +516,127 @@ ExcitonTransport::solve(void)
     // TODO: ???
     disable_mesh_refinement();
   }
+  
+  // update the list which contains all elements of this simulation
+  update_element_list();
 }
 
-/*
+
+double
+ExcitonTransport::get_solution(const Elem* elem, const Point& p)
+{
+  double solution = 0.0;
+
+  // this will contain the element in which p lies and for which
+  // DriftDiffusion knows the potential
+  const Elem* el = elem;
+  
+  // check if elem is in _element_list
+  set<const Elem*>::iterator end = _element_list.end();
+  set<const Elem*>::iterator it = _element_list.find(elem);
+
+  if (it == end)
+  {
+    // do we have a parent element in the list?
+    const Elem* parent = elem->parent();
+    while (parent != NULL)
+    {
+      it = _element_list.find(parent);
+
+      if (it != end)
+        break; // we have found it, so get out of the while loop
+
+      parent = parent->parent();
+    }
+    el = parent; // is NULL if no parent
+
+    // no parent, so check for children
+    if (el == NULL)
+    {
+      vector<const Elem*> tree;
+      elem->family_tree(tree, false);
+      
+      unsigned int len = tree.size();
+      for (unsigned int i = 0; i < len; i++)
+      {
+        it = _element_list.find(tree[i]);
+        if (it != end)
+        {
+          if (tree[i]->contains_point(p))
+          {
+            // we have found it, so get out of the for loop
+            el = tree[i];
+            break;
+          }
+        }
+      }
+    }
+  }
+  // now el points to a valid element containing p or is NULL
+
+  if (el != NULL)
+    get_solution_secure(el, p, solution);
+
+  return solution;
+}
+
+void
+ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
+    vector<double>& solution)
+{
+  unsigned int np = p.size();
+  solution.resize(np);
+  if (np == 0) return;
+
+  NonlinearImplicitSystem* system;
+  system = &_eq_system->get_system<NonlinearImplicitSystem>(
+      "exciton");
+
+  const NumericVector<Number>& ddsol = *(system->solution);
+
+  const unsigned int dim = get_mesh().mesh_dimension();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int u_var = system->variable_number("fermi_x");
+
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+
+  vector<unsigned int> dof_indices_u;
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+
+  vector<Point> points(np);
+  FEInterface::inverse_map(dim, fe_type, elem, p, points);
+  //for (unsigned int n = 0; n < np; n++)
+  //  points[n] = FEInterface::inverse_map(dim, fe_type, elem, p[n], 1e-6);
+
+  fe->reinit(elem, &points);
+
+  dof_map.dof_indices(elem, dof_indices_u, u_var);
+
+  const unsigned int n_dofs = dof_indices_u.size();
+
+  // the scaling parameters to scale back the result
+  double phi0 = get_scaling().get_potential_scaling();
+
+  for (unsigned int n = 0; n < np; n++)
+  {
+    double u = 0;
+    // do interpolation
+    for (unsigned int i = 0; i < n_dofs; i++)
+      u  += phi[i][n] * ddsol(dof_indices_u[i]);
+
+    // scale the potential back
+    u  *= phi0;
+
+    solution[n] = u;
+  }
+}
+
+/* 
 void
 ExcitonTransport::build_scaling(void)
 {
@@ -656,13 +791,12 @@ ExcitonTransport::build_densities(vector<double>& densities,
   // TODO if some elements were coarsened, does this still work??
   const unsigned int nn  = mesh.n_nodes();
 
-  const unsigned int n_vars  = 5;
+  const unsigned int n_vars  = 4;
   names.resize(n_vars);
   names[0] = "density";
   names[1] = "recombination_rate";
   names[2] = "generation_rate";
   names[3] = "electro-chimical_potential";
-  names[4] = "electric_potential";
 
   densities.resize(nn * n_vars);
 
@@ -782,10 +916,6 @@ ExcitonTransport::build_densities(vector<double>& densities,
 
         nodal_val = ex;
         local[id + 3] +=
-          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
-
-        nodal_val = u;
-        local[id + 4] +=
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
       }
 

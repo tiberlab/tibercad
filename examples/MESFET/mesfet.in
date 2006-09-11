@@ -5,7 +5,9 @@ $Options
 # mesfet example
 
 
-meshfile=mesfet.msh
+#meshfile=mesfet.msh
+meshfile=mesfet_mdr.grd
+format=ise
 
 # units are um
 mesh_units = 1e-4

@@ -120,6 +120,20 @@ class DriftDiffusionProperties : public PhysicalProperties
         int coupling = DriftDiffusionDefs::BOTH,
         double temperature = SimulationOptions::T);
 
+    //! The method that will calculate electron and hole densities
+    /*!
+     * This method calculates electron and hole densities and their
+     * derivatives.
+     * It is assumed that this calculation does not depend on the
+     * coordinate inside of an element.
+     * 
+     * \param potential the electric potential
+     * \param fermi_e the electron electro-chemical potential
+     * \param fermi_h the hole electro-chemical potential
+     */
+    void calculate_densities(double potential, double fermi_e,
+        double fermi_h);
+    
     //! The method that will calculate all needed properties
     /*!
      * This method can be reimplemented in derived classes if necessary
@@ -374,15 +388,27 @@ class DriftDiffusionProperties : public PhysicalProperties
     double get_band_gap(void) const
       { return conduction_band.band_edge - valence_band.band_edge; };
 
-    void get_net_recombination_rates(std::vector<double>& rates) {};
+    void get_net_recombination_rates(std::vector<double>& rates);
+    
+    //! Get the IDs of the registered recombination models
+    /*!
+     * \return number of registered models
+     */
+    int get_net_recombination_rate_IDs(std::vector<ID>& ids);
 
     RecombinationModelInterface* get_recombination_model(ID id);
 
-    //! clear all doping
+    //! get the net recombination rate of model \c id
+    double get_net_recombination_rate(ID id);
+
+    //! Clear all doping
     void clear_doping(void);
 
-    //! clear all recombination rates
+    //! Clear all recombination rates
     void clear_recombination(void);
+
+    //! Returns the number of recombination models
+    int get_number_of_recombination_models(void) const;
 
   protected:
       
@@ -622,8 +648,11 @@ inline
 void
 DriftDiffusionProperties::reinit(const Elem* elem)
 {
-  _elem = elem;
-  this->prepare_element_data();
+  if (_elem != elem)
+  {
+    _elem = elem;
+    this->prepare_element_data();
+  }
 }
     
 inline
@@ -830,6 +859,12 @@ DriftDiffusionProperties::setup_band_edges(void)
 }
 
 
+inline
+int
+DriftDiffusionProperties::get_number_of_recombination_models(void) const
+{
+  return _recombination_models.size();
+}
 
 
 

@@ -12,6 +12,7 @@
 #include "ExcitonTransport.h"
 #include "ExcitonModel.h"
 #include "RecombinationModelInterface.h"
+#include "ExcitonDissociation.h"
 
 #include "mesh.h"
 #include "mesh_modification.h"
@@ -77,6 +78,8 @@ int main (int argc, char** argv)
     string tau_p = input_file("recombination_time_p", "1e-9");
     string C_direct = input_file("direct_recombination", "1e-8");
     string X_gen = input_file("exciton_generation", "1e-9");
+    
+    double damping = input_file("damping", 1e-6);
 
     unsigned int refinement_steps = input_file("max_refinement_steps", 0);
 
@@ -183,9 +186,9 @@ int main (int argc, char** argv)
     OhmicContact anode("anode");
     //SchottkyContact anode("anode");
     //anode.set_schottky_barrier_height(0.8);
-    //anode.set_zero_derivative_bc(FERMIE);
+    anode.set_zero_derivative_bc(FERMIE);
     OhmicContact cathode("cathode");
-    //cathode.set_zero_derivative_bc(FERMIH);
+    cathode.set_zero_derivative_bc(FERMIH);
 
 
     BoundaryData boundary_data;
@@ -272,7 +275,7 @@ int main (int argc, char** argv)
     exparams.max_refinement_steps = refinement_steps;
     exparams.solver_params.nonlinear_max_iterations = 50;
     exparams.solver_params.linear_max_iterations = lin_max_it;
-    exparams.solver_params.nonlinear_tolerance = 1e-12;
+    exparams.solver_params.nonlinear_tolerance = 1e-19;
     exparams.solver_params.nonlinear_abs_tolerance = dd_nonlin_atol;
     exparams.solver_params.ls_maxstep = nonlin_ls_maxstep;
     exparams.solver_params.linear_tolerance = lin_rtol;
@@ -283,18 +286,21 @@ int main (int argc, char** argv)
     exparams.mesh_units = mesh_units;
 
 
-
-    params.solver_params.pc_type = PCILU;
-    params.coupling = POISSON;
-
     dd.set_simulation_voltage("cathode", 0.0);
     dd.set_simulation_voltage("anode", 0.0);
     {
       cout << "Solving equilibrium...\n" << flush;
       // is default:
       //params.coupling = POISSON;
+      dd.guess_equilibrium();
       dd.solve();
       dd.remember_current_solution();
+      //try { ex.solve(); }
+      //catch (...) { }
+      //params.solver_params.pc_type = PCCOMPOSITE;
+      //params.coupling = FULLYCOUPLED;
+      //dd.solve();
+
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
         ", final residual: " << dd.get_final_residual() << ")\n" << flush;
       
@@ -308,6 +314,10 @@ int main (int argc, char** argv)
           densities, names);
       dd.build_electric_field(densities, names);
       GMVIO_cell(dd.get_mesh()).write_ascii_cell_data("output/field_eq.gmv",
+          densities, names);
+
+      ex.build_densities(densities, names);
+      GMVIO(ex.get_mesh()).write_nodal_data("output/excitons_eq.gmv",
           densities, names);
     }
     cout << "GaN material info (n-type):\n";
@@ -324,8 +334,21 @@ int main (int argc, char** argv)
 
     params.solver_params.nonlinear_max_iterations = nonlin_max_it;
 
+
+    ostringstream s;
+    s << damping;
+    opts["damping"] = s.str();
+    RecombinationModelInterface* rma =
+      RecombinationModelInterface::create("exciton_dissociation", opts);
+    (static_cast<ExcitonDissociation*>(rma))->set_exciton_transport(&ex);
+    RecombinationModelInterface* rmb =
+      RecombinationModelInterface::create("exciton_dissociation", opts);
+    (static_cast<ExcitonDissociation*>(rmb))->set_exciton_transport(&ex);
+
+
     cout << "\nBegin sweep...\n" << flush;
     params.solver_params.pc_type = PCCOMPOSITE;
+    //params.solver_params.pc_type = PCJACOBI;
     params.coupling = FULLYCOUPLED;
     // make a voltage sweep
     double delta_v = 1e-6;
@@ -354,6 +377,7 @@ int main (int argc, char** argv)
     file.open("output/iv_char.dat");
     file << "# V      A/cm\n";
 
+    bool done = false;
     vector<double>::iterator it = first_positive;
     for ( ; it != voltages.end(); ++it)
     {
@@ -371,9 +395,67 @@ int main (int argc, char** argv)
       }
       try { dd.solve(); }
       catch (...) { cerr << "Oops: Did not converge!\n"; }
-      try { ex.solve(); }
-      catch (...) { }
-      
+ 
+      if (*it >= 0.5)
+      {
+        if (!done)
+        {
+          nside.add_recombination_model(rma);
+          pside.add_recombination_model(rmb);
+          done = true;
+        }
+
+        try { ex.solve(); }
+        catch (...) {}
+
+        dd.solve();
+        try { ex.solve(); }
+        catch (...) {}
+        {
+          damping = pow(damping, 0.25);
+          ostringstream s;
+          s << damping;
+          opts["damping"] = s.str();
+          rma->set_model_options(opts);
+          rmb->set_model_options(opts);
+        }
+        dd.solve();
+        try { ex.solve(); }
+        catch (...) {}
+        {
+          damping = pow(damping, 0.25);
+          ostringstream s;
+          s << damping;
+          opts["damping"] = s.str();
+          rma->set_model_options(opts);
+          rmb->set_model_options(opts);
+        }
+        dd.solve();
+        /*
+        try { ex.solve(); }
+        catch (...) {}
+        {
+          damping = pow(damping, 0.25);
+          ostringstream s;
+          s << damping;
+          opts["damping"] = s.str();
+          rma->set_model_options(opts);
+          rmb->set_model_options(opts);
+        }
+        dd.solve();
+        try { ex.solve(); }
+        catch (...) {}
+        {
+          damping = pow(damping, 0.25);
+          ostringstream s;
+          s << damping;
+          opts["damping"] = s.str();
+          rma->set_model_options(opts);
+          rmb->set_model_options(opts);
+        }
+        */
+      }     
+
 
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
         ", final residual: " << dd.get_final_residual() << ")\n" << flush;

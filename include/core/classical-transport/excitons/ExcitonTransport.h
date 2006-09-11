@@ -13,6 +13,7 @@
 // Libmesh includes
 #include "libmesh_common.h"
 #include "enum_order.h"
+#include "point.h"
 
 // PETSc include
 #ifndef USE_COMPLEX_NUMBERS
@@ -31,7 +32,6 @@ extern "C" {
 class DD::Device;
 class Mesh;
 class Elem;
-class Node;
 class EquationSystems;
 class NonlinearImplicitSystem;
 class DriftDiffusion;
@@ -323,6 +323,22 @@ class ExcitonTransport
      */
     double get_final_residual(void) const;
 
+    //! Get the exciton electro-chemical potential in a given point
+    /*!
+     * If \c elem is not in the list of active elements for this simulation,
+     * a parent or children which contains \p will be looked for.
+     * 
+     * \param elem the pointer to the element
+     * \param p the point in which to calculate the potentials
+     * \return the electro-chemical potential in \c p
+     *
+     * \pre
+     * The element \c elem is assumed to contain the point \c p.
+     *
+     */
+    double get_solution(const Elem* elem, const Point& p);
+    
+
     /**
      * fill @c densities with electron and hole densities
      *
@@ -331,7 +347,7 @@ class ExcitonTransport
     void build_densities(std::vector<double>& densities,
         std::vector<std::string>& names);
 
-    //! Fill a vector with the electric field data
+    //! Fill a vector with the exciton current data
     void build_current_density(std::vector<double>& current,
         std::vector<std::string>& names);
 
@@ -350,6 +366,12 @@ class ExcitonTransport
      * The device to be solved by this ExcitonTransport object
      */
     DD::Device* _device;
+
+    //! The elements that were used in the last simulation
+    std::set<const Elem*> _element_list;
+
+    //! Update the element list
+    void update_element_list(void);
 
     DriftDiffusion* _dd_object;
 
@@ -388,7 +410,36 @@ class ExcitonTransport
     //! disable the copy constructor and assignment operator
     ExcitonTransport(const ExcitonTransport& rhs);
     ExcitonTransport& operator=(const ExcitonTransport& rhs);
+    
+    //! Get the solution at the point \c p in a given element
+    /*!
+     * \param elem the pointer to the element
+     * \param a vector containing the points in which to calculate the potential
+     * \param solution a vector where the solutions will be stored
+     *
+     * \note
+     * This implementation assumes, that \c elem is one of the active elements
+     * of this simulation and that it contains the points in \c p.
+     *
+     */
+    void get_solution_secure(const Elem* elem, const Point& p,
+        double& solution);
+ 
+    //! Get the electro-chemical potential at the points in \c p
+    /*!
+     * \param elem the pointer to the element
+     * \param a vector containing the points in which to calculate the potentials
+     * \param solution a vector where the potential will be stored
+     *
+     * \note
+     * This implementation assumes, that \c elem is one of the active elements
+     * of this simulation and that it contains the points in \c p.
+     *
+     */
+    void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
+        std::vector<double>& solution);
 
+   
     /**
      * Set the options for the PETSc solver as given in @c SolverParameters
      */
@@ -506,5 +557,20 @@ ExcitonTransport::get_mesh(void) const
 {
   return _device->get_mesh();
 }
+
+inline
+void
+ExcitonTransport::get_solution_secure(const Elem* elem, const Point& p,
+        double& solution)
+{
+  std::vector<Point> pvec(1, p);
+  std::vector<double> sol(1);
+
+  get_solution_secure(elem, pvec, sol);
+
+  solution = sol[0];
+}
+
+
 
 #endif //_EXCITONTRANSPORT_H_

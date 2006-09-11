@@ -629,16 +629,6 @@ class DriftDiffusion
      */
     void find_dirichlet_nodes(void);
 
-    /**
-     * Sets the boundary values for each node on a Dirichlet type
-     * boundary
-     *
-     * This function could be called after
-     * \p calculate_next_sim_voltage() and after the static parameters
-     * were set up.
-     */
-    //void set_dirichlet_values(void);
-
     //! Reset solver environment.
     /*!
      * Deletes only the \p EquationSystems object, without
@@ -755,6 +745,11 @@ class DriftDiffusion
      */
     template <int T>
     static void assemble(const NumericVector<Number>& x,
+        NumericVector<Number>* residual,
+        SparseMatrix<Number>* jacobian);
+    
+    template <int T>
+    static void assemble2(const NumericVector<Number>& x,
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
 

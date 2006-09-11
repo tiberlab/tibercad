@@ -124,6 +124,77 @@ DriftDiffusionProperties::clear_recombination(void)
 }
 
 
+void
+DriftDiffusionProperties::calculate_densities(double potential,
+    double fermi_e, double fermi_h)
+{
+
+  // for now, all are equal
+  double kT = electron_vt;
+  double kTe = electron_vt;
+  double kTh = hole_vt;
+  
+  // 1 conduction band
+  const BandProperties& cb = conduction_band;
+  const BandProperties& vb = valence_band;
+
+  double Ec = get_conduction_band_edge();
+  double Ev = get_valence_band_edge();
+  
+  // 1.) electron and hole density
+  double n = 0, dn = 0, dn2 = 0, dn_over_n = 0, arg_e;
+  double p = 0, dp = 0, dp2 = 0, dp_over_p = 0, arg_h;
+  //if (_coupling & DriftDiffusionDefs::ELECTRONS)
+  //{
+    arg_e = fermi_e + potential - Ec;
+    if (get_statistics() == TiberCad::FERMIDIRAC)
+    {
+      density_and_derivatives<TiberCad::FERMIDIRAC>(arg_e / kTe,
+          n, dn, dn2, dn_over_n);
+    }
+    else
+    {
+      density_and_derivatives<TiberCad::BOLTZMANN>(arg_e / kTe,
+          n, dn, dn2, dn_over_n);
+    }
+  
+    double Nc = cb.effective_DOS;
+    n *= Nc;
+    dn *= Nc / kTe;
+    dn2 *= Nc / (kTe * kTe);
+    dn_over_n /= kTe;
+
+    electron_density = n;
+    electron_density_derivative = dn;
+  //}
+
+  //if (_coupling & DriftDiffusionDefs::HOLES)
+  //{
+    arg_h = -fermi_h - potential + Ev;
+
+    if (get_statistics() == TiberCad::FERMIDIRAC)
+    {
+      density_and_derivatives<TiberCad::FERMIDIRAC>(arg_h / kTh,
+          p, dp, dp2, dp_over_p);
+    }
+    else
+    {
+      density_and_derivatives<TiberCad::BOLTZMANN>(arg_h / kTh,
+          p, dp, dp2, dp_over_p);
+    }
+
+    double Nv = vb.effective_DOS;
+    p *= Nv;
+    dp *= -Nv / kTh;
+    dp2 *= Nv / (kTh * kTh);
+    dp_over_p /= -kTh;
+
+    hole_density = p;
+    hole_density_derivative = dp;
+  //}
+
+}
+
 
 void
 DriftDiffusionProperties::calculate_all(double potential,
@@ -173,7 +244,7 @@ DriftDiffusionProperties::calculate_all(double potential,
 
   //if (_coupling & DriftDiffusionDefs::HOLES)
   //{
-    arg_h = -(fermi_h + potential - Ev);
+    arg_h = -fermi_h - potential + Ev;
 
     if (get_statistics() == TiberCad::FERMIDIRAC)
     {
@@ -223,10 +294,11 @@ DriftDiffusionProperties::calculate_all(double potential,
 
 
   // 3.) total charge density
+  // NOTE: the sign change comes from the fact, that d/dphi = -d/dFn
   charge_density = p - n + Nd - Na;
-  charge_density_derivatives[0] = dp - dn + dNd - dNa;
-  charge_density_derivatives[1] =    - dn + dNd;
-  charge_density_derivatives[2] = dp            - dNa;
+  charge_density_derivatives[0] =  dp - dn + dNd - dNa;
+  charge_density_derivatives[1] =     - dn + dNd;
+  charge_density_derivatives[2] =  dp            - dNa;
 
 /*
   
@@ -284,8 +356,47 @@ DriftDiffusionProperties::calculate_all(double potential,
       hole_recombination_rate_derivatives[2] += dRh[2];
     }
   }
-
 }
+
+// TODO
+void
+DriftDiffusionProperties::get_net_recombination_rates(
+    std::vector<double>& rates)
+{
+}
+
+int
+DriftDiffusionProperties::get_net_recombination_rate_IDs(
+    std::vector<ID>& ids)
+{
+  int n = _recombination_models.size();
+
+  ids.resize(n);
+
+  recomb_iterator it = _recombination_models.begin();
+  recomb_iterator end = _recombination_models.end();
+  int ctr = 0;
+  for ( ; it != end; ++it, ctr++)
+    ids[ctr] = (it->first);
+
+  return n;
+}
+
+double
+DriftDiffusionProperties::get_net_recombination_rate(ID id)
+{
+  double r = 0.0, dummy;
+  
+  RecombinationModelInterface* rec =
+    get_recombination_model(id);
+  if (rec != NULL)
+    rec->get_net_recombination_rates(r, dummy);
+
+  return r;
+}
+
+
+
 
 void
 DriftDiffusionProperties::calculate_equilibrium_properties(int coupling,
@@ -359,6 +470,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(int coupling,
     guess = vb.band_edge + kT
       * std::log(vb.effective_DOS / (Na + ni));
   }
+  guess = guess;
 
   ierr = VecSet(&guess, x);
 

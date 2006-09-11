@@ -1,6 +1,6 @@
 # $Id$
 
-topdir := ../..
+topdir := ../../..
 
 include $(topdir)/Make.common
 

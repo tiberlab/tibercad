@@ -29,14 +29,14 @@ class DriftDiffusionModelInterface
      * \param dd_prop a pointer to the DriftDiffusionProperties object this
      * model belongs to
      */
-    void set_driftdiffusionproperties(const DriftDiffusionProperties* dd_prop);
+    void set_driftdiffusionproperties(DriftDiffusionProperties* dd_prop);
 
     //! Get a reference to the DriftDiffusionProperties object
     /*!
      * \return a reference to the DriftDiffusionProperties object this
      * model belongs to
      */
-    const DriftDiffusionProperties& get_driftdiffusionproperties(void) const;
+    DriftDiffusionProperties& get_driftdiffusionproperties(void);
 
     //! Get the unique ID of this model
     ID get_id(void) const;
@@ -74,7 +74,10 @@ class DriftDiffusionModelInterface
         const ModelOptions& options);
 
     //! Set options for this model
-    virtual void set_model_options(const ModelOptions& options) {};
+    virtual void set_model_options(const ModelOptions& options) = 0;
+
+    //! Get a user friendly name of this model
+    virtual const std::string get_name(void) const = 0;
 
 
   protected:
@@ -97,7 +100,7 @@ class DriftDiffusionModelInterface
     static std::map<const std::string, ID> _model_ids;
 
     //! The DriftDiffusionProperties object this model belongs to
-    const DriftDiffusionProperties* _dd_prop;
+    DriftDiffusionProperties* _dd_prop;
 
     //! Register a new model
     /*!
@@ -124,15 +127,15 @@ DriftDiffusionModelInterface::get_id(void) const
 inline
 void
 DriftDiffusionModelInterface::set_driftdiffusionproperties(
-    const DriftDiffusionProperties* dd_prop)
+    DriftDiffusionProperties* dd_prop)
 {
   assert(dd_prop != 0);
   _dd_prop = dd_prop;
 }
 
 inline
-const DriftDiffusionProperties&
-DriftDiffusionModelInterface::get_driftdiffusionproperties(void) const
+DriftDiffusionProperties&
+DriftDiffusionModelInterface::get_driftdiffusionproperties(void)
 {
   assert(_dd_prop != 0);
   return *_dd_prop;

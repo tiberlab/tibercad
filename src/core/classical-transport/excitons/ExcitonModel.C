@@ -21,13 +21,7 @@ ExcitonModel::calculate_all(double fermi_x, const Point& coord)
   double kT = exciton_vt;
 
   // 1.) exciton density
-  double arg_x = - (band_gap - _R - fermi_x) / kT;
-
-  calculate_density_and_derivative (arg_x, density, density_derivative);
-
-  double Nx = _DOS;
-  density *= Nx;
-  density_derivative *= Nx / kT;
+  calculate_densities(fermi_x);
 
 
   // 2.) mobility
@@ -73,3 +67,26 @@ ExcitonModel::read_database(const Dummy& d)
   // TODO perhaps we should check if the exciton generation model exists?
   assert(_gen_mod_id != 0);
 }
+
+void
+ExcitonModel::calculate_densities(double fermi_x)
+{
+  double kT = exciton_vt;
+
+  double arg_x = - (band_gap - _R - fermi_x) / kT;
+
+  calculate_density_and_derivative(arg_x, density, density_derivative);
+
+  double Nx = _DOS;
+  density *= Nx;
+  density_derivative *= Nx / kT;
+}
+
+void
+ExcitonModel::calculate_recombination_rate(void)
+{
+  recombination_rate = density / _t;
+  recombination_rate_derivative = density_derivative / _t;
+}
+
+

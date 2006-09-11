@@ -1,11 +1,13 @@
 // the following _HAS_ to be included first
 #include "Read_MSH.h"
+#include "ReadISEGrid.h"
 
 #include "Dopant.h"
 #include "ElementData.h"
 #include "OhmicContact.h"
 #include "SchottkyContact.h"
 #include "BoundaryData.h"
+#include "Dopant.h"
 #include "DDevice.h"
 #include "DriftDiffusion.h"
 #include "SemiconductorModel.h"
@@ -43,6 +45,7 @@ int main (int argc, char** argv)
     GetPot input("mesfet.in");
 
     string meshfile = input("meshfile", "");
+    string format = input("format", "gmsh");
     const double mesh_units = input("mesh_units", 1e-4);
 
     int fully = input("fully_coupled", 1);
@@ -77,24 +80,33 @@ int main (int argc, char** argv)
     double refine_frac = input("refine_fraction", 0.7);
     double coarsen_frac = input("coarsen_fraction", 0.0);
 
-    vector<unsigned int> phys_reg_ID(3);
-    phys_reg_ID[0] = 101; // bulk
-    phys_reg_ID[1] = 102; // contacts
-    phys_reg_ID[2] = 103; // doped
+    vector<unsigned int> phys_reg_ID(4);
+    phys_reg_ID[0] = 1; // bulk
+    phys_reg_ID[1] = 2; // channel
+    phys_reg_ID[2] = 3; // contact1
+    phys_reg_ID[3] = 4; // contact2
     
     vector<unsigned int> BC_reg_ID(3);
-    BC_reg_ID[0] = 4; // source
-    BC_reg_ID[1] = 5; // gate
-    BC_reg_ID[2] = 6; // drain
+    BC_reg_ID[0] = 1; // source
+    BC_reg_ID[1] = 2; // gate
+    BC_reg_ID[2] = 3; // drain
 
     int dim = 2;
     Mesh mesh(dim);
     MeshData_elements meshdata(mesh);
     meshdata.enable_compatibility_mode();
     
-    Read_MSH readmesh(meshfile, phys_reg_ID, BC_reg_ID, dim, mesh, meshdata);
     map<unsigned int, vector<unsigned int> > boundary_nodes;
-    readmesh.get_BC_data(boundary_nodes);
+    if (format == "ise")
+    {
+      ReadISEGrid readmesh(meshfile.c_str(), mesh, meshdata);
+      readmesh.get_BC_data(boundary_nodes);
+    }
+    else
+    {
+      Read_MSH readmesh(meshfile, phys_reg_ID, BC_reg_ID, dim, mesh, meshdata);
+      readmesh.get_BC_data(boundary_nodes);
+    }
 
     mesh.print_info();
 
@@ -146,6 +158,23 @@ int main (int argc, char** argv)
       contact.add_recombination_model(rm);
     }
 
+    SemiconductorModel contact2;
+    contact2.set_data_file("Si.dat");
+    contact2.read_database(d);
+    {
+      contact2.add_dopant(new Dopant(5e19, 0.025, 2, Dopant::N_TYPE));
+      contact2.set_mobilities(70, 54);
+      ModelOptions opts;
+      opts["tau_n"] = "2e-9";
+      opts["tau_p"] = "6e-10";
+      //opts.insert(pair<const string, string>("tau_n", "2e-9"));
+      //opts.insert(pair<const string, string>("tau_p", "6e-10"));
+      RecombinationModelInterface* rm =
+        RecombinationModelInterface::create("SRH", opts);
+      contact2.add_recombination_model(rm);
+    }
+
+
 
     if (statistics == "FD")
     {
@@ -189,11 +218,14 @@ int main (int argc, char** argv)
 
         switch (id)
         {
-          case 102:
+          case 2:
+            element_data.set_data(elem, &schottky);
+            break;
+          case 3:
             element_data.set_data(elem, &contact);
             break;
-          case 103:
-            element_data.set_data(elem, &schottky);
+          case 4:
+            element_data.set_data(elem, &contact2);
             break;
           default:
             element_data.set_data(elem, &sub);
@@ -221,13 +253,13 @@ int main (int argc, char** argv)
 
         switch (it->first)
         {
-          case 4:
+          case 1:
             set_boundary(boundary_data, nodes, &source, mesh);
             break;
-          case 5:
+          case 2:
             set_boundary(boundary_data, nodes, &gate, mesh);
             break;
-          case 6:
+          case 3:
             set_boundary(boundary_data, nodes, &drain, mesh);
             break;
         }
@@ -249,7 +281,7 @@ int main (int argc, char** argv)
     dd.init();
 
     DriftDiffusion::Options& params = dd.get_options();
-    params.solver_params.nonlinear_max_iterations = 100;
+    params.solver_params.nonlinear_max_iterations = 1;
     params.solver_params.linear_max_iterations = lin_max_it;
     params.solver_params.ls_maxstep = nonlin_ls_maxstep;
     params.solver_params.nonlinear_tolerance = nonlin_rtol;

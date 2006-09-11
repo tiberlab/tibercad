@@ -49,3 +49,9 @@ DirectRecombination::get_net_recombination_rate_derivatives(
   recomb_e[1] = recomb_h[1] = a;
   recomb_e[2] = recomb_h[2] = b;
 }
+
+const std::string
+DirectRecombination::get_name(void) const
+{
+  return "direct_recombination";
+}

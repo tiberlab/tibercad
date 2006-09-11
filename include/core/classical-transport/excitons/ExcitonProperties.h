@@ -49,6 +49,18 @@ class ExcitonProperties : public PhysicalProperties
      * \param dd_prop a pointer to the semiconductor model
      */
     void reinit(const Elem* elem, DriftDiffusionProperties* dd_prop);
+
+    //! Calculate the exciton density
+    /*!
+     * \param fermi_x the exciton electro-chemical potential
+     *
+     * It is assumed that the calculation does not depend on the
+     * coordinate inside the element
+     */
+    virtual void calculate_densities(double fermi_x) {};
+
+    //! Calculate the exciton dissociation rate
+    virtual void calculate_recombination_rate(void) {};
     
     //! The method that will calculate all needed properties
     /*!
@@ -195,9 +207,12 @@ inline
 void
 ExcitonProperties::reinit(const Elem* elem, DriftDiffusionProperties* dd_prop)
 {
-  this->elem = elem;
-  this->_dd_prop = dd_prop;
-  this->prepare_element_data();
+  if (this->elem != elem)
+  {
+    this->elem = elem;
+    this->_dd_prop = dd_prop;
+    this->prepare_element_data();
+  }
 }
 
 inline
@@ -254,8 +269,6 @@ ExcitonProperties::get_driftdiffusion_properties(void)
 {
   return _dd_prop;
 }
-
-
 
 
 #endif /* _EXCITONPROPERTIES_H_*/

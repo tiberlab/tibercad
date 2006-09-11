@@ -26,19 +26,21 @@ exciton_generation = 2e-9;
 #voltage_steps = 24
 start_voltage = 0.0
 stop_voltage = 3.2
-voltage_steps = 64
+voltage_steps = 32
 
 #simulation_method = GUMMEL
 
 nonlinear_tolerance = 1e-9
-nonlinear_abs_tolerance = 1e-15
-nonlinear_ls_maxstep = 0.1
+nonlinear_abs_tolerance = 1e-12
+nonlinear_ls_maxstep = 0.05
 linear_tolerance = 1e-7
-linear_abs_tolerance = 1e-15
+linear_abs_tolerance = 1e-4
 nonlinear_max_it = 10
 min_voltage_step = 1e-5
 linear_max_it = 1000
 integration_order = 2
+
+damping = 1e-9
 
 
 #refinement_stop_criterion=1e-4

@@ -73,6 +73,9 @@ class RecombinationModelInterface : public DriftDiffusionModelInterface
     //! Set options for this model
     virtual void set_model_options(const ModelOptions& options) {};
 
+    //! Get a user friendly name
+    virtual const std::string get_name(void) const = 0;
+
   protected:
 
     //! Empty constructor

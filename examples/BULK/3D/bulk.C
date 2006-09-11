@@ -7,6 +7,7 @@
 #include "SchottkyContact.h"
 #include "BoundaryData.h"
 #include "DDevice.h"
+#include "Dopant.h"
 #include "DriftDiffusion.h"
 #include "SemiconductorModel.h"
 #include "RecombinationModelInterface.h"
@@ -212,6 +213,7 @@ int main (int argc, char** argv)
       vector<double> densities;
       vector<string> names;
       cout << "Solving equilibrium... " << flush;
+      dd.guess_equilibrium();
       dd.solve();
       dd.remember_current_solution();
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<

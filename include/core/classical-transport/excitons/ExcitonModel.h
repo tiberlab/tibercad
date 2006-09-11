@@ -26,6 +26,12 @@ class ExcitonModel : public ExcitonProperties
     //! A default (empty) destructor.
     virtual ~ExcitonModel(void);
 
+    //! \copydoc ExcitonProperties::calculate_densities()
+    virtual void calculate_densities(double fermi_x);
+
+    //! \copydoc ExcitonProperties::calculate_recombination_rate()
+    virtual void calculate_recombination_rate(void);
+
     /*! \copydoc ExcitonProperties::calculate_all()
      * 
      * This implementation models the most simple exciton model

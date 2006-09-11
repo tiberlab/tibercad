@@ -21,24 +21,26 @@ recombination_time_p = 2e-11
 direct_recombination = 1.1e-8
 exciton_generation = 2e-9
 
+damping = 1e-6
+
 #start_voltage = 0.0
 #stop_voltage = 1.2
 #voltage_steps = 24
 start_voltage = 0.0
-stop_voltage = 3.5
-voltage_steps = 35
+stop_voltage = 3.2
+voltage_steps = 32
 
 #simulation_method = GUMMEL
 
 nonlinear_tolerance = 1e-9
-nonlinear_abs_tolerance = 1e-15
+nonlinear_abs_tolerance = 1e-6
 nonlinear_ls_maxstep = 0.025
 linear_tolerance = 1e-7
 linear_abs_tolerance = 1e-15
 nonlinear_max_it = 10
 min_voltage_step = 1e-5
 linear_max_it = 1000
-integration_order = 5
+integration_order = 1
 
 
 #refinement_stop_criterion=1e-4

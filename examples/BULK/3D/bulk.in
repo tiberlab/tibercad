@@ -6,7 +6,7 @@ $Options$
 
 
 n_doping = 1e16
-p_doping = 0
+p_doping = 0e16
 temperature = 300
 
 #statistics = FD

@@ -6,11 +6,13 @@
 #include "RecombinationModelInterface.h"
 #include "TypeDefs.h"
 
+class ExcitonTransport;
+
 
 //! Implementation of Exciton generation
 /*!
  * This class implements Exciton generation processes that can be
- * modeled by \f[G_{x}=C(np-n_i^2)\f]
+ * modeled by \f[G_{x}=Cnp\f]
  */
 class ExcitonGeneration : public RecombinationModelInterface
 {
@@ -38,6 +40,9 @@ class ExcitonGeneration : public RecombinationModelInterface
 
     //! \copydoc RecombinationModelInterface::set_model_options()
     virtual void set_model_options(const ModelOptions& options);
+
+    //! \copydoc RecombinationModelInterface::get_name()
+    virtual const std::string get_name(void) const;
     
   private:
 
@@ -53,5 +58,6 @@ ExcitonGeneration::set_parameters(double C)
 {
   _C = C;
 }
+
 
 #endif // _EXCITONGENERATION_H_
