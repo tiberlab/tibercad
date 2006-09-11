@@ -146,7 +146,7 @@ DriftDiffusionProperties::calculate_densities(double potential,
   double p = 0, dp = 0, dp2 = 0, dp_over_p = 0, arg_h;
   //if (_coupling & DriftDiffusionDefs::ELECTRONS)
   //{
-    arg_e = fermi_e + potential - Ec;
+    arg_e = -fermi_e + potential - Ec;
     if (get_statistics() == TiberCad::FERMIDIRAC)
     {
       density_and_derivatives<TiberCad::FERMIDIRAC>(arg_e / kTe,
@@ -170,7 +170,7 @@ DriftDiffusionProperties::calculate_densities(double potential,
 
   //if (_coupling & DriftDiffusionDefs::HOLES)
   //{
-    arg_h = -fermi_h - potential + Ev;
+    arg_h = fermi_h - potential + Ev;
 
     if (get_statistics() == TiberCad::FERMIDIRAC)
     {
@@ -220,7 +220,7 @@ DriftDiffusionProperties::calculate_all(double potential,
   double p = 0, dp = 0, dp2 = 0, dp_over_p = 0, arg_h;
   //if (_coupling & DriftDiffusionDefs::ELECTRONS)
   //{
-    arg_e = fermi_e + potential - Ec;
+    arg_e = -fermi_e + potential - Ec;
     if (get_statistics() == TiberCad::FERMIDIRAC)
     {
       density_and_derivatives<TiberCad::FERMIDIRAC>(arg_e / kTe,
@@ -244,7 +244,7 @@ DriftDiffusionProperties::calculate_all(double potential,
 
   //if (_coupling & DriftDiffusionDefs::HOLES)
   //{
-    arg_h = -fermi_h - potential + Ev;
+    arg_h = fermi_h - potential + Ev;
 
     if (get_statistics() == TiberCad::FERMIDIRAC)
     {
@@ -297,11 +297,10 @@ DriftDiffusionProperties::calculate_all(double potential,
   // NOTE: the sign change comes from the fact, that d/dphi = -d/dFn
   charge_density = p - n + Nd - Na;
   charge_density_derivatives[0] =  dp - dn + dNd - dNa;
-  charge_density_derivatives[1] =     - dn + dNd;
-  charge_density_derivatives[2] =  dp            - dNa;
+  charge_density_derivatives[1] =       dn - dNd;
+  charge_density_derivatives[2] = -dp            + dNa;
 
 /*
-  
   // 4.) mobilities / conductivities
   // For both statistics:
   // 

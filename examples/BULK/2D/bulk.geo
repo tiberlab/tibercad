@@ -8,7 +8,7 @@ la = 0.2;
 N = 4;
 
 // device dimension
-r = 1.3;
+r = 1;
 x = 0.5;
 y = 0.5*r;
 

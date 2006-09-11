@@ -1821,7 +1821,7 @@ DriftDiffusion::calculate_currents(void)
             Real cond_e = Constants::e * sc->get_electron_conductivity();
             Real cond_h = Constants::e * sc->get_hole_conductivity();
 
-            current += JxW[qp] * (cond_e * dEfn + cond_h * dEfp);
+            current += -JxW[qp] * (cond_e * dEfn + cond_h * dEfp);
           } // end loop over quadrature points
 
           _boundary_currents[boundary_desc] += current;
@@ -1864,7 +1864,7 @@ DriftDiffusion::calculate_currents(void)
           Real cond_h = Constants::e * sc->get_hole_conductivity();
 
           _boundary_currents[boundary_desc] =
-            (cond_e * dEfn + cond_h * dEfp);
+            -(cond_e * dEfn + cond_h * dEfp);
         }
       }
     } // end loop over elem sides
@@ -2577,8 +2577,9 @@ DriftDiffusion::build_current_density(vector<double>& current,
     }
 
     sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep, q_point[0]);
-    double sigma_e = sc->get_electron_conductivity() * Constants::e;
-    double sigma_h = sc->get_hole_conductivity() * Constants::e;
+    // we put the minus here for convenience
+    double sigma_e = -sc->get_electron_conductivity() * Constants::e;
+    double sigma_h = -sc->get_hole_conductivity() * Constants::e;
 
     unsigned int id = n_vars * elem_number;
     current[id]     = phi0 / x0 * sigma_e * en_x;
@@ -2919,8 +2920,10 @@ DriftDiffusion::build_band_edges(vector<double>& band_edges,
         local[id + 1] +=
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
 
-        local[id + 2] = en;
-        local[id + 3] = ep;
+        // We take the negative of the electro-chemical potentials
+        // as we want to show them as energies
+        local[id + 2] = -en;
+        local[id + 3] = -ep;
         local[id + 4] = u;
       }
     }
@@ -3343,7 +3346,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
                 if (coupling & POISSON)
                   Knu(i,j) += elem_contrib;
 
-                Knn(i,j) += elem_contrib;
+                Knn(i,j) -= elem_contrib;
               }
 
               if (coupling & HCURRENT)
@@ -3354,7 +3357,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
                 if (coupling & POISSON)
                   Kpu(i,j) += elem_contrib;
 
-                Kpp(i,j) += elem_contrib;
+                Kpp(i,j) -= elem_contrib;
               }
             }
 
@@ -3375,23 +3378,23 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
             if (coupling & ECURRENT)
             {
               if (coupling & POISSON)
-                Knu(i,j) += dRn[0] * phi_i_x_phi_j / n0[i];
+                Knu(i,j) -= dRn[0] * phi_i_x_phi_j / n0[i];
 
-              Knn(i,j) += dRn[1] * phi_i_x_phi_j / n0[i];
+              Knn(i,j) -= dRn[1] * phi_i_x_phi_j / n0[i];
 
               if (coupling & HCURRENT)
-                Knp(i,j) += dRn[2] * phi_i_x_phi_j / n0[i];
+                Knp(i,j) -= dRn[2] * phi_i_x_phi_j / n0[i];
             }
 
             if (coupling & HCURRENT)
             {
               if (coupling & POISSON)
-                Kpu(i,j) -= dRp[0] * phi_i_x_phi_j / p0[i];
+                Kpu(i,j) += dRp[0] * phi_i_x_phi_j / p0[i];
 
               if (coupling & ECURRENT)
-                Kpn(i,j) -= dRp[1] * phi_i_x_phi_j / p0[i];
+                Kpn(i,j) += dRp[1] * phi_i_x_phi_j / p0[i];
               
-              Kpp(i,j) -= dRp[2] * phi_i_x_phi_j / p0[i];
+              Kpp(i,j) += dRp[2] * phi_i_x_phi_j / p0[i];
             }
 
           }
@@ -3423,12 +3426,12 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
             Fu(i) -= Xu(i);
           
           if (coupling & ECURRENT)
-            Fn(i) += net_recomb_e;
+            Fn(i) -= net_recomb_e;
           else
             Fn(i) -= Xn(i);
 
           if (coupling & HCURRENT)
-            Fp(i) -= net_recomb_h;
+            Fp(i) += net_recomb_h;
           else
             Fp(i) -= Xp(i);
         }
@@ -3706,7 +3709,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
             if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
             {
               double val = (contact->get_boundary_value(FERMIE)
-                  - simulation_voltages[contact]) / phi0;
+                  + simulation_voltages[contact]) / phi0;
               Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
             }
           }
@@ -3716,7 +3719,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
             if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
             {
               double val = (contact->get_boundary_value(FERMIH)
-                  - simulation_voltages[contact]) / phi0;
+                  + simulation_voltages[contact]) / phi0;
               Ke.condense(i + 2 * n_dofs, i + 2 * n_dofs, -val, Fe);
             }
           }
@@ -3804,7 +3807,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
                   if (dof_indices[id] == dof_indices_en[i])
                   {
                     double val = (contact->get_boundary_value(FERMIE)
-                      - simulation_voltages[contact]) / phi0;
+                      + simulation_voltages[contact]) / phi0;
                     Ke.condense(id, id, -val, Fe);
                   }
                 }
@@ -3819,7 +3822,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
                   if (dof_indices[id] == dof_indices_ep[i])
                   {
                     double val = (contact->get_boundary_value(FERMIE)
-                      - simulation_voltages[contact]) / phi0;
+                      + simulation_voltages[contact]) / phi0;
                     Ke.condense(id, id, -val, Fe);
                   }
                 }
@@ -3851,10 +3854,12 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
   options.n_max = n_max;
   options.p_max = p_max;
 
+/*
   if (residual == NULL)
     jacobian->print_matlab("jac.m");
   else
     residual->print_matlab("res.m");
+*/
   
   perf_log.stop_event("assembly");
 } 
@@ -3866,921 +3871,8 @@ DriftDiffusion::assemble2(const NumericVector<Number>& x,
     NumericVector<Number>* residual,
     SparseMatrix<Number>* jacobian)
 {
-
-  PerfLog perf_log("Matrix assembly", false);
-  perf_log.start_event("assembly");
-  
-  // references for nicer code
-  const Mesh& mesh = _this->get_mesh();
-  EquationSystems& eq_sys = _this->get_equation_system();
-  NonlinearImplicitSystem& system = static_cast<NonlinearImplicitSystem&>(
-      eq_sys.get_system("drift-diffusion coupled"));
-  //NonlinearImplicitSystem& system = eq_sys.get_system<NonlinearImplicitSystem>(
-  //    "drift-diffusion coupled");
-
-  const unsigned int dim = mesh.mesh_dimension();
-  
-  const DD::Device& device = _this->get_device();
-  const Options& params = _this->get_options();
-  Options& options = _this->get_options();
-  bool linearize = options.linearize_continuity_eq;
-
-  ContactData& simulation_voltages = _this->_simulation_voltages;
-  BoundaryNodeList& dirichlet_nodes = _this->_dirichlet_nodes;
-
-
-  //
-  // some scaling stuff...
-  // 
-  // NOTE: the mesh and all paramters were not explicitly scaled, so
-  //       we have to treat scaling by explicit division/multiplication
-  //       
-  // maximum density of electrons
-  double n_max = 1;
-  // maximum density of holes
-  double p_max = 1;
-  // the scaling parameters
-  const Scaling& scaling = _this->get_scaling();
-  // the scaling parameter for the poisson eq.
-  // The factor 1e-2 comes from the fact, that we are calculating in cm!
-  const double l2 = scaling.get_lambda_squared() * Constants::e0 * 1e-2;
-  const double x0 = scaling.get_length_scaling();
-  const double phi0 = scaling.get_potential_scaling();
-  const double C0 = scaling.get_density_scaling();
-  const double mu0 = scaling.get_mobility_scaling();
-  // x 1e4 because we calculate in cm
-  const double P0 = (Constants::e * x0 * C0) * 1e4;
-  // density scaling for electrons
-  double C0_e = options.C0_e;
-  // density scaling for holes
-  double C0_h = options.C0_h;
-  // scaling for recombination rates
-  double R0_e = C0_e / scaling.get_time_scaling();
-  double R0_h = C0_h / scaling.get_time_scaling();
-  //
-  // we calculate on a scaled mesh with |xmax - xmin| = 1, but we did not 
-  // explicitly scale the mesh, so we have to account for this in the code,
-  // assuming that the mesh is drawn in units of 'mesh_units'
-  const double x0_mesh = x0 / params.mesh_units;
-  //
-  // the scaling value for the jacobian
-  double J_scale;
-  switch (dim)
-  {
-    case 3:
-      J_scale = x0_mesh * x0_mesh * x0_mesh;
-      break;
-    case 2:
-      J_scale = x0_mesh * x0_mesh;
-      break;
-    default:
-      J_scale = x0_mesh;
-      break;
-  }
-  // the scaling value for the surface jacobian
-  double Jface_scale = 1;
-  switch (dim)
-  {
-    case 3:
-      Jface_scale = x0_mesh * x0_mesh;
-      break;
-    case 2:
-      Jface_scale = x0_mesh;
-      break;
-  }
-
-
-
-  const DofMap& dof_map = system.get_dof_map();
-  
-  // numeric ids corresponding to the variables
-  const unsigned int u_var = system.variable_number("potential");
-  const unsigned int en_var = system.variable_number("fermi_e");
-  const unsigned int ep_var = system.variable_number("fermi_h");
-  
-  FEType fe_type = system.variable_type(u_var);
-
-  // the finite element
-  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
-  QGauss qrule(dim, params.integration_order);
-  fe->attach_quadrature_rule(&qrule);
-
-  // the finite element for boundary integration
-  AutoPtr<FEBase> fe_face(FEBase::build(dim, fe_type));
-  libMeshEnums::Order integration_order;
-  if (dim == 1)
-    integration_order = libMeshEnums::CONSTANT;
-  else
-    integration_order = params.integration_order;
-  
-  QGauss qface(dim - 1, integration_order);
-  fe_face->attach_quadrature_rule(&qface);
-
-  
-  // references to cell-specific data that will be used to
-  // assemble the system.
-  // Data will be given for each quadrature point.
-  // 
-  // Jacobian * quadrature weight at each integration point.   
-  const vector<Real>& JxW = fe->get_JxW();
-  //
-  // physical coordinates of the quadrature points
-  const vector<Point>& q_point = fe->get_xyz();
-  //
-  // element shape functions
-  const vector<vector<Real> >& phi = fe->get_phi();
-  //
-  // element shape function gradients
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-  
-  // the system matrix (will hold also element jacobian contribution)
-  DenseMatrix<Number> Ke;
-  // the system rhs (will hold also element rhs contribution)
-  DenseVector<Number> Fe;
-  // the local solution
-  DenseVector<Number> X;
-
-  DenseSubMatrix<Number>
-    Kuu(Ke), Kun(Ke), Kup(Ke),
-    Knu(Ke), Knn(Ke), Knp(Ke),
-    Kpu(Ke), Kpn(Ke), Kpp(Ke);
-
-  DenseSubVector<Number>
-    Fu(Fe),
-    Fn(Fe),
-    Fp(Fe);
-
-  DenseSubVector<Number>
-    Xu(X),
-    Xn(X),
-    Xp(X);
-
-
-  vector<unsigned int> dof_indices;
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-  // zero out residual and jacobian !! IMPORTANT !!
-  if (residual != NULL)
-    residual->zero();
-  if (jacobian != NULL)
-    jacobian->zero();
-
-
-  MeshBase::const_element_iterator el =
-                                  mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el =
-                                  mesh.active_local_elements_end();
-
-  // loop over all active elements
-  for ( ; el != end_el ; ++el) 
-  {
-    const Elem* elem = *el;
-    const Elem* top_parent = (*el)->top_parent();
-
-    // get DOF indices
-    dof_map.dof_indices(elem, dof_indices);
-    dof_map.dof_indices(elem, dof_indices_u, u_var);
-    dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-    unsigned int n_dofs     = dof_indices_u.size();
-    unsigned int n_dofs_tot = dof_indices.size();
-
-    fe->reinit(elem);
-
-    Ke.resize(n_dofs_tot, n_dofs_tot);
-    Fe.resize(n_dofs_tot);
-    X.resize(n_dofs_tot);
-
-    // extract local solution, accounting for constraints
-    dof_map.extract_local_vector(x, dof_indices, X);
-
-    // Reposition the submatrices according to this scheme:
-    //
-    //         -           -          -  -
-    //        | Kuu Kun Kup |        | Fu |
-    //   Ke = | Knu Knn Knp |;  Fe = | Fn |
-    //        | Kpu Kpn Kpp |        | Fp |
-    //         -           -          -  -
-    //
-    Kuu.reposition(0, 0, n_dofs, n_dofs);
-    Kun.reposition(0, n_dofs, n_dofs, n_dofs);
-    Kup.reposition(0, 2 * n_dofs, n_dofs, n_dofs);
-    //
-    Knu.reposition(n_dofs, 0, n_dofs, n_dofs);
-    Knn.reposition(n_dofs, n_dofs, n_dofs, n_dofs);
-    Knp.reposition(n_dofs, 2 * n_dofs, n_dofs, n_dofs);
-    //
-    Kpu.reposition(2 * n_dofs, 0, n_dofs, n_dofs);
-    Kpn.reposition(2 * n_dofs, n_dofs, n_dofs, n_dofs);
-    Kpp.reposition(2 * n_dofs, 2 * n_dofs, n_dofs, n_dofs);
-    //
-    Fu.reposition(0, n_dofs);
-    Fn.reposition(n_dofs, n_dofs);
-    Fp.reposition(2 * n_dofs, n_dofs);
-    //
-    Xu.reposition(0, n_dofs);
-    Xn.reposition(n_dofs, n_dofs);
-    Xp.reposition(2 * n_dofs, n_dofs);
-
-
-    DriftDiffusionProperties* sc =
-      device.get_element_data().get_data(top_parent);
-    assert(sc != NULL);
-
-    sc->reinit(elem);
-
-    // get the nodal scaling values
-    vector<double> n0(n_dofs, 1);
-    vector<double> p0(n_dofs, 1);
-    if (options.local_scaling)
-    {
-      NumericVector<Number>& scaling = system.get_vector("scaling");
-      for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        n0[i] = scaling(dof_indices_en[i]) / C0_e;
-        p0[i] = scaling(dof_indices_ep[i]) / C0_h;
-      }
-    }
-
-    // make matrix entries for potential using box integration
-
-    // loop over the quadrature points
-    for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
-    {
-      // get the solution values at the quadrature points
-      Real u  = 0.0;
-      Real en = 0.0;
-      Real ep = 0.0;
-      for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        u  += phi[i][qp] * Xu(i);
-        en += phi[i][qp] * Xn(i);
-        ep += phi[i][qp] * Xp(i);
-      }
-
-      // calculate densities etc.
-      sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep, q_point[qp]);
-      double n = sc->get_electron_density();
-      double p = sc->get_hole_density();
-      double epsilon = sc->get_relative_permittivity();
-      double l2_eps = l2 * epsilon;
-
-      double Rn = sc->get_net_electron_recombination_rate();
-      //Rn = (fabs(Rn) < 1.0e-19) ? 0.0 : Rn;
-      double Rp = sc->get_net_hole_recombination_rate();
-      //Rp = (fabs(Rp) < 1.0e-19) ? 0.0 : Rp;
-      
-      // remember the maximum densities
-      n_max = (n_max > n) ? n_max : n;
-      p_max = (p_max > p) ? p_max : p;
-
-      double ni = sc->get_intrinsic_density();
-      double nn0 = sc->get_equilibrium_electron_density();
-      double pp0 = sc->get_equilibrium_hole_density();
-      double mue = sc->get_electron_mobility();
-      double muh = sc->get_hole_mobility();
-      double a = 0.0;
-      double b = 0.0;
-      if (options.artificial_drift)
-      {
-        a = exp(-n / nn0 * 1);
-        b = exp(-p / pp0 * 1);
-      }
-
-      // NOTE: sigma_e = mu_e * n is the electron conductivity
-      double sigma_e = (sc->get_electron_conductivity()
-          + mue * nn0 * a) / (mu0 * C0_e);
-      double sigma_h = (sc->get_hole_conductivity()
-          + muh * pp0 * b) / (mu0 * C0_h);
-    
-      //
-      // The residual looks like this:
-      //
-      //      r_i = Ke_ij*X_j - Fe_i
-      //
-      // The jacobian looks like this:
-      //
-      //      J_ij = dr_i/dX_j
-      //      
-      //           = Ke_ij + dKe_il/dX_j * X_l - dFe_i/dX_j
-      //   
-
-      // the jacobian x weight x scaling
-      double J = JxW[qp] / J_scale;
-
-      // 
-      // First we will build the system matrix Ke_ij
-      //
-      for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        for (unsigned int j = 0; j < n_dofs; j++)
-        {
-          Real laplace =
-            J * (dphi[i][qp] * dphi[j][qp]) * x0_mesh * x0_mesh;
-          
-          if (coupling & POISSON)
-            Kuu(i,j) += l2_eps * laplace;
-          
-          if (coupling & ECURRENT)
-            Knn(i,j) += sigma_e * laplace / n0[i];
-          
-          if (coupling & HCURRENT)
-            Kpp(i,j) += sigma_h * laplace / p0[i];
-        }
-
-        if (!(coupling & POISSON))
-          Kuu(i,i) += 1;
-        
-        if (!(coupling & ECURRENT))
-          Knn(i,i) += 1;
-        
-        if (!(coupling & HCURRENT))
-          Kpp(i,i) += 1;
-      }
-            
-      // 
-      // for jacobian compute the other contributions
-      // 
-      if (jacobian != NULL)
-      //if (0)
-      {
-        double drho[3];
-        double dRn[3];
-        double dRp[3];
-        for (int id = 0; id < 3; id++)
-        {
-          drho[id] = phi0 / C0 * sc->get_charge_density_derivatives()[id];
-          //dRn[id] = phi0 / R0_e
-          dRn[id] = phi0 / R0_e * (1 - a)
-            * sc->get_net_electron_recombination_rate_derivatives()[id];
-          //dRp[id] = phi0 / R0_h
-          dRp[id] = phi0 / R0_h * (1 - b)
-            * sc->get_net_hole_recombination_rate_derivatives()[id];
-        }
-        //if (fabs(Rn) < 1e-3)
-        if (Rn == 0.0)
-          dRn[0] = dRn[1] = dRn[2] = 0.0;
-        //if (fabs(Rp) < 1e-3)
-        if (Rp == 0.0)
-          dRp[0] = dRp[1] = dRp[2] = 0.0;
-
-        // d(sigma_n)/du * element-jacobian
-        // sigma_n = mu_n * n means the conductivity of electrons
-        Real dsigma_e = J * phi0 / (mu0 * C0_e)
-          * sc->get_electron_conductivity_derivatives()[0]
-               * (1 - a);
-        Real dsigma_h = J * phi0 / (mu0 * C0_h)
-          * sc->get_hole_conductivity_derivatives()[0]
-               * (1 - b);
-
-        if (linearize)
-        {
-          dRn[0] = dRn[1] = dRn[2] = 0.0;
-          dRp[0] = dRp[1] = dRp[2] = 0.0;
-          dsigma_e = dsigma_h = 0.0;
-        }
-
-        for (unsigned int i = 0; i < n_dofs; i++)
-        {
-          for (unsigned int j = 0; j < n_dofs; j++)
-          {
-            // first the dKe_il/dX_j * X_l part
-            // (for X_l = u_l we dont get anything, i.e. the
-            // contributions to Kuu, Kun, Kup are zero)
-            
-            Real dsigma_e_x_phi = dsigma_e * phi[j][qp] / n0[i];
-            Real dsigma_h_x_phi = dsigma_h * phi[j][qp] / p0[i];
-            for (unsigned int k = 0; k < n_dofs; k++)
-            {
-              Real laplace = (dphi[i][qp] * dphi[k][qp]) * x0_mesh * x0_mesh;
-            
-              if (coupling & ECURRENT)
-              {
-                Real elem_contrib =
-                  dsigma_e_x_phi * laplace * Xn(k);
-
-                if (coupling & POISSON)
-                  Knu(i,j) += elem_contrib;
-
-                Knn(i,j) += elem_contrib;
-              }
-
-              if (coupling & HCURRENT)
-              {
-                Real elem_contrib =
-                  dsigma_h_x_phi * laplace * Xp(k);
-                
-                if (coupling & POISSON)
-                  Kpu(i,j) += elem_contrib;
-
-                Kpp(i,j) += elem_contrib;
-              }
-            }
-
-            // The dFe_i/dX_j part
-            Real phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp];
-
-            if (coupling & POISSON)
-            {
-              Kuu(i,j) -= drho[0] * phi_i_x_phi_j;
-              
-              if (coupling & ECURRENT)
-                Kun(i,j) -= drho[1] * phi_i_x_phi_j;
-
-              if (coupling & HCURRENT)
-                Kup(i,j) -= drho[2] * phi_i_x_phi_j;
-            }            
-            
-            if (coupling & ECURRENT)
-            {
-              if (coupling & POISSON)
-                Knu(i,j) += dRn[0] * phi_i_x_phi_j / n0[i];
-
-              Knn(i,j) += dRn[1] * phi_i_x_phi_j / n0[i];
-
-              if (coupling & HCURRENT)
-                Knp(i,j) += dRn[2] * phi_i_x_phi_j / n0[i];
-            }
-
-            if (coupling & HCURRENT)
-            {
-              if (coupling & POISSON)
-                Kpu(i,j) -= dRp[0] * phi_i_x_phi_j / p0[i];
-
-              if (coupling & ECURRENT)
-                Kpn(i,j) -= dRp[1] * phi_i_x_phi_j / p0[i];
-              
-              Kpp(i,j) -= dRp[2] * phi_i_x_phi_j / p0[i];
-            }
-
-          }
-        }
-      }
-
-      // if we are doing residual, calculate rhs contribution (i.e. Fe)
-      if (residual != NULL)
-      {
-        // charge density
-        Real J_x_rho = J * sc->get_charge_density() / C0;
-        Real J_x_P0 = J / P0;
-
-        // net recombination rate
-        Real J_x_Rn = J * Rn / R0_e * (1 - a);
-        Real J_x_Rp = J * Rp / R0_h * (1 - b);
-
-        RealVectorValue P(sc->get_total_polarization());
-        P *= J_x_P0;
-
-        for (unsigned int i = 0; i < n_dofs; i++)
-        {
-          Real net_recomb_e = J_x_Rn * phi[i][qp] / n0[i];
-          Real net_recomb_h = J_x_Rp * phi[i][qp] / p0[i];
-          
-          if (coupling & POISSON)
-            Fu(i) -= J_x_rho * phi[i][qp] + (P * dphi[i][qp]) * x0_mesh;
-          else
-            Fu(i) -= Xu(i);
-          
-          if (coupling & ECURRENT)
-            Fn(i) += net_recomb_e;
-          else
-            Fn(i) -= Xn(i);
-
-          if (coupling & HCURRENT)
-            Fp(i) -= net_recomb_h;
-          else
-            Fp(i) -= Xp(i);
-        }
-      }
-
-    } // end loop over quadrature points
-
-    // now loop over the element sides to find boundary elements
-    // and to include von Neumann and mixed type boundary conditions
-    // 
-    // NOTE 1:
-    // we dont apply BC for nabla(Ef) but for the particle
-    // flux mu * n * nabla(Ef)
-    //
-    // NOTE 2:
-    // 1D case needs special treatment as 0D boundary elements do not
-    // exist in libmesh...
-    // 
-    for (unsigned int s = 0; s < elem->n_sides(); s++)
-    {
-      if (elem->neighbor(s) == NULL)
-      {
-        int s_top = find_boundary(elem, s, top_parent);
-
-        BoundaryData::ElementSide side(top_parent, s_top);
-        ElectricalContact* contact = 
-          device.get_boundary_data().get_data(side);
-
-        // for von Neumann or mixed type boundary conditions
-        vector<double> coeff(3, 0.0);
-        vector<double> value(3, 0.0);
-
-        //
-        // NOTE: we have to integrate over the boundary also if there are
-        //       no contacts because there could be polarization.
-        //
-        const vector<vector<Real> >&  phi_face =
-          fe_face->get_phi();
-          
-        // physical coordinates of the quadrature points
-        const vector<Point>& q_point = fe_face->get_xyz();
-
-        const vector<Point>& face_normals = fe_face->get_normals();
-
-        const vector<Real>& JxW_face = fe_face->get_JxW();
-
-        if (dim > 1)
-        {
-          fe_face->reinit(elem, s);
-
-          int phi_size = phi_face.size();
-
-          // now integrate to include von Neumann and mixed type BCs
-          // and polarization
-          for (unsigned int qp = 0; qp < qface.n_points(); qp++)
-          {
-
-            // get the solution values at the quadrature points
-            Real u  = 0.0;
-            Real en = 0.0;
-            Real ep = 0.0;
-            for (unsigned int i = 0; i < n_dofs; i++)
-            {
-              u  += phi_face[i][qp] * Xu(i);
-              en += phi_face[i][qp] * Xn(i);
-              ep += phi_face[i][qp] * Xp(i);
-            }
-
-            // calculate densities etc.
-            sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep, q_point[qp]);
-            double epsilon = sc->get_relative_permittivity();
-            double l2_eps = l2 * epsilon;
-
-            // get the boundary condition coefficients
-            if (contact != NULL)
-            {
-              contact->set_material(sc);
-              double a, c;
-
-              if (coupling & POISSON)
-              {
-                contact->get_normal_derivative(POTENTIAL, a, c);
-                coeff[0] = a * x0;
-                value[0] = c * x0 / phi0;
-              }
-              if (coupling & ECURRENT)
-              {
-                contact->get_normal_derivative(FERMIE, a, c);
-                coeff[1] = a * x0;
-                value[1] = c * x0 / phi0;
-              }
-              if (coupling & HCURRENT)
-              {
-                contact->get_normal_derivative(FERMIH, a, c);
-                coeff[2] = a * x0;
-                value[2] = c * x0 / phi0;
-              }
-            }
-
-
-
-            // the jacobian x weight x scaling
-            double J = JxW_face[qp] / Jface_scale;
-
-            // first the contributions to Ke_ij
-            for (unsigned int i = 0; i < n_dofs; i++)
-            {
-              for (unsigned int j = 0; j < n_dofs; j++)
-              {
-
-                Real phi_i_x_phi_j =
-                  J * phi_face[i][qp] * phi_face[j][qp];
-
-                if (coupling & POISSON)
-                  Kuu(i,j) += l2_eps * coeff[0] * phi_i_x_phi_j;
-
-                if (coupling & ECURRENT)
-                  Knn(i,j) += coeff[1] * phi_i_x_phi_j;
-
-                if (coupling & HCURRENT)
-                  Kpp(i,j) += coeff[2] * phi_i_x_phi_j;
-              }
-            }
-
-            // contribution to the jacobian
-            if (jacobian != NULL)
-            {
-            }
-
-            // contribution to -Fe_i
-            if (residual != NULL)
-            {
-              RealVectorValue P(sc->get_total_polarization());
-              double Pn = (P * face_normals[qp]) / P0;
-              double value_u = J * (l2_eps * value[0] - Pn);
-              double value_n = J * value[1] / (mu0 * C0_e);
-              double value_p = J * value[2] / (mu0 * C0_h);
-
-              for (unsigned int i = 0; i < n_dofs; i++)
-              {
-                if (coupling & POISSON)
-                  Fu(i) -= value_u * phi_face[i][qp];
-
-                if (coupling & ECURRENT)
-                  Fn(i) -= value_n * phi_face[i][qp] / n0[i];
-
-                if (coupling & HCURRENT)
-                  Fp(i) -= value_p * phi_face[i][qp] / p0[i];
-              }
-            } 
-          }
-        }
-        else // i.e. dim == 1
-        {
-          // s is the node of the element lying on the boundary
-          Real u  = Xu(s);
-          Real en = Xn(s);
-          Real ep = Xp(s);
-
-          // calculate densities etc.
-          sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep, elem->point(s));
-          double epsilon = sc->get_relative_permittivity();
-          double l2_eps = l2 * epsilon;
-
-          // get the boundary condition coefficients
-          if (contact != NULL)
-          {
-            contact->set_material(sc);
-            double a, c;
-
-            if (coupling & POISSON)
-            {
-              contact->get_normal_derivative(POTENTIAL, a, c);
-              coeff[0] = a * x0;
-              value[0] = c * x0 / phi0;
-            }
-            if (coupling & ECURRENT)
-            {
-              contact->get_normal_derivative(FERMIE, a, c);
-              coeff[1] = a * x0;
-              value[1] = c * x0 / phi0;
-            }
-            if (coupling & HCURRENT)
-            {
-              contact->get_normal_derivative(FERMIH, a, c);
-              coeff[2] = a * x0;
-              value[2] = c * x0 / phi0;
-            }
-          }
-
-
-          // first the contributions to Ke_ij
-          if (coupling & POISSON)
-            Kuu(s,s) += l2_eps * coeff[0];
-
-          if (coupling & ECURRENT)
-            Knn(s,s) += coeff[1];
-
-          if (coupling & HCURRENT)
-            Kpp(s,s) += coeff[2];
-
-          // contribution to -Fe_i
-          if (residual != NULL)
-          {
-            double Pn =  sc->get_total_polarization()(0) / P0;
-            // what is the outer normal in this point??
-            // Idea: if x(s) > x(centroid), normal is +1
-            //       else it is -1
-            double x_c = elem->centroid()(0);
-            double x_s = elem->point(s)(0);
-            Pn = (x_s > x_c) ? Pn : -Pn;
-            double value_u = l2_eps * value[0] - Pn;
-            double value_n = value[1] / (mu0 * C0_e * n0[s]);
-            double value_p = value[2] / (mu0 * C0_h * p0[s]);
-
-            if (coupling & POISSON)
-              Fu(s) -= value_u;
-
-            if (coupling & ECURRENT)
-              Fn(s) -= value_n;
-
-            if (coupling & HCURRENT)
-              Fp(s) -= value_p;
-          }
-        }
-      }
-    } // end loop over element sides
-
-
-
-    // constrain the jacobian and the rhs to account for constrained
-    // DOFs
-    // NOTE: this changes dof_indices that's why the application of
-    //       Dirichlet type BCs needs special care
-    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
-
-
-    //
-    // now as last thing we apply Dirichlet type Bcs
-    //
-    BoundaryNodeList::const_iterator node_it;
-    const BoundaryNodeList::const_iterator end =
-      dirichlet_nodes.end();
-    if (Ke.m() == n_dofs_tot)
-    {
-      // no constrained nodes, so everything is easy
-
-      // loop over all nodes and check if it is a dirichlet type node
-      for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        node_it = dirichlet_nodes.find(elem->get_node(i));
-        if (node_it != end)
-        {
-          ElectricalContact* contact = node_it->second;
-          contact->set_material(sc);
-
-          if (coupling & POISSON)
-          {
-            if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
-            {
-              double val = (contact->get_boundary_value(POTENTIAL)
-                  + simulation_voltages[contact]) / phi0;
-              Ke.condense(i, i, -val, Fe);
-            }
-            else if (contact->get_type(POTENTIAL) == ElectricalContact::PINNING)
-            {
-              double val = contact->get_boundary_value(POTENTIAL) / phi0;
-              Ke.condense(i, i, -val, Fe);
-              Ke(i, i + n_dofs) = 1.0;
-            }
-          }
-
-          if (coupling & ECURRENT)
-          {
-            if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
-            {
-              double val = (contact->get_boundary_value(FERMIE)
-                  - simulation_voltages[contact]) / phi0;
-              Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
-            }
-          }
-
-          if (coupling & HCURRENT)
-          {
-            if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
-            {
-              double val = (contact->get_boundary_value(FERMIH)
-                  - simulation_voltages[contact]) / phi0;
-              Ke.condense(i + 2 * n_dofs, i + 2 * n_dofs, -val, Fe);
-            }
-          }
-        }
-      }
-    }
-    else
-    {
-      // TODO this needs to be checked!!!
-
-      // Some nodes are constrained, so we have messed up our
-      // matrix and vector. In particular, we could have included
-      // nodes on Dirichlet boundaries.
-      // We will look for them on the parent element(s) to apply
-      // proper boundary conditions
-
-      n_dofs_tot = dof_indices.size();
-
-      // it's possible, that a node of the parent element is
-      // also a hanging node. In this case we have to look at the
-      // grand parent
-      bool is_done = false;
-      const Elem* parent;
-      while (!is_done)
-      {
-        is_done = true;
-        parent = elem->parent();
-        elem = parent;
-
-        assert(parent != NULL);
-
-        dof_map.dof_indices(parent, dof_indices_u, u_var);
-        dof_map.dof_indices(parent, dof_indices_en, en_var);
-        dof_map.dof_indices(parent, dof_indices_ep, ep_var);
-
-        // loop over the nodes of the parent element
-        unsigned int n_nodes = parent->n_nodes();
-        for (unsigned int i = 0; i < n_nodes; i++)
-        {
-          if (dof_map.is_constrained_dof(dof_indices_u[i]))
-            is_done = false;
-
-          node_it = dirichlet_nodes.find(parent->get_node(i));
-          if (node_it != end)
-          {
-            ElectricalContact* contact = node_it->second;
-            contact->set_material(sc);
-
-            // loop over all DOFs occurring in the constrained matrix
-            for (unsigned int id = 0; id < n_dofs_tot; id++)
-            {
-
-              if (coupling & POISSON)
-              {
-                if (contact->get_type(POTENTIAL) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_u[i])
-                  {
-                    double val = (contact->get_boundary_value(POTENTIAL)
-                      + simulation_voltages[contact]) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-                else if (contact->get_type(POTENTIAL) ==
-                    ElectricalContact::PINNING)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_u[i])
-                  {
-                    double val = contact->get_boundary_value(POTENTIAL) / phi0;
-                    Ke.condense(i, i, -val, Fe);
-                    Ke(id, id + n_dofs) = 1.0;
-                  }
-                }
-              }
-
-              if (coupling & ECURRENT)
-              {
-                if (contact->get_type(FERMIE) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_en[i])
-                  {
-                    double val = (contact->get_boundary_value(FERMIE)
-                      - simulation_voltages[contact]) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-              }
-
-              if (coupling & HCURRENT)
-              {
-                if (contact->get_type(FERMIH) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_ep[i])
-                  {
-                    double val = (contact->get_boundary_value(FERMIE)
-                      - simulation_voltages[contact]) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-              }
-
-            } // end loop over all DOFs 
-          }
-        } // end loop over the nodes of the parent element
-      }
-    }
-
-    perf_log.start_event("add");
-    if (residual != NULL)
-    {
-      for (unsigned int i = 0; i < n_dofs_tot; i++)
-        for (unsigned int j = 0; j < n_dofs_tot; j++)
-          Fe(i) += Ke(i,j) * x(dof_indices[j]);
-
-      residual->add_vector(Fe, dof_indices);
-    }
-    else
-      jacobian->add_matrix(Ke, dof_indices);
-
-    perf_log.stop_event("add");
-
-  } // end loop over elements
-
-  // put the maximum densities back into the options
-  options.n_max = n_max;
-  options.p_max = p_max;
-
-  if (residual == NULL)
-    jacobian->print_matlab("jac.m");
-  else
-    residual->print_matlab("res.m");
-  
-  perf_log.stop_event("assembly");
-} 
+ 
+}
 
 
 

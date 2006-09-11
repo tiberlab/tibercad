@@ -400,14 +400,14 @@ SemiconductorModel::calculate_all(double potential,
     electron_mobility = _e_mobility;
     electron_conductivity = _e_mobility * n;
     electron_conductivity_derivatives[0] = _e_mobility * dn;
-    electron_conductivity_derivatives[1] = _e_mobility * dn;
+    electron_conductivity_derivatives[1] = -_e_mobility * dn;
   //}
   //if (coupling & DriftDiffusionDefs::HOLES)
   //{
     hole_mobility = _h_mobility;
     hole_conductivity = _h_mobility * p;
     hole_conductivity_derivatives[0] = _h_mobility * dp;
-    hole_conductivity_derivatives[2] = _h_mobility * dp;
+    hole_conductivity_derivatives[2] = -_h_mobility * dp;
   //}
 
 }

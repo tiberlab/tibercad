@@ -56,8 +56,8 @@ SRHRecombination::get_net_recombination_rate_derivatives(
 
 
   recomb_e[0] = recomb_h[0] = a + b;
-  recomb_e[1] = recomb_h[1] = a;
-  recomb_e[2] = recomb_h[2] = b;
+  recomb_e[1] = recomb_h[1] = -a;
+  recomb_e[2] = recomb_h[2] = -b;
 }
 
 const std::string
