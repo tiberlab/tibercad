@@ -13,13 +13,18 @@ mesh_units = 1e-4
 start_voltage = -0.9
 stop_voltage = 0.9
 voltage_steps = 50
+#start_voltage = 0
+#stop_voltage = 0.1
+#voltage_steps = 1
 
 #simulation_method = GUMMEL
 
 nonlinear_tolerance = 1e-9
-nonlinear_ls_maxstep = 0.05
-linear_tolerance = 1e-9
-nonlinear_max_it = 15
+nonlinear_abs_tolerance = 1e-12
+nonlinear_ls_maxstep = 0.5
+linear_tolerance = 1e-8
+linear_abs_tolerance = 1e-15
+nonlinear_max_it = 20
 linear_max_it = 1000
 integration_order = 2
 

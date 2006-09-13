@@ -38,14 +38,16 @@ class ExcitonModel : public ExcitonProperties
      */
     virtual void calculate_all(double fermi_x, const Point& coord);
 
+    virtual double get_nonradiative_recombination_rate(void);
+
     virtual void read_database(const Dummy&);
 
     //! Set the model of exciton generation to be used
     void set_exciton_generation_model(const std::string& model_name);
 
-    //! Set the exciton recombination time
-    void set_recombination_time(double tau)
-      { _t = tau; };
+    //! Set the exciton recombination times
+    void set_recombination_times(double tau_r, double tau_nr = 1e100)
+      { _t_r = tau_r; _t_nr = tau_nr; };
 
     //! Set the exciton binding energy
     void set_binding_energy(double R)
@@ -67,7 +69,8 @@ class ExcitonModel : public ExcitonProperties
   private:
 
     //! Exciton recombination time
-    double _t;
+    double _t_r;
+    double _t_nr;
 
     //! Exciton binding energy
     double _R;

@@ -6,8 +6,10 @@
 #include "OhmicContact.h"
 #include "BoundaryData.h"
 #include "DDevice.h"
+#include "Dopant.h"
 #include "DriftDiffusion.h"
 #include "SemiconductorModel.h"
+#include "RecombinationModelInterface.h"
 
 #include "mesh.h"
 #include "mesh_modification.h"
@@ -91,32 +93,45 @@ int main (int argc, char** argv)
     
     mesh.print_info();
 
+    Dummy d;
 
     SemiconductorModel nside;    
     nside.set_data_file(material+".dat");
-    if (statistics == "FD")
-      nside.set_statistics(TiberCad::FERMIDIRAC);
-    else
-      nside.set_statistics(TiberCad::BOLTZMANN);
-
-    nside.add_recombination_model(SRH);
-    nside.set_SRH_parameters(tau_n, tau_p);
-    nside.add_recombination_model(DIRECT);
-    nside.set_direct_rec_parameters(C_direct);
-
-    SemiconductorModel pside(nside);
-    nside.set_SRH_parameters(tau_n, tau_p);
-
-    nside.set_n_dopant(Dopant(n_doping, 0.054, 2));
-    //pside.set_p_dopant(Dopant(p_doping, 0.17, 4));
-    pside.set_p_dopant(Dopant(p_doping, 0.045, 4));
-    //pside.set_n_dopant(Dopant(5e16, 0.054, 2));
-
-    Dummy d;
     nside.read_database(d);
+
+    nside.add_dopant(new Dopant(n_doping, 0.025, 2, Dopant::N_TYPE));
+    nside.set_mobilities(283.8, 160.3);
+
+    ModelOptions opts;
+    opts["tau_n"] = "1e-7";
+    opts["tau_p"] = "3e-8";
+    RecombinationModelInterface* rm =
+      RecombinationModelInterface::create("SRH", opts);
+    nside.add_recombination_model(rm);
+
+
+    SemiconductorModel pside;
+    pside.set_data_file(material+".dat");
     pside.read_database(d);
-    nside.set_mobilities(mu_e, mu_h);
-    pside.set_mobilities(mu_e, mu_h);
+
+    pside.add_dopant(new Dopant(p_doping, 0.01, 4, Dopant::P_TYPE));
+    pside.set_mobilities(283.8, 160.3);
+
+    opts["tau_n"] = "1e-7";
+    opts["tau_p"] = "3e-8";
+    rm = RecombinationModelInterface::create("SRH", opts);
+    pside.add_recombination_model(rm);
+
+    if (statistics == "FD")
+    {
+      nside.set_statistics(TiberCad::FERMIDIRAC);
+      pside.set_statistics(TiberCad::FERMIDIRAC);
+    }
+    else
+    {
+      nside.set_statistics(TiberCad::BOLTZMANN);
+      pside.set_statistics(TiberCad::BOLTZMANN);
+    }
 
 
     ElementData element_data;
@@ -233,6 +248,7 @@ int main (int argc, char** argv)
     {
       cout << "Solving equilibrium...\n" << flush;
       params.coupling = POISSON;
+      dd.guess_equilibrium();
       dd.solve();
       dd.remember_current_solution();
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<

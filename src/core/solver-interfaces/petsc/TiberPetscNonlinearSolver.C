@@ -237,8 +237,8 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
   this->init();
   
   // set solver options
-  //ierr = SNESSetTolerances(_snes, PETSC_DEFAULT,
-  //    _nonlinear_rtol, _nonlinear_atol, _nonlinear_max_it, _linear_max_it);
+  //ierr = SNESSetTolerances(_snes, _nonlinear_atol,
+  //    _nonlinear_rtol, _nonlinear_stol, _nonlinear_max_it, _linear_max_it);
   ierr = SNESSetTolerances(_snes, _nonlinear_atol,
       _nonlinear_rtol, PETSC_DEFAULT, _nonlinear_max_it, _linear_max_it);
   _checkerr(ierr);

@@ -14,6 +14,11 @@ ExcitonModel::ExcitonModel(void)
 {
 }
 
+double
+ExcitonModel::get_nonradiative_recombination_rate(void)
+{
+  return density / _t_nr;
+}
 
 void
 ExcitonModel::calculate_all(double fermi_x, const Point& coord)
@@ -29,8 +34,9 @@ ExcitonModel::calculate_all(double fermi_x, const Point& coord)
   mobility = _mu;
 
   // 3.) Recombination
-  recombination_rate = density / _t;
-  recombination_rate_derivative = density_derivative / _t;
+  double f_eq = (1.0 / _t_r + 1.0 / _t_nr);
+  recombination_rate = density * f_eq;
+  recombination_rate_derivative = density_derivative * f_eq;
 
   // 4.) Generation
   RecombinationModelInterface* rec =
@@ -85,8 +91,8 @@ ExcitonModel::calculate_densities(double fermi_x)
 void
 ExcitonModel::calculate_recombination_rate(void)
 {
-  recombination_rate = density / _t;
-  recombination_rate_derivative = density_derivative / _t;
+  recombination_rate = density / _t_nr;
+  recombination_rate_derivative = density_derivative / _t_nr;
 }
 
 

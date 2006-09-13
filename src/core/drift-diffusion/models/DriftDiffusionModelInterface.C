@@ -8,7 +8,7 @@
 #include "DirectRecombination.h"
 #include "ExcitonGeneration.h"
 #include "ExcitonDissociation.h"
-//#include "OpticalGeneration.h"
+#include "OpticalGeneration.h"
 
 #include <typeinfo>
 #include <iostream>
@@ -30,8 +30,8 @@ DriftDiffusionModelInterface::create(const std::string& name)
     rec = new ExcitonGeneration();
   else if (name == "exciton_dissociation")
     rec = new ExcitonDissociation();
-  //else if (name == "optical")
-  //  rec = new OpticalGeneration();
+  else if (name == "optical")
+    rec = new OpticalGeneration();
 
   register_model(rec);
 

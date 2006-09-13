@@ -51,6 +51,8 @@ int main (int argc, char** argv)
     const string statistics = input_file("statistics", "B");
 
     double nonlin_rtol = input_file("nonlinear_tolerance", 1e-9);
+    double dd_nonlin_atol = input_file("nonlinear_abs_tolerance", 1e-12);
+    double dd_lin_atol = input_file("linear_abs_tolerance", 1e-9);
     double lin_rtol = input_file("linear_tolerance", 1e-12);
     int integration_order = input_file("integration_order", 5);
     int nonlin_max_it = input_file("nonlinear_max_it", 15);
@@ -201,8 +203,10 @@ int main (int argc, char** argv)
     params.solver_params.nonlinear_max_iterations = nonlin_max_it;
     params.solver_params.linear_max_iterations = lin_max_it;
     params.solver_params.nonlinear_tolerance = nonlin_rtol;
+    params.solver_params.nonlinear_abs_tolerance = dd_nonlin_atol;
     params.solver_params.ls_maxstep = nonlin_ls_maxstep;
     params.solver_params.linear_tolerance = lin_rtol;
+    params.solver_params.nonlinear_abs_tolerance = dd_nonlin_atol;
     params.integration_order =
       static_cast<libMeshEnums::Order>(integration_order);
     params.refine_fraction = refine_frac;

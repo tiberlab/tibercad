@@ -79,6 +79,11 @@ int main (int argc, char** argv)
     string C_direct = input_file("direct_recombination", "1e-8");
     string X_gen = input_file("exciton_generation", "1e-9");
     
+    string trapping = input_file("trapping_probability", "0.5");
+    double rec_rad = input_file("recombination_time_x_radiative", 1e-11);
+    double rec_nonrad =
+      input_file("recombination_time_x_nonradiative", 1e-11);
+    
     double damping = input_file("damping", 1e-6);
 
     unsigned int refinement_steps = input_file("max_refinement_steps", 0);
@@ -186,9 +191,9 @@ int main (int argc, char** argv)
     OhmicContact anode("anode");
     //SchottkyContact anode("anode");
     //anode.set_schottky_barrier_height(0.8);
-    anode.set_zero_derivative_bc(FERMIE);
+    //anode.set_zero_derivative_bc(FERMIE);
     OhmicContact cathode("cathode");
-    cathode.set_zero_derivative_bc(FERMIH);
+    //cathode.set_zero_derivative_bc(FERMIH);
 
 
     BoundaryData boundary_data;
@@ -213,7 +218,7 @@ int main (int argc, char** argv)
     xpart.set_exciton_generation_model("exciton_generation");
     // this is needed, but a momentary quirk
     xpart.read_database(d);
-    xpart.set_recombination_time(1e-9);
+    xpart.set_recombination_times(rec_rad, rec_nonrad);
     xpart.set_binding_energy(20.4e-3);
     xpart.set_effective_mass(1.02);  // (*me) in exciton model
     xpart.set_mobility(1500);
@@ -269,17 +274,18 @@ int main (int argc, char** argv)
     ex.init();
     ex.set_exciton_model(&xpart);
     ex.set_driftdiffusion(&dd);
-    ex.set_initial_guess(2.5);
+    ex.set_initial_guess(1.5);
 
     ExcitonTransport::Options& exparams = ex.get_options();
     exparams.max_refinement_steps = refinement_steps;
     exparams.solver_params.nonlinear_max_iterations = 50;
     exparams.solver_params.linear_max_iterations = lin_max_it;
     exparams.solver_params.nonlinear_tolerance = 1e-19;
-    exparams.solver_params.nonlinear_abs_tolerance = dd_nonlin_atol;
+    exparams.solver_params.nonlinear_abs_tolerance = 1e-32;
     exparams.solver_params.ls_maxstep = nonlin_ls_maxstep;
     exparams.solver_params.linear_tolerance = lin_rtol;
     exparams.solver_params.linear_abs_tolerance = dd_lin_atol;
+    exparams.solver_params.pc_type = PCCOMPOSITE;
     exparams.integration_order = 
       static_cast<libMeshEnums::Order>(5);
 
@@ -338,6 +344,7 @@ int main (int argc, char** argv)
     ostringstream s;
     s << damping;
     opts["damping"] = s.str();
+    opts["trapping_probability"] = trapping;
     RecombinationModelInterface* rma =
       RecombinationModelInterface::create("exciton_dissociation", opts);
     (static_cast<ExcitonDissociation*>(rma))->set_exciton_transport(&ex);

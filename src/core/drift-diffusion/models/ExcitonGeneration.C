@@ -27,9 +27,7 @@ ExcitonGeneration::get_net_recombination_rates(double& recomb_e,
   
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
-  //double ni  = dd.get_intrinsic_density();
 
-  //recomb_e = recomb_h = _C * (n * p - ni*ni);
   recomb_e = recomb_h = _C * n * p;
 }
 

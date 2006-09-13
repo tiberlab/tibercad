@@ -749,7 +749,7 @@ class DriftDiffusion
         SparseMatrix<Number>* jacobian);
     
     template <int T>
-    static void assemble2(const NumericVector<Number>& x,
+    static void assemble1D(const NumericVector<Number>& x,
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
 

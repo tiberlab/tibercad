@@ -19,7 +19,13 @@ hole_mobility = 20
 recombination_time_n = 1e-11;
 recombination_time_p = 2e-11;
 direct_recombination = 1.1e-8;
-exciton_generation = 2e-9;
+exciton_generation = 2e-7;
+
+recombination_time_x_radiative = 1e-11
+recombination_time_x_nonradiative = 1e-9
+trapping_probability = 0.8
+
+damping = 1e-20
 
 #start_voltage = 0.0
 #stop_voltage = 1.2
@@ -32,15 +38,13 @@ voltage_steps = 32
 
 nonlinear_tolerance = 1e-9
 nonlinear_abs_tolerance = 1e-12
-nonlinear_ls_maxstep = 0.05
+nonlinear_ls_maxstep = 0.025
 linear_tolerance = 1e-7
-linear_abs_tolerance = 1e-4
+linear_abs_tolerance = 1e-15
 nonlinear_max_it = 10
 min_voltage_step = 1e-5
 linear_max_it = 1000
 integration_order = 2
-
-damping = 1e-9
 
 
 #refinement_stop_criterion=1e-4

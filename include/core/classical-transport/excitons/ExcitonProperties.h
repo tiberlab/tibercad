@@ -78,6 +78,8 @@ class ExcitonProperties : public PhysicalProperties
      *
      */
     virtual void calculate_all(double fermi_x, const Point& coord) = 0;
+
+    virtual double get_nonradiative_recombination_rate(void) { return 0.0; };
       
 
     //! Get the exciton density
