@@ -36,3 +36,10 @@ OpticalGeneration::get_net_recombination_rate_derivatives(
   recomb_e[1] = recomb_h[1] = 0;
   recomb_e[2] = recomb_h[2] = 0;
 }
+
+
+const std::string
+OpticalGeneration::get_name(void) const
+{
+  return "optical direct generation";
+}

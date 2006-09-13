@@ -38,6 +38,10 @@ class OpticalGeneration : public RecombinationModelInterface
 
     //! \copydoc RecombinationModelInterface::set_model_options()
     virtual void set_model_options(const ModelOptions& options);
+
+
+    //! \copydoc RecombinationModelInterface::get_name()
+    virtual const std::string get_name(void) const;
     
   private:
 
