@@ -3438,7 +3438,6 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
         Real J_x_Rp = J * Rp / R0_h * (1 - b);
 
         RealVectorValue P(sc->get_total_polarization());
-        //cerr << "Pz = " << P(0) << "\n";
         P *= J_x_P0;
 
         for (unsigned int i = 0; i < n_dofs; i++)
