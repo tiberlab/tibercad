@@ -19,7 +19,7 @@ hole_mobility = 20
 recombination_time_n = 1e-11;
 recombination_time_p = 2e-11;
 direct_recombination = 1.1e-8;
-exciton_generation = 2e-7;
+exciton_generation = 1e-7;
 
 recombination_time_x_radiative = 1e-11
 recombination_time_x_nonradiative = 1e-9
@@ -32,7 +32,7 @@ damping = 1e-20
 #voltage_steps = 24
 start_voltage = 0.0
 stop_voltage = 3.2
-voltage_steps = 32
+voltage_steps = 64
 
 #simulation_method = GUMMEL
 

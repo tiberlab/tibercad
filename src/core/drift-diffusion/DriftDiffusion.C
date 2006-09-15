@@ -889,7 +889,7 @@ DriftDiffusion::solve_newton(void) throw (PetscRuntimeError)
 
 
   // set the right assembly function
-  if (dim == 1)
+  if (dim == 0)
     switch (_options.coupling)
     {
       case (POISSON | ECURRENT):
@@ -3438,6 +3438,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
         Real J_x_Rp = J * Rp / R0_h * (1 - b);
 
         RealVectorValue P(sc->get_total_polarization());
+        cerr << "Py = " << P(1) << "\n";
         P *= J_x_P0;
 
         for (unsigned int i = 0; i < n_dofs; i++)
@@ -4273,11 +4274,14 @@ DriftDiffusion::assemble1D(const NumericVector<Number>& x,
         double Rp = sc->get_net_hole_recombination_rate() / R0_h;
         //Rp = (fabs(Rp) < 1.0e-19) ? 0.0 : Rp;
 
-        RealVectorValue P(sc->get_total_polarization());
+        double P = sc->get_total_polarization()(0);
         P = P / P0;
+        // where does the outer normal point to?
+        if (i == 2)
+          P *= -1;
 
         if (coupling & POISSON)
-          Fu(i) = -0.5 * d * rho;
+          Fu(i) = -0.5 * d * rho - x0_mesh * P;
         else
           Fu(i) = - Xu(i);
 
@@ -4331,7 +4335,7 @@ DriftDiffusion::assemble1D(const NumericVector<Number>& x,
         const vector<Point>& face_normals = fe_face->get_normals();
 
         const vector<Real>& JxW_face = fe_face->get_JxW();
-
+/*
         if (dim > 1)
         {
           fe_face->reinit(elem, s);
@@ -4440,6 +4444,7 @@ DriftDiffusion::assemble1D(const NumericVector<Number>& x,
         }
         else // i.e. dim == 1
         {
+*/
           // s is the node of the element lying on the boundary
           Real u  = Xu(s);
           Real en = Xn(s);
@@ -4510,7 +4515,7 @@ DriftDiffusion::assemble1D(const NumericVector<Number>& x,
             if (coupling & HCURRENT)
               Fp(s) -= value_p;
           }
-        }
+//        }
       }
     } // end loop over element sides
 

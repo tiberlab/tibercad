@@ -526,6 +526,8 @@ int main (int argc, char** argv)
       ingan.set_data_file("materials/GaAs.dat");
     else if (mat_sys == 4)
       ingan.set_data_file("materials/AlN.dat");
+    else
+      ingan.set_data_file("materials/GaN.dat");
 
     opts["tau_n"] = "1e-7";
     opts["tau_p"] = "1e-7";

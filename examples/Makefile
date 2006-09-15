@@ -4,7 +4,7 @@
 topdir := ../
 include $(topdir)/Make.common
 
-subdirs := BULK_3D MESFET
+subdirs := BULK/2D BULK/3D MESFET
 
 
 
