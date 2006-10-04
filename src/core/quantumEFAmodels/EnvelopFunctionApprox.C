@@ -1576,13 +1576,22 @@ void EnvelopFunctionApprox::apply_diriclet_bc_at_all_boundaries()
 	  else
 	    {
 	      std::vector< const Elem * > active_family;
-	      el1->active_family_tree (active_family);
-	      if (active_family.size() == 0)
-		  side_is_external = true;
-	      //TODO
-              /*
-		has to be corrected because it may contain active child that does not belong to boundary
-	      */
+	      if ( el1->has_children() )
+		{
+		  el1->active_family_tree (active_family);
+	 
+		  if (active_family.size() == 0)
+		    side_is_external = true;
+		  //TODO
+		  /*
+		    has to be corrected because it may contain active child that does not belong to boundary
+		  */
+		}
+	      else
+		{//no children
+		  if ( !(el1->active()) )
+		    side_is_external = true;
+		}
 
 	    }
 	  //-------------------------------------------------------

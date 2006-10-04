@@ -40,8 +40,10 @@ void
 SemiconductorModel::read_database(const Dummy&)
 {
   GetPot data(_filename);
-
+ 
   const std::string structure = data("structure", "zb");
+
+ 
 
   if (structure == "zb")
   {
@@ -120,6 +122,8 @@ SemiconductorModel::read_database(const Dummy&)
     permittivity = data("permittivity", 9.5);
     _e_mobility = data("electron_mobility", 1000.0);
     _h_mobility = data("hole_mobility", 200.0);
+
+  
   }
 }
 
@@ -198,6 +202,8 @@ SemiconductorModel::build_alloy(const std::string& component2,
   {
     WzDDsemiconductor* sc = dynamic_cast<WzDDsemiconductor*>(_bulk_model);
     WzDDsemiconductor::WzDDparameters& params = sc->get_parameters();
+
+   
 
     params.EgGamma = alloy(data("Eg_G", 3.51), params.EgGamma, content,
         bowing("Eg_G", 0.0));

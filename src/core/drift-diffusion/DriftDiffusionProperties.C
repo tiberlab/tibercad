@@ -481,9 +481,9 @@ DriftDiffusionProperties::calculate_equilibrium_properties(int coupling,
   ierr = SNESGetIterationNumber(snes, &n_iterations);
   if (reason < 0)
   {
-    //std::cerr << "ATTENTION Equilibrium properties calculation:\n";
-    //std::cerr << "  # iterations: "  << n_iterations
-    //  << ", converged reason: " << reason << "\n";
+    std::cerr << "ATTENTION Equilibrium properties calculation:\n";
+    std::cerr << "  # iterations: "  << n_iterations
+      << ", converged reason: " << reason << "\n";
   }
 
   ierr = VecGetArray(x, &result);

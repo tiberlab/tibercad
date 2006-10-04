@@ -321,7 +321,7 @@ int main (int argc, char** argv)
     opts["tau_n"] = tau_n;
     opts["tau_p"] = tau_n;
     opts["C"] = C_direct;
-    RecombinationModelInterface* rm =
+    RecombinationModelInterface* rm =   
       RecombinationModelInterface::create("SRH", opts);
     nside.add_recombination_model(rm);
     rm = RecombinationModelInterface::create("direct", opts);

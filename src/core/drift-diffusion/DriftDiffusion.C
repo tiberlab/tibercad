@@ -969,8 +969,8 @@ DriftDiffusion::solve_newton(void) throw (PetscRuntimeError)
           " at iteration " << e.get_iteration() <<
           " (fnorm = " << e.get_fnorm() << ")\n";
 
-        if (e.get_reason() == -5) retry = false;
-        if (e.get_reason() == -6) retry = false;
+        //if (e.get_reason() == -5) retry = false;
+        //if (e.get_reason() == -6) retry = false;
 
       }
       catch (PetscRuntimeError& e)
@@ -3879,12 +3879,12 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
   options.n_max = n_max;
   options.p_max = p_max;
 
-///*
+/*
   if (residual == NULL)
     jacobian->print_matlab("jac.m");
   else
     residual->print_matlab("res.m");
-//*/
+*/
   
   perf_log.stop_event("assembly");
 } 

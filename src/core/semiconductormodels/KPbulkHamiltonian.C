@@ -133,9 +133,9 @@ void KPbulkHamiltonian::read_database(const Dummy& dd)
 {
   
   GetPot data(_filename);
-  const std::string structure = data("structure", "zb");
+  const std::string structure = data("structure", "wz");
 
-   
+ 
 
   if (structure == "zb")
     {
@@ -147,7 +147,6 @@ void KPbulkHamiltonian::read_database(const Dummy& dd)
 
   if (structure == "wz")
     {
-      
       
       WzDDsemiconductor* wzsc = new WzDDsemiconductor();
       semiconductor =  wzsc;
