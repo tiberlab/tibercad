@@ -522,3 +522,160 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   
   return(result);
 }
+
+
+
+
+
+//----------------------------------------------------------------------------------------//
+
+double OpticsKP::calculate_fermi_averaged(unsigned int i, short kind)
+{
+
+  Complex  result(0.0,0.0);
+
+
+  //-----------------------------------------------------//
+
+  const EnvelopFunctionApprox* state_model;
+  
+  if (kind == 1 )
+    state_model = initial_state_model;
+  else
+    state_model = final_state_model;
+
+
+
+  const vector< Complex >   eigen_vector =  (state_model->get_solution())[i].eigen_vector;
+  
+
+  DriftDiffusion* dd = state_model->get_drift_diffusion(); 
+ 
+  //----------------------------------------------------//
+
+  
+  const Mesh* mesh = &(es->get_mesh());
+
+
+  unsigned int dim = mesh->mesh_dimension();
+  
+
+
+  system = &( es->get_system<LinearImplicitSystem>(system_name));
+
+  DofMap& dof_map = system->get_dof_map();
+  
+
+  const EnvelopFunctionApprox::options&  options= state_model->get_options();
+  
+
+  //My Jacobian 
+
+  double length_scale = options.length_scale;
+
+  my_Jacobian = 1.0;
+  for (short i = 1; i <= dim; i++)
+    my_Jacobian *= length_scale;
+
+  
+   system->init();
+   
+
+   FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
+
+   AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+
+   // A 5th order Gauss quadrature rule for numerical integration.
+   QGauss qrule (dim, SECOND);
+
+   // Tell the finite element object to use our quadrature rule.
+   fe -> attach_quadrature_rule (&qrule);
+
+   // The element Jacobian * quadrature weight at each integration point.   
+   const std::vector<Real>& JxW = fe->get_JxW();
+
+   // properties at the quadrature points.
+   const std::vector<Point>& q_point = fe->get_xyz();
+   
+   // The element shape functions evaluated at the quadrature points.
+   const std::vector<std::vector<Real> >& phi = fe->get_phi();
+  
+
+   //------------------------------------------------------------
+   std::vector<unsigned int> dof_indices_component;
+ 
+   std::vector<unsigned int> dof_indices;
+
+   //-------------------------------------------------------------
+   
+  //----------------------------------------------------//
+
+
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+
+  
+  Complex eigen_f_value1;
+  Complex eigen_f_value2;
+
+
+  DriftDiffusion::Solution dd_solution;
+  double chem_pot_value_eV;
+  
+  for ( ; el != end_el ; ++el) 
+    {//el
+
+      const Elem* elem = *el;
+      fe->reinit (elem);
+
+
+      Point center = elem->centroid();
+
+      dd->get_solution(elem, center, dd_solution);
+
+      if (options.particle == "el")
+	chem_pot_value_eV = dd_solution.fermi_e;
+      else
+	chem_pot_value_eV = dd_solution.fermi_h;
+
+     
+      for (short psi_index = 0; psi_index < options.number_of_bands; psi_index++)
+	{
+	  dof_map.dof_indices (elem, dof_indices, psi_index);
+	  const unsigned int n_psi_dofs = dof_indices.size();
+
+	  for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+	    {//qp
+	      
+	      for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+		{
+		  eigen_f_value1 = eigen_vector[dof_indices[p1]];
+		  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+
+		    {
+		      eigen_f_value2 = eigen_vector[dof_indices[p2]];
+		      result += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *  phi[p2][qp] * conj(eigen_f_value2) ) * chem_pot_value_eV;
+		    
+		    }
+		}
+
+	    }
+
+
+	
+	  
+	}
+      
+
+    }
+
+ 
+
+
+  
+  result *= my_Jacobian;
+
+
+ 
+  return(result.real());
+}

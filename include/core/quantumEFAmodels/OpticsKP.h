@@ -51,7 +51,12 @@ class OpticsKP
   void calculate_matrix(void);
 
 
- 
+  //!calculate averaged value of the electrochemical potential <\psi|\mu|psi>
+  /*!
+    \param  i number of state
+    \param  kind  1: the initial state; 2: the final state
+   */
+  double calculate_fermi_averaged(unsigned int i, short kind);
 
 
  private:
@@ -115,6 +120,7 @@ class OpticsKP
   */
   std::vector<Complex> calculate_matrix_element(unsigned int i, unsigned int j);
 
+ 
 
 
 };

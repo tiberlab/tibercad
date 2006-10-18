@@ -2,9 +2,11 @@
 #include "EnvelopFunctionApprox.h"
 #include <gnuplot_io.h>
 using namespace std;
+using namespace Constants;
+
 const double EnvelopFunctionApprox::Hartree;
 
-const std::vector< EnvelopFunctionApprox::eigen_propblem_solution > EnvelopFunctionApprox::get_solution() const
+const std::vector< EnvelopFunctionApprox::eigen_propblem_solution >& EnvelopFunctionApprox::get_solution() const
 {
   return(solution);
 }
@@ -39,7 +41,7 @@ double EnvelopFunctionApprox::get_band_edge() const
   
   
 
- vector<double> band_edges;
+  vector<double> band_edges;
   vector<string> names;
 
   poisson_equation -> build_elem_band_edges( band_edges,  names);
@@ -1155,6 +1157,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   1) Read all eigenvalues
   2) Sort the eigenvalues and select those we want 
   3) Read eigenvectors that correspond to the eigenvalues we want
+  4) normalize eigenfunctions
   */
 
 
@@ -1188,8 +1191,17 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
     solution_size = number_of_converged_solutions;
   else
     solution_size = number_of_ev;
-    
-  solution.resize(solution_size);
+
+
+
+  {
+    EnvelopFunctionApprox::eigen_propblem_solution temp1;
+    temp1.eigen_energy = 0;
+    temp1.eigen_vector.resize(number_of_all_dofs, Complex(0.0, 0.0));
+    solution.resize(solution_size, temp1);
+  }
+ 
+
   vector<EnvelopFunctionApprox::eigen_energy>   ev(number_of_converged_solutions);
   
   
@@ -1285,10 +1297,6 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 	{
 	  unsigned int solution_number = it->second;
 	 
-	  (solution[solution_number].eigen_vector).resize(number_of_all_dofs);
-	  (solution[solution_number].eigen_vector).assign(number_of_all_dofs, Complex(0.0, 0.0));
-
-	 
 	  
 	  //-----------------------------------------------------------------------------
 	  //put independent dofs in the eigenvectors that may contain also non independent dofs
@@ -1328,6 +1336,17 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 	}
       //------------------------------------------------------------------------
 
+    }
+
+  //normalization
+  for (unsigned int i = 0; i < solution_size; i++)
+    {
+      const double norm = eigenstate_norm(i);
+      const unsigned int n1 =  solution[i].eigen_vector.size();
+
+      
+      for (unsigned int j = 0; j < n1; j++)
+	solution[i].eigen_vector[j] /= norm;
     }
 
 
@@ -1998,4 +2017,369 @@ void EnvelopFunctionApprox::make_nodes_periodic()
 	}
       nodes_periodic.push_back(temp_vec);
     }
+}
+
+
+//-----------------------------------------------------------------------------//
+double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
+{
+  double  result;
+  
+  const vector< Complex > &  eigen_vector =  solution[state_number].eigen_vector;
+  
+
+  DofMap& dof_map = system->get_dof_map();
+
+  FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
+
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+
+  QGauss qrule (dim, SECOND);
+
+  fe -> attach_quadrature_rule (&qrule);
+
+
+  const std::vector<Real>& JxW = fe->get_JxW();
+
+  const std::vector<std::vector<Real> >& phi = fe->get_phi();
+
+  std::vector<unsigned int> dof_indices;
+
+
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+
+
+  //My Jacobian 
+
+  double length_scale = opt.length_scale;
+
+  my_Jacobian = 1.0;
+  for (short i = 1; i <= dim; i++)
+    my_Jacobian *= length_scale;
+
+
+  Complex temp(0.0, 0.0);
+  Complex eigen_f_value1, eigen_f_value2;
+
+  for ( ; el != end_el ; ++el) 
+    {//el
+      
+      const Elem* elem = *el;
+      fe->reinit (elem);
+
+      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+	{
+	  dof_map.dof_indices (elem, dof_indices, psi_index);
+	  const unsigned int n_psi_dofs = dof_indices.size();
+
+	  for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+	    {//qp	      
+	      for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+		{
+		  eigen_f_value1 = eigen_vector[dof_indices[p1]];
+		  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+		    {
+		      eigen_f_value2 = eigen_vector[dof_indices[p2]];
+		      temp += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *  phi[p2][qp] * conj(eigen_f_value2) );
+		    }
+		}
+	      
+	    }
+
+
+	
+	  
+	}
+      
+
+    }
+
+
+
+  result = sqrt( abs(temp) * my_Jacobian );
+
+
+  return(result);
+
+} 
+//==========================================================//
+DriftDiffusion* EnvelopFunctionApprox::get_drift_diffusion() const
+{
+  return(poisson_equation);
+}
+
+
+//==========================================================//
+
+
+double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
+{
+
+  Complex  result(0.0,0.0);
+
+
+  //-----------------------------------------------------//
+
+ 
+
+
+
+  const vector< Complex >&   eigen_vector =  solution[i].eigen_vector;
+  
+
+ 
+ 
+  //----------------------------------------------------//
+
+  
+  const Mesh* mesh = &(es->get_mesh());
+
+
+  unsigned int dim = mesh->mesh_dimension();
+  
+
+
+  system = &( es->get_system<LinearImplicitSystem>(system_name));
+
+  DofMap& dof_map = system->get_dof_map();
+  
+
+
+  
+
+  //My Jacobian 
+
+  double length_scale = opt.length_scale;
+
+  my_Jacobian = 1.0;
+  for (short i = 1; i <= dim; i++)
+    my_Jacobian *= length_scale;
+
+  
+   system->init();
+   
+
+   FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
+
+   AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+
+   // A 5th order Gauss quadrature rule for numerical integration.
+   QGauss qrule (dim, SECOND);
+
+   // Tell the finite element object to use our quadrature rule.
+   fe -> attach_quadrature_rule (&qrule);
+
+   // The element Jacobian * quadrature weight at each integration point.   
+   const std::vector<Real>& JxW = fe->get_JxW();
+
+   // properties at the quadrature points.
+   const std::vector<Point>& q_point = fe->get_xyz();
+   
+   // The element shape functions evaluated at the quadrature points.
+   const std::vector<std::vector<Real> >& phi = fe->get_phi();
+  
+
+   //------------------------------------------------------------
+   std::vector<unsigned int> dof_indices_component;
+ 
+   std::vector<unsigned int> dof_indices;
+
+   //-------------------------------------------------------------
+   
+  //----------------------------------------------------//
+
+
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+
+  
+  Complex eigen_f_value1;
+  Complex eigen_f_value2;
+
+
+  DriftDiffusion::Solution dd_solution;
+  double chem_pot_value_eV;
+  
+  for ( ; el != end_el ; ++el) 
+    {//el
+
+      const Elem* elem = *el;
+      fe->reinit (elem);
+
+
+      Point center = elem->centroid();
+
+      poisson_equation->get_solution(elem, center, dd_solution);
+
+      if (opt.particle == "el")
+	chem_pot_value_eV = dd_solution.fermi_e;
+      else
+	chem_pot_value_eV = dd_solution.fermi_h;
+
+     
+      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+	{
+	  dof_map.dof_indices (elem, dof_indices, psi_index);
+	  const unsigned int n_psi_dofs = dof_indices.size();
+
+	  for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+	    {//qp
+	      
+	      for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+		{
+		  eigen_f_value1 = eigen_vector[dof_indices[p1]];
+		  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+
+		    {
+		      eigen_f_value2 = eigen_vector[dof_indices[p2]];
+		      result += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *  phi[p2][qp] * conj(eigen_f_value2) ) * chem_pot_value_eV;
+		    
+		    }
+		}
+
+	    }
+
+
+	
+	  
+	}
+      
+
+    }
+
+ 
+
+
+  
+  result *= my_Jacobian;
+
+
+ 
+  return(result.real());
+}
+
+//---------------------------------------------------------------------------//
+
+vector<double> EnvelopFunctionApprox::calculate_density(double Temperature)
+{
+  DofMap& dof_map = system->get_dof_map();
+
+  const Mesh& mesh1 = system->get_mesh();
+
+  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
+  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
+
+  unsigned int number_of_points = 0;
+
+  for ( ; nd != nd_el ; ++nd)  number_of_points++; 
+
+
+  vector<double> result(number_of_points, 0.0);
+
+
+  unsigned int number_of_eigenfunctions = solution.size();
+
+  for (unsigned int i = 0; i < number_of_eigenfunctions; i++)
+    {
+      
+      const double T_EV = Temperature * k_Boltzmann;
+
+      const double Fermi_energy = calculate_fermi_averaged(i);
+
+      const double Energy = solution[i].eigen_energy;
+      
+      double prob_factor =  1.0/(  1 + exp((Energy - Fermi_energy)/T_EV   )  );
+
+      vector<double> density_state = calculate_prob_function(i);
+      
+      for (unsigned int j = 0; j <  number_of_points; j++)
+	{
+	  
+	  result[j] +=  density_state[j] * prob_factor; 
+
+	}
+
+      
+    }
+
+  
+}
+
+
+//===========================================================//
+
+vector<double> EnvelopFunctionApprox::calculate_prob_function(unsigned int state_number)
+{
+//===========================================
+
+  DofMap& dof_map = system->get_dof_map();
+
+  const Mesh& mesh1 = system->get_mesh();
+
+  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
+  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
+
+  unsigned int number_of_points = 0;
+
+  for ( ; nd != nd_el ; ++nd)  number_of_points++;
+    
+  unsigned int  point_index = 0;
+  
+
+  vector< vector<Complex> >  psi_data;
+  psi_data.resize(number_of_points);
+  for (unsigned int i = 0; i < number_of_points; i++) psi_data[i].resize( opt.number_of_bands, Complex(0.0, 0.0) ); 
+ 
+  vector<double>  probability_data(number_of_points, 0.0);
+ 
+  MeshBase::const_element_iterator it = mesh1.active_local_elements_begin();
+  const MeshBase::const_element_iterator end =  mesh1.active_local_elements_end();
+
+  std::vector<unsigned int> dof_indices;
+
+
+  //!calculation of psi
+
+  for ( ; it != end; ++it)
+    {
+      const Elem* elem = *it;
+      
+
+      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+	{
+	  dof_map.dof_indices (elem, dof_indices, psi_index);
+	  for (unsigned int n = 0; n < elem->n_nodes(); n++)
+	    { 
+	      unsigned int  node_id =  elem->node(n);
+	      Complex value =  (solution[state_number].eigen_vector[ dof_indices[n] ]);
+	      
+	      psi_data[node_id][psi_index] = value;
+	      
+	    
+	      
+	      
+	      
+	    }
+	}
+    }
+
+
+  //calculation of |psi|^2
+  double t1;
+  for (unsigned int i = 0; i < number_of_points; i++)
+    for (unsigned int j = 0; j < opt.number_of_bands; j++)
+      {
+	t1 = std::abs(psi_data[i][j]);
+	probability_data[i] += t1 * t1; 
+      }
+
+
+  
+  //------
+
+  return(probability_data);
+
+  //-----
+
 }

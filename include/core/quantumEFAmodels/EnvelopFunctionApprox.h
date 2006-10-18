@@ -221,13 +221,29 @@ class EnvelopFunctionApprox
   const std::vector<unsigned int>& get_material_numbers() const;
 
   //! returns a reference to solutions
-  const std::vector<eigen_propblem_solution> get_solution() const;
+  const std::vector<eigen_propblem_solution>& get_solution() const;
  
   //! set spectrum shift  
   void set_spectrum_shift(double energy);
 
   //! returns conduction band minima for holes and valence band maximum for holes 
   double get_band_edge() const;
+
+
+  //! returns a pointer to DriftDiffusion object
+  DriftDiffusion* get_drift_diffusion() const;
+
+
+
+  //!calculate averaged value of the electrochemical potential <\psi|\mu|psi>
+  /*!
+    \param  i number of state
+   
+   */
+  double calculate_fermi_averaged(unsigned int i);
+
+
+  
 
  private:
 
@@ -417,6 +433,27 @@ class EnvelopFunctionApprox
   //! cheks if element lies on boundary
   bool element_on_boundary(const Elem* element);
   
+
+
+  //! calculates the norm of the eigenstate \f$ \sqrt {| \langle \psi|\psi \rangle |} \f$
+  /*!
+    \param state_number number of the eigenstate
+  */
+  double eigenstate_norm(unsigned int state_number);
+
+
+  //! calculate dessity without \f$ {\bf k}_{\|}\f$ integration.  The density reads: \f $ \rho({\bf r}) = \sum_i   |\psi_i({\bf r})|^2 F_{fermi}(E_i) \f$ in atomic units
+  /*
+    \param T temperature [K]
+  */
+  vector<double>  calculate_density(double T);
+  
+  //! calculate dessity without \f$ | \psi (r) |^2 \f4
+  /*!
+    \param i number of the eigenstate
+   */
+  vector<double> EnvelopFunctionApprox::calculate_prob_function(unsigned int i);
+
 };
 
 

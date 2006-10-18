@@ -86,10 +86,10 @@ class  WzDDsemiconductor : public DDsemiconductor
     //!crystal field spliting energy [eV]
     double  delta_cr; 
    
-    //! optical matrix element \f$ \frac{\<X|{\bf P}|S\>^2}{2m_0} \f$  [eV]
+    //! optical matrix element \f$ \frac{\langle X|{\bf P}|S \rangle ^2}{2m_0} \f$  [eV]
     double Ep_1 ;
 
-    //! optical matrix element \f$ \frac{\<Z|{\bf P}|S\>^2}{2m_0} \f$  [eV]
+    //! optical matrix element \f$ \frac{\langle |{\bf P}|S \rangle ^2}{2m_0} \f$  [eV]
     double Ep_2 ;
 
   };

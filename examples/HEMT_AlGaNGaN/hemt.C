@@ -144,6 +144,9 @@ int main (int argc, char** argv)
     mesh.print_info();
 
 
+    EquationSystems eqsys(mesh);
+
+    
     /*****************************************************
      *
      * Setup of strain parameters
@@ -335,15 +338,51 @@ int main (int argc, char** argv)
     map<unsigned int, double> stress_map;
     stress_map[1] = stress_value;
 
-    Macrostrain strain_calculation(opt, mesh);
+   
+    Macrostrain::strain_param GaN_strain;
+    Macrostrain::strain_param AlGaN_strain;
+    Macrostrain::strain_param GaN_doped_strain;
+    Macrostrain::strain_param AlGaN_doped_strain;
+
+
+    GaN_strain.crystal = crystal[1] ;
+    AlGaN_strain.crystal = crystal[0] ;
+    GaN_doped_strain.crystal = crystal[3];
+    AlGaN_doped_strain.crystal = crystal[2];
+
+    GaN_strain.C_tensor = C_tensor[1];
+    AlGaN_strain.C_tensor = C_tensor[0];
+    GaN_doped_strain.C_tensor = C_tensor[3];
+    AlGaN_doped_strain.C_tensor = C_tensor[2];
+    
+
+    std::map<unsigned int, Macrostrain::strain_param*> strain_params;
+
+    strain_params[1] = &GaN_strain;
+    strain_params[2] = &AlGaN_strain;
+    strain_params[3] = &GaN_strain;
+    strain_params[4] = &AlGaN_strain;
+    
+
+    std::map<unsigned int, Piezoelectricity*> piezodata;
+    piezodata[1] = &piezo_data[1];
+    piezodata[2] = &piezo_data[0];
+    piezodata[3] = &piezo_data[3];
+    piezodata[4] = &piezo_data[2];
+
+
+
+    Macrostrain strain_calculation(opt, eqsys, "strainsys");
 
     strain_calculation.define_substrate_bc(4);
     strain_calculation.define_BC_map(boundary_nodes);
     strain_calculation.define_stress_value(stress_map);
 
     strain_calculation.assign_mesh_data(meshdata);
-    strain_calculation.define_strain_parameters(C_tensor, crystal);
-    strain_calculation.define_piezo_moduli(piezo_data);
+
+    strain_calculation.define_strain_parameters(strain_params);
+
+    strain_calculation.define_piezo_moduli(piezodata);
 
 
     /*****************************************************/
@@ -363,9 +402,11 @@ int main (int argc, char** argv)
       barrier.set_statistics(TiberCad::BOLTZMANN);
     
 
-    barrier.add_recombination_model(SRH);
+  
     double bg_doping = 1e16;
-    barrier.set_n_dopant(Dopant(bg_doping, 0.025, 2));
+   
+    barrier.add_dopant(new Dopant(bg_doping, 0.025, 2, Dopant::N_TYPE));
+
 
     StrainedSemiconductorModel channel(barrier);
     channel.set_n_dopant(Dopant(0, 0.025, 2));

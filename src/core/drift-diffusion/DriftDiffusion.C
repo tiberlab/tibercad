@@ -969,8 +969,11 @@ DriftDiffusion::solve_newton(void) throw (PetscRuntimeError)
           " at iteration " << e.get_iteration() <<
           " (fnorm = " << e.get_fnorm() << ")\n";
 
-        //if (e.get_reason() == -5) retry = false;
-        //if (e.get_reason() == -6) retry = false;
+	if (_options.coupling == POISSON)
+	{
+	  if (e.get_reason() == -5) retry = false;
+	  if (e.get_reason() == -6) retry = false;
+	}
 
       }
       catch (PetscRuntimeError& e)
@@ -4732,6 +4735,10 @@ DriftDiffusion::assemble1D(const NumericVector<Number>& x,
 template void
 DriftDiffusion::get_solution<double>(const Elem* elem, const Point& p,
     double& solution);
+
+template void
+DriftDiffusion::get_solution<DriftDiffusion::Solution>(const Elem* elem,
+    const Point& p, DriftDiffusion::Solution& solution);
 
 template void
 DriftDiffusion::get_solution<double>(const Elem* elem, const vector<Point>& p,
