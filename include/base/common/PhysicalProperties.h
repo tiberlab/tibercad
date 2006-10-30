@@ -2,6 +2,7 @@
 #define _PHYSICALPROPERTIES_H_
 
 #include <string>
+//#include "DataBaseCall.h"
 
 // forward declarations
 class Dummy;
@@ -46,7 +47,8 @@ class PhysicalProperties
    * Reads all needed physical properties from the database.
    * \param db a const reference to the database
    */
-  virtual void read_database(const Dummy& db) = 0;
+  virtual void read_database(const Dummy& db) = 0;  //  for  compatibility with  svn !!
+  //  virtual void read_database(DataBaseCall& db) = 0;
 
 
 

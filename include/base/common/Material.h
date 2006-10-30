@@ -9,6 +9,7 @@
 #include <point.h>
 
 #include "PhysicalProperties.h"
+//#include "DataBaseCall.h"
 
 using  namespace  std;
 // forward declarations
@@ -23,7 +24,7 @@ class Dummy;
 class Material
 {
 
-  public:
+ public:
 
   //! Construct a material with a given structure
   /*!
@@ -50,8 +51,9 @@ class Material
    *
    * \param database the database to read from
    */
-  virtual void init(const Dummy& database);
-  
+  //  virtual void init( DataBaseCall& database);
+
+  virtual void init( Dummy& database); // for  compatibility with svn !
 
 
   //! Add new physical properties
@@ -60,7 +62,7 @@ class Material
    *
    * \param properties the properties to add
    */
-  void add_properties(PhysicalProperties* properties);
+  virtual void add_properties(PhysicalProperties* properties);
 
   //! Get physical properties of a given type
   /*!
@@ -77,7 +79,7 @@ class Material
   string get_name(void) const;
   string get_structure(void) const;
 
-  protected:
+ protected:
 
   //! a typedef for convenience
   typedef std::map<const std::string, PhysicalProperties*> PropertyMap;
@@ -101,7 +103,7 @@ class Material
    */
   PropertyMap _properties;
     
-  private:
+ private:
     
 
 };
@@ -139,37 +141,40 @@ inline void
 Material::add_properties(PhysicalProperties* properties)
 {
  
+  cout << " in  Material::add_properties" << endl;
+ 
   const std::string& id = properties->get_id();
  
   _properties[id] = properties;
 }
 
 inline void
-Material::init(const Dummy& database)
+//Material::init(DataBaseCall& database) //Dummy& database)
+ Material::init(Dummy& database)
 {
  
   PropertyMap::iterator it = _properties.begin();
   const PropertyMap::const_iterator end = _properties.end();
 
   for ( ; it != end; ++it)
-    {
-      (it->second)->set_material(this);
+  {
+    (it->second)->set_material(this);
      
-      (it->second)->read_database(database);
-      
+    (it->second)->read_database(database);
+    cout << "material->_name" << this->get_name() << endl;
 
-    }
+  }
 }
 
 
 inline string
-    Material::get_name(void) const
+Material::get_name(void) const
 {
   return  _name;
 }
 
 inline string
-    Material::get_structure(void) const
+Material::get_structure(void) const
 {
   return  _structure;
 }

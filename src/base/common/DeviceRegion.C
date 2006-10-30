@@ -17,3 +17,6 @@ DeviceRegion::~DeviceRegion()
 {
 
 }
+
+
+

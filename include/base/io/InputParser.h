@@ -38,10 +38,15 @@ using namespace boost::spirit;
 
 //!  A parser  for  input  text  files . 
 /*!
-  Public method read_input allows  to  read  values in the  format tagname = value.
-  These assignements can be placed everywhere inside the  section defined by "section_name" and should be  separated by  spaces.
-  Everything following a '#' is  a  comment and  is  disregarded.
-  A vector of  values can be  read in  the  same  way if  it  is  written in the  format: tagname = ( value1  value2 .... valueN ).  Only  one  vector  value  per  line  is   allowed.
+ * USAGE : first use \c read_section("section_name") to specify the section of  input  file!
+ * (where section_name is  written without "$").  In  input  file, each  section must  be 
+ * preceded by its name between "$" (e.g. $Options$ ) and  must be  followed by keyword $End$.
+ * Public method read_input allows  to  read  values in the  format tagname = value.
+ * These assignements can be placed everywhere inside the  section defined by "section_name" 
+ * and should be  separated by  spaces.
+ * Everything following a '#' is  a  comment and  is  disregarded.
+ * A vector of  values can be  read in  the  same  way if  it  is  written in the 
+ * format: tagname = ( value1  value2 .... valueN ).  Only  one  vector  value  per  line  is   allowed.
   
 
 */
@@ -67,6 +72,12 @@ class InputParser{
   */
   ~InputParser();
 
+
+//!  Access a  section of  input   file
+  /*!
+    Select the  section of  input  file where data should  be  looked  for.
+  */
+void read_section(string& section_name); 
 
   //!  Overloaded  method  to  read input 
   /*!
@@ -148,7 +159,7 @@ class InputParser{
 				     vector<string>&  mat_name_v, vector<double>& dop_conc_v, 
 				     vector<string>&  dop_type_v   );
 
-  void read_section(string& section_name); 
+ // void read_section(string& section_name); 
 
   void get_BC_data( vector<string>& BC_region_name_v_out,
 				 vector<unsigned int>& BC_region_numb_v_out,

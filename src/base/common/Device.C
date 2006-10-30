@@ -9,6 +9,8 @@
 
 
 
+
+
 Device::Device()
 {
   material_regions.clear();	
@@ -21,29 +23,39 @@ Device::~Device()
 
 
 void
-    Device::init_device(const  vector<RegionDefinition>& dev_reg)
+Device::init_device(const  vector<RegionDefinition>& dev_reg)
 {
   
   set_material_regions( dev_reg);
   set_materials ();
   set_map_ID_material_region();
- 
+  makes_set_of_materials();
 }
 
+//***************************************
+
+void Device::set_map_alloy_model(const map <unsigned int, AlloyModel*>&  map_alloy_model)
+{
+  
+  reg_alloy_model_map = map_alloy_model;
+  
+}
+//***************************************
 
 
 
-//  public  method to get  material regions description (from input  file)
+
+  //  public  method to get  material regions description (from input  file)
 void 
-    Device::set_material_regions( const  vector<RegionDefinition>& dev_reg)
+Device::set_material_regions( const  vector<RegionDefinition>& dev_reg)
 {
   // device_regions = dev_reg;
   material_regions = dev_reg;    //   vector  of  RegionDefinition
   
   
   //  TEST
-//   set_materials ();
-//   set_map_ID_material_region();
+  //   set_materials ();
+  //   set_map_ID_material_region();
   //   
 }
 
@@ -88,91 +100,277 @@ void
 
 
 
-// NEW  14/2/06
-// ********************************
-
-//in  .h
-//map < string ,Material* > name_mat_map;
-//Material* matpoint, matpoint_alloy 
-
-
+// NEW 24/2/06
+//
 void
-    Device::set_materials ()
+Device::set_materials()
 {
   string mat_name;
   string  crystal_name;
+  unsigned int reg_id;
 
   int number_material_regions = material_regions.size ();
-  map < string, Material * >::iterator p;
-
+  map < string, Material* >::iterator p;
+  map < unsigned int, Alloy* > ::iterator p_alloy;  //  reg_id_alloy_map;  
+  
+  map <unsigned int, AlloyModel*>::iterator p_alloy_model;
 
   for (int i = 0; i < number_material_regions; i++)
   {
     mat_name = material_regions[i].get_material_name ();  // get   material name and  crystal structure from region definition data
-   // inline string  RegionDefinition::get_crystal_name() const
+    // inline string  RegionDefinition::get_crystal_name() const
     crystal_name = material_regions[i].get_crystal_name();
-    
-    p = name_mat_map.find (mat_name);
-    if (p == name_mat_map.end ())
-	      // not found in  map
-    {
-	         // crystal_struct = material_regions[i].get_crystal_struct(); // TO BE IMPLEMENTED!
-	         //if call_db(database,mat_name,crystal_struct, alloy ) !=  fail
-      if (false)
-	         //mat_name is  alloy  !!!
+    reg_id = material_regions[i].get_region_number();
+    //if call_db(database,mat_name,crystal_struct, alloy ) !=  fail
+ //   if ( ( reg_id == 1) || ( reg_id == 2) )
+    if (false)
+    //**********************************************
+      //if  mat_name is  alloy  !!!
+      // ****************************************
+      // makes an  Alloy  object for  each material region
+      // and pass also pointer to AlloyModel
+      // then put ALL Alloy objects in  map <id,Alloy>
+    { 
+      // find  alloy model associated to present material region
+      p_alloy_model = reg_alloy_model_map.find(reg_id);
+      
+      if (p_alloy_model != reg_alloy_model_map.end())
+      {alloy_model_point = p_alloy_model->second ;}
+      //
+      // test
+      const double  x = alloy_model_point -> get_x_min();
+      cout << "molar frac********* = " << x << endl;
+      //
+            
+      //else error
+      //
+      matpoint_alloy = new Alloy (mat_name,crystal_name,alloy_model_point );
+      // insert in map <region id, pointer to alloy>
+      // Alloys  are  inserted in a special map  which associate them to region ID,
+      // because there can be  2 or  more Alloy objects with the  same name 
+      // but  different AlloyModel properties,
+      // while 2 physical regions with the  same SIMPLE material point to the same 
+      // Material object (so there is only  one  Material object  with a given name)
+      // Instead 2 Alloy object can have the  same  name but different AlloyModel
+      // 
+      reg_id_alloy_map.insert(make_pair (reg_id, matpoint_alloy));
+      // call_db -> vector<string> = vector(alloy components)
+      // read from database:
+      alloy_components.push_back("AlN"); // AlAs");
+      alloy_components.push_back("GaN"  );  //As");
+                      
+      for (int i = 0; i < alloy_components.size (); i++)
       {
+        p = name_mat_map.find (alloy_components[i]);
+        //  cout << " alloy_components[i]  " << alloy_components[i] << endl;
 
-        matpoint_alloy = new Alloy (mat_name);
-        name_mat_map.insert (make_pair (mat_name, matpoint_alloy));
-
-	             // call_db -> vector<string> = vector(alloy components)
-        for (int i = 0; i < alloy_components.size (); i++)
+        if (p == name_mat_map.end ())
+          //  not yet present
         {
-          p = name_mat_map.find (alloy_components[i]);
+          matpoint = new Material (alloy_components[i],crystal_name  );
+          cout << "***alloy_components[i]**** " << alloy_components[i] << endl;
+          name_mat_map.insert (make_pair (alloy_components[i], matpoint));
 
-          if (p == name_mat_map.end ())
-		               //  not yet present
-          {
-            matpoint = new Material (alloy_components[i],crystal_name  );
-            name_mat_map.insert (make_pair (mat_name, matpoint));
+          // put mat.  components in  alloy  object
+          matpoint_alloy->set_components (matpoint);
 
-		                   // put mat.  components in  alloy  object
-            matpoint_alloy->set_components (matpoint);
+        }
 
-          }
+        else
+          // comp. mat.. already  present   in  map
+        {
+          // put Material*  in alloy  as  a  component
+          matpoint_alloy->set_components (p->second);
 
-          else
-		                 // comp. mat.. already  present   in  map
-          {
-		                   // put Material*  in alloy  as  a  component
-            matpoint_alloy->set_components (p->second);
-
-          }
-
-        } 
-
+        }
       }
-
-      else
-
+    }
+              
+    else 
+      // not  alloy !!!
+      //  for simple  materials we  make an  object for EACH distinct
+      // material name  and  put Material in  map <name, Material>
+    { 
+      p = name_mat_map.find (mat_name);
+      if (p == name_mat_map.end ())
+        // not found in  material map   
       {
-	             // mat_name is  not alloy 
         matpoint = new Material (mat_name,crystal_name );
         name_mat_map.insert (make_pair (mat_name, matpoint)); 
-                             
       }
+            
+    }
+           
+           
+  }
+  
+    
+}
+              
+              
+            
+            
+            
+void
+Device::makes_set_of_materials() 
+//
+//makes set with all the  Material* (both simple material and alloy  material,
+// included material components of  each alloy material)
+//  to  be  visited from outside with an  iterator . So we can add properties and 
+// init ALL the materials in a  single  loop (both Material and  Alloy objects)
+//
 
-    }  
-
-
+{
+  
+  ////in "main":
+  //  
+  //  
+  //  set<Material *>::iterator it = set_all_materials.begin():
+  //  const set<Material *>::const_iterator end = set_all_materials.end();
+  //  for ( ; it != end; ++it)  
+  //    {
+  //      // it points to the element of  set (Material* or  Alloy*)
+  //      ( it->add_properties   ) ;
+  //      it->init(db);
+  //      
+  //    }
+  //  
+  //  
+  //map < string, Material* >name_mat_map;
+  //map < unsigned int, Alloy* >reg_id_alloy_map;
+   
+   
+  //set<Material *>  set_all_materials;
+   
+  map < string, Material* >::iterator it = name_mat_map.begin();
+  const map < string, Material* >::const_iterator end = name_mat_map.end();
+   
+  for ( ; it != end; ++it)  
+  {
+    set_all_materials.insert( it->second) ;
+  }
+    
+  map < unsigned int, Alloy* >::iterator it_alloy = reg_id_alloy_map.begin();
+  const map < unsigned int, Alloy* >::const_iterator end_alloy = reg_id_alloy_map.end();
+    
+  for ( ; it_alloy != end_alloy; ++it_alloy)  
+  {
+    set_all_materials.insert( it_alloy->second) ;
   }
 
-
-
-}
-
-
-
+  
+  
+}       
+         
+         
+set<Material *> &  
+Device::get_set_all_materials()
+{
+  
+  return  set_all_materials;
+  
+}         
+          
+    
+    
+    
+//
+//
+//// old 14/2/06
+//// ********************************
+//
+////in  .h
+////map < string ,Material* > name_mat_map;
+////Material* matpoint, matpoint_alloy 
+//
+//
+//void
+//Device::set_materials ()
+//{
+//  string mat_name;
+//  string  crystal_name;
+//
+//  int number_material_regions = material_regions.size ();
+//  map < string, Material * >::iterator p;
+//
+//
+//  for (int i = 0; i < number_material_regions; i++)
+//  {
+//    mat_name = material_regions[i].get_material_name ();  // get   material name and  crystal structure from region definition data
+//   // inline string  RegionDefinition::get_crystal_name() const
+//    crystal_name = material_regions[i].get_crystal_name();
+//    
+//    
+//    // first : if is  alloy 
+//    //  {
+//    //    put in map_alloy = map <reg_id, matpoint_alloy>
+//   //  id = get_region_number()  ,  find id in map <reg_id , AlloyModel*> -> &AlloyModel
+//   //  new Alloy (mat_name,crystal_name, AlloyModel*);
+//   //   }
+//   // else  //not alloy !!
+//   //........
+//    
+//    p = name_mat_map.find (mat_name);
+//    if (p == name_mat_map.end ())
+//	      // not found in  map
+//    {
+//	         
+//	         //if call_db(database,mat_name,crystal_struct, alloy ) !=  fail
+//      if (false)
+//	         //mat_name is  alloy  !!!
+//      {
+//
+//        matpoint_alloy = new Alloy (mat_name,crystal_name);
+//        name_mat_map.insert (make_pair (mat_name, matpoint_alloy));
+//
+//	             // call_db -> vector<string> = vector(alloy components)
+//        for (int i = 0; i < alloy_components.size (); i++)
+//        {
+//          p = name_mat_map.find (alloy_components[i]);
+//
+//          if (p == name_mat_map.end ())
+//		               //  not yet present
+//          {
+//            matpoint = new Material (alloy_components[i],crystal_name  );
+//            name_mat_map.insert (make_pair (mat_name, matpoint));
+//
+//		                   // put mat.  components in  alloy  object
+//            matpoint_alloy->set_components (matpoint);
+//
+//          }
+//
+//          else
+//		                 // comp. mat.. already  present   in  map
+//          {
+//		                   // put Material*  in alloy  as  a  component
+//            matpoint_alloy->set_components (p->second);
+//
+//          }
+//
+//        } 
+//
+//      }
+//
+//      else
+//
+//      {
+//	             // mat_name is  not alloy 
+//        matpoint = new Material (mat_name,crystal_name );
+//        name_mat_map.insert (make_pair (mat_name, matpoint)); 
+//                             
+//      }
+//
+//    }  
+//
+//
+//  }
+//
+//
+//
+//}
+//
+//
+//
 
 // *******************************
 
@@ -184,39 +382,98 @@ void
 //  material_regions, then makes a map <MaterialRegion * , 
 // fai  una  mappa <reg ID,  MaterialRegion>  
 void
-    Device::set_map_ID_material_region()
+Device::set_map_ID_material_region()
 {
   Material*  mat_point;	
   string mat_name;
   int number_material_regions = material_regions.size();
-  map < string ,Material* >::iterator p;
-  unsigned int reg_ID;
+  map < string ,Material* >::iterator p; // map <region name, simple Material>
+  
+  map < unsigned int, Alloy* >::iterator p_alloy; //reg_id_alloy_map;
+  unsigned int reg_id;
+  
+  
+  // *************************************************
+
+  //  for  (int i = 0; i < number_material_regions; i++)
+  //  {
+  //      // pointer to a MaterialRegion object 
+  //      
+  //      // pass  also  Material* !!
+  //    mat_name = material_regions[i].get_material_name();
+  //    	
+  //    p = name_mat_map.find(mat_name);
+  //    	
+  //    if (p != name_mat_map.end())
+  //    {mat_point = p->second ;}
+  //      //  		else
+  //      //  		{ //  ERROR}}
+  //      //  		}
+  //  		
+  //      //  mat_reg_point  = new MaterialRegion (material_regions[i]);
+  //      // makes object MaterialRegion which points to Material*
+  //    mat_reg_point  = new MaterialRegion( material_regions[i], mat_point);
+  //
+  //    reg_ID = mat_reg_point -> get_region_number();
+  //
+  //    ID_mat_reg_map.insert(make_pair(reg_ID, mat_reg_point));
+  //
+  //  }
+  
+  // *****************************************************
+  
+  
+  // for  alloy :
+  // search in map <reg_id, matpoint_alloy> 
+  // 
+
+  // NEW  24/02/06
 
   for  (int i = 0; i < number_material_regions; i++)
   {
-      // pointer to a MaterialRegion object 
-      
-      // pass  also  Material* !!
+
     mat_name = material_regions[i].get_material_name();
-    	
-    p = name_mat_map.find(mat_name);
-    	
-    if (p != name_mat_map.end())
-    {mat_point = p->second ;}
-      //  		else
-      //  		{ //  ERROR}}
-      //  		}
-  		
-      //  mat_reg_point  = new MaterialRegion (material_regions[i]);
-      // makes object MaterialRegion which points to Material*
+    reg_id = material_regions[i].get_region_number();
+    cout << "reg_id =  " <<  reg_id <<  endl;
+    
+    p_alloy = reg_id_alloy_map.find(reg_id);
+    // search in alloy map
+    if (p_alloy != reg_id_alloy_map.end())
+    {mat_point = p_alloy->second ;}
+    else
+    {  //  not alloy,  search  in  material  map
+      p = name_mat_map.find(mat_name);
+      if (p != name_mat_map.end())
+      {mat_point = p->second ;}
+    }
+    //else  // error
+    
+    // makes object MaterialRegion which points to Material*
     mat_reg_point  = new MaterialRegion( material_regions[i], mat_point);
+    ID_mat_reg_map.insert(make_pair(reg_id, mat_reg_point));
 
-    reg_ID = mat_reg_point -> get_region_number();
-
-    ID_mat_reg_map.insert(make_pair(reg_ID, mat_reg_point));
 
   }
 
+
+ 
+ 
+  //  for  regions with the SAME  alloy (eg. AlGaAs) : 
+  // one  MaterialRegion for each  region which  points 
+  //  to a DIFFERENT Material object with the  same  material 
+  //name but with DIFFERENT (in general) AlloyModel
+  //
+  // reg_id = material_regions[i].get_region_number();
+  // p_alloy = alloy_map.find(reg_id);
+  // if p_alloy != alloy_map.end())
+  //  {mat_point = p_alloy->second ;}
+  //  else  // not  alloy
+  //       p = name_mat_map.find(mat_name);
+  //      
+  //        if (p != name_mat_map.end())
+  //        {mat_point = p->second ;}
+ 
+ 
 
 }
 
@@ -232,7 +489,7 @@ void
 
 
 void
-    Device::set_map_ID_doping_region()
+Device::set_map_ID_doping_region()
 {
 
   // ..............................
@@ -244,7 +501,7 @@ void
 
 
 void 
-    Device::set_map_ID_model_region()
+Device::set_map_ID_model_region()
 {
 
   // ...........
@@ -256,7 +513,7 @@ void
 
 
 MaterialRegion* 
-    Device::get_material_region(unsigned int  ID)
+Device::get_material_region(unsigned int  ID)
 {
 
   map < unsigned int,MaterialRegion* >::iterator p;
@@ -409,7 +666,7 @@ MaterialRegion*
 
 
 const  RegionDefinition& 
-    Device::get_device_data(unsigned int region_query)
+Device::get_device_data(unsigned int region_query)
 { 
   unsigned int numb;
 
@@ -433,10 +690,10 @@ const  RegionDefinition&
 //  BC regions:   TO  BE  PUT  IN  "SolverEnvironment"  object (?)
 
 void 
-    Device::set_device_boundary_cond(vector<string>&  BC_region_name_v,
-                                     vector<unsigned int>& BC_region_number_v,
-                                     vector<string>&  BC_type_v, 
-                                     vector<double>& BC_value_v   )
+Device::set_device_boundary_cond(vector<string>&  BC_region_name_v,
+                                 vector<unsigned int>& BC_region_number_v,
+                                 vector<string>&  BC_type_v, 
+                                 vector<double>& BC_value_v   )
 {
 
   BC_device_regions.resize(BC_region_number_v.size()); // allocate  correct  number of  objects BcRegionDefinition
@@ -458,7 +715,7 @@ void
 
 
 const  BcRegionDefinition& 
-    Device::get_device_boundary_cond(unsigned int region_query)
+Device::get_device_boundary_cond(unsigned int region_query)
 { 
 
   unsigned int numb;

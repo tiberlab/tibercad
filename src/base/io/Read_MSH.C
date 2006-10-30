@@ -1559,6 +1559,11 @@ void Read_MSH::get_elem_nodes()
 
         // **********************************************
         check_orientation(node_id_list,type);
+        
+        //  TEST !!!!!!!!!!!
+       //  cout <<  " Second  time  det  should  be  > 0 !!!   "  << endl;
+//         check_orientation(node_id_list,type);
+        
     //*****************************************************
 
         //    cout << "+++++++++++++++++++    CHECK orient +++++++++++++" << endl;
@@ -2039,12 +2044,15 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
       node_id_list[0] = node_id_list[2];
       node_id_list[2] = temp;
       
-      //  cout << " check_orientation OK  !!!  " << endl;
+      // cout << " change orientation  !!!  " << endl;
+      //  cout << " det =     " << det << endl;
       //	  count_ok++;
 
     }
     else  // swap = false  (det >  0 )  
     {
+      
+      // cout << " det =     " << det << endl;
       //  cout  << " SWAP NODES  !!!  " << endl;
       //  count_swap++;
 

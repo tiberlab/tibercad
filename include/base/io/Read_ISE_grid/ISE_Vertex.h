@@ -8,18 +8,13 @@ using  namespace std;
 class ISE_Vertex
 {
  public:
-  /*!
-   *  Constructor
-   */
- 
-  //ISE_Vertex(double  x ,  double  y ,  double z, unsigned int i);
-	
+
   ISE_Vertex( vector <double> &  node_coord , unsigned int i );
   virtual ~ISE_Vertex();
 	
 	
   vector<double> get_coord();
-  unsigned int get_node_id();
+  unsigned int get_node_id(); 
 
  private:
 
@@ -29,7 +24,7 @@ class ISE_Vertex
 };
 
 inline 
-ISE_Vertex::ISE_Vertex(vector<double>&  node_coord , unsigned int i)
+ISE_Vertex::ISE_Vertex(vector<double>&  node_coord , unsigned int i) 
 {
   node_coordinates = node_coord;
   node_ID = i;
@@ -37,13 +32,13 @@ ISE_Vertex::ISE_Vertex(vector<double>&  node_coord , unsigned int i)
 }
 
 
-inline vector<double>
+inline vector<double> 
 ISE_Vertex::get_coord()
 {
   return node_coordinates;
 }
 
-inline unsigned int
+inline unsigned int 
 ISE_Vertex::get_node_id()
 {
   return node_ID;

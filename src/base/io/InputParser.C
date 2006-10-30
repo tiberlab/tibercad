@@ -706,6 +706,8 @@ vector<unsigned int> InputParser::read_input( string label, vector<unsigned int>
   }
 
   else
+  
+  cout << label  << endl;
     cout  <<  "Warning --- read_input_vector int: vector data empty or  missing " << endl ;
 
 
@@ -746,6 +748,7 @@ vector<int> InputParser::read_input( string label, vector<int> def_vector)
   }
 
   else
+  cout << label  << endl;
     cout  <<  "Warning --- read_input_vector int: vector data empty or  missing " << endl ;
 
 
