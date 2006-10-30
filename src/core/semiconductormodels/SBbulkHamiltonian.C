@@ -94,6 +94,7 @@ void SBbulkHamiltonian::calculate_Hamiltonian_gen(void)
 void SBbulkHamiltonian::calculate_Hamiltonian_k_par(void)
 {
 
+
   MatrixElement result;
   result = single_band_ham;
 
@@ -106,7 +107,9 @@ void SBbulkHamiltonian::calculate_Hamiltonian_k_par(void)
       result.constant += single_band_ham.linear_right[i1] * k_vector[i1];
       for (short j1 = 0; j1 < 3; j1++)
 	{
-	  result.constant += single_band_ham.quad[i1][j1] * k_vector[i1] * k_vector[j1]; 
+	  result.constant += single_band_ham.quad[i1][j1] * k_vector[i1] * k_vector[j1];
+	 
+ 
 	}
     }
 
@@ -121,13 +124,22 @@ void SBbulkHamiltonian::calculate_Hamiltonian_k_par(void)
   
 
   
+
+  
+ 
   vector<MatrixElement> temp;
   temp.push_back(result); 
-  Hamiltonian.push_back(temp);
+
+
+
+  Hamiltonian.resize(1);
+
+  Hamiltonian[0] = temp;
+
   Hamiltonian_without_strain_pot = Hamiltonian;
 
 
-  
+ 
 }
 
 //======================================================================//

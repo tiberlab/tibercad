@@ -25,8 +25,16 @@ class EFAbulkHamiltonian: public PhysicalProperties
 
   EFAbulkHamiltonian();
 
+  //!set Bloch k-vector
+  /*!
+    \param kvector - k vector [a.u.]
+  */
   void set_k_vector(const double kvector[3]);
  
+  //!set Bloch k-vector
+  /*!
+    \param k_in - k vector [a.u.]
+  */  
   void set_k_vector(Tensor1 k_in); 
 
   void set_rotation_matrix(Tensor2Gen& rotmatrix);

@@ -109,7 +109,19 @@ class EnvelopFunctionApprox
 
 
     bool solve_ev_problem_twice;//!< if true, calculate the first eigenvalue only and then run again
+
+
+
+    bool convergent_density;//!< if true, the number of eigenstates will be increased to reach the tolerance
+
  
+    unsigned int initial_eigenstates_number; //!< initial number of eigenstates that is used in an iterative calculation of the density
+
+
+    double relative_density_tolerance; //!< stops itarations if \f$ \rho_i / \rho_{i+1} < \varepsilon    \f$, where \f$ \rho \f$ is the                                              total density 
+ 
+    double eigen_number_increase_factor; //!< to increase number of eigenstates for the next iteration 
+
   };
 
 
@@ -127,6 +139,7 @@ class EnvelopFunctionApprox
   {
     double eigen_energy; //!< eigen energy [eV]
     std::vector< std::complex<double>  > eigen_vector; //< eigen vector
+    double Fermi_energy; //< electro-chemical potential [eV] \f$ \langle \psi |\mu({\bf r} | \psi \rangle  \f$
   };
 
 
@@ -164,9 +177,9 @@ class EnvelopFunctionApprox
   //!solves eigenvalue problem
   /*!
     \param ev_number number of eigenvalues requested
-   
+    \param spectrum_shift additional spetrum shift [eV]
   */
-  void solve_eigen_value_problem(unsigned int ev_number );
+  void solve_eigen_value_problem(unsigned int ev_number, double spectrum_shift = 0.0 );
 
   //!writes on disk the eigenfunction
   /*!
@@ -243,7 +256,60 @@ class EnvelopFunctionApprox
   double calculate_fermi_averaged(unsigned int i);
 
 
+
   
+  
+
+
+ 
+
+  
+  //!apply k Block vector to all the Hamiltonians
+  /*!
+    \param k k-vector in atomic units
+  */
+  void apply_k_vector(const double k[3]);
+
+
+
+  //! claculate total density
+  /*!
+    \f$ \rho = \sum_i F_{\rm{Fermi}}(E_i) \f$
+    \param T temperature [K];
+  */
+  double get_integrated_probability(double T);
+
+
+
+  //!obtain convergent density
+  /*!
+    \param T temperature [K]
+    \param cell_data  if true, then cell data is calculated (default); if false, the nodal data ic calculated 
+  */
+  vector<double>  calculate_convergent_density(double T, bool cell_data = true);
+  
+
+
+   //! calculate nodal or cell density  (in atomic units) for a single \f$ {\bf k}_{\|}\f$ vector.  
+  /*!
+    The nodal density reads: \f $ \rho({\bf r}) = \sum_i   |\psi_i({\bf r})|^2 F_{fermi}(E_i) \f$ 
+    The cell density reads:  \f $ \rho = \frac{1}{\Omega_0} \int_{\Omega_0}  \sum_i   |\psi_i({\bf r})|^2 \, dV  F_{fermi}(E_i), \f$
+    where \f$ \Omega_0 \f$ is the element volume.
+
+    \param T temperature [K]
+    \param cell_data  if true, then cell data is calculated (default); if false, the nodal data ic calculated 
+
+  */
+  vector<double>  calculate_density(double T, bool cell_data = true);
+
+
+  //! sets opt.initial_eigestates_number
+  void set_initial_eigenstates_number(unsigned int n);
+
+
+
+  //! returns number of active cells
+  unsigned int get_number_of_active_cells();
 
  private:
 
@@ -333,6 +399,13 @@ class EnvelopFunctionApprox
 
   //!read SLEPc solutions
   /*!
+ 
+  1) Read all eigenvalues
+  2) Sort the eigenvalues and select those we want 
+  3) Read eigenvectors that correspond to the eigenvalues we want
+  4) normalize eigenfunctions
+  5) calculate fermi energy for each state
+ 
     \param number_of_ev number of eigen functions to read
   */
   void read_SLEPC_solution(unsigned int number_of_ev);
@@ -442,20 +515,54 @@ class EnvelopFunctionApprox
   double eigenstate_norm(unsigned int state_number);
 
 
-  //! calculate dessity without \f$ {\bf k}_{\|}\f$ integration.  The density reads: \f $ \rho({\bf r}) = \sum_i   |\psi_i({\bf r})|^2 F_{fermi}(E_i) \f$ in atomic units
-  /*
-    \param T temperature [K]
-  */
-  vector<double>  calculate_density(double T);
+ 
   
-  //! calculate dessity without \f$ | \psi (r) |^2 \f4
+  //! calculate density without \f$ | \psi_i (r) |^2 \f$
   /*!
     \param i number of the eigenstate
    */
   vector<double> EnvelopFunctionApprox::calculate_prob_function(unsigned int i);
 
-};
 
+  //! calculate density without \f$ \frac{1}{\Sigma_0} \int_{\Sigma_0} | \psi_i (r) |^2 /,dV \f$
+  /*!
+    \param i number of the eigenstate
+  */
+  vector<double> EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int i);
+
+
+
+  //!Calculates Fermi Dirac probability
+  /*!
+    For electrons:  \f$ p = frac{1}{1 + \exp (\frac{E - \mu}{kT})}     \f$
+    For holes:      \f$ p = 1 - frac{1}{1 + \exp (\frac{E - \mu}{kT})} \f$
+    \param Energy   state energy [eV]
+    \param Fermi_energy  Fermi energy [eV]
+    \param temperature   temperature [K] 
+   */
+  double Fermi_statistics_probability(double Energy, double Fermi_energy, double temperature);
+
+
+
+ 
+
+
+
+};
+//-------------------------------------------------------------------
+inline double EnvelopFunctionApprox::Fermi_statistics_probability(double Energy, double Fermi_energy, double Temperature)
+{
+  
+  double T_EV = Temperature * Constants::k_Boltzmann;
+  double el_fermi =  1.0/(  1 + exp((Energy - Fermi_energy)/T_EV   )  );
+
+  if (opt.particle == "el")
+    return(el_fermi);
+  else
+    return(1.0 - el_fermi);
+
+
+}
 
 //-------------------------------------------------------------------
 inline bool EnvelopFunctionApprox::element_on_boundary(const Elem* element)
@@ -490,5 +597,11 @@ inline bool EnvelopFunctionApprox::element_on_boundary(const Elem* element)
   return(result);
   
 };
+//---------------------------------------------------------
+
+inline void EnvelopFunctionApprox::set_initial_eigenstates_number(unsigned int n)
+{
+  opt.initial_eigenstates_number = n;
+}
 
 #endif
