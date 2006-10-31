@@ -42,7 +42,9 @@ QuantumDensity:: QuantumDensity( EnvelopFunctionApprox* model, QuantumDensity::o
 //============================================//
 QuantumDensity:: ~QuantumDensity()
 {
+  delete eq;
   delete kmesh;
+  
 }
 
 
@@ -110,17 +112,11 @@ void QuantumDensity::calculate_density()
   //----------------------------------------------------------------------//
   //build equation system object
 
-  EquationSystems eq(*kmesh);
-      
-  eq.add_system<ImplicitSystem> ("k-integration");
-  
-  
+ 
 
-  ImplicitSystem& system = eq.get_system<ImplicitSystem> ("k-integration");
+ 
 
-  system.add_variable("u", SECOND);
-
-  const DofMap& dof_map = system.get_dof_map();
+  const DofMap& dof_map = system->get_dof_map();
     
   FEType fe_type = dof_map.variable_type(0);
     
@@ -143,11 +139,17 @@ void QuantumDensity::calculate_density()
 
   real_space_density.resize(real_space_density_size,0.0);
 
+
+  std::vector<unsigned int> dof_indices;
+
+
   for ( ; it != it_el ; ++it) 
     {
 
       const Elem* elem = *it;
       fe->reinit (elem);
+
+      dof_map.dof_indices (elem, dof_indices, 0);
 
       for (unsigned int qp=0; qp<qrule.n_points(); qp++)
 	{//qp
@@ -164,7 +166,7 @@ void QuantumDensity::calculate_density()
 
 		  for (unsigned int j = 0; j <  real_space_density_size; j++)
 		    {
-		      real_space_density[j] += phi[i][qp] * dens_at_k_node[j];
+		      real_space_density[j] += phi[i][qp] * dens_at_k_node[j]*JxW[qp];
 		    }
 		    
 
@@ -272,7 +274,7 @@ void QuantumDensity::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k
 void QuantumDensity::calculate_at_each_k_point()
 {
 
-  build_k_grid();
+ 
 
   MeshBase::node_iterator       it     = kmesh->active_nodes_begin();
   const MeshBase::node_iterator it_el  = kmesh->active_nodes_end();
@@ -315,6 +317,14 @@ void QuantumDensity::calculate_at_each_k_point()
      
      
 	  k_point_density.insert( pair<const Node*, vector<double> > (nd, dens) );
+
+	  double rho = quantum_model->get_integrated_probability(opt.Temperature);
+
+	  k_point_charge.insert(pair<const Node*, double > (nd, rho));
+
+
+	  
+
 	}
 
     }
@@ -352,3 +362,140 @@ void QuantumDensity::rotate_mesh(Mesh* mesh, Tensor2Gen& RotMatrix)
 
 
 //=============================================================//
+void QuantumDensity::calculate_convergent_density()
+{
+
+  build_k_grid();
+
+  eq = new EquationSystems(*kmesh);
+
+  eq->add_system<LinearImplicitSystem> ("k-integration");
+  
+  system = &(eq->get_system<LinearImplicitSystem> ("k-integration"));
+  
+  system->add_variable("u", SECOND);
+
+  eq->init();
+
+
+  calculate_at_each_k_point();
+
+  calculate_density();
+
+
+  
+
+  prepare_system_solution();
+
+  if (opt.k_domain_refinement) 
+    {
+      //----------------------------------------
+      //refinement block
+      //---------------------------------------
+      MeshRefinement mesh_refinement(*kmesh);
+
+      ErrorVector error;
+
+
+      KellyErrorEstimator error_estimator;
+
+      error_estimator.estimate_error (*system,error);
+
+      mesh_refinement.flag_elements_by_error_fraction (error,opt.refine_fraction,0.0, 10);
+
+      
+      if (opt.uniform_refinement == 1)
+	mesh_refinement.uniformly_refine(1);
+      else
+	mesh_refinement.refine_and_coarsen_elements();
+      
+      eq->reinit();
+
+
+      calculate_at_each_k_point();
+
+
+      calculate_density();
+
+
+    }
+
+
+}
+
+
+//=================================================================//
+
+void QuantumDensity::prepare_system_solution()
+{
+
+ 
+
+  unsigned int num_nodes = kmesh->n_nodes();
+
+  system->solution->init(num_nodes);
+
+  cerr <<  "system->solution->size()" << system->solution->size() << "\n";;
+
+  const  DofMap& dof_map = system->get_dof_map();
+    
+  FEType fe_type = dof_map.variable_type(0);
+
+
+    
+  AutoPtr<FEBase> fe (FEBase::build(k_dim, fe_type));
+
+
+  QGauss qrule (k_dim, FIRST);
+    
+  fe->attach_quadrature_rule (&qrule);
+
+  std::vector<unsigned int> dof_indices;
+
+
+  MeshBase::element_iterator       it     = kmesh->active_elements_begin();
+  const MeshBase::element_iterator it_el  = kmesh->active_elements_end();
+
+
+  cerr << "----------------------------------------\n";
+
+
+
+
+  for ( ; it != it_el ; ++it) 
+    {
+
+   
+      const Elem* elem = *it;
+
+      fe->reinit (elem);
+
+     
+
+      dof_map.dof_indices (elem, dof_indices);
+
+
+    
+
+      unsigned int n_nodes = elem->n_nodes();
+
+    
+      
+      for (unsigned int n = 0; n < n_nodes; n++)
+	{
+	  const	  Node*  node =  elem->get_node(n);
+
+	
+	  system->solution->set( dof_indices[n] ,  k_point_charge[node]);
+	  
+	 
+
+	}  
+      
+
+    }
+
+
+}
+
+//=================================================================//

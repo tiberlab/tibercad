@@ -80,6 +80,8 @@ class QuantumDensity
   {
     bool k_domain_user_input;  //!< if true user provides Brilluoin zone size. Otherwise, it is calculated by the program
     bool k_domain_refinement;  //!< if true, program will refine the Brilluoin zone adaptively
+    bool uniform_refinement;   //!< if true, all the cells in the k-space are refined
+    double refine_fraction;    //!< fraction of the elements to be refined
     double relative_accuracy;  //!< stop refinement if \f$ ||\rho_{i+1} - \rho_i||/||rho_i|| < \epsilon \f$ 
     double Temperature;        //!< temperature [K] 
   };
@@ -116,8 +118,7 @@ class QuantumDensity
   std::vector<double>& get_density(void);
 
 
-  //!calculate density
-  void calculate_density();
+ 
 
 
   //!defines 1D  Brilluoin zone \f$ k \in [-{\bf K}/2; {\bf K}/2) \f$
@@ -158,10 +159,18 @@ class QuantumDensity
   void set_options( QuantumDensity::options& options   );
 
 
-  //!calculates objects k_point_density and eigen_energy
-  void calculate_at_each_k_point();
+ 
 
- private:  
+  //!calculates density performing mesh refinement of k-space, if required.
+  void calculate_convergent_density(void);
+
+
+ private:
+
+
+
+
+  
    EnvelopFunctionApprox*  quantum_model;
 
 
@@ -194,9 +203,11 @@ class QuantumDensity
    //!build k space grid
    void build_k_grid();
 
-   //!map from node in the k-grid to a real space density
-   
+   //!map from node in the k-grid to a real space density   
    std::map< const Node*, std::vector <double>  > k_point_density;
+
+   //!map from node in the k-grid to a total charge
+   std::map< const Node*, double > k_point_charge;
 
 
    //!spectra of eigenvalues
@@ -215,8 +226,28 @@ class QuantumDensity
    void rotate_mesh(Mesh* mesh, Tensor2Gen& RotMatrix);
 
 
+   //! matrix that rotates mesh
    Tensor2Gen transform_matrix;
 
+   //! equation system defined at k-space
+   EquationSystems*  eq;
+   
+   //! system 
+   LinearImplicitSystem* system;
+   
+   
+
+    //!calculate density for a particular k-grid
+   void calculate_density();
+
+
+   //!put charge of each k-point into system solution
+   void prepare_system_solution();
+
+
+   //!calculates objects k_point_density and eigen_energy
+   void calculate_at_each_k_point();
+   
 
 };
 
