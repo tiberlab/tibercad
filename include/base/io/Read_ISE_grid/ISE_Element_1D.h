@@ -4,20 +4,33 @@
 #include "ISE_Element.h"
 #include "ISE_Vertex.h"
 
+
+/** 1D Element Class. Segment Definition. */
 class ISE_Element_1D: public  ISE_Element
 {
  public:
 
+
+/** Constructor. Assigns two vertex pointers to the element. */
   ISE_Element_1D(ISE_Vertex*  vertex_0,  ISE_Vertex*  vertex_1);
+
 	
+/** Virtual Destructor. Dummy. */
   virtual ~ISE_Element_1D();
+
 	
+/** Returns nodes id. */
   vector<unsigned int> get_nodes_id();
 	
 	
  private:
 
+
+/** Vertex Pointer. */
   ISE_Vertex*  node_1;
+
+
+/** Vertex Pointer. */
   ISE_Vertex*  node_2;
 	
 };

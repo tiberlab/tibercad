@@ -305,7 +305,7 @@ cout << endl;
       {
         ISE_INPUT >> dummy;
       }
-      while (dummy != "{");  //  begin  of Locations section
+      while (dummy != "{");  ///  begin  of Locations section
                      
       // ................................. neglected
       do

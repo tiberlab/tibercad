@@ -5,23 +5,36 @@
 
 using  namespace  std ;
 
+
+/** Edge Class. Contains two Vertex pointers. */
 class ISE_Edge
 {
  public:
 
+
+/** Constructor. Assigns two Vertex Pointers. */
   ISE_Edge(ISE_Vertex*  id_1,  ISE_Vertex*   id_2) ;
 	
-  //! Get node belonging to an  edge
-  //Returns  a  pointer to  \c ISE_Vertex 
-  //(v=1 -> first node of  edge,  v=2 ->  second node of  edge)
+ 
+/** Returns Vertex pointer belonging to an Edge. 
+ *  v=1 -> first edge vertex; v=2 -> second edge vertex;
+ */ 
   ISE_Vertex*  get_vertex(unsigned int  v); 
 	
+
+/** Virtual Destructor. Dummy. */
   virtual ~ISE_Edge();
 
 
 
  private:
+
+
+/** First node pointer. */
   ISE_Vertex*  node_1;
+
+
+/** Second node pointer. */
   ISE_Vertex*  node_2;
 
 };
