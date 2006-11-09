@@ -421,18 +421,18 @@ void InputParser::read_section(string& section_name)
           //	  if (  (section_name == "Regions") && (name == section_name))
 
         {
-          parse_device(in_stream);
+          //   parse_device(in_stream);
         }
         else if  (section_name == "BC_Regions")
 
         {
-          parse_device_BC(in_stream);
+          //   parse_device_BC(in_stream);
         }
     
         else if (section_name == "Alloy")
         
         {
-          parse_alloy(in_stream);
+          //   parse_alloy(in_stream);
         }
     
    
@@ -782,176 +782,176 @@ void InputParser::read_data_maps( map <string,double>& num_map, map <string,stri
 
 
 
-void InputParser::parse_device(ifstream& in_stream )
+// void InputParser::parse_device(ifstream& in_stream )
 
-{
+// {
 
-  // *******************************************************************************************************
-  //  ***** IDEA:  List  of regions :
-  //  $Regions$
-  //  Reg 1 name {  reg_numb = 1  mat= Si  doping = 1e18 dop_type = donor}
-  // .....................................................
-  // $End$
+//   // *******************************************************************************************************
+//   //  ***** IDEA:  List  of regions :
+//   //  $Regions$
+//   //  Reg 1 name {  reg_numb = 1  mat= Si  doping = 1e18 dop_type = donor}
+//   // .....................................................
+//   // $End$
 
-  // $Bound_cond$
-  // BC_name {  BC_numb = 1  type = dirichlet  value =  1.0 }
-  //   $End$
-  //
-  //  vector<struct> ,   struct  ={  reg_n , reg_name, mat, dop_conc , dop type } 
+//   // $Bound_cond$
+//   // BC_name {  BC_numb = 1  type = dirichlet  value =  1.0 }
+//   //   $End$
+//   //
+//   //  vector<struct> ,   struct  ={  reg_n , reg_name, mat, dop_conc , dop type } 
 
-  //   struct region_definition {
+//   //   struct region_definition {
 
-  //     unsigned int  reg_numb;
-  //     string  reg_name;
-  //     double  dop_conc  ;
-  //     string dop_type;
+//   //     unsigned int  reg_numb;
+//   //     string  reg_name;
+//   //     double  dop_conc  ;
+//   //     string dop_type;
 
-  //   };
+//   //   };
 
-  //   region_definition reg_def;
+//   //   region_definition reg_def;
 
-  //   vector<reg_def> device_regions;
+//   //   vector<reg_def> device_regions;
 
-  vector<double> v_real; 
-  vector<int> v_int;
-  vector<string> v_string;
+//   vector<double> v_real; 
+//   vector<int> v_int;
+//   vector<string> v_string;
 
-  string  name,str;
+//   string  name,str;
 
-  RegionDefinition  current_region;  //   struct *************
-  device_regions.clear();
-
-
-  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/') | ch_p('+')  );
-  rule<>region_name = (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
-  rule<>string_value     = (+alnum_p)>>   * (  (special_char )      >> *(+alnum_p) ) ;
+//   RegionDefinition  current_region;  //   struct *************
+//   device_regions.clear();
 
 
-  rule<>assignement_double  =   *(space_p) >> ch_p('=')>> *(space_p) >> 
-    ( real_p[push_back_a(v_real)])>>*(space_p)   ; // with _ !!
-  rule<>assignement_int  =   *(space_p) >> ch_p('=')>> *(space_p) >>
-    ( int_p[push_back_a(v_int)])>>*(space_p)  ; // with _ !!
-  rule<>assignement_string  =   *(space_p) >> ch_p('=')>> *(space_p) >>
-    ( (string_value)[push_back_a(v_string)])>>*(space_p)  ; 
+//   rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/') | ch_p('+')  );
+//   rule<>region_name = (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
+//   rule<>string_value     = (+alnum_p)>>   * (  (special_char )      >> *(+alnum_p) ) ;
 
 
-  //   string label1, label2, label3, label4;
-  //   label1 = "reg_numb";
-  //   label2 = "mat";
-
-  // ******************************
-  //  TO DO:  add label  "crystal_struct" 
-  // ****************************
-  //   label3 = "doping";
-  //   label4 = "dop_type";
-
-  rule<>label1_p = str_p("reg_numb");
-  rule<>label2_p = str_p("mat");
-  rule<>label3_p = str_p("crystal_struct");
-  rule<>label4_p = str_p("doping");
-  rule<>label5_p = str_p("dop_type");
-
-  rule<> reg_prop = *(space_p) >>(label1_p) >> assignement_int >> 
-    (label2_p) >>  assignement_string  >> (label3_p)>> 
-    assignement_string  >> (label4_p) >> 
-    assignement_double >>  (label5_p) >> assignement_string;   
-
-  rule<> r_region = *(space_p)>>region_name[push_back_a(v_string)] >> 
-    *(space_p) >> (ch_p('{'))>>  reg_prop >>*(space_p) >> (ch_p('}'))>> *(space_p) ; 
+//   rule<>assignement_double  =   *(space_p) >> ch_p('=')>> *(space_p) >> 
+//     ( real_p[push_back_a(v_real)])>>*(space_p)   ; // with _ !!
+//   rule<>assignement_int  =   *(space_p) >> ch_p('=')>> *(space_p) >>
+//     ( int_p[push_back_a(v_int)])>>*(space_p)  ; // with _ !!
+//   rule<>assignement_string  =   *(space_p) >> ch_p('=')>> *(space_p) >>
+//     ( (string_value)[push_back_a(v_string)])>>*(space_p)  ; 
 
 
-  while ( getline(in_stream, str) )
-  {
+//   //   string label1, label2, label3, label4;
+//   //   label1 = "reg_numb";
+//   //   label2 = "mat";
+
+//   // ******************************
+//   //  TO DO:  add label  "crystal_struct" 
+//   // ****************************
+//   //   label3 = "doping";
+//   //   label4 = "dop_type";
+
+//   rule<>label1_p = str_p("reg_numb");
+//   rule<>label2_p = str_p("mat");
+//   rule<>label3_p = str_p("crystal_struct");
+//   rule<>label4_p = str_p("doping");
+//   rule<>label5_p = str_p("dop_type");
+
+//   rule<> reg_prop = *(space_p) >>(label1_p) >> assignement_int >> 
+//     (label2_p) >>  assignement_string  >> (label3_p)>> 
+//     assignement_string  >> (label4_p) >> 
+//     assignement_double >>  (label5_p) >> assignement_string;   
+
+//   rule<> r_region = *(space_p)>>region_name[push_back_a(v_string)] >> 
+//     *(space_p) >> (ch_p('{'))>>  reg_prop >>*(space_p) >> (ch_p('}'))>> *(space_p) ; 
 
 
-    if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
+//   while ( getline(in_stream, str) )
+//   {
 
-    { // if !  comment_p("#")  
+
+//     if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
+
+//     { // if !  comment_p("#")  
 
 	 
 
-      if (  parse(str.c_str(),
-                  r_region
-                  )
-            .full )  
-      {
-        //  //   cout << "v_real[0] " << v_real[0]<< endl;
-        // 	      current_region.reg_name = v_string[0];
-        // 	      current_region.reg_numb = v_int[0];
-        // 	      current_region.mat_name = v_string[1];
-        // 	      current_region.dop_conc = v_real[0];
-        // 	      current_region.dop_type = v_string[2];
+//       if (  parse(str.c_str(),
+//                   r_region
+//                   )
+//             .full )  
+//       {
+//         //  //   cout << "v_real[0] " << v_real[0]<< endl;
+//         // 	      current_region.reg_name = v_string[0];
+//         // 	      current_region.reg_numb = v_int[0];
+//         // 	      current_region.mat_name = v_string[1];
+//         // 	      current_region.dop_conc = v_real[0];
+//         // 	      current_region.dop_type = v_string[2];
 
-        // using  class  RegionDefinition 
-        current_region.set_region_name(v_string[0]);
-        current_region.set_region_number(v_int[0]);
-        current_region.set_material_name(v_string[1]);
-        current_region.set_crystal_name(v_string[2]);
-        current_region.set_doping_concentration( v_real[0]);
-        current_region.set_doping_type(v_string[3]);
-
-
-
-        device_regions.push_back(current_region); // vector  of  RegionDefinition objects
-
-        //   cout << "device_regions[0].mat_name  " <<device_regions[0].mat_name  << endl;
-
-        //    cout << "current_region.mat_name " <<current_region.mat_name << endl;
-        //    cout << v_int.size()<< endl;
-        //   cout << "in parse_device: device_regions.size()  " << device_regions.size();
-
-
-      }
-
-
-      else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >> 
-                                             ch_p("$")  ] , space_p ).full)
-
-
-      {
-        if (name == "End")
-        {  
-          cout << name  << endl ;
-          break;
-        }
-
-
-      }
-
-      else 
-      {
-        cerr <<  "  SYNTAX ERROR in input  file (section device structure)   " <<  endl;
-        exit(1); 
-      }
+//         // using  class  RegionDefinition 
+//         current_region.set_region_name(v_string[0]);
+//         current_region.set_region_number(v_int[0]);
+//         current_region.set_material_name(v_string[1]);
+//         current_region.set_crystal_name(v_string[2]);
+//         current_region.set_doping_concentration( v_real[0]);
+//         current_region.set_doping_type(v_string[3]);
 
 
 
+//         device_regions.push_back(current_region); // vector  of  RegionDefinition objects
+
+//         //   cout << "device_regions[0].mat_name  " <<device_regions[0].mat_name  << endl;
+
+//         //    cout << "current_region.mat_name " <<current_region.mat_name << endl;
+//         //    cout << v_int.size()<< endl;
+//         //   cout << "in parse_device: device_regions.size()  " << device_regions.size();
 
 
-    }
+//       }
 
 
-    v_real.clear();
-    v_int.clear();
-    v_string.clear();
+//       else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >> 
+//                                              ch_p("$")  ] , space_p ).full)
 
 
-  }  //  end  while
+//       {
+//         if (name == "End")
+//         {  
+//           cout << name  << endl ;
+//           break;
+//         }
+
+
+//       }
+
+//       else 
+//       {
+//         cerr <<  "  SYNTAX ERROR in input  file (section device structure)   " <<  endl;
+//         exit(1); 
+//       }
 
 
 
-}
+
+
+//     }
+
+
+//     v_real.clear();
+//     v_int.clear();
+//     v_string.clear();
+
+
+//   }  //  end  while
 
 
 
-const  vector<RegionDefinition>&   InputParser::get_device_regions()
-
-{
-
-  return  device_regions;
+// }
 
 
-}
+
+// const  vector<RegionDefinition>&   InputParser::get_device_regions()
+
+// {
+
+//   return  device_regions;
+
+
+// }
 
 
 
@@ -993,263 +993,263 @@ const  vector<RegionDefinition>&   InputParser::get_device_regions()
 
 
 
-void InputParser::parse_device_BC(ifstream& in_stream )
+// void InputParser::parse_device_BC(ifstream& in_stream )
 
-{
-
-  // *******************************************************************************************************
-  //  ***** IDEA:  List  of regions :
- 
-
-  // $Bound_cond$
-  // BC_name {  BC_numb = 1  type = dirichlet  value =  1.0 }
-  //   $End$
-  //
- 
-
-  //   region_definition reg_def;
-
-  //   vector<reg_def> device_regions;
-
-  vector<double> v_real; 
-  vector<int> v_int;
-  vector<string> v_string;
-
-  string  name,str;
-
-  //  RegionDefinition  current_region;  //   struct *************
-  //   device_regions.clear();
-
-
-  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/') | ch_p('+')  );
-  rule<>region_name = (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
-  rule<>string_value     = (+alnum_p)>>   * (  (special_char )      >> *(+alnum_p) ) ;
-
-
-  rule<>assignement_double  =   *(space_p) >> ch_p('=')>> *(space_p) >> 
-    ( real_p[push_back_a(v_real)])>>*(space_p)   ; // with _ !!
-  rule<>assignement_int  =   *(space_p) >> ch_p('=')>> *(space_p) >>
-    ( int_p[push_back_a(v_int)])>>*(space_p)  ; // with _ !!
-  rule<>assignement_string  =   *(space_p) >> ch_p('=')>> *(space_p) >>
-    ( (string_value)[push_back_a(v_string)])>>*(space_p)  ; 
-
-
-  //   string label1, label2, label3, label4;
-  //   label1 = "BC_reg_numb";
-  //   label2 = "type";
-  //   label3 = "value";
-  //   // label4 = "dop_type";
-
-  rule<>label1_p = str_p("BC_reg_numb");
-  rule<>label2_p = str_p("type");
-  rule<>label3_p = str_p("value");
-  //  rule<>label4_p = str_p("dop_type");
-
-  rule<> reg_prop = *(space_p) >>(label1_p) >> assignement_int >> 
-    (label2_p) >>  assignement_string  >> (label3_p)>> 
-    assignement_double; 
-  // >> (label4_p) >> assignement_string;   
-
-  rule<> r_region = *(space_p)>>region_name[push_back_a(v_string)] >> 
-    *(space_p) >> (ch_p('{'))>>  reg_prop >>*(space_p) >> (ch_p('}'))>> *(space_p) ; 
-
-
-  while ( getline(in_stream, str) )
-  {
-
-
-    if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
-
-    { // if !  comment_p("#")  
-
-	 
-
-      if (  parse(str.c_str(),
-                  r_region
-                  )
-            .full )  
-      {
-        //   cout << "v_real[0] " << v_real[0]<< endl;
-
-        BC_region_name_v.push_back(v_string[0]);
-        BC_region_number_v.push_back(v_int[0]);
-        BC_type_v.push_back(v_string[1]);
-        BC_value_v.push_back(v_real[0]);
-
-
-
-      }
-
-
-      else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >> 
-                                             ch_p("$")  ] , space_p ).full)
-
-
-      {
-        if (name == "End")
-        {  
-          cout << name  << endl ;
-          break;
-        }
-
-
-      }
-
-      else 
-      {
-        cerr <<  "  SYNTAX ERROR in input  file (section device boundary cond. )   " <<  endl;
-        exit(1); 
-      }
-
-	 
-
-
-    }
-
-
-    v_real.clear();
-    v_int.clear();
-    v_string.clear();
-
-
-  }  //  end  while
-
-
-
-}
-
-
-
-
-void InputParser::get_BC_data( vector<string>& BC_region_name_v_out,
-			       vector<unsigned int>& BC_region_numb_v_out,
-			       vector<string>& BC_type_v_out, vector<double>& BC_value_v_out  )
-
-
-{
-
-
-  BC_region_name_v_out=BC_region_name_v ;
-  BC_region_numb_v_out=BC_region_number_v ;
-  BC_type_v_out = BC_type_v;
-  BC_value_v_out = BC_value_v;
-
-
-
-}
-
-
-void
-InputParser::parse_alloy(ifstream& in_stream)
-{// method  for   parsing  of  alloy model section
-
-  // vector <AlloyModel>  alloy_model ;
-
-
-  string  item, region_keyword, alloy_model_keyword, equal, model_type, start_symbol , end_symbol, x;
-  double molar_fraction, start_molar_fraction, end_molar_fraction;
-  unsigned int reg_numb;
-  
-  string dummy;
-  char c;
-  
-  //alloy_model.clear();
-  
-  //AlloyModel current_alloy_model;
-  
-  
-  
-  // while (!in_stream.eof()) 
-  
-  //getline (in_stream, str))	  
-  
-  
-  
-  in_stream >> region_keyword;
-  cout << region_keyword<< endl;
-  
-// if (region_keyword == "#")
 // {
-//  while (dummy != "\n")
-//  {
-//    c=getchar();
-//  }
-//  in_stream >> region_keyword;
+
+//   // *******************************************************************************************************
+//   //  ***** IDEA:  List  of regions :
+ 
+
+//   // $Bound_cond$
+//   // BC_name {  BC_numb = 1  type = dirichlet  value =  1.0 }
+//   //   $End$
+//   //
+ 
+
+//   //   region_definition reg_def;
+
+//   //   vector<reg_def> device_regions;
+
+//   vector<double> v_real; 
+//   vector<int> v_int;
+//   vector<string> v_string;
+
+//   string  name,str;
+
+//   //  RegionDefinition  current_region;  //   struct *************
+//   //   device_regions.clear();
+
+
+//   rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/') | ch_p('+')  );
+//   rule<>region_name = (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
+//   rule<>string_value     = (+alnum_p)>>   * (  (special_char )      >> *(+alnum_p) ) ;
+
+
+//   rule<>assignement_double  =   *(space_p) >> ch_p('=')>> *(space_p) >> 
+//     ( real_p[push_back_a(v_real)])>>*(space_p)   ; // with _ !!
+//   rule<>assignement_int  =   *(space_p) >> ch_p('=')>> *(space_p) >>
+//     ( int_p[push_back_a(v_int)])>>*(space_p)  ; // with _ !!
+//   rule<>assignement_string  =   *(space_p) >> ch_p('=')>> *(space_p) >>
+//     ( (string_value)[push_back_a(v_string)])>>*(space_p)  ; 
+
+
+//   //   string label1, label2, label3, label4;
+//   //   label1 = "BC_reg_numb";
+//   //   label2 = "type";
+//   //   label3 = "value";
+//   //   // label4 = "dop_type";
+
+//   rule<>label1_p = str_p("BC_reg_numb");
+//   rule<>label2_p = str_p("type");
+//   rule<>label3_p = str_p("value");
+//   //  rule<>label4_p = str_p("dop_type");
+
+//   rule<> reg_prop = *(space_p) >>(label1_p) >> assignement_int >> 
+//     (label2_p) >>  assignement_string  >> (label3_p)>> 
+//     assignement_double; 
+//   // >> (label4_p) >> assignement_string;   
+
+//   rule<> r_region = *(space_p)>>region_name[push_back_a(v_string)] >> 
+//     *(space_p) >> (ch_p('{'))>>  reg_prop >>*(space_p) >> (ch_p('}'))>> *(space_p) ; 
+
+
+//   while ( getline(in_stream, str) )
+//   {
+
+
+//     if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
+
+//     { // if !  comment_p("#")  
+
+	 
+
+//       if (  parse(str.c_str(),
+//                   r_region
+//                   )
+//             .full )  
+//       {
+//         //   cout << "v_real[0] " << v_real[0]<< endl;
+
+//         BC_region_name_v.push_back(v_string[0]);
+//         BC_region_number_v.push_back(v_int[0]);
+//         BC_type_v.push_back(v_string[1]);
+//         BC_value_v.push_back(v_real[0]);
+
+
+
+//       }
+
+
+//       else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >> 
+//                                              ch_p("$")  ] , space_p ).full)
+
+
+//       {
+//         if (name == "End")
+//         {  
+//           cout << name  << endl ;
+//           break;
+//         }
+
+
+//       }
+
+//       else 
+//       {
+//         cerr <<  "  SYNTAX ERROR in input  file (section device boundary cond. )   " <<  endl;
+//         exit(1); 
+//       }
+
+	 
+
+
+//     }
+
+
+//     v_real.clear();
+//     v_int.clear();
+//     v_string.clear();
+
+
+//   }  //  end  while
+
+
+
 // }
+
+
+
+
+// void InputParser::get_BC_data( vector<string>& BC_region_name_v_out,
+// 			       vector<unsigned int>& BC_region_numb_v_out,
+// 			       vector<string>& BC_type_v_out, vector<double>& BC_value_v_out  )
+
+
+// {
+
+
+//   BC_region_name_v_out=BC_region_name_v ;
+//   BC_region_numb_v_out=BC_region_number_v ;
+//   BC_type_v_out = BC_type_v;
+//   BC_value_v_out = BC_value_v;
+
+
+
+// }
+
+
+// void
+// InputParser::parse_alloy(ifstream& in_stream)
+// {// method  for   parsing  of  alloy model section
+
+//   // vector <AlloyModel>  alloy_model ;
+
+
+//   string  item, region_keyword, alloy_model_keyword, equal, model_type, start_symbol , end_symbol, x;
+//   double molar_fraction, start_molar_fraction, end_molar_fraction;
+//   unsigned int reg_numb;
+  
+//   string dummy;
+//   char c;
+  
+//   //alloy_model.clear();
+  
+//   //AlloyModel current_alloy_model;
+  
+  
+  
+//   // while (!in_stream.eof()) 
+  
+//   //getline (in_stream, str))	  
+  
+  
+  
+//   in_stream >> region_keyword;
+//   cout << region_keyword<< endl;
+  
+// // if (region_keyword == "#")
+// // {
+// //  while (dummy != "\n")
+// //  {
+// //    c=getchar();
+// //  }
+// //  in_stream >> region_keyword;
+// // }
  
     
-  while (  (region_keyword != "End") && (!in_stream.eof()) ) 
+//   while (  (region_keyword != "End") && (!in_stream.eof()) ) 
     
     
-  {
+//   {
 
-    // Region n
-    in_stream >>  reg_numb;
-    in_stream >> start_symbol >> alloy_model_keyword >> equal >> model_type;
-    alloy_model_pointer = new AlloyModel;
+//     // Region n
+//     in_stream >>  reg_numb;
+//     in_stream >> start_symbol >> alloy_model_keyword >> equal >> model_type;
+//     alloy_model_pointer = new AlloyModel;
 
-    //  if  (std::strncmp (model_type, "constant") = 0) 
-    if (model_type == "constant")
-    {
+//     //  if  (std::strncmp (model_type, "constant") = 0) 
+//     if (model_type == "constant")
+//     {
 
-      in_stream >> x >> equal >> molar_fraction >> end_symbol;
-      cout << " Region1  " << endl;
-      alloy_model_pointer->set_x_constant (molar_fraction);
-    }
-
-
-    else
-      //  if (std::strncmp (model_type, "linear") = 0)
-      if (model_type =="linear")
-
-      {
-        in_stream >> x >> equal >> start_molar_fraction >>
-          x >> equal >> end_molar_fraction >> end_symbol;                 
-
-        alloy_model_pointer->set_x_min (start_molar_fraction);
-        alloy_model_pointer->set_x_max (end_molar_fraction);
-        cout << " Region2  " << endl;
-
-      }
-
-    alloy_model_pointer-> set_model (model_type);
-
-    // alloy_model_pointer-> alloy_model_pointer = &current_alloy_model;
+//       in_stream >> x >> equal >> molar_fraction >> end_symbol;
+//       cout << " Region1  " << endl;
+//       alloy_model_pointer->set_x_constant (molar_fraction);
+//     }
 
 
-    // alloy_model.push_back (current_alloy_model);
+//     else
+//       //  if (std::strncmp (model_type, "linear") = 0)
+//       if (model_type =="linear")
+
+//       {
+//         in_stream >> x >> equal >> start_molar_fraction >>
+//           x >> equal >> end_molar_fraction >> end_symbol;                 
+
+//         alloy_model_pointer->set_x_min (start_molar_fraction);
+//         alloy_model_pointer->set_x_max (end_molar_fraction);
+//         cout << " Region2  " << endl;
+
+//       }
+
+//     alloy_model_pointer-> set_model (model_type);
+
+//     // alloy_model_pointer-> alloy_model_pointer = &current_alloy_model;
+
+
+//     // alloy_model.push_back (current_alloy_model);
     
     
 
 
-    // map reg_alloy_model_map map <int reg_numb, AlloyModel&  current_alloy_model>
-    cout << reg_numb << "   "  << model_type<< endl;
-    reg_alloy_model_map.insert (make_pair (reg_numb, alloy_model_pointer));
+//     // map reg_alloy_model_map map <int reg_numb, AlloyModel&  current_alloy_model>
+//     cout << reg_numb << "   "  << model_type<< endl;
+//     reg_alloy_model_map.insert (make_pair (reg_numb, alloy_model_pointer));
     
-    in_stream >> region_keyword;
-    cout << region_keyword<< endl;
+//     in_stream >> region_keyword;
+//     cout << region_keyword<< endl;
 
 	      
-  }// end while != "end"
+//   }// end while != "end"
       
-  cout <<   "  Out of  while "<< endl;
+//   cout <<   "  Out of  while "<< endl;
 
 
-  //  } // end while != "eof"
+//   //  } // end while != "eof"
 
-} //  end  method
-
-
+// } //  end  method
 
 
 
-const   map <unsigned int, AlloyModel*>&  
-InputParser::get_alloy_model_map()
-{
+
+
+// const   map <unsigned int, AlloyModel*>&  
+// InputParser::get_alloy_model_map()
+// {
   
-  return  reg_alloy_model_map;
+//   return  reg_alloy_model_map;
   
-}
+// }
 
 
 

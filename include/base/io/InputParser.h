@@ -22,8 +22,8 @@
 #include <vector>
 #include <string>
 
-#include "RegionDefinition.h"
-#include "AlloyModel.h"
+//#include "RegionDefinition.h"
+//#include "AlloyModel.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -155,22 +155,22 @@ void read_section(string& section_name);
     Returns   five  vectors  with values of fields for  each physical region of the device: region name,
     region number, material name, doping concentration, doping  type.
   */
-  void get_device_data( vector<string>& reg_name_v,vector<unsigned int>&  reg_numb_v,
-				     vector<string>&  mat_name_v, vector<double>& dop_conc_v, 
-				     vector<string>&  dop_type_v   );
+  //  void get_device_data( vector<string>& reg_name_v,vector<unsigned int>&  reg_numb_v,
+  //				     vector<string>&  mat_name_v, vector<double>& dop_conc_v, 
+  //				     vector<string>&  dop_type_v   );
 
  // void read_section(string& section_name); 
 
-  void get_BC_data( vector<string>& BC_region_name_v_out,
-				 vector<unsigned int>& BC_region_numb_v_out,
-				 vector<string>& BC_type_v_out, vector<double>& BC_value_v_out  );
+ /*  void get_BC_data( vector<string>& BC_region_name_v_out, */
+/* 				 vector<unsigned int>& BC_region_numb_v_out, */
+/* 				 vector<string>& BC_type_v_out, vector<double>& BC_value_v_out  ); */
 
   void  read_data_maps( map <string,double>& num_map, map <string,string>&  string_map, 
 				    map <string, vector<double> >&  vector_map) const  ;
 
-  const  vector<RegionDefinition>&  get_device_regions();
+  //  const  vector<RegionDefinition>&  get_device_regions();
 
-   const   map <unsigned int, AlloyModel*>&  get_alloy_model_map(); 
+  //   const   map <unsigned int, AlloyModel*>&  get_alloy_model_map(); 
    
    
    
@@ -199,7 +199,7 @@ void read_section(string& section_name);
 // Use directly  class  RegionDefinition
 
 
-  vector<RegionDefinition> device_regions;   //  vector of  objects  RegionDefinition
+//  vector<RegionDefinition> device_regions;   //  vector of  objects  RegionDefinition
 
   //  BC regions vectors
   // ------------------------------------
@@ -242,16 +242,16 @@ void read_section(string& section_name);
  
   void parse_options(ifstream& in_stream );
 
-  void parse_device(ifstream& in_stream );
+  //  void parse_device(ifstream& in_stream );
 
-  void parse_device_BC(ifstream& in_stream );
+  //  void parse_device_BC(ifstream& in_stream );
   
   //vector <AlloyModel>  alloy_model;
-  AlloyModel* alloy_model_pointer ;
+  //  AlloyModel* alloy_model_pointer ;
    
-  void parse_alloy(ifstream& in_stream);
+  //  void parse_alloy(ifstream& in_stream);
   
-  map <unsigned int, AlloyModel*> reg_alloy_model_map;
+  //  map <unsigned int, AlloyModel*> reg_alloy_model_map;
 
 };
 
