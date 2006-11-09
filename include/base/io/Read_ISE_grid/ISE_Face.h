@@ -8,45 +8,29 @@
 
 using  namespace  std ;
 
-
-/** Face Class. Contains edges and orientations. */
 class ISE_Face
 {
  public:
 
-
-/** Constructor. Assigns edge pointers and orientations vector. */
   ISE_Face(vector <ISE_Edge*> fcs_edg, vector <bool> neg_edg) ;
 	
-
-/** Returns Edge pointer.
- *  e=0 -> first face edge; e=1 -> second face edge; ...
- *  An overflow control is included ('e' value limited).
- */
+  //! Get edge belonging to a face
+  //Returns  a  pointer to  \c ISE_Edge 
+  //(e=0 -> first edge of face,  e=1 ->  second edge of face, ...
+  //An overflow control is included (the "e" value is limited)
   ISE_Edge* get_edge (unsigned int e);
 
-
-/** Return the 'e' edge state.
- *  (true == negative edge; false == positive edge).
- */
+//Returns the state of the 'e' edge (true == negative edge, false == positive edge)
   bool get_edge_state (unsigned int e);
 
-
-/** Returns face edges number. */
+//Returns the number of edges in the face
   unsigned int get_face_edges_size();
 	
-
-/** Virtual Destructor. Dummy. */
   virtual ~ISE_Face();
 	
  private:
 
-
-/** Face Edges. */
   vector <ISE_Edge*> face_edges;
-
-
-/** Orientation vector. */
   vector <bool> negative_face_edges;
 };
 

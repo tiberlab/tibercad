@@ -5,36 +5,20 @@
 
 using  namespace std;
 
-
-/** Vertex Class. Contains node coordinates and id. */
 class ISE_Vertex
 {
  public:
 
-
-/** Constructor. Assigns node coordinates and id. */
   ISE_Vertex( vector <double> &  node_coord , unsigned int i );
-
-
-/** Virtual Destructor. Dummy. */
   virtual ~ISE_Vertex();
-
 	
-/** Returns coordinates vector. */
+	
   vector<double> get_coord();
-
-
-/** Returns node id. */
   unsigned int get_node_id(); 
 
  private:
 
-
-/** Vertex coordinates. */
-  vector<double> node_coordinates;
-
-
-/** Node id. */
+  vector<double> node_coordinates ;
   unsigned int node_ID;	
 	
 };
