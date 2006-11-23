@@ -1,7 +1,7 @@
 #include "ReadISEGrid.h"
 
 
-Read_ISE_Grid::Read_ISE_Grid(const char* file_name)
+ReadISEGrid::ReadISEGrid(const char* file_name)
 {
 	
   ISE_file_name = file_name;
@@ -11,13 +11,13 @@ Read_ISE_Grid::Read_ISE_Grid(const char* file_name)
   set_BC_data();
 };
 
-Read_ISE_Grid::~Read_ISE_Grid()
+ReadISEGrid::~ReadISEGrid()
 {
 };
 
 
 
-void Read_ISE_Grid::integrity_check(int ver, string tp)
+void ReadISEGrid::integrity_check(int ver, string tp)
 {
  if (ver == 1.0)
  {
@@ -32,22 +32,22 @@ void Read_ISE_Grid::integrity_check(int ver, string tp)
 
 };
 
-void Read_ISE_Grid::scan_grid_file()
+void ReadISEGrid::scan_grid_file()
 {
 	 
   ifstream ISE_INPUT(ISE_file_name);
 
   if ( !(ISE_INPUT.good()) )
   {
-   cout << "The path entered is incorrect or does not represent a valid input file, aborting program" << endl << endl;
+   //cout << "The path entered is incorrect or does not represent a valid input file, aborting program" << endl << endl;
    exit(1);
   };
 
 	
-cout << "Beginning ISE_FILE Reading process: " << endl;	 
+//cout << "Beginning ISE_FILE Reading process: " << endl;	 
 
 
-cout << "Opening file streaming... Done" << endl;
+//cout << "Opening file streaming... Done" << endl;
 
   string dummy;
      
@@ -60,7 +60,7 @@ cout << "Opening file streaming... Done" << endl;
     
 
 
-cout << "Reading Info Block Variables... ";
+//cout << "Reading Info Block Variables... ";
   ////     READ  INFO BLOCK VARIABLES
   //    
   string qualifier, equal, type;
@@ -69,14 +69,14 @@ cout << "Reading Info Block Variables... ";
   ISE_INPUT >> dummy >> qualifier >> equal >> version;
   ISE_INPUT >> qualifier >> equal >> type;
 
-cout << "Done" << endl;
+//cout << "Done" << endl;
 
 
-cout << "Integrity check... ";
+//cout << "Integrity check... ";
 
   integrity_check(version, type);   
 
-cout << "Done" << endl;
+//cout << "Done" << endl;
 
      
   ISE_INPUT >> qualifier >> equal >> dimension;
@@ -87,18 +87,18 @@ cout << "Done" << endl;
   ISE_INPUT >> qualifier >> equal >> nb_regions;
     
 
-cout << endl << endl << "Variables: " << endl << endl;
-cout << "Dimension: " << dimension << endl;
-cout << "Vertices: " << nb_vertices << endl;
-cout << "Edges: " << nb_edges << endl;
-cout << "Faces: " << nb_faces << endl;
-cout << "Elements: " << nb_elements << endl;
-cout << "Regions: " << nb_regions << endl;
+//cout << endl << endl << "Variables: " << endl << endl;
+//cout << "Dimension: " << dimension << endl;
+//cout << "Vertices: " << nb_vertices << endl;
+//cout << "Edges: " << nb_edges << endl;
+//cout << "Faces: " << nb_faces << endl;
+//cout << "Elements: " << nb_elements << endl;
+//cout << "Regions: " << nb_regions << endl;
 
-cout << endl;
+//cout << endl;
     
     
-cout << endl << "Reading Region and Material Information: " << endl;
+//cout << endl << "Reading Region and Material Information: " << endl;
   // array  of  strings  for  "region" and  "material" labels
   string  regions[nb_regions], materials[nb_regions];
     
@@ -107,7 +107,7 @@ cout << endl << "Reading Region and Material Information: " << endl;
   for (int i = 0; i < nb_regions; i++)
   {
     ISE_INPUT >> regions[i];
-    cout << "Region ID: " << regions[i] << endl;
+    //cout << "Region ID: " << regions[i] << endl;
   }
     
   ISE_INPUT >> dummy >> qualifier >> equal >> dummy;
@@ -115,7 +115,7 @@ cout << endl << "Reading Region and Material Information: " << endl;
   for (int i = 0; i < nb_regions; i++)
   {
     ISE_INPUT >> materials[i];
-   cout << "Material type: " << materials[i] << endl;
+   //cout << "Material type: " << materials[i] << endl;
   }
     
   //    
@@ -149,7 +149,7 @@ cout << endl << "Reading Region and Material Information: " << endl;
     double coord_id;
 	
     vertices.clear();
-      cout << endl << endl << endl << "Vertices Section: " << endl << endl;
+      //cout << endl << endl << endl << "Vertices Section: " << endl << endl;
 	
     for (unsigned int i=0; i < nb_vertices ; i++)
     {
@@ -157,12 +157,12 @@ cout << endl << "Reading Region and Material Information: " << endl;
       for (unsigned int j = 0; j < dimension; j++)
       {
         ISE_INPUT >> coord_id ;
-cout << coord_id << "   ";
+//cout << coord_id << "   ";
         node_coord.push_back( coord_id);
             
       }
 		
-cout << endl;
+//cout << endl;
       vertex_point = new  ISE_Vertex( node_coord , i);	
 		
       vertices.push_back(vertex_point);
@@ -192,13 +192,13 @@ cout << endl;
       unsigned int id_1;
       unsigned int id_2;
                    
-               cout << endl << endl << "Edges Section: " << endl;
+               //cout << endl << endl << "Edges Section: " << endl;
     
       for (unsigned int i = 0; i < nb_edges; i++)
       {
         ISE_INPUT >> id_1; 
         ISE_INPUT >> id_2; 
-cout << id_1 << "    " << id_2 << endl;
+//cout << id_1 << "    " << id_2 << endl;
         				 
         edge_point = new  ISE_Edge(vertices[id_1] , vertices[id_2] );	
         edges.push_back(edge_point);
@@ -234,17 +234,17 @@ cout << id_1 << "    " << id_2 << endl;
       face_edgs.clear();
       neg_edges.clear();
 
- cout << endl << endl << "Faces Section: " << endl;
+ //cout << endl << endl << "Faces Section: " << endl;
 
 	for (unsigned int f = 0; f < nb_faces; f++)
 	{
 		ISE_INPUT >> n_edg;
-cout << n_edg << "       ";
+//cout << n_edg << "       ";
 
 	        for (unsigned int e = 0; e < n_edg; e++)
 		{
 			ISE_INPUT >> edge_id;
-cout << edge_id << "  ";
+//cout << edge_id << "  ";
 
 			if (edge_id < 0)
 			{
@@ -259,7 +259,7 @@ cout << edge_id << "  ";
 			face_edgs.push_back(edges[edge_id]);
 		}
 
-cout << endl;
+//cout << endl;
                 face_point = new  ISE_Face(face_edgs, neg_edges);	
 		
                 faces.push_back(face_point);
@@ -314,13 +314,13 @@ cout << endl;
       }
       while (dummy != "{");  //  begin  of Elements section
                      
-cout << endl << endl << endl << "Element Section: " << endl << endl;
+//cout << endl << endl << endl << "Element Section: " << endl << endl;
                      
       for (unsigned int i = 0; i < nb_elements; i++)
       {
         ISE_INPUT >> elem_type ; //read element type;
 
-cout << "Element type: " << elem_type << "  " << endl;                     	  
+//cout << "Element type: " << elem_type << "  " << endl;                     	  
                      	                  	  
         switch(elem_type) 
         {
@@ -337,9 +337,9 @@ case 0:
 
 
           //  0D element = Point 
-cout << "0D element = Point: " << endl;
+//cout << "0D element = Point: " << endl;
           ISE_INPUT >> vertex_0;
-cout << "vertex: " << vertex_0 << endl;
+//cout << "vertex: " << vertex_0 << endl;
 
           elements_list_point = new  ISE_Element_0D(vertices[vertex_0]);
           elements_list_point->set_type(elem_type);
@@ -348,7 +348,7 @@ cout << "vertex: " << vertex_0 << endl;
           elements_list.push_back(elements_list_point);
 
 
-cout << "0D element inserted into list..." << endl << endl;
+//cout << "0D element inserted into list..." << endl << endl;
 
           break;
 
@@ -365,12 +365,12 @@ case 1:
 
 
           //  1D element = Segment (<vertex0,vertex1>)
-cout << "1D element = Segment (<vertex0,vertex1>): " << endl;
+//cout << "1D element = Segment (<vertex0,vertex1>): " << endl;
      						
           ISE_INPUT >> vertex_0;
-cout  <<  "vertex_0: " << vertex_0 << "   " ;
+//cout  <<  "vertex_0: " << vertex_0 << "   " ;
           ISE_INPUT >> vertex_1;
-cout  <<  "vertex_1: " << vertex_1 << "   " ;
+//cout  <<  "vertex_1: " << vertex_1 << "   " ;
 
           elements_list_point = new  ISE_Element_1D(vertices[vertex_0] , vertices[vertex_1]);
           elements_list_point->set_type(elem_type);
@@ -379,7 +379,7 @@ cout  <<  "vertex_1: " << vertex_1 << "   " ;
           elements_list.push_back(elements_list_point);
 
 
-cout << endl << "1D element inserted into list..." << endl << endl;
+//cout << endl << "1D element inserted into list..." << endl << endl;
 
      						 
           break;
@@ -398,16 +398,16 @@ case 3: //  Rectangle
           }
        							 
           
-cout << "2D element = Triangle/Rectangle: " << endl;
+//cout << "2D element = Triangle/Rectangle: " << endl;
      						
        							 
-cout  << "edge id: " << endl;
+//cout  << "edge id: " << endl;
      						 
           // for  all  edges  of  the  element -> elem_type+1
           for (unsigned int j = 0; j<(elem_type+1); j++)
           {
             ISE_INPUT >> id;   // edge id
-cout  << id << "   " ;
+//cout  << id << "   " ;
 	     						
             if (id < 0)  //  negative  edge  id 
             {
@@ -415,16 +415,16 @@ cout  << id << "   " ;
               //  !!!!! INVERT THE  ORDER OF  THE  NODES OF  THIS  (NEGATIVE) EDGE :
               //  (1,2) ->   (2,1)
               negative_edges.push_back(true);  //  flag  for ISE_Element_2D::set_element_nodes()
-cout << "NEGATIVE EDGE ********** ";
+//cout << "NEGATIVE EDGE ********** ";
             }
             else {negative_edges.push_back(false);}
-cout << endl;
+//cout << endl;
 					
             edge_list.push_back(edges[id]); 
        							
           } //   edges cycle	
 	     					 
-cout << endl;
+//cout << endl;
  						      
           //  creates new  Element_2D
 
@@ -436,7 +436,7 @@ cout << endl;
           elements_list.push_back(elements_list_point);
 
 
-cout << "2D element type inserted into list..." << endl << endl; 
+//cout << "2D element type inserted into list..." << endl << endl; 
    						   
           edge_list.clear();
           negative_edges.clear();
@@ -450,7 +450,7 @@ cout << "2D element type inserted into list..." << endl << endl;
 case 4: //  Polygon
           // ***** 2D element *******
      					
-cout << "2D element = Polygon: " << endl;
+//cout << "2D element = Polygon: " << endl;
      							 
           // update list of  ISE element types:
           p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
@@ -463,15 +463,15 @@ cout << "2D element = Polygon: " << endl;
        							 
        				
           ISE_INPUT >> elem_edges;
-cout << "Number of Edges:  " << elem_edges << endl;
+//cout << "Number of Edges:  " << elem_edges << endl;
 			 
-cout  << "edge id: " << endl;
+//cout  << "edge id: " << endl;
      						 
           // for  all  edges  of  the  element
           for (unsigned int j = 0; j<(elem_edges); j++)
           {
             ISE_INPUT >> id;   // edge id
-cout  << id << "   " ;
+//cout  << id << "   " ;
 	     						
             if (id < 0)  //  negative  edge  id 
             {
@@ -479,16 +479,16 @@ cout  << id << "   " ;
               //  !!!!! INVERT THE  ORDER OF  THE  NODES OF  THIS  (NEGATIVE) EDGE :
               //  (1,2) ->   (2,1)
               negative_edges.push_back(true);  //  flag  for ISE_Element_2D::set_element_nodes()
-cout << "NEGATIVE EDGE ********** ";
+//cout << "NEGATIVE EDGE ********** ";
             }
             else {negative_edges.push_back(false);}
-cout << endl;
+//cout << endl;
 					
             edge_list.push_back(edges[id]); 
        							
           } //   edges cycle	
 	     					 
-cout << endl;
+//cout << endl;
  						      
           //  creates new  Element_2D
 
@@ -500,7 +500,7 @@ cout << endl;
           elements_list.push_back(elements_list_point); 
 
 
-cout << "2D element type inserted into list..." << endl << endl;
+//cout << "2D element type inserted into list..." << endl << endl;
    						   
           edge_list.clear();
           negative_edges.clear();
@@ -514,7 +514,7 @@ cout << "2D element type inserted into list..." << endl << endl;
 case 5: //  Tetrahedron
           // ***** 3D element *******
      						
-cout << "3D element = Tetrahedron: " << endl;
+//cout << "3D element = Tetrahedron: " << endl;
      						 
           // update list of  ISE element types:
           p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
@@ -525,13 +525,13 @@ cout << "3D element = Tetrahedron: " << endl;
           }
        							 
        	
-cout  << "face id: " << endl;
+//cout  << "face id: " << endl;
      						 
           // for  all  faces  of  the  element
           for (unsigned int j = 0; j<4; j++)
           {
             ISE_INPUT >> id;   // face id
-cout  << id << "   " ;
+//cout  << id << "   " ;
 	     						
             if (id < 0)  //  negative  face  id 
             {
@@ -539,16 +539,16 @@ cout  << id << "   " ;
               //  !!!!! INVERT THE  ORDER (AND ORIENTATION) OF  THE  EDGES OF  THIS  (NEGATIVE) FACE :
               //  (1,2,3,4) ->   (-4,-3,-2,-1)
               negative_faces.push_back(true);  //  flag  for ISE_Element_3D::set_element_nodes()
-cout << "NEGATIVE FACE ********** ";
+//cout << "NEGATIVE FACE ********** ";
             }
             else {negative_faces.push_back(false);}
-cout << endl;
+//cout << endl;
 					
             face_list.push_back(faces[id]); 
        							
           } //   faces cycle	
 	     					 
-cout << endl;
+//cout << endl;
  						      
           //  creates new  Element_3D
 
@@ -560,7 +560,7 @@ cout << endl;
           elements_list.push_back(elements_list_point);
 
  
-cout << "3D Tetrahedron element type inserted into list..." << endl << endl;
+//cout << "3D Tetrahedron element type inserted into list..." << endl << endl;
 						 	
    						   
           face_list.clear();
@@ -577,7 +577,7 @@ case 6:
 case 7: //  Pyramid/Prism
           // ***** 3D element *******
      		
-cout << "3D element = Pyramid/Prism: " << endl;
+//cout << "3D element = Pyramid/Prism: " << endl;
      										 
           // update list of  ISE element types:
           p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
@@ -588,13 +588,13 @@ cout << "3D element = Pyramid/Prism: " << endl;
           }
        							 
        	
-cout  << "face id: " << endl;
+//cout  << "face id: " << endl;
      						 
           // for  all  faces  of  the  element
           for (unsigned int j = 0; j<5; j++)
           {
             ISE_INPUT >> id;   // face id
-cout  << id << "   " ;
+//cout  << id << "   " ;
 	     						
             if (id < 0)  //  negative  face  id 
             {
@@ -602,16 +602,16 @@ cout  << id << "   " ;
               //  !!!!! INVERT THE  ORDER (AND ORIENTATION) OF  THE  EDGES OF  THIS  (NEGATIVE) FACE :
               //  (1,2,3,4,5) ->   (-5,-4,-3,-2,-1)
               negative_faces.push_back(true);  //  flag  for ISE_Element_3D::set_element_nodes()
-cout << "NEGATIVE FACE ********** ";
+//cout << "NEGATIVE FACE ********** ";
             }
             else {negative_faces.push_back(false);}
-cout << endl;
+//cout << endl;
 					
             face_list.push_back(faces[id]); 
        							
           } //   faces cycle	
 	     					 
-cout << endl;
+//cout << endl;
  						      
           //  creates new  Element_3D
 
@@ -623,7 +623,7 @@ cout << endl;
           elements_list.push_back(elements_list_point);
 
 
-cout << "3D Pyramid/Prism element type inserted into list..." << endl << endl;
+//cout << "3D Pyramid/Prism element type inserted into list..." << endl << endl;
 						 		
    						   
           face_list.clear();
@@ -639,7 +639,7 @@ cout << "3D Pyramid/Prism element type inserted into list..." << endl << endl;
 case 8: //  Brick
           // ***** 3D element *******
      						 
-cout << "3D element = Brick: " << endl;
+//cout << "3D element = Brick: " << endl;
      						
           // update list of  ISE element types:
           p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
@@ -650,13 +650,13 @@ cout << "3D element = Brick: " << endl;
           }
        							 
        	
-cout  << "face id: " << endl;
+//cout  << "face id: " << endl;
      						 
           // for  all  faces  of  the  element
           for (unsigned int j = 0; j<6; j++)
           {
             ISE_INPUT >> id;   // face id
-cout  << id << "   " ;
+//cout  << id << "   " ;
 	     						
             if (id < 0)  //  negative  face  id 
             {
@@ -664,16 +664,16 @@ cout  << id << "   " ;
               //  !!!!! INVERT THE  ORDER (AND ORIENTATION) OF  THE  EDGES OF  THIS  (NEGATIVE) FACE :
               //  (1,2,3,4,5,6) ->   (-6,-5,-4,-3,-2,-1)
               negative_faces.push_back(true);  //  flag  for ISE_Element_3D::set_element_nodes()
-cout << "NEGATIVE FACE ********** ";
+//cout << "NEGATIVE FACE ********** ";
             }
             else {negative_faces.push_back(false);}
-cout << endl;
+//cout << endl;
 					
             face_list.push_back(faces[id]); 
        							
           } //   faces cycle	
 	     					 
-cout << endl;
+//cout << endl;
  						      
           //  creates new  Element_3D
 
@@ -685,7 +685,7 @@ cout << endl;
           elements_list.push_back(elements_list_point);
 
    						   
-cout << "3D Brick element type inserted into list..." << endl << endl;
+//cout << "3D Brick element type inserted into list..." << endl << endl;
 						 		 
           face_list.clear();
           negative_faces.clear();
@@ -699,7 +699,7 @@ cout << "3D Brick element type inserted into list..." << endl << endl;
 case 9: //  Tetrabrick
           // ***** 3D element *******
      					
-cout << "3D element = Tetrabrick: " << endl;
+//cout << "3D element = Tetrabrick: " << endl;
      							 
           // update list of  ISE element types:
           p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
@@ -710,13 +710,13 @@ cout << "3D element = Tetrabrick: " << endl;
           }
        							 
        	
-cout  << "face id: " << endl;
+//cout  << "face id: " << endl;
      						 
           // for  all  faces  of  the  element
           for (unsigned int j = 0; j<7; j++)
           {
             ISE_INPUT >> id;   // face id
-cout  << id << "   " ;
+//cout  << id << "   " ;
 	     						
             if (id < 0)  //  negative  face  id 
             {
@@ -724,16 +724,16 @@ cout  << id << "   " ;
               //  !!!!! INVERT THE  ORDER (AND ORIENTATION) OF  THE  EDGES OF  THIS  (NEGATIVE) FACE :
               //  (1,2,3,4,5,6,7) ->   (-7,-6,-5,-4,-3,-2,-1)
               negative_faces.push_back(true);  //  flag  for ISE_Element_3D::set_element_nodes()
-cout << "NEGATIVE FACE ********** ";
+//cout << "NEGATIVE FACE ********** ";
             }
             else {negative_faces.push_back(false);}
-cout << endl;
+//cout << endl;
 					
             face_list.push_back(faces[id]); 
        							
           } //   faces cycle	
 	     					 
-cout << endl;
+//cout << endl;
  						      
           //  creates new  Element_3D
 
@@ -745,7 +745,7 @@ cout << endl;
           elements_list.push_back(elements_list_point);
 
    						   
-cout << "3D Tetrabrick element type inserted into list..." << endl << endl;
+//cout << "3D Tetrabrick element type inserted into list..." << endl << endl;
 						 		 
           face_list.clear();
           negative_faces.clear();
@@ -760,7 +760,7 @@ cout << "3D Tetrabrick element type inserted into list..." << endl << endl;
 case 10: //  Polyhedron
           // ***** 3D element *******
      					
-cout << "3D element = Polyhedron: " << endl;
+//cout << "3D element = Polyhedron: " << endl;
      							 
           // update list of  ISE element types:
           p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
@@ -772,14 +772,14 @@ cout << "3D element = Polyhedron: " << endl;
        							 
        	
           ISE_INPUT >> elem_faces;
-cout  << "Number of Element Faces: " << elem_faces << endl;
-cout  << "face id: " << endl;
+//cout  << "Number of Element Faces: " << elem_faces << endl;
+//cout  << "face id: " << endl;
      						 
           // for  all  faces  of  the  element
           for (unsigned int j = 0; j<(elem_faces); j++)
           {
             ISE_INPUT >> id;   // face id
-cout  << id << "   " ;
+//cout  << id << "   " ;
 	     						
             if (id < 0)  //  negative  face  id 
             {
@@ -787,16 +787,16 @@ cout  << id << "   " ;
               //  !!!!! INVERT THE  ORDER (AND ORIENTATION) OF  THE  EDGES OF  THIS  (NEGATIVE) FACE :
               //  (1,2,3,...,n) ->   (-n,...,-3,-2,-1)
               negative_faces.push_back(true);  //  flag  for ISE_Element_3D::set_element_nodes()
-cout << "NEGATIVE FACE ********** ";
+//cout << "NEGATIVE FACE ********** ";
             }
             else {negative_faces.push_back(false);}
-cout << endl;
+//cout << endl;
 					
             face_list.push_back(faces[id]); 
        							
           } //   faces cycle	
 	     					 
-cout << endl;
+//cout << endl;
  						      
           //  creates new  Element_3D
 
@@ -808,7 +808,7 @@ cout << endl;
           elements_list.push_back(elements_list_point);
 
 
-cout << "3D Polyhedron element type inserted into list..." << endl << endl;
+//cout << "3D Polyhedron element type inserted into list..." << endl << endl;
 						 	
    						   
           face_list.clear();
@@ -818,7 +818,8 @@ cout << "3D Polyhedron element type inserted into list..." << endl << endl;
           break;
 
         default:
-          cout << "Error : NOT implemented yet... is it possible? :)" << endl<<endl; 
+          //cout << "Error : NOT implemented yet... is it possible? :)" << endl<<endl; 
+          break;
         }		//  end  switch
                      	   
       } //  next  element
@@ -838,7 +839,7 @@ cout << "3D Polyhedron element type inserted into list..." << endl << endl;
     //                           PHYSICAL REGIONS
     // *****************************************************************************  
     
-cout << endl << "Begin of Physical Region Section: " << endl << endl;
+//cout << endl << "Begin of Physical Region Section: " << endl << endl;
 
     int numb_region_elements;
     unsigned int phys_reg_id;
@@ -859,7 +860,7 @@ cout << endl << "Begin of Physical Region Section: " << endl << endl;
 	
       phys_reg_id = i+1;  //  phys  reg =  {1,...,nb_regions}
 
-cout << "Region[" << phys_reg_id << "]: " << endl;
+//cout << "Region[" << phys_reg_id << "]: " << endl;
 	
       do
       {
@@ -876,7 +877,7 @@ cout << "Region[" << phys_reg_id << "]: " << endl;
       //  find  numb  elements of  regions
       ISE_INPUT >> numb_region_elements;
 
-cout << "Region Elements Number: " << numb_region_elements << endl;
+//cout << "Region Elements Number: " << numb_region_elements << endl;
       do
       {
     	ISE_INPUT >> dummy;
@@ -887,13 +888,13 @@ cout << "Region Elements Number: " << numb_region_elements << endl;
 
       //list of  elements id
 
-cout << "Elements id: " << endl;
+//cout << "Elements id: " << endl;
     
       for  (unsigned int j = 0; j < numb_region_elements; j++)
       {
     	ISE_INPUT >> id;  //  id  is  element id ,  that  is  its  position in the  array elements_list
     	
-cout <<  id <<  "   ";
+//cout <<  id <<  "   ";
     	  	
     	// ******************************************
     	// associate current physical  region (phys_reg_id)  to  element elements_list[id]
@@ -915,7 +916,7 @@ case 0:
 
 
     		 
-cout << "0D Element inserted into appropriate map" << endl;
+//cout << "0D Element inserted into appropriate map" << endl;
     		 
     	 	
         };
@@ -933,7 +934,7 @@ case 1:
     		     		 
         map_1D_region_elements.insert(make_pair(phys_reg_id, region_elements_1D) );
 
-cout << "1D Element inserted into appropriate map" << endl;
+//cout << "1D Element inserted into appropriate map" << endl;
     		 
     	 	
         };
@@ -952,7 +953,7 @@ case 2:
         map_2D_region_elements.insert(make_pair(phys_reg_id, region_elements_2D) );
 
 
-cout << "2D Element inserted into appropriate map" << endl;
+//cout << "2D Element inserted into appropriate map" << endl;
     		 
     	 	
         };
@@ -971,7 +972,7 @@ case 3:
         map_3D_region_elements.insert(make_pair(phys_reg_id, region_elements_3D) );
 
 
-cout << "3D Element inserted into appropriate map" << endl;
+//cout << "3D Element inserted into appropriate map" << endl;
     		 
     	 	
         };
@@ -987,7 +988,7 @@ default:
      	    	
      } //region elements end
     
-cout << endl;
+//cout << endl;
     
     	
     }  //  next  phys. region
@@ -1001,7 +1002,7 @@ cout << endl;
             //  close  input file
             ISE_INPUT.close(); 
 
-cout << "File reading... Done" << endl << "Closing file stream... Done" << endl << endl;
+//cout << "File reading... Done" << endl << "Closing file stream... Done" << endl << endl;
  	 	
 }
 
@@ -1021,11 +1022,11 @@ cout << "File reading... Done" << endl << "Closing file stream... Done" << endl 
 
 
 
-void Read_ISE_Grid::write_xda() 
+void ReadISEGrid::write_xda() 
 {
 
-cout << "Writing xda file: In progress..." << endl << endl;
-cout << "Converting ISE element types into Libmesh ones..." << endl;
+//cout << "Writing xda file: In progress..." << endl << endl;
+//cout << "Converting ISE element types into Libmesh ones..." << endl;
 	
   // ************************************************************
   //  xda (libmesh)  ELEM TYPES  [see enum_elem_type.h] 
@@ -1089,26 +1090,26 @@ cout << "Converting ISE element types into Libmesh ones..." << endl;
   const unsigned int ISE_element_type_list_size = ISE_element_type_list.size();
   
 
-cout << ISE_element_type_list_size << " element types to convert: " << endl;
+//cout << ISE_element_type_list_size << " element types to convert: " << endl;
 
   
   for (unsigned int i =0; i< ISE_element_type_list_size ;i++)
   {
 
-cout << "ISE Element type " << ISE_element_type_list[i] << " -> ";
+//cout << "ISE Element type " << ISE_element_type_list[i] << " -> ";
     switch(ISE_element_type_list[i]) 
     {
 
     case 0:
       // 0D :  not  implemented in Libmesh
-cout << "Element not implemented in Libmesh!! Nothing to be done (Aborting Program)." << endl;
+//cout << "Element not implemented in Libmesh!! Nothing to be done (Aborting Program)." << endl;
 	exit(1);
 
     break;
 
     case 1:
       // 1D:  SEGMENT  -> line EDGE2 = 0 (2 nodes)
-cout << "Libmesh Element type 0 " << endl;
+//cout << "Libmesh Element type 0 " << endl;
 
       xda_elem_type.push_back(0);
 
@@ -1117,21 +1118,21 @@ cout << "Libmesh Element type 0 " << endl;
     case 2:
       //   TRIANGLE 3nodes       // 3
 
-cout << "Libmesh Element type 3 " << endl;
+//cout << "Libmesh Element type 3 " << endl;
 
       xda_elem_type.push_back(3);
       break;
 
     case 3:
       // Rectangle 4nodes,      // 5
-cout << "Libmesh Element type 5 " << endl;
+//cout << "Libmesh Element type 5 " << endl;
 
       xda_elem_type.push_back(5);
       break;
 
     case 4:
       //    Polygon n nodes
-cout << "Element not implemented in Libmesh!! Nothing to be done (Aborting Program)." << endl;
+//cout << "Element not implemented in Libmesh!! Nothing to be done (Aborting Program)." << endl;
 	exit(1);
 
 
@@ -1139,28 +1140,28 @@ cout << "Element not implemented in Libmesh!! Nothing to be done (Aborting Progr
 
     case 5:
       // Tetrahedron  4faces   
-cout << "Libmesh Element type 8 " << endl;
+//cout << "Libmesh Element type 8 " << endl;
 
       xda_elem_type.push_back(8);
       break;
 
     case 6:
       //  Pyramid 5faces      
-cout << "Libmesh Element type 16 " << endl;
+//cout << "Libmesh Element type 16 " << endl;
 
       xda_elem_type.push_back(16);
       break;
 
     case 7:
       //  Prism 5faces 
-cout << "Libmesh Element type 13 " << endl;
+//cout << "Libmesh Element type 13 " << endl;
 
       xda_elem_type.push_back(13);
       break;
 
     case 8:
       // Brick 6 faces 
-cout << "Libmesh Element type 10 " << endl; 
+//cout << "Libmesh Element type 10 " << endl; 
 
       xda_elem_type.push_back(10);
      
@@ -1168,7 +1169,7 @@ cout << "Libmesh Element type 10 " << endl;
 
     case 9:
       //  Tetrabrick 
-cout << "Element not implemented in Libmesh!! Nothing to be done (Aborting Program)." << endl;
+//cout << "Element not implemented in Libmesh!! Nothing to be done (Aborting Program)." << endl;
 	exit(1);
 
 
@@ -1177,14 +1178,15 @@ cout << "Element not implemented in Libmesh!! Nothing to be done (Aborting Progr
 
     case 10:
       //  Polyhedron n  faces 
-cout << "Element not implemented in Libmesh!! Nothing to be done (Aborting Program)." << endl;
+//cout << "Element not implemented in Libmesh!! Nothing to be done (Aborting Program)." << endl;
 	exit(1);
 
 
       break;
 
     default:
-      cout <<  "Error : wrong  value  of ISE_elem_type  "; 
+      //cout <<  "Error : wrong  value  of ISE_elem_type  "; 
+      break;
 
     }
   }
@@ -1217,8 +1219,8 @@ cout << "Element not implemented in Libmesh!! Nothing to be done (Aborting Progr
 
   //  Open   .xda  file 
  
-//cout << endl;
-//cout << endl << "Insert the full name (with no path will be in the same directory) of the *.xda output file: " << endl;
+////cout << endl;
+////cout << endl << "Insert the full name (with no path will be in the same directory) of the *.xda output file: " << endl;
 
 //  cin >> fname_xda;
   fname_xda = "a.xda";
@@ -1460,7 +1462,7 @@ cout << "Element not implemented in Libmesh!! Nothing to be done (Aborting Progr
 out_xda.close();		
  
 
-cout << endl << "Writing *.xda file... Done" << endl << endl;
+//cout << endl << "Writing *.xda file... Done" << endl << endl;
 
 };
 
@@ -1486,12 +1488,12 @@ cout << endl << "Writing *.xda file... Done" << endl << endl;
 
 
 
-void Read_ISE_Grid::write_xta() 
+void ReadISEGrid::write_xta() 
 {
 
-cout << "Writing xta file: In progress" << endl;
+//cout << "Writing xta file: In progress" << endl;
 
-// cout << endl << "Insert the full name (with no path will be in the same directory) of the *.xta output file: " << endl;
+// //cout << endl << "Insert the full name (with no path will be in the same directory) of the *.xta output file: " << endl;
 
 
  // *************************************
@@ -1552,7 +1554,7 @@ cout << "Writing xta file: In progress" << endl;
 out.close();
 
 
-cout << endl << "Writing *.xta file... Done" << endl << endl;
+//cout << endl << "Writing *.xta file... Done" << endl << endl;
 };
 
 
@@ -1579,7 +1581,7 @@ cout << endl << "Writing *.xta file... Done" << endl << endl;
 
 //! Utility    to  eliminate  repetitions  in  node  list
 
-void  Read_ISE_Grid::unique_nodes(vector<unsigned int>& v1)
+void  ReadISEGrid::unique_nodes(vector<unsigned int>& v1)
 {
 	
   vector<unsigned int> v_temp;
@@ -1614,7 +1616,7 @@ void  Read_ISE_Grid::unique_nodes(vector<unsigned int>& v1)
 // [ (dimension-1) elements] and relative regions
 
 //  makes  the  map  map <unsigned int tiber_BC_region, vector<unsigned int> region_nodes 
-void  Read_ISE_Grid::set_BC_data()
+void  ReadISEGrid::set_BC_data()
 {
    
   vector<ISE_Element*> BC_elements ;  // elements belonging to  a  single  phys reg
@@ -1656,7 +1658,7 @@ void  Read_ISE_Grid::set_BC_data()
       }
       else
 	{
-        cout  <<  "error in map_1D_region_elements"<< endl;
+        //cout  <<  "error in map_1D_region_elements"<< endl;
 	exit(1);
 	};
 	    
@@ -1707,7 +1709,7 @@ void  Read_ISE_Grid::set_BC_data()
       }
       else
 	{
-        cout  <<  "error in map_2D_region_elements"<< endl;
+        //cout  <<  "error in map_2D_region_elements"<< endl;
 	exit (1);
 	};
 	    
@@ -1741,13 +1743,14 @@ void  Read_ISE_Grid::set_BC_data()
   	
   }//  end  dimension  = 3
   
-  else cout  <<  "NOT IMPLEMENTED !" <<  endl;
+  else
+    cout  <<  "NOT IMPLEMENTED !" <<  endl;
 		
 	
 };
 
 
-void  Read_ISE_Grid::get_BC_data (map<unsigned int, vector<unsigned int> >& BoundCond_map )
+void  ReadISEGrid::get_BC_data (map<unsigned int, vector<unsigned int> >& BoundCond_map )
 {
 
   BoundCond_map = map_BC_region_nodes;

@@ -15,7 +15,7 @@ ISE_Element_3D::~ISE_Element_3D()
 
 void ISE_Element_3D::set_element_nodes()
 {
-cout << endl << "Setting 3D Element nodes: " << endl;
+//cout << endl << "Setting 3D Element nodes: " << endl;
 
   unsigned int e_size;
   ISE_Vertex* current_node;
@@ -28,20 +28,20 @@ cout << endl << "Setting 3D Element nodes: " << endl;
 
    e_size = element_faces[i]->get_face_edges_size();
 
-cout <<  "  face " <<  i << " : " << endl;
+//cout <<  "  face " <<  i << " : " << endl;
 		
 		
     if (negative_faces[i] == true)
     {
       //swap face edges order and their orientation !!!!!!!;
-cout << "Negative Face: Swapping edges order and orientation" << endl;
+//cout << "Negative Face: Swapping edges order and orientation" << endl;
 
         
 
 	for (int s = e_size-1; s >= 0; s--)
 	{
 
-cout << "edge " << s << ": " << endl;
+//cout << "edge " << s << ": " << endl;
 
 	 current_edge = element_faces[i]->get_edge(s);
 	 edge_state = element_faces[i]->get_edge_state(s);
@@ -49,12 +49,12 @@ cout << "edge " << s << ": " << endl;
 	 if (!edge_state)
 	 {
 
-cout << "Negative edge, swapping vertices..." << endl;
+//cout << "Negative edge, swapping vertices..." << endl;
 
 	  	for (unsigned int j=2; j > 0; j--)
           	{
           	 current_node = (current_edge->get_vertex(j) ) ;
-cout << " current_node =    " <<  current_node << endl;
+//cout << " current_node =    " <<  current_node << endl;
           	 element_nodes.push_back(current_node);		
           	}
 	 }
@@ -64,7 +64,7 @@ cout << " current_node =    " <<  current_node << endl;
      		for (unsigned int j=0; j < 2; j++)
      		{
       		 current_node = (current_edge->get_vertex(j+1) ) ;
-cout << " current_node =    " <<  current_node<< endl;
+//cout << " current_node =    " <<  current_node<< endl;
        		 element_nodes.push_back(current_node);		
      		}
     	 }
@@ -80,7 +80,7 @@ cout << " current_node =    " <<  current_node<< endl;
 	for (unsigned int e = 0; e < e_size; e++)
 	{
 
-cout << "edge " << e << ": " << endl;
+//cout << "edge " << e << ": " << endl;
 
 	 current_edge = element_faces[i]->get_edge(e);
 	 edge_state = element_faces[i]->get_edge_state(e);
@@ -88,12 +88,12 @@ cout << "edge " << e << ": " << endl;
 	 if (edge_state)
 	 {
 
-cout << "Negative edge, swapping vertices..." << endl;
+//cout << "Negative edge, swapping vertices..." << endl;
 
 	  	for (unsigned int j=2; j > 0; j--)
           	{
           	 current_node = (current_edge->get_vertex(j) ) ;
-cout << " current_node =    " <<  current_node << endl;
+//cout << " current_node =    " <<  current_node << endl;
           	 element_nodes.push_back(current_node);		
           	}
 	 }
@@ -103,7 +103,7 @@ cout << " current_node =    " <<  current_node << endl;
      		for (unsigned int j=0; j < 2; j++)
      		{
       		 current_node = (current_edge->get_vertex(j+1) ) ;
-cout << " current_node =    " <<  current_node<< endl;
+//cout << " current_node =    " <<  current_node<< endl;
        		 element_nodes.push_back(current_node);		
      		}
     	 }
@@ -111,7 +111,7 @@ cout << " current_node =    " <<  current_node<< endl;
 		
     }
 		
-cout << endl;
+//cout << endl;
 
   }	
 	

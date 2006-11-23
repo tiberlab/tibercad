@@ -21,24 +21,24 @@ ISE_Element_2D::~ISE_Element_2D()
 void ISE_Element_2D::set_element_nodes()
 {
 	
-cout << endl << "Setting 2D Element nodes: " << endl;
+//cout << endl << "Setting 2D Element nodes: " << endl;
   ISE_Vertex* current_node;
 	
   for (unsigned int i=0; i < element_edges.size(); i++)
   {
-cout <<  "  edge " <<  i << " : " << endl;
+//cout <<  "  edge " <<  i << " : " << endl;
 		
 		
     if (negative_edges[i] == true)
     {
       //swap edge vertices !!!!!!!
-cout << "Negative Edge: Swapping vertices" << endl;
+//cout << "Negative Edge: Swapping vertices" << endl;
 
 
      for (unsigned int j=2; j > 0; j--)
      {
        current_node = (element_edges[i]->get_vertex(j) ) ;
-cout << " current_node =    " <<  current_node<< endl;
+//cout << " current_node =    " <<  current_node<< endl;
        element_nodes.push_back(current_node);
 			
      }
@@ -50,7 +50,7 @@ cout << " current_node =    " <<  current_node<< endl;
      for (unsigned int j=0; j < 2; j++)
      {
        current_node = (element_edges[i]->get_vertex(j+1) ) ;
-cout << " current_node =    " <<  current_node<< endl;
+//cout << " current_node =    " <<  current_node<< endl;
        element_nodes.push_back(current_node);
 			
      }

@@ -1,5 +1,5 @@
-#ifndef _READ_ISE_GRID_H_
-#define _READ_ISE_GRID_H_
+#ifndef _READISEGRID_H_
+#define _READISEGRID_H_
 
 
 #include <iomanip>
@@ -17,14 +17,14 @@
 #include "ISE_Element_2D.h"
 #include "ISE_Element_1D.h"
 #include "ISE_Element_0D.h"
-class Read_ISE_Grid
+class ReadISEGrid
 {
 		
  public:
 
-  Read_ISE_Grid(const char* file_name);
+  ReadISEGrid(const char* file_name);
 
-  virtual ~Read_ISE_Grid();
+  virtual ~ReadISEGrid();
 	
   //! Writes  mesh file for  Libmesh in  DEAL  format  (*.xda)
   //Writes .xda file with a  DEAL header, a  list  of  all (simulation-dimension) elements  
@@ -118,9 +118,9 @@ class Read_ISE_Grid
 	
 };
 
-inline unsigned int Read_ISE_Grid::get_dim()
+inline unsigned int ReadISEGrid::get_dim()
 {
 	return (dimension);
 };
 
-#endif /*_READ_ISE_GRID_H_*/
+#endif /* _READISEGRID_H_ */
