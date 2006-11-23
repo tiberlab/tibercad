@@ -47,7 +47,7 @@ double EnvelopFunctionApprox::get_band_edge() const
   poisson_equation -> build_elem_band_edges( band_edges,  names);
 
  
- 
+   
 
   double cond_band_edge = band_edges[0];
   double valence_band_edge = band_edges[1] ;
@@ -129,6 +129,12 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(EquationSystems&  equation_systems
 
   
   //Initialization
+
+  poisson_equation = NULL;
+
+  strain = NULL;
+
+
   opt = opt1;
 
   es = &equation_systems;
@@ -277,6 +283,10 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 {
 
 
+  Ham_real->zero();
+  Ham_imag->zero();
+  S_real->zero();
+
   //material list
   assemble_material_list();
 
@@ -386,7 +396,10 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 	  if (opt.consider_potential)
 	    {
+
+	      
 	      electric_potential = poisson_equation -> get_electric_potential(elem, q_point[qp]);
+	      
 	     
 	    }
 
@@ -536,7 +549,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   save_S_matrix("S.out");
   save_H_matrix("H.out");
 
-  dof_map.print_dof_constraints();
+  //  dof_map.print_dof_constraints();
      
 }
 //============================================================//
@@ -643,7 +656,7 @@ void EnvelopFunctionApprox::save_S_matrix(const std::string & fname)
 	}
     }
 
-  std::cout << "We have got " << Number_of_elements << " non-zero elements in S matrix\n"; 
+  // std::cout << "We have got " << Number_of_elements << " non-zero elements in S matrix\n"; 
 
   out_int = *(reinterpret_cast<unsigned int*> (& Number_of_elements) );  endian_swap(out_int);
   out.write(  reinterpret_cast<char *>( & out_int ), int_size);
@@ -765,7 +778,7 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 
   int size_matrix = Ham_real->n();
 
-  cerr << "Ham_real->n()  " <<  size_matrix << "\n";
+  
 
   out_int = *(reinterpret_cast<unsigned int*> (& number_of_new_dofs) );  endian_swap(out_int);
   out.write(  reinterpret_cast<char *>( & out_int ), int_size);
@@ -833,7 +846,10 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	}
 
     }
-  std::cout << "We have got " << Number_of_elements << " non-zero elements in the Hamiltonian matrix\n"; 
+  if (opt.log_output) {
+    std::cout << "We have got " << Number_of_elements << " non-zero elements in the Hamiltonian matrix\n"; 
+    std::cout.flush();
+  }
 
   out_int = *(reinterpret_cast<unsigned int*> (& Number_of_elements) );  endian_swap(out_int);
   out.write(  reinterpret_cast<char *>( & out_int ), int_size);
@@ -1128,7 +1144,11 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
   command_line <<  "    \n";
 
 
-  cerr << command_line.str()<<"\n";
+  if (opt.log_output) 
+    {
+      cout << command_line.str()<<"\n";
+      cout.flush();
+    }
 
   std::system( (command_line.str()).c_str());
 
@@ -1351,6 +1371,10 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 	
       }
  
+
+ 
+
+
   
 }
 //=============================================================//
@@ -2555,7 +2579,10 @@ double EnvelopFunctionApprox::get_integrated_probability(double T)
   double result = 0;
   unsigned int number_of_eigs = solution.size();
   for (unsigned int i = 0 ; i <  number_of_eigs; i++)
-    result += Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy,T);
+    { 
+     
+      result += Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy,T);
+    }
   return(result);
 }
 

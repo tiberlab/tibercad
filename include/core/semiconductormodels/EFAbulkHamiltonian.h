@@ -45,6 +45,7 @@ class EFAbulkHamiltonian: public PhysicalProperties
   //! apply k|| to the Hamiltonian
   virtual void calculate_Hamiltonian_k_par(void) = 0;
 
+
   //! apply strain and potential to the EFA Hamiltonian
   /*!
     \param strain_crystal strain tensor in crystal system

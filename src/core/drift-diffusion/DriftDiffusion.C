@@ -175,7 +175,7 @@ DriftDiffusion::DriftDiffusion(DD::Device* device)
     _rebuild_eq_system(true)
 {
   // should throw exception
-  assert(device->check_integrity());
+  //  assert(device->check_integrity());
   _device = device;
 
   find_dirichlet_nodes();
@@ -429,7 +429,7 @@ DriftDiffusion::set_electric_potential(double pot)
   
   const unsigned int var = system.variable_number("potential");
   const double phi0 = _scaling.get_potential_scaling();
-  double level = -pot / phi0;
+  double level = pot / phi0;  
 
   Mesh& mesh = get_mesh();
   Mesh::node_iterator it = mesh.active_nodes_begin();
@@ -827,8 +827,7 @@ DriftDiffusion::init(void)
   // finally initialize the newly created system
   system.init();
 
-  // compute the scaling factors
-  compute_scaling(get_options().scaling_type);
+ 
   
   // make a rough guess of the equilibrium potential
   // NOTE: for now this has to be done outside because it is not clear
@@ -849,6 +848,11 @@ DriftDiffusion::init(void)
     _old_sim_voltages[*it] = 0.0;
   }
 
+
+  // update the list which contains all elements of this simulation
+  update_element_list();
+
+
   _rebuild_eq_system = false;
 }
 
@@ -858,6 +862,11 @@ DriftDiffusion::solve_newton(void) throw (PetscRuntimeError)
 {
 
   PerfLog perf_log("solve_newton", false);
+
+  // compute the scaling factors
+  compute_scaling(get_options().scaling_type);
+
+
 
   // aliases for nicer code
   Options& params = get_options();
@@ -1214,6 +1223,8 @@ DriftDiffusion::get_solution(const Elem* elem, const Point& p,
     T& solution)
 {
 
+ 
+
   // this will contain the element in which p lies and for which
   // DriftDiffusion knows the potential
   const Elem* el = elem;
@@ -1222,8 +1233,10 @@ DriftDiffusion::get_solution(const Elem* elem, const Point& p,
   set<const Elem*>::iterator end = _element_list.end();
   set<const Elem*>::iterator it = _element_list.find(elem);
 
+ 
+
   if (it == end)
-  {
+  { 
     // do we have a parent element in the list?
     const Elem* parent = elem->parent();
     while (parent != NULL)
@@ -1261,6 +1274,7 @@ DriftDiffusion::get_solution(const Elem* elem, const Point& p,
   }
   // now el points to a valid element containing p or is NULL
 
+
   if (el != NULL)
     get_solution_secure(el, p, solution);
 }
@@ -1269,6 +1283,8 @@ void
 DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     vector<double>& solution)
 {
+
+
   unsigned int np = p.size();
   solution.resize(np);
   if (np == 0) return;
@@ -1388,8 +1404,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     ep *= phi0;
 
     solution[n].potential = u;
-    solution[n].fermi_e = en;
-    solution[n].fermi_h = ep;
+    solution[n].fermi_e = -en;
+    solution[n].fermi_h = -ep;
   }
 }
 

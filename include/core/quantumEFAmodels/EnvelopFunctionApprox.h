@@ -58,7 +58,7 @@
 #include <set>
 #include <tecplot_io.h>
 #include "mesh_data.h"
-#include "macrostrain.h"
+#include "Macrostrain.h"
 #include "DriftDiffusion.h"
 class EnvelopFunctionApprox
 {
@@ -121,6 +121,9 @@ class EnvelopFunctionApprox
     double relative_density_tolerance; //!< stops itarations if \f$ \rho_i / \rho_{i+1} < \varepsilon    \f$, where \f$ \rho \f$ is the                                              total density 
  
     double eigen_number_increase_factor; //!< to increase number of eigenstates for the next iteration 
+
+
+    bool log_output;
 
   };
 
@@ -286,7 +289,7 @@ class EnvelopFunctionApprox
     \param T temperature [K]
     \param cell_data  if true, then cell data is calculated (default); if false, the nodal data ic calculated 
   */
-  vector<double>  calculate_convergent_density(double T, bool cell_data = true);
+  std::vector<double>  calculate_convergent_density(double T, bool cell_data = true);
   
 
 
@@ -300,7 +303,7 @@ class EnvelopFunctionApprox
     \param cell_data  if true, then cell data is calculated (default); if false, the nodal data ic calculated 
 
   */
-  vector<double>  calculate_density(double T, bool cell_data = true);
+  std::vector<double>  calculate_density(double T, bool cell_data = true);
 
 
   //! sets opt.initial_eigestates_number
@@ -331,7 +334,7 @@ class EnvelopFunctionApprox
   EquationSystems* es;
 
   
-  string system_name;
+  std::string system_name;
 
   //pointer to a drift-diffusion object that is used to get potential data 
   DriftDiffusion* poisson_equation;
@@ -521,14 +524,14 @@ class EnvelopFunctionApprox
   /*!
     \param i number of the eigenstate
    */
-  vector<double> EnvelopFunctionApprox::calculate_prob_function(unsigned int i);
+  std::vector<double> EnvelopFunctionApprox::calculate_prob_function(unsigned int i);
 
 
   //! calculate density without \f$ \frac{1}{\Sigma_0} \int_{\Sigma_0} | \psi_i (r) |^2 /,dV \f$
   /*!
     \param i number of the eigenstate
   */
-  vector<double> EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int i);
+  std::vector<double> EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int i);
 
 
 
@@ -553,8 +556,19 @@ class EnvelopFunctionApprox
 inline double EnvelopFunctionApprox::Fermi_statistics_probability(double Energy, double Fermi_energy, double Temperature)
 {
   
+
   double T_EV = Temperature * Constants::k_Boltzmann;
-  double el_fermi =  1.0/(  1 + exp((Energy - Fermi_energy)/T_EV   )  );
+  double exp_arg =  (Energy - Fermi_energy)/T_EV;
+  
+  double el_fermi;
+
+  if (exp_arg > 20) 
+    el_fermi = 0.0;
+  else
+    el_fermi = 1.0/(  1 +  std::exp(exp_arg)  );
+
+
+  
 
   if (opt.particle == "el")
     return(el_fermi);

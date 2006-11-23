@@ -1,4 +1,3 @@
-
 #include "QuantumDensity.h"
 
 
@@ -35,7 +34,7 @@ QuantumDensity:: QuantumDensity( EnvelopFunctionApprox* model, QuantumDensity::o
   opt = options;
   real_space_density_size = quantum_model->get_number_of_active_cells();
 
-}
+}  
 
 
 
@@ -207,11 +206,34 @@ void  QuantumDensity::define_k_space(Tensor1 k_vector, unsigned int n)
   kmin[0] = -norm_k/2.0;  kmax[0] = norm_k/2.0; num_nodes[0] = n;
 
   
+  //TODO hasto be changed!!
+  Tensor1 basis1 = k_vector/norm_k;
 
-  for (short i = 1; i < 4; i++)
+  if (basis1(1) == 1)
+    transform_matrix = Tensor2Sym(1);
+  else
     {
-      transform_matrix(i,1) = k_vector(i)/norm_k; 
-    } 
+      Tensor1 basis2;
+     
+      basis2(1) = 0;
+      basis2(2) = -basis1(3);
+      basis2(3) =  basis1(2);
+
+      basis2 = basis2/norm(basis2);
+
+      Tensor1 basis3 = vectorProduct(basis1, basis2);
+
+      
+      for (short i = 1; i < 4; i++)
+	{
+	  transform_matrix(i,1) = basis1(i);
+	  transform_matrix(i,2) = basis2(i);
+	  transform_matrix(i,3) = basis3(i);
+	}
+      
+    }
+
+ 
 
   k_dim = 1;
 }
@@ -229,10 +251,16 @@ void QuantumDensity::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k
   kmin[1] = -norm_k2/2.0;  kmax[1] = norm_k2/2.0; num_nodes[1] = m;
 
   
+  Tensor1 basis1 = k_vector1/norm_k1;
+  Tensor1 basis2 = k_vector2/norm_k2;
+  Tensor1 basis3 = vectorProduct(basis1, basis2);
+
+
   for (short i = 1; i < 4; i++)
     {
-      transform_matrix(i,1) = k_vector1(i)/norm_k1; 
-      transform_matrix(i,2) = k_vector2(i)/norm_k2;
+      transform_matrix(i,1) = basis1(i);
+      transform_matrix(i,2) = basis2(i);
+      transform_matrix(i,3) = basis3(i);
     }
 
   k_dim = 2;
@@ -279,14 +307,7 @@ void QuantumDensity::calculate_at_each_k_point()
   MeshBase::node_iterator       it     = kmesh->active_nodes_begin();
   const MeshBase::node_iterator it_el  = kmesh->active_nodes_end();
 
-  double band_edge = quantum_model->get_band_edge();
 
-
-
-
-  
-
- 
 
   for ( ; it != it_el ; ++it) 
     {
@@ -306,22 +327,30 @@ void QuantumDensity::calculate_at_each_k_point()
 	  k_vector[0] = (*nd)(0);
 	  k_vector[1] = (*nd)(1);
 	  k_vector[2] = (*nd)(2);
+
+
 	  
-	  std::cout <<  k_vector[0] << "   " <<  k_vector[1] << "    " <<  k_vector[2] << "\n";
+	  
+	  std::cout << "Kvector (kx,ky,kz)   " << k_vector[0] << "   " <<  k_vector[1] << "    " <<  k_vector[2] << "\n";
 	  
 	  quantum_model->apply_k_vector(k_vector);
+	  quantum_model->solve_eigen_value_problem(10);
 	  
+
 	  vector<double>  dens = quantum_model->calculate_convergent_density(opt.Temperature);
 
+          unsigned int size_of_dens = dens.size();
 
+	  for (unsigned int i2 = 0; i2 < size_of_dens  ; i2++)
+	    dens[i2] *= opt.degeneracy;
      
      
 	  k_point_density.insert( pair<const Node*, vector<double> > (nd, dens) );
 
-	  double rho = quantum_model->get_integrated_probability(opt.Temperature);
-
+	  double rho = (quantum_model->get_integrated_probability(opt.Temperature)) * opt.degeneracy;
+	  
 	  k_point_charge.insert(pair<const Node*, double > (nd, rho));
-
+	  
 
 	  
 
@@ -331,7 +360,7 @@ void QuantumDensity::calculate_at_each_k_point()
 
 
   
-
+ 
 }
 
 
@@ -375,50 +404,116 @@ void QuantumDensity::calculate_convergent_density()
   
   system->add_variable("u", SECOND);
 
+  
+  //!system vector that contains charge density in k space from previous iteration
+  NumericVector<Number>& old_density = system->add_vector("old density");
+
+
   eq->init();
 
+  
 
   calculate_at_each_k_point();
+
+ 
 
   calculate_density();
 
 
-  
 
   prepare_system_solution();
+
+
+  
+
 
   if (opt.k_domain_refinement) 
     {
       //----------------------------------------
       //refinement block
       //---------------------------------------
+     
+     
+
+      old_density = * (system->solution);
+      
+
       MeshRefinement mesh_refinement(*kmesh);
 
-      ErrorVector error;
-
-
-      KellyErrorEstimator error_estimator;
-
-      error_estimator.estimate_error (*system,error);
-
-      mesh_refinement.flag_elements_by_error_fraction (error,opt.refine_fraction,0.0, 10);
-
       
-      if (opt.uniform_refinement == 1)
-	mesh_refinement.uniformly_refine(1);
-      else
-	mesh_refinement.refine_and_coarsen_elements();
+      double norm_of_error = opt.relative_accuracy;
+
+      for ( ; (norm_of_error >=  opt.relative_accuracy) ;  ) 
+	{//for
+
+
+
+	  if (opt.uniform_refinement)
+	    mesh_refinement.uniformly_refine(1);
+	  else
+	    {
+	      
+	      ErrorVector error;
+	      
+	      
+	      KellyErrorEstimator error_estimator;
+	      
+	      Tensor2Gen RotM_inv =  transform_matrix.transpose() ;
+	      
+	      rotate_mesh(kmesh,  RotM_inv );
+	      
+	      error_estimator.estimate_error (*system,error);
+	      
+	      rotate_mesh(kmesh, transform_matrix);
+	      
+	      
+	      mesh_refinement.flag_elements_by_error_fraction (error,opt.refine_fraction,0.0, 10);
+	      
+	      
+	      mesh_refinement.refine_and_coarsen_elements();
+	      
+	      kmesh->print_info();
+	      
+	      std::cout << "k-mesh after refinement  " << "\n";
+	     
+	      kmesh->print_info();
+
+	      eq->reinit();
+
+	      calculate_at_each_k_point();
+
+	      calculate_density();
+
+	      prepare_system_solution();
+
+
+	      old_density.add(-1.0, *(system->solution));
+	      
+	      old_density.close();
+
+	      double x1 = old_density.linfty_norm();
+
+	      system->solution->close();
+
+	      double x2 = ( system->solution->linfty_norm() );
+	      
+	      norm_of_error = x1/x2;
+
+
+	      old_density = * (system->solution);
+
+	      
+	      
+	    }
+
+	}
+
+    
       
-      eq->reinit();
 
 
-      calculate_at_each_k_point();
 
-
-      calculate_density();
-
-
-    }
+    }//end of refinement block
 
 
 }
@@ -435,8 +530,7 @@ void QuantumDensity::prepare_system_solution()
 
   system->solution->init(num_nodes);
 
-  cerr <<  "system->solution->size()" << system->solution->size() << "\n";;
-
+ 
   const  DofMap& dof_map = system->get_dof_map();
     
   FEType fe_type = dof_map.variable_type(0);
@@ -485,9 +579,15 @@ void QuantumDensity::prepare_system_solution()
 	{
 	  const	  Node*  node =  elem->get_node(n);
 
-	
+
+	  cerr << (*node)(0) << "   " << (*node)(1) << "    " << (*node)(2) << "    " <<  k_point_charge[node] << "\n";
+
+	 
+
 	  system->solution->set( dof_indices[n] ,  k_point_charge[node]);
 	  
+
+
 	 
 
 	}  
@@ -499,3 +599,22 @@ void QuantumDensity::prepare_system_solution()
 }
 
 //=================================================================//
+const Mesh& QuantumDensity::get_k_mesh() const
+{
+  return(*kmesh);
+
+}
+
+//=================================================================// 
+std::vector<double>   QuantumDensity::get_density_in_k_space(void)  const
+{
+  
+  vector<double> result ;
+
+  eq->build_solution_vector  	( result) ;     
+
+
+ 
+  
+  return(result);
+}

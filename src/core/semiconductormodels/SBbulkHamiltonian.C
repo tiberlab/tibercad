@@ -85,7 +85,7 @@ void SBbulkHamiltonian::calculate_Hamiltonian_gen(void)
   temp.push_back(single_band_ham);
   Hamiltonian.push_back(temp);
 
-  
+  Hamiltonian_without_strain_pot = Hamiltonian;
    
 
 }
@@ -113,6 +113,8 @@ void SBbulkHamiltonian::calculate_Hamiltonian_k_par(void)
 	}
     }
 
+
+  
   //------we have to change linear term
   
   for (short i1 = 0; i1 < 3; i1++)
@@ -127,14 +129,17 @@ void SBbulkHamiltonian::calculate_Hamiltonian_k_par(void)
 
   
  
-  vector<MatrixElement> temp;
-  temp.push_back(result); 
+  vector<MatrixElement> temp(1,result);
+  
 
 
 
   Hamiltonian.resize(1);
 
-  Hamiltonian[0] = temp;
+  Hamiltonian[0][0] = result;
+
+ 
+  
 
   Hamiltonian_without_strain_pot = Hamiltonian;
 

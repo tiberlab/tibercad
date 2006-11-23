@@ -27,7 +27,7 @@ Device::init_device(const  vector<RegionDefinition>& dev_reg)
 {
   
   set_material_regions( dev_reg);
-  //  set_materials ();
+
   set_map_ID_material_region();
   makes_set_of_materials();
 }

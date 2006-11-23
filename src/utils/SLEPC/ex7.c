@@ -30,7 +30,7 @@ int main( int argc, char **argv )
         Load the matrices that define the eigensystem, Ax=kBx
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"\nGeneralized eigenproblem stored in file.\n\n");CHKERRQ(ierr);
+  //  ierr = PetscPrintf(PETSC_COMM_WORLD,"\nGeneralized eigenproblem stored in file.\n\n");CHKERRQ(ierr);
   ierr = PetscOptionsGetString(PETSC_NULL,"-f1",filename,256,&flg);CHKERRQ(ierr);
   if (!flg) {
     SETERRQ(1,"Must indicate a file name for matrix A with the -f1 option.");
@@ -46,14 +46,14 @@ int main( int argc, char **argv )
      communicator PETSC_COMM_WORLD.  Thus, only one message is
      printed representng PETSC_COMM_WORLD, i.e., all the processors.
   */
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"Number of processors = %d, rank = %d\n",size,rank);CHKERRQ(ierr);
+  //ierr = PetscPrintf(PETSC_COMM_WORLD,"Number of processors = %d, rank = %d\n",size,rank);CHKERRQ(ierr);
   
 
 
 #if defined(PETSC_USE_COMPLEX)
-  ierr = PetscPrintf(PETSC_COMM_WORLD," Reading COMPLEX matrices from binary files...\n");CHKERRQ(ierr);
+  // ierr = PetscPrintf(PETSC_COMM_WORLD," Reading COMPLEX matrices from binary files...\n");CHKERRQ(ierr);
 #else
-  ierr = PetscPrintf(PETSC_COMM_WORLD," Reading REAL matrices from binary files...\n");CHKERRQ(ierr);
+  // ierr = PetscPrintf(PETSC_COMM_WORLD," Reading REAL matrices from binary files...\n");CHKERRQ(ierr);
 #endif
   ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,filename,PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr);
   ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
@@ -70,7 +70,7 @@ int main( int argc, char **argv )
 
   MatGetVecs(A,PETSC_NULL,&eigen_vector);
 
-  printf("\n Matrixes are loaded\n\n");
+  //  printf("\n Matrixes are loaded\n\n");
  
   // printf("\n Matrix A:\n\n");
   // MatView(A,0);
@@ -104,15 +104,15 @@ int main( int argc, char **argv )
      Optional: Get some information from the solver and display it
   */
   ierr = EPSGetIterationNumber(eps, &its);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD," Number of iterations of the method: %d\n",its);CHKERRQ(ierr);
+  //  ierr = PetscPrintf(PETSC_COMM_WORLD," Number of iterations of the method: %d\n",its);CHKERRQ(ierr);
   ierr = EPSGetNumberLinearIterations(eps, &lits);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD," Number of linear iterations of the method: %d\n",lits);CHKERRQ(ierr);
+  //ierr = PetscPrintf(PETSC_COMM_WORLD," Number of linear iterations of the method: %d\n",lits);CHKERRQ(ierr);
   ierr = EPSGetType(eps,&type);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD," Solution method: %s\n\n",type);CHKERRQ(ierr);
+  // ierr = PetscPrintf(PETSC_COMM_WORLD," Solution method: %s\n\n",type);CHKERRQ(ierr);
   ierr = EPSGetDimensions(eps,&nev,PETSC_NULL);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD," Number of requested eigenvalues: %d\n",nev);CHKERRQ(ierr);
+  // ierr = PetscPrintf(PETSC_COMM_WORLD," Number of requested eigenvalues: %d\n",nev);CHKERRQ(ierr);
   ierr = EPSGetTolerances(eps,&tol,&maxit);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD," Stopping condition: tol=%.4g, maxit=%d\n",tol,maxit);CHKERRQ(ierr);
+  //ierr = PetscPrintf(PETSC_COMM_WORLD," Stopping condition: tol=%.4g, maxit=%d\n",tol,maxit);CHKERRQ(ierr);
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                     Display solution and clean up
@@ -122,7 +122,7 @@ int main( int argc, char **argv )
      Get number of converged eigenpairs
   */
   ierr = EPSGetConverged(eps,&nconv);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD," Number of converged approximate eigenpairs: %d\n\n",nconv);CHKERRQ(ierr);
+  //ierr = PetscPrintf(PETSC_COMM_WORLD," Number of converged approximate eigenpairs: %d\n\n",nconv);CHKERRQ(ierr);
 
   if (nconv>0) {//there are converged solutions
 
@@ -141,10 +141,13 @@ int main( int argc, char **argv )
     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,"eigvects_SLEPC.out",PETSC_FILE_CREATE,&viewer_out);CHKERRQ(ierr);
     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,"eigvals_SLEPC.out",PETSC_FILE_CREATE,&viewer_eigvals);CHKERRQ(ierr);
    
-
+    /*
     ierr = PetscPrintf(PETSC_COMM_WORLD,
          "           k             ||Ax-kx||/||kx||\n"
          "  --------------------- ------------------\n" );CHKERRQ(ierr);
+
+    */
+
     for( i=0; i<nconv; i++ ) {//eigen solutions loop
       /* 
          Get converged eigenpairs: i-th eigenvalue is stored in kr (real part) and
@@ -164,12 +167,16 @@ int main( int argc, char **argv )
       re = kr;
       im = ki;
 #endif
+      /*
+
       if( im != 0.0 ) {
         ierr = PetscPrintf(PETSC_COMM_WORLD," % 6f %+6f i",re,im);CHKERRQ(ierr);
       } else {
         ierr = PetscPrintf(PETSC_COMM_WORLD,"       % 6f      ",re); CHKERRQ(ierr);
       }
       ierr = PetscPrintf(PETSC_COMM_WORLD," % 12f\n",error);CHKERRQ(ierr);
+
+      */
 
       ierr = VecAssemblyBegin(eigen_vector);CHKERRQ(ierr);
       ierr = VecAssemblyEnd(eigen_vector);CHKERRQ(ierr);
@@ -190,7 +197,7 @@ int main( int argc, char **argv )
     ierr = MPI_Barrier(PETSC_COMM_WORLD);CHKERRQ(ierr);
 
     ierr = PetscViewerDestroy(viewer_out);CHKERRQ(ierr);
-    ierr = PetscPrintf(PETSC_COMM_WORLD,"Saved \n" );CHKERRQ(ierr);
+    //ierr = PetscPrintf(PETSC_COMM_WORLD,"Saved \n" );CHKERRQ(ierr);
 
 
     

@@ -60,7 +60,6 @@
 #include <set>
 #include <tecplot_io.h>
 #include "mesh_data.h"
-#include "macrostrain.h"
 #include "DriftDiffusion.h"
 #include "EnvelopFunctionApprox.h"
 
@@ -82,8 +81,12 @@ class QuantumDensity
     bool k_domain_refinement;  //!< if true, program will refine the Brilluoin zone adaptively
     bool uniform_refinement;   //!< if true, all the cells in the k-space are refined
     double refine_fraction;    //!< fraction of the elements to be refined
-    double relative_accuracy;  //!< stop refinement if \f$ ||\rho_{i+1} - \rho_i||/||rho_i|| < \epsilon \f$ 
-    double Temperature;        //!< temperature [K] 
+    double relative_accuracy;  //!< stop refinement if \f$ ||\rho_{i+1} - \rho_i||/||rho_i|| < \epsilon \f$
+    unsigned int maximum_ref_level; //!< maximum level for k space refinement
+    double Temperature;        //!< temperature [K]
+    unsigned int degeneracy;   //!< degeneracy factor to mutiply the charge density  
+    bool log_output; 
+
   };
 
 
@@ -164,6 +167,14 @@ class QuantumDensity
   //!calculates density performing mesh refinement of k-space, if required.
   void calculate_convergent_density(void);
 
+
+  //!returns reference to kmesh object
+  const Mesh& get_k_mesh(void) const; 
+
+
+
+  //!returns \f$ \rho({\bf k} ) = \int \rho{\bf{ k, r}} \, d{\bf r} \f$
+   std::vector<double>  get_density_in_k_space(void)  const;
 
  private:
 
@@ -248,6 +259,9 @@ class QuantumDensity
    //!calculates objects k_point_density and eigen_energy
    void calculate_at_each_k_point();
    
+
+ 
+  
 
 };
 

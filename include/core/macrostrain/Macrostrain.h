@@ -53,12 +53,12 @@
 
 //------------------------------------------------------------------------------
 
-#include "stiffness.h"
-#include "rotated_crystal.h"
+#include "Stiffness.h"
+#include "RotatedCrystal.h"
 #include "tensor.h"
 #include "GMVIO_cell.h"
 
-#include "piezoelectricity.h"
+#include "Piezoelectricity.h"
 
 #include "mesh_data.h"
 
@@ -106,7 +106,7 @@ class Macrostrain
     //------------------------------------
 
     //----------------- numerical options -------------------------------------
-    string                mesh_input_file;
+  
 
     unsigned int          max_r_steps;       
     int                   uniform_refinement; 
@@ -124,9 +124,9 @@ class Macrostrain
     unsigned int          substr_mat;
     //-------------------------------
     
-    vector<double> fixed_point1 ; //x,y,z
-    vector<double> fixed_point2 ;
-    vector<double> fixed_point3 ;
+    std::vector<double> fixed_point1 ; //x,y,z
+    std::vector<double> fixed_point2 ;
+    std::vector<double> fixed_point3 ;
     
  
 
@@ -137,23 +137,23 @@ class Macrostrain
   
     bool calculate_atom_displacements;
     
-    string   atom_structure_filename;
+    std::string   atom_structure_filename;
     
-    string   atom_displacements_filename;  
+    std::string   atom_displacements_filename;  
     //-----------------------------------------------------------------------
     //output options
     
     bool intermediate_output;
   
     
-    string  output_type;
+    std:: string  output_type;
 
     //------------------------------------------------------------------------  
   };
 
   struct  add_variable 
   {
-    string name ;
+    std::string name ;
     Elem * element;
     unsigned int dof_number;
     bool lat_cons;
@@ -165,8 +165,8 @@ class Macrostrain
   //!structure that contains both crystalographic information of a material and Elasticity tensor of a material
   struct strain_param
   {
-    stiffness C_tensor;
-    rotated_crystal crystal;
+    Stiffness* C_tensor;
+    RotatedCrystal* crystal;
   };
  
   //---------------------------------------------------------------------
@@ -192,7 +192,7 @@ class Macrostrain
   //void define_strain_parameters(const std::vector<stiffness>&        C_tensor_in,
   //			const std::vector<rotated_crystal>&  crystal_in);
 
-  void define_strain_parameters(const std::map <unsigned int, strain_param* >&    strain_parameters_in);
+  void define_strain_parameters(const std::map <unsigned int, strain_param >&    strain_parameters_in);
 
   //--------------------------------------------------------------------
   //! passes a number of substrate boundary condition
@@ -332,7 +332,7 @@ class Macrostrain
   //  static std:: vector<rotated_crystal>*  crystal_temp;
 
   //! static pointer to parameters
-  static std:: map<unsigned int, strain_param* > *    strain_parameters_temp;
+  static std:: map<unsigned int, strain_param > *    strain_parameters_temp;
 
   static std:: vector <unsigned int>*             material_of_elem_temp;
   static std:: vector <Tensor2Sym>*      eps0_of_elem_temp;
@@ -350,7 +350,7 @@ class Macrostrain
  
 
   //!map between material number and strain parameters 
-  std:: map<unsigned int, Macrostrain::strain_param*>    strain_parameters;
+  std:: map<unsigned int, Macrostrain::strain_param>    strain_parameters;
 
   std::vector<unsigned int>              material_of_elem; // material of an element
 
@@ -442,7 +442,7 @@ class Macrostrain
   // mesh reading
   
 
-  string mesh_input_file;
+  std::string mesh_input_file;
 
   bool read_regions_from_mesh;
   //------------------------------------------------------------------------
@@ -512,11 +512,11 @@ class Macrostrain
 
   bool calculate_atom_displacements;
  
-  string atom_structure_filename;
+  std::string atom_structure_filename;
  
-  string atom_displacements_filename;  
+  std::string atom_displacements_filename;  
 
-  string atom_output_type;
+  std::string atom_output_type;
 
   bool output_strain_on_atoms;
 
@@ -538,7 +538,7 @@ class Macrostrain
   //-------------------------------------------------------------------
 
   //! 2D/3D:  map between Elem* and set of substrate faces; 1D map between Elem* and set of substrate nodes
-  std::map<const Elem*,std:: set<unsigned int> > substrate_faces;
+  std::map<const Elem*,std::set<unsigned int> > substrate_faces;
  
   //!map between b.c. number and a set of nodes 
   std::map <unsigned int , std::vector<unsigned int> >   boundary_cond_nodes; 
@@ -566,7 +566,7 @@ class Macrostrain
   void update_bondary_conditions_map();
 
   //!"GMV" or "tecplot"
-  string output_type; 
+  std::string output_type; 
 
   //!
   bool element_on_boundary(const Elem* element);

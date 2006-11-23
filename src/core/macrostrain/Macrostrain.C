@@ -1,4 +1,4 @@
-#include "macrostrain.h"
+#include "Macrostrain.h"
 using namespace std;
 //-----------------------------------------------------------------//
 //Static objects must be "mentioned" here! 
@@ -13,7 +13,7 @@ unsigned  int  Macrostrain:: substr_mat;
 Tensor2Sym     Macrostrain:: eps0_var_log;
 unsigned int   Macrostrain:: number_of_add_var_static;
 
-std:: map<unsigned int, Macrostrain::strain_param* > *    Macrostrain::strain_parameters_temp;
+std:: map<unsigned int, Macrostrain::strain_param > *    Macrostrain::strain_parameters_temp;
 std::vector <unsigned int>*            Macrostrain:: material_of_elem_temp;
 std::vector <Tensor2Sym>*     Macrostrain:: eps0_of_elem_temp;
 std::vector<Macrostrain::add_variable>*    Macrostrain:: add_var_temp; 
@@ -47,7 +47,7 @@ Macrostrain::Macrostrain(const options& opt,  EquationSystems& equation_systems_
   tolerance  = opt.tolerance  ;
   max_shape_steps = opt.max_shape_steps;
   
-  mesh_input_file = opt.mesh_input_file;
+
   grown_on_substrate = opt.grown_on_substrate;
   calculate_atom_displacements = opt.calculate_atom_displacements;
   atom_structure_filename = opt.atom_structure_filename;
@@ -220,7 +220,7 @@ void Macrostrain::assign_mesh_data(MeshData& mesh_data_in)
 
 
 //-----------------------------------------------------------------//
-void Macrostrain::define_strain_parameters(const std::map <unsigned int, Macrostrain::strain_param* > &    strain_parameters_in )
+void Macrostrain::define_strain_parameters(const std::map <unsigned int, Macrostrain::strain_param > &    strain_parameters_in )
 {
   strain_parameters = strain_parameters_in;
 }
@@ -786,8 +786,8 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
   system.matrix->zero();
 
 
-   stiffness C_tensor_el;
-   rotated_crystal crystal_el;
+   Stiffness* C_tensor_el;
+   RotatedCrystal* crystal_el;
   
 
 
@@ -823,18 +823,21 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
       
       
      
-      C_tensor_el = 	((*strain_parameters_temp)[ material  ]) -> C_tensor ;
-      crystal_el =  	((*strain_parameters_temp)[ material  ]) -> crystal;
+      C_tensor_el = 	((*strain_parameters_temp)[ material  ]).C_tensor ;
+      crystal_el =  	((*strain_parameters_temp)[ material  ]).crystal;
 
 	
 
 
-      eps_const =  crystal_el.get_const_eps0(substrate_lat_const, eps0_var_log) 
+      eps_const =  crystal_el->get_const_eps0(substrate_lat_const, eps0_var_log) 
 	+ (*eps0_of_elem_temp)[el_number] ;//+ substrate_shear;
 
      
+    
+
+
       double lat_const[3];
-      crystal_el.get_lat_const(lat_const);
+      crystal_el->get_lat_const(lat_const);
      
       
 
@@ -883,7 +886,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 			    }
 			  
 			 
-			  Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el.get_subtensor(j+1,k+1)* vec2 ));
+			  Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)* vec2 ));
 			} 
 
 		      //------------external normal stress--------
@@ -974,7 +977,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 			  Ke_u_add_sub.reposition (uvar[j]*n_u_dofs, n_dofs, n_u_dofs, (*add_var_temp).size());
 			  
 			
-			  eps_var = crystal_el.get_var_eps0( (*add_var_temp)[i1].name );
+			  eps_var = crystal_el->get_var_eps0( (*add_var_temp)[i1].name );
 			  
 			  
 			  
@@ -992,7 +995,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 				    vec2(i) = eps_var(i,k+1);
 				}
 			   
-			      Ke_u_add_sub(p1,i1) += JxW[qp]*(vec1 * ( C_tensor_el.get_subtensor(j+1,k+1) * vec2 ));
+			      Ke_u_add_sub(p1,i1) += JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2 ));
 			    }
  
 			} 
@@ -1034,7 +1037,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 			  vec2 = 0;
 			  for (int i = 1; i<=dim; i++) vec2(i) = dphi[p2][qp](i-1) ;
 			  
-			  scal_prod = vec1 * ( C_tensor_el.get_subtensor(j+1,k+1) * vec2);
+			  scal_prod = vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2);
 			  
 			  if (!belongs_to_substrate(p1, elem))
 			    {
@@ -1069,7 +1072,11 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 	      if ( (*add_var_temp)[eq_number].lat_cons )
 		{
 		    unsigned int lat_index = (*add_var_temp)[eq_number].index1;
-		    double lat_const = crystal_el.lat_const_calc[lat_index - 1];
+		    double lat_constants[3];
+		    crystal_el-> get_lat_const(lat_constants);
+
+
+		    double lat_const = lat_constants[lat_index - 1];
 		    
 		    lattice_factor = 1/lat_const;
 		 }
@@ -1082,7 +1089,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 		  unsigned int lat_index2 = (*add_var_temp)[eq_number].index2;
 		  
 		 
-		  C_kl = C_tensor_el.get_another_subtensor(lat_index1,lat_index2);
+		  C_kl = C_tensor_el->get_another_subtensor(lat_index1,lat_index2);
 		  //----------------RHS------------------
 		  Fe_add_sub.reposition(n_dofs + eq_number,1);
 		  
@@ -1123,7 +1130,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 		  for (unsigned int i1 = 0; i1 < (*add_var_temp).size()  ; i1++)
 		    {
 		      Ke_add_add_sub.reposition(n_dofs + eq_number,n_dofs + i1,1,1);
-		      eps_var = crystal_el.get_var_eps0( (*add_var_temp)[i1].name );
+		      eps_var = crystal_el->get_var_eps0( (*add_var_temp)[i1].name );
 		    
 		      Ke_add_add_sub(0,0) += JxW[qp]  * doubleContraction(eps_var,C_kl) *  lattice_factor;
 		   
@@ -2310,12 +2317,12 @@ void Macrostrain::output_strain(std::string filename )
   char num_j[2];
   string eps_ij;
   
-  std:: map<unsigned int, Macrostrain::strain_param*>::iterator str_it =
+  std:: map<unsigned int, Macrostrain::strain_param>::iterator str_it =
     strain_parameters.find( substr_mat  );
  
-  rotated_crystal crystal_substr =  (str_it->second)->crystal;
+  RotatedCrystal* crystal_substr =  (str_it->second).crystal;
 
-  double a_substrate[3];  crystal_substr.get_lat_const(a_substrate);
+  double a_substrate[3];  crystal_substr->get_lat_const(a_substrate);
 
   unsigned int index = 0;
 
@@ -2776,11 +2783,11 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
     {//convert to crystal system
       const unsigned int material = material_of_elem[elem_number]; //get material number
      
-      std:: map<unsigned int, Macrostrain::strain_param*>::iterator str_it = strain_parameters.find(material);
+      std:: map<unsigned int, Macrostrain::strain_param>::iterator str_it = strain_parameters.find(material);
       
-      rotated_crystal crystal1 =( str_it -> second ) -> crystal; 
+      RotatedCrystal* crystal1 =( str_it -> second ).crystal; 
 
-      Tensor2Gen RotM = (crystal1.RotMatrix).transpose();//get rotation matrix
+      Tensor2Gen RotM = (crystal1->RotMatrix).transpose();//get rotation matrix
       
       Tensor2Gen eps1 = (RotM*eps)*RotM.transpose();  //transform
       
@@ -2818,10 +2825,10 @@ Tensor1 Macrostrain::get_built_in_polarization(const Elem* el, const Point& quad
 
   Tensor1 polariz = (piezo_it -> second)->get_polariz_cryst(strain_cr); //crystal system
 
-  std::map< unsigned int, Macrostrain::strain_param*>::iterator str_it =
+  std::map< unsigned int, Macrostrain::strain_param>::iterator str_it =
     strain_parameters.find( material) ;
 
-  polariz =( (str_it -> second)->crystal.RotMatrix) * polariz; //calculation system
+  polariz =( (  (str_it -> second).crystal  )->RotMatrix) * polariz; //calculation system
 
   return(polariz);
 
@@ -2854,10 +2861,10 @@ Tensor1 Macrostrain::get_piezopolarization(const Elem* el)
 
   Tensor1 polariz = (piezo_it -> second)->get_polariz_cryst(strain_cr); //crystal system
 
-  std::map< unsigned int, Macrostrain::strain_param*>::iterator str_it =
+  std::map< unsigned int, Macrostrain::strain_param>::iterator str_it =
     strain_parameters.find( material) ;
 
-  polariz =( (str_it -> second)->crystal.RotMatrix) * polariz; //calculation system
+  polariz =( ((str_it -> second).crystal)->RotMatrix) * polariz; //calculation system
 
   return(polariz);
 
@@ -3029,10 +3036,10 @@ void  Macrostrain::set_up_additional_dofs()
 Tensor2Sym Macrostrain::calculate_eps_lat_matching(unsigned int material)
 {
   //constant part of the lattice matching tensor
-  std::map< unsigned int, Macrostrain::strain_param*>::iterator str_it =
+  std::map< unsigned int, Macrostrain::strain_param>::iterator str_it =
     strain_parameters.find(material);
 
-  Tensor2Sym eps0 = ((str_it -> second)->crystal).get_const_eps0(substrate_lat_const, eps0_var_log);
+  Tensor2Sym eps0 = ((str_it -> second).crystal)->get_const_eps0(substrate_lat_const, eps0_var_log);
   //------
   //variable part:
   for (unsigned int i = 0; i < number_of_add_var; i++)
@@ -3041,7 +3048,7 @@ Tensor2Sym Macrostrain::calculate_eps_lat_matching(unsigned int material)
 
       double coeff = ( *(my_system->solution) )( dof_number ); 
 
-      eps0 += coeff * ((str_it -> second)->crystal).get_var_eps0( add_var[i].name );
+      eps0 += coeff * ((str_it -> second).crystal)->get_var_eps0( add_var[i].name );
     } 
 
   return(eps0);
@@ -3052,10 +3059,10 @@ void Macrostrain::init_substrate()
 {
   substrate_shear = Tensor2Sym(0);
 
-  std::map< unsigned int, Macrostrain::strain_param*>::iterator str_it =
+  std::map< unsigned int, Macrostrain::strain_param>::iterator str_it =
     strain_parameters.find( substr_mat);
   
-  ((str_it -> second)->crystal).get_lat_const(substrate_lat_const);
+  ((str_it -> second).crystal)->get_lat_const(substrate_lat_const);
 }
 //--------------------------------------------------------------------------------------------/
 
@@ -3512,10 +3519,10 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
   //----------------------------------------------------------------------
   double substrate_lat_const_initial[3];
 
-  std::map< unsigned int, Macrostrain::strain_param*>::iterator str_it =
+  std::map< unsigned int, Macrostrain::strain_param>::iterator str_it =
     strain_parameters.find(substr_mat);
   
-  ((str_it -> second)->crystal).get_lat_const(substrate_lat_const_initial);
+  ((str_it -> second).crystal)->get_lat_const(substrate_lat_const_initial);
   //----------------------------------------------------------------------
   
 

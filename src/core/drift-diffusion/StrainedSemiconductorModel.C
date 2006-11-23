@@ -4,7 +4,7 @@
 #include "DDsemiconductor.h"
 
 #include "elem.h"
-#include "macrostrain.h"
+#include "Macrostrain.h"
 #include "tensor.h"
 
 #include <iostream>
