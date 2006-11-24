@@ -1,0 +1,32 @@
+#ifndef _WZSTIFFNESS_H_
+#define _WZSTIFFNESS_H_
+
+#include "Stiffness.h"
+
+class WzStiffness : public Stiffness
+{
+
+ public:
+
+  //!Empty constructor
+  WzStiffness();
+  
+  //!Constructor that sets moduli
+
+  WzStiffness(double c11, double c12, double c13, double c33, double c44 );
+
+
+  //! method that sets moduli
+  /*!assembles stiffness tensor in crystal system for a wurtzite crystal
+  z axis is parallel to [0001] direction
+  (x,y,z) - othogonormal system 
+   \f$ c_{11} = C_{xxxx}, c_{12}=C_{xxyy}, c_{13} = C_{xxzz}, c_{33} = C_{zzzz}, c_{44} = C_{yzxz} \f$
+  */  
+  void set_moduli(double c11, double c12, double c13, double c33, double c44 );
+  
+  
+  //reads database
+  void read_database (const Dummy &db);
+};
+
+#endif
