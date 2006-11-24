@@ -2,7 +2,7 @@
 #
 
 topdir := .
-dirs := src doc examples
+dirs := src examples
 
 include Make.common
 
@@ -25,6 +25,7 @@ clean:
 
 distclean: clean
 	@$(MAKE) -C examples distclean
+	@$(MAKE) -C doc clean
 	@rm -f lib/*
 
 

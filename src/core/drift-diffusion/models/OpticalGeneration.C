@@ -4,17 +4,11 @@
 
 #include <typeinfo>
 
-OpticalGeneration::OpticalGeneration(void)
-  : RecombinationModelInterface(),
-    _G(1e-10)
-
-{
-}
 
 void
-OpticalGeneration::set_model_options(const ModelOptions& options)
+OpticalGeneration::do_init(void)
 {
- 
+  _G = get_options().get_option("G", 1e-10);
 }
 
 void
@@ -38,8 +32,15 @@ OpticalGeneration::get_net_recombination_rate_derivatives(
 }
 
 
-const std::string
-OpticalGeneration::get_name(void) const
+void
+OpticalGeneration::calculate_VCA(const PhysicalModelInterface* comp_A,
+    const PhysicalModelInterface* comp_B, double xa)
 {
-  return "optical direct generation";
+  const OpticalGeneration* scA =
+    dynamic_cast<const OpticalGeneration*>(comp_A);
+  const OpticalGeneration* scB =
+    dynamic_cast<const OpticalGeneration*>(comp_B);
+
+  _G = alloy(scA->_G, scB->_G, xa);
 }
+

@@ -1,8 +1,12 @@
+// $Id$
+
 #ifndef _ELECTRICALCONTACT_H_
 #define _ELECTRICALCONTACT_H_
 
 
 #include "DriftDiffusionDefs.h"
+#include "BoundaryProperties.h"
+#include "ModelOptions.h"
 
 // C++ includes
 #include <string>
@@ -13,15 +17,16 @@ class DriftDiffusionProperties;
 /*!
  * Derive from this class to define contact models
  */
-class ElectricalContact
+class ElectricalContact : public BoundaryProperties
 {
   public:
 
-    //! This class is not intended for direct use
-    ElectricalContact(const std::string identifier);
-
     //! Empty destructor
     virtual ~ElectricalContact(void) {};
+
+    //! Create an electrical contact model
+    static ElectricalContact* create(const std::string& name,
+        const ModelOptions& options = ModelOptions());
 
     
     //! The type of boundary condition
@@ -34,6 +39,12 @@ class ElectricalContact
       //! the electric potential
       PINNING    
     };
+
+    //! Set the simulation voltage for this contact
+    void set_simulation_voltage(double voltage);
+
+    //! Get the simulation voltage for this contact
+    double get_simulation_voltage(void) const;
     
     //! Set the material
     /*!
@@ -63,9 +74,6 @@ class ElectricalContact
     //! Get the boundary value for \c variable
     virtual double get_boundary_value(DriftDiffusionDefs::Variable variable);
 
-    //! Return the id of this contact
-    const std::string& get_id(void) const;
-
     //! Set a BC to homogeneous von Neumann type
     /*!
      * This is only useful if on has a Dirichlet type boundary condition
@@ -78,6 +86,9 @@ class ElectricalContact
 
   protected:
 
+    //! This class is not intended for direct use
+    ElectricalContact(void);
+
     //! Set the boundary condition type for \c variable
     void set_type(DriftDiffusionDefs::Variable variable,
         BCType type);
@@ -85,23 +96,43 @@ class ElectricalContact
     //! Get a reference to the Drift-Diffusion properties
     const DriftDiffusionProperties& get_material(void) const;
 
+    /*! \copydoc BoundaryProperties::do_init() */
+    virtual void do_init(void);
+
+    
   private:
 
-    std::string _id;
-    
     BCType _potential_type;
     BCType _fermie_type;
     BCType _fermih_type;
+
+    //! The simulation voltage
+    double _sim_voltage;
 
     const DriftDiffusionProperties *_properties;
 };
 
 inline
-ElectricalContact::ElectricalContact(const std::string identifier)
-  : _id(identifier),
-    _properties(NULL)
+ElectricalContact::ElectricalContact(void)
+  : _properties(NULL)
 {
 }
+
+inline
+void
+ElectricalContact::set_simulation_voltage(double voltage)
+{
+  _sim_voltage = voltage;
+}
+
+
+inline
+double
+ElectricalContact::get_simulation_voltage(void) const
+{
+  return _sim_voltage;
+}
+
 
 inline
 void
@@ -163,6 +194,7 @@ void
 ElectricalContact::get_normal_derivative(DriftDiffusionDefs::Variable variable,
         double& a, double& c)
 {
+  ignore_unused_variable(variable);
   a = 0.0;
   c = 0.0;
 }
@@ -171,14 +203,8 @@ inline
 double
 ElectricalContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
 {
+  ignore_unused_variable(variable);
   return 0.0;
-}
-
-inline
-const std::string&
-ElectricalContact::get_id(void) const
-{
-  return _id;
 }
 
 inline
@@ -187,5 +213,6 @@ ElectricalContact::set_zero_derivative_bc(DriftDiffusionDefs::Variable variable)
 {
   set_type(variable, ElectricalContact::NEUMANN);
 }
+
 
 #endif // _ELECTRICALCONTACT_H_

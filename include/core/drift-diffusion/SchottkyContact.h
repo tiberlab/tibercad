@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _SCHOTTKYCONTACT_H_
 #define _SCHOTTKYCONTACT_H_
 
@@ -11,13 +13,20 @@ class SchottkyContact : public ElectricalContact
   public:
 
     //! The constructor
-    SchottkyContact(const std::string identifier);
+    SchottkyContact(void);
+
+    //! Create a schottky contact
+    static SchottkyContact* create(void);
     
     //! \copydoc ElectricalContact::get_boundary_value()
     virtual double get_boundary_value(DriftDiffusionDefs::Variable variable);
 
-    //! Set the Schottky barrier
-    void set_schottky_barrier(double barrier);
+
+  protected:
+
+    /*! \copydoc ElectricalContact::do_init() */
+    virtual void do_init(void);
+
 
   private:
 
@@ -25,9 +34,21 @@ class SchottkyContact : public ElectricalContact
     double _barrier;
 };
 
+
+//
+// inline
+// 
+
 inline
-SchottkyContact::SchottkyContact(const std::string identifier)
-  : ElectricalContact(identifier)
+SchottkyContact*
+SchottkyContact::create(void)
+{
+  return new SchottkyContact();
+}
+
+
+inline
+SchottkyContact::SchottkyContact(void)
 {
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::DIRICHLET);
   set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::DIRICHLET);
@@ -53,11 +74,14 @@ SchottkyContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
   return val;
 }
 
+
 inline
 void
-SchottkyContact::set_schottky_barrier(double barrier)
+SchottkyContact::do_init(void)
 {
-  _barrier = barrier;
+  ElectricalContact::do_init();
+
+  _barrier = get_options().get_option("barrier_height", 0.8);
 }
 
 #endif // _SCHOTTKYCONTACT_H_

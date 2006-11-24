@@ -3,11 +3,13 @@
 #ifndef _DOPANT_H_
 #define _DOPANT_H_
 
+//! Describes a dopant with a single energy level
 class Dopant
 {
 
   public:
 
+    //! The type of the dopant
     enum DopingType
     {
       P_TYPE = -1,
@@ -16,6 +18,8 @@ class Dopant
 
     Dopant(double density = 0.0, double ionisation_energy = 0.025,
         int g_factor = 2, DopingType type = N_TYPE);
+
+    Dopant(const Dopant& dopant);
 
     double get_doping_density(void) const;
 
@@ -40,8 +44,8 @@ class Dopant
 
   private:
 
-    DopingType _type;
     double _density;
+    DopingType _type;
     double _ionisation_energy;
     int _g_factor;
 
@@ -55,8 +59,19 @@ class Dopant
 inline
 Dopant::Dopant(double density, double ionisation_energy,
                int g_factor, DopingType type)
-  : _density(density), _type(type),
-    _ionisation_energy(ionisation_energy), _g_factor(g_factor)
+  : _density(density),
+    _type(type),
+    _ionisation_energy(ionisation_energy),
+    _g_factor(g_factor)
+{
+}
+
+inline
+Dopant::Dopant(const Dopant& dopant)
+  : _density(dopant._density),
+    _type(dopant._type),
+    _ionisation_energy(dopant._ionisation_energy),
+    _g_factor(dopant._g_factor)
 {
 }
 

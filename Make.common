@@ -11,6 +11,9 @@
 # $(tibermodules) are the subdirectories in $(topdir)/include
 tibermodules := base/common base/io utils/Tensor
 tibermodules += base/io/Read_ISE_grid
+tibermodules += base/database
+#tibermodules += base/exception
+tibermodules += pmi
 tibermodules += core/drift-diffusion core/drift-diffusion/models
 tibermodules += core/macrostrain core/semiconductormodels
 tibermodules += core/quantumEFAmodels core/solver-interfaces/petsc

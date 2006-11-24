@@ -1,0 +1,10 @@
+A piece of bulk semiconductor
+-----------------------------
+
+To change the material, modify bulk.in
+
+To compile, do a 'make'
+
+To run the 2D example, hit 'make run2d'
+
+To run the 3D example, hit 'make run3d'

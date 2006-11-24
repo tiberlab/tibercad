@@ -6,6 +6,8 @@
 #include "ZbDDsemiconductor.h"
 #include "WzDDsemiconductor.h"
 
+#include "Database.h"
+
 #include "getpot.h"
 
 #include <iostream>
@@ -20,32 +22,32 @@ SemiconductorModel::~SemiconductorModel(void)
 }
 
 SemiconductorModel::SemiconductorModel(void)
-  : Parent(),
-    _bulk_model(NULL),
+  : _bulk_model(NULL),
     _is_prepared(false)
 {
 }
 
+
+void
+SemiconductorModel::do_init(void)
+{
+  Parent::do_init();
+}
+
 /*
-SemiconductorModel::SemiconductorModel(
-    const SemiconductorModel& model)
-  : Parent(model),
-    _filename(model._filename),
-    _is_prepared(false)
+void
+SemiconductorModel::read_bowing_parameters(void)
 {
 }
 */
 
 void
-SemiconductorModel::read_database(const Dummy&)
+SemiconductorModel::read_database(void)
 {
-  GetPot data(_filename);
- 
-  const std::string structure = data("structure", "zb");
+  const Material* mat = get_material();
+  GetPot data((mat->get_database()).get_data_file());
 
- 
-
-  if (structure == "zb")
+  if (get_material()->get_structure() == "zb")
   {
     // defaults for GaAs
     ZbDDsemiconductor::ZbDDparameters params;
@@ -81,8 +83,6 @@ SemiconductorModel::read_database(const Dummy&)
     zbsc->energy_cutoff = 4.0;
 
     permittivity = data("permittivity", 12.93);
-    _e_mobility = data("electron_mobility", 1000.0);
-    _h_mobility = data("hole_mobility", 200.0);
 
   }
   else
@@ -120,144 +120,109 @@ SemiconductorModel::read_database(const Dummy&)
     wzsc->energy_cutoff = 4.0;
 
     permittivity = data("permittivity", 9.5);
-    _e_mobility = data("electron_mobility", 1000.0);
-    _h_mobility = data("hole_mobility", 200.0);
 
   
   }
 }
 
-void
-SemiconductorModel::build_alloy(const std::string& component2,
-    const std::string& bowing_params, double content)
-{
-  GetPot data(component2);
-  GetPot bowing(bowing_params);
 
-  const std::string structure = data("structure", "zb");
+void
+SemiconductorModel::calculate_VCA(const PhysicalModelInterface* comp_A,
+    const PhysicalModelInterface* comp_B, double xa)
+{
+  DriftDiffusionProperties::calculate_VCA(comp_A, comp_B, xa);
 
   double (*alloy)(double, double, double, double) =
     Alloy::calculate_VCA_parameter;
 
-  if (structure == "zb")
+  const SemiconductorModel* scA =
+    dynamic_cast<const SemiconductorModel*>(comp_A);
+  const SemiconductorModel* scB =
+    dynamic_cast<const SemiconductorModel*>(comp_B);
+
+  if (get_material()->get_structure() == "zb")
   {
     ZbDDsemiconductor* sc = dynamic_cast<ZbDDsemiconductor*>(_bulk_model);
+    ZbDDsemiconductor* sca = dynamic_cast<ZbDDsemiconductor*>(scA->_bulk_model);
+    ZbDDsemiconductor* scb = dynamic_cast<ZbDDsemiconductor*>(scB->_bulk_model);
     ZbDDsemiconductor::ZbDDparameters& params = sc->get_parameters();
+    const ZbDDsemiconductor::ZbDDparameters& paramsA = sca->get_parameters();
+    const ZbDDsemiconductor::ZbDDparameters& paramsB = scb->get_parameters();
 
-    params.EgGamma = alloy(data("Eg_G", 1.519), params.EgGamma, content,
-       bowing("Eg_G", 0.0));
-    params.EgL = alloy(data("Eg_L", 1.815), params.EgL, content,
-       bowing("Eg_L", 0.0));
-    params.EgX = alloy(data("Eg_X", 1.981), params.EgX, content,
-       bowing("Eg_X", 0.0));
-    params.Ev = alloy(data("E_v", 1.346), params.Ev, content,
-       bowing("E_v", 0.0));
+    params.EgGamma = alloy(paramsA.EgGamma, paramsB.EgGamma, xa, 0.0);
+    params.EgL = alloy(paramsA.EgL, paramsB.EgL, xa, 0.0);
+    params.EgX = alloy(paramsA.EgX, paramsB.EgX, xa, 0.0);
+    params.Ev = alloy(paramsA.Ev, paramsB.Ev, xa, 0.0);
 
-    params.m_G = alloy(data("m_G", 0.067), params.m_G, content,
-       bowing("m_G", 0.0));
-    params.m_t_L = alloy(data("m_L_t", 0.0754), params.m_t_L, content,
-       bowing("m_L_t", 0.0));
-    params.m_l_L = alloy(data("m_L_l", 1.9), params.m_l_L, content,
-       bowing("m_L_l", 0.0));
-    params.m_t_X = alloy(data("m_X_t", 1.3), params.m_t_X, content,
-       bowing("m_X_t", 0.0));
-    params.m_l_X = alloy(data("m_X_l", 0.23), params.m_l_X, content,
-       bowing("m_X_l", 0.0));
+    params.m_G = alloy(paramsA.m_G, paramsB.m_G, xa, 0.0);
+    params.m_t_L = alloy(paramsA.m_t_L, paramsB.m_t_L, xa, 0.0);
+    params.m_l_L = alloy(paramsA.m_l_L, paramsB.m_l_L, xa, 0.0);
+    params.m_t_X = alloy(paramsA.m_t_X, paramsB.m_t_X, xa, 0.0);
+    params.m_l_X = alloy(paramsA.m_l_X, paramsB.m_l_X, xa, 0.0);
 
-    params.a_c = alloy(data("a_c", -9.36), params.a_c, content,
-       bowing("a_c", 0.0));
-    params.a_v = alloy(data("a_v", -1.21), params.a_v, content,
-       bowing("a_v", 0.0));
-    params.b = alloy(data("b", -2.0), params.b, content,
-       bowing("b", 0.0));
-    params.d = alloy(data("d", -4.8), params.d, content,
-       bowing("d", 0.0));
+    params.a_c = alloy(paramsA.a_c, paramsB.a_c, xa, 0.0);
+    params.a_v = alloy(paramsA.a_v, paramsB.a_v, xa, 0.0);
+    params.b = alloy(paramsA.b, paramsB.b, xa, 0.0);
+    params.d = alloy(paramsA.d, paramsB.d, xa, 0.0);
 
-    params.delta = alloy(data("delta", 0.341), params.delta, content,
-       bowing("delta", 0.0));
-    params.gamma1 = alloy(data("gamma1", 6.98), params.gamma1, content,
-       bowing("gamma1", 0.0));
-    params.gamma2 = alloy(data("gamma2", 2.06), params.gamma2, content,
-       bowing("gamma2", 0.0));
-    params.gamma3 = alloy(data("gamma3", 2.93), params.gamma3, content,
-       bowing("gamma3", 0.0));
+    params.delta = alloy(paramsA.delta, paramsB.delta, xa, 0.0);
+    params.gamma1 = alloy(paramsA.gamma1, paramsB.gamma1, xa, 0.0);
+    params.gamma2 = alloy(paramsA.gamma2, paramsB.gamma2, xa, 0.0);
+    params.gamma3 = alloy(paramsA.gamma3, paramsB.gamma3, xa, 0.0);
 
-    params.def_vol_X = alloy(data("abs_def_pot_X", -0.16),
-        params.def_vol_X, content, bowing("abs_def_pot_X", 0.0));
-    params.def_uniax_X = alloy(data("uniax_def_pot_X", 14.26),
-        params.def_uniax_X, content, bowing("uniax_def_pot_X", 0.0));
-    params.def_vol_L = alloy(data("abs_def_pot_L", -4.91),
-        params.def_vol_L, content, bowing("abs_def_pot_L", 0.0));
-    params.def_uniax_L = alloy(data("uniax_def_pot_L", 6.5),
-        params.def_uniax_L, content, bowing("uniax_def_pot_L", 0.0));
+    params.def_vol_X = alloy(paramsA.def_vol_X,
+        paramsB.def_vol_X, xa, 0.0);
+    params.def_uniax_X = alloy(paramsA.def_uniax_X,
+        paramsB.def_uniax_X, xa, 0.0);
+    params.def_vol_L = alloy(paramsA.def_vol_L,
+        paramsB.def_vol_L, xa, 0.0);
+    params.def_uniax_L = alloy(paramsA.def_uniax_L,
+        paramsB.def_uniax_L, xa, 0.0);
 
-    permittivity = alloy(data("permittivity", 12.93), permittivity, content,
-       bowing("permittivity", 0.0));
-    _e_mobility = alloy(data("electron_mobility", 1000.0),
-        _e_mobility, content, bowing("electron_mobility", 0.0));
-    _h_mobility = alloy(data("hole_mobility", 200.0),
-        _h_mobility, content, bowing("hole_mobility", 0.0));
+    permittivity = alloy(scA->permittivity, scB->permittivity,
+        xa, 0.0);
   }
   else
   {
     WzDDsemiconductor* sc = dynamic_cast<WzDDsemiconductor*>(_bulk_model);
+    WzDDsemiconductor* sca = dynamic_cast<WzDDsemiconductor*>(scA->_bulk_model);
+    WzDDsemiconductor* scb = dynamic_cast<WzDDsemiconductor*>(scB->_bulk_model);
     WzDDsemiconductor::WzDDparameters& params = sc->get_parameters();
+    const WzDDsemiconductor::WzDDparameters& paramsA = sca->get_parameters();
+    const WzDDsemiconductor::WzDDparameters& paramsB = scb->get_parameters();
 
-   
+    params.EgGamma = alloy(paramsA.EgGamma, paramsB.EgGamma, xa, 0.0);
+    params.Ev = alloy(paramsA.Ev, paramsB.Ev, xa, 0.0);
 
-    params.EgGamma = alloy(data("Eg_G", 3.51), params.EgGamma, content,
-        bowing("Eg_G", 0.0));
-    params.Ev = alloy(data("E_v", -0.726), params.Ev, content,
-        bowing("E_v", 0.0));
+    params.m_c_zz = alloy(paramsA.m_c_zz, paramsB.m_c_zz, xa, 0.0);
+    params.m_c_xx = alloy(paramsA.m_c_xx, paramsB.m_c_xx, xa, 0.0);
 
-    params.m_c_zz = alloy(data("m_c_zz", 0.20), params.m_c_zz, content,
-        bowing("m_c_zz", 0.0));
-    params.m_c_xx = alloy(data("m_c_xx", 0.20), params.m_c_xx, content,
-        bowing("m_c_xx", 0.0));
+    params.A1 = alloy(paramsA.A1, paramsB.A1, xa, 0.0);
+    params.A2 = alloy(paramsA.A2, paramsB.A2, xa, 0.0);
+    params.A3 = alloy(paramsA.A3, paramsB.A3, xa, 0.0);
+    params.A4 = alloy(paramsA.A4, paramsB.A4, xa, 0.0);
+    params.A5 = alloy(paramsA.A5, paramsB.A5, xa, 0.0);
+    params.A6 = alloy(paramsA.A6, paramsB.A6, xa, 0.0); 
 
-    params.A1 = alloy(data("A1", -7.21), params.A1, content,
-        bowing("A1", 0.0));
-    params.A2 = alloy(data("A2", -0.44), params.A2, content,
-        bowing("A2", 0.0));
-    params.A3 = alloy(data("A3", 6.68), params.A3, content,
-        bowing("A3", 0.0));
-    params.A4 = alloy(data("A4", -3.46), params.A4,content, 
-        bowing("A4", 0.0));
-    params.A5 = alloy(data("A5", -3.40), params.A5, content,
-        bowing("A5", 0.0));
-    params.A6 = alloy(data("A6", -4.90), params.A6,content, 
-        bowing("A6", 0.0));
+    params.a_x = alloy(paramsA.a_x, paramsB.a_x, xa, 0.0);
+    params.a_z = alloy(paramsA.a_z, paramsB.a_z, xa, 0.0);
 
-    params.a_x = alloy(data("a_x", -4.9), params.a_x, content,
-        bowing("a_x", 0.0));
-    params.a_z = alloy(data("a_z", -11.3), params.a_z,content, 
-        bowing("a_z", 0.0));
+    params.D1 = alloy(paramsA.D1, paramsB.D1, xa, 0.0);
+    params.D2 = alloy(paramsA.D2, paramsB.D2, xa, 0.0);
+    params.D3 = alloy(paramsA.D3, paramsB.D3, xa, 0.0);
+    params.D4 = alloy(paramsA.D4, paramsB.D4, xa, 0.0);
+    params.D5 = alloy(paramsA.D5, paramsB.D5, xa, 0.0);
+    params.D6 = alloy(paramsA.D6, paramsB.D6, xa, 0.0);
+    params.delta_s = alloy(paramsA.delta_s, paramsB.delta_s, xa, 0.0);
+    params.delta_cr = alloy(paramsA.delta_cr, paramsB.delta_cr, xa, 0.0);
 
-    params.D1 = alloy(data("D1", -3.7), params.D1, content,
-        bowing("D1", 0.0));
-    params.D2 = alloy(data("D2", 4.5), params.D2,content, 
-        bowing("D2", 0.0));
-    params.D3 = alloy(data("D3", 8.2), params.D3, content,
-        bowing("D3", 0.0));
-    params.D4 = alloy(data("D4", -4.1), params.D4, content,
-        bowing("D4", 0.0));
-    params.D5 = alloy(data("D5", -4.0), params.D5, content,
-        bowing("D5", 0.0));
-    params.D6 = alloy(data("D6", -5.5), params.D6, content,
-        bowing("D6", 0.0));
-    params.delta_s = alloy(data("delta_s", 0.017), params.delta_s,
-        content, bowing("delta_s", 0.0));
-    params.delta_cr = alloy(data("delta_cr", 0.010), params.delta_cr,
-        content, bowing("delta_cr", 0.0));
+    permittivity = alloy(scA->permittivity, scB->permittivity,
+        xa, 0.0);
 
-    permittivity = alloy(data("permittivity", 9.5), permittivity,
-        content, bowing("permittivity", 0.0));
-    _e_mobility = alloy(data("electron_mobility", 1000.0),
-      _e_mobility, content, bowing("electron_mobility", 0.0));
-    _h_mobility = alloy(data("hole_mobility", 200.0),
-      _h_mobility, content, bowing("hole_mobility", 0.0));
   }
 }
+
+
 
 void
 SemiconductorModel::prepare_element_data(void)
@@ -266,7 +231,7 @@ SemiconductorModel::prepare_element_data(void)
   {
     try
     {
-      calculate_equilibrium_properties(BOTH, SimulationOptions::T);
+      calculate_equilibrium_properties();
     }
     catch (...)
     {
@@ -359,8 +324,7 @@ SemiconductorModel::print_info(void) const
 }
 
 void
-SemiconductorModel::calculate_equilibrium_properties(int coupling,
-    double temperature)
+SemiconductorModel::calculate_equilibrium_properties(void)
 {
 
   assert(_bulk_model != NULL);
@@ -373,48 +337,7 @@ SemiconductorModel::calculate_equilibrium_properties(int coupling,
   extract_band_properties();
 
   // call the method of the parent class
-  Parent::calculate_equilibrium_properties(coupling, temperature);
-
-}
-
-
-void
-SemiconductorModel::calculate_all(double potential,
-    double fermi_e, double fermi_h, const Point& coord)
-{
-  int coupling = get_coupling_type();
-
-  // in this simple model all temperatures are equal
-  double kT = electron_vt;
-
-  // call the method of the parent class
-  Parent::calculate_all(potential, fermi_e, fermi_h, coord);
-
-  double n = electron_density;
-  double dn = electron_density_derivative;
-  double p = hole_density;
-  double dp = hole_density_derivative;
-
-  // 4.) mobilities / conductivities
-  // For both statistics:
-  // 
-  //   mu_n = e * D_n * (1 / n) * (dn / dEf_e)
-  //
-  // NOTE: kT := kB * T / e includes already e
-  //if (coupling & DriftDiffusionDefs::ELECTRONS)
-  //{
-    electron_mobility = _e_mobility;
-    electron_conductivity = _e_mobility * n;
-    electron_conductivity_derivatives[0] = _e_mobility * dn;
-    electron_conductivity_derivatives[1] = -_e_mobility * dn;
-  //}
-  //if (coupling & DriftDiffusionDefs::HOLES)
-  //{
-    hole_mobility = _h_mobility;
-    hole_conductivity = _h_mobility * p;
-    hole_conductivity_derivatives[0] = _h_mobility * dp;
-    hole_conductivity_derivatives[2] = -_h_mobility * dp;
-  //}
+  Parent::calculate_equilibrium_properties();
 
 }
 

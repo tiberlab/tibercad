@@ -2,22 +2,16 @@
 
 // module includes
 #include "ExcitonTransport.h"
-#include "DriftDiffusion.h"
-#include "DDevice.h"
+#include "SimulationEnvironment.h"
+#include "Material.h"
 #include "Scaling.h"
-#include "ElementData.h"
-#include "BoundaryData.h"
-#include "ElectricalContact.h"
 #include "Constants.h"
-#include "DriftDiffusionProperties.h"
 #include "ExcitonProperties.h"
-#include "SemiconductorModel.h"
 #include "TiberPetscNonlinearSolver.h"
 
 // libmesh includes
 #include "node.h"
 #include "mesh.h"
-#include "mesh_modification.h"
 #include "dof_map.h"
 #include "elem.h"
 #include "fe.h"
@@ -30,11 +24,8 @@
 #include "kelly_error_estimator.h"
 #include "sparse_matrix.h"
 #include "numeric_vector.h"
-#include "dense_matrix.h"
-#include "dense_vector.h"
 #include "dense_submatrix.h"
 #include "dense_subvector.h"
-#include "gmv_io.h"
 
 // C++ includes
 
@@ -54,8 +45,7 @@ ExcitonTransport::Options::Options(void)
     coarsen_fraction(0.3),
     refinement_tolerance(1e-6),
     integration_order(libMeshEnums::FIFTH),
-    mesh_units(1e-4), // default mesh units are um
-    local_scaling(false)
+    mesh_units(1e-4) // default mesh units are um
 {
 }
 
@@ -68,8 +58,7 @@ ExcitonTransport::Options::Options(const Options& rhs)
     refinement_tolerance(rhs.refinement_tolerance),
     integration_order(rhs.integration_order),
     solver_params(rhs.solver_params),
-    mesh_units(rhs.mesh_units),
-    local_scaling(rhs.local_scaling)
+    mesh_units(rhs.mesh_units)
 {
 }
 
@@ -87,7 +76,6 @@ ExcitonTransport::Options::operator=(const Options& rhs)
     integration_order = rhs.integration_order;
     solver_params = rhs.solver_params;
     mesh_units = rhs.mesh_units;
-    local_scaling = rhs.local_scaling;
   }
   return *this;
 }
@@ -97,11 +85,13 @@ ExcitonTransport::Options::operator=(const Options& rhs)
 ExcitonTransport::SolverParameters::SolverParameters(void)
   : nonlinear_tolerance(1e-12),
     nonlinear_abs_tolerance(1e-18),
+    nonlinear_step_tolerance(1e-6),
     nonlinear_max_iterations(10),
     linear_tolerance(1e-6),
     linear_abs_tolerance(1e-12),
     linear_max_iterations(500),
     ls_maxstep(0.025),
+    ls_type(3),
     ksp_type(KSPBCGSL),
     pc_type(PCILU)
 {
@@ -110,11 +100,13 @@ ExcitonTransport::SolverParameters::SolverParameters(void)
 ExcitonTransport::SolverParameters::SolverParameters(const SolverParameters& rhs)
   : nonlinear_tolerance(rhs.nonlinear_tolerance),
     nonlinear_abs_tolerance(rhs.nonlinear_abs_tolerance),
+    nonlinear_step_tolerance(rhs.nonlinear_step_tolerance),
     nonlinear_max_iterations(rhs.nonlinear_max_iterations),
     linear_tolerance(rhs.linear_tolerance),
     linear_abs_tolerance(rhs.linear_abs_tolerance),
     linear_max_iterations(rhs.linear_max_iterations),
     ls_maxstep(rhs.ls_maxstep),
+    ls_type(rhs.ls_type),
     ksp_type(rhs.ksp_type),
     pc_type(rhs.pc_type)
 {
@@ -127,11 +119,13 @@ ExcitonTransport::SolverParameters::operator=(const SolverParameters& rhs)
   {
     nonlinear_tolerance = rhs.nonlinear_tolerance;
     nonlinear_abs_tolerance = rhs.nonlinear_abs_tolerance;
+    nonlinear_step_tolerance = rhs.nonlinear_step_tolerance;
     nonlinear_max_iterations = rhs.nonlinear_max_iterations;
     linear_tolerance = rhs.linear_tolerance;
     linear_abs_tolerance = rhs.linear_abs_tolerance;
     linear_max_iterations = rhs.linear_max_iterations;
     ls_maxstep = rhs.ls_maxstep;
+    ls_type = rhs.ls_type;
     ksp_type = rhs.ksp_type;
     pc_type = rhs.pc_type;
   }
@@ -139,64 +133,17 @@ ExcitonTransport::SolverParameters::operator=(const SolverParameters& rhs)
 }
 
 
-
-// TODO add integrity test
-ExcitonTransport::ExcitonTransport(DD::Device* device)
-  : _eq_system(NULL),
-    _rebuild_eq_system(true)
+ExcitonTransport::ExcitonTransport(void)
+  : _rebuild_eq_system(true),
+    _relaxation_factor(1.0)
 {
-  // should throw exception
-  assert(device->check_integrity());
-  _device = device;
-
 }
 
-// TODO add integrity test
-ExcitonTransport::ExcitonTransport(DD::Device* device,
-    ExcitonTransport::Options& params)
-  : _eq_system(NULL),
-    _rebuild_eq_system(true)
-{
-  // should throw exception
-  assert(device->check_integrity());
-  _device = device;
-  _options = params;
-
-}
 
 ExcitonTransport::~ExcitonTransport(void)
 {
   cleanup_solver();
 }
-
-// TODO add integrity test
-void
-ExcitonTransport::set_device(DD::Device* device)
-{
-  // should throw exception
-  assert(device->check_integrity());
-
-  cleanup_solver();
-
-  _device = device;
-}
-
-void
-ExcitonTransport::update_element_list(void)
-{
-
-  MeshBase::const_element_iterator el =
-                                  get_mesh().active_elements_begin();
-  const MeshBase::const_element_iterator end_el =
-                                  get_mesh().active_elements_end();
-
-  _element_list.clear();
-  for ( ; el != end_el; ++el)
-  {
-    _element_list.insert(*el);
-  }
-}
-
 
 
 void
@@ -259,7 +206,7 @@ ExcitonTransport::set_to_remembered_solution(void)
 {
   NonlinearImplicitSystem& system =
     _eq_system->get_system<NonlinearImplicitSystem>(
-        "exciton");
+        get_equation_system_name());
   *(system.solution) = system.get_vector("remembered solution");
 }
 
@@ -269,11 +216,11 @@ ExcitonTransport::reset_solver(void)
 {
   if (!_rebuild_eq_system)
   {
-    assert(_eq_system != NULL);
-    _eq_system->delete_system("exciton");
+    get_equation_systems().delete_system(get_equation_system_name());
     _rebuild_eq_system = true;
   }
 }
+
 
 void
 ExcitonTransport::cleanup_solver(void)
@@ -297,7 +244,10 @@ ExcitonTransport::set_solver_params(NonlinearSolver<Number>& solver)
   double sqrt_n = sqrt((double) get_mesh().n_nodes());
 
   solver_class.set_snes_options(solver_params.nonlinear_tolerance,
-      solver_params.nonlinear_abs_tolerance * sqrt_n, nonlin_max_its,
+      solver_params.nonlinear_abs_tolerance * sqrt_n,
+      solver_params.nonlinear_step_tolerance, nonlin_max_its);
+  
+  solver_class.set_snes_ls_options(solver_params.ls_type,
       solver_params.ls_maxstep * sqrt_n / phi0);
 
   solver_class.set_ksp_options(solver_params.linear_tolerance,
@@ -309,16 +259,47 @@ ExcitonTransport::set_solver_params(NonlinearSolver<Number>& solver)
 }
 
 void
-ExcitonTransport::init(void)
+ExcitonTransport::parse_options(void)
+{
+  SolverParameters& solver_params =
+    get_options().solver_params;
+
+  const ModelOptions& opts = SimulationInterface::get_options();
+  Options& myopts = get_options();
+
+  myopts.integration_order = static_cast<libMeshEnums::Order>(
+      opts.get_option("integration_order", 5));
+  myopts.mesh_units = opts.get_option("mesh_units", 1e-4);
+
+  myopts.mesh_refinement = opts.get_option("mesh_refinement", false);
+
+  solver_params.nonlinear_tolerance = opts.get_option("nonlin_rel_tol", 1e-9);
+  solver_params.nonlinear_abs_tolerance = opts.get_option("nonlin_abs_tol",
+      1e-15);
+  solver_params.nonlinear_step_tolerance = opts.get_option("nonlin_step_tol",
+      1e-6);
+  solver_params.nonlinear_max_iterations = opts.get_option("nonlin_max_it", 10);
+  solver_params.linear_tolerance = opts.get_option("lin_rel_tol", 1e-6);
+  solver_params.linear_abs_tolerance = opts.get_option("lin_abs_tol", 1e-12);
+  solver_params.linear_max_iterations = opts.get_option("lin_max_it", 500);
+  solver_params.ls_maxstep = opts.get_option("ls_maxstep", 0.05);
+  //string pc = opts.get_option("pc", "ilu");
+
+}
+
+void
+ExcitonTransport::do_init(void)
 {
   if (!_rebuild_eq_system) return;
 
-  EquationSystems& equation_systems = get_equation_system();
+  _device = &get_environment().get_device();
+
+  EquationSystems& equation_systems = get_equation_systems();
 
   // create the exciton continuity equation
   NonlinearImplicitSystem& system =
     equation_systems.add_system<NonlinearImplicitSystem>(
-        "exciton");
+        get_equation_system_name());
 
 
   // we use PETSc
@@ -335,7 +316,6 @@ ExcitonTransport::init(void)
   // for adaptive mesh refinement we need the old solution
   // befor a refinement step
   system.add_vector("old solution");
-  system.add_vector("scaling");
 
   system.nonlinear_solver->matvec = assemble;
 
@@ -344,11 +324,9 @@ ExcitonTransport::init(void)
   SolverParameters& solver_params = get_options().solver_params;
 
   equation_systems.parameters.set<unsigned int>(
-    "nonlinear solver maximum iterations") =
-      solver_params.nonlinear_max_iterations;
-
-  equation_systems.parameters.set<Real>("nonlinear solver tolerance") =
-    solver_params.nonlinear_tolerance;
+    "nonlinear solver maximum iterations") = 100;
+      
+  equation_systems.parameters.set<Real>("nonlinear solver tolerance") = 1e-6;
 
 
   // initialize the newly created system
@@ -367,8 +345,8 @@ ExcitonTransport::set_initial_guess(double guess)
   assert(_rebuild_eq_system == false);
 
   NonlinearImplicitSystem& system =
-    get_equation_system().get_system<NonlinearImplicitSystem>(
-        "exciton");
+    get_equation_systems().get_system<NonlinearImplicitSystem>(
+        get_equation_system_name());
 
   NumericVector<Number>& solution = *(system.solution);
 
@@ -377,7 +355,7 @@ ExcitonTransport::set_initial_guess(double guess)
 }
 
 void
-ExcitonTransport::solve(void)
+ExcitonTransport::do_solve(void)
 {
 
   assert(_rebuild_eq_system == false);
@@ -386,14 +364,15 @@ ExcitonTransport::solve(void)
   // this is needed in the static assembly routine
   _this = this;
 
+  parse_options();
+
   // aliases for nicer code
   Options& params = get_options();
   SolverParameters& solver_params = params.solver_params;
 
-  DD::Device& device = *_device;
-  Mesh& mesh = _device->get_mesh();
+  Mesh& mesh = get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
-  EquationSystems& equation_systems = get_equation_system();
+  EquationSystems& equation_systems = get_equation_systems();
 
   if (dim == 1)
     if (solver_params.ksp_type == KSPBCGSL)
@@ -402,7 +381,7 @@ ExcitonTransport::solve(void)
 
   NonlinearImplicitSystem& system =
     equation_systems.get_system<NonlinearImplicitSystem>(
-        "exciton");
+        get_equation_system_name());
 
   NumericVector<Number>& solution = *(system.solution);
   NumericVector<Number>& old_solution = system.get_vector("old solution");
@@ -411,8 +390,6 @@ ExcitonTransport::solve(void)
   // the first calculation)
   set_solver_params(*system.nonlinear_solver);
 
-
-  //build_scaling();
 
   try { system.solve(); }
   // if it did not converge, so try half of the step
@@ -448,7 +425,7 @@ ExcitonTransport::solve(void)
 
   if (params.mesh_refinement)
   {
-    MeshRefinement mesh_refinement(device.get_mesh());
+    MeshRefinement mesh_refinement(mesh);
     ErrorVector error;
     KellyErrorEstimator error_estimator;
 
@@ -469,9 +446,12 @@ ExcitonTransport::solve(void)
 
       equation_systems.reinit();
 
+      if (is_refined)
+        get_environment().update_element_list();
+
+
       old_solution = solution;
 
-      //build_scaling();
       try { system.solve(); }
       catch (PetscDivergedError& e)
       {
@@ -516,9 +496,6 @@ ExcitonTransport::solve(void)
     // TODO: ???
     disable_mesh_refinement();
   }
-  
-  // update the list which contains all elements of this simulation
-  update_element_list();
 }
 
 
@@ -530,24 +507,19 @@ ExcitonTransport::get_solution(const Elem* elem, const Point& p)
   // this will contain the element in which p lies and for which
   // DriftDiffusion knows the potential
   const Elem* el = elem;
-  
-  // check if elem is in _element_list
-  set<const Elem*>::iterator end = _element_list.end();
-  set<const Elem*>::iterator it = _element_list.find(elem);
 
-  if (it == end)
+  SimulationEnvironment& env = get_environment();
+  
+  
+  // check if elem is an active element of the simulation
+  if (!env.contains_element(elem))
   {
     // do we have a parent element in the list?
     const Elem* parent = elem->parent();
-    while (parent != NULL)
-    {
-      it = _element_list.find(parent);
 
-      if (it != end)
-        break; // we have found it, so get out of the while loop
-
+    while ((parent != NULL) && (!env.contains_element(parent)))
       parent = parent->parent();
-    }
+
     el = parent; // is NULL if no parent
 
     // no parent, so check for children
@@ -559,13 +531,13 @@ ExcitonTransport::get_solution(const Elem* elem, const Point& p)
       unsigned int len = tree.size();
       for (unsigned int i = 0; i < len; i++)
       {
-        it = _element_list.find(tree[i]);
-        if (it != end)
+        const Elem* elem_i = tree[i];
+        if (env.contains_element(elem_i))
         {
-          if (tree[i]->contains_point(p))
+          if (elem_i->contains_point(p))
           {
             // we have found it, so get out of the for loop
-            el = tree[i];
+            el = elem_i;
             break;
           }
         }
@@ -589,10 +561,13 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
   if (np == 0) return;
 
   NonlinearImplicitSystem* system;
-  system = &_eq_system->get_system<NonlinearImplicitSystem>(
-      "exciton");
+  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
+      get_equation_system_name());
 
   const NumericVector<Number>& ddsol = *(system->solution);
+  const NumericVector<Number>& old_ddsol = system->get_vector("old solution");
+  double a = _relaxation_factor;
+  double b = 1 - _relaxation_factor;
 
   const unsigned int dim = get_mesh().mesh_dimension();
 
@@ -627,7 +602,8 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
     double u = 0;
     // do interpolation
     for (unsigned int i = 0; i < n_dofs; i++)
-      u  += phi[i][n] * ddsol(dof_indices_u[i]);
+      u  += phi[i][n] * (a * ddsol(dof_indices_u[i]) +
+          b * old_ddsol(dof_indices_u[i]));
 
     // scale the potential back
     u  *= phi0;
@@ -636,138 +612,6 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
   }
 }
 
-/* 
-void
-ExcitonTransport::build_scaling(void)
-{
-  NonlinearImplicitSystem* system;
-
-  system = &_eq_system->get_system<NonlinearImplicitSystem>(
-      "exciton");
-
-  // aliases for nicer code
-  const DD::Device& device = *(_device);
-  const Mesh& mesh = _device->get_mesh();
-  const NumericVector<Number>& solution = *(system->solution);
-  NumericVector<Number>& scaling = system->get_vector("scaling");
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int dim = mesh.mesh_dimension();
-  const unsigned int nn  = mesh.n_nodes();
-
-  vector<unsigned short int> node_conn(nn);
-
-  vector<double> nodal_val;
-
-  // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
-
-  scaling.zero();
-
-  // Get the number of elements that share each node.  We will
-  // compute the average value at each node.
-  {
-    vector<unsigned short int> node_conn_local(node_conn.size());
-
-    MeshBase::const_element_iterator it =
-      mesh.active_local_elements_begin();
-    const MeshBase::const_element_iterator end =
-      mesh.active_local_elements_end();
-
-    for ( ; it != end; ++it)
-      for (unsigned int n=0; n<(*it)->n_nodes(); n++)
-	node_conn_local[(*it)->node(n)]++;
-
-#ifdef HAVE_MPI
-    // Gather the distributed node_conn arrays in the case of
-    // multiple processors
-    //
-    // (Note that we use an unsigned short int here even though an
-    // unsigned char would be more that sufficient.  The MPI 1.1
-    // standard does not require that MPI_SUM, MPI_PROD etc... be
-    // implemented for char data types. 12/23/2003 - BSK)
-    MPI_Allreduce (&node_conn_local[0], &node_conn[0], node_conn.size(),
-		   MPI_UNSIGNED_SHORT, MPI_SUM, libMesh::COMM_WORLD);
-
-#else
-    // Without MPI the node_conn_local and the node_conn arrays
-    // are necessarily identical
-    node_conn = node_conn_local;
-
-#endif
-  }
-
-  const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
-
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-  MeshBase::const_element_iterator it =
-    mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end =
-    mesh.active_elements_end();
-
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-#ifdef ENABLE_INFINITE_ELEMENTS
-    // infinite elements should be skipped...
-    if (!elem->infinite())
-#endif
-    {
-      dof_map.dof_indices(elem, dof_indices_u, u_var);
-      dof_map.dof_indices(elem, dof_indices_en, en_var);
-      dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-      DriftDiffusionProperties* sc =
-        device.get_element_data().get_data(elem->top_parent());
-      assert(sc != NULL);
-
-      sc->reinit(elem);
-
-      assert(elem->n_nodes() == dof_indices_u.size());
-
-      //sol.resize(dof_indices.size());
-
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      {
-        double u  = phi0 * solution(dof_indices_u[n]);
-        double en = phi0 * solution(dof_indices_en[n]);
-        double ep = phi0 * solution(dof_indices_ep[n]);
-
-        sc->calculate_all(u, en, ep, elem->point(n));
-
-        assert (node_conn[elem->node(n)] != 0);
-
-        double nn  = sc->get_electron_density();
-        double pp  = sc->get_hole_density();
-        double ni = sc->get_intrinsic_density();
-        double nn0 = sc->get_equilibrium_electron_density();
-        double pp0 = sc->get_equilibrium_hole_density();
-        double mue = sc->get_electron_mobility();
-        double muh = sc->get_hole_mobility();
-        double a = nn0 * exp(-nn / nn0 * 1);
-        double b = pp0 * exp(-pp / pp0 * 1);
-
-        scaling.set(dof_indices_u[n], 1);
-
-        double nodal_val = nn + a;
-        nodal_val /= static_cast<Real>(node_conn[elem->node(n)]);
-        scaling.add(dof_indices_en[n], nodal_val);
-
-        nodal_val = pp + b;
-        nodal_val /= static_cast<Real>(node_conn[elem->node(n)]);
-        scaling.add(dof_indices_ep[n], nodal_val);
-      }
-    }
-  }
-}
-*/
 
 
 // implementation taken from libmesh equation_systems.C
@@ -777,12 +621,12 @@ ExcitonTransport::build_densities(vector<double>& densities,
 {
   NonlinearImplicitSystem* system;
 
-  system = &_eq_system->get_system<NonlinearImplicitSystem>(
-      "exciton");
+  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
+      get_equation_system_name());
 
   // aliases for nicer code
-  const DD::Device& device = *(_device);
-  const Mesh& mesh = _device->get_mesh();
+  const Device& device = *(_device);
+  const Mesh& mesh = get_mesh();
   const NumericVector<Number>& solution = *(system->solution);
 
   const DofMap& dof_map = system->get_dof_map();
@@ -794,7 +638,7 @@ ExcitonTransport::build_densities(vector<double>& densities,
   const unsigned int n_vars  = 4;
   names.resize(n_vars);
   names[0] = "density";
-  names[1] = "recombination_rate";
+  names[1] = "net_recombination_rate";
   names[2] = "generation_rate";
   names[3] = "electro-chimical_potential";
 
@@ -807,10 +651,6 @@ ExcitonTransport::build_densities(vector<double>& densities,
 
   // the scaling parameters to scale back the result
   double phi0 = get_scaling().get_potential_scaling();
-
-  ExcitonProperties* excitonmodel = get_exciton_model();
-  DriftDiffusion* driftdiff = get_driftdiffusion();
-
 
   fill(densities.begin(), densities.end(), 0.0);
   fill(local.begin(), local.end(), 0.0);
@@ -848,9 +688,6 @@ ExcitonTransport::build_densities(vector<double>& densities,
 #endif
   }
 
-  //! for the drift-diffusion solution
-  vector<DriftDiffusion::Solution> dd_solution;
-
   const unsigned int u_var = system->variable_number("fermi_x");
 
   vector<unsigned int> dof_indices_u;
@@ -871,12 +708,15 @@ ExcitonTransport::build_densities(vector<double>& densities,
     {
       dof_map.dof_indices(elem, dof_indices_u, u_var);
 
-      SemiconductorModel* sc = static_cast<SemiconductorModel*>(
-          device.get_element_data().get_data(elem->top_parent()));
-      assert(sc != NULL);
+      ID subdomain = elem->subdomain_id();
 
-      sc->reinit(elem);
-      excitonmodel->reinit(elem, sc);
+      ExcitonProperties* excitonmodel =
+        dynamic_cast<ExcitonProperties*>(
+            device.get_material(subdomain)->get_model(get_id()));
+
+      assert(excitonmodel!= NULL);
+
+      excitonmodel->reinit(elem);
 
       assert(elem->n_nodes() == dof_indices_u.size());
 
@@ -885,19 +725,15 @@ ExcitonTransport::build_densities(vector<double>& densities,
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
         nodes[n] = elem->point(n);
 
-      // get the potentials at the nodes
-      driftdiff->get_solution(elem, nodes, dd_solution);
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
-        double u  = dd_solution[n].potential;
-        double en = dd_solution[n].fermi_e;
-        double ep = dd_solution[n].fermi_h;
         double ex  = phi0 * solution(dof_indices_u[n]);
         
-
-        sc->calculate_all(u, en, ep, elem->point(n));
-        excitonmodel->calculate_all(ex, elem->point(n));
+        excitonmodel->set_coordinates(elem->point(n));
+        excitonmodel->set_effective_potential(ex);
+        excitonmodel->calculate_density();
+        excitonmodel->calculate_net_recombination_rate();
 
         assert (node_conn[elem->node(n)] != 0);
 
@@ -906,11 +742,11 @@ ExcitonTransport::build_densities(vector<double>& densities,
         local[id] +=
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
 
-        nodal_val = excitonmodel->get_recombination_rate();
+        nodal_val = excitonmodel->get_net_recombination_rate();
         local[id + 1] +=
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
 
-        nodal_val = excitonmodel->get_generation_rate();
+        nodal_val = 0;
         local[id + 2] +=
           nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
 
@@ -945,7 +781,7 @@ ExcitonTransport::build_current_density(vector<double>& current,
   NonlinearImplicitSystem* system;
 
   system = &_eq_system->get_system<NonlinearImplicitSystem>(
-      "exciton");
+      get_equation_system_name());
 
   // aliases for nicer code
   const DD::Device& device = *(_device);
@@ -1061,26 +897,24 @@ ExcitonTransport::build_current_density(vector<double>& current,
 }
 
 
-
 void
-ExcitonTransport::assemble(const NumericVector<Number>& x,
+ExcitonTransport::do_assembly(const NumericVector<Number>& x,
     NumericVector<Number>* residual,
     SparseMatrix<Number>* jacobian)
 {
 
   // references for nicer code
-  const Mesh& mesh = _this->get_mesh();
-  EquationSystems& eq_sys = _this->get_equation_system();
+  const Mesh& mesh = get_mesh();
+
+  EquationSystems& eq_sys = get_equation_systems();
   NonlinearImplicitSystem& system =
-    eq_sys.get_system<NonlinearImplicitSystem>("exciton");
+    eq_sys.get_system<NonlinearImplicitSystem>(get_equation_system_name());
 
   const unsigned int dim = mesh.mesh_dimension();
 
-  const DD::Device& device = _this->get_device();
-  const Options& params = _this->get_options();
-  Options& options = _this->get_options();
-
-  DriftDiffusion* driftdiff = _this->get_driftdiffusion();
+  const Device& device = *_device;
+  const Options& params = get_options();
+  Options& options = get_options();
 
   //
   // some scaling stuff...
@@ -1089,7 +923,7 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
   //       we have to treat scaling by explicit division/multiplication
   //
   // the scaling parameters
-  const Scaling& scaling = _this->get_scaling();
+  const Scaling& scaling = get_scaling();
   // the scaling parameter for the poisson eq.
   // The factor 1e-2 comes from the fact, that we are calculating in cm!
   const double x0 = scaling.get_length_scaling();
@@ -1184,8 +1018,6 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
   // the DOF indices
   vector<unsigned int> dof_indices;
 
-  //! for the drift-diffusion solution at the quadrature points
-  vector<DriftDiffusion::Solution> dd_solution;
 
   // zero out residual and jacobian !! IMPORTANT !!
   if (residual != NULL)
@@ -1205,6 +1037,8 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
 
+    ID subdomain = elem->subdomain_id();
+
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices);
     unsigned int n_dofs = dof_indices.size();
@@ -1218,17 +1052,13 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
     // extract local solution, accounting for constraints
     dof_map.extract_local_vector(x, dof_indices, X);
 
-    DriftDiffusionProperties* sc =
-      device.get_element_data().get_data(top_parent);
-    assert(sc != NULL);
+    ExcitonProperties* em =
+      dynamic_cast<ExcitonProperties*>(
+          device.get_material(subdomain)->get_model(get_id()));
 
-    ExcitonProperties* em = _this->get_exciton_model();
+    assert(em != NULL);
 
-    sc->reinit(elem);
-    em->reinit(elem, sc);
-
-    // get the drift-diffusion solution values at the quadrature points
-    driftdiff->get_solution(elem, q_point, dd_solution);
+    em->reinit(elem);
 
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
@@ -1238,19 +1068,15 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
       for (unsigned int i = 0; i < n_dofs; i++)
         ex += phi[i][qp] * X(i);
 
-      double u = dd_solution[qp].potential;
-      double en = dd_solution[qp].fermi_e;
-      double ep = dd_solution[qp].fermi_h;
-
-      // calculate densities etc.
-      sc->calculate_all(u, en, ep, q_point[qp]);
-      em->calculate_all(phi0 * ex, q_point[qp]);
+      em->set_coordinates(q_point[qp]);
+      em->set_effective_potential(phi0 * ex);
+      em->calculate_density();
+      em->calculate_mobility();
+      em->calculate_net_recombination_rate();
 
       double x = em->get_density();
-      double Rx = em->get_recombination_rate();
-      double Gx = em->get_generation_rate();
+      double Rx = em->get_net_recombination_rate();
       double mux = em->get_mobility();
-      //Rx = (fabs(Rx) < 1.0) ? 0.0 : Rx;
 
       // remember the maximum densities
       x_max = (x_max > x) ? x_max : x;
@@ -1294,7 +1120,7 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
       //
       if (jacobian != NULL)
       {
-        double dRx = phi0 / R0 * em->get_recombination_rate_derivative();
+        double dRx = phi0 / R0 * em->get_net_recombination_rate_derivative();
         if (Rx == 0.0)
           dRx = 0.0;
 
@@ -1334,7 +1160,7 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
       {
 
         // net recombination rate
-        double J_x_Rx = J * (Rx - Gx) / R0 ;
+        double J_x_Rx = J * Rx / R0 ;
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {

@@ -3,20 +3,10 @@
 #include "ExcitonProperties.h"
 #include "DriftDiffusionProperties.h"
 
-
-
-ExcitonGeneration::ExcitonGeneration(void)
-  : RecombinationModelInterface(),
-    _C(1e-10)
-{
-}
-
 void
-ExcitonGeneration::set_model_options(const ModelOptions& options)
+ExcitonGeneration::do_init(void)
 {
-  ModelOptions::const_iterator it = options.find("C");
-  if (it != options.end())
-    _C = atof((it->second).c_str());
+  _C = get_options().get_option("C", 1e-10);
 }
 
 void
@@ -50,8 +40,16 @@ ExcitonGeneration::get_net_recombination_rate_derivatives(
   recomb_e[2] = recomb_h[2] = -b;
 }
 
-const std::string
-ExcitonGeneration::get_name(void) const
+
+void
+ExcitonGeneration::calculate_VCA(const PhysicalModelInterface* comp_A,
+    const PhysicalModelInterface* comp_B, double xa)
 {
-  return "exciton_generation";
+  const ExcitonGeneration* scA =
+    dynamic_cast<const ExcitonGeneration*>(comp_A);
+  const ExcitonGeneration* scB =
+    dynamic_cast<const ExcitonGeneration*>(comp_B);
+
+  _C = alloy(scA->_C, scB->_C, xa);
 }
+

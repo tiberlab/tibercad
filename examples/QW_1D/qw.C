@@ -3,12 +3,18 @@
 
 #include "Dopant.h"
 #include "RecombinationModelInterface.h"
-#include "ElementData.h"
-#include "OhmicContact.h"
-#include "BoundaryData.h"
-#include "DDevice.h"
+#include "MobilityModelInterface.h"
+#include "ElectricalContact.h"
 #include "DriftDiffusion.h"
 #include "StrainedSemiconductorModel.h"
+
+
+#include "Material.h"
+#include "Device.h"
+#include "Boundary.h"
+#include "SimulationEnvironment.h"
+#include "Database.h"
+#include "MeshUtils.h"
 
 #include "macrostrain.h"
 #include "mesh_data_elements.h"
@@ -28,16 +34,11 @@ using namespace std;
 using namespace DriftDiffusionDefs;
 
 
-void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    ElectricalContact* desc, const Mesh& mesh);
-
 
 double alloy(double a, double b, double xa, double bowing = 0.0)
 {
   return b + (a - b) * xa - bowing * xa *  (1 - xa);
 };
-
-class Dummy {};
 
 
 int main (int argc, char** argv)
@@ -49,16 +50,13 @@ int main (int argc, char** argv)
     // general options
     GetPot input_file("options.in");
 
+    string searchpath = input_file("searchpath", ".");
     string meshfile = input_file("meshfile", "");
-    const double mesh_units = input_file("mesh_units", 1e-7);
+    string mesh_units = input_file("mesh_units", "1e-7");
 
     int fully = input_file("fully_coupled", 1);
 
-    int mat_sys = input_file("material_system",0);
     double in_content = input_file("in_content", 0.15);
-    double al_content = input_file("al_content", 0.48);
-    double ga_content = input_file("ga_content", 0.47);
-    int growth_dir = input_file("growth_dir",1);
 
     // drift-diffusion options
     GetPot dd_opt("dd.in");
@@ -70,17 +68,16 @@ int main (int argc, char** argv)
     double stop_voltage = dd_opt("vg_stop", 0.0);
     unsigned int voltage_steps = dd_opt("vg_steps", 1);
 
-    double dd_nonlin_rtol = dd_opt("nonlinear_tolerance", 1e-9);
-    double dd_nonlin_atol = dd_opt("nonlinear_abs_tolerance", 1e-12);
-    double dd_lin_rtol = dd_opt("linear_tolerance", 1e-6);
-    double dd_lin_atol = dd_opt("linear_abs_tolerance", 1e-9);
-    int integration_order = dd_opt("integration_order", 5);
-    int dd_nonlin_max_it = dd_opt("nonlinear_max_it", 15);
-    int dd_lin_max_it = dd_opt("linear_max_it", 500);
-    double dd_nonlin_ls_maxstep =
-      dd_opt("nonlinear_ls_maxstep", 0.025);
-    unsigned int dd_max_r_steps =
-      dd_opt("max_refinement_steps", 0);
+    string dd_nonlin_rtol = dd_opt("nonlinear_tolerance", "1e-9");
+    string dd_nonlin_atol = dd_opt("nonlinear_abs_tolerance", "1e-12");
+    string dd_lin_rtol = dd_opt("linear_tolerance", "1e-6");
+    string dd_lin_atol = dd_opt("linear_abs_tolerance", "1e-9");
+    string integration_order = dd_opt("integration_order", "5");
+    string dd_nonlin_max_it = dd_opt("nonlinear_max_it", "15");
+    string dd_lin_max_it = dd_opt("linear_max_it", "500");
+    string ls_type = dd_opt("ls_type", "cubic");
+    string dd_nonlin_ls_maxstep =
+      dd_opt("nonlinear_ls_maxstep", "0.025");
     
     // strain options
     GetPot strain_opt("strain.in");
@@ -157,9 +154,12 @@ int main (int argc, char** argv)
 
     }
 
+
+    MeshUtils::assign_subdomain_ids(mesh, meshdata);
  
     mesh.print_info();
 
+    Device dev(mesh, boundary_nodes);
 
     /*****************************************************
      *
@@ -171,22 +171,12 @@ int main (int argc, char** argv)
 
     rotated_crystal cryst;
 
-    if ((mat_sys != 0) && (mat_sys != 4))
-    {
-      // InAs - GaAs
-      cryst.set_cryst_type("cub");
-      cryst.set_xyz_mil_direction("x",  1,  0, 0);
-      cryst.set_xyz_mil_direction("y",  0,  1, 0);
-      cryst.set_xyz_mil_direction("z",  0,  0, 1);
-    }
-    else
-    {
-      // AlGaN - GaN
-      cryst.set_cryst_type("hex");
-      cryst.set_xyz_mil_direction("y", 1,  0, -1, 0) ;
-      cryst.set_xyz_mil_direction("z", 1,  -2, 1, 0) ;
-      cryst.set_xyz_mil_direction("x",  0,  0, 0,  1) ;
-    }
+
+    // AlGaN - GaN
+    cryst.set_cryst_type("hex");
+    cryst.set_xyz_mil_direction("y", 1,  0, -1, 0) ;
+    cryst.set_xyz_mil_direction("z", 1,  -2, 1, 0) ;
+    cryst.set_xyz_mil_direction("x",  0,  0, 0,  1) ;
 
     
     Macrostrain::strain_param a_strain;
@@ -207,222 +197,73 @@ int main (int argc, char** argv)
     piezodata[3] = &c_piezo;
 
 
-    double x_al = al_content;
-    double x_ga = ga_content;
-    double x_in = 1 - al_content;
-    
-    if (mat_sys == 2)
-    {
-      // GaInAs - AlInAs
-      cout << "Using GaInAs - AlInAs\n" << flush;
 
-      a_strain.C_tensor.set_moduli(
-          alloy(83.290, 125.0, x_in),
-          alloy(45.260, 53.4, x_in),
-          alloy(39.590, 54.2, x_in)); //InAlAs
-      b_strain.C_tensor.set_moduli(
-          alloy(122.1, 83.290, x_ga),
-          alloy(56.6, 45.260, x_ga),
-          alloy(60.0, 39.590, x_ga)); //GaInAs
-      c_strain.C_tensor.set_moduli(
-          alloy(83.290, 125.0, x_in),
-          alloy(45.260, 53.4, x_in),
-          alloy(39.590, 54.2, x_in)); //InAlAs
+    a_strain.crystal = cryst;
+    b_strain.crystal = cryst;
+    c_strain.crystal = cryst;
 
-      a_piezo.set_moduli(alloy(-0.044, -0.015, x_in)); //InAs
-      b_piezo.set_moduli(alloy(-0.16, -0.044, x_ga)); //GaAs  C/m^2
-      c_piezo.set_moduli(alloy(-0.044, -0.015, x_in)); //InAs
-      a_piezo.set_pyro_module(0.0);
-      b_piezo.set_pyro_module(0.0);
-      c_piezo.set_pyro_module(0.0);
+    std::vector<int> x_dir(4);
+    std::vector<int> y_dir(4);
 
-      a_strain.crystal = cryst;
-      b_strain.crystal = cryst;
-      c_strain.crystal = cryst;
-
-      std::vector<int> x_dir(3);
-      std::vector<int> y_dir(3);
-      // growth direction
-      //x_dir[0] = growth_dir;  x_dir[1] = 1;  x_dir[2] =   1;
-      //x_dir[0] = 1;  x_dir[1] = growth_dir;  x_dir[2] =   growth_dir;
-      //y_dir[0] = 0;  y_dir[1] = 1;  y_dir[2] =  -1;
-      y_dir[0] = 0;  y_dir[1] = 1;  y_dir[2] =  0;
-      x_dir[0] = 1;  x_dir[1] = 0;  x_dir[2] =  0;
-
-      a_strain.crystal.set_lat_const(alloy(6.05830, 5.6611, x_in));
-      a_strain.crystal.calculate_lat_consts();
-      a_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
-      a_strain.C_tensor.rotate_to_calc_system(a_strain.crystal.RotMatrix);
-      
-      b_strain.crystal.set_lat_const(alloy(5.65325, 6.05830, x_ga));
-      b_strain.crystal.calculate_lat_consts();
-      b_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
-      b_strain.C_tensor.rotate_to_calc_system(b_strain.crystal.RotMatrix);
-
-      c_strain.crystal.set_lat_const(alloy(6.05830, 5.6611, x_in));
-      c_strain.crystal.calculate_lat_consts();
-      c_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
-      c_strain.C_tensor.rotate_to_calc_system(c_strain.crystal.RotMatrix);
-
-    }
-    else if (mat_sys == 1)
-    {
-      // GaAs - InAs
-      cout << "Using GaAs - InAs\n" << flush;
-
-      a_strain.C_tensor.set_moduli(122.1,  56.6,   60.0); //GaAs
-      b_strain.C_tensor.set_moduli(83.290,  45.260,  39.590); //InAs
-      c_strain.C_tensor.set_moduli(122.1,  56.6,   60.0); //GaAs
-
-      a_piezo.set_moduli(-0.16); //GaAs  C/m^2
-      b_piezo.set_moduli(-0.044); //InAs
-      c_piezo.set_moduli(-0.16); //GaAs
-      a_piezo.set_pyro_module(0.0);
-      b_piezo.set_pyro_module(0.0);
-      c_piezo.set_pyro_module(0.0);
+    y_dir[0] =  1;  y_dir[1] = 0;  y_dir[2] = -1;  y_dir[3] =  0;
+    x_dir[0] =  0;  x_dir[1] = 0;  x_dir[2] =  0;  x_dir[3] =  1;
 
 
-      a_strain.crystal = cryst;
-      b_strain.crystal = cryst;
-      c_strain.crystal = cryst;
+    // GaN
+    a_strain.C_tensor.set_moduli(390.0, 145.0, 106.0, 398.0, 105.0);
+    c_strain.C_tensor.set_moduli(390.0, 145.0, 106.0, 398.0, 105.0);
+    //
+    a_piezo.set_moduli(1.27, -0.35, -0.3); // C/m^2
+    c_piezo.set_moduli(1.27, -0.35, -0.3); // C/m^2
+    //
+    a_piezo.set_pyro_module(-0.034);
+    c_piezo.set_pyro_module(-0.034);
+    //
+    a_strain.crystal.set_lat_const(0.3189, 0.5185);
+    c_strain.crystal.set_lat_const(0.3189, 0.5185);
+    a_strain.crystal.calculate_lat_consts();
+    c_strain.crystal.calculate_lat_consts();
+    a_strain.crystal.calculate_rot_matrix(x_dir, y_dir); 
+    c_strain.crystal.calculate_rot_matrix(x_dir, y_dir); 
+    a_strain.C_tensor.rotate_to_calc_system(a_strain.crystal.RotMatrix);
+    c_strain.C_tensor.rotate_to_calc_system(c_strain.crystal.RotMatrix);
 
-      std::vector<int> x_dir(3);
-      std::vector<int> y_dir(3);
-      // growth direction
-      x_dir[0] = growth_dir;  x_dir[1] = 1;  x_dir[2] =   1;
-      //x_dir[0] = 1;  x_dir[1] = growth_dir;  x_dir[2] =   growth_dir;
-      y_dir[0] = 0;  y_dir[1] = 1;  y_dir[2] =  -1;
+    /*
+    // AlN
+    b_strain.C_tensor.set_moduli(396.0, 137.0, 108.0, 373.0, 116.0);
+    b_piezo.set_moduli(1.79, -0.5, -0.48);
+    b_piezo.set_pyro_module(-0.09);
+    b_strain.crystal.set_lat_const(0.3112, 0.4982);
+    b_strain.crystal.calculate_lat_consts();
+    b_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
+    b_strain.C_tensor.rotate_to_calc_system(b_strain.crystal.RotMatrix);
+    */
 
-      a_strain.crystal.set_lat_const(5.65325);
-      a_strain.crystal.calculate_lat_consts();
-      a_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
-      a_strain.C_tensor.rotate_to_calc_system(a_strain.crystal.RotMatrix);
+    // InGaN
+    // first value: InN, second value: GaN
+    b_strain.C_tensor.set_moduli(
+        alloy(223.0, 390.0, in_content),
+        alloy(115.0, 145.0, in_content),
+        alloy(92.0, 106.0, in_content),
+        alloy(224.0, 398.0, in_content),
+        alloy(48.0, 105.0, in_content));
 
-      b_strain.crystal.set_lat_const(6.05830);
-      b_strain.crystal.calculate_lat_consts();
-      b_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
-      b_strain.C_tensor.rotate_to_calc_system(b_strain.crystal.RotMatrix);
+    b_piezo.set_moduli(
+        alloy(0.97, 1.27, in_content),
+        alloy(-0.57, -0.35, in_content),
+        alloy(-0.4, -0.3, in_content));
+    b_piezo.set_pyro_module(
+        alloy(-0.042, -0.034, in_content, -0.037));
 
-      c_strain.crystal.set_lat_const(5.65325);
-      c_strain.crystal.calculate_lat_consts();
-      c_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
-      c_strain.C_tensor.rotate_to_calc_system(c_strain.crystal.RotMatrix);
-    }
-    else if (mat_sys == 3)
-    {
-      // GaAs - InAs
-      cout << "Using GaAs - InAs\n" << flush;
-
-      a_strain.C_tensor.set_moduli(83.290,  45.260,  39.590); //InAs
-      b_strain.C_tensor.set_moduli(122.1,  56.6,   60.0); //GaAs
-      c_strain.C_tensor.set_moduli(83.290,  45.260,  39.590); //InAs
-
-      a_piezo.set_moduli(-0.044); //InAs
-      b_piezo.set_moduli(-0.16); //GaAs  C/m^2
-      c_piezo.set_moduli(-0.044); //InAs
-      a_piezo.set_pyro_module(0.0);
-      b_piezo.set_pyro_module(0.0);
-      c_piezo.set_pyro_module(0.0);
-
-
-      a_strain.crystal = cryst;
-      b_strain.crystal = cryst;
-      c_strain.crystal = cryst;
-
-      std::vector<int> x_dir(3);
-      std::vector<int> y_dir(3);
-      // growth direction
-      x_dir[0] = 1;  x_dir[1] = 0;  x_dir[2] =   0;
-      y_dir[0] = 0;  y_dir[1] = 1;  y_dir[2] =  0;
-
-      a_strain.crystal.set_lat_const(6.05830);
-      a_strain.crystal.calculate_lat_consts();
-      a_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
-      a_strain.C_tensor.rotate_to_calc_system(a_strain.crystal.RotMatrix);
-
-      b_strain.crystal.set_lat_const(5.65325);
-      b_strain.crystal.calculate_lat_consts();
-      b_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
-      b_strain.C_tensor.rotate_to_calc_system(b_strain.crystal.RotMatrix);
-
-      c_strain.crystal.set_lat_const(6.05830);
-      c_strain.crystal.calculate_lat_consts();
-      c_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
-      c_strain.C_tensor.rotate_to_calc_system(c_strain.crystal.RotMatrix);
-    }
-    else
-    {
-
-      a_strain.crystal = cryst;
-      b_strain.crystal = cryst;
-      c_strain.crystal = cryst;
-
-      std::vector<int> x_dir(4);
-      std::vector<int> y_dir(4);
-
-      y_dir[0] =  1;  y_dir[1] = 0;  y_dir[2] = -1;  y_dir[3] =  0;
-      x_dir[0] =  0;  x_dir[1] = 0;  x_dir[2] =  0;  x_dir[3] =  1;
-
-
-      // GaN
-      a_strain.C_tensor.set_moduli(390.0, 145.0, 106.0, 398.0, 105.0);
-      c_strain.C_tensor.set_moduli(390.0, 145.0, 106.0, 398.0, 105.0);
-      //
-      a_piezo.set_moduli(1.27, -0.35, -0.3); // C/m^2
-      c_piezo.set_moduli(1.27, -0.35, -0.3); // C/m^2
-      //
-      a_piezo.set_pyro_module(-0.034);
-      c_piezo.set_pyro_module(-0.034);
-      //
-      a_strain.crystal.set_lat_const(0.3189, 0.5185);
-      c_strain.crystal.set_lat_const(0.3189, 0.5185);
-      a_strain.crystal.calculate_lat_consts();
-      c_strain.crystal.calculate_lat_consts();
-      a_strain.crystal.calculate_rot_matrix(x_dir, y_dir); 
-      c_strain.crystal.calculate_rot_matrix(x_dir, y_dir); 
-      a_strain.C_tensor.rotate_to_calc_system(a_strain.crystal.RotMatrix);
-      c_strain.C_tensor.rotate_to_calc_system(c_strain.crystal.RotMatrix);
-
-      if (mat_sys == 4)
-      {
-        // AlN
-        b_strain.C_tensor.set_moduli(396.0, 137.0, 108.0, 373.0, 116.0);
-        b_piezo.set_moduli(1.79, -0.5, -0.48);
-        b_piezo.set_pyro_module(-0.09);
-        b_strain.crystal.set_lat_const(0.3112, 0.4982);
-        b_strain.crystal.calculate_lat_consts();
-        b_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
-        b_strain.C_tensor.rotate_to_calc_system(b_strain.crystal.RotMatrix);
-      }
-      else
-      {    
-        // InGaN
-        // first value: InN, second value: GaN
-        b_strain.C_tensor.set_moduli(
-            alloy(223.0, 390.0, in_content),
-            alloy(115.0, 145.0, in_content),
-            alloy(92.0, 106.0, in_content),
-            alloy(224.0, 398.0, in_content),
-            alloy(48.0, 105.0, in_content));
-
-        b_piezo.set_moduli(
-            alloy(0.97, 1.27, in_content),
-            alloy(-0.57, -0.35, in_content),
-            alloy(-0.4, -0.3, in_content));
-        b_piezo.set_pyro_module(
-            alloy(-0.042, -0.034, in_content, -0.037));
-
-        b_strain.crystal.set_lat_const(
-            alloy(0.3545, 0.3189, in_content),
-            alloy(0.5703, 0.5185, in_content));
-        b_strain.crystal.calculate_lat_consts();
-        b_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
-        b_strain.C_tensor.rotate_to_calc_system(b_strain.crystal.RotMatrix);
-      }
-    }
+    b_strain.crystal.set_lat_const(
+        alloy(0.3545, 0.3189, in_content),
+        alloy(0.5703, 0.5185, in_content));
+    b_strain.crystal.calculate_lat_consts();
+    b_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
+    b_strain.C_tensor.rotate_to_calc_system(b_strain.crystal.RotMatrix);
 
     Macrostrain::options opt;
-  
+
     opt.intermediate_output = false;
 
     opt.max_r_steps        = s_max_r_steps;
@@ -458,10 +299,10 @@ int main (int argc, char** argv)
     stress_map[1] = stress_value;
 
 
-    EquationSystems eqsys(mesh);
-    Macrostrain strain_calculation(opt, eqsys, "strainsys");
+    Macrostrain strain_calculation(opt, dev.get_equation_systems(),
+        "strainsys");
 
-    strain_calculation.define_substrate_bc(2);
+    strain_calculation.define_substrate_bc(1);
     strain_calculation.define_BC_map(boundary_nodes);
     strain_calculation.define_stress_value(stress_map);
 
@@ -469,6 +310,10 @@ int main (int argc, char** argv)
     strain_calculation.define_strain_parameters(strain_params);
     strain_calculation.define_piezo_moduli(piezodata);
 
+
+    cout << "Solving strain... \n" << flush;
+    strain_calculation.solve();
+    strain_calculation.output_piezo("Piezo.gmv");
 
     /*****************************************************/
 
@@ -479,198 +324,135 @@ int main (int argc, char** argv)
      *
      ****************************************************************/
 
-    StrainedSemiconductorModel n_gan(&strain_calculation);    
-    StrainedSemiconductorModel p_gan(&strain_calculation);
-    if (mat_sys == 1)
+    SimulationInterface* dd_ptr;
     {
-      n_gan.set_data_file("materials/GaAs.dat");
-      p_gan.set_data_file("materials/GaAs.dat");
+      ModelOptions dd_opts;
+      //dd_opts["nonlin_max_it"] = "100";
+      dd_opts["nonlin_max_it"] = dd_nonlin_max_it;
+      dd_opts["lin_max_it"] = dd_lin_max_it;
+      dd_opts["nonlin_rel_tol"] = dd_nonlin_rtol;
+      dd_opts["nonlin_abs_tol"] = dd_nonlin_atol;
+      dd_opts["lin_rel_tol"] = dd_lin_rtol;
+      dd_opts["lin_abs_tol"] = dd_lin_atol;
+      dd_opts["integration_order"] = integration_order;
+      dd_opts["ls_type"] = ls_type;
+      dd_opts["ls_maxstep"] = dd_nonlin_ls_maxstep;
+      dd_opts["mesh_units"] = mesh_units;
+      //dd_opts["pc_type"] = "composite";
+      //dd_opts["pc_type"] = "jacobi";
+      dd_ptr = SimulationInterface::create("drift-diffusion", dd_opts);
     }
-    else if (mat_sys == 2)
+    DriftDiffusion& dd = *dynamic_cast<DriftDiffusion*>(dd_ptr);
+
+
+    DriftDiffusionProperties* nside = 
+      DriftDiffusionProperties::create("strained");
+
+    DriftDiffusionProperties* pside = 
+      DriftDiffusionProperties::create("strained");
+
+    DriftDiffusionProperties* well = 
+      DriftDiffusionProperties::create("strained");
+
     {
-      n_gan.set_data_file("materials/InAs.dat");
-      p_gan.set_data_file("materials/InAs.dat");
-    }
-    else if (mat_sys == 3)
-    {
-      n_gan.set_data_file("materials/InAs.dat");
-      p_gan.set_data_file("materials/InAs.dat");
-    }
-    else
-    {
-      n_gan.set_data_file("materials/GaN.dat");
-      p_gan.set_data_file("materials/GaN.dat");
+      StrainedSemiconductorModel* sc =
+        static_cast<StrainedSemiconductorModel*>(nside);
+      sc->set_macrostrain(&strain_calculation);
+      sc = static_cast<StrainedSemiconductorModel*>(pside);
+      sc->set_macrostrain(&strain_calculation);
+      sc = static_cast<StrainedSemiconductorModel*>(well);
+      sc->set_macrostrain(&strain_calculation);
     }
 
-    
+    nside->set_statistics(TiberCad::FERMIDIRAC);
+    pside->set_statistics(TiberCad::FERMIDIRAC);
+    well->set_statistics(TiberCad::FERMIDIRAC);
+
+
+    nside->add_dopant(new Dopant(n_doping, 0.025, 2, Dopant::N_TYPE));
+    pside->add_dopant(new Dopant(p_doping, 0.17, 4, Dopant::P_TYPE));
+
+
     ModelOptions opts;
     opts["tau_n"] = "1e-10";
     opts["tau_p"] = "1e-10";
-    opts["C"] = "1e-10";
-    RecombinationModelInterface* rm =
-      RecombinationModelInterface::create("SRH", opts);
-    n_gan.add_recombination_model(rm);
-    rm = RecombinationModelInterface::create("direct", opts);
-    n_gan.add_recombination_model(rm);
-
-    rm = RecombinationModelInterface::create("SRH", opts);
-    p_gan.add_recombination_model(rm);
-    rm = RecombinationModelInterface::create("direct", opts);
-    p_gan.add_recombination_model(rm);
-    
-    // InGaN
-    StrainedSemiconductorModel ingan(&strain_calculation);
-    if (mat_sys == 1)
-      ingan.set_data_file("materials/InAs.dat");
-    else if (mat_sys == 3)
-      ingan.set_data_file("materials/GaAs.dat");
-    else if (mat_sys == 4)
-      ingan.set_data_file("materials/AlN.dat");
-    else
-      ingan.set_data_file("materials/GaN.dat");
-
+    nside->add_recombination_model("SRH", opts);
+    pside->add_recombination_model("SRH", opts);
     opts["tau_n"] = "1e-7";
     opts["tau_p"] = "1e-7";
-    opts["C"] = "1e-10";
-    rm = RecombinationModelInterface::create("SRH", opts);
-    ingan.add_recombination_model(rm);
-    rm = RecombinationModelInterface::create("direct", opts);
-    ingan.add_recombination_model(rm);
-
-    n_gan.add_dopant(new Dopant(n_doping, 0.025, 2, Dopant::N_TYPE));
-    p_gan.add_dopant(new Dopant(p_doping, 0.01, 4, Dopant::P_TYPE));
-
-    n_gan.set_statistics(TiberCad::FERMIDIRAC);
-    p_gan.set_statistics(TiberCad::FERMIDIRAC);
-    ingan.set_statistics(TiberCad::FERMIDIRAC);
-
-    Dummy d;
-    n_gan.read_database(d);
-    p_gan.read_database(d);
-    ingan.read_database(d);
-
-    if (mat_sys == 2)
-    {
-      n_gan.build_alloy("materials/AlAs.dat",
-          "materials/AlInAs_bow.dat", x_al);
-      p_gan.build_alloy("materials/AlAs.dat",
-          "materials/AlInAs_bow.dat", x_al);
-      ingan.build_alloy("materials/GaAs.dat",
-          "materials/GaInAs_bow.dat", x_ga);
-    }
-    else if (mat_sys == 0)
-      ingan.build_alloy("materials/InN.dat",
-          "materials/InGaN_bow.dat", in_content);
+    well->add_recombination_model("SRH", opts);
+    opts.clear();
     
-    n_gan.set_mobilities(200, 50);
-    p_gan.set_mobilities(200, 50);
-    ingan.set_mobilities(200, 50);
+    opts["C"] = "1e-10";
+    nside->add_recombination_model("direct", opts);
+    pside->add_recombination_model("direct", opts);
+    well->add_recombination_model("direct", opts);
+    opts.clear();
 
-    ElementData element_data;
-    {
-      MeshData::const_elem_data_iterator it = meshdata.elem_data_begin();
-      const MeshData::const_elem_data_iterator end =
-        meshdata.elem_data_end();
-      for ( ; it != end; ++it)
-      {
-        const Elem* elem = it->first;
+    opts["mu0"] = "200";
+    nside->set_electron_mobility_model("constant", opts);
+    pside->set_electron_mobility_model("constant", opts);
+    well->set_electron_mobility_model("constant", opts);
 
-        // every element needs to have a material assigned
-        assert(meshdata.has_data(elem));
+    opts["mu0"] = "50";
+    nside->set_hole_mobility_model("constant", opts);
+    pside->set_hole_mobility_model("constant", opts);
+    well->set_hole_mobility_model("constant", opts);
+    opts.clear();
 
-        int id = (int) meshdata(elem);
+    Database d;
+    d.set_search_path(searchpath);
+    Material::set_database(d);
 
-        switch (id)
-        {
-          case 1:
-            element_data.set_data(elem, &n_gan);
-            break;
-          case 2:
-            element_data.set_data(elem, &ingan);
-            break;
-          case 3:
-            element_data.set_data(elem, &p_gan);
-            break;
-        }
-      }
-    }
+    opts["structure"] = "wz";
+    Material* mat_n = Material::create("GaN", opts);
+    mat_n->add_model(nside, dd.get_id());
+    mat_n->init();
 
+    Material* mat_p = Material::create("GaN", opts);
+    mat_p->add_model(pside, dd.get_id());
+    mat_p->init();
 
+    opts["x"] = "0.14";
+    Material* mat_w = Material::create("InGaN", opts);
+    mat_w->add_model(well, dd.get_id());
+    mat_w->init();
 
-    cout << "Solving strain... \n" << flush;
-    strain_calculation.solve();
-    strain_calculation.output_piezo("Piezo.gmv");
+    dev.set_material(mat_n, 1);
+    dev.set_material(mat_w, 2);
+    dev.set_material(mat_p, 3);
 
+    set<ID> regions;
+    regions.insert(1);
+    regions.insert(2);
+    regions.insert(3);
+    SimulationEnvironment dd_env(dev, regions);
 
-    OhmicContact anode("anode");
-    anode.set_zero_derivative_bc(POTENTIAL);
-    anode.set_zero_derivative_bc(FERMIE);
-    OhmicContact cathode("cathode");
-    cathode.set_zero_derivative_bc(POTENTIAL);
-    cathode.set_zero_derivative_bc(FERMIH);
+    ModelOptions ctopts;
+    ctopts["zero_field"] = "true";
+    ctopts["zero_grad_fermi_e"] = "true";
+    ctopts["zero_grad_fermi_h"] = "false";
+    ElectricalContact* anode = ElectricalContact::create("ohmic", ctopts);
+    ctopts["zero_grad_fermi_e"] = "false";
+    ctopts["zero_grad_fermi_h"] = "true";
+    ElectricalContact* cathode = ElectricalContact::create("ohmic", ctopts);
 
+    Boundary* bd_anode = new Boundary("anode");
+    Boundary* bd_cathode = new Boundary("cathode");
+    bd_anode->add_boundary_properties(anode, dd.get_id());
+    bd_cathode->add_boundary_properties(cathode, dd.get_id());
+    dd_env.add_boundary(bd_anode, 1);
+    dd_env.add_boundary(bd_cathode, 2);
 
-    BoundaryData boundary_data;
-    {
-      map<unsigned int, vector<unsigned int> >::const_iterator it =
-        boundary_nodes.begin();
-      const map<unsigned int, vector<unsigned int> >::const_iterator end =
-        boundary_nodes.end();
+    dd_env.init();
+    dd.set_environment(&dd_env);
 
-      for ( ; it != end; ++it)
-      {
-        const vector<unsigned int>& nodes = it->second;
+    
 
-        switch (it->first)
-        {
-          case 1:
-            set_boundary(boundary_data, nodes, &anode, mesh);
-            break;
-          case 2:
-            set_boundary(boundary_data, nodes, &cathode, mesh);
-            break;
-        }
-      }
-    }
-
-
-    DD::Device device(&mesh, &element_data, &boundary_data);
-    bool device_integrity = device.check_integrity();
-    if (device_integrity)
-      cout << "Device ok.\n\n";
-    else
-    {
-      cout << "Device bad.\n\n";
-      return 1;
-    }
 
     mesh.print_info();
     
   
-    DriftDiffusion dd(&device);
-    dd.set_equation_systems(&eqsys);
-    dd.init();
-
-    DriftDiffusion::Options& params = dd.get_options();
-    params.max_refinement_steps = dd_max_r_steps;
-    params.solver_params.nonlinear_max_iterations = 100;
-    params.solver_params.linear_max_iterations = dd_lin_max_it;
-    params.solver_params.nonlinear_tolerance = dd_nonlin_rtol;
-    params.solver_params.nonlinear_abs_tolerance = dd_nonlin_atol;
-    params.solver_params.ls_maxstep = 0.05;
-    params.solver_params.linear_tolerance = dd_lin_rtol;
-    params.solver_params.linear_abs_tolerance = dd_lin_atol;
-    params.integration_order =
-      static_cast<libMeshEnums::Order>(integration_order);
-
-    params.solver_params.ksp_type = KSPGMRES;
-    params.solver_params.pc_type = PCILU;
-    //params.artificial_drift = true;
-    params.local_scaling = true;
-    
-
-    // mesh drawn in um
-    params.mesh_units = mesh_units;
 
     dd.enable_mesh_refinement();
 
@@ -678,6 +460,7 @@ int main (int argc, char** argv)
 
     
 
+    dd.init();
 
     cout << "Solving drift-diffusion... \n" << flush;
 
@@ -685,8 +468,9 @@ int main (int argc, char** argv)
     dd.set_simulation_voltage("anode", 0.0);
     
     cout << "Solving equilibrium... " << flush;
-    params.coupling = POISSON;
-    dd.solve();
+    dd.guess_equilibrium();
+    try { dd.solve(); }
+    catch (...) {}
     const Scaling& sc = dd.get_scaling();
     cout << "Scaling parameters:\n";
     cout << "     phi0: " << sc.get_potential_scaling() << "\n";
@@ -712,27 +496,15 @@ int main (int argc, char** argv)
           GnuPlotIO::GRID_ON).write_nodal_data("output/bands_eq",
             densities, names);
     }
-    cout << "Barrier:\n";
-    n_gan.print_info();
-    cout << "\nWell:\n";
-    ingan.print_info();
-
-    params.solver_params.nonlinear_max_iterations = dd_nonlin_max_it;
-    params.solver_params.ls_maxstep = dd_nonlin_ls_maxstep;
-
-    if (fully)
-    {
-      cout << "Solving for electrons and holes.\n" << flush;
-      params.coupling = FULLYCOUPLED;
-    }
-    else
-    {
-      cout << "Solving for electrons only.\n" << flush;
-      params.coupling = POISSON | ELECTRONS;
-    }
 
 
     cout << "\nBegin sweep...\n" << flush;
+    {
+      ModelOptions dd_opts;
+      dd_opts["nonlin_max_it"] = dd_nonlin_max_it;
+      dd_opts["coupling"] = "full";
+      dd_ptr->set_options(dd_opts);
+    }
     // make a voltage sweep
     double delta_v = 1e-6;
 
@@ -774,7 +546,8 @@ int main (int argc, char** argv)
     {
       dd.set_simulation_voltage("anode", *it);
       cout << " Solving U = " << *it << " V ... " << flush;
-      dd.solve();
+      try { dd.solve(); }
+      catch (...) {}
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
         ", final residual: " << dd.get_final_residual() << ")\n" << flush;
 
@@ -794,13 +567,12 @@ int main (int argc, char** argv)
           GnuPlotIO::GRID_ON).write_nodal_data(filename_b.str(),
             densities, names);
 
-      const map<const ElectricalContact*, double>& curr =
+      const map<const Boundary*, double>& curr =
         dd.get_boundary_currents();
       file << *it << "  "
-           << (*curr.find(&cathode)).second << "  "
-           << (*curr.find(&anode)).second << "  "
-           << dd.get_artificial_boundary_current() << "\n" << flush;
-      cerr << "    I = " << (*curr.find(&cathode)).second << " A/cm^2\n";
+           << (*curr.find(bd_cathode)).second << "  "
+           << (*curr.find(bd_anode)).second << "\n" << flush;
+      cerr << "    I = " << (*curr.find(bd_cathode)).second << " A/cm^2\n";
     }
 
 
@@ -833,46 +605,22 @@ int main (int argc, char** argv)
             GnuPlotIO::GRID_ON).write_nodal_data(filename_b.str(),
               densities, names);
 
-        const map<const ElectricalContact*, double>& curr =
+        const map<const Boundary*, double>& curr =
           dd.get_boundary_currents();
         file << *it << "  "
-          << (*curr.find(&cathode)).second << "  "
-          << (*curr.find(&anode)).second << "  "
-          << dd.get_artificial_boundary_current() << "\n" << flush;
-        cerr << "    I = " << (*curr.find(&cathode)).second << " A/cm^2\n";
+          << (*curr.find(bd_cathode)).second << "  "
+          << (*curr.find(bd_anode)).second << "\n" << flush;
+        cerr << "    I = " << (*curr.find(bd_cathode)).second << " A/cm^2\n";
       }
       while (it != voltages.begin());
     }
     file.close();
+    
+    delete dd_ptr;
   }
 
   return libMesh::close();
 }
 
 
-
-void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    ElectricalContact* desc, const Mesh& mesh)
-{
-  vector<int>::const_iterator n_it;
-  const vector<unsigned int>::const_iterator n_begin = nodes.begin();
-  const vector<unsigned int>::const_iterator n_end = nodes.end();
-
-  Mesh::const_element_iterator el = mesh.elements_begin();
-  const Mesh::const_element_iterator el_end = mesh.elements_end();
-  for ( ; el != el_end; ++el)
-  {
-    Elem* elem = *el;
-
-    int n_sides = elem->n_sides();
-    for (int s = 0; s < n_sides; s++)
-    {
-      if (elem->neighbor(s) == NULL)
-      {
-        if (find(n_begin, n_end, elem->node(s)) != n_end)
-          data.set_data(BoundaryData::ElementSide(elem, s), desc);
-      }
-    }
-  }
-}
 

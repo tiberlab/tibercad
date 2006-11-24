@@ -7,24 +7,27 @@ p_doping = 1e18
 temperature = 300
 
 statistics = B
+searchpath = ../materials
+material = Si
 
 mesh_units = 1e-4
 
-start_voltage = -0.9
-stop_voltage = 0.9
-voltage_steps = 50
-#start_voltage = 0
-#stop_voltage = 0.1
-#voltage_steps = 1
+#start_voltage = -0.9
+#stop_voltage = 0.9
+#voltage_steps = 50
+start_voltage = 0
+stop_voltage = 1.0
+voltage_steps = 10
 
 #simulation_method = GUMMEL
 
-nonlinear_tolerance = 1e-9
+nonlinear_tolerance = 1e-19
 nonlinear_abs_tolerance = 1e-12
-nonlinear_ls_maxstep = 0.5
-linear_tolerance = 1e-8
+nonlinear_ls_maxstep = 0.05
+ls_type = none
+linear_tolerance = 1e-6
 linear_abs_tolerance = 1e-15
-nonlinear_max_it = 20
+nonlinear_max_it = 50
 linear_max_it = 1000
 integration_order = 2
 

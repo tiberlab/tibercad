@@ -1,29 +1,31 @@
+// $Id$
+
 #include "ExcitonTransport.h"
 #include "ExcitonDissociation.h"
 #include "ExcitonProperties.h"
 #include "DriftDiffusionProperties.h"
 
+#include "Material.h"
+#include "Utils.h"
 
-
-ExcitonDissociation::ExcitonDissociation(void)
-  : RecombinationModelInterface(),
-    _d(1.0),
-    _a(0.0),
-    _exciton_sim(NULL)
-
-{
-}
 
 void
-ExcitonDissociation::set_model_options(const ModelOptions& options)
+ExcitonDissociation::do_init(void)
 {
-  ModelOptions::const_iterator it = options.find("damping");
-  if (it != options.end())
-    _d = atof((it->second).c_str());
-  
-  it = options.find("trapping_probability");
-  if (it != options.end())
-    _a = atof((it->second).c_str());
+  _d = get_options().get_option("damping", 1.0);
+
+  std::string ex = get_options().get_option("exciton_simulation",
+      Utils::extract_typename(typeid(_exciton_sim)));
+
+  // find the exciton simulation to use
+  _exciton_sim = dynamic_cast<ExcitonTransport*>(
+      SimulationInterface::find_simulation(ex));
+
+  if (_exciton_sim == NULL)
+  {
+    std::string msg("Simulation "+std::string(ex)+" not found");
+    throw InitFailedException(msg);
+  }
 }
 
 void
@@ -32,25 +34,24 @@ ExcitonDissociation::get_net_recombination_rates(double& recomb_e,
 {
   DriftDiffusionProperties& dd = get_driftdiffusionproperties();
   
-  recomb_e = 0.0;
-  
-  if (_exciton_sim != NULL)
+  const Elem* el = dd.get_element();
+
+  // we only use the exciton simulation if it has been solved before
+  if (_exciton_sim->is_solved())
   {
-    const Elem* el = dd.get_element();
+    ID ex_id = _exciton_sim->get_id();
+    ExcitonProperties* mod =
+      static_cast<ExcitonProperties*>(get_material()->get_model(ex_id));
+    mod->reinit(el);
 
-    assert(_exciton_sim->get_exciton_model());
-    _exciton_sim->get_exciton_model()->reinit(el, &dd);
-
-    const Point& p = *(dd.get_coordinates());
-    double u = _exciton_sim->get_solution(el, p);
-    _exciton_sim->get_exciton_model()->calculate_densities(u);
-    //_exciton_sim->get_exciton_model()->calculate_recombination_rate();
-    //recomb_e =
-    //  -_d * _exciton_sim->get_exciton_model()->get_recombination_rate();
-    recomb_e = -_d * (1 - _a) *
-      _exciton_sim->get_exciton_model()->get_nonradiative_recombination_rate();
+    double u = _exciton_sim->get_solution(el, dd.get_coordinates());
+    mod->set_effective_potential(u);
+    mod->calculate_density();
+    recomb_e = -_d * mod->get_dissociation_rate();
   }
-  
+  else
+    recomb_e = 0.0;
+
   recomb_h = recomb_e;
 }
 
@@ -63,8 +64,13 @@ ExcitonDissociation::get_net_recombination_rate_derivatives(
   recomb_e[2] = recomb_h[2] = 0.0;
 }
 
-const std::string
-ExcitonDissociation::get_name(void) const
+
+void
+ExcitonDissociation::calculate_VCA(const PhysicalModelInterface* comp_A,
+    const PhysicalModelInterface* comp_B, double xa)
 {
-  return "exciton_dissociation";
+  ignore_unused_variable(comp_A);
+  ignore_unused_variable(comp_B);
+  ignore_unused_variable(xa);
 }
+

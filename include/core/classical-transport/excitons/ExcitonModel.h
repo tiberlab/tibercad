@@ -11,66 +11,65 @@
 
 #include <string>
 
-// forward declarations
-class DriftDiffusionProperties;
-class Dummy;
+class DriftDiffusion;
 
+//! A simple Exciton model
 class ExcitonModel : public ExcitonProperties
 {
     
   public:
-  
-    //! The empty constructor.
-    ExcitonModel(void);
        
     //! A default (empty) destructor.
     virtual ~ExcitonModel(void);
 
-    //! \copydoc ExcitonProperties::calculate_densities()
-    virtual void calculate_densities(double fermi_x);
+    //! This method creates an ExcitonModel object
+    static ExcitonModel* create(void);
 
-    //! \copydoc ExcitonProperties::calculate_recombination_rate()
-    virtual void calculate_recombination_rate(void);
 
-    /*! \copydoc ExcitonProperties::calculate_all()
-     * 
-     * This implementation models the most simple exciton model
-     */
-    virtual void calculate_all(double fermi_x, const Point& coord);
-
-    virtual double get_nonradiative_recombination_rate(void);
-
-    virtual void read_database(const Dummy&);
-
-    //! Set the model of exciton generation to be used
-    void set_exciton_generation_model(const std::string& model_name);
-
-    //! Set the exciton recombination times
-    void set_recombination_times(double tau_r, double tau_nr = 1e100)
-      { _t_r = tau_r; _t_nr = tau_nr; };
-
-    //! Set the exciton binding energy
-    void set_binding_energy(double R)
-      { _R = R; };
-
-    //! Set the exciton effective mass
-    void set_effective_mass(double m)
-      { _m = m; };
-
-    //! Set the exciton mobility
-    void set_mobility(double mu)
-      { _mu = mu; };
-      
   protected:
 
-    //! \copydoc ExcitonProperties::prepare_element_data()
+    /*! \copydoc ExcitonProperties::prepare_element_data() */
     virtual void prepare_element_data(void);
 
-  private:
+    /*! \copydoc PhysicalModel::create_new() */
+    virtual PhysicalModelInterface* create_new(void) const;
 
-    //! Exciton recombination time
+    /*! \copydoc PhysicalModel::copy_from() */
+    virtual void copy_from(const PhysicalModelInterface* rhs);
+
+    /*! \copydoc ExcitonProperties::read_database() */
+    virtual void read_database(void);
+
+    /*! \copydoc ExcitonProperties::do_init() */
+    virtual void do_init(void);
+
+    virtual void do_recombination(void);
+
+    virtual void do_mobility(void);
+
+    
+    //! Get the nonradiative recombination rate
+    virtual double get_nonradiative_recombination_rate(void);
+
+    //! Get the radiative recombination rate
+    virtual double get_radiative_recombination_rate(void);
+    
+    //! Get the dissociation rate
+    virtual double get_dissociation_rate(void);
+
+  private:
+  
+    //! The empty constructor.
+    ExcitonModel(void);
+
+    //! Exciton radiative recombination time
     double _t_r;
+    
+    //! Exciton non-radiative recombination time
     double _t_nr;
+    
+    //! Exciton dissociation time
+    double _t_diss;
 
     //! Exciton binding energy
     double _R;
@@ -81,15 +80,11 @@ class ExcitonModel : public ExcitonProperties
     //! Exciton mobility
     double _mu;
 
-    //! The effective density of states
-    double _DOS;
+    //! The ID for the generation model to be used
+    ID _gen_model;
 
-    //! the ID of the exciton generation model
-    ID _gen_mod_id;
-
-    //! The name of the exciton generation model to be used
-    std::string _exciton_generation_model;
-
+    //! The DriftDiffusion simulation to be used
+    DriftDiffusion* _dd_sim;
 
 };
 
@@ -105,11 +100,20 @@ ExcitonModel::~ExcitonModel(void)
 
 
 inline
-void
-ExcitonModel::set_exciton_generation_model(const std::string& model_name)
+PhysicalModelInterface*
+ExcitonModel::create_new(void) const
 {
-  _exciton_generation_model = model_name;
+  return new ExcitonModel();
 }
+
+
+inline
+ExcitonModel*
+ExcitonModel::create(void)
+{
+  return new ExcitonModel();
+}
+
 
 
 

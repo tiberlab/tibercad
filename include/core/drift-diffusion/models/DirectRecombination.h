@@ -17,11 +17,11 @@ class DirectRecombination : public RecombinationModelInterface
 
   public:
 
-    //! Constructor
-    DirectRecombination(void);
-
     //! Destructor
     virtual ~DirectRecombination(void) {};
+
+    //! Create a ConstantMobility object
+    static DirectRecombination* create(void);
 
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
@@ -36,12 +36,26 @@ class DirectRecombination : public RecombinationModelInterface
     //! Set the direct recombination parameters
     void set_parameters(double C);
 
-    //! \copydoc RecombinationModelInterface::set_model_options()
-    virtual void set_model_options(const ModelOptions& options);
-
-    //! \copydoc RecombinationModelInterface::get_name()
-    virtual const std::string get_name(void) const;
     
+  protected:
+
+    //! Constructor
+    DirectRecombination(void);
+
+    //! \copydoc RecombinationModelInterface::do_init()
+    virtual void do_init(void);
+
+    //! \copydoc RecombinationModelInterface::create_new()
+    virtual PhysicalModelInterface* create_new(void) const;
+
+    //! \copydoc RecombinationModelInterface::copy_from()
+    virtual void copy_from(const PhysicalModelInterface* rhs);
+
+    /*! \copydoc RecombinationModelInterface::calculate_VCA() */
+    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+        const PhysicalModelInterface* comp_B, double xa);
+    
+
   private:
 
     //! Recombination rate parameter
@@ -50,11 +64,53 @@ class DirectRecombination : public RecombinationModelInterface
 };
 
 
+
+//
+// inline methods
+// 
+
+inline
+DirectRecombination::DirectRecombination(void)
+  : _C(1e-10)
+{
+}
+
+
+inline
+DirectRecombination*
+DirectRecombination::create(void)
+{
+  return new DirectRecombination();
+}
+
+
 inline
 void
 DirectRecombination::set_parameters(double C)
 {
   _C = C;
 }
+
+
+inline
+PhysicalModelInterface*
+DirectRecombination::create_new(void) const
+{
+  return new DirectRecombination();
+}
+
+
+inline
+void
+DirectRecombination::copy_from(const PhysicalModelInterface* rhs)
+{
+  RecombinationModelInterface::copy_from(rhs);
+  
+  const DirectRecombination* mod = dynamic_cast<const DirectRecombination*>(rhs);
+  _C = mod->_C;
+}
+
+
+
 
 #endif // _DIRECTRECOMBINATION_H_

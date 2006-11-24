@@ -2,33 +2,25 @@
 
 #include "StrainedSemiconductorModel.h"
 #include "DDsemiconductor.h"
+#include "Macrostrain.h"
+//#include "tensor.h"
+#include "Utils.h"
+// will be included by macrostrain:
+#include "SimulationInterface.h"
 
 #include "elem.h"
-#include "Macrostrain.h"
-#include "tensor.h"
 
 #include <iostream>
 
 using namespace DriftDiffusionDefs;
 
-StrainedSemiconductorModel::StrainedSemiconductorModel(
-    Macrostrain* strain)
-  : SemiconductorModel(),
-    _strain(strain),
+StrainedSemiconductorModel::StrainedSemiconductorModel(void)
+  : _strain_model(NULL),
     _ignore_strain(false)
 {
 }
 
 
-/*
-StrainedSemiconductorModel::StrainedSemiconductorModel(
-    const StrainedSemiconductorModel& model)
-  : SemiconductorModel(model),
-    _strain(model._strain),
-    _ignore_strain(model._ignore_strain)
-{
-}
-*/
 
 void
 StrainedSemiconductorModel::prepare_element_data(void)
@@ -43,12 +35,11 @@ StrainedSemiconductorModel::prepare_element_data(void)
     if (it == end)
     {
       // set strain
-      get_physical_model()->set_strain(_strain->get_strain_crystal(elem));
+      set_strain(_strain_model->get_strain_crystal(elem));
+      get_physical_model()->set_strain(get_strain());
 
       // call method of parent class
-      double temp = electron_vt / Constants::k_B;
-      SemiconductorModel::calculate_equilibrium_properties(BOTH,
-          temp);
+      SemiconductorModel::calculate_equilibrium_properties();
 
       // put them into _element_data
       ElementData& elem_data = _element_data[elem];
@@ -57,10 +48,10 @@ StrainedSemiconductorModel::prepare_element_data(void)
       elem_data.mc = get_conduction_band().effective_mass;
       elem_data.mv = get_valence_band().effective_mass;
       elem_data.Ef0 = get_equilibrium_fermi_level();
-      elem_data.n0 = get_equilibrium_electron_density();
-      elem_data.p0 = get_equilibrium_hole_density();
+      elem_data.ni = get_intrinsic_density();
 
-      Tensor1 pol = _strain->get_built_in_polarization(elem, elem->centroid());
+      Tensor1 pol =
+        _strain_model->get_built_in_polarization(elem, elem->centroid());
       elem_data.polarization(0) = pol(1); 
       elem_data.polarization(1) = pol(2); 
       elem_data.polarization(2) = pol(3); 
@@ -78,8 +69,7 @@ StrainedSemiconductorModel::prepare_element_data(void)
       get_valence_band().effective_mass = elem_data.mv; 
 
       equilibrium_fermi_level = elem_data.Ef0;
-      equilibrium_electron_density = elem_data.n0;
-      equilibrium_hole_density = elem_data.p0;
+      intrinsic_density = elem_data.ni;
 
       // this sets the band edges and the effective DOS in the base class
       setup_band_edges();
@@ -97,5 +87,42 @@ StrainedSemiconductorModel::reset(void)
   DataMap::iterator begin = _element_data.begin();
   DataMap::iterator end = _element_data.end();
   _element_data.erase(begin, end);
-  std::cerr << _element_data.size() << std::endl;
+}
+
+void
+StrainedSemiconductorModel::copy_from(const PhysicalModelInterface* rhs)
+{
+  SemiconductorModel::copy_from(rhs);
+
+  const StrainedSemiconductorModel* sc =
+    dynamic_cast<const StrainedSemiconductorModel*>(rhs);
+
+  _strain_model = sc->_strain_model;
+  _ignore_strain = sc->_ignore_strain;
+}
+
+
+void
+StrainedSemiconductorModel::do_init(void)
+{
+  SemiconductorModel::do_init();
+
+  
+  std::string strain_sim =
+    get_options().get_option("strain_simulation",
+        Utils::extract_typename(typeid(_strain_model)));
+
+  // find the strain calculation to use
+/*
+  _strain_model = dynamic_cast<Macrostrain*>(
+      SimulationInterface::find_simulation(strain_sim));
+
+  if (_strain_model == NULL)
+  {
+    std::string msg("Simulation "+std::string(strain_sim)+" not found");
+    throw InitFailedException(msg);
+  }
+*/
+  _ignore_strain = get_options().get_option("ignore_strain", false);
+
 }

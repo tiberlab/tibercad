@@ -1,5 +1,7 @@
 $Options
 
+  searchpath = ../materials
+
   mesh_units = 1e-7
 
   # the coupling should be 1 because we have p doping
@@ -7,7 +9,7 @@ $Options
 
   material_system = 0
   # only if material_system == 0
-  in_content = 0.15
+  in_content = 0.14
   # only if material_system == 1
   growth_dir = 2
   # only if material_system == 2

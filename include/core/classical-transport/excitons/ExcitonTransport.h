@@ -3,9 +3,10 @@
 #ifndef _EXCITONTRANSPORT_H_
 #define _EXCITONTRANSPORT_H_
 
+#include "SimulationInterface.h"
 #include "SimulationOptions.h"
 #include "Scaling.h"
-#include "DDevice.h"
+#include "Device.h"
 #include "PetscRuntimeError.h"
 #include "KSPDivergedError.h"
 #include "SNESDivergedError.h"
@@ -29,12 +30,10 @@ extern "C" {
 #include <map>
 
 // forward declarations
-class DD::Device;
 class Mesh;
 class Elem;
 class EquationSystems;
 class NonlinearImplicitSystem;
-class DriftDiffusion;
 class ExcitonProperties;
 
 template<typename T> class NumericVector;
@@ -43,12 +42,12 @@ template<typename T> class SparseMatrix;
 template<typename T> class TiberPetscNonlinearSolver;
 template<typename T> class NonlinearSolver;
 
-//! The main class to perform standard drift-diffusion calculations
+//! The main class to perform exciton drift-diffusion calculations
 /*!
  * TODO
  * Some more details
  */
-class ExcitonTransport
+class ExcitonTransport : public SimulationInterface
 {
   public:
  
@@ -70,6 +69,7 @@ class ExcitonTransport
       
         double nonlinear_tolerance;
         double nonlinear_abs_tolerance;
+        double nonlinear_step_tolerance;
         unsigned int nonlinear_max_iterations;
         double linear_tolerance;
         double linear_abs_tolerance;
@@ -77,6 +77,9 @@ class ExcitonTransport
         
         //! The line search maximum step size per grid point
         double ls_maxstep;
+
+        //! The line search type
+        int ls_type;
 
         //! The linear (KSP) solver type
         /*!
@@ -179,66 +182,29 @@ class ExcitonTransport
          */
         double mesh_units;
 
-        //! Use a local (nodal based) scaling for continuity equations
-        /*!
-         * This probably should be the default and should replace the global
-         * scaling factors for the continuity equations
-         */
-        bool local_scaling;
 
       private:
         
         friend class ExcitonTransport;
     };
 
-      
-    ExcitonTransport(DD::Device* device);
 
-    ExcitonTransport(DD::Device* device, ExcitonTransport::Options& params);
+    //! Underrelaxation if doing gummel schemes
+    double _relaxation_factor;
 
+    //! Destructor
     ~ExcitonTransport(void);
+
+    //! Create an ExcitonTransport object
+    static ExcitonTransport* create(void);
     
-    /**
-     * @returns a reference to the device to be solved
-     */
-    const DD::Device& get_device(void) const;
-    
-    /**
-     * Set a new device to be simulated
-     *
-     * After a call to this function, the equation system object
-     * and the simulation voltages map are cleared and have to be
-     * rebuilt in the \p solve method.
-     */
-    void set_device(DD::Device* device);
-
-    void set_equation_systems(EquationSystems* eq_systems)
-      { _eq_system = eq_systems; }
-
-    //! Set the exciton model
-    void set_exciton_model(ExcitonProperties* exciton_model)
-      { _exciton_model = exciton_model; };
-
-    //! Get a pointer to the exciton model
-    ExcitonProperties* get_exciton_model(void)
-      { return _exciton_model; };
 
     /**
      * @returns a reference to the simulation options
      */
     Options& get_options(void);
 
-    //! Initialise the equation system
-    void init(void);
     
-    //! Set the DriftDiffusion object
-    void set_driftdiffusion(DriftDiffusion* dd)
-      { _dd_object = dd; };
-
-    //! Get the DriftDiffusion object
-    DriftDiffusion* get_driftdiffusion(void)
-      { return _dd_object; };
-
     /**
      * Enables adaptive mesh refinement.
      */
@@ -278,32 +244,23 @@ class ExcitonTransport
      */
     //void build_scaling(void);
 
-    /**
+    /*!
      * Remember the current solution for future restart
      */
     void remember_current_solution(void);
 
-    /**
+    /*!
      * Reset to the remembered solution
      */
     void set_to_remembered_solution(void);
 
 
-    /**
-     * Solve the drift-diffusion problem.
-     *
-     * If adaptive mesh refinement was enabled for this solver
-     * run, it will be deactivated afterwards and has to be re-enabled
-     * explicitly.
-     */
-    void solve(void);
-
-    /**
+    /*!
      * @returns the variable names in a vector.
      */
     const std::vector<std::string>& get_variable_names(void) const;
 
-    /**
+    /*!
      * @returns the current nodal solution vector.
      *
      * The vector is ordered as
@@ -313,12 +270,12 @@ class ExcitonTransport
      */
     const std::vector<Number>& get_solution(void) const;
 
-    /**
+    /*!
      * @returns the number of nonlinear iterations needed for the solution
      */
     unsigned int get_n_nonlinear_iterations(void) const;
 
-    /**
+    /*!
      * @returns the final residual norm of the solution
      */
     double get_final_residual(void) const;
@@ -351,6 +308,31 @@ class ExcitonTransport
     void build_current_density(std::vector<double>& current,
         std::vector<std::string>& names);
 
+
+  protected:
+      
+    //! Constructor
+    ExcitonTransport(void);
+    
+    //! Initialize the equation system
+    /*!
+     * This has to be called before any call to methods which access the
+     * equation system object. So do it early.
+     */
+    virtual void do_init(void);
+
+    //! Solve the drift-diffusion problem.
+    /*!
+     * If adaptive mesh refinement was enabled for this solver
+     * run, it will be deactivated afterwards and has to be re-enabled
+     * explicitly.
+     */
+    virtual void do_solve(void);
+
+    /*! \copydoc SimulationInterface::parse_options() */
+    virtual void parse_options(void);
+
+    
   private:
 
     // for nicer code
@@ -362,53 +344,44 @@ class ExcitonTransport
      */
     static ExcitonTransport* _this;
 
-    /**
-     * The device to be solved by this ExcitonTransport object
-     */
-    DD::Device* _device;
+    //! An internal pointer to the device
+    Device* _device;
 
-    //! The elements that were used in the last simulation
-    std::set<const Elem*> _element_list;
 
-    //! Update the element list
-    void update_element_list(void);
-
-    DriftDiffusion* _dd_object;
-
-    ExcitonProperties* _exciton_model;
-
-    /**
+    /*!
      * The equation system for this device
      */
     EquationSystems* _eq_system;
     
-    /**
+    /*!
      * If @c true, the equation system needs to be rebuilt
      */
     bool _rebuild_eq_system;
 
-    /**
+    /*!
      * The @c Options to be used
      */
     Options _options;
     
-    /**
+    /*!
      * The scaling parameters
      */
     Scaling _scaling;
 
-    /**
+    /*!
      * The number of nonlinear iterations needed
      */
     unsigned int _n_nonlinear_iterations;
 
-    /**
+    /*!
      * The final residual norm
      */
     double _final_residual;
 
-    //! disable the copy constructor and assignment operator
+    //! disable the copy constructor
     ExcitonTransport(const ExcitonTransport& rhs);
+    
+    //! disable the copy assignment operator
     ExcitonTransport& operator=(const ExcitonTransport& rhs);
     
     //! Get the solution at the point \c p in a given element
@@ -466,9 +439,6 @@ class ExcitonTransport
     void cleanup_solver(void);
 
 
-    //! Get the equation system
-    EquationSystems& get_equation_system(void);
-
     //! Assembles the residual vector or the jacobian matrix
     /*!
      * Assembles the residual vector or the jacobian matrix for
@@ -481,6 +451,11 @@ class ExcitonTransport
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
 
+    //! Do the actual assembly
+    void do_assembly(const NumericVector<Number>& x,
+        NumericVector<Number>* residual,
+        SparseMatrix<Number>* jacobian);
+
 };
 
 
@@ -489,11 +464,12 @@ class ExcitonTransport
 // 
 
 inline
-const DD::Device&
-ExcitonTransport::get_device(void) const
+ExcitonTransport*
+ExcitonTransport::create(void)
 {
-  return *_device;
+  return new ExcitonTransport();
 }
+
 
 inline
 ExcitonTransport::Options&
@@ -544,12 +520,6 @@ ExcitonTransport::get_final_residual(void) const
   return _final_residual;
 }
 
-inline
-EquationSystems&
-ExcitonTransport::get_equation_system(void)
-{
-  return *_eq_system;
-}
 
 inline
 Mesh& 
@@ -569,6 +539,16 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const Point& p,
   get_solution_secure(elem, pvec, sol);
 
   solution = sol[0];
+}
+
+
+inline
+void
+ExcitonTransport::assemble(const NumericVector<Number>& x,
+    NumericVector<Number>* residual,
+    SparseMatrix<Number>* jacobian)
+{
+  _this->do_assembly(x, residual, jacobian);
 }
 
 

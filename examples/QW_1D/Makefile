@@ -33,7 +33,7 @@ main: $(objects)
 run: all
 	@echo "Running example..."
 	@[ -d output ] || mkdir output
-	./main -ksp_type bcgsl -pc_ilu_zeropivot 1e-32
+	./main
 
 
 clean:

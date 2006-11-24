@@ -1,14 +1,19 @@
 // the following _HAS_ to be included first
 #include "Read_MSH.h"
 
-#include "ElementData.h"
-#include "OhmicContact.h"
-#include "BoundaryData.h"
-#include "DDevice.h"
+#include "ElectricalContact.h"
 #include "Dopant.h"
 #include "DriftDiffusion.h"
 #include "SemiconductorModel.h"
 #include "RecombinationModelInterface.h"
+#include "MobilityModelInterface.h"
+
+#include "Material.h"
+#include "Device.h"
+#include "Boundary.h"
+#include "SimulationEnvironment.h"
+#include "Database.h"
+#include "MeshUtils.h"
 
 #include "mesh.h"
 #include "mesh_modification.h"
@@ -25,13 +30,6 @@
 using namespace std;
 using namespace DriftDiffusionDefs;
 
-void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    ElectricalContact* desc, const Mesh& mesh);
-
-
-
-class Dummy {};
-
 
 int main (int argc, char** argv)
 {
@@ -40,7 +38,11 @@ int main (int argc, char** argv)
 
     GetPot input_file("diode.in");
 
+    const string searchpath = input_file("searchpath", ".");
     string meshfile = input_file("meshfile", "");
+    string material = input_file("material", "Si");
+
+    double temperature = input_file("temperature", 300.0);
 
     double start_voltage = input_file("start_voltage", 0.0);
     double stop_voltage = input_file("stop_voltage", 0.0);
@@ -50,23 +52,21 @@ int main (int argc, char** argv)
     const string method = input_file("simulation_method", "NEWTON");
     const string statistics = input_file("statistics", "B");
 
-    double nonlin_rtol = input_file("nonlinear_tolerance", 1e-9);
-    double dd_nonlin_atol = input_file("nonlinear_abs_tolerance", 1e-12);
-    double dd_lin_atol = input_file("linear_abs_tolerance", 1e-9);
-    double lin_rtol = input_file("linear_tolerance", 1e-12);
-    int integration_order = input_file("integration_order", 5);
-    int nonlin_max_it = input_file("nonlinear_max_it", 15);
-    int lin_max_it = input_file("linear_max_it", 500);
-    double nonlin_ls_maxstep = input_file("nonlinear_ls_maxstep", 0.025);
+    string nonlin_rtol = input_file("nonlinear_tolerance", "1e-9");
+    string dd_nonlin_atol = input_file("nonlinear_abs_tolerance", "1e-12");
+    string dd_lin_atol = input_file("linear_abs_tolerance", "1e-9");
+    string lin_rtol = input_file("linear_tolerance", "1e-12");
+    string integration_order = input_file("integration_order", "5");
+    string nonlin_max_it = input_file("nonlinear_max_it", "15");
+    string lin_max_it = input_file("linear_max_it", "500");
+    string ls_type = input_file("ls_type", "cubic");
+    string nonlin_ls_maxstep = input_file("nonlinear_ls_maxstep", "0.025");
 
-    const double mesh_units = input_file("mesh_units", 1e-4);
-    double xmin = input_file("xmin", -0.5);
-    double xmax = input_file("xmax", 0.5);
+    string mesh_units = input_file("mesh_units", "1e-4");
 
     double n_doping = input_file("n_doping", 1e18);
     double p_doping = input_file("p_doping", 1e18);
 
-    unsigned int initial_density = input_file("initial_density", 20);
 
     unsigned int refinement_steps = input_file("max_refinement_steps", 0);
     double refine_frac = input_file("refine_fraction", 0.7);
@@ -90,140 +90,104 @@ int main (int argc, char** argv)
     readmesh.get_BC_data(boundary_nodes);
     
 
+    MeshUtils::assign_subdomain_ids(mesh, meshdata);
+
+
     mesh.print_info();
 
-    Dummy d;
+    SimulationOptions::temperature = temperature;
 
-    SemiconductorModel nside;    
-    nside.set_data_file("Si.dat");
-    nside.read_database(d);
+    SimulationInterface* dd_ptr;
+    {
+      ModelOptions dd_opts;
+      dd_opts["nonlin_max_it"] = "100";
+      dd_opts["lin_max_it"] = lin_max_it;
+      dd_opts["nonlin_rel_tol"] = nonlin_rtol;
+      dd_opts["lin_rel_tol"] = lin_rtol;
+      dd_opts["integration_order"] = integration_order;
+      dd_opts["ls_maxstep"] = nonlin_ls_maxstep;
+      dd_opts["ls_type"] = ls_type;
+      dd_opts["mesh_units"] = mesh_units;
+      dd_opts["pc_type"] = "composite";
+      dd_ptr = SimulationInterface::create("drift-diffusion", dd_opts);
+    }
+    DriftDiffusion& dd = *dynamic_cast<DriftDiffusion*>(dd_ptr);
 
-    nside.add_dopant(new Dopant(n_doping, 0.025, 2, Dopant::N_TYPE));
-    nside.set_mobilities(283.8, 160.3);
 
-    ModelOptions opts;
-    opts["tau_n"] = "1e-7";
-    opts["tau_p"] = "3e-8";
-    RecombinationModelInterface* rm =
-      RecombinationModelInterface::create("SRH", opts);
-    nside.add_recombination_model(rm);
+    DriftDiffusionProperties* nside = 
+      DriftDiffusionProperties::create("unstrained");
 
-
-    SemiconductorModel pside;
-    pside.set_data_file("Si.dat");
-    pside.read_database(d);
-
-    pside.add_dopant(new Dopant(p_doping, 0.01, 4, Dopant::P_TYPE));
-    pside.set_mobilities(283.8, 160.3);
-
-    opts["tau_n"] = "1e-7";
-    opts["tau_p"] = "3e-8";
-    rm = RecombinationModelInterface::create("SRH", opts);
-    pside.add_recombination_model(rm);
+    DriftDiffusionProperties* pside = 
+      DriftDiffusionProperties::create("unstrained");
 
     if (statistics == "FD")
     {
-      nside.set_statistics(TiberCad::FERMIDIRAC);
-      pside.set_statistics(TiberCad::FERMIDIRAC);
+      nside->set_statistics(TiberCad::FERMIDIRAC);
+      pside->set_statistics(TiberCad::FERMIDIRAC);
     }
     else
     {
-      nside.set_statistics(TiberCad::BOLTZMANN);
-      pside.set_statistics(TiberCad::BOLTZMANN);
+      nside->set_statistics(TiberCad::BOLTZMANN);
+      pside->set_statistics(TiberCad::BOLTZMANN);
     }
 
-    ElementData element_data;
-    {
-      MeshData::const_elem_data_iterator it = meshdata.elem_data_begin();
-      const MeshData::const_elem_data_iterator end =
-        meshdata.elem_data_end();
-      for ( ; it != end; ++it)
-      {
-        const Elem* elem = it->first;
+    nside->add_dopant(new Dopant(n_doping, 0.025, 2, Dopant::N_TYPE));
+    pside->add_dopant(new Dopant(p_doping, 0.01, 4, Dopant::P_TYPE));
 
-        // every element needs to have a material assigned
-        assert(meshdata.has_data(elem));
+    ModelOptions opts;
+    opts["tau_n"] = "1e-9";
+    opts["tau_p"] = "3e-10";
+    nside->add_recombination_model("SRH", opts);
+    pside->add_recombination_model("SRH", opts);
 
-        int id = (int) meshdata(elem);
+    opts.clear();
+    opts["mu0"] = "284";
+    nside->set_electron_mobility_model("constant", opts);
+    pside->set_electron_mobility_model("constant", opts);
 
-        switch (id)
-        {
-          case 2:
-            element_data.set_data(elem, &pside);
-            break;
-          default:
-            element_data.set_data(elem, &nside);
-            break;
-        }
-      }
-    }
-
-    OhmicContact anode("anode");
-    anode.set_zero_derivative_bc(FERMIE);
-    OhmicContact cathode("cathode");
-    cathode.set_zero_derivative_bc(FERMIH);
-
-    BoundaryData boundary_data;
-    {
-      map<unsigned int, vector<unsigned int> >::const_iterator it =
-        boundary_nodes.begin();
-      const map<unsigned int, vector<unsigned int> >::const_iterator end =
-        boundary_nodes.end();
-
-      for ( ; it != end; ++it)
-      {
-        const vector<unsigned int>& nodes = it->second;
-
-        if (it->first == 1)
-          set_boundary(boundary_data, nodes, &anode, mesh);
-        else
-          set_boundary(boundary_data, nodes, &cathode, mesh);
-      }
-    }
+    opts["mu0"] = "160";
+    nside->set_hole_mobility_model("constant", opts);
+    pside->set_hole_mobility_model("constant", opts);
 
 
-    DD::Device device(&mesh, &element_data, &boundary_data);
-    bool device_integrity = device.check_integrity();
-    if (device_integrity)
-      cout << "Device ok.\n\n";
-    else
-    {
-      cout << "Device bad.\n\n";
-      return 1;
-    }
+    Database d;
+    d.set_search_path(searchpath);
+    Material::set_database(d);
 
-  
-    EquationSystems eqsys(mesh);
-    DriftDiffusion dd(&device);
-    dd.set_equation_systems(&eqsys);
+    Material* mat_n = Material::create(material);
+    mat_n->add_model(nside, dd.get_id());
+    mat_n->init();
+
+    Material* mat_p = Material::create(material);
+    mat_p->add_model(pside, dd.get_id());
+    mat_p->init();
+
+    Device dev(mesh, boundary_nodes);
+    dev.set_material(mat_n, 1);
+    dev.set_material(mat_p, 2);
+
+    set<ID> regions;
+    regions.insert(1);
+    regions.insert(2);
+    SimulationEnvironment dd_env(dev, regions);
+
+
+    ModelOptions ctopts;
+    ElectricalContact* anode = ElectricalContact::create("ohmic", ctopts);
+    ElectricalContact* cathode = ElectricalContact::create("ohmic", ctopts);
+
+    Boundary* bd_anode = new Boundary("anode");
+    Boundary* bd_cathode = new Boundary("cathode");
+    bd_anode->add_boundary_properties(anode, dd.get_id());
+    bd_cathode->add_boundary_properties(cathode, dd.get_id());
+    dd_env.add_boundary(bd_anode, 1);
+    dd_env.add_boundary(bd_cathode, 2);
+
+
+    dd_env.init();
+    dd.set_environment(&dd_env);
     dd.init();
 
-    DriftDiffusion::Options& params = dd.get_options();
-    params.max_refinement_steps = refinement_steps;
-    params.solver_params.nonlinear_max_iterations = nonlin_max_it;
-    params.solver_params.linear_max_iterations = lin_max_it;
-    params.solver_params.nonlinear_tolerance = nonlin_rtol;
-    params.solver_params.nonlinear_abs_tolerance = dd_nonlin_atol;
-    params.solver_params.ls_maxstep = nonlin_ls_maxstep;
-    params.solver_params.linear_tolerance = lin_rtol;
-    params.solver_params.nonlinear_abs_tolerance = dd_nonlin_atol;
-    params.integration_order =
-      static_cast<libMeshEnums::Order>(integration_order);
-    params.refine_fraction = refine_frac;
-    params.coarsen_fraction = coarsen_frac;
-    params.solver_params.pc_type = PCILU;
-
-    if (method == "GUMMEL")
-    {
-      params.solver_method = DriftDiffusion::GUMMEL;
-      params.max_gummel_iterations = 2;
-    }
-    else
-      params.solver_method = DriftDiffusion::NEWTON;
-
-
-    // mesh drawn in um
-    params.mesh_units = mesh_units;
 
     dd.enable_mesh_refinement();
 
@@ -235,7 +199,8 @@ int main (int argc, char** argv)
       vector<string> names;
       cout << "Solving equilibrium...\n" << flush;
       dd.guess_equilibrium();
-      dd.solve();
+      try { dd.solve(); }
+      catch (...) {}
       dd.remember_current_solution();
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
         ", final residual: " << dd.get_final_residual() << ")\n" << flush;
@@ -249,7 +214,8 @@ int main (int argc, char** argv)
           densities, names);
     }
     cout << "Si properties:\n";
-    nside.print_info();
+    //nside.print_info();
+    //pside.print_info();
 
     const Scaling& sc = dd.get_scaling();
     cout << "Scaling parameters:\n";
@@ -263,7 +229,12 @@ int main (int argc, char** argv)
 
 
     cout << "\nBegin sweep...\n" << flush;
-    params.coupling = FULLYCOUPLED;
+    {
+      ModelOptions dd_opts;
+      dd_opts["nonlin_max_it"] = nonlin_max_it;
+      dd_opts["coupling"] = "full";
+      dd_ptr->set_options(dd_opts);
+    }
     // make a voltage sweep
     double delta_v = 1e-6;
 
@@ -297,7 +268,8 @@ int main (int argc, char** argv)
       dd.set_simulation_voltage("anode", *it);
       cout << " Solving U = " << *it << " V ...\n" << flush;
       dd.enable_mesh_refinement();
-      dd.solve();
+      try { dd.solve(); }
+      catch (...) {}
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
         ", final residual: " << dd.get_final_residual() << ")\n" << flush;
       vector<double> densities;
@@ -319,13 +291,12 @@ int main (int argc, char** argv)
           GnuPlotIO::GRID_ON).write_nodal_data(filename_d.str(),
           densities, names);
 
-      const map<const ElectricalContact*, double>& curr =
+      const map<const Boundary*, double>& curr =
         dd.get_boundary_currents();
       file << *it << "  "
-           << (*curr.find(&cathode)).second << "  "
-           << (*curr.find(&anode)).second << "  "
-           << dd.get_artificial_boundary_current() << "\n" << flush;
-      cerr << "    I = " << (*curr.find(&cathode)).second << " A/cm\n";
+           << (*curr.find(bd_cathode)).second << "  "
+           << (*curr.find(bd_anode)).second << "\n" << flush;
+      cerr << "    I = " << (*curr.find(bd_cathode)).second << " A/cm\n";
     }
 
     vector<double>::iterator zero =
@@ -370,48 +341,22 @@ int main (int argc, char** argv)
             densities, names);
 
         restart = false;
-        const map<const ElectricalContact*, double>& curr =
+        const map<const Boundary*, double>& curr =
           dd.get_boundary_currents();
         file << *it << "  "
-          << (*curr.find(&cathode)).second << "  "
-          << (*curr.find(&anode)).second << "  "
-          << dd.get_artificial_boundary_current() << "\n" << flush;
-        cerr << "    I = " << (*curr.find(&cathode)).second << " A/cm\n";
+          << (*curr.find(bd_cathode)).second << "  "
+          << (*curr.find(bd_anode)).second << "\n" << flush;
+        cerr << "    I = " << (*curr.find(bd_cathode)).second << " A/cm\n";
       }
       while (it != voltages.begin());
     }
     
     file.close();
+
+    delete dd_ptr;
   }
 
   return libMesh::close();
 }
-
-
-void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    ElectricalContact* desc, const Mesh& mesh)
-{
-  vector<int>::const_iterator n_it;
-  const vector<unsigned int>::const_iterator n_begin = nodes.begin();
-  const vector<unsigned int>::const_iterator n_end = nodes.end();
-
-  Mesh::const_element_iterator el = mesh.elements_begin();
-  const Mesh::const_element_iterator el_end = mesh.elements_end();
-  for ( ; el != el_end; ++el)
-  {
-    Elem* elem = *el;
-
-    int n_sides = elem->n_sides();
-    for (int s = 0; s < n_sides; s++)
-    {
-      if (elem->neighbor(s) == NULL)
-      {
-        if (find(n_begin, n_end, elem->node(s)) != n_end)
-          data.set_data(BoundaryData::ElementSide(elem, s), desc);
-      }
-    }
-  }
-}
-
 
 

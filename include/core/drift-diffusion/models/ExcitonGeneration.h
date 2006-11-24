@@ -19,11 +19,11 @@ class ExcitonGeneration : public RecombinationModelInterface
 
   public:
 
-    //! Constructor
-    ExcitonGeneration(void);
-
     //! Destructor
     virtual ~ExcitonGeneration(void) {};
+
+    //! Create a ConstantMobility object
+    static ExcitonGeneration* create(void);
 
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
@@ -38,11 +38,25 @@ class ExcitonGeneration : public RecombinationModelInterface
     //! Set the direct recombination parameters
     void set_parameters(double C);
 
-    //! \copydoc RecombinationModelInterface::set_model_options()
-    virtual void set_model_options(const ModelOptions& options);
 
-    //! \copydoc RecombinationModelInterface::get_name()
-    virtual const std::string get_name(void) const;
+  protected:
+
+    //! Constructor
+    ExcitonGeneration(void);
+
+    //! \copydoc RecombinationModelInterface::do_init()
+    virtual void do_init(void);
+
+    //! \copydoc RecombinationModelInterface::create_new()
+    virtual PhysicalModelInterface* create_new(void) const;
+
+    //! \copydoc RecombinationModelInterface::copy_from()
+    virtual void copy_from(const PhysicalModelInterface* rhs);
+
+    /*! \copydoc RecombinationModelInterface::calculate_VCA() */
+    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+        const PhysicalModelInterface* comp_B, double xa);
+
     
   private:
 
@@ -52,11 +66,50 @@ class ExcitonGeneration : public RecombinationModelInterface
 };
 
 
+//
+// inline methods
+// 
+
+
+inline
+ExcitonGeneration::ExcitonGeneration(void)
+  : _C(1e-10)
+{
+}
+
+
+inline
+ExcitonGeneration*
+ExcitonGeneration::create(void)
+{
+  return new ExcitonGeneration();
+}
+
+
 inline
 void
 ExcitonGeneration::set_parameters(double C)
 {
   _C = C;
+}
+
+
+inline
+PhysicalModelInterface*
+ExcitonGeneration::create_new(void) const
+{
+  return new ExcitonGeneration();
+}
+
+
+inline
+void
+ExcitonGeneration::copy_from(const PhysicalModelInterface* rhs)
+{
+  RecombinationModelInterface::copy_from(rhs);
+  
+  const ExcitonGeneration* mod = dynamic_cast<const ExcitonGeneration*>(rhs);
+  _C = mod->_C;
 }
 
 

@@ -2,24 +2,11 @@
 #include "DriftDiffusionProperties.h"
 
 
-
-SRHRecombination::SRHRecombination(void)
-  : RecombinationModelInterface(),
-    _tau_n(1e-9),
-    _tau_p(1e-9)
-{
-}
-
 void
-SRHRecombination::set_model_options(const ModelOptions& options)
+SRHRecombination::do_init(void)
 {
-  ModelOptions::const_iterator it = options.find("tau_n");
-  if (it != options.end())
-    _tau_n = atof((it->second).c_str());
-  
-  it = options.find("tau_p");
-  if (it != options.end())
-    _tau_p = atof((it->second).c_str());
+  _tau_n = get_options().get_option("tau_n", 1e-9);
+  _tau_p = get_options().get_option("tau_p", 1e-9);
 }
 
 void
@@ -60,8 +47,17 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   recomb_e[2] = recomb_h[2] = -b;
 }
 
-const std::string
-SRHRecombination::get_name(void) const
+
+void
+SRHRecombination::calculate_VCA(const PhysicalModelInterface* comp_A,
+    const PhysicalModelInterface* comp_B, double xa)
 {
-  return "SRH_recombination";
+  const SRHRecombination* scA =
+    dynamic_cast<const SRHRecombination*>(comp_A);
+  const SRHRecombination* scB =
+    dynamic_cast<const SRHRecombination*>(comp_B);
+
+  _tau_n = alloy(scA->_tau_n, scB->_tau_n, xa);
+  _tau_p = alloy(scA->_tau_p, scB->_tau_p, xa);
 }
+

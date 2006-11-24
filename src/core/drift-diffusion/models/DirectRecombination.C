@@ -1,20 +1,13 @@
+// $Id$
+
 #include "DirectRecombination.h"
 #include "DriftDiffusionProperties.h"
 
 
-
-DirectRecombination::DirectRecombination(void)
-  : RecombinationModelInterface(),
-    _C(1e-10)
-{
-}
-
 void
-DirectRecombination::set_model_options(const ModelOptions& options)
+DirectRecombination::do_init(void)
 {
-  ModelOptions::const_iterator it = options.find("C");
-  if (it != options.end())
-    _C = atof((it->second).c_str());
+  _C = get_options().get_option("C", 1e-10);
 }
 
 void
@@ -40,7 +33,6 @@ DirectRecombination::get_net_recombination_rate_derivatives(
   double dn  = dd.get_electron_density_derivative();
   double p  = dd.get_hole_density();
   double dp  = dd.get_hole_density_derivative();
-  double ni = dd.get_intrinsic_density();
 
   double a = _C * dn * p;
   double b = _C * n * dp; 
@@ -50,8 +42,16 @@ DirectRecombination::get_net_recombination_rate_derivatives(
   recomb_e[2] = recomb_h[2] = -b;
 }
 
-const std::string
-DirectRecombination::get_name(void) const
+
+void
+DirectRecombination::calculate_VCA(const PhysicalModelInterface* comp_A,
+    const PhysicalModelInterface* comp_B, double xa)
 {
-  return "direct_recombination";
+  const DirectRecombination* scA =
+    dynamic_cast<const DirectRecombination*>(comp_A);
+  const DirectRecombination* scB =
+    dynamic_cast<const DirectRecombination*>(comp_B);
+
+  _C = alloy(scA->_C, scB->_C, xa);
 }
+

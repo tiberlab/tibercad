@@ -1,10 +1,7 @@
 // the following _HAS_ to be included first
 #include "Read_MSH.h"
 
-#include "ElementData.h"
 #include "OhmicContact.h"
-#include "BoundaryData.h"
-#include "DDevice.h"
 #include "DriftDiffusion.h"
 #include "Dopant.h"
 #include "SemiconductorModel.h"
@@ -13,8 +10,14 @@
 #include "RecombinationModelInterface.h"
 #include "ExcitonDissociation.h"
 
+#include "Material.h"
+#include "Device.h"
+#include "Boundary.h"
+#include "SimulationEnvironment.h"
+#include "Database.h"
+#include "MeshUtils.h"
+
 #include "mesh.h"
-#include "mesh_modification.h"
 #include "mesh_data.h"
 #include "mesh_generation.h"
 #include "elem.h"
@@ -27,10 +30,7 @@
 using namespace std;
 using namespace DriftDiffusionDefs;
 
-void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    ElectricalContact* desc, const Mesh& mesh);
 
-class Dummy {};
 
 
 int main (int argc, char** argv)
@@ -69,8 +69,8 @@ int main (int argc, char** argv)
 
     double n_doping = input_file("n_doping", 1e18);
     double p_doping = input_file("p_doping", 1e18);
-    double mu_e = input_file("electron_mobility", 800);
-    double mu_h = input_file("hole_mobility", 200);
+    string mu_e = input_file("electron_mobility", "800");
+    string mu_h = input_file("hole_mobility", "200");
     string tau_n = input_file("recombination_time_n", "1e-9");
     string tau_p = input_file("recombination_time_p", "1e-9");
     string C_direct = input_file("direct_recombination", "1e-8");
@@ -102,143 +102,127 @@ int main (int argc, char** argv)
     Read_MSH readmesh(meshfile, phys_reg_ID, BC_reg_ID, dim, mesh, meshdata);
     map<unsigned int, vector<unsigned int> > boundary_nodes;
     readmesh.get_BC_data(boundary_nodes);
+
+    MeshUtils::assign_subdomain_ids(mesh, meshdata);
     
     mesh.print_info();
 
 
-    Dummy d;
+    ModelOptions dd_opts;
+    dd_opts["name"] = "driftdiff";
+    SimulationInterface* dd_ptr =
+      SimulationInterface::create("drift-diffusion", dd_opts);
+    DriftDiffusion& dd = *dynamic_cast<DriftDiffusion*>(dd_ptr);
 
-    SemiconductorModel nside;    
-    nside.set_data_file(material);
-    nside.read_database(d);
-    
-    nside.add_dopant(new Dopant(n_doping, 0.025, 2, Dopant::N_TYPE));
-    nside.set_mobilities(mu_e, mu_h);
+    ModelOptions ex_opts;
+    ex_opts["name"] = "excitons";
+    SimulationInterface* ex_ptr =
+      SimulationInterface::create("exciton-transport", ex_opts);
+    ExcitonTransport& ex = *dynamic_cast<ExcitonTransport*>(ex_ptr);
 
-    ModelOptions opts;
-    opts["tau_n"] = tau_n;
-    opts["tau_p"] = tau_n;
-    opts["C"] = C_direct;
-    RecombinationModelInterface* rm =
-      RecombinationModelInterface::create("SRH", opts);
-    nside.add_recombination_model(rm);
-    rm = RecombinationModelInterface::create("direct", opts);
-    nside.add_recombination_model(rm);
-    opts["C"] = X_gen;
-    rm = RecombinationModelInterface::create("exciton_generation", opts);
-    nside.add_recombination_model(rm);
+    DriftDiffusionProperties* nside = 
+      DriftDiffusionProperties::create("unstrained");
 
-
-    SemiconductorModel pside;
-    pside.set_data_file(material);
-    pside.read_database(d);
-
-    pside.add_dopant(new Dopant(5e16, 0.025, 2, Dopant::N_TYPE));
-    pside.add_dopant(new Dopant(p_doping, 0.17, 4, Dopant::P_TYPE));
-    pside.set_mobilities(mu_e, mu_h);
-
-    opts["tau_n"] = tau_p;
-    opts["tau_p"] = tau_p;
-    opts["C"] = C_direct;
-    rm = RecombinationModelInterface::create("SRH", opts);
-    pside.add_recombination_model(rm);
-    rm = RecombinationModelInterface::create("direct", opts);
-    pside.add_recombination_model(rm);
-    opts["C"] = X_gen;
-    rm = RecombinationModelInterface::create("exciton_generation", opts);
-    pside.add_recombination_model(rm);
+    DriftDiffusionProperties* pside = 
+      DriftDiffusionProperties::create("unstrained");
 
 
     if (statistics == "FD")
     {
-      nside.set_statistics(TiberCad::FERMIDIRAC);
-      pside.set_statistics(TiberCad::FERMIDIRAC);
+      nside->set_statistics(TiberCad::FERMIDIRAC);
+      pside->set_statistics(TiberCad::FERMIDIRAC);
     }
 
+    nside->add_dopant(new Dopant(n_doping, 0.025, 2, Dopant::N_TYPE));
+    pside->add_dopant(new Dopant(5e16, 0.025, 2, Dopant::N_TYPE));
+    pside->add_dopant(new Dopant(p_doping, 0.17, 4, Dopant::P_TYPE));
+
+
+    ModelOptions opts;
+    opts["tau_n"] = tau_n;
+    opts["tau_p"] = tau_n;
+    nside->add_recombination_model("SRH", opts);
+    opts["tau_n"] = tau_p;
+    opts["tau_p"] = tau_p;
+    pside->add_recombination_model("SRH", opts);
+    
+    opts.clear();
+    opts["C"] = C_direct;
+    nside->add_recombination_model("direct", opts);
+    pside->add_recombination_model("direct", opts);
+    
+    opts.clear();
+    opts["C"] = X_gen;
+    nside->add_recombination_model("exciton_generation", opts);
+    pside->add_recombination_model("exciton_generation", opts);
+
+    opts.clear();
+    opts["mu0"] = mu_e;
+    nside->set_electron_mobility_model("constant", opts);
+    pside->set_electron_mobility_model("constant", opts);
+
+    opts["mu0"] = mu_h;
+    nside->set_hole_mobility_model("constant", opts);
+    pside->set_hole_mobility_model("constant", opts);
+
+
+    Database d;
+    Material::set_database(d);
+
+    Material* mat_n = Material::create("Si");
+    mat_n->add_model(nside, dd.get_id());
+    mat_n->init();
+
+    Material* mat_p = Material::create("Si");
+    mat_p->add_model(pside, dd.get_id());
+    mat_p->init();
+
+
+    Device dev(mesh, boundary_nodes);
+    dev.set_material(mat_n, 1);
+    dev.set_material(mat_p, 2);
+
+    set<ID> regions;
+    regions.insert(1);
+    regions.insert(2);
+    SimulationEnvironment dd_env(dev, regions);
+    SimulationEnvironment ex_env(dev, regions);
 
 
 
-    ElementData element_data;
-    {
-      MeshData::const_elem_data_iterator it = meshdata.elem_data_begin();
-      const MeshData::const_elem_data_iterator end =
-        meshdata.elem_data_end();
-      for ( ; it != end; ++it)
-      {
-        const Elem* elem = it->first;
-
-        // every element needs to have a material assigned
-        assert(meshdata.has_data(elem));
-
-        int id = (int) meshdata(elem);
-
-        switch (id)
-        {
-          case 2:
-            element_data.set_data(elem, &pside);
-            break;
-          default:
-            element_data.set_data(elem, &nside);
-            break;
-        }
-      }
-    }
-
-    OhmicContact anode("anode");
+    OhmicContact anode;
     //SchottkyContact anode("anode");
     //anode.set_schottky_barrier_height(0.8);
     //anode.set_zero_derivative_bc(FERMIE);
-    OhmicContact cathode("cathode");
+    OhmicContact cathode;
     //cathode.set_zero_derivative_bc(FERMIH);
 
+    Boundary bd_anode("anode"), bd_cathode("cathode");
+    bd_anode.add_boundary_properties(&anode, dd.get_id());
+    bd_cathode.add_boundary_properties(&cathode, dd.get_id());
+    dd_env.add_boundary(&bd_anode, 1);
+    dd_env.add_boundary(&bd_cathode, 2);
 
-    BoundaryData boundary_data;
-    {
-      map<unsigned int, vector<unsigned int> >::const_iterator it =
-        boundary_nodes.begin();
-      const map<unsigned int, vector<unsigned int> >::const_iterator end =
-        boundary_nodes.end();
-
-      for ( ; it != end; ++it)
-      {
-        const vector<unsigned int>& nodes = it->second;
-
-        if (it->first == 1)
-          set_boundary(boundary_data, nodes, &anode, mesh);
-        else
-          set_boundary(boundary_data, nodes, &cathode, mesh);
-      }
-    }
+    dd_env.init();
+    dd.set_environment(&dd_env);
+    dd.init();
+    
+    //ex_env.init();
+    //ex.set_environment(&dd_env);
 
 
-    ExcitonModel xpart;
+    ExcitonModel& xpart = *ExcitonModel::create();
     xpart.set_exciton_generation_model("exciton_generation");
     // this is needed, but a momentary quirk
-    xpart.read_database(d);
     xpart.set_recombination_times(rec_rad, rec_nonrad);
     xpart.set_binding_energy(20.4e-3);
     xpart.set_effective_mass(1.02);  // (*me) in exciton model
     xpart.set_mobility(1500);
+    xpart.init();
 
 
 
-
-    DD::Device device(&mesh, &element_data, &boundary_data);
-    bool device_integrity = device.check_integrity();
-    if (device_integrity)
-      cout << "Device ok.\n\n";
-    else
-    {
-      cout << "Device bad.\n\n";
-      return 1;
-    }
-    
   
-    EquationSystems eqsys(mesh);
-    DriftDiffusion dd(&device);
-    dd.set_equation_systems(&eqsys);
-    dd.init();
-
     DriftDiffusion::Options& params = dd.get_options();
     params.max_refinement_steps = refinement_steps;
     params.solver_params.nonlinear_max_iterations = 100;
@@ -267,12 +251,9 @@ int main (int argc, char** argv)
     //dd.enable_mesh_refinement();
 
 
-    ExcitonTransport ex(&device);
-    ex.set_equation_systems(&eqsys);
-    ex.init();
-    ex.set_exciton_model(&xpart);
-    ex.set_driftdiffusion(&dd);
-    ex.set_initial_guess(1.5);
+    //ex.init();
+    //ex.set_exciton_model(&xpart);
+    //ex.set_initial_guess(1.5);
 
     ExcitonTransport::Options& exparams = ex.get_options();
     exparams.max_refinement_steps = refinement_steps;
@@ -297,7 +278,8 @@ int main (int argc, char** argv)
       // is default:
       //params.coupling = POISSON;
       dd.guess_equilibrium();
-      dd.solve();
+      try { dd.solve(); }
+      catch (...) {}
 
       //try { ex.solve(); }
       //catch (...) {}
@@ -319,11 +301,6 @@ int main (int argc, char** argv)
       GnuPlotIO(dd.get_mesh()).write_nodal_data("output/excitons_eq",
             densities, names);
     }
-    cout << "GaN material info:\n";
-    cout << "n-side:\n";
-    nside.print_info();
-    cout << "p-side:\n";
-    pside.print_info();
 
     const Scaling& sc = dd.get_scaling();
     cout << "Scaling parameters:\n";
@@ -339,13 +316,9 @@ int main (int argc, char** argv)
     ostringstream s;
     s << damping;
     opts["damping"] = s.str();
-    opts["trapping_probability"] = trapping;
-    RecombinationModelInterface* rma =
-      RecombinationModelInterface::create("exciton_dissociation", opts);
-    (static_cast<ExcitonDissociation*>(rma))->set_exciton_transport(&ex);
-    RecombinationModelInterface* rmb =
-      RecombinationModelInterface::create("exciton_dissociation", opts);
-    (static_cast<ExcitonDissociation*>(rmb))->set_exciton_transport(&ex);
+    opts["exciton_simulation"] = "x_transport";
+    //nside->add_recombination_model("exciton_dissociation", opts);
+    //pside->add_recombination_model("exciton_dissociation", opts);
 
     cout << "\nBegin sweep...\n" << flush;
     params.solver_params.pc_type = PCCOMPOSITE;
@@ -377,7 +350,6 @@ int main (int argc, char** argv)
     file << "# V      A/cm\n";
     
 
-    bool done = false;
     vector<double>::iterator it = first_positive;
     for ( ; it != voltages.end(); ++it)
     {
@@ -395,21 +367,10 @@ int main (int argc, char** argv)
       }
       dd.solve();
 
-      if (it == first_positive)
-      {
-        //nside.add_recombination_model(rma);
-        //pside.add_recombination_model(rmb);
-      }
 
 
       if (*it >= 0.5)
       {
-        if (!done)
-        {
-          nside.add_recombination_model(rma);
-          pside.add_recombination_model(rmb);
-          done = true;
-        }
 
         try { ex.solve(); }
         catch (...) {}
@@ -422,8 +383,8 @@ int main (int argc, char** argv)
           ostringstream s;
           s << damping;
           opts["damping"] = s.str();
-          rma->set_model_options(opts);
-          rmb->set_model_options(opts);
+          //rma->set_model_options(opts);
+          //rmb->set_model_options(opts);
         }
         dd.solve();
         try { ex.solve(); }
@@ -484,13 +445,12 @@ int main (int argc, char** argv)
             densities, names);
       
 
-      const map<const ElectricalContact*, double>& curr =
+      const map<const Boundary*, double>& curr =
         dd.get_boundary_currents();
       file << *it << "  "
-           << (*curr.find(&cathode)).second << "  "
-           << (*curr.find(&anode)).second << "  "
-           << dd.get_artificial_boundary_current() << "\n" << flush;
-      cerr << "    I = " << (*curr.find(&cathode)).second << " A/cm\n";
+           << (*curr.find(&bd_cathode)).second << "  "
+           << (*curr.find(&bd_anode)).second << "\n" << flush;
+      cerr << "    I = " << (*curr.find(&bd_cathode)).second << " A/cm\n";
     }
 
     vector<double>::iterator zero =
@@ -531,13 +491,12 @@ int main (int argc, char** argv)
 
         restart = false;
 
-        const map<const ElectricalContact*, double>& curr =
+        const map<const Boundary*, double>& curr =
           dd.get_boundary_currents();
         file << *it << "  "
-          << (*curr.find(&cathode)).second << "  "
-          << (*curr.find(&anode)).second << "  "
-          << dd.get_artificial_boundary_current() << "\n" << flush;
-        cerr << "    I = " << (*curr.find(&cathode)).second << " A/cm\n";
+          << (*curr.find(&bd_cathode)).second << "  "
+          << (*curr.find(&bd_anode)).second << "\n" << flush;
+        cerr << "    I = " << (*curr.find(&bd_cathode)).second << " A/cm\n";
       }
       while (it != voltages.begin());
     }
@@ -549,29 +508,4 @@ int main (int argc, char** argv)
   return libMesh::close();
 }
 
-
-void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    ElectricalContact* desc, const Mesh& mesh)
-{
-  vector<int>::const_iterator n_it;
-  const vector<unsigned int>::const_iterator n_begin = nodes.begin();
-  const vector<unsigned int>::const_iterator n_end = nodes.end();
-
-  Mesh::const_element_iterator el = mesh.elements_begin();
-  const Mesh::const_element_iterator el_end = mesh.elements_end();
-  for ( ; el != el_end; ++el)
-  {
-    Elem* elem = *el;
-
-    int n_sides = elem->n_sides();
-    for (int s = 0; s < n_sides; s++)
-    {
-      if (elem->neighbor(s) == NULL)
-      {
-        if (find(n_begin, n_end, elem->node(s)) != n_end)
-          data.set_data(BoundaryData::ElementSide(elem, s), desc);
-      }
-    }
-  }
-}
 

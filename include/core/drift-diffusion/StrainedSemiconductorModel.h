@@ -21,12 +21,15 @@ class StrainedSemiconductorModel : public SemiconductorModel
 {
 
   public:
-
-    //! The default constructor
-    StrainedSemiconductorModel(Macrostrain* strain);
     
     //! The destructor
     virtual ~StrainedSemiconductorModel(void) {};
+
+    // Create a StrainedSemiconductorModel object
+    static StrainedSemiconductorModel* create(void);
+
+    //! \deprecated { Exists only as long as Macrostrain is old version }
+    void set_macrostrain(Macrostrain* strain);
 
     //! Ignore strain related effects
     void ignore_strain(void);
@@ -43,7 +46,20 @@ class StrainedSemiconductorModel : public SemiconductorModel
 
   protected:
 
+    //! The default constructor
+    StrainedSemiconductorModel(void);
+
+    //! \copydoc DriftDiffusionProperties::prepare_element_data()
     virtual void prepare_element_data(void);
+
+    //! \copydoc DriftDiffusionProperties::do_init()
+    virtual void do_init();
+
+    //! \copydoc DriftDiffusionProperties::create_new()
+    virtual PhysicalModelInterface* create_new(void) const;
+
+    //! \copydoc DriftDiffusionProperties::copy_from()
+    virtual void copy_from(const PhysicalModelInterface* rhs);
 
   private:
 
@@ -56,8 +72,7 @@ class StrainedSemiconductorModel : public SemiconductorModel
       double mv;
 
       double Ef0;
-      double n0;
-      double p0;
+      double ni;
 
       RealVectorValue polarization;
     };
@@ -65,13 +80,45 @@ class StrainedSemiconductorModel : public SemiconductorModel
     typedef std::map<const Elem*, ElementData> DataMap;
     
     StrainedSemiconductorModel(const StrainedSemiconductorModel& model);
+    StrainedSemiconductorModel&
+      operator=(const StrainedSemiconductorModel& model);
     
-    Macrostrain* _strain;
+    Macrostrain* _strain_model;
     bool _ignore_strain;
 
     DataMap _element_data;
 
 };
+
+
+
+//
+// inline methods
+//
+
+inline
+PhysicalModelInterface*
+StrainedSemiconductorModel::create_new(void) const
+{
+  return new StrainedSemiconductorModel();
+}
+
+
+inline
+void
+StrainedSemiconductorModel::set_macrostrain(Macrostrain* strain)
+{
+  assert(strain != 0);
+  _strain_model = strain;
+}
+
+inline
+StrainedSemiconductorModel*
+StrainedSemiconductorModel::create(void)
+{
+  return new StrainedSemiconductorModel();
+}
+
 
 inline
 void
@@ -80,12 +127,14 @@ StrainedSemiconductorModel::ignore_strain(void)
   _ignore_strain = true;
 }
 
+
 inline
 void
 StrainedSemiconductorModel::include_strain(void)
 {
   _ignore_strain = false;
 }
+
 
 
 #endif

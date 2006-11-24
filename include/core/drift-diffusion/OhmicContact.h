@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _OHMICCONTACT_H_
 #define _OHMICCONTACT_H_
 
@@ -11,15 +13,30 @@ class OhmicContact : public ElectricalContact
   public:
 
     //! The constructor
-    OhmicContact(const std::string identifier);
+    OhmicContact(void);
+
+    //! Create an ohmic contact
+    static OhmicContact* create(void);
     
     //! \copydoc ElectricalContact::get_boundary_value()
     virtual double get_boundary_value(DriftDiffusionDefs::Variable variable);
 };
 
+
+//
+// inline
+// 
+
 inline
-OhmicContact::OhmicContact(const std::string identifier)
-  : ElectricalContact(identifier)
+OhmicContact*
+OhmicContact::create(void)
+{
+  return new OhmicContact();
+}
+
+
+inline
+OhmicContact::OhmicContact(void)
 {
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::DIRICHLET);
   set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::DIRICHLET);

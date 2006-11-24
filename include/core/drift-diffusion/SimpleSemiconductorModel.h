@@ -23,11 +23,11 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
 {
   public:
 
-    //! The default constructor
-    SimpleSemiconductorModel(void);
-
     //! The destructor
     virtual ~SimpleSemiconductorModel(void) {};
+
+    //! This method creates a SimpleSemiconductorModel object
+    static SimpleSemiconductorModel* create(void);
 
     //! Set conduction band properties
     /*!
@@ -46,16 +46,25 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
     //! Set the relative permittivity
     void set_relative_permittivity(double epsilon_r);
     
-    virtual void read_database(const Dummy&) {};
 
-    /*! \copydoc DriftDiffusionProperties::calculate_all()
-     * 
-     * This implementation models the most simple semiconductor equations
-     */
-    virtual void calculate_all(double potential,
-      double fermi_e, double fermi_h, const Point& coord);
-    
   protected:
+
+    //! The default constructor
+    /*!
+     * A derived class can call this constructor to set a different
+     * model name
+     */
+    SimpleSemiconductorModel(void);
+
+    //! \copydoc DriftDiffusionProperties::do_init()
+    virtual void do_init();
+
+    //! \copydoc DriftDiffusionProperties::create_new()
+    virtual PhysicalModelInterface* create_new(void) const;
+
+    //! \copydoc DriftDiffusionProperties::copy_from()
+    virtual void copy_from(const PhysicalModelInterface* rhs);
+
 
     //! \copydoc DriftDiffusionProperties::prepare_element_data()
     /*!
@@ -66,8 +75,9 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
   private:
 
     typedef DriftDiffusionProperties Parent;
-    
+
     SimpleSemiconductorModel(const SimpleSemiconductorModel& model);
+    SimpleSemiconductorModel& operator=(const SimpleSemiconductorModel& model);
     
     //! \c true if equilibrium properties are calculated
     bool _is_prepared;
@@ -78,6 +88,13 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
 //
 // inline member functions
 //
+
+inline
+SimpleSemiconductorModel*
+SimpleSemiconductorModel::create(void)
+{
+  return new SimpleSemiconductorModel();
+}
 
 
 inline
@@ -90,6 +107,7 @@ SimpleSemiconductorModel::set_conduction_band_properties(double band_edge,
   electron_mobility = mobility;
 }
 
+
 inline
 void
 SimpleSemiconductorModel::set_valence_band_properties(double band_edge,
@@ -100,12 +118,41 @@ SimpleSemiconductorModel::set_valence_band_properties(double band_edge,
   hole_mobility = mobility;
 }
 
+
 inline
 void
 SimpleSemiconductorModel::set_relative_permittivity(double epsilon_r)
 {
   permittivity = epsilon_r;
 }
+
+
+inline
+PhysicalModelInterface*
+SimpleSemiconductorModel::create_new(void) const
+{
+  return new SimpleSemiconductorModel();
+}
+
+
+inline
+void
+SimpleSemiconductorModel::copy_from(const PhysicalModelInterface* rhs)
+{
+  Parent::copy_from(rhs);
+
+  const SimpleSemiconductorModel* mod =
+    dynamic_cast<const SimpleSemiconductorModel*>(rhs);
+  
+  _is_prepared = mod->_is_prepared;
+  
+  get_conduction_band().band_edge = mod->get_conduction_band().band_edge;
+  get_conduction_band().effective_mass =
+    mod->get_conduction_band().effective_mass;
+  get_valence_band().band_edge = mod->get_valence_band().band_edge;
+  get_valence_band().effective_mass = mod->get_valence_band().effective_mass;
+}
+
 
 
 #endif //_SIMPLESEMICONDUCTORMODEL_H_

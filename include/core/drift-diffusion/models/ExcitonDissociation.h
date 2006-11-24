@@ -18,11 +18,11 @@ class ExcitonDissociation : public RecombinationModelInterface
 
   public:
 
-    //! Constructor
-    ExcitonDissociation(void);
-
     //! Destructor
     virtual ~ExcitonDissociation(void) {};
+
+    //! Create a ConstantMobility object
+    static ExcitonDissociation* create(void);
 
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
@@ -34,26 +34,30 @@ class ExcitonDissociation : public RecombinationModelInterface
     void get_net_recombination_rate_derivatives(
         std::vector<double>& recomb_e, std::vector<double>& recomb_h);
 
-    //! Set the \c ExcitonTransport to be used
-    void set_exciton_transport(ExcitonTransport* simulator);
+    
+  protected:
 
-    //! \copydoc RecombinationModelInterface::set_model_options()
-    virtual void set_model_options(const ModelOptions& options);
+    //! Constructor
+    ExcitonDissociation(void);
+    
+    //! \copydoc RecombinationModelInterface::do_init()
+    virtual void do_init(void);
 
-    //! \copydoc RecombinationModelInterface::get_name()
-    virtual const std::string get_name(void) const;
+    //! \copydoc RecombinationModelInterface::create_new()
+    virtual PhysicalModelInterface* create_new(void) const;
+
+    //! \copydoc RecombinationModelInterface::copy_from()
+    virtual void copy_from(const PhysicalModelInterface* rhs);
+
+    /*! \copydoc RecombinationModelInterface::calculate_VCA() */
+    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+        const PhysicalModelInterface* comp_B, double xa);
+
 
   private:
 
     //! Damping factor
     double _d;
-
-    //! Trapping probability
-    /*!
-     * \f$\alpha\f$ is the percentage of dissociating excitons that
-     * gets trapped instead of creating free electron hole pairs
-     */
-    double _a;
 
     //! The \c ExcitonTransport to use
     ExcitonTransport* _exciton_sim;
@@ -62,11 +66,43 @@ class ExcitonDissociation : public RecombinationModelInterface
 
 
 
+//
+// inline methods
+// 
+
+inline
+ExcitonDissociation::ExcitonDissociation(void)
+  : _d(1.0),
+    _exciton_sim(NULL)
+{
+}
+
+inline
+ExcitonDissociation*
+ExcitonDissociation::create(void)
+{
+  return new ExcitonDissociation();
+}
+
+
+
+inline
+PhysicalModelInterface*
+ExcitonDissociation::create_new(void) const
+{
+  return new ExcitonDissociation();
+}
+
+
 inline
 void
-ExcitonDissociation::set_exciton_transport(ExcitonTransport* simulator)
+ExcitonDissociation::copy_from(const PhysicalModelInterface* rhs)
 {
-  _exciton_sim = simulator;
+  RecombinationModelInterface::copy_from(rhs);
+  
+  const ExcitonDissociation* mod = dynamic_cast<const ExcitonDissociation*>(rhs);
+  _exciton_sim = mod->_exciton_sim;
+  _d = mod->_d;
 }
 
 

@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _FERMILEVELPINNING_H_
 #define _FERMILEVELPINNING_H_
 
@@ -12,7 +14,10 @@ class FermiLevelPinning : public ElectricalContact
   public:
 
     //! The constructor
-    FermiLevelPinning(const std::string identifier);
+    FermiLevelPinning(void);
+
+    //! Create an ohmic contact
+    static FermiLevelPinning* create(void);
     
     //! \copydoc ElectricalContact::get_boundary_value()
     virtual double get_boundary_value(DriftDiffusionDefs::Variable variable);
@@ -30,9 +35,21 @@ class FermiLevelPinning : public ElectricalContact
     double _pinning;
 };
 
+
+//
+// inline
+// 
+
 inline
-FermiLevelPinning::FermiLevelPinning(const std::string identifier)
-  : ElectricalContact(identifier)
+FermiLevelPinning*
+FermiLevelPinning::create(void)
+{
+  return new FermiLevelPinning();
+}
+
+
+inline
+FermiLevelPinning::FermiLevelPinning(void)
 {
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::PINNING);
   set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::NEUMANN);

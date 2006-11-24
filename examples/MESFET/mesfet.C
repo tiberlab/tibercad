@@ -3,15 +3,17 @@
 #include "ReadISEGrid.h"
 
 #include "Dopant.h"
-#include "ElementData.h"
-#include "OhmicContact.h"
-#include "SchottkyContact.h"
-#include "BoundaryData.h"
-#include "Dopant.h"
-#include "DDevice.h"
 #include "DriftDiffusion.h"
-#include "SemiconductorModel.h"
+#include "DriftDiffusionProperties.h"
 #include "RecombinationModelInterface.h"
+#include "ElectricalContact.h"
+
+#include "Material.h"
+#include "Device.h"
+#include "Boundary.h"
+#include "SimulationEnvironment.h"
+#include "Database.h"
+#include "MeshUtils.h"
 
 #include "mesh.h"
 #include "mesh_modification.h"
@@ -22,20 +24,18 @@
 #include "gmv_io.h"
 #include "tecplot_io.h"
 #include "GMVIO_cell.h"
-#include "equation_systems.h"
 
 #include <algorithm>
 
 using namespace std;
 using namespace DriftDiffusionDefs;
 
-void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    ElectricalContact* desc, const Mesh& mesh);
 
 void sweep_drain(double stop, int steps, DriftDiffusion& dd, double vg);
 
-class Dummy {};
-
+Boundary* bd_source;
+Boundary* bd_drain;
+Boundary* bd_gate;
 
 int main (int argc, char** argv)
 {
@@ -44,13 +44,14 @@ int main (int argc, char** argv)
 
     GetPot input("mesfet.in");
 
+    const string searchpath = input("searchpath", ".");
     string meshfile = input("meshfile", "");
     string format = input("format", "gmsh");
-    const double mesh_units = input("mesh_units", 1e-4);
+    string mesh_units = input("mesh_units", "1e-4");
 
     int fully = input("fully_coupled", 1);
 
-    double schottky_barrier = input("schottky_barrier", 0.8);
+    string schottky_barrier = input("schottky_barrier", "0.8");
     
     double vds_stop = input("vds_stop", 0.0);
     unsigned int vds_steps = input("vds_steps", 1);
@@ -63,16 +64,18 @@ int main (int argc, char** argv)
     int characteristic = input("characteristic", 0);
 
 
-    const string method = input("simulation_method", "NEWTON");
     const string statistics = input("statistics", "B");
 
-    double nonlin_rtol = input("nonlinear_tolerance", 1e-9);
-    double lin_rtol = input("linear_tolerance", 1e-12);
-    int integration_order = input("integration_order", 5);
-    int nonlin_max_it = input("nonlinear_max_it", 15);
-    int lin_max_it = input("linear_max_it", 500);
-    double nonlin_ls_maxstep =
-      input("nonlinear_ls_maxstep", 0.025);
+
+    string nonlin_rtol = input("nonlinear_tolerance", "1e-9");
+    string lin_rtol = input("linear_tolerance", "1e-12");
+    string integration_order = input("integration_order", "5");
+    string nonlin_max_it = input("nonlinear_max_it", "15");
+    string lin_max_it = input("linear_max_it", "500");
+    string ls_type = input("ls_type", "cubic");
+    string nonlin_ls_maxstep =
+      input("nonlinear_ls_maxstep", "0.025");
+
 
 
     unsigned int refinement_steps =
@@ -99,7 +102,9 @@ int main (int argc, char** argv)
     map<unsigned int, vector<unsigned int> > boundary_nodes;
     if (format == "ise")
     {
-      ReadISEGrid readmesh(meshfile.c_str(), mesh, meshdata);
+      ReadISEGrid readmesh(meshfile.c_str());
+      mesh.read(readmesh.fname_xda,  &meshdata); 
+      meshdata.read(readmesh.fname_xta);
       readmesh.get_BC_data(boundary_nodes);
     }
     else
@@ -108,199 +113,153 @@ int main (int argc, char** argv)
       readmesh.get_BC_data(boundary_nodes);
     }
 
+    MeshUtils::assign_subdomain_ids(mesh, meshdata);
+
     mesh.print_info();
 
-    Dummy d;
 
-    SemiconductorModel sub;    
-    sub.set_data_file("Si.dat");
-    sub.read_database(d);
+
+    SimulationInterface* dd_ptr;
     {
-      sub.add_dopant(new Dopant(1e17, 0.01, 4, Dopant::P_TYPE));
-      //sub.set_mobilities(1416, 470);
-      sub.set_mobilities(560, 280);
+      ModelOptions dd_opts;
+      dd_opts["name"] = "driftdiff";
+      dd_opts["nonlin_max_it"] = "100";
+      dd_opts["lin_max_it"] = lin_max_it;
+      dd_opts["nonlin_rel_tol"] = nonlin_rtol;
+      dd_opts["lin_rel_tol"] = lin_rtol;
+      dd_opts["integration_order"] = integration_order;
+      dd_opts["ls_type"] = ls_type;
+      dd_opts["ls_maxstep"] = nonlin_ls_maxstep;
+      dd_opts["mesh_units"] = mesh_units;
+      //dd_opts["pc_type"] = "composite";
+      dd_ptr = SimulationInterface::create("drift-diffusion", dd_opts);
+    }
+
+
+    
+    DriftDiffusionProperties* sub = 
+      DriftDiffusionProperties::create("unstrained");
+    {
+      sub->add_dopant(new Dopant(1e17, 0.01, 4, Dopant::P_TYPE));
       ModelOptions opts;
       opts["tau_n"] = "1e-6";
       opts["tau_p"] = "3e-7";
-      RecombinationModelInterface* rm =
-        RecombinationModelInterface::create("SRH", opts);
-      sub.add_recombination_model(rm);
+      sub->add_recombination_model("SRH", opts);
+      opts.clear();
+      opts["mu0"] = "560";
+      sub->set_electron_mobility_model("constant", opts);
+      opts["mu0"] = "280";
+      sub->set_hole_mobility_model("constant", opts);
     }
 
 
-
-    SemiconductorModel schottky;
-    schottky.set_data_file("Si.dat");
-    schottky.read_database(d);
+    DriftDiffusionProperties* schottky = 
+      DriftDiffusionProperties::create("unstrained");
     { 
-      schottky.add_dopant(new Dopant(1e18, 0.025, 2, Dopant::N_TYPE));
-      schottky.set_mobilities(283.8, 160.3);
+      schottky->add_dopant(new Dopant(1e18, 0.025, 2, Dopant::N_TYPE));
       ModelOptions opts;
       opts["tau_n"] = "1e-7";
       opts["tau_p"] = "3e-8";
-      RecombinationModelInterface* rm =
-        RecombinationModelInterface::create("SRH", opts);
-      schottky.add_recombination_model(rm);
+      schottky->add_recombination_model("SRH", opts);
+      opts.clear();
+      opts["mu0"] = "283.8";
+      schottky->set_electron_mobility_model("constant", opts);
+      opts["mu0"] = "160.3";
+      schottky->set_hole_mobility_model("constant", opts);
     }
 
 
-    SemiconductorModel contact;
-    contact.set_data_file("Si.dat");
-    contact.read_database(d);
+    DriftDiffusionProperties* contact = 
+      DriftDiffusionProperties::create("unstrained");
     {
-      contact.add_dopant(new Dopant(5e19, 0.025, 2, Dopant::N_TYPE));
-      contact.set_mobilities(70, 54);
+      contact->add_dopant(new Dopant(5e19, 0.025, 2, Dopant::N_TYPE));
       ModelOptions opts;
       opts["tau_n"] = "2e-9";
       opts["tau_p"] = "6e-10";
-      RecombinationModelInterface* rm =
-        RecombinationModelInterface::create("SRH", opts);
-      contact.add_recombination_model(rm);
+      contact->add_recombination_model("SRH", opts);
+      opts.clear();
+      opts["mu0"] = "70";
+      contact->set_electron_mobility_model("constant", opts);
+      opts["mu0"] = "54";
+      contact->set_hole_mobility_model("constant", opts);
     }
 
-    SemiconductorModel contact2;
-    contact2.set_data_file("Si.dat");
-    contact2.read_database(d);
+    DriftDiffusionProperties* contact2 = 
+      DriftDiffusionProperties::create("unstrained");
     {
-      contact2.add_dopant(new Dopant(5e19, 0.025, 2, Dopant::N_TYPE));
-      contact2.set_mobilities(70, 54);
+      contact2->add_dopant(new Dopant(5e19, 0.025, 2, Dopant::N_TYPE));
       ModelOptions opts;
       opts["tau_n"] = "2e-9";
       opts["tau_p"] = "6e-10";
-      //opts.insert(pair<const string, string>("tau_n", "2e-9"));
-      //opts.insert(pair<const string, string>("tau_p", "6e-10"));
-      RecombinationModelInterface* rm =
-        RecombinationModelInterface::create("SRH", opts);
-      contact2.add_recombination_model(rm);
+      contact2->add_recombination_model("SRH", opts);
+      opts.clear();
+      opts["mu0"] = "70";
+      contact2->set_electron_mobility_model("constant", opts);
+      opts["mu0"] = "54";
+      contact2->set_hole_mobility_model("constant", opts);
     }
 
 
+    Database d;
+    d.set_search_path(searchpath);
+    Material::set_database(d);
 
-    if (statistics == "FD")
-    {
-      sub.set_statistics(TiberCad::FERMIDIRAC);
-      schottky.set_statistics(TiberCad::FERMIDIRAC);
-      contact.set_statistics(TiberCad::FERMIDIRAC);
-    }
-    else
-    {
-      sub.set_statistics(TiberCad::BOLTZMANN);
-      schottky.set_statistics(TiberCad::BOLTZMANN);
-      contact.set_statistics(TiberCad::BOLTZMANN);
-    }
+
+    ModelOptions opts;
+    Material* mat_sub = Material::create("Si", opts);
+    Material* mat_schottky = Material::create("Si", opts);
+    Material* mat_contact = Material::create("Si", opts);
+    Material* mat_contact2 = Material::create("Si", opts);
+
+    mat_sub->add_model(sub, dd_ptr->get_id());
+    mat_schottky->add_model(schottky, dd_ptr->get_id());
+    mat_contact->add_model(contact, dd_ptr->get_id());
+    mat_contact2->add_model(contact2, dd_ptr->get_id());
+
+    mat_sub->init();
+    mat_schottky->init();
+    mat_contact->init();
+    mat_contact2->init();
+
+    Device dev(mesh, boundary_nodes);
+    dev.set_material(mat_sub, 1);
+    dev.set_material(mat_schottky, 2);
+    dev.set_material(mat_contact, 3);
+    dev.set_material(mat_contact2, 4);
+
+    std::set<ID> ids;
+    ids.insert(1);
+    ids.insert(2);
+    ids.insert(3);
+    ids.insert(4);
+    SimulationEnvironment dd_env(dev, ids);
+
     
-    if (fully)
-    {
-      sub.set_coupling_type(BOTH);
-      schottky.set_coupling_type(BOTH);
-      contact.set_coupling_type(BOTH);
-    }
-    else
-    {
-      sub.set_coupling_type(ELECTRONS);
-      schottky.set_coupling_type(ELECTRONS);
-      contact.set_coupling_type(ELECTRONS);
-    }
+    ModelOptions ctopts;
+    ElectricalContact* source = ElectricalContact::create("ohmic", ctopts);
+    ElectricalContact* drain = ElectricalContact::create("ohmic", ctopts);
+    ctopts["schottky_barrier"] = schottky_barrier;
+    ElectricalContact* gate = ElectricalContact::create("schottky", ctopts);
+
+    bd_source = new Boundary("source");
+    bd_drain = new Boundary("drain");
+    bd_gate = new Boundary("gate");
+    bd_source->add_boundary_properties(source, dd_ptr->get_id());
+    bd_drain->add_boundary_properties(drain, dd_ptr->get_id());
+    bd_gate->add_boundary_properties(gate, dd_ptr->get_id());
+    dd_env.add_boundary(bd_source, 1);
+    dd_env.add_boundary(bd_gate, 2);
+    dd_env.add_boundary(bd_drain, 3);
 
 
-    ElementData element_data;
-    {
-      MeshData::const_elem_data_iterator it = meshdata.elem_data_begin();
-      const MeshData::const_elem_data_iterator end = meshdata.elem_data_end();
-      for ( ; it != end; ++it)
-      {
-        const Elem* elem = it->first;
-
-        // every element needs to have a material assigned
-        assert(meshdata.has_data(elem));
-
-        int id = (int) meshdata(elem);
-
-        switch (id)
-        {
-          case 2:
-            element_data.set_data(elem, &schottky);
-            break;
-          case 3:
-            element_data.set_data(elem, &contact);
-            break;
-          case 4:
-            element_data.set_data(elem, &contact2);
-            break;
-          default:
-            element_data.set_data(elem, &sub);
-            break;
-        }
-      }
-    }
-
-
-    OhmicContact source("source");
-    SchottkyContact gate("gate");
-    gate.set_schottky_barrier(schottky_barrier);
-    OhmicContact drain("drain");
-
-    BoundaryData boundary_data;
-    {
-      map<unsigned int, vector<unsigned int> >::const_iterator it =
-        boundary_nodes.begin();
-      const map<unsigned int, vector<unsigned int> >::const_iterator end =
-        boundary_nodes.end();
-
-      for ( ; it != end; ++it)
-      {
-        const vector<unsigned int>& nodes = it->second;
-
-        switch (it->first)
-        {
-          case 1:
-            set_boundary(boundary_data, nodes, &source, mesh);
-            break;
-          case 2:
-            set_boundary(boundary_data, nodes, &gate, mesh);
-            break;
-          case 3:
-            set_boundary(boundary_data, nodes, &drain, mesh);
-            break;
-        }
-      }
-    }
-
-
-    DD::Device device(&mesh, &element_data, &boundary_data);
-    bool device_integrity = device.check_integrity();
-    if (device_integrity)
-      cout << "Device ok.\n\n";
-    else
-      cout << "Device bad.\n\n";
-    
+    dd_env.init();
+    dd_ptr->set_environment(&dd_env);
+    dd_ptr->init();
   
-    EquationSystems eqsys(mesh);
-    DriftDiffusion dd(&device);
-    dd.set_equation_systems(&eqsys);
-    dd.init();
 
-    DriftDiffusion::Options& params = dd.get_options();
-    params.solver_params.nonlinear_max_iterations = 1;
-    params.solver_params.linear_max_iterations = lin_max_it;
-    params.solver_params.ls_maxstep = nonlin_ls_maxstep;
-    params.solver_params.nonlinear_tolerance = nonlin_rtol;
-    params.solver_params.ls_maxstep = nonlin_ls_maxstep;
-    params.solver_params.linear_tolerance = lin_rtol;
-    params.integration_order =
-      static_cast<libMeshEnums::Order>(integration_order);
-    params.max_refinement_steps = refinement_steps;
-    params.refine_fraction = refine_frac;
-    params.coarsen_fraction = coarsen_frac;
-
-    //params.local_scaling = true;
-
-    // mesh drawn in um
-    params.mesh_units = mesh_units;
-
-    dd.enable_mesh_refinement();
+    //dd.enable_mesh_refinement();
     
-    //print_boundary_data(boundary_data, mesh);
+    DriftDiffusion& dd = static_cast<DriftDiffusion&>(*dd_ptr);
 
     dd.set_simulation_voltage("source", 0.0);
     dd.set_simulation_voltage("gate", 0.0);
@@ -320,8 +279,6 @@ int main (int argc, char** argv)
     cout << "     t0  : " << sc.get_time_scaling() << "\n";
     cout << "     R0  : " << sc.get_recombination_scaling() << "\n\n";
 
-    cout << "Material properties:\n";
-    sub.print_info();
 
     vector<double> densities;
     vector<string> names;
@@ -334,18 +291,11 @@ int main (int argc, char** argv)
         densities, names);
 
 
-
-    params.solver_params.nonlinear_max_iterations = nonlin_max_it;
-
-    if (fully)
     {
-      cout << "Solving for electrons and holes.\n" << flush;
-      params.coupling = FULLYCOUPLED;
-    }
-    else
-    {
-      cout << "Solving for electrons only.\n" << flush;
-      params.coupling = POISSON | ELECTRONS;
+      ModelOptions dd_opts;
+      dd_opts["nonlin_max_it"] = nonlin_max_it;
+      dd_opts["coupling"] = "full";
+      dd_ptr->set_options(dd_opts);
     }
 
 
@@ -397,20 +347,23 @@ int main (int argc, char** argv)
       if (it != voltages.begin())
       {
         // recalculate equilibrium
-        DriftDiffusion::Options& params = dd.get_options();
-        int bkp = params.coupling;
-        params.coupling = POISSON;
-        params.solver_params.nonlinear_max_iterations = 100;
-        dd.set_simulation_voltage("gate", 0.0);
-        dd.set_simulation_voltage("drain", 0.0);
-        dd.set_electron_fermi_level(0.0);
-        dd.set_hole_fermi_level(0.0);
-        dd.set_electric_potential(0.0);
-        dd.guess_equilibrium();
-        dd.solve();
-        dd.remember_current_solution();
-        params.coupling = bkp;
-        params.solver_params.nonlinear_max_iterations = nonlin_max_it;
+        {
+          ModelOptions dd_opts;
+          dd_opts["nonlin_max_it"] = "100";
+          dd_opts["coupling"] = "poisson";
+          dd_ptr->set_options(dd_opts);
+          dd.set_simulation_voltage("gate", 0.0);
+          dd.set_simulation_voltage("drain", 0.0);
+          dd.set_electron_fermi_level(0.0);
+          dd.set_hole_fermi_level(0.0);
+          dd.set_electric_potential(0.0);
+          dd.guess_equilibrium();
+          dd.solve();
+          dd.remember_current_solution();
+          dd_opts["nonlin_max_it"] = nonlin_max_it;
+          dd_opts["coupling"] = "full";
+          dd_ptr->set_options(dd_opts);
+        }
 
         do
         {
@@ -466,14 +419,14 @@ int main (int argc, char** argv)
         dd.set_simulation_voltage("gate", *it);
         cout << "Vgs = " << *it << " Vds = " << vds << "\n" << flush;
         dd.solve();
-        const map<const ElectricalContact*, double>& curr =
+        const map<const Boundary*, double>& curr =
           dd.get_boundary_currents();
         file << *it << " "
-          << (*curr.find(dd.get_device().get_boundary("gate"))).second
+          << (*curr.find(bd_gate)).second
           << " "
-          << (*curr.find(dd.get_device().get_boundary("drain"))).second
+          << (*curr.find(bd_drain)).second
           << " "
-          << (*curr.find(dd.get_device().get_boundary("source"))).second
+          << (*curr.find(bd_source)).second
           << "\n" << flush;
       }
 
@@ -493,14 +446,14 @@ int main (int argc, char** argv)
           if (restart)
             dd.set_to_remembered_solution();
           dd.solve();
-          const map<const ElectricalContact*, double>& curr =
+          const map<const Boundary*, double>& curr =
             dd.get_boundary_currents();
           file << *it << " "
-            << (*curr.find(dd.get_device().get_boundary("gate"))).second
+            << (*curr.find(bd_gate)).second
             << " "
-            << (*curr.find(dd.get_device().get_boundary("drain"))).second
+            << (*curr.find(bd_drain)).second
             << " "
-            << (*curr.find(dd.get_device().get_boundary("source"))).second
+            << (*curr.find(bd_source)).second
             << "\n" << flush;
           restart = false;
         }
@@ -555,14 +508,14 @@ void sweep_drain(double stop, int steps,
       dd.remember_current_solution();
     }
     remember = false;
-    const map<const ElectricalContact*, double>& curr =
+    const map<const Boundary*, double>& curr =
       dd.get_boundary_currents();
     file << *it << " "
-         << (*curr.find(dd.get_device().get_boundary("gate"))).second
+         << (*curr.find(bd_gate)).second
          << " "
-         << (*curr.find(dd.get_device().get_boundary("drain"))).second
+         << (*curr.find(bd_drain)).second
          << " "
-         << (*curr.find(dd.get_device().get_boundary("source"))).second
+         << (*curr.find(bd_source)).second
          << "\n" << flush;
 
     ostringstream f;
@@ -586,36 +539,5 @@ void sweep_drain(double stop, int steps,
 }
 
 
-void set_boundary(BoundaryData& data, const vector<unsigned int>& nodes,
-    ElectricalContact* desc, const Mesh& mesh)
-{
-  vector<unsigned int>::const_iterator n_it;
-  const vector<unsigned int>::const_iterator n_begin = nodes.begin();
-  const vector<unsigned int>::const_iterator n_end = nodes.end();
-
-  Mesh::const_element_iterator el = mesh.elements_begin();
-  const Mesh::const_element_iterator el_end = mesh.elements_end();
-  for ( ; el != el_end; ++el)
-  {
-    Elem* elem = *el;
-
-    int n_sides = elem->n_sides();
-    for (int s = 0; s < n_sides; s++)
-    {
-      if (elem->neighbor(s) == NULL)
-      {
-        bool found = true;
-        AutoPtr<Elem> side = elem->build_side(s);
-        for (int i = 0; i < side->n_nodes(); i++)
-        {
-          if (find(n_begin, n_end, side->node(i)) == n_end)
-            found = false;
-        }
-        if (found)
-          data.set_data(BoundaryData::ElementSide(elem, s), desc);
-      }
-    }
-  }
-}
 
 

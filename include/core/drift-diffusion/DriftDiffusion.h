@@ -3,10 +3,11 @@
 #ifndef _DRIFTDIFFUSION_H_
 #define _DRIFTDIFFUSION_H_
 
+#include "SimulationInterface.h"
 #include "SimulationOptions.h"
 #include "DriftDiffusionDefs.h"
+#include "Device.h"
 #include "Scaling.h"
-#include "DDevice.h"
 #include "PetscRuntimeError.h"
 #include "KSPDivergedError.h"
 #include "SNESDivergedError.h"
@@ -29,9 +30,10 @@ extern "C" {
 #include <set>
 #include <map>
 
+
 // forward declarations
-class DD::Device;
-class ElectricalContact;
+//class Device;
+class Boundary;
 class Mesh;
 class Elem;
 class Point;
@@ -39,6 +41,7 @@ class Node;
 class EquationSystems;
 class NonlinearImplicitSystem;
 
+template<typename T> class DenseMatrix;
 template<typename T> class NumericVector;
 template<typename T> class SparseMatrix;
 
@@ -50,7 +53,7 @@ template<typename T> class NonlinearSolver;
  * TODO
  * Some more details
  */
-class DriftDiffusion
+class DriftDiffusion : public SimulationInterface
 {
   public:
  
@@ -96,6 +99,7 @@ class DriftDiffusion
       
         double nonlinear_tolerance;
         double nonlinear_abs_tolerance;
+        double nonlinear_step_tolerance;
         unsigned int nonlinear_max_iterations;
         double linear_tolerance;
         double linear_abs_tolerance;
@@ -103,6 +107,9 @@ class DriftDiffusion
         
         //! The line search maximum step size per grid point
         double ls_maxstep;
+
+        //! The line search type
+        int ls_type;
 
         //! The linear (KSP) solver type
         /*!
@@ -242,20 +249,6 @@ class DriftDiffusion
          */
         int coupling;
 
-        //! Include artificial drift in continuity equations
-        /*!
-         * This can be helpful in materials of high bandgap, but it is
-         * a somewhat dirty trick.
-         */
-        bool artificial_drift;
-
-        //! Use a local (nodal based) scaling for continuity equations
-        /*!
-         * This probably should be the default and should replace the global
-         * scaling factors for the continuity equations
-         */
-        bool local_scaling;
-
         //! linearize continuity equations
         bool linearize_continuity_eq;
 
@@ -284,38 +277,17 @@ class DriftDiffusion
 
         friend class DriftDiffusion;
     };
-
       
-    DriftDiffusion(DD::Device* device);
 
-    DriftDiffusion(DD::Device* device, DriftDiffusion::Options& params);
+    //! Underrelaxation if doing gummel schemes
+    double _relaxation_factor;
 
-    ~DriftDiffusion(void);
+    //! Destructor
+    virtual ~DriftDiffusion(void);
+
+    //! Create an DriftDiffusion object
+    static DriftDiffusion* create(void);
     
-    /**
-     * @returns a reference to the device to be solved
-     */
-    const DD::Device& get_device(void) const;
-    
-    /**
-     * Set a new device to be simulated
-     *
-     * After a call to this function, the equation system object
-     * and the simulation voltages map are cleared and have to be
-     * rebuilt in the \p solve method.
-     */
-    void set_device(DD::Device* device);
-
-    void set_equation_systems(EquationSystems* eq_systems)
-      { _eq_system = eq_systems; }
-
-    //! Initialize the equation system
-    /*!
-     * This has to be called before any call to methods which access the
-     * equation system object. So do it early.
-     */
-    void init(void);
-
     /**
      * @returns a reference to the simulation options
      */
@@ -347,16 +319,7 @@ class DriftDiffusion
      */
     const Scaling& get_scaling(void) const;
 
-    //! Calculate the nodal scaling factors for the continuity equations
     /*!
-     * This method currently calculates the densities on each node as scaling
-     * factors for the electron and hole continuity equations.
-     * A better way would be to use some potential based values which can be
-     * calculated from nodal potential values during matrix assembly.
-     */
-    void build_scaling(void);
-
-    /**
      * Set the simulation voltage for the boundary named \p boundary.
      */
     // TODO throw exception if boundary non-existing
@@ -370,9 +333,19 @@ class DriftDiffusion
     void set_to_remembered_solution(void);
 
     //! Set the electron quasi Fermi level to \c Ef_n
+    /*!
+     * \c Ef_n has to be given as electron energy in units of eV
+     *
+     * \note {Put some figure her for illustration. }
+     */
     void set_electron_fermi_level(double Ef_n);
 
     //! Set the hole quasi Fermi level to \c Ef_p
+    /*!
+     * \c Ef_p has to be given as electron energy in units of eV
+     *
+     * \note {Put some figure her for illustration. }
+     */
     void set_hole_fermi_level(double Ef_p);
 
     //! Set the electric potential everywhere to \c pot
@@ -383,14 +356,6 @@ class DriftDiffusion
      * It sets every node to its equilibrium potential.
      */
     void guess_equilibrium(void);
-
-    //! Solve the drift-diffusion problem.
-    /*!
-     * If adaptive mesh refinement was enabled for this solver
-     * run, it will be deactivated afterwards and has to be re-enabled
-     * explicitly.
-     */
-    void solve(void);
 
     /**
      * @returns the current nodal solution vector.
@@ -474,20 +439,11 @@ class DriftDiffusion
      * @returns the boundary currents indexed by boundary descriptor
      * pointers.
      */
-    const std::map<const ElectricalContact*, double>&
+    const std::map<const Boundary*, double>&
       get_boundary_currents(void) const;
 
-    /**
-     * @returns the integrated current at the artificial (non-contact)
-     * boundary of the device, which should be zero.
-     */
-    double get_artificial_boundary_current(void);
 
-    /**
-     * fill @c densities with electron and hole densities
-     *
-     * TODO add other values
-     */
+    //! Build a vector with all densities and recombination rates
     void build_densities(std::vector<double>& densities,
         std::vector<std::string>& names);
 
@@ -508,11 +464,36 @@ class DriftDiffusion
         std::vector<std::string>& names);
 
 
+
+  protected:
+
+    //! Constructor
+    DriftDiffusion(void);
+    
+    //! Initialize the equation system
+    /*!
+     * This has to be called before any call to methods which access the
+     * equation system object. So do it early.
+     */
+    virtual void do_init(void);
+
+    //! Solve the drift-diffusion problem.
+    /*!
+     * If adaptive mesh refinement was enabled for this solver
+     * run, it will be deactivated afterwards and has to be re-enabled
+     * explicitly.
+     */
+    virtual void do_solve(void);
+
+    /*! \copydoc SimulationInterface::parse_options() */
+    virtual void parse_options(void);
+
+
   private:
 
     // for nicer code
-    typedef std::map<const ElectricalContact*, double> ContactData;
-    typedef std::map<const Node*, ElectricalContact*> BoundaryNodeList;
+    typedef std::map<const Boundary*, double> ContactData;
+    typedef std::map<const Node*, Boundary*> BoundaryNodeList;
     typedef TiberPetscNonlinearSolver<Real> SolverClass;
 
     //! A static reference to \c this
@@ -521,48 +502,36 @@ class DriftDiffusion
      */
     static DriftDiffusion* _this;
 
-    /**
-     * The device to be solved by this DriftDiffusion object
-     */
-    DD::Device* _device;
+    //! An internal pointer to the device
+    Device* _device;
 
-    /**
+    /*!
      * A list of nodes with dirichlet boundary conditions
      */
     BoundaryNodeList _dirichlet_nodes;
 
-    //! The elements that were used in the last simulation
-    std::set<const Elem*> _element_list;
 
-    //! Update the element list
-    void update_element_list(void);
-
-    /**
-     * The equation system for this device
-     */
-    EquationSystems* _eq_system;
-    
-    /**
+    /*!
      * If @c true, the equation system needs to be rebuilt
      */
     bool _rebuild_eq_system;
 
-    /**
+    /*!
      * The @c Options to be used
      */
     Options _options;
     
-    /**
+    /*!
      * The scaling parameters
      */
     Scaling _scaling;
 
-    /**
+    /*!
      * The simulation voltages of the previous solve step
      */
     ContactData _old_sim_voltages;
     
-    /**
+    /*!
      * The simulation voltages for the next simulation
      */
     ContactData _simulation_voltages;
@@ -601,8 +570,10 @@ class DriftDiffusion
      */
     double _final_residual;
 
-    //! disable the copy constructor and assignment operator
+    //! disable the copy constructor
     DriftDiffusion(const DriftDiffusion& rhs);
+    
+    //! disable the copy assignment operator
     DriftDiffusion& operator=(const DriftDiffusion& rhs);
 
     //! Do a number of Gummel iterations
@@ -644,11 +615,8 @@ class DriftDiffusion
     void cleanup_solver(void);
 
 
-    //! Get the equation system
-    EquationSystems& get_equation_system(void);
-
     //! Solve using Newton method
-    void solve_newton(void) throw (PetscRuntimeError);
+    void solve_newton(void);
 
     //! Solve using an iterative Gummel scheme
     void solve_gummel(void) throw (PetscRuntimeError);
@@ -714,44 +682,55 @@ class DriftDiffusion
     double calculate_new_simulation_voltages(void);
 
 
-    /**
-     * @returns the side number of the top level element, if the side
-     * \p side of element \p elem is on a boundary, -1 if not.
-     *
-     * It is supposed that \p top_parent is the top parent of \p elem
-     * and \p side lies on a device boundary
-     */
-    static int find_boundary(const Elem* elem, int side,
-      const Elem* top_parent);
-
-    //! Assign boundary value coefficients
+    //! Assemble the residual vector or the jacobian matrix
     /*!
-     * Assigns boundary value coefficient in a form
-     *
-     *   du/dn = - coeff * u + value
-     *
-     * NOTE: this method assumes mixed or von Neumann boundary conditions.
+     * This method gets called from the underlying nonlinear solver
+     * library. It calls the real assembly routines.
      */
-    static void assign_boundary_values(double& coeff, double& value,
-        const std::vector<double>& coefficients);
+    static void assemble(const NumericVector<Number>& x,
+        NumericVector<Number>* residual,
+        SparseMatrix<Number>* jacobian);
 
     //! Assembles the residual vector or the jacobian matrix
     /*!
      * Assembles the residual vector or the jacobian matrix for
      * the equation system with @c Coupling T.
      *
-     * This method gets called from the underlying nonlinear solver
-     * library
+     * This implementation uses standard FEM.
      */
     template <int T>
-    static void assemble(const NumericVector<Number>& x,
+    void do_assembly(const NumericVector<Number>& x,
+        NumericVector<Number>* residual,
+        SparseMatrix<Number>* jacobian);
+ 
+    //! Assembles the residual vector or the jacobian matrix
+    /*!
+     * Assembles the residual vector or the jacobian matrix for
+     * the equation system with @c Coupling T.
+     *
+     * This implementation uses standard FEM, but with the continuity
+     * equations written in a different form.
+     */
+    template <int T>
+    void do_assembly_new(const NumericVector<Number>& x,
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
     
+   
+    //! Assembles the residual vector or the jacobian matrix for 1D
+    /*!
+     * Assembles the residual vector or the jacobian matrix for
+     * the equation system with @c Coupling T.
+     *
+     * This implementation is for 1D only and implements the 
+     * Box Integration Method.
+     */
     template <int T>
-    static void assemble1D(const NumericVector<Number>& x,
+    void do_assembly1D(const NumericVector<Number>& x,
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
+
+    void make_Mmatrix(DenseMatrix<Number>& m);
 
 };
 
@@ -761,11 +740,12 @@ class DriftDiffusion
 // 
 
 inline
-const DD::Device&
-DriftDiffusion::get_device(void) const
+DriftDiffusion*
+DriftDiffusion::create(void)
 {
-  return *_device;
+  return new DriftDiffusion();
 }
+
 
 inline
 DriftDiffusion::Options&
@@ -825,30 +805,12 @@ DriftDiffusion::get_final_residual(void) const
 }
 
 inline
-const std::map<const ElectricalContact*, double>&
+const std::map<const Boundary*, double>&
 DriftDiffusion::get_boundary_currents() const
 {
   return _boundary_currents;
 }
 
-inline
-void
-DriftDiffusion::assign_boundary_values(double& coeff, double& value,
-        const std::vector<double>& coefficients)
-{
-  assert(coefficients[1] != 0.0);
-
-  coeff = coefficients[0] / coefficients[1];
-  value = coefficients[2] / coefficients[1];
-}
-
-
-inline
-EquationSystems&
-DriftDiffusion::get_equation_system(void)
-{
-  return *_eq_system;
-}
 
 inline
 Mesh& 

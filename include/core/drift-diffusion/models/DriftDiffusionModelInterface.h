@@ -4,6 +4,7 @@
 #define _DRIFTDIFFUSIONMODELINTERFACE_H_
 
 #include "TypeDefs.h"
+#include "PhysicalModelInterface.h"
 
 #include <cassert>
 #include <map>
@@ -16,7 +17,7 @@ class DriftDiffusionProperties;
  * recombination models etc. which will be used in conjunction with
  * a semiconductor model derived from DriftDiffusionProperties
  */
-class DriftDiffusionModelInterface
+class DriftDiffusionModelInterface : public PhysicalModelInterface
 {
 
   public:
@@ -38,47 +39,6 @@ class DriftDiffusionModelInterface
      */
     DriftDiffusionProperties& get_driftdiffusionproperties(void);
 
-    //! Get the unique ID of this model
-    ID get_id(void) const;
-
-    //! Get the ID of the model with name \c model_name
-    /*!
-     * If the model was not already registered, it gets inserted in the
-     * model list and assigned a new ID.
-     *
-     * \param model_name the name of the model
-     * \return the ID of the model or 0 if it does not exist
-     */
-    static ID get_id(const std::string& model_name);
-
-    //! Creates a new named model
-    /*!
-     * The model is created according to the given model name.
-     * If it is not known, the NULL pointer is returned.
-     * 
-     * \param name the model name
-     * \return a pointer to the newly created object
-     */
-    static DriftDiffusionModelInterface* create(const std::string& name);
-
-    //! Creates a new named model
-    /*!
-     * The model is created according to the given model name.
-     * If it is not known, the NULL pointer is returned.
-     * 
-     * \param name the model name
-     * \param options the options as given in the input file
-     * \return a pointer to the newly created object
-     */
-    static DriftDiffusionModelInterface* create(const std::string& name,
-        const ModelOptions& options);
-
-    //! Set options for this model
-    virtual void set_model_options(const ModelOptions& options) = 0;
-
-    //! Get a user friendly name of this model
-    virtual const std::string get_name(void) const = 0;
-
 
   protected:
 
@@ -88,26 +48,14 @@ class DriftDiffusionModelInterface
 
   private:
 
-    typedef std::map<const std::string, ID>::iterator model_id_iterator;
+    //! Disable copy constructor
+    DriftDiffusionModelInterface(const DriftDiffusionModelInterface&);
 
-    //! The unique ID of this model
-    ID _id;
-
-    //! A map with ID/model name pairs
-    /*!
-     * Models are counted starting from 1. 0 means undefined model.
-     */
-    static std::map<const std::string, ID> _model_ids;
-
+    //! Disable assignment operator
+    DriftDiffusionModelInterface& operator=(const DriftDiffusionModelInterface&);
+    
     //! The DriftDiffusionProperties object this model belongs to
     DriftDiffusionProperties* _dd_prop;
-
-    //! Register a new model
-    /*!
-     * This method registers every new model that gets created and assigns
-     * it a unique model ID.
-     */
-    static void register_model(DriftDiffusionModelInterface* model);
 };
 
 
@@ -117,12 +65,6 @@ DriftDiffusionModelInterface::DriftDiffusionModelInterface(void)
 {
 }
 
-inline
-ID
-DriftDiffusionModelInterface::get_id(void) const
-{
-  return _id;
-}
 
 inline
 void
@@ -133,6 +75,7 @@ DriftDiffusionModelInterface::set_driftdiffusionproperties(
   _dd_prop = dd_prop;
 }
 
+
 inline
 DriftDiffusionProperties&
 DriftDiffusionModelInterface::get_driftdiffusionproperties(void)
@@ -140,7 +83,6 @@ DriftDiffusionModelInterface::get_driftdiffusionproperties(void)
   assert(_dd_prop != 0);
   return *_dd_prop;
 }
-
 
 
 #endif // _DRIFTDIFFUSIONMODELINTERFACE_H_

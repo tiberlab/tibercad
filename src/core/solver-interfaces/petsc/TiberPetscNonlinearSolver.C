@@ -18,6 +18,7 @@
  */
 extern "C"
 {
+
   // Older versions of PETSc do not have the different int typedefs.
   // On 64-bit machines, PetscInt may actually be a long long int.
   // This change occurred in Petsc-2.2.1.
@@ -37,17 +38,19 @@ extern "C"
     int ierr = 0;
 
     KSP ksp;
-    ierr = SNESGetKSP(_snes, &ksp);
-    if (ierr != 0) throw(PetscRuntimeError(ierr));
+    SNESGetKSP(_snes, &ksp);
 
     KSPConvergedReason reason;
-    ierr = KSPGetConvergedReason(ksp, &reason);
-    if (ierr != 0) throw(PetscRuntimeError(ierr));
+    KSPGetConvergedReason(ksp, &reason);
 
-    std::cerr << "it " << its << ", fnorm = " << fnorm << "\n";
+    //std::cerr << "it " << its << ", fnorm = " << fnorm << "\n";
+
+    if (fnorm != fnorm)
+      throw(KSPDivergedError(-8, its, fnorm));
 
     // check for convergence
-    if ((reason < 0) && (reason != -3) && (reason != -4))
+    //if ((reason < 0) && (reason != -3) && (reason != -4))
+    if ((reason < 0) && (reason != -3))
       throw(KSPDivergedError(reason, its, fnorm));
 
     return ierr;
@@ -124,6 +127,55 @@ extern "C"
   {
     throw(PetscRuntimeError(n));
   }
+
+
+  /*
+  // Checks the update vector before updating
+  PetscErrorCode
+  __tiber_snes_update(SNES snes, PetscInt)
+  {
+    int ierr = 0;
+
+    Vec x;
+
+    ierr = SNESGetSolutionUpdate(snes, &x);
+    if (ierr != 0) throw(PetscRuntimeError(ierr));
+    
+    PetscScalar* vv;
+    ierr = VecGetArray(x, &vv);
+    if (ierr != 0) throw(PetscRuntimeError(ierr));
+
+    PetscInt n;
+    ierr = VecGetLocalSize(x, &n);
+
+    for (int i = 0; i < n; i++)
+    {
+      //if (vv[i] > 0.1)
+      //{
+        //vv[i] = 0.0001;
+      //}
+    }
+    
+    ierr = VecRestoreArray(x, &vv);
+    if (ierr != 0) throw(PetscRuntimeError(ierr));
+    
+    return ierr;
+  }
+  */
+
+
+  // Convergence test
+  PetscErrorCode
+  __tiber_snes_convergence_test(SNES snes, PetscReal xnorm, PetscReal gnorm, 
+      PetscReal fnorm, SNESConvergedReason *reason, void *ctx)
+  {
+    int ierr = 0;
+
+    std::cerr << "xnorm = " << xnorm << " gnorm = " << gnorm <<
+      " fnorm = " << fnorm << "\n";
+
+    return SNESConverged_LS(snes, xnorm, gnorm, fnorm, reason, ctx);
+  }
     
 } // end extern "C"
 
@@ -132,18 +184,42 @@ extern "C"
 template <typename T>
 TiberPetscNonlinearSolver<T>::TiberPetscNonlinearSolver(void)
   throw (PetscRuntimeError) 
-  : _nonlinear_rtol(1e-9),
-    _nonlinear_atol(1e-15),
-    _linear_rtol(1e-4),
+  : _nonlinear_rtol(1e-15),
+    _nonlinear_atol(1e-18),
+    _nonlinear_stol(1e-6),
+    _linear_rtol(1e-6),
     _linear_atol(1e-15),
     _nonlinear_max_it(20),
     _linear_max_it(500),
+    _ls_type(3),
     _ls_maxstep(1e3),
     _ksp_type(KSPBCGSL),
     _pc_type(PCILU)
 {
-  //this->init();
 }
+
+
+template <typename T>
+void
+TiberPetscNonlinearSolver<T>::set_snes_options(double rtol, double atol,
+    double stol, unsigned int max_it)
+{
+  _nonlinear_rtol = rtol;
+  _nonlinear_atol = atol;
+  _nonlinear_stol = stol;
+  _nonlinear_max_it = max_it;
+}
+
+template <typename T>
+void
+TiberPetscNonlinearSolver<T>::set_snes_ls_options(int ls_type, 
+    double ls_maxstep)
+{
+  _ls_type = ls_type;
+  _ls_maxstep = ls_maxstep;
+}
+
+
 
 
 
@@ -191,21 +267,33 @@ void TiberPetscNonlinearSolver<T>::init(void) throw (PetscRuntimeError)
 
 #endif	     
 
-    ierr = SNESSetMonitor(_snes, __tiber_petsc_snes_monitor, this,
-        PETSC_NULL);
-    _checkerr(ierr);
-    ierr = PetscPushErrorHandler(__tiber_petsc_snes_error_handler, this);
-    _checkerr(ierr);
+    SNESSetMonitor(_snes, __tiber_petsc_snes_monitor, (void*) this, PETSC_NULL);
+    PetscPushErrorHandler(__tiber_petsc_snes_error_handler, (void*) this);
+
+    //SNESSetUpdate(_snes, __tiber_snes_update);
 
     ierr = SNESSetType(_snes, SNESLS);
     _checkerr(ierr);
+    switch (_ls_type)
+    {
+      case 1:
+        ierr = SNESSetLineSearch(_snes, SNESNoLineSearch, (void*) this);
+        break;
+      case 2:
+        ierr = SNESSetLineSearch(_snes, SNESQuadraticLineSearch, (void*) this);
+        break;
+      default:
+        ierr = SNESSetLineSearch(_snes, SNESCubicLineSearch, (void*) this);
+        break;
+    }
+    _checkerr(ierr);
+
+    SNESSetConvergenceTest(_snes, __tiber_snes_convergence_test, (void*) this);
 
     KSP ksp;
-    ierr = SNESGetKSP(_snes, &ksp);
-    _checkerr(ierr);
-    ierr = KSPSetInitialGuessKnoll(ksp, PETSC_TRUE);
+    SNESGetKSP(_snes, &ksp);
+    KSPSetInitialGuessKnoll(ksp, PETSC_TRUE);
 
-    _checkerr(ierr);
   }
 }
 
@@ -237,35 +325,26 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
   this->init();
   
   // set solver options
-  //ierr = SNESSetTolerances(_snes, _nonlinear_atol,
-  //    _nonlinear_rtol, _nonlinear_stol, _nonlinear_max_it, _linear_max_it);
-  ierr = SNESSetTolerances(_snes, _nonlinear_atol,
-      _nonlinear_rtol, PETSC_DEFAULT, _nonlinear_max_it, _linear_max_it);
-  _checkerr(ierr);
+  SNESSetTolerances(_snes, _nonlinear_atol, _nonlinear_rtol,
+      _nonlinear_stol, _nonlinear_max_it, _linear_max_it);
   
-  ierr = SNESSetLineSearchParams(_snes, PETSC_DEFAULT, _ls_maxstep,
-      PETSC_DEFAULT);
-  _checkerr(ierr);
+  SNESSetLineSearchParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
 
   KSP ksp;
-  ierr = SNESGetKSP(_snes, &ksp);
-  _checkerr(ierr);
+  SNESGetKSP(_snes, &ksp);
   
   ierr = KSPSetType(ksp, _ksp_type);
   _checkerr(ierr);
   
-  ierr = KSPSetTolerances(ksp, _linear_rtol,
-      _linear_atol, PETSC_DEFAULT, _linear_max_it);
-  _checkerr(ierr);
+  KSPSetTolerances(ksp, _linear_rtol, _linear_atol, PETSC_DEFAULT,
+      _linear_max_it);
  
   PC pc;
-  ierr = KSPGetPC(ksp, &pc);
-  _checkerr(ierr);
+  KSPGetPC(ksp, &pc);
 
   // get the type of preconditioner
   PCType pc_type;
-  ierr = PCGetType(pc, &pc_type);
-  _checkerr(ierr);
+  PCGetType(pc, &pc_type);
 
   // - the very first time, there's no preconditioner yet
   // - if we changed the preconditioner, then we create it from scratch
@@ -273,7 +352,7 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
   {
     ierr = PCSetType(pc, _pc_type);
     _checkerr(ierr);
-    ierr = PCGetType(pc, &pc_type);
+    PCGetType(pc, &pc_type);
 
     // for composite type, do some extra stuff
     if (strcmp(pc_type, PCCOMPOSITE) == 0)
@@ -289,15 +368,12 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
       PC sub_pc;
       ierr = PCCompositeGetPC(pc, 1, &sub_pc);
       _checkerr(ierr);
-      ierr = PCILUSetZeroPivot(sub_pc, 1e-32);
-      _checkerr(ierr);
-      ierr = PCILUSetDamping(sub_pc, 1e-3);
-      _checkerr(ierr);
+      PCILUSetZeroPivot(sub_pc, 1e-32);
+      PCILUSetDamping(sub_pc, 1e-3);
     }
   }
 
-  ierr = PCILUSetZeroPivot(pc, 1e-32);
-  _checkerr(ierr);
+  PCILUSetZeroPivot(pc, 1e-32);
 
   // to override options from command line
   // only for tests
@@ -306,13 +382,11 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
 
 
   // set functions
-  ierr = SNESSetFunction (_snes, r->vec(),
-      __tiber_petsc_snes_residual, this);
-  _checkerr(ierr);
+  SNESSetFunction (_snes, r->vec(),
+      __tiber_petsc_snes_residual, (void*) this);
 
-  ierr = SNESSetJacobian (_snes, jac->mat(), jac->mat(),
-      __tiber_petsc_snes_jacobian, this);
-  _checkerr(ierr);
+  SNESSetJacobian (_snes, jac->mat(), jac->mat(),
+      __tiber_petsc_snes_jacobian, (void*) this);
 
   // solve the system
   // the syntax depends on the PETSc version
@@ -337,19 +411,15 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
 
   // check for convergence
   SNESConvergedReason reason;
-  ierr = SNESGetConvergedReason(_snes, &reason);
-  _checkerr(ierr);
+  SNESGetConvergedReason(_snes, &reason);
   
-  ierr = SNESGetIterationNumber(_snes, &n_iterations);
-  _checkerr(ierr);
+  SNESGetIterationNumber(_snes, &n_iterations);
 
   double fnorm;
-  ierr = SNESGetFunctionNorm(_snes, &fnorm);
-  _checkerr(ierr);
+  SNESGetFunctionNorm(_snes, &fnorm);
 
   // reason < 0 means that the solver diverged. In this case we
   // throw an exception.
-  //if ((reason < 0) && (reason != -5))
   if (reason < 0)
     throw (SNESDivergedError(reason, n_iterations, fnorm));
 
@@ -362,6 +432,6 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
 
 
 // Explicit instantiation
-template class TiberPetscNonlinearSolver<Number>;
+template class TiberPetscNonlinearSolver<Real>;
 
 

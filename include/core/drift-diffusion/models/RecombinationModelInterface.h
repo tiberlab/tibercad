@@ -7,6 +7,11 @@
 
 #include <vector>
 
+//! Base class for recombination models
+/*!
+ * This is the base class for recombination models. A new recombination model
+ * can be implemented by deriving from this class.
+ */
 class RecombinationModelInterface : public DriftDiffusionModelInterface
 {
 
@@ -30,34 +35,6 @@ class RecombinationModelInterface : public DriftDiffusionModelInterface
         std::vector<double>& recomb_e, std::vector<double>& recomb_h) = 0;
 
 
-    //! Get the electron and hole recombination rates
-    //virtual void get_recombination_rates(double& recomb_e,
-    //    double& recomb_h) = 0;
-
-    //! Get the electron and hole net recombination rate derivatives
-    //virtual void get_recombination_rate_derivatives(
-    //    std::vector<double>& recomb_e, std::vector<double>& recomb_h) = 0;
-
-    
-    //! Get the electron and hole generation rates
-    //virtual void get_generation_rates(double& gen_e,
-    //    double& gen_h) = 0;
-
-    //! Get the electron and hole net generation rate derivatives
-    //virtual void get_generation_rate_derivatives(
-    //    std::vector<double>& gen_e, std::vector<double>& gen_h) = 0;
-
-
-    //! Creates a new named recombination model
-    /*!
-     * The model is created according to the given model name.
-     * If it is not known, the NULL pointer is returned.
-     * 
-     * \param name the model name
-     * \return a pointer to the newly created object
-     */
-    static RecombinationModelInterface* create(const std::string& name);
-
     //! Creates a new named recombination model
     /*!
      * The model is created according to the given model name.
@@ -68,26 +45,25 @@ class RecombinationModelInterface : public DriftDiffusionModelInterface
      * \return a pointer to the newly created object
      */
     static RecombinationModelInterface* create(const std::string& name,
-        const ModelOptions& options);
+        const ModelOptions& options = ModelOptions());
 
-    //! Set options for this model
-    virtual void set_model_options(const ModelOptions& options) {};
-
-    //! Get a user friendly name
-    virtual const std::string get_name(void) const = 0;
 
   protected:
 
-    //! Empty constructor
+    //! \copydoc DriftDiffusionProperties::DriftDiffusionProperties()
     RecombinationModelInterface(void);
 
   private:
 
 };
 
+
+//
+// inline methods
+//
+
 inline
 RecombinationModelInterface::RecombinationModelInterface(void)
-  : DriftDiffusionModelInterface()
 {
 }
 
@@ -99,20 +75,11 @@ RecombinationModelInterface::~RecombinationModelInterface(void)
 
 inline
 RecombinationModelInterface*
-RecombinationModelInterface::create(const std::string& name)
-{
-  return dynamic_cast<RecombinationModelInterface*>(
-      DriftDiffusionModelInterface::create(name));
-}
-
-
-inline
-RecombinationModelInterface*
 RecombinationModelInterface::create(const std::string& name,
     const ModelOptions& options)
 {
   return dynamic_cast<RecombinationModelInterface*>(
-      DriftDiffusionModelInterface::create(name, options));
+      PhysicalModelInterface::create("rec_" + name, options));
 }
 
 

@@ -54,12 +54,14 @@ class TiberPetscNonlinearSolver : public NonlinearSolver<T>
       throw (PetscRuntimeError, KSPDivergedError, SNESDivergedError);
 
     //! Set the options for the nonlinear solver
-    void set_snes_options(double rtol = 1e-9, unsigned int max_it = 10,
-        double ls_maxstep = 1e3);
+    void set_snes_options(double rtol = 1e-9, unsigned int max_it = 10);
 
     //! Set the options for the nonlinear solver
-    void set_snes_options(double rtol, double atol,
-        unsigned int max_it = 10, double ls_maxstep = 1e3);
+    void set_snes_options(double rtol, double atol, double stol,
+        unsigned int max_it = 10);
+
+    //! Set the options for the nonlinear solver
+    void set_snes_ls_options(int ls_type = 3, double ls_maxstep = 1e3);
 
     //! Set the options for the linear solver
     void set_ksp_options(double rtol = 1e-6, unsigned int max_it = 1000);
@@ -84,12 +86,14 @@ class TiberPetscNonlinearSolver : public NonlinearSolver<T>
 
     double _nonlinear_rtol;
     double _nonlinear_atol;
+    double _nonlinear_stol;
     int _nonlinear_max_it;
     
     double _linear_rtol;
     double _linear_atol;
     int _linear_max_it;
 
+    int _ls_type;
     double _ls_maxstep;
     KSPType _ksp_type;
     PCType _pc_type;
@@ -124,22 +128,9 @@ TiberPetscNonlinearSolver<T>::~TiberPetscNonlinearSolver(void)
 template <typename T>
 inline
 void
-TiberPetscNonlinearSolver<T>::set_snes_options(double rtol,
-    unsigned int max_it, double ls_maxstep)
+TiberPetscNonlinearSolver<T>::set_snes_options(double rtol, unsigned int max_it)
 {
-  set_snes_options(rtol, 1e-15, max_it, ls_maxstep);
-}
-
-template <typename T>
-inline
-void
-TiberPetscNonlinearSolver<T>::set_snes_options(double rtol, double atol,
-    unsigned int max_it, double ls_maxstep)
-{
-  _nonlinear_rtol = rtol;
-  _nonlinear_atol = atol;
-  _nonlinear_max_it = max_it;
-  _ls_maxstep = ls_maxstep;
+  set_snes_options(rtol, 1e-15, 1e-6, max_it);
 }
 
 

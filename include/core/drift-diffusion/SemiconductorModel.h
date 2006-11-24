@@ -25,48 +25,43 @@ class SemiconductorModel : public DriftDiffusionProperties
 {
   public:
 
-    //! The default constructor
-    SemiconductorModel(void);
-
     //! The destructor
     virtual ~SemiconductorModel(void);
 
-    void set_mobilities(double mu_e, double mu_h)
-    {
-      _e_mobility = mu_e;
-      _h_mobility = mu_h;
-    };
-    
-    //! \copydoc DriftDiffusionProperties::calculate_equilibrium_properties()
-    virtual void calculate_equilibrium_properties(
-        int coupling = DriftDiffusionDefs::BOTH,
-        double temperature = SimulationOptions::T);
+    //! This method creates a SimpleSemiconductorModel object
+    static SemiconductorModel* create(void);
 
-    void set_data_file(const std::string& filename)
-      { _filename = filename; };
+    /*! \copydoc DriftDiffusionProperties::calculate_equilibrium_properties() */
+    virtual void calculate_equilibrium_properties(void);
 
-    virtual void read_database(const Dummy&);
+    /*! \copydoc DriftDiffusionProperties::calculate_VCA() */
+    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+        const PhysicalModelInterface* comp_B, double xa);
 
-    //! \deprecated { Create parameters for an alloy }
-    /*!
-     * \deprecated { This method will live as long as the database is
-     * not used yet.}
-     */
-    virtual void build_alloy(const std::string& component2,
-        const std::string& bowing_params, double content);
-
-    /*! \copydoc DriftDiffusionProperties::calculate_all()
-     * 
-     * This implementation models a simple semiconductor
-     */
-    virtual void calculate_all(double potential,
-      double fermi_e, double fermi_h, const Point& coord);
-    
-
+    //! \deprecated { Was for debugging }
     void print_info(void) const;
 
     
   protected:
+    
+    //! The constructor
+    /*!
+     * This constructor can be called be derived classes to specify
+     * a different model name.
+     */
+    SemiconductorModel(void);
+
+    /*! \copydoc DriftDiffusionProperties::do_init() */
+    virtual void do_init();
+
+    //! Read the from database
+    virtual void read_database(void);
+
+    /*! \copydoc DriftDiffusionProperties::create_new() */
+    virtual PhysicalModelInterface* create_new(void) const;
+
+    /*! \copydoc DriftDiffusionProperties::copy_from() */
+    virtual void copy_from(const PhysicalModelInterface* rhs);
 
     //! Get the physical semiconductor model
     /*!
@@ -83,7 +78,7 @@ class SemiconductorModel : public DriftDiffusionProperties
      */
     void extract_band_properties(void);
 
-    //! \copydoc DriftDiffusionProperties::prepare_element_data()
+    /*! \copydoc DriftDiffusionProperties::prepare_element_data() */
     virtual void prepare_element_data(void);
 
 
@@ -95,6 +90,7 @@ class SemiconductorModel : public DriftDiffusionProperties
     typedef DriftDiffusionProperties Parent;
     
     SemiconductorModel(const SemiconductorModel& model);
+    SemiconductorModel& operator=(const SemiconductorModel& model);
 
     //! A flag to tell the state of this object
     /*!
@@ -108,13 +104,7 @@ class SemiconductorModel : public DriftDiffusionProperties
      */
     DDsemiconductor* _bulk_model;
 
-    double _e_mobility;
-    double _h_mobility;
 
-
-    std::string _filename;
-
-    
 };
 
 
@@ -122,11 +112,43 @@ class SemiconductorModel : public DriftDiffusionProperties
 // inline member functions
 //
 
+
+inline
+SemiconductorModel*
+SemiconductorModel::create(void)
+{
+  return new SemiconductorModel();
+}
+
+
 inline
 void
 SemiconductorModel::set_to_unprepared(void)
 {
   _is_prepared = false;
 }
+
+inline
+PhysicalModelInterface*
+SemiconductorModel::create_new(void) const
+{
+  return new SemiconductorModel();
+}
+
+
+inline
+void
+SemiconductorModel::copy_from(const PhysicalModelInterface* rhs)
+{
+  Parent::copy_from(rhs);
+
+  const SemiconductorModel* mod = dynamic_cast<const SemiconductorModel*>(rhs);
+  _is_prepared = mod->_is_prepared;
+  // TODO uncomment
+  //delete _bulk_model;
+  //_bulk_model = (mod->_bulk_model).copy();
+  _bulk_model = mod->_bulk_model;
+}
+
 
 #endif //_SEMICONDUCTORMODEL_H_

@@ -3,12 +3,12 @@
 #ifndef _EXCITONPROPERTIES_H_
 #define _EXCITONPROPERTIES_H_
 
-#include "vector_value.h"
-
+#include "PhysicalModel.h"
 #include "SimulationOptions.h"
-#include "PhysicalProperties.h"
 #include "DriftDiffusionDefs.h"
 #include "TiberCad.h"
+
+#include "vector_value.h"
 
 // GNU scientific library
 //#include <gsl/gsl_sf_fermi_dirac.h>
@@ -18,15 +18,32 @@
 // forward declarations
 class Point;
 class Elem;
-class DriftDiffusionProperties;
 
-class ExcitonProperties : public PhysicalProperties
+class ExcitonProperties : public PhysicalModel
 {
     
   public:
        
     //! A default (empty) destructor.
     virtual ~ExcitonProperties(void);
+
+
+    //! Create a named model
+    /*!
+     * The model is created according to the given model name.
+     * If it is not known, the NULL pointer is returned.
+     * 
+     * \param name the model name
+     * \param options the options as given in the input file
+     * \return a pointer to the newly created object
+     */
+    static ExcitonProperties* create(const std::string& name,
+        const ModelOptions& options = ModelOptions());
+
+    /*! \copydoc PhysicalModel::calculate_VCA() */
+    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+        const PhysicalModelInterface* comp_B, double xa) {};
+
 
     //! Set the statistics to be used
     /*!
@@ -40,6 +57,15 @@ class ExcitonProperties : public PhysicalProperties
      */
     TiberCad::Statistics get_statistics(void) const;
 
+    //! Set the mobility model
+    /*!
+     * Creates a mobility model for the excitons from the given model
+     * name and options.
+     */
+    void set_mobility_model(const std::string& model_name,
+        const ModelOptions& options = ModelOptions()) {};
+
+
     //! (Re-)Initialize for the given element
     /*!
      * \c reinit() calls \c prepare_element_data() which needs to be
@@ -48,39 +74,54 @@ class ExcitonProperties : public PhysicalProperties
      * \param elem the current element
      * \param dd_prop a pointer to the semiconductor model
      */
-    void reinit(const Elem* elem, DriftDiffusionProperties* dd_prop);
+    void reinit(const Elem* elem);
+
+
+    //! Set the coordinates
+    void set_coordinates(const Point& p);
+    
+    //! Set the carrier temperature
+    void set_carrier_temperature(double T_x);
+
+    //! Set the effective exciton potential
+    void set_effective_potential(double eff_potential);
+
+    //! Set the exciton energy \f$E_x\f$
+    /*!
+     * \f$E_x=E_g-R\f$ where \f$E_g\f$ and \f$R\f$ are the band gap and
+     * the Exciton binding energy, respectively.
+     */
+    void set_energy(double energy);
+    
+    //! Set the exciton DOS
+    void set_density_of_states(double DOS);
+    
+    //! Set the carrier density
+    void set_density(double x);
+    
+
+    //! Get the element we are currently working on
+    const Elem* get_element(void) const;
+
+    //! Get the coordinates of the point we are currently working on
+    const Point& get_coordinates(void) const;
+
 
     //! Calculate the exciton density
-    /*!
-     * \param fermi_x the exciton electro-chemical potential
-     *
-     * It is assumed that the calculation does not depend on the
-     * coordinate inside the element
-     */
-    virtual void calculate_densities(double fermi_x) {};
+    void calculate_density(void);
 
-    //! Calculate the exciton dissociation rate
-    virtual void calculate_recombination_rate(void) {};
-    
-    //! The method that will calculate all needed properties
-    /*!
-     * This method needs to be implemented by a derived class. It has to
-     * calculate at least the following set of parameters:
-     * 
-     * \li the thermal voltage \f$v_T=k_BT/e\f$ for the excitons
-     * \li the exciton density and its derivative
-     * \li the exciton mobility
-     * \li the exciton recombination rate and its derivative
-     * \li the exciton generation rate
-     * 
-     * \param fermi_x the exciton electro-chemical potential
-     * \param p the coordinates in real space
-     *
-     */
-    virtual void calculate_all(double fermi_x, const Point& coord) = 0;
+    //! Calculate the exciton net recombination rate
+    void calculate_net_recombination_rate(void);
 
-    virtual double get_nonradiative_recombination_rate(void) { return 0.0; };
-      
+    //! Calculate the exciton mobility
+    void calculate_mobility(void);
+
+
+    //! Get the lattice temperature
+    double get_lattice_temperature(void);
+
+    //! Get the carrier temperature
+    double get_carrier_temperature(void);
 
     //! Get the exciton density
     /*!
@@ -101,19 +142,24 @@ class ExcitonProperties : public PhysicalProperties
     
 
     //! Get the exciton recombination rate
-    double get_recombination_rate(void) const
-      { return recombination_rate; };
+    double get_net_recombination_rate(void) const;
       
     //! Get the exciton recombination rate derivative
     /*!
      * Get \f$\frac{\partial R}{\partial\phi_x}\f$
      */
-    double get_recombination_rate_derivative(void) const
+    double get_net_recombination_rate_derivative(void) const
         { return recombination_rate_derivative; };
     
-    double get_generation_rate(void) const
-      { return generation_rate; };
-      
+    //! Get the nonradiative recombination rate
+    virtual double get_nonradiative_recombination_rate(void);
+
+    //! Get the radiative recombination rate
+    virtual double get_radiative_recombination_rate(void);
+    
+    //! Get the dissociation rate
+    virtual double get_dissociation_rate(void);
+
     //! Get the exciton mobility
     /*!
      * \return the exciton mobility
@@ -126,6 +172,24 @@ class ExcitonProperties : public PhysicalProperties
     //! The empty constructor.
     ExcitonProperties(void);
 
+
+    //! Initialize this model
+    /*!
+     * This reads the database and calls init for all submodels
+     * A derived class which reimplements this method has to call 
+     * explicitly the one of this class!
+     */
+    virtual void do_init(void) {};
+
+    //! \copydoc PhysicalModel::copy_from()
+    virtual void copy_from(const PhysicalModelInterface* rhs);
+
+
+    virtual void do_recombination(void) {};
+
+    virtual void do_mobility(void) {};
+
+
     //! This method gets called from reinit()
     /*!
      * It can be used to setup data that is constant in an element, e.g.
@@ -133,11 +197,14 @@ class ExcitonProperties : public PhysicalProperties
      */
     virtual void prepare_element_data(void) {};
 
-    //! The element we are currently working on
-    const Elem* elem;
+    //! The lattice temperature in eV (\f$= k_B T_{lat} / e\f$)
+    double lattice_vt;
 
-    //! The thermal voltage for the electrons
+    //! The exciton temperature in eV (\f$= k_B T_h / e\f$)
     double exciton_vt;
+
+    //! The effective exciton potential
+    double eff_pot;
 
     //! The density
     double density;
@@ -148,20 +215,44 @@ class ExcitonProperties : public PhysicalProperties
     //! The mobility
     double mobility;
 
-    //! The recombination rate
-    double recombination_rate;
+    //! The radiative recombination rate
+    double rad_recomb_rate;
+
+    //! The nonradiative recombination rate
+    double nonrad_recomb_rate;
+
+    //! The dissociation rate
+    double dissoc_rate;
+
+    //! The net recombination rate
+    double net_recomb_rate;
     
-    //! The derivative of the net electron recombination rate
+    //! The derivative of the net recombination rate
     double recombination_rate_derivative;
     
-    //! The generation rate
-    double generation_rate;
-    
-    //! The band gap
-    /*!
-     * The band gap is an element data
-     */
-    double band_gap;
+
+  private:
+
+    //! The copy constructor is disabled
+    ExcitonProperties(const ExcitonProperties& rhs);
+
+    //! The assignment operator is disabled
+    ExcitonProperties& operator=(const ExcitonProperties& rhs);
+
+    //! The element we are currently working on
+    const Elem* _elem;
+
+    //! The coordinates of the point we are working on
+    const Point* _coord;
+
+    //! The exciton energy
+    double _energy;
+
+    //! The DOS of the excitons
+    double _DOS;
+
+    //! The statistics to be used
+    TiberCad::Statistics _statistics;
 
     //! Calculate the density and its derivative
     void calculate_density_and_derivative(double arg, double& density,
@@ -170,18 +261,7 @@ class ExcitonProperties : public PhysicalProperties
     //! Calculate the density for a given argument
     double calculate_density(double arg) const;
 
-    //! Get a reference to the DriftDiffusionProperties
-    const DriftDiffusionProperties* get_driftdiffusion_properties(void) const;
 
-    //! Get a reference to the DriftDiffusionProperties
-    DriftDiffusionProperties* get_driftdiffusion_properties(void);
-
-
-  private:
-
-    TiberCad::Statistics _statistics;
-
-    DriftDiffusionProperties* _dd_prop;
 
 
 };
@@ -196,26 +276,42 @@ ExcitonProperties::~ExcitonProperties(void)
 {
 }
 
+
 inline
 ExcitonProperties::ExcitonProperties(void)
-  : PhysicalProperties("ExcitonProperties"),
-    elem(NULL),
-    _statistics(TiberCad::BOLTZMANN),
-    _dd_prop(NULL)
+  : _elem(NULL),
+    _statistics(TiberCad::BOLTZMANN)
 {
+}
+
+
+inline
+ExcitonProperties*
+ExcitonProperties::create(const std::string& name,
+    const ModelOptions& options)
+{
+  return dynamic_cast<ExcitonProperties*>(
+      PhysicalModelInterface::create("exmodel_" + name, options));
 }
 
 inline
 void
-ExcitonProperties::reinit(const Elem* elem, DriftDiffusionProperties* dd_prop)
+ExcitonProperties::copy_from(const PhysicalModelInterface* rhs)
 {
-  if (this->elem != elem)
+  PhysicalModel::copy_from(rhs);
+}
+
+inline
+void
+ExcitonProperties::reinit(const Elem* elem)
+{
+  if (this->_elem != elem)
   {
-    this->elem = elem;
-    this->_dd_prop = dd_prop;
+    this->_elem = elem;
     this->prepare_element_data();
   }
 }
+
 
 inline
 void
@@ -224,12 +320,45 @@ ExcitonProperties::set_statistics(TiberCad::Statistics statistics)
   _statistics = statistics;
 }
 
+
 inline
 TiberCad::Statistics
 ExcitonProperties::get_statistics(void) const
 {
   return _statistics;
 }
+
+inline
+double
+ExcitonProperties::get_net_recombination_rate(void) const
+{
+  return net_recomb_rate;
+}
+
+
+inline
+double
+ExcitonProperties::get_nonradiative_recombination_rate(void)
+{
+  return 0;
+}
+
+
+inline
+double
+ExcitonProperties::get_radiative_recombination_rate(void)
+{
+  return 0;
+}
+ 
+
+inline
+double
+ExcitonProperties::get_dissociation_rate(void)
+{
+  return 0;
+}
+
 
 inline
 double
@@ -258,19 +387,120 @@ ExcitonProperties::calculate_density_and_derivative(double arg, double& density,
   derivative = density;
 }
 
-inline
-const DriftDiffusionProperties*
-ExcitonProperties::get_driftdiffusion_properties(void) const
-{
-  return _dd_prop;
-}
 
 inline
-DriftDiffusionProperties*
-ExcitonProperties::get_driftdiffusion_properties(void)
+const Elem*
+ExcitonProperties::get_element(void) const
 {
-  return _dd_prop;
+  return _elem;
 }
+
+
+inline
+const Point&
+ExcitonProperties::get_coordinates(void) const
+{
+  return *_coord;
+}
+
+
+inline
+void
+ExcitonProperties::set_coordinates(const Point& p)
+{
+  _coord = &p;
+}
+ 
+    
+inline
+void
+ExcitonProperties::set_carrier_temperature(double T_x)
+{
+  exciton_vt = T_x;
+}
+    
+inline
+double
+ExcitonProperties::get_lattice_temperature(void)
+{
+  return exciton_vt;
+}
+
+    
+inline
+double
+ExcitonProperties::get_carrier_temperature(void)
+{
+  return exciton_vt;
+}
+
+
+    
+inline
+void
+ExcitonProperties::set_effective_potential(double eff_potential)
+{
+  eff_pot = eff_potential;
+}
+    
+
+inline
+void
+ExcitonProperties::set_energy(double energy)
+{
+  _energy = energy;
+}
+
+
+inline
+void
+ExcitonProperties::set_density_of_states(double DOS)
+{
+  _DOS = DOS;
+}
+
+
+inline
+void
+ExcitonProperties::set_density(double x)
+{
+  density = x;
+}
+
+
+inline
+void
+ExcitonProperties::calculate_density(void)
+{
+  double kT = exciton_vt;
+
+  double arg_x = - (_energy - eff_pot) / kT;
+
+  calculate_density_and_derivative(arg_x, density, density_derivative);
+
+  double Nx = _DOS;
+  density *= Nx;
+  density_derivative *= Nx / kT;
+}
+
+
+inline
+void
+ExcitonProperties::calculate_mobility(void)
+{
+  do_mobility();
+}
+
+
+inline
+void
+ExcitonProperties::calculate_net_recombination_rate(void)
+{
+  do_recombination();
+}
+
+
+
 
 
 #endif /* _EXCITONPROPERTIES_H_*/
