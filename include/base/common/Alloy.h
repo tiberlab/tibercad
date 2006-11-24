@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _ALLOY_H_
 #define _ALLOY_H_
 
