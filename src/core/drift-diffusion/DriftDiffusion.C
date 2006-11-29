@@ -57,8 +57,7 @@ DriftDiffusion::Options::Options(void)
     scaling_type(Scaling::UNITS),
     coupling(POISSON),
     n_max(1), p_max(1),
-    C0_e(1), C0_h(1),
-    linearize_continuity_eq(false)
+    C0_e(1), C0_h(1)
 {
 }
 
@@ -80,8 +79,7 @@ DriftDiffusion::Options::Options(const Options& rhs)
     n_max(rhs.n_max),
     p_max(rhs.p_max),
     C0_e(rhs.C0_e),
-    C0_h(rhs.C0_h),
-    linearize_continuity_eq(rhs.linearize_continuity_eq)
+    C0_h(rhs.C0_h)
 {
 }
 
@@ -108,7 +106,6 @@ DriftDiffusion::Options::operator=(const Options& rhs)
     p_max = rhs.p_max;
     C0_e = rhs.C0_e;
     C0_h = rhs.C0_h;
-    linearize_continuity_eq = rhs.linearize_continuity_eq;
   }
   return *this;
 }
@@ -1002,7 +999,6 @@ DriftDiffusion::do_gummel_iterations(int max_it)
       system.nonlinear_solver->matvec = assemble<POISSON>;
       system.solve();
 
-      _options.linearize_continuity_eq = true;
       solver_params.nonlinear_max_iterations = 1;
       set_solver_params(*system.nonlinear_solver);
 
@@ -1012,14 +1008,12 @@ DriftDiffusion::do_gummel_iterations(int max_it)
       system.nonlinear_solver->matvec = assemble<HCURRENT>;
       system.solve();
 
-      _options.linearize_continuity_eq = false;
       solver_params.nonlinear_max_iterations = nonlin_max_it;
       set_solver_params(*system.nonlinear_solver);
     }
   }
   catch (PetscRuntimeError err)
   {
-    _options.linearize_continuity_eq = false;
     solver_params.nonlinear_max_iterations = nonlin_max_it;
     set_solver_params(*system.nonlinear_solver);
     throw(err);
@@ -2616,6 +2610,7 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
     NumericVector<Number>* residual,
     SparseMatrix<Number>* jacobian)
 {
+
   const Mesh& mesh = _this->get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
 
@@ -2707,7 +2702,6 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
 
   const Options& params = get_options();
   Options& options = get_options();
-  bool linearize = options.linearize_continuity_eq;
 
   ContactData& simulation_voltages = _simulation_voltages;
   BoundaryNodeList& dirichlet_nodes = _dirichlet_nodes;
@@ -3061,12 +3055,6 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
         Real dsigma_h = J * phi0 / (mu0 * C0_h) * muh *
           sc->get_hole_density_derivative();
 
-        if (linearize)
-        {
-          dRn[0] = dRn[1] = dRn[2] = 0.0;
-          dRp[0] = dRp[1] = dRp[2] = 0.0;
-          dsigma_e = dsigma_h = 0.0;
-        }
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
@@ -3682,7 +3670,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
   const Options& params = get_options();
   Options& options = get_options();
-  bool linearize = options.linearize_continuity_eq;
 
   ContactData& simulation_voltages = _simulation_voltages;
   BoundaryNodeList& dirichlet_nodes = _dirichlet_nodes;
@@ -4004,28 +3991,33 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       // for jacobian compute the other contributions
       // 
       if (jacobian != NULL)
-      //if (0)
       {
+        double dn_dphi = phi0 * sc->get_electron_density_derivative();
+        double dp_dphi = phi0 * sc->get_hole_density_derivative();
+        double dNd_dphi = phi0 * sc->get_ionized_donor_density_derivative();
+        double dNa_dphi = phi0 * sc->get_ionized_acceptor_density_derivative();
+
         double drho[3];
-        drho[1] = phi0 / C0 * (sc->get_electron_density_derivative() -
-          sc->get_ionized_donor_density_derivative());
-        drho[2] = -phi0 / C0 * (sc->get_hole_density_derivative() -
-          sc->get_ionized_acceptor_density_derivative());
+        drho[1] = (dn_dphi - dNd_dphi) / C0;
+        drho[2] = -(dp_dphi - dNa_dphi) / C0;
         drho[0] = -(drho[1] + drho[2]);
+
+        double dRn_dn = sc->get_net_electron_recombination_rate_derivatives()[0];
+        double dRn_dp = sc->get_net_electron_recombination_rate_derivatives()[1];
+        double dRp_dn = sc->get_net_hole_recombination_rate_derivatives()[0];
+        double dRp_dp = sc->get_net_hole_recombination_rate_derivatives()[1];
 
         double dRn[3];
         double dRp[3];
-        for (int id = 0; id < 3; id++)
-        {
-          dRn[id] = phi0 / R0_e
-            * sc->get_net_electron_recombination_rate_derivatives()[id];
-          dRp[id] = phi0 / R0_h
-            * sc->get_net_hole_recombination_rate_derivatives()[id];
-        }
-        //if (fabs(Rn) < 1e-3)
+        dRn[1] = -dRn_dn * dn_dphi / R0_e;
+        dRn[2] = -dRn_dp * dp_dphi / R0_e;
+        dRn[0] = -(dRn[1] + dRn[2]);
+        dRp[1] = -dRp_dn * dn_dphi / R0_h;
+        dRp[2] = -dRp_dp * dp_dphi / R0_h;
+        dRp[0] = -(dRp[1] + dRp[2]);
+
         if (Rn == 0.0)
           dRn[0] = dRn[1] = dRn[2] = 0.0;
-        //if (fabs(Rp) < 1e-3)
         if (Rp == 0.0)
           dRp[0] = dRp[1] = dRp[2] = 0.0;
 
@@ -4036,12 +4028,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         Real dsigma_h = J * phi0 / (mu0 * C0_h) * muh *
           sc->get_hole_density_derivative();
 
-        if (linearize)
-        {
-          dRn[0] = dRn[1] = dRn[2] = 0.0;
-          dRp[0] = dRp[1] = dRp[2] = 0.0;
-          dsigma_e = dsigma_h = 0.0;
-        }
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
@@ -4659,7 +4645,6 @@ DriftDiffusion::do_assembly1D(const NumericVector<Number>& x,
 
   const Options& params = get_options();
   Options& options = get_options();
-  bool linearize = options.linearize_continuity_eq;
 
   ContactData& simulation_voltages = _simulation_voltages;
   BoundaryNodeList& dirichlet_nodes = _dirichlet_nodes;
@@ -4968,22 +4953,29 @@ DriftDiffusion::do_assembly1D(const NumericVector<Number>& x,
 
       if (jacobian != NULL)
       {
+        double dn_dphi = phi0 * sc->get_electron_density_derivative();
+        double dp_dphi = phi0 * sc->get_hole_density_derivative();
+        double dNd_dphi = phi0 * sc->get_ionized_donor_density_derivative();
+        double dNa_dphi = phi0 * sc->get_ionized_acceptor_density_derivative();
+
         double drho[3];
-        drho[1] = phi0 / C0 * (sc->get_electron_density_derivative() -
-            sc->get_ionized_donor_density_derivative());
-        drho[2] = -phi0 / C0 * (sc->get_hole_density_derivative() -
-            sc->get_ionized_acceptor_density_derivative());
+        drho[1] = (dn_dphi - dNd_dphi) / C0;
+        drho[2] = -(dp_dphi - dNa_dphi) / C0;
         drho[0] = -(drho[1] + drho[2]);
+
+        double dRn_dn = sc->get_net_electron_recombination_rate_derivatives()[0];
+        double dRn_dp = sc->get_net_electron_recombination_rate_derivatives()[1];
+        double dRp_dn = sc->get_net_hole_recombination_rate_derivatives()[0];
+        double dRp_dp = sc->get_net_hole_recombination_rate_derivatives()[1];
+
         double dRn[3];
         double dRp[3];
-        for (int id = 0; id < 3; id++)
-        {
-          dRn[id] = phi0 / R0_e
-            * sc->get_net_electron_recombination_rate_derivatives()[id];
-          dRp[id] = phi0 / R0_h
-            * sc->get_net_hole_recombination_rate_derivatives()[id];
-        }
-
+        dRn[1] = -dRn_dn * dn_dphi / R0_e;
+        dRn[2] = -dRn_dp * dp_dphi / R0_e;
+        dRn[0] = -(dRn[1] + dRn[2]);
+        dRp[1] = -dRp_dn * dn_dphi / R0_h;
+        dRp[2] = -dRp_dp * dp_dphi / R0_h;
+        dRp[0] = -(dRp[1] + dRp[2]);
 
         if (coupling & POISSON)
         {

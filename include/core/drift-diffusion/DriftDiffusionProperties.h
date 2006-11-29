@@ -357,7 +357,7 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_net_electron_recombination_rate(void) const
       { return electron_recombination_rate; };
       
-    //! Get the net electron recombination rate derivative
+    //! Get the net electron recombination rate derivatives
     /*!
      * Get \f$\frac{\partial R_{net}}{\partial\varphi}\f$
      *
@@ -376,7 +376,7 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_net_hole_recombination_rate(void) const
       { return hole_recombination_rate; };
       
-    //! Get the net hole recombination rate derivative
+    //! Get the net hole recombination rate derivatives
     /*!
      * Get \f$\frac{\partial R_{net}}{\partial\varphi}\f$
      *
@@ -603,9 +603,6 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! The total charge density
     double charge_density;
-
-    //! The total charge density derivatives
-    std::vector<double> charge_density_derivatives;
 
     //! The electron mobility
     double electron_mobility;

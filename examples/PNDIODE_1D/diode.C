@@ -139,8 +139,8 @@ int main (int argc, char** argv)
     opts["tau_p"] = "3e-10";
     nside->add_recombination_model("SRH", opts);
     pside->add_recombination_model("SRH", opts);
-
     opts.clear();
+
     opts["mu0"] = "284";
     nside->set_electron_mobility_model("constant", opts);
     pside->set_electron_mobility_model("constant", opts);

@@ -30,6 +30,8 @@ class RecombinationModelInterface : public DriftDiffusionModelInterface
     //! Get the electron and hole net recombination rate derivatives
     /*!
      * The net recombination rate is defined as \f$R_{net}=R-G\f$
+     * The derivative is intended with respect to the electron (first
+     * component) and hole (second component) density.
      */
     virtual void get_net_recombination_rate_derivatives(
         std::vector<double>& recomb_e, std::vector<double>& recomb_h) = 0;

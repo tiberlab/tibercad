@@ -30,16 +30,10 @@ DirectRecombination::get_net_recombination_rate_derivatives(
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
   
   double n  = dd.get_electron_density();
-  double dn  = dd.get_electron_density_derivative();
   double p  = dd.get_hole_density();
-  double dp  = dd.get_hole_density_derivative();
 
-  double a = _C * dn * p;
-  double b = _C * n * dp; 
-
-  recomb_e[0] = recomb_h[0] = a + b;
-  recomb_e[1] = recomb_h[1] = -a;
-  recomb_e[2] = recomb_h[2] = -b;
+  recomb_e[0] = recomb_h[0] = _C * p; // dR/dn
+  recomb_e[1] = recomb_h[1] = _C * n; // dR/dp
 }
 
 

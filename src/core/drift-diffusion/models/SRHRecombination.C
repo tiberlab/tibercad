@@ -1,3 +1,5 @@
+// $Id$
+
 #include "SRHRecombination.h"
 #include "DriftDiffusionProperties.h"
 
@@ -30,21 +32,17 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
   
   double n  = dd.get_electron_density();
-  double dn  = dd.get_electron_density_derivative();
   double p  = dd.get_hole_density();
-  double dp  = dd.get_hole_density_derivative();
   double ni = dd.get_intrinsic_density();
 
   double denom = _tau_p * (n + ni) + _tau_n * (p + ni);
   double SRH = (n * p - ni * ni) / denom;
 
-  double a = (p - _tau_p * SRH) * dn / denom;
-  double b = (n - _tau_n * SRH) * dp / denom; 
+  double a = (p - _tau_p * SRH) / denom;
+  double b = (n - _tau_n * SRH) / denom; 
 
-
-  recomb_e[0] = recomb_h[0] = a + b;
-  recomb_e[1] = recomb_h[1] = -a;
-  recomb_e[2] = recomb_h[2] = -b;
+  recomb_e[0] = recomb_h[0] = a;
+  recomb_e[1] = recomb_h[1] = b;
 }
 
 

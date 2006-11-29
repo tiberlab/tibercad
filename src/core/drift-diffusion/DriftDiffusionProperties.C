@@ -18,8 +18,7 @@ DriftDiffusionProperties::_DOS_factor = std::pow(2.0 * M_PI * Constants::me /
 
 
 DriftDiffusionProperties::DriftDiffusionProperties(void)
-  : charge_density_derivatives(3, 0.0),
-    electron_conductivity_derivatives(3, 0.0),
+  : electron_conductivity_derivatives(3, 0.0),
     hole_conductivity_derivatives(3, 0.0),
     electron_recombination_rate_derivatives(3, 0.0),
     hole_recombination_rate_derivatives(3, 0.0),
@@ -74,6 +73,7 @@ DriftDiffusionProperties::calculate_VCA(const PhysicalModelInterface* comp_A,
     dynamic_cast<const DriftDiffusionProperties*>(comp_B);
 
   permittivity = alloy(scA->permittivity, scB->permittivity, xa);
+
   conduction_band.effective_mass =
     alloy(scA->conduction_band.effective_mass,
         scB->conduction_band.effective_mass, xa);
@@ -376,11 +376,11 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
   electron_recombination_rate = 0;
   electron_recombination_rate_derivatives[0] = 0;
   electron_recombination_rate_derivatives[1] = 0;
-  electron_recombination_rate_derivatives[2] = 0;
+  //electron_recombination_rate_derivatives[2] = 0;
   hole_recombination_rate = 0;
   hole_recombination_rate_derivatives[0] = 0;
   hole_recombination_rate_derivatives[1] = 0;
-  hole_recombination_rate_derivatives[2] = 0;
+  //hole_recombination_rate_derivatives[2] = 0;
 
   double Re, Rh;
   std::vector<double> dRe(3), dRh(3);
@@ -395,11 +395,11 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
     electron_recombination_rate += Re;
     electron_recombination_rate_derivatives[0] += dRe[0];
     electron_recombination_rate_derivatives[1] += dRe[1];
-    electron_recombination_rate_derivatives[2] += dRe[2];
+    //electron_recombination_rate_derivatives[2] += dRe[2];
     hole_recombination_rate += Rh;
     hole_recombination_rate_derivatives[0] += dRh[0];
     hole_recombination_rate_derivatives[1] += dRh[1];
-    hole_recombination_rate_derivatives[2] += dRh[2];
+    //hole_recombination_rate_derivatives[2] += dRh[2];
   }
 }
 

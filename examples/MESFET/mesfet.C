@@ -106,11 +106,13 @@ int main (int argc, char** argv)
       mesh.read(readmesh.fname_xda,  &meshdata); 
       meshdata.read(readmesh.fname_xta);
       readmesh.get_BC_data(boundary_nodes);
+      cerr << boundary_nodes.size() << "\n";
     }
     else
     {
       Read_MSH readmesh(meshfile, phys_reg_ID, BC_reg_ID, dim, mesh, meshdata);
       readmesh.get_BC_data(boundary_nodes);
+      cerr << boundary_nodes.size() << "\n";
     }
 
     MeshUtils::assign_subdomain_ids(mesh, meshdata);

@@ -249,9 +249,6 @@ class DriftDiffusion : public SimulationInterface
          */
         int coupling;
 
-        //! linearize continuity equations
-        bool linearize_continuity_eq;
-
 
       private:
         
