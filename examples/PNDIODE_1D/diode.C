@@ -61,6 +61,8 @@ int main (int argc, char** argv)
     string lin_max_it = input_file("linear_max_it", "500");
     string ls_type = input_file("ls_type", "cubic");
     string nonlin_ls_maxstep = input_file("nonlinear_ls_maxstep", "0.025");
+    
+    string E_t = input_file("trap_energy", "0.0");
 
     string mesh_units = input_file("mesh_units", "1e-4");
 
@@ -137,6 +139,7 @@ int main (int argc, char** argv)
     ModelOptions opts;
     opts["tau_n"] = "1e-9";
     opts["tau_p"] = "3e-10";
+    opts["E_t"] = E_t;
     nside->add_recombination_model("SRH", opts);
     pside->add_recombination_model("SRH", opts);
     opts.clear();

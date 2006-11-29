@@ -7,6 +7,7 @@
 
 #include <vector>
 
+//! The base class for mobility models
 class MobilityModelInterface : public DriftDiffusionModelInterface
 {
 

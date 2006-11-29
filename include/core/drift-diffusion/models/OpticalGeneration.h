@@ -1,7 +1,7 @@
 // $Id: ExcitonGeneration.h 70 2006-07-14 16:57:35Z maufder $
 
 #ifndef _OPTICALGENERATION_H_
-#define _OPTICALENERATION_H_
+#define _OPTICALGENERATION_H_
 
 #include "RecombinationModelInterface.h"
 #include "TypeDefs.h"

@@ -11,7 +11,8 @@
 /*!
  * This class implements Shockley-Read-Hall recombination processes that can be
  * modeled by 
- * \f[R_{SRH}=\frac{np - n_i^2}{(n+n_i)\tau_p + (p+n_i)\tau_n}\f]
+ * \f[R_{SRH}=\frac{np - n_i^2}{(n+n_i\exp{(E_t-E_i)\k_BT})\tau_p +
+ * (p+n_i\exp{(E_i-E_t)/k_BT})\tau_n}\f]
  */
 class SRHRecombination : public RecombinationModelInterface
 {
@@ -24,11 +25,12 @@ class SRHRecombination : public RecombinationModelInterface
     //! Create a ConstantMobility object
     static SRHRecombination* create(void);
 
-    //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
+    /*! \copydoc RecombinationModelInterface::get_net_recombination_rates() */
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
 
-    //! \copydoc
-    //! RecombinationModelInterface::get_net_recombination_rate_derivatives()
+    /*! \copydoc
+     * RecombinationModelInterface::get_net_recombination_rate_derivatives()
+     */
     void get_net_recombination_rate_derivatives(
         std::vector<double>& recomb_e, std::vector<double>& recomb_h);
 
@@ -63,11 +65,14 @@ class SRHRecombination : public RecombinationModelInterface
     
   private:
 
-    //! electron lifetime
+    //! The electron lifetime
     double _tau_n;
 
-    //! hole lifetime
+    //! The hole lifetime
     double _tau_p;
+
+    //! The trap level (from midgap)
+    double _E_t;
 
 };
 
@@ -80,7 +85,8 @@ class SRHRecombination : public RecombinationModelInterface
 inline
 SRHRecombination::SRHRecombination(void)
   : _tau_n(1e-9),
-    _tau_p(1e-9)
+    _tau_p(1e-9),
+    _E_t(0.0)
 {
 }
 
@@ -119,6 +125,7 @@ SRHRecombination::copy_from(const PhysicalModelInterface* rhs)
   const SRHRecombination* mod = dynamic_cast<const SRHRecombination*>(rhs);
   _tau_n = mod->_tau_n;
   _tau_p = mod->_tau_p;
+  _E_t = mod->_E_t;
 }
 
 

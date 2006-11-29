@@ -7,8 +7,9 @@
 void
 SRHRecombination::do_init(void)
 {
-  _tau_n = get_options().get_option("tau_n", 1e-9);
-  _tau_p = get_options().get_option("tau_p", 1e-9);
+  _tau_n = get_options().get_option("tau_n", _tau_n);
+  _tau_p = get_options().get_option("tau_p", _tau_p);
+  _E_t   = get_options().get_option("E_t", _E_t);
 }
 
 void
@@ -20,8 +21,11 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
   double ni = dd.get_intrinsic_density();
+  double kT = dd.get_lattice_temperature();
 
-  double denom = _tau_p * (n + ni) + _tau_n * (p + ni);
+  double f = std::exp(_E_t / kT);
+
+  double denom = _tau_p * (n + ni * f) + _tau_n * (p + ni / f);
   recomb_e = recomb_h = (n * p - ni * ni) / denom;
 }
 
@@ -34,8 +38,11 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
   double ni = dd.get_intrinsic_density();
+  double kT = dd.get_lattice_temperature();
 
-  double denom = _tau_p * (n + ni) + _tau_n * (p + ni);
+  double f = std::exp(_E_t / kT);
+
+  double denom = _tau_p * (n + ni * f) + _tau_n * (p + ni / f);
   double SRH = (n * p - ni * ni) / denom;
 
   double a = (p - _tau_p * SRH) / denom;

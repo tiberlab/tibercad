@@ -213,7 +213,7 @@ class DriftDiffusionProperties : public PhysicalModel
     const Tensor2Sym& get_strain(void) const;
 
     //! Get the lattice temperature (in units of eV)
-    double get_lattice_temperature(void);
+    double get_lattice_temperature(void) const;
 
     //! Get the total n-doping
     double get_total_donor_density(void) const;
@@ -829,7 +829,7 @@ DriftDiffusionProperties::set_densities(double n, double p)
 
 inline
 double
-DriftDiffusionProperties::get_lattice_temperature(void)
+DriftDiffusionProperties::get_lattice_temperature(void) const
 {
   return lattice_vt;
 }

@@ -12,7 +12,8 @@
 //! A class to store model options
 /*!
  * All options are stored internally as strings. They are accessed by
- * providing a key (which is also a string). The key is assumed to be unique.
+ * providing a key (which is also a string).
+ * The key is assumed to be unique.
  */
 class ModelOptions
 {
@@ -48,7 +49,7 @@ class ModelOptions
      *
      * The subvectors have to be quoted and have to use another type of
      * braces. E.g.:
-     * \code {(1), "(1,2,3)", "(3,4)"}
+     * \code {(1), "(1,2,3)", "(3,4)"} \endcode
      */
     template <typename T>
     void get_option(const std::string& name,

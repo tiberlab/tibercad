@@ -10,6 +10,7 @@ statistics = B
 searchpath = ../materials
 material = Si
 
+
 mesh_units = 1e-4
 
 #start_voltage = -0.9
