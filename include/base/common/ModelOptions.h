@@ -3,56 +3,64 @@
 #ifndef _MODELOPTIONS_H_
 #define _MODELOPTIONS_H_
 
+#include "Utils.h"
+
 #include <map>
+#include <vector>
 #include <string>
 
 //! A class to store model options
+/*!
+ * All options are stored internally as strings. They are accessed by
+ * providing a key (which is also a string). The key is assumed to be unique.
+ */
 class ModelOptions
 {
 
   public:
 
-    //! Get the value of an option as double
+    //! Get the value of an option
     /*!
      * \param name the name of the option
-     * \param default_value the default value
+     * \param default_value the default value, which also defines
+     * the type of the option
+     * \return the value
      */
-    double get_option(const std::string& name, double default_value) const;
+    template <typename T>
+    T get_option(const std::string& name, T default_value) const;
 
-    //! Get the value of an option as int
+    //! Get an option which is a vector of values (of the same type)
     /*!
      * \param name the name of the option
-     * \param default_value the default value
+     * \param vec the vector, where the values will be stored. \c vec can
+     * contain default values, but it's size will be changed according to
+     * the vector found in the options.
      */
-    int get_option(const std::string& name, int default_value) const;
+    template <typename T>
+    void get_option(const std::string& name, std::vector<T>& vec) const;
 
-    //! Get the value of an option as bool
+    //! Get an option which is a vector of vectors (with the same type)
     /*!
      * \param name the name of the option
-     * \param default_value the default value
+     * \param array the arry, where the values will be stored. \c array can
+     * contain default values, but it's size will be changed according to
+     * the array found in the options.
+     *
+     * The subvectors have to be quoted and have to use another type of
+     * braces. E.g.:
+     * \code {(1), "(1,2,3)", "(3,4)"}
      */
-    bool get_option(const std::string& name, bool default_value) const;
-    
-    //! Get the value of an option as string
-    /*!
-     * \param name the name of the option
-     * \param default_value the default value
-     */
-    const std::string& get_option(const std::string& name,
-        const std::string& default_value) const;
-    
-    //! Get the value of an option as const char*
-    /*!
-     * \param name the name of the option
-     * \param default_value the default value
-     */
-    const char* get_option(const std::string& name,
-        const char* default_value) const;
+    template <typename T>
+    void get_option(const std::string& name,
+        std::vector<std::vector<T> >& vec) const;
 
     //! Check if an option is present
     bool find_option(const std::string& name) const;
 
     //! Set an option
+    /*!
+     * This method is probably of no use...
+     */
     template <typename T>
     void set_option(const std::string& name, const T value);
 
@@ -78,9 +86,12 @@ class ModelOptions
     //! The map holding all options
     OptionsMap _options;
 
-
 };
 
+
+//
+// inline methods
+//
 
 inline
 void
@@ -89,12 +100,14 @@ ModelOptions::delete_option(const std::string& name)
   _options.erase(name);
 }
 
+
 inline
 std::string&
 ModelOptions::operator[](const std::string& name)
 {
   return _options[name];
 }
+
 
 inline
 bool
@@ -110,6 +123,7 @@ ModelOptions::find_option(const std::string& name) const
   return res;
 }
 
+
 inline
 void
 ModelOptions::clear(void)
@@ -118,26 +132,18 @@ ModelOptions::clear(void)
 }
 
 
-/*
 template <typename T>
+inline
 T
-ModelOptions::get_option(const std::string& name, T default_value)
+ModelOptions::get_option(const std::string& name, T default_value) const
 {
-  return _options.get_option(name, default_value);
-  
-  T val(default_value);
-
-  ModelOptions::const_iterator it = _options.find(name);
+  OptionsMap::const_iterator it = _options.find(name);
 
   if (it != _options.end())
-  {
-    std::istringstream s((it->second).c_str());
-    s >> val;
-  }
-
-  return val;
+    return Utils::convert<T>(it->second);
+  else
+    return default_value;
 }
-*/
 
 
 #endif // _MODELOPTIONS_H_

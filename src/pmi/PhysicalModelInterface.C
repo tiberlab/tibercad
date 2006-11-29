@@ -14,6 +14,8 @@
 
 #include "ExcitonModel.h"
 
+#include "Utils.h"
+
 #include "SimpleSemiconductorModel.h"
 #include "SemiconductorModel.h"
 #include "StrainedSemiconductorModel.h"
@@ -60,7 +62,8 @@ PhysicalModelInterface::create(const std::string& name,
     mod->set_options(options);
 
     //! set the name
-    mod->_name = mod->_options.get_option("name", "");
+    std::string defaultname = Utils::extract_typename(typeid(*mod));
+    mod->_name = mod->_options.get_option("name", defaultname);
     mod->_options.delete_option("name");
 
     std::cerr << "Added model (ID = " << mod->get_id() <<

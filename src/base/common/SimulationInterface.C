@@ -46,6 +46,7 @@ SimulationInterface::create(const std::string& type,
     //! set the name
     std::string defaultname = Utils::extract_typename(typeid(*sim));
     sim->_name = sim->get_options().get_option("name", defaultname);
+    sim->_options.delete_option("name");
 
     std::cerr << "Added simulator (ID = " << sim->get_id() <<
       " default name = " << sim->get_name() << ")\n";

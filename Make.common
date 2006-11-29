@@ -25,8 +25,9 @@ libmesh := /usr/pack/libmesh-0.5.0_20051010cvs-ma
 include $(libmesh)/Make.common
 
 # the spirit/boost libraries
-spirit := /usr/pack/spirit-1.8.3-ma/boost
-miniboost := /usr/pack/spirit-1.8.3-ma/boost/miniboost
+#spirit := /usr/pack/spirit-1.8.3-ma/boost
+#miniboost := /usr/pack/spirit-1.8.3-ma/boost/miniboost
+boost := /usr/pack/boost-1.33.1-ma
 
 # the GNU scientific library
 gsl := /usr/pack/gsl-1.6-ma
@@ -53,11 +54,13 @@ ifdef PROFILE
 endif
 
 CXXFLAGS += $(TIBER_INCLUDES)
-CXXFLAGS += -I$(miniboost) -I$(spirit)
+#CXXFLAGS += -I$(miniboost) -I$(spirit)
+CXXFLAGS += -I$(boost)/include
 CXXFLAGS += -I$(gsl)/include
 
 LDFLAGS += -Wl,-rpath,$(gsl)/lib -L$(gsl)/lib -lgsl -lgslcblas
 LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib
+LDFLAGS += -Wl,-rpath,$(boost)/lib -L$(boost)/lib -lboost_regex-gcc
 LDFLAGS += $(topdir)/lib/libtensor.a
 
 TIBER_OBJECTS := $(shell find $(topdir)/src -name "*.$(obj-suffix)")

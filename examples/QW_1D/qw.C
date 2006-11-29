@@ -8,6 +8,11 @@
 #include "DriftDiffusion.h"
 #include "StrainedSemiconductorModel.h"
 
+#include "Macrostrain.h"
+#include "WzDDsemiconductor.h"
+#include "WzRotatedCrystal.h"
+#include "WzPiezoelectricity.h"
+#include "WzStiffness.h"
 
 #include "Material.h"
 #include "Device.h"
@@ -16,7 +21,6 @@
 #include "Database.h"
 #include "MeshUtils.h"
 
-#include "macrostrain.h"
 #include "mesh_data_elements.h"
 
 #include "mesh.h"
@@ -26,7 +30,6 @@
 #include "elem.h"
 #include "getpot.h"
 #include "gnuplot_io.h"
-#include "WzDDsemiconductor.h"
 
 #include <algorithm>
 
@@ -169,27 +172,14 @@ int main (int argc, char** argv)
 
     bool periodicity[3];
 
-    rotated_crystal cryst;
-
-
-    // AlGaN - GaN
-    cryst.set_cryst_type("hex");
-    cryst.set_xyz_mil_direction("y", 1,  0, -1, 0) ;
-    cryst.set_xyz_mil_direction("z", 1,  -2, 1, 0) ;
-    cryst.set_xyz_mil_direction("x",  0,  0, 0,  1) ;
-
     
     Macrostrain::strain_param a_strain;
     Macrostrain::strain_param b_strain;
     Macrostrain::strain_param c_strain;
-    Piezoelectricity a_piezo;
-    Piezoelectricity b_piezo;
-    Piezoelectricity c_piezo;
+    WzPiezoelectricity a_piezo;
+    WzPiezoelectricity b_piezo;
+    WzPiezoelectricity c_piezo;
 
-    std::map<unsigned int, Macrostrain::strain_param*> strain_params;
-    strain_params[1] = &a_strain;
-    strain_params[2] = &b_strain;
-    strain_params[3] = &c_strain;
 
     std::map<unsigned int, Piezoelectricity*> piezodata;
     piezodata[1] = &a_piezo;
@@ -198,50 +188,43 @@ int main (int argc, char** argv)
 
 
 
-    a_strain.crystal = cryst;
-    b_strain.crystal = cryst;
-    c_strain.crystal = cryst;
+    WzRotatedCrystal a_cryst;
+    WzRotatedCrystal b_cryst;
+    WzRotatedCrystal c_cryst;
 
-    std::vector<int> x_dir(4);
-    std::vector<int> y_dir(4);
+    a_cryst.set_xyz_mil_direction("y", 1,  0, -1, 0) ;
+    a_cryst.set_xyz_mil_direction("z", 1,  -2, 1, 0) ;
+    a_cryst.set_xyz_mil_direction("x",  0,  0, 0,  1) ;
+    b_cryst.set_xyz_mil_direction("y", 1,  0, -1, 0) ;
+    b_cryst.set_xyz_mil_direction("z", 1,  -2, 1, 0) ;
+    b_cryst.set_xyz_mil_direction("x",  0,  0, 0,  1) ;
+    c_cryst.set_xyz_mil_direction("y", 1,  0, -1, 0) ;
+    c_cryst.set_xyz_mil_direction("z", 1,  -2, 1, 0) ;
+    c_cryst.set_xyz_mil_direction("x",  0,  0, 0,  1) ;
 
-    y_dir[0] =  1;  y_dir[1] = 0;  y_dir[2] = -1;  y_dir[3] =  0;
-    x_dir[0] =  0;  x_dir[1] = 0;  x_dir[2] =  0;  x_dir[3] =  1;
+    a_cryst.set_lat_const(0.3189, 0.5185);
+    b_cryst.set_lat_const(alloy(0.3545, 0.3189, in_content),
+        alloy(0.5703, 0.5185, in_content));
+    c_cryst.set_lat_const(0.3189, 0.5185);
 
+    a_strain.crystal = &a_cryst;
+    b_strain.crystal = &b_cryst;
+    c_strain.crystal = &c_cryst;
+
+    WzStiffness a_stiff;
+    WzStiffness b_stiff;
+    WzStiffness c_stiff;
 
     // GaN
-    a_strain.C_tensor.set_moduli(390.0, 145.0, 106.0, 398.0, 105.0);
-    c_strain.C_tensor.set_moduli(390.0, 145.0, 106.0, 398.0, 105.0);
+    a_stiff.set_moduli(390.0, 145.0, 106.0, 398.0, 105.0);
+    c_stiff.set_moduli(390.0, 145.0, 106.0, 398.0, 105.0);
     //
-    a_piezo.set_moduli(1.27, -0.35, -0.3); // C/m^2
-    c_piezo.set_moduli(1.27, -0.35, -0.3); // C/m^2
-    //
-    a_piezo.set_pyro_module(-0.034);
-    c_piezo.set_pyro_module(-0.034);
-    //
-    a_strain.crystal.set_lat_const(0.3189, 0.5185);
-    c_strain.crystal.set_lat_const(0.3189, 0.5185);
-    a_strain.crystal.calculate_lat_consts();
-    c_strain.crystal.calculate_lat_consts();
-    a_strain.crystal.calculate_rot_matrix(x_dir, y_dir); 
-    c_strain.crystal.calculate_rot_matrix(x_dir, y_dir); 
-    a_strain.C_tensor.rotate_to_calc_system(a_strain.crystal.RotMatrix);
-    c_strain.C_tensor.rotate_to_calc_system(c_strain.crystal.RotMatrix);
-
-    /*
-    // AlN
-    b_strain.C_tensor.set_moduli(396.0, 137.0, 108.0, 373.0, 116.0);
-    b_piezo.set_moduli(1.79, -0.5, -0.48);
-    b_piezo.set_pyro_module(-0.09);
-    b_strain.crystal.set_lat_const(0.3112, 0.4982);
-    b_strain.crystal.calculate_lat_consts();
-    b_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
-    b_strain.C_tensor.rotate_to_calc_system(b_strain.crystal.RotMatrix);
-    */
+    a_piezo.set_moduli(1.27, -0.35, -0.3, -0.034); // C/m^2
+    c_piezo.set_moduli(1.27, -0.35, -0.3, -0.034); // C/m^2
 
     // InGaN
     // first value: InN, second value: GaN
-    b_strain.C_tensor.set_moduli(
+    b_stiff.set_moduli(
         alloy(223.0, 390.0, in_content),
         alloy(115.0, 145.0, in_content),
         alloy(92.0, 106.0, in_content),
@@ -251,16 +234,36 @@ int main (int argc, char** argv)
     b_piezo.set_moduli(
         alloy(0.97, 1.27, in_content),
         alloy(-0.57, -0.35, in_content),
-        alloy(-0.4, -0.3, in_content));
-    b_piezo.set_pyro_module(
+        alloy(-0.4, -0.3, in_content),
         alloy(-0.042, -0.034, in_content, -0.037));
 
-    b_strain.crystal.set_lat_const(
-        alloy(0.3545, 0.3189, in_content),
-        alloy(0.5703, 0.5185, in_content));
-    b_strain.crystal.calculate_lat_consts();
-    b_strain.crystal.calculate_rot_matrix(x_dir, y_dir);
-    b_strain.C_tensor.rotate_to_calc_system(b_strain.crystal.RotMatrix);
+
+    a_strain.C_tensor = &a_stiff;
+    b_strain.C_tensor = &b_stiff;
+    c_strain.C_tensor = &c_stiff;
+
+    std::vector<int> x_dir(4);
+    std::vector<int> y_dir(4);
+
+    y_dir[0] =  1;  y_dir[1] = 0;  y_dir[2] = -1;  y_dir[3] =  0;
+    x_dir[0] =  0;  x_dir[1] = 0;  x_dir[2] =  0;  x_dir[3] =  1;
+
+
+    a_strain.crystal->calculate_lat_consts();
+    b_strain.crystal->calculate_lat_consts();
+    c_strain.crystal->calculate_lat_consts();
+    a_strain.crystal->calculate_rot_matrix_miller(x_dir, y_dir); 
+    b_strain.crystal->calculate_rot_matrix_miller(x_dir, y_dir);
+    c_strain.crystal->calculate_rot_matrix_miller(x_dir, y_dir); 
+    a_strain.C_tensor->rotate_to_calc_system(a_strain.crystal->RotMatrix);
+    b_strain.C_tensor->rotate_to_calc_system(b_strain.crystal->RotMatrix);
+    c_strain.C_tensor->rotate_to_calc_system(c_strain.crystal->RotMatrix);
+
+    std::map<unsigned int, Macrostrain::strain_param> strain_params;
+    strain_params.insert(pair<ID, Macrostrain::strain_param>(1, a_strain));
+    strain_params.insert(pair<ID, Macrostrain::strain_param>(2, b_strain));
+    strain_params.insert(pair<ID, Macrostrain::strain_param>(3, c_strain));
+
 
     Macrostrain::options opt;
 
@@ -275,7 +278,6 @@ int main (int argc, char** argv)
     opt.max_shape_steps    = max_shape_steps;
     opt.grown_on_substrate = grown_on_substrate;
     opt.substr_mat         = substr_mat;
-    opt.mesh_input_file    = meshfile;
 
     opt.calculate_atom_displacements = calculate_atom_displacements;
     opt.atom_structure_filename = atom_structure_filename;

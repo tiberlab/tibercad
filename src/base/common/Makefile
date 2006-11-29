@@ -26,5 +26,7 @@ all: $(objects)
 clean:
 	@rm -f *.o *~ *.d
 
+test:
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -S ModelOptions.C
 
 

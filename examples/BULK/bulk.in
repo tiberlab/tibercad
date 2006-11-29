@@ -16,8 +16,8 @@ molar_fraction = 0.3
 
 statistics = B
 
-dimension = 3
-meshfile = bulk3D.msh
+dimension = 2
+meshfile = bulk2D.msh
 
 mesh_units = 1e-4
 

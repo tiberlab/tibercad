@@ -115,7 +115,8 @@ int main (int argc, char** argv)
       dd_ptr = SimulationInterface::create("drift-diffusion", dd_opts);
     }
 
-    
+
+
     DriftDiffusionProperties* nside = 
       DriftDiffusionProperties::create("unstrained");
 

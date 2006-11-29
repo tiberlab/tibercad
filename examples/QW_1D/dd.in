@@ -13,10 +13,10 @@ vg_steps = 1;
 nonlinear_tolerance = 1e-9
 nonlinear_abs_tolerance = 1e-15
 nonlinear_ls_maxstep = 0.05
-ls_type = none
+#ls_type = none
 linear_tolerance = 1e-6
 linear_abs_tolerance = 1e-12
-nonlinear_max_it = 20
+nonlinear_max_it = 50
 linear_max_it = 1000
 integration_order = 2
 
