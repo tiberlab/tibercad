@@ -298,7 +298,7 @@ void ReadISEGrid::scan_grid_file()
     ISE_element_type_list.clear();
   	
     unsigned int  elem_type, elem_edges, elem_faces; //local variables
-    int id; //local variable    
+    int id; //local variable   
 	
 
       do
@@ -324,16 +324,16 @@ void ReadISEGrid::scan_grid_file()
                      	                  	  
         switch(elem_type) 
         {
-case 0:
+        case 0:
 	 
-          // update list of  ISE element types:
-          p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
+         //  // NO: never in XDA list !  !!!!update list of  ISE element types:
+//           p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
 
-          if (p == ISE_element_type_list.end())   //  not  found
-          {
-            ISE_element_type_list.push_back(elem_type);  
+//           if (p == ISE_element_type_list.end())   //  not  found
+//           {
+//             ISE_element_type_list.push_back(elem_type);  
 						 		 
-          }
+//           }
 
 
           //  0D element = Point 
@@ -352,17 +352,19 @@ case 0:
 
           break;
 
-case 1:
-     						 
-          // update list of  ISE element types:
-          p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
+        case 1:
+     			
+          if (dimension == 1)  //  if  dim = 2D or  3D, 1D elements don't go in xda file !!
+          {		 
+            // update list of  ISE element types:
+            p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
 
-          if (p == ISE_element_type_list.end())   //  not  found
-          {
-            ISE_element_type_list.push_back(elem_type);  
+            if (p == ISE_element_type_list.end())   //  not  found
+            {
+              ISE_element_type_list.push_back(elem_type);  
 						 		 
+            }
           }
-
 
           //  1D element = Segment (<vertex0,vertex1>)
 //cout << "1D element = Segment (<vertex0,vertex1>): " << endl;
@@ -388,14 +390,20 @@ case 2: // Triangle
 case 3: //  Rectangle
           // ***** 2D elements *******
      						 
-          // update list of  ISE element types:
-          p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
+  if (dimension == 2)  //  if  dim = 3D, 2D elements don't go in xda file, only BC !!
+  {
+    // update list of  ISE element types:
+    p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
 
-          if (p == ISE_element_type_list.end())   //  not  found
-          {
-            ISE_element_type_list.push_back(elem_type);  
+    if (p == ISE_element_type_list.end())   //  not  found
+    {
+      ISE_element_type_list.push_back(elem_type);  
 						 		 
-          }
+    }
+
+  }
+
+
        							 
           
 //cout << "2D element = Triangle/Rectangle: " << endl;
@@ -451,15 +459,18 @@ case 4: //  Polygon
           // ***** 2D element *******
      					
 //cout << "2D element = Polygon: " << endl;
-     							 
-          // update list of  ISE element types:
-          p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
+ if (dimension == 2)  //  if  dim = 3D, 2D elements don't go in xda file, only BC !!
+ {					 
+   // update list of  ISE element types:
+   p = find(ISE_element_type_list.begin(), ISE_element_type_list.end(), elem_type);
 
-          if (p == ISE_element_type_list.end())   //  not  found
-          {
-            ISE_element_type_list.push_back(elem_type);  
+   if (p == ISE_element_type_list.end())   //  not  found
+   {
+     ISE_element_type_list.push_back(elem_type);  
 						 		 
-          }
+   }
+ }
+
        							 
        				
           ISE_INPUT >> elem_edges;
