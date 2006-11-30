@@ -8,18 +8,37 @@
 
 using namespace  std;
 
+
+//! 0D Class Element.
+/*! 
+  Point Definition.
+*/
 class ISE_Element_0D : public ISE_Element
 {
  public:
-
+  //! Constructor.
+  /*!
+    Assigns a Vertex pointer to the element.
+  */
   ISE_Element_0D(ISE_Vertex* vertex_0);
-	
+
+  //! Virtual Destructor.
+  /*!
+    Dummy.
+  */	
   virtual ~ISE_Element_0D();
-	
+
+  /*!
+    Returns node id.
+  */	
   vector<unsigned int> get_nodes_id();
 	
 	
  private:
+
+  /*!
+    Vertex Pointer.
+  */
   ISE_Vertex* node;
 	
 };

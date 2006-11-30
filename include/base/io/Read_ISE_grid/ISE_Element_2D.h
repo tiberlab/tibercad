@@ -8,31 +8,60 @@
 
 using namespace  std;
 
+//!2D Element Class.
+/*!
+  Contains Segment data and orientations.
+*/
 class ISE_Element_2D : public  ISE_Element
 {
  public:
-	
+
+  //!  Constructor
+  /*!
+    Assigns Edge pointers and defines orientation vector.
+  */	
   ISE_Element_2D(vector<ISE_Edge*> edge_ids, vector<bool> neg_edges);
-	
+
+  //!  Virtual Destructor.
+  /*!
+    Dummy.
+  */	
   virtual ~ISE_Element_2D();
 
+  /*!
+   *  Returns nodes id vector.
+   *  Beware: repetitions in the list: to use after unique_nodes_point() method!
+   */
   vector<unsigned int> get_nodes_id();
 	
  private:
 
-
+  /*!
+    Edge Pointers vector.
+  */
   vector<ISE_Edge*> element_edges;
 	
-	  
+  /*!
+    Orientation values vector. A 'false' value determines opposite orientation.
+  */	  
   vector<bool> negative_edges;
 	
 
-
-  //!  Check if orientation  of  nodes  is  positive,  otherwise swap  nodes  of  element.	
+  /*!
+    Check if orientation  of  nodes  is  positive,  otherwise swap  nodes  of  element.
+  */	
   void set_element_nodes();
 
+
+  /*!
+    Unique Node Verification. Deletes repetitions in the list.
+  */
   void  unique_nodes_point();
-	
+
+
+  /*!
+    Writes element_nodes_id vector. Used after possible change of orientation.
+  */	
   void  set_element_nodes_id();
 
 };
