@@ -4,8 +4,6 @@ topdir := ../../..
 
 include $(topdir)/Make.common
 
-CXXFLAGS += -I/usr/pack/gsl-1.6-ma/include/
-
 
 #
 # source files
@@ -22,12 +20,14 @@ objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
 
 all: $(objects)
 
-#-include $(srcfiles:.C=.d)
-
 
 clean:
-	@rm -f *.o *~ *.d
+	@rm -f *.o *~ *.d .*.d .*.d.*
 
 
-test:
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -S DriftDiffusionProperties.C
+
+ifneq ($(MAKECMDGOALS),clean)
+-include $(patsubst %,.%,$(srcfiles:.C=.d))
+endif
+
+include $(topdir)/Make.rules

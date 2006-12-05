@@ -2,13 +2,14 @@
 
 # Useful rules
 
+
 .PHONY: $(subdirs)
 $(subdirs):
 	@$(MAKE) -C $@ $(target)
 
-%.d: %.C
-	@$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+.%.d: %.C
+	@$(CC) -MT $(basename $<).$(obj-suffix) -MM $(CPPFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.$(obj-suffix)[ :]*,\1.$(obj-suffix) $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
 
@@ -16,3 +17,5 @@ $(subdirs):
 	@$(GMSH) -format msh -order $(ORDER) -$(DIM) -o $<.msh $<
 	@$(topdir)/bin/renumber_msh $<.msh $@
 	@rm $<.msh
+
+

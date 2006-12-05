@@ -2,6 +2,7 @@
 #define ISE_ELEMENT_H_
 #include <vector>
 #include "ISE_Vertex.h"
+#include "reference_counted_object.h"
 
 using  namespace std;
 
@@ -10,7 +11,7 @@ using  namespace std;
 /*!
   Contains general methods. 
 */
-class ISE_Element
+class ISE_Element : public ReferenceCountedObject<ISE_Element>
 {
  public:
 

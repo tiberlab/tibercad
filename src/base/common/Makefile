@@ -20,13 +20,14 @@ objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
 
 all: $(objects)
 
-#-include $(srcfiles:.C=.d)
-
 
 clean:
-	@rm -f *.o *~ *.d
-
-test:
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -S ModelOptions.C
+	@rm -f *.o *~ *.d .*.d .*.d.*
 
 
+
+ifneq ($(MAKECMDGOALS),clean)
+-include $(patsubst %,.%,$(srcfiles:.C=.d))
+endif
+
+include $(topdir)/Make.rules

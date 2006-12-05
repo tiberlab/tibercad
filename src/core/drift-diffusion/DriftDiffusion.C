@@ -666,8 +666,7 @@ DriftDiffusion::set_solver_params(NonlinearSolver<Number>& solver)
 void
 DriftDiffusion::parse_options(void)
 {
-  SolverParameters& solver_params =
-    get_options().solver_params;
+  SolverParameters& solver_params = get_options().solver_params;
 
   const ModelOptions& opts = SimulationInterface::get_options();
   Options& myopts = get_options();
@@ -719,6 +718,7 @@ DriftDiffusion::parse_options(void)
     solver_params.pc_type = PCILU;
 
 }
+
 
 void
 DriftDiffusion::do_init(void)

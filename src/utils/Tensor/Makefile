@@ -19,7 +19,9 @@ objects		:= $(patsubst %.cpp, %.o, $(srcfiles))
 
 
 all: $(objects)
-	@ar rcs $(topdir)/lib/libtensor.a $(objects)
+	$(CXX) -fPIC -shared -o $(topdir)/lib/libtensor.so $(objects)
+
+#@ar rcs $(topdir)/lib/libtensor.a $(objects)
 
 
 clean:

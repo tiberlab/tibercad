@@ -27,14 +27,14 @@ characteristic = 1
 
 # for transcharacteristic
 vds = 1.5;
-vg_start = -1.0;
-vg_stop =  0.2;
-vg_steps = 12;
+vg_start = 0.0;
+vg_stop =  0.0;
+vg_steps = 1;
 #vg_stop = 1.0;
 #vg_steps = 50;
 # for output characteristic
-vds_stop = 3.0;
-vds_steps = 60;
+vds_stop = 0.1;
+vds_steps = 1;
 
 nonlinear_tolerance = 1e-12
 nonlinear_ls_maxstep = 0.1

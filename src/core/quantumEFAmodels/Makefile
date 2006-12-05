@@ -1,4 +1,4 @@
-# $Id: Makefile 1 2006-02-10 09:27:03Z maufder $
+# $Id: Makefile 131 2006-11-29 12:04:01Z maufder $
 
 topdir := ../../..
 
@@ -20,11 +20,14 @@ objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
 
 all: $(objects)
 
-#-include $(srcfiles:.C=.d)
-
 
 clean:
-	@rm -f *.o *~ *.d
+	@rm -f *.o *~ *.d .*.d .*.d.*
 
 
 
+ifneq ($(MAKECMDGOALS),clean)
+-include $(patsubst %,.%,$(srcfiles:.C=.d))
+endif
+
+include $(topdir)/Make.rules

@@ -4,6 +4,8 @@
 #include "Boundary.h"
 #include "BoundaryProperties.h"
 
+#include <cassert>
+
 
 void
 Boundary::add_boundary_properties(BoundaryProperties* properties,
