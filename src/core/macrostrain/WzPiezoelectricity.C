@@ -1,5 +1,5 @@
 #include "WzPiezoelectricity.h"
-
+ 
 WzPiezoelectricity::WzPiezoelectricity() : Piezoelectricity()
 {
 
@@ -17,14 +17,31 @@ WzPiezoelectricity::WzPiezoelectricity(double  e33, double e31, double e15, doub
 
 //-----------------------------------------------------------//
 
-void WzPiezoelectricity::read_database (const Dummy &db)
+void WzPiezoelectricity::read_database ( )
 {
 
 
 }
 
 //------------------------------------------------------------//
+void WzPiezoelectricity::do_init(void)
+{
+  ModelOptions & options = get_options ();
 
+  const double e33 = options.get_option("e33",0);
+  
+  const double e31 = options.get_option("e31",0);
+
+  const double e15 = options.get_option("e15",0);
+
+  const double Pz = options.get_option("Pz",0);
+
+  set_moduli( e33,  e31,  e15,  Pz);
+
+}
+
+
+//-----------------------------------------------------------//
 void WzPiezoelectricity:: set_moduli(double  e33_i, double e31_i, double e15_i, double Pz_i)
 {
 
@@ -32,6 +49,42 @@ void WzPiezoelectricity:: set_moduli(double  e33_i, double e31_i, double e15_i, 
   e31 = e31_i;
   e15 = e15_i;
   Pz  = Pz_i;
+
+}
+
+//------------------------------------------------------------//
+PhysicalModelInterface* WzPiezoelectricity::create_new(void) const
+{
+  return new WzPiezoelectricity();
+}
+
+//------------------------------------------------------------//
+
+void WzPiezoelectricity::copy_from (const PhysicalModelInterface *rhs)
+{
+  
+  const WzPiezoelectricity* temp = dynamic_cast<const WzPiezoelectricity*> (rhs);
+  e33 = temp->e33;
+  e31 = temp->e31;
+  e15 = temp->e15;
+  Pz  = temp->Pz;
+
+} 
+
+//------------------------------------------------------------//
+
+void WzPiezoelectricity:: calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+{
+   const WzPiezoelectricity* tempA = dynamic_cast<const WzPiezoelectricity*> (comp_A);
+
+   const WzPiezoelectricity* tempB = dynamic_cast<const WzPiezoelectricity*> (comp_B);
+
+   e33 = alloy(tempA->e33, tempB->e33, xa);
+   e31 = alloy(tempA->e31, tempB->e31, xa);
+   e15 = alloy(tempA->e15, tempB->e15, xa);
+   Pz  = alloy(tempA->Pz , tempB->Pz , xa);
+
+
 
 }
 

@@ -7,7 +7,6 @@
 #include "Material.h"
 
 
-
 //! Description of  an  alloy  material.
 /*!
  * An alloy is thought to be of the form \f$A_xB_{1-x}C\f$.
@@ -47,6 +46,9 @@ class Alloy : public Material
      */
     static double calculate_VCA_parameter(double ac, double bc,
         double x, double bowing = 0.0);
+
+
+    
 
 
   protected:
@@ -95,6 +97,7 @@ Alloy::calculate_VCA_parameter(double ac, double bc,
 {
   return bc + (ac - bc) * x - bowing * x * (1 - x);
 }
+
 
 
 

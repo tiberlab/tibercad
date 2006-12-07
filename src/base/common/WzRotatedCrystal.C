@@ -2,6 +2,14 @@
 
 WzRotatedCrystal::WzRotatedCrystal() : RotatedCrystal()
 {
+  a_lat = 0;
+  c_lat = 0;
+
+  set_xyz_mil_direction("x",  1, 0, -1, 0); 
+  set_xyz_mil_direction("y", -1, 2, -1, 0);
+  set_xyz_mil_direction("z", 0, 0, 0, 1); 
+
+
 
 }
 
@@ -14,7 +22,7 @@ WzRotatedCrystal::WzRotatedCrystal(const double a, const double c)
   set_lat_const(a, c);
 
 }
-
+ 
 //======================================================//
 
 
@@ -149,8 +157,103 @@ void WzRotatedCrystal::set_xyz_mil_direction(std::string dir, int h, int k, int 
 
 }
 //====================================================//
-void WzRotatedCrystal::read_database (Dummy &db)
+void WzRotatedCrystal::read_database ( )
 {
 
+
+}
+
+//===================================================//
+
+PhysicalModelInterface* WzRotatedCrystal::create_new(void) const
+{
+  return ( new WzRotatedCrystal() );
+
+}
+
+//===================================================//
+
+void WzRotatedCrystal::copy_from (const PhysicalModelInterface *rhs) 
+{
+
+  const WzRotatedCrystal* temp = dynamic_cast<const WzRotatedCrystal*> (rhs);
+
+
+  a_lat = temp->a_lat;
+
+  c_lat = temp->c_lat;
+
+
+  x_miller = temp->x_miller;
+
+  y_miller = temp->y_miller;
+
+  z_miller = temp->z_miller;
+
+  calculate_lat_consts();
+
+  calculate_rot_matrix_miller(x_miller, y_miller);
+
+}
+
+//===================================================//
+
+
+void WzRotatedCrystal::do_init(void)
+{
+  ModelOptions & options = get_options ();
+
+  a_lat =  options.get_option("a", a_lat);
+
+  assert(a_lat > 0);
+
+  c_lat =  options.get_option("c", c_lat);
+
+  assert(c_lat > 0);
+
+  options.get_option("x-growth-direction", x_miller);
+  options.get_option("y-growth-direction", y_miller);
+  options.get_option("z-growth-direction", z_miller);
+  
+
+  calculate_lat_consts();
+
+  calculate_rot_matrix_miller(x_miller, y_miller);
+
+
+}
+
+//===================================================//
+
+void WzRotatedCrystal::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+{
+
+ 
+
+  const WzRotatedCrystal* modA = dynamic_cast<const WzRotatedCrystal*> (comp_A);
+
+  const WzRotatedCrystal* modB = dynamic_cast<const WzRotatedCrystal*> (comp_B);
+
+
+  x_miller = modA->x_miller;
+
+  y_miller = modA->y_miller;
+
+  z_miller = modA->z_miller;
+
+
+  a_lat = alloy(modA->a_lat, modB->a_lat, xa);
+
+  
+  c_lat = alloy(modA->c_lat, modB->c_lat, xa);
+
+
+  
+
+
+  calculate_lat_consts();
+
+  calculate_rot_matrix_miller(x_miller, y_miller);
+  
 
 }

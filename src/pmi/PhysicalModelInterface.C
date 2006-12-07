@@ -20,6 +20,14 @@
 #include "SemiconductorModel.h"
 #include "StrainedSemiconductorModel.h"
 
+#include "ZbStiffness.h"
+#include "WzStiffness.h"
+#include "ZbPiezoelectricity.h"
+#include "WzPiezoelectricity.h"
+#include "ZbRotatedCrystal.h"
+#include "WzRotatedCrystal.h"
+#include "MacrostrainModel.h"
+
 #include <typeinfo>
 #include <iostream>
 #include <string>
@@ -54,6 +62,22 @@ PhysicalModelInterface::create(const std::string& name,
     mod = StrainedSemiconductorModel::create();
   else if (name == "exmodel_simple")
     mod = ExcitonModel::create();
+  else if (name == "stiffness_zb")
+    mod = ZbStiffness::create();
+  else if (name == "stiffness_wz")
+    mod = WzStiffness::create();
+  else if (name == "piezo_zb")
+    mod = ZbPiezoelectricity::create();
+  else if (name == "piezo_wz")
+    mod = WzPiezoelectricity::create();
+  else if (name == "cryst_zb")
+    mod = ZbRotatedCrystal::create();
+  else if (name == "cryst_wz")
+    mod = WzRotatedCrystal::create();
+  else if (name == "macrostrain")
+    mod = MacrostrainModel::create();
+
+
 
   register_model(mod);
 

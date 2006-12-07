@@ -1,8 +1,34 @@
-#include "Stiffness.h"
+#include "Stiffness.h" 
+//----------------------------------------------------------------------//
+void Stiffness::copy_from (const PhysicalModelInterface *rhs)
+{
+
+  const Stiffness* mod = dynamic_cast<const Stiffness*>(rhs);
+  C_cr = mod->C_cr;
+
+} 
+ 
+
+//----------------------------------------------------------------------//
+void Stiffness:: calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+{
+  const Stiffness* modA = dynamic_cast<const Stiffness*>(comp_A);
+
+  const Stiffness* modB = dynamic_cast<const Stiffness*>(comp_B);
+
+  
+  alloy(C_cr,  modA->C_cr, modB->C_cr, xa);
+ 
+}
+
+
+
+
+
 
 //--------------------------------------------------------------------//
 
-Stiffness::Stiffness() : PhysicalProperties("Stiffness")
+Stiffness::Stiffness() : PhysicalModelInterface( )
 {
   C_cr = 0;
 }
@@ -23,3 +49,4 @@ void Stiffness::set_C_tensor_crystal(const Tensor4DSym&     C)
   C_cr = C;
 }
 
+//--------------------------------------------------------------------//

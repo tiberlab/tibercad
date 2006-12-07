@@ -1,44 +1,60 @@
 #include "Macrostrain.h"
+#include "SimulationEnvironment.h"
+#include "Material.h"
 using namespace std;
 //-----------------------------------------------------------------//
-//Static objects must be "mentioned" here! 
-
-std::string    Macrostrain:: uname_vec[3];
-//unsigned int   Macrostrain:: dim;
-bool           Macrostrain:: grown_on_substrate;
- 
-unsigned  int  Macrostrain:: substr_mat;
 
 
-Tensor2Sym     Macrostrain:: eps0_var_log;
-unsigned int   Macrostrain:: number_of_add_var_static;
 
-std:: map<unsigned int, Macrostrain::strain_param > *    Macrostrain::strain_parameters_temp;
-std::vector <unsigned int>*            Macrostrain:: material_of_elem_temp;
-std::vector <Tensor2Sym>*     Macrostrain:: eps0_of_elem_temp;
-std::vector<Macrostrain::add_variable>*    Macrostrain:: add_var_temp; 
-std::vector<unsigned int>     Macrostrain:: add_dofs_vector;
-std::vector<unsigned int>*    Macrostrain:: zero_set_dofs_temp;
-std::map<const Elem*, map <unsigned int, double> >* Macrostrain::boundary_cond_elem_temp;
-
-std::set <unsigned int>* Macrostrain::substrate_nodes_temp;
-
-double Macrostrain::substrate_lat_const[3];
-
-Tensor2Sym Macrostrain::substrate_shear;
-
-unsigned int Macrostrain::fixed_node1_temp;
-unsigned int Macrostrain::fixed_node2_temp;
-unsigned int Macrostrain::fixed_node3_temp;
-
-LinearImplicitSystem* Macrostrain::my_system_temp;
+Device*  Macrostrain:: _device;
+Macrostrain* Macrostrain::static_this;
 //-----------------------------------------------------------------//
-Macrostrain::Macrostrain(const options& opt,  EquationSystems& equation_systems_in,
-    const std::string& problem_name ) 
+
+void Macrostrain::parse_options( )
 {
+
+
+  const ModelOptions& options = get_options();
+
+
+
+}
+
+
+
+
+
+//-----------------------------------------------------------------//
+void Macrostrain::do_init( ) 
+{
+
+  const ModelOptions& options = get_options();
+
   
-  equation_systems = &equation_systems_in;
-   
+  equation_systems = & (get_equation_systems());
+
+
+  SimulationEnvironment& si = get_environment();   
+
+  _device = &( si.get_device() );
+
+
+  grown_on_substrate = options.get_option("grown_on_substrate",false );
+
+
+  if ( grown_on_substrate )
+    {
+/*      string substrate_mat_name;
+
+      assert( options.find_options("substrate_material") );
+
+      substrate_mat_name = options.get_option("sunbstrate_material", "GaAs");
+      
+      substrate = RotatedCrystal::create( substrate_mat_name,   )
+*/
+    }
+
+
   max_r_steps = opt.max_r_steps;
   uniform_refinement = opt.uniform_refinement;
   refine_fraction = opt.refine_fraction;
@@ -46,13 +62,14 @@ Macrostrain::Macrostrain(const options& opt,  EquationSystems& equation_systems_
   max_ref_level = opt.max_ref_level;
   tolerance  = opt.tolerance  ;
   max_shape_steps = opt.max_shape_steps;
-  
+   
 
-  grown_on_substrate = opt.grown_on_substrate;
+  //  grown_on_substrate = opt.grown_on_substrate;
+
   calculate_atom_displacements = opt.calculate_atom_displacements;
   atom_structure_filename = opt.atom_structure_filename;
   atom_displacements_filename = opt.atom_displacements_filename;
-  
+   
 
   for (unsigned int i =0; i <=2; i ++ ) periodicity[i] = opt.periodicity[i];
   substr_mat = opt.substr_mat;
@@ -70,11 +87,9 @@ Macrostrain::Macrostrain(const options& opt,  EquationSystems& equation_systems_
     define_additional_variables();
 
 
-    // Create an equation systems object.
-    equation_systems = & equation_systems_in;
-    
+   
 
-    system_name = problem_name;
+    system_name = get_equation_system_name ( );
 
     // Declare the Poisson system and its variables.
     // The Poisson system is another example of a steady system.
@@ -181,6 +196,7 @@ Macrostrain::Macrostrain(const options& opt,  EquationSystems& equation_systems_
     
     //----------------------------------------------------------------//   
  
+
     
 }
 //--------------------------------------------------------------------//
@@ -576,12 +592,20 @@ void Macrostrain::update_bondary_conditions_map()
     }
 }
 
+//-----------------------------------------------------------------//
+void Macrostrain::assemble_strain_matrix(EquationSystems& es,
+				     const std::string& system_name)
+{
+
+  static_this->do_assemble( es, system_name);
+
+}
 
 
 
 //-----------------------------------------------------------------//
 
-void Macrostrain::assemble_strain_matrix(EquationSystems& es,
+void Macrostrain::do_assemble(EquationSystems& es,
 				     const std::string& system_name)
 
 { //
@@ -612,7 +636,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
   //dim = mesh.mesh_dimension();
 
   // Get a reference to the LinearImplicitSystem we are solving
-  LinearImplicitSystem& system = *my_system_temp;
+  LinearImplicitSystem& system = *my_system;
 
  
   
@@ -625,7 +649,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
     }
   
 
-  if (number_of_add_var_static !=0 ) var_fict = system.variable_number("fict");
+  if (number_of_add_var !=0 ) var_fict = system.variable_number("fict");
 
   // A reference to the  DofMap object for this system.  The  DofMap
   // object handles the index translation from node and element numbers
@@ -717,6 +741,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
   
   DenseSubMatrix<Number>   Ke_add_u_sub(Ke_total);//matrix for superalttice equation that couples u and additional variables
 
+ 
   DenseSubMatrix<Number>   Ke_add_add_sub(Ke_total);//matrix for superalttice equation that couples additional variables only
   //--------------------------------------------------------------
 
@@ -786,10 +811,10 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
   system.matrix->zero();
 
 
-   Stiffness* C_tensor_el;
-   RotatedCrystal* crystal_el;
+  Stiffness* C_tensor_el;
+  RotatedCrystal* crystal_el;
   
-
+  MacrostrainModel* macrostrain_model;
 
   for ( ; el != end_el ; ++el) 
     {//el
@@ -808,29 +833,46 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
       fe->reinit  (elem);
   
 
-      Ke_total.resize (n_dofs + number_of_add_var_static, n_dofs + number_of_add_var_static);
-      Fe_total.resize (n_dofs + number_of_add_var_static);
+      Ke_total.resize (n_dofs + number_of_add_var, n_dofs + number_of_add_var);
+      Fe_total.resize (n_dofs + number_of_add_var);
 
-      dof_indices_total.resize(n_dofs + number_of_add_var_static);
+      dof_indices_total.resize(n_dofs + number_of_add_var);
+
       
-      
+      ID subdomain = elem->subdomain_id();
       
 
-      const unsigned int material = (*material_of_elem_temp)[el_number];
+      
+      //
+      //  C_tensor_el = dynamic_cast<Stiffness*>( _device->get_material(subdomain) ->get_model(  get_id())   );
+
+      
+      //crystal_el = dynamic_cast<RotatedCrystal*>( _device->get_material(subdomain)->get_model(  get_id())   );
+
+
+      //   const unsigned int material = (*material_of_elem_temp)[el_number];
 
      
     
       
       
      
-      C_tensor_el = 	((*strain_parameters_temp)[ material  ]).C_tensor ;
-      crystal_el =  	((*strain_parameters_temp)[ material  ]).crystal;
+      //C_tensor_el = 	((*strain_parameters_temp)[ material  ]).C_tensor ;
+      //crystal_el =  	((*strain_parameters_temp)[ material  ]).crystal;
 
+      const Material* mat = _device->get_material(subdomain);
+
+     
+      
 	
+      macrostrain_model = dynamic_cast<MacrostrainModel*>(   mat ->get_model(get_id())     );
+
+      C_tensor_el = macrostrain_model->get_stiffness();
+      crystal_el = macrostrain_model->get_crystal();
 
 
       eps_const =  crystal_el->get_const_eps0(substrate_lat_const, eps0_var_log) 
-	+ (*eps0_of_elem_temp)[el_number] ;//+ substrate_shear;
+	+ eps0_of_elem[el_number] ;//+ substrate_shear;
 
      
     
@@ -896,9 +938,9 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 		      map<const Elem*, std::map <unsigned int , double > > :: iterator it_bc;
 		      std::map <unsigned int, double>  element_map;
 		     
-		      it_bc = boundary_cond_elem_temp->find(elem);
+		      it_bc = boundary_cond_elem.find(elem);
 		    
-		      if (it_bc != boundary_cond_elem_temp->end()) 
+		      if (it_bc != boundary_cond_elem.end()) 
 			{ //if this element has applied stress
 			 
 			 
@@ -970,14 +1012,14 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 
 		      //----- additional variables first, if any---------------------------------------------
 		    
-		      for (unsigned int i1 = 0; i1 < (*add_var_temp).size()  ; i1++)
+		      for (unsigned int i1 = 0; i1 < add_var.size()  ; i1++)
 			{	  			 
 			
 			  
-			  Ke_u_add_sub.reposition (uvar[j]*n_u_dofs, n_dofs, n_u_dofs, (*add_var_temp).size());
+			  Ke_u_add_sub.reposition (uvar[j]*n_u_dofs, n_dofs, n_u_dofs, add_var.size());
 			  
 			
-			  eps_var = crystal_el->get_var_eps0( (*add_var_temp)[i1].name );
+			  eps_var = crystal_el->get_var_eps0( add_var[i1].name );
 			  
 			  
 			  
@@ -1062,16 +1104,16 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 
 	  //----------------------------------------------------------------------------
 	  //superlattice equations
-	  for (unsigned int eq_number =  0;   eq_number <  number_of_add_var_static; eq_number++)
+	  for (unsigned int eq_number =  0;   eq_number <  number_of_add_var; eq_number++)
 	    {
 	      
 	      dof_map.dof_indices (elem, dof_indices_component, uvar[0]);
 	      const unsigned int n_u_dofs = dof_indices_component.size();
  
 	    
-	      if ( (*add_var_temp)[eq_number].lat_cons )
+	      if ( add_var[eq_number].lat_cons )
 		{
-		    unsigned int lat_index = (*add_var_temp)[eq_number].index1;
+		    unsigned int lat_index = add_var[eq_number].index1;
 		    double lat_constants[3];
 		    crystal_el-> get_lat_const(lat_constants);
 
@@ -1085,8 +1127,8 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 		   lattice_factor = 1.0;
 		 }
 		  
-		  unsigned int lat_index1 = (*add_var_temp)[eq_number].index1;
-		  unsigned int lat_index2 = (*add_var_temp)[eq_number].index2;
+		  unsigned int lat_index1 = add_var[eq_number].index1;
+		  unsigned int lat_index2 = add_var[eq_number].index2;
 		  
 		 
 		  C_kl = C_tensor_el->get_another_subtensor(lat_index1,lat_index2);
@@ -1103,7 +1145,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 		    {//loop over k
 		      dof_map.dof_indices (elem, dof_indices_component, uvar[k]);
 		      const unsigned int n_u_dofs = dof_indices_component.size(); 
-		      Ke_add_u_sub.reposition (n_dofs, uvar[k]*n_u_dofs, (*add_var_temp).size() , n_u_dofs);
+		      Ke_add_u_sub.reposition (n_dofs, uvar[k]*n_u_dofs, add_var.size() , n_u_dofs);
 
 		      vec1 = 0;
 		      for (unsigned int l = 1; l <= dim; l++)
@@ -1127,10 +1169,10 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 
 		  //-----------add_add---matrix---------------
 		 
-		  for (unsigned int i1 = 0; i1 < (*add_var_temp).size()  ; i1++)
+		  for (unsigned int i1 = 0; i1 < add_var.size()  ; i1++)
 		    {
 		      Ke_add_add_sub.reposition(n_dofs + eq_number,n_dofs + i1,1,1);
-		      eps_var = crystal_el->get_var_eps0( (*add_var_temp)[i1].name );
+		      eps_var = crystal_el->get_var_eps0( add_var[i1].name );
 		    
 		      Ke_add_add_sub(0,0) += JxW[qp]  * doubleContraction(eps_var,C_kl) *  lattice_factor;
 		   
@@ -1148,10 +1190,10 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 
 	  
 
-	  if  (number_of_add_var_static != 0)
+	  if  (number_of_add_var != 0)
 	    {
 	     
-	      if ( el_number >=  number_of_add_var_static )
+	      if ( el_number >=  number_of_add_var )
 		{
 		  dof_map.dof_indices (elem, dof_indices_component, uvar[0]);
 		  const unsigned int n_u_dofs = dof_indices_component.size(); 
@@ -1178,7 +1220,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 	 dof_indices_total[i] = dof_indices[i];
 	 
        
-       for (unsigned i =0 ; i <number_of_add_var_static ; i++)
+       for (unsigned i =0 ; i <number_of_add_var ; i++)
 	 dof_indices_total[i+n_dofs] =  add_dofs_vector[i];
 	
        
@@ -1253,9 +1295,9 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 
 
 
-       substr_nodes_it = substrate_nodes_temp->find( elem->node(n) );
+       substr_nodes_it = substrate_nodes.find( elem->node(n) );
 
-       if (substr_nodes_it != substrate_nodes_temp->end())
+       if (substr_nodes_it != substrate_nodes.end())
 	 return(true);
        else
 	 return(false);
@@ -1268,7 +1310,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 
    else
      {
-       if (elem->node(n) == fixed_node1_temp ) return(true);
+       if (elem->node(n) == fixed_node1 ) return(true);
        //there is always one node that is fixed. 
        // std :: cerr << elem->node(n) << "  " << fixed_node_number << "\n";
        //return(elem->node(n) == fixed_node_number);
@@ -1291,6 +1333,8 @@ void Macrostrain::refer_objects()
   //C_tensor_temp = &C_tensor;
 
   //crystal_temp =  &crystal ;
+
+  /*
 
   strain_parameters_temp = &strain_parameters;
 
@@ -1315,6 +1359,11 @@ void Macrostrain::refer_objects()
   
   my_system_temp = my_system;
 
+
+  */
+
+  static_this = this; 
+
   //------------------------------------------------------
 }
 //-----------------------------------------------------------------//
@@ -1324,7 +1373,7 @@ Mesh* Macrostrain::get_mesh()
 }
 
 //-----------------------------------------------------------------//
-void Macrostrain::solve()
+void Macrostrain::do_solve()
 
 {
   
@@ -1625,43 +1674,50 @@ void Macrostrain::solve()
     
   std::cout << "SHAPE IS DONE\n";
 
-  std::cout << "OUTPUT...\n";
+ 
 
   update_u_node();
-   //------write-----------------------------------------------
-  if (dim > 1) mesh.write("mesh0.ucd");
-	  
-  std::ostringstream os;
-  os << "displacement_field.dat" ;
-  if (output_type=="GMV") GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
-  if (output_type=="tecplot")   TecplotIO_cell(mesh,false).write_equation_systems (os.str(), *equation_systems);
-
-  std::ostringstream os_mesh;
-  os_mesh << "mesh"<< ".ucd";
-  if (dim > 1) mesh.write(os_mesh.str());
-      
-  std::ostringstream os1;
-  os1 <<"strain.dat" ;
-  output_strain(os1.str() );
-
-	  
-  std::ostringstream os2;
-  os2 <<"add_var";
-
-  output_add_strain_variables(os2.str());
-
-  if (calculate_atom_displacements)
+ 
+  //------write-------------------------------------------------------------------------------------//
+  //--  output of the final result
+  if (intermediate_output)
     {
-      std::ostringstream disp_file;
-      disp_file << atom_displacements_filename <<".out";
-      write_atom_displacements(disp_file.str());
-    }
-  
+      if (dim > 1) mesh.write("mesh0.ucd");
 
+	  
+      std::ostringstream os;
+      os << "displacement_field.dat" ;
+
+      if (output_type=="GMV") GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
+      if (output_type=="tecplot")   TecplotIO_cell(mesh,false).write_equation_systems (os.str(), *equation_systems);
+
+      std::ostringstream os_mesh;
+      os_mesh << "mesh"<< ".ucd";
+      if (dim > 1) mesh.write(os_mesh.str());
+      
+      std::ostringstream os1;
+      os1 <<"strain.dat" ;
+      output_strain(os1.str() );
+      
+      
+      std::ostringstream os2;
+      os2 <<"add_var";
+      
+      output_add_strain_variables(os2.str());
+      
+      if (calculate_atom_displacements)
+	{
+	  std::ostringstream disp_file;
+	  disp_file << atom_displacements_filename <<".out";
+	  write_atom_displacements(disp_file.str());
+	}
+    }
+
+  //--------------------------------------------------------------------------------------------------//
   calculate_result_elem_strain_map();
 
 
-  //------------------------------------------------------------------------------------------//
+  //--------------------------------------------------------------------------------------------------//
   
  }
 
@@ -2110,17 +2166,17 @@ The constrants are the following:
    {//substrate system is not treated
      if (dim > 1)
        {//1D system does not need a treatment 
-	 if (fixed_node1_temp == fixed_node2_temp) 
+	 if (fixed_node1 == fixed_node2) 
 	   {
 	     
-	     cerr << "Error: fixed_node1_temp == fixed_node2_temp  " << fixed_node1_temp <<"  "
-		  << fixed_node2_temp <<"\n";  
+	     cerr << "Error: fixed_node1 == fixed_node2  " << fixed_node1 <<"  "
+		  << fixed_node2 <<"\n";  
 	     cerr << fixed_node1 <<"  "<< fixed_node2 <<"\n";   
 	     exit(1);
 	   }
 
-	 const Node& node1= mesh.node(fixed_node1_temp);
-	 const Node& node2= mesh.node(fixed_node2_temp);
+	 const Node& node1= mesh.node(fixed_node1);
+	 const Node& node2= mesh.node(fixed_node2);
 
         
 
@@ -2233,7 +2289,7 @@ The constrants are the following:
 		 //in a 3D case we need additional constrain
 		 if (n_per == 0)
 		   {
-		     if ((fixed_node1_temp == fixed_node3_temp)|| (fixed_node2_temp == fixed_node3_temp)) 
+		     if ((fixed_node1 == fixed_node3)|| (fixed_node2 == fixed_node3)) 
 		       {
 		     
 			 cerr << "Error: fixed_node1_temp == fixed_node3_temp  or \n";
@@ -2242,7 +2298,7 @@ The constrants are the following:
 			 exit(1);
 		       }
 		 
-		     const Node& node3= mesh.node(fixed_node3_temp);
+		     const Node& node3= mesh.node(fixed_node3);
 		     vector<double> nd1_to_nd3(3);
 		     for (int i = 0; i < 3; i++) nd1_to_nd3[i] = node3(i) - node1(i);
 	     
@@ -2540,7 +2596,7 @@ void Macrostrain::move_nodes()
   Tensor1 r0(0); //fixed node coordinates
   Tensor1 r ;
 
-  const Node& node_fix = mesh.node(fixed_node1_temp);  
+  const Node& node_fix = mesh.node(fixed_node1);  
 
   for (unsigned int i = 0; i < dim; i++) r0(i + 1) = node_fix(i);
 
@@ -3786,4 +3842,13 @@ void Macrostrain::output_materials(std :: string filename)
 Macrostrain::~Macrostrain()
 {
   equation_systems->delete_system(system_name);
+}
+
+
+//-------------------------------------------------------------------------------------------//
+
+
+Macrostrain::Macrostrain(void )
+{
+
 }

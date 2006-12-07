@@ -15,6 +15,11 @@
 #include <sstream>
 #include <iostream>
 
+#include "tensor.h"
+#include "xtensor.h"
+
+
+
 class Material;
 
 
@@ -105,6 +110,8 @@ class PhysicalModelInterface
         const PhysicalModelInterface* comp_B, double xa);
 
 
+    
+
   protected:
 
     //! Empty constructor
@@ -185,6 +192,29 @@ class PhysicalModelInterface
     double alloy(double val_a, double val_b, double xa, double bowing = 0.0);
 
 
+
+    //! calculate an alloy parameter in VCA approximation
+    /*!
+     * In a ternary compound semiconductor
+     * \f$Q = A_xB_{1-x}C\f$ the value of a
+     * material parameter can (in the virtual crystal approximation) be
+     * calculated as
+     * \f[ \alpha_Q = x\alpha_{AC} + (1-x)\alpha_{BC} - bx(1-x)\f]
+     * where \em b is called bowing parameter and describes deviation
+     * from the nonlinear behaviour.
+     *
+     * \param result the  value for material \f$  A_xB_{1-x}C\f$
+     * \param val_a the value for material \f$AC\f$
+     * \param val_b the value for material \f$BC\f$
+     * \param xa the molar fraction of \f$AC\f$
+     * \param bowing the bowing parameter
+     */
+
+    void  alloy( Tensor4DSym& result,
+		 const Tensor4DSym& val_a, const Tensor4DSym& val_b, double xa, const Tensor4DSym& bowing = Tensor4DSym(0) );
+
+
+
   private:
 
     typedef std::map<const std::string, ID>::iterator model_id_iterator;
@@ -252,6 +282,11 @@ PhysicalModelInterface::alloy(double val_a, double val_b,
   return val_b + (val_a - val_b) * xa - bowing * xa * (1 - xa);
 }
 
+inline void PhysicalModelInterface::alloy( Tensor4DSym& result,
+					   const Tensor4DSym& val_a, const Tensor4DSym& val_b, double xa, const Tensor4DSym& bowing)
+{
+  result =  (1-xa)*val_b + xa*val_a + (-xa * (1 - xa)) * bowing ;
+}
 
 inline
 ID

@@ -1,5 +1,6 @@
 #include "WzStiffness.h"
 
+
 //---------------------------------------------------//
 
 WzStiffness::WzStiffness() :Stiffness()
@@ -33,7 +34,25 @@ void WzStiffness::set_moduli(double c11, double c12, double c13, double c33, dou
 }
 
 //----------------------------------------------//
-void WzStiffness::read_database (const Dummy &db)
+void WzStiffness::read_database ( )
 {
 
 }
+
+
+//----------------------------------------------//
+void WzStiffness::do_init(void)
+{
+   ModelOptions & options = get_options ();
+   double c11 = options.get_option ("C11", 0);
+   double c12 = options.get_option ("C12", 0);
+   double c13 = options.get_option ("C13", 0);
+   double c33 = options.get_option ("C33", 0);
+   double c44 = options.get_option ("C44", 0);
+
+   set_moduli(c11,  c12,  c13,  c33,  c44);
+
+}
+
+
+

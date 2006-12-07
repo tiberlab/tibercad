@@ -5,7 +5,13 @@
 class WzRotatedCrystal : public RotatedCrystal
 {
  public:
-
+  //!Constructor
+  /*!
+    sets growth directions
+    x [ 1, 0, -1, 0]
+    y [-1, 2, -1, 0]
+    z [ 0, 0,  0, 1]
+   */
   WzRotatedCrystal();
 
   WzRotatedCrystal(const double a, const double c);
@@ -20,7 +26,24 @@ class WzRotatedCrystal : public RotatedCrystal
   void set_xyz_mil_direction(std::string dir, int h, int k, int i, int l );
 
 
-  void read_database (Dummy &db);
+  static WzRotatedCrystal* create();
+
+ protected:
+
+  virtual void read_database ( );
+
+  virtual void do_init(void) ;
+
+
+  virtual void copy_from (const PhysicalModelInterface *rhs) ;
+
+
+  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) ;
+
+
+  virtual PhysicalModelInterface* create_new(void) const ;
+
+
 
  private:
 
@@ -30,5 +53,11 @@ class WzRotatedCrystal : public RotatedCrystal
 
 };
 
+
+
+inline WzRotatedCrystal* WzRotatedCrystal::create()
+{
+  return new WzRotatedCrystal();
+}
 
 #endif

@@ -1,7 +1,7 @@
 #include "Piezoelectricity.h"
-
  
-Piezoelectricity::Piezoelectricity() : PhysicalProperties("Piezoelectricity")
+ 
+Piezoelectricity::Piezoelectricity() : PhysicalModelInterface( )
 {
 
 

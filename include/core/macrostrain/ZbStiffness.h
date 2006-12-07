@@ -20,9 +20,31 @@ class ZbStiffness : public Stiffness
   //!method that sets Young moduli
   void set_moduli(double c11, double c12, double c44);
 
+
+  static ZbStiffness* create(void);
+
+ protected:
+
   //reads database
-  void read_database (const Dummy &db);
+  void read_database ( );
+
+  virtual PhysicalModelInterface* create_new(void) const;
+
+  virtual void do_init (void);
   
-}; 
+  
+};
+
+
+inline  PhysicalModelInterface* ZbStiffness::create_new(void) const
+{
+  return ( new ZbStiffness() ) ;
+}
+
+
+inline ZbStiffness* ZbStiffness::create()
+{
+   return new ZbStiffness() ;
+}
 
 #endif

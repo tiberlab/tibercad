@@ -1,9 +1,10 @@
 #include "RotatedCrystal.h"
 
-RotatedCrystal::RotatedCrystal() : PhysicalProperties("Rotated Crystal")
+RotatedCrystal::RotatedCrystal() : PhysicalModelInterface()
 {
   
 }
+
 
 //===============================================================//
 

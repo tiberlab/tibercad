@@ -1,5 +1,5 @@
 #include "ZbStiffness.h"
-
+  
 //---------------------------------------------------//
 
 ZbStiffness::ZbStiffness() :Stiffness()
@@ -35,7 +35,20 @@ void ZbStiffness::set_moduli(double c11, double c12, double c44)
 }
 
 //----------------------------------------------//
-void ZbStiffness::read_database (const Dummy &db)
+void ZbStiffness::read_database ( )
 {
  
+}
+
+//-----------------------------------------------//
+void ZbStiffness::do_init ( )
+{
+  ModelOptions & options = get_options ();
+  
+  double c12 = options.get_option ("C12", 0); 
+  double c11 = options.get_option ("C11", 0);
+  double c44 = options.get_option ("C11", 0);
+
+  set_moduli( c11, c12,  c44);
+
 }

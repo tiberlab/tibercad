@@ -2,7 +2,10 @@
 
 ZbRotatedCrystal::ZbRotatedCrystal() : RotatedCrystal()
 {
-
+  a_lat = 0;
+  set_xyz_mil_direction("x", 1, 0, 0);
+  set_xyz_mil_direction("y", 0, 1, 0);
+  set_xyz_mil_direction("z", 0, 0, 1);
 }
 
 //===============================================================//
@@ -104,8 +107,78 @@ void ZbRotatedCrystal::calculate_rot_matrix_miller(std::vector<int> vec_x_mil, s
 
 
 //====================================================//
-void ZbRotatedCrystal::read_database (Dummy &db)
+void ZbRotatedCrystal::read_database ( )
 {
 
    
 }
+
+//=====================================================//
+
+void ZbRotatedCrystal::do_init(void)
+{
+
+   ModelOptions & options = get_options ();
+   a_lat = options.get_option("lattice constant", a_lat);
+   assert(a_lat != 0);
+
+   options.get_option("x-growth-direction", x_miller);
+   options.get_option("y-growth-direction", y_miller);
+   options.get_option("z-growth-direction", z_miller); 
+
+   calculate_lat_consts();
+
+   calculate_rot_matrix_miller(x_miller, y_miller);
+
+}
+
+//-----------------------------------------------------//
+
+void  ZbRotatedCrystal::copy_from (const PhysicalModelInterface *rhs)
+{
+
+  const ZbRotatedCrystal* temp = dynamic_cast<const ZbRotatedCrystal*> (rhs);
+  a_lat = temp->a_lat;
+
+  x_miller = temp->x_miller;
+  y_miller = temp->y_miller;
+  z_miller = temp->z_miller;
+
+
+  calculate_lat_consts();
+
+  calculate_rot_matrix_miller(x_miller, y_miller);
+  
+}
+
+//-----------------------------------------------------//
+
+void  ZbRotatedCrystal::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) 
+{
+  
+  const ZbRotatedCrystal* mod_A = dynamic_cast<const ZbRotatedCrystal*> (comp_A);
+  const ZbRotatedCrystal* mod_B = dynamic_cast<const ZbRotatedCrystal*> (comp_B);
+
+  a_lat = alloy(mod_A->a_lat, mod_B->a_lat, xa);
+
+
+  x_miller = mod_A->x_miller;
+  y_miller = mod_A->y_miller;
+  z_miller = mod_A->z_miller;
+
+
+  calculate_lat_consts();
+
+  calculate_rot_matrix_miller(x_miller, y_miller);
+
+}
+
+//==================================================================//
+PhysicalModelInterface* ZbRotatedCrystal::create_new(void) const
+{
+  return ( new  ZbRotatedCrystal() );
+
+}
+
+//==================================================================//
+

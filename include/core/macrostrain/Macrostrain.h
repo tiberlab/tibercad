@@ -67,14 +67,15 @@
 //------------------------------------------------------------------------------
 
 #include "PhysicalProperties.h"
-
-
+#include "SimulationInterface.h"
+#include "Device.h"
+#include "MacrostrainModel.h"
 
 
 
 
 //! A class to calculate strain and shape
-class Macrostrain
+class Macrostrain : public SimulationInterface
 /*!
   Class uses the macroscopic strain theory
 */
@@ -130,7 +131,7 @@ class Macrostrain
     
  
 
-    unsigned int           number_of_regions;
+  
 
     //-------------------------------------------------------------------------
     //atomic displacements
@@ -169,17 +170,9 @@ class Macrostrain
     RotatedCrystal* crystal;
   };
  
-  //---------------------------------------------------------------------
   
-  //! Constructor
-  /*!
-    \param opt options
-    \param equation_systems  reference to EquationSystems  object
-    \param problem_name name of the problem that is given to a new system
-  */
-  Macrostrain(const options& opt,  EquationSystems& equation_systems,
-      const std::string& problem_name); //gets mesh 
-  
+  //!Constructor
+   Macrostrain(void );
 
   //----------------------------------------------------------------------
 
@@ -227,15 +220,7 @@ class Macrostrain
    */
   static void assemble_strain_matrix(EquationSystems& es,
 				     const std::string& system_name);
-  //---------------------------------------------------------------------
-
-  /*
-    method that solves strain problem 
-  */
-  void solve();
-  //---------------------------------------------------------------------
-
-  
+  //--------------------------------------------------------------------
   
 
   //!get in crystal strain system
@@ -287,7 +272,7 @@ class Macrostrain
   
 
 
-  ~Macrostrain();
+  virtual ~Macrostrain();
 
 
    
@@ -299,11 +284,13 @@ class Macrostrain
   //!pointer to the equation systems 
   EquationSystems*   equation_systems; 
 
+  //!pointer to the device object
+  static  Device* _device;
+
   //!pointer to the  system used in the simulation 
   LinearImplicitSystem* my_system;
   
-  //!static pointer to the  system used in the simulation 
-  static LinearImplicitSystem* my_system_temp;
+ 
 
   //!name of my system
   std::string system_name;
@@ -322,33 +309,25 @@ class Macrostrain
  
   //! calculate the result_strain map
   void calculate_result_elem_strain_map();
+
+  //! options of the solver
+  options opt;
   
   //---------------------------------------------------------------------
-  /*
-    STATIC Pointers to the objects that are necesary to assemble strain problem matrix
+ 
+  //! static pointer to this object
+  static Macrostrain* static_this; 
 
-  */
-  //  static std:: vector<stiffness>*        C_tensor_temp;
-  //  static std:: vector<rotated_crystal>*  crystal_temp;
 
-  //! static pointer to parameters
-  static std:: map<unsigned int, strain_param > *    strain_parameters_temp;
 
-  static std:: vector <unsigned int>*             material_of_elem_temp;
-  static std:: vector <Tensor2Sym>*      eps0_of_elem_temp;
-
-  static std:: vector<add_variable>*     add_var_temp; 
-   
-  static std::vector<unsigned int>*      zero_set_dofs_temp;
+  //! Substrate material
+  RotatedCrystal* substrate;
 
   //---------------------------------------------------------------------------------------------------
   /*
     DYNAMICAL objects that are necesary to assemble strain problemmatrix
   */
-  //  std::vector<stiffness>        C_tensor; //Elasticity tensor of a material     
-  //std::vector<rotated_crystal>  crystal;  //crystalographic information of a material
  
-
   //!map between material number and strain parameters 
   std:: map<unsigned int, Macrostrain::strain_param>    strain_parameters;
 
@@ -377,15 +356,15 @@ class Macrostrain
   std :: vector< std :: vector <const Node*> >  nodes_periodic; //dim node list's: each contains list of nodes that periodic b.c
                                                                 //must be applied to
 
-  static  std::string uname_vec[3];  // "ux", "uy", uz"
+  std::string uname_vec[3];  // "ux", "uy", uz"
   
-  static bool belongs_to_substrate(unsigned int n, const Elem* elem ); //if vertex n of elem belongs to substrate
+  bool belongs_to_substrate(unsigned int n, const Elem* elem ); //if vertex n of elem belongs to substrate
  
-  static inline int delta (int i, int j); //Kronecker detla
+  inline int delta (int i, int j); //Kronecker detla
 
   unsigned int dim; //problem dimension
 
-  static bool grown_on_substrate; //if there is a substrate
+  bool grown_on_substrate; //if there is a substrate
 
 
 
@@ -418,8 +397,10 @@ class Macrostrain
   bool periodicity[3]; 
 
 
-  static unsigned int substr_mat; //substrate material number
+   unsigned int substr_mat; //substrate material number
   
+
+
 
   
 
@@ -449,7 +430,7 @@ class Macrostrain
   //Additional variables----------------------------------------------------
   unsigned int             number_of_add_var;
   
-  static  unsigned int             number_of_add_var_static;
+ 
 
   std::vector<add_variable>  add_var;
 
@@ -457,10 +438,10 @@ class Macrostrain
 
   void set_up_additional_dofs();
 
-  static std::vector<unsigned int> add_dofs_vector;
+  std::vector<unsigned int> add_dofs_vector;
 
   
-  static Tensor2Sym  eps0_var_log;  
+   Tensor2Sym  eps0_var_log;  
   /*
     = 0, this is a fixed entry 
     = 1, this is variable entry
@@ -472,9 +453,7 @@ class Macrostrain
   unsigned int fixed_node3;
   
 
-  static unsigned int fixed_node1_temp;
-  static unsigned int fixed_node2_temp;
-  static unsigned int fixed_node3_temp;
+ 
 
   Point fixed_point1 ; //x,y,z
   Point fixed_point2 ;
@@ -484,9 +463,9 @@ class Macrostrain
   //!number of boundary condition that defines substrate
   unsigned int substrate_bc_number;
 
-  static double substrate_lat_const[3];
+  double substrate_lat_const[3];
 
-  static Tensor2Sym substrate_shear;
+  Tensor2Sym substrate_shear;
 
   //!updates substrate_lattice and substrate_shear
   void update_substrate();
@@ -547,7 +526,7 @@ class Macrostrain
   std::map <const Elem*, std::map <unsigned int, double>  >   boundary_cond_elem; 
   
   //!static pointer to boundary_cond_elem
-  static std::map <const Elem*, std::map <unsigned int, double>  >* boundary_cond_elem_temp;
+  //static std::map <const Elem*, std::map <unsigned int, double>  >* boundary_cond_elem_temp;
  
   //!map between stress number and stress values
   std::map <unsigned int, double>   stress_values; 
@@ -556,7 +535,7 @@ class Macrostrain
   std::set <unsigned int> substrate_nodes; 
 
   //!static pointer to substate_nodes
-  static std::set <unsigned int>* substrate_nodes_temp; 
+  //static std::set <unsigned int>* substrate_nodes_temp; 
 
 
   //! create map boundary_cond_elem from boundary_cond_nodes;
@@ -571,6 +550,21 @@ class Macrostrain
   //!
   bool element_on_boundary(const Elem* element);
  
+
+  //! non-static method that actually does matrix assembling 
+  void do_assemble(EquationSystems& es,  const std::string& system_name);
+
+ protected:
+
+
+
+  virtual void do_init(void);
+
+  virtual void do_solve(void);
+  
+  virtual void parse_options(void);
+
+
 
 };
 

@@ -4,10 +4,12 @@
 #include "tensor.h"
 #include "xtensor.h"
 #include <cmath>
-#include "PhysicalProperties.h"
+#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
+
 //! A class that containes Young modules for the elasticity problem
 
-class Stiffness : public PhysicalProperties
+class Stiffness : public PhysicalModelInterface
 {
  public:
 
@@ -28,22 +30,41 @@ class Stiffness : public PhysicalProperties
   //! sets stiffness tensor in crystal system   
   void set_C_tensor_crystal(const Tensor4DSym&     C);
 
-
-  virtual void read_database (const Dummy &db) {};
-
-
+  //! creates new object
+  static Stiffness* create(const std::string& name,  const ModelOptions& options);
+ 
 
  private:
 
-
+ 
  protected:
 
   //! stiffness tensor in crystal system     (rank 4, double symmetric, 21 independent components)
   Tensor4DSym     C_cr    ;    
 
 
+  virtual void read_database ( ) {};
+
+
+  virtual void do_init(void) = 0;
+
+
+  virtual void copy_from (const PhysicalModelInterface *rhs);
+
+
+  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
+
+
+  virtual PhysicalModelInterface* create_new(void) const = 0;
+
+
 };
 
+//------------------------------------------------------------------------------------//
+inline Stiffness* Stiffness::create( const std::string& name,  const ModelOptions& options )
+{
+  return dynamic_cast<Stiffness*>(PhysicalModelInterface::create("stiffness_" + name, options));
+}
 
 
 //------------------------------------------------------------------------------------//

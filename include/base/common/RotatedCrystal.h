@@ -4,9 +4,11 @@
 #include "tensor.h"
 #include <cmath>
 #include <vector>
-#include "PhysicalProperties.h"
 
-class RotatedCrystal : public PhysicalProperties
+#include "PhysicalModelInterface.h"
+#include "PhysicalModel.h"
+
+class RotatedCrystal : public PhysicalModelInterface
 {
 
  public:
@@ -72,10 +74,11 @@ class RotatedCrystal : public PhysicalProperties
   Tensor2Sym get_var_eps0(std::string  var_name);
 
 
-  //!read lattice constant from the database
-  virtual void read_database (const Dummy &db) {};
+ 
 
-  
+  //! Create new  RotatedCrystal object
+  static RotatedCrystal* create(const std::string& name,  const ModelOptions& options);
+
 
  protected:
 
@@ -96,9 +99,38 @@ class RotatedCrystal : public PhysicalProperties
   //! lattice constants along the 3 main growth directions
   double  lat_const_calc[3];
 
+
+  //!read lattice constant from the database
+  virtual void read_database ( ) =0;
+
+
+ 
+  virtual void do_init(void) = 0;
+
+
+  virtual void copy_from (const PhysicalModelInterface *rhs) = 0;
+
+
+  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
+
+
+  virtual PhysicalModelInterface* create_new(void) const = 0;
+ 
+
+
  private:
 
 
+ 
+
+
+
 };
+
+
+inline RotatedCrystal* create(const std::string& name,  const ModelOptions& options)
+{
+  return dynamic_cast<RotatedCrystal*>(PhysicalModelInterface::create("cryst_" + name, options));
+}
 
 #endif
