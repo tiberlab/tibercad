@@ -12,8 +12,11 @@ class RotatedCrystal : public PhysicalModelInterface
 {
 
  public:
-  RotatedCrystal();
 
+   //! Create a RotatedCrystal object
+   static RotatedCrystal* create(const std::string& name,
+       const ModelOptions& options);
+   
   //!Rotation matrix  \f$ {\bf x}^{calc} = R {\bf x}^{cryst} \f$  \f$ 
 
 
@@ -76,11 +79,11 @@ class RotatedCrystal : public PhysicalModelInterface
 
  
 
-  //! Create new  RotatedCrystal object
-  static RotatedCrystal* create(const std::string& name,  const ModelOptions& options);
-
 
  protected:
+
+  //! Constructor
+  RotatedCrystal();
 
   
 
@@ -127,10 +130,17 @@ class RotatedCrystal : public PhysicalModelInterface
 
 };
 
+//
+// inline members
+//
 
-inline RotatedCrystal* create(const std::string& name,  const ModelOptions& options)
+inline
+RotatedCrystal*
+RotatedCrystal::create(const std::string& name, const ModelOptions& options)
 {
-  return dynamic_cast<RotatedCrystal*>(PhysicalModelInterface::create("cryst_" + name, options));
+  return dynamic_cast<RotatedCrystal*>(
+      PhysicalModelInterface::create("cryst_" + name, options));
 }
+
 
 #endif

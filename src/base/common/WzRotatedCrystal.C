@@ -160,6 +160,9 @@ void WzRotatedCrystal::set_xyz_mil_direction(std::string dir, int h, int k, int 
 void WzRotatedCrystal::read_database ( )
 {
 
+  // just to have something for now
+  a_lat = 0.3189;
+  c_lat = 0.5185;
 
 }
 

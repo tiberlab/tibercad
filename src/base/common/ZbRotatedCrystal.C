@@ -109,7 +109,8 @@ void ZbRotatedCrystal::calculate_rot_matrix_miller(std::vector<int> vec_x_mil, s
 //====================================================//
 void ZbRotatedCrystal::read_database ( )
 {
-
+  // to not generate errors when testing other things
+  a_lat = 0.543095;
    
 }
 
@@ -119,8 +120,8 @@ void ZbRotatedCrystal::do_init(void)
 {
 
    ModelOptions & options = get_options ();
-   a_lat = options.get_option("lattice constant", a_lat);
-   assert(a_lat != 0);
+   a_lat = options.get_option("a", a_lat);
+   assert(a_lat > 0);
 
    options.get_option("x-growth-direction", x_miller);
    options.get_option("y-growth-direction", y_miller);

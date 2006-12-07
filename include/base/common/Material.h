@@ -13,6 +13,7 @@
 
 // forward declarations
 class Database;
+class RotatedCrystal;
 
 //! Contains all needed data for a material
 /*!
@@ -79,6 +80,9 @@ class Material
     //! Get the crystal structure
     const std::string& get_structure(void) const;
 
+    //! Get a reference to the RotatedCrystal
+    const RotatedCrystal& get_rotated_crystal(void) const;
+
     //! Get a reference to the database
     const Database& get_database(void) const;
 
@@ -123,19 +127,22 @@ class Material
 
   private:
 
-    //! the material name
+    //! The material name
     /*!
      * The name of the material as GaAs, Si etc.
      */
     const std::string _name;
 
-    //! the crystal structure
+    //! The crystal structure
     /*!
      * The crystal structure as wz, zb etc
      */
     std::string _structure;
 
-    //! the map containing all \c PhysicalModelInterface objects
+    //! The RotatedCrystal object which
+    RotatedCrystal* _rotated_crystal;
+
+    //! The map containing all \c PhysicalModelInterface objects
     /*!
      * This map containes the physical model of any simulation type
      * requested.
@@ -190,6 +197,15 @@ Material::get_structure(void) const
 {
   return  _structure;
 }
+
+
+inline
+const RotatedCrystal&
+Material::get_rotated_crystal(void) const
+{
+  return *_rotated_crystal;
+}
+
 
 inline
 void
