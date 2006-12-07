@@ -48,7 +48,7 @@ class RotatedCrystal : public PhysicalModelInterface
   /*!
     \param lat_cont  at the exit contains lattice constants
    */
-  void get_lat_const(double lat_cont[3]); 
+  void get_lat_const(double lat_cont[3]) const; 
 
 
   //! calculates lattice matching deformation tensor in calculation system
@@ -57,7 +57,7 @@ class RotatedCrystal : public PhysicalModelInterface
     \f$ \varepsilon_{ij}^{0} = \delta_{ij} \frac {a^{substrate}_{i} - a_{i}} {a_i}  \f$
     \param lat_cont_substrate substrate lattice constants (conventional cell)
    */
-  Tensor2Sym get_eps0(double lat_cont_substrate[3]);
+  Tensor2Sym get_eps0(double lat_cont_substrate[3]) const;
 
 
   //! calculates constant part of the lattice matching tensor \f$ \varepsilon^{0}_{ij} \f$
@@ -67,14 +67,14 @@ class RotatedCrystal : public PhysicalModelInterface
     \param eps0_var_log this tensor defines which lattice constants are fixed.
 
   */
-  Tensor2Sym get_const_eps0(double lat_cont_substrate[3], Tensor2Sym& eps0_var_log);
+  Tensor2Sym get_const_eps0(double lat_cont_substrate[3], Tensor2Sym& eps0_var_log) const;
 
   //! calculates variable part of the lattice matching tensor
   /*!
     \param name of the additional variable
   */
 
-  Tensor2Sym get_var_eps0(std::string  var_name);
+  Tensor2Sym get_var_eps0(std::string  var_name) const;
 
 
  

@@ -812,7 +812,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
 
   Stiffness* C_tensor_el;
-  RotatedCrystal* crystal_el;
+ 
   
   MacrostrainModel* macrostrain_model;
 
@@ -862,13 +862,13 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
       const Material* mat = _device->get_material(subdomain);
 
-     
+      const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
       
 	
       macrostrain_model = dynamic_cast<MacrostrainModel*>(   mat ->get_model(get_id())     );
 
       C_tensor_el = macrostrain_model->get_stiffness();
-      crystal_el = macrostrain_model->get_crystal();
+     
 
 
       eps_const =  crystal_el->get_const_eps0(substrate_lat_const, eps0_var_log) 

@@ -24,9 +24,7 @@ class MacrostrainModel: public MacrostrainModelInterface
   //! define an object that stores Young moduli
   void add_stiffness(Stiffness*  st);
 
-  //! define the crystal object
-  void add_crystal(RotatedCrystal*  st);
-
+  
   //! define the piezoelectricity
   void add_piezo(Piezoelectricity* pz);
 
@@ -37,7 +35,7 @@ class MacrostrainModel: public MacrostrainModelInterface
   inline Piezoelectricity* get_piezo(void);
 
 
-  inline  RotatedCrystal* get_crystal(void);
+ 
 
 
  private:
@@ -48,7 +46,7 @@ class MacrostrainModel: public MacrostrainModelInterface
   Piezoelectricity* piezo;
 
 
-  RotatedCrystal*  crystal;
+ 
   
   //!copy constructor should not be used
   MacrostrainModel (const MacrostrainModel &  t) {};
@@ -93,10 +91,7 @@ inline Piezoelectricity* MacrostrainModel::get_piezo(void)
   return( piezo );
 }
 
-inline RotatedCrystal* MacrostrainModel::get_crystal(void)
-{
-  return( crystal );
-}
+
 
 
 #endif 

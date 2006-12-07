@@ -32,7 +32,7 @@ void RotatedCrystal::calculate_rot_matrix(const Tensor1& vec_x, const Tensor1& v
 
 //===================================================================//
 
-Tensor2Sym RotatedCrystal::get_const_eps0(double lat_cont_substrate[3], Tensor2Sym& eps0_var_log)
+Tensor2Sym RotatedCrystal::get_const_eps0(double lat_cont_substrate[3], Tensor2Sym& eps0_var_log) const
 {
   Tensor2Sym const_eps0;
   const_eps0 = Tensor2Sym(0);
@@ -59,7 +59,7 @@ Tensor2Sym RotatedCrystal::get_const_eps0(double lat_cont_substrate[3], Tensor2S
 
 //========================================================================//
 
-Tensor2Sym RotatedCrystal::get_var_eps0( std::string  var_name)
+Tensor2Sym RotatedCrystal::get_var_eps0( std::string  var_name) const
 {
   Tensor2Sym eps0;
   eps0 = Tensor2Sym(0);
@@ -102,7 +102,7 @@ Tensor2Sym RotatedCrystal::get_var_eps0( std::string  var_name)
  
 //=======================================================================//
 
-void RotatedCrystal::get_lat_const(double lat_const[3])
+void RotatedCrystal::get_lat_const(double lat_const[3]) const
 {
   for (int i = 0; i <=2; i++) lat_const[i] = lat_const_calc[i];
 }
@@ -111,7 +111,7 @@ void RotatedCrystal::get_lat_const(double lat_const[3])
 //=======================================================================//
 
 
-Tensor2Sym RotatedCrystal::get_eps0(double lat_cont_substrate[3])
+Tensor2Sym RotatedCrystal::get_eps0(double lat_cont_substrate[3]) const
 {
   Tensor2Sym eps0;
   eps0 = Tensor2Sym(0);
