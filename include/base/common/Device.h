@@ -13,6 +13,10 @@ class Mesh;
 class EquationSystems;
 
 //! Higher-level definition of the  structure to  be  simulated.
+/*!
+ * This class contains all Material instances and the list of boundary
+ * nodes as read from the mesh file
+ */
 class Device
 {
 
@@ -36,6 +40,12 @@ class Device
 
     //! Get a reference to the equation systems object
     EquationSystems& get_equation_systems(void) const;
+
+    //! Initialize this device
+    /*!
+     * This method will call \c init() of all Materials in this device
+     */
+    void init(void);
 
   
     //! Set a material for a geometrical region

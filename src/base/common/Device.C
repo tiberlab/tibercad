@@ -28,6 +28,15 @@ Device::~Device()
   delete _eq_system;
 }
 
+void
+Device::init(void)
+{
+  MaterialMap::iterator it(_material_map.begin());
+  const MaterialMap::iterator end(_material_map.end());
+  for ( ; it != end; ++it)
+    (it->second)->init();
+}
+
 
 void
 Device::set_material(Material* material, ID region_id)

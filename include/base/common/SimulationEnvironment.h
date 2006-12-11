@@ -111,6 +111,14 @@ class SimulationEnvironment
      * \return a pointer to the boundary if found, \c NULL otherwise
      */
     Boundary* get_boundary(const std::string& name) const;
+    
+    //! Get the boundary for a given Node
+    /*!
+     * \param node a node 
+     * \return a pointer to the boundary if found, \c NULL otherwise
+     */
+    Boundary* get_boundary(const Node* node) const;
+
 
     //! Get the ID of the boundary with user defined name \c name
     /*!
@@ -259,9 +267,22 @@ inline
 Boundary*
 SimulationEnvironment::get_boundary(const ElementSide& side) const
 {
-  std::map<ElementSide, ID>::const_iterator it(_element_side_map.find(side));
+  ElemSideMap::const_iterator it(_element_side_map.find(side));
 
   if (it != _element_side_map.end())
+    return get_boundary(it->second);
+  else
+    return NULL;
+}
+
+
+inline
+Boundary*
+SimulationEnvironment::get_boundary(const Node* node) const
+{
+  NodeMap::const_iterator it(_node_map.find(node));
+
+  if (it != _node_map.end())
     return get_boundary(it->second);
   else
     return NULL;

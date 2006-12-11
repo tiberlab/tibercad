@@ -157,10 +157,10 @@ int main (int argc, char** argv)
     //mat.add_model(ddprop, dd.get_id());
       
     mat.add_model(nside, dd_ptr->get_id());
-    mat.init();
 
     Device dev(mesh, boundary_nodes);
     dev.set_material(&mat, 1);
+    dev.init();
 
     SimulationEnvironment dd_env(dev, 1);
 
