@@ -14,11 +14,11 @@ Material::~Material(void)
   ModelMap::const_iterator it(_models.begin());
   const ModelMap::const_iterator end(_models.end());
   for ( ; it != end; ++it)
-    delete it->second;
+    PhysicalModelInterface::destroy(it->second);
 
   _models.clear();
 
-  delete _rotated_crystal;
+  PhysicalModelInterface::destroy(_rotated_crystal);
 }
 
 
@@ -81,7 +81,7 @@ Material::add_model(PhysicalModel* model, ID simulator_id)
   ModelMap::iterator it = _models.find(simulator_id);
   if (it != _models.end())
   {
-    delete it->second;
+    PhysicalModelInterface::destroy(it->second);
     it->second = model;
   }
   else

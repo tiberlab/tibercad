@@ -11,7 +11,7 @@
 /*!
  * This class implements Shockley-Read-Hall recombination processes that can be
  * modeled by 
- * \f[R_{SRH}=\frac{np - n_i^2}{(n+n_i\exp{(E_t-E_i)\k_BT})\tau_p +
+ * \f[R_{SRH}=\frac{np - n_i^2}{(n+n_i\exp{(E_t-E_i)/k_BT})\tau_p +
  * (p+n_i\exp{(E_i-E_t)/k_BT})\tau_n}\f]
  */
 class SRHRecombination : public RecombinationModelInterface

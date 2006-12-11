@@ -185,11 +185,12 @@ void QuantumDensity::calculate_density()
 
   //--------------------------------------------------------------------------//
 
-  double pi = 4.0 * atan(1);
+  // is in <cmath> : M_PI
+  //double pi = 4.0 * atan(1.0);
 
   double factor = 1;
 
-  for (short i = 0; i < k_dim; i++)  factor /= (2.0 * pi);
+  for (short i = 0; i < k_dim; i++)  factor /= (2.0 * M_PI);
 
   for (unsigned int j = 0; j <  real_space_density_size; j++)  real_space_density[j] *= factor;
    

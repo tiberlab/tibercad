@@ -90,12 +90,27 @@ PhysicalModelInterface::create(const std::string& name,
     mod->_name = mod->_options.get_option("name", defaultname);
     mod->_options.delete_option("name");
 
-    std::cerr << "Added model (ID = " << mod->get_id() <<
+    std::cerr << "Add model (ID = " << mod->get_id() <<
       " name = " << mod->get_name() << ")\n";
   }
 
   return mod;
 }
+
+
+void
+PhysicalModelInterface::destroy(PhysicalModelInterface* p)
+{
+  // TODO call destroy of the model module
+
+  if (p != NULL)
+  {
+    std::cerr << "Delete model (ID = " << p->get_id() <<
+      " name = " << p->get_name() << ")\n";
+    delete p;
+  }
+}
+
 
 template <typename T>
 ID
@@ -109,7 +124,8 @@ PhysicalModelInterface::get_id_from_name(const std::string& name)
     id = rec->get_id();
 
   // rec is either valid or NULL
-  delete rec;
+  destroy(rec);
+  
 
   return id;
 }
@@ -131,17 +147,11 @@ PhysicalModelInterface::register_model(
     {
       id = _model_ids.size() + 1;
       _model_ids[name] = id;
-
-      // FIXME remove this
-      std::cerr << "registered new ";
     }
     else
       id = it->second;
 
     model->_id = id;
-
-    // FIXME remove this
-    std::cerr << name << " model. ID = " << id << "\n";
   }
 }
 

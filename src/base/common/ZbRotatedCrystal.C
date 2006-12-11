@@ -71,7 +71,7 @@ void ZbRotatedCrystal::calculate_lat_consts()
  lat_const_calc[2] = a_lat/sqrt(double( z_miller[0]*z_miller[0] + z_miller[1]*z_miller[1] + z_miller[2]*z_miller[2]));
 
 
- std::cerr << "lat_const_calc  " << lat_const_calc[0] << "   " << lat_const_calc[1] << "    " <<  lat_const_calc[2] << "\n";
+ //std::cerr << "lat_const_calc  " << lat_const_calc[0] << "   " << lat_const_calc[1] << "    " <<  lat_const_calc[2] << "\n";
  
 
 }

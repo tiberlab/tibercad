@@ -29,13 +29,6 @@ class BoundaryProperties
     void init(void);
 
 
-    //! Get ID of the boundary
-    /*!
-     * The ID of a boundary should be a unique number
-     */
-    //ID get_id(void) const;
-
-
   protected:
     
     //! The empty constructor
@@ -72,13 +65,6 @@ class BoundaryProperties
 
     //! Disable assignement operator
     BoundaryProperties& operator=(const BoundaryProperties&); 
-
-    //! The identifier of a boundary object
-    /*!
-     * The identifier is assumed to be uniqe for every instance of
-     * \c Boundary
-     */
-    //ID _id;
 
     //! The options for this model as read from the input file
     ModelOptions _options;

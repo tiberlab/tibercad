@@ -295,8 +295,8 @@ class EnvelopFunctionApprox
 
    //! calculate nodal or cell density  (in atomic units) for a single \f$ {\bf k}_{\|}\f$ vector.  
   /*!
-    The nodal density reads: \f $ \rho({\bf r}) = \sum_i   |\psi_i({\bf r})|^2 F_{fermi}(E_i) \f$ 
-    The cell density reads:  \f $ \rho = \frac{1}{\Omega_0} \int_{\Omega_0}  \sum_i   |\psi_i({\bf r})|^2 \, dV  F_{fermi}(E_i), \f$
+    The nodal density reads: \f$ \rho({\bf r}) = \sum_i   |\psi_i({\bf r})|^2 F_{fermi}(E_i) \f$ 
+    The cell density reads:  \f$ \rho = \frac{1}{\Omega_0} \int_{\Omega_0}  \sum_i   |\psi_i({\bf r})|^2 \, dV  F_{fermi}(E_i), \f$
     where \f$ \Omega_0 \f$ is the element volume.
 
     \param T temperature [K]
@@ -537,8 +537,8 @@ class EnvelopFunctionApprox
 
   //!Calculates Fermi Dirac probability
   /*!
-    For electrons:  \f$ p = frac{1}{1 + \exp (\frac{E - \mu}{kT})}     \f$
-    For holes:      \f$ p = 1 - frac{1}{1 + \exp (\frac{E - \mu}{kT})} \f$
+    For electrons:  \f$ p = \frac{1}{1 + \exp (\frac{E - \mu}{kT})}     \f$
+    For holes:      \f$ p = 1 - \frac{1}{1 + \exp (\frac{E - \mu}{kT})} \f$
     \param Energy   state energy [eV]
     \param Fermi_energy  Fermi energy [eV]
     \param temperature   temperature [K] 

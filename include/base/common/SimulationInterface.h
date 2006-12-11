@@ -118,7 +118,6 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
   private:
 
     //! A typedef for convenience
-    //typedef std::map<const char*, ID> SimulationMap;
     typedef std::map<ID, SimulationInterface*> SimulationMap;
 
     //! The environment for this simulation

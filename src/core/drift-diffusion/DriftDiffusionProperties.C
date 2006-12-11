@@ -58,8 +58,8 @@ DriftDiffusionProperties::~DriftDiffusionProperties(void)
 {
   clear_doping();
   clear_recombination();
-  delete _electron_mobility;
-  delete _hole_mobility;
+  PhysicalModelInterface::destroy(_electron_mobility);
+  PhysicalModelInterface::destroy(_hole_mobility);
 }
 
 
@@ -150,17 +150,6 @@ DriftDiffusionProperties::add_recombination_model(
   }
 }
 
-void
-DriftDiffusionProperties::set_electron_mobility_model(
-    MobilityModelInterface* mobility_model)
-{
-  if (mobility_model != NULL)
-  {
-    delete _electron_mobility;
-    _electron_mobility = mobility_model;
-    _electron_mobility->set_driftdiffusionproperties(this);
-  }
-}
  
 void
 DriftDiffusionProperties::set_electron_mobility_model(
@@ -171,23 +160,12 @@ DriftDiffusionProperties::set_electron_mobility_model(
 
   if (mobility_model != NULL)
   {
-    delete _electron_mobility;
+    PhysicalModelInterface::destroy(_electron_mobility);
     _electron_mobility = mobility_model;
     _electron_mobility->set_driftdiffusionproperties(this);
   }
 }
 
-void
-DriftDiffusionProperties::set_hole_mobility_model(
-    MobilityModelInterface* mobility_model)
-{
-  if (mobility_model != NULL)
-  {
-    delete _hole_mobility;
-    _hole_mobility = mobility_model;
-    _hole_mobility->set_driftdiffusionproperties(this);
-  }
-}   
  
 void
 DriftDiffusionProperties::set_hole_mobility_model(
@@ -198,11 +176,12 @@ DriftDiffusionProperties::set_hole_mobility_model(
 
   if (mobility_model != NULL)
   {
-    delete _hole_mobility;
+    PhysicalModelInterface::destroy(_hole_mobility);
     _hole_mobility = mobility_model;
     _hole_mobility->set_driftdiffusionproperties(this);
   }
 }
+
 
 double
 DriftDiffusionProperties::get_total_donor_density(void) const
@@ -233,11 +212,13 @@ DriftDiffusionProperties::clear_doping(void)
 {
   dopant_iterator it = _donors.begin();
   dopant_iterator end = _donors.end();
-  for ( ; it != end; ++it) delete (*it);
+  for ( ; it != end; ++it)
+    delete (*it);
 
   it = _acceptors.begin();
   end = _acceptors.end();
-  for ( ; it != end; ++it) delete (*it);
+  for ( ; it != end; ++it)
+    delete (*it);
 
   _donors.clear();
   _acceptors.clear();
@@ -248,7 +229,8 @@ DriftDiffusionProperties::clear_recombination(void)
 {
   recomb_iterator it = _recombination_models.begin();
   recomb_iterator end = _recombination_models.end();
-  for ( ; it != end; ++it) delete (it->second);
+  for ( ; it != end; ++it)
+    PhysicalModelInterface::destroy(it->second);
 
   _recombination_models.clear();
 }
@@ -603,8 +585,8 @@ DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
     _recombination_models[(rec_it->second)->get_id()] = recmod;
   }
 
-  delete _electron_mobility;
-  delete _hole_mobility;
+  PhysicalModelInterface::destroy(_electron_mobility);
+  PhysicalModelInterface::destroy(_hole_mobility);
 
   _electron_mobility = static_cast<MobilityModelInterface*>(
       (mod->_electron_mobility)->copy());

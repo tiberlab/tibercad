@@ -35,8 +35,7 @@ class PhysicalModelInterface
   public:
 
     //! Destructor
-    virtual ~PhysicalModelInterface(void) { 
-      std::cerr << "deleted model " << _id << "\n";};
+    virtual ~PhysicalModelInterface(void); 
 
 
     //! Get the unique ID of this model
@@ -80,6 +79,12 @@ class PhysicalModelInterface
      */
     static PhysicalModelInterface* create(const std::string& name,
         const ModelOptions& options = ModelOptions());
+
+    //! Deletes a model
+    /*!
+     * \param p the pointer to the model to be destroyed
+     */
+    static void destroy(PhysicalModelInterface* p);
 
     //! Create a new model as an exact copy of this
     /*!
@@ -139,7 +144,6 @@ class PhysicalModelInterface
 
     //! Create a new model of the same type
     virtual PhysicalModelInterface* create_new(void) const = 0;
-    //virtual PhysicalModelInterface* create_new(void) const {};
 
     //! Copy all data from another model to this one
     /*!
@@ -210,20 +214,34 @@ class PhysicalModelInterface
      * \param bowing the bowing parameter
      */
 
-    void  alloy( Tensor4DSym& result,
-		 const Tensor4DSym& val_a, const Tensor4DSym& val_b, double xa, const Tensor4DSym& bowing = Tensor4DSym(0) );
+    void alloy( Tensor4DSym& result, const Tensor4DSym& val_a,
+        const Tensor4DSym& val_b, double xa,
+        const Tensor4DSym& bowing = Tensor4DSym(0) );
 
 
 
   private:
 
+    //! An iterator for the models
     typedef std::map<const std::string, ID>::iterator model_id_iterator;
+
+    //! The creation method signature
+    typedef PhysicalModelInterface* (*create_t)(void);
+
+    //! The destruction method signature
+    typedef void (*destroy_t)(PhysicalModelInterface*);
 
     //! Disable copy constructor
     PhysicalModelInterface(const PhysicalModelInterface&);
 
     //! Disable assignement operator
-    PhysicalModelInterface& operator=(const PhysicalModelInterface&); 
+    PhysicalModelInterface& operator=(const PhysicalModelInterface&);
+
+    //! The creation method for this model
+    create_t _create;
+
+    //! The destruction method for this model
+    destroy_t _destroy;
 
     //! The unique ID of this model
     ID _id;
@@ -275,6 +293,12 @@ PhysicalModelInterface::PhysicalModelInterface(void)
 
 
 inline
+PhysicalModelInterface::~PhysicalModelInterface(void)
+{
+}
+
+
+inline
 double
 PhysicalModelInterface::alloy(double val_a, double val_b,
     double xa, double bowing)
@@ -282,10 +306,12 @@ PhysicalModelInterface::alloy(double val_a, double val_b,
   return val_b + (val_a - val_b) * xa - bowing * xa * (1 - xa);
 }
 
-inline void PhysicalModelInterface::alloy( Tensor4DSym& result,
-					   const Tensor4DSym& val_a, const Tensor4DSym& val_b, double xa, const Tensor4DSym& bowing)
+inline
+void
+PhysicalModelInterface::alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
+    const Tensor4DSym& val_b, double xa, const Tensor4DSym& bowing)
 {
-  result =  (1-xa)*val_b + xa*val_a + (-xa * (1 - xa)) * bowing ;
+  result = (1 - xa) * val_b + xa * val_a - xa * (1 - xa) * bowing ;
 }
 
 inline

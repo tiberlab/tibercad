@@ -87,29 +87,11 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Set the electron mobility model
     /*!
-     * \deprecated
-     * Set the model to be used for the electron mobility
-     *
-     * \param mobility_model a pointer to a given mobility model
-     */
-    void set_electron_mobility_model(MobilityModelInterface* mobility_model);
-
-    //! Set the electron mobility model
-    /*!
      * Creates a mobility model for the electrons from the given model
      * name and options.
      */
     void set_electron_mobility_model(const std::string& model_name,
         const ModelOptions& options = ModelOptions());
-
-    //! Set the hole mobility model
-    /*!
-     * \deprecated
-     * Set the model to be used for the hole mobility
-     *
-     * \param mobility_model a pointer to a given mobility model
-     */
-    void set_hole_mobility_model(MobilityModelInterface* mobility_model);
 
     //! Set the hole mobility model
     /*!
