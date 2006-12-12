@@ -16,6 +16,35 @@ ReadISEGrid::ReadISEGrid(const char* file_name , Mesh& mesh, MeshData_elements& 
 
 ReadISEGrid::~ReadISEGrid()
 {
+  
+  int elements_list_size = elements_list.size();
+  int vertices_size = vertices.size();
+  int edges_size = edges.size();
+  int faces_size = faces.size();
+
+
+
+  for (int i = 0; i < vertices_size; i++)
+  {
+    delete vertices[i];
+  }
+
+  for (int i = 0; i < edges_size; i++)
+  {
+    delete edges[i];
+  }
+
+  for (int i = 0; i < faces_size; i++)
+  {
+    delete faces[i];
+  }
+
+  //delete    pointers to  elements_list !!!
+  for (int i = 0; i < elements_list_size; i++)
+  {
+    delete elements_list[i];
+  }
+
 };
 
 
@@ -38,6 +67,24 @@ void ReadISEGrid::integrity_check(int ver, string tp)
 void ReadISEGrid::scan_grid_file()
 {
 	 
+  //  local  pointers to ISE entities
+
+  ISE_Vertex* vertex_point;
+  ISE_Edge* edge_point;
+  ISE_Face* face_point;
+  ISE_Element* elements_list_point;
+
+
+  //  
+  //   lists of nD Elements with nD region    //   LOCAL   !!!!
+  //
+  vector<ISE_Element*>  region_elements_0D;
+  vector<ISE_Element*>  region_elements_1D;
+  vector<ISE_Element*>  region_elements_2D;
+  vector<ISE_Element*>  region_elements_3D;
+
+
+
   ifstream ISE_INPUT(ISE_file_name);
 
   if ( !(ISE_INPUT.good()) )
@@ -172,6 +219,7 @@ void ReadISEGrid::scan_grid_file()
       vertices.push_back(vertex_point);
 			
       node_coord.clear();
+
 		
     } 
     
@@ -1129,9 +1177,19 @@ void ReadISEGrid::scan_grid_file()
             //  close  input file
             ISE_INPUT.close(); 
 
+
+    // *******************deallocation  local pointers
+    // delete vertex_point;
+    // delete edge_point;
+    // delete edge_point;
+    //  delete elements_list_point;
+
+
+
+
     //cout << "File reading... Done" << endl << "Closing file stream... Done" << endl << endl;
  	 	
-}
+} // end  scan_grid_file
 
 
 

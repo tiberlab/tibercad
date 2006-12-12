@@ -39,13 +39,13 @@ class ReadISEGrid
    *  Writes *.xda and *.xta files into default directory.
    * 
    */
-  //  ReadISEGrid(const char* file_name);
+ 
   ReadISEGrid(const char* file_name , Mesh& mesh, MeshData_elements&  mesh_data );
 
 
   //! Virtual Destructor.
   /*! 
-    Dummy.
+    Deallocate pointers.
   */
   virtual ~ReadISEGrid();
 	
@@ -55,7 +55,7 @@ class ReadISEGrid
    *Puts in map BoundCond_map  a  map which associates   each Boundary region ID  with its nodes.
    */ 
   void  get_BC_data (map<unsigned int, vector<unsigned int> >& BoundCond_map );
-  //  map<unsigned int, vector<unsigned int> >& get_BC_data();
+ 
 
   /*!
     Returns simulation dimension.
@@ -72,14 +72,12 @@ class ReadISEGrid
    */
   void write_xda();
 
-  //! Writes  data file for  meshdata (*.xta) 
-  // Writes .xta file with a  list  of  all  (simulation-dimension) elements 
-  // associated to  related physical  region ID
+  
 
   //! Writes meshdata data file (xta).
   /*!
-   *  .xta file contains list of all simulation-dimension elements
-   *  associated to physical region ID.
+   *  .xta file contains a list of all simulation-dimension elements
+   *  associated to the relative physical region ID.
    */
   void write_xta();
 
@@ -134,9 +132,9 @@ class ReadISEGrid
   vector<unsigned int> ISE_element_type_list;
 
   /*!
-    Elements belonging to xda file.
+    Elements belonging to xda file (subset of the vector  of all elements "elements_list").
   */
-  vector<ISE_Element*> xda_list_elements;
+  vector<ISE_Element*> xda_list_elements;  
 	
   /*!
     Base variables.
@@ -147,7 +145,7 @@ class ReadISEGrid
   /*!
     Vector of all vertices.
   */	
-  vector<ISE_Vertex*> vertices;
+  vector<ISE_Vertex*> vertices; 
 
   /*!
     Input file name.
@@ -155,40 +153,28 @@ class ReadISEGrid
   const char* ISE_file_name;
 	
 	
-  /*!
-    Temporary vertex.
-  */
-  ISE_Vertex* vertex_point;
 
-  /*!
-    Temporary edge.
-  */		
-  ISE_Edge* edge_point;
+
+ 
 
   /*!
     Temporary edge vector.
   */
   vector<ISE_Edge*> edges;
 
-  /*!
-    Temporary face.
-  */
-  ISE_Face* face_point;
+ 
 
   /*!
     Temporary face vector.
   */
   vector<ISE_Face*> faces;
 
-  /*!
-    Temporary Element.
-  */
-  ISE_Element* elements_list_point;
+ 
 
   /*!
     List of all elements.
   */
-  vector<ISE_Element*> elements_list;
+  vector<ISE_Element*> elements_list;  //  delete  these  pointers in  destructor !!
 	
   /*!
     lists of ISE physical region IDs, respectively of 0D, 1D, 2D and 3D.
@@ -198,13 +184,7 @@ class ReadISEGrid
   vector<unsigned int> regions_2D;
   vector<unsigned int> regions_3D;
 
-  /*!  
-    lists of nD Elements with nD region
-  */
-  vector<ISE_Element*>  region_elements_0D;
-  vector<ISE_Element*>  region_elements_1D;
-  vector<ISE_Element*>  region_elements_2D;
-  vector<ISE_Element*>  region_elements_3D;
+ 
 
   /*!	
     maps <ISE phis reg ID, region_elements_nD>
