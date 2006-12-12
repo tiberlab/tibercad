@@ -22,34 +22,48 @@
 #include <vector>
 #include <string>
 
-//#include "RegionDefinition.h"
-//#include "AlloyModel.h"
+#include "TypeDefs.h"
+#include "ModelStructure.h"
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
 using namespace std;
 using namespace boost::spirit;
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// 
-//
-///////////////////////////////////////////////////////////////////////////////
 
-//!  A parser  for  input  text  files . 
+
+//!  A parser  for  TIBERCAD input  text  file. 
 /*!
- * USAGE : first use \c read_section("section_name") to specify the section of  input  file!
- * (where section_name is  written without "$").  In  input  file, each  section must  be 
- * preceded by its name between "$" (e.g. $Options$ ) and  must be  followed by keyword $End$.
- * Public method read_input allows  to  read  values in the  format tagname = value.
- * These assignements can be placed everywhere inside the  section defined by "section_name" 
- * and should be  separated by  spaces.
+ * Parses an input text file composed by sections:  each  section begins with a name  
+ * preceded by "$" (e.g. $Physics ) and it is composed by a block between "{" and  "}" 
+ * parenthesis.
+ * This block can be possibly composed by one or more subblocks, each preceded  by a model name.
+ * Two special sections are "Device" and "Models"  sections: in  "Device" section, each subblock
+ * must be preceded by the keyword "Region", followed by the name of the physical region.
+ * In  "Models"  section, one or  more special model-blocks must be  present: each model-block
+ * must be preceded by the keyword "Model", followed by the model name. Each model-block must 
+ * contain the tagname "phys_regions = ( list of physical regions of the model)" and one 
+ * BC_regions-block. The BC_regions-block must be preceded by the  keyword  "BC_Regions" and 
+ * it is  composed by one or more subblocks,
+ * each  preceded by  the keyword "BC_Region" followed by the name of the boundary condition region.
+ * 
+ *  
+ * Except the model-blocks and the BC_regions-blocks, each block and  subblock can 
+ *  contain zero or  any number of  parameters in the assignement form "tagname = tagvalue", 
+ *  where "tagname" is  a  string and "tagvalue" is  a single 
+ * numerical or string item or a list of  items between  "(" and ")" parenthesis.
+ * Format is free for these assignements, provided they are separated by spaces. 
  * Everything following a '#' is  a  comment and  is  disregarded.
- * A vector of  values can be  read in  the  same  way if  it  is  written in the 
- * format: tagname = ( value1  value2 .... valueN ).  Only  one  vector  value  per  line  is   allowed.
-  
-
-*/
+ *
+ * Public methods read_device() and get_device_map() parse and extract information 
+ * from Device section.
+ * Read_models() and get_model_structure_map() methods  parse and extract information 
+ * from Models section. Models data are stored in the class \c ModelStructure.
+ * Public methods read_parameters() and get_parameters_map()  parse and extract 
+ * information from the other parameters sections.
+ */
 
 
 class InputParser{
@@ -62,8 +76,6 @@ class InputParser{
   /*!
     Defines  name  of input  file ("input_file_name").
   */
-
-  //  InputParser(string filename , string section_name   );
   InputParser(string& input_file_name);
 
   //!  Destructor 
@@ -73,185 +85,202 @@ class InputParser{
   ~InputParser();
 
 
-//!  Access a  section of  input   file
-  /*!
-    Select the  section of  input  file where data should  be  looked  for.
-  */
-void read_section(string& section_name); 
 
-  //!  Overloaded  method  to  read input 
-  /*!
-    Returns   a  double if  "label"  is  found; otherwise returns Default .
-  */
 
-  double read_input( string label , double  Default);
-
-  //!  Overloaded  method  to  read input 
+  //!   Parses the  device section of  input  file 
   /*!
-    Returns   an  int  if  "label"  is  found; otherwise returns Default .
-  */
-  int  read_input( string label , int  Default);
+   * Method to  read   the  device section of  input  file in an internal map, 
+   * which is  returned by \c  get_device_map()
+   */
+  void read_device();
+
+  //!   Gets the map of   device description. 
+  /*!
+   * Returns   a  map which associates a physical region number 
+   * with the map (of the kind "label = property" ) of the appropriate physical region.
+   */
+  map <ID,  map <string,string> >& get_device_map();
+
+
+  //!  Parses the "Models"  section  of the  input file. 
+  /*!
+   * Method to  parse the "Models"  section  of the  input file.
+   *  Fields are  read in an internal  map and can be  extracted by means 
+   * of \c get_model_structure_map() 
+   * and the methods of class \c  ModelStructure.
+   */
+  void read_models();
+
+  //!   Gets the map of   model definition. 
+  /*!
+   * Returns   a  map which associates the name of  a model to a pointer 
+   * to the class  \c  ModelStructure, which contains a full
+   * description of model parameters:  physical regions associated to it, 
+   * list of boundary conditions defined for the model. 
+   */
+  map <string, ModelStructure*>& get_model_structure_map();
+
+
+  //!   Reads parameters of  a  given  section   for a given  model. 
+  /*!
+   * Method to   read  parameters of the  section "section_name"  for a given model " model_name".
+   * Parameters are read in an internal  map and can be  extracted by means of 
+   *  \c get_parameters_map().
+   */
+  void read_parameters( string& section_name, string& model_name);
  
-  //    bool   InputParser::read_input2( string label_bool , bool  default_bool );
-
-
-  //!  Overloaded  method  to  read input 
+  //!   Reads parameters of  a  given  section  
   /*!
-    Returns   a string   if  "label"  is  found; otherwise returns Default .
-  */
-  string   read_input( string label , string  Default);
+   * Overloaded method to   read  model-independent parameters of the  section "section_name".
+   * Parameters are read in an internal  map and can be  extracted by means of 
+   *  \c get_parameters_map(). 
+   */
+  void read_parameters( string& section_name);
 
-  //  bool   InputParser::read_input( string label_bool , bool  default_bool );
-
-  //!  Overloaded  method  to  read input 
+  //!   Gets a map of  parameters. 
   /*!
-    Returns   a  boolean value  if  "label_bool"  is  found .
-  */
-  bool   read_input( string label_bool );
-
-
-
-  /*   void InputParser::read_input_vector( string label , vector<double>& return_vector); */
-  /*   void InputParser::read_input_vector( string label , vector<int>& return_vector); */
-
-
-
-  //!  Overloaded  method  to  read input 
-  /*!
-    Returns   a  vector of  double   if  "label"  is  found; return_vector is  a  dummy vector
-  */
-  vector<double>  read_input( string label, vector<double> return_vector );
-
-
-  //!  Overloaded  method  to  read input 
-  /*!
-    Returns   a  vector of  unsigned int   if  "label"  is  found; def_vector  is  a  dummy vector
-  */
-  vector<unsigned int> read_input( string label, vector<unsigned int> def_vector);
-
-  //!  Overloaded  method  to  read input 
-  /*!
-    Returns   a  vector of  int   if  "label"  is  found; def_vector  is  a  dummy vector
-  */
-  vector<int>  read_input( string label, vector<int> def_vector);
-
-
-  // void  InputParser::get_data ( vector< vector<double> >& glob_reg_values,
-  //  vector<int>& glob_reg_id,  vector<string>& glob_mat);
-
-  // OLD  !!!
-  void  get_data ( vector< vector<double> >& glob_reg_values,
-				vector< vector<double> >& glob_comm_values,
-				vector<int>& glob_reg_id,  vector<string>& glob_mat );
-
+   * Returns   a  map of the kind "label = property" containing information 
+   * read in a section of input file, and possibly for a given model, as specified previously by 
+   * \c read_parameters.
+   */
+  map <string,string>& get_parameters_map();
 
  
 
-
-  //  void InputParser::get_device_data( vector<RegionDefinition>& device_regions_struct );
-
-  //!    Method  to  read device structure input 
-  /*!
-    Returns   five  vectors  with values of fields for  each physical region of the device: region name,
-    region number, material name, doping concentration, doping  type.
-  */
-  //  void get_device_data( vector<string>& reg_name_v,vector<unsigned int>&  reg_numb_v,
-  //				     vector<string>&  mat_name_v, vector<double>& dop_conc_v, 
-  //				     vector<string>&  dop_type_v   );
-
- // void read_section(string& section_name); 
-
- /*  void get_BC_data( vector<string>& BC_region_name_v_out, */
-/* 				 vector<unsigned int>& BC_region_numb_v_out, */
-/* 				 vector<string>& BC_type_v_out, vector<double>& BC_value_v_out  ); */
-
-  void  read_data_maps( map <string,double>& num_map, map <string,string>&  string_map, 
-				    map <string, vector<double> >&  vector_map) const  ;
-
-  //  const  vector<RegionDefinition>&  get_device_regions();
-
-  //   const   map <unsigned int, AlloyModel*>&  get_alloy_model_map(); 
-   
-   
-   
   //----------------------------------------------------------------------------------
 
  private:
 
+  //  members data:
 
-  // string  section_name, filename;
+  //   control  chars:
+
+  /*!
+   *  Char to  start a block ("{").
+   */
+  string  start_symb ;
+
+
+  /*!
+   *  Char to  end a block ("}")
+   */
+  string  end_symb ;
+ 
+
+ 
+  /*!
+   *  Name of the  input  file.
+   */
   string  filename;
 
-  vector< vector<double> > reg_values  ;
+ 
 
-  vector< vector<double> > command_values  ;
-
- /*  struct RegionDefinition { */
-
-/*     string reg_name ; */
-/*     unsigned int  reg_numb; */
-/*     string  mat_name; */
-/*     double  dop_conc  ; */
-/*     string dop_type; */
-
-/*   }; */
-
-// Use directly  class  RegionDefinition
-
-
-//  vector<RegionDefinition> device_regions;   //  vector of  objects  RegionDefinition
-
-  //  BC regions vectors
-  // ------------------------------------
-  vector<string> BC_region_name_v;
-  vector<unsigned int> BC_region_number_v;
-  vector<string> BC_type_v;
-  vector<double> BC_value_v;
-  // ---------------------------------
-
-
-  vector<int> reg_id;
-  vector<string> mat;
-
-
-  map <string,double>  prop_labels_map;
-  map <string,string>  string_prop_labels_map;
-
-
-
-  vector<string> prop_labels ;
-
+  /*!
+   *  Vector of  vectorial-properties labels (presently not used).
+   */
   vector<string> vector_prop_labels;
+
+
+  /*!
+   *  Vector of  properties labels.
+   */
   vector<string> string_prop_labels;
 
 
 
-  map <string, vector<double> >  vector_prop_labels_map;
+
+
+  /*!
+   *   Map between label and property in the  parameter section; 
+   * property is  read as a string and its correct type is checked elsewhere.
+   */
+  map <string,string>  string_prop_labels_map;
+
+  /*!
+   *   Map between label and a vector of properties in the  parameter section; 
+   * properties  are  read as a string and their  correct type is checked elsewhere.
+   */
+  map <string, vector<string> >  vector_string_prop_labels_map;
 
 
 
-  //  vector<double> values;
-  /*  vector< vector<double> > reg_values  ; */
+  /*!
+   *   Map between physical region number  and  the map associated to it.
+   */
+  map <ID,  map <string,string> > device_map;
+  
+  /*!
+   *   Map between  model name and  \c ModelStructure object associated.
+   */
+  map <string, ModelStructure*>  model_structure_map;
+
+  /*!
+   *   Map between  BC region number and the map for the BC region associated.
+   */
+  map <ID,  map <string,string> > model_BC_map;
+
+  /*!
+   *   Pointer to \c ModelStructure  object.
+   */
+  ModelStructure* current_model_point;
 
 
-  /*   vector<int> reg_id; */
-  /*  vector<string> mat; */
+  //  private  methods
 
-  void initialize_vectors();
+  //  void initialize_vectors();
+
 
  
+ 
+  /*!
+   *  Utility  to  find a  keyword in the input file.
+   *    
+   */
+  void find_keyword(ifstream& in_stream, string& keyword);
+
+  /*!
+   *  Utility  to  find a  keyword in a section
+   *    
+   */
+  void find_keyword_in_section(ifstream& in_stream, string& keyword);
+
+
+  /*!
+   *   Method   to  clear  all  maps 
+   *    
+   */
+  void reset_all_maps();
+
+  /*!
+   *   Method   to  read free-format parameter  section. 
+   *    
+   */
   void parse_options(ifstream& in_stream );
 
-  //  void parse_device(ifstream& in_stream );
+  /*!
+   *   Method   to  parse "Models" section. 
+   *    
+   */
+  void parse_model(ifstream& in_stream);
 
-  //  void parse_device_BC(ifstream& in_stream );
-  
-  //vector <AlloyModel>  alloy_model;
-  //  AlloyModel* alloy_model_pointer ;
-   
-  //  void parse_alloy(ifstream& in_stream);
-  
-  //  map <unsigned int, AlloyModel*> reg_alloy_model_map;
+
+
+
+  /*!
+   *   Utility  to  skip  comments (everything on a line, after "#" ). 
+   *   Returns true if  the following part of the line is  a  comment.  
+   */
+  bool skip_comments(ifstream& in_stream, string& item);
+
+ 
+
+  //!  Method   to  read a list of strings.
+  /*!  Parses an assignement "phys_regions = ( ....)  
+   */
+  void parse_list_phys_ID(ifstream& in_stream,vector<string>& list_regions   );
+
+
+
 
 };
 

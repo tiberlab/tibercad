@@ -20,33 +20,28 @@
 
 
 
+
 ///////////////////////////////////////////////////////////////////////////////
 using namespace std;
 using namespace boost::spirit;
 
 
 
-//InputParser::InputParser(string filename, string section_n)
+
 InputParser::InputParser(string& input_file_name)
 
 {
 
-  //  section_name =  section_n;
+  start_symb = '{';
+  end_symb  =  '}';
+
+ 
   filename = input_file_name;
 
-  initialize_vectors(); // 
-  //  reg_values.clear();
-
-
-  //  find_section(filename);
-
- 
-
-  //	cout << device_regions[0].reg_name << endl;
-  //  get_device_data();
-
- 
-
+  //  initialize_vectors(); // 
+  
+  reset_all_maps();
+  
 }
 
 InputParser::~InputParser()
@@ -54,34 +49,261 @@ InputParser::~InputParser()
 }
 
 
-void InputParser::initialize_vectors()
+
+
+// private  method: utility  to  find a  keyword in a section
+void InputParser::find_keyword_in_section(ifstream& in_stream, string& keyword)
+
 {
-  command_values.clear();
-  reg_values.clear();
-  reg_id.clear();
-  mat.clear();
+
+  bool found = false;
+  std::string str,  label,dollar_symbol ;
+  dollar_symbol = "$";
+
+
+  if ( !in_stream.good() )
+  {
+    std::cerr << "ERROR: Input file not good." 
+              << std::endl;
+    //   error();
+  }
+  in_stream >>  label;
+  
+  //       while (  ( found == false) && (  label != dollar_symbol ) && (!in_stream.eof()) ) //  
+  while (  ( found == false) && (  strncmp ((label.c_str()),dollar_symbol.c_str(),1) != 0  )
+           && (!in_stream.eof()) ) //  
  
+  { //while
+        
+    if  (label == keyword  )
+    {
+      found = true;
+      break;
+    }  
+
+    in_stream >>  label;
+  }   
+
+
+  if (found == false)
+
+  {
+    cerr << " Error: keyword "<< keyword <<  "  not  found !  " << endl ;
+    exit(1);
+
+  }
 
 }
 
 
-// *********************************
-// OPTIONS (COMMAND)  SECTION
-// *********************************
 
-//void InputParser::parse_command(ifstream& in_stream )
-void InputParser::parse_options(ifstream& in_stream )
-
-
+// public  method to  read  parameters  for a given model " model_name"
+void InputParser::read_parameters( string& section_name, string& model_name)
 
 {
 
+  std::string  label ;
+  std::ifstream in_stream (filename.c_str()) ;
+
+  reset_all_maps();
+
+  if ( !in_stream.good() )
+  {
+    std::cerr << "ERROR: Input file not good." 
+              << std::endl;
+    //   error();
+  }
+
+  section_name = "$"+section_name;
+
+  find_keyword( in_stream,section_name  );
+ 
+  // { 
+ 
+  // while (  ( label  != end_symbol) && (!in_stream.eof()) ) //   
+  //        {   
+
+  //   if  ( !(  model_name == "") )
+  //   {    
+  in_stream >>  label;   //   read   start_symb  !!
+  while (skip_comments(in_stream,label) == true )
+  {
+    in_stream >> label; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+  } 
+
+  find_keyword_in_section( in_stream,  model_name);  //   read   Model name  string
+
+
+    
+  //  in_stream >>  label;  //    {  read  by   parse_options) !!
+                     
+ 
+  parse_options (in_stream); // !!!!!  ->   get_parameters_map();  !!!!!!
+            
+ 
+}
+
+
+//  overload  to  read model-independent  parameters
+void InputParser::read_parameters( string& section_name)
+
+{
+
+  std::string  label ;
+  std::ifstream in_stream (filename.c_str()) ;
+
+  reset_all_maps();
+
+  if ( !in_stream.good() )
+  {
+    std::cerr << "ERROR: Input file not good." 
+              << std::endl;
+    //   error();
+  }
+
+  section_name = "$"+section_name;
+
+  find_keyword( in_stream,section_name  );
+ 
+  // { 
+ 
+  // while (  ( label  != end_symbol) && (!in_stream.eof()) ) //   
+  //        {   
+
+  //  if  ( !(  model_name == "") )
+  //   {    
+  //     in_stream >>  label; 
+
+  //     find_keyword_in_section( in_stream,  model_name);
+  //   }
+  //         }   
+  //  in_stream >>  label;  //    {  read  by   parse_options) !!
+                     
+ 
+  parse_options (in_stream); // !!!!!  ->   get_parameters_map();  !!!!!!
+ 
+}
+
+
+
+
+
+
+
+//  *******************
+
+
+void InputParser::reset_all_maps()
+{
+ 
+ 
+  // prop_labels_map.clear();
+  string_prop_labels_map.clear();
+  //  vector_prop_labels_map.clear();
+  
+  vector_string_prop_labels_map.clear();
+            
+ 
+}
+
+
+
+
+
+
+
+// private  method: utility  to  find a  keyword 
+void InputParser::find_keyword(ifstream& in_stream, string& keyword)
+
+{
+
+  bool found = false;
+  std::string str,  label;
+
+
+  if ( !in_stream.good() )
+  {
+    std::cerr << "ERROR: Input file not good." 
+              << std::endl;
+    //   error();
+  }
+  in_stream >>  label;
+  
+  while (  ( found == false) && (!in_stream.eof()) ) //   
+  { //while
+        
+    if  (label == keyword  )
+    {
+      found = true;
+      break;
+    }  
+    in_stream >>  label;
+              
+  }   
+
+
+  if (found == false)
+
+  {
+    cerr << " Error: keyword "<< keyword <<  "  not  found !  " << endl ;
+    exit(1);
+
+  }
+
+}
+
+
+
+
+
+void InputParser::read_models()
+
+{
+
+  string section_name;
+  section_name = "$Models";
+
+  std::ifstream in_stream (filename.c_str()) ;
+
+  if ( !in_stream.good() )
+  {
+    std::cerr << "ERROR: Input file not good." 
+              << std::endl;
+    //   error();
+  }
+
+
+  find_keyword(in_stream,section_name );  //  looks  for "$Models$"; 
+
+  parse_model(in_stream);
+  //  NEW_parse_model(in_stream);
+
+
+  in_stream.close();
+
+
+}
+
+
+
+
+
+//   *************************************************************
+//  NEW  PARSE  OPTIONS  WHICH   READS  ALL  STRINGS:
+//  ALL  THE  INPUT  ITEMS  ARE  READ  AS  STRINGS AND  
+//  PUT   IN A  SINGLE  MAP  <STRING, STRING>  
+//   *************************************************************
+
+
+
+//void InputParser::NEW_parse_options(ifstream& in_stream )
+void InputParser::parse_options(ifstream& in_stream )
+{
+
   // *******************************************************************************************************
-  //  ***** IDEA:  label = value  ->  map <string,double>  o map <string,string>  , map <string, string> 
-  // variable = inp_file.read("prop", int Default)
-  //   int  inp_file::read ( string,  int  Default);
-  //    find string   in  map  <string,prop_value>  ->  return  value 
-  //  name_property  ->  if  find in  vector< name_property>  then  property  = true
+  //  ***** IDEA:  label = value  -> map <string,string> 
+  // 
+  //  
   // *******************************************************************************************************
 
 
@@ -98,6 +320,10 @@ void InputParser::parse_options(ifstream& in_stream )
   vector<int> v_int; 
   //  vector<double>  vect;
   vector<string>  v_string;
+  vector<string>  v_list_string;   //   value of  list_string
+  vector<string> block_termination;
+  block_termination.clear();
+
   v_string.clear();
   //  vect.clear();
   v.clear();
@@ -109,12 +335,16 @@ void InputParser::parse_options(ifstream& in_stream )
       //  labels of  properties
       //------------------------
 
+
       vector<string> v_label;
   vector<string>vect_label;
   vector<string> v_label_string;  //  label  for  string  value
+  vector<string>list_label; //  label  for  list_string  value
+
   v_label_string.clear();
   vect_label.clear();
   v_label.clear();
+  list_label.clear();
 
   //  vect.push_back(0);
 
@@ -127,17 +357,30 @@ void InputParser::parse_options(ifstream& in_stream )
 
 
 
-  rule<>list_of_numbers_space_sep = ch_p('(')>> *(space_p) >>*real_p[push_back_a(v)] >>
-    *( *(space_p) >> real_p[push_back_a(v)])>> *(space_p)>> ch_p(')')  ;
+  //   rule<>list_of_numbers_space_sep = ch_p('(')>> *(space_p) >>*real_p[push_back_a(v)] >>
+  //     *( *(space_p) >> real_p[push_back_a(v)])>> *(space_p)>> ch_p(')')  ;
 
-  // rule<>list_of_numbers_space_sep = ch_p('(')>> *(space_p) >>real_p[push_back_a(v)] >>
-  //  *( *(separator) >> real_p[push_back_a(v)])>> *(separator)>> ch_p(')')  ;
+ 
 
-
-  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+')   );
+ 
+  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',')    );
 
   // rule<>label  = (+alnum_p)>>   * ( ch_p('_') >> *(+alnum_p) ) ;
-  rule<>label  = (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
+
+  //  rule<>label  = (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;  //2006
+
+  rule<>label  = *(special_char)>>  (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
+
+  rule<>list_string =  ch_p('(') >> *(space_p) >> (label)>>  *( *(space_p) >> (label) ) >> ch_p(')');
+
+  // rule<>tag_value = if_p('(')[(list_string) ].else_p[label];
+  rule<>tag_value =  list_string | label;
+
+  
+  //  ************************** NEW  20.11.06
+  rule<>list_of_strings_space_sep  = ch_p('(')>> *(space_p) >> (label)[push_back_a(v_string)]>>
+    *( *(space_p) >> (label)[push_back_a(v_string)] )>> *(space_p)>> ch_p(')')  ;
+    
 
 
   // *** one  can  use $ to distinguish  string_label from label of  numerical prop,
@@ -147,32 +390,40 @@ void InputParser::parse_options(ifstream& in_stream )
   //   //   (+alnum_p)>> ;//  * ( (special_char ) >> *(+alnum_p) ) ;
 
 
+ 
+  //  rule<>assignement  =  (label)[push_back_a(v_label)] >> *(space_p) >> ch_p('=')>>
+  //     *(space_p) >> ( real_p[push_back_a(v)])  ; // with _ !!
 
-
-
-   
-  // rule<>assignement  =  (+alnum_p)[push_back_a(v_label)] >> *(space_p) >> ch_p('=')>>
-  //  *(space_p) >> ( real_p[push_back_a(v)])  ; //ok !!
-  // strict_real_p  for real with . !!!!
-  rule<>assignement  =  (label)[push_back_a(v_label)] >> *(space_p) >> ch_p('=')>>
-    *(space_p) >> ( real_p[push_back_a(v)])  ; // with _ !!
-
-  // for  int
-  //  rule<>assignement_int  =  (label)[push_back_a(v_label)] >> *(space_p) >> ch_p('=')>>
-  //   *(space_p) >> ( int_p[push_back_a(v_int)])  ;
+ 
 
 
 
   //   rule<>assignement_string  =  (label_string)[push_back_a(v_label_bool)] >> *(space_p) >>
   //    ch_p('=')>> *(space_p) >> ((label )[push_back_a(v_bool)])   ; //  ok!!!
 
+  //  rule<>assignement_string  =  (label)[push_back_a(v_label_string)] >> 
+  //     *(space_p) >> ch_p('=')>> *(space_p) >> ((label)[push_back_a(v_string)])   ;
+
+  // ********************************************  NEW 30.11.06  *******************
+  //tag_value
   rule<>assignement_string  =  (label)[push_back_a(v_label_string)] >> 
-    *(space_p) >> ch_p('=')>> *(space_p) >> ((label)[push_back_a(v_string)])   ;
+    *(space_p) >> ch_p('=')>> *(space_p) >> ((tag_value)[push_back_a(v_string)])   ;
+
+  // ***********************************************************************
 
 
-  rule<>assignement_vector =  (label)[push_back_a(vect_label)] >> *(space_p) >> 
-    ch_p('=')>> *(space_p) >> list_of_numbers_space_sep;
+ 
 
+
+  //  rule<>assignement_vector =  (label)[push_back_a(vect_label)] >> *(space_p) >> 
+  //     ch_p('=')>> *(space_p) >> list_of_numbers_space_sep;
+    
+  //  ***********************  NEW   20.11.06  **********
+  rule<>assignement_vector_strings =  (label)[push_back_a(vect_label)] >> *(space_p) >> 
+    ch_p('=')>> *(space_p) >> list_of_strings_space_sep;
+   
+   
+  //  ***********************  end  NEW   20.11.06  **********
  
   //  rule<>assignement = (assignement_double |  assignement_int); 
 
@@ -182,27 +433,49 @@ void InputParser::parse_options(ifstream& in_stream )
 
 
   // ******************************************************************* 
-  //list of  only numeric  OR  list  of only  strings !!
+  //list of  only  strings !!
   // 
-  rule<>list_of_assignement = (assignement )  >>
-    *( *(space_p) >> (assignement ) )   | (  assignement_string) >> 
-    *( *(space_p) >> (assignement_string ) );
+  rule<>list_of_assignement =  (  assignement_string) >>   //  OK  23.11.06  !!!!!
+    *( *(space_p) >> (assignement_string )) ;
+
 
   // ************************************************************************
 
  
   // rule<> r_command  = *(space_p) >> (list_of_assignement | assignement_vector)    >> *(anychar_p);
 
-  rule<> r_command  = *(space_p) >> (list_of_assignement )    >>   *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
+  rule<> r_command  = *(space_p) >> (list_of_assignement )    >> 
+    *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
   // *(anychar_p);  
 
   //  possibly COMMENTs after list_of_assignement !
 
+  //  //  for  a  vector of  numbers
+  //   rule<> r_command_vector  = *(space_p) >> (assignement_vector)    >> *(anychar_p);
 
-  rule<> r_command_vector  = *(space_p) >> (assignement_vector)    >> *(anychar_p);
+  //for  a  vector of  strings
+  rule<> r_command_vector_strings  = *(space_p) >> (assignement_vector_strings)    >> *(anychar_p);
 
 
 
+
+  // for  a   line   terminated with  }
+  rule<> r_command_terminated  = *(space_p) >> (list_of_assignement )    >> 
+    *(space_p) >> (ch_p("}")) >>  !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
+
+  // find_keyword(in_stream,start_symb ); //  looks  for  "{"
+  in_stream >> str;
+  while (skip_comments(in_stream,str) == true )
+  {
+    in_stream >> str; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+  }
+
+  if (str != start_symb)
+  {
+    cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+  
+    exit(1); 
+  }
 
 
   while ( getline(in_stream, str) )
@@ -234,22 +507,7 @@ void InputParser::parse_options(ifstream& in_stream )
 
 	     
 
-        if ( !(v.empty()) )
-
-        {
-
-          if ( !(v_int.empty()) )
-          {
-            cout << "v_int[0-------------- "<< v_int[0]<< endl;
-          }
-
-          for (int i =0; i< v.size();++i)
-          {
-            prop_labels.push_back(v_label[i]);
-		      
-            prop_labels_map.insert(make_pair(v_label[i], v[i]) );
-          }
-        }
+     
 
 
         if ( !(v_string.empty()) )
@@ -258,11 +516,14 @@ void InputParser::parse_options(ifstream& in_stream )
           for (int i =0; i< v_label_string.size();++i)
           {
             string_prop_labels.push_back(v_label_string[i]);
+          //cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+
             string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
           }
         }
 	     
 
+       
 
 	      
 
@@ -273,21 +534,31 @@ void InputParser::parse_options(ifstream& in_stream )
         v.clear();
         v_int.clear();
 
-
+  
 	    
 
       }
 
-      else if(  parse(str.c_str(),  r_command_vector   )   .full ) //  not skipping spaces
-        //  reads  list of  values (vector)
+     
+
+	     
+
+
+
+      //   ***********************************************
+      //   vector  of  strings  !!!!
+      //  *************************************
+
+      else if(  parse(str.c_str(),  r_command_vector_strings   )   .full ) //  not skipping spaces
+        //  reads  list of  strings  (vector)
 
       {
 
-        if ( !(v.empty()) )
+        if ( !(v_string.empty()) )
         {
           vector_prop_labels.push_back(vect_label[0]);
-		  
-          vector_prop_labels_map.insert(make_pair(vect_label[0], v) );
+          //   cout << v_string[0] <<  endl ;  //   !!!!!
+          vector_string_prop_labels_map.insert(make_pair(vect_label[0], v_string) );
 
         }
 
@@ -302,23 +573,66 @@ void InputParser::parse_options(ifstream& in_stream )
 
       }
 
-
-      //	  else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)]]  , space_p).full)
-      else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >>
-                                             ch_p("$")  ] , space_p ).full)
+    
 
 
-      {
-        if (name == "End")
 
-        {  
-          cout << name  << endl ;
-          break;
+      //  *******************************************************
+
+      //   termination condition  !!!
+      else if  (parse(str.c_str(),  *(space_p)>>ch_p("}")   , space_p).full) 
+      {  
+       //  cout << endl ;
+//         cout <<  "Fine  !" << endl ;
+        //   if (name == "a")
+        break;
+      }
+
+
+      //   termination condition  with  } on  the  line  !!!
+      else if (  parse(str.c_str(), r_command_terminated ).full )           //  not skipping spaces
+
+
+      { // if parse
+
+
+        if ( !(v_string.empty()) )
+        {
+
+          for (int i =0; i< v_label_string.size();++i)
+          {
+            string_prop_labels.push_back(v_label_string[i]);
+          //  cout <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+
+            string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
+          }
         }
+	     
 
+        // cout << endl ;
+//         cout <<  "Fine device !!! !" << endl ;
+        break;
+
+    
 
       }
 
+
+
+
+
+   
+
+
+
+      //     skip   all  the  other  kids  of  lines  !!!!
+      else  if (parse(str.c_str(), if_p("{")[(+alpha_p) 
+                                             ] , space_p ).full)
+      {  
+        //   cout << "SKIP" << endl ;
+        //   if (name == "a")
+        //   break;
+      }
 
 
       else  
@@ -345,51 +659,26 @@ void InputParser::parse_options(ifstream& in_stream )
     v_int.clear();
      
 
-    //    if (name == "End")
-    // 	{  
-    // 	  cout << name  << endl ;
-    // 	  break;
-    // 	}
-
-
-
-    //  OK  ***************
-    //   else
-    // 	{
-    // 	  getline(in_stream, str);
-    // 	}
-    //  OK  ***************
-
-
-
-      
-
+  
   }  //  end  while
 
 
 }
 
 
-// *********************************
-// END  OPTIONS(COMMAND)  SECTION
-// *********************************
 
 
-// find section = section name (from input) and  parses  just  that  section
+// public  method to  read  device regions
 
-//void InputParser::find_section(string file_name)
-void InputParser::read_section(string& section_name)
+void InputParser::read_device( )
 
 {
 
-  bool found = false;
-  std::string str;
+  std::string  label, keyword,region_name, section_name   ;
+  std::ifstream in_stream (filename.c_str()) ;
+  ID current_region_ID;
 
-  //  std::ifstream in_stream (file_name.c_str());
-  std::ifstream in_stream (filename.c_str());
-
-
-  string name;
+  reset_all_maps();
 
   if ( !in_stream.good() )
   {
@@ -398,860 +687,652 @@ void InputParser::read_section(string& section_name)
     //   error();
   }
 
+  section_name =  "Device";
+
+  section_name = "$"+section_name;
+
+  find_keyword( in_stream,section_name  );
+ 
+  // { 
+ 
+  // while (  ( label  != end_symbol) && (!in_stream.eof()) ) //   
+  //        {   
+
+ 
 
 
-  while (getline(in_stream, str))  //   
-  { //while
 
-    //  if  (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)]>> ch_p("$")].else_p[nothing_p] ).full)
-    if  (parse(str.c_str(), if_p("$")[(+(~ch_p('$')))[assign_a(name)]>>
-                                      ch_p("$")].else_p[nothing_p] ).full)
+  in_stream >>  label; //  read   start_symb
 
+
+
+  //  ********************************
+  //  read keyword Region
+  in_stream >> keyword;
+
+  //  skip_comments(in_stream,keyword );
+
+  //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+  while (skip_comments(in_stream,keyword ) == true )
+  {
+    in_stream >> keyword; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+  } 
+
+//  cout <<  " region_k = " << keyword <<  endl; 
+
+ 
+
+  while  (keyword !=  end_symb)
+  {
+
+    if  (keyword != "Region")
+    {
+      cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+      cerr << " keyword Region is  missing " 
+           << endl;
+       
+      exit(1); 
+    }
+
+    //     read   region_name
+    in_stream >>region_name;
+
+  //  cout <<  " region_name = " << region_name <<  endl; 
+    
+    //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+    while (skip_comments(in_stream,region_name) == true )
+    {
+      in_stream >> region_name; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+  
+  
+       
+ 
+    parse_options(in_stream);   //    read  the  block  between  { and  }
+
+
+    //  put region_name in map  map_region <string,string >
+    // region_map.insert(make_pair ("region_name",region_name  ));  
+    string_prop_labels_map.insert(make_pair ("region_name",region_name  )); 
+
+
+    //  get   ID of   the  current region :
+    //    ID = map_region[reg_mumb]
+    current_region_ID   = atoi(string_prop_labels_map["reg_numb"].c_str());
+   // cout <<  current_region_ID << endl;
+
+
+    //  put  in  map  <ID, map_region   >
+    //   the map map_region <string,string >
+    //  device_map.insert(make_pair (ID,map_region  ));   
+
+    device_map.insert(make_pair (current_region_ID, string_prop_labels_map ));  
+//cout <<  "(device_map[current_region_ID])[mat]  =  " << (device_map[current_region_ID])["mat"] << endl  ;
+
+    //    next   Region    
+    string_prop_labels_map.clear();
+    in_stream >> keyword;
+
+    //   skip_comments(in_stream,keyword );
+
+    while (skip_comments(in_stream,keyword ) == true )
+    {
+      in_stream >> keyword; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+    //  if  (keyword != "Region")
+    //   {
+    //     cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+    //     cerr << " keyword Region is  missing " 
+    //          << endl;
+       
+    //     exit(1); 
+    //   }
+
+
+  }  //end   while 
+     
+ 
+
+}      //  end   Device   section 
+
+
+
+
+map <ID,  map <string,string> >& InputParser::get_device_map()
+
+{
+
+  return device_map;
+
+} 
+
+
+
+
+// private  method: utility  to  skip  comments (everything on a line, after "#" ) 
+bool InputParser::skip_comments(ifstream& in_stream, string& item)
+
+{
+
+  bool  skip  = false;
+
+  if (item == "#" | (strncmp ((item.c_str()), "#",1) == 0) )
+  {
+    in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
+    //   in_stream >> item;  //      and   read  the  next keyword !!! 
+
+    skip  = true;
+
+  } 
+
+  return  skip;
+
+
+} 
+
+
+
+//  ***************************************************
+
+//    parse  model  section :  for  each model a   list  of  phys regions and a list of BC definitions
+//   are  read from input  file
+void
+InputParser::parse_model(ifstream& in_stream)
+{// method  for   parsing  of   model section
+
+ 
+  
+  string numb_regions_keyword_string,phys_regions_keyword_string,BC_regions_keyword_string , 
+    keyword_BC_Region_string, model_keyword_string  ;
+
+  numb_regions_keyword_string = "numb_regions";
+  phys_regions_keyword_string = "phys_regions";
+  BC_regions_keyword_string = "BC_Regions";
+  keyword_BC_Region_string = "BC_Region";
+  model_keyword_string  =  "model";
+
+  //  vector <ID> list_physical_regions  ;
+
+  vector <string> list_physical_regions  ;
+
+  //  vector <string> model_list;  ->  private  member
+
+  string model_name, label , keyword;
+  string  item, model_keyword, numb_regions_keyword, equal,regions_keyword ,BC_regions_keyword;
+  //    start_symbol,end_symbol;
+  ID numb_regions ;
+  ID reg_numb;
+ 
+  ID current_BC_region_ID ;
+
+  string dummy;
+  char c;
+
+  string  start_symbol,end_symbol, BC_region_name ;
+
+  string str;
+
+  in_stream >>  label; //  read   start_symb
+
+  if  (label != start_symb)
+  {
+    cerr <<  "  SYNTAX ERROR in input  file (models)  " <<  endl;
+     
+       
+    exit(1); 
+  }
+  
+  //   find_keyword(in_stream,start_symb ); //  looks  for  "{"
+
+  in_stream >> model_keyword;
+//  cout << model_keyword<< endl;
+
+
+
+  while (skip_comments(in_stream,model_keyword ) == true )
+  {
+    in_stream >> model_keyword; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+  } 
+
+  if  ( model_keyword != model_keyword_string)
+  {
+    cerr <<  "  SYNTAX ERROR in input  file (models)  " <<  endl;
+    cerr << " keyword model is  missing " 
+         << endl;
+       
+    exit(1); 
+  }
+
+
+    
+  //while (  (model_keyword != "End") && (!in_stream.eof()) ) 
+  while (  (model_keyword != end_symb ) && (!in_stream.eof()) ) 
+    
+  {  //  while loop  models
+
+    // Model n
+    if  (model_keyword != model_keyword_string)
+    {
+      cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+      cerr << " keyword model is  missing " 
+           << endl;
+       
+      exit(1); 
+    }
+
+
+    in_stream >>  model_name ;
+    while (skip_comments(in_stream, model_name ) == true )
+    {
+      in_stream >>  model_name ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+    reset_all_maps();  //  clear  the  IP  maps !!!!
+    model_BC_map.clear();
+
+    //   new   ModelStructure  object  !!!!
+    current_model_point = new ModelStructure(model_name);
+    //  and ModelStructure.set_model_name !!!!!!!!!!
+
+   
+
+    in_stream >> start_symbol;
+    //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+    while (skip_comments(in_stream,start_symbol) == true )
+    {
+      in_stream >> start_symbol; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+    if  ( start_symbol !=start_symb )
+    {
+      cerr <<  "  SYNTAX ERROR in input  file 1  " <<  endl;
+  
+       
+      exit(1); 
+    }
+
+
+
+    //   in_stream>> numb_regions_keyword ;
+
+    //     //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+    //     while (skip_comments(in_stream,numb_regions_keyword ) == true )
+    //     {
+    //       in_stream >> numb_regions_keyword ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    //     } 
+
+    //   if  ( numb_regions_keyword != numb_regions_keyword_string )
+    //     {
+    //       cerr <<  "  SYNTAX ERROR in input  file 2   " <<  endl;
+  
+       
+    //       exit(1); 
+    //     }
+
+
+    //     in_stream >> equal >> numb_regions ;
+  
+
+    //parse_list_phys_ID(ifstream& in_stream,vector<string>& list_regions   )
+    ////   vector<string> list_physical_regions;
+    parse_list_phys_ID(in_stream, list_physical_regions   );
+ //   cerr <<  " list_regions  = " << list_physical_regions[1] <<  endl;;
+   
+
+ 
+
+    // **********************************
+    //  ModelStructure.set_physical_regions(list_physical_regions)   !!!!!!!!!!!!!!!!!!!!!!
+    current_model_point->set_physical_regions(list_physical_regions);
+
+    //  ****************************************************
+
+    //  //  put  in  map  <list_physical_regions, model_name>
+    //     phys_reg_model_map.insert(make_pair (model_name,list_physical_regions ));
+
+    //     //  vector <string> model_list;
+    //     model_list.push_back(model_name);
+
+    list_physical_regions.clear();
+
+    //   ----------------------------------------------------------------
+
+    //  now  READ BC REGIONS   
+
+
+
+    //  read keyword BC_Regions
+
+    in_stream >> BC_regions_keyword;
+
+    //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+    while (skip_comments(in_stream,BC_regions_keyword ) == true )
+    {
+      in_stream >> BC_regions_keyword ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+    if  ( BC_regions_keyword != BC_regions_keyword_string )
+    {
+
+    //  cerr <<  BC_regions_keyword <<  endl;
+      cerr <<  "  SYNTAX ERROR in input  file 4  " <<  endl;
+  
+       
+      exit(1); 
+    }
+
+
+
+    //    in_stream >> start_symbol;  //  read   by  parse_options  !!!!
+
+    //  cout<< BC_regions_keyword <<  endl;
+    //     cout << start_symbol <<  endl;
+
+   
+
+   // cout <<  " BC_region_k = " << BC_regions_keyword <<  endl; 
+
+    in_stream >>  start_symbol ; //  read   start_symb of   BC_regions block
+    //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+    while (skip_comments(in_stream,start_symbol ) == true )
+    {
+      in_stream >> start_symbol ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+    if  ( start_symbol != start_symb)
+    {
+     cerr <<  "  SYNTAX ERROR in input  file 5  " <<  endl;
+  
+       
+      exit(1); 
+    }
+
+
+
+
+    //  read keyword BC_Region
+    in_stream >> keyword;
+    //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+    while (skip_comments(in_stream,keyword ) == true )
+    {
+      in_stream >> keyword; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+
+
+    while  (keyword !=  end_symb)   //    loop  BC_region   block
+    {
+
+      if  (keyword != keyword_BC_Region_string)
+      {
+        cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+        cerr << " keyword BC_Region is  missing " 
+             << endl;
+       
+        exit(1); 
+      }
+
+      //     read   BC_region_name
+      in_stream >>BC_region_name;
+
+
+      //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+      while (skip_comments(in_stream,BC_region_name) == true )
+      {
+        in_stream >> BC_region_name; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+      } 
+
+
+     
+      parse_options(in_stream);   //    read  the  block  between  { and  }
+
+
+
+      //  put region_name in map  map_region <string,string >
+   
+      string_prop_labels_map.insert(make_pair ("BC_region_name",BC_region_name  )); 
+
+      //  get   ID of   the  current BC_region :
+      //    ID = map_region[BC_reg_mumb]
+      current_BC_region_ID   = atoi(string_prop_labels_map["BC_reg_numb"].c_str());
+    //  cout <<  current_BC_region_ID << endl;
+
+      //  put  in  map  <ID, map_region   >
+      //   the map map_region <string,string >
+      //  device_map.insert(make_pair (ID,map_region  ));   
+
+      model_BC_map.insert(make_pair (current_BC_region_ID, string_prop_labels_map ));  
+    //  cout <<  "([ model_BC_map.current_BC_region_ID])[value]  =  " << (model_BC_map[current_BC_region_ID])["value"] << endl  ;
+
+      //    next   BC_Region    
+      string_prop_labels_map.clear();
+      in_stream >> keyword;
+
+      //   skip_comments(in_stream,keyword );
+
+      while (skip_comments(in_stream,keyword ) == true )
+      {
+        in_stream >> keyword; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+      } 
+
+
+
+
+
+    }  //end   while  loop  BC_region   block
+
+    //   END   READ  BC  REGIONS  
+
+
+
+    //  ******************************
+    //  PUT   model_BC_map IN   OBJECT  ModelStructure
+
+    //  ModelStructure->set_model_BC_map(model_BC_map)  **********************************
+    //  ModelStructure.set_model_BC_map( map  <unsigned int,  map <string,string> >& id_BC_regions_map   )   !!!!!!!!!
+    current_model_point->set_model_BC_map( model_BC_map);
+   
+    in_stream >>  end_symbol;
+
+    while (skip_comments(in_stream, end_symbol) == true )
+    {
+      in_stream >> end_symbol; // if  the  whole  line has  been  skipped: read  the  next keyword !!! 
+    } 
+
+
+  //  cout <<  "end_symbol = " <<  end_symbol  <<   endl;
+
+    //    if  (strncmp ((end_symbol.c_str()),"}",1) != 0)
+    if  (strncmp ((end_symbol.c_str()),end_symb.c_str(),1) != 0)
 
     {
-      cout << name<< endl;
-
-      //	  if ((name == section_name) && (name == "Regions"))
-      if  (name == section_name) 
-      {
-        found = true;
-
-        if  (section_name == "Regions")
-
-          //	  if (  (section_name == "Regions") && (name == section_name))
-
-        {
-          //   parse_device(in_stream);
-        }
-        else if  (section_name == "BC_Regions")
-
-        {
-          //   parse_device_BC(in_stream);
-        }
-    
-        else if (section_name == "Alloy")
-        
-        {
-          //   parse_alloy(in_stream);
-        }
-    
+      cerr <<  "  SYNTAX ERROR in input  file (section  Models )   " <<  endl;
+      exit(1); 
+    }
    
-        else 
-          //if (name == section_name)
+    in_stream >>  model_keyword; 
+   // cout << model_keyword<< endl;
+
+    while (skip_comments(in_stream, model_keyword ) == true )
+    {
+      in_stream >>  model_keyword ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+
+
+    //  put ModelStructure in  map  <model_name, *ModelStructure>
+    model_structure_map.insert(make_pair (model_name, current_model_point )); 
+
+
+
+    //  NEXT  MODEL
+
+    //   model_BC_regions_ID.clear();
+
+
+
+	      
+  }// end while   while (  (model_keyword != end_symb ) && (!in_stream.eof()) ) ***********  end   Model
       
-          //   {parse_command(in_stream);}
+//  cout <<   "  Out of  while Model "<< endl;
+
+
+
+
+  //  } // end while != "eof"
+
+} //  end  method    NEW parse_model
+
+
+
+
+
+
+map <string, ModelStructure*>& InputParser:: get_model_structure_map()
+{
+  
+  
+  return model_structure_map;
+
+} //  end  method
+
+
+
+map <string,string>& InputParser::get_parameters_map()
+
+{
+
+  return string_prop_labels_map;
+
+} 
+
+
+
+// **********************
+
+//  method to parse  list  of  IDs  
+
+void InputParser::parse_list_phys_ID(ifstream& in_stream,vector<string>& list_regions   )
+{
+
+
+
+  string str ;
+
+
+  vector<string>  v_string;
+
+
+
+  v_string.clear();
+
+
+ 
+  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',')    );
+
+ 
+  rule<>label  = *(special_char)>>  (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
+
+
+
+  // ***********************************************************************
+  //      1-12-06  !!!
+
+ 
+
+  rule<>list_of_strings_space_sep  = ch_p('(')>> *(space_p) >> (label)[push_back_a(v_string)]>>
+    *( *(space_p) >> (label)[push_back_a(v_string)] )>> *(space_p)>> ch_p(')')  ;
+
+  
+  rule<>assignement = (label) >> 
+    *(space_p) >> ch_p('=')>> *(space_p) >> list_of_strings_space_sep;
+
+  rule<> r_command  = *(space_p) >> (assignement )    >> 
+    *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
+
+
+
+  // ************************************************************************
+
+ 
+ 
+
+
+  while ( getline(in_stream, str) )
+  {
+
+   
+    if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
+
+    { // if !  comment_p("#")  
+
+	 
+
+
+      if(  parse(str.c_str(),  r_command   )   .full ) //  not skipping spaces
+        // reads  list of  values (vector)
+
+      {
+
+        if ( !(v_string.empty()) )
         {
-          parse_options(in_stream);
+          //  vector_prop_labels.push_back(vect_label[0]);
+		  
+          //           vector_prop_labels_map.insert(make_pair(vect_label[0], v) );
+          list_regions = v_string;
+          break;   //  return to  input file
+
         }
 
+	     
+
+	      
+       
+
+        v_string.clear();
+
+        
+
+      }
+
+     
+
+      //     skip   all  the  other  kids  of  lines  !!!!
+      
+      else if (parse(str.c_str(), if_p("{")[(+alpha_p) 
+                                            ] , space_p ).full)
+      {  
+        //   cout << "SKIP" << endl ;
+        //   if (name == "a")
+        //   break;
+      }
+
+
+      else  
+
+      {
+        cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+        cerr << " Correct syntax is : 'label' = 'value' 'label' = 'value' .......# 'comment' " 
+             << endl;
+        cerr << " A comment line  must be preceded by '#'. "<< endl;
+        cerr <<"'Value' is a string of alphanumerics char or a list of strings between par., e.g. (p1 p2)"
+             << endl;
+        exit(1); 
       }
 
 
     }
 
-  }
 
-  if (found == false)
+    v_string.clear();
 
-  {
-    cerr << " Error: Section not  found  " << endl ;
-    exit(1);
+   
 
-  }
-
-  in_stream.close();
-
+  
+  }  //  end  while
 
 
 }
-
-
-
-
-
-void  InputParser::get_data ( vector< vector<double> >& glob_reg_values,
-			      vector< vector<double> >& glob_comm_values,
-			      vector<int>& glob_reg_id,  vector<string>& glob_mat)
-{
-  glob_reg_values = reg_values;
-  glob_reg_id = reg_id;
-  glob_mat = mat;
-
-  glob_comm_values = command_values;
-
-
-
-}
-
-
-
-
-double InputParser::read_input( string label , double  Default)
-{
-  double value;
-  map <string,double>  :: iterator  p;
-
-
-  //  for (int i =0; i< prop_labels.size();++i)
-  //   {
-  p = prop_labels_map.find( label  );
-
-  if  (p != prop_labels_map.end() )
-
-  {  
-    value  =  (p -> second) ;
-	
-
-     
-    return value ;
-
-  }
-
-  else 
-  { 
-    cout  <<  "*** Default ***  ";
-
-    return Default;
-    //  cout  <<  "error"  ;
-  }
-  //  }
-
-}
-
-
-
-
-int  InputParser::read_input( string label , int  Default)
-{
-  int value;
-  map <string,double>  :: iterator  p;
-
-
-  //  for (int i =0; i< prop_labels.size();++i)
-  //    {
-  p = prop_labels_map.find( label  );
-
-  if  (p != prop_labels_map.end() )
-
-  {  
-    value  =  (int)(p -> second) ;
-	
-
-	 
-    return value ;
-
-  }
-
-  else
-  {
-    cout  <<  "*** Default ***  ";
-    return Default;
-    //	  cout  <<  "error"  ;
-  }
-  //   }
-
-}
-
-
-
-
-string   InputParser::read_input( string label , string  Default)
-{
-  string  value;
-  map <string,string>  :: iterator  p;
-
-
-  //  for (int i =0; i< prop_labels.size();++i)
-  //    {
-  p = string_prop_labels_map.find( label  );
-
-  if  (p != string_prop_labels_map.end() )
-
-  {  
-    value  =  (p -> second) ;
-	
-
-	 
-    return value ;
-
-  }
-
-  else
-  {
-    cout  <<  "*** Default ***  ";
-    return Default;
-    //  cout  <<  "error"  ;
-  }
-  //   }
-
-}
-
-
-
-////*****  bool  return  :  overload  not  possible :  why  ???
-//bool   InputParser::read_input( string label_bool , bool  default_bool)
-bool   InputParser::read_input( string label_string )
-
-{
-  string  value;
-  map <string,string>  :: iterator  p;
-  bool flag;
-  flag = 0;//default_bool ;
-
-
-
-
-  //  for (int i =0; i< prop_labels.size();++i)
-  //    {
-  p = string_prop_labels_map.find( label_string  );
-
-  if  (p != string_prop_labels_map.end() )
-
-  {  
-    value  =  (p -> second) ;
-	 
-    //	if ( strncmp (str[n],"C3**",2) == 0)
-
-
-    // s.compare(s1);
-
-    if  (  (value.compare("true")) == 0 )  
-
-    { 
-      flag = 1 ;//true;
-      return flag;
-
-    }
-    else if  (  (value.compare("false")) == 0 ) 
-    { 
-      flag = 0;// false;
-      return flag;
-
-    }
-
-
-	 
-    //     return value ;
-
-  }
-
-  else
-  {
-    cout  <<  "*** Default ***  ";
-    return flag ;
-    //  cout  <<  "error"  ;
-  }
-  //   }
-
-}
-
-
-
-//  NEW  *********************
-// overload  for   vector 
-
-vector<double> InputParser::read_input( string label, vector<double> def_vector)
-{
-
-  map <string, vector<double> >   :: iterator  p;
-
-  vector<double>  return_vector;
-
-  p = vector_prop_labels_map.find( label  );
-
-  if  (p != vector_prop_labels_map.end() )
-
-  {  
-    return_vector    =  (p -> second) ;
-    return  return_vector;
-
-  }
-
-  else
-    cout  <<  "Warning --- read_input_vector double: vector data empty or  missing  " << endl ;
-
-
-}
-
-
-vector<unsigned int> InputParser::read_input( string label, vector<unsigned int> def_vector)
-{
-
-  map <string, vector<double> >   :: iterator  p;
-
-  vector<unsigned int>  return_vector;
-  vector<double> temp;
-  return_vector.clear();
-
-
-  p = vector_prop_labels_map.find( label  );
-
-  if  (p != vector_prop_labels_map.end() )
-
-  {  
-
-    temp    =  (p -> second) ;
-
-
-    for (int i =0; i< temp.size();++i)
-    {
-      //    cout <<  "temp.size()  " <<  temp.size();
-      //     return_vector[i]    = (int)(temp[i]); 
-      return_vector.push_back( (int)(temp[i]) );
-
-    }
-
-    return  return_vector;
-	
-  }
-
-  else
-  
-  cout << label  << endl;
-    cout  <<  "Warning --- read_input_vector int: vector data empty or  missing " << endl ;
-
-
-}
-
-
-
-
-vector<int> InputParser::read_input( string label, vector<int> def_vector)
-{
-
-  map <string, vector<double> >   :: iterator  p;
-
-  vector<int>  return_vector;
-  vector<double> temp;
-  return_vector.clear();
-
-
-  p = vector_prop_labels_map.find( label  );
-
-  if  (p != vector_prop_labels_map.end() )
-
-  {  
-
-    temp    =  (p -> second) ;
-
-
-    for (int i =0; i< temp.size();++i)
-    {
-      //    cout <<  "temp.size()  " <<  temp.size();
-      //     return_vector[i]    = (int)(temp[i]); 
-      return_vector.push_back( (int)(temp[i]) );
-
-    }
-
-    return  return_vector;
-  
-  }
-
-  else
-  cout << label  << endl;
-    cout  <<  "Warning --- read_input_vector int: vector data empty or  missing " << endl ;
-
-
-}
-
-
-
-
-
-//  END  NEW for  vectors  *********************
-// ************************************************
-
-
-
-
-void InputParser::read_data_maps( map <string,double>& num_map, map <string,string>&  string_map, 
-				  map <string, vector<double> >&  vector_map) const
-
-{
-
-  num_map = prop_labels_map;
-  string_map =string_prop_labels_map ;
-  vector_map = vector_prop_labels_map ;
-
-
-}
-
-
-
-
-
-
-
-// void InputParser::parse_device(ifstream& in_stream )
-
-// {
-
-//   // *******************************************************************************************************
-//   //  ***** IDEA:  List  of regions :
-//   //  $Regions$
-//   //  Reg 1 name {  reg_numb = 1  mat= Si  doping = 1e18 dop_type = donor}
-//   // .....................................................
-//   // $End$
-
-//   // $Bound_cond$
-//   // BC_name {  BC_numb = 1  type = dirichlet  value =  1.0 }
-//   //   $End$
-//   //
-//   //  vector<struct> ,   struct  ={  reg_n , reg_name, mat, dop_conc , dop type } 
-
-//   //   struct region_definition {
-
-//   //     unsigned int  reg_numb;
-//   //     string  reg_name;
-//   //     double  dop_conc  ;
-//   //     string dop_type;
-
-//   //   };
-
-//   //   region_definition reg_def;
-
-//   //   vector<reg_def> device_regions;
-
-//   vector<double> v_real; 
-//   vector<int> v_int;
-//   vector<string> v_string;
-
-//   string  name,str;
-
-//   RegionDefinition  current_region;  //   struct *************
-//   device_regions.clear();
-
-
-//   rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/') | ch_p('+')  );
-//   rule<>region_name = (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
-//   rule<>string_value     = (+alnum_p)>>   * (  (special_char )      >> *(+alnum_p) ) ;
-
-
-//   rule<>assignement_double  =   *(space_p) >> ch_p('=')>> *(space_p) >> 
-//     ( real_p[push_back_a(v_real)])>>*(space_p)   ; // with _ !!
-//   rule<>assignement_int  =   *(space_p) >> ch_p('=')>> *(space_p) >>
-//     ( int_p[push_back_a(v_int)])>>*(space_p)  ; // with _ !!
-//   rule<>assignement_string  =   *(space_p) >> ch_p('=')>> *(space_p) >>
-//     ( (string_value)[push_back_a(v_string)])>>*(space_p)  ; 
-
-
-//   //   string label1, label2, label3, label4;
-//   //   label1 = "reg_numb";
-//   //   label2 = "mat";
-
-//   // ******************************
-//   //  TO DO:  add label  "crystal_struct" 
-//   // ****************************
-//   //   label3 = "doping";
-//   //   label4 = "dop_type";
-
-//   rule<>label1_p = str_p("reg_numb");
-//   rule<>label2_p = str_p("mat");
-//   rule<>label3_p = str_p("crystal_struct");
-//   rule<>label4_p = str_p("doping");
-//   rule<>label5_p = str_p("dop_type");
-
-//   rule<> reg_prop = *(space_p) >>(label1_p) >> assignement_int >> 
-//     (label2_p) >>  assignement_string  >> (label3_p)>> 
-//     assignement_string  >> (label4_p) >> 
-//     assignement_double >>  (label5_p) >> assignement_string;   
-
-//   rule<> r_region = *(space_p)>>region_name[push_back_a(v_string)] >> 
-//     *(space_p) >> (ch_p('{'))>>  reg_prop >>*(space_p) >> (ch_p('}'))>> *(space_p) ; 
-
-
-//   while ( getline(in_stream, str) )
-//   {
-
-
-//     if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
-
-//     { // if !  comment_p("#")  
-
-	 
-
-//       if (  parse(str.c_str(),
-//                   r_region
-//                   )
-//             .full )  
-//       {
-//         //  //   cout << "v_real[0] " << v_real[0]<< endl;
-//         // 	      current_region.reg_name = v_string[0];
-//         // 	      current_region.reg_numb = v_int[0];
-//         // 	      current_region.mat_name = v_string[1];
-//         // 	      current_region.dop_conc = v_real[0];
-//         // 	      current_region.dop_type = v_string[2];
-
-//         // using  class  RegionDefinition 
-//         current_region.set_region_name(v_string[0]);
-//         current_region.set_region_number(v_int[0]);
-//         current_region.set_material_name(v_string[1]);
-//         current_region.set_crystal_name(v_string[2]);
-//         current_region.set_doping_concentration( v_real[0]);
-//         current_region.set_doping_type(v_string[3]);
-
-
-
-//         device_regions.push_back(current_region); // vector  of  RegionDefinition objects
-
-//         //   cout << "device_regions[0].mat_name  " <<device_regions[0].mat_name  << endl;
-
-//         //    cout << "current_region.mat_name " <<current_region.mat_name << endl;
-//         //    cout << v_int.size()<< endl;
-//         //   cout << "in parse_device: device_regions.size()  " << device_regions.size();
-
-
-//       }
-
-
-//       else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >> 
-//                                              ch_p("$")  ] , space_p ).full)
-
-
-//       {
-//         if (name == "End")
-//         {  
-//           cout << name  << endl ;
-//           break;
-//         }
-
-
-//       }
-
-//       else 
-//       {
-//         cerr <<  "  SYNTAX ERROR in input  file (section device structure)   " <<  endl;
-//         exit(1); 
-//       }
-
-
-
-
-
-//     }
-
-
-//     v_real.clear();
-//     v_int.clear();
-//     v_string.clear();
-
-
-//   }  //  end  while
-
-
-
-// }
-
-
-
-// const  vector<RegionDefinition>&   InputParser::get_device_regions()
-
-// {
-
-//   return  device_regions;
-
-
-// }
-
-
-
-
-
-// void InputParser::get_device_data( vector<string>& reg_name_v,vector<unsigned int>& reg_numb_v,
-// 				   vector<string>& mat_name_v, vector<double>& dop_conc_v, 
-// 				   vector<string>&  dop_type_v   )
-
-// {
-
-//   //  cout << "device_regions.size()" << device_regions.size();
-
-//   for (int i =0; i< device_regions.size();++i)
-//     {
-
-//       reg_name_v.push_back(device_regions[i].reg_name);
-//       reg_numb_v.push_back(device_regions[i].reg_numb);
-//       //  cout << "device_regions[i].mat_name" << 
-//       //	device_regions[i].mat_name<< endl;
-	
-
-//       mat_name_v.push_back(device_regions[i].mat_name);
-//       //  cout << " mat_name_v "<< mat_name_v[i]<< endl ; 
-
-//       dop_conc_v.push_back(device_regions[i].dop_conc);
-//       dop_type_v.push_back(device_regions[i].dop_type);
-
-//     }
-
-
-// }
-
-
-
-
-
-
-
-
-
-// void InputParser::parse_device_BC(ifstream& in_stream )
-
-// {
-
-//   // *******************************************************************************************************
-//   //  ***** IDEA:  List  of regions :
- 
-
-//   // $Bound_cond$
-//   // BC_name {  BC_numb = 1  type = dirichlet  value =  1.0 }
-//   //   $End$
-//   //
- 
-
-//   //   region_definition reg_def;
-
-//   //   vector<reg_def> device_regions;
-
-//   vector<double> v_real; 
-//   vector<int> v_int;
-//   vector<string> v_string;
-
-//   string  name,str;
-
-//   //  RegionDefinition  current_region;  //   struct *************
-//   //   device_regions.clear();
-
-
-//   rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/') | ch_p('+')  );
-//   rule<>region_name = (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
-//   rule<>string_value     = (+alnum_p)>>   * (  (special_char )      >> *(+alnum_p) ) ;
-
-
-//   rule<>assignement_double  =   *(space_p) >> ch_p('=')>> *(space_p) >> 
-//     ( real_p[push_back_a(v_real)])>>*(space_p)   ; // with _ !!
-//   rule<>assignement_int  =   *(space_p) >> ch_p('=')>> *(space_p) >>
-//     ( int_p[push_back_a(v_int)])>>*(space_p)  ; // with _ !!
-//   rule<>assignement_string  =   *(space_p) >> ch_p('=')>> *(space_p) >>
-//     ( (string_value)[push_back_a(v_string)])>>*(space_p)  ; 
-
-
-//   //   string label1, label2, label3, label4;
-//   //   label1 = "BC_reg_numb";
-//   //   label2 = "type";
-//   //   label3 = "value";
-//   //   // label4 = "dop_type";
-
-//   rule<>label1_p = str_p("BC_reg_numb");
-//   rule<>label2_p = str_p("type");
-//   rule<>label3_p = str_p("value");
-//   //  rule<>label4_p = str_p("dop_type");
-
-//   rule<> reg_prop = *(space_p) >>(label1_p) >> assignement_int >> 
-//     (label2_p) >>  assignement_string  >> (label3_p)>> 
-//     assignement_double; 
-//   // >> (label4_p) >> assignement_string;   
-
-//   rule<> r_region = *(space_p)>>region_name[push_back_a(v_string)] >> 
-//     *(space_p) >> (ch_p('{'))>>  reg_prop >>*(space_p) >> (ch_p('}'))>> *(space_p) ; 
-
-
-//   while ( getline(in_stream, str) )
-//   {
-
-
-//     if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
-
-//     { // if !  comment_p("#")  
-
-	 
-
-//       if (  parse(str.c_str(),
-//                   r_region
-//                   )
-//             .full )  
-//       {
-//         //   cout << "v_real[0] " << v_real[0]<< endl;
-
-//         BC_region_name_v.push_back(v_string[0]);
-//         BC_region_number_v.push_back(v_int[0]);
-//         BC_type_v.push_back(v_string[1]);
-//         BC_value_v.push_back(v_real[0]);
-
-
-
-//       }
-
-
-//       else  if (parse(str.c_str(), if_p("$")[(+alpha_p)[assign_a(name)] >> 
-//                                              ch_p("$")  ] , space_p ).full)
-
-
-//       {
-//         if (name == "End")
-//         {  
-//           cout << name  << endl ;
-//           break;
-//         }
-
-
-//       }
-
-//       else 
-//       {
-//         cerr <<  "  SYNTAX ERROR in input  file (section device boundary cond. )   " <<  endl;
-//         exit(1); 
-//       }
-
-	 
-
-
-//     }
-
-
-//     v_real.clear();
-//     v_int.clear();
-//     v_string.clear();
-
-
-//   }  //  end  while
-
-
-
-// }
-
-
-
-
-// void InputParser::get_BC_data( vector<string>& BC_region_name_v_out,
-// 			       vector<unsigned int>& BC_region_numb_v_out,
-// 			       vector<string>& BC_type_v_out, vector<double>& BC_value_v_out  )
-
-
-// {
-
-
-//   BC_region_name_v_out=BC_region_name_v ;
-//   BC_region_numb_v_out=BC_region_number_v ;
-//   BC_type_v_out = BC_type_v;
-//   BC_value_v_out = BC_value_v;
-
-
-
-// }
-
-
-// void
-// InputParser::parse_alloy(ifstream& in_stream)
-// {// method  for   parsing  of  alloy model section
-
-//   // vector <AlloyModel>  alloy_model ;
-
-
-//   string  item, region_keyword, alloy_model_keyword, equal, model_type, start_symbol , end_symbol, x;
-//   double molar_fraction, start_molar_fraction, end_molar_fraction;
-//   unsigned int reg_numb;
-  
-//   string dummy;
-//   char c;
-  
-//   //alloy_model.clear();
-  
-//   //AlloyModel current_alloy_model;
-  
-  
-  
-//   // while (!in_stream.eof()) 
-  
-//   //getline (in_stream, str))	  
-  
-  
-  
-//   in_stream >> region_keyword;
-//   cout << region_keyword<< endl;
-  
-// // if (region_keyword == "#")
-// // {
-// //  while (dummy != "\n")
-// //  {
-// //    c=getchar();
-// //  }
-// //  in_stream >> region_keyword;
-// // }
- 
-    
-//   while (  (region_keyword != "End") && (!in_stream.eof()) ) 
-    
-    
-//   {
-
-//     // Region n
-//     in_stream >>  reg_numb;
-//     in_stream >> start_symbol >> alloy_model_keyword >> equal >> model_type;
-//     alloy_model_pointer = new AlloyModel;
-
-//     //  if  (std::strncmp (model_type, "constant") = 0) 
-//     if (model_type == "constant")
-//     {
-
-//       in_stream >> x >> equal >> molar_fraction >> end_symbol;
-//       cout << " Region1  " << endl;
-//       alloy_model_pointer->set_x_constant (molar_fraction);
-//     }
-
-
-//     else
-//       //  if (std::strncmp (model_type, "linear") = 0)
-//       if (model_type =="linear")
-
-//       {
-//         in_stream >> x >> equal >> start_molar_fraction >>
-//           x >> equal >> end_molar_fraction >> end_symbol;                 
-
-//         alloy_model_pointer->set_x_min (start_molar_fraction);
-//         alloy_model_pointer->set_x_max (end_molar_fraction);
-//         cout << " Region2  " << endl;
-
-//       }
-
-//     alloy_model_pointer-> set_model (model_type);
-
-//     // alloy_model_pointer-> alloy_model_pointer = &current_alloy_model;
-
-
-//     // alloy_model.push_back (current_alloy_model);
-    
-    
-
-
-//     // map reg_alloy_model_map map <int reg_numb, AlloyModel&  current_alloy_model>
-//     cout << reg_numb << "   "  << model_type<< endl;
-//     reg_alloy_model_map.insert (make_pair (reg_numb, alloy_model_pointer));
-    
-//     in_stream >> region_keyword;
-//     cout << region_keyword<< endl;
-
-	      
-//   }// end while != "end"
-      
-//   cout <<   "  Out of  while "<< endl;
-
-
-//   //  } // end while != "eof"
-
-// } //  end  method
-
-
-
-
-
-// const   map <unsigned int, AlloyModel*>&  
-// InputParser::get_alloy_model_map()
-// {
-  
-//   return  reg_alloy_model_map;
-  
-// }
-
-
-
-
 
