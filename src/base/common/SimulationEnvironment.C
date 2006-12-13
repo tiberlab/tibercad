@@ -267,6 +267,7 @@ SimulationEnvironment::get_boundary_id(const std::string& name) const
   return id;
 }
 
+
 void
 SimulationEnvironment::prepare_for_solve(void)
 {
@@ -283,5 +284,23 @@ SimulationEnvironment::prepare_for_solve(void)
       el->set_refinement_flag(Elem::DO_NOTHING);
     else
       el->set_refinement_flag(Elem::INACTIVE);
+  }
+}
+
+
+void
+SimulationEnvironment::get_boundary_nodes(const Boundary* boundary,
+    std::set<const Node*>& nodelist)
+{
+  nodelist.clear();
+
+  BoundaryNodeIterator it(boundary_nodes_begin());
+  const BoundaryNodeIterator end(boundary_nodes_end());
+
+  for ( ; it != end; ++it)
+  {
+    // we can assume that any ID we get here is also in the BCMap
+    if (_bc_map[it->second] == boundary)
+      nodelist.insert(it->first);
   }
 }

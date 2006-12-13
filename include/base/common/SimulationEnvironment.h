@@ -119,6 +119,22 @@ class SimulationEnvironment
      */
     Boundary* get_boundary(const Node* node) const;
 
+    //! Get the list of all Nodes that belong to a certain boundary
+    /*!
+     * \param name the name of the boundary to look for
+     * \param nodelist the list to create
+     */
+    void get_boundary_nodes(const std::string& name,
+        std::set<const Node*>& nodelist);
+
+    //! Get the list of all Nodes that belong to a certain boundary
+    /*!
+     * \param boundary the pointer to the boundary to look for
+     * \param nodelist the list to create
+     */
+    void get_boundary_nodes(const Boundary* boundary,
+        std::set<const Node*>& nodelist);
+
 
     //! Get the ID of the boundary with user defined name \c name
     /*!
@@ -222,6 +238,13 @@ class SimulationEnvironment
     NodeMap _node_map;
 
 };
+
+
+
+//
+// inline members
+// 
+
 
 inline
 Device&
@@ -369,5 +392,16 @@ SimulationEnvironment::update_element_list(void)
 {
   create_element_list();
 }
+
+
+inline
+void
+SimulationEnvironment::get_boundary_nodes(const std::string& name,
+    std::set<const Node*>& nodelist)
+{
+  const Boundary* bd = get_boundary(name);
+  get_boundary_nodes(bd, nodelist);
+}
+
 
 #endif // _SIMULATIONENVIRONMENT_H_
