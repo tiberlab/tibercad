@@ -1,7 +1,7 @@
 # $Id$
 
 # Common definitions for all Makefiles
-topdir := /home/nano0/maufder/Projects/TIBERCAD/trunk
+topdir := @abs_top_builddir@
 
 ##
 ##
@@ -22,7 +22,7 @@ tibermodules += core/classical-transport/excitons
 tibermodules += utils/SLEPC
 
 # libmesh can be found here
-libmesh := /usr/pack/libmesh-0.5.0_20051010cvs-ma
+libmesh := @LIBMESH_PREFIX@
 include $(libmesh)/Make.common
 
 # libmesh and petsc were not compiled with it, but it resolves a link
@@ -33,7 +33,7 @@ include $(libmesh)/Make.common
 # boost := @BOOST_PREFIX@
 
 # gmsh
-GMSH := /usr/sepp/bin/gmsh
+GMSH := @GMSH@
 
 ##
 ##
@@ -59,11 +59,11 @@ endif
 
 CXXFLAGS += $(TIBER_INCLUDES)
 
-CXXFLAGS += -I/usr/pack/boost-1.33.1-ma/include
-LDFLAGS += -Wl,-rpath,/usr/pack/boost-1.33.1-ma/lib -L/usr/pack/boost-1.33.1-ma/lib -lboost_regex-gcc
+CXXFLAGS += @BOOST_CXXFLAGS@
+LDFLAGS += @BOOST_REGEX_LIB@
 
-CXXFLAGS += -I/usr/pack/gsl-1.6-ma/include
-LDFLAGS += -L/usr/pack/gsl-1.6-ma/lib -lgsl -lgslcblas -lm
+CXXFLAGS += @GSL_CFLAGS@
+LDFLAGS += @GSL_LIBS@
 
 LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib
 LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib -ltensor
@@ -71,7 +71,7 @@ LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib -ltensor
 TIBER_OBJECTS := $(shell find $(topdir)/src -name "*.$(obj-suffix)")
 
 
-NON_TIBER_INCLUDES := $(INCLUDE) -I/usr/pack/gsl-1.6-ma/include -I/usr/pack/boost-1.33.1-ma/include
+NON_TIBER_INCLUDES := $(INCLUDE) @GSL_CFLAGS@ @BOOST_CXXFLAGS@
 NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
 
 

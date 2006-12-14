@@ -1,0 +1,14 @@
+/* include/base/common/optional.h.in.  Generated from configure.ac by autoheader.  */
+
+/* define if boost is available. */
+#undef HAVE_BOOST
+
+/* define if Boost::regex is available */
+#undef HAVE_BOOST_REGEX
+
+/* Define to 1 if you have the <cassert> header file. */
+#undef HAVE_CASSERT
+
+/* Define to 1 if you have the GSL library. */
+#undef HAVE_GSL
+
