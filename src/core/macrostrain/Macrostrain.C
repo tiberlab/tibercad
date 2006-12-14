@@ -50,10 +50,20 @@ void Macrostrain::parse_options( )
  equation_systems->parameters.set<Real>("linear solver tolerance") = tolerance; 
 
 
-   
- opt.get_option("fixed_point1",fixed_point1);
- opt.get_option("fixed_point2",fixed_point2);
- opt.get_option("fixed_point3",fixed_point3);
+ {
+   vector<double> point;
+
+   opt.get_option("fixed_point1",point);
+   for (short i = 0; i < 3; i++)  fixed_point1(i) = point[i];
+
+
+   opt.get_option("fixed_point2",point);
+   for (short i = 0; i < 3; i++)  fixed_point2(i) = point[i];
+
+   opt.get_option("fixed_point3",point);
+   for (short i = 0; i < 3; i++)  fixed_point3(i) = point[i];
+
+ }
   
 
  //--------------------------------------------------------------------------------------//
