@@ -89,6 +89,8 @@ fi
 
 # GSL GNU scientific library
 TC_GSL
+# add RPATH to LDFLAGS
+[GSL_LIBS=`echo "$GSL_LIBS" | sed -r 's/-L([^[:space:]]+)/-Wl,-rpath,\1 -L\1/'`]
 
   
 

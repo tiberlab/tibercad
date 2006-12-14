@@ -27,7 +27,8 @@ include $(libmesh)/Make.common
 
 # libmesh and petsc were not compiled with it, but it resolves a link
 # problem if one links on a machine with debian `etch'
-# CXX = g++-4.0.0
+CXX = @CXX@
+CC = @CC@
 
 # the boost libraries
 # boost := @BOOST_PREFIX@

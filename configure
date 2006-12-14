@@ -3950,6 +3950,9 @@ _ACEOF
 
  fi
 
+# add RPATH to LDFLAGS
+GSL_LIBS=`echo "$GSL_LIBS" | sed -r 's/-L([^[:space:]]+)/-Wl,-rpath,\1 -L\1/'`
+echo "$GSL_LIBS"
 
 
 
@@ -4844,8 +4847,8 @@ done
 
                     ac_config_files="$ac_config_files Make.common doc/Doxyfile"
 
-#                 Makefile
-#                 doc/Makefile
+                 Makefile
+                 doc/Makefile
 
 if test "x$DOXYGEN" == x
 then
