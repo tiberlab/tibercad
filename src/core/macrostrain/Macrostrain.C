@@ -1,6 +1,9 @@
 #include "Macrostrain.h"
 #include "SimulationEnvironment.h"
 #include "Material.h"
+#include "BoundaryProperties.h"
+#include "Boundary.h"
+#include "MacrostrainBoundaryProperties.h"
 using namespace std;
 //-----------------------------------------------------------------//
 
@@ -10,18 +13,96 @@ Device*  Macrostrain:: _device;
 Macrostrain* Macrostrain::static_this;
 //-----------------------------------------------------------------//
 
+
+//-----------------------------------------------------------------//
 void Macrostrain::parse_options( )
 {
 
+ const ModelOptions& opt = get_options();
 
-  const ModelOptions& options = get_options();
+ 
 
+
+ max_r_steps = opt.get_option("refinement_steps", 0);
+ uniform_refinement = opt.get_option("uniform_refinement", false);
+
+
+ refine_fraction = opt.get_option("refine_fraction", 0);
+
+ coarsen_fraction = opt.get_option("coarsen_fraction", 0);
+
+ max_ref_level = opt.get_option("max_refinement_level",0);
+ tolerance  = opt.get_option("tolerance", 1e-6);  
+ max_shape_steps = opt.get_option("number_shape_steps",0);
+   
+
+ calculate_atom_displacements = opt.get_option("calculate_atom_displacements", false);
+ atom_structure_filename = opt.get_option("atom_structure_filename", "");
+ atom_displacements_filename = opt.get_option("atom_displacements_filename","");
+   
+ periodicity[0] = opt.get_option("periodicity_x",false);
+ periodicity[1] = opt.get_option("periodicity_y",false);
+ periodicity[2] = opt.get_option("periodicity_z",false);
+ 
+
+
+  
+ equation_systems->parameters.set<Real>("linear solver tolerance") = tolerance; 
+
+
+   
+ opt.get_option("fixed_point1",fixed_point1);
+ opt.get_option("fixed_point2",fixed_point2);
+ opt.get_option("fixed_point3",fixed_point3);
+  
+
+ //--------------------------------------------------------------------------------------//
+ //define  max and min coordinates 
+
+ Mesh  mesh = equation_systems->get_mesh();
+ 
+
+    
+ unsigned int num_nodes = mesh.n_nodes();
+ const Node& nd = mesh.node(0);
+ for (unsigned i = 0; i < 3; i++)
+   {
+     min_coord[i] = nd(i);
+     max_coord[i] = nd(i);
+   }
+
+ for (unsigned i = 1; i < num_nodes; i++)
+   {
+     const Node& nd = mesh.node(i);
+     for (unsigned i = 0; i < 3; i++)
+       {
+	 if (min_coord[i] < nd(i)) min_coord[i] = nd(i);
+	 if (max_coord[i] > nd(i)) max_coord[i] = nd(i);
+	 
+       }
+
+   }
+   
+  //-------------------------------------------------------------------------------------//
+  //-------------------------------------------------------------------//
+
+  
+
+
+    intermediate_output = opt.get_option("intermediate_output",false);
+    
+    output_strain_on_atoms = false;
+    atom_output_type = "uptight";
+
+ 
+    output_type = opt.get_option("output_type","GMV");
+ 
+
+    
+  
 
 
 }
-
-
-
 
 
 //-----------------------------------------------------------------//
@@ -39,166 +120,124 @@ void Macrostrain::do_init( )
   _device = &( si.get_device() );
 
 
-  grown_on_substrate = options.get_option("grown_on_substrate",false );
+  uname_vec[0]="ux";
+  uname_vec[1]="uy";
+  uname_vec[2]="uz";
+
+  mesh = &(equation_systems->get_mesh());
+      
+  dim = mesh->mesh_dimension();
 
 
-  if ( grown_on_substrate )
+
+  substrate_name = options.get_option("substrate","_no_substrate_");
+
+  Boundary* substrate_boundary= si.get_boundary ( substrate_name) ;
+
+  grown_on_substrate = false;
+
+  substrate_crystal = NULL;
+
+  if (substrate_boundary != NULL)
     {
-/*      string substrate_mat_name;
+      BoundaryProperties*  bp =  substrate_boundary->get_boundary_properties (get_id() );
 
-      assert( options.find_options("substrate_material") );
+      if (bp !=NULL) 
+	{
+	  grown_on_substrate = true;
 
-      substrate_mat_name = options.get_option("sunbstrate_material", "GaAs");
-      
-      substrate = RotatedCrystal::create( substrate_mat_name,   )
-*/
+	  substrate_crystal =  &( ( (dynamic_cast< MacrostrainSubstrate* > (bp) )
+				    ->get_material() )->get_rotated_crystal ()  );
+	}
+
+
     }
-
-
-  max_r_steps = opt.max_r_steps;
-  uniform_refinement = opt.uniform_refinement;
-  refine_fraction = opt.refine_fraction;
-  coarsen_fraction = opt.coarsen_fraction;
-  max_ref_level = opt.max_ref_level;
-  tolerance  = opt.tolerance  ;
-  max_shape_steps = opt.max_shape_steps;
-   
-
-  //  grown_on_substrate = opt.grown_on_substrate;
-
-  calculate_atom_displacements = opt.calculate_atom_displacements;
-  atom_structure_filename = opt.atom_structure_filename;
-  atom_displacements_filename = opt.atom_displacements_filename;
-   
-
-  for (unsigned int i =0; i <=2; i ++ ) periodicity[i] = opt.periodicity[i];
-  substr_mat = opt.substr_mat;
   
-  Mesh& mesh = equation_systems->get_mesh();
-      
-    dim = mesh.mesh_dimension();
 
-    uname_vec[0]="ux";
-    uname_vec[1]="uy";
-    uname_vec[2]="uz";
+  if (!grown_on_substrate)
+    {
+      Point p;
+      vector<double> ref_point;
+      options.get_option("reference_material_point",ref_point);
+      for (short i = 0; i < 3; i++)  p(i) = ref_point[i];
 
-    //define additional parameters-------------------------------------------
+      MeshBase::const_element_iterator el  = mesh->active_elements_begin();
+      MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
-    define_additional_variables();
+      const Elem* elem1 = NULL;
 
+      for ( ; ( el != end_el ) ; ++el)  
+	{
+	  Elem* elem = *el;
+	  if (   may_belong_to_element(elem,  p) )
+	    {
+	      if (elem->contains_point(p))
+		{
+		  if (elem->contains_point(p))
+		    {
+		      elem1 = elem;
 
-   
-
-    system_name = get_equation_system_name ( );
-
-    // Declare the Poisson system and its variables.
-    // The Poisson system is another example of a steady system.
-    equation_systems->add_system<LinearImplicitSystem> (system_name);
-
-   
-    
-      
-    equation_systems->parameters.set<Real>("linear solver tolerance") = tolerance; 
-    // Adds the variable "u" to "Poisson".  "u"
-    // will be approximated using second-order approximation.
-  
-    dim = mesh.mesh_dimension();
-
-
-    my_system = &( equation_systems->get_system<LinearImplicitSystem>(system_name)  );
-
-    //---------------------------------------------------------------------------------------
-    //add normal variables
-	
-    for (unsigned int i = 0; i <  3 ; i++)  
-      {  
-	my_system->add_variable(uname_vec[i], FIRST);
-      }
-    
- 
-    //---------------------------------------------------------------------------------------
-    //add aditional varables 
-
-
-    if (number_of_add_var != 0)
-      {
-	FEType fe_type(CONSTANT,MONOMIAL);
-	my_system->add_variable("fict", fe_type);
-      }
-    //-----------------------------------------------------------------------------------
-      
-
-    // Give the system a pointer to the matrix assembly
-    // function.  This will be called when needed by the
-    // library.
-
-   
-
-
-
-    my_system->attach_assemble_function (assemble_strain_matrix);
-  
-    //---------------------------------------------------------------------------------------
- 
-    for (unsigned int i=0 ; i < 3; i++) 
-      {
-	fixed_point1(i) = opt.fixed_point1[i];
-	fixed_point2(i) = opt.fixed_point2[i];
-	fixed_point3(i) = opt.fixed_point3[i];
-      }
-
-    //-------------------------------------------------------------------//
-
-    //define  max and min coordinates 
-    
-    unsigned int num_nodes = mesh.n_nodes();
-    const Node& nd = mesh.node(0);
-    for (unsigned i = 0; i < 3; i++)
-      {
-	min_coord[i] = nd(i);
-	max_coord[i] = nd(i);
-      }
-
-    for (unsigned i = 1; i < num_nodes; i++)
-      {
-	const Node& nd = mesh.node(i);
-	for (unsigned i = 0; i < 3; i++)
-	  {
-	    if (min_coord[i] < nd(i)) min_coord[i] = nd(i);
-	    if (max_coord[i] > nd(i)) max_coord[i] = nd(i);
+		      break;
+		    }
+		}
+	    }
 	  
-	  }
+	}
+      
+      ID subdomain = elem1->subdomain_id();
+      const Material* mat = _device->get_material(subdomain);
+      substrate_crystal  = &(mat->get_rotated_crystal());
 
-      }
-   
+    }
 
-  //-------------------------------------------------------------------//
+
+
+ 
+
+
+  define_additional_variables();
+
 
   
 
 
-    intermediate_output = opt.intermediate_output;
+  //--------------------------------------------------------------------------------------//
+  //add new system
+  system_name = get_equation_system_name ( );
+  
+ 
+  equation_systems->add_system<LinearImplicitSystem> (system_name);
 
-    output_strain_on_atoms = false;
-    atom_output_type = "uptight";
+  my_system = &( equation_systems->get_system<LinearImplicitSystem>(system_name)  );
 
-    //------------------------------------------------------------------//
-    if ((opt.output_type == "GMV")|| (opt.output_type == "tecplot"))
-      {
-	output_type = opt.output_type;
-      }
-    else
-      {
-	cerr << "Strange output type: " << opt.output_type << "\n";
-	cerr << "We set it to GMV\n";
-	output_type = "GMV";
+  //--------------------------------------------------------------------------------------//
+
+  //--------------------------------------------------------------------------------------//
+  //add normal variables
+	
+  for (unsigned int i = 0; i <  3 ; i++)  
+    {  
+      my_system->add_variable(uname_vec[i], FIRST);
     }
     
-    //----------------------------------------------------------------//   
  
+  //---------------------------------------------------------------------------------------//
+  //add aditional varables 
+  
+  
+  if (number_of_add_var != 0)
+    {
+      FEType fe_type(CONSTANT,MONOMIAL);
+      my_system->add_variable("fict", fe_type);
+    }
+  //---------------------------------------------------------------------------------------//
+  
+  my_system->attach_assemble_function (assemble_strain_matrix);
 
-    
+  //------init is done---------------------------------------------------------------------//
 }
+
+
 //--------------------------------------------------------------------//
 
 void Macrostrain::define_fixed_nodes()
@@ -208,391 +247,8 @@ void Macrostrain::define_fixed_nodes()
   fixed_node3 = find_nearest_node(fixed_point3);
 }
 
-//-------------------------------------------------------------------//
-void Macrostrain::define_substrate_bc(unsigned int substrate_bc_number_in)
-{
-  substrate_bc_number = substrate_bc_number_in;
-}
-
 //--------------------------------------------------------------------//
-void Macrostrain::define_stress_value (const map <unsigned int, double> & stress_map_in)
-{
-  stress_values = stress_map_in;
-}
 
-//-------------------------------------------------------------------//
-void Macrostrain::define_BC_map (const map <unsigned int , vector<unsigned int> > & bc_cond_in  )
-{
-  boundary_cond_nodes = bc_cond_in;
-}
- 
-
-
-//-------------------------------------------------------------------//
-void Macrostrain::assign_mesh_data(MeshData& mesh_data_in)
-{
-   meshdata = &mesh_data_in;
-}
-
-
-//-----------------------------------------------------------------//
-void Macrostrain::define_strain_parameters(const std::map <unsigned int, Macrostrain::strain_param > &    strain_parameters_in )
-{
-  strain_parameters = strain_parameters_in;
-}
-
-
-//------------------------------------------------------------------//
-
-
-//------------------------------------------------------------------//
-
-void Macrostrain::define_piezo_moduli(const std::map<unsigned int, Piezoelectricity*>&  piezo_in )
-{
-  piezo_parameters = piezo_in; 
-}
-//------------------------------------------------------------------//
-void Macrostrain::create_substate_nodes_set()
-{
-  if (grown_on_substrate)
-    {
-      //--------------------------------------------------------------
-      //first we create a list of substrate nodes
-      map <unsigned int , vector<unsigned int> >   :: iterator bc_pos;
-  
-      bc_pos =  boundary_cond_nodes.find(substrate_bc_number);
-      if (bc_pos == boundary_cond_nodes.end()) 
-	{
-	  cerr << "Macrostrain::create_substate_nodes_set Can not find boundary condition for substrate #  "<< substrate_bc_number  <<"  \n";
-	  exit(1);
-	}
-  
-      vector<unsigned int> sub_nodes = bc_pos->second;
-      unsigned int num_nodes = sub_nodes.size();
-
-      substrate_nodes.clear();
-      
-      for (unsigned int i = 0; i <  num_nodes; i++)
-	{
-	  substrate_nodes.insert(sub_nodes[i]);
-	}
-      
-      //cerr << " substrate_nodes.size() " << substrate_nodes.size() <<"\n";
-     
-
-      //-------------------------------------------------------------
-      // we create substrate_faces (2D/3D only)
-
-      if (dim > 1)
-	{
-	  set<unsigned int>:: iterator  node_begin = substrate_nodes.begin();
-	  set<unsigned int>:: iterator  node_end = substrate_nodes.end();
-
-	  substrate_faces.clear();
-
-	  const Mesh& mesh = equation_systems->get_mesh();
-
-	  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-	  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-	  
-	  for ( ; el != end_el ; ++el) 
-	    {
-	      
-	      const Elem* elem = *el;
-	      
-	      
-	      unsigned int n_sides = elem -> n_sides();
-	      set<unsigned int> s_faces;
- 
-
-	      for (unsigned int s = 0; s < n_sides; s++)
-		{
-		  
-		  
-		  AutoPtr<Elem> side = elem->build_side(s);
-		  bool found = true;
-		  for (int i = 0; i < side->n_nodes(); i++)
-		    {
-		      if (substrate_nodes.find(side->node(i)) == node_end)       found = false;
-		    }
-		  if (found)
-		    {
-		      s_faces.insert(s);
-		    }
-		}
-
-	    
-
-	 
-
-	      if (!(s_faces.empty() )) substrate_faces.insert(pair < const Elem*, set<unsigned int> > (elem, s_faces ))  ;
-
-	    }
-	  
-	}
-    }
-}
-//------------------------------------------------------------------//
-void Macrostrain::update_substrate_nodes_set()
-{
-  if (grown_on_substrate)
-    {//grown on substrate
-      if (dim > 1) //only in this case we have to update
-	{
-	  map<const Elem*, std::set <unsigned int > >  new_map;
-	  new_map.clear();
-
-	  substrate_nodes.clear();
-	  const Mesh& mesh = equation_systems->get_mesh();
-
-	  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-	  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-      
-	  for ( ; el != end_el ; ++el) 
-	    { //--el_loop
-	      const Elem* elem = *el;
-	      //---does this element belong to the map?----
-	      map<const Elem*, std::set <unsigned int > > :: iterator it;
-	      it = substrate_faces.find(elem);
-	      if (it != substrate_faces.end())
-		{//----yes, it belongs to the map
-		  set<unsigned int> el_sides = it -> second;
-		  
-		  new_map.insert(pair<const Elem*, std::set <unsigned int > > (elem, el_sides)); //copy it to the new map
-		  set<unsigned int> :: iterator  side_it = el_sides.begin();
-		  for ( ; side_it != el_sides.end() ; ++side_it)
-		    {
-		      unsigned int side_number = *side_it;
-		      AutoPtr<Elem> side = elem->build_side(side_number);
-		      for (int i = 0; i < side->n_nodes(); i++) substrate_nodes.insert(side->node(i));
-
-		   
-		      
-		    }
-		}
-	      else 
-		{//---no, it does not belong to the map
-		  //let us check its parent 
-		  const Elem* elem_parent = elem->parent();
-		  map<const Elem*, std::set <unsigned int > > :: iterator it;
-		  it = substrate_faces.find(elem_parent);
-		  if (it !=  substrate_faces.end())
-		    { //top parent belongs to a map
-		      set <unsigned int> new_sides;
-		      std::set <unsigned int > parent_el_sides;
-		      parent_el_sides = it -> second;
-		      //now we check if a child lies on a necessary side
-		      
-		      set <unsigned int> :: iterator par_it  =  parent_el_sides.begin();
-		      set <unsigned int> :: iterator par_end =  parent_el_sides.end();
-		      for ( ; par_it != par_end; ++par_it) 
-			{
-			  unsigned int side_number = *par_it;
-			  /* I assume that side number i of an element and its parent are parallel faces */
-			  /* I hope this is correct */
-		       
-			  if ((elem->neighbor(side_number) == NULL)) // on boundary
-			    {
-			      AutoPtr<Elem> side = elem->build_side(side_number);
-			      new_sides.insert(side_number);
-			      for (int i = 0; i < side->n_nodes(); i++) substrate_nodes.insert(side->node(i));
-
-
-			    }
-			  
-			}
-		      if (!(new_sides.empty()))  new_map.insert(pair< const Elem*, set <unsigned int>  > (elem, new_sides));
-		      
-		    }
-		}
-	      
-	      
-	    } 
-	  
-	  
-	  substrate_faces = new_map;
-	}
-    }
-
-}
-
-//-----------------------------------------------------------------//
-void Macrostrain::create_bondary_conditions_map()
-{
-  // Get a constant reference to the mesh object.
-  const Mesh& mesh = equation_systems->get_mesh();
-
-  boundary_cond_elem.clear();
-
- 
-  map <unsigned int, double>::iterator   stress_bc;
-  map <unsigned int, double>::iterator   stress_bc_end = stress_values.end();
-  
-  stress_bc = stress_values.begin();
-  
-  for (       ;  stress_bc != stress_bc_end ; ++stress_bc)
-    { //boundary conditions loop
-      //----------------------------------------------------------------
-      //we have to find if there is information in a mesh file for this stress applied
-
-      unsigned int stress_number = stress_bc->first;
-
-      map <unsigned int , vector<unsigned int> >   :: iterator bc_pos;
-
-      bc_pos =  boundary_cond_nodes.find(stress_number);
-
-      if (bc_pos == boundary_cond_nodes.end()) 
-	{
-	  cerr << "Can not find boundary condition #  "<< stress_number <<"  \n";
-	  exit(1);
-	}
-      //---------------------------------------------------------------
-      // there is such information, we can find elements and sides
-      const vector<unsigned int> nodes_of_bc = bc_pos->second;
-      
-      vector<unsigned int> :: const_iterator n_it;
-      const vector<unsigned int> :: const_iterator n_begin = nodes_of_bc.begin();
-      const vector<unsigned int> :: const_iterator n_end   = nodes_of_bc.end();
-
-      MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-      const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-
-      for ( ; el != end_el ; ++el) 
-	{
-	
-	  const Elem* elem = *el;
-	  map <unsigned int, double>  element_map;
-	  
-	  if (dim > 1)
-	    {
-	      unsigned int n_sides = elem -> n_sides();
-	      
-
-
-	      for (unsigned int s = 0; s < n_sides; s++)
-		{
-		  if (elem->neighbor(s) == NULL)
-		    {
-		      bool found = true;
-		      AutoPtr<Elem> side = elem->build_side(s);
-		      for (int i = 0; i < side->n_nodes(); i++)
-			{
-			  if (find(n_begin, n_end,side->node(i) ) == n_end)
-			    { found = false;}		    
-			}
-		      if (found) 
-			{
-			  
-			  element_map.insert(pair<unsigned int, double>(s,stress_bc->second) );
-			}
-		    }
-		} 
-	    }
-	  else
-	    {
-	      for (int i = 0; i < 2; i++)
-		{
-		   if (find(n_begin, n_end, elem->node(i) ) != n_end) 
-		     {
-		       element_map.insert(pair<unsigned int, double>(i,stress_bc->second) );
-		     }
-		}
-	    }
-
-	  if (!(element_map.empty())) 
-	    {
-	     
-	      boundary_cond_elem.insert(pair<const Elem*, map<unsigned int, double> > (elem,element_map));
-	    
-	    }
-	 
-	}
-    }
-  
- 
-
-
-
- 
-}
-//-----------------------------------------------------------------//
-void Macrostrain::update_bondary_conditions_map()
-{
-
-  if (dim > 1)
-    {
-      map <const Elem*, map <unsigned int, double> > new_map;
-
-      new_map.clear();
-
-      const Mesh& mesh = equation_systems->get_mesh();
-
-      MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-      const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-      for ( ; el != end_el ; ++el) 
-	{ //--el_loop
-	  const Elem* elem = *el;
-	  if (element_on_boundary(elem)) 
-	    {//element is on boundary
-	      //---does this element belong to the map?----
-	      map<const Elem*, std::map <unsigned int , double > > :: iterator it_bc;
-	      map <unsigned int, double>  element_map;
-	      it_bc = boundary_cond_elem.find(elem);
-	      if (it_bc !=  boundary_cond_elem.end())
-		{//----yes, it belongs to the map
-		  element_map = it_bc->second ;
-		  new_map.insert(pair<const Elem*, map<unsigned int, double> > (elem,element_map));
-		}
-	      else
-		{//---no, it does not belong to the map
-		  
-		  //let us check its parent 
-		  const Elem* elem_parent = elem->parent();
-		  map<const Elem*, std::map <unsigned int , double > > :: iterator it_bc;
-		  
-		  it_bc = boundary_cond_elem.find(elem_parent);
-		  if (it_bc !=  boundary_cond_elem.end())
-		    { //top parent belongs to a map
-		      
-		      map <unsigned int, double>  parent_element_map;
-		      parent_element_map = it_bc->second ;
-		      
-		      
-		      map <unsigned int, double>  element_map;
-		      
-		      element_map.clear();
-		      
-		      
-		      //now we check if a child lies on a necessary side
-		      map <unsigned int, double> :: iterator par_it  =  parent_element_map.begin();
-		      map <unsigned int, double> :: iterator par_end =  parent_element_map.end();
-		      
-		      for ( ; par_it != par_end; ++par_it) 
-			{
-			  unsigned int side = par_it->first;
-			  /* I assume that side number i of an element and its parent are parallel faces */
-			  /* I hope this is correct */
-			  
-			  if ((elem->neighbor(side) == NULL)) // on boundary
-			    {
-			      const double stress =  par_it->second;
-			      element_map.insert(pair<unsigned int, double>  (side,stress));
-			      
-			    }
-			}
-	     	      
-		      if (! element_map.empty() ) new_map.insert(pair<const Elem*, map<unsigned int, double> > (elem,element_map));
-		      
-		    }  
-		}
-	    }
-	}
-      
-      boundary_cond_elem = new_map;
-    }
-}
-
-//-----------------------------------------------------------------//
 void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 				     const std::string& system_name)
 {
@@ -756,19 +412,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
  
   std::vector<unsigned int> dof_indices_total;
 
-  // Now we will loop over all the elements in the mesh.
-  // We will compute the element matrix and right-hand-side
-  // contribution.
-  //
-  // Element iterators are a nice way to iterate through
-  // all the elements, or all the elements that have some property.
-  // There are many types of element iterators, but here we will
-  // use the most basic type, the  const_elem_iterator.  The iterator
-  //  el will iterate from the first to the last element.  The
-  // iterator  end_el tells us when to stop.  It is smart to make
-  // this one  const so that we don't accidentally mess it up!
-//   const_elem_iterator           el (mesh.elements_begin());
-//   const const_elem_iterator end_el (mesh.elements_end());
+  
 
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
@@ -783,9 +427,10 @@ void Macrostrain::do_assemble(EquationSystems& es,
   
   //dof_map.print_dof_constraints();   	
  
-  // Loop over the elements.  Note that  ++el is preferred to
-  // el++ since the latter requires an unnecessary temporary
-  // object.
+
+
+  SimulationEnvironment& si = get_environment(); 
+  
 
   
 
@@ -802,8 +447,6 @@ void Macrostrain::do_assemble(EquationSystems& es,
  
   double lattice_factor;
 
-  //(*crystal_temp)[substr_mat].get_lat_const(substrate_lat_const);
-  // for (int i = 0; i <=2; i++) std::cerr << substrate_lat_const[i];
 
   
   unsigned int el_number = 0; 
@@ -843,23 +486,6 @@ void Macrostrain::do_assemble(EquationSystems& es,
       
 
       
-      //
-      //  C_tensor_el = dynamic_cast<Stiffness*>( _device->get_material(subdomain) ->get_model(  get_id())   );
-
-      
-      //crystal_el = dynamic_cast<RotatedCrystal*>( _device->get_material(subdomain)->get_model(  get_id())   );
-
-
-      //   const unsigned int material = (*material_of_elem_temp)[el_number];
-
-     
-    
-      
-      
-     
-      //C_tensor_el = 	((*strain_parameters_temp)[ material  ]).C_tensor ;
-      //crystal_el =  	((*strain_parameters_temp)[ material  ]).crystal;
-
       const Material* mat = _device->get_material(subdomain);
 
       const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
@@ -882,346 +508,331 @@ void Macrostrain::do_assemble(EquationSystems& es,
       crystal_el->get_lat_const(lat_const);
      
       
-
+      //----------------------------------------------------------//
+      //master equation:                                          //
+      //                                                          //
+      //     d/dx_i  ( C_ijkl (du_k/dx_l + eps0_kl)) =0           //
+      //                                                          //
+      //                                                          //
+      //----------------------------------------------------------//
      
-      
-      for (unsigned int qp=0; qp<qrule.n_points(); qp++) // Scalar product integration
-	{//qp
-	  //----------------------------------------------------------//
-	  //master equation:                                          //
-          //                                                          //
-	  //     d/dx_i  ( C_ijkl (du_k/dx_l + eps0_kl)) =0           //
-	  //                                                          //
-          //                                                          //
-	  //----------------------------------------------------------//
-	  for (unsigned int j = 0; j<=2; j++)
-	    {//loop over j: master equation discretization
- 	     
-	      dof_map.dof_indices (elem, dof_indices_component, uvar[j]);
-	      const unsigned int n_u_dofs = dof_indices_component.size(); 
-	      Fe_sub.reposition (uvar[j]*n_u_dofs, n_u_dofs);
+      for (unsigned int j = 0; j<=2; j++)
+	{//loop over j: master equation discretization
+	//Right Hand Side---------------------------------------------------------------------//
+
 	 
-	          
+	  
 	      
+	  dof_map.dof_indices (elem, dof_indices_component, uvar[j]);
+	  const unsigned int n_u_dofs = dof_indices_component.size(); 
+	  Fe_sub.reposition (uvar[j]*n_u_dofs, n_u_dofs);
+	          
+	  const unsigned int num_sides =  elem->n_sides(); 
+	  //!first we calculate volume part
+	  //  /
+	  //  | C_ijkl eps0_kl df/dx_i dV
+	  //  /
+	  //
+	  for (unsigned int p1=0; p1<n_u_dofs; p1++)
+	     if (!belongs_to_substrate(p1, elem))
+	       {//not a substrate
+		 for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+		   {//qp
+		     vec1 = 0;
+		     for (int i = 1; i<=dim; i++) vec1(i) = dphi[p1][qp](i-1);
+		     
+		     //-------------eps0 part------------------
+		     for (unsigned int k = 0; k <= 2; k++)
+		       {
+			 vec2 = 0;
+			 for (int i = 1; i <=3; i++ ) 
+			   {	     	
+			     if (k+1 > i)
+			       vec2(i) = eps_const(k+1,i);
+			     else
+			       vec2(i) = eps_const(i,k+1);
+			   }
+			 
+				
+			 Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)* vec2 ));
+		       } 
+		   }
+	       
+	    
+	  
 
-	      for (unsigned int p1=0; p1<n_u_dofs; p1++)
-		{//p1
+		 //! may be there is external pressure, so we have to calculate a surface part
+		 //
+		 //
+		 //
+		 for (unsigned int side=0; side<num_sides; side++)
+		   {//side loop
+	      
+	   
+		     Boundary* bd = si.get_boundary(std::pair<const Elem*,  unsigned int> (elem,side));
+		     
+		     if (bd != NULL)
+		       if (bd->get_name() != substrate_name)
+			 {
+				
+				
+			   MacrostrainPressure* press = 
+			     dynamic_cast<MacrostrainPressure*> (bd->get_boundary_properties (get_id()));
+		      
+			   if (dim > 1)
+			     
+			     {
+			       const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
+			       
+			       const std::vector<Real>& JxW_face = fe_face->get_JxW();
+			       
+			       const std::vector<Point >& qface_point = fe_face->get_xyz();
+			       
+			       const std::vector<Point> & normal = fe_face->get_normals();
+			       
+			       fe_face->reinit(elem, side);
+			       
+			       for (unsigned int qp=0; qp<qface.n_points(); qp++)
+				 {				  
+				   Fe_sub(p1) += ((JxW_face[qp] * phi_face[p1][qp])
+						  * press->get_value() ) * normal[qp](j);
+				 } 
+					
+			     }
+			   else
+			     {
+			       double normal;
+			       Point p = elem->point(side);
+			       Point pc = elem->centroid();
+			       if (p(0) > pc(0)) 
+				 normal = 1.0;
+			       else
+				 normal = -1.0;
+			     
+			       
+			       Fe_sub(p1) +=  press->get_value() * normal;
+			     }
+				
+			 }
+		      
+			  
+		   }//end of side loop
+	       }
+	     else
+	       {
+		 Fe_sub(p1) = 0.0;
+	       }	      
+	       
 
+	    	
+			
+	  //---RHS of master equation is done---------------------------------------------------//
+	  //---now we do the matrix-------------------------------------------------------------//    
 
-
- 		  if (!belongs_to_substrate(p1, elem))
-		    {//---------not a substrate point, so we calculte the RHS for master equation system
-
+	  //----- additional variables first, if any--------------------------------------------//
+	  for (unsigned int p1=0; p1<n_u_dofs; p1++)
+	    {
+	      for (unsigned int i1 = 0; i1 < add_var.size()  ; i1++)
+		{
+		  Ke_u_add_sub.reposition (uvar[j]*n_u_dofs, n_dofs, n_u_dofs, add_var.size());	  
+		
+		  eps_var = crystal_el->get_var_eps0( add_var[i1].name );
+		
+		  for (unsigned int qp=0; qp<qrule.n_points(); qp++) 
+		    {
 		      vec1 = 0;
 		      for (int i = 1; i<=dim; i++) vec1(i) = dphi[p1][qp](i-1);
-		      
-		      //-------------eps0 part------------------
+		     
 		      for (unsigned int k = 0; k <= 2; k++)
 			{
 			  vec2 = 0;
 			  for (int i = 1; i <=3; i++ ) 
-			    {	     	
+			    {  
 			      if (k+1 > i)
-				vec2(i) = eps_const(k+1,i);
+				vec2(i) = eps_var(k+1,i);
 			      else
-				vec2(i) = eps_const(i,k+1);
+				vec2(i) = eps_var(i,k+1);
 			    }
-			  
-			 
-			  Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)* vec2 ));
-			} 
-
-		      //------------external normal stress--------
-		     
 		      
-
-		      map<const Elem*, std::map <unsigned int , double > > :: iterator it_bc;
-		      std::map <unsigned int, double>  element_map;
-		     
-		      it_bc = boundary_cond_elem.find(elem);
-		    
-		      if (it_bc != boundary_cond_elem.end()) 
-			{ //if this element has applied stress
-			 
-			 
-			 
-			  element_map = it_bc->second ;
-
-			  if (dim > 1)
-			    {//2D, 3D case 
-
-			      map <unsigned int, double> :: iterator side_it  =  element_map.begin();
-			      map <unsigned int, double> :: iterator side_end =  element_map.end();
-			      for ( ; side_it != side_end; ++side_it) 
-				{//loop over stressed sides
-				  unsigned int side = side_it->first;
-			     	
-				  const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
-				  
-				  const std::vector<Real>& JxW_face = fe_face->get_JxW();
-				
-				  const std::vector<Point >& qface_point = fe_face->get_xyz();
-				  
-				  const std::vector<Point> & normal = fe_face->get_normals();
-				  
-				  double stress_value = side_it->second ;
-
-
-				  fe_face->reinit(elem, side);
-
-				 
-				  for (unsigned int qp=0; qp<qface.n_points(); qp++)
-				    {				  
-				      Fe_sub(p1) += ((JxW_face[qp] * phi_face[p1][qp]) * stress_value) * normal[qp](j);
-				    } 
-				  
-				    
-				}
-			    }
-			  else
-			    { //1D case 
-			      if (j == 0) //the only non-zero component of the normal
-				{
-				  map <unsigned int, double> :: iterator node_it  =  element_map.begin();
-				  map <unsigned int, double> :: iterator node_end =  element_map.end();
-				  for ( ; node_it != node_end; ++node_it) 
-				    {//loop over stressed nodes
-				      unsigned int node_number = node_it -> first;
-				      if (p1 == node_number)
-					{
-					  double stress_value = node_it->second ;
-					  double normal;
-					  Point p = elem->point(node_number);
-					  Point pc = elem->centroid();
-					  if (p(0) > pc(0)) 
-					    normal = 1.0;
-					  else
-					    normal = -1.0;
-                                          cerr << "stress_value   " <<  stress_value << "\n";
-
-					  Fe_sub(p1) += stress_value * normal;
-					} 
-				    }
-				}
-			    }
-			  
+			  Ke_u_add_sub(p1,i1) += JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2 ));
 			}
-			
-		      //---RHS of master equation is done---------------------------------------------------
-
-
-		      //----- additional variables first, if any---------------------------------------------
-		    
-		      for (unsigned int i1 = 0; i1 < add_var.size()  ; i1++)
-			{	  			 
-			
-			  
-			  Ke_u_add_sub.reposition (uvar[j]*n_u_dofs, n_dofs, n_u_dofs, add_var.size());
-			  
-			
-			  eps_var = crystal_el->get_var_eps0( add_var[i1].name );
-			  
-			  
-			  
-			  vec1 = 0;
-			  for (int i = 1; i<=dim; i++) vec1(i) = dphi[p1][qp](i-1);
-		      
-			  for (unsigned int k = 0; k <= 2; k++)
-			    {
-			      vec2 = 0;
-			      for (int i = 1; i <=3; i++ ) 
-				{  
-				  if (k+1 > i)
-				    vec2(i) = eps_var(k+1,i);
-				  else
-				    vec2(i) = eps_var(i,k+1);
-				}
-			   
-			      Ke_u_add_sub(p1,i1) += JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2 ));
-			    }
- 
-			} 
-		      //------ additional variables done ---------------------
 		    }
-		  else
-		    {
-		      //substrate point
-		      Fe_sub(p1) = 0.0;
-		     
-		    }
-
-
-
-
-		}		
-	    
+		} 
+	    }
+	    //------ additional variables done --------------------
+	    //------ now normal variables -------------------------
 	      
-	      for (unsigned int k = 0; k<=2; k++)
-		{//loop over k
+	    for (unsigned int k = 0; k<=2; k++)
+	      {//loop over k
 		
-			  
-		  dof_map.dof_indices (elem, dof_indices_component, uvar[k]);
-		  const unsigned int n_u_dofs = dof_indices_component.size(); 
-		  Ke_sub.reposition (uvar[j]*n_u_dofs, uvar[k]*n_u_dofs, n_u_dofs, n_u_dofs);
+		dof_map.dof_indices (elem, dof_indices_component, uvar[k]);
+		const unsigned int n_u_dofs = dof_indices_component.size(); 
+		Ke_sub.reposition (uvar[j]*n_u_dofs, uvar[k]*n_u_dofs, n_u_dofs, n_u_dofs);
 			  
 		 	  
-		  for (unsigned int p1=0; p1<n_u_dofs; p1++)
-		    {
-		      for (unsigned int p2=0; p2<n_u_dofs; p2++)
-			{		      
-			  double scal_prod;
-			 
+		for (unsigned int p1=0; p1<n_u_dofs; p1++)
+		  {
+		    for (unsigned int p2=0; p2<n_u_dofs; p2++)
+		      {		      
+			double scal_prod;
 			
+			
+			for (unsigned int qp=0; qp<qrule.n_points(); qp++) 
+			  {
+			    vec1 = 0;
+			    for (int i = 1; i<=dim; i++) vec1(i) = dphi[p1][qp](i-1) ;
+			  
+			    vec2 = 0;
+			    for (int i = 1; i<=dim; i++) vec2(i) = dphi[p2][qp](i-1) ;
+			    
+			    scal_prod = vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2);
+			      
+			    if (!belongs_to_substrate(p1, elem))
+			      {
+				Ke_sub(p1,p2) += JxW[qp]*scal_prod;
+				
+			      }
+			    else
+			      {
+				Ke_sub(p1,p2) = delta(p1,p2)*delta(j,k);
+			      }
+			  }
 
-			  vec1 = 0;
-			  for (int i = 1; i<=dim; i++) vec1(i) = dphi[p1][qp](i-1) ;
-			  
-			  vec2 = 0;
-			  for (int i = 1; i<=dim; i++) vec2(i) = dphi[p2][qp](i-1) ;
-			  
-			  scal_prod = vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2);
-			  
-			  if (!belongs_to_substrate(p1, elem))
-			    {
-			      Ke_sub(p1,p2) += JxW[qp]*scal_prod;
-			     
-			    }
-			  else
-			    {
-			      Ke_sub(p1,p2) = delta(p1,p2)*delta(j,k);
-			    }
-
-			}
+		      }
 		      
-		    }
+		  }
 			
 		
-		}
+	      }
 		      
 		      
-	    }//end of loop over j - end of master equation
-	  
-
-	  //----------------------------------------------------------------------------
-	  //superlattice equations
+	}//end of loop over j - end of master equation
+      //---------------------------------------------------------------------------//
+      //master equation is done                                                    //
+      //---------------------------------------------------------------------------//
+      //superlattice equations
+      //---------------------------------------------------------------------------//
+      for (unsigned int qp=0; qp<qrule.n_points(); qp++)//qp
+	{
 	  for (unsigned int eq_number =  0;   eq_number <  number_of_add_var; eq_number++)
 	    {
-	      
+	  
 	      dof_map.dof_indices (elem, dof_indices_component, uvar[0]);
 	      const unsigned int n_u_dofs = dof_indices_component.size();
- 
-	    
+	  
+	  
 	      if ( add_var[eq_number].lat_cons )
 		{
-		    unsigned int lat_index = add_var[eq_number].index1;
-		    double lat_constants[3];
-		    crystal_el-> get_lat_const(lat_constants);
-
-
-		    double lat_const = lat_constants[lat_index - 1];
-		    
-		    lattice_factor = 1/lat_const;
-		 }
-	       else
-		 {
-		   lattice_factor = 1.0;
-		 }
+		  unsigned int lat_index = add_var[eq_number].index1;
+		  double lat_constants[3];
+		  crystal_el-> get_lat_const(lat_constants);
+	      
+	      
+		  double lat_const = lat_constants[lat_index - 1];
+	      
+		  lattice_factor = 1/lat_const;
+		}
+	      else
+		{
+		  lattice_factor = 1.0;
+		}
 		  
-		  unsigned int lat_index1 = add_var[eq_number].index1;
-		  unsigned int lat_index2 = add_var[eq_number].index2;
-		  
-		 
-		  C_kl = C_tensor_el->get_another_subtensor(lat_index1,lat_index2);
-		  //----------------RHS------------------
-		  Fe_add_sub.reposition(n_dofs + eq_number,1);
-		  
-
-		  Fe_add_sub(0) -=  JxW[qp] * doubleContraction(C_kl , eps_const ) *lattice_factor  ;
-		 
-		  //-------------------------------------
-
-		  //-------------ux,uy,uz----------------
-		  for (unsigned int k = 0; k<=2; k++)
-		    {//loop over k
-		      dof_map.dof_indices (elem, dof_indices_component, uvar[k]);
-		      const unsigned int n_u_dofs = dof_indices_component.size(); 
-		      Ke_add_u_sub.reposition (n_dofs, uvar[k]*n_u_dofs, add_var.size() , n_u_dofs);
-
-		      vec1 = 0;
-		      for (unsigned int l = 1; l <= dim; l++)
-			{
-			  if (l>= k+1 ) 
-			    vec1(l) = C_kl(l,k+1);
-			  else 
-			    vec1(l) = C_kl(k+1,l);
-			}
-
-		      for (unsigned int p1=0; p1<n_u_dofs; p1++)
-			{
-			  vec2 = 0; 
-			  for (unsigned int l = 1; l <= dim; l++) vec2(l) = dphi[p1][qp](l-1) ;
-			  
-			  Ke_add_u_sub(eq_number, p1) += JxW[qp] * (vec1*vec2) * lattice_factor ;
-			 
-			}
-		    }
-		  //------------------------------------------
-
-		  //-----------add_add---matrix---------------
-		 
-		  for (unsigned int i1 = 0; i1 < add_var.size()  ; i1++)
+	      unsigned int lat_index1 = add_var[eq_number].index1;
+	      unsigned int lat_index2 = add_var[eq_number].index2;
+	  
+	  
+	      C_kl = C_tensor_el->get_another_subtensor(lat_index1,lat_index2);
+	      //----------------RHS------------------
+	      Fe_add_sub.reposition(n_dofs + eq_number,1);
+	  
+	  
+	      Fe_add_sub(0) -=  JxW[qp] * doubleContraction(C_kl , eps_const ) *lattice_factor  ;
+	  
+	      //-------------------------------------
+	  
+	      //-------------ux,uy,uz----------------
+	      for (unsigned int k = 0; k<=2; k++)
+		{//loop over k
+		  dof_map.dof_indices (elem, dof_indices_component, uvar[k]);
+		  const unsigned int n_u_dofs = dof_indices_component.size(); 
+		  Ke_add_u_sub.reposition (n_dofs, uvar[k]*n_u_dofs, add_var.size() , n_u_dofs);
+	      
+		  vec1 = 0;
+		  for (unsigned int l = 1; l <= dim; l++)
 		    {
-		      Ke_add_add_sub.reposition(n_dofs + eq_number,n_dofs + i1,1,1);
-		      eps_var = crystal_el->get_var_eps0( add_var[i1].name );
-		    
-		      Ke_add_add_sub(0,0) += JxW[qp]  * doubleContraction(eps_var,C_kl) *  lattice_factor;
-		   
-		      
+		      if (l>= k+1 ) 
+			vec1(l) = C_kl(l,k+1);
+		      else 
+			vec1(l) = C_kl(k+1,l);
 		    }
-		    
+	      
+		  for (unsigned int p1=0; p1<n_u_dofs; p1++)
+		    {
+		      vec2 = 0; 
+		      for (unsigned int l = 1; l <= dim; l++) vec2(l) = dphi[p1][qp](l-1) ;
 		  
+		      Ke_add_u_sub(eq_number, p1) += JxW[qp] * (vec1*vec2) * lattice_factor ;
+		  
+		    }
+		}
+	      //------------------------------------------
 
-		  //------------------------------------------
+	      //-----------add_add---matrix---------------
+		 
+	      for (unsigned int i1 = 0; i1 < add_var.size()  ; i1++)
+		{
+		  Ke_add_add_sub.reposition(n_dofs + eq_number,n_dofs + i1,1,1);
+		  eps_var = crystal_el->get_var_eps0( add_var[i1].name );
+	      
+		  Ke_add_add_sub(0,0) += JxW[qp]  * doubleContraction(eps_var,C_kl) *  lattice_factor;
+	      
+	      
+		}
+	    }
+	  
+	}  
+
+      //------------------------------------------
 
 		
 	    
-	    }
+    
 
 
 	  
 
-	  if  (number_of_add_var != 0)
+      if  (number_of_add_var != 0)
+	{
+	  
+	  if ( el_number >=  number_of_add_var )
 	    {
-	     
-	      if ( el_number >=  number_of_add_var )
-		{
-		  dof_map.dof_indices (elem, dof_indices_component, uvar[0]);
-		  const unsigned int n_u_dofs = dof_indices_component.size(); 
-		  Ke_sub.reposition(3*n_u_dofs,3*n_u_dofs, 1, 1);
-		  Ke_sub(0,0) += 1.0;
-		}
-		
-	      
-	      	      
+	      dof_map.dof_indices (elem, dof_indices_component, uvar[0]);
+	      const unsigned int n_u_dofs = dof_indices_component.size(); 
+	      Ke_sub.reposition(3*n_u_dofs,3*n_u_dofs, 1, 1);
+	      Ke_sub(0,0) += 1.0;
 	    }
-
 	  
-	  // end of superlattice equations
-	  //--------------------------------------------------------------------------
-
 	  
 	  
 	}
 
+	  
+      // end of superlattice equations
+      //--------------------------------------------------------------------------
+
+	  
+	  
+    
+
     
      
        
-       for (unsigned i =0 ; i < n_dofs; i++)
-	 dof_indices_total[i] = dof_indices[i];
-	 
+      for (unsigned i =0 ; i < n_dofs; i++)
+	dof_indices_total[i] = dof_indices[i];
+  
        
-       for (unsigned i =0 ; i <number_of_add_var ; i++)
-	 dof_indices_total[i+n_dofs] =  add_dofs_vector[i];
+      for (unsigned i =0 ; i <number_of_add_var ; i++)
+	dof_indices_total[i+n_dofs] =  add_dofs_vector[i];
 	
        
        
@@ -1229,7 +840,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
       
       dof_map.constrain_element_matrix_and_vector(Ke_total, Fe_total, dof_indices_total);
     
-
+  
       system.matrix->add_matrix (Ke_total, dof_indices_total);
       system.rhs->add_vector    (Fe_total, dof_indices_total);
       
@@ -1240,7 +851,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
       el_number++;
     }
-       
+
       
 
  
@@ -1291,18 +902,14 @@ void Macrostrain::do_assemble(EquationSystems& es,
    if (grown_on_substrate)
      {
      
-       set<unsigned int>::iterator substr_nodes_it;
+       const Node* nd = elem->get_node(n);
 
+       std::set <const Node*> :: iterator it = substrate_points.find( nd );
 
-
-       substr_nodes_it = substrate_nodes.find( elem->node(n) );
-
-       if (substr_nodes_it != substrate_nodes.end())
+       if ( it != substrate_points.end() )
 	 return(true);
        else
-	 return(false);
-       
-
+	 return (false);      
 
         
      }
@@ -1328,43 +935,11 @@ void Macrostrain::do_assemble(EquationSystems& es,
 //-----------------------------------------------------------------//
 void Macrostrain::refer_objects()
 {
-//------------------------------------------------------
-  //referencing of data objects
-  //C_tensor_temp = &C_tensor;
 
-  //crystal_temp =  &crystal ;
-
-  /*
-
-  strain_parameters_temp = &strain_parameters;
-
-  material_of_elem_temp  = &material_of_elem;
- 
-  eps0_of_elem_temp = &eps0_of_elem;
-
-  number_of_add_var_static = number_of_add_var;
-
-  add_var_temp = &add_var; 
-  
-  fixed_node1_temp = fixed_node1;
-  fixed_node2_temp = fixed_node2;
-  fixed_node3_temp = fixed_node3;
-
-  zero_set_dofs_temp = &zero_set_dofs;
-  
-
-  boundary_cond_elem_temp = &boundary_cond_elem;
-
-  substrate_nodes_temp = &substrate_nodes;
-  
-  my_system_temp = my_system;
-
-
-  */
 
   static_this = this; 
 
-  //------------------------------------------------------
+
 }
 //-----------------------------------------------------------------//
 Mesh* Macrostrain::get_mesh()
@@ -1377,8 +952,13 @@ void Macrostrain::do_solve()
 
 {
   
- 
   
+
+
+  SimulationEnvironment& si = get_environment();   
+
+ 
+  //------------------------------------------------------
   NumericVector<Number>& old_solution = 
     my_system->add_vector("old solution");
   
@@ -1393,7 +973,7 @@ void Macrostrain::do_solve()
 
  
 
-  assemble_material_list();
+ 
   initialize_eps0_list();
   initialize_el_number_map();
 
@@ -1405,17 +985,11 @@ void Macrostrain::do_solve()
   
   init_substrate();
 
-  create_substate_nodes_set();
-  
-  
-  create_bondary_conditions_map();
 
-
-  
 
   refer_objects();
 
- 
+  if (grown_on_substrate) si.get_boundary_nodes (substrate_name, substrate_points);
 
   set_up_additional_dofs();
 
@@ -1513,7 +1087,7 @@ void Macrostrain::do_solve()
       old_solution = *(my_system->solution);
       
 
-      assemble_material_list();
+   
       initialize_eps0_list();
       initialize_el_number_map();
       
@@ -1525,13 +1099,11 @@ void Macrostrain::do_solve()
 
       define_fixed_nodes();
 
-      update_substrate_nodes_set();
-  
-      update_bondary_conditions_map();
+      if (grown_on_substrate) si.get_boundary_nodes (substrate_name, substrate_points);
 
       refer_objects();
 
-
+ 
       make_nodes_periodic();
       
       apply_periodic_bc();
@@ -1582,10 +1154,7 @@ void Macrostrain::do_solve()
 
   std::cerr << "Grid refinement is done \n";
 
-  if (intermediate_output)
-    {
-      output_materials("materials_nondeformed.dat");
-    }
+ 
 
   //cerr << atom_structure_filename << "\n";
 
@@ -1722,6 +1291,7 @@ void Macrostrain::do_solve()
  }
 
 //-------------------------------------------------------------------------------------//
+/*
 void Macrostrain::assemble_material_list()
 {
   Mesh& mesh = equation_systems->get_mesh();
@@ -1756,14 +1326,14 @@ void Macrostrain::assemble_material_list()
     }
      
 }
-
+*/
 //-----------------------------------------------------------------//
 void Macrostrain::update_eps0_list()
 {
   //calculate eps_new = eps_old + 1/2(du/dx + du/dx) 
 
   const Mesh& mesh = equation_systems->get_mesh();
-  //const unsigned int dim = mesh.mesh_dimension();
+ 
   LinearImplicitSystem& system = *my_system;
 
   AutoPtr<NumericVector<Number> >& solution = system.solution;
@@ -2373,12 +1943,8 @@ void Macrostrain::output_strain(std::string filename )
   char num_j[2];
   string eps_ij;
   
-  std:: map<unsigned int, Macrostrain::strain_param>::iterator str_it =
-    strain_parameters.find( substr_mat  );
  
-  RotatedCrystal* crystal_substr =  (str_it->second).crystal;
-
-  double a_substrate[3];  crystal_substr->get_lat_const(a_substrate);
+  double a_substrate[3];  substrate_crystal -> get_lat_const(a_substrate);
 
   unsigned int index = 0;
 
@@ -2452,9 +2018,9 @@ void Macrostrain::output_strain(std::string filename )
 
 	    Point center=elem->centroid();
 
-	    const int material = material_of_elem[elem_number];
+	    //  const int material = material_of_elem[elem_number];
 	    
-	    eps0 = eps0_of_elem[elem_number] + calculate_eps_lat_matching( material); //previous iterations and lattice matching
+	    eps0 = eps0_of_elem[elem_number] + calculate_eps_lat_matching( elem ); //previous iterations and lattice matching
 	
 	    Point center1 = FEInterface::inverse_map(dim, fe_type, elem, center);
 	    point_vec[0] = center1;
@@ -2613,11 +2179,11 @@ void Macrostrain::move_nodes()
 	  
       if (number_of_add_var !=0)
 	{
-	  for (unsigned int i = 0; i < dim; i++)   r(i + 1) -= u_node[node_number][i]; //position without displacement
+	  for (unsigned int i = 0; i < dim; i++)   r(i + 1) -= u_node[node1][i]; //position without displacement
 
 	  r = lat_matching_transformation * (r - r0) + r0; //transform cells according to the lattice matching transformation
 
-	  for (unsigned int i = 0; i < dim; i++) r(i + 1) += u_node[node_number][i]; //add back displacements
+	  for (unsigned int i = 0; i < dim; i++) r(i + 1) += u_node[node1][i]; //add back displacements
 	}
 
       for (unsigned int i = 0; i < dim; i++) 
@@ -2832,18 +2398,21 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
  
   //-----------------------------------------------------------------
   //we have to add lattice matching deformation
-  eps += calculate_eps_lat_matching(material_of_elem[elem_number]);
+  eps += calculate_eps_lat_matching(elem);
   //------------------------------------------------------------------
 
   if (crystal_system)
     {//convert to crystal system
-      const unsigned int material = material_of_elem[elem_number]; //get material number
-     
-      std:: map<unsigned int, Macrostrain::strain_param>::iterator str_it = strain_parameters.find(material);
-      
-      RotatedCrystal* crystal1 =( str_it -> second ).crystal; 
 
-      Tensor2Gen RotM = (crystal1->RotMatrix).transpose();//get rotation matrix
+   
+
+      ID subdomain = elem->subdomain_id();
+         
+      const Material* mat = _device->get_material(subdomain);
+
+      const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
+
+      Tensor2Gen RotM = (crystal_el->RotMatrix).transpose();//get rotation matrix
       
       Tensor2Gen eps1 = (RotM*eps)*RotM.transpose();  //transform
       
@@ -2860,7 +2429,7 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
     }
 
 }
-
+/*
 //==============================================================================//
 Tensor1 Macrostrain::get_built_in_polarization(const Elem* el, const Point& quadratur_point )
 {
@@ -2889,38 +2458,49 @@ Tensor1 Macrostrain::get_built_in_polarization(const Elem* el, const Point& quad
   return(polariz);
 
 }
-
+*/
 
 //-------------------------------------------------------------------------------------------/
 Tensor1 Macrostrain::get_piezopolarization(const Elem* el)
 {
-  //---------------calculate strain in crystal system---------------------------
+  //---------------calculate strain in crystal system-----------------------------
 
 
    Tensor2Sym strain_cr= get_strain( el, true);
 
-  //---------------get material number -----------------------------------------
+  //---------------get material number -------------------------------------------
+   /*
+     map<const Elem*, unsigned int> :: iterator el_numb_it;
 
-  map<const Elem*, unsigned int> :: iterator el_numb_it;
-
-  el_numb_it = elem_numbers.find(el);
+     el_numb_it = elem_numbers.find(el);
   
-  const unsigned int elem_number = el_numb_it->second;
+     const unsigned int elem_number = el_numb_it->second;
 
-  const unsigned int material = material_of_elem[elem_number]; //get material number
-  //----------------calculate polarization---------------------------------
+     const unsigned int material = material_of_elem[elem_number]; //get material number
 
-  std::map< unsigned int, Piezoelectricity*>::iterator piezo_it =
-    piezo_parameters.find( material) ;
+     //----------------calculate polarization-----------------------------------------
+
+     std::map< unsigned int, Piezoelectricity*>::iterator piezo_it =
+     piezo_parameters.find( material) ;
+
+   */
+
+   ID subdomain = el->subdomain_id();
+      
+
+      
+   const Material* mat = _device->get_material(subdomain);
+
+   const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
+
+   MacrostrainModel* macrostrain_model =  dynamic_cast<MacrostrainModel*>(   mat ->get_model(get_id())     );
+      
+
+   Tensor1 polariz = ( macrostrain_model->get_piezo() )-> get_polariz_cryst(strain_cr); //crystal system
 
   
 
-  Tensor1 polariz = (piezo_it -> second)->get_polariz_cryst(strain_cr); //crystal system
-
-  std::map< unsigned int, Macrostrain::strain_param>::iterator str_it =
-    strain_parameters.find( material) ;
-
-  polariz =( ((str_it -> second).crystal)->RotMatrix) * polariz; //calculation system
+  polariz =(crystal_el->RotMatrix) * polariz; //calculation system
 
   return(polariz);
 
@@ -3089,13 +2669,20 @@ void  Macrostrain::set_up_additional_dofs()
 }
 //-------------------------------------------------------------------------------------------/
 
-Tensor2Sym Macrostrain::calculate_eps_lat_matching(unsigned int material)
+Tensor2Sym Macrostrain::calculate_eps_lat_matching(const Elem* elem)
 {
   //constant part of the lattice matching tensor
-  std::map< unsigned int, Macrostrain::strain_param>::iterator str_it =
-    strain_parameters.find(material);
 
-  Tensor2Sym eps0 = ((str_it -> second).crystal)->get_const_eps0(substrate_lat_const, eps0_var_log);
+  ID subdomain = elem->subdomain_id();
+      
+
+      
+  const Material* mat = _device->get_material(subdomain);
+
+  const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
+  
+
+  Tensor2Sym eps0 = crystal_el->get_const_eps0(substrate_lat_const, eps0_var_log);
   //------
   //variable part:
   for (unsigned int i = 0; i < number_of_add_var; i++)
@@ -3104,7 +2691,7 @@ Tensor2Sym Macrostrain::calculate_eps_lat_matching(unsigned int material)
 
       double coeff = ( *(my_system->solution) )( dof_number ); 
 
-      eps0 += coeff * ((str_it -> second).crystal)->get_var_eps0( add_var[i].name );
+      eps0 += coeff * crystal_el->get_var_eps0( add_var[i].name );
     } 
 
   return(eps0);
@@ -3115,10 +2702,9 @@ void Macrostrain::init_substrate()
 {
   substrate_shear = Tensor2Sym(0);
 
-  std::map< unsigned int, Macrostrain::strain_param>::iterator str_it =
-    strain_parameters.find( substr_mat);
+ 
   
-  ((str_it -> second).crystal)->get_lat_const(substrate_lat_const);
+  substrate_crystal->get_lat_const(substrate_lat_const);
 }
 //--------------------------------------------------------------------------------------------/
 
@@ -3159,26 +2745,18 @@ void Macrostrain::init_u_node()
   std :: vector <double> single_node(3);
 
   for (unsigned int i = 0 ; i < 3 ; i++) single_node[i] = 0.0;
-
-  const Mesh& mesh = equation_systems->get_mesh();
-
-  u_node.resize(mesh.n_nodes());
-
-  for (unsigned int i = 0; i< mesh.n_nodes(); i++ )  u_node[i] = single_node;
-
-  active_node_number.clear();
-
-  Node* nd1;
-  MeshBase::const_node_iterator nd  = mesh.active_nodes_begin();
-  MeshBase::const_node_iterator end_nd = mesh.active_nodes_end();
+ 
+  
+  MeshBase::const_node_iterator nd  = mesh->active_nodes_begin();
+  MeshBase::const_node_iterator end_nd = mesh->active_nodes_end();
 
   unsigned int node_number = 0;
 
   for ( ; nd != end_nd ; ++nd) 
     {
-      nd1 = *nd;
+      const Node* nd1 = *nd;
       
-      active_node_number.insert( pair<Node*,unsigned int> (nd1,node_number)  );
+      u_node.insert( pair<const Node*,vector<double> > (nd1,single_node)  );
      
       node_number++;
     }
@@ -3215,7 +2793,7 @@ void Macrostrain::update_u_node()
 	{
 	  const unsigned int  n_dof = node1->dof_number(system_number,uvar[i],0);
 	  
-	  u_node[node_number][i] +=  (*solution)(n_dof);
+	  u_node[node1][i] +=  (*solution)(n_dof);
 	}
 
 
@@ -3575,10 +3153,9 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
   //----------------------------------------------------------------------
   double substrate_lat_const_initial[3];
 
-  std::map< unsigned int, Macrostrain::strain_param>::iterator str_it =
-    strain_parameters.find(substr_mat);
+ 
   
-  ((str_it -> second).crystal)->get_lat_const(substrate_lat_const_initial);
+  substrate_crystal->get_lat_const(substrate_lat_const_initial);
   //----------------------------------------------------------------------
   
 
@@ -3612,9 +3189,9 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
 		{
 		  for (short coord = dim; coord < 3; coord++)
 		    {
-		      map<Node*, unsigned int> :: iterator active_node_it;
-		      unsigned int node_number = (active_node_number.find(atom_structure[i].element->get_node(nd))) -> second;
-		      u_vector[coord] += u_node[node_number][coord] * phi[nd][0]; 
+		     
+ 
+		      u_vector[coord] += u_node[atom_structure[i].element->get_node(nd)][coord] * phi[nd][0]; 
 		    }
 		}
 
@@ -3818,25 +3395,7 @@ unsigned int Macrostrain::find_nearest_node(Point& point)
 
 }
 //-------------------------------------------------------------------------------------------/
-void Macrostrain::output_materials(std :: string filename)
-{
 
-  const Mesh& mesh = equation_systems->get_mesh();
-
- 
-  std::vector<std::string> mat_name(1);
-  mat_name[0] = "material";
-
-  unsigned int N =  material_of_elem.size();
-
-  std::vector<double> mat_double(N);
-
-  for (unsigned i = 0; i < N; i++) mat_double[i] = material_of_elem[i];
-
-  if (output_type == "GMV")  GMVIO_cell(mesh).write_ascii_cell_data(filename, mat_double, mat_name);
-  if (output_type == "tecplot") TecplotIO_cell(mesh,false).write_cell_data(filename,mat_double, mat_name);
-
-}
 
 //-------------------------------------------------------------------------------------------/
 Macrostrain::~Macrostrain()

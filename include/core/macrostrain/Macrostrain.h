@@ -98,59 +98,7 @@ class Macrostrain : public SimulationInterface
 
 
 
-   //data structure type
 
-
-  struct options {
-
-
-    //------------------------------------
-
-    //----------------- numerical options -------------------------------------
-  
-
-    unsigned int          max_r_steps;       
-    int                   uniform_refinement; 
-     
-    double                refine_fraction ; 
-    double                coarsen_fraction ;  
-    unsigned int          max_ref_level  ;   
-    double                tolerance     ;    
-  
-    unsigned int          max_shape_steps;   
-    //--------------------------------
-    bool                  grown_on_substrate;
-  
-    bool                  periodicity[3]; 
-    unsigned int          substr_mat;
-    //-------------------------------
-    
-    std::vector<double> fixed_point1 ; //x,y,z
-    std::vector<double> fixed_point2 ;
-    std::vector<double> fixed_point3 ;
-    
- 
-
-  
-
-    //-------------------------------------------------------------------------
-    //atomic displacements
-  
-    bool calculate_atom_displacements;
-    
-    std::string   atom_structure_filename;
-    
-    std::string   atom_displacements_filename;  
-    //-----------------------------------------------------------------------
-    //output options
-    
-    bool intermediate_output;
-  
-    
-    std:: string  output_type;
-
-    //------------------------------------------------------------------------  
-  };
 
   struct  add_variable 
   {
@@ -174,43 +122,7 @@ class Macrostrain : public SimulationInterface
   //!Constructor
    Macrostrain(void );
 
-  //----------------------------------------------------------------------
 
-  //!passes information about crystal orientation and elastisity moduli
-  /*!
-    \param strain_parameters_in a map between materials and a strain parameters 
-   
-  */
-
-  //void define_strain_parameters(const std::vector<stiffness>&        C_tensor_in,
-  //			const std::vector<rotated_crystal>&  crystal_in);
-
-  void define_strain_parameters(const std::map <unsigned int, strain_param >&    strain_parameters_in);
-
-  //--------------------------------------------------------------------
-  //! passes a number of substrate boundary condition
-  /*!
-    \param  substrate_bc_number number of boundary condition that defines substrate 
-  */
-  void define_substrate_bc(unsigned int substrate_bc_number);
-
-  //--------------------------------------------------------------------
-  //!passes an information about piezoelectric parameters
-  void define_piezo_moduli(const std::map<unsigned int, Piezoelectricity*>&  piezo_in);
-  //---------------------------------------------------------------------
-
-  //! passes a reference to a boundary conditions map  
-  void define_BC_map (const std::map <unsigned int , std::vector<unsigned int> > & bc_cond  );
-
-  //---------------------------------------------------------------------
-  //! passes a value for the stress 
-  /*!
-    \param stress_map is a map between boundary condition number and stress value
-  */
-  void define_stress_value (const std::map <unsigned int, double> & stress_map_in);
-
-
-  void assign_mesh_data(MeshData& mesh_data_in);
   
 
   //---------------------------------------------------------------------
@@ -260,7 +172,7 @@ class Macrostrain : public SimulationInterface
   void output_add_strain_variables(std::string filename); 
   //---------------------------------------------------------------------
 
-  void output_materials(std::string filename); //output materials
+
 
   //----------------------------------------------------------
  
@@ -279,6 +191,7 @@ class Macrostrain : public SimulationInterface
   
 
  private:
+
 
 
   //!pointer to the equation systems 
@@ -302,7 +215,9 @@ class Macrostrain : public SimulationInterface
    */
   std::map<const Elem*, Tensor2Sym> result_strain;
 
-  MeshData*  meshdata;
+
+  //!pointer to the mesh
+  Mesh*  mesh;
 
   //!calculate strain
   Tensor2Sym get_strain(const Elem* el, bool crystal_system = false); 
@@ -310,8 +225,7 @@ class Macrostrain : public SimulationInterface
   //! calculate the result_strain map
   void calculate_result_elem_strain_map();
 
-  //! options of the solver
-  options opt;
+  
   
   //---------------------------------------------------------------------
  
@@ -320,76 +234,82 @@ class Macrostrain : public SimulationInterface
 
 
 
-  //! Substrate material
-  RotatedCrystal* substrate;
+  //! Substrate material crystal
+  const RotatedCrystal* substrate_crystal;
 
-  //---------------------------------------------------------------------------------------------------
-  /*
-    DYNAMICAL objects that are necesary to assemble strain problemmatrix
-  */
  
-  //!map between material number and strain parameters 
-  std:: map<unsigned int, Macrostrain::strain_param>    strain_parameters;
-
-  std::vector<unsigned int>              material_of_elem; // material of an element
-
+  //! strain tensor of an element from previous iteration
   std::vector<Tensor2Sym>       eps0_of_elem;     // eps of an element from previous iteration
 
 
-  std::vector<unsigned int>     zero_set_dofs;    //DOFs number that have to be set to zero
-  //----------------------------------------------------------------------------------------------------
+ 
+ 
+  //!displacements of nodes with respect to the non-deformed mesh
+  std::map< const Node*, std:: vector <double> > u_node; 
 
-  std::vector< std:: vector <double> > u_node; //displacements of nodes with respect to the non-deformed mesh
+  //!initializes list of node displacements u = 0.0
+  void init_u_node(); 
 
-  void init_u_node(); //initializes list of node displacements u = 0.0
-
+  //!updates list of node displacements
   void update_u_node(); //updates list of node displacements
 
-  //---------------------------------------------------------------------
-  //map between material number and piezoelectricity constants of a material  
-  std::map< unsigned int, Piezoelectricity*> piezo_parameters; 
-
-  std :: map <const Elem*, unsigned int > elem_numbers;  //map between element pointers and their numbers
-
-  std :: map <const Node*,  unsigned int > active_node_number;    //map between active node pointers and their numbers
-
-  std :: vector< std :: vector <const Node*> >  nodes_periodic; //dim node list's: each contains list of nodes that periodic b.c
-                                                                //must be applied to
-
-  std::string uname_vec[3];  // "ux", "uy", uz"
   
-  bool belongs_to_substrate(unsigned int n, const Elem* elem ); //if vertex n of elem belongs to substrate
  
+  //!map between element pointers and their numbers
+  std :: map <const Elem*, unsigned int > elem_numbers; 
+  
+ 
+  //!dim node list's: each contains list of nodes that periodic b.c. must be applied to
+  std :: vector< std :: vector <const Node*> >  nodes_periodic; 
+
+  //! {"ux", "uy", uz"}
+  std::string uname_vec[3];  
+
+
+  //!if vertex n of elem belongs to substrate
+  bool belongs_to_substrate(unsigned int n, const Elem* elem ); //if vertex n of elem belongs to substrate
+
+  //!Kronecker detla
   inline int delta (int i, int j); //Kronecker detla
 
+  //!problem dimension
   unsigned int dim; //problem dimension
 
-  bool grown_on_substrate; //if there is a substrate
+  //!if there is a substrate
+  bool grown_on_substrate; 
 
+  //!  name of the substrate boundary condition;
+  std::string substrate_name;
 
-
+  //!refer static pointers to dinamical objects
   void refer_objects(); //refer static pointers to dinamical objects
 
-  void assemble_material_list(); // create material_of_elem at the beginning
 
 
+  //! update eps0_of_elem 
   void update_eps0_list();  // update eps0_of_elem // !check!!!!
 
-  void initialize_eps0_list(); //initialize eps0_of_elem !check!!!!
+  //!initialize eps0_of_elem 
+  void initialize_eps0_list(); 
 
-  void initialize_el_number_map(); //initialize   elem_numbers; 
+  //!initialize   elem_numbers;
+  void initialize_el_number_map(); 
 
-  void make_nodes_periodic(); //create nodes_periodic
-
-  void apply_periodic_bc(); //create DOF constraints for periodic b.c.
-
-  void apply_antirotation_constraints(); //create DOF constraints that do not allow to a freestanding system to rotate.
+  //!create nodes_periodic
+  void make_nodes_periodic(); 
 
 
-  Tensor2Sym calculate_eps_lat_matching(unsigned int material); //calculate latiice matching tensor considering latice constants and strain
+  //!create DOF constraints for periodic b.c.
+  void apply_periodic_bc(); 
+
+  //!create DOF constraints that do not allow to a freestanding system to rotate.
+  void apply_antirotation_constraints(); 
+
+  //!calculate latiice matching tensor considering latice constants and strain
+  Tensor2Sym calculate_eps_lat_matching(const Elem* elem); 
   
 
-  
+  //!create new mesh by moving nodes slightly
   void move_nodes(); //create new mesh by moving nodes slightly
 
 
@@ -397,8 +317,7 @@ class Macrostrain : public SimulationInterface
   bool periodicity[3]; 
 
 
-   unsigned int substr_mat; //substrate material number
-  
+
 
 
 
@@ -476,9 +395,8 @@ class Macrostrain : public SimulationInterface
   //!returns node number, closest to point 
   unsigned int get_number_of_the_fixed_node(Point point); 
 
-  void create_substate_nodes_set();
+
  
-  void update_substrate_nodes_set();
   //------------atomic description------------------
 
   std::vector<atom> atom_structure;  
@@ -503,6 +421,8 @@ class Macrostrain : public SimulationInterface
 
 
 
+ 
+
   bool may_belong_to_element(const Elem* element, Point& point);
 
   unsigned int find_nearest_node(Point& point);
@@ -516,33 +436,11 @@ class Macrostrain : public SimulationInterface
   bool intermediate_output;
   //-------------------------------------------------------------------
 
-  //! 2D/3D:  map between Elem* and set of substrate faces; 1D map between Elem* and set of substrate nodes
-  std::map<const Elem*,std::set<unsigned int> > substrate_faces;
+
+  //!node id's that belong to substrate
+  std::set <const Node*> substrate_points;
+
  
-  //!map between b.c. number and a set of nodes 
-  std::map <unsigned int , std::vector<unsigned int> >   boundary_cond_nodes; 
-
-  //! 2D/3D: map between Elem  and (map between side and stress value); 1D map between Elem  and (map between node and stress value)
-  std::map <const Elem*, std::map <unsigned int, double>  >   boundary_cond_elem; 
-  
-  //!static pointer to boundary_cond_elem
-  //static std::map <const Elem*, std::map <unsigned int, double>  >* boundary_cond_elem_temp;
- 
-  //!map between stress number and stress values
-  std::map <unsigned int, double>   stress_values; 
-  
-  //!contains nodes that belong to substrate
-  std::set <unsigned int> substrate_nodes; 
-
-  //!static pointer to substate_nodes
-  //static std::set <unsigned int>* substrate_nodes_temp; 
-
-
-  //! create map boundary_cond_elem from boundary_cond_nodes;
-  void create_bondary_conditions_map();
-
-  //! update boundary_cond_elem due to mesh refinement ;
-  void update_bondary_conditions_map();
 
   //!"GMV" or "tecplot"
   std::string output_type; 

@@ -10,14 +10,14 @@ MacrostrainBoundaryProperties::MacrostrainBoundaryProperties() : BoundaryPropert
 
 MacrostrainSubstrate::MacrostrainSubstrate()  :MacrostrainBoundaryProperties()
 {
-  crystal = NULL;
+  material = NULL;
 }
 
 
 //===================================================================================//
 MacrostrainSubstrate::~MacrostrainSubstrate()
 {
-  delete crystal;
+  delete material;
 }
 
 //===================================================================================//
@@ -27,9 +27,11 @@ void MacrostrainSubstrate::do_init()
 
   const std::string name = options.get_option("material", "GaAs");
 
-  // crystal = RotatedCrystal::create ( name, options ); 
+  material = Material::create (name, options);
 
-  crystal->init();
+  material->init();
+
+  
 
 }
 

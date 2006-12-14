@@ -2,7 +2,7 @@
 #define _MACROSTRAINBOUNDARYPROPERTIES_H_
 
 #include "BoundaryProperties.h"
-#include "RotatedCrystal.h"
+#include "Material.h"
 
 class MacrostrainBoundaryProperties: public BoundaryProperties
 {
@@ -25,14 +25,14 @@ class MacrostrainBoundaryProperties: public BoundaryProperties
 
 //======================================================================//
 
-class MacrostrainSubstrate : MacrostrainBoundaryProperties
+class MacrostrainSubstrate : public MacrostrainBoundaryProperties
 {
  public:
   MacrostrainSubstrate();
   
   ~MacrostrainSubstrate();
 
-  RotatedCrystal* get_crystal(void) const;
+  Material* get_material(void) const;
 
  protected:
 
@@ -40,22 +40,23 @@ class MacrostrainSubstrate : MacrostrainBoundaryProperties
 
 
  private:
-  RotatedCrystal* crystal;
+
+  Material*  material;
   
 
 };
 
 
-inline  RotatedCrystal* MacrostrainSubstrate::get_crystal( ) const
+inline  Material* MacrostrainSubstrate::get_material( ) const
 {
 
-  return crystal;
+  return material;
 
 }
 
 //=================================================================//
 
-class MacrostrainPressure : MacrostrainBoundaryProperties
+class MacrostrainPressure : public MacrostrainBoundaryProperties
 {
  public:
 
