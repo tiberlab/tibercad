@@ -2439,7 +2439,7 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
     }
 
 }
-/*
+
 //==============================================================================//
 Tensor1 Macrostrain::get_built_in_polarization(const Elem* el, const Point& quadratur_point )
 {
@@ -2448,27 +2448,40 @@ Tensor1 Macrostrain::get_built_in_polarization(const Elem* el, const Point& quad
 
   Tensor2Sym strain_cr = get_strain_crystal( el, quadratur_point);
 
-  //---------------get material number -----------------------------------------
-  const unsigned int material  = (unsigned int) (*meshdata)(el->top_parent(),0);
  
   //----------------calculate polarization---------------------------------
 
-  std::map< unsigned int, Piezoelectricity*>::iterator piezo_it =
-    piezo_parameters.find( material) ;
+  // std::map< unsigned int, Piezoelectricity*>::iterator piezo_it =
+  //  piezo_parameters.find( material) ;
 
   
 
-  Tensor1 polariz = (piezo_it -> second)->get_polariz_cryst(strain_cr); //crystal system
+  ID subdomain = el->subdomain_id();
+      
 
-  std::map< unsigned int, Macrostrain::strain_param>::iterator str_it =
-    strain_parameters.find( material) ;
+      
+  const Material* mat = _device->get_material(subdomain);
 
-  polariz =( (  (str_it -> second).crystal  )->RotMatrix) * polariz; //calculation system
+  const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
+
+  MacrostrainModel* macrostrain_model =  dynamic_cast<MacrostrainModel*>(   mat ->get_model(get_id())     );
+      
+
+  Tensor1 polariz = ( macrostrain_model->get_piezo() )-> get_polariz_cryst(strain_cr);
+  
+
+
+  // Tensor1 polariz = (piezo_it -> second)->get_polariz_cryst(strain_cr); //crystal system
+
+  // std::map< unsigned int, Macrostrain::strain_param>::iterator str_it =
+  //  strain_parameters.find( material) ;
+
+  polariz =( crystal_el->RotMatrix) * polariz; //calculation system
 
   return(polariz);
 
 }
-*/
+
 
 //-------------------------------------------------------------------------------------------/
 Tensor1 Macrostrain::get_piezopolarization(const Elem* el)
