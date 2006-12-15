@@ -72,6 +72,9 @@ then
   AC_MSG_ERROR([libMesh not found, but needed for tibercad!])
 fi
 
+# check for SLEPc
+TC_SLEPC
+
 # boost includes
 TC_BOOST
 if test "$tc_cv_boost" == no
@@ -112,9 +115,10 @@ AC_CHECK_FUNCS([pow sqrt])
 
 AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
 AC_CONFIG_FILES([Make.common
-                 doc/Doxyfile])
+                 doc/Doxyfile
                  Makefile
                  doc/Makefile
+                 src/utils/SLEPC/Makefile])
 
 if test "x$DOXYGEN" == x
 then

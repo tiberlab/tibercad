@@ -1,0 +1,27 @@
+CFLAGS	   = 
+FFLAGS     =
+CPPFLAGS   = 
+FPPFLAGS   =
+LOCDIR     =./
+PETSC_ARCH = @COMPLEX_PETSC_ARCH@
+
+SLEPC_DIR  = @SLEPC_DIR@
+PETSC_DIR  = @COMPLEX_PETSC_DIR@
+
+BOPT = O_complex
+
+MANSEC           = EPS
+
+include ${SLEPC_DIR}/bmake/slepc_common
+
+
+all: ex7.o 
+	@${CLINKER}  -o ex7 $(CXXFLAGS) $(FFLAGS) $(INCLUDE) ex7.o ${LDFLAGS} ${SLEPC_LIB}
+	\cp ex7 ../../../bin/
+
+
+clean:
+	rm -f *.o ex7
+
+
+

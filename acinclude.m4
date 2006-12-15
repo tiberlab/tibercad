@@ -7,7 +7,7 @@ AC_MSG_NOTICE([****************************************])
 AC_MSG_NOTICE([* Checking for boost...])
 AC_MSG_NOTICE([****************************************])
 AC_CACHE_VAL(tc_cv_boost_prefix,
-[AC_ARG_WITH([boost-prefix], AS_HELP_STRING([--with-boost-prefix],
+[AC_ARG_WITH([boost-prefix], AS_HELP_STRING([--with-boost-prefix=DIR],
 	[specify the path to the boost installation]),
 	[tc_cv_boost_prefix="$with_boost_prefix"])
 ])dnl
@@ -34,8 +34,8 @@ dnl
 AC_DEFUN([TC_BOOST_REGEX],
 [AC_REQUIRE([TC_BOOST])dnl
 AC_CACHE_CHECK([wether Boost::regex is available], tc_cv_boost_regex_lib,
-[AC_ARG_WITH([boost-regex-lib], AS_HELP_STRING([--with-boost-regex-lib],
-	[specify the boost regex library]),
+[AC_ARG_WITH([boost-regex-lib], AS_HELP_STRING([--with-boost-regex-lib=LIB],
+	[specify the boost regex library or library extension]),
 	[tc_cv_boost_regex_lib="$with_boost_regex_lib"])
  CXXFLAGS_save=$CXXFLAGS
  CXXFLAGS=$BOOST_CXXFLAGS
@@ -68,7 +68,7 @@ dnl check for GNU GSL
 dnl
 AC_DEFUN([TC_GSL],
 [tc_gsl_config="gsl-config"
- AC_ARG_WITH([gsl-config], AS_HELP_STRING([--with-gsl-config],
+ AC_ARG_WITH([gsl-config], AS_HELP_STRING([--with-gsl-config=PROG],
 	[specify the GSL config script]),
 	[tc_gsl_config=$with_gsl_config])
  dnl an absolute path could have been provided
@@ -83,12 +83,13 @@ AC_DEFUN([TC_GSL],
 
 dnl check for libmesh
 dnl for now we just get the installation path
+dnl
 AC_DEFUN([TC_LIBMESH],
 [AC_MSG_NOTICE([])
  AC_MSG_NOTICE([****************************************])
  AC_MSG_NOTICE([* Checking for libMesh...])
  AC_MSG_NOTICE([****************************************])
- AC_ARG_WITH([libmesh-prefix], AS_HELP_STRING([--with-libmesh-prefix],
+ AC_ARG_WITH([libmesh-prefix], AS_HELP_STRING([--with-libmesh-prefix=DIR],
 	[specify the libmesh installation prefix]),
 	[tc_libmesh_prefix=$with_libmesh_prefix])
 echo "$tc_libmesh_prefix"
@@ -106,3 +107,38 @@ echo "$tc_libmesh_prefix"
     AC_MSG_NOTICE([])
   fi
 ])dnl
+
+dnl check for complex petsc
+dnl
+AC_DEFUN([TC_COMPLEX_PETSC],
+[AC_MSG_NOTICE([])
+ AC_MSG_NOTICE([****************************************])
+ AC_MSG_NOTICE([* Checking for complex version of PETSc])
+ AC_MSG_NOTICE([* NOTE: the real version of PETSc used])
+ AC_MSG_NOTICE([*       for libmesh is taken from the])
+ AC_MSG_NOTICE([*       libmesh configuration])
+ AC_MSG_NOTICE([****************************************])
+ AC_ARG_WITH([petsc-prefix], AS_HELP_STRING([--with-petsc-prefix=DIR],
+	[specify the (complex) PETSc installation prefix]),
+	[tc_petsc_prefix=$with_petsc_prefix])
+ AC_ARG_WITH([petsc-arch], AS_HELP_STRING([--with-petsc-arch=ARCH],
+	[specify the (complex) PETSc ARCH to be used]),
+	[tc_petsc_arch=$with_petsc_arch])
+ AC_SUBST([COMPLEX_PETSC_DIR], "$tc_petsc_prefix")
+ AC_SUBST([COMPLEX_PETSC_ARCH], "$tc_petsc_arch")
+])dnl
+
+dnl check for SLEPc
+dnl
+AC_DEFUN([TC_SLEPC],
+[AC_REQUIRE([TC_COMPLEX_PETSC])dnl
+ AC_MSG_NOTICE([])
+ AC_MSG_NOTICE([****************************************])
+ AC_MSG_NOTICE([* Checking for SLEPc])
+ AC_MSG_NOTICE([****************************************])
+ AC_ARG_WITH([slepc-prefix], AS_HELP_STRING([--with-slepc-prefix=DIR],
+	[specify the SLEPc installation prefix]),
+	[tc_slepc_prefix=$with_slepc_prefix])
+ AC_SUBST([SLEPC_DIR], "$tc_slepc_prefix")
+])dnl
+
