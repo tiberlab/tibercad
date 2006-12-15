@@ -173,7 +173,7 @@ class QuantumDensity
 
 
 
-  //!returns \f$ \rho({\bf k} ) = \int \rho{\bf{ k, r}} \, d{\bf r} \f$
+  //!returns \f$ \rho({\bf k} ) = \int \rho{\bf{ k, r}}  d{\bf r} \f$
    std::vector<double>  get_density_in_k_space(void)  const;
 
  private:

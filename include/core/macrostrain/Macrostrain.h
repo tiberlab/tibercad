@@ -188,6 +188,7 @@ class Macrostrain : public SimulationInterface
 
 
    
+  static Macrostrain* create(void);
   
 
  private:
@@ -510,6 +511,10 @@ Macrostrain::get_strain_crystal(const Elem* el)
   return get_strain_crystal(el, el->centroid());
 }
 
-
+inline
+Macrostrain* Macrostrain::create(void) 
+{
+  return new Macrostrain();
+}
 
 #endif

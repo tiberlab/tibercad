@@ -5,6 +5,7 @@
 
 #include "DriftDiffusion.h"
 #include "ExcitonTransport.h"
+#include "Macrostrain.h"
 
 #include "Utils.h"
 
@@ -37,7 +38,8 @@ SimulationInterface::create(const std::string& type,
     sim = DriftDiffusion::create();
   else if (type == "exciton-transport")
     sim = ExcitonTransport::create();
-
+  else if (type == "macrostrain")
+    sim = Macrostrain::create();
 
   if (sim != NULL)
   {
