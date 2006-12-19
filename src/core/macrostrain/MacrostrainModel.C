@@ -1,5 +1,5 @@
 #include "MacrostrainModel.h"
-
+#include "Material.h"
 MacrostrainModel::MacrostrainModel() : MacrostrainModelInterface() 
 {
   stiffness = NULL;
@@ -33,16 +33,20 @@ void MacrostrainModel::do_init()
 {
 
   
-  assert(stiffness != NULL);
+ 
+
+  const ModelOptions& opt =  get_options ();
+
+  stiffness = Stiffness::create( get_material() -> get_structure(), opt  );
   
+ 
   stiffness->init();
 
 
-  
+  piezo = Piezoelectricity::create( get_material() -> get_structure(), opt  ); 
 
 
-
-  if (piezo != NULL) piezo->init();
+  piezo->init();
 
 
 }
@@ -60,7 +64,7 @@ void MacrostrainModel::copy_from(const PhysicalModelInterface *rhs)
   
  
 
-  if (temp->piezo != NULL) piezo =  dynamic_cast<Piezoelectricity* >(  (temp->piezo)->copy() );
+  piezo =  dynamic_cast<Piezoelectricity* >(  (temp->piezo)->copy() );
   
 
 }
@@ -84,7 +88,7 @@ void MacrostrainModel::calculate_VCA (const PhysicalModelInterface *comp_A, cons
   
 
 
-  if (matA->piezo != NULL && matB->piezo != NULL)  piezo->build_alloy(matA->piezo, matB->piezo, xa);
+  piezo->build_alloy(matA->piezo, matB->piezo, xa);
 
 
 }

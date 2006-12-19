@@ -49,7 +49,7 @@ void Macrostrain::parse_options( )
   
  equation_systems->parameters.set<Real>("linear solver tolerance") = tolerance; 
 
-
+ if (!grown_on_substrate)
  {
    vector<double> point;
 
@@ -66,34 +66,7 @@ void Macrostrain::parse_options( )
  }
   
 
- //--------------------------------------------------------------------------------------//
- //define  max and min coordinates 
 
- Mesh  mesh = equation_systems->get_mesh();
- 
-
-    
- unsigned int num_nodes = mesh.n_nodes();
- const Node& nd = mesh.node(0);
- for (unsigned i = 0; i < 3; i++)
-   {
-     min_coord[i] = nd(i);
-     max_coord[i] = nd(i);
-   }
-
- for (unsigned i = 1; i < num_nodes; i++)
-   {
-     const Node& nd = mesh.node(i);
-     for (unsigned i = 0; i < 3; i++)
-       {
-	 if (min_coord[i] < nd(i)) min_coord[i] = nd(i);
-	 if (max_coord[i] > nd(i)) max_coord[i] = nd(i);
-	 
-       }
-
-   }
-   
-  //-------------------------------------------------------------------------------------//
   //-------------------------------------------------------------------//
 
   
@@ -243,6 +216,48 @@ void Macrostrain::do_init( )
   //---------------------------------------------------------------------------------------//
   
   my_system->attach_assemble_function (assemble_strain_matrix);
+
+
+
+  //------------------------------------------------------
+  NumericVector<Number>& old_solution = 
+    my_system->add_vector("old solution");
+  
+  // Initialize the data structures for the equation system.
+  my_system->init();	
+
+
+
+   //---------------------------------------------------------------------//
+ //define  max and min coordinates 
+
+
+ 
+
+    
+ unsigned int num_nodes = mesh->n_nodes();
+ const Node& nd = mesh->node(0);
+ for (unsigned i = 0; i < 3; i++)
+   {
+     min_coord[i] = nd(i);
+     max_coord[i] = nd(i);
+   }
+
+ for (unsigned i = 1; i < num_nodes; i++)
+   {
+     const Node& nd = mesh->node(i);
+     for (unsigned i = 0; i < 3; i++)
+       {
+	 if (min_coord[i] < nd(i)) min_coord[i] = nd(i);
+	 if (max_coord[i] > nd(i)) max_coord[i] = nd(i);
+	 
+       }
+
+   }
+   
+  //-------------------------------------------------------------------//
+
+
 
   //------init is done---------------------------------------------------------------------//
 }
@@ -581,7 +596,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	   
 		     Boundary* bd = si.get_boundary(std::pair<const Elem*,  unsigned int> (elem,side));
 		     
-		     if (bd != NULL)
+		     if (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  )
 		       if (bd->get_name() != substrate_name)
 			 {
 				
@@ -962,20 +977,16 @@ void Macrostrain::do_solve()
 
 {
   
-  
+  parse_options();
 
 
   SimulationEnvironment& si = get_environment();   
 
  
+
   //------------------------------------------------------
   NumericVector<Number>& old_solution = 
-    my_system->add_vector("old solution");
-  
-  // Initialize the data structures for the equation system.
-  my_system->init();	
-
- 
+    my_system->get_vector("old solution");
   
 
  
@@ -1296,8 +1307,13 @@ void Macrostrain::do_solve()
   calculate_result_elem_strain_map();
 
 
-  //--------------------------------------------------------------------------------------------------//
+ 
   
+  std::ostringstream os1;
+  os1 <<"strain.dat" ;
+  output_strain(os1.str() );
+
+  //--------------------------------------------------------------------------------------------------//
  }
 
 //-------------------------------------------------------------------------------------//
@@ -2070,6 +2086,10 @@ void Macrostrain::output_strain(std::string filename )
       }
 
   //std :: cout << filename << "\n";
+
+ 
+  
+
   if (output_type == "GMV")     GMVIO_cell(mesh).write_ascii_cell_data(filename, eps_data, eps_names);
 
   if (output_type == "tecplot") TecplotIO_cell(mesh,false).write_cell_data(filename,eps_data,eps_names);

@@ -1,10 +1,13 @@
 #include "ZbStiffness.h"
-  
+#include "getpot.h"
+#include "Material.h"
+#include "Database.h"
+
 //---------------------------------------------------//
 
 ZbStiffness::ZbStiffness() :Stiffness()
 {
-
+set_moduli(0, 0,  0);
 }
 //---------------------------------------------------//
 
@@ -37,7 +40,17 @@ void ZbStiffness::set_moduli(double c11, double c12, double c44)
 //----------------------------------------------//
 void ZbStiffness::read_database ( )
 {
- 
+  const Material* mat = get_material();
+  GetPot data((mat->get_database()).get_data_file());
+
+  double c11 = data("C11", 0);
+  double c12 = data("C12", 0);
+  double c44 = data("C44", 0);
+
+  set_moduli( c11, c12, c44);
+
+  
+  
 }
 
 //-----------------------------------------------//
@@ -45,9 +58,9 @@ void ZbStiffness::do_init ( )
 {
   ModelOptions & options = get_options ();
   
-  double c12 = options.get_option ("C12", 0); 
-  double c11 = options.get_option ("C11", 0);
-  double c44 = options.get_option ("C11", 0);
+  double c12 = options.get_option ("C12", C_cr(2,2,1,1)); 
+  double c11 = options.get_option ("C11", C_cr(1,1,1,1));
+  double c44 = options.get_option ("C11", C_cr(3,2,3,2));
 
   set_moduli( c11, c12,  c44);
 

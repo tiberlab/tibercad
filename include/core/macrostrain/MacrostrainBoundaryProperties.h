@@ -10,6 +10,8 @@ class MacrostrainBoundaryProperties: public BoundaryProperties
 
    MacrostrainBoundaryProperties();
 
+   static  MacrostrainBoundaryProperties* create(const std::string & name,  const ModelOptions &   options );
+
  protected:
 
   virtual void 	do_init (void) = 0;
@@ -34,6 +36,8 @@ class MacrostrainSubstrate : public MacrostrainBoundaryProperties
 
   Material* get_material(void) const;
 
+  static MacrostrainSubstrate* create(void);
+
  protected:
 
   virtual void 	do_init (void);
@@ -46,6 +50,11 @@ class MacrostrainSubstrate : public MacrostrainBoundaryProperties
 
 };
 
+
+inline MacrostrainSubstrate* MacrostrainSubstrate::create()
+{
+  return new MacrostrainSubstrate;
+}
 
 inline  Material* MacrostrainSubstrate::get_material( ) const
 {
@@ -65,6 +74,8 @@ class MacrostrainPressure : public MacrostrainBoundaryProperties
 
   double get_value(void) const;
 
+  static MacrostrainPressure* create();
+
  protected:
 
   virtual void 	do_init (void);
@@ -79,6 +90,10 @@ class MacrostrainPressure : public MacrostrainBoundaryProperties
 
 }; 
 
+inline MacrostrainPressure* MacrostrainPressure::create()
+{
+  return new MacrostrainPressure;
+}
 
 
 inline double MacrostrainPressure::get_value(void) const

@@ -1,8 +1,11 @@
 #include "WzPiezoelectricity.h"
- 
+#include "getpot.h"
+#include "Material.h"
+#include "Database.h"
+
 WzPiezoelectricity::WzPiezoelectricity() : Piezoelectricity()
 {
-
+  set_moduli(0,  0,  0,  0);
 }
 
 //------------------------------------------------------------//
@@ -20,7 +23,16 @@ WzPiezoelectricity::WzPiezoelectricity(double  e33, double e31, double e15, doub
 void WzPiezoelectricity::read_database ( )
 {
 
+  const Material* mat = get_material();
+  GetPot data((mat->get_database()).get_data_file());
 
+  e33 = data("e33",0);
+  
+  e31 = data("e31",0);
+
+  e15 = data("e15",0);
+
+   Pz = data("Pz",0);
 }
 
 //------------------------------------------------------------//
@@ -28,15 +40,15 @@ void WzPiezoelectricity::do_init(void)
 {
   ModelOptions & options = get_options ();
 
-  const double e33 = options.get_option("e33",0);
+   e33 = options.get_option("e33",e33);
   
-  const double e31 = options.get_option("e31",0);
+   e31 = options.get_option("e31",e31);
 
-  const double e15 = options.get_option("e15",0);
+   e15 = options.get_option("e15",e15);
 
-  const double Pz = options.get_option("Pz",0);
+   Pz = options.get_option("Pz",0);
 
-  set_moduli( e33,  e31,  e15,  Pz);
+   
 
 }
 

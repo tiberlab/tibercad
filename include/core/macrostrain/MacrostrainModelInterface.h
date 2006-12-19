@@ -36,7 +36,10 @@ class MacrostrainModelInterface : public PhysicalModel
 inline MacrostrainModelInterface* MacrostrainModelInterface::create (const std::string& name,  const ModelOptions& options)
 {
 
+
+
   return dynamic_cast<MacrostrainModelInterface*> (PhysicalModelInterface::create( name, options)  ) ;
+
 
 }
 

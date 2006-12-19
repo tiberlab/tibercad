@@ -1,10 +1,31 @@
 #include "MacrostrainBoundaryProperties.h"
 
+ 
+
+
 MacrostrainBoundaryProperties::MacrostrainBoundaryProperties() : BoundaryProperties()
 {
 
 
 }
+
+//==================================================================================//
+MacrostrainBoundaryProperties *
+MacrostrainBoundaryProperties::create(const std::string & name,  const ModelOptions &   options)
+{
+  MacrostrainBoundaryProperties* result = NULL;
+
+  if (name == "substrate")
+    result = MacrostrainSubstrate::create();
+  else if (name == "pressure")
+    result = MacrostrainPressure::create();
+
+  if (result != NULL)
+    result->set_options(options);
+
+  return result;
+}
+
 
 //==================================================================================//
 

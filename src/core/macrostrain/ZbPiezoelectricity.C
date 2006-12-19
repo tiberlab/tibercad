@@ -1,8 +1,11 @@
 #include "ZbPiezoelectricity.h"
+#include "getpot.h"
+#include "Material.h"
+#include "Database.h"
 
 ZbPiezoelectricity::ZbPiezoelectricity() : Piezoelectricity()
 {
-
+  e14 = 0;
 } 
 
 //---------------------------------------------------------------//
@@ -24,8 +27,9 @@ void ZbPiezoelectricity::set_piezo_module(double e)
 
 void ZbPiezoelectricity::read_database ()
 {
-   ModelOptions & options = get_options ();
-   
+  const Material* mat = get_material();
+  GetPot data((mat->get_database()).get_data_file());
+  e14 = data("e14", 0);
 }
 
 
@@ -34,8 +38,8 @@ void ZbPiezoelectricity::read_database ()
 void ZbPiezoelectricity::do_init(void)
 {
    ModelOptions & options = get_options ();
-   const double e14 = options.get_option("e14",0);
-   set_piezo_module(e14);
+   e14 = options.get_option("e14",e14);
+  
 }
 
 //---------------------------------------------------------------//
