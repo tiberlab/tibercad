@@ -40,10 +40,6 @@ class ExcitonProperties : public PhysicalModel
     static ExcitonProperties* create(const std::string& name,
         const ModelOptions& options = ModelOptions());
 
-    /*! \copydoc PhysicalModel::calculate_VCA() */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa) {};
-
 
     //! Set the statistics to be used
     /*!
@@ -182,7 +178,7 @@ class ExcitonProperties : public PhysicalModel
     virtual void do_init(void) {};
 
     //! \copydoc PhysicalModel::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs);
+    virtual void copy_from(const PhysicalModelInterface* rhs) {};
 
 
     virtual void do_recombination(void) {};
@@ -294,12 +290,6 @@ ExcitonProperties::create(const std::string& name,
       PhysicalModelInterface::create("exmodel_" + name, options));
 }
 
-inline
-void
-ExcitonProperties::copy_from(const PhysicalModelInterface* rhs)
-{
-  PhysicalModel::copy_from(rhs);
-}
 
 inline
 void

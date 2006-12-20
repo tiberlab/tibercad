@@ -45,6 +45,9 @@ class DriftDiffusionModelInterface : public PhysicalModelInterface
     //! Empty constructor
     DriftDiffusionModelInterface(void);
 
+    //! \copydoc PhysicalModelInterfaceInterface::copy_from()
+    virtual void copy_from(const PhysicalModelInterface* rhs) {};
+
 
   private:
 

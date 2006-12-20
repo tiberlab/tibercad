@@ -555,7 +555,6 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 void
 DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
 {
-  PhysicalModel::copy_from(rhs);
 
   const DriftDiffusionProperties* mod =
     dynamic_cast<const DriftDiffusionProperties*>(rhs);

@@ -163,7 +163,15 @@ PhysicalModelInterface::copy(void) const
   new_copy = this->create_new();
 
   if (new_copy != NULL)
+  {
+    new_copy->_id = _id;
+    new_copy->_material = _material;
+    new_copy->_options = _options;
+    new_copy->_name = _name;
+    new_copy->_simulator_id = _simulator_id;
+
     new_copy->copy_from(this);
+  }
 
   return new_copy;
 }

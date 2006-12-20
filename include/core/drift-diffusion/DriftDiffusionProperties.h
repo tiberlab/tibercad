@@ -55,10 +55,6 @@ class DriftDiffusionProperties : public PhysicalModel
         const ModelOptions& options = ModelOptions());
 
 
-    /*! \copydoc PhysicalModel::calculate_VCA() */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
-
     //! Set the statistics to be used
     /*!
      * \param statistics the statistics
@@ -503,6 +499,10 @@ class DriftDiffusionProperties : public PhysicalModel
      * explicitly the one of this class!
      */
     virtual void do_init(void);
+
+    /*! \copydoc PhysicalModel::calculate_VCA() */
+    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+        const PhysicalModelInterface* comp_B, double xa);
 
 
     //! This method gets called from reinit()

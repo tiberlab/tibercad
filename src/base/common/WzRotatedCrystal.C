@@ -187,7 +187,6 @@ PhysicalModelInterface* WzRotatedCrystal::create_new(void) const
 
 void WzRotatedCrystal::copy_from (const PhysicalModelInterface *rhs) 
 {
-  PhysicalModelInterface::copy_from(rhs);
 
   const WzRotatedCrystal* temp = dynamic_cast<const WzRotatedCrystal*> (rhs);
 

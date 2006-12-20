@@ -148,9 +148,10 @@ class PhysicalModelInterface
     //! Copy all data from another model to this one
     /*!
      * If you reimplement this in a derived class, call the method
-     * of the base class, too.
+     * of the base class, too. If not, you may not copy important
+     * things.
      */
-    virtual void copy_from(const PhysicalModelInterface* rhs);
+    virtual void copy_from(const PhysicalModelInterface* rhs) = 0;
 
     //! Read the properties from the database
     /*!
@@ -176,7 +177,7 @@ class PhysicalModelInterface
      * virtual crystal approximation
      */
     virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa) = 0;
+        const PhysicalModelInterface* comp_B, double xa) {};
 
     //! calculate an alloy parameter in VCA approximation
     /*!
@@ -387,17 +388,6 @@ PhysicalModelInterface::init(void) throw (InitFailedException)
   do_init();
 }
 
-
-inline
-void
-PhysicalModelInterface::copy_from(const PhysicalModelInterface* rhs)
-{
-  _id = rhs->_id;
-  _material = rhs->_material;
-  _options = rhs->_options;
-  _name = rhs->_name;
-  _simulator_id = rhs->_simulator_id;
-}
 
 inline
 void
