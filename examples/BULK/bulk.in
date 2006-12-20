@@ -7,7 +7,7 @@ $Options$
 
 n_doping = 1e16
 p_doping = 1e14
-temperature = 300
+temperature = 3
 
 searchpath = ../materials
 material = Si
@@ -16,8 +16,8 @@ molar_fraction = 0.3
 
 statistics = B
 
-dimension = 2
-meshfile = bulk2D.msh
+dimension = 1
+meshfile = bulk1D.msh
 
 mesh_units = 1e-4
 
@@ -26,13 +26,18 @@ stop_voltage = 1.0
 voltage_steps = 10
 
 
-nonlinear_tolerance = 1e-16
-nonlinear_ls_maxstep = 0.1
+nonlinear_tolerance = 1e-9
+nonlinear_ls_maxstep = 0.05
+min_voltage_step = 0.001
 ls_type = none
-linear_tolerance = 1e-6
-nonlinear_max_it = 25
+linear_tolerance = 1e-9
+nonlinear_max_it = 20
 linear_max_it = 1000
-integration_order = 5
+integration_order = 2
+ksp_type = gmres
+pc_type = jacobi
+discretization = fem
+
 
 scaling = 1
 

@@ -64,6 +64,14 @@ class DriftDiffusion : public SimulationInterface
       GUMMEL
     };
 
+    //! The implemented discretization schemes
+    enum DiscretizationScheme
+    {
+      FEM,
+      BOX,
+      FEMVARIANT
+    };
+
     //! A structure to hold the three potentials
     /*!
      * This structure is used for the queries of the solution in certain
@@ -249,6 +257,9 @@ class DriftDiffusion : public SimulationInterface
          */
         int coupling;
 
+        //! The discretization method
+        DiscretizationScheme scheme;
+
 
       private:
         
@@ -422,20 +433,13 @@ class DriftDiffusion : public SimulationInterface
      */
     double get_electric_potential(const Elem* elem, const Point& p);
 
-    /**
-     * @returns the number of nonlinear iterations needed for the solution
-     */
+    //! Get the number of nonlinear iterations needed for the solution
     unsigned int get_n_nonlinear_iterations(void) const;
 
-    /**
-     * @returns the final residual norm of the solution
-     */
+    //! Get the final residual norm of the solution
     double get_final_residual(void) const;
 
-    /**
-     * @returns the boundary currents indexed by boundary descriptor
-     * pointers.
-     */
+    //! Get the boundary currents indexed by boundary descriptor
     const std::map<const Boundary*, double>&
       get_boundary_currents(void) const;
 

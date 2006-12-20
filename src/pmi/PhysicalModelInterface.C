@@ -161,8 +161,6 @@ PhysicalModelInterface::copy(void) const
   PhysicalModelInterface* new_copy = NULL;
 
   new_copy = this->create_new();
-  const std::string name = typeid(*new_copy).name();
-  std::cerr << name << "\n";
 
   if (new_copy != NULL)
     new_copy->copy_from(this);

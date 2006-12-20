@@ -61,6 +61,14 @@ class TiberPetscNonlinearSolver : public NonlinearSolver<T>
         unsigned int max_it = 10);
 
     //! Set the options for the nonlinear solver
+    /*!
+     * \param ls_type the line search type:
+     *  \li 1 = no linesearch (standard newton)
+     *  \li 2 = quadratic line search
+     *  \li 3 = cubic line search
+     * \param ls_maxstep the maximum L2 norm for the line search step. This
+     * is only used for \c ls_type 2 and 3
+     */
     void set_snes_ls_options(int ls_type = 3, double ls_maxstep = 1e3);
 
     //! Set the options for the linear solver

@@ -80,6 +80,12 @@ class Alloy : public Material
 
     //! The models for component B
     ModelMap _models_B;
+
+    //! The rotated crystal of A
+    RotatedCrystal* _cryst_A;
+
+    //! The rotated crystal of A
+    RotatedCrystal* _cryst_B;
     
 };
 

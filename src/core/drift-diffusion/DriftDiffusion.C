@@ -56,6 +56,7 @@ DriftDiffusion::Options::Options(void)
     mesh_units(1e-4), // default mesh units are um
     scaling_type(Scaling::UNITS),
     coupling(POISSON),
+    scheme(FEM),
     n_max(1), p_max(1),
     C0_e(1), C0_h(1)
 {
@@ -76,6 +77,7 @@ DriftDiffusion::Options::Options(const Options& rhs)
     mesh_units(rhs.mesh_units),
     scaling_type(rhs.scaling_type),
     coupling(rhs.coupling),
+    scheme(rhs.scheme),
     n_max(rhs.n_max),
     p_max(rhs.p_max),
     C0_e(rhs.C0_e),
@@ -102,6 +104,7 @@ DriftDiffusion::Options::operator=(const Options& rhs)
     mesh_units = rhs.mesh_units;
     scaling_type = rhs.scaling_type;
     coupling = rhs.coupling;
+    scheme = rhs.scheme,
     n_max = rhs.n_max;
     p_max = rhs.p_max;
     C0_e = rhs.C0_e;
@@ -121,7 +124,7 @@ DriftDiffusion::SolverParameters::SolverParameters(void)
     linear_abs_tolerance(1e-12),
     linear_max_iterations(500),
     ls_maxstep(0.025),
-    ls_type(3),
+    ls_type(1),
     ksp_type(KSPBCGSL),
     pc_type(PCILU)
 {
@@ -666,6 +669,9 @@ DriftDiffusion::set_solver_params(NonlinearSolver<Number>& solver)
 void
 DriftDiffusion::parse_options(void)
 {
+  PerfLog perf_log("DriftDiffusion parse_options()", false);
+  perf_log.start_event("parse");
+  
   SolverParameters& solver_params = get_options().solver_params;
 
   const ModelOptions& opts = SimulationInterface::get_options();
@@ -678,14 +684,24 @@ DriftDiffusion::parse_options(void)
   string coupling = opts.get_option("coupling", "");
   if (coupling == "full")
     myopts.coupling = FULLYCOUPLED;
+  else if (coupling == "poisson")
+    myopts.coupling = POISSON;
   else if (coupling == "electrons")
     myopts.coupling = ECURRENT | POISSON;
   else if (coupling == "holes")
     myopts.coupling = HCURRENT | POISSON;
   else if (coupling == "current")
     myopts.coupling = CURRENTS;
-  else 
-    myopts.coupling = POISSON;
+
+
+  string discretization = opts.get_option("discretization", "");
+  if (discretization == "fem")
+    myopts.scheme = FEM;
+  else if (discretization == "box")
+    myopts.scheme = BOX;
+  else if (discretization == "fem_new")
+    myopts.scheme = FEMVARIANT;
+
 
   myopts.mesh_refinement = opts.get_option("mesh_refinement", false);
 
@@ -698,25 +714,49 @@ DriftDiffusion::parse_options(void)
   solver_params.linear_tolerance = opts.get_option("lin_rel_tol", 1e-6);
   solver_params.linear_abs_tolerance = opts.get_option("lin_abs_tol", 1e-12);
   solver_params.linear_max_iterations = opts.get_option("lin_max_it", 500);
+
+  string ksptype = opts.get_option("ksp_type", "");
+  if (ksptype == "") {}
+  else if (ksptype == "bcgsl")
+    solver_params.ksp_type = KSPBCGSL;
+  else if (ksptype == "gmres")
+    solver_params.ksp_type = KSPGMRES;
+  else if (ksptype == "fgmres")
+    solver_params.ksp_type = KSPFGMRES;
+  else if (ksptype == "bcgs")
+    solver_params.ksp_type = KSPBCGS;
+  else if (ksptype == "cg")
+    solver_params.ksp_type = KSPCG;
+  else if (ksptype == "preonly")
+    solver_params.ksp_type = KSPPREONLY;
+
+
   
   string lstype = opts.get_option("ls_type", "");
-  if (lstype == "none")
+  if (lstype == "") {}
+  else if (lstype == "none")
     solver_params.ls_type = 1;
+  else if (lstype == "cubic")
+    solver_params.ls_type = 3;
   else if (lstype == "quadratic")
     solver_params.ls_type = 2;
-  else 
-    solver_params.ls_type = 3;
 
   solver_params.ls_maxstep = opts.get_option("ls_maxstep", 0.05);
 
   string pc = opts.get_option("pc_type", "");
-  if (pc == "composite")
+  if (pc == "") {}
+  else if (pc == "ilu")
+    solver_params.pc_type = PCILU;
+  else if (pc == "composite")
     solver_params.pc_type = PCCOMPOSITE;
   else if (pc == "jacobi")
     solver_params.pc_type = PCJACOBI;
-  else
-    solver_params.pc_type = PCILU;
+  else if (pc == "lu")
+    solver_params.pc_type = PCLU;
+  else if (pc == "cholesky")
+    solver_params.pc_type = PCCHOLESKY;
 
+  perf_log.stop_event("parse");
 }
 
 
@@ -796,8 +836,6 @@ void
 DriftDiffusion::solve_newton(void)
 {
 
-  PerfLog perf_log("solve_newton", false);
-
   // aliases for nicer code
   Options& params = get_options();
   SolverParameters& solver_params = params.solver_params;
@@ -815,9 +853,9 @@ DriftDiffusion::solve_newton(void)
 
 
   // in 1D bcgs seems to work better than bcgsl
-  if (dim == 1)
-    if (solver_params.ksp_type == KSPBCGSL)
-      solver_params.ksp_type = KSPBCGS;
+  //if (dim == 1)
+  //  if (solver_params.ksp_type == KSPBCGSL)
+  //    solver_params.ksp_type = KSPBCGS;
 
 
   // set the solver parameters (they could have changed since we made
@@ -2615,7 +2653,8 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
   const unsigned int dim = mesh.mesh_dimension();
 
   // set the right assembly function
-  if (dim == 1)
+  if ((dim == 1) && (_this->_options.scheme == BOX))
+  {
     switch (_this->_options.coupling)
     {
       case (POISSON | ECURRENT):
@@ -2639,7 +2678,9 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       default:
         _this->do_assembly1D<FULLYCOUPLED>(x, residual, jacobian);
     }
-  else
+  }
+  else if (_this->_options.scheme == FEM)
+  {
     switch (_this->_options.coupling)
     {
       case (POISSON | ECURRENT):
@@ -2663,6 +2704,34 @@ DriftDiffusion::assemble(const NumericVector<Number>& x,
       default:
         _this->do_assembly<FULLYCOUPLED>(x, residual, jacobian);
     }
+  }
+  else if (_this->_options.scheme == FEMVARIANT)
+  {
+    switch (_this->_options.coupling)
+    {
+      case (POISSON | ECURRENT):
+        _this->do_assembly_new<POISSON | ECURRENT>(x, residual, jacobian);
+        break;
+      case (POISSON | HCURRENT):
+        _this->do_assembly_new<POISSON | HCURRENT>(x, residual, jacobian);
+        break;
+      case (CURRENTS):
+        _this->do_assembly_new<CURRENTS>(x, residual, jacobian);
+        break;
+      case (POISSON):
+        _this->do_assembly_new<POISSON>(x, residual, jacobian);
+        break;
+      case (ECURRENT):
+        _this->do_assembly_new<ECURRENT>(x, residual, jacobian);
+        break;
+      case (HCURRENT):
+        _this->do_assembly_new<HCURRENT>(x, residual, jacobian);
+        break;
+      default:
+        _this->do_assembly_new<FULLYCOUPLED>(x, residual, jacobian);
+    }
+
+  }
 }
 
 void
@@ -2922,12 +2991,16 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
       Real en = 0.0;
       Real ep = 0.0;
       RealGradient e_field(0);
+      RealGradient nabla_en(0);
+      RealGradient nabla_ep(0);
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         u  += phi[i][qp] * Xu(i);
         en += phi[i][qp] * Xn(i);
         ep += phi[i][qp] * Xp(i);
-        e_field += dphi[i][qp] * Xu(i);
+        e_field -= dphi[i][qp] * Xu(i);
+        nabla_en += dphi[i][qp] * Xn(i);
+        nabla_ep += dphi[i][qp] * Xp(i);
       }
 
       // prepare for calculating local properties
@@ -2939,7 +3012,7 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
-      sc->set_electric_field(phi0 * e_field);
+      sc->set_electric_field(phi0 * e_field / params.mesh_units);
 
       sc->calculate_densities();
 
@@ -2957,9 +3030,9 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
       double l2_eps = l2 * epsilon;
 
       double Rn = sc->get_net_electron_recombination_rate();
-      //Rn = (fabs(Rn) < 1.0e-19) ? 0.0 : Rn;
+      Rn = (abs(Rn) < 1.0e-80) ? 0.0 : Rn;
       double Rp = sc->get_net_hole_recombination_rate();
-      //Rp = (fabs(Rp) < 1.0e-19) ? 0.0 : Rp;
+      Rp = (abs(Rp) < 1.0e-80) ? 0.0 : Rp;
       
       // remember the maximum densities
       n_max = (n_max > n) ? n_max : n;
@@ -2989,6 +3062,10 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
       // the jacobian x weight x scaling
       double J = JxW[qp] / J_scale;
 
+      RealGradient nabla_u_en = J * (nabla_en + e_field) *
+        x0_mesh * x0_mesh / T_lat;
+      RealGradient nabla_u_ep = J * (nabla_ep + e_field) *
+        x0_mesh * x0_mesh / T_lat;
       // 
       // First we will build the system matrix Ke_ij
       //
@@ -2996,17 +3073,22 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
       {
         for (unsigned int j = 0; j < n_dofs; j++)
         {
-          Real laplace =
+          double laplace =
             J * (dphi[i][qp] * dphi[j][qp]) * x0_mesh * x0_mesh;
+
+          double tmp_n = phi[i][qp] * (dphi[j][qp] * nabla_u_en);
+          double tmp_p = phi[i][qp] * (dphi[j][qp] * nabla_u_ep);
           
           if (coupling & POISSON)
             Kuu(i,j) += l2_eps * laplace;
           
           if (coupling & ECURRENT)
-            Knn(i,j) += sigma_e * laplace;
+          {
+            Knn(i,j) += laplace + tmp_n;
+          }
           
           if (coupling & HCURRENT)
-            Kpp(i,j) += sigma_h * laplace;
+            Kpp(i,j) += laplace - tmp_p;
         }
 
         if (!(coupling & POISSON))
@@ -3023,48 +3105,54 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
       // for jacobian compute the other contributions
       // 
       if (jacobian != NULL)
-      //if (0)
       {
+        double dn_dphi = phi0 * sc->get_electron_density_derivative();
+        double dp_dphi = phi0 * sc->get_hole_density_derivative();
+        double dNd_dphi = phi0 * sc->get_ionized_donor_density_derivative();
+        double dNa_dphi = phi0 * sc->get_ionized_acceptor_density_derivative();
+
         double drho[3];
-        drho[1] = phi0 / C0 * (sc->get_electron_density_derivative() -
-          sc->get_ionized_donor_density_derivative());
-        drho[2] = -phi0 / C0 * (sc->get_hole_density_derivative() -
-          sc->get_ionized_acceptor_density_derivative());
+        drho[1] = (dn_dphi - dNd_dphi) / C0;
+        drho[2] = -(dp_dphi - dNa_dphi) / C0;
         drho[0] = -(drho[1] + drho[2]);
 
+        double dRn_dn = sc->get_net_electron_recombination_rate_derivatives()[0];
+        double dRn_dp = sc->get_net_electron_recombination_rate_derivatives()[1];
+        double dRp_dn = sc->get_net_hole_recombination_rate_derivatives()[0];
+        double dRp_dp = sc->get_net_hole_recombination_rate_derivatives()[1];
+
         double dRn[3];
+        dRn[1] = -(dRn_dn - Rn / n ) * dn_dphi / (sigma_e * R0_e);
+        dRn[2] = -dRn_dp * dp_dphi / (sigma_e * R0_e);
+        dRn[0] = -(dRn[1] + dRn[2]);
+
         double dRp[3];
-        for (int id = 0; id < 3; id++)
-        {
-          dRn[id] = phi0 / R0_e
-            * sc->get_net_electron_recombination_rate_derivatives()[id];
-          dRp[id] = phi0 / R0_h
-            * sc->get_net_hole_recombination_rate_derivatives()[id];
-        }
-        //if (fabs(Rn) < 1e-3)
+        dRp[1] = -dRp_dn * dn_dphi / (sigma_h * R0_h);
+        dRp[2] = -(dRp_dp - Rp / p ) * dp_dphi / (sigma_h * R0_h);
+        dRp[0] = -(dRp[1] + dRp[2]);
+
         if (Rn == 0.0)
           dRn[0] = dRn[1] = dRn[2] = 0.0;
-        //if (fabs(Rp) < 1e-3)
         if (Rp == 0.0)
           dRp[0] = dRp[1] = dRp[2] = 0.0;
 
         // d(sigma_n)/du * element-jacobian
         // sigma_n = mu_n * n means the conductivity of electrons
-        Real dsigma_e = J * phi0 / (mu0 * C0_e) * mue *
-          sc->get_electron_density_derivative();
-        Real dsigma_h = J * phi0 / (mu0 * C0_h) * muh *
-          sc->get_hole_density_derivative();
+        //Real dsigma_e = J * phi0 / (mu0 * C0_e) * mue *
+        //  sc->get_electron_density_derivative();
+        //Real dsigma_h = J * phi0 / (mu0 * C0_h) * muh *
+        //  sc->get_hole_density_derivative();
 
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
-          unsigned int j = i;
-          //for (unsigned int j = 0; j < n_dofs; j++)
+          for (unsigned int j = 0; j < n_dofs; j++)
           {
             // first the dKe_il/dX_j * X_l part
             // (for X_l = u_l we dont get anything, i.e. the
             // contributions to Kuu, Kun, Kup are zero)
             
+            /*
             Real dsigma_e_x_phi = dsigma_e * phi[j][qp];
             Real dsigma_h_x_phi = dsigma_h * phi[j][qp];
             for (unsigned int k = 0; k < n_dofs; k++)
@@ -3093,6 +3181,7 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
                 Kpp(i,j) -= elem_contrib;
               }
             }
+            */
 
             // The dFe_i/dX_j part
             Real phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp];
@@ -3110,8 +3199,10 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
             
             if (coupling & ECURRENT)
             {
-              //if (coupling & POISSON)
-              //  Knu(i,j) -= dRn[0] * phi_i_x_phi_j;
+              // (1) would destroy M-Matrix property
+              // (2) is 0 for Boltzmann statistics
+              if (coupling & POISSON)
+                Knu(i,j) -= dRn[0] * phi_i_x_phi_j;
 
               Knn(i,j) -= dRn[1] * phi_i_x_phi_j;
 
@@ -3121,8 +3212,10 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
 
             if (coupling & HCURRENT)
             {
-              //if (coupling & POISSON)
-              //  Kpu(i,j) += dRp[0] * phi_i_x_phi_j;
+              // (1) would destroy M-Matrix property
+              // (2) is 0 for Boltzmann statistics
+              if (coupling & POISSON)
+                Kpu(i,j) += dRp[0] * phi_i_x_phi_j;
 
               if (coupling & ECURRENT)
                 Kpn(i,j) += dRp[1] * phi_i_x_phi_j;
@@ -3142,8 +3235,12 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
         Real J_x_P0 = J / P0;
 
         // net recombination rate
-        Real J_x_Rn = J * Rn / R0_e;
-        Real J_x_Rp = J * Rp / R0_h;
+        Real J_x_Rn = J * Rn / (sigma_e * R0_e);
+        if (isnan(J_x_Rn) || isinf(J_x_Rn))
+          J_x_Rn = 0.0;
+        Real J_x_Rp = J * Rp / (sigma_h * R0_h);
+        if (isnan(J_x_Rp) || isinf(J_x_Rp))
+          J_x_Rp = 0.0;
 
         RealVectorValue P(sc->get_total_polarization());
         P *= J_x_P0;
@@ -3616,30 +3713,44 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
 /*
   {
     static int i = 0;
-    std::ostringstream s;
-    s << i;
+    static int j = 0;
+    std::ostringstream si;
+    si << i;
+    std::ostringstream sj;
+    sj << j;
     if (residual == NULL)
     {
-      std::cerr << "Writing jacobian...\n";
-      if (coupling == POISSON)
-        jacobian->print_matlab("jac_"+s.str()+".m");
-      else
-        jacobian->print_matlab("jac_neq.m");
-    }
-    else
+      std::cerr << "Writing jacobian " << i << "...\n";
       if (coupling == POISSON)
       {
-        residual->print_matlab("res_"+s.str()+".m");
-        x.print_matlab("sol_"+s.str()+".m");
+        //jacobian->print_matlab("jac_"+s.str()+".m");
       }
       else
-        residual->print_matlab("res_neq.m");
+        jacobian->print_matlab("jac_neq_"+si.str()+".m");
 
     i++;
+    }
+    else
+    {
+      std::cerr << "Writing residual " << j << "...\n";
+      if (coupling == POISSON)
+      {
+        //residual->print_matlab("res_"+s.str()+".m");
+        //x.print_matlab("sol_"+s.str()+".m");
+      }
+      else
+      {
+        residual->print_matlab("res_neq_"+sj.str()+".m");
+        x.print_matlab("sol_neq_"+sj.str()+".m");
+      }
+
+      j++;
+    }
   }
 */
   
   perf_log.stop_event("assembly");
+
 } 
 
 
@@ -4590,28 +4701,41 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   options.p_max = p_max;
 
 /*
-  {
+ {
     static int i = 0;
-    std::ostringstream s;
-    s << i;
+    static int j = 0;
+    std::ostringstream si;
+    si << i;
+    std::ostringstream sj;
+    sj << j;
     if (residual == NULL)
     {
-      std::cerr << "Writing jacobian...\n";
-      if (coupling == POISSON)
-        jacobian->print_matlab("jac_"+s.str()+".m");
-      else
-        jacobian->print_matlab("jac_neq.m");
-    }
-    else
+      std::cerr << "Writing jacobian " << i << "...\n";
       if (coupling == POISSON)
       {
-        residual->print_matlab("res_"+s.str()+".m");
-        x.print_matlab("sol_"+s.str()+".m");
+        //jacobian->print_matlab("jac_"+s.str()+".m");
       }
       else
-        residual->print_matlab("res_neq.m");
+        jacobian->print_matlab("jac_neq_"+si.str()+".m");
 
     i++;
+    }
+    else
+    {
+      std::cerr << "Writing residual " << j << "...\n";
+      if (coupling == POISSON)
+      {
+        //residual->print_matlab("res_"+s.str()+".m");
+        //x.print_matlab("sol_"+s.str()+".m");
+      }
+      else
+      {
+        residual->print_matlab("res_neq_"+sj.str()+".m");
+        x.print_matlab("sol_neq_"+sj.str()+".m");
+      }
+
+      j++;
+    }
   }
 */
   
@@ -5366,24 +5490,43 @@ DriftDiffusion::do_assembly1D(const NumericVector<Number>& x,
   options.n_max = n_max;
   options.p_max = p_max;
 
+
 /*
-  static bool flag = true;
-  if (flag)
-  {
+ {
+    static int i = 0;
+    static int j = 0;
+    std::ostringstream si;
+    si << i;
+    std::ostringstream sj;
+    sj << j;
     if (residual == NULL)
     {
-      std::cerr << "Writing jacobian...\n";
+      std::cerr << "Writing jacobian " << i << "...\n";
       if (coupling == POISSON)
-        jacobian->print_matlab("jac_eq.m");
+      {
+        //jacobian->print_matlab("jac_"+s.str()+".m");
+      }
       else
-        jacobian->print_matlab("jac_neq.m");
-      flag = false;
+        jacobian->print_matlab("jac_neq_"+si.str()+".m");
+
+      i++;
     }
     else
+    {
+      std::cerr << "Writing residual " << j << "...\n";
       if (coupling == POISSON)
-        residual->print_matlab("res_eq.m");
+      {
+        //residual->print_matlab("res_"+s.str()+".m");
+        //x.print_matlab("sol_"+s.str()+".m");
+      }
       else
-        residual->print_matlab("res_neq.m");
+      {
+        residual->print_matlab("res_neq_"+sj.str()+".m");
+        x.print_matlab("sol_neq_"+sj.str()+".m");
+      }
+
+      j++;
+    }
   }
 */
   

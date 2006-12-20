@@ -18,7 +18,7 @@ DIM := 2
 # order of the mesh elements (1 or 2)
 ORDER := 1
 
-targets := run2d run3d
+targets := run1d run2d run3d
 
 .PHONY: all clean run
 
@@ -29,6 +29,7 @@ main: $(objects)
 	@echo "Linking main..."
 	@$(CXX) $(CXXFLAGS) $(objects) $(TIBER_OBJECTS) -o main $(LIBS) $(LDFLAGS) 
 
+run1d: DIM := 1
 run2d: DIM := 2
 run3d: DIM := 3
 $(targets): run%d: bulk%D.msh run

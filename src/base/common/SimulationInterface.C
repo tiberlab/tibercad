@@ -57,6 +57,13 @@ SimulationInterface::create(const std::string& type,
   return sim;
 }
 
+void
+SimulationInterface::destroy(SimulationInterface* p)
+{
+  // TODO better call a module internal method
+  delete p;
+}
+
 
 void
 SimulationInterface::init(void) throw (InitFailedException)
@@ -103,5 +110,21 @@ EquationSystems&
 SimulationInterface::get_equation_systems(void) const
 {
   return _environment->get_device().get_equation_systems();
+}
+
+
+void
+SimulationInterface::solve(void) throw (SolveFailedException) 
+{
+  PerfLog perflog(get_name() + ": solve", false);
+  perflog.start_event("solve");
+
+  assert(_is_initialized);
+
+  do_solve();
+
+  _is_solved = true;
+  
+  perflog.stop_event("solve");
 }
 

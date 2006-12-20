@@ -147,6 +147,7 @@ void ZbRotatedCrystal::do_init(void)
 
 void  ZbRotatedCrystal::copy_from (const PhysicalModelInterface *rhs)
 {
+  PhysicalModelInterface::copy_from(rhs);
 
   const ZbRotatedCrystal* temp = dynamic_cast<const ZbRotatedCrystal*> (rhs);
   a_lat = temp->a_lat;

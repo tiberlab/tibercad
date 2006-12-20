@@ -66,6 +66,12 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     static SimulationInterface* create(const std::string& type,
         const ModelOptions& options = ModelOptions());
 
+    //! Destroy a simulation
+    /*!
+     * \param p the pointer to the simulation to destroy
+     */
+    static void destroy(SimulationInterface* p);
+
 
     //! Find a simulation with name \c name
     /*!
@@ -98,17 +104,30 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! Do the initialization
     /*!
-     * Has to be implemented by derived classes
+     * Has to be implemented by derived classes.
+     *
+     * This method should initialize everything that is needed to do a
+     * simulation.
      */
     virtual void do_init(void) = 0;
 
     //! Do the solve
     /*!
-     * Has to be implemented by derived classes
+     * Has to be implemented by derived classes.
+     *
+     * This method does the actual simulation.
      */
     virtual void do_solve(void) = 0;
 
     //! Parse the options
+    /*!
+     * This method has to be called \em explicitly somewhere in the derived
+     * class. It is not called from \c SimulationInterface::init(), because 
+     * in some situations options could change between different calls
+     * to \c solve(). It is not called in \c SimulationInterface::solve(),
+     * because in other situations this is not necessary. So: call it in
+     * \c do_init() or \c do_solve().
+     */
     virtual void parse_options(void) = 0;
 
     //! Get the unique name for the equation system
@@ -173,16 +192,6 @@ SimulationInterface::get_environment(void) const
   return *_environment;
 }
 
-inline
-void
-SimulationInterface::solve(void) throw (SolveFailedException) 
-{
-  assert(_is_initialized);
-
-  do_solve();
-
-  _is_solved = true;
-}
 
 inline
 ID
@@ -190,6 +199,7 @@ SimulationInterface::get_id(void) const
 {
   return _id;
 }
+
 
 inline
 const std::string&

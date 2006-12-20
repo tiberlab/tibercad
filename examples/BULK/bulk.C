@@ -55,6 +55,7 @@ int main (int argc, char** argv)
     const string method = input("simulation_method", "NEWTON");
     const string statistics = input("statistics", "B");
 
+    string min_voltage_step = input("min_voltage_step", "1e-3");
     string nonlin_rtol = input("nonlinear_tolerance", "1e-9");
     string lin_rtol = input("linear_tolerance", "1e-12");
     string integration_order = input("integration_order", "5");
@@ -63,6 +64,9 @@ int main (int argc, char** argv)
     string ls_type = input("ls_type", "cubic");
     string nonlin_ls_maxstep =
       input("nonlinear_ls_maxstep", "0.025");
+    string ksp_type = input("ksp_type", "gmres");
+    string pc_type = input("pc_type", "composite");
+    string discretization = input("discretization", "fem");
 
     double n_doping = input("n_doping", 1e15);
     double p_doping = input("p_doping", 0.0);
@@ -104,6 +108,7 @@ int main (int argc, char** argv)
       ModelOptions dd_opts;
       dd_opts["name"] = "driftdiff";
       dd_opts["nonlin_max_it"] = "100";
+      dd_opts["min_voltage_step"] = min_voltage_step;
       dd_opts["lin_max_it"] = lin_max_it;
       dd_opts["nonlin_rel_tol"] = nonlin_rtol;
       dd_opts["lin_rel_tol"] = lin_rtol;
@@ -111,7 +116,9 @@ int main (int argc, char** argv)
       dd_opts["ls_type"] = ls_type;
       dd_opts["ls_maxstep"] = nonlin_ls_maxstep;
       dd_opts["mesh_units"] = mesh_units;
-      dd_opts["pc_type"] = "composite";
+      dd_opts["ksp_type"] = ksp_type;
+      dd_opts["pc_type"] = pc_type;
+      dd_opts["discretization"] = discretization;
       dd_ptr = SimulationInterface::create("drift-diffusion", dd_opts);
     }
 

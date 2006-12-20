@@ -118,6 +118,9 @@ class Material
     //! Get a writable reference to the database
     Database& get_database(void);
 
+    //! Get a writable reference to the RotatedCrystal
+    RotatedCrystal& get_crystal(void);
+
     //! Get an iterator to the first model
     ModelMap::iterator models_begin(void);
 
@@ -139,7 +142,7 @@ class Material
      */
     std::string _structure;
 
-    //! The RotatedCrystal object which
+    //! The RotatedCrystal object
     RotatedCrystal* _rotated_crystal;
 
     //! The map containing all \c PhysicalModelInterface objects
@@ -202,6 +205,14 @@ Material::get_structure(void) const
 inline
 const RotatedCrystal&
 Material::get_rotated_crystal(void) const
+{
+  return *_rotated_crystal;
+}
+
+
+inline
+RotatedCrystal&
+Material::get_crystal(void)
 {
   return *_rotated_crystal;
 }

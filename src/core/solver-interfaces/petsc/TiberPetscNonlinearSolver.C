@@ -290,9 +290,9 @@ void TiberPetscNonlinearSolver<T>::init(void) throw (PetscRuntimeError)
 
     SNESSetConvergenceTest(_snes, __tiber_snes_convergence_test, (void*) this);
 
-    KSP ksp;
-    SNESGetKSP(_snes, &ksp);
-    KSPSetInitialGuessKnoll(ksp, PETSC_TRUE);
+    //KSP ksp;
+    //SNESGetKSP(_snes, &ksp);
+    //KSPSetInitialGuessKnoll(ksp, PETSC_TRUE);
 
   }
 }
