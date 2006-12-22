@@ -16,7 +16,7 @@ Macrostrain* Macrostrain::static_this;
 
 //-----------------------------------------------------------------//
 void Macrostrain::parse_options( )
-{
+{ 
 
  const ModelOptions& opt = get_options();
 
@@ -24,14 +24,15 @@ void Macrostrain::parse_options( )
 
 
  max_r_steps = opt.get_option("refinement_steps", 0);
+
  uniform_refinement = opt.get_option("uniform_refinement", false);
 
 
- refine_fraction = opt.get_option("refine_fraction", 0);
+ refine_fraction = opt.get_option("refine_fraction", 0.25);
 
- coarsen_fraction = opt.get_option("coarsen_fraction", 0);
+ coarsen_fraction = opt.get_option("coarsen_fraction", 0.0);
 
- max_ref_level = opt.get_option("max_refinement_level",0);
+ max_ref_level = opt.get_option("max_refinement_level",10);
  tolerance  = opt.get_option("tolerance", 1e-6);  
  max_shape_steps = opt.get_option("number_shape_steps",0);
    
@@ -1080,21 +1081,21 @@ void Macrostrain::do_solve()
       // coarsened.
       
       mesh_refinement.flag_elements_by_error_fraction (error,
-							 refine_fraction,
-							 coarsen_fraction,
-							 max_ref_level);
-	
+						       refine_fraction,
+						       coarsen_fraction,
+						       max_ref_level);
+      
 
-      std :: cerr << " refine_fraction  " << refine_fraction <<"\n";
+   
 	
       // This call actually refines and coarsens the flagged
       // elements.
       if (uniform_refinement == 1)
 	mesh_refinement.uniformly_refine(1);
       else
-	mesh_refinement.refine_and_coarsen_elements();
+        mesh_refinement.refine_and_coarsen_elements();
 
-
+	
 
 
 
@@ -1193,6 +1194,9 @@ void Macrostrain::do_solve()
   //geometry relaxation
 
   init_u_node();
+
+
+ 
 
   for (unsigned int geom_it = 1 ; geom_it <= max_shape_steps; geom_it++)
     {
