@@ -34,3 +34,6 @@ gamma3 = 2.93
 
 
 permittivity = 12.93
+
+# lattice constant
+a = 0.565325

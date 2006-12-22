@@ -57,6 +57,7 @@ DriftDiffusion::Options::Options(void)
     scaling_type(Scaling::UNITS),
     coupling(POISSON),
     scheme(FEM),
+    current_calculation(DEFAULT),
     n_max(1), p_max(1),
     C0_e(1), C0_h(1)
 {
@@ -78,6 +79,7 @@ DriftDiffusion::Options::Options(const Options& rhs)
     scaling_type(rhs.scaling_type),
     coupling(rhs.coupling),
     scheme(rhs.scheme),
+    current_calculation(rhs.current_calculation),
     n_max(rhs.n_max),
     p_max(rhs.p_max),
     C0_e(rhs.C0_e),
@@ -105,6 +107,7 @@ DriftDiffusion::Options::operator=(const Options& rhs)
     scaling_type = rhs.scaling_type;
     coupling = rhs.coupling;
     scheme = rhs.scheme,
+    current_calculation = rhs.current_calculation,
     n_max = rhs.n_max;
     p_max = rhs.p_max;
     C0_e = rhs.C0_e;
@@ -124,7 +127,7 @@ DriftDiffusion::SolverParameters::SolverParameters(void)
     linear_abs_tolerance(1e-12),
     linear_max_iterations(500),
     ls_maxstep(0.025),
-    ls_type(1),
+    ls_type(3),
     ksp_type(KSPBCGSL),
     pc_type(PCILU)
 {
@@ -665,6 +668,22 @@ DriftDiffusion::set_solver_params(NonlinearSolver<Number>& solver)
   solver_class.set_pc_type(solver_params.pc_type);
 }
 
+void
+DriftDiffusion::parse_const_options(void)
+{
+  SolverParameters& solver_params = get_options().solver_params;
+
+  const ModelOptions& opts = SimulationInterface::get_options();
+  Options& myopts = get_options();
+
+  myopts.mesh_units = opts.get_option("mesh_units", 1e-4);
+  string method =  opts.get_option("current_integration_method", "");
+  if (method == "new")
+    myopts.current_calculation = NEW;
+  else
+    myopts.current_calculation = DEFAULT;
+
+}
 
 void
 DriftDiffusion::parse_options(void)
@@ -680,7 +699,7 @@ DriftDiffusion::parse_options(void)
   myopts.min_voltage_step = opts.get_option("min_voltage_step", 2e-3);
   myopts.integration_order = static_cast<libMeshEnums::Order>(
       opts.get_option("integration_order", 5));
-  myopts.mesh_units = opts.get_option("mesh_units", 1e-4);
+
   string coupling = opts.get_option("coupling", "");
   if (coupling == "full")
     myopts.coupling = FULLYCOUPLED;
@@ -829,6 +848,8 @@ DriftDiffusion::do_init(void)
   find_dirichlet_nodes();
 
   _rebuild_eq_system = false;
+
+  parse_const_options();
 }
 
 
@@ -1356,7 +1377,7 @@ DriftDiffusion::get_solution(const Elem* elem,
 }
 
 void
-DriftDiffusion::calculate_currents(void)
+DriftDiffusion::calculate_currents_new(void)
 {
 
   // we only do something if we are on processor 0
@@ -1574,7 +1595,7 @@ DriftDiffusion::calculate_currents(void)
     (*it).second *= j0;
 }
 
-/*
+
 // old implementation, gives sometimes strange currents
 void
 DriftDiffusion::calculate_currents(void)
@@ -1818,7 +1839,7 @@ DriftDiffusion::calculate_currents(void)
   for ( ; it != _boundary_currents.end(); ++it)
     (*it).second *= j0;
 }
-*/
+
 
 
 void

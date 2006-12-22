@@ -39,13 +39,13 @@ void MacrostrainModel::do_init()
 
   stiffness = Stiffness::create( get_material() -> get_structure(), opt  );
   
- 
+  stiffness->set_material(get_material());
   stiffness->init();
 
 
   piezo = Piezoelectricity::create( get_material() -> get_structure(), opt  ); 
 
-
+  piezo->set_material(get_material());
   piezo->init();
 
 

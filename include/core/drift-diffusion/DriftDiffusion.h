@@ -67,9 +67,16 @@ class DriftDiffusion : public SimulationInterface
     //! The implemented discretization schemes
     enum DiscretizationScheme
     {
-      FEM,
-      BOX,
-      FEMVARIANT
+      FEM, //< Standard Finite Elements
+      BOX, //< Box integration method
+      FEMVARIANT //< Finite Elements on slightly different equations
+    };
+
+    //! How to calculate currents
+    enum CurrentCalculation
+    {
+      DEFAULT,
+      NEW
     };
 
     //! A structure to hold the three potentials
@@ -243,10 +250,9 @@ class DriftDiffusion : public SimulationInterface
          */
         double mesh_units;
 
-        /**
-         * The type of scaling to be applied
-         *
-         * Can be one of @c NONE, @c UNITS or @c DEMARI
+        //! The type of scaling to be applied
+        /*!
+         * Can be one of \c NONE, \c UNITS or \c DEMARI
          */
         Scaling::ScalingType scaling_type;
 
@@ -259,6 +265,9 @@ class DriftDiffusion : public SimulationInterface
 
         //! The discretization method
         DiscretizationScheme scheme;
+
+        //! How to calculate currents
+        CurrentCalculation current_calculation; 
 
 
       private:
@@ -585,6 +594,9 @@ class DriftDiffusion : public SimulationInterface
     double do_gummel_iterations(int max_it)
       throw (PetscRuntimeError, KSPDivergedError, SNESDivergedError);
 
+    //! Parse the options which will not change between calls to solve()
+    void parse_const_options(void);
+    
     /**
      * Set the options for the PETSc solver as given in @c SolverParameters
      */
@@ -623,7 +635,16 @@ class DriftDiffusion : public SimulationInterface
     void solve_gummel(void) throw (PetscRuntimeError);
 
     //! Calculate terminal currents
+    /*!
+     * Integrates over the boundary elements
+     */
     void calculate_currents(void);
+
+    //! Calculate terminal currents
+    /*!
+     * Takes the elemental current value for boundary integration
+     */
+    void calculate_currents_new(void);
 
     //! Get the solution at the point \c p in a given element
     /*!

@@ -4,7 +4,10 @@ structure = zb
 
 Eg_G = 3.385
 Eg_L = 1.635
-Eg_X = 1.165
+# 0 K
+#Eg_X = 1.165
+# 300 K
+Eg_X = 1.12
 Ev = 1.09
 
 delta = 0.044
@@ -30,3 +33,14 @@ abs_def_pot_L = -2.07
 uniax_def_pot_L = 16.14
 
 permittivity = 11.7
+
+# lattice constant
+a = 0.54304
+
+# stiffness data
+C11 = 165.77
+C12 = 63.93
+C44 = 79.62
+
+# piezoelectricity
+e14 = 0.0

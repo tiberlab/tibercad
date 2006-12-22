@@ -24,8 +24,8 @@ voltage_steps = 10
 
 nonlinear_tolerance = 1e-9
 nonlinear_abs_tolerance = 1e-12
-nonlinear_ls_maxstep = 0.05
-ls_type = ls
+nonlinear_ls_maxstep = 0.025
+ls_type = cubic
 linear_tolerance = 1e-6
 linear_abs_tolerance = 1e-15
 nonlinear_max_it = 50
