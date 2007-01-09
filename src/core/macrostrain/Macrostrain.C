@@ -41,14 +41,17 @@ void Macrostrain::parse_options( )
  atom_structure_filename = opt.get_option("atom_structure_filename", "");
  atom_displacements_filename = opt.get_option("atom_displacements_filename","");
    
- periodicity[0] = opt.get_option("periodicity_x",false);
- periodicity[1] = opt.get_option("periodicity_y",false);
- periodicity[2] = opt.get_option("periodicity_z",false);
+
  
+
+ // assert(periodicity_x == false);
 
 
   
  equation_systems->parameters.set<Real>("linear solver tolerance") = tolerance; 
+
+
+
 
  if (!grown_on_substrate)
  {
@@ -141,8 +144,9 @@ void Macrostrain::do_init( )
   if (!grown_on_substrate)
     {
       Point p;
-      vector<double> ref_point;
-      options.get_option("reference_material_point",ref_point);
+      vector<double>  ref_point(3);
+      ref_point[0] = 0; ref_point[1] = 0; ref_point[2] = 0;
+      // options.get_option("reference_material_point", ref_point);
       for (short i = 0; i < 3; i++)  p(i) = ref_point[i];
 
       MeshBase::const_element_iterator el  = mesh->active_elements_begin();
@@ -175,7 +179,9 @@ void Macrostrain::do_init( )
     }
 
 
-
+  periodicity[0] = options.get_option("periodicity_x",false);
+  periodicity[1] = options.get_option("periodicity_y",false);
+  periodicity[2] = options.get_option("periodicity_z",false);
  
 
 
@@ -271,6 +277,8 @@ void Macrostrain::define_fixed_nodes()
   fixed_node1 = find_nearest_node(fixed_point1);
   fixed_node2 = find_nearest_node(fixed_point2);
   fixed_node3 = find_nearest_node(fixed_point3);
+
+
 }
 
 //--------------------------------------------------------------------//
@@ -598,9 +606,9 @@ void Macrostrain::do_assemble(EquationSystems& es,
 		     Boundary* bd = si.get_boundary(std::pair<const Elem*,  unsigned int> (elem,side));
 		     
 		     if (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  )
-		       if (bd->get_name() != substrate_name)
+		       if (  bd->get_name() != substrate_name)
 			 {
-				
+			   	
 				
 			   MacrostrainPressure* press = 
 			     dynamic_cast<MacrostrainPressure*> (bd->get_boundary_properties (get_id()));
@@ -943,11 +951,15 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
    else
      {
-       if (elem->node(n) == fixed_node1 ) return(true);
+
        //there is always one node that is fixed. 
        // std :: cerr << elem->node(n) << "  " << fixed_node_number << "\n";
        //return(elem->node(n) == fixed_node_number);
-       return(false);
+
+       if (elem->node(n) == fixed_node1 ) 
+	 return(true);
+       else 	
+	 return(false);
      }
 
  
@@ -1702,9 +1714,9 @@ void  Macrostrain::apply_periodic_bc()
 	  
 	}
     }  
-  // std::cout << '+++++++++++++++++\n';
-  //dof_map.print_dof_constraints();  
-  // std::cout << '+++++++++++++++++\n';
+  //  std::cout << '+++++++++++++++++\n';
+  // dof_map.print_dof_constraints();  
+  //  std::cout << '+++++++++++++++++\n';
 
 }
 
@@ -1762,10 +1774,15 @@ The constrants are the following:
 
  DofConstraintRow constraint; 
 
+
+
+
  if ( !grown_on_substrate )
    {//substrate system is not treated
      if (dim > 1)
        {//1D system does not need a treatment 
+
+
 	 if (fixed_node1 == fixed_node2) 
 	   {
 	     
@@ -1960,6 +1977,8 @@ The constrants are the following:
        }
 
    }
+
+ 
 
 }
 //--------------------------------------------------------------------------------//
@@ -2664,6 +2683,9 @@ void Macrostrain::define_additional_variables()
 
 	
     }
+
+
+ 
   
 }
 
