@@ -229,6 +229,9 @@ void Macrostrain::do_init( )
   //------------------------------------------------------
   NumericVector<Number>& old_solution = 
     my_system->add_vector("old solution");
+
+
+
   
   // Initialize the data structures for the equation system.
   my_system->init();	
@@ -1003,6 +1006,10 @@ void Macrostrain::do_solve()
   
 
  
+
+  //------------------------------------------------------
+
+ 
   Mesh& mesh = equation_systems->get_mesh();
 
  
@@ -1068,29 +1075,18 @@ void Macrostrain::do_solve()
     {
       std::cerr << "\nRefining the mesh... (Step" << r_step << ")\n" << std::endl;
       
-      // The \p ErrorVector is a particular \p StatisticsVector
-      // for computing error information on a finite element mesh.
+
+      
+
+     
       ErrorVector error;
       
-      // The \p ErrorEstimator class interrogates a finite element
-      // solution and assigns to each element a positive error value.
-      // This value is used for deciding which elements to refine
-      // and which to coarsen.
       KellyErrorEstimator error_estimator;
 
-      // Compute the error for each active element using the provided
-      // \p flux_jump indicator.  Note in general you will need to
-      // provide an error estimator specifically designed for your
-      // application.
+     
       error_estimator.estimate_error (*my_system,error);
 		
-      // This takes the error in \p error and decides which elements
-      // will be coarsened or refined.  Any element within 20% of the
-      // maximum error on any element will be refined, and any
-      // element within 10% of the minimum error on any element might
-      // be coarsened. Note that the elements flagged for refinement
-      // will be refined, but those flagged for coarsening _might_ be
-      // coarsened.
+      
       
       mesh_refinement.flag_elements_by_error_fraction (error,
 						       refine_fraction,
@@ -1107,29 +1103,20 @@ void Macrostrain::do_solve()
       else
         mesh_refinement.refine_and_coarsen_elements();
 
-	
-
-
-
-      // This call reinitializes the \p EquationSystems object for
-      // the newly refined mesh.  One of the steps in the
-      // reinitialization is projecting the \p solution,
-      // \p old_solution, etc... vectors from the old mesh to
-      // the current one.
+     
       equation_systems->reinit();
 
       old_solution = *(my_system->solution);
       
-
+      old_solution.close();
    
       initialize_eps0_list();
+
       initialize_el_number_map();
       
       set_up_additional_dofs();
       
-     
       init_substrate();
-
 
       define_fixed_nodes();
 
@@ -1137,7 +1124,6 @@ void Macrostrain::do_solve()
 
       refer_objects();
 
- 
       make_nodes_periodic();
       
       apply_periodic_bc();
@@ -1150,11 +1136,9 @@ void Macrostrain::do_solve()
       
       my_system->solve();
       
-      old_solution.add(-1.0, *(my_system->solution));
 
-      old_solution.close();
-
-      std::cout << "Norm of the difference  " <<  old_solution.linfty_norm() << "\n";
+      std::cout << "Norm of the difference  " << norm_of_difference( old_solution, *(my_system->solution) ) 
+		<< "  after step number " << r_step << "\n";
      
       if (intermediate_output)
 	{      
@@ -3464,7 +3448,44 @@ unsigned int Macrostrain::find_nearest_node(Point& point)
 
 }
 //-------------------------------------------------------------------------------------------/
+double Macrostrain::norm_of_difference(NumericVector<Number>& solution1, NumericVector<Number>& solution2)
+{
 
+  //the idea is to exclude from comparison the additional variables 
+
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+
+  DofMap& dof_map = my_system->get_dof_map();
+  vector<unsigned int> dof_indices;
+
+  double  norm = 0;
+
+  for ( ; el != end_el ; ++el) 
+    {//el
+
+      const Elem* elem = *el;
+
+      for (short alpha = 0; alpha < 3; alpha++)
+	{
+	  dof_map.dof_indices (elem, dof_indices, alpha);
+
+	  short n = dof_indices.size();
+
+	  for (short i = 0; i < n; i++)
+	    {
+	      double t = abs( solution1(dof_indices[i]) - solution2(dof_indices[i]) );
+
+	      if (t > norm) norm = t;
+	    }
+
+	}
+
+    }
+
+  return norm;
+
+}
 
 //-------------------------------------------------------------------------------------------/
 Macrostrain::~Macrostrain()

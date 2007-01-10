@@ -453,6 +453,11 @@ class Macrostrain : public SimulationInterface
   //! non-static method that actually does matrix assembling 
   void do_assemble(EquationSystems& es,  const std::string& system_name);
 
+
+
+  //! calculates \f$ \mathop{\rm{max}}_{\alpha, n}|u_{\alpha}^n - v_{\alpha}^n|  \f$
+  double norm_of_difference(NumericVector<Number>& solution1, NumericVector<Number>& solution2);
+
  protected:
 
 
