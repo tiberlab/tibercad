@@ -13,7 +13,12 @@ MacrostrainModel::MacrostrainModel() : MacrostrainModelInterface()
 
 MacrostrainModel::~MacrostrainModel()
 {
+
+
+
   delete stiffness;
+
+  
 
   delete piezo;
 
@@ -40,12 +45,14 @@ void MacrostrainModel::do_init()
   stiffness = Stiffness::create( get_material() -> get_structure(), opt  );
   
   stiffness->set_material(get_material());
+
   stiffness->init();
 
 
   piezo = Piezoelectricity::create( get_material() -> get_structure(), opt  ); 
 
   piezo->set_material(get_material());
+
   piezo->init();
 
 
@@ -57,12 +64,8 @@ void MacrostrainModel::copy_from(const PhysicalModelInterface *rhs)
 {
  
   const  MacrostrainModel*   temp = dynamic_cast<const MacrostrainModel* >  (rhs);
-
   
   stiffness = dynamic_cast<Stiffness* >( (temp->stiffness)->copy() );
-
-  
- 
 
   piezo =  dynamic_cast<Piezoelectricity* >(  (temp->piezo)->copy() );
   
@@ -84,11 +87,17 @@ void MacrostrainModel::calculate_VCA (const PhysicalModelInterface *comp_A, cons
 
   const MacrostrainModel* matB = dynamic_cast< const MacrostrainModel*> (comp_B);
 
+ 
+
   stiffness->build_alloy(matA->stiffness, matB->stiffness, xa);
   
-
+ 
 
   piezo->build_alloy(matA->piezo, matB->piezo, xa);
+
+  
+
+  
 
 
 }

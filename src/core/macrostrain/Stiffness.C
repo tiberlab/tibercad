@@ -16,9 +16,14 @@ void Stiffness:: calculate_VCA (const PhysicalModelInterface *comp_A, const Phys
 
   const Stiffness* modB = dynamic_cast<const Stiffness*>(comp_B);
 
+
   
   alloy(C_cr,  modA->C_cr, modB->C_cr, xa);
  
+  
+
+  C_calc = C_cr;
+
 }
 
 

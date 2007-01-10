@@ -496,6 +496,8 @@ void Macrostrain::do_assemble(EquationSystems& es,
   
   MacrostrainModel* macrostrain_model;
 
+ 
+
   for ( ; el != end_el ; ++el) 
     {//el
       
@@ -531,8 +533,9 @@ void Macrostrain::do_assemble(EquationSystems& es,
       macrostrain_model = dynamic_cast<MacrostrainModel*>(   mat ->get_model(get_id())     );
 
       C_tensor_el = macrostrain_model->get_stiffness();
-     
 
+     
+     
 
       eps_const =  crystal_el->get_const_eps0(substrate_lat_const, eps0_var_log) 
 	+ eps0_of_elem[el_number] ;//+ substrate_shear;
