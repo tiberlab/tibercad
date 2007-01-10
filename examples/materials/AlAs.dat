@@ -33,3 +33,14 @@ gamma2 = 0.82
 gamma3 = 1.42
 
 permittivity = 10.64
+
+# lattice constant
+a = 0.56611
+
+# stiffness data
+C11 = 125.0
+C12 = 53.4
+C44 = 54.2
+
+# piezoelectricity
+e14 = -0.015

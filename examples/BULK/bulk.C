@@ -88,7 +88,7 @@ int main (int argc, char** argv)
     BC_reg_ID[0] = 1; // anode
     BC_reg_ID[1] = 2; // cathode
 
-    
+
     Mesh mesh(dim);
     MeshData_elements meshdata(mesh);
     meshdata.enable_compatibility_mode();

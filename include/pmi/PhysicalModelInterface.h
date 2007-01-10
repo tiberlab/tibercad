@@ -215,9 +215,9 @@ class PhysicalModelInterface
      * \param bowing the bowing parameter
      */
 
-    void alloy( Tensor4DSym& result, const Tensor4DSym& val_a,
+    void alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
         const Tensor4DSym& val_b, double xa,
-        const Tensor4DSym& bowing = Tensor4DSym(0) );
+        const Tensor4DSym& bowing = Tensor4DSym(0));
 
 
 

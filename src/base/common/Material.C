@@ -27,9 +27,9 @@ Material::do_init(void)
 {
   _database->set_material(_name);
 
-  // first we set up RotatedCrystal because it will be
-  // needed by others
   ModelOptions opts;
+  _structure = get_options().get_option("structure", "zb");
+
   if (get_options().find_option("a"))
   {
     opts["a"] = get_options()["a"];
@@ -56,6 +56,8 @@ Material::do_init(void)
     get_options().delete_option("z-growth-direction");
   }
 
+  // first we set up RotatedCrystal because it will be
+  // needed by others
   _rotated_crystal = RotatedCrystal::create(get_structure(), opts);
   _rotated_crystal->set_material(this);
   _rotated_crystal->init();

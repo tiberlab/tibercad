@@ -181,7 +181,6 @@ void  ZbRotatedCrystal::calculate_VCA (const PhysicalModelInterface *comp_A, con
   calculate_lat_consts();
 
   calculate_rot_matrix_miller(x_miller, y_miller);
-
 }
 
 //==================================================================//

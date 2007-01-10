@@ -102,9 +102,7 @@ int main (int argc, char** argv)
     map<unsigned int, vector<unsigned int> > boundary_nodes;
     if (format == "ise")
     {
-      ReadISEGrid readmesh(meshfile.c_str());
-      mesh.read(readmesh.fname_xda,  &meshdata); 
-      meshdata.read(readmesh.fname_xta);
+      ReadISEGrid readmesh(meshfile.c_str(), mesh, meshdata);
       readmesh.get_BC_data(boundary_nodes);
       cerr << boundary_nodes.size() << "\n";
     }

@@ -30,3 +30,19 @@ D6 = -5.5;
 
 permittivity = 14.4;
 
+# lattice constants
+a = 0.3545
+c = 0.5703
+
+# stiffness data
+C11 = 223.0
+C12 = 115.0
+C13 = 92.0
+C33 = 224.0
+C44 = 48.0
+
+# piezoelectricity data
+e33 = 0.97
+e31 = -0.57
+e15 = -0.4
+Pz = -0.042

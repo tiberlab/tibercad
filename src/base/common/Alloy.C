@@ -44,6 +44,19 @@ Alloy::do_init(void)
 
   _molar_fraction = get_options().get_option("x", 0.0);
 
+  _cryst_A = static_cast<RotatedCrystal*>(get_rotated_crystal().copy());
+  _cryst_A->set_material(this);
+  get_database().set_material(_name_A);
+  _cryst_A->init();
+
+  _cryst_B = static_cast<RotatedCrystal*>(get_rotated_crystal().copy());
+  _cryst_B->set_material(this);
+  get_database().set_material(_name_B);
+  _cryst_B->init();
+
+  get_database().set_material(get_name());
+  get_crystal().build_alloy(_cryst_A, _cryst_B, _molar_fraction);
+
   // copy and initialize the models of the components
   ModelMap::iterator it(models_begin());
   ModelMap::const_iterator end(models_end());
@@ -66,19 +79,6 @@ Alloy::do_init(void)
     get_database().set_material(get_name());
     (it->second)->build_alloy(modA, modB, _molar_fraction);
   }
-
-  _cryst_A = static_cast<RotatedCrystal*>(get_rotated_crystal().copy());
-  _cryst_A->set_material(this);
-  get_database().set_material(_name_A);
-  _cryst_A->init();
-
-  _cryst_B = static_cast<RotatedCrystal*>(get_rotated_crystal().copy());
-  _cryst_B->set_material(this);
-  get_database().set_material(_name_B);
-  _cryst_B->init();
-
-  get_database().set_material(get_name());
-  get_crystal().build_alloy(_cryst_A, _cryst_B, _molar_fraction);
 }
 
 

@@ -602,6 +602,9 @@ class DriftDiffusion : public SimulationInterface
      */
     void set_solver_params(NonlinearSolver<Number>& solver);
 
+    //! Rebuild the equation system if needed
+    void rebuild_equation_system(void);
+
     /**
      * Computes the scaling parameters according to the
      * scaling type \p type

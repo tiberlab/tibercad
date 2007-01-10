@@ -495,7 +495,8 @@ void
 DriftDiffusion::do_solve(void)
 {
 
-  assert(_rebuild_eq_system == false);
+  // rebuild the system if needed
+  rebuild_equation_system();
 
   // set a static pointer to ourselves
   // this is needed in the static assembly routine
@@ -568,6 +569,9 @@ DriftDiffusion::calculate_new_simulation_voltages(void)
 void
 DriftDiffusion::guess_equilibrium(void)
 {
+
+  // equation system needs to be active
+  rebuild_equation_system();
   
   NonlinearImplicitSystem& poisson =
     get_equation_systems().get_system<NonlinearImplicitSystem>(
@@ -780,7 +784,7 @@ DriftDiffusion::parse_options(void)
 
 
 void
-DriftDiffusion::do_init(void)
+DriftDiffusion::rebuild_equation_system(void)
 {
   if (!_rebuild_eq_system) return;
 
@@ -821,10 +825,17 @@ DriftDiffusion::do_init(void)
 
   // finally initialize the newly created system
   system.init();
-
-  // compute the scaling factors
-  compute_scaling(get_options().scaling_type);
   
+  compute_scaling(get_options().scaling_type);
+
+  _rebuild_eq_system = false;
+
+}
+
+void
+DriftDiffusion::do_init(void)
+{
+
   // prepare a list for the boundary voltages
   const SimulationEnvironment& env = get_environment();
 
@@ -847,7 +858,6 @@ DriftDiffusion::do_init(void)
 
   find_dirichlet_nodes();
 
-  _rebuild_eq_system = false;
 
   parse_const_options();
 }

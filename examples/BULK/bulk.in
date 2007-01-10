@@ -4,7 +4,6 @@ $Options$
 
 # a 3D piece of bulk semiconductor
 
-
 n_doping = 1e16
 p_doping = 1e14
 temperature = 3

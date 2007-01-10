@@ -28,9 +28,6 @@ class StrainedSemiconductorModel : public SemiconductorModel
     // Create a StrainedSemiconductorModel object
     static StrainedSemiconductorModel* create(void);
 
-    //! \deprecated { Exists only as long as Macrostrain is old version }
-    void set_macrostrain(Macrostrain* strain);
-
     //! Ignore strain related effects
     void ignore_strain(void);
 
@@ -103,14 +100,6 @@ StrainedSemiconductorModel::create_new(void) const
   return new StrainedSemiconductorModel();
 }
 
-
-inline
-void
-StrainedSemiconductorModel::set_macrostrain(Macrostrain* strain)
-{
-  assert(strain != 0);
-  _strain_model = strain;
-}
 
 inline
 StrainedSemiconductorModel*

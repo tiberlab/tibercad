@@ -60,7 +60,7 @@ void ZbStiffness::do_init ( )
   
   double c12 = options.get_option ("C12", C_cr(2,2,1,1)); 
   double c11 = options.get_option ("C11", C_cr(1,1,1,1));
-  double c44 = options.get_option ("C11", C_cr(3,2,3,2));
+  double c44 = options.get_option ("C44", C_cr(3,2,3,2));
 
   set_moduli( c11, c12,  c44);
 

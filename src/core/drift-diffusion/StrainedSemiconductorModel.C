@@ -111,9 +111,8 @@ StrainedSemiconductorModel::do_init(void)
   std::string strain_sim =
     get_options().get_option("strain_simulation",
         Utils::extract_typename(typeid(_strain_model)));
-
+  
   // find the strain calculation to use
-/*
   _strain_model = dynamic_cast<Macrostrain*>(
       SimulationInterface::find_simulation(strain_sim));
 
@@ -122,7 +121,6 @@ StrainedSemiconductorModel::do_init(void)
     std::string msg("Simulation "+std::string(strain_sim)+" not found");
     throw InitFailedException(msg);
   }
-*/
-  _ignore_strain = get_options().get_option("ignore_strain", false);
 
+  _ignore_strain = get_options().get_option("ignore_strain", false);
 }

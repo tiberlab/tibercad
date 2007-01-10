@@ -10,7 +10,7 @@ class MacrostrainModelInterface : public PhysicalModel
   MacrostrainModelInterface(void) { };
 
   
-  static MacrostrainModelInterface* create (const std::string& name,  const ModelOptions& options);
+  static MacrostrainModelInterface* create (const std::string& name,  const ModelOptions& options = ModelOptions());
 
 
  protected:
