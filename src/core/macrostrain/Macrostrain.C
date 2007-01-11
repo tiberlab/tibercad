@@ -126,57 +126,57 @@ void Macrostrain::do_init( )
   substrate_crystal = NULL;
 
   if (substrate_boundary != NULL)
+  {
+    BoundaryProperties*  bp =  substrate_boundary->get_boundary_properties (get_id() );
+
+    if (bp !=NULL) 
     {
-      BoundaryProperties*  bp =  substrate_boundary->get_boundary_properties (get_id() );
-
-      if (bp !=NULL) 
-	{
-	  grown_on_substrate = true;
-
-	  substrate_crystal =  &( ( (dynamic_cast< MacrostrainSubstrate* > (bp) )
-				    ->get_material() )->get_rotated_crystal ()  );
-	}
-
-
+      grown_on_substrate = true;
+      
+      substrate_crystal =  &( ( (dynamic_cast< MacrostrainSubstrate* > (bp) )
+				->get_material() )->get_rotated_crystal ()  );
     }
+
+
+  }
   
 
   if (!grown_on_substrate)
+  {
+    Point p;
+    vector<double>  ref_point(3);
+    ref_point[0] = 0; ref_point[1] = 0; ref_point[2] = 0;
+    // options.get_option("reference_material_point", ref_point);
+    for (short i = 0; i < 3; i++)  p(i) = ref_point[i];
+    
+    MeshBase::const_element_iterator el  = mesh->active_elements_begin();
+    MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+    
+    const Elem* elem1 = NULL;
+
+    for ( ; ( el != end_el ) ; ++el)  
     {
-      Point p;
-      vector<double>  ref_point(3);
-      ref_point[0] = 0; ref_point[1] = 0; ref_point[2] = 0;
-      // options.get_option("reference_material_point", ref_point);
-      for (short i = 0; i < 3; i++)  p(i) = ref_point[i];
-
-      MeshBase::const_element_iterator el  = mesh->active_elements_begin();
-      MeshBase::const_element_iterator end_el = mesh->active_elements_end();
-
-      const Elem* elem1 = NULL;
-
-      for ( ; ( el != end_el ) ; ++el)  
+      Elem* elem = *el;
+      if (   may_belong_to_element(elem,  p) )
+      {
+	if (elem->contains_point(p))
 	{
-	  Elem* elem = *el;
-	  if (   may_belong_to_element(elem,  p) )
-	    {
-	      if (elem->contains_point(p))
-		{
-		  if (elem->contains_point(p))
-		    {
-		      elem1 = elem;
-
-		      break;
-		    }
-		}
-	    }
-	  
+	  if (elem->contains_point(p))
+	  {
+	    elem1 = elem;
+	    
+	    break;
+	  }
 	}
-      
-      ID subdomain = elem1->subdomain_id();
-      const Material* mat = _device->get_material(subdomain);
-      substrate_crystal  = &(mat->get_rotated_crystal());
-
+      }
+	  
     }
+      
+    ID subdomain = elem1->subdomain_id();
+    const Material* mat = _device->get_material(subdomain);
+    substrate_crystal  = &(mat->get_rotated_crystal());
+    
+  }
 
 
   periodicity[0] = options.get_option("periodicity_x",false);
@@ -206,9 +206,9 @@ void Macrostrain::do_init( )
   //add normal variables
 	
   for (unsigned int i = 0; i <  3 ; i++)  
-    {  
-      my_system->add_variable(uname_vec[i], FIRST);
-    }
+  {  
+    my_system->add_variable(uname_vec[i], FIRST);
+  }
     
  
   //---------------------------------------------------------------------------------------//
@@ -216,10 +216,10 @@ void Macrostrain::do_init( )
   
   
   if (number_of_add_var != 0)
-    {
-      FEType fe_type(CONSTANT,MONOMIAL);
-      my_system->add_variable("fict", fe_type);
-    }
+  {
+    FEType fe_type(CONSTANT,MONOMIAL);
+    my_system->add_variable("fict", fe_type);
+  }
   //---------------------------------------------------------------------------------------//
   
   my_system->attach_assemble_function (assemble_strain_matrix);
@@ -337,9 +337,9 @@ void Macrostrain::do_assemble(EquationSystems& es,
   unsigned int var_fict;
 
   for (unsigned int i = 0; i<= 3 - 1; i++) 
-    {
-      uvar[i] = system.variable_number(uname_vec[i]);
-    }
+  {
+    uvar[i] = system.variable_number(uname_vec[i]);
+  }
   
 
   if (number_of_add_var !=0 ) var_fict = system.variable_number("fict");
@@ -499,340 +499,338 @@ void Macrostrain::do_assemble(EquationSystems& es,
  
 
   for ( ; el != end_el ; ++el) 
-    {//el
-      
-      // Store a pointer to the element we are currently
-      // working on.  This allows for nicer syntax later.
-      const Elem* elem = *el;
+  {//el
+    
+    // Store a pointer to the element we are currently
+    // working on.  This allows for nicer syntax later.
+    const Elem* elem = *el;
+    
+    // Get the degree of freedom indices for the
+    // current element.  These define where in the global
+    // matrix and right-hand-side this element will
+    // contribute to.
+    dof_map.dof_indices (elem, dof_indices);   
+    const unsigned int n_dofs   = dof_indices.size(); //in fact, could be  dof_indices.size() - 1, fict is not used 
 
-      // Get the degree of freedom indices for the
-      // current element.  These define where in the global
-      // matrix and right-hand-side this element will
-      // contribute to.
-      dof_map.dof_indices (elem, dof_indices);   
-      const unsigned int n_dofs   = dof_indices.size(); //in fact, could be  dof_indices.size() - 1, fict is not used 
-
-      fe->reinit  (elem);
+    fe->reinit  (elem);
   
 
-      Ke_total.resize (n_dofs + number_of_add_var, n_dofs + number_of_add_var);
-      Fe_total.resize (n_dofs + number_of_add_var);
+    Ke_total.resize (n_dofs + number_of_add_var, n_dofs + number_of_add_var);
+    Fe_total.resize (n_dofs + number_of_add_var);
 
-      dof_indices_total.resize(n_dofs + number_of_add_var);
-
-      
-      ID subdomain = elem->subdomain_id();
-      
+    dof_indices_total.resize(n_dofs + number_of_add_var);
 
       
-      const Material* mat = _device->get_material(subdomain);
+    ID subdomain = elem->subdomain_id();
+      
 
-      const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
+      
+    const Material* mat = _device->get_material(subdomain);
+
+    const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
       
 	
-      macrostrain_model = dynamic_cast<MacrostrainModel*>(   mat ->get_model(get_id())     );
+    macrostrain_model = dynamic_cast<MacrostrainModel*>(   mat ->get_model(get_id())     );
 
-      C_tensor_el = macrostrain_model->get_stiffness();
-
+    C_tensor_el = macrostrain_model->get_stiffness();
+    
      
      
 
-      eps_const =  crystal_el->get_const_eps0(substrate_lat_const, eps0_var_log) 
-	+ eps0_of_elem[el_number] ;//+ substrate_shear;
-
+    eps_const =  crystal_el->get_const_eps0(substrate_lat_const, eps0_var_log) 
+      + eps0_of_elem[el_number] ;//+ substrate_shear;
+    
      
     
 
 
-      double lat_const[3];
-      crystal_el->get_lat_const(lat_const);
+    double lat_const[3];
+    crystal_el->get_lat_const(lat_const);
      
       
-      //----------------------------------------------------------//
-      //master equation:                                          //
-      //                                                          //
-      //     d/dx_i  ( C_ijkl (du_k/dx_l + eps0_kl)) =0           //
-      //                                                          //
-      //                                                          //
-      //----------------------------------------------------------//
-     
-      for (unsigned int j = 0; j<=2; j++)
-	{//loop over j: master equation discretization
-	//Right Hand Side---------------------------------------------------------------------//
+    //----------------------------------------------------------//
+    //master equation:                                          //
+    //                                                          //
+    //     d/dx_i  ( C_ijkl (du_k/dx_l + eps0_kl)) =0           //
+    //                                                          //
+    //                                                          //
+    //----------------------------------------------------------//
+    
+    for (unsigned int j = 0; j<=2; j++)
+    {//loop over j: master equation discretization
+
+
+      //Right Hand Side---------------------------------------------------------------------//
 
 	 
 	  
 	      
-	  dof_map.dof_indices (elem, dof_indices_component, uvar[j]);
-	  const unsigned int n_u_dofs = dof_indices_component.size(); 
-	  Fe_sub.reposition (uvar[j]*n_u_dofs, n_u_dofs);
-	          
-	  const unsigned int num_sides =  elem->n_sides(); 
-	  //!first we calculate volume part
-	  //  /
-	  //  | C_ijkl eps0_kl df/dx_i dV
-	  //  /
-	  //
-	  for (unsigned int p1=0; p1<n_u_dofs; p1++)
-	     if (!belongs_to_substrate(p1, elem))
-	       {//not a substrate
-		 for (unsigned int qp=0; qp<qrule.n_points(); qp++)
-		   {//qp
-		     vec1 = 0;
-		     for (int i = 1; i<=dim; i++) vec1(i) = dphi[p1][qp](i-1);
-		     
-		     //-------------eps0 part------------------
-		     for (unsigned int k = 0; k <= 2; k++)
-		       {
-			 vec2 = 0;
-			 for (int i = 1; i <=3; i++ ) 
-			   {	     	
-			     if (k+1 > i)
-			       vec2(i) = eps_const(k+1,i);
-			     else
-			       vec2(i) = eps_const(i,k+1);
-			   }
-			 
-				
-			 Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)* vec2 ));
-		       } 
-		   }
+      dof_map.dof_indices (elem, dof_indices_component, uvar[j]);
+      const unsigned int n_u_dofs = dof_indices_component.size(); 
+      Fe_sub.reposition (uvar[j]*n_u_dofs, n_u_dofs);
+      
+      const unsigned int num_sides =  elem->n_sides(); 
+      //!first we calculate volume part
+      //  /
+      //  | C_ijkl eps0_kl df/dx_i dV
+      //  /
+      //
+      for (unsigned int p1=0; p1<n_u_dofs; p1++)
+      {//nodes loop
+	if (!belongs_to_substrate(p1, elem))
+	{//not a substrate
+	  for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+	  {//qp
+	    vec1 = 0;
+	    for (int i = 1; i<=dim; i++) vec1(i) = dphi[p1][qp](i-1);
+	    
+	    //-------------eps0 part------------------
+	    for (unsigned int k = 0; k <= 2; k++)
+	    {
+	      vec2 = 0;
+	      for (int i = 1; i <=3; i++ ) 
+	      {	     	
+		if (k+1 > i)
+		  vec2(i) = eps_const(k+1,i);
+		else
+		  vec2(i) = eps_const(i,k+1);
+	      }
+	      
+	      
+	      Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)* vec2 ));
+	    } 
+	  }
 	       
 	    
 	  
 
-		 //! may be there is external pressure, so we have to calculate a surface part
-		 //
-		 //
-		 //
-		 for (unsigned int side=0; side<num_sides; side++)
-		   {//side loop
-	      
-	   
-		     Boundary* bd = si.get_boundary(std::pair<const Elem*,  unsigned int> (elem,side));
-		     
-		     if (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  )
-		       if (  bd->get_name() != substrate_name)
-			 {
-			   	
-				
-			   MacrostrainPressure* press = 
-			     dynamic_cast<MacrostrainPressure*> (bd->get_boundary_properties (get_id()));
-		      
-			   if (dim > 1)
-			     
-			     {
-			       const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
-			       
-			       const std::vector<Real>& JxW_face = fe_face->get_JxW();
-			       
-			       const std::vector<Point >& qface_point = fe_face->get_xyz();
-			       
-			       const std::vector<Point> & normal = fe_face->get_normals();
-			       
-			       fe_face->reinit(elem, side);
-			       
-			       for (unsigned int qp=0; qp<qface.n_points(); qp++)
-				 {				  
-				   Fe_sub(p1) += ((JxW_face[qp] * phi_face[p1][qp])
-						  * press->get_value() ) * normal[qp](j);
-				 } 
-					
-			     }
-			   else
-			     {
-			       double normal;
-			       Point p = elem->point(side);
-			       Point pc = elem->centroid();
-			       if (p(0) > pc(0)) 
-				 normal = 1.0;
-			       else
-				 normal = -1.0;
-			     
-			       
-			       Fe_sub(p1) +=  press->get_value() * normal;
-			     }
-				
-			 }
-		      
-			  
-		   }//end of side loop
-	       }
-	     else
-	       {
-		 Fe_sub(p1) = 0.0;
-	       }	      
-	       
-
+	  //! may be there is external pressure, so we have to calculate a surface part
+	  //
+	  //
+	  //
+	  for (unsigned int side=0; side<num_sides; side++)
+	  {//side loop
+	    Boundary* bd = si.get_boundary(std::pair<const Elem*,  unsigned int> (elem,side));
+	    
+	    if (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  )
+	      if (  bd->get_name() != substrate_name ) 
+	      { 	 
+		MacrostrainPressure* press =
+		  dynamic_cast< MacrostrainPressure* > (bd->get_boundary_properties (get_id()) ) ;
+		if (dim > 1)
+		{
+		  const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
+		  
+		  const std::vector<Real>& JxW_face = fe_face->get_JxW();
+		  
+		  const std::vector<Point >& qface_point = fe_face->get_xyz();
+		  
+		  const std::vector<Point> & normal = fe_face->get_normals();
+			        
+		  fe_face->reinit(elem, side);
+			         
+		  for (unsigned int qp=0; qp<qface.n_points(); qp++)
+		  {				  
+		    Fe_sub(p1) += ((JxW_face[qp] * phi_face[p1][qp])
+				   * press->get_value() ) * normal[qp](j);
+		  } 
+		  
+		}
+		else
+		{
+		  double normal;
+		  Point p = elem->point(side);
+		  Point pc = elem->centroid();
+		  if (p(0) > pc(0)) 
+		    normal = 1.0;
+		  else
+		    normal = -1.0;
+		  
+		  
+		  Fe_sub(p1) +=  press->get_value() * normal;
+		}
+		  
+	      }
+	  }//end of side loop
+	}
+	else
+	{
+	  Fe_sub(p1) = 0.0;
+	}	      
+      }
+   
 	    	
 			
-	  //---RHS of master equation is done---------------------------------------------------//
-	  //---now we do the matrix-------------------------------------------------------------//    
-
-	  //----- additional variables first, if any--------------------------------------------//
-	  for (unsigned int p1=0; p1<n_u_dofs; p1++)
+      //---RHS of master equation is done---------------------------------------------------//
+      //---now we do the matrix-------------------------------------------------------------//    
+      
+      //----- additional variables first, if any--------------------------------------------//
+      for (unsigned int p1=0; p1<n_u_dofs; p1++)
+      {
+	if (!belongs_to_substrate(p1, elem))
+	{
+	  for (unsigned int i1 = 0; i1 < add_var.size()  ; i1++)
+	  {
+	    Ke_u_add_sub.reposition (uvar[j]*n_u_dofs, n_dofs, n_u_dofs, add_var.size());	  
+	    
+	    eps_var = crystal_el->get_var_eps0( add_var[i1].name );
+	    
+	    for (unsigned int qp=0; qp<qrule.n_points(); qp++) 
 	    {
-	      for (unsigned int i1 = 0; i1 < add_var.size()  ; i1++)
-		{
-		  Ke_u_add_sub.reposition (uvar[j]*n_u_dofs, n_dofs, n_u_dofs, add_var.size());	  
-		
-		  eps_var = crystal_el->get_var_eps0( add_var[i1].name );
-		
-		  for (unsigned int qp=0; qp<qrule.n_points(); qp++) 
-		    {
-		      vec1 = 0;
-		      for (int i = 1; i<=dim; i++) vec1(i) = dphi[p1][qp](i-1);
-		     
-		      for (unsigned int k = 0; k <= 2; k++)
-			{
-			  vec2 = 0;
-			  for (int i = 1; i <=3; i++ ) 
-			    {  
-			      if (k+1 > i)
-				vec2(i) = eps_var(k+1,i);
-			      else
-				vec2(i) = eps_var(i,k+1);
-			    }
-		      
-			  Ke_u_add_sub(p1,i1) += JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2 ));
-			}
-		    }
-		} 
-	    }
-	    //------ additional variables done --------------------
-	    //------ now normal variables -------------------------
+	      vec1 = 0;
+	      for (int i = 1; i<=dim; i++) vec1(i) = dphi[p1][qp](i-1);
 	      
-	    for (unsigned int k = 0; k<=2; k++)
-	      {//loop over k
+	      for (unsigned int k = 0; k <= 2; k++)
+	      {
+		vec2 = 0;
+		for (int i = 1; i <=3; i++ ) 
+		{  
+		  if (k+1 > i)
+		    vec2(i) = eps_var(k+1,i);
+		  else
+		    vec2(i) = eps_var(i,k+1);
+		}
 		
-		dof_map.dof_indices (elem, dof_indices_component, uvar[k]);
-		const unsigned int n_u_dofs = dof_indices_component.size(); 
-		Ke_sub.reposition (uvar[j]*n_u_dofs, uvar[k]*n_u_dofs, n_u_dofs, n_u_dofs);
-			  
-		 	  
-		for (unsigned int p1=0; p1<n_u_dofs; p1++)
-		  {
-		    for (unsigned int p2=0; p2<n_u_dofs; p2++)
-		      {		      
-			double scal_prod;
-			
-			
-			for (unsigned int qp=0; qp<qrule.n_points(); qp++) 
-			  {
-			    vec1 = 0;
-			    for (int i = 1; i<=dim; i++) vec1(i) = dphi[p1][qp](i-1) ;
-			  
-			    vec2 = 0;
-			    for (int i = 1; i<=dim; i++) vec2(i) = dphi[p2][qp](i-1) ;
-			    
-			    scal_prod = vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2);
-			      
-			    if (!belongs_to_substrate(p1, elem))
-			      {
-				Ke_sub(p1,p2) += JxW[qp]*scal_prod;
-				
-			      }
-			    else
-			      {
-				Ke_sub(p1,p2) = delta(p1,p2)*delta(j,k);
-			      }
-			  }
-
-		      }
-		      
-		  }
-			
+		Ke_u_add_sub(p1,i1) += JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2 ));
+	      }
+	    }
+	  } 
+	}
+      }
+      //------ additional variables done --------------------
+      //------ now normal variables -------------------------
+      
+      for (unsigned int k = 0; k<=2; k++)
+      {//loop over k
+	
+	dof_map.dof_indices (elem, dof_indices_component, uvar[k]);
+	const unsigned int n_u_dofs = dof_indices_component.size(); 
+	Ke_sub.reposition (uvar[j]*n_u_dofs, uvar[k]*n_u_dofs, n_u_dofs, n_u_dofs);
+	
+	
+	for (unsigned int p1=0; p1<n_u_dofs; p1++)
+	{
+	  for (unsigned int p2=0; p2<n_u_dofs; p2++)
+	  {		      
+	    double scal_prod;
+	    
+	    
+	    for (unsigned int qp=0; qp<qrule.n_points(); qp++) 
+	    {
+	      vec1 = 0;
+	      for (int i = 1; i<=dim; i++) vec1(i) = dphi[p1][qp](i-1) ;
+	      
+	      vec2 = 0;
+	      for (int i = 1; i<=dim; i++) vec2(i) = dphi[p2][qp](i-1) ;
+	      
+	      scal_prod = vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2);
+	      
+	      if (!belongs_to_substrate(p1, elem))
+	      {
+		Ke_sub(p1,p2) += JxW[qp]*scal_prod;
 		
 	      }
-		      
-		      
-	}//end of loop over j - end of master equation
-      //---------------------------------------------------------------------------//
-      //master equation is done                                                    //
-      //---------------------------------------------------------------------------//
-      //superlattice equations
-      //---------------------------------------------------------------------------//
-      for (unsigned int qp=0; qp<qrule.n_points(); qp++)//qp
-	{
-	  for (unsigned int eq_number =  0;   eq_number <  number_of_add_var; eq_number++)
-	    {
-	  
-	      dof_map.dof_indices (elem, dof_indices_component, uvar[0]);
-	      const unsigned int n_u_dofs = dof_indices_component.size();
-	  
-	  
-	      if ( add_var[eq_number].lat_cons )
-		{
-		  unsigned int lat_index = add_var[eq_number].index1;
-		  double lat_constants[3];
-		  crystal_el-> get_lat_const(lat_constants);
-	      
-	      
-		  double lat_const = lat_constants[lat_index - 1];
-	      
-		  lattice_factor = 1/lat_const;
-		}
 	      else
-		{
-		  lattice_factor = 1.0;
-		}
-		  
-	      unsigned int lat_index1 = add_var[eq_number].index1;
-	      unsigned int lat_index2 = add_var[eq_number].index2;
-	  
-	  
-	      C_kl = C_tensor_el->get_another_subtensor(lat_index1,lat_index2);
-	      //----------------RHS------------------
-	      Fe_add_sub.reposition(n_dofs + eq_number,1);
-	  
-	  
-	      Fe_add_sub(0) -=  JxW[qp] * doubleContraction(C_kl , eps_const ) *lattice_factor  ;
-	  
-	      //-------------------------------------
-	  
-	      //-------------ux,uy,uz----------------
-	      for (unsigned int k = 0; k<=2; k++)
-		{//loop over k
-		  dof_map.dof_indices (elem, dof_indices_component, uvar[k]);
-		  const unsigned int n_u_dofs = dof_indices_component.size(); 
-		  Ke_add_u_sub.reposition (n_dofs, uvar[k]*n_u_dofs, add_var.size() , n_u_dofs);
-	      
-		  vec1 = 0;
-		  for (unsigned int l = 1; l <= dim; l++)
-		    {
-		      if (l>= k+1 ) 
-			vec1(l) = C_kl(l,k+1);
-		      else 
-			vec1(l) = C_kl(k+1,l);
-		    }
-	      
-		  for (unsigned int p1=0; p1<n_u_dofs; p1++)
-		    {
-		      vec2 = 0; 
-		      for (unsigned int l = 1; l <= dim; l++) vec2(l) = dphi[p1][qp](l-1) ;
-		  
-		      Ke_add_u_sub(eq_number, p1) += JxW[qp] * (vec1*vec2) * lattice_factor ;
-		  
-		    }
-		}
-	      //------------------------------------------
-
-	      //-----------add_add---matrix---------------
-		 
-	      for (unsigned int i1 = 0; i1 < add_var.size()  ; i1++)
-		{
-		  Ke_add_add_sub.reposition(n_dofs + eq_number,n_dofs + i1,1,1);
-		  eps_var = crystal_el->get_var_eps0( add_var[i1].name );
-	      
-		  Ke_add_add_sub(0,0) += JxW[qp]  * doubleContraction(eps_var,C_kl) *  lattice_factor;
-	      
-	      
-		}
+	      {
+		Ke_sub(p1,p2) = delta(p1,p2)*delta(j,k);
+	      }
 	    }
+	    
+	  }
 	  
-	}  
+	}
+	
+		
+      }
+		      
+		      
+    }//end of loop over j - end of master equation
+    //---------------------------------------------------------------------------//
+    //master equation is done                                                    //
+    //---------------------------------------------------------------------------//
+    //superlattice equations
+    //---------------------------------------------------------------------------//
+    for (unsigned int qp=0; qp<qrule.n_points(); qp++)//qp
+    {
+      for (unsigned int eq_number =  0;   eq_number <  number_of_add_var; eq_number++)
+      {
+	
+	dof_map.dof_indices (elem, dof_indices_component, uvar[0]);
+	const unsigned int n_u_dofs = dof_indices_component.size();
+	
+	  
+	if ( add_var[eq_number].lat_cons )
+	{
+	  unsigned int lat_index = add_var[eq_number].index1;
+	  double lat_constants[3];
+	  crystal_el-> get_lat_const(lat_constants);
+	  
+	      
+	  double lat_const = lat_constants[lat_index - 1];
+	      
+	  lattice_factor = 1/lat_const;
+	}
+	else
+	{
+	  lattice_factor = 1.0;
+	}
+		  
+	unsigned int lat_index1 = add_var[eq_number].index1;
+	unsigned int lat_index2 = add_var[eq_number].index2;
+	  
+	  
+	C_kl = C_tensor_el->get_another_subtensor(lat_index1,lat_index2);
+	//----------------RHS------------------
+	Fe_add_sub.reposition(n_dofs + eq_number,1);
+	
+	  
+	Fe_add_sub(0) -=  JxW[qp] * doubleContraction(C_kl , eps_const ) *lattice_factor  ;
+	  
+	//-------------------------------------
+	  
+	//-------------ux,uy,uz----------------
+	for (unsigned int k = 0; k<=2; k++)
+	{//loop over k
+	  dof_map.dof_indices (elem, dof_indices_component, uvar[k]);
+	  const unsigned int n_u_dofs = dof_indices_component.size(); 
+	  Ke_add_u_sub.reposition (n_dofs, uvar[k]*n_u_dofs, add_var.size() , n_u_dofs);
+	  
+	  vec1 = 0;
+	  for (unsigned int l = 1; l <= dim; l++)
+	  {
+	    if (l>= k+1 ) 
+	      vec1(l) = C_kl(l,k+1);
+	    else 
+	      vec1(l) = C_kl(k+1,l);
+	  }
+	  
+	  for (unsigned int p1=0; p1<n_u_dofs; p1++)
+	  {
+	    vec2 = 0; 
+	    for (unsigned int l = 1; l <= dim; l++) vec2(l) = dphi[p1][qp](l-1) ;
+	    
+	    Ke_add_u_sub(eq_number, p1) += JxW[qp] * (vec1*vec2) * lattice_factor ;
+	    
+	  }
+	}
+	//------------------------------------------
+	
+	//-----------add_add---matrix---------------
+		 
+	for (unsigned int i1 = 0; i1 < add_var.size()  ; i1++)
+	{
+	  Ke_add_add_sub.reposition(n_dofs + eq_number,n_dofs + i1,1,1);
+	  eps_var = crystal_el->get_var_eps0( add_var[i1].name );
+	  
+	  Ke_add_add_sub(0,0) += JxW[qp]  * doubleContraction(eps_var,C_kl) *  lattice_factor;
+	  
+	  
+	}
+      }
+      
+    }  
 
-      //------------------------------------------
+    //------------------------------------------
 
 		
 	    
@@ -841,24 +839,24 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
 	  
 
-      if  (number_of_add_var != 0)
-	{
+    if  (number_of_add_var != 0)
+    {
+      
+      if ( el_number >=  number_of_add_var )
+      {
+	dof_map.dof_indices (elem, dof_indices_component, uvar[0]);
+	const unsigned int n_u_dofs = dof_indices_component.size(); 
+	Ke_sub.reposition(3*n_u_dofs,3*n_u_dofs, 1, 1);
+	Ke_sub(0,0) += 1.0;
+      }
+      
+      
 	  
-	  if ( el_number >=  number_of_add_var )
-	    {
-	      dof_map.dof_indices (elem, dof_indices_component, uvar[0]);
-	      const unsigned int n_u_dofs = dof_indices_component.size(); 
-	      Ke_sub.reposition(3*n_u_dofs,3*n_u_dofs, 1, 1);
-	      Ke_sub(0,0) += 1.0;
-	    }
-	  
-	  
-	  
-	}
+    }
 
 	  
-      // end of superlattice equations
-      //--------------------------------------------------------------------------
+    // end of superlattice equations
+    //--------------------------------------------------------------------------
 
 	  
 	  
@@ -867,30 +865,30 @@ void Macrostrain::do_assemble(EquationSystems& es,
     
      
        
-      for (unsigned i =0 ; i < n_dofs; i++)
-	dof_indices_total[i] = dof_indices[i];
+    for (unsigned i =0 ; i < n_dofs; i++)
+      dof_indices_total[i] = dof_indices[i];
   
        
-      for (unsigned i =0 ; i <number_of_add_var ; i++)
-	dof_indices_total[i+n_dofs] =  add_dofs_vector[i];
+    for (unsigned i =0 ; i <number_of_add_var ; i++)
+      dof_indices_total[i+n_dofs] =  add_dofs_vector[i];
 	
        
        
 
       
-      dof_map.constrain_element_matrix_and_vector(Ke_total, Fe_total, dof_indices_total);
+    dof_map.constrain_element_matrix_and_vector(Ke_total, Fe_total, dof_indices_total);
     
   
-      system.matrix->add_matrix (Ke_total, dof_indices_total);
-      system.rhs->add_vector    (Fe_total, dof_indices_total);
+    system.matrix->add_matrix (Ke_total, dof_indices_total);
+    system.rhs->add_vector    (Fe_total, dof_indices_total);
       
-      // constraint is necessary for Ke_add!!
+    // constraint is necessary for Ke_add!!
       
 
    
 
-      el_number++;
-    }
+    el_number++;
+  }
 
       
 
@@ -963,7 +961,11 @@ void Macrostrain::do_assemble(EquationSystems& es,
        //return(elem->node(n) == fixed_node_number);
 
        if (elem->node(n) == fixed_node1 ) 
-	 return(true);
+	 {
+	  
+	   return(true);
+	   
+	 }
        else 	
 	 return(false);
      }
@@ -2173,6 +2175,8 @@ void Macrostrain::move_nodes()
   
   
   Tensor2Sym lat_matching_transformation(1);
+
+
   for (unsigned int i = 0; i <  number_of_add_var; i++)
     {      
       if (add_var[i].lat_cons)
@@ -2206,7 +2210,9 @@ void Macrostrain::move_nodes()
 
   for (unsigned int i = 0; i < dim; i++) r0(i + 1) = node_fix(i);
 
-  unsigned int node_number = 0;
+
+
+ 
   for ( ; ( (nd != nd_end) ) ; ++nd)
     {
       //-----------------------------------------------------------------------------
@@ -2243,7 +2249,7 @@ void Macrostrain::move_nodes()
        *node1 = p;
 
 
-      node_number++;
+     
 
     } 
 
@@ -2840,22 +2846,23 @@ void Macrostrain::update_u_node()
   MeshBase::const_node_iterator       nd     = mesh.active_nodes_begin();
   const MeshBase::const_node_iterator nd_end = mesh.active_nodes_end();
 
-  unsigned int node_number = 0;
+ 
 
   for ( ; ( (nd != nd_end) ) ; ++nd)
     {
       Node* node1 = *nd;
+
+     
+
+
       for (unsigned int i = 0; i < 3; i++) //<3 , not < dim (necessary for atoms!) 
 	{
-	  const unsigned int  n_dof = node1->dof_number(system_number,uvar[i],0);
-	  
+	  const unsigned int  n_dof = node1->dof_number(system_number,uvar[i],0);  
 	  u_node[node1][i] +=  (*solution)(n_dof);
 	}
-
-
-      node_number++;
-
     }
+
+
 }
 //-------------------------------------------------------------------------------------------/
 void Macrostrain::output_add_strain_variables(string filename)
