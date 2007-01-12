@@ -319,6 +319,7 @@ DriftDiffusion::set_simulation_voltage(const string& boundary,
     _simulation_voltages[desc] = voltage;
 }
 
+
 void
 DriftDiffusion::remember_current_solution(void)
 {
@@ -330,6 +331,7 @@ DriftDiffusion::remember_current_solution(void)
   system.get_vector("remembered solution") = *(system.solution);
   system.get_vector("remembered solution").close();
 }
+
 
 void
 DriftDiffusion::set_to_remembered_solution(void)
@@ -345,6 +347,7 @@ DriftDiffusion::set_to_remembered_solution(void)
   system.get_vector("old solution") = *(system.solution);
 
 }
+
 
 void
 DriftDiffusion::set_electron_fermi_level(double Ef_n)
@@ -369,6 +372,7 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
   }
 }
 
+
 void
 DriftDiffusion::set_hole_fermi_level(double Ef_p)
 {
@@ -391,6 +395,7 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
     system.solution->set(id, level);
   }
 }
+
 
 void
 DriftDiffusion::set_electric_potential(double pot)
@@ -502,21 +507,21 @@ DriftDiffusion::do_solve(void)
   // this is needed in the static assembly routine
   _this = this;
   
-  //compute_scaling(get_options().scaling_type);
-
   parse_options();
 
   switch (_options.solver_method)
   {
     case GUMMEL:
       solve_gummel();
-      calculate_currents();
       break;
     default: // Newton method
       solve_newton();
-      calculate_currents();
       break;
   }
+  if (get_options().current_calculation == NEW)
+    calculate_currents_new();
+  else
+    calculate_currents();
 
   build_solution_vector(_solution);
 }

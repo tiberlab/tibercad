@@ -8,7 +8,7 @@ dirs := src examples
 include Make.common
 
 
-.PHONY: all doc clean
+.PHONY: doc
 
 
 
@@ -19,12 +19,11 @@ all:
 
 
 clean:
-	@for i in $(dirs);	\
-	do			\
-	  $(MAKE) -C $$i clean;	\
-	done
+	@$(MAKE) -C src clean
+	@$(MAKE) -C examples clean
 
-distclean: clean
+distclean:
+	@$(MAKE) -C src distclean
 	@$(MAKE) -C examples distclean
 	@$(MAKE) -C doc clean
 	@rm -f lib/*
@@ -70,3 +69,6 @@ Makefile: Makefile.in config.status
 
 config.status: configure
 	./config.status --recheck
+
+
+include Make.rules

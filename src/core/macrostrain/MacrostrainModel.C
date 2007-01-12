@@ -14,15 +14,8 @@ MacrostrainModel::MacrostrainModel() : MacrostrainModelInterface()
 MacrostrainModel::~MacrostrainModel()
 {
 
-
-
-  delete stiffness;
-
-  
-
-  delete piezo;
-
-
+  PhysicalModelInterface::destroy(stiffness);
+  PhysicalModelInterface::destroy(piezo);
 
 }
 
@@ -63,11 +56,13 @@ void MacrostrainModel::do_init()
 void MacrostrainModel::copy_from(const PhysicalModelInterface *rhs)
 {
  
-  const  MacrostrainModel*   temp = dynamic_cast<const MacrostrainModel* >  (rhs);
+  // copy is not necessary as they are created in do_init()
   
-  stiffness = dynamic_cast<Stiffness* >( (temp->stiffness)->copy() );
+  //const  MacrostrainModel*   temp = dynamic_cast<const MacrostrainModel* >  (rhs);
+  
+  //stiffness = dynamic_cast<Stiffness* >( (temp->stiffness)->copy() );
 
-  piezo =  dynamic_cast<Piezoelectricity* >(  (temp->piezo)->copy() );
+  //piezo =  dynamic_cast<Piezoelectricity* >(  (temp->piezo)->copy() );
   
 
 }

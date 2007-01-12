@@ -24,10 +24,9 @@ all: $(objects)
 #@ar rcs $(topdir)/lib/libtensor.a $(objects)
 
 
-clean:
-	@rm -f *.o *~
-
 
 %.o: %.cpp
 	@$(CXX) $(TIBER_INCLUDES) -c $<
 
+
+include $(topdir)/Make.rules

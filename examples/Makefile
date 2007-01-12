@@ -2,30 +2,14 @@
 #
 
 topdir := ../
+
+subdirs := BULK MESFET PNDIODE_1D
+
 include $(topdir)/Make.common
 
-subdirs := BULK MESFET PNDIODE_1D PINDIODE_1D
 
-
-
-.PHONY: all clean
-
-# sets the target for the subdirs
-all: target := all
-clean: target := clean
-distclean: target := distclean
 
 all: $(subdirs)
-
-run: all
-	for i in $(subdirs);	\
-	do			\
-	  $(MAKE) -C $$i run	\
-	done
-
-clean: $(subdirs)
-
-distclean: $(subdirs)
 
 
 

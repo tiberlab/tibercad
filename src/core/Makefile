@@ -1,10 +1,10 @@
 # $Id$
 #
 
-topdir := ../
+topdir := ../..
 
 # we have to compile each module
-subdirs := base pmi core utils contrib
+subdirs := classical-transport macrostrain semiconductormodels solver-interfaces
 
 include $(topdir)/Make.common
 

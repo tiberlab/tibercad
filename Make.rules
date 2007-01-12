@@ -3,9 +3,17 @@
 # Useful rules
 
 
+src-clean:
+	@rm -f *.o *~
+
+src-distclean:
+	@rm -f *.o .*.d *~
+
+
 .PHONY: $(subdirs)
 $(subdirs):
-	@$(MAKE) -C $@ $(target)
+	@$(MAKE) -C $@ $(MAKECMDGOALS)
+
 
 .%.d: %.C
 	@$(CC) -MT $(basename $<).$(obj-suffix) -MM $(CPPFLAGS) $< > $@.$$$$; \
@@ -18,4 +26,10 @@ $(subdirs):
 	@$(topdir)/bin/renumber_msh $<.msh $@
 	@rm $<.msh
 
+
+ifneq ($(MAKECMDGOALS),clean)
+ifneq (x$(srcfiles),x)
+-include $(patsubst %,.%,$(srcfiles:.C=.d))
+endif
+endif
 
