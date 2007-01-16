@@ -41,11 +41,11 @@ void WzStiffness::read_database ( )
 
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
-  double c11 = data ("C11", 0);
-  double c12 = data ("C12", 0);
-  double c13 = data ("C13", 0);
-  double c33 = data ("C33", 0);
-  double c44 = data ("C44", 0);
+  double c11 = data ("C11", 0.0);
+  double c12 = data ("C12", 0.0);
+  double c13 = data ("C13", 0.0);
+  double c33 = data ("C33", 0.0);
+  double c44 = data ("C44", 0.0);
 
   set_moduli(c11,  c12,  c13,  c33,  c44);
 

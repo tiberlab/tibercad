@@ -115,11 +115,7 @@ void ZbRotatedCrystal::read_database ( )
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
 
-  a_lat = data("a",0.543095);
-  
-  // to not generate errors when testing other things
-  //a_lat = 0.543095;
-
+  a_lat = data("a", 0.543095);
   
    
 }

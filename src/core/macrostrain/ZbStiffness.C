@@ -43,9 +43,9 @@ void ZbStiffness::read_database ( )
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
 
-  double c11 = data("C11", 0);
-  double c12 = data("C12", 0);
-  double c44 = data("C44", 0);
+  double c11 = data("C11", 0.0);
+  double c12 = data("C12", 0.0);
+  double c44 = data("C44", 0.0);
 
   set_moduli( c11, c12, c44);
 

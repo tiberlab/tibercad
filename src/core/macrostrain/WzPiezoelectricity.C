@@ -26,13 +26,13 @@ void WzPiezoelectricity::read_database ( )
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
 
-  e33 = data("e33",0);
+  e33 = data("e33", 0.0);
   
-  e31 = data("e31",0);
+  e31 = data("e31", 0.0);
 
-  e15 = data("e15",0);
+  e15 = data("e15", 0.0);
 
-   Pz = data("Pz",0);
+   Pz = data("Pz", 0.0);
 }
 
 //------------------------------------------------------------//
@@ -46,7 +46,7 @@ void WzPiezoelectricity::do_init(void)
 
    e15 = options.get_option("e15",e15);
 
-   Pz = options.get_option("Pz",0);
+   Pz = options.get_option("Pz", 0.0);
 
    
 

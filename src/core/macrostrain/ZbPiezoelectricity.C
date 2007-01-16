@@ -29,7 +29,7 @@ void ZbPiezoelectricity::read_database ()
 {
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
-  e14 = data("e14", 0);
+  e14 = data("e14", 0.0);
 }
 
 
@@ -38,7 +38,7 @@ void ZbPiezoelectricity::read_database ()
 void ZbPiezoelectricity::do_init(void)
 {
    ModelOptions & options = get_options ();
-   e14 = options.get_option("e14",e14);
+   e14 = options.get_option("e14", e14);
   
 }
 

@@ -28,7 +28,6 @@ Material::do_init(void)
   _database->set_material(_name);
 
   ModelOptions opts;
-  _structure = get_options().get_option("structure", "zb");
 
   if (get_options().find_option("a"))
   {
@@ -119,6 +118,7 @@ Material::create(const std::string& name, const ModelOptions& options)
   {
     mat->set_options(options);
 
+    // set the crystal structure at this point
     mat->_structure = mat->_options.get_option("structure", "zb");
     mat->_options.delete_option("structure");
   }
