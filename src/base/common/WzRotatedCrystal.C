@@ -170,8 +170,8 @@ void WzRotatedCrystal::read_database ( )
   c_lat = data("c",0.5185);
 
   // just to have something for now
-  a_lat = 0.3189;
-  c_lat = 0.5185;
+  // a_lat = 0.3189;
+  // c_lat = 0.5185;
 
 }
 

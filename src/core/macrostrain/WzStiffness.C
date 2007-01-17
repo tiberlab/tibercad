@@ -2,7 +2,7 @@
 #include "getpot.h"
 #include "Material.h"
 #include "Database.h"
-
+#include "RotatedCrystal.h"
 //---------------------------------------------------//
 
 WzStiffness::WzStiffness() :Stiffness()
@@ -47,10 +47,12 @@ void WzStiffness::read_database ( )
   double c33 = data ("C33", 0.0);
   double c44 = data ("C44", 0.0);
 
+
+
   set_moduli(c11,  c12,  c13,  c33,  c44);
 
 
-}
+} 
 
 
 //----------------------------------------------//
@@ -64,6 +66,12 @@ void WzStiffness::do_init(void)
    double c44 = options.get_option ("C44", C_cr(3,2,3,2));
 
    set_moduli(c11,  c12,  c13,  c33,  c44);
+
+   Material*   mat = get_material();
+
+   const RotatedCrystal&   cr = mat->get_rotated_crystal ();
+
+   rotate_to_calc_system(cr.RotMatrix);
 
 }
 

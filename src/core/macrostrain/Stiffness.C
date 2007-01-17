@@ -1,10 +1,14 @@
 #include "Stiffness.h" 
+#include "RotatedCrystal.h"
+#include "Material.h"
 //----------------------------------------------------------------------//
 void Stiffness::copy_from (const PhysicalModelInterface *rhs)
 {
 
   const Stiffness* mod = dynamic_cast<const Stiffness*>(rhs);
   C_cr = mod->C_cr;
+
+  
 
 } 
  
@@ -22,7 +26,12 @@ void Stiffness:: calculate_VCA (const PhysicalModelInterface *comp_A, const Phys
  
   
 
-  C_calc = C_cr;
+  Material*   mat = get_material();
+
+  const RotatedCrystal&   cr = mat->get_rotated_crystal ();
+
+  rotate_to_calc_system(cr.RotMatrix);
+  
 
 }
 

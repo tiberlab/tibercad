@@ -2,7 +2,7 @@
 #include "getpot.h"
 #include "Material.h"
 #include "Database.h"
-
+#include "RotatedCrystal.h"
 //---------------------------------------------------//
 
 ZbStiffness::ZbStiffness() :Stiffness()
@@ -63,5 +63,12 @@ void ZbStiffness::do_init ( )
   double c44 = options.get_option ("C44", C_cr(3,2,3,2));
 
   set_moduli( c11, c12,  c44);
+
+
+  Material*   mat = get_material();
+
+  const RotatedCrystal&   cr = mat->get_rotated_crystal ();
+
+  rotate_to_calc_system(cr.RotMatrix);
 
 }
