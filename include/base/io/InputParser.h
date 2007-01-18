@@ -58,8 +58,8 @@ using namespace boost::spirit;
  * Everything following a '#' is  a  comment and  is  disregarded.
  *
  * Public methods read_device() and get_device_map() parse and extract information 
- * from Device section.
- * Read_models() and get_model_structure_map() methods  parse and extract information 
+ * from device section.
+ * read_models() and get_model_structure_map() methods  parse and extract information 
  * from Models section. Models data are stored in the class \c ModelStructure.
  * Public methods read_parameters() and get_parameters_map()  parse and extract 
  * information from the other parameters sections.

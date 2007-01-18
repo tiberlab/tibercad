@@ -4,7 +4,7 @@
 
 
 src-clean:
-	@rm -f *.o *~
+	@rm -f *.o *~ .*.d *~
 
 src-distclean:
 	@rm -f *.o .*.d *~
