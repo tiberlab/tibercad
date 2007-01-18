@@ -105,6 +105,8 @@ void WzPiezoelectricity:: calculate_VCA (const PhysicalModelInterface *comp_A, c
 Tensor1 WzPiezoelectricity::get_polariz_cryst(Tensor2Sym& strain_cryst)
 {
 
+ 
+
   Tensor1 polariz;
 
   polariz(1) = 2*e15*strain_cryst(3,1);
@@ -112,5 +114,9 @@ Tensor1 WzPiezoelectricity::get_polariz_cryst(Tensor2Sym& strain_cryst)
   polariz(3) = e31*strain_cryst(1,1) + e31*strain_cryst(2,2) + e33*strain_cryst(3,3);
 
   polariz(3) += Pz;
+
+
+
+  return(polariz);
 
 }

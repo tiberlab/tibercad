@@ -2137,6 +2137,8 @@ void Macrostrain::output_piezo(std :: string filename)
       Elem* elem = *el;
 
       polariz_vec =  get_piezopolarization( elem );
+
+    
       polariz_data[0 + el_number*3] = polariz_vec (1);
       polariz_data[1 + el_number*3] = polariz_vec (2);
       polariz_data[2 + el_number*3] = polariz_vec (3);
@@ -2557,11 +2559,11 @@ Tensor1 Macrostrain::get_piezopolarization(const Elem* el)
 
    Tensor1 polariz = ( macrostrain_model->get_piezo() )-> get_polariz_cryst(strain_cr); //crystal system
 
-  
+   
 
-  polariz =(crystal_el->RotMatrix) * polariz; //calculation system
+   polariz =(crystal_el->RotMatrix) * polariz; //calculation system
 
-  return(polariz);
+   return(polariz);
 
 
 }
