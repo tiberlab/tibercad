@@ -57,7 +57,7 @@ DriftDiffusion::Options::Options(void)
     scaling_type(Scaling::UNITS),
     coupling(POISSON),
     scheme(FEM),
-    current_calculation(DEFAULT),
+    current_calculation(RSTF),
     n_max(1), p_max(1),
     C0_e(1), C0_h(1)
 {
@@ -518,10 +518,11 @@ DriftDiffusion::do_solve(void)
       solve_newton();
       break;
   }
-  if (get_options().current_calculation == NEW)
-    calculate_currents_new();
+
+  if (get_options().current_calculation == RSTF)
+    calculate_currents_rstf();
   else
-    calculate_currents();
+    calculate_currents_surfint();
 
   build_solution_vector(_solution);
 }
@@ -687,10 +688,10 @@ DriftDiffusion::parse_const_options(void)
 
   myopts.mesh_units = opts.get_option("mesh_units", 1e-4);
   string method =  opts.get_option("current_integration_method", "");
-  if (method == "new")
-    myopts.current_calculation = NEW;
+  if (method == "surfint")
+    myopts.current_calculation = SURFINT;
   else
-    myopts.current_calculation = DEFAULT;
+    myopts.current_calculation = RSTF;
 
 }
 
@@ -1392,7 +1393,7 @@ DriftDiffusion::get_solution(const Elem* elem,
 }
 
 void
-DriftDiffusion::calculate_currents_new(void)
+DriftDiffusion::calculate_currents_rstf(void)
 {
 
   // we only do something if we are on processor 0
@@ -1446,22 +1447,15 @@ DriftDiffusion::calculate_currents_new(void)
   FEType fe_type = system->variable_type(u_var);
 
   AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::CONSTANT);
+  QGauss qrule(dim, get_options().integration_order);
   fe->attach_quadrature_rule(&qrule);
-
-  // the finite element for boundary integration
-  AutoPtr<FEBase> fe_face(FEBase::build(dim, fe_type));
-  libMeshEnums::Order integration_order = libMeshEnums::CONSTANT;
-  
-  QGauss qface(dim - 1, integration_order);
-  fe_face->attach_quadrature_rule(&qface);
 
   
   // Jacobian * quadrature weight at each integration point.   
-  const vector<Real>& JxW = fe_face->get_JxW();
+  const vector<Real>& JxW = fe->get_JxW();
   
   // physical coordinates of the quadrature points
-  const vector<Point>& q_point = fe_face->get_xyz();
+  const vector<Point>& q_point = fe->get_xyz();
 
   // element shape functions
   const vector<vector<Real> >& phi = fe->get_phi();
@@ -1469,12 +1463,13 @@ DriftDiffusion::calculate_currents_new(void)
   // element shape function gradients
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
-  // the face normals
-  const vector<Point>& face_normals = fe_face->get_normals();
 
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
   vector<unsigned int> dof_indices_ep;
+
+  // will contain the node ids if an element has boundary nodes
+  vector<Boundary*> node_ids;
 
   MeshBase::const_element_iterator el =
                                   mesh.active_elements_begin();
@@ -1486,6 +1481,21 @@ DriftDiffusion::calculate_currents_new(void)
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
 
+    bool has_node = false;
+    node_ids.resize(elem->n_nodes());
+    for (unsigned int n = 0; n < elem->n_nodes(); n++)
+    {
+      Boundary* bd = env.get_boundary(elem->get_node(n));
+      node_ids[n] = bd;
+      if (bd != NULL)
+        has_node = true;
+    }
+
+    // if the element has no node on a boundary,
+    // we can go to the next element
+    if (!has_node)
+      continue;
+    
     ID subdomain = elem->subdomain_id();
 
     // get DOF indices
@@ -1499,109 +1509,65 @@ DriftDiffusion::calculate_currents_new(void)
 
     assert(sc != NULL);
 
-    for (unsigned int s = 0; s < elem->n_sides(); s++)
+    fe->reinit(elem);
+
+    sc->reinit(elem);
+        
+    for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
-      ElementSide side(top_parent, s);
-      
-      if (env.is_on_boundary(side))
+
+      unsigned int n_dofs = dof_indices_u.size();
+      // get the solution values at the centroid
+      Real u  = 0.0;
+      Real en = 0.0;
+      Real ep = 0.0;
+      RealGradient dEfn(0);
+      RealGradient dEfp(0);
+      RealGradient e_field(0);
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        u  += phi[i][qp] * solution(dof_indices_u[i]);
+        en += phi[i][qp] * solution(dof_indices_en[i]);
+        ep += phi[i][qp] * solution(dof_indices_ep[i]);
+
+        dEfn += dphi[i][qp] * solution(dof_indices_en[i]);
+        dEfp += dphi[i][qp] * solution(dof_indices_ep[i]);
+
+        e_field += dphi[i][qp] * solution(dof_indices_u[i]);
+      }
+
+      // prepare for calculating local properties
+      sc->set_coordinates(elem->centroid());
+
+      double T_lat = sc->get_lattice_temperature();
+      // all are at lattice temperature
+      sc->set_carrier_temperatures(T_lat, T_lat);
+
+      sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+
+      sc->set_electric_field(phi0 * e_field);
+
+      sc->calculate_densities();
+      sc->calculate_mobilities();
+
+      // we put the minus here for convenience
+      double sigma_e = -Constants::e * sc->get_electron_density() *
+        sc->get_electron_mobility();
+      double sigma_h = -Constants::e * sc->get_hole_density() *
+        sc->get_hole_mobility();
+
+      RealGradient j(JxW[qp] * (sigma_e * dEfn + sigma_h * dEfp)); 
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
 
-        // If this is not associated to any boundary we skip the rest
-        // and go to the next side
-        Boundary* boundary = env.get_boundary(side);
-        if (boundary == NULL)
-          continue;
-        
-        fe->reinit(elem);
-
-        sc->reinit(elem);
-
-        unsigned int n_dofs = dof_indices_u.size();
-        // get the solution values at the centroid
-        Real u  = 0.0;
-        Real en = 0.0;
-        Real ep = 0.0;
-        RealGradient e_field(0);
-        for (unsigned int i = 0; i < n_dofs; i++)
+        Boundary* boundary = node_ids[n];
+        if (boundary != NULL)
         {
-          u  += phi[i][0] * solution(dof_indices_u[i]);
-          en += phi[i][0] * solution(dof_indices_en[i]);
-          ep += phi[i][0] * solution(dof_indices_ep[i]);
-
-          e_field += dphi[i][0] * solution(dof_indices_u[i]);
-        }
-
-        // prepare for calculating local properties
-        sc->set_coordinates(elem->centroid());
-
-        double T_lat = sc->get_lattice_temperature();
-        // all are at lattice temperature
-        sc->set_carrier_temperatures(T_lat, T_lat);
-
-        sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-
-        sc->set_electric_field(phi0 * e_field);
-
-        sc->calculate_densities();
-        sc->calculate_mobilities();
-
-        // we put the minus here for convenience
-        double sigma_e = -Constants::e * sc->get_electron_density() *
-          sc->get_electron_mobility();
-        double sigma_h = -Constants::e * sc->get_hole_density() *
-          sc->get_hole_mobility();
-
-
-        // only for dim > 1 we need to integrate
-        if (dim > 1)
-        {
-          fe_face->reinit(elem, s);
-
-          double current = 0.0;
-
-          Real dEfn = 0.0;
-          Real dEfp = 0.0;
-          for (unsigned int i = 0; i < n_dofs; i++)
-          {
-            double tmp = dphi[i][0] * face_normals[0];
-            dEfn += tmp * solution(dof_indices_en[i]);
-            dEfp += tmp * solution(dof_indices_ep[i]);
-          }
-
-          current += JxW[0] * (sigma_e * dEfn + sigma_h * dEfp);
-
-          _boundary_currents[boundary] += current;
-        }
-        else
-        {
-          vector<Point> v(1, elem->centroid());
-          fe_face->reinit(elem, &v);
-
-          double current = 0.0;
-
-          Real dEfn = 0.0;
-          Real dEfp = 0.0;
-          for (unsigned int n = 0; n < elem->n_nodes(); n++)
-          {
-            dEfn += dphi[n][0](0) * solution(dof_indices_en[n]);
-            dEfp += dphi[n][0](0) * solution(dof_indices_ep[n]);
-          }
-          
-          // what is the outer normal in this point??
-          // Idea: if x(s) > x(centroid), normal is +1
-          //       else it is -1
-          double x_c = elem->centroid()(0);
-          double x_s = elem->point(s)(0);
-          if (x_s < x_c)
-          {
-            dEfn = -dEfn;
-            dEfp = -dEfp;
-          }
-
-          _boundary_currents[boundary] = sigma_e * dEfn + sigma_h * dEfp;
+          _boundary_currents[boundary] += j * dphi[n][qp];
         }
       }
-    } // end loop over elem sides
+    } // end loop over quadrature points
   } // end loop over elements
 
   // scale the current to normal units
@@ -1611,9 +1577,10 @@ DriftDiffusion::calculate_currents_new(void)
 }
 
 
-// old implementation, gives sometimes strange currents
+// old implementation, is not completely consistent with the
+// solution approach
 void
-DriftDiffusion::calculate_currents(void)
+DriftDiffusion::calculate_currents_surfint(void)
 {
 
   // we only do something if we are on processor 0

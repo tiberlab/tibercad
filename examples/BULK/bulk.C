@@ -8,6 +8,10 @@
 #include "DriftDiffusion.h"
 #include "DriftDiffusionProperties.h"
 
+#include "Macrostrain.h"
+#include "MacrostrainModelInterface.h"
+#include "MacrostrainBoundaryProperties.h"
+
 #include "Material.h"
 #include "Device.h"
 #include "Boundary.h"
@@ -48,14 +52,26 @@ int main (int argc, char** argv)
     double stop_voltage = input("stop_voltage", 0.0);
     unsigned int voltage_steps = input("voltage_steps", 1);
 
-    const string material = input("material", "Si");
+    const string shape_steps = input("shape_steps", "0");
+
     const string structure = input("crystal_structure", "zb");
-    const string molar_fraction = input("molar_fraction", "0.2");
+    const string xdir = input("x-dir", "[1,0,0]");
+    const string ydir = input("y-dir", "[0,1,0]");
+    const string zdir = input("z-dir", "[0,0,1]");
+    const string material = input("material", "Si");
+    const string molar_fraction = input("molar_fraction", "0.0");
+    const string subst_material = input("substrate_material", "Si");
+    const string subst_molar_fraction =
+      input("substrate_molar_fraction", "0.0");
 
     const string method = input("simulation_method", "NEWTON");
     const string statistics = input("statistics", "B");
 
     string min_voltage_step = input("min_voltage_step", "1e-3");
+    string curr_method = input("current_integration", "default");
+    string ksp_type = input("ksp_type", "gmres");
+    string pc_type = input("pc_type", "composite");
+    string discretization = input("discretization", "fem");
     string nonlin_rtol = input("nonlinear_tolerance", "1e-9");
     string lin_rtol = input("linear_tolerance", "1e-12");
     string integration_order = input("integration_order", "5");
@@ -64,9 +80,6 @@ int main (int argc, char** argv)
     string ls_type = input("ls_type", "cubic");
     string nonlin_ls_maxstep =
       input("nonlinear_ls_maxstep", "0.025");
-    string ksp_type = input("ksp_type", "gmres");
-    string pc_type = input("pc_type", "composite");
-    string discretization = input("discretization", "fem");
 
     double n_doping = input("n_doping", 1e15);
     double p_doping = input("p_doping", 0.0);
@@ -88,7 +101,7 @@ int main (int argc, char** argv)
     BC_reg_ID[0] = 1; // anode
     BC_reg_ID[1] = 2; // cathode
 
-
+    
     Mesh mesh(dim);
     MeshData_elements meshdata(mesh);
     meshdata.enable_compatibility_mode();
@@ -116,54 +129,72 @@ int main (int argc, char** argv)
       dd_opts["ls_type"] = ls_type;
       dd_opts["ls_maxstep"] = nonlin_ls_maxstep;
       dd_opts["mesh_units"] = mesh_units;
+      dd_opts["pc_type"] = "composite";
       dd_opts["ksp_type"] = ksp_type;
       dd_opts["pc_type"] = pc_type;
       dd_opts["discretization"] = discretization;
+      dd_opts["current_integration_method"] = curr_method;
       dd_ptr = SimulationInterface::create("drift-diffusion", dd_opts);
     }
 
+    SimulationInterface* strainsim;
+    {
+      ModelOptions opts;
+      opts["name"] = "strain";
+      opts["substrate"] = "cathode";
+      opts["refinement_steps"] = "0";
+      opts["number_shape_steps"] = shape_steps;
+      opts["fixed_point_1"] = "[0,0,0]";
+      opts["periodicity_x"] = "false";
+      strainsim = SimulationInterface::create("macrostrain", opts);
+    }
 
 
-    DriftDiffusionProperties* nside = 
-      DriftDiffusionProperties::create("unstrained");
+    DriftDiffusionProperties* nside;
+    {
+      ModelOptions opts;
+      opts["statistics"] = statistics;
+      opts["strain_simulation"] = "strain";
+      nside = DriftDiffusionProperties::create("strained", opts);
 
-    if (statistics == "FD")
-      nside->set_statistics(TiberCad::FERMIDIRAC);
-    else
-      nside->set_statistics(TiberCad::BOLTZMANN);
-
-
-    nside->add_dopant(new Dopant(n_doping, 0.025, 2, Dopant::N_TYPE));
-    nside->add_dopant(new Dopant(p_doping, 0.01, 4, Dopant::P_TYPE));
+      nside->add_dopant(new Dopant(n_doping, 0.025, 2, Dopant::N_TYPE));
+      nside->add_dopant(new Dopant(p_doping, 0.01, 4, Dopant::P_TYPE));
 
 
-    ModelOptions opts;
-    opts["tau_n"] = "1e-7";
-    opts["tau_p"] = "3e-8";
-    nside->add_recombination_model("SRH", opts);
-    opts["mu0"] = "800";
-    nside->set_electron_mobility_model("constant", opts);
-    opts["mu0"] = "200";
-    nside->set_hole_mobility_model("constant", opts);
+      opts.clear();
+      opts["tau_n"] = "1e-7";
+      opts["tau_p"] = "3e-8";
+      nside->add_recombination_model("SRH", opts);
+      opts.clear();
+      opts["mu0"] = "800";
+      nside->set_electron_mobility_model("constant", opts);
+      opts["mu0"] = "200";
+      nside->set_hole_mobility_model("constant", opts);
+    }
+
+    MacrostrainModelInterface* nstrain;
+    {
+      ModelOptions opts;
+      nstrain = MacrostrainModelInterface::create("macrostrain", opts);
+    }
 
 
     Database d;
     d.set_search_path(searchpath);
     Material::set_database(d);
 
-    opts.clear();
+    ModelOptions opts;
     opts["x"] = molar_fraction;
     opts["structure"] = structure;
+    opts["x-growth-direction"] = xdir;
+    opts["y-growth-direction"] = ydir;
+    //opts["z-growth-direction"] = zdir;
     Material* mat_ptr = Material::create(material, opts);
     Material& mat = *mat_ptr;
     
-    // test copy of models
-    //DriftDiffusionProperties* ddprop =
-    //  dynamic_cast<DriftDiffusionProperties*>(nside->copy());
-    //delete nside;
-    //mat.add_model(ddprop, dd.get_id());
       
     mat.add_model(nside, dd_ptr->get_id());
+    mat.add_model(nstrain, strainsim->get_id());
 
     Device dev(mesh, boundary_nodes);
     dev.set_material(&mat, 1);
@@ -176,17 +207,36 @@ int main (int argc, char** argv)
     ElectricalContact* anode = ElectricalContact::create("ohmic", ctopts);
     ElectricalContact* cathode = ElectricalContact::create("ohmic", ctopts);
 
+    ctopts["material"] = subst_material;
+    ctopts["x"] = subst_molar_fraction;
+    ctopts["structure"] = structure;
+    ctopts["x-growth-direction"] = xdir;
+    ctopts["y-growth-direction"] = ydir;
+    //ctopts["z-growth-direction"] = zdir;
+    MacrostrainBoundaryProperties* substrate =
+      MacrostrainBoundaryProperties::create("substrate", ctopts);
+
     Boundary* bd_anode = new Boundary("anode");
     Boundary* bd_cathode = new Boundary("cathode");
     bd_anode->add_boundary_properties(anode, dd_ptr->get_id());
     bd_cathode->add_boundary_properties(cathode, dd_ptr->get_id());
+    bd_cathode->add_boundary_properties(substrate, strainsim->get_id());
     dd_env.add_boundary(bd_anode, 1);
     dd_env.add_boundary(bd_cathode, 2);
 
 
     dd_env.init();
     dd_ptr->set_environment(&dd_env);
+    strainsim->set_environment(&dd_env);
+
+
+    strainsim->init();
     dd_ptr->init();
+    
+    strainsim->solve();
+    Macrostrain& strain = *static_cast<Macrostrain*>(strainsim);
+    strain.output_piezo("output/piezo.gmv");
+    strain.output_strain("output/strain.gmv");
 
     
     DriftDiffusion& dd = static_cast<DriftDiffusion&>(*dd_ptr);
@@ -258,6 +308,7 @@ int main (int argc, char** argv)
     ofstream file;
     file.open("output/iv_char.dat");
     file << "# V      A/cm\n";
+    file << setprecision(15);
 
     vector<double>::iterator it = first_positive;
     for ( ; it != voltages.end(); ++it)
@@ -358,7 +409,8 @@ int main (int argc, char** argv)
     
     file.close();
     
-    delete dd_ptr;
+    SimulationInterface::destroy(dd_ptr);
+    SimulationInterface::destroy(strainsim);
 
   }
 

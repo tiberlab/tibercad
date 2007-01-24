@@ -20,7 +20,7 @@ ORDER := 1
 
 targets := run1d run2d run3d
 
-.PHONY: all clean run
+.PHONY: run
 
 
 all: main
@@ -33,6 +33,12 @@ run1d: DIM := 1
 run2d: DIM := 2
 run3d: DIM := 3
 $(targets): run%d: bulk%D.msh run
+run2d_tri: run%d_tri: bulk2Dtri.msh main
+	@echo "Running example in $(DIM)D..."
+	@[ -d output ] || mkdir output
+	@perl -i -p -e 's/^\s*dimension\s*=.*/dimension = $(DIM)/' bulk.in
+	@perl -i -p -e 's/^\s*meshfile\s*=.*/meshfile = bulk$(DIM)Dtri.msh/' bulk.in
+	./main
 
 run: all
 	@echo "Running example in $(DIM)D..."
@@ -43,10 +49,10 @@ run: all
 
 
 clean:
-	@rm -f *.o *~ main *.xda *.xta
+	@rm -f main *.xda *.xta *.ucd
 
 distclean: clean
-	@rm -f *.msh
+	@rm -f *.msh *.dat
 	@rm -rf output
 
 

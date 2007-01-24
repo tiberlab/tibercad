@@ -46,7 +46,7 @@ void WzPiezoelectricity::do_init(void)
 
    e15 = options.get_option("e15",e15);
 
-   Pz = options.get_option("Pz", 0.0);
+   Pz = options.get_option("Pz", Pz);
 
    
 

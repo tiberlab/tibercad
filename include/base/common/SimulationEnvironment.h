@@ -32,6 +32,7 @@ class SimulationEnvironment
     //! An iterator for the boundaries
     typedef std::map<ID, Boundary*>::const_iterator BoundaryIterator;
 
+
     //! The constructor
     /*!
      * \param device the device

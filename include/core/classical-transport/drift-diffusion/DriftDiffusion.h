@@ -67,16 +67,24 @@ class DriftDiffusion : public SimulationInterface
     //! The implemented discretization schemes
     enum DiscretizationScheme
     {
-      FEM, //< Standard Finite Elements
-      BOX, //< Box integration method
-      FEMVARIANT //< Finite Elements on slightly different equations
+      FEM, /*!< Standard Finite Elements */
+      BOX, /*!< Box integration method */
+      FEMVARIANT /*!< Finite Elements on slightly different equations */
     };
 
     //! How to calculate currents
     enum CurrentCalculation
     {
-      DEFAULT,
-      NEW
+      /*!
+       * Use Ramo-Shockley test functions
+       * (cf. calculate_current_rstf() )
+       */
+      RSTF,
+      /*!
+       * Do a naive surface integration
+       * (cf. calculate_current_surfint() )
+       */
+      SURFINT
     };
 
     //! A structure to hold the three potentials
@@ -639,15 +647,43 @@ class DriftDiffusion : public SimulationInterface
 
     //! Calculate terminal currents
     /*!
-     * Integrates over the boundary elements
+     * Integrates numerically over the boundary elements.
+     * The current on the l'th contact is then:
+     *
+     * \f[I_l = -e \int_{\Gamma_l}\left(\mu_n n \nabla\phi_n +
+     * \mu_p p \nabla\phi_p \right) \mathrm{d}\Gamma \f]
      */
-    void calculate_currents(void);
+    void calculate_currents_surfint(void);
 
     //! Calculate terminal currents
     /*!
-     * Takes the elemental current value for boundary integration
+     * Uses the Ramo-Shockley test functions and integrates over the
+     * volume.
+     *
+     * Assuming electron and hole generation-recombination terms to be
+     * equal, one can write:
+     * \f[\left(-\nabla(\mathbf{j}_n + \mathbf{j}_p), hl\right) = 
+     * -\int_\Omega h_l \nabla (\mathbf{j}_n + \mathbf{j}_p)\mathrm{d}V = 0\f]
+     * where \f$h_l|_{\Gamma_j} = \delta_{lj}, h_l \in H^1\f$ is the test
+     * function for the contact \it l
+     *
+     * Using Gauss in the scalar product, one gets
+     * \f[ 0 = - \int_{\partial\Omega}h_l(\mathbf{j}_n +
+     * \mathbf{j}_p)\mathrm{\mathbf{S}}
+     * + \int_\Omega \nabla h_l (\mathbf{j}_n +
+     * \mathbf{j}_p)\mathrm{d}V\f]
+     * The first term of the left hand side is exactly the terminal current
+     * of contact \it l due to our choice of the testfunction, therefore
+     * \f[ I_l = \int_\Omega \nabla h_l (\mathbf{j}_n +
+     * \mathbf{j}_p)\mathrm{d}V\f]
+     *
+     * In this implementation we choose the test function to be (where \it i
+     * is a node index and \f$\psi_i\f$ the FEM basis function associated with
+     * node \it i):
+     * \f[h_l = \sum_{i \in \Gamma_l}\psi_i\f]
      */
-    void calculate_currents_new(void);
+    void calculate_currents_rstf(void);
+
 
     //! Get the solution at the point \c p in a given element
     /*!
