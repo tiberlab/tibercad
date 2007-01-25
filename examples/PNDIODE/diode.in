@@ -1,9 +1,11 @@
 # pn-junction definition
 
-meshfile = diode.msh
+dimension = 2
+meshfile = diode_mdr.grd
+format = ise
 
 n_doping = 1e18
-p_doping = 1e18
+p_doping = 1e19
 temperature = 300
 
 statistics = B
@@ -31,6 +33,7 @@ linear_abs_tolerance = 1e-15
 nonlinear_max_it = 50
 linear_max_it = 1000
 integration_order = 2
+discretization = fem
 
 
 scaling = 1

@@ -274,25 +274,12 @@ void TiberPetscNonlinearSolver<T>::init(void) throw (PetscRuntimeError)
 
     ierr = SNESSetType(_snes, SNESLS);
     _checkerr(ierr);
-    switch (_ls_type)
-    {
-      case 1:
-        ierr = SNESSetLineSearch(_snes, SNESNoLineSearch, (void*) this);
-        break;
-      case 2:
-        ierr = SNESSetLineSearch(_snes, SNESQuadraticLineSearch, (void*) this);
-        break;
-      default:
-        ierr = SNESSetLineSearch(_snes, SNESCubicLineSearch, (void*) this);
-        break;
-    }
-    _checkerr(ierr);
 
     SNESSetConvergenceTest(_snes, __tiber_snes_convergence_test, (void*) this);
 
-    //KSP ksp;
-    //SNESGetKSP(_snes, &ksp);
-    //KSPSetInitialGuessKnoll(ksp, PETSC_TRUE);
+    KSP ksp;
+    SNESGetKSP(_snes, &ksp);
+    KSPSetInitialGuessKnoll(ksp, PETSC_TRUE);
 
   }
 }
@@ -327,12 +314,25 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
   // set solver options
   SNESSetTolerances(_snes, _nonlinear_atol, _nonlinear_rtol,
       _nonlinear_stol, _nonlinear_max_it, _linear_max_it);
-  
+
+  switch (_ls_type)
+  {
+    case 1:
+      ierr = SNESSetLineSearch(_snes, SNESNoLineSearch, (void*) this);
+      break;
+    case 2:
+      ierr = SNESSetLineSearch(_snes, SNESQuadraticLineSearch, (void*) this);
+      break;
+    default:
+      ierr = SNESSetLineSearch(_snes, SNESCubicLineSearch, (void*) this);
+      break;
+  }
+
   SNESSetLineSearchParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
 
   KSP ksp;
   SNESGetKSP(_snes, &ksp);
-  
+
   ierr = KSPSetType(ksp, _ksp_type);
   _checkerr(ierr);
   

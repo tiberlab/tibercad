@@ -75,6 +75,8 @@ int main (int argc, char** argv)
     string ls_type = input("ls_type", "cubic");
     string nonlin_ls_maxstep =
       input("nonlinear_ls_maxstep", "0.025");
+    string ksp_type = input("ksp_type", "gmres");
+    string pc_type = input("pc_type", "composite");
 
 
 
@@ -104,13 +106,11 @@ int main (int argc, char** argv)
     {
       ReadISEGrid readmesh(meshfile.c_str(), mesh, meshdata);
       readmesh.get_BC_data(boundary_nodes);
-      cerr << boundary_nodes.size() << "\n";
     }
     else
     {
       Read_MSH readmesh(meshfile, phys_reg_ID, BC_reg_ID, dim, mesh, meshdata);
       readmesh.get_BC_data(boundary_nodes);
-      cerr << boundary_nodes.size() << "\n";
     }
 
     MeshUtils::assign_subdomain_ids(mesh, meshdata);
@@ -129,9 +129,11 @@ int main (int argc, char** argv)
       dd_opts["lin_rel_tol"] = lin_rtol;
       dd_opts["integration_order"] = integration_order;
       dd_opts["ls_type"] = ls_type;
+      //dd_opts["ls_type"] = "cubic";
       dd_opts["ls_maxstep"] = nonlin_ls_maxstep;
       dd_opts["mesh_units"] = mesh_units;
-      //dd_opts["pc_type"] = "composite";
+      dd_opts["pc_type"] = pc_type;
+      dd_opts["ksp_type"] = ksp_type;
       dd_ptr = SimulationInterface::create("drift-diffusion", dd_opts);
     }
 
@@ -140,15 +142,15 @@ int main (int argc, char** argv)
     DriftDiffusionProperties* sub = 
       DriftDiffusionProperties::create("unstrained");
     {
-      sub->add_dopant(new Dopant(1e17, 0.01, 4, Dopant::P_TYPE));
+      sub->add_dopant(new Dopant(1e19, 0.01, 4, Dopant::P_TYPE));
       ModelOptions opts;
-      opts["tau_n"] = "1e-6";
-      opts["tau_p"] = "3e-7";
+      opts["tau_n"] = "2e-9";
+      opts["tau_p"] = "6e-10";
       sub->add_recombination_model("SRH", opts);
       opts.clear();
-      opts["mu0"] = "560";
+      opts["mu0"] = "70";
       sub->set_electron_mobility_model("constant", opts);
-      opts["mu0"] = "280";
+      opts["mu0"] = "54";
       sub->set_hole_mobility_model("constant", opts);
     }
 
@@ -295,6 +297,7 @@ int main (int argc, char** argv)
       ModelOptions dd_opts;
       dd_opts["nonlin_max_it"] = nonlin_max_it;
       dd_opts["coupling"] = "full";
+      dd_opts["ls_type"] = ls_type;
       dd_ptr->set_options(dd_opts);
     }
 

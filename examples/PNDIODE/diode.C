@@ -1,5 +1,6 @@
 // the following _HAS_ to be included first
 #include "Read_MSH.h"
+#include "ReadISEGrid.h"
 
 #include "ElectricalContact.h"
 #include "Dopant.h"
@@ -23,6 +24,7 @@
 #include "elem.h"
 #include "getpot.h"
 #include "gnuplot_io.h"
+#include "GMVIO_cell.h"
 #include "equation_systems.h"
 
 #include <algorithm>
@@ -38,8 +40,11 @@ int main (int argc, char** argv)
 
     GetPot input_file("diode.in");
 
+    unsigned int dim = input_file("dimension", 1);
+    
     const string searchpath = input_file("searchpath", ".");
     string meshfile = input_file("meshfile", "");
+    string format = input_file("format", "gmsh");
     string material = input_file("material", "Si");
 
     double temperature = input_file("temperature", 300.0);
@@ -60,7 +65,10 @@ int main (int argc, char** argv)
     string nonlin_max_it = input_file("nonlinear_max_it", "15");
     string lin_max_it = input_file("linear_max_it", "500");
     string ls_type = input_file("ls_type", "cubic");
+    string ksp_type = input_file("ksp_type", "gmres");
+    string pc_type = input_file("pc_type", "ilu");
     string nonlin_ls_maxstep = input_file("nonlinear_ls_maxstep", "0.025");
+    string discretization = input_file("discretization", "fem");
     
     string E_t = input_file("trap_energy", "0.0");
 
@@ -82,15 +90,22 @@ int main (int argc, char** argv)
     BC_reg_ID[0] = 1; // anode
     BC_reg_ID[1] = 2; // cathode
 
-    unsigned int dim = 1;
     Mesh mesh(dim);
     MeshData_elements meshdata(mesh);
     meshdata.enable_compatibility_mode();
-    
-    Read_MSH readmesh(meshfile, phys_reg_ID, BC_reg_ID, dim, mesh, meshdata);
+     
     map<unsigned int, vector<unsigned int> > boundary_nodes;
-    readmesh.get_BC_data(boundary_nodes);
-    
+    if (format == "ise")
+    {
+      ReadISEGrid readmesh(meshfile.c_str(), mesh, meshdata);
+      readmesh.get_BC_data(boundary_nodes);
+    }
+    else
+    {
+      Read_MSH readmesh(meshfile, phys_reg_ID, BC_reg_ID, dim, mesh, meshdata);
+      readmesh.get_BC_data(boundary_nodes);
+    }
+   
 
     MeshUtils::assign_subdomain_ids(mesh, meshdata);
 
@@ -110,7 +125,9 @@ int main (int argc, char** argv)
       dd_opts["ls_maxstep"] = nonlin_ls_maxstep;
       dd_opts["ls_type"] = ls_type;
       dd_opts["mesh_units"] = mesh_units;
-      dd_opts["pc_type"] = "composite";
+      dd_opts["ksp_type"] = ksp_type;
+      dd_opts["pc_type"] = pc_type;
+      dd_opts["discretization"] = discretization;
       dd_ptr = SimulationInterface::create("drift-diffusion", dd_opts);
     }
     DriftDiffusion& dd = *dynamic_cast<DriftDiffusion*>(dd_ptr);
@@ -166,8 +183,8 @@ int main (int argc, char** argv)
     mat_p->init();
 
     Device dev(mesh, boundary_nodes);
-    dev.set_material(mat_n, 1);
-    dev.set_material(mat_p, 2);
+    dev.set_material(mat_p, 1);
+    dev.set_material(mat_n, 2);
 
     set<ID> regions;
     regions.insert(1);
@@ -208,13 +225,23 @@ int main (int argc, char** argv)
       cout << "done (nr. iterations: " << dd.get_n_nonlinear_iterations() <<
         ", final residual: " << dd.get_final_residual() << ")\n" << flush;
       dd.build_densities(densities, names);
-      GnuPlotIO(dd.get_mesh(), "Equilibrium densities",
-          GnuPlotIO::GRID_ON).write_nodal_data("output/densities_eq",
-          densities, names);
-      dd.build_band_edges(densities, names);
-      GnuPlotIO(dd.get_mesh(), "Equilibrium band profile",
-          GnuPlotIO::GRID_ON).write_nodal_data("output/bands_eq",
-          densities, names);
+      if (dim == 1) {
+        GnuPlotIO(dd.get_mesh(), "Equilibrium densities",
+            GnuPlotIO::GRID_ON).write_nodal_data("output/densities_eq",
+              densities, names);
+        dd.build_band_edges(densities, names);
+        GnuPlotIO(dd.get_mesh(), "Equilibrium band profile",
+            GnuPlotIO::GRID_ON).write_nodal_data("output/bands_eq",
+              densities, names);
+      }
+      else
+      {
+        GMVIO(dd.get_mesh()).write_nodal_data("output/densities_eq.gmv",
+            densities, names);
+        dd.build_band_edges(densities, names);
+        GMVIO(dd.get_mesh()).write_nodal_data("output/bands_eq.gmv",
+            densities, names);
+      }
     }
     cout << "Si properties:\n";
     //nside.print_info();
@@ -277,28 +304,55 @@ int main (int argc, char** argv)
         ", final residual: " << dd.get_final_residual() << ")\n" << flush;
       vector<double> densities;
       vector<string> names;
-      ostringstream filename;
-      filename << "output/bands_" << *it;
-      ostringstream title;
-      title << "Band profile for " << *it << " V";
       dd.build_band_edges(densities, names);
-      GnuPlotIO(dd.get_mesh(), title.str(),
-          GnuPlotIO::GRID_ON).write_nodal_data(filename.str(),
-          densities, names);
-      ostringstream filename_d;
-      filename_d << "output/densities_" << *it;
-      ostringstream title_d;
-      title_d << "Densities for " << *it << " V";
-      dd.build_densities(densities, names);
-      GnuPlotIO(dd.get_mesh(), title_d.str(),
-          GnuPlotIO::GRID_ON).write_nodal_data(filename_d.str(),
-          densities, names);
+      if (dim == 1)
+      {
+        ostringstream filename;
+        filename << "output/bands_" << *it;
+        ostringstream title;
+        title << "Band profile for " << *it << " V";
+        GnuPlotIO(dd.get_mesh(), title.str(),
+            GnuPlotIO::GRID_ON).write_nodal_data(filename.str(),
+              densities, names);
+        ostringstream filename_d;
+        filename_d << "output/densities_" << *it;
+        ostringstream title_d;
+        title_d << "Densities for " << *it << " V";
+        dd.build_densities(densities, names);
+        GnuPlotIO(dd.get_mesh(), title_d.str(),
+            GnuPlotIO::GRID_ON).write_nodal_data(filename_d.str(),
+              densities, names);
+      }
+      else
+      {
+        ostringstream filename_b;
+        filename_b << "output/bands_" << *it << ".gmv";
+        dd.build_band_edges(densities, names);
+        GMVIO(dd.get_mesh()).write_nodal_data(filename_b.str(),
+            densities, names);
+        ostringstream filename_d;
+        filename_d << "output/densities_" << *it << ".gmv";
+        dd.build_densities(densities, names);
+        GMVIO(dd.get_mesh()).write_nodal_data(filename_d.str(),
+            densities, names);
+        ostringstream filename_f;
+        filename_f << "output/field_" << *it << ".gmv";
+        dd.build_electric_field(densities, names);
+        GMVIO_cell(dd.get_mesh()).write_ascii_cell_data(filename_f.str(),
+            densities, names);
+        ostringstream filename_c;
+        filename_c << "output/current_" << *it << ".gmv";
+        dd.build_current_density(densities, names);
+        GMVIO_cell(dd.get_mesh()).write_ascii_cell_data(filename_c.str(),
+            densities, names);
+
+      }
 
       const map<const Boundary*, double>& curr =
         dd.get_boundary_currents();
       file << *it << "  "
-           << (*curr.find(bd_cathode)).second << "  "
-           << (*curr.find(bd_anode)).second << "\n" << flush;
+        << (*curr.find(bd_cathode)).second << "  "
+        << (*curr.find(bd_anode)).second << "\n" << flush;
       cerr << "    I = " << (*curr.find(bd_cathode)).second << " A/cm\n";
     }
 
@@ -326,22 +380,49 @@ int main (int argc, char** argv)
           ", final residual: " << dd.get_final_residual() << ")\n" << flush;
         vector<double> densities;
         vector<string> names;
-        ostringstream filename;
-        filename << "output/bands_" << *it;
-        ostringstream title;
-        title << "Band profile for " << *it << " V";
         dd.build_band_edges(densities, names);
-        GnuPlotIO(dd.get_mesh(), title.str(),
-          GnuPlotIO::GRID_ON).write_nodal_data(filename.str(),
-            densities, names);
-        ostringstream filename_d;
-        filename_d << "output/densities_" << *it;
-        ostringstream title_d;
-        title_d << "Densities for " << *it << " V";
-        dd.build_densities(densities, names);
-        GnuPlotIO(dd.get_mesh(), title_d.str(),
-          GnuPlotIO::GRID_ON).write_nodal_data(filename_d.str(),
-            densities, names);
+        if (dim == 1)
+        {
+          ostringstream filename;
+          filename << "output/bands_" << *it;
+          ostringstream title;
+          title << "Band profile for " << *it << " V";
+          GnuPlotIO(dd.get_mesh(), title.str(),
+              GnuPlotIO::GRID_ON).write_nodal_data(filename.str(),
+                densities, names);
+          ostringstream filename_d;
+          filename_d << "output/densities_" << *it;
+          ostringstream title_d;
+          title_d << "Densities for " << *it << " V";
+          dd.build_densities(densities, names);
+          GnuPlotIO(dd.get_mesh(), title_d.str(),
+              GnuPlotIO::GRID_ON).write_nodal_data(filename_d.str(),
+                densities, names);
+        }
+        else
+        {
+          ostringstream filename_b;
+          filename_b << "output/bands_" << *it << ".gmv";
+          dd.build_band_edges(densities, names);
+          GMVIO(dd.get_mesh()).write_nodal_data(filename_b.str(),
+              densities, names);
+          ostringstream filename_d;
+          filename_d << "output/densities_" << *it << ".gmv";
+          dd.build_densities(densities, names);
+          GMVIO(dd.get_mesh()).write_nodal_data(filename_d.str(),
+              densities, names);
+          ostringstream filename_f;
+          filename_f << "output/field_" << *it << ".gmv";
+          dd.build_electric_field(densities, names);
+          GMVIO_cell(dd.get_mesh()).write_ascii_cell_data(filename_f.str(),
+              densities, names);
+          ostringstream filename_c;
+          filename_c << "output/current_" << *it << ".gmv";
+          dd.build_current_density(densities, names);
+          GMVIO_cell(dd.get_mesh()).write_ascii_cell_data(filename_c.str(),
+              densities, names);
+
+        }
 
         restart = false;
         const map<const Boundary*, double>& curr =
@@ -353,7 +434,7 @@ int main (int argc, char** argv)
       }
       while (it != voltages.begin());
     }
-    
+
     file.close();
 
     delete dd_ptr;

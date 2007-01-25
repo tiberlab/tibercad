@@ -27,8 +27,8 @@ shape_steps = 3
 
 statistics = B
 
-dimension = 3
-meshfile = bulk3D.msh
+dimension = 2
+meshfile = bulk2D.msh
 
 mesh_units = 1e-4
 
@@ -44,9 +44,9 @@ ls_type = cubic
 linear_tolerance = 1e-6
 nonlinear_max_it = 25
 linear_max_it = 1000
-integration_order = 5
-ksp_type = gmres
-pc_type = jacobi
+integration_order = 2
+ksp_type = bcgsl
+pc_type = composite
 discretization = fem
 current_integration = new
 

@@ -24,17 +24,17 @@ l3 = newl; Line(l3) = {p3, p4};
 l4 = newl; Line(l4) = {p4, p5};
 
 Extrude Line {l1, {0.0, y, 0.0}}
-//	{Recombine; Layers{N, 1, 1};};
-	{Layers{N, 1, 1};};
+	{Recombine; Layers{N, 1, 1};};
+//	{Layers{N, 1, 1};};
 Extrude Line {l2, {0.0, y, 0.0}}
-//	{Recombine; Layers{N, 1, 1};};
-	{Layers{N, 1, 1};};
+	{Recombine; Layers{N, 1, 1};};
+//	{Layers{N, 1, 1};};
 Extrude Line {l3, {0.0, y, 0.0}}
-//	{Recombine; Layers{N, 1, 1};};
-	{Layers{N, 1, 1};};
+	{Recombine; Layers{N, 1, 1};};
+//	{Layers{N, 1, 1};};
 Extrude Line {l4, {0.0, y, 0.0}}
-//	{Recombine; Layers{N, 1, 1};};
-	{Layers{N, 1, 1};};
+	{Recombine; Layers{N, 1, 1};};
+//	{Layers{N, 1, 1};};
 
 Physical Surface(1) = {1};
 Physical Line(1) = {9,13};

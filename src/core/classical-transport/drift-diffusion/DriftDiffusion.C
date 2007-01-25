@@ -49,7 +49,7 @@ DriftDiffusion::Options::Options(void)
     refine_fraction(0.7),
     coarsen_fraction(0.3),
     refinement_tolerance(1e-6),
-    min_voltage_step(2e-3),
+    min_voltage_step(1e-3),
     integration_order(libMeshEnums::FIFTH),
     solver_method(NEWTON),
     max_gummel_iterations(5),
@@ -235,9 +235,9 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     mu = sc->get_electron_mobility();
     mu0 = (mu0 > mu) ? mu0 : mu;
 
-    //double C = fabs(sc->get_net_doping_density());
-    double C = fabs(sc->get_ionized_donor_density() -
-        sc->get_ionized_acceptor_density());
+    double C = fabs(sc->get_net_doping_density());
+    //double C = fabs(sc->get_ionized_donor_density() -
+    //    sc->get_ionized_acceptor_density());
     C0 = (C0 > C) ? C0 : C;
 
     double ni = sc->get_intrinsic_density();

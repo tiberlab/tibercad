@@ -4,9 +4,11 @@ $Options
 
 # mesfet example
 
+searchpath = ../
 
 #meshfile=mesfet.msh
 meshfile=mesfet_mdr.grd
+#meshfile=fet_mdr.grd
 format=ise
 
 # units are um
@@ -26,22 +28,26 @@ scaling = 1
 characteristic = 1
 
 # for transcharacteristic
-vds = 1.5;
-vg_start = 0.0;
+vds = 5.0;
+vg_start = -0.5;
 vg_stop =  0.0;
-vg_steps = 1;
+vg_steps = 5;
 #vg_stop = 1.0;
 #vg_steps = 50;
 # for output characteristic
 vds_stop = 1.0;
-vds_steps = 10;
+vds_steps = 20;
 
-nonlinear_tolerance = 1e-12
-nonlinear_ls_maxstep = 0.1
+nonlinear_tolerance = 1e-6
+nonlinear_ls_maxstep = 0.05
+#min_voltage_step = 1e-3
+ls_type = cubic
 linear_tolerance = 1e-6
 linear_max_it = 1000
 nonlinear_max_it = 15
-integration_order = 2
+integration_order = 5
+ksp_type = bcgsl
+pc_type = composite
 
 max_refinement_steps=0
 refine_fraction=0.8
