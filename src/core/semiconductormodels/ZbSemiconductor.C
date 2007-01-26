@@ -15,7 +15,10 @@ extern "C"
 const double ZbSemiconductor::Hartree = 27.2113961;
 //---------------------------------------------//
 
-
+ZbSemiconductor::ZbDDparameters& ZbSemiconductor::get_parameters()
+{
+  return(par);
+}
 
 
 //--------------------------------------------//
@@ -129,7 +132,7 @@ void ZbSemiconductor::read_database( )
 //----------------------------------------------//
 void ZbSemiconductor::copy_from (const PhysicalModelInterface *rhs)
 {
-  Semiconductor::copy_from ( rhs);
+ 
 
   const ZbSemiconductor* mod = dynamic_cast<const ZbSemiconductor*> (rhs);
   
@@ -183,7 +186,7 @@ void ZbSemiconductor::read_bowing_parameters()
 void ZbSemiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 
-  Semiconductor::calculate_VCA (comp_A, comp_B,  xa);
+ 
 
   const ZbSemiconductor* modA = dynamic_cast<const ZbSemiconductor*> (comp_A);
   const ZbSemiconductor* modB = dynamic_cast<const ZbSemiconductor*> (comp_B);

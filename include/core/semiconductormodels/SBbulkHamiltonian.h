@@ -60,7 +60,7 @@ class SBbulkHamiltonian : public EFAbulkHamiltonian
 
   virtual PhysicalModelInterface* create_new(void) const = 0;
 
-  virtual void copy_from (const PhysicalModelInterface *rhs) = 0;
+  virtual void copy_from (const PhysicalModelInterface *rhs) ;
 
   virtual void do_init(void) = 0;
  

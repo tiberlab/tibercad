@@ -1,5 +1,5 @@
 #include "DDsemiconductor.h"
-
+#include "EFAbulkHamiltonian.h"
 #include "Database.h"
 #include "Alloy.h"
 #include "getpot.h"

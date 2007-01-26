@@ -25,7 +25,7 @@ class SBCondBandBulkHamiltonian: public SBbulkHamiltonian
 
  virtual PhysicalModelInterface* create_new(void) const = 0 ;
 
- virtual void copy_from (const PhysicalModelInterface *rhs) ;
+ // virtual void copy_from (const PhysicalModelInterface *rhs) ;
 
  virtual void do_init(void);
 

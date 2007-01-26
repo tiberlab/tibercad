@@ -6,7 +6,7 @@
 #include <vector>
 #include "tensor.h"
 #include "SBbulkHamiltonian.h"
-
+#include "PhysicalModelInterface.h"
 //class DDsemiconductor;
 
 
@@ -23,7 +23,7 @@ class SBuserHamiltonian : public SBbulkHamiltonian
 
   static  SBuserHamiltonian* create(void);
 
-  virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
+  
 
  protected:
 
@@ -31,7 +31,7 @@ class SBuserHamiltonian : public SBbulkHamiltonian
 
   virtual PhysicalModelInterface* create_new(void) const;
 
-  virtual void copy_from (const PhysicalModelInterface *rhs);
+ 
 
   virtual void do_init(void);
 
@@ -49,7 +49,7 @@ class SBuserHamiltonian : public SBbulkHamiltonian
  
 };
 
-inline PhysicalModelInterface* create_new(void) 
+inline PhysicalModelInterface* SBuserHamiltonian::create_new() const
 {
   return new SBuserHamiltonian();
 }
@@ -58,7 +58,7 @@ inline PhysicalModelInterface* create_new(void)
 
 
 
-inline SBbulkHamiltonian* create()
+inline SBuserHamiltonian* SBuserHamiltonian::create()
 {
   return new SBuserHamiltonian();
 }

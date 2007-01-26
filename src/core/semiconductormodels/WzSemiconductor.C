@@ -292,7 +292,7 @@ void WzSemiconductor::copy_from (const PhysicalModelInterface *rhs)
 
 {
   
-  Semiconductor::copy_from(rhs);
+ 
   const WzSemiconductor* mod = dynamic_cast<const WzSemiconductor*> (rhs);
   par = mod->par;
   bow = mod->bow;
@@ -305,7 +305,7 @@ void WzSemiconductor::copy_from (const PhysicalModelInterface *rhs)
 //--------------------------------------------------------------------//
 void WzSemiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
-  Semiconductor::calculate_VCA (comp_A, comp_B,  xa);
+ 
 
   const WzSemiconductor* modA = dynamic_cast<const WzSemiconductor*> (comp_A);
   const WzSemiconductor* modB = dynamic_cast<const WzSemiconductor*> (comp_B);

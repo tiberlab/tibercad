@@ -100,7 +100,7 @@ void SBbulkHamiltonian::calculate_Hamiltonian_k_par(void)
 
   Hamiltonian[0][0] = result;
 
- 
+  
   
 
   Hamiltonian_without_strain_pot = Hamiltonian;

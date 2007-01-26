@@ -116,7 +116,7 @@ class DDsemiconductor : public PhysicalModelInterface
   std::vector<band_extremum>  valence_band;
 
 
-  virtual PhysicalModelInterface* create_new(void) const;
+  virtual PhysicalModelInterface* create_new(void) const = 0;
 
   virtual void copy_from (const PhysicalModelInterface *rhs) ;
 
@@ -135,6 +135,8 @@ inline DDsemiconductor* DDsemiconductor::create(const std::string& name,  const 
   return dynamic_cast<DDsemiconductor*> (PhysicalModelInterface::create("DDsemicond_" + name ,options));
 }
  
+
+
 
 
 #endif

@@ -29,7 +29,7 @@ EFAbulkHamiltonian::EFAbulkHamiltonian()
  
 
 }
-
+ 
 //------------------------------------------------------------//
 
 void EFAbulkHamiltonian::set_k_vector (const double k_vector_in[3])

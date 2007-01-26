@@ -22,20 +22,8 @@ void Semiconductor::do_init ()
  
 }
 
-//---------------------------------------------------------------------------------------------//
-void Semiconductor::copy_from (const PhysicalModelInterface *rhs)
-{
- 
 
-}
 
-//--------------------------------------------------------------------------------------------//
-void Semiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
-{
- 
- 
-  
-}
 
 
 //---------------------------------------------------------------------------------------------//

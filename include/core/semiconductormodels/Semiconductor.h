@@ -52,9 +52,9 @@ class Semiconductor : public PhysicalModelInterface
 
  protected:
 
-  virtual PhysicalModelInterface* create_new(void) const;
+  virtual PhysicalModelInterface* create_new(void) const = 0;
 
-  virtual void copy_from (const PhysicalModelInterface *rhs) ;
+  virtual void copy_from (const PhysicalModelInterface *rhs) = 0 ;
 
   virtual void do_init (void);
 
@@ -62,7 +62,7 @@ class Semiconductor : public PhysicalModelInterface
 
   virtual void read_bowing_parameters(void) = 0;
  
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
+  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
 
 };
 

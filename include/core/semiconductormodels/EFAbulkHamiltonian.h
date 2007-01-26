@@ -73,7 +73,7 @@ class EFAbulkHamiltonian: public PhysicalModel
  protected:
   
 
-  virtual PhysicalModelInterface* create_new(void) const;
+  virtual PhysicalModelInterface* create_new(void) const = 0;
 
   virtual void copy_from (const PhysicalModelInterface *rhs) ;
 
@@ -129,7 +129,7 @@ class EFAbulkHamiltonian: public PhysicalModel
 };
 
 
-inline  EFAbulkHamiltonian* create (const std::string& name,  const ModelOptions& options)
+inline  EFAbulkHamiltonian* EFAbulkHamiltonian::create (const std::string& name,  const ModelOptions& options)
 {
 
   if (! (options.find_option("model_name")) )

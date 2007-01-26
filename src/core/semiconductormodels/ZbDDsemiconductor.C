@@ -1,5 +1,7 @@
 #include "ZbDDsemiconductor.h"
 #include "ZbSemiconductor.h"
+#include "DDsemiconductor.h"
+#include "Semiconductor.h"
 #include "getpot.h"
 #include "Alloy.h"
 #include "Database.h"
