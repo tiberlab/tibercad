@@ -6,10 +6,9 @@
 #include <vector>
 #include "tensor.h"
 #include "EFAbulkHamiltonian.h"
-
-
-class DDsemiconductor;
-
+#include "PhysicalModelInterface.h"
+#include "Semiconductor.h"
+#include "KPparameters.h"
 typedef std::complex<double> Complex;
 
 class KPbulkHamiltonian : public EFAbulkHamiltonian
@@ -18,41 +17,7 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
 
   
 
- struct  KPparams
-  {
 
-   
-
-    double L1;
-    double L2;
-    double M1;
-    double M2;
-    double M3;
-    double N1;
-    double N2;    
-    double P1;
-    double P2;
-    double s1;
-    double s2;
-    double E_c;
-    double E_v;
-    double d1;
-    double d2;
-    double d3;
-    double N1_xy;
-    double N1_yx; 
-    double N2_xy; 
-    double N2_yx;
-    double l1s;
-    double l2s;
-    double n1s;  
-    double n2s;
-    double m1s;
-    double m2s;
-    double m3s;
-    double axs;
-    double azs;
-  };
 
 
  
@@ -62,33 +27,11 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   KPbulkHamiltonian(void);
 
 
-  //! constructor
-  /*!
-    \param model_name  name of the model "8x8" or "6x6"
-  */
-  KPbulkHamiltonian(const std::string model_name );
-  
 
  
   //! destructor. 
   ~KPbulkHamiltonian(void);
   
-  virtual void read_database(const Dummy&);
-
-  //! \deprecated { Create parameters for an alloy }
-  /*!
-   * \deprecated { This method will live as long as the database is
-   * not used yet.}
-   */
-
-  virtual void build_alloy(const std::string& component2,
-			   const std::string& bowing_params, double content);
-
-
-
-  void set_data_file(const std::string& filename)
-      { _filename = filename; };
-
 
   virtual void calculate_Hamiltonian_k_par(void);
 
@@ -107,11 +50,8 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   //!calculates momentum operator P with k|| application
   void calculate_optical_operator_k_par(void);
 
-  bool kpVVtermSymmetric;
-
+ 
   Tensor2Sym strainM;
-
-  bool kpCVtermSymmetric;
 
   void set_parameters(const KPparams&  par1 );
 
@@ -119,10 +59,22 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   const std::vector< std::vector <std::vector<MatrixElement> > > & get_optical_operator(void) const;
 
 
-  //! a pointer to a semiconductor that contains parameters
-  DDsemiconductor* semiconductor;
+  static KPbulkHamiltonian* create( );
+ 
 
  private:
+  //!simmetrize valence-valence term 
+  bool kpVVtermSymmetric;
+  
+  //!simmetrize conduction-valence term 
+  bool kpCVtermSymmetric;
+
+  //model_name  name of the model "8x8" or "6x6"
+  std::string model_name;
+  
+
+  //! a pointer to a semiconductor that contains parameters
+  Semiconductor*  semiconductor;
 
   //! minimal used band in 8x8 Hamiltonian 
   short band_min;
@@ -157,17 +109,38 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   KPparams par ;
 
  
-  std::string _filename;
-
-  //model_name  name of the model "8x8" or "6x6"
-  std::string model_name;
-
-  
+ 
  
 
-  //!Copy-constructor
-  KPbulkHamiltonian(const KPbulkHamiltonian& kp_ham);
+ protected:
+
+  virtual PhysicalModelInterface* create_new(void) const;
+
+  virtual void copy_from (const PhysicalModelInterface *rhs){};
+
+  virtual void do_init(void);
+
+  virtual void read_database(void){};
+
+  virtual void read_bowing_parameters(void){};
+ 
+  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) ;
+ 
+
  
   
 };
+
+
+inline   KPbulkHamiltonian* KPbulkHamiltonian::create( )
+{
+  return new KPbulkHamiltonian();
+}
+
+inline PhysicalModelInterface* KPbulkHamiltonian::create_new() const
+{
+  return new KPbulkHamiltonian();
+}
+
+
 #endif

@@ -2,24 +2,21 @@
 #define _SBZbCondBandBulkHamiltonian_h_
 
 
-#include "SBbulkHamiltonian.h"
-#include "ZbDDsemiconductor.h"
-
+#include "ZbSemiconductor.h"
+#include "SBCondBandBulkHamiltonian.h"
+#include "PhysicalModelInterface.h"
 
 //! A class to calculate single band Hamiltonian of zinc-blende material
-class SBZbCondBandBulkHamiltonian : public SBbulkHamiltonian
+class SBZbCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
 {
 
  public:
 
   //!Constructor
-  SBZbCondBandBulkHamiltonian( );
+  SBZbCondBandBulkHamiltonian(){};
 
-  //!Constructor
-  /*!
-    \param parameters parameters that describe a zinc-blende crystal
-  */
-  SBZbCondBandBulkHamiltonian(ZbDDsemiconductor::ZbDDparameters& parameters);
+  //!Destructor
+  ~SBZbCondBandBulkHamiltonian(){};
   
   //! Gamma or X or L
   std::string min_name;
@@ -32,16 +29,33 @@ class SBZbCondBandBulkHamiltonian : public SBbulkHamiltonian
   */ 
   unsigned int min_number;
 
- 
-  void  calculate_edge_and_mass();
-
   
-  void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
+  virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
+
+  static SBZbCondBandBulkHamiltonian* create();
 
  private:
 
-  ZbDDsemiconductor::ZbDDparameters  par; 
+  ZbSemiconductor::ZbDDparameters* zb_par;
+
+
+ protected:
+
+  virtual PhysicalModelInterface* create_new(void) const;
+
+  virtual void do_init(void);
+
 
 };
+
+inline PhysicalModelInterface* SBZbCondBandBulkHamiltonian::create_new() const
+{
+  return new SBZbCondBandBulkHamiltonian();
+}
+
+inline SBZbCondBandBulkHamiltonian* SBZbCondBandBulkHamiltonian::create()
+{
+  return new SBZbCondBandBulkHamiltonian();
+}
 
 #endif

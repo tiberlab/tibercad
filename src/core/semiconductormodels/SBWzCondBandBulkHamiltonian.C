@@ -3,36 +3,18 @@ using namespace std;
 #include "getpot.h"
 #include "Alloy.h"
 
-
-
-
-//===========================================================//
-SBWzCondBandBulkHamiltonian::SBWzCondBandBulkHamiltonian( ):SBbulkHamiltonian()
-{
-  kp_bands.resize(1,0);
-  kp_bands_map.insert(make_pair(0,0));
-}
-
-SBWzCondBandBulkHamiltonian::SBWzCondBandBulkHamiltonian(const SBWzCondBandBulkHamiltonian &  model):SBbulkHamiltonian(model)
-{ 
-  kp_bands.resize(1,0);
-  par = model.par;
-  calculate_edge_and_mass();
-  kp_bands_map.insert(make_pair(0,0));
-}
-
 //=======================================================================//
-void  SBWzCondBandBulkHamiltonian::calculate_edge_and_mass()
+void SBWzCondBandBulkHamiltonian::do_init()
 {
-  //--------------------------------------------------
-  //if there is a semiconductor associated with the class, we take its  parameters
-  if (semiconductor != NULL)
-    {
-      par = (dynamic_cast<WzDDsemiconductor*>(semiconductor))->get_parameters();
-    }
+
+  SBCondBandBulkHamiltonian::do_init();
+
+  WzSemiconductor::WzDDparameters& par = (dynamic_cast<WzSemiconductor*> (semiconductor)) -> get_parameters();
+
+  wz_par = &par;
 
 
-  //--------------------------------------------------
+   //--------------------------------------------------
   imass = Tensor2Sym(0);
   imass(1,1) = 1.0/par.m_c_xx;
   imass(2,2) = 1.0/par.m_c_xx;
@@ -59,18 +41,13 @@ void  SBWzCondBandBulkHamiltonian::calculate_edge_and_mass()
   edge = (Ev_top + par.EgGamma)/Hartree;
 
   //--------------------------------------------------------------------------------//
+
+  calculate_Hamiltonian_gen();
+  
 }
 
-//=======================================================================//
-SBWzCondBandBulkHamiltonian::SBWzCondBandBulkHamiltonian(WzDDsemiconductor::WzDDparameters& parameters):SBbulkHamiltonian()
-{
-  kp_bands.resize(1,0);
-  kp_bands_map.insert(make_pair(0,0));
-  par = parameters;
-  calculate_edge_and_mass();
-  
-  
-}
+
+
 
 
 //===========================================================================//
@@ -80,7 +57,7 @@ void SBWzCondBandBulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_
   //now strain and potential
 
   Hamiltonian[0][0].constant = Hamiltonian_without_strain_pot[0][0].constant - el_potential/Hartree
-    + ((strain_crystal(1,1) + strain_crystal(2,2))* par.a_x + par.a_z *  strain_crystal(3,3))/Hartree;
+    + ((strain_crystal(1,1) + strain_crystal(2,2))* (wz_par->a_x) + (wz_par->a_z) *  strain_crystal(3,3))/Hartree;
     
 }
 

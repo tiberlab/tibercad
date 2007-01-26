@@ -6,8 +6,9 @@
 #include <vector>
 #include <map>
 #include "tensor.h"
-#include "PhysicalProperties.h"
-class EFAbulkHamiltonian: public PhysicalProperties
+
+#include "PhysicalModel.h"
+class EFAbulkHamiltonian: public PhysicalModel
 {
 
  public:
@@ -16,14 +17,20 @@ class EFAbulkHamiltonian: public PhysicalProperties
 
   struct MatrixElement
   {
-    std::complex<double> constant;
-    std::complex<double> linear_left[3];
-    std::complex<double> linear_right[3];
-    std::complex<double> quad[3][3];
+    Complex constant;
+    Complex linear_left[3];
+    Complex linear_right[3];
+    Complex quad[3][3];
     
   };
 
+  //!constructor
   EFAbulkHamiltonian();
+
+
+  //!destructor
+  virtual ~EFAbulkHamiltonian() {};
+  
 
   //!set Bloch k-vector
   /*!
@@ -37,7 +44,7 @@ class EFAbulkHamiltonian: public PhysicalProperties
   */  
   void set_k_vector(Tensor1 k_in); 
 
-  void set_rotation_matrix(Tensor2Gen& rotmatrix);
+ 
 
   //! calculate model Hamiltonian without application of k||
   virtual void calculate_Hamiltonian_gen(void) = 0; 
@@ -53,25 +60,31 @@ class EFAbulkHamiltonian: public PhysicalProperties
   */
   virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential) = 0;
 
+
+  //!returns Hamiltonian
   std::vector< std::vector<MatrixElement > >& get_Hamiltonian(void); 
 
-  //!destructor
-  virtual ~EFAbulkHamiltonian() {};
-  //----------------------------------------------------------------------------------
-  //virtual methods of  PhysicalProperties
-  virtual void read_database (const Dummy &db);
-
-  virtual void read_database_bowing_parameters (const Dummy &db);
-  
-  virtual void set_properties_alloy (const PhysicalProperties *prop_comp1, const PhysicalProperties *prop_comp2, double molar_fraction);
-  //---------------------------------------------------------------------------------
-
+ 
   const std::map<short, short>&  get_kp_bands_map(void) const; 
+
+
+  static EFAbulkHamiltonian* create (const std::string& name,  const ModelOptions& options = ModelOptions());
 
  protected:
   
-  
 
+  virtual PhysicalModelInterface* create_new(void) const;
+
+  virtual void copy_from (const PhysicalModelInterface *rhs) ;
+
+  virtual void do_init (void);
+
+  virtual void read_database(void) {};
+
+  virtual void read_bowing_parameters(void) {};
+ 
+  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
+  
 
   //!result Hamiltonian in k representation 
   std::vector< std::vector<MatrixElement > > Hamiltonian;
@@ -110,7 +123,34 @@ class EFAbulkHamiltonian: public PhysicalProperties
 
  private:
   
-  // MatrixElement Ham;
+
+   void set_rotation_matrix(void);
+ 
 };
+
+
+inline  EFAbulkHamiltonian* create (const std::string& name,  const ModelOptions& options)
+{
+
+  if (! (options.find_option("model_name")) )
+  {
+    std::cerr << "EFAbulkHamiltonian* EFAbulkHamiltonian::create   model_name must be specified \n"; 
+    exit(1);
+  }
+
+  const std::string&  model_name = options.get_option("model_name", ""); 
+  
+  std::string model;
+
+  if ( model_name == "kp")
+    model = "quantum_kp_" + name;
+  else if ( model_name == "sb_user_defined")
+    model = "quantum_user";
+  else if ( model_name == "conduction_band")
+    model ="quantum_cond_band_" + name; 
+  
+  return dynamic_cast<EFAbulkHamiltonian*> ( PhysicalModelInterface::create(model, options) );
+
+}
 
 #endif

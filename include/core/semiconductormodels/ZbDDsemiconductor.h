@@ -3,9 +3,10 @@
 
 
 #include "DDsemiconductor.h"
+#include "PhysicalModelInterface.h"
 #include<vector>
-#include <complex>
-#include "KPbulkHamiltonian.h" 
+#include<complex>
+
 
 //! A class to provide all neccessary parameters for drift-diffusion calculation for a zinc-blend (or diamond) crystal
 class ZbDDsemiconductor  : public DDsemiconductor
@@ -17,95 +18,15 @@ class ZbDDsemiconductor  : public DDsemiconductor
 */
 {
  public:
-  //! data structure  for zinc-blende structure parameters
-  struct ZbDDparameters
-  {
-   
-
-    double       Ev;//!< valence band averaged energy \f$  E_v^{\Gamma} \f$ [eV]
-    double EgGamma; //!< band gap \f$ E_c^{\Gamma} - E_v^{\Gamma} \f$  [eV]    
-    double EgL;     //!< band gap \f$ E_c^{L} - E_v^{\Gamma} \f$  [eV]    
-    double EgX;     //!< band gap \f$ E_c^{X} - E_v^{\Gamma} \f$   [eV]  
-    double gamma1;  //!< Luttinger \f$ \gamma_1 \f$
-    double gamma2;  //!< Luttinger \f$ \gamma_2 \f$
-    double gamma3;  //!< Luttinger \f$ \gamma_3 \f$
-    double m_t_L;   //!< transversal mass in L point of conduction band [free electron mass]
-    double m_l_L;   //!< logitudinal mass in L point of conduction band [free electron mass]
-    double m_t_X;   //!< transversal mass in X point of conduction band [free electron mass]
-    double m_l_X;   //!< logitudinal mass in X point of conduction band [free electron mass]
-    double m_G;     //!< mass in \f$ \Gamma \f$ minimum  point of conduction band 
-    double a_c;     //!< conduction band deformation potential [eV]
-    double a_v;     //!< valence band deformation potential (hydrostatic) [eV]
-    double b;       //!< valence band deformation potential b (uniaxial) [eV] 
-    double d;       //!< valence band deformation potential d (uniaxial) [eV] 
-    double def_vol_X; //!<   volume deformation potential for X point \f$ \Xi_d + \frac{1}{3}\Xi_u  \f$ [eV]
-    double def_uniax_X; //!< uniaxial deformation potential for X point \f$ \Xi_u \f$ [eV]
-    double def_vol_L;  //!<  volume deformation potential for L point \f$ \Xi_d + \frac{1}{3}\Xi_u \f$ [eV]
-    double def_uniax_L; //!< uniaxial deformation potential for L point \f$ \Xi_u \f$ [eV]
-    double delta; //!< spin-orbit \f$ \Delta \f$ [eV]
-  };
-
+ 
   
 
 
   //!Constructor  
-  ZbDDsemiconductor(void);
-  
-  //!Constructor with parameters
-  /*!
-    \param params all the necessary parameters
-   */
-  ZbDDsemiconductor(const ZbDDparameters& params);
+  ZbDDsemiconductor(void) {};
 
-  //!sets valence band top energy
-  void set_Ev(const double Ev);
-
-
-  //! sets 3 bandgaps
-  /*!
-      \param EgGamma \f$ E_g^{\Gamma} =  E_c^{\Gamma} - E_v^{\Gamma} \f$
-      \param EgL \f$ E_g^{L} = E_c^{L} - E_v^{\Gamma} \f$
-      \param EgX \f$ E_g^{X} = E_c^{X} - E_v^{\Gamma} \f$ 
-  */
-
-
-  void set_Eg(double EgGamma, double EgL, double EgX);
-
-  
-  //! sets conduction band mass (isotropic)
-  void set_mass_Gamma(double m);
-
-  //! sets logitudinal and transversal mass for L point
-  /*!
-    \param m_t transversal mass [free electron mass]
-    \param m_l logitudinal mass [free electron mass]
-   */
-  void set_masses_L(double m_t, double m_l);
-
-  //! sets logitudinal and transversal mass for x point
-  /*!
-    \param m_t transversal mass [free electron mass]
-    \param m_l logitudinal mass [free electron mass]
-   */
-  void set_masses_X(double m_t, double m_l);
-
-  //! sets parameters for the valence band \f${\bf k \cdot p}\f$ description
-  /*!
-     \param gamma1 Luttinger \f$ \gamma_1 \f$
-     \param gamma2 Luttinger \f$ \gamma_2 \f$
-     \param gamma3 Luttinger \f$ \gamma_3 \f$
-     \param delta  Spin-orbit spliting energy  \f$ \Delta \f$ [eV]  
-   */
-  void set_6x6kp_params(double gamma1, double gamma2, double gamma3, double delta);
-  
-  //! sets deformation potential for \f$ \Gamma \f$ point
-  /*!
-    \param a_c conduction band deformation potential [eV]
-    \param a_v valence band volumic deformation potential [eV]
-    \param b valence band deformation potential b [eV]
-    \param d valence band deformation potential d [eV]
-  */
-  void set_deformation_parameters(double a_c, double a_v, double b, double d);
+  //!Destructor
+  ~ZbDDsemiconductor(void) {};
 
   //! calculates information about conduction bands
   /*!
@@ -127,98 +48,32 @@ class ZbDDsemiconductor  : public DDsemiconductor
   */
   virtual void  calculate_valence_band_extremum(void);
 
-  //! Get a writeable reference to the physical parameters
-  ZbDDparameters& get_parameters(void);
-
-  //! Set the physical parameters
-  void set_parameters(const ZbDDparameters& parameters);
-  
-
-  //! Calculates k.p parameters in atomic units for 6 band valence band calculation
-
-  /*! Valence band k.p parameters:
-
-      \f$
-
-          L = \frac{1}{2} (-\gamma_1 - 4 \gamma_2 - 1)  ; \\
-
-          M = \frac{1}{2} ( 2\gamma_2 - \gamma_1  - 1 ) ;  \\
-
-          N = -3\gamma_3; \\
-
-          N_{yx} = M; \\
-
-          N_{xy} = N -  N_{yx};
-          
-      \f$
-
-      Valence band deformation potential:
-
-      \f$
-        l  =  a_v + 2b; \\
-        m  =  a_v  - b; \\
-        n  =  \sqrt{3} d. \\
-      \f$
-
-     
-      Averaged valence band energy:
-
-      \f$
-      \bar{E}_v = E_v - \frac{\Delta}{3};
-      \f$
-
-  */
- 
-  virtual KPbulkHamiltonian::KPparams calculate_6x6_kp_params (void );
-
-  //! Calculates k.p parameters in atomic units for 8 band valence band calculation (not coded yet!)
-  virtual KPbulkHamiltonian::KPparams calculate_8x8_kp_params (void );
-
-  void read_database(const Dummy&);
-
-  void build_alloy(const std::string& component2,
-			   const std::string& bowing_params, double content);
+  static ZbDDsemiconductor* create();
 
  private:
 
-  //-------------------------------------------------------------------------------//
-  //material data block:
 
 
-  ZbDDparameters  par;
+ protected:
+
+  virtual PhysicalModelInterface* create_new(void) const;
 
  
-  //---------------------------------------------------------------------------------//
-  // k.p Hamiltonian section
-
-  //! Hartree energy in eV
-  static const double Hartree;
   
-  //! k.p Hamiltonian matrix
-  std::complex<double>  Ham[6][6] ;
 
-  //! builds Hamiltonian matrix
-  void build_Hamiltonian(std::vector<double> k);
-
-
-
-  //--------------------------------------------------------------------------------//
  
 };
 
-inline
-ZbDDsemiconductor::ZbDDparameters&
-ZbDDsemiconductor::get_parameters(void)
+
+
+inline PhysicalModelInterface* ZbDDsemiconductor::create_new( ) const
 {
-  return par;
+  return ( new ZbDDsemiconductor() );
 }
 
-inline
-void
-ZbDDsemiconductor::set_parameters(const ZbDDparameters& parameters)
+inline ZbDDsemiconductor* ZbDDsemiconductor::create()
 {
-  par = parameters;
+  return new ZbDDsemiconductor();
 }
-
 
 #endif 

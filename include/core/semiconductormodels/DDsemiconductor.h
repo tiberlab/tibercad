@@ -10,28 +10,23 @@
 
 #include "tensor.h"
 #include <vector>
-#include "EFAbulkHamiltonian.h"
+#include "PhysicalModelInterface.h"
+
 #include "KPbulkHamiltonian.h"
 
-class DDsemiconductor
+class DDsemiconductor : public PhysicalModelInterface
 {
  public:
-  //! constructor
-  DDsemiconductor();
 
-  //! constructor
-  /*!
-    \param Ev top valence band edge
-    \param strain strain tensor in a crystalographic system
-    \param energy_cutoff if the conduction (valence) band edge is higher (lower) than the lowest
-    (highest) band edge by more than energy_cuttoff, then the band edge is ignored
-  */
-  DDsemiconductor( const Tensor2Sym& strain, const double energy_cutoff);
-  
-  //!sets strain tensor
-  /*!
-     \param strain strain tensor in a crystalographic system
-   */
+  //! data structure for band extremum
+  struct band_extremum
+   {
+     short degeneracy;/*!< degeneracy (including spin).*/
+     double energy;   /*!< edge energy [eV].*/
+     double mass_DOS; /*!< mass for density of states \f$ m = \left( \mathop {\rm det} \left(\frac{1}{m} \right)_{ij} \right)^{-1} \f$ */
+  };
+
+
   void set_strain(const Tensor2Sym& strain);
 
 
@@ -47,23 +42,11 @@ class DDsemiconductor
   double energy_cutoff;
   
 
- 
+  //!Constructor
+  DDsemiconductor(void);
 
   //!Desctructor
   virtual ~DDsemiconductor(void);
-
-
-  //! data structure for band extremum
-  //*!    */
-  struct band_extremum
-  {
-    short degeneracy; /*!< degeneracy (including spin).*/
-    double energy;    /*!< edge energy [eV].*/
-    double mass_DOS;  /*!< mass for density of states \f$ m = \left( \mathop {\rm det} \left(\frac{1}{m} \right)_{ij} \right)^{-1} \f$ */
-  } ;
-
- 
- 
 
 
   //! returns information about conduction bands
@@ -71,6 +54,8 @@ class DDsemiconductor
   
   //! returns information about valence bands
   const std::vector<band_extremum>& get_valence_band_energy_mass(void) const;
+
+
 
   //! calculate information about conduction bands
   virtual void  calculate_conduction_band_extremum(void) = 0;
@@ -85,50 +70,40 @@ class DDsemiconductor
     \param  k_f - final k-point
     \param  number_of_points number k-points between the initial and the final point 
    */
-  std::vector<std::vector<double> > get_valence_kp_dispersion(Tensor1 k_i, Tensor1 k_f, unsigned int number_of_points);
+  std::vector<std::vector<double> >  get_valence_kp_dispersion(Tensor1 k_i, Tensor1 k_f, unsigned int number_of_points);
 
-  std::vector< std::vector<double> >   calculate_vb_bulk_states(const std::vector<Tensor1>& k_vector) ; 
+  std::vector< std::vector<double> > calculate_vb_bulk_states(const std::vector<Tensor1>& k_vector) ; 
 
 
    //! absolute value of k-vector for DOS mass calculation [a.u.]
   double k_max;
 
-  //! Calculates k.p parameters in atomic units for 6 band valence band calculation
-  virtual KPbulkHamiltonian::KPparams   calculate_6x6_kp_params (void )=0;
-
-  //! Calculates k.p parameters in atomic units for 8 band valence band calculation
-  virtual KPbulkHamiltonian::KPparams   calculate_8x8_kp_params (void )=0;
-
-
-  //! Calculates k.p parameters in atomic units for 6 or 8 band valence band calculation
-  KPbulkHamiltonian::KPparams   calculate_kp_params (std::string kp_model );
-
-
+ 
   
-  virtual void read_database(const Dummy&)=0;
-
-  virtual void build_alloy(const std::string& component2,
-			   const std::string& bowing_params, double content)=0;
-
-  void set_data_file(const std::string& filename)
-      { _filename = filename; };
+  //! creates new object
+  static DDsemiconductor* create(const std::string& name,  const ModelOptions& options);
+ 
 
  private:
 
-  //! Hartree energy in eV
-  static const double Hartree;
+  KPbulkHamiltonian*  bulk_ham;
+
+  
    
 
  
 
  protected:
 
-  
 
+  //! Hartree energy in eV
+  static const double Hartree;
+
+  //!semiconductor
+  Semiconductor* semiconductor;
 
   //!  if \f$ ||\varepsilon_{ij}|| > 10^{-5} \f$, then true 
   bool strained ;
-
 
   //! strain tensor in crystal system
   Tensor2Sym   strain;
@@ -141,9 +116,25 @@ class DDsemiconductor
   std::vector<band_extremum>  valence_band;
 
 
-  
-  std::string _filename;
+  virtual PhysicalModelInterface* create_new(void) const;
+
+  virtual void copy_from (const PhysicalModelInterface *rhs) ;
+
+  virtual void do_init (void);
+
+  virtual void read_database(void);
+
+  virtual void read_bowing_parameters(void) {};
+ 
+  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
 
 };
+
+inline DDsemiconductor* DDsemiconductor::create(const std::string& name,  const ModelOptions& options)
+{
+  return dynamic_cast<DDsemiconductor*> (PhysicalModelInterface::create("DDsemicond_" + name ,options));
+}
+ 
+
 
 #endif

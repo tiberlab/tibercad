@@ -27,6 +27,17 @@
 #include "ZbRotatedCrystal.h"
 #include "WzRotatedCrystal.h"
 #include "MacrostrainModel.h"
+#include "ZbSemiconductor.h"
+#include "WzSemiconductor.h"
+#include "ZbDDsemiconductor.h"
+#include "WzDDsemiconductor.h"
+
+#include "SBZbCondBandBulkHamiltonian.h"
+#include "SBWzCondBandBulkHamiltonian.h"
+#include "SBuserHamiltonian.h"
+#include "KPbulkHamiltonian.h"
+
+
 
 #include <typeinfo>
 #include <iostream>
@@ -76,6 +87,25 @@ PhysicalModelInterface::create(const std::string& name,
     mod = WzRotatedCrystal::create();
   else if (name == "macrostrain")
     mod = MacrostrainModel::create();
+  else if (name == "semicond_zb")
+    mod = ZbSemiconductor::create();
+  else if (name == "semicond_wz")
+    mod = WzSemiconductor::create();
+  else if (name == "quantum_kp")
+    mod = KPbulkHamiltonian::create();
+  else if (name == "quantum_cond_band_zb")
+    mod = SBZbCondBandBulkHamiltonian::create();
+  else if (name == "quantum_cond_band_wz")
+    mod = SBWzCondBandBulkHamiltonian::create();
+  else if (name == "quantum_user")
+    mod = SBuserHamiltonian::create();
+  else if (name == "DDsemicond_zb")
+    mod = ZbDDsemiconductor::create();
+  else if (name == "DDsemicond_zb")
+    mod = WzDDsemiconductor::create();
+
+  
+ 
 
 
 

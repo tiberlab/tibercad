@@ -1,10 +1,8 @@
-#include "ZbDDsemiconductor.h"
-#include "WzDDsemiconductor.h"
 #include "KPbulkHamiltonian.h"
 #include "getpot.h"
 #include "Alloy.h"
+#include "PhysicalModelInterface.h"
 
- 
 
 using namespace std;
 //==================================================================
@@ -50,24 +48,48 @@ void KPbulkHamiltonian::nullify_parameters(void)
 //================================================================
 KPbulkHamiltonian::~KPbulkHamiltonian()
 {
-  delete(semiconductor);
+  PhysicalModelInterface::destroy(semiconductor);
 }
-  
+
+
+//================================================================
+
+KPbulkHamiltonian::KPbulkHamiltonian( )
+{
+
+ semiconductor = NULL;
+
+} 
 
 
 
 //=================================================================
 
-KPbulkHamiltonian::KPbulkHamiltonian(const string model) : EFAbulkHamiltonian()
+void KPbulkHamiltonian::do_init() 
 {
-  
-  semiconductor = NULL;
 
-  model_name = model;
+  EFAbulkHamiltonian::do_init();
+  
+  const ModelOptions& opt =  get_options ();
+
+  PhysicalModelInterface::destroy(semiconductor);
+
+  semiconductor = Semiconductor::create( get_material() -> get_structure(), opt  );
+
+  semiconductor->set_material(get_material());
+
+  semiconductor->init();
+
+  model_name = opt.get_option("kp_model","6x6");
+
+  kpVVtermSymmetric = opt.get_option("kpVVtermSymmetric", false);
+
+  kpCVtermSymmetric = opt.get_option("kpCVtermSymmetric", true);
+  
 
   nullify_parameters();
 
-  if (model == "6x6")
+  if (model_name == "6x6")
     {
       band_min = 2;
       band_max = 7;
@@ -75,98 +97,46 @@ KPbulkHamiltonian::KPbulkHamiltonian(const string model) : EFAbulkHamiltonian()
     }
   else
     { 
-      if (model == "8x8")
+      if (model_name == "8x8")
 	{
 	  band_min = 0;
 	  band_max = 7;
 	}
       else
 	{
-	  cerr << "Wrong kp model:  " << model << "\n";
+	  cerr << "Wrong kp model:  " << model_name << "\n";
 	  exit(1);
 	}
     }
 
   short i1 = 0;
+
   for (short i = band_min; i <= band_max; i++) 
     {
       kp_bands.push_back(i);
       kp_bands_map.insert(make_pair (i,i1) );
       i1++;
     }
-    
-}
-//=================================================================//
 
-KPbulkHamiltonian::KPbulkHamiltonian(void) : EFAbulkHamiltonian()
-{
-  nullify_parameters();
-  semiconductor = NULL;
-  band_min = 0;
-  band_max = 7;
+  //prepare k.p parameter
+  par = semiconductor->calculate_kp_params (model_name);
 
-  short i1 = 0;
-  for (short i = band_min; i <= band_max; i++) 
-    {
-      kp_bands.push_back(i);
-      kp_bands_map.insert(make_pair (i,i1) );
-      i1++;
-    }
-}
-//==================================================================//
+  //nullify strain
+  strainM = Tensor2Sym(0);
 
-KPbulkHamiltonian::KPbulkHamiltonian(const KPbulkHamiltonian& kp_ham)
-{
-  semiconductor = kp_ham.semiconductor;
-  par = kp_ham.par;
-  band_min = kp_ham.band_min;
-  band_max = kp_ham.band_max;
-  Ham = kp_ham.Ham;
-  _filename = kp_ham._filename;
-  model_name = kp_ham.model_name;
-  kp_bands =  kp_ham.kp_bands;
-  kp_bands_map =  kp_ham.kp_bands_map; 
-}
-
-//==================================================================//
-void KPbulkHamiltonian::read_database(const Dummy& dd)
-{
   
-  GetPot data(_filename);
-  const std::string structure = data("structure", "wz");
-
- 
-
-  if (structure == "zb")
-    {
-      
-      ZbDDsemiconductor* zbsc = new ZbDDsemiconductor();
-      semiconductor = zbsc;
-      
-    }
-
-  if (structure == "wz")
-    {
-      
-      WzDDsemiconductor* wzsc = new WzDDsemiconductor();
-      semiconductor =  wzsc;
-     
-    
-    }
-
-  semiconductor->read_database(dd);
-  par = semiconductor->calculate_kp_params (model_name);
-
- 
+  //calculate general Hamiltonian 
+  calculate_Hamiltonian_gen();
 
 }
 //==================================================================//
-void KPbulkHamiltonian::build_alloy(const std::string& component2,
-			   const std::string& bowing_params, double content)
+void KPbulkHamiltonian::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
- 
-  semiconductor->build_alloy( component2, bowing_params, content);
-  par = semiconductor->calculate_kp_params (model_name);
+  const KPbulkHamiltonian* modA = dynamic_cast<const KPbulkHamiltonian*> (comp_A);
+  const KPbulkHamiltonian* modB = dynamic_cast<const KPbulkHamiltonian*> (comp_B);
+
+
+  semiconductor->build_alloy(modA->semiconductor, modB->semiconductor, xa);
 
 }
 
@@ -622,13 +592,9 @@ void KPbulkHamiltonian::calculate_optical_operator_k_par(void)
 }
 
 
+ 
 
 
-//-------------------------------------------------------//
-void KPbulkHamiltonian::set_parameters(const KPbulkHamiltonian::KPparams&  par1)
-{
-  par = par1;
-}
 
 //-------------------------------------------------------//
 const std::vector< std::vector <std::vector<EFAbulkHamiltonian::MatrixElement> > > & KPbulkHamiltonian::get_optical_operator() const

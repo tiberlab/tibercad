@@ -630,8 +630,9 @@ void Macrostrain::do_assemble(EquationSystems& es,
 		  fe_face->reinit(elem, side);
 			         
 		  for (unsigned int qp=0; qp<qface.n_points(); qp++)
-		  {				  
-		    Fe_sub(p1) += ((JxW_face[qp] * phi_face[p1][qp])
+		  {
+		    //why minus? because pressure = -stress (points into the region)
+		    Fe_sub(p1) -= ((JxW_face[qp] * phi_face[p1][qp])
 				   * press->get_value() ) * normal[qp](j);
 		  } 
 		  
@@ -647,7 +648,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 		    normal = -1.0;
 		  
 		  
-		  Fe_sub(p1) +=  press->get_value() * normal;
+		  Fe_sub(p1) -=  press->get_value() * normal;
 		}
 		  
 	      }

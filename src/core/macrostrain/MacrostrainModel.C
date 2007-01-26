@@ -31,7 +31,8 @@ void MacrostrainModel::do_init()
 {
 
   
- 
+  PhysicalModelInterface::destroy(stiffness);
+  PhysicalModelInterface::destroy(piezo);
 
   const ModelOptions& opt =  get_options ();
 
@@ -55,7 +56,7 @@ void MacrostrainModel::do_init()
 //================================================================//
 void MacrostrainModel::copy_from(const PhysicalModelInterface *rhs)
 {
- 
+ /*
   // copy is not necessary as they are created in do_init()
   
   //const  MacrostrainModel*   temp = dynamic_cast<const MacrostrainModel* >  (rhs);
@@ -63,7 +64,7 @@ void MacrostrainModel::copy_from(const PhysicalModelInterface *rhs)
   //stiffness = dynamic_cast<Stiffness* >( (temp->stiffness)->copy() );
 
   //piezo =  dynamic_cast<Piezoelectricity* >(  (temp->piezo)->copy() );
-  
+  */
 
 }
 

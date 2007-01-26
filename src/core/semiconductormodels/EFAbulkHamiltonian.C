@@ -1,18 +1,36 @@
 #include "EFAbulkHamiltonian.h"
-
+#include "RotatedCrystal.h"
+#include "Material.h" 
 using namespace std; 
 
-const double
-EFAbulkHamiltonian::Hartree = 27.2113961;
-
-EFAbulkHamiltonian::EFAbulkHamiltonian() : PhysicalProperties("EFAbulkHamiltonian")
+const double EFAbulkHamiltonian::Hartree = 27.2113961;
+//------------------------------------------------------------//
+void EFAbulkHamiltonian::do_init()
 {
+
+  std::vector <double> k(3, 0.0);
+  ModelOptions & options = get_options ();
+  options.get_option ("k", k);
+
+  k_vector[0] =  k[0];
+  k_vector[1] =  k[1];
+  k_vector[2] =  k[2];
+
+
+  set_rotation_matrix();
  
- k_vector[0] =  0.0;
- k_vector[1] =  0.0;
- k_vector[2] =  0.0;
 }
 
+
+
+//-------------------------------------------------------------//
+EFAbulkHamiltonian::EFAbulkHamiltonian() 
+{
+ 
+
+}
+
+//------------------------------------------------------------//
 
 void EFAbulkHamiltonian::set_k_vector (const double k_vector_in[3])
 {
@@ -30,7 +48,25 @@ void EFAbulkHamiltonian::set_k_vector (Tensor1 k_vector_in)
 
 
 }
+//---------------------------------------------------------------//
+void EFAbulkHamiltonian::copy_from (const PhysicalModelInterface *rhs)
+{
+  const EFAbulkHamiltonian* mod = dynamic_cast<const EFAbulkHamiltonian*> (rhs);
 
+  for (short i = 0; i < 3; i++)  k_vector[i] = mod->k_vector[i];
+
+  kp_bands = mod->kp_bands;
+
+  kp_bands_map = mod->kp_bands_map;
+
+  Hamiltonian = mod->Hamiltonian;
+
+  Hamiltonian_without_strain_pot = mod->Hamiltonian_without_strain_pot; 
+  
+
+}
+
+//---------------------------------------------------------------//
 
 
 std::vector< std::vector<EFAbulkHamiltonian::MatrixElement > >& EFAbulkHamiltonian::get_Hamiltonian(void)
@@ -39,9 +75,16 @@ std::vector< std::vector<EFAbulkHamiltonian::MatrixElement > >& EFAbulkHamiltoni
 }
 
 
-void EFAbulkHamiltonian::set_rotation_matrix(Tensor2Gen& rotmatrix)
+void EFAbulkHamiltonian::set_rotation_matrix()
 
 {
+
+  const Material* mat =	get_material();
+  
+  const RotatedCrystal& cr = mat->get_rotated_crystal ();
+
+  Tensor2Gen rotmatrix = cr.RotMatrix;
+
   for (short i = 0; i < 3; i++)
      for (short j = 0; j < 3; j++)
        rot_matrix[i][j] = rotmatrix(i+1,j+1);
@@ -94,31 +137,10 @@ void EFAbulkHamiltonian::rotate_quad(std::complex<double> matrix[][3])
  
      
 }
-//-------------------------------------------------------//
-//virtual methods of  PhysicalProperties
-//--------------------------------------------------------//
-void EFAbulkHamiltonian::read_database (const Dummy &db)
-{
-
-
-}
 //--------------------------------------------------------//
 
-void EFAbulkHamiltonian::read_database_bowing_parameters (const Dummy &db)
-{
 
 
-}
-  
-
-//---------------------------------------------------------//
-
-void  EFAbulkHamiltonian::set_properties_alloy (const PhysicalProperties *prop_comp1, 
-						const PhysicalProperties *prop_comp2, double molar_fraction)
-{
-
-
-}
 
 
 //---------------------------------------------------------// 
