@@ -86,6 +86,7 @@ class DDsemiconductor : public PhysicalModelInterface
 
  private:
 
+  //! a pointer to an object that can calculate the valence band properties 
   KPbulkHamiltonian*  bulk_ham;
 
   
@@ -99,7 +100,7 @@ class DDsemiconductor : public PhysicalModelInterface
   //! Hartree energy in eV
   static const double Hartree;
 
-  //!semiconductor
+  //!pointer to an object that can calculate the conduction band properties 
   Semiconductor* semiconductor;
 
   //!  if \f$ ||\varepsilon_{ij}|| > 10^{-5} \f$, then true 
