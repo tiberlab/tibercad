@@ -14,9 +14,9 @@ searchpath = ../materials
 crystal_structure = wz
 #y-dir = [1,1,1]
 #x-dir = [-2,1,1]
-x-dir = [1,0,-1,0]
-y-dir = [-1,2,-1,0]
-z-dir = [0,0,0,1]
+z-dir = [1,0,-1,0]
+x-dir = [-1,2,-1,0]
+y-dir = [0,0,0,1]
 material = InGaN
 molar_fraction = 0.05
 

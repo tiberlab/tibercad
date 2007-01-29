@@ -223,8 +223,6 @@ vector< vector<double> > DDsemiconductor::calculate_vb_bulk_states(const vector<
 
   }
 
-  PhysicalModelInterface::destroy(bulk_ham);
-   
   return(result);
 }
 
