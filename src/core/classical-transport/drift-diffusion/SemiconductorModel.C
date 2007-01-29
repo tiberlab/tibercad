@@ -94,7 +94,6 @@ SemiconductorModel::calculate_VCA(const PhysicalModelInterface* comp_A,
   permittivity = alloy(scA->permittivity, scB->permittivity,
         xa, 0.0);
 
-  
 }
 
 

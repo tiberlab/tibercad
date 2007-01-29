@@ -26,7 +26,7 @@ class  WzDDsemiconductor : public DDsemiconductor
   WzDDsemiconductor(void) {};
 
   //Destructor
-  ~WzDDsemiconductor(void) {};
+  virtual ~WzDDsemiconductor(void) {};
 
  
   //! calculates information about conduction bands

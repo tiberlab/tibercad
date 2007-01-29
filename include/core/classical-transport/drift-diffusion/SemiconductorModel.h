@@ -144,10 +144,7 @@ SemiconductorModel::copy_from(const PhysicalModelInterface* rhs)
 
   const SemiconductorModel* mod = dynamic_cast<const SemiconductorModel*>(rhs);
   _is_prepared = mod->_is_prepared;
-  // TODO uncomment
-  //delete _bulk_model;
-  //_bulk_model = (mod->_bulk_model).copy();
-  _bulk_model = mod->_bulk_model;
+
 }
 
 
