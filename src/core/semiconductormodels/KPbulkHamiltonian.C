@@ -128,6 +128,9 @@ void KPbulkHamiltonian::do_init()
   //calculate general Hamiltonian 
   calculate_Hamiltonian_gen();
 
+  //apply k|| vector (even if it is zero-vector !!!)
+  calculate_Hamiltonian_k_par();
+
 }
 //==================================================================//
 void KPbulkHamiltonian::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
