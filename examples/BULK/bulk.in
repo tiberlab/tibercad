@@ -23,7 +23,7 @@ molar_fraction = 0.05
 substrate_material = GaN
 substrate_molar_fraction = 0.0
 
-shape_steps = 3
+shape_steps = 0
 
 statistics = B
 

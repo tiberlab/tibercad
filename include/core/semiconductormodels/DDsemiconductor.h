@@ -130,9 +130,14 @@ class DDsemiconductor : public PhysicalModelInterface
 
 };
 
-inline DDsemiconductor* DDsemiconductor::create(const std::string& name,  const ModelOptions& options)
+
+
+
+inline DDsemiconductor* DDsemiconductor::create(const std::string& name,
+    const ModelOptions& options)
 {
-  return dynamic_cast<DDsemiconductor*> (PhysicalModelInterface::create("DDsemicond_" + name ,options));
+  return dynamic_cast<DDsemiconductor*>(
+      PhysicalModelInterface::create("DDsemicond_" + name, options));
 }
  
 

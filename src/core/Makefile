@@ -4,7 +4,8 @@
 topdir := ../..
 
 # we have to compile each module
-subdirs := classical-transport macrostrain semiconductormodels solver-interfaces
+subdirs := classical-transport macrostrain semiconductormodels
+subdirs += solver-interfaces selfconsistency
 
 include $(topdir)/Make.common
 

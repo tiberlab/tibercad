@@ -3,7 +3,7 @@
 
 topdir := ../
 
-subdirs := BULK MESFET PNDIODE_1D
+subdirs := BULK MESFET PNDIODE
 
 include $(topdir)/Make.common
 

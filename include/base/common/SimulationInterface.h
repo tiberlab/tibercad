@@ -90,6 +90,12 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     bool is_solved(void) const;
 
+    //! Set the relaxation factor
+    void set_relaxation_factor(double relax);
+
+    //! Get the relaxation factor
+    double get_relaxation_factor(void);
+
 
   protected:
 
@@ -147,6 +153,9 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! A flag indicating that a simulation has be done
     bool _is_solved;
+
+    //! For self-consistent calculations this could be useful
+    double _relaxation_factor;
 
     //! The ID of this simulation
     /*!
@@ -247,6 +256,21 @@ SimulationInterface::is_solved(void) const
   return _is_solved;
 }
 
+
+inline
+void
+SimulationInterface::set_relaxation_factor(double relax)
+{
+  _relaxation_factor = relax;
+}
+
+
+inline
+double
+SimulationInterface::get_relaxation_factor(void)
+{
+  return _relaxation_factor;
+}
 
 
 #endif // _SIMULATIONINTERFACE_H_

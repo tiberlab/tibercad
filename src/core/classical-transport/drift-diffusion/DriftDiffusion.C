@@ -170,8 +170,7 @@ DriftDiffusion::SolverParameters::operator=(const SolverParameters& rhs)
 
 
 DriftDiffusion::DriftDiffusion(void)
-  : _rebuild_eq_system(true),
-    _relaxation_factor(1.0)
+  : _rebuild_eq_system(true)
 {
 }
 
@@ -235,6 +234,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     mu = sc->get_electron_mobility();
     mu0 = (mu0 > mu) ? mu0 : mu;
 
+    // I don't know what is better...
     double C = fabs(sc->get_net_doping_density());
     //double C = fabs(sc->get_ionized_donor_density() -
     //    sc->get_ionized_acceptor_density());
@@ -693,6 +693,13 @@ DriftDiffusion::parse_const_options(void)
   else
     myopts.current_calculation = RSTF;
 
+  string scaling = opts.get_option("scaling", "");
+  if (method == "demari")
+    myopts.scaling_type = Scaling::DEMARI;
+  else if (method == "none")
+    myopts.scaling_type = Scaling::NONE;
+  else
+    myopts.scaling_type = Scaling::UNITS;
 }
 
 void
@@ -706,7 +713,9 @@ DriftDiffusion::parse_options(void)
   const ModelOptions& opts = SimulationInterface::get_options();
   Options& myopts = get_options();
 
-  myopts.min_voltage_step = opts.get_option("min_voltage_step", 2e-3);
+  myopts.min_voltage_step = opts.get_option("min_voltage_step", 
+      myopts.min_voltage_step);
+
   myopts.integration_order = static_cast<libMeshEnums::Order>(
       opts.get_option("integration_order", 5));
 
@@ -732,17 +741,25 @@ DriftDiffusion::parse_options(void)
     myopts.scheme = FEMVARIANT;
 
 
-  myopts.mesh_refinement = opts.get_option("mesh_refinement", false);
+  myopts.mesh_refinement = opts.get_option("mesh_refinement",
+      myopts.mesh_refinement);
 
-  solver_params.nonlinear_tolerance = opts.get_option("nonlin_rel_tol", 1e-15);
+
+  solver_params.nonlinear_tolerance = opts.get_option("nonlin_rel_tol",
+      solver_params.nonlinear_tolerance);
   solver_params.nonlinear_abs_tolerance = opts.get_option("nonlin_abs_tol",
-      1e-18);
+      solver_params.nonlinear_abs_tolerance);
   solver_params.nonlinear_step_tolerance = opts.get_option("nonlin_step_tol",
-      1e-6);
-  solver_params.nonlinear_max_iterations = opts.get_option("nonlin_max_it", 10);
-  solver_params.linear_tolerance = opts.get_option("lin_rel_tol", 1e-6);
-  solver_params.linear_abs_tolerance = opts.get_option("lin_abs_tol", 1e-12);
+      solver_params.nonlinear_step_tolerance);
+  solver_params.nonlinear_max_iterations = opts.get_option("nonlin_max_it",
+      solver_params.nonlinear_max_iterations);
+  solver_params.linear_tolerance = opts.get_option("lin_rel_tol",
+      solver_params.linear_tolerance);
+  solver_params.linear_abs_tolerance = opts.get_option("lin_abs_tol",
+      solver_params.linear_abs_tolerance);
   solver_params.linear_max_iterations = opts.get_option("lin_max_it", 500);
+
+
 
   string ksptype = opts.get_option("ksp_type", "");
   if (ksptype == "") {}
@@ -1287,8 +1304,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   const NumericVector<Number>& ddsol = *(system->solution);
   const NumericVector<Number>& old_ddsol = system->get_vector("old solution");
-  double a = _relaxation_factor;
-  double b = 1 - _relaxation_factor;
+  double a = get_relaxation_factor();
+  double b = 1 - get_relaxation_factor();
 
   const unsigned int dim = get_mesh().mesh_dimension();
 

@@ -19,7 +19,8 @@ SimulationInterface::_simulation_map;
 SimulationInterface::SimulationInterface(void)
   : _environment(0),
     _is_initialized(false),
-    _is_solved(false)
+    _is_solved(false),
+    _relaxation_factor(1.0)
 {
   ID new_id = _simulation_map.size() + 1;
   _id = new_id;

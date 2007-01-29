@@ -189,9 +189,6 @@ class ExcitonTransport : public SimulationInterface
     };
 
 
-    //! Underrelaxation if doing gummel schemes
-    double _relaxation_factor;
-
     //! Destructor
     ~ExcitonTransport(void);
 

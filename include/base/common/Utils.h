@@ -68,6 +68,16 @@ Utils::convert<int>(const std::string& val)
   return (int) convert<double>(val);
 }
 
+
+template<>
+inline
+unsigned int
+Utils::convert<unsigned int>(const std::string& val)
+{
+  return (unsigned int) convert<double>(val);
+}
+
+
 template<>
 inline
 char

@@ -44,9 +44,9 @@ void DDsemiconductor::do_init ()
 
   PhysicalModelInterface::destroy(semiconductor);
   
-  semiconductor = Semiconductor::create(get_material() -> get_structure(), opt);
+  semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
 
-  semiconductor -> init();
+  semiconductor->init();
   
   PhysicalModelInterface::destroy(bulk_ham);
 
@@ -54,7 +54,14 @@ void DDsemiconductor::do_init ()
   kp_options["model_name"] = "kp";
   kp_options["kp_model"] = "6x6";
 
-  bulk_ham = dynamic_cast<KPbulkHamiltonian*> (EFAbulkHamiltonian::create(get_material() -> get_structure() , kp_options));
+  bulk_ham = dynamic_cast<KPbulkHamiltonian*>(
+      EFAbulkHamiltonian::create(get_material()->get_structure(), kp_options));
+
+  if (bulk_ham == NULL)
+    throw InitFailedException("EFAbulkHamiltonian: Unknown structure " +
+        get_material()->get_structure());
+
+  bulk_ham->set_material(get_material());
    
   bulk_ham->init();
   
@@ -75,7 +82,7 @@ void DDsemiconductor::read_database(void)
 //---------------------------------------------------------------------------------------------//
 void DDsemiconductor::copy_from (const PhysicalModelInterface *rhs)
 {
-    const DDsemiconductor* mod = dynamic_cast<const DDsemiconductor*> (rhs);
+    const DDsemiconductor* mod = dynamic_cast<const DDsemiconductor*>(rhs);
   
     strain = mod->strain;
     energy_cutoff = mod->energy_cutoff;
@@ -88,8 +95,8 @@ void DDsemiconductor::copy_from (const PhysicalModelInterface *rhs)
 void DDsemiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
  
-  const DDsemiconductor* modA = dynamic_cast<const DDsemiconductor*> (comp_A);
-  const DDsemiconductor* modB = dynamic_cast<const DDsemiconductor*> (comp_B);
+  const DDsemiconductor* modA = dynamic_cast<const DDsemiconductor*>(comp_A);
+  const DDsemiconductor* modB = dynamic_cast<const DDsemiconductor*>(comp_B);
  
  
   

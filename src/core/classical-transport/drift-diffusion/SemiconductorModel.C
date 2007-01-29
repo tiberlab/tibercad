@@ -37,11 +37,14 @@ SemiconductorModel::do_init(void)
 
   PhysicalModelInterface::destroy(_bulk_model);
 
-  _bulk_model = DDsemiconductor::create( get_material() -> get_structure(), opt  );
+  _bulk_model = DDsemiconductor::create(get_material()->get_structure(), opt);
 
-  _bulk_model ->set_material(get_material());
+  if (_bulk_model == NULL)
+    throw InitFailedException("Unknown structure for DDsemiconductor");
 
-  _bulk_model ->init();
+  _bulk_model->set_material(get_material());
+
+  _bulk_model->init();
   
 }
 
@@ -59,22 +62,15 @@ SemiconductorModel::read_database(void)
   GetPot data((mat->get_database()).get_data_file());
 
   permittivity = data("permittivity", 12.93);
-  
  
 
   if (get_material()->get_structure() == "zb")
   {
-   
-
     permittivity = data("permittivity", 12.93);
-
   }
   else
   {
-    
     permittivity = data("permittivity", 9.5);
-
-  
   }
 }
 

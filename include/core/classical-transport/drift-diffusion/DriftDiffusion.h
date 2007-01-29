@@ -304,9 +304,6 @@ class DriftDiffusion : public SimulationInterface
     };
       
 
-    //! Underrelaxation if doing gummel schemes
-    double _relaxation_factor;
-
     //! Destructor
     virtual ~DriftDiffusion(void);
 

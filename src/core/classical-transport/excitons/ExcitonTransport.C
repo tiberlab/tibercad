@@ -134,8 +134,7 @@ ExcitonTransport::SolverParameters::operator=(const SolverParameters& rhs)
 
 
 ExcitonTransport::ExcitonTransport(void)
-  : _rebuild_eq_system(true),
-    _relaxation_factor(1.0)
+  : _rebuild_eq_system(true)
 {
 }
 
@@ -566,8 +565,8 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   const NumericVector<Number>& ddsol = *(system->solution);
   const NumericVector<Number>& old_ddsol = system->get_vector("old solution");
-  double a = _relaxation_factor;
-  double b = 1 - _relaxation_factor;
+  double a = get_relaxation_factor();
+  double b = 1 - a;
 
   const unsigned int dim = get_mesh().mesh_dimension();
 

@@ -4,21 +4,19 @@ $Options
 
 # mesfet example
 
-searchpath = ../
+searchpath = ../materials
 
 #meshfile=mesfet.msh
-meshfile=mesfet_mdr.grd
-#meshfile=fet_mdr.grd
+#meshfile=mesfet_mdr.grd
+meshfile=fet_mdr.grd
 format=ise
 
 # units are um
 mesh_units = 1e-4
 
-statistics = B
+statistics = FD
 
-# = 0 means solve only for electrons
-# = 1 means solve electrons and holes
-fully_coupled = 1
+coupling = electrons
 
 # apply unit scaling
 scaling = 1
@@ -35,19 +33,20 @@ vg_steps = 5;
 #vg_stop = 1.0;
 #vg_steps = 50;
 # for output characteristic
-vds_stop = 1.0;
-vds_steps = 20;
+vds_stop = 5.0;
+vds_steps = 100;
 
-nonlinear_tolerance = 1e-6
+nonlinear_tolerance = 1e-9
+nonlinear_abs_tolerance = 1e-6
 nonlinear_ls_maxstep = 0.05
 #min_voltage_step = 1e-3
 ls_type = cubic
 linear_tolerance = 1e-6
 linear_max_it = 1000
-nonlinear_max_it = 15
-integration_order = 5
-ksp_type = bcgsl
-pc_type = composite
+nonlinear_max_it = 20
+integration_order = 11
+ksp_type = bcgs
+pc_type = ilu
 
 max_refinement_steps=0
 refine_fraction=0.8

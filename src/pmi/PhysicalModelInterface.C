@@ -101,7 +101,7 @@ PhysicalModelInterface::create(const std::string& name,
     mod = SBuserHamiltonian::create();
   else if (name == "DDsemicond_zb")
     mod = ZbDDsemiconductor::create();
-  else if (name == "DDsemicond_zb")
+  else if (name == "DDsemicond_wz")
     mod = WzDDsemiconductor::create();
 
    

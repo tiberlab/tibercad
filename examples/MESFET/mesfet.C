@@ -49,7 +49,7 @@ int main (int argc, char** argv)
     string format = input("format", "gmsh");
     string mesh_units = input("mesh_units", "1e-4");
 
-    int fully = input("fully_coupled", 1);
+    string coupling = input("coupling", "full");
 
     string schottky_barrier = input("schottky_barrier", "0.8");
     
@@ -68,6 +68,7 @@ int main (int argc, char** argv)
 
 
     string nonlin_rtol = input("nonlinear_tolerance", "1e-9");
+    string nonlin_atol = input("nonlinear_abs_tolerance", "1e-9");
     string lin_rtol = input("linear_tolerance", "1e-12");
     string integration_order = input("integration_order", "5");
     string nonlin_max_it = input("nonlinear_max_it", "15");
@@ -126,14 +127,16 @@ int main (int argc, char** argv)
       dd_opts["nonlin_max_it"] = "100";
       dd_opts["lin_max_it"] = lin_max_it;
       dd_opts["nonlin_rel_tol"] = nonlin_rtol;
+      dd_opts["nonlin_abs_tol"] = nonlin_atol;
       dd_opts["lin_rel_tol"] = lin_rtol;
       dd_opts["integration_order"] = integration_order;
-      dd_opts["ls_type"] = ls_type;
-      //dd_opts["ls_type"] = "cubic";
+      //dd_opts["ls_type"] = ls_type;
+      dd_opts["ls_type"] = "cubic";
       dd_opts["ls_maxstep"] = nonlin_ls_maxstep;
       dd_opts["mesh_units"] = mesh_units;
       dd_opts["pc_type"] = pc_type;
       dd_opts["ksp_type"] = ksp_type;
+      //dd_opts["scaling"] = "demari";
       dd_ptr = SimulationInterface::create("drift-diffusion", dd_opts);
     }
 
@@ -142,7 +145,7 @@ int main (int argc, char** argv)
     DriftDiffusionProperties* sub = 
       DriftDiffusionProperties::create("unstrained");
     {
-      sub->add_dopant(new Dopant(1e19, 0.01, 4, Dopant::P_TYPE));
+      sub->add_dopant(new Dopant(5e18, 0.01, 4, Dopant::P_TYPE));
       ModelOptions opts;
       opts["tau_n"] = "2e-9";
       opts["tau_p"] = "6e-10";
@@ -174,7 +177,7 @@ int main (int argc, char** argv)
     DriftDiffusionProperties* contact = 
       DriftDiffusionProperties::create("unstrained");
     {
-      contact->add_dopant(new Dopant(5e19, 0.025, 2, Dopant::N_TYPE));
+      contact->add_dopant(new Dopant(1e19, 0.025, 2, Dopant::N_TYPE));
       ModelOptions opts;
       opts["tau_n"] = "2e-9";
       opts["tau_p"] = "6e-10";
@@ -189,7 +192,7 @@ int main (int argc, char** argv)
     DriftDiffusionProperties* contact2 = 
       DriftDiffusionProperties::create("unstrained");
     {
-      contact2->add_dopant(new Dopant(5e19, 0.025, 2, Dopant::N_TYPE));
+      contact2->add_dopant(new Dopant(1e19, 0.025, 2, Dopant::N_TYPE));
       ModelOptions opts;
       opts["tau_n"] = "2e-9";
       opts["tau_p"] = "6e-10";
@@ -238,9 +241,11 @@ int main (int argc, char** argv)
 
     
     ModelOptions ctopts;
+    ctopts["zero_grad_fermi_h"] = "true";
     ElectricalContact* source = ElectricalContact::create("ohmic", ctopts);
     ElectricalContact* drain = ElectricalContact::create("ohmic", ctopts);
     ctopts["schottky_barrier"] = schottky_barrier;
+    //ctopts["zero_grad_fermi_e"] = "true";
     ElectricalContact* gate = ElectricalContact::create("schottky", ctopts);
 
     bd_source = new Boundary("source");
@@ -296,7 +301,7 @@ int main (int argc, char** argv)
     {
       ModelOptions dd_opts;
       dd_opts["nonlin_max_it"] = nonlin_max_it;
-      dd_opts["coupling"] = "full";
+      dd_opts["coupling"] = coupling;
       dd_opts["ls_type"] = ls_type;
       dd_ptr->set_options(dd_opts);
     }
@@ -364,7 +369,7 @@ int main (int argc, char** argv)
           dd.solve();
           dd.remember_current_solution();
           dd_opts["nonlin_max_it"] = nonlin_max_it;
-          dd_opts["coupling"] = "full";
+          dd_opts["coupling"] = coupling;
           dd_ptr->set_options(dd_opts);
         }
 

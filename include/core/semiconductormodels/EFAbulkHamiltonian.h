@@ -143,12 +143,13 @@ inline  EFAbulkHamiltonian* EFAbulkHamiltonian::create (const std::string& name,
   std::string model;
 
   if ( model_name == "kp")
-    model = "quantum_kp_" + name;
+    //model = "quantum_kp_" + name;
+    model = "quantum_kp";
   else if ( model_name == "sb_user_defined")
     model = "quantum_user";
   else if ( model_name == "conduction_band")
     model ="quantum_cond_band_" + name; 
-  
+
   return dynamic_cast<EFAbulkHamiltonian*> ( PhysicalModelInterface::create(model, options) );
 
 }
