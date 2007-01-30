@@ -44,6 +44,14 @@ class ModelStructure{
    */
   map  <ID,  map <string,string> >&  get_model_BC_map();
 
+  //!  Gets a map  with physical model info 
+  /*!
+   * Returns a map which associates physical model name  with a string property 
+   * (e.g. "active" or submodel name )
+   */
+  map  <string,string>& get_phys_model_map();
+
+
 
   //!  Sets an internal map with Boundary Conditions definitions associated to each BC ID. 
   /*!
@@ -51,6 +59,15 @@ class ModelStructure{
    * each   Boundary Condition  region.
    */
   void set_model_BC_map( map  <ID,  map <string,string> >& id_BC_regions_map   );
+
+  //!  Sets an internal map with physical model info 
+  /*!
+   * Creates  a map which associatesa physivcal model name  with a string property 
+   * (e.g. "active" or submodel name )
+   */
+  void set_phys_model_map( map <string,string>& physical_model_map );
+
+
 
 
   //!  Gets a  vector with the physical regions IDs of this model. 
@@ -85,6 +102,13 @@ class ModelStructure{
    * each   Boundary Condition  region.
    */
   map  <unsigned int,  map <string,string>   >  model_BC_map;
+
+  /*! Map of  the  physical models associated with the  current simulation model:
+   *  <physical_model_name, property>; property can  be just a flag for activation of  physical model or 
+   *  the  name of a specification of the physical model
+   */
+  map  <string,string>   phys_model_map;
+
 
   //!  Sets  the name of the model.
   void set_model_name(string& model);

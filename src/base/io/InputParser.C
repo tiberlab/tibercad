@@ -516,7 +516,7 @@ void InputParser::parse_options(ifstream& in_stream )
           for (int i =0; i< v_label_string.size();++i)
           {
             string_prop_labels.push_back(v_label_string[i]);
-          //cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+            //cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
 
             string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
           }
@@ -582,8 +582,8 @@ void InputParser::parse_options(ifstream& in_stream )
       //   termination condition  !!!
       else if  (parse(str.c_str(),  *(space_p)>>ch_p("}")   , space_p).full) 
       {  
-       //  cout << endl ;
-//         cout <<  "Fine  !" << endl ;
+        //  cout << endl ;
+        //         cout <<  "Fine  !" << endl ;
         //   if (name == "a")
         break;
       }
@@ -602,7 +602,7 @@ void InputParser::parse_options(ifstream& in_stream )
           for (int i =0; i< v_label_string.size();++i)
           {
             string_prop_labels.push_back(v_label_string[i]);
-          //  cout <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+            //  cout <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
 
             string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
           }
@@ -610,7 +610,7 @@ void InputParser::parse_options(ifstream& in_stream )
 	     
 
         // cout << endl ;
-//         cout <<  "Fine device !!! !" << endl ;
+        //         cout <<  "Fine device !!! !" << endl ;
         break;
 
     
@@ -718,7 +718,7 @@ void InputParser::read_device( )
     in_stream >> keyword; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
   } 
 
-//  cout <<  " region_k = " << keyword <<  endl; 
+  //  cout <<  " region_k = " << keyword <<  endl; 
 
  
 
@@ -737,7 +737,7 @@ void InputParser::read_device( )
     //     read   region_name
     in_stream >>region_name;
 
-  //  cout <<  " region_name = " << region_name <<  endl; 
+    //  cout <<  " region_name = " << region_name <<  endl; 
     
     //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
     while (skip_comments(in_stream,region_name) == true )
@@ -760,7 +760,7 @@ void InputParser::read_device( )
     //  get   ID of   the  current region :
     //    ID = map_region[reg_mumb]
     current_region_ID   = atoi(string_prop_labels_map["reg_numb"].c_str());
-   // cout <<  current_region_ID << endl;
+    // cout <<  current_region_ID << endl;
 
 
     //  put  in  map  <ID, map_region   >
@@ -768,7 +768,7 @@ void InputParser::read_device( )
     //  device_map.insert(make_pair (ID,map_region  ));   
 
     device_map.insert(make_pair (current_region_ID, string_prop_labels_map ));  
-//cout <<  "(device_map[current_region_ID])[mat]  =  " << (device_map[current_region_ID])["mat"] << endl  ;
+    //cout <<  "(device_map[current_region_ID])[mat]  =  " << (device_map[current_region_ID])["mat"] << endl  ;
 
     //    next   Region    
     string_prop_labels_map.clear();
@@ -845,13 +845,14 @@ InputParser::parse_model(ifstream& in_stream)
  
   
   string numb_regions_keyword_string,phys_regions_keyword_string,BC_regions_keyword_string , 
-    keyword_BC_Region_string, model_keyword_string  ;
+    keyword_BC_Region_string, model_keyword_string,phys_model_label   ;
 
   numb_regions_keyword_string = "numb_regions";
   phys_regions_keyword_string = "phys_regions";
   BC_regions_keyword_string = "BC_Regions";
   keyword_BC_Region_string = "BC_Region";
   model_keyword_string  =  "model";
+  phys_model_label = "physical_models";
 
   //  vector <ID> list_physical_regions  ;
 
@@ -887,7 +888,7 @@ InputParser::parse_model(ifstream& in_stream)
   //   find_keyword(in_stream,start_symb ); //  looks  for  "{"
 
   in_stream >> model_keyword;
-//  cout << model_keyword<< endl;
+  //  cout << model_keyword<< endl;
 
 
 
@@ -947,7 +948,7 @@ InputParser::parse_model(ifstream& in_stream)
 
     if  ( start_symbol !=start_symb )
     {
-      cerr <<  "  SYNTAX ERROR in input  file 1  " <<  endl;
+      cerr <<  "  SYNTAX ERROR in input  file (1)  " <<  endl;
   
        
       exit(1); 
@@ -978,7 +979,7 @@ InputParser::parse_model(ifstream& in_stream)
     //parse_list_phys_ID(ifstream& in_stream,vector<string>& list_regions   )
     ////   vector<string> list_physical_regions;
     parse_list_phys_ID(in_stream, list_physical_regions   );
- //   cerr <<  " list_regions  = " << list_physical_regions[1] <<  endl;;
+    //   cerr <<  " list_regions  = " << list_physical_regions[1] <<  endl;;
    
 
  
@@ -999,6 +1000,45 @@ InputParser::parse_model(ifstream& in_stream)
 
     //   ----------------------------------------------------------------
 
+
+    //     //   read  physical  model  section 
+
+    //  read   label "phys_mod"   ; 
+    in_stream >>  label; //  phys_model_label ;
+    while (skip_comments(in_stream, label ) == true )
+    {
+      in_stream >>  label ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+ 
+    if  ( label != phys_model_label )
+    {
+      cerr <<  "  SYNTAX ERROR in input  file (models)  " <<  endl;
+      cerr << " keyword physical_models  is  missing " 
+           << endl;
+       
+      exit(1); 
+    }
+
+ 
+
+    string_prop_labels_map.clear();
+   
+    parse_options(in_stream);   //    read  the  block  between  { and  }
+
+
+
+    //parse_options(in_stream);   //    read  the  block  between  { and  }
+    // 
+    // 
+    current_model_point->set_phys_model_map( string_prop_labels_map);
+
+    string_prop_labels_map.clear();
+
+    //     //   ----------------------------------------------------------------
+
+
+
     //  now  READ BC REGIONS   
 
 
@@ -1016,8 +1056,8 @@ InputParser::parse_model(ifstream& in_stream)
     if  ( BC_regions_keyword != BC_regions_keyword_string )
     {
 
-    //  cerr <<  BC_regions_keyword <<  endl;
-      cerr <<  "  SYNTAX ERROR in input  file 4  " <<  endl;
+      //  cerr <<  BC_regions_keyword <<  endl;
+      cerr <<  "  SYNTAX ERROR in input  file (4)  " <<  endl;
   
        
       exit(1); 
@@ -1032,7 +1072,7 @@ InputParser::parse_model(ifstream& in_stream)
 
    
 
-   // cout <<  " BC_region_k = " << BC_regions_keyword <<  endl; 
+    // cout <<  " BC_region_k = " << BC_regions_keyword <<  endl; 
 
     in_stream >>  start_symbol ; //  read   start_symb of   BC_regions block
     //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
@@ -1043,7 +1083,7 @@ InputParser::parse_model(ifstream& in_stream)
 
     if  ( start_symbol != start_symb)
     {
-     cerr <<  "  SYNTAX ERROR in input  file 5  " <<  endl;
+      cerr <<  "  SYNTAX ERROR in input  file (5)  " <<  endl;
   
        
       exit(1); 
@@ -1097,14 +1137,15 @@ InputParser::parse_model(ifstream& in_stream)
       //  get   ID of   the  current BC_region :
       //    ID = map_region[BC_reg_mumb]
       current_BC_region_ID   = atoi(string_prop_labels_map["BC_reg_numb"].c_str());
-    //  cout <<  current_BC_region_ID << endl;
+      //  cout <<  current_BC_region_ID << endl;
 
       //  put  in  map  <ID, map_region   >
       //   the map map_region <string,string >
       //  device_map.insert(make_pair (ID,map_region  ));   
 
       model_BC_map.insert(make_pair (current_BC_region_ID, string_prop_labels_map ));  
-    //  cout <<  "([ model_BC_map.current_BC_region_ID])[value]  =  " << (model_BC_map[current_BC_region_ID])["value"] << endl  ;
+      //  cout <<  "([ model_BC_map.current_BC_region_ID])[value]  =  " 
+      //  << (model_BC_map[current_BC_region_ID])["value"] << endl  ;
 
       //    next   BC_Region    
       string_prop_labels_map.clear();
@@ -1131,7 +1172,8 @@ InputParser::parse_model(ifstream& in_stream)
     //  PUT   model_BC_map IN   OBJECT  ModelStructure
 
     //  ModelStructure->set_model_BC_map(model_BC_map)  **********************************
-    //  ModelStructure.set_model_BC_map( map  <unsigned int,  map <string,string> >& id_BC_regions_map   )   !!!!!!!!!
+    //  ModelStructure.set_model_BC_map( map  <unsigned int,  map <string,string> >& 
+    // id_BC_regions_map   )   !!!!!!!!!
     current_model_point->set_model_BC_map( model_BC_map);
    
     in_stream >>  end_symbol;
@@ -1142,7 +1184,7 @@ InputParser::parse_model(ifstream& in_stream)
     } 
 
 
-  //  cout <<  "end_symbol = " <<  end_symbol  <<   endl;
+    //  cout <<  "end_symbol = " <<  end_symbol  <<   endl;
 
     //    if  (strncmp ((end_symbol.c_str()),"}",1) != 0)
     if  (strncmp ((end_symbol.c_str()),end_symb.c_str(),1) != 0)
@@ -1153,7 +1195,7 @@ InputParser::parse_model(ifstream& in_stream)
     }
    
     in_stream >>  model_keyword; 
-   // cout << model_keyword<< endl;
+    // cout << model_keyword<< endl;
 
     while (skip_comments(in_stream, model_keyword ) == true )
     {
@@ -1176,7 +1218,7 @@ InputParser::parse_model(ifstream& in_stream)
 	      
   }// end while   while (  (model_keyword != end_symb ) && (!in_stream.eof()) ) ***********  end   Model
       
-//  cout <<   "  Out of  while Model "<< endl;
+  //  cout <<   "  Out of  while Model "<< endl;
 
 
 

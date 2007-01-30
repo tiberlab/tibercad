@@ -25,6 +25,14 @@ map  <unsigned int,  map <string,string>  >&  ModelStructure::get_model_BC_map()
   return model_BC_map;
 
 }
+
+map  <string,string>&  ModelStructure::get_phys_model_map()
+
+{
+ 
+  return phys_model_map;
+
+}
  
 
 vector<string> ModelStructure::get_physical_regions()
@@ -55,6 +63,15 @@ void ModelStructure::set_model_BC_map( map  <unsigned int,  map <string,string> 
   model_BC_map = id_BC_regions_map ;
 
   //  cout <<  "(model_BC_map[1])[value] =  "  <<   (model_BC_map[1])["value"] <<  endl;
+}
+
+
+void ModelStructure::set_phys_model_map( map <string,string>& physical_model_map )
+{
+ 
+ 
+  phys_model_map = physical_model_map;
+ 
 }
 
 
