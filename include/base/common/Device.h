@@ -5,6 +5,7 @@
 
 
 #include "TypeDefs.h"
+#include "ModelOptions.h"
 
 #include <vector>
 
@@ -30,7 +31,8 @@ class Device
      * The \c boundary_nodes map has to contain all nodes for each boundary
      * for which a boundary condition is implied.
      */
-    Device(Mesh& mesh, BoundaryNodeMap& boundary_nodes);
+    Device(Mesh& mesh, BoundaryNodeMap& boundary_nodes,
+        const ModelOptions& options = ModelOptions());
 
     //! Destructor
     ~Device();
@@ -80,6 +82,9 @@ class Device
     
     //! Get the map that contains all boundary nodes for all boundaries
     BoundaryNodeMap& get_boundary_node_map(void) const;
+
+    //! Get the mesh units
+    double get_mesh_units(void) const;
     
 
   private:
@@ -93,6 +98,12 @@ class Device
     //! The mesh for this device
     Mesh* _mesh;
 
+    //! The mesh unit in m
+    /*!
+     * A distance of 1 in the mesh corresponds to \c _mesh_units m
+     */
+    double _mesh_units;
+
     //! The equation systems used for this device
     /*!
      * This is stored here because it has to be consistent with the mesh
@@ -102,6 +113,9 @@ class Device
 
     //! A map that contains all nodes for boundary conditions
     BoundaryNodeMap* _boundary_nodes;
+
+    //! User defined options for this device
+    ModelOptions _options;
   
 };
 
@@ -140,6 +154,13 @@ BoundaryNodeMap&
 Device::get_boundary_node_map(void) const
 {
   return *_boundary_nodes;
+}
+
+inline
+double
+Device::get_mesh_units(void) const
+{
+  return _mesh_units;
 }
 
 #endif //  __DEVICE_H__

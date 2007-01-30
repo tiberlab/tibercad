@@ -8,8 +8,12 @@
 #include <iostream>
 
 
-Device::Device(Mesh& mesh, BoundaryNodeMap& boundary_nodes)
-  : _mesh(&mesh), _boundary_nodes(&boundary_nodes)
+Device::Device(Mesh& mesh, BoundaryNodeMap& boundary_nodes,
+    const ModelOptions& options)
+  : _mesh(&mesh),
+    _boundary_nodes(&boundary_nodes),
+    _mesh_units(1e-6),
+    _options(options)
 {
   _material_map.clear();	
   _eq_system = new EquationSystems(mesh);
@@ -31,6 +35,8 @@ Device::~Device()
 void
 Device::init(void)
 {
+  _mesh_units = _options.get_option("mesh_units", _mesh_units);
+
   MaterialMap::iterator it(_material_map.begin());
   const MaterialMap::iterator end(_material_map.end());
   for ( ; it != end; ++it)
