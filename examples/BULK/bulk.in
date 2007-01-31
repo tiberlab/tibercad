@@ -20,8 +20,8 @@ y-dir = [0,0,0,1]
 material = AlGaN
 molar_fraction = 0.05
 
-substrate_material = GaN
-substrate_molar_fraction = 0.0
+substrate_material = AlGaN
+substrate_molar_fraction = 0.1
 
 shape_steps = 0
 

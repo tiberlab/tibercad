@@ -141,6 +141,16 @@ void KPbulkHamiltonian::calculate_VCA (const PhysicalModelInterface *comp_A, con
 
   semiconductor->build_alloy(modA->semiconductor, modB->semiconductor, xa);
 
+  
+  //prepare k.p parameter
+  par = semiconductor->calculate_kp_params (model_name);
+
+  //calculate general Hamiltonian 
+  calculate_Hamiltonian_gen();
+
+  //apply k|| vector (even if it is zero-vector !!!)
+  calculate_Hamiltonian_k_par();
+  
 }
 
 //==================================================================//
