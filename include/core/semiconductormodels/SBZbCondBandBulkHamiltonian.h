@@ -45,6 +45,8 @@ class SBZbCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
 
   virtual void do_init(void);
 
+  virtual void calculate_for_init(void);
+
 
 };
 

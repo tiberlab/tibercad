@@ -40,6 +40,10 @@ class SBWzCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
  
   virtual void do_init(void);
 
+
+  virtual void calculate_for_init(void);
+
+
 };
 
 inline PhysicalModelInterface* SBWzCondBandBulkHamiltonian::create_new() const

@@ -25,12 +25,8 @@ class SBCondBandBulkHamiltonian: public SBbulkHamiltonian
 
  virtual PhysicalModelInterface* create_new(void) const = 0 ;
 
- // virtual void copy_from (const PhysicalModelInterface *rhs) ;
 
  virtual void do_init(void);
-
-
-
 
  
  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
@@ -38,6 +34,9 @@ class SBCondBandBulkHamiltonian: public SBbulkHamiltonian
 
  //! a pointer to a semiconductor that contains parameters
  Semiconductor* semiconductor;
+
+ //!calculate everything we need from semiconductor model
+ virtual void calculate_for_init(void) = 0;
 
  private:
 
@@ -90,6 +89,8 @@ inline void SBCondBandBulkHamiltonian::calculate_VCA (const PhysicalModelInterfa
   const SBCondBandBulkHamiltonian* matB = dynamic_cast< const SBCondBandBulkHamiltonian*> (comp_B);
 
   semiconductor->build_alloy(matA->semiconductor, matB->semiconductor, xa);
+
+  calculate_for_init();
 
 }
 

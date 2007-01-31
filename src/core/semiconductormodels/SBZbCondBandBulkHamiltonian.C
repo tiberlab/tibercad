@@ -13,7 +13,17 @@ void SBZbCondBandBulkHamiltonian::do_init()
 
   SBCondBandBulkHamiltonian::do_init();
 
-  ZbSemiconductor::ZbDDparameters& par = (dynamic_cast<ZbSemiconductor*> (semiconductor)) -> get_parameters();
+  calculate_for_init();
+
+  
+
+
+}
+
+//===========================================================================//
+void SBZbCondBandBulkHamiltonian::calculate_for_init(void)
+{
+ ZbSemiconductor::ZbDDparameters& par = (dynamic_cast<ZbSemiconductor*> (semiconductor)) -> get_parameters();
 
   zb_par = &par;
 
@@ -36,9 +46,8 @@ void SBZbCondBandBulkHamiltonian::do_init()
   
   calculate_Hamiltonian_gen();
 
-
+  calculate_Hamiltonian_k_par();
 }
-
 
 //===========================================================================//
 void SBZbCondBandBulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential)

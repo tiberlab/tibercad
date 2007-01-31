@@ -9,6 +9,14 @@ void SBWzCondBandBulkHamiltonian::do_init()
 
   SBCondBandBulkHamiltonian::do_init();
 
+  calculate_for_init( );
+  
+}
+
+//===========================================================================//
+void SBWzCondBandBulkHamiltonian:: calculate_for_init( )
+{
+ 
   WzSemiconductor::WzDDparameters& par = (dynamic_cast<WzSemiconductor*> (semiconductor)) -> get_parameters();
 
   wz_par = &par;
@@ -43,11 +51,10 @@ void SBWzCondBandBulkHamiltonian::do_init()
   //--------------------------------------------------------------------------------//
 
   calculate_Hamiltonian_gen();
-  
+
+  calculate_Hamiltonian_k_par();
+
 }
-
-
-
 
 
 //===========================================================================//
