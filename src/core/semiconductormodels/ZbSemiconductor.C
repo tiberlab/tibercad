@@ -186,8 +186,6 @@ void ZbSemiconductor::read_bowing_parameters()
 void ZbSemiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 
- 
-
   const ZbSemiconductor* modA = dynamic_cast<const ZbSemiconductor*> (comp_A);
   const ZbSemiconductor* modB = dynamic_cast<const ZbSemiconductor*> (comp_B);
 

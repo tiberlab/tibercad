@@ -76,13 +76,13 @@ class InputParser{
   /*!
     Defines  name  of input  file ("input_file_name").
   */
-  InputParser(string& input_file_name);
+  InputParser(const std::string& input_file_name);
 
   //!  Destructor 
   /*!
   
   */
-  ~InputParser();
+  ~InputParser(void);
 
 
 
@@ -92,14 +92,14 @@ class InputParser{
    * Method to  read   the  device section of  input  file in an internal map, 
    * which is  returned by \c  get_device_map()
    */
-  void read_device();
+  void read_device(void);
 
   //!   Gets the map of   device description. 
   /*!
    * Returns   a  map which associates a physical region number 
    * with the map (of the kind "label = property" ) of the appropriate physical region.
    */
-  map <ID,  map <string,string> >& get_device_map();
+  map <ID,  map <const string,string> >& get_device_map(void);
 
 
   //!  Parses the "Models"  section  of the  input file. 
@@ -109,7 +109,7 @@ class InputParser{
    * of \c get_model_structure_map() 
    * and the methods of class \c  ModelStructure.
    */
-  void read_models();
+  void read_models(void);
 
   //!   Gets the map of   model definition. 
   /*!
@@ -118,7 +118,7 @@ class InputParser{
    * description of model parameters:  physical regions associated to it, 
    * list of boundary conditions defined for the model. 
    */
-  map <string, ModelStructure*>& get_model_structure_map();
+  map <const string, ModelStructure*>& get_model_structure_map(void);
 
 
   //!   Reads parameters of  a  given  section   for a given  model. 
@@ -127,7 +127,8 @@ class InputParser{
    * Parameters are read in an internal  map and can be  extracted by means of 
    *  \c get_parameters_map().
    */
-  void read_parameters( string& section_name, string& model_name);
+  void read_parameters(std::string section_name,
+      const std::string& model_name);
  
   //!   Reads parameters of  a  given  section  
   /*!
@@ -135,7 +136,7 @@ class InputParser{
    * Parameters are read in an internal  map and can be  extracted by means of 
    *  \c get_parameters_map(). 
    */
-  void read_parameters( string& section_name);
+  void read_parameters(std::string section_name);
 
   //!   Gets a map of  parameters. 
   /*!
@@ -143,7 +144,7 @@ class InputParser{
    * read in a section of input file, and possibly for a given model, as specified previously by 
    * \c read_parameters.
    */
-  map <string,string>& get_parameters_map();
+  map <const string,string>& get_parameters_map(void);
 
  
 
@@ -194,30 +195,30 @@ class InputParser{
    *   Map between label and property in the  parameter section; 
    * property is  read as a string and its correct type is checked elsewhere.
    */
-  map <string,string>  string_prop_labels_map;
+  map <const string,string>  string_prop_labels_map;
 
   /*!
    *   Map between label and a vector of properties in the  parameter section; 
    * properties  are  read as a string and their  correct type is checked elsewhere.
    */
-  map <string, vector<string> >  vector_string_prop_labels_map;
+  map <const string, vector<string> >  vector_string_prop_labels_map;
 
 
 
   /*!
    *   Map between physical region number  and  the map associated to it.
    */
-  map <ID,  map <string,string> > device_map;
+  map <ID,  map <const string,string> > device_map;
   
   /*!
    *   Map between  model name and  \c ModelStructure object associated.
    */
-  map <string, ModelStructure*>  model_structure_map;
+  map <const string, ModelStructure*>  model_structure_map;
 
   /*!
    *   Map between  BC region number and the map for the BC region associated.
    */
-  map <ID,  map <string,string> > model_BC_map;
+  map <ID,  map <const string,string> > model_BC_map;
 
   /*!
    *   Pointer to \c ModelStructure  object.
@@ -236,20 +237,20 @@ class InputParser{
    *  Utility  to  find a  keyword in the input file.
    *    
    */
-  void find_keyword(ifstream& in_stream, string& keyword);
+  void find_keyword(ifstream& in_stream, const std::string& keyword);
 
   /*!
    *  Utility  to  find a  keyword in a section
    *    
    */
-  void find_keyword_in_section(ifstream& in_stream, string& keyword);
+  void find_keyword_in_section(ifstream& in_stream, const std::string& keyword);
 
 
   /*!
    *   Method   to  clear  all  maps 
    *    
    */
-  void reset_all_maps();
+  void reset_all_maps(void);
 
   /*!
    *   Method   to  read free-format parameter  section. 
@@ -270,7 +271,7 @@ class InputParser{
    *   Utility  to  skip  comments (everything on a line, after "#" ). 
    *   Returns true if  the following part of the line is  a  comment.  
    */
-  bool skip_comments(ifstream& in_stream, string& item);
+  bool skip_comments(ifstream& in_stream, const std::string& item);
 
  
 

@@ -153,7 +153,6 @@ const std::vector<DDsemiconductor::band_extremum>& DDsemiconductor::get_valence_
 vector< vector<double> > DDsemiconductor::calculate_vb_bulk_states(const vector<Tensor1>& k_vector)
 {
  
-
   vector< vector<double> > result;  
  
   double kvec[3];

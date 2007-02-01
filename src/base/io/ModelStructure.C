@@ -18,7 +18,7 @@ ModelStructure::~ModelStructure()
 }
 
 
-map  <unsigned int,  map <string,string>  >&  ModelStructure::get_model_BC_map()
+map  <unsigned int,  map <const string,string>  >&  ModelStructure::get_model_BC_map()
 
 {
  
@@ -26,7 +26,7 @@ map  <unsigned int,  map <string,string>  >&  ModelStructure::get_model_BC_map()
 
 }
 
-map  <string,string>&  ModelStructure::get_phys_model_map()
+map  <const string,string>&  ModelStructure::get_phys_model_map()
 
 {
  
@@ -57,7 +57,7 @@ string  ModelStructure::get_model_name()
 }
 
 
-void ModelStructure::set_model_BC_map( map  <unsigned int,  map <string,string> >& id_BC_regions_map   )
+void ModelStructure::set_model_BC_map( map  <unsigned int,  map <const string,string> >& id_BC_regions_map   )
 {
  
   model_BC_map = id_BC_regions_map ;
@@ -66,7 +66,7 @@ void ModelStructure::set_model_BC_map( map  <unsigned int,  map <string,string> 
 }
 
 
-void ModelStructure::set_phys_model_map( map <string,string>& physical_model_map )
+void ModelStructure::set_phys_model_map( map <const string,string>& physical_model_map )
 {
  
  

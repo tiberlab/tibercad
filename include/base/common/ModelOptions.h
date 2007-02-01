@@ -20,6 +20,15 @@ class ModelOptions
 
   public:
 
+    //! The default constructor
+    ModelOptions(void) {};
+
+    //! Constructor which takes a map as argument
+    ModelOptions(std::map<const std::string, std::string> options);
+
+    //! The destructor
+    ~ModelOptions(void) {};
+
     //! Get the value of an option
     /*!
      * \param name the name of the option

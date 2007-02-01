@@ -6,11 +6,19 @@
 #include <iostream>
 
 
+using namespace std;
+
+
+ModelOptions::ModelOptions(map<const string, string> options)
+  : _options(options)
+{
+}
+
 template <typename T>
 void
-ModelOptions::set_option(const std::string& name, const T value)
+ModelOptions::set_option(const string& name, const T value)
 {
-  std::ostringstream s;
+  ostringstream s;
   s << value;
   
   _options[name] = s.str();
@@ -19,8 +27,8 @@ ModelOptions::set_option(const std::string& name, const T value)
 
 template <typename T>
 void
-ModelOptions::get_option(const std::string& name,
-    std::vector<T>& vec) const
+ModelOptions::get_option(const string& name,
+    vector<T>& vec) const
 {
 
   OptionsMap::const_iterator it = _options.find(name);
@@ -32,10 +40,10 @@ ModelOptions::get_option(const std::string& name,
 
 template <typename T>
 void
-ModelOptions::get_option(const std::string& name,
-    std::vector<std::vector<T> >& array) const
+ModelOptions::get_option(const string& name,
+    vector<vector<T> >& array) const
 {
-  std::vector<std::string> vec;
+  vector<string> vec;
   get_option(name, vec);
 
   int n = vec.size();
@@ -68,67 +76,67 @@ ModelOptions::operator+=(const ModelOptions& rhs)
 
 
 template
-void ModelOptions::set_option<double>(const std::string&, const double);
+void ModelOptions::set_option<double>(const string&, const double);
 
 template
-void ModelOptions::set_option<int>(const std::string&, const int);
+void ModelOptions::set_option<int>(const string&, const int);
 
 template
-void ModelOptions::set_option<bool>(const std::string&, const bool);
+void ModelOptions::set_option<bool>(const string&, const bool);
 
 template
-void ModelOptions::set_option<std::string>(const std::string&,
-    const std::string);
-
-
-template
-void
-ModelOptions::get_option<double>(const std::string& name,
-    std::vector<double>& vec) const;
-
-template
-void
-ModelOptions::get_option<int>(const std::string& name,
-    std::vector<int>& vec) const;
-
-template
-void
-ModelOptions::get_option<bool>(const std::string& name,
-    std::vector<bool>& vec) const;
-
-template
-void
-ModelOptions::get_option<char>(const std::string& name,
-    std::vector<char>& vec) const;
-
-template
-void
-ModelOptions::get_option<std::string>(const std::string& name,
-    std::vector<std::string>& vec) const;
+void ModelOptions::set_option<string>(const string&,
+    const string);
 
 
 template
 void
-ModelOptions::get_option<double>(const std::string& name,
-    std::vector<std::vector<double> >& vec) const;
+ModelOptions::get_option<double>(const string& name,
+    vector<double>& vec) const;
 
 template
 void
-ModelOptions::get_option<int>(const std::string& name,
-    std::vector<std::vector<int> >& vec) const;
+ModelOptions::get_option<int>(const string& name,
+    vector<int>& vec) const;
 
 template
 void
-ModelOptions::get_option<bool>(const std::string& name,
-    std::vector<std::vector<bool> >& vec) const;
+ModelOptions::get_option<bool>(const string& name,
+    vector<bool>& vec) const;
 
 template
 void
-ModelOptions::get_option<char>(const std::string& name,
-    std::vector<std::vector<char> >& vec) const;
+ModelOptions::get_option<char>(const string& name,
+    vector<char>& vec) const;
 
 template
 void
-ModelOptions::get_option<std::string>(const std::string& name,
-    std::vector<std::vector<std::string> >& vec) const;
+ModelOptions::get_option<string>(const string& name,
+    vector<string>& vec) const;
+
+
+template
+void
+ModelOptions::get_option<double>(const string& name,
+    vector<vector<double> >& vec) const;
+
+template
+void
+ModelOptions::get_option<int>(const string& name,
+    vector<vector<int> >& vec) const;
+
+template
+void
+ModelOptions::get_option<bool>(const string& name,
+    vector<vector<bool> >& vec) const;
+
+template
+void
+ModelOptions::get_option<char>(const string& name,
+    vector<vector<char> >& vec) const;
+
+template
+void
+ModelOptions::get_option<string>(const string& name,
+    vector<vector<string> >& vec) const;
 

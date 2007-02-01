@@ -1,13 +1,22 @@
 # $Id$
-#
 
 topdir := ../..
-
-# we have to compile each module
-subdirs := 
 
 include $(topdir)/Make.common
 
 
-include $(topdir)/Make.rules
+#
+# source files
+srcfiles 	:= $(wildcard *.C)
 
+#
+# object files
+objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
+
+
+
+all: $(objects)
+
+
+
+include $(topdir)/Make.rules

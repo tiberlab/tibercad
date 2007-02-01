@@ -28,7 +28,7 @@ using namespace boost::spirit;
 
 
 
-InputParser::InputParser(string& input_file_name)
+InputParser::InputParser(const std::string& input_file_name)
 
 {
 
@@ -44,7 +44,7 @@ InputParser::InputParser(string& input_file_name)
   
 }
 
-InputParser::~InputParser()
+InputParser::~InputParser(void)
 {
 }
 
@@ -52,7 +52,7 @@ InputParser::~InputParser()
 
 
 // private  method: utility  to  find a  keyword in a section
-void InputParser::find_keyword_in_section(ifstream& in_stream, string& keyword)
+void InputParser::find_keyword_in_section(ifstream& in_stream, const std::string& keyword)
 
 {
 
@@ -98,7 +98,7 @@ void InputParser::find_keyword_in_section(ifstream& in_stream, string& keyword)
 
 
 // public  method to  read  parameters  for a given model " model_name"
-void InputParser::read_parameters( string& section_name, string& model_name)
+void InputParser::read_parameters(std::string section_name, const std::string& model_name)
 
 {
 
@@ -145,7 +145,7 @@ void InputParser::read_parameters( string& section_name, string& model_name)
 
 
 //  overload  to  read model-independent  parameters
-void InputParser::read_parameters( string& section_name)
+void InputParser::read_parameters(std::string section_name)
 
 {
 
@@ -213,7 +213,7 @@ void InputParser::reset_all_maps()
 
 
 // private  method: utility  to  find a  keyword 
-void InputParser::find_keyword(ifstream& in_stream, string& keyword)
+void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
 
 {
 
@@ -670,7 +670,7 @@ void InputParser::parse_options(ifstream& in_stream )
 
 // public  method to  read  device regions
 
-void InputParser::read_device( )
+void InputParser::read_device(void)
 
 {
 
@@ -800,7 +800,7 @@ void InputParser::read_device( )
 
 
 
-map <ID,  map <string,string> >& InputParser::get_device_map()
+map <ID,  map <const string,string> >& InputParser::get_device_map(void)
 
 {
 
@@ -812,7 +812,7 @@ map <ID,  map <string,string> >& InputParser::get_device_map()
 
 
 // private  method: utility  to  skip  comments (everything on a line, after "#" ) 
-bool InputParser::skip_comments(ifstream& in_stream, string& item)
+bool InputParser::skip_comments(ifstream& in_stream, const std::string& item)
 
 {
 
@@ -1232,7 +1232,7 @@ InputParser::parse_model(ifstream& in_stream)
 
 
 
-map <string, ModelStructure*>& InputParser:: get_model_structure_map()
+map <const string, ModelStructure*>& InputParser:: get_model_structure_map(void)
 {
   
   
@@ -1242,7 +1242,7 @@ map <string, ModelStructure*>& InputParser:: get_model_structure_map()
 
 
 
-map <string,string>& InputParser::get_parameters_map()
+map <const string,string>& InputParser::get_parameters_map(void)
 
 {
 
