@@ -2,12 +2,33 @@
 
 #include "ConstantMobility.h"
 
+#include "Material.h"
+#include "Database.h"
+
+#include "getpot.h"
+#include <iostream>
+
+void
+ConstantMobility::read_database(void)
+{
+  const Material* mat = get_material();
+  GetPot data((mat->get_database()).get_data_file());
+  
+  std::string s("mu_max_");
+  s += get_carrier_type();
+  _mu0 = data(s.c_str(), _mu0);
+
+}
+
+
 
 void
 ConstantMobility::do_init(void)
 {
-  _mu0 = get_options().get_option("mu0", 1000.0);
+  _mu0 = get_options().get_option("mu_max", _mu0);
 }
+
+
 
 double
 ConstantMobility::get_mobility(void)
@@ -16,11 +37,13 @@ ConstantMobility::get_mobility(void)
 }
 
 
+
 void
 ConstantMobility::get_mobility_derivatives(std::vector<double>& dm)
 {
   dm[0] = dm[1] = dm[2] = 0.0;
 }
+
 
 
 void

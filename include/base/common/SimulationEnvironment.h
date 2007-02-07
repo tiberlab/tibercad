@@ -188,6 +188,9 @@ class SimulationEnvironment
 
     //! Update the list of all elements of this simulation
     void update_element_list(void);
+
+    //! Tell if this environment is initialized
+    bool is_initialized(void) const;
     
 
   private:
@@ -238,6 +241,9 @@ class SimulationEnvironment
      */
     NodeMap _node_map;
 
+    //! Tells if this environment is already initialized
+    bool _is_initialized;
+
 };
 
 
@@ -254,6 +260,14 @@ SimulationEnvironment::get_device(void)
   return *_device;
 }
 
+
+inline
+bool
+SimulationEnvironment::is_initialized(void) const
+{
+  return _is_initialized;
+}
+    
 
 inline
 bool

@@ -7,9 +7,12 @@
 #include "ModelOptions.h"
 #include "InitFailedException.h"
 #include "SolveFailedException.h"
+#include "ModelErrorException.h"
 
+// LibMesh includes
 // For debugging
 #include "reference_counted_object.h"
+#include "numeric_vector.h"
 
 #include <cassert>
 #include <map>
@@ -17,6 +20,9 @@
 
 class SimulationEnvironment;
 class EquationSystems;
+class PhysicalModel;
+class BoundaryProperties;
+
 
 //! The base class for any simulation
 class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
@@ -27,17 +33,48 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Destructor
     virtual ~SimulationInterface(void) {};
 
+
     //! Set the simulation environment for this simulation
     void set_environment(SimulationEnvironment* environment);
 
+    
     //! Get the simulation environment for this simulation
     SimulationEnvironment& get_environment(void) const;
 
+    
     //! Get the ID of this simulation
     ID get_id(void) const;
 
+    
     //! Get the user defined name of this simulation
     const std::string& get_name(void) const;
+
+    
+    //! Create a physical model that can be used by this type of simulation
+    /*!
+     * The default behaviour defined in the base class is to return the
+     * NULL pointer, because there could be simulations that don't need
+     * a physical model. If a derived class reimplements this method (which
+     * will normally be the case) it should notify about errors by throwing
+     * a ModelErrorException.
+     */
+    virtual PhysicalModel*
+      create_physical_model(const ModelOptions& options) const
+      throw (ModelErrorException);
+
+    
+    //! Create a boundary model that can be used by this type of simulation
+    /*!
+     * The default behaviour defined in the base class is to return the
+     * NULL pointer, because there could be simulations that don't need
+     * a boundary model. If a derived class reimplements this method (which
+     * will normally be the case) it should notify about errors by throwing
+     * a ModelErrorException.
+     */
+    virtual BoundaryProperties*
+      create_boundary_model(const ModelOptions& options) const
+      throw (ModelErrorException);
+
 
     //! Initialize the system
     /*!
@@ -45,9 +82,18 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     void init(void) throw (InitFailedException);
 
+    
     //! Set options for this model
+    /*!
+     * \param options the options to be changed
+     *
+     * This method will take all options given in \c options and update
+     * the options of the solver accordingly. It does not touch options
+     * which are not present in the argument of this method
+     */
     void set_options(const ModelOptions& options);
 
+    
     //! Solve the system
     /*!
      * This method calls do_solve() after some health checks
@@ -66,6 +112,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     static SimulationInterface* create(const std::string& type,
         const ModelOptions& options = ModelOptions());
 
+    
     //! Destroy a simulation
     /*!
      * \param p the pointer to the simulation to destroy
@@ -77,12 +124,23 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     /*!
      * \param name the name to look for
      * \return a pointer to the simulation if found, \c NULL otherwise
+     *
+     * \c name can be one of the following:
+     * \li the user defined name of a simulation
+     * \li the identifier of the simulation as used for creation
+     * \li the empty string
+     *
+     * In the second case, the first simulation of this type will be
+     * returned. In the third case, the first simulation will be returned.
+     * 
      */
     static SimulationInterface* find_simulation(const std::string& name);
 
+    
     //! Check if this simulation is initialized
     bool is_initialized(void) const;
 
+    
     //! Check if this simulation has already been solved
     /*!
      * This could be useful for models which use results of another
@@ -90,24 +148,41 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     bool is_solved(void) const;
 
+    
     //! Set the relaxation factor
     void set_relaxation_factor(double relax);
 
+    
     //! Get the relaxation factor
-    double get_relaxation_factor(void);
+    double get_relaxation_factor(void) const;
 
+    
+    //! Get a pointer to the solution vector
+    NumericVector<Real>& get_solution_vector(void);
+
+
+    //! Get the type of this simulation
+    /*!
+     * The type is the identifying string which defines at creation time
+     * which simulation to create. It's the same string one writes in the
+     * input file.
+     */
+    const std::string& get_type(void) const;
 
   protected:
 
     //! Empty constructor
     SimulationInterface(void);
 
+    
     //! Get a reference to the equation system object
     EquationSystems& get_equation_systems(void) const;
 
+    
     //! Get the options for this simulator
     ModelOptions& get_options(void);
 
+    
     //! Do the initialization
     /*!
      * Has to be implemented by derived classes.
@@ -117,6 +192,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     virtual void do_init(void) = 0;
 
+    
     //! Do the solve
     /*!
      * Has to be implemented by derived classes.
@@ -125,6 +201,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     virtual void do_solve(void) = 0;
 
+    
     //! Parse the options
     /*!
      * This method has to be called \em explicitly somewhere in the derived
@@ -136,8 +213,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     virtual void parse_options(void) = 0;
 
+    
     //! Get the unique name for the equation system
     const std::string& get_equation_system_name(void) const;
+    
 
 
   private:
@@ -145,18 +224,23 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! A typedef for convenience
     typedef std::map<ID, SimulationInterface*> SimulationMap;
 
+    
     //! The environment for this simulation
     SimulationEnvironment* _environment;
 
+    
     //! A flag indicating if the simulator is initialized
     bool _is_initialized;
 
+    
     //! A flag indicating that a simulation has be done
     bool _is_solved;
 
+    
     //! For self-consistent calculations this could be useful
     double _relaxation_factor;
 
+    
     //! The ID of this simulation
     /*!
      * The ID is unique for every simulator and is assigned automatically
@@ -164,25 +248,48 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     ID _id;
 
+    
     //! Options associated with this model
     /*!
      * These are the options as read from the input file.
      */
     ModelOptions _options;
 
+    
     //! A user definable name to identify this simulation
     std::string _name;
 
+
+    //! The identifying string for the type of this simulation
+    std::string _type;
+
+    
     //! The unique name for the equation system
     std::string _eq_system_name;
 
+    
     //! The map containing all simulations with their ID
     static SimulationMap _simulation_map;
 
+    
     //! create a unique name for the equation system
     void create_equation_system_name(void);
 
+
+    //! Set the simulation type (= identifier)
+    /*!
+     * The identifier is used at creation time to know which type of
+     * simulation to create.
+     */
+    void set_type(const std::string& type);
+
 };
+
+
+//
+// inline members
+// 
+
 
 inline
 void
@@ -191,6 +298,8 @@ SimulationInterface::set_environment(SimulationEnvironment* environment)
   if (environment != 0)
     _environment = environment;
 }
+
+
 
 inline
 SimulationEnvironment&
@@ -202,12 +311,14 @@ SimulationInterface::get_environment(void) const
 }
 
 
+
 inline
 ID
 SimulationInterface::get_id(void) const
 {
   return _id;
 }
+
 
 
 inline
@@ -218,12 +329,14 @@ SimulationInterface::get_name(void) const
 }
 
 
+
 inline
 const std::string&
 SimulationInterface::get_equation_system_name(void) const
 {
   return _eq_system_name;
 }
+
 
 
 inline
@@ -233,12 +346,15 @@ SimulationInterface::set_options(const ModelOptions& options)
   _options += options;
 }
 
+
+
 inline
 ModelOptions&
 SimulationInterface::get_options(void)
 {
   return _options;
 }
+
 
 
 inline
@@ -249,12 +365,14 @@ SimulationInterface::is_initialized(void) const
 }
 
 
+
 inline
 bool
 SimulationInterface::is_solved(void) const
 {
   return _is_solved;
 }
+
 
 
 inline
@@ -265,11 +383,30 @@ SimulationInterface::set_relaxation_factor(double relax)
 }
 
 
+
 inline
 double
-SimulationInterface::get_relaxation_factor(void)
+SimulationInterface::get_relaxation_factor(void) const
 {
   return _relaxation_factor;
+}
+
+
+
+inline
+void
+SimulationInterface::set_type(const std::string& type)
+{
+  _type = type;
+}
+
+
+
+inline
+const std::string&
+SimulationInterface::get_type(void) const
+{
+  return _type;
 }
 
 

@@ -29,6 +29,9 @@ class ConstantMobility : public MobilityModelInterface
     //! constructor
     ConstantMobility(void);
 
+    //! \copydoc MobilityModelInterface::read_database()
+    virtual void read_database(void);
+
     //! \copydoc MobilityModelInterface::do_init()
     virtual void do_init(void);
 

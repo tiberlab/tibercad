@@ -35,12 +35,30 @@ class MobilityModelInterface : public DriftDiffusionModelInterface
         const ModelOptions& options = ModelOptions());
 
 
+    //! Set the carrier type
+    /*!
+     * \param type the carrier type, can be \c e or \c h
+     */
+    void set_carrier_type(char type);
+    
+
+    //! Get the carrier type
+    char get_carrier_type(void) const;
+
+    
   protected:
 
     //! \copydoc DriftDiffusionProperties::DriftDiffusionProperties()
     MobilityModelInterface(void);
 
+
   private:
+
+    //! The type of carriers this model is for
+    /*!
+     * Can be \c e or \c h
+     */
+    char _carrier;
 
 };
 
@@ -53,6 +71,7 @@ class MobilityModelInterface : public DriftDiffusionModelInterface
 
 inline
 MobilityModelInterface::MobilityModelInterface(void)
+  : _carrier('e')
 {
 }
 
@@ -72,6 +91,21 @@ MobilityModelInterface::create(const std::string& name,
       PhysicalModelInterface::create("mob_" + name, options));
 }
 
+
+inline
+void
+MobilityModelInterface::set_carrier_type(char type)
+{
+  _carrier = type;
+}
+
+
+inline
+char
+MobilityModelInterface::get_carrier_type(void) const
+{
+  return _carrier;
+}
 
 
 #endif // _MOBILITYMODELINTERFACE_H_

@@ -83,7 +83,8 @@ class PhysicalProperties
    
   //! Constructs  \c PhysicalProperties for  an  alloy.
   /*!
-   * Constructs  \c PhysicalProperties for  an  alloy, basing on  properties of  component materials
+   * Constructs  \c PhysicalProperties for  an  alloy, basing on
+   * properties of  component materials
    * and on alloy composition \param molar_fraction.
    */ 
     

@@ -1,4 +1,4 @@
-// $Id: mesh_data.C,v 1.25 2004/11/14 18:51:59 jwpeterson Exp $
+// $Id$
 
 // The libMesh Finite Element Library.
 // Copyright (C) 2002-2004  Benjamin S. Kirk, John W. Peterson

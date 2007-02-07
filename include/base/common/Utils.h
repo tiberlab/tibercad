@@ -29,6 +29,7 @@ class Utils
      * \li \verbatim ( val1, val2, ..., valN ) \endverbatim
      * \li \verbatim [ val1, val2, ..., valN ] \endverbatim
      * \li \verbatim { val1, val2, ..., valN } \endverbatim
+     * \li \verbatim   val1, val2, ..., valN  \endverbatim
      *
      * The vector components can contain any character sequencies which do not
      * contain the type of braces used to define the vector. When a component

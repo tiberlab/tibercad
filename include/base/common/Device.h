@@ -10,6 +10,7 @@
 #include <vector>
 
 class Material;
+class Control;
 class Mesh;
 class EquationSystems;
 
@@ -23,25 +24,33 @@ class Device
 
   public:
 
-    //! Constructor
-    /*!
-     * The mesh is assumed to be correctly prepared, i.e. all elements the
-     * right subdomain id assigned (which is the physical region number
-     * found in the mesh file).
-     * The \c boundary_nodes map has to contain all nodes for each boundary
-     * for which a boundary condition is implied.
-     */
-    Device(Mesh& mesh, BoundaryNodeMap& boundary_nodes,
-        const ModelOptions& options = ModelOptions());
-
     //! Destructor
     ~Device();
+
+    //! The method for creation of a device
+    /*!
+     * \param options the options needed for device creation
+     * \return a pointer to the newly created device
+     *
+     * \c options has to contain the following options:
+     * \li "meshfile" -> filename
+     * \li "dimension" -> the real space dimension (1, 2 or 3)
+     * \li "mesh_units" -> the units of the mesh (cf. get_mesh_units())
+     */
+    static Device* create(const ModelOptions& options);
+
+
+    //! Destroy a Device object
+    static void destroy(Device* device);
+
 
     //! Get a reference to the mesh
     Mesh& get_mesh(void) const;
 
+    
     //! Get a reference to the equation systems object
     EquationSystems& get_equation_systems(void) const;
+
 
     //! Initialize this device
     /*!
@@ -50,7 +59,7 @@ class Device
     void init(void);
 
   
-    //! Set a material for a geometrical region
+    //! Set a material for a physical region
     /*!
      * \c region_id is assumed to be a valid region number as given in the
      * mesh.
@@ -60,6 +69,7 @@ class Device
      */
     void set_material(Material* material, ID region_id);
   
+    
     //! Set a material for a number of geometrical regions
     /*!
      * \c region_id is assumed to be a vector of valid region numbers
@@ -71,6 +81,10 @@ class Device
     void set_material(Material* material, const std::vector<ID>& region_ids);
 
 
+    //! Set the Control module which will control this device
+    void set_control(Control* control);
+
+
     //! Get the material for a given region ID
     /*!
      * If \c region_id is not found in the material list, the NULL
@@ -78,32 +92,89 @@ class Device
      *
      * \param region_id the region number
      */
+    Material* get_material(ID region_id);
+
+    
+    /*! \copydoc get_material() const */
     const Material* get_material(ID region_id) const;
+    
     
     //! Get the map that contains all boundary nodes for all boundaries
     BoundaryNodeMap& get_boundary_node_map(void) const;
 
+    
     //! Get the mesh units
+    /*!
+     * Mesh units are in SI units, i.e. meters. The return value is
+     * the distance in real space corresponding to a distance of 1 in
+     * the mesh object, or:
+     * \f[\mathrm{d}_{real}(x, y) = \gamma\mathrm{d}_{mesh}(x,y)\f]
+     * where \f$\gamma\f$ is the result of get_mesh_units()
+     */
     double get_mesh_units(void) const;
+
+
+    //! Get a reference to the Control module that controls this device
+    Control& get_control(void) const;
     
 
   private:
 
+    //! Empty Constructor
+    /*!
+     * The mesh is assumed to be correctly prepared, i.e. all elements the
+     * right subdomain id assigned (which is the physical region number
+     * found in the mesh file).
+     * The \c boundary_nodes map has to contain all nodes for each boundary
+     * for which a boundary condition is implied.
+     */
+    Device(void);
+
+    
+    //! Set options for this device
+    /*!
+     * The options are stored internally and are accessible through
+     * special methods.
+     * Options have to be specified at creation time.
+     */
+    void set_options(const ModelOptions& options);
+
+    
+    //! Get a reference to the model options
+    ModelOptions& get_options(void);
+
+    
+    //! creates the mesh and the equation system
+    /*!
+     * This method assumes, that \c _options contain the name of the
+     * meshfile and the dimension
+     */
+    void setup_mesh(void);
+
+
     //! A typdef for convenience
     typedef std::map<ID, Material*> MaterialMap;
 
+    
     //! The map that connects region number to material
     MaterialMap _material_map;
 
+    
     //! The mesh for this device
     Mesh* _mesh;
 
+    
     //! The mesh unit in m
     /*!
      * A distance of 1 in the mesh corresponds to \c _mesh_units m
      */
     double _mesh_units;
 
+
+    //! The control module which controls this device
+    Control* _control;
+
+    
     //! The equation systems used for this device
     /*!
      * This is stored here because it has to be consistent with the mesh
@@ -111,13 +182,56 @@ class Device
      */
     EquationSystems* _eq_system;
 
+    
     //! A map that contains all nodes for boundary conditions
     BoundaryNodeMap* _boundary_nodes;
+
 
     //! User defined options for this device
     ModelOptions _options;
   
 };
+
+
+//
+// inline methods
+// 
+
+inline
+void
+Device::destroy(Device* device)
+{
+  delete device;
+}
+
+
+inline
+void
+Device::set_options(const ModelOptions& options)
+{
+  _options = options;
+}
+
+
+inline
+ModelOptions&
+Device::get_options(void)
+{
+  return _options;
+}
+
+
+inline
+Material*
+Device::get_material(ID region_id)
+{
+  MaterialMap::const_iterator it(_material_map.find(region_id));
+
+  if (it == _material_map.end())
+    return NULL;
+
+  return it->second;
+}
 
 
 inline
@@ -138,6 +252,22 @@ Mesh&
 Device::get_mesh(void) const
 {
   return *_mesh;
+}
+
+
+inline
+void
+Device::set_control(Control* control)
+{
+  _control = control;
+}
+
+
+inline
+Control&
+Device::get_control(void) const
+{
+  return *_control;
 }
 
 

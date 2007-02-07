@@ -61,42 +61,6 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     void set_statistics(TiberCad::Statistics statistics);
 
-    //! Add a dopant
-    void add_dopant(Dopant* dopant);
-
-    //! Add a recombination model
-    /*!
-     * \deprecated {Will probably disappear}
-     * \param recomb_model a pointer to a given recombination model
-     */
-    void add_recombination_model(RecombinationModelInterface* recomb_model);
-
-    //! Add a recombination model
-    /*!
-     * Creates and adds a new recombination model from the given name and
-     * options.
-     *
-     * \param model_name the name of the model
-     * \param options the options for the model
-     */
-    void add_recombination_model(const std::string& model_name,
-        const ModelOptions& options = ModelOptions());
-
-    //! Set the electron mobility model
-    /*!
-     * Creates a mobility model for the electrons from the given model
-     * name and options.
-     */
-    void set_electron_mobility_model(const std::string& model_name,
-        const ModelOptions& options = ModelOptions());
-
-    //! Set the hole mobility model
-    /*!
-     * Creates a mobility model for the holes from the given model
-     * name and options.
-     */
-    void set_hole_mobility_model(const std::string& model_name,
-        const ModelOptions& options = ModelOptions());
 
     //! Get the statistics to be used
     /*!
@@ -104,20 +68,24 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     TiberCad::Statistics get_statistics(void) const;
 
+    
     //! (Re-)Initialize for the given element
     /*!
      * \c reinit() calls \c prepare_element_data() which needs to be
      * implemented in derived classes
      */
     void reinit(const Elem* elem);
+
     
     //! Set the coupling type
     void set_coupling_type(DriftDiffusionDefs::Coupling coupling)
       { _coupling = (int) coupling; };
+ 
     
     //! Set the coupling type
     void set_coupling_type(int coupling)
-      { _coupling = coupling; };
+ 
+    { _coupling = coupling; };
     
     //! Get the coupling type
     DriftDiffusionDefs::Coupling get_coupling_type(void) const
@@ -194,22 +162,10 @@ class DriftDiffusionProperties : public PhysicalModel
     //! Get the lattice temperature (in units of eV)
     double get_lattice_temperature(void) const;
 
-    //! Get the total n-doping
-    double get_total_donor_density(void) const;
-
-    //! Get the total p-doping
-    double get_total_acceptor_density(void) const;
-
-    //! Get the total net doping density
-    /*!
-     * The return value is \f$N_d - N_a\f$
-     */
-    double get_net_doping_density(void) const;
-
-
 
     //! Calculate the electro-chemical potentials for given densities
     void calculate_electro_chemical_potentials(void);
+    
     
     //! Calculate electron and hole densities and derivatives
     /*!
@@ -219,6 +175,7 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     void calculate_densities(void);
 
+    
     //! Calculate the ionized dopant densities and derivatives
     /*!
      * The total density of ionized donors and acceptors is calculated,
@@ -228,6 +185,7 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     void calculate_ionized_dopants(void);
 
+    
     //! Calculate net recombination rates and derivatives
     /*!
      * The recombination models calculate the derivatives with respect to
@@ -235,9 +193,11 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     void calculate_net_recombination_rates(void);
 
+    
     //! Calculate the mobilities
     void calculate_mobilities(void);
 
+    
     //! Calculates the equilibrium properties.
     /*!
      *
@@ -260,6 +220,7 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_electron_density(void) const
       { return electron_density; };
      
+    
     //! Get the electron density derivative
     /*!
      * \return the electron density derivative with respect to the
@@ -267,6 +228,7 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     double get_electron_density_derivative(void) const
       { return electron_density_derivative; };
+    
     
     //! Get the hole density
     /*!
@@ -277,6 +239,7 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_hole_density(void) const
       { return hole_density; };
      
+    
     //! Get the ehole density derivative
     /*!
      * \return the hole density derivative with respect to the
@@ -285,6 +248,7 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_hole_density_derivative(void) const
       { return hole_density_derivative; };
     
+
     //! Get the ionized donor density
     /*!
      * \return the ionized donor density
@@ -292,6 +256,7 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_ionized_donor_density(void) const
       { return ionized_donor_density; };
      
+    
     //! Get the ionized donor density derivative
     /*!
      * \return the ionized donor density derivative with respect to the
@@ -300,6 +265,7 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_ionized_donor_density_derivative(void) const
       { return ionized_donor_density_derivative; };
         
+    
     //! Get the ionized acceptor density
     /*!
      * \return the ionized acceptor density
@@ -307,6 +273,7 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_ionized_acceptor_density(void) const
       { return ionized_acceptor_density; };
      
+    
     //! Get the ionized acceptor density derivative
     /*!
      * \return the ionized acceptor density derivative with respect to the
@@ -329,6 +296,7 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     double get_charge_density(void) const;
   
+    
     //! Get the net electron recombination rate
     /*!
      * Get \f$R_{net} = R - G\f$ as
@@ -336,6 +304,7 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_net_electron_recombination_rate(void) const
       { return electron_recombination_rate; };
       
+    
     //! Get the net electron recombination rate derivatives
     /*!
      * Get \f$\frac{\partial R_{net}}{\partial\varphi}\f$
@@ -346,6 +315,7 @@ class DriftDiffusionProperties : public PhysicalModel
       get_net_electron_recombination_rate_derivatives(void) const
         { return electron_recombination_rate_derivatives; };
     
+    
     //! Get the net hole recombination rate
     /*!
      * Get \f$R_{net} = R - G\f$ as
@@ -355,6 +325,7 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_net_hole_recombination_rate(void) const
       { return hole_recombination_rate; };
       
+    
     //! Get the net hole recombination rate derivatives
     /*!
      * Get \f$\frac{\partial R_{net}}{\partial\varphi}\f$
@@ -365,6 +336,7 @@ class DriftDiffusionProperties : public PhysicalModel
       get_net_hole_recombination_rate_derivatives(void) const
         { return hole_recombination_rate_derivatives; };
 
+    
     //! Get the total electric polarization
     /*!
      * The total electric polarization \b P is the sum of the
@@ -373,11 +345,13 @@ class DriftDiffusionProperties : public PhysicalModel
     const RealVectorValue& get_total_polarization(void) const
       { return polarization; };
 
+    
     //! Get the relative permittivity tensor
     //const RealTensorValue& get_relative_permittivity(void) const
     double get_relative_permittivity(void) const
       { return permittivity; };
       
+    
     //! Get the electron conductivity
     /*!
      * \return the electron conductivity \f$\sigma_n = \mu_n n\f$
@@ -385,6 +359,7 @@ class DriftDiffusionProperties : public PhysicalModel
     //double get_electron_conductivity(void) const
     //  { return electron_conductivity; };
       
+    
     //! Get the hole conductivity
     /*!
      * \return the hole conductivity \f$\sigma_p = \mu_p p\f$
@@ -392,6 +367,7 @@ class DriftDiffusionProperties : public PhysicalModel
     //double get_hole_conductivity(void) const
     //  { return hole_conductivity; };
       
+    
     //! Get the electron mobility
     /*!
      * \return the electron mobility
@@ -399,6 +375,7 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_electron_mobility(void) const
       { return electron_mobility; };
       
+    
     //! Get the hole mobility
     /*!
      * \return the hole mobility
@@ -411,6 +388,7 @@ class DriftDiffusionProperties : public PhysicalModel
     //const std::vector<double>& get_electron_conductivity_derivatives(void) const
     //  { return electron_conductivity_derivatives; };
       
+    
     //! Get the hole conductivity derivatives
     //const std::vector<double>& get_hole_conductivity_derivatives(void) const
     //  { return hole_conductivity_derivatives; };
@@ -420,27 +398,33 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_intrinsic_density_squared(void) const
       { return intrinsic_density * intrinsic_density; };
 
+    
     //! Get the intrinsic density
     double get_intrinsic_density(void) const
       { return intrinsic_density; };
 
+    
     //! Get equilibrium fermi level
     double get_equilibrium_fermi_level(void) const
       { return equilibrium_fermi_level; };
 
+    
     //! Get the conduction band edge
     double get_conduction_band_edge(void) const
       { return conduction_band.band_edge; };
 
+    
     //! Get the valence band edge
     double get_valence_band_edge(void) const
       { return valence_band.band_edge; };
 
+    
     //! Get the band gap
     double get_band_gap(void) const
       { return conduction_band.band_edge - valence_band.band_edge; };
 
     void get_net_recombination_rates(std::vector<double>& rates);
+    
     
     //! Get the IDs of the registered recombination models
     /*!
@@ -448,21 +432,23 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     int get_net_recombination_rate_IDs(std::vector<ID>& ids);
 
+    
     //! Get the recombination model with ID \c id
     RecombinationModelInterface* get_recombination_model(ID id);
 
+    
     //! Get the recombination model with ID \c id
     const RecombinationModelInterface* get_recombination_model(ID id) const;
 
+    
     //! get the net recombination rate of model \c id
     double get_net_recombination_rate(ID id);
 
-    //! Clear all doping
-    void clear_doping(void);
-
+    
     //! Clear all recombination rates
     void clear_recombination(void);
 
+    
     //! Returns the number of recombination models
     int get_number_of_recombination_models(void) const;
 
@@ -500,6 +486,7 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     virtual void do_init(void);
 
+    
     /*! \copydoc PhysicalModel::calculate_VCA() */
     virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
@@ -513,12 +500,15 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     virtual void prepare_element_data(void) {};
 
+    
     //! \copydoc PhysicalModel::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
+    
     //! \copydoc PhysicalModel::copy_from()
     virtual void copy_from(const PhysicalModelInterface* rhs);
 
+    
     //! The lattice temperature in eV (\f$= k_B T_{lat} / e\f$)
     double lattice_vt;
 
@@ -633,6 +623,8 @@ class DriftDiffusionProperties : public PhysicalModel
     //! The intrinsic density
     double intrinsic_density;
         
+
+    
     //! Calculate the density and its derivatives
     /*! 
      * The method also returns the ratio 'first derivative over density'
@@ -643,6 +635,7 @@ class DriftDiffusionProperties : public PhysicalModel
         double& derivative, double& _2nd_derivative,
         double& derivative_over_density) const;
     
+    
     //! Calculate the density for a given argument
     /*!
      * Basically an approximation for the Fermi integral with index 0.5 is
@@ -650,22 +643,27 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     template<TiberCad::Statistics S> double density(double arg) const;
 
+    
     //! Get the conduction band properties
     const BandProperties& get_conduction_band(void) const
       { return conduction_band; };
 
+    
     //! Get the valence band properties
     const BandProperties& get_valence_band(void) const
       { return valence_band; };
 
+    
     //! Get the conduction band properties
     BandProperties& get_conduction_band(void)
       { return conduction_band; };
 
+    
     //! Get the valence band properties
     BandProperties& get_valence_band(void)
       { return valence_band; };
 
+    
     //! Get the constant factor to calculate the effective density of states
     /*!
      * \return the factor pow(2 * PI / h^2)^1.5
@@ -676,20 +674,56 @@ class DriftDiffusionProperties : public PhysicalModel
       { return _DOS_factor; }
 
 
+
   private:
 
-    typedef std::set<Dopant*>::iterator dopant_iterator;
-    typedef std::set<Dopant*>::const_iterator const_dopant_iterator;
+    //! An iterator for the recombination models
     typedef std::map<ID, RecombinationModelInterface*>::iterator
       recomb_iterator;
+    
+    //! A const iterator for the recombination models
     typedef std::map<ID, RecombinationModelInterface*>::const_iterator
       const_recomb_iterator;
 
+    
     //! The copy constructor is disabled
     DriftDiffusionProperties(const DriftDiffusionProperties& rhs);
 
+    
     //! The assignment operator is disabled
     DriftDiffusionProperties& operator=(const DriftDiffusionProperties& rhs);
+
+    
+    //! Add a recombination model
+    /*!
+     * Creates and adds a new recombination model from the given name and
+     * options.
+     *
+     * \param model_name the name of the model
+     * \param options the options for the model
+     */
+     void add_recombination_model(const std::string& model_name,
+        const ModelOptions& options = ModelOptions());
+
+    
+    //! Set the electron mobility model
+    /*!
+     * Creates a mobility model for the electrons from the given model
+     * name and options.
+     */
+    void set_electron_mobility_model(const std::string& model_name,
+        const ModelOptions& options = ModelOptions());
+
+    
+    //! Set the hole mobility model
+    /*!
+     * Creates a mobility model for the holes from the given model
+     * name and options.
+     */
+    void set_hole_mobility_model(const std::string& model_name,
+        const ModelOptions& options = ModelOptions());
+
+
 
     //! The element we are currently working on
     const Elem* _elem;
@@ -721,12 +755,7 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     BandProperties valence_band;
 
-    //! The donors
-    std::set<Dopant*> _donors;
-
-    //! The acceptors
-    std::set<Dopant*> _acceptors;
-
+    
     //! The recombination models
     std::map<ID, RecombinationModelInterface*> _recombination_models;
 
@@ -831,6 +860,7 @@ DriftDiffusionProperties::get_coordinates(void) const
   return *_coord;
 }
  
+
 inline
 double
 DriftDiffusionProperties::get_charge_density(void) const
@@ -889,6 +919,7 @@ DriftDiffusionProperties::set_statistics(TiberCad::Statistics statistics)
   _statistics = statistics;
 }
 
+
 inline
 TiberCad::Statistics
 DriftDiffusionProperties::get_statistics(void) const
@@ -896,12 +927,6 @@ DriftDiffusionProperties::get_statistics(void) const
   return _statistics;
 }
 
-inline
-double
-DriftDiffusionProperties::get_net_doping_density(void) const
-{
-  return (get_total_donor_density() - get_total_acceptor_density());
-}
 
 template<TiberCad::Statistics S>
 inline
@@ -1004,6 +1029,7 @@ DriftDiffusionProperties::density_and_derivatives(double arg, double& density,
       break;
   }
 }
+
 
 inline
 void

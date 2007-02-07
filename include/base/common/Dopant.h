@@ -3,6 +3,7 @@
 #ifndef _DOPANT_H_
 #define _DOPANT_H_
 
+
 //! Describes a dopant with a single energy level
 class Dopant
 {
@@ -12,23 +13,45 @@ class Dopant
     //! The type of the dopant
     enum DopingType
     {
-      P_TYPE = -1,
-      N_TYPE = 1
+      P_TYPE = -1, /*!< p-type, acceptor */
+      N_TYPE = 1   /*!< n-type, donor */
     };
 
+    //! Constructor
+    /*!
+     * \param density doping density
+     * \param ionisation_energy the distance of the doping level from
+     * the corresponding band edge \f$\vert E_{c,v} - E_d\vert\f$
+     * \param g_factor g (cf. get_ionized_dopant_density())
+     * \param type the doping type
+     */
     Dopant(double density = 0.0, double ionisation_energy = 0.025,
         int g_factor = 2, DopingType type = N_TYPE);
 
+
+    //! Copy constructor
     Dopant(const Dopant& dopant);
 
+    
+    //! Get the doping density
     double get_doping_density(void) const;
 
+    
+    //! Get the ionisation energy of the dopant
+    /*!
+     * \f$E_i = \vert E_{c,v} - E_d\vert\f$
+     */
     double get_ionisation_energy(void) const;
 
+    
+    //! Get g (cf. get_ionized_dopant_density())
     int get_g_factor(void) const;
 
+    
+    //! Get the doping type
     DopingType get_type(void) const;
 
+    
     void set_doping_density(double N);
 
     void set_ionisation_energy(double E_i);
@@ -37,19 +60,39 @@ class Dopant
 
     void set_type(DopingType type);
 
+    //! Get the density of ionized dopants
+    /*!
+     * For donors this is
+     * \f[
+     * N_d^+ = \frac{N_d}{1 + g \exp{??}}
+     * \f]
+     *
+     */
     double get_ionized_dopant_density(double arg, double kT);
 
+
+    /*! \brief {Get the derivative of the ionized doping density with
+     * respect to the electric potential}
+     */
     double get_ionized_dopant_density_derivative(double arg, double kT);
 
 
   private:
 
+    //! The doping density
     double _density;
+
+    //! The doping type
     DopingType _type;
+
+    //! The ionisation energy
     double _ionisation_energy;
+
+    //! The g factor
     int _g_factor;
 
 };
+
 
 
 //

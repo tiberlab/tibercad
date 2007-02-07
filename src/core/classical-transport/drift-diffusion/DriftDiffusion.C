@@ -16,7 +16,6 @@
 // libmesh includes
 #include "node.h"
 #include "mesh.h"
-//#include "mesh_modification.h"
 #include "dof_map.h"
 #include "elem.h"
 #include "fe.h"
@@ -31,6 +30,7 @@
 #include "numeric_vector.h"
 #include "dense_submatrix.h"
 #include "dense_subvector.h"
+#include "GMVIO_cell.h"
 
 // C++ includes
 
@@ -38,8 +38,10 @@ using namespace std;
 using namespace DriftDiffusionDefs;
 
 
+
 DriftDiffusion*
 DriftDiffusion::_this;
+
 
 
 DriftDiffusion::Options::Options(void)
@@ -49,19 +51,22 @@ DriftDiffusion::Options::Options(void)
     refine_fraction(0.7),
     coarsen_fraction(0.3),
     refinement_tolerance(1e-6),
-    min_voltage_step(1e-3),
     integration_order(libMeshEnums::FIFTH),
     solver_method(NEWTON),
     max_gummel_iterations(5),
     mesh_units(1e-4), // default mesh units are um
     scaling_type(Scaling::UNITS),
-    coupling(POISSON),
+    coupling(FULLYCOUPLED),
     scheme(FEM),
     current_calculation(RSTF),
     n_max(1), p_max(1),
     C0_e(1), C0_h(1)
 {
 }
+
+
+
+
 
 DriftDiffusion::Options::Options(const Options& rhs)
   : mesh_refinement(rhs.mesh_refinement),
@@ -70,7 +75,6 @@ DriftDiffusion::Options::Options(const Options& rhs)
     refine_fraction(rhs.refine_fraction),
     coarsen_fraction(rhs.coarsen_fraction),
     refinement_tolerance(rhs.refinement_tolerance),
-    min_voltage_step(rhs.min_voltage_step),
     integration_order(rhs.integration_order),
     solver_method(rhs.solver_method),
     max_gummel_iterations(rhs.max_gummel_iterations),
@@ -87,6 +91,10 @@ DriftDiffusion::Options::Options(const Options& rhs)
 {
 }
 
+
+
+
+
 DriftDiffusion::Options&
 DriftDiffusion::Options::operator=(const Options& rhs)
 {
@@ -98,7 +106,6 @@ DriftDiffusion::Options::operator=(const Options& rhs)
     refine_fraction = rhs.refine_fraction;
     coarsen_fraction = rhs.coarsen_fraction;
     refinement_tolerance = rhs.refinement_tolerance;
-    min_voltage_step = rhs.min_voltage_step;
     integration_order = rhs.integration_order;
     solver_method = rhs.solver_method;
     max_gummel_iterations = rhs.max_gummel_iterations;
@@ -118,20 +125,27 @@ DriftDiffusion::Options::operator=(const Options& rhs)
 
 
 
+
+
 DriftDiffusion::SolverParameters::SolverParameters(void)
-  : nonlinear_tolerance(1e-12), 
-    nonlinear_abs_tolerance(1e-18),
+  : nonlinear_tolerance(1e-9), 
+    nonlinear_abs_tolerance(1e-12),
     nonlinear_step_tolerance(1e-6),
-    nonlinear_max_iterations(10),
+    nonlinear_max_iterations(20),
     linear_tolerance(1e-6),
-    linear_abs_tolerance(1e-12),
+    linear_abs_tolerance(1e-15),
     linear_max_iterations(500),
     ls_maxstep(0.025),
     ls_type(3),
     ksp_type(KSPBCGSL),
     pc_type(PCILU)
 {
+  // TODO read default values from some text file
 }
+
+
+
+
 
 DriftDiffusion::SolverParameters::SolverParameters(const SolverParameters& rhs)
   : nonlinear_tolerance(rhs.nonlinear_tolerance), 
@@ -147,6 +161,10 @@ DriftDiffusion::SolverParameters::SolverParameters(const SolverParameters& rhs)
     pc_type(rhs.pc_type)
 {
 }
+
+
+
+
 
 DriftDiffusion::SolverParameters&
 DriftDiffusion::SolverParameters::operator=(const SolverParameters& rhs)
@@ -169,10 +187,15 @@ DriftDiffusion::SolverParameters::operator=(const SolverParameters& rhs)
 }
 
 
+
+
 DriftDiffusion::DriftDiffusion(void)
-  : _rebuild_eq_system(true)
+  : _rebuild_eq_system(true),
+    _solve_equilibrium(true)
 {
 }
+
+
 
 
 DriftDiffusion::~DriftDiffusion(void)
@@ -180,6 +203,47 @@ DriftDiffusion::~DriftDiffusion(void)
   cleanup_solver();
 }
  
+
+
+
+PhysicalModel*
+DriftDiffusion::create_physical_model(const ModelOptions& options) const
+throw (ModelErrorException)
+{
+  const string& modelname = options.get_option("model", "unstrained");
+
+  DriftDiffusionProperties* model =
+    DriftDiffusionProperties::create(modelname, options);
+
+  if (model == NULL)
+    throw ModelErrorException(
+        "DriftDiffusion: No such physical model: " + modelname);
+
+  return model;
+}
+
+
+
+
+
+BoundaryProperties*
+DriftDiffusion::create_boundary_model(const ModelOptions& options) const
+throw (ModelErrorException)
+{
+  const string& modelname = options.get_option("type", "ohmic");
+
+  ElectricalContact* model =
+    ElectricalContact::create(modelname, options);
+
+  if (model == NULL)
+    throw ModelErrorException(
+        "DriftDiffusion: No such boundary model: " + modelname);
+
+  return model;
+}
+
+
+
 
 void
 DriftDiffusion::compute_scaling(Scaling::ScalingType type)
@@ -214,6 +278,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
 
+    assert(_device->get_material(elem->subdomain_id()) != NULL);
     DriftDiffusionProperties* sc =
       dynamic_cast<DriftDiffusionProperties*>(
           _device->get_material(elem->subdomain_id())->get_model(get_id()));
@@ -235,7 +300,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     mu0 = (mu0 > mu) ? mu0 : mu;
 
     // I don't know what is better...
-    double C = fabs(sc->get_net_doping_density());
+    double C = fabs(sc->get_material()->get_net_doping_density());
     //double C = fabs(sc->get_ionized_donor_density() -
     //    sc->get_ionized_acceptor_density());
     C0 = (C0 > C) ? C0 : C;
@@ -309,44 +374,6 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
 }
 
 
-void
-DriftDiffusion::set_simulation_voltage(const string& boundary,
-    double voltage)
-{
-  const Boundary* desc = get_environment().get_boundary(boundary);
-
-  if (desc != NULL)
-    _simulation_voltages[desc] = voltage;
-}
-
-
-void
-DriftDiffusion::remember_current_solution(void)
-{
-  _remembered_voltages = _simulation_voltages;
-
-  NonlinearImplicitSystem& system =
-    get_equation_systems().get_system<NonlinearImplicitSystem>(
-        get_equation_system_name());
-  system.get_vector("remembered solution") = *(system.solution);
-  system.get_vector("remembered solution").close();
-}
-
-
-void
-DriftDiffusion::set_to_remembered_solution(void)
-{
-  assert(_old_sim_voltages.size() == _remembered_voltages.size());
-  _old_sim_voltages = _remembered_voltages;
-
-  NonlinearImplicitSystem& system =
-    get_equation_systems().get_system<NonlinearImplicitSystem>(
-        get_equation_system_name());
-  *(system.solution) = system.get_vector("remembered solution");
-
-  system.get_vector("old solution") = *(system.solution);
-
-}
 
 
 void
@@ -373,6 +400,8 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
 }
 
 
+
+
 void
 DriftDiffusion::set_hole_fermi_level(double Ef_p)
 {
@@ -397,6 +426,8 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
 }
 
 
+
+
 void
 DriftDiffusion::set_electric_potential(double pot)
 {
@@ -419,6 +450,8 @@ DriftDiffusion::set_electric_potential(double pot)
     system.solution->set(id, level);
   }
 }
+
+
 
 
 void
@@ -454,6 +487,8 @@ DriftDiffusion::find_dirichlet_nodes(void)
 }
 
 
+
+
 void
 DriftDiffusion::reset_solver(void)
 {
@@ -464,20 +499,12 @@ DriftDiffusion::reset_solver(void)
   }
 }
 
+
+
+
 void
 DriftDiffusion::cleanup_solver(void)
 {
-  // erase old simulation voltage data structure
-  _old_sim_voltages.erase(_old_sim_voltages.begin(),
-      _old_sim_voltages.end());
-
-  // erase simulation voltage data structure
-  _simulation_voltages.erase(_simulation_voltages.begin(),
-      _simulation_voltages.end());
-
-  // erase remembered voltage data structure
-  _remembered_voltages.erase(_remembered_voltages.begin(),
-      _remembered_voltages.end());
 
   // erase boundary current data structure
   _boundary_currents.erase(_boundary_currents.begin(),
@@ -496,6 +523,9 @@ DriftDiffusion::cleanup_solver(void)
   reset_solver();
 }
 
+
+
+
 void
 DriftDiffusion::do_solve(void)
 {
@@ -508,6 +538,9 @@ DriftDiffusion::do_solve(void)
   _this = this;
   
   parse_options();
+
+  if (_solve_equilibrium)
+    solve_equilibrium();
 
   switch (_options.solver_method)
   {
@@ -525,51 +558,90 @@ DriftDiffusion::do_solve(void)
     calculate_currents_surfint();
 
   build_solution_vector(_solution);
+
+  static int cnt = 1;
+  vector<double> densities;
+  vector<string> names;
+  ostringstream os;
+  os << cnt << ".gmv";
+  build_band_edges(densities, names);
+  GMVIO(get_mesh()).write_nodal_data("output/bands_" + os.str(),
+      densities, names);
+  build_densities(densities, names);
+  GMVIO(get_mesh()).write_nodal_data("output/densities_" + os.str(),
+      densities, names);
+  build_current_density(densities, names);
+  GMVIO_cell(get_mesh()).write_ascii_cell_data("output/current_" + os.str(),
+      densities, names);
+  cnt++;
+
+  ContactData::iterator it(_boundary_currents.begin());
+  const ContactData::iterator end(_boundary_currents.end());
+  cout << "Currents:";
+  for ( ; it != end; ++it)
+    cout << " " << it->first->get_name() << " = " << (*it).second;
+  cout << endl;
 }
 
-double
-DriftDiffusion::calculate_new_simulation_voltages(void)
+
+void
+DriftDiffusion::solve_equilibrium(void)
 {
-  double step;
-  double max_diff = -1.0;
+  // make a rough guess
+  guess_equilibrium();
 
-  const SimulationEnvironment& env = get_environment();
+  NonlinearImplicitSystem& system =
+    get_equation_systems().get_system<NonlinearImplicitSystem>(
+        get_equation_system_name());
+  
+  SolverParameters& solver_params = get_options().solver_params;
+  unsigned int maxit = solver_params.nonlinear_max_iterations;
+  solver_params.nonlinear_max_iterations = 100;
+  set_solver_params(*system.nonlinear_solver);
+  solver_params.nonlinear_max_iterations = maxit;
 
-  SimulationEnvironment::BoundaryIterator it(env.boundaries_begin());
-  const SimulationEnvironment::BoundaryIterator end(env.boundaries_end());
+  int coupling = get_options().coupling;
+  get_options().coupling = POISSON;
 
-  SimulationEnvironment::BoundaryIterator max_id;
-
+  // backup the simulation voltages and set all to zero
+  ContactData sim_voltages(_boundary_currents);
+  ContactData::iterator it(sim_voltages.begin());
+  const ContactData::iterator end(sim_voltages.end());
   for ( ; it != end; ++it)
   {
-    const Boundary* bd = it->second;
-
-    double diff = _simulation_voltages[bd] - _old_sim_voltages[bd];
-    double abs_diff = fabs(diff);
-    if (abs_diff > max_diff)
-    {
-      max_diff = abs_diff;
-      step = diff;
-      max_id = it;
-    }
+    const Boundary* bd = it->first;
+    // It's save to static_cast because we know there has to be an
+    // ElectricalContact object
+    ElectricalContact* cnt =
+      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
+    sim_voltages[bd] = cnt->get_simulation_voltage();
+    cnt->set_simulation_voltage(0.0);
   }
 
-  const Boundary* max_bd = max_id->second;
-  _simulation_voltages[max_bd] = _old_sim_voltages[max_bd] + step / 2;
-
-  // TODO this is for test only
-  cerr << "Try new voltage:\n";
-  for ( it = env.boundaries_begin(); it != end; ++it)
+  try
   {
-    const Boundary* bd = it->second;
-    cerr << bd->get_name() << " : " << (_simulation_voltages[bd]) << " ";
+    system.solve();
   }
-    cerr << "\n";
+  catch (runtime_error& e)
+  {
+    cerr << "ATTENTION: Equilibrium did not converge: " << e.what() << endl;
+  }
 
+  // set the contact voltages back to the desired values
+  it = sim_voltages.begin();
+  for ( ; it != end; ++it)
+  {
+    const Boundary* bd = it->first;
+    ElectricalContact* cnt =
+      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
+    cnt->set_simulation_voltage(sim_voltages[bd]);
+  }
 
+  get_options().coupling = coupling;
 
-  return max_diff / 2.0;
+  _solve_equilibrium = false;
 }
+
 
 
 void
@@ -649,6 +721,9 @@ DriftDiffusion::guess_equilibrium(void)
   }
 }
 
+
+
+
 void
 DriftDiffusion::set_solver_params(NonlinearSolver<Number>& solver)
 {
@@ -678,6 +753,9 @@ DriftDiffusion::set_solver_params(NonlinearSolver<Number>& solver)
   solver_class.set_pc_type(solver_params.pc_type);
 }
 
+
+
+
 void
 DriftDiffusion::parse_const_options(void)
 {
@@ -686,7 +764,6 @@ DriftDiffusion::parse_const_options(void)
   const ModelOptions& opts = SimulationInterface::get_options();
   Options& myopts = get_options();
 
-  myopts.mesh_units = opts.get_option("mesh_units", 1e-4);
   string method =  opts.get_option("current_integration_method", "");
   if (method == "surfint")
     myopts.current_calculation = SURFINT;
@@ -700,7 +777,15 @@ DriftDiffusion::parse_const_options(void)
     myopts.scaling_type = Scaling::NONE;
   else
     myopts.scaling_type = Scaling::UNITS;
+
+  // mesh units are stored in Device. We make a copy here because we need
+  // them in cm.
+  myopts.mesh_units = 100.0 * get_environment().get_device().get_mesh_units();
 }
+
+
+
+
 
 void
 DriftDiffusion::parse_options(void)
@@ -712,9 +797,6 @@ DriftDiffusion::parse_options(void)
 
   const ModelOptions& opts = SimulationInterface::get_options();
   Options& myopts = get_options();
-
-  myopts.min_voltage_step = opts.get_option("min_voltage_step", 
-      myopts.min_voltage_step);
 
   myopts.integration_order = static_cast<libMeshEnums::Order>(
       opts.get_option("integration_order", 5));
@@ -806,6 +888,9 @@ DriftDiffusion::parse_options(void)
 }
 
 
+
+
+
 void
 DriftDiffusion::rebuild_equation_system(void)
 {
@@ -829,10 +914,9 @@ DriftDiffusion::rebuild_equation_system(void)
   system.add_variable("fermi_e", libMeshEnums::FIRST);
   system.add_variable("fermi_h", libMeshEnums::FIRST);
 
-  // we can remember a solution for future use
-  system.add_vector("remembered solution");
   // for adaptive mesh refinement we need the old solution
   // befor a refinement step
+  // we need it also for self-consistent loops
   system.add_vector("old solution");
 
 
@@ -848,6 +932,8 @@ DriftDiffusion::rebuild_equation_system(void)
 
   // finally initialize the newly created system
   system.init();
+
+  system.nonlinear_solver->matvec = assemble;
   
   compute_scaling(get_options().scaling_type);
 
@@ -855,35 +941,35 @@ DriftDiffusion::rebuild_equation_system(void)
 
 }
 
+
+
+
 void
 DriftDiffusion::do_init(void)
 {
 
-  // prepare a list for the boundary voltages
-  const SimulationEnvironment& env = get_environment();
-
-  SimulationEnvironment::BoundaryIterator it(env.boundaries_begin());
-  const SimulationEnvironment::BoundaryIterator end(env.boundaries_end());
-
-  const ContactData::const_iterator bc_end = _simulation_voltages.end();
-
-  for ( ; it != end; ++it)
-  {
-    Boundary* bd = it->second;
-    ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
-
-    if (_simulation_voltages.find(bd) == bc_end)
-      _simulation_voltages[bd] = 0.0;
-
-    _old_sim_voltages[bd] = 0.0;
-  }
-
   find_dirichlet_nodes();
 
-
   parse_const_options();
+  
+  rebuild_equation_system();
+
+  // prepare the _boundary_currents
+  // we will rely on the fact that it contains an entry for every boundary
+  // later on !!!
+  SimulationEnvironment::BoundaryIterator
+    it(get_environment().boundaries_begin());
+  const SimulationEnvironment::BoundaryIterator
+    end(get_environment().boundaries_end());
+  for ( ; it != end; ++it)
+  {
+    BoundaryProperties* bd = it->second->get_boundary_properties(get_id());
+    if (bd != NULL)
+      _boundary_currents[it->second] = 0.0;
+  }
 }
+
+
 
 
 void
@@ -902,9 +988,6 @@ DriftDiffusion::solve_newton(void)
     equation_systems.get_system<NonlinearImplicitSystem>(
         get_equation_system_name());
 
-  NumericVector<Number>& solution = *(system.solution);
-  NumericVector<Number>& old_solution = system.get_vector("old solution");
-
 
   // in 1D bcgs seems to work better than bcgsl
   //if (dim == 1)
@@ -915,162 +998,69 @@ DriftDiffusion::solve_newton(void)
   // set the solver parameters (they could have changed since we made
   // the last calculation)
   set_solver_params(*system.nonlinear_solver);
-  system.nonlinear_solver->matvec = assemble;
 
-
-  //
-  // solve for the desired contact voltages
-  //
-  ContactData voltages = _simulation_voltages;
 
   _options.C0_e = _options.n_max;
   _options.C0_h = _options.p_max;
 
-  bool reached = false;
-  do
+
+  bool failure = true;
+  string msg("DriftDiffusion: solve failed (");
+
+  try
   {
-    _simulation_voltages = voltages;
-    bool retry = true;
-    do
+    system.solve();
+    failure = false;
+  }
+  catch (PetscDivergedError& e)
+  {
+    if (e.get_solver_type() == 1) cerr << "KSP ";
+    else cerr << "SNES ";
+    cerr << "diverged: " << e.get_reason() <<
+      " at iteration " << e.get_iteration() <<
+      " (fnorm = " << e.get_fnorm() << ")\n";
+
+    //if (e.get_reason() == -5) retry = false;
+    //if (e.get_reason() == -6) retry = false;
+    //if (e.get_reason() == -8) retry = false;
+
+    msg += e.what();
+    msg += ")\n";
+
+  }
+  catch (PetscRuntimeError& e)
+  {
+    cerr << "Petsc runtime error: " << e.get_reason();
+    if (e.get_reason() == PETSC_ERR_MAT_LU_ZRPVT)
     {
-      // try to solve the full step
+      // in the case of a zero pivot in (I)LU factorization
+      // we try another preconditioner
+      cerr << " (Zero pivot during ILU.)";
+      PCType old_pc = solver_params.pc_type;
+      solver_params.pc_type = PCJACOBI;
+      set_solver_params(*system.nonlinear_solver);
+      solver_params.pc_type = old_pc;
       try
       {
         system.solve();
-        retry = false;
+        failure = false;
       }
-      catch (PetscDivergedError& e)
-      {
-        if (e.get_solver_type() == 1) cerr << "KSP ";
-        else cerr << "SNES ";
-        cerr << "diverged: " << e.get_reason() <<
-          " at iteration " << e.get_iteration() <<
-          " (fnorm = " << e.get_fnorm() << ")\n";
-
-        //if (e.get_reason() == -5) retry = false;
-        //if (e.get_reason() == -6) retry = false;
-        //if (e.get_reason() == -8) retry = false;
-
-      }
-      catch (PetscRuntimeError& e)
-      {
-        cerr << "Petsc runtime error: " << e.get_reason();
-        if (e.get_reason() == PETSC_ERR_MAT_LU_ZRPVT)
-        {
-          // in the case of a zero pivot in (I)LU factorization
-          // we try another preconditioner
-          cerr << " (Zero pivot during ILU.)";
-          PCType old_pc = solver_params.pc_type;
-          solver_params.pc_type = PCJACOBI;
-          set_solver_params(*system.nonlinear_solver);
-          solver_params.pc_type = old_pc;
-        }
-        cerr << "\n";
-      }
-
-      // if it did not converge, try half of the step
-      if (retry)
-      {
-        double step = calculate_new_simulation_voltages();
-        if (step < params.min_voltage_step)
-          throw (SolveFailedException("Voltage step too small"));
-
-        // we have to clear the solver context, because the exception
-        // left it in a unknown state such that future solves would fail.
-        system.nonlinear_solver->clear();
-        solution = old_solution;
-      }
-    } while (retry);
-
-    _n_nonlinear_iterations = system.n_nonlinear_iterations();
-    _final_residual = system.final_nonlinear_residual();
-    _old_sim_voltages = _simulation_voltages;
-    old_solution = solution;
-
-    _options.C0_e = _options.n_max;
-    _options.C0_h = _options.p_max;
-
-    if (_simulation_voltages == voltages) reached = true;
-  } while (!reached);
-
-
-
-  // do mesh refinement if desired
-  if (params.mesh_refinement)
-  {
-    MeshRefinement mesh_refinement(mesh);
-    ErrorVector error;
-    KellyErrorEstimator error_estimator;
-
-    bool is_refined;
-    double delta_l2_norm, l2_norm;
-
-    for (int r_step = 0; r_step < params.max_refinement_steps; r_step++)
-    {
-      cout << "\nRefinement step " << (r_step + 1) << "\n" << flush;
-      error_estimator.estimate_error(system, error);
-    
-      mesh_refinement.flag_elements_by_error_fraction(error,
-                                          params.refine_fraction,
-                                          params.coarsen_fraction,
-                                          params.max_refinement_level);
-
-      is_refined = mesh_refinement.refine_and_coarsen_elements();
-      
-      equation_systems.reinit();
-      
-      if (is_refined)
-      {
-        get_environment().update_element_list();
-        get_environment().update_boundary_node_map();
-        find_dirichlet_nodes();
-      }
-
-      old_solution = solution;
-
-      try { system.solve(); }
-      catch (PetscDivergedError& e)
-      {
-        if (e.get_solver_type() == 1) cerr << "KSP ";
-        else cerr << "SNES ";
-        cerr << "diverged: " << e.get_reason() <<
-          " at iteration " << e.get_iteration() <<
-          " (fnorm = " << e.get_fnorm() << ")\n";
-
-        // we have to clear the solver context, because the exception
-        // left it in a unknown state such that future solves would fail.
-        solution = old_solution;
-        system.nonlinear_solver->clear();
-      }
-      catch (PetscRuntimeError& e)
-      {
-        if (e.get_reason() == PETSC_ERR_MAT_LU_ZRPVT)
-          cerr << "Zero pivot during ILU.\n";
-        // we have to clear the solver context, because the exception
-        // left it in a unknown state such that future solves would fail.
-        solution = old_solution;
-        system.nonlinear_solver->clear();
-      }
-
-/*
-      solution.close();
-      l2_norm = solution.l2_norm() / sqrt(mesh.n_nodes());
-      old_solution.add(-1.0, solution);
-
-
-      old_solution.close();
-      delta_l2_norm = old_solution.l2_norm() / sqrt(mesh.n_nodes());
-      cout << "  |new - old|_2 = " << delta_l2_norm
-        << " |new| = " << l2_norm << "\n\n";
-*/
-
+      catch (...) {}
     }
-
-    // disable refinement
-    // TODO: ???
-    disable_mesh_refinement();
+    cerr << "\n";
+    msg += e.what();
+    msg += ")\n";
   }
+
+  if (failure)
+    throw SolveFailedException(msg);
+
+  _options.C0_e = _options.n_max;
+  _options.C0_h = _options.p_max;
 }
+
+
+
 
 double
 DriftDiffusion::do_gummel_iterations(int max_it)
@@ -1114,11 +1104,17 @@ DriftDiffusion::do_gummel_iterations(int max_it)
   return 0;
 }
 
+
+
+
 void
 DriftDiffusion::solve_gummel(void) throw (PetscRuntimeError)
 {
   do_gummel_iterations(get_options().max_gummel_iterations);
 }
+
+
+
 
 
 template <typename T>
@@ -2663,6 +2659,8 @@ DriftDiffusion::build_band_edges(vector<double>& band_edges,
 #endif
 }
 
+
+
 void
 DriftDiffusion::assemble(const NumericVector<Number>& x,
     NumericVector<Number>* residual,
@@ -2792,7 +2790,6 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
   const Options& params = get_options();
   Options& options = get_options();
 
-  ContactData& simulation_voltages = _simulation_voltages;
   BoundaryNodeList& dirichlet_nodes = _dirichlet_nodes;
 
 
@@ -3564,7 +3561,7 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
             if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
             {
               double val = (contact->get_boundary_value(POTENTIAL)
-                  + simulation_voltages[bd]) / phi0;
+                  + contact->get_simulation_voltage()) / phi0;
               Ke.condense(i, i, -val, Fe);
             }
             else if (contact->get_type(POTENTIAL) == ElectricalContact::PINNING)
@@ -3580,7 +3577,7 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
             if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
             {
               double val = (contact->get_boundary_value(FERMIE)
-                  + simulation_voltages[bd]) / phi0;
+                  + contact->get_simulation_voltage()) / phi0;
               Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
             }
           }
@@ -3590,7 +3587,7 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
             if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
             {
               double val = (contact->get_boundary_value(FERMIH)
-                  + simulation_voltages[bd]) / phi0;
+                  + contact->get_simulation_voltage()) / phi0;
               Ke.condense(i + 2 * n_dofs, i + 2 * n_dofs, -val, Fe);
             }
           }
@@ -3654,7 +3651,7 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
                   if (dof_indices[id] == dof_indices_u[i])
                   {
                     double val = (contact->get_boundary_value(POTENTIAL)
-                      + simulation_voltages[bd]) / phi0;
+                        + contact->get_simulation_voltage()) / phi0;
                     Ke.condense(id, id, -val, Fe);
                   }
                 }
@@ -3680,7 +3677,7 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
                   if (dof_indices[id] == dof_indices_en[i])
                   {
                     double val = (contact->get_boundary_value(FERMIE)
-                      + simulation_voltages[bd]) / phi0;
+                      + contact->get_simulation_voltage()) / phi0;
                     Ke.condense(id, id, -val, Fe);
                   }
                 }
@@ -3695,7 +3692,7 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
                   if (dof_indices[id] == dof_indices_ep[i])
                   {
                     double val = (contact->get_boundary_value(FERMIE)
-                      + simulation_voltages[bd]) / phi0;
+                      + contact->get_simulation_voltage()) / phi0;
                     Ke.condense(id, id, -val, Fe);
                   }
                 }
@@ -3802,7 +3799,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   const Options& params = get_options();
   Options& options = get_options();
 
-  ContactData& simulation_voltages = _simulation_voltages;
   BoundaryNodeList& dirichlet_nodes = _dirichlet_nodes;
 
 
@@ -3829,8 +3825,10 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   const double P0 = (Constants::e * x0 * C0) * 1e4;
   // density scaling for electrons
   double C0_e = options.C0_e;
+  C0_e = C0;
   // density scaling for holes
   double C0_h = options.C0_h;
+  C0_h = C0;
   // scaling for recombination rates
   double R0_e = C0_e / scaling.get_time_scaling();
   double R0_h = C0_h / scaling.get_time_scaling();
@@ -4554,7 +4552,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
             {
               double val = (contact->get_boundary_value(POTENTIAL)
-                  + simulation_voltages[bd]) / phi0;
+                  + contact->get_simulation_voltage()) / phi0;
               Ke.condense(i, i, -val, Fe);
             }
             else if (contact->get_type(POTENTIAL) == ElectricalContact::PINNING)
@@ -4570,7 +4568,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
             {
               double val = (contact->get_boundary_value(FERMIE)
-                  + simulation_voltages[bd]) / phi0;
+                  + contact->get_simulation_voltage()) / phi0;
               Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
             }
           }
@@ -4580,7 +4578,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
             {
               double val = (contact->get_boundary_value(FERMIH)
-                  + simulation_voltages[bd]) / phi0;
+                  + contact->get_simulation_voltage()) / phi0;
               Ke.condense(i + 2 * n_dofs, i + 2 * n_dofs, -val, Fe);
             }
           }
@@ -4644,7 +4642,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                   if (dof_indices[id] == dof_indices_u[i])
                   {
                     double val = (contact->get_boundary_value(POTENTIAL)
-                      + simulation_voltages[bd]) / phi0;
+                        + contact->get_simulation_voltage()) / phi0;
                     Ke.condense(id, id, -val, Fe);
                   }
                 }
@@ -4670,7 +4668,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                   if (dof_indices[id] == dof_indices_en[i])
                   {
                     double val = (contact->get_boundary_value(FERMIE)
-                      + simulation_voltages[bd]) / phi0;
+                        + contact->get_simulation_voltage()) / phi0;
                     Ke.condense(id, id, -val, Fe);
                   }
                 }
@@ -4685,7 +4683,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                   if (dof_indices[id] == dof_indices_ep[i])
                   {
                     double val = (contact->get_boundary_value(FERMIE)
-                      + simulation_voltages[bd]) / phi0;
+                        + contact->get_simulation_voltage()) / phi0;
                     Ke.condense(id, id, -val, Fe);
                   }
                 }
@@ -4790,7 +4788,6 @@ DriftDiffusion::do_assembly1D(const NumericVector<Number>& x,
   const Options& params = get_options();
   Options& options = get_options();
 
-  ContactData& simulation_voltages = _simulation_voltages;
   BoundaryNodeList& dirichlet_nodes = _dirichlet_nodes;
 
 
@@ -5347,7 +5344,7 @@ DriftDiffusion::do_assembly1D(const NumericVector<Number>& x,
             if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
             {
               double val = (contact->get_boundary_value(POTENTIAL)
-                  + simulation_voltages[bd]) / phi0;
+                  + contact->get_simulation_voltage()) / phi0;
               Ke.condense(i, i, -val, Fe);
             }
             else if (contact->get_type(POTENTIAL) == ElectricalContact::PINNING)
@@ -5363,7 +5360,7 @@ DriftDiffusion::do_assembly1D(const NumericVector<Number>& x,
             if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
             {
               double val = (contact->get_boundary_value(FERMIE)
-                  + simulation_voltages[bd]) / phi0;
+                  + contact->get_simulation_voltage()) / phi0;
               Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
             }
           }
@@ -5373,7 +5370,7 @@ DriftDiffusion::do_assembly1D(const NumericVector<Number>& x,
             if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
             {
               double val = (contact->get_boundary_value(FERMIH)
-                  + simulation_voltages[bd]) / phi0;
+                  + contact->get_simulation_voltage()) / phi0;
               Ke.condense(i + 2 * n_dofs, i + 2 * n_dofs, -val, Fe);
             }
           }
@@ -5437,7 +5434,7 @@ DriftDiffusion::do_assembly1D(const NumericVector<Number>& x,
                   if (dof_indices[id] == dof_indices_u[i])
                   {
                     double val = (contact->get_boundary_value(POTENTIAL)
-                        + simulation_voltages[bd]) / phi0;
+                        + contact->get_simulation_voltage()) / phi0;
                     Ke.condense(id, id, -val, Fe);
                   }
                 }
@@ -5463,7 +5460,7 @@ DriftDiffusion::do_assembly1D(const NumericVector<Number>& x,
                   if (dof_indices[id] == dof_indices_en[i])
                   {
                     double val = (contact->get_boundary_value(FERMIE)
-                      + simulation_voltages[bd]) / phi0;
+                        + contact->get_simulation_voltage()) / phi0;
                     Ke.condense(id, id, -val, Fe);
                   }
                 }
@@ -5478,7 +5475,7 @@ DriftDiffusion::do_assembly1D(const NumericVector<Number>& x,
                   if (dof_indices[id] == dof_indices_ep[i])
                   {
                     double val = (contact->get_boundary_value(FERMIE)
-                      + simulation_voltages[bd]) / phi0;
+                        + contact->get_simulation_voltage()) / phi0;
                     Ke.condense(id, id, -val, Fe);
                   }
                 }

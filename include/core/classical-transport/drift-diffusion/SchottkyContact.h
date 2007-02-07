@@ -35,9 +35,11 @@ class SchottkyContact : public ElectricalContact
 };
 
 
+
 //
 // inline
 // 
+
 
 inline
 SchottkyContact*
@@ -47,6 +49,7 @@ SchottkyContact::create(void)
 }
 
 
+
 inline
 SchottkyContact::SchottkyContact(void)
 {
@@ -54,6 +57,8 @@ SchottkyContact::SchottkyContact(void)
   set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::DIRICHLET);
   set_type(DriftDiffusionDefs::FERMIH, ElectricalContact::DIRICHLET);
 }
+
+
 
 inline
 double
@@ -75,6 +80,7 @@ SchottkyContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
 }
 
 
+
 inline
 void
 SchottkyContact::do_init(void)
@@ -83,5 +89,8 @@ SchottkyContact::do_init(void)
 
   _barrier = get_options().get_option("barrier_height", 0.8);
 }
+
+
+
 
 #endif // _SCHOTTKYCONTACT_H_

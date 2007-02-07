@@ -3,18 +3,24 @@
 #include "DriftDiffusionProperties.h"
 #include "RecombinationModelInterface.h"
 #include "MobilityModelInterface.h"
+#include "Material.h"
 #include "Dopant.h"
 #include "Constants.h"
+#include "InitFailedException.h"
 
 #include "elem.h"
 
 #include <cmath>
+
+
 
 // we calculate in cm, therefore the factor 1e6
 // the electron charge enters because we take k*T in electron volts
 const double
 DriftDiffusionProperties::_DOS_factor = std::pow(2.0 * M_PI * Constants::me /
       (Constants::h * Constants::h) * Constants::e, 1.5) / 1e6;
+
+
 
 
 DriftDiffusionProperties::DriftDiffusionProperties(void)
@@ -31,36 +37,51 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
 {
 }
 
+
+
+
 void
 DriftDiffusionProperties::do_init(void)
 {
-  Material* mat = get_material();
-
-  _electron_mobility->set_material(mat);
-  _electron_mobility->init();
-  _hole_mobility->set_material(mat);
-  _hole_mobility->init();
-  
-  recomb_iterator it = _recombination_models.begin();
-  recomb_iterator end = _recombination_models.end();
-  for ( ; it != end; ++it)
-  {
-    (it->second)->set_material(mat);
-    (it->second)->init();
-  }
 
   if (get_options().get_option("statistics", "B") == "FD")
     set_statistics(TiberCad::FERMIDIRAC);
 
+  Material* mat = get_material();
+  const ModelOptions& matopts = mat->get_options();
+
+  // create electron mobility model
+  const std::string& emob =
+    get_options().get_option("electron_mobility", "constant");
+  set_electron_mobility_model(emob);
+
+  // create hole mobility model
+  const std::string& hmob =
+    get_options().get_option("hole_mobility", "constant");
+  set_hole_mobility_model(hmob);
+
+
+  // create recombination models
+  std::vector<std::string> recomb;
+  get_options().get_option("recombination", recomb);
+  std::vector<std::string>::iterator it(recomb.begin());
+  const std::vector<std::string>::iterator end(recomb.end());
+  for ( ; it != end; ++it)
+    add_recombination_model(*it);
+  
 }
+
+
+
 
 DriftDiffusionProperties::~DriftDiffusionProperties(void)
 {
-  clear_doping();
   clear_recombination();
   PhysicalModelInterface::destroy(_electron_mobility);
   PhysicalModelInterface::destroy(_hole_mobility);
 }
+
+
 
 
 void
@@ -110,30 +131,7 @@ DriftDiffusionProperties::calculate_VCA(const PhysicalModelInterface* comp_A,
 }
 
 
-void
-DriftDiffusionProperties::add_dopant(Dopant* dopant)
-{
-  if (dopant != NULL)
-  {
-    if (dopant->get_type() == Dopant::N_TYPE)
-      _donors.insert(dopant);
-    else
-      _acceptors.insert(dopant);
-  }
-    
-}
 
-void
-DriftDiffusionProperties::add_recombination_model(
-    RecombinationModelInterface* recomb_model)
-{
-  if (recomb_model != NULL)
-  {
-    ID id = recomb_model->get_id();
-    _recombination_models[id] = recomb_model;
-    recomb_model->set_driftdiffusionproperties(this);
-  }
-}
 
 void
 DriftDiffusionProperties::add_recombination_model(
@@ -142,15 +140,19 @@ DriftDiffusionProperties::add_recombination_model(
   RecombinationModelInterface* model =
     RecombinationModelInterface::create(model_name, options);
 
-  if (model != NULL)
-  {
-    ID id = model->get_id();
-    _recombination_models[id] = model;
-    model->set_driftdiffusionproperties(this);
-  }
+  if (model == NULL)
+    throw InitFailedException("No such recombination model: " + model_name);
+
+  ID id = model->get_id();
+  _recombination_models[id] = model;
+  model->set_driftdiffusionproperties(this);
+  model->set_material(get_material());
+  model->init();
 }
 
  
+
+
 void
 DriftDiffusionProperties::set_electron_mobility_model(
     const std::string& model_name, const ModelOptions& options)
@@ -158,13 +160,19 @@ DriftDiffusionProperties::set_electron_mobility_model(
   MobilityModelInterface* mobility_model =
     MobilityModelInterface::create(model_name, options);
 
-  if (mobility_model != NULL)
-  {
-    PhysicalModelInterface::destroy(_electron_mobility);
-    _electron_mobility = mobility_model;
-    _electron_mobility->set_driftdiffusionproperties(this);
-  }
+  if (mobility_model == NULL)
+    throw InitFailedException("No such electron mobility model: " + model_name);
+  
+  PhysicalModelInterface::destroy(_electron_mobility);
+  _electron_mobility = mobility_model;
+  _electron_mobility->set_driftdiffusionproperties(this);
+  _electron_mobility->set_material(get_material());
+  _electron_mobility->set_carrier_type('e');
+  _electron_mobility->init();
+
 }
+
+
 
  
 void
@@ -174,55 +182,20 @@ DriftDiffusionProperties::set_hole_mobility_model(
   MobilityModelInterface* mobility_model =
     MobilityModelInterface::create(model_name, options);
 
-  if (mobility_model != NULL)
-  {
-    PhysicalModelInterface::destroy(_hole_mobility);
-    _hole_mobility = mobility_model;
-    _hole_mobility->set_driftdiffusionproperties(this);
-  }
+  if (mobility_model == NULL)
+    throw InitFailedException("No such hole mobility model: " + model_name);
+ 
+  PhysicalModelInterface::destroy(_hole_mobility);
+  _hole_mobility = mobility_model;
+  _hole_mobility->set_driftdiffusionproperties(this);
+  _hole_mobility->set_material(get_material());
+  _hole_mobility->set_carrier_type('h');
+  _hole_mobility->init();
+
 }
 
 
-double
-DriftDiffusionProperties::get_total_donor_density(void) const
-{
-  double Nd = 0;
-  dopant_iterator it = _donors.begin();
-  dopant_iterator end = _donors.end();
-  for ( ; it != end; ++it)
-    Nd += (*it)->get_doping_density();
 
-  return Nd;
-}
-
-double
-DriftDiffusionProperties::get_total_acceptor_density(void) const
-{
-  double Na = 0;
-  dopant_iterator it = _acceptors.begin();
-  dopant_iterator end = _acceptors.end();
-  for ( ; it != end; ++it)
-    Na += (*it)->get_doping_density();
-
-  return Na;
-}
-
-void
-DriftDiffusionProperties::clear_doping(void)
-{
-  dopant_iterator it = _donors.begin();
-  dopant_iterator end = _donors.end();
-  for ( ; it != end; ++it)
-    delete (*it);
-
-  it = _acceptors.begin();
-  end = _acceptors.end();
-  for ( ; it != end; ++it)
-    delete (*it);
-
-  _donors.clear();
-  _acceptors.clear();
-}
 
 void
 DriftDiffusionProperties::clear_recombination(void)
@@ -234,6 +207,9 @@ DriftDiffusionProperties::clear_recombination(void)
 
   _recombination_models.clear();
 }
+
+
+
 
 void
 DriftDiffusionProperties::calculate_densities(void)
@@ -316,6 +292,9 @@ DriftDiffusionProperties::calculate_densities(void)
 
 }
 
+
+
+
 void
 DriftDiffusionProperties::calculate_ionized_dopants(void)
 {
@@ -329,28 +308,31 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
 
   double Nd = 0, dNd = 0;
   double Na = 0, dNa = 0;
+  
+  Material::dopant_iterator it(get_material()->donors_begin());
+  Material::dopant_iterator end(get_material()->donors_end());
+  for ( ; it != end; ++it)
   {
-    dopant_iterator it = _donors.begin();
-    dopant_iterator end = _donors.end();
-    for ( ; it != end; ++it)
-    {
-      Nd += (*it)->get_ionized_dopant_density(arg_e, kT);
-      dNd += (*it)->get_ionized_dopant_density_derivative(arg_e, kT);
-    }
-    ionized_donor_density = Nd;
-    ionized_donor_density_derivative = dNd;
-
-    it = _acceptors.begin();
-    end = _acceptors.end();
-    for ( ; it != end; ++it)
-    {
-      Na += (*it)->get_ionized_dopant_density(arg_h, kT);
-      dNa -= (*it)->get_ionized_dopant_density_derivative(arg_h, kT);
-    }
-    ionized_acceptor_density = Na;
-    ionized_acceptor_density_derivative = dNa;
+    Nd += (*it)->get_ionized_dopant_density(arg_e, kT);
+    dNd += (*it)->get_ionized_dopant_density_derivative(arg_e, kT);
   }
+  ionized_donor_density = Nd;
+  ionized_donor_density_derivative = dNd;
+
+  it = get_material()->acceptors_begin();
+  end = get_material()->acceptors_end();
+  for ( ; it != end; ++it)
+  {
+    Na += (*it)->get_ionized_dopant_density(arg_h, kT);
+    dNa -= (*it)->get_ionized_dopant_density_derivative(arg_h, kT);
+  }
+  ionized_acceptor_density = Na;
+  ionized_acceptor_density_derivative = dNa;
+
 }
+
+
+
 
 void
 DriftDiffusionProperties::calculate_net_recombination_rates(void)
@@ -385,6 +367,9 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
   }
 }
 
+
+
+
 void
 DriftDiffusionProperties::calculate_mobilities(void)
 {
@@ -407,6 +392,8 @@ DriftDiffusionProperties::calculate_mobilities(void)
 }
 
 
+
+
 void
 DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
 {
@@ -420,6 +407,8 @@ DriftDiffusionProperties::get_net_recombination_rates(
     std::vector<double>& rates)
 {
 }
+
+
 
 int
 DriftDiffusionProperties::get_net_recombination_rate_IDs(
@@ -437,6 +426,8 @@ DriftDiffusionProperties::get_net_recombination_rate_IDs(
 
   return n;
 }
+
+
 
 double
 DriftDiffusionProperties::get_net_recombination_rate(ID id)
@@ -471,8 +462,8 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 
   const BandProperties& cb = conduction_band;
   const BandProperties& vb = valence_band;
-  double Nd = get_total_donor_density();
-  double Na = get_total_acceptor_density();
+  double Nd = get_material()->get_total_donor_density();
+  double Na = get_material()->get_total_acceptor_density();
 
   double ni2 = cb.effective_DOS * vb.effective_DOS
     * std::exp(-get_band_gap() / kT);
@@ -566,13 +557,8 @@ DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
   _strain = mod->_strain;
   conduction_band = mod->conduction_band;
   valence_band = mod->valence_band;
-
-  clear_doping();
-  const_dopant_iterator dop_it(mod->_donors.begin());
-  const const_dopant_iterator dop_end(mod->_donors.end());
-  for ( ; dop_it != dop_end; ++dop_it)
-    add_dopant(new Dopant(**dop_it));
   
+
   clear_recombination();
   RecombinationModelInterface* recmod;
   const_recomb_iterator rec_it(mod->_recombination_models.begin());
@@ -583,6 +569,7 @@ DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
     recmod->set_driftdiffusionproperties(this);
     _recombination_models[(rec_it->second)->get_id()] = recmod;
   }
+
 
   PhysicalModelInterface::destroy(_electron_mobility);
   PhysicalModelInterface::destroy(_hole_mobility);

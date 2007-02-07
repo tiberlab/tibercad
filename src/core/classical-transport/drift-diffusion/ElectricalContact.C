@@ -36,6 +36,9 @@ ElectricalContact::do_init(void)
     set_zero_derivative_bc(DriftDiffusionDefs::FERMIE);
   if (get_options().get_option("zero_grad_fermi_h", false))
     set_zero_derivative_bc(DriftDiffusionDefs::FERMIH);
+
+  if (get_options().find_option("value"))
+    set_simulation_voltage(get_options().get_option("value", 0.0));
 }
 
 

@@ -13,3 +13,6 @@ doc:
 clean:
 	@rm -rf html latex
 
+.PHONY: distclean
+distclean: clean
+

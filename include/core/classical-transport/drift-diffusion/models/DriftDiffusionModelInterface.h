@@ -46,7 +46,7 @@ class DriftDiffusionModelInterface : public PhysicalModelInterface
     DriftDiffusionModelInterface(void);
 
     //! \copydoc PhysicalModelInterfaceInterface::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs) {};
+    virtual void copy_from(const PhysicalModelInterface* rhs);
 
 
   private:
@@ -85,6 +85,13 @@ DriftDiffusionModelInterface::get_driftdiffusionproperties(void)
 {
   assert(_dd_prop != 0);
   return *_dd_prop;
+}
+
+inline
+void
+DriftDiffusionModelInterface::copy_from(const PhysicalModelInterface* rhs)
+{
+  ignore_unused_variable(rhs);
 }
 
 

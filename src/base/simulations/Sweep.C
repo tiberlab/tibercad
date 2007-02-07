@@ -1,0 +1,143 @@
+// $Id$
+
+#include "Sweep.h"
+#include "Sweepable.h"
+#include "Boundary.h"
+#include "BoundaryProperties.h"
+#include "SimulationEnvironment.h"
+
+
+void
+Sweep::do_init(void)
+{
+  ModelOptions& opts = get_options();
+  
+  // get the simulation
+  const std::string& sim = opts.get_option("simulation", "");
+  _simulation = SimulationInterface::find_simulation(sim);
+  
+  // we don't tolerate NULL pointers...
+  if (_simulation == NULL)
+    throw InitFailedException("Sweep: Simulation " + sim + " not found.");
+
+  if (!_simulation->is_initialized())
+    _simulation->init();
+  
+  // get the model which contains the sweep variable
+  // NOTE: for now we can sweep over boundary values
+  const std::string& bnd = opts.get_option("boundary", "");
+  SimulationEnvironment& env = _simulation->get_environment();
+
+  // we have to set our environments to enable nested sweeps!
+  set_environment(&env);
+
+  if (!env.is_initialized())
+    env.init();
+
+  Boundary* boundary = env.get_boundary(bnd);
+  if (boundary == NULL)
+    throw InitFailedException("Sweep: Boundary " + bnd + " not found.");
+  
+  _variable = dynamic_cast<Sweepable*>(
+      boundary->get_boundary_properties(_simulation->get_id()));
+  
+  if (_variable == NULL)
+    throw InitFailedException("Sweep: No sweepable entity on boundary " +
+        bnd + " found.");
+}
+
+
+void
+Sweep::parse_options(void)
+{
+  ModelOptions& opts = get_options();
+
+  _min_step = opts.get_option("min_step", _min_step);
+  _max_step = opts.get_option("max_step", _max_step);
+
+  double start = opts.get_option("start", 0.0);
+  double stop = opts.get_option("stop", 0.0);
+  unsigned int steps = opts.get_option("steps", 1);
+  steps = (steps < 1) ? 1 : steps;
+
+  _values.resize(steps + 1);
+  double step = (stop - start) / steps;
+  for (unsigned int i = 0; i <= steps; i++)
+    _values[i] = start + i * step;
+
+  // we can also specify a vector with the values
+  opts.get_option("values", _values);
+
+  _do_output = opts.get_option("output", _do_output);
+}
+
+
+void
+Sweep::do_solve(void)
+{
+  assert(_simulation != NULL);
+  assert(_simulation->is_initialized());
+  assert(_variable != NULL);
+
+  parse_options();
+
+  // we make a copy of the current solution
+  // we need this in the case of a solver failure to go back
+  // to an old successful solution
+  AutoPtr<NumericVector<Real> > old_sol = 
+    (_simulation->get_solution_vector()).clone();
+  
+  unsigned int n = _values.size();
+
+  for (unsigned int i = 0; i < n; i++)
+  {
+    double goal = _values[i];
+    double goal_sign = goal < 0.0 ? -1 : 1;
+    _last = _variable->get_current_value();
+    double step = goal - _last;
+
+    double value;
+    do
+    {
+      // check for step > max_step
+      double absstep = std::abs(step);
+      double sign = step < 0.0 ? -1 : 1;
+      step = (absstep > _max_step) ? _max_step * sign : step;
+
+      value = _last + step;
+      double diff = goal_sign * (goal - value);
+      if (diff < 0.0)
+        value = goal;
+      
+      _variable->set_new_value(value);
+      std::cerr  << "Sweep value = " << value << std::endl;
+      
+      try
+      {
+        _simulation->solve();
+
+        _last = _variable->get_current_value();
+
+        // try to increase step
+        step *= 2.0;
+      }
+      catch (...)
+      {
+        step = (value - _last) / 2.0;
+        if (std::abs(step) < _min_step)
+          throw SolveFailedException("Sweep: step size small.");
+
+        _simulation->get_solution_vector() = *old_sol;
+
+        // it failed, so we go back to the old value
+        // (In principle this is unnecessary, but we need it to not
+        // get out of the do...while loop
+        value = _last;
+      }
+    }
+    while (goal_sign * (value - goal) < 0.0);
+
+    *old_sol = _simulation->get_solution_vector();
+  }
+}
+

@@ -1845,8 +1845,6 @@ void Read_MSH::read_data_section(char const* str,ifstream& in_stream )
     if (name == "ELM")
       //	if (name == name_data )
     {
-      cout << " ********* Please wait for  .msh file processing ..........  "<< 
-        endl;
       parse_elem_section(in_stream);
 
     }

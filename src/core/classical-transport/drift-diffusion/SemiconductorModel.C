@@ -128,7 +128,6 @@ SemiconductorModel::extract_band_properties(void)
       id = i;
   }
   get_conduction_band().band_edge = cbs[id].energy;
-  //std::cerr << "in DD: Ec = " << get_conduction_band().band_edge << "\n";
   get_conduction_band().effective_mass = cbs[id].mass_DOS
     * std::pow(cbs[id].degeneracy, 2.0 / 3.0);
   
@@ -145,7 +144,7 @@ SemiconductorModel::extract_band_properties(void)
       id = i;
   }
   get_valence_band().band_edge = vbs[id].energy;
-  //std::cerr << "in DD: Ev = " << get_valence_band().band_edge << "\n";
+  
   double tmp = 0;
   // include other bands
   for (int i = 0; i < vbs.size(); i++)

@@ -5,8 +5,10 @@
 // for parsing of vectors
 #include "boost/regex.hpp"
 #include "boost/tokenizer.hpp"
+#include "boost/algorithm/string/trim.hpp"
 
 #include <cctype>
+#include <iostream>
 
 
 std::string
@@ -30,8 +32,8 @@ Utils::extract_vector(const std::string& input, std::vector<T>& vec)
 {
 
   // the regexp to match the vector
-  static const boost::regex regexp("[[:space:]]*?(?:(\\()|(\\[)|(\\{)){1}\
-(.*)(?(1)\\)|(?(2)\\]|\\})){1}[[:space:]]*?");
+  static const boost::regex regexp("[[:space:]]*?(?:(\\()|(\\[)|(\\{)|\\<){1}\
+(.*)(?(1)\\)|(?(2)\\]|(?(3)\\}|\\>))){1}[[:space:]]*?");
 
   //typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
   typedef boost::tokenizer<boost::escaped_list_separator<char> > tokenizer;
@@ -59,7 +61,13 @@ Utils::extract_vector(const std::string& input, std::vector<T>& vec)
       // we resize the vector and fill in the found values
       vec.resize(0);
       for ( ; it != end; ++it)
-        vec.push_back(Utils::convert<T>((*it)));
+      {
+        // strip spaces from both ends
+        std::string s(*it);
+        boost::algorithm::trim(s);
+
+        vec.push_back(Utils::convert<T>(s));
+      }
     }
   }
 }

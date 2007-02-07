@@ -11,14 +11,17 @@
 
 SimulationEnvironment::SimulationEnvironment(
     Device& device, std::set<ID> region_numbers)
-  : _device(&device), _region_numbers(region_numbers)
+  : _device(&device),
+    _region_numbers(region_numbers),
+    _is_initialized(false)
 {
 }
 
 
 SimulationEnvironment::SimulationEnvironment(
     Device& device, ID region_number)
-  : _device(&device)
+  : _device(&device),
+    _is_initialized(false)
 {
   _region_numbers.insert(region_number);
 }
@@ -39,21 +42,27 @@ SimulationEnvironment::init(void)
 {
   assert(_device != NULL);
 
-  create_element_list();
-  create_bc_maps();
-  update_boundary_node_map();
+  if (!_is_initialized)
+  {
+    create_element_list();
+    create_bc_maps();
+    update_boundary_node_map();
 
-  BCMap::iterator it = _bc_map.begin();
-  const BCMap::iterator end = _bc_map.end();
+    BCMap::iterator it = _bc_map.begin();
+    const BCMap::iterator end = _bc_map.end();
 
-  for ( ; it != end; ++it)
-    it->second->init();
+    for ( ; it != end; ++it)
+      it->second->init();
+
+    _is_initialized = true;
+  }
 }
 
 void
 SimulationEnvironment::add_boundary(Boundary* boundary, ID boundary_id)
 {
   assert(boundary != NULL);
+  assert(!_is_initialized);
   
   BCMap::iterator it = _bc_map.find(boundary_id);
   if (it != _bc_map.end())

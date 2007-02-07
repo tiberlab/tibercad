@@ -1,25 +1,17 @@
+// $Id$
+
 #include "MeshInput.h"
 #include "ReadISEGrid.h"
 #include "Read_MSH.h"
 
-#include <iomanip>
-#include <vector>
+#include "mesh.h"
+#include "mesh_data_elements.h"
+
 #include <iostream> //for I/O interaction
 #include <fstream>  //for file streaming
-#include <string>   //for strings
-#include <set>
-#include <map>
+
 using namespace std;
 
-MeshInput::MeshInput(void)
-{
-
-}
-
-MeshInput::~MeshInput(void)
-{
-
-}
 
 
 void MeshInput::read_mesh(const std::string& file_name,unsigned int sim_dim,
@@ -29,13 +21,13 @@ void MeshInput::read_mesh(const std::string& file_name,unsigned int sim_dim,
 
   // See if the file exists.  
   
-  std::ifstream in (file_name.c_str());
+  ifstream in (file_name.c_str());
      
   if (!in.good())
   {
-    std::cerr << "ERROR: cannot locate specified mesh file:\n\t"
+    cerr << "ERROR: cannot locate specified mesh file:\n\t"
               << file_name
-              << std::endl;
+              << endl;
     error();
   }
 
@@ -44,7 +36,6 @@ void MeshInput::read_mesh(const std::string& file_name,unsigned int sim_dim,
 
     ReadISEGrid  ISE_mesh( file_name.c_str() , mesh, mesh_data );
     ISE_mesh.get_BC_data (BoundCond );
-    //    BoundCond =  BoundCond_map;
 
   }
 

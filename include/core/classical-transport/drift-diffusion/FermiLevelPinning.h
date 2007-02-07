@@ -25,6 +25,13 @@ class FermiLevelPinning : public ElectricalContact
     //! set the value of pinning
     void set_pinning(double pinning);
 
+
+  protected:
+
+    /*! \copydoc ElectricalContact::do_init() */
+    virtual void do_init(void);
+
+
   private:
 
     //! The value of the pinning
@@ -73,5 +80,16 @@ FermiLevelPinning::get_boundary_value(DriftDiffusionDefs::Variable variable)
 
   return val;
 }
+
+
+inline
+void
+FermiLevelPinning::do_init(void)
+{
+  ElectricalContact::do_init();
+
+  set_pinning(get_options().get_option("pinning", 0.8));
+}
+
 
 #endif // _FERMILEVELPINNING_H_

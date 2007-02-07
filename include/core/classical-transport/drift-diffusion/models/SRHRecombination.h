@@ -49,6 +49,9 @@ class SRHRecombination : public RecombinationModelInterface
     //! Constructor
     SRHRecombination(void);
 
+    //! \copydoc RecombinationModelInterface::read_database()
+    virtual void read_database(void);
+
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 

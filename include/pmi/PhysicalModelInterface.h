@@ -41,18 +41,21 @@ class PhysicalModelInterface
     //! Get the unique ID of this model
     ID get_id(void) const;
 
+    
     //! Get the ID of the simulator this model is used with
     /*!
      * This ID is needed by the simulator to get the right models
      */
     ID get_simulator_id(void) const;
 
+    
     //! Set the ID of the simulator this model is used with
     /*!
      * This ID is needed by the simulator to get the right models
      */
     void set_simulator_id(ID id);
 
+    
     //! Get the ID of the model with name \c model_name
     /*!
      * If the model was not already registered, it gets inserted in the
@@ -80,36 +83,45 @@ class PhysicalModelInterface
     static PhysicalModelInterface* create(const std::string& name,
         const ModelOptions& options = ModelOptions());
 
+    
     //! Deletes a model
     /*!
      * \param p the pointer to the model to be destroyed
      */
     static void destroy(PhysicalModelInterface* p);
 
+    
     //! Create a new model as an exact copy of this
     /*!
-     * \return a pointer to the newly created model, \c NULL if creation failed
+     * \return a pointer to the newly created model, \c NULL if
+     * creation failed
      */
     PhysicalModelInterface* copy(void) const;
     
+
     //! Set a reference to the material this model belongs to
     void set_material(Material* material);
+
 
     //! Get a reference to the material this model belongs to
     const Material* get_material(void) const;
 
+    
     //! Get a writeable reference to the material this model belongs to
     Material* get_material(void);
+
 
     //! Get the user defined name of this model
     const std::string& get_name(void) const;
 
+    
     //! Initialize this model
     /*!
      * It calls read_database() and then do_init()
      */
     void init(void) throw (InitFailedException);
 
+    
     //! Build parameters for an alloy
     void build_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
@@ -122,6 +134,7 @@ class PhysicalModelInterface
     //! Empty constructor
     PhysicalModelInterface(void);
  
+    
     //! Set options for this model
     /*!
      * The options are stored internally and are accessible through
@@ -130,9 +143,11 @@ class PhysicalModelInterface
      */
     void set_options(const ModelOptions& options);
 
+    
     //! Get a reference to the model options
     ModelOptions& get_options(void);
    
+    
     //! Initialize the model
     /*!
      * This method should set all model options and call
@@ -142,9 +157,11 @@ class PhysicalModelInterface
      */
     virtual void do_init(void) {};
 
+    
     //! Create a new model of the same type
     virtual PhysicalModelInterface* create_new(void) const = 0;
 
+    
     //! Copy all data from another model to this one
     /*!
      * If you reimplement this in a derived class, call the method
@@ -153,6 +170,7 @@ class PhysicalModelInterface
      */
     virtual void copy_from(const PhysicalModelInterface* rhs) = 0;
 
+    
     //! Read the properties from the database
     /*!
      * Reads all needed physical properties from the database.
@@ -162,6 +180,7 @@ class PhysicalModelInterface
      */
     virtual void read_database(void) {};
 
+    
     //! Read the bowing parameters from the database
     /*!
      * Read the bowing parameters for an alloy material from the database.
@@ -171,14 +190,16 @@ class PhysicalModelInterface
      */
     virtual void read_bowing_parameters(void) {};
 
+    
     //! Calculate parameters for an alloy
     /*!
      * Calculates all parameters of an alloy \f$A_xB_{x-1}C\f$ in
      * virtual crystal approximation
      */
     virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa) {};
+        const PhysicalModelInterface* comp_B, double xa);
 
+    
     //! calculate an alloy parameter in VCA approximation
     /*!
      * In a ternary compound semiconductor
@@ -214,7 +235,6 @@ class PhysicalModelInterface
      * \param xa the molar fraction of \f$AC\f$
      * \param bowing the bowing parameter
      */
-
     void alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
         const Tensor4DSym& val_b, double xa,
         const Tensor4DSym& bowing = Tensor4DSym(0));
@@ -226,53 +246,66 @@ class PhysicalModelInterface
     //! An iterator for the models
     typedef std::map<const std::string, ID>::iterator model_id_iterator;
 
+    
     //! The creation method signature
     typedef PhysicalModelInterface* (*create_t)(void);
 
+    
     //! The destruction method signature
     typedef void (*destroy_t)(PhysicalModelInterface*);
 
+    
     //! Disable copy constructor
     PhysicalModelInterface(const PhysicalModelInterface&);
 
+    
     //! Disable assignement operator
     PhysicalModelInterface& operator=(const PhysicalModelInterface&);
 
+    
     //! The creation method for this model
     create_t _create;
 
+    
     //! The destruction method for this model
     destroy_t _destroy;
 
+    
     //! The unique ID of this model
     ID _id;
 
+    
     //! The ID of the simulator this model is used for
     /*!
      * This ID is needed by the simulator to get the right models
      */
     ID _simulator_id;
 
+    
     //! A user defined name for this model
     /*!
      * The name is assigned from the ModelOptions.
      */
     std::string _name;
 
+    
     //! The material this properties belong to
     /*!
      * This pointer can be used by this or associated models
      */
     Material* _material;
 
+    
     //! The options for this model as read from the input file
     ModelOptions _options;
 
+    
     //! A map with ID/model name pairs
     /*!
      * Models are counted starting from 1. 0 means undefined model.
      */
     static std::map<const std::string, ID> _model_ids;
+
 
     //! Register a new model
     /*!
@@ -307,6 +340,8 @@ PhysicalModelInterface::alloy(double val_a, double val_b,
   return val_b + (val_a - val_b) * xa - bowing * xa * (1 - xa);
 }
 
+
+
 inline
 void
 PhysicalModelInterface::alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
@@ -315,12 +350,16 @@ PhysicalModelInterface::alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
   result = (1 - xa) * val_b + xa * val_a - xa * (1 - xa) * bowing ;
 }
 
+
+
 inline
 ID
 PhysicalModelInterface::get_id(void) const
 {
   return _id;
 }
+
+
 
 inline
 ID
@@ -329,12 +368,16 @@ PhysicalModelInterface::get_simulator_id(void) const
   return _simulator_id;
 }
 
+
+
 inline
 void
 PhysicalModelInterface::set_simulator_id(ID id)
 {
   _simulator_id = id;
 }
+
+
 
 inline
 const std::string&
@@ -343,12 +386,16 @@ PhysicalModelInterface::get_name(void) const
   return _name;
 }
 
+
+
 inline
 void
 PhysicalModelInterface::set_material(Material* material)
 {
   _material = material;
 }
+
+
 
 inline
 Material*
@@ -357,12 +404,15 @@ PhysicalModelInterface::get_material(void)
   return _material;
 }
 
+
+
 inline
 const Material*
 PhysicalModelInterface::get_material(void) const
 {
   return _material;
 }
+
 
 
 inline
@@ -398,5 +448,14 @@ PhysicalModelInterface::build_alloy(const PhysicalModelInterface* comp_A,
   calculate_VCA(comp_A, comp_B, xa);
 }
 
+inline
+void
+PhysicalModelInterface::calculate_VCA(const PhysicalModelInterface* comp_A,
+    const PhysicalModelInterface* comp_B, double xa)
+{
+  ignore_unused_variable(comp_A);
+  ignore_unused_variable(comp_B);
+  ignore_unused_variable(xa);
+}
 
 #endif // _PHYSICALMODELINTERFACE_H_

@@ -4,7 +4,7 @@
 topdir := ../..
 
 # we have to compile each module
-subdirs := common io database
+subdirs := common io database simulations
 
 include $(topdir)/Make.common
 

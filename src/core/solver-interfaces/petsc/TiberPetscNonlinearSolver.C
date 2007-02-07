@@ -93,7 +93,7 @@ extern "C"
       MatStructure *msflag, void *ctx)
   {
     int ierr=0;
-    
+
     assert (ctx != NULL);
     
     TiberPetscNonlinearSolver<Number>* solver =

@@ -29,6 +29,9 @@ class ModelOptions
     //! The destructor
     ~ModelOptions(void) {};
 
+    //! Check if it is empty
+    bool is_empty(void);
+
     //! Get the value of an option
     /*!
      * \param name the name of the option
@@ -87,6 +90,13 @@ class ModelOptions
     //! operator to add options
     ModelOptions& operator+=(const ModelOptions& rhs);
 
+    //! operator to add options
+    ModelOptions& operator+=(const std::map<const std::string,
+        std::string>& rhs);
+
+    //! Print all options for debugging
+    void print_all(void) const;
+
 
   private:
 
@@ -99,9 +109,12 @@ class ModelOptions
 };
 
 
+
+
 //
 // inline methods
 //
+
 
 inline
 void
@@ -111,12 +124,14 @@ ModelOptions::delete_option(const std::string& name)
 }
 
 
+
 inline
 std::string&
 ModelOptions::operator[](const std::string& name)
 {
   return _options[name];
 }
+
 
 
 inline
@@ -134,12 +149,14 @@ ModelOptions::find_option(const std::string& name) const
 }
 
 
+
 inline
 void
 ModelOptions::clear(void)
 {
   _options.clear();
 }
+
 
 
 template <typename T>
@@ -153,6 +170,14 @@ ModelOptions::get_option(const std::string& name, T default_value) const
     return Utils::convert<T>(it->second);
   else
     return default_value;
+}
+
+
+inline
+bool
+ModelOptions::is_empty(void)
+{
+  return _options.empty();
 }
 
 

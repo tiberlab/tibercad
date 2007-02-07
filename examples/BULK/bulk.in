@@ -1,65 +1,101 @@
-# $Id$
 
-$Options$
+# Description of  the  device physical regions
+$Device
+{
+   Region bulk 
+   {
+     reg_numb = 1
+     mat = GaAs
+     doping = 1e18 doping_type = donor
+   }
 
-# a 3D piece of bulk semiconductor
-
-
-n_doping = 1e16
-p_doping = 1e14
-temperature = 300
-
-searchpath = ../materials
-
-crystal_structure = zb
-y-dir = [1,1,1]
-x-dir = [-2,1,1]
-#z-dir = [1,0,-1,0]
-#x-dir = [-1,2,-1,0]
-#y-dir = [0,0,0,1]
-material = AlGaAs
-molar_fraction = 0.05
-
-substrate_material = GaAs
-substrate_molar_fraction = 0.1
-
-shape_steps = 0
-
-statistics = B
-
-dimension = 2
-meshfile = bulk2D.msh
-
-mesh_units = 1e-4
-
-start_voltage = 0.0
-stop_voltage = 0.1
-voltage_steps = 1
+}
 
 
-nonlinear_tolerance = 1e-19
-nonlinear_ls_maxstep = 0.05
-min_voltage_step = 0.001
-ls_type = cubic
-linear_tolerance = 1e-6
-nonlinear_max_it = 25
-linear_max_it = 1000
-integration_order = 2
-ksp_type = bcgsl
-pc_type = composite
-discretization = fem
-current_integration = new
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+  model driftdiffusion
+  { 
+              
+     phys_regions = (1)
 
-scaling = 1
+     physical_models
+     { 
+       recombination  =  SRH
+       electron_mobility = constant
+     }                
 
-#refinement_stop_criterion=1e-4
-max_refinement_steps=0
+    BC_Regions  
+    {
+      BC_Region anode
+      {
+        BC_reg_numb = 2
+        type = ohmic
+        barrier_height = 0.8
+        value = 0.5
+      }
 
-uniform_refinement=0
+      BC_Region cathode
+      {
+        BC_reg_numb = 1
+        type = ohmic
+        value = 0.0
+      }
+ 
+    }   
 
-refine_fraction=0.7
-coarsen_fraction=0.0
-max_ref_level=10
+  }  
+
+}
 
 
-$End$
+# Definition of  Model-dependent Solver parameters
+$Solver
+
+{
+  driftdiffusion
+  {
+    ksp_type = gmres
+    nonlin_max_it = 50
+    current_integration_method = rstf
+  }
+
+  sweep
+  {
+    boundary = anode
+    start = 0.0
+    stop = 1.0
+    steps = 10
+  }
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+ 
+  driftdiffusion 
+  {
+    model = unstrained
+  }
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+
+$Simulation
+{
+  searchpath = ../materials
+  meshfile = bulk1D.msh
+  dimension = 1
+  temperature = 300
+  solve = sweep
+}
+
+
+
+
+

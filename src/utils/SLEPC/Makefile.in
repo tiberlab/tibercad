@@ -23,5 +23,6 @@ all: ex7.o
 clean:
 	rm -f *.o ex7
 
+distclean: clean
 
 

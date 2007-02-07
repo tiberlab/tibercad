@@ -46,3 +46,20 @@ C44 = 60.0
 
 # piezoelectricity
 e14 = -0.16
+
+
+# mobility
+mu_max_e = 8500.0
+mu_max_h = 400.0
+
+# SRH recombination
+Etrap    = 0.0
+taumin_e = 0.0
+taumax_e = 1.0e-9
+Nref_e   = 1.0e+16
+gamma_e  = 1
+taumin_h = 0.0
+taumax_h = 1.0e-9
+Nref_h   = 1.0e+16
+gamma_h  = 1
+

@@ -4,6 +4,15 @@
 #include "Alloy.h"
 #include "Database.h"
 #include "RotatedCrystal.h"
+#include "Dopant.h"
+
+/*
+  clear_doping();
+  const_dopant_iterator dop_it(mod->_donors.begin());
+  const const_dopant_iterator dop_end(mod->_donors.end());
+  for ( ; dop_it != dop_end; ++dop_it)
+    add_dopant(new Dopant(**dop_it));
+*/
 
 Database*
 Material::_database;
@@ -17,6 +26,8 @@ Material::~Material(void)
     PhysicalModelInterface::destroy(it->second);
 
   _models.clear();
+
+  clear_doping();
 
   PhysicalModelInterface::destroy(_rotated_crystal);
 }
@@ -61,6 +72,22 @@ Material::do_init(void)
   _rotated_crystal->set_material(this);
   _rotated_crystal->init();
 
+
+  // now the doping
+  double doping = get_options().get_option("doping", 0.0);
+  if (doping > 0.0)
+  {
+    double level = get_options().get_option("doping_level", 0.025);
+    int g = get_options().get_option("g", 2);
+    Dopant::DopingType type = Dopant::N_TYPE;
+    const std::string& doptype = get_options().get_option("doping_type", "");
+    if (doptype == "acceptor")
+      type = Dopant::P_TYPE;
+    
+    add_dopant(new Dopant(doping, level, g, type));
+  }
+
+
   ModelMap::iterator it = _models.begin();
   const ModelMap::const_iterator end = _models.end();
 
@@ -71,6 +98,7 @@ Material::do_init(void)
     (it->second)->init();
   }
 }
+
 
 
 void
@@ -92,6 +120,22 @@ Material::add_model(PhysicalModel* model, ID simulator_id)
 }
 
 
+
+void
+Material::add_dopant(Dopant* dopant)
+{
+  if (dopant != NULL)
+  {
+    if (dopant->get_type() == Dopant::N_TYPE)
+      _donors.insert(dopant);
+    else
+      _acceptors.insert(dopant);
+  }
+    
+}
+
+
+
 Material*
 Material::create(const std::string& name)
 {
@@ -104,10 +148,13 @@ Material::create(const std::string& name)
   else
     mat = new Material(name);
 
-  std::cerr << "Created Material " << mat->get_name() << "\n";
+  std::cout << "Created Material " << mat->get_name() << "\n";
 
   return mat;
 }
+
+
+
 
 Material*
 Material::create(const std::string& name, const ModelOptions& options)
@@ -125,3 +172,53 @@ Material::create(const std::string& name, const ModelOptions& options)
 
   return mat;
 }
+
+
+
+double
+Material::get_total_donor_density(void) const
+{
+  double Nd = 0;
+  dopant_iterator it = _donors.begin();
+  dopant_iterator end = _donors.end();
+  for ( ; it != end; ++it)
+    Nd += (*it)->get_doping_density();
+
+  return Nd;
+}
+
+
+
+double
+Material::get_total_acceptor_density(void) const
+{
+  double Na = 0;
+  dopant_iterator it = _acceptors.begin();
+  dopant_iterator end = _acceptors.end();
+  for ( ; it != end; ++it)
+    Na += (*it)->get_doping_density();
+
+  return Na;
+}
+
+
+
+void
+Material::clear_doping(void)
+{
+  dopant_iterator it = _donors.begin();
+  dopant_iterator end = _donors.end();
+  for ( ; it != end; ++it)
+    delete (*it);
+
+  it = _acceptors.begin();
+  end = _acceptors.end();
+  for ( ; it != end; ++it)
+    delete (*it);
+
+  _donors.clear();
+  _acceptors.clear();
+}
+
+
+

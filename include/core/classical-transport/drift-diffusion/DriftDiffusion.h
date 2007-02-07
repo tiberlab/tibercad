@@ -221,16 +221,6 @@ class DriftDiffusion : public SimulationInterface
         double refinement_tolerance;
 
         /**
-         * The minimum allowable voltage step size
-         */
-        double min_voltage_step;
-
-        /**
-         * The maximum allowable voltage step size
-         */
-        //double max_voltage_step;
-
-        /**
          * The order of gauss integration
          */
         libMeshEnums::Order integration_order;
@@ -304,55 +294,63 @@ class DriftDiffusion : public SimulationInterface
     };
       
 
+    
     //! Destructor
     virtual ~DriftDiffusion(void);
 
+    
     //! Create an DriftDiffusion object
     static DriftDiffusion* create(void);
+
+    
+    /*! \copydoc SimulationInterface::create_physical_model() */
+    virtual PhysicalModel*
+      create_physical_model(const ModelOptions& options) const
+      throw (ModelErrorException);
+
+
+    /*! \copydoc SimulationInterface::create_boundary_model() */
+    virtual BoundaryProperties*
+      create_boundary_model(const ModelOptions& options) const
+      throw (ModelErrorException);
+ 
     
     /**
      * @returns a reference to the simulation options
      */
     Options& get_options(void);
 
+    
     /**
      * Enables adaptive mesh refinement.
      */
     void enable_mesh_refinement(void);
 
+    
     /**
      * Disables adaptive mesh refinement.
      */
     void disable_mesh_refinement(void);
 
+    
     /**
      * Set new simulation options.
      */
     void set_options(const Options& options);
 
+    
     //! Get the mesh
     /*!
      * \return a constant reference to the simulation mesh
      */
     Mesh& get_mesh(void) const;
     
+    
     /**
      * @returns a constant reference to the current scaling parameters
      */
     const Scaling& get_scaling(void) const;
 
-    /*!
-     * Set the simulation voltage for the boundary named \p boundary.
-     */
-    // TODO throw exception if boundary non-existing
-    void set_simulation_voltage(const std::string& boundary,
-        double voltage);
-
-    //! Remember the current solution for future restart
-    void remember_current_solution(void);
-
-    //! Reset to the remembered solution
-    void set_to_remembered_solution(void);
 
     //! Set the electron quasi Fermi level to \c Ef_n
     /*!
@@ -362,6 +360,7 @@ class DriftDiffusion : public SimulationInterface
      */
     void set_electron_fermi_level(double Ef_n);
 
+    
     //! Set the hole quasi Fermi level to \c Ef_p
     /*!
      * \c Ef_p has to be given as electron energy in units of eV
@@ -370,15 +369,18 @@ class DriftDiffusion : public SimulationInterface
      */
     void set_hole_fermi_level(double Ef_p);
 
+    
     //! Set the electric potential everywhere to \c pot
     void set_electric_potential(double pot);
 
+    
     //! Makes a first guess of the equilibrium potential
     /**
      * It sets every node to its equilibrium potential.
      */
     void guess_equilibrium(void);
 
+    
     /**
      * @returns the current nodal solution vector.
      *
@@ -389,6 +391,7 @@ class DriftDiffusion : public SimulationInterface
      */
     const std::vector<double>& get_solution(void) const;
 
+    
     //! Get the solution on the nodes of a given element
     /*!
      * \param elem the pointer to the element
@@ -396,6 +399,7 @@ class DriftDiffusion : public SimulationInterface
      */
     void get_solution(const Elem* elem, std::vector<Solution>& solution);
 
+    
     //! Get the solution at the point p in a given element
     /*!
      * If \c elem is not in the list of active elements for this simulation,
@@ -412,6 +416,7 @@ class DriftDiffusion : public SimulationInterface
     template <typename T>
     void get_solution(const Elem* elem, const Point& p, T& solution);
 
+    
     //! Get the solution at the points p in a given element
     /*!
      * If \c elem is not in the list of active elements for this simulation,
@@ -447,12 +452,15 @@ class DriftDiffusion : public SimulationInterface
      */
     double get_electric_potential(const Elem* elem, const Point& p);
 
+    
     //! Get the number of nonlinear iterations needed for the solution
     unsigned int get_n_nonlinear_iterations(void) const;
 
+    
     //! Get the final residual norm of the solution
     double get_final_residual(void) const;
 
+    
     //! Get the boundary currents indexed by boundary descriptor
     const std::map<const Boundary*, double>&
       get_boundary_currents(void) const;
@@ -462,17 +470,21 @@ class DriftDiffusion : public SimulationInterface
     void build_densities(std::vector<double>& densities,
         std::vector<std::string>& names);
 
+    
     //! Fill a vector with the electric field data
     void build_current_density(std::vector<double>& current,
         std::vector<std::string>& names);
 
+    
     //! Fill a vector with the electric field data
     void build_electric_field(std::vector<double>& field,
         std::vector<std::string>& names);
 
+    
     //! Fill a vector with the band edge data
     void build_band_edges(std::vector<double>& band_edges,
         std::vector<std::string>& names);
+
 
     //! Fill a vector with the elemental band edge data
     void build_elem_band_edges(std::vector<double>& band_edges,
@@ -484,7 +496,8 @@ class DriftDiffusion : public SimulationInterface
 
     //! Constructor
     DriftDiffusion(void);
-    
+
+
     //! Initialize the equation system
     /*!
      * This has to be called before any call to methods which access the
@@ -492,6 +505,7 @@ class DriftDiffusion : public SimulationInterface
      */
     virtual void do_init(void);
 
+    
     //! Solve the drift-diffusion problem.
     /*!
      * If adaptive mesh refinement was enabled for this solver
@@ -500,8 +514,10 @@ class DriftDiffusion : public SimulationInterface
      */
     virtual void do_solve(void);
 
+    
     /*! \copydoc SimulationInterface::parse_options() */
     virtual void parse_options(void);
+
 
 
   private:
@@ -531,34 +547,20 @@ class DriftDiffusion : public SimulationInterface
      */
     bool _rebuild_eq_system;
 
+    //! Decides if only equilibrium has to be solved
+    bool _solve_equilibrium;
+
+
     /*!
      * The @c Options to be used
      */
     Options _options;
     
-    /*!
-     * The scaling parameters
-     */
+    //! The scaling parameters
     Scaling _scaling;
 
+    //! The boundary currents
     /*!
-     * The simulation voltages of the previous solve step
-     */
-    ContactData _old_sim_voltages;
-    
-    /*!
-     * The simulation voltages for the next simulation
-     */
-    ContactData _simulation_voltages;
-    
-    /**
-     * The remembered simulation voltages
-     */
-    ContactData _remembered_voltages;
-
-    /**
-     * The boundary currents
-     *
      * Currents are calculated after each solve step.
      */
     ContactData _boundary_currents;
@@ -585,11 +587,13 @@ class DriftDiffusion : public SimulationInterface
      */
     double _final_residual;
 
+
     //! disable the copy constructor
     DriftDiffusion(const DriftDiffusion& rhs);
     
     //! disable the copy assignment operator
     DriftDiffusion& operator=(const DriftDiffusion& rhs);
+    
 
     //! Do a number of Gummel iterations
     /*!
@@ -641,6 +645,11 @@ class DriftDiffusion : public SimulationInterface
 
     //! Solve using an iterative Gummel scheme
     void solve_gummel(void) throw (PetscRuntimeError);
+
+
+    //! Solve the equilibrium
+    void solve_equilibrium(void);
+
 
     //! Calculate terminal currents
     /*!
@@ -733,11 +742,6 @@ class DriftDiffusion : public SimulationInterface
 
     void build_solution_vector(std::vector<double>& vector);
 
-    /**
-     * Calculates the next simulation point and returns
-     * the voltage step
-     */
-    double calculate_new_simulation_voltages(void);
 
 
     //! Assemble the residual vector or the jacobian matrix
@@ -748,6 +752,7 @@ class DriftDiffusion : public SimulationInterface
     static void assemble(const NumericVector<Number>& x,
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
+
 
     //! Assembles the residual vector or the jacobian matrix
     /*!
@@ -761,6 +766,7 @@ class DriftDiffusion : public SimulationInterface
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
  
+
     //! Assembles the residual vector or the jacobian matrix
     /*!
      * Assembles the residual vector or the jacobian matrix for

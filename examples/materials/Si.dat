@@ -44,3 +44,8 @@ C44 = 79.62
 
 # piezoelectricity
 e14 = 0.0
+
+
+# mobility
+mu_max_e = 500
+mu_max_h = 200

@@ -7,6 +7,7 @@
 #include "DriftDiffusionDefs.h"
 #include "BoundaryProperties.h"
 #include "ModelOptions.h"
+#include "Sweepable.h"
 
 // C++ includes
 #include <string>
@@ -15,9 +16,13 @@ class DriftDiffusionProperties;
 
 //! Base class for any kind of electrical contact models
 /*!
- * Derive from this class to define contact models
+ * Derive from this class to define contact models. Examples can be found
+ * in OhmicContact and SchottkyContact.
+ *
+ * This class is derived also from Sweepable to be able to make
+ * a voltage sweep.
  */
-class ElectricalContact : public BoundaryProperties
+class ElectricalContact : public BoundaryProperties, public Sweepable
 {
   public:
 
@@ -106,11 +111,14 @@ class ElectricalContact : public BoundaryProperties
     BCType _fermie_type;
     BCType _fermih_type;
 
-    //! The simulation voltage
-    double _sim_voltage;
-
+    // A pointer to the DriftDiffusionProperties object
     const DriftDiffusionProperties *_properties;
 };
+
+//
+// inline members
+//
+
 
 inline
 ElectricalContact::ElectricalContact(void)
@@ -122,7 +130,7 @@ inline
 void
 ElectricalContact::set_simulation_voltage(double voltage)
 {
-  _sim_voltage = voltage;
+  set_new_value(voltage);
 }
 
 
@@ -130,7 +138,7 @@ inline
 double
 ElectricalContact::get_simulation_voltage(void) const
 {
-  return _sim_voltage;
+  return get_current_value();
 }
 
 

@@ -1,28 +1,16 @@
+// $Id$
+
 #ifndef _MESHINPUT_H_
 #define _MESHINPUT_H_
 
-
-
-
-
-#include <iomanip>
-
-#include <iostream> //for I/O interaction
-#include <fstream>  //for file streaming
-#include <string>   //for strings
-#include <set>
+#include <string>
 #include <map>
 #include <vector>
 
 
-//  LibMesh  include files
-#include "mesh_data_elements.h"
-#include "mesh_data.h"
-#include "libmesh.h"
-#include "mesh.h"
-#include "mesh_generation.h"
 
-using namespace std;
+class MeshData_elements;
+class Mesh;
 
 
 //! General Class for mesh file  reading.
@@ -32,20 +20,8 @@ using namespace std;
 class MeshInput
 {
 
+
  public:
-
-  //!Constructor.
-  /*! 
-    
-  */
-  MeshInput(void);
-
-  //! Virtual Destructor.
-  /*! 
-    
-  */
-  virtual ~MeshInput();
-	
 
  
   //! Static  method to  read  the  mesh  file.
@@ -56,12 +32,21 @@ class MeshInput
    * Returns reference to  a map associating boundary condition regions to grid nodes 
    * belonging  to  the BC  region.
    */
-  static  void read_mesh(const std::string& file_name,unsigned int sim_dim,
+  static  void read_mesh(const std::string& file_name, unsigned int sim_dim,
                          Mesh& mesh, MeshData_elements& mesh_data,
-                         map<unsigned int, vector<unsigned int> >& BoundCond  );
+                         std::map<unsigned int,
+                         std::vector<unsigned int> >& BoundCond  );
 
 
  private:
+
+  //!Constructor.
+  MeshInput(void);
+
+
+  //! Virtual Destructor.
+  virtual ~MeshInput();
+
 
 };
 

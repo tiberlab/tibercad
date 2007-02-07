@@ -1,4 +1,4 @@
-// $Id: ExcitonGeneration.h 70 2006-07-14 16:57:35Z maufder $
+// $Id$
 
 #ifndef _OPTICALGENERATION_H_
 #define _OPTICALGENERATION_H_

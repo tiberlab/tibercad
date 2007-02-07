@@ -69,6 +69,32 @@ ModelOptions::operator+=(const ModelOptions& rhs)
 }
 
 
+ModelOptions&
+ModelOptions::operator+=(const map<const string, string>& rhs)
+{
+  OptionsMap::const_iterator it = rhs.begin();
+  const OptionsMap::const_iterator end = rhs.end();
+
+  for ( ; it != end; ++it)
+    _options[it->first] = it->second;
+
+  return *this;
+}
+
+
+void
+ModelOptions::print_all(void) const
+{
+  cerr << "ModelOptions content:" << endl;
+  OptionsMap::const_iterator it = _options.begin();
+  const OptionsMap::const_iterator end = _options.end();
+
+  for ( ; it != end; ++it)
+    cerr << it->first << " -> " << it->second << endl;
+
+  cerr << endl;
+}
+
 
 
 

@@ -120,7 +120,7 @@ PhysicalModelInterface::create(const std::string& name,
     mod->_name = mod->_options.get_option("name", defaultname);
     mod->_options.delete_option("name");
 
-    std::cerr << "Add model (ID = " << mod->get_id() <<
+    std::cout << "Add model (ID = " << mod->get_id() <<
       " name = " << mod->get_name() << ")\n";
   }
 
@@ -135,7 +135,7 @@ PhysicalModelInterface::destroy(PhysicalModelInterface* p)
 
   if (p != NULL)
   {
-    std::cerr << "Delete model (ID = " << p->get_id() <<
+    std::cout << "Delete model (ID = " << p->get_id() <<
       " name = " << p->get_name() << ")\n";
     delete p;
   }
