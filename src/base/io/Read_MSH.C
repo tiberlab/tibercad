@@ -46,9 +46,13 @@ using namespace boost::spirit;
 // .xta  file for  Libmesh
 //  needs physical region ID,  bound. conditions region  ID (2D or 1D), dim. of  
 // simulation 
-Read_MSH::Read_MSH(string filename, vector<unsigned int>& phys_reg_ID, 
-                   vector<unsigned int>& BC_reg_ID, unsigned int sim_dim, 
+//Read_MSH::Read_MSH(string filename, vector<unsigned int>& phys_reg_ID, 
+//                   vector<unsigned int>& BC_reg_ID, unsigned int sim_dim, 
+//                   Mesh& mesh, MeshData_elements&  mesh_data)
+
+Read_MSH::Read_MSH(string filename, unsigned int sim_dim, 
                    Mesh& mesh, MeshData_elements&  mesh_data)
+
 {
 
   dim =  sim_dim; 
@@ -75,11 +79,15 @@ Read_MSH::Read_MSH(string filename, vector<unsigned int>& phys_reg_ID,
   // extract nodes which  belong to  bound cond reg. (DIM-1 phys.reg.) and 
   // associate them with 
   // user defined BC regions
-  get_BC_info(BC_reg_ID);
+  //  get_BC_info(BC_reg_ID);
+
+  get_BC_info();
 
   // associate elements to corrispondent physical region (as defined in user's 
   // phys region settings)
-  get_physical_elem(phys_reg_ID);
+  ////  get_physical_elem(phys_reg_ID);
+  get_physical_elem();
+
 
   // write  .xta file with  meshdata info for  Libmesh (here ID of  phys regions)  
   write_xta();
@@ -270,7 +278,9 @@ void  Read_MSH::get_data ( vector< vector<unsigned int> >& glob_elem_values )
 //  nodes of  each (dim-1)D element 
 // to its own physical region number 
 
-void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
+// void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
+void Read_MSH::get_BC_info()
+
 { // begin
 
   //  works  only  for  .msh file  format  v.1  !!!
@@ -344,18 +354,20 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
   vector<unsigned int> :: iterator p1;
 
   // makes  a  vector  of  all different BC  id  from  gmsh  file,  
-  // to  compare with user's BC_reg_ID
+  // to  compare with user's BC_reg_ID  ->  THIS  CHECK  WILL  BE  DONE  SOMEWHERE ELSE !
+
   for (unsigned int i =0; i< BC_elem_line.size(); ++i)
   {
 
     BC_id = BC_elem_line[i][2]  ;
+
     p1 = find(BC_id_vec.begin(), BC_id_vec.end(), BC_id );  
     // find if physic_id has  been already taken
 
     if (p1 ==  BC_id_vec.end())   //  not  found
     {
       BC_id_vec.push_back(BC_id);
-   	 
+   //   cout << " BC_id_vec " << BC_id << endl ;
     }
 
   }
@@ -363,10 +375,11 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
   // cout << " BC_id_vec " << BC_id_vec[0]<< "   " << BC_id_vec[1]<< "   " 
   // <<BC_id_vec[2]<<endl;
 
-  // NEW  
+ 
   // ************************************************************
-  //  cross check between BC_id_vec and BC_reg_ID
-  cross_check_regions( BC_reg_ID,BC_id_vec, "BC");
+  //  cross check between BC_id_vec and BC_reg_ID ->  THIS  CHECK  WILL  BE  DONE  SOMEWHERE ELSE !
+  //  cross_check_regions( BC_reg_ID,BC_id_vec, "BC");
+  //  ***********************************************************
 
   //  p_2 = BC_reg_ID.begin();
 
@@ -387,7 +400,8 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
   // initialization of BC_nodes vector
   vector<unsigned int> null_vector;
-  for (unsigned int i =0; i< BC_reg_ID.size(); ++i)
+  //  for (unsigned int i =0; i< BC_reg_ID.size(); ++i)  
+  for (unsigned int i =0; i< BC_id_vec.size(); ++i)
   {
     BC_nodes.push_back(null_vector);
   }
@@ -464,8 +478,8 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
     }
    
-    pos = find_pos(id,BC_reg_ID);
- 
+    //  pos = find_pos(id,BC_reg_ID);
+    pos = find_pos(id,BC_id_vec);
 
     //   if (BC_nodes[pos].size() == 1)
     //        	{
@@ -561,7 +575,8 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
     // initialization of BC_nodes vector
     //  vector<int> null_vector;
-    for (unsigned int i =0; i< BC_reg_ID.size(); ++i)
+    //   for (unsigned int i =0; i< BC_reg_ID.size(); ++i)
+    for (unsigned int i =0; i<BC_id_vec.size(); ++i)
     {
       BC_elements.push_back(null_vector);
     }
@@ -575,7 +590,8 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
       el_id = BC_elem_line[i][0]  ;
 
-      pos = find_pos(id,BC_reg_ID);
+      //   pos = find_pos(id,BC_reg_ID);
+      pos = find_pos(id,BC_id_vec);
 
       BC_elements[pos].push_back(el_id);
       el_id = 0;
@@ -591,7 +607,8 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
     for (unsigned int i =0; i< BC_elements.size();++i)
     {
-      BoundCond_elements.insert(make_pair(BC_reg_ID[i], BC_elements[i]) );
+      //     BoundCond_elements.insert(make_pair(BC_reg_ID[i], BC_elements[i]) );
+      BoundCond_elements.insert(make_pair(BC_id_vec[i], BC_elements[i]) );
       //   cout << BC_reg_ID[i]<< endl ;
       // cout << BC_nodes[i][0]<< endl ;
 
@@ -614,9 +631,16 @@ void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
 
   for (unsigned int i =0; i< BC_nodes.size();++i)
   {
-    BoundCond.insert(make_pair(BC_reg_ID[i], BC_nodes[i]) );
-    //   cout << BC_reg_ID[i]<< endl ;
-    // cout << BC_nodes[i][0]<< endl ;
+    //  BoundCond.insert(make_pair(BC_reg_ID[i], BC_nodes[i]) );
+    BoundCond.insert(make_pair(BC_id_vec[i], BC_nodes[i]) );
+    //    cout << BC_reg_ID[i]<< endl ;
+ //   cout << "BC_id_vec[i]" << BC_id_vec[i]<<  endl ;
+
+ //    for (unsigned int j =0; j< BC_nodes[i].size();++j)
+//     {
+//       cout << "BC_nodes[i][j]" << BC_nodes[i][j]<<  endl ;
+//     }
+
 
   }
 
@@ -713,7 +737,8 @@ void  Read_MSH::get_elem_data (map<unsigned int, vector<unsigned int> >&
 
 
 // get  physical  regions  for  each  element
-void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
+//void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
+void Read_MSH::get_physical_elem()
 { //get_phys
 
 	
@@ -751,7 +776,7 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
 
   unsigned int  physic_id;
 
-  vector<unsigned int> physic_id_vec;
+  vector<unsigned int> physic_id_vec;   //  NEW :   use   only  this  vector for  physical regions  ID !!
   physic_id = 0;
   // int id = 0;
   vector<unsigned int> :: iterator p;
@@ -783,17 +808,19 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
   // cout << " physic_id_vec " << physic_id_vec[0]<< "   " << physic_id_vec[1]<< 
   // "   " <<physic_id_vec[2]<<endl;
 
-  // NEW  
+  // NEW :   ELIMINATE   phys_reg_ID !!!!
+  // ---------------------------------------
   // ************************************************************
   //  cross check between physic_id_vec and phys_reg_ID
 
-  if  (phys_reg_ID.empty() ) 
-  {
-    cerr  <<  " ERROR : No Physical  region has   been    defined !! " <<  endl;
-    exit(1);
-  }
+  //   if  (phys_reg_ID.empty() ) 
+  //   {
+  //     cerr  <<  " ERROR : No Physical  region has   been    defined !! " <<  endl;
+  //     exit(1);
+  //   }
 
-  cross_check_regions( phys_reg_ID,physic_id_vec, "phys");
+  //   cross_check_regions( phys_reg_ID,physic_id_vec, "phys");
+  //   THIS  CHECK   WILL  BE   SOMEWHERE  ELSE !
 
 
 
@@ -804,7 +831,8 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
 
   // initialization of phys_elements vector
   //  vector<int> null_vector;
-  for (unsigned int i =0; i< phys_reg_ID.size(); ++i)
+  //  for (unsigned int i =0; i< phys_reg_ID.size(); ++i)
+  for (unsigned int i =0; i< physic_id_vec.size(); ++i)
   {
     phys_elements.push_back(null_vector);
   }
@@ -822,7 +850,9 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
     {
       physic_id = list_elements[i].phys_id;
 
-      pos = find_pos(physic_id,phys_reg_ID);
+
+      //    pos = find_pos(physic_id,phys_reg_ID);
+      pos = find_pos(physic_id,physic_id_vec);
 
       // if  not  found ->  error  inconsistency
 
@@ -849,7 +879,11 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
 
       for (unsigned int i =0; i< phys_elements.size();++i)
     {
-      PhysReg_elements.insert(make_pair(phys_reg_ID[i], phys_elements[i]) );
+      //    PhysReg_elements.insert(make_pair(phys_reg_ID[i], phys_elements[i]) );
+
+      PhysReg_elements.insert(make_pair(physic_id_vec[i], phys_elements[i]) );
+
+
       //   cout << BC_reg_ID[i]<< endl ;
       // cout << BC_nodes[i][0]<< endl ;
 
@@ -874,7 +908,12 @@ void Read_MSH::get_physical_elem(vector<unsigned int>& phys_reg_ID)
     for (unsigned int j =0; j< phys_elements[i].size();++j)
     {
 	  
-      elem_region_map.insert(make_pair( phys_elements[i][j],phys_reg_ID[i] ) );
+      //    elem_region_map.insert(make_pair( phys_elements[i][j],phys_reg_ID[i] ) );
+
+      elem_region_map.insert(make_pair( phys_elements[i][j],physic_id_vec[i] ) );
+
+
+
     }
   }
         
@@ -1560,9 +1599,9 @@ void Read_MSH::get_elem_nodes()
         // **********************************************
         check_orientation(node_id_list,type);
         
-        //  TEST !!!!!!!!!!!
-       //  cout <<  " Second  time  det  should  be  > 0 !!!   "  << endl;
-//         check_orientation(node_id_list,type);
+    //  TEST !!!!!!!!!!!
+    //  cout <<  " Second  time  det  should  be  > 0 !!!   "  << endl;
+    //         check_orientation(node_id_list,type);
         
     //*****************************************************
 
@@ -1616,7 +1655,7 @@ void Read_MSH::get_elem_nodes()
         // *******************************************************
 
 
-    current_element.nodes = node_id_list;
+        current_element.nodes = node_id_list;
     current_element.type =  elem_line[i][1];
 
     current_element.phys_id =  elem_line[i][2];
@@ -1631,7 +1670,7 @@ void Read_MSH::get_elem_nodes()
 
 
 
-    elem_nodes.push_back(node_id_list);
+        elem_nodes.push_back(node_id_list);
 
     node_id_list.clear();
 
@@ -1983,7 +2022,7 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
 
   double det  ;    //    determinant
   double x0,x1,z0, y0,y1,z1,  x2,y2, z2, x3, y3, z3 ,x4,y4,z4, 
-           a11,a21, a12, a22, a31, a32, a13, a23, a33;
+    a11,a21, a12, a22, a31, a32, a13, a23, a33;
 
   unsigned int  size_node_list ;
 
@@ -2057,9 +2096,9 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
       //  count_swap++;
 
       // swap node_id_list[0] and  node_id_list[2]
-//      temp = node_id_list[0];
-//      node_id_list[0] = node_id_list[2];
-//      node_id_list[2] = temp;
+      //      temp = node_id_list[0];
+      //      node_id_list[0] = node_id_list[2];
+      //      node_id_list[2] = temp;
 
 
     }
@@ -2137,7 +2176,7 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
     // det 
 
     det =  a11 * (a22*a33 - a23*a32 ) - a12 * (a21*a33 - a23*a31)+ 
-          a13 * (a21*a32 - a22*a31);
+      a13 * (a21*a32 - a22*a31);
 
     //|a_1 a_2 a_3; b_1 b_2 b_3; c_1 c_2 c_3| ==
     // a_1b_2c_3-a_1b_3c_2-a_2b_1c_3+a_2b_3c_1+a_3b_1c_2-a_3b_2c_1
@@ -2303,7 +2342,7 @@ void   Read_MSH:: cross_check_regions( vector<unsigned int>&  user_reg_list,
 
     id = gmsh_reg_list[i];
     p2 = find(user_reg_list.begin(), user_reg_list.end(), id );  
-  // find  phys_id from GMSH file in  (user's id list)
+    // find  phys_id from GMSH file in  (user's id list)
 
     if (p2 == user_reg_list.end())   //  not  found
 

@@ -32,6 +32,7 @@
 #include "mesh_generation.h"
 
 
+
 ///////////////////////////////////////////////////////////////////////////////
 using namespace std;
 using namespace boost::spirit;
@@ -56,6 +57,7 @@ using namespace boost::spirit;
  * This  list can be accessed through   \c get_BC_data , which returns a map between 
  * Boundary Condition Region number (BC id) and a vector of node id.
  */
+
 class Read_MSH
 {
 
@@ -79,8 +81,11 @@ class Read_MSH
    * \param  mesh_data   reference to  \c MeshData_elements
    * 
    */
-  Read_MSH(string filename, vector<unsigned int>& phys_reg_ID,
-           vector<unsigned int>& BC_reg_ID, unsigned int sim_dim, 
+  //  Read_MSH(string filename, vector<unsigned int>& phys_reg_ID,
+  //           vector<unsigned int>& BC_reg_ID, unsigned int sim_dim, 
+  //           Mesh& mesh, MeshData_elements&  mesh_data);
+
+  Read_MSH(string filename, unsigned int sim_dim, 
            Mesh& mesh, MeshData_elements&  mesh_data);
 
 
@@ -183,10 +188,15 @@ class Read_MSH
                           vector<unsigned int>& user_reg_ID );
 
 
-  void get_BC_info( vector<unsigned int>& BC_reg_ID );
+  //  void get_BC_info( vector<unsigned int>& BC_reg_ID );
+  void get_BC_info();
+
 
   // get  physical  regions
-  void get_physical_elem(vector<unsigned int>& phys_reg_ID);
+  //  void get_physical_elem(vector<unsigned int>& phys_reg_ID);
+  void get_physical_elem();
+
+
 
   // write  .xda  file
   void  write_xda ( );
