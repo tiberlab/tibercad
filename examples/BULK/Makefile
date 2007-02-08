@@ -19,9 +19,11 @@ $(targets): run%d: bulk%D.msh run
 run2d_tri: run%d_tri: bulk2Dtri.msh 
 	@echo "Running example in $(DIM)D..."
 	@echo ""
+	@ln -f -s $(topdir)/bin/tibercad
 	@[ -d output ] || mkdir output
 	@perl -i -p -e 's/^\s*dimension\s*=.*/  dimension = $(DIM)/' bulk.in
 	@perl -i -p -e 's/^\s*meshfile\s*=.*/  meshfile = bulk$(DIM)Dtri.msh/' bulk.in
+	@./tibercad bulk.in
 
 run:
 	@echo "Running example in $(DIM)D..."
@@ -34,7 +36,7 @@ run:
 
 
 clean:
-	@rm -f *.xda *.xta *.ucd
+	@rm -f *~ *.xda *.xta *.ucd
 
 distclean: clean
 	@rm -f *.msh *.dat

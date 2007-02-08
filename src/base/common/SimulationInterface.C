@@ -191,6 +191,8 @@ BoundaryProperties*
 SimulationInterface::create_boundary_model(const ModelOptions& options) const
       throw (ModelErrorException)
 {
+  ignore_unused_variable(options);
+
   return NULL;
 }
 
@@ -200,5 +202,7 @@ PhysicalModel*
 SimulationInterface::create_physical_model(const ModelOptions& options) const
       throw (ModelErrorException)
 {
+  ignore_unused_variable(options);
+  
   return NULL;
 }

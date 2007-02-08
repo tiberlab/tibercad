@@ -48,12 +48,15 @@ class SimulationEnvironment
      */
     SimulationEnvironment(Device& device, std::set<ID> region_numbers);
 
+    
     //! Destructor
     ~SimulationEnvironment(void);
 
+    
     //! Get a reference to the device
     Device& get_device(void);
 
+    
     //! Add the boundary for a given boundary number
     /*!
      * The boundary number has to correspond to a boundary number given
@@ -65,6 +68,7 @@ class SimulationEnvironment
      */
     void add_boundary(Boundary* boundary, ID boundary_id);
 
+    
     //! Add the boundary for a given set of boundary numbers
     /*!
      * The boundary numbers have to correspond to boundary numbers given
@@ -85,6 +89,7 @@ class SimulationEnvironment
      */
     void init(void);
 
+    
     //! Prepares the environment for a solve
     /*!
      * This sets all elements for this simulation to active and the others
@@ -92,6 +97,7 @@ class SimulationEnvironment
      */
     void prepare_for_solve(void);
 
+    
     //! Get the boundary for a given boundary number
     /*!
      * \param boundary_number the number of the boundary
@@ -99,6 +105,7 @@ class SimulationEnvironment
      */
     Boundary* get_boundary(ID boundary_number) const;
 
+    
     //! Get the boundary for a given ElementSide
     /*!
      * \param side an element side 
@@ -106,12 +113,14 @@ class SimulationEnvironment
      */
     Boundary* get_boundary(const ElementSide& side) const;
 
+    
     //! Get the boundary with user defined name \c name
     /*!
      * \param name the user defined name to look for
      * \return a pointer to the boundary if found, \c NULL otherwise
      */
     Boundary* get_boundary(const std::string& name) const;
+  
     
     //! Get the boundary for a given Node
     /*!
@@ -120,6 +129,7 @@ class SimulationEnvironment
      */
     Boundary* get_boundary(const Node* node) const;
 
+    
     //! Get the list of all Nodes that belong to a certain boundary
     /*!
      * \param name the name of the boundary to look for
@@ -128,6 +138,7 @@ class SimulationEnvironment
     void get_boundary_nodes(const std::string& name,
         std::set<const Node*>& nodelist);
 
+    
     //! Get the list of all Nodes that belong to a certain boundary
     /*!
      * \param boundary the pointer to the boundary to look for
@@ -148,12 +159,14 @@ class SimulationEnvironment
     //! Check if region \c id is a region of this simulation environment
     bool contains_region(ID id) const;
 
+    
     //! Check if an element is an active element of this simulation environment
     /*!
      * \param elem the element to check for
      */
     bool contains_element(const Elem* elem) const;
 
+    
     //! Check if an ElementSide lies on the boundary of the simulation region
     /*!
      * This does \em not mean that this side has also a boundary condition
@@ -161,24 +174,31 @@ class SimulationEnvironment
      */
     bool is_on_boundary(const ElementSide& side) const;
 
+    
     //! Get the iterator for the first boundary side
     const BoundarySideIterator boundary_sides_begin(void) const;
 
+    
     //! Get the end iterator for the boundary sides
     const BoundarySideIterator boundary_sides_end(void) const;
 
+    
     //! Get the iterator for the first boundary side
     const BoundaryNodeIterator boundary_nodes_begin(void) const;
 
+    
     //! Get the end iterator for the boundary sides
     const BoundaryNodeIterator boundary_nodes_end(void) const;
 
+    
     //! Get the iterator for the first boundary
     const BoundaryIterator boundaries_begin(void) const;
 
+    
     //! Get the end iterator for the boundaries
     const BoundaryIterator boundaries_end(void) const;
 
+    
     //! Update the boundary node map
     /*!
      * This method updates the boundary node map from the active elements
@@ -186,12 +206,15 @@ class SimulationEnvironment
      */
     void update_boundary_node_map(void);
 
+    
     //! Update the list of all elements of this simulation
     void update_element_list(void);
 
+    
     //! Tell if this environment is initialized
     bool is_initialized(void) const;
-    
+
+
 
   private:
 
@@ -204,15 +227,19 @@ class SimulationEnvironment
     //! A typedef for convenience
     typedef std::map<const Node*, ID> NodeMap;
 
+
     //! Disable copy constructor
     SimulationEnvironment(const SimulationEnvironment&);
 
+    
     //! Disable assignment operator
     SimulationEnvironment& operator=(const SimulationEnvironment&);
 
+    
     //! Create the list of elements
     void create_element_list(void);
 
+    
     //! Creates the boundary element maps
     void create_bc_maps(void);
 
@@ -220,27 +247,33 @@ class SimulationEnvironment
     //! The device
     Device* _device;
 
+    
     //! The region numbers for this simulation
     std::set<ID> _region_numbers;
 
+    
     //! A set containing all elements belonging to this simulation region
     std::set<const Elem*> _element_list;
 
+    
     //! A map that assigns boundary ID to boundary condition
     BCMap _bc_map;
 
+    
     //! The ElementSide for the different boundaries
     /*!
      * Connects ElementSide objects to Boundary pointers
      */
     ElemSideMap _element_side_map;
 
+    
     //! A map that contains all nodes of the boundaries
     /*!
      * Connects Node pointers to Boundary pointers
      */
     NodeMap _node_map;
 
+    
     //! Tells if this environment is already initialized
     bool _is_initialized;
 

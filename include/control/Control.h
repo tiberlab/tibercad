@@ -55,6 +55,25 @@ class Control
     Device& get_device(void);
 
 
+    //! Find a simulation with name \c name
+    /*!
+     * \param name the name to look for
+     * \return a pointer to the simulation if found, \c NULL otherwise
+     *
+     * \c name can be one of the following:
+     * \li the user defined name of a simulation
+     * \li the identifier of the simulation as used for creation
+     * \li the empty string
+     *
+     * In the second case, the first simulation of this type will be
+     * returned. In the third case, the first of all simulations will
+     * be returned.
+     * 
+     */
+    SimulationInterface* find_simulation(const std::string& name) const;
+
+
+
 
   private:
 
@@ -97,6 +116,7 @@ class Control
 
     //! Create and setup the models
     void setup_models(void) throw (ModelErrorException);
+
 
 };
 

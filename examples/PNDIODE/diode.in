@@ -1,50 +1,108 @@
-# pn-junction definition
+# diode example
 
-dimension = 2
-meshfile = diode_mdr.grd
-format = ise
+# Description of  the  device physical regions
+$Device
+{
+   Region nside 
+   {
+     reg_numb = 2
+     mat = Si
+     doping = 1e18 doping_type = donor
+   }
 
-n_doping = 1e18
-p_doping = 1e19
-temperature = 300
-
-statistics = B
-searchpath = ../materials
-material = Si
-
-
-mesh_units = 1e-4
-
-#start_voltage = -0.9
-#stop_voltage = 0.9
-#voltage_steps = 50
-start_voltage = 0
-stop_voltage = 1.0
-voltage_steps = 10
-
-#simulation_method = GUMMEL
-
-nonlinear_tolerance = 1e-9
-nonlinear_abs_tolerance = 1e-12
-nonlinear_ls_maxstep = 0.025
-ls_type = cubic
-linear_tolerance = 1e-6
-linear_abs_tolerance = 1e-15
-nonlinear_max_it = 50
-linear_max_it = 1000
-integration_order = 2
-discretization = fem
+   Region pside 
+   {
+     reg_numb = 1
+     mat = Si
+     doping = 1e18 doping_type = acceptor
+   }
+}
 
 
-scaling = 1
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+  model driftdiffusion
+  { 
+              
+     phys_regions = (1 2)
 
-#refinement_stop_criterion=1e-4
-max_refinement_steps=0
+     physical_models
+     { 
+       recombination  =  SRH
+     }                
 
-uniform_refinement=0
+    BC_Regions  
+    {
+      BC_Region anode
+      {
+        BC_reg_numb = 1
+        type = ohmic
+      #  barrier_height = 0.8
+        value = 0.5
+      }
 
-refine_fraction=0.7
-coarsen_fraction=0.3
-max_ref_level=6
+      BC_Region cathode
+      {
+        BC_reg_numb = 2
+        type = ohmic
+        value = 0.0
+      }
+ 
+    }   
+
+  }  
+
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+
+{
+  driftdiffusion
+  {
+    coupling = full
+    nonlin_max_it = 10
+   # ls_max_step = 0.025
+   # current_integration_method = rstf
+  }
+
+  sweep
+  {
+    boundary = anode
+    start = 0.0
+    stop = 1.0
+    steps = 10
+  }
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+ 
+  driftdiffusion 
+  {
+    model = unstrained
+  }
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+
+$Simulation
+{
+  searchpath = ../materials
+  meshfile = diode_mdr.grd
+  dimension = 2
+  temperature = 300
+  solve = sweep
+}
+
+
+
 
 

@@ -282,7 +282,7 @@ Control::run_simulation(void) throw (SolveFailedException)
 
   const string& name = simulation_params["solve"];
 
-  SimulationInterface* sim = SimulationInterface::find_simulation(name);
+  SimulationInterface* sim = find_simulation(name);
 
   if (sim == NULL)
     throw SolveFailedException("Control: Simulation not found: " + name);
@@ -291,3 +291,24 @@ Control::run_simulation(void) throw (SolveFailedException)
   sim->solve();
   
 }
+
+
+
+
+SimulationInterface*
+Control::find_simulation(const string& name) const
+{
+  SimulationInterface* sim = SimulationInterface::find_simulation(name);
+
+  if (sim != NULL)
+  {
+    SimulationMap::const_iterator it = _simulations.find(sim->get_name());
+    if (it == _simulations.end())
+      sim == NULL;
+  }
+    
+  return sim;
+}
+
+
+

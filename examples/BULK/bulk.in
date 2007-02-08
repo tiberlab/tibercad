@@ -5,8 +5,8 @@ $Device
    Region bulk 
    {
      reg_numb = 1
-     mat = GaAs
-     doping = 1e18 doping_type = donor
+     mat = Si
+     doping = 1e16 doping_type = donor
    }
 
 }
