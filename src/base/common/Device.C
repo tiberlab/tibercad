@@ -84,6 +84,7 @@ void
 Device::init(void)
 {
   _mesh_units = _options.get_option("mesh_units", _mesh_units);
+  cout << "mesh units: " << _mesh_units << " m" << endl;
 
   setup_mesh();
 

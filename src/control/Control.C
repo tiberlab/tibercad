@@ -96,9 +96,11 @@ Control::create_device(void)
   if (simulation_params["searchpath"] != "")
     _database->set_search_path(simulation_params["searchpath"]);
 
-  ModelOptions opts;
-  opts["meshfile"] = simulation_params["meshfile"];
-  opts["dimension"] = simulation_params["dimension"];
+  // create options for the device
+  ModelOptions opts(simulation_params);
+  //opts["meshfile"] = simulation_params["meshfile"];
+  //opts["mesh_units"] = simulation_params["mesh_units"];
+  //opts["dimension"] = simulation_params["dimension"];
 
   _device = Device::create(opts);
 

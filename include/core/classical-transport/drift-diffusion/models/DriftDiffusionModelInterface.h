@@ -48,6 +48,14 @@ class DriftDiffusionModelInterface : public PhysicalModelInterface
     //! \copydoc PhysicalModelInterfaceInterface::copy_from()
     virtual void copy_from(const PhysicalModelInterface* rhs);
 
+    //! The standard reference temperature in eV
+    /*!
+     * We give this value here because we get the lattice temperature
+     * from DriftDiffusionProperties in eV and many models need something
+     * like T/T0
+     */
+    static const double T0;
+
 
   private:
 
@@ -59,6 +67,7 @@ class DriftDiffusionModelInterface : public PhysicalModelInterface
     
     //! The DriftDiffusionProperties object this model belongs to
     DriftDiffusionProperties* _dd_prop;
+
 };
 
 

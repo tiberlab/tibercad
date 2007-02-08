@@ -6,7 +6,7 @@ $Device
    {
      reg_numb = 1
      mat = Si
-     doping = 1e16 doping_type = donor
+     doping = 1e16 doping_type = donor Ec = 1.4 Ev = 0 meff_n = 1 meff_p = 1 permittivity = 1
    }
 
 }

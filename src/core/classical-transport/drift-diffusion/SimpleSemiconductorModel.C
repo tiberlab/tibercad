@@ -1,6 +1,7 @@
 // $Id$
 
 #include "SimpleSemiconductorModel.h"
+#include "Material.h"
 
 
 using namespace DriftDiffusionDefs;
@@ -28,14 +29,17 @@ SimpleSemiconductorModel::do_init(void)
 {
   DriftDiffusionProperties::do_init();
 
-  get_conduction_band().band_edge = get_options().get_option("Ec", 2.269);
-  get_conduction_band().effective_mass =
-    get_options().get_option("meff_n", 0.6);
-  get_valence_band().band_edge = get_options().get_option("Ev", 1.1047);
-  get_valence_band().effective_mass =
-    get_options().get_option("meff_p", 1.2);
-  
-  permittivity = get_options().get_option("eps_r", 11.7);
+  // for the moment we read them from the materials section
+  ModelOptions& opt = get_material()->get_options();
 
-  polarization(0) = get_options().get_option("Px", 0.0);
+  get_conduction_band().band_edge = opt.get_option("Ec", 2.269);
+  get_valence_band().band_edge = opt.get_option("Ev", 1.1047);
+  get_conduction_band().effective_mass = opt.get_option("meff_n", 0.6);
+  get_valence_band().effective_mass = opt.get_option("meff_p", 1.2);
+  
+  permittivity = opt.get_option("permittivity", 11.7);
+
+  polarization(0) = opt.get_option("Px", 0.0);
+  polarization(1) = opt.get_option("Py", 0.0);
+  polarization(2) = opt.get_option("Pz", 0.0);
 }

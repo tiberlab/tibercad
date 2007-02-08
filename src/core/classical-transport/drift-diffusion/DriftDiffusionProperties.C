@@ -47,8 +47,8 @@ DriftDiffusionProperties::do_init(void)
   if (get_options().get_option("statistics", "B") == "FD")
     set_statistics(TiberCad::FERMIDIRAC);
 
-  Material* mat = get_material();
-  const ModelOptions& matopts = mat->get_options();
+  //Material* mat = get_material();
+  //const ModelOptions& matopts = mat->get_options();
 
   // create electron mobility model
   const std::string& emob =
@@ -559,6 +559,7 @@ DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
   valence_band = mod->valence_band;
   
 
+  /*
   clear_recombination();
   RecombinationModelInterface* recmod;
   const_recomb_iterator rec_it(mod->_recombination_models.begin());
@@ -580,7 +581,7 @@ DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
   _hole_mobility = static_cast<MobilityModelInterface*>(
       (mod->_hole_mobility)->copy());
   _hole_mobility->set_driftdiffusionproperties(this);
-  
+  */
 }
 
 

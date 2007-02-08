@@ -11,6 +11,7 @@
 #include "OpticalGeneration.h"
 
 #include "ConstantMobility.h"
+#include "DopingDependentMobility.h"
 
 #include "ExcitonModel.h"
 
@@ -65,6 +66,8 @@ PhysicalModelInterface::create(const std::string& name,
     mod = OpticalGeneration::create();
   else if (name == "mob_constant")
     mod = ConstantMobility::create();
+  else if (name == "mob_doping_dependent")
+    mod = DopingDependentMobility::create();
   else if (name == "ddmodel_simple")
     mod = SimpleSemiconductorModel::create();
   else if (name == "ddmodel_unstrained")

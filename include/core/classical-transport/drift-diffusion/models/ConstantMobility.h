@@ -6,6 +6,16 @@
 #include "MobilityModelInterface.h"
 
 
+//! Constant mobility model
+/*!
+ * The constant mobility model assumes no mobility dependence on
+ * doping density or electric field. Only temperature dependence is 
+ * included.
+ * The mobility is calculated from
+ * \f[
+ * \mu = \mu_{max} \left(\frac{T}{T_0}\right)^{-\gamma}
+ * \f]
+ */
 class ConstantMobility : public MobilityModelInterface
 {
 
@@ -50,6 +60,9 @@ class ConstantMobility : public MobilityModelInterface
     //! The (constant) mobility
     double _mu0;
 
+    //! The exponent for the temperature dependence
+    double _exp;
+
 };
 
 //
@@ -58,7 +71,8 @@ class ConstantMobility : public MobilityModelInterface
 
 inline
 ConstantMobility::ConstantMobility(void)
-  :  _mu0(1000)
+  : _mu0(1000),
+    _exp(1)
 {
 }
 

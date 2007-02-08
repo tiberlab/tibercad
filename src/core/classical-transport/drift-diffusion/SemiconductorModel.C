@@ -33,7 +33,7 @@ SemiconductorModel::do_init(void)
 {
   Parent::do_init();
 
-  const ModelOptions& opt = get_options ();
+  const ModelOptions& opt = get_options();
 
   PhysicalModelInterface::destroy(_bulk_model);
 

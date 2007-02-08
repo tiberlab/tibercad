@@ -1,12 +1,12 @@
 // $Id$
 
 #include "ConstantMobility.h"
+#include "DriftDiffusionProperties.h"
 
 #include "Material.h"
 #include "Database.h"
 
 #include "getpot.h"
-#include <iostream>
 
 void
 ConstantMobility::read_database(void)
@@ -18,6 +18,9 @@ ConstantMobility::read_database(void)
   s += get_carrier_type();
   _mu0 = data(s.c_str(), _mu0);
 
+  s = "exponent_";
+  s += get_carrier_type();
+  _exp = data(s.c_str(), _exp);
 }
 
 
@@ -25,7 +28,9 @@ ConstantMobility::read_database(void)
 void
 ConstantMobility::do_init(void)
 {
-  _mu0 = get_options().get_option("mu_max", _mu0);
+  std::string s("mu_");
+  s += get_carrier_type();
+  _mu0 = get_material()->get_options().get_option(s, _mu0);
 }
 
 
@@ -33,7 +38,8 @@ ConstantMobility::do_init(void)
 double
 ConstantMobility::get_mobility(void)
 {
-  return _mu0;
+  double T = get_driftdiffusionproperties().get_lattice_temperature();
+  return _mu0 * std::pow(T / T0, -_exp);
 }
 
 
@@ -57,5 +63,6 @@ ConstantMobility::calculate_VCA(const PhysicalModelInterface* comp_A,
     dynamic_cast<const ConstantMobility*>(comp_B);
 
   _mu0 = alloy(scA->_mu0, scB->_mu0, xa);
+  _exp = alloy(scA->_exp, scB->_exp, xa);
 }
 
