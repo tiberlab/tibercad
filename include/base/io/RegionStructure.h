@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _REGIONSTRUCTURE_H_
 #define _REGIONSTRUCTURE_H_
 
@@ -39,25 +41,25 @@ class RegionStructure{
   /*!
    * 
    */
-  std::string  get_region_name();
+  const std::string&  get_region_name() const;
 
   //!  Returns the  region ID. 
   /*!
    * 
    */
-  std::string  get_region_ID();
+  const std::string&  get_region_ID() const;
 
   //!  Returns the name of the material associated to the region (if  physical) . 
   /*!
    * 
    */
-  std::string  get_material_name();
+  const std::string&  get_material_name() const;
 
   //!  Returns the options associated to the region. 
   /*!
    * Returns a reference to object ModelOptions.
    */
-  const ModelOptions&  get_options();
+  const ModelOptions&  get_options() const;
 
  
 
@@ -111,7 +113,7 @@ class RegionStructure{
 
 
 inline const
-ModelOptions&  RegionStructure::get_options()
+ModelOptions&  RegionStructure::get_options() const
 {
    
   return region_options;
@@ -120,8 +122,8 @@ ModelOptions&  RegionStructure::get_options()
 
 
 
-inline
-std::string  RegionStructure::get_region_name()
+inline const
+std::string&  RegionStructure::get_region_name() const
 {
    
   return region_name;
@@ -129,8 +131,8 @@ std::string  RegionStructure::get_region_name()
 }
 
 
-inline
-std::string  RegionStructure::get_region_ID()
+inline const
+std::string&  RegionStructure::get_region_ID() const
 {
    
   return region_ID;
@@ -138,8 +140,8 @@ std::string  RegionStructure::get_region_ID()
 }
 
 
-inline
-std::string  RegionStructure::get_material_name()
+inline const
+std::string&  RegionStructure::get_material_name() const
 {
    
   return material_name;

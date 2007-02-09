@@ -85,14 +85,25 @@ ModelOptions::operator+=(const map<const string, string>& rhs)
 void
 ModelOptions::print_all(void) const
 {
-  cerr << "ModelOptions content:" << endl;
+  cout << "ModelOptions content: {" << endl;
   OptionsMap::const_iterator it = _options.begin();
   const OptionsMap::const_iterator end = _options.end();
 
   for ( ; it != end; ++it)
-    cerr << it->first << " -> " << it->second << endl;
+    cout << it->first << " -> " << it->second << endl;
 
-  cerr << endl;
+  if (!_submodels.empty())
+  {
+    cout << "Submodel ";
+    const_submodel_iterator it(_submodels.begin());
+    const const_submodel_iterator end(_submodels.end());
+    for ( ; it != end; ++it)
+    {
+      cout << it->first << ":\n";
+      (it->second).print_all();
+    }
+  }
+  cout << "}" << endl;
 }
 
 

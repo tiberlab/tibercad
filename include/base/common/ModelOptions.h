@@ -20,18 +20,35 @@ class ModelOptions
 
   public:
 
+    //! typedef for convenience
+    typedef std::map<const std::string, std::string> OptionsMap;
+    
+    //! typedef for the map of submodels
+    typedef std::multimap<const std::string, ModelOptions> SubmodelMap;
+
+    //! An iterator to iterate over the submodels
+    typedef SubmodelMap::iterator submodel_iterator;
+
+    /*! \copydoc submodel_iterator */
+    typedef SubmodelMap::const_iterator const_submodel_iterator;
+
+
     //! The default constructor
     ModelOptions(void) {};
 
+    
     //! Constructor which takes a map as argument
     ModelOptions(std::map<const std::string, std::string> options);
 
+    
     //! The destructor
     ~ModelOptions(void) {};
 
+    
     //! Check if it is empty
-    bool is_empty(void);
+    bool is_empty(void) const;
 
+    
     //! Get the value of an option
     /*!
      * \param name the name of the option
@@ -42,6 +59,7 @@ class ModelOptions
     template <typename T>
     T get_option(const std::string& name, T default_value) const;
 
+    
     //! Get an option which is a vector of values (of the same type)
     /*!
      * \param name the name of the option
@@ -52,6 +70,7 @@ class ModelOptions
     template <typename T>
     void get_option(const std::string& name, std::vector<T>& vec) const;
 
+    
     //! Get an option which is a vector of vectors (with the same type)
     /*!
      * \param name the name of the option
@@ -67,9 +86,11 @@ class ModelOptions
     void get_option(const std::string& name,
         std::vector<std::vector<T> >& vec) const;
 
+    
     //! Check if an option is present
     bool find_option(const std::string& name) const;
 
+    
     //! Set an option
     /*!
      * This method is probably of no use...
@@ -77,6 +98,7 @@ class ModelOptions
     template <typename T>
     void set_option(const std::string& name, const T value);
 
+    
     //! Set or get an option in string representation
     std::string& operator[](const std::string& name);
 
@@ -84,27 +106,83 @@ class ModelOptions
     //! Delete an option
     void delete_option(const std::string& name);
 
+    
     //! Clear all options
     void clear(void);
 
+    
     //! operator to add options
     ModelOptions& operator+=(const ModelOptions& rhs);
 
+    
     //! operator to add options
     ModelOptions& operator+=(const std::map<const std::string,
         std::string>& rhs);
 
+    
     //! Print all options for debugging
     void print_all(void) const;
 
 
-  private:
+    //! Add a submodel
+    /*!
+     * \param name the name of the model to be added
+     * \param options the ModelOptions
+     *
+     * \note { The model name doesn't have to be unique. }
+     */
+    void add_submodel(const std::string& name, const ModelOptions& options);
 
-    //! typedef for convenience
-    typedef std::map<const std::string, std::string> OptionsMap;
+
+    //! Check if there is a certain submodel
+    /*!
+     * \param name the name of the model to look for
+     * \return \c true if found, \c false otherwise
+     */
+    bool has_submodel(const std::string& name);
+
+
+    //! Get the const iterator for a certain submodel
+    /*!
+     * \param name the name of the model to look for
+     * \return the const iterator for the first appearance of the model
+     */
+    const_submodel_iterator submodels_begin(const std::string& name) const;
+
+
+    //! Get the past-the-end iterator for a certain submodel
+    /*!
+     * \param name the name of the model to look for
+     * \return the past-the-end iterator for the model
+     */
+    const_submodel_iterator submodels_end(const std::string& name) const;
+
+
+    //! Get the iterator for the first submodel
+    submodel_iterator submodels_begin(void);
+
+    
+    //! Get the past-the-end iterator for the submodels
+    submodel_iterator submodels_end(void);
+
+    
+    //! Get the iterator for the first submodel
+    const_submodel_iterator submodels_begin(void) const;
+
+    
+    //! Get the past-the-end iterator for the submodels
+    const_submodel_iterator submodels_end(void) const;
+
+
+
+
+  private:
     
     //! The map holding all options
     OptionsMap _options;
+
+    //! A map containing submodels
+    SubmodelMap _submodels;
 
 };
 
@@ -173,12 +251,95 @@ ModelOptions::get_option(const std::string& name, T default_value) const
 }
 
 
+
 inline
 bool
-ModelOptions::is_empty(void)
+ModelOptions::is_empty(void) const
 {
   return _options.empty();
 }
 
 
+
+inline
+ModelOptions::const_submodel_iterator
+ModelOptions::submodels_begin(void) const
+{
+  return _submodels.begin();
+}
+
+
+
+inline
+ModelOptions::const_submodel_iterator
+ModelOptions::submodels_end(void) const
+{
+  return _submodels.end();
+}
+
+
+
+
+inline
+ModelOptions::submodel_iterator
+ModelOptions::submodels_begin(void)
+{
+  return _submodels.begin();
+}
+
+
+
+
+inline
+ModelOptions::submodel_iterator
+ModelOptions::submodels_end(void)
+{
+  return _submodels.end();
+}
+
+
+
+inline
+ModelOptions::const_submodel_iterator
+ModelOptions::submodels_begin(const std::string& name) const
+{
+  return _submodels.lower_bound(name);
+}
+
+
+
+inline
+ModelOptions::const_submodel_iterator
+ModelOptions::submodels_end(const std::string& name) const
+{
+  return _submodels.upper_bound(name);
+}
+
+
+
+
+inline
+void
+ModelOptions::add_submodel(const std::string& name,
+    const ModelOptions& options)
+{
+  _submodels.insert(SubmodelMap::value_type(name, options));
+}
+
+
+
+inline
+bool
+ModelOptions::has_submodel(const std::string& name)
+{
+  bool ans = true;
+  if (_submodels.find(name) == _submodels.end())
+    ans = false;
+
+  return ans;
+}
+
+
+
+    
 #endif // _MODELOPTIONS_H_

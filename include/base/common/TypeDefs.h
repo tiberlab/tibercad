@@ -25,6 +25,7 @@ typedef std::map<ID, std::vector<ID> > BoundaryNodeMap;
  * \c ignore_unused_variable(a) so that the compiler gives no warning
  */
 template <typename T>
+inline
 void ignore_unused_variable(T)
 {
 }

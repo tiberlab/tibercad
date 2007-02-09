@@ -706,21 +706,13 @@ class DriftDiffusionProperties : public PhysicalModel
         const ModelOptions& options = ModelOptions());
 
     
-    //! Set the electron mobility model
-    /*!
-     * Creates a mobility model for the electrons from the given model
-     * name and options.
-     */
-    void set_electron_mobility_model(const std::string& model_name,
-        const ModelOptions& options = ModelOptions());
-
     
-    //! Set the hole mobility model
+    //! Create a mobility model
     /*!
-     * Creates a mobility model for the holes from the given model
-     * name and options.
+     * Creates a mobility model from the given model name
+     * and options.
      */
-    void set_hole_mobility_model(const std::string& model_name,
+    MobilityModelInterface* create_mobility_model(
         const ModelOptions& options = ModelOptions());
 
 

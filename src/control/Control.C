@@ -2,6 +2,7 @@
 
 
 #include "InputParser.h"
+#include "RegionStructure.h"
 #include "Control.h"
 #include "Database.h"
 #include "Utils.h"
@@ -90,29 +91,17 @@ Control::create_device(void)
 {
   InputParser parser(_inputfile);
 
-  parser.read_parameters("Simulation");
-  map<const string, string>& simulation_params = parser.get_parameters_map();
+  const ModelOptions& opts = parser.read_parameters("Simulation");
 
-  if (simulation_params["searchpath"] != "")
-    _database->set_search_path(simulation_params["searchpath"]);
-
-  // create options for the device
-  ModelOptions opts(simulation_params);
-  //opts["meshfile"] = simulation_params["meshfile"];
-  //opts["mesh_units"] = simulation_params["mesh_units"];
-  //opts["dimension"] = simulation_params["dimension"];
+  _database->set_search_path(opts.get_option("searchpath", "."));
 
   _device = Device::create(opts);
 
   // tell the device who controls it
   _device->set_control(this);
 
-
-  if (simulation_params.find("temperature") != simulation_params.end())
-    SimulationOptions::temperature =
-      Utils::convert<double>(simulation_params["temperature"]);
+  SimulationOptions::temperature = opts.get_option("temperature", 300.0);
   
-
   cout << "Control: simulation temperature = " <<
     SimulationOptions::temperature << " K" << endl << endl;
 
@@ -128,19 +117,17 @@ Control::create_materials(void)
 
   InputParser parser(_inputfile);
 
-  parser.read_device();
-
-  map<ID, map<const string, string> >& device_map = parser.get_device_map();
+  const map<ID, RegionStructure>& device_map = parser.read_device();
 
   // iterate the map and create the materials
-  map<ID,  map<const string, string> >::iterator mapit(device_map.begin());
-  const map<ID,  map<const string, string> >::iterator mapend(device_map.end());
+  map<ID, RegionStructure>::const_iterator mapit(device_map.begin());
+  const map<ID, RegionStructure>::const_iterator mapend(device_map.end());
   for ( ; mapit != mapend; ++mapit)
   {
-    map<const string, string>& data = mapit->second;
+    const RegionStructure& data = mapit->second;
     ID region_id = mapit->first;
-    const std::string& material = data["mat"];
-    Material* mat = Material::create(material, ModelOptions(data));
+    const std::string& material = data.get_material_name();
+    Material* mat = Material::create(material, data.get_options());
     _device->set_material(mat, region_id);
   }
 }
@@ -159,32 +146,36 @@ Control::setup_models(void) throw (ModelErrorException)
   InputParser parser(_inputfile);
 
   // parse the models section
-  parser.read_models();
-  map<const string, ModelStructure*>& models = parser.get_model_structure_map();
+  const map<const string, ModelStructure*>& models = parser.read_models();
 
   // we loop over all simulations to setup the models
-  map<const string, ModelStructure*>::iterator modit(models.begin());
-  const map<const string, ModelStructure*>::iterator modend(models.end());
+  map<const string, ModelStructure*>::const_iterator modit(models.begin());
+  const map<const string, ModelStructure*>::const_iterator modend(models.end());
   for ( ; modit != modend; ++modit)
   {
     const string& modelname = modit->first;
     ModelStructure* model_str = modit->second;
 
+    //
     // extract the physical regions
+    // 
+
     vector<string> preg = model_str->get_physical_regions();
     unsigned int n = preg.size();
     set<ID> phys_regions;
     for (unsigned int i = 0; i < n; i++)
       phys_regions.insert(Utils::convert<ID>(preg[i]));
 
+    //
+    // now create the simulation
+    //
     
-    // read options for this simulation (from Solver and Physics section)
-    parser.read_parameters("Solver", modelname);
-    map<const string, string>& solveropts = parser.get_parameters_map();
-    ModelOptions opts(solveropts);
+    // read options for this simulation (from Solver section)
+    const ModelOptions& solveropts =
+      parser.read_parameters("Solver", modelname);
 
-
-    SimulationInterface* sim = SimulationInterface::create(modelname, opts);
+    SimulationInterface* sim =
+      SimulationInterface::create(modelname, solveropts);
     if (sim == NULL)
       throw ModelErrorException(
           "Control: No such simulation type: " + modelname);
@@ -201,26 +192,33 @@ Control::setup_models(void) throw (ModelErrorException)
     // now we have to create the models
     //
 
-    opts.clear();
     // what main model should be used?
-    parser.read_parameters("Physics", modelname);
-    map<const string, string>& physopts = parser.get_parameters_map();
-    opts += physopts;
+    ModelOptions physopts(parser.read_parameters("Physics", modelname));
 
     // parse the submodels
-    map<const string, string>& physmodels = model_str->get_phys_model_map();
-    opts += physmodels;
+    {
+      const map<const string, ModelOptions>& physmodels =
+        model_str->get_physical_model_map();
 
-    set<ID>::iterator it(phys_regions.begin());
-    const set<ID>::iterator end(phys_regions.end());
+      map<const string, ModelOptions>::const_iterator it(physmodels.begin());
+      map<const string, ModelOptions>::const_iterator end(physmodels.end());
+      for ( ; it != end; ++it)
+      {
+        physopts.add_submodel(it->first, it->second);
+        physopts.add_submodel(it->first, it->second);
+      }
+    }
+
 
     // we have to do this for each material!
+    set<ID>::iterator it(phys_regions.begin());
+    const set<ID>::iterator end(phys_regions.end());
     for ( ; it != end; ++it)
     {
       Material* mat = device.get_material(*it);
 
       // here we actually create the model
-      PhysicalModel* model = sim->create_physical_model(opts);
+      PhysicalModel* model = sim->create_physical_model(physopts);
 
       // NOTE: model could be NULL, but we don't care about. Who tells us that
       // every simulation necessarily needs a model?
@@ -232,25 +230,25 @@ Control::setup_models(void) throw (ModelErrorException)
     // and now... the boundary conditions
     //
 
-    map<ID, map<const string, string> >& bc_map = model_str->get_model_BC_map();
-    map<ID, map<const string, string> >::iterator bdit(bc_map.begin());
-    const map<ID, map<const string, string> >::iterator bdend(bc_map.end());
+    map<ID, RegionStructure>& bc_map = model_str->get_model_BC_map();
+    map<ID, RegionStructure>::iterator bdit(bc_map.begin());
+    const map<ID, RegionStructure>::iterator bdend(bc_map.end());
 
     for ( ; bdit != bdend; ++bdit)
     {
       ID id = bdit->first;
 
-      opts.clear();
-      opts += bdit->second;
+      const ModelOptions& bdopts = (bdit->second).get_options();
 
-      Boundary* bd = new Boundary(opts.get_option("BC_region_name", ""));
-      BoundaryProperties* bdprop = sim->create_boundary_model(opts);
+      Boundary* bd = new Boundary((bdit->second).get_region_name());
+      BoundaryProperties* bdprop = sim->create_boundary_model(bdopts);
 
       // NOTE: bdprop could be NULL, but we don't care about. Who tells us that
       // every simulation necessarily needs a boundary model?
       bd->add_boundary_properties(bdprop, sim->get_id());
       env->add_boundary(bd, id);
     }
+
 
   } // end loop over simulations
 
@@ -260,15 +258,16 @@ Control::setup_models(void) throw (ModelErrorException)
 
   // first selfconsistency
 
+
   // then sweep
   parser.read_parameters("Solver", "sweep");
-  map<const string, string>& solveropts = parser.get_parameters_map();
-  ModelOptions opts(solveropts);
-  if (!opts.is_empty())
+  const ModelOptions& solveropts = parser.read_parameters("Solver", "sweep");
+  if (!solveropts.is_empty())
   {
-    SimulationInterface* sim = SimulationInterface::create("sweep", opts);
+    SimulationInterface* sim = SimulationInterface::create("sweep", solveropts);
     _simulations[sim->get_name()] = sim;
   }
+
 }
 
 
@@ -277,21 +276,37 @@ Control::setup_models(void) throw (ModelErrorException)
 void
 Control::run_simulation(void) throw (SolveFailedException)
 {
+
   InputParser parser(_inputfile);
 
-  parser.read_parameters("Simulation");
-  map<const string, string>& simulation_params = parser.get_parameters_map();
+  const ModelOptions& opts = parser.read_parameters("Simulation");
 
-  const string& name = simulation_params["solve"];
-
-  SimulationInterface* sim = find_simulation(name);
-
-  if (sim == NULL)
-    throw SolveFailedException("Control: Simulation not found: " + name);
-
-  // now run it
-  sim->solve();
+  vector<string> names;
+  opts.get_option("solve", names);
   
+  cout << "We solve: ";
+  unsigned int n = names.size();
+  for (unsigned int i = 0; i < n; i++)
+    cout << names[i] << " ";
+  cout << endl;
+
+  vector<SimulationInterface*> simulations(n);
+  
+  // first check if we can find all simulations
+  for (unsigned int i = 0; i < n; i++)
+  {
+    SimulationInterface* sim = find_simulation(names[i]);
+
+    if (sim == NULL)
+      throw SolveFailedException("Control: Simulation not found: " + names[i]);
+
+    simulations[i] = sim;
+  }
+
+  // now run them
+  for (unsigned int i = 0; i < n; i++)
+    simulations[i]->solve();
+ 
 }
 
 
@@ -306,7 +321,7 @@ Control::find_simulation(const string& name) const
   {
     SimulationMap::const_iterator it = _simulations.find(sim->get_name());
     if (it == _simulations.end())
-      sim == NULL;
+      sim = NULL;
   }
     
   return sim;

@@ -62,7 +62,7 @@ Device::setup_mesh(void)
   int dim = _options.get_option("dimension", 2);
 
   cout << endl << "Device::setup_mesh(): " << endl;
-  cout << "meshfile : " << meshfile << " (" << dim << "D)" << endl;
+  cout << "   meshfile : " << meshfile << " (" << dim << "D)" << endl;
   
   MeshData_elements meshdata(*_mesh);
   meshdata.enable_compatibility_mode();

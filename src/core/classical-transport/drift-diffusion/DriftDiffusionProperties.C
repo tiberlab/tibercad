@@ -13,11 +13,13 @@
 #include <cmath>
 
 
+using namespace std;
+
 
 // we calculate in cm, therefore the factor 1e6
 // the electron charge enters because we take k*T in electron volts
 const double
-DriftDiffusionProperties::_DOS_factor = std::pow(2.0 * M_PI * Constants::me /
+DriftDiffusionProperties::_DOS_factor = pow(2.0 * M_PI * Constants::me /
       (Constants::h * Constants::h) * Constants::e, 1.5) / 1e6;
 
 
@@ -47,27 +49,49 @@ DriftDiffusionProperties::do_init(void)
   if (get_options().get_option("statistics", "B") == "FD")
     set_statistics(TiberCad::FERMIDIRAC);
 
-  //Material* mat = get_material();
-  //const ModelOptions& matopts = mat->get_options();
+  //
+  // mobilities
+  // 
 
   // create electron mobility model
-  const std::string& emob =
-    get_options().get_option("electron_mobility", "constant");
-  set_electron_mobility_model(emob);
+  PhysicalModelInterface::destroy(_electron_mobility);
+
+  ModelOptions::const_submodel_iterator
+    it(get_options().submodels_begin("electron_mobility"));
+
+  if (it != get_options().submodels_end("electron_mobility"))
+    _electron_mobility = create_mobility_model(it->second);
+  else
+    _electron_mobility = create_mobility_model();
+
 
   // create hole mobility model
-  const std::string& hmob =
-    get_options().get_option("hole_mobility", "constant");
-  set_hole_mobility_model(hmob);
+  PhysicalModelInterface::destroy(_hole_mobility);
 
+  it = get_options().submodels_begin("hole_mobility");
+
+  if (it != get_options().submodels_end("hole_mobility"))
+  {
+    _hole_mobility = create_mobility_model(it->second);
+    (it->second).print_all();
+  }
+  else
+    _hole_mobility = create_mobility_model();
+
+  
+  //
+  // Recombinations (we can have several models!
+  //
 
   // create recombination models
-  std::vector<std::string> recomb;
+  {
+  vector<string> recomb;
   get_options().get_option("recombination", recomb);
-  std::vector<std::string>::iterator it(recomb.begin());
-  const std::vector<std::string>::iterator end(recomb.end());
+  vector<string>::iterator it(recomb.begin());
+  const vector<string>::iterator end(recomb.end());
   for ( ; it != end; ++it)
     add_recombination_model(*it);
+  }
   
 }
 
@@ -135,7 +159,7 @@ DriftDiffusionProperties::calculate_VCA(const PhysicalModelInterface* comp_A,
 
 void
 DriftDiffusionProperties::add_recombination_model(
-    const std::string& model_name, const ModelOptions& options)
+    const string& model_name, const ModelOptions& options)
 {
   RecombinationModelInterface* model =
     RecombinationModelInterface::create(model_name, options);
@@ -152,46 +176,24 @@ DriftDiffusionProperties::add_recombination_model(
 
  
 
-
-void
-DriftDiffusionProperties::set_electron_mobility_model(
-    const std::string& model_name, const ModelOptions& options)
+ 
+MobilityModelInterface*
+DriftDiffusionProperties::create_mobility_model(const ModelOptions& options)
 {
+  const string& model_name = options.get_option("model", "constant");
+
   MobilityModelInterface* mobility_model =
     MobilityModelInterface::create(model_name, options);
 
   if (mobility_model == NULL)
-    throw InitFailedException("No such electron mobility model: " + model_name);
-  
-  PhysicalModelInterface::destroy(_electron_mobility);
-  _electron_mobility = mobility_model;
-  _electron_mobility->set_driftdiffusionproperties(this);
-  _electron_mobility->set_material(get_material());
-  _electron_mobility->set_carrier_type('e');
-  _electron_mobility->init();
-
-}
-
-
-
+    throw InitFailedException("No such mobility model: " + model_name);
  
-void
-DriftDiffusionProperties::set_hole_mobility_model(
-    const std::string& model_name, const ModelOptions& options)
-{
-  MobilityModelInterface* mobility_model =
-    MobilityModelInterface::create(model_name, options);
+  mobility_model->set_driftdiffusionproperties(this);
+  mobility_model->set_material(get_material());
+  mobility_model->set_carrier_type('h');
+  mobility_model->init();
 
-  if (mobility_model == NULL)
-    throw InitFailedException("No such hole mobility model: " + model_name);
- 
-  PhysicalModelInterface::destroy(_hole_mobility);
-  _hole_mobility = mobility_model;
-  _hole_mobility->set_driftdiffusionproperties(this);
-  _hole_mobility->set_material(get_material());
-  _hole_mobility->set_carrier_type('h');
-  _hole_mobility->init();
-
+  return mobility_model;
 }
 
 
@@ -347,7 +349,7 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
   //hole_recombination_rate_derivatives[2] = 0;
 
   double Re, Rh;
-  std::vector<double> dRe(3), dRh(3);
+  vector<double> dRe(3), dRh(3);
 
   recomb_iterator it = _recombination_models.begin();
   recomb_iterator end = _recombination_models.end();
@@ -404,7 +406,7 @@ DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
 // TODO
 void
 DriftDiffusionProperties::get_net_recombination_rates(
-    std::vector<double>& rates)
+    vector<double>& rates)
 {
 }
 
@@ -412,7 +414,7 @@ DriftDiffusionProperties::get_net_recombination_rates(
 
 int
 DriftDiffusionProperties::get_net_recombination_rate_IDs(
-    std::vector<ID>& ids)
+    vector<ID>& ids)
 {
   int n = _recombination_models.size();
 
@@ -466,8 +468,8 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   double Na = get_material()->get_total_acceptor_density();
 
   double ni2 = cb.effective_DOS * vb.effective_DOS
-    * std::exp(-get_band_gap() / kT);
-  double ni = std::sqrt(ni2);
+    * exp(-get_band_gap() / kT);
+  double ni = sqrt(ni2);
   intrinsic_density = ni;
   
   double guess;
@@ -475,12 +477,12 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   if (Nd > Na)
   {
     guess = cb.band_edge - kT *
-      std::log(cb.effective_DOS / (Nd + ni));
+      log(cb.effective_DOS / (Nd + ni));
   }
   else
   {
     guess = vb.band_edge + kT *
-      std::log(vb.effective_DOS / (Na + ni));
+      log(vb.effective_DOS / (Na + ni));
   }
 
   // In some cases guess can be Inf or NaN. Then we set it to midband energy
@@ -499,7 +501,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 
   set_carrier_temperatures(kT, kT);
 
-  //std::cerr << "guess: " << x << " T = " << kT << "\n";
+  //cerr << "guess: " << x << " T = " << kT << "\n";
   do
   {
     set_potentials(x);
@@ -511,7 +513,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
     double df = hole_density_derivative - electron_density_derivative +
       ionized_donor_density_derivative - ionized_acceptor_density_derivative;
 
-    //std::cerr << "x = " << std::setprecision(12) << x <<
+    //cerr << "x = " << setprecision(12) << x <<
     //  "  f(x) = " << f << "  df = " << df << "\n";
 
     // At low temperatures everything is very sensitive on dx, so we don't
@@ -533,7 +535,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   }
   while ((error > eps) || (residual_dens > dens_max));
 
-  intrinsic_density = std::sqrt(electron_density) * std::sqrt(hole_density);
+  intrinsic_density = sqrt(electron_density) * sqrt(hole_density);
 
   equilibrium_fermi_level =  y;
   

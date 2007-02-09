@@ -9,6 +9,49 @@ using namespace std;
 
 
 
+PhysicalModel*
+Macrostrain::create_physical_model(const ModelOptions& options) const
+throw (ModelErrorException)
+{
+  const string& modelname = options.get_option("model", "macrostrain");
+
+  MacrostrainModelInterface* model =
+    MacrostrainModelInterface::create(modelname, options);
+
+  if (model == NULL)
+    throw ModelErrorException(
+        "Macrostrain: No such physical model: " + modelname);
+
+  return model;
+}
+
+
+
+
+
+BoundaryProperties*
+Macrostrain::create_boundary_model(const ModelOptions& options) const
+throw (ModelErrorException)
+{
+  //const string& modelname = options.get_option("BC_region_name", "");
+  //if (modelname != "substrate")
+  const string& modelname = options.get_option("type", "pressure");
+
+  MacrostrainBoundaryProperties* model =
+    MacrostrainBoundaryProperties::create(modelname, options);
+
+  if (model == NULL)
+    throw ModelErrorException(
+        "Macrostrain: No such boundary model: " + modelname);
+
+  return model;
+}
+
+
+
+
+
+
 Device*  Macrostrain:: _device;
 Macrostrain* Macrostrain::static_this;
 //-----------------------------------------------------------------//
@@ -132,9 +175,18 @@ void Macrostrain::do_init( )
     if (bp !=NULL) 
     {
       grown_on_substrate = true;
+
+      MacrostrainSubstrate* subst = dynamic_cast<MacrostrainSubstrate*>(bp);
+      if (subst == NULL)
+        throw InitFailedException("Macrostrain: Boundary model of \'" +
+            substrate_name + "\' is not substrate model.");
+
+      Material* mat = subst->get_material();
+      if (mat == NULL)
+        throw InitFailedException("Macrostrain: Substrate \'" + substrate_name +
+            "\' has no material.");
       
-      substrate_crystal =  &( ( (dynamic_cast< MacrostrainSubstrate* > (bp) )
-				->get_material() )->get_rotated_crystal ()  );
+      substrate_crystal =  &(mat->get_rotated_crystal());
     }
 
 

@@ -86,7 +86,7 @@ class InputParser{
    * Method to  read   the  device section of  input  file: returns a map 
    * between region ID and its RegionStructure.
    */
-  std::map <ID, RegionStructure>& read_device(void);
+  const std::map <ID, RegionStructure>& read_device(void);
 
 
   //!  Parses the "Models"  section  of the  input file. 
@@ -95,7 +95,7 @@ class InputParser{
    *  Returns a map between Model name and a pointer to ModelStructure 
    * associated to the model. 
    */
-  std::map <const std::string, ModelStructure*>& read_models(void);
+  const std::map <const std::string, ModelStructure*>& read_models(void);
 
  
 

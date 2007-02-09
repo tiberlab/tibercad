@@ -603,28 +603,36 @@ class DriftDiffusion : public SimulationInterface
     double do_gummel_iterations(int max_it)
       throw (PetscRuntimeError, KSPDivergedError, SNESDivergedError);
 
+
     //! Parse the options which will not change between calls to solve()
     void parse_const_options(void);
+  
     
-    /**
-     * Set the options for the PETSc solver as given in @c SolverParameters
+    //! Set the options for the PETSc solver as given in @c SolverParameters
+    /*!
+     * This method needs correctly calculated scaling parameters, so
+     * compute_scaling() has to be called first.
      */
     void set_solver_params(NonlinearSolver<Number>& solver);
 
+    
     //! Rebuild the equation system if needed
     void rebuild_equation_system(void);
 
+    
     /**
      * Computes the scaling parameters according to the
      * scaling type \p type
      */
     void compute_scaling(Scaling::ScalingType type = Scaling::UNITS);
 
+    
     /**
      * Fills the dirichlet nodes data structure.
      */
     void find_dirichlet_nodes(void);
 
+    
     //! Reset solver environment.
     /*!
      * Deletes only the \p EquationSystems object, without
@@ -632,6 +640,7 @@ class DriftDiffusion : public SimulationInterface
      */
     void reset_solver(void);
 
+    
     //! Cleanup solver environment.
     /*!
      * Deletes the \p EquationSystems object, the simulation voltages

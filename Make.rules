@@ -26,6 +26,9 @@ $(subdirs):
 	@$(topdir)/bin/renumber_msh $<.msh $@
 	@rm $<.msh
 
+%.s: %.C .%.d
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S $<
+
 
 ifneq ($(MAKECMDGOALS),clean)
 ifneq (x$(srcfiles),x)

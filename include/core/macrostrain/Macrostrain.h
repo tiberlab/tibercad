@@ -189,7 +189,20 @@ class Macrostrain : public SimulationInterface
 
    
   static Macrostrain* create(void);
-  
+      
+
+    /*! \copydoc SimulationInterface::create_physical_model() */
+    virtual PhysicalModel*
+      create_physical_model(const ModelOptions& options) const
+      throw (ModelErrorException);
+
+
+    /*! \copydoc SimulationInterface::create_boundary_model() */
+    virtual BoundaryProperties*
+      create_boundary_model(const ModelOptions& options) const
+      throw (ModelErrorException);
+ 
+
 
  private:
 

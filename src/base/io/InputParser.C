@@ -288,7 +288,7 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
 
 
 //void InputParser::read_models()
-map <const string, ModelStructure*>& InputParser::read_models()
+const map <const string, ModelStructure*>& InputParser::read_models()
 
 {
 
@@ -712,7 +712,7 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 // public  method to  read  device regions
 
 //void InputParser::read_device(void)
-map <ID, RegionStructure>& InputParser::read_device(void)
+const map <ID, RegionStructure>& InputParser::read_device(void)
 {
 
   std::string  label, keyword,region_name, section_name   ;

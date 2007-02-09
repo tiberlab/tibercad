@@ -587,8 +587,9 @@ DriftDiffusion::do_solve(void)
 void
 DriftDiffusion::solve_equilibrium(void)
 {
-  // make a rough guess
-  guess_equilibrium();
+
+  // first we have to compute the scaling
+  compute_scaling(get_options().scaling_type);
 
   NonlinearImplicitSystem& system =
     get_equation_systems().get_system<NonlinearImplicitSystem>(
@@ -618,6 +619,9 @@ DriftDiffusion::solve_equilibrium(void)
     cnt->set_simulation_voltage(0.0);
   }
 
+  // make a rough guess
+  guess_equilibrium();
+
   try
   {
     system.solve();
@@ -636,7 +640,8 @@ DriftDiffusion::solve_equilibrium(void)
       static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
     cnt->set_simulation_voltage(sim_voltages[bd]);
   }
-
+  
+  // reset the coupling
   get_options().coupling = coupling;
 
   _solve_equilibrium = false;
@@ -935,8 +940,6 @@ DriftDiffusion::rebuild_equation_system(void)
 
   system.nonlinear_solver->matvec = assemble;
   
-  compute_scaling(get_options().scaling_type);
-
   _rebuild_eq_system = false;
 
 }
@@ -1433,6 +1436,7 @@ DriftDiffusion::calculate_currents_rstf(void)
   const DofMap& dof_map = system->get_dof_map();
 
   const unsigned int dim = mesh.mesh_dimension();
+
 
   const double phi0 = _scaling.get_potential_scaling();
 
