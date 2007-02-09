@@ -9,8 +9,10 @@
 #include <vector>
 #include <string>
 #include "TypeDefs.h"
+#include "ModelOptions.h"
+#include "RegionStructure.h"
 
-using namespace std;
+
 
 //!  Class  containing  input-defined model features.
 /*!
@@ -27,7 +29,7 @@ class ModelStructure{
   /*!
    * Creates a new structure associated to the model "model_name".
    */
-  ModelStructure(string& model_name);
+  ModelStructure( const std::string& model_name);
 
   //!  Destructor 
   /*!
@@ -39,34 +41,35 @@ class ModelStructure{
 
   //!  Gets a map with Boundary Conditions definitions associated to each BC ID. 
   /*!
-   * Returns a map which associates Boundary Conditions IDs with the property map of
+   * Returns a map which associates Boundary Conditions IDs with the a RegionStructure
+   * containing description  of
    * each   Boundary Condition  region.
    */
-  map  <ID,  map <const string,string> >&  get_model_BC_map();
+  std::map <ID, RegionStructure>& get_model_BC_map();
 
   //!  Gets a map  with physical model info 
   /*!
-   * Returns a map which associates physical model name  with a string property 
-   * (e.g. "active" or submodel name )
+   * Returns a map which associates physical model name  with properties contained in a 
+   * ModelOptions object
    */
-  map  <const string,string>& get_phys_model_map();
+  std::map<const std::string,ModelOptions>& get_physical_model_map();
 
 
 
   //!  Sets an internal map with Boundary Conditions definitions associated to each BC ID. 
   /*!
-   * Creates  a map which associates Boundary Conditions IDs with the property map of
-   * each   Boundary Condition  region.
+   * Creates  a map which associates Boundary Conditions IDs with the RegionStructure 
+   * of the BC.
    */
-  void set_model_BC_map( map  <ID,  map <const string,string> >& id_BC_regions_map   );
+  void set_model_BC_map( std::map <ID, RegionStructure>& mod_BC_map);
+
 
   //!  Sets an internal map with physical model info 
   /*!
-   * Creates  a map which associatesa physivcal model name  with a string property 
-   * (e.g. "active" or submodel name )
+   * Creates  a map which associates a physical model name  with a ModelOptions 
+   * object containing its  properties. 
    */
-  void set_phys_model_map( map <const string,string>& physical_model_map );
-
+  void set_physical_model_map(  std::map <const std::string,ModelOptions>& phys_model_map );
 
 
 
@@ -74,18 +77,18 @@ class ModelStructure{
   /*!
    * Returns a vector with the physical regions IDs   associated to the  current model.
    */
-  vector<string> get_physical_regions();
+  std::vector<std::string> get_physical_regions();
 
 
   //!  Sets a  vector with the physical regions IDs of this model. 
   /*!
    * Creates  a vector with the physical regions IDs   associated to the  current model.
    */
-  void set_physical_regions( vector<string>& list_phys_regions);
+  void set_physical_regions( std::vector<std::string>& list_phys_regions);
 
  
   //!  Gets a  string with the name of the model.
-  string  get_model_name();
+  std::string  get_model_name();
 
   //----------------------------------------------------------------------------------
 
@@ -93,25 +96,28 @@ class ModelStructure{
  private:
 
   //! Model name.
-  string model_name;
+  std::string model_name;
 
   //!  Physical regions associated to this  model
-  vector<string>  physical_regions;   
+  std::vector<std::string>  physical_regions;   
 
-  /*! Map which associates Boundary Conditions IDs with the property map of
-   * each   Boundary Condition  region.
+  /*! Map which associates Boundary Conditions IDs with the RegionStructure  of
+   * the   Boundary Condition  region.
    */
-  map  <unsigned int,  map <const string,string>   >  model_BC_map;
+  std::map <ID, RegionStructure> model_BC_map;
+
+
+
+
 
   /*! Map of  the  physical models associated with the  current simulation model:
-   *  <physical_model_name, property>; property can  be just a flag for activation of  physical model or 
-   *  the  name of a specification of the physical model
+   *  physical model name is  associated with a ModelOptions object.
    */
-  map  <const string,string>   phys_model_map;
+  std::map <const std::string,ModelOptions>  physical_model_map ; 
 
 
   //!  Sets  the name of the model.
-  void set_model_name(string& model);
+  void set_model_name(const std::string& model);
 
 
 };

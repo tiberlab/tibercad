@@ -10,6 +10,7 @@
 #include <boost/spirit/core.hpp>
 #include <boost/spirit/actor/push_back_actor.hpp>
 #include <boost/spirit/dynamic.hpp>
+#include <boost/spirit/utility/confix.hpp>
 #include <iostream>
 #include <fstream>
 
@@ -98,7 +99,9 @@ void InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
 
 
 // public  method to  read  parameters  for a given model " model_name"
-void InputParser::read_parameters(std::string section_name, const std::string& model_name)
+//void InputParser::read_parameters(std::string section_name, const std::string& model_name)
+//void InputParser::read_parameters(std::string section_name, const std::string& model_name)
+const  ModelOptions& InputParser::read_parameters(std::string section_name, const std::string& model_name)
 
 {
 
@@ -136,16 +139,31 @@ void InputParser::read_parameters(std::string section_name, const std::string& m
 
     
   //  in_stream >>  label;  //    {  read  by   parse_options) !!
-                     
- 
-  parse_options (in_stream); // !!!!!  ->   get_parameters_map();  !!!!!!
             
+  //*************************************
+      // create  new ModelOptions  
+      //    ModelOptions temp_options;
+      //*************************************
+         
+          temp_options.clear();
+
+  //  parse_options (in_stream); // !!!!!  ->   get_parameters_map();  !!!!!!
+  parse_options (in_stream,temp_options );  
+
+  //  return temp_options;
+
+  return  get_options();
+
+ 
  
 }
 
 
 //  overload  to  read model-independent  parameters
-void InputParser::read_parameters(std::string section_name)
+//void InputParser::read_parameters(std::string section_name)
+
+// void InputParser::read_parameters(std::string section_name)
+const  ModelOptions&  InputParser::read_parameters(std::string section_name)
 
 {
 
@@ -179,8 +197,19 @@ void InputParser::read_parameters(std::string section_name)
   //         }   
   //  in_stream >>  label;  //    {  read  by   parse_options) !!
                      
- 
-  parse_options (in_stream); // !!!!!  ->   get_parameters_map();  !!!!!!
+  //*********************************
+      // create  new ModelOptions  
+      // ModelOptions temp_options;   private  member 
+      // *********************************
+
+      temp_options.clear();
+
+  //  parse_options (in_stream); // !!!!!  ->   get_parameters_map();  !!!!!!
+  parse_options (in_stream,temp_options );
+
+  // return temp_options;
+
+  return  get_options();
  
 }
 
@@ -196,7 +225,9 @@ void InputParser::read_parameters(std::string section_name)
 void InputParser::reset_all_maps()
 {
  
- 
+  model_BC_map.clear();
+  physical_model_map.clear();
+
   // prop_labels_map.clear();
   string_prop_labels_map.clear();
   //  vector_prop_labels_map.clear();
@@ -256,7 +287,8 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
 
 
 
-void InputParser::read_models()
+//void InputParser::read_models()
+map <const string, ModelStructure*>& InputParser::read_models()
 
 {
 
@@ -276,10 +308,10 @@ void InputParser::read_models()
   find_keyword(in_stream,section_name );  //  looks  for "$Models$"; 
 
   parse_model(in_stream);
-  //  NEW_parse_model(in_stream);
-
-
+ 
   in_stream.close();
+
+  return model_structure_map;
 
 
 }
@@ -291,13 +323,14 @@ void InputParser::read_models()
 //   *************************************************************
 //  NEW  PARSE  OPTIONS  WHICH   READS  ALL  STRINGS:
 //  ALL  THE  INPUT  ITEMS  ARE  READ  AS  STRINGS AND  
-//  PUT   IN A  SINGLE  MAP  <STRING, STRING>  
+//  PUT   IN A  ModelOptions  object   
 //   *************************************************************
 
 
 
-//void InputParser::NEW_parse_options(ifstream& in_stream )
-void InputParser::parse_options(ifstream& in_stream )
+
+//void InputParser::parse_options(ifstream& in_stream )
+void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_options )
 {
 
   // *******************************************************************************************************
@@ -519,6 +552,10 @@ void InputParser::parse_options(ifstream& in_stream )
             //cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
 
             string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
+
+            //region_options.set_option(v_label_string[i],v_string[i])) ;
+            region_options.set_option(v_label_string[i],v_string[i]) ;
+
           }
         }
 	     
@@ -605,6 +642,10 @@ void InputParser::parse_options(ifstream& in_stream )
             //  cout <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
 
             string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
+
+            //  put option pair in ModelOptions  object
+            region_options.set_option(v_label_string[i],v_string[i]) ;
+
           }
         }
 	     
@@ -670,8 +711,8 @@ void InputParser::parse_options(ifstream& in_stream )
 
 // public  method to  read  device regions
 
-void InputParser::read_device(void)
-
+//void InputParser::read_device(void)
+map <ID, RegionStructure>& InputParser::read_device(void)
 {
 
   std::string  label, keyword,region_name, section_name   ;
@@ -749,7 +790,51 @@ void InputParser::read_device(void)
   
        
  
-    parse_options(in_stream);   //    read  the  block  between  { and  }
+    //  parse_options(in_stream);   //    read  the  block  between  { and  }
+
+
+
+    //  ********************  NEW options  **********************
+
+   
+
+
+    // create  new ModelOptions  
+    // ModelOptions temp_region_options; private  member 
+    //  
+
+    temp_options.clear();
+    parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
+
+    // extract and delete name, ID and  mat   from  temp_region_options
+    // ................
+    string material, region_numb , def;
+
+
+    material  = temp_options.get_option( "mat" ,def);
+    temp_options.delete_option ( "mat" );
+    region_numb = temp_options.get_option( "reg_numb" ,def);
+    temp_options.delete_option ( "reg_numb" );
+
+    // create new RegionStructure
+    RegionStructure current_region_structure;
+
+
+    //put  region_name  current_region_ID, material  and temp_region_options in RegionStructure
+
+    current_region_structure.set_region_name(region_name);
+    current_region_structure.set_region_ID(region_numb);
+
+    current_region_structure.set_material_name(material);
+    current_region_structure.set_model_options(temp_options);
+
+    //   current_region_structure.set_model_options(temp_region_options);
+    current_region_ID   = atoi(region_numb.c_str());
+
+
+    device_map.insert(make_pair (current_region_ID, current_region_structure )); 
+
+    // ***************************************
 
 
     //  put region_name in map  map_region <string,string >
@@ -759,7 +844,7 @@ void InputParser::read_device(void)
 
     //  get   ID of   the  current region :
     //    ID = map_region[reg_mumb]
-    current_region_ID   = atoi(string_prop_labels_map["reg_numb"].c_str());
+    //  current_region_ID   = atoi(string_prop_labels_map["reg_numb"].c_str());
     // cout <<  current_region_ID << endl;
 
 
@@ -767,7 +852,9 @@ void InputParser::read_device(void)
     //   the map map_region <string,string >
     //  device_map.insert(make_pair (ID,map_region  ));   
 
-    device_map.insert(make_pair (current_region_ID, string_prop_labels_map ));  
+    //    device_map.insert(make_pair (current_region_ID, string_prop_labels_map ));  
+
+
     //cout <<  "(device_map[current_region_ID])[mat]  =  " << (device_map[current_region_ID])["mat"] << endl  ;
 
     //    next   Region    
@@ -793,14 +880,17 @@ void InputParser::read_device(void)
 
   }  //end   while 
      
- 
+  // map <ID, RegionStructure>& InputParser::get_device_map(void)
+  return device_map;
+
 
 }      //  end   Device   section 
 
 
 
 
-map <ID,  map <const string,string> >& InputParser::get_device_map(void)
+//map <ID,  map <const string,string> >& InputParser::get_device_map(void)
+map <ID, RegionStructure>& InputParser::get_device_map(void) 
 
 {
 
@@ -852,7 +942,7 @@ InputParser::parse_model(ifstream& in_stream)
   BC_regions_keyword_string = "BC_Regions";
   keyword_BC_Region_string = "BC_Region";
   model_keyword_string  =  "model";
-  phys_model_label = "physical_models";
+  phys_model_label = "physical_model";
 
   //  vector <ID> list_physical_regions  ;
 
@@ -860,7 +950,7 @@ InputParser::parse_model(ifstream& in_stream)
 
   //  vector <string> model_list;  ->  private  member
 
-  string model_name, label , keyword;
+  string model_name, label , keyword,physical_model_name ;
   string  item, model_keyword, numb_regions_keyword, equal,regions_keyword ,BC_regions_keyword;
   //    start_symbol,end_symbol;
   ID numb_regions ;
@@ -894,7 +984,8 @@ InputParser::parse_model(ifstream& in_stream)
 
   while (skip_comments(in_stream,model_keyword ) == true )
   {
-    in_stream >> model_keyword; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    in_stream >> model_keyword; // if  the  whole  line has  ben  skipped:
+    // read  the  next keyword !!! 
   } 
 
   if  ( model_keyword != model_keyword_string)
@@ -1001,7 +1092,7 @@ InputParser::parse_model(ifstream& in_stream)
     //   ----------------------------------------------------------------
 
 
-    //     //   read  physical  model  section 
+    //     // ************  read  physical  model  section ************
 
     //  read   label "phys_mod"   ; 
     in_stream >>  label; //  phys_model_label ;
@@ -1011,29 +1102,87 @@ InputParser::parse_model(ifstream& in_stream)
     } 
 
  
-    if  ( label != phys_model_label )
+    //    if  ( label != phys_model_label )  //  &&   label != BC_regions_keyword_string 
+    if  ( (label != phys_model_label) &&   (label != BC_regions_keyword_string)  ) 
     {
       cerr <<  "  SYNTAX ERROR in input  file (models)  " <<  endl;
-      cerr << " keyword physical_models  is  missing " 
+      cerr << " keyword 'physical_model' or 'BC_Regions'  is  missing " 
            << endl;
        
       exit(1); 
     }
 
+    while (  (label == phys_model_label  ) && (!in_stream.eof()) ) 
+    
+    {  //  while loop  physical models
+
+      // phisical Model n
+      //    if  (label != phys_model_label)
+      //       {
+      //         cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+      //         cerr << " keyword physical model is  missing " 
+      //              << endl;
+       
+      //         exit(1); 
+      //       }
+
+      in_stream >>  physical_model_name ;
+
+      while (skip_comments(in_stream, physical_model_name ) == true )
+      {
+        in_stream >>  model_name ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+      } 
+
+      //     reset_all_maps();  //  clear  the  IP  maps !!!!
+
+
+
+
+      //*********************************
+          // create  new ModelOptions  
+          // ModelOptions temp_options; private  member 
+          // *********************************
+
+          temp_options.clear();
+
+      string_prop_labels_map.clear();  //  obsolete !!!!
+   
+      //    parse_options(in_stream);   //    read  the  block  between  { and  }
+      parse_options(in_stream,temp_options  );
+
+
+      //parse_options(in_stream);   //    read  the  block  between  { and  }
+      // 
+      // 
+      //   current_model_point->set_phys_model_map( string_prop_labels_map);
+
+      physical_model_map.insert(make_pair (physical_model_name,temp_options));
+      //    physical_model_map[physical_model_name]=temp_options;
+
+
+
+      //  current_model_point->set_phys_model_options(  temp_options );// old
+
+      current_model_point->set_physical_model_map(physical_model_map);
+
+
+      // void set_phys_model_options(  ModelOptions& physical_model_options  );
+
+
+
+      string_prop_labels_map.clear();   //  obsolete !!!!  
  
 
-    string_prop_labels_map.clear();
+      in_stream >>  label; 
    
-    parse_options(in_stream);   //    read  the  block  between  { and  }
+      while (skip_comments(in_stream, label ) == true )
+      {
+        in_stream >> label ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+      } 
+  
 
+    }// end while loop  physical models
 
-
-    //parse_options(in_stream);   //    read  the  block  between  { and  }
-    // 
-    // 
-    current_model_point->set_phys_model_map( string_prop_labels_map);
-
-    string_prop_labels_map.clear();
 
     //     //   ----------------------------------------------------------------
 
@@ -1045,7 +1194,10 @@ InputParser::parse_model(ifstream& in_stream)
 
     //  read keyword BC_Regions
 
-    in_stream >> BC_regions_keyword;
+    //    in_stream >> BC_regions_keyword;  //  already  read !!!
+
+  
+    BC_regions_keyword  =  label;
 
     //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
     while (skip_comments(in_stream,BC_regions_keyword ) == true )
@@ -1057,8 +1209,9 @@ InputParser::parse_model(ifstream& in_stream)
     {
 
       //  cerr <<  BC_regions_keyword <<  endl;
-      cerr <<  "  SYNTAX ERROR in input  file (4)  " <<  endl;
-  
+      //    cerr <<  "  SYNTAX ERROR in input  file (4)  " <<  endl;
+      cerr <<  "  SYNTAX ERROR in input  file (model section):  " << endl;
+      cerr << " keyword 'BC_Regions'  is  missing " << endl;
        
       exit(1); 
     }
@@ -1084,7 +1237,7 @@ InputParser::parse_model(ifstream& in_stream)
     if  ( start_symbol != start_symb)
     {
       cerr <<  "  SYNTAX ERROR in input  file (5)  " <<  endl;
-  
+      cerr <<  " missing BC_regions block ! " <<  endl;
        
       exit(1); 
     }
@@ -1125,10 +1278,33 @@ InputParser::parse_model(ifstream& in_stream)
       } 
 
 
+      //*************************************
+          // create  new ModelOptions  
+          // ModelOptions temp_BC_options;  private  member 
+          //*************************************
+
+              temp_options.clear();
      
-      parse_options(in_stream);   //    read  the  block  between  { and  }
+      //    parse_options(in_stream);   //    read  the  block  between  { and  }
+      parse_options(in_stream,temp_options);
 
+      string  BC_region_numb , def;
+      BC_region_numb = temp_options.get_option( "BC_reg_numb" ,def);
 
+      // create new RegionStructure
+      RegionStructure current_BC_region_structure;
+
+      current_BC_region_structure.set_region_name(BC_region_name);
+      current_BC_region_structure.set_region_ID(BC_region_numb);
+
+      current_BC_region_structure.set_material_name("");
+      current_BC_region_structure.set_model_options(temp_options);
+
+      current_BC_region_ID   = atoi(BC_region_numb.c_str());
+
+      model_BC_map.insert(make_pair (current_BC_region_ID,current_BC_region_structure  ));  
+
+      // *******************************  END  2.2.07 *****************
 
       //  put region_name in map  map_region <string,string >
    
@@ -1136,14 +1312,14 @@ InputParser::parse_model(ifstream& in_stream)
 
       //  get   ID of   the  current BC_region :
       //    ID = map_region[BC_reg_mumb]
-      current_BC_region_ID   = atoi(string_prop_labels_map["BC_reg_numb"].c_str());
+      //      current_BC_region_ID   = atoi(string_prop_labels_map["BC_reg_numb"].c_str());
       //  cout <<  current_BC_region_ID << endl;
 
       //  put  in  map  <ID, map_region   >
       //   the map map_region <string,string >
       //  device_map.insert(make_pair (ID,map_region  ));   
 
-      model_BC_map.insert(make_pair (current_BC_region_ID, string_prop_labels_map ));  
+      //      model_BC_map.insert(make_pair (current_BC_region_ID, string_prop_labels_map ));  
       //  cout <<  "([ model_BC_map.current_BC_region_ID])[value]  =  " 
       //  << (model_BC_map[current_BC_region_ID])["value"] << endl  ;
 
@@ -1242,13 +1418,22 @@ map <const string, ModelStructure*>& InputParser:: get_model_structure_map(void)
 
 
 
-map <const string,string>& InputParser::get_parameters_map(void)
+// map <const string,string>& InputParser::get_parameters_map(void)
+
+// {
+
+//   return string_prop_labels_map;
+
+// } 
+
+const  ModelOptions& InputParser::get_options(void)
 
 {
 
-  return string_prop_labels_map;
+  return temp_options;
 
 } 
+
 
 
 

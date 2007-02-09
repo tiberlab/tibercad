@@ -11,10 +11,6 @@
 #ifndef _INPUTPARSER_H_
 #define _INPUTPARSER_H_
 
-#include <boost/spirit/core.hpp>
-#include <boost/spirit/actor/push_back_actor.hpp>
-#include <boost/spirit/dynamic.hpp>
-#include <boost/spirit/utility/confix.hpp>
 #include <iostream>
 #include <fstream>
 
@@ -24,13 +20,8 @@
 
 #include "TypeDefs.h"
 #include "ModelStructure.h"
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////
-using namespace std;
-using namespace boost::spirit;
+#include "RegionStructure.h"
+#include "ModelOptions.h"
 
 
 
@@ -48,6 +39,9 @@ using namespace boost::spirit;
  * BC_regions-block. The BC_regions-block must be preceded by the  keyword  "BC_Regions" and 
  * it is  composed by one or more subblocks,
  * each  preceded by  the keyword "BC_Region" followed by the name of the boundary condition region.
+ * "Models"  section can  contain also  one or more optionals physical model blocks:
+ * each physical model-block must be preceded by the keyword "physical_model", followed by 
+ * the name of physical model.
  * 
  *  
  * Except the model-blocks and the BC_regions-blocks, each block and  subblock can 
@@ -57,11 +51,11 @@ using namespace boost::spirit;
  * Format is free for these assignements, provided they are separated by spaces. 
  * Everything following a '#' is  a  comment and  is  disregarded.
  *
- * Public methods read_device() and get_device_map() parse and extract information 
+ * Public method read_device()  parses and extracts information 
  * from device section.
- * read_models() and get_model_structure_map() methods  parse and extract information 
- * from Models section. Models data are stored in the class \c ModelStructure.
- * Public methods read_parameters() and get_parameters_map()  parse and extract 
+ * read_models()  method  parses and extracts information from Models section.
+ *  Models data are stored in the class \c ModelStructure.
+ * Public methods read_parameters()   parse and extract 
  * information from the other parameters sections.
  */
 
@@ -89,62 +83,41 @@ class InputParser{
 
   //!   Parses the  device section of  input  file 
   /*!
-   * Method to  read   the  device section of  input  file in an internal map, 
-   * which is  returned by \c  get_device_map()
+   * Method to  read   the  device section of  input  file: returns a map 
+   * between region ID and its RegionStructure.
    */
-  void read_device(void);
-
-  //!   Gets the map of   device description. 
-  /*!
-   * Returns   a  map which associates a physical region number 
-   * with the map (of the kind "label = property" ) of the appropriate physical region.
-   */
-  map <ID,  map <const string,string> >& get_device_map(void);
+  std::map <ID, RegionStructure>& read_device(void);
 
 
   //!  Parses the "Models"  section  of the  input file. 
   /*!
    * Method to  parse the "Models"  section  of the  input file.
-   *  Fields are  read in an internal  map and can be  extracted by means 
-   * of \c get_model_structure_map() 
-   * and the methods of class \c  ModelStructure.
+   *  Returns a map between Model name and a pointer to ModelStructure 
+   * associated to the model. 
    */
-  void read_models(void);
+  std::map <const std::string, ModelStructure*>& read_models(void);
 
-  //!   Gets the map of   model definition. 
-  /*!
-   * Returns   a  map which associates the name of  a model to a pointer 
-   * to the class  \c  ModelStructure, which contains a full
-   * description of model parameters:  physical regions associated to it, 
-   * list of boundary conditions defined for the model. 
-   */
-  map <const string, ModelStructure*>& get_model_structure_map(void);
+ 
 
 
   //!   Reads parameters of  a  given  section   for a given  model. 
   /*!
    * Method to   read  parameters of the  section "section_name"  for a given model " model_name".
-   * Parameters are read in an internal  map and can be  extracted by means of 
-   *  \c get_parameters_map().
+   * Returns parameters in a ModelOptions object.
    */
-  void read_parameters(std::string section_name,
-      const std::string& model_name);
+  const  ModelOptions&  read_parameters(std::string section_name,const std::string& model_name);
+
  
   //!   Reads parameters of  a  given  section  
   /*!
    * Overloaded method to   read  model-independent parameters of the  section "section_name".
-   * Parameters are read in an internal  map and can be  extracted by means of 
-   *  \c get_parameters_map(). 
+   * Returns parameters in a ModelOptions object. 
    */
-  void read_parameters(std::string section_name);
+  const  ModelOptions& read_parameters(std::string section_name);
 
-  //!   Gets a map of  parameters. 
-  /*!
-   * Returns   a  map of the kind "label = property" containing information 
-   * read in a section of input file, and possibly for a given model, as specified previously by 
-   * \c read_parameters.
-   */
-  map <const string,string>& get_parameters_map(void);
+
+
+
 
  
 
@@ -159,33 +132,33 @@ class InputParser{
   /*!
    *  Char to  start a block ("{").
    */
-  string  start_symb ;
+  std::string  start_symb ;
 
 
   /*!
    *  Char to  end a block ("}")
    */
-  string  end_symb ;
+  std::string  end_symb ;
  
 
  
   /*!
    *  Name of the  input  file.
    */
-  string  filename;
+  std::string  filename;
 
  
 
   /*!
    *  Vector of  vectorial-properties labels (presently not used).
    */
-  vector<string> vector_prop_labels;
+  std::vector<std::string> vector_prop_labels;
 
 
   /*!
    *  Vector of  properties labels.
    */
-  vector<string> string_prop_labels;
+  std::vector<std::string> string_prop_labels;
 
 
 
@@ -195,55 +168,66 @@ class InputParser{
    *   Map between label and property in the  parameter section; 
    * property is  read as a string and its correct type is checked elsewhere.
    */
-  map <const string,string>  string_prop_labels_map;
+  std::map <const std::string,std::string>  string_prop_labels_map;
 
   /*!
    *   Map between label and a vector of properties in the  parameter section; 
    * properties  are  read as a string and their  correct type is checked elsewhere.
    */
-  map <const string, vector<string> >  vector_string_prop_labels_map;
+  std::map <const std::string, std::vector<std::string> >  vector_string_prop_labels_map;
 
 
 
   /*!
-   *   Map between physical region number  and  the map associated to it.
+   *   Map between physical region number  and  the Region Structure associated to it.
    */
-  map <ID,  map <const string,string> > device_map;
+  std::map <ID, RegionStructure> device_map;
   
   /*!
    *   Map between  model name and  \c ModelStructure object associated.
    */
-  map <const string, ModelStructure*>  model_structure_map;
+  std::map <const std::string, ModelStructure*>  model_structure_map;
 
   /*!
-   *   Map between  BC region number and the map for the BC region associated.
+   *   Map between  BC region number and the Region Structure  for the associated BC region.
    */
-  map <ID,  map <const string,string> > model_BC_map;
+
+  std::map <ID, RegionStructure> model_BC_map;
+  
+
+  /*!
+   *   Map between   physical model name and its options (stored in ModelOptions).
+   */
+  std::map <const std::string,ModelOptions> physical_model_map;
+
+
 
   /*!
    *   Pointer to \c ModelStructure  object.
    */
   ModelStructure* current_model_point;
 
+  /*!
+   *   ModelOptions  object for  the  options read in  each  section.
+   */
+  ModelOptions temp_options;
+
+
 
   //  private  methods
 
-  //  void initialize_vectors();
-
-
- 
  
   /*!
    *  Utility  to  find a  keyword in the input file.
    *    
    */
-  void find_keyword(ifstream& in_stream, const std::string& keyword);
+  void find_keyword(std::ifstream& in_stream, const std::string& keyword);
 
   /*!
    *  Utility  to  find a  keyword in a section
    *    
    */
-  void find_keyword_in_section(ifstream& in_stream, const std::string& keyword);
+  void find_keyword_in_section(std::ifstream& in_stream, const std::string& keyword);
 
 
   /*!
@@ -256,13 +240,16 @@ class InputParser{
    *   Method   to  read free-format parameter  section. 
    *    
    */
-  void parse_options(ifstream& in_stream );
+  //  void parse_options(ifstream& in_stream );
+  void parse_options(std::ifstream& in_stream, ModelOptions& options );
+
+
 
   /*!
    *   Method   to  parse "Models" section. 
    *    
    */
-  void parse_model(ifstream& in_stream);
+  void parse_model(std::ifstream& in_stream);
 
 
 
@@ -271,15 +258,42 @@ class InputParser{
    *   Utility  to  skip  comments (everything on a line, after "#" ). 
    *   Returns true if  the following part of the line is  a  comment.  
    */
-  bool skip_comments(ifstream& in_stream, const std::string& item);
+  bool skip_comments(std::ifstream& in_stream, const std::string& item);
 
  
 
   //!  Method   to  read a list of strings.
   /*!  Parses an assignement "phys_regions = ( ....)  
    */
-  void parse_list_phys_ID(ifstream& in_stream,vector<string>& list_regions   );
+  void parse_list_phys_ID(std::ifstream& in_stream,std::vector<std::string>& list_regions   );
 
+
+  //!   Returns options associated to a  section specified in read_parameters. 
+  /*!
+   * Returns  a reference to an object ModelOptions, containing information 
+   * read from a section of input file, and possibly for a given model, as specified previously by 
+   * \c read_parameters.
+   */
+  const  ModelOptions& get_options(void);
+
+
+  //!   Gets the map of   device description. 
+  /*!
+   * Returns   a  map which associates a physical region number 
+   * with the associated RegionStructure object.
+   */
+  std::map <ID, RegionStructure>& get_device_map(void); 
+
+
+
+  //!   Gets the map of   model definition. 
+  /*!
+   * Returns   a  map which associates the name of  a model to a pointer 
+   * to the class  \c  ModelStructure, which contains a full
+   * description of model parameters:  physical regions associated to it, 
+   * list of boundary conditions defined for the model. 
+   */
+  std::map <const std::string, ModelStructure*>& get_model_structure_map(void);
 
 
 
