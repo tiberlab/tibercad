@@ -50,6 +50,15 @@ namespace Constants
   extern const double& h;
   extern const double hbar;
 
+
+  
+  //!Bohr radius in m
+  extern const double bohr_radius;
+  
+  //!Hartree [eV]
+  extern const double Hartree;
+
 }
+
 
 #endif //_CONSTANTS_H_

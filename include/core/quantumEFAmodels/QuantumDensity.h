@@ -62,11 +62,11 @@
 #include "mesh_data.h"
 #include "DriftDiffusion.h"
 #include "EnvelopFunctionApprox.h"
-
+#include "SimulationInterface.h"
 #include "tensor.h"
 
 //! This class is a nextnano-like model of quantum density. The approach is correct, in principle, only for equilibrium.
-class QuantumDensity
+class QuantumDensity : public SimulationInterface
 {
 
 
@@ -77,14 +77,16 @@ class QuantumDensity
   
   struct options
   {
-    bool k_domain_user_input;  //!< if true user provides Brilluoin zone size. Otherwise, it is calculated by the program
-    bool k_domain_refinement;  //!< if true, program will refine the Brilluoin zone adaptively
-    bool uniform_refinement;   //!< if true, all the cells in the k-space are refined
-    double refine_fraction;    //!< fraction of the elements to be refined
-    double relative_accuracy;  //!< stop refinement if \f$ ||\rho_{i+1} - \rho_i||/||rho_i|| < \epsilon \f$
+    bool k_domain_user_input;       //!< if true user provides Brilluoin zone size. Otherwise, it is calculated by the program
+    bool k_domain_refinement;       //!< if true, program will refine the Brilluoin zone adaptively
+    bool uniform_refinement;        //!< if true, all the cells in the k-space are refined
+
+    double refine_fraction;         //!< fraction of the elements to be refined
+    double relative_accuracy;       //!< stop refinement if \f$ ||\rho_{i+1} - \rho_i||/||rho_i|| < \epsilon \f$
     unsigned int maximum_ref_level; //!< maximum level for k space refinement
-    double Temperature;        //!< temperature [K]
-    unsigned int degeneracy;   //!< degeneracy factor to mutiply the charge density  
+
+    double Temperature;             //!< temperature [K]
+    unsigned int degeneracy;        //!< degeneracy factor to mutiply the charge density  
     bool log_output; 
 
   };
@@ -102,7 +104,7 @@ class QuantumDensity
   /*!
     \param model Scroedinger equation object
   */
-  QuantumDensity( EnvelopFunctionApprox* model );
+  //QuantumDensity( EnvelopFunctionApprox* model );
 
 
   //!Constructor
@@ -110,7 +112,7 @@ class QuantumDensity
     \param model Scroedinger equation object
     \param options options of this options
   */
-  QuantumDensity( EnvelopFunctionApprox* model,  QuantumDensity::options& options);
+  //QuantumDensity( EnvelopFunctionApprox* model,  QuantumDensity::options& options);
 
   
   //!define quantum model
@@ -175,6 +177,9 @@ class QuantumDensity
 
   //!returns \f$ \rho({\bf k} ) = \int \rho{\bf{ k, r}}  d{\bf r} \f$
    std::vector<double>  get_density_in_k_space(void)  const;
+
+
+   static  QuantumDensity* create();
 
  private:
 
@@ -260,8 +265,13 @@ class QuantumDensity
    void calculate_at_each_k_point();
    
 
+ protected:
  
-  
+   virtual void 	do_init(void);
+
+   virtual void 	do_solve (void);
+
+   virtual void 	parse_options (void);
 
 };
 

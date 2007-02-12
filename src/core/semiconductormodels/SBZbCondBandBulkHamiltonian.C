@@ -11,11 +11,15 @@ using namespace std;
 void SBZbCondBandBulkHamiltonian::do_init()
 {
 
+ 
+  
   SBCondBandBulkHamiltonian::do_init();
+  
+  
 
   calculate_for_init();
 
-  
+ 
 
 
 }
@@ -47,6 +51,9 @@ void SBZbCondBandBulkHamiltonian::calculate_for_init(void)
   calculate_Hamiltonian_gen();
 
   calculate_Hamiltonian_k_par();
+
+
+
 }
 
 //===========================================================================//

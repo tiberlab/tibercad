@@ -18,11 +18,10 @@ class RotatedCrystal : public PhysicalModelInterface
        const ModelOptions& options);
    
   //!Rotation matrix  \f$ {\bf x}^{calc} = R {\bf x}^{cryst} \f$  \f$ 
-
-
-  /*!In matrix notation:  
-    vector transformation:    vec_calc = R * vec_crystal
-    2D tensor transformation: Matr_calc = R * Mat_crystal * (R^T)
+  /*! 
+    In matrix notation:  
+    vector transformation:    \f$ {\bf v}^{calc} = R {\bf v}^{cryst} \f$
+    2D tensor transformation: \f$ M^{calc} = R M^{crystal} R^T       \f$
   */
   Tensor2Gen RotMatrix;
 

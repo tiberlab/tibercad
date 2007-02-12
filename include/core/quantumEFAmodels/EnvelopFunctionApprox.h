@@ -60,7 +60,9 @@
 #include "mesh_data.h"
 #include "Macrostrain.h"
 #include "DriftDiffusion.h"
-class EnvelopFunctionApprox
+#include "SimulationInterface.h"
+
+class EnvelopFunctionApprox  : public SimulationInterface
 {
  public:
   //!control options
@@ -79,11 +81,10 @@ class EnvelopFunctionApprox
 
     double  length_scale;   //!< mesh length scale [Bohr radius]
 
-    double  max_energy;     //!< max energy value for Dirichlet b.c.
 
     bool periodicity[3];    //!< periodic boundary conditions
 
-    std::string solver;  //!< solver type
+    std::string solver;     //!< solver type
 
     std::string mpi_command_line; //!< something like:  mpirun -np 5 -machinefile machines
 
@@ -97,19 +98,19 @@ class EnvelopFunctionApprox
 
     unsigned int max_iteration_number; //!< maximum number of iterations for the eigenvalue solver
 
-    double spectrum_shift; //!< shift of spectrum ised in matrix assembly[eV]
+    double spectrum_shift;    //!< shift of spectrum ised in matrix assembly[eV]
 
-    bool  consider_strain; //!< apply strain effect to the EFA Hamiltonian;
+    bool  consider_strain;    //!< apply strain effect to the EFA Hamiltonian;
 
     bool  consider_potential; //!< apply strain effect to the EFA Hamiltonian;
 
-    double disturb_arnoldi; //!< small disturb of the Hamiltonian matrix;
+    bool estimate_spectrum_shift; //!< calculate spectrum shift from band edges;
+  
 
     bool Dirichlet_bc_everywhere;//!< apply dirichlet boundary conditions at all boundaries
 
 
     bool solve_ev_problem_twice;//!< if true, calculate the first eigenvalue only and then run again
-
 
 
     bool convergent_density;//!< if true, the number of eigenstates will be increased to reach the tolerance
@@ -123,7 +124,12 @@ class EnvelopFunctionApprox
     double eigen_number_increase_factor; //!< to increase number of eigenstates for the next iteration 
 
 
-    bool log_output;
+    bool log_output; //!< to do a lot of output on screen
+
+
+    unsigned int number_of_eigenstates; //!<number of eigenstates to be calculated
+
+    
 
   };
 
@@ -161,7 +167,10 @@ class EnvelopFunctionApprox
     \param problem_nam name of the problem that will be asigned to a new system
    
   */
-  EnvelopFunctionApprox(EquationSystems&  equation_systems, std::string& problem_name, options& opt);
+  // EnvelopFunctionApprox(EquationSystems&  equation_systems, std::string& problem_name, options& opt);
+
+  //!constructor
+  EnvelopFunctionApprox(void);
 
 
   //!destructor
@@ -174,7 +183,7 @@ class EnvelopFunctionApprox
 
 
   //!sets material data
-  void set_material_parameters(std::map<unsigned int, EFAbulkHamiltonian*>&  bulkHamiltonian); 
+  //void set_material_parameters(std::map<unsigned int, EFAbulkHamiltonian*>&  bulkHamiltonian); 
 
 
   //!solves eigenvalue problem
@@ -189,7 +198,7 @@ class EnvelopFunctionApprox
     \param state_number eigenstate number
     \param filename name of file
   */
-  void output_eigen_function(unsigned int state_number,  std::string& filename);
+  void output_eigen_function(unsigned int state_number,  const std::string& filename);
 
 
   //!writes on disk the probability function \f$  \sum_i |\psi({\bf r})|^2   \f$
@@ -197,60 +206,20 @@ class EnvelopFunctionApprox
     \param state_number eigenstate number
     \param filename name of file
   */
-  void output_probability_function(unsigned int state_number,  std::string& filename);
+  void output_probability_function(unsigned int state_number,  const std::string& filename);
 
-  //! assigned mesh_data_objects
-  /*!
-    \param  mesh_data_in mesh data that contains material information and Dirichlet conditions
-   */
-  void assign_mesh_data(MeshData& mesh_data_in);
 
   
-
-
-  //! define Dirichlet boundary condition
-  /*!
-    \param dirichlet_nodes_input nodes where \f$ \psi({\bf r}) = 0 \f$
-  */
-  void define_diriclet_nodes(std::vector<unsigned int>&  dirichlet_nodes_input);
-
-
-  //! Passes a pointer of a Macrostrain object
-  /*!
-    \param strain_in a pointer to Macrostrain object
-  */
-  void define_strain_data( Macrostrain*  strain_in);
-
-
-
-  //! Passes a pointer of a Drift-Diffusion object
-  void define_Poisson_data( DriftDiffusion*  drift_in);
-
-
-  //! returns  a pointer to the EquationSystems object
-  EquationSystems* get_equation_systems();
-
-  //! returns  a reference to the options
-  const EnvelopFunctionApprox::options& get_options()  const;
-
-  //! returns  a reference to the material_numbers object
-  const std::vector<unsigned int>& get_material_numbers() const;
 
   //! returns a reference to solutions
   const std::vector<eigen_propblem_solution>& get_solution() const;
  
-  //! set spectrum shift  
-  void set_spectrum_shift(double energy);
-
+ 
   //! returns conduction band minima for holes and valence band maximum for holes 
   double get_band_edge() const;
 
 
-  //! returns a pointer to DriftDiffusion object
-  DriftDiffusion* get_drift_diffusion() const;
-
-
-
+  
   //!calculate averaged value of the electrochemical potential <\psi|\mu|psi>
   /*!
     \param  i number of state
@@ -260,11 +229,6 @@ class EnvelopFunctionApprox
 
 
 
-  
-  
-
-
- 
 
   
   //!apply k Block vector to all the Hamiltonians
@@ -314,8 +278,13 @@ class EnvelopFunctionApprox
   //! returns number of active cells
   unsigned int get_number_of_active_cells();
 
+
+  static  EnvelopFunctionApprox* create();
+
  private:
 
+  //!pointer to the device object
+  static  Device* _device;
 
 
   //!Apply Dirichlet boundary conditions to all boundary points!
@@ -336,17 +305,17 @@ class EnvelopFunctionApprox
   
   std::string system_name;
 
-  //pointer to a drift-diffusion object that is used to get potential data 
+  //!pointer to a drift-diffusion object that is used to get potential data 
   DriftDiffusion* poisson_equation;
 
-  //pointer to the macrostrain object that is used to get strain data 
+  //!pointer to the macrostrain object that is used to get strain data 
   Macrostrain* strain;
 
   //!system that we add to the equation systems
   LinearImplicitSystem* system;
 
   //!diriclet nodes vector
-  std::vector<unsigned int>  dirichlet_nodes;
+  // std::vector<unsigned int>  dirichlet_nodes;
 
   //!diriclet DOFS
   std::set<unsigned int>  dirichlet_dofs;
@@ -381,11 +350,11 @@ class EnvelopFunctionApprox
 
 
   //!vector that contains material number
-  std::vector<unsigned int> material_of_elem;
+  //std::vector<unsigned int> material_of_elem;
 
 
   //!create material_number vector
-  void assemble_material_list(void);
+  //void assemble_material_list(void);
 
 
   //!saves S matrix in PETSc format
@@ -461,8 +430,7 @@ class EnvelopFunctionApprox
   int number_of_all_dofs;
 
 
-  //! Hartree energy in eV
-  static const double Hartree = 27.2113961;
+  
 
 
   //! compares eigenstate energy for electrons 
@@ -546,6 +514,22 @@ class EnvelopFunctionApprox
   double Fermi_statistics_probability(double Energy, double Fermi_energy, double temperature);
 
 
+  //!Calculate number of bands in the Hamiltonian 
+  short calculate_number_of_bands(void) const;
+
+
+
+ 
+
+ protected:
+
+
+  virtual void 	do_init(void);
+
+  virtual void 	do_solve (void);
+
+  virtual void 	parse_options (void);
+
 
  
 
@@ -583,7 +567,7 @@ inline bool EnvelopFunctionApprox::element_on_boundary(const Elem* element)
 {
   bool result = false;
 
-
+  
     
   unsigned int n_sides ; 
 
@@ -618,4 +602,11 @@ inline void EnvelopFunctionApprox::set_initial_eigenstates_number(unsigned int n
   opt.initial_eigenstates_number = n;
 }
 
+
+//---------------------------------------------------------
+
+inline EnvelopFunctionApprox*  EnvelopFunctionApprox::create()
+{
+  return (new EnvelopFunctionApprox );
+}
 #endif

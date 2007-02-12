@@ -238,7 +238,7 @@ void Macrostrain::do_init( )
 
 
   define_additional_variables();
-
+ 
 
   
 

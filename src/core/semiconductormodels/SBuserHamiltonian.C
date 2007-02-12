@@ -33,12 +33,18 @@ void SBuserHamiltonian::do_init( )
 
   edge = options.get_option("Edge", 0.0);
 
+  const double mass = options.get_option("mass", 1.0);
+ 
+  if (mass == 0.0) throw InitFailedException("User-defined Hamiltonian: zero mass");
+
+  imass = (1/mass) * Tensor2Sym(1); 
   
+  if (options.find_option("imass"))
   {//read (1/m) from input
     std::vector < std::vector <double>  > im;
-
-    im.resize(3);
     
+    im.resize(3);
+      
     for (short i = 0; i < 3; i++)
     {
       im[i].resize(3, 0.0);

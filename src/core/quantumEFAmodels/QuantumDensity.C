@@ -3,31 +3,145 @@
 
 using namespace std;
 
+
 //============================================//
 
 QuantumDensity::QuantumDensity()
 {
+  quantum_model = NULL;
 
+  system = NULL;
 }
 
 //============================================//
-
-void QuantumDensity::set_options( QuantumDensity::options& options   )
+void QuantumDensity::do_init( )
 {
-  opt =  options;
+  
+
+  const ModelOptions& mod_opt = get_options();
+
+  if (! mod_opt.find_option("k_space_dimension") ) 
+    throw  InitFailedException("QuantumDensity: k_space_dimension must be defined");
+  
+  k_dim = mod_opt.get_option("k_space_dimension",1);
+
+  std::vector<unsigned int> num_nodes;
+  mod_opt.get_option("number_of_nodes",num_nodes);
+
+  
+  
+
+  if ( num_nodes.size() != k_dim ) 
+  {
+    ostringstream temp; temp << setw(4) << k_dim; 
+    throw  InitFailedException("QuantumDensity: number_of_nodes should contain " + temp.str() + " elements");
+  }
+
+  if (k_dim == 1)
+  {
+    std::vector<double> k_vector;
+    Tensor1 vec;
+
+    if (! mod_opt.find_option("k1") ) throw  InitFailedException("QuantumDensity: k1 vectror must be defined"); 
+
+    mod_opt.get_option("k1", k_vector);
+
+    if (k_vector.size() != 3) throw  InitFailedException("QuantumDensity: k1 vectror size must be equal to 3");
+
+    for (short i = 0; i < 3; i++)  vec(i + 1) = k_vector[i];
+
+    define_k_space(vec, num_nodes[0]);
+    
+  }
+  else if (k_dim == 2)
+  {
+    std::vector<double> k_vector;
+
+    Tensor1 vec1;
+    Tensor1 vec2;
+
+
+    if (! mod_opt.find_option("k1") ) throw  InitFailedException("QuantumDensity: k1 vectror must be defined"); 
+    mod_opt.get_option("k1", k_vector);
+    if (k_vector.size() != 3) throw  InitFailedException("QuantumDensity: k1 vectror size must be equal to 3");
+    for (short i = 0; i < 3; i++)  vec1(i - 1) = k_vector[i];
+
+    if (! mod_opt.find_option("k2") ) throw  InitFailedException("QuantumDensity: k2 vectror must be defined"); 
+    mod_opt.get_option("k2", k_vector);
+    if (k_vector.size() != 3) throw  InitFailedException("QuantumDensity: k2 vectror size must be equal to 3");
+    for (short i = 0; i < 3; i++)  vec2(i + 1) = k_vector[i];
+
+    define_k_space(vec1, num_nodes[0],vec2, num_nodes[1] );
+
+    
+  }
+  else if (k_dim == 3)
+  {
+    std::vector<double> k_vector;
+
+    Tensor1 vec1;
+    Tensor1 vec2;
+    Tensor1 vec3;
+
+    if (! mod_opt.find_option("k1") ) throw  InitFailedException("QuantumDensity: k1 vectror must be defined"); 
+    mod_opt.get_option("k1", k_vector);
+    if (k_vector.size() != 3) throw  InitFailedException("QuantumDensity: k1 vectror size must be equal to 3");
+    for (short i = 0; i < 3; i++)  vec1(i - 1) = k_vector[i];
+
+    if (! mod_opt.find_option("k2") ) throw  InitFailedException("QuantumDensity: k2 vectror must be defined"); 
+    mod_opt.get_option("k2", k_vector);
+    if (k_vector.size() != 3) throw  InitFailedException("QuantumDensity: k2 vectror size must be equal to 3");
+    for (short i = 0; i < 3; i++)  vec2(i + 1) = k_vector[i];
+
+    if (! mod_opt.find_option("k3") ) throw  InitFailedException("QuantumDensity: k3 vectror must be defined"); 
+    mod_opt.get_option("k3", k_vector);
+    if (k_vector.size() != 3) throw  InitFailedException("QuantumDensity: k3 vectror size must be equal to 3");
+    for (short i = 0; i < 3; i++)  vec3(i + 1) = k_vector[i];
+    
+    define_k_space(vec1, num_nodes[0],vec2, num_nodes[1],vec3, num_nodes[2]);
+
+  } 
+  else
+  {
+     throw  InitFailedException("QuantumDensity: k_space_dimension should be or 1 or 2 or 3");
+  }
+  
+
 }
-
-
 //============================================//
+void QuantumDensity::do_solve ( )
+{
+  parse_options();
 
+}
+//============================================//
+void QuantumDensity::parse_options( )
+{
+ const ModelOptions& mod_opt = get_options();
+ 
+ opt.Temperature             = mod_opt.get_option("Temperature", opt.Temperature);
+ opt.log_output              = mod_opt.get_option("log_output", false);
+ opt.uniform_refinement      = mod_opt.get_option("uniform_refinement",false);
+
+ opt.refine_fraction         = mod_opt.get_option("refine_fraction", 0.5);
+ opt.maximum_ref_level       = mod_opt.get_option("maximum_ref_level", 10);
+ opt.relative_accuracy       = mod_opt.get_option("relative_accuracy", 1e-2);
+
+ opt.degeneracy              = mod_opt.get_option("degeneracy",1);
+
+ 
+
+}
+//============================================//
+/*
 QuantumDensity:: QuantumDensity( EnvelopFunctionApprox* model )
 {
   quantum_model = model;
   real_space_density_size = quantum_model->get_number_of_active_cells();
 }
-
+*/
 //============================================//
-
+/*
 QuantumDensity:: QuantumDensity( EnvelopFunctionApprox* model, QuantumDensity::options& options  )
 {
   quantum_model = model;
@@ -35,7 +149,7 @@ QuantumDensity:: QuantumDensity( EnvelopFunctionApprox* model, QuantumDensity::o
   real_space_density_size = quantum_model->get_number_of_active_cells();
 
 }  
-
+*/
 
 
 //============================================//
@@ -236,7 +350,7 @@ void  QuantumDensity::define_k_space(Tensor1 k_vector, unsigned int n)
 
  
 
-  k_dim = 1;
+  // k_dim = 1;
 }
 
 //================================================================//
@@ -264,7 +378,7 @@ void QuantumDensity::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k
       transform_matrix(i,3) = basis3(i);
     }
 
-  k_dim = 2;
+  //  k_dim = 2;
 
 }
 
@@ -295,7 +409,7 @@ void QuantumDensity::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k
       transform_matrix(i,3) = k_vector3(i)/norm_k3;
     }
 
-  k_dim = 3;
+  // k_dim = 3;
 
 }
 

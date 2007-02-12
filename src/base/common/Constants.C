@@ -19,7 +19,7 @@ const double&
 Constants::e = elementary_charge;
 
 const double
-Constants::electron_volt = 1.60219e-19;
+Constants::electron_volt = elementary_charge;
 
 const double&
 Constants::eV = electron_volt;
@@ -47,3 +47,9 @@ Constants::h = plancks_constant;
 
 const double
 Constants::hbar = h / (2 * M_PI);
+
+const double
+Constants::bohr_radius = 4 * M_PI * epsilon * (hbar * hbar) /(electron_mass * elementary_charge * elementary_charge);
+
+const double 
+Constants::Hartree = (hbar * hbar)/(electron_mass * bohr_radius * bohr_radius) / elementary_charge;

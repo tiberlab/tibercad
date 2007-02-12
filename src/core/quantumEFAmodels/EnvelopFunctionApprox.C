@@ -1,45 +1,29 @@
-
+#include "SimulationEnvironment.h"
 #include "EnvelopFunctionApprox.h"
+#include "ModelOptions.h"
+#include "EFAbulkModel.h"
+#include "Material.h"
+#include "Boundary.h"
 #include <gnuplot_io.h>
+
 using namespace std;
 using namespace Constants;
 
-const double EnvelopFunctionApprox::Hartree;
+Device*   EnvelopFunctionApprox:: _device;
+
+//===================================================//
 
 const std::vector< EnvelopFunctionApprox::eigen_propblem_solution >& EnvelopFunctionApprox::get_solution() const
 {
   return(solution);
 }
+  
 
 
-
-//=====================================================//
-EquationSystems* EnvelopFunctionApprox::get_equation_systems() 
-{
-  return(es);
-}
-//===================================================//
-const EnvelopFunctionApprox::options& EnvelopFunctionApprox:: get_options() const
-{
-  return(opt);
-}
-//===================================================//
-const std::vector<unsigned int>& EnvelopFunctionApprox::get_material_numbers() const
-{
-  return(material_of_elem);
-}
-//===================================================//
-void EnvelopFunctionApprox::set_spectrum_shift(double energy)
-{
-  opt.spectrum_shift   =  energy;
-}
 //====================================================//
 double EnvelopFunctionApprox::get_band_edge() const
 {
-
- 
-  
-  
+   
 
   vector<double> band_edges;
   vector<string> names;
@@ -113,7 +97,7 @@ double EnvelopFunctionApprox::get_band_edge() const
 
 
   
- 
+    
   if (opt.particle == "el")
     return(cond_band_edge);
   else
@@ -123,36 +107,151 @@ double EnvelopFunctionApprox::get_band_edge() const
 }
 
 //===================================================//
-EnvelopFunctionApprox:: EnvelopFunctionApprox(EquationSystems&  equation_systems, std::string& problem_name, 
-					      options& opt1 )
+EnvelopFunctionApprox::EnvelopFunctionApprox()
+{
+  poisson_equation = NULL;
+
+  strain = NULL;
+}
+//===================================================//
+void EnvelopFunctionApprox::parse_options()
+{
+ 
+  const ModelOptions& mod_opt = get_options();
+
+  opt.particle                = mod_opt.get_option("particle", "el");
+
+ 
+
+  opt.periodicity[0]          = mod_opt.get_option("x-periodicity", false);
+  opt.periodicity[1]          = mod_opt.get_option("y-periodicity", false);
+  opt.periodicity[2]          = mod_opt.get_option("z-periodicity", false);
+
+  opt.log_output              = mod_opt.get_option("log_output", false);
+
+  opt.solver                  = mod_opt.get_option("solver","arnoldi");
+  opt.eigen_solver_tolerance  = mod_opt.get_option("eigen_solver_tolerance",1e-9); 
+  opt.max_iteration_number    = mod_opt.get_option("max_iteration_number",10000);
+
+  opt.solve_ev_problem_twice  = mod_opt.get_option("solve_ev_problem_twice",true);
+  opt.Dirichlet_bc_everywhere = mod_opt.get_option("Dirichlet_bc_everywhere",false);
+  
+
+  opt.mpi_command_line        = mod_opt.get_option("mpi_command_line","");
+  opt.solver_command_line     = mod_opt.get_option("solver_command_line", " -eps_largest_magnitude -st_type sinvert -st_ksp_rtol 1e-10 -st_ksp_type bcgs" );
+
+  opt.output_type             = mod_opt.get_option("output_type","GMV");
+
+  opt.eigen_number_increase_factor = mod_opt.get_option("eigen_number_increase_factor",1.2);
+  
+
+  opt.number_of_eigenstates   = mod_opt.get_option("number_of_eigenstates", 6);
+
+
+  opt.spectrum_shift          = mod_opt.get_option("spectrum_shift", 0.0);
+
+
+
+
+  //-------------------------------------------------------------------------------------------//
+  //strain model
+  std::string  strain_model_name = mod_opt.get_option("strain_model_name","no_strain");
+
+  if (strain_model_name != "no_strain" )
+  {
+    opt.consider_strain = true;
+    
+    strain = dynamic_cast< Macrostrain* > ( find_simulation( strain_model_name )   ); 
+    
+    if (strain == NULL)
+      throw InitFailedException("Unknown strain model" + strain_model_name);
+    
+ 
+  }
+  else
+  {
+    opt.consider_strain = false;    
+  }
+
+
+  //-------------------------------------------------------------------------------------------//
+  //-------------------------------------------------------------------------------------------//
+  //poisson
+  std::string  poisson_model_name = mod_opt.get_option("poisson_model_name","no_poisson");
+  if ( poisson_model_name != "no_poisson" )
+  {
+    opt.consider_potential = true;
+    
+    poisson_equation  = dynamic_cast< DriftDiffusion* > (find_simulation ( poisson_model_name ));
+    
+    if (poisson_equation == NULL)
+      throw InitFailedException( "Unknown poisson model " + poisson_model_name);
+
+  }
+  else
+  {
+    opt.consider_potential = false;
+  }
+  //--------------------------------------------------------------------------------------------//
+  //as default, we  estimate spectrum shift only in electric potential is defined
+  opt.estimate_spectrum_shift =  opt.consider_potential;
+
+  opt.estimate_spectrum_shift = mod_opt.get_option("estimate_spectrum_shift",  opt.estimate_spectrum_shift);
+
+  if ( !opt.consider_potential && opt.estimate_spectrum_shift) throw InitFailedException( "EnvelopeFunctionApprox: cannot estimate spectrum shift without electric potential");
+
+
+  if (opt.estimate_spectrum_shift) opt.spectrum_shift = get_band_edge();
+  //--------------------------------------------------------------------------------------------//
+  
+
+}
+//===================================================//
+
+
+//===================================================//
+void EnvelopFunctionApprox::do_init( )
 {
 
   
   //Initialization
 
-  poisson_equation = NULL;
+  //poisson_equation = NULL;
 
-  strain = NULL;
+  //strain = NULL;
 
 
-  opt = opt1;
+  //opt = opt1;
 
-  es = &equation_systems;
-
-  
-  mesh = &(es->get_mesh());
-  
  
 
-  system_name = problem_name;
 
-  es->add_system<LinearImplicitSystem> (problem_name);
+  SimulationEnvironment& si = get_environment();   
 
-  system = &( es->get_system<LinearImplicitSystem>(problem_name));
+  _device = &( si.get_device() );
+
+
+  double mesh_units = get_environment().get_device().get_mesh_units();
+ 
+  opt.length_scale = mesh_units/bohr_radius;
+
+  es = &(get_equation_systems());
+
+  mesh = &(es->get_mesh());
+  
+  system_name = get_equation_system_name ( );
+
+  es->add_system<LinearImplicitSystem> (system_name);
+
+  system = &( es->get_system<LinearImplicitSystem>( system_name ) );
 
   dim = mesh->mesh_dimension();
+
+  //--------------------------------------------------------------------------------------------------------//
+  opt.number_of_bands = calculate_number_of_bands( );
+ 
   
-  //---------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------------//
   //add variables
   psi_name.clear();
   for (short i = 0; i < opt.number_of_bands; i++)
@@ -166,25 +265,10 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(EquationSystems&  equation_systems
     } 
 
   //add matrixes
-
- 
-
-  //-----------------------------------------------------------------------------------------------------//
-  
-  //LinearImplicitSystem& ls = static_cast<LinearImplicitSystem&>(es->get_system(system_name));
-
-
-
-  
-  DofMap& dof_map = system->get_dof_map();
-
-
-  
-
-
-  
+  //---------------------------------------------------------------------------------------------------------//
    
-
+  DofMap& dof_map = system->get_dof_map();
+   
   system->add_matrix("Ham_real"); //add matrix for a real part of the Hamiltonian
 
   Ham_real = & (system->get_matrix("Ham_real"));
@@ -249,38 +333,25 @@ EnvelopFunctionApprox:: EnvelopFunctionApprox(EquationSystems&  equation_systems
  
    //------------------------------------------------------------------------------------------------------//
    
+  
+   
 
-
-
- 
+   //------------------------------------------------------------------------------------------------------//
 
 
 }
 //===========================================================//
-void EnvelopFunctionApprox::define_strain_data( Macrostrain*  strain_in)
+void EnvelopFunctionApprox::do_solve()
 {
-  strain = strain_in;
+  parse_options();
+
+  solve_eigen_value_problem( opt.number_of_eigenstates);
 }
-
-//============================================================//
-
-void EnvelopFunctionApprox::define_Poisson_data( DriftDiffusion*  drift_in)
-{
-  poisson_equation = drift_in;
-}
-
-//============================================================//
-void EnvelopFunctionApprox::set_material_parameters(std::map<unsigned int, EFAbulkHamiltonian*>&  bulkHamiltonian_in)
-{
-  bulkHamiltonian = bulkHamiltonian_in;
-}
-
-//============================================================//
-
-
 //===========================================================//
 void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 {
+
+
 
 
   Ham_real->zero();
@@ -288,7 +359,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   S_real->zero();
 
   //material list
-  assemble_material_list();
+  //assemble_material_list();
 
  vector<unsigned int> psivar(opt.number_of_bands);
  //get numbers of variables
@@ -362,13 +433,17 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       // Store a pointer to the element we are currently
       // working on.  This allows for nicer syntax later.
       const Elem* elem = *el;
-      const unsigned int mat = material_of_elem[el_number];
+
+      const ID subdomain = elem->subdomain_id();
+      const Material* mat = _device->get_material(subdomain);
+
+      element_hamiltonian = (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model(); 
+
+      /*
+      //const unsigned int mat = material_of_elem[el_number];
  
-   
-   
-
-      element_hamiltonian = bulkHamiltonian[mat];
-
+      //element_hamiltonian = bulkHamiltonian[mat];
+      */
    
       dof_map.dof_indices (elem, dof_indices); 
       const unsigned int n_dofs   = dof_indices.size();
@@ -397,9 +472,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	  if (opt.consider_potential)
 	    {
 
-	      
 	      electric_potential = poisson_equation -> get_electric_potential(elem, q_point[qp]);
-	      
 	     
 	    }
 
@@ -438,8 +511,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 			   complex<double> value = (0.0, 0.0);
 			   //constant
 			   value += JxW[qp] * phi[p1][qp] * phi[p2][qp] * model_Ham[band1][band2].constant ;
-			   
-
+			  
 			  
 			   //linear left
 			
@@ -460,12 +532,14 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 			       {
 				 value -= JxW[qp] * dphi[p1][qp](i) * dphi[p2][qp](j)*model_Ham[band1][band2].quad[i][j]
 				 * Complex(0.0,-1.0) * Complex(0.0, -1.0) /opt.length_scale / opt.length_scale;
+
+			
 				  
 			       }
 			   
 
 			    value *= my_Jacobian;
-			    
+
 
 			  
 			    ham_real_sub(p1,p2) += value.real(); 
@@ -499,9 +573,11 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 	}
 
-      ham_real.add(  opt.disturb_arnoldi * (std::rand()/( (double)RAND_MAX + 1) )   ,s_real);//apply disturb
+  
 
       ham_real.add( - opt.spectrum_shift/Hartree, s_real);//apply spectrum shift.
+
+
 /*
       ham_real.scale(Hartree);
       ham_imag.scale(Hartree);
@@ -514,15 +590,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
       S_real->add_matrix(s_real,dof_indices_tmp);
-/*
-      if ( dof_indices.size() !=  dof_indices_tmp.size() )
-	{
-	  for (unsigned int i1 = 0 ; i1 < dof_indices.size() ; i1++) cerr << dof_indices[i1] << "   ";
-	  cerr << "\n";
-	  for (unsigned int i1 = 0 ; i1 < dof_indices_tmp.size() ; i1++) cerr << dof_indices_tmp[i1] << "   ";
-	  cerr << "\n";
-	}
-*/
+
       dof_indices_tmp = dof_indices;
 
       dof_map.constrain_element_matrix(ham_real, dof_indices_tmp);
@@ -539,12 +607,12 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
  
 //this is only to test
-/*
-  Ham_real->print_matlab("ham_r_matlab.m");
-  Ham_imag->print_matlab("ham_i_matlab.m");
-  S_real->print_matlab("s.m");
 
-*/
+   Ham_real->print_matlab("ham_r_matlab.m");
+   Ham_imag->print_matlab("ham_i_matlab.m");
+   S_real->print_matlab("s.m");
+
+
 
   save_S_matrix("S.out");
   save_H_matrix("H.out");
@@ -553,43 +621,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
      
 }
 //============================================================//
-void EnvelopFunctionApprox::assemble_material_list(void)
-{
 
-
-  const unsigned int N_elem = mesh->n_active_elem();
-
- 
-
-  material_of_elem.resize( N_elem );
-
- 
-  
-  MeshBase::const_element_iterator el  = mesh->active_elements_begin();
-  MeshBase::const_element_iterator end_el = mesh->active_elements_end();
-
-    
-
-  unsigned int el_number = 0;
-  
-  for ( ; el != end_el ; ++el) 
-    {
-      const Elem* elem = *el;
-      unsigned int mat;
-      //-------------------------------------
-      
-      mat  = ( (unsigned int) (*meshdata)(elem->top_parent(),0) );
-      material_of_elem[el_number] = mat;
-      Point p = elem->centroid();
-   
-      el_number++;
-      
-    }
-
-}
-
-
-//============================================================//
 void EnvelopFunctionApprox::save_S_matrix(const std::string & fname)
 {
  
@@ -1028,10 +1060,7 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	      else 
 		value = 0.0;
 
-	      //Distirb matrix, if necessary:
-
-	      if ((n1 ==  row))
-		value += opt.disturb_arnoldi * (std::rand()/( (double)RAND_MAX + 1));
+	
 
 	      out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
 	      out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
@@ -1073,9 +1102,8 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
       create_dirichlet_dofs();
  
 
-  make_constraints();
+  make_constraints(); //creates a copy of them
 
-  
   
   make_nodes_periodic();
   
@@ -1084,8 +1112,6 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
   make_new_dofs();
 
   calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
-
-
  
 
   if (opt.solve_ev_problem_twice)
@@ -1101,7 +1127,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
       
       command_line_0 <<  "   -eps_nev     " << 1;
     
-      command_line_0 <<  "   -eps_type    " << opt.solver ;
+      command_line_0 <<  "   -eps_type    " << opt.solver <<"  ";
       
       command_line_0 <<  opt.solver_command_line << "  ";
 
@@ -1109,7 +1135,11 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
  
       command_line_0 <<  "    \n";
 
-      cerr << command_line_0.str()<<"\n";
+      if (opt.log_output) 
+      {
+	cout << command_line_0.str()<<"\n";
+	cout.flush();
+      }
 
       std::system( (command_line_0.str()).c_str());
 
@@ -1382,7 +1412,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
 //=======================================================================//
 
-void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  std::string& filename)
+void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  const std::string& filename)
 {
   //===========================================
 
@@ -1473,7 +1503,7 @@ void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  st
 }
 
 //=======================================================================//
-void EnvelopFunctionApprox::output_probability_function(unsigned int state_number,  std::string& filename)
+void EnvelopFunctionApprox::output_probability_function(unsigned int state_number,  const std::string& filename)
 {
   //===========================================
 
@@ -1571,20 +1601,11 @@ void EnvelopFunctionApprox::output_probability_function(unsigned int state_numbe
 
 
 //=======================================================================//
-void EnvelopFunctionApprox::assign_mesh_data(MeshData& mesh_data_in)
-{
-   meshdata = &mesh_data_in;
-   assemble_material_list();
-}
+
 
 //=======================================================================//
 
-void EnvelopFunctionApprox::define_diriclet_nodes(std::vector<unsigned int>&  dirichlet_nodes_input)
-{
-  dirichlet_nodes = dirichlet_nodes_input;
 
-
-}
 
 void EnvelopFunctionApprox::apply_diriclet_bc_at_all_boundaries()
 {
@@ -1642,7 +1663,7 @@ void EnvelopFunctionApprox::apply_diriclet_bc_at_all_boundaries()
 
 
 
-	   if (   side_is_external   ) //check if the side is external 
+	   if (   side_is_external   )  
 	    {
 	      
 	      if (dim > 1)
@@ -1677,23 +1698,21 @@ void EnvelopFunctionApprox::apply_diriclet_bc_at_all_boundaries()
 	   
     }
     
+
+
 }
 //======================================================================//
 void  EnvelopFunctionApprox::create_dirichlet_dofs( )
 {
   
+  SimulationEnvironment& se = get_environment(); 
+
   DofMap& dof_map = system->get_dof_map();
 
   MeshBase::const_element_iterator it = mesh->active_local_elements_begin();
   const MeshBase::const_element_iterator end =  mesh->active_local_elements_end();
 
   dirichlet_dofs.clear();
-  // insert_iterator<set<int> >  dir_ins(dirichlet_dofs,dirichlet_dof.begin() ); 
-
-
-  const std::vector<unsigned int> :: const_iterator  n_begin = dirichlet_nodes.begin();
-  const std::vector<unsigned int> :: const_iterator  n_end   = dirichlet_nodes.end();
-  std::vector<unsigned int> :: const_iterator n_it;
 
 
  
@@ -1705,15 +1724,21 @@ void  EnvelopFunctionApprox::create_dirichlet_dofs( )
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
 	{ 
 	  unsigned int  node_id =  elem->node(n);
+
+	  const Node* nd = elem->get_node(n); 
+
+	  Boundary* bd = se.get_boundary(nd); 
 	 
-	  //does a node belong to a a dirichlet nodes set?
-	  if (find(n_begin, n_end, node_id) != n_end)
+	  //does a node belong to a a dirichlet boundary condition
+
+	  if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+	    if ( bd->get_name() == "Dirichlet" || bd->get_name() == "dirichlet" )
 	    {
 	      for (short band = 0 ; band <  opt.number_of_bands; band++)
-		{
-		  dof_map.dof_indices (elem, dof_indices,band); 
-		  dirichlet_dofs.insert(dof_indices[n]);
-		}
+	      {
+		dof_map.dof_indices (elem, dof_indices,band); 
+		dirichlet_dofs.insert(dof_indices[n]);
+	      }
 	     
 	    }
 
@@ -2127,11 +2152,7 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
   return(result);
 
 } 
-//==========================================================//
-DriftDiffusion* EnvelopFunctionApprox::get_drift_diffusion() const
-{
-  return(poisson_equation);
-}
+
 
 
 //==========================================================//
@@ -2642,3 +2663,54 @@ unsigned int EnvelopFunctionApprox::get_number_of_active_cells()
 
   
 }
+
+//===============================================================================//
+short EnvelopFunctionApprox::calculate_number_of_bands(void) const
+{
+  
+  short result = 0;
+
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+
+  EFAbulkHamiltonian* element_hamiltonian;
+  
+  const Elem* elem = *el;
+  const ID subdomain = elem->subdomain_id();
+  const Material* mat = _device->get_material(subdomain);
+
+
+  element_hamiltonian = (  dynamic_cast<EFAbulkModel*> ( mat ->get_model(get_id()) )    ) -> get_Hamiltonian_model() ; 
+
+  std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&  
+	    model_Ham = ( element_hamiltonian->get_Hamiltonian() );
+
+  result = model_Ham.size();
+
+  if (result == 0)  throw InitFailedException("EnvelopFunctionApprox: Hamiltonian is empty");
+
+  for ( ; el != end_el ; ++el)
+  {
+    const Elem* elem = *el;
+
+    const ID subdomain = elem->subdomain_id();
+    const Material* mat = _device->get_material(subdomain);
+
+
+    element_hamiltonian = ( dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) ) )->get_Hamiltonian_model() ;
+ 
+    const std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&  
+      model_Ham = ( element_hamiltonian->get_Hamiltonian() );
+
+
+    short result1 = model_Ham.size();
+
+    if (result1 != result) throw InitFailedException("EnvelopFunctionApprox: Hamiltonians of different materials have different number of bands");
+
+
+  }
+
+  return(result);
+ 
+}
+//========================================================================================//

@@ -37,7 +37,7 @@
 #include "SBWzCondBandBulkHamiltonian.h"
 #include "SBuserHamiltonian.h"
 #include "KPbulkHamiltonian.h"
-
+#include "EFAbulkModel.h"
 
 
 #include <typeinfo>
@@ -108,7 +108,8 @@ PhysicalModelInterface::create(const std::string& name,
     mod = ZbDDsemiconductor::create();
   else if (name == "DDsemicond_wz")
     mod = WzDDsemiconductor::create();
-
+  else if (name == "EFAmodel")
+    mod = EFAbulkModel::create();
    
  
 

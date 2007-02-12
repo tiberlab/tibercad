@@ -7,8 +7,8 @@
 #include <map>
 #include "tensor.h"
 
-#include "PhysicalModel.h"
-class EFAbulkHamiltonian: public PhysicalModel
+#include "PhysicalModelInterface.h"
+class EFAbulkHamiltonian: public PhysicalModelInterface
 {
 
  public:
@@ -67,8 +67,12 @@ class EFAbulkHamiltonian: public PhysicalModel
  
   const std::map<short, short>&  get_kp_bands_map(void) const; 
 
-
-  static EFAbulkHamiltonian* create (const std::string& name,  const ModelOptions& options = ModelOptions());
+  //!creates a new object
+  /*!
+    \param structure crystal structure, e.g. "zb", "wz"
+    \param options options for the model
+  */
+  static EFAbulkHamiltonian* create (const std::string& structure,  const ModelOptions& options = ModelOptions());
 
  protected:
   

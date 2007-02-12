@@ -19,6 +19,8 @@ class MacrostrainModel: public MacrostrainModelInterface
   //!Destructor
   ~MacrostrainModel();
 
+
+  //! creates a new object
   static MacrostrainModel* create();
 
   //! define an object that stores Young moduli

@@ -7,7 +7,9 @@
 #include "DriftDiffusion.h"
 #include "ExcitonTransport.h"
 #include "Macrostrain.h"
+#include "EnvelopFunctionApprox.h"
 #include "Sweep.h"
+
 
 #include "Utils.h"
 
@@ -51,6 +53,8 @@ SimulationInterface::create(const std::string& type,
     sim = ExcitonTransport::create();
   else if (type == "macrostrain")
     sim = Macrostrain::create();
+  else if (type == "efa-schroedinger")
+    sim = EnvelopFunctionApprox::create();
   else if (type == "sweep")
     sim = Sweep::create();
 
@@ -164,6 +168,8 @@ SimulationInterface::get_equation_systems(void) const
 void
 SimulationInterface::solve(void) throw (SolveFailedException) 
 {
+ 
+
   PerfLog perflog(get_name() + ": solve", false);
   perflog.start_event("solve");
 
