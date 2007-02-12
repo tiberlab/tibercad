@@ -466,40 +466,6 @@ class DriftDiffusion : public SimulationInterface
       get_boundary_currents(void) const;
 
 
-    //! Build a vector with all densities and recombination rates
-    void build_densities(std::vector<double>& densities,
-        std::vector<std::string>& names);
-
-    
-    //! Fill a vector with the electric field data
-    void build_current_density(std::vector<double>& current,
-        std::vector<std::string>& names);
-
-    
-    //! Fill a vector with the electric field data
-    void build_electric_field(std::vector<double>& field,
-        std::vector<std::string>& names);
-
-    
-    //! Fill a vector with the band edge data
-    void build_band_edges(std::vector<double>& band_edges,
-        std::vector<std::string>& names);
-
-
-    //! Fill a vector with the elemental band edge data
-    void build_elem_band_edges(std::vector<double>& band_edges,
-        std::vector<std::string>& names);
-
-
-    /*! \copydoc SimulationInterface::build_nodal_results() */
-    virtual void build_nodal_results(const std::set<std::string>& variables,
-        std::vector<double>& results, std::vector<std::string>& legend);
-
-
-    /*! \copydoc SimulationInterface::build_elemental_results() */
-    virtual void build_elemental_results(const std::set<std::string>& variables,
-        std::vector<double>& results, std::vector<std::string>& legend);
-
 
 
   protected:
@@ -527,6 +493,17 @@ class DriftDiffusion : public SimulationInterface
     
     /*! \copydoc SimulationInterface::parse_options() */
     virtual void parse_options(void);
+
+
+    /*! \copydoc SimulationInterface::build_nodal_results() */
+    virtual void build_nodal_results(const std::set<std::string>& variables,
+        std::vector<double>& results, std::vector<std::string>& legend);
+
+
+    /*! \copydoc SimulationInterface::build_elemental_results() */
+    virtual void build_elemental_results(const std::set<std::string>& variables,
+        std::vector<double>& results, std::vector<std::string>& legend);
+
 
 
 

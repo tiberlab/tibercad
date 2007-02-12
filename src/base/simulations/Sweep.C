@@ -128,9 +128,9 @@ Sweep::do_solve(void)
 
         // try to increase step, but only if it worked twice
         // with the old one
-        if (step == _old_step)
+        if (step == old_step)
           step *= 2.0;
-        _old_step = step;
+        old_step = step;
       }
       catch (...)
       {

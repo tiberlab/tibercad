@@ -99,7 +99,7 @@ $Simulation
   temperature = 300
   solve = sweep
   resultpath = output
-  plot = (Ec, Ev, QFermi_e, QFermi_h)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, ECurrent, AbsECurrent)
 }
 
 

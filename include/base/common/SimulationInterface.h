@@ -227,13 +227,43 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     
 
     //! Build nodal result vector for the given variables
+    /*!
+     * \param variables the identifier for the quantities that should be
+     * putted into the vector
+     * \param results the vector that will contain the results
+     * \param legend the legend for the values in \c results
+     */
     virtual void build_nodal_results(const std::set<std::string>& variables,
         std::vector<double>& results, std::vector<std::string>& legend) {};
 
 
     //! Build elemental result vector for the given variables
+    /*!
+     * \param variables the identifier for the quantities that should be
+     * putted into the vector
+     * \param results the vector that will contain the results
+     * \param legend the legend for the values in \c results
+     */
     virtual void build_elemental_results(const std::set<std::string>& variables,
         std::vector<double>& results, std::vector<std::string>& legend) {};
+
+
+    //! Build a vector with some integrated quantities
+    /*!
+     * \param names the identifier for the quantities that should be
+     * putted into the vector
+     * \param values the vector that will contain the results
+     * \param legend the legend for the values in \c results
+     *
+     * This method is thought for quantities that do not depend on coordinates
+     * but are e.g. scalar integrated quantities like terminal currents.
+     * They can also be scalar values depending on some other quantity like
+     * energy (e.g. for some spectrum). In this case, the legend should contain
+     * the corresponding values of the independent variable.
+     */
+    virtual void build_integrated_quantities(
+        const std::set<std::string>& names,
+        std::vector<double>& values, std::vector<std::string>& legend) {};
 
 
     //! Get the Control object

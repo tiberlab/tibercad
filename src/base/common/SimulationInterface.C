@@ -234,4 +234,13 @@ SimulationInterface::plot(void)
     GMVIO(dev.get_mesh()).write_nodal_data(filename, results, names);
   }
 
+  build_elemental_results(get_control().get_plotvariables(), results, names);
+  if (names.size() > 0)
+  {
+    std::string filename = get_control().get_output_dir() + "/" +
+      get_name() + "_elemental" + get_control().get_filename_suffix() + ".gmv";
+
+    GMVIO_cell(dev.get_mesh()).write_ascii_cell_data(filename, results, names);
+  }
+
 }
