@@ -2742,7 +2742,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
 
 void
 DriftDiffusion::build_integrated_quantities(const set<string>& names,
-    vector<double>& values, vector<string>& legend)
+    vector<double>& values)
 {
   const set<string>::const_iterator varend(names.end());
 
@@ -2754,18 +2754,53 @@ DriftDiffusion::build_integrated_quantities(const set<string>& names,
       calculate_currents_surfint();
 
     values.resize(_boundary_currents.size());
+
+    ContactData::iterator it(_boundary_currents.begin());
+    const ContactData::iterator end(_boundary_currents.end());
+    for (unsigned int id = 0; it != end; ++it, id++)
+      values[id] = (*it).second;
+
+  }
+}
+
+
+
+void
+DriftDiffusion::build_integrated_quantities_description(
+    const std::set<std::string>& names,
+    std::vector<std::string>& legend,
+    std::vector<std::string>& description)
+{
+  const set<string>::const_iterator varend(names.end());
+
+  if (names.find("current") != varend)
+  {
     legend.resize(_boundary_currents.size());
 
     ContactData::iterator it(_boundary_currents.begin());
     const ContactData::iterator end(_boundary_currents.end());
     for (unsigned int id = 0; it != end; ++it, id++)
-    {
       legend[id] = it->first->get_name();
-      values[id] = (*it).second;
-    }
 
+    description.resize(1);
+    unsigned int dim = get_mesh().mesh_dimension();
+    ostringstream s;
+    s << "Contact currents. Units A";
+    switch (dim)
+    {
+      case 1:
+        s << "cm^-2";
+        break;
+      case 2:
+        s << "cm^-1";
+        break;
+    }
+    description[0] = s.str();
   }
+
 }
+
+
 
 
 

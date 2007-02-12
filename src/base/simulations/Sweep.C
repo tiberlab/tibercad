@@ -101,32 +101,49 @@ Sweep::do_solve(void)
   string outdir = get_control().get_output_dir();
   
   vector<double> values;
-  vector<string> legend;
-  _simulation->get_integrated_quantities(_plotvariables, values, legend);
+  bool do_plot = false;
   ofstream plotfile;
-  // should we plot something?
-  if (legend.size() != 0)
   {
+    vector<string> legend;
+    vector<string> description;
+    _simulation->get_integrated_quantities_description(_plotvariables,
+        legend, description);
+    // should we plot something?
+    if (legend.size() != 0)
+    {
 
-    string plotfilename(outdir + "/" + get_name() + suffix + ".dat");
-    plotfile.open(plotfilename.c_str());
-    
-    if (!plotfile.good())
-      throw SolveFailedException("Sweep: Could not open plotfile " +
-          plotfilename);
+      string plotfilename(outdir + "/" + get_name() + suffix + ".dat");
+      plotfile.open(plotfilename.c_str());
 
-    ostringstream s;
-    s << "# Parameter sweep " << "(" << ")" << endl;
-    s << "# Simulation: " << _simulation->get_name() << endl;
-    plotfile << s.str();
-    ostringstream l;
-    l << "# indep";
-    unsigned int n = legend.size();
-    for (unsigned int i = 0; i < n; i++)
-      l << "  " << legend[i];
-    l << endl;
-    plotfile << l.str();
-    
+      if (!plotfile.good())
+        throw SolveFailedException("Sweep: Could not open plotfile " +
+            plotfilename);
+
+
+      //
+      // print some header
+      // 
+      ostringstream s;
+      s << "# Parameter sweep " << "(" << ")" << endl;
+      s << "# Simulation: " << _simulation->get_name() << endl;
+      plotfile << s.str();
+
+      // print the data description
+      plotfile << "# Data:" << endl;
+      for (unsigned int i = 0; i < description.size(); i++)
+        plotfile << "#    " << description[i] << endl;
+
+      
+      ostringstream l;
+      l << "#" << endl << "# x   ";
+      unsigned int n = legend.size();
+      for (unsigned int i = 0; i < n; i++)
+        l << "  " << legend[i];
+      l << endl;
+      plotfile << l.str();
+
+      do_plot = true;
+    }
   }
 
   // we make a copy of the current solution
@@ -134,7 +151,7 @@ Sweep::do_solve(void)
   // to an old successful solution
   AutoPtr<NumericVector<Real> > old_sol = 
     (_simulation->get_solution_vector()).clone();
-  
+
   unsigned int n = _values.size();
 
   for (unsigned int i = 0; i < n; i++)
@@ -167,10 +184,26 @@ Sweep::do_solve(void)
 
         _last = _variable->get_current_value();
 
+        // write results
         ostringstream s;
         s << suffix << _last;
         get_control().set_filename_suffix(s.str());
         _simulation->plot();
+
+
+        // update "something-vs.-sweepvariable" file
+        if (do_plot)
+        {
+          _simulation->get_integrated_quantities(_plotvariables, values);
+          ostringstream l;
+          l << setprecision(12) << _last;
+          unsigned int n = values.size();
+          for (unsigned int i = 0; i < n; i++)
+            l << "   " << values[i];
+          l << endl;
+          plotfile << l.str();
+        }
+
 
         // try to increase step, but only if it worked twice
         // with the old one

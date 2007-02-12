@@ -170,11 +170,34 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! Build a vector with some integrated quantities
     /*!
-     * Calls build_integrated_quantities();
+     * Calls build_integrated_quantities()
+     *
+     * This method is used in sweeps for creating files like I-V
+     * characteristics and similar.
+     *
+     * \param names the identifier of the quantities to plot
+     * \param values the vector where the values will be put
      */
     void get_integrated_quantities(const std::set<std::string>& names,
-        std::vector<double>& values, std::vector<std::string>& legend);
+        std::vector<double>& values);
     
+
+    //! Get the description for some integrated quantities
+    /*!
+     * calls build_integrated_quantities_description()
+     *
+     * cf. get_integrated_quantities()
+     *
+     * \param names the identifier of the quantities to plot
+     * \param legend the legend for the plot values, has usually the same
+     * size as \c values in get_integrated_quantities()
+     * \param description a description for each of the known quantities
+     */
+    void get_integrated_quantities_description(
+        const std::set<std::string>& names,
+        std::vector<std::string>& legend,
+        std::vector<std::string>& description);
+
 
     //! Get the type of this simulation
     /*!
@@ -271,7 +294,18 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     virtual void build_integrated_quantities(
         const std::set<std::string>& names,
-        std::vector<double>& values, std::vector<std::string>& legend) {};
+        std::vector<double>& values) {};
+
+    //! Create legend and descrition for integrated quantities
+    /*!
+     * cf. build_integrated_quantities()
+     *
+     * The return values of this method are used in printing data files
+     */
+    virtual void build_integrated_quantities_description(
+        const std::set<std::string>& names,
+        std::vector<std::string>& legend,
+        std::vector<std::string>& description) {};
 
 
     //! Get the Control object
@@ -475,11 +509,23 @@ SimulationInterface::get_type(void) const
 inline
 void
 SimulationInterface::get_integrated_quantities(
-    const std::set<std::string>& names,
-    std::vector<double>& values, std::vector<std::string>& legend)
+    const std::set<std::string>& names, std::vector<double>& values)
 {
-  build_integrated_quantities(names, values, legend);
+  build_integrated_quantities(names, values);
 }
+
+
+inline
+void
+SimulationInterface::get_integrated_quantities_description(
+    const std::set<std::string>& names,
+    std::vector<std::string>& legend,
+    std::vector<std::string>& description)
+{
+  build_integrated_quantities_description(names, legend, description);
+}
+
+
 
 
 #endif // _SIMULATIONINTERFACE_H_

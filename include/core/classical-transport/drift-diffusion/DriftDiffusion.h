@@ -520,8 +520,15 @@ class DriftDiffusion : public SimulationInterface
     /*! \copydoc SimulationInterface::build_integrated_quantities() */
     virtual void build_integrated_quantities(
         const std::set<std::string>& names,
-        std::vector<double>& values, std::vector<std::string>& legend);
+        std::vector<double>& values);
 
+
+    /*! \copydoc SimulationInterface::build_integrated_quantities_description()
+     */
+    virtual void build_integrated_quantities_description(
+        const std::set<std::string>& names,
+        std::vector<std::string>& legend,
+        std::vector<std::string>& description);
 
 
 
