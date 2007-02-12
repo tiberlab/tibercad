@@ -2,4 +2,4 @@
 
 ISE_Face::~ISE_Face()
 {
-};
+}

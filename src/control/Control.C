@@ -91,16 +91,32 @@ Control::create_device(void)
 {
   InputParser parser(_inputfile);
 
-  const ModelOptions& opts = parser.read_parameters("Simulation");
+  ModelOptions opts = parser.read_parameters("Simulation");
 
   _database->set_search_path(opts.get_option("searchpath", "."));
+  opts.delete_option("searchpath");
+
+  SimulationOptions::temperature = opts.get_option("temperature", 300.0);
+
+  //! read the variables we want to plot
+  vector<string> vars;
+  opts.get_option("plot", vars);
+  opts.delete_option("plot");
+  for (unsigned int i = 0; i < vars.size(); i++)
+    _plotvariables.insert(vars[i]);
+
+  _outputdir = opts.get_option("resultpath", _outputdir);
+  opts.delete_option("resultpath");
+  //! create _outputdir / check if is empty
+
+
 
   _device = Device::create(opts);
+
 
   // tell the device who controls it
   _device->set_control(this);
 
-  SimulationOptions::temperature = opts.get_option("temperature", 300.0);
   
   cout << "Control: simulation temperature = " <<
     SimulationOptions::temperature << " K" << endl << endl;
@@ -196,17 +212,17 @@ Control::setup_models(void) throw (ModelErrorException)
     ModelOptions physopts(parser.read_parameters("Physics", modelname));
 
     // parse the submodels
+    // NOTE: different submodels could have the same identifier
     {
-      const map<const string, ModelOptions>& physmodels =
+      const multimap<const string, ModelOptions>& physmodels =
         model_str->get_physical_model_map();
 
-      map<const string, ModelOptions>::const_iterator it(physmodels.begin());
-      map<const string, ModelOptions>::const_iterator end(physmodels.end());
+      multimap<const string,
+        ModelOptions>::const_iterator it(physmodels.begin());
+      multimap<const string,
+        ModelOptions>::const_iterator end(physmodels.end());
       for ( ; it != end; ++it)
-      {
         physopts.add_submodel(it->first, it->second);
-        physopts.add_submodel(it->first, it->second);
-      }
     }
 
 
@@ -281,6 +297,8 @@ Control::run_simulation(void) throw (SolveFailedException)
 
   const ModelOptions& opts = parser.read_parameters("Simulation");
 
+  _outputdir = opts.get_option("resultpath", _outputdir);
+
   vector<string> names;
   opts.get_option("solve", names);
   
@@ -305,7 +323,10 @@ Control::run_simulation(void) throw (SolveFailedException)
 
   // now run them
   for (unsigned int i = 0; i < n; i++)
+  {
     simulations[i]->solve();
+    simulations[i]->plot();
+  }
  
 }
 

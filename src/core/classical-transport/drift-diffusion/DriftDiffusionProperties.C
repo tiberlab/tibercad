@@ -58,41 +58,41 @@ DriftDiffusionProperties::do_init(void)
 
   ModelOptions::const_submodel_iterator
     it(get_options().submodels_begin("electron_mobility"));
+  ModelOptions::const_submodel_iterator
+    end(get_options().submodels_end("electron_mobility"));
 
-  if (it != get_options().submodels_end("electron_mobility"))
+  if (it != end)
     _electron_mobility = create_mobility_model(it->second);
   else
     _electron_mobility = create_mobility_model();
+  _electron_mobility->set_carrier_type('e');
 
 
   // create hole mobility model
   PhysicalModelInterface::destroy(_hole_mobility);
 
   it = get_options().submodels_begin("hole_mobility");
+  end = get_options().submodels_end("hole_mobility");
 
-  if (it != get_options().submodels_end("hole_mobility"))
-  {
+  if (it != end)
     _hole_mobility = create_mobility_model(it->second);
-    (it->second).print_all();
-  }
   else
     _hole_mobility = create_mobility_model();
+  _hole_mobility->set_carrier_type('h');
 
   
   //
-  // Recombinations (we can have several models!
+  // Recombinations (we can have several models!)
   //
 
   // create recombination models
-  {
-  vector<string> recomb;
-  get_options().get_option("recombination", recomb);
-  vector<string>::iterator it(recomb.begin());
-  const vector<string>::iterator end(recomb.end());
+  it = get_options().submodels_begin("recombination");
+  end = get_options().submodels_end("recombination");
   for ( ; it != end; ++it)
-    add_recombination_model(*it);
+  {
+    const std::string& name = (it->second).get_option("model", "SRH");
+    add_recombination_model(name, it->second);
   }
-  
 }
 
 
@@ -190,7 +190,6 @@ DriftDiffusionProperties::create_mobility_model(const ModelOptions& options)
  
   mobility_model->set_driftdiffusionproperties(this);
   mobility_model->set_material(get_material());
-  mobility_model->set_carrier_type('h');
   mobility_model->init();
 
   return mobility_model;

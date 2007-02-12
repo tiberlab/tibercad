@@ -56,7 +56,7 @@ class  WzDDsemiconductor : public DDsemiconductor
   
 
  protected:
-  PhysicalModelInterface* WzDDsemiconductor::create_new(void) const;
+  PhysicalModelInterface* create_new(void) const;
   
 
 

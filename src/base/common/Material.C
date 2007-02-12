@@ -78,7 +78,7 @@ Material::do_init(void)
   if (doping > 0.0)
   {
     double level = get_options().get_option("doping_level", 0.025);
-    int g = get_options().get_option("g", 2);
+    int g = get_options().get_option("doping_degen", 2);
     Dopant::DopingType type = Dopant::N_TYPE;
     const std::string& doptype = get_options().get_option("doping_type", "");
     if (doptype == "acceptor")

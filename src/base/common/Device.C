@@ -60,9 +60,6 @@ Device::setup_mesh(void)
 
   const string& meshfile = _options["meshfile"];
   int dim = _options.get_option("dimension", 2);
-
-  cout << endl << "Device::setup_mesh(): " << endl;
-  cout << "   meshfile : " << meshfile << " (" << dim << "D)" << endl;
   
   MeshData_elements meshdata(*_mesh);
   meshdata.enable_compatibility_mode();
@@ -74,7 +71,11 @@ Device::setup_mesh(void)
 
   MeshUtils::assign_subdomain_ids(*_mesh, meshdata);
 
+#ifdef DEBUG
+  cout << endl << "Device::setup_mesh(): ";
+  cout << "   meshfile : " << meshfile << " (" << dim << "D)" << endl;
   _mesh->print_info();
+#endif
 
   _eq_system = new EquationSystems(*_mesh);
 }

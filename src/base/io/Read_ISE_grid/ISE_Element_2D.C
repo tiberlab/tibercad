@@ -14,7 +14,7 @@ using namespace  std;
 
 ISE_Element_2D::~ISE_Element_2D()
 {
-};
+}
 
 
 // writes  nodes  belonging to element, both  as  ISE_Vertex*,  and  as  node_id
@@ -64,7 +64,7 @@ void ISE_Element_2D::set_element_nodes()
 	
 	
 	
-};
+}
 
 
 
@@ -121,5 +121,5 @@ void ISE_Element_2D::set_element_nodes_id()
   }
 
 
-};
+}
 

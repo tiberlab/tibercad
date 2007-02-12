@@ -559,22 +559,6 @@ DriftDiffusion::do_solve(void)
 
   build_solution_vector(_solution);
 
-  static int cnt = 1;
-  vector<double> densities;
-  vector<string> names;
-  ostringstream os;
-  os << cnt << ".gmv";
-  build_band_edges(densities, names);
-  GMVIO(get_mesh()).write_nodal_data("output/bands_" + os.str(),
-      densities, names);
-  build_densities(densities, names);
-  GMVIO(get_mesh()).write_nodal_data("output/densities_" + os.str(),
-      densities, names);
-  build_current_density(densities, names);
-  GMVIO_cell(get_mesh()).write_ascii_cell_data("output/current_" + os.str(),
-      densities, names);
-  cnt++;
-
   ContactData::iterator it(_boundary_currents.begin());
   const ContactData::iterator end(_boundary_currents.end());
   cout << "Currents:";
@@ -582,6 +566,7 @@ DriftDiffusion::do_solve(void)
     cout << " " << it->first->get_name() << " = " << (*it).second;
   cout << endl;
 }
+
 
 
 void
@@ -1233,6 +1218,9 @@ DriftDiffusion::get_solution(const Elem* elem, const Point& p,
     get_solution_secure(el, p, solution);
 }
 
+
+
+
 void
 DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     vector<double>& solution)
@@ -1288,6 +1276,10 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     solution[n] = u;
   }
 }
+
+
+
+
 
 void
 DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
@@ -1368,6 +1360,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 }
 
 
+
+
 void
 DriftDiffusion::get_solution(const Elem* elem,
     std::vector<DriftDiffusion::Solution>& solution)
@@ -1407,6 +1401,9 @@ DriftDiffusion::get_solution(const Elem* elem,
   }
 
 }
+
+
+
 
 void
 DriftDiffusion::calculate_currents_rstf(void)
@@ -1592,6 +1589,8 @@ DriftDiffusion::calculate_currents_rstf(void)
   for ( ; it != _boundary_currents.end(); ++it)
     (*it).second *= j0;
 }
+
+
 
 
 // old implementation, is not completely consistent with the
@@ -1841,6 +1840,8 @@ DriftDiffusion::calculate_currents_surfint(void)
 
 
 
+
+
 void
 DriftDiffusion::build_solution_vector(vector<double>& solution_vector)
 {
@@ -1923,6 +1924,413 @@ DriftDiffusion::build_solution_vector(vector<double>& solution_vector)
 
 
 
+
+
+// implementation taken from libmesh equation_systems.C
+void
+DriftDiffusion::build_nodal_results(const set<string>& variables,
+    vector<double>& results, vector<string>& legend)
+{
+  
+  NonlinearImplicitSystem* system;
+
+  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
+      get_equation_system_name());
+
+  // aliases for nicer code
+  const Device& device = *(_device);
+  const Mesh& mesh = get_mesh();
+  const NumericVector<Number>& solution = *(system->solution);
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+  // TODO if some elements were coarsened, does this still work??
+  const unsigned int nn  = mesh.n_nodes();
+  
+  legend.resize(variables.size());
+
+  // for each possible variable we set the vector index
+  // -1 means, the variable should not be plotted
+  unsigned int n_vars = 0;
+  const set<string>::const_iterator varend(variables.end());
+
+  int Ec = -1;
+  if (variables.find("Ec") != varend)
+  {
+    Ec = n_vars;
+    legend[n_vars] = "Ec";
+    n_vars++;
+  }
+
+  int Ev = -1;
+  if (variables.find("Ev") != varend)
+  {
+    Ev = n_vars;
+    legend[n_vars] = "Ev";
+    n_vars++;
+  }
+
+  int Efn = -1;
+  if (variables.find("QFermi_e") != varend)
+  {
+    Efn = n_vars;
+    legend[n_vars] = "QFermi_e";
+    n_vars++;
+  }
+
+  int Efp = -1;
+  if (variables.find("QFermi_h") != varend)
+  {
+    Efp = n_vars;
+    legend[n_vars] = "QFermi_h";
+    n_vars++;
+  }
+
+  int phi = -1;
+  if (variables.find("el_pot") != varend)
+  {
+    phi = n_vars;
+    legend[n_vars] = "electric_potential";
+    n_vars++;
+  }
+
+  int edens = -1;
+  if (variables.find("n") != varend)
+  {
+    edens = n_vars;
+    legend[n_vars] = "electron_density";
+    n_vars++;
+  }
+
+  int hdens = -1;
+  if (variables.find("p") != varend)
+  {
+    hdens = n_vars;
+    legend[n_vars] = "hole_density";
+    n_vars++;
+  }
+
+  int Nd = -1;
+  if (variables.find("Nd") != varend)
+  {
+    Nd = n_vars;
+    legend[n_vars] = "ionized_donors";
+    n_vars++;
+  }
+
+  int Na = -1;
+  if (variables.find("Na") != varend)
+  {
+    Na = n_vars;
+    legend[n_vars] = "ionized_acceptors";
+    n_vars++;
+  }
+
+  int rho = -1;
+  if (variables.find("charge_densitity") != varend)
+  {
+    rho = n_vars;
+    legend[n_vars] = "total_charge_densitity";
+    n_vars++;
+  }
+
+  int rec = -1;
+  int num_rec = 0;
+  map<ID, string> rec_model_ids;
+  if (variables.find("rec") != varend)
+  {
+
+    // look for all recombination models
+    {
+      MeshBase::const_element_iterator it =
+        mesh.active_local_elements_begin();
+
+      assert(it != mesh.active_local_elements_end());
+
+      DriftDiffusionProperties* sc = NULL;
+      vector<ID> ids;
+
+      const Elem* elem = *it;
+
+      ID subdomain = elem->subdomain_id();
+
+      sc = dynamic_cast<DriftDiffusionProperties*>(
+          device.get_material(subdomain)->get_model(get_id()));
+
+      int n = sc->get_net_recombination_rate_IDs(ids);
+
+      for (int i = 0; i < n; i++)
+        rec_model_ids[ids[i]] =
+          sc->get_recombination_model(ids[i])->get_name();
+    }
+    num_rec = rec_model_ids.size();
+    if (num_rec != 0)
+    {
+      rec = n_vars;
+
+      map<ID, string>::iterator it = rec_model_ids.begin();
+      map<ID, string>::iterator end = rec_model_ids.end();
+      for ( ; it != end; ++it, n_vars++)
+      {
+        legend[n_vars] = it->second;
+        n_vars++;
+      }
+
+      // plot also the total net rate
+      legend[n_vars] = "total_net_recombination";
+      n_vars++;
+    }
+  }
+
+
+  int mun = -1;
+  if (variables.find("e_mob") != varend)
+  {
+    mun = n_vars;
+    legend[n_vars] = "electron_mobility";
+    n_vars++;
+  }
+
+  int mup = -1;
+  if (variables.find("h_mob") != varend)
+  {
+    mup = n_vars;
+    legend[n_vars] = "hole_mobility";
+    n_vars++;
+  }
+
+
+  legend.resize(n_vars);
+    
+  results.resize(nn * n_vars);
+
+  vector<double> local(results.size());
+  vector<unsigned short int> node_conn(nn);
+
+  vector<double> nodal_val;
+
+  // the scaling parameters to scale back the result
+  const double phi0 = get_scaling().get_potential_scaling();
+  const double x0 = get_options().mesh_units;
+
+
+  fill(results.begin(), results.end(), 0.0);
+  fill(local.begin(), local.end(), 0.0);
+
+  // Get the number of elements that share each node.  We will
+  // compute the average value at each node.
+  {
+    vector<unsigned short int> node_conn_local(node_conn.size());
+    
+    MeshBase::const_element_iterator it =
+      mesh.active_local_elements_begin();
+    const MeshBase::const_element_iterator end =
+      mesh.active_local_elements_end(); 
+
+    for ( ; it != end; ++it)
+      for (unsigned int n=0; n<(*it)->n_nodes(); n++)
+	node_conn_local[(*it)->node(n)]++;
+
+#ifdef HAVE_MPI
+    // Gather the distributed node_conn arrays in the case of
+    // multiple processors
+    //
+    // (Note that we use an unsigned short int here even though an
+    // unsigned char would be more that sufficient.  The MPI 1.1
+    // standard does not require that MPI_SUM, MPI_PROD etc... be
+    // implemented for char data types. 12/23/2003 - BSK)  
+    MPI_Allreduce (&node_conn_local[0], &node_conn[0], node_conn.size(),
+		   MPI_UNSIGNED_SHORT, MPI_SUM, libMesh::COMM_WORLD);
+    
+#else
+    // Without MPI the node_conn_local and the node_conn arrays
+    // are necessarily identical
+    node_conn = node_conn_local;
+    
+#endif
+  }
+
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_e");
+  const unsigned int ep_var = system->variable_number("fermi_h");
+  
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  QGauss qrule(dim, libMeshEnums::CONSTANT);
+  fe->attach_quadrature_rule(&qrule);
+
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+  MeshBase::const_element_iterator it =
+    mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end =
+    mesh.active_local_elements_end(); 
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    ID subdomain = elem->subdomain_id();
+
+#ifdef ENABLE_INFINITE_ELEMENTS
+    // infinite elements should be skipped...
+    if (!elem->infinite())
+#endif
+    {
+      dof_map.dof_indices(elem, dof_indices_u, u_var);
+      dof_map.dof_indices(elem, dof_indices_en, en_var);
+      dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+      DriftDiffusionProperties* sc =
+      dynamic_cast<DriftDiffusionProperties*>(
+          device.get_material(subdomain)->get_model(get_id()));
+      assert(sc != NULL); 
+
+      sc->reinit(elem);
+      fe->reinit(elem);
+
+      assert(elem->n_nodes() == dof_indices_u.size());
+
+      RealGradient field(0.0);
+      for (unsigned int i = 0; i < dof_indices_u.size(); i++)
+        field += dphi[i][0] * solution(dof_indices_u[i]);
+      field *= -phi0 / x0;
+
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
+        double u  = phi0 * solution(dof_indices_u[n]);
+        double en = phi0 * solution(dof_indices_en[n]);
+        double ep = phi0 * solution(dof_indices_ep[n]);
+
+        // prepare for calculating local properties
+        sc->set_coordinates(elem->point(n));
+
+        double T_lat = sc->get_lattice_temperature();
+        // all are at lattice temperature
+        sc->set_carrier_temperatures(T_lat, T_lat);
+
+        sc->set_potentials(u, en, ep);
+        sc->set_electric_field(field);
+
+        sc->calculate_densities();
+        sc->calculate_ionized_dopants();
+        sc->calculate_mobilities();
+        sc->calculate_net_recombination_rates();
+
+
+        assert (node_conn[elem->node(n)] != 0);
+        double conn = static_cast<double>(node_conn[elem->node(n)]);
+
+        unsigned int id = n_vars * elem->node(n);
+
+        if (edens != -1)
+        {
+          double nodal_val = sc->get_electron_density();
+          local[id + edens] += nodal_val / conn;
+        }
+
+        if (hdens != -1)
+        {
+          double nodal_val = sc->get_hole_density();
+          local[id + hdens] += nodal_val / conn;
+        }
+
+        if (Nd != -1)
+        {
+          double nodal_val = sc->get_ionized_donor_density();
+          local[id + Nd] += nodal_val / conn;
+        }
+
+        if (Na != -1)
+        {
+          double nodal_val = sc->get_ionized_acceptor_density();
+          local[id + Na] += nodal_val / conn;
+        }
+
+        if (rho != -1)
+        {
+          double nodal_val = sc->get_charge_density();
+          local[id + rho] += nodal_val / conn;
+        }
+
+        if (rec != -1)
+        {
+          // recombination models
+          map<ID, string>::iterator it = rec_model_ids.begin();
+          map<ID, string>::iterator end = rec_model_ids.end();
+          int ctr = id + rec;
+          for ( ; it != end; ++it, ctr++)
+          {
+            double nodal_val = sc->get_net_recombination_rate(it->first);
+            local[id + ctr] += nodal_val / conn;
+          }
+        }
+
+
+        if (mun != -1)
+        {
+          double nodal_val = sc->get_electron_mobility();
+          local[id + mun] += nodal_val / conn;
+        }
+
+        if (mup != -1)
+        {
+          double nodal_val = sc->get_hole_mobility();
+          local[id + mup] += nodal_val / conn;
+        }
+
+
+        if (phi != -1)
+          local[id + phi] += u / conn;
+
+        if (Efn != -1)
+          local[id + Efn] += -en / conn;
+
+        if (Efp != -1)
+          local[id + Efp] += -ep / conn;
+
+        if (Ec != -1)
+          local[id + Ec] += (sc->get_conduction_band_edge() - u) / conn;
+
+        if (Ev != -1)
+          local[id + Ev] += (sc->get_valence_band_edge() - u) / conn;
+
+
+      } // end loop over nodes
+    } // end if not infinite element
+  } // end loop over elements
+
+#ifdef HAVE_MPI
+  // Now each processor has computed contriburions to the
+  // soln vector.  Gather them all up.
+  MPI_Allreduce (&local[0], &results[0], results.size(),
+		 MPI_REAL, MPI_SUM, libMesh::COMM_WORLD);
+#else
+  results = local;
+#endif
+
+}
+
+
+
+
+
+
+void
+DriftDiffusion::build_elemental_results(const std::set<std::string>& variables,
+    std::vector<double>& results, std::vector<std::string>& legend)
+{
+}
+
+
+
+
 // implementation taken from libmesh equation_systems.C
 void
 DriftDiffusion::build_densities(vector<double>& densities,
@@ -1998,8 +2406,6 @@ DriftDiffusion::build_densities(vector<double>& densities,
   }
 
     
-  vector<double> recomb(3, 0.0);
-
   densities.resize(nn * n_vars);
 
   vector<double> local(densities.size());

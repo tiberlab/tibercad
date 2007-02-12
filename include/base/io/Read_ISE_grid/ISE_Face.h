@@ -75,7 +75,7 @@ inline ISE_Face::ISE_Face(vector <ISE_Edge*> fcs_edg, vector <bool> neg_edg)
     negative_face_edges.push_back(neg_edg[e]);
   }
 
-};
+}
 
 
 
@@ -91,7 +91,7 @@ inline ISE_Edge* ISE_Face::get_edge (unsigned int e)
     cerr << "The 'e' value for the 'ISE_Edge* ISE_Face::get_edge(unsigned int e)' method is incorrect" << endl;
     exit(1);
   }
-};
+}
 
 
 inline bool ISE_Face::get_edge_state (unsigned int e)
@@ -106,13 +106,13 @@ inline bool ISE_Face::get_edge_state (unsigned int e)
     cerr << "The 'e' value for the 'bool ISE_Face::get_edge_state(unsigned int e)' method is incorrect" << endl;
     exit(1);
   }
-};
+}
 
 
 
 inline unsigned int ISE_Face::get_face_edges_size()
 {
   return face_edges.size();
-};
+}
 
 #endif /*ISE_FACE_H_*/

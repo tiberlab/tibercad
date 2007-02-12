@@ -48,7 +48,7 @@ ISE_Element_0D::ISE_Element_0D(ISE_Vertex* vertex_0) :ISE_Element()
 {
   node = vertex_0;
 		
-};
+}
 
 inline vector<unsigned int>
 ISE_Element_0D::get_nodes_id()
@@ -57,7 +57,7 @@ ISE_Element_0D::get_nodes_id()
   element_nodes_id.push_back (node->get_node_id() );
 	
   return element_nodes_id;
-};
+}
 
 
 #endif /*ISE_ELEMENT_0D_H_*/

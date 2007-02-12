@@ -52,7 +52,7 @@ class ModelStructure{
    * Returns a map which associates physical model name  with properties contained in a 
    * ModelOptions object
    */
-  std::map<const std::string,ModelOptions>& get_physical_model_map();
+  std::multimap<const std::string,ModelOptions>& get_physical_model_map();
 
 
 
@@ -69,7 +69,7 @@ class ModelStructure{
    * Creates  a map which associates a physical model name  with a ModelOptions 
    * object containing its  properties. 
    */
-  void set_physical_model_map(  std::map <const std::string,ModelOptions>& phys_model_map );
+  void set_physical_model_map(  std::multimap <const std::string,ModelOptions>& phys_model_map );
 
 
 
@@ -113,7 +113,7 @@ class ModelStructure{
   /*! Map of  the  physical models associated with the  current simulation model:
    *  physical model name is  associated with a ModelOptions object.
    */
-  std::map <const std::string,ModelOptions>  physical_model_map ; 
+  std::multimap <const std::string,ModelOptions>  physical_model_map ; 
 
 
   //!  Sets  the name of the model.

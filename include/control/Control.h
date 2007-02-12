@@ -8,6 +8,7 @@
 #include "SolveFailedException.h"
 
 #include <map>
+#include <set>
 
 class Device;
 class Database;
@@ -73,6 +74,39 @@ class Control
     SimulationInterface* find_simulation(const std::string& name) const;
 
 
+    //! Get the variables to plot
+    const std::set<std::string>& get_plotvariables(void) const;
+
+
+    //! Get the directory where to put output files
+    const std::string& get_output_dir(void) const;
+
+
+    //! Get the suffix for the output filenames
+    const std::string& get_filename_suffix(void) const;
+
+
+    //! Clear the suffix for the output filenames
+    void clear_filename_suffix(void);
+
+
+    //! Set the suffix for the output filenames
+    /*!
+     * The filename suffix will be appended to all output files which
+     * contain plot data.
+     * The suffix itself will be prepended by a '_'
+     */
+    void set_filename_suffix(const std::string& suffix);
+
+
+    //! Append something to the suffix for the output filenames
+    /*!
+     * The filename suffix will be appended to all output files which
+     * contain plot data.
+     * The suffix itself will be prepended by a '_'
+     */
+    void append_to_filename_suffix(const std::string& suffix);
+
 
 
   private:
@@ -105,6 +139,18 @@ class Control
     //! A list of all simulation environments we control
     EnvironmentMap _simulation_environments;
 
+
+    //! The directory where to put output
+    std::string _outputdir;
+
+
+    //! The variables we want to save data
+    std::set<std::string> _plotvariables;
+
+
+    //! The filename suffix
+    std::string _filename_suffix;
+
     
     //! Create the device
     void create_device(void);
@@ -130,7 +176,9 @@ inline
 Control::Control(const std::string& inputfile)
   : _inputfile(inputfile),
     _device(0),
-    _database(0)
+    _database(0),
+    _outputdir("."),
+    _filename_suffix("")
 {
 }
 
@@ -140,6 +188,56 @@ Device&
 Control::get_device(void)
 {
   return *_device;
+}
+
+
+inline
+const std::set<std::string>&
+Control::get_plotvariables(void) const
+{
+  return _plotvariables;
+}
+
+
+inline
+const std::string&
+Control::get_output_dir(void) const
+{
+  return _outputdir;
+}
+
+
+inline
+const std::string&
+Control::get_filename_suffix(void) const
+{
+  return _filename_suffix;
+}
+
+
+inline
+void
+Control::clear_filename_suffix(void)
+{
+  _filename_suffix = "";
+}
+
+
+
+inline
+void
+Control::set_filename_suffix(const std::string& suffix)
+{
+  _filename_suffix = "_" + suffix;
+}
+
+
+
+inline
+void
+Control::append_to_filename_suffix(const std::string& suffix)
+{
+  _filename_suffix += "_" + suffix;
 }
 
 

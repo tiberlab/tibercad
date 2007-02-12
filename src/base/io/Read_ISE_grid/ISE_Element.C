@@ -2,8 +2,8 @@
 
 ISE_Element::ISE_Element()
 {
-};
+}
 
 ISE_Element::~ISE_Element()
 {
-};
+}

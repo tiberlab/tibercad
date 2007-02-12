@@ -40,7 +40,7 @@ namespace DriftDiffusionDefs
     FERMIH    = 2  //< hole electro-chemical potential
   };
 
-};
+}
 
 
 #endif // _DRIFTDIFFUSIONDEFS_H_

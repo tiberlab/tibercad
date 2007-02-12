@@ -2,4 +2,4 @@
 
 ISE_Vertex::~ISE_Vertex()
 {
-};
+}

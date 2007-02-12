@@ -57,7 +57,7 @@ ISE_Edge::ISE_Edge( ISE_Vertex*  id_1, ISE_Vertex*    id_2)
 {
   node_1 = id_1;
   node_2 = id_2;
-};
+}
 
 inline ISE_Vertex* 
 ISE_Edge::get_vertex(unsigned int  v) 
@@ -69,8 +69,7 @@ ISE_Edge::get_vertex(unsigned int  v)
   else { cerr <<  " Error, no valid vertex in 'get_vertex' method selected "<< endl; }
 	
 	
-};
-
+}
 
 
 

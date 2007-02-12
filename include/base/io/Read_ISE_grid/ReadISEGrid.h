@@ -205,6 +205,6 @@ class ReadISEGrid
 inline unsigned int ReadISEGrid::get_dim()
 {
   return (dimension);
-};
+}
 
 #endif /* _READISEGRID_H_ */

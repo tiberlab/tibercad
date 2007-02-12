@@ -519,7 +519,7 @@ inline bool Macrostrain::element_on_boundary(const Elem* element)
  
   return(result);
   
-};
+}
 
 
 inline

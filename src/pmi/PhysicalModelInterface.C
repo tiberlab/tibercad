@@ -41,7 +41,9 @@
 
 
 #include <typeinfo>
+#ifdef DEBUG
 #include <iostream>
+#endif
 #include <string>
 
 std::map<const std::string, ID> 
@@ -122,9 +124,10 @@ PhysicalModelInterface::create(const std::string& name,
     std::string defaultname = Utils::extract_typename(typeid(*mod));
     mod->_name = mod->_options.get_option("name", defaultname);
     mod->_options.delete_option("name");
-
+#ifdef DEBUG
     std::cout << "Add model (ID = " << mod->get_id() <<
       " name = " << mod->get_name() << ")\n";
+#endif
   }
 
   return mod;
@@ -138,8 +141,10 @@ PhysicalModelInterface::destroy(PhysicalModelInterface* p)
 
   if (p != NULL)
   {
+#ifdef DEBUG
     std::cout << "Delete model (ID = " << p->get_id() <<
       " name = " << p->get_name() << ")\n";
+#endif
     delete p;
   }
 }

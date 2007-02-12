@@ -2,4 +2,4 @@
 
 ISE_Edge::~ISE_Edge()
 {
-};
+}

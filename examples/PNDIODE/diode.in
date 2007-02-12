@@ -27,9 +27,9 @@ $Models
               
      phys_regions = (1 2)
 
-     physical_models
+     physical_model recombination
      { 
-       recombination  =  SRH
+       model  =  SRH
      }                
 
     BC_Regions  

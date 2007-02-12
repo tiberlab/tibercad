@@ -10,7 +10,7 @@ using namespace std;
 
 ISE_Element_3D::~ISE_Element_3D()
 {
-};
+}
 
 
 void ISE_Element_3D::set_element_nodes()
@@ -118,7 +118,7 @@ void ISE_Element_3D::set_element_nodes()
 	
 	
 	
-};
+}
 
 
 void ISE_Element_3D::unique_nodes_point()
@@ -148,7 +148,7 @@ void ISE_Element_3D::unique_nodes_point()
   element_nodes.clear();
   element_nodes = v_temp;
 		
-};
+}
 
 
 
@@ -170,5 +170,5 @@ void ISE_Element_3D::set_element_nodes_id()
   }
 
 
-};
+}
 

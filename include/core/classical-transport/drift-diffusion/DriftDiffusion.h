@@ -347,7 +347,7 @@ class DriftDiffusion : public SimulationInterface
     
     
     /**
-     * @returns a constant reference to the current scaling parameters
+     * @return a constant reference to the current scaling parameters
      */
     const Scaling& get_scaling(void) const;
 
@@ -382,7 +382,7 @@ class DriftDiffusion : public SimulationInterface
 
     
     /**
-     * @returns the current nodal solution vector.
+     * @return the current nodal solution vector.
      *
      * The vector is ordered as
      *   [ var1\@node1 ... varn\@node1 var1\@node2 ... varn\@node2 ... ]
@@ -489,6 +489,16 @@ class DriftDiffusion : public SimulationInterface
     //! Fill a vector with the elemental band edge data
     void build_elem_band_edges(std::vector<double>& band_edges,
         std::vector<std::string>& names);
+
+
+    /*! \copydoc SimulationInterface::build_nodal_results() */
+    virtual void build_nodal_results(const std::set<std::string>& variables,
+        std::vector<double>& results, std::vector<std::string>& legend);
+
+
+    /*! \copydoc SimulationInterface::build_elemental_results() */
+    virtual void build_elemental_results(const std::set<std::string>& variables,
+        std::vector<double>& results, std::vector<std::string>& legend);
 
 
 

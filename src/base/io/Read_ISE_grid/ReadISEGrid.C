@@ -12,7 +12,7 @@ ReadISEGrid::ReadISEGrid(const char* file_name , Mesh& mesh, MeshData_elements& 
   set_BC_data();
   // read .xta and  .xda files  in  Libmesh  data structures
   read_mesh_and_data(mesh,mesh_data );
-};
+}
 
 ReadISEGrid::~ReadISEGrid()
 {
@@ -45,7 +45,7 @@ ReadISEGrid::~ReadISEGrid()
     delete elements_list[i];
   }
 
-};
+}
 
 
 
@@ -62,7 +62,7 @@ void ReadISEGrid::integrity_check(int ver, string tp)
     }
   }
 
-};
+}
 
 void ReadISEGrid::scan_grid_file()
 {
@@ -1646,7 +1646,7 @@ void ReadISEGrid::write_xda()
 
   //cout << endl << "Writing *.xda file... Done" << endl << endl;
 
-};
+}
 
 //  END  write  xda
 
@@ -1738,7 +1738,7 @@ void ReadISEGrid::write_xta()
 
 
   //cout << endl << "Writing *.xta file... Done" << endl << endl;
-};
+}
 
 
 
@@ -1790,7 +1790,7 @@ void  ReadISEGrid::unique_nodes(vector<unsigned int>& v1)
   v1 = v_temp;
 	
 	
-};
+}
 
 
 
@@ -1936,7 +1936,7 @@ void  ReadISEGrid::set_BC_data()
     cout  <<  "NOT IMPLEMENTED !" <<  endl;
 		
 	
-};
+}
 
 
 //  returns BC_region_map
@@ -1947,7 +1947,7 @@ void  ReadISEGrid::get_BC_data (map<unsigned int, vector<unsigned int> >& BoundC
   BoundCond_map = map_BC_region_nodes;
   //return map_BC_region_nodes;
  
-};
+}
 
 
 // write  mesh  and  meshdata from  .xda and  .xta  files

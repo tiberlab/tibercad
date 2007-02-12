@@ -33,6 +33,11 @@ class RecombinationModelInterface;
 class MobilityModelInterface;
 
 //! The base class for all drift-diffusion related semiconductor models
+/*!
+ * \note { it is not yet possible to have twice the same recombination model.
+ * Trying to add to identical models will result in a memory leak. This will
+ * be corrected in future. }
+ */
 class DriftDiffusionProperties : public PhysicalModel
 {
     

@@ -5,6 +5,8 @@
 #include "Boundary.h"
 #include "BoundaryProperties.h"
 #include "SimulationEnvironment.h"
+#include "Control.h"
+
 
 
 void
@@ -92,9 +94,10 @@ Sweep::do_solve(void)
   for (unsigned int i = 0; i < n; i++)
   {
     double goal = _values[i];
-    double goal_sign = goal < 0.0 ? -1 : 1;
+    double goal_sign = (goal < 0.0) ? -1 : 1;
     _last = _variable->get_current_value();
     double step = goal - _last;
+    double old_step = 0.0;
 
     double value;
     do
@@ -118,8 +121,16 @@ Sweep::do_solve(void)
 
         _last = _variable->get_current_value();
 
-        // try to increase step
-        step *= 2.0;
+        std::ostringstream s;
+        s << _last;
+        get_control().set_filename_suffix(s.str());
+        _simulation->plot();
+
+        // try to increase step, but only if it worked twice
+        // with the old one
+        if (step == _old_step)
+          step *= 2.0;
+        _old_step = step;
       }
       catch (...)
       {

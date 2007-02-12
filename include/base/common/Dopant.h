@@ -151,27 +151,27 @@ void
 Dopant::set_doping_density(double N)
 {
   _density = N;
-};
+}
 
 inline
 void
 Dopant::set_ionisation_energy(double E_i)
 {
   _ionisation_energy = E_i;
-};
+}
 
 inline
 void
 Dopant::set_g_factor(int g)
 {
   _g_factor = g;
-};
+}
 
 inline
 void
 Dopant::set_type(Dopant::DopingType type)
 {
   _type = type;
-};
+}
 
 #endif //_DOPANT_H_

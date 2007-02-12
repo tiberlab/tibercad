@@ -16,12 +16,15 @@
 
 #include <cassert>
 #include <map>
+#include <set>
 #include <string>
 
 class SimulationEnvironment;
 class EquationSystems;
 class PhysicalModel;
 class BoundaryProperties;
+class Control;
+class Mesh;
 
 
 //! The base class for any simulation
@@ -49,7 +52,26 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Get the user defined name of this simulation
     const std::string& get_name(void) const;
 
+
+    //! Create a simulation of type \c type with options
+    /*!
+     * \param type the simulation type to create
+     * \param options the options for the simulation
+     * 
+     * \return a pointer to the newly created simulation object or \c NULL
+     * if the \c typr does not exist.
+     */
+    static SimulationInterface* create(const std::string& type,
+        const ModelOptions& options = ModelOptions());
+
     
+    //! Destroy a simulation
+    /*!
+     * \param p the pointer to the simulation to destroy
+     */
+    static void destroy(SimulationInterface* p);
+
+
     //! Create a physical model that can be used by this type of simulation
     /*!
      * The default behaviour defined in the base class is to return the
@@ -101,23 +123,8 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     void solve(void) throw (SolveFailedException);
 
 
-    //! Create a simulation of type \c type with options
-    /*!
-     * \param type the simulation type to create
-     * \param options the options for the simulation
-     * 
-     * \return a pointer to the newly created simulation object or \c NULL
-     * if the \c typr does not exist.
-     */
-    static SimulationInterface* create(const std::string& type,
-        const ModelOptions& options = ModelOptions());
-
-    
-    //! Destroy a simulation
-    /*!
-     * \param p the pointer to the simulation to destroy
-     */
-    static void destroy(SimulationInterface* p);
+    //! Write results to file
+    void plot(void);
 
 
     //! Find a simulation with name \c name
@@ -169,6 +176,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     const std::string& get_type(void) const;
 
+
   protected:
 
     //! Empty constructor
@@ -182,7 +190,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Get the options for this simulator
     ModelOptions& get_options(void);
 
-    
+
     //! Do the initialization
     /*!
      * Has to be implemented by derived classes.
@@ -217,6 +225,20 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Get the unique name for the equation system
     const std::string& get_equation_system_name(void) const;
     
+
+    //! Build nodal result vector for the given variables
+    virtual void build_nodal_results(const std::set<std::string>& variables,
+        std::vector<double>& results, std::vector<std::string>& legend) {};
+
+
+    //! Build elemental result vector for the given variables
+    virtual void build_elemental_results(const std::set<std::string>& variables,
+        std::vector<double>& results, std::vector<std::string>& legend) {};
+
+
+    //! Get the Control object
+    Control& get_control(void);
+
 
 
   private:
@@ -282,6 +304,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * simulation to create.
      */
     void set_type(const std::string& type);
+
 
 };
 

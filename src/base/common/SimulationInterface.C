@@ -2,6 +2,7 @@
 
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
+#include "Control.h"
 
 #include "DriftDiffusion.h"
 #include "ExcitonTransport.h"
@@ -9,6 +10,8 @@
 #include "Sweep.h"
 
 #include "Utils.h"
+
+#include "GMVIO_cell.h"
 
 // LibMesh includes
 #include "system.h"
@@ -205,4 +208,30 @@ SimulationInterface::create_physical_model(const ModelOptions& options) const
   ignore_unused_variable(options);
   
   return NULL;
+}
+
+
+Control&
+SimulationInterface::get_control(void)
+{
+  return get_environment().get_device().get_control();
+}
+
+
+void
+SimulationInterface::plot(void)
+{
+  const Device& dev = get_environment().get_device();
+
+  std::vector<double> results;
+  std::vector<std::string> names;
+  build_nodal_results(get_control().get_plotvariables(), results, names);
+  if (names.size() > 0)
+  {
+    std::string filename = get_control().get_output_dir() + "/" +
+      get_name() + "_nodal" + get_control().get_filename_suffix() + ".gmv";
+
+    GMVIO(dev.get_mesh()).write_nodal_data(filename, results, names);
+  }
+
 }

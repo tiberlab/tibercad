@@ -50,7 +50,7 @@ map <ID, RegionStructure>& ModelStructure::get_model_BC_map()
  
 // }
 
-map<const string,ModelOptions>& ModelStructure::get_physical_model_map()
+multimap<const string,ModelOptions>& ModelStructure::get_physical_model_map()
 {
  
   return  physical_model_map;
@@ -107,7 +107,7 @@ void ModelStructure::set_model_BC_map( map <ID, RegionStructure>& mod_BC_map)
  
 // }
 
-void ModelStructure::set_physical_model_map( map <const string,ModelOptions>& phys_model_map)
+void ModelStructure::set_physical_model_map( multimap <const string,ModelOptions>& phys_model_map)
 {
  
   physical_model_map   = phys_model_map ;

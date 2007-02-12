@@ -1320,7 +1320,6 @@ void Macrostrain::do_solve()
 
     }//end of shape loop
     
-  std::cout << "SHAPE IS DONE\n";
 
  
 

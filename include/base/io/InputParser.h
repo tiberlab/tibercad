@@ -198,7 +198,7 @@ class InputParser{
   /*!
    *   Map between   physical model name and its options (stored in ModelOptions).
    */
-  std::map <const std::string,ModelOptions> physical_model_map;
+  std::multimap <const std::string,ModelOptions> physical_model_map;
 
 
 

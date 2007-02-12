@@ -50,6 +50,6 @@ namespace Constants
   extern const double& h;
   extern const double hbar;
 
-};
+}
 
 #endif //_CONSTANTS_H_

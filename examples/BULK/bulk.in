@@ -6,7 +6,7 @@ $Device
    {
      reg_numb = 1
      mat = Si
-     doping = 1e16 doping_type = donor Ec = 1.4 Ev = 0 meff_n = 1 meff_p = 1 permittivity = 1
+     doping = 1e16 doping_type = donor 
    }
 
 }
@@ -20,11 +20,16 @@ $Models
               
      phys_regions = (1)
 
-     physical_models
-     { 
-       recombination  =  SRH
-       electron_mobility = constant
-     }                
+     physical_model electron_mobility
+     {
+       model = constant
+     }
+
+     physical_model hole_mobility
+     {
+       model = constant
+     }
+
 
     BC_Regions  
     {
@@ -89,10 +94,12 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = bulk1D.msh
-  dimension = 1
+  meshfile = bulk2D.msh
+  dimension = 2
   temperature = 300
   solve = sweep
+  resultpath = output
+  plot = (Ec, Ev, QFermi_e, QFermi_h)
 }
 
 

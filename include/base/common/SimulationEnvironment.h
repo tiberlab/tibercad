@@ -4,12 +4,12 @@
 #define _SIMULATIONENVIRONMENT_H_
 
 #include "TypeDefs.h"
+#include "Device.h"
 
 #include "elem.h"
 
 #include <set>
 
-class Device;
 class Boundary;
 class Node;
 
@@ -55,6 +55,10 @@ class SimulationEnvironment
     
     //! Get a reference to the device
     Device& get_device(void);
+
+
+    //! Get a reference to the mesh
+    Mesh& get_mesh(void);
 
     
     //! Add the boundary for a given boundary number
@@ -291,6 +295,14 @@ Device&
 SimulationEnvironment::get_device(void)
 {
   return *_device;
+}
+
+
+inline
+Mesh&
+SimulationEnvironment::get_mesh(void)
+{
+  return get_device().get_mesh();
 }
 
 
