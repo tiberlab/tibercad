@@ -7,7 +7,10 @@
 #include "SimulationEnvironment.h"
 #include "Control.h"
 
+#include "fstream"
 
+
+using namespace std;
 
 void
 Sweep::do_init(void)
@@ -15,7 +18,7 @@ Sweep::do_init(void)
   ModelOptions& opts = get_options();
   
   // get the simulation
-  const std::string& sim = opts.get_option("simulation", "");
+  const string& sim = opts.get_option("simulation", "");
   _simulation = SimulationInterface::find_simulation(sim);
   
   // we don't tolerate NULL pointers...
@@ -27,7 +30,7 @@ Sweep::do_init(void)
   
   // get the model which contains the sweep variable
   // NOTE: for now we can sweep over boundary values
-  const std::string& bnd = opts.get_option("boundary", "");
+  const string& bnd = opts.get_option("boundary", "");
   SimulationEnvironment& env = _simulation->get_environment();
 
   // we have to set our environments to enable nested sweeps!
@@ -72,7 +75,7 @@ Sweep::parse_options(void)
 
 
   //! read the variables we want to plot (type IV characteristic)
-  std::vector<std::string> vars;
+  vector<string> vars;
   opts.get_option("plotvariable", vars);
   for (unsigned int i = 0; i < vars.size(); i++)
     _plotvariables.insert(vars[i]);
@@ -93,15 +96,38 @@ Sweep::do_solve(void)
 
   parse_options();
 
-  if (_plotvariables.size() != 0)
+  // the current filename suffix
+  string suffix = get_control().get_filename_suffix();
+  string outdir = get_control().get_output_dir();
+  
+  vector<double> values;
+  vector<string> legend;
+  _simulation->get_integrated_quantities(_plotvariables, values, legend);
+  ofstream plotfile;
+  // should we plot something?
+  if (legend.size() != 0)
   {
-    // we should plot something
 
+    string plotfilename(outdir + "/" + get_name() + suffix + ".dat");
+    plotfile.open(plotfilename.c_str());
+    
+    if (!plotfile.good())
+      throw SolveFailedException("Sweep: Could not open plotfile " +
+          plotfilename);
+
+    ostringstream s;
+    s << "# Parameter sweep " << "(" << ")" << endl;
+    s << "# Simulation: " << _simulation->get_name() << endl;
+    plotfile << s.str();
+    ostringstream l;
+    l << "# indep";
+    unsigned int n = legend.size();
+    for (unsigned int i = 0; i < n; i++)
+      l << "  " << legend[i];
+    l << endl;
+    plotfile << l.str();
     
   }
-
-  // the current filename suffix
-  std::string suffix = get_control().get_filename_suffix();
 
   // we make a copy of the current solution
   // we need this in the case of a solver failure to go back
@@ -123,7 +149,7 @@ Sweep::do_solve(void)
     do
     {
       // check for step > max_step
-      double absstep = std::abs(step);
+      double absstep = abs(step);
       double sign = step < 0.0 ? -1 : 1;
       step = (absstep > _max_step) ? _max_step * sign : step;
 
@@ -133,7 +159,7 @@ Sweep::do_solve(void)
         value = goal;
       
       _variable->set_new_value(value);
-      std::cerr  << "Sweep value = " << value << std::endl;
+      cerr  << "Sweep value = " << value << endl;
       
       try
       {
@@ -141,8 +167,8 @@ Sweep::do_solve(void)
 
         _last = _variable->get_current_value();
 
-        std::ostringstream s(suffix);
-        s << _last;
+        ostringstream s;
+        s << suffix << _last;
         get_control().set_filename_suffix(s.str());
         _simulation->plot();
 
@@ -155,7 +181,7 @@ Sweep::do_solve(void)
       catch (...)
       {
         step = (value - _last) / 2.0;
-        if (std::abs(step) < _min_step)
+        if (abs(step) < _min_step)
           throw SolveFailedException("Sweep: step size small.");
 
         _simulation->get_solution_vector() = *old_sol;
@@ -170,5 +196,8 @@ Sweep::do_solve(void)
 
     *old_sol = _simulation->get_solution_vector();
   }
+
+  plotfile.close();
+  plotfile.close();
 }
 

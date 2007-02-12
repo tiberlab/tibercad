@@ -228,7 +228,10 @@ inline
 void
 Control::set_filename_suffix(const std::string& suffix)
 {
-  _filename_suffix = "_" + suffix;
+  if (_filename_suffix[0] != '_')
+    _filename_suffix = "_" + suffix;
+  else
+    _filename_suffix = suffix;
 }
 
 
@@ -237,7 +240,10 @@ inline
 void
 Control::append_to_filename_suffix(const std::string& suffix)
 {
-  _filename_suffix += "_" + suffix;
+  if (_filename_suffix[0] != '_')
+    _filename_suffix += "_" + suffix;
+  else
+    _filename_suffix += suffix;
 }
 
 

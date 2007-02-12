@@ -168,6 +168,14 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     NumericVector<Real>& get_solution_vector(void);
 
 
+    //! Build a vector with some integrated quantities
+    /*!
+     * Calls build_integrated_quantities();
+     */
+    void get_integrated_quantities(const std::set<std::string>& names,
+        std::vector<double>& values, std::vector<std::string>& legend);
+    
+
     //! Get the type of this simulation
     /*!
      * The type is the identifying string which defines at creation time
@@ -460,6 +468,17 @@ const std::string&
 SimulationInterface::get_type(void) const
 {
   return _type;
+}
+
+
+
+inline
+void
+SimulationInterface::get_integrated_quantities(
+    const std::set<std::string>& names,
+    std::vector<double>& values, std::vector<std::string>& legend)
+{
+  build_integrated_quantities(names, values, legend);
 }
 
 

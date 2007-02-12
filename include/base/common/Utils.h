@@ -81,6 +81,15 @@ Utils::convert<unsigned int>(const std::string& val)
 
 template<>
 inline
+short
+Utils::convert<short>(const std::string& val)
+{
+  return (short) convert<double>(val);
+}
+
+
+template<>
+inline
 char
 Utils::convert<char>(const std::string& val)
 {

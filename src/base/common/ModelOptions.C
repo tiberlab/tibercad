@@ -138,6 +138,17 @@ ModelOptions::get_option<int>(const string& name,
 
 template
 void
+ModelOptions::get_option<unsigned int>(const string& name,
+    vector<unsigned int>& vec) const;
+
+template
+void
+ModelOptions::get_option<short>(const string& name,
+    vector<short>& vec) const;
+
+
+template
+void
 ModelOptions::get_option<bool>(const string& name,
     vector<bool>& vec) const;
 

@@ -87,6 +87,15 @@ Utils::extract_vector<int>(const std::string& input, std::vector<int>& vec);
 
 template
 void
+Utils::extract_vector<unsigned int>(const std::string& input,
+    std::vector<unsigned int>& vec);
+
+template
+void
+Utils::extract_vector<short>(const std::string& input, std::vector<short>& vec);
+
+template
+void
 Utils::extract_vector<char>(const std::string& input, std::vector<char>& vec);
 
 template
