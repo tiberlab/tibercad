@@ -25,16 +25,8 @@ double EnvelopFunctionApprox::get_band_edge() const
 {
    
 
-  vector<double> band_edges;
-  vector<string> names;
-
-  poisson_equation -> build_elem_band_edges( band_edges,  names);
-
  
-   
-
-  double cond_band_edge = band_edges[0];
-  double valence_band_edge = band_edges[1] ;
+  
   
   DofMap& dof_map = system->get_dof_map();
 
@@ -52,13 +44,17 @@ double EnvelopFunctionApprox::get_band_edge() const
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
 
- 
-
-  vector <double> electric_potential(1, 0.0);
-  unsigned int el_number = 0;
   
-  cond_band_edge = band_edges[el_number * 3] - electric_potential[0];
-  valence_band_edge = band_edges[el_number * 3 + 1] - electric_potential[0];
+
+  double cond_band_edge;
+ 
+  double valence_band_edge;
+  
+  vector <double> electric_potential(1, 0.0);
+
+  
+  vector<double> band_edges;
+ 
 
  
  
@@ -74,25 +70,26 @@ double EnvelopFunctionApprox::get_band_edge() const
 	  
 	}
       
+      poisson_equation -> get_band_edges ( *el, band_edges );
+
       short n1 = electric_potential.size();
 
-      if (el_number == 0)
+      if ( elem == *(mesh->active_elements_begin()) )
 	{
-	  cond_band_edge = band_edges[el_number * 3] - electric_potential[0];
-	  valence_band_edge = band_edges[el_number * 3 + 1] - electric_potential[0];
+	  cond_band_edge = band_edges[0] - electric_potential[0];
+	  valence_band_edge = band_edges[1] - electric_potential[0];
 	}
 
       for (unsigned int i = 0; i < n1; i++) 
 	{     
 	
-	  if (cond_band_edge > band_edges[el_number * 3] - electric_potential[i]) 
-	    cond_band_edge = band_edges[el_number * 3] - electric_potential[i];
+	  if (cond_band_edge > band_edges[0] - electric_potential[i]) 
+	    cond_band_edge = band_edges[1] - electric_potential[i];
 
-	  if (valence_band_edge < band_edges[el_number * 3 + 1] - electric_potential[i] ) 
-	    valence_band_edge = band_edges[el_number * 3 + 1] - electric_potential[i];
+	  if (valence_band_edge < band_edges[0] - electric_potential[i] ) 
+	    valence_band_edge = band_edges[1] - electric_potential[i];
 	}
-      el_number++;
-
+  
     }
 
 
