@@ -72,6 +72,7 @@ $Solver
     start = 0.0
     stop = 1.0
     steps = 10
+    plotvariable = current
   }
 }
 
@@ -94,8 +95,8 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = bulk2D.msh
-  dimension = 2
+  meshfile = bulk1D.msh
+  dimension = 1
   temperature = 300
   solve = sweep
   resultpath = output

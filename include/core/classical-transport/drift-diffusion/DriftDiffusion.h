@@ -444,6 +444,18 @@ class DriftDiffusion : public SimulationInterface
         std::vector<double>& potential);
 
 
+    //! Get the band edges in a given element
+    /*!
+     * \param elem the pointer to the element
+     * \param band_edges the band_edges
+     * \note { \c band_edges[0] = Ec, \c band_edges[1] = Ev }
+     *
+     * This method returns the band edges of the material of element elem
+     * without adding the electric potential.
+     */
+    void get_band_edges(const Elem* elem, std::vector<double>& band_edges);
+
+
     //! Get the electric potential at a given point in a given element
     /*!
      * \param elem the pointer to the element
@@ -503,6 +515,12 @@ class DriftDiffusion : public SimulationInterface
     /*! \copydoc SimulationInterface::build_elemental_results() */
     virtual void build_elemental_results(const std::set<std::string>& variables,
         std::vector<double>& results, std::vector<std::string>& legend);
+
+
+    /*! \copydoc SimulationInterface::build_integrated_quantities() */
+    virtual void build_integrated_quantities(
+        const std::set<std::string>& names,
+        std::vector<double>& values, std::vector<std::string>& legend);
 
 
 
@@ -734,6 +752,13 @@ class DriftDiffusion : public SimulationInterface
     void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
         std::vector<double>& solution);
 
+    //! Get the band edges of a given element
+    /*!
+     * \note
+     * This implementation assumes, that \c elem is one of the active elements
+     * of this simulation and that it contains the points in \c p.
+     */
+    void get_bands_secure(const Elem* elem, std::vector<double>& band_edges);
 
 
     void build_solution_vector(std::vector<double>& vector);

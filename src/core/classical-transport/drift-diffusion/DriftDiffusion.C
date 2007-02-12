@@ -1104,6 +1104,84 @@ DriftDiffusion::solve_gummel(void) throw (PetscRuntimeError)
 
 
 
+void
+DriftDiffusion::get_band_edges(const Elem* elem, vector<double>& band_edges)
+{
+  band_edges.resize(2);
+
+  // this will contain the element in which p lies and for which
+  // DriftDiffusion knows the potential
+  const Elem* el = elem;
+
+  SimulationEnvironment& env = get_environment();
+  
+  // check if elem is an active element of the simulation
+  if (!env.contains_element(elem))
+  {
+    // do we have a parent element in the list?
+    const Elem* parent = elem->parent();
+
+    while ((parent != NULL) && (!env.contains_element(parent)))
+      parent = parent->parent();
+
+    el = parent; // is NULL if no parent
+  }
+
+  if (el != NULL) // we found it!
+    get_bands_secure(el, band_edges);
+  else
+  {
+    // no parent, so check for children
+    vector<const Elem*> tree;
+    elem->family_tree(tree, false);
+
+    set<const Elem*> elem_list;
+    unsigned int len = tree.size();
+    for (unsigned int i = 0; i < len; i++)
+    {
+      const Elem* elem_i = tree[i];
+      if (env.contains_element(elem_i))
+        elem_list.insert(elem_i);
+    }
+    set<const Elem*>::iterator el_it = elem_list.begin();
+    set<const Elem*>::iterator el_end = elem_list.end();
+    for ( ; el_it != el_end; ++el_it)
+    {
+      el = *el_it;
+      if (el->contains_point(elem->centroid()))
+      {
+        get_bands_secure(el, band_edges);
+        // we have found it, so get out of the for loop
+        break;
+      }
+    }
+  }
+}
+
+
+
+
+void
+DriftDiffusion::get_bands_secure(const Elem* elem, vector<double>& band_edges)
+{
+
+  assert(_device != NULL);
+
+  DriftDiffusionProperties* sc =
+    dynamic_cast<DriftDiffusionProperties*>(
+        _device->get_material(elem->subdomain_id())->get_model(get_id()));
+  assert(sc != NULL); 
+
+  sc->reinit(elem);
+
+  band_edges[0] = sc->get_conduction_band_edge();
+  band_edges[1] = sc->get_valence_band_edge();
+
+}
+
+
+
+
 
 template <typename T>
 void
@@ -2323,8 +2401,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
 
 
 void
-DriftDiffusion::build_elemental_results(const std::set<std::string>& variables,
-    std::vector<double>& results, std::vector<std::string>& legend)
+DriftDiffusion::build_elemental_results(const set<string>& variables,
+    vector<double>& results, vector<string>& legend)
 {
 
   // we only do something if we are on processor 0
@@ -2661,6 +2739,33 @@ DriftDiffusion::build_elemental_results(const std::set<std::string>& variables,
 }
 
 
+
+void
+DriftDiffusion::build_integrated_quantities(const set<string>& names,
+    vector<double>& values, vector<string>& legend)
+{
+  const set<string>::const_iterator varend(names.end());
+
+  if (names.find("current") != varend)
+  {
+    if (get_options().current_calculation == RSTF)
+      calculate_currents_rstf();
+    else
+      calculate_currents_surfint();
+
+    values.resize(_boundary_currents.size());
+    legend.resize(_boundary_currents.size());
+
+    ContactData::iterator it(_boundary_currents.begin());
+    const ContactData::iterator end(_boundary_currents.end());
+    for (unsigned int id = 0; it != end; ++it, id++)
+    {
+      legend[id] = it->first->get_name();
+      values[id] = (*it).second;
+    }
+
+  }
+}
 
 
 

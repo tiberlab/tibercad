@@ -5,6 +5,9 @@
 
 #include "SimulationInterface.h"
 
+#include <set>
+
+
 class Sweepable;
 
 //! Make a sweep of a sweepable variable
@@ -63,6 +66,10 @@ class Sweep : public SimulationInterface
 
     //! Write results to file after every step if true
     bool _do_output;
+
+
+    //! The dependent variables we want to plot
+    std::set<std::string> _plotvariables;
 
 
 };

@@ -70,7 +70,17 @@ Sweep::parse_options(void)
   // we can also specify a vector with the values
   opts.get_option("values", _values);
 
-  _do_output = opts.get_option("output", _do_output);
+
+  //! read the variables we want to plot (type IV characteristic)
+  std::vector<std::string> vars;
+  opts.get_option("plotvariable", vars);
+  for (unsigned int i = 0; i < vars.size(); i++)
+    _plotvariables.insert(vars[i]);
+
+
+
+  // unused
+  //_do_output = opts.get_option("output", _do_output);
 }
 
 
@@ -82,6 +92,16 @@ Sweep::do_solve(void)
   assert(_variable != NULL);
 
   parse_options();
+
+  if (_plotvariables.size() != 0)
+  {
+    // we should plot something
+
+    
+  }
+
+  // the current filename suffix
+  std::string suffix = get_control().get_filename_suffix();
 
   // we make a copy of the current solution
   // we need this in the case of a solver failure to go back
@@ -121,7 +141,7 @@ Sweep::do_solve(void)
 
         _last = _variable->get_current_value();
 
-        std::ostringstream s;
+        std::ostringstream s(suffix);
         s << _last;
         get_control().set_filename_suffix(s.str());
         _simulation->plot();
