@@ -72,13 +72,28 @@ void ModelStructure::set_model_name(const string& model)
   model_name=model ;
 }
 
+void ModelStructure::set_simulation_name(const std::string& sim_name)
+{
+ 
+  simulation_name=sim_name  ;
+
+}
+
+
 string  ModelStructure::get_model_name()
 {
  
   return model_name;
 
+}
+
+string  ModelStructure::get_simulation_name()
+{
+ 
+  return simulation_name;
 
 }
+
 
 
 //void ModelStructure::set_model_BC_map( map  <unsigned int,  map <const string,string> >& id_BC_regions_map   )

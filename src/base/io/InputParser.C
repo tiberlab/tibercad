@@ -53,7 +53,8 @@ InputParser::~InputParser(void)
 
 
 // private  method: utility  to  find a  keyword in a section
-void InputParser::find_keyword_in_section(ifstream& in_stream, const std::string& keyword)
+//void InputParser::find_keyword_in_section(ifstream& in_stream, const std::string& keyword)
+bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string& keyword)
 
 {
 
@@ -92,7 +93,11 @@ void InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
     cerr << " Error: keyword "<< keyword <<  "  not  found !  " << endl ;
     exit(1);
 
+   
+
   }
+
+  return  found;
 
 }
 
@@ -107,6 +112,9 @@ const  ModelOptions& InputParser::read_parameters(std::string section_name, cons
 
   std::string  label ;
   std::ifstream in_stream (filename.c_str()) ;
+
+  bool found_model;
+  found_model = false;
 
   reset_all_maps();
 
@@ -134,18 +142,26 @@ const  ModelOptions& InputParser::read_parameters(std::string section_name, cons
     in_stream >> label; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
   } 
 
-  find_keyword_in_section( in_stream,  model_name);  //   read   Model name  string
-
+  //  find_keyword_in_section( in_stream,  model_name);  //   read   Model name  string
+  found_model =  find_keyword_in_section( in_stream,  model_name);  //   read   Model name  string
 
     
   //  in_stream >>  label;  //    {  read  by   parse_options) !!
             
   //*************************************
-      // create  new ModelOptions  
+     
       //    ModelOptions temp_options;
       //*************************************
          
           temp_options.clear();
+
+  if (!found_model)
+  {
+    return  temp_options;  //  model keyword  not  found-> returns empty ModelOptions !!
+
+  } 
+
+
 
   //  parse_options (in_stream); // !!!!!  ->   get_parameters_map();  !!!!!!
   parse_options (in_stream,temp_options );  
@@ -345,6 +361,10 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
   string name, str, mat_name ;
   name = "Start";
   int id;
+  bool block_ended;
+
+  block_ended = false;
+
 
   // ****************************
   //  assigned   values (local)
@@ -490,79 +510,373 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
   rule<> r_command_vector_strings  = *(space_p) >> (assignement_vector_strings)    >> *(anychar_p);
 
 
+  //  *****************
+  // case {par = pippo ....  !
+  //
+  // if the first    line begins with "{par =..."  
+  rule<> r_command_started  = *(space_p) >> (ch_p("{")) >> (*(space_p)) >> (list_of_assignement )    >> 
+    *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
+
+
+  //  *****************
+  // case {par = pippo }  ....  !
+  //if the first    line is all:  "{par =...}"
+  rule<> r_command_started_and_terminated  = *(space_p) >> (ch_p("{")) >> (*(space_p)) >> 
+    (list_of_assignement )    >> *(space_p) >> (ch_p("}")) >> 
+    *(anychar_p) >>*(space_p)  ;
+  //   !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
+
+
+
+
+  //  reads a  line  with  only start symbol "{    "
+  rule<> r_start_symbol  = *(space_p) >> (ch_p("{")) >>   
+    *(space_p)>> *(comment_p("#")) ;
+  //>> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
+
+
+  rule<> r_empty_line = *(space_p);
+
+  rule<> r_empty_block = *(space_p) >> (ch_p("{")) >> (*(space_p)) >> (ch_p("}")) >>
+    !(comment_p("#") >> *(anychar_p)) >>*(space_p);
 
 
   // for  a   line   terminated with  }
   rule<> r_command_terminated  = *(space_p) >> (list_of_assignement )    >> 
-    *(space_p) >> (ch_p("}")) >>  !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
+    *(space_p) >> (ch_p("}")) >>  *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
 
-  // find_keyword(in_stream,start_symb ); //  looks  for  "{"
-  in_stream >> str;
-  while (skip_comments(in_stream,str) == true )
-  {
-    in_stream >> str; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-  }
 
-  if (str != start_symb)
-  {
-    cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+
+
+  //   // find_keyword(in_stream,start_symb ); //  looks  for  "{"
+  //   in_stream >> str;
+  //   while (skip_comments(in_stream,str) == true )
+  //   {
+  //     in_stream >> str; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+  //   }
+
+  //   if (str != start_symb)
+  //   {
+  //     cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
   
-    exit(1); 
-  }
+  //     exit(1); 
+  //   }
 
+  //  *****************
+
+  //  FIRST LINE !!!
+  // 1) case "{         "
+  //  2)  case  "{par = pippo ...."
+  // 
+  //
 
   while ( getline(in_stream, str) )
-  {
+  { //while
+    if   (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
+    {// if !  comment_p("#") 
+
+      if (!(parse(str.c_str(), r_empty_line ).full) )
+      { // if !  empty line
+   
+        if  ((parse(str.c_str(), r_start_symbol  ).full) ) 
+        { // if parse   {
+
+          //  OK  
+          break;
+        }
+
+        //   first line with "{par = "    !!!
+        else if (  parse(str.c_str(), r_command_started ).full )  
+        { // 
+
+
+          if ( !(v_string.empty()) )
+          {
+
+            for (int i =0; i< v_label_string.size();++i)
+            {
+              string_prop_labels.push_back(v_label_string[i]);
+              //  cout <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+
+              string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
+
+              //  put option pair in ModelOptions  object
+              region_options.set_option(v_label_string[i],v_string[i]) ;
+
+            }
+          }
+	     
+
+          v_label_string.clear();
+          vect_label.clear();
+          v_label.clear();
+          v_string.clear();
+          v.clear();
+          v_int.clear();
+          break;
+    
+
+        }
+
+        //   first line is all! : termination condition  with  } on  the  line  !!!
+        else if (  parse(str.c_str(), r_command_started_and_terminated).full )           //  not skipping spaces
+
+
+        { // if parse
+
+
+          if ( !(v_string.empty()) )
+          {
+
+            for (int i =0; i< v_label_string.size();++i)
+            {
+              string_prop_labels.push_back(v_label_string[i]);
+              //  cout <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+
+              string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
+
+              //  put option pair in ModelOptions  object
+              region_options.set_option(v_label_string[i],v_string[i]) ;
+
+            }
+          }
+	     
+
+          // cout << endl ;
+          //     
+          block_ended =  true;  //  flag     
+          break;
+
+    
+
+        }
+
+        //  empty block :  "{}"  or   "{  }" 
+        else if  ((parse(str.c_str(),r_empty_block  ).full) ) 
+        { // if parse   {
+
+          //  OK  
+          block_ended =  true;  //  flag   
+          break;
+        }
+
+
+
+        else  
+
+          //  throw InitFailedException("....................");
+
+
+        {
+          cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+          
+          exit(1); 
+        }
+
+
+
+      }
+
+    }
+
+  }
+
+
+  //***********
+      //  IF  THERE ARE OTHER LINES IN  THE  BLOCK (BLOCK NOT ENDED)
+
+
+      if (! (block_ended) )
+
+    { // ! (block_ended)
+
+      while ( getline(in_stream, str) )
+      {
 
    
-    if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
+        if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
 
-    { // if !  comment_p("#")  
+        { // if !  comment_p("#")  
 
 	 
 
-      if (  parse(str.c_str(),
+          if (  parse(str.c_str(),
 
-                  //  Begin  grammar
+                      //  Begin  grammar
 		      
-                  r_command 
+                      r_command 
 
-                  )
+                      )
 
-            //  ,
-            //  End grammar
+                //  ,
+                //  End grammar
 
-            //  space_p).full )
-            .full )           //  not skipping spaces
+                //  space_p).full )
+                .full )           //  not skipping spaces
 
 
-      { // if parse
+          { // if parse
 
 	     
 
      
 
 
-        if ( !(v_string.empty()) )
-        {
+            if ( !(v_string.empty()) )
+            {
 
-          for (int i =0; i< v_label_string.size();++i)
-          {
-            string_prop_labels.push_back(v_label_string[i]);
-            //cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+              for (int i =0; i< v_label_string.size();++i)
+              {
+                string_prop_labels.push_back(v_label_string[i]);
+                //cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
 
-            string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
+                string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
 
-            //region_options.set_option(v_label_string[i],v_string[i])) ;
-            region_options.set_option(v_label_string[i],v_string[i]) ;
+                //region_options.set_option(v_label_string[i],v_string[i])) ;
+                region_options.set_option(v_label_string[i],v_string[i]) ;
 
-          }
-        }
+              }
+            }
 	     
 
        
 
 	      
+
+            v_label_string.clear();
+            vect_label.clear();
+            v_label.clear();
+            v_string.clear();
+            v.clear();
+            v_int.clear();
+
+  
+	    
+
+          }
+
+     
+
+	     
+
+
+
+          //   ***********************************************
+          //   vector  of  strings  !!!!
+          //  *************************************
+
+          else if(  parse(str.c_str(),  r_command_vector_strings   )   .full ) //  not skipping spaces
+            //  reads  list of  strings  (vector)
+
+          {
+
+            if ( !(v_string.empty()) )
+            {
+              vector_prop_labels.push_back(vect_label[0]);
+              //   cout << v_string[0] <<  endl ;  //   !!!!!
+              vector_string_prop_labels_map.insert(make_pair(vect_label[0], v_string) );
+
+            }
+
+	     
+
+	      
+            v_label_string.clear();
+            vect_label.clear();
+            v_label.clear();
+            v_string.clear();
+            v.clear();
+
+          }
+
+    
+
+
+
+          //  *******************************************************
+
+          //   termination condition  !!!
+          else if  (parse(str.c_str(), ( *(space_p)>>ch_p("}")  >> *(anychar_p) >>*(space_p) )  , space_p).full) 
+          {  
+            //  cout << endl ;
+            //         cout <<  "Fine  !" << endl ;
+            //   if (name == "a")
+            break;
+          }
+
+
+         
+
+
+
+          //   termination condition  with  } on  the  line  !!!
+          else if (  parse(str.c_str(), r_command_terminated ).full )           //  not skipping spaces
+
+
+          { // if parse
+
+
+            if ( !(v_string.empty()) )
+            {
+
+              for (int i =0; i< v_label_string.size();++i)
+              {
+                string_prop_labels.push_back(v_label_string[i]);
+                //  cout <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+
+                string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
+
+                //  put option pair in ModelOptions  object
+                region_options.set_option(v_label_string[i],v_string[i]) ;
+
+              }
+            }
+	     
+
+            // cout << endl ;
+            //         cout <<  "Fine device !!! !" << endl ;
+            break;
+
+    
+
+          }
+
+
+
+
+
+   
+
+
+
+          //     skip   all  the  other  kinds  of  lines  !!!!
+          else  if (parse(str.c_str(), if_p("{")[(+alpha_p) 
+                                                 ] , space_p ).full)
+          {  
+            //   cout << "SKIP" << endl ;
+            //   if (name == "a")
+            //   break;
+          }
+
+
+          else  
+
+            //  throw InitFailedException("....................");
+
+
+          {
+            cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+            cerr << " Correct syntax is : 'label' = 'value' 'label' = 'value' .......# 'comment' " 
+                 << endl;
+            cerr << " A comment line  must be preceded by '#' "<< endl;
+            //     cerr << " BEWARE: numerical and string values cannot  be  mixed  in  the  same line !"
+            //        << endl;
+            exit(1); 
+          }
+
+
+        }
+
 
         v_label_string.clear();
         vect_label.clear();
@@ -570,139 +884,12 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
         v_string.clear();
         v.clear();
         v_int.clear();
-
-  
-	    
-
-      }
-
      
 
-	     
-
-
-
-      //   ***********************************************
-      //   vector  of  strings  !!!!
-      //  *************************************
-
-      else if(  parse(str.c_str(),  r_command_vector_strings   )   .full ) //  not skipping spaces
-        //  reads  list of  strings  (vector)
-
-      {
-
-        if ( !(v_string.empty()) )
-        {
-          vector_prop_labels.push_back(vect_label[0]);
-          //   cout << v_string[0] <<  endl ;  //   !!!!!
-          vector_string_prop_labels_map.insert(make_pair(vect_label[0], v_string) );
-
-        }
-
-	     
-
-	      
-        v_label_string.clear();
-        vect_label.clear();
-        v_label.clear();
-        v_string.clear();
-        v.clear();
-
-      }
-
-    
-
-
-
-      //  *******************************************************
-
-      //   termination condition  !!!
-      else if  (parse(str.c_str(),  *(space_p)>>ch_p("}")   , space_p).full) 
-      {  
-        //  cout << endl ;
-        //         cout <<  "Fine  !" << endl ;
-        //   if (name == "a")
-        break;
-      }
-
-
-      //   termination condition  with  } on  the  line  !!!
-      else if (  parse(str.c_str(), r_command_terminated ).full )           //  not skipping spaces
-
-
-      { // if parse
-
-
-        if ( !(v_string.empty()) )
-        {
-
-          for (int i =0; i< v_label_string.size();++i)
-          {
-            string_prop_labels.push_back(v_label_string[i]);
-            //  cout <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
-
-            string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
-
-            //  put option pair in ModelOptions  object
-            region_options.set_option(v_label_string[i],v_string[i]) ;
-
-          }
-        }
-	     
-
-        // cout << endl ;
-        //         cout <<  "Fine device !!! !" << endl ;
-        break;
-
-    
-
-      }
-
-
-
-
-
-   
-
-
-
-      //     skip   all  the  other  kids  of  lines  !!!!
-      else  if (parse(str.c_str(), if_p("{")[(+alpha_p) 
-                                             ] , space_p ).full)
-      {  
-        //   cout << "SKIP" << endl ;
-        //   if (name == "a")
-        //   break;
-      }
-
-
-      else  
-
-      {
-        cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
-        cerr << " Correct syntax is : 'label' = 'value' 'label' = 'value' .......# 'comment' " 
-             << endl;
-        cerr << " A comment line  must be preceded by '#' "<< endl;
-        cerr << " BEWARE: numerical and string values cannot  be  mixed  in  the  same line !"
-             << endl;
-        exit(1); 
-      }
-
+  
+      }  //  end  while
 
     }
-
-
-    v_label_string.clear();
-    vect_label.clear();
-    v_label.clear();
-    v_string.clear();
-    v.clear();
-    v_int.clear();
-     
-
-  
-  }  //  end  while
-
 
 }
 
@@ -935,7 +1122,7 @@ InputParser::parse_model(ifstream& in_stream)
  
   
   string numb_regions_keyword_string,phys_regions_keyword_string,BC_regions_keyword_string , 
-    keyword_BC_Region_string, model_keyword_string,phys_model_label   ;
+    keyword_BC_Region_string, model_keyword_string,phys_model_label,simulation_name_label    ;
 
   numb_regions_keyword_string = "numb_regions";
   phys_regions_keyword_string = "phys_regions";
@@ -943,6 +1130,7 @@ InputParser::parse_model(ifstream& in_stream)
   keyword_BC_Region_string = "BC_Region";
   model_keyword_string  =  "model";
   phys_model_label = "physical_model";
+  simulation_name_label = "name";
 
   //  vector <ID> list_physical_regions  ;
 
@@ -950,7 +1138,7 @@ InputParser::parse_model(ifstream& in_stream)
 
   //  vector <string> model_list;  ->  private  member
 
-  string model_name, label , keyword,physical_model_name ;
+  string model_name, label , keyword,physical_model_name,simulation_name ;
   string  item, model_keyword, numb_regions_keyword, equal,regions_keyword ,BC_regions_keyword;
   //    start_symbol,end_symbol;
   ID numb_regions ;
@@ -1052,7 +1240,8 @@ InputParser::parse_model(ifstream& in_stream)
     //     //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
     //     while (skip_comments(in_stream,numb_regions_keyword ) == true )
     //     {
-    //       in_stream >> numb_regions_keyword ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    //       in_stream >> numb_regions_keyword ; // if  the  whole  line has 
+    //  ben  skipped: read  the  next keyword !!! 
     //     } 
 
     //   if  ( numb_regions_keyword != numb_regions_keyword_string )
@@ -1066,6 +1255,36 @@ InputParser::parse_model(ifstream& in_stream)
 
     //     in_stream >> equal >> numb_regions ;
   
+
+
+    //   -------------------------------------------------------------------------
+    //  read    user-defined name of this specifical  model instance
+
+    in_stream >>  label ;
+    while (skip_comments(in_stream,  label ) == true )
+    {
+      in_stream >> label  ; // if  the  whole  line has
+      //  ben  skipped: read  the next keyword !!! 
+    } 
+
+    if  ( label  != simulation_name_label )
+    {
+      cerr <<  "  SYNTAX ERROR in input  file: model name missing for model  " << 
+        model_name <<  endl;
+       
+      exit(1); 
+    }
+
+
+    // in_stream >> symbol;         //  "=" 
+
+    in_stream >> simulation_name   ; 
+    current_model_point->set_simulation_name( simulation_name);
+
+
+    //   -------------------------------------------------------------------------
+
+
 
     //parse_list_phys_ID(ifstream& in_stream,vector<string>& list_regions   )
     ////   vector<string> list_physical_regions;
@@ -1089,8 +1308,8 @@ InputParser::parse_model(ifstream& in_stream)
 
     list_physical_regions.clear();
 
-    //   ----------------------------------------------------------------
-
+  
+    //   ------------------------------------------------------------------------
 
     //     // ************  read  physical  model  section ************
 

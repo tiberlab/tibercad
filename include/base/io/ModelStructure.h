@@ -37,6 +37,11 @@ class ModelStructure{
    */
   ~ModelStructure();
 
+  //!  Sets the Simulation name
+  /*! Sets the user-defined name for a particular simulation 
+   *  of type "model_name".
+   */ 
+  void set_simulation_name(const std::string& sim_name);
 
 
   //!  Gets a map with Boundary Conditions definitions associated to each BC ID. 
@@ -90,13 +95,21 @@ class ModelStructure{
   //!  Gets a  string with the name of the model.
   std::string  get_model_name();
 
+  //!  Gets a  string with the name of  the present simulation.
+  std::string  get_simulation_name();
+
   //----------------------------------------------------------------------------------
 
 
  private:
 
+  
   //! Model name.
   std::string model_name;
+
+  //! Simulation name(user-defined name for a particular simulation of type "model_name").
+  std::string simulation_name;
+
 
   //!  Physical regions associated to this  model
   std::vector<std::string>  physical_regions;   

@@ -102,8 +102,9 @@ class InputParser{
 
   //!   Reads parameters of  a  given  section   for a given  model. 
   /*!
-   * Method to   read  parameters of the  section "section_name"  for a given model " model_name".
-   * Returns parameters in a ModelOptions object.
+   * Method to   read  parameters of the  section "section_name"  for a given model "model_name".
+   * Returns parameters in a ModelOptions object. If "model_name" section is absent, returns 
+   *  am empty  ModelOptions.
    */
   const  ModelOptions&  read_parameters(std::string section_name,const std::string& model_name);
 
@@ -227,8 +228,8 @@ class InputParser{
    *  Utility  to  find a  keyword in a section
    *    
    */
-  void find_keyword_in_section(std::ifstream& in_stream, const std::string& keyword);
-
+//  void find_keyword_in_section(std::ifstream& in_stream, const std::string& keyword);
+  bool find_keyword_in_section(std::ifstream& in_stream, const std::string& keyword);
 
   /*!
    *   Method   to  clear  all  maps 
