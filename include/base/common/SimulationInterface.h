@@ -167,6 +167,24 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Get a pointer to the solution vector
     NumericVector<Real>& get_solution_vector(void);
 
+    
+    /*!
+     * \copydoc build_nodal_results()
+     *
+     * Calls build_nodal_results()
+     */
+    void get_nodal_results(const std::set<std::string>& variables,
+        std::vector<double>& results, std::vector<std::string>& legend);
+
+
+    /*!
+     * \copydoc build_elemental_results()
+     *
+     * Calls build_elemental_results()
+     */
+    void get_elemental_results(const std::set<std::string>& variables,
+        std::vector<double>& results, std::vector<std::string>& legend);
+
 
     //! Build a vector with some integrated quantities
     /*!
@@ -296,7 +314,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
         const std::set<std::string>& names,
         std::vector<double>& values) {};
 
-    //! Create legend and descrition for integrated quantities
+    //! Create legend and description for integrated quantities
     /*!
      * cf. build_integrated_quantities()
      *
@@ -505,12 +523,37 @@ SimulationInterface::get_type(void) const
 }
 
 
+inline
+void
+SimulationInterface::get_elemental_results(
+    const std::set<std::string>& variables,
+    std::vector<double>& results, std::vector<std::string>& legend)
+{
+  results.resize(0);
+  legend.resize(0);
+  build_elemental_results(variables, results, legend);
+}
+
+
+inline
+void
+SimulationInterface::get_nodal_results(
+    const std::set<std::string>& variables,
+    std::vector<double>& results, std::vector<std::string>& legend)
+{
+  results.resize(0);
+  legend.resize(0);
+  build_nodal_results(variables, results, legend);
+}
+
+
 
 inline
 void
 SimulationInterface::get_integrated_quantities(
     const std::set<std::string>& names, std::vector<double>& values)
 {
+  values.resize(0);
   build_integrated_quantities(names, values);
 }
 
@@ -522,6 +565,8 @@ SimulationInterface::get_integrated_quantities_description(
     std::vector<std::string>& legend,
     std::vector<std::string>& description)
 {
+  legend.resize(0);
+  description.resize(0);
   build_integrated_quantities_description(names, legend, description);
 }
 

@@ -45,6 +45,12 @@ class Boundary
     //! Initialize all models
     void init(void);
 
+    //! Set the area factor
+    void set_area_factor(double area_factor);
+
+    //! Get the area factor
+    double get_area_factor(void) const;
+
 
   private:
 
@@ -57,7 +63,17 @@ class Boundary
     //! The user defined name of this boundary
     std::string _name;
 
+    //! The area factor
+    double _area_factor;
+
 };
+
+
+//
+// inline methods
+// 
+
+
 
 inline
 BoundaryProperties*
@@ -74,7 +90,8 @@ Boundary::get_boundary_properties(ID simulator_id) const
 
 inline
 Boundary::Boundary(const std::string& name)
-  : _name(name)
+  : _name(name),
+    _area_factor(1.0)
 {
 }
 
@@ -84,5 +101,23 @@ Boundary::get_name(void) const
 {
   return _name;
 }
+
+
+inline
+void
+Boundary::set_area_factor(double area_factor)
+{
+  _area_factor = area_factor;
+}
+
+
+inline
+double
+Boundary::get_area_factor(void) const
+{
+  return _area_factor;
+}
+
+
 
 #endif // _BOUNDARY_H_

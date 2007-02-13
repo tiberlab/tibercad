@@ -552,19 +552,8 @@ DriftDiffusion::do_solve(void)
       break;
   }
 
-  if (get_options().current_calculation == RSTF)
-    calculate_currents_rstf();
-  else
-    calculate_currents_surfint();
-
+  // TODO will be deleted
   build_solution_vector(_solution);
-
-  ContactData::iterator it(_boundary_currents.begin());
-  const ContactData::iterator end(_boundary_currents.end());
-  cout << "Currents:";
-  for ( ; it != end; ++it)
-    cout << " " << it->first->get_name() << " = " << (*it).second;
-  cout << endl;
 }
 
 
@@ -1015,6 +1004,8 @@ DriftDiffusion::solve_newton(void)
     msg += e.what();
     msg += ")\n";
 
+    system.nonlinear_solver->clear();
+
   }
   catch (PetscRuntimeError& e)
   {
@@ -1035,6 +1026,9 @@ DriftDiffusion::solve_newton(void)
       }
       catch (...) {}
     }
+    else
+      system.nonlinear_solver->clear();
+
     cerr << "\n";
     msg += e.what();
     msg += ")\n";
@@ -2116,7 +2110,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
   int rec = -1;
   int num_rec = 0;
   map<ID, string> rec_model_ids;
-  if (variables.find("rec") != varend)
+  if (variables.find("NetRecombination") != varend)
   {
 
     // look for all recombination models
@@ -2143,21 +2137,25 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
           sc->get_recombination_model(ids[i])->get_name();
     }
     num_rec = rec_model_ids.size();
+    legend.resize(variables.size() + num_rec);
     if (num_rec != 0)
     {
       rec = n_vars;
 
       map<ID, string>::iterator it = rec_model_ids.begin();
       map<ID, string>::iterator end = rec_model_ids.end();
-      for ( ; it != end; ++it, n_vars++)
+      for ( ; it != end; ++it)
       {
         legend[n_vars] = it->second;
         n_vars++;
       }
 
-      // plot also the total net rate
-      legend[n_vars] = "total_net_recombination";
-      n_vars++;
+      if (num_rec > 1)
+      {
+        // plot also the total net rate
+        legend[n_vars] = "total_net_recombination";
+        n_vars++;
+      }
     }
   }
 
@@ -2343,11 +2341,15 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
           map<ID, string>::iterator it = rec_model_ids.begin();
           map<ID, string>::iterator end = rec_model_ids.end();
           int ctr = id + rec;
+          double tot = 0.0;
           for ( ; it != end; ++it, ctr++)
           {
             double nodal_val = sc->get_net_recombination_rate(it->first);
-            local[id + ctr] += nodal_val / conn;
+            local[ctr] += nodal_val / conn;
+            tot += nodal_val;
           }
+          if (num_rec > 1)
+            local[ctr] += tot / conn;
         }
 
 
@@ -2758,7 +2760,7 @@ DriftDiffusion::build_integrated_quantities(const set<string>& names,
     ContactData::iterator it(_boundary_currents.begin());
     const ContactData::iterator end(_boundary_currents.end());
     for (unsigned int id = 0; it != end; ++it, id++)
-      values[id] = (*it).second;
+      values[id] = it->second * it->first->get_area_factor();
 
   }
 }
@@ -2797,7 +2799,6 @@ DriftDiffusion::build_integrated_quantities_description(
     }
     description[0] = s.str();
   }
-
 }
 
 

@@ -383,7 +383,7 @@ class DriftDiffusion : public SimulationInterface
     
     /**
      * @return the current nodal solution vector.
-     *
+     * \deprecated
      * The vector is ordered as
      *   [ var1\@node1 ... varn\@node1 var1\@node2 ... varn\@node2 ... ]
      * where the ordering \p var1 ... \p var2 is the same as in the
@@ -586,6 +586,7 @@ class DriftDiffusion : public SimulationInterface
     /**
      * The nodal solution in the order
      * [ var1\@node1 ... varn\@node1 var1\@node2 ... varn\@node2 ... ]
+     * \deprecated
      */
     std::vector<double> _solution;
 

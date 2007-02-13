@@ -33,7 +33,7 @@ Sweep::do_init(void)
   const string& bnd = opts.get_option("boundary", "");
   SimulationEnvironment& env = _simulation->get_environment();
 
-  // we have to set our environments to enable nested sweeps!
+  // we have to set our environment to enable nested sweeps!
   set_environment(&env);
 
   if (!env.is_initialized())
@@ -131,7 +131,7 @@ Sweep::do_solve(void)
       // print the data description
       plotfile << "# Data:" << endl;
       for (unsigned int i = 0; i < description.size(); i++)
-        plotfile << "#    " << description[i] << endl;
+        plotfile << "#    * " << description[i] << endl;
 
       
       ostringstream l;
@@ -176,7 +176,7 @@ Sweep::do_solve(void)
         value = goal;
       
       _variable->set_new_value(value);
-      cerr  << "Sweep value = " << value << endl;
+      cout  << "Sweep value = " << value << endl;
       
       try
       {
@@ -201,7 +201,7 @@ Sweep::do_solve(void)
           for (unsigned int i = 0; i < n; i++)
             l << "   " << values[i];
           l << endl;
-          plotfile << l.str();
+          plotfile << l.str() << flush;
         }
 
 
@@ -230,7 +230,6 @@ Sweep::do_solve(void)
     *old_sol = _simulation->get_solution_vector();
   }
 
-  plotfile.close();
   plotfile.close();
 }
 

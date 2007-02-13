@@ -20,6 +20,7 @@
 
 #include <iostream>
 
+using namespace std;
 
 SimulationInterface::SimulationMap
 SimulationInterface::_simulation_map;
@@ -42,7 +43,7 @@ SimulationInterface::SimulationInterface(void)
 
 
 SimulationInterface*
-SimulationInterface::create(const std::string& type,
+SimulationInterface::create(const string& type,
         const ModelOptions& options)
 {
   SimulationInterface* sim = NULL;
@@ -66,12 +67,14 @@ SimulationInterface::create(const std::string& type,
     sim->set_type(type);
 
     //! set the name
-    std::string defaultname = Utils::extract_typename(typeid(*sim));
+    string defaultname = Utils::extract_typename(typeid(*sim));
     sim->_name = sim->get_options().get_option("name", defaultname);
     sim->_options.delete_option("name");
 
-    std::cout << "Added simulator (ID = " << sim->get_id() <<
+#ifdef DEBUG
+    cout << "Added simulator (ID = " << sim->get_id() <<
       " name = " << sim->get_name() << ")\n";
+#endif
   }
 
   return sim;
@@ -110,7 +113,7 @@ SimulationInterface::init(void) throw (InitFailedException)
 void
 SimulationInterface::create_equation_system_name(void)
 {
-  std::ostringstream o;
+  ostringstream o;
   o << get_name() << get_id();
   _eq_system_name = o.str();
 }
@@ -119,7 +122,7 @@ SimulationInterface::create_equation_system_name(void)
 
 
 SimulationInterface*
-SimulationInterface::find_simulation(const std::string& name)
+SimulationInterface::find_simulation(const string& name)
 {
   SimulationInterface* sim = NULL;
 
@@ -229,24 +232,84 @@ SimulationInterface::plot(void)
 {
   const Device& dev = get_environment().get_device();
 
-  std::vector<double> results;
-  std::vector<std::string> names;
-  build_nodal_results(get_control().get_plotvariables(), results, names);
+  string suffix = get_control().get_filename_suffix();
+  string outdir = get_control().get_output_dir();
+
+  vector<double> results;
+  vector<string> names;
+
+  // nodal values
+  get_nodal_results(get_control().get_plotvariables(), results, names);
   if (names.size() > 0)
   {
-    std::string filename = get_control().get_output_dir() + "/" +
-      get_name() + "_nodal" + get_control().get_filename_suffix() + ".gmv";
+    string filename(outdir + "/" + get_name() +
+        "_nodal" + suffix + ".gmv");
 
     GMVIO(dev.get_mesh()).write_nodal_data(filename, results, names);
   }
 
-  build_elemental_results(get_control().get_plotvariables(), results, names);
+  // elemental values
+  get_elemental_results(get_control().get_plotvariables(), results, names);
   if (names.size() > 0)
   {
-    std::string filename = get_control().get_output_dir() + "/" +
-      get_name() + "_elemental" + get_control().get_filename_suffix() + ".gmv";
+    string filename(outdir + "/" + get_name() +
+        "_elemental" + suffix + ".gmv");
 
     GMVIO_cell(dev.get_mesh()).write_ascii_cell_data(filename, results, names);
+  }
+
+  // integrated properties
+  vector<string> description;
+  get_integrated_quantities_description(get_control().get_plotvariables(),
+      names, description);
+  if (names.size() > 0)
+  {
+    string filename(outdir + "/" + get_name() + suffix + ".dat");
+    ofstream file;
+    file.open(filename.c_str());
+    if (file.good())
+    {
+      // header
+      file << "# Simulation: " << get_name() << endl;
+      file << "# Data:" << endl;
+      for (unsigned int i = 0; i < description.size(); i++)
+        file << "#    * " << description[i] << endl;
+      file << "#" << endl;
+      
+      build_integrated_quantities(get_control().get_plotvariables(), results);
+      
+      unsigned int nn = names.size();
+      unsigned int nr = results.size();
+
+      // if nn == nr, we print data in columns, otherwise on a row
+      if (nn == nr)
+      {
+        ostringstream l;
+        l << setprecision(12);
+        for (unsigned int i = 0; i < nn; i++)
+          l << names[i] << "   " << results[i] << endl;
+
+        file << l.str();
+      }
+      else
+      {
+        // legend
+        ostringstream l;
+        l << setprecision(12);
+        l << "# ";
+        for (unsigned int i = 0; i < nn; i++)
+          l << names[i] << "   ";
+        l << endl;
+
+        // data
+        for (unsigned int i = 0; i < nr; i++)
+          l << results[i] << "   ";
+        l << endl;
+        file << l.str();
+      }
+
+      file.close();
+    }
   }
 
 }

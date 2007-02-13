@@ -137,6 +137,10 @@ class Control
 
     
     //! A list of all simulation environments we control
+    /*!
+     * \note {Not every simulation necessarily has an associated
+     * environment! }
+     */
     EnvironmentMap _simulation_environments;
 
 

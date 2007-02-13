@@ -257,6 +257,7 @@ Control::setup_models(void) throw (ModelErrorException)
       const ModelOptions& bdopts = (bdit->second).get_options();
 
       Boundary* bd = new Boundary((bdit->second).get_region_name());
+      bd->set_area_factor(bdopts.get_option("area_factor", 1.0));
       BoundaryProperties* bdprop = sim->create_boundary_model(bdopts);
 
       // NOTE: bdprop could be NULL, but we don't care about. Who tells us that
@@ -324,8 +325,10 @@ Control::run_simulation(void) throw (SolveFailedException)
   // now run them
   for (unsigned int i = 0; i < n; i++)
   {
-    simulations[i]->solve();
-    simulations[i]->plot();
+    SimulationInterface* sim = simulations[i];
+    (sim->get_environment()).prepare_for_solve();
+    sim->solve();
+    sim->plot();
   }
  
 }

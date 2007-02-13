@@ -11,6 +11,14 @@
 class Sweepable;
 
 //! Make a sweep of a sweepable variable
+/*!
+ * This class takes a sweepable (cf. Sweepable class) boundary model
+ * and makes a sweep over that variable (e.g. contact voltage). For each
+ * sweep step it solves the given simulation according to the following
+ * flow chart:
+ * \image html Sweep_flowchart.jpg
+ * \image latex Sweep_flowchart.eps "Flow chart for a parameter sweep" width=10cm
+ */
 class Sweep : public SimulationInterface
 {
 

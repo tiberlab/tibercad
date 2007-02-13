@@ -37,11 +37,11 @@ class ElectricalContact : public BoundaryProperties, public Sweepable
     //! The type of boundary condition
     enum BCType
     {
-      DIRICHLET, //< Dirichlet type BC
-      NEUMANN,   //< von Neumann type BC
-      MIXED,     //< mixed type BC
+      DIRICHLET, /*!< Dirichlet type BC */
+      NEUMANN,   /*!< von Neumann type BC */
+      MIXED,     /*!< mixed type BC */
       //! pinning of electro-chemical potential with respect to
-      //! the electric potential
+      //! the conduction band edge
       PINNING    
     };
 

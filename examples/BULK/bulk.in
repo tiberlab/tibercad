@@ -20,14 +20,14 @@ $Models
               
      phys_regions = (1)
 
-     physical_model electron_mobility
+     physical_model recombination
      {
-       model = constant
+       model = SRH
      }
 
-     physical_model hole_mobility
+     physical_model recombination
      {
-       model = constant
+       model = direct
      }
 
 
@@ -69,7 +69,7 @@ $Solver
   sweep
   {
     boundary = anode
-    start = 0.0
+    start = 0.5
     stop = 1.0
     steps = 10
     plotvariable = current
@@ -100,7 +100,7 @@ $Simulation
   temperature = 300
   solve = sweep
   resultpath = output
-  plot = (Ec, Ev, QFermi_e, QFermi_h, ECurrent, AbsECurrent)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, ECurrent, AbsECurrent, current, NetRecombination)
 }
 
 
