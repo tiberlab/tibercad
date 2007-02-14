@@ -163,12 +163,12 @@ class Macrostrain : public SimulationInterface
   */
   Tensor1 get_built_in_polarization(const Elem* el, const Point& quadratur_point ); 
 
-  //---------------------------------------------------------------------
-  void output_strain(std::string filename ); //output strain for gmv
+ 
+ 
+  //!output piezo for gmv
+  void output_piezo(std :: string filename); 
 
-  void output_piezo(std :: string filename); //output piezo for gmv
-
- //! output lattice matching parameters
+  //! output lattice matching parameters
   void output_add_strain_variables(std::string filename); 
   //---------------------------------------------------------------------
 
@@ -191,17 +191,17 @@ class Macrostrain : public SimulationInterface
   static Macrostrain* create(void);
       
 
-    /*! \copydoc SimulationInterface::create_physical_model() */
-    virtual PhysicalModel*
-      create_physical_model(const ModelOptions& options) const
-      throw (ModelErrorException);
+  /*! \copydoc SimulationInterface::create_physical_model() */
+  virtual PhysicalModel*
+    create_physical_model(const ModelOptions& options) const
+    throw (ModelErrorException);
 
 
-    /*! \copydoc SimulationInterface::create_boundary_model() */
-    virtual BoundaryProperties*
-      create_boundary_model(const ModelOptions& options) const
-      throw (ModelErrorException);
- 
+  /*! \copydoc SimulationInterface::create_boundary_model() */
+  virtual BoundaryProperties*
+    create_boundary_model(const ModelOptions& options) const
+    throw (ModelErrorException);
+  
 
 
  private:
@@ -324,9 +324,14 @@ class Macrostrain : public SimulationInterface
   
 
   //!create new mesh by moving nodes slightly
-  void move_nodes(); //create new mesh by moving nodes slightly
+  void move_nodes();
 
-
+ 
+  //!writes in a file all strain components (only for debug purposes)
+  /*!
+    \filename name of the file for output
+  */
+  void output_strain(std::string filename );
   
   bool periodicity[3]; 
 
@@ -471,6 +476,14 @@ class Macrostrain : public SimulationInterface
   //! calculates \f$ \mathop{\rm{max}}_{\alpha, n}|u_{\alpha}^n - v_{\alpha}^n|  \f$
   double norm_of_difference(NumericVector<Number>& solution1, NumericVector<Number>& solution2);
 
+  //! Preapare all 6 components of the strain tensor for output
+  void prepare_strain_data_for_output( std::vector<std::string>& eps_names, std::vector<double>& eps_data );
+
+
+  //! Preapare all 3 components of the polarization vector for output
+  void prepare_polarization_data_for_output( std::vector<std::string>& polariz_names, std::vector<double>& polariz_data );
+
+
  protected:
 
 
@@ -480,6 +493,24 @@ class Macrostrain : public SimulationInterface
   virtual void do_solve(void);
   
   virtual void parse_options(void);
+
+
+  
+
+  
+  /*! 
+    \copydoc SimulationInterface::build_elemental_results()
+    The possible variables are: "eps_11", "eps_22", "eps_33", "eps_21", "eps_31", "eps_32" and "Px", "Py" and "Pz"
+    This means strain tensor components:
+    \f$ \varepsilon_{xx}, \varepsilon_{yy},\varepsilon_{zz}, \varepsilon_{xy}, \varepsilon_{xz}, \varepsilon_{yz}\f$,
+    and polarization vector \f$ \bf P \f$ components. 
+    \f$ x, y,  z\f$ refer to calculation coordinate system.
+   */
+  virtual void build_elemental_results(const std::set<std::string>& variables,
+				       std::vector<double>& results, std::vector<std::string>& legend) ;
+
+  
+ 
 
 
 

@@ -9,6 +9,69 @@ using namespace std;
 
 
 
+//-----------------------------------------------------------------//
+void Macrostrain::build_elemental_results(const std::set<std::string>& variables,
+			     std::vector<double>& results, std::vector<std::string>& legend)
+{
+
+  std::vector<std::string> eps_names;
+  std::vector<double> eps_data;  
+
+  std::vector<std::string> pol_names;
+  std::vector<double> pol_data;  
+
+  prepare_strain_data_for_output( eps_names,  eps_data);
+  prepare_polarization_data_for_output( pol_names,  pol_data);
+  
+  short num_var = variables.size(); 
+
+  short num_elem = eps_data.size()/6;
+
+  results.resize(num_var * num_elem);
+  legend.resize(num_var);
+
+  const set<string>::const_iterator varend = variables.end();
+
+  //first we do strain
+
+  for (short i = 0; i <  num_var; i++)
+  {
+   
+    for (short i1 = 0; i1 < 6; i1++)
+    {
+      if ( variables.find(eps_names[i1]) != varend )
+      {
+	legend[i] = eps_names[i1];
+	for (unsigned int j = 0; j < num_elem; j++)
+	  results[i + j * num_var ] = eps_data[i1 + j * 6];  
+       
+      }
+    }
+  }
+  
+  //now we do polarization
+
+  for (short i = 0; i <  num_var; i++)
+  {
+   
+    for (short i1 = 0; i1 < 3; i1++)
+    {
+      if ( variables.find(pol_names[i1]) != varend )
+      {
+	legend[i] = pol_names[i1];
+	for (unsigned int j = 0; j < num_elem; j++)
+	  results[i + j * num_var ] = pol_data[i1 + j * 3];  
+	
+      }
+    }
+  }
+
+ 
+
+}
+
+//-------------------------------------------------------------------------//
+
 PhysicalModel*
 Macrostrain::create_physical_model(const ModelOptions& options) const
 throw (ModelErrorException)
@@ -26,7 +89,7 @@ throw (ModelErrorException)
 }
 
 
-
+//---------------------------------------------------------------------------//
 
 
 BoundaryProperties*
@@ -48,7 +111,7 @@ throw (ModelErrorException)
 }
 
 
-
+//----------------------------------------------------------------------------//
 
 
 
@@ -1365,11 +1428,11 @@ void Macrostrain::do_solve()
 
 
  
-  
-  std::ostringstream os1;
-  os1 <<"strain.dat" ;
-  output_strain(os1.str() );
-
+  /*
+    std::ostringstream os1;
+    os1 <<"strain.dat" ;
+    output_strain(os1.str() );
+  */
   //--------------------------------------------------------------------------------------------------//
  }
 
@@ -2023,15 +2086,12 @@ The constrants are the following:
 
 }
 //--------------------------------------------------------------------------------//
-//write out strain tensor component------------------------     ---------------
-void Macrostrain::output_strain(std::string filename )
+void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_names, std::vector<double>& eps_data ) 
 {
-
- 
- 
   char num_i[2];
   char num_j[2];
   string eps_ij;
+  
   
  
   double a_substrate[3];  substrate_crystal -> get_lat_const(a_substrate);
@@ -2068,8 +2128,10 @@ void Macrostrain::output_strain(std::string filename )
 
 
   unsigned int Number_of_elements = mesh.n_active_elem();
-  std::vector<Number> eps_data(Number_of_elements*6);
-  std::vector<std::string> eps_names(6);
+
+  eps_data.resize(Number_of_elements*6);
+  eps_names.resize(6);
+
   std::vector<Point> point_vec(1);
 
   
@@ -2090,6 +2152,7 @@ void Macrostrain::output_strain(std::string filename )
       {
 	sprintf( num_i, "%i",i);
 	sprintf( num_j, "%i",j);
+	
 
 	eps_ij = "eps_" + string(num_i) + string(num_j);
 
@@ -2108,7 +2171,7 @@ void Macrostrain::output_strain(std::string filename )
 
 	    Point center=elem->centroid();
 
-	    //  const int material = material_of_elem[elem_number];
+	   
 	    
 	    eps0 = eps0_of_elem[elem_number] + calculate_eps_lat_matching( elem ); //previous iterations and lattice matching
 	
@@ -2148,11 +2211,20 @@ void Macrostrain::output_strain(std::string filename )
 
 	index++;
       }
+}
 
-  //std :: cout << filename << "\n";
+//--------------------------------------------------------------------------------//
+//write out strain tensor component------------------------     ---------------
+void Macrostrain::output_strain(std::string filename )
+{
 
- 
-  
+  std::vector<std::string> eps_names;
+
+  std::vector<double> eps_data;
+
+  prepare_strain_data_for_output(  eps_names,  eps_data );
+
+  const Mesh& mesh = equation_systems->get_mesh();
 
   if (output_type == "GMV")     GMVIO_cell(mesh).write_ascii_cell_data(filename, eps_data, eps_names);
 
@@ -2160,17 +2232,19 @@ void Macrostrain::output_strain(std::string filename )
 
 }
 //---------------------------------------------------------------------------
-//writes piezopolarization in GMV format
-void Macrostrain::output_piezo(std :: string filename)
+
+void Macrostrain::prepare_polarization_data_for_output( std::vector<std::string>& polariz_names, std::vector<double>& polariz_data )
 {
+
   char num_i[2];
   const Mesh& mesh = equation_systems->get_mesh();
 
   unsigned int Number_of_elements = mesh.n_active_elem();
 
-  std::vector<Number> polariz_data(Number_of_elements*3);
+  polariz_data.resize(Number_of_elements*3);
 
-  std::vector<std::string> polariz_names(3);
+  polariz_names.resize(3);
+
   polariz_names[0] = "Px";
   polariz_names[1] = "Py";
   polariz_names[2] = "Pz";
@@ -2198,9 +2272,31 @@ void Macrostrain::output_piezo(std :: string filename)
       el_number++;
 
     }
+
+}
+
+//---------------------------------------------------------------------------
+
+
+
+//writes piezopolarization in GMV ot tecplot format
+void Macrostrain::output_piezo(std :: string filename)
+{
+  
+  const Mesh& mesh = equation_systems->get_mesh();
+
   
 
+  std::vector<double> polariz_data;
+
+  std::vector<std::string> polariz_names;
+ 
+  
+  prepare_polarization_data_for_output( polariz_names,  polariz_data );
+
+  
   if (output_type == "GMV")  GMVIO_cell(mesh).write_ascii_cell_data(filename, polariz_data, polariz_names);
+ 
   if (output_type == "tecplot") TecplotIO_cell(mesh,false).write_cell_data(filename, polariz_data, polariz_names);
 }
 
