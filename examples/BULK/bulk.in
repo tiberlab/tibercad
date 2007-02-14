@@ -69,7 +69,7 @@ $Solver
   sweep
   {
     boundary = anode
-    start = 0.5
+    start = 0.0
     stop = 1.0
     steps = 10
     plotvariable = current
@@ -95,8 +95,8 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = bulk1D.msh
-  dimension = 1
+  meshfile = bulk2D.msh
+  dimension = 2
   temperature = 300
   solve = sweep
   resultpath = output

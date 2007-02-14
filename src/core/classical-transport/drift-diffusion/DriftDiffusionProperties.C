@@ -66,6 +66,7 @@ DriftDiffusionProperties::do_init(void)
   else
     _electron_mobility = create_mobility_model();
   _electron_mobility->set_carrier_type('e');
+  _electron_mobility->init();
 
 
   // create hole mobility model
@@ -79,6 +80,7 @@ DriftDiffusionProperties::do_init(void)
   else
     _hole_mobility = create_mobility_model();
   _hole_mobility->set_carrier_type('h');
+  _hole_mobility->init();
 
   
   //
@@ -190,7 +192,6 @@ DriftDiffusionProperties::create_mobility_model(const ModelOptions& options)
  
   mobility_model->set_driftdiffusionproperties(this);
   mobility_model->set_material(get_material());
-  mobility_model->init();
 
   return mobility_model;
 }
@@ -500,7 +501,6 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 
   set_carrier_temperatures(kT, kT);
 
-  //cerr << "guess: " << x << " T = " << kT << "\n";
   do
   {
     set_potentials(x);
@@ -512,8 +512,6 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
     double df = hole_density_derivative - electron_density_derivative +
       ionized_donor_density_derivative - ionized_acceptor_density_derivative;
 
-    //cerr << "x = " << setprecision(12) << x <<
-    //  "  f(x) = " << f << "  df = " << df << "\n";
 
     // At low temperatures everything is very sensitive on dx, so we don't
     // allow it to be bigger than k*T. At high temperatures this should not

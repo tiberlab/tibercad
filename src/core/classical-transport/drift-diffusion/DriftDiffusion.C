@@ -542,6 +542,20 @@ DriftDiffusion::do_solve(void)
   if (_solve_equilibrium)
     solve_equilibrium();
 
+
+  const ModelOptions& opts = SimulationInterface::get_options();
+  if (opts.find_option("quasi_equilibrium"))
+  {
+    vector<double> qfpot(2, 0.0);
+    opts.get_option("quasi_equilibrium", qfpot);
+    assert(qfpot.size() == 2);
+    set_electron_fermi_level(qfpot[0]);
+    set_hole_fermi_level(qfpot[1]);
+
+    get_options().coupling = POISSON;
+  }
+
+
   switch (_options.solver_method)
   {
     case GUMMEL:
@@ -848,7 +862,8 @@ DriftDiffusion::parse_options(void)
   else if (lstype == "quadratic")
     solver_params.ls_type = 2;
 
-  solver_params.ls_maxstep = opts.get_option("ls_maxstep", 0.05);
+  solver_params.ls_maxstep = opts.get_option("ls_max_step",
+      solver_params.ls_maxstep);
 
   string pc = opts.get_option("pc_type", "");
   if (pc == "") {}
@@ -2068,7 +2083,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
   }
 
   int edens = -1;
-  if (variables.find("n") != varend)
+  if (variables.find("eDensity") != varend)
   {
     edens = n_vars;
     legend[n_vars] = "electron_density";
@@ -2076,7 +2091,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
   }
 
   int hdens = -1;
-  if (variables.find("p") != varend)
+  if (variables.find("hDensity") != varend)
   {
     hdens = n_vars;
     legend[n_vars] = "hole_density";
@@ -2161,7 +2176,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
 
 
   int mun = -1;
-  if (variables.find("e_mob") != varend)
+  if (variables.find("eMob") != varend)
   {
     mun = n_vars;
     legend[n_vars] = "electron_mobility";
@@ -2169,7 +2184,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
   }
 
   int mup = -1;
-  if (variables.find("h_mob") != varend)
+  if (variables.find("hMob") != varend)
   {
     mup = n_vars;
     legend[n_vars] = "hole_mobility";

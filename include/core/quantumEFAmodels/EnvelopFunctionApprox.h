@@ -492,14 +492,14 @@ class EnvelopFunctionApprox  : public SimulationInterface
   /*!
     \param i number of the eigenstate
    */
-  std::vector<double> EnvelopFunctionApprox::calculate_prob_function(unsigned int i);
+  std::vector<double> calculate_prob_function(unsigned int i);
 
 
   //! calculate density without \f$ \frac{1}{\Sigma_0} \int_{\Sigma_0} | \psi_i (r) |^2 /,dV \f$
   /*!
     \param i number of the eigenstate
   */
-  std::vector<double> EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int i);
+  std::vector<double> calculate_cell_prob_function(unsigned int i);
 
 
 
