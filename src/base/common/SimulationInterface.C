@@ -14,6 +14,7 @@
 #include "Utils.h"
 
 #include "GMVIO_cell.h"
+#include "tecplot_IO_cell.h"
 #include "gnuplot_io.h"
 
 // LibMesh includes
@@ -265,7 +266,12 @@ SimulationInterface::plot(void)
     else if (format == "gnuplot")
       GnuPlotIO(dev.get_mesh()).write_nodal_data(filename, results, names);
     else if (format == "ise")
-      cout << "Output for Tecplot not yet supported." << endl;
+      TecplotIO(dev.get_mesh()).write_nodal_data(filename, results, names);
+    else
+    {
+      cout << "Output format not supported. Falling back to GMV." << endl;
+      GMVIO(dev.get_mesh()).write_nodal_data(filename, results, names);
+    }
   }
 
   // elemental values
@@ -273,14 +279,19 @@ SimulationInterface::plot(void)
   if (names.size() > 0)
   {
     string filename(outdir + "/" + get_name() +
-        "_elemental" + suffix + ".gmv");
+        "_elemental" + suffix + suff);
 
     if (format == "gmv")
       GMVIO_cell(dev.get_mesh()).write_ascii_cell_data(filename, results, names);
     else if (format == "gnuplot")
       cout << "GnuPlot does not currently support cell data." << endl;
     else if (format == "ise")
-      cout << "Output for Tecplot not yet supported." << endl;
+      TecplotIO_cell(dev.get_mesh()).write_cell_data(filename, results, names);
+    else
+    {
+      cout << "Output format not supported. Falling back to GMV." << endl;
+      GMVIO_cell(dev.get_mesh()).write_ascii_cell_data(filename, results, names);
+    }
   }
 
   // integrated properties

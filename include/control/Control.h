@@ -201,17 +201,6 @@ class Control
 
 
 inline
-Control::Control(const std::string& inputfile)
-  : _inputfile(inputfile),
-    _device(0),
-    _database(0),
-    _outputdir("."),
-    _filename_suffix("")
-{
-}
-
-
-inline
 Device&
 Control::get_device(void)
 {

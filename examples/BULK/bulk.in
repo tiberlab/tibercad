@@ -17,7 +17,7 @@ $Models
   model driftdiffusion
   { 
               
-     name driftdiff
+     name driftdiffusion
 
      phys_regions = (1)
 
@@ -48,7 +48,6 @@ $Models
 
 # Definition of  Model-dependent Solver parameters
 $Solver
-
 {
   driftdiffusion
   {
@@ -57,13 +56,10 @@ $Solver
     current_integration_method = rstf
   }
 
-  driftdiff
-  {
-  }
 
   sweep
   {
-    # simulation = driftdiff
+    #simulation = driftdiff
     boundary = anode
     start = 0.0
     stop = 1.0
@@ -91,12 +87,13 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = bulk1D.msh
-  dimension = 1
+  meshfile = bulk2Dtri.msh
+  dimension = 2
   temperature = 300
   solve = sweep
-  resultpath = output
-  plot = (Ec, Ev, QFermi_e, QFermi_h, ECurrent, AbsECurrent, current, NetRecombination)
+  resultpath = output_tri
+  output_format = ise
+  plot = (Ec, Ev, QFermi_e, QFermi_h, ECurrent, AbsECurrent, current)
 }
 
 

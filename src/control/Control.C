@@ -14,12 +14,33 @@
 #include "SimulationInterface.h"
 
 
+#include <boost/filesystem/operations.hpp>
+
 #include <iostream>
 #include <vector>
 #include <set>
 
 
 using namespace std;
+
+
+
+
+Control::Control(const std::string& inputfile)
+  : _inputfile(inputfile),
+    _device(0),
+    _database(0),
+    _outputdir("."),
+    _filename_suffix("")
+{
+  using namespace boost::filesystem;
+  
+  // we check here if the input file exists
+  path infile(_inputfile);
+  if (!exists(infile) || is_empty(infile) || is_directory(infile))
+    throw InitFailedException("Control: input file is invalid.");
+}
+
 
 
 Control::~Control(void)
@@ -88,7 +109,7 @@ Control::init(void) throw (InitFailedException)
   }
   catch (runtime_error& e)
   {
-    string msg("Control::init failed:\n     Cause: ");
+    string msg("Control::init failed.\n    Cause: ");
     msg += e.what();
     throw InitFailedException(msg);
   }
@@ -99,6 +120,8 @@ Control::init(void) throw (InitFailedException)
 void
 Control::create_device(void)
 {
+  using namespace boost::filesystem;
+  
   InputParser parser(_inputfile);
 
   ModelOptions opts = parser.read_parameters("Simulation");
@@ -115,12 +138,18 @@ Control::create_device(void)
   for (unsigned int i = 0; i < vars.size(); i++)
     _plotvariables.insert(vars[i]);
 
+  // create output directory
   _outputdir = opts.get_option("resultpath", _outputdir);
   opts.delete_option("resultpath");
-  //! create _outputdir / check if is empty
+  path outpath(_outputdir);
+  if (!exists(outpath))
+    create_directory(outpath);
+    
+  if (!(exists(outpath) && is_directory(outpath)))
+    throw InitFailedException("Control: cannot create / use output directory.");
+
 
   _output_format = opts.get_option("output_format", "gmv");
-
 
   _device = Device::create(opts);
 
@@ -202,7 +231,7 @@ Control::setup_models(void) throw (ModelErrorException)
     
     // get the user defined name (if defined...)
     const string& simulation_name = model_str->get_simulation_name();
-    if (!simulation_name.empty())
+    if (!simulation_name.empty() && (simulation_name != modelname))
     {
       solveropts += parser.read_parameters("Solver", simulation_name);
       solveropts["name"] = simulation_name;
@@ -321,8 +350,6 @@ Control::run_simulation(void) throw (SolveFailedException)
   InputParser parser(_inputfile);
 
   const ModelOptions& opts = parser.read_parameters("Simulation");
-
-  _outputdir = opts.get_option("resultpath", _outputdir);
 
   vector<string> names;
   opts.get_option("solve", names);

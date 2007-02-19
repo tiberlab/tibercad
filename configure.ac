@@ -90,6 +90,14 @@ if test "${tc_cv_boost_regex_lib-no}" == "no"; then
   AC_MSG_ERROR([Boost:regex is not available, but it is needed for TiberCAD!])
 fi
 
+# boost filesystem
+TC_BOOST_FILESYSTEM
+if test "${tc_cv_boost_filesystem_lib-no}" == "no"; then
+  AC_MSG_NOTICE([])
+  AC_MSG_ERROR([Boost:filesystem is not available, but it is needed for TiberCAD!])
+fi
+
+
 # GSL GNU scientific library
 TC_GSL
 # add RPATH to LDFLAGS
