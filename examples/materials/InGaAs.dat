@@ -1,0 +1,28 @@
+# InGaAs-zb
+
+structure = zb
+
+bow_Eg_G = 0.477
+bow_Eg_L = 0.33
+bow_Eg_X = 1.4
+
+bow_E_v = -0.38 # Vurgaftman
+#bow_E_v = -0.0511 # Nextnano
+
+bow_m_G = 0.0091
+
+bow_a_c = 2.61
+bow_abs_def_pot_L = 2.61
+bow_abs_def_pot_X = 2.61
+bow_uniax_def_pot_L = 0.0
+bow_uniax_def_pot_X = 0.0
+
+bow_a_v = 0.0
+bow_b = 0.0
+bow_d = 0.0
+
+bow_delta = 0.15
+#bow_gamma1 = -11.52
+#bow_gamma2 = -10.38
+#bow_gamma3 = -11.34
+

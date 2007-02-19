@@ -180,8 +180,8 @@ Control::setup_models(void) throw (ModelErrorException)
   const map<const string, ModelStructure*>::const_iterator modend(models.end());
   for ( ; modit != modend; ++modit)
   {
-    const string& modelname = modit->first;
     ModelStructure* model_str = modit->second;
+    const string& modelname = model_str->get_model_name();
 
     //
     // extract the physical regions
@@ -196,10 +196,17 @@ Control::setup_models(void) throw (ModelErrorException)
     //
     // now create the simulation
     //
-    
+
     // read options for this simulation (from Solver section)
-    const ModelOptions& solveropts =
-      parser.read_parameters("Solver", modelname);
+    ModelOptions solveropts(parser.read_parameters("Solver", modelname));
+    
+    // get the user defined name (if defined...)
+    const string& simulation_name = model_str->get_simulation_name();
+    if (!simulation_name.empty())
+    {
+      solveropts += parser.read_parameters("Solver", simulation_name);
+      solveropts["name"] = simulation_name;
+    }
 
     SimulationInterface* sim =
       SimulationInterface::create(modelname, solveropts);
