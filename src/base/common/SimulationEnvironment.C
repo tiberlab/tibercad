@@ -1,6 +1,7 @@
 // $Id$
 
 #include "SimulationEnvironment.h"
+#include "Control.h"
 #include "Device.h"
 #include "Boundary.h"
 
@@ -13,7 +14,8 @@ SimulationEnvironment::SimulationEnvironment(
     Device& device, std::set<ID> region_numbers)
   : _device(&device),
     _region_numbers(region_numbers),
-    _is_initialized(false)
+    _is_initialized(false),
+    _is_prepared(false)
 {
 }
 
@@ -21,7 +23,8 @@ SimulationEnvironment::SimulationEnvironment(
 SimulationEnvironment::SimulationEnvironment(
     Device& device, ID region_number)
   : _device(&device),
-    _is_initialized(false)
+    _is_initialized(false),
+    _is_prepared(false)
 {
   _region_numbers.insert(region_number);
 }
@@ -109,6 +112,7 @@ SimulationEnvironment::create_element_list(void)
       _element_list.insert(elem);
   }
 }
+
 
 
 void
@@ -280,6 +284,13 @@ SimulationEnvironment::get_boundary_id(const std::string& name) const
 void
 SimulationEnvironment::prepare_for_solve(void)
 {
+  assert(_device != NULL);
+
+  // check if we are already prepared
+  if (is_prepared())
+    return;
+
+  
   Mesh& mesh = _device->get_mesh();
 
   MeshBase::element_iterator it = mesh.elements_begin();
@@ -294,6 +305,10 @@ SimulationEnvironment::prepare_for_solve(void)
     else
       el->set_refinement_flag(Elem::INACTIVE);
   }
+
+  (_device->get_control()).invalidate_environments();
+  
+  _is_prepared = true;
 }
 
 

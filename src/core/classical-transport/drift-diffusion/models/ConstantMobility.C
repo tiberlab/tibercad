@@ -28,6 +28,7 @@ ConstantMobility::read_database(void)
 void
 ConstantMobility::do_init(void)
 {
+  _mu0 = get_options().get_option("mu", _mu0);
   std::string s("mu_");
   s += get_carrier_type();
   _mu0 = get_material()->get_options().get_option(s, _mu0);

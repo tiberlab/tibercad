@@ -6,6 +6,7 @@
 #include <typeinfo>
 #include <string>
 #include <vector>
+#include <iostream>
 
 //! This class contains useful methods for different tasks
 class Utils
@@ -104,7 +105,7 @@ Utils::convert<bool>(const std::string& val)
 {
   bool res;
 
-  if ((val == "true") || (val == "1"))
+  if ((val == "true") || (val == "1") || (val == "TRUE"))
     res = true;
   else
     res = false;

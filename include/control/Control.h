@@ -108,6 +108,23 @@ class Control
     void append_to_filename_suffix(const std::string& suffix);
 
 
+    //! Get the output format
+    /*!
+     * \return a string that identifies the type ouf output files
+     * to generate
+     *
+     * Currently the following formats are supported:
+     * \li \c gmv for GMV 
+     * \li \c ise for Tecplot
+     * \li \c gnu for GnuPlot
+     */
+    const std::string& get_output_format(void) const;
+
+
+    //! Mark all environments as unprepared
+    void invalidate_environments(void);
+
+
 
   private:
 
@@ -154,6 +171,13 @@ class Control
 
     //! The filename suffix
     std::string _filename_suffix;
+
+
+    //! The output format
+    /*!
+     * see get_output_format() for a detailed description
+     */
+    std::string _output_format;
 
     
     //! Create the device
@@ -248,6 +272,14 @@ Control::append_to_filename_suffix(const std::string& suffix)
     _filename_suffix += "_" + suffix;
   else
     _filename_suffix += suffix;
+}
+
+
+inline
+const std::string&
+Control::get_output_format(void) const
+{
+  return _output_format;
 }
 
 

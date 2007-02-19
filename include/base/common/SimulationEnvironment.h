@@ -218,6 +218,14 @@ class SimulationEnvironment
     //! Tell if this environment is initialized
     bool is_initialized(void) const;
 
+    
+    //! Tell if this environment is prepared for solve
+    bool is_prepared(void) const;
+
+
+    //! Set the \c unprepared flag
+    void invalidate(void);
+
 
 
   private:
@@ -281,6 +289,10 @@ class SimulationEnvironment
     //! Tells if this environment is already initialized
     bool _is_initialized;
 
+
+    //! Tells if this environment is prepared for solve
+    bool _is_prepared;
+
 };
 
 
@@ -312,7 +324,24 @@ SimulationEnvironment::is_initialized(void) const
 {
   return _is_initialized;
 }
-    
+ 
+
+inline
+bool
+SimulationEnvironment::is_prepared(void) const
+{
+  return _is_prepared;
+}
+     
+
+inline
+void
+SimulationEnvironment::invalidate(void)
+{
+  _is_prepared = false;
+}
+
+
 
 inline
 bool

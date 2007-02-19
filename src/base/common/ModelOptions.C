@@ -94,7 +94,7 @@ ModelOptions::print_all(void) const
 
   if (!_submodels.empty())
   {
-    cout << "Submodel ";
+    cout << "Submodels:" << endl;
     const_submodel_iterator it(_submodels.begin());
     const const_submodel_iterator end(_submodels.end());
     for ( ; it != end; ++it)

@@ -252,6 +252,7 @@ ModelOptions::get_option(const std::string& name, T default_value) const
 
 
 
+
 inline
 bool
 ModelOptions::is_empty(void) const

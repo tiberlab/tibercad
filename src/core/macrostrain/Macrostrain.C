@@ -1028,7 +1028,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
    
  
 
-
+#ifdef DEBUG
   std:: cout<< "matrix is done \n";  
    
   // system.rhs->print();
@@ -1039,6 +1039,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
   std:: cout << "Total dofs number   " << system.n_dofs()   	<< "\n";
 
   std:: cout << "Constraint dofs number " <<  system.n_constrained_dofs()   	<< "\n";
+#endif
       
 
 
@@ -1284,14 +1285,12 @@ void Macrostrain::do_solve()
 	  
 	  output_add_strain_variables(os2.str());
 	}
+      std::cout << "\n" ;
+      std::cout << "Final Mesh after  " <<  max_r_steps <<" refinements  steps   " <<  "\n" ;
+      mesh.print_info();
+      std::cerr << "Grid refinement is done \n";
     }
 
-  std::cout << "\n" ;
-  std::cout << "Final Mesh after  " <<  max_r_steps <<" refinements  steps   " <<  "\n" ;
-  mesh.print_info();
-
-
-  std::cerr << "Grid refinement is done \n";
 
  
 

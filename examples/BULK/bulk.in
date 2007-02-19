@@ -6,9 +6,8 @@ $Device
    {
      reg_numb = 1
      mat = Si
-     doping = 1e16 doping_type = donor 
+     doping = 1e16 doping_type = donor
    }
-
 }
 
 
@@ -18,17 +17,9 @@ $Models
   model driftdiffusion
   { 
               
+     name driftdiff
+
      phys_regions = (1)
-
-     physical_model recombination
-     {
-       model = SRH
-     }
-
-     physical_model recombination
-     {
-       model = direct
-     }
 
 
     BC_Regions  
@@ -95,8 +86,8 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = bulk2D.msh
-  dimension = 2
+  meshfile = bulk1D.msh
+  dimension = 1
   temperature = 300
   solve = sweep
   resultpath = output

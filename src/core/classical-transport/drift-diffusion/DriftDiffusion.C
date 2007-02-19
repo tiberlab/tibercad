@@ -230,14 +230,18 @@ BoundaryProperties*
 DriftDiffusion::create_boundary_model(const ModelOptions& options) const
 throw (ModelErrorException)
 {
-  const string& modelname = options.get_option("type", "ohmic");
+  const string& modelname = options.get_option("type", "");
 
-  ElectricalContact* model =
-    ElectricalContact::create(modelname, options);
+  ElectricalContact* model = NULL;
 
-  if (model == NULL)
-    throw ModelErrorException(
-        "DriftDiffusion: No such boundary model: " + modelname);
+  if (modelname != "")
+  {
+    model =  ElectricalContact::create(modelname, options);
+
+    if (model == NULL)
+      throw ModelErrorException(
+          "DriftDiffusion: No such boundary model: " + modelname);
+  }
 
   return model;
 }
@@ -470,6 +474,7 @@ DriftDiffusion::find_dirichlet_nodes(void)
     Boundary* bd = env.get_boundary(id);
 
     ElectricalContact* contact = NULL;
+    if (bd != NULL)
       contact = dynamic_cast<ElectricalContact*>(
           bd->get_boundary_properties(get_id()));
 
@@ -546,11 +551,26 @@ DriftDiffusion::do_solve(void)
   const ModelOptions& opts = SimulationInterface::get_options();
   if (opts.find_option("quasi_equilibrium"))
   {
-    vector<double> qfpot(2, 0.0);
+    vector<string> qfpot(2, "");
     opts.get_option("quasi_equilibrium", qfpot);
     assert(qfpot.size() == 2);
-    set_electron_fermi_level(qfpot[0]);
-    set_hole_fermi_level(qfpot[1]);
+    Boundary* boundary = get_environment().get_boundary(qfpot[0]);
+    ElectricalContact* contact;
+    if (boundary != NULL)
+    {
+      contact = dynamic_cast<ElectricalContact*>(
+          boundary->get_boundary_properties(get_id()));
+      if (contact != NULL)
+        set_electron_fermi_level(contact->get_simulation_voltage());
+    }
+    boundary = get_environment().get_boundary(qfpot[1]);
+    if (boundary != NULL)
+    {
+      contact = dynamic_cast<ElectricalContact*>(
+          boundary->get_boundary_properties(get_id()));
+      if (contact != NULL)
+        set_hole_fermi_level(contact->get_simulation_voltage());
+    }
 
     get_options().coupling = POISSON;
   }
@@ -612,7 +632,10 @@ DriftDiffusion::solve_equilibrium(void)
 
   try
   {
+    cerr << "Solving equilibrium" << endl;
     system.solve();
+    system.get_vector("old solution") = *system.solution;
+    cerr << "Equilibrium done" << endl;
   }
   catch (runtime_error& e)
   {
@@ -1002,6 +1025,8 @@ DriftDiffusion::solve_newton(void)
   try
   {
     system.solve();
+    system.get_vector("old solution") = *system.solution;
+
     failure = false;
   }
   catch (PetscDivergedError& e)
@@ -1038,8 +1063,12 @@ DriftDiffusion::solve_newton(void)
       {
         system.solve();
         failure = false;
+        system.get_vector("old solution") = *system.solution;
       }
-      catch (...) {}
+      catch (...)
+      {
+        system.nonlinear_solver->clear();
+      }
     }
     else
       system.nonlinear_solver->clear();
@@ -1050,7 +1079,10 @@ DriftDiffusion::solve_newton(void)
   }
 
   if (failure)
+  {
+    *system.solution = system.get_vector("old solution");
     throw SolveFailedException(msg);
+  }
 
   _options.C0_e = _options.n_max;
   _options.C0_h = _options.p_max;
@@ -3199,8 +3231,8 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
 
       double n = sc->get_electron_density();
       double p = sc->get_hole_density();
-      double Nd = sc->get_ionized_donor_density();
-      double Na = sc->get_ionized_acceptor_density();
+      //double Nd = sc->get_ionized_donor_density();
+      //double Na = sc->get_ionized_acceptor_density();
       
       double epsilon = sc->get_relative_permittivity();
       double l2_eps = l2 * epsilon;
@@ -3214,7 +3246,7 @@ DriftDiffusion::do_assembly_new(const NumericVector<Number>& x,
       n_max = (n_max > n) ? n_max : n;
       p_max = (p_max > p) ? p_max : p;
 
-      double ni = sc->get_intrinsic_density();
+      //double ni = sc->get_intrinsic_density();
       double mue = sc->get_electron_mobility();
       double muh = sc->get_hole_mobility();
 
@@ -4206,8 +4238,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
       double n = sc->get_electron_density();
       double p = sc->get_hole_density();
-      double Nd = sc->get_ionized_donor_density();
-      double Na = sc->get_ionized_acceptor_density();
+      //double Nd = sc->get_ionized_donor_density();
+      //double Na = sc->get_ionized_acceptor_density();
       
       double epsilon = sc->get_relative_permittivity();
       double l2_eps = l2 * epsilon;
@@ -4221,7 +4253,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       n_max = (n_max > n) ? n_max : n;
       p_max = (p_max > p) ? p_max : p;
 
-      double ni = sc->get_intrinsic_density();
+      //double ni = sc->get_intrinsic_density();
       double mue = sc->get_electron_mobility();
       double muh = sc->get_hole_mobility();
 

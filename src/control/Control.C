@@ -46,6 +46,16 @@ Control::~Control(void)
 }
 
 
+void
+Control::invalidate_environments(void)
+{
+  EnvironmentMap::iterator envit(_simulation_environments.begin());
+  const EnvironmentMap::iterator envend(_simulation_environments.end());
+  for ( ; envit != envend; ++envit)
+    envit->second->invalidate();
+}
+
+
 
 void
 Control::init(void) throw (InitFailedException)
@@ -78,7 +88,7 @@ Control::init(void) throw (InitFailedException)
   }
   catch (runtime_error& e)
   {
-    string msg("Control::init failed:\nCause: ");
+    string msg("Control::init failed:\n     Cause: ");
     msg += e.what();
     throw InitFailedException(msg);
   }
@@ -109,6 +119,7 @@ Control::create_device(void)
   opts.delete_option("resultpath");
   //! create _outputdir / check if is empty
 
+  _output_format = opts.get_option("output_format", "gmv");
 
 
   _device = Device::create(opts);
@@ -238,7 +249,8 @@ Control::setup_models(void) throw (ModelErrorException)
 
       // NOTE: model could be NULL, but we don't care about. Who tells us that
       // every simulation necessarily needs a model?
-      mat->add_model(model, sim->get_id());
+      if (model != NULL)
+        mat->add_model(model, sim->get_id());
     }
 
 
@@ -253,6 +265,10 @@ Control::setup_models(void) throw (ModelErrorException)
     for ( ; bdit != bdend; ++bdit)
     {
       ID id = bdit->first;
+#ifdef DEBUG
+      cerr << "Add boundary \'" << (bdit->second).get_region_name()
+        << "\' (region nr. " << id << ")\n";
+#endif
 
       const ModelOptions& bdopts = (bdit->second).get_options();
 
@@ -262,7 +278,8 @@ Control::setup_models(void) throw (ModelErrorException)
 
       // NOTE: bdprop could be NULL, but we don't care about. Who tells us that
       // every simulation necessarily needs a boundary model?
-      bd->add_boundary_properties(bdprop, sim->get_id());
+      if (bdprop != NULL)
+        bd->add_boundary_properties(bdprop, sim->get_id());
       env->add_boundary(bd, id);
     }
 
@@ -326,7 +343,6 @@ Control::run_simulation(void) throw (SolveFailedException)
   for (unsigned int i = 0; i < n; i++)
   {
     SimulationInterface* sim = simulations[i];
-    (sim->get_environment()).prepare_for_solve();
     sim->solve();
     sim->plot();
   }

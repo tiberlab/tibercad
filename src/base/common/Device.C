@@ -56,10 +56,11 @@ Device::setup_mesh(void)
 {
 
   delete _mesh;
-  _mesh = new Mesh(_options.get_option("dimension", 2));
+  
+  int dim = _options.get_option("dimension", 2);
+  _mesh = new Mesh(dim);
 
   const string& meshfile = _options["meshfile"];
-  int dim = _options.get_option("dimension", 2);
   
   MeshData_elements meshdata(*_mesh);
   meshdata.enable_compatibility_mode();

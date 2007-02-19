@@ -14,6 +14,7 @@
 #include "Utils.h"
 
 #include "GMVIO_cell.h"
+#include "gnuplot_io.h"
 
 // LibMesh includes
 #include "system.h"
@@ -100,8 +101,12 @@ SimulationInterface::init(void) throw (InitFailedException)
   {
     // build name for equation systems
     create_equation_system_name();
+
+    if (_environment != NULL)
+      _environment->prepare_for_solve();
     
     do_init();
+    
   }
 
   _is_initialized = true;
@@ -178,6 +183,9 @@ SimulationInterface::solve(void) throw (SolveFailedException)
 
   assert(_is_initialized);
 
+  if (_environment != NULL)
+    _environment->prepare_for_solve();
+
   do_solve();
 
   _is_solved = true;
@@ -234,6 +242,13 @@ SimulationInterface::plot(void)
 
   string suffix = get_control().get_filename_suffix();
   string outdir = get_control().get_output_dir();
+  string format = get_control().get_output_format();
+
+  string suff;
+  if (format == "gmv")
+    suff = ".gmv";
+  else if (format == "ise")
+    suff = ".plt";
 
   vector<double> results;
   vector<string> names;
@@ -243,9 +258,14 @@ SimulationInterface::plot(void)
   if (names.size() > 0)
   {
     string filename(outdir + "/" + get_name() +
-        "_nodal" + suffix + ".gmv");
+        "_nodal" + suffix + suff);
 
-    GMVIO(dev.get_mesh()).write_nodal_data(filename, results, names);
+    if (format == "gmv")
+      GMVIO(dev.get_mesh()).write_nodal_data(filename, results, names);
+    else if (format == "gnuplot")
+      GnuPlotIO(dev.get_mesh()).write_nodal_data(filename, results, names);
+    else if (format == "ise")
+      cout << "Output for Tecplot not yet supported." << endl;
   }
 
   // elemental values
@@ -255,7 +275,12 @@ SimulationInterface::plot(void)
     string filename(outdir + "/" + get_name() +
         "_elemental" + suffix + ".gmv");
 
-    GMVIO_cell(dev.get_mesh()).write_ascii_cell_data(filename, results, names);
+    if (format == "gmv")
+      GMVIO_cell(dev.get_mesh()).write_ascii_cell_data(filename, results, names);
+    else if (format == "gnuplot")
+      cout << "GnuPlot does not currently support cell data." << endl;
+    else if (format == "ise")
+      cout << "Output for Tecplot not yet supported." << endl;
   }
 
   // integrated properties

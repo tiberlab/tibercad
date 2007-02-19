@@ -149,8 +149,8 @@ Sweep::do_solve(void)
   // we make a copy of the current solution
   // we need this in the case of a solver failure to go back
   // to an old successful solution
-  AutoPtr<NumericVector<Real> > old_sol = 
-    (_simulation->get_solution_vector()).clone();
+  //AutoPtr<NumericVector<Real> > old_sol = 
+  //  (_simulation->get_solution_vector()).clone();
 
   unsigned int n = _values.size();
 
@@ -217,7 +217,7 @@ Sweep::do_solve(void)
         if (abs(step) < _min_step)
           throw SolveFailedException("Sweep: step size small.");
 
-        _simulation->get_solution_vector() = *old_sol;
+        //_simulation->get_solution_vector() = *old_sol;
 
         // it failed, so we go back to the old value
         // (In principle this is unnecessary, but we need it to not
@@ -227,7 +227,7 @@ Sweep::do_solve(void)
     }
     while (goal_sign * (value - goal) < 0.0);
 
-    *old_sol = _simulation->get_solution_vector();
+    //*old_sol = _simulation->get_solution_vector();
   }
 
   plotfile.close();

@@ -46,7 +46,8 @@ void
 DriftDiffusionProperties::do_init(void)
 {
 
-  if (get_options().get_option("statistics", "B") == "FD")
+  const string stat("B");
+  if (get_options().get_option("statistics", stat) == "FD")
     set_statistics(TiberCad::FERMIDIRAC);
 
   //
