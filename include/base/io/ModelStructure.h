@@ -82,21 +82,34 @@ class ModelStructure{
   /*!
    * Returns a vector with the physical regions IDs   associated to the  current model.
    */
-  std::vector<std::string> get_physical_regions();
+  //  std::vector<std::string> get_physical_regions();
+  const std::string  get_physical_regions();
 
 
   //!  Sets a  vector with the physical regions IDs of this model. 
   /*!
    * Creates  a vector with the physical regions IDs   associated to the  current model.
    */
-  void set_physical_regions( std::vector<std::string>& list_phys_regions);
-
+  //  void set_physical_regions( std::vector<std::string>& list_phys_regions);
+  void set_physical_regions( const std::string& list_phys_regions);
  
   //!  Gets a  string with the name of the model.
   std::string  get_model_name();
 
   //!  Gets a  string with the name of  the present simulation.
   std::string  get_simulation_name();
+
+ //!  Set  the generic options for the present model. 
+  /*!
+   * 
+   */
+  void set_model_options(ModelOptions& generic_options);
+
+ //!  Returns the generic options associated to the model. 
+  /*!
+   * Returns a reference to object ModelOptions.
+   */
+  const ModelOptions&  get_model_options() const;
 
   //----------------------------------------------------------------------------------
 
@@ -107,20 +120,26 @@ class ModelStructure{
   //! Model name.
   std::string model_name;
 
+
+ //!  Contains a ModelOptions description of generic_model_options 
+  /*!
+   * 
+   */
+  ModelOptions    generic_model_options;
+
+
   //! Simulation name(user-defined name for a particular simulation of type "model_name").
   std::string simulation_name;
 
 
   //!  Physical regions associated to this  model
-  std::vector<std::string>  physical_regions;   
+  // std::vector<std::string>  physical_regions; 
+  std::string  physical_regions; 
 
   /*! Map which associates Boundary Conditions IDs with the RegionStructure  of
-   * the   Boundary Condition  region.
+   * that   Boundary Condition  region.
    */
   std::map <ID, RegionStructure> model_BC_map;
-
-
-
 
 
   /*! Map of  the  physical models associated with the  current simulation model:

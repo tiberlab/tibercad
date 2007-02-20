@@ -59,11 +59,18 @@ multimap<const string,ModelOptions>& ModelStructure::get_physical_model_map()
 
 
 
-vector<string> ModelStructure::get_physical_regions()
+// vector<string> ModelStructure::get_physical_regions()
+// {
+ 
+//   return physical_regions;
+// }
+
+const string  ModelStructure::get_physical_regions()
 {
  
   return physical_regions;
 }
+
  
 
 void ModelStructure::set_model_name(const string& model)
@@ -133,10 +140,36 @@ void ModelStructure::set_physical_model_map( multimap <const string,ModelOptions
 
 
 
-void ModelStructure::set_physical_regions( vector<string>& list_phys_regions)
+// void ModelStructure::set_physical_regions( vector<string>& list_phys_regions)
+// {
+ 
+
+//   physical_regions = list_phys_regions;
+
+// }
+
+void ModelStructure::set_physical_regions( const string& list_phys_regions)
 {
  
 
   physical_regions = list_phys_regions;
 
 }
+
+
+void ModelStructure::set_model_options(ModelOptions& generic_options)
+{
+ 
+  generic_model_options = generic_options;
+
+}
+
+
+const ModelOptions&  ModelStructure::get_model_options() const
+{
+ 
+  return  generic_model_options;
+  
+}
+
+

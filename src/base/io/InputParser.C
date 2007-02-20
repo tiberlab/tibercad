@@ -65,8 +65,10 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
 
   if ( !in_stream.good() )
   {
-    std::cerr << "ERROR: Input file not good." 
-              << std::endl;
+
+ throw InitFailedException("ERROR: Input file not good");
+   //  std::cerr << "ERROR: Input file not good." 
+//               << std::endl;
     //   error();
   }
   in_stream >>  label;
@@ -87,15 +89,14 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
   }   
 
 
-  if (found == false)
+  //   if (found == false)
 
-  {
-    cerr << " Error: keyword "<< keyword <<  "  not  found !  " << endl ;
-    exit(1);
-
+  //   {
+  //     cerr << " Error: keyword "<< keyword <<  "  not  found !  " << endl ;
+  //     exit(1);
    
+  //   }
 
-  }
 
   return  found;
 
@@ -120,9 +121,11 @@ const  ModelOptions& InputParser::read_parameters(std::string section_name, cons
 
   if ( !in_stream.good() )
   {
-    std::cerr << "ERROR: Input file not good." 
-              << std::endl;
-    //   error();
+    throw InitFailedException("ERROR: Input file not good."); 
+
+  //   std::cerr << "ERROR: Input file not good." 
+//               << std::endl;
+//     //   error();
   }
 
   section_name = "$"+section_name;
@@ -190,8 +193,9 @@ const  ModelOptions&  InputParser::read_parameters(std::string section_name)
 
   if ( !in_stream.good() )
   {
-    std::cerr << "ERROR: Input file not good." 
-              << std::endl;
+    throw InitFailedException("ERROR: Input file not good."); 
+   //  std::cerr << "ERROR: Input file not good." 
+//               << std::endl;
     //   error();
   }
 
@@ -270,8 +274,10 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
 
   if ( !in_stream.good() )
   {
-    std::cerr << "ERROR: Input file not good." 
-              << std::endl;
+
+    throw InitFailedException("ERROR: Input file not good.");
+    // std::cerr << "ERROR: Input file not good." 
+//               << std::endl;
     //   error();
   }
   in_stream >>  label;
@@ -292,6 +298,8 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
   if (found == false)
 
   {
+
+
     cerr << " Error: keyword "<< keyword <<  "  not  found !  " << endl ;
     exit(1);
 
@@ -315,8 +323,10 @@ const map <const string, ModelStructure*>& InputParser::read_models()
 
   if ( !in_stream.good() )
   {
-    std::cerr << "ERROR: Input file not good." 
-              << std::endl;
+
+    throw InitFailedException("ERROR: Input file not good." );
+    // std::cerr << "ERROR: Input file not good." 
+//               << std::endl;
     //   error();
   }
 
@@ -664,14 +674,14 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 
         else  
 
-          //  throw InitFailedException("....................");
+          throw InitFailedException("SYNTAX ERROR in input file (block) ");
 
 
-        {
-          cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+        // {
+        //           cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
           
-          exit(1); 
-        }
+        //           exit(1); 
+        //         }
 
 
 
@@ -910,8 +920,10 @@ const map <ID, RegionStructure>& InputParser::read_device(void)
 
   if ( !in_stream.good() )
   {
-    std::cerr << "ERROR: Input file not good." 
-              << std::endl;
+
+    throw InitFailedException("ERROR: Input file not good." );
+    // std::cerr << "ERROR: Input file not good." 
+//               << std::endl;
     //   error();
   }
 
@@ -955,11 +967,13 @@ const map <ID, RegionStructure>& InputParser::read_device(void)
 
     if  (keyword != "Region")
     {
-      cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
-      cerr << " keyword Region is  missing " 
-           << endl;
+      throw InitFailedException("SYNTAX ERROR in input  file (device section): keyword Region is  missing! ");
+
+//       cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+//       cerr << " keyword Region is  missing " 
+//            << endl;
        
-      exit(1); 
+//       exit(1); 
     }
 
     //     read   region_name
@@ -1121,20 +1135,35 @@ InputParser::parse_model(ifstream& in_stream)
 
  
   
-  string numb_regions_keyword_string,phys_regions_keyword_string,BC_regions_keyword_string , 
-    keyword_BC_Region_string, model_keyword_string,phys_model_label,simulation_name_label    ;
+  string BC_regions_keyword_string , keyword_BC_Region_string, model_keyword_string,
+    phys_model_label, apply_label    ;
 
-  numb_regions_keyword_string = "numb_regions";
-  phys_regions_keyword_string = "phys_regions";
+  //  numb_regions_keyword_string = "numb_regions";
+  //  phys_regions_keyword_string = "phys_regions";
   BC_regions_keyword_string = "BC_Regions";
   keyword_BC_Region_string = "BC_Region";
   model_keyword_string  =  "model";
   phys_model_label = "physical_model";
-  simulation_name_label = "name";
+  //  simulation_name_label = "name";
+  //  physical_regions_label = "phys_regions";
+  apply_label = "apply_to";
+
+  set<string>  model_section_keywords;
+  // set<string>::iterator   s_it;
+
+  model_section_keywords.insert("BC_Regions");
+  model_section_keywords.insert("model");
+  model_section_keywords.insert("physical_model");
+  model_section_keywords.insert("apply_to");
+  model_section_keywords.insert("}");
+
+
+
 
   //  vector <ID> list_physical_regions  ;
 
-  vector <string> list_physical_regions  ;
+  //  vector <string> list_physical_regions  ;
+  string list_physical_regions  ;
 
   //  vector <string> model_list;  ->  private  member
 
@@ -1157,10 +1186,7 @@ InputParser::parse_model(ifstream& in_stream)
 
   if  (label != start_symb)
   {
-    cerr <<  "  SYNTAX ERROR in input  file (models)  " <<  endl;
-     
-       
-    exit(1); 
+     throw InitFailedException("  SYNTAX ERROR in input  file (models section)  ");  
   }
   
   //   find_keyword(in_stream,start_symb ); //  looks  for  "{"
@@ -1178,11 +1204,13 @@ InputParser::parse_model(ifstream& in_stream)
 
   if  ( model_keyword != model_keyword_string)
   {
-    cerr <<  "  SYNTAX ERROR in input  file (models)  " <<  endl;
-    cerr << " keyword model is  missing " 
-         << endl;
+    throw InitFailedException("SYNTAX ERROR in input  file: keyword model missing in models section  ");  
+
+   //  cerr <<  "  SYNTAX ERROR in input  file (models)  " <<  endl;
+//     cerr << " keyword model is  missing " 
+//          << endl;
        
-    exit(1); 
+//     exit(1); 
   }
 
 
@@ -1195,11 +1223,14 @@ InputParser::parse_model(ifstream& in_stream)
     // Model n
     if  (model_keyword != model_keyword_string)
     {
-      cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
-      cerr << " keyword model is  missing " 
-           << endl;
+
+      throw InitFailedException("SYNTAX ERROR in input  file: keyword model missing in models section  ");  
+
+      // cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+//       cerr << " keyword model is  missing " 
+//            << endl;
        
-      exit(1); 
+//       exit(1); 
     }
 
 
@@ -1227,10 +1258,13 @@ InputParser::parse_model(ifstream& in_stream)
 
     if  ( start_symbol !=start_symb )
     {
-      cerr <<  "  SYNTAX ERROR in input  file (1)  " <<  endl;
+
+      throw InitFailedException("SYNTAX ERROR in input  file: model block missing!   ");  
+
+      // cerr <<  "  SYNTAX ERROR in input file: model block missing!   " <<  endl;
   
        
-      exit(1); 
+//       exit(1); 
     }
 
 
@@ -1257,150 +1291,249 @@ InputParser::parse_model(ifstream& in_stream)
   
 
 
-    //   -------------------------------------------------------------------------
-    //  read    user-defined name of this specifical  model instance
+    //***********************************************************************
 
-    in_stream >>  label ;
+        //  NEW :  
+        //  read  optional label  "apply_to"
+        in_stream >>  label ;
     while (skip_comments(in_stream,  label ) == true )
     {
       in_stream >> label  ; // if  the  whole  line has
-      //  ben  skipped: read  the next keyword !!! 
+      //  been  skipped: read  the next keyword !!! 
     } 
 
-    if  ( label  != simulation_name_label )
+    // bool InputParser::check_label(set<string>& section_keywords, const string& label )
+
+    if (!check_label(model_section_keywords, label))
+      throw InitFailedException("SYNTAX ERROR in input  file: unknown keyword in models section! ");
+
+    if  ( label  == apply_label )
     {
-      cerr <<  "  SYNTAX ERROR in input  file: model name missing for model  " << 
-        model_name <<  endl;
-       
-      exit(1); 
+               
+      temp_options.clear();
+      parse_options(in_stream,temp_options);
+      current_model_point->set_model_options(temp_options );
+
+      // after apply_to  block,   read  the  next  label
+
+      in_stream >>  label ;
+      while (skip_comments(in_stream,  label ) == true )
+      {
+        in_stream >> label  ; // if  the  whole  line has
+        //  been  skipped: read  the next keyword !!! 
+      } 
+
+      if (!check_label(model_section_keywords, label))
+        throw InitFailedException("SYNTAX ERROR in input  file: unknown keyword in models section! ");
+
+
     }
 
 
-    // in_stream >> symbol;         //  "=" 
+    //  NEW ***********************
+    //  READ  OPTIONAL PHYSICAL_MODEL AND  OPTIONAL  BC_REGIONS
 
-    in_stream >> simulation_name   ; 
-    current_model_point->set_simulation_name( simulation_name);
-
-
-    //   -------------------------------------------------------------------------
+    //
 
 
 
-    //parse_list_phys_ID(ifstream& in_stream,vector<string>& list_regions   )
-    ////   vector<string> list_physical_regions;
-    parse_list_phys_ID(in_stream, list_physical_regions   );
-    //   cerr <<  " list_regions  = " << list_physical_regions[1] <<  endl;;
+    //*********************************************************************
+
+        //***********************************************************************
+
+
+            //  //   -------------------------------------------------------------------------
+            //     //  read    user-defined name of this specifical  model instance
+
+            //     //     optional !!!
+
+
+            //     in_stream >>  label ;
+            //     cerr << label<< endl;
+            //     while (skip_comments(in_stream,  label ) == true )
+            //     {
+            //       in_stream >> label  ; // if  the  whole  line has
+            //       //  ben  skipped: read  the next keyword !!! 
+            //     } 
+
+
+            //     //****************************
+
+
+
+
+            //             if  ( label  != physical_regions_label )
+            //           {
+     
+
+            //             if  ( label  != simulation_name_label )
+            //             {
+            //               cerr <<  "  SYNTAX ERROR in input  file: phys_regions label is  missing.  "  <<  endl;
+       
+            //               exit(1); 
+            //             }
+
+
+
+
+            //             in_stream >> simulation_name   ; 
+            //             current_model_point->set_simulation_name( simulation_name);
+
+
+            //             in_stream >>  label ;
+            //             while (skip_comments(in_stream,  label ) == true )
+            //             {
+            //               in_stream >> label  ; // if  the  whole  line has
+            //               //  ben  skipped: read  the next keyword !!! 
+            //             } 
+
+            //             if  ( label  != physical_regions_label )
+            //             {
+            //               cerr <<  "  SYNTAX ERROR in input  file: phys_regions label is  missing.  "  <<  endl;
+       
+            //               exit(1); 
+            //             }
+
+
+
+
+            //           }
+
+
+
+
+            //     //   -------------------------------------------------------------------------
+
+            //     // phys_regions label already  read !
+
+            //     //parse_list_phys_ID(ifstream& in_stream,vector<string>& list_regions   )
+            //     ////   vector<string> list_physical_regions;
+            //     parse_list_phys_ID(in_stream, list_physical_regions   );
+            //     //   cerr <<  " list_regions  = " << list_physical_regions[1] <<  endl;;
    
 
  
 
-    // **********************************
-    //  ModelStructure.set_physical_regions(list_physical_regions)   !!!!!!!!!!!!!!!!!!!!!!
-    current_model_point->set_physical_regions(list_physical_regions);
+            //     // **********************************
+            //     //  ModelStructure.set_physical_regions(list_physical_regions)   !!!!!!!!!!!!!!!!!!!!!!
+            //     current_model_point->set_physical_regions(list_physical_regions);
 
-    //  ****************************************************
+            //     //  ****************************************************
 
-    //  //  put  in  map  <list_physical_regions, model_name>
-    //     phys_reg_model_map.insert(make_pair (model_name,list_physical_regions ));
+            //     //  //  put  in  map  <list_physical_regions, model_name>
+            //     //     phys_reg_model_map.insert(make_pair (model_name,list_physical_regions ));
 
-    //     //  vector <string> model_list;
-    //     model_list.push_back(model_name);
+            //     //     //  vector <string> model_list;
+            //     //     model_list.push_back(model_name);
 
-    list_physical_regions.clear();
+            //     //   list_physical_regions.clear();
+            //     list_physical_regions = "";
 
   
-    //   ------------------------------------------------------------------------
+            //     //   ------------------------------------------------------------------------
 
-    //     // ************  read  physical  model  section ************
 
-    //  read   label "phys_mod"   ; 
-    in_stream >>  label; //  phys_model_label ;
-    while (skip_comments(in_stream, label ) == true )
-    {
-      in_stream >>  label ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-    } 
+
+
+
+            //     // ************  read  physical  model  section ************
+
+            //     //  read   label "phys_mod"   ; 
+            //     in_stream >>  label; //  phys_model_label ;
+            //     while (skip_comments(in_stream, label ) == true )
+            //     {
+            //       in_stream >>  label ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+            //     } 
 
  
-    //    if  ( label != phys_model_label )  //  &&   label != BC_regions_keyword_string 
-    if  ( (label != phys_model_label) &&   (label != BC_regions_keyword_string)  ) 
-    {
-      cerr <<  "  SYNTAX ERROR in input  file (models)  " <<  endl;
-      cerr << " keyword 'physical_model' or 'BC_Regions'  is  missing " 
-           << endl;
+            //     //    if  ( label != phys_model_label )  //  &&   label != BC_regions_keyword_string 
+            //     if  ( (label != phys_model_label) &&   (label != BC_regions_keyword_string)  ) 
+            //     {
+            //       cerr <<  "  SYNTAX ERROR in input  file (models)  " <<  endl;
+            //       cerr << " keyword 'physical_model' or 'BC_Regions'  is  missing " 
+            //            << endl;
        
-      exit(1); 
-    }
+            //       exit(1); 
+            //     }
 
-    while (  (label == phys_model_label  ) && (!in_stream.eof()) ) 
+
+            //******************************************************
+
+                while (  (label == phys_model_label  ) && (!in_stream.eof()) ) 
     
-    {  //  while loop  physical models
+              {  //  while loop  physical models
 
-      // phisical Model n
-      //    if  (label != phys_model_label)
-      //       {
-      //         cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
-      //         cerr << " keyword physical model is  missing " 
-      //              << endl;
+                // phisical Model n
+                //    if  (label != phys_model_label)
+                //       {
+                //         cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+                //         cerr << " keyword physical model is  missing " 
+                //              << endl;
        
-      //         exit(1); 
-      //       }
+                //         exit(1); 
+                //       }
 
-      in_stream >>  physical_model_name ;
+                in_stream >>  physical_model_name ;
 
-      while (skip_comments(in_stream, physical_model_name ) == true )
-      {
-        in_stream >>  model_name ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-      } 
+                while (skip_comments(in_stream, physical_model_name ) == true )
+                {
+                  in_stream >>  model_name ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+                } 
 
-      //     reset_all_maps();  //  clear  the  IP  maps !!!!
-
-
+                //     reset_all_maps();  //  clear  the  IP  maps !!!!
 
 
-      //*********************************
-          // create  new ModelOptions  
-          // ModelOptions temp_options; private  member 
-          // *********************************
 
-          temp_options.clear();
 
-      string_prop_labels_map.clear();  //  obsolete !!!!
+                //*********************************
+                    // create  new ModelOptions  
+                    // ModelOptions temp_options; private  member 
+                    // *********************************
+
+                    temp_options.clear();
+
+                string_prop_labels_map.clear();  //  obsolete !!!!
    
-      //    parse_options(in_stream);   //    read  the  block  between  { and  }
-      parse_options(in_stream,temp_options  );
+                //    parse_options(in_stream);   //    read  the  block  between  { and  }
+                parse_options(in_stream,temp_options  );
 
 
-      //parse_options(in_stream);   //    read  the  block  between  { and  }
-      // 
-      // 
-      //   current_model_point->set_phys_model_map( string_prop_labels_map);
+                //parse_options(in_stream);   //    read  the  block  between  { and  }
+                // 
+                // 
+                //   current_model_point->set_phys_model_map( string_prop_labels_map);
 
-      physical_model_map.insert(make_pair (physical_model_name,temp_options));
-      //    physical_model_map[physical_model_name]=temp_options;
-
-
-
-      //  current_model_point->set_phys_model_options(  temp_options );// old
-
-      current_model_point->set_physical_model_map(physical_model_map);
-
-
-      // void set_phys_model_options(  ModelOptions& physical_model_options  );
+                physical_model_map.insert(make_pair (physical_model_name,temp_options));
+                //    physical_model_map[physical_model_name]=temp_options;
 
 
 
-      string_prop_labels_map.clear();   //  obsolete !!!!  
+                //  current_model_point->set_phys_model_options(  temp_options );// old
+
+                current_model_point->set_physical_model_map(physical_model_map);
+
+
+                // void set_phys_model_options(  ModelOptions& physical_model_options  );
+
+
+
+                string_prop_labels_map.clear();   //  obsolete !!!!  
  
 
-      in_stream >>  label; 
+                in_stream >>  label; 
    
-      while (skip_comments(in_stream, label ) == true )
-      {
-        in_stream >> label ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-      } 
+                while (skip_comments(in_stream, label ) == true )
+                {
+                  in_stream >> label ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+                } 
   
+                if (!check_label(model_section_keywords, label))
+                  throw InitFailedException("SYNTAX ERROR in input  file: unknown keyword in models section! ");
 
-    }// end while loop  physical models
+
+
+
+              }// end while loop  physical models
 
 
     //     //   ----------------------------------------------------------------
@@ -1415,25 +1548,55 @@ InputParser::parse_model(ifstream& in_stream)
 
     //    in_stream >> BC_regions_keyword;  //  already  read !!!
 
+    // *****************************************************
+    // if label   == }  then  skip  to  NEXT  MODEL  !!!
+    // ******************************************************
+
   
-    BC_regions_keyword  =  label;
+    if  (strncmp ((label.c_str()),end_symb.c_str(),1) == 0)
 
-    //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
-    while (skip_comments(in_stream,BC_regions_keyword ) == true )
     {
-      in_stream >> BC_regions_keyword ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-    } 
+ 
+      while (skip_comments(in_stream, model_keyword ) == true )
+      {
+        in_stream >>  model_keyword ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+      } 
 
-    if  ( BC_regions_keyword != BC_regions_keyword_string )
-    {
+      //  put ModelStructure in  map  <model_name, *ModelStructure>
+      model_structure_map.insert(make_pair (model_name, current_model_point )); 
 
-      //  cerr <<  BC_regions_keyword <<  endl;
-      //    cerr <<  "  SYNTAX ERROR in input  file (4)  " <<  endl;
-      cerr <<  "  SYNTAX ERROR in input  file (model section):  " << endl;
-      cerr << " keyword 'BC_Regions'  is  missing " << endl;
-       
-      exit(1); 
+      if (!check_label(model_section_keywords, model_keyword))
+        throw InitFailedException("SYNTAX ERROR in input file: unknown keyword in model section! ");
+
+
+      break ;    //  to  NEXT  MODEL  !!!
+
     }
+
+    // ******************************  
+    //  now  READ BC REGIONS !!!  
+
+
+    // BC_regions_keyword  =  label;
+
+    //     //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+    //     while (skip_comments(in_stream,BC_regions_keyword ) == true )
+    //     {
+    //       in_stream >> BC_regions_keyword ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    //     } 
+
+
+
+    //  if  ( BC_regions_keyword != BC_regions_keyword_string )
+    //     {
+    //       throw InitFailedException("SYNTAX ERROR in input file (model section): unknown keyword!  ");
+
+      
+    //       //  cerr <<  "  SYNTAX ERROR in input  file (model section):  " << endl;
+    //       //       cerr << " keyword 'BC_Regions'  is  missing " << endl;
+       
+    //       //       exit(1); 
+    //     }
 
 
 
@@ -1446,108 +1609,35 @@ InputParser::parse_model(ifstream& in_stream)
 
     // cout <<  " BC_region_k = " << BC_regions_keyword <<  endl; 
 
-    in_stream >>  start_symbol ; //  read   start_symb of   BC_regions block
-    //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
-    while (skip_comments(in_stream,start_symbol ) == true )
-    {
-      in_stream >> start_symbol ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-    } 
-
-    if  ( start_symbol != start_symb)
-    {
-      cerr <<  "  SYNTAX ERROR in input  file (5)  " <<  endl;
-      cerr <<  " missing BC_regions block ! " <<  endl;
-       
-      exit(1); 
-    }
-
-
-
-
-    //  read keyword BC_Region
-    in_stream >> keyword;
-    //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
-    while (skip_comments(in_stream,keyword ) == true )
-    {
-      in_stream >> keyword; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-    } 
-
-
-
-    while  (keyword !=  end_symb)   //    loop  BC_region   block
+    if  ( label  == BC_regions_keyword_string)
     {
 
-      if  (keyword != keyword_BC_Region_string)
-      {
-        cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
-        cerr << " keyword BC_Region is  missing " 
-             << endl;
-       
-        exit(1); 
-      }
 
-      //     read   BC_region_name
-      in_stream >>BC_region_name;
-
-
+      in_stream >>  start_symbol ; //  read   start_symb of   BC_regions block
       //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
-      while (skip_comments(in_stream,BC_region_name) == true )
+      while (skip_comments(in_stream,start_symbol ) == true )
       {
-        in_stream >> BC_region_name; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+        in_stream >> start_symbol ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
       } 
 
+      if  ( start_symbol != start_symb)
+      {
 
-      //*************************************
-          // create  new ModelOptions  
-          // ModelOptions temp_BC_options;  private  member 
-          //*************************************
+        throw InitFailedException("SYNTAX ERROR in input file: BC_regions block is missing!  ");
+        
 
-              temp_options.clear();
-     
-      //    parse_options(in_stream);   //    read  the  block  between  { and  }
-      parse_options(in_stream,temp_options);
+        // cerr <<  "  SYNTAX ERROR in input  file (5)  " <<  endl;
+//         cerr <<  " missing BC_regions block ! " <<  endl;
+       
+//         exit(1); 
+      }
 
-      string  BC_region_numb , def;
-      BC_region_numb = temp_options.get_option( "BC_reg_numb" ,def);
 
-      // create new RegionStructure
-      RegionStructure current_BC_region_structure;
 
-      current_BC_region_structure.set_region_name(BC_region_name);
-      current_BC_region_structure.set_region_ID(BC_region_numb);
 
-      current_BC_region_structure.set_material_name("");
-      current_BC_region_structure.set_model_options(temp_options);
-
-      current_BC_region_ID   = atoi(BC_region_numb.c_str());
-
-      model_BC_map.insert(make_pair (current_BC_region_ID,current_BC_region_structure  ));  
-
-      // *******************************  END  2.2.07 *****************
-
-      //  put region_name in map  map_region <string,string >
-   
-      string_prop_labels_map.insert(make_pair ("BC_region_name",BC_region_name  )); 
-
-      //  get   ID of   the  current BC_region :
-      //    ID = map_region[BC_reg_mumb]
-      //      current_BC_region_ID   = atoi(string_prop_labels_map["BC_reg_numb"].c_str());
-      //  cout <<  current_BC_region_ID << endl;
-
-      //  put  in  map  <ID, map_region   >
-      //   the map map_region <string,string >
-      //  device_map.insert(make_pair (ID,map_region  ));   
-
-      //      model_BC_map.insert(make_pair (current_BC_region_ID, string_prop_labels_map ));  
-      //  cout <<  "([ model_BC_map.current_BC_region_ID])[value]  =  " 
-      //  << (model_BC_map[current_BC_region_ID])["value"] << endl  ;
-
-      //    next   BC_Region    
-      string_prop_labels_map.clear();
+      //  read keyword BC_Region
       in_stream >> keyword;
-
-      //   skip_comments(in_stream,keyword );
-
+      //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
       while (skip_comments(in_stream,keyword ) == true )
       {
         in_stream >> keyword; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
@@ -1555,72 +1645,178 @@ InputParser::parse_model(ifstream& in_stream)
 
 
 
+      while  (keyword !=  end_symb)   //    loop  BC_region   block
+      {
+
+        if  (keyword != keyword_BC_Region_string)
+        {
+
+        throw InitFailedException("SYNTAX ERROR in input file:keyword BC_Region is  missing !");
 
 
-    }  //end   while  loop  BC_region   block
+//           cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+//           cerr << " keyword BC_Region is  missing " 
+//                << endl;
+       
+//           exit(1); 
+        }
 
-    //   END   READ  BC  REGIONS  
+        //     read   BC_region_name
+        in_stream >>BC_region_name;
 
 
+        //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+        while (skip_comments(in_stream,BC_region_name) == true )
+        {
+          in_stream >> BC_region_name; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+        } 
 
-    //  ******************************
-    //  PUT   model_BC_map IN   OBJECT  ModelStructure
 
-    //  ModelStructure->set_model_BC_map(model_BC_map)  **********************************
-    //  ModelStructure.set_model_BC_map( map  <unsigned int,  map <string,string> >& 
-    // id_BC_regions_map   )   !!!!!!!!!
-    current_model_point->set_model_BC_map( model_BC_map);
+        //*************************************
+            // create  new ModelOptions  
+            // ModelOptions temp_BC_options;  private  member 
+            //*************************************
+
+                temp_options.clear();
+     
+        //    parse_options(in_stream);   //    read  the  block  between  { and  }
+        parse_options(in_stream,temp_options);
+
+        string  BC_region_numb , def;
+        BC_region_numb = temp_options.get_option( "BC_reg_numb" ,def);
+
+        // create new RegionStructure
+        RegionStructure current_BC_region_structure;
+
+        current_BC_region_structure.set_region_name(BC_region_name);
+        current_BC_region_structure.set_region_ID(BC_region_numb);
+
+        current_BC_region_structure.set_material_name("");
+        current_BC_region_structure.set_model_options(temp_options);
+
+        current_BC_region_ID   = atoi(BC_region_numb.c_str());
+
+        model_BC_map.insert(make_pair (current_BC_region_ID,current_BC_region_structure  ));  
+
+        // *******************************  END  2.2.07 *****************
+
+        //  put region_name in map  map_region <string,string >
    
-    in_stream >>  end_symbol;
+        string_prop_labels_map.insert(make_pair ("BC_region_name",BC_region_name  )); 
 
-    while (skip_comments(in_stream, end_symbol) == true )
-    {
-      in_stream >> end_symbol; // if  the  whole  line has  been  skipped: read  the  next keyword !!! 
-    } 
+        //  get   ID of   the  current BC_region :
+        //    ID = map_region[BC_reg_mumb]
+        //      current_BC_region_ID   = atoi(string_prop_labels_map["BC_reg_numb"].c_str());
+        //  cout <<  current_BC_region_ID << endl;
+
+        //  put  in  map  <ID, map_region   >
+        //   the map map_region <string,string >
+        //  device_map.insert(make_pair (ID,map_region  ));   
+
+        //      model_BC_map.insert(make_pair (current_BC_region_ID, string_prop_labels_map ));  
+        //  cout <<  "([ model_BC_map.current_BC_region_ID])[value]  =  " 
+        //  << (model_BC_map[current_BC_region_ID])["value"] << endl  ;
+
+        //    next   BC_Region    
+        string_prop_labels_map.clear();
+        in_stream >> keyword;
+
+        //   skip_comments(in_stream,keyword );
+
+        while (skip_comments(in_stream,keyword ) == true )
+        {
+          in_stream >> keyword; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+        } 
 
 
-    //  cout <<  "end_symbol = " <<  end_symbol  <<   endl;
 
-    //    if  (strncmp ((end_symbol.c_str()),"}",1) != 0)
-    if  (strncmp ((end_symbol.c_str()),end_symb.c_str(),1) != 0)
 
-    {
-      cerr <<  "  SYNTAX ERROR in input  file (section  Models )   " <<  endl;
-      exit(1); 
-    }
+
+      }  //end   while  loop  BC_region   block
+
+      //   END   READ  BC  REGIONS  
+
+
+
+      //  ******************************
+      //  PUT   model_BC_map IN   OBJECT  ModelStructure
+
+      //  ModelStructure->set_model_BC_map(model_BC_map)  **********************************
+      //  ModelStructure.set_model_BC_map( map  <unsigned int,  map <string,string> >& 
+      // id_BC_regions_map   )   !!!!!!!!!
+      current_model_point->set_model_BC_map( model_BC_map);
+
+
+
    
-    in_stream >>  model_keyword; 
-    // cout << model_keyword<< endl;
+   //   in_stream >>  end_symbol;
 
-    while (skip_comments(in_stream, model_keyword ) == true )
-    {
-      in_stream >>  model_keyword ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-    } 
+    //keyword  !!!!
+      end_symbol = keyword;
+
+      while (skip_comments(in_stream, end_symbol) == true )
+      {
+        in_stream >> end_symbol; // if  the  whole  line has  been  skipped: read  the  next keyword !!! 
+      } 
 
 
+      
 
+      //    if  (strncmp ((end_symbol.c_str()),"}",1) != 0)
+      if  (strncmp ((end_symbol.c_str()),end_symb.c_str(),1) != 0)
+
+      {
+          throw InitFailedException("SYNTAX ERROR in input file (BC regions block)  ");
+
+
+        // cerr <<  "  SYNTAX ERROR in input  file (section  Models )   " <<  endl;
+//         exit(1); 
+      }
+
+
+//  read  end  model
+      in_stream >> end_symbol;
+      while (skip_comments(in_stream, end_symbol) == true )
+      {
+        in_stream >> end_symbol; // if  the  whole  line has  been  skipped: read  the  next keyword !!! 
+      } 
+
+      if  (strncmp ((end_symbol.c_str()),end_symb.c_str(),1) != 0)
+
+      {
+          throw InitFailedException("SYNTAX ERROR in input file (model block)   ");
+
+      }
+
+
+      //  END  OF  MODEL
     //  put ModelStructure in  map  <model_name, *ModelStructure>
-    model_structure_map.insert(make_pair (model_name, current_model_point )); 
+      model_structure_map.insert(make_pair (model_name, current_model_point )); 
 
+
+
+      in_stream >>  model_keyword; 
+      // cout << model_keyword<< endl;
+
+      while (skip_comments(in_stream, model_keyword ) == true )
+      {
+        in_stream >>  model_keyword ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+      } 
+
+     
+      //   end  if  ( label  == BC_regions_keyword )
+    }
 
 
     //  NEXT  MODEL
-
-    //   model_BC_regions_ID.clear();
-
-
-
 	      
   }// end while   while (  (model_keyword != end_symb ) && (!in_stream.eof()) ) ***********  end   Model
       
   //  cout <<   "  Out of  while Model "<< endl;
 
+ 
 
-
-
-  //  } // end while != "eof"
-
-} //  end  method    NEW parse_model
+} //  end  method   parse_model
 
 
 
@@ -1658,9 +1854,12 @@ const  ModelOptions& InputParser::get_options(void)
 
 // **********************
 
-//  method to parse  list  of  IDs  
+//  method to parse  list  of  IDs 
+//  NEW:  returns just a string "(3 4 5 )" 
 
-void InputParser::parse_list_phys_ID(ifstream& in_stream,vector<string>& list_regions   )
+//void InputParser::parse_list_phys_ID(ifstream& in_stream,vector<string>& list_regions   )
+void InputParser::parse_list_phys_ID(ifstream& in_stream, string& list_regions   )
+
 {
 
 
@@ -1682,21 +1881,34 @@ void InputParser::parse_list_phys_ID(ifstream& in_stream,vector<string>& list_re
   rule<>label  = *(special_char)>>  (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
 
 
-
   // ***********************************************************************
   //      1-12-06  !!!
 
+  rule<>list_string =  ch_p('(') >> *(space_p) >> (label)>>  *( *(space_p) >> (label) ) >> ch_p(')');
+  rule<>tag_value =  list_string | label;
+  //  rule<>assignement_string  =  (label) >>  *(space_p) >> ch_p('=')>> *(space_p) >> 
+  //    ((tag_value)[push_back_a(v_string)])   ;
+  rule<>assignement_string  =  *(space_p) >> ch_p('=')>> *(space_p) >> 
+    ((tag_value)[push_back_a(v_string)])   ;
+
+  rule<> r_command  = *(space_p) >> (assignement_string )    >> 
+    *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
+
+  //      14-2-07  !!!
+
+
+
  
 
-  rule<>list_of_strings_space_sep  = ch_p('(')>> *(space_p) >> (label)[push_back_a(v_string)]>>
-    *( *(space_p) >> (label)[push_back_a(v_string)] )>> *(space_p)>> ch_p(')')  ;
+  //  rule<>list_of_strings_space_sep  = ch_p('(')>> *(space_p) >> (label)[push_back_a(v_string)]>>
+  //     *( *(space_p) >> (label)[push_back_a(v_string)] )>> *(space_p)>> ch_p(')')  ;
 
   
-  rule<>assignement = (label) >> 
-    *(space_p) >> ch_p('=')>> *(space_p) >> list_of_strings_space_sep;
+  //   rule<>assignement = (label) >> 
+  //     *(space_p) >> ch_p('=')>> *(space_p) >> list_of_strings_space_sep;
 
-  rule<> r_command  = *(space_p) >> (assignement )    >> 
-    *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
+  //   rule<> r_command  = *(space_p) >> (assignement )    >> 
+  //     *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
 
 
 
@@ -1727,7 +1939,7 @@ void InputParser::parse_list_phys_ID(ifstream& in_stream,vector<string>& list_re
           //  vector_prop_labels.push_back(vect_label[0]);
 		  
           //           vector_prop_labels_map.insert(make_pair(vect_label[0], v) );
-          list_regions = v_string;
+          list_regions = v_string[0];
           break;   //  return to  input file
 
         }
@@ -1759,6 +1971,8 @@ void InputParser::parse_list_phys_ID(ifstream& in_stream,vector<string>& list_re
       else  
 
       {
+
+
         cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
         cerr << " Correct syntax is : 'label' = 'value' 'label' = 'value' .......# 'comment' " 
              << endl;
@@ -1781,4 +1995,40 @@ void InputParser::parse_list_phys_ID(ifstream& in_stream,vector<string>& list_re
 
 
 }
+
+
+
+bool InputParser::check_label(set<string>& section_keywords, const string& label )
+{
+
+  set<string>::iterator   s_it;
+  bool  found;
+  found = false;
+
+  
+  //for ( s_it = section_keywords.begin( ); s_it != section_keywords.end( ); s_it++ )
+  //     cout << " " << *s_it;
+  //   cout << "." << endl;
+
+  s_it = section_keywords.find(label);
+
+  if (s_it != section_keywords.end())
+  {
+
+ //   cout <<  " Found  " <<  endl;
+
+    found = true;
+ 
+
+  } 
+  else 
+  {
+ //   cout <<  " NOT  Found  " <<  endl;
+    found = false;
+  } 
+
+
+  return found;
+
+} //  end  method
 

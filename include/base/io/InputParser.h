@@ -17,7 +17,9 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <set>
 
+#include <InitFailedException.h>
 #include "TypeDefs.h"
 #include "ModelStructure.h"
 #include "RegionStructure.h"
@@ -228,7 +230,7 @@ class InputParser{
    *  Utility  to  find a  keyword in a section
    *    
    */
-//  void find_keyword_in_section(std::ifstream& in_stream, const std::string& keyword);
+  //  void find_keyword_in_section(std::ifstream& in_stream, const std::string& keyword);
   bool find_keyword_in_section(std::ifstream& in_stream, const std::string& keyword);
 
   /*!
@@ -266,7 +268,11 @@ class InputParser{
   //!  Method   to  read a list of strings.
   /*!  Parses an assignement "phys_regions = ( ....)  
    */
-  void parse_list_phys_ID(std::ifstream& in_stream,std::vector<std::string>& list_regions   );
+  //  void parse_list_phys_ID(std::ifstream& in_stream,std::vector<std::string>& list_regions   );
+  //  void InputParser::parse_list_phys_ID(ifstream& in_stream,vector<string>& list_regions);
+  void parse_list_phys_ID(std::ifstream& in_stream, std::string& list_regions);
+
+
 
 
   //!   Returns options associated to a  section specified in read_parameters. 
@@ -295,6 +301,13 @@ class InputParser{
    * list of boundary conditions defined for the model. 
    */
   std::map <const std::string, ModelStructure*>& get_model_structure_map(void);
+
+
+ //!   Utility  to  check  label  consistency. 
+  /*!
+   * Check if the  string  "label" is  a  valid keyword for the section. 
+   */
+  bool check_label(std::set<std::string>& section_keywords, const std::string& label );
 
 
 
