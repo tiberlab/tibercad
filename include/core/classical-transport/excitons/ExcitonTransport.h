@@ -194,7 +194,14 @@ class ExcitonTransport : public SimulationInterface
 
     //! Create an ExcitonTransport object
     static ExcitonTransport* create(void);
+  
     
+    /*! \copydoc SimulationInterface::create_physical_model() */
+    virtual PhysicalModel*
+      create_physical_model(const ModelOptions& options) const
+      throw (ModelErrorException);
+
+  
 
     /**
      * @returns a reference to the simulation options

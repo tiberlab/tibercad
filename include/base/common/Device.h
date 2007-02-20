@@ -8,6 +8,7 @@
 #include "ModelOptions.h"
 
 #include <vector>
+#include <set>
 
 class Material;
 class Control;
@@ -116,6 +117,10 @@ class Device
 
     //! Get a reference to the Control module that controls this device
     Control& get_control(void) const;
+
+
+    //! Get the set with all region IDs
+    const std::set<ID>& get_region_ids(void) const;
     
 
   private:
@@ -189,6 +194,10 @@ class Device
 
     //! User defined options for this device
     ModelOptions _options;
+
+
+    //! A set with all region IDs
+    std::set<ID> _region_ids;
   
 };
 
@@ -292,5 +301,15 @@ Device::get_mesh_units(void) const
 {
   return _mesh_units;
 }
+
+
+inline
+const std::set<ID>&
+Device::get_region_ids(void) const
+{
+  return _region_ids;
+}
+
+
 
 #endif //  __DEVICE_H__

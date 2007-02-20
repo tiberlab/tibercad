@@ -49,7 +49,9 @@ const double
 Constants::hbar = h / (2 * M_PI);
 
 const double
-Constants::bohr_radius = 4 * M_PI * epsilon * (hbar * hbar) /(electron_mass * elementary_charge * elementary_charge);
+Constants::bohr_radius = 4 * M_PI * epsilon * (hbar * hbar) /
+  (electron_mass * elementary_charge * elementary_charge);
 
 const double 
-Constants::Hartree = (hbar * hbar)/(electron_mass * bohr_radius * bohr_radius) / elementary_charge;
+Constants::Hartree = (hbar * hbar) /
+  (electron_mass * bohr_radius * bohr_radius) / elementary_charge;

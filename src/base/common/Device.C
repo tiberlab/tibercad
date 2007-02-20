@@ -47,6 +47,8 @@ Device::create(const ModelOptions& options)
 
   device->set_options(options);
 
+  device->setup_mesh();
+
   return device;
 }
 
@@ -71,6 +73,7 @@ Device::setup_mesh(void)
   MeshInput::read_mesh(meshfile, dim, *_mesh, meshdata, *_boundary_nodes);
 
   MeshUtils::assign_subdomain_ids(*_mesh, meshdata);
+  MeshUtils::get_subdomain_ids(*_mesh, _region_ids);
 
 #ifdef DEBUG
   cout << endl << "Device::setup_mesh(): ";
@@ -88,12 +91,12 @@ Device::init(void)
   _mesh_units = _options.get_option("mesh_units", _mesh_units);
   cout << "mesh units: " << _mesh_units << " m" << endl;
 
-  setup_mesh();
-
+  // init all materials
   MaterialMap::iterator it(_material_map.begin());
   const MaterialMap::iterator end(_material_map.end());
   for ( ; it != end; ++it)
     (it->second)->init();
+
 }
 
 
@@ -101,6 +104,14 @@ void
 Device::set_material(Material* material, ID region_id)
 {
   assert(material != NULL);
+
+  if (_region_ids.find(region_id) == _region_ids.end())
+  {
+    std::ostringstream s;
+    s << "Device: physical region " << region_id <<
+      " does not exist in mesh file.";
+    throw InitFailedException(s.str());
+  }
 
   _material_map[region_id] = material;
   std::cout << "added material " << material->get_name()

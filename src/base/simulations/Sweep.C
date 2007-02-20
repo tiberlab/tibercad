@@ -152,6 +152,9 @@ Sweep::do_solve(void)
   //AutoPtr<NumericVector<Real> > old_sol = 
   //  (_simulation->get_solution_vector()).clone();
 
+  vector<double>::iterator values_begin(_values.begin());
+  vector<double>::iterator values_end(_values.end());
+
   unsigned int n = _values.size();
 
   for (unsigned int i = 0; i < n; i++)
@@ -176,7 +179,7 @@ Sweep::do_solve(void)
         value = goal;
       
       _variable->set_new_value(value);
-      cout  << "Sweep value = " << value << endl;
+      cout  << "Sweep value = " << setprecision(12) << value << endl;
       
       try
       {
@@ -184,14 +187,19 @@ Sweep::do_solve(void)
 
         _last = _variable->get_current_value();
 
-        // write results
-        ostringstream s;
-        s << suffix << _last;
-        get_control().set_filename_suffix(s.str());
-        _simulation->plot();
+        // write results, but only at desired sweep steps
+        if (find_if(values_begin, values_end,
+              bind2nd(Utils::almost_equal(), _last)) != values_end)
+        {
+          ostringstream s;
+          s << suffix << _last;
+          get_control().set_filename_suffix(s.str());
+          _simulation->plot();
+        }
 
 
         // update "something-vs.-sweepvariable" file
+        // Here we do it also for intermediate steps
         if (do_plot)
         {
           _simulation->get_integrated_quantities(_plotvariables, values);

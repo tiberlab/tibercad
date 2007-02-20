@@ -145,6 +145,30 @@ ExcitonTransport::~ExcitonTransport(void)
 }
 
 
+
+
+PhysicalModel*
+ExcitonTransport::create_physical_model(const ModelOptions& options) const
+throw (ModelErrorException)
+{
+  const string& modelname = options.get_option("model", "simple");
+
+  ExcitonProperties* model =
+    ExcitonProperties::create(modelname, options);
+
+  if (model == NULL)
+    throw ModelErrorException(
+        "ExcitonTransport: No such physical model: " + modelname);
+
+  return model;
+}
+
+
+
+
+
+
+
 void
 ExcitonTransport::compute_scaling(void)
 {
@@ -257,6 +281,9 @@ ExcitonTransport::set_solver_params(NonlinearSolver<Number>& solver)
   solver_class.set_pc_type(solver_params.pc_type);
 }
 
+
+
+
 void
 ExcitonTransport::parse_options(void)
 {
@@ -338,6 +365,10 @@ ExcitonTransport::do_init(void)
   _rebuild_eq_system = false;
 }
 
+
+
+
+
 void
 ExcitonTransport::set_initial_guess(double guess)
 {
@@ -352,6 +383,10 @@ ExcitonTransport::set_initial_guess(double guess)
   solution.zero();
   solution.add(guess);
 }
+
+
+
+
 
 void
 ExcitonTransport::do_solve(void)
@@ -498,6 +533,10 @@ ExcitonTransport::do_solve(void)
 }
 
 
+
+
+
+
 double
 ExcitonTransport::get_solution(const Elem* elem, const Point& p)
 {
@@ -550,6 +589,10 @@ ExcitonTransport::get_solution(const Elem* elem, const Point& p)
 
   return solution;
 }
+
+
+
+
 
 void
 ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
@@ -610,6 +653,9 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
     solution[n] = u;
   }
 }
+
+
+
 
 
 
@@ -768,6 +814,11 @@ ExcitonTransport::build_densities(vector<double>& densities,
 
 }
 
+
+
+
+
+
 void
 ExcitonTransport::build_current_density(vector<double>& current,
     vector<string>& names)
@@ -894,6 +945,10 @@ ExcitonTransport::build_current_density(vector<double>& current,
   current.resize(elem_number * n_vars);
 */
 }
+
+
+
+
 
 
 void

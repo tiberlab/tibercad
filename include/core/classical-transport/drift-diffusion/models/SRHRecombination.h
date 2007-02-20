@@ -11,8 +11,15 @@
 /*!
  * This class implements Shockley-Read-Hall recombination processes that can be
  * modeled by 
- * \f[R_{SRH}=\frac{np - n_i^2}{(n+n_i\exp{(E_t-E_i)/k_BT})\tau_p +
- * (p+n_i\exp{(E_i-E_t)/k_BT})\tau_n}\f]
+ * \f{eqnarray*}
+ * R_{SRH} & =& \frac{np - n_i^2}{(n+n_i\exp{(E_t-E_i)/k_BT})\tau_p +
+ * (p+n_i\exp{(E_i-E_t)/k_BT})\tau_n} \\
+ * \tau_{n,p} & = & {\tau^0}_{n,p} \left{
+ *     \begin{array}[l]
+ *      \left(\frac{T}{T_0}\right)^{T_\alpha} \\
+ *      \exp{T_c(T/T_0 - 1)}
+ *     \end{array}\right.
+ * \f}
  */
 class SRHRecombination : public RecombinationModelInterface
 {
@@ -77,6 +84,15 @@ class SRHRecombination : public RecombinationModelInterface
     //! The trap level (from midgap)
     double _E_t;
 
+    //! Temperature coefficient for temperature dependence, electrons
+    double _Talpha_e;
+
+    //! Temperature coefficient for temperature dependence, holes
+    double _Talpha_h;
+
+    //! Temperature coefficient for exponential temperature dependence
+    //double _Tcoeff;
+
 };
 
 
@@ -89,7 +105,10 @@ inline
 SRHRecombination::SRHRecombination(void)
   : _tau_n(1e-9),
     _tau_p(1e-9),
-    _E_t(0.0)
+    _E_t(0.0),
+    _Talpha_e(0.0),
+    _Talpha_h(0.0)
+    //_Tcoeeff(0.0)
 {
 }
 
@@ -129,6 +148,8 @@ SRHRecombination::copy_from(const PhysicalModelInterface* rhs)
   _tau_n = mod->_tau_n;
   _tau_p = mod->_tau_p;
   _E_t = mod->_E_t;
+  _Talpha_e = mod->_Talpha_e;
+  _Talpha_h = mod->_Talpha_h;
 }
 
 

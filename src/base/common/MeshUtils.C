@@ -27,3 +27,22 @@ MeshUtils::assign_subdomain_ids(Mesh& mesh, MeshData_elements& meshdata)
     }
   }
 }
+
+
+
+void
+MeshUtils::get_subdomain_ids(Mesh& mesh, std::set<ID>& subdomain_ids)
+{
+  subdomain_ids.clear();
+
+  Mesh::element_iterator it = mesh.elements_begin();
+  const Mesh::element_iterator end = mesh.elements_end();
+
+  for ( ; it != end; ++it)
+  {
+    Elem* elem = *it;
+
+    ID id = static_cast<ID>(elem->subdomain_id());
+    subdomain_ids.insert(id);
+  }
+}

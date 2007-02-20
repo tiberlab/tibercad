@@ -42,11 +42,58 @@ C33 = 398.0
 C44 = 105.0
 
 # piezoelectricity data
-e33 = 0
-e31 = -0
-e15 = -0
-Pz = -0.0
-#e33 = 1.27
-#e31 = -0.35
-#e15 = -0.3
-#Pz = -0.034
+e33 = 1.27
+e31 = -0.35
+e15 = -0.3
+Pz = -0.034
+
+
+
+#
+# mobility
+#
+
+# constant
+mu_max_e = 1500
+exponent_e = 1.0
+mu_max_h = 20
+exponent_h = 2.1
+
+# doping dependent
+mobility_formula = 1
+mumin1_e = 85
+mumin2_e = 75
+mu1_e = 50
+Pc_e = 6.5e15
+Cr_e = 9.5e16
+Cs_e = 7.2e19
+alpha_e = 0.55
+beta_e = 0.75
+mumin1_h = 33
+mumin2_h = 0
+mu1_h = 20
+Pc_h = 5e15
+Cr_h = 8e16
+Cs_h = 8e20
+alpha_h = 0.55
+beta_h = 0.7
+
+
+#
+# recombination
+#
+
+# SRH recombination
+Etrap    = 0.0
+taumin_e = 0.0
+taumax_e = 1.0e-9
+Nref_e   = 1.0e+16
+gamma_e  = 1
+Talpha_e = -1.5
+taumin_h = 0.0
+taumax_h = 1.0e-9
+Nref_h   = 1.0e+16
+gamma_h  = 1
+Talpha_h = -1.5
+
+# direct

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <cmath>
 
 //! This class contains useful methods for different tasks
 class Utils
@@ -39,6 +40,42 @@ class Utils
      */
     template <typename T>
     static void extract_vector(const std::string& input, std::vector<T>& vec);
+
+
+    //! A functor that checks if two double values are almost equal
+    /*!
+     * \em almost \em equal means the following:
+     * \f[ \vert a - b \vert < \epsilon(1 + \vert a\vert) \f]
+     */
+    class almost_equal
+    {
+
+      public:
+
+        //! Constructor
+        /*!
+         * \param eps the precision for the comparison
+         *
+         * Default for the precision is 1e-12
+         */
+        explicit almost_equal(double eps = 1e-12) : _eps(eps) {};
+
+
+        typedef double first_argument_type;
+        typedef double second_argument_type;
+        typedef bool result_type;
+        
+        //! compare \c a with \c b
+        bool operator()(double a, double b) const;
+
+        //! compare \c a with \c b using precision \c eps
+        bool operator()(double a, double b, double eps) const;
+
+      private:
+
+        //! The precision
+        double _eps;
+    };
 
 
   private:
@@ -140,6 +177,26 @@ Utils::convert<const char*>(const std::string& val)
   return val.c_str();
 }
 
+
+inline
+bool
+Utils::almost_equal::operator()(double a, double b) const
+{
+  double diff = std::fabs(a - b);
+  bool result = std::isless(diff, _eps * (1.0 + std::fabs(a)));
+  return result;
+}
+  
+
+inline
+bool
+Utils::almost_equal::operator()(double a, double b, double eps) const
+{
+  double diff = std::fabs(a - b);
+  bool result = std::isless(diff, eps * (1.0 + std::fabs(a)));
+  return result;
+}
+  
 
 
 

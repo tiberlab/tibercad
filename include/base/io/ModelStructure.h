@@ -83,7 +83,7 @@ class ModelStructure{
    * Returns a vector with the physical regions IDs   associated to the  current model.
    */
   //  std::vector<std::string> get_physical_regions();
-  const std::string  get_physical_regions();
+  const std::string&  get_physical_regions();
 
 
   //!  Sets a  vector with the physical regions IDs of this model. 

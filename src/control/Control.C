@@ -151,6 +151,7 @@ Control::create_device(void)
 
   _output_format = opts.get_option("output_format", "gmv");
 
+
   _device = Device::create(opts);
 
 
@@ -210,17 +211,40 @@ Control::setup_models(void) throw (ModelErrorException)
   for ( ; modit != modend; ++modit)
   {
     ModelStructure* model_str = modit->second;
+
+    const ModelOptions& simopts = model_str->get_model_options();
     const string& modelname = model_str->get_model_name();
 
     //
     // extract the physical regions
     // 
 
-    vector<string> preg = model_str->get_physical_regions();
-    unsigned int n = preg.size();
     set<ID> phys_regions;
-    for (unsigned int i = 0; i < n; i++)
-      phys_regions.insert(Utils::convert<ID>(preg[i]));
+    const string& physreg = simopts.get_option("physical_regions", "all");
+    if (physreg == "all")
+      phys_regions = _device->get_region_ids();
+    else
+    {
+      // we have to get it as vector (for the moment at least)
+      vector<ID> preg;
+      simopts.get_option("physical_regions", preg);
+
+      const set<ID>& regs = _device->get_region_ids();
+      const set<ID>::const_iterator id_end(regs.end());
+      unsigned int n = preg.size();
+      for (unsigned int i = 0; i < n; i++)
+      {
+        if (regs.find(preg[i]) == id_end)
+        {
+          ostringstream s;
+          s << "Control: physical region " << preg[i] <<
+            " does not exist in mesh file.";
+          throw InitFailedException(s.str());
+        }
+        phys_regions.insert(preg[i]);
+      }
+    }
+
 
     //
     // now create the simulation
@@ -230,7 +254,7 @@ Control::setup_models(void) throw (ModelErrorException)
     ModelOptions solveropts(parser.read_parameters("Solver", modelname));
     
     // get the user defined name (if defined...)
-    const string& simulation_name = model_str->get_simulation_name();
+    const string& simulation_name = simopts.get_option("simulation_name", "");
     if (!simulation_name.empty() && (simulation_name != modelname))
     {
       solveropts += parser.read_parameters("Solver", simulation_name);

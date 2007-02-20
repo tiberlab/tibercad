@@ -19,8 +19,7 @@ class Database
     void set_material(const std::string& material)
       { _material = material; };
 
-    const std::string get_data_file(void) const
-      { return _path + "/" + _material + ".dat"; };
+    const std::string get_data_file(void) const;
 
     bool is_alloy(const std::string& material) const;
 
@@ -33,6 +32,17 @@ class Database
     std::string _material;
 
 };
+
+
+inline
+const std::string
+Database::get_data_file(void) const
+{
+  std::string s(_path);
+  s += "/" + _material + ".dat";
+
+  return s;
+}
 
 
 #endif // _DATABASE_H_

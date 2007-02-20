@@ -3,10 +3,10 @@
 #ifndef _CONSTANTS_H_
 #define _CONSTANTS_H_
 
-/**
- * Physical constants
+//! Physical constants
+/*!
  *
- * SI units, converted to cm as length unit
+ * Physical constants are given in SI units
  *
  */
 namespace Constants

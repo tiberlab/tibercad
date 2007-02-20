@@ -15,7 +15,9 @@ SRHRecombination::read_database(void)
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
 
-  _E_t = data("Etrap", 0.0);
+  _E_t = data("Etrap", _E_t);
+  _Talpha_e = data("Talpha_e", _Talpha_e);
+  _Talpha_h = data("Talpha_h", _Talpha_h);
   
   double N = mat->get_total_doping_density();
 
@@ -57,11 +59,14 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
   double ni = dd.get_intrinsic_density();
-  double kT = dd.get_lattice_temperature();
+  double T = dd.get_lattice_temperature();
 
-  double f = std::exp(_E_t / kT);
+  double f = std::exp(_E_t / T);
 
-  double denom = _tau_p * (n + ni * f) + _tau_n * (p + ni / f);
+  double tau_n = _tau_n * std::pow(T / T0, _Talpha_e);
+  double tau_p = _tau_p * std::pow(T / T0, _Talpha_h);
+
+  double denom = tau_p * (n + ni * f) + tau_n * (p + ni / f);
   recomb_e = recomb_h = (n * p - ni * ni) / denom;
 }
 
@@ -76,15 +81,18 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
   double ni = dd.get_intrinsic_density();
-  double kT = dd.get_lattice_temperature();
+  double T = dd.get_lattice_temperature();
 
-  double f = std::exp(_E_t / kT);
+  double f = std::exp(_E_t / T);
 
-  double denom = _tau_p * (n + ni * f) + _tau_n * (p + ni / f);
+  double tau_n = _tau_n * std::pow(T / T0, _Talpha_e);
+  double tau_p = _tau_p * std::pow(T / T0, _Talpha_h);
+
+  double denom = tau_p * (n + ni * f) + tau_n * (p + ni / f);
   double SRH = (n * p - ni * ni) / denom;
 
-  double a = (p - _tau_p * SRH) / denom;
-  double b = (n - _tau_n * SRH) / denom; 
+  double a = (p - tau_p * SRH) / denom;
+  double b = (n - tau_n * SRH) / denom; 
 
   recomb_e[0] = recomb_h[0] = a;
   recomb_e[1] = recomb_h[1] = b;

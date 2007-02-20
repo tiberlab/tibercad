@@ -17,9 +17,12 @@ $Models
   model driftdiffusion
   { 
               
-     name driftdiffusion
+    apply_to
+    {
+     simulation_name = dd
 
-     phys_regions = (1)
+     physical_regions = all
+    }
 
 
     BC_Regions  
@@ -55,6 +58,7 @@ $Solver
     nonlin_max_it = 50
     current_integration_method = rstf
   }
+
 
 
   sweep

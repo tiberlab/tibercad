@@ -65,7 +65,7 @@ multimap<const string,ModelOptions>& ModelStructure::get_physical_model_map()
 //   return physical_regions;
 // }
 
-const string  ModelStructure::get_physical_regions()
+const string&  ModelStructure::get_physical_regions()
 {
  
   return physical_regions;

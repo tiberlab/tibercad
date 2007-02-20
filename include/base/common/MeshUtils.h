@@ -4,8 +4,13 @@
 #ifndef _MESHUTILS_H_
 #define _MESHUTILS_H_
 
+#include "TypeDefs.h"
+
+#include <set>
+
 class Mesh;
 class MeshData_elements;
+
 
 //! A few utilities for operations on a mesh
 class MeshUtils
@@ -22,6 +27,14 @@ class MeshUtils
      * \param meshdata the meshdata object
      */
     static void assign_subdomain_ids(Mesh& mesh, MeshData_elements& meshdata);
+
+
+    //! Get all the subdomain IDs present in the mesh
+    /*!
+     * This method iterates over all mesh elements and puts the subdomain id
+     * into the provided set.
+     */
+    static void get_subdomain_ids(Mesh& mesh, std::set<ID>& subdomain_ids);
 
   private:
 
