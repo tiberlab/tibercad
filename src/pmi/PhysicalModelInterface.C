@@ -40,6 +40,10 @@
 #include "EFAbulkModel.h"
 
 
+#include  "ZbLatticeThermalConductivity.h"
+#include  "WzLatticeThermalConductivity.h"
+#include  "HeatModel.h"
+
 #include <typeinfo>
 #ifdef DEBUG
 #include <iostream>
@@ -110,8 +114,12 @@ PhysicalModelInterface::create(const std::string& name,
     mod = WzDDsemiconductor::create();
   else if (name == "EFAmodel")
     mod = EFAbulkModel::create();
-   
- 
+  else if (name == "lat_therm_cond_zb")
+    mod = ZbLatticeThermalConductivity::create();
+  else if (name == "lat_therm_cond_wz")
+    mod = WzLatticeThermalConductivity::create();
+  else if (name == "thermal")
+    mod = HeatModel::create();
 
 
 

@@ -69,8 +69,7 @@ class PhysicalModelInterface
      */
     template <typename T>
     static ID get_id_from_name(const std::string& model_name);
-
-
+  
     //! Creates a new named model
     /*!
      * The model is created according to the given model name.
@@ -215,8 +214,12 @@ class PhysicalModelInterface
      * \param xa the molar fraction of \f$AC\f$
      * \param bowing the bowing parameter
      */
-    double alloy(double val_a, double val_b, double xa, double bowing = 0.0);
 
+    // template <typename T>
+    //  T alloy(T& result,T& val_a,T& val_b, double xa,T& bowing = T(0.0))
+    //  {
+    //   result = (1 - xa) * val_b + xa * val_a - xa * (1 - xa) * bowing ;
+    //   };
 
 
     //! calculate an alloy parameter in VCA approximation
@@ -235,14 +238,19 @@ class PhysicalModelInterface
      * \param xa the molar fraction of \f$AC\f$
      * \param bowing the bowing parameter
      */
-    void alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
+
+        void alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
         const Tensor4DSym& val_b, double xa,
         const Tensor4DSym& bowing = Tensor4DSym(0));
 
+        void alloy(Tensor2Sym& result, const Tensor2Sym& val_a,
+        const Tensor2Sym& val_b, double xa,
+        const Tensor2Sym& bowing = Tensor2Sym(0)); 
 
+    double alloy(double val_a, double val_b, double xa, double bowing = 0.0);
 
   private:
-
+    //double alloy(double val_a, double val_b, double xa, double bowing = 0.0)
     //! An iterator for the models
     typedef std::map<const std::string, ID>::iterator model_id_iterator;
 
@@ -338,14 +346,33 @@ PhysicalModelInterface::alloy(double val_a, double val_b,
     double xa, double bowing)
 {
   return val_b + (val_a - val_b) * xa - bowing * xa * (1 - xa);
-}
+};
 
+
+
+
+
+//template <typename T>
+//inline
+//T PhysicalModelInterface::alloy(T& result,const T& val_a,const T& val_b,double xa,const T& bowing)
+//{
+//  result = (1 - xa) * val_b + xa * val_a - xa * (1 - xa) * bowing;
+//};
 
 
 inline
 void
 PhysicalModelInterface::alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
     const Tensor4DSym& val_b, double xa, const Tensor4DSym& bowing)
+{
+ result = (1 - xa) * val_b + xa * val_a - xa * (1 - xa) * bowing ;
+}
+
+
+inline
+void
+PhysicalModelInterface::alloy(Tensor2Sym& result, const Tensor2Sym& val_a,
+    const Tensor2Sym& val_b, double xa, const Tensor2Sym& bowing)
 {
   result = (1 - xa) * val_b + xa * val_a - xa * (1 - xa) * bowing ;
 }

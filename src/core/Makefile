@@ -4,7 +4,9 @@
 topdir := ../..
 
 # we have to compile each module
-subdirs := classical-transport macrostrain semiconductormodels
+
+subdirs := classical-transport macrostrain semiconductormodels solver-interfaces macroheatbalance
+
 
 subdirs += solver-interfaces  quantumEFAmodels
 
