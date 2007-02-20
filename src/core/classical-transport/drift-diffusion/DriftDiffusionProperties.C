@@ -376,7 +376,7 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
 void
 DriftDiffusionProperties::calculate_mobilities(void)
 {
-  double kT = lattice_vt;
+  //double kT = lattice_vt;
 
   double mue = _electron_mobility->get_mobility();
   //double electron_diffusivity = kT * mue;
