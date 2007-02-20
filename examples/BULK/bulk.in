@@ -87,11 +87,11 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = bulk2Dtri.msh
-  dimension = 2
+  meshfile = bulk1D.msh
+  dimension = 1
   temperature = 300
   solve = sweep
-  resultpath = output_tri
+  resultpath = output_1D
   output_format = ise
   plot = (Ec, Ev, QFermi_e, QFermi_h, ECurrent, AbsECurrent, current)
 }

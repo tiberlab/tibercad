@@ -136,13 +136,13 @@ class EFAbulkHamiltonian: public PhysicalModelInterface
 inline  EFAbulkHamiltonian* EFAbulkHamiltonian::create (const std::string& name,  const ModelOptions& options)
 {
 
-  if (! (options.find_option("model_name")) )
+  if (! (options.find_option("model")) )
   {
-    std::cerr << "EFAbulkHamiltonian* EFAbulkHamiltonian::create   model_name must be specified \n"; 
+    std::cerr << "EFAbulkHamiltonian* EFAbulkHamiltonian::create   model must be specified \n"; 
     exit(1);
   }
 
-  const std::string&  model_name = options.get_option("model_name", ""); 
+  const std::string&  model_name = options.get_option("model", ""); 
   
   std::string model;
 

@@ -56,7 +56,7 @@ SimulationInterface::create(const string& type,
     sim = ExcitonTransport::create();
   else if (type == "macrostrain")
     sim = Macrostrain::create();
-  else if (type == "efa-schroedinger")
+  else if (type == "efaschroedinger")
     sim = EnvelopFunctionApprox::create();
   else if (type == "sweep")
     sim = Sweep::create();

@@ -51,15 +51,14 @@ void DDsemiconductor::do_init ()
   PhysicalModelInterface::destroy(bulk_ham);
 
   ModelOptions  kp_options; 
-  kp_options["model_name"] = "kp";
+  kp_options["model"] = "kp";
   kp_options["kp_model"] = "6x6";
 
   bulk_ham = dynamic_cast<KPbulkHamiltonian*>(
       EFAbulkHamiltonian::create(get_material()->get_structure(), kp_options));
 
   if (bulk_ham == NULL)
-    throw InitFailedException("EFAbulkHamiltonian: Unknown structure " +
-        get_material()->get_structure());
+    throw InitFailedException("DDsemiconductor::do_init ()     bulk_ham == NULL ");
 
   bulk_ham->set_material(get_material());
    

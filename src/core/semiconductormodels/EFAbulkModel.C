@@ -27,6 +27,8 @@ void EFAbulkModel::do_init()
   _bulkHamiltonian->set_material(get_material());
 
   _bulkHamiltonian->init();
+
+  
   
   
 }

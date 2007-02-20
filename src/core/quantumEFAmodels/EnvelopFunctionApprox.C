@@ -19,6 +19,28 @@ const std::vector< EnvelopFunctionApprox::eigen_propblem_solution >& EnvelopFunc
 }
   
 
+//====================================================//
+PhysicalModel* EnvelopFunctionApprox::create_physical_model(const ModelOptions& options) const throw (ModelErrorException)
+{
+
+
+  EFAbulkModel* model = dynamic_cast<EFAbulkModel*> ( PhysicalModelInterface::create("EFAmodel", options) );
+ 
+  if (model == NULL)
+    throw ModelErrorException("EnvelopFunctionApprox: cannot create EFAbulkModel");
+
+  
+
+  return(model);
+
+}
+//=====================================================//
+BoundaryProperties* EnvelopFunctionApprox::create_boundary_model(const ModelOptions& options) const  throw (ModelErrorException)
+{
+  
+  return NULL;
+}
+
 
 //====================================================//
 double EnvelopFunctionApprox::get_band_edge() const

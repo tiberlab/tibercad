@@ -160,14 +160,7 @@ class EnvelopFunctionApprox  : public SimulationInterface
   };
 
 
-  //!constructor
-  /*!
-    \param equation_systems reference to the "global" equation systems object
-    \param opt  parameters  of the model
-    \param problem_nam name of the problem that will be asigned to a new system
-   
-  */
-  // EnvelopFunctionApprox(EquationSystems&  equation_systems, std::string& problem_name, options& opt);
+ 
 
   //!constructor
   EnvelopFunctionApprox(void);
@@ -182,9 +175,7 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
 
 
-  //!sets material data
-  //void set_material_parameters(std::map<unsigned int, EFAbulkHamiltonian*>&  bulkHamiltonian); 
-
+  
 
   //!solves eigenvalue problem
   /*!
@@ -280,6 +271,16 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
 
   static  EnvelopFunctionApprox* create();
+
+
+  virtual PhysicalModel*
+    create_physical_model(const ModelOptions& options) const
+    throw (ModelErrorException);
+    
+   
+  virtual BoundaryProperties*
+    create_boundary_model(const ModelOptions& options) const
+    throw (ModelErrorException);
 
  private:
 
