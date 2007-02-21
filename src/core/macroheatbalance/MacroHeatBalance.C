@@ -1,4 +1,4 @@
-#include "macroheatbalance.h"
+#include "MacroHeatBalance.h"
 #include "DriftDiffusion.h"
 #include "BoundaryProperties.h"
 #include "PhysicalModel.h"
