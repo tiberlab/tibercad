@@ -1,11 +1,12 @@
 // $Id$
 
-#ifndef _SWEEP_h_
-#define _SWEEP_h_
+#ifndef _SWEEP_H_
+#define _SWEEP_H_
 
 #include "SimulationInterface.h"
 
 #include <set>
+#include <vector>
 
 
 class Sweepable;
@@ -53,6 +54,7 @@ class Sweep : public SimulationInterface
 
     //! The simulation for which wew do the sweep
     SimulationInterface* _simulation;
+    std::vector<SimulationInterface*> _simulations;
 
     //! A pointer to the sweepable variable
     Sweepable* _variable;
@@ -69,8 +71,6 @@ class Sweep : public SimulationInterface
     //! The maximum step size
     double _max_step;
 
-    //! A pointer to a vector containing always the last solution
-    NumericVector<Real>* _last_solution;
 
     //! Write results to file after every step if true
     bool _do_output;
@@ -94,7 +94,6 @@ Sweep::Sweep(void)
     _variable(0),
     _min_step(1e-3),
     _max_step(1),
-    _last_solution(0),
     _do_output(true)
 {
 }
@@ -114,4 +113,4 @@ Sweep::create(void)
 }
 
 
-#endif // _SWEEP_h_
+#endif // _SWEEP_H_

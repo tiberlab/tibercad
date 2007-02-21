@@ -1044,8 +1044,6 @@ DriftDiffusion::solve_newton(void)
     msg += e.what();
     msg += ")\n";
 
-    system.nonlinear_solver->clear();
-
   }
   catch (PetscRuntimeError& e)
   {
@@ -1067,19 +1065,20 @@ DriftDiffusion::solve_newton(void)
       }
       catch (...)
       {
-        system.nonlinear_solver->clear();
       }
     }
-    else
-      system.nonlinear_solver->clear();
 
     cerr << "\n";
     msg += e.what();
     msg += ")\n";
   }
 
+  _n_nonlinear_iterations = system.n_nonlinear_iterations();
+  _final_residual = system.final_nonlinear_residual();
+
   if (failure)
   {
+    system.nonlinear_solver->clear();
     *system.solution = system.get_vector("old solution");
     throw SolveFailedException(msg);
   }

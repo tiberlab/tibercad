@@ -214,43 +214,29 @@ class PhysicalModelInterface
      * \param xa the molar fraction of \f$AC\f$
      * \param bowing the bowing parameter
      */
-
-    // template <typename T>
-    //  T alloy(T& result,T& val_a,T& val_b, double xa,T& bowing = T(0.0))
-    //  {
-    //   result = (1 - xa) * val_b + xa * val_a - xa * (1 - xa) * bowing ;
-    //   };
+    double alloy(double val_a, double val_b, double xa, double bowing = 0.0);
 
 
-    //! calculate an alloy parameter in VCA approximation
     /*!
-     * In a ternary compound semiconductor
-     * \f$Q = A_xB_{1-x}C\f$ the value of a
-     * material parameter can (in the virtual crystal approximation) be
-     * calculated as
-     * \f[ \alpha_Q = x\alpha_{AC} + (1-x)\alpha_{BC} - bx(1-x)\f]
-     * where \em b is called bowing parameter and describes deviation
-     * from the nonlinear behaviour.
+     * \copydoc alloy(double, double, double, double)
      *
-     * \param result the  value for material \f$  A_xB_{1-x}C\f$
-     * \param val_a the value for material \f$AC\f$
-     * \param val_b the value for material \f$BC\f$
-     * \param xa the molar fraction of \f$AC\f$
-     * \param bowing the bowing parameter
+     * \param result the value for material \f$  A_xB_{1-x}C\f$
      */
-
-        void alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
+    void alloy(Tensor4DSym& result, const Tensor4DSym& val_a,
         const Tensor4DSym& val_b, double xa,
         const Tensor4DSym& bowing = Tensor4DSym(0));
 
-        void alloy(Tensor2Sym& result, const Tensor2Sym& val_a,
+
+    /*! \copydoc alloy(double, double, double, double) */
+    void alloy(Tensor2Sym& result, const Tensor2Sym& val_a,
         const Tensor2Sym& val_b, double xa,
         const Tensor2Sym& bowing = Tensor2Sym(0)); 
 
-    double alloy(double val_a, double val_b, double xa, double bowing = 0.0);
+
+
 
   private:
-    //double alloy(double val_a, double val_b, double xa, double bowing = 0.0)
+    
     //! An iterator for the models
     typedef std::map<const std::string, ID>::iterator model_id_iterator;
 
@@ -346,18 +332,8 @@ PhysicalModelInterface::alloy(double val_a, double val_b,
     double xa, double bowing)
 {
   return val_b + (val_a - val_b) * xa - bowing * xa * (1 - xa);
-};
+}
 
-
-
-
-
-//template <typename T>
-//inline
-//T PhysicalModelInterface::alloy(T& result,const T& val_a,const T& val_b,double xa,const T& bowing)
-//{
-//  result = (1 - xa) * val_b + xa * val_a - xa * (1 - xa) * bowing;
-//};
 
 
 inline

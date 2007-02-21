@@ -9,17 +9,23 @@
 
 #include "fstream"
 
+#include <boost/tokenizer.hpp>
+
 
 using namespace std;
 
 void
 Sweep::do_init(void)
 {
+
+  using namespace boost;
+
   ModelOptions& opts = get_options();
+  Control& control = get_control();
   
   // get the simulation
   const string& sim = opts.get_option("simulation", "");
-  _simulation = SimulationInterface::find_simulation(sim);
+  _simulation = control.find_simulation(sim);
   
   // we don't tolerate NULL pointers...
   if (_simulation == NULL)
@@ -27,17 +33,90 @@ Sweep::do_init(void)
 
   if (!_simulation->is_initialized())
     _simulation->init();
+
+
+  // get the names of the simulations to be solved
+  vector<string> sims;
+  opts.get_option("simulation", sims);
+  int num_of_sims = sims.size();
+
+  
+  _simulations.resize(num_of_sims);
+  for (int i = 0; i < num_of_sims; i++)
+  {
+    _simulations[i] = control.find_simulation(sims[i]);
+    if (_simulations[i] == NULL)
+      throw InitFailedException("Sweep: Simulation " + sim + " not found.");
+
+    if (!_simulations[i]->is_initialized())
+      _simulations[i]->init();
+  }
+
+  // if user didn't provide a simulation name, we take the first available
+  if (num_of_sims == 0)
+  {
+    _simulations.resize(1);
+    _simulations[0] = control.find_simulation("");
+    if (_simulations[0] == NULL)
+      throw InitFailedException("Sweep: No simulation found.");
+  }
+
+  //
+  // at this point we have for sure one simulation
+  //
+
+  // we set our environment to that of the first simulation
+  set_environment(&_simulations[0]->get_environment());
   
   // get the model which contains the sweep variable
-  // NOTE: for now we can sweep over boundary values
-  const string& bnd = opts.get_option("boundary", "");
-  SimulationEnvironment& env = _simulation->get_environment();
+  // NOTE: for now we can sweep only over boundary values
+  //
+  // syntax is: 'simulationname.boundaryname'
+  //         or 'boundaryname'
+  string bnd = opts.get_option("boundary", "");
+  typedef tokenizer<char_separator<char> > tokenizer;
+  char_separator<char> sep(".");
+  tokenizer tok(bnd, sep);
+  tokenizer::iterator tokit(tok.begin());
+  if (tokit == tok.end())
+  {
+    string msg("Sweep: You have to provide the name of ");
+    msg += "the sweep variable (currently we support only boundary values).";
+    throw InitFailedException(msg);
+  }
 
-  // we have to set our environment to enable nested sweeps!
-  set_environment(&env);
+  SimulationInterface* simulation;
+  if ((++tokit) == tok.end())
+  {
+    // only boundary name provided, let's hope it's unique...
+    // (we just pick the first that matches)
+    Control::simulation_iterator simit(control.simulations_begin());
+    const Control::simulation_iterator simend(control.simulations_end());
+    for ( ; simit != simend; ++simit)
+    {
+      simulation = *simit;
+      cerr << simulation->get_name() << endl;
+      SimulationEnvironment& env = simulation->get_environment();
+      Boundary* boundary = env.get_boundary(bnd);
+      if (boundary != NULL)
+        break;
+    }
+  }
+  else
+  {
+    tokit = tok.begin();
+    simulation = control.find_simulation(*tokit);
+    if (simulation == NULL)
+      throw InitFailedException("Sweep: Simulation " + *tokit + " not found.");
 
-  if (!env.is_initialized())
-    env.init();
+    bnd = *(++tokit);
+    
+  }
+
+
+  // simulation should have the sweepable boundary value
+  SimulationEnvironment& env = simulation->get_environment();
+
 
   Boundary* boundary = env.get_boundary(bnd);
   if (boundary == NULL)
@@ -156,6 +235,8 @@ Sweep::do_solve(void)
   vector<double>::iterator values_end(_values.end());
 
   unsigned int n = _values.size();
+  // we look at voltages +/- 1e-9 V
+  double eps = 1e-9;
 
   for (unsigned int i = 0; i < n; i++)
   {
@@ -233,7 +314,7 @@ Sweep::do_solve(void)
         value = _last;
       }
     }
-    while (goal_sign * (value - goal) < 0.0);
+    while (goal_sign * (value - goal) < -eps);
 
     //*old_sol = _simulation->get_solution_vector();
   }

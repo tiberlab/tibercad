@@ -224,7 +224,7 @@ PhysicalModelInterface::copy(void) const
 }
 
 
-// explict instantiations
+// explicit instantiations
 
 template ID
 PhysicalModelInterface::get_id_from_name<RecombinationModelInterface>(

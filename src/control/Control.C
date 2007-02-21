@@ -79,7 +79,7 @@ Control::invalidate_environments(void)
 
 
 void
-Control::init(void) throw (InitFailedException)
+Control::init(void) throw (InitFailedException, ModelErrorException)
 {
   try
   {
@@ -192,7 +192,7 @@ Control::create_materials(void)
 
 
 void
-Control::setup_models(void) throw (ModelErrorException)
+Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 {
 
   assert(_device != NULL);
@@ -255,10 +255,14 @@ Control::setup_models(void) throw (ModelErrorException)
     
     // get the user defined name (if defined...)
     const string& simulation_name = simopts.get_option("simulation_name", "");
-    if (!simulation_name.empty() && (simulation_name != modelname))
+
+    // read also section with user defined name as label
+    if (!simulation_name.empty())
     {
-      solveropts += parser.read_parameters("Solver", simulation_name);
       solveropts["name"] = simulation_name;
+
+      if (simulation_name != modelname)
+        solveropts += parser.read_parameters("Solver", simulation_name);
     }
 
     SimulationInterface* sim =
@@ -266,6 +270,8 @@ Control::setup_models(void) throw (ModelErrorException)
     if (sim == NULL)
       throw ModelErrorException(
           "Control: No such simulation type: " + modelname);
+
+    sim->set_control(this);
 
     _simulations[sim->get_name()] = sim;
 
@@ -281,6 +287,10 @@ Control::setup_models(void) throw (ModelErrorException)
 
     // what main model should be used?
     ModelOptions physopts(parser.read_parameters("Physics", modelname));
+
+    // read also section with user defined name as label
+    if (!simulation_name.empty() && (simulation_name != modelname))
+      physopts += parser.read_parameters("Physics", simulation_name);
 
     // parse the submodels
     // NOTE: different submodels could have the same identifier
@@ -359,6 +369,7 @@ Control::setup_models(void) throw (ModelErrorException)
   if (!solveropts.is_empty())
   {
     SimulationInterface* sim = SimulationInterface::create("sweep", solveropts);
+    sim->set_control(this);
     _simulations[sim->get_name()] = sim;
   }
 

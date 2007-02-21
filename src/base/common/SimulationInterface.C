@@ -74,8 +74,11 @@ SimulationInterface::create(const string& type,
     sim->_options.delete_option("name");
 
 #ifdef DEBUG
-    cout << "Added simulator (ID = " << sim->get_id() <<
-      " name = " << sim->get_name() << ")\n";
+    cout << "Added simulator" << endl;
+    cout << "        ID   = " << sim->get_id() << endl;
+    cout << "        type = " << sim->get_type() << endl;
+    cout << "        name = " << sim->get_name() <<
+      " / default name = " << sim->get_default_name() << endl;
 #endif
   }
 
@@ -125,6 +128,12 @@ SimulationInterface::create_equation_system_name(void)
 }
 
 
+string
+SimulationInterface::get_default_name(void) const
+{
+  return Utils::extract_typename(typeid(*this));
+}
+
 
 
 SimulationInterface*
@@ -156,6 +165,17 @@ SimulationInterface::find_simulation(const string& name)
         if (it != end)
           sim = it->second;
       }
+
+      if (it == end)
+      {
+        // we even look for the default name
+        it = _simulation_map.begin();
+        for ( ; (it != end) && ((it->second)->get_default_name() != name); ++it);
+
+        if (it != end)
+          sim = it->second;
+      }
+
     }
   }
 
@@ -228,12 +248,6 @@ SimulationInterface::create_physical_model(const ModelOptions& options) const
   return NULL;
 }
 
-
-Control&
-SimulationInterface::get_control(void)
-{
-  return get_environment().get_device().get_control();
-}
 
 
 void

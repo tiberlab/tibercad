@@ -23,7 +23,8 @@ ExcitonDissociation::do_init(void)
 
   if (_exciton_sim == NULL)
   {
-    std::string msg("Simulation "+std::string(ex)+" not found");
+    std::string msg("ExcitonDissociation: Simulation " +
+        std::string(ex) + " not found");
     throw InitFailedException(msg);
   }
 }

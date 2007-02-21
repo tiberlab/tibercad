@@ -53,6 +53,14 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     const std::string& get_name(void) const;
 
 
+    //! Get the default name for this simulation
+    /*!
+     * This can be useful to identify a named simulation for which
+     * we dont't know the name neither the type
+     */
+    std::string get_default_name(void) const;
+
+
     //! Create a simulation of type \c type with options
     /*!
      * \param type the simulation type to create
@@ -226,6 +234,15 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     const std::string& get_type(void) const;
 
 
+    //! Set the Control object
+    void set_control(Control* control);
+
+
+    //! Get the Control object
+    Control& get_control(void);
+
+
+
   protected:
 
     //! Empty constructor
@@ -326,10 +343,6 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
         std::vector<std::string>& description) {};
 
 
-    //! Get the Control object
-    Control& get_control(void);
-
-
 
   private:
 
@@ -339,6 +352,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     
     //! The environment for this simulation
     SimulationEnvironment* _environment;
+
+
+    //! The Control object which controls this simulation
+    Control* _control;
 
     
     //! A flag indicating if the simulator is initialized
@@ -402,6 +419,24 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 //
 // inline members
 // 
+
+
+inline
+void
+SimulationInterface::set_control(Control* control)
+{
+  _control = control;
+}
+
+
+inline
+Control&
+SimulationInterface::get_control(void)
+{
+  assert(_control != NULL);
+  return *_control;
+}
+
 
 
 inline

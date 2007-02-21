@@ -14,10 +14,10 @@
  * \f{eqnarray*}
  * R_{SRH} & =& \frac{np - n_i^2}{(n+n_i\exp{(E_t-E_i)/k_BT})\tau_p +
  * (p+n_i\exp{(E_i-E_t)/k_BT})\tau_n} \\
- * \tau_{n,p} & = & {\tau^0}_{n,p} \left{
- *     \begin{array}[l]
+ * \tau_{n,p} & = & {\tau^0}_{n,p} \left\{
+ *     \begin{array}{l}
  *      \left(\frac{T}{T_0}\right)^{T_\alpha} \\
- *      \exp{T_c(T/T_0 - 1)}
+ *      e^{T_c(T/T_0 - 1)}
  *     \end{array}\right.
  * \f}
  */

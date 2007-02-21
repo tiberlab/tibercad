@@ -93,7 +93,7 @@ ExcitonTransport::SolverParameters::SolverParameters(void)
     ls_maxstep(0.025),
     ls_type(3),
     ksp_type(KSPBCGSL),
-    pc_type(PCILU)
+    pc_type(PCCOMPOSITE)
 {
 }
 
@@ -216,6 +216,8 @@ ExcitonTransport::compute_scaling(void)
   x0 = (x > y) ? x : y;
   x0 = (x0 > z) ? x0 : z;
 
+  phi0 = Constants::k_B * SimulationOptions::T;
+
   _scaling.set_potential_scaling(phi0);
   _scaling.set_length_scaling(x0 * _options.mesh_units);
   _scaling.set_mobility_scaling(mu0);
@@ -294,6 +296,7 @@ ExcitonTransport::parse_options(void)
   Options& myopts = get_options();
 
   myopts.integration_order = static_cast<libMeshEnums::Order>(
+
       opts.get_option("integration_order", 5));
   myopts.mesh_units = opts.get_option("mesh_units", 1e-4);
 
@@ -309,7 +312,20 @@ ExcitonTransport::parse_options(void)
   solver_params.linear_abs_tolerance = opts.get_option("lin_abs_tol", 1e-12);
   solver_params.linear_max_iterations = opts.get_option("lin_max_it", 500);
   solver_params.ls_maxstep = opts.get_option("ls_maxstep", 0.05);
-  //string pc = opts.get_option("pc", "ilu");
+
+  string pc = opts.get_option("pc_type", "");
+  if (pc == "") {}
+  else if (pc == "ilu")
+    solver_params.pc_type = PCILU;
+  else if (pc == "composite")
+    solver_params.pc_type = PCCOMPOSITE;
+  else if (pc == "jacobi")
+    solver_params.pc_type = PCJACOBI;
+  else if (pc == "lu")
+    solver_params.pc_type = PCLU;
+  else if (pc == "cholesky")
+    solver_params.pc_type = PCCHOLESKY;
+
 
 }
 
@@ -425,8 +441,16 @@ ExcitonTransport::do_solve(void)
   set_solver_params(*system.nonlinear_solver);
 
 
-  try { system.solve(); }
-  // if it did not converge, so try half of the step
+  bool failure = true;
+  string msg("ExcitonTransport: solve failed (");
+
+  try
+  {
+    system.solve();
+    old_solution = solution;
+
+    failure = false;
+  }
   catch (PetscDivergedError& e)
   {
     if (e.get_solver_type() == 1) cerr << "KSP ";
@@ -434,6 +458,9 @@ ExcitonTransport::do_solve(void)
     cerr << "diverged: " << e.get_reason() <<
       " at iteration " << e.get_iteration() <<
       " (fnorm = " << e.get_fnorm() << ")\n";
+
+    msg += e.what();
+    msg += ")\n";
   }
   catch (PetscRuntimeError& e)
   {
@@ -449,87 +476,20 @@ ExcitonTransport::do_solve(void)
       solver_params.pc_type = old_pc;
     }
     cerr << "\n";
+    msg += e.what();
+    msg += ")\n";
   }
 
   _n_nonlinear_iterations = system.n_nonlinear_iterations();
   _final_residual = system.final_nonlinear_residual();
-  old_solution = solution;
 
-
-
-  if (params.mesh_refinement)
+  if (failure)
   {
-    MeshRefinement mesh_refinement(mesh);
-    ErrorVector error;
-    KellyErrorEstimator error_estimator;
-
-    bool is_refined;
-    double delta_l2_norm, l2_norm;
-
-    for (int r_step = 0; r_step < params.max_refinement_steps; r_step++)
-    {
-      cout << "\nRefinement step " << (r_step + 1) << "\n" << flush;
-      error_estimator.estimate_error(system, error);
-
-      mesh_refinement.flag_elements_by_error_fraction(error,
-                                          params.refine_fraction,
-                                          params.coarsen_fraction,
-                                          params.max_refinement_level);
-
-      is_refined = mesh_refinement.refine_and_coarsen_elements();
-
-      equation_systems.reinit();
-
-      if (is_refined)
-        get_environment().update_element_list();
-
-
-      old_solution = solution;
-
-      try { system.solve(); }
-      catch (PetscDivergedError& e)
-      {
-        // TODO
-        if (e.get_solver_type() == 1) cerr << "KSP ";
-        else cerr << "SNES ";
-        cerr << "diverged: " << e.get_reason() <<
-          " at iteration " << e.get_iteration() <<
-          " (fnorm = " << e.get_fnorm() << ")\n";
-
-        // we have to clear the solver context, because the exception
-        // left it in a unknown state such that future solves would fail.
-        solution = old_solution;
-        system.nonlinear_solver->clear();
-      }
-      catch (PetscRuntimeError& e)
-      {
-        // TODO
-        if (e.get_reason() == PETSC_ERR_MAT_LU_ZRPVT)
-          cerr << "Zero pivot during ILU.\n";
-        // we have to clear the solver context, because the exception
-        // left it in a unknown state such that future solves would fail.
-        solution = old_solution;
-        system.nonlinear_solver->clear();
-      }
-
-/*
-      solution.close();
-      l2_norm = solution.l2_norm() / sqrt(mesh.n_nodes());
-      old_solution.add(-1.0, solution);
-
-
-      old_solution.close();
-      delta_l2_norm = old_solution.l2_norm() / sqrt(mesh.n_nodes());
-      cout << "  |new - old|_2 = " << delta_l2_norm
-        << " |new| = " << l2_norm << "\n\n";
-*/
-
-    }
-
-    // disable refinement
-    // TODO: ???
-    disable_mesh_refinement();
+    system.nonlinear_solver->clear();
+    solution = old_solution;
+    throw SolveFailedException(msg);
   }
+
 }
 
 
@@ -657,13 +617,12 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
 
 
-
-
 // implementation taken from libmesh equation_systems.C
 void
-ExcitonTransport::build_densities(vector<double>& densities,
-    vector<string>& names)
+ExcitonTransport::build_nodal_results(const set<string>& variables,
+    vector<double>& results, vector<string>& legend)
 {
+  
   NonlinearImplicitSystem* system;
 
   system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
@@ -679,36 +638,94 @@ ExcitonTransport::build_densities(vector<double>& densities,
   const unsigned int dim = mesh.mesh_dimension();
   // TODO if some elements were coarsened, does this still work??
   const unsigned int nn  = mesh.n_nodes();
+  
+  legend.resize(variables.size());
 
-  const unsigned int n_vars  = 4;
-  names.resize(n_vars);
-  names[0] = "density";
-  names[1] = "net_recombination_rate";
-  names[2] = "generation_rate";
-  names[3] = "electro-chimical_potential";
+  // for each possible variable we set the vector index
+  // -1 means, the variable should not be plotted
+  unsigned int n_vars = 0;
+  const set<string>::const_iterator varend(variables.end());
 
-  densities.resize(nn * n_vars);
 
-  vector<double> local(densities.size());
+  int Ef = -1;
+  if (variables.find("xEffPot") != varend)
+  {
+    Ef = n_vars;
+    legend[n_vars] = "exciton_effective_potential";
+    n_vars++;
+  }
+
+
+  int xdens = -1;
+  if (variables.find("xDensity") != varend)
+  {
+    xdens = n_vars;
+    legend[n_vars] = "exciton_density";
+    n_vars++;
+  }
+
+
+  int rec = -1;
+  int num_rec = 0;
+  map<ID, string> rec_model_ids;
+  if (variables.find("ExcitonRecombination") != varend)
+  {
+    num_rec = 5;
+    rec = n_vars;
+    
+    legend.resize(variables.size() + num_rec);
+
+    legend[n_vars] = "exciton_generation";
+    n_vars++;
+
+    legend[n_vars] = "exciton_radiative_recombination";
+    n_vars++;
+
+    legend[n_vars] = "exciton_nonradiative_recombination";
+    n_vars++;
+
+    legend[n_vars] = "exciton_dissociation";
+    n_vars++;
+
+    legend[n_vars] = "net_exciton_recombination";
+    n_vars++;
+  }
+
+
+  int mu = -1;
+  if (variables.find("xMob") != varend)
+  {
+    mu = n_vars;
+    legend[n_vars] = "exciton_mobility";
+    n_vars++;
+  }
+
+  legend.resize(n_vars);
+    
+  results.resize(nn * n_vars);
+
+  vector<double> local(results.size());
   vector<unsigned short int> node_conn(nn);
 
   vector<double> nodal_val;
 
   // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
+  const double phi0 = get_scaling().get_potential_scaling();
+  const double x0 = get_options().mesh_units;
 
-  fill(densities.begin(), densities.end(), 0.0);
+
+  fill(results.begin(), results.end(), 0.0);
   fill(local.begin(), local.end(), 0.0);
 
   // Get the number of elements that share each node.  We will
   // compute the average value at each node.
   {
     vector<unsigned short int> node_conn_local(node_conn.size());
-
+    
     MeshBase::const_element_iterator it =
       mesh.active_local_elements_begin();
     const MeshBase::const_element_iterator end =
-      mesh.active_local_elements_end();
+      mesh.active_local_elements_end(); 
 
     for ( ; it != end; ++it)
       for (unsigned int n=0; n<(*it)->n_nodes(); n++)
@@ -721,30 +738,39 @@ ExcitonTransport::build_densities(vector<double>& densities,
     // (Note that we use an unsigned short int here even though an
     // unsigned char would be more that sufficient.  The MPI 1.1
     // standard does not require that MPI_SUM, MPI_PROD etc... be
-    // implemented for char data types. 12/23/2003 - BSK)
+    // implemented for char data types. 12/23/2003 - BSK)  
     MPI_Allreduce (&node_conn_local[0], &node_conn[0], node_conn.size(),
 		   MPI_UNSIGNED_SHORT, MPI_SUM, libMesh::COMM_WORLD);
-
+    
 #else
     // Without MPI the node_conn_local and the node_conn arrays
     // are necessarily identical
     node_conn = node_conn_local;
-
+    
 #endif
   }
 
   const unsigned int u_var = system->variable_number("fermi_x");
-
+  
   vector<unsigned int> dof_indices_u;
+
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  QGauss qrule(dim, libMeshEnums::CONSTANT);
+  fe->attach_quadrature_rule(&qrule);
+
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
   MeshBase::const_element_iterator it =
     mesh.active_local_elements_begin();
   const MeshBase::const_element_iterator end =
-    mesh.active_local_elements_end();
+    mesh.active_local_elements_end(); 
 
   for ( ; it != end; ++it)
   {
     const Elem* elem = *it;
+
+    ID subdomain = elem->subdomain_id();
 
 #ifdef ENABLE_INFINITE_ELEMENTS
     // infinite elements should be skipped...
@@ -752,8 +778,6 @@ ExcitonTransport::build_densities(vector<double>& densities,
 #endif
     {
       dof_map.dof_indices(elem, dof_indices_u, u_var);
-
-      ID subdomain = elem->subdomain_id();
 
       ExcitonProperties* excitonmodel =
         dynamic_cast<ExcitonProperties*>(
@@ -763,53 +787,80 @@ ExcitonTransport::build_densities(vector<double>& densities,
 
       excitonmodel->reinit(elem);
 
+      fe->reinit(elem);
+
       assert(elem->n_nodes() == dof_indices_u.size());
-
-
-      vector<Point> nodes(elem->n_nodes());
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-        nodes[n] = elem->point(n);
 
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
         double ex  = phi0 * solution(dof_indices_u[n]);
+
+        double kT = excitonmodel->get_lattice_temperature();
         
+        excitonmodel->set_carrier_temperature(kT);
         excitonmodel->set_coordinates(elem->point(n));
         excitonmodel->set_effective_potential(ex);
         excitonmodel->calculate_density();
         excitonmodel->calculate_net_recombination_rate();
 
+
         assert (node_conn[elem->node(n)] != 0);
+        double conn = static_cast<double>(node_conn[elem->node(n)]);
 
         unsigned int id = n_vars * elem->node(n);
-        double nodal_val = excitonmodel->get_density();
-        local[id] +=
-          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
 
-        nodal_val = excitonmodel->get_net_recombination_rate();
-        local[id + 1] +=
-          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+        if (xdens != -1)
+        {
+          double nodal_val = excitonmodel->get_density();
+          local[id + xdens] += nodal_val / conn;
+        }
 
-        nodal_val = 0;
-        local[id + 2] +=
-          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
+        if (rec != -1)
+        {
+          // recombination models
+          int first = id + rec;
+          double tot = excitonmodel->get_net_recombination_rate();
+          local[first + 4] += tot / conn;
+          
+          double nodal_val = excitonmodel->get_radiative_recombination_rate();
+          local[first + 1] += nodal_val / conn;
+          double totrec = nodal_val;
+          
+          nodal_val = excitonmodel->get_nonradiative_recombination_rate();
+          local[first + 2] += nodal_val / conn;
+          totrec += nodal_val;
+          
+          nodal_val = excitonmodel->get_dissociation_rate();
+          local[first + 3] += nodal_val / conn;
+          totrec += nodal_val;
 
-        nodal_val = ex;
-        local[id + 3] +=
-          nodal_val / static_cast<Real>(node_conn[elem->node(n)]);
-      }
+          nodal_val = (totrec - tot) / conn;
+          local[first] += nodal_val; // generation
+        }
 
-    }
-  }
+
+        if (mu != -1)
+        {
+          double nodal_val = excitonmodel->get_mobility();
+          local[id + mu] += nodal_val / conn;
+        }
+
+        if (Ef != -1)
+          local[id + Ef] += ex / conn;
+
+
+      } // end loop over nodes
+    } // end if not infinite element
+  } // end loop over elements
 
 #ifdef HAVE_MPI
   // Now each processor has computed contriburions to the
   // soln vector.  Gather them all up.
-  MPI_Allreduce (&local[0], &densities[0], densities.size(),
+  MPI_Allreduce (&local[0], &results[0], results.size(),
 		 MPI_REAL, MPI_SUM, libMesh::COMM_WORLD);
 #else
-  densities = local;
+  results = local;
 #endif
 
 }
@@ -820,56 +871,81 @@ ExcitonTransport::build_densities(vector<double>& densities,
 
 
 void
-ExcitonTransport::build_current_density(vector<double>& current,
-    vector<string>& names)
+ExcitonTransport::build_elemental_results(const set<string>& variables,
+    vector<double>& results, vector<string>& legend)
 {
-/*
+
   // we only do something if we are on processor 0
+  // TODO parallelize
   if (libMesh::processor_id() != 0)
     return;
-
+  
   NonlinearImplicitSystem* system;
 
-  system = &_eq_system->get_system<NonlinearImplicitSystem>(
+  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
       get_equation_system_name());
 
   // aliases for nicer code
-  const DD::Device& device = *(_device);
-  const Mesh& mesh = _device->get_mesh();
+  const Device& device = *(_device);
+  const Mesh& mesh = get_mesh();
   const NumericVector<Number>& solution = *(system->solution);
 
   const DofMap& dof_map = system->get_dof_map();
 
   const unsigned int dim = mesh.mesh_dimension();
   const unsigned int nn  = mesh.n_elem();
+  
+  legend.resize(variables.size());
 
-  const unsigned int n_vars  = 6;
-  names.resize(n_vars);
-  names[0] = "Jn_x";
-  names[1] = "Jn_y";
-  names[2] = "Jn_z";
-  names[3] = "Jp_x";
-  names[4] = "Jp_y";
-  names[5] = "Jp_z";
+  // for each possible variable we set the vector index
+  // -1 means, the variable should not be plotted
+  unsigned int n_vars = 0;
+  const set<string>::const_iterator varend(variables.end());
 
-  current.resize(nn * n_vars);
+
+  int J = -1;
+  if (variables.find("XCurrent") != varend)
+  {
+    J = n_vars;
+    switch (dim)
+    {
+      case 3:
+        legend[n_vars] = "Jx_z";
+        n_vars++;
+      case 2:
+        legend[n_vars] = "Jx_y";
+        n_vars++;
+      default:
+        legend[n_vars] = "Jx_x";
+        n_vars++;
+    }
+  }
+
+  int AbsJ = -1;
+  if (variables.find("AbsXCurrent") != varend)
+  {
+    AbsJ = n_vars;
+    legend[n_vars] = "|J|";
+    n_vars++;
+  }
+
+
+  legend.resize(n_vars);
+
+  results.resize(nn * n_vars);
 
   // the scaling parameters to scale back the result
   double phi0 = get_scaling().get_potential_scaling();
   const double x0 = get_options().mesh_units;
 
-  const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
-
+  const unsigned int u_var = system->variable_number("fermi_x");
+  
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
   QGauss qrule(dim, libMeshEnums::CONSTANT);
   fe->attach_quadrature_rule(&qrule);
 
   vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
 
   // element shape functions
   const vector<vector<Real> >& phi = fe->get_phi();
@@ -883,68 +959,90 @@ ExcitonTransport::build_current_density(vector<double>& current,
   MeshBase::const_element_iterator it =
     mesh.active_elements_begin();
   const MeshBase::const_element_iterator end =
-    mesh.active_elements_end();
+    mesh.active_elements_end(); 
 
   unsigned int elem_number = 0;
   for ( ; it != end; ++it)
   {
     const Elem* elem = *it;
 
+    ID subdomain = elem->subdomain_id();
+
     dof_map.dof_indices(elem, dof_indices_u, u_var);
-    dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
 
-    DriftDiffusionProperties* sc =
-      device.get_element_data().get_data(elem->top_parent());
-    assert(sc != NULL);
+    ExcitonProperties* excitonmodel =
+      dynamic_cast<ExcitonProperties*>(
+          device.get_material(subdomain)->get_model(get_id()));
 
-    sc->reinit(elem);
+    assert(excitonmodel!= NULL);
+
+    excitonmodel->reinit(elem);
 
     fe->reinit(elem);
-
+    
     unsigned int n_dofs = dof_indices_u.size();
     // get the solution values at the centroid
-    Real en_x = 0.0, ep_x = 0.0;
-    Real en_y = 0.0, ep_y = 0.0;
-    Real en_z = 0.0, ep_z = 0.0;
-    Real u  = 0.0;
-    Real en = 0.0;
-    Real ep = 0.0;
+    Real ex_x = 0.0;
+    Real ex_y = 0.0;
+    Real ex_z = 0.0;
+    Real ex = 0.0;
     for (unsigned int i = 0; i < n_dofs; i++)
     {
-      en_x  += dphi[i][0](0) * solution(dof_indices_en[i]);
-      en_y  += dphi[i][0](1) * solution(dof_indices_en[i]);
-      en_z  += dphi[i][0](2) * solution(dof_indices_en[i]);
-
-      ep_x  += dphi[i][0](0) * solution(dof_indices_ep[i]);
-      ep_y  += dphi[i][0](1) * solution(dof_indices_ep[i]);
-      ep_z  += dphi[i][0](2) * solution(dof_indices_ep[i]);
-
-      u  += phi[i][0] * solution(dof_indices_u[i]);
-      en += phi[i][0] * solution(dof_indices_en[i]);
-      ep += phi[i][0] * solution(dof_indices_ep[i]);
+      ex_x  += dphi[i][0](0) * solution(dof_indices_u[i]);
+      ex_y  += dphi[i][0](1) * solution(dof_indices_u[i]);
+      ex_z  += dphi[i][0](2) * solution(dof_indices_u[i]);
+      
+      ex += phi[i][0] * solution(dof_indices_u[i]);
     }
+    ex_x *= phi0 / x0;
+    ex_y *= phi0 / x0;
+    ex_z *= phi0 / x0;
 
-    sc->calculate_all(phi0 * u, phi0 * en, phi0 * ep, q_point[0]);
-    double sigma_e = sc->get_electron_conductivity() * Constants::e;
-    double sigma_h = sc->get_hole_conductivity() * Constants::e;
+    // prepare for calculating local properties
+    excitonmodel->set_coordinates(elem->centroid());
+
+    double kT = excitonmodel->get_lattice_temperature();
+
+    excitonmodel->set_carrier_temperature(kT);
+    excitonmodel->set_coordinates(elem->centroid());
+    excitonmodel->set_effective_potential(ex);
+    excitonmodel->calculate_density();
+    excitonmodel->calculate_net_recombination_rate();
+
+
+    double sigma = excitonmodel->get_density() * excitonmodel->get_mobility();
 
     unsigned int id = n_vars * elem_number;
-    //current[id] = phi0 / x0 * (sigma_e * en_x + sigma_h * ep_x);
-    //current[id + 1] = phi0 / x0 * (sigma_e * en_y + sigma_h * ep_y);
-    //current[id + 2] = phi0 / x0 * (sigma_e * en_z + sigma_h * ep_z);
-    current[id]     = phi0 / x0 * sigma_e * en_x;
-    current[id + 1] = phi0 / x0 * sigma_e * en_y;
-    current[id + 2] = phi0 / x0 * sigma_e * en_z;
-    current[id + 3] = phi0 / x0 * sigma_h * ep_x;
-    current[id + 4] = phi0 / x0 * sigma_h * ep_y;
-    current[id + 5] = phi0 / x0 * sigma_h * ep_z;
+
+
+    if (J != -1)
+    {
+      switch (dim)
+      {
+        case 3:
+          results[id + J + 2] = sigma * ex_z;
+        case 2:
+          results[id + J + 1] = sigma * ex_y;
+        default:
+          results[id + J] = sigma * ex_x;
+      }
+    }
+
+    if (AbsJ != -1)
+    {
+      double jx = sigma * ex_x;
+      double jy = sigma * ex_y;
+      double jz = sigma * ex_z;
+      results[id + AbsJ] = sqrt(jx * jx + jy * jy + jz * jz);
+    }
+
 
     elem_number++;
   }
-  current.resize(elem_number * n_vars);
-*/
+
+  results.resize(elem_number * n_vars);
 }
+
 
 
 

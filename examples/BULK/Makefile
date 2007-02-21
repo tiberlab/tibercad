@@ -41,7 +41,7 @@ clean:
 
 distclean: clean
 	@rm -f *.msh *.dat
-	@rm -rf output_*D tibercad
+	@rm -rf output_*D output_tri tibercad
 
 
 include $(topdir)/Make.rules

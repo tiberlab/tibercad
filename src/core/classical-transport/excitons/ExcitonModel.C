@@ -136,7 +136,8 @@ ExcitonModel::do_init(void)
 
   if (_dd_sim == NULL)
   {
-    std::string msg("Simulation "+std::string(dd)+" not found");
+    std::string msg("ExcitonModel: Simulation " +
+        std::string(dd) + " not found");
     throw InitFailedException(msg);
   }
 

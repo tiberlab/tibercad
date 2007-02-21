@@ -22,8 +22,54 @@ class SimulationEnvironment;
  */
 class Control
 {
+  // Some typedefs that are needed in the public section
+  private:
+
+    //! Type for the list of simulations
+    typedef std::map<const std::string, SimulationInterface*> SimulationMap;
+
+    
+    //! Type for the list of simulation environments
+    typedef std::map<SimulationInterface*,
+            SimulationEnvironment*> EnvironmentMap;
+
 
   public:
+
+    //! An iterator to iterate over all simulations
+    class simulation_iterator
+    {
+      public:
+        simulation_iterator(void) {};
+        simulation_iterator(const simulation_iterator& it) : _it(it._it) {};
+        simulation_iterator(const SimulationMap::iterator& it) : _it(it) {};
+
+        simulation_iterator& operator=(const simulation_iterator& other)
+        {
+          _it = other._it;
+          return *this;
+        };
+        
+        simulation_iterator& operator++(void) { ++_it; return *this; };
+        
+        simulation_iterator& operator--(void) { --_it; return *this; };
+        
+        SimulationInterface* operator*(void) { return _it->second; };
+        
+        bool operator==(const simulation_iterator& other)
+        {
+          return (_it == other._it);
+        };
+        
+        bool operator!=(const simulation_iterator& other)
+        {
+          return (_it != other._it);
+        };
+
+      private:
+        SimulationMap::iterator _it;
+    };
+        
 
     //! The constructor
     /*!
@@ -41,7 +87,7 @@ class Control
      * This method calls create_device(), create_materials() and
      * setup_models()
      */
-    void init(void) throw (InitFailedException);
+    void init(void) throw (InitFailedException, ModelErrorException);
 
     
     //! Runs the simulation
@@ -125,18 +171,17 @@ class Control
     void invalidate_environments(void);
 
 
+    //! Get the iterator to the first simulation
+    simulation_iterator simulations_begin(void);
+
+    
+    //! Get the past-the-end iterator for the simulations
+    simulation_iterator simulations_end(void);
+
+
 
   private:
 
-    //! Type for the list of simulations
-    typedef std::map<const std::string, SimulationInterface*> SimulationMap;
-
-    
-    //! Type for the list of simulation environments
-    typedef std::map<SimulationInterface*,
-            SimulationEnvironment*> EnvironmentMap;
-
-    
     //! The inputfile
     std::string _inputfile;
 
@@ -189,7 +234,7 @@ class Control
 
 
     //! Create and setup the models
-    void setup_models(void) throw (ModelErrorException);
+    void setup_models(void) throw (InitFailedException, ModelErrorException);
 
 
 };
@@ -269,6 +314,24 @@ const std::string&
 Control::get_output_format(void) const
 {
   return _output_format;
+}
+
+
+
+inline
+Control::simulation_iterator
+Control::simulations_begin(void)
+{
+  return simulation_iterator(_simulations.begin());
+}
+
+
+
+inline
+Control::simulation_iterator
+Control::simulations_end(void)
+{
+  return simulation_iterator(_simulations.end());
 }
 
 

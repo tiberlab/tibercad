@@ -13,7 +13,7 @@
  *
  * \li Formula of Masetti et al. (formula 1):
  * \f[
- * \mu  =  \mu_{min,1}\exp(-P_c / N) +
+ * \mu  =  \mu_{min,1}e^{-P_c / N} +
  *  \frac{\mu_{const} - \mu_{min,2}}{1 + (N/C_r)^\alpha} -
  *  \frac{\mu_1}{1 + (C_s/N)^\beta}
  * \f]
@@ -148,7 +148,8 @@ DopingDependentMobility::DopingDependentMobility(void)
     _N0(7e16),
     _an(4),
     _a(1),
-    _aa(0)
+    _aa(0),
+    _const_mob(0)
 {
 }
 
@@ -172,6 +173,7 @@ DopingDependentMobility::create_new(void) const
 inline
 DopingDependentMobility::~DopingDependentMobility(void)
 {
+  PhysicalModelInterface::destroy(_const_mob);
 }
 
 #endif // _DOPINGDEPENDENTMOBILITY_H_

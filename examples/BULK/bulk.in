@@ -64,7 +64,7 @@ $Solver
   sweep
   {
     #simulation = driftdiff
-    boundary = anode
+    boundary = dd.anode
     start = 0.0
     stop = 1.0
     steps = 10
@@ -96,8 +96,7 @@ $Simulation
   temperature = 300
   solve = sweep
   resultpath = output_1D
-  output_format = ise
-  plot = (Ec, Ev, QFermi_e, QFermi_h, ECurrent, AbsECurrent, current)
+  output_format = gmv
 }
 
 

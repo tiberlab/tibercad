@@ -290,6 +290,8 @@ SimulationEnvironment::prepare_for_solve(void)
   if (is_prepared())
     return;
 
+  if (!_is_initialized)
+    init();
   
   Mesh& mesh = _device->get_mesh();
 

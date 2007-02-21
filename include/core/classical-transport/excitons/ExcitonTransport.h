@@ -300,18 +300,6 @@ class ExcitonTransport : public SimulationInterface
     double get_solution(const Elem* elem, const Point& p);
     
 
-    /**
-     * fill @c densities with electron and hole densities
-     *
-     * TODO add other values
-     */
-    void build_densities(std::vector<double>& densities,
-        std::vector<std::string>& names);
-
-    //! Fill a vector with the exciton current data
-    void build_current_density(std::vector<double>& current,
-        std::vector<std::string>& names);
-
 
   protected:
       
@@ -335,6 +323,17 @@ class ExcitonTransport : public SimulationInterface
 
     /*! \copydoc SimulationInterface::parse_options() */
     virtual void parse_options(void);
+
+
+    /*! \copydoc SimulationInterface::build_nodal_results() */
+    virtual void build_nodal_results(const std::set<std::string>& variables,
+        std::vector<double>& results, std::vector<std::string>& legend);
+
+
+    /*! \copydoc SimulationInterface::build_elemental_results() */
+    virtual void build_elemental_results(const std::set<std::string>& variables,
+        std::vector<double>& results, std::vector<std::string>& legend);
+
 
     
   private:

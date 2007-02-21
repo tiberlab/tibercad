@@ -17,7 +17,7 @@ $(subdirs):
 
 .%.d: %.C
 	@$(CC) -MT $(basename $<).$(obj-suffix) -MM $(CPPFLAGS) $< > $@.$$$$; \
-	sed 's,\($*\)\.$(obj-suffix)[ :]*,\1.$(obj-suffix) $@ : ,g' < $@.$$$$ > $@; \
+	sed 's,\($*\)\.$(obj-suffix)[ :]*,\1.\*\.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
 
