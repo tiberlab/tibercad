@@ -83,12 +83,12 @@ ExcitonTransport::Options::operator=(const Options& rhs)
 
 
 ExcitonTransport::SolverParameters::SolverParameters(void)
-  : nonlinear_tolerance(1e-12),
-    nonlinear_abs_tolerance(1e-18),
+  : nonlinear_tolerance(1e-9),
+    nonlinear_abs_tolerance(1e-12),
     nonlinear_step_tolerance(1e-6),
-    nonlinear_max_iterations(10),
+    nonlinear_max_iterations(20),
     linear_tolerance(1e-6),
-    linear_abs_tolerance(1e-12),
+    linear_abs_tolerance(1e-15),
     linear_max_iterations(500),
     ls_maxstep(0.025),
     ls_type(3),
@@ -289,29 +289,34 @@ ExcitonTransport::set_solver_params(NonlinearSolver<Number>& solver)
 void
 ExcitonTransport::parse_options(void)
 {
-  SolverParameters& solver_params =
-    get_options().solver_params;
 
   const ModelOptions& opts = SimulationInterface::get_options();
   Options& myopts = get_options();
+  SolverParameters& solver_params = myopts.solver_params;
 
   myopts.integration_order = static_cast<libMeshEnums::Order>(
 
-      opts.get_option("integration_order", 5));
-  myopts.mesh_units = opts.get_option("mesh_units", 1e-4);
+      opts.get_option("integration_order", (int) myopts.integration_order));
+  myopts.mesh_units = opts.get_option("mesh_units", myopts.mesh_units);
 
   myopts.mesh_refinement = opts.get_option("mesh_refinement", false);
 
-  solver_params.nonlinear_tolerance = opts.get_option("nonlin_rel_tol", 1e-9);
+  solver_params.nonlinear_tolerance = opts.get_option("nonlin_rel_tol",
+      solver_params.nonlinear_tolerance);
   solver_params.nonlinear_abs_tolerance = opts.get_option("nonlin_abs_tol",
-      1e-15);
+      solver_params.nonlinear_abs_tolerance);
   solver_params.nonlinear_step_tolerance = opts.get_option("nonlin_step_tol",
-      1e-6);
-  solver_params.nonlinear_max_iterations = opts.get_option("nonlin_max_it", 10);
-  solver_params.linear_tolerance = opts.get_option("lin_rel_tol", 1e-6);
-  solver_params.linear_abs_tolerance = opts.get_option("lin_abs_tol", 1e-12);
-  solver_params.linear_max_iterations = opts.get_option("lin_max_it", 500);
-  solver_params.ls_maxstep = opts.get_option("ls_maxstep", 0.05);
+      solver_params.nonlinear_step_tolerance);
+  solver_params.nonlinear_max_iterations = opts.get_option("nonlin_max_it",
+      solver_params.nonlinear_max_iterations);
+  solver_params.linear_tolerance = opts.get_option("lin_rel_tol",
+      solver_params.linear_tolerance);
+  solver_params.linear_abs_tolerance = opts.get_option("lin_abs_tol",
+      solver_params.linear_abs_tolerance);
+  solver_params.linear_max_iterations = opts.get_option("lin_max_it",
+      solver_params.linear_max_iterations);
+  solver_params.ls_maxstep = opts.get_option("ls_maxstep",
+      solver_params.ls_maxstep);
 
   string pc = opts.get_option("pc_type", "");
   if (pc == "") {}

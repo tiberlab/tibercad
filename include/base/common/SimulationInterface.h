@@ -300,7 +300,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param legend the legend for the values in \c results
      */
     virtual void build_nodal_results(const std::set<std::string>& variables,
-        std::vector<double>& results, std::vector<std::string>& legend) {};
+        std::vector<double>& results, std::vector<std::string>& legend);
 
 
     //! Build elemental result vector for the given variables
@@ -311,7 +311,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param legend the legend for the values in \c results
      */
     virtual void build_elemental_results(const std::set<std::string>& variables,
-        std::vector<double>& results, std::vector<std::string>& legend) {};
+        std::vector<double>& results, std::vector<std::string>& legend);
 
 
     //! Build a vector with some integrated quantities
@@ -606,6 +606,30 @@ SimulationInterface::get_integrated_quantities_description(
 }
 
 
+
+inline
+void
+SimulationInterface::build_nodal_results(
+    const std::set<std::string>& variables,
+    std::vector<double>& results, std::vector<std::string>& legend)
+{
+  ignore_unused_variable(variables);
+  ignore_unused_variable(results);
+  ignore_unused_variable(legend);
+}
+
+
+
+inline
+void
+SimulationInterface::build_elemental_results(
+    const std::set<std::string>& variables,
+    std::vector<double>& results, std::vector<std::string>& legend)
+{
+  ignore_unused_variable(variables);
+  ignore_unused_variable(results);
+  ignore_unused_variable(legend);
+}
 
 
 #endif // _SIMULATIONINTERFACE_H_

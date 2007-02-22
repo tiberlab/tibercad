@@ -22,7 +22,7 @@ Sweep::do_init(void)
 
   ModelOptions& opts = get_options();
   Control& control = get_control();
-  
+/*  
   // get the simulation
   const string& sim = opts.get_option("simulation", "");
   _simulation = control.find_simulation(sim);
@@ -33,7 +33,7 @@ Sweep::do_init(void)
 
   if (!_simulation->is_initialized())
     _simulation->init();
-
+*/
 
   // get the names of the simulations to be solved
   vector<string> sims;
@@ -46,7 +46,7 @@ Sweep::do_init(void)
   {
     _simulations[i] = control.find_simulation(sims[i]);
     if (_simulations[i] == NULL)
-      throw InitFailedException("Sweep: Simulation " + sim + " not found.");
+      throw InitFailedException("Sweep: Simulation " + sims[i] + " not found.");
 
     if (!_simulations[i]->is_initialized())
       _simulations[i]->init();
@@ -123,7 +123,7 @@ Sweep::do_init(void)
     throw InitFailedException("Sweep: Boundary " + bnd + " not found.");
   
   _variable = dynamic_cast<Sweepable*>(
-      boundary->get_boundary_properties(_simulation->get_id()));
+      boundary->get_boundary_properties(simulation->get_id()));
   
   if (_variable == NULL)
     throw InitFailedException("Sweep: No sweepable entity on boundary " +
@@ -169,8 +169,6 @@ Sweep::parse_options(void)
 void
 Sweep::do_solve(void)
 {
-  assert(_simulation != NULL);
-  assert(_simulation->is_initialized());
   assert(_variable != NULL);
 
   parse_options();
@@ -179,22 +177,40 @@ Sweep::do_solve(void)
   string suffix = get_control().get_filename_suffix();
   string outdir = get_control().get_output_dir();
   
+  int num_sim = _simulations.size();
+
+  assert(num_sim > 0);
+
+  // we make a plot file for each simulation
   vector<double> values;
   bool do_plot = false;
-  ofstream plotfile;
+  vector<ofstream*> plotfiles(num_sim);
+  for (int i = 0; i < num_sim; i++)
   {
+    // some sanity check
+    assert(_simulations[i] != NULL);
+    assert(_simulations[i]->is_initialized());
+    
     vector<string> legend;
     vector<string> description;
-    _simulation->get_integrated_quantities_description(_plotvariables,
+    _simulations[i]->get_integrated_quantities_description(_plotvariables,
         legend, description);
+
     // should we plot something?
-    if (legend.size() != 0)
+    if (legend.size() == 0)
+      plotfiles[i] = NULL;
+    else
     {
 
-      string plotfilename(outdir + "/" + get_name() + suffix + ".dat");
-      plotfile.open(plotfilename.c_str());
+      string plotfilename(outdir + "/" + get_name() + "_" +
+          _simulations[i]->get_name() + suffix + ".dat");
 
-      if (!plotfile.good())
+      plotfiles[i] = new ofstream;
+      ofstream& file = *plotfiles[i];
+
+      file.open(plotfilename.c_str());
+
+      if (!file.good())
         throw SolveFailedException("Sweep: Could not open plotfile " +
             plotfilename);
 
@@ -204,32 +220,31 @@ Sweep::do_solve(void)
       // 
       ostringstream s;
       s << "# Parameter sweep " << "(" << ")" << endl;
-      s << "# Simulation: " << _simulation->get_name() << endl;
-      plotfile << s.str();
+      s << "# Simulation: " << _simulations[i]->get_name() << endl;
+      file << s.str();
 
       // print the data description
-      plotfile << "# Data:" << endl;
-      for (unsigned int i = 0; i < description.size(); i++)
-        plotfile << "#    * " << description[i] << endl;
+      file << "# Data:" << endl;
+      for (unsigned int j = 0; j < description.size(); j++)
+        file << "#    * " << description[j] << endl;
 
       
       ostringstream l;
-      l << "#" << endl << "# x   ";
+      l << "#" << endl << "# x   "; // x is out sweep variable
       unsigned int n = legend.size();
-      for (unsigned int i = 0; i < n; i++)
-        l << "  " << legend[i];
+      for (unsigned int j = 0; j < n; j++)
+        l << "  " << legend[j];
       l << endl;
-      plotfile << l.str();
+      file << l.str();
 
       do_plot = true;
     }
   }
 
-  // we make a copy of the current solution
-  // we need this in the case of a solver failure to go back
-  // to an old successful solution
-  //AutoPtr<NumericVector<Real> > old_sol = 
-  //  (_simulation->get_solution_vector()).clone();
+
+  //
+  // now do the loop
+  //
 
   vector<double>::iterator values_begin(_values.begin());
   vector<double>::iterator values_end(_values.end());
@@ -246,6 +261,7 @@ Sweep::do_solve(void)
     double step = goal - _last;
     double old_step = 0.0;
 
+    // we iterate until we arrive at the goal
     double value;
     do
     {
@@ -260,11 +276,12 @@ Sweep::do_solve(void)
         value = goal;
       
       _variable->set_new_value(value);
-      cout  << "Sweep value = " << setprecision(12) << value << endl;
+      cout  << "Sweep value = " << value << endl;
       
       try
       {
-        _simulation->solve();
+        for (int j = 0; j < num_sim; j++)
+          _simulations[j]->solve();
 
         _last = _variable->get_current_value();
 
@@ -275,22 +292,33 @@ Sweep::do_solve(void)
           ostringstream s;
           s << suffix << _last;
           get_control().set_filename_suffix(s.str());
-          _simulation->plot();
+
+          for (int j = 0; j < num_sim; j++)
+            _simulations[j]->plot();
         }
 
 
-        // update "something-vs.-sweepvariable" file
+        // update "something-vs.-sweepvariable" files
         // Here we do it also for intermediate steps
         if (do_plot)
         {
-          _simulation->get_integrated_quantities(_plotvariables, values);
-          ostringstream l;
-          l << setprecision(12) << _last;
-          unsigned int n = values.size();
-          for (unsigned int i = 0; i < n; i++)
-            l << "   " << values[i];
-          l << endl;
-          plotfile << l.str() << flush;
+          for (int j = 0; j < num_sim; j++)
+          {
+            if (plotfiles[j] != NULL)
+              // it means we have something to plot
+            {
+              ofstream& file = *plotfiles[j];
+              _simulations[j]->get_integrated_quantities(_plotvariables, values);
+              ostringstream l;
+              l << setprecision(12) << _last;
+              unsigned int n = values.size();
+              for (unsigned int k = 0; k < n; k++)
+                l << "   " << values[k];
+              l << endl;
+              
+              file << l.str() << flush;
+            }
+          }
         }
 
 
@@ -306,7 +334,6 @@ Sweep::do_solve(void)
         if (abs(step) < _min_step)
           throw SolveFailedException("Sweep: step size small.");
 
-        //_simulation->get_solution_vector() = *old_sol;
 
         // it failed, so we go back to the old value
         // (In principle this is unnecessary, but we need it to not
@@ -315,10 +342,15 @@ Sweep::do_solve(void)
       }
     }
     while (goal_sign * (value - goal) < -eps);
-
-    //*old_sol = _simulation->get_solution_vector();
   }
 
-  plotfile.close();
+  for (int j = 0; j < num_sim; j++)
+  {
+    if (plotfiles[j] != NULL)
+    {
+      plotfiles[j]->close();
+      delete plotfiles[j];
+    }
+  }
 }
 

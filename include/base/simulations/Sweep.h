@@ -15,7 +15,7 @@ class Sweepable;
 /*!
  * This class takes a sweepable (cf. Sweepable class) boundary model
  * and makes a sweep over that variable (e.g. contact voltage). For each
- * sweep step it solves the given simulation according to the following
+ * sweep step it solves the given simulation(s) according to the following
  * flow chart:
  * \image html Sweep_flowchart.jpg
  * \image latex Sweep_flowchart.eps "Flow chart for a parameter sweep" width=10cm
@@ -53,7 +53,6 @@ class Sweep : public SimulationInterface
   private:
 
     //! The simulation for which wew do the sweep
-    SimulationInterface* _simulation;
     std::vector<SimulationInterface*> _simulations;
 
     //! A pointer to the sweepable variable
@@ -90,8 +89,7 @@ class Sweep : public SimulationInterface
 
 inline
 Sweep::Sweep(void)
-  : _simulation(0),
-    _variable(0),
+  : _variable(0),
     _min_step(1e-3),
     _max_step(1),
     _do_output(true)
