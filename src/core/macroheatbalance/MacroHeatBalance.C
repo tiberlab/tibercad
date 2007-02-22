@@ -98,20 +98,20 @@ void MacroHeatBalance::do_init( )
   //------init is done---------------------------------------------------------------------//
 
 }
-
+//-------------------------------------------------------------------------------//
 void  MacroHeatBalance::do_solve()
 {
 
 
 
 }
-
+//--------------------------------------------------------------------------------//
 MacroHeatBalance::~MacroHeatBalance()
 {
   equation_systems->delete_system(system_name);
 
 }
-
+//---------------------------------------------------------------------------------//
 MacroHeatBalance::MacroHeatBalance()
 {
   _dd_simul = NULL;
@@ -122,11 +122,7 @@ PhysicalModel*   MacroHeatBalance :: create_physical_model (const ModelOptions &
                     throw (ModelErrorException)
 {
   
- 
-  
   HeatModel* model = HeatModel::create( );
-
-
 
   return model;      
 
@@ -138,8 +134,17 @@ BoundaryProperties* MacroHeatBalance :: create_boundary_model (const ModelOption
 
 {
 
-}
+   const string& modelname = options.get_option("type", "Heat_reservoir");
+ 
+   ThermalContact* model = ThermalContact::create(modelname, options);
 
+   if (model == NULL)  
+     throw ModelErrorException("MacroHeatBalance: No such boundary model: " + modelname);
+
+  return model;
+
+}
+//----------------------------------------------------------------------------------//
 MacroHeatBalance*  MacroHeatBalance :: create (void)
 {
   return new MacroHeatBalance();
