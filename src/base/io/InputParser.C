@@ -554,7 +554,15 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
       found = true;
       break;
     }  
+
     in_stream >>  label;
+
+    while (skip_comments(in_stream,label ) == true )
+    {
+      in_stream >> label; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+    cut_off_comment(label, in_stream);
               
   }   
 
