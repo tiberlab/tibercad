@@ -61,31 +61,167 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
   bool found = false;
   std::string str,  label,dollar_symbol ;
   dollar_symbol = "$";
-
+  char ch ;
 
   if ( !in_stream.good() )
   {
 
- throw InitFailedException("ERROR: Input file not good");
-   //  std::cerr << "ERROR: Input file not good." 
-//               << std::endl;
+    throw InitFailedException("ERROR: Input file not good");
+    //  std::cerr << "ERROR: Input file not good." 
+    //               << std::endl;
     //   error();
   }
   in_stream >>  label;
+
+  // cerr <<  " BEFORE cut_off_comment(label)  "  <<  label <<  endl;
+  cut_off_comment(label); //  erase comment in  case label#my_comment....
+  //  cerr <<  " cut_off_comment(label)  "  <<  label <<  endl;
+
   
   //       while (  ( found == false) && (  label != dollar_symbol ) && (!in_stream.eof()) ) //  
   while (  ( found == false) && (  strncmp ((label.c_str()),dollar_symbol.c_str(),1) != 0  )
-           && (!in_stream.eof()) ) //  
+           && (!in_stream.eof()) )   
  
   { //while
         
+    //   cerr <<  " +++++++++keyword =  " << keyword << " ++++++++label  =  " << label <<  endl;
+
     if  (label == keyword  )
-    {
-      found = true;
-      break;
-    }  
+    { // if
+
+      //cerr <<  " -----------keyword =  " << keyword << " ----------label  =  " << label <<  endl;
+      //*********************************************
+        //NEW :  check if  it is   really  beginning of  a block   
+        // 
+
+        //  *****************************************************
+
+        in_stream.get(ch); // get next char
+      do{
+      
+        if  ( (ch == ' ') || (ch == '\n'))
+        {
+          in_stream.get(ch);
+        }
+
+        if (ch == '#' )  //  skip  comments 
+        { 
+          in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
+          //      and   read  the  next keyword !!!
+          in_stream.get(ch);
+             
+        }
+
+
+      } while ( (ch == '\n') || (ch == ' ') || (ch == '#') );
+
+
+      // then  check  if  first char (not  blank) is  "{"
+      if (ch == '{')
+      {
+     //   cout  <<  "  ch { :   "<< ch <<  endl << endl;
+        in_stream.putback(ch );
+
+        found = true;
+        break;
+
+        //  OK
+
+      }
+      else in_stream.putback(ch );
+
+
+
+
+
+      // ------------------------------------------------
+
+
+
+
+      //         in_stream.get(ch); // get next char
+      //       // cerr <<  " in_stream.get(ch)" <<  ch  <<  endl;
+      //       while (ch == '\n')  //  if  starts with new line !!
+      //       {
+      //         cout  <<  "  ch = new line   "<<  endl << endl;
+      //         in_stream.get(ch);
+      //       }
+
+      //       while(ch == ' ')        //  skip  blanks
+      //       {
+      //         in_stream.get(ch);
+
+      //         //  OR  ch != ' ' ,  OR  ch = EOL
+      //         while (ch == '\n')
+      //         {
+      //           cout  <<  "  ch = new line   "<<  endl << endl;
+      //           in_stream.get(ch);
+      //         }
+
+      //         cout  <<  "  ch:   "<< ch <<  endl << endl;
+      //       }
+
+      //       while (ch == '#' )  //  skip  comments   // ***  if ?
+      //       {
+      //         in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
+      //         //   in_stream >> item;  //      and   read  the  next keyword !!!
+      //         in_stream.get(ch);
+
+      //         while(ch == ' ') //  skip  blanks
+      //         {
+
+
+
+      //           in_stream.get(ch);
+      //           //  OR  ch != ' ' ,  OR  ch = EOL
+      //           while (ch == '\n')
+      //           {
+      //             cout  <<  "  ch = new line   "<<  endl << endl;
+      //             in_stream.get(ch);
+      //           }
+
+      //           cout  <<  "  ch:   "<< ch <<  endl << endl;
+      //         }
+
+      //       } 
+
+
+
+
+
+
+
+      //       // then  check  if  first char (not  blank) is  "{"
+      //       if (ch == '{')
+      //       {
+      //         cout  <<  "  ch { :   "<< ch <<  endl << endl;
+      //         // then  putback char  and  return  found = true, break
+      //         //  
+
+      //         in_stream.putback(ch );
+
+      //         found = true;
+      //         break;
+
+      //       }
+
+      //       else in_stream.putback(ch );
+
+      //*************************************************************
+
+
+
+
+          //       found = true;
+          //       break;
+          }  
 
     in_stream >>  label;
+    // cerr <<  " BEFORE cut_off_comment(label)  "  <<  label <<  endl;
+
+    cut_off_comment(label); //  erase comment in  case label#my_comment....
+    // cerr <<  " AFTER cut_off_comment(label)  "  <<  label <<  endl;
+
   }   
 
 
@@ -113,8 +249,9 @@ const  ModelOptions& InputParser::read_parameters(std::string section_name, cons
 
   std::string  label ;
   std::ifstream in_stream (filename.c_str()) ;
+  char ch;
 
-  bool found_model;
+  bool found_model, check_error ;
   found_model = false;
 
   reset_all_maps();
@@ -123,27 +260,146 @@ const  ModelOptions& InputParser::read_parameters(std::string section_name, cons
   {
     throw InitFailedException("ERROR: Input file not good."); 
 
-  //   std::cerr << "ERROR: Input file not good." 
-//               << std::endl;
-//     //   error();
+    //   std::cerr << "ERROR: Input file not good." 
+    //               << std::endl;
+    //     //   error();
   }
 
   section_name = "$"+section_name;
 
   find_keyword( in_stream,section_name  );
  
-  // { 
+  //  // { 
  
-  // while (  ( label  != end_symbol) && (!in_stream.eof()) ) //   
-  //        {   
+  //   // while (  ( label  != end_symbol) && (!in_stream.eof()) ) //   
+  //   //        {   
 
-  //   if  ( !(  model_name == "") )
-  //   {    
-  in_stream >>  label;   //   read   start_symb  !!
-  while (skip_comments(in_stream,label) == true )
-  {
-    in_stream >> label; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-  } 
+  //   //   if  ( !(  model_name == "") )
+  //   //   {    
+
+  // in_stream >>  label;   //   read   start_symb  !!
+  //   while (skip_comments(in_stream,label) == true )
+  //   {
+  //     in_stream >> label; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+  //   } 
+
+  // ****************************************************************
+  // get comments and  blanks until char;  if  char = '{' then stop
+
+
+  //       in_stream.get(ch); // get next char
+  //       // cerr <<  " in_stream.get(ch)" <<  ch  <<  endl;
+  //       while (ch == '\n')  //  if  starts with new line !!
+  //       {
+  //         cout  <<  "  ch = new line   "<<  endl << endl;
+  //         in_stream.get(ch);
+  //       }
+
+
+
+  //       while(ch == ' ')        //  skip  blanks
+  //       {
+  //         in_stream.get(ch);
+
+  //         //  OR  ch != ' ' ,  OR  ch = EOL
+  //         while (ch == '\n')
+  //         {
+  //           cout  <<  "  ch = new line   "<<  endl << endl;
+  //           in_stream.get(ch);
+  //         }
+
+  //         cout  <<  "  ch:   "<< ch <<  endl << endl;
+  //       }
+
+  //       while (ch == '#' )  //  skip  comments   // ***  if ?
+  //       {
+  //         in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
+  //         //   in_stream >> item;  //      and   read  the  next keyword !!!
+  //         in_stream.get(ch);
+
+  //         while(ch == ' ') //  skip  blanks
+  //         {
+
+
+
+  //           in_stream.get(ch);
+  //           //  OR  ch != ' ' ,  OR  ch = EOL
+  //           while (ch == '\n')
+  //           {
+  //             cout  <<  "  ch = new line   "<<  endl << endl;
+  //             in_stream.get(ch);
+  //           }
+
+  //           cout  <<  "  ch:   "<< ch <<  endl << endl;
+  //         }
+
+  //       } 
+
+
+  //       // then  check  if  first char (not  blank) is  "{"
+  //       if (ch == '{')
+  //       {
+  //         cout  <<  "  ch { :   "<< ch <<  endl << endl;
+  //        //  OK
+
+  //       }
+
+  //       else cerr <<  "ERROR  hereee"  << endl; 
+
+  //*************************
+
+
+      // ++++++++++++++  put   function skip_to_bracket !!!
+      // bool InputParser::skip_to_bracket(ifstream& in_stream)
+
+      check_error = skip_to_bracket(in_stream);  // go on reading until the  char  '{' is  read  
+  if (check_error == true)
+    throw InitFailedException("ERROR: missing  block."); 
+  //   cerr <<  "ERROR "  << endl; 
+
+
+  // -----------------------------------------------------
+  //  OK  ----------------
+  //
+
+  //       in_stream.get(ch); // get next char
+  //   do{
+      
+  //     if  ( (ch == ' ') || (ch == '\n'))
+  //     {
+  //       in_stream.get(ch);
+  //     }
+
+  //     if (ch == '#' )  //  skip  comments 
+  //     { 
+  //       in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
+  //       //      and   read  the  next keyword !!!
+  //       in_stream.get(ch);
+             
+  //     }
+
+
+  //   } while ( (ch == '\n') || (ch == ' ') || (ch == '#') );
+
+
+  //   // then  check  if  first char (not  blank) is  "{"
+  //   if (ch == '{')
+  //   {
+  //     cout  <<  "  ch { :   "<< ch <<  endl << endl;
+  //     //  OK
+
+  //   }
+
+  //   else cerr <<  "ERROR  hereee"  << endl; 
+
+
+
+
+  // **********************************************
+
+
+ 
+
 
   //  find_keyword_in_section( in_stream,  model_name);  //   read   Model name  string
   found_model =  find_keyword_in_section( in_stream,  model_name);  //   read   Model name  string
@@ -194,8 +450,8 @@ const  ModelOptions&  InputParser::read_parameters(std::string section_name)
   if ( !in_stream.good() )
   {
     throw InitFailedException("ERROR: Input file not good."); 
-   //  std::cerr << "ERROR: Input file not good." 
-//               << std::endl;
+    //  std::cerr << "ERROR: Input file not good." 
+    //               << std::endl;
     //   error();
   }
 
@@ -277,7 +533,7 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
 
     throw InitFailedException("ERROR: Input file not good.");
     // std::cerr << "ERROR: Input file not good." 
-//               << std::endl;
+    //               << std::endl;
     //   error();
   }
   in_stream >>  label;
@@ -301,7 +557,8 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
 
 
     cerr << " Error: keyword "<< keyword <<  "  not  found !  " << endl ;
-    exit(1);
+    throw InitFailedException("ERROR "); 
+    //  exit(1);
 
   }
 
@@ -326,7 +583,7 @@ const map <const string, ModelStructure*>& InputParser::read_models()
 
     throw InitFailedException("ERROR: Input file not good." );
     // std::cerr << "ERROR: Input file not good." 
-//               << std::endl;
+    //               << std::endl;
     //   error();
   }
 
@@ -673,9 +930,11 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 
 
         else  
+        {
 
+       
           throw InitFailedException("SYNTAX ERROR in input file (block) ");
-
+        }
 
         // {
         //           cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
@@ -881,7 +1140,8 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
             cerr << " A comment line  must be preceded by '#' "<< endl;
             //     cerr << " BEWARE: numerical and string values cannot  be  mixed  in  the  same line !"
             //        << endl;
-            exit(1); 
+            throw InitFailedException("ERROR "); 
+          
           }
 
 
@@ -923,7 +1183,7 @@ const map <ID, RegionStructure>& InputParser::read_device(void)
 
     throw InitFailedException("ERROR: Input file not good." );
     // std::cerr << "ERROR: Input file not good." 
-//               << std::endl;
+    //               << std::endl;
     //   error();
   }
 
@@ -969,11 +1229,11 @@ const map <ID, RegionStructure>& InputParser::read_device(void)
     {
       throw InitFailedException("SYNTAX ERROR in input  file (device section): keyword Region is  missing! ");
 
-//       cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
-//       cerr << " keyword Region is  missing " 
-//            << endl;
+      //       cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+      //       cerr << " keyword Region is  missing " 
+      //            << endl;
        
-//       exit(1); 
+      //       exit(1); 
     }
 
     //     read   region_name
@@ -1134,9 +1394,9 @@ InputParser::parse_model(ifstream& in_stream)
 {// method  for   parsing  of   model section
 
  
-  
+  bool  check_error;
   string BC_regions_keyword_string , keyword_BC_Region_string, model_keyword_string,
-    phys_model_label, apply_label    ;
+    phys_model_label, options_label    ;
 
   //  numb_regions_keyword_string = "numb_regions";
   //  phys_regions_keyword_string = "phys_regions";
@@ -1146,7 +1406,7 @@ InputParser::parse_model(ifstream& in_stream)
   phys_model_label = "physical_model";
   //  simulation_name_label = "name";
   //  physical_regions_label = "phys_regions";
-  apply_label = "apply_to";
+  options_label   = "options";
 
   set<string>  model_section_keywords;
   // set<string>::iterator   s_it;
@@ -1154,7 +1414,7 @@ InputParser::parse_model(ifstream& in_stream)
   model_section_keywords.insert("BC_Regions");
   model_section_keywords.insert("model");
   model_section_keywords.insert("physical_model");
-  model_section_keywords.insert("apply_to");
+  model_section_keywords.insert("options");
   model_section_keywords.insert("}");
 
 
@@ -1182,12 +1442,20 @@ InputParser::parse_model(ifstream& in_stream)
 
   string str;
 
-  in_stream >>  label; //  read   start_symb
+  //  in_stream >>  label; //  read   start_symb
 
-  if  (label != start_symb)
-  {
-     throw InitFailedException("  SYNTAX ERROR in input  file (models section)  ");  
-  }
+  //   if  (label != start_symb)
+  //   {
+  //     throw InitFailedException("  SYNTAX ERROR in input  file (models section)  ");  
+  //   }
+
+
+  check_error = skip_to_bracket(in_stream);  // go on reading until the  char  '{' is  read  
+  if (check_error == true)
+    throw InitFailedException("ERROR: Model block  missing."); 
+  //   cerr <<  "ERROR "  << endl; 
+
+
   
   //   find_keyword(in_stream,start_symb ); //  looks  for  "{"
 
@@ -1206,11 +1474,11 @@ InputParser::parse_model(ifstream& in_stream)
   {
     throw InitFailedException("SYNTAX ERROR in input  file: keyword model missing in models section  ");  
 
-   //  cerr <<  "  SYNTAX ERROR in input  file (models)  " <<  endl;
-//     cerr << " keyword model is  missing " 
-//          << endl;
+    //  cerr <<  "  SYNTAX ERROR in input  file (models)  " <<  endl;
+    //     cerr << " keyword model is  missing " 
+    //          << endl;
        
-//     exit(1); 
+    //     exit(1); 
   }
 
 
@@ -1227,18 +1495,26 @@ InputParser::parse_model(ifstream& in_stream)
       throw InitFailedException("SYNTAX ERROR in input  file: keyword model missing in models section  ");  
 
       // cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
-//       cerr << " keyword model is  missing " 
-//            << endl;
+      //       cerr << " keyword model is  missing " 
+      //            << endl;
        
-//       exit(1); 
+      //       exit(1); 
     }
 
 
     in_stream >>  model_name ;
+
+
+
     while (skip_comments(in_stream, model_name ) == true )
     {
       in_stream >>  model_name ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
     } 
+    //**********************************
+        //cut_off_comment(string& label )//   erase  possible comments attached to model_name
+
+        cut_off_comment(model_name);
+
 
     reset_all_maps();  //  clear  the  IP  maps !!!!
     model_BC_map.clear();
@@ -1264,7 +1540,7 @@ InputParser::parse_model(ifstream& in_stream)
       // cerr <<  "  SYNTAX ERROR in input file: model block missing!   " <<  endl;
   
        
-//       exit(1); 
+      //       exit(1); 
     }
 
 
@@ -1307,14 +1583,14 @@ InputParser::parse_model(ifstream& in_stream)
     if (!check_label(model_section_keywords, label))
       throw InitFailedException("SYNTAX ERROR in input  file: unknown keyword in models section! ");
 
-    if  ( label  == apply_label )
+    if  ( label  == options_label )
     {
                
       temp_options.clear();
       parse_options(in_stream,temp_options);
       current_model_point->set_model_options(temp_options );
 
-      // after apply_to  block,   read  the  next  label
+      // after "options"  block,   read  the  next  label
 
       in_stream >>  label ;
       while (skip_comments(in_stream,  label ) == true )
@@ -1627,9 +1903,9 @@ InputParser::parse_model(ifstream& in_stream)
         
 
         // cerr <<  "  SYNTAX ERROR in input  file (5)  " <<  endl;
-//         cerr <<  " missing BC_regions block ! " <<  endl;
+        //         cerr <<  " missing BC_regions block ! " <<  endl;
        
-//         exit(1); 
+        //         exit(1); 
       }
 
 
@@ -1651,14 +1927,14 @@ InputParser::parse_model(ifstream& in_stream)
         if  (keyword != keyword_BC_Region_string)
         {
 
-        throw InitFailedException("SYNTAX ERROR in input file:keyword BC_Region is  missing !");
+          throw InitFailedException("SYNTAX ERROR in input file:keyword BC_Region is  missing !");
 
 
-//           cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
-//           cerr << " keyword BC_Region is  missing " 
-//                << endl;
+          //           cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+          //           cerr << " keyword BC_Region is  missing " 
+          //                << endl;
        
-//           exit(1); 
+          //           exit(1); 
         }
 
         //     read   BC_region_name
@@ -1749,9 +2025,9 @@ InputParser::parse_model(ifstream& in_stream)
 
 
    
-   //   in_stream >>  end_symbol;
+      //   in_stream >>  end_symbol;
 
-    //keyword  !!!!
+      //keyword  !!!!
       end_symbol = keyword;
 
       while (skip_comments(in_stream, end_symbol) == true )
@@ -1766,15 +2042,15 @@ InputParser::parse_model(ifstream& in_stream)
       if  (strncmp ((end_symbol.c_str()),end_symb.c_str(),1) != 0)
 
       {
-          throw InitFailedException("SYNTAX ERROR in input file (BC regions block)  ");
+        throw InitFailedException("SYNTAX ERROR in input file (BC regions block)  ");
 
 
         // cerr <<  "  SYNTAX ERROR in input  file (section  Models )   " <<  endl;
-//         exit(1); 
+        //         exit(1); 
       }
 
 
-//  read  end  model
+      //  read  end  model
       in_stream >> end_symbol;
       while (skip_comments(in_stream, end_symbol) == true )
       {
@@ -1784,13 +2060,13 @@ InputParser::parse_model(ifstream& in_stream)
       if  (strncmp ((end_symbol.c_str()),end_symb.c_str(),1) != 0)
 
       {
-          throw InitFailedException("SYNTAX ERROR in input file (model block)   ");
+        throw InitFailedException("SYNTAX ERROR in input file (model block)   ");
 
       }
 
 
       //  END  OF  MODEL
-    //  put ModelStructure in  map  <model_name, *ModelStructure>
+      //  put ModelStructure in  map  <model_name, *ModelStructure>
       model_structure_map.insert(make_pair (model_name, current_model_point )); 
 
 
@@ -1857,7 +2133,7 @@ const  ModelOptions& InputParser::get_options(void)
 //  method to parse  list  of  IDs 
 //  NEW:  returns just a string "(3 4 5 )" 
 
-//void InputParser::parse_list_phys_ID(ifstream& in_stream,vector<string>& list_regions   )
+//  obsolete !!!!!!!
 void InputParser::parse_list_phys_ID(ifstream& in_stream, string& list_regions   )
 
 {
@@ -2015,7 +2291,7 @@ bool InputParser::check_label(set<string>& section_keywords, const string& label
   if (s_it != section_keywords.end())
   {
 
- //   cout <<  " Found  " <<  endl;
+    //   cout <<  " Found  " <<  endl;
 
     found = true;
  
@@ -2023,7 +2299,7 @@ bool InputParser::check_label(set<string>& section_keywords, const string& label
   } 
   else 
   {
- //   cout <<  " NOT  Found  " <<  endl;
+    //   cout <<  " NOT  Found  " <<  endl;
     found = false;
   } 
 
@@ -2032,3 +2308,72 @@ bool InputParser::check_label(set<string>& section_keywords, const string& label
 
 } //  end  method
 
+
+
+
+void InputParser::cut_off_comment(string& label )
+{
+
+  string::size_type loc = label.find_first_of( "#", 0 );
+  if( loc != string::npos )
+  {
+    //    cout << "Found # at " << loc << endl;
+    label.erase(loc);
+  }
+  //  else
+  //    cout << "Didn't find # " << endl;        
+  // lab1.erase(loc);
+
+} //  end  method
+
+
+
+bool InputParser::skip_to_bracket(ifstream& in_stream)
+
+{
+
+  bool check_error = false;  
+  char ch ;
+
+  //*************************
+
+
+      in_stream.get(ch); // get next char
+  do{
+      
+    if  ( (ch == ' ') || (ch == '\n'))
+    {
+      in_stream.get(ch);
+    }
+
+    if (ch == '#' )  //  skip  comments 
+    { 
+      in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
+      //      and   read  the  next keyword !!!
+      in_stream.get(ch);
+             
+    }
+
+
+  } while ( (ch == '\n') || (ch == ' ') || (ch == '#') );
+
+
+  // then  check  if  first char (not  blank) is  "{"
+  if (ch == '{')
+  {
+  //  cout  <<  "  ch { :   "<< ch <<  endl << endl;
+    //  OK
+   
+    return  check_error ;
+
+  }
+
+  else  
+  {
+    check_error =true;
+
+    return  check_error ;
+
+  }
+
+} //  end  method

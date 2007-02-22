@@ -303,12 +303,25 @@ class InputParser{
   std::map <const std::string, ModelStructure*>& get_model_structure_map(void);
 
 
- //!   Utility  to  check  label  consistency. 
+  //!   Utility  to  check  label  consistency. 
   /*!
    * Check if the  string  "label" is  a  valid keyword for the section. 
    */
   bool check_label(std::set<std::string>& section_keywords, const std::string& label );
 
+
+  //!   Utility  to  delete possible comments after label. 
+  /*!
+   * Check if the  string  "label" is directly followed by  comments; in
+   * this case erase the comment  from label. 
+   */
+  void cut_off_comment(std::string& label );
+
+  //!   Utility  to skip comments and set stream pointer to the next  bracket. 
+  /*!
+   * 
+   */
+  bool skip_to_bracket(std::ifstream& in_stream);
 
 
 };
