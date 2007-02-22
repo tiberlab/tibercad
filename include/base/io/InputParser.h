@@ -315,7 +315,9 @@ class InputParser{
    * Check if the  string  "label" is directly followed by  comments; in
    * this case erase the comment  from label. 
    */
-  void cut_off_comment(std::string& label );
+  //  void cut_off_comment(std::string& label );
+  void cut_off_comment(std::string& label,  std::ifstream& in_stream);
+
 
   //!   Utility  to skip comments and set stream pointer to the next  bracket. 
   /*!
