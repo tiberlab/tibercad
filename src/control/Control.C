@@ -398,6 +398,7 @@ Control::run_simulation(void) throw (SolveFailedException)
   vector<SimulationInterface*> simulations(n);
   
   // first check if we can find all simulations
+  // We also let them solve the equilibrium
   for (unsigned int i = 0; i < n; i++)
   {
     SimulationInterface* sim = find_simulation(names[i]);
@@ -412,6 +413,22 @@ Control::run_simulation(void) throw (SolveFailedException)
   for (unsigned int i = 0; i < n; i++)
   {
     SimulationInterface* sim = simulations[i];
+
+    // we try first to solve the equilibrium solution, which
+    // could be useful for most simulations
+    try
+    {
+      sim->solve_equilibrium();
+    }
+    catch (runtime_error& e)
+    {
+      ostringstream s;
+      s << "Control: Problem in solving equilibrium." << endl <<
+        "    Cause: " << e.what();
+      throw SolveFailedException(s.str());
+    }
+
+    // now the actual solve
     sim->solve();
     sim->plot();
   }

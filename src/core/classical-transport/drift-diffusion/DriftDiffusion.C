@@ -190,8 +190,7 @@ DriftDiffusion::SolverParameters::operator=(const SolverParameters& rhs)
 
 
 DriftDiffusion::DriftDiffusion(void)
-  : _rebuild_eq_system(true),
-    _solve_equilibrium(true)
+  : _rebuild_eq_system(true)
 {
 }
 
@@ -519,9 +518,6 @@ DriftDiffusion::cleanup_solver(void)
   _dirichlet_nodes.erase(_dirichlet_nodes.begin(),
       _dirichlet_nodes.end());
 
-  // clear result vector
-  _solution.erase(_solution.begin(), _solution.end());
-
   // clear variables vector
   _variables.erase(_variables.begin(), _variables.end());
 
@@ -543,9 +539,6 @@ DriftDiffusion::do_solve(void)
   _this = this;
   
   parse_options();
-
-  if (_solve_equilibrium)
-    solve_equilibrium();
 
 
   const ModelOptions& opts = SimulationInterface::get_options();
@@ -586,15 +579,24 @@ DriftDiffusion::do_solve(void)
       break;
   }
 
-  // TODO will be deleted
-  build_solution_vector(_solution);
 }
 
 
 
+
 void
-DriftDiffusion::solve_equilibrium(void)
+DriftDiffusion::do_equilibrium(void)
 {
+
+  // rebuild the system if needed
+  rebuild_equation_system();
+
+  // set a static pointer to ourselves
+  // this is needed in the static assembly routine
+  _this = this;
+  
+  parse_options();
+
 
   // first we have to compute the scaling
   compute_scaling(get_options().scaling_type);
@@ -634,12 +636,12 @@ DriftDiffusion::solve_equilibrium(void)
   {
     cerr << "Solving equilibrium" << endl;
     system.solve();
-    system.get_vector("old solution") = *system.solution;
     cerr << "Equilibrium done" << endl;
   }
   catch (runtime_error& e)
   {
     cerr << "ATTENTION: Equilibrium did not converge: " << e.what() << endl;
+    throw (e);
   }
 
   // set the contact voltages back to the desired values
@@ -654,8 +656,6 @@ DriftDiffusion::solve_equilibrium(void)
   
   // reset the coupling
   get_options().coupling = coupling;
-
-  _solve_equilibrium = false;
 }
 
 
@@ -931,11 +931,6 @@ DriftDiffusion::rebuild_equation_system(void)
   system.add_variable("fermi_e", libMeshEnums::FIRST);
   system.add_variable("fermi_h", libMeshEnums::FIRST);
 
-  // for adaptive mesh refinement we need the old solution
-  // befor a refinement step
-  // we need it also for self-consistent loops
-  system.add_vector("old solution");
-
 
   // these are needed by libmesh, we don't use them, though
   SolverParameters& solver_params =
@@ -1025,7 +1020,6 @@ DriftDiffusion::solve_newton(void)
   try
   {
     system.solve();
-    system.get_vector("old solution") = *system.solution;
 
     failure = false;
   }
@@ -1061,7 +1055,6 @@ DriftDiffusion::solve_newton(void)
       {
         system.solve();
         failure = false;
-        system.get_vector("old solution") = *system.solution;
       }
       catch (...)
       {
@@ -1079,7 +1072,6 @@ DriftDiffusion::solve_newton(void)
   if (failure)
   {
     system.nonlinear_solver->clear();
-    *system.solution = system.get_vector("old solution");
     throw SolveFailedException(msg);
   }
 
@@ -1412,9 +1404,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
       get_equation_system_name());
 
   const NumericVector<Number>& ddsol = *(system->solution);
-  const NumericVector<Number>& old_ddsol = system->get_vector("old solution");
-  double a = get_relaxation_factor();
-  double b = 1 - get_relaxation_factor();
 
   const unsigned int dim = get_mesh().mesh_dimension();
 
@@ -1458,12 +1447,9 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     // do interpolation
     for (unsigned int i = 0; i < n_dofs; i++)
     {
-      u  += phi[i][n] * (a * ddsol(dof_indices_u[i]) +
-          b * old_ddsol(dof_indices_u[i]));
-      en += phi[i][n] * (a * ddsol(dof_indices_en[i]) +
-          b * old_ddsol(dof_indices_en[i]));
-      ep += phi[i][n] * (a * ddsol(dof_indices_ep[i]) +
-          b * old_ddsol(dof_indices_ep[i]));
+      u  += phi[i][n] * ddsol(dof_indices_u[i]);
+      en += phi[i][n] * ddsol(dof_indices_en[i]);
+      ep += phi[i][n] * ddsol(dof_indices_ep[i]);
     }
 
     // scale the potential back

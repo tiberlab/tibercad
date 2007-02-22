@@ -22,18 +22,7 @@ Sweep::do_init(void)
 
   ModelOptions& opts = get_options();
   Control& control = get_control();
-/*  
-  // get the simulation
-  const string& sim = opts.get_option("simulation", "");
-  _simulation = control.find_simulation(sim);
-  
-  // we don't tolerate NULL pointers...
-  if (_simulation == NULL)
-    throw InitFailedException("Sweep: Simulation " + sim + " not found.");
 
-  if (!_simulation->is_initialized())
-    _simulation->init();
-*/
 
   // get the names of the simulations to be solved
   vector<string> sims;
@@ -131,6 +120,9 @@ Sweep::do_init(void)
 }
 
 
+
+
+
 void
 Sweep::parse_options(void)
 {
@@ -164,6 +156,27 @@ Sweep::parse_options(void)
   // unused
   //_do_output = opts.get_option("output", _do_output);
 }
+
+
+
+
+
+void
+Sweep::do_equilibrium(void)
+{
+  int num_sim = _simulations.size();
+  
+  for (int i = 0; i < num_sim; i++)
+  {
+    // some sanity check
+    assert(_simulations[i] != NULL);
+    assert(_simulations[i]->is_initialized());
+
+    _simulations[i]->solve_equilibrium();
+  }
+}
+
+
 
 
 void
@@ -242,6 +255,15 @@ Sweep::do_solve(void)
   }
 
 
+  // we make a copy of the current solutions
+  // we need this in the case of a solver failure to go back
+  // to an old successful solution
+  vector<NumericVector<Real>* > old_sol(num_sim); 
+  for (int i = 0; i < num_sim; i++)
+    old_sol[i] = ((_simulations[i]->get_solution_vector()).clone()).release();
+
+
+
   //
   // now do the loop
   //
@@ -283,7 +305,14 @@ Sweep::do_solve(void)
         for (int j = 0; j < num_sim; j++)
           _simulations[j]->solve();
 
+
         _last = _variable->get_current_value();
+
+
+        // remember the current solution
+        for (int j = 0; j < num_sim; j++)
+          *(old_sol[j]) = _simulations[j]->get_solution_vector();
+
 
         // write results, but only at desired sweep steps
         if (find_if(values_begin, values_end,
@@ -334,6 +363,9 @@ Sweep::do_solve(void)
         if (abs(step) < _min_step)
           throw SolveFailedException("Sweep: step size small.");
 
+        // set to the remembered solution
+        for (int j = 0; j < num_sim; j++)
+          _simulations[j]->get_solution_vector() = *(old_sol[j]);
 
         // it failed, so we go back to the old value
         // (In principle this is unnecessary, but we need it to not
@@ -342,10 +374,15 @@ Sweep::do_solve(void)
       }
     }
     while (goal_sign * (value - goal) < -eps);
+
   }
 
+
+  // clean up
   for (int j = 0; j < num_sim; j++)
   {
+    delete old_sol[j];
+
     if (plotfiles[j] != NULL)
     {
       plotfiles[j]->close();

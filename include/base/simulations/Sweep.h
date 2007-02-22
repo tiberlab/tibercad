@@ -40,12 +40,18 @@ class Sweep : public SimulationInterface
     /*! \copydoc SimulationInterface::do_init() */
     virtual void do_init(void);
 
+
+    /*! \copydoc SimulationInterface::do_equilibrium() */
+    virtual void do_equilibrium(void);
+
+    
     /*! \copydoc SimulationInterface::do_solve()
      * solve() of the associated SimulationInterface object will
      * be called repeatedly for all sweep values
      */
     virtual void do_solve(void);
 
+    
     /*! \copydoc SimulationInterface::parse_options() */
     virtual void parse_options(void);
     

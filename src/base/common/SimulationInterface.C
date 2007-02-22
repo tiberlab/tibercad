@@ -202,10 +202,11 @@ SimulationInterface::solve(void) throw (SolveFailedException)
   PerfLog perflog(get_name() + ": solve", false);
   perflog.start_event("solve");
 
-  assert(_is_initialized);
+  assert(is_initialized());
 
   if (_environment != NULL)
     _environment->prepare_for_solve();
+
 
   do_solve();
 

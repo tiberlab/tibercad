@@ -248,16 +248,6 @@ class ExcitonTransport : public SimulationInterface
      */
     //void build_scaling(void);
 
-    /*!
-     * Remember the current solution for future restart
-     */
-    void remember_current_solution(void);
-
-    /*!
-     * Reset to the remembered solution
-     */
-    void set_to_remembered_solution(void);
-
 
     /*!
      * @returns the variable names in a vector.

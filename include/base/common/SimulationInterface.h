@@ -123,7 +123,15 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     void set_options(const ModelOptions& options);
 
+
+    //! Solve the system for equilibrium
+    /*!
+     * Calls do_equilibrium()
+     *
+     */
+    void solve_equilibrium(void) throw (SolveFailedException);
     
+
     //! Solve the system
     /*!
      * This method calls do_solve() after some health checks
@@ -163,6 +171,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     bool is_solved(void) const;
 
+
+    //! Check if the equilibrium for this simulation has been calculated
+    bool equilibrium_done(void) const;
+    
     
     //! Set the relaxation factor
     void set_relaxation_factor(double relax);
@@ -266,6 +278,18 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     virtual void do_init(void) = 0;
 
+
+    //! Solve for equilibrium
+    /*!
+     * Can be implemented in derived classes to solve for some
+     * equilibrium state. This method will be called for any simulation
+     * before calling solve().
+     *
+     * Use it e.g. to solve the Poisson equation for equilibrium, to set
+     * some reasonable starting values etc.
+     */
+    virtual void do_equilibrium(void) {};
+
     
     //! Do the solve
     /*!
@@ -362,10 +386,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     bool _is_initialized;
 
     
-    //! A flag indicating that a simulation has be done
+    //! A flag indicating that a simulation has been done
     bool _is_solved;
 
-    
+
     //! For self-consistent calculations this could be useful
     double _relaxation_factor;
 
@@ -523,6 +547,8 @@ SimulationInterface::is_solved(void) const
 
 
 
+
+
 inline
 void
 SimulationInterface::set_relaxation_factor(double relax)
@@ -631,5 +657,12 @@ SimulationInterface::build_elemental_results(
   ignore_unused_variable(legend);
 }
 
+
+inline
+void
+SimulationInterface::solve_equilibrium(void) throw (SolveFailedException)
+{
+  do_equilibrium();
+}
 
 #endif // _SIMULATIONINTERFACE_H_

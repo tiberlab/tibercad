@@ -381,17 +381,6 @@ class DriftDiffusion : public SimulationInterface
     void guess_equilibrium(void);
 
     
-    /**
-     * @return the current nodal solution vector.
-     * \deprecated
-     * The vector is ordered as
-     *   [ var1\@node1 ... varn\@node1 var1\@node2 ... varn\@node2 ... ]
-     * where the ordering \p var1 ... \p var2 is the same as in the
-     * method \p get_variable_names()
-     */
-    const std::vector<double>& get_solution(void) const;
-
-    
     //! Get the solution on the nodes of a given element
     /*!
      * \param elem the pointer to the element
@@ -493,6 +482,10 @@ class DriftDiffusion : public SimulationInterface
      */
     virtual void do_init(void);
 
+
+    /*! \copydoc SimulationInterface::do_equilibrium() */
+    virtual void do_equilibrium(void);
+
     
     //! Solve the drift-diffusion problem.
     /*!
@@ -559,9 +552,6 @@ class DriftDiffusion : public SimulationInterface
      */
     bool _rebuild_eq_system;
 
-    //! Decides if only equilibrium has to be solved
-    bool _solve_equilibrium;
-
 
     /*!
      * The @c Options to be used
@@ -583,12 +573,6 @@ class DriftDiffusion : public SimulationInterface
      */
     std::vector<std::string> _variables;
 
-    /**
-     * The nodal solution in the order
-     * [ var1\@node1 ... varn\@node1 var1\@node2 ... varn\@node2 ... ]
-     * \deprecated
-     */
-    std::vector<double> _solution;
 
     /**
      * The number of nonlinear iterations needed
@@ -667,10 +651,6 @@ class DriftDiffusion : public SimulationInterface
 
     //! Solve using an iterative Gummel scheme
     void solve_gummel(void) throw (PetscRuntimeError);
-
-
-    //! Solve the equilibrium
-    void solve_equilibrium(void);
 
 
     //! Calculate terminal currents
@@ -876,12 +856,6 @@ DriftDiffusion::get_scaling(void) const
 }
 
 
-inline
-const std::vector<double>&
-DriftDiffusion::get_solution(void) const
-{
-  return _solution;
-}
 
 inline
 unsigned int

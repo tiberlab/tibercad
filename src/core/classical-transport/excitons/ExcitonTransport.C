@@ -84,7 +84,7 @@ ExcitonTransport::Options::operator=(const Options& rhs)
 
 ExcitonTransport::SolverParameters::SolverParameters(void)
   : nonlinear_tolerance(1e-9),
-    nonlinear_abs_tolerance(1e-12),
+    nonlinear_abs_tolerance(1e-18),
     nonlinear_step_tolerance(1e-6),
     nonlinear_max_iterations(20),
     linear_tolerance(1e-6),
@@ -226,15 +226,6 @@ ExcitonTransport::compute_scaling(void)
 
 
 
-void
-ExcitonTransport::set_to_remembered_solution(void)
-{
-  NonlinearImplicitSystem& system =
-    _eq_system->get_system<NonlinearImplicitSystem>(
-        get_equation_system_name());
-  *(system.solution) = system.get_vector("remembered solution");
-}
-
 
 void
 ExcitonTransport::reset_solver(void)
@@ -358,12 +349,6 @@ ExcitonTransport::do_init(void)
 
   system.add_variable("fermi_x", libMeshEnums::FIRST);
 
-  // we can remember a solution for future use
-  system.add_vector("remembered solution");
-  // for adaptive mesh refinement we need the old solution
-  // befor a refinement step
-  system.add_vector("old solution");
-
   system.nonlinear_solver->matvec = assemble;
 
   // set some parameters (but we don't use them in this way)
@@ -439,7 +424,6 @@ ExcitonTransport::do_solve(void)
         get_equation_system_name());
 
   NumericVector<Number>& solution = *(system.solution);
-  NumericVector<Number>& old_solution = system.get_vector("old solution");
 
   // set the solver parameters (they could have change since we made
   // the first calculation)
@@ -452,7 +436,6 @@ ExcitonTransport::do_solve(void)
   try
   {
     system.solve();
-    old_solution = solution;
 
     failure = false;
   }
@@ -491,7 +474,6 @@ ExcitonTransport::do_solve(void)
   if (failure)
   {
     system.nonlinear_solver->clear();
-    solution = old_solution;
     throw SolveFailedException(msg);
   }
 
@@ -572,9 +554,6 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
       get_equation_system_name());
 
   const NumericVector<Number>& ddsol = *(system->solution);
-  const NumericVector<Number>& old_ddsol = system->get_vector("old solution");
-  double a = get_relaxation_factor();
-  double b = 1 - a;
 
   const unsigned int dim = get_mesh().mesh_dimension();
 
@@ -609,8 +588,7 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
     double u = 0;
     // do interpolation
     for (unsigned int i = 0; i < n_dofs; i++)
-      u  += phi[i][n] * (a * ddsol(dof_indices_u[i]) +
-          b * old_ddsol(dof_indices_u[i]));
+      u  += phi[i][n] * ddsol(dof_indices_u[i]);
 
     // scale the potential back
     u  *= phi0;
@@ -840,6 +818,7 @@ ExcitonTransport::build_nodal_results(const set<string>& variables,
           local[first + 3] += nodal_val / conn;
           totrec += nodal_val;
 
+          // note the sign: we want to plot it as positive quantity
           nodal_val = (totrec - tot) / conn;
           local[first] += nodal_val; // generation
         }
