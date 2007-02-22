@@ -9,7 +9,7 @@
 #include "Macrostrain.h"
 #include "EnvelopFunctionApprox.h"
 #include "Sweep.h"
-
+#include "MacroHeatBalance.h"
 
 #include "Utils.h"
 
@@ -60,6 +60,8 @@ SimulationInterface::create(const string& type,
     sim = EnvelopFunctionApprox::create();
   else if (type == "sweep")
     sim = Sweep::create();
+  else if (type == "thermal")
+    sim = MacroHeatBalance::create();
 
   if (sim != NULL)
   {

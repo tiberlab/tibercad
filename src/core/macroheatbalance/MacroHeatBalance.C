@@ -54,7 +54,7 @@ void MacroHeatBalance::parse_options( )
       throw InitFailedException("Unknown current model" + opt.current_simulation );
   }
 
-  opt.work_units = sim_opt.get_option("Work_length_units", 1e-2);
+
 
  
 }
@@ -62,6 +62,7 @@ void MacroHeatBalance::parse_options( )
 void MacroHeatBalance::do_init( ) 
 {
 
+  const ModelOptions& sim_opt = get_options();
 
   SimulationEnvironment& si = get_environment();   
 
@@ -74,7 +75,11 @@ void MacroHeatBalance::do_init( )
 
   double mesh_units = _device->get_mesh_units();
 
+  opt.work_units = sim_opt.get_option("Work_length_units", 1e-2);
+
   opt.length_scale = mesh_units/opt.work_units;
+
+
 
   equation_systems = & (get_equation_systems());
 
@@ -102,7 +107,13 @@ void MacroHeatBalance::do_init( )
 void  MacroHeatBalance::do_solve()
 {
 
+   parse_options();
 
+   static_this = this;
+
+   my_system->solution->zero();
+
+   my_system->solve();
 
 }
 //--------------------------------------------------------------------------------//
@@ -118,7 +129,7 @@ MacroHeatBalance::MacroHeatBalance()
 
 }
 //----------------------------------------------------------------------------------//
-PhysicalModel*   MacroHeatBalance :: create_physical_model (const ModelOptions &options) const 
+PhysicalModel*   MacroHeatBalance::create_physical_model (const ModelOptions &options) const 
                     throw (ModelErrorException)
 {
   
@@ -129,7 +140,7 @@ PhysicalModel*   MacroHeatBalance :: create_physical_model (const ModelOptions &
 }
 //----------------------------------------------------------------------------------//
 
-BoundaryProperties* MacroHeatBalance :: create_boundary_model (const ModelOptions &options) const 
+BoundaryProperties* MacroHeatBalance::create_boundary_model (const ModelOptions &options) const 
                     throw (ModelErrorException)
 
 {
@@ -145,18 +156,60 @@ BoundaryProperties* MacroHeatBalance :: create_boundary_model (const ModelOption
 
 }
 //----------------------------------------------------------------------------------//
-MacroHeatBalance*  MacroHeatBalance :: create (void)
+MacroHeatBalance*  MacroHeatBalance::create (void)
 {
   return new MacroHeatBalance();
 }
 
-void MacroHeatBalance :: build_nodal_results (const std::set< std::string > &variables, 
+//----------------------------------------------------------------------------------//
+void MacroHeatBalance::build_nodal_results (const std::set< std::string > &variables, 
 				     std::vector< double > &results, 
 				     std::vector< std::string > &legend)
 {
 
+ 
+
+  if (variables.find("T") != variables.end())
+  {
+    legend.resize(1);
+    legend[0] = "Temperature [K]";
+
+
+
+    MeshBase::const_node_iterator       nd     = mesh->active_nodes_begin();
+    const MeshBase::const_node_iterator nd_el  = mesh->active_nodes_end();
+
+    unsigned int number_of_points = 0;
+    for ( ; nd != nd_el ; ++nd)  number_of_points++;
+
+    results.resize(number_of_points, 0.0);
+
+    MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
+    const MeshBase::const_element_iterator end =     mesh->active_local_elements_end();
+
+    std::vector<unsigned int> dof_indices;
+
+    DofMap& dof_map = my_system->get_dof_map();
+
+    for ( ; it != end; ++it)
+    { 
+      const Elem* elem = *it;
+
+      dof_map.dof_indices (elem, dof_indices); 
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
+	unsigned int id =  elem->node(n);
+	results[id]  =  (*(my_system->solution))(dof_indices[n]);
+      }
+    }
+
+  }
+  
+
 }
 
+//----------------------------------------------------------------------------------//
 void MacroHeatBalance::assemble_heat_matrix(EquationSystems& es,
 				     const std::string& system_name)
 {
@@ -165,7 +218,7 @@ void MacroHeatBalance::assemble_heat_matrix(EquationSystems& es,
 
 }
 
-
+//----------------------------------------------------------------------------------//
 void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& system_name)
 {
 
@@ -270,56 +323,66 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
     
     for (unsigned int qp=0; qp<qrule.n_points(); qp++)
-      {//volumic integration loop
-	for (unsigned int p1=0; p1<n_dofs; p1++) //basis functions of the variable T
-	  {
-	    //!let us check if it belongs to a reservoir bounday
-	    const Node* nd = elem->get_node(p1);
-
-	    Boundary* bd = se.get_boundary(nd); 
-	    
-	    if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
-	      if (bd->get_name() == "Heat_reservoir")
-		{
-		  Ke(p1,p1) = 1.0;
-		   
-		  Fe(p1) = ( dynamic_cast<Reservoir*> ( bd->get_boundary_properties( get_id() ) ) )->get_temperature();
-		}
-	      else
-		{
-		  for (unsigned int p2=0; p2<n_dofs; p1++) //test functions
-		    {
-		      double value = 0.0;
-		      
-		      for (short i = 0; i < dim; i++) //basis function derivative
-			for (short j = 0; j < dim; j++) //test function derivative
-			  {
-			    double kappa_value;
-			    if (i > j) 
-			      kappa_value = kappa(j+1, i+1);
-			    else
-			      kappa_value = kappa(i+1, j+1);
-			    
-			    value += -JxW[qp] * kappa_value * dphi[p1][qp](i) * dphi[p2][qp](j) /(opt.length_scale * opt.length_scale);
-			    
-			  }
-		      
-		      value *= my_Jacobian;
-		      
-		      Ke(p1,p2) += value;
-		    }
-		}
-	  } 
-
+    {//volumic integration loop
+      for (unsigned int p1=0; p1<n_dofs; p1++) //basis functions of the variable T
+      {
+	//!let us check if it belongs to a reservoir bounday
+	const Node* nd = elem->get_node(p1);
 	
-      }
-
+	Boundary* bd = se.get_boundary(nd); 
+	
+	if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+	{
+	  ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );
+	  if (contact->get_type() == 0)
+	  {
+	   
+	   
+	    Ke(p1,p1) = 1.0;
+	    
+	    Fe(p1) = ( dynamic_cast<Reservoir*> (contact) )->get_temperature();
+	  }
+	}
+	else
+	{
+	  for (unsigned int p2=0; p2<n_dofs; p2++) //test functions
+	  {
+	    double value = 0.0;
+	    
+	    for (short i = 0; i < dim; i++) //basis function derivative
+	      for (short j = 0; j < dim; j++) //test function derivative
+	      {
+		double kappa_value;
+		if (i > j) 
+		  kappa_value = kappa(j+1, i+1);
+		else
+		  kappa_value = kappa(i+1, j+1);
+		
+		value += -JxW[qp] * kappa_value * dphi[p1][qp](i) * dphi[p2][qp](j) /(opt.length_scale * opt.length_scale);
+		
+	      }
+	    
+	    value *= my_Jacobian;
+	   
+	    Ke(p1,p2) += value;
+	  }
+	}
+      } 
+      
+	
+    }
+    
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
+    
     system.matrix->add_matrix (Ke, dof_indices);
     system.rhs->add_vector    (Fe, dof_indices); 
-   
+    
+    
+    
 
   }
 
+  // system.matrix->print_matlab("Matr.m");
+ 
 }

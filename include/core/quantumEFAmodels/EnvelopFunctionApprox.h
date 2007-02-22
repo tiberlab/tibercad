@@ -211,7 +211,7 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
 
   
-  //!calculate averaged value of the electrochemical potential <\psi|\mu|psi>
+  //!calculate averaged value of the electrochemical potential \f$\langle \psi|\mu|psi \rangle \$f
   /*!
     \param  i number of state
    
@@ -338,8 +338,12 @@ class EnvelopFunctionApprox  : public SimulationInterface
   SparseMatrix<Number>* S_real;
 
 
- 
-
+  //!calculates \f$ |\langle \psi|\psi \rangle|^2 \f$ of an eigenstate
+  /*!
+    \param state_number eigenstate number
+    \param prob_data \f$ |\langle \psi|\psi \rangle|^2 \f$ of an eigenstate
+  */
+  void prepare_probability_function(const unsigned int state_number, std::vector<double>& prob_data);
 
 
 
@@ -524,6 +528,14 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
  protected:
 
+
+  //!in this class  outputs \f$ |<\psi|\psi>|^2 \f$ for each eigenstate
+  virtual void build_nodal_results(const std::set<std::string>& variables,
+				   std::vector<double>& results, std::vector<std::string>& legend);
+
+  //!in this class outputs eigenvalues 
+  void get_integrated_quantities(const std::set<std::string>& names,
+				 std::vector<double>& values);
 
   virtual void 	do_init(void);
 

@@ -9,7 +9,7 @@ class Reservoir : public ThermalContact
 {
  public:
   //!Constructor	 
-  Reservoir(){};
+  Reservoir();
   //!Destructor 
   ~Reservoir(){};
   //!Return the temperature

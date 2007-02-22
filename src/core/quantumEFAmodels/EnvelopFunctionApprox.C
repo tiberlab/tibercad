@@ -11,6 +11,57 @@ using namespace Constants;
 
 Device*   EnvelopFunctionApprox:: _device;
 
+//---------------------------------------------------------------------------------//
+
+
+void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& variables,
+						std::vector<double>& results, std::vector<std::string>& legend)
+{
+  const set<string>::const_iterator varend(variables.end());
+
+  const Mesh& mesh1 = system->get_mesh();
+
+  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
+  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
+
+  unsigned int number_of_points = 0;
+
+  for ( ; nd != nd_el ; ++nd)  number_of_points++;
+  
+  if (variables.find("eigen_functions") != varend)
+  {
+
+    legend.resize(solution.size());
+    results.resize(number_of_points * solution.size());
+
+    for (unsigned int i = 0; i < solution.size(); i++)
+    {
+      std::ostringstream i_str;
+      i_str << "state_number_" << i ; //The states are numbered starting from 0 
+      legend[i] = i_str.str();
+
+      std::vector<double> prob_data;
+
+      prepare_probability_function(i,  prob_data);
+
+      for (unsigned int i1 = 0; i1<number_of_points; i1++)
+	results[number_of_points * i + i1] = prob_data[i1];
+
+    }
+  }
+
+}
+
+//---------------------------------------------------------------------------------//
+
+
+ 
+void EnvelopFunctionApprox::get_integrated_quantities(const std::set<std::string>& names,
+						      std::vector<double>& values)
+{
+
+} 
+
 //===================================================//
 
 const std::vector< EnvelopFunctionApprox::eigen_propblem_solution >& EnvelopFunctionApprox::get_solution() const
@@ -1522,6 +1573,58 @@ void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  co
 }
 
 //=======================================================================//
+
+void  EnvelopFunctionApprox::prepare_probability_function(const unsigned int state_number, std::vector<double>& prob_data)
+{
+
+  DofMap& dof_map = system->get_dof_map();
+
+  const Mesh& mesh1 = system->get_mesh();
+
+  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
+  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
+
+  unsigned int number_of_points = 0;
+
+  for ( ; nd != nd_el ; ++nd)  number_of_points++;
+
+ 
+  
+  prob_data.resize(number_of_points, 0.0);
+
+  MeshBase::const_element_iterator it = mesh1.active_local_elements_begin();
+  const MeshBase::const_element_iterator end =  mesh1.active_local_elements_end();
+
+  std::vector<unsigned int> dof_indices;
+
+
+  //!calculation of probability function
+  for ( ; it != end; ++it)
+    {
+      const Elem* elem = *it;
+      
+
+      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+	{
+	  dof_map.dof_indices (elem, dof_indices, psi_index);
+	  for (unsigned int n = 0; n < elem->n_nodes(); n++)
+	    { 
+	      unsigned int  node_id =  elem->node(n);
+	      Complex value =  (solution[state_number].eigen_vector[ dof_indices[n] ]);
+	     
+	      prob_data[node_id] += std::abs(value) * std::abs(value);
+	      
+	      
+	      
+	    }
+	}
+    }
+  //done
+
+ 
+}
+
+
 void EnvelopFunctionApprox::output_probability_function(unsigned int state_number,  const std::string& filename)
 {
   //===========================================
@@ -1543,13 +1646,6 @@ void EnvelopFunctionApprox::output_probability_function(unsigned int state_numbe
   vector<string> output_names(1);
   output_names[0] = "|psi|^2";
 
-  
-
- 
-  
-
-  
- 
   
   unsigned int  point_index = 0;
   

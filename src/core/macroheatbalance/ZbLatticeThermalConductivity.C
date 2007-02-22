@@ -9,7 +9,7 @@ void  ZbLatticeThermalConductivity::read_database(void)
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
 
-  double k = data("cond_term_lat", 0.0);
+  double k = data("therm_lat_cond", 0.0);
 
   _conductivity(1,1) = k;
   _conductivity(2,2) = k;
@@ -22,7 +22,7 @@ void  ZbLatticeThermalConductivity::read_database(void)
 void ZbLatticeThermalConductivity::do_init(void)
 {
   ModelOptions & options = get_options ();
-  double k = options.get_option("cond_term_lat", _conductivity(1,1) );
+  double k = options.get_option("therm_lat_cond", _conductivity(1,1) );
 
   _conductivity(1,1) = k;
   _conductivity(2,2) = k;
