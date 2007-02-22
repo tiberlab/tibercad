@@ -8,16 +8,17 @@
 class Reservoir : public ThermalContact
 {
  public:
+  //!Constructor	 
   Reservoir(){};
-  
+  //!Destructor 
   ~Reservoir(){};
-
+  //!Return the temperature
   double get_temperature(void) const;
-
+  //!Create a Reservoir object and return its pointer
   static Reservoir* create(void);
 
  protected:
-
+  //!Initialize the model
   virtual void 	do_init (void);
 
 
