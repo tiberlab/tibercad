@@ -321,10 +321,12 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     Ke.resize(n_dofs, n_dofs);
     Fe.resize(n_dofs);
 
+
+    std::vector< std::vector<double> > pot_per_current;
     
     for (unsigned int qp=0; qp<qrule.n_points(); qp++)
     {//volumic integration loop
-      for (unsigned int p1=0; p1<n_dofs; p1++) //basis functions of the variable T
+      for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
       {
 	//!let us check if it belongs to a reservoir bounday
 	const Node* nd = elem->get_node(p1);
@@ -335,9 +337,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	{
 	  ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );
 	  if (contact->get_type() == 0)
-	  {
-	   
-	   
+	  {//heat reservoir---
+	   	   
 	    Ke(p1,p1) = 1.0;
 	    
 	    Fe(p1) = ( dynamic_cast<Reservoir*> (contact) )->get_temperature();
@@ -345,12 +346,18 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	}
 	else
 	{
-	  for (unsigned int p2=0; p2<n_dofs; p2++) //test functions
+
+	  //------------------------
+	  //volume integration for matrix
+	  // x Giuseppe:  comment on volume integration
+
+	  
+	  for (unsigned int p2=0; p2<n_dofs; p2++) //basis functions
 	  {
 	    double value = 0.0;
 	    
-	    for (short i = 0; i < dim; i++) //basis function derivative
-	      for (short j = 0; j < dim; j++) //test function derivative
+	    for (short i = 0; i < dim; i++) //test function derivative
+	      for (short j = 0; j < dim; j++) //basis function derivative
 	      {
 		double kappa_value;
 		if (i > j) 
@@ -365,12 +372,26 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	    value *= my_Jacobian;
 	   
 	    Ke(p1,p2) += value;
+
+	    if (_dd_simul != NULL)
+	      for (short i = 0; i < dim; i++) 
+		Fe(p1) -= dphi[p1][qp](i) * pot_per_current[qp][i] / opt.length_scale * my_Jacobian;
+
 	  }
+
+	  
+
+
+	 
+	  
 	}
       } 
       
 	
     }
+
+    //TODO surface
+
     
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
