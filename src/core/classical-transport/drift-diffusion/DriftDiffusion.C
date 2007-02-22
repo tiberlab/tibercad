@@ -1331,6 +1331,7 @@ DriftDiffusion::get_solution(const Elem* elem, const Point& p,
 
 
 
+template <>
 void
 DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     vector<double>& solution)
@@ -1391,6 +1392,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
 
 
+template <>
 void
 DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     vector<DriftDiffusion::Solution>& solution)
@@ -1462,6 +1464,138 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     solution[n].fermi_h = ep;
   }
 }
+
+
+template <>
+void
+DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
+    vector<DriftDiffusion::Currents>& solution)
+{
+  unsigned int np = p.size();
+  solution.resize(np);
+  if (np == 0) return;
+
+  NonlinearImplicitSystem* system;
+  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
+      get_equation_system_name());
+
+  const NumericVector<Number>& ddsol = *(system->solution);
+
+  const unsigned int dim = get_mesh().mesh_dimension();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_e");
+  const unsigned int ep_var = system->variable_number("fermi_h");
+
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+  vector<Point> points(np);
+  FEInterface::inverse_map(dim, fe_type, elem, p, points);
+  //for (unsigned int n = 0; n < np; n++)
+  //  points[n] = FEInterface::inverse_map(dim, fe_type, elem, p[n], 1e-6);
+
+  ID subdomain = elem->subdomain_id();
+
+  DriftDiffusionProperties* sc =
+    dynamic_cast<DriftDiffusionProperties*>(
+        _device->get_material(subdomain)->get_model(get_id()));
+
+  assert(sc != NULL); 
+
+  sc->reinit(elem);
+
+
+  fe->reinit(elem, &points);
+
+  dof_map.dof_indices(elem, dof_indices_u, u_var);
+  dof_map.dof_indices(elem, dof_indices_en, en_var);
+  dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+  const unsigned int n_dofs = dof_indices_u.size();
+
+  // the scaling parameters to scale back the result
+  const double phi0 = get_scaling().get_potential_scaling();
+  const double x0 = get_options().mesh_units;
+
+  for (unsigned int n = 0; n < np; n++)
+  {
+    double u = 0;
+    double en = 0;
+    double ep = 0;
+    double en_x = 0.0, ep_x = 0.0;
+    double en_y = 0.0, ep_y = 0.0;
+    double en_z = 0.0, ep_z = 0.0;
+    RealGradient e_field(0);
+    // do interpolation
+    for (unsigned int i = 0; i < n_dofs; i++)
+    {
+      u  += phi[i][n] * ddsol(dof_indices_u[i]);
+      en += phi[i][n] * ddsol(dof_indices_en[i]);
+      ep += phi[i][n] * ddsol(dof_indices_ep[i]);
+
+      en_x  += dphi[i][0](0) * ddsol(dof_indices_en[i]);
+      en_y  += dphi[i][0](1) * ddsol(dof_indices_en[i]);
+      en_z  += dphi[i][0](2) * ddsol(dof_indices_en[i]);
+      
+      ep_x  += dphi[i][0](0) * ddsol(dof_indices_ep[i]);
+      ep_y  += dphi[i][0](1) * ddsol(dof_indices_ep[i]);
+      ep_z  += dphi[i][0](2) * ddsol(dof_indices_ep[i]);
+
+      e_field += dphi[i][0] * ddsol(dof_indices_u[i]);
+    }
+
+    // scale the potential back
+    e_field *= -phi0 / x0;
+    en_x *= phi0 / x0;
+    en_y *= phi0 / x0;
+    en_z *= phi0 / x0;
+    ep_x *= phi0 / x0;
+    ep_y *= phi0 / x0;
+    ep_z *= phi0 / x0;
+
+    // prepare for calculating local properties
+    sc->set_coordinates(points[n]);
+
+    double T_lat = sc->get_lattice_temperature();
+    // all are at lattice temperature
+    sc->set_carrier_temperatures(T_lat, T_lat);
+
+    sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+
+    sc->set_electric_field(e_field);
+
+    sc->calculate_densities();
+    sc->calculate_mobilities();
+
+    // we put the minus here for convenience
+    double sigma_e = -Constants::e * sc->get_electron_density() *
+      sc->get_electron_mobility();
+    double sigma_h = -Constants::e * sc->get_hole_density() *
+      sc->get_hole_mobility();
+
+
+    solution[n]._jn_x = sigma_e * en_x;
+    solution[n]._jn_y = sigma_e * en_y;
+    solution[n]._jn_z = sigma_e * en_z;
+
+    solution[n]._jp_x = sigma_h * ep_x;
+    solution[n]._jp_y = sigma_h * ep_y;
+    solution[n]._jp_z = sigma_h * ep_z;
+  }
+}
+
+
 
 
 
@@ -1943,87 +2077,6 @@ DriftDiffusion::calculate_currents_surfint(void)
 }
 
 
-
-
-
-void
-DriftDiffusion::build_solution_vector(vector<double>& solution_vector)
-{
-  NonlinearImplicitSystem* system;
-
-  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
-      get_equation_system_name());
-
-  // aliases for nicer code
-  const Mesh& mesh = get_mesh();
-  const NumericVector<Number>& solution = *(system->solution);
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int dim = mesh.mesh_dimension();
-  // TODO if some elements were coarsened, does this still work??
-  const unsigned int nn  = mesh.n_nodes();
-
-  const unsigned int n_vars  = 3;
-
-  solution_vector.resize(nn * n_vars);
-  vector<double> local(solution_vector.size());
-
-  // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
-
-  const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
-  
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-  MeshBase::const_element_iterator it =
-    mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end =
-    mesh.active_local_elements_end(); 
-
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-#ifdef ENABLE_INFINITE_ELEMENTS
-    // infinite elements should be skipped...
-    if (!elem->infinite())
-#endif
-    {
-      dof_map.dof_indices(elem, dof_indices_u, u_var);
-      dof_map.dof_indices(elem, dof_indices_en, en_var);
-      dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-      assert(elem->n_nodes() == dof_indices_u.size());
-
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      {
-        Real u  = phi0 * solution(dof_indices_u[n]);
-        Real en = phi0 * solution(dof_indices_en[n]);
-        Real ep = phi0 * solution(dof_indices_ep[n]);
-        
-        unsigned int id = n_vars * elem->node(n);
-        local[id] = u;
-        local[id + 1] = en;
-        local[id + 2] = ep;
-      }
-
-    }
-  }
-
-#ifdef HAVE_MPI
-  // Now each processor has computed contriburions to the
-  // soln vector.  Gather them all up.
-  MPI_Allreduce (&local[0], &solution_vector[0], solution_vector.size(),
-		 MPI_REAL, MPI_SUM, libMesh::COMM_WORLD);
-#else
-  solution_vector = local;
-#endif
-}
 
 
 
@@ -2629,12 +2682,12 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     
     unsigned int n_dofs = dof_indices_u.size();
     // get the solution values at the centroid
-    Real en_x = 0.0, ep_x = 0.0;
-    Real en_y = 0.0, ep_y = 0.0;
-    Real en_z = 0.0, ep_z = 0.0;
-    Real u  = 0.0;
-    Real en = 0.0;
-    Real ep = 0.0;
+    double en_x = 0.0, ep_x = 0.0;
+    double en_y = 0.0, ep_y = 0.0;
+    double en_z = 0.0, ep_z = 0.0;
+    double u  = 0.0;
+    double en = 0.0;
+    double ep = 0.0;
     RealGradient e_field(0);
     for (unsigned int i = 0; i < n_dofs; i++)
     {
@@ -2720,7 +2773,6 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
       double jz = sigma_e * en_z;
       results[id + AbsJn] = sqrt(jx * jx + jy * jy + jz * jz);
     }
-
 
     if (Jp != -1)
     {
@@ -5745,11 +5797,20 @@ DriftDiffusion::get_solution<DriftDiffusion::Solution>(const Elem* elem,
     const Point& p, DriftDiffusion::Solution& solution);
 
 template void
+DriftDiffusion::get_solution<DriftDiffusion::Currents>(const Elem* elem,
+    const Point& p, DriftDiffusion::Currents& solution);
+
+template void
 DriftDiffusion::get_solution<double>(const Elem* elem, const vector<Point>& p,
     vector<double>& solution);
 
 template void
 DriftDiffusion::get_solution<DriftDiffusion::Solution>(const Elem* elem,
     const vector<Point>& p, vector<DriftDiffusion::Solution>& solution);
+
+template void
+DriftDiffusion::get_solution<DriftDiffusion::Currents>(const Elem* elem,
+    const vector<Point>& p, vector<DriftDiffusion::Currents>& solution);
+
 
 

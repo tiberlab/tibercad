@@ -84,7 +84,7 @@ ExcitonTransport::Options::operator=(const Options& rhs)
 
 ExcitonTransport::SolverParameters::SolverParameters(void)
   : nonlinear_tolerance(1e-9),
-    nonlinear_abs_tolerance(1e-18),
+    nonlinear_abs_tolerance(1e-15),
     nonlinear_step_tolerance(1e-6),
     nonlinear_max_iterations(20),
     linear_tolerance(1e-6),

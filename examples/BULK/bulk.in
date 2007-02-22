@@ -91,12 +91,13 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = bulk1D.msh
-  dimension = 1
+  meshfile = bulk2D.msh
+  dimension = 2
   temperature = 300
   solve = sweep
-  resultpath = output_1D
+  resultpath = output_2D
   output_format = gmv
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, ECurrent, HCurrent, AbsECurrent, AbsHCurrent, AbsCurrent, NetRecombination)
 }
 
 

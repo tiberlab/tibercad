@@ -1,0 +1,182 @@
+
+# Description of  the  device physical regions
+$Device
+{
+   Region nside 
+   {
+     reg_numb = 1
+     structure = wz
+     mat = GaN
+     doping = 1e18 doping_type = donor doping_level = 0.025
+   }
+
+   Region pside 
+   {
+     reg_numb = 2
+     structure = wz
+     mat = GaN
+     doping = 5e17 doping_type = acceptor doping_level = 0.17 g = 4
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+  model driftdiffusion
+  { 
+
+    apply_to
+    {
+     simulation_name = driftdiffusion
+
+     physical_regions = all
+    }
+
+    physical_model recombination
+    {
+      model = SRH
+    }
+
+    physical_model recombination
+    {
+      model = direct
+      C = 1.1e-8
+    }
+
+    physical_model recombination
+    {
+      model = exciton_generation
+      C = 2e-7
+    }
+
+    physical_model recombination
+    {
+      model = exciton_dissociation
+      exciton_simulation = excitons
+    }
+
+
+
+    physical_model electron_mobility
+    {
+      model = doping_dependent
+    }
+
+    physical_model hole_mobility
+    {
+      model = doping_dependent
+    }
+
+
+
+    BC_Regions  
+    {
+      BC_Region anode
+      {
+        BC_reg_numb = 1
+        type = ohmic
+        value = 0.0
+      }
+
+      BC_Region cathode
+      {
+        BC_reg_numb = 2
+        type = ohmic
+        value = 0.0
+      }
+ 
+    }   
+
+  }  
+
+
+  model excitontransport
+  {
+    apply_to
+    {
+     simulation_name = excitons
+
+     physical_regions = all
+    }
+
+  }
+
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+  driftdiffusion
+  {
+    nonlin_max_it = 50
+    ksp_type = gmres
+    pc_type = composite
+    #current_integration_method = rstf
+  }
+
+  excitons
+  {
+    nonlin_max_it = 5
+    pc_type = composite
+    ksp_type = gmres
+  }
+
+  sweep
+  {
+    simulation = (driftdiffusion, excitontransport)
+    boundary = driftdiffusion.anode
+    start = 1.0
+    stop = 3.5
+    steps = 50
+    plotvariable = current
+  }
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+ 
+  driftdiffusion 
+  {
+    model = unstrained
+  }
+
+  excitons
+  {
+    model = simple
+    tau_rad = 1e-11
+    tau_nonrad = 1.2e-9
+    tau_diss = 6e-9
+    R = 20.4e-3
+    eff_mass = 1.02
+    mobility = 1500
+    generation_model = exciton_generation
+  }
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+
+$Simulation
+{
+  searchpath = ../../materials
+  meshfile = diode_mdr.grd
+  mesh_units = 1e-6
+  dimension = 2
+  temperature = 300
+  solve = (sweep, excitontransport)
+  resultpath = output_2D
+  output_format = gmv
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, ECurrent, HCurrent, AbsECurrent, NetRecombination, eMob, hMob, xEffPot, xDensity, xMob, ExcitonRecombination)
+}
+
+
+
+
+

@@ -103,6 +103,58 @@ class DriftDiffusion : public SimulationInterface
       //! The hole electro-chemical potential
       double fermi_h;
     };
+
+    //! A structure to hold all components of the electrical current densities
+    /*!
+     * This structure is used for the queries of the current densities in
+     * certain points or elements. It stores the x,y and x components of the
+     * electrical current densities for electrons and holes.
+     */
+    class Currents
+    {
+      public:
+
+        //! Get the x-component of the electron current density
+        double jn_x(void) const { return _jn_x; };
+        //! Get the y-component of the electron current density
+        double jn_y(void) const { return _jn_y; };
+        //! Get the z-component of the electron current density
+        double jn_z(void) const { return _jn_z; };
+
+        //! Get the x-component of the hole current density
+        double jp_x(void) const { return _jp_x; };
+        //! Get the y-component of the hole current density
+        double jp_y(void) const { return _jp_y; };
+        //! Get the z-component of the hole current density
+        double jp_z(void) const { return _jp_z; };
+
+        //! Get the x-component of the total current density
+        double j_x(void) const { return _jn_x + _jp_x; };
+        //! Get the y-component of the total current density
+        double j_y(void) const { return _jn_y + _jp_y; };
+        //! Get the z-component of the total current density
+        double j_z(void) const { return _jn_z + _jp_z; };
+
+        // Get the absolute value of the total current density
+        double j_abs(void) const
+        { return std::sqrt((_jn_x + _jp_x) * (_jn_x + + _jp_x) +
+            (_jn_y + _jp_y) * (_jn_y + _jp_y) +
+            (_jn_z + _jp_z) * (_jn_z + _jp_z)); };
+            
+      private:
+        
+        double _jn_x;
+        double _jn_y;
+        double _jn_z;
+
+        double _jp_x;
+        double _jp_y;
+        double _jp_z;
+
+        friend class DriftDiffusion;
+    };
+        
+
     
     //! This class defines parameters used by the underlying
     //! nonlinear solver
@@ -712,7 +764,7 @@ class DriftDiffusion : public SimulationInterface
     void get_solution_secure(const Elem* elem, const Point& p,
         T& solution);
 
-    //! Get the solution at the points in \c p in a given element
+    //! Get a solution at the points in \c p in a given element
     /*!
      * \param elem the pointer to the element
      * \param a vector containing the points in which to calculate the potentials
@@ -723,8 +775,9 @@ class DriftDiffusion : public SimulationInterface
      * of this simulation and that it contains the points in \c p.
      *
      */
+    template <typename T>
     void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
-        std::vector<Solution>& solution);
+        std::vector<T>& solution);
 
     //! Get the electric potential at the points in \c p in a given element
     /*!
@@ -737,8 +790,8 @@ class DriftDiffusion : public SimulationInterface
      * of this simulation and that it contains the points in \c p.
      *
      */
-    void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
-        std::vector<double>& solution);
+    //void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
+    //    std::vector<double>& solution);
 
     //! Get the band edges of a given element
     /*!
@@ -748,8 +801,6 @@ class DriftDiffusion : public SimulationInterface
      */
     void get_bands_secure(const Elem* elem, std::vector<double>& band_edges);
 
-
-    void build_solution_vector(std::vector<double>& vector);
 
 
 
