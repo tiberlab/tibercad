@@ -17,7 +17,7 @@ $Models
   model driftdiffusion
   { 
               
-    apply_to
+    options
     {
      simulation_name = dd
 
@@ -63,7 +63,7 @@ $Solver
 
   sweep
   {
-    #simulation = driftdiff
+    simulation = dd
     boundary = dd.anode
     start = 0.0
     stop = 1.0
@@ -91,11 +91,11 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = bulk2D.msh
-  dimension = 2
+  meshfile = bulk1D.msh
+  dimension = 1
   temperature = 300
   solve = sweep
-  resultpath = output_2D
+  resultpath = output_1D
   output_format = gmv
   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, ECurrent, HCurrent, AbsECurrent, AbsHCurrent, AbsCurrent, NetRecombination)
 }

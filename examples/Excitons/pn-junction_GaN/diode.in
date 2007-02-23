@@ -27,7 +27,7 @@ $Models
   model driftdiffusion
   { 
 
-    apply_to
+    options
     {
      simulation_name = driftdiffusion
 
@@ -77,14 +77,14 @@ $Models
       {
         BC_reg_numb = 1
         type = ohmic
-        value = 0.0
+	zero_grad_fermi_e = true
       }
 
       BC_Region cathode
       {
         BC_reg_numb = 2
         type = ohmic
-        value = 0.0
+	zero_grad_fermi_h = true
       }
  
     }   
@@ -94,7 +94,7 @@ $Models
 
   model excitontransport
   {
-    apply_to
+    options
     {
      simulation_name = excitons
 
@@ -112,14 +112,15 @@ $Solver
   driftdiffusion
   {
     nonlin_max_it = 50
-    ksp_type = gmres
+    ksp_type = bcgsl
     pc_type = composite
+    ls_max_step = 0.01
     #current_integration_method = rstf
   }
 
   excitons
   {
-    nonlin_max_it = 5
+    nonlin_max_it = 70
     pc_type = composite
     ksp_type = gmres
   }

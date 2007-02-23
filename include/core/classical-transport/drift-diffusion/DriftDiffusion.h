@@ -50,8 +50,16 @@ template<typename T> class NonlinearSolver;
 
 //! The main class to perform standard drift-diffusion calculations
 /*!
- * TODO
- * Some more details
+ * We solve the following system of equations:
+ * \f{eqnarray*}
+ * -\nabla(\epsilon_r\nabla\varphi -\mathrm{P})& = & \frac{e}{\epsilon_0}
+ *     \left(-n + p + N_D^+ - N_A^-\right) \\
+ * -\nabla(\mu_n n\nabla\phi_n) & = & R \\
+ * -\nabla(\mu_p p\nabla\phi_p) & = & R
+ * \f}
+ * using appropriate models for the ionization of dopants, polarization,
+ * mobilities and recombinations.
+ * 
  */
 class DriftDiffusion : public SimulationInterface
 {
@@ -64,6 +72,7 @@ class DriftDiffusion : public SimulationInterface
       GUMMEL
     };
 
+    
     //! The implemented discretization schemes
     enum DiscretizationScheme
     {
@@ -71,6 +80,7 @@ class DriftDiffusion : public SimulationInterface
       BOX, /*!< Box integration method */
       FEMVARIANT /*!< Finite Elements on slightly different equations */
     };
+
 
     //! How to calculate currents
     enum CurrentCalculation
@@ -87,10 +97,13 @@ class DriftDiffusion : public SimulationInterface
       SURFINT
     };
 
+    
     //! A structure to hold the three potentials
     /*!
      * This structure is used for the queries of the solution in certain
-     * points or elements
+     * points or elements.
+     *
+     * The values are given in Volts
      */
     struct Solution
     {
@@ -104,11 +117,14 @@ class DriftDiffusion : public SimulationInterface
       double fermi_h;
     };
 
+    
     //! A structure to hold all components of the electrical current densities
     /*!
      * This structure is used for the queries of the current densities in
      * certain points or elements. It stores the x,y and x components of the
      * electrical current densities for electrons and holes.
+     *
+     * Current densities are given in Acm^-2
      */
     class Currents
     {
@@ -116,30 +132,53 @@ class DriftDiffusion : public SimulationInterface
 
         //! Get the x-component of the electron current density
         double jn_x(void) const { return _jn_x; };
+        
         //! Get the y-component of the electron current density
         double jn_y(void) const { return _jn_y; };
+        
         //! Get the z-component of the electron current density
         double jn_z(void) const { return _jn_z; };
+        
+        //! Get the i-th component of the electron current density
+        /*!
+         * 0 -> x, 1 -> y, 2 -> z
+         */
+        double jn(unsigned int i = 0) const;
+              
 
         //! Get the x-component of the hole current density
         double jp_x(void) const { return _jp_x; };
+        
         //! Get the y-component of the hole current density
         double jp_y(void) const { return _jp_y; };
+        
         //! Get the z-component of the hole current density
         double jp_z(void) const { return _jp_z; };
-
+        
+        //! Get the i-th component of the hole current density
+        /*!
+         * 0 -> x, 1 -> y, 2 -> z
+         */
+        double jp(unsigned int i = 0) const;
+        
+           
         //! Get the x-component of the total current density
         double j_x(void) const { return _jn_x + _jp_x; };
+        
         //! Get the y-component of the total current density
         double j_y(void) const { return _jn_y + _jp_y; };
+        
         //! Get the z-component of the total current density
         double j_z(void) const { return _jn_z + _jp_z; };
+        
+        //! Get the i-th component of the total current density
+        /*!
+         * 0 -> x, 1 -> y, 2 -> z
+         */
+        double j(unsigned int i = 0) const;
 
         // Get the absolute value of the total current density
-        double j_abs(void) const
-        { return std::sqrt((_jn_x + _jp_x) * (_jn_x + + _jp_x) +
-            (_jn_y + _jp_y) * (_jn_y + _jp_y) +
-            (_jn_z + _jp_z) * (_jn_z + _jp_z)); };
+        double j_abs(void) const;
             
       private:
         
@@ -971,5 +1010,67 @@ DriftDiffusion::get_electric_potential(const Elem* elem,
 
 
 
+inline
+double
+DriftDiffusion::Currents::jn(unsigned int i) const
+{
+  switch (i)
+  {
+    case 1:
+      return _jn_y;
+      break;
+    case 2:
+      return _jn_z;
+      break;
+    default:
+      return _jn_x;
+  }
+}
+
+
+
+inline
+double
+DriftDiffusion::Currents::jp(unsigned int i) const
+{
+  switch (i)
+  {
+    case 1:
+      return _jp_y;
+      break;
+    case 2:
+      return _jp_z;
+      break;
+    default:
+      return _jp_x;
+  }
+}
+
+
+
+inline
+double
+DriftDiffusion::Currents::j(unsigned int i) const
+{
+  switch (i)
+  {
+    case 1:
+      return j_y();
+      break;
+    case 2:
+      return j_z();
+      break;
+    default:
+      return j_x();
+  }
+}
+
+
+inline
+double
+DriftDiffusion::Currents::j_abs(void) const
+{
+  return std::sqrt(j_x() * j_x() + j_y() * j_y() + j_z() * j_z());
+}
 
 #endif //_DRIFTDIFFUSION_H_

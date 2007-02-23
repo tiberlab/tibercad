@@ -56,6 +56,8 @@ class Control
         
         SimulationInterface* operator*(void) { return _it->second; };
         
+        SimulationInterface& operator->(void) { return *_it->second; };
+        
         bool operator==(const simulation_iterator& other)
         {
           return (_it == other._it);

@@ -25,7 +25,10 @@ $Models
   model driftdiffusion
   { 
               
-     phys_regions = (1 2)
+    options
+    {
+     physical_regions = all
+    }
 
      physical_model recombination
      { 
@@ -62,7 +65,6 @@ $Solver
 {
   driftdiffusion
   {
-    coupling = full
     nonlin_max_it = 10
    # ls_max_step = 0.025
    # current_integration_method = rstf
@@ -74,6 +76,7 @@ $Solver
     start = 0.0
     stop = 1.0
     steps = 10
+    plotvariable = current
   }
 }
 
@@ -96,10 +99,13 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = diode_mdr.grd
-  dimension = 2
+  meshfile = diode.msh
+  dimension = 1
   temperature = 300
   solve = sweep
+  resultpath = output
+  output_format = gmv
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current)
 }
 
 

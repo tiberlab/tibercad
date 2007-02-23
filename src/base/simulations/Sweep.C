@@ -77,18 +77,26 @@ Sweep::do_init(void)
   SimulationInterface* simulation;
   if ((++tokit) == tok.end())
   {
-    // only boundary name provided, let's hope it's unique...
-    // (we just pick the first that matches)
-    Control::simulation_iterator simit(control.simulations_begin());
-    const Control::simulation_iterator simend(control.simulations_end());
-    for ( ; simit != simend; ++simit)
+    // first check the sweep simulation
+    //SimulationEnvironment& env = get_environment();
+    //Boundary* boundary = env.get_boundary(bnd);
+    //if (boundary != NULL)
+    //  simulation = _simulations[0];
+    //else
     {
-      simulation = *simit;
-      cerr << simulation->get_name() << endl;
-      SimulationEnvironment& env = simulation->get_environment();
-      Boundary* boundary = env.get_boundary(bnd);
-      if (boundary != NULL)
-        break;
+      // only boundary name provided, let's hope it's unique...
+      // (we just pick the first that matches)
+      Control::simulation_iterator simit(control.simulations_begin());
+      const Control::simulation_iterator simend(control.simulations_end());
+      for ( ; simit != simend; ++simit)
+      {
+        simulation = *simit;
+        cerr << simulation->get_name() << endl;
+        SimulationEnvironment& env = simulation->get_environment();
+        Boundary* boundary = env.get_boundary(bnd);
+        if (boundary != NULL)
+          break;
+      }
     }
   }
   else

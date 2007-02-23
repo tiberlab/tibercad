@@ -532,7 +532,7 @@ DriftDiffusion::do_solve(void)
 {
 
   // rebuild the system if needed
-  rebuild_equation_system();
+  //rebuild_equation_system();
 
   // set a static pointer to ourselves
   // this is needed in the static assembly routine
@@ -589,7 +589,7 @@ DriftDiffusion::do_equilibrium(void)
 {
 
   // rebuild the system if needed
-  rebuild_equation_system();
+  //rebuild_equation_system();
 
   // set a static pointer to ourselves
   // this is needed in the static assembly routine
@@ -606,10 +606,9 @@ DriftDiffusion::do_equilibrium(void)
         get_equation_system_name());
   
   SolverParameters& solver_params = get_options().solver_params;
-  unsigned int maxit = solver_params.nonlinear_max_iterations;
-  solver_params.nonlinear_max_iterations = 100;
+  solver_params.nonlinear_max_iterations = 150;
+  solver_params.ls_type = 3;
   set_solver_params(*system.nonlinear_solver);
-  solver_params.nonlinear_max_iterations = maxit;
 
   int coupling = get_options().coupling;
   get_options().coupling = POISSON;
@@ -640,6 +639,9 @@ DriftDiffusion::do_equilibrium(void)
   }
   catch (runtime_error& e)
   {
+    system.nonlinear_solver->clear();
+    rebuild_equation_system();
+
     cerr << "ATTENTION: Equilibrium did not converge: " << e.what() << endl;
     throw (e);
   }
@@ -1032,8 +1034,23 @@ DriftDiffusion::solve_newton(void)
       " (fnorm = " << e.get_fnorm() << ")\n";
 
     //if (e.get_reason() == -5) retry = false;
-    //if (e.get_reason() == -6) retry = false;
     //if (e.get_reason() == -8) retry = false;
+    if (e.get_reason() == -6)
+    {
+      cerr << "  trying without line-search..." << endl;
+      int old_ls = solver_params.ls_type;
+      solver_params.ls_type = 0;
+      set_solver_params(*system.nonlinear_solver);
+      solver_params.ls_type = old_ls;
+      try
+      {
+        system.solve();
+        failure = false;
+      }
+      catch (...)
+      {
+      }
+    }
 
     msg += e.what();
     msg += ")\n";
@@ -1071,7 +1088,11 @@ DriftDiffusion::solve_newton(void)
 
   if (failure)
   {
+    // we rebuild the equation system as could have been
+    // 'damaged' by the crash
     system.nonlinear_solver->clear();
+    rebuild_equation_system();
+
     throw SolveFailedException(msg);
   }
 

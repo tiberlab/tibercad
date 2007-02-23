@@ -474,6 +474,7 @@ ExcitonTransport::do_solve(void)
   if (failure)
   {
     system.nonlinear_solver->clear();
+    do_init();
     throw SolveFailedException(msg);
   }
 
