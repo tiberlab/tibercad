@@ -93,3 +93,5 @@ Nref_h   = 1.0e+16
 gamma_h  = 1
 Talpha_h = -1.5
 
+#Lattice thermal conductivity
+therm_lat_cond = 2.85
