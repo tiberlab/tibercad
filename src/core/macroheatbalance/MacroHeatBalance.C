@@ -385,7 +385,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	      for (short j = 0; j < dim; j++) //basis function derivative
 	      {
 		double kappa_value;
-		if (i > j) 
+		if (i < j) 
 		  kappa_value = kappa(j+1, i+1);
 		else
 		  kappa_value = kappa(i+1, j+1);
