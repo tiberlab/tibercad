@@ -93,6 +93,11 @@ SimulationInterface::create(const string& type,
 void
 SimulationInterface::destroy(SimulationInterface* p)
 {
+#ifdef DEBUG
+    cout << "Deleted simulator (ID = " << p->get_id() <<
+      " name = " << p->get_name() << " / type_id = " <<
+      p->get_default_name() << ")" << endl;
+#endif
   // TODO better call a module internal method
   delete p;
 }

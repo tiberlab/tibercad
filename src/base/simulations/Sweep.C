@@ -78,11 +78,11 @@ Sweep::do_init(void)
   if ((++tokit) == tok.end())
   {
     // first check the sweep simulation
-    //SimulationEnvironment& env = get_environment();
-    //Boundary* boundary = env.get_boundary(bnd);
-    //if (boundary != NULL)
-    //  simulation = _simulations[0];
-    //else
+    SimulationEnvironment& env = get_environment();
+    Boundary* boundary = env.get_boundary(bnd);
+    if (boundary != NULL)
+      simulation = _simulations[0];
+    else
     {
       // only boundary name provided, let's hope it's unique...
       // (we just pick the first that matches)
@@ -91,7 +91,9 @@ Sweep::do_init(void)
       for ( ; simit != simend; ++simit)
       {
         simulation = *simit;
-        cerr << simulation->get_name() << endl;
+        if (simulation == this) // would not make sense...
+          continue;
+
         SimulationEnvironment& env = simulation->get_environment();
         Boundary* boundary = env.get_boundary(bnd);
         if (boundary != NULL)
@@ -111,7 +113,7 @@ Sweep::do_init(void)
   }
 
 
-  // simulation should have the sweepable boundary value
+  // simulation now should have the sweepable boundary value
   SimulationEnvironment& env = simulation->get_environment();
 
 

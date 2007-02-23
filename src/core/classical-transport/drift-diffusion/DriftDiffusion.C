@@ -1036,21 +1036,7 @@ DriftDiffusion::solve_newton(void)
     //if (e.get_reason() == -5) retry = false;
     //if (e.get_reason() == -8) retry = false;
     if (e.get_reason() == -6)
-    {
-      cerr << "  trying without line-search..." << endl;
-      int old_ls = solver_params.ls_type;
       solver_params.ls_type = 0;
-      set_solver_params(*system.nonlinear_solver);
-      solver_params.ls_type = old_ls;
-      try
-      {
-        system.solve();
-        failure = false;
-      }
-      catch (...)
-      {
-      }
-    }
 
     msg += e.what();
     msg += ")\n";
@@ -1065,7 +1051,7 @@ DriftDiffusion::solve_newton(void)
       // we try another preconditioner
       cerr << " (Zero pivot during ILU.)";
       PCType old_pc = solver_params.pc_type;
-      solver_params.pc_type = PCJACOBI;
+      solver_params.pc_type = PCCOMPOSITE;
       set_solver_params(*system.nonlinear_solver);
       solver_params.pc_type = old_pc;
       try

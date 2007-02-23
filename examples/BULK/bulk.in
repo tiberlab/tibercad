@@ -64,7 +64,7 @@ $Solver
   sweep
   {
     simulation = dd
-    boundary = dd.anode
+    boundary = anode
     start = 0.0
     stop = 1.0
     steps = 10

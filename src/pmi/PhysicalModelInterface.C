@@ -130,7 +130,7 @@ PhysicalModelInterface::create(const std::string& name,
     mod->set_options(options);
 
     //! set the name
-    std::string defaultname = Utils::extract_typename(typeid(*mod));
+    std::string defaultname = mod->get_default_name();
     mod->_name = mod->_options.get_option("name", defaultname);
     mod->_options.delete_option("name");
 #ifdef DEBUG
@@ -224,6 +224,15 @@ PhysicalModelInterface::copy(void) const
 
   return new_copy;
 }
+
+
+std::string
+PhysicalModelInterface::get_default_name(void) const
+{
+  return Utils::extract_typename(typeid(*this));
+}
+
+
 
 
 // explicit instantiations

@@ -45,11 +45,11 @@ Control::Control(const std::string& inputfile)
 
 Control::~Control(void)
 {
-  SimulationMap::iterator simit(_simulations.begin());
-  const SimulationMap::iterator simend(_simulations.end());
+  simulation_iterator simit(_simulations.begin());
+  const simulation_iterator simend(_simulations.end());
 
   for ( ; simit != simend; ++simit)
-    SimulationInterface::destroy(simit->second);
+    SimulationInterface::destroy(*simit);
 
   _simulations.clear();
 
@@ -102,10 +102,10 @@ Control::init(void) throw (InitFailedException, ModelErrorException)
 
 
     // initialize the simulations
-    SimulationMap::iterator simit(_simulations.begin());
-    const SimulationMap::iterator simend(_simulations.end());
+    simulation_iterator simit(_simulations.begin());
+    const simulation_iterator simend(_simulations.end());
     for ( ; simit != simend; ++simit)
-      simit->second->init();
+      (*simit)->init();
   }
   catch (runtime_error& e)
   {

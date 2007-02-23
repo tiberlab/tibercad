@@ -113,6 +113,10 @@ class PhysicalModelInterface
     //! Get the user defined name of this model
     const std::string& get_name(void) const;
 
+
+    //! Get the default name for this model
+    std::string get_default_name(void) const;
+
     
     //! Initialize this model
     /*!
