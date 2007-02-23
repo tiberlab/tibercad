@@ -22,7 +22,7 @@
  #include "dof_map.h"
  
  #include "fe_interface.h"
- #include "dense_submatrix.h"
+#include "dense_submatrix.h"
  #include "dense_subvector.h"
 
 #include "LatticeThermalConductivity.h"
@@ -133,7 +133,10 @@ PhysicalModel*   MacroHeatBalance::create_physical_model (const ModelOptions &op
                     throw (ModelErrorException)
 {
   
-  HeatModel* model = HeatModel::create( );
+  HeatModel* model = dynamic_cast<HeatModel*> ( PhysicalModelInterface::create("thermal",options) );
+
+  if (model == NULL) 
+    throw ModelErrorException("MacroHeatBalance: Thermal physical model is not created" );
 
   return model;      
 
@@ -172,7 +175,7 @@ void MacroHeatBalance::build_nodal_results (const std::set< std::string > &varia
   if (variables.find("T") != variables.end())
   {
     legend.resize(1);
-    legend[0] = "Temperature [K]";
+    legend[0] = "Temperature[K]";
 
 
 
@@ -288,6 +291,13 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
   const LatticeThermalConductivity* lattice_conductivity; 
   
+  //Define the vectors which store the Drift Diffusion solutions
+  std::vector<DriftDiffusion::Solution>  potentials;   
+  std::vector<DriftDiffusion::Currents>   currents; 
+
+
+  //-----------------------------------------------------------------//
+  
 
   //-----------------------------------------------------------------//
   //My Jacobian. It is to pass to our work units
@@ -296,11 +306,14 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   for (short i = 1; i <= dim; i++)  my_Jacobian *= opt.length_scale;
   //----------------------------------------------------------------//
 
-  
-  for ( ; el != end_el ; ++el) 
-    {  
-    const Elem* elem = *el;
 
+  //Initialize pot_per current
+   std::vector< std::vector<double> > pot_per_current;
+   
+   for ( ; el != end_el ; ++el) 
+   {  
+    const Elem* elem = *el;
+    
     ID subdomain = elem->subdomain_id();
     const Material* mat = _device->get_material(subdomain);
 
@@ -309,8 +322,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     lattice_conductivity = heat_model->get_lattice_conductivity();
 
     lattice_conductivity->get_conductivity(kappa);
-
-    
 
     dof_map.dof_indices (elem, dof_indices); 
     
@@ -322,13 +333,27 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     Fe.resize(n_dofs);
 
 
-    std::vector< std::vector<double> > pot_per_current;
+    //Initialize J*pot    
+    if (_dd_simul != NULL)
+    {
+      _dd_simul->get_solution(elem,q_point,potentials);  
+      _dd_simul->get_solution(elem,q_point,currents);
+    }
+
+   
+               
+ 
     
     for (unsigned int qp=0; qp<qrule.n_points(); qp++)
     {//volumic integration loop
+
+
+ 
+
+
       for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
       {
-	//!let us check if it belongs to a reservoir bounday
+	//!let us check if it belongs to a reservoir boundary
 	const Node* nd = elem->get_node(p1);
 	
 	Boundary* bd = se.get_boundary(nd); 
@@ -336,7 +361,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
 	{
 	  ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );
-	  if (contact->get_type() == 0)
+	  if (contact->get_type() == ThermalContact::Reservoir)
 	  {//heat reservoir---
 	   	   
 	    Ke(p1,p1) = 1.0;
@@ -349,7 +374,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 	  //------------------------
 	  //volume integration for matrix
-	  // x Giuseppe:  comment on volume integration
+	  // - \int_V \frac{\patial \phi_{\alpha}{\partial x_i}\kappa_{i,j} \frac{\patial \phi_{\beta}{\partial x_j} dx
 
 	  
 	  for (unsigned int p2=0; p2<n_dofs; p2++) //basis functions
@@ -375,32 +400,108 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 	    if (_dd_simul != NULL)
 	      for (short i = 0; i < dim; i++) 
-		Fe(p1) -= dphi[p1][qp](i) * pot_per_current[qp][i] / opt.length_scale * my_Jacobian;
+		Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
+		  ( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
+		  / opt.length_scale * my_Jacobian;
 
 	  }
-
-	  
-
-
-	 
 	  
 	}
       } 
       
-	
+      
     }
+    
+
+    
 
     //TODO surface
+    if (_dd_simul != NULL)
+      for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+      {
+	//!let us check if it belongs to a reservoir boundary
+	const Node* nd = elem->get_node(p1);
+	
+	Boundary* bd = se.get_boundary(nd); 
+	
+	if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+	{
+	  ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );
+	  if (contact->get_type() != ThermalContact::Reservoir) //not fixed temperature 
+	  {
+	    const unsigned int num_sides = elem->n_sides();
 
+	    for (unsigned int side = 0; side<num_sides; side++)
+	    {
+	     
+	      if (se.is_on_boundary(  std::pair<const Elem*, unsigned int>(elem, side)  )   )
+	      {
+		if (dim > 1)
+		{
+		  const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
+		  
+		  const std::vector<Real>& JxW_face = fe_face->get_JxW();
+		
+		  const std::vector<Point >& qface_point = fe_face->get_xyz();
+		  
+		  const std::vector<Point> & normal = fe_face->get_normals();
+		
+		  fe_face->reinit(elem, side);
+
+		  _dd_simul->get_solution(elem,q_point,potentials);  
+
+		  _dd_simul->get_solution(elem,q_point,currents);
+
+		  for (short i = 0; i < 3; i++)
+		    for (unsigned int qp=0; qp < qface.n_points(); qp++)
+		      Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
+			( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) ) * 
+			(my_Jacobian/opt.length_scale);
+		}
+		else //dim = 1
+		{
+		  std::vector<double> normal(3);
+		  Point p = elem->point(side);
+		  Point pc = elem->centroid();
+		 
+
+
+		 const double temp = sqrt((p(0) - pc(0)) * (p(0) - pc(0)) 
+			      +(p(1) - pc(1)) * (p(1) - pc(1)) + 
+			      (p(2) - pc(2)) * (p(2) - pc(2)));
+
+
+		  for (short i = 0; i < 3; i++)
+		    normal[i] = (p(i) - pc(i))/temp;
+		  
+
+		  std::vector<Point > qface_point(1);
+
+		  qface_point[0] = elem->point(p1);
+
+		  _dd_simul->get_solution(elem,q_point,potentials);  
+
+		  _dd_simul->get_solution(elem,q_point,currents);
+		  
+		  for (short i = 0; i < 3; i++)
+		    Fe(p1) +=   normal[i] * ( currents[0].jn(i)*potentials[0].fermi_e + potentials[0].fermi_h * currents[0].jp(i) ) ;
+
+		 
+
+		}
+	      }
+	    }
+	    
+	  }
+	}
+      }
     
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
     
     system.matrix->add_matrix (Ke, dof_indices);
     system.rhs->add_vector    (Fe, dof_indices); 
-    
-    
-    
+   
 
   }
 

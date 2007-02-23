@@ -29,7 +29,8 @@ void HeatModel::do_init()
   
   const ModelOptions& opt =  get_options ();
 
-  kappa = LatticeThermalConductivity::create( get_material() -> get_structure(), opt  );
+  kappa =dynamic_cast<LatticeThermalConductivity*>
+    (  PhysicalModelInterface::create("lat_therm_cond_" + get_material()->get_structure(),  opt  )  );
   
   kappa->set_material(get_material());
 

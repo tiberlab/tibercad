@@ -14,9 +14,9 @@ public:
   
   //!Constructor 
   LatticeThermalConductivity()
- {  
+  {  
    _conductivity=Tensor2Sym(0);
-};
+  };
 
    //!Destructor
   ~LatticeThermalConductivity(){};
@@ -25,12 +25,7 @@ public:
   //!provides conductivity in sumulation system
   inline void get_conductivity(Tensor2Sym& conductivity) const; 
 
-  //!create object
-  /*!
-    \param name crystal structure
-    \param options model options
-   */
-  inline static LatticeThermalConductivity* 	create(const std::string &name, const ModelOptions &options);
+  
   
 
 private:
@@ -75,10 +70,6 @@ void  LatticeThermalConductivity::get_conductivity(Tensor2Sym& conductivity) con
 
 }
 
-LatticeThermalConductivity* LatticeThermalConductivity::create(const std::string &name, const ModelOptions &options)
-{
-  return dynamic_cast<LatticeThermalConductivity*>(PhysicalModelInterface::create("lat_therm_cond_" + name, options));
-}
 
 
 #endif
