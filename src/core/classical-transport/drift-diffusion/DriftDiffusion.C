@@ -2152,7 +2152,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
   }
 
   int phi = -1;
-  if (variables.find("el_pot") != varend)
+  if (variables.find("ElPotential") != varend)
   {
     phi = n_vars;
     legend[n_vars] = "electric_potential";
@@ -2529,17 +2529,18 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   int EField = -1;
   if (variables.find("EField") != varend)
   {
+    legend.resize(legend.size() + dim - 1);
     EField = n_vars;
     switch (dim)
     {
       case 3:
-        legend[n_vars] = "E_z";
+        legend[EField + 2] = "E_z";
         n_vars++;
       case 2:
-        legend[n_vars] = "E_y";
+        legend[EField + 1] = "E_y";
         n_vars++;
       default:
-        legend[n_vars] = "E_x";
+        legend[EField] = "E_x";
         n_vars++;
     }
   }
@@ -2555,17 +2556,18 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   int Jn = -1;
   if (variables.find("ECurrent") != varend)
   {
+    legend.resize(legend.size() + dim - 1);
     Jn = n_vars;
     switch (dim)
     {
       case 3:
-        legend[n_vars] = "Jn_z";
+        legend[Jn + 2] = "Jn_z";
         n_vars++;
       case 2:
-        legend[n_vars] = "Jn_y";
+        legend[Jn + 1] = "Jn_y";
         n_vars++;
       default:
-        legend[n_vars] = "Jn_x";
+        legend[Jn] = "Jn_x";
         n_vars++;
     }
   }
@@ -2581,17 +2583,18 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   int Jp = -1;
   if (variables.find("HCurrent") != varend)
   {
+    legend.resize(legend.size() + dim - 1);
     Jp = n_vars;
     switch (dim)
     {
       case 3:
-        legend[n_vars] = "Jp_z";
+        legend[Jp + 2] = "Jp_z";
         n_vars++;
       case 2:
-        legend[n_vars] = "Jp_y";
+        legend[Jp + 1] = "Jp_y";
         n_vars++;
       default:
-        legend[n_vars] = "Jp_x";
+        legend[Jp] = "Jp_x";
         n_vars++;
     }
   }
@@ -2607,17 +2610,18 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   int J = -1;
   if (variables.find("Current") != varend)
   {
+    legend.resize(legend.size() + dim - 1);
     J = n_vars;
     switch (dim)
     {
       case 3:
-        legend[n_vars] = "J_z";
+        legend[J + 2] = "J_z";
         n_vars++;
       case 2:
-        legend[n_vars] = "J_y";
+        legend[J + 1] = "J_y";
         n_vars++;
       default:
-        legend[n_vars] = "J_x";
+        legend[J] = "J_x";
         n_vars++;
     }
   }
@@ -2627,6 +2631,14 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   {
     AbsJ = n_vars;
     legend[n_vars] = "|J|";
+    n_vars++;
+  }
+
+  int PDens = -1;
+  if (variables.find("PowerDensity")!= varend)
+  {
+    PDens = n_vars;
+    legend[n_vars] = "power_density";
     n_vars++;
   }
 
@@ -2822,6 +2834,15 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
       double jy = sigma_e * en_y + sigma_h * ep_y;
       double jz = sigma_e * en_z + sigma_h * ep_z;
       results[id + AbsJ] = sqrt(jx * jx + jy * jy + jz * jz);
+    }
+
+    if (PDens != -1)
+    {
+      double jx = sigma_e * en_x + sigma_h * ep_x;
+      double jy = sigma_e * en_y + sigma_h * ep_y;
+      double jz = sigma_e * en_z + sigma_h * ep_z;
+      double P = jx * e_field(0) + jy * e_field(1) + jz  * e_field(2);
+      results[id + PDens] = P;
     }
 
 
