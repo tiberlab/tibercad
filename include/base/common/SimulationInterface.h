@@ -230,6 +230,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param legend the legend for the plot values, has usually the same
      * size as \c values in get_integrated_quantities()
      * \param description a description for each of the known quantities
+     *
+     * \note This method must not access the mesh or DOF maps or similar
+     * as it is not guaranteed the the mesh is prepared for the currently
+     * accessed simulation.
      */
     void get_integrated_quantities_description(
         const std::set<std::string>& names,
@@ -605,17 +609,6 @@ SimulationInterface::get_nodal_results(
   results.resize(0);
   legend.resize(0);
   build_nodal_results(variables, results, legend);
-}
-
-
-
-inline
-void
-SimulationInterface::get_integrated_quantities(
-    const std::set<std::string>& names, std::vector<double>& values)
-{
-  values.resize(0);
-  build_integrated_quantities(names, values);
 }
 
 

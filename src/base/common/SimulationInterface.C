@@ -282,9 +282,28 @@ SimulationInterface::create_physical_model(const ModelOptions& options) const
 
 
 
+
+void
+SimulationInterface::get_integrated_quantities(
+    const std::set<std::string>& names, std::vector<double>& values)
+{
+
+  if (_environment != NULL)
+    get_environment().prepare_for_solve();
+
+  values.resize(0);
+  build_integrated_quantities(names, values);
+}
+
+
+
 void
 SimulationInterface::plot(void)
 {
+
+  if (_environment != NULL)
+    get_environment().prepare_for_solve();
+  
   const Device& dev = get_environment().get_device();
 
   string suffix = get_control().get_filename_suffix();
