@@ -341,7 +341,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     }
 
    
-               
+    Fe.zero();         
  
     
     for (unsigned int qp=0; qp<qrule.n_points(); qp++)
@@ -367,6 +367,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	    Ke(p1,p1) = 1.0;
 	    
 	    Fe(p1) = ( dynamic_cast<Reservoir*> (contact) )->get_temperature();
+	   
 	  }
 	}
 	else
@@ -393,18 +394,19 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		value += -JxW[qp] * kappa_value * dphi[p1][qp](i) * dphi[p2][qp](j) /(opt.length_scale * opt.length_scale);
 		
 	      }
-	    
+	  
 	    value *= my_Jacobian;
 	   
 	    Ke(p1,p2) += value;
 
-	    if (_dd_simul != NULL)
-	      for (short i = 0; i < dim; i++) 
-		Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
-		  ( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
-		  / opt.length_scale * my_Jacobian;
-
 	  }
+	  if (_dd_simul != NULL)
+	    for (short i = 0; i < dim; i++) 
+	      Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
+		( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
+		/ opt.length_scale * my_Jacobian;
+
+	  
 	  
 	}
       } 
@@ -436,100 +438,95 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	}
  
 
-	if ( !belongs_to_reservoir )//not fixed temperature 
-	{
-	 
-	  // ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
 
-	  if ( !belongs_to_reservoir ) 
-	  {//not fixed temperature2
-	    //assert(belongs_to_reservoir = false);
+	if ( !belongs_to_reservoir ) 
+	{//not fixed temperature2
+	  //assert(belongs_to_reservoir = false);
 
-	    const unsigned int num_sides = elem->n_sides();
+	  const unsigned int num_sides = elem->n_sides();
 	  
-	    for (unsigned int side = 0; side<num_sides; side++)
-	    {
+	  for (unsigned int side = 0; side<num_sides; side++)
+	  {
 	     
-	      if (se.is_on_boundary(  std::pair<const Elem*, unsigned int>(elem, side)  )   )
+	    if (se.is_on_boundary(  std::pair<const Elem*, unsigned int>(elem, side)  )   )
+	    {
+		
+	      std::vector<DriftDiffusion::Solution>  potentials;   
+	      std::vector<DriftDiffusion::Currents>   currents; 
+
+	      if (dim > 1)
+	      {
+		const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
+		
+		const std::vector<Real>& JxW_face = fe_face->get_JxW();
+		
+		const std::vector<Point >& qface_point = fe_face->get_xyz();
+		
+		const std::vector<Point> & normal = fe_face->get_normals();
+		
+		fe_face->reinit(elem, side);
+		
+		_dd_simul->get_solution(elem,q_point,potentials);  
+
+		_dd_simul->get_solution(elem,q_point,currents);
+		
+		for (short i = 0; i < 3; i++)
+		  for (unsigned int qp=0; qp < qface.n_points(); qp++)
+		    Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
+		      ( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) ) * 
+		      (my_Jacobian/opt.length_scale);
+		}
+	      else //dim = 1
 	      {
 		
-		std::vector<DriftDiffusion::Solution>  potentials;   
-		std::vector<DriftDiffusion::Currents>   currents; 
-
-		if (dim > 1)
+		if (p1== side)
 		{
-		  const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
-		  
-		  const std::vector<Real>& JxW_face = fe_face->get_JxW();
-		
-		  const std::vector<Point >& qface_point = fe_face->get_xyz();
-		  
-		  const std::vector<Point> & normal = fe_face->get_normals();
-		
-		  fe_face->reinit(elem, side);
-
-		  _dd_simul->get_solution(elem,q_point,potentials);  
-
-		  _dd_simul->get_solution(elem,q_point,currents);
-
-		  for (short i = 0; i < 3; i++)
-		    for (unsigned int qp=0; qp < qface.n_points(); qp++)
-		      Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
-			( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) ) * 
-			(my_Jacobian/opt.length_scale);
-		}
-		else //dim = 1
-		{
-		 
-		  if (p1 == side)
-		  {
-		    std::vector<double> normal(3);
-		    Point p = elem->point(p1);
-		    Point pc = elem->centroid();
+		  std::vector<double> normal(3);
+		  Point p = elem->point(side);
+		  Point pc = elem->centroid();
 		 
 
 
-		    const double temp = sqrt((p(0) - pc(0)) * (p(0) - pc(0)) 
+		  const double temp = sqrt((p(0) - pc(0)) * (p(0) - pc(0)) 
 					   +(p(1) - pc(1)) * (p(1) - pc(1)) + 
 					   (p(2) - pc(2)) * (p(2) - pc(2)));
 
 
-		    for (short i = 0; i < 3; i++)
-		      normal[i] = (p(i) - pc(i))/temp;
+		  for (short i = 0; i < 3; i++)
+		    normal[i] = (p(i) - pc(i))/temp;
 		 
 		    
-		    std::vector<Point > qface_point(1);
+		  std::vector<Point > qface_point(1);
 		    
-		    qface_point[0] = elem->point(p1);
+		  qface_point[0] = elem->point(p1);
 
 
-		    _dd_simul->get_solution(elem,q_point,potentials);  
-		    
-		    _dd_simul->get_solution(elem,q_point,currents);
+		  _dd_simul->get_solution(elem,qface_point,potentials);  
+		  
+		  _dd_simul->get_solution(elem,qface_point,currents);
 		    
 
 		  
 		  
-		    for (short i = 0; i < 3; i++)
-		      Fe(p1) +=   normal[i] * 
-			( currents[0].jn(i)*potentials[0].fermi_e + potentials[0].fermi_h * currents[0].jp(i) ) ;
-		
-
-		    cerr << "   data\n  ";
-		    cerr << "qface_point[0]" <<  qface_point[0] <<"\n";
-		    cerr << "elem  " << elem <<"\n";
-		    cerr << "side  " << side <<"\n";
-		    cerr << "p1  "   << p1 <<"\n";
-		    cerr << "value " <<  potentials[0].fermi_e << "   " <<  potentials[0].fermi_h  << "\n";
+		  for (short i = 0; i < 3; i++)
+		  {  
+		    Fe(p1) +=   normal[i] * 
+		      ( currents[0].jn(i)*potentials[0].fermi_e + potentials[0].fermi_h * currents[0].jp(i) )   ;
 		    
-		  }
-		  
+		     
+		   }
+		 
+
+
+		    
 		}
+		
 	      }
 	    }
-	    
 	  }
+	  
 	}
+	
       }
     
  
@@ -541,8 +538,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
    
 
   }
-
+/*
   system.matrix->print_matlab("Matr.m");
   system.rhs->print();
- 
+ */
 }
