@@ -23,50 +23,47 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
   prepare_strain_data_for_output( eps_names,  eps_data);
   prepare_polarization_data_for_output( pol_names,  pol_data);
   
-  short num_var = variables.size(); 
+  short num_var = 0;
+  const set<string>::const_iterator varend = variables.end();
+  
+  const string strain_name("strain");
+  const string pol_name("polarization");
+
+  if (variables.find(strain_name) != varend) num_var += 6;  
+  if (variables.find(pol_name) != varend) num_var +=3;
 
   short num_elem = eps_data.size()/6;
 
   results.resize(num_var * num_elem);
   legend.resize(num_var);
 
-  const set<string>::const_iterator varend = variables.end();
+  
 
-  //first we do strain
-
-  for (short i = 0; i <  num_var; i++)
-  {
-   
-    for (short i1 = 0; i1 < 6; i1++)
-    {
-      if ( variables.find(eps_names[i1]) != varend )
-      {
-	legend[i] = eps_names[i1];
-	for (unsigned int j = 0; j < num_elem; j++)
-	  results[i + j * num_var ] = eps_data[i1 + j * 6];  
-       
-      }
+  if (variables.find(strain_name) != varend)
+  {//we do strain
+    for (short i = 0; i < 6; i++)
+    {	
+      legend[i] = eps_names[i];
+      for (unsigned int j = 0; j < num_elem; j++)
+	results[i + j * num_var ] = eps_data[i + j * 6];  
     }
+    
   }
   
-  //now we do polarization
 
-  for (short i = 0; i <  num_var; i++)
-  {
-   
+  
+  if (variables.find(pol_name) != varend)
+  {//now we do polarization
     for (short i1 = 0; i1 < 3; i1++)
-    {
-      if ( variables.find(pol_names[i1]) != varend )
-      {
-	legend[i] = pol_names[i1];
-	for (unsigned int j = 0; j < num_elem; j++)
-	  results[i + j * num_var ] = pol_data[i1 + j * 3];  
-	
-      }
+    {  
+      
+      legend[i1 + num_var - 3] = pol_names[i1];
+      for (unsigned int j = 0; j < num_elem; j++)
+	results[i1 + num_var - 3 + j * num_var ] = pol_data[i1 + j * 3];  
+      
+      
     }
   }
-
- 
 
 }
 

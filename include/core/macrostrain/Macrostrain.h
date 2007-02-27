@@ -500,7 +500,7 @@ class Macrostrain : public SimulationInterface
   
   /*! 
     \copydoc SimulationInterface::build_elemental_results()
-    The possible variables are: "eps_11", "eps_22", "eps_33", "eps_21", "eps_31", "eps_32" and "Px", "Py" and "Pz"
+    The variables are: "strain", "polarization"
     This means strain tensor components:
     \f$ \varepsilon_{xx}, \varepsilon_{yy},\varepsilon_{zz}, \varepsilon_{xy}, \varepsilon_{xz}, \varepsilon_{yz}\f$,
     and polarization vector \f$ \bf P \f$ components. 
