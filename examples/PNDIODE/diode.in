@@ -99,8 +99,8 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = diode.msh
-  dimension = 1
+  meshfile = diode_mdr.grd
+  dimension = 2
   temperature = 300
   solve = sweep
   resultpath = output

@@ -202,6 +202,30 @@ SimulationInterface::get_equation_systems(void) const
 
 
 void
+SimulationInterface::solve_equilibrium(void) throw (SolveFailedException) 
+{
+ 
+
+  PerfLog perflog(get_name() + ": solve_equilibrium", false);
+  perflog.start_event("solve_equilibrium");
+
+  assert(is_initialized());
+
+  if (_environment != NULL)
+    _environment->prepare_for_solve();
+
+
+  do_equilibrium();
+
+  _is_solved = true;
+  
+  perflog.stop_event("solve_equilibrium");
+}
+
+
+
+
+void
 SimulationInterface::solve(void) throw (SolveFailedException) 
 {
  

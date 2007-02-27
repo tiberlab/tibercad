@@ -818,19 +818,7 @@ class DriftDiffusion : public SimulationInterface
     void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
         std::vector<T>& solution);
 
-    //! Get the electric potential at the points in \c p in a given element
-    /*!
-     * \param elem the pointer to the element
-     * \param a vector containing the points in which to calculate the potentials
-     * \param solution a vector where the potential will be stored
-     *
-     * \note
-     * This implementation assumes, that \c elem is one of the active elements
-     * of this simulation and that it contains the points in \c p.
-     *
-     */
-    //void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
-    //    std::vector<double>& solution);
+
 
     //! Get the band edges of a given element
     /*!
@@ -852,6 +840,10 @@ class DriftDiffusion : public SimulationInterface
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
 
+    static void assemble_residual(const NumericVector<Number>& x,
+        NumericVector<Number>& residual);
+    static void assemble_jacobian(const NumericVector<Number>& x,
+        SparseMatrix<Number>& jacobian);
 
     //! Assembles the residual vector or the jacobian matrix
     /*!
@@ -864,6 +856,12 @@ class DriftDiffusion : public SimulationInterface
     void do_assembly(const NumericVector<Number>& x,
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
+    template <int T>
+    void do_assembly_residual(const NumericVector<Number>& x,
+        NumericVector<Number>& residual);
+    template <int T>
+    void do_assembly_jacobian(const NumericVector<Number>& x,
+        SparseMatrix<Number>& jacobian);
  
 
     //! Assembles the residual vector or the jacobian matrix

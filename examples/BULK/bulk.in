@@ -14,6 +14,27 @@ $Device
 # Definition of  Simulation Models  and associated Boundary Conditions 
 $Models
 { 
+  model thermal
+  { 
+              
+    options
+    {
+     simulation_name = tt
+
+     physical_regions = all
+    }
+
+
+    BC_Regions  
+    {
+
+      BC_Region cold
+      {
+        BC_reg_numb = 1
+      }
+     }
+    }
+
   model driftdiffusion
   { 
               
@@ -82,6 +103,13 @@ $Physics
   {
     model = unstrained
   }
+
+  thermal
+  {
+    current_simulation = driftdiffusion
+  }
+ 
+
 }
 
 

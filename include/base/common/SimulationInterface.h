@@ -658,11 +658,5 @@ SimulationInterface::build_elemental_results(
 }
 
 
-inline
-void
-SimulationInterface::solve_equilibrium(void) throw (SolveFailedException)
-{
-  do_equilibrium();
-}
 
 #endif // _SIMULATIONINTERFACE_H_

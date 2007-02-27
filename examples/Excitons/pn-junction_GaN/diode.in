@@ -75,16 +75,16 @@ $Models
     {
       BC_Region anode
       {
-        BC_reg_numb = 1
+        BC_reg_numb = 2
         type = ohmic
-	zero_grad_fermi_e = true
+	#zero_grad_fermi_e = true
       }
 
       BC_Region cathode
       {
-        BC_reg_numb = 2
+        BC_reg_numb = 1
         type = ohmic
-	zero_grad_fermi_h = true
+	#zero_grad_fermi_h = true
       }
  
     }   
@@ -112,9 +112,9 @@ $Solver
   driftdiffusion
   {
     nonlin_max_it = 50
-    ksp_type = bcgsl
+    #ksp_type = bcgs
     pc_type = composite
-    ls_max_step = 0.01
+    ls_max_step = 0.05
     #current_integration_method = rstf
   }
 
@@ -129,9 +129,9 @@ $Solver
   {
     simulation = (driftdiffusion, excitontransport)
     boundary = driftdiffusion.anode
-    start = 1.0
+    start = 0.0
     stop = 3.5
-    steps = 50
+    steps = 70
     plotvariable = current
   }
 }
@@ -167,7 +167,7 @@ $Physics
 $Simulation
 {
   searchpath = ../../materials
-  meshfile = diode_mdr.grd
+  meshfile = diode2D_mdr.grd
   mesh_units = 1e-6
   dimension = 2
   temperature = 300

@@ -15,15 +15,17 @@ DIM := 2
 all: run
 
 run1d: DIM := 1
-run1d: meshfile := diode1D.msh
+run1d: meshfile = diode1D.msh
 run1d: format := gnuplot
+run1d: diode1D.msh
+
 run2d: DIM := 2
-run2d: meshfile := diode_mdr.grd
+run2d: meshfile = diode_mdr.grd
 run2d: format := gmv
 
 $(targets): run
 
-run: $(infile) $(meshfile)
+run:
 	@echo "Running example in $(DIM)D..."
 	@echo ""
 	@ln -f -s $(topdir)/bin/tibercad
