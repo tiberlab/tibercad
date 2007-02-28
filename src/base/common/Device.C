@@ -26,10 +26,18 @@ Device::Device(void)
 
 Device::~Device()
 {
+  // we put them first into a set because a material can be associated
+  // to several IDs
   MaterialMap::iterator it(_material_map.begin());
   const MaterialMap::iterator end(_material_map.end());
+  set<Material*> mats;
   for ( ; it != end; ++it)
-    delete it->second;
+    mats.insert(it->second);
+
+  set<Material*>::iterator matit(mats.begin());
+  const set<Material*>::iterator matend(mats.end());
+  for ( ; matit != matend; ++matit)
+    delete *matit;
 
   _material_map.clear();
 

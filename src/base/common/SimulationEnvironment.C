@@ -10,8 +10,11 @@
 
 #include <vector>
 
+
+using namespace std;
+
 SimulationEnvironment::SimulationEnvironment(
-    Device& device, std::set<ID> region_numbers)
+    Device& device, set<ID> region_numbers)
   : _device(&device),
     _region_numbers(region_numbers),
     _is_initialized(false),
@@ -35,9 +38,16 @@ SimulationEnvironment::~SimulationEnvironment(void)
   BCMap::iterator it = _bc_map.begin();
   const BCMap::iterator end = _bc_map.end();
 
-  // TODO
+  // we have to put them first into a set, because each boundary
+  // can be associated to several IDs
+  set<Boundary*> bds;
   for ( ; it != end; ++it)
-    delete it->second;
+    bds.insert(it->second);
+
+  set<Boundary*>::iterator bdit(bds.begin());
+  const set<Boundary*>::iterator bdend(bds.end());
+  for ( ; bdit != bdend; ++bdit)
+    delete *bdit;
 }
 
 void
@@ -79,12 +89,12 @@ SimulationEnvironment::add_boundary(Boundary* boundary, ID boundary_id)
 
 void
 SimulationEnvironment::add_boundary(Boundary* boundary,
-    const std::set<ID>& boundary_ids)
+    const set<ID>& boundary_ids)
 {
   assert(boundary != NULL);
   
-  std::set<ID>::const_iterator it(boundary_ids.begin());
-  std::set<ID>::const_iterator end(boundary_ids.end());
+  set<ID>::const_iterator it(boundary_ids.begin());
+  set<ID>::const_iterator end(boundary_ids.end());
 
   for ( ; it != end; ++it)
     add_boundary(boundary, *it);
@@ -101,7 +111,7 @@ SimulationEnvironment::create_element_list(void)
   MeshBase::element_iterator it = mesh.active_elements_begin();
   const MeshBase::element_iterator end = mesh.active_elements_end();
 
-  const std::set<ID>::iterator list_end = _region_numbers.end();
+  const set<ID>::iterator list_end = _region_numbers.end();
 
   for ( ; it != end; ++it)
   {
@@ -165,9 +175,9 @@ SimulationEnvironment::create_bc_maps(void)
             bd_it = bd_nodes.find(bd_id);
             if (bd_it != bd_end)
             {
-              const std::vector<ID>& nodes = bd_it->second;
-              const std::vector<ID>::const_iterator n_begin(nodes.begin());
-              const std::vector<ID>::const_iterator n_end(nodes.end());
+              const vector<ID>& nodes = bd_it->second;
+              const vector<ID>::const_iterator n_begin(nodes.begin());
+              const vector<ID>::const_iterator n_end(nodes.end());
               
               if (dim == 1)
               {
@@ -226,13 +236,13 @@ SimulationEnvironment::update_boundary_node_map(void)
       const unsigned int side_num = elem_side.second;
 
       // get the active family tree of this element
-      std::vector<const Elem*> fam_tree;
+      vector<const Elem*> fam_tree;
       elem->active_family_tree(fam_tree);
 
       // loop over all active children and find boundary sides that
       // correspond to side_num
-      std::vector<const Elem*>::const_iterator elem_it(fam_tree.begin());
-      std::vector<const Elem*>::const_iterator fam_end(fam_tree.end());
+      vector<const Elem*>::const_iterator elem_it(fam_tree.begin());
+      vector<const Elem*>::const_iterator fam_end(fam_tree.end());
       for ( ; elem_it != fam_end; ++elem_it)
       {
         const Elem* child = *elem_it;
@@ -250,7 +260,7 @@ SimulationEnvironment::update_boundary_node_map(void)
 
 
 Boundary*
-SimulationEnvironment::get_boundary(const std::string& name) const
+SimulationEnvironment::get_boundary(const string& name) const
 {
   Boundary* bd = NULL;
 
@@ -266,7 +276,7 @@ SimulationEnvironment::get_boundary(const std::string& name) const
 
 
 ID
-SimulationEnvironment::get_boundary_id(const std::string& name) const
+SimulationEnvironment::get_boundary_id(const string& name) const
 {
   ID id = 0;
 
@@ -316,7 +326,7 @@ SimulationEnvironment::prepare_for_solve(void)
 
 void
 SimulationEnvironment::get_boundary_nodes(const Boundary* boundary,
-    std::set<const Node*>& nodelist)
+    set<const Node*>& nodelist)
 {
   nodelist.clear();
 

@@ -45,6 +45,13 @@ SimulationInterface::SimulationInterface(void)
 }
 
 
+SimulationInterface::~SimulationInterface(void)
+{
+  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.begin());
+  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  for ( ; it != end; ++it)
+    delete it->second;
+}
 
 
 SimulationInterface*
@@ -427,12 +434,42 @@ SimulationInterface::plot(void)
 
 
 ID
-SimulationInterface:: do_remember_current_solution(ID id)
+SimulationInterface::do_remember_current_solution(ID id)
 {
+  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
+
+  if (it != end)
+    *(it->second) = get_solution_vector();
+  else
+  {
+    if (_remembered_solutions.begin() == end)
+      id = 1;
+    else
+      id = (--end)->first + 1;
+
+    _remembered_solutions[id] = get_solution_vector().clone().release();
+  }
+
+
+  return id;
 }
 
 
 void
 SimulationInterface::do_set_to_remembered_solution(ID id)
 {
+  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
+
+  if (it != end)
+    get_solution_vector() = *(it->second);
+}
+
+
+
+void
+SimulationInterface::do_clear_remembered_solution(ID id)
+{
+  _remembered_solutions.erase(_remembered_solutions.find(id));
 }

@@ -182,10 +182,12 @@ Control::create_materials(void)
   for ( ; mapit != mapend; ++mapit)
   {
     const RegionStructure& data = mapit->second;
-    ID region_id = mapit->first;
+    vector<ID> region_ids;
+    Utils::extract_vector(data.get_region_ID(), region_ids);
+
     const std::string& material = data.get_material_name();
     Material* mat = Material::create(material, data.get_options());
-    _device->set_material(mat, region_id);
+    _device->set_material(mat, region_ids);
   }
 }
 
@@ -335,9 +337,18 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     for ( ; bdit != bdend; ++bdit)
     {
       ID id = bdit->first;
+      set<ID> region_ids;
+      vector<ID> ids;
+      Utils::extract_vector((bdit->second).get_region_ID(), ids);
+      for (unsigned int i = 0; i < ids.size(); i++)
+        region_ids.insert(ids[i]);
+
 #ifdef DEBUG
       cerr << "Add boundary \'" << (bdit->second).get_region_name()
-        << "\' (region nr. " << id << ")\n";
+        << "\' (region nr.";
+      for (unsigned int i = 0; i < ids.size(); i++)
+        cerr << " " << ids[i];
+      cerr << ")\n";
 #endif
 
       const ModelOptions& bdopts = (bdit->second).get_options();
@@ -350,7 +361,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       // every simulation necessarily needs a boundary model?
       if (bdprop != NULL)
         bd->add_boundary_properties(bdprop, sim->get_id());
-      env->add_boundary(bd, id);
+      env->add_boundary(bd, region_ids);
     }
 
 

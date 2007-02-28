@@ -34,7 +34,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
   public:
     
     //! Destructor
-    virtual ~SimulationInterface(void) {};
+    virtual ~SimulationInterface(void);
 
 
     //! Set the simulation environment for this simulation
@@ -160,6 +160,13 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * Calls do_set_to_remembered_solution()
      */
     void set_to_remembered_solution(ID id);
+
+
+    //! Clear a remembered solution
+    /*!
+     * Calls do_clear_remembered_solution()
+     */
+    void clear_remembered_solution(ID id);
 
 
     //! Find a simulation with name \c name
@@ -336,6 +343,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! Set to the remembered solution number \c id
     virtual void do_set_to_remembered_solution(ID id);
+
+
+    //! Delete a remembered solution
+    virtual void do_clear_remembered_solution(ID id);
     
     
     //! Parse the options
@@ -477,6 +488,11 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * simulation to create.
      */
     void set_type(const std::string& type);
+
+
+    //! A map with remembered solutions
+    std::map<ID, NumericVector<double>*> _remembered_solutions;
+
 
 
 };
@@ -686,6 +702,30 @@ SimulationInterface::build_elemental_results(
   ignore_unused_variable(variables);
   ignore_unused_variable(results);
   ignore_unused_variable(legend);
+}
+
+
+inline
+ID
+SimulationInterface::remember_current_solution(ID id)
+{
+  return do_remember_current_solution(id);
+}
+
+
+inline
+void
+SimulationInterface::set_to_remembered_solution(ID id)
+{
+  do_set_to_remembered_solution(id);
+}
+
+
+inline
+void
+SimulationInterface::clear_remembered_solution(ID id)
+{
+  do_clear_remembered_solution(id);
 }
 
 
