@@ -315,6 +315,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     const Elem* elem = *el;
     
     ID subdomain = elem->subdomain_id();
+
+   
     const Material* mat = _device->get_material(subdomain);
 
     heat_model =  (  dynamic_cast<HeatModel*> (  mat ->get_model(get_id()) )  ); 
@@ -322,6 +324,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     lattice_conductivity = heat_model->get_lattice_conductivity();
 
     lattice_conductivity->get_conductivity(kappa);
+
+   
 
     dof_map.dof_indices (elem, dof_indices); 
     
@@ -400,12 +404,26 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	    Ke(p1,p2) += value;
 
 	  }
+
+	  //volume integration for matrix for rhs
+	  
 	  if (_dd_simul != NULL)
+	  {
+	    
+	    
 	    for (short i = 0; i < dim; i++) 
+	    {
 	      Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
 		( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
 		/ opt.length_scale * my_Jacobian;
+	    
+	     
+	    
 
+	    }
+	   
+	  }
+	
 	  
 	  
 	}
@@ -443,14 +461,16 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	{//not fixed temperature2
 	  //assert(belongs_to_reservoir = false);
 
+
+
 	  const unsigned int num_sides = elem->n_sides();
 	  
 	  for (unsigned int side = 0; side<num_sides; side++)
 	  {
-	     
-	    if (se.is_on_boundary(  std::pair<const Elem*, unsigned int>(elem, side)  )   )
+	    const ElementSide elside(elem->top_parent(), side);
+	    if ( (_dd_simul->get_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
 	    {
-		
+	      
 	      std::vector<DriftDiffusion::Solution>  potentials;   
 	      std::vector<DriftDiffusion::Currents>   currents; 
 
@@ -529,7 +549,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	
       }
     
- 
+   
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
     
@@ -538,8 +558,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
    
 
   }
-/*
-  system.matrix->print_matlab("Matr.m");
-  system.rhs->print();
- */
+
+   // system.matrix->print_matlab("Matr.m");
+   //  system.rhs->print();
+ 
 }
