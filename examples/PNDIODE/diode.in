@@ -65,6 +65,7 @@ $Solver
 {
   driftdiffusion
   {
+    ksp_type = gmres
     nonlin_max_it = 10
    # ls_max_step = 0.025
    # current_integration_method = rstf
@@ -99,8 +100,8 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = diode_mdr.grd
-  dimension = 2
+  meshfile = diode.msh
+  dimension = 1
   temperature = 300
   solve = sweep
   resultpath = output

@@ -268,10 +268,9 @@ Sweep::do_solve(void)
   // we make a copy of the current solutions
   // we need this in the case of a solver failure to go back
   // to an old successful solution
-  vector<NumericVector<Real>* > old_sol(num_sim); 
+  vector<ID> old_sol(num_sim);
   for (int i = 0; i < num_sim; i++)
-    old_sol[i] = ((_simulations[i]->get_solution_vector()).clone()).release();
-
+    old_sol[i] = _simulations[i]->remember_current_solution();
 
 
   //
@@ -321,7 +320,7 @@ Sweep::do_solve(void)
 
         // remember the current solution
         for (int j = 0; j < num_sim; j++)
-          *(old_sol[j]) = _simulations[j]->get_solution_vector();
+          _simulations[j]->remember_current_solution(old_sol[j]);
 
 
         // write results, but only at desired sweep steps
@@ -346,7 +345,6 @@ Sweep::do_solve(void)
             if (plotfiles[j] != NULL)
               // it means we have something to plot
             {
-              ofstream& file = *plotfiles[j];
               _simulations[j]->get_integrated_quantities(_plotvariables, values);
               ostringstream l;
               l << setprecision(12) << _last;
@@ -355,6 +353,7 @@ Sweep::do_solve(void)
                 l << "   " << values[k];
               l << endl;
               
+              ofstream& file = *plotfiles[j];
               file << l.str() << flush;
             }
           }
@@ -375,7 +374,7 @@ Sweep::do_solve(void)
 
         // set to the remembered solution
         for (int j = 0; j < num_sim; j++)
-          _simulations[j]->get_solution_vector() = *(old_sol[j]);
+          _simulations[j]->set_to_remembered_solution(old_sol[j]);
 
         // it failed, so we go back to the old value
         // (In principle this is unnecessary, but we need it to not
@@ -391,7 +390,7 @@ Sweep::do_solve(void)
   // clean up
   for (int j = 0; j < num_sim; j++)
   {
-    delete old_sol[j];
+    _simulations[j]->delete_remembered_solution(old_sol[j]);
 
     if (plotfiles[j] != NULL)
     {

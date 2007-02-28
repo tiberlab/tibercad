@@ -71,10 +71,10 @@ SelfconsistentSolver::do_solve(void)
   _simulation2->solve();
 
   // we make a copy of the current solutions
-  NumericVector<Real>* old_sol1; 
-  NumericVector<Real>* old_sol2; 
-  old_sol1 = ((_simulation1->get_solution_vector()).clone()).release();
-  old_sol2 = ((_simulation2->get_solution_vector()).clone()).release();
+  ID old_sol1; 
+  ID old_sol2; 
+  old_sol1 = _simulation1->remember_current_solution();
+  old_sol2 = _simulation2->remember_current_solution();
 
 
   for (unsigned int i = 0; i < _max_it; i++)
@@ -83,23 +83,26 @@ SelfconsistentSolver::do_solve(void)
     _simulation2->solve();
 
     // check for the difference between old and new solutions
-    double norm1 = get_norm_of_difference(*old_sol1,
-        _simulation1->get_solution_vector());
-    double norm2 = get_norm_of_difference(*old_sol2,
-        _simulation2->get_solution_vector());
-    cerr << "iteration " << i << ": norm1 = " << norm1 <<
-      "  norm2 = " << norm2 << endl;
+    //double norm1 = get_norm_of_difference(*old_sol1,
+    //    _simulation1->get_solution_vector());
+    //double norm2 = get_norm_of_difference(*old_sol2,
+    //    _simulation2->get_solution_vector());
+    //cerr << "iteration " << i << ": norm1 = " << norm1 <<
+    //  "  norm2 = " << norm2 << endl;
 
-    if ((norm1 <= _abs_tol) && (norm2 <= _abs_tol))
-      break;
+    //if ((norm1 <= _abs_tol) && (norm2 <= _abs_tol))
+    //  break;
+    
+    _simulation1->remember_current_solution(old_sol1);
+    _simulation2->remember_current_solution(old_sol2);
   }
 
   _simulation1->plot();
   _simulation2->plot();
 
   // clean up
-  delete old_sol1;
-  delete old_sol2;
+  _simulation1->delete_remembered_solution(old_sol1);
+  _simulation2->delete_remembered_solution(old_sol2);
 }
 
 

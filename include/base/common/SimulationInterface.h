@@ -164,9 +164,13 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! Clear a remembered solution
     /*!
-     * Calls do_clear_remembered_solution()
+     * Calls do_delete_remembered_solution()
      */
-    void clear_remembered_solution(ID id);
+    void delete_remembered_solution(ID id);
+
+
+    //! Get a remembered solution
+    NumericVector<double>* get_remembered_solution(ID id);
 
 
     //! Find a simulation with name \c name
@@ -346,7 +350,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
 
     //! Delete a remembered solution
-    virtual void do_clear_remembered_solution(ID id);
+    virtual void do_delete_remembered_solution(ID id);
     
     
     //! Parse the options
@@ -723,9 +727,9 @@ SimulationInterface::set_to_remembered_solution(ID id)
 
 inline
 void
-SimulationInterface::clear_remembered_solution(ID id)
+SimulationInterface::delete_remembered_solution(ID id)
 {
-  do_clear_remembered_solution(id);
+  do_delete_remembered_solution(id);
 }
 
 
