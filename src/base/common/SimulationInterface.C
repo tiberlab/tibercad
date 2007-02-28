@@ -471,7 +471,13 @@ SimulationInterface::do_set_to_remembered_solution(ID id)
 void
 SimulationInterface::do_delete_remembered_solution(ID id)
 {
-  _remembered_solutions.erase(_remembered_solutions.find(id));
+  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
+  if (it != end)
+  {
+    delete it->second;
+    _remembered_solutions.erase(it);
+  }
 }
 
 
