@@ -20,7 +20,7 @@ run1d: format := gnuplot
 run1d: diode1D.msh
 
 run2d: DIM := 2
-run2d: meshfile = diode_mdr.grd
+run2d: meshfile = diode2D_mdr.grd
 run2d: format := gmv
 
 $(targets): run

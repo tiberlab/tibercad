@@ -8,8 +8,10 @@
 #include "ExcitonTransport.h"
 #include "Macrostrain.h"
 #include "EnvelopFunctionApprox.h"
-#include "Sweep.h"
 #include "MacroHeatBalance.h"
+
+#include "Sweep.h"
+#include "SelfconsistentSolver.h"
 
 #include "Utils.h"
 
@@ -33,6 +35,7 @@ SimulationInterface::SimulationInterface(void)
   : _environment(0),
     _is_initialized(false),
     _is_solved(false),
+    _equilibrium_is_solved(false),
     _relaxation_factor(1.0)
 {
   ID new_id = _simulation_map.size() + 1;
@@ -62,6 +65,8 @@ SimulationInterface::create(const string& type,
     sim = Sweep::create();
   else if (type == "thermal")
     sim = MacroHeatBalance::create();
+  else if (type == "selfconsistent")
+    sim = SelfconsistentSolver::create();
 
   if (sim != NULL)
   {
@@ -205,21 +210,26 @@ void
 SimulationInterface::solve_equilibrium(void) throw (SolveFailedException) 
 {
  
+  if (!_equilibrium_is_solved)
+  {
 
-  PerfLog perflog(get_name() + ": solve_equilibrium", false);
-  perflog.start_event("solve_equilibrium");
+    PerfLog perflog(get_name() + ": solve_equilibrium", false);
+    perflog.start_event("solve_equilibrium");
 
-  assert(is_initialized());
+    assert(is_initialized());
 
-  if (_environment != NULL)
-    _environment->prepare_for_solve();
+    if (_environment != NULL)
+      _environment->prepare_for_solve();
 
 
-  do_equilibrium();
+    do_equilibrium();
 
-  _is_solved = true;
-  
-  perflog.stop_event("solve_equilibrium");
+    _is_solved = true;
+
+    perflog.stop_event("solve_equilibrium");
+
+    _equilibrium_is_solved = true;
+  }
 }
 
 
@@ -413,4 +423,16 @@ SimulationInterface::plot(void)
     }
   }
 
+}
+
+
+ID
+SimulationInterface:: do_remember_current_solution(ID id)
+{
+}
+
+
+void
+SimulationInterface::do_set_to_remembered_solution(ID id)
+{
 }

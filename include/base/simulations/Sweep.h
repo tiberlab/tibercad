@@ -24,9 +24,6 @@ class Sweep : public SimulationInterface
 {
 
   public:
-
-    //! Constructor
-    Sweep(void);
     
     //! Destructor
     virtual ~Sweep(void);
@@ -36,6 +33,9 @@ class Sweep : public SimulationInterface
 
 
   protected:
+
+    //! Constructor
+    Sweep(void);
 
     /*! \copydoc SimulationInterface::do_init() */
     virtual void do_init(void);

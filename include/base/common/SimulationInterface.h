@@ -143,6 +143,25 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     void plot(void);
 
 
+    //! Remember current solution (on the current mesh!)
+    /*!
+     * Calls do_remember_current_solution()
+     */
+    /*!
+     * If \c id is invalid or not specified, a new ID will be generated and
+     * the solution stored with this new ID. Otherwise a solution stored at 
+     * \c id will be overwritten.
+     */
+    ID remember_current_solution(ID id = 0);
+
+
+    //! Set to the remembered solution number \c id
+    /*!
+     * Calls do_set_to_remembered_solution()
+     */
+    void set_to_remembered_solution(ID id);
+
+
     //! Find a simulation with name \c name
     /*!
      * \param name the name to look for
@@ -304,6 +323,21 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     virtual void do_solve(void) = 0;
 
     
+    //! Remember the current solution
+    /*!
+     * The default action is to clone the solution vector of the 
+     * equations system. If \c id is invalid, a new ID will be generated
+     * and returned, if not, the remembered solution \c id will be overwritten.
+     * If this method is reimplemented in a derived class, it should behave in
+     * the same way!
+     */
+    virtual ID do_remember_current_solution(ID id = 0);
+
+
+    //! Set to the remembered solution number \c id
+    virtual void do_set_to_remembered_solution(ID id);
+    
+    
     //! Parse the options
     /*!
      * This method has to be called \em explicitly somewhere in the derived
@@ -392,6 +426,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     
     //! A flag indicating that a simulation has been done
     bool _is_solved;
+
+    
+    //! A flag indicating that equilibrium has been done
+    bool _equilibrium_is_solved;
 
 
     //! For self-consistent calculations this could be useful

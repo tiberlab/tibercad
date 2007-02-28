@@ -105,16 +105,24 @@ class DriftDiffusion : public SimulationInterface
      *
      * The values are given in Volts
      */
-    struct Solution
+    class Solution
     {
-      //! The electric potential
-      double potential;
+      public:
+
+        //! Constructor
+        Solution(void);
+
+        //! The electric potential
+        double potential;
       
-      //! The electron electro-chemical potential
-      double fermi_e;
+        //! The electron electro-chemical potential
+        double fermi_e;
       
-      //! The hole electro-chemical potential
-      double fermi_h;
+        //! The hole electro-chemical potential
+        double fermi_h;
+
+        //! Set all to some value
+        Solution& operator=(double other);
     };
 
     
@@ -129,6 +137,9 @@ class DriftDiffusion : public SimulationInterface
     class Currents
     {
       public:
+
+        //! Constructor
+        Currents(void);
 
         //! Get the x-component of the electron current density
         double jn_x(void) const { return _jn_x; };
@@ -179,6 +190,9 @@ class DriftDiffusion : public SimulationInterface
 
         // Get the absolute value of the total current density
         double j_abs(void) const;
+
+        //! Set all to some value
+        Currents& operator=(double other);
             
       private:
         
@@ -1007,6 +1021,40 @@ DriftDiffusion::get_electric_potential(const Elem* elem,
 }
 
 
+inline
+DriftDiffusion::Solution::Solution(void)
+  : potential(0.0),
+    fermi_e(0.0),
+    fermi_h(0.0)
+{
+}
+
+
+
+inline
+DriftDiffusion::Solution&
+DriftDiffusion::Solution::operator=(double other)
+{
+  potential = other;
+  fermi_e = other;
+  fermi_h = other;
+  return *this;
+}
+
+
+
+inline
+DriftDiffusion::Currents::Currents(void)
+  : _jn_x(0.0),
+    _jn_y(0.0),
+    _jn_z(0.0),
+    _jp_x(0.0),
+    _jp_y(0.0),
+    _jp_z(0.0)
+{
+}
+
+
 
 inline
 double
@@ -1070,5 +1118,22 @@ DriftDiffusion::Currents::j_abs(void) const
 {
   return std::sqrt(j_x() * j_x() + j_y() * j_y() + j_z() * j_z());
 }
+
+
+
+inline
+DriftDiffusion::Currents&
+DriftDiffusion::Currents::operator=(double other)
+{
+  
+  _jn_x = other;
+  _jn_y = other;
+  _jn_z = other;
+  _jp_x = other;
+  _jp_y = other;
+  _jp_z = other;
+  return *this;
+}
+
 
 #endif //_DRIFTDIFFUSION_H_

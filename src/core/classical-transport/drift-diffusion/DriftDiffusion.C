@@ -24,13 +24,10 @@
 #include "equation_systems.h"
 #include "nonlinear_implicit_system.h"
 #include "mesh_refinement.h"
-#include "error_vector.h"
-#include "kelly_error_estimator.h"
 #include "sparse_matrix.h"
 #include "numeric_vector.h"
 #include "dense_submatrix.h"
 #include "dense_subvector.h"
-#include "GMVIO_cell.h"
 
 // C++ includes
 
@@ -1281,6 +1278,8 @@ DriftDiffusion::get_solution(const Elem* elem, const vector<Point>& p,
           break;
         }
       }
+      if (el_it == el_end)
+        solution[i] = 0;
     }
   }
 }
@@ -1337,6 +1336,8 @@ DriftDiffusion::get_solution(const Elem* elem, const Point& p,
 
   if (el != NULL)
     get_solution_secure(el, p, solution);
+  else
+    solution = 0;
 }
 
 

@@ -6,6 +6,9 @@ $Device
    {
      reg_numb = 1
      structure = wz
+     #x-growth-direction = (1,0,-1,0)
+     #y-growth-direction = (-1,2,-1,0)
+     #z-growth-direction = (0,0,0,1)
      mat = GaN
      doping = 1e18 doping_type = donor doping_level = 0.025
    }
@@ -14,6 +17,9 @@ $Device
    {
      reg_numb = 2
      structure = wz
+     #x-growth-direction = (1,0,-1,0)
+     #y-growth-direction = (-1,2,-1,0)
+     #z-growth-direction = (0,0,0,1)
      mat = GaN
      doping = 5e17 doping_type = acceptor doping_level = 0.17 g = 4
    }
@@ -77,14 +83,15 @@ $Models
       {
         BC_reg_numb = 2
         type = ohmic
-	#zero_grad_fermi_e = true
+	zero_grad_fermi_e = true
+	voltage = 2.5
       }
 
       BC_Region cathode
       {
         BC_reg_numb = 1
         type = ohmic
-	#zero_grad_fermi_h = true
+	zero_grad_fermi_h = true
       }
  
     }   
@@ -112,7 +119,7 @@ $Solver
   driftdiffusion
   {
     nonlin_max_it = 50
-    #ksp_type = bcgs
+    ksp_type = gmres
     pc_type = composite
     ls_max_step = 0.05
     #current_integration_method = rstf
@@ -128,11 +135,18 @@ $Solver
   sweep
   {
     simulation = (driftdiffusion, excitontransport)
+    #simulation = selfconsistent
     boundary = driftdiffusion.anode
     start = 0.0
-    stop = 3.5
-    steps = 70
+    stop = 2.5
+    steps = 25
     plotvariable = current
+  }
+
+  selfconsistent
+  {
+    simulation1 = driftdiffusion
+    simulation2 = excitontransport
   }
 }
 
@@ -168,10 +182,11 @@ $Simulation
 {
   searchpath = ../../materials
   meshfile = diode2D_mdr.grd
-  mesh_units = 1e-6
+  mesh_units = 1e-7
   dimension = 2
   temperature = 300
-  solve = (sweep, excitontransport)
+  solve = (sweep, selfconsistent)
+  #solve = selfconsistent
   resultpath = output_2D
   output_format = gmv
   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, ECurrent, HCurrent, AbsECurrent, NetRecombination, eMob, hMob, xEffPot, xDensity, xMob, ExcitonRecombination)

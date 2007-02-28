@@ -361,14 +361,23 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   // 
 
   // first selfconsistency
+  parser.read_parameters("Solver", "selfconsistent");
+  const ModelOptions& solveropts = parser.read_parameters("Solver", "selfconsistent");
+  if (!solveropts.is_empty())
+  {
+    SimulationInterface* sim =
+      SimulationInterface::create("selfconsistent", solveropts);
+    sim->set_control(this);
+    _simulations[sim->get_name()] = sim;
+  }
 
 
   // then sweep
   parser.read_parameters("Solver", "sweep");
-  const ModelOptions& solveropts = parser.read_parameters("Solver", "sweep");
+  const ModelOptions& sweepopts = parser.read_parameters("Solver", "sweep");
   if (!solveropts.is_empty())
   {
-    SimulationInterface* sim = SimulationInterface::create("sweep", solveropts);
+    SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
     sim->set_control(this);
     _simulations[sim->get_name()] = sim;
   }

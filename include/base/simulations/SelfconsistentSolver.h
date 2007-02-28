@@ -12,17 +12,23 @@ class SelfconsistentSolver : public SimulationInterface
 
   public:
 
-    //! The empty Constructor
-    SelfconsistentSolver(void);
-
     //! The destructor
     virtual ~SelfconsistentSolver(void);
+
+    //! Create a Sweep object
+    static SelfconsistentSolver* create(void);
 
 
   protected:
 
+    //! The empty Constructor
+    SelfconsistentSolver(void);
+
     /*! \copydoc SimulationInterface::do_init() */
     virtual void do_init(void);
+
+    /*! \copydoc SimulationInterface::do_equilibrium() */
+    virtual void do_equilibrium(void);
 
     /*! \copydoc SimulationInterface::do_solve() */
     virtual void do_solve(void);
@@ -50,6 +56,14 @@ class SelfconsistentSolver : public SimulationInterface
 
     //! The relaxation factor to be used
     double _relax;
+
+
+    //! Get the norm of the difference of two solutions
+    /*!
+     * The two vectors have to be of the same size
+     */
+    double get_norm_of_difference(NumericVector<double>& vec1,
+        NumericVector<double>& vec2);
     
 };
 
@@ -63,8 +77,8 @@ SelfconsistentSolver::SelfconsistentSolver(void)
   : _simulation1(NULL),
     _simulation2(NULL),
     _max_it(5),
-    _rel_tol(1e-6),
-    _abs_tol(1e-8),
+    _rel_tol(1e-3),
+    _abs_tol(1e-3),
     _relax(0.5)
 {
 }
@@ -73,6 +87,14 @@ inline
 SelfconsistentSolver::~SelfconsistentSolver(void)
 {
 }
+
+inline
+SelfconsistentSolver*
+SelfconsistentSolver::create(void)
+{
+  return new SelfconsistentSolver();
+}
+
 
 
 #endif // _SELFCONSISTENTSOLVER_H_
