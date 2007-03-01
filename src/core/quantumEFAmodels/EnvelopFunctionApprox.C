@@ -34,7 +34,8 @@ void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& var
     legend.resize(solution.size());
     results.resize(number_of_points * solution.size());
 
-    for (unsigned int i = 0; i < solution.size(); i++)
+    unsigned int num_var = solution.size();
+    for (unsigned int i = 0; i < num_var; i++)
     {
       std::ostringstream i_str;
       i_str << "state_number_" << i ; //The states are numbered starting from 0 
@@ -45,7 +46,7 @@ void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& var
       prepare_probability_function(i,  prob_data);
 
       for (unsigned int i1 = 0; i1<number_of_points; i1++)
-	results[number_of_points * i + i1] = prob_data[i1];
+	results[num_var * i1 + i] = prob_data[i1];
 
     }
   }
@@ -142,7 +143,7 @@ double EnvelopFunctionApprox::get_band_edge() const
 	  poisson_equation -> get_electric_potential(elem, q_point, electric_potential);
 	  
 	}
-      
+       
       poisson_equation -> get_band_edges ( *el, band_edges );
 
       short n1 = electric_potential.size();
@@ -157,7 +158,7 @@ double EnvelopFunctionApprox::get_band_edge() const
 	{     
 	
 	  if (cond_band_edge > band_edges[0] - electric_potential[i]) 
-	    cond_band_edge = band_edges[1] - electric_potential[i];
+	    cond_band_edge = band_edges[0] - electric_potential[i];
 
 	  if (valence_band_edge < band_edges[0] - electric_potential[i] ) 
 	    valence_band_edge = band_edges[1] - electric_potential[i];
@@ -167,10 +168,10 @@ double EnvelopFunctionApprox::get_band_edge() const
 
 
   
-    
+  
   if (opt.particle == "el")
     return(cond_band_edge);
-  else
+  else  
     return(valence_band_edge);
   
 
@@ -189,9 +190,9 @@ void EnvelopFunctionApprox::parse_options()
  
   const ModelOptions& mod_opt = get_options();
 
-  opt.particle                = mod_opt.get_option("particle", "el");
 
- 
+
+  opt.particle                = mod_opt.get_option("particle", "el");
 
   opt.periodicity[0]          = mod_opt.get_option("x-periodicity", false);
   opt.periodicity[1]          = mod_opt.get_option("y-periodicity", false);
@@ -208,7 +209,8 @@ void EnvelopFunctionApprox::parse_options()
   
 
   opt.mpi_command_line        = mod_opt.get_option("mpi_command_line","");
-  opt.solver_command_line     = mod_opt.get_option("solver_command_line", " -eps_largest_magnitude -st_type sinvert -st_ksp_rtol 1e-10 -st_ksp_type bcgs" );
+  opt.solver_command_line     = mod_opt.get_option("solver_command_line", 
+						   " -eps_largest_magnitude -st_type sinvert -st_ksp_rtol 1e-10 -st_ksp_type bcgs" );
 
   opt.output_type             = mod_opt.get_option("output_type","GMV");
 
@@ -270,9 +272,11 @@ void EnvelopFunctionApprox::parse_options()
 
   if ( !opt.consider_potential && opt.estimate_spectrum_shift) throw InitFailedException( "EnvelopeFunctionApprox: cannot estimate spectrum shift without electric potential");
 
+  
 
   if (opt.estimate_spectrum_shift) opt.spectrum_shift = get_band_edge();
   //--------------------------------------------------------------------------------------------//
+
   
 
 }
@@ -416,6 +420,9 @@ void EnvelopFunctionApprox::do_solve()
   parse_options();
 
   solve_eigen_value_problem( opt.number_of_eigenstates);
+
+
+
 }
 //===========================================================//
 void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)

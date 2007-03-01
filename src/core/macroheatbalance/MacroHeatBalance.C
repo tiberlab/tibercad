@@ -408,11 +408,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	  //volume integration for matrix for rhs
 	  
 	  if (_dd_simul != NULL)
-	  {
-	    
-	    
 	    for (short i = 0; i < dim; i++) 
-	    {
 	      Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
 		( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
 		/ opt.length_scale * my_Jacobian;
@@ -420,9 +416,9 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	     
 	    
 
-	    }
+	    
 	   
-	  }
+	  
 	
 	  
 	  
@@ -468,6 +464,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	  for (unsigned int side = 0; side<num_sides; side++)
 	  {
 	    const ElementSide elside(elem->top_parent(), side);
+
 	    if ( (_dd_simul->get_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
 	    {
 	      
