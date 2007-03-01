@@ -2540,15 +2540,15 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     switch (dim)
     {
       case 3:
-        legend[EField + 2] = "E_z";
+        legend[EField + 2] = "E_z[V/cm]";
         n_vars++;
       case 2:
-        legend[EField + 1] = "E_y";
+        legend[EField + 1] = "E_y[V/cm]";
         n_vars++;
-        legend[EField + dim] = "|E|";
+        legend[EField + dim] = "|E|[V/cm]";
         n_vars++;
       default:
-        legend[EField] = "E_x";
+        legend[EField] = "E_x[V/cm]";
         n_vars++;
     }
   }
@@ -2561,15 +2561,15 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     switch (dim)
     {
       case 3:
-        legend[Jn + 2] = "Jn_z";
+        legend[Jn + 2] = "Jn_z[A*cm^-2]";
         n_vars++;
       case 2:
-        legend[Jn + 1] = "Jn_y";
+        legend[Jn + 1] = "Jn_y[A*cm^-2]";
         n_vars++;
-        legend[n_vars + dim] = "|Jn|";
+        legend[Jn + dim] = "|Jn|[A*cm^-2]";
         n_vars++;
       default:
-        legend[Jn] = "Jn_x";
+        legend[Jn] = "Jn_x[A*cm^-2]";
         n_vars++;
     }
   }
@@ -2583,15 +2583,15 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     switch (dim)
     {
       case 3:
-        legend[Jp + 2] = "Jp_z";
+        legend[Jp + 2] = "Jp_z[A*cm^-2]";
         n_vars++;
       case 2:
-        legend[Jp + 1] = "Jp_y";
+        legend[Jp + 1] = "Jp_y[A*cm^-2]";
         n_vars++;
-        legend[n_vars + dim] = "|Jp|";
+        legend[Jp + dim] = "|Jp|[A*cm^-2]";
         n_vars++;
       default:
-        legend[Jp] = "Jp_x";
+        legend[Jp] = "Jp_x[A*cm^-2]";
         n_vars++;
     }
   }
@@ -2605,15 +2605,15 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     switch (dim)
     {
       case 3:
-        legend[J + 2] = "J_z";
+        legend[J + 2] = "J_z[A*cm^-2]";
         n_vars++;
       case 2:
-        legend[J + 1] = "J_y";
+        legend[J + 1] = "J_y[A*cm^-2]";
         n_vars++;
-        legend[n_vars + dim] = "|J|";
+        legend[J + dim] = "|J|[A*cm^-2]";
         n_vars++;
       default:
-        legend[J] = "J_x";
+        legend[J] = "J_x[A*cm^-2]";
         n_vars++;
     }
   }
@@ -2623,7 +2623,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   if (variables.find("PowerDensity")!= varend)
   {
     PDens = n_vars;
-    legend[n_vars] = "power_density";
+    legend[n_vars] = "power_density[W*cm^-3]";
     n_vars++;
   }
 
@@ -2885,6 +2885,21 @@ DriftDiffusion::build_integrated_quantities_description(
     description[0] = s.str();
   }
 }
+
+
+
+
+double
+DriftDiffusion::do_maximum_norm_of_difference(ID id)
+{
+  double norm = SimulationInterface::do_maximum_norm_of_difference(id);
+
+  return norm * get_scaling().get_potential_scaling();
+}
+
+
+
+
 
 
 void

@@ -137,9 +137,9 @@ $Solver
     #simulation = (driftdiffusion, excitontransport)
     simulation = selfconsistent
     boundary = driftdiffusion.anode
-    start = 0.0
+    start = 1.5
     stop = 3.5
-    steps = 70
+    steps = 40
     plotvariable = current
   }
 

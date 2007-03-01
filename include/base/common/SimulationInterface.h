@@ -176,6 +176,16 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     NumericVector<double>* get_remembered_solution(ID id);
 
 
+    /*!
+     * \brief Get the maximum norm of the difference the current and a
+     * remembered solution.
+     *
+     * Calls do_maximum_norm_of_difference();
+     *
+     */
+    double get_maximum_norm_of_difference(ID id);
+
+
     //! Find a simulation with name \c name
     /*!
      * \param name the name to look for
@@ -218,7 +228,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     
     //! Get a pointer to the solution vector
-    NumericVector<Real>& get_solution_vector(void);
+    NumericVector<double>& get_solution_vector(void);
 
     
     /*!
@@ -365,7 +375,23 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Delete a remembered solution
     virtual void do_delete_remembered_solution(ID id);
     
+
+    //! Build the maximum norm of the solution difference
+    /*!
+     * This method returns the maximum norm \f$\Vert x - x_i\Vert_\infty\f$
+     * of the difference between the current solution \f$x\f$ and some
+     * remembered solution \f$x_i\f$
+     *
+     * \param id the id of the remembered solution.
+     *
+     * If the remembered solution doesn't exist, return value is zero.
+     *
+     * The default action should be ok in most cases. But it could be useful
+     * to reimplement this method when a simulation uses some scaling
+     */
+    virtual double do_maximum_norm_of_difference(ID id);
     
+
     //! Parse the options
     /*!
      * This method has to be called \em explicitly somewhere in the derived
@@ -745,6 +771,13 @@ SimulationInterface::delete_remembered_solution(ID id)
   do_delete_remembered_solution(id);
 }
 
+
+inline
+double
+SimulationInterface::get_maximum_norm_of_difference(ID id)
+{
+  return do_maximum_norm_of_difference(id);
+}
 
 
 #endif // _SIMULATIONINTERFACE_H_

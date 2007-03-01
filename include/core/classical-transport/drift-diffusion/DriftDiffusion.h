@@ -629,6 +629,9 @@ class DriftDiffusion : public SimulationInterface
         std::vector<std::string>& description);
 
 
+    /*! \copydoc SimulationInterface::do_maximum_norm_of_difference() */
+    virtual double do_maximum_norm_of_difference(ID id);
+
 
   private:
 

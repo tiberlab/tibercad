@@ -57,8 +57,8 @@ class SelfconsistentSolver : public SimulationInterface
     virtual void do_delete_remembered_solution(ID id);
     
 
-  private:
 
+  private:
 
     //! The simulations which we solve self-consistently
     std::vector<SimulationInterface*> _simulations;

@@ -399,6 +399,10 @@ class ExcitonTransport : public SimulationInterface
         std::vector<double>& results, std::vector<std::string>& legend);
 
 
+    /*! \copydoc SimulationInterface::do_maximum_norm_of_difference() */
+    virtual double do_maximum_norm_of_difference(ID id);
+
+
     
   private:
 

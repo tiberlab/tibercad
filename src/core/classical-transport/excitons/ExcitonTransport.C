@@ -725,7 +725,7 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
     dynamic_cast<ExcitonProperties*>(
         _device->get_material(subdomain)->get_model(get_id()));
 
-  assert(sc != NULL); 
+  assert(excitonmodel != NULL); 
 
   excitonmodel->reinit(elem);
 
@@ -1075,15 +1075,15 @@ ExcitonTransport::build_elemental_results(const set<string>& variables,
     switch (dim)
     {
       case 3:
-        legend[J + 2] = "Jx_z";
+        legend[J + 2] = "Jx_z[cm^2*s^-1]";
         n_vars++;
       case 2:
-        legend[J + 1] = "Jx_y";
+        legend[J + 1] = "Jx_y[cm^2*s^-1]";
         n_vars++;
-        legend[J + dim] = "|J|";
+        legend[J + dim] = "|J|[cm^2*s^-1]";
         n_vars++;
       default:
-        legend[J] = "Jx_x";
+        legend[J] = "Jx_x[cm^-2*s^-1)]";
         n_vars++;
     }
   }
@@ -1197,6 +1197,17 @@ ExcitonTransport::build_elemental_results(const set<string>& variables,
   results.resize(elem_number * n_vars);
 }
 
+
+
+
+
+double
+ExcitonTransport::do_maximum_norm_of_difference(ID id)
+{
+  double norm = SimulationInterface::do_maximum_norm_of_difference(id);
+
+  return norm * get_scaling().get_potential_scaling();
+}
 
 
 
