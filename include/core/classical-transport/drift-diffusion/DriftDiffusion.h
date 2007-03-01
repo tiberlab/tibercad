@@ -103,7 +103,7 @@ class DriftDiffusion : public SimulationInterface
      * This structure is used for the queries of the solution in certain
      * points or elements.
      *
-     * The values are given in Volts
+     * The values are given in Volts.
      */
     class Solution
     {
@@ -132,7 +132,7 @@ class DriftDiffusion : public SimulationInterface
      * certain points or elements. It stores the x,y and x components of the
      * electrical current densities for electrons and holes.
      *
-     * Current densities are given in Acm^-2
+     * Current densities are given in \f$Acm^{-2}\f$
      */
     class Currents
     {

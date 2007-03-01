@@ -140,6 +140,9 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
 
     //! Write results to file
+    /*!
+     * This method calls do_plot() after some health checks
+     */
     void plot(void);
 
 
@@ -332,6 +335,16 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * This method does the actual simulation.
      */
     virtual void do_solve(void) = 0;
+
+
+    //! Do a plot
+    /*!
+     * This method creates files with the results of the simulation.
+     * In almost all cases the default implementation should be ok, but
+     * in some it is not, especially in "compound" simulations as
+     * sweeps, selfconsitent solvers etc.
+     */
+    virtual void do_plot(void);
 
     
     //! Remember the current solution

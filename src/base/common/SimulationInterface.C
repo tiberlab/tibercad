@@ -317,10 +317,18 @@ SimulationInterface::get_integrated_quantities(
 void
 SimulationInterface::plot(void)
 {
-
   if (_environment != NULL)
     get_environment().prepare_for_solve();
+
+  do_plot();
+}
   
+
+
+void
+SimulationInterface::do_plot(void)
+{
+
   const Device& dev = get_environment().get_device();
 
   string suffix = get_control().get_filename_suffix();
@@ -431,6 +439,8 @@ SimulationInterface::plot(void)
   }
 
 }
+
+
 
 
 ID

@@ -944,9 +944,9 @@ DriftDiffusion::rebuild_equation_system(void)
   // finally initialize the newly created system
   system.init();
 
-  //system.nonlinear_solver->matvec = assemble;
-  system.nonlinear_solver->residual = assemble_residual;
-  system.nonlinear_solver->jacobian = assemble_jacobian;
+  system.nonlinear_solver->matvec = assemble;
+  //system.nonlinear_solver->residual = assemble_residual;
+  //system.nonlinear_solver->jacobian = assemble_jacobian;
   
   _rebuild_eq_system = false;
 
@@ -1556,13 +1556,13 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
       en += phi[i][n] * ddsol(dof_indices_en[i]);
       ep += phi[i][n] * ddsol(dof_indices_ep[i]);
 
-      en_x  += dphi[i][0](0) * ddsol(dof_indices_en[i]);
-      en_y  += dphi[i][0](1) * ddsol(dof_indices_en[i]);
-      en_z  += dphi[i][0](2) * ddsol(dof_indices_en[i]);
+      en_x  += dphi[i][n](0) * ddsol(dof_indices_en[i]);
+      en_y  += dphi[i][n](1) * ddsol(dof_indices_en[i]);
+      en_z  += dphi[i][n](2) * ddsol(dof_indices_en[i]);
       
-      ep_x  += dphi[i][0](0) * ddsol(dof_indices_ep[i]);
-      ep_y  += dphi[i][0](1) * ddsol(dof_indices_ep[i]);
-      ep_z  += dphi[i][0](2) * ddsol(dof_indices_ep[i]);
+      ep_x  += dphi[i][n](0) * ddsol(dof_indices_ep[i]);
+      ep_y  += dphi[i][n](1) * ddsol(dof_indices_ep[i]);
+      ep_z  += dphi[i][n](2) * ddsol(dof_indices_ep[i]);
 
       e_field += dphi[i][0] * ddsol(dof_indices_u[i]);
     }
@@ -2535,7 +2535,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   int EField = -1;
   if (variables.find("EField") != varend)
   {
-    legend.resize(legend.size() + dim - 1);
+    legend.resize(legend.size() + dim);
     EField = n_vars;
     switch (dim)
     {
@@ -2545,24 +2545,18 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
       case 2:
         legend[EField + 1] = "E_y";
         n_vars++;
+        legend[EField + dim] = "|E|";
+        n_vars++;
       default:
         legend[EField] = "E_x";
         n_vars++;
     }
   }
 
-  int AbsEField = -1;
-  if (variables.find("AbsEField") != varend)
-  {
-    AbsEField = n_vars;
-    legend[n_vars] = "|E|";
-    n_vars++;
-  }
-
   int Jn = -1;
-  if (variables.find("ECurrent") != varend)
+  if (variables.find("eCurrent") != varend)
   {
-    legend.resize(legend.size() + dim - 1);
+    legend.resize(legend.size() + dim);
     Jn = n_vars;
     switch (dim)
     {
@@ -2572,24 +2566,19 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
       case 2:
         legend[Jn + 1] = "Jn_y";
         n_vars++;
+        legend[n_vars + dim] = "|Jn|";
+        n_vars++;
       default:
         legend[Jn] = "Jn_x";
         n_vars++;
     }
   }
 
-  int AbsJn = -1;
-  if (variables.find("AbsECurrent") != varend)
-  {
-    AbsJn = n_vars;
-    legend[n_vars] = "|Jn|";
-    n_vars++;
-  }
 
   int Jp = -1;
-  if (variables.find("HCurrent") != varend)
+  if (variables.find("hCurrent") != varend)
   {
-    legend.resize(legend.size() + dim - 1);
+    legend.resize(legend.size() + dim);
     Jp = n_vars;
     switch (dim)
     {
@@ -2599,24 +2588,19 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
       case 2:
         legend[Jp + 1] = "Jp_y";
         n_vars++;
+        legend[n_vars + dim] = "|Jp|";
+        n_vars++;
       default:
         legend[Jp] = "Jp_x";
         n_vars++;
     }
   }
 
-  int AbsJp = -1;
-  if (variables.find("AbsHCurrent") != varend)
-  {
-    AbsJp = n_vars;
-    legend[n_vars] = "|Jp|";
-    n_vars++;
-  }
 
   int J = -1;
   if (variables.find("Current") != varend)
   {
-    legend.resize(legend.size() + dim - 1);
+    legend.resize(legend.size() + dim);
     J = n_vars;
     switch (dim)
     {
@@ -2626,19 +2610,14 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
       case 2:
         legend[J + 1] = "J_y";
         n_vars++;
+        legend[n_vars + dim] = "|J|";
+        n_vars++;
       default:
         legend[J] = "J_x";
         n_vars++;
     }
   }
 
-  int AbsJ = -1;
-  if (variables.find("AbsCurrent") != varend)
-  {
-    AbsJ = n_vars;
-    legend[n_vars] = "|J|";
-    n_vars++;
-  }
 
   int PDens = -1;
   if (variables.find("PowerDensity")!= varend)
@@ -2769,78 +2748,66 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
           results[id + EField + 2] = e_field(2);
         case 2:
           results[id + EField + 1] = e_field(1);
+          results[id + EField + dim] = e_field.size();
         default:
           results[id + EField] = e_field(0);
       }
     }
 
-    if (AbsEField != -1)
-      results[id + AbsEField] = e_field.size();
-
 
     if (Jn != -1)
-    {
-      switch (dim)
-      {
-        case 3:
-          results[id + Jn + 2] = sigma_e * en_z;
-        case 2:
-          results[id + Jn + 1] = sigma_e * en_y;
-        default:
-          results[id + Jn] = sigma_e * en_x;
-      }
-    }
-
-    if (AbsJn != -1)
     {
       double jx = sigma_e * en_x;
       double jy = sigma_e * en_y;
       double jz = sigma_e * en_z;
-      results[id + AbsJn] = sqrt(jx * jx + jy * jy + jz * jz);
-    }
-
-    if (Jp != -1)
-    {
       switch (dim)
       {
         case 3:
-          results[id + Jp + 2] = sigma_h * ep_z;
+          results[id + Jn + 2] = jz;
         case 2:
-          results[id + Jp + 1] = sigma_h * ep_y;
+          results[id + Jn + 1] = jy;
+          results[id + Jn + dim] = sqrt(jx * jx + jy * jy + jz * jz);
         default:
-          results[id + Jp] = sigma_h * ep_x;
+          results[id + Jn] = jx;
       }
     }
 
-    if (AbsJp != -1)
+
+    if (Jp != -1)
     {
       double jx = sigma_h * ep_x;
       double jy = sigma_h * ep_y;
       double jz = sigma_h * ep_z;
-      results[id + AbsJp] = sqrt(jx * jx + jy * jy + jz * jz);
+      switch (dim)
+      {
+        case 3:
+          results[id + Jp + 2] = jz;
+        case 2:
+          results[id + Jp + 1] = jy;
+          results[id + Jp + dim] = sqrt(jx * jx + jy * jy + jz * jz);
+        default:
+          results[id + Jp] = jx;
+      }
     }
 
 
     if (J != -1)
     {
-      switch (dim)
-      {
-        case 3:
-          results[id + J + 2] = sigma_e * en_z + sigma_h * ep_z;
-        case 2:
-          results[id + J + 1] = sigma_e * en_y + sigma_h * ep_y;
-        default:
-          results[id + J] = sigma_e * en_x + sigma_h * ep_x;
-      }
-    }
-
-    if (AbsJ != -1)
-    {
       double jx = sigma_e * en_x + sigma_h * ep_x;
       double jy = sigma_e * en_y + sigma_h * ep_y;
       double jz = sigma_e * en_z + sigma_h * ep_z;
-      results[id + AbsJ] = sqrt(jx * jx + jy * jy + jz * jz);
+      switch (dim)
+      {
+        case 3:
+          results[id + J + 2] = jz;
+        case 2:
+          results[id + J + 1] = jy;
+          results[id + J + dim] = sqrt(jx * jx + jy * jy + jz * jz);
+        default:
+          results[id + J] = jx;
+      }
     }
+
 
     if (PDens != -1)
     {

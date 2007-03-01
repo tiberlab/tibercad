@@ -134,8 +134,8 @@ $Solver
 
   sweep
   {
-    simulation = (driftdiffusion, excitontransport)
-    #simulation = selfconsistent
+    #simulation = (driftdiffusion, excitontransport)
+    simulation = selfconsistent
     boundary = driftdiffusion.anode
     start = 0.0
     stop = 2.5
@@ -185,11 +185,10 @@ $Simulation
   mesh_units = 1e-7
   dimension = 2
   temperature = 300
-  solve = (sweep, selfconsistent)
-  #solve = selfconsistent
+  solve = sweep
   resultpath = output_2D
   output_format = gmv
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, ECurrent, HCurrent, AbsECurrent, NetRecombination, eMob, hMob, xEffPot, xDensity, xMob, ExcitonRecombination)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, NetRecombination, eMob, hMob, xEffPot, xDensity, xMob, ExcitonRecombination, xCurrent)
 }
 
 

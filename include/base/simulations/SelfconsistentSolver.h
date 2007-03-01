@@ -24,17 +24,37 @@ class SelfconsistentSolver : public SimulationInterface
     //! The empty Constructor
     SelfconsistentSolver(void);
 
+    
     /*! \copydoc SimulationInterface::do_init() */
     virtual void do_init(void);
 
+    
     /*! \copydoc SimulationInterface::do_equilibrium() */
     virtual void do_equilibrium(void);
 
+    
     /*! \copydoc SimulationInterface::do_solve() */
     virtual void do_solve(void);
 
+    
+    /*! \copydoc SimulationInterface::do_plot() */
+    virtual void do_plot(void);
+
+    
     /*! \copydoc SimulationInterface::parse_options() */
     virtual void parse_options(void);
+
+
+    /*! \copydoc SimulationInterface::do_remember_current_solution() */
+    virtual ID do_remember_current_solution(ID id = 0);
+
+
+    /*! \copydoc SimulationInterface::do_set_to_remembered_solution() */
+    virtual void do_set_to_remembered_solution(ID id);
+
+
+    /*! \copydoc SimulationInterface::do_delete_remembered_solution() */
+    virtual void do_delete_remembered_solution(ID id);
     
 
   private:
@@ -57,6 +77,8 @@ class SelfconsistentSolver : public SimulationInterface
     //! The relaxation factor to be used
     double _relax;
 
+    //! The ids of the remembered solutions
+    std::map<ID, std::vector<ID> > _remembered_sol_ids;
 
     //! Get the norm of the difference of two solutions
     /*!

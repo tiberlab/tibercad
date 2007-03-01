@@ -488,7 +488,20 @@ ExcitonTransport::do_solve(void)
 double
 ExcitonTransport::get_solution(const Elem* elem, const Point& p)
 {
-  double solution = 0.0;
+  double solution;
+
+  get_solution(elem, p, solution);
+
+  return solution;
+}
+
+
+
+template <typename T>
+void
+ExcitonTransport::get_solution(const Elem* elem, const Point& p, T& solution)
+{
+  solution = 0.0;
 
   // this will contain the element in which p lies and for which
   // DriftDiffusion knows the potential
@@ -535,13 +548,78 @@ ExcitonTransport::get_solution(const Elem* elem, const Point& p)
   if (el != NULL)
     get_solution_secure(el, p, solution);
 
-  return solution;
+}
+
+
+
+template <typename T>
+void
+ExcitonTransport::get_solution(const Elem* elem, const vector<Point>& p,
+    vector<T>& solution)
+{
+  unsigned int np = p.size();
+  solution.resize(np);
+  if (np == 0) return;
+
+  // this will contain the element in which p lies and for which
+  // DriftDiffusion knows the potential
+  const Elem* el = elem;
+
+  SimulationEnvironment& env = get_environment();
+  
+  // check if elem is an active element of the simulation
+  if (!env.contains_element(elem))
+  {
+    // do we have a parent element in the list?
+    const Elem* parent = elem->parent();
+
+    while ((parent != NULL) && (!env.contains_element(parent)))
+      parent = parent->parent();
+
+    el = parent; // is NULL if no parent
+  }
+
+  if (el != NULL) // we found it!
+    get_solution_secure(el, p, solution);
+  else
+  {
+    // no parent, so check for children
+    vector<const Elem*> tree;
+    elem->family_tree(tree, false);
+
+    set<const Elem*> elem_list;
+    unsigned int len = tree.size();
+    for (unsigned int i = 0; i < len; i++)
+    {
+      const Elem* elem_i = tree[i];
+      if (env.contains_element(elem_i))
+        elem_list.insert(elem_i);
+    }
+    for (unsigned int i = 0; i < np; i++)
+    {
+      set<const Elem*>::iterator el_it = elem_list.begin();
+      set<const Elem*>::iterator el_end = elem_list.end();
+      for ( ; el_it != el_end; ++el_it)
+      {
+        el = *el_it;
+        if (el->contains_point(p[i]))
+        {
+          get_solution_secure(el, p[i], solution[i]);
+          // we have found it, so get out of the for loop
+          break;
+        }
+      }
+      if (el_it == el_end)
+        solution[i] = 0;
+    }
+  }
 }
 
 
 
 
 
+template<>
 void
 ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
     vector<double>& solution)
@@ -597,6 +675,107 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
     solution[n] = u;
   }
 }
+
+
+
+template<>
+void
+ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
+    vector<ExcitonTransport::Current>& solution)
+{
+  unsigned int np = p.size();
+  solution.resize(np);
+  if (np == 0) return;
+
+  NonlinearImplicitSystem* system;
+  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
+      get_equation_system_name());
+
+  const NumericVector<Number>& ddsol = *(system->solution);
+
+  const unsigned int dim = get_mesh().mesh_dimension();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int u_var = system->variable_number("fermi_x");
+
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+
+  vector<unsigned int> dof_indices_u;
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+  vector<Point> points(np);
+  FEInterface::inverse_map(dim, fe_type, elem, p, points);
+  //for (unsigned int n = 0; n < np; n++)
+  //  points[n] = FEInterface::inverse_map(dim, fe_type, elem, p[n], 1e-6);
+
+  fe->reinit(elem, &points);
+
+  dof_map.dof_indices(elem, dof_indices_u, u_var);
+
+  const unsigned int n_dofs = dof_indices_u.size();
+
+  ID subdomain = elem->subdomain_id();
+
+  ExcitonProperties* excitonmodel =
+    dynamic_cast<ExcitonProperties*>(
+        _device->get_material(subdomain)->get_model(get_id()));
+
+  assert(sc != NULL); 
+
+  excitonmodel->reinit(elem);
+
+
+
+  // the scaling parameters to scale back the result
+  double phi0 = get_scaling().get_potential_scaling();
+  const double x0 = get_options().mesh_units;
+
+  for (unsigned int n = 0; n < np; n++)
+  {
+    double ex = 0;
+    double ex_x = 0.0;
+    double ex_y = 0.0;
+    double ex_z = 0.0;
+    // do interpolation
+    for (unsigned int i = 0; i < n_dofs; i++)
+    {
+      ex  += phi[i][n] * ddsol(dof_indices_u[i]);
+
+      ex_x  += dphi[i][n](0) * ddsol(dof_indices_u[i]);
+      ex_y  += dphi[i][n](1) * ddsol(dof_indices_u[i]);
+      ex_z  += dphi[i][n](2) * ddsol(dof_indices_u[i]);
+    }
+
+    // scale the potential back
+    ex  *= phi0;
+    ex_x *= phi0 / x0;
+    ex_y *= phi0 / x0;
+    ex_z *= phi0 / x0;
+
+    // prepare for calculating local properties
+    excitonmodel->set_coordinates(points[n]);
+
+    double T_lat = excitonmodel->get_lattice_temperature();
+    // all are at lattice temperature
+    excitonmodel->set_carrier_temperature(T_lat);
+
+    excitonmodel->set_effective_potential(ex);
+
+    excitonmodel->calculate_density();
+
+    double sigma = excitonmodel->get_density() * excitonmodel->get_mobility();
+
+    solution[n]._j_x = sigma * ex_x;
+    solution[n]._j_y = sigma * ex_y;
+    solution[n]._j_z = sigma * ex_z;
+  }
+}
+
 
 
 
@@ -889,29 +1068,24 @@ ExcitonTransport::build_elemental_results(const set<string>& variables,
 
 
   int J = -1;
-  if (variables.find("XCurrent") != varend)
+  if (variables.find("xCurrent") != varend)
   {
     J = n_vars;
+    legend.resize(variables.size() + dim);
     switch (dim)
     {
       case 3:
-        legend[n_vars] = "Jx_z";
+        legend[J + 2] = "Jx_z";
         n_vars++;
       case 2:
-        legend[n_vars] = "Jx_y";
+        legend[J + 1] = "Jx_y";
+        n_vars++;
+        legend[J + dim] = "|J|";
         n_vars++;
       default:
-        legend[n_vars] = "Jx_x";
+        legend[J] = "Jx_x";
         n_vars++;
     }
-  }
-
-  int AbsJ = -1;
-  if (variables.find("AbsXCurrent") != varend)
-  {
-    AbsJ = n_vars;
-    legend[n_vars] = "|J|";
-    n_vars++;
   }
 
 
@@ -990,9 +1164,8 @@ ExcitonTransport::build_elemental_results(const set<string>& variables,
 
     excitonmodel->set_carrier_temperature(kT);
     excitonmodel->set_coordinates(elem->centroid());
-    excitonmodel->set_effective_potential(ex);
+    excitonmodel->set_effective_potential(phi0 * ex);
     excitonmodel->calculate_density();
-    excitonmodel->calculate_net_recombination_rate();
 
 
     double sigma = excitonmodel->get_density() * excitonmodel->get_mobility();
@@ -1002,23 +1175,19 @@ ExcitonTransport::build_elemental_results(const set<string>& variables,
 
     if (J != -1)
     {
-      switch (dim)
-      {
-        case 3:
-          results[id + J + 2] = sigma * ex_z;
-        case 2:
-          results[id + J + 1] = sigma * ex_y;
-        default:
-          results[id + J] = sigma * ex_x;
-      }
-    }
-
-    if (AbsJ != -1)
-    {
       double jx = sigma * ex_x;
       double jy = sigma * ex_y;
       double jz = sigma * ex_z;
-      results[id + AbsJ] = sqrt(jx * jx + jy * jy + jz * jz);
+      switch (dim)
+      {
+        case 3:
+          results[id + J + 2] = jz;
+        case 2:
+          results[id + J + 1] = jy;
+          results[id + J + dim] = sqrt(jx * jx + jy * jy + jz * jz);
+        default:
+          results[id + J] = jx;
+      }
     }
 
 
@@ -1327,4 +1496,26 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
 
   } // end loop over elements
 }
+
+
+//
+// explicit instantiations of template methods
+//
+template void
+ExcitonTransport::get_solution<double>(const Elem* elem, const Point& p,
+    double& solution);
+
+template void
+ExcitonTransport::get_solution<ExcitonTransport::Current>(const Elem* elem,
+    const Point& p, ExcitonTransport::Current& solution);
+
+template void
+ExcitonTransport::get_solution<double>(const Elem* elem, const vector<Point>& p,
+    vector<double>& solution);
+
+template void
+ExcitonTransport::get_solution<ExcitonTransport::Current>(const Elem* elem,
+    const vector<Point>& p, vector<ExcitonTransport::Current>& solution);
+
+
 

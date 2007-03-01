@@ -190,6 +190,13 @@ Sweep::do_equilibrium(void)
 
 
 void
+Sweep::do_plot(void)
+{
+}
+
+
+
+void
 Sweep::do_solve(void)
 {
   assert(_variable != NULL);

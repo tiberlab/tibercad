@@ -83,22 +83,20 @@ SelfconsistentSolver::do_solve(void)
     _simulation2->solve();
 
     // check for the difference between old and new solutions
-    //double norm1 = get_norm_of_difference(*old_sol1,
-    //    _simulation1->get_solution_vector());
-    //double norm2 = get_norm_of_difference(*old_sol2,
-    //    _simulation2->get_solution_vector());
-    //cerr << "iteration " << i << ": norm1 = " << norm1 <<
-    //  "  norm2 = " << norm2 << endl;
+    double norm1 =
+      get_norm_of_difference(_simulation1->get_solution_vector(),
+          *(_simulation1->get_remembered_solution(old_sol1)));
+    double norm2 = get_norm_of_difference(_simulation2->get_solution_vector(),
+          *(_simulation2->get_remembered_solution(old_sol2)));
+    cerr << "iteration " << i << ": norm1 = " << norm1 <<
+      "  norm2 = " << norm2 << endl;
 
-    //if ((norm1 <= _abs_tol) && (norm2 <= _abs_tol))
-    //  break;
+    if ((norm1 <= _abs_tol) && (norm2 <= _abs_tol))
+      break;
     
     _simulation1->remember_current_solution(old_sol1);
     _simulation2->remember_current_solution(old_sol2);
   }
-
-  _simulation1->plot();
-  _simulation2->plot();
 
   // clean up
   _simulation1->delete_remembered_solution(old_sol1);
@@ -123,4 +121,71 @@ SelfconsistentSolver::get_norm_of_difference(NumericVector<double>& vec1,
   }
 
   return norm;
+}
+
+
+
+
+ID
+SelfconsistentSolver::do_remember_current_solution(ID id)
+{
+  map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
+  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
+
+  if (it != end)
+  {
+    (it->second)[0] = _simulation1->remember_current_solution((it->second)[0]);
+    (it->second)[1] = _simulation2->remember_current_solution((it->second)[1]);
+  }
+  else
+  {
+    if (_remembered_sol_ids.begin() == end)
+      id = 1;
+    else
+      id = (--end)->first + 1;
+
+    vector<ID> ids(2);
+    ids[0] = _simulation1->remember_current_solution();
+    ids[1] = _simulation2->remember_current_solution();
+    _remembered_sol_ids[id] = ids;
+  }
+
+  return id;
+}
+
+
+void
+SelfconsistentSolver::do_set_to_remembered_solution(ID id)
+{
+  map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
+  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
+
+  if (it != end)
+  {
+    _simulation1->set_to_remembered_solution((it->second)[0]);
+    _simulation2->set_to_remembered_solution((it->second)[1]);
+  }
+}
+
+
+
+void
+SelfconsistentSolver::do_delete_remembered_solution(ID id)
+{
+  map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
+  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
+  if (it != end)
+  {
+    _simulation1->delete_remembered_solution((it->second)[0]);
+    _simulation2->delete_remembered_solution((it->second)[1]);
+  }
+}
+
+
+
+void
+SelfconsistentSolver::do_plot(void)
+{
+  _simulation1->plot();
+  _simulation2->plot();
 }

@@ -46,10 +46,18 @@ class Sweep : public SimulationInterface
 
     
     /*! \copydoc SimulationInterface::do_solve()
-     * solve() of the associated SimulationInterface object will
+     *
+     * solve() of the associated SimulationInterface objects will
      * be called repeatedly for all sweep values
      */
     virtual void do_solve(void);
+   
+    //! Plot results. Empty implementation!
+    /*!
+     * We do not plot anything here because we plot after each sweep step
+     */
+    virtual void do_plot(void);
+
 
     
     /*! \copydoc SimulationInterface::parse_options() */
