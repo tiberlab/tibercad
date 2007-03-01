@@ -596,16 +596,18 @@ void ReadISEGrid::scan_grid_file()
           ISE_INPUT >> id;   // face id
           //cout  << id << "   " ;
 	     						
-          if (id < 0)  //  negative  face  id 
+           if (id < 0)  //  negative  face  id 
           {
-            id = (-id-1);   //  ISE code  for inverted face
+             id = (-id-1);   //  ISE code  for inverted face
             //  !!!!! INVERT THE  ORDER (AND ORIENTATION) OF  THE  EDGES OF  THIS  (NEGATIVE) FACE :
             //  (1,2,3,4) ->   (-4,-3,-2,-1)
             negative_faces.push_back(true);  //  flag  for ISE_Element_3D::set_element_nodes()
-            //cout << "NEGATIVE FACE ********** ";
+            cout << "NEGATIVE FACE ********** ";
           }
           else {negative_faces.push_back(false);}
           //cout << endl;
+
+      //    negative_faces.push_back(false);  //  TEST  !!!
 					
           face_list.push_back(faces[id]); 
        							

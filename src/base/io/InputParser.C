@@ -1190,8 +1190,10 @@ const map <ID, RegionStructure>& InputParser::read_device(void)
 
   std::string  label, keyword,region_name, section_name   ;
   std::ifstream in_stream (filename.c_str()) ;
-  ID current_region_ID;
+  ID current_region_ID; //  to be  deleted
   bool  check_error;
+  ID region_counter;
+  region_counter = 0;
 
   reset_all_maps();
 
@@ -1259,6 +1261,7 @@ const map <ID, RegionStructure>& InputParser::read_device(void)
 
     //     read   region_name
     in_stream >>region_name;
+    region_counter++;
 
     //  cout <<  " region_name = " << region_name <<  endl; 
     
@@ -1313,8 +1316,13 @@ const map <ID, RegionStructure>& InputParser::read_device(void)
     //   current_region_structure.set_model_options(temp_region_options);
     current_region_ID   = atoi(region_numb.c_str());
 
+// ****************************************************
+// instead of  current_region_ID,  put  incremental ID in map device_map: region_counter
+// device_map.insert(make_pair (region_counter, current_region_structure )); 
 
-    device_map.insert(make_pair (current_region_ID, current_region_structure )); 
+    device_map.insert(make_pair (region_counter, current_region_structure ));
+
+//    device_map.insert(make_pair (current_region_ID, current_region_structure )); 
 
     // ***************************************
 
@@ -1418,7 +1426,7 @@ void
 InputParser::parse_model(ifstream& in_stream)
 {// method  for   parsing  of   model section
 
- 
+  ID BC_region_counter ;
   bool  check_error;
   string BC_regions_keyword_string , keyword_BC_Region_string, model_keyword_string,
     phys_model_label, options_label    ;
@@ -1961,7 +1969,9 @@ InputParser::parse_model(ifstream& in_stream)
 
 
 
-
+      BC_region_counter = 0 ;//  reset  counter for  boundary regions for this model
+//  one single   BC region can refer to more than one BC_reg_ID !!!!
+ 
       //  read keyword BC_Region
       in_stream >> keyword;
       //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
@@ -1991,6 +2001,7 @@ InputParser::parse_model(ifstream& in_stream)
 
         //     read   BC_region_name
         in_stream >>BC_region_name;
+        BC_region_counter++; // ***********************
 
 
         //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
@@ -2025,9 +2036,15 @@ InputParser::parse_model(ifstream& in_stream)
 
         current_BC_region_ID   = atoi(BC_region_numb.c_str());
 
-        model_BC_map.insert(make_pair (current_BC_region_ID,current_BC_region_structure  ));  
+// ****************************************************
+// instead of  current_BC_region_ID,  put  incremental ID in map model_BC_map: BC_region_counter
+// model_BC_map.insert(make_pair (BC_region_counter,current_BC_region_structure  )); 
 
-        // *******************************  END  2.2.07 *****************
+        model_BC_map.insert(make_pair (BC_region_counter,current_BC_region_structure  )); 
+
+//        model_BC_map.insert(make_pair (current_BC_region_ID,current_BC_region_structure  ));  
+
+        // *******************************  END  2.2.07/1.3.07 *****************
 
         //  put region_name in map  map_region <string,string >
    
