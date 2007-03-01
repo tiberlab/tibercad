@@ -109,4 +109,5 @@ gamma_h  = 1
 Talpha_h = -1.5
 
 #Lattice thermal conductivity
-therm_lat_cond = 0.45
+therm_lat_cond_x = 0.45
+therm_lat_cond_z = 0.45

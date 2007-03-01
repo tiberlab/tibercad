@@ -1,5 +1,4 @@
 #include "LatticeThermalConductivity.h"
-#include "ZbLatticeThermalConductivity.h"
 #include "Material.h"
 #include "RotatedCrystal.h" 
 #include "tensor.h"
@@ -21,9 +20,9 @@ void LatticeThermalConductivity::copy_from(const PhysicalModelInterface *rhs)
 void LatticeThermalConductivity::calculate_VCA (const PhysicalModelInterface *comp_A, 
                                                 const PhysicalModelInterface *comp_B, double xa) 
 { 
-  const ZbLatticeThermalConductivity* modA = dynamic_cast<const ZbLatticeThermalConductivity*>(comp_A);
+  const LatticeThermalConductivity* modA = dynamic_cast<const LatticeThermalConductivity*>(comp_A);
 
-  const ZbLatticeThermalConductivity* modB = dynamic_cast<const ZbLatticeThermalConductivity*>(comp_B);
+  const LatticeThermalConductivity* modB = dynamic_cast<const LatticeThermalConductivity*>(comp_B);
 
 
    alloy(_conductivity,modA->_conductivity, modB->_conductivity, xa);  

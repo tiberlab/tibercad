@@ -99,4 +99,5 @@ Talpha_h = -1.5
 # direct
 
 #Lattice thermal conductivity 
-therm_lat_cond = 1.3
+therm_lat_cond_x = 1.3
+therm_lat_cond_z = 1.3
