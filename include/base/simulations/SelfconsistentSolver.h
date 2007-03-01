@@ -59,11 +59,9 @@ class SelfconsistentSolver : public SimulationInterface
 
   private:
 
-    //! The first simulation
-    SimulationInterface* _simulation1;
-    
-    //! The second simulation
-    SimulationInterface* _simulation2;
+
+    //! The simulations which we solve self-consistently
+    std::vector<SimulationInterface*> _simulations;
 
     //! The maximum number of iterations
     unsigned int _max_it;
@@ -96,9 +94,7 @@ class SelfconsistentSolver : public SimulationInterface
 
 inline
 SelfconsistentSolver::SelfconsistentSolver(void)
-  : _simulation1(NULL),
-    _simulation2(NULL),
-    _max_it(5),
+  : _max_it(5),
     _rel_tol(1e-3),
     _abs_tol(1e-3),
     _relax(0.5)

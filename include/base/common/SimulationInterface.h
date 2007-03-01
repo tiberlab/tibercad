@@ -371,7 +371,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * This method has to be called \em explicitly somewhere in the derived
      * class. It is not called from \c SimulationInterface::init(), because 
      * in some situations options could change between different calls
-     * to \c solve(). It is not called in \c SimulationInterface::solve(),
+     * to \c solve(). It is \em not called in \c SimulationInterface::solve(),
      * because in other situations this is not necessary. So: call it in
      * \c do_init() or \c do_solve().
      */

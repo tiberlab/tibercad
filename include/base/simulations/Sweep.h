@@ -66,7 +66,7 @@ class Sweep : public SimulationInterface
 
   private:
 
-    //! The simulation for which wew do the sweep
+    //! The simulations for which wew do the sweep
     std::vector<SimulationInterface*> _simulations;
 
     //! A pointer to the sweepable variable

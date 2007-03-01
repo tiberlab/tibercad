@@ -1,6 +1,7 @@
 // $Id$
 
 #include "SelfconsistentSolver.h"
+#include "Control.h"
 
 using namespace std;
 
@@ -10,22 +11,30 @@ void
 SelfconsistentSolver::do_init(void)
 {
   ModelOptions& opts = get_options();
+  Control& control = get_control();
   
-  const string& sim1 = opts.get_option("simulation1", "");
-  _simulation1 = SimulationInterface::find_simulation(sim1);
-  
-  const string& sim2 = opts.get_option("simulation2", "");
-  _simulation2 = SimulationInterface::find_simulation(sim2);
+  // get the names of the simulations to be solved
+  vector<string> sims;
+  opts.get_option("simulations", sims);
+  int num_of_sims = sims.size();
 
-  // we don't tolerate NULL pointers...
-  if (_simulation1 == NULL)
-    throw InitFailedException("Simulation " + sim1 + " not found");
+  if (num_of_sims == 0)
+    throw InitFailedException("Sweep: No simulation names provided.");
   
-  if (_simulation2 == NULL)
-    throw InitFailedException("Simulation " + sim2 + " not found");
+  _simulations.resize(num_of_sims);
+  for (int i = 0; i < num_of_sims; i++)
+  {
+    _simulations[i] = control.find_simulation(sims[i]);
+    if (_simulations[i] == NULL)
+      throw InitFailedException("Sweep: Simulation " + sims[i] + " not found.");
+
+    if (!_simulations[i]->is_initialized())
+      _simulations[i]->init();
+  }
+
   
   // we set our environment to that of the first simulation
-  set_environment(&_simulation1->get_environment());
+  set_environment(&_simulations[0]->get_environment());
 }
 
 
@@ -39,23 +48,25 @@ SelfconsistentSolver::parse_options(void)
   _abs_tol = opts.get_option("abs_tolerance", _abs_tol);
   _relax = opts.get_option("relaxation_factor", _relax);
 
-  _simulation1->set_relaxation_factor(_relax);
-  _simulation2->set_relaxation_factor(_relax);
+  int num_sim = _simulations.size();
+  for (int i = 0; i < num_sim; i++)
+    _simulations[i]->set_relaxation_factor(_relax);
 }
 
 
 void
 SelfconsistentSolver::do_equilibrium(void)
 {
+  int num_sim = _simulations.size();
   
-  // some sanity check
-  assert(_simulation1 != NULL);
-  assert(_simulation1->is_initialized());
-  assert(_simulation2 != NULL);
-  assert(_simulation2->is_initialized());
+  for (int i = 0; i < num_sim; i++)
+  {
+    // some sanity check
+    assert(_simulations[i] != NULL);
+    assert(_simulations[i]->is_initialized());
 
-  _simulation1->solve_equilibrium();
-  _simulation2->solve_equilibrium();
+    _simulations[i]->solve_equilibrium();
+  }
 }
 
 
@@ -64,43 +75,55 @@ SelfconsistentSolver::do_equilibrium(void)
 void
 SelfconsistentSolver::do_solve(void)
 {
-  assert(_simulation1 != NULL);
-  assert(_simulation2 != NULL);
+  int num_sim = _simulations.size();
 
-  _simulation1->solve();
-  _simulation2->solve();
+  assert(num_sim > 0);
+
+  for (int i = 0; i < num_sim; i++)
+    _simulations[i]->solve();
 
   // we make a copy of the current solutions
-  ID old_sol1; 
-  ID old_sol2; 
-  old_sol1 = _simulation1->remember_current_solution();
-  old_sol2 = _simulation2->remember_current_solution();
+  vector<ID> old_sol_ids(num_sim); 
+  for (int i = 0; i < num_sim; i++)
+    old_sol_ids[i] = _simulations[i]->remember_current_solution();
 
 
-  for (unsigned int i = 0; i < _max_it; i++)
+  // for the norms of the differences
+  vector<double> norms(num_sim);
+
+  for (unsigned int it = 0; it < _max_it; it++)
   {
-    _simulation1->solve();
-    _simulation2->solve();
+
+    for (int i = 0; i < num_sim; i++)
+      _simulations[i]->solve();
+
+    bool converged = true;
 
     // check for the difference between old and new solutions
-    double norm1 =
-      get_norm_of_difference(_simulation1->get_solution_vector(),
-          *(_simulation1->get_remembered_solution(old_sol1)));
-    double norm2 = get_norm_of_difference(_simulation2->get_solution_vector(),
-          *(_simulation2->get_remembered_solution(old_sol2)));
-    cerr << "iteration " << i << ": norm1 = " << norm1 <<
-      "  norm2 = " << norm2 << endl;
+    cerr << "iteration " << it << ": ";
+    for (int i = 0; i < num_sim; i++)
+    {
+      norms[i] =
+        get_norm_of_difference(_simulations[i]->get_solution_vector(),
+            *(_simulations[i]->get_remembered_solution(old_sol_ids[i])));
 
-    if ((norm1 <= _abs_tol) && (norm2 <= _abs_tol))
+      if (norms[i] > _abs_tol)
+        converged = false;
+      
+      cerr << "norm[" << i << "] = " << norms[i] << " ";
+    }
+    cerr << endl;
+
+    if (converged)
       break;
     
-    _simulation1->remember_current_solution(old_sol1);
-    _simulation2->remember_current_solution(old_sol2);
+    for (int i = 0; i < num_sim; i++)
+      _simulations[i]->remember_current_solution(old_sol_ids[i]);
   }
 
   // clean up
-  _simulation1->delete_remembered_solution(old_sol1);
-  _simulation2->delete_remembered_solution(old_sol2);
+  for (int i = 0; i < num_sim; i++)
+    _simulations[i]->delete_remembered_solution(old_sol_ids[i]);
 }
 
 
@@ -129,13 +152,16 @@ SelfconsistentSolver::get_norm_of_difference(NumericVector<double>& vec1,
 ID
 SelfconsistentSolver::do_remember_current_solution(ID id)
 {
+  int num_sim = _simulations.size();
+
   map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
   map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
 
   if (it != end)
   {
-    (it->second)[0] = _simulation1->remember_current_solution((it->second)[0]);
-    (it->second)[1] = _simulation2->remember_current_solution((it->second)[1]);
+    assert((it->second).size() == num_sim);
+    for (int i = 0; i < num_sim; i++)
+      (it->second)[i] = _simulations[i]->remember_current_solution((it->second)[i]);
   }
   else
   {
@@ -144,9 +170,10 @@ SelfconsistentSolver::do_remember_current_solution(ID id)
     else
       id = (--end)->first + 1;
 
-    vector<ID> ids(2);
-    ids[0] = _simulation1->remember_current_solution();
-    ids[1] = _simulation2->remember_current_solution();
+    vector<ID> ids(num_sim);
+    for (int i = 0; i < num_sim; i++)
+      ids[i] = _simulations[i]->remember_current_solution();
+
     _remembered_sol_ids[id] = ids;
   }
 
@@ -157,14 +184,14 @@ SelfconsistentSolver::do_remember_current_solution(ID id)
 void
 SelfconsistentSolver::do_set_to_remembered_solution(ID id)
 {
+  int num_sim = _simulations.size();
+
   map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
   map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
 
   if (it != end)
-  {
-    _simulation1->set_to_remembered_solution((it->second)[0]);
-    _simulation2->set_to_remembered_solution((it->second)[1]);
-  }
+    for (int i = 0; i < num_sim; i++)
+      _simulations[i]->set_to_remembered_solution((it->second)[i]);
 }
 
 
@@ -172,13 +199,13 @@ SelfconsistentSolver::do_set_to_remembered_solution(ID id)
 void
 SelfconsistentSolver::do_delete_remembered_solution(ID id)
 {
+  int num_sim = _simulations.size();
+
   map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
   map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
   if (it != end)
-  {
-    _simulation1->delete_remembered_solution((it->second)[0]);
-    _simulation2->delete_remembered_solution((it->second)[1]);
-  }
+    for (int i = 0; i < num_sim; i++)
+      _simulations[i]->delete_remembered_solution((it->second)[i]);
 }
 
 
@@ -186,6 +213,8 @@ SelfconsistentSolver::do_delete_remembered_solution(ID id)
 void
 SelfconsistentSolver::do_plot(void)
 {
-  _simulation1->plot();
-  _simulation2->plot();
+  int num_sim = _simulations.size();
+
+  for (int i = 0; i < num_sim; i++)
+    _simulations[i]->plot();
 }
