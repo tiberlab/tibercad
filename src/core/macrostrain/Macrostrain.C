@@ -1306,8 +1306,7 @@ void Macrostrain::do_solve()
   //------------------------------------------------------------------------------------
   //geometry relaxation
 
-  init_u_node();
-
+ 
 
  
 
@@ -1382,7 +1381,9 @@ void Macrostrain::do_solve()
 
  
 
-  update_u_node();
+  if (max_shape_steps >= 1) update_u_node(); //temporary
+
+   //update_u_node(); should be!
  
   //------write-------------------------------------------------------------------------------------//
   //--  output of the final result
@@ -2991,6 +2992,10 @@ void Macrostrain::update_u_node()
 
   MeshBase::const_node_iterator       nd     = mesh.active_nodes_begin();
   const MeshBase::const_node_iterator nd_end = mesh.active_nodes_end();
+
+
+
+  
 
  
 
