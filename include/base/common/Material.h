@@ -255,6 +255,10 @@ class Material
     void clear_doping(void);
 
 
+    //! A flag to tell if the material is already initialized
+    bool _is_initialized;
+
+
 };
 
 
@@ -264,7 +268,9 @@ class Material
 
 inline
 Material::Material(const std::string& name)
-: _name(name), _structure("zb")
+  : _name(name),
+    _structure("zb"), 
+    _is_initialized(false)
 {
 }
 
@@ -344,7 +350,11 @@ Material::init(void)
 {
   assert(_database != NULL);
   
-  do_init();
+  if (!_is_initialized)
+  {
+    do_init();
+    _is_initialized = true;
+  }
 }
 
 

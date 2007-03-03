@@ -76,15 +76,28 @@ SimulationEnvironment::add_boundary(Boundary* boundary, ID boundary_id)
 {
   assert(boundary != NULL);
   assert(!_is_initialized);
+
+  if ((_device->get_boundary_node_map()).find(boundary_id) == 
+      (_device->get_boundary_node_map()).end())
+  {
+    std::ostringstream s;
+    s << "SimulationEnvironment: boundary region " << boundary_id <<
+      " does not exist in device.";
+    throw InitFailedException(s.str());
+  }
   
   BCMap::iterator it = _bc_map.find(boundary_id);
-  if (it != _bc_map.end())
-  {
-    delete it->second;
-    it->second = boundary;
-  }
-  else
+  if (it == _bc_map.end())
     _bc_map[boundary_id] = boundary;
+  else
+  {
+    std::ostringstream s;
+    s << "SimulationEnvironment: boundary region " << boundary_id <<
+      " already defined.";
+    throw InitFailedException(s.str());
+    //delete it->second;
+    //it->second = boundary;
+  }
 }
 
 void

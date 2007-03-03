@@ -11,8 +11,10 @@ Alloy::Alloy(const std::string& name)
     _molar_fraction(0.0)
 {
   get_database().get_alloy_components(name, _name_A, _name_B);
-  std::cerr << name << " is an alloy with components " <<
+#ifdef DEBUG
+  std::cout << name << " is an alloy with components " <<
     _name_A << " and " << _name_B << ".\n";
+#endif
 }
 
 

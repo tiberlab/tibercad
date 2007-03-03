@@ -112,8 +112,8 @@ extern "C"
     PC.close();
     Jac.close();
     
-    *msflag = SAME_NONZERO_PATTERN;
-    //*msflag = DIFFERENT_NONZERO_PATTERN;
+    //*msflag = SAME_NONZERO_PATTERN;
+    *msflag = DIFFERENT_NONZERO_PATTERN;
     
     return ierr;
   }

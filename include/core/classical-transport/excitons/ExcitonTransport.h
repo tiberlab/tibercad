@@ -195,7 +195,7 @@ class ExcitonTransport : public SimulationInterface
      * certain points or elements. It stores the x,y and x components of the
      * flux.
      *
-     * Units are in \f$cm^-2\f$
+     * Units are in \f$cm^{-2}s^{-1}\f$
      */
     class Current
     {

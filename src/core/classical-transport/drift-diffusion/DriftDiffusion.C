@@ -4719,7 +4719,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             if (residual != NULL)
             {
               RealVectorValue P(sc->get_total_polarization());
-              double Pn = (P * face_normals[qp]) / P0;
+              //if (qp == 0)
+              //  cerr << q_point[0] << "  " << face_normals[0] << " " << P << endl;
+              double Pn = -(P * face_normals[qp]) / P0;
               double value_u = J * (l2_eps * value[0] - Pn);
               double value_n = J * value[1] / (mu0 * C0_e);
               double value_p = J * value[2] / (mu0 * C0_h);

@@ -120,6 +120,12 @@ Device::set_material(Material* material, ID region_id)
       " does not exist in mesh file.";
     throw InitFailedException(s.str());
   }
+  if (_material_map.find(region_id) != _material_map.end())
+  {
+    std::ostringstream s;
+    s << "Device: trying to redefine physical region " << region_id << ".";
+    throw InitFailedException(s.str());
+  }
 
   _material_map[region_id] = material;
   std::cout << "added material " << material->get_name()
@@ -133,11 +139,5 @@ Device::set_material(Material* material, const std::vector<ID>& region_ids)
   assert(material != NULL);
 
   for (unsigned int i = 0; i < region_ids.size(); ++i)
-    _material_map[region_ids[i]] = material;
-  
-  std::cout << "added material " << material->get_name()
-    << " for region numbers ";
-  for (unsigned int i = 0; i < region_ids.size(); ++i)
-    std::cout << " " << region_ids[i];
-  std::cout << "\n";
+    set_material(material, region_ids[i]);
 }

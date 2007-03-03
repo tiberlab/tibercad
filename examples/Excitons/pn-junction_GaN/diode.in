@@ -84,7 +84,7 @@ $Models
         BC_reg_numb = 2
         type = ohmic
 	zero_grad_fermi_e = true
-	voltage = 2.5
+	voltage = 0.0
       }
 
       BC_Region cathode
@@ -119,6 +119,7 @@ $Solver
   driftdiffusion
   {
     nonlin_max_it = 50
+    nonlin_abs_tol = 1e-7
     ksp_type = gmres
     pc_type = composite
     ls_max_step = 0.05
@@ -130,6 +131,7 @@ $Solver
     nonlin_max_it = 70
     pc_type = composite
     ksp_type = gmres
+    ls_min_step = 1e-5
   }
 
   sweep

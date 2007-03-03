@@ -4,7 +4,7 @@ HeatModel::HeatModel()
 {
   kappa = NULL;  
 
-};
+}
 
 
 HeatModel::~HeatModel()
