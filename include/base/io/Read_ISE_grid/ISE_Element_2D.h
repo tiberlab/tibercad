@@ -64,6 +64,8 @@ class ISE_Element_2D : public  ISE_Element
   */	
   void  set_element_nodes_id();
 
+  void  check_orientation_2D();
+
 };
 
 
