@@ -8,6 +8,15 @@
 
 //! Class to return the lattice thermal Conductivity
 class LatticeThermalConductivity : public PhysicalModelInterface
+
+//The Lattice thermal conductivity must be in W/(cm K)
+
+/*!
+
+The lattice thermal conductivity must be in W/(cm K)
+
+*/
+
 {
 
 public:
