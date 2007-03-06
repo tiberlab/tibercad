@@ -7,15 +7,13 @@
 
 
 //! Class to return the lattice thermal Conductivity
-class LatticeThermalConductivity : public PhysicalModelInterface
-
-//The Lattice thermal conductivity must be in W/(cm K)
-
 /*!
 
 The lattice thermal conductivity must be in W/(cm K)
 
 */
+
+class LatticeThermalConductivity : public PhysicalModelInterface
 
 {
 
@@ -31,7 +29,7 @@ public:
   ~LatticeThermalConductivity(){};
 
 
-  //!provides conductivity in sumulation system
+  //!provides conductivity in simulation system W/(cm K)
   inline void get_conductivity(Tensor2Sym& conductivity) const; 
 
   
@@ -56,7 +54,7 @@ protected:
 
   virtual PhysicalModelInterface* create_new (void) const =0;
 
-  //!conductivity tensor in simulation system
+  //!conductivity tensor in simulation system. Units W/(cm K)
   Tensor2Sym _conductivity;
 
 

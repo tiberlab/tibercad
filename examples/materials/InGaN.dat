@@ -1,4 +1,4 @@
-# GaN
+# InGaN
 
 structure = wz
 
@@ -9,3 +9,7 @@ bow_Eg_L = 1.84
 
 
 bow_Pz = -0.037
+
+
+# doping dependent
+mobility_formula = 1

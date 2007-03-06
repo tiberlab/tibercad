@@ -388,14 +388,18 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
   double level = Ef_n / phi0;
 
   Mesh& mesh = get_mesh();
-  Mesh::node_iterator it = mesh.active_nodes_begin();
-  const Mesh::node_iterator end = mesh.active_nodes_end();
+  Mesh::element_iterator it = mesh.active_elements_begin();
+  const Mesh::element_iterator end = mesh.active_elements_end();
 
   for ( ; it != end; ++it)
   {
-    const Node* node = *it;
-    unsigned int id = node->dof_number(system.number(), var, 0);
-    system.solution->set(id, level);
+    const Elem* elem = *it;
+    for (unsigned int i = 0; i < elem->n_nodes(); i++)
+    {
+      unsigned int id = 
+        elem->get_node(i)->dof_number(system.number(), var, 0);
+      system.solution->set(id, level);
+    }
   }
 }
 
@@ -414,14 +418,18 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
   double level = Ef_p / phi0;
 
   Mesh& mesh = get_mesh();
-  Mesh::node_iterator it = mesh.active_nodes_begin();
-  const Mesh::node_iterator end = mesh.active_nodes_end();
+  Mesh::element_iterator it = mesh.active_elements_begin();
+  const Mesh::element_iterator end = mesh.active_elements_end();
 
   for ( ; it != end; ++it)
   {
-    const Node* node = *it;
-    unsigned int id = node->dof_number(system.number(), var, 0);
-    system.solution->set(id, level);
+    const Elem* elem = *it;
+    for (unsigned int i = 0; i < elem->n_nodes(); i++)
+    {
+      unsigned int id = 
+        elem->get_node(i)->dof_number(system.number(), var, 0);
+      system.solution->set(id, level);
+    }
   }
 }
 
@@ -440,14 +448,18 @@ DriftDiffusion::set_electric_potential(double pot)
   double level = -pot / phi0;
 
   Mesh& mesh = get_mesh();
-  Mesh::node_iterator it = mesh.active_nodes_begin();
-  const Mesh::node_iterator end = mesh.active_nodes_end();
+  Mesh::element_iterator it = mesh.active_elements_begin();
+  const Mesh::element_iterator end = mesh.active_elements_end();
 
   for ( ; it != end; ++it)
   {
-    const Node* node = *it;
-    unsigned int id = node->dof_number(system.number(), var, 0);
-    system.solution->set(id, level);
+    const Elem* elem = *it;
+    for (unsigned int i = 0; i < elem->n_nodes(); i++)
+    {
+      unsigned int id = 
+        elem->get_node(i)->dof_number(system.number(), var, 0);
+      system.solution->set(id, level);
+    }
   }
 }
 
@@ -538,31 +550,41 @@ DriftDiffusion::do_solve(void)
   parse_options();
 
 
+  static map<ElectricalContact*, double> voltages;
   const ModelOptions& opts = SimulationInterface::get_options();
+  bool quasi_equilibrium = false;
   if (opts.find_option("quasi_equilibrium"))
   {
     vector<string> qfpot(2, "");
     opts.get_option("quasi_equilibrium", qfpot);
     assert(qfpot.size() == 2);
-    Boundary* boundary = get_environment().get_boundary(qfpot[0]);
-    ElectricalContact* contact;
-    if (boundary != NULL)
+    Boundary* boundary1 = get_environment().get_boundary(qfpot[0]);
+    Boundary* boundary2 = get_environment().get_boundary(qfpot[1]);
+    ElectricalContact* contact1;
+    ElectricalContact* contact2;
+    if ((boundary1 != NULL) && (boundary2 != NULL))
     {
-      contact = dynamic_cast<ElectricalContact*>(
-          boundary->get_boundary_properties(get_id()));
-      if (contact != NULL)
-        set_electron_fermi_level(contact->get_simulation_voltage());
-    }
-    boundary = get_environment().get_boundary(qfpot[1]);
-    if (boundary != NULL)
-    {
-      contact = dynamic_cast<ElectricalContact*>(
-          boundary->get_boundary_properties(get_id()));
-      if (contact != NULL)
-        set_hole_fermi_level(contact->get_simulation_voltage());
+      contact1 = dynamic_cast<ElectricalContact*>(
+          boundary1->get_boundary_properties(get_id()));
+      contact2 = dynamic_cast<ElectricalContact*>(
+          boundary2->get_boundary_properties(get_id()));
+
+      if ((contact1 != NULL) && (contact2 != NULL))
+      {
+        if ((contact1->get_simulation_voltage() != voltages[contact1]) ||
+            (contact2->get_simulation_voltage() != voltages[contact2]))
+        {
+          voltages[contact1] = contact1->get_simulation_voltage();
+          voltages[contact2] = contact2->get_simulation_voltage();
+          set_electron_fermi_level(contact1->get_simulation_voltage());
+          set_hole_fermi_level(contact2->get_simulation_voltage());
+          get_options().coupling = POISSON;
+          quasi_equilibrium = true;
+          cerr << "solving quasi-equilibrium..." << endl;
+        }
+      }
     }
 
-    get_options().coupling = POISSON;
   }
 
 
@@ -574,6 +596,15 @@ DriftDiffusion::do_solve(void)
     default: // Newton method
       solve_newton();
       break;
+  }
+
+  if (quasi_equilibrium)
+  {
+    cerr << "switching on continuity eq..." << endl;
+    get_options().coupling = FULLYCOUPLED;
+    get_options().solver_params.nonlinear_step_tolerance = 1e-9;
+    get_options().solver_params.nonlinear_abs_tolerance = 1e-12;
+    solve_newton();
   }
 
 }
@@ -1092,7 +1123,7 @@ double
 DriftDiffusion::do_gummel_iterations(int max_it)
   throw (PetscRuntimeError, KSPDivergedError, SNESDivergedError)
 {
-  /*
+  
   NonlinearImplicitSystem& system =
     get_equation_systems().get_system<NonlinearImplicitSystem>(
         get_equation_system_name());
@@ -1104,16 +1135,16 @@ DriftDiffusion::do_gummel_iterations(int max_it)
   {
     for (int i = 0; i < max_it; i++)
     {
-      system.nonlinear_solver->matvec = assemble<POISSON>;
+      get_options().coupling = POISSON;
       system.solve();
 
       solver_params.nonlinear_max_iterations = 1;
       set_solver_params(*system.nonlinear_solver);
 
-      system.nonlinear_solver->matvec = assemble<ECURRENT>;
+      get_options().coupling = ECURRENT;
       system.solve();
 
-      system.nonlinear_solver->matvec = assemble<HCURRENT>;
+      get_options().coupling = HCURRENT;
       system.solve();
 
       solver_params.nonlinear_max_iterations = nonlin_max_it;
@@ -1126,7 +1157,7 @@ DriftDiffusion::do_gummel_iterations(int max_it)
     set_solver_params(*system.nonlinear_solver);
     throw(err);
   }
-  */
+  
   return 0;
 }
 
@@ -4103,6 +4134,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
   BoundaryNodeList& dirichlet_nodes = _dirichlet_nodes;
 
+  double relax = get_relaxation_factor();
 
   //
   // some scaling stuff...
@@ -4549,8 +4581,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         Real J_x_P0 = J / P0;
 
         // net recombination rate
-        Real J_x_Rn = J * Rn / R0_e;
-        Real J_x_Rp = J * Rp / R0_h;
+        Real J_x_Rn = J * Rn / R0_e * relax;
+        Real J_x_Rp = J * Rp / R0_h * relax;
 
         RealVectorValue P(sc->get_total_polarization());
         P *= J_x_P0;
@@ -4719,12 +4751,10 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             if (residual != NULL)
             {
               RealVectorValue P(sc->get_total_polarization());
-              //if (qp == 0)
-              //  cerr << q_point[0] << "  " << face_normals[0] << " " << P << endl;
-              double Pn = -(P * face_normals[qp]) / P0;
+              double Pn = (P * face_normals[qp]) / P0;
               double value_u = J * (l2_eps * value[0] - Pn);
-              double value_n = J * value[1] / (mu0 * C0_e);
-              double value_p = J * value[2] / (mu0 * C0_h);
+              double value_n = J * value[1] / (mu0 * C0_e) * relax;
+              double value_p = J * value[2] / (mu0 * C0_h) * relax;
 
               for (unsigned int i = 0; i < n_dofs; i++)
               {
@@ -7099,7 +7129,9 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
 
           if (coupling & POISSON)
           {
-            Kuu(i,j) -= drho[0] * phi_i_x_phi_j;
+            Kuu(i,j) -= drho[0] *  phi_i_x_phi_j;
+            //if (i == j)
+            //  Kuu(i,j) -= drho[0] * J * phi[i][qp];
 
             if (coupling & ECURRENT)
               Kun(i,j) -= drho[1] * phi_i_x_phi_j;

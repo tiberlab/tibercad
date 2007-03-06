@@ -56,7 +56,7 @@ Pz = -0.034
 # constant
 mu_max_e = 1500
 exponent_e = 1.0
-mu_max_h = 20
+mu_max_h = 200
 exponent_h = 2.1
 
 # doping dependent
@@ -70,7 +70,7 @@ Cs_e = 7.2e19
 alpha_e = 0.55
 beta_e = 0.75
 mumin1_h = 33
-mumin2_h = 0
+mumin2_h = 0.0
 mu1_h = 20
 Pc_h = 5e15
 Cr_h = 8e16

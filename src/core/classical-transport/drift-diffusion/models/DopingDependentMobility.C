@@ -200,5 +200,13 @@ DopingDependentMobility::calculate_VCA(const PhysicalModelInterface* comp_A,
   _an = alloy(scA->_an, scB->_an , xa);
   _a = alloy(scA->_a, scB->_a , xa);
   _aa = alloy(scA->_aa, scB->_aa , xa);
+  
+  if (_formula == 1)
+  {
+    assert(_const_mob != NULL);
+    assert(scA->_const_mob != NULL);
+    assert(scB->_const_mob != NULL);
+    _const_mob->build_alloy(scA->_const_mob, scB->_const_mob, xa);
+  }
 }
 

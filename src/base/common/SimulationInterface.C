@@ -86,6 +86,10 @@ SimulationInterface::create(const string& type,
     string defaultname = Utils::extract_typename(typeid(*sim));
     sim->_name = sim->get_options().get_option("name", defaultname);
     sim->_options.delete_option("name");
+    
+    sim->_relaxation_factor =
+      sim->get_options().get_option("relaxation_factor", sim->_relaxation_factor);
+    sim->_options.delete_option("relaxation_factor");
 
 #ifdef DEBUG
     cout << "Added simulator" << endl;

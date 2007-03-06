@@ -306,8 +306,8 @@ void  ISE_Element_2D::check_orientation_2D()
     //      node_id_list[0] = node_id_list[2];
     //      node_id_list[2] = temp;
       
-  //   cout << " change orientation  !!!  " << endl;
-   //   cout << " det =     " << det << endl;
+     //cout << " change orientation  !!!  " << endl;
+      //cout << " det =     " << det << endl;
     //	  count_ok++;
 
   }
