@@ -35,7 +35,7 @@ class ISE_Element : public ReferenceCountedObject<ISE_Element>
   /*!
     Sets Element type.
   */
-  void set_type(unsigned int element_type);
+ void set_type(unsigned int element_type);
 
   /*!
     Sets Element dimension. 

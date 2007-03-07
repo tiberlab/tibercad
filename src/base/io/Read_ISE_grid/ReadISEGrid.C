@@ -596,18 +596,18 @@ void ReadISEGrid::scan_grid_file()
           ISE_INPUT >> id;   // face id
           //cout  << id << "   " ;
 	     						
-           if (id < 0)  //  negative  face  id 
+          if (id < 0)  //  negative  face  id 
           {
-             id = (-id-1);   //  ISE code  for inverted face
+            id = (-id-1);   //  ISE code  for inverted face
             //  !!!!! INVERT THE  ORDER (AND ORIENTATION) OF  THE  EDGES OF  THIS  (NEGATIVE) FACE :
             //  (1,2,3,4) ->   (-4,-3,-2,-1)
             negative_faces.push_back(true);  //  flag  for ISE_Element_3D::set_element_nodes()
-            cout << "NEGATIVE FACE ********** ";
+            //     cout << "NEGATIVE FACE ********** ";
           }
           else {negative_faces.push_back(false);}
           //cout << endl;
 
-      //    negative_faces.push_back(false);  //  TEST  !!!
+          //    negative_faces.push_back(false);  //  TEST  !!!
 					
           face_list.push_back(faces[id]); 
        							
@@ -617,9 +617,11 @@ void ReadISEGrid::scan_grid_file()
  						      
         //  creates new  Element_3D
 
-        elements_list_point = new  ISE_Element_3D( face_list, negative_faces );
+        //    elements_list_point = new  ISE_Element_3D( face_list, negative_faces );
+        elements_list_point = new  ISE_Element_3D( face_list, negative_faces,elem_type );
+
    						     
-        elements_list_point->set_type(elem_type);
+        //       elements_list_point->set_type(elem_type);
         elements_list_point->set_dimension(3);
    						 
         elements_list.push_back(elements_list_point);
@@ -680,9 +682,9 @@ void ReadISEGrid::scan_grid_file()
  						      
         //  creates new  Element_3D
 
-        elements_list_point = new  ISE_Element_3D( face_list, negative_faces );
+        elements_list_point = new  ISE_Element_3D( face_list, negative_faces,elem_type );
    						     
-        elements_list_point->set_type(elem_type);
+        //       elements_list_point->set_type(elem_type);
         elements_list_point->set_dimension(3);
    						 
         elements_list.push_back(elements_list_point);
@@ -742,9 +744,9 @@ void ReadISEGrid::scan_grid_file()
  						      
         //  creates new  Element_3D
 
-        elements_list_point = new  ISE_Element_3D( face_list, negative_faces );
+        elements_list_point = new  ISE_Element_3D( face_list, negative_faces,elem_type );
    						     
-        elements_list_point->set_type(elem_type);
+        //       elements_list_point->set_type(elem_type);
         elements_list_point->set_dimension(3);
    						 
         elements_list.push_back(elements_list_point);
@@ -802,9 +804,9 @@ void ReadISEGrid::scan_grid_file()
  						      
         //  creates new  Element_3D
 
-        elements_list_point = new  ISE_Element_3D( face_list, negative_faces );
+        elements_list_point = new  ISE_Element_3D( face_list, negative_faces,elem_type );
    						     
-        elements_list_point->set_type(elem_type);
+        //       elements_list_point->set_type(elem_type);
         elements_list_point->set_dimension(3);
    						 
         elements_list.push_back(elements_list_point);
@@ -865,9 +867,9 @@ void ReadISEGrid::scan_grid_file()
  						      
         //  creates new  Element_3D
 
-        elements_list_point = new  ISE_Element_3D( face_list, negative_faces );
+        elements_list_point = new  ISE_Element_3D( face_list, negative_faces,elem_type  );
    						     
-        elements_list_point->set_type(elem_type);
+        //       elements_list_point->set_type(elem_type);
         elements_list_point->set_dimension(3);
    						 
         elements_list.push_back(elements_list_point);
@@ -907,16 +909,23 @@ void ReadISEGrid::scan_grid_file()
     //cout << endl << "Begin of Physical Region Section: " << endl << endl;
 
     int numb_region_elements;
-    unsigned int phys_reg_id;
+    unsigned int phys_reg_id,tiber_phys_reg_id ;
+    bool  tib_reg_incremented ;
+
+    phys_reg_id = 0;
+
+    tiber_phys_reg_id = 0;
 
     regions_0D.clear();
     regions_1D.clear();
     regions_2D.clear();
     regions_3D.clear();
 
+    //    increment_tiber_region = false;
+    tib_reg_incremented = false;
 
     for  (unsigned int i = 0; i < nb_regions; i++)
-    {
+    { // for nb_regions
 
       // regions_0D.clear();
       //       regions_1D.clear();
@@ -929,6 +938,8 @@ void ReadISEGrid::scan_grid_file()
       region_elements_3D.clear();
 	
       phys_reg_id = i+1;  //  phys  reg =  {1,...,nb_regions}
+
+
 
       //cout << "Region[" << phys_reg_id << "]: " << endl;
 	
@@ -968,7 +979,7 @@ void ReadISEGrid::scan_grid_file()
     	  	
     	// ******************************************
     	// associate current physical  region (phys_reg_id)  to  element elements_list[id]
-    	elements_list[id]->set_physical_region(phys_reg_id);
+        //	elements_list[id]->set_physical_region(phys_reg_id);   !!see below, only  for elem_dim = sim_dim
     	
     	// makes a vector of all elements nD in the  ISE phys. reg.
 
@@ -976,7 +987,7 @@ void ReadISEGrid::scan_grid_file()
         switch ( (elements_list[id]->get_dimension()) )
         {
 
-        case 0:
+        case 0:  //  element_dimension = 0!
           {
             region_elements_0D.push_back(elements_list[id]);
 
@@ -996,9 +1007,14 @@ void ReadISEGrid::scan_grid_file()
           break;
 
 
-        case 1:
+        case 1: //  element_dimension = 1!
           {
             region_elements_1D.push_back(elements_list[id]);
+
+
+
+ 
+
 
             //  regions_1D.push_back(phys_reg_id) ;
             //             cerr << "regions_1D = " << phys_reg_id <<  endl;
@@ -1015,9 +1031,28 @@ void ReadISEGrid::scan_grid_file()
           break;
 
 
-        case 2:
+        case 2://  element_dimension = 2!
           {
+
+            // element_dimension = simulation dimension ->  to tiber_phys_region !!
+            if  (dimension == 2)
+            {// 
+
+              if  (tib_reg_incremented ==  false)
+              {
+                tib_reg_incremented =  true;
+                tiber_phys_reg_id++;
+              }
+              
+              elements_list[id]->set_physical_region(tiber_phys_reg_id);
+            }
+
             region_elements_2D.push_back(elements_list[id]);
+
+ 
+
+
+
 
             //  regions_2D.push_back(phys_reg_id) ;
 
@@ -1036,9 +1071,25 @@ void ReadISEGrid::scan_grid_file()
           break;
 
 
-        case 3:
+        case 3://  element_dimension = 3!
           {
+        
+
+            // element_dimension = simulation dimension ->  to tiber_phys_region !!
+            if  (dimension == 3)
+            {
+              if  (tib_reg_incremented ==  false)
+              {
+                tib_reg_incremented =  true;
+                tiber_phys_reg_id++;
+              }
+              
+              elements_list[id]->set_physical_region(tiber_phys_reg_id);
+
+            }
+
             region_elements_3D.push_back(elements_list[id]);
+
 
             //  regions_3D.push_back(phys_reg_id) ;
 
@@ -1062,7 +1113,11 @@ void ReadISEGrid::scan_grid_file()
           };
         } //switch end
      	    	
+        
+
       } //region elements end
+
+      tib_reg_incremented =  false;
 
 
       //  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1165,6 +1220,9 @@ void ReadISEGrid::scan_grid_file()
       //cout << endl;
     
       phys_reg_id = 0;
+
+ 
+     
 
     }  //  next  phys. region
     

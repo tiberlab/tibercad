@@ -64,6 +64,9 @@ class ISE_Element_2D : public  ISE_Element
   */	
   void  set_element_nodes_id();
 
+  /*!
+    Check orientation of the element and change order of  nodes if  necessary.
+  */
   void  check_orientation_2D();
 
 };

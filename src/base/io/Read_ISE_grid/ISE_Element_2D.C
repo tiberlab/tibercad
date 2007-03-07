@@ -17,127 +17,126 @@ ISE_Element_2D::~ISE_Element_2D()
 }
 
 
-// //writes  nodes  belonging to element, both  as  ISE_Vertex*,  and  as  node_id
-// void ISE_Element_2D::set_element_nodes()
-// {
+//writes  nodes  belonging to element, both  as  ISE_Vertex*,  and  as  node_id
+void ISE_Element_2D::set_element_nodes()
+{
 	
-// //cout << endl << "Setting 2D Element nodes: " << endl;
-//   ISE_Vertex* current_node;
+  //cout << endl << "Setting 2D Element nodes: " << endl;
+  ISE_Vertex* current_node;
 	
-//   for (unsigned int i=0; i < element_edges.size(); i++)
-//   {
-// //cout <<  "  edge " <<  i << " : " << endl;
+  for (unsigned int i=0; i < element_edges.size(); i++)
+  {
+    //cout <<  "  edge " <<  i << " : " << endl;
 		
 		
-//     if (negative_edges[i] == true)
-//     {
-//       //swap edge vertices !!!!!!!
-// //cout << "Negative Edge: Swapping vertices" << endl;
+    if (negative_edges[i] == true)
+    {
+      //swap edge vertices !!!!!!!
+      //cout << "Negative Edge: Swapping vertices" << endl;
+      // cerr << "Negative Edge: Swapping vertices" << endl;
 
-
-//      for (unsigned int j=2; j > 0; j--)
-//      {
-//        current_node = (element_edges[i]->get_vertex(j) ) ;
-// //cout << " current_node =    " <<  current_node<< endl;
-//        element_nodes.push_back(current_node);
+      for (unsigned int j=2; j > 0; j--)
+      {
+        current_node = (element_edges[i]->get_vertex(j) ) ;
+        //cout << " current_node =    " <<  current_node<< endl;
+        element_nodes.push_back(current_node);
 			
-//      }
-//     }
+      }
+    }
 
-//     else
-//     {
+    else
+    {
 		
-//      for (unsigned int j=0; j < 2; j++)
-//      {
-//        current_node = (element_edges[i]->get_vertex(j+1) ) ;
-// //cout << " current_node =    " <<  current_node<< endl;
-//        element_nodes.push_back(current_node);
+      for (unsigned int j=0; j < 2; j++)
+      {
+        current_node = (element_edges[i]->get_vertex(j+1) ) ;
+        //cout << " current_node =    " <<  current_node<< endl;
+        element_nodes.push_back(current_node);
 			
-//      }
-//     }
+      }
+    }
 		
 		
 		
-//   }
+  }
 	
 
 
-// // temp  !!!!
-// //*********************	
-// //  check_orientation_2D();	
+  //*********************	
+      check_orientation_2D();	//  necessary  for  consistency of nodes order,  normals, etc.
 	
 	
-// }
+}
 
 
 // **********************************-----------------------------
 
 
-// OLD  VERSION !!!
-//writes  nodes  belonging to element, both  as  ISE_Vertex*,  and  as  node_id
-void ISE_Element_2D::set_element_nodes()
-{
+// // OLD  VERSION !!!
+// //writes  nodes  belonging to element, both  as  ISE_Vertex*,  and  as  node_id
+// void ISE_Element_2D::set_element_nodes()
+// {
 	
-  unsigned int  last,  last2;
-  // cout <<  " element_edges.size() =   " << element_edges.size()<<  endl;
-  //unsigned int current_node =0 ;
+//   unsigned int  last,  last2;
+//   // cout <<  " element_edges.size() =   " << element_edges.size()<<  endl;
+//   //unsigned int current_node =0 ;
 	
-  ISE_Vertex* current_node;
+//   ISE_Vertex* current_node;
 	
-  for (unsigned int i=0; i < element_edges.size(); i++)
-  {
-    //cout <<  "  edge " <<  i << endl;
+//   for (unsigned int i=0; i < element_edges.size(); i++)
+//   {
+//     //cout <<  "  edge " <<  i << endl;
 		
 		
 		
-    for (unsigned int j=0; j < 2; j++)
-    {
-      current_node = (element_edges[i]->get_vertex(j+1) ) ;
-      //	cout << " current_node =    " <<  current_node<< endl;
-      element_nodes.push_back(current_node);
+//     for (unsigned int j=0; j < 2; j++)
+//     {
+//       current_node = (element_edges[i]->get_vertex(j+1) ) ;
+//       //	cout << " current_node =    " <<  current_node<< endl;
+//       element_nodes.push_back(current_node);
 			
-      //element_nodes_id.push_back(current_node->get_node_id() );
+//       //element_nodes_id.push_back(current_node->get_node_id() );
 			
-    }
+//     }
 		
-    if (negative_edges[i] == true)
-    {
-      //swap last  2  nodes !!!!!!!;
+//    if (negative_edges[i] == true)
+//     {
+//       cerr << "swap last  2  nodes !!!!!!!" << endl;
 			
-      //	cout << "element_nodes[last] =  " << element_nodes_id[last2]<< endl;
-      //	cout << "element_nodes[last-1] =  "<<  element_nodes_id[last2-1]<<  endl;
+//       //	cout << "element_nodes[last] =  " << element_nodes_id[last2]<< endl;
+//       //	cout << "element_nodes[last-1] =  "<<  element_nodes_id[last2-1]<<  endl;
 			
-      last= (element_nodes.size() ) - 1;
-      swap(element_nodes[last], element_nodes[last-1]);
+//       last= (element_nodes.size() ) - 1;
+//       swap(element_nodes[last], element_nodes[last-1]);
 			
-      //last2= (element_nodes_id.size() ) - 1;
-      //swap(element_nodes_id[last2], element_nodes_id[last2-1]);
-			
-			
-      //	cout << "element_nodes[last] =  "<<  element_nodes_id[last2]<< endl;
-      //	cout << "element_nodes[last-1] =  "<<  element_nodes_id[last2-1]<<  endl;
+//       //last2= (element_nodes_id.size() ) - 1;
+//       //swap(element_nodes_id[last2], element_nodes_id[last2-1]);
 			
 			
-    }
+//       //	cout << "element_nodes[last] =  "<<  element_nodes_id[last2]<< endl;
+//       //	cout << "element_nodes[last-1] =  "<<  element_nodes_id[last2-1]<<  endl;
+			
+			
+//     }
 			
 		
 		
-  }
+//   }
 	
 	
-  //  unique_nodes (element_nodes)
+//   //  unique_nodes (element_nodes)
 	
-  // unique_nodes_point(element_nodes)
+//   // unique_nodes_point(element_nodes)
 	
 	
-  check_orientation_2D();
+//   check_orientation_2D();
 
 	
 	
 	
 	
 	
-}
+// }
 
 
 
@@ -306,14 +305,15 @@ void  ISE_Element_2D::check_orientation_2D()
     //      node_id_list[0] = node_id_list[2];
     //      node_id_list[2] = temp;
       
-     //cout << " change orientation  !!!  " << endl;
-      //cout << " det =     " << det << endl;
+    //    cout << " change orientation  !!!  " << endl;
+    //     cout << " det =     " << det << endl;
     //	  count_ok++;
 
   }
   else  // swap = false  (det >  0 )  
   {
       
+    //   cerr << "  orientation OK !!!  " << endl;
     // cout << " det =     " << det << endl;
     //  cout  << " SWAP NODES  !!!  " << endl;
     //  count_swap++;

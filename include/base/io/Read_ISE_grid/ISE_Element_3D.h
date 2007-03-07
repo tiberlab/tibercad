@@ -20,7 +20,8 @@ class ISE_Element_3D : public ISE_Element
   /*!
     Assigns face pointers and orientations vector.
   */
-  ISE_Element_3D(vector<ISE_Face*> face_ids, vector<bool> neg_faces  );
+  //  ISE_Element_3D(vector<ISE_Face*> face_ids, vector<bool> neg_faces  );
+  ISE_Element_3D(vector<ISE_Face*> face_ids, vector<bool> neg_faces,unsigned int element_type);
 
   //! Virtual Destructor. 	
   /*! 
@@ -64,15 +65,25 @@ class ISE_Element_3D : public ISE_Element
   */	
   void  set_element_nodes_id();
 
+
+  /*!
+    Check orientation of the element and change order of  nodes if  necessary.
+  */
+  void  check_orientation_3D();
+
+  // virtual void set_type(unsigned int element_type);
+
 };
 
 
 inline
-ISE_Element_3D::ISE_Element_3D(vector<ISE_Face*> face_ids, vector<bool> neg_faces  ):ISE_Element()
+ISE_Element_3D::ISE_Element_3D(vector<ISE_Face*> face_ids, vector<bool> neg_faces, 
+                               unsigned int element_type ):ISE_Element()
 {
  
   element_faces = face_ids;
   negative_faces = neg_faces;
+  set_type(element_type);
   element_nodes.clear();
   set_element_nodes();
   unique_nodes_point();
@@ -91,5 +102,12 @@ ISE_Element_3D::get_nodes_id()
   return element_nodes_id;
 }
 
+/* inline void  */
+/* ISE_Element_3D::set_type(unsigned int element_type) */
+/* { */
+/*   elem_type = element_type; */
+/*   // check_orientation_3D(); */
+
+ /* } */
 
 #endif /*ISE_ELEMENT_3D_H_*/
