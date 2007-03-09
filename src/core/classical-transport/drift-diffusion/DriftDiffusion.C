@@ -553,6 +553,7 @@ DriftDiffusion::do_solve(void)
   static map<ElectricalContact*, double> voltages;
   const ModelOptions& opts = SimulationInterface::get_options();
   bool quasi_equilibrium = false;
+  int coupling = get_options().coupling;
   if (opts.find_option("quasi_equilibrium"))
   {
     vector<string> qfpot(2, "");
@@ -601,7 +602,7 @@ DriftDiffusion::do_solve(void)
   if (quasi_equilibrium)
   {
     cerr << "switching on continuity eq..." << endl;
-    get_options().coupling = FULLYCOUPLED;
+    get_options().coupling = coupling;
     get_options().solver_params.nonlinear_step_tolerance = 1e-9;
     get_options().solver_params.nonlinear_abs_tolerance = 1e-12;
     solve_newton();
