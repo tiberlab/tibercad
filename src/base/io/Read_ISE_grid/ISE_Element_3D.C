@@ -2,8 +2,8 @@
 
 #include <vector>
 #include <string>
-#include <stdio.h>
-#include <math.h>
+#include <cstdio>
+#include <cmath>
 #include <cassert>
 
 using namespace std;
