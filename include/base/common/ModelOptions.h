@@ -93,11 +93,21 @@ class ModelOptions
     
     //! Set an option
     /*!
-     * This method is probably of no use...
+     * \param name the name of the option
+     * \param value the value to set
      */
     template <typename T>
-    void set_option(const std::string& name, const T value);
+    void set_option(const std::string& name, const T& value);
 
+
+    //! Set an vector option
+    /*!
+     * \param name the name of the option
+     * \param value the vector with the values to set
+     */
+    template <typename T>
+    void set_option(const std::string& name, const std::vector<T>& value);
+    
     
     //! Set or get an option in string representation
     std::string& operator[](const std::string& name);

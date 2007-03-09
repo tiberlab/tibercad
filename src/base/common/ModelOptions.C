@@ -14,15 +14,37 @@ ModelOptions::ModelOptions(map<const string, string> options)
 {
 }
 
+
 template <typename T>
 void
-ModelOptions::set_option(const string& name, const T value)
+ModelOptions::set_option(const string& name, const T& value)
 {
   ostringstream s;
   s << value;
   
   _options[name] = s.str();
 }
+
+
+
+template <typename T>
+void
+ModelOptions::set_option(const string& name, const vector<T>& value)
+{
+  ostringstream s;
+  unsigned int n = value.size();
+  if (n > 0)
+  {
+    s << "(" << value[0];
+    for (unsigned int i = 1; i < n; i++)
+      s << "," << value[i];
+    s << ")";
+  }
+
+  _options[name] = s.str();
+}
+
+
 
 
 template <typename T>
@@ -113,17 +135,37 @@ ModelOptions::print_all(void) const
 
 
 template
-void ModelOptions::set_option<double>(const string&, const double);
+void ModelOptions::set_option<double>(const string&, const double&);
 
 template
-void ModelOptions::set_option<int>(const string&, const int);
+void ModelOptions::set_option<int>(const string&, const int&);
 
 template
-void ModelOptions::set_option<bool>(const string&, const bool);
+void ModelOptions::set_option<unsigned int>(const string&, const unsigned int&);
 
 template
-void ModelOptions::set_option<string>(const string&,
-    const string);
+void ModelOptions::set_option<bool>(const string&, const bool&);
+
+template
+void ModelOptions::set_option<string>(const string&, const string&);
+
+
+template
+void ModelOptions::set_option<double>(const string&, const vector<double>&);
+
+template
+void ModelOptions::set_option<int>(const string&, const vector<int>&);
+
+template
+void ModelOptions::set_option<unsigned int>(const string&,
+    const vector<unsigned int>&);
+
+template
+void ModelOptions::set_option<bool>(const string&, const vector<bool>&);
+
+template
+void ModelOptions::set_option<string>(const string&, const vector<string>&);
+
 
 
 template
