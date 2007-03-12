@@ -6,9 +6,11 @@
 
 #include <iostream> //for I/O interaction
 #include <fstream>  //for file streaming
-#include <string>   //for strings
-#include <set>
-#include <map>
+#include <InitFailedException.h>
+
+/* #include <string>   //for strings */
+ /* #include <set> */
+ /* #include <map> */
 
 #include "ISE_Vertex.h"
 #include "ISE_Edge.h"
@@ -17,20 +19,20 @@
 #include "ISE_Element_2D.h"
 #include "ISE_Element_1D.h"
 #include "ISE_Element_0D.h"
+#include "TypeDefs.h"
 
-
-//  LibMesh  include files
+ //  LibMesh  include files
 #include "mesh_data_elements.h"
 #include "mesh_data.h"
 #include "libmesh.h"
 #include "mesh.h"
 #include "mesh_generation.h"
 
-//!ISE Reading and Libmesh Writing Class.
-/*!
- *  Reads a '*.grd' (ISE T-Cad) file and converts it into
- * libmesh type ('*.xda'; '*.xta'). Extracts also boundary conditions.
- */
+ //!ISE Reading and Libmesh Writing Class.
+ /*!
+  *  Reads a '*.grd' (ISE T-Cad) file and converts it into
+  * libmesh type ('*.xda'; '*.xta'). Extracts also boundary conditions.
+  */
 class ReadISEGrid 
 {
 		
@@ -55,7 +57,7 @@ class ReadISEGrid
   /*!
    *Puts in map BoundCond_map  a  map which associates   each Boundary region ID  with its nodes.
    */ 
-  void  get_BC_data (map<unsigned int, vector<unsigned int> >& BoundCond_map );
+  void  get_BC_data (std::map<unsigned int, std::vector<unsigned int> >& BoundCond_map );
  
 
   /*!
@@ -63,8 +65,22 @@ class ReadISEGrid
   */
   unsigned int get_dim();
 
+
+  /*!
+    Gets the map which associates internal mesh IDs to user-defined physical region names
+  */
+  void  get_region_names_map (std::map<ID, std::string >& region_names_map );
+
+  /*!
+    Gets the map which associates internal mesh BC IDs to user-defined BC  region names
+  */
+  void  get_BC_region_names_map (std::map<ID, std::string >& region_names_map );
+
+
  private:
   
+
+
 
   //!  Writes  mesh file for  Libmesh in  DEAL  format  (.xda)
   /*!
@@ -86,7 +102,7 @@ class ReadISEGrid
   /*!
     Deletes repetitions in node list.
   */
-  void  unique_nodes(vector<unsigned int>& v1);
+  void  unique_nodes(std::vector<unsigned int>& v1);
 
  
 
@@ -94,12 +110,12 @@ class ReadISEGrid
   /*!
     Xda file name string.
   */  
-  string fname_xda;
+  std::string fname_xda;
 
   /*!
     Xta file name string.
   */
-  string fname_xta;
+  std::string fname_xta;
 
  
 
@@ -120,7 +136,7 @@ class ReadISEGrid
    *  Integrity Check. Controls if file Version and Type are correct.
    *  Otherwise aborts program.
    */
-  void integrity_check(int ver, string tp);
+  void integrity_check(int ver, std::string tp);
 
   /*!
     Reads Input file.
@@ -130,12 +146,12 @@ class ReadISEGrid
   /*!
     List of all ISE file types whose  dimension is equal to the simulation dimension.
   */
-  vector<unsigned int> ISE_element_type_list;
+  std::vector<unsigned int> ISE_element_type_list;
 
   /*!
     Elements belonging to xda file (subset of the vector  of all elements "elements_list").
   */
-  vector<ISE_Element*> xda_list_elements;  
+  std::vector<ISE_Element*> xda_list_elements;  
 	
   /*!
     Base variables.
@@ -146,7 +162,7 @@ class ReadISEGrid
   /*!
     Vector of all vertices.
   */	
-  vector<ISE_Vertex*> vertices; 
+  std::vector<ISE_Vertex*> vertices; 
 
   /*!
     Input file name.
@@ -161,44 +177,59 @@ class ReadISEGrid
   /*!
     Temporary edge vector.
   */
-  vector<ISE_Edge*> edges;
+  std::vector<ISE_Edge*> edges;
 
  
 
   /*!
     Temporary face vector.
   */
-  vector<ISE_Face*> faces;
+  std::vector<ISE_Face*> faces;
 
  
 
   /*!
     List of all elements.
   */
-  vector<ISE_Element*> elements_list;  //  delete  these  pointers in  destructor !!
+  std::vector<ISE_Element*> elements_list;  //  delete  these  pointers in  destructor !!
 	
   /*!
     lists of ISE physical region IDs, respectively of 0D, 1D, 2D and 3D.
   */
-  vector<unsigned int> regions_0D;
-  vector<unsigned int> regions_1D;
-  vector<unsigned int> regions_2D;
-  vector<unsigned int> regions_3D;
+  std::vector<unsigned int> regions_0D;
+  std::vector<unsigned int> regions_1D;
+  std::vector<unsigned int> regions_2D;
+  std::vector<unsigned int> regions_3D;
 
  
 
   /*!	
     maps <ISE phis reg ID, region_elements_nD>
   */
-  map <unsigned int , vector<ISE_Element*> >  map_0D_region_elements;
-  map <unsigned int , vector<ISE_Element*> >  map_1D_region_elements;
-  map <unsigned int , vector<ISE_Element*> >  map_2D_region_elements;
-  map <unsigned int , vector<ISE_Element*> >  map_3D_region_elements;
+  std::map <unsigned int , vector<ISE_Element*> >  map_0D_region_elements;
+  std::map <unsigned int , vector<ISE_Element*> >  map_1D_region_elements;
+  std::map <unsigned int , vector<ISE_Element*> >  map_2D_region_elements;
+  std::map <unsigned int , vector<ISE_Element*> >  map_3D_region_elements;
   /*!	
     map <unsigned int tiber_BC_region, vector<unsigned int> region_nodes )
   */
-  map <unsigned int , vector<unsigned int>  > map_BC_region_nodes;
+  std::map <unsigned int , vector<unsigned int>  > map_BC_region_nodes;
 	
+
+
+  /*!	
+    Map which associates internal mesh IDs to user-defined physical region names 
+  */
+  std::map<ID, std::string >  region_names_ID_map;
+
+
+  /*!	
+    Map which associates internal mesh BC IDs to user-defined BC region names 
+  */
+  std::map<ID, std::string > BC_region_names_ID_map;
+
+
+
 	
 };
 

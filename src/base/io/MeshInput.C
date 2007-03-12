@@ -14,9 +14,17 @@ using namespace std;
 
 
 
-void MeshInput::read_mesh(const std::string& file_name,unsigned int sim_dim,
+// void MeshInput::read_mesh(const string& file_name,unsigned int sim_dim,
+//                           Mesh& mesh, MeshData_elements& mesh_data,
+//                           map<unsigned int, vector<unsigned int> >& BoundCond  )
+
+void MeshInput::read_mesh(const string& file_name,unsigned int sim_dim,
                           Mesh& mesh, MeshData_elements& mesh_data,
-                          map<unsigned int, vector<unsigned int> >& BoundCond  )
+                          map<unsigned int, vector<unsigned int> >& BoundCond ,
+                          map<ID, string >& region_names_map,
+                          map<ID, string >& BC_region_names_map)
+
+
 {
 
   // See if the file exists.  
@@ -36,6 +44,8 @@ void MeshInput::read_mesh(const std::string& file_name,unsigned int sim_dim,
 
     ReadISEGrid  ISE_mesh( file_name.c_str() , mesh, mesh_data );
     ISE_mesh.get_BC_data (BoundCond );
+    ISE_mesh.get_region_names_map (region_names_map );  //  not empty only  for  ISE  grid
+    ISE_mesh.get_BC_region_names_map (BC_region_names_map ); //  not empty only  for  ISE  grid
 
   }
 
