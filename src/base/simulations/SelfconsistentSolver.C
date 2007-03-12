@@ -103,9 +103,9 @@ SelfconsistentSolver::do_solve(void)
     cerr << "iteration " << it << ": ";
     for (int i = 0; i < num_sim; i++)
     {
-      norms[i] =
-        get_norm_of_difference(_simulations[i]->get_solution_vector(),
-            *(_simulations[i]->get_remembered_solution(old_sol_ids[i])));
+      norms[i] = _simulations[i]->get_maximum_norm_of_difference(old_sol_ids[i]);
+      //  get_norm_of_difference(_simulations[i]->get_solution_vector(),
+      //      *(_simulations[i]->get_remembered_solution(old_sol_ids[i])));
 
       if (norms[i] > _abs_tol)
         converged = false;

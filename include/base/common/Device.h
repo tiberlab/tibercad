@@ -121,6 +121,27 @@ class Device
 
     //! Get the set with all region IDs
     const std::set<ID>& get_region_ids(void) const;
+
+
+    //! Get the name of a region
+    /*!
+     * \param id the ID of the physical region
+     *
+     * If a region has no name associated, it will be assigned the
+     * empty string.
+     */
+    const std::string& get_region_name(ID id);
+
+
+    //! Get the name of a boundary region
+    /*!
+     * \param id the ID of the boundary region
+     *
+     * If a region has no name associated, it will be assigned the
+     * empty string.
+     */
+    const std::string& get_boundary_region_name(ID id);
+
     
 
   private:
@@ -199,6 +220,13 @@ class Device
     //! A set with all region IDs
     std::set<ID> _region_ids;
   
+
+    //! A map that assigns region IDs to region names
+    std::map<ID, std::string> _region_names;
+  
+
+    //! A map that assigns boundary region IDs to boundary region names
+    std::map<ID, std::string> _boundary_region_names;
 };
 
 
@@ -308,6 +336,24 @@ const std::set<ID>&
 Device::get_region_ids(void) const
 {
   return _region_ids;
+}
+
+
+
+inline
+const std::string&
+Device::get_region_name(ID id)
+{
+  return _region_names[id];
+}
+
+
+
+inline
+const std::string&
+Device::get_boundary_region_name(ID id)
+{
+  return _boundary_region_names[id];
 }
 
 

@@ -78,7 +78,8 @@ Device::setup_mesh(void)
   delete _boundary_nodes;
   _boundary_nodes = new map<unsigned int, vector<ID> >();
 
-  MeshInput::read_mesh(meshfile, dim, *_mesh, meshdata, *_boundary_nodes);
+  MeshInput::read_mesh(meshfile, dim, *_mesh, meshdata, *_boundary_nodes,
+      _region_names, _boundary_region_names);
 
   MeshUtils::assign_subdomain_ids(*_mesh, meshdata);
   MeshUtils::get_subdomain_ids(*_mesh, _region_ids);
