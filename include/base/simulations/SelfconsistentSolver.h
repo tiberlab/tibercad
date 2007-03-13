@@ -57,6 +57,19 @@ class SelfconsistentSolver : public SimulationInterface
     virtual void do_delete_remembered_solution(ID id);
     
 
+    /*! \copydoc SimulationInterface::build_integrated_quantities() */
+    virtual void build_integrated_quantities(
+        const std::set<std::string>& names,
+        std::vector<double>& values);
+
+
+    /*! \copydoc SimulationInterface::build_integrated_quantities() */
+    virtual void build_integrated_quantities_description(
+        const std::set<std::string>& names,
+        std::vector<std::string>& legend,
+        std::vector<std::string>& description);
+
+
 
   private:
 
@@ -78,13 +91,6 @@ class SelfconsistentSolver : public SimulationInterface
     //! The ids of the remembered solutions
     std::map<ID, std::vector<ID> > _remembered_sol_ids;
 
-    //! Get the norm of the difference of two solutions
-    /*!
-     * The two vectors have to be of the same size
-     */
-    double get_norm_of_difference(NumericVector<double>& vec1,
-        NumericVector<double>& vec2);
-    
 };
 
 

@@ -78,6 +78,26 @@ class Utils
     };
 
 
+
+    //! Calculate the Bernoulli function of x
+    /*!
+     * Calculates \f$\frac{x}{e^x - 1}\f$
+     */
+    static double bernoulli(double x);
+
+
+
+    //! Calculate the inverse of the Bernoulli function of x
+    /*!
+     * Calculates \f$\frac{e^x - 1}{x}\f$
+     */
+    static double bernoulli_inv(double x);
+
+
+
+
+
+
   private:
 
     //! Not to be instantiated
@@ -198,6 +218,34 @@ Utils::almost_equal::operator()(double a, double b, double eps) const
 }
   
 
+
+
+inline
+double
+Utils::bernoulli(double x)
+{
+  double res = 1.0;
+
+  if (std::abs(x) > 1e-12)
+    res = x / (std::exp(x) - 1);
+
+  return res;
+}
+
+
+
+
+inline
+double
+Utils::bernoulli_inv(double x)
+{
+  double res = 1.0;
+
+  if (std::abs(x) > 1e-12)
+    res = (std::exp(x) - 1) / x;
+
+  return res;
+}
 
 
 #endif // _UTILS_H_

@@ -129,24 +129,6 @@ SelfconsistentSolver::do_solve(void)
 
 
 
-double
-SelfconsistentSolver::get_norm_of_difference(NumericVector<double>& vec1,
-    NumericVector<double>& vec2)
-{
-  assert(vec1.size() == vec2.size());
-  double norm = -1;
-
-  unsigned int n = vec1.size();
-  for (unsigned int i = 0; i < n; i++)
-  {
-    double d = fabs(vec1(i) - vec2(i));
-    norm = (d > norm) ? d : norm;
-  }
-
-  return norm;
-}
-
-
 
 
 ID
@@ -217,4 +199,44 @@ SelfconsistentSolver::do_plot(void)
 
   for (int i = 0; i < num_sim; i++)
     _simulations[i]->plot();
+}
+
+
+
+
+void
+SelfconsistentSolver::build_integrated_quantities(const set<string>& names,
+    vector<double>& values)
+{
+  vector<double> val;
+
+  int num_sim = _simulations.size();
+
+  for (int i = 0; i < num_sim; i++)
+  {
+    _simulations[i]->get_integrated_quantities(names, val);
+    values.insert(values.end(), val.begin(), val.end());
+  }
+}
+
+
+
+
+void
+SelfconsistentSolver::build_integrated_quantities_description(
+    const set<string>& names,
+    vector<string>& legend,
+    vector<string>& description)
+{
+  vector<string> leg;
+  vector<string> desc;
+
+  int num_sim = _simulations.size();
+
+  for (int i = 0; i < num_sim; i++)
+  {
+    _simulations[i]->get_integrated_quantities_description(names, leg, desc);
+    legend.insert(legend.end(), leg.begin(), leg.end());
+    description.insert(description.end(), desc.begin(), desc.end());
+  }
 }

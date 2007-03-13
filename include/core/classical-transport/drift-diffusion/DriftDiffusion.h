@@ -848,67 +848,74 @@ class DriftDiffusion : public SimulationInterface
 
 
 
-    //! Assemble the residual vector or the jacobian matrix
+    //! Assemble the residual vector
     /*!
      * This method gets called from the underlying nonlinear solver
      * library. It calls the real assembly routines.
      */
-    static void assemble(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
-
     static void assemble_residual(const NumericVector<Number>& x,
         NumericVector<Number>& residual);
+
+    
+    //! Assemble the jacobian matrix
+    /*!
+     * This method gets called from the underlying nonlinear solver
+     * library. It calls the real assembly routines.
+     */
     static void assemble_jacobian(const NumericVector<Number>& x,
         SparseMatrix<Number>& jacobian);
 
-    //! Assembles the residual vector or the jacobian matrix
+    
+    //! Assembles the residual vector
     /*!
-     * Assembles the residual vector or the jacobian matrix for
+     * Assembles the residual vector for
      * the equation system with @c Coupling T.
      *
      * This implementation uses standard FEM.
      */
     template <int T>
-    void do_assembly(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
-    template <int T>
     void do_assembly_residual(const NumericVector<Number>& x,
         NumericVector<Number>& residual);
+
+
+    //! Assemble the jacobian matrix
+    /*!
+     * Assembles the jacobian matrix for
+     * the equation system with @c Coupling T.
+     *
+     * This implementation uses standard FEM.
+     */
     template <int T>
     void do_assembly_jacobian(const NumericVector<Number>& x,
         SparseMatrix<Number>& jacobian);
  
-
-    //! Assembles the residual vector or the jacobian matrix
-    /*!
-     * Assembles the residual vector or the jacobian matrix for
-     * the equation system with @c Coupling T.
-     *
-     * This implementation uses standard FEM, but with the continuity
-     * equations written in a different form.
-     */
-    template <int T>
-    void do_assembly_new(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
-    
    
-    //! Assembles the residual vector or the jacobian matrix for 1D
+    //! Assembles the residual vector for 1D
     /*!
-     * Assembles the residual vector or the jacobian matrix for
+     * Assembles the residual vector for
      * the equation system with @c Coupling T.
      *
      * This implementation is for 1D only and implements the 
      * Box Integration Method.
      */
     template <int T>
-    void do_assembly1D(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
+    void do_assembly_residual_box1D(const NumericVector<Number>& x,
+        NumericVector<Number>& residual);
 
-    void make_Mmatrix(DenseMatrix<Number>& m);
+ 
+    //! Assembles the jacobian matrix for 1D
+    /*!
+     * Assembles the jacobian matrix for
+     * the equation system with @c Coupling T.
+     *
+     * This implementation is for 1D only and implements the 
+     * Box Integration Method.
+     */
+
+    template <int T>
+    void do_assembly_jacobian_box1D(const NumericVector<Number>& x,
+        SparseMatrix<Number>& jacobian);
+
 
 };
 
