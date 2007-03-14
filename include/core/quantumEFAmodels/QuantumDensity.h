@@ -86,8 +86,13 @@ class QuantumDensity : public SimulationInterface
     unsigned int maximum_ref_level; //!< maximum level for k space refinement
 
     double Temperature;             //!< temperature [K]
-    unsigned int degeneracy;        //!< degeneracy factor to mutiply the charge density  
+    unsigned int degeneracy;        //!< degeneracy factor to mutiply the charge density 
+
+    unsigned int intial_eigenstates_number;  //!< number of required eigenstates for the first call of Schoedinger solver
     bool log_output; 
+
+
+   
 
   };
 
@@ -100,33 +105,37 @@ class QuantumDensity : public SimulationInterface
   ~QuantumDensity();
 
 
-  //!Constructor
-  /*!
-    \param model Scroedinger equation object
-  */
-  //QuantumDensity( EnvelopFunctionApprox* model );
+  
 
-
-  //!Constructor
-  /*!
-    \param model Scroedinger equation object
-    \param options options of this options
-  */
-  //QuantumDensity( EnvelopFunctionApprox* model,  QuantumDensity::options& options);
 
   
-  //!define quantum model
-  void set_quantum_model(EnvelopFunctionApprox* model);
 
 
-  //!returns a reference to density
-  std::vector<double>& get_density(void);
+  //!returns charge density for quadratur points 
+  /*!
+    We assume that the charge density is constant of the the element of a mesh used for a quantum calculation
+    \param element pointer to the element
+    \param quad_points quadratur points in local coordinates
+    \param density resulting density
+  */
+  void get_particle_density(const Elem* element, const std::vector<double>& quad_points, std::vector<double> density);
 
 
- 
+
+  //!returns reference to kmesh object
+  const Mesh& get_k_mesh(void) const; 
 
 
-  //!defines 1D  Brilluoin zone \f$ k \in [-{\bf K}/2; {\bf K}/2) \f$
+
+  //!returns \f$ \rho({\bf k} ) = \int \rho{\bf{ k, r}}  d{\bf r} \f$
+   std::vector<double>  get_density_in_k_space(void)  const;
+
+   //!creates a new object 
+   static  QuantumDensity* create();
+
+ private:
+
+     //!defines 1D  Brilluoin zone \f$ k \in [-{\bf K}/2; {\bf K}/2) \f$
   /*!
     \param k_vector Basis k-vector  \f$ \bf K \f$ [atom. units]
     \param n - initial number of nodes
@@ -170,28 +179,13 @@ class QuantumDensity : public SimulationInterface
   void calculate_convergent_density(void);
 
 
-  //!returns reference to kmesh object
-  const Mesh& get_k_mesh(void) const; 
 
-
-
-  //!returns \f$ \rho({\bf k} ) = \int \rho{\bf{ k, r}}  d{\bf r} \f$
-   std::vector<double>  get_density_in_k_space(void)  const;
-
-
-   static  QuantumDensity* create();
-
- private:
-
-
-
-
-  
+   //! name of the simulation that solves Schroedinger equation 
    EnvelopFunctionApprox*  quantum_model;
 
 
-   //!quantum density
-   std::vector<double> real_space_density;
+   //!quantum density for elements 
+   std::map<const Elem*, double> real_space_density;
 
 
    //! size of the real_space_density vector
@@ -213,14 +207,14 @@ class QuantumDensity : public SimulationInterface
    options opt;  
 
    //number of nodes in k-domain
-   unsigned int num_nodes[3];
+   std::vector<unsigned int>  num_nodes;
 
 
    //!build k space grid
    void build_k_grid();
 
-   //!map from node in the k-grid to a real space density   
-   std::map< const Node*, std::vector <double>  > k_point_density;
+   //!map from node in the k-grid to a real space density, which is a map between real space elements and density   
+   std::map< const Node*, std::map <const Elem*, double>  > k_point_density;
 
    //!map from node in the k-grid to a total charge
    std::map< const Node*, double > k_point_charge;
@@ -266,6 +260,14 @@ class QuantumDensity : public SimulationInterface
    
 
  protected:
+
+   //!in this class  outputs particle density in a real space
+   /*!
+     Significant variable for this class is "quantum_density"
+   */
+   virtual void build_elemental_results(const std::set<std::string>& variables,
+				   std::vector<double>& results, std::vector<std::string>& legend);
+
  
    virtual void 	do_init(void);
 
@@ -274,5 +276,13 @@ class QuantumDensity : public SimulationInterface
    virtual void 	parse_options (void);
 
 };
+
+
+//---------------------------------------------------------
+
+inline QuantumDensity*  QuantumDensity::create()
+{
+  return (new QuantumDensity );
+}
 
 #endif

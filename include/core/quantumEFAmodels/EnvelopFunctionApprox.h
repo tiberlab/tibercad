@@ -67,6 +67,12 @@ class EnvelopFunctionApprox  : public SimulationInterface
  public:
   //!control options
 
+  enum JobKind
+  {
+     EIGENSTATES = 0,
+     DENSITY = 1
+  };
+
 
   //! data structure that contains options for effective mass
   struct options
@@ -129,7 +135,10 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
     unsigned int number_of_eigenstates; //!<number of eigenstates to be calculated
 
-    
+    JobKind job; //!< a job to do
+
+
+    double Temperature;//!Temperature for density calculation
 
   };
 
@@ -222,43 +231,36 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
 
   
-  //!apply k Block vector to all the Hamiltonians
-  /*!
-    \param k k-vector in atomic units
-  */
-  void apply_k_vector(const double k[3]);
-
-
-
+ 
   //! claculate total density
   /*!
     \f$ \rho = \sum_i F_{\rm{Fermi}}(E_i) \f$
-    \param T temperature [K];
+    
   */
-  double get_integrated_probability(double T);
+  double get_integrated_probability();
 
 
 
   //!obtain convergent density
   /*!
     \param T temperature [K]
-    \param cell_data  if true, then cell data is calculated (default); if false, the nodal data ic calculated 
+   
   */
-  std::vector<double>  calculate_convergent_density(double T, bool cell_data = true);
+  void  calculate_convergent_density(double T);
   
 
 
-   //! calculate nodal or cell density  (in atomic units) for a single \f$ {\bf k}_{\|}\f$ vector.  
+   //! calculate cell density  (in atomic units) for a single \f$ {\bf k}_{\|}\f$ vector.  
   /*!
     The nodal density reads: \f$ \rho({\bf r}) = \sum_i   |\psi_i({\bf r})|^2 F_{fermi}(E_i) \f$ 
     The cell density reads:  \f$ \rho = \frac{1}{\Omega_0} \int_{\Omega_0}  \sum_i   |\psi_i({\bf r})|^2 \, dV  F_{fermi}(E_i), \f$
     where \f$ \Omega_0 \f$ is the element volume.
 
     \param T temperature [K]
-    \param cell_data  if true, then cell data is calculated (default); if false, the nodal data ic calculated 
+  
 
   */
-  std::vector<double>  calculate_density(double T, bool cell_data = true);
+  void  calculate_density(double T);
 
 
   //! sets opt.initial_eigestates_number
@@ -281,6 +283,11 @@ class EnvelopFunctionApprox  : public SimulationInterface
   virtual BoundaryProperties*
     create_boundary_model(const ModelOptions& options) const
     throw (ModelErrorException);
+
+
+  //!returns a constant reference calculated density
+  const std::map<const Elem*, double>& get_density(void) const 
+  { return _density; } ;
 
  private:
 
@@ -347,8 +354,6 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
 
 
-  //!map that contains pointers to bulk Hamiltoninas
-  std::map<unsigned int, EFAbulkHamiltonian*>  bulkHamiltonian;
 
   //!bands names
   std::vector<std::string> psi_name;
@@ -493,14 +498,14 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
  
   
-  //! calculate density without \f$ | \psi_i (r) |^2 \f$
+  //! calculate density \f$ | \psi_i (r) |^2 \f$
   /*!
     \param i number of the eigenstate
    */
   std::vector<double> calculate_prob_function(unsigned int i);
 
 
-  //! calculate density without \f$ \frac{1}{\Sigma_0} \int_{\Sigma_0} | \psi_i (r) |^2 /,dV \f$
+  //! calculate density  \f$ \frac{1}{\Sigma_0} \int_{\Sigma_0} | \psi_i (r) |^2 /,dV \f$
   /*!
     \param i number of the eigenstate
   */
@@ -524,7 +529,13 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
 
 
+  //!calculated density
+  std::map<const Elem*, double> _density;
  
+ 
+
+  //!k-vector in atomic units
+  double k_vector[3];
 
  protected:
 

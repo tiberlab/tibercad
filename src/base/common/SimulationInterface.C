@@ -9,6 +9,7 @@
 #include "Macrostrain.h"
 #include "EnvelopFunctionApprox.h"
 #include "MacroHeatBalance.h"
+#include "QuantumDensity.h"
 
 #include "Sweep.h"
 #include "SelfconsistentSolver.h"
@@ -60,6 +61,9 @@ SimulationInterface::create(const string& type,
 {
   SimulationInterface* sim = NULL;
 
+ 
+
+
   if (type == "driftdiffusion")
     sim = DriftDiffusion::create();
   else if (type == "excitontransport")
@@ -74,6 +78,8 @@ SimulationInterface::create(const string& type,
     sim = MacroHeatBalance::create();
   else if (type == "selfconsistent")
     sim = SelfconsistentSolver::create();
+  else if (type == "quantumdensity")
+    sim = QuantumDensity::create(); 
 
   if (sim != NULL)
   {
@@ -97,6 +103,7 @@ SimulationInterface::create(const string& type,
     cout << "        type = " << sim->get_type() << endl;
     cout << "        name = " << sim->get_name() <<
       " / default name = " << sim->get_default_name() << endl;
+    cout << "        address = " << sim << endl;
 #endif
   }
 
@@ -112,7 +119,8 @@ SimulationInterface::destroy(SimulationInterface* p)
 #ifdef DEBUG
     cout << "Deleted simulator (ID = " << p->get_id() <<
       " name = " << p->get_name() << " / type_id = " <<
-      p->get_default_name() << ")" << endl;
+      p->get_default_name() << ")";
+    cout << " address = " << p << endl;
 #endif
   // TODO better call a module internal method
   delete p;

@@ -1383,7 +1383,7 @@ void Macrostrain::do_solve()
 
   if (max_shape_steps >= 1) update_u_node(); //temporary
 
-   //update_u_node(); should be!
+  update_u_node();
  
   //------write-------------------------------------------------------------------------------------//
   //--  output of the final result
@@ -2955,20 +2955,28 @@ void Macrostrain::init_u_node()
 
   for (unsigned int i = 0 ; i < 3 ; i++) single_node[i] = 0.0;
  
+  u_node.clear();
   
-  MeshBase::const_node_iterator nd  = mesh->active_nodes_begin();
-  MeshBase::const_node_iterator end_nd = mesh->active_nodes_end();
+  const Mesh& mesh = equation_systems->get_mesh();
+  MeshBase::const_element_iterator el  = mesh.active_elements_begin();
+  MeshBase::const_element_iterator end_el = mesh.active_elements_end();
 
-  unsigned int node_number = 0;
+  for ( ; el != end_el ; ++el) 
+  { 
+    const Elem* elem = *el;
 
-  for ( ; nd != end_nd ; ++nd) 
+    const unsigned int num_nodes = elem->n_nodes();
+
+    for (short i = 0; i < num_nodes; i++)
     {
-      const Node* nd1 = *nd;
-      
-      u_node.insert( pair<const Node*,vector<double> > (nd1,single_node)  );
-     
-      node_number++;
+      const Node* nd = elem->get_node(i);
+      if (u_node.find(nd) == u_node.end())
+	u_node.insert( pair<const Node*,vector<double> > (nd,single_node)  ); 
     }
+     
+  }
+  
+
 
 }
 //-------------------------------------------------------------------------------------------/
@@ -2990,29 +2998,52 @@ void Macrostrain::update_u_node()
     }
 
 
-  MeshBase::const_node_iterator       nd     = mesh.active_nodes_begin();
-  const MeshBase::const_node_iterator nd_end = mesh.active_nodes_end();
-
-
-
-  
-
  
 
-  for ( ; ( (nd != nd_end) ) ; ++nd)
+  map<const Node*, vector<double> > temp;
+
+  MeshBase::const_element_iterator el  = mesh.active_elements_begin();
+  MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+
+  for ( ; el != end_el ; ++el) 
+  { 
+    const Elem* elem = *el;
+
+    const unsigned int num_nodes = elem->n_nodes();
+
+    for (short i = 0; i < num_nodes; i++)
     {
-      Node* node1 = *nd;
+      const Node* nd = elem->get_node(i);
+
+      if (temp.find(nd) == temp.end())
+      {
+	vector <double> du(3);
+	for (unsigned int i = 0; i < 3; i++) //<3 , not < dim (necessary for atoms!) 
+	{
+	  const unsigned int  n_dof = nd->dof_number(system_number,uvar[i],0);
+	  du[i] = (*solution)(n_dof);
+	}
+	temp.insert( pair<const Node*,vector<double> > (nd,du)  ); 
+      }
 
      
-
-
-      for (unsigned int i = 0; i < 3; i++) //<3 , not < dim (necessary for atoms!) 
-	{
-	  const unsigned int  n_dof = node1->dof_number(system_number,uvar[i],0);  
-	  u_node[node1][i] +=  (*solution)(n_dof);
-	}
     }
+     
+  }
 
+
+  map<const Node*, vector<double> >::iterator it = u_node.begin();
+  map<const Node*, vector<double> >::iterator it_end = u_node.end();
+
+  for( ; it != it_end ; )
+  {
+    const Node* nd = it->first;
+
+    for (unsigned int i = 0; i < 3; i++) (it->second)[i] +=temp[nd][i]; 
+  }
+
+
+ 
 
 }
 //-------------------------------------------------------------------------------------------/

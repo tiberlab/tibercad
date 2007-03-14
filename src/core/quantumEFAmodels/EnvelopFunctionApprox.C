@@ -272,30 +272,48 @@ void EnvelopFunctionApprox::parse_options()
 
   if ( !opt.consider_potential && opt.estimate_spectrum_shift) throw InitFailedException( "EnvelopeFunctionApprox: cannot estimate spectrum shift without electric potential");
 
-  
+  //--------------------------------------------------------------------------------------------//
 
   if (opt.estimate_spectrum_shift) opt.spectrum_shift = get_band_edge();
   //--------------------------------------------------------------------------------------------//
+  //k-vector
+  std::vector<double> k_vec(3, 0.0);
+  mod_opt.get_option("k_vector",k_vec);
+  if (k_vec.size() == 3)
+  {
+   
+    for (short i = 0; i < 3; i++) k_vector[i] = k_vec[i]; 
+    
+   
+  }
+  else
+    throw InitFailedException( "EnvelopeFunctionApprox: k_vector size must be equal to 3 instead of " + k_vec.size()); 
 
-  
+  //--------------------------------------------------------------------------------//
+  std::string  job_name = mod_opt.get_option("job","eigenstates");
+  if (job_name == "eigenstates")
+    opt.job = EIGENSTATES;
+  else if (job_name == "density")
+    opt.job = DENSITY;
+  else
+    throw InitFailedException( "EnvelopeFunctionApprox: Incorrect job " + job_name );  
+  //---------------------------------------------------------------------------------//
+
+  opt.Temperature = mod_opt.get_option("Temperature", 300.0);
+
+  opt.initial_eigenstates_number = mod_opt.get_option("initial_eigenstates_number", 6);
 
 }
+
+
+
+
 //===================================================//
 
 
 //===================================================//
 void EnvelopFunctionApprox::do_init( )
 {
-
-  
-  //Initialization
-
-  //poisson_equation = NULL;
-
-  //strain = NULL;
-
-
-  //opt = opt1;
 
  
 
@@ -419,7 +437,13 @@ void EnvelopFunctionApprox::do_solve()
 {
   parse_options();
 
-  solve_eigen_value_problem( opt.number_of_eigenstates);
+ 
+  if ( opt.job ==   EIGENSTATES )
+    solve_eigen_value_problem( opt.number_of_eigenstates);
+  else if ( opt.job == DENSITY )
+    calculate_convergent_density(opt.Temperature);
+    
+  
 
 
 
@@ -516,12 +540,10 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
       element_hamiltonian = (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model(); 
 
-      /*
-      //const unsigned int mat = material_of_elem[el_number];
- 
-      //element_hamiltonian = bulkHamiltonian[mat];
-      */
-   
+      element_hamiltonian->set_k_vector(k_vector);
+      element_hamiltonian->calculate_Hamiltonian_k_par();
+
+
       dof_map.dof_indices (elem, dof_indices); 
       const unsigned int n_dofs   = dof_indices.size();
       fe->reinit (elem);
@@ -1251,11 +1273,14 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
   command_line <<  "    \n";
 
 
+
   if (opt.log_output) 
     {
       cout << command_line.str()<<"\n";
       cout.flush();
     }
+
+
 
   std::system( (command_line.str()).c_str());
 
@@ -1303,7 +1328,10 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   unsigned int number_of_converged_solutions;
   file_eigvals.read(buffer, int_size); 
   number_of_converged_solutions =  *(reinterpret_cast<unsigned int*> ( buffer));  endian_swap(number_of_converged_solutions);
+
+#ifdef DEBUG
   cout << " Number of converged solutions  " << number_of_converged_solutions << "\n";
+#endif
 
   unsigned int solution_size;
   if (number_of_converged_solutions < number_of_ev)
@@ -2428,43 +2456,23 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 
 //---------------------------------------------------------------------------//
 
-vector<double> EnvelopFunctionApprox::calculate_density(double Temperature, bool cell_data)
+void EnvelopFunctionApprox::calculate_density(double Temperature)
 {
   DofMap& dof_map = system->get_dof_map();
 
   const Mesh& mesh1 = system->get_mesh();
 
   
-  unsigned int size_of_output = 0;
-
-  if (cell_data)
-    {
-
-      MeshBase::const_element_iterator       nd     = mesh1.active_elements_begin();
-      const MeshBase::const_element_iterator nd_el  = mesh1.active_elements_end();
-
-      for ( ; nd != nd_el ; ++nd)  size_of_output++;  
-
-    }
-  else
-    {
-
-      MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
-      const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
-
-      for ( ; nd != nd_el ; ++nd)  size_of_output++; 
- 
-   }
+  _density.clear();
 
 
+
+  MeshBase::const_element_iterator       nd     = mesh1.active_elements_begin();
+  const MeshBase::const_element_iterator nd_el  = mesh1.active_elements_end();
 
  
 
-
-  vector<double> result(size_of_output, 0.0);
-
-
-  vector<double> density_of_state(size_of_output, 0.0);
+  vector<double> density_of_state;
 
   unsigned int number_of_eigenfunctions = solution.size();
 
@@ -2477,25 +2485,37 @@ vector<double> EnvelopFunctionApprox::calculate_density(double Temperature, bool
 
       const double Energy = solution[i].eigen_energy;
       
-      double prob_factor = Fermi_statistics_probability(Energy, Fermi_energy, Temperature); 
+      double prob_factor = Fermi_statistics_probability(Energy, Fermi_energy, Temperature); //Thermal probability
 
-      if (cell_data)
-	density_of_state = calculate_cell_prob_function(i);
-      else
-	density_of_state = calculate_prob_function(i);
+     
+      density_of_state = calculate_cell_prob_function(i);
 
-      for (unsigned int j = 0; j < size_of_output; j++)
-	{
-	  
-	  result[j] +=  density_of_state[j] * prob_factor; 
-
-	}
+      MeshBase::const_element_iterator       it     = mesh1.active_elements_begin();
+      const MeshBase::const_element_iterator it_end  = mesh1.active_elements_end();
+     
+      unsigned int el_number = 0;
+      
+      for( ;it !=  it_end ;++it)
+      {
+	const Elem* el = *it;
+	
+	double temp = density_of_state[el_number] * prob_factor;
+	
+	if (it == it_end)
+	  _density.insert(pair<const Elem*, double> (el, temp));
+	else
+	  _density[el] += temp;
+	
+	el_number++;
+      }
+      
+     
 
       
     }
 
 
-  return(result);
+  
   
 }
 
@@ -2697,42 +2717,30 @@ vector<double> EnvelopFunctionApprox::calculate_prob_function(unsigned int state
   //-----
 
 }
-//=================================================================//
-
-void EnvelopFunctionApprox::apply_k_vector(const double k[3])
-{
-  map<unsigned int, EFAbulkHamiltonian*>::iterator  it     = bulkHamiltonian.begin();
-
-  map<unsigned int, EFAbulkHamiltonian*>::iterator  it_end = bulkHamiltonian.end();
-
-  for( ; it != it_end ; ++it)
-    {
-      EFAbulkHamiltonian* Ham = it -> second;
-      Ham->set_k_vector(k);
-      Ham->calculate_Hamiltonian_k_par();
-    }
-  
-}
 
 
 //=================================================================//
 
-double EnvelopFunctionApprox::get_integrated_probability(double T)
+double EnvelopFunctionApprox::get_integrated_probability()
 {
   double result = 0;
   unsigned int number_of_eigs = solution.size();
   for (unsigned int i = 0 ; i <  number_of_eigs; i++)
     { 
-     
-      result += Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy,T);
+    
+      result += Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy,opt.Temperature);
     }
+ 
   return(result);
 }
 
 
 //=================================================================//
-vector<double>  EnvelopFunctionApprox::calculate_convergent_density(double T, bool cell_data)
+void EnvelopFunctionApprox::calculate_convergent_density(double T)
 {
+
+ 
+
   unsigned int number_of_states = opt.initial_eigenstates_number;
 
   solve_eigen_value_problem(number_of_states);
@@ -2743,7 +2751,7 @@ vector<double>  EnvelopFunctionApprox::calculate_convergent_density(double T, bo
 							   solution[n1-1].Fermi_energy,
 							   T);
 
-  double total_density =  get_integrated_probability(T);
+  double total_density =  get_integrated_probability();
  
   bool converged =( last_state_density/total_density  < opt.relative_density_tolerance ) ; 
 
@@ -2757,14 +2765,14 @@ vector<double>  EnvelopFunctionApprox::calculate_convergent_density(double T, bo
 
       solve_eigen_value_problem(number_of_states, st_shift_value);
 
-      double total_density1 = get_integrated_probability(T);
+      double total_density1 = get_integrated_probability();
 
       if ( abs(total_density1 - total_density)/total_density < opt.relative_density_tolerance )  converged = true;
 
       total_density = total_density1;
     }
 
-  return(calculate_density(T,cell_data ));
+  calculate_density(T );
  
 }
 
