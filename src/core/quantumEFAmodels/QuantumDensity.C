@@ -1,7 +1,60 @@
 #include "QuantumDensity.h"
-
-
+#include "SimulationEnvironment.h"
+#include "Control.h"
+#include "gnuplot_io.h"
 using namespace std;
+
+void QuantumDensity::do_plot (void)
+{
+  //---------------------------------------------------------------------------
+  //standard output
+  SimulationInterface::do_plot();
+  //---------------------------------------------------------------------------
+  //k-space output
+  const Device& dev = get_environment().get_device();
+
+  string suffix = get_control().get_filename_suffix();
+  string outdir = get_control().get_output_dir();
+  string format = get_control().get_output_format();
+
+  string suff;
+  if (format == "gmv")
+    suff = ".gmv";
+  else if (format == "ise")
+    suff = ".plt";
+
+  const std::set< std::string >& plotvariables = get_control().get_plotvariables();
+
+  if (plotvariables.find("k-space_density") != plotvariables.end())
+  {
+    string filename(outdir + "/" + get_name() +
+        "_k_space" + suffix + suff);
+
+   
+
+    vector<string> names(1,"density[atomic_units]");
+
+    const vector<double> results = get_density_in_k_space();
+
+
+    if (format == "gmv")
+      GMVIO(get_k_mesh()).write_nodal_data(filename, results, names);
+    else if (format == "gnuplot")
+      GnuPlotIO(get_k_mesh()).write_nodal_data(filename, results, names);
+    else if (format == "ise")
+      TecplotIO(get_k_mesh()).write_nodal_data(filename, results, names);
+    else
+    {
+      cout << "Output format not supported. Falling back to GMV." << endl;
+      GMVIO(get_k_mesh()).write_nodal_data(filename, results, names);
+    }
+
+  }
+
+  //----------------------------------------------------------------------------
+}
+
+
 
 void QuantumDensity::get_particle_density(const Elem* element, const std::vector<double>& quad_points, std::vector<double> density)
 {
@@ -283,6 +336,8 @@ void QuantumDensity::do_solve ( )
 
  calculate_convergent_density();
 
+
+
 }
 //============================================//
 void QuantumDensity::parse_options( )
@@ -293,15 +348,13 @@ void QuantumDensity::parse_options( )
  opt.log_output              = mod_opt.get_option("log_output", false);
  opt.uniform_refinement      = mod_opt.get_option("uniform_refinement",false);
 
- opt.refine_fraction         = mod_opt.get_option("refine_fraction", 0.5);
+ opt.refine_fraction         = mod_opt.get_option("refine_fraction", 0.3);
  opt.maximum_ref_level       = mod_opt.get_option("maximum_ref_level", 8);
  opt.relative_accuracy       = mod_opt.get_option("relative_accuracy", 1e-2);
 
- opt.degeneracy              = mod_opt.get_option("degeneracy",1);
- opt.k_domain_refinement      = mod_opt.get_option("refine_k_space", false);
+ opt.degeneracy                = mod_opt.get_option("degeneracy",1);
+ opt.k_domain_refinement       = mod_opt.get_option("refine_k_space", false);
  opt.intial_eigenstates_number = mod_opt.get_option("intial_eigenstates_number", 6);
-
- 
 
 }
 

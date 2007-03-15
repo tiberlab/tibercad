@@ -48,6 +48,7 @@ void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& var
       for (unsigned int i1 = 0; i1<number_of_points; i1++)
 	results[num_var * i1 + i] = prob_data[i1];
 
+
     }
   }
 
@@ -1457,7 +1458,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 		}
 	    }
 	
-	  //TODO put constrained dofs
+	  
 	  //put constrained dofs
 	  for (unsigned j = 0; j < number_of_all_dofs; j++)
 	    {

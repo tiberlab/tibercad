@@ -89,6 +89,8 @@ class QuantumDensity : public SimulationInterface
     unsigned int degeneracy;        //!< degeneracy factor to mutiply the charge density 
 
     unsigned int intial_eigenstates_number;  //!< number of required eigenstates for the first call of Schoedinger solver
+
+  
     bool log_output; 
 
 
@@ -275,6 +277,8 @@ class QuantumDensity : public SimulationInterface
 
    virtual void 	parse_options (void);
 
+   //!is reimplemented here to be able to do output over k-space 
+   virtual void 	do_plot (void);
 };
 
 
