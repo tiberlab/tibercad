@@ -4,6 +4,7 @@
 #define __DEVICE_H__
 
 
+#include "TiberCad.h"
 #include "TypeDefs.h"
 #include "ModelOptions.h"
 
@@ -142,6 +143,9 @@ class Device
      */
     const std::string& get_boundary_region_name(ID id);
 
+
+    //! Get the type of symmetry
+    TiberCad::Symmetry get_symmetry(void) const;
     
 
   private:
@@ -227,6 +231,14 @@ class Device
 
     //! A map that assigns boundary region IDs to boundary region names
     std::map<ID, std::string> _boundary_region_names;
+
+
+    //! The symmetry of the device
+    /*!
+     * The default assumes no special symmetry.
+     */
+    TiberCad::Symmetry _symmetry;
+
 };
 
 
@@ -357,5 +369,12 @@ Device::get_boundary_region_name(ID id)
 }
 
 
+
+inline
+TiberCad::Symmetry
+Device::get_symmetry(void) const
+{
+  return _symmetry;
+}
 
 #endif //  __DEVICE_H__

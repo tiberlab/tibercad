@@ -12,6 +12,14 @@ namespace TiberCad
     BOSEEINSTEIN   /*!< Bose-Einstein statistics */
   };
 
+
+  //! Types of symmetries
+  enum Symmetry
+  {
+    NONE,         /*!< no special symmetry */
+    CYLINDRICAL   /*!< cylinder symmetry */
+  };
+
 };
 
 

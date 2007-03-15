@@ -7,6 +7,7 @@
 
 class Elem;
 
+
 //! An element side
 typedef std::pair<const Elem*, unsigned int> ElementSide;
 

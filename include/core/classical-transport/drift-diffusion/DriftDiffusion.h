@@ -7,7 +7,6 @@
 #include "SimulationOptions.h"
 #include "DriftDiffusionDefs.h"
 #include "Device.h"
-#include "Scaling.h"
 #include "PetscRuntimeError.h"
 #include "KSPDivergedError.h"
 #include "SNESDivergedError.h"
@@ -47,6 +46,7 @@ template<typename T> class SparseMatrix;
 
 template<typename T> class TiberPetscNonlinearSolver;
 template<typename T> class NonlinearSolver;
+
 
 //! The main class to perform standard drift-diffusion calculations
 /*!
@@ -454,7 +454,7 @@ class DriftDiffusion : public SimulationInterface
     /**
      * @return a constant reference to the current scaling parameters
      */
-    const Scaling& get_scaling(void) const;
+    //const Scaling& get_scaling(void) const;
 
 
     //! Set the electron quasi Fermi level to \c Ef_n
@@ -667,7 +667,7 @@ class DriftDiffusion : public SimulationInterface
     Options _options;
     
     //! The scaling parameters
-    Scaling _scaling;
+    //Scaling _scaling;
 
     //! The boundary currents
     /*!
@@ -960,12 +960,12 @@ DriftDiffusion::disable_mesh_refinement(void)
   _options.mesh_refinement = false;
 }
 
-inline
-const Scaling&
-DriftDiffusion::get_scaling(void) const
-{
-  return _scaling;
-}
+//inline
+//const Scaling&
+//DriftDiffusion::get_scaling(void) const
+//{
+//  return _scaling;
+//}
 
 
 

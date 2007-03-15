@@ -138,8 +138,11 @@ SimulationInterface::init(void) throw (InitFailedException)
     create_equation_system_name();
 
     if (_environment != NULL)
+    {
       _environment->prepare_for_solve();
-    
+      _scaling.set_calc_mesh_units((_environment->get_device()).get_mesh_units());
+    }
+
     do_init();
     
   }
@@ -546,3 +549,19 @@ SimulationInterface::do_maximum_norm_of_difference(ID id)
 }
 
 
+void
+SimulationInterface::get_determinant_of_symmetry_transformation(
+    const std::vector<Point>& p, std::vector<double>& det)
+{
+  det.resize(p.size(), 1.0);
+  TiberCad::Symmetry sym = get_environment().get_device().get_symmetry();
+  double x0 = get_scaling().get_calc_mesh_units();
+
+  switch (sym)
+  {
+    case TiberCad::CYLINDRICAL:
+      for (unsigned int i = 0; i < p.size(); i++)
+        det[i] = 2 * M_PI * p[i](0) * x0;
+      break;
+  }
+}

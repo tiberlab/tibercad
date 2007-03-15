@@ -250,13 +250,18 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
 {
   if (type == Scaling::NONE)
   {
-    _scaling.set_scaling_type(type);
-    _scaling.set_potential_scaling(1);
-    _scaling.set_length_scaling(1);
-    _scaling.set_mobility_scaling(1);
-    _scaling.set_density_scaling(1);
+    get_scaling().set_scaling_type(type);
+    get_scaling().set_potential_scaling(1);
+    get_scaling().set_length_scaling(1);
+    get_scaling().set_mobility_scaling(1);
+    get_scaling().set_density_scaling(1);
     return;
   }
+
+  // we calculate in cm!
+  double mesh_units = 100 * get_scaling().get_calc_mesh_units();
+  get_scaling().set_calc_mesh_units(mesh_units);
+
   
   // the scaling parameters should never be zero
   // they are in any case positive, so it will
@@ -365,12 +370,12 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
       break;
   }
 
-  _scaling.set_scaling_type(type);
-  _scaling.set_potential_scaling(phi0);
-  //_scaling.set_potential_scaling(1.0);
-  _scaling.set_length_scaling(x0 * _options.mesh_units);
-  _scaling.set_mobility_scaling(mu0);
-  _scaling.set_density_scaling(C0);
+  get_scaling().set_scaling_type(type);
+  get_scaling().set_potential_scaling(phi0);
+  //get_scaling.set_potential_scaling(1.0);
+  get_scaling().set_length_scaling(x0 * mesh_units);
+  get_scaling().set_mobility_scaling(mu0);
+  get_scaling().set_density_scaling(C0);
 }
 
 
@@ -384,7 +389,7 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
         get_equation_system_name());
   
   const unsigned int var = system.variable_number("fermi_e");
-  const double phi0 = _scaling.get_potential_scaling();
+  const double phi0 = get_scaling().get_potential_scaling();
   double level = Ef_n / phi0;
 
   Mesh& mesh = get_mesh();
@@ -414,7 +419,7 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
         get_equation_system_name());
   
   const unsigned int var = system.variable_number("fermi_h");
-  const double phi0 = _scaling.get_potential_scaling();
+  const double phi0 = get_scaling().get_potential_scaling();
   double level = Ef_p / phi0;
 
   Mesh& mesh = get_mesh();
@@ -444,7 +449,7 @@ DriftDiffusion::set_electric_potential(double pot)
         get_equation_system_name());
   
   const unsigned int var = system.variable_number("potential");
-  const double phi0 = _scaling.get_potential_scaling();
+  const double phi0 = get_scaling().get_potential_scaling();
   double level = -pot / phi0;
 
   Mesh& mesh = get_mesh();
@@ -603,8 +608,6 @@ DriftDiffusion::do_solve(void)
   {
     cerr << "switching on continuity eq..." << endl;
     get_options().coupling = coupling;
-    get_options().solver_params.nonlinear_step_tolerance = 1e-9;
-    get_options().solver_params.nonlinear_abs_tolerance = 1e-12;
     solve_newton();
   }
 
@@ -713,7 +716,7 @@ DriftDiffusion::guess_equilibrium(void)
   const MeshBase::const_element_iterator end_el =
                                   get_mesh().active_elements_end();
 
-  const double phi0 = _scaling.get_potential_scaling();
+  const double phi0 = get_scaling().get_potential_scaling();
   
   const unsigned int nn  = get_mesh().n_nodes();
   vector<unsigned short int> node_conn(nn);
@@ -779,7 +782,7 @@ DriftDiffusion::set_solver_params(NonlinearSolver<Number>& solver)
   
   SolverParameters& solver_params = _options.solver_params;
 
-  const double phi0 = _scaling.get_potential_scaling();
+  const double phi0 = get_scaling().get_potential_scaling();
   
   unsigned int nonlin_max_its = solver_params.nonlinear_max_iterations;
 
@@ -827,7 +830,7 @@ DriftDiffusion::parse_const_options(void)
 
   // mesh units are stored in Device. We make a copy here because we need
   // them in cm.
-  myopts.mesh_units = 100.0 * get_environment().get_device().get_mesh_units();
+  //myopts.mesh_units = 100.0 * get_environment().get_device().get_mesh_units();
 }
 
 
@@ -1716,7 +1719,8 @@ DriftDiffusion::calculate_currents_rstf(void)
   const unsigned int dim = mesh.mesh_dimension();
 
 
-  const double phi0 = _scaling.get_potential_scaling();
+  const double phi0 = get_scaling().get_potential_scaling();
+  const double x0_mesh =  _options.mesh_units;
 
   // the scaling for the current
   // NOTE: e current eg. is integral(Jacobian * mu * n * nabla Ef * face_normal)
@@ -1763,6 +1767,9 @@ DriftDiffusion::calculate_currents_rstf(void)
   vector<unsigned int> dof_indices_en;
   vector<unsigned int> dof_indices_ep;
 
+  // for symmetry
+  vector<double> det_sym;
+
   // will contain the node ids if an element has boundary nodes
   vector<Boundary*> node_ids;
 
@@ -1807,6 +1814,8 @@ DriftDiffusion::calculate_currents_rstf(void)
     fe->reinit(elem);
 
     sc->reinit(elem);
+    
+    get_determinant_of_symmetry_transformation(q_point, det_sym);
         
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
@@ -1851,7 +1860,7 @@ DriftDiffusion::calculate_currents_rstf(void)
       double sigma_h = -Constants::e * sc->get_hole_density() *
         sc->get_hole_mobility();
 
-      RealGradient j(JxW[qp] * (sigma_e * dEfn + sigma_h * dEfp)); 
+      RealGradient j(JxW[qp] * det_sym[qp] * (sigma_e * dEfn + sigma_h * dEfp)); 
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
@@ -1905,7 +1914,8 @@ DriftDiffusion::calculate_currents_surfint(void)
 
   const unsigned int dim = mesh.mesh_dimension();
 
-  const double phi0 = _scaling.get_potential_scaling();
+  const double phi0 = get_scaling().get_potential_scaling();
+  const double x0_mesh =  _options.mesh_units;
 
   // the scaling for the current
   // NOTE: e current eg. is integral(Jacobian * mu * n * nabla Ef * face_normal)
@@ -1961,6 +1971,9 @@ DriftDiffusion::calculate_currents_surfint(void)
   vector<unsigned int> dof_indices_en;
   vector<unsigned int> dof_indices_ep;
 
+  // for symmetry
+  vector<double> det_sym;
+
   MeshBase::const_element_iterator el =
                                   mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el =
@@ -2003,6 +2016,8 @@ DriftDiffusion::calculate_currents_surfint(void)
           fe_face->reinit(elem, s);
 
           int phi_size = phi.size();
+    
+          get_determinant_of_symmetry_transformation(q_point, det_sym);
 
           double current = 0.0;
 
@@ -2047,7 +2062,7 @@ DriftDiffusion::calculate_currents_surfint(void)
             Real cond_h = Constants::e * sc->get_hole_mobility() *
               sc->get_hole_density();
 
-            current += -JxW[qp] * (cond_e * dEfn + cond_h * dEfp);
+            current += -JxW[qp] * det_sym[qp] * (cond_e * dEfn + cond_h * dEfp);
           } // end loop over quadrature points
 
           _boundary_currents[boundary] += current;
@@ -3125,7 +3140,7 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
   // we calculate on a scaled mesh with |xmax - xmin| = 1, but we did not 
   // explicitly scale the mesh, so we have to account for this in the code,
   // assuming that the mesh is drawn in units of 'mesh_units'
-  const double x0_mesh = x0 / params.mesh_units;
+  const double x0_mesh = x0 / scaling.get_calc_mesh_units();
   //
   // the scaling value for the jacobian
   double J_scale = x0_mesh;
@@ -3799,7 +3814,7 @@ DriftDiffusion::do_assembly_jacobian_box1D(const NumericVector<Number>& x,
   // we calculate on a scaled mesh with |xmax - xmin| = 1, but we did not 
   // explicitly scale the mesh, so we have to account for this in the code,
   // assuming that the mesh is drawn in units of 'mesh_units'
-  const double x0_mesh = x0 / params.mesh_units;
+  const double x0_mesh = x0 / scaling.get_calc_mesh_units();
   //
   // the scaling value for the jacobian
   double J_scale = x0_mesh;
@@ -4517,7 +4532,7 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
   // we calculate on a scaled mesh with |xmax - xmin| = 1, but we did not 
   // explicitly scale the mesh, so we have to account for this in the code,
   // assuming that the mesh is drawn in units of 'mesh_units'
-  const double x0_mesh = x0 / params.mesh_units;
+  const double x0_mesh = x0 / scaling.get_calc_mesh_units();
   //
   // the scaling value for the jacobian
   double J_scale;
@@ -4615,6 +4630,9 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
   vector<unsigned int> dof_indices_en;
   vector<unsigned int> dof_indices_ep;
 
+  vector<double> det_sym;
+  vector<double> det_sym_face;
+
   residual.zero();
 
   MeshBase::const_element_iterator el =
@@ -4685,6 +4703,9 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
 
     sc->reinit(elem);
 
+    // for symmetries
+    get_determinant_of_symmetry_transformation(q_point, det_sym);
+
 
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
@@ -4753,7 +4774,7 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
       //
 
       // the jacobian x weight x scaling
-      double J = JxW[qp] / J_scale;
+      double J = JxW[qp] / J_scale * det_sym[qp];
 
       // 
       // First we will build the system matrix Ke_ij
@@ -4860,7 +4881,7 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
           fe_face->get_dphi();
           
         // physical coordinates of the quadrature points
-        const vector<Point>& q_point = fe_face->get_xyz();
+        const vector<Point>& q_point_face = fe_face->get_xyz();
 
         const vector<Point>& face_normals = fe_face->get_normals();
 
@@ -4871,6 +4892,9 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
           fe_face->reinit(elem, s);
 
           int phi_size = phi_face.size();
+
+          // for symmetries
+          get_determinant_of_symmetry_transformation(q_point_face, det_sym_face);
 
           // now integrate to include von Neumann and mixed type BCs
           // and polarization
@@ -4891,7 +4915,7 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
             }
             
             sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-            sc->set_coordinates(q_point[qp]);
+            sc->set_coordinates(q_point_face[qp]);
             sc->set_electric_field(phi0 * e_field);
             // TODO the contact model should do this by itself:
             //sc->calculate_densities();
@@ -4929,7 +4953,7 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
 
 
             // the jacobian x weight x scaling
-            double J = JxW_face[qp] / Jface_scale;
+            double J = JxW_face[qp] / Jface_scale * det_sym_face[qp];
 
             // first the contributions to Ke_ij
             for (unsigned int i = 0; i < n_dofs; i++)
@@ -5309,7 +5333,7 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
   // we calculate on a scaled mesh with |xmax - xmin| = 1, but we did not 
   // explicitly scale the mesh, so we have to account for this in the code,
   // assuming that the mesh is drawn in units of 'mesh_units'
-  const double x0_mesh = x0 / params.mesh_units;
+  const double x0_mesh = x0 / scaling.get_calc_mesh_units();
   //
   // the scaling value for the jacobian
   double J_scale;
@@ -5367,7 +5391,7 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
   // Data will be given for each quadrature point.
   // 
   // Jacobian * quadrature weight at each integration point.   
-  const vector<Real>& JxW = fe->get_JxW();
+  const vector<double>& JxW = fe->get_JxW();
   //
   // physical coordinates of the quadrature points
   const vector<Point>& q_point = fe->get_xyz();
@@ -5406,6 +5430,9 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
   vector<unsigned int> dof_indices_ep;
+
+  vector<double> det_sym;
+  vector<double> det_sym_face;
 
   jacobian.zero();
 
@@ -5478,6 +5505,9 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
 
     sc->reinit(elem);
 
+    // for symmetries
+    get_determinant_of_symmetry_transformation(q_point, det_sym);
+
 
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
@@ -5547,8 +5577,8 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
       //           = Ke_ij + dKe_il/dX_j * X_l - dFe_i/dX_j
       //   
 
-      // the jacobian x weight x scaling
-      double J = JxW[qp] / J_scale;
+      // the jacobian x weight x scaling x symmetry
+      double J = JxW[qp] / J_scale * det_sym[qp];
 
       // 
       // First we will build the system matrix Ke_ij
@@ -5745,7 +5775,7 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
           fe_face->get_dphi();
           
         // physical coordinates of the quadrature points
-        const vector<Point>& q_point = fe_face->get_xyz();
+        const vector<Point>& q_point_face = fe_face->get_xyz();
 
         const vector<Point>& face_normals = fe_face->get_normals();
 
@@ -5756,6 +5786,9 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
           fe_face->reinit(elem, s);
 
           int phi_size = phi_face.size();
+
+          // for symmetries
+          get_determinant_of_symmetry_transformation(q_point_face, det_sym_face);
 
           // now integrate to include von Neumann and mixed type BCs
           // and polarization
@@ -5776,7 +5809,7 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
             }
             
             sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-            sc->set_coordinates(q_point[qp]);
+            sc->set_coordinates(q_point_face[qp]);
             sc->set_electric_field(phi0 * e_field);
             // TODO the contact model should do this by itself:
             //sc->calculate_densities();
@@ -5814,7 +5847,7 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
 
 
             // the jacobian x weight x scaling
-            double J = JxW_face[qp] / Jface_scale;
+            double J = JxW_face[qp] / Jface_scale * det_sym_face[qp];
 
             // first the contributions to Ke_ij
             for (unsigned int i = 0; i < n_dofs; i++)
