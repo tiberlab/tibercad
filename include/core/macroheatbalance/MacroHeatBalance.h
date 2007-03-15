@@ -15,7 +15,7 @@ class Mesh;
 //!  Class to solve heat transport problem
 class MacroHeatBalance : public SimulationInterface
 /*!
-   
+*-\nabla \cdot(k \nabla T)+ \nabla \cdot (T P_n J_n + T P_p J_p)=-\nabla cdot (J_n \phi_n + J_p \phi_p)
 */
 
 {
@@ -26,7 +26,8 @@ class MacroHeatBalance : public SimulationInterface
   {
     double  lin_tol; //!< linear tolerance 
     std::string  current_simulation; //!< name of drift-diffusion simmulation
-    bool Thompson_effect; 
+    std::string  thomson_peltier_effect;
+   
     
     double work_units; //!< SI units, has to be consistent with the database parameters
 
@@ -79,7 +80,6 @@ class MacroHeatBalance : public SimulationInterface
   //!non-static method that actually does matrix assembling 
   void do_assemble(EquationSystems& es, const std::string& system_name);
 
-  
   static Device* _device;
 
   //!Dimension of mesh

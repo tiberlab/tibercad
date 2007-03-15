@@ -53,3 +53,7 @@ mu_max_h = 200
 
 # Lattice thermal conductivity [W/(cm*K)]
 therm_lat_cond = 1.5
+
+#Thermoelectric power [V/k]
+eTEpower = 1
+hTEpower = 1

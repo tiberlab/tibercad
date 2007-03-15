@@ -26,6 +26,7 @@
  #include "dense_subvector.h"
 
 #include "LatticeThermalConductivity.h"
+#include "ThermoelectricPower.h"
 #include "HeatModel.h"
 #include "SimulationEnvironment.h"
 #include "Material.h"
@@ -54,6 +55,17 @@ void MacroHeatBalance::parse_options( )
       throw InitFailedException("Unknown current model" + opt.current_simulation );
   }
 
+
+  opt.thomson_peltier_effect = sim_opt.get_option("thomson_peltier", "noTPeffect");
+
+  if (opt.thomson_peltier_effect != "noTPeffect")
+  {
+    _dd_simul = dynamic_cast< DriftDiffusion* > ( find_simulation(opt.thomson_peltier_effect) );
+ 
+    if (_dd_simul == NULL)
+      throw InitFailedException("Unknown current model" + opt.thomson_peltier_effect);
+     
+  }
 
 
  
@@ -217,6 +229,8 @@ void MacroHeatBalance::assemble_heat_matrix(EquationSystems& es,
 				     const std::string& system_name)
 {
 
+
+
    static_this->do_assemble( es, system_name);
 
 }
@@ -226,48 +240,54 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 {
 
   SimulationEnvironment& se = get_environment(); 
-
- LinearImplicitSystem& system = *my_system;
-
- const unsigned int uvar = system.variable_number("T");
-
- DofMap& dof_map = system.get_dof_map();
-
- FEType fe_type = dof_map.variable_type(uvar);
-
- AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
-
- QGauss qrule (dim, FIFTH); //may be could be decreased (CHECK!!!)
-
+  
+  LinearImplicitSystem& system = *my_system;
+  
+  const unsigned int uvar = system.variable_number("T");
+  
+  DofMap& dof_map = system.get_dof_map();
+  
+  FEType fe_type = dof_map.variable_type(uvar);
+  
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  
+  QGauss qrule (dim, FIFTH); //may be could be decreased (CHECK!!!)
+  
   // quadrature rule  
   fe -> attach_quadrature_rule (&qrule);
- 
-
+  
+  
   // Declare a special finite element object for
   // boundary integration.
   AutoPtr<FEBase>  fe_face(FEBase::build(dim, fe_type));
-
- // Boundary integration requires one quadraure rule,
- // with dimensionality one less than the dimensionality
- // of the element.
- QGauss qface(dim-1, THIRD);
   
- // Tell the finite element object to use our
- // quadrature rule.
- 
-    fe_face -> attach_quadrature_rule (&qface);
-
- // Here we define some references to cell-specific data that
+  // Boundary integration requires one quadraure rule,
+  // with dimensionality one less than the dimensionality
+  // of the element.
+  QGauss qface(dim-1, THIRD);
+  
+  // Tell the finite element object to use our
+  // quadrature rule.
+  
+  fe_face -> attach_quadrature_rule (&qface);
+  
+  // Here we define some references to cell-specific data that
   // will be used to assemble the linear system.
   //
   // The element Jacobian * quadrature weight at each integration point.   
   const std::vector<Real>& JxW = fe->get_JxW();
-
+  
   // The physical XY locations of the quadrature points on the element.
   // These might be useful for evaluating spatially varying material
   // properties at the quadrature points.
   const std::vector<Point>& q_point = fe->get_xyz();
+
+  //Provides the options
+  const ModelOptions& sim_opt = get_options();
  
+  opt.current_simulation = sim_opt.get_option("current_simulation", "no_current");
+
+  ///////////////
 
   // The element shape functions evaluated at the quadrature points.
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
@@ -285,14 +305,24 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
+  
   Tensor2Sym kappa;
 
   HeatModel* heat_model;
 
   const LatticeThermalConductivity* lattice_conductivity; 
+
   
+  double eTEpower;
+
+  double hTEpower;
+
+  const ThermoelectricPower* thermoelectric_power;  
+
+
   //Define the vectors which store the Drift Diffusion solutions
   std::vector<DriftDiffusion::Solution>  potentials;   
+
   std::vector<DriftDiffusion::Currents>   currents; 
 
 
@@ -308,255 +338,302 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 
   //Initialize pot_per current
-   std::vector< std::vector<double> > pot_per_current;
-   
-   for ( ; el != end_el ; ++el) 
-   {  
+  std::vector< std::vector<double> > pot_per_current;
+  
+  for ( ; el != end_el ; ++el)   //loop over elements
+  {  
     const Elem* elem = *el;
     
     ID subdomain = elem->subdomain_id();
-
-   
+    
+    
     const Material* mat = _device->get_material(subdomain);
-
-    heat_model =  (  dynamic_cast<HeatModel*> (  mat ->get_model(get_id()) )  ); 
-
+    
+    heat_model =  (  dynamic_cast<HeatModel*> (  mat ->get_model(get_id()) )  );
+    
+    
+    //Lattice thermal  conductivity
     lattice_conductivity = heat_model->get_lattice_conductivity();
-
+    
     lattice_conductivity->get_conductivity(kappa);
 
    
+    //Inclusion of Peltier effect
+     
+    
+     if (opt.thomson_peltier_effect != "noTPeffect")    
+     {
+       //Electron Thermoelectric power
+       
+       thermoelectric_power = heat_model->get_thermoelectric_power();
+       
+       thermoelectric_power->get_thermoelectric_power_e(eTEpower);
 
+       thermoelectric_power->get_thermoelectric_power_h(hTEpower);
+            
+     }
+    	
+	
+	
     dof_map.dof_indices (elem, dof_indices); 
     
     const unsigned int n_dofs   = dof_indices.size();
     
     fe->reinit (elem);
-
+    
     Ke.resize(n_dofs, n_dofs);
     Fe.resize(n_dofs);
-
-
+    
+    
     //Initialize J*pot    
     if (_dd_simul != NULL)
     {
       _dd_simul->get_solution(elem,q_point,potentials);  
       _dd_simul->get_solution(elem,q_point,currents);
     }
-
-   
-    Fe.zero();         
- 
     
-    for (unsigned int qp=0; qp<qrule.n_points(); qp++)
-    {//volumic integration loop
+    
+    Fe.zero();         
+    
+    
+    // for (unsigned int qp=0; qp<qrule.n_points(); qp++)  
 
+    // { //loop over quadrature points
+      
+      
+      for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
 
- 
+      { // loop over test function
 
-
-      for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
-      {
 	//!let us check if it belongs to a reservoir boundary
 	const Node* nd = elem->get_node(p1);
 	
 	Boundary* bd = se.get_boundary(nd); 
 	
 	if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
-	{
+
+	{ //if belongs to boundary
+
 	  ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );
 	  if (contact->get_type() == ThermalContact::Reservoir)
-	  {//heat reservoir---
-	   	   
+	  {//heat reservoir---{//loop over basis functions
+	    
 	    Ke(p1,p1) = 1.0;
 	    
 	    Fe(p1) = ( dynamic_cast<Reservoir*> (contact) )->get_temperature();
-	   
-	  }
-	}
-	else
-	{
+	    
+	  }//end reservoir
+	} // end if belongs to boundary
+	else // else if belongs to boundary
+
+	{ //if doesn't belongs to boundary
+	  
+           for (unsigned int qp=0; qp<qrule.n_points(); qp++)  
+           {//Loop over quadrature points 
 
 	  //------------------------
 	  //volume integration for matrix
 	  // - \int_V \frac{\patial \phi_{\alpha}{\partial x_i}\kappa_{i,j} \frac{\patial \phi_{\beta}{\partial x_j} dx
-
 	  
-	  for (unsigned int p2=0; p2<n_dofs; p2++) //basis functions
-	  {
-	    double value = 0.0;
-	    
-	    for (short i = 0; i < dim; i++) //test function derivative
-	      for (short j = 0; j < dim; j++) //basis function derivative
-	      {
+	  
+	     for (unsigned int p2=0; p2<n_dofs; p2++) 
+
+	     {//loop over basis functions
+            
+
+             double value = 0.0;
+
+	     //for (unsigned int qp=0; qp<qrule.n_points(); qp++) 
+	     // {//Loop over quadrature points
+
+ 
+
+	    for (short i = 0; i < dim; i++) 
+
+	    {//loop over direction (1)
+
+	      for (short j = 0; j < dim; j++)
+
+	      {//loop over direction (2)
+
 		double kappa_value;
 		if (i < j) 
 		  kappa_value = kappa(j+1, i+1);
 		else
 		  kappa_value = kappa(i+1, j+1);
-		
-		value += -JxW[qp] * kappa_value * dphi[p1][qp](i) * dphi[p2][qp](j) /(opt.length_scale * opt.length_scale);
-		
-	      }
-	  
-	    value *= my_Jacobian;
+
 	   
-	    Ke(p1,p2) += value;
+	        value += -JxW[qp] * kappa_value * dphi[p1][qp](i) * dphi[p2][qp](j) /(opt.length_scale * opt.length_scale);
+                
+		
+	      }//end loop over direction (2)
 
-	  }
+	      //This includes the Peltier-Thompson effects   
+	      if (opt.thomson_peltier_effect != "noTPeffect")  
 
-	  //volume integration for matrix for rhs
+	      { //if it includes the Peltier-Thompson effects
+
+	          value +=-JxW[qp]*phi[p1][qp]*dphi[p2][qp](i)*(eTEpower*currents[qp].jn(i)+hTEpower*currents[qp].jp(i) ) /(opt.length_scale);
+	      }//end if it includes the Peltier-Thompson effects
+               
+	       
+	   }//end loop over direction (1)												
+	    
+	   value *= my_Jacobian;
+	    
+
+           Ke(p1,p2) += value;
+	    
+       } //loop over basis functions
 	  
-	  if (_dd_simul != NULL)
+       //volume integration for matrix for rhs
+      
+       if  (opt.current_simulation != "no_current")
+
+       { // If the joule effect must be included
 	    for (short i = 0; i < dim; i++) 
 	      Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
 		( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
 		/ opt.length_scale * my_Jacobian;
-	    
-	     
-	    
-
-	    
-	   
+       } //end if the joule effect must be included
 	  
-	
-	  
-	  
-	}
-      } 
-      
-      
-    }
-     
 
-    
+       }//end Loop over quadrature points  
 
-    //TODO surface
-    if (_dd_simul != NULL)
-      for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
-      {
-	//!let us check if it belongs to a reservoir boundary
-	const Node* nd = elem->get_node(p1);
-	
-	Boundary* bd = se.get_boundary(nd); 
 
-	bool belongs_to_reservoir = false;
-
-	const unsigned int num_sides = elem->n_sides();
-
-	if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
-	{
-	  ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
-
-	  if (contact->get_type() == ThermalContact::Reservoir)   belongs_to_reservoir = true;
-	}
+     } //end if it belongs to boundary
  
 
-
-	if ( !belongs_to_reservoir ) 
-	{//not fixed temperature2
-	  //assert(belongs_to_reservoir = false);
-
-
-
+   } // end loop over test functions
+      
+	//  }//end loop over quadrature points
+     
+    
+    if (opt.current_simulation != "no_current")
+     	for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+	{
+	  //!let us check if it belongs to a reservoir boundary
+	  const Node* nd = elem->get_node(p1);
+	  
+	  Boundary* bd = se.get_boundary(nd); 
+	  
+	  bool belongs_to_reservoir = false;
+	  
 	  const unsigned int num_sides = elem->n_sides();
 	  
-	  for (unsigned int side = 0; side<num_sides; side++)
+	  if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
 	  {
-	    const ElementSide elside(elem->top_parent(), side);
-
-	    if ( (_dd_simul->get_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
+	    ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
+	    
+	    if (contact->get_type() == ThermalContact::Reservoir)   belongs_to_reservoir = true;
+	  }
+	  
+	  
+	  
+	  if ( !belongs_to_reservoir ) 
+	  {//not fixed temperature2
+	    //assert(belongs_to_reservoir = false);
+	    
+	    
+	    
+	    const unsigned int num_sides = elem->n_sides();
+	    
+	    for (unsigned int side = 0; side<num_sides; side++)
 	    {
+	      const ElementSide elside(elem->top_parent(), side);
 	      
-	      std::vector<DriftDiffusion::Solution>  potentials;   
-	      std::vector<DriftDiffusion::Currents>   currents; 
-
-	      if (dim > 1)
-	      {
-		const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
-		
-		const std::vector<Real>& JxW_face = fe_face->get_JxW();
-		
-		const std::vector<Point >& qface_point = fe_face->get_xyz();
-		
-		const std::vector<Point> & normal = fe_face->get_normals();
-		
-		fe_face->reinit(elem, side);
-		
-		_dd_simul->get_solution(elem,q_point,potentials);  
-
-		_dd_simul->get_solution(elem,q_point,currents);
-		
-		for (short i = 0; i < 3; i++)
-		  for (unsigned int qp=0; qp < qface.n_points(); qp++)
-		    Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
-		      ( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) ) * 
-		      (my_Jacobian/opt.length_scale);
-		}
-	      else //dim = 1
+	      if ( (_dd_simul->get_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
 	      {
 		
-		if (p1== side)
+		std::vector<DriftDiffusion::Solution>  potentials;   
+		std::vector<DriftDiffusion::Currents>   currents; 
+		
+		if (dim > 1)
 		{
-		  std::vector<double> normal(3);
-		  Point p = elem->point(side);
-		  Point pc = elem->centroid();
-		 
-
-
-		  const double temp = sqrt((p(0) - pc(0)) * (p(0) - pc(0)) 
-					   +(p(1) - pc(1)) * (p(1) - pc(1)) + 
-					   (p(2) - pc(2)) * (p(2) - pc(2)));
-
-
-		  for (short i = 0; i < 3; i++)
-		    normal[i] = (p(i) - pc(i))/temp;
-		 
-		    
-		  std::vector<Point > qface_point(1);
-		    
-		  qface_point[0] = elem->point(p1);
-
-
-		  _dd_simul->get_solution(elem,qface_point,potentials);  
+		  const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
 		  
-		  _dd_simul->get_solution(elem,qface_point,currents);
-		    
-
+		  const std::vector<Real>& JxW_face = fe_face->get_JxW();
 		  
+		  const std::vector<Point >& qface_point = fe_face->get_xyz();
+		  
+		  const std::vector<Point> & normal = fe_face->get_normals();
+		  
+		  fe_face->reinit(elem, side);
+		  
+		  _dd_simul->get_solution(elem,q_point,potentials);  
+		  
+		  _dd_simul->get_solution(elem,q_point,currents);
 		  
 		  for (short i = 0; i < 3; i++)
-		  {  
-		    Fe(p1) +=   normal[i] * 
-		      ( currents[0].jn(i)*potentials[0].fermi_e + potentials[0].fermi_h * currents[0].jp(i) )   ;
-		    
-		     
-		   }
-		 
-
-
-		    
+		    for (unsigned int qp=0; qp < qface.n_points(); qp++)
+		      Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
+			( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) ) * 
+			(my_Jacobian/opt.length_scale);
 		}
-		
+		else //dim = 1
+		{
+		  
+		  if (p1== side)
+		  {
+		    std::vector<double> normal(3);
+		    Point p = elem->point(side);
+		    Point pc = elem->centroid();
+		    
+		    
+		    
+		    const double temp = sqrt((p(0) - pc(0)) * (p(0) - pc(0)) 
+					     +(p(1) - pc(1)) * (p(1) - pc(1)) + 
+					     (p(2) - pc(2)) * (p(2) - pc(2)));
+		    
+		    
+		    for (short i = 0; i < 3; i++)
+		      normal[i] = (p(i) - pc(i))/temp;
+		    
+		    
+		    std::vector<Point > qface_point(1);
+		    
+		    qface_point[0] = elem->point(p1);
+		    
+		    
+		    _dd_simul->get_solution(elem,qface_point,potentials);  
+		    
+		    _dd_simul->get_solution(elem,qface_point,currents);
+		    
+		    
+		    
+		    
+		    for (short i = 0; i < 3; i++)
+		    {  
+		      Fe(p1) +=   normal[i] * 
+			( currents[0].jn(i)*potentials[0].fermi_e + potentials[0].fermi_h * currents[0].jp(i) )   ;
+		      
+		      
+		    }
+		    
+		    
+		    
+		    
+		  }
+		  
+		}
 	      }
 	    }
+	    
 	  }
 	  
 	}
-	
-      }
+      
+      
+      dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
+      
+      
+      system.matrix->add_matrix (Ke, dof_indices);
+      system.rhs->add_vector    (Fe, dof_indices); 
+      
+      
+  } //End Loop over elements
     
-   
-    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
-
+  //   system.matrix->print_matlab("Matr.m");
+  //  system.rhs->print();
     
-    system.matrix->add_matrix (Ke, dof_indices);
-    system.rhs->add_vector    (Fe, dof_indices); 
-   
-
-  }
-
-   // system.matrix->print_matlab("Matr.m");
-   //  system.rhs->print();
- 
-}
+   }

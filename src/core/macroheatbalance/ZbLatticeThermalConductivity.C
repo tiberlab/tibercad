@@ -14,7 +14,7 @@ void  ZbLatticeThermalConductivity::read_database(void)
   _conductivity(1,1) = k;
   _conductivity(2,2) = k;
   _conductivity(3,3) = k;
-  
+
 }
 
 //---------------------------------------------------------//
@@ -24,9 +24,9 @@ void ZbLatticeThermalConductivity::do_init(void)
   ModelOptions & options = get_options ();
   double k = options.get_option("therm_lat_cond", _conductivity(1,1) );
 
-  _conductivity(1,1) = k;
-  _conductivity(2,2) = k;
-  _conductivity(3,3) = k;
+   _conductivity(1,1) = k;
+   _conductivity(2,2) = k;
+   _conductivity(3,3) = k;
   
   Material* mat = get_material();
 

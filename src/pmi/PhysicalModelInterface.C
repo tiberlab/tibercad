@@ -40,6 +40,9 @@
 #include "EFAbulkModel.h"
 
 
+#include "ThermoelectricPower.h"
+
+
 #include  "ZbLatticeThermalConductivity.h"
 #include  "WzLatticeThermalConductivity.h"
 #include  "HeatModel.h"
@@ -120,7 +123,9 @@ PhysicalModelInterface::create(const std::string& name,
     mod = WzLatticeThermalConductivity::create();
   else if (name == "thermal")
     mod = HeatModel::create();
-
+  else if (name == "thermoelectric_power") 
+   mod = ThermoelectricPower::create();
+ 
 
 
   register_model(mod);

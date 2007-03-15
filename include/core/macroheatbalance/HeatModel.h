@@ -4,6 +4,8 @@
 
 #include "PhysicalModel.h"
 #include "LatticeThermalConductivity.h"
+#include "ThermoelectricPower.h"
+
 
 
 //!Class that contains all the object, necessary for Heat Transport solver
@@ -21,10 +23,16 @@ class HeatModel: public PhysicalModel
   
   inline const LatticeThermalConductivity* get_lattice_conductivity(void) const;
 
+  inline const ThermoelectricPower* get_thermoelectric_power(void) const;
+
+  
  private:
 
-  LatticeThermalConductivity* kappa;
- 
+   LatticeThermalConductivity* kappa;
+
+   ThermoelectricPower* thermoelectric_power;
+  
+
   //!copy constructor should not be used
   HeatModel (const HeatModel &  t) {};
   
@@ -60,5 +68,12 @@ inline const LatticeThermalConductivity* HeatModel::get_lattice_conductivity(voi
 {
   return( kappa );
 }
+
+inline const ThermoelectricPower* HeatModel::get_thermoelectric_power(void) const
+{
+  return( thermoelectric_power);
+}
+
+
 
 #endif
