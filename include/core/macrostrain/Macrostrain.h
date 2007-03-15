@@ -70,7 +70,7 @@
 #include "SimulationInterface.h"
 #include "Device.h"
 #include "MacrostrainModel.h"
-
+#include "DriftDiffusion.h"
 
 
 
@@ -206,7 +206,11 @@ class Macrostrain : public SimulationInterface
 
  private:
 
+  //!consider converse piezo-effect or not 
+  bool converse_piezo_effect;
 
+  //!pointer to a drift-diffusion object that is used to get electric-field  data 
+  DriftDiffusion* poisson_equation;
 
   //!pointer to the equation systems 
   EquationSystems*   equation_systems; 

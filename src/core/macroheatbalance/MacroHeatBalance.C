@@ -396,65 +396,53 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     Fe.zero();         
     
     
-    // for (unsigned int qp=0; qp<qrule.n_points(); qp++)  
-
-    // { //loop over quadrature points
+    
       
+    for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
       
-      for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
+    { // loop over test function
 
-      { // loop over test function
-
-	//!let us check if it belongs to a reservoir boundary
-	const Node* nd = elem->get_node(p1);
+      //!let us check if it belongs to a reservoir boundary
+      const Node* nd = elem->get_node(p1);
 	
-	Boundary* bd = se.get_boundary(nd); 
+      Boundary* bd = se.get_boundary(nd); 
 	
-	if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+      if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
 
-	{ //if belongs to boundary
+      { //if belongs to boundary
 
-	  ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );
-	  if (contact->get_type() == ThermalContact::Reservoir)
-	  {//heat reservoir---{//loop over basis functions
+	ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );
+	if (contact->get_type() == ThermalContact::Reservoir)
+	{//heat reservoir---{//loop over basis functions
 	    
-	    Ke(p1,p1) = 1.0;
-	    
-	    Fe(p1) = ( dynamic_cast<Reservoir*> (contact) )->get_temperature();
-	    
-	  }//end reservoir
-	} // end if belongs to boundary
-	else // else if belongs to boundary
-
-	{ //if doesn't belongs to boundary
+	  Ke(p1,p1) = 1.0;
 	  
-           for (unsigned int qp=0; qp<qrule.n_points(); qp++)  
-           {//Loop over quadrature points 
+	  Fe(p1) = ( dynamic_cast<Reservoir*> (contact) )->get_temperature();
+	  
+	}//end reservoir
+      } 
+      else 
+      {
+	for (unsigned int qp=0; qp<qrule.n_points(); qp++)  
+	{//Loop over quadrature points 
 
 	  //------------------------
 	  //volume integration for matrix
 	  // - \int_V \frac{\patial \phi_{\alpha}{\partial x_i}\kappa_{i,j} \frac{\patial \phi_{\beta}{\partial x_j} dx
 	  
 	  
-	     for (unsigned int p2=0; p2<n_dofs; p2++) 
-
-	     {//loop over basis functions
+	  for (unsigned int p2=0; p2<n_dofs; p2++) 
+	  {//loop over basis functions
             
 
-             double value = 0.0;
-
-	     //for (unsigned int qp=0; qp<qrule.n_points(); qp++) 
-	     // {//Loop over quadrature points
-
- 
-
+	    double value = 0.0;
+	    
+	    
 	    for (short i = 0; i < dim; i++) 
-
-	    {//loop over direction (1)
+	    {//loop over direction (1); test function derivative
 
 	      for (short j = 0; j < dim; j++)
-
-	      {//loop over direction (2)
+	      {//loop over direction (2); basis function derivative
 
 		double kappa_value;
 		if (i < j) 
@@ -470,75 +458,70 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 	      //This includes the Peltier-Thompson effects   
 	      if (opt.thomson_peltier_effect != "noTPeffect")  
-
-	      { //if it includes the Peltier-Thompson effects
-
-	          value +=-JxW[qp]*phi[p1][qp]*dphi[p2][qp](i)*(eTEpower*currents[qp].jn(i)+hTEpower*currents[qp].jp(i) ) /(opt.length_scale);
-	      }//end if it includes the Peltier-Thompson effects
+	      {
+	          value += -JxW[qp]* phi[p1][qp] * dphi[p2][qp](i)*
+		    (eTEpower*currents[qp].jn(i) + hTEpower*currents[qp].jp(i) ) /(opt.length_scale);
+	      }
                
 	       
-	   }//end loop over direction (1)												
+	    }//end loop over direction (1)												
 	    
 	   value *= my_Jacobian;
 	    
 
            Ke(p1,p2) += value;
 	    
-       } //loop over basis functions
+	  } //loop over basis functions
 	  
-       //volume integration for matrix for rhs
+	 
       
-       if  (opt.current_simulation != "no_current")
-
-       { // If the joule effect must be included
+	  if  (opt.current_simulation != "no_current")
+	  { 
 	    for (short i = 0; i < dim; i++) 
 	      Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
 		( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
 		/ opt.length_scale * my_Jacobian;
-       } //end if the joule effect must be included
+	  } 
 	  
 
-       }//end Loop over quadrature points  
+	}//end Loop over quadrature points  
 
 
-     } //end if it belongs to boundary
+      } //end if it belongs to boundary
  
 
-   } // end loop over test functions
+    } // end loop over test functions
       
-	//  }//end loop over quadrature points
+
      
     
     if (opt.current_simulation != "no_current")
-     	for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+      for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+      {
+	//!let us check if it belongs to a reservoir boundary
+	const Node* nd = elem->get_node(p1);
+	
+	Boundary* bd = se.get_boundary(nd); 
+	  
+	bool belongs_to_reservoir = false;
+	
+	const unsigned int num_sides = elem->n_sides();
+	
+	if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
 	{
-	  //!let us check if it belongs to a reservoir boundary
-	  const Node* nd = elem->get_node(p1);
+	  ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
 	  
-	  Boundary* bd = se.get_boundary(nd); 
+	  if (contact->get_type() == ThermalContact::Reservoir)   belongs_to_reservoir = true;
+	}
+	
 	  
-	  bool belongs_to_reservoir = false;
+	  
+	if ( !belongs_to_reservoir ) 
+	{//not fixed temperature2
 	  
 	  const unsigned int num_sides = elem->n_sides();
 	  
-	  if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
-	  {
-	    ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
-	    
-	    if (contact->get_type() == ThermalContact::Reservoir)   belongs_to_reservoir = true;
-	  }
-	  
-	  
-	  
-	  if ( !belongs_to_reservoir ) 
-	  {//not fixed temperature2
-	    //assert(belongs_to_reservoir = false);
-	    
-	    
-	    
-	    const unsigned int num_sides = elem->n_sides();
-	    
-	    for (unsigned int side = 0; side<num_sides; side++)
+	  for (unsigned int side = 0; side<num_sides; side++)
 	    {
 	      const ElementSide elside(elem->top_parent(), side);
 	      
@@ -619,9 +602,9 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	      }
 	    }
 	    
-	  }
-	  
 	}
+	  
+      }
       
       
       dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
@@ -636,4 +619,4 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   //   system.matrix->print_matlab("Matr.m");
   //  system.rhs->print();
     
-   }
+}
