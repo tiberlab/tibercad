@@ -81,3 +81,12 @@ Tensor1  ZbPiezoelectricity::get_polariz_cryst(Tensor2Sym& strain_cryst)
   polariz(3) = 2*e14*strain_cryst(2,1);
   return(polariz);
 }
+//-----------------------------------------------------------------//
+void  ZbPiezoelectricity::calculate_product_by_vector(const Tensor1& f, Tensor2Sym& r) const
+{
+  r = 0;
+  r(3,2) = f(1) * e14;
+  r(3,1) = f(2) * e14;
+  r(2,1) = f(3) * e14; 
+}
+

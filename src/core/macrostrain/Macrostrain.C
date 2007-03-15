@@ -1449,43 +1449,7 @@ void Macrostrain::do_solve()
   //--------------------------------------------------------------------------------------------------//
  }
 
-//-------------------------------------------------------------------------------------//
-/*
-void Macrostrain::assemble_material_list()
-{
-  Mesh& mesh = equation_systems->get_mesh();
- 
 
-  const unsigned int N_elem = mesh.n_active_elem();
-
-  material_of_elem.resize( N_elem );
-
- 
-  
-  MeshBase::const_element_iterator el  = mesh.active_elements_begin();
-  MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-
-    
-
-  unsigned int el_number = 0;
-  
-  for ( ; el != end_el ; ++el) 
-    {
-      const Elem* elem = *el;
-	  unsigned int  mat;
-	  
-	  mat  = (unsigned int) (*meshdata)(elem->top_parent(),0);
-	  
-	  
-	  
-	  material_of_elem[el_number] = mat;
-	  
-	  el_number++;
-
-    }
-     
-}
-*/
 //-----------------------------------------------------------------//
 void Macrostrain::update_eps0_list()
 {

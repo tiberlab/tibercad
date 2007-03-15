@@ -15,6 +15,9 @@ class WzPiezoelectricity : public Piezoelectricity
   
   Tensor1 get_polariz_cryst(Tensor2Sym& strain_cryst);
 
+  virtual void calculate_product_by_vector(const Tensor1& f, Tensor2Sym& r) const;
+
+
   static WzPiezoelectricity* create();
 
  private:
