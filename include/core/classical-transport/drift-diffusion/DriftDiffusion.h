@@ -1183,6 +1183,8 @@ DriftDiffusion::EField&
 DriftDiffusion::EField::operator=(double other)
 {
   _efield = other;
+
+  return *this;
 }
 
 

@@ -3,14 +3,14 @@
 # Description of  the  device physical regions
 $Device
 {
-   Region nside 
+   Region n_side 
    {
      reg_numb = 2
      mat = Si
      doping = 1e18 doping_type = donor
    }
 
-   Region pside 
+   Region p_side 
    {
      reg_numb = 1
      mat = Si
@@ -33,6 +33,8 @@ $Models
      physical_model recombination
      { 
        model  =  SRH
+       tau_n = 1e-10
+       tau_p = 1e-10
      }                
 
     BC_Regions  
@@ -67,8 +69,7 @@ $Solver
   {
     ksp_type = bcgs
     nonlin_max_it = 10
-   # ls_max_step = 0.025
-   # current_integration_method = rstf
+    #ls_max_step = 0.025
   }
 
   sweep
@@ -106,7 +107,7 @@ $Simulation
   solve = sweep
   resultpath = output
   output_format = gmv
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob)
 }
 
 

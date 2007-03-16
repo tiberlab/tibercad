@@ -185,6 +185,21 @@ Control::create_materials(void)
     vector<ID> region_ids;
     Utils::extract_vector(data.get_region_ID(), region_ids);
 
+    // if no numbers are specified we try to get them from the region name
+    if (region_ids.size() == 0)
+      _device->get_region_ids(data.get_region_name(), region_ids);
+    else
+      _device->set_region_name(data.get_region_name(), region_ids);
+    
+
+    if (region_ids.size() == 0)
+    {
+      ostringstream s;
+      s << "Control: physical region \'" << data.get_region_name() <<
+        "\' is not consistent with mesh.";
+      throw InitFailedException(s.str());
+    }
+
     const std::string& material = data.get_material_name();
     Material* mat = Material::create(material, data.get_options());
     _device->set_material(mat, region_ids);
@@ -228,22 +243,38 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     else
     {
       // we have to get it as vector (for the moment at least)
-      vector<ID> preg;
+      // we read them as strings as they could be region names
+      vector<string> preg;
       simopts.get_option("physical_regions", preg);
+
+      vector<ID> preg_ids;
 
       const set<ID>& regs = _device->get_region_ids();
       const set<ID>::const_iterator id_end(regs.end());
       unsigned int n = preg.size();
       for (unsigned int i = 0; i < n; i++)
       {
-        if (regs.find(preg[i]) == id_end)
+        // first check if it is a region name
+        _device->get_region_ids(preg[i], preg_ids);
+        if (preg_ids.size() != 0)
         {
-          ostringstream s;
-          s << "Control: physical region " << preg[i] <<
-            " does not exist in mesh file.";
-          throw InitFailedException(s.str());
+          for (unsigned int j = 0; j < preg_ids.size(); j++)
+            phys_regions.insert(preg_ids[j]);
         }
-        phys_regions.insert(preg[i]);
+        else
+        {
+          // it has to be a region number
+          ID id = Utils::convert<ID>(preg[i]);
+          
+          if (regs.find(id) == id_end)
+          {
+            ostringstream s;
+            s << "Control: physical region " << id <<
+              " does not exist in mesh file.";
+            throw InitFailedException(s.str());
+          }
+          phys_regions.insert(id);
+        }
       }
     }
 
@@ -337,23 +368,40 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     for ( ; bdit != bdend; ++bdit)
     {
       ID id = bdit->first;
+      const RegionStructure& data = bdit->second;
+
       set<ID> region_ids;
       vector<ID> ids;
-      Utils::extract_vector((bdit->second).get_region_ID(), ids);
+      Utils::extract_vector(data.get_region_ID(), ids);
+
+      // if no numbers are specified we try to get them from the region name
+      if (ids.size() == 0)
+        _device->get_boundary_region_ids(data.get_region_name(), ids);
+      else
+        _device->set_boundary_region_name(data.get_region_name(), ids);
+
+      if (ids.size() == 0)
+      {
+        ostringstream s;
+        s << "Control: boundary region \'" << data.get_region_name() <<
+          "\' is not consistent with mesh.";
+        throw InitFailedException(s.str());
+      }
+
       for (unsigned int i = 0; i < ids.size(); i++)
         region_ids.insert(ids[i]);
 
 #ifdef DEBUG
-      cerr << "Add boundary \'" << (bdit->second).get_region_name()
+      cerr << "Add boundary \'" << data.get_region_name()
         << "\' (region nr.";
       for (unsigned int i = 0; i < ids.size(); i++)
         cerr << " " << ids[i];
       cerr << ")\n";
 #endif
 
-      const ModelOptions& bdopts = (bdit->second).get_options();
+      const ModelOptions& bdopts = data.get_options();
 
-      Boundary* bd = new Boundary((bdit->second).get_region_name());
+      Boundary* bd = new Boundary(data.get_region_name());
       bd->set_area_factor(bdopts.get_option("area_factor", 1.0));
       BoundaryProperties* bdprop = sim->create_boundary_model(bdopts);
 

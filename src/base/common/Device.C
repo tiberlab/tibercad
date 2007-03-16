@@ -124,21 +124,22 @@ Device::set_material(Material* material, ID region_id)
 
   if (_region_ids.find(region_id) == _region_ids.end())
   {
-    std::ostringstream s;
+    ostringstream s;
     s << "Device: physical region " << region_id <<
       " does not exist in mesh file.";
     throw InitFailedException(s.str());
   }
   if (_material_map.find(region_id) != _material_map.end())
   {
-    std::ostringstream s;
+    ostringstream s;
     s << "Device: trying to redefine physical region " << region_id << ".";
     throw InitFailedException(s.str());
   }
 
   _material_map[region_id] = material;
-  std::cout << "added material " << material->get_name()
-    << " for region number " << region_id << "\n";
+  cout << "added material " << material->get_name()
+    << " for region number " << region_id
+    << " (" << get_region_name(region_id) << ")\n";
 }
 
 
@@ -149,4 +150,48 @@ Device::set_material(Material* material, const std::vector<ID>& region_ids)
 
   for (unsigned int i = 0; i < region_ids.size(); ++i)
     set_material(material, region_ids[i]);
+}
+
+
+
+void 
+Device::get_region_ids(const std::string& name, vector<ID>& ids) const
+{
+  ids.resize(0);
+  map<ID, string>::const_iterator it(_region_names.begin());
+  const map<ID, string>::const_iterator end(_region_names.end());
+  for ( ; it != end; ++it)
+    if (it->second == name)
+      ids.push_back(it->first);
+}
+
+
+
+void
+Device::get_boundary_region_ids(const std::string& name, vector<ID>& ids) const
+{
+  ids.resize(0);
+  map<ID, string>::const_iterator it(_boundary_region_names.begin());
+  const map<ID, string>::const_iterator end(_boundary_region_names.end());
+  for ( ; it != end; ++it)
+    if (it->second == name)
+      ids.push_back(it->first);
+}
+
+
+
+void 
+Device::set_region_name(const std::string& name, const vector<ID>& ids)
+{
+  for (unsigned int i = 0 ; i < ids.size(); ++i)
+    _region_names[ids[i]] = name;
+}
+
+
+
+void
+Device::set_boundary_region_name(const std::string& name, const vector<ID>& ids)
+{
+  for (unsigned int i = 0 ; i < ids.size(); ++i)
+    _boundary_region_names[ids[i]] = name;
 }

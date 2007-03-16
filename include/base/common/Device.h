@@ -144,6 +144,24 @@ class Device
     const std::string& get_boundary_region_name(ID id);
 
 
+    //! Get the region IDs of the region with name \c name
+    void get_region_ids(const std::string& name, std::vector<ID>& ids) const;
+
+
+    //! Get the region IDs of the boundary region with name \c name
+    void get_boundary_region_ids(const std::string& name,
+        std::vector<ID>& ids) const;
+
+
+    //! Set the name for a region
+    void set_region_name(const std::string& name, const std::vector<ID>& ids);
+
+
+    //! Set the name for a boundary region
+    void set_boundary_region_name(const std::string& name,
+        const std::vector<ID>& ids);
+
+
     //! Get the type of symmetry
     TiberCad::Symmetry get_symmetry(void) const;
     
@@ -240,6 +258,9 @@ class Device
     TiberCad::Symmetry _symmetry;
 
 };
+
+
+
 
 
 //

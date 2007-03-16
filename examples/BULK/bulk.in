@@ -14,26 +14,6 @@ $Device
 # Definition of  Simulation Models  and associated Boundary Conditions 
 $Models
 { 
-  model thermal
-  { 
-              
-    options
-    {
-     simulation_name = tt
-
-     physical_regions = all
-    }
-
-
-    BC_Regions  
-    {
-
-      BC_Region cold
-      {
-        BC_reg_numb = 1
-      }
-     }
-    }
 
   model driftdiffusion
   { 
@@ -104,12 +84,6 @@ $Physics
     model = unstrained
   }
 
-  thermal
-  {
-    current_simulation = driftdiffusion
-  }
- 
-
 }
 
 
@@ -119,11 +93,11 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = bulk2D.msh
-  dimension = 2
+  meshfile = bulk1D.msh
+  dimension = 1
   temperature = 300
   solve = sweep
-  resultpath = output_2D
+  resultpath = output_1D
   output_format = gmv
   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, ECurrent, HCurrent, AbsECurrent, AbsHCurrent, AbsCurrent, NetRecombination)
 }
