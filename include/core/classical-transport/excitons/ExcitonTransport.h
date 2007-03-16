@@ -5,7 +5,6 @@
 
 #include "SimulationInterface.h"
 #include "SimulationOptions.h"
-#include "Scaling.h"
 #include "Device.h"
 #include "PetscRuntimeError.h"
 #include "KSPDivergedError.h"
@@ -177,11 +176,6 @@ class ExcitonTransport : public SimulationInterface
          */
         SolverParameters solver_params;
 
-        /**
-         * The units in which the mesh object is given
-         */
-        double mesh_units;
-
 
       private:
         
@@ -282,11 +276,6 @@ class ExcitonTransport : public SimulationInterface
     void set_initial_guess(double guess);
 
     
-    /**
-     * @returns a constant reference to the current scaling parameters
-     */
-    const Scaling& get_scaling(void) const;
-
     //! Calculate the nodal scaling factors for the continuity equations
     /*!
      * This method currently calculates the densities on each node as scaling
@@ -434,10 +423,6 @@ class ExcitonTransport : public SimulationInterface
      */
     Options _options;
     
-    /*!
-     * The scaling parameters
-     */
-    Scaling _scaling;
 
     /*!
      * The number of nonlinear iterations needed
@@ -572,12 +557,6 @@ ExcitonTransport::disable_mesh_refinement(void)
   _options.mesh_refinement = false;
 }
 
-inline
-const Scaling&
-ExcitonTransport::get_scaling(void) const
-{
-  return _scaling;
-}
 
 inline
 unsigned int

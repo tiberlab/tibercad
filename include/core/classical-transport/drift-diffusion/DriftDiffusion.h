@@ -90,6 +90,7 @@ class DriftDiffusion : public SimulationInterface
        * (cf. calculate_current_rstf() )
        */
       RSTF,
+
       /*!
        * Do a naive surface integration
        * (cf. calculate_current_surfint() )
@@ -123,6 +124,31 @@ class DriftDiffusion : public SimulationInterface
 
         //! Set all to some value
         Solution& operator=(double other);
+    };
+
+
+    //! A structure to hold the electric field
+    class EField
+    {
+      public:
+
+        //! Constructor
+        EField(void);
+
+        //! Get the field as RealGradient
+        const RealGradient& get_field(void) const;
+
+        //! Get the i-th component
+        double operator()(unsigned int i) const;
+
+        //! Set all values to \c other
+        EField& operator=(double other);
+
+      private:
+
+        RealGradient _efield;
+
+        friend class DriftDiffusion;
     };
 
     
@@ -348,10 +374,6 @@ class DriftDiffusion : public SimulationInterface
          */
         SolverParameters solver_params;
 
-        /**
-         * The units in which the mesh object is given
-         */
-        double mesh_units;
 
         //! The type of scaling to be applied
         /*!
@@ -451,11 +473,6 @@ class DriftDiffusion : public SimulationInterface
     Mesh& get_mesh(void) const;
     
     
-    /**
-     * @return a constant reference to the current scaling parameters
-     */
-    //const Scaling& get_scaling(void) const;
-
 
     //! Set the electron quasi Fermi level to \c Ef_n
     /*!
@@ -666,8 +683,6 @@ class DriftDiffusion : public SimulationInterface
      */
     Options _options;
     
-    //! The scaling parameters
-    //Scaling _scaling;
 
     //! The boundary currents
     /*!
@@ -876,6 +891,9 @@ class DriftDiffusion : public SimulationInterface
     template <int T>
     void do_assembly_residual(const NumericVector<Number>& x,
         NumericVector<Number>& residual);
+    template <int T>
+    void do_assembly_residual_old(const NumericVector<Number>& x,
+        NumericVector<Number>& residual);
 
 
     //! Assemble the jacobian matrix
@@ -887,6 +905,9 @@ class DriftDiffusion : public SimulationInterface
      */
     template <int T>
     void do_assembly_jacobian(const NumericVector<Number>& x,
+        SparseMatrix<Number>& jacobian);
+    template <int T>
+    void do_assembly_jacobian_old(const NumericVector<Number>& x,
         SparseMatrix<Number>& jacobian);
  
    
@@ -959,13 +980,6 @@ DriftDiffusion::disable_mesh_refinement(void)
 {
   _options.mesh_refinement = false;
 }
-
-//inline
-//const Scaling&
-//DriftDiffusion::get_scaling(void) const
-//{
-//  return _scaling;
-//}
 
 
 
@@ -1144,6 +1158,42 @@ DriftDiffusion::Currents::operator=(double other)
   _jp_z = other;
   return *this;
 }
+
+
+
+
+
+inline
+DriftDiffusion::EField::EField(void)
+  : _efield(0.0)
+{
+}
+
+
+inline
+const RealGradient&
+DriftDiffusion::EField::get_field(void) const
+{
+  return _efield;
+}
+
+
+inline
+DriftDiffusion::EField&
+DriftDiffusion::EField::operator=(double other)
+{
+  _efield = other;
+}
+
+
+inline
+double
+DriftDiffusion::EField::operator()(unsigned int i) const
+{
+  return _efield(i);
+}
+
+
 
 
 #endif //_DRIFTDIFFUSION_H_

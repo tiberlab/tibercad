@@ -9,6 +9,7 @@
 #include "SolveFailedException.h"
 #include "ModelErrorException.h"
 #include "Scaling.h"
+#include "FiniteElement.h"
 
 // LibMesh includes
 // For debugging
@@ -27,7 +28,6 @@ class BoundaryProperties;
 class Control;
 class Mesh;
 class Point;
-
 
 //! The base class for any simulation
 class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
@@ -303,12 +303,24 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     Control& get_control(void);
 
 
+    //! Set the scaling parameters
+    void set_scaling(const Scaling& scaling);
+
+
     //! Get the scaling parameters
     Scaling& get_scaling(void);
 
 
-    //! Set the scaling parameters
-    void set_scaling(const Scaling& scaling);
+    //! Build a finite element
+    /*!
+     * Currently only Lagrange elements are supported.
+     *
+     * \param dim the space dimension for this element
+     * \param type the type of finite element
+     * \param scale include length scaling if true
+     */
+    AutoPtr<FEBase> build_finite_element(unsigned int dim, FEType type,
+        bool scale = false);
 
 
 
@@ -324,22 +336,6 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     
     //! Get the options for this simulator
     ModelOptions& get_options(void);
-
-
-    //! Get the determinant of the jacobian for the device symmetry transformation
-    /*!
-     * \param p the points for which to calculate the determinant
-     * \param det the vector where to put the values
-     *
-     * The method will calculate the determinant according to the device symmetry.
-     * 
-     * For \em cylinder \em symmetry it evaluates \f$\vert J\vert = 2\pi\rho\f$.
-     * The integration over \f$\mathrm{d}\phi\f$ is already included.
-     * Moreover, the y axis is assumed to be the symmetry axis, i.e. we assume a
-     * mapping \f$\rho \rightarrow x,\, z \rightarrow y\f$.
-     */
-    void get_determinant_of_symmetry_transformation(const std::vector<Point>& p,
-        std::vector<double>& det);
 
 
     //! Do the initialization

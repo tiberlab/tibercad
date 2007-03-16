@@ -44,8 +44,7 @@ ExcitonTransport::Options::Options(void)
     refine_fraction(0.7),
     coarsen_fraction(0.3),
     refinement_tolerance(1e-6),
-    integration_order(libMeshEnums::FIFTH),
-    mesh_units(1e-4) // default mesh units are um
+    integration_order(libMeshEnums::FIFTH)
 {
 }
 
@@ -57,8 +56,7 @@ ExcitonTransport::Options::Options(const Options& rhs)
     coarsen_fraction(rhs.coarsen_fraction),
     refinement_tolerance(rhs.refinement_tolerance),
     integration_order(rhs.integration_order),
-    solver_params(rhs.solver_params),
-    mesh_units(rhs.mesh_units)
+    solver_params(rhs.solver_params)
 {
 }
 
@@ -75,7 +73,6 @@ ExcitonTransport::Options::operator=(const Options& rhs)
     refinement_tolerance = rhs.refinement_tolerance;
     integration_order = rhs.integration_order;
     solver_params = rhs.solver_params;
-    mesh_units = rhs.mesh_units;
   }
   return *this;
 }
@@ -173,6 +170,11 @@ void
 ExcitonTransport::compute_scaling(void)
 {
 
+
+  // we calculate in cm!
+  double mesh_units = 100 * get_scaling().get_calc_mesh_units();
+  get_scaling().set_calc_mesh_units(mesh_units);
+
   double x0 = -1;
   double phi0 = 1;
   double mu0 = 1;
@@ -218,10 +220,10 @@ ExcitonTransport::compute_scaling(void)
 
   phi0 = Constants::k_B * SimulationOptions::T;
 
-  _scaling.set_potential_scaling(phi0);
-  _scaling.set_length_scaling(x0 * _options.mesh_units);
-  _scaling.set_mobility_scaling(mu0);
-  _scaling.set_density_scaling(C0);
+  get_scaling().set_potential_scaling(phi0);
+  get_scaling().set_length_scaling(x0 * mesh_units);
+  get_scaling().set_mobility_scaling(mu0);
+  get_scaling().set_density_scaling(C0);
 }
 
 
@@ -253,7 +255,7 @@ ExcitonTransport::set_solver_params(NonlinearSolver<Number>& solver)
 
   SolverParameters& solver_params = _options.solver_params;
 
-  const double phi0 = _scaling.get_potential_scaling();
+  const double phi0 = get_scaling().get_potential_scaling();
 
   unsigned int nonlin_max_its = solver_params.nonlinear_max_iterations;
 
@@ -286,9 +288,7 @@ ExcitonTransport::parse_options(void)
   SolverParameters& solver_params = myopts.solver_params;
 
   myopts.integration_order = static_cast<libMeshEnums::Order>(
-
       opts.get_option("integration_order", (int) myopts.integration_order));
-  myopts.mesh_units = opts.get_option("mesh_units", myopts.mesh_units);
 
   myopts.mesh_refinement = opts.get_option("mesh_refinement", false);
 
@@ -700,7 +700,7 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
   const unsigned int u_var = system->variable_number("fermi_x");
 
   FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
 
   vector<unsigned int> dof_indices_u;
 
@@ -733,7 +733,6 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   // the scaling parameters to scale back the result
   double phi0 = get_scaling().get_potential_scaling();
-  const double x0 = get_options().mesh_units;
 
   for (unsigned int n = 0; n < np; n++)
   {
@@ -753,9 +752,9 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     // scale the potential back
     ex  *= phi0;
-    ex_x *= phi0 / x0;
-    ex_y *= phi0 / x0;
-    ex_z *= phi0 / x0;
+    ex_x *= phi0;
+    ex_y *= phi0;
+    ex_z *= phi0;
 
     // prepare for calculating local properties
     excitonmodel->set_coordinates(points[n]);
@@ -874,7 +873,6 @@ ExcitonTransport::build_nodal_results(const set<string>& variables,
 
   // the scaling parameters to scale back the result
   const double phi0 = get_scaling().get_potential_scaling();
-  const double x0 = get_options().mesh_units;
 
 
   fill(results.begin(), results.end(), 0.0);
@@ -1095,12 +1093,11 @@ ExcitonTransport::build_elemental_results(const set<string>& variables,
 
   // the scaling parameters to scale back the result
   double phi0 = get_scaling().get_potential_scaling();
-  const double x0 = get_options().mesh_units;
 
   const unsigned int u_var = system->variable_number("fermi_x");
   
   FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
   QGauss qrule(dim, libMeshEnums::CONSTANT);
   fe->attach_quadrature_rule(&qrule);
 
@@ -1153,9 +1150,9 @@ ExcitonTransport::build_elemental_results(const set<string>& variables,
       
       ex += phi[i][0] * solution(dof_indices_u[i]);
     }
-    ex_x *= phi0 / x0;
-    ex_y *= phi0 / x0;
-    ex_z *= phi0 / x0;
+    ex_x *= phi0;
+    ex_y *= phi0;
+    ex_z *= phi0;
 
     // prepare for calculating local properties
     excitonmodel->set_coordinates(elem->centroid());
@@ -1249,39 +1246,6 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
   const double mu0 = scaling.get_mobility_scaling();
   // scaling for recombination rates
   double R0 = C0 / scaling.get_time_scaling();
-  double x_max = 1;
-  //
-  // we calculate on a scaled mesh with |xmax - xmin| = 1, but we did not
-  // explicitly scale the mesh, so we have to account for this in the code,
-  // assuming that the mesh is drawn in units of 'mesh_units'
-  const double x0_mesh = x0 / params.mesh_units;
-  //
-  // the scaling value for the jacobian
-  double J_scale;
-  switch (dim)
-  {
-    case 3:
-      J_scale = x0_mesh * x0_mesh * x0_mesh;
-      break;
-    case 2:
-      J_scale = x0_mesh * x0_mesh;
-      break;
-    default:
-      J_scale = x0_mesh;
-      break;
-  }
-  // the scaling value for the surface jacobian
-  double Jface_scale = 1;
-  switch (dim)
-  {
-    case 3:
-      Jface_scale = x0_mesh * x0_mesh;
-      break;
-    case 2:
-      Jface_scale = x0_mesh;
-      break;
-  }
-
 
 
   const DofMap& dof_map = system.get_dof_map();
@@ -1292,7 +1256,7 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
   FEType fe_type = system.variable_type(ex_var);
 
   // the finite element
-  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
   QGauss qrule(dim, params.integration_order);
   fe->attach_quadrature_rule(&qrule);
 
@@ -1395,8 +1359,6 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
       double Rx = em->get_net_recombination_rate();
       double mux = em->get_mobility();
 
-      // remember the maximum densities
-      x_max = (x_max > x) ? x_max : x;
 
       // NOTE: sigma_x = mu_x * x is the exciton conductivity
       double sigma_x = (mux * x) / (mu0 * C0);
@@ -1415,7 +1377,7 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
       //
 
       // the jacobian x weight x scaling
-      double J = JxW[qp] / J_scale;
+      double J = JxW[qp];
 
       //
       // First we will build the system matrix Ke_ij
@@ -1425,7 +1387,7 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
         for (unsigned int j = 0; j < n_dofs; j++)
         {
           double laplace =
-            J * (dphi[i][qp] * dphi[j][qp]) * x0_mesh * x0_mesh;
+            J * (dphi[i][qp] * dphi[j][qp]);
 
             Ke(i,j) += sigma_x * laplace ;
 
@@ -1454,7 +1416,7 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
 
             for (unsigned int k = 0; k < n_dofs; k++)
             {
-              double laplace = (dphi[i][qp] * dphi[k][qp]) * x0_mesh * x0_mesh;
+              double laplace = (dphi[i][qp] * dphi[k][qp]);
 
               double elem_contrib =
                 dsigma_x_phi * laplace * X(k);
@@ -1512,6 +1474,7 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
 //
 // explicit instantiations of template methods
 //
+
 template void
 ExcitonTransport::get_solution<double>(const Elem* elem, const Point& p,
     double& solution);

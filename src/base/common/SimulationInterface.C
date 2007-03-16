@@ -549,19 +549,55 @@ SimulationInterface::do_maximum_norm_of_difference(ID id)
 }
 
 
-void
-SimulationInterface::get_determinant_of_symmetry_transformation(
-    const std::vector<Point>& p, std::vector<double>& det)
-{
-  det.resize(p.size(), 1.0);
-  TiberCad::Symmetry sym = get_environment().get_device().get_symmetry();
-  double x0 = get_scaling().get_calc_mesh_units();
 
-  switch (sym)
+AutoPtr<FEBase>
+SimulationInterface::build_finite_element(unsigned int dim, FEType type,
+    bool scale)
+{
+  assert(type.family == libMeshEnums::LAGRANGE);
+
+  double x0 = scale ? get_scaling().get_length_scaling() : 1.0;
+  double mu = get_scaling().get_calc_mesh_units();
+  TiberCad::Symmetry sym = get_environment().get_device().get_symmetry();
+
+  FEBase* fe;
+
+  switch (dim)
   {
-    case TiberCad::CYLINDRICAL:
-      for (unsigned int i = 0; i < p.size(); i++)
-        det[i] = 2 * M_PI * p[i](0) * x0;
+    case 1:
+      {
+        FiniteElement<1, libMeshEnums::LAGRANGE>* fem =
+          new FiniteElement<1, libMeshEnums::LAGRANGE>(type);
+        fem->set_symmetry(sym);
+        fem->set_scaling(x0, mu);
+        fe = fem;
+      }
       break;
+    case 2:
+      {
+        FiniteElement<2, libMeshEnums::LAGRANGE>* fem =
+          new FiniteElement<2, libMeshEnums::LAGRANGE>(type);
+        fem->set_symmetry(sym);
+        fem->set_scaling(x0, mu);
+        fe = fem;
+      }
+      break;
+    case 3:
+      {
+        FiniteElement<3, libMeshEnums::LAGRANGE>* fem =
+          new FiniteElement<3, libMeshEnums::LAGRANGE>(type);
+        fem->set_symmetry(sym);
+        fem->set_scaling(x0, mu);
+        fe = fem;
+      }
+      break;
+    default:
+      fe = NULL;
   }
+  assert(fe != NULL);
+  
+  return AutoPtr<FEBase>(fe);
 }
+
+
+
