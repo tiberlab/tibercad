@@ -318,17 +318,33 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
   switch (_ls_type)
   {
     case 1:
+#if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
       ierr = SNESSetLineSearch(_snes, SNESNoLineSearch, (void*) this);
+#else
+      ierr = SNESLineSearchSet(_snes, SNESLineSearchNo, (void*) this);
+#endif
       break;
     case 2:
+#if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
       ierr = SNESSetLineSearch(_snes, SNESQuadraticLineSearch, (void*) this);
+#else
+      ierr = SNESLineSearchSet(_snes, SNESLineSearchQuadratic, (void*) this);
+#endif
       break;
     default:
+#if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
       ierr = SNESSetLineSearch(_snes, SNESCubicLineSearch, (void*) this);
+#else
+      ierr = SNESLineSearchSet(_snes, SNESLineSearchCubic, (void*) this);
+#endif
       break;
   }
 
+#if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
   SNESSetLineSearchParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
+#else
+  SNESLineSearchSetParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
+#endif
 
   KSP ksp;
   SNESGetKSP(_snes, &ksp);
@@ -368,12 +384,23 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
       PC sub_pc;
       ierr = PCCompositeGetPC(pc, 1, &sub_pc);
       _checkerr(ierr);
+#if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
       PCILUSetZeroPivot(sub_pc, 1e-32);
       PCILUSetDamping(sub_pc, 1e-3);
+#else
+      PCFactorSetShiftNonzero(sub_pc, 1e-3);
+      PCFactorSetZeroPivot(sub_pc, 1e-32);
+      PCILUReorderForNonzeroDiagonal(sub_pc, 1e-32);
+#endif
     }
   }
 
+#if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
   PCILUSetZeroPivot(pc, 1e-32);
+#else
+  PCFactorSetZeroPivot(pc, 1e-32);
+  PCILUReorderForNonzeroDiagonal(pc, 1e-32);
+#endif
 
   // to override options from command line
   // only for tests
