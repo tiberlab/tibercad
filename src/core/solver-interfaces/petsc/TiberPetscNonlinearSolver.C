@@ -165,6 +165,20 @@ extern "C"
 
 
   // Convergence test
+# if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
+    (PETSC_VERSION_SUBMINOR >= 2))
+  PetscErrorCode
+  __tiber_snes_convergence_test(SNES snes, PetscInt it, PetscReal xnorm,
+      PetscReal gnorm, PetscReal fnorm, SNESConvergedReason *reason, void *ctx)
+  {
+    int ierr = 0;
+
+    std::cerr << "iteration " << it << ": xnorm = " << xnorm <<
+      " gnorm = " << gnorm << " fnorm = " << fnorm << "\n";
+
+    return SNESConverged_LS(snes, it, xnorm, gnorm, fnorm, reason, ctx);
+  }
+#else
   PetscErrorCode
   __tiber_snes_convergence_test(SNES snes, PetscReal xnorm, PetscReal gnorm, 
       PetscReal fnorm, SNESConvergedReason *reason, void *ctx)
@@ -176,6 +190,7 @@ extern "C"
 
     return SNESConverged_LS(snes, xnorm, gnorm, fnorm, reason, ctx);
   }
+#endif
     
 } // end extern "C"
 
@@ -390,7 +405,7 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
 #else
       PCFactorSetShiftNonzero(sub_pc, 1e-3);
       PCFactorSetZeroPivot(sub_pc, 1e-32);
-      PCILUReorderForNonzeroDiagonal(sub_pc, 1e-32);
+      //PCILUReorderForNonzeroDiagonal(sub_pc, 1e-32);
 #endif
     }
   }
@@ -399,7 +414,7 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
   PCILUSetZeroPivot(pc, 1e-32);
 #else
   PCFactorSetZeroPivot(pc, 1e-32);
-  PCILUReorderForNonzeroDiagonal(pc, 1e-32);
+  //PCILUReorderForNonzeroDiagonal(pc, 1e-32);
 #endif
 
   // to override options from command line

@@ -33,8 +33,6 @@ $Models
      physical_model recombination
      { 
        model  =  SRH
-       tau_n = 1e-10
-       tau_p = 1e-10
      }                
 
     BC_Regions  
@@ -67,9 +65,10 @@ $Solver
 {
   driftdiffusion
   {
-    ksp_type = bcgs
+    ksp_type = bcgsl
     nonlin_max_it = 10
     #ls_max_step = 0.025
+    #pc_type = jacobi
   }
 
   sweep
@@ -101,8 +100,8 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = diode_mdr.grd
-  dimension = 2
+  meshfile = diode.msh
+  dimension = 1
   temperature = 300
   solve = sweep
   resultpath = output

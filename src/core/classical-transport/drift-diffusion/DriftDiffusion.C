@@ -1079,7 +1079,7 @@ DriftDiffusion::solve_newton(void)
       // we try another preconditioner
       cerr << " (Zero pivot during ILU.)\n";
       PCType old_pc = solver_params.pc_type;
-      solver_params.pc_type = PCCOMPOSITE;
+      solver_params.pc_type = PCJACOBI;
       set_solver_params(*system.nonlinear_solver);
       solver_params.pc_type = old_pc;
       try
@@ -4749,6 +4749,8 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
           Kpp(i,i) += 1;
       }
 
+      // now -Fe_i
+      // NOTE: we include the negative sign here
 
       // charge density
       Real J_x_rho = J * sc->get_charge_density() / C0;
