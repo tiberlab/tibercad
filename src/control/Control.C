@@ -182,6 +182,7 @@ Control::create_materials(void)
   for ( ; mapit != mapend; ++mapit)
   {
     const RegionStructure& data = mapit->second;
+
     vector<ID> region_ids;
     Utils::extract_vector(data.get_region_ID(), region_ids);
 
@@ -200,7 +201,7 @@ Control::create_materials(void)
       throw InitFailedException(s.str());
     }
 
-    const std::string& material = data.get_material_name();
+    const string& material = data.get_material_name();
     Material* mat = Material::create(material, data.get_options());
     _device->set_material(mat, region_ids);
   }

@@ -719,7 +719,8 @@ SimulationInterface::get_elemental_results(
 {
   results.resize(0);
   legend.resize(0);
-  build_elemental_results(variables, results, legend);
+  if (variables.size() > 0)
+    build_elemental_results(variables, results, legend);
 }
 
 
@@ -731,7 +732,8 @@ SimulationInterface::get_nodal_results(
 {
   results.resize(0);
   legend.resize(0);
-  build_nodal_results(variables, results, legend);
+  if (variables.size() > 0)
+    build_nodal_results(variables, results, legend);
 }
 
 
@@ -744,7 +746,8 @@ SimulationInterface::get_integrated_quantities_description(
 {
   legend.resize(0);
   description.resize(0);
-  build_integrated_quantities_description(names, legend, description);
+  if (names.size() > 0)
+    build_integrated_quantities_description(names, legend, description);
 }
 
 
