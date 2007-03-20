@@ -43,8 +43,6 @@ extern "C"
     KSPConvergedReason reason;
     KSPGetConvergedReason(ksp, &reason);
 
-    //std::cerr << "it " << its << ", fnorm = " << fnorm << "\n";
-
     if (fnorm != fnorm)
       throw(KSPDivergedError(-8, its, fnorm));
 
@@ -112,8 +110,8 @@ extern "C"
     PC.close();
     Jac.close();
     
-    //*msflag = SAME_NONZERO_PATTERN;
-    *msflag = DIFFERENT_NONZERO_PATTERN;
+    *msflag = SAME_NONZERO_PATTERN;
+    //*msflag = DIFFERENT_NONZERO_PATTERN;
     
     return ierr;
   }
@@ -193,6 +191,10 @@ extern "C"
 #endif
     
 } // end extern "C"
+
+
+
+
 
 
 
@@ -290,6 +292,7 @@ void TiberPetscNonlinearSolver<T>::init(void) throw (PetscRuntimeError)
     ierr = SNESSetType(_snes, SNESLS);
     _checkerr(ierr);
 
+
     SNESSetConvergenceTest(_snes, __tiber_snes_convergence_test, (void*) this);
 
     KSP ksp;
@@ -330,6 +333,8 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
   SNESSetTolerances(_snes, _nonlinear_atol, _nonlinear_rtol,
       _nonlinear_stol, _nonlinear_max_it, _linear_max_it);
 
+  SNESSetMaxLinearSolveFailures(_snes, _nonlinear_max_it);
+
   switch (_ls_type)
   {
     case 1:
@@ -360,6 +365,7 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
 #else
   SNESLineSearchSetParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
 #endif
+  
 
   KSP ksp;
   SNESGetKSP(_snes, &ksp);
@@ -419,8 +425,8 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
 
   // to override options from command line
   // only for tests
-  //ierr = SNESSetFromOptions(_snes);
-  //_checkerr(ierr);
+  ierr = SNESSetFromOptions(_snes);
+  _checkerr(ierr);
 
 
   // set functions
@@ -463,7 +469,23 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
   // reason < 0 means that the solver diverged. In this case we
   // throw an exception.
   if (reason < 0)
+  { 
+# if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
+    (PETSC_VERSION_SUBMINOR >= 2))
+    bool throw_ex = true;
+    if (reason == -3)
+    {
+      KSPConvergedReason ksp_reason;
+      KSPGetConvergedReason(ksp, &ksp_reason);
+      if (ksp_reason == -3 || ksp_reason >= 0)
+        throw_ex = false;
+    }
+    if (throw_ex)
+      throw (SNESDivergedError(reason, n_iterations, fnorm));
+#else
     throw (SNESDivergedError(reason, n_iterations, fnorm));
+#endif
+  }
 
   // return the # of its. and the final residual norm.  Note that
   // n_iterations may be zero for PETSc versions 2.2.x and greater.
