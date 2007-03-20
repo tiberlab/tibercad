@@ -333,7 +333,10 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
   SNESSetTolerances(_snes, _nonlinear_atol, _nonlinear_rtol,
       _nonlinear_stol, _nonlinear_max_it, _linear_max_it);
 
+# if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
+    (PETSC_VERSION_SUBMINOR >= 2))
   SNESSetMaxLinearSolveFailures(_snes, _nonlinear_max_it);
+#endif
 
   switch (_ls_type)
   {
