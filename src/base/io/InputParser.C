@@ -679,102 +679,78 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 
  
 
- 
-  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',')    );
+
+  //*******  special  characters for  the  label
+      rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',')    );
+  //  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+')    );
+
+  // ******* separator for  list  entry: 'property = ( x , y, z )'
+  rule<>separator = ch_p(',');
 
   // rule<>label  = (+alnum_p)>>   * ( ch_p('_') >> *(+alnum_p) ) ;
 
   //  rule<>label  = (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;  //2006
 
+
+  // ******** label = name of  property
   rule<>label  = *(special_char)>>  (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
 
-  rule<>list_string =  ch_p('(') >> *(space_p) >> (label)>>  *( *(space_p) >> (label) ) >> ch_p(')');
+  //  rule<>list_string =  ch_p('(') >> *(space_p) >> (label)>>  *( *(space_p) >> (label) ) >> ch_p(')');
+  //   rule<>list_string =  ch_p('(') >> *(space_p) >> *(separator) >> *(space_p) >> 
+  //     (label) >> *(space_p) >>   *( *(space_p) >>  *(space_p) >> *(separator) 
+  //                                   >> *(space_p) >>(label) ) >> *(space_p) >> ch_p(')');
+
+  // ********* list  entry: 'property = ( x , y, z )'
+  rule<>list_string =  ch_p('(') >> *(space_p) >> (label) >> *(space_p) >> 
+    *(  *(space_p) >> *(separator) >> *(space_p) >>(label) ) >> *(space_p) >> ch_p(')');
+
+
+  //  rule<>list_string =  ch_p('(') >> *(space_p) >> (label)>> >> *(space_p)>> 
+  //  *( *(space_p) >> (label) >>*(space_p)  ) >> ch_p(')');
+
+  //  rule<phrase_scanner_t>list_string =  ch_p('(') >> (label)>> *(',' >> label  )>>   ch_p(')');
+  //  cannot  be  used  because other rules are  not phrase_scanner_t !!! (?) 
+
 
   // rule<>tag_value = if_p('(')[(list_string) ].else_p[label];
+  // **********  property value  can  be  a  single string (label) or  a  list ( x , y, z )
   rule<>tag_value =  list_string | label;
-
-  
-  //  ************************** NEW  20.11.06
-  rule<>list_of_strings_space_sep  = ch_p('(')>> *(space_p) >> (label)[push_back_a(v_string)]>>
-    *( *(space_p) >> (label)[push_back_a(v_string)] )>> *(space_p)>> ch_p(')')  ;
-    
-
-
-  // *** one  can  use $ to distinguish  string_label from label of  numerical prop,
-  //  otherwise  one  line  can  contain only  numeric or only string  values !!!
-  //  
-  //    rule<>label_string  =  (ch_p('$'))>> (+alnum_p)>>   * ( ch_p('_') >> *(+alnum_p) ) ; 
-  //   //   (+alnum_p)>> ;//  * ( (special_char ) >> *(+alnum_p) ) ;
-
-
- 
-  //  rule<>assignement  =  (label)[push_back_a(v_label)] >> *(space_p) >> ch_p('=')>>
-  //     *(space_p) >> ( real_p[push_back_a(v)])  ; // with _ !!
-
- 
-
-
-
-  //   rule<>assignement_string  =  (label_string)[push_back_a(v_label_bool)] >> *(space_p) >>
-  //    ch_p('=')>> *(space_p) >> ((label )[push_back_a(v_bool)])   ; //  ok!!!
-
-  //  rule<>assignement_string  =  (label)[push_back_a(v_label_string)] >> 
-  //     *(space_p) >> ch_p('=')>> *(space_p) >> ((label)[push_back_a(v_string)])   ;
 
   // ********************************************  NEW 30.11.06  *******************
   //tag_value
+
+  // **********  general assignement 'property = value'
   rule<>assignement_string  =  (label)[push_back_a(v_label_string)] >> 
     *(space_p) >> ch_p('=')>> *(space_p) >> ((tag_value)[push_back_a(v_string)])   ;
 
   // ***********************************************************************
 
 
- 
-
-
-  //  rule<>assignement_vector =  (label)[push_back_a(vect_label)] >> *(space_p) >> 
-  //     ch_p('=')>> *(space_p) >> list_of_numbers_space_sep;
-    
-  //  ***********************  NEW   20.11.06  **********
-  rule<>assignement_vector_strings =  (label)[push_back_a(vect_label)] >> *(space_p) >> 
-    ch_p('=')>> *(space_p) >> list_of_strings_space_sep;
-   
-   
-  //  ***********************  end  NEW   20.11.06  **********
- 
-  //  rule<>assignement = (assignement_double |  assignement_int); 
-
-
-  //  rule<>list_of_assignement = (assignement | assignement_string)  >> 
-  //   *( *(space_p) >> (assignement | assignement_string) ); //  ok
 
 
   // ******************************************************************* 
   //list of  only  strings !!
   // 
+
+  // **********  in  general  on a  line there can be  several assignements 
   rule<>list_of_assignement =  (  assignement_string) >>   //  OK  23.11.06  !!!!!
     *( *(space_p) >> (assignement_string )) ;
 
 
   // ************************************************************************
 
- 
   // rule<> r_command  = *(space_p) >> (list_of_assignement | assignement_vector)    >> *(anychar_p);
 
+
+  // **********  highest  level  rule for  parsing
   rule<> r_command  = *(space_p) >> (list_of_assignement )    >> 
     *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
   // *(anychar_p);  
 
   //  possibly COMMENTs after list_of_assignement !
 
-  //  //  for  a  vector of  numbers
-  //   rule<> r_command_vector  = *(space_p) >> (assignement_vector)    >> *(anychar_p);
 
-  //for  a  vector of  strings
-  rule<> r_command_vector_strings  = *(space_p) >> (assignement_vector_strings)    >> *(anychar_p);
-
-
-  //  *****************
+  //  ************   highest  level  rule for  parsing when first    line begins with "{par =..."  
   // case {par = pippo ....  !
   //
   // if the first    line begins with "{par =..."  
@@ -782,7 +758,7 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
     *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
 
 
-  //  *****************
+  //  ************  highest  level  rule for  parsing when first    line is {par = pippo }
   // case {par = pippo }  ....  !
   //if the first    line is all:  "{par =...}"
   rule<> r_command_started_and_terminated  = *(space_p) >> (ch_p("{")) >> (*(space_p)) >> 
@@ -793,7 +769,7 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 
 
 
-  //  reads a  line  with  only start symbol "{    "
+  //  ******** reads a  line  with  only start symbol "{    "
   rule<> r_start_symbol  = *(space_p) >> (ch_p("{")) >>   
     *(space_p)>> *(comment_p("#")) ;
   //>> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
@@ -805,28 +781,12 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
     !(comment_p("#") >> *(anychar_p)) >>*(space_p);
 
 
-  // for  a   line   terminated with  }
+  // ********* rule for  a   line   terminated with  }
   rule<> r_command_terminated  = *(space_p) >> (list_of_assignement )    >> 
     *(space_p) >> (ch_p("}")) >>  *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
 
 
-
-
-  //   // find_keyword(in_stream,start_symb ); //  looks  for  "{"
-  //   in_stream >> str;
-  //   while (skip_comments(in_stream,str) == true )
-  //   {
-  //     in_stream >> str; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-  //   }
-
-  //   if (str != start_symb)
-  //   {
-  //     cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
-  
-  //     exit(1); 
-  //   }
-
-  //  *****************
+  //  ****************************************************************
 
   //  FIRST LINE !!!
   // 1) case "{         "
@@ -949,67 +909,167 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 
 
   //*******************************************************************
-  //  IF  THERE ARE OTHER LINES IN  THE  BLOCK (BLOCK NOT ENDED)
-  //*******************************************************************
+      //  IF  THERE ARE OTHER LINES IN  THE  BLOCK (BLOCK NOT ENDED)
+      //*******************************************************************
 
 
 
-      if (! (block_ended) )
+          if (! (block_ended) )
 
-    { // ! (block_ended)
+        { // ! (block_ended)
 
-      while ( getline(in_stream, str) )
-      {
+          while ( getline(in_stream, str) )
+          {
 
    
-        if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
+            if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
 
-        { // if !  comment_p("#")  
+            { // if !  comment_p("#")  
 
 	 
 
-          if (  parse(str.c_str(),
+              if (  parse(str.c_str(),
 
-                      //  Begin  grammar
+                          //  Begin  grammar
 		      
-                      r_command 
+                          r_command 
 
-                      )
+                          )
 
-                //  ,
-                //  End grammar
+                    //  ,
+                    //  End grammar
 
-                //  space_p).full )
-                .full )           //  not skipping spaces
+                    //  space_p).full )
+                    .full )           //  not skipping spaces
 
 
-          { // if parse
+              { // if parse
 
 	     
 
      
 
 
-            if ( !(v_string.empty()) )
-            {
+                if ( !(v_string.empty()) )
+                {
 
-              for (int i =0; i< v_label_string.size();++i)
-              {
-                string_prop_labels.push_back(v_label_string[i]);
-                //cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+                  for (int i =0; i< v_label_string.size();++i)
+                  {
+                    string_prop_labels.push_back(v_label_string[i]);
+                    //cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
 
-                string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
+                    string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
 
-                //region_options.set_option(v_label_string[i],v_string[i])) ;
-                region_options.set_option(v_label_string[i],v_string[i]) ;
+                    //region_options.set_option(v_label_string[i],v_string[i])) ;
+                    region_options.set_option(v_label_string[i],v_string[i]) ;
 
-              }
-            }
+                  }
+                }
 	     
 
        
 
 	      
+
+                v_label_string.clear();
+                vect_label.clear();
+                v_label.clear();
+                v_string.clear();
+                v.clear();
+                v_int.clear();
+
+  
+	    
+
+              }
+
+     
+
+              //  *******************************************************
+
+              //   termination condition  !!!
+              else if  (parse(str.c_str(), ( *(space_p)>>ch_p("}")  >> *(anychar_p) >>*(space_p) )  , space_p).full) 
+              {  
+                //  cout << endl ;
+                //         cout <<  "Fine  !" << endl ;
+                //   if (name == "a")
+                break;
+              }
+
+
+         
+
+
+
+              //   termination condition  with  } on  the  line  !!!
+              else if (  parse(str.c_str(), r_command_terminated ).full )           //  not skipping spaces
+
+
+              { // if parse
+
+
+                if ( !(v_string.empty()) )
+                {
+
+                  for (int i =0; i< v_label_string.size();++i)
+                  {
+                    string_prop_labels.push_back(v_label_string[i]);
+                    //  cout <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+
+                    string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
+
+                    //  put option pair in ModelOptions  object
+                    region_options.set_option(v_label_string[i],v_string[i]) ;
+
+                  }
+                }
+	     
+
+                // cout << endl ;
+                //         cout <<  "Fine device !!! !" << endl ;
+                break;
+
+    
+
+              }
+
+
+
+
+
+   
+
+
+
+              //     skip   all  the  other  kinds  of  lines  !!!!
+              else  if (parse(str.c_str(), if_p("{")[(+alpha_p) 
+                                                     ] , space_p ).full)
+              {  
+                //   cout << "SKIP" << endl ;
+                //   if (name == "a")
+                //   break;
+              }
+
+
+              else  
+
+                //  throw InitFailedException("....................");
+
+
+              {
+                cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
+                cerr << " Correct syntax is : 'label' = 'value' 'label' = 'value' .......# 'comment' " 
+                     << endl;
+                cerr << " A comment line  must be preceded by '#' "<< endl;
+                //     cerr << " BEWARE: numerical and string values cannot  be  mixed  in  the  same line !"
+                //        << endl;
+                throw InitFailedException("ERROR "); 
+          
+              }
+
+
+            }
+
 
             v_label_string.clear();
             vect_label.clear();
@@ -1017,148 +1077,12 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
             v_string.clear();
             v.clear();
             v_int.clear();
-
-  
-	    
-
-          }
-
      
 
-	     
-
-
-
-          //   ***********************************************
-          //   vector  of  strings  !!!!
-          //  *************************************
-
-          else if(  parse(str.c_str(),  r_command_vector_strings   )   .full ) //  not skipping spaces
-            //  reads  list of  strings  (vector)
-
-          {
-
-            if ( !(v_string.empty()) )
-            {
-              vector_prop_labels.push_back(vect_label[0]);
-              //   cout << v_string[0] <<  endl ;  //   !!!!!
-              vector_string_prop_labels_map.insert(make_pair(vect_label[0], v_string) );
-
-            }
-
-	     
-
-	      
-            v_label_string.clear();
-            vect_label.clear();
-            v_label.clear();
-            v_string.clear();
-            v.clear();
-
-          }
-
-    
-
-
-
-          //  *******************************************************
-
-          //   termination condition  !!!
-          else if  (parse(str.c_str(), ( *(space_p)>>ch_p("}")  >> *(anychar_p) >>*(space_p) )  , space_p).full) 
-          {  
-            //  cout << endl ;
-            //         cout <<  "Fine  !" << endl ;
-            //   if (name == "a")
-            break;
-          }
-
-
-         
-
-
-
-          //   termination condition  with  } on  the  line  !!!
-          else if (  parse(str.c_str(), r_command_terminated ).full )           //  not skipping spaces
-
-
-          { // if parse
-
-
-            if ( !(v_string.empty()) )
-            {
-
-              for (int i =0; i< v_label_string.size();++i)
-              {
-                string_prop_labels.push_back(v_label_string[i]);
-                //  cout <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
-
-                string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
-
-                //  put option pair in ModelOptions  object
-                region_options.set_option(v_label_string[i],v_string[i]) ;
-
-              }
-            }
-	     
-
-            // cout << endl ;
-            //         cout <<  "Fine device !!! !" << endl ;
-            break;
-
-    
-
-          }
-
-
-
-
-
-   
-
-
-
-          //     skip   all  the  other  kinds  of  lines  !!!!
-          else  if (parse(str.c_str(), if_p("{")[(+alpha_p) 
-                                                 ] , space_p ).full)
-          {  
-            //   cout << "SKIP" << endl ;
-            //   if (name == "a")
-            //   break;
-          }
-
-
-          else  
-
-            //  throw InitFailedException("....................");
-
-
-          {
-            cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
-            cerr << " Correct syntax is : 'label' = 'value' 'label' = 'value' .......# 'comment' " 
-                 << endl;
-            cerr << " A comment line  must be preceded by '#' "<< endl;
-            //     cerr << " BEWARE: numerical and string values cannot  be  mixed  in  the  same line !"
-            //        << endl;
-            throw InitFailedException("ERROR "); 
-          
-          }
-
+  
+          }  //  end  while
 
         }
-
-
-        v_label_string.clear();
-        vect_label.clear();
-        v_label.clear();
-        v_string.clear();
-        v.clear();
-        v_int.clear();
-     
-
-  
-      }  //  end  while
-
-    }
 
 }
 
@@ -1274,9 +1198,17 @@ const map <ID, RegionStructure>& InputParser::read_device(void)
 
 
     material  = temp_options.get_option( "mat" ,def);
+    // material  = temp_options.get_option( "material" ,def);
+
     temp_options.delete_option ( "mat" );
+    //    temp_options.delete_option ( "material" );
+
     region_numb = temp_options.get_option( "reg_numb" ,def);
+    //    region_numb = temp_options.get_option( "region_ID" ,def);
+
     temp_options.delete_option ( "reg_numb" );
+    //    temp_options.delete_option ( "region_ID" );
+
 
     // create new RegionStructure
     RegionStructure current_region_structure;
