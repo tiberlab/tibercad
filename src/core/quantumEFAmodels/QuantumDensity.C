@@ -181,6 +181,10 @@ QuantumDensity::QuantumDensity()
   quantum_model = NULL;
 
   system = NULL;
+
+  eq = NULL;
+
+  kmesh = NULL;
 }
 
 //============================================//

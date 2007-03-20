@@ -199,6 +199,8 @@ void EnvelopFunctionApprox::parse_options()
   opt.periodicity[1]          = mod_opt.get_option("y-periodicity", false);
   opt.periodicity[2]          = mod_opt.get_option("z-periodicity", false);
 
+ 
+
   opt.log_output              = mod_opt.get_option("log_output", false);
 
   opt.solver                  = mod_opt.get_option("solver","arnoldi");
@@ -303,6 +305,26 @@ void EnvelopFunctionApprox::parse_options()
   opt.Temperature = mod_opt.get_option("Temperature", 300.0);
 
   opt.initial_eigenstates_number = mod_opt.get_option("initial_eigenstates_number", 6);
+
+  //---------------------------------------------------------------------------------//
+
+  std::set<const Node*> used_nodes;
+
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+  for ( ; el != end_el ; ++el) 
+  {
+    const Elem* elem = *el;
+    const unsigned int n = elem->n_nodes();
+    for (unsigned int i = 0; i < n; i++)
+    {
+      const Node* nd = elem->get_node(i);
+      used_nodes.insert(nd);
+    }
+  }
+
+  number_of_nodes = used_nodes.size();
+  
 
 }
 
@@ -436,15 +458,19 @@ void EnvelopFunctionApprox::do_init( )
 //===========================================================//
 void EnvelopFunctionApprox::do_solve()
 {
-  parse_options();
-
  
+ parse_options();
+
+
   if ( opt.job ==   EIGENSTATES )
+    
     solve_eigen_value_problem( opt.number_of_eigenstates);
   else if ( opt.job == DENSITY )
     calculate_convergent_density(opt.Temperature);
-    
-  
+
+  system->solution->init(0);
+  system->solution->zero();
+  // system->solution->close();
 
 
 
@@ -1213,7 +1239,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
 
   calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
  
-
+  
   if (opt.solve_ev_problem_twice)
     {
 
@@ -1257,6 +1283,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
 	st_shift_value += 0.01/Hartree;
     }
 
+
   std::ostringstream  command_line;
 
   command_line << opt.mpi_command_line   ;
@@ -1289,7 +1316,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
 
  
 
-  
+ 
   
 
 }
@@ -1331,7 +1358,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   number_of_converged_solutions =  *(reinterpret_cast<unsigned int*> ( buffer));  endian_swap(number_of_converged_solutions);
 
 #ifdef DEBUG
-  cout << " Number of converged solutions  " << number_of_converged_solutions << "\n";
+  cerr << " Number of converged solutions  " << number_of_converged_solutions << "\n";
 #endif
 
   unsigned int solution_size;
@@ -1381,7 +1408,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
     }
   
   //--------------------------------------------------------------------
-
+ 
   
   //sorting of the solutions
   if (opt.particle == "el") sort( ev.begin(), ev.end(), compare_eigen_energy_electrons1);
@@ -1407,6 +1434,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   assert (file_eigvects.good());
 
   //read solutions - only independent dofs
+
   //----------------------------------------------------------------------
   for (unsigned int ind = 0; ind < number_of_converged_solutions; ind++)
     {
@@ -1414,33 +1442,36 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
      
  
 	
-
+     
 
       file_eigvects.read(buffer, int_size);
       file_eigvects.read(buffer, int_size);
       unsigned int vector_size =  *(reinterpret_cast<unsigned int*> ( buffer));  endian_swap(vector_size);
       assert( vector_size == number_of_new_dofs);
-    
+      
     
 
-      vector<Complex> temp(vector_size); //only independent dofs
-     
+      vector<Complex> temp(vector_size,Complex(0.0, 0.0)); //only independent dofs
+    
       for (unsigned j = 0; j < vector_size; j++)
 	{
           double re, im;
 	  file_eigvects.read(buffer_double, double_size);
+	
 	  fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap(fict);
 	  re   = *(  reinterpret_cast<double*>( &fict ) );
-
+	
 	  file_eigvects.read(buffer_double, double_size);
+	  
 	  fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap(fict);
 	  im   = *(  reinterpret_cast<double*>( &fict ) );
+	  
 	  temp[j] = Complex(re,im);
 	 
 
 	 
 	}
-
+      
       it = global_to_sol_index.find(ind);
       if (  it  !=  global_to_sol_index.end() )
 	{
@@ -1460,6 +1491,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 	
 	  
 	  //put constrained dofs
+	 
 	  for (unsigned j = 0; j < number_of_all_dofs; j++)
 	    {
 
@@ -1467,25 +1499,29 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 	      it = my_dof_constraints.find(j);
 	      if (it != my_dof_constraints.end() )
 		{
+	 
 		  DofConstraintRow constr_row = it->second;
 		  std::map<unsigned int, Real>::iterator  c =  constr_row.begin();
 		
 		  for ( ; c != constr_row.end() ; ++c )
 		    {
+		  
 		      solution[solution_number].eigen_vector[j] +=  solution[solution_number].eigen_vector[(c->first)]
 			* (c->second);
 		    }
-		  
+		
 		}
 	   
 	    }
-
+	    
 	 
 
 	}
+      
       //------------------------------------------------------------------------
 
     }
+
 
   //normalization
   for (unsigned int i = 0; i < solution_size; i++)
@@ -1497,20 +1533,20 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
       for (unsigned int j = 0; j < n1; j++)
 	solution[i].eigen_vector[j] /= norm;
     }
-
+  
   //Fermi energy calculation
 
   if (poisson_equation != NULL)
     for (unsigned int i = 0; i < solution_size; i++)
-      {
-	solution[i].Fermi_energy = calculate_fermi_averaged( i);
-	
-      }
+    {
+      solution[i].Fermi_energy = calculate_fermi_averaged( i);
+      
+    }
  
 
  
-
-
+ 
+  
   
 }
 //=============================================================//
@@ -1526,14 +1562,12 @@ void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  co
 
   const Mesh& mesh1 = system->get_mesh();
  
-  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
-  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
+ 
   
 
-  unsigned int number_of_points = 0;
+  unsigned int number_of_points = number_of_nodes;
 
-  for ( ; nd != nd_el ; ++nd)  number_of_points++;
-    
+ 
 
 
   //vector of names
@@ -1617,19 +1651,17 @@ void  EnvelopFunctionApprox::prepare_probability_function(const unsigned int sta
 
   const Mesh& mesh1 = system->get_mesh();
 
-  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
-  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
+ 
+  unsigned int number_of_points = number_of_nodes;
 
-  unsigned int number_of_points = 0;
-
-  for ( ; nd != nd_el ; ++nd)  number_of_points++;
+ 
 
  
   
   prob_data.resize(number_of_points, 0.0);
 
-  MeshBase::const_element_iterator it = mesh1.active_local_elements_begin();
-  const MeshBase::const_element_iterator end =  mesh1.active_local_elements_end();
+  MeshBase::const_element_iterator it = mesh1.active_elements_begin();
+  const MeshBase::const_element_iterator end =  mesh1.active_elements_end();
 
   std::vector<unsigned int> dof_indices;
 
@@ -1646,6 +1678,7 @@ void  EnvelopFunctionApprox::prepare_probability_function(const unsigned int sta
 	  for (unsigned int n = 0; n < elem->n_nodes(); n++)
 	    { 
 	      unsigned int  node_id =  elem->node(n);
+
 	      Complex value =  (solution[state_number].eigen_vector[ dof_indices[n] ]);
 	     
 	      prob_data[node_id] += std::abs(value) * std::abs(value);
@@ -1669,12 +1702,11 @@ void EnvelopFunctionApprox::output_probability_function(unsigned int state_numbe
 
   const Mesh& mesh1 = system->get_mesh();
 
-  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
-  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
+  
 
-  unsigned int number_of_points = 0;
+  unsigned int number_of_points = number_of_nodes;
 
-  for ( ; nd != nd_el ; ++nd)  number_of_points++;
+ 
     
 
 
@@ -2007,7 +2039,7 @@ bool EnvelopFunctionApprox::compare_eigen_energy_electrons1(eigen_energy state1,
 //=======================================================================//
 EnvelopFunctionApprox:: ~EnvelopFunctionApprox(void)
 {
-  es->delete_system(system_name);
+   es->delete_system(system_name);
 }
 
 //=======================================================================//
@@ -2099,44 +2131,31 @@ void EnvelopFunctionApprox::apply_periodic_bc()
 		      
 		      
 		      //let us find an element this point belongs to and calculate the constraints
+
 		      //the most coarse element first
 		      unsigned int refinement_level = 0; 
-		      MeshBase::const_element_iterator el3  = mesh->level_elements_begin(refinement_level);
-		      MeshBase::const_element_iterator end_el3 = mesh->level_elements_end(refinement_level);
+		      MeshBase::const_element_iterator el3  = mesh->active_elements_begin();
+		      MeshBase::const_element_iterator end_el3 = mesh->active_elements_end();
 		      
-		      Elem*  elem1;
+		      const Elem* elem1;
+		      bool found = false; 
 		      for ( ; ( (el3 != end_el3) ) ; ++el3)  
 			{
 			  Elem* elem = *el3;
+			  
 			  if (element_on_boundary(elem))
 			    {
 			      if (elem->contains_point(point2))
 				{
 				  elem1 = elem;
-				  
+				  found = true;
 				  break;
 				  
 				}
 			    }
 			}
 		      
-		      //children of the  most coarse element 
-		      while ( !( elem1->active() ) )
-			{
-			  
-			  for (unsigned int i=0 ; i < elem1->n_children() ; i++)
-			    {
-			      Elem* 	child = elem1->child(i);
-			      if (element_on_boundary(child))
-				{
-				  if (child->contains_point(point2))
-				    {
-				      elem1 = child;
-				      break;
-				    }
-				}
-			    }
-			}
+		      if (!found)  throw ModelErrorException("EnvelopFunctionApprox: Mesh periproblem");
 			
 		      
 
@@ -2353,7 +2372,7 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
     my_Jacobian *= length_scale;
 
   
-   system->init();
+ 
    
 
    FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
@@ -2450,9 +2469,11 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
   
   result *= my_Jacobian;
 
-
  
   return(result.real());
+
+
+
 }
 
 //---------------------------------------------------------------------------//
@@ -2652,12 +2673,10 @@ vector<double> EnvelopFunctionApprox::calculate_prob_function(unsigned int state
 
   const Mesh& mesh1 = system->get_mesh();
 
-  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
-  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
+  
+  unsigned int number_of_points = number_of_nodes;
 
-  unsigned int number_of_points = 0;
-
-  for ( ; nd != nd_el ; ++nd)  number_of_points++;
+ 
     
   unsigned int  point_index = 0;
   

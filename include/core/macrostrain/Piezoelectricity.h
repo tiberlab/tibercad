@@ -27,7 +27,7 @@ class Piezoelectricity : public PhysicalModelInterface
 
 
   //!returns \f$ q = d_{i,jk} f_i e_{jk} \f$
-  virtual double calculate_product_by_vector_and_tensor(const Tensor1& f, const Tensor2Sym& e) const {};
+  inline double calculate_product_by_vector_and_tensor(const Tensor1& f, const Tensor2Sym& e) const;
 
   
   static Piezoelectricity* create(const std::string& name,  const ModelOptions& options);
@@ -61,5 +61,12 @@ inline Piezoelectricity* Piezoelectricity::create(const std::string& name,  cons
 
 }
 
+
+inline double Piezoelectricity::calculate_product_by_vector_and_tensor(const Tensor1& f, const Tensor2Sym& e) const
+{
+  Tensor2Sym temp;
+  calculate_product_by_vector(f, temp);
+  return (doubleContraction(temp, e) );
+}
 
 #endif

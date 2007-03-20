@@ -440,7 +440,8 @@ class EnvelopFunctionApprox  : public SimulationInterface
   int number_of_all_dofs;
 
 
-  
+  //!number of nodes used in the model
+  unsigned int number_of_nodes;
 
 
   //! compares eigenstate energy for electrons 
