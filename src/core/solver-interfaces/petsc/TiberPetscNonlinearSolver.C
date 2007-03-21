@@ -428,8 +428,8 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
 
   // to override options from command line
   // only for tests
-  ierr = SNESSetFromOptions(_snes);
-  _checkerr(ierr);
+  //ierr = SNESSetFromOptions(_snes);
+  //_checkerr(ierr);
 
 
   // set functions
