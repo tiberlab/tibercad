@@ -689,6 +689,7 @@ void QuantumDensity::calculate_at_each_k_point()
 	  
 	  quantum_model->set_options(quantum_model_opts);
 
+
 	  quantum_model->solve();
 
 	  map<const Elem*, double> dens = quantum_model->get_density();

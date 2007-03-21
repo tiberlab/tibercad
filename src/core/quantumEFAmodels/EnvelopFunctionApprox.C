@@ -41,14 +41,14 @@ void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& var
       i_str << "state_number_" << i ; //The states are numbered starting from 0 
       legend[i] = i_str.str();
 
-      std::vector<double> prob_data;
+      std::vector<double> prob_data(number_of_points, 0.0);
 
       prepare_probability_function(i,  prob_data);
 
       for (unsigned int i1 = 0; i1<number_of_points; i1++)
 	results[num_var * i1 + i] = prob_data[i1];
 
-
+      
     }
   }
 
@@ -195,10 +195,7 @@ void EnvelopFunctionApprox::parse_options()
 
   opt.particle                = mod_opt.get_option("particle", "el");
 
-  opt.periodicity[0]          = mod_opt.get_option("x-periodicity", false);
-  opt.periodicity[1]          = mod_opt.get_option("y-periodicity", false);
-  opt.periodicity[2]          = mod_opt.get_option("z-periodicity", false);
-
+ 
  
 
   opt.log_output              = mod_opt.get_option("log_output", false);
@@ -325,7 +322,7 @@ void EnvelopFunctionApprox::parse_options()
 
   number_of_nodes = used_nodes.size();
   
-
+  opt.convergent_density = mod_opt.get_option("convergent_density", true);
 }
 
 
@@ -447,8 +444,27 @@ void EnvelopFunctionApprox::do_init( )
  
  
    //------------------------------------------------------------------------------------------------------//
-   
+   const ModelOptions& mod_opt = get_options();
+
+   opt.periodicity[0]          = mod_opt.get_option("x-periodicity", false);
+   opt.periodicity[1]          = mod_opt.get_option("y-periodicity", false);
+   opt.periodicity[2]          = mod_opt.get_option("z-periodicity", false);
+
+
+   if (opt.Dirichlet_bc_everywhere)
+    apply_diriclet_bc_at_all_boundaries();
+   else
+      create_dirichlet_dofs();
+ 
+
+   make_constraints(); //creates a copy of them
+
   
+   make_nodes_periodic();
+  
+   apply_periodic_bc();
+
+   make_new_dofs();
    
 
    //------------------------------------------------------------------------------------------------------//
@@ -472,8 +488,9 @@ void EnvelopFunctionApprox::do_solve()
   system->solution->zero();
   // system->solution->close();
 
-
-
+  opt.output_type = "GMV";
+  output_eigen_function(1, string("test14.gmv"));
+  output_probability_function(1, string("test15.gmv"));
 }
 //===========================================================//
 void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
@@ -727,11 +744,13 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp);
       Ham_imag->add_matrix(ham_imag,dof_indices_tmp);
 
+     
+
       el_number++;
 
     }
 
- 
+  
 //this is only to test
 
    Ham_real->print_matlab("ham_r_matlab.m");
@@ -1222,6 +1241,8 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 
 void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, double st_shift_value)
 {
+
+/*
   if (opt.Dirichlet_bc_everywhere)
     apply_diriclet_bc_at_all_boundaries();
    else
@@ -1236,6 +1257,8 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
   apply_periodic_bc();
 
   make_new_dofs();
+
+*/
 
   calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
  
@@ -1372,12 +1395,14 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   {
     EnvelopFunctionApprox::eigen_propblem_solution temp1;
     temp1.eigen_energy = 0;
-    temp1.Fermi_energy = 0;
+    temp1.Fermi_energy = 0;    
     temp1.eigen_vector.resize(number_of_all_dofs, Complex(0.0, 0.0));
+
+    solution.clear();
     solution.resize(solution_size, temp1);
   }
- 
-
+  
+  
   vector<EnvelopFunctionApprox::eigen_energy>   ev(number_of_converged_solutions);
   
   
@@ -1424,6 +1449,9 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
       global_to_sol_index.insert( make_pair(ev[i].global_number, i)  );
       solution[i].eigen_energy = ev[i].energy;
     } 
+
+
+
   //--------------------------------------------------------------------
   //read eigenvectors
   string fname_eigvects = "eigvects_SLEPC.out";
@@ -1438,9 +1466,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   //----------------------------------------------------------------------
   for (unsigned int ind = 0; ind < number_of_converged_solutions; ind++)
     {
-
-     
- 
+      
 	
      
 
@@ -1473,54 +1499,70 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 	}
       
       it = global_to_sol_index.find(ind);
+     
       if (  it  !=  global_to_sol_index.end() )
-	{
-	  unsigned int solution_number = it->second;
+      {
+	unsigned int solution_number = it->second;
 	 
 	  
-	  //-----------------------------------------------------------------------------
-	  //put independent dofs in the eigenvectors that may contain also non independent dofs
-	  for (unsigned j = 0; j < number_of_all_dofs; j++)
-	    {
-	      if (new_dofs[j].independent)
-		{
+	//-----------------------------------------------------------------------------
+	//put independent dofs in the eigenvectors that may contain also non independent dofs
+	for (unsigned j = 0; j < number_of_all_dofs; j++)
+	{
+	  if (new_dofs[j].independent)
+	  {
 		
-		  solution[solution_number].eigen_vector[j] = temp[new_dofs[j].new_number];
-		}
-	    }
+	    solution[solution_number].eigen_vector[j] = temp[new_dofs[j].new_number];
+	  }
+	}
 	
 	  
-	  //put constrained dofs
-	 
-	  for (unsigned j = 0; j < number_of_all_dofs; j++)
-	    {
+	//put constrained dofs
+	
 
-	      std::map<unsigned int, DofConstraintRow> :: iterator it;
-	      it = my_dof_constraints.find(j);
-	      if (it != my_dof_constraints.end() )
-		{
-	 
-		  DofConstraintRow constr_row = it->second;
-		  std::map<unsigned int, Real>::iterator  c =  constr_row.begin();
+   
+	
+	for (unsigned int j = 0; j < number_of_all_dofs; j++)
+	{
+
+	  
+	  
+	  std::map<unsigned int, DofConstraintRow> :: iterator it;
+	  
+	  it = my_dof_constraints.find(j);
+	    
+
+	  if (it != my_dof_constraints.end() )
+	  {
+	      
+	    DofConstraintRow constr_row = it->second;
+	    
+	    std::map<unsigned int, Real>::iterator  c =  constr_row.begin();
+
+	     
+	    for ( ; c != constr_row.end() ; ++c )
+	    {
 		
-		  for ( ; c != constr_row.end() ; ++c )
-		    {
-		  
-		      solution[solution_number].eigen_vector[j] +=  solution[solution_number].eigen_vector[(c->first)]
-			* (c->second);
-		    }
-		
-		}
-	   
+	
+	      solution[solution_number].eigen_vector[j] += ( c->second ) * solution[solution_number].eigen_vector[(c->first)];
 	    }
 	    
-	 
 
+	     
+	  }
+	   
+	  
 	}
+	    
+
+
+      }
       
       //------------------------------------------------------------------------
 
     }
+
+ 
 
 
   //normalization
@@ -1531,9 +1573,13 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
       
       for (unsigned int j = 0; j < n1; j++)
-	solution[i].eigen_vector[j] /= norm;
+	solution[i].eigen_vector[j] /= Complex(norm, 0.0);
     }
   
+
+ 
+
+
   //Fermi energy calculation
 
   if (poisson_equation != NULL)
@@ -1563,12 +1609,16 @@ void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  co
   const Mesh& mesh1 = system->get_mesh();
  
  
+  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
+  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
   
 
-  unsigned int number_of_points = number_of_nodes;
+  unsigned int number_of_points = 0;
+
+  for ( ; nd != nd_el ; ++nd)  number_of_points++;
+
 
  
-
 
   //vector of names
   vector<string> output_names(psi_name.size() * 2);
@@ -1651,14 +1701,28 @@ void  EnvelopFunctionApprox::prepare_probability_function(const unsigned int sta
 
   const Mesh& mesh1 = system->get_mesh();
 
- 
-  unsigned int number_of_points = number_of_nodes;
 
+  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
+  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
+  
+
+  unsigned int number_of_points = 0;
+
+  for ( ; nd != nd_el ; ++nd)  number_of_points++;
+
+  
+ 
  
 
  
   
   prob_data.resize(number_of_points, 0.0);
+
+
+  vector< vector<Complex> >  psi_data;
+  psi_data.resize(number_of_points);
+  for (unsigned int i = 0; i < number_of_points; i++) psi_data[i].resize( opt.number_of_bands, Complex(0.0, 0.0) ); 
+
 
   MeshBase::const_element_iterator it = mesh1.active_elements_begin();
   const MeshBase::const_element_iterator end =  mesh1.active_elements_end();
@@ -1681,15 +1745,21 @@ void  EnvelopFunctionApprox::prepare_probability_function(const unsigned int sta
 
 	      Complex value =  (solution[state_number].eigen_vector[ dof_indices[n] ]);
 	     
-	      prob_data[node_id] += std::abs(value) * std::abs(value);
-	      
-	      
+	      psi_data[node_id][psi_index] = value;
 	      
 	    }
 	}
     }
-  //done
 
+  //done
+  //calculation of |psi|^2
+  double t1;
+  for (unsigned int i = 0; i < number_of_points; i++)
+    for (unsigned int j = 0; j < opt.number_of_bands; j++)
+      {
+	t1 = std::abs(psi_data[i][j]);
+	prob_data[i] += t1 * t1; 
+      }
  
 }
 
@@ -1702,12 +1772,15 @@ void EnvelopFunctionApprox::output_probability_function(unsigned int state_numbe
 
   const Mesh& mesh1 = system->get_mesh();
 
+  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
+  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
   
 
-  unsigned int number_of_points = number_of_nodes;
+  unsigned int number_of_points = 0;
+
+  for ( ; nd != nd_el ; ++nd)  number_of_points++;
 
  
-    
 
 
   //vector of names
@@ -1769,7 +1842,8 @@ void EnvelopFunctionApprox::output_probability_function(unsigned int state_numbe
 
   //std :: cout << filename << "\n";
 
-
+ 
+  
   if (opt.output_type == "GMV")     
     GMVIO(mesh1).write_nodal_data(filename, probability_data, output_names);
 
@@ -2039,7 +2113,7 @@ bool EnvelopFunctionApprox::compare_eigen_energy_electrons1(eigen_energy state1,
 //=======================================================================//
 EnvelopFunctionApprox:: ~EnvelopFunctionApprox(void)
 {
-   es->delete_system(system_name);
+  // es->delete_system(system_name);
 }
 
 //=======================================================================//
@@ -2115,10 +2189,12 @@ void EnvelopFunctionApprox::apply_periodic_bc()
 		 // const Node& node = mesh.node(n);
 		  
 		  const unsigned int  n_dof = node1->dof_number(system_number,uvar[var_index],0);
-		  
+		
 		  //dof is found-------------------------------
 		 
-		  
+		
+
+
 		  if (! dof_map.is_constrained_dof(n_dof) ) //only if the dof is not constrained do the job
 		    {
 		      //let us make a  point that lies at the opposite side
@@ -2128,7 +2204,7 @@ void EnvelopFunctionApprox::apply_periodic_bc()
 		  
 		      
 		      //corresponding point is created
-		      
+		       cerr << "dof is found 1" <<  n_dof << "\n"; 
 		      
 		      //let us find an element this point belongs to and calculate the constraints
 
@@ -2139,6 +2215,9 @@ void EnvelopFunctionApprox::apply_periodic_bc()
 		      
 		      const Elem* elem1;
 		      bool found = false; 
+
+		      unsigned int el_number = 0;
+
 		      for ( ; ( (el3 != end_el3) ) ; ++el3)  
 			{
 			  Elem* elem = *el3;
@@ -2153,10 +2232,11 @@ void EnvelopFunctionApprox::apply_periodic_bc()
 				  
 				}
 			    }
+			  el_number++;
 			}
 		      
 		      if (!found)  throw ModelErrorException("EnvelopFunctionApprox: Mesh periproblem");
-			
+		  
 		      
 
 		      
@@ -2188,6 +2268,7 @@ void EnvelopFunctionApprox::apply_periodic_bc()
 			    {
 			     
 			      constraint[dof_indices_component[i1]] = phi[i1][0];
+			    
 			    }
 			}
 		       
@@ -2205,6 +2286,9 @@ void EnvelopFunctionApprox::apply_periodic_bc()
 	}
     }  
  
+
+ 
+
 }
 //---------------------------------------------------------------------------------------------
 
@@ -2555,7 +2639,7 @@ vector<double>  EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int
 
   AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
 
-  QGauss qrule (dim, SECOND);
+  QGauss qrule (dim, FIFTH);
 
   fe -> attach_quadrature_rule (&qrule);
 
@@ -2577,6 +2661,7 @@ vector<double>  EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int
   for ( ; el1 != end_el1; ++el1) active_el_number++;
 
   vector<double> result(active_el_number, 0);
+  vector<Complex> result_complex(active_el_number, Complex(0.0, 0.0));
   //--------------------------------------------------------------//
 
 
@@ -2603,20 +2688,26 @@ vector<double>  EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int
 
 	  for (unsigned int qp=0; qp<qrule.n_points(); qp++)
 	    {//qp	      
+	     
+
 	      for (unsigned int p1=0; p1<n_psi_dofs; p1++)
 		{
 		  eigen_f_value1 = eigen_vector[dof_indices[p1]];
+
 		  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
 		    {
 		      eigen_f_value2 = eigen_vector[dof_indices[p2]];
 
 		      Complex temp =  eigen_f_value1 * conj(eigen_f_value2);
-
-		      result[el_number] +=  JxW[qp] * phi[p1][qp] *  phi[p2][qp] * temp.real() ;
-
+		   
+		      // result[el_number] +=  JxW[qp] * phi[p1][qp] *  phi[p2][qp] * temp.real();
+		      result_complex[el_number] +=  JxW[qp] * phi[p1][qp] *  phi[p2][qp] * temp;
 		    }
+
 		}
+	      	  
 	      
+
 	    }
 
 
@@ -2641,7 +2732,10 @@ vector<double>  EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int
       
 
 
-      result[el_number] /= el_volume;
+      //  result[el_number] /= el_volume;
+
+     
+      result[el_number] = std::abs(result_complex[el_number])/ el_volume;
       el_number++;
 
     }
