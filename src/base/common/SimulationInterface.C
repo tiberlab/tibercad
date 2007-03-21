@@ -601,3 +601,63 @@ SimulationInterface::build_finite_element(unsigned int dim, FEType type,
 
 
 
+void
+SimulationInterface::get_elemental_results(
+    const std::set<std::string>& variables,
+    std::vector<double>& results, std::vector<std::string>& legend)
+{
+  results.resize(0);
+  legend.resize(0);
+  if (variables.size() > 0)
+  {
+    build_elemental_results(variables, results, legend);
+
+    unsigned int n = get_environment().get_mesh().n_elem();
+    if (results.size() != n * legend.size())
+    {
+      ostringstream s;
+      s << "SimulationInterface::get_elemental_results: simulation "
+        << this->get_name() << " returned broken elemental results.";
+      throw runtime_error(s.str()); 
+    }
+  }
+}
+
+
+void
+SimulationInterface::get_nodal_results(
+    const std::set<std::string>& variables,
+    std::vector<double>& results, std::vector<std::string>& legend)
+{
+  results.resize(0);
+  legend.resize(0);
+  if (variables.size() > 0)
+  {
+    build_nodal_results(variables, results, legend);
+
+    unsigned int n = get_environment().get_mesh().n_nodes();
+    if (results.size() != n * legend.size())
+    {
+      ostringstream s;
+      s << "SimulationInterface::get_nodal_results: simulation "
+        << this->get_name() << " returned broken nodal results.";
+      throw runtime_error(s.str()); 
+    }
+  }
+}
+
+
+void
+SimulationInterface::get_integrated_quantities_description(
+    const std::set<std::string>& names,
+    std::vector<std::string>& legend,
+    std::vector<std::string>& description)
+{
+  legend.resize(0);
+  description.resize(0);
+  if (names.size() > 0)
+    build_integrated_quantities_description(names, legend, description);
+}
+
+
+

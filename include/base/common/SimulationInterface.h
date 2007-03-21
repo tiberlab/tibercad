@@ -713,47 +713,6 @@ SimulationInterface::get_type(void) const
 
 inline
 void
-SimulationInterface::get_elemental_results(
-    const std::set<std::string>& variables,
-    std::vector<double>& results, std::vector<std::string>& legend)
-{
-  results.resize(0);
-  legend.resize(0);
-  if (variables.size() > 0)
-    build_elemental_results(variables, results, legend);
-}
-
-
-inline
-void
-SimulationInterface::get_nodal_results(
-    const std::set<std::string>& variables,
-    std::vector<double>& results, std::vector<std::string>& legend)
-{
-  results.resize(0);
-  legend.resize(0);
-  if (variables.size() > 0)
-    build_nodal_results(variables, results, legend);
-}
-
-
-inline
-void
-SimulationInterface::get_integrated_quantities_description(
-    const std::set<std::string>& names,
-    std::vector<std::string>& legend,
-    std::vector<std::string>& description)
-{
-  legend.resize(0);
-  description.resize(0);
-  if (names.size() > 0)
-    build_integrated_quantities_description(names, legend, description);
-}
-
-
-
-inline
-void
 SimulationInterface::build_nodal_results(
     const std::set<std::string>& variables,
     std::vector<double>& results, std::vector<std::string>& legend)

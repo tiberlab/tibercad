@@ -1,7 +1,7 @@
 // $Id$
 
 // for parsing of vectors
-//#include "boost/regex.hpp"
+#include "boost/regex.hpp"
 #include "boost/tokenizer.hpp"
 #include "boost/algorithm/string/trim.hpp"
 
@@ -33,7 +33,7 @@ template <typename T>
 void
 Utils::extract_vector(const string& input, vector<T>& vec)
 {
-
+/*
   typedef boost::tokenizer<boost::escaped_list_separator<char> > tokenizer;
   boost::escaped_list_separator<char> sep;
 
@@ -89,10 +89,8 @@ Utils::extract_vector(const string& input, vector<T>& vec)
         vec.push_back(Utils::convert<T>(s));
       }
   }
+*/
 
-/*
- * BOOST regexp has some problem in debug mode
- *
   // the regexp to match the vector
   static const boost::regex regexp("[[:space:]]*?(?:(\\()|(\\[)|(\\{)|\\<){1}\
 (.*)(?(1)\\)|(?(2)\\]|(?(3)\\}|\\>))){1}[[:space:]]*?");
@@ -132,7 +130,6 @@ Utils::extract_vector(const string& input, vector<T>& vec)
       }
     }
   }
-*/
 }
 
 
