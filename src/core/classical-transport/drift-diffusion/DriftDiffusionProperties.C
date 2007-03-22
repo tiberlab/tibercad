@@ -93,7 +93,7 @@ DriftDiffusionProperties::do_init(void)
   end = get_options().submodels_end("recombination");
   for ( ; it != end; ++it)
   {
-    const std::string& name = (it->second).get_option("model", "SRH");
+    const std::string& name = (it->second).get_option("model", "");
     add_recombination_model(name, it->second);
   }
 }
