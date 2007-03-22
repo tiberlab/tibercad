@@ -8,6 +8,8 @@
 #include "TypeDefs.h"
 #include "ModelOptions.h"
 
+#include "elem.h"
+
 #include <vector>
 #include <set>
 
@@ -166,7 +168,28 @@ class Device
     TiberCad::Symmetry get_symmetry(void) const;
     
 
+    //! Set the temperature for an element
+    void set_temperature(const Elem* elem, double temperature);
+
+
+    //! Get the temperature for an element
+    /*!
+     * For elements for which no temperature was set explicitly the 
+     * simulation temperature will be returned
+     */
+    double get_temperature(const Elem* elem) const;
+
+
+
   private:
+
+    //! A typedef for the map of element temperatures
+    typedef std::map<const Elem*, double> TemperatureMap;
+
+
+    //! A typdef for convenience
+    typedef std::map<ID, Material*> MaterialMap;
+
 
     //! Empty Constructor
     /*!
@@ -199,13 +222,25 @@ class Device
      */
     void setup_mesh(void);
 
+    
+    //! Get the temperature for an element
+    /*!
+     * This method tries to find the temperature for \c elem when
+     * \elem itself is not in the internal list.
+     */
+    double find_temperature_for_elem(const Elem* elem) const;
 
-    //! A typdef for convenience
-    typedef std::map<ID, Material*> MaterialMap;
 
+    //! Delete an element or its parents from the temperature map
+    void delete_from_temperature_map(const Elem* elem);
+    
     
     //! The map that connects region number to material
     MaterialMap _material_map;
+
+
+    //! A map with temperatures for elements
+    TemperatureMap _elem_temp;
 
     
     //! The mesh for this device
@@ -398,4 +433,34 @@ Device::get_symmetry(void) const
   return _symmetry;
 }
 
+
+
+inline
+void
+Device::set_temperature(const Elem* elem, double temperature)
+{
+  _elem_temp[elem] = temperature;
+
+  // we delete any parent element from the map
+  const Elem* el = elem->parent();
+  if (el != NULL)
+    delete_from_temperature_map(el);
+}
+
+
+
+inline
+double
+Device::get_temperature(const Elem* elem) const
+{
+  TemperatureMap::const_iterator it(_elem_temp.find(elem));
+  if (it != _elem_temp.end())
+    return it->second;
+  else
+    return find_temperature_for_elem(elem);
+}
+
+
+
+    
 #endif //  __DEVICE_H__

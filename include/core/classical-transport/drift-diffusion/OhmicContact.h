@@ -6,7 +6,6 @@
 #include "ElectricalContact.h"
 #include "DriftDiffusionProperties.h"
 
-using namespace DriftDiffusionDefs;
 
 class OhmicContact : public ElectricalContact
 {

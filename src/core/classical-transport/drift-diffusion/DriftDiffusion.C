@@ -598,6 +598,7 @@ DriftDiffusion::do_solve(void)
       solve_gummel();
       break;
     default: // Newton method
+      //do_gummel_iterations(5);
       solve_newton();
       break;
   }
@@ -1030,9 +1031,9 @@ DriftDiffusion::solve_newton(void)
 
 
   // in 1D bcgs seems to work better than bcgsl
-  //if (dim == 1)
-  //  if (solver_params.ksp_type == KSPBCGSL)
-  //    solver_params.ksp_type = KSPBCGS;
+  if (dim == 1)
+    if (solver_params.ksp_type == KSPBCGSL)
+      solver_params.ksp_type = KSPBCGS;
 
 
   // set the solver parameters (they could have changed since we made
@@ -1063,8 +1064,8 @@ DriftDiffusion::solve_newton(void)
 
     //if (e.get_reason() == -5) retry = false;
     //if (e.get_reason() == -8) retry = false;
-    if (e.get_reason() == -6)
-      solver_params.ls_type = 0;
+    //if (e.get_reason() == -6)
+    //  solver_params.ls_type = 0;
 
     msg += e.what();
     msg += ")\n";
@@ -1153,7 +1154,7 @@ DriftDiffusion::do_gummel_iterations(int max_it)
   {
     solver_params.nonlinear_max_iterations = nonlin_max_it;
     set_solver_params(*system.nonlinear_solver);
-    throw(err);
+    //throw(err);
   }
   
   return 0;
@@ -4649,6 +4650,7 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
     assert(sc != NULL);
 
     sc->reinit(elem);
+
 
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)

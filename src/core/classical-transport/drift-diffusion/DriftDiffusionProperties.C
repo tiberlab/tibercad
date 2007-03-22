@@ -472,7 +472,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
     * exp(-get_band_gap() / kT);
   double ni = sqrt(ni2);
   intrinsic_density = ni;
-  
+
   double guess;
   // Hmm... Is there a better guess?
   if (Nd > Na)
@@ -492,7 +492,8 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 
   /*
    * We use standard Newton. This should work always, as the density
-   * is a strictly monotone fucntion of the electric potential.
+   * is a strictly monotone function of the electric potential with
+   * lim_{+-infty} = +-infty .
    */
 
   double x = guess;
@@ -528,6 +529,8 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 
     error = fabs(y - x);
     residual_dens = fabs(f);
+    //cerr << "x = " << y << " error = " << error << " res. dens. = "
+    //  << residual_dens << endl;
     
     x = y;
   }

@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "MeshUtils.h"
 #include "MeshInput.h"
+#include "SimulationOptions.h"
 
 #include "mesh.h"
 #include "mesh_data_elements.h"
@@ -194,4 +195,73 @@ Device::set_boundary_region_name(const std::string& name, const vector<ID>& ids)
 {
   for (unsigned int i = 0 ; i < ids.size(); ++i)
     _boundary_region_names[ids[i]] = name;
+}
+
+
+
+
+double
+Device::find_temperature_for_elem(const Elem* elem) const
+{
+  double temp = 0.0;
+  
+  TemperatureMap::const_iterator it(_elem_temp.find(elem));
+  TemperatureMap::const_iterator end(_elem_temp.end());
+
+  const Elem* el = elem->parent();
+  while ((el != NULL) && (it != end))
+  {
+    el = el->parent();
+    it = _elem_temp.find(el);
+  }
+
+  if (el != NULL) // we found it!
+    temp = it->second;
+  else
+  {
+    // no parent, so check for children
+    // NOTE: if we find mor than one child, we build some mean value
+    vector<const Elem*> tree;
+    elem->family_tree(tree, false);
+
+    unsigned int n_children = 0;
+    
+    unsigned int len = tree.size();
+    for (unsigned int i = 0; i < len; i++)
+    {
+      const Elem* elem_i = tree[i];
+      it = _elem_temp.find(elem_i);
+      if (it != end)
+      {
+        temp += it->second;
+        n_children++;
+      }
+    }
+
+    if (n_children != 0)
+      temp /= n_children;
+    else
+      temp = SimulationOptions::temperature;
+  }
+
+  return temp;
+}
+
+
+
+void
+Device::delete_from_temperature_map(const Elem* elem)
+{
+  TemperatureMap::iterator end(_elem_temp.end());
+  // if elem is in the list, we delete it
+  while (elem != NULL)
+  {
+    TemperatureMap::iterator it(_elem_temp.find(elem));
+    if (it != end)
+    {
+      _elem_temp.erase(it);
+      break;
+    }
+    elem = elem->parent();
+  }
 }

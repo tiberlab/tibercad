@@ -486,7 +486,8 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
     if (throw_ex)
       throw (SNESDivergedError(reason, n_iterations, fnorm));
 #else
-    throw (SNESDivergedError(reason, n_iterations, fnorm));
+    if (reason != -3)
+      throw (SNESDivergedError(reason, n_iterations, fnorm));
 #endif
   }
 
