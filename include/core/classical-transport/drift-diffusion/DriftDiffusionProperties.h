@@ -963,7 +963,7 @@ DriftDiffusionProperties::density(double arg) const
           dens = gsl_sf_fermi_dirac_half(arg);
       }
       else
-        dens = 2 * M_2_SQRTPI / 3 * std::pow(arg, 1.5);
+        dens = 2.0 * M_2_SQRTPI / 3.0 * std::pow(arg, 1.5);
 
       break;
 
@@ -1026,7 +1026,7 @@ DriftDiffusionProperties::density_and_derivatives(double arg, double& density,
       }
       else
       {
-        density = 2 * M_2_SQRTPI / 3 * std::pow(arg, 1.5);
+        density = 2.0 * M_2_SQRTPI / 3.0 * std::pow(arg, 1.5);
         derivative = M_2_SQRTPI * std::sqrt(arg);
         _2nd_derivative = 0.5 * M_2_SQRTPI / std::sqrt(arg);
         derivative_over_density = derivative / density;
