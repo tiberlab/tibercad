@@ -99,7 +99,7 @@ $Simulation
   solve = sweep
   resultpath = output_1D
   output_format = gmv
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, ECurrent, HCurrent, AbsECurrent, AbsHCurrent, AbsCurrent, NetRecombination)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, eCurrent,  NetRecombination)
 }
 
 

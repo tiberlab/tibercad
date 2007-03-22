@@ -164,6 +164,10 @@ class DriftDiffusionProperties : public PhysicalModel
     //! Get the strain
     const Tensor2Sym& get_strain(void) const;
 
+
+    //! Set the lattice temperature (in K)
+    void set_lattice_temperature(double T);
+    
     //! Get the lattice temperature (in units of eV)
     double get_lattice_temperature(void) const;
 
@@ -836,12 +840,25 @@ DriftDiffusionProperties::set_densities(double n, double p)
   hole_density = p;
 }
 
+
+
+inline
+void
+DriftDiffusionProperties::set_lattice_temperature(double T)
+{
+  lattice_vt = T * Constants::k_B;
+}
+
+
+
 inline
 double
 DriftDiffusionProperties::get_lattice_temperature(void) const
 {
   return lattice_vt;
 }
+
+
 
 inline
 const Elem*
@@ -1032,8 +1049,7 @@ inline
 void
 DriftDiffusionProperties::setup_band_edges(void)
 {
-  double kT = SimulationOptions::T * Constants::k_B;
-  lattice_vt = kT;
+  double kT = lattice_vt;
   electron_vt = hole_vt = kT;
   
   BandProperties& cb = conduction_band;

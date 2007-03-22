@@ -286,6 +286,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
       dynamic_cast<DriftDiffusionProperties*>(
           _device->get_material(elem->subdomain_id())->get_model(get_id()));
 
+    sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
     sc->set_coordinates(elem->centroid());
     sc->set_potentials(sc->get_equilibrium_fermi_level());
@@ -1240,6 +1241,7 @@ DriftDiffusion::get_bands_secure(const Elem* elem, vector<double>& band_edges)
         _device->get_material(elem->subdomain_id())->get_model(get_id()));
   assert(sc != NULL); 
 
+  sc->set_lattice_temperature(_device->get_temperature(elem));
   sc->reinit(elem);
 
   band_edges[0] = sc->get_conduction_band_edge();
@@ -1555,6 +1557,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   assert(sc != NULL); 
 
+  sc->set_lattice_temperature(_device->get_temperature(elem));
   sc->reinit(elem);
 
 
@@ -1854,6 +1857,7 @@ DriftDiffusion::calculate_currents_rstf(void)
 
     fe->reinit(elem);
 
+    sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
     
         
@@ -2023,6 +2027,7 @@ DriftDiffusion::calculate_currents_surfint(void)
         if (boundary == NULL)
           continue;
         
+        sc->set_lattice_temperature(_device->get_temperature(elem));
         sc->reinit(elem);
 
         // only for dim > 1 we need to integrate
@@ -2417,7 +2422,9 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
           device.get_material(subdomain)->get_model(get_id()));
       assert(sc != NULL); 
 
+      sc->set_lattice_temperature(_device->get_temperature(elem));
       sc->reinit(elem);
+
       fe->reinit(elem);
 
       assert(elem->n_nodes() == dof_indices_u.size());
@@ -2576,7 +2583,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   const DofMap& dof_map = system->get_dof_map();
 
   const unsigned int dim = mesh.mesh_dimension();
-  const unsigned int nn  = mesh.n_elem();
+  const unsigned int nn  = mesh.n_active_elem();
   
   legend.resize(variables.size());
 
@@ -2732,6 +2739,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
 
     assert(sc != NULL); 
 
+    sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
 
     fe->reinit(elem);
@@ -3292,6 +3300,7 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
           device.get_material(subdomain)->get_model(get_id()));
     assert(sc != NULL);
 
+    sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
 
 
@@ -3966,6 +3975,7 @@ DriftDiffusion::do_assembly_jacobian_box1D(const NumericVector<Number>& x,
           device.get_material(subdomain)->get_model(get_id()));
     assert(sc != NULL);
 
+    sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
 
 
@@ -4649,6 +4659,7 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
 
     assert(sc != NULL);
 
+    sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
 
 
@@ -5379,8 +5390,6 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
 
 
 
-    
-
     Ke.resize(n_dofs_tot, n_dofs_tot);
     Fe.resize(n_dofs_tot);
     X.resize(n_dofs_tot);
@@ -5423,6 +5432,7 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
 
     assert(sc != NULL);
 
+    sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
 
 
@@ -5483,8 +5493,8 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
 
 
       // NOTE: sigma_e = mu_e * n is the electron conductivity
-      double sigma_e = mue * sc->get_electron_density() / (mu0 * C0_e);
-      double sigma_h = muh * sc->get_hole_density() / (mu0 * C0_h);
+      double sigma_e = mue * n / (mu0 * C0_e);
+      double sigma_h = muh * p / (mu0 * C0_h);
 
       //
       // The jacobian looks like this:
@@ -5561,9 +5571,9 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
 
       // d(sigma_n)/du * element-jacobian
       // sigma_n = mu_n * n means the conductivity of electrons
-      Real dsigma_e = J * phi0 / (mu0 * C0_e) * mue *
+      double dsigma_e = J * phi0 / (mu0 * C0_e) * mue *
         sc->get_electron_density_derivative();
-      Real dsigma_h = J * phi0 / (mu0 * C0_h) * muh *
+      double dsigma_h = J * phi0 / (mu0 * C0_h) * muh *
         sc->get_hole_density_derivative();
 
 
@@ -5583,7 +5593,7 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
 
             if (coupling & ECURRENT)
             {
-              Real elem_contrib =
+              double elem_contrib =
                 dsigma_e_x_phi * laplace * Xn(k);
 
               if (coupling & POISSON)
@@ -5594,7 +5604,7 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
 
             if (coupling & HCURRENT)
             {
-              Real elem_contrib =
+              double elem_contrib =
                 dsigma_h_x_phi * laplace * Xp(k);
 
               if (coupling & POISSON)
