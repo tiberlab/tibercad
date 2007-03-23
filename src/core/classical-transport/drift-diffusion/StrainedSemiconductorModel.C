@@ -5,8 +5,6 @@
 #include "Macrostrain.h"
 //#include "tensor.h"
 #include "Utils.h"
-// will be included by macrostrain:
-#include "SimulationInterface.h"
 
 #include "elem.h"
 

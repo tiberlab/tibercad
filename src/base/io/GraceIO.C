@@ -162,12 +162,12 @@ void GraceIO::write_elemental_data(const std::string& fname,
 
     std::vector<Number> values;
 
-    // Get the global id of the node
+    // Get the global id of 
     unsigned int global_id = elem_number * n_vars;
 
     for(unsigned int c = 0; c < n_vars; c++)
     {
-      values.push_back(soln[global_id*n_vars + c] );
+      values.push_back(soln[global_id + c] );
     }
 
     node_map[elem->centroid()(0)] = values;

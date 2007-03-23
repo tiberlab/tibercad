@@ -158,10 +158,11 @@ SemiconductorModel::extract_band_properties(void)
   
 }
 
+
 void
 SemiconductorModel::print_info(void) const
 {
-  _bulk_model->calculate_conduction_band_extremum();
+  //_bulk_model->calculate_conduction_band_extremum();
   const std::vector<DDsemiconductor::band_extremum>& cbs =
     _bulk_model->get_conduction_band_energy_mass();
   cout << " - conduction bands:\n";
@@ -174,7 +175,7 @@ SemiconductorModel::print_info(void) const
   cout << "   Nc = " << get_conduction_band().effective_DOS << " cm^-3"
     << "  m_dos = " << get_conduction_band().effective_mass << "\n";
 
-  _bulk_model->calculate_valence_band_extremum();
+  //_bulk_model->calculate_valence_band_extremum();
   const std::vector<DDsemiconductor::band_extremum>& vbs =
     _bulk_model->get_valence_band_energy_mass();
   cout << " - valence bands:\n";
@@ -208,5 +209,7 @@ SemiconductorModel::calculate_equilibrium_properties(void)
   // call the method of the parent class
   Parent::calculate_equilibrium_properties();
 
+  //cerr << get_material()->get_name() << ":" << endl;
+  //print_info();
 }
 
