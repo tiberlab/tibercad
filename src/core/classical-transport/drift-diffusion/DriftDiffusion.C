@@ -3092,7 +3092,7 @@ DriftDiffusion::assemble_jacobian(const NumericVector<Number>& x,
 
 
 
-/*
+///*
 template <int coupling>
 void
 DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
@@ -4451,7 +4451,7 @@ DriftDiffusion::do_assembly_jacobian_box1D(const NumericVector<Number>& x,
   perf_log.stop_event("assembly");
 }
 
-*/
+//*/
 
 
 
@@ -6089,7 +6089,7 @@ DriftDiffusion::get_solution<DriftDiffusion::EField>(const Elem* elem,
 
 
 
-
+/*
 template <int coupling>
 void
 DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
@@ -7446,6 +7446,6 @@ DriftDiffusion::do_assembly_jacobian_box1D(const NumericVector<Number>& x,
   perf_log.stop_event("assembly");
 }
 
-
+*/
 
 
