@@ -362,7 +362,7 @@ void EnvelopFunctionApprox::do_init( )
   //--------------------------------------------------------------------------------------------------------//
   opt.number_of_bands = calculate_number_of_bands( );
  
-  
+ 
   //--------------------------------------------------------------------------------------------------------//
   //add variables
   psi_name.clear();
@@ -391,7 +391,7 @@ void EnvelopFunctionApprox::do_init( )
 
   system->add_matrix("S_real"); //add matrix for S matrix
 
-  S_real = &( system->add_matrix("S_real") );
+  S_real = &( system->get_matrix("S_real") );
   
  
 

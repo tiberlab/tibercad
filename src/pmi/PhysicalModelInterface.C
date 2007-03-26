@@ -1,6 +1,7 @@
 // $Id$
 
 #include "PhysicalModelInterface.h"
+#include "DLLoader.h"
 
 // the models
 // this will be done in a more elegant way
@@ -66,130 +67,96 @@ PhysicalModelInterface*
 PhysicalModelInterface::create(const string& name,
     const ModelOptions& options)
 {
+
   PhysicalModelInterface* mod = NULL;
 
-  string libfile = "lib" + name + ".so";
+  // First we attempt to open a shared library
+  //
+  DLLoader::LibraryInterface iface;
+  bool success = DLLoader::open_library(name, iface);
 
-#ifdef DEBUG
-  cerr << "Looking for library " + libfile + "... ";
-  cerr << "found." << endl;
-#endif
-
-#ifdef DEBUG
-  cerr << "Trying to open " + libfile + "... ";
-#endif
-
-  libfile = "./" + libfile;
-
-  create_t create_fnc = NULL;
-  destroy_t destroy_fnc = NULL;
-  libhandle_t handle = dlopen(libfile.c_str(), RTLD_NOW);
-  if (handle != NULL)
+  if(success)
   {
-    create_fnc = (create_t) dlsym(handle, "create");
-    destroy_fnc = (destroy_t) dlsym(handle, "destroy");
+    create_t create_fnc = (create_t) iface.create_fnc;
+    destroy_t destroy_fnc = (destroy_t) iface.destroy_fnc;
 
-    if (create_fnc == NULL)
-    {
-      ostringstream s;
-      s << "PhysicalModelInterface: library " << libfile <<
-        " has no 'create' method.";
-      throw InitFailedException(s.str());
-    }
-
-#ifdef DEBUG
-    cerr << "OK." << endl;
-#endif
-
-    // at this point we try to create an instance of the model
+    // Try to create the object
     mod = create_fnc();
+
+    mod->_libhandle = iface.handle;
+    mod->_create = create_fnc;
+    mod->_destroy = destroy_fnc;
   }
   else
   {
-#ifdef DEBUG
-    cerr << "failed." << endl;
-#endif
-//    ostringstream s;
-//    s << "PhysicalModelInterface: Cannot open library " << libfile << ".";
-//    throw InitFailedException(s.str());
+    if (name == "rec_SRH")
+      mod = SRHRecombination::create();
+    else if (name == "rec_direct")
+      mod = DirectRecombination::create();
+    else if (name == "rec_exciton_generation")
+      mod = ExcitonGeneration::create();
+    else if (name == "rec_exciton_dissociation")
+      mod = ExcitonDissociation::create();
+    else if (name == "rec_optical")
+      mod = OpticalGeneration::create();
+    else if (name == "mob_constant")
+      mod = ConstantMobility::create();
+    else if (name == "mob_doping_dependent")
+      mod = DopingDependentMobility::create();
+    else if (name == "ddmodel_simple")
+      mod = SimpleSemiconductorModel::create();
+    else if (name == "ddmodel_unstrained")
+      mod = SemiconductorModel::create();
+    else if (name == "ddmodel_strained")
+      mod = StrainedSemiconductorModel::create();
+    else if (name == "exmodel_simple")
+      mod = ExcitonModel::create();
+    else if (name == "stiffness_zb")
+      mod = ZbStiffness::create();
+    else if (name == "stiffness_wz")
+      mod = WzStiffness::create();
+    else if (name == "piezo_zb")
+      mod = ZbPiezoelectricity::create();
+    else if (name == "piezo_wz")
+      mod = WzPiezoelectricity::create();
+    else if (name == "cryst_zb")
+      mod = ZbRotatedCrystal::create();
+    else if (name == "cryst_wz")
+      mod = WzRotatedCrystal::create();
+    else if (name == "macrostrain")
+      mod = MacrostrainModel::create();
+    else if (name == "semicond_zb")
+      mod = ZbSemiconductor::create();
+    else if (name == "semicond_wz")
+      mod = WzSemiconductor::create();
+    else if (name == "quantum_kp")
+      mod = KPbulkHamiltonian::create();
+    else if (name == "quantum_cond_band_zb")
+      mod = SBZbCondBandBulkHamiltonian::create();
+    else if (name == "quantum_cond_band_wz")
+      mod = SBWzCondBandBulkHamiltonian::create();
+    else if (name == "quantum_user")
+      mod = SBuserHamiltonian::create();
+    else if (name == "DDsemicond_zb")
+      mod = ZbDDsemiconductor::create();
+    else if (name == "DDsemicond_wz")
+      mod = WzDDsemiconductor::create();
+    else if (name == "EFAmodel")
+      mod = EFAbulkModel::create();
+    else if (name == "lat_therm_cond_zb")
+      mod = ZbLatticeThermalConductivity::create();
+    else if (name == "lat_therm_cond_wz")
+      mod = WzLatticeThermalConductivity::create();
+    else if (name == "thermal")
+      mod = HeatModel::create();
+    else if (name == "thermoelectric_power") 
+      mod = ThermoelectricPower::create();
   }
-
- 
-
-
-  if (name == "rec_SRH")
-    mod = SRHRecombination::create();
-  else if (name == "rec_direct")
-    mod = DirectRecombination::create();
-  else if (name == "rec_exciton_generation")
-    mod = ExcitonGeneration::create();
-  else if (name == "rec_exciton_dissociation")
-    mod = ExcitonDissociation::create();
-  else if (name == "rec_optical")
-    mod = OpticalGeneration::create();
-  else if (name == "mob_constant")
-    mod = ConstantMobility::create();
-  else if (name == "mob_doping_dependent")
-    mod = DopingDependentMobility::create();
-  else if (name == "ddmodel_simple")
-    mod = SimpleSemiconductorModel::create();
-  else if (name == "ddmodel_unstrained")
-    mod = SemiconductorModel::create();
-  else if (name == "ddmodel_strained")
-    mod = StrainedSemiconductorModel::create();
-  else if (name == "exmodel_simple")
-    mod = ExcitonModel::create();
-  else if (name == "stiffness_zb")
-    mod = ZbStiffness::create();
-  else if (name == "stiffness_wz")
-    mod = WzStiffness::create();
-  else if (name == "piezo_zb")
-    mod = ZbPiezoelectricity::create();
-  else if (name == "piezo_wz")
-    mod = WzPiezoelectricity::create();
-  else if (name == "cryst_zb")
-    mod = ZbRotatedCrystal::create();
-  else if (name == "cryst_wz")
-    mod = WzRotatedCrystal::create();
-  else if (name == "macrostrain")
-    mod = MacrostrainModel::create();
-  else if (name == "semicond_zb")
-    mod = ZbSemiconductor::create();
-  else if (name == "semicond_wz")
-    mod = WzSemiconductor::create();
-  else if (name == "quantum_kp")
-    mod = KPbulkHamiltonian::create();
-  else if (name == "quantum_cond_band_zb")
-    mod = SBZbCondBandBulkHamiltonian::create();
-  else if (name == "quantum_cond_band_wz")
-    mod = SBWzCondBandBulkHamiltonian::create();
-  else if (name == "quantum_user")
-    mod = SBuserHamiltonian::create();
-  else if (name == "DDsemicond_zb")
-    mod = ZbDDsemiconductor::create();
-  else if (name == "DDsemicond_wz")
-    mod = WzDDsemiconductor::create();
-  else if (name == "EFAmodel")
-    mod = EFAbulkModel::create();
-  else if (name == "lat_therm_cond_zb")
-    mod = ZbLatticeThermalConductivity::create();
-  else if (name == "lat_therm_cond_wz")
-    mod = WzLatticeThermalConductivity::create();
-  else if (name == "thermal")
-    mod = HeatModel::create();
-  else if (name == "thermoelectric_power") 
-   mod = ThermoelectricPower::create();
- 
-
 
 
   if (mod != NULL)
   {
     register_model(mod);
-
-    mod->_libhandle = handle;
-    mod->_create = create_fnc;
-    mod->_destroy = destroy_fnc;
 
     mod->set_options(options);
 
@@ -228,8 +195,7 @@ PhysicalModelInterface::destroy(PhysicalModelInterface* p)
     else
       delete p;
 
-    if (libhandle != NULL)
-      dlclose(libhandle);
+    DLLoader::close_library(libhandle);
   }
 }
 

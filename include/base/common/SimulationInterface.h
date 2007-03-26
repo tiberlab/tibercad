@@ -486,6 +486,19 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! A typedef for convenience
     typedef std::map<ID, SimulationInterface*> SimulationMap;
+    
+
+    //! The creation method signature
+    typedef SimulationInterface* (*create_t)(void);
+
+    
+    //! The destruction method signature
+    typedef void (*destroy_t)(SimulationInterface*);
+
+
+    //! The type for library handles
+    typedef void* libhandle_t;
+
 
     
     //! The environment for this simulation
@@ -510,6 +523,20 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! For self-consistent calculations this could be useful
     double _relaxation_factor;
+
+
+
+    //! The library handle for this simulation type
+    libhandle_t _libhandle;
+
+    
+    //! The creation method for this simulation type
+    create_t _create;
+
+    
+    //! The destruction method for this simulation type
+    destroy_t _destroy;
+
 
     
     //! The ID of this simulation

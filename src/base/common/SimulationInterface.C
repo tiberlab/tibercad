@@ -3,6 +3,7 @@
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
 #include "Control.h"
+#include "DLLoader.h"
 
 #include "DriftDiffusion.h"
 #include "ExcitonTransport.h"
@@ -62,25 +63,42 @@ SimulationInterface::create(const string& type,
 {
   SimulationInterface* sim = NULL;
 
- 
+  // First we attempt to open a shared library
+  //
+  DLLoader::LibraryInterface iface;
+  bool success = DLLoader::open_library(type, iface);
 
+  if(success)
+  {
+    create_t create_fnc = (create_t) iface.create_fnc;
+    destroy_t destroy_fnc = (destroy_t) iface.destroy_fnc;
 
-  if (type == "driftdiffusion")
-    sim = DriftDiffusion::create();
-  else if (type == "excitontransport")
-    sim = ExcitonTransport::create();
-  else if (type == "macrostrain")
-    sim = Macrostrain::create();
-  else if (type == "efaschroedinger")
-    sim = EnvelopFunctionApprox::create();
-  else if (type == "sweep")
-    sim = Sweep::create();
-  else if (type == "thermal")
-    sim = MacroHeatBalance::create();
-  else if (type == "selfconsistent")
-    sim = SelfconsistentSolver::create();
-  else if (type == "quantumdensity")
-    sim = QuantumDensity::create(); 
+    // Try to create the object
+    sim = create_fnc();
+
+    sim->_libhandle = iface.handle;
+    sim->_create = create_fnc;
+    sim->_destroy = destroy_fnc;
+  }
+  else
+  {
+    if (type == "driftdiffusion")
+      sim = DriftDiffusion::create();
+    else if (type == "excitontransport")
+      sim = ExcitonTransport::create();
+    else if (type == "macrostrain")
+      sim = Macrostrain::create();
+    else if (type == "efaschroedinger")
+      sim = EnvelopFunctionApprox::create();
+    else if (type == "sweep")
+      sim = Sweep::create();
+    else if (type == "thermal")
+      sim = MacroHeatBalance::create();
+    else if (type == "selfconsistent")
+      sim = SelfconsistentSolver::create();
+    else if (type == "quantumdensity")
+      sim = QuantumDensity::create(); 
+  }
 
   if (sim != NULL)
   {
