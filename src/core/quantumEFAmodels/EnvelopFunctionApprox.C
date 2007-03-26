@@ -444,6 +444,7 @@ void EnvelopFunctionApprox::do_init( )
  
  
    //------------------------------------------------------------------------------------------------------//
+   //peiodicity can not be changed between runs because that will require cleaning of the DOF constraint table
    const ModelOptions& mod_opt = get_options();
 
    opt.periodicity[0]          = mod_opt.get_option("x-periodicity", false);
@@ -451,20 +452,7 @@ void EnvelopFunctionApprox::do_init( )
    opt.periodicity[2]          = mod_opt.get_option("z-periodicity", false);
 
 
-   if (opt.Dirichlet_bc_everywhere)
-    apply_diriclet_bc_at_all_boundaries();
-   else
-      create_dirichlet_dofs();
- 
-
-   make_constraints(); //creates a copy of them
-
   
-   make_nodes_periodic();
-  
-   apply_periodic_bc();
-
-   make_new_dofs();
    
 
    //------------------------------------------------------------------------------------------------------//
@@ -478,19 +466,32 @@ void EnvelopFunctionApprox::do_solve()
  parse_options();
 
 
+ if (opt.Dirichlet_bc_everywhere)
+   apply_diriclet_bc_at_all_boundaries();
+ else
+   create_dirichlet_dofs();
+ 
+
+ make_constraints(); //creates a copy of them
+
+  
+ make_nodes_periodic();
+  
+ apply_periodic_bc();
+
+ make_new_dofs();
+
   if ( opt.job ==   EIGENSTATES )
     
     solve_eigen_value_problem( opt.number_of_eigenstates);
   else if ( opt.job == DENSITY )
     calculate_convergent_density(opt.Temperature);
+  
+  //system->solution->init(0);
+  //system->solution->zero();
+  //system->solution->close();
 
-  system->solution->init(0);
-  system->solution->zero();
-  // system->solution->close();
-
-  opt.output_type = "GMV";
-  output_eigen_function(1, string("test14.gmv"));
-  output_probability_function(1, string("test15.gmv"));
+ 
 }
 //===========================================================//
 void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
@@ -721,10 +722,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       ham_real.add( - opt.spectrum_shift/Hartree, s_real);//apply spectrum shift.
 
 
-/*
-      ham_real.scale(Hartree);
-      ham_imag.scale(Hartree);
-*/
+
       vector<unsigned int> dof_indices_tmp;
 
       dof_indices_tmp = dof_indices;
@@ -752,11 +750,11 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
   
 //this is only to test
-
+/*
    Ham_real->print_matlab("ham_r_matlab.m");
    Ham_imag->print_matlab("ham_i_matlab.m");
    S_real->print_matlab("s.m");
-
+*/
 
 
   save_S_matrix("S.out");
@@ -2019,7 +2017,7 @@ void EnvelopFunctionApprox::make_constraints(void)
  
   //----------------------------------------------------------------------------//
   //I recalculate my copy of the dof constraints because I need them explicitely!
-  my_dof_constraints.clear();
+  //  my_dof_constraints.clear(); not clear!!!
 
   // Look at all the variables in the system
   for (unsigned int variable_number=0; variable_number < dof_map.n_variables();
@@ -2204,7 +2202,7 @@ void EnvelopFunctionApprox::apply_periodic_bc()
 		  
 		      
 		      //corresponding point is created
-		       cerr << "dof is found 1" <<  n_dof << "\n"; 
+		      
 		      
 		      //let us find an element this point belongs to and calculate the constraints
 

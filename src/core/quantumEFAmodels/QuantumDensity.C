@@ -160,7 +160,7 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
     }
     //----------------------------------------------------------------------------------//
 
-    //now I have to transform from atomic units to [cm^-3] 
+    //now I have to transform from atomic units to [cm^-3]    
 
     const double coeff =  1.0/ ( (Constants::bohr_radius) * (Constants::bohr_radius) * (Constants::bohr_radius) * 1.0e6 );
 
@@ -169,6 +169,7 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
       results[i] *= coeff;
     }
 
+    //----------------------------------------------------------------------------------//
 
   }
 
@@ -530,10 +531,10 @@ void QuantumDensity::calculate_density()
   // is in <cmath> : M_PI
   //double pi = 4.0 * atan(1.0);
   {
-    double factor = 1;
+    double factor = 1.0;
 
     for (short i = 0; i < k_dim; i++)  factor /= (2.0 * M_PI);
-
+    
     map<const Elem*, double>::iterator   it = real_space_density.begin();
     map<const Elem*, double>::iterator   end_it = real_space_density.end();
 
