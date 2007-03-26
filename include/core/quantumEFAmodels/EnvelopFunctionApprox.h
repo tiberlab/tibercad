@@ -619,7 +619,7 @@ inline bool EnvelopFunctionApprox::element_on_boundary(const Elem* element)
  
   return(result);
   
-};
+}
 //---------------------------------------------------------
 
 inline void EnvelopFunctionApprox::set_initial_eigenstates_number(unsigned int n)

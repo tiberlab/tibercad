@@ -533,8 +533,6 @@ SimulationInterface::do_maximum_norm_of_difference(ID id)
 {
   double norm = 0.0;
 
-  NumericVector<double>* vec = NULL;
-
   map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
   map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
   if (it != end)

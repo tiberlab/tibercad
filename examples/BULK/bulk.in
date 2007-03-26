@@ -25,6 +25,11 @@ $Models
      physical_regions = all
     }
 
+    physical_model electron_mobility
+    {
+      model = doping_dependent
+    }
+
 
     BC_Regions  
     {

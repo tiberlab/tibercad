@@ -47,21 +47,75 @@
 #include  "WzLatticeThermalConductivity.h"
 #include  "HeatModel.h"
 
+#include <dlfcn.h>
 #include <typeinfo>
 #ifdef DEBUG
 #include <iostream>
 #endif
 #include <string>
 
-std::map<const std::string, ID> 
+
+using namespace std;
+
+
+map<const string, ID> 
 PhysicalModelInterface::_model_ids;
 
 
 PhysicalModelInterface*
-PhysicalModelInterface::create(const std::string& name,
+PhysicalModelInterface::create(const string& name,
     const ModelOptions& options)
 {
   PhysicalModelInterface* mod = NULL;
+
+  string libfile = "lib" + name + ".so";
+
+#ifdef DEBUG
+  cerr << "Looking for library " + libfile + "... ";
+  cerr << "found." << endl;
+#endif
+
+#ifdef DEBUG
+  cerr << "Trying to open " + libfile + "... ";
+#endif
+
+  libfile = "./" + libfile;
+
+  create_t create_fnc = NULL;
+  destroy_t destroy_fnc = NULL;
+  libhandle_t handle = dlopen(libfile.c_str(), RTLD_NOW);
+  if (handle != NULL)
+  {
+    create_fnc = (create_t) dlsym(handle, "create");
+    destroy_fnc = (destroy_t) dlsym(handle, "destroy");
+
+    if (create_fnc == NULL)
+    {
+      ostringstream s;
+      s << "PhysicalModelInterface: library " << libfile <<
+        " has no 'create' method.";
+      throw InitFailedException(s.str());
+    }
+
+#ifdef DEBUG
+    cerr << "OK." << endl;
+#endif
+
+    // at this point we try to create an instance of the model
+    mod = create_fnc();
+  }
+  else
+  {
+#ifdef DEBUG
+    cerr << "failed." << endl;
+#endif
+//    ostringstream s;
+//    s << "PhysicalModelInterface: Cannot open library " << libfile << ".";
+//    throw InitFailedException(s.str());
+  }
+
+ 
+
 
   if (name == "rec_SRH")
     mod = SRHRecombination::create();
@@ -128,18 +182,23 @@ PhysicalModelInterface::create(const std::string& name,
  
 
 
-  register_model(mod);
 
   if (mod != NULL)
   {
+    register_model(mod);
+
+    mod->_libhandle = handle;
+    mod->_create = create_fnc;
+    mod->_destroy = destroy_fnc;
+
     mod->set_options(options);
 
     //! set the name
-    std::string defaultname = mod->get_default_name();
+    string defaultname = mod->get_default_name();
     mod->_name = mod->_options.get_option("name", defaultname);
     mod->_options.delete_option("name");
 #ifdef DEBUG
-    std::cout << "Add model (ID = " << mod->get_id() <<
+    cout << "Add model (ID = " << mod->get_id() <<
       " name = " << mod->get_name() << " type_id = " <<
       defaultname << ")\n";
 #endif
@@ -157,18 +216,27 @@ PhysicalModelInterface::destroy(PhysicalModelInterface* p)
   if (p != NULL)
   {
 #ifdef DEBUG
-    std::string id = Utils::extract_typename(typeid(*p));
-    std::cout << "Delete model (ID = " << p->get_id() <<
+    string id = Utils::extract_typename(typeid(*p));
+    cout << "Delete model (ID = " << p->get_id() <<
       " name = " << p->get_name() << " type_id = " << id << ")\n";
 #endif
-    delete p;
+    libhandle_t libhandle = p->_libhandle;
+    destroy_t destroy_fnc = p->_destroy;
+
+    if (destroy_fnc != NULL)
+      destroy_fnc(p);
+    else
+      delete p;
+
+    if (libhandle != NULL)
+      dlclose(libhandle);
   }
 }
 
 
 template <typename T>
 ID
-PhysicalModelInterface::get_id_from_name(const std::string& name)
+PhysicalModelInterface::get_id_from_name(const string& name)
 {
   ID id = 0;
 
@@ -189,25 +257,25 @@ void
 PhysicalModelInterface::register_model(
     PhysicalModelInterface* model)
 {
-  if (model != NULL)
+  const string name = typeid(*model).name();
+  model_id_iterator it = _model_ids.find(name);
+
+  ID id;
+
+  // set the model ID (create a new one if the model didn't exist yet)
+  if (it == _model_ids.end())
   {
-    const std::string name = typeid(*model).name();
-    model_id_iterator it = _model_ids.find(name);
-
-    ID id;
-
-    // set the model ID (create a new one if the model didn't exist yet)
-    if (it == _model_ids.end())
-    {
-      id = _model_ids.size() + 1;
-      _model_ids[name] = id;
-    }
-    else
-      id = it->second;
-
-    model->_id = id;
+    id = _model_ids.size() + 1;
+    _model_ids[name] = id;
   }
+  else
+    id = it->second;
+
+  model->_id = id;
 }
+
+
+
 
 PhysicalModelInterface*
 PhysicalModelInterface::copy(void) const
@@ -231,7 +299,7 @@ PhysicalModelInterface::copy(void) const
 }
 
 
-std::string
+string
 PhysicalModelInterface::get_default_name(void) const
 {
   return Utils::extract_typename(typeid(*this));
@@ -244,8 +312,8 @@ PhysicalModelInterface::get_default_name(void) const
 
 template ID
 PhysicalModelInterface::get_id_from_name<RecombinationModelInterface>(
-    const std::string& name);
+    const string& name);
 
 template ID
 PhysicalModelInterface::get_id_from_name<MobilityModelInterface>(
-    const std::string& name);
+    const string& name);

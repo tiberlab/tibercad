@@ -20,7 +20,7 @@ all: $(objects)
 
 tibercad: all
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad \
-		$(LIBS) $(LDFLAGS) -ltibercad
+		$(LIBS) $(LDFLAGS)  -ltibercad
 #	@$(CXX) $(CXXFLAGS) $(objects) $(TIBER_OBJECTS) \
 #	-o $(topdir)/bin/tibercad $(LIBS) $(LDFLAGS)
 

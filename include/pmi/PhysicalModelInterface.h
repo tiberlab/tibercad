@@ -252,6 +252,10 @@ class PhysicalModelInterface
     //! The destruction method signature
     typedef void (*destroy_t)(PhysicalModelInterface*);
 
+
+    //! The type for library handles
+    typedef void* libhandle_t;
+
     
     //! Disable copy constructor
     PhysicalModelInterface(const PhysicalModelInterface&);
@@ -259,6 +263,10 @@ class PhysicalModelInterface
     
     //! Disable assignement operator
     PhysicalModelInterface& operator=(const PhysicalModelInterface&);
+
+
+    //! The library handle for this model
+    libhandle_t _libhandle;
 
     
     //! The creation method for this model
@@ -320,6 +328,10 @@ class PhysicalModelInterface
 
 inline
 PhysicalModelInterface::PhysicalModelInterface(void)
+  : _libhandle(NULL),
+    _create(NULL),
+    _destroy(NULL),
+    _material(NULL)
 {
 }
 

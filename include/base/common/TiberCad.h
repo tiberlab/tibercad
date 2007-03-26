@@ -1,6 +1,9 @@
+// $Id$
+
 #ifndef _TIBERCAD_H_
 #define _TIBERCAD_H_
 
+//! Some useful common definitions for TiberCAD
 namespace TiberCad
 {
 
