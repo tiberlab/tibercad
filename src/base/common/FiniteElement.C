@@ -77,7 +77,7 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const vector<Point>* points)
       break;
   }
   
-  if (FE<Dim, T>::calculate_dphi)
+  //if (FE<Dim, T>::calculate_dphi)
     for (unsigned int i = 0; i < n_points; i++)
       for (unsigned int j = 0; j < elem->n_nodes(); j++)
         FE<Dim, T>::dphi[j][i] *= x0;

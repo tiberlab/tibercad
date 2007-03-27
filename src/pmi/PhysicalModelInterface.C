@@ -89,19 +89,19 @@ PhysicalModelInterface::create(const string& name,
   }
   else
   {
-    if (name == "rec_SRH")
+    if (name == "dd_rec_SRH")
       mod = SRHRecombination::create();
-    else if (name == "rec_direct")
+    else if (name == "dd_rec_direct")
       mod = DirectRecombination::create();
-    else if (name == "rec_exciton_generation")
+    else if (name == "dd_rec_exciton_generation")
       mod = ExcitonGeneration::create();
-    else if (name == "rec_exciton_dissociation")
+    else if (name == "dd_rec_exciton_dissociation")
       mod = ExcitonDissociation::create();
-    else if (name == "rec_optical")
+    else if (name == "dd_rec_optical")
       mod = OpticalGeneration::create();
-    else if (name == "mob_constant")
+    else if (name == "dd_mob_constant")
       mod = ConstantMobility::create();
-    else if (name == "mob_doping_dependent")
+    else if (name == "dd_mob_doping_dependent")
       mod = DopingDependentMobility::create();
     else if (name == "ddmodel_simple")
       mod = SimpleSemiconductorModel::create();

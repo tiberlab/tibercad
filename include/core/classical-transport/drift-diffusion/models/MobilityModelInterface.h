@@ -3,6 +3,14 @@
 #ifndef _MOBILITYMODELINTERFACE_H_
 #define _MOBILITYMODELINTERFACE_H_
 
+
+#ifdef TIBER_MODULE
+# ifndef TIBER_MODULENAME
+#  define TIBER_MODULENAME dd_mob
+# endif
+#endif
+
+
 #include "DriftDiffusionModelInterface.h"
 
 #include <vector>
@@ -88,7 +96,7 @@ MobilityModelInterface::create(const std::string& name,
     const ModelOptions& options)
 {
   return dynamic_cast<MobilityModelInterface*>(
-      PhysicalModelInterface::create("mob_" + name, options));
+      PhysicalModelInterface::create("dd_mob_" + name, options));
 }
 
 

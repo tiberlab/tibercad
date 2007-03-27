@@ -36,6 +36,30 @@ using namespace std;
 using namespace DriftDiffusionDefs;
 
 
+//
+// Module interface
+//
+
+#ifdef TIBERMODULE
+
+extern "C"
+{
+
+  DriftDiffusion* create(void)
+  {
+    return new DriftDiffusion();
+  }
+
+  void destroy(SimulationInterface* p)
+  {
+    delete p;
+  }
+}
+
+#endif
+
+
+
 
 DriftDiffusion*
 DriftDiffusion::_this;

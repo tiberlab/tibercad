@@ -8,6 +8,31 @@
 
 #include "getpot.h"
 
+
+#ifdef TIBER_MODULE
+
+# undef TIBER_MODELNAME
+# define TIBER_MODELNAME constant
+
+extern "C"
+{
+
+  ConstantMobility* create(void)
+  {
+    return new ConstantMobility();
+  }
+
+  void destroy(PhysicalModelInterface* p)
+  {
+    delete p;
+  }
+}
+
+#endif
+
+
+
+
 void
 ConstantMobility::read_database(void)
 {

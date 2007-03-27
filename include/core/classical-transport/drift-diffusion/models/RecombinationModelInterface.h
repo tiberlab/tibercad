@@ -3,6 +3,14 @@
 #ifndef _RECOMBINATIONMODELINTERFACE_H_
 #define _RECOMBINATIONMODELINTERFACE_H_
 
+
+#ifdef TIBER_MODULE
+# ifndef TIBER_MODULENAME
+#  define TIBER_MODULENAME dd_rec
+# endif
+#endif
+
+
 #include "DriftDiffusionModelInterface.h"
 
 #include <vector>
@@ -81,7 +89,7 @@ RecombinationModelInterface::create(const std::string& name,
     const ModelOptions& options)
 {
   return dynamic_cast<RecombinationModelInterface*>(
-      PhysicalModelInterface::create("rec_" + name, options));
+      PhysicalModelInterface::create("dd_rec_" + name, options));
 }
 
 

@@ -17,8 +17,14 @@ objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
 
 .PHONY: all clean
 
-
 all: $(objects)
+
+test:
+	@$(CPP) $(CPPFLAGS) -DTIBER_MODULE -dM ConstantMobility.C \
+		| awk '/TIBER_MODULENAME/ { module = $$3; } \
+		  /TIBER_MODELNAME/ { model = $$3; } \
+		  END { if (module == "") printf("%s", model); \
+		        else printf("%s_%s", module, model); }'
 
 
 clean:
