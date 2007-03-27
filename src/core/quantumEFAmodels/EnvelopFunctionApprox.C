@@ -98,11 +98,7 @@ BoundaryProperties* EnvelopFunctionApprox::create_boundary_model(const ModelOpti
 //====================================================//
 double EnvelopFunctionApprox::get_band_edge() const
 {
-   
-
- 
-  
-  
+     
   DofMap& dof_map = system->get_dof_map();
 
   FEType fe_type = dof_map.variable_type(0); 
@@ -117,9 +113,7 @@ double EnvelopFunctionApprox::get_band_edge() const
 
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
-
-
-  
+ 
 
   double cond_band_edge;
  
@@ -141,8 +135,7 @@ double EnvelopFunctionApprox::get_band_edge() const
 
       if (opt.consider_potential)
 	{
-	  poisson_equation -> get_electric_potential(elem, q_point, electric_potential);
-	  
+	  poisson_equation -> get_electric_potential(elem, q_point, electric_potential);	  
 	}
        
       poisson_equation -> get_band_edges ( *el, band_edges );
@@ -156,8 +149,7 @@ double EnvelopFunctionApprox::get_band_edge() const
 	}
 
       for (unsigned int i = 0; i < n1; i++) 
-	{     
-	
+	{   
 	  if (cond_band_edge > band_edges[0] - electric_potential[i]) 
 	    cond_band_edge = band_edges[0] - electric_potential[i];
 
@@ -168,7 +160,8 @@ double EnvelopFunctionApprox::get_band_edge() const
     }
 
 
-  
+
+
   
   if (opt.particle == "el")
     return(cond_band_edge);
@@ -274,8 +267,14 @@ void EnvelopFunctionApprox::parse_options()
 
   //--------------------------------------------------------------------------------------------//
 
-  if (opt.estimate_spectrum_shift) opt.spectrum_shift = get_band_edge();
-  //--------------------------------------------------------------------------------------------//
+  if (opt.estimate_spectrum_shift) 
+  {
+    opt.spectrum_shift = get_band_edge();
+   
+  }
+    //--------------------------------------------------------------------------------------------//
+
+
   //k-vector
   std::vector<double> k_vec(3, 0.0);
   mod_opt.get_option("k_vector",k_vec);
@@ -750,11 +749,11 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
   
 //this is only to test
-/*
-   Ham_real->print_matlab("ham_r_matlab.m");
-   Ham_imag->print_matlab("ham_i_matlab.m");
-   S_real->print_matlab("s.m");
-*/
+
+  Ham_real->print_matlab("ham_r_matlab.m");
+  Ham_imag->print_matlab("ham_i_matlab.m");
+  S_real->print_matlab("s.m");
+
 
 
   save_S_matrix("S.out");
@@ -1414,12 +1413,9 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
       file_eigvals.read(buffer_double, double_size);
       fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap(fict);
 
-
-      
-
-     
 	
       ev[ind].energy = *(  reinterpret_cast<double*>( &fict ) ) * Hartree + opt.spectrum_shift;
+
       ev[ind].global_number = ind;
 
      
@@ -1567,6 +1563,8 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   for (unsigned int i = 0; i < solution_size; i++)
     {
       const double norm = eigenstate_norm(i);
+
+    
       const unsigned int n1 =  solution[i].eigen_vector.size();
 
       
@@ -2594,9 +2592,12 @@ void EnvelopFunctionApprox::calculate_density(double Temperature)
      
       density_of_state = calculate_cell_prob_function(i);
 
-      MeshBase::const_element_iterator       it     = mesh1.active_elements_begin();
+    
       const MeshBase::const_element_iterator it_end  = mesh1.active_elements_end();
-     
+      const MeshBase::const_element_iterator it_begin  = mesh1.active_elements_begin();
+
+      MeshBase::const_element_iterator       it     =  it_begin;
+
       unsigned int el_number = 0;
       
       for( ;it !=  it_end ;++it)
@@ -2604,12 +2605,21 @@ void EnvelopFunctionApprox::calculate_density(double Temperature)
 	const Elem* el = *it;
 	
 	double temp = density_of_state[el_number] * prob_factor;
+
 	
-	if (it == it_end)
+	if (it == it_begin && i == 0)
+	{
+	
 	  _density.insert(pair<const Elem*, double> (el, temp));
+	}
 	else
 	  _density[el] += temp;
 	
+
+
+	
+
+//	_density[el] += temp;
 	el_number++;
       }
       

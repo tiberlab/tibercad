@@ -144,7 +144,7 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
   {
     legend.resize(1, "particle_density[cm^-3]");
 
-    //---------------------------------------------------------------------------------//
+    //------------------------------------------------------------------------------------//
     //!from map to vector
     map<const Elem*, double>::iterator it = real_space_density.begin();
 
@@ -158,7 +158,7 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
       results[el_number] = it->second;
       el_number++;
     }
-    //----------------------------------------------------------------------------------//
+    //-------------------------------------------------------------------------------------//
 
     //now I have to transform from atomic units to [cm^-3]    
 
@@ -169,7 +169,7 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
       results[i] *= coeff;
     }
 
-    //----------------------------------------------------------------------------------//
+    //-------------------------------------------------------------------------------------//
 
   }
 
@@ -495,8 +495,6 @@ void QuantumDensity::calculate_density()
 		  map<const Elem*, double>::iterator   dens_at_k_node_it = dens_at_k_node.begin();
 		  map<const Elem*, double>::iterator   dens_at_k_node_end = dens_at_k_node.end();
 
-		  
-
 
 		  for ( ; dens_at_k_node_it != dens_at_k_node_end ; ++dens_at_k_node_it) //loop over real space elements
 		  {
@@ -508,6 +506,7 @@ void QuantumDensity::calculate_density()
 		       real_space_density.insert(pair<const Elem*, double> (el,temp  ) );
 		     else
 		       real_space_density[el] +=  temp;
+
 		  }
 
 	
@@ -670,52 +669,52 @@ void QuantumDensity::calculate_at_each_k_point()
 
       if (it1 ==  k_point_density.end() )
 
-	{
-	  vector<double> k_vector(3, 0.0);
+      {
+	vector<double> k_vector(3, 0.0);
 
 
-	  k_vector[0] = (*nd)(0);
-	  k_vector[1] = (*nd)(1);
-	  k_vector[2] = (*nd)(2);
-
-
-	  ModelOptions quantum_model_opts;
+	k_vector[0] = (*nd)(0);
+	k_vector[1] = (*nd)(1);
+	k_vector[2] = (*nd)(2);
 	  
 
-	  quantum_model_opts.set_option("k_vector",  k_vector);
-	  quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number ); 
-	  quantum_model_opts["job"] = "density";
+	ModelOptions quantum_model_opts;
+	  
+
+	quantum_model_opts.set_option("k_vector",  k_vector);
+	quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number ); 
+	quantum_model_opts["job"] = "density";
 
  
 	  
-	  quantum_model->set_options(quantum_model_opts);
+	quantum_model->set_options(quantum_model_opts);
 
 
-	  quantum_model->solve();
+	quantum_model->solve();
 
-	  map<const Elem*, double> dens = quantum_model->get_density();
+	map<const Elem*, double> dens = quantum_model->get_density();
 
-	  if (it == kmesh->active_nodes_begin()) real_space_density_size = dens.size();
+	if (it == kmesh->active_nodes_begin()) real_space_density_size = dens.size();
 	  
-	  map<const Elem*, double>::iterator density_it = dens.begin();
-	  map<const Elem*, double>::iterator density_end   = dens.end();
+	map<const Elem*, double>::iterator density_it = dens.begin();
+	map<const Elem*, double>::iterator density_end   = dens.end();
 
-	  for ( ; density_it != density_end  ; ++density_it )
-	    density_it->second *= opt.degeneracy;
+	for ( ; density_it != density_end  ; ++density_it )
+	  density_it->second *= opt.degeneracy;
      
      
-	  k_point_density.insert( pair< const Node*, map<const Elem*, double> > (nd, dens) );
+	k_point_density.insert( pair< const Node*, map<const Elem*, double> > (nd, dens) );
 
-	  double rho = (quantum_model->get_integrated_probability()) * opt.degeneracy;
+	double rho = (quantum_model->get_integrated_probability()) * opt.degeneracy;
 
 	 
 	  
-	  k_point_charge.insert(pair<const Node*, double > (nd, rho));
+	k_point_charge.insert(pair<const Node*, double > (nd, rho));
 	  
 
 	  
 
-	}
+      }
 
     }
 
@@ -839,12 +838,7 @@ void QuantumDensity::calculate_convergent_density()
 	      
 	      
 	      mesh_refinement.refine_and_coarsen_elements();
-	      
-	     
-	      
-	     
-	     
-	     
+	      	     
 
 	      eq->reinit();
 
