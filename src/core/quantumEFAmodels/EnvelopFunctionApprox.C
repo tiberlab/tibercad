@@ -81,36 +81,71 @@ void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& var
 
   const Mesh& mesh1 = system->get_mesh();
 
+
+  const bool output_psi = variables.find("EigenFunctions") != varend ;
+  const bool output_level = variables.find("EnergyLevels") != varend ;
+
   MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
   const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
 
   unsigned int number_of_points = 0;
-
-  for ( ; nd != nd_el ; ++nd)  number_of_points++;
+  unsigned int num_var = 0;
+  const unsigned int num_functions = solution.size();
+  unsigned int temp = 0;
   
-  if (variables.find("EigenFunctions") != varend)
+  for ( ; nd != nd_el ; ++nd)  number_of_points++;
+
+  if (output_psi)  num_var += num_functions;
+
+  if (output_level)  num_var += num_functions;
+  
+  if (output_psi || output_level)
   {
 
-    legend.resize(solution.size());
-    results.resize(number_of_points * solution.size());
+    legend.resize(num_var);
+    results.resize(number_of_points * num_var);
 
-    unsigned int num_var = solution.size();
-    for (unsigned int i = 0; i < num_var; i++)
+    if (output_psi)
     {
-      std::ostringstream i_str;
-      i_str << "state_number_" << i ; //The states are numbered starting from 0 
-      legend[i] = i_str.str();
+      temp = num_functions;
+      for (unsigned int i = 0; i < num_functions; i++)
+      {
+	std::ostringstream i_str;
+	i_str << "state_number_" << i ; //The states are numbered starting from 0 
+	legend[i] = i_str.str();
 
-      std::vector<double> prob_data(number_of_points, 0.0);
+	std::vector<double> prob_data(number_of_points, 0.0);
 
-      prepare_probability_function(i,  prob_data);
+	prepare_probability_function(i,  prob_data);
 
-      for (unsigned int i1 = 0; i1<number_of_points; i1++)
-	results[num_var * i1 + i] = prob_data[i1];
+	for (unsigned int i1 = 0; i1<number_of_points; i1++)
+	  results[num_var * i1 + i] = prob_data[i1];
 
       
+      }
     }
+    
+    if (output_level)
+    {
+      for (unsigned int i = 0; i < num_functions; i++)
+      {
+	std::ostringstream i_str;
+	i_str << "energy_number_" << i ; //The states are numbered starting from 0 
+	legend[i] = i_str.str();
+
+	
+	for (unsigned int i1 = 0; i1<number_of_points; i1++)
+	  results[num_var * i1 + i + temp] = solution[i].eigen_energy;
+      
+      }
+    }
+  
+    
+
   }
+
+ 
+  
 
 }
 
