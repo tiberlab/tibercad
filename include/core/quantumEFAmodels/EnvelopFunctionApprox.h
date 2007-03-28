@@ -514,6 +514,10 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
 
 
+
+  std::vector<double> estimate_density(double parallel_mass);
+
+
   //!Calculates Fermi Dirac probability
   /*!
     For electrons:  \f$ p = \frac{1}{1 + \exp (\frac{E - \mu}{kT})}     \f$
@@ -544,6 +548,21 @@ class EnvelopFunctionApprox  : public SimulationInterface
   //!in this class  outputs \f$ |<\psi|\psi>|^2 \f$ for each eigenstate
   virtual void build_nodal_results(const std::set<std::string>& variables,
 				   std::vector<double>& results, std::vector<std::string>& legend);
+
+
+  virtual void 	build_elemental_results (const std::set< std::string > &variables, 
+					 std::vector< double > &results, std::vector< std::string > &legend);
+
+
+  //!in this class it outputs eigen energies
+  virtual void 	build_integrated_quantities (const std::set< std::string > &names, std::vector< double > &values);
+
+  //!in this class it builds descriotion for eigen energies
+  virtual void 	build_integrated_quantities_description (const std::set< std::string > &names,
+							 std::vector< std::string > &legend, 
+							 std::vector< std::string > &description);
+ 
+
 
   //!in this class outputs eigenvalues 
   void get_integrated_quantities(const std::set<std::string>& names,

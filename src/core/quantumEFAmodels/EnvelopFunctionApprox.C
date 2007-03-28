@@ -12,8 +12,68 @@ using namespace Constants;
 Device*   EnvelopFunctionApprox:: _device;
 
 //---------------------------------------------------------------------------------//
+void EnvelopFunctionApprox::build_integrated_quantities (const std::set< std::string > &names, std::vector< double > &values)
+{
+  const set<string>::const_iterator varend(names.end());
+  
+  if (names.find("eigenenergy") != varend)
+  {
+    unsigned int n = solution.size();
+    values.resize(n);
+    for (unsigned int i = 0; i < n; i++)
+    {
+      values[i] = solution[i].eigen_energy;
+    }
+  }
 
+}
 
+//---------------------------------------------------------------------------------//
+
+void EnvelopFunctionApprox::build_integrated_quantities_description (const std::set< std::string > &names,
+							 std::vector< std::string > &legend, 
+							 std::vector< std::string > &description)
+{
+
+  const set<string>::const_iterator varend(names.end());
+  if (names.find("eigenenergy") != varend)
+  {
+    unsigned int n = solution.size(); 
+    legend.resize(n);
+    for (unsigned int i = 0; i < n; i++)
+    {
+      ostringstream temp;
+      temp << i + 1;
+      legend[i] = temp.str();
+    }
+  }
+
+  description.resize(1);
+  description[0] = "Eigen energy [eV]";
+  
+  
+
+}
+
+//---------------------------------------------------------------------------------//
+
+void EnvelopFunctionApprox::build_elemental_results (const std::set< std::string > &variables, 
+					 std::vector< double > &results, std::vector< std::string > &legend)
+{
+ 
+  double parallel_mass = 0.067* 0.95 +  0.026 * 0.05;
+  const set<string>::const_iterator varend(variables.end());
+  if (variables.find("test_density") != varend)
+  {
+   
+    results = estimate_density( parallel_mass);
+    
+    legend.resize(1);
+    legend[0] = string("density");
+  }
+}
+
+//---------------------------------------------------------------------------------//
 void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& variables,
 						std::vector<double>& results, std::vector<std::string>& legend)
 {
@@ -2556,7 +2616,49 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 
 }
 
-//---------------------------------------------------------------------------//
+//-------------------------------------------------------------------------------//
+
+std::vector<double> EnvelopFunctionApprox::estimate_density(double parallel_mass)
+{
+  vector<double> result;
+
+  double T_EV = opt.Temperature * Constants::k_Boltzmann;
+
+  unsigned int number_of_eigenfunctions = solution.size();
+
+  double mass_factor = parallel_mass/M_PI * (T_EV /Constants::Hartree);
+ 
+  for (unsigned int i = 0; i < number_of_eigenfunctions; i++)
+  {
+    const double Fermi_energy = solution[i].Fermi_energy;
+
+    const double Energy = solution[i].eigen_energy;
+      
+    double prob_factor = std::log(1 + exp( (Fermi_energy - Energy) / T_EV )  );
+    
+    vector<double> density_of_state = calculate_cell_prob_function(i);
+
+    unsigned int n =  density_of_state.size();
+
+    if (i == 0)
+    {
+      result.resize( density_of_state.size(), 0.0);
+    }
+
+    for (unsigned int j = 0; j < n; j++)
+    {
+      result[j] +=  density_of_state[j] * prob_factor * mass_factor / 
+	( (Constants::bohr_radius) * (Constants::bohr_radius) * (Constants::bohr_radius) * 1.0e6 );
+    }
+
+  }
+
+  return(result);
+
+}
+
+
+//------------------------------------------------------------------------------//
 
 void EnvelopFunctionApprox::calculate_density(double Temperature)
 {

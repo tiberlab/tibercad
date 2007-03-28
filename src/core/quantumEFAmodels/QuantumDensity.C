@@ -501,11 +501,14 @@ void QuantumDensity::calculate_density()
 		     const Elem* el = dens_at_k_node_it->first;
 
 		     double temp =  phi[i][qp] * (dens_at_k_node_it->second)*JxW[qp];
-
+/*
 		     if (it == kmesh->active_elements_begin())
 		       real_space_density.insert(pair<const Elem*, double> (el,temp  ) );
 		     else
-		       real_space_density[el] +=  temp;
+   		       real_space_density[el] +=  temp;
+*/
+
+		     real_space_density[el] +=  temp;
 
 		  }
 
