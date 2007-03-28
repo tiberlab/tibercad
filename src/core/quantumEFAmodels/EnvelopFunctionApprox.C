@@ -16,7 +16,7 @@ void EnvelopFunctionApprox::build_integrated_quantities (const std::set< std::st
 {
   const set<string>::const_iterator varend(names.end());
   
-  if (names.find("eigenenergy") != varend)
+  if (names.find("EigenEnergy") != varend)
   {
     unsigned int n = solution.size();
     values.resize(n);
@@ -36,7 +36,7 @@ void EnvelopFunctionApprox::build_integrated_quantities_description (const std::
 {
 
   const set<string>::const_iterator varend(names.end());
-  if (names.find("eigenenergy") != varend)
+  if (names.find("EigenEnergy") != varend)
   {
     unsigned int n = solution.size(); 
     legend.resize(n);
@@ -88,7 +88,7 @@ void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& var
 
   for ( ; nd != nd_el ; ++nd)  number_of_points++;
   
-  if (variables.find("eigen_functions") != varend)
+  if (variables.find("EigenFunctions") != varend)
   {
 
     legend.resize(solution.size());
