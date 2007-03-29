@@ -6,6 +6,8 @@
 #include "Boundary.h"
 #include <gnuplot_io.h>
 
+#include "GraceIO.h" //for test only
+
 using namespace std;
 using namespace Constants;
 
@@ -176,9 +178,7 @@ PhysicalModel* EnvelopFunctionApprox::create_physical_model(const ModelOptions& 
  
   if (model == NULL)
     throw ModelErrorException("EnvelopFunctionApprox: cannot create EFAbulkModel");
-
-  
-
+ 
   return(model);
 
 }
@@ -243,13 +243,16 @@ double EnvelopFunctionApprox::get_band_edge() const
 	  valence_band_edge = band_edges[1] - electric_potential[0];
 	}
 
+      
+
       for (unsigned int i = 0; i < n1; i++) 
 	{   
 	  if (cond_band_edge > band_edges[0] - electric_potential[i]) 
 	    cond_band_edge = band_edges[0] - electric_potential[i];
 
-	  if (valence_band_edge < band_edges[0] - electric_potential[i] ) 
+	  if (valence_band_edge < band_edges[1] - electric_potential[i] ) 
 	    valence_band_edge = band_edges[1] - electric_potential[i];
+	  
 	}
   
     }
@@ -368,7 +371,7 @@ void EnvelopFunctionApprox::parse_options()
    
   }
     //--------------------------------------------------------------------------------------------//
-
+  
 
   //k-vector
   std::vector<double> k_vec(3, 0.0);
@@ -585,6 +588,11 @@ void EnvelopFunctionApprox::do_solve()
   //system->solution->zero();
   //system->solution->close();
 
+  //-----test--------------------
+  // vector<double> density_of_state = calculate_cell_prob_function(0);
+  //string f("test16.dat");
+  //vector<string> ns(1, "|psi^2|");
+  //GraceIO(*mesh).write_elemental_data(f,density_of_state , ns);
  
 }
 //===========================================================//
@@ -2667,6 +2675,8 @@ std::vector<double> EnvelopFunctionApprox::estimate_density(double parallel_mass
   {
     const double Fermi_energy = solution[i].Fermi_energy;
 
+    cerr << solution[i].Fermi_energy << "\n";
+
     const double Energy = solution[i].eigen_energy;
       
     double prob_factor = std::log(1 + exp( (Fermi_energy - Energy) / T_EV )  );
@@ -2682,6 +2692,7 @@ std::vector<double> EnvelopFunctionApprox::estimate_density(double parallel_mass
 
     for (unsigned int j = 0; j < n; j++)
     {
+      cerr << j << "  " <<  density_of_state[j] << "\n";
       result[j] +=  density_of_state[j] * prob_factor * mass_factor / 
 	( (Constants::bohr_radius) * (Constants::bohr_radius) * (Constants::bohr_radius) * 1.0e6 );
     }
