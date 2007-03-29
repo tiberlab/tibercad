@@ -97,7 +97,7 @@ class InputParser{
    *  Returns a map between Model name and a pointer to ModelStructure 
    * associated to the model. 
    */
-  const std::map <const std::string, ModelStructure*>& read_models(void);
+  const std::multimap <const std::string, ModelStructure*>& read_models(void);
 
  
 
@@ -189,7 +189,7 @@ class InputParser{
   /*!
    *   Map between  model name and  \c ModelStructure object associated.
    */
-  std::map <const std::string, ModelStructure*>  model_structure_map;
+  std::multimap <const std::string, ModelStructure*>  model_structure_map;
 
   /*!
    *   Map between  BC region number and the Region Structure  for the associated BC region.
@@ -300,7 +300,7 @@ class InputParser{
    * description of model parameters:  physical regions associated to it, 
    * list of boundary conditions defined for the model. 
    */
-  std::map <const std::string, ModelStructure*>& get_model_structure_map(void);
+  std::multimap <const std::string, ModelStructure*>& get_model_structure_map(void);
 
 
   //!   Utility  to  check  label  consistency. 

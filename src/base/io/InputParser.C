@@ -569,7 +569,7 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
 
 
 //void InputParser::read_models()
-const map <const string, ModelStructure*>& InputParser::read_models()
+const multimap <const string, ModelStructure*>& InputParser::read_models()
 
 {
 
@@ -1822,7 +1822,7 @@ InputParser::parse_model(ifstream& in_stream)
 
 
 
-map <const string, ModelStructure*>& InputParser:: get_model_structure_map(void)
+multimap <const string, ModelStructure*>& InputParser:: get_model_structure_map(void)
 {
   
   

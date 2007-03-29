@@ -221,11 +221,11 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   InputParser parser(_inputfile);
 
   // parse the models section
-  const map<const string, ModelStructure*>& models = parser.read_models();
+  const multimap<const string, ModelStructure*>& models = parser.read_models();
 
   // we loop over all simulations to setup the models
-  map<const string, ModelStructure*>::const_iterator modit(models.begin());
-  const map<const string, ModelStructure*>::const_iterator modend(models.end());
+  multimap<const string, ModelStructure*>::const_iterator modit(models.begin());
+  const multimap<const string, ModelStructure*>::const_iterator modend(models.end());
   for ( ; modit != modend; ++modit)
   {
     ModelStructure* model_str = modit->second;
