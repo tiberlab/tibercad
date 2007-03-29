@@ -133,7 +133,7 @@ void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& var
       {
 	std::ostringstream i_str;
 	i_str << "energy_number_" << i ; //The states are numbered starting from 0 
-	legend[i] = i_str.str();
+	legend[i + temp] = i_str.str();
 
 	
 	for (unsigned int i1 = 0; i1<number_of_points; i1++)
