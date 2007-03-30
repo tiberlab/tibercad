@@ -181,7 +181,7 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
     {
       results[i] *= coeff;
     }
-    cerr << results[0] << "    " << results[1] << "\n";
+  
 
 
     //-------------------------------------------------------------------------------------//
