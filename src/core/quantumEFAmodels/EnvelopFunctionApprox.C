@@ -589,7 +589,7 @@ void EnvelopFunctionApprox::do_solve()
   //system->solution->close();
 
   //-----test--------------------
-  // vector<double> density_of_state = calculate_cell_prob_function(0);
+  //vector<double> density_of_state = calculate_cell_prob_function(0);
   //string f("test16.dat");
   //vector<string> ns(1, "|psi^2|");
   //GraceIO(*mesh).write_elemental_data(f,density_of_state , ns);
@@ -2664,6 +2664,7 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 std::vector<double> EnvelopFunctionApprox::estimate_density(double parallel_mass)
 {
   vector<double> result;
+  
 
   double T_EV = opt.Temperature * Constants::k_Boltzmann;
 
@@ -2675,11 +2676,13 @@ std::vector<double> EnvelopFunctionApprox::estimate_density(double parallel_mass
   {
     const double Fermi_energy = solution[i].Fermi_energy;
 
-    cerr << solution[i].Fermi_energy << "\n";
+   
 
     const double Energy = solution[i].eigen_energy;
+
+   
       
-    double prob_factor = std::log(1 + exp( (Fermi_energy - Energy) / T_EV )  );
+    double prob_factor = std::log( 1.0 + exp( (Fermi_energy - Energy) / T_EV )  );
     
     vector<double> density_of_state = calculate_cell_prob_function(i);
 
@@ -2687,14 +2690,17 @@ std::vector<double> EnvelopFunctionApprox::estimate_density(double parallel_mass
 
     if (i == 0)
     {
-      result.resize( density_of_state.size(), 0.0);
+      result.resize(n, 0.0);
     }
 
     for (unsigned int j = 0; j < n; j++)
     {
-      cerr << j << "  " <<  density_of_state[j] << "\n";
+     
+
       result[j] +=  density_of_state[j] * prob_factor * mass_factor / 
 	( (Constants::bohr_radius) * (Constants::bohr_radius) * (Constants::bohr_radius) * 1.0e6 );
+
+     
     }
 
   }
@@ -2729,7 +2735,7 @@ void EnvelopFunctionApprox::calculate_density(double Temperature)
   for (unsigned int i = 0; i < number_of_eigenfunctions; i++)
     {
       
-      
+    
 
       const double Fermi_energy = solution[i].Fermi_energy;
 
@@ -2763,14 +2769,17 @@ void EnvelopFunctionApprox::calculate_density(double Temperature)
 	else
 	  _density[el] += temp;
 	
-
-
+	
+	//	if (el_number == 0) cerr <<  _density[el] << "   ";
+	//      if (el_number == 1) cerr <<  _density[el] << " \n  ";
+	//if (el_number == 1)
+	//  if (_density[el] < _density[*it_begin]) cerr << "problem\n";
 	
 
-//	_density[el] += temp;
+	//_density[el] += temp;
 	el_number++;
       }
-      
+     
      
 
       

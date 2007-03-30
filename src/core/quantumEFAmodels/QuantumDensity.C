@@ -35,6 +35,7 @@ void QuantumDensity::do_plot (void)
     vector<string> names(1,"density[atomic_units]");
 
     const vector<double> results = get_density_in_k_space();
+  
 
 
     if (format == "gmv")
@@ -146,16 +147,28 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
 
     //------------------------------------------------------------------------------------//
     //!from map to vector
+    Mesh & mesh = get_environment().get_mesh();
+    
     map<const Elem*, double>::iterator it = real_space_density.begin();
 
+    MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
     
     results.resize(real_space_density_size);
 
     unsigned int el_number = 0;
 
-    for (; it !=real_space_density.end() ; ++it)
+    for (; el !=end_el ; ++el)
     {
-      results[el_number] = it->second;
+      const Elem* elem = *el; 
+
+      it = real_space_density.find(elem);
+
+      if (it != real_space_density.end())
+	results[el_number] = it->second;
+      else
+	cerr << "WARNING: not all elements have a calculated density\n";
+
       el_number++;
     }
     //-------------------------------------------------------------------------------------//
@@ -168,6 +181,8 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
     {
       results[i] *= coeff;
     }
+    cerr << results[0] << "    " << results[1] << "\n";
+
 
     //-------------------------------------------------------------------------------------//
 
@@ -471,7 +486,7 @@ void QuantumDensity::calculate_density()
   std::vector<unsigned int> dof_indices;
 
 
-  for ( ; it != it_el ; ++it) //loop over k space nodes
+  for ( ; it != it_el ; ++it) //loop over k space elements
     {
 
       const Elem* elem = *it;
@@ -495,21 +510,20 @@ void QuantumDensity::calculate_density()
 		  map<const Elem*, double>::iterator   dens_at_k_node_it = dens_at_k_node.begin();
 		  map<const Elem*, double>::iterator   dens_at_k_node_end = dens_at_k_node.end();
 
+	
 
 		  for ( ; dens_at_k_node_it != dens_at_k_node_end ; ++dens_at_k_node_it) //loop over real space elements
 		  {
 		     const Elem* el = dens_at_k_node_it->first;
 
+		     
+
 		     double temp =  phi[i][qp] * (dens_at_k_node_it->second)*JxW[qp];
-/*
-		     if (it == kmesh->active_elements_begin())
-		       real_space_density.insert(pair<const Elem*, double> (el,temp  ) );
-		     else
-   		       real_space_density[el] +=  temp;
-*/
+
 
 		     real_space_density[el] +=  temp;
 
+		    
 		  }
 
 	
@@ -519,7 +533,8 @@ void QuantumDensity::calculate_density()
 		{
 		  cerr << "WARNING! QuantumDensity   node is missing\n";
 		}
-	      
+
+	     
 
 	    }
 
@@ -701,10 +716,13 @@ void QuantumDensity::calculate_at_each_k_point()
 	  
 	map<const Elem*, double>::iterator density_it = dens.begin();
 	map<const Elem*, double>::iterator density_end   = dens.end();
+	
+
 
 	for ( ; density_it != density_end  ; ++density_it )
-	  density_it->second *= opt.degeneracy;
-     
+	{
+	  density_it->second *= opt.degeneracy;	 
+	}
      
 	k_point_density.insert( pair< const Node*, map<const Elem*, double> > (nd, dens) );
 
