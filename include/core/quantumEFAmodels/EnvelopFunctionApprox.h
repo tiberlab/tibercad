@@ -289,6 +289,13 @@ class EnvelopFunctionApprox  : public SimulationInterface
   const std::map<const Elem*, double>& get_density(void) const 
   { return _density; } ;
 
+  //!returns number of bands
+  inline unsigned int get_number_of_bands(void) const;
+
+
+  //!returns map for kp bands
+  inline const std::map<short, short>& get_kp_bands(void) const;
+
  private:
 
   //!pointer to the device object
@@ -653,4 +660,22 @@ inline EnvelopFunctionApprox*  EnvelopFunctionApprox::create()
 {
   return (new EnvelopFunctionApprox );
 }
+
+
+//---------------------------------------------------------
+
+inline  unsigned int EnvelopFunctionApprox::get_number_of_bands(void) const
+{
+  return (opt.number_of_bands);
+}
+
+//--------------------------------------------------------------------
+inline const std::map<short, short>& EnvelopFunctionApprox::get_kp_bands(void) const
+{
+
+  return (opt.kp_bands);
+
+}
+
+//--------------------------------------------------------------------
 #endif

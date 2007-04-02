@@ -1,14 +1,17 @@
 #ifndef _OpticsKP_H_
 #define _OpticsKP_H_
 
-#include  "EnvelopFunctionApprox.h"
-#include "KPbulkHamiltonian.h"
+
+#include "SimulationInterface.h"
+
+#include "EnvelopFunctionApprox.h"
+class  KPbulkHamiltonian;
 
 
 
 
 //!Class that calculates optical matrix elements in k.p formalism
-class OpticsKP
+class OpticsKP: public SimulationInterface
 {
  public:
 
@@ -18,21 +21,12 @@ class OpticsKP
   //! constructor
   OpticsKP();
 
-
-  //! constructor
-  /*!
-    \param initial_state_model intial states of the optical transition
-    \param final_states_model intial states of the optical transition
-   */
-  OpticsKP(const EnvelopFunctionApprox* initial_state_model, const EnvelopFunctionApprox* final_state_model, EquationSystems* es, std::string& system_name);
-
-
   ~OpticsKP();
+
+ 
+ 
   
-  void set_initial_eigen_states(const std::vector < unsigned int >& initial_eigen_state_numbers	); 
-
-  void set_final_eigen_states(const std::vector < unsigned int >& final_eigen_state_numbers	); 
-
+ 
   //! calculate momentum matrix elements 
   /*!
     \param P_matrix matrix that contains momentum matrix elements
@@ -41,23 +35,32 @@ class OpticsKP
   void get_P_matrix_elements (std::vector< std::vector <std::vector <  Complex  >  >  > &  P_matrix);
 
 
-  //! set kp material model for optics calculation
+  //! creates kp material model for optics calculation
   /*!
-    Has to 8x8 model. Parameters may be different from those used in Schroedinger equation.
+    Has to be 8x8 model. Parameters may be different from those used in Schroedinger equation.
    */ 
-  void set_material_parameters(std::map<unsigned int, KPbulkHamiltonian*>&  bulkHamiltonian); 
+
+  virtual PhysicalModel*
+    create_physical_model(const ModelOptions& options) const
+    throw (ModelErrorException);
+    
+  
+  //!Here returns NULL
+  virtual BoundaryProperties*
+    create_boundary_model(const ModelOptions& options) const
+    throw (ModelErrorException);
+
+
+
+  // void set_material_parameters(std::map<unsigned int, KPbulkHamiltonian*>&  bulkHamiltonian); 
 
   //! calculate Px, Py and Pz matrixes 
   void calculate_matrix(void);
 
 
-  //!calculate averaged value of the electrochemical potential <\psi|\mu|psi>
-  /*!
-    \param  i number of state
-    \param  kind  1: the initial state; 2: the final state
-   */
-  double calculate_fermi_averaged(unsigned int i, short kind);
+ 
 
+  static OpticsKP* create();
 
  private:
 
@@ -65,16 +68,22 @@ class OpticsKP
   EquationSystems* es ;
   
 
+  //!pointer to the device object
+  static  Device* _device;
+
+
+  //!numbers of eigensates that are considered as intial states for optical transition
   std::vector<unsigned int> _initial_eigen_state_numbers;
 
 
+  //!numbers of eigensates that are considered as final states for optical transition
   std::vector<unsigned int> _final_eigen_state_numbers;
 
-
+  //!pointer to the eigenvalue solver for initial states
   const EnvelopFunctionApprox* initial_state_model;
 
 
-
+  //!pointer to the eigenvalue solver for final states
   const EnvelopFunctionApprox* final_state_model;
 
  
@@ -109,6 +118,8 @@ class OpticsKP
   //!system that we add to the equation systems
   LinearImplicitSystem* system;
 
+  //!length scale from mesh units to atomic unit
+  double length_scale;
 
   //!my Jacobian because I calculate everything in atomic units
   double my_Jacobian; 
@@ -120,9 +131,23 @@ class OpticsKP
   */
   std::vector<Complex> calculate_matrix_element(unsigned int i, unsigned int j);
 
- 
+
+  
+
+ protected:
+
+   virtual void 	do_init(void);
+
+   virtual void 	do_solve (void);
+
+   virtual void 	parse_options (void);
 
 
 };
+
+inline OpticsKP* OpticsKP::create()
+{
+  return (new OpticsKP);
+}
 
 #endif

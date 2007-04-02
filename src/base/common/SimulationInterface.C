@@ -11,6 +11,7 @@
 #include "EnvelopFunctionApprox.h"
 #include "MacroHeatBalance.h"
 #include "QuantumDensity.h"
+#include "OpticsKP.h"
 
 #include "Sweep.h"
 #include "SelfconsistentSolver.h"
@@ -97,7 +98,9 @@ SimulationInterface::create(const string& type,
     else if (type == "selfconsistent")
       sim = SelfconsistentSolver::create();
     else if (type == "quantumdensity")
-      sim = QuantumDensity::create(); 
+      sim = QuantumDensity::create();
+    else if (type == "opticskp")
+      sim = OpticsKP::create();
   }
 
   if (sim != NULL)
