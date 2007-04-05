@@ -314,7 +314,7 @@ void EnvelopFunctionApprox::parse_options()
   opt.spectrum_shift          = mod_opt.get_option("spectrum_shift", 0.0);
 
 
-
+  opt.relative_density_tolerance =  mod_opt.get_option("relative_density_tolerance", 1e-2);
 
   //-------------------------------------------------------------------------------------------//
   //strain model
@@ -420,6 +420,9 @@ void EnvelopFunctionApprox::parse_options()
   number_of_nodes = used_nodes.size();
   
   opt.convergent_density = mod_opt.get_option("convergent_density", true);
+
+
+  opt.local_occupation              = mod_opt.get_option("local_occupation", true);
 }
 
 
@@ -2610,10 +2613,11 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 
       poisson_equation->get_solution(elem, center, dd_solution);
 
+      //why minus? because  DriftDiffusion::Solution contaions potential not energy
       if (opt.particle == "el")
-	chem_pot_value_eV = dd_solution.fermi_e;
+	chem_pot_value_eV = -dd_solution.fermi_e;
       else
-	chem_pot_value_eV = dd_solution.fermi_h;
+	chem_pot_value_eV = -dd_solution.fermi_h;
 
      
       for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
@@ -2758,9 +2762,31 @@ void EnvelopFunctionApprox::calculate_density(double Temperature)
       {
 	const Elem* el = *it;
 	
-	double temp = density_of_state[el_number] * prob_factor;
 
+
+	if (opt.local_occupation)
+	{
+	  DriftDiffusion::Solution dd_solution;
+
+	  Point center = el->centroid();
+
+	  poisson_equation->get_solution(el, center, dd_solution);
+	  
+	  double chem_pot_value_eV;
+
+	  //!why minus? because I need energy, not a potential
+	  if (opt.particle == "el")
+	    chem_pot_value_eV = -dd_solution.fermi_e;
+	  else
+	    chem_pot_value_eV = -dd_solution.fermi_h;
+
+	  prob_factor = Fermi_statistics_probability(Energy,  chem_pot_value_eV, Temperature); //Thermal probability
+	}
 	
+	
+	  double temp = density_of_state[el_number] * prob_factor;
+	
+
 	if (it == it_begin && i == 0)
 	{
 	
@@ -3036,6 +3062,8 @@ void EnvelopFunctionApprox::calculate_convergent_density(double T)
 
   if  (opt.convergent_density && (!converged))
     {
+     
+
       number_of_states = (unsigned int) (number_of_states * opt.eigen_number_increase_factor) + 1;
       
       opt.solve_ev_problem_twice = false;
@@ -3051,6 +3079,7 @@ void EnvelopFunctionApprox::calculate_convergent_density(double T)
       total_density = total_density1;
     }
 
+ 
   calculate_density(T );
  
 }

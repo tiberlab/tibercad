@@ -140,6 +140,9 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
     double Temperature;//!Temperature for density calculation
 
+
+    bool local_occupation; //!If a local occupation is considered 
+
   };
 
 
