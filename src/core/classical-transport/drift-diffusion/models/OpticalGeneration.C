@@ -1,14 +1,22 @@
 #include "OpticalGeneration.h"
 #include "DriftDiffusionProperties.h"
+#include "Material.h"
 
 
 #include <typeinfo>
+
+
+
+//TIBER_MODULE(OpticalGeneration, optical)
+
+
 
 
 void
 OpticalGeneration::do_init(void)
 {
   _G = get_options().get_option("G", 1e-10);
+  _G = get_material()->get_options().get_option("G", _G);
 }
 
 void
