@@ -2,7 +2,7 @@
 #define _LATTICETHERMALCONDUCTIVITY_H_
 
 #include "PhysicalModelInterface.h"
-
+#include "SimulationOptions.h"
 
 
 
@@ -32,8 +32,12 @@ public:
   //!provides conductivity in simulation system W/(cm K)
   inline void get_conductivity(Tensor2Sym& conductivity) const; 
 
-  
-  
+  //Temperature
+
+  double temperature;
+     
+   virtual void update_tensor(void)=0;
+
 
 private:
 
@@ -51,7 +55,6 @@ protected:
 
   virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa); 
 
-
   virtual PhysicalModelInterface* create_new (void) const =0;
 
   //!conductivity tensor in simulation system. Units W/(cm K)
@@ -65,14 +68,14 @@ protected:
 
 void  LatticeThermalConductivity::get_conductivity(Tensor2Sym& conductivity) const
 {
-  conductivity = _conductivity;
+   conductivity = _conductivity;
 }
 
  void LatticeThermalConductivity::rotate_to_calculation_system(const Tensor2Gen& RotMatrix)
 {
 
-  // generates stiffness matrix in calculation system
-  _conductivity = sym(RotMatrix *( _conductivity * (RotMatrix.transpose())));
+  // generates conductivity matrix in calculation system
+  _conductivity = sym(RotMatrix * ( _conductivity * (RotMatrix.transpose())));
 
 
 }

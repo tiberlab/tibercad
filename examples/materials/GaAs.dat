@@ -104,6 +104,7 @@ gamma_h  = 1
 #Lattice thermal conductivity [W/(cm*K)]
 therm_lat_cond = 0.55
 
-#Thermoelectric power [V/K]
-eTEpower = 2
-hTEpower = 2
+
+#Thermoelectric power [mV/K]
+eTEpower = -200
+hTEpower = 200

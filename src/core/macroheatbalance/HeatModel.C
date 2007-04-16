@@ -1,5 +1,6 @@
 #include "HeatModel.h"
 #include "Material.h"
+#include "LatticeThermalConductivity.h"
 HeatModel::HeatModel() 
 {
 	
@@ -29,25 +30,36 @@ PhysicalModelInterface* HeatModel::create_new (void) const
 void HeatModel::do_init()
 {
 
-  PhysicalModelInterface::destroy(kappa);
-  
-  PhysicalModelInterface::destroy(thermoelectric_power);
-
   const ModelOptions& opt =  get_options ();
+  //Kappa
+
+  PhysicalModelInterface::destroy(kappa);
+
+  ModelOptions::const_submodel_iterator  it = get_options().submodels_begin("Lattice_thermal_conductivity");
+
+  const ModelOptions& kappa_option = (it->second);
+
+    //const std::string& name = (it->second).get_option("kappa_model", "constant");
+  
+
 
   kappa =dynamic_cast<LatticeThermalConductivity*>
-    (  PhysicalModelInterface::create("lat_therm_cond_" + get_material()->get_structure(),  opt  )  );
-  
-  
-  thermoelectric_power =dynamic_cast<ThermoelectricPower*>
-    (  PhysicalModelInterface::create("thermoelectric_power" ,  opt  ))  ;
+    (  PhysicalModelInterface::create("lat_therm_cond_" + get_material()->get_structure(),  kappa_option  )  );
 
-
-
+  kappa->temperature = SimulationOptions::temperature;
+    
   kappa->set_material(get_material());
 
   kappa->init();
 
+
+  //Thermoelectric_power
+
+  PhysicalModelInterface::destroy(thermoelectric_power);
+
+
+  thermoelectric_power =dynamic_cast<ThermoelectricPower*>
+    (  PhysicalModelInterface::create("thermoelectric_power" ,  opt  ))  ;
 
   thermoelectric_power->set_material(get_material());
   

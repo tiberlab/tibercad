@@ -26,13 +26,14 @@
  #include "dense_subvector.h"
 
 #include "LatticeThermalConductivity.h"
+#include "ZbLatticeThermalConductivity.h"
 #include "ThermoelectricPower.h"
 #include "HeatModel.h"
 #include "SimulationEnvironment.h"
 #include "Material.h"
 #include "Boundary.h"
 #include "Reservoir.h"
-
+#include "SimulationOptions.h"
 
 using namespace std;
 MacroHeatBalance* MacroHeatBalance::static_this;
@@ -56,7 +57,9 @@ void MacroHeatBalance::parse_options( )
   }
 
 
+  
   opt.thomson_peltier_effect = sim_opt.get_option("thomson_peltier", "noTPeffect");
+  
 
   if (opt.thomson_peltier_effect != "noTPeffect")
   {
@@ -68,11 +71,19 @@ void MacroHeatBalance::parse_options( )
   }
 
 
+  opt.kappa_solve = sim_opt.get_option("kappa_solve", "no_self");
  
+  if (opt.kappa_solve.compare("self_consistent") == 0 )
+  {  
+    opt.max_error = sim_opt.get_option("max_error",1e-2);
+  }
+
+   
 }
 
 void MacroHeatBalance::do_init( ) 
 {
+  
 
   const ModelOptions& sim_opt = get_options();
 
@@ -95,8 +106,6 @@ void MacroHeatBalance::do_init( )
 
   equation_systems = & (get_equation_systems());
 
-  
-
   system_name = get_equation_system_name();
 
   equation_systems->add_system<LinearImplicitSystem> (system_name);
@@ -106,7 +115,7 @@ void MacroHeatBalance::do_init( )
   my_system->add_variable("T", FIRST);
 
 
- // Insert the pointer to function that LibMesh library has to use    
+   // Insert the pointer to function that LibMesh library has to use    
   my_system->attach_assemble_function (assemble_heat_matrix);
 
    // Initialize the data structures for the equation system.
@@ -125,8 +134,76 @@ void  MacroHeatBalance::do_solve()
 
    my_system->solution->zero();
 
+ 
+
+   //Get the number of active elements---------------------------------------
+
+    MeshBase::const_node_iterator       nd     = mesh->active_nodes_begin();
+    const MeshBase::const_node_iterator nd_el  = mesh->active_nodes_end();
+
+    unsigned int number_of_points = 0;
+    for ( ; nd != nd_el ; ++nd)  number_of_points++;
+
+    //-----------------------------------------------------------------------
+
+
+   for ( unsigned int n = 0 ; n != number_of_points; ++n)
+   {
+     (*(my_system->solution)).set(n,SimulationOptions::temperature); 
+   }
+
    my_system->solve();
 
+  
+   if (opt.kappa_solve.compare("self_consistent") == 0)
+   {
+     cout<<endl;
+     cout<<"Start loop over lattice thermal conductivity"<<endl; 
+     cout<<endl;
+     
+     double norm_error;
+
+     norm_error = opt.max_error + 1;
+     
+     //Inizialize the old_soluction----------------------------------------
+     vector<double> old_solution((*(my_system->solution)).size());
+     
+
+     for ( unsigned int n = 0 ; n != (*(my_system->solution)).size(); ++n) 
+         { old_solution[n] = (*(my_system->solution))(n);}
+
+     //-------------------------------------------------------------------  
+    
+     for (; norm_error> opt.max_error;)
+     {
+  
+                
+       my_system->solve();
+       
+       
+       //Compute error and old_solution
+       norm_error = 0.0;
+       for ( unsigned int n = 0 ; n !=  (*(my_system->solution)).size(); ++n)
+       {
+	 norm_error += (old_solution[n]-(*(my_system->solution))(n)) * (old_solution[n]-(*(my_system->solution))(n));
+	 old_solution[n] = (*(my_system->solution))(n);
+         
+       }
+	
+
+       norm_error = sqrt(norm_error);
+       
+       //------------------------ 
+       
+       cout<<"Error_norm = " <<norm_error<<endl;
+       
+     } //end for 
+     cout<<endl;
+     cout<<"End loop over lattice thermal conductivity"<<endl;	
+     cout<<endl;   
+     
+   }//end if
+   
 }
 //--------------------------------------------------------------------------------//
 MacroHeatBalance::~MacroHeatBalance()
@@ -199,6 +276,7 @@ void MacroHeatBalance::build_nodal_results (const std::set< std::string > &varia
 
     results.resize(number_of_points, 0.0);
 
+    
     MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
     const MeshBase::const_element_iterator end =     mesh->active_local_elements_end();
 
@@ -215,13 +293,13 @@ void MacroHeatBalance::build_nodal_results (const std::set< std::string > &varia
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
 	unsigned int id =  elem->node(n);
-	results[id]  =  (*(my_system->solution))(dof_indices[n]);
+        
+	results[id]  =  (*(my_system->solution))(dof_indices[n]);       
+
+
       }
     }
-
   }
-  
-
 }
 
 //----------------------------------------------------------------------------------//
@@ -263,7 +341,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   
   // Boundary integration requires one quadraure rule,
   // with dimensionality one less than the dimensionality
-  // of the element.
+  // o cout<<"Start loop over lattice thermal conductivity"<<endl;f the element.
   QGauss qface(dim-1, THIRD);
   
   // Tell the finite element object to use our
@@ -272,7 +350,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   fe_face -> attach_quadrature_rule (&qface);
   
   // Here we define some references to cell-specific data that
-  // will be used to assemble the linear system.
+  // will be used to assemble the lin ModelOptions&ear system.
   //
   // The element Jacobian * quadrature weight at each integration point.   
   const std::vector<Real>& JxW = fe->get_JxW();
@@ -310,12 +388,13 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
   HeatModel* heat_model;
 
-  const LatticeThermalConductivity* lattice_conductivity; 
+  LatticeThermalConductivity* lattice_conductivity; 
 
-  
   double eTEpower;
 
   double hTEpower;
+
+  double Tloc;
 
   const ThermoelectricPower* thermoelectric_power;  
 
@@ -326,7 +405,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   std::vector<DriftDiffusion::Currents>   currents; 
 
 
-  //-----------------------------------------------------------------//
+  //----------------------------------------------------------LatticeThermalConductivity-------//
   
 
   //-----------------------------------------------------------------//
@@ -337,29 +416,57 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   //----------------------------------------------------------------//
 
 
+ 
+
   //Initialize pot_per current
   std::vector< std::vector<double> > pot_per_current;
   
+
   for ( ; el != end_el ; ++el)   //loop over elements
   {  
     const Elem* elem = *el;
     
     ID subdomain = elem->subdomain_id();
-    
+
+    dof_map.dof_indices (elem, dof_indices); 
     
     const Material* mat = _device->get_material(subdomain);
     
     heat_model =  (  dynamic_cast<HeatModel*> (  mat ->get_model(get_id()) )  );
     
     
-    //Lattice thermal  conductivity
+    //Return a pointer to lattice_thermal_conductivity object
     lattice_conductivity = heat_model->get_lattice_conductivity();
-    
-    lattice_conductivity->get_conductivity(kappa);
+
+    if (opt.kappa_solve.compare("self_consistent") == 0)
+    {
+      //Dependence by Temperature
+      
+      //Mean temperature for a given element
+      
+      Tloc = 0.0;
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {   
+	Tloc +=  (*(my_system->solution))(dof_indices[n]); 
+      }
+      
+      Tloc /= elem->n_nodes();
+
+      lattice_conductivity->temperature = Tloc;
+      
+      lattice_conductivity->update_tensor();
 
    
+      
+      //-------------------------------------   
+    }
+    
+    lattice_conductivity->get_conductivity(kappa);
+    
+    
+    
     //Inclusion of Peltier effect
-     
+    
     
      if (opt.thomson_peltier_effect != "noTPeffect")    
      {
@@ -375,8 +482,9 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     	
 	
 	
-    dof_map.dof_indices (elem, dof_indices); 
-    
+   
+  
+
     const unsigned int n_dofs   = dof_indices.size();
     
     fe->reinit (elem);
@@ -398,7 +506,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     
     
       
-    for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
+        for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
       
     { // loop over test function
 

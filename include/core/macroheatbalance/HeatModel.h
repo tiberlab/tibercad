@@ -21,9 +21,11 @@ class HeatModel: public PhysicalModel
    //! creates a new object
   static HeatModel* create();
   
-  inline const LatticeThermalConductivity* get_lattice_conductivity(void) const;
+  inline  LatticeThermalConductivity* get_lattice_conductivity(void) const;
+
 
   inline const ThermoelectricPower* get_thermoelectric_power(void) const;
+
 
   
  private:
@@ -58,13 +60,14 @@ class HeatModel: public PhysicalModel
 
 
 
-inline HeatModel* HeatModel::create()
+inline 
+HeatModel* HeatModel::create()
 {
   return new  HeatModel();
 }
 
-
-inline const LatticeThermalConductivity* HeatModel::get_lattice_conductivity(void) const
+inline 
+LatticeThermalConductivity* HeatModel::get_lattice_conductivity(void) const
 {
   return( kappa );
 }

@@ -15,7 +15,8 @@ class Mesh;
 //!  Class to solve heat transport problem
 class MacroHeatBalance : public SimulationInterface
 /*!
-*-\nabla \cdot(k \nabla T)+ \nabla \cdot (T P_n J_n + T P_p J_p)=-\nabla cdot (J_n \phi_n + J_p \phi_p)
+  
+ \f$ -\nabla_i \cdot(k_{i,j} \nabla_j T)+ \nabla \cdot (T P_n J_n + T P_p J_p)=-\nabla cdot (J_n \phi_n + J_p \phi_p)\f$
 */
 
 {
@@ -27,13 +28,19 @@ class MacroHeatBalance : public SimulationInterface
     double  lin_tol; //!< linear tolerance 
     std::string  current_simulation; //!< name of drift-diffusion simmulation
     std::string  thomson_peltier_effect;
-   
-    
+  
+    std::string  kappa_solve; //!< Model for lattice thermal conductivity
+      
+    double max_error; //!< Max tollerance for self-consistent loop  
+
     double work_units; //!< SI units, has to be consistent with the database parameters
 
     double length_scale; //!< mesh_units/work_units
 
   };
+
+ 
+
 
   //!Constructor
   MacroHeatBalance();
@@ -54,17 +61,19 @@ class MacroHeatBalance : public SimulationInterface
   //!Create an MacroHeatBalance object 
   static MacroHeatBalance*  create(void);
   
+
+
   
  private:
   
   EquationSystems * 	equation_systems;
-  
+
 
   std::string system_name;
 
   LinearImplicitSystem* my_system;  
  
-  
+  //! Order the solution in correct mode
   virtual void 	build_nodal_results(const std::set< std::string > &variables, 
 				     std::vector< double > &results, 
 				     std::vector< std::string > &legend);
@@ -92,9 +101,6 @@ class MacroHeatBalance : public SimulationInterface
   
  
   //! \copydoc  SimulationInterface::do_init() 
-  /*!
-    In this class it does ...
-   */
   virtual void 	do_init (void);
   
   //!Do the solve
