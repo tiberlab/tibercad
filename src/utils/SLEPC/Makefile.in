@@ -7,21 +7,47 @@ PETSC_ARCH = @COMPLEX_PETSC_ARCH@
 
 SLEPC_DIR  = @SLEPC_DIR@
 PETSC_DIR  = @COMPLEX_PETSC_DIR@
-
+CXX = @CXX@
 BOPT = O_complex
 
 MANSEC           = EPS
 
-include ${SLEPC_DIR}/bmake/slepc_common
+#include ${SLEPC_DIR}/bmake/slepc_common
+
+CFLAGS += -fPIC
 
 
-all: ex7.o 
-	@${CLINKER}  -o ex7 $(CXXFLAGS) $(FFLAGS) $(INCLUDE) ex7.o ${LDFLAGS} ${SLEPC_LIB}
-	\cp ex7 ../../../bin/
 
+libeigen_solver.so:  eigen_solver.o
+	@${CXX}   -shared -Wl,-soname,libeigen_solver.so -Wl,--version-script,export.map \
+ -o libeigen_solver.so $(CFLAGS) eigen_solver.o  \
+\
+/usr/pack/slepc-2.3.0-ma/lib/linux-gnu-complex/libslepc.a \
+/usr/pack/slepc-2.3.0-ma/lib/linux-gnu-complex/libslepcfortran.a \
+/usr/pack/petsc-2.3.0-ma/lib/linux-gnu-complex/libmpiuni.a \
+\
+/usr/pack/slepc-2.3.0-ma/ARPACK/libparpack.a \
+/usr/pack/slepc-2.3.0-ma/ARPACK/libarpack.a \
+/usr/pack/mpich-1.2.7p1-ma/lib/libfmpich.a \
+/usr/pack/intel_fc-8.1-ma/lib/libifcore.a \
+/usr/pack/intel_fc-8.1-ma/lib/libirc.a \
+\
+/usr/pack/petsc-2.3.0-ma/lib/linux-gnu-complex/libpetscts.a \
+/usr/pack/petsc-2.3.0-ma/lib/linux-gnu-complex/libpetscksp.a  \
+/usr/pack/petsc-2.3.0-ma/lib/linux-gnu-complex/libpetscdm.a \
+/usr/pack/petsc-2.3.0-ma/lib/linux-gnu-complex/libpetscmat.a  \
+/usr/pack/petsc-2.3.0-ma/lib/linux-gnu-complex/libpetscvec.a \
+/usr/pack/petsc-2.3.0-ma/lib/linux-gnu-complex/libpetsc.a 
+
+	\cp libeigen_solver.so ../../../lib/
+
+eigen_solver.o: eigen_solver.c
+	@${CXX} -c eigen_solver.c -I /usr/pack/slepc-2.3.0-ma/include -I /usr/pack/petsc-2.3.0-ma/include/ \
+-I  /usr/pack/petsc-2.3.0-ma/bmake/linux-gnu-complex/  -I /usr/pack/petsc-2.3.0-ma/include/mpiuni/ \
+-I ../../../include/utils/SLEPC/
 
 clean:
-	rm -f *.o ex7
+	rm -f *.o libeigen_solver.so
 
 distclean: clean
 

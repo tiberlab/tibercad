@@ -25,7 +25,7 @@ PhysicalModel* OpticsKP::create_physical_model(const ModelOptions& options) cons
   kp8x8options["model"] = "kp";
   kp8x8options["kp_model"] = "8x8";
 
-  EFAbulkModel* model = dynamic_cast<EFAbulkModel*> ( PhysicalModelInterface::create("EFAmodel", options) );
+  EFAbulkModel* model = dynamic_cast<EFAbulkModel*> ( PhysicalModelInterface::create("EFAmodel", kp8x8options ) );
 
   if (model == NULL)
     throw ModelErrorException("OpticsKP: cannot create EFAbulkModel");
@@ -48,6 +48,7 @@ OpticsKP::OpticsKP()
 
   initial_state_model = NULL;
   final_state_model = NULL;
+
 
 }
 
@@ -165,7 +166,34 @@ void OpticsKP::do_init()
 void OpticsKP::do_solve()
 {
 
+  parse_options();
 
+  calculate_matrix();
+
+  //temporary_solution------------------------------
+  unsigned int n1 =  _initial_eigen_state_numbers.size();
+  unsigned int n2 =  _final_eigen_state_numbers.size();
+  std::vector< std::vector <std::vector <  Complex  >  >  >   P_matrix;
+  get_P_matrix_elements(P_matrix);
+  std::ostringstream os3;
+  os3 << "output/optics.out";
+	  
+  std::ofstream out_optics(  (os3.str()).c_str()   );
+	  
+  for (int i = 0; i < n1; i++) 
+    for (int j = 0; j < n2; j++) 
+    {
+      out_optics << i << "   " << j <<  "  " ;
+      for (int p = 0; p < 3; p++) 
+      {
+	cerr << p << "  " << i  <<"   " << j   <<  P_matrix[p][i][j] << "\n";
+
+	out_optics << P_matrix[p][i][j].real() << "   " <<  P_matrix[p][i][j].imag() <<"         " ;
+      }
+      out_optics << "\n";
+    }
+
+  //------------------------------------------------
 }
 
 
@@ -347,8 +375,8 @@ void OpticsKP::calculate_matrix(void)
       element_hamiltonian = (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model(); 
 
       element_kp_hamiltonian = dynamic_cast<KPbulkHamiltonian*>  (element_hamiltonian);
+   
       
-
 
       dof_map.dof_indices (elem, dof_indices); 
       const unsigned int n_dofs   = dof_indices.size();
@@ -369,6 +397,8 @@ void OpticsKP::calculate_matrix(void)
 	{//qp
 	  const vector < vector <vector <EFAbulkHamiltonian::MatrixElement> > >&  
 	    P = element_kp_hamiltonian->get_optical_operator() ;
+	  
+
 
 	  for (unsigned int band1 = 0; band1 < 8; band1++)
 	    {//band1
@@ -503,11 +533,14 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   short    num_bands_initial = initial_state_model->get_number_of_bands();
   const map<short, short>&  kp_bands_map_in = initial_state_model->get_kp_bands();
 
+  assert( kp_bands_map_in.size() > 0);
 
   //number of bands in final state
   short    num_bands_final   = final_state_model->get_number_of_bands();
   const map<short, short>&  kp_bands_map_fi = final_state_model->get_kp_bands();
-  
+
+  assert( kp_bands_map_fi.size() > 0);
+
   map<short, short>::const_iterator  band_it;
   
  
@@ -521,7 +554,8 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 	  short band_number1 = row/number_of_nodes;
 	 
 	  band_it = kp_bands_map_in.find( band_number1 );
-	
+	  
+
 	  if (band_it != kp_bands_map_in.end())
 	    {//band exists in kp model of the initial state
 	     
@@ -606,7 +640,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 		     
 		      unsigned int dof_in_final_eigenvector = band_it->second * number_of_nodes + n1%number_of_nodes;
 
- 
+		      
 		      result[pol] += value_complex * conj(eigen_vector_i[dof_in_initial_eigenvector]) * eigen_vector_f[dof_in_final_eigenvector];
 
 

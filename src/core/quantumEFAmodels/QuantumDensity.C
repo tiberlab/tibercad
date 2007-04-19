@@ -323,10 +323,8 @@ void QuantumDensity::do_init( )
      throw  InitFailedException("QuantumDensity: k_space_dimension should be or 1 or 2 or 3");
   }
   //--kspace domain----------------------------------------
-
-
   //---------quantum model---------------------------------------------------------------------//
-
+  
   std::string quantum_simul_name;
   if (mod_opt.find_option("quantum_simulation"))
   {
@@ -339,6 +337,8 @@ void QuantumDensity::do_init( )
   {
     throw  InitFailedException("QuantumDensity: quantum_simulation  has to be specified");
   }
+
+ 
   //--------------------------------------------------------------------------------------------//
 
 
@@ -375,6 +375,9 @@ void QuantumDensity::parse_options( )
  opt.degeneracy                = mod_opt.get_option("degeneracy",1);
  opt.k_domain_refinement       = mod_opt.get_option("refine_k_space", false);
  opt.intial_eigenstates_number = mod_opt.get_option("intial_eigenstates_number", 6);
+
+
+
 
 }
 

@@ -8,10 +8,14 @@
 
 #include "GraceIO.h" //for test only
 
+#include "EigenSolver.h"
+
 using namespace std;
 using namespace Constants;
 
 Device*   EnvelopFunctionApprox:: _device;
+
+
 
 //---------------------------------------------------------------------------------//
 void EnvelopFunctionApprox::build_integrated_quantities (const std::set< std::string > &names, std::vector< double > &values)
@@ -552,9 +556,19 @@ void EnvelopFunctionApprox::do_init( )
    opt.periodicity[2]          = mod_opt.get_option("z-periodicity", false);
 
 
-  
-   
+   //------------------------------------------------------------------------------------------------------//
+   //kp bands map
+   {
+     MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+     const Elem* elem = *el;
+      const ID subdomain = elem->subdomain_id();
+      const Material* mat = _device->get_material(subdomain);
 
+      EFAbulkHamiltonian* element_hamiltonian =
+	(  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model();
+
+      opt.kp_bands = element_hamiltonian->get_kp_bands_map();
+   } 
    //------------------------------------------------------------------------------------------------------//
 
 
@@ -1365,86 +1379,70 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
 
   calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
  
-  
-  if (opt.solve_ev_problem_twice)
-    {
+  SLEPCoptions slep_opt;
 
-      st_shift_value = 0.0;
-
-      std::ostringstream  command_line_0;
-
-      command_line_0 <<     opt.mpi_command_line   ;
-
-      command_line_0 <<  "  eigen_solver  -f1 H.out   -f2 S.out "; 
-      
-      command_line_0 <<  "   -eps_nev     " << 1;
+  slep_opt.H_file_name = "H.out";
     
-      command_line_0 <<  "   -eps_type    " << opt.solver <<"  ";
-      
-      command_line_0 <<  opt.solver_command_line << "  ";
+  slep_opt.S_file_name = "S.out";
 
-      command_line_0 <<   " -eps_tol  1e-5  -eps_max_it 3000 ";
- 
-      command_line_0 <<  "    \n";
+  slep_opt.eps_max_it = 3000;
 
-      if (opt.log_output) 
-      {
-	cout << command_line_0.str()<<"\n";
-	cout.flush();
-      }
+  if (opt.solve_ev_problem_twice)
+  {
 
-      std::system( (command_line_0.str()).c_str());
-
-      read_SLEPC_solution(1);
-
-      assert(solution.size() == 1);
-
-      
-
-      st_shift_value = (solution[0].eigen_energy - opt.spectrum_shift)/Hartree;
-
-      if (opt.particle == "el")
-	 st_shift_value -= 0.01/Hartree;
-      else
-	st_shift_value += 0.01/Hartree;
-    }
+    st_shift_value = 0.0;
 
 
-  std::ostringstream  command_line;
+    slep_opt.ev_number = 1;
 
-  command_line << opt.mpi_command_line   ;
+   
+    slep_opt.eps_tolerance = 1e-5;
+   
+   
   
-  command_line <<  "  eigen_solver  -f1 H.out   -f2 S.out "; 
+    
+    slep_opt.spectrum_shift = st_shift_value;
+
   
-  command_line <<  "   -eps_nev     " << ev_number;
+   
+   
+    int result = eig_value_problem_general(slep_opt);
+   
+    cerr << "result "  << result << "\n";
+   
+   
+    read_SLEPC_solution(1);
+
+    assert(solution.size() == 1);
+
+    cerr << "okay\n"; 
+
+    st_shift_value = (solution[0].eigen_energy - opt.spectrum_shift)/Hartree;
+    
+    if (opt.particle == "el")
+      st_shift_value -= 0.01/Hartree;
+    else
+      st_shift_value += 0.01/Hartree;
+  }
+
+
   
-  command_line <<  "   -eps_type    " << opt.solver ;
+  slep_opt.eps_tolerance = 1e-10;
 
-  command_line << " -st_shift  " <<  st_shift_value ;
-
-  command_line <<  opt.solver_command_line << "  ";
-
-  command_line <<  "    \n";
-
-
-
-  if (opt.log_output) 
-    {
-      cout << command_line.str()<<"\n";
-      cout.flush();
-    }
+  slep_opt.ev_number = ev_number;
+  
+  slep_opt.spectrum_shift  = st_shift_value;
+  
+   
+  int result = eig_value_problem_general(slep_opt);
+  
+  cerr << "result  " << result << "\n";
 
 
-
-  std::system( (command_line.str()).c_str());
 
   read_SLEPC_solution(ev_number);
 
  
-
- 
-  
-
 }
 
 //=============================================================//
@@ -3151,4 +3149,6 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
   return(result);
  
 }
+
+
 //========================================================================================//

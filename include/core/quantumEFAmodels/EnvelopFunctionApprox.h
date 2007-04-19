@@ -174,6 +174,7 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
  
 
+
   //!constructor
   EnvelopFunctionApprox(void);
 
@@ -681,4 +682,9 @@ inline const std::map<short, short>& EnvelopFunctionApprox::get_kp_bands(void) c
 }
 
 //--------------------------------------------------------------------
+
+
+
+
+
 #endif

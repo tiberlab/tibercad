@@ -1,0 +1,6 @@
+{
+  global: eig_value_problem_general;
+          slepc_init;
+          slepc_done;
+  local: *;
+};

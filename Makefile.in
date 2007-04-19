@@ -10,7 +10,7 @@ include Make.common
 
 all: src
 	@$(CXX) -shared -fPIC $(CXXFLAGS) \
-		$(TIBER_OBJECTS) -o lib/libtibercad.so $(LIBS) $(LDFLAGS)
+		$(TIBER_OBJECTS) -o lib/libtibercad.so lib/libeigen_solver.so $(LIBS) $(LDFLAGS)
 	@$(MAKE) -C src/tibercad tibercad
 
 

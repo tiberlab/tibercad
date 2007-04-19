@@ -4,6 +4,8 @@
 #include "PhysicalModelInterface.h"
 
 
+
+
 using namespace std;
 //==================================================================
 
@@ -109,6 +111,11 @@ void KPbulkHamiltonian::do_init()
 	}
     }
 
+
+
+ 
+
+
   short i1 = 0;
 
   for (short i = band_min; i <= band_max; i++) 
@@ -131,6 +138,14 @@ void KPbulkHamiltonian::do_init()
   //apply k|| vector (even if it is zero-vector !!!)
   calculate_Hamiltonian_k_par();
 
+  //-----------------------------------------------
+  //calculate optical operator
+  calculate_optical_operator();
+  calculate_optical_operator_k_par();
+  //-----------------------------------------------
+
+
+
 }
 //==================================================================//
 void KPbulkHamiltonian::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
@@ -150,6 +165,14 @@ void KPbulkHamiltonian::calculate_VCA (const PhysicalModelInterface *comp_A, con
   //apply k|| vector (even if it is zero-vector !!!)
   calculate_Hamiltonian_k_par();
   
+
+  //-----------------------------------------------
+  //calculate optical operator
+
+  calculate_optical_operator();
+
+  calculate_optical_operator_k_par();
+  //-----------------------------------------------
 }
 
 //==================================================================//
