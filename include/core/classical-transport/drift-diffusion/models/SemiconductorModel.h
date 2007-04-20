@@ -24,6 +24,13 @@ class DDsemiconductor;
 class SemiconductorModel : public DriftDiffusionProperties
 {
   public:
+    
+    //! The constructor
+    /*!
+     * This constructor can be called be derived classes to specify
+     * a different model name.
+     */
+    SemiconductorModel(void);
 
     //! The destructor
     virtual ~SemiconductorModel(void);
@@ -43,13 +50,6 @@ class SemiconductorModel : public DriftDiffusionProperties
 
     
   protected:
-    
-    //! The constructor
-    /*!
-     * This constructor can be called be derived classes to specify
-     * a different model name.
-     */
-    SemiconductorModel(void);
 
     /*! \copydoc DriftDiffusionProperties::do_init() */
     virtual void do_init();
@@ -69,9 +69,9 @@ class SemiconductorModel : public DriftDiffusionProperties
      * set the strain.
      */
     DDsemiconductor* get_physical_model(void)
-      { return _bulk_model; };
+      { return bulk_model_; };
 
-    //! Extract the band properties from _bulk_model
+    //! Extract the band properties from bulk_model_
     /*!
      * This method looks for the band extrema and puts the effective
      * mass, band edges etc. into the BandProperties structure
@@ -96,13 +96,13 @@ class SemiconductorModel : public DriftDiffusionProperties
     /*!
      * \c true means that all data is prepared and ready for use
      */
-    bool _is_prepared;
+    bool is_prepared_;
 
     //! The physical model for this semiconductor
     /*!
      * The physical model is based on an effective mass approximation
      */
-    DDsemiconductor* _bulk_model;
+    DDsemiconductor* bulk_model_;
 
 
 };
@@ -125,7 +125,7 @@ inline
 void
 SemiconductorModel::set_to_unprepared(void)
 {
-  _is_prepared = false;
+  is_prepared_ = false;
 }
 
 inline
@@ -143,7 +143,7 @@ SemiconductorModel::copy_from(const PhysicalModelInterface* rhs)
   Parent::copy_from(rhs);
 
   const SemiconductorModel* mod = dynamic_cast<const SemiconductorModel*>(rhs);
-  _is_prepared = mod->_is_prepared;
+  is_prepared_ = mod->is_prepared_;
 
 }
 

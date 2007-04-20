@@ -8,13 +8,20 @@
 
 #include "getpot.h"
 
+
+
+TIBER_MODULE(DirectRecombination, direct)
+
+
+
+
 void
 DirectRecombination::read_database(void)
 {
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
 
-  _C = data("C", _C);
+  C_ = data("C", C_);
   
 }
 
@@ -23,8 +30,8 @@ DirectRecombination::read_database(void)
 void
 DirectRecombination::do_init(void)
 {
-  _C = get_options().get_option("C", _C);
-  _C = (get_material()->get_options()).get_option("C", _C);
+  C_ = get_options().get_option("C", C_);
+  C_ = (get_material()->get_options()).get_option("C", C_);
 }
 
 
@@ -39,7 +46,7 @@ DirectRecombination::get_net_recombination_rates(double& recomb_e,
   double p  = dd.get_hole_density();
   double ni = dd.get_intrinsic_density();
 
-  recomb_e = recomb_h = _C * (n * p - ni * ni);
+  recomb_e = recomb_h = C_ * (n * p - ni * ni);
 }
 
 
@@ -53,8 +60,8 @@ DirectRecombination::get_net_recombination_rate_derivatives(
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
 
-  recomb_e[0] = recomb_h[0] = _C * p; // dR/dn
-  recomb_e[1] = recomb_h[1] = _C * n; // dR/dp
+  recomb_e[0] = recomb_h[0] = C_ * p; // dR/dn
+  recomb_e[1] = recomb_h[1] = C_ * n; // dR/dp
 }
 
 
@@ -68,6 +75,6 @@ DirectRecombination::calculate_VCA(const PhysicalModelInterface* comp_A,
   const DirectRecombination* scB =
     dynamic_cast<const DirectRecombination*>(comp_B);
 
-  _C = alloy(scA->_C, scB->_C, xa);
+  C_ = alloy(scA->C_, scB->C_, xa);
 }
 

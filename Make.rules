@@ -7,7 +7,7 @@ src-clean:
 	@rm -f *.o *~ .*.d *~
 
 src-distclean:
-	@rm -f *.o .*.d *~
+	@rm -f *.so *.o .*.d *~
 
 
 .PHONY: $(subdirs)

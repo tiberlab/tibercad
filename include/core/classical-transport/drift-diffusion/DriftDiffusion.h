@@ -105,6 +105,10 @@ class DriftDiffusion : public SimulationInterface
      * points or elements.
      *
      * The values are given in Volts.
+     * To get the quasi-Fermi energies one has to multiply the electro-chemical
+     * potentials by -e (the potentials refer to a particle with charge -e):
+     * \f[E_{F,n} = -e \phi_n\f]
+     * \f[E_{F,p} = -e \phi_p\f]
      */
     class Solution
     {
@@ -421,6 +425,9 @@ class DriftDiffusion : public SimulationInterface
     };
       
 
+
+    //! Constructor
+    DriftDiffusion(void);
     
     //! Destructor
     virtual ~DriftDiffusion(void);
@@ -592,9 +599,6 @@ class DriftDiffusion : public SimulationInterface
 
 
   protected:
-
-    //! Constructor
-    DriftDiffusion(void);
 
 
     //! Initialize the equation system

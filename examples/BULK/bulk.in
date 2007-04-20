@@ -25,11 +25,6 @@ $Models
      physical_regions = all
     }
 
-    #physical_model electron_mobility
-    #{
-    #  model = doping_dependent
-    #}
-
 
     BC_Regions  
     {
@@ -38,14 +33,14 @@ $Models
         BC_reg_numb = 2
         type = ohmic
         barrier_height = 0.8
-        value = 0.5
+        voltage = 0.5
       }
 
       BC_Region cathode
       {
         BC_reg_numb = 1
         type = ohmic
-        value = 0.0
+        voltage = 0.0
       }
  
     }   
@@ -66,11 +61,10 @@ $Solver
   }
 
 
-
   sweep
   {
     simulation = dd
-    boundary = anode
+    boundary = dd.anode
     start = 0.0
     stop = 1.0
     steps = 10

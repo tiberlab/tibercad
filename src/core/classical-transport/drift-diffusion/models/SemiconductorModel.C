@@ -1,10 +1,11 @@
 // $Id$
 
-#include "Alloy.h"
 
 #include "SemiconductorModel.h"
 #include "ZbDDsemiconductor.h"
 #include "WzDDsemiconductor.h"
+
+#include "Alloy.h"
 
 #include "Database.h"
 
@@ -12,18 +13,22 @@
 
 #include <iostream>
 
+
+TIBER_MODULE(SemiconductorModel, unstrained)
+
+
 using namespace DriftDiffusionDefs;
 using namespace std;
 
 
 SemiconductorModel::~SemiconductorModel(void)
 {
-  PhysicalModelInterface::destroy(_bulk_model);
+  PhysicalModelInterface::destroy(bulk_model_);
 }
 
 SemiconductorModel::SemiconductorModel(void)
-  : _bulk_model(NULL),
-    _is_prepared(false)
+  : bulk_model_(NULL),
+    is_prepared_(false)
 {
 }
 
@@ -35,16 +40,16 @@ SemiconductorModel::do_init(void)
 
   const ModelOptions& opt = get_options();
 
-  PhysicalModelInterface::destroy(_bulk_model);
+  PhysicalModelInterface::destroy(bulk_model_);
 
-  _bulk_model = DDsemiconductor::create(get_material()->get_structure(), opt);
+  bulk_model_ = DDsemiconductor::create(get_material()->get_structure(), opt);
 
-  if (_bulk_model == NULL)
+  if (bulk_model_ == NULL)
     throw InitFailedException("Unknown structure for DDsemiconductor");
 
-  _bulk_model->set_material(get_material());
+  bulk_model_->set_material(get_material());
 
-  _bulk_model->init();
+  bulk_model_->init();
   
 }
 
@@ -83,7 +88,7 @@ SemiconductorModel::calculate_VCA(const PhysicalModelInterface* comp_A,
   const SemiconductorModel* scB =
     dynamic_cast<const SemiconductorModel*>(comp_B);
 
-  _bulk_model->build_alloy(scA->_bulk_model, scB->_bulk_model, xa);
+  bulk_model_->build_alloy(scA->bulk_model_, scB->bulk_model_, xa);
 
   permittivity = alloy(scA->permittivity, scB->permittivity,
         xa, 0.0);
@@ -95,7 +100,7 @@ SemiconductorModel::calculate_VCA(const PhysicalModelInterface* comp_A,
 void
 SemiconductorModel::prepare_element_data(void)
 {
-  if (!_is_prepared)
+  if (!is_prepared_)
   {
     try
     {
@@ -105,7 +110,7 @@ SemiconductorModel::prepare_element_data(void)
     {
     }
   
-    _is_prepared = true;
+    is_prepared_ = true;
   }
 }
 
@@ -119,7 +124,7 @@ SemiconductorModel::extract_band_properties(void)
 {
   // treat conduction band
   const std::vector<DDsemiconductor::band_extremum>& cbs =
-    _bulk_model->get_conduction_band_energy_mass();
+    bulk_model_->get_conduction_band_energy_mass();
   // get minimum
   int id = 0;
   for (int i = 1; i < cbs.size(); i++)
@@ -133,7 +138,7 @@ SemiconductorModel::extract_band_properties(void)
   
   // treat valence band
   const std::vector<DDsemiconductor::band_extremum>& vbs =
-    _bulk_model->get_valence_band_energy_mass();
+    bulk_model_->get_valence_band_energy_mass();
   // get maximum
   id = 0;
   double kT = SimulationOptions::T * Constants::k_B;
@@ -164,7 +169,7 @@ SemiconductorModel::print_info(void) const
 {
   //_bulk_model->calculate_conduction_band_extremum();
   const std::vector<DDsemiconductor::band_extremum>& cbs =
-    _bulk_model->get_conduction_band_energy_mass();
+    bulk_model_->get_conduction_band_energy_mass();
   cout << " - conduction bands:\n";
   for (int i = 0 ; i < cbs.size(); i++)
   {
@@ -177,7 +182,7 @@ SemiconductorModel::print_info(void) const
 
   //_bulk_model->calculate_valence_band_extremum();
   const std::vector<DDsemiconductor::band_extremum>& vbs =
-    _bulk_model->get_valence_band_energy_mass();
+    bulk_model_->get_valence_band_energy_mass();
   cout << " - valence bands:\n";
   for (int i = 0 ; i < vbs.size(); i++)
   {
@@ -197,13 +202,13 @@ void
 SemiconductorModel::calculate_equilibrium_properties(void)
 {
 
-  assert(_bulk_model != NULL);
+  assert(bulk_model_ != NULL);
 
   // calculate conduction and valence band data
-  _bulk_model->calculate_conduction_band_extremum();
-  _bulk_model->calculate_valence_band_extremum();
+  bulk_model_->calculate_conduction_band_extremum();
+  bulk_model_->calculate_valence_band_extremum();
 
-  // get the band properties from _bulk_model
+  // get the band properties from bulk_model_
   extract_band_properties();
 
   // call the method of the parent class

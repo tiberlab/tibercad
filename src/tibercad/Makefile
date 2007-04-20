@@ -14,13 +14,11 @@ srcfiles 	:= $(wildcard *.C)
 objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
 
 
+all: tibercad
 
-all: $(objects)
-
-
-tibercad: all
+tibercad: $(objects)
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad \
-		$(LIBS) $(LDFLAGS)  -ltibercad
+		$(LIBS) $(LDFLAGS) -Wl,-export-dynamic -ltibercad
 #	@$(CXX) $(CXXFLAGS) $(objects) $(TIBER_OBJECTS) \
 #	-o $(topdir)/bin/tibercad $(LIBS) $(LDFLAGS)
 

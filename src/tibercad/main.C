@@ -2,6 +2,7 @@
 
 
 #include "Control.h"
+#include "DLLoader.h"
 
 #include "libmesh.h"
 
@@ -27,6 +28,26 @@ int main (int argc, char** argv)
   }
 
   cout << "TiberCAD version 0.1.0" << endl << endl;
+
+  // Set up some path
+  {
+    // the TiberCAD root
+    string tiberroot;
+    char* root = getenv("TIBERCADROOT");
+    if (root != NULL)
+      tiberroot = string(root);
+
+    // Set up search path for libraries
+    DLLoader::set_library_path(tiberroot + "/lib/tibermodels");
+
+    char* modelpath = getenv("TIBERMODELPATH");
+    if (modelpath != NULL)
+      DLLoader::prepend_to_library_path(modelpath);
+
+    //DLLoader::prepend_to_library_path(".");
+
+    // Set up search path for materials
+  }
 
   libMesh::init(argc, argv);
   {

@@ -8,6 +8,7 @@
 #include "Constants.h"
 #include "ExcitonProperties.h"
 #include "TiberPetscNonlinearSolver.h"
+#include "FiniteElement.h"
 
 // libmesh includes
 #include "node.h"
@@ -641,7 +642,7 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
   const unsigned int u_var = system->variable_number("fermi_x");
 
   FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
 
   vector<unsigned int> dof_indices_u;
 
@@ -916,7 +917,7 @@ ExcitonTransport::build_nodal_results(const set<string>& variables,
   vector<unsigned int> dof_indices_u;
 
   FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
   QGauss qrule(dim, libMeshEnums::CONSTANT);
   fe->attach_quadrature_rule(&qrule);
 

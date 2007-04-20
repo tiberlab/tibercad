@@ -13,26 +13,29 @@
  *
  * \li Formula of Masetti et al. (formula 1):
  * \f[
- * \mu  =  \mu_{min,1}e^{-P_c / N} +
- *  \frac{\mu_{const} - \mu_{min,2}}{1 + (N/C_r)^\alpha} -
- *  \frac{\mu_1}{1 + (C_s/N)^\beta}
+ * \mu  =  \mu_{min,1}e^{-Pc_ / N} +
+ *  \frac{\mu_{const} - \mu_{min,2}}{1 + (N/Cr_)^\alpha} -
+ *  \frac{\mu_1}{1 + (Cs_/N)^\beta}
  * \f]
  * with \f$\mu_{const}\f$ from the ConstantMobility model.
  * 
  * \li Formula of Arora (formula 2):
  * \f{eqnarray*}
  * \mu & = & {\mu_{min}}^\ast +
- * \frac{{\mu_d}^\ast}{1+\left(N/{N_0}^\ast\right)^{\alpha^\ast}} \\
- * \mu_{min}^\ast & = & \mu_{min}\left(\frac{T}{T_0}\right)^{\alpha_m} \\
- * {\mu_d}^\ast & = & \mu_d\left(\frac{T}{T_0}\right)^{\alpha_d} \\ 
- * {N_0}^\ast & = & N_0\left(\frac{T}{T_0}\right)^{\alpha_N} \\
- * \alpha^\ast & = & \alpha\left(\frac{T}{T_0}\right)^{\alpha_a}
+ * \frac{{\mu_d}^\ast}{1+\left(N/{N0_}^\ast\right)^{\alpha^\ast}} \\
+ * \mu_{min}^\ast & = & \mu_{min}\left(\frac{T}{T0_}\right)^{\alpha_m} \\
+ * {\mu_d}^\ast & = & \mu_d\left(\frac{T}{T0_}\right)^{\alpha_d} \\ 
+ * {N0_}^\ast & = & N0_\left(\frac{T}{T0_}\right)^{\alpha_N} \\
+ * \alpha^\ast & = & \alpha\left(\frac{T}{T0_}\right)^{\alpha_a}
  * \f}
  */
 class DopingDependentMobility : public MobilityModelInterface
 {
 
   public:
+
+    //! constructor
+    DopingDependentMobility(void);
 
     //! Destructor
     virtual ~DopingDependentMobility(void);
@@ -48,9 +51,6 @@ class DopingDependentMobility : public MobilityModelInterface
 
 
   protected:
-
-    //! constructor
-    DopingDependentMobility(void);
 
     //! \copydoc MobilityModelInterface::read_database()
     virtual void read_database(void);
@@ -75,59 +75,59 @@ class DopingDependentMobility : public MobilityModelInterface
      * 1 means formula of Masetti et al.
      * 2 means formula of Arora
      */
-    int _formula;
+    int formula_;
 
     //! The minimum mobility
     /*!
      * is mumin1 for formula 1
      */
-    double _mumin;
+    double mumin_;
 
-    //! The temperature coefficient for _mumin
+    //! The temperature coefficient for mumin_
     /*!
      * is mumin2 for formula 1
      */
-    double _am;
+    double am_;
 
     //! The difference between maximum and minimum mobility
     /*!
      * is mu1 for formula 1
      */
-    double _mud;
+    double mud_;
 
-    //! The temperature coefficient for _mud
+    //! The temperature coefficient for mud_
     /*!
      * is Cr for formula 1
      */
-    double _ad;
+    double ad_;
 
     //! The reference doping density
     /*!
      * is Cs for formula 1
      */
-    double _N0;
+    double N0_;
 
-    //! The temperature coefficient for _N0
+    //! The temperature coefficient for N0_
     /*!
      * is alpha for formula 1
      */
-    double _an;
+    double an_;
 
     //! The exponent
     /*!
      * is beta for formula 1
      */
-    double _a;
+    double a_;
 
-    //! The temperature coefficient for _a
+    //! The temperature coefficient for a_
     /*!
      * is Pc for formula 1
      */
-    double _aa;
+    double aa_;
 
 
     //! Constant mobility model
-    MobilityModelInterface* _const_mob;
+    MobilityModelInterface* const_mob_;
 
 };
 
@@ -140,16 +140,16 @@ class DopingDependentMobility : public MobilityModelInterface
 
 inline
 DopingDependentMobility::DopingDependentMobility(void)
-  : _formula(2),
-    _mumin(2000),
-    _am(-1),
-    _mud(6000),
-    _ad(-2),
-    _N0(7e16),
-    _an(4),
-    _a(1),
-    _aa(0),
-    _const_mob(0)
+  : formula_(2),
+    mumin_(2000),
+    am_(-1),
+    mud_(6000),
+    ad_(-2),
+    N0_(7e16),
+    an_(4),
+    a_(1),
+    aa_(0),
+    const_mob_(0)
 {
 }
 
@@ -173,7 +173,7 @@ DopingDependentMobility::create_new(void) const
 inline
 DopingDependentMobility::~DopingDependentMobility(void)
 {
-  PhysicalModelInterface::destroy(_const_mob);
+  PhysicalModelInterface::destroy(const_mob_);
 }
 
 #endif // _DOPINGDEPENDENTMOBILITY_H_

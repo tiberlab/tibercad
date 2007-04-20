@@ -27,10 +27,16 @@ GMSH := @GMSH@
 DIM := 2
 ORDER := 1
 
+# build modules or not
+build_modules := @BUILD_TIBER_MODULES@
+
 
 # TIBERCAD includes
 include_dirs := $(shell find $(topdir)/include -type d -a ! -path "*.svn*")
 TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
+
+CXXFLAGS += -fPIC
+
 
 ifdef DEBUG
   CXXFLAGS += -g
@@ -49,6 +55,7 @@ CXXFLAGS += @GSL_CFLAGS@
 LDFLAGS += @GSL_LIBS@
 
 LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib
+LDFLAGS += -Wl,-rpath,$(topdir)/lib/tibermodels -L$(topdir)/lib/tibermodels
 LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib -ltensor
 
 TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*")

@@ -69,18 +69,11 @@ SimulationInterface::create(const string& type,
   DLLoader::LibraryInterface iface;
   bool success = DLLoader::open_library(type, iface);
 
+  create_t create_fnc = (create_t) iface.create_fnc;
+  destroy_t destroy_fnc = (destroy_t) iface.destroy_fnc;
+
   if(success)
-  {
-    create_t create_fnc = (create_t) iface.create_fnc;
-    destroy_t destroy_fnc = (destroy_t) iface.destroy_fnc;
-
-    // Try to create the object
     sim = create_fnc();
-
-    sim->_libhandle = iface.handle;
-    sim->_create = create_fnc;
-    sim->_destroy = destroy_fnc;
-  }
   else
   {
     if (type == "driftdiffusion")
@@ -105,6 +98,11 @@ SimulationInterface::create(const string& type,
 
   if (sim != NULL)
   {
+    sim->_libhandle = iface.handle;
+    sim->_create = create_fnc;
+    sim->_destroy = destroy_fnc;
+
+
     sim->set_options(options);
 
     // we let it know what's its identifier
@@ -138,14 +136,26 @@ SimulationInterface::create(const string& type,
 void
 SimulationInterface::destroy(SimulationInterface* p)
 {
+  if (p != NULL)
+  {
 #ifdef DEBUG
     cout << "Deleted simulator (ID = " << p->get_id() <<
       " name = " << p->get_name() << " / type_id = " <<
       p->get_default_name() << ")";
     cout << " address = " << p << endl;
 #endif
-  // TODO better call a module internal method
-  delete p;
+
+    libhandle_t libhandle = p->_libhandle;
+    destroy_t destroy_fnc = p->_destroy;
+
+    if (destroy_fnc != NULL)
+      destroy_fnc(p);
+    else
+      delete p;
+
+    if (libhandle != NULL)
+      DLLoader::close_library(libhandle);
+  }
 }
 
 
@@ -339,14 +349,14 @@ SimulationInterface::create_physical_model(const ModelOptions& options) const
 
 void
 SimulationInterface::get_integrated_quantities(
-    const std::set<std::string>& names, std::vector<double>& values)
+    const std::set<std::string>& variables, std::vector<double>& values)
 {
 
   if (_environment != NULL)
     get_environment().prepare_for_solve();
 
   values.resize(0);
-  build_integrated_quantities(names, values);
+  build_integrated_quantities(variables, values);
 }
 
 
@@ -675,14 +685,14 @@ SimulationInterface::get_nodal_results(
 
 void
 SimulationInterface::get_integrated_quantities_description(
-    const std::set<std::string>& names,
+    const std::set<std::string>& variables,
     std::vector<std::string>& legend,
     std::vector<std::string>& description)
 {
   legend.resize(0);
   description.resize(0);
-  if (names.size() > 0)
-    build_integrated_quantities_description(names, legend, description);
+  if (variables.size() > 0)
+    build_integrated_quantities_description(variables, legend, description);
 }
 
 

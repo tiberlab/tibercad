@@ -32,7 +32,7 @@ $Models
 
      physical_model recombination
      { 
-       model  =  SRH
+       model  =  srh
      }                
 
     BC_Regions  
@@ -66,9 +66,10 @@ $Solver
   driftdiffusion
   {
     ksp_type = bcgsl
-    nonlin_max_it = 10
-    #ls_max_step = 0.025
-    #pc_type = jacobi
+    nonlin_step_tol = 1e-4
+    nonlin_max_it = 20
+    #ls_max_step = 0.05
+    #pc_type = composite
   }
 
   sweep
@@ -76,7 +77,7 @@ $Solver
     boundary = anode
     start = 0.0
     stop = 1.0
-    steps = 10
+    steps = 20
     plotvariable = current
   }
 }
@@ -104,8 +105,9 @@ $Simulation
   dimension = 1
   temperature = 300
   solve = sweep
+  #solve = driftdiffusion
   resultpath = output
-  output_format = gmv
+  output_format = grace
   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob)
 }
 

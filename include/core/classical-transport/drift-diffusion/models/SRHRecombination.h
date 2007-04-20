@@ -26,6 +26,9 @@ class SRHRecombination : public RecombinationModelInterface
 
   public:
 
+    //! Constructor
+    SRHRecombination(void);
+
     //! Destructor
     virtual ~SRHRecombination(void) {};
 
@@ -53,9 +56,6 @@ class SRHRecombination : public RecombinationModelInterface
     
   protected:
 
-    //! Constructor
-    SRHRecombination(void);
-
     //! \copydoc RecombinationModelInterface::read_database()
     virtual void read_database(void);
 
@@ -76,22 +76,22 @@ class SRHRecombination : public RecombinationModelInterface
   private:
 
     //! The electron lifetime
-    double _tau_n;
+    double tau_n_;
 
     //! The hole lifetime
-    double _tau_p;
+    double tau_p_;
 
     //! The trap level (from midgap)
-    double _E_t;
+    double E_t_;
 
     //! Temperature coefficient for temperature dependence, electrons
-    double _Talpha_e;
+    double Talpha_e_;
 
     //! Temperature coefficient for temperature dependence, holes
-    double _Talpha_h;
+    double Talpha_h_;
 
     //! Temperature coefficient for exponential temperature dependence
-    //double _Tcoeff;
+    //double Tcoeff_;
 
 };
 
@@ -103,11 +103,11 @@ class SRHRecombination : public RecombinationModelInterface
 
 inline
 SRHRecombination::SRHRecombination(void)
-  : _tau_n(1e-9),
-    _tau_p(1e-9),
-    _E_t(0.0),
-    _Talpha_e(0.0),
-    _Talpha_h(0.0)
+  : tau_n_(1e-9),
+    tau_p_(1e-9),
+    E_t_(0.0),
+    Talpha_e_(0.0),
+    Talpha_h_(0.0)
     //_Tcoeeff(0.0)
 {
 }
@@ -125,8 +125,8 @@ inline
 void
 SRHRecombination::set_SRH_parameters(double tau_n, double tau_p)
 {
-  _tau_n = tau_n;
-  _tau_p = tau_p;
+  tau_n_ = tau_n;
+  tau_p_ = tau_p;
 }
 
 
@@ -145,11 +145,11 @@ SRHRecombination::copy_from(const PhysicalModelInterface* rhs)
   RecombinationModelInterface::copy_from(rhs);
   
   const SRHRecombination* mod = dynamic_cast<const SRHRecombination*>(rhs);
-  _tau_n = mod->_tau_n;
-  _tau_p = mod->_tau_p;
-  _E_t = mod->_E_t;
-  _Talpha_e = mod->_Talpha_e;
-  _Talpha_h = mod->_Talpha_h;
+  tau_n_ = mod->tau_n_;
+  tau_p_ = mod->tau_p_;
+  E_t_ = mod->E_t_;
+  Talpha_e_ = mod->Talpha_e_;
+  Talpha_h_ = mod->Talpha_h_;
 }
 
 

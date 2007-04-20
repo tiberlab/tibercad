@@ -1,10 +1,10 @@
 // $Id$
 
+#include "tiber_config.h"
 #include "PhysicalModelInterface.h"
 #include "DLLoader.h"
 
-// the models
-// this will be done in a more elegant way
+#ifndef BUILD_TIBER_MODULES
 #include "SRHRecombination.h"
 #include "DirectRecombination.h"
 #include "ExcitonGeneration.h"
@@ -14,13 +14,16 @@
 #include "ConstantMobility.h"
 #include "DopingDependentMobility.h"
 
-#include "ExcitonModel.h"
-
-#include "Utils.h"
-
 #include "SimpleSemiconductorModel.h"
 #include "SemiconductorModel.h"
 #include "StrainedSemiconductorModel.h"
+#endif
+#include "MobilityModelInterface.h"
+#include "RecombinationModelInterface.h"
+
+#include "ExcitonModel.h"
+
+#include "Utils.h"
 
 #include "ZbStiffness.h"
 #include "WzStiffness.h"
@@ -75,21 +78,16 @@ PhysicalModelInterface::create(const string& name,
   DLLoader::LibraryInterface iface;
   bool success = DLLoader::open_library(name, iface);
 
-  if(success)
-  {
-    create_t create_fnc = (create_t) iface.create_fnc;
-    destroy_t destroy_fnc = (destroy_t) iface.destroy_fnc;
+  create_t create_fnc = (create_t) iface.create_fnc;
+  destroy_t destroy_fnc = (destroy_t) iface.destroy_fnc;
 
+  if(success)
     // Try to create the object
     mod = create_fnc();
-
-    mod->_libhandle = iface.handle;
-    mod->_create = create_fnc;
-    mod->_destroy = destroy_fnc;
-  }
   else
   {
-    if (name == "dd_rec_SRH")
+#ifndef BUILD_TIBER_MODULES
+    if (name == "dd_rec_srh")
       mod = SRHRecombination::create();
     else if (name == "dd_rec_direct")
       mod = DirectRecombination::create();
@@ -103,13 +101,16 @@ PhysicalModelInterface::create(const string& name,
       mod = ConstantMobility::create();
     else if (name == "dd_mob_doping_dependent")
       mod = DopingDependentMobility::create();
-    else if (name == "ddmodel_simple")
+    else if (name == "dd_simple")
       mod = SimpleSemiconductorModel::create();
-    else if (name == "ddmodel_unstrained")
+    else if (name == "dd_unstrained")
       mod = SemiconductorModel::create();
-    else if (name == "ddmodel_strained")
+    else if (name == "dd_strained")
       mod = StrainedSemiconductorModel::create();
     else if (name == "exmodel_simple")
+#else    
+    if (name == "exmodel_simple")
+#endif
       mod = ExcitonModel::create();
     else if (name == "stiffness_zb")
       mod = ZbStiffness::create();
@@ -158,6 +159,11 @@ PhysicalModelInterface::create(const string& name,
   {
     register_model(mod);
 
+    mod->_libhandle = iface.handle;
+    mod->_create = create_fnc;
+    mod->_destroy = destroy_fnc;
+
+
     mod->set_options(options);
 
     //! set the name
@@ -178,7 +184,6 @@ PhysicalModelInterface::create(const string& name,
 void
 PhysicalModelInterface::destroy(PhysicalModelInterface* p)
 {
-  // TODO call destroy of the model module
 
   if (p != NULL)
   {
@@ -187,6 +192,7 @@ PhysicalModelInterface::destroy(PhysicalModelInterface* p)
     cout << "Delete model (ID = " << p->get_id() <<
       " name = " << p->get_name() << " type_id = " << id << ")\n";
 #endif
+
     libhandle_t libhandle = p->_libhandle;
     destroy_t destroy_fnc = p->_destroy;
 
@@ -195,7 +201,8 @@ PhysicalModelInterface::destroy(PhysicalModelInterface* p)
     else
       delete p;
 
-    DLLoader::close_library(libhandle);
+    if (libhandle != NULL)
+      DLLoader::close_library(libhandle);
   }
 }
 

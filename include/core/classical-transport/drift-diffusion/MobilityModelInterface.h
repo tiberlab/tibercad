@@ -4,10 +4,8 @@
 #define _MOBILITYMODELINTERFACE_H_
 
 
-#ifdef TIBER_MODULE
-# ifndef TIBER_MODULENAME
-#  define TIBER_MODULENAME dd_mob
-# endif
+#ifndef TIBER_MODULE_NAME
+# define TIBER_MODULE_NAME dd_mob
 #endif
 
 

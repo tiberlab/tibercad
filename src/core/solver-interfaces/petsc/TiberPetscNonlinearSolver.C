@@ -127,39 +127,89 @@ extern "C"
   }
 
 
-  /*
   // Checks the update vector before updating
   PetscErrorCode
-  __tiber_snes_update(SNES snes, PetscInt)
+  __tiber_snes_ls_precheck(SNES snes, Vec x, Vec y, void* ctx,
+      PetscTruth* y_changed)
   {
     int ierr = 0;
+    bool change = false;
 
-    Vec x;
-
-    ierr = SNESGetSolutionUpdate(snes, &x);
-    if (ierr != 0) throw(PetscRuntimeError(ierr));
-    
     PetscScalar* vv;
-    ierr = VecGetArray(x, &vv);
+    ierr = VecGetArray(y, &vv);
     if (ierr != 0) throw(PetscRuntimeError(ierr));
 
     PetscInt n;
-    ierr = VecGetLocalSize(x, &n);
+    ierr = VecGetLocalSize(y, &n);
 
     for (int i = 0; i < n; i++)
     {
-      //if (vv[i] > 0.1)
-      //{
-        //vv[i] = 0.0001;
-      //}
+      if (vv[i] > 10)
+      {
+        vv[i] = 10;
+        change = true;
+      }
+      else if (vv[i] < -10)
+      {
+        vv[i] = -10;
+        change = true;
+      }
     }
     
-    ierr = VecRestoreArray(x, &vv);
+    ierr = VecRestoreArray(y, &vv);
     if (ierr != 0) throw(PetscRuntimeError(ierr));
+
+    if (change)
+      *y_changed = PETSC_TRUE;
+    else
+      *y_changed = PETSC_FALSE;
     
     return ierr;
   }
-  */
+
+
+  // Checks the update vector before updating
+  PetscErrorCode
+  __tiber_snes_ls_postcheck(SNES snes, Vec x, Vec y, Vec w, void* ctx,
+      PetscTruth* y_changed, PetscTruth* w_changed)
+  {
+    int ierr = 0;
+    bool change = false;
+
+    PetscScalar* vv;
+    ierr = VecGetArray(y, &vv);
+    if (ierr != 0) throw(PetscRuntimeError(ierr));
+
+    PetscInt n;
+    ierr = VecGetLocalSize(y, &n);
+
+    for (int i = 0; i < n; i++)
+    {
+      if (vv[i] > 1)
+      {
+        vv[i] = 1;
+        change = true;
+      }
+      else if (vv[i] < -1)
+      {
+        vv[i] = -1;
+        change = true;
+      }
+    }
+    
+    ierr = VecRestoreArray(y, &vv);
+    if (ierr != 0) throw(PetscRuntimeError(ierr));
+
+    if (change)
+      *y_changed = PETSC_TRUE;
+    else
+      *y_changed = PETSC_FALSE;
+    
+    return ierr;
+  }
+
+
+
 
 
   // Convergence test
@@ -287,10 +337,17 @@ void TiberPetscNonlinearSolver<T>::init(void) throw (PetscRuntimeError)
     SNESSetMonitor(_snes, __tiber_petsc_snes_monitor, (void*) this, PETSC_NULL);
     PetscPushErrorHandler(__tiber_petsc_snes_error_handler, (void*) this);
 
-    //SNESSetUpdate(_snes, __tiber_snes_update);
 
     ierr = SNESSetType(_snes, SNESLS);
     _checkerr(ierr);
+#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
+    (PETSC_VERSION_SUBMINOR >= 2))
+    //ierr = SNESLineSearchSetPreCheck(_snes,
+    //    __tiber_snes_ls_precheck, (void*) this);
+
+    //ierr = SNESLineSearchSetPostCheck(_snes,
+    //    __tiber_snes_ls_postcheck, (void*) this);
+#endif
 
 
     SNESSetConvergenceTest(_snes, __tiber_snes_convergence_test, (void*) this);
@@ -364,7 +421,8 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
   }
 
 #if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
-  SNESSetLineSearchParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
+  //SNESSetLineSearchParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
+  SNESSetLineSearchParams(_snes, 0.00001, _ls_maxstep, PETSC_DEFAULT);
 #else
   SNESLineSearchSetParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
 #endif

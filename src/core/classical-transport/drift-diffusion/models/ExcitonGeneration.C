@@ -1,14 +1,19 @@
 // $Id$
 
-#include "ExcitonTransport.h"
 #include "ExcitonGeneration.h"
+
+#include "ExcitonTransport.h"
 #include "ExcitonProperties.h"
 #include "DriftDiffusionProperties.h"
+
+
+TIBER_MODULE(ExcitonGeneration, exciton_generation)
+
 
 void
 ExcitonGeneration::do_init(void)
 {
-  _C = get_options().get_option("C", 1e-10);
+  C_ = get_options().get_option("C", 1e-10);
 }
 
 void
@@ -20,7 +25,7 @@ ExcitonGeneration::get_net_recombination_rates(double& recomb_e,
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
 
-  recomb_e = recomb_h = _C * n * p;
+  recomb_e = recomb_h = C_ * n * p;
 }
 
 void
@@ -32,8 +37,8 @@ ExcitonGeneration::get_net_recombination_rate_derivatives(
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
 
-  recomb_e[0] = recomb_h[0] = _C * p;
-  recomb_e[1] = recomb_h[1] = _C * n;
+  recomb_e[0] = recomb_h[0] = C_ * p;
+  recomb_e[1] = recomb_h[1] = C_ * n;
 }
 
 
@@ -46,6 +51,6 @@ ExcitonGeneration::calculate_VCA(const PhysicalModelInterface* comp_A,
   const ExcitonGeneration* scB =
     dynamic_cast<const ExcitonGeneration*>(comp_B);
 
-  _C = alloy(scA->_C, scB->_C, xa);
+  C_ = alloy(scA->C_, scB->C_, xa);
 }
 

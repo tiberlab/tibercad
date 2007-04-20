@@ -21,6 +21,9 @@ class ConstantMobility : public MobilityModelInterface
 
   public:
 
+    //! constructor
+    ConstantMobility(void);
+
     //! Destructor
     virtual ~ConstantMobility(void);
 
@@ -35,9 +38,6 @@ class ConstantMobility : public MobilityModelInterface
 
 
   protected:
-
-    //! constructor
-    ConstantMobility(void);
 
     //! \copydoc MobilityModelInterface::read_database()
     virtual void read_database(void);
@@ -58,10 +58,10 @@ class ConstantMobility : public MobilityModelInterface
   private:
 
     //! The (constant) mobility
-    double _mu0;
+    double mu0_;
 
     //! The exponent for the temperature dependence
-    double _exp;
+    double exp_;
 
 };
 
@@ -71,8 +71,8 @@ class ConstantMobility : public MobilityModelInterface
 
 inline
 ConstantMobility::ConstantMobility(void)
-  : _mu0(1000),
-    _exp(1)
+  : mu0_(1000),
+    exp_(1)
 {
 }
 
@@ -100,7 +100,7 @@ ConstantMobility::copy_from(const PhysicalModelInterface* rhs)
   MobilityModelInterface::copy_from(rhs);
 
   const ConstantMobility* mod = dynamic_cast<const ConstantMobility*>(rhs);
-  _mu0 = mod->_mu0;
+  mu0_ = mod->mu0_;
 }
 
 

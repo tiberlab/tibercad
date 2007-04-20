@@ -3,6 +3,12 @@
 #ifndef _DRIFTDIFFUSIONPROPERTIES_H_
 #define _DRIFTDIFFUSIONPROPERTIES_H_
 
+
+#ifndef TIBER_MODULE_NAME
+# define TIBER_MODULE_NAME dd
+#endif
+
+
 #include "PhysicalModel.h"
 
 #include "SimulationOptions.h"
@@ -786,7 +792,7 @@ DriftDiffusionProperties::create(const std::string& name,
     const ModelOptions& options)
 {
   return dynamic_cast<DriftDiffusionProperties*>(
-      PhysicalModelInterface::create("ddmodel_" + name, options));
+      PhysicalModelInterface::create("dd_" + name, options));
 }
 
 inline
@@ -985,6 +991,7 @@ DriftDiffusionProperties::density_and_derivatives(double arg, double& density,
     double& derivative_over_density) const
 {
   
+  //const double arg_max = 150;
   const double arg_max = 150;
   const double arg_min = -50;
 

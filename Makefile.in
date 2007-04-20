@@ -6,11 +6,19 @@ srcdir = @srcdir@
 
 include Make.common
 
+ifeq ($(build_modules), yes)
+ MODULE_LIBS	:= lib/libeigen_solver.so lib/tibermodels/lib*.so
+else
+ MODULE_LIBS	:= lib/libeigen_solver.so 
+endif
 
 
 all: src
-	@$(CXX) -shared -fPIC $(CXXFLAGS) \
-		$(TIBER_OBJECTS) -o lib/libtibercad.so lib/libeigen_solver.so $(LIBS) $(LDFLAGS)
+	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
+		-Wl,-soname,libtibercad.so.0 -o lib/libtibercad.so.0.0 \
+		$(LDFLAGS) $(MODULE_LIBS) $(LIBS)
+	@cd lib && ln -f -s libtibercad.so.0.0 libtibercad.so.0 \
+		&& ln -f -s libtibercad.so.0 libtibercad.so && cd ..
 	@$(MAKE) -C src/tibercad tibercad
 
 
@@ -20,12 +28,13 @@ clean: src
 
 distclean: src doc
 	@$(MAKE) -C examples distclean
-	@rm -f lib/*
+	@rm -rf lib/*
 	@rm -f bin/tibercad
 
 
 .PHONY: src
 src:
+	@mkdir -p lib/tibermodels
 	@$(MAKE) -C src $(MAKECMDGOALS)
 
 

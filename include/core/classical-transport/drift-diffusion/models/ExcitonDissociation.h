@@ -18,6 +18,9 @@ class ExcitonDissociation : public RecombinationModelInterface
 
   public:
 
+    //! Constructor
+    ExcitonDissociation(void);
+
     //! Destructor
     virtual ~ExcitonDissociation(void) {};
 
@@ -36,9 +39,6 @@ class ExcitonDissociation : public RecombinationModelInterface
 
     
   protected:
-
-    //! Constructor
-    ExcitonDissociation(void);
     
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
@@ -57,10 +57,10 @@ class ExcitonDissociation : public RecombinationModelInterface
   private:
 
     //! Damping factor
-    double _d;
+    double d_;
 
     //! The \c ExcitonTransport to use
-    ExcitonTransport* _exciton_sim;
+    ExcitonTransport* exciton_sim_;
 
 };
 
@@ -72,8 +72,8 @@ class ExcitonDissociation : public RecombinationModelInterface
 
 inline
 ExcitonDissociation::ExcitonDissociation(void)
-  : _d(1.0),
-    _exciton_sim(NULL)
+  : d_(1.0),
+    exciton_sim_(NULL)
 {
 }
 
@@ -101,8 +101,8 @@ ExcitonDissociation::copy_from(const PhysicalModelInterface* rhs)
   RecombinationModelInterface::copy_from(rhs);
   
   const ExcitonDissociation* mod = dynamic_cast<const ExcitonDissociation*>(rhs);
-  _exciton_sim = mod->_exciton_sim;
-  _d = mod->_d;
+  exciton_sim_ = mod->exciton_sim_;
+  d_ = mod->d_;
 }
 
 

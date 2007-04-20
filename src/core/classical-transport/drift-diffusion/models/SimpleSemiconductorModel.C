@@ -4,11 +4,15 @@
 #include "Material.h"
 
 
+TIBER_MODULE(SimpleSemiconductorModel, simple)
+
+
+
 using namespace DriftDiffusionDefs;
 
 
 SimpleSemiconductorModel::SimpleSemiconductorModel(void)
-  : _is_prepared(false)
+  : is_prepared_(false)
 {
 }
 
@@ -16,11 +20,11 @@ SimpleSemiconductorModel::SimpleSemiconductorModel(void)
 void
 SimpleSemiconductorModel::prepare_element_data(void)
 {
-  if (!_is_prepared)
+  if (!is_prepared_)
   {
     calculate_equilibrium_properties();
 
-    _is_prepared =  true;
+    is_prepared_ =  true;
   }
 }
 

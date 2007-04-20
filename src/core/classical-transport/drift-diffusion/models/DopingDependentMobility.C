@@ -8,49 +8,55 @@
 
 #include "getpot.h"
 
+
+TIBER_MODULE(DopingDependentMobility, doping_dependent)
+
+
+
+
 void
 DopingDependentMobility::read_database(void)
 {
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
 
-  _formula = data("mobility_formula", _formula);
+  formula_ = data("mobility_formula", formula_);
   
-  if (_formula == 1)
+  if (formula_ == 1)
   {
     // Model of Masetti et al.
 
     std::string s("mumin1_");
     s += get_carrier_type();
-    _mumin = data(s.c_str(), _mumin);
+    mumin_ = data(s.c_str(), mumin_);
 
     s = "mumin2_";
     s += get_carrier_type();
-    _am = data(s.c_str(), _am);
+    am_ = data(s.c_str(), am_);
 
     s = "mu1_";
     s += get_carrier_type();
-    _mud = data(s.c_str(), _mud);
+    mud_ = data(s.c_str(), mud_);
 
     s = "Cr_";
     s += get_carrier_type();
-    _ad = data(s.c_str(), _ad);
+    ad_ = data(s.c_str(), ad_);
 
     s = "Cs_";
     s += get_carrier_type();
-    _N0 = data(s.c_str(), _N0);
+    N0_ = data(s.c_str(), N0_);
 
     s = "alpha_";
     s += get_carrier_type();
-    _an = data(s.c_str(), _an);
+    an_ = data(s.c_str(), an_);
 
     s = "beta_";
     s += get_carrier_type();
-    _a = data(s.c_str(), _a);
+    a_ = data(s.c_str(), a_);
 
     s = "Pc_";
     s += get_carrier_type();
-    _aa = data(s.c_str(), _aa);
+    aa_ = data(s.c_str(), aa_);
   }
   else
   {
@@ -58,35 +64,35 @@ DopingDependentMobility::read_database(void)
 
     std::string s("mumin_");
     s += get_carrier_type();
-    _mumin = data(s.c_str(), _mumin);
+    mumin_ = data(s.c_str(), mumin_);
 
     s = "am_";
     s += get_carrier_type();
-    _am = data(s.c_str(), _am);
+    am_ = data(s.c_str(), am_);
 
     s = "mud_";
     s += get_carrier_type();
-    _mud = data(s.c_str(), _mud);
+    mud_ = data(s.c_str(), mud_);
 
     s = "ad_";
     s += get_carrier_type();
-    _ad = data(s.c_str(), _ad);
+    ad_ = data(s.c_str(), ad_);
 
     s = "N0_";
     s += get_carrier_type();
-    _N0 = data(s.c_str(), _N0);
+    N0_ = data(s.c_str(), N0_);
 
     s = "an_";
     s += get_carrier_type();
-    _an = data(s.c_str(), _an);
+    an_ = data(s.c_str(), an_);
 
     s = "a_";
     s += get_carrier_type();
-    _a = data(s.c_str(), _a);
+    a_ = data(s.c_str(), a_);
 
     s = "aa_";
     s += get_carrier_type();
-    _aa = data(s.c_str(), _aa);
+    aa_ = data(s.c_str(), aa_);
   }
 
 }
@@ -96,20 +102,20 @@ DopingDependentMobility::read_database(void)
 void
 DopingDependentMobility::do_init(void)
 {
-  if (_formula == 1)
+  if (formula_ == 1)
   {
-    _const_mob = MobilityModelInterface::create("constant");
-    if (_const_mob == NULL)
+    const_mob_ = MobilityModelInterface::create("constant");
+    if (const_mob_ == NULL)
     {
       std::string msg("DopingDependentMobility: Could not ");
       msg += "create constant mobility model needed for formula of Masetti.";
       throw InitFailedException(msg);
     }
 
-    _const_mob->set_driftdiffusionproperties(&get_driftdiffusionproperties());
-    _const_mob->set_carrier_type(get_carrier_type());
-    _const_mob->set_material(get_material());
-    _const_mob->init();
+    const_mob_->set_driftdiffusionproperties(&get_driftdiffusionproperties());
+    const_mob_->set_carrier_type(get_carrier_type());
+    const_mob_->set_material(get_material());
+    const_mob_->init();
   }
 
 }
@@ -123,18 +129,18 @@ DopingDependentMobility::get_mobility(void)
   double T = get_driftdiffusionproperties().get_lattice_temperature() / T0;
   double N = get_material()->get_total_doping_density();
 
-  if (_formula == 1)
+  if (formula_ == 1)
   {
-    assert(_const_mob != NULL);
-    double mu_const = _const_mob->get_mobility();
-    double mumin1 = _mumin;
-    double Pc = _aa;
-    double mumin2 = _am;
-    double Cr = _ad;
-    double alpha = _an;
-    double mu1 = _mud;
-    double Cs = _N0;
-    double beta = _a;
+    assert(const_mob_ != NULL);
+    double mu_const = const_mob_->get_mobility();
+    double mumin1 = mumin_;
+    double Pc = aa_;
+    double mumin2 = am_;
+    double Cr = ad_;
+    double alpha = an_;
+    double mu1 = mud_;
+    double Cs = N0_;
+    double beta = a_;
 
     N = (N > 1.0) ? N : 1.0;
     // Model of Masetti et al.
@@ -145,10 +151,10 @@ DopingDependentMobility::get_mobility(void)
   else
   {
     // Model of Arora et al.
-    double muminA = _mumin * std::pow(T, _am);
-    double mudA = _mud * std::pow(T, _ad);
-    double N00 = _N0 * std::pow(T, _an);
-    double aa = _a * std::pow(T, _aa);
+    double muminA = mumin_ * std::pow(T, am_);
+    double mudA = mud_ * std::pow(T, ad_);
+    double N00 = N0_ * std::pow(T, an_);
+    double aa = a_ * std::pow(T, aa_);
     mu = muminA + mudA / (1.0 + std::pow(N / N00, aa));
   }
   return mu;
@@ -170,14 +176,14 @@ DopingDependentMobility::copy_from(const PhysicalModelInterface* rhs)
 
   const DopingDependentMobility* mod =
     dynamic_cast<const DopingDependentMobility*>(rhs);
-  _mumin = mod->_mumin;
-  _am = mod->_am;
-  _mud = mod->_mud;
-  _ad = mod->_ad;
-  _N0 = mod->_N0;
-  _an = mod->_an;
-  _a = mod->_a;
-  _aa = mod->_aa;
+  mumin_ = mod->mumin_;
+  am_ = mod->am_;
+  mud_ = mod->mud_;
+  ad_ = mod->ad_;
+  N0_ = mod->N0_;
+  an_ = mod->an_;
+  a_ = mod->a_;
+  aa_ = mod->aa_;
 }
 
 
@@ -192,21 +198,21 @@ DopingDependentMobility::calculate_VCA(const PhysicalModelInterface* comp_A,
   const DopingDependentMobility* scB =
     dynamic_cast<const DopingDependentMobility*>(comp_B);
 
-  _mumin = alloy(scA->_mumin, scB->_mumin , xa);
-  _am = alloy(scA->_am, scB->_am , xa);
-  _mud = alloy(scA->_mud, scB->_mud , xa);
-  _ad = alloy(scA->_ad, scB->_ad , xa);
-  _N0 = alloy(scA->_N0, scB->_N0 , xa);
-  _an = alloy(scA->_an, scB->_an , xa);
-  _a = alloy(scA->_a, scB->_a , xa);
-  _aa = alloy(scA->_aa, scB->_aa , xa);
+  mumin_ = alloy(scA->mumin_, scB->mumin_ , xa);
+  am_ = alloy(scA->am_, scB->am_ , xa);
+  mud_ = alloy(scA->mud_, scB->mud_ , xa);
+  ad_ = alloy(scA->ad_, scB->ad_ , xa);
+  N0_ = alloy(scA->N0_, scB->N0_ , xa);
+  an_ = alloy(scA->an_, scB->an_ , xa);
+  a_ = alloy(scA->a_, scB->a_ , xa);
+  aa_ = alloy(scA->aa_, scB->aa_ , xa);
   
-  if (_formula == 1)
+  if (formula_ == 1)
   {
-    assert(_const_mob != NULL);
-    assert(scA->_const_mob != NULL);
-    assert(scB->_const_mob != NULL);
-    _const_mob->build_alloy(scA->_const_mob, scB->_const_mob, xa);
+    assert(const_mob_ != NULL);
+    assert(scA->const_mob_ != NULL);
+    assert(scB->const_mob_ != NULL);
+    const_mob_->build_alloy(scA->const_mob_, scB->const_mob_, xa);
   }
 }
 

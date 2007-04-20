@@ -12,7 +12,6 @@
 #include "RecombinationModelInterface.h"
 #include "TiberPetscNonlinearSolver.h"
 #include "SolveFailedException.h"
-#include "FiniteElement.h"
 
 // libmesh includes
 #include "node.h"
@@ -40,24 +39,7 @@ using namespace DriftDiffusionDefs;
 // Module interface
 //
 
-#ifdef TIBERMODULE
-
-extern "C"
-{
-
-  DriftDiffusion* create(void)
-  {
-    return new DriftDiffusion();
-  }
-
-  void destroy(SimulationInterface* p)
-  {
-    delete p;
-  }
-}
-
-#endif
-
+TIBER_MODULE(DriftDiffusion,driftdiffusion)
 
 
 
@@ -579,7 +561,7 @@ DriftDiffusion::do_solve(void)
 
 
   static map<ElectricalContact*, double> voltages;
-  const ModelOptions& opts = SimulationInterface::get_options();
+  ModelOptions& opts = SimulationInterface::get_options();
   bool quasi_equilibrium = false;
   int coupling = get_options().coupling;
   if (opts.find_option("quasi_equilibrium"))
@@ -631,6 +613,7 @@ DriftDiffusion::do_solve(void)
   if (quasi_equilibrium)
   {
     cerr << "switching on continuity eq..." << endl;
+    opts.delete_option("quasi_equilibrium");
     get_options().coupling = coupling;
     solve_newton();
   }
@@ -845,9 +828,9 @@ DriftDiffusion::parse_const_options(void)
     myopts.current_calculation = RSTF;
 
   string scaling = opts.get_option("scaling", "");
-  if (method == "demari")
+  if (scaling == "demari")
     myopts.scaling_type = Scaling::DEMARI;
-  else if (method == "none")
+  else if (scaling == "none")
     myopts.scaling_type = Scaling::NONE;
   else
     myopts.scaling_type = Scaling::UNITS;
@@ -2247,6 +2230,14 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     n_vars++;
   }
 
+  int Eg = -1;
+  if (variables.find("Eg") != varend)
+  {
+    Eg = n_vars;
+    legend[n_vars] = "Eg";
+    n_vars++;
+  }
+
   int edens = -1;
   if (variables.find("eDensity") != varend)
   {
@@ -2562,6 +2553,10 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
 
         if (Ev != -1)
           local[id + Ev] += (sc->get_valence_band_edge() - u) / conn;
+
+        if (Eg != -1)
+          local[id + Eg] +=
+            (sc->get_conduction_band_edge() - sc->get_valence_band_edge()) / conn;
 
 
       } // end loop over nodes
@@ -3116,7 +3111,7 @@ DriftDiffusion::assemble_jacobian(const NumericVector<Number>& x,
 
 
 
-///*
+
 template <int coupling>
 void
 DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
@@ -4475,7 +4470,6 @@ DriftDiffusion::do_assembly_jacobian_box1D(const NumericVector<Number>& x,
   perf_log.stop_event("assembly");
 }
 
-//*/
 
 
 
@@ -5546,7 +5540,7 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
           
           if (coupling & POISSON)
             Kuu(i,j) += l2_eps * laplace;
-          
+       
           if (coupling & ECURRENT)
             Knn(i,j) += sigma_e * laplace;
           
@@ -5617,7 +5611,7 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
           for (unsigned int k = 0; k < n_dofs; k++)
           {
             Real laplace = (dphi[i][qp] * dphi[k][qp]);
-
+/*
             if (coupling & ECURRENT)
             {
               double elem_contrib =
@@ -5639,6 +5633,7 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
 
               Kpp(i,j) -= elem_contrib;
             }
+*/
           }
 
           // The dFe_i/dX_j part
@@ -5646,11 +5641,12 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
 
           if (coupling & POISSON)
           {
+if (i == j)
             Kuu(i,j) -= drho[0] *  phi_i_x_phi_j;
-
+if (i == j)
             if (coupling & ECURRENT)
               Kun(i,j) -= drho[1] * phi_i_x_phi_j;
-
+if (i == j)
             if (coupling & HCURRENT)
               Kup(i,j) -= drho[2] * phi_i_x_phi_j;
           }            
@@ -5661,9 +5657,9 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
             // (2) is 0 for Boltzmann statistics
             //if (coupling & POISSON)
             //  Knu(i,j) -= dRn[0] * phi_i_x_phi_j;
-
+if (i == j)
             Knn(i,j) -= dRn[1] * phi_i_x_phi_j;
-
+if (i == j)
             if (coupling & HCURRENT)
               Knp(i,j) -= dRn[2] * phi_i_x_phi_j;
           }
@@ -5674,10 +5670,10 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
             // (2) is 0 for Boltzmann statistics
             //if (coupling & POISSON)
             //  Kpu(i,j) += dRp[0] * phi_i_x_phi_j;
-
+if (i == j)
             if (coupling & ECURRENT)
               Kpn(i,j) += dRp[1] * phi_i_x_phi_j;
-
+if (i == j)
             Kpp(i,j) += dRp[2] * phi_i_x_phi_j;
           }
 
@@ -6061,9 +6057,12 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
     perf_log.start_event("add");
     jacobian.add_matrix(Ke, dof_indices);
 
+
     perf_log.stop_event("add");
 
   } // end loop over elements
+
+  //jacobian.print_matlab("jac.m");
 
 } 
 

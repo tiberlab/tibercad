@@ -10,6 +10,21 @@ dnl but WITHOUT ANY WARRANTY, to the extent permitted by law; without
 dnl even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 dnl PARTICULAR PURPOSE.
 
+dnl check if TiberCAD models should be built as dynamic libraries
+dnl
+AC_DEFUN([TC_BUILD_MODULES],
+[AC_ARG_ENABLE([modules], AS_HELP_STRING([--enable-modules],
+	[build TiberCAD models as dynamically loadable libraries]),
+	[if test $enableval != "no"; then
+	  AC_DEFINE([BUILD_TIBER_MODULES], [1],
+		[Define to 1 if models should be built as modules])
+	  AC_SUBST([BUILD_TIBER_MODULES], ["yes"])
+	 else 
+	  AC_SUBST([BUILD_TIBER_MODULES], ["no"])
+	 fi], [AC_SUBST([BUILD_TIBER_MODULES], ["no"])])
+])dnl
+
+
 dnl check for boost
 dnl
 AC_DEFUN([TC_BOOST],

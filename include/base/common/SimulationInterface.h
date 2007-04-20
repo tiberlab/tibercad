@@ -3,6 +3,7 @@
 #ifndef _SIMULATIONINTERFACE_H_
 #define _SIMULATIONINTERFACE_H_
 
+#include "tiber_config.h"
 #include "TypeDefs.h"
 #include "ModelOptions.h"
 #include "InitFailedException.h"
@@ -20,6 +21,45 @@
 #include <map>
 #include <set>
 #include <string>
+
+
+#ifdef BUILD_TIBER_MODULES
+/*!
+ * \def TIBER_MODULE(classname, libname)
+ *
+ * \brief Creates methods to create and destroy a simulation object
+ * 
+ * In each implementation derived from SimulationInterface, put
+ * this macro somewhere in the source file to be able to compile
+ * it as TiberCad module.
+ *
+ * \param name the name of the class that should be 'creatable'
+ * \param libname the name for this module
+ *
+ * \c libname will be used to create the library name, and the model
+ * will have to be referred to in the input file by \c libname
+ */
+# ifndef TIBER_MODULE
+#  define TIBER_MODULE(classname, libname) \
+  extern "C" { \
+    void destroy(SimulationInterface* p) { \
+      delete p; \
+    } \
+    classname* create(void) { \
+      return new classname(); \
+    } \
+    const char* _tiber_module_ ## libname = #libname; \
+    const char* library_name(void) { \
+      return _tiber_module_ ## libname; \
+    } \
+  }
+# endif
+#else
+# ifndef TIBER_MODULE
+#  define TIBER_MODULE(classname, libname)
+# endif
+#endif
+
 
 class SimulationEnvironment;
 class EquationSystems;
@@ -261,7 +301,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param names the identifier of the quantities to plot
      * \param values the vector where the values will be put
      */
-    void get_integrated_quantities(const std::set<std::string>& names,
+    void get_integrated_quantities(const std::set<std::string>& variables,
         std::vector<double>& values);
     
 
@@ -271,7 +311,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      *
      * cf. get_integrated_quantities()
      *
-     * \param names the identifier of the quantities to plot
+     * \param variables the identifier of the quantities to plot
      * \param legend the legend for the plot values, has usually the same
      * size as \c values in get_integrated_quantities()
      * \param description a description for each of the known quantities
@@ -281,7 +321,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * accessed simulation.
      */
     void get_integrated_quantities_description(
-        const std::set<std::string>& names,
+        const std::set<std::string>& variables,
         std::vector<std::string>& legend,
         std::vector<std::string>& description);
 
@@ -454,7 +494,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! Build a vector with some integrated quantities
     /*!
-     * \param names the identifier for the quantities that should be
+     * \param variables the identifier for the quantities that should be
      * putted into the vector
      * \param values the vector that will contain the results
      * \param legend the legend for the values in \c results
@@ -466,7 +506,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * the corresponding values of the independent variable.
      */
     virtual void build_integrated_quantities(
-        const std::set<std::string>& names,
+        const std::set<std::string>& variables,
         std::vector<double>& values) {};
 
     //! Create legend and description for integrated quantities
@@ -476,7 +516,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * The return values of this method are used in printing data files
      */
     virtual void build_integrated_quantities_description(
-        const std::set<std::string>& names,
+        const std::set<std::string>& variables,
         std::vector<std::string>& legend,
         std::vector<std::string>& description) {};
 
@@ -809,6 +849,8 @@ SimulationInterface::set_scaling(const Scaling& scaling)
 {
   _scaling = scaling;
 }
+
+
 
 
 

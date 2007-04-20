@@ -9,15 +9,20 @@
 #include "getpot.h"
 
 
+
+TIBER_MODULE(SRHRecombination, srh)
+
+
+
 void
 SRHRecombination::read_database(void)
 {
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
 
-  _E_t = data("Etrap", _E_t);
-  _Talpha_e = data("Talpha_e", _Talpha_e);
-  _Talpha_h = data("Talpha_h", _Talpha_h);
+  E_t_ = data("Etrap", E_t_);
+  Talpha_e_ = data("Talpha_e", Talpha_e_);
+  Talpha_h_ = data("Talpha_h", Talpha_h_);
   
   double N = mat->get_total_doping_density();
 
@@ -27,7 +32,7 @@ SRHRecombination::read_database(void)
   double Nref = data("Nref_e", 1e16);
   double g = data("gamma_e", 1.0);
   double denom = 1.0 + std::pow(N / Nref, g);
-  _tau_n = taumin + (taumax - taumin) / denom; 
+  tau_n_ = taumin + (taumax - taumin) / denom; 
 
   // holes
   taumin = data("taumin_h", 0.0);
@@ -35,7 +40,7 @@ SRHRecombination::read_database(void)
   Nref = data("Nref_h", 1e16);
   g = data("gamma_h", 1.0);
   denom = 1.0 + std::pow(N / Nref, g);
-  _tau_p = taumin + (taumax - taumin) / denom; 
+  tau_p_ = taumin + (taumax - taumin) / denom; 
 }
 
 
@@ -43,9 +48,9 @@ SRHRecombination::read_database(void)
 void
 SRHRecombination::do_init(void)
 {
-  _tau_n = get_options().get_option("tau_n", _tau_n);
-  _tau_p = get_options().get_option("tau_p", _tau_p);
-  _E_t   = get_options().get_option("E_t", _E_t);
+  tau_n_ = get_options().get_option("tau_n", tau_n_);
+  tau_p_ = get_options().get_option("tau_p", tau_p_);
+  E_t_   = get_options().get_option("E_t", E_t_);
 }
 
 
@@ -61,10 +66,10 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   double ni = dd.get_intrinsic_density();
   double T = dd.get_lattice_temperature();
 
-  double f = std::exp(_E_t / T);
+  double f = std::exp(E_t_ / T);
 
-  double tau_n = _tau_n * std::pow(T / T0, _Talpha_e);
-  double tau_p = _tau_p * std::pow(T / T0, _Talpha_h);
+  double tau_n = tau_n_ * std::pow(T / T0, Talpha_e_);
+  double tau_p = tau_p_ * std::pow(T / T0, Talpha_h_);
 
   double denom = tau_p * (n + ni * f) + tau_n * (p + ni / f);
   recomb_e = recomb_h = (n * p - ni * ni) / denom;
@@ -83,10 +88,10 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   double ni = dd.get_intrinsic_density();
   double T = dd.get_lattice_temperature();
 
-  double f = std::exp(_E_t / T);
+  double f = std::exp(E_t_ / T);
 
-  double tau_n = _tau_n * std::pow(T / T0, _Talpha_e);
-  double tau_p = _tau_p * std::pow(T / T0, _Talpha_h);
+  double tau_n = tau_n_ * std::pow(T / T0, Talpha_e_);
+  double tau_p = tau_p_ * std::pow(T / T0, Talpha_h_);
 
   double denom = tau_p * (n + ni * f) + tau_n * (p + ni / f);
   double SRH = (n * p - ni * ni) / denom;
@@ -109,7 +114,7 @@ SRHRecombination::calculate_VCA(const PhysicalModelInterface* comp_A,
   const SRHRecombination* scB =
     dynamic_cast<const SRHRecombination*>(comp_B);
 
-  _tau_n = alloy(scA->_tau_n, scB->_tau_n, xa);
-  _tau_p = alloy(scA->_tau_p, scB->_tau_p, xa);
+  tau_n_ = alloy(scA->tau_n_, scB->tau_n_, xa);
+  tau_p_ = alloy(scA->tau_p_, scB->tau_p_, xa);
 }
 

@@ -10,11 +10,16 @@
 
 #include <iostream>
 
+
+TIBER_MODULE(StrainedSemiconductorModel, strained)
+
+
+
 using namespace DriftDiffusionDefs;
 
 StrainedSemiconductorModel::StrainedSemiconductorModel(void)
-  : _strain_model(NULL),
-    _ignore_strain(false)
+  : strain_model_(NULL),
+    ignore_strain_(false)
 {
 }
 
@@ -23,24 +28,24 @@ StrainedSemiconductorModel::StrainedSemiconductorModel(void)
 void
 StrainedSemiconductorModel::prepare_element_data(void)
 {
-  if (!_ignore_strain)
+  if (!ignore_strain_)
   {
     const Elem* elem = get_element();
     assert(elem != NULL);
 
-    const DataMap::const_iterator end = _element_data.end();
-    const DataMap::const_iterator it = _element_data.find(elem);
+    const DataMap::const_iterator end = element_data_.end();
+    const DataMap::const_iterator it = element_data_.find(elem);
     if (it == end)
     {
       // set strain
-      set_strain(_strain_model->get_strain_crystal(elem));
+      set_strain(strain_model_->get_strain_crystal(elem));
       get_physical_model()->set_strain(get_strain());
 
       // call method of parent class
       SemiconductorModel::calculate_equilibrium_properties();
 
-      // put them into _element_data
-      ElementData& elem_data = _element_data[elem];
+      // put them into element_data_
+      ElementData& elem_data = element_data_[elem];
       elem_data.Ec = get_conduction_band_edge();
       elem_data.Ev = get_valence_band_edge();
       elem_data.mc = get_conduction_band().effective_mass;
@@ -49,7 +54,7 @@ StrainedSemiconductorModel::prepare_element_data(void)
       elem_data.ni = get_intrinsic_density();
 
       Tensor1 pol =
-        _strain_model->get_built_in_polarization(elem, elem->centroid());
+        strain_model_->get_built_in_polarization(elem, elem->centroid());
       elem_data.polarization(0) = pol(1); 
       elem_data.polarization(1) = pol(2); 
       elem_data.polarization(2) = pol(3); 
@@ -82,9 +87,9 @@ StrainedSemiconductorModel::prepare_element_data(void)
 void
 StrainedSemiconductorModel::reset(void)
 {
-  DataMap::iterator begin = _element_data.begin();
-  DataMap::iterator end = _element_data.end();
-  _element_data.erase(begin, end);
+  DataMap::iterator begin = element_data_.begin();
+  DataMap::iterator end = element_data_.end();
+  element_data_.erase(begin, end);
 }
 
 void
@@ -95,8 +100,8 @@ StrainedSemiconductorModel::copy_from(const PhysicalModelInterface* rhs)
   const StrainedSemiconductorModel* sc =
     dynamic_cast<const StrainedSemiconductorModel*>(rhs);
 
-  _strain_model = sc->_strain_model;
-  _ignore_strain = sc->_ignore_strain;
+  strain_model_ = sc->strain_model_;
+  ignore_strain_ = sc->ignore_strain_;
 }
 
 
@@ -108,17 +113,17 @@ StrainedSemiconductorModel::do_init(void)
   
   std::string strain_sim =
     get_options().get_option("strain_simulation",
-        Utils::extract_typename(typeid(_strain_model)));
+        Utils::extract_typename(typeid(strain_model_)));
   
   // find the strain calculation to use
-  _strain_model = dynamic_cast<Macrostrain*>(
+  strain_model_ = dynamic_cast<Macrostrain*>(
       SimulationInterface::find_simulation(strain_sim));
 
-  if (_strain_model == NULL)
+  if (strain_model_ == NULL)
   {
     std::string msg("Simulation "+std::string(strain_sim)+" not found");
     throw InitFailedException(msg);
   }
 
-  _ignore_strain = get_options().get_option("ignore_strain", false);
+  ignore_strain_ = get_options().get_option("ignore_strain", false);
 }

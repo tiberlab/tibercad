@@ -2,6 +2,7 @@
 
 #include "DLLoader.h"
 
+#include <boost/filesystem/operations.hpp>
 
 #include <dlfcn.h>
 #ifdef DEBUG
@@ -15,52 +16,99 @@ using namespace std;
 string
 DLLoader::_libpath = ".";
 
+
+
+void
+DLLoader::set_library_path(const std::string& path)
+{
+  _libpath = path;
+}
+
+
+
+void
+DLLoader::prepend_to_library_path(const std::string& path)
+{
+  _libpath = path + ":" + _libpath;
+}
+
+
+
 bool
 DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 {
 
-  bool success = true;
-  
-  string libfile = _libpath + "/" + "lib" + name + ".so";
+  using namespace boost::filesystem;
 
-#ifdef DEBUG_
+  // we are not very optimistic
+  bool success = false;
+  
+  // construct the library name
+  string libfile = "lib" + name + ".so";
+
+  bool file_exists = true;
+
+#ifdef DEBUG
   cerr << "Looking for library " + libfile + "... ";
-  cerr << "found." << endl;
+#endif
+  if (exists("./" + libfile))
+    libfile = "./" + libfile;
+  else if (exists(_libpath + "/" + libfile))
+    libfile = _libpath + "/" + libfile;
+  else
+    file_exists = false;
+
+
+#ifdef DEBUG
+  if (file_exists)
+    cerr << "found." << endl;
+  else
+    cerr << "not found." << endl;
 #endif
 
-#ifdef DEBUG_
-  cerr << "Trying to open " + libfile + "... ";
-#endif
-
-  libfile = "./" + libfile;
-
-  iface.handle = dlopen(libfile.c_str(), RTLD_NOW);
-  if ((iface.handle != NULL) && (dlerror() == NULL))
+  if (file_exists)
   {
-    iface.create_fnc = dlsym(iface.handle, "create");
-    iface.destroy_fnc = dlsym(iface.handle, "destroy");
-
-    if ((iface.create_fnc == NULL)
-        || (iface.destroy_fnc == NULL)
-        || (dlerror() != NULL))
-      success = false;
-  }
-  else
-    success = false;
-  
-#ifdef DEBUG_
-  if (success)
-    cerr << "OK" << endl;
-  else
-    cerr << "failed" << endl;
+#ifdef DEBUG
+    cerr << "Trying to open " + libfile + "... ";
 #endif
+
+    // we will set it to false if something bad happens
+    success = true;
+
+    const char* error_msg = 0;
+
+    //iface.handle = dlopen(libfile.c_str(), RTLD_NOW);
+    iface.handle = dlopen(libfile.c_str(), RTLD_LAZY);
+    if ((iface.handle != NULL) && ((error_msg = dlerror()) == NULL))
+    {
+      iface.create_fnc = dlsym(iface.handle, "create");
+      iface.destroy_fnc = dlsym(iface.handle, "destroy");
+
+      if ((iface.create_fnc == NULL)
+          || (iface.destroy_fnc == NULL)
+          || (dlerror() != NULL))
+        success = false;
+    }
+    else
+      success = false;
+
+#ifdef DEBUG
+    if (success)
+      cerr << "OK" << endl;
+    else
+      if (error_msg != 0)
+        cerr << "failed: " << error_msg << endl;
+      else
+        cerr << "failed" << endl;
+#endif
+  }
 
   return success;
 }
 
 
 
-void
+  void
 DLLoader::close_library(void* handle)
 {
   if (handle != NULL)

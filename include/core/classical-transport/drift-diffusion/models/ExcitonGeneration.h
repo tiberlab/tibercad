@@ -19,6 +19,9 @@ class ExcitonGeneration : public RecombinationModelInterface
 
   public:
 
+    //! Constructor
+    ExcitonGeneration(void);
+
     //! Destructor
     virtual ~ExcitonGeneration(void) {};
 
@@ -41,9 +44,6 @@ class ExcitonGeneration : public RecombinationModelInterface
 
   protected:
 
-    //! Constructor
-    ExcitonGeneration(void);
-
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
@@ -61,7 +61,7 @@ class ExcitonGeneration : public RecombinationModelInterface
   private:
 
     //! Recombination rate parameter
-    double _C;
+    double C_;
 
 };
 
@@ -73,7 +73,7 @@ class ExcitonGeneration : public RecombinationModelInterface
 
 inline
 ExcitonGeneration::ExcitonGeneration(void)
-  : _C(1e-10)
+  : C_(1e-10)
 {
 }
 
@@ -90,7 +90,7 @@ inline
 void
 ExcitonGeneration::set_parameters(double C)
 {
-  _C = C;
+  C_ = C;
 }
 
 
@@ -109,7 +109,7 @@ ExcitonGeneration::copy_from(const PhysicalModelInterface* rhs)
   RecombinationModelInterface::copy_from(rhs);
   
   const ExcitonGeneration* mod = dynamic_cast<const ExcitonGeneration*>(rhs);
-  _C = mod->_C;
+  C_ = mod->C_;
 }
 
 

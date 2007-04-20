@@ -12,3 +12,8 @@
 /* Define to 1 if you have the GSL library. */
 #undef HAVE_GSL
 
+/* Define the TiberCAD install prefix */
+#undef TIBERCAD_INSTALL_PREFIX
+
+/* Define to 1 if models should be built as modules */
+#undef BUILD_TIBER_MODULES

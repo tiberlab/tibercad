@@ -5,7 +5,7 @@ AC_INIT([TiberCAD], [0.1.0], [bug@tibercad.org])
 AC_PREREQ(2.59)
 
 AC_CONFIG_SRCDIR([include/base/common/TiberCad.h])
-AC_CONFIG_HEADER([include/base/common/config.h])
+AC_CONFIG_HEADER([include/base/common/tiber_config.h])
 
 AC_REVISION([$Revision: 0.1$])
 
@@ -21,6 +21,12 @@ AC_LANG([C++])
 # compilers
 AC_PROG_CXX
 AC_PROG_CC
+
+# libtool
+#AC_LIBTOOL_DLOPEN
+#AC_DISABLE_STATIC
+#AC_PROG_LIBTOOL
+
 
 # check for perl
 AC_PATH_PROG([PERL], [perl])
@@ -104,20 +110,25 @@ TC_GSL
 [GSL_LIBS=`echo "$GSL_LIBS" | sed -r 's/-L([^[:space:]]+)/-Wl,-rpath,\1 -L\1/'`]
 
   
-
+#
 # Checks for header files.
+#
 AC_HEADER_STDC
-AC_CHECK_HEADERS([float.h stdlib.h cassert])
+AC_CHECK_HEADERS([float.h stdlib.h dlfcn.h cassert])
 
 
+#
 # Checks for typedefs, structures, and compiler characteristics.
+#
 AC_HEADER_STDBOOL
 AC_C_CONST
 AC_C_INLINE
 AC_TYPE_SIZE_T
 
 
+#
 # Checks for library functions.
+#
 AC_FUNC_ERROR_AT_LINE
 AC_CHECK_FUNCS([pow sqrt])
 
@@ -127,6 +138,14 @@ AC_CONFIG_FILES([Make.common
                  Makefile
                  doc/Makefile
                  src/utils/SLEPC/Makefile])
+
+#
+# check for other options
+#
+
+# enable/disable modules
+TC_BUILD_MODULES
+
 
 if test "x$DOXYGEN" == x
 then

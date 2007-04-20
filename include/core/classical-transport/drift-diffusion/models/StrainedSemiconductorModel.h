@@ -21,6 +21,9 @@ class StrainedSemiconductorModel : public SemiconductorModel
 {
 
   public:
+
+    //! The default constructor
+    StrainedSemiconductorModel(void);
     
     //! The destructor
     virtual ~StrainedSemiconductorModel(void) {};
@@ -41,10 +44,8 @@ class StrainedSemiconductorModel : public SemiconductorModel
      */
     void reset(void);
 
-  protected:
 
-    //! The default constructor
-    StrainedSemiconductorModel(void);
+  protected:
 
     //! \copydoc DriftDiffusionProperties::prepare_element_data()
     virtual void prepare_element_data(void);
@@ -80,10 +81,10 @@ class StrainedSemiconductorModel : public SemiconductorModel
     StrainedSemiconductorModel&
       operator=(const StrainedSemiconductorModel& model);
     
-    Macrostrain* _strain_model;
-    bool _ignore_strain;
+    Macrostrain* strain_model_;
+    bool ignore_strain_;
 
-    DataMap _element_data;
+    DataMap element_data_;
 
 };
 
@@ -113,7 +114,7 @@ inline
 void
 StrainedSemiconductorModel::ignore_strain(void)
 {
-  _ignore_strain = true;
+  ignore_strain_ = true;
 }
 
 
@@ -121,7 +122,7 @@ inline
 void
 StrainedSemiconductorModel::include_strain(void)
 {
-  _ignore_strain = false;
+  ignore_strain_ = false;
 }
 
 

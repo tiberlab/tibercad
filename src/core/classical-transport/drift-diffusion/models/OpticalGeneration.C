@@ -7,7 +7,7 @@
 
 
 
-//TIBER_MODULE(OpticalGeneration, optical)
+TIBER_MODULE(OpticalGeneration, optical)
 
 
 
@@ -15,8 +15,8 @@
 void
 OpticalGeneration::do_init(void)
 {
-  _G = get_options().get_option("G", 1e-10);
-  _G = get_material()->get_options().get_option("G", _G);
+  G_ = get_options().get_option("G", 1e-10);
+  G_ = get_material()->get_options().get_option("G", G_);
 }
 
 void
@@ -25,7 +25,7 @@ OpticalGeneration::get_net_recombination_rates(double& recomb_e,
 {
   
 
-  recomb_e = recomb_h = -_G;
+  recomb_e = recomb_h = -G_;
 }
 
 void
@@ -46,6 +46,6 @@ OpticalGeneration::calculate_VCA(const PhysicalModelInterface* comp_A,
   const OpticalGeneration* scB =
     dynamic_cast<const OpticalGeneration*>(comp_B);
 
-  _G = alloy(scA->_G, scB->_G, xa);
+  G_ = alloy(scA->G_, scB->G_, xa);
 }
 

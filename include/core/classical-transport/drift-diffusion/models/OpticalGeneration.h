@@ -17,6 +17,9 @@ class OpticalGeneration : public RecombinationModelInterface
 
   public:
 
+    //! Constructor
+    OpticalGeneration(void);
+
     //! Destructor
     virtual ~OpticalGeneration(void) {};
 
@@ -39,9 +42,6 @@ class OpticalGeneration : public RecombinationModelInterface
 
   protected:
 
-    //! Constructor
-    OpticalGeneration(void);
-
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
@@ -59,7 +59,7 @@ class OpticalGeneration : public RecombinationModelInterface
   private:
 
     //! Generation rate parameter
-    double _G;
+    double G_;
 
 };
 
@@ -71,7 +71,7 @@ class OpticalGeneration : public RecombinationModelInterface
 
 inline
 OpticalGeneration::OpticalGeneration(void)
-  : _G(1e-10)
+  : G_(1e-10)
 {
 }
 
@@ -88,7 +88,7 @@ inline
 void
 OpticalGeneration::set_parameters(double G)
 {
-  _G = G;
+  G_ = G;
 }
 
 
@@ -107,7 +107,7 @@ OpticalGeneration::copy_from(const PhysicalModelInterface* rhs)
   RecombinationModelInterface::copy_from(rhs);
   
   const OpticalGeneration* mod = dynamic_cast<const OpticalGeneration*>(rhs);
-  _G = mod->_G;
+  G_ = mod->G_;
 }
 
 

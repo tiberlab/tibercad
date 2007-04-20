@@ -26,6 +26,8 @@ class DLLoader
 
       //! The destroy method
       void* destroy_fnc;
+
+      LibraryInterface(void);
     };
 
     
@@ -43,6 +45,15 @@ class DLLoader
     static void close_library(void* handle);
 
 
+    //! Set the library search path
+    static void set_library_path(const std::string& path);
+
+
+    //! Prepend to library search path
+    static void prepend_to_library_path(const std::string& path);
+
+
+
   private:
 
     //! For static use only
@@ -52,6 +63,20 @@ class DLLoader
     static std::string _libpath;
 
 };
+
+
+
+//
+// inline members
+// 
+
+inline
+DLLoader::LibraryInterface::LibraryInterface(void)
+  : handle(NULL),
+    create_fnc(NULL),
+    destroy_fnc(NULL)
+{
+}
 
 
 #endif // _DLLOADER_H_

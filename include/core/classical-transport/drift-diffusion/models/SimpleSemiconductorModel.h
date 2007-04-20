@@ -23,6 +23,13 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
 {
   public:
 
+    //! The default constructor
+    /*!
+     * A derived class can call this constructor to set a different
+     * model name
+     */
+    SimpleSemiconductorModel(void);
+
     //! The destructor
     virtual ~SimpleSemiconductorModel(void) {};
 
@@ -49,13 +56,6 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
 
   protected:
 
-    //! The default constructor
-    /*!
-     * A derived class can call this constructor to set a different
-     * model name
-     */
-    SimpleSemiconductorModel(void);
-
     //! \copydoc DriftDiffusionProperties::do_init()
     virtual void do_init();
 
@@ -80,7 +80,7 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
     SimpleSemiconductorModel& operator=(const SimpleSemiconductorModel& model);
     
     //! \c true if equilibrium properties are calculated
-    bool _is_prepared;
+    bool is_prepared_;
 
 };
 
@@ -144,7 +144,7 @@ SimpleSemiconductorModel::copy_from(const PhysicalModelInterface* rhs)
   const SimpleSemiconductorModel* mod =
     dynamic_cast<const SimpleSemiconductorModel*>(rhs);
   
-  _is_prepared = mod->_is_prepared;
+  is_prepared_ = mod->is_prepared_;
   
   get_conduction_band().band_edge = mod->get_conduction_band().band_edge;
   get_conduction_band().effective_mass =

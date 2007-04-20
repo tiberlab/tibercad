@@ -17,6 +17,9 @@ class DirectRecombination : public RecombinationModelInterface
 
   public:
 
+    //! Constructor
+    DirectRecombination(void);
+
     //! Destructor
     virtual ~DirectRecombination(void) {};
 
@@ -39,9 +42,6 @@ class DirectRecombination : public RecombinationModelInterface
     
   protected:
 
-    //! Constructor
-    DirectRecombination(void);
-
     //! \copydoc RecombinationModelInterface::read_database()
     virtual void read_database(void);
 
@@ -62,7 +62,7 @@ class DirectRecombination : public RecombinationModelInterface
   private:
 
     //! Recombination rate parameter
-    double _C;
+    double C_;
 
 };
 
@@ -74,7 +74,7 @@ class DirectRecombination : public RecombinationModelInterface
 
 inline
 DirectRecombination::DirectRecombination(void)
-  : _C(1e-10)
+  : C_(1e-10)
 {
 }
 
@@ -91,7 +91,7 @@ inline
 void
 DirectRecombination::set_parameters(double C)
 {
-  _C = C;
+  C_ = C;
 }
 
 
@@ -110,10 +110,10 @@ DirectRecombination::copy_from(const PhysicalModelInterface* rhs)
   RecombinationModelInterface::copy_from(rhs);
   
   const DirectRecombination* mod = dynamic_cast<const DirectRecombination*>(rhs);
-  _C = mod->_C;
+  C_ = mod->C_;
 }
 
 
 
 
-#endif // _DIRECTRECOMBINATION_H_
+#endif // _DIRECTRECOMBINATION_H__

@@ -225,7 +225,9 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
   // we loop over all simulations to setup the models
   multimap<const string, ModelStructure*>::const_iterator modit(models.begin());
-  const multimap<const string, ModelStructure*>::const_iterator modend(models.end());
+  const multimap<const string,
+        ModelStructure*>::const_iterator modend(models.end());
+
   for ( ; modit != modend; ++modit)
   {
     ModelStructure* model_str = modit->second;
