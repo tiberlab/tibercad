@@ -24,7 +24,8 @@
 
 // GNU scientific library
 #include <gsl/gsl_sf_fermi_dirac.h>
-#include <values.h>
+
+#include <float.h>
 
 #include <vector>
 #include <set>
@@ -1043,7 +1044,7 @@ DriftDiffusionProperties::density_and_derivatives(double arg, double& density,
     default:
       arg = (arg > arg_max) ? arg_max : arg;
 
-      density = std::exp(arg) + 2 * MINDOUBLE;
+      density = std::exp(arg) + 2 * DBL_MIN;
       derivative = density;
       _2nd_derivative = density;
       derivative_over_density = 1;
