@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 
 // Basic include files needed for the mesh functionality.
 #include "libmesh.h"
