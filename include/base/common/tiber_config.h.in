@@ -17,3 +17,9 @@
 
 /* Define to 1 if models should be built as modules */
 #undef BUILD_TIBER_MODULES
+
+/* Define to 1 if you have the isnan function */
+#undef HAVE_ISNAN
+
+/* Define to 1 if you have the isinf function */
+#undef HAVE_ISINF

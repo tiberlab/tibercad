@@ -130,7 +130,7 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 #
 AC_FUNC_ERROR_AT_LINE
-AC_CHECK_FUNCS([pow sqrt])
+AC_CHECK_FUNCS([pow sqrt isinf isnan])
 
 AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
 AC_CONFIG_FILES([Make.common
