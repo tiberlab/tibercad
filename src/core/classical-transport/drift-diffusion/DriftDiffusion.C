@@ -3222,17 +3222,12 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
   
-  // the system matrix (will hold also element jacobian contribution)
-  DenseMatrix<Number> Ke;
   // the system rhs (will hold also element rhs contribution)
   DenseVector<Number> Fe;
+
   // the local solution
   DenseVector<Number> X;
 
-  DenseSubMatrix<Number>
-    Kuu(Ke), Kun(Ke), Kup(Ke),
-    Knu(Ke), Knn(Ke), Knp(Ke),
-    Kpu(Ke), Kpn(Ke), Kpp(Ke);
 
   DenseSubVector<Number>
     Fu(Fe),
@@ -3278,7 +3273,6 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
 
     fe->reinit(elem);
 
-    Ke.resize(n_dofs_tot, n_dofs_tot);
     Fe.resize(n_dofs_tot);
     X.resize(n_dofs_tot);
 
@@ -3292,18 +3286,6 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
     //   Ke = | Knu Knn Knp |;  Fe = | Fn |
     //        | Kpu Kpn Kpp |        | Fp |
     //         -           -          -  -
-    //
-    Kuu.reposition(0, 0, n_dofs, n_dofs);
-    Kun.reposition(0, n_dofs, n_dofs, n_dofs);
-    Kup.reposition(0, 2 * n_dofs, n_dofs, n_dofs);
-    //
-    Knu.reposition(n_dofs, 0, n_dofs, n_dofs);
-    Knn.reposition(n_dofs, n_dofs, n_dofs, n_dofs);
-    Knp.reposition(n_dofs, 2 * n_dofs, n_dofs, n_dofs);
-    //
-    Kpu.reposition(2 * n_dofs, 0, n_dofs, n_dofs);
-    Kpn.reposition(2 * n_dofs, n_dofs, n_dofs, n_dofs);
-    Kpp.reposition(2 * n_dofs, 2 * n_dofs, n_dofs, n_dofs);
     //
     Fu.reposition(0, n_dofs);
     Fn.reposition(n_dofs, n_dofs);
@@ -3373,13 +3355,6 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
     double sigma_e = mue * n / (mu0 * C0_e);
     double sigma_h = muh * p / (mu0 * C0_h);
 
-    // d(sigma_n)/du * element-jacobian
-    // sigma_n = mu_n * n means the conductivity of electrons
-    //Real dsigma_e = phi0 / (mu0 * C0_e) * mue *
-    //  sc->get_electron_density_derivative();
-    //Real dsigma_h = phi0 / (mu0 * C0_h) * muh *
-    //  sc->get_hole_density_derivative();
-
 
     // remember the maximum densities
     n_max = (n_max > n) ? n_max : n;
@@ -3387,40 +3362,6 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
 
     double epsilon = sc->get_relative_permittivity();
     double l2_eps = l2 * epsilon;
-
-    // 
-    // build the system matrix Ke ...
-    //
-
-    // the diagonal entries:
-    {
-      if (coupling & POISSON)
-        Kuu(0,0) = Kuu(1,1) = l2_eps / d;
-      else
-        Kuu(0,0) = Kuu(1,1) = 1;
-
-      if (coupling & ECURRENT)
-        Knn(0,0) = Knn(1,1) = sigma_e / d;
-      else
-        Knn(0,0) = Knn(1,1) = 1;
-
-      if (coupling & HCURRENT)
-        Kpp(0,0) = Kpp(1,1) = sigma_h / d;
-      else
-        Kpp(0,0) = Kpp(1,1) = 1;
-    }
-    // the off-diagonal entries:
-    {
-      if (coupling & POISSON)
-        Kuu(0,1) = Kuu(1,0) = -l2_eps / d;
-
-      if (coupling & ECURRENT)
-        Knn(0,1) = Knn(1,0) = -sigma_e / d;
-
-      if (coupling & HCURRENT)
-        Kpp(0,1) = Kpp(1,0) = -sigma_h / d;
-    }
-
 
 
     // there are only two nodes...
@@ -3449,27 +3390,23 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
       double Rp = sc->get_net_hole_recombination_rate() / R0_h;
       //Rp = (fabs(Rp) < 1.0e-19) ? 0.0 : Rp;
 
-      double P = sc->get_total_polarization()(0);
-      P = P / P0;
+      double sig = 1;
       // where does the outer normal point to?
       double x_c = elem->centroid()(0);
       double x_s = elem->point(i)(0);
-      P = (x_s > x_c) ? -P : P;
+      if (x_s > x_c)
+        sig = -1;
+      
+      double P = sig * sc->get_total_polarization()(0) / P0;
 
       if (coupling & POISSON)
-        Fu(i) = -0.5 * d * rho + P;
-      else
-        Fu(i) = - Xu(i);
+        Fu(i) = -0.5 * d * rho + P + l2_eps * (u[0] - u[1]) / phi0 / d * sig;
 
       if (coupling & ECURRENT)
-        Fn(i) = -0.5 * d * Rn;
-      else
-        Fn(i) = -Xn(i);
+        Fn(i) = -0.5 * d * Rn + sigma_e * (en[0] - en[1]) / phi0 / d * sig;
 
       if (coupling & HCURRENT)
-        Fp(i) = 0.5 * d * Rp;
-      else
-        Fp(i) = -Xp(i);
+        Fp(i) = 0.5 * d * Rp + sigma_h * (ep[0] - ep[1]) / phi0 / d * sig;
     }
 
     // now loop over the element sides to find boundary elements
@@ -3518,9 +3455,9 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
         const vector<Real>& JxW_face = fe_face->get_JxW();
 
         // s is the node of the element lying on the boundary
-        Real u  = Xu(s);
-        Real en = Xn(s);
-        Real ep = Xp(s);
+        double u  = Xu(s);
+        double en = Xn(s);
+        double ep = Xp(s);
 
         // calculate densities etc.
         sc->set_coordinates(elem->point(s));
@@ -3556,48 +3493,24 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
         }
 
 
-        // first the contributions to Ke_ij
+        double Pn =  sc->get_total_polarization()(0) / P0;
+        // what is the outer normal in this point??
+        // Idea: if x(s) > x(centroid), normal is +1
+        //       else it is -1
+        double x_c = elem->centroid()(0);
+        double x_s = elem->point(s)(0);
+        Pn = (x_s > x_c) ? Pn : -Pn;
+
         if (coupling & POISSON)
-          Kuu(s,s) += l2_eps * coeff[0];
+          Fu(s) += l2_eps * (coeff[0] * u - value[0]) + Pn;
 
         if (coupling & ECURRENT)
-          Knn(s,s) += coeff[1];
+          Fn(s) += coeff[1] * en - value[1] / (mu0 * C0_e);
 
         if (coupling & HCURRENT)
-          Kpp(s,s) += coeff[2];
-
-        // contribution to -Fe_i
-        {
-          double Pn =  sc->get_total_polarization()(0) / P0;
-          // what is the outer normal in this point??
-          // Idea: if x(s) > x(centroid), normal is +1
-          //       else it is -1
-          double x_c = elem->centroid()(0);
-          double x_s = elem->point(s)(0);
-          Pn = (x_s > x_c) ? Pn : -Pn;
-          double value_u = l2_eps * value[0] - Pn;
-          double value_n = value[1] / (mu0 * C0_e);
-          double value_p = value[2] / (mu0 * C0_h);
-
-          if (coupling & POISSON)
-            Fu(s) -= value_u;
-
-          if (coupling & ECURRENT)
-            Fn(s) -= value_n;
-
-          if (coupling & HCURRENT)
-            Fp(s) -= value_p;
-        }
+          Fp(s) += coeff[2] * ep - value[2] / (mu0 * C0_h);
       }
     } // end loop over element sides
-
-
-
-    // constrain the jacobian and the rhs to account for constrained
-    // DOFs
-    // NOTE: this changes dof_indices that's why the application of
-    //       Dirichlet type BCs needs special care
-    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
 
     //
@@ -3606,10 +3519,8 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
     BoundaryNodeList::const_iterator node_it;
     const BoundaryNodeList::const_iterator end =
       dirichlet_nodes.end();
-    if (Ke.m() == n_dofs_tot)
-    {
-      // no constrained nodes, so everything is easy
 
+    {
       // loop over all nodes and check if it is a dirichlet type node
       for (unsigned int i = 0; i < n_dofs; i++)
       {
@@ -3627,13 +3538,14 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
             {
               double val = (contact->get_boundary_value(POTENTIAL)
                   + contact->get_simulation_voltage()) / phi0;
-              Ke.condense(i, i, -val, Fe);
+
+              Fe(i) = X(i) - val;
             }
             else if (contact->get_type(POTENTIAL) == ElectricalContact::PINNING)
             {
               double val = contact->get_boundary_value(POTENTIAL) / phi0;
-              Ke.condense(i, i, -val, Fe);
-              Ke(i, i + n_dofs) = 1.0;
+
+              Fe(i) = X(i) + X(i + n_dofs) - val;
             }
           }
 
@@ -3643,7 +3555,8 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
             {
               double val = (contact->get_boundary_value(FERMIE)
                   + contact->get_simulation_voltage()) / phi0;
-              Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
+
+              Fe(i + n_dofs) = X(i + n_dofs) - val;
             }
           }
 
@@ -3653,125 +3566,14 @@ DriftDiffusion::do_assembly_residual_box1D(const NumericVector<Number>& x,
             {
               double val = (contact->get_boundary_value(FERMIH)
                   + contact->get_simulation_voltage()) / phi0;
-              Ke.condense(i + 2 * n_dofs, i + 2 * n_dofs, -val, Fe);
+
+              Fe(i + 2 * n_dofs) = X(i + 2 * n_dofs) - val;
             }
           }
         }
       }
     }
-    else
-    {
-      // TODO this needs to be checked!!!
 
-      // Some nodes are constrained, so we have messed up our
-      // matrix and vector. In particular, we could have included
-      // nodes on Dirichlet boundaries.
-      // We will look for them on the parent element(s) to apply
-      // proper boundary conditions
-
-      n_dofs_tot = dof_indices.size();
-
-      // it's possible, that a node of the parent element is
-      // also a hanging node. In this case we have to look at the
-      // grand parent
-      bool is_done = false;
-      const Elem* parent;
-      while (!is_done)
-      {
-        is_done = true;
-        parent = elem->parent();
-        elem = parent;
-
-        assert(parent != NULL);
-
-        dof_map.dof_indices(parent, dof_indices_u, u_var);
-        dof_map.dof_indices(parent, dof_indices_en, en_var);
-        dof_map.dof_indices(parent, dof_indices_ep, ep_var);
-
-        // loop over the nodes of the parent element
-        unsigned int n_nodes = parent->n_nodes();
-        for (unsigned int i = 0; i < n_nodes; i++)
-        {
-          if (dof_map.is_constrained_dof(dof_indices_u[i]))
-            is_done = false;
-
-          node_it = dirichlet_nodes.find(parent->get_node(i));
-          if (node_it != end)
-          {
-            Boundary* bd = node_it->second;
-            ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
-                bd->get_boundary_properties(get_id()));
-            contact->set_material(sc);
-
-            // loop over all DOFs occurring in the constrained matrix
-            for (unsigned int id = 0; id < n_dofs_tot; id++)
-            {
-
-              if (coupling & POISSON)
-              {
-                if (contact->get_type(POTENTIAL) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_u[i])
-                  {
-                    double val = (contact->get_boundary_value(POTENTIAL)
-                        + contact->get_simulation_voltage()) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-                else if (contact->get_type(POTENTIAL) ==
-                    ElectricalContact::PINNING)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_u[i])
-                  {
-                    double val = contact->get_boundary_value(POTENTIAL) / phi0;
-                    Ke.condense(i, i, -val, Fe);
-                    Ke(id, id + n_dofs) = 1.0;
-                  }
-                }
-              }
-
-              if (coupling & ECURRENT)
-              {
-                if (contact->get_type(FERMIE) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_en[i])
-                  {
-                    double val = (contact->get_boundary_value(FERMIE)
-                        + contact->get_simulation_voltage()) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-              }
-
-              if (coupling & HCURRENT)
-              {
-                if (contact->get_type(FERMIH) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_ep[i])
-                  {
-                    double val = (contact->get_boundary_value(FERMIE)
-                        + contact->get_simulation_voltage()) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-              }
-
-            } // end loop over all DOFs 
-          }
-        } // end loop over the nodes of the parent element
-      }
-    }
-
-    for (unsigned int i = 0; i < n_dofs_tot; i++)
-      for (unsigned int j = 0; j < n_dofs_tot; j++)
-        Fe(i) += Ke(i,j) * x(dof_indices[j]);
 
     residual.add_vector(Fe, dof_indices);
 
@@ -3912,11 +3714,6 @@ DriftDiffusion::do_assembly_jacobian_box1D(const NumericVector<Number>& x,
     Kpu(Ke), Kpn(Ke), Kpp(Ke);
 
   DenseSubVector<Number>
-    Fu(Fe),
-    Fn(Fe),
-    Fp(Fe);
-
-  DenseSubVector<Number>
     Xu(X),
     Xn(X),
     Xp(X);
@@ -3956,7 +3753,6 @@ DriftDiffusion::do_assembly_jacobian_box1D(const NumericVector<Number>& x,
     fe->reinit(elem);
 
     Ke.resize(n_dofs_tot, n_dofs_tot);
-    Fe.resize(n_dofs_tot);
     X.resize(n_dofs_tot);
 
     // extract local solution, accounting for constraints
@@ -3981,10 +3777,6 @@ DriftDiffusion::do_assembly_jacobian_box1D(const NumericVector<Number>& x,
     Kpu.reposition(2 * n_dofs, 0, n_dofs, n_dofs);
     Kpn.reposition(2 * n_dofs, n_dofs, n_dofs, n_dofs);
     Kpp.reposition(2 * n_dofs, 2 * n_dofs, n_dofs, n_dofs);
-    //
-    Fu.reposition(0, n_dofs);
-    Fn.reposition(n_dofs, n_dofs);
-    Fp.reposition(2 * n_dofs, n_dofs);
     //
     Xu.reposition(0, n_dofs);
     Xn.reposition(n_dofs, n_dofs);
@@ -4281,23 +4073,14 @@ DriftDiffusion::do_assembly_jacobian_box1D(const NumericVector<Number>& x,
 
 
 
-    // constrain the jacobian and the rhs to account for constrained
-    // DOFs
-    // NOTE: this changes dof_indices that's why the application of
-    //       Dirichlet type BCs needs special care
-    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
-
-
     //
     // now as last thing we apply Dirichlet type Bcs
     //
     BoundaryNodeList::const_iterator node_it;
     const BoundaryNodeList::const_iterator end =
       dirichlet_nodes.end();
-    if (Ke.m() == n_dofs_tot)
+    
     {
-      // no constrained nodes, so everything is easy
-
       // loop over all nodes and check if it is a dirichlet type node
       for (unsigned int i = 0; i < n_dofs; i++)
       {
@@ -4315,12 +4098,20 @@ DriftDiffusion::do_assembly_jacobian_box1D(const NumericVector<Number>& x,
             {
               double val = (contact->get_boundary_value(POTENTIAL)
                   + contact->get_simulation_voltage()) / phi0;
-              Ke.condense(i, i, -val, Fe);
+
+              for (unsigned int j = 0; j < 3 * n_dofs; j++)
+                Ke(i, j) = 0.0;
+
+              Ke(i, i) = 1.0;
             }
             else if (contact->get_type(POTENTIAL) == ElectricalContact::PINNING)
             {
               double val = contact->get_boundary_value(POTENTIAL) / phi0;
-              Ke.condense(i, i, -val, Fe);
+
+              for (unsigned int j = 0; j < 3 * n_dofs; j++)
+                Ke(i, j) = 0.0;
+
+              Ke(i, i) = 1.0;
               Ke(i, i + n_dofs) = 1.0;
             }
           }
@@ -4331,7 +4122,11 @@ DriftDiffusion::do_assembly_jacobian_box1D(const NumericVector<Number>& x,
             {
               double val = (contact->get_boundary_value(FERMIE)
                   + contact->get_simulation_voltage()) / phi0;
-              Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
+              
+              for (unsigned int j = 0; j < 3 * n_dofs; j++)
+                Ke(i + n_dofs, j) = 0.0;
+
+              Ke(i + n_dofs, i + n_dofs) = 1.0;
             }
           }
 
@@ -4341,121 +4136,17 @@ DriftDiffusion::do_assembly_jacobian_box1D(const NumericVector<Number>& x,
             {
               double val = (contact->get_boundary_value(FERMIH)
                   + contact->get_simulation_voltage()) / phi0;
-              Ke.condense(i + 2 * n_dofs, i + 2 * n_dofs, -val, Fe);
+
+              for (unsigned int j = 0; j < 3 * n_dofs; j++)
+                Ke(i + 2 * n_dofs, j) = 0.0;
+
+              Ke(i + 2 * n_dofs, i + 2 * n_dofs) = 1.0;
             }
           }
         }
       }
     }
-    else
-    {
-      // TODO this needs to be checked!!!
-
-      // Some nodes are constrained, so we have messed up our
-      // matrix and vector. In particular, we could have included
-      // nodes on Dirichlet boundaries.
-      // We will look for them on the parent element(s) to apply
-      // proper boundary conditions
-
-      n_dofs_tot = dof_indices.size();
-
-      // it's possible, that a node of the parent element is
-      // also a hanging node. In this case we have to look at the
-      // grand parent
-      bool is_done = false;
-      const Elem* parent;
-      while (!is_done)
-      {
-        is_done = true;
-        parent = elem->parent();
-        elem = parent;
-
-        assert(parent != NULL);
-
-        dof_map.dof_indices(parent, dof_indices_u, u_var);
-        dof_map.dof_indices(parent, dof_indices_en, en_var);
-        dof_map.dof_indices(parent, dof_indices_ep, ep_var);
-
-        // loop over the nodes of the parent element
-        unsigned int n_nodes = parent->n_nodes();
-        for (unsigned int i = 0; i < n_nodes; i++)
-        {
-          if (dof_map.is_constrained_dof(dof_indices_u[i]))
-            is_done = false;
-
-          node_it = dirichlet_nodes.find(parent->get_node(i));
-          if (node_it != end)
-          {
-            Boundary* bd = node_it->second;
-            ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
-                bd->get_boundary_properties(get_id()));
-            contact->set_material(sc);
-
-            // loop over all DOFs occurring in the constrained matrix
-            for (unsigned int id = 0; id < n_dofs_tot; id++)
-            {
-
-              if (coupling & POISSON)
-              {
-                if (contact->get_type(POTENTIAL) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_u[i])
-                  {
-                    double val = (contact->get_boundary_value(POTENTIAL)
-                        + contact->get_simulation_voltage()) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-                else if (contact->get_type(POTENTIAL) ==
-                    ElectricalContact::PINNING)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_u[i])
-                  {
-                    double val = contact->get_boundary_value(POTENTIAL) / phi0;
-                    Ke.condense(i, i, -val, Fe);
-                    Ke(id, id + n_dofs) = 1.0;
-                  }
-                }
-              }
-
-              if (coupling & ECURRENT)
-              {
-                if (contact->get_type(FERMIE) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_en[i])
-                  {
-                    double val = (contact->get_boundary_value(FERMIE)
-                        + contact->get_simulation_voltage()) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-              }
-
-              if (coupling & HCURRENT)
-              {
-                if (contact->get_type(FERMIH) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_ep[i])
-                  {
-                    double val = (contact->get_boundary_value(FERMIE)
-                        + contact->get_simulation_voltage()) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-              }
-
-            } // end loop over all DOFs 
-          }
-        } // end loop over the nodes of the parent element
-      }
-    }
+    
 
     jacobian.add_matrix(Ke, dof_indices);
 

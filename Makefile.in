@@ -24,10 +24,13 @@ all: src
 
 clean: src
 	@$(MAKE) -C examples clean
+	@$(MAKE) -C src/tibercad clean
+
 
 
 distclean: src doc
 	@$(MAKE) -C examples distclean
+	@$(MAKE) -C src/tibercad distclean
 	@rm -rf lib/*
 	@rm -f bin/tibercad
 

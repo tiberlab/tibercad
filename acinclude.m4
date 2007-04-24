@@ -192,6 +192,24 @@ AC_DEFUN([TC_SLEPC],
  AC_ARG_WITH([slepc-prefix], AS_HELP_STRING([--with-slepc-prefix=DIR],
 	[specify the SLEPc installation prefix]),
 	[tc_slepc_prefix=$with_slepc_prefix])
+ dnl
+ dnl compile test
+dnl CXXFLAGS_save=$CXXFLAGS
+dnl LDFLAGS_save=$LDFLAGS
+dnl AC_LANG_PUSH([C++])
+dnl CXXFLAGS=-I${tc_slepc_prefix}/include
+dnl LDFLAGS=-L${tc_slepc_prefix}/lib/${tc_petsc_arch} -lslepc \
+dnl  	 -L${tc_petsc_prefix}/lib/${tc_petsc_arch} -lpetscksp
+dnl AC_LINK_IFELSE(AC_LANG_PROGRAM([[#include "slepceps.h"]],
+dnl 			        [[SlepcInitialize(0,0,0,0);
+dnl 				  SlepcFinalize();]]);
+dnl 			        [tc_cv_have_slepc="yes"])
+ dnl AC_LANG_POP()
+ dnl CXXFLAGS=$CXXFLAGS_save
+ dnl LDFLAGS=$LDFLAGS_save
  AC_SUBST([SLEPC_DIR], "$tc_slepc_prefix")
+ if test "$tc_cv_have_slepc" == "yes"; then
+   AC_DEFINE([HAVE_COMPLEX_SLEPC], [1], [Define to 1 if complex SLEPc is available])
+ fi
 ])dnl
 

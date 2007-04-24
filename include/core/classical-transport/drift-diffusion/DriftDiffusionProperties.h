@@ -469,6 +469,10 @@ class DriftDiffusionProperties : public PhysicalModel
     int get_number_of_recombination_models(void) const;
 
 
+    //! Get the thermo-electric power
+    double get_thermo_electric_power(void) {return 0;};
+
+
   protected:
       
     /*!

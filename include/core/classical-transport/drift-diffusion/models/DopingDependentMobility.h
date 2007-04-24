@@ -13,20 +13,20 @@
  *
  * \li Formula of Masetti et al. (formula 1):
  * \f[
- * \mu  =  \mu_{min,1}e^{-Pc_ / N} +
- *  \frac{\mu_{const} - \mu_{min,2}}{1 + (N/Cr_)^\alpha} -
- *  \frac{\mu_1}{1 + (Cs_/N)^\beta}
+ * \mu  =  \mu_{min,1}e^{-P_c / N} +
+ *  \frac{\mu_{const} - \m_u{min,2}}{1 + (N/C_r)^\alpha} -
+ *  \frac{\mu_1}{1 + (C_s/N)^\beta}
  * \f]
  * with \f$\mu_{const}\f$ from the ConstantMobility model.
  * 
  * \li Formula of Arora (formula 2):
  * \f{eqnarray*}
  * \mu & = & {\mu_{min}}^\ast +
- * \frac{{\mu_d}^\ast}{1+\left(N/{N0_}^\ast\right)^{\alpha^\ast}} \\
- * \mu_{min}^\ast & = & \mu_{min}\left(\frac{T}{T0_}\right)^{\alpha_m} \\
- * {\mu_d}^\ast & = & \mu_d\left(\frac{T}{T0_}\right)^{\alpha_d} \\ 
- * {N0_}^\ast & = & N0_\left(\frac{T}{T0_}\right)^{\alpha_N} \\
- * \alpha^\ast & = & \alpha\left(\frac{T}{T0_}\right)^{\alpha_a}
+ * \frac{{\mu_d}^\ast}{1+\left(N/{N_0}^\ast\right)^{\alpha^\ast}} \\
+ * \mu_{min}^\ast & = & \mu_{min}\left(\frac{T}{T_0}\right)^{\alpha_m} \\
+ * {\mu_d}^\ast & = & \mu_d\left(\frac{T}{T_0}\right)^{\alpha_d} \\ 
+ * {N_0}^\ast & = & N_0\left(\frac{T}{T_0}\right)^{\alpha_N} \\
+ * \alpha^\ast & = & \alpha\left(\frac{T}{T_0}\right)^{\alpha_a}
  * \f}
  */
 class DopingDependentMobility : public MobilityModelInterface
