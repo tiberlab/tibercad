@@ -120,6 +120,24 @@ void MacroHeatBalance::do_init( )
 
    // Initialize the data structures for the equation system.
   my_system->init();	
+
+
+
+
+  //Inizialize the solution to temperature of simulation options
+
+    MeshBase::const_node_iterator       nd     = mesh->active_nodes_begin();
+    const MeshBase::const_node_iterator nd_el  = mesh->active_nodes_end();
+
+    unsigned int number_of_points = 0;
+    for ( ; nd != nd_el ; ++nd)  number_of_points++;
+
+    for ( unsigned int n = 0 ; n != number_of_points; ++n)
+    {
+      (*(my_system->solution)).set(n,SimulationOptions::temperature); 
+    }
+   //-----------------------------------------------------------------
+
    
   //------init is done---------------------------------------------------------------------//
 
@@ -131,26 +149,6 @@ void  MacroHeatBalance::do_solve()
    parse_options();
 
    static_this = this;
-
-   my_system->solution->zero();
-
- 
-
-   //Get the number of active elements---------------------------------------
-
-    MeshBase::const_node_iterator       nd     = mesh->active_nodes_begin();
-    const MeshBase::const_node_iterator nd_el  = mesh->active_nodes_end();
-
-    unsigned int number_of_points = 0;
-    for ( ; nd != nd_el ; ++nd)  number_of_points++;
-
-    //-----------------------------------------------------------------------
-
-
-   for ( unsigned int n = 0 ; n != number_of_points; ++n)
-   {
-     (*(my_system->solution)).set(n,SimulationOptions::temperature); 
-   }
 
    my_system->solve();
 
@@ -302,6 +300,52 @@ void MacroHeatBalance::build_nodal_results (const std::set< std::string > &varia
   }
 }
 
+
+
+void MacroHeatBalance::get_temperature_element(const Elem* elem,double& T) const
+{
+        
+
+       std::vector<unsigned int> dof_indices;
+
+       DofMap& dof_map = my_system->get_dof_map();
+
+       dof_map.dof_indices (elem, dof_indices); 
+
+       T=0.0;
+       for (unsigned int n = 0; n < elem->n_nodes(); n++)
+       {   
+	  T +=  (*(my_system->solution))(dof_indices[n]); 
+       }
+      
+       T /= elem->n_nodes();
+
+}
+
+
+
+void MacroHeatBalance::get_temperature_node(const Elem* elem,vector<double>& T) const
+{
+        
+
+       std::vector<unsigned int> dof_indices;
+
+       DofMap& dof_map = my_system->get_dof_map();
+
+       dof_map.dof_indices (elem, dof_indices); 
+
+       for (unsigned int n = 0; n < elem->n_nodes(); n++)
+       {   
+	  T[n]=  (*(my_system->solution))(dof_indices[n]); 
+       }
+      
+   
+
+}
+
+
+
+
 //----------------------------------------------------------------------------------//
 void MacroHeatBalance::assemble_heat_matrix(EquationSystems& es,
 				     const std::string& system_name)
@@ -341,7 +385,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   
   // Boundary integration requires one quadraure rule,
   // with dimensionality one less than the dimensionality
-  // o cout<<"Start loop over lattice thermal conductivity"<<endl;f the element.
+  // o cout<<"Start loop over lattice thermal conductivity"<<endl;f the element.map
   QGauss qface(dim-1, THIRD);
   
   // Tell the finite element object to use our
@@ -537,9 +581,9 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	  //------------------------
 	  //volume integration for matrix
 	  // - \int_V \frac{\patial \phi_{\alpha}{\partial x_i}\kappa_{i,j} \frac{\patial \phi_{\beta}{\partial x_j} dx
-	  
-	  
-	  for (unsigned int p2=0; p2<n_dofs; p2++) 
+	  	  
+	   for (unsigned int p2=0; p2<n_dofs; p2++) 
+
 	  {//loop over basis functions
             
 
@@ -559,12 +603,12 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		  kappa_value = kappa(i+1, j+1);
 
 	   
-	        value += -JxW[qp] * kappa_value * dphi[p1][qp](i) * dphi[p2][qp](j) /(opt.length_scale * opt.length_scale);
+	          value += -JxW[qp] * kappa_value * dphi[p1][qp](i) * dphi[p2][qp](j) /(opt.length_scale * opt.length_scale);
                 
 		
 	      }//end loop over direction (2)
 
-	      //This includes the Peltier-Thompson effects   
+	      //This includes the Peltier-Thomson effects   
 	      if (opt.thomson_peltier_effect != "noTPeffect")  
 	      {
 	          value += -JxW[qp]* phi[p1][qp] * dphi[p2][qp](i)*
@@ -635,7 +679,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	      
 	      if ( (_dd_simul->get_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
 	      {
-		
 		std::vector<DriftDiffusion::Solution>  potentials;   
 		std::vector<DriftDiffusion::Currents>   currents; 
 		
@@ -654,7 +697,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		  _dd_simul->get_solution(elem,q_point,potentials);  
 		  
 		  _dd_simul->get_solution(elem,q_point,currents);
-		  
+		 
 		  for (short i = 0; i < 3; i++)
 		    for (unsigned int qp=0; qp < qface.n_points(); qp++)
 		      Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 

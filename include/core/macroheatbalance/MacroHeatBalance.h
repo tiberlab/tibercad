@@ -39,8 +39,11 @@ class MacroHeatBalance : public SimulationInterface
 
   };
 
- 
+  //!Get a avarage temperature for a given element  
+  void get_temperature_element(const Elem* elem,double& T) const;
 
+  //!Get a avarage temperature for a given node
+  void get_temperature_node(const Elem* elem,std::vector<double>& T) const; 
 
   //!Constructor
   MacroHeatBalance();
@@ -91,7 +94,7 @@ class MacroHeatBalance : public SimulationInterface
 
   static Device* _device;
 
-  //!Dimension of mesh
+  //!Dimension of meshmap
   short dim;  
 
   //!Pointer to mesh

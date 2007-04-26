@@ -64,8 +64,6 @@ void ZbLatticeThermalConductivity::do_init(void)
    _conductivity(1,1) = k;
    _conductivity(2,2) = k;
    _conductivity(3,3) = k;
-
- 
   
  
 }
@@ -83,7 +81,6 @@ void ZbLatticeThermalConductivity::update_tensor(void)
        
    k = 1.0 / (_kappa_a + _kappa_b * temperature +  _kappa_c * temperature * temperature );
   
-   //   std::cout<<k<<std::endl;
    _conductivity(1,1) = k;
    _conductivity(2,2) = k;
    _conductivity(3,3) = k;

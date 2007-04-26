@@ -39,10 +39,6 @@ void HeatModel::do_init()
 
   const ModelOptions& kappa_option = (it->second);
 
-    //const std::string& name = (it->second).get_option("kappa_model", "constant");
-  
-
-
   kappa =dynamic_cast<LatticeThermalConductivity*>
     (  PhysicalModelInterface::create("lat_therm_cond_" + get_material()->get_structure(),  kappa_option  )  );
 
