@@ -59,7 +59,7 @@ void ThermoelectricPower::do_init(void)
   {
     _eTEmodel = "variable";    
  
-    _eTEpower = - KfracQ * (5.0 / 2.0 + _e_mobility_term + ( -  _eQfermi - _Ec )  );
+    _eTEpower = - KfracQ * (5.0 / 2.0 + _e_mobility_term +  _eQfermi +  _Ec   );
   }
   else
   {
@@ -70,7 +70,7 @@ void ThermoelectricPower::do_init(void)
   {
     _hTEmodel = "variable";
 
-    _hTEpower = + KfracQ * (5.0 / 2.0 + _h_mobility_term + (-  _hQfermi - _Ev )  );
+    _hTEpower = + KfracQ * (5.0 / 2.0 + _h_mobility_term -  _hQfermi - _Ev   );
   }
   else
   {
