@@ -78,7 +78,7 @@ class DriftDiffusion : public SimulationInterface
     {
       FEM, /*!< Standard Finite Elements */
       BOX, /*!< Box integration method */
-      FEMVARIANT /*!< Finite Elements on slightly different equations */
+      SG   /*!< Box integration with Scharfetter-Gummel */
     };
 
 
@@ -895,9 +895,6 @@ class DriftDiffusion : public SimulationInterface
     template <int T>
     void do_assembly_residual(const NumericVector<Number>& x,
         NumericVector<Number>& residual);
-    template <int T>
-    void do_assembly_residual_old(const NumericVector<Number>& x,
-        NumericVector<Number>& residual);
 
 
     //! Assemble the jacobian matrix
@@ -909,9 +906,6 @@ class DriftDiffusion : public SimulationInterface
      */
     template <int T>
     void do_assembly_jacobian(const NumericVector<Number>& x,
-        SparseMatrix<Number>& jacobian);
-    template <int T>
-    void do_assembly_jacobian_old(const NumericVector<Number>& x,
         SparseMatrix<Number>& jacobian);
  
    
@@ -925,6 +919,9 @@ class DriftDiffusion : public SimulationInterface
      */
     template <int T>
     void do_assembly_residual_box1D(const NumericVector<Number>& x,
+        NumericVector<Number>& residual);
+    template <int T>
+    void do_assembly_residual_box1D_SG(const NumericVector<Number>& x,
         NumericVector<Number>& residual);
 
  

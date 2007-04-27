@@ -14,7 +14,7 @@
  * \li Formula of Masetti et al. (formula 1):
  * \f[
  * \mu  =  \mu_{min,1}e^{-P_c / N} +
- *  \frac{\mu_{const} - \m_u{min,2}}{1 + (N/C_r)^\alpha} -
+ *  \frac{\mu_{const} - \mu_{min,2}}{1 + (N/C_r)^\alpha} -
  *  \frac{\mu_1}{1 + (C_s/N)^\beta}
  * \f]
  * with \f$\mu_{const}\f$ from the ConstantMobility model.
