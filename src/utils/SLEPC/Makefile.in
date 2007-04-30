@@ -22,10 +22,10 @@ CXXFLAGS += -fPIC $(CC_INCLUDES) -I ../../../include/utils/SLEPC
 all: libeigen_solver.so
 
 
-libeigen_solver.so:  eigen_solver.o
+libeigen_solver.so:  Eigensolver.o
 	@$(CXX) -shared -Wl,-soname,libeigen_solver.so \
 		-Wl,--version-script,export.map \
-		-o libeigen_solver.so eigen_solver.o  \
+		-o libeigen_solver.so Eigensolver.o  \
 		-Wl,-Bsymbolic -Wl,-Bstatic \
 		-L$(SLEPC_LIB_DIR) -lslepc -lslepcfortran \
 		-L$(PETSC_LIB_DIR) -lmpiuni -lpetscts \

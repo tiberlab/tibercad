@@ -74,6 +74,13 @@ class EnvelopFunctionApprox  : public SimulationInterface
   };
 
 
+  enum Method
+  {
+    FEM = 0,
+    BIM = 1
+  };
+
+
   //! data structure that contains options for effective mass
   struct options
   {
@@ -138,10 +145,13 @@ class EnvelopFunctionApprox  : public SimulationInterface
     JobKind job; //!< a job to do
 
 
-    double Temperature;//!Temperature for density calculation
+    double Temperature;//!<Temperature for density calculation
 
 
-    bool local_occupation; //!If a local occupation is considered 
+    bool local_occupation; //!<If a local occupation is considered 
+
+
+    Method discretization_method; //!<box integration or finite element 
 
   };
 
@@ -419,7 +429,7 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
   //!swaps 8 byte variable for output
   // __int64 for MSVC, "long long" for gcc
-  inline void endian_swap(unsigned long long& x)
+  inline void endian_swap1(unsigned long long& x)
     {
       x = (x>>56) | 
         ((x<<40) & 0x00FF000000000000LL) |
@@ -432,6 +442,32 @@ class EnvelopFunctionApprox  : public SimulationInterface
     }
 
   
+ 
+ inline void swap_double_buffer(char* x)
+ {
+   char result[8];
+
+   result[0] = x[7];
+   result[1] = x[0];
+   result[2] = x[1];
+   result[3] = x[2];
+   result[4] = x[3];
+   result[5] = x[4];
+   result[6] = x[5];
+   result[7] = x[6];
+
+   x[0] = result[0];
+   x[1] = result[1];
+   x[2] = result[2];
+   x[3] = result[3];
+   x[4] = result[4];
+   x[5] = result[5];
+   x[6] = result[6];
+   x[7] = result[7];
+ }
+
+  
+
   //!creates dirichlet dofs
   void create_dirichlet_dofs(void);
 

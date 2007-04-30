@@ -48,6 +48,8 @@ void EnvelopFunctionApprox::build_integrated_quantities_description (const std::
     legend.resize(n);
     for (unsigned int i = 0; i < n; i++)
     {
+
+
       ostringstream temp;
       temp << i + 1;
       legend[i] = temp.str();
@@ -110,6 +112,7 @@ void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& var
 
     legend.resize(num_var);
     results.resize(number_of_points * num_var);
+   
 
     if (output_psi)
     {
@@ -121,6 +124,8 @@ void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& var
 	legend[i] = i_str.str();
 
 	std::vector<double> prob_data(number_of_points, 0.0);
+
+
 
 	prepare_probability_function(i,  prob_data);
 
@@ -427,6 +432,21 @@ void EnvelopFunctionApprox::parse_options()
 
 
   opt.local_occupation              = mod_opt.get_option("local_occupation", true);
+
+  //------------
+  {
+    std::string  method_name = mod_opt.get_option("method","FEM");
+    if (method_name == "FEM")
+      opt.discretization_method = FEM;
+    else if (method_name == "BIM")
+      opt.discretization_method = BIM;
+    else
+      throw InitFailedException( "EnvelopeFunctionApprox: Incorrect method " + method_name );  
+
+   
+  }
+  //------------
+
 }
 
 
@@ -612,7 +632,7 @@ void EnvelopFunctionApprox::do_solve()
   //GraceIO(*mesh).write_elemental_data(f,density_of_state , ns);
  
 }
-//===========================================================//
+
 void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 {
 
@@ -710,15 +730,17 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
       dof_map.dof_indices (elem, dof_indices); 
       const unsigned int n_dofs   = dof_indices.size();
-      fe->reinit (elem);
-
+     
       ham_real.resize(n_dofs, n_dofs);
       ham_imag.resize(n_dofs, n_dofs);
       s_real.resize(n_dofs, n_dofs);
 
       // complex<double> operator_sign = Complex(0.0, -1.0);
+      if (opt.discretization_method == FEM)
+      {//FEM
+	fe->reinit (elem);
 
-      for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+	for (unsigned int qp=0; qp<qrule.n_points(); qp++)
 	{//qp
 	  //--------------------------------------------------------------------------------
 	  /*
@@ -726,18 +748,18 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	    It is done for a sake of a multiscale generalization
 	  */
 	  if (opt.consider_strain) 
-	    {
+	  {
              
-	      strain_crystal_system = strain->get_strain_crystal(elem , q_point[qp]);
-	    }
+	    strain_crystal_system = strain->get_strain_crystal(elem , q_point[qp]);
+	  }
  
 
 	  if (opt.consider_potential)
-	    {
+	  {
 
-	      electric_potential = poisson_equation -> get_electric_potential(elem, q_point[qp]);
+	    electric_potential = poisson_equation -> get_electric_potential(elem, q_point[qp]);
 	     
-	    }
+	  }
 
 
 
@@ -755,88 +777,241 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	
 
 	  for (unsigned int band1 = 0; band1 < opt.number_of_bands; band1++)
-	    {//band1
-	      dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
-	      const unsigned int n_psi_dofs = dof_indices_component.size();
+	  {//band1
+	    dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
+	    const unsigned int n_psi_dofs = dof_indices_component.size();
  
-	       for (unsigned int band2 = 0; band2 < opt.number_of_bands; band2++)
-		 {//band2
-		  
-		   //Hamiltonian
+	    for (unsigned int band2 = 0; band2 < opt.number_of_bands; band2++)
+	    {//band2
+	      
+	      //Hamiltonian
 		  
 
-		   ham_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
-		   ham_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
-		   for (unsigned int p1=0; p1<n_psi_dofs; p1++)
-		     {
-		       for (unsigned int p2=0; p2<n_psi_dofs; p2++)
-			 {		      
-			   complex<double> value = (0.0, 0.0);
-			   //constant
-			   value += JxW[qp] * phi[p1][qp] * phi[p2][qp] * model_Ham[band1][band2].constant ;
-			  
-			  
-			   //linear left
-			
-			   for (short i = 0; i < dim; i++)
-			     value -= JxW[qp]* dphi[p1][qp](i) * phi[p2][qp] * model_Ham[band1][band2].linear_left[i]
-			       * Complex(0.0, -1.0) /opt.length_scale;
- 
-                           //linear right
+	      ham_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+	      ham_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+	      for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+	      {
+		for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+		{		      
+		  complex<double> value = (0.0, 0.0);
+		  //constant
+		  value += JxW[qp] * phi[p1][qp] * phi[p2][qp] * model_Ham[band1][band2].constant ;
+		  
+		  
+		  //linear left
+		  
+		  for (short i = 0; i < dim; i++)
+		    value -= JxW[qp]* dphi[p1][qp](i) * phi[p2][qp] * model_Ham[band1][band2].linear_left[i]
+		      * Complex(0.0, -1.0) /opt.length_scale;
+		  
+		  //linear right
 
-			   for (short i = 0; i < dim; i++)
-			     value += JxW[qp]* dphi[p2][qp](i) * phi[p1][qp] * model_Ham[band1][band2].linear_right[i] 
-			       * Complex(0.0, -1.0) /opt.length_scale;
-			
-			   //quadratic
+		  for (short i = 0; i < dim; i++)
+		    value += JxW[qp]* dphi[p2][qp](i) * phi[p1][qp] * model_Ham[band1][band2].linear_right[i] 
+		      * Complex(0.0, -1.0) /opt.length_scale;
+		  
+		  //quadratic
 			   
-			   for (short i = 0; i < dim; i++)
-			     for (short j = 0; j < dim; j++)
-			       {
-				 value -= JxW[qp] * dphi[p1][qp](i) * dphi[p2][qp](j)*model_Ham[band1][band2].quad[i][j]
-				 * Complex(0.0,-1.0) * Complex(0.0, -1.0) /opt.length_scale / opt.length_scale;
-
+		  for (short i = 0; i < dim; i++)
+		    for (short j = 0; j < dim; j++)
+		    {
+		      value -= JxW[qp] * dphi[p1][qp](i) * dphi[p2][qp](j)*model_Ham[band1][band2].quad[i][j]
+			* Complex(0.0,-1.0) * Complex(0.0, -1.0) /opt.length_scale / opt.length_scale;
+		      
 			
 				  
-			       }
+		    }
 			   
-
-			    value *= my_Jacobian;
-
-
-			  
-			    ham_real_sub(p1,p2) += value.real(); 
-			    ham_imag_sub(p1,p2) += value.imag(); 
-
-			 }
-		     }
+		  
+		  value *= my_Jacobian;
+		  
+		  
+		  
+		  ham_real_sub(p1,p2) += value.real(); 
+		  ham_imag_sub(p1,p2) += value.imag(); 
+		  
+		}
+	      }
 		   
 		  
 
 		  
-		   //S-matrix
-		   if (band1 == band2)
-		     {
-		       s_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
-		       for (unsigned int p1=0; p1<n_psi_dofs; p1++)
-			 {
-			   for (unsigned int p2=0; p2<n_psi_dofs; p2++)
-			     {
-			       s_real_sub(p1,p2) += JxW[qp] * phi[p1][qp] * phi[p2][qp] * my_Jacobian;
-			     }
-			 }
+	      //S-matrix
+	      if (band1 == band2)
+	      {
+		s_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+		for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+		{
+		  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+		  {
+		    s_real_sub(p1,p2) += JxW[qp] * phi[p1][qp] * phi[p2][qp] * my_Jacobian;
+		  }
+		}
 		      
-		     }
-		   //--------------------------------------------------------------------------//
+	      }
+	      //--------------------------------------------------------------------------//
 
-		 }
 	    }
+	  }
 	  
 
 
 	}
 
-  
+      }
+
+      if (opt.discretization_method == BIM)
+      {//BIM
+
+	Point center = elem->centroid();
+    
+	if (opt.consider_strain) 
+	{
+	  
+	  strain_crystal_system = strain->get_strain_crystal(elem, center);
+	}
+	
+
+	if (opt.consider_potential)
+	{
+	  
+	  electric_potential = poisson_equation -> get_electric_potential(elem, center);
+	  
+	}
+
+
+	element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
+	  
+ 
+
+
+	std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&  
+	  model_Ham = ( element_hamiltonian->get_Hamiltonian() );
+
+
+ 	double box_part_volume;
+	{
+	  Point p1 = elem->point(0);
+	  Point p2 = elem->point(1);
+
+	  box_part_volume = 0.5 * std::abs(p1(0) - p2(0)) ;
+	}
+	
+	for (unsigned int band1 = 0; band1 < opt.number_of_bands; band1++)
+	{//band1
+	  dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
+	  const unsigned int n_psi_dofs = dof_indices_component.size();
+ 
+	  for (unsigned int band2 = 0; band2 < opt.number_of_bands; band2++)
+	  {//band2
+
+	    ham_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+	    ham_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+
+	    //hamiltonian
+
+	    for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+	    {//p1      
+
+	     
+	      vector< Point > qpoints;
+	      Point q1(0.0, 0.0, 0.0);
+	      qpoints.push_back(q1);
+	      qpoints.push_back( FEInterface::inverse_map ( dim, fe_type, elem, elem->point(p1)) );
+
+	      fe->reinit (elem, &qpoints);
+
+	      for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+	      {	//p2	      
+		complex<double> value = (0.0, 0.0);
+		//constant (zero order)
+
+		if (p1 == p2)
+		{
+		  value +=  model_Ham[band1][band2].constant * box_part_volume;
+		}
+
+
+	       //linear left
+			
+		for (short i = 0; i < dim; i++)
+		{
+		  double surface ;
+		  if (p1 == 0)
+		    surface = 1.0;
+		  else
+		    surface = -1.0;
+
+		  for (unsigned int qp=0; qp < dim; qp++)
+		    value +=   phi[p2][qp] * model_Ham[band1][band2].linear_left[i] * surface
+		      * Complex(0.0, -1.0) /opt.length_scale;
+
+		}
+
+		//linear right
+
+		for (short i = 0; i < dim; i++)
+		  value +=  dphi[p2][dim](i) * model_Ham[band1][band2].linear_right[i] 
+		    * Complex(0.0, -1.0) /opt.length_scale * box_part_volume ;
+
+
+		//second order
+		vector<double> n1[3];
+
+		for (unsigned int qp=0; qp < dim; qp++)
+		{
+		  for (short i = 0; i < dim; i++)  //x,y,z
+		    for (short j = 0; j < dim; j++) //x,y,z
+		    {
+		     
+		      
+		      double surface ;
+
+		      if (p1 == 0)
+			surface = 1.0;
+		      else
+		     	surface = -1.0;
+		     
+		      
+		      value +=   dphi[p2][qp](j)  * surface *
+			model_Ham[band1][band2].quad[i][j] * Complex(0.0,-1.0) * Complex(0.0, -1.0)/opt.length_scale/opt.length_scale;
+		      
+		    }
+		}
+
+		value *= my_Jacobian;
+
+
+			  
+		ham_real_sub(p1,p2) += value.real(); 
+		ham_imag_sub(p1,p2) += value.imag();
+ 
+
+	      }
+	    }
+
+	    if (band1 == band2)
+	    {
+	      s_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+	      for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+	      {
+		for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+		{
+		  if (p1 == p2)
+		    s_real_sub(p1,p2) +=  box_part_volume * my_Jacobian;
+		}
+	      }
+		      
+	    }
+
+	  
+	    
+	  }
+	}
+
+      }
+
+
 
       ham_real.add( - opt.spectrum_shift/Hartree, s_real);//apply spectrum shift.
 
@@ -882,6 +1057,13 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   //  dof_map.print_dof_constraints();
      
 }
+//============================================================//
+
+//===========================================================//
+/*
+
+
+*/
 //============================================================//
 
 void EnvelopFunctionApprox::save_S_matrix(const std::string & fname)
@@ -1032,10 +1214,10 @@ void EnvelopFunctionApprox::save_S_matrix(const std::string & fname)
 		  double value = petsc_row_vals[col];
 		  double zero = 0.0;
 	  
-		  out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
+		  out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap1(out_long_long);
 		  out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
 		  
-		  out_long_long = *(reinterpret_cast<unsigned long long*> (& zero) );  endian_swap(out_long_long);
+		  out_long_long = *(reinterpret_cast<unsigned long long*> (& zero) );  endian_swap1(out_long_long);
 		  out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
 		}
 	    }
@@ -1324,7 +1506,7 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 
 	
 
-	      out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
+	      out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap1(out_long_long);
 	      out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
 	  
 	      //----------------
@@ -1335,7 +1517,7 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 	      else 
 		value = 0.0;
 	      
-	      out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap(out_long_long);
+	      out_long_long = *(reinterpret_cast<unsigned long long*> (& value) );  endian_swap1(out_long_long);
 	      out.write(  reinterpret_cast<char *>( & out_long_long ), double_size);
 	      
 	      //----------------
@@ -1379,7 +1561,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
 
   calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
  
-  SLEPCoptions slep_opt;
+  EigenSolver::SLEPCoptions slep_opt;
 
   slep_opt.H_file_name = "H.out";
     
@@ -1406,7 +1588,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
   
    
    
-    int result = eig_value_problem_general(slep_opt);
+    int result = EigenSolver::eig_value_problem_general(slep_opt);
    
     cerr << "result "  << result << "\n";
    
@@ -1427,14 +1609,14 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
 
 
   
-  slep_opt.eps_tolerance = 1e-10;
+  slep_opt.eps_tolerance = 1e-9;
 
   slep_opt.ev_number = ev_number;
   
   slep_opt.spectrum_shift  = st_shift_value;
   
-   
-  int result = eig_value_problem_general(slep_opt);
+ 
+  int result = EigenSolver::eig_value_problem_general(slep_opt);
   
   cerr << "result  " << result << "\n";
 
@@ -1515,7 +1697,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
       
       
       file_eigvals.read(buffer_double, double_size);
-      fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap(fict);
+      fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap1(fict);
 
 	
       ev[ind].energy = *(  reinterpret_cast<double*>( &fict ) ) * Hartree + opt.spectrum_shift;
@@ -1557,19 +1739,29 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
   std::ifstream file_eigvects ( fname_eigvects.c_str() );
 
+
+  
   assert (file_eigvects.good());
+  
+  
 
   //read solutions - only independent dofs
 
+ 
   //----------------------------------------------------------------------
   for (unsigned int ind = 0; ind < number_of_converged_solutions; ind++)
     {
       
 	
      
+      
+      file_eigvects.read(buffer, int_size);
+    
 
       file_eigvects.read(buffer, int_size);
-      file_eigvects.read(buffer, int_size);
+
+     
+
       unsigned int vector_size =  *(reinterpret_cast<unsigned int*> ( buffer));  endian_swap(vector_size);
       assert( vector_size == number_of_new_dofs);
       
@@ -1581,16 +1773,35 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 	{
           double re, im;
 	  file_eigvects.read(buffer_double, double_size);
+	 
+	 
+
+	  { 
+
+	    re = 0.0;
+	    unsigned long long int  fict = *( reinterpret_cast<unsigned long long int*>( buffer_double) ); endian_swap1(fict);
+	    re   = *(  reinterpret_cast<double*>( &fict ) );
+
 	
-	  fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap(fict);
-	  re   = *(  reinterpret_cast<double*>( &fict ) );
+
+	   
+	  }
 	
+
+	  
+
 	  file_eigvects.read(buffer_double, double_size);
 	  
-	  fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap(fict);
-	  im   = *(  reinterpret_cast<double*>( &fict ) );
-	  
+	  {
+	    unsigned long long int fict = *( reinterpret_cast<unsigned long long int*>( buffer_double) ); endian_swap1(fict);
+	    im   = *(  reinterpret_cast<double*>( &fict ) );
+	   
+	  }
+	 
+
+
 	  temp[j] = Complex(re,im);
+	
 	 
 
 	 
@@ -1611,10 +1822,12 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 	  {
 		
 	    solution[solution_number].eigen_vector[j] = temp[new_dofs[j].new_number];
+	 
+
 	  }
 	}
-	
-	  
+
+
 	//put constrained dofs
 	
 
@@ -1662,7 +1875,6 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
  
 
-
   //normalization
   for (unsigned int i = 0; i < solution_size; i++)
     {
@@ -1691,7 +1903,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
  
 
  
- 
+
   
   
 }
@@ -1846,6 +2058,8 @@ void  EnvelopFunctionApprox::prepare_probability_function(const unsigned int sta
 	      Complex value =  (solution[state_number].eigen_vector[ dof_indices[n] ]);
 	     
 	      psi_data[node_id][psi_index] = value;
+
+	    
 	      
 	    }
 	}
@@ -1854,13 +2068,16 @@ void  EnvelopFunctionApprox::prepare_probability_function(const unsigned int sta
   //done
   //calculation of |psi|^2
   double t1;
-  for (unsigned int i = 0; i < number_of_points; i++)
+  for (unsigned int i = 0; i < number_of_points; i++) 
+  {
     for (unsigned int j = 0; j < opt.number_of_bands; j++)
-      {
-	t1 = std::abs(psi_data[i][j]);
-	prob_data[i] += t1 * t1; 
-      }
- 
+    {
+
+      t1 = std::abs(psi_data[i][j]);
+      prob_data[i] += t1 * t1; 
+    }
+    // if (state_number == 0) cerr << prob_data[i] << "\n";
+  }
 }
 
 

@@ -8,9 +8,11 @@ static char help[] = "Solves a generalized eigensystem Ax=kBx with matrices load
 #include <iostream>
 #include "slepceps.h"
 #include <string.h>
+
 #include "EigenSolver.h"
+
 //-------------------------------------------------------------//
-void slepc_init()
+void EigenSolver::slepc_init()
 {
   int argc1 = 0;
   char **argv1;
@@ -26,12 +28,12 @@ void slepc_init()
 }
 
 //--------------------------------------------------------------//
-void slepc_done()
+void  EigenSolver::slepc_done()
 {
  SlepcFinalize();
 }
 //--------------------------------------------------------------//
-int eig_value_problem_general(const SLEPCoptions& opt )
+int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt )
 {
   Mat         A,B;             /* matrices */
   EPS         eps;             /* eigenproblem solver context */
@@ -119,6 +121,9 @@ int eig_value_problem_general(const SLEPCoptions& opt )
   ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  CHKERRQ(ierr);
 
   ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
+
+  //ierr = EPSSetType(eps, EPSLAPACK);
+  
   ierr = EPSSetType(eps, EPSARNOLDI); CHKERRQ(ierr);
 	
   ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
@@ -130,7 +135,7 @@ int eig_value_problem_general(const SLEPCoptions& opt )
 
   ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);
 
-  ierr = KSPSetType( ksp, KSPBCGSL);CHKERRQ(ierr);
+  ierr = KSPSetType( ksp, KSPBCGS);CHKERRQ(ierr);
 
 
   //rtol, abstol, dtol, maxits
@@ -220,15 +225,15 @@ int eig_value_problem_general(const SLEPCoptions& opt )
       im = ki;
 #endif
       
-/*
+
       if( im != 0.0 ) {
-        ierr = PetscPrintf(PETSC_COMM_WORLD," % 6f %+6f i",re,im);CHKERRQ(ierr);
+        ierr = PetscPrintf(PETSC_COMM_WORLD," % 20.14f %+12f i \n",re,im);CHKERRQ(ierr);
       } else {
         ierr = PetscPrintf(PETSC_COMM_WORLD,"       % 6f      ",re); CHKERRQ(ierr);
       }
-      ierr = PetscPrintf(PETSC_COMM_WORLD," % 12f\n",error);CHKERRQ(ierr);
-*/
-      
+      // ierr = PetscPrintf(PETSC_COMM_WORLD," % 12f\n",error);CHKERRQ(ierr);
+
+       
 
       ierr = VecAssemblyBegin(eigen_vector);CHKERRQ(ierr);
       ierr = VecAssemblyEnd(eigen_vector);CHKERRQ(ierr);

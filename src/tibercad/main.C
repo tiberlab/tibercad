@@ -7,7 +7,11 @@
 #include "libmesh.h"
 
 #include <iostream>
-#include "EigenSolver.h"
+
+extern "C++"
+{
+   #include "EigenSolver.h"
+}
 
 using namespace std;
 
@@ -51,14 +55,14 @@ int main (int argc, char** argv)
 
   libMesh::init(argc, argv);
   {
-    slepc_init();
+    EigenSolver::slepc_init();
 
     Control control(inputfile);
     
     control.init();
     control.run_simulation();
 
-    slepc_done();
+    EigenSolver::slepc_done();
   }
 
   cout << "Simulation finished..." << endl << "Goodbye" << endl;
