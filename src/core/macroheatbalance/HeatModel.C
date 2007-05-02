@@ -37,10 +37,14 @@ void HeatModel::do_init()
 
   ModelOptions::const_submodel_iterator  it = get_options().submodels_begin("Lattice_thermal_conductivity");
 
-  const ModelOptions& kappa_option = (it->second);
-
-  kappa =dynamic_cast<LatticeThermalConductivity*>
-    (  PhysicalModelInterface::create("lat_therm_cond_" + get_material()->get_structure(),  kappa_option  )  );
+  if (it != get_options().submodels_end())
+    kappa =dynamic_cast<LatticeThermalConductivity*>(
+        PhysicalModelInterface::create("lat_therm_cond_" + 
+          get_material()->get_structure(), it->second));
+  else
+    kappa =dynamic_cast<LatticeThermalConductivity*>(
+        PhysicalModelInterface::create("lat_therm_cond_" +
+          get_material()->get_structure()));
 
   kappa->temperature = SimulationOptions::temperature;
     
