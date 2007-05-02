@@ -12,8 +12,6 @@ SLEPC_DIR  = @SLEPC_DIR@
 CXX        = @CXX@
 
 
-include $(SLEPC_DIR)/bmake/slepc_common_variables
-
 
 CXXFLAGS += -fPIC $(CC_INCLUDES) -I ../../../include/utils/SLEPC
 
@@ -25,7 +23,7 @@ all: libeigen_solver.so
 libeigen_solver.so:  EigenSolver.o
 	@$(CXX) -shared -Wl,-soname,libeigen_solver.so \
 		-Wl,--version-script,export.map \
-		-o libeigen_solver.so EigenSolver.o  \
+		-o libeigen_solver.so $<  \
 		-Wl,-Bsymbolic -Wl,-Bstatic \
 		-L$(SLEPC_LIB_DIR) -lslepc -lslepcfortran \
 		-L$(PETSC_LIB_DIR) -lmpiuni -lpetscts \
@@ -38,7 +36,7 @@ libeigen_solver.so:  EigenSolver.o
 
 
 
-%.o: %.c
+%.o: %.C
 	@$(CXX) $(SLEPC_HAVE_ARPACK) $(CXXFLAGS) -c $<
 
 
@@ -48,3 +46,5 @@ clean:
 distclean: clean
 
 
+
+include $(SLEPC_DIR)/bmake/slepc_common_variables
