@@ -8,8 +8,6 @@
 
 #include <iostream>
 
-
-
 #include "EigenSolver.h"
 
 

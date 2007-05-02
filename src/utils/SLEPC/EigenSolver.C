@@ -8,11 +8,15 @@ static char help[] = "Solves a generalized eigensystem Ax=kBx with matrices load
 #include <iostream>
 
 #include <string.h>
-
+#include "slepceps.h"
 #include "EigenSolver.h"
-Mat EigenSolver::A;
-Mat EigenSolver::B;
-EPS EigenSolver::eps;
+
+namespace
+{
+Mat A;
+Mat B;
+EPS eps;
+}
 
 //-------------------------------------------------------------//
 void EigenSolver::slepc_init()
@@ -106,10 +110,10 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
                 Create the eigensolver and set various options
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  /* 
-     Create eigensolver context
-  */
-  ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
+  ///* 
+  //   Create eigensolver context
+  //*/
+  //ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
 
   /* 
      Set operators. In this case, it is a generalized eigenvalue problem
@@ -262,15 +266,22 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     
   }
   
+  {
+
+  }
+
+
   /* 
      Free work space
   */
 
-  ierr = EPSDestroy(eps);CHKERRQ(ierr);
-  ierr = MatDestroy(A);CHKERRQ(ierr);
-  ierr = MatDestroy(B);CHKERRQ(ierr);
+  // ierr = EPSDestroy(eps);CHKERRQ(ierr);
+  // ierr = MatDestroy(A);CHKERRQ(ierr);
+  //ierr = MatDestroy(B);CHKERRQ(ierr);
+
   ierr = VecDestroy(eigen_vector); CHKERRQ(ierr);
   ierr = VecDestroy(eig_vals); CHKERRQ(ierr);
+
   //  ierr = SlepcFinalize();CHKERRQ(ierr);
  
  
@@ -279,3 +290,85 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
 }
 
 //------------------------------------------------------------------------------//
+//--------------------------------------------------------------//
+int EigenSolver::number_of_converged_eigenvalues()
+{
+  int ierr, nconv; 
+  ierr =  EPSGetConverged(eps,&nconv);CHKERRQ(ierr);
+  return(nconv);
+}
+//--------------------------------------------------------------//
+double EigenSolver::get_eigenvalue( int i)
+{
+  int ierr;
+  PetscScalar ev, ev_i;
+ 
+  ierr = EPSGetValue(eps, i, &ev,  &ev_i);
+
+  double eigen_value = PetscRealPart(ev);
+
+  return(eigen_value);
+ 
+}
+//----------------------------------------------------------------//
+
+
+ void EigenSolver::get_eigen_vector( int i, std::vector<Complex>& eigen_vector_out)
+{
+  int ierr, vec_size;
+  PetscScalar kr, ki;
+  Vec eigen_vector;
+
+ 
+
+  MatGetVecs(A,PETSC_NULL,&eigen_vector);
+
+  EPSGetEigenpair(eps,i,&kr,&ki,eigen_vector,PETSC_NULL);
+
+ 
+  VecGetSize(eigen_vector, &vec_size);
+  
+  eigen_vector_out.resize(vec_size);
+
+  {
+
+    PetscInt ix[vec_size];
+
+    for (int j= 0; j < vec_size; j++) ix[j] = j;
+
+    PetscScalar y[vec_size];
+
+    VecGetValues(eigen_vector,vec_size,ix,y);
+
+    for (int j= 0; j < vec_size; j++)
+    {
+      eigen_vector_out[j] = Complex(  PetscRealPart(y[j]), PetscImaginaryPart(y[j]) );  
+    }
+
+  }
+}
+//-----------------------------------------------------------------------------//
+
+int EigenSolver::prepare_slepc()
+{
+  /* 
+     Create eigensolver context
+  */
+  int ierr;
+  ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
+  return(ierr);
+}
+
+//-----------------------------------------------------------------------------//
+
+int EigenSolver::clear_slepc()
+{
+  /*
+    Free memory
+   */
+  int ierr;
+  ierr = EPSDestroy(eps);CHKERRQ(ierr);
+  ierr = MatDestroy(A);CHKERRQ(ierr);
+  ierr = MatDestroy(B);CHKERRQ(ierr);
+  return(ierr);
+}

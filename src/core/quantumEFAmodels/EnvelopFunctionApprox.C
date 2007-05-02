@@ -6,7 +6,6 @@
 #include "Boundary.h"
 #include <gnuplot_io.h>
 
-#include "GraceIO.h" //for test only
 
 #include "EigenSolver.h"
 
@@ -621,15 +620,7 @@ void EnvelopFunctionApprox::do_solve()
   else if ( opt.job == DENSITY )
     calculate_convergent_density(opt.Temperature);
   
-  //system->solution->init(0);
-  //system->solution->zero();
-  //system->solution->close();
-
-  //-----test--------------------
-  //vector<double> density_of_state = calculate_cell_prob_function(0);
-  //string f("test16.dat");
-  //vector<string> ns(1, "|psi^2|");
-  //GraceIO(*mesh).write_elemental_data(f,density_of_state , ns);
+ 
  
 }
 
@@ -1541,27 +1532,16 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
 void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, double st_shift_value)
 {
 
-/*
-  if (opt.Dirichlet_bc_everywhere)
-    apply_diriclet_bc_at_all_boundaries();
-   else
-      create_dirichlet_dofs();
- 
 
-  make_constraints(); //creates a copy of them
-
-  
-  make_nodes_periodic();
-  
-  apply_periodic_bc();
-
-  make_new_dofs();
-
-*/
 
   calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
  
+
+  EigenSolver::prepare_slepc();
+
   EigenSolver::SLEPCoptions slep_opt;
+
+ 
 
   slep_opt.H_file_name = "H.out";
     
@@ -1624,7 +1604,9 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
 
   read_SLEPC_solution(ev_number);
 
+  result = EigenSolver::clear_slepc();
  
+  
 }
 
 //=============================================================//
@@ -1716,6 +1698,8 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
  
   
   //sorting of the solutions
+
+
   if (opt.particle == "el") sort( ev.begin(), ev.end(), compare_eigen_energy_electrons1);
 
   if (opt.particle == "hl") sort( ev.begin(), ev.end(), compare_eigen_energy_holes1 );
@@ -1752,9 +1736,10 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   for (unsigned int ind = 0; ind < number_of_converged_solutions; ind++)
     {
       
-	
+      vector<Complex> temp;
+      EigenSolver::get_eigen_vector( ind, temp);
      
-      
+     /* 
       file_eigvects.read(buffer, int_size);
     
 
@@ -1768,6 +1753,8 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
     
 
       vector<Complex> temp(vector_size,Complex(0.0, 0.0)); //only independent dofs
+
+      
     
       for (unsigned j = 0; j < vector_size; j++)
 	{
@@ -1806,7 +1793,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
 	 
 	}
-      
+      */
       it = global_to_sol_index.find(ind);
      
       if (  it  !=  global_to_sol_index.end() )
