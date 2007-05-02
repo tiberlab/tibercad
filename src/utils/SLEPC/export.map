@@ -1,4 +1,8 @@
 {
-  global: *;
+  global: 
+   extern "C++"
+   {
+        EigenSolver::*
+   };
   local: *;
 };

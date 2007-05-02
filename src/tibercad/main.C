@@ -8,10 +8,10 @@
 
 #include <iostream>
 
-extern "C++"
-{
-   #include "EigenSolver.h"
-}
+
+
+#include "EigenSolver.h"
+
 
 using namespace std;
 
