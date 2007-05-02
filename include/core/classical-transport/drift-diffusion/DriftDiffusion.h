@@ -700,6 +700,14 @@ class DriftDiffusion : public SimulationInterface
      */
     std::vector<std::string> _variables;
 
+    //! The local density scaling
+    std::map<const Node*, std::vector<double> > local_scaling_;
+
+    //! If true, local density scaling should be applied
+    bool do_local_scaling_;
+
+    //! Calculate the local density scaling on each node
+    void build_local_scaling(void);
 
     /**
      * The number of nonlinear iterations needed

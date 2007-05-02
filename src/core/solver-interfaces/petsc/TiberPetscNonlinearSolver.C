@@ -51,6 +51,14 @@ extern "C"
     if ((reason < 0) && (reason != -3))
       throw(KSPDivergedError(reason, its, fnorm));
 
+
+    // we increase tolerance for linear solver at each nonlinear step
+    double rtol, atol, stol;
+    int maxit;
+    KSPGetTolerances(ksp, &rtol, &atol, &stol, &maxit);
+    KSPSetTolerances(ksp, rtol * rtol, atol / 100.0, stol, maxit);
+
+
     return ierr;
   }
 

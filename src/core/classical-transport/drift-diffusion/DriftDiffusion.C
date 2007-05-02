@@ -598,6 +598,8 @@ DriftDiffusion::do_solve(void)
 
   }
 
+  if (do_local_scaling_)
+    build_local_scaling();
 
   switch (_options.solver_method)
   {
@@ -835,6 +837,7 @@ DriftDiffusion::parse_const_options(void)
   else
     myopts.scaling_type = Scaling::UNITS;
 
+  do_local_scaling_ = opts.get_option("local_density_scaling", false);
 }
 
 
@@ -2156,6 +2159,138 @@ DriftDiffusion::calculate_currents_surfint(void)
 
 
 
+void
+DriftDiffusion::build_local_scaling(void)
+{
+  
+  NonlinearImplicitSystem* system;
+
+  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
+      get_equation_system_name());
+
+  // aliases for nicer code
+  const Device& device = *(_device);
+  const Mesh& mesh = get_mesh();
+  const NumericVector<Number>& solution = *(system->solution);
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+  const unsigned int nn  = mesh.n_nodes();
+  vector<unsigned short int> node_conn(nn);
+
+  vector<double> nodal_val;
+
+  // the scaling parameters to scale back the result
+  const double phi0 = get_scaling().get_potential_scaling();
+
+  local_scaling_.clear();
+
+  // Get the number of elements that share each node.  We will
+  // compute the average value at each node.
+  {
+    MeshBase::const_element_iterator it =
+      mesh.active_elements_begin();
+    const MeshBase::const_element_iterator end =
+      mesh.active_elements_end(); 
+
+    for ( ; it != end; ++it)
+      for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
+      {
+	node_conn[(*it)->node(n)] += 1;
+        local_scaling_[(*it)->get_node(n)] = vector<double>(2, 1.0);
+      }
+
+  }
+
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_e");
+  const unsigned int ep_var = system->variable_number("fermi_h");
+  
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  QGauss qrule(dim, libMeshEnums::CONSTANT);
+  fe->attach_quadrature_rule(&qrule);
+
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+  MeshBase::const_element_iterator it =
+    mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end =
+    mesh.active_elements_end(); 
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    ID subdomain = elem->subdomain_id();
+
+    {
+      dof_map.dof_indices(elem, dof_indices_u, u_var);
+      dof_map.dof_indices(elem, dof_indices_en, en_var);
+      dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+      DriftDiffusionProperties* sc =
+      dynamic_cast<DriftDiffusionProperties*>(
+          device.get_material(subdomain)->get_model(get_id()));
+      assert(sc != NULL); 
+
+      sc->set_lattice_temperature(_device->get_temperature(elem));
+      sc->reinit(elem);
+
+      fe->reinit(elem);
+
+      assert(elem->n_nodes() == dof_indices_u.size());
+
+      RealGradient field(0.0);
+      for (unsigned int i = 0; i < dof_indices_u.size(); i++)
+        field += dphi[i][0] * solution(dof_indices_u[i]);
+      field *= -phi0;
+
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
+        double u  = phi0 * solution(dof_indices_u[n]);
+        double en = phi0 * solution(dof_indices_en[n]);
+        double ep = phi0 * solution(dof_indices_ep[n]);
+
+
+        // prepare for calculating local properties
+        sc->set_coordinates(elem->point(n));
+
+        double T_lat = sc->get_lattice_temperature();
+        // all are at lattice temperature
+        sc->set_carrier_temperatures(T_lat, T_lat);
+
+        sc->set_potentials(u, en, ep);
+        sc->set_electric_field(field);
+
+        sc->calculate_densities();
+        sc->calculate_mobilities();
+
+        double sigma_e =
+          sc->get_electron_mobility() * sc->get_electron_density();
+        double sigma_h = sc->get_hole_mobility() * sc->get_hole_density();
+
+
+        assert (node_conn[elem->node(n)] != 0);
+        double conn = static_cast<double>(node_conn[elem->node(n)]);
+
+        vector<double>& val = local_scaling_[elem->get_node(n)];
+        val[0] *= pow(sigma_e, 1.0 / conn);
+        val[1] *= pow(sigma_h, 1.0 / conn);
+
+      } // end loop over nodes
+    } // end if not infinite element
+  } // end loop over elements
+}
+
+
+
 
 
 
@@ -3080,7 +3215,8 @@ DriftDiffusion::assemble_jacobian(const NumericVector<Number>& x,
   const Mesh& mesh = _this->get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
 
-  if ((dim == 1) && (_this->_options.scheme == BOX))
+  if ((dim == 1) && ((_this->_options.scheme == BOX)
+        || (_this->_options.scheme == SG)))
   {
     switch (_this->_options.coupling)
     {
@@ -4751,10 +4887,14 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
   const double P0 = (Constants::e * x0 * C0) * 1e4;
   // density scaling for electrons
   double C0_e = options.C0_e;
-  C0_e = C0;
+  //C0_e = C0;
   // density scaling for holes
   double C0_h = options.C0_h;
-  C0_h = C0;
+  //C0_h = C0;
+
+  if (do_local_scaling_)
+    C0_e = C0_h = 1.0;
+
   // scaling for recombination rates
   double R0_e = C0_e / scaling.get_time_scaling();
   double R0_h = C0_h / scaling.get_time_scaling();
@@ -4908,6 +5048,20 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
     sc->reinit(elem);
 
 
+
+
+
+    vector<vector<double> > local_scaling(elem->n_nodes(), vector<double>(2, 1));
+    if (do_local_scaling_)
+    {
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+        local_scaling[n] = local_scaling_[elem->get_node(n)];
+    }
+
+
+
+
+
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
@@ -4991,10 +5145,10 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
             Kuu(i,j) += l2_eps * laplace;
           
           if (coupling & ECURRENT)
-            Knn(i,j) += sigma_e * laplace;
+            Knn(i,j) += sigma_e * laplace / local_scaling[i][0];
           
           if (coupling & HCURRENT)
-            Kpp(i,j) += sigma_h * laplace;
+            Kpp(i,j) += sigma_h * laplace / local_scaling[i][1];
         }
 
         if (!(coupling & POISSON))
@@ -5032,12 +5186,12 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
           Fu(i) -= Xu(i);
 
         if (coupling & ECURRENT)
-          Fn(i) -= net_recomb_e;
+          Fn(i) -= net_recomb_e / local_scaling[i][0];
         else
           Fn(i) -= Xn(i);
 
         if (coupling & HCURRENT)
-          Fp(i) += net_recomb_h;
+          Fp(i) += net_recomb_h / local_scaling[i][1];
         else
           Fp(i) -= Xp(i);
       }
@@ -5523,10 +5677,14 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
   const double P0 = (Constants::e * x0 * C0) * 1e4;
   // density scaling for electrons
   double C0_e = options.C0_e;
-  C0_e = C0;
+  //C0_e = C0;
   // density scaling for holes
   double C0_h = options.C0_h;
-  C0_h = C0;
+  //C0_h = C0;
+
+  if (do_local_scaling_)
+    C0_e = C0_h = 1.0;
+
   // scaling for recombination rates
   double R0_e = C0_e / scaling.get_time_scaling();
   double R0_h = C0_h / scaling.get_time_scaling();
@@ -5681,6 +5839,17 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
     sc->reinit(elem);
 
 
+
+    vector<vector<double> > local_scaling(elem->n_nodes(), vector<double>(2, 1));
+    if (do_local_scaling_)
+    {
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+        local_scaling[n] = local_scaling_[elem->get_node(n)];
+    }
+
+
+
+
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
@@ -5766,10 +5935,10 @@ DriftDiffusion::do_assembly_jacobian(const NumericVector<Number>& x,
             Kuu(i,j) += l2_eps * laplace;
        
           if (coupling & ECURRENT)
-            Knn(i,j) += sigma_e * laplace;
+            Knn(i,j) += sigma_e * laplace / local_scaling[i][0];
           
           if (coupling & HCURRENT)
-            Kpp(i,j) += sigma_h * laplace;
+            Kpp(i,j) += sigma_h * laplace / local_scaling[i][1];
         }
 
         if (!(coupling & POISSON))
@@ -5882,10 +6051,10 @@ if (i == j)
             //if (coupling & POISSON)
             //  Knu(i,j) -= dRn[0] * phi_i_x_phi_j;
 if (i == j)
-            Knn(i,j) -= dRn[1] * phi_i_x_phi_j;
+            Knn(i,j) -= dRn[1] * phi_i_x_phi_j / local_scaling[i][0];
 if (i == j)
             if (coupling & HCURRENT)
-              Knp(i,j) -= dRn[2] * phi_i_x_phi_j;
+              Knp(i,j) -= dRn[2] * phi_i_x_phi_j / local_scaling[i][0];
           }
 
           if (coupling & HCURRENT)
@@ -5896,9 +6065,9 @@ if (i == j)
             //  Kpu(i,j) += dRp[0] * phi_i_x_phi_j;
 if (i == j)
             if (coupling & ECURRENT)
-              Kpn(i,j) += dRp[1] * phi_i_x_phi_j;
+              Kpn(i,j) += dRp[1] * phi_i_x_phi_j / local_scaling[i][1];
 if (i == j)
-            Kpp(i,j) += dRp[2] * phi_i_x_phi_j;
+            Kpp(i,j) += dRp[2] * phi_i_x_phi_j / local_scaling[i][1];
           }
 
         }
@@ -6286,7 +6455,7 @@ if (i == j)
 
   } // end loop over elements
 
-  //jacobian.print_matlab("jac.m");
+  jacobian.print_matlab("jac.m");
 
 } 
 

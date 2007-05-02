@@ -67,7 +67,7 @@ public:
   inline void get_thermoelectric_power_h(double& TEpower) const; 
   
   //! Update the value of the thermoelectric power
-  void ThermoelectricPower::update_tensor(void);
+  void update_tensor(void);
   
   inline  static ThermoelectricPower* create();
 
