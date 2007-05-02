@@ -1638,12 +1638,16 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   
   unsigned long long fict;
 
-  file_eigvals.read(buffer, int_size);
+  //  file_eigvals.read(buffer, int_size);
   //--------------------------------------------------------------------
   //how many solutions do we have from SLEPC?
   unsigned int number_of_converged_solutions;
-  file_eigvals.read(buffer, int_size); 
-  number_of_converged_solutions =  *(reinterpret_cast<unsigned int*> ( buffer));  endian_swap(number_of_converged_solutions);
+  //file_eigvals.read(buffer, int_size); 
+
+
+  // number_of_converged_solutions =  *(reinterpret_cast<unsigned int*> ( buffer));  endian_swap(number_of_converged_solutions);
+
+  number_of_converged_solutions = EigenSolver::number_of_converged_eigenvalues();
 
 #ifdef DEBUG
   cerr << " Number of converged solutions  " << number_of_converged_solutions << "\n";
@@ -1678,18 +1682,20 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
     {
       
       
-      file_eigvals.read(buffer_double, double_size);
-      fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap1(fict);
+      //file_eigvals.read(buffer_double, double_size);
+      //fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap1(fict);
 
-	
-      ev[ind].energy = *(  reinterpret_cast<double*>( &fict ) ) * Hartree + opt.spectrum_shift;
+	ev[ind].energy =  EigenSolver::get_eigenvalue(ind) * Hartree + opt.spectrum_shift;
+      
+
+      //ev[ind].energy = *(  reinterpret_cast<double*>( &fict ) ) * Hartree + opt.spectrum_shift;
 
       ev[ind].global_number = ind;
 
      
 
       //read dummy imaginary part
-      file_eigvals.read(buffer_double, double_size);
+      // file_eigvals.read(buffer_double, double_size);
       
       
     }
