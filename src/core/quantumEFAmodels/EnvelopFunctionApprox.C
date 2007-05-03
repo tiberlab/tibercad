@@ -692,6 +692,43 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   DenseSubMatrix<Number> s_real_sub(s_real);
 
 
+  vector<double> box_volume(Ham_real->n(), 0.0);
+   
+  if (opt.discretization_method == BIM)
+  {
+    MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+    for ( ; el != end_el ; ++el) 
+    {//el
+      const Elem* elem = *el;
+      dof_map.dof_indices (elem, dof_indices); 
+      for (unsigned int band1 = 0; band1 < opt.number_of_bands; band1++)
+      {//band1
+	dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
+	const unsigned int n_psi_dofs = dof_indices_component.size();
+	for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+	{
+	  double box_part_volume;
+	  
+	  if (dim == 1)
+	  {
+	    Point p1 = elem->point(0);
+	    Point p2 = elem->point(1);
+	    
+	    box_part_volume = 0.5 * std::abs(p1(0) - p2(0)) ;
+	  } 
+	  
+	  box_volume[dof_indices_component[p1]] += box_part_volume;
+	  
+	}
+      }
+	
+    }
+    
+  }
+
+
+
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
  
@@ -701,6 +738,10 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   EFAbulkHamiltonian* element_hamiltonian;
 
   unsigned int el_number = 0;
+
+
+
+
 
 
 
@@ -1527,8 +1568,6 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
     }
   //------------------------------------------------------------------------------
 }
-//===============================================================================//
-
 void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, double st_shift_value)
 {
 
@@ -1541,7 +1580,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
 
   EigenSolver::SLEPCoptions slep_opt;
 
- 
+  slep_opt.solver_type = opt.solver;
 
   slep_opt.H_file_name = "H.out";
     
@@ -1569,15 +1608,14 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
    
    
     int result = EigenSolver::eig_value_problem_general(slep_opt);
-   
-    cerr << "result "  << result << "\n";
+    if (result !=0 ) throw SolveFailedException("Eigensolver problem\n");
    
    
     read_SLEPC_solution(1);
 
     assert(solution.size() == 1);
 
-    cerr << "okay\n"; 
+   
 
     st_shift_value = (solution[0].eigen_energy - opt.spectrum_shift)/Hartree;
     
@@ -1597,8 +1635,8 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
   
  
   int result = EigenSolver::eig_value_problem_general(slep_opt);
-  
-  cerr << "result  " << result << "\n";
+  if (result !=0 ) throw SolveFailedException("Eigensolver problem\n");
+ 
 
 
 
@@ -1610,6 +1648,11 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
 }
 
 //=============================================================//
+
+
+
+
+//=========================================================================//
 void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 {//
   /*
@@ -1628,9 +1671,6 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   string fname_eigvals = "eigvals_SLEPC.out";
 
 
-  std::ifstream file_eigvals ( fname_eigvals.c_str() );
-
-  assert (file_eigvals.good());
 
   char buffer[int_size];
   char buffer_double[double_size];
@@ -1638,15 +1678,11 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   
   unsigned long long fict;
 
-  //  file_eigvals.read(buffer, int_size);
+ 
   //--------------------------------------------------------------------
   //how many solutions do we have from SLEPC?
   unsigned int number_of_converged_solutions;
-  //file_eigvals.read(buffer, int_size); 
-
-
-  // number_of_converged_solutions =  *(reinterpret_cast<unsigned int*> ( buffer));  endian_swap(number_of_converged_solutions);
-
+ 
   number_of_converged_solutions = EigenSolver::number_of_converged_eigenvalues();
 
 #ifdef DEBUG
@@ -1681,21 +1717,10 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   for (unsigned ind = 0; ind < number_of_converged_solutions; ind++)
     {
       
+      ev[ind].energy =  EigenSolver::get_eigenvalue(ind) * Hartree + opt.spectrum_shift;
       
-      //file_eigvals.read(buffer_double, double_size);
-      //fict = *( reinterpret_cast<unsigned long long*>( buffer_double) ); endian_swap1(fict);
-
-	ev[ind].energy =  EigenSolver::get_eigenvalue(ind) * Hartree + opt.spectrum_shift;
-      
-
-      //ev[ind].energy = *(  reinterpret_cast<double*>( &fict ) ) * Hartree + opt.spectrum_shift;
 
       ev[ind].global_number = ind;
-
-     
-
-      //read dummy imaginary part
-      // file_eigvals.read(buffer_double, double_size);
       
       
     }
@@ -1724,15 +1749,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
   //--------------------------------------------------------------------
   //read eigenvectors
-  string fname_eigvects = "eigvects_SLEPC.out";
-
-
-  std::ifstream file_eigvects ( fname_eigvects.c_str() );
-
-
-  
-  assert (file_eigvects.good());
-  
+ 
   
 
   //read solutions - only independent dofs
@@ -1745,61 +1762,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
       vector<Complex> temp;
       EigenSolver::get_eigen_vector( ind, temp);
      
-     /* 
-      file_eigvects.read(buffer, int_size);
     
-
-      file_eigvects.read(buffer, int_size);
-
-     
-
-      unsigned int vector_size =  *(reinterpret_cast<unsigned int*> ( buffer));  endian_swap(vector_size);
-      assert( vector_size == number_of_new_dofs);
-      
-    
-
-      vector<Complex> temp(vector_size,Complex(0.0, 0.0)); //only independent dofs
-
-      
-    
-      for (unsigned j = 0; j < vector_size; j++)
-	{
-          double re, im;
-	  file_eigvects.read(buffer_double, double_size);
-	 
-	 
-
-	  { 
-
-	    re = 0.0;
-	    unsigned long long int  fict = *( reinterpret_cast<unsigned long long int*>( buffer_double) ); endian_swap1(fict);
-	    re   = *(  reinterpret_cast<double*>( &fict ) );
-
-	
-
-	   
-	  }
-	
-
-	  
-
-	  file_eigvects.read(buffer_double, double_size);
-	  
-	  {
-	    unsigned long long int fict = *( reinterpret_cast<unsigned long long int*>( buffer_double) ); endian_swap1(fict);
-	    im   = *(  reinterpret_cast<double*>( &fict ) );
-	   
-	  }
-	 
-
-
-	  temp[j] = Complex(re,im);
-	
-	 
-
-	 
-	}
-      */
       it = global_to_sol_index.find(ind);
      
       if (  it  !=  global_to_sol_index.end() )
@@ -1900,7 +1863,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   
   
 }
-//=============================================================//
+
 
 
 //=======================================================================//
