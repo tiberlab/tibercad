@@ -216,7 +216,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
 
   if (opt.solver_type == "arnoldi")
   {
-    ierr = EPSSetProblemType(eps,EPS_NHEP);CHKERRQ(ierr);
+    ierr = EPSSetProblemType(eps,EPS_HEP);CHKERRQ(ierr);
     ierr = EPSSetType(eps, EPSARNOLDI); CHKERRQ(ierr);
     ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
  
