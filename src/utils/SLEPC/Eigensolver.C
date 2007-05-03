@@ -226,11 +226,11 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
 #endif
       
 
-      if( im != 0.0 ) {
+      if( im != 0.0 ) 
+      {
         ierr = PetscPrintf(PETSC_COMM_WORLD," % 20.14f %+12f i \n",re,im);CHKERRQ(ierr);
-      } else {
-        ierr = PetscPrintf(PETSC_COMM_WORLD,"       % 6f      ",re); CHKERRQ(ierr);
       }
+
       // ierr = PetscPrintf(PETSC_COMM_WORLD," % 12f\n",error);CHKERRQ(ierr);
 
        

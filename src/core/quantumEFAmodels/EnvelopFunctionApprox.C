@@ -718,8 +718,10 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	    box_part_volume = 0.5 * std::abs(p1(0) - p2(0)) ;
 	  } 
 	  
-	  box_volume[dof_indices_component[p1]] += box_part_volume;
-	  
+	  box_volume[dof_indices_component[p1]] += box_part_volume *  my_Jacobian;
+
+	 
+
 	}
       }
 	
@@ -961,6 +963,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 		if (p1 == p2)
 		{
 		  value +=  model_Ham[band1][band2].constant * box_part_volume;
+		  if (band1 == band2) value += - opt.spectrum_shift/Hartree * box_part_volume;
 		}
 
 
@@ -1015,26 +1018,13 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
 			  
-		ham_real_sub(p1,p2) += value.real(); 
-		ham_imag_sub(p1,p2) += value.imag();
+		ham_real_sub(p1,p2) += value.real()/box_volume[dof_indices_component[p1]]; 
+		ham_imag_sub(p1,p2) += value.imag()/box_volume[dof_indices_component[p1]];
  
 
 	      }
 	    }
 
-	    if (band1 == band2)
-	    {
-	      s_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
-	      for (unsigned int p1=0; p1<n_psi_dofs; p1++)
-	      {
-		for (unsigned int p2=0; p2<n_psi_dofs; p2++)
-		{
-		  if (p1 == p2)
-		    s_real_sub(p1,p2) +=  box_part_volume * my_Jacobian;
-		}
-	      }
-		      
-	    }
 
 	  
 	    
@@ -1045,18 +1035,17 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
 
-      ham_real.add( - opt.spectrum_shift/Hartree, s_real);//apply spectrum shift.
-
-
+      if (opt.discretization_method == FEM) ham_real.add( - opt.spectrum_shift/Hartree, s_real);//apply spectrum shift.
 
       vector<unsigned int> dof_indices_tmp;
 
-      dof_indices_tmp = dof_indices;
+      if (opt.discretization_method == FEM) 
+      {
+	dof_indices_tmp = dof_indices;
 
-      dof_map.constrain_element_matrix(s_real, dof_indices_tmp);
-
-
-      S_real->add_matrix(s_real,dof_indices_tmp);
+	dof_map.constrain_element_matrix(s_real, dof_indices_tmp);
+	S_real->add_matrix(s_real,dof_indices_tmp);
+      }
 
       dof_indices_tmp = dof_indices;
 
@@ -1076,14 +1065,16 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
   
 //this is only to test
-
+/*
   Ham_real->print_matlab("ham_r_matlab.m");
   Ham_imag->print_matlab("ham_i_matlab.m");
   S_real->print_matlab("s.m");
+*/
+ 
 
 
-
-  save_S_matrix("S.out");
+  
+  if (opt.discretization_method == FEM) save_S_matrix("S.out");
   save_H_matrix("H.out");
 
   //  dof_map.print_dof_constraints();
@@ -1605,11 +1596,16 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
     slep_opt.spectrum_shift = st_shift_value;
 
   
-   
-   
-    int result = EigenSolver::eig_value_problem_general(slep_opt);
-    if (result !=0 ) throw SolveFailedException("Eigensolver problem\n");
-   
+    {
+      int result;
+      if (opt.discretization_method == FEM) 
+	result = EigenSolver::eig_value_problem_general(slep_opt);
+      else
+	result = EigenSolver::eig_value_problem(slep_opt);
+
+
+      if (result !=0 ) throw SolveFailedException("Eigensolver problem\n");
+    }
    
     read_SLEPC_solution(1);
 
@@ -1633,16 +1629,23 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
   
   slep_opt.spectrum_shift  = st_shift_value;
   
- 
-  int result = EigenSolver::eig_value_problem_general(slep_opt);
-  if (result !=0 ) throw SolveFailedException("Eigensolver problem\n");
+  {
+      int result;
+      if (opt.discretization_method == FEM) 
+	result = EigenSolver::eig_value_problem_general(slep_opt);
+      else
+	result = EigenSolver::eig_value_problem(slep_opt);
+
+
+      if (result !=0 ) throw SolveFailedException("Eigensolver problem\n");
+  }
  
 
 
 
   read_SLEPC_solution(ev_number);
 
-  result = EigenSolver::clear_slepc();
+  int result = EigenSolver::clear_slepc();
  
   
 }

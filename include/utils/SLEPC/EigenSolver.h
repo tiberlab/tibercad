@@ -34,8 +34,12 @@ class EigenSolver
     
   };
 
-  //!diagonalizes matrix
+  //!solves general eigenvalue problem matrix
   static int eig_value_problem_general(const SLEPCoptions& opt) ;
+
+
+  //!solves  eigenvalue problem matrix
+  static int eig_value_problem(const SLEPCoptions& opt) ;
 
   //!has to be called at the beginning of tibecad
   static void slepc_init(void);
@@ -43,14 +47,19 @@ class EigenSolver
   //!has to be called at the end of tibecad
   static void slepc_done(void);
 
+  //!returns number of converged eigenvalues
   static int number_of_converged_eigenvalues();
 
+  //!returns  eigenvalue number i (starting from 0) 
   static double get_eigenvalue( int i);
 
+  //!returns  eigenvector number i (starting from 0) 
   static void get_eigen_vector( int i, std::vector<Complex>& eigen_vector);
 
+  //!has to be called before solving the eigenvalue problem
   static int prepare_slepc(void);
 
+  //!has to be called after solving the eigenvalue problem
   static int clear_slepc(void);
 
 
