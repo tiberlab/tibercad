@@ -1692,13 +1692,69 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   cerr << " Number of converged solutions  " << number_of_converged_solutions << "\n";
 #endif
 
+
+
+  //--------------------------------------------------------------------
+  //read eigenvalues
+
+  vector<EnvelopFunctionApprox::eigen_energy>   ev(number_of_converged_solutions);
+
+  for (unsigned ind = 0; ind < number_of_converged_solutions; ind++)
+    {
+      
+      ev[ind].energy =  EigenSolver::get_eigenvalue(ind) * Hartree + opt.spectrum_shift;
+      
+
+      ev[ind].global_number = ind;
+      
+      #ifdef DEBUG
+      cerr << ev[ind].global_number  << "    " << ev[ind].energy << "\n";
+     #endif
+    }
+  
+  //---------------------------------------------------------------------
+  //sorting of the solutions
+
+
+  if (opt.particle == "el") sort( ev.begin(), ev.end(), compare_eigen_energy_electrons1);
+
+  if (opt.particle == "hl") sort( ev.begin(), ev.end(), compare_eigen_energy_holes1 );
+
+
+  //----------------------------------------------------------------------
+  //let us find the ground electron or hole level
+  unsigned int ground_state_index = 0;
+  bool finish = false;
+  for (unsigned int i = 0; (i < number_of_converged_solutions && (!finish) ); i++)
+  {
+    if (opt.particle == "el")
+    {
+      if (ev[i].energy > opt.spectrum_shift)
+      {
+	ground_state_index = i;
+	finish = true;
+      }
+    }
+    else
+    {
+      if (ev[i].energy < opt.spectrum_shift)
+      {
+	ground_state_index = i;
+	finish = true;
+      }
+    }
+
+
+
+  } 
+ 
+
   unsigned int solution_size;
-  if (number_of_converged_solutions < number_of_ev)
-    solution_size = number_of_converged_solutions;
+  if (number_of_converged_solutions - ground_state_index < number_of_ev)
+    solution_size = number_of_converged_solutions - ground_state_index;
   else
     solution_size = number_of_ev;
-
-
+  
 
   {
     EnvelopFunctionApprox::eigen_propblem_solution temp1;
@@ -1711,42 +1767,26 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   }
   
   
-  vector<EnvelopFunctionApprox::eigen_energy>   ev(number_of_converged_solutions);
-  
-  
-
-  //--------------------------------------------------------------------
-  //read eigenvalues
-  for (unsigned ind = 0; ind < number_of_converged_solutions; ind++)
-    {
-      
-      ev[ind].energy =  EigenSolver::get_eigenvalue(ind) * Hartree + opt.spectrum_shift;
-      
-
-      ev[ind].global_number = ind;
-      
-      
-    }
-  
-  //--------------------------------------------------------------------
  
   
-  //sorting of the solutions
+  
 
-
-  if (opt.particle == "el") sort( ev.begin(), ev.end(), compare_eigen_energy_electrons1);
-
-  if (opt.particle == "hl") sort( ev.begin(), ev.end(), compare_eigen_energy_holes1 );
+  
+ 
+  
+ 
    
 
 
   map<unsigned int, unsigned int>  global_to_sol_index;
   map<unsigned int, unsigned int> :: iterator it;
-  for (unsigned int i = 0; i < solution_size; i++)
-    {
-      global_to_sol_index.insert( make_pair(ev[i].global_number, i)  );
-      solution[i].eigen_energy = ev[i].energy;
-    } 
+
+
+  for (unsigned int i = ground_state_index; i < ground_state_index + solution_size ; i++)
+  {
+    global_to_sol_index.insert( make_pair(ev[i].global_number, i - ground_state_index )  );
+    solution[i - ground_state_index].eigen_energy = ev[i].energy;
+  } 
 
 
 
@@ -1763,9 +1803,9 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
     {
       
       vector<Complex> temp;
-      EigenSolver::get_eigen_vector( ind, temp);
      
-    
+      EigenSolver::get_eigen_vector( ind, temp);
+         
       it = global_to_sol_index.find(ind);
      
       if (  it  !=  global_to_sol_index.end() )

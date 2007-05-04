@@ -356,15 +356,18 @@ int EigenSolver::clear_slepc()
     Free memory
    */
   int ierr;
-  ierr = EPSDestroy(eps);CHKERRQ(ierr);
   ierr = MatDestroy(A);CHKERRQ(ierr);
-
   {
     PetscTruth generalized;
     ierr = EPSIsGeneralized(eps,&generalized); CHKERRQ(ierr);
 
     if ( generalized)  ierr = MatDestroy(B);CHKERRQ(ierr);
   }
+
+  ierr = EPSDestroy(eps);CHKERRQ(ierr);
+ 
+
+  
 
   return(ierr);
 }

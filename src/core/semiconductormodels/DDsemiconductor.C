@@ -126,7 +126,11 @@ void DDsemiconductor::set_strain(const Tensor2Sym& strain_1)
       strained = false;
     }
 
+ 
+
   bulk_ham->apply_strain_and_potential(strain, 0.0);
+
+
 
 }
 
@@ -173,7 +177,7 @@ vector< vector<double> > DDsemiconductor::calculate_vb_bulk_states(const vector<
      
     bulk_ham->calculate_Hamiltonian_k_par();
 
-      
+    if (strained)  bulk_ham->apply_strain_and_potential(strain, 0.0); 
 
     std::vector<std::vector<KPbulkHamiltonian::MatrixElement> >&    Ham1 =  bulk_ham->get_Hamiltonian() ;
      

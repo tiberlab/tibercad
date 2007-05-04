@@ -174,6 +174,8 @@ void ZbDDsemiconductor::calculate_conduction_band_extremum(void)
 void ZbDDsemiconductor::calculate_valence_band_extremum(void)
 {
   
+ 
+
   vector<DDsemiconductor::band_extremum>   result;
   
   DDsemiconductor::band_extremum extremum;
@@ -209,12 +211,16 @@ void ZbDDsemiconductor::calculate_valence_band_extremum(void)
 
   Tensor2Sym imass;
 
+ 
   for (short ind = 0; ind < 3; ind++)
   {
+   
     if (eigenvalue[0][ind*2] + energy_cutoff > eigenvalue[0][5]) 
     {
       extremum.degeneracy = 2;
       extremum.energy  =eigenvalue[0][ind*2] ;
+
+    
 	  
       imass(1,1) = (2.0 *(eigenvalue[0][ind*2] - eigenvalue[1][ind*2] )) / Hartree /(k_max * k_max);
 

@@ -73,8 +73,15 @@ class QuantumDensity : public SimulationInterface
 
 
  public:
-
   
+  enum JobKind
+  {
+     DENSITY = 0,
+     DISPERSION = 1
+  };
+  
+
+  //!options for charge density
   struct options
   {
     bool k_domain_user_input;       //!< if true user provides Brilluoin zone size. Otherwise, it is calculated by the program
