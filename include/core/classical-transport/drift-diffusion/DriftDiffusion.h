@@ -941,9 +941,11 @@ class DriftDiffusion : public SimulationInterface
      * This implementation is for 1D only and implements the 
      * Box Integration Method.
      */
-
     template <int T>
     void do_assembly_jacobian_box1D(const NumericVector<Number>& x,
+        SparseMatrix<Number>& jacobian);
+    template <int T>
+    void do_assembly_jacobian_box1D_SG(const NumericVector<Number>& x,
         SparseMatrix<Number>& jacobian);
 
 
