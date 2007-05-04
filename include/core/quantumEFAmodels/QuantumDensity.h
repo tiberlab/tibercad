@@ -62,11 +62,11 @@
 #include "mesh_data.h"
 #include "DriftDiffusion.h"
 #include "EnvelopFunctionApprox.h"
-#include "SimulationInterface.h"
 #include "tensor.h"
+#include "Kspace.h"
 
 //! This class is a nextnano-like model of quantum density. The approach is correct, in principle, only for equilibrium.
-class QuantumDensity : public SimulationInterface
+class QuantumDensity : public Kspace
 {
 
 
@@ -99,7 +99,7 @@ class QuantumDensity : public SimulationInterface
 
   
     bool log_output; 
-
+    JobKind job; //!< what has to be done: either charge density or dispersion
 
    
 
@@ -131,51 +131,14 @@ class QuantumDensity : public SimulationInterface
 
 
 
-  //!returns reference to kmesh object
-  const Mesh& get_k_mesh(void) const; 
-
-
-
   //!returns \f$ \rho({\bf k} ) = \int \rho{\bf{ k, r}}  d{\bf r} \f$
-   std::vector<double>  get_density_in_k_space(void)  const;
+  std::vector<double>  get_density_in_k_space(void)  const;
 
-   //!creates a new object 
-   static  QuantumDensity* create();
+  //!creates a new object 
+  static  QuantumDensity* create();
 
  private:
 
-     //!defines 1D  Brilluoin zone \f$ k \in [-{\bf K}/2; {\bf K}/2) \f$
-  /*!
-    \param k_vector Basis k-vector  \f$ \bf K \f$ [atom. units]
-    \param n - initial number of nodes
-  */
-  void define_k_space(Tensor1 k_vector, unsigned int n);
-
- //!defines 2D  Brilluoin zone  \f$ k \in [-{\bf K}_1 / 2; {\bf K}_1 / 2) \otimes [-{\bf K}_2 / 2; {\bf K}_2 / 2) \f$
-  /*!
-    \param k_vector1  Basis k-vector  \f$ {\bf K}_1 \f$ [atom. units]
-    \param n - initial number of nodes in direction 1
-    \param k_vector2  Basis k-vector  \f$ {\bf K}_2 \f$ [atom. units]
-    \param m - initial number of nodes in direction 2
-  */
-  
-  void define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2, unsigned int m);
-
-  //!defines 2D  Brilluoin zone  \f$ k \in [-{\bf K}_1 / 2; {\bf K}_1 / 2) \otimes [-{\bf K}_2 / 2; {\bf K}_2 / 2)   \otimes [-{\bf K}_3 / 2; {\bf K}_3 / 2) \f$
-  /*!
-    \param k_vector1  Basis k-vector  \f$ {\bf K}_1 \f$ [atom. units]
-    \param n - initial number of nodes in direction 1
-    \param k_vector2  Basis k-vector  \f$ {\bf K}_2 \f$ [atom. units]
-    \param m - initial number of nodes in direction 2
-    \param k_vector3  Basis k-vector  \f$ {\bf K}_3 \f$ [atom. units]
-    \param k - initial number of nodes in direction 3
-  */
-  
-  void define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2, unsigned int m, Tensor1 k_vector3, unsigned int k);
-
-  
-
-  
 
 
   //!set options for the object
@@ -201,26 +164,11 @@ class QuantumDensity : public SimulationInterface
    unsigned int real_space_density_size;
 
 
-   //!Brilluoin zone
-   Mesh* kmesh;
-  
-   //!Boundaries of the Brilluoin zone [atomic units]
-   double kmin[3], kmax[3];
-
-
-   //!Dimension of the Brilluoin zone
-   short  k_dim;
-
-
+ 
    //options 
    options opt;  
 
-   //number of nodes in k-domain
-   std::vector<unsigned int>  num_nodes;
 
-
-   //!build k space grid
-   void build_k_grid();
 
    //!map from node in the k-grid to a real space density, which is a map between real space elements and density   
    std::map< const Node*, std::map <const Elem*, double>  > k_point_density;
@@ -237,16 +185,10 @@ class QuantumDensity : public SimulationInterface
 
    
 
-   //! Rotate mesh
-   /*!
-     \param mesh  pointer to the mesh
-     \RotMatrix transformation matrix (not necessaryly rotation matrix) 
-   */
-   void rotate_mesh(Mesh* mesh, Tensor2Gen& RotMatrix);
+   
 
 
-   //! matrix that rotates mesh
-   Tensor2Gen transform_matrix;
+  
 
    //! equation system defined at k-space
    EquationSystems*  eq;
