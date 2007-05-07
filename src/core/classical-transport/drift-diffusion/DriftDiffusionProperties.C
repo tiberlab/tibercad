@@ -3,6 +3,7 @@
 #include "DriftDiffusionProperties.h"
 #include "RecombinationModelInterface.h"
 #include "MobilityModelInterface.h"
+#include "ThermoelectricPower.h"
 #include "Material.h"
 #include "Dopant.h"
 #include "Constants.h"
@@ -35,7 +36,8 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     _coupling(DriftDiffusionDefs::BOTH),
     _strain(0),
     _electron_mobility(NULL),
-    _hole_mobility(NULL)
+    _hole_mobility(NULL),
+    thermoelectric_power_(NULL)
 {
 }
 
@@ -82,6 +84,24 @@ DriftDiffusionProperties::do_init(void)
     _hole_mobility = create_mobility_model();
   _hole_mobility->set_carrier_type('h');
   _hole_mobility->init();
+
+
+  // create thermoelectric power
+  PhysicalModelInterface::destroy(thermoelectric_power_);
+  
+  it = get_options().submodels_begin("thermoelectric_power");
+  end = get_options().submodels_end("thermoelectric_power");
+
+  if (it != end)
+  {
+    thermoelectric_power_ = dynamic_cast<ThermoelectricPower*>(
+      PhysicalModelInterface::create("thermoelectric_power", it->second));
+
+    if (thermoelectric_power_ == NULL)
+      throw InitFailedException("Could not create thermoelectric power model");
+
+    thermoelectric_power_->set_material(get_material());
+  }
 
   
   //
@@ -196,6 +216,7 @@ DriftDiffusionProperties::create_mobility_model(const ModelOptions& options)
 
   return mobility_model;
 }
+
 
 
 
@@ -400,6 +421,40 @@ DriftDiffusionProperties::calculate_mobilities(void)
 void
 DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
 {
+
+  if (_coupling & DriftDiffusionDefs::ELECTRONS)
+  {
+    double kTe = electron_vt;
+
+    const BandProperties& cb = conduction_band;
+    double Ec = get_conduction_band_edge();
+    double Nc = cb.effective_DOS;
+
+    if (electron_density > 0.0)
+      fermi_e = -kTe * log(electron_density / Nc) - Ec + electric_potential;
+    else
+      fermi_e = -10.0;
+
+    if (! _coupling & DriftDiffusionDefs::HOLES)
+      fermi_h = fermi_e;
+  }
+  
+  if (_coupling & DriftDiffusionDefs::HOLES)
+  {
+    double kTh = hole_vt;
+  
+    const BandProperties& vb = valence_band;
+    double Ev = get_valence_band_edge();
+    double Nv = vb.effective_DOS;
+  
+    if (hole_density > 0.0)
+      fermi_h = kTh * log(hole_density / Nv) - Ev + electric_potential;
+    else
+      fermi_h = -10.0;
+
+    if (! _coupling & DriftDiffusionDefs::ELECTRONS)
+      fermi_e = fermi_h;
+  }
 }
 
 
@@ -561,30 +616,6 @@ DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
   conduction_band = mod->conduction_band;
   valence_band = mod->valence_band;
   
-
-  /*
-  clear_recombination();
-  RecombinationModelInterface* recmod;
-  const_recomb_iterator rec_it(mod->_recombination_models.begin());
-  const const_recomb_iterator rec_end(mod->_recombination_models.end());
-  for ( ; rec_it != rec_end; ++rec_it)
-  {
-    recmod = static_cast<RecombinationModelInterface*>((rec_it->second)->copy());
-    recmod->set_driftdiffusionproperties(this);
-    _recombination_models[(rec_it->second)->get_id()] = recmod;
-  }
-
-
-  PhysicalModelInterface::destroy(_electron_mobility);
-  PhysicalModelInterface::destroy(_hole_mobility);
-
-  _electron_mobility = static_cast<MobilityModelInterface*>(
-      (mod->_electron_mobility)->copy());
-  _electron_mobility->set_driftdiffusionproperties(this);
-  _hole_mobility = static_cast<MobilityModelInterface*>(
-      (mod->_hole_mobility)->copy());
-  _hole_mobility->set_driftdiffusionproperties(this);
-  */
 }
 
 

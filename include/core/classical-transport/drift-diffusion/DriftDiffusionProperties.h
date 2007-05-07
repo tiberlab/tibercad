@@ -38,6 +38,7 @@ class Elem;
 class Dopant;
 class RecombinationModelInterface;
 class MobilityModelInterface;
+class ThermoelectricPower;
 
 //! The base class for all drift-diffusion related semiconductor models
 /*!
@@ -469,8 +470,23 @@ class DriftDiffusionProperties : public PhysicalModel
     int get_number_of_recombination_models(void) const;
 
 
-    //! Get the thermo-electric power
-    double get_thermo_electric_power(void) {return 0;};
+    //! Get the electron thermoelectric power
+    double get_electron_thermoelectric_power(void);
+
+
+    //! Get the hole thermoelectric power
+    double get_hole_thermoelectric_power(void);
+
+
+    //! Get the electron electro-chemical potential
+    double get_electron_electro_chemical_potential(void) const
+      { return fermi_e; };
+
+
+    //! Get the hole electro-chemical potential
+    double get_hole_electro_chemical_potential(void) const
+      { return fermi_h; };
+
 
 
   protected:
@@ -777,6 +793,11 @@ class DriftDiffusionProperties : public PhysicalModel
     //! The hole mobility
     MobilityModelInterface* _hole_mobility;
 
+
+    //! The electron thermoelectric power
+    ThermoelectricPower* thermoelectric_power_;
+
+
     //! The constant factor to calculate the effective density of states
     /*!
      * The spin degeneracy has to be included in the effective mass
@@ -849,6 +870,9 @@ DriftDiffusionProperties::set_densities(double n, double p)
 {
   electron_density = n;
   hole_density = p;
+  electron_density_derivative = n / electron_vt;
+  hole_density = p;
+  hole_density_derivative = -p / hole_vt;
 }
 
 
