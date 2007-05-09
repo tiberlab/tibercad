@@ -14,6 +14,8 @@
 #include "OpticsKP.h"
 #include "QuantumDispersion.h"
 
+#include "TunnelingCurrent.h"
+
 #include "Sweep.h"
 #include "SelfconsistentSolver.h"
 
@@ -97,6 +99,9 @@ SimulationInterface::create(const string& type,
       sim = OpticsKP::create();
     else if (type == "quantumdispersion")
       sim = QuantumDispersion::create();
+    else if (type == "tunnelingcurrent")
+      sim = TunnelingCurrent::create();
+
   }
 
   if (sim != NULL)
