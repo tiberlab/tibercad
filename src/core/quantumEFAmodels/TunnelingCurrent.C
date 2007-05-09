@@ -15,13 +15,7 @@ extern "C"
 
 TunnelingCurrent::TunnelingCurrent()
 {
-  quantum_model = NULL;
-
-  system = NULL;
-
-  eq = NULL;
-
-  kmesh = NULL;
+ 
 }
 
 //============================================//

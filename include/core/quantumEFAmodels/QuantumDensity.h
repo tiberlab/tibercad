@@ -63,10 +63,10 @@
 #include "DriftDiffusion.h"
 #include "EnvelopFunctionApprox.h"
 #include "tensor.h"
-#include "Kspace.h"
+#include "KspaceIntegration.h"
 
 //! This class is a nextnano-like model of quantum density. The approach is correct, in principle, only for equilibrium.
-class QuantumDensity : public Kspace
+class QuantumDensity : public KspaceIntegration
 {
 
 
@@ -80,13 +80,7 @@ class QuantumDensity : public Kspace
   //!options for charge density
   struct options
   {
-    bool k_domain_user_input;       //!< if true user provides Brilluoin zone size. Otherwise, it is calculated by the program
-    bool k_domain_refinement;       //!< if true, program will refine the Brilluoin zone adaptively
-    bool uniform_refinement;        //!< if true, all the cells in the k-space are refined
-
-    double refine_fraction;         //!< fraction of the elements to be refined
-    double relative_accuracy;       //!< stop refinement if \f$ ||\rho_{i+1} - \rho_i||/||rho_i|| < \epsilon \f$
-    unsigned int maximum_ref_level; //!< maximum level for k space refinement
+    
 
     double Temperature;             //!< temperature [K]
     unsigned int degeneracy;        //!< degeneracy factor to mutiply the charge density 
@@ -107,11 +101,6 @@ class QuantumDensity : public Kspace
 
   //! Desructor
   ~QuantumDensity();
-
-
-  
-
-
   
 
 
@@ -140,23 +129,13 @@ class QuantumDensity : public Kspace
   void set_options( QuantumDensity::options& options   );
 
 
- 
-
-  //!calculates density performing mesh refinement of k-space, if required.
-  void calculate_convergent_density(void);
-
 
 
    //! name of the simulation that solves Schroedinger equation 
    EnvelopFunctionApprox*  quantum_model;
 
 
-   //!quantum density for elements 
-   std::map<const Elem*, double> real_space_density;
-
-
-   //! size of the real_space_density vector
-   unsigned int real_space_density_size;
+  
 
 
  
@@ -165,41 +144,11 @@ class QuantumDensity : public Kspace
 
 
 
-   //!map from node in the k-grid to a real space density, which is a map between real space elements and density   
-   std::map< const Node*, std::map <const Elem*, double>  > k_point_density;
-
-   //!map from node in the k-grid to a total charge
-   std::map< const Node*, double > k_point_charge;
-
-
-   
-
-   
-
-   
+   //!calculates objects k_point_density and eigen_energy
+   virtual void calculate_at_each_k_point();
 
 
   
-
-   //! equation system defined at k-space
-   EquationSystems*  eq;
-   
-   //! system 
-   LinearImplicitSystem* system;
-   
-   
-
-    //!calculate density for a particular k-grid
-   void calculate_density();
-
-
-   //!put charge of each k-point into system solution
-   void prepare_system_solution();
-
-
-   //!calculates objects k_point_density and eigen_energy
-   void calculate_at_each_k_point();
-   
 
  protected:
 
@@ -212,8 +161,6 @@ class QuantumDensity : public Kspace
 
  
    virtual void 	do_init(void);
-
-   virtual void 	do_solve (void);
 
    virtual void 	parse_options (void);
 

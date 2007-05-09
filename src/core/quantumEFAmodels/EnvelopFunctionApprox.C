@@ -9,6 +9,9 @@
 
 #include "EigenSolver.h"
 
+
+#include <edge_edge2.h>
+
 using namespace std;
 using namespace Constants;
 
@@ -707,13 +710,70 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	{
 	  double box_part_volume;
 	  
+	  Elem* box_part_elem;
+
 	  if (dim == 1)
 	  {
-	    Point p1 = elem->point(0);
-	    Point p2 = elem->point(1);
+
+	    Edge2 box_part_1D;
+	    Point& 	pbox0 =  box_part_1D.point(0);
+	    Point& 	pbox1 =  box_part_1D.point(1);
 	    
-	    box_part_volume = 0.5 * std::abs(p1(0) - p2(0)) ;
-	  } 
+	    Point point1 = elem->point(0);
+	    Point p_center = elem->centroid();
+	    
+	    if (p1 == 0)
+	    {
+	      pbox0 = point1;
+	      pbox1 = p_center;
+	    }
+	    else
+	    {
+	      pbox0 = p_center;
+	      pbox1 = point1;
+	    }
+
+	    box_part_elem = &box_part_1D;
+
+
+	    {//volume calculation
+	      
+	      FEType fe_type (FIRST , LAGRANGE);
+
+	      AutoPtr<FEBase> fe (FEBase::build(dim,
+                                   fe_type));
+
+	     
+	      
+	      QGauss qrule (dim, FIRST);
+
+	      fe -> attach_quadrature_rule (&qrule);
+
+
+
+	      const std::vector<Real>& JxW = fe->get_JxW();
+
+	      fe->reinit(box_part_elem);
+
+
+	      box_part_volume = 0.0;
+	      for (unsigned int qp=0; qp<qrule.n_points(); ++qp)
+		box_part_volume += JxW[qp];
+
+	    }
+
+	  }
+
+
+	  
+
+
+
+	  // double v = box_part_1D.volume();
+ 
+	  //  box_part_volume = 0.5 * std::abs(p1(0) - p2(0)) ;
+
+	   
 	  
 	  box_volume[dof_indices_component[p1]] += box_part_volume *  my_Jacobian;
 
@@ -944,8 +1004,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	    for (unsigned int p1=0; p1<n_psi_dofs; p1++)
 	    {//p1      
 
-	     
+	      Elem* box_part_elem;
 	      vector< Point > qpoints;
+
 	      Point q1(0.0, 0.0, 0.0);
 	      qpoints.push_back(q1);
 	      qpoints.push_back( FEInterface::inverse_map ( dim, fe_type, elem, elem->point(p1)) );
@@ -1079,11 +1140,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 }
 //============================================================//
 
-//===========================================================//
-/*
 
-
-*/
 //============================================================//
 
 void EnvelopFunctionApprox::save_S_matrix(const std::string & fname)
