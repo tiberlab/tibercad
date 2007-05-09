@@ -65,7 +65,7 @@ class EigenSolver
 
  private:
 
-
+  static int do_solve(const SLEPCoptions& opt);
 
   
 

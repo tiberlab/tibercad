@@ -200,7 +200,7 @@ QuantumDensity::QuantumDensity()
 
   eq = NULL;
 
-
+ 
 }
 
 //============================================//
@@ -210,9 +210,9 @@ void QuantumDensity::do_init( )
 
   const ModelOptions& mod_opt = get_options();
 
-  Kspace::do_init();
+  Kspace::do_init();//--kspace domain--------------
 
-  //--kspace domain---------------------------//
+ 
 
   //---------quantum model---------------------------------------------------------------------//
   
@@ -267,16 +267,7 @@ void QuantumDensity::parse_options( )
  opt.k_domain_refinement       = mod_opt.get_option("refine_k_space", false);
  opt.intial_eigenstates_number = mod_opt.get_option("intial_eigenstates_number", 6);
 
- {//-------------------------------------------------------------------------------------//
-   std::string  job_name = mod_opt.get_option("job","density");
-   if (job_name == "density")
-     opt.job = DENSITY;
-   else if (job_name == "dispersion")
-     opt.job = DISPERSION;
-   else
-     throw InitFailedException( "QuantumDensity: Incorrect job " + job_name ); 
-   //-------------------------------------------------------------------------------------//
- }
+
 }
 
 

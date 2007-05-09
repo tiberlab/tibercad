@@ -59,6 +59,7 @@ void Kspace::build_k_grid()
 				     type);
 
 
+ 
   
   rotate_mesh(kmesh, transform_matrix);
 
@@ -71,6 +72,7 @@ void Kspace::build_k_grid()
 //---------------------------------------------------------------------------//
 void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
 {
+
 
   double norm_k = norm(k_vector);
   kmin[0] = -norm_k/2.0;  kmax[0] = norm_k/2.0; num_nodes[0] = n;
@@ -177,14 +179,20 @@ void Kspace::do_init()
   const ModelOptions& mod_opt = get_options();
 
   if (! mod_opt.find_option("k_space_dimension") ) 
-    throw  InitFailedException("QuantumDensity: k_space_dimension must be defined");
+    throw  InitFailedException("Kspace: k_space_dimension must be defined");
   
   k_dim = mod_opt.get_option("k_space_dimension",1);
+
+
+  
+  mod_opt.get_option("number_of_nodes",num_nodes);
+
+  
 
   if ( num_nodes.size() != k_dim ) 
   {
     ostringstream temp; temp << setw(4) << k_dim; 
-    throw  InitFailedException("QuantumDensity: number_of_nodes should contain " + temp.str() + " elements");
+    throw  InitFailedException("Kspace: number_of_nodes should contain " + temp.str() + " elements");
   }
 
   if (k_dim == 1)
@@ -192,11 +200,11 @@ void Kspace::do_init()
     std::vector<double> k_vector;
     Tensor1 vec;
 
-    if (! mod_opt.find_option("k1") ) throw  InitFailedException("QuantumDensity: k1 vectror must be defined"); 
+    if (! mod_opt.find_option("k1") ) throw  InitFailedException("Kspace: k1 vectror must be defined"); 
 
     mod_opt.get_option("k1", k_vector);
 
-    if (k_vector.size() != 3) throw  InitFailedException("QuantumDensity: k1 vectror size must be equal to 3");
+    if (k_vector.size() != 3) throw  InitFailedException("Kspace: k1 vectror size must be equal to 3");
 
     for (short i = 0; i < 3; i++)  vec(i + 1) = k_vector[i];
 
@@ -215,19 +223,19 @@ void Kspace::do_init()
     Tensor1 vec2;
 
 
-    if (! mod_opt.find_option("k1") ) throw  InitFailedException("QuantumDensity: k1 vectror must be defined"); 
+    if (! mod_opt.find_option("k1") ) throw  InitFailedException("Kspace: k1 vectror must be defined"); 
 
     mod_opt.get_option("k1", k_vector);
 
-    if (k_vector.size() != 3) throw  InitFailedException("QuantumDensity: k1 vectror size must be equal to 3");
+    if (k_vector.size() != 3) throw  InitFailedException("Kspace: k1 vectror size must be equal to 3");
 
     for (short i = 0; i < 3; i++)  vec1(i + 1) = k_vector[i];
 
-    if (! mod_opt.find_option("k2") ) throw  InitFailedException("QuantumDensity: k2 vectror must be defined"); 
+    if (! mod_opt.find_option("k2") ) throw  InitFailedException("Kspace: k2 vectror must be defined"); 
 
     mod_opt.get_option("k2", k_vector);
 
-    if (k_vector.size() != 3) throw  InitFailedException("QuantumDensity: k2 vectror size must be equal to 3");
+    if (k_vector.size() != 3) throw  InitFailedException("Kspace: k2 vectror size must be equal to 3");
 
     for (short i = 0; i < 3; i++)  vec2(i + 1) = k_vector[i];
 
@@ -244,26 +252,26 @@ void Kspace::do_init()
     Tensor1 vec2;
     Tensor1 vec3;
 
-    if (! mod_opt.find_option("k1") ) throw  InitFailedException("QuantumDensity: k1 vectror must be defined");
+    if (! mod_opt.find_option("k1") ) throw  InitFailedException("Kspace: k1 vectror must be defined");
  
     mod_opt.get_option("k1", k_vector);
 
-    if (k_vector.size() != 3) throw  InitFailedException("QuantumDensity: k1 vectror size must be equal to 3");
+    if (k_vector.size() != 3) throw  InitFailedException("Kspace: k1 vectror size must be equal to 3");
 
     for (short i = 0; i < 3; i++)  vec1(i + 1) = k_vector[i];
 
-    if (! mod_opt.find_option("k2") ) throw  InitFailedException("QuantumDensity: k2 vectror must be defined");
+    if (! mod_opt.find_option("k2") ) throw  InitFailedException("Kspace: k2 vectror must be defined");
  
     mod_opt.get_option("k2", k_vector);
 
-    if (k_vector.size() != 3) throw  InitFailedException("QuantumDensity: k2 vectror size must be equal to 3");
+    if (k_vector.size() != 3) throw  InitFailedException("Kspace: k2 vectror size must be equal to 3");
 
     for (short i = 0; i < 3; i++)  vec2(i + 1) = k_vector[i];
 
-    if (! mod_opt.find_option("k3") ) throw  InitFailedException("QuantumDensity: k3 vectror must be defined"); 
+    if (! mod_opt.find_option("k3") ) throw  InitFailedException("Kspace: k3 vectror must be defined"); 
     mod_opt.get_option("k3", k_vector);
 
-    if (k_vector.size() != 3) throw  InitFailedException("QuantumDensity: k3 vectror size must be equal to 3");
+    if (k_vector.size() != 3) throw  InitFailedException("Kspace: k3 vectror size must be equal to 3");
 
     for (short i = 0; i < 3; i++)  vec3(i + 1) = k_vector[i];
     
@@ -272,7 +280,7 @@ void Kspace::do_init()
   } 
   else
   {
-     throw  InitFailedException("QuantumDensity: k_space_dimension should be or 1 or 2 or 3");
+     throw  InitFailedException("Kspace: k_space_dimension should be or 1 or 2 or 3");
   }
 
 }

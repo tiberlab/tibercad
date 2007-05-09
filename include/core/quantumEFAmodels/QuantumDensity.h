@@ -74,11 +74,7 @@ class QuantumDensity : public Kspace
 
  public:
   
-  enum JobKind
-  {
-     DENSITY = 0,
-     DISPERSION = 1
-  };
+  
   
 
   //!options for charge density
@@ -99,8 +95,7 @@ class QuantumDensity : public Kspace
 
   
     bool log_output; 
-    JobKind job; //!< what has to be done: either charge density or dispersion
-
+   
    
 
   };
@@ -177,11 +172,7 @@ class QuantumDensity : public Kspace
    std::map< const Node*, double > k_point_charge;
 
 
-   //!spectra of eigenvalues
-   /*!
-     eigen_energy[i][j] = E_i(k_j);
-   */
-   std::vector< std::vector <double> > eigen_energy;
+   
 
    
 

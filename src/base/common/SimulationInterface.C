@@ -12,6 +12,7 @@
 #include "MacroHeatBalance.h"
 #include "QuantumDensity.h"
 #include "OpticsKP.h"
+#include "QuantumDispersion.h"
 
 #include "Sweep.h"
 #include "SelfconsistentSolver.h"
@@ -94,6 +95,8 @@ SimulationInterface::create(const string& type,
       sim = QuantumDensity::create();
     else if (type == "opticskp")
       sim = OpticsKP::create();
+    else if (type == "quantumdispersion")
+      sim = QuantumDispersion::create();
   }
 
   if (sim != NULL)

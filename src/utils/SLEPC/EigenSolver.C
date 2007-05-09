@@ -147,22 +147,17 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
 
   }
 
-  ierr = EPSSetDimensions(eps,opt.ev_number, PETSC_DECIDE); CHKERRQ(ierr);
- 
-  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-                      Solve the eigensystem
-     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
-  ierr = EPSSolve(eps);CHKERRQ(ierr);
+  ierr = do_solve(opt);
 
  
 
-  return 0;
+  return ierr;
 }
 
 //------------------------------------------------------------------------------//
 
-//--------------------------------------------------------------//
+
+
 int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
 {
   
@@ -232,7 +227,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
 
 
     //rtol, abstol, dtol, maxits
-  ierr = KSPSetTolerances(ksp,1e-10, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
+    ierr = KSPSetTolerances(ksp,1e-10, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
    
   }
   else if (opt.solver_type == "lapack")
@@ -265,18 +260,14 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
     }
 
   }
-
-  ierr = EPSSetDimensions(eps,opt.ev_number, PETSC_DECIDE); CHKERRQ(ierr);
  
-  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-                      Solve the eigensystem
-     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
-  ierr = EPSSolve(eps);CHKERRQ(ierr);
+  ierr = do_solve(opt);
 
  
 
-  return 0;
+  return ierr; 
+
+ 
 }
 
 //--------------------------------------------------------------//
@@ -371,3 +362,33 @@ int EigenSolver::clear_slepc()
 
   return(ierr);
 }
+
+//-------------------------------------------------------------//
+int EigenSolver::do_solve(const SLEPCoptions& opt)
+{
+
+  int ierr;
+
+  int ncv;
+  
+
+  if (opt.ev_number > 8)
+    ncv =  4*opt.ev_number;
+  else
+    ncv = 32;
+   
+  // ierr = EPSSetDimensions(eps,opt.ev_number, PETSC_DECIDE); CHKERRQ(ierr);
+
+  ierr = EPSSetDimensions(eps,opt.ev_number, ncv); CHKERRQ(ierr);
+
+
+  ierr = EPSSolve(eps);CHKERRQ(ierr);
+  
+ 
+
+  return ierr;
+
+}
+
+
+//--------------------------------------------------------------//

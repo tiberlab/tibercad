@@ -614,20 +614,17 @@ void EnvelopFunctionApprox::do_solve()
 
  make_new_dofs();
 
-  if ( opt.job ==   EIGENSTATES )
-    
-    solve_eigen_value_problem( opt.number_of_eigenstates);
-  else if ( opt.job == DENSITY )
-    calculate_convergent_density(opt.Temperature);
+ if ( opt.job ==   EIGENSTATES )   
+   solve_eigen_value_problem( opt.number_of_eigenstates);
+ else if ( opt.job == DENSITY )
+   calculate_convergent_density(opt.Temperature);
   
  
  
 }
-
+//===========================================================//
 void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 {
-
-
 
 
   Ham_real->zero();
@@ -640,9 +637,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
  vector<unsigned int> psivar(opt.number_of_bands);
  //get numbers of variables
  for (unsigned int i = 0; i < opt.number_of_bands; i++)
-   {
-     psivar[i] = system->variable_number(psi_name[i]);
-   }
+ {
+   psivar[i] = system->variable_number(psi_name[i]);
+ }
 
  DofMap& dof_map = system->get_dof_map();
 
