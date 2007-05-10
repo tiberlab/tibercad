@@ -15,7 +15,7 @@ extern "C"
 
 TunnelingCurrent::TunnelingCurrent()
 {
- 
+  Vmesh = NULL;
 }
 
 //============================================//
@@ -23,7 +23,7 @@ TunnelingCurrent::TunnelingCurrent()
 TunnelingCurrent:: ~TunnelingCurrent()
 
 {
- 
+  delete Vmesh;
   
 }
 
