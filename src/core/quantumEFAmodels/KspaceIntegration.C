@@ -3,7 +3,7 @@ using namespace std;
 
 KspaceIntegration::KspaceIntegration()
 {
- 
+  eq = NULL;
 
   system = NULL;
 
@@ -63,60 +63,60 @@ void KspaceIntegration::calculate_density()
 
 
   for ( ; it != it_el ; ++it) //loop over k space elements
-    {
+  {
 
-      const Elem* elem = *it;
-      fe->reinit (elem);
+    const Elem* elem = *it;
+    fe->reinit (elem);
 
-      dof_map.dof_indices (elem, dof_indices, 0);
+    dof_map.dof_indices (elem, dof_indices, 0);
+    
+    for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+    {//qp
+      unsigned int num_nodes =  phi.size();
+      for (unsigned int i = 0; i <  num_nodes; i++)
+      {
+	const Node* nd = elem->get_node(i);
+	map <const Node*, map< const Elem*, double> > :: iterator node_it;
 
-      for (unsigned int qp=0; qp<qrule.n_points(); qp++)
-	{//qp
-	  unsigned int num_nodes =  phi.size();
-	  for (unsigned int i = 0; i <  num_nodes; i++)
-	    {
-	      const Node* nd = elem->get_node(i);
-	      map <const Node*, map< const Elem*, double> > :: iterator node_it;
-
-	      node_it = k_point_density.find(nd);
-	      if (node_it != k_point_density.end())
-		{
-		  map<const Elem*, double>&  dens_at_k_node = node_it->second;
-		  
-		  map<const Elem*, double>::iterator   dens_at_k_node_it = dens_at_k_node.begin();
-		  map<const Elem*, double>::iterator   dens_at_k_node_end = dens_at_k_node.end();
+	node_it = k_point_density.find(nd);
+	if (node_it != k_point_density.end())
+	{
+	  map<const Elem*, double>&  dens_at_k_node = node_it->second;
+	  
+	  map<const Elem*, double>::iterator   dens_at_k_node_it = dens_at_k_node.begin();
+	  map<const Elem*, double>::iterator   dens_at_k_node_end = dens_at_k_node.end();
 
 	
 
-		  for ( ; dens_at_k_node_it != dens_at_k_node_end ; ++dens_at_k_node_it) //loop over real space elements
-		  {
-		     const Elem* el = dens_at_k_node_it->first;
-
+	  for ( ; dens_at_k_node_it != dens_at_k_node_end ; ++dens_at_k_node_it) //loop over real space elements
+	  {
+	    const Elem* el = dens_at_k_node_it->first;
+	    
 		     
 
-		     double temp =  phi[i][qp] * (dens_at_k_node_it->second)*JxW[qp];
+	    double temp =  phi[i][qp] * (dens_at_k_node_it->second)*JxW[qp];
 
 
-		     real_space_density[el] +=  temp;
-
-		    
-		  }
+	    real_space_density[el] +=  temp;
+	    
+	    
+	  }
 
 	
 
-		}
-	      else
-		{
-		  cerr << "WARNING! QuantumDensity   node is missing\n";
-		}
+	}
+	else
+	{
+	  cerr << "WARNING! QuantumDensity   node is missing\n";
+	}
 
 	     
 
-	    }
+      }
 
-	}
-      
     }
+    
+  }
 
 
   //--------------------------------------------------------------------------//
@@ -144,7 +144,7 @@ void KspaceIntegration::calculate_density()
 //-------------------------------------------------------------------------------//
 void KspaceIntegration::calculate_convergent_density()
 {
-
+  
 
   build_k_grid();
 
@@ -180,93 +180,89 @@ void KspaceIntegration::calculate_convergent_density()
   
 
   if (opt.k_domain_refinement) 
-    {
-      //----------------------------------------
-      //refinement block
-      //---------------------------------------
+  {
+    //----------------------------------------
+    //refinement block
+    //---------------------------------------
      
      
 
-      old_density = * (system->solution);
+    old_density = * (system->solution);
       
 
-      MeshRefinement mesh_refinement(*kmesh);
+    MeshRefinement mesh_refinement(*kmesh);
 
       
-      double norm_of_error = opt.relative_accuracy;
+    double norm_of_error = opt.relative_accuracy;
 
-     
+    
 
+    for ( ; (norm_of_error >=  opt.relative_accuracy) ;  ) 
+    {//for
 
-
-      for ( ; (norm_of_error >=  opt.relative_accuracy) ;  ) 
-	{//for
-
+      if (opt.uniform_refinement)
+	mesh_refinement.uniformly_refine(1);
+      else
+      {
+	      
+	ErrorVector error;
+	      
+	      
+	KellyErrorEstimator error_estimator;
+	      
+	Tensor2Gen RotM_inv =  transform_matrix.transpose() ;
+	      
+	rotate_mesh(kmesh,  RotM_inv );
 	
-
-	  if (opt.uniform_refinement)
-	    mesh_refinement.uniformly_refine(1);
-	  else
-	    {
-	      
-	      ErrorVector error;
+	error_estimator.estimate_error (*system,error);
+	
+	rotate_mesh(kmesh, transform_matrix);
 	      
 	      
-	      KellyErrorEstimator error_estimator;
-	      
-	      Tensor2Gen RotM_inv =  transform_matrix.transpose() ;
-	      
-	      rotate_mesh(kmesh,  RotM_inv );
-	      
-	      error_estimator.estimate_error (*system,error);
-	      
-	      rotate_mesh(kmesh, transform_matrix);
+	mesh_refinement.flag_elements_by_error_fraction (error,opt.refine_fraction,0.0, 10);
 	      
 	      
-	      mesh_refinement.flag_elements_by_error_fraction (error,opt.refine_fraction,0.0, 10);
-	      
-	      
-	      mesh_refinement.refine_and_coarsen_elements();
+	mesh_refinement.refine_and_coarsen_elements();
 	      	     
 
-	      eq->reinit();
+	eq->reinit();
 
-	      calculate_at_each_k_point();
+	calculate_at_each_k_point();
 
-	      calculate_density();
+	calculate_density();
 
-	      prepare_system_solution();
+	prepare_system_solution();
 
 
-	      old_density.add(-1.0, *(system->solution));
+	old_density.add(-1.0, *(system->solution));
 	      
-	      old_density.close();
+	old_density.close();
 
-	      double x1 = old_density.linfty_norm();
+	double x1 = old_density.linfty_norm();
 
-	      system->solution->close();
+	system->solution->close();
 
-	      double x2 = ( system->solution->linfty_norm() );
+	double x2 = ( system->solution->linfty_norm() );
 	      
-	      norm_of_error = x1/x2;
+	norm_of_error = x1/x2;
 
 
-	      old_density = *(system->solution);
+	old_density = *(system->solution);
 
-	      std::cout << "k space grid has " << kmesh->n_nodes() << " nodes " << flush;
-	      std::cout <<  "quantum density error " << norm_of_error << endl << flush;
+	std::cout << "k space grid has " << kmesh->n_nodes() << " nodes " << flush;
+	std::cout <<  "quantum density error " << norm_of_error << endl << flush;
 
 	      
-	    }
+      }
 
-	}
+    }
 
     
       
 
 
 
-    }//end of refinement block
+  }//end of refinement block
 
 
 }
@@ -306,43 +302,43 @@ void KspaceIntegration::prepare_system_solution()
 
 
   for ( ; it != it_el ; ++it) 
-    {
+  {
 
    
-      const Elem* elem = *it;
+    const Elem* elem = *it;
 
-      fe->reinit (elem);
+    fe->reinit (elem);
 
      
 
-      dof_map.dof_indices (elem, dof_indices);
-
+    dof_map.dof_indices (elem, dof_indices);
+      
 
     
 
-      unsigned int n_nodes = elem->n_nodes();
+    unsigned int n_nodes = elem->n_nodes();
 
     
       
-      for (unsigned int n = 0; n < n_nodes; n++)
-	{
-	  const	  Node*  node =  elem->get_node(n);
-
+    for (unsigned int n = 0; n < n_nodes; n++)
+    {
+      const	  Node*  node =  elem->get_node(n);
+      
 #ifdef DEBUG
-	  cerr << (*node)(0) << "   " << (*node)(1) << "    " << (*node)(2) << "    " <<  k_point_charge[node] << "\n";
+      cerr << (*node)(0) << "   " << (*node)(1) << "    " << (*node)(2) << "    " <<  k_point_charge[node] << "\n";
 #endif
-	 
+      
 
-	  system->solution->set( dof_indices[n] ,  k_point_charge[node]);
+      system->solution->set( dof_indices[n] ,  k_point_charge[node]);
  	  
 
 
 	 
 
-	}  
+    }  
       
 
-    }
+  }
 
 
 }
@@ -350,34 +346,37 @@ void KspaceIntegration::prepare_system_solution()
 
 void KspaceIntegration::parse_options( )
 {
- const ModelOptions& mod_opt = get_options();
+
+  const ModelOptions& mod_opt = get_options();
  
 
 
- opt.uniform_refinement      = mod_opt.get_option("uniform_refinement",false);
+  opt.uniform_refinement      = mod_opt.get_option("uniform_refinement",false);
 
- opt.refine_fraction         = mod_opt.get_option("refine_fraction", 0.3);
- opt.maximum_ref_level       = mod_opt.get_option("maximum_ref_level", 8);
- opt.relative_accuracy       = mod_opt.get_option("relative_accuracy", 1e-2);
+  opt.refine_fraction         = mod_opt.get_option("refine_fraction", 0.3);
+  opt.maximum_ref_level       = mod_opt.get_option("maximum_ref_level", 8);
+  opt.relative_accuracy       = mod_opt.get_option("relative_accuracy", 1e-2);
 
- opt.degeneracy                = mod_opt.get_option("degeneracy",1);
- opt.k_domain_refinement       = mod_opt.get_option("refine_k_space", false);
+  opt.degeneracy                = mod_opt.get_option("degeneracy",1);
+  opt.k_domain_refinement       = mod_opt.get_option("refine_k_space", false);
 
 
 
 }
 //------------------------------------------------------------------------------------//
-//============================================//
+
 void KspaceIntegration::do_solve( )
 {
 
 
- parse_options();
+  parse_options();
 
 
 
- calculate_convergent_density();
+  calculate_convergent_density();
 
 
 
 }
+
+//--------------------------------------------------------------------------------------//
