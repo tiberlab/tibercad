@@ -23,9 +23,7 @@ TunnelingCurrent::TunnelingCurrent()
 TunnelingCurrent:: ~TunnelingCurrent()
 
 {
-  delete eq;
-
-  delete kmesh;
+ 
   
 }
 
