@@ -80,16 +80,16 @@ class KspaceIntegration : public Kspace
 
   
   //!calculates the quantity performing mesh refinement of k-space, if required.
-  void calculate_convergent_density(void);
+  virtual void calculate_convergent_density(void);
 
   //!calculates everything that is necessary for eack k-point 
-  virtual void calculate_at_each_k_point()=0;
+  virtual void calculate_at_each_k_point() {};
 
 
    //!map from node in the k-grid to a real space density, which is a map between real space elements and density   
-   std::map< const Node*, std::map <const Elem*, double>  > k_point_density;
+  std::map< const Node*, std::map <const Elem*, double>  > k_point_density;
 
-   //!map from node in the k-grid to a total charge (refinement criterion)
+  //!map from node in the k-grid to a total charge (refinement criterion)
    std::map< const Node*, double > k_point_charge;
   
 
@@ -127,6 +127,8 @@ class KspaceIntegration : public Kspace
 
    
    virtual void do_solve(void);
+
+   virtual void do_init(void);
 
  private:
 

@@ -1763,6 +1763,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
       
       #ifdef DEBUG
       cerr << ev[ind].global_number  << "    " << ev[ind].energy << "\n";
+     
      #endif
     }
   

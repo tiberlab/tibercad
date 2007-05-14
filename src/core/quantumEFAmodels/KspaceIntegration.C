@@ -33,6 +33,8 @@ void KspaceIntegration::calculate_density()
   const DofMap& dof_map = system->get_dof_map();
     
   FEType fe_type = dof_map.variable_type(0);
+
+ 
     
   AutoPtr<FEBase> fe (FEBase::build(k_dim, fe_type));
 
@@ -54,7 +56,7 @@ void KspaceIntegration::calculate_density()
   const MeshBase::element_iterator it_el  = kmesh->active_elements_end();
  
    
-  real_space_density.clear();
+
 
  
   
@@ -68,11 +70,17 @@ void KspaceIntegration::calculate_density()
     const Elem* elem = *it;
     fe->reinit (elem);
 
+   
+
     dof_map.dof_indices (elem, dof_indices, 0);
     
+  
+
     for (unsigned int qp=0; qp<qrule.n_points(); qp++)
     {//qp
       unsigned int num_nodes =  phi.size();
+
+
       for (unsigned int i = 0; i <  num_nodes; i++)
       {
 	const Node* nd = elem->get_node(i);
@@ -95,7 +103,7 @@ void KspaceIntegration::calculate_density()
 		     
 
 	    double temp =  phi[i][qp] * (dens_at_k_node_it->second)*JxW[qp];
-
+	   
 
 	    real_space_density[el] +=  temp;
 	    
@@ -154,7 +162,7 @@ void KspaceIntegration::calculate_convergent_density()
   
   system = &(eq->get_system<LinearImplicitSystem> ("k-integration"));
   
-  system->add_variable("u", SECOND);
+  system->add_variable("u", integration_order);
 
   
   //!system vector that contains charge density in k space from previous iteration
@@ -169,7 +177,10 @@ void KspaceIntegration::calculate_convergent_density()
   calculate_at_each_k_point();
  
  
-  
+  real_space_density.clear();
+
+
+
   calculate_density();
 
  
@@ -196,7 +207,7 @@ void KspaceIntegration::calculate_convergent_density()
     double norm_of_error = opt.relative_accuracy;
 
     
-
+ 
     for ( ; (norm_of_error >=  opt.relative_accuracy) ;  ) 
     {//for
 
@@ -219,16 +230,17 @@ void KspaceIntegration::calculate_convergent_density()
 	rotate_mesh(kmesh, transform_matrix);
 	      
 	      
-	mesh_refinement.flag_elements_by_error_fraction (error,opt.refine_fraction,0.0, 10);
-	      
+	mesh_refinement.flag_elements_by_elem_fraction (error,opt.refine_fraction,0.0, 10);
+
 	      
 	mesh_refinement.refine_and_coarsen_elements();
-	      	     
+	     
 
 	eq->reinit();
 
 	calculate_at_each_k_point();
-
+	
+	real_space_density.clear();
 	calculate_density();
 
 	prepare_system_solution();
@@ -380,3 +392,8 @@ void KspaceIntegration::do_solve( )
 }
 
 //--------------------------------------------------------------------------------------//
+void KspaceIntegration::do_init(void)
+{
+  Kspace::do_init();
+
+}

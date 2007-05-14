@@ -41,8 +41,20 @@ class TunnelingCurrent: public KspaceIntegration
 				   std::vector<double>& results, std::vector<std::string>& legend);
 
 
-   std::map<const Elem*, double> transmission_map;
+   virtual void do_solve(void);
 
+   virtual void do_init(void);
+
+   virtual void parse_options(void);
+   
+
+ private:
+
+   //!used for all k-points
+   const Elem* applied_voltage_elem;
+
+
+   void k_space_output(void);
 
 };
 

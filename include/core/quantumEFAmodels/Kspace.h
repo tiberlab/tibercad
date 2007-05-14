@@ -31,8 +31,8 @@ class Kspace : public SimulationInterface
 
  protected:
 
-
-  
+  //!integration_order;
+  Order integration_order;
 
 
   //!defines 1D  Brilluoin zone \f$ k \in [-{\bf K}/2; {\bf K}/2) \f$
@@ -79,7 +79,7 @@ class Kspace : public SimulationInterface
 
 
   //!build k space grid
-  void build_k_grid();
+  void build_k_grid( );
 
 
   //!number of nodes in k-domain

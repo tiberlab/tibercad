@@ -113,7 +113,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
 
 
     //rtol, abstol, dtol, maxits
-  ierr = KSPSetTolerances(ksp,1e-10, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
+    ierr = KSPSetTolerances(ksp,1e-10, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
    
   }
   else if (opt.solver_type == "lapack")
@@ -144,8 +144,12 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
       ierr = KSPSetTolerances(ksp,1e-10, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
 
     }
-
   }
+ 
+
+
+
+
 
   ierr = do_solve(opt);
 
