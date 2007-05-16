@@ -5866,11 +5866,23 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
 
         const vector<Real>& JxW_face = fe_face->get_JxW();
 
+        // check the normal
+        double orientation = 1;
+        {
+          AutoPtr<Elem> side_s = elem->build_side(s);
+          Point test_vec = side_s->point(0) - elem->centroid();
+          double scalar_prod = test_vec * face_normals[0];
+          if (scalar_prod < 0.0)
+            orientation = -1;
+        }
+        
+
         if (dim > 1)
         {
           fe_face->reinit(elem, s);
 
           int phi_size = phi_face.size();
+
 
 
           // now integrate to include von Neumann and mixed type BCs
@@ -5954,7 +5966,7 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
 
 
             RealVectorValue P(sc->get_total_polarization());
-            double Pn = (P * face_normals[qp]) / P0;
+            double Pn = orientation * (P * face_normals[qp]) / P0;
             double value_u = J * (l2_eps * value[0] - Pn);
             double value_n = J * value[1] / (mu0 * C0_e);
             double value_p = J * value[2] / (mu0 * C0_h);
@@ -6744,6 +6756,17 @@ if (i == j)
         const vector<Point>& face_normals = fe_face->get_normals();
 
         const vector<Real>& JxW_face = fe_face->get_JxW();
+
+        // check the normal
+        //double orientation = 1;
+        //{
+        //  AutoPtr<Elem> side_s = elem->build_side(s);
+        //  Point test_vec = side_s->point(0) - elem->centroid();
+        //  double scalar_prod = test_vec * face_normals[0];
+        //  if (scalar_prod < 0.0)
+        //    orientation = -1;
+        //}
+        
 
         if (dim > 1)
         {
