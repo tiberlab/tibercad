@@ -5866,23 +5866,22 @@ DriftDiffusion::do_assembly_residual(const NumericVector<Number>& x,
 
         const vector<Real>& JxW_face = fe_face->get_JxW();
 
-        // check the normal
-        double orientation = 1;
-        {
-          AutoPtr<Elem> side_s = elem->build_side(s);
-          Point test_vec = side_s->point(0) - elem->centroid();
-          double scalar_prod = test_vec * face_normals[0];
-          if (scalar_prod < 0.0)
-            orientation = -1;
-        }
-        
-
         if (dim > 1)
         {
+
           fe_face->reinit(elem, s);
 
           int phi_size = phi_face.size();
 
+          // check the normal
+          double orientation = 1;
+          {
+            AutoPtr<Elem> side_s = elem->build_side(s);
+            Point test_vec = side_s->point(0) - elem->centroid();
+            double scalar_prod = test_vec * face_normals[0];
+            if (scalar_prod < 0.0)
+              orientation = -1;
+          }
 
 
           // now integrate to include von Neumann and mixed type BCs
