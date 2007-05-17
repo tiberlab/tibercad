@@ -230,7 +230,7 @@ void KspaceIntegration::calculate_convergent_density()
 	rotate_mesh(kmesh, transform_matrix);
 	      
 	      
-	mesh_refinement.flag_elements_by_elem_fraction (error,opt.refine_fraction,0.0, 10);
+	mesh_refinement.flag_elements_by_error_fraction (error,opt.refine_fraction,0.0, 10);
 
 	      
 	mesh_refinement.refine_and_coarsen_elements();

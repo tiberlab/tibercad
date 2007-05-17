@@ -193,6 +193,8 @@ void TunnelingCurrent::do_solve()
 
     prepare_system_solution();
 
+    MeshRefinement mesh_refinement(*kmesh);
+
     double x1;
     double x2;
 
@@ -216,7 +218,7 @@ void TunnelingCurrent::do_solve()
       old_density = * (system->solution);
       
 
-      MeshRefinement mesh_refinement(*kmesh);
+      
 
       
       double norm_of_error = opt.relative_accuracy;
@@ -245,7 +247,7 @@ void TunnelingCurrent::do_solve()
 	  rotate_mesh(kmesh, transform_matrix);
 	  
 	 
-	  mesh_refinement.flag_elements_by_elem_fraction (error,opt.refine_fraction,0.0, 10);
+	  mesh_refinement.flag_elements_by_error_fraction (error,opt.refine_fraction,0.0, 10);
 	      
 	      
 	  mesh_refinement.refine_and_coarsen_elements();
@@ -287,11 +289,12 @@ void TunnelingCurrent::do_solve()
 	max_refinement++;
       }
 
-      mesh_refinement.uniformly_coarsen(max_refinement);
+     
     }//end of refinement block
     
     
     k_space_output();
+    mesh_refinement.uniformly_coarsen(max_refinement);
 
   }//voltage loop
   
@@ -362,9 +365,9 @@ void TunnelingCurrent::calculate_at_each_k_point()
 	   // k_vector[2] = 1e-5;
 
 	    
-	    k_vector[0] = std::ceil(k_vector[0] *1e6)/1e6;
-	    k_vector[1] = std::ceil(k_vector[1] *1e6)/1e6;
-	    k_vector[2] = std::ceil(k_vector[2] *1e6)/1e6;
+	    k_vector[0] = std::ceil(k_vector[0] *1e5)/1e5;
+	    k_vector[1] = std::ceil(k_vector[1] *1e5)/1e5;
+	    k_vector[2] = std::ceil(k_vector[2] *1e5)/1e5;
 
 
 
@@ -464,6 +467,9 @@ void TunnelingCurrent::k_space_output(void)
   v_s << voltage;
   if (plotvariables.find("k-space_tunneling") != plotvariables.end())
   {
+
+    kmesh->print_info();
+
     string filename(outdir + "/" + get_name() +
 		    "_k_space" + suffix +"_voltage_" +v_s.str() + suff );
 
@@ -474,8 +480,8 @@ void TunnelingCurrent::k_space_output(void)
     names.resize(1, "current");
     
     results.resize( kmesh->n_nodes() );
-    MeshBase::node_iterator       it     = kmesh->active_nodes_begin();
-    const MeshBase::node_iterator it_el  = kmesh->active_nodes_end();
+    MeshBase::node_iterator       it     = kmesh->nodes_begin();
+    const MeshBase::node_iterator it_el  = kmesh->nodes_end();
     for ( ; it != it_el ; ++it) 
     {
       const Node* nd  = *it;

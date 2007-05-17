@@ -22,6 +22,8 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
 
   prepare_strain_data_for_output( eps_names,  eps_data);
   prepare_polarization_data_for_output( pol_names,  pol_data);
+
+  cerr << "eps_data.size()  " << eps_data.size()  << "\n";
   
   short num_var = 0;
   const set<string>::const_iterator varend = variables.end();
@@ -32,7 +34,9 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
   if (variables.find(strain_name) != varend) num_var += 6;  
   if (variables.find(pol_name) != varend) num_var +=3;
 
-  short num_elem = eps_data.size()/6;
+  unsigned int num_elem = eps_data.size()/6;
+
+
 
   results.resize(num_var * num_elem);
   legend.resize(num_var);
@@ -2108,6 +2112,9 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
 
   eps_data.resize(Number_of_elements*6);
   eps_names.resize(6);
+
+
+
 
   std::vector<Point> point_vec(1);
 

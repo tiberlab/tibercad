@@ -657,6 +657,9 @@ SimulationInterface::get_elemental_results(
     build_elemental_results(variables, results, legend);
 
     unsigned int n = get_environment().get_mesh().n_active_elem();
+
+   
+
     if (results.size() != n * legend.size())
     {
       ostringstream s;
