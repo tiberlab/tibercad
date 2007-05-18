@@ -681,7 +681,10 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 
 
   //*******  special  characters for  the  label
-      rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',')    );
+  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',') 
+                         | ch_p('%')   | ch_p('@') | ch_p('[') | ch_p(']') );
+
+  //    rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',')    );
   //  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+')    );
 
   // ******* separator for  list  entry: 'property = ( x , y, z )'
@@ -956,7 +959,7 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
                   for (int i =0; i< v_label_string.size();++i)
                   {
                     string_prop_labels.push_back(v_label_string[i]);
-                    //cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+                //    cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
 
                     string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
 
