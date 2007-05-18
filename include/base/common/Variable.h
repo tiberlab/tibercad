@@ -84,7 +84,7 @@ class Variable
     //! Parse the string from the input file and register if needed
     /*!
      * A variable variable is defined in the input file using the notation
-     * \c #name(defaultvalue)
+     * \c \#name(defaultvalue)
      *
      * If a string of this type is found, the variable object is registered
      * in the list and the default value is returned.
