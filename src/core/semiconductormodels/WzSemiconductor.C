@@ -122,128 +122,7 @@ void  WzSemiconductor::read_bowing_parameters(void)
   bow.Ep_2 = data("bow_Ep_2", 0.0);
 }
 
-/*
-//----------------------------------------------------/
-void WzSemiconductor::calculate_conduction_band_extremum(void)
-{
-  vector<DDsemiconductor::band_extremum> result;
- 
-  double Ev_top;
-  //---------------------------------
-  //valence top reference energy
-  //-------------------------------
-  double d1 =  par.delta_cr;
-  double d2 =  par.delta_s / 3.0;
-  double d3 = d2;
-  
-  double E1 = d1 + d2;
 
-  double E2 = (d1 - d2)/2.0 + sqrt( (d1-  d2)*( d1- d2) / 4.0 + 2.0 * d3 * d3 );
-
-  if (E1 > E2)
-    Ev_top = par.Ev + E1;
-  else
-    Ev_top = par.Ev + E2;
-
-  //------------------------------
-
-  double energy = Ev_top + par.EgGamma;
- 
-  if (strained) energy += (strain(1,1) + strain(2,2))* par.a_x + par.a_z *  strain(3,3);
-   
-  DDsemiconductor::band_extremum band_ext;
-  band_ext.energy = energy;
-  band_ext.degeneracy = 2;
-  band_ext.mass_DOS = pow(par.m_c_xx * par.m_c_xx * par.m_c_zz, 1.0/3.0) ;
-
-  result.push_back(band_ext);
-
-  conduction_band = result;
-}
-//----------------------------------------------------/
-
-void  WzSemiconductor::calculate_valence_band_extremum(void)
-{
-  vector<DDsemiconductor::band_extremum>   result;
-
-  DDsemiconductor::band_extremum extremum;
-
-  vector<Tensor1> k_vector;
-  //-----------------------------------------------
-  Tensor1 k;
-  k(1) = 0 ; k(2) = 0; k(3) = 0;
-  k_vector.push_back(k);
-
-  k(1) = k_max ; k(2) = 0; k(3) = 0;
-  k_vector.push_back(k);
- 
-  k(1) = 0 ; k(2) = k_max; k(3) = 0;
-  k_vector.push_back(k);
-
-  k(1) = 0 ; k(2) = 0; k(3) = k_max;
-  k_vector.push_back(k);
-
-  k(1) =k_max  ; k(2) = k_max; k(3) = 0;
-  k_vector.push_back(k);
-
-
-  k(1) =k_max  ; k(2) = 0; k(3) = k_max;
-  k_vector.push_back(k);
-
-  k(1) =0.0    ; k(2) = k_max; k(3) = k_max;
-  k_vector.push_back(k);
-
-
-  //--------------------------------------------------
-  vector< vector<double> >  eigenvalue = calculate_vb_bulk_states(k_vector);
-    
-
-  Tensor2Sym imass;
-  for (short ind = 0; ind < 6; ind++)
-    {
-      if (eigenvalue[0][ind] + energy_cutoff > eigenvalue[0][5]) 
-	{
-	  extremum.degeneracy = 1;
-
-	  extremum.energy  =eigenvalue[0][ind] ;
-	  
-	  imass(1,1) = (2.0 *(eigenvalue[0][ind] - eigenvalue[1][ind] )) / Hartree /(k_max * k_max);
-	 
-	 
-	  imass(2,2) = (2.0 *(eigenvalue[0][ind] - eigenvalue[2][ind] )) / Hartree /(k_max * k_max);
-	 
-	  imass(3,3) = (2.0 *(eigenvalue[0][ind] - eigenvalue[3][ind] )) / Hartree /(k_max * k_max);
-	  
-	  
-	  imass(2,1) = (eigenvalue[0][ind] - eigenvalue[4][ind] + (eigenvalue[1][ind] - eigenvalue[0][ind] )
-	        + (eigenvalue[2][ind] - eigenvalue[0][ind]))  / Hartree /(k_max * k_max);
-
-
-
-	  
-	  imass(3,1) =(eigenvalue[0][ind] - eigenvalue[5][ind] + (eigenvalue[1][ind] - eigenvalue[0][ind] )
-	         + (eigenvalue[3][ind] - eigenvalue[0][ind])) / Hartree /(k_max * k_max);
-	 
-	  imass(3,2) =(eigenvalue[0][ind] - eigenvalue[6][ind] + (eigenvalue[2][ind] - eigenvalue[0][ind] )
-	         + (eigenvalue[3][ind] - eigenvalue[0][ind])) / Hartree /(k_max * k_max);
-	 
-	  double imass_DOS;
-	  double temp1, temp2;
-	  imass.invariants(&temp1, &temp2,&imass_DOS);
-
-	 
-	  
-	  extremum.mass_DOS = std::pow(1.0/imass_DOS,1.0/3.0);
-	  result.push_back(extremum);
-	}
-    }
-  
- 
-  valence_band = result;
-
-}
-
-*/
 //--------------------------------------------------
 
 void WzSemiconductor::read_database( )
@@ -346,6 +225,79 @@ void WzSemiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const
 //--------------------------------------------------
 KPparams WzSemiconductor::calculate_8x8_kp_params (void )
 {
+  //we start from 6x6 kp parameters  
+  KPparams  result = calculate_6x6_kp_params();
+
+  
+  //------------------------------------------------------------------
+  //CONDUCTION BAND
+  //we renormalize conduction band quadratic part to free electron mass
+  result.s1 = 0.5;
+  result.s2 = 0.5;
+
+
+  //---------------------------------
+  //valence top reference energy
+  //-------------------------------
+
+  double Ev_top;
+
+
+  {
+    double d1 =  par.delta_cr;
+    double d2 =  par.delta_s / 3.0;
+    double d3 = d2;
+  
+    double E1 = d1 + d2;
+
+    double E2 = (d1 - d2)/2.0 + sqrt( (d1-  d2)*( d1- d2) / 4.0 + 2.0 * d3 * d3 );
+
+    if (E1 > E2)
+      Ev_top = par.Ev + E1;
+    else
+      Ev_top = par.Ev + E2;
+
+ 
+
+
+    double Ev_top = par.Ev + ((1.0/3.0) * par.delta_s );
+  }
+
+  result.E_c =  (Ev_top + par.EgGamma)/Hartree;
+
+  //-----------------------------------------------------------------
+  //to check!
+  double Ep1,Ep2; //Ep = P^2 / 2.0;
+  
+  Ep1 = (1.0/par.m_c_zz - 1.0)*
+    par.EgGamma * ( (par.EgGamma +  par.delta_s )/(par.EgGamma + 2.0/3.0 * par.delta_s ) ) / Hartree;
+
+  Ep2 = (1.0/par.m_c_xx - 1.0)*
+    par.EgGamma * ( (par.EgGamma +  par.delta_s )/(par.EgGamma + 2.0/3.0 * par.delta_s ) ) / Hartree;
+  
+
+  result.P1 = std::sqrt(2.0 * Ep1);
+  result.P2 = std::sqrt(2.0 * Ep2);
+
+
+  //-----------------------------------------------------------------
+  //to check !
+  //rescale L and N
+  double t1 =   Ep1/( (par.EgGamma +  par.delta_s/3.0)/Hartree );
+  double t2 =   Ep2/( (par.EgGamma +  par.delta_s/3.0)/Hartree );
+
+  result.L1 += t1;
+  result.L2 += t2;
+
+  result.N1 += t1;
+  result.N2 += t2;
+  
+
+  result.N1_yx = result.M1;  result.N2_yx = result.N1_yx;
+  result.N1_xy = result.N1 - result.N1_yx; result.N2_xy = result.N1_xy;
+
+  return(result);
+
 
 
 }

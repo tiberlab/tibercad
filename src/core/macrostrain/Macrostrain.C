@@ -23,7 +23,7 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
   prepare_strain_data_for_output( eps_names,  eps_data);
   prepare_polarization_data_for_output( pol_names,  pol_data);
 
-  cerr << "eps_data.size()  " << eps_data.size()  << "\n";
+
   
   short num_var = 0;
   const set<string>::const_iterator varend = variables.end();
@@ -99,6 +99,7 @@ throw (ModelErrorException)
 {
   //const string& modelname = options.get_option("BC_region_name", "");
   //if (modelname != "substrate")
+
   const string& modelname = options.get_option("type", "pressure");
 
   MacrostrainBoundaryProperties* model =

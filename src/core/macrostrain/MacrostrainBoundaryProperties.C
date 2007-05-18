@@ -46,7 +46,12 @@ void MacrostrainSubstrate::do_init()
 {
   const ModelOptions& options =	get_options ();
 
-  const std::string name = options.get_option("material", "GaAs");
+ 
+
+  const std::string name = options.get_option("material", "");
+
+  if (name == "") throw InitFailedException("MacrostrainSubstrate: substrate material is not defined");
+
 
   material = Material::create (name, options);
 
