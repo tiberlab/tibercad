@@ -4,6 +4,7 @@
 #define _OPTICALGENERATION_H_
 
 #include "RecombinationModelInterface.h"
+#include "Variable.h"
 #include "TypeDefs.h"
 
 
@@ -11,8 +12,11 @@
 /*!
  * This class implements optical generation processes that can be
  * modeled by \f[G_{x}= G]
+ *
+ * It is derived from Variable to be able to make a sweep over the 
+ * generation rate.
  */
-class OpticalGeneration : public RecombinationModelInterface
+class OpticalGeneration : public RecombinationModelInterface, public Variable
 {
 
   public:
@@ -36,9 +40,6 @@ class OpticalGeneration : public RecombinationModelInterface
     void get_net_recombination_rate_derivatives(
         std::vector<double>& recomb_e, std::vector<double>& recomb_h);
 
-    //! Set the direct recombination parameters
-    void set_parameters(double C);
-
 
   protected:
 
@@ -54,6 +55,14 @@ class OpticalGeneration : public RecombinationModelInterface
     /*! \copydoc RecombinationModelInterface::calculate_VCA() */
     virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
+
+
+    /*! \copydoc Variable::set_variable_value() */
+    virtual void set_variable_value(double value, ID id = 0);
+
+
+    /*! \copydoc Variable::set_variable_value() */
+    virtual double get_variable_value(ID id = 0);
 
 
   private:
@@ -84,13 +93,6 @@ OpticalGeneration::create(void)
 }
 
 
-inline
-void
-OpticalGeneration::set_parameters(double G)
-{
-  G_ = G;
-}
-
 
 inline
 PhysicalModelInterface*
@@ -108,6 +110,24 @@ OpticalGeneration::copy_from(const PhysicalModelInterface* rhs)
   
   const OpticalGeneration* mod = dynamic_cast<const OpticalGeneration*>(rhs);
   G_ = mod->G_;
+}
+
+
+inline
+void
+OpticalGeneration::set_variable_value(double value, ID id)
+{
+  ignore_unused_variable(id);
+  G_ = value;
+}
+
+
+inline
+double
+OpticalGeneration::get_variable_value(ID id)
+{
+  ignore_unused_variable(id);
+  return G_;
 }
 
 

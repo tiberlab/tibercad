@@ -1,7 +1,7 @@
 // $Id$
 
 #include "Sweep.h"
-#include "Sweepable.h"
+#include "Variable.h"
 #include "Boundary.h"
 #include "BoundaryProperties.h"
 #include "SimulationEnvironment.h"
@@ -57,76 +57,23 @@ Sweep::do_init(void)
   // we set our environment to that of the first simulation
   set_environment(&_simulations[0]->get_environment());
   
-  // get the model which contains the sweep variable
-  // NOTE: for now we can sweep only over boundary values
-  //
-  // syntax is: 'simulationname.boundaryname'
-  //         or 'boundaryname'
-  string bnd = opts.get_option("boundary", "");
-  typedef tokenizer<char_separator<char> > tokenizer;
-  char_separator<char> sep(".");
-  tokenizer tok(bnd, sep);
-  tokenizer::iterator tokit(tok.begin());
-  if (tokit == tok.end())
+
+  // Now we have to find the model to the variable
+  _variable = opts.get_option("variable", "");
+  if (_variable == "")
   {
     string msg("Sweep: You have to provide the name of ");
-    msg += "the sweep variable (currently we support only boundary values).";
+    msg += "the sweep variable.";
     throw InitFailedException(msg);
   }
 
-  SimulationInterface* simulation;
-  if ((++tokit) == tok.end())
+  if (!Variable::is_variable(_variable))
   {
-    // first check the sweep simulation
-    SimulationEnvironment& env = get_environment();
-    Boundary* boundary = env.get_boundary(bnd);
-    if (boundary != NULL)
-      simulation = _simulations[0];
-    else
-    {
-      // only boundary name provided, let's hope it's unique...
-      // (we just pick the first that matches)
-      Control::simulation_iterator simit(control.simulations_begin());
-      const Control::simulation_iterator simend(control.simulations_end());
-      for ( ; simit != simend; ++simit)
-      {
-        simulation = *simit;
-        if (simulation == this) // would not make sense...
-          continue;
-
-        SimulationEnvironment& env = simulation->get_environment();
-        Boundary* boundary = env.get_boundary(bnd);
-        if (boundary != NULL)
-          break;
-      }
-    }
-  }
-  else
-  {
-    tokit = tok.begin();
-    simulation = control.find_simulation(*tokit);
-    if (simulation == NULL)
-      throw InitFailedException("Sweep: Simulation " + *tokit + " not found.");
-
-    bnd = *(++tokit);
-    
+    ostringstream o;
+    o << "Sweep: The variable " << _variable << " is not defined.";
+    throw InitFailedException(o.str());
   }
 
-
-  // simulation now should have the sweepable boundary value
-  SimulationEnvironment& env = simulation->get_environment();
-
-
-  Boundary* boundary = env.get_boundary(bnd);
-  if (boundary == NULL)
-    throw InitFailedException("Sweep: Boundary " + bnd + " not found.");
-  
-  _variable = dynamic_cast<Sweepable*>(
-      boundary->get_boundary_properties(simulation->get_id()));
-  
-  if (_variable == NULL)
-    throw InitFailedException("Sweep: No sweepable entity on boundary " +
-        bnd + " found.");
 }
 
 
@@ -199,7 +146,7 @@ Sweep::do_plot(void)
 void
 Sweep::do_solve(void)
 {
-  assert(_variable != NULL);
+  assert(_variable != "");
 
   parse_options();
 
@@ -233,7 +180,7 @@ Sweep::do_solve(void)
     {
 
       string plotfilename(outdir + "/" + get_name() + "_" +
-          _simulations[i]->get_name() + suffix + ".dat");
+          _simulations[i]->get_name() + suffix + "_" + _variable + ".dat");
 
       plotfiles[i] = new ofstream;
       ofstream& file = *plotfiles[i];
@@ -295,7 +242,8 @@ Sweep::do_solve(void)
   {
     double goal = _values[i];
     double goal_sign = (goal < 0.0) ? -1 : 1;
-    _last = _variable->get_current_value();
+    //_last = _variable->get_current_value();
+    _last = Variable::get_variable_value(_variable);
     double step = goal - _last;
     double old_step = 0.0;
 
@@ -313,7 +261,7 @@ Sweep::do_solve(void)
       if (diff < 0.0)
         value = goal;
       
-      _variable->set_new_value(value);
+      Variable::set_variable_value(_variable, value);
       cout  << "Sweep value = " << value << endl;
       
       try
@@ -322,7 +270,7 @@ Sweep::do_solve(void)
           _simulations[j]->solve();
 
 
-        _last = _variable->get_current_value();
+        _last = Variable::get_variable_value(_variable);
 
 
         // remember the current solution
@@ -335,7 +283,7 @@ Sweep::do_solve(void)
               bind2nd(Utils::almost_equal(), _last)) != values_end)
         {
           ostringstream s;
-          s << suffix << _last;
+          s << suffix << "_" << _variable << "_" << _last;
           get_control().set_filename_suffix(s.str());
 
           for (int j = 0; j < num_sim; j++)

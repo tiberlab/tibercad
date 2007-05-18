@@ -7,7 +7,7 @@
 #include "DriftDiffusionDefs.h"
 #include "BoundaryProperties.h"
 #include "ModelOptions.h"
-#include "Sweepable.h"
+#include "Variable.h"
 
 // C++ includes
 #include <string>
@@ -19,10 +19,10 @@ class DriftDiffusionProperties;
  * Derive from this class to define contact models. Examples can be found
  * in OhmicContact and SchottkyContact.
  *
- * This class is derived also from Sweepable to be able to make
+ * This class is derived also from Variable to be able to make
  * a voltage sweep.
  */
-class ElectricalContact : public BoundaryProperties, public Sweepable
+class ElectricalContact : public BoundaryProperties, public Variable
 {
   public:
 
@@ -104,16 +104,32 @@ class ElectricalContact : public BoundaryProperties, public Sweepable
     /*! \copydoc BoundaryProperties::do_init() */
     virtual void do_init(void);
 
-    
+
+    /*! \copydoc Variable::set_variable_value() */
+    virtual void set_variable_value(double value, ID id = 0);
+
+
+    /*! \copydoc Variable::set_variable_value() */
+    virtual double get_variable_value(ID id = 0);
+
+
   private:
 
     BCType _potential_type;
     BCType _fermie_type;
     BCType _fermih_type;
 
+
+    //! The boundary value (eg. applied voltage)
+    double _boundary_value;
+    
+
     // A pointer to the DriftDiffusionProperties object
     const DriftDiffusionProperties *_properties;
 };
+
+
+
 
 //
 // inline members
@@ -122,7 +138,8 @@ class ElectricalContact : public BoundaryProperties, public Sweepable
 
 inline
 ElectricalContact::ElectricalContact(void)
-  : _properties(NULL)
+  : _boundary_value(0.0),
+    _properties(NULL)
 {
 }
 
@@ -130,7 +147,7 @@ inline
 void
 ElectricalContact::set_simulation_voltage(double voltage)
 {
-  set_new_value(voltage);
+  _boundary_value = voltage;
 }
 
 
@@ -138,7 +155,7 @@ inline
 double
 ElectricalContact::get_simulation_voltage(void) const
 {
-  return get_current_value();
+  return _boundary_value;
 }
 
 
@@ -221,6 +238,26 @@ ElectricalContact::set_zero_derivative_bc(DriftDiffusionDefs::Variable variable)
 {
   set_type(variable, ElectricalContact::NEUMANN);
 }
+
+
+
+inline
+void
+ElectricalContact::set_variable_value(double value, ID id)
+{
+  ignore_unused_variable(id);
+  set_simulation_voltage(value);
+}
+
+
+inline
+double
+ElectricalContact::get_variable_value(ID id)
+{
+  ignore_unused_variable(id);
+  return get_simulation_voltage();
+}
+
 
 
 #endif // _ELECTRICALCONTACT_H_

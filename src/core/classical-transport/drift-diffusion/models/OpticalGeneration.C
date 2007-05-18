@@ -1,9 +1,10 @@
+// $Id$
+
 #include "OpticalGeneration.h"
-#include "DriftDiffusionProperties.h"
 #include "Material.h"
 
 
-#include <typeinfo>
+#include <string>
 
 
 
@@ -15,8 +16,13 @@ TIBER_MODULE(OpticalGeneration, optical)
 void
 OpticalGeneration::do_init(void)
 {
-  G_ = get_options().get_option("G", 1e-10);
-  G_ = get_material()->get_options().get_option("G", G_);
+  // G is a sweepable value, so check it!
+  std::string g_str(get_options().get_option("G", ""));
+  g_str = get_material()->get_options().get_option("G", g_str);
+  G_ = check_and_register(g_str, G_);
+  
+  //G_ = get_options().get_option("G", G_);
+  //G_ = get_material()->get_options().get_option("G", G_);
 }
 
 void
