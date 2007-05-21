@@ -612,7 +612,8 @@ DriftDiffusion::do_solve(void)
       break;
   }
 
-  if (quasi_equilibrium)
+  //if (quasi_equilibrium)
+  if (0)
   {
     cerr << "switching on continuity eq..." << endl;
     opts.delete_option("quasi_equilibrium");
