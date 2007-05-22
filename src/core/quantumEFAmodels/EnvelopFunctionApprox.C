@@ -23,7 +23,9 @@ Device*   EnvelopFunctionApprox:: _device;
 void EnvelopFunctionApprox::build_integrated_quantities (const std::set< std::string > &names, std::vector< double > &values)
 {
   const set<string>::const_iterator varend(names.end());
+  values.resize(0);
   
+
   if (names.find("EigenEnergy") != varend)
   {
     unsigned int n = solution.size();
@@ -31,6 +33,18 @@ void EnvelopFunctionApprox::build_integrated_quantities (const std::set< std::st
     for (unsigned int i = 0; i < n; i++)
     {
       values[i] = solution[i].eigen_energy;
+    }
+  }
+
+
+  if (names.find("Occupation") != varend)
+  {
+    unsigned int n = solution.size();
+    unsigned int m = values.size();
+    values.resize(n + m);
+    for (unsigned int i = 0; i < n; i++)
+    {
+      values[i + m] = Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy,opt.Temperature);
     }
   }
 
@@ -43,6 +57,8 @@ void EnvelopFunctionApprox::build_integrated_quantities_description (const std::
 							 std::vector< std::string > &description)
 {
 
+  legend.resize(0);
+
   const set<string>::const_iterator varend(names.end());
   if (names.find("EigenEnergy") != varend)
   {
@@ -53,7 +69,7 @@ void EnvelopFunctionApprox::build_integrated_quantities_description (const std::
 
 
       ostringstream temp;
-      temp << i + 1;
+      temp << i ;
       legend[i] = temp.str();
     }
   }
@@ -61,6 +77,21 @@ void EnvelopFunctionApprox::build_integrated_quantities_description (const std::
   description.resize(1);
   description[0] = "Eigen energy [eV]";
   
+  if (names.find("Occupation") != varend)
+  {
+    unsigned int n = solution.size();
+    unsigned int m = legend.size();
+    legend.resize(m + n);
+    for (unsigned int i = 0; i < n; i++)
+    {
+      ostringstream temp;
+      temp << i ;
+      legend[i+m] =  temp.str() ;
+    }
+
+    description.push_back("Occupation Probability");
+
+  }  
   
 
 }

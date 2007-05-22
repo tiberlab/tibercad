@@ -175,6 +175,9 @@ void OpticsKP::do_solve()
   unsigned int n2 =  _final_eigen_state_numbers.size();
   std::vector< std::vector <std::vector <  Complex  >  >  >   P_matrix;
   get_P_matrix_elements(P_matrix);
+
+ 
+
   std::ostringstream os3;
   os3 << "output/optics.out";
 	  
