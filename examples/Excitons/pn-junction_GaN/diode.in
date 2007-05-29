@@ -6,9 +6,9 @@ $Device
    {
      reg_numb = 1
      structure = wz
-     #x-growth-direction = (1,0,-1,0)
-     #y-growth-direction = (-1,2,-1,0)
-     #z-growth-direction = (0,0,0,1)
+     z-growth-direction = (1,0,-1,0)
+     x-growth-direction = (-1,2,-1,0)
+     y-growth-direction = (0,0,0,1)
      mat = GaN
      doping = 1e18 doping_type = donor doping_level = 0.025
    }
@@ -17,9 +17,9 @@ $Device
    {
      reg_numb = 2
      structure = wz
-     #x-growth-direction = (1,0,-1,0)
-     #y-growth-direction = (-1,2,-1,0)
-     #z-growth-direction = (0,0,0,1)
+     z-growth-direction = (1,0,-1,0)
+     x-growth-direction = (-1,2,-1,0)
+     y-growth-direction = (0,0,0,1)
      mat = GaN
      doping = 5e17 doping_type = acceptor doping_level = 0.17 g = 4
    }
@@ -42,7 +42,7 @@ $Models
 
     physical_model recombination
     {
-      model = SRH
+      model = srh
     }
 
     physical_model recombination
@@ -51,17 +51,17 @@ $Models
       C = 1.1e-8
     }
 
-    physical_model recombination
-    {
-      model = exciton_generation
-      C = 2e-7
-    }
+#    physical_model recombination
+#    {
+#      model = exciton_generation
+#      C = 2e-7
+#    }
 
-    physical_model recombination
-    {
-      model = exciton_dissociation
-      exciton_simulation = excitons
-    }
+#    physical_model recombination
+#    {
+#      model = exciton_dissociation
+#      exciton_simulation = excitons
+#    }
 
 
 
@@ -83,15 +83,15 @@ $Models
       {
         BC_reg_numb = 2
         type = ohmic
-	zero_grad_fermi_e = true
-	voltage = 0.0
+	#zero_grad_fermi_e = true
+	voltage = @Vb[0]
       }
 
       BC_Region cathode
       {
         BC_reg_numb = 1
         type = ohmic
-	zero_grad_fermi_h = true
+	#zero_grad_fermi_h = true
       }
  
     }   
@@ -99,14 +99,14 @@ $Models
   }  
 
 
-  model excitontransport
-  {
-    options
-    {
-     simulation_name = excitons
-
-     physical_regions = all
-    }
+#  model excitontransport
+#  {
+#    options
+#    {
+#     simulation_name = excitons
+#
+#     physical_regions = all
+#    }
 
   }
 
@@ -118,9 +118,10 @@ $Solver
 {
   driftdiffusion
   {
-    nonlin_max_it = 50
+    nonlin_max_it = 30
     nonlin_abs_tol = 1e-7
-    ksp_type = gmres
+    nonlin_step_tol = 1e-2
+    ksp_type = bcgsl
     pc_type = composite
     ls_max_step = 0.05
     #current_integration_method = rstf
@@ -137,18 +138,18 @@ $Solver
   sweep
   {
     #simulation = (driftdiffusion, excitontransport)
-    simulation = selfconsistent
-    boundary = driftdiffusion.anode
-    start = 1.5
-    stop = 3.5
+    simulation = driftdiffusion
+    variable = Vb
+    start = 0.0
+    stop = 4.0
     steps = 40
     plotvariable = current
   }
 
-  selfconsistent
-  {
-    simulations = (driftdiffusion, excitontransport)
-  }
+#  selfconsistent
+#  {
+#    simulations = (driftdiffusion, excitontransport)
+#  }
 }
 
 
@@ -183,7 +184,7 @@ $Simulation
 {
   searchpath = ../../materials
   meshfile = diode2D_mdr.grd
-  mesh_units = 1e-7
+  mesh_units = 1e-6
   dimension = 2
   temperature = 300
   solve = sweep

@@ -35,6 +35,7 @@ run: all
 	@[ -d output ] || mkdir output
 	@perl -i -p -e 's/^\s*dimension\s*=.*/  dimension = $(DIM)/' diode.in
 	@perl -i -p -e 's/^\s*meshfile\s*=.*/  meshfile = $(meshfile)/' diode.in
+	@perl -i -p -e 's/^\s*resultpath\s*=.*/  resultpath = output_$(DIM)D/' diode.in
 	@./tibercad diode.in
 
 
@@ -43,7 +44,7 @@ clean:
 
 distclean: clean
 	@rm -f *.msh *.gmv* 
-	@rm -rf output tibercad
+	@rm -rf output_*D tibercad
 
 
 include $(topdir)/Make.rules

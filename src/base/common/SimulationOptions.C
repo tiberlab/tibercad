@@ -12,3 +12,5 @@ SimulationOptions::temp = temperature;
 double&
 SimulationOptions::T = temperature;
 
+bool
+SimulationOptions::incomplete_ionization = false;

@@ -269,10 +269,6 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     double get_relaxation_factor(void) const;
 
     
-    //! Get a pointer to the solution vector
-    NumericVector<double>& get_solution_vector(void);
-
-    
     /*!
      * \copydoc build_nodal_results()
      *
@@ -428,6 +424,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * the same way!
      */
     virtual ID do_remember_current_solution(ID id = 0);
+
+    
+    //! Get a pointer to the solution vector
+    virtual NumericVector<double>& get_solution_vector(void);
 
 
     //! Set to the remembered solution number \c id

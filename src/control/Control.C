@@ -129,7 +129,13 @@ Control::create_device(void)
   _database->set_search_path(opts.get_option("searchpath", "."));
   opts.delete_option("searchpath");
 
+  // the simulation temperature
   SimulationOptions::temperature = opts.get_option("temperature", 300.0);
+
+  // incomplete or complete ionization of dopants
+  SimulationOptions::incomplete_ionization =
+    opts.get_option("incomplete_ionization", true);
+
 
   //! read the variables we want to plot
   vector<string> vars;
@@ -350,6 +356,15 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     {
       Material* mat = device.get_material(*it);
 
+      if (mat == NULL)
+      {
+        ostringstream s;
+        s << "Control: physical region " << *it <<
+          " has no material associated!";
+        throw InitFailedException(s.str());
+      }
+
+
       // here we actually create the model
       PhysicalModel* model = sim->create_physical_model(physopts);
 
@@ -423,8 +438,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   // 
 
   // first selfconsistency
-  parser.read_parameters("Solver", "selfconsistent");
-  const ModelOptions& solveropts = parser.read_parameters("Solver", "selfconsistent");
+  const ModelOptions& solveropts =
+    parser.read_parameters("Solver", "selfconsistent");
   if (!solveropts.is_empty())
   {
     SimulationInterface* sim =
@@ -435,7 +450,6 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
 
   // then sweep
-  parser.read_parameters("Solver", "sweep");
   const ModelOptions& sweepopts = parser.read_parameters("Solver", "sweep");
   if (!solveropts.is_empty())
   {

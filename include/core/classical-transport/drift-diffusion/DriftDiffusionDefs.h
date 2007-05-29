@@ -21,7 +21,8 @@ namespace DriftDiffusionDefs
     CURRENTS = 0x06,
     ELECTRONS = 0x02,
     HOLES = 0x04,
-    BOTH = 0x06
+    BOTH = 0x06,
+    EQUILIBRIUM = 0x10
   };
 
   //! The known basic Generation/Recombination processes
@@ -37,7 +38,9 @@ namespace DriftDiffusionDefs
   {
     POTENTIAL = 0, //< electrical potential
     FERMIE    = 1, //< electron electro-chemical potential
-    FERMIH    = 2  //< hole electro-chemical potential
+    FERMIH    = 2, //< hole electro-chemical potential
+    DENSE     = 3, //< electron density
+    DENSH     = 4, //< hole density
   };
 
 }

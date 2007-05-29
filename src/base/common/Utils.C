@@ -7,12 +7,20 @@
 
 #include "Utils.h"
 
+//#include "enum_solver_type.h"
+//#include "enum_preconditioner_type.h"
+
 #include <cctype>
 #include <iostream>
 
 
 using namespace std;
 
+//template<>
+//SolverType
+//Utils::convert<SolverType>(const string& val)
+//{
+//}
 
 string
 Utils::extract_typename(const type_info& info)
@@ -33,64 +41,6 @@ template <typename T>
 void
 Utils::extract_vector(const string& input, vector<T>& vec)
 {
-/*
-  typedef boost::tokenizer<boost::escaped_list_separator<char> > tokenizer;
-  boost::escaped_list_separator<char> sep;
-
-  string in(input);
-  boost::algorithm::trim(in);
-  unsigned int len = in.size();
-  char stop = '0';
-  
-  vec.resize(0);
-  // if the string is empty, we return immediately
-  if (len == 0)
-    return;
-  
-  switch (in[0])
-  {
-    case '(':
-      stop = ')';
-      break;
-    case '[':
-      stop = ']';
-      break;
-    case '{':
-      stop = '}';
-      break;
-  }
-
-  if (stop == '0') 
-  {
-    vec.resize(1);
-    vec[0] = Utils::convert<T>(in);
-  }
-  else
-  {
-    // do a sanity check: vector has to finish with 'stop' symbol
-    if (in[len - 1] != stop)
-      return;
-
-      string match(in, 1, len - 2);
-
-      // cut the matched string into tokens
-      tokenizer tokens(match, sep);
-
-      tokenizer::iterator it = tokens.begin();
-      const tokenizer::iterator end = tokens.end();
-
-      // we resize the vector and fill in the found values
-      for ( ; it != end; ++it)
-      {
-        // strip spaces from both ends
-        string s(*it);
-        boost::algorithm::trim(s);
-
-        vec.push_back(Utils::convert<T>(s));
-      }
-  }
-*/
-
   // the regexp to match the vector
   static const boost::regex regexp("[[:space:]]*?(?:(\\()|(\\[)|(\\{)|\\<){1}\
 (.*)(?(1)\\)|(?(2)\\]|(?(3)\\}|\\>))){1}[[:space:]]*?");

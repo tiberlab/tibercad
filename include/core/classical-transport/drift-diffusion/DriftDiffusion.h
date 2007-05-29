@@ -14,15 +14,9 @@
 // Libmesh includes
 #include "libmesh_common.h"
 #include "enum_order.h"
+#include "enum_solver_type.h"
+#include "enum_preconditioner_type.h"
 
-// PETSc include
-#ifndef USE_COMPLEX_NUMBERS
-extern "C" {
-# include <petscksp.h>
-}
-#else
-# include <petscksp.h>
-#endif
 
 // C++ includes
 #include <vector>
@@ -45,8 +39,7 @@ template<typename T> class DenseMatrix;
 template<typename T> class NumericVector;
 template<typename T> class SparseMatrix;
 
-template<typename T> class TiberPetscNonlinearSolver;
-template<typename T> class NonlinearSolver;
+template<typename T> class TiberPetscLinearSolver;
 
 
 //! The main class to perform standard drift-diffusion calculations
@@ -281,7 +274,7 @@ class DriftDiffusion : public SimulationInterface
          * Usually \c KSPBCGS or \c KSPBCGSL seem to be the most stable
          * solver types
          */
-        KSPType ksp_type;
+        SolverType ksp_type;
 
         //! The preconditioner (PC)
         /*!
@@ -295,7 +288,7 @@ class DriftDiffusion : public SimulationInterface
          * there are problems with zero pivot values. In this case, the use of
          * \c PCJACOBI can solve it.
          */
-        PCType pc_type;
+        PreconditionerType pc_type;
 
       private:
 
@@ -402,25 +395,6 @@ class DriftDiffusion : public SimulationInterface
 
       private:
         
-        /**
-         * The maximum electron density
-         */
-        double n_max;
-        
-        /**
-         * The maximum hole density
-         */
-        double p_max;
-
-        /**
-         * The density scaling factor for the electron current equation
-         */
-        double C0_e;
-
-        /**
-         * The density scaling factor for the hole current equation
-         */
-        double C0_h;
 
         friend class DriftDiffusion;
     };
@@ -630,6 +604,10 @@ class DriftDiffusion : public SimulationInterface
     /*! \copydoc SimulationInterface::parse_options() */
     virtual void parse_options(void);
 
+    
+    /*! \copydoc SimulationInterface::get_solution_vector() */
+    virtual NumericVector<double>& get_solution_vector(void);
+    
 
     /*! \copydoc SimulationInterface::build_nodal_results() */
     virtual void build_nodal_results(const std::set<std::string>& variables,
@@ -666,7 +644,6 @@ class DriftDiffusion : public SimulationInterface
     // for nicer code
     typedef std::map<const Boundary*, double> ContactData;
     typedef std::map<const Node*, Boundary*> BoundaryNodeList;
-    typedef TiberPetscNonlinearSolver<Real> SolverClass;
 
     //! A static reference to \c this
     /*!
@@ -747,13 +724,6 @@ class DriftDiffusion : public SimulationInterface
     void parse_const_options(void);
   
     
-    //! Set the options for the PETSc solver as given in @c SolverParameters
-    /*!
-     * This method needs correctly calculated scaling parameters, so
-     * compute_scaling() has to be called first.
-     */
-    void set_solver_params(NonlinearSolver<Number>& solver);
-
     
     //! Rebuild the equation system if needed
     void rebuild_equation_system(void);
@@ -779,7 +749,11 @@ class DriftDiffusion : public SimulationInterface
      */
     void reset_solver(void);
 
+
+    //! Sets the Dirichlet type boundary conditions
+    void set_dirichlet_bc(void);
     
+
     //! Cleanup solver environment.
     /*!
      * Deletes the \p EquationSystems object, the simulation voltages
@@ -792,8 +766,11 @@ class DriftDiffusion : public SimulationInterface
     void solve_newton(void);
 
     //! Solve using an iterative Gummel scheme
-    void solve_gummel(void) throw (PetscRuntimeError);
+    void solve_gummel(void);
 
+
+    //! Do a Newton type iteration
+    void do_newton(void);
 
     //! Calculate terminal currents
     /*!
@@ -881,79 +858,27 @@ class DriftDiffusion : public SimulationInterface
 
 
 
-
-    //! Assemble the residual vector
+    //! Assemble the residual vector or the jacobian matrix
     /*!
      * This method gets called from the underlying nonlinear solver
      * library. It calls the real assembly routines.
      */
-    static void assemble_residual(const NumericVector<Number>& x,
-        NumericVector<Number>& residual);
+    static void assemble_system(const NumericVector<Number>& x,
+        NumericVector<Number>* residual,
+        SparseMatrix<Number>* jacobian);
 
-    
-    //! Assemble the jacobian matrix
-    /*!
-     * This method gets called from the underlying nonlinear solver
-     * library. It calls the real assembly routines.
-     */
-    static void assemble_jacobian(const NumericVector<Number>& x,
-        SparseMatrix<Number>& jacobian);
 
-    
-    //! Assembles the residual vector
+    //! Assembles the residual vector or the jacobian matrix
     /*!
-     * Assembles the residual vector for
+     * Assembles the residual vector or the jacobian matrix for
      * the equation system with @c Coupling T.
      *
      * This implementation uses standard FEM.
      */
     template <int T>
-    void do_assembly_residual(const NumericVector<Number>& x,
-        NumericVector<Number>& residual);
-
-
-    //! Assemble the jacobian matrix
-    /*!
-     * Assembles the jacobian matrix for
-     * the equation system with @c Coupling T.
-     *
-     * This implementation uses standard FEM.
-     */
-    template <int T>
-    void do_assembly_jacobian(const NumericVector<Number>& x,
-        SparseMatrix<Number>& jacobian);
- 
-   
-    //! Assembles the residual vector for 1D
-    /*!
-     * Assembles the residual vector for
-     * the equation system with @c Coupling T.
-     *
-     * This implementation is for 1D only and implements the 
-     * Box Integration Method.
-     */
-    template <int T>
-    void do_assembly_residual_box1D(const NumericVector<Number>& x,
-        NumericVector<Number>& residual);
-    template <int T>
-    void do_assembly_residual_box1D_SG(const NumericVector<Number>& x,
-        NumericVector<Number>& residual);
-
- 
-    //! Assembles the jacobian matrix for 1D
-    /*!
-     * Assembles the jacobian matrix for
-     * the equation system with @c Coupling T.
-     *
-     * This implementation is for 1D only and implements the 
-     * Box Integration Method.
-     */
-    template <int T>
-    void do_assembly_jacobian_box1D(const NumericVector<Number>& x,
-        SparseMatrix<Number>& jacobian);
-    template <int T>
-    void do_assembly_jacobian_box1D_SG(const NumericVector<Number>& x,
-        SparseMatrix<Number>& jacobian);
+    void do_assembly(const NumericVector<Number>& x,
+        NumericVector<Number>* residual,
+        SparseMatrix<Number>* jacobian);
 
 
 };

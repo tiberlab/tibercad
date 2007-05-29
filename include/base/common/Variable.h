@@ -99,13 +99,11 @@ class Variable
 
 
     //! Set the value of variable with ID \c id
-    //virtual void set_variable_value(double value, ID id = 0) = 0;
-    virtual void set_variable_value(double value, ID id = 0) {};
+    virtual void set_variable_value(double value, ID id = 0) = 0;
 
 
     //! Get the value of variable with ID \c id
-    //virtual double get_variable_value(ID id = 0) = 0;
-    virtual double get_variable_value(ID id = 0) {};
+    virtual double get_variable_value(ID id = 0) = 0;
 
 
 

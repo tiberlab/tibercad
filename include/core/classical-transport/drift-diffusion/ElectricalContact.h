@@ -56,7 +56,7 @@ class ElectricalContact : public BoundaryProperties, public Variable
      * The material reference is needed to compute parameters of the boundary
      * condition
      */
-    void set_material(const DriftDiffusionProperties *properties);
+    void set_material(DriftDiffusionProperties *properties);
     
     //! Get the type of boundary condition for \c variable
     BCType get_type(DriftDiffusionDefs::Variable variable) const;
@@ -99,7 +99,7 @@ class ElectricalContact : public BoundaryProperties, public Variable
         BCType type);
 
     //! Get a reference to the Drift-Diffusion properties
-    const DriftDiffusionProperties& get_material(void) const;
+    DriftDiffusionProperties& get_material(void);
 
     /*! \copydoc BoundaryProperties::do_init() */
     virtual void do_init(void);
@@ -109,7 +109,7 @@ class ElectricalContact : public BoundaryProperties, public Variable
     virtual void set_variable_value(double value, ID id = 0);
 
 
-    /*! \copydoc Variable::set_variable_value() */
+    /*! \copydoc Variable::get_variable_value() */
     virtual double get_variable_value(ID id = 0);
 
 
@@ -125,7 +125,7 @@ class ElectricalContact : public BoundaryProperties, public Variable
     
 
     // A pointer to the DriftDiffusionProperties object
-    const DriftDiffusionProperties *_properties;
+    DriftDiffusionProperties *_properties;
 };
 
 
@@ -161,14 +161,14 @@ ElectricalContact::get_simulation_voltage(void) const
 
 inline
 void
-ElectricalContact::set_material(const DriftDiffusionProperties *properties)
+ElectricalContact::set_material(DriftDiffusionProperties *properties)
 {
   _properties = properties;
 }
 
 inline
-const DriftDiffusionProperties&
-ElectricalContact::get_material(void) const
+DriftDiffusionProperties&
+ElectricalContact::get_material(void)
 {
   return *_properties;
 }

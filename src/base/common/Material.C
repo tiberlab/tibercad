@@ -6,16 +6,10 @@
 #include "RotatedCrystal.h"
 #include "Dopant.h"
 
-/*
-  clear_doping();
-  const_dopant_iterator dop_it(mod->_donors.begin());
-  const const_dopant_iterator dop_end(mod->_donors.end());
-  for ( ; dop_it != dop_end; ++dop_it)
-    add_dopant(new Dopant(**dop_it));
-*/
 
 Database*
 Material::_database;
+
 
 
 Material::~Material(void)

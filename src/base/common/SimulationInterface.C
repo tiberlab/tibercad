@@ -101,7 +101,6 @@ SimulationInterface::create(const string& type,
       sim = QuantumDispersion::create();
     else if (type == "tunnelingcurrent")
       sim = TunnelingCurrent::create();
-
   }
 
   if (sim != NULL)
@@ -393,7 +392,7 @@ SimulationInterface::do_plot(void)
   string suff;
   if (format == "gmv")
     suff = ".gmv";
-  else if (format == "ise")
+  else if (format == "tecplot")
     suff = ".plt";
   else if (format == "grace")
     suff = ".dat";

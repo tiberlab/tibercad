@@ -80,7 +80,7 @@ class OpticalGeneration : public RecombinationModelInterface, public Variable
 
 inline
 OpticalGeneration::OpticalGeneration(void)
-  : G_(1e-10)
+  : G_(0.0)
 {
 }
 

@@ -20,9 +20,6 @@ OpticalGeneration::do_init(void)
   std::string g_str(get_options().get_option("G", ""));
   g_str = get_material()->get_options().get_option("G", g_str);
   G_ = check_and_register(g_str, G_);
-  
-  //G_ = get_options().get_option("G", G_);
-  //G_ = get_material()->get_options().get_option("G", G_);
 }
 
 void

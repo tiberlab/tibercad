@@ -14,6 +14,11 @@ class SimulationOptions
     static double& temp;
     static double& T;
 
+
+    //! Wheter or not to consider incomplete ionization
+    static bool incomplete_ionization;
+
+
   private:
     
     SimulationOptions(void) {};

@@ -3,11 +3,11 @@
 #ifndef _TIBERPETSCNONLINEARSOLVER_H_
 #define _TIBERPETSCNONLINEARSOLVER_H_
 
-// C++ includes
+#include "PetscRuntimeError.h"
+
 
 // Libmesh includes
 #include "nonlinear_solver.h"
-#include "PetscRuntimeError.h"
 #include "KSPDivergedError.h"
 #include "SNESDivergedError.h"
 
@@ -32,6 +32,7 @@ template <typename T>
 class TiberPetscNonlinearSolver : public NonlinearSolver<T>
 {
   public:
+
     //! Constructor. Initializes Petsc data structures
     TiberPetscNonlinearSolver(void) throw (PetscRuntimeError);
 

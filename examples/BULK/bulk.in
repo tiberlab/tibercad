@@ -6,6 +6,7 @@ $Device
    {
      reg_numb = 1
      mat = Si
+     #structure = wz
      doping = 1e16 doping_type = donor
    }
 }
@@ -20,9 +21,14 @@ $Models
               
     options
     {
-     simulation_name = dd
+     simulation_name = driftdiffusion
 
      physical_regions = all
+    }
+
+    physical_model recombination
+    {
+      model = srh
     }
 
 
@@ -32,8 +38,7 @@ $Models
       {
         BC_reg_numb = 2
         type = ohmic
-        barrier_height = 0.8
-        voltage = 0.5
+        voltage = @Vb[0.9]
       }
 
       BC_Region cathode
@@ -56,15 +61,24 @@ $Solver
   driftdiffusion
   {
     ksp_type = gmres
-    nonlin_max_it = 50
-    current_integration_method = rstf
+    #ksp_type = preonly
+    nonlin_max_it = 20
+    #lin_max_it = 10
+    #lin_abs_tol = 1e-9
+    nonlin_abs_tol = 1e-12
+    nonlin_step_tol = 1e-3
+    ls_max_step = 0.0
+    pc_type = ilu
+    local_density_scaling = true
+    #current_integration_method = surfint
+    #relaxation_factor = 0.5
   }
 
 
   sweep
   {
-    simulation = dd
-    boundary = dd.anode
+    simulation = driftdiffusion
+    variable = Vb
     start = 0.0
     stop = 1.0
     steps = 10
@@ -95,11 +109,18 @@ $Simulation
   meshfile = bulk1D.msh
   dimension = 1
   temperature = 300
+  #solve = driftdiffusion
   solve = sweep
   resultpath = output_1D
+  #output_format = grace
   output_format = gmv
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, eCurrent,  NetRecombination)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, current)
 }
+
+
+
+
+
 
 
 
