@@ -30,20 +30,24 @@ public:
 
 
   //!provides conductivity in simulation system W/(cm K)
-  inline void get_conductivity(Tensor2Sym& conductivity) const; 
+   void get_conductivity(Tensor2Sym& conductivity) const; 
 
   //Temperature
 
-  double temperature;
+  void set_temperature(double temperature);
      
-   virtual void update_tensor(void)=0;
+  virtual void update_tensor(void)=0;
 
 
 private:
 
+
  
 
 protected:
+
+  //! Temperature
+   double _temperature;
 
   virtual void do_init (void)=0;
 
@@ -60,18 +64,23 @@ protected:
   //!conductivity tensor in simulation system. Units W/(cm K)
   Tensor2Sym _conductivity;
 
-
   //!rotates conductivity into the simulation system
- inline void rotate_to_calculation_system(const Tensor2Gen& RotMatrix);
+   void rotate_to_calculation_system(const Tensor2Gen& RotMatrix);
 
 };
 
-void  LatticeThermalConductivity::get_conductivity(Tensor2Sym& conductivity) const
+
+
+inline
+void
+LatticeThermalConductivity::get_conductivity(Tensor2Sym& conductivity) const
 {
    conductivity = _conductivity;
 }
 
- void LatticeThermalConductivity::rotate_to_calculation_system(const Tensor2Gen& RotMatrix)
+inline
+void 
+LatticeThermalConductivity::rotate_to_calculation_system(const Tensor2Gen& RotMatrix)
 {
 
   // generates conductivity matrix in calculation system
@@ -80,6 +89,13 @@ void  LatticeThermalConductivity::get_conductivity(Tensor2Sym& conductivity) con
 
 }
 
+
+inline
+void
+LatticeThermalConductivity::set_temperature(double temperature)
+{
+  _temperature = temperature;
+}
 
 
 #endif

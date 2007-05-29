@@ -8,6 +8,7 @@
 
 #include "SimulationInterface.h"
 
+#include "HeatModel.h"
 #include "linear_implicit_system.h"
 class DriftDiffusion;
 class Device;
@@ -40,10 +41,10 @@ class MacroHeatBalance : public SimulationInterface
   };
 
   //!Get a avarage temperature for a given element  
-  void get_temperature_element(const Elem* elem,double& T) const;
+  double get_temperature_element(const Elem* elem) const;
 
-  //!Get a avarage temperature for a given node
-  void get_temperature_node(const Elem* elem,std::vector<double>& T) const; 
+  //!Get a temperature for all nodes of a given element
+  std::vector<double> get_temperature_node(const Elem* elem);
 
   //!Constructor
   MacroHeatBalance();
@@ -69,7 +70,20 @@ class MacroHeatBalance : public SimulationInterface
   
  private:
   
+ 
+
+
+   //! Quadrature point along the face of the element 
+  const std::vector<Point> qface_point;
+
+  //! A pointer to heat simulation
+  MacroHeatBalance* _heat_simul;
+
   EquationSystems * 	equation_systems;
+  
+  HeatModel* heat_model; 
+
+  void init_heat_model(const Elem* elem);
 
 
   std::string system_name;
@@ -80,9 +94,6 @@ class MacroHeatBalance : public SimulationInterface
   virtual void 	build_nodal_results(const std::set< std::string > &variables, 
 				     std::vector< double > &results, 
 				     std::vector< std::string > &legend);
-
-  //! Pointer to a DriftDiffusion simulation
-  DriftDiffusion* _dd_simul;
 
   
   static MacroHeatBalance* static_this;

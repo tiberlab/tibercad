@@ -2,7 +2,7 @@
 #include "Material.h"
 #include "RotatedCrystal.h" 
 #include "tensor.h"
-using namespace std;
+
 
 
 //-------------------------------------------------------------------------//
@@ -34,11 +34,3 @@ void LatticeThermalConductivity::calculate_VCA (const PhysicalModelInterface *co
    rotate_to_calculation_system(cr.RotMatrix);
 }
 
-//-------------------------------------------------------------------------//
-
-
-
-
-
-
-//-------------------------------------------------------------------------//

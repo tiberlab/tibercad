@@ -1,4 +1,6 @@
  #include "Reservoir.h"
+ #include "SimulationOptions.h"
+
 
 
 //===================================================================================//
@@ -6,6 +8,7 @@ Reservoir::Reservoir()
 {
   
   set_type(ThermalContact::Reservoir);
+
 }
 
 
@@ -13,9 +16,11 @@ Reservoir::Reservoir()
  //===================================================================================//
 void Reservoir::do_init()
 {
-  const ModelOptions& options =	get_options ();
+ 
+  std::string s(get_options().get_option("Temperature", ""));
 
-  _temperature=options.get_option("Temperature",300.0);
-  
+  //Insert the default written in the input file or the temperature of th simulation
+  set_temperature(check_and_register(s, SimulationOptions::temperature));
+
 
 }

@@ -40,7 +40,7 @@ void ZbLatticeThermalConductivity::do_init(void)
 {
 
    const ModelOptions& options = get_options();
-  double k;
+   double k;
 
   if (_kappa_model != "constant")
 
@@ -51,7 +51,7 @@ void ZbLatticeThermalConductivity::do_init(void)
    _kappa_b = options.get_option("therm_lat_cond_b", _kappa_b);
    _kappa_c = options.get_option("therm_lat_cond_c", _kappa_c);
 
-   k = 1.0 / (_kappa_a + _kappa_b * temperature +  _kappa_c * temperature * temperature );
+   k = 1.0 / (_kappa_a + _kappa_b * _temperature +  _kappa_c * _temperature * _temperature );
 
   }
   else
@@ -79,7 +79,7 @@ void ZbLatticeThermalConductivity::update_tensor(void)
   if (_kappa_model != "constant")
   {
        
-   k = 1.0 / (_kappa_a + _kappa_b * temperature +  _kappa_c * temperature * temperature );
+   k = 1.0 / (_kappa_a + _kappa_b * _temperature +  _kappa_c * _temperature * _temperature );
   
    _conductivity(1,1) = k;
    _conductivity(2,2) = k;

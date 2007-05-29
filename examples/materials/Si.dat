@@ -59,6 +59,6 @@ therm_lat_cond_c = 1.65e-6   #[(cm)/(W K)]
 
 
 
-#Thermoelectric power [mV/k]
-eTEpower = -100
-hTEpower = 100
+#Thermoelectric power [V/k]
+eTEpower = -0.001
+hTEpower = 0.001

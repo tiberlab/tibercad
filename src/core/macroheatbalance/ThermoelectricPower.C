@@ -2,6 +2,7 @@
 #include "getpot.h"
 #include "Material.h"
 #include "Database.h"
+#include "Constants.h"
 
 
 
@@ -37,12 +38,24 @@ void  ThermoelectricPower::calculate_VCA (const PhysicalModelInterface *comp_A,
 //--------------------------------------------------------//
 void  ThermoelectricPower::read_database(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
 
-  _eTEpower = data("eTEpower", 0.0);
-  _hTEpower = data("hTEpower", 0.0); 
+  const ModelOptions& options = get_options();
+  _TEmodel = options.get_option("model","constant");
 
+   
+  //std::cout<<std::endl;
+  // std::cout<<_TEmodel<<std::endl;
+  // std::cout<<std::endl;
+
+  if  (_TEmodel == "constant")
+  {
+    const Material* mat = get_material();
+    GetPot data((mat->get_database()).get_data_file());
+    
+    _eTEpower = data("eTEpower", 0.0);
+    _hTEpower = data("hTEpower", 0.0); 
+
+  }	
   
 }
 
@@ -50,49 +63,45 @@ void  ThermoelectricPower::read_database(void)
 
 void ThermoelectricPower::do_init(void)
 {
-  ModelOptions & options = get_options ();
-  _eTEpower = options.get_option("eTEpower", _eTEpower );
-  _hTEpower = options.get_option("hTEpower", _hTEpower );
 
-
-  if (_eTEpower = 0.0)
+     
+  if (_TEmodel=="constant")
   {
-    _eTEmodel = "variable";    
+    
+    ModelOptions& options = get_options ();
+    
+    _eTEpower = options.get_option("eTEpower", _eTEpower );
+    
+    _hTEpower = options.get_option("hTEpower", _hTEpower );
+    
+  }
+  else if  (_TEmodel.compare("diffusivity_model") == 0 ) 
+  {
+    
+    _eTEpower = - Constants::k_B * (5.0 / 2.0 + _e_mobility_term +  (_eQfermi +  _Ec) / (Constants::k_B * _Tloc)   );
+    
+    _hTEpower =  Constants::k_B * (5.0 / 2.0 + _h_mobility_term -  (_hQfermi + _Ev) / (Constants::k_B * _Tloc)  );
+
+
+  }
+  else
+  {
+
+
+  throw InitFailedException("Unrecongnition the thermoelectric power model:  " + _TEmodel);
+  
+
+  } 
+
  
-    _eTEpower = - KfracQ * (5.0 / 2.0 + _e_mobility_term +  _eQfermi +  _Ec   );
-  }
-  else
-  {
-    _eTEpower *= 0.001;
-  }
-
-  if (_hTEpower = 0.0)
-  {
-    _hTEmodel = "variable";
-
-    _hTEpower = + KfracQ * (5.0 / 2.0 + _h_mobility_term -  _hQfermi - _Ev   );
-  }
-  else
-  {
-    _hTEpower *= 0.001;
-  }
-
   
 }
 
-void ThermoelectricPower::update_tensor(void)
+void ThermoelectricPower::re_init(void)
 {
  
+  this->do_init();
  
-  if ( _eTEmodel != "constant")
-  {
-    _eTEpower = - KfracQ * (5.0 / 2.0 + _e_mobility_term + (- _eQfermi - _Ec )  );
-  }
-
-  if ( _hTEmodel != "constant")
-  {
-    _hTEpower = + KfracQ * (5.0 / 2.0 + _h_mobility_term + (-  _hQfermi - _Ev )  );
-  }
 
   
 }

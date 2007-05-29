@@ -40,7 +40,7 @@ class ElectricalContact : public BoundaryProperties, public Variable
       DIRICHLET, /*!< Dirichlet type BC */
       NEUMANN,   /*!< von Neumann type BC */
       MIXED,     /*!< mixed type BC */
-      //! pinning of electro-chemical potential with respect to
+      //! pinning of electro-chemical potential with respect to 
       //! the conduction band edge
       PINNING    
     };

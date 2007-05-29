@@ -40,6 +40,7 @@ class Node;
 class EquationSystems;
 class NonlinearImplicitSystem;
 
+
 template<typename T> class DenseMatrix;
 template<typename T> class NumericVector;
 template<typename T> class SparseMatrix;
@@ -58,7 +59,7 @@ template<typename T> class NonlinearSolver;
  * -\nabla(\mu_p p\nabla\phi_p) & = & R
  * \f}
  * using appropriate models for the ionization of dopants, polarization,
- * mobilities and recombinations.
+cre* mobilities and recombinations.
  * 
  */
 class DriftDiffusion : public SimulationInterface
@@ -596,6 +597,10 @@ class DriftDiffusion : public SimulationInterface
       get_boundary_currents(void) const;
 
 
+    double get_electrons_thermoelectric_power(const Elem* elem);
+
+    double get_holes_thermoelectric_power(const Elem* elem);
+
 
 
   protected:
@@ -655,6 +660,8 @@ class DriftDiffusion : public SimulationInterface
 
 
   private:
+   
+
 
     // for nicer code
     typedef std::map<const Boundary*, double> ContactData;

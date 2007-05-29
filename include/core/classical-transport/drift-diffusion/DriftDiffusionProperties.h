@@ -26,7 +26,7 @@
 #include <gsl/gsl_sf_fermi_dirac.h>
 
 #include <float.h>
-
+#include <MacroHeatBalance.h>
 #include <vector>
 #include <set>
 #include <map>
@@ -39,6 +39,9 @@ class Dopant;
 class RecombinationModelInterface;
 class MobilityModelInterface;
 class ThermoelectricPower;
+class MacroHeatBalance;
+
+
 
 //! The base class for all drift-diffusion related semiconductor models
 /*!
@@ -469,13 +472,19 @@ class DriftDiffusionProperties : public PhysicalModel
     //! Returns the number of recombination models
     int get_number_of_recombination_models(void) const;
 
+    //! Return the electrons_thermoelectric_power
+    const double DriftDiffusionProperties::get_electrons_thermoelectric_power();
 
-    //! Get the electron thermoelectric power
-    double get_electron_thermoelectric_power(void);
+    //! Return the holes_thermoelectric_power
+    const double DriftDiffusionProperties::get_holes_thermoelectric_power();
 
+    //! Computes the electrons and holes thermoelectric power
+    void compute_thermoelectric_powers(void);
 
-    //! Get the hole thermoelectric power
-    double get_hole_thermoelectric_power(void);
+  
+    //! Get the all nodals temperature for a given element
+    std::vector<double> get_temperature_node(void);
+
 
 
     //! Get the electron electro-chemical potential
@@ -650,6 +659,8 @@ class DriftDiffusionProperties : public PhysicalModel
     //RealTensorValue permittivity;
     double permittivity;
 
+
+
     //! The equilibrium fermi level
     /*!
      * The fermi level such that \f$n=n_0,\,p=p_0\f$
@@ -712,6 +723,16 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
   private:
+
+    //!A pointer to a heat simulation
+    MacroHeatBalance* _heat_simul;
+       
+    //Electrons thermoelectric power
+    double _eTEpower;
+
+    //Holes thermoelectric power
+    double _hTEpower; 
+
 
     //! An iterator for the recombination models
     typedef std::map<ID, RecombinationModelInterface*>::iterator
@@ -1105,6 +1126,25 @@ DriftDiffusionProperties::get_number_of_recombination_models(void) const
 {
   return _recombination_models.size();
 }
+
+inline
+const 
+double DriftDiffusionProperties::get_electrons_thermoelectric_power()
+{
+
+  return(_eTEpower);
+
+}
+
+inline
+const
+double DriftDiffusionProperties::get_holes_thermoelectric_power()
+{
+
+  return(_hTEpower);
+
+}
+
 
 
 inline

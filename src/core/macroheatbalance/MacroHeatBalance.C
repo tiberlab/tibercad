@@ -45,31 +45,6 @@ void MacroHeatBalance::parse_options( )
 { 
 
   const ModelOptions& sim_opt = get_options();
- 
-  opt.current_simulation = sim_opt.get_option("current_simulation", "no_current");
-
-  if (opt.current_simulation != "no_current")
-  {
-    _dd_simul = dynamic_cast< DriftDiffusion* > ( find_simulation(opt.current_simulation ) );
- 
-    if (_dd_simul == NULL)
-      throw InitFailedException("Unknown current model" + opt.current_simulation );
-  }
-
-
-  
-  opt.thomson_peltier_effect = sim_opt.get_option("thomson_peltier", "noTPeffect");
-  
-
-  if (opt.thomson_peltier_effect != "noTPeffect")
-  {
-    _dd_simul = dynamic_cast< DriftDiffusion* > ( find_simulation(opt.thomson_peltier_effect) );
- 
-    if (_dd_simul == NULL)
-      throw InitFailedException("Unknown current model" + opt.thomson_peltier_effect);
-     
-  }
-
 
   opt.kappa_solve = sim_opt.get_option("kappa_solve", "no_self");
  
@@ -145,64 +120,108 @@ void MacroHeatBalance::do_init( )
 //-------------------------------------------------------------------------------//
 void  MacroHeatBalance::do_solve()
 {
-
-   parse_options();
-
-   static_this = this;
-
-   my_system->solve();
-
   
-   if (opt.kappa_solve.compare("self_consistent") == 0)
-   {
-     cout<<endl;
-     cout<<"Start loop over lattice thermal conductivity"<<endl; 
-     cout<<endl;
-     
-     double norm_error;
+   std::cout<<"Solving macro heat balance: start"<<std::endl;
+  
+  parse_options();
+  
+  static_this = this;
+  
+  my_system->solve();
+  
+  
+  if (opt.kappa_solve.compare("self_consistent") == 0)
+  {
+    cout<<endl;
+    cout<<"Start loop over lattice thermal conductivity"<<endl; 
+    cout<<endl;
+    
+    double norm_error;
+    
+    norm_error = opt.max_error + 1;
+    
+    //Inizialize the old_soluction----------------------------------------
+    vector<double> old_solution((*(my_system->solution)).size());
+    
 
-     norm_error = opt.max_error + 1;
-     
-     //Inizialize the old_soluction----------------------------------------
-     vector<double> old_solution((*(my_system->solution)).size());
-     
-
-     for ( unsigned int n = 0 ; n != (*(my_system->solution)).size(); ++n) 
-         { old_solution[n] = (*(my_system->solution))(n);}
-
+    for ( unsigned int n = 0 ; n != (*(my_system->solution)).size(); ++n) 
+    { old_solution[n] = (*(my_system->solution))(n);}
+    
      //-------------------------------------------------------------------  
     
-     for (; norm_error> opt.max_error;)
-     {
-  
-                
-       my_system->solve();
+    for (; norm_error> opt.max_error;)
+    {
+      
+      
+      my_system->solve();
+      
        
-       
-       //Compute error and old_solution
-       norm_error = 0.0;
-       for ( unsigned int n = 0 ; n !=  (*(my_system->solution)).size(); ++n)
-       {
-	 norm_error += (old_solution[n]-(*(my_system->solution))(n)) * (old_solution[n]-(*(my_system->solution))(n));
-	 old_solution[n] = (*(my_system->solution))(n);
-         
-       }
-	
-
-       norm_error = sqrt(norm_error);
-       
-       //------------------------ 
-       
+      //Compute error and old_solution
+      norm_error = 0.0;
+      for ( unsigned int n = 0 ; n !=  (*(my_system->solution)).size(); ++n)
+      {
+	norm_error += (old_solution[n]-(*(my_system->solution))(n)) * (old_solution[n]-(*(my_system->solution))(n));
+	old_solution[n] = (*(my_system->solution))(n);
+        
+      }
+      
+      
+      norm_error = sqrt(norm_error);
+      
+      //------------------------ 
+      
        cout<<"Error_norm = " <<norm_error<<endl;
        
      } //end for 
-     cout<<endl;
-     cout<<"End loop over lattice thermal conductivity"<<endl;	
-     cout<<endl;   
-     
-   }//end if
-   
+    cout<<endl;
+    cout<<"End loop over lattice thermal conductivity"<<endl;	
+    cout<<endl;   
+    
+  }//end if
+  
+  
+ 
+  if (get_options().get_option("update_temperature",true))
+  {
+
+
+    
+    std::vector<unsigned int> dof_indices;
+    
+    DofMap& dof_map = my_system->get_dof_map();
+    
+    MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+    
+    double  T=0.0;
+    
+    for ( ; el != end_el ; ++el)   //loop over elements
+    {  
+      const Elem* elem = *el;
+      
+      dof_map.dof_indices (elem, dof_indices); 
+      
+      T=0.0;
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {   
+	T +=  (*(my_system->solution))(dof_indices[n]); 
+      }
+      
+      T /= elem->n_nodes();
+      _device->set_temperature(elem,T);
+      
+    }
+    ////////////////////////////////////
+    
+  }
+  
+  
+  
+  std::cout<<"Solving macro heat balance: finish"<<std::endl;
+  
 }
+
+
 //--------------------------------------------------------------------------------//
 MacroHeatBalance::~MacroHeatBalance()
 {
@@ -212,7 +231,7 @@ MacroHeatBalance::~MacroHeatBalance()
 //---------------------------------------------------------------------------------//
 MacroHeatBalance::MacroHeatBalance()
 {
-  _dd_simul = NULL;
+  
 
 }
 //----------------------------------------------------------------------------------//
@@ -302,7 +321,9 @@ void MacroHeatBalance::build_nodal_results (const std::set< std::string > &varia
 
 
 
-void MacroHeatBalance::get_temperature_element(const Elem* elem,double& T) const
+
+
+double MacroHeatBalance::get_temperature_element(const Elem* elem) const
 {
         
 
@@ -312,7 +333,7 @@ void MacroHeatBalance::get_temperature_element(const Elem* elem,double& T) const
 
        dof_map.dof_indices (elem, dof_indices); 
 
-       T=0.0;
+       double T = 0.0;
        for (unsigned int n = 0; n < elem->n_nodes(); n++)
        {   
 	  T +=  (*(my_system->solution))(dof_indices[n]); 
@@ -320,13 +341,16 @@ void MacroHeatBalance::get_temperature_element(const Elem* elem,double& T) const
       
        T /= elem->n_nodes();
 
+       return T;
+
 }
 
 
 
-void MacroHeatBalance::get_temperature_node(const Elem* elem,vector<double>& T) const
+std::vector<double>  MacroHeatBalance::get_temperature_node(const Elem* elem)
 {
-        
+
+      std::vector<double> Tloc(elem->n_nodes());
 
        std::vector<unsigned int> dof_indices;
 
@@ -336,13 +360,12 @@ void MacroHeatBalance::get_temperature_node(const Elem* elem,vector<double>& T) 
 
        for (unsigned int n = 0; n < elem->n_nodes(); n++)
        {   
-	  T[n]=  (*(my_system->solution))(dof_indices[n]); 
+	  Tloc[n] =  (*(my_system->solution))(dof_indices[n]); 
        }
-      
-   
+    
+       return Tloc;
 
 }
-
 
 
 
@@ -362,7 +385,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 {
 
   SimulationEnvironment& se = get_environment(); 
-  
+
   LinearImplicitSystem& system = *my_system;
   
   const unsigned int uvar = system.variable_number("T");
@@ -372,6 +395,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   FEType fe_type = dof_map.variable_type(uvar);
   
   AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+
+  //AutoPtr<FEBase> fe (build_finite_element(dim, fe_type));
   
   QGauss qrule (dim, FIFTH); //may be could be decreased (CHECK!!!)
   
@@ -381,7 +406,15 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   
   // Declare a special finite element object for
   // boundary integration.
+
   AutoPtr<FEBase>  fe_face(FEBase::build(dim, fe_type));
+
+
+
+
+
+
+  // AutoPtr<FEBase>  fe_face(build_finite_element(dim, fe_type));
   
   // Boundary integration requires one quadraure rule,
   // with dimensionality one less than the dimensionality
@@ -393,6 +426,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   
   fe_face -> attach_quadrature_rule (&qface);
   
+
+
   // Here we define some references to cell-specific data that
   // will be used to assemble the lin ModelOptions&ear system.
   //
@@ -402,14 +437,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   // The physical XY locations of the quadrature points on the element.
   // These might be useful for evaluating spatially varying material
   // properties at the quadrature points.
+
   const std::vector<Point>& q_point = fe->get_xyz();
-
-  //Provides the options
-  const ModelOptions& sim_opt = get_options();
- 
-  opt.current_simulation = sim_opt.get_option("current_simulation", "no_current");
-
-  ///////////////
 
   // The element shape functions evaluated at the quadrature points.
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
@@ -417,7 +446,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   // The element shape function gradients evaluated at the quadrature
   // points.
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
-  
+
+ 
   std::vector<unsigned int> dof_indices;
   
   DenseMatrix<Number>  Ke;
@@ -428,25 +458,24 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
   
-  Tensor2Sym kappa;
+  //Model Variables
 
-  HeatModel* heat_model;
-
-  LatticeThermalConductivity* lattice_conductivity; 
+  Tensor2Sym kappa; 
 
   double eTEpower;
 
   double hTEpower;
 
-  double Tloc;
-
-  const ThermoelectricPower* thermoelectric_power;  
-
+  //------------------------------
+  
 
   //Define the vectors which store the Drift Diffusion solutions
-  std::vector<DriftDiffusion::Solution>  potentials;   
 
-  std::vector<DriftDiffusion::Currents>   currents; 
+   
+
+  std::vector<DriftDiffusion::Solution>  potentials;
+
+  std::vector<DriftDiffusion::Currents>   currents;
 
 
   //----------------------------------------------------------LatticeThermalConductivity-------//
@@ -461,96 +490,51 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 
  
-
-  //Initialize pot_per current
-  std::vector< std::vector<double> > pot_per_current;
-  
+   
 
   for ( ; el != end_el ; ++el)   //loop over elements
   {  
-    const Elem* elem = *el;
-    
-    ID subdomain = elem->subdomain_id();
 
-    dof_map.dof_indices (elem, dof_indices); 
-    
-    const Material* mat = _device->get_material(subdomain);
-    
-    heat_model =  (  dynamic_cast<HeatModel*> (  mat ->get_model(get_id()) )  );
-    
-    
-    //Return a pointer to lattice_thermal_conductivity object
-    lattice_conductivity = heat_model->get_lattice_conductivity();
-
-    if (opt.kappa_solve.compare("self_consistent") == 0)
-    {
-      //Dependence by Temperature
-      
-      //Mean temperature for a given element
-      
-      Tloc = 0.0;
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      {   
-	Tloc +=  (*(my_system->solution))(dof_indices[n]); 
-      }
-      
-      Tloc /= elem->n_nodes();
-
-      lattice_conductivity->temperature = Tloc;
-      
-      lattice_conductivity->update_tensor();
-
-   
-      
-      //-------------------------------------   
-    }
-    
-    lattice_conductivity->get_conductivity(kappa);
-    
-    
-    
-    //Inclusion of Peltier effect
-    
-    
-     if (opt.thomson_peltier_effect != "noTPeffect")    
-     {
-       //Electron Thermoelectric power
-       
-       thermoelectric_power = heat_model->get_thermoelectric_power();
-       
-       thermoelectric_power->get_thermoelectric_power_e(eTEpower);
-
-       thermoelectric_power->get_thermoelectric_power_h(hTEpower);
-            
-     }
-    	
-	
-	
-   
   
+    //Inizialize the element environment
+    const Elem* elem = *el;
+
+    dof_map.dof_indices (elem, dof_indices);  
 
     const unsigned int n_dofs   = dof_indices.size();
     
     fe->reinit (elem);
     
     Ke.resize(n_dofs, n_dofs);
+
     Fe.resize(n_dofs);
     
-    
-    //Initialize J*pot    
-    if (_dd_simul != NULL)
+    Fe.zero();  
+     
+    Ke.zero();
+
+    //Init e read from heat model
+
+    init_heat_model(elem);
+  
+    heat_model->get_lattice_thermal_conductivity(kappa);
+
+    eTEpower = heat_model->get_electrons_thermoelectric_power();	
+   
+    hTEpower = heat_model->get_holes_thermoelectric_power();
+
+    if (heat_model->get_joule_opt())
     {
-      _dd_simul->get_solution(elem,q_point,potentials);  
-      _dd_simul->get_solution(elem,q_point,currents);
-    }
+      heat_model->get_dd_solution(q_point,potentials,currents); 
+      
+    } 
     
-    
-    Fe.zero();         
-    
-    
+  
+  
+ 
     
       
-        for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
+     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
       
     { // loop over test function
 
@@ -570,6 +554,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	  Ke(p1,p1) = 1.0;
 	  
 	  Fe(p1) = ( dynamic_cast<Reservoir*> (contact) )->get_temperature();
+        
 	  
 	}//end reservoir
       } 
@@ -580,7 +565,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 	  //------------------------
 	  //volume integration for matrix
-	  // - \int_V \frac{\patial \phi_{\alpha}{\partial x_i}\kappa_{i,j} \frac{\patial \phi_{\beta}{\partial x_j} dx
+	  // - \int_V \frac{\patial \phi_{\alpha}{\partial x_i}\kappa_{i,j} \frac{\par tial \phi_{\beta}{\partial x_j} dx
 	  	  
 	   for (unsigned int p2=0; p2<n_dofs; p2++) 
 
@@ -609,12 +594,15 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	      }//end loop over direction (2)
 
 	      //This includes the Peltier-Thomson effects   
-	      if (opt.thomson_peltier_effect != "noTPeffect")  
+             
+	      if (heat_model->get_peltier_thomson_opt())
 	      {
-	          value += -JxW[qp]* phi[p1][qp] * dphi[p2][qp](i)*
-		    (eTEpower*currents[qp].jn(i) + hTEpower*currents[qp].jp(i) ) /(opt.length_scale);
+		
+		value += -JxW[qp]* phi[p1][qp] * dphi[p2][qp](i)*
+		  (eTEpower*currents[qp].jn(i) + hTEpower*currents[qp].jp(i) ) /(opt.length_scale);
+		
 	      }
-               
+	      
 	       
 	    }//end loop over direction (1)												
 	    
@@ -626,148 +614,199 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	  } //loop over basis functions
 	  
 	 
-      
-	  if  (opt.current_simulation != "no_current")
-	  { 
-	    for (short i = 0; i < dim; i++) 
-	      Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
-		( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
-		/ opt.length_scale * my_Jacobian;
-	  } 
-	  
-
+	   if (heat_model->get_joule_opt())
+	   {
+	     //Inclusion of jolue effect  
+	     
+	     for (short i = 0; i < dim; i++) 
+	     { Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
+		 ( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
+		 / opt.length_scale * my_Jacobian;
+	     }
+	     
+	   }   
+	   
+	   
+	   
 	}//end Loop over quadrature points  
-
+	
 
       } //end if it belongs to boundary
  
 
     } // end loop over test functions
       
-
+     //The loop over element is the only loop that is surviving at this point
+  
      
-    
-    if (opt.current_simulation != "no_current")
-      for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
-      {
-	//!let us check if it belongs to a reservoir boundary
-	const Node* nd = elem->get_node(p1);
-	
-	Boundary* bd = se.get_boundary(nd); 
-	  
-	bool belongs_to_reservoir = false;
-	
-	const unsigned int num_sides = elem->n_sides();
-	
-	if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
-	{
-	  ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
-	  
-	  if (contact->get_type() == ThermalContact::Reservoir)   belongs_to_reservoir = true;
-	}
-	
-	  
-	  
-	if ( !belongs_to_reservoir ) 
-	{//not fixed temperature2
-	  
-	  const unsigned int num_sides = elem->n_sides();
-	  
-	  for (unsigned int side = 0; side<num_sides; side++)
-	    {
-	      const ElementSide elside(elem->top_parent(), side);
+     if (heat_model->get_joule_opt())
+     {
+       for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+       {
+	 //!let us check if it belongs to a reservoir boundary
+	 const Node* nd = elem->get_node(p1);
+	 
+	 Boundary* bd = se.get_boundary(nd); 
+	 
+	 bool belongs_to_reservoir = false;
+	 
+	 const unsigned int num_sides = elem->n_sides();
+	 
+	 if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+	 {
+	   ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
+	   
+	   if (contact->get_type() == ThermalContact::Reservoir)   belongs_to_reservoir = true;
+	 }
+	 
+	 
+	 
+	 if ( !belongs_to_reservoir ) 
+	 {//not fixed temperature2
+	   
+	   const unsigned int num_sides = elem->n_sides();
+	   
+	   for (unsigned int side = 0; side<num_sides; side++)
+	   {
+	     const ElementSide elside(elem->top_parent(), side);
+	     
+	     if ( (heat_model->get_dd_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
+	     {
 	      
-	      if ( (_dd_simul->get_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
-	      {
-		std::vector<DriftDiffusion::Solution>  potentials;   
-		std::vector<DriftDiffusion::Currents>   currents; 
-		
-		if (dim > 1)
-		{
-		  const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
-		  
-		  const std::vector<Real>& JxW_face = fe_face->get_JxW();
-		  
-		  const std::vector<Point >& qface_point = fe_face->get_xyz();
-		  
-		  const std::vector<Point> & normal = fe_face->get_normals();
-		  
-		  fe_face->reinit(elem, side);
-		  
-		  _dd_simul->get_solution(elem,q_point,potentials);  
-		  
-		  _dd_simul->get_solution(elem,q_point,currents);
+	       std::vector<DriftDiffusion::Solution>  face_potentials;   
+	       
+	       std::vector<DriftDiffusion::Currents>   face_currents;
+		   
+
+	       if (dim > 1)
+	       {
 		 
-		  for (short i = 0; i < 3; i++)
-		    for (unsigned int qp=0; qp < qface.n_points(); qp++)
-		      Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
-			( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) ) * 
-			(my_Jacobian/opt.length_scale);
-		}
-		else //dim = 1
-		{
-		  
-		  if (p1== side)
-		  {
-		    std::vector<double> normal(3);
-		    Point p = elem->point(side);
-		    Point pc = elem->centroid();
+		 fe_face->reinit(elem, side);
+		 
+		 const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
+		 
+		 const std::vector<Real>& JxW_face = fe_face->get_JxW();
+		 
+		 const std::vector<Point>& qface_point = fe_face->get_xyz();
+		 
+		 const std::vector<Point> & normal = fe_face->get_normals();
+		 
 		    
-		    
-		    
-		    const double temp = sqrt((p(0) - pc(0)) * (p(0) - pc(0)) 
-					     +(p(1) - pc(1)) * (p(1) - pc(1)) + 
-					     (p(2) - pc(2)) * (p(2) - pc(2)));
-		    
-		    
-		    for (short i = 0; i < 3; i++)
-		      normal[i] = (p(i) - pc(i))/temp;
-		    
-		    
-		    std::vector<Point > qface_point(1);
-		    
-		    qface_point[0] = elem->point(p1);
-		    
-		    
-		    _dd_simul->get_solution(elem,qface_point,potentials);  
-		    
-		    _dd_simul->get_solution(elem,qface_point,currents);
-		    
-		    
-		    
-		    
-		    for (short i = 0; i < 3; i++)
-		    {  
-		      Fe(p1) +=   normal[i] * 
-			( currents[0].jn(i)*potentials[0].fermi_e + potentials[0].fermi_h * currents[0].jp(i) )   ;
-		      
-		      
-		    }
-		    
-		    
-		    
-		    
-		  }
-		  
-		}
-	      }
-	    }
-	    
-	}
-	  
-      }
-      
-      
-      dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
-      
-      
-      system.matrix->add_matrix (Ke, dof_indices);
-      system.rhs->add_vector    (Fe, dof_indices); 
+		 heat_model->get_dd_solution(qface_point,face_potentials,face_currents);  
+		     
+		 
+		 for (short i = 0; i < 3; i++)
+		 {
+		   for (unsigned int qp=0; qp < qface.n_points(); qp++)
+		   {
+		     Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
+		       ( face_currents[qp].jn(i)*face_potentials[qp].fermi_e + face_potentials[qp].fermi_h * face_currents[qp].jp(i) ) * 
+		       (my_Jacobian/opt.length_scale);
+		   }
+                 }
+
+
+	       }
+	       else //dim = 1
+	       {
+		 
+		 if (p1== side)
+		 {
+		   std::vector<double> normal(3);
+		   Point p = elem->point(side);
+		   Point pc = elem->centroid();
+		   
+		   
+		   
+		   const double temp = sqrt((p(0) - pc(0)) * (p(0) - pc(0)) 
+					    +(p(1) - pc(1)) * (p(1) - pc(1)) + 
+					    (p(2) - pc(2)) * (p(2) - pc(2)));
+		   
+		   
+		   for (short i = 0; i < 3; i++)
+		     normal[i] = (p(i) - pc(i))/temp;
+		   
+		   
+		   std::vector<Point> qface_point(1);
+		   
+		   qface_point[0] = elem->point(p1);
+		   
+		   
+	
+		   heat_model->get_dd_solution(qface_point,face_potentials,face_currents);  		   
+		   
+		   for (short i = 0; i < 3; i++)
+		   {  
+		     Fe(p1) +=   normal[i] * 
+		       ( face_currents[0].jn(i) * face_potentials[0].fermi_e + face_potentials[0].fermi_h * face_currents[0].jp(i) )   ;
+		     
+		     
+		   }
+		   
+		   
+		   
+		   
+		 } //if (dim > 1)
+		 
+	       }
+	     } // if ( (dd_simul->get_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
+	   } //  for (unsigned int side = 0; side<num_sides; side++)
+	   
+	 } // if ( !belongs_to_reservoir ) 
+	 
+       }// for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+       
+     } // (dd_simul != NULL)
+
+
+     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
+     system.matrix->add_matrix (Ke, dof_indices);
+     system.rhs->add_vector    (Fe, dof_indices); 
       
       
   } //End Loop over elements
     
+
+ 
   //   system.matrix->print_matlab("Matr.m");
   //  system.rhs->print();
     
+} //do assembly
+
+void  MacroHeatBalance:: init_heat_model(const Elem* elem)
+{
+       DofMap& dof_map = my_system->get_dof_map(); 
+       
+       std::vector<unsigned int> dof_indices;
+
+       dof_map.dof_indices (elem, dof_indices);  
+
+       
+       ID subdomain = elem->subdomain_id();
+    
+       const Material* mat = _device->get_material(subdomain);
+    
+       heat_model =  (  dynamic_cast<HeatModel*> (  mat ->get_model(get_id()) )  );
+    
+
+       double Tloc = 0.0;
+       for (unsigned int n = 0; n < elem->n_nodes(); n++)
+       {   
+	 Tloc +=  (*(my_system->solution))(dof_indices[n]); 
+       }
+      
+       Tloc /= elem->n_nodes();
+
+
+       //Configure model phase
+   
+       heat_model->set_element(elem);     
+
+       heat_model->set_temperature(Tloc);
+
+   
+
+       //Update model for a given element
+       heat_model->re_init();
+     
 }

@@ -59,9 +59,9 @@ if (_kappa_model != "constant")
  _kappa_b_z = options.get_option("therm_lat_cond_x", _kappa_b_z );
  _kappa_c_z = options.get_option("therm_lat_cond_x", _kappa_c_z );
 
-  k_x = 1.0 / (_kappa_a_x + _kappa_b_x * temperature +  _kappa_c_x * temperature * temperature );
+  k_x = 1.0 / (_kappa_a_x + _kappa_b_x * _temperature +  _kappa_c_x * _temperature * _temperature );
 
-  k_z = 1.0 / (_kappa_a_z + _kappa_b_z * temperature +  _kappa_c_z * temperature * temperature );
+  k_z = 1.0 / (_kappa_a_z + _kappa_b_z * _temperature +  _kappa_c_z * _temperature * _temperature );
 
  }
  else
@@ -99,9 +99,9 @@ if (_kappa_model != "constant")
 
 { 
  
-  k_x = 1.0 / (_kappa_a_x + _kappa_b_x * temperature +  _kappa_c_x * temperature * temperature );
+  k_x = 1.0 / (_kappa_a_x + _kappa_b_x * _temperature +  _kappa_c_x * _temperature * _temperature );
 
-  k_z = 1.0 / (_kappa_a_z + _kappa_b_z * temperature +  _kappa_c_z * temperature * temperature );
+  k_z = 1.0 / (_kappa_a_z + _kappa_b_z * _temperature +  _kappa_c_z * _temperature * _temperature );
 
   _conductivity(1,1) = k_x;
   _conductivity(2,2) = k_x;

@@ -3,6 +3,8 @@
 
 #include "BoundaryProperties.h"
 
+
+
 //! A class that forwards the heat transport problem to boundary condition entailed
 class ThermalContact: public BoundaryProperties
 {
@@ -25,6 +27,9 @@ class ThermalContact: public BoundaryProperties
 
  protected:
 
+   
+ 
+
   //!Initialize the model
   virtual void 	do_init (void) = 0;
 
@@ -46,5 +51,12 @@ inline void ThermalContact::set_type(Type type_in)
 {
   type = type_in;
 }
+
+
+
+
+
+
+
 
 #endif
