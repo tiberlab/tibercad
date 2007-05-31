@@ -32,14 +32,11 @@ class Elem;
 class Point;
 class Node;
 class EquationSystems;
-class NonlinearImplicitSystem;
 
 
 template<typename T> class DenseMatrix;
 template<typename T> class NumericVector;
 template<typename T> class SparseMatrix;
-
-template<typename T> class TiberPetscLinearSolver;
 
 
 //! The main class to perform standard drift-diffusion calculations
@@ -263,32 +260,28 @@ class DriftDiffusion : public SimulationInterface
         //! The line search type
         int ls_type;
 
-        //! The linear (KSP) solver type
+        //! The linear solver type
         /*!
-         * This defines what type of linear solver to be used. For
-         * details refer to the
-         * <A HREF="http://www-unix.mcs.anl.gov/petsc/petsc-2">online
-         * PETSc documentation</A>.
+         * The implementation of the linear solver depends on the
+         * underlying library to be used.
          *
-         * \note
-         * Usually \c KSPBCGS or \c KSPBCGSL seem to be the most stable
-         * solver types
          */
         SolverType ksp_type;
 
-        //! The preconditioner (PC)
+        //! The preconditioner
         /*!
-         * This defines the type of preconditioner to be used. For
-         * details refer to the
-         * <A HREF="http://www-unix.mcs.anl.gov/petsc/petsc-2">online
-         * PETSc documentation</A>.
-         *
-         * \note
-         * In most cases \c PCILU seems to be a good choice, but sometimes
-         * there are problems with zero pivot values. In this case, the use of
-         * \c PCJACOBI can solve it.
+         * The implementation of the preconditioner depends on the
+         * underlying library to be used.
+         * 
          */
         PreconditionerType pc_type;
+
+        //! The nonlinear solver type
+        /*!
+         * This means the implementation of the nonlinear system solver
+         */
+        std::string nonlinear_solver;
+
 
       private:
 

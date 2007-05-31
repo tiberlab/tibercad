@@ -32,6 +32,10 @@ class SchottkyContact : public ElectricalContact
 
     //! The Schottky barrier
     double _barrier;
+
+
+    //! Whether to consider doping dependence of barrier height
+    bool _doping_dependent;
 };
 
 
@@ -52,6 +56,7 @@ SchottkyContact::create(void)
 
 inline
 SchottkyContact::SchottkyContact(void)
+  : _doping_dependent(false)
 {
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::DIRICHLET);
   set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::DIRICHLET);
@@ -87,6 +92,7 @@ SchottkyContact::do_init(void)
 {
   ElectricalContact::do_init();
 
+  _doping_dependent = get_options().get_option("doping_dependent_height", false); 
   _barrier = get_options().get_option("barrier_height", 0.8);
 }
 

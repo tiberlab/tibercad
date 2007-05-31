@@ -10,6 +10,8 @@
 
 
 template<typename> class LinearSolver;
+class EquationSystems;
+
 
 //! A generic class to solve nonlinear systems
 /*!
@@ -27,6 +29,19 @@ class TiberNonlinearSystem : public ImplicitSystem
 
   public:
 
+    //! The nonlinear solver implementations
+    enum NonlinearSystemType
+    {
+      /*!
+       * The TiberCAD internal Newton with line search
+       */
+      TIBER,
+
+      /*! The PETSc nonlinear solver */
+      PETSC
+    };
+
+    
     //! The type of norms
     enum NormType
     {
@@ -34,19 +49,38 @@ class TiberNonlinearSystem : public ImplicitSystem
       l2_NORM,   //< the l2 norm
     };
 
+    
     //! The type of the assembly routine
     typedef void (*AssemblyRoutine)(const NumericVector<Number> &X,
                                     NumericVector<Number> *R,
                                     SparseMatrix<Number> *J);
     
-
-    //! Constructor
-    TiberNonlinearSystem(EquationSystems& es,
-                         const std::string& name,
-                         const unsigned int number);
+ 
 
     //! Destructor
-    virtual ~TiberNonlinearSystem(void);
+    virtual ~TiberNonlinearSystem(void) {};
+
+
+    //! To create a nonlinear system
+    /*!
+     * \param es the EquationSystems object where the new system will be added
+     * \param sysname the name of the new system
+     * \param type the type of system to create
+     * \return a reference to the newly created system
+     */
+    static TiberNonlinearSystem& create_nonlinear_system(EquationSystems& es,
+        const std::string& sysname, NonlinearSystemType type);
+
+    
+    //! To create a nonlinear system
+    /*!
+     * \param es the EquationSystems object where the new system will be added
+     * \param sysname the name of the new system
+     * \param type the type of system to create as string
+     * \return a reference to the newly created system
+     */
+    static TiberNonlinearSystem& create_nonlinear_system(EquationSystems& es,
+        const std::string& sysname, const std::string& type);
 
 
     /*! \copydoc ImplicitSystem::clear() */
@@ -58,11 +92,15 @@ class TiberNonlinearSystem : public ImplicitSystem
 
 
     /*! \copydoc ImplicitSystem::solve() */
-    virtual void solve(void);
+    virtual void solve(void) = 0;
 
 
     /*! \copydoc ImplicitSystem::system_type() */
-    virtual std::string system_type(void);
+    virtual std::string system_type(void) const;
+
+
+    //! Get the solution vector
+    virtual NumericVector<double>& get_solution_vector(void) = 0;
 
 
     //! Set the linear solver parameters
@@ -78,6 +116,7 @@ class TiberNonlinearSystem : public ImplicitSystem
     void set_nonlinear_solver_params(double relative_tolerance,
                                      double absolute_tolerance,
                                      double step_tolerance,
+                                     double max_step,
                                      unsigned int maximum_iterations);
 
 
@@ -97,24 +136,19 @@ class TiberNonlinearSystem : public ImplicitSystem
     double last_step_size(void) const;
 
 
-    //! Get the solution vector
-    NumericVector<double>& get_solution_vector(void);
 
+  protected:
 
-
-  private:
-
-    //! The parent class type
-    typedef ImplicitSystem Parent;
-
-    //! The linear solver to be used for the Newton iteration
-    LinearSolver<double>* _solver;
-
+    //! Constructor
+    TiberNonlinearSystem(EquationSystems& es,
+                         const std::string& name,
+                         const unsigned int number);
+   
 
     //! The assembly routine
     AssemblyRoutine _assemble;
 
-
+ 
     //! The nonlinear iterations
     unsigned int _n_nonlin_iterations;
 
@@ -150,6 +184,25 @@ class TiberNonlinearSystem : public ImplicitSystem
     //! The linear solver maximum number of iterations
     unsigned int _lin_max_it;
 
+
+    //! The maximum step size
+    double _max_step_size;
+
+
+    //! The linear solver type
+    SolverType _solver_type;
+
+
+    //! The preconditioner type
+    PreconditionerType _preconditioner_type;
+   
+
+
+  private:
+
+    //! The parent class type
+    typedef ImplicitSystem Parent;
+
 };
 
 
@@ -165,6 +218,24 @@ TiberNonlinearSystem::attach_assembly_routine(AssemblyRoutine assembly)
 {
   _assemble = assembly;
 }
+
+
+inline
+void
+TiberNonlinearSystem::clear(void)
+{
+  Parent::clear();
+}
+
+
+
+inline
+void
+TiberNonlinearSystem::reinit(void)
+{
+  Parent::reinit();
+}
+
 
 
     
@@ -194,7 +265,7 @@ TiberNonlinearSystem::last_step_size(void) const
 
 inline
 std::string
-TiberNonlinearSystem::system_type(void)
+TiberNonlinearSystem::system_type(void) const
 {
   return "TiberNonlinear";
 }
@@ -213,21 +284,24 @@ TiberNonlinearSystem::set_linear_solver_params(double relative_tolerance,
 inline
 void
 TiberNonlinearSystem::set_nonlinear_solver_params(double relative_tolerance,
-    double absolute_tolerance, double step_tolerance,
+    double absolute_tolerance, double step_tolerance, double max_step,
     unsigned int maximum_iterations)
 {
   _nonlin_rel_tol = relative_tolerance;
   _nonlin_abs_tol = absolute_tolerance;
   _nonlin_step_tol = step_tolerance;
+  _max_step_size = max_step;
   _nonlin_max_it = maximum_iterations;
 }
 
 
 inline
-NumericVector<double>&
-TiberNonlinearSystem::get_solution_vector(void)
+void
+TiberNonlinearSystem::set_linear_solver_type(SolverType solver_type,
+    PreconditionerType pc)
 {
-  return get_vector("sol");
+  _solver_type = solver_type;
+  _preconditioner_type = pc;
 }
 
 

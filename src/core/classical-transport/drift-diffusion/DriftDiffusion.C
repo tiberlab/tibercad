@@ -10,8 +10,8 @@
 #include "Constants.h"
 #include "DriftDiffusionProperties.h"
 #include "RecombinationModelInterface.h"
-//#include "TiberPetscLinearSolver.h"
-#include "TiberNonlinearSystem.h"
+#include "TiberNonlinLS.h"
+#include "TiberNonlinPetsc.h"
 #include "SolveFailedException.h"
 #include "GraceIO.h"
 
@@ -20,7 +20,6 @@
 #include "mesh.h"
 #include "dof_map.h"
 #include "elem.h"
-//#include "fe.h"
 #include "fe_interface.h"
 #include "quadrature_gauss.h"
 #include "equation_systems.h"
@@ -813,6 +812,7 @@ DriftDiffusion::parse_const_options(void)
   else if (discretization == "sg")
     myopts.scheme = SG;
 
+  solver_params.nonlinear_solver = opts.get_option("nonlinear_solver", "petsc");
 
   string ksptype = opts.get_option("ksp_type", "");
   if (ksptype == "") {}
@@ -926,10 +926,16 @@ DriftDiffusion::rebuild_equation_system(void)
 
   EquationSystems& equation_systems = get_equation_systems();
 
+  SolverParameters& solver_params = get_options().solver_params;
+
   // the coupled DD system
   TiberNonlinearSystem& system =
-    equation_systems.add_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+    TiberNonlinearSystem::create_nonlinear_system(equation_systems,
+        get_equation_system_name(), solver_params.nonlinear_solver);
+
+  system.set_linear_solver_type(solver_params.ksp_type, solver_params.pc_type);
+
+  system.attach_assembly_routine(assemble_system);
 
 
   system.add_variable("potential", libMeshEnums::FIRST);
@@ -937,13 +943,6 @@ DriftDiffusion::rebuild_equation_system(void)
   system.add_variable("fermi_h", libMeshEnums::FIRST);
 
 
-  // these are needed by libmesh, we don't use them, though
-  SolverParameters& solver_params = get_options().solver_params;
-
-
-  system.attach_assembly_routine(assemble_system);
-
-  system.set_linear_solver_type(solver_params.ksp_type, solver_params.pc_type);
 
   // finally initialize the newly created system
   system.init();
@@ -1014,10 +1013,10 @@ DriftDiffusion::do_newton(void)
   system.set_nonlinear_solver_params(solver_params.nonlinear_tolerance,
       solver_params.nonlinear_abs_tolerance,
       solver_params.nonlinear_step_tolerance,
+      solver_params.ls_maxstep,
       solver_params.nonlinear_max_iterations);
 
   system.solve();
-
 }
 
 
