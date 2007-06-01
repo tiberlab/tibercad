@@ -121,12 +121,12 @@ DriftDiffusion::Options::operator=(const Options& rhs)
 DriftDiffusion::SolverParameters::SolverParameters(void)
   : nonlinear_tolerance(1e-9), 
     nonlinear_abs_tolerance(1e-12),
-    nonlinear_step_tolerance(1e-6),
+    nonlinear_step_tolerance(1e-3),
     nonlinear_max_iterations(20),
     linear_tolerance(1e-6),
     linear_abs_tolerance(1e-15),
     linear_max_iterations(500),
-    ls_maxstep(0.025),
+    ls_maxstep(1.0),
     ls_type(3),
     ksp_type(BICGSTAB),
     pc_type(ILU_PRECOND)
@@ -3484,9 +3484,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     Xp(X);
 
   DenseSubVector<Number>
-    dXu(X),
-    dXn(X),
-    dXp(X);
+    dXu(dX),
+    dXn(dX),
+    dXp(dX);
 
 
   vector<unsigned int> dof_indices;
@@ -3500,8 +3500,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (jacobian != NULL)
     jacobian->zero();
 
-  //if (jacobian != NULL)
-  //  cerr << "Jacobian" << endl;
   
 
 
@@ -3569,8 +3567,20 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     dXu.reposition(0, n_dofs);
     dXn.reposition(n_dofs, n_dofs);
     dXp.reposition(2 * n_dofs, n_dofs);
-
-
+/*
+    cerr << "Xu = [" << Xu(0);
+    for (int i = 1; i < n_dofs; i++)
+      cerr << ", " << Xu(i);
+    cerr << "]\n";
+    cerr << "Xn = [" << Xn(0);
+    for (int i = 1; i < n_dofs; i++)
+      cerr << ", " << Xn(i);
+    cerr << "]\n";
+    cerr << "Xp = [" << Xp(0);
+    for (int i = 1; i < n_dofs; i++)
+      cerr << ", " << Xp(i);
+    cerr << "]\n";
+*/
     DriftDiffusionProperties* sc =
       dynamic_cast<DriftDiffusionProperties*>(
           device.get_material(subdomain)->get_model(get_id()));
@@ -3757,9 +3767,10 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             // (for X_l = u_l we dont get anything, i.e. the
             // contributions to Kuu, Kun, Kup are zero)
 
-/*             
-            double dsigma_e_x_phi = 0.02 * dsigma_e * phi[j][qp];
-            double dsigma_h_x_phi = 0.02 * dsigma_h * phi[j][qp];
+///*             
+            double dsigma_e_x_phi = dsigma_e * phi[j][qp];
+            double dsigma_h_x_phi = dsigma_h * phi[j][qp];
+            
             for (unsigned int k = 0; k < n_dofs; k++)
             {
               double laplace = (dphi[i][qp] * dphi[k][qp]);
@@ -3790,14 +3801,14 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                 //Fp(i) += elem_contrib * dXp(j);
               }
             }
-*/
+//*/
 
             // contribution of the Seebeck effect
-            Real dsigma_e_x_phi_x_Pe = dsigma_e * phi[j][qp] * eTEpower;
-            Real dsigma_h_x_phi_x_Ph = dsigma_h * phi[j][qp] * hTEpower;
+            double dsigma_e_x_phi_x_Pe = dsigma_e * phi[j][qp] * eTEpower;
+            double dsigma_h_x_phi_x_Ph = dsigma_h * phi[j][qp] * hTEpower;
             for (unsigned int k = 0; k < n_dofs; k++)
             {
-              Real laplace = dphi[i][qp] * dphi[k][qp];
+              double laplace = dphi[i][qp] * dphi[k][qp];
 
               if (coupling & ECURRENT)
               {
@@ -3827,21 +3838,21 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
 
             // The dFe_i/dX_j part
-            Real phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp];
+            double phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp];
 
-            if (i == j)
+//if (i == j)
               if (coupling & POISSON)
               {
-                Kuu(i,j) -= drho[0] * phi_i_x_phi_j * 0.5;
+                Kuu(i,j) -= drho[0] * phi_i_x_phi_j;
 
                 if (coupling & ECURRENT)
-                  Kun(i,j) -= drho[1] * phi_i_x_phi_j * 0.5;
+                  Kun(i,j) -= drho[1] * phi_i_x_phi_j;
 
                 if (coupling & HCURRENT)
-                Kup(i,j) -= drho[2] * phi_i_x_phi_j * 0.5;
+                Kup(i,j) -= drho[2] * phi_i_x_phi_j;
             }            
             
-if (i == j)
+//if (i == j)
             if (coupling & ECURRENT)
             {
               // (1) would destroy M-Matrix property
@@ -3849,13 +3860,13 @@ if (i == j)
               //if (coupling & POISSON)
               //  Knu(i,j) -= dRn[0] * phi_i_x_phi_j;
 
-              Knn(i,j) -= dRn[1] * phi_i_x_phi_j / local_scaling[i][0] * 0.5;
+              Knn(i,j) -= dRn[1] * phi_i_x_phi_j / local_scaling[i][0];
 
               if (coupling & HCURRENT)
-                Knp(i,j) -= dRn[2] * phi_i_x_phi_j / local_scaling[i][0] * 0.5;
+                Knp(i,j) -= dRn[2] * phi_i_x_phi_j / local_scaling[i][0];
             }
 
-if (i == j)
+//if (i == j)
             if (coupling & HCURRENT)
             {
               // (1) would destroy M-Matrix property
@@ -3864,9 +3875,9 @@ if (i == j)
               //  Kpu(i,j) += dRp[0] * phi_i_x_phi_j;
 
               if (coupling & ECURRENT)
-                Kpn(i,j) += dRp[1] * phi_i_x_phi_j / local_scaling[i][1] * 0.5;
+                Kpn(i,j) += dRp[1] * phi_i_x_phi_j / local_scaling[i][1];
               
-              Kpp(i,j) += dRp[2] * phi_i_x_phi_j / local_scaling[i][1] * 0.5;
+              Kpp(i,j) += dRp[2] * phi_i_x_phi_j / local_scaling[i][1];
             }
 
           }
@@ -4368,8 +4379,10 @@ if (i == j)
   } // end loop over elements
 
 
-  //if (jacobian != NULL)
-  //  jacobian->print_matlab("J.m");
+  if (jacobian != NULL)
+    jacobian->print_matlab("J.m");
+  else
+    residual->print_matlab("r.m");
   
   perf_log.stop_event("assembly");
 } 
