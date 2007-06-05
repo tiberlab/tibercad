@@ -43,6 +43,9 @@ extern "C"
     KSPConvergedReason reason;
     KSPGetConvergedReason(ksp, &reason);
 
+    if (its == 0)
+      std::cerr << "it " << its << ", fnorm = " << fnorm << "\n";
+
     if (fnorm != fnorm)
       throw(KSPDivergedError(-8, its, fnorm));
 

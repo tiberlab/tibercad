@@ -151,8 +151,8 @@ TiberNonlinLS::solve(void)
       norm_res = rhs->l2_norm();
       norm_du = du.linfty_norm();
 
-      cerr << "       ||r(x)|| = " << norm_rhs << ", ||r(x + " << 
-        alpha << "*dx)|| = " << norm_res << endl;
+      //cerr << "       ||r(x)|| = " << norm_rhs << ", ||r(x + " << 
+      //  alpha << "*dx)|| = " << norm_res << endl;
 
       if ((norm_res < norm_rhs) || (norm_du < eps) || (norm_res < eps_res))
         break;
@@ -210,8 +210,8 @@ TiberNonlinLS::solve(void)
   
       double norm_res_old = norm_res;
       norm_res = rhs->l2_norm();
-      cerr << "        ||r(x + " << alpha << "*dx)|| = " << norm_res_old <<
-        ", ||r(x + " << 0.5 * alpha << "*dx)|| = "  << norm_res << endl;
+      //cerr << "        ||r(x + " << alpha << "*dx)|| = " << norm_res_old <<
+      //  ", ||r(x + " << 0.5 * alpha << "*dx)|| = "  << norm_res << endl;
       if (norm_res > norm_res_old)
       {
         // keep the former step

@@ -71,6 +71,9 @@ class Utils
         //! compare \c a with \c b using precision \c eps
         bool operator()(double a, double b, double eps) const;
 
+        //! A static version
+        static bool compare(double a, double b, double eps = 1e-12);
+
       private:
 
         //! The precision
@@ -218,6 +221,15 @@ Utils::almost_equal::operator()(double a, double b, double eps) const
 }
   
 
+inline
+bool
+Utils::almost_equal::compare(double a, double b, double eps)
+{
+  double diff = std::fabs(a - b);
+  bool result = std::isless(diff, eps * (1.0 + std::fabs(a)));
+  return result;
+}
+  
 
 
 inline

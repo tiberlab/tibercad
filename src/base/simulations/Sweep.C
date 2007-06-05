@@ -1,6 +1,7 @@
 // $Id$
 
 #include "Sweep.h"
+#include "Utils.h"
 #include "Variable.h"
 #include "Boundary.h"
 #include "BoundaryProperties.h"
@@ -93,8 +94,16 @@ Sweep::parse_options(void)
   unsigned int steps = opts.get_option("steps", 1);
   steps = (steps < 1) ? 1 : steps;
 
-  _values.resize(steps + 1);
   double step = (stop - start) / steps;
+
+  if (Utils::almost_equal::compare(start, stop))
+  {
+    steps = 0;
+    _values.resize(1);
+  }
+  else
+    _values.resize(steps + 1);
+
   for (unsigned int i = 0; i <= steps; i++)
     _values[i] = start + i * step;
 
