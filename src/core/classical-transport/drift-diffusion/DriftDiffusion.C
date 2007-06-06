@@ -3946,10 +3946,13 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     {
       ElementSide side(top_parent, s);
 
-      // is this a boundary?
-      if (environment.is_on_boundary(side))
-      {
+      const Elem* neighbour = elem->neighbor(s);
 
+      // is this a boundary?
+      //if (environment.is_on_boundary(side))
+      bool true_boundary = environment.is_on_boundary(side);
+      if (true_boundary || (neighbour->subdomain_id() != elem->subdomain_id()))
+      {
         Boundary* boundary = environment.get_boundary(side);
 
         ElectricalContact* contact = NULL;
@@ -4070,8 +4073,14 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             // contribution to -Fe_i
             if (residual != NULL)
             {
-              RealVectorValue P(sc->get_total_polarization());
-              double Pn = (P * face_normals[qp]) / P0;
+              double Pn = 0.0;
+              if (true_boundary)
+              {
+                // If we are on an outer boundary, we have to include
+                // the polarization
+                RealVectorValue P(sc->get_total_polarization());
+                Pn = (P * face_normals[qp]) / P0;
+              }
               double value_u = J * (l2_eps * value[0] - Pn);
               double value_n = J * value[1] / (mu0 * C0_e);
               double value_p = J * value[2] / (mu0 * C0_h);
@@ -4147,7 +4156,13 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           // contribution to -Fe_i
           if (residual != NULL)
           {
-            double Pn =  sc->get_total_polarization()(0) / P0;
+            double Pn =  0.0;
+            if (true_boundary)
+            {
+              // If we are on an outer boundary, we have to include
+              // the polarization
+              Pn = sc->get_total_polarization()(0) / P0;
+            }
             // what is the outer normal in this point??
             // Idea: if x(s) > x(centroid), normal is +1
             //       else it is -1
