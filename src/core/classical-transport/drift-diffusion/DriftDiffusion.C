@@ -933,6 +933,14 @@ DriftDiffusion::rebuild_equation_system(void)
     TiberNonlinearSystem::create_nonlinear_system(equation_systems,
         get_equation_system_name(), solver_params.nonlinear_solver);
 
+  
+  const unsigned int dim = get_mesh().mesh_dimension();
+
+  // in 1D bcgs seems to work better than bcgsl
+  if (dim == 1)
+    if (solver_params.ksp_type == BICGSTAB)
+      solver_params.ksp_type = BICG;
+
   system.set_linear_solver_type(solver_params.ksp_type, solver_params.pc_type);
 
   system.attach_assembly_routine(assemble_system);
@@ -1025,28 +1033,8 @@ DriftDiffusion::do_newton(void)
 void
 DriftDiffusion::solve_newton(void)
 {
-
-  // aliases for nicer code
-  Options& params = get_options();
-  SolverParameters& solver_params = params.solver_params;
   
-  Mesh& mesh = get_mesh();
-  const unsigned int dim = mesh.mesh_dimension();
-  EquationSystems& equation_systems = get_equation_systems();
-
-  TiberNonlinearSystem& system =
-    equation_systems.get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
-
-
-  // in 1D bcgs seems to work better than bcgsl
-  if (dim == 1)
-    if (solver_params.ksp_type == BICGSTAB)
-      solver_params.ksp_type = BICG;
-
-
-  //set_dirichlet_bc();
-
+  set_dirichlet_bc();
 
   bool failure = true;
   string msg("DriftDiffusion: solve failed (");
@@ -3592,10 +3580,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     
 
     //Get the thermoelectric power
-    //double eTEpower =  get_electrons_thermoelectric_power(elem) / phi0;
-    //double hTEpower =  get_holes_thermoelectric_power(elem) / phi0;
-    double eTEpower =  0.0;
-    double hTEpower =  0.0; 
+    double eTEpower =  get_electrons_thermoelectric_power(elem) / phi0;
+    double hTEpower =  get_holes_thermoelectric_power(elem) / phi0;
+
            
      //Get the temperature given the element
     vector<double> T_nodes = sc->get_temperature_node();
@@ -3768,7 +3755,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             // (for X_l = u_l we dont get anything, i.e. the
             // contributions to Kuu, Kun, Kup are zero)
 
-/*             
+///*             
             double dsigma_e_x_phi = dsigma_e * phi[j][qp];
             double dsigma_h_x_phi = dsigma_h * phi[j][qp];
             
@@ -3802,7 +3789,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                 //Fp(i) += elem_contrib * dXp(j);
               }
             }
-*/
+//*/
 
             // contribution of the Seebeck effect
             double dsigma_e_x_phi_x_Pe = dsigma_e * phi[j][qp] * eTEpower;
@@ -3841,7 +3828,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             // The dFe_i/dX_j part
             double phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp];
 
-if (i == j)
+//if (i == j)
             if (coupling & POISSON)
             {
                 Kuu(i,j) -= drho[0] * phi_i_x_phi_j;
@@ -3853,7 +3840,7 @@ if (i == j)
                 Kup(i,j) -= drho[2] * phi_i_x_phi_j;
             }            
             
-if (i == j)
+//if (i == j)
             if (coupling & ECURRENT)
             {
               // (1) would destroy M-Matrix property
@@ -3867,7 +3854,7 @@ if (i == j)
                 Knp(i,j) -= dRn[2] * phi_i_x_phi_j / local_scaling[i][0];
             }
 
-if (i == j)
+//if (i == j)
             if (coupling & HCURRENT)
             {
               // (1) would destroy M-Matrix property

@@ -60,16 +60,14 @@ $Solver
 {
   driftdiffusion
   {
-    ksp_type = gmres
-    #ksp_type = preonly
+    #nonlinear_solver = tiber
+    ksp_type = bcgsl
     nonlin_max_it = 20
-    #lin_max_it = 10
-    #lin_abs_tol = 1e-9
     nonlin_abs_tol = 1e-12
     nonlin_step_tol = 1e-3
-    ls_max_step = 0.0
-    pc_type = ilu
-    local_density_scaling = true
+    ls_max_step = 2
+    #pc_type = composite
+    #local_density_scaling = true
     #current_integration_method = surfint
     #relaxation_factor = 0.5
   }
@@ -112,10 +110,12 @@ $Simulation
   #solve = driftdiffusion
   solve = sweep
   resultpath = output_1D
-  #output_format = grace
-  output_format = gmv
+  output_format = grace
+  #output_format = gmv
   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, current)
 }
+
+
 
 
 

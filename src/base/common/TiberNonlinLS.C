@@ -6,6 +6,7 @@
 #include "InitFailedException.h"
 
 #include "PetscDivergedError.h"
+#include "SNESDivergedError.h"
 
 
 #include "linear_solver.h"
@@ -176,9 +177,15 @@ TiberNonlinLS::solve(void)
       }
     }
     
+    // check for divergence
+    if ((norm_res > norm_rhs) || isnan(norm_res))
+      throw (SNESDivergedError(-4, i, norm_rhs));
 
+
+    // check for convergence
     if ((norm_du < eps) || (norm_res < eps_res))
       break;
+    
 
     if (cauchy)
     //if ((ls_step >= max_ls_step) && (norm_res >= norm_rhs))
