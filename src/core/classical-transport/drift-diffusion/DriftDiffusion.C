@@ -1984,7 +1984,7 @@ DriftDiffusion::calculate_currents_surfint(void)
     {
       ElementSide side(top_parent, s);
       
-      if (env.is_on_boundary(side))
+      if (env.is_boundary(side))
       {
 
         Boundary* boundary = env.get_boundary(side);
@@ -3949,10 +3949,11 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       const Elem* neighbour = elem->neighbor(s);
 
       // is this a boundary?
-      //if (environment.is_on_boundary(side))
-      bool true_boundary = environment.is_on_boundary(side);
-      if (true_boundary || (neighbour->subdomain_id() != elem->subdomain_id()))
+      if (environment.is_boundary(side))
       {
+        // we need to know if it is an outer boundary
+        bool true_boundary = environment.is_outer_boundary(side);
+
         Boundary* boundary = environment.get_boundary(side);
 
         ElectricalContact* contact = NULL;
@@ -4383,7 +4384,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
   } // end loop over elements
 
-
+/*
   static bool flag = true;
   if (flag)
     if (jacobian != NULL)
@@ -4397,7 +4398,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       cerr << "write residual." << endl;
       residual->print_matlab("r.m");
     }
-  
+*/  
   perf_log.stop_event("assembly");
 } 
 

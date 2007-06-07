@@ -173,10 +173,28 @@ class SimulationEnvironment
     
     //! Check if an ElementSide lies on the boundary of the simulation region
     /*!
+     * \deprecated {Use one of is_boundary(), is_outer_boundary() or
+     * is_inner_boundary() instead.}
      * This does \em not mean that this side has also a boundary condition
      * assigned.
      */
     bool is_on_boundary(const ElementSide& side) const;
+
+
+    //! Check if an ElementSide lies on a any boundary
+    bool is_boundary(const ElementSide& side) const;
+
+
+    //! Check if an ElementSide lies on a 'real' outer boundary
+    bool is_outer_boundary(const ElementSide& side) const;
+
+
+    //! Check if an ElementSide lies on an inner boundary
+    /*!
+     * An inner boundary is not really a boundary, but should be 
+     * considered as an n-1 dimensional domain.
+     */
+    bool is_inner_boundary(const ElementSide& side) const;
 
     
     //! Get the iterator for the first boundary side
@@ -360,6 +378,59 @@ SimulationEnvironment::is_on_boundary(const ElementSide& side) const
 
   return result;
 }
+
+
+inline
+bool
+SimulationEnvironment::is_boundary(const ElementSide& side) const
+{
+  bool result = false;
+
+  const Elem* neighbour = (side.first)->neighbor(side.second);
+
+  if ((neighbour == NULL) ||
+      (neighbour->subdomain_id() != (side.first)->subdomain_id()))
+    result = true;
+
+  return result;
+}
+
+
+
+inline
+bool
+SimulationEnvironment::is_outer_boundary(const ElementSide& side) const
+{
+  bool result = true;
+
+  const Elem* neighbour = (side.first)->neighbor(side.second);
+
+  if (neighbour != NULL)
+  {
+    ID neighbour_id = neighbour->subdomain_id();
+    if (_region_numbers.find(neighbour_id) != _region_numbers.end())
+      result = false;
+  }
+
+  return result;
+}
+
+
+inline
+bool
+SimulationEnvironment::is_inner_boundary(const ElementSide& side) const
+{
+  bool result = false;
+
+  const Elem* neighbour = (side.first)->neighbor(side.second);
+
+  if ((neighbour != NULL) &&
+      (neighbour->subdomain_id() != (side.first)->subdomain_id()))
+    result = true;
+
+  return result;
+}
+
 
 
 inline

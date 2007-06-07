@@ -174,8 +174,10 @@ SimulationEnvironment::create_bc_maps(void)
 
         // check if the neighbouring element is inexistent (outer boundary)
         // or in another simulation region (inner boundary)
-        if ((elem->neighbor(s) == NULL) ||
-            (!this->contains_region((elem->neighbor(s))->subdomain_id())))
+        //
+        // we allow inner 'boundaries', i.e. we don't really consider
+        // boundaries but n-1 dimensional domains
+        if (is_boundary(ElementSide(elem, s)))
         {
           
           // now we also have to loop over all relevant map entries
@@ -260,7 +262,8 @@ SimulationEnvironment::update_boundary_node_map(void)
       {
         const Elem* child = *elem_it;
 
-        if (is_on_boundary(ElementSide(child, side_num)))
+        // we allow for internal boundaries
+        if (is_boundary(ElementSide(child, side_num)))
         {
           AutoPtr<Elem> side = child->build_side(side_num);
           for (unsigned int i = 0; i < side->n_nodes(); i++)
