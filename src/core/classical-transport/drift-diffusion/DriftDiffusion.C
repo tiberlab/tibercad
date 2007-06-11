@@ -4305,27 +4305,17 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           Kpu(i, j) = Kpn(i, j) = Kpp(i, j) = 0.0;
         }
 
-        Knn(i, i) = Kpp(i, i) = 1.0;
+        if (environment.is_inner_boundary(elem->get_node(i)))
+          Knn(i, i) = Kpp(i, i) = 0.0;
+        else
+          Knn(i, i) = Kpp(i, i) = 1.0;
 
-        //Fn(i) = -Xn(i);
-        //Fp(i) = -Xp(i);
+        // we simply set the electrochemical potential to zero
         Fn(i) = 0.0;
         Fp(i) = 0.0;
       }
-
-      for (unsigned int s = 0; s < elem->n_sides(); s++)
-      {
-        ElementSide side(top_parent, s);
-        if (environment.is_inner_boundary(side))
-        {
-          for (unsigned int i = 0; i < n_dofs; i++)
-          {
-            if (elem->is_node_on_side(i, s))
-              Knn(i, i) = Kpp(i, i) = 0.0;
-          }
-        }
-      }
     }
+
 
 
     // constrain the jacobian and the rhs to account for constrained

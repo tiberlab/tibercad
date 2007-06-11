@@ -95,8 +95,6 @@ SimulationEnvironment::add_boundary(Boundary* boundary, ID boundary_id)
     s << "SimulationEnvironment: boundary region " << boundary_id <<
       " already defined.";
     throw InitFailedException(s.str());
-    //delete it->second;
-    //it->second = boundary;
   }
 }
 
@@ -240,6 +238,8 @@ SimulationEnvironment::update_boundary_node_map(void)
     {
       const ElementSide& elem_side = it->first;
       _node_map[(elem_side.first)->get_node(elem_side.second)] = it->second;
+      if (is_inner_boundary(elem_side))
+        _inner_boundary_nodes.insert((elem_side.first)->get_node(elem_side.second));
     }
   }
   else
@@ -262,12 +262,17 @@ SimulationEnvironment::update_boundary_node_map(void)
       {
         const Elem* child = *elem_it;
 
+        ElementSide elemside(child, side_num);
         // we allow for internal boundaries
-        if (is_boundary(ElementSide(child, side_num)))
+        if (is_boundary(elemside))
         {
           AutoPtr<Elem> side = child->build_side(side_num);
           for (unsigned int i = 0; i < side->n_nodes(); i++)
             _node_map[side->get_node(i)] = it->second;
+
+          if (is_inner_boundary(elemside))
+            for (unsigned int i = 0; i < side->n_nodes(); i++)
+              _inner_boundary_nodes.insert(side->get_node(i));
         }
       }
     }

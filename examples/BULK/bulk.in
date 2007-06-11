@@ -36,14 +36,14 @@ $Models
     {
       BC_Region anode
       {
-        BC_reg_numb = 2
+        BC_reg_numb = 1
         type = ohmic
-        voltage = @Vb[0.9]
+        voltage = @Vb[0.0]
       }
 
       BC_Region cathode
       {
-        BC_reg_numb = 1
+        BC_reg_numb = 2
         type = ohmic
         voltage = 0.0
       }
@@ -104,16 +104,17 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = bulk1D.msh
-  dimension = 1
+  meshfile = bulk2D.msh
+  dimension = 2
   temperature = 300
   #solve = driftdiffusion
   solve = sweep
-  resultpath = output_1D
-  output_format = grace
-  #output_format = gmv
+  resultpath = output_2D
+  #output_format = grace
+  output_format = gmv
   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, current)
 }
+
 
 
 
