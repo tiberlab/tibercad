@@ -40,7 +40,8 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     _heat_simul(NULL),
     _eTEpower(0),
     _hTEpower(0),
-    thermoelectric_power_(NULL)
+    _thermoelectric_power(NULL),
+    _is_dielectric(false)
 {
 }
 
@@ -55,6 +56,10 @@ DriftDiffusionProperties::do_init(void)
   if (get_options().get_option("statistics", stat) == "FD")
     set_statistics(TiberCad::FERMIDIRAC);
 
+
+  _is_dielectric = get_material()->get_options().get_option("dielectric", false);
+
+  
   //
   // mobilities
   // 
@@ -115,28 +120,23 @@ DriftDiffusionProperties::do_init(void)
    
 
    // create a pointer to thermoelectric power
-   PhysicalModelInterface::destroy(thermoelectric_power_);
+   PhysicalModelInterface::destroy(_thermoelectric_power);
    
    it = get_options().submodels_begin("thermoelectric_power");
    end = get_options().submodels_end("thermoelectric_power");
 
     if (it != end)
    {
-     thermoelectric_power_ = dynamic_cast<ThermoelectricPower*>(
+     _thermoelectric_power = dynamic_cast<ThermoelectricPower*>(
       PhysicalModelInterface::create("thermoelectric_power", it->second));
 
-    if (thermoelectric_power_ == NULL)
+    if (_thermoelectric_power == NULL)
       throw InitFailedException("Could not create thermoelectric power model");
 
-    thermoelectric_power_->init();  
+    _thermoelectric_power->init();  
  
-    thermoelectric_power_->set_material(get_material());
+    _thermoelectric_power->set_material(get_material());
    }
-
-
-
-
-
 
 }
 
@@ -148,7 +148,7 @@ DriftDiffusionProperties::~DriftDiffusionProperties(void)
   clear_recombination();
   PhysicalModelInterface::destroy(_electron_mobility);
   PhysicalModelInterface::destroy(_hole_mobility);
-  PhysicalModelInterface::destroy(thermoelectric_power_);
+  PhysicalModelInterface::destroy(_thermoelectric_power);
 }
 
 
@@ -648,27 +648,27 @@ DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
 void  DriftDiffusionProperties::compute_thermoelectric_powers()
 {
 
-  if (thermoelectric_power_ != NULL)
+  if (_thermoelectric_power != NULL)
   {
 
-    thermoelectric_power_->set_fermi_potential(fermi_e,fermi_h);
+    _thermoelectric_power->set_fermi_potential(fermi_e,fermi_h);
     
     double cb = get_conduction_band_edge()-electric_potential;
     
     double vb = get_valence_band_edge()-electric_potential;
     
-    thermoelectric_power_->set_band_edges(cb,vb);
+    _thermoelectric_power->set_band_edges(cb,vb);
  
-    thermoelectric_power_->set_mobility_term(5.0,5.0);
+    _thermoelectric_power->set_mobility_term(5.0,5.0);
 
     
-    thermoelectric_power_->set_temperature(lattice_vt / Constants::k_B);
+    _thermoelectric_power->set_temperature(lattice_vt / Constants::k_B);
     
-    thermoelectric_power_->re_init();
+    _thermoelectric_power->re_init();
     
-    _eTEpower = thermoelectric_power_->get_electrons_thermoelectric_power();
+    _eTEpower = _thermoelectric_power->get_electrons_thermoelectric_power();
 
-    _hTEpower = thermoelectric_power_->get_holes_thermoelectric_power();
+    _hTEpower = _thermoelectric_power->get_holes_thermoelectric_power();
     
   }
  

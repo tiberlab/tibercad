@@ -120,7 +120,7 @@ DriftDiffusion::Options::operator=(const Options& rhs)
 
 DriftDiffusion::SolverParameters::SolverParameters(void)
   : nonlinear_tolerance(1e-9), 
-    nonlinear_abs_tolerance(1e-12),
+    nonlinear_abs_tolerance(1e-15),
     nonlinear_step_tolerance(1e-3),
     nonlinear_max_iterations(20),
     linear_tolerance(1e-6),
@@ -263,7 +263,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
   double x0 = -1;
   double phi0 = SimulationOptions::T * Constants::k_B;
   double mu0 = -1;
-  double C0 = 1e-12;
+  double C0 = 1;
   double ni0 = 1e-12; // let 1 be the minimum for ni0
   double eps0 = -1;
   
@@ -1016,6 +1016,7 @@ DriftDiffusion::do_newton(void)
   SolverParameters& solver_params = get_options().solver_params;
   
   system.set_linear_solver_params(solver_params.linear_tolerance,
+      solver_params.linear_abs_tolerance,
       solver_params.linear_max_iterations);
 
   system.set_nonlinear_solver_params(solver_params.nonlinear_tolerance,
@@ -1034,7 +1035,7 @@ void
 DriftDiffusion::solve_newton(void)
 {
   
-  set_dirichlet_bc();
+  //set_dirichlet_bc();
 
   bool failure = true;
   string msg("DriftDiffusion: solve failed (");
@@ -1807,6 +1808,12 @@ DriftDiffusion::calculate_currents_rstf(void)
           device.get_material(subdomain)->get_model(get_id()));
 
     assert(sc != NULL);
+
+    
+    // in a dielectric we have no current
+    if (sc->is_dielectric())
+      continue;
+
 
     fe->reinit(elem);
 
@@ -2605,12 +2612,16 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
         if (edens != -1)
         {
           double nodal_val = sc->get_electron_density();
+          if (sc->is_dielectric())
+            nodal_val = 0.0;
           local[id + edens] += nodal_val / conn;
         }
 
         if (hdens != -1)
         {
           double nodal_val = sc->get_hole_density();
+          if (sc->is_dielectric())
+            nodal_val = 0.0;
           local[id + hdens] += nodal_val / conn;
         }
 
@@ -2629,6 +2640,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
         if (rho != -1)
         {
           double nodal_val = sc->get_charge_density();
+          if (sc->is_dielectric())
+            nodal_val = 0.0;
           local[id + rho] += nodal_val / conn;
         }
 
@@ -3719,6 +3732,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         drho[1] = (dn_dphi - dNd_dphi) / C0;
         drho[2] = -(dp_dphi - dNa_dphi) / C0;
         drho[0] = -(drho[1] + drho[2]);
+        if (sc->is_dielectric())
+          drho[2] = drho[1] = drho[0] = 0.0;
 
         double dRn_dn = sc->get_net_electron_recombination_rate_derivatives()[0];
         double dRn_dp = sc->get_net_electron_recombination_rate_derivatives()[1];
@@ -3747,6 +3762,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           sc->get_hole_density_derivative();
 
 
+      //if (jacobian != NULL)
         for (unsigned int i = 0; i < n_dofs; i++)
         {
           for (unsigned int j = 0; j < n_dofs; j++)
@@ -3870,9 +3886,93 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
           }
         }
+/*
+        if (residual != NULL)
+        {
+          for (unsigned int i = 0; i < n_dofs; i++)
+          {
+            for (unsigned int j = 0; j < n_dofs; j++)
+            {
+
+              double dsigma_e_x_phi = dsigma_e * phi[j][qp] * 0.1;
+              double dsigma_h_x_phi = dsigma_h * phi[j][qp] * 0.1;
+
+
+              for (unsigned int k = 0; k < n_dofs; k++)
+              {
+                double laplace = (dphi[i][qp] * dphi[k][qp]);
+
+                if (coupling & ECURRENT)
+                {
+                  double elem_contrib =
+                    dsigma_e_x_phi * laplace * Xn(k);
+
+                  if (coupling & POISSON)
+                    Fn(i) += elem_contrib * dXu(j);
+
+                  Fn(i) -= elem_contrib * dXn(j);
+                }
+
+                if (coupling & HCURRENT)
+                {
+                  double elem_contrib =
+                    dsigma_h_x_phi * laplace * Xp(k);
+
+                  if (coupling & POISSON)
+                    Fp(i) += elem_contrib * dXu(j);
+
+                  Fp(i) -= elem_contrib * dXp(j);
+                }
+              }
+
+
+              if (i != j)
+              {
+                double phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp] * 0.1;
+
+                if (coupling & POISSON)
+                {
+                  Fu(i) -= drho[0] * phi_i_x_phi_j * dXu(j);
+
+                  if (coupling & ECURRENT)
+                    Fu(i) -= drho[1] * phi_i_x_phi_j * dXn(j);
+
+                  if (coupling & HCURRENT)
+                    Fu(i) -= drho[2] * phi_i_x_phi_j * dXp(j);
+                }            
+
+                if (coupling & ECURRENT)
+                {
+                  // (1) would destroy M-Matrix property
+                  // (2) is 0 for Boltzmann statistics
+                  //if (coupling & POISSON)
+                  //  Knu(i,j) -= dRn[0] * phi_i_x_phi_j;
+
+                  Fn(i) -= dRn[1] * phi_i_x_phi_j / local_scaling[i][0] * dXn(j);
+
+                  if (coupling & HCURRENT)
+                    Fn(i) -= dRn[2] * phi_i_x_phi_j / local_scaling[i][0] * dXp(j);
+                }
+
+                if (coupling & HCURRENT)
+                {
+                  // (1) would destroy M-Matrix property
+                  // (2) is 0 for Boltzmann statistics
+                  //if (coupling & POISSON)
+                  //  Kpu(i,j) += dRp[0] * phi_i_x_phi_j;
+
+                  if (coupling & ECURRENT)
+                    Fp(i) += dRp[1] * phi_i_x_phi_j / local_scaling[i][1] * dXn(j);
+
+                  Fp(i) += dRp[2] * phi_i_x_phi_j / local_scaling[i][1] * dXp(j);
+                }
+              }
+            }
+          }
+        } // if (residual != NULL)
+*/
+
       }
-
-
 
 
       // if we are doing residual, calculate rhs contribution (i.e. Fe)
@@ -3880,6 +3980,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       {
         // charge density
         Real J_x_rho = J * sc->get_charge_density() / C0;
+        if (sc->is_dielectric())
+          J_x_rho = 0.0;
+
         Real J_x_P0 = J / P0;
 
         // net recombination rate
@@ -3929,6 +4032,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
       }
     } // end loop over quadrature points
+
 
     
     // now loop over the element sides to find boundary elements
@@ -4187,6 +4291,41 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       }
     } // end loop over element sides
 
+
+
+    // check if it is a dielectric
+    if (sc->is_dielectric())
+    {
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        for (unsigned int j = 0; j < n_dofs; j++)
+        {
+          Kun(i, j) = Kup(i, j) = 0.0;
+          Knu(i, j) = Knn(i, j) = Knp(i, j) = 0.0;
+          Kpu(i, j) = Kpn(i, j) = Kpp(i, j) = 0.0;
+        }
+
+        Knn(i, i) = Kpp(i, i) = 1.0;
+
+        //Fn(i) = -Xn(i);
+        //Fp(i) = -Xp(i);
+        Fn(i) = 0.0;
+        Fp(i) = 0.0;
+      }
+
+      for (unsigned int s = 0; s < elem->n_sides(); s++)
+      {
+        ElementSide side(top_parent, s);
+        if (environment.is_inner_boundary(side))
+        {
+          for (unsigned int i = 0; i < n_dofs; i++)
+          {
+            if (elem->is_node_on_side(i, s))
+              Knn(i, i) = Kpp(i, i) = 0.0;
+          }
+        }
+      }
+    }
 
 
     // constrain the jacobian and the rhs to account for constrained

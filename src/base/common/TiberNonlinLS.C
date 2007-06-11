@@ -114,6 +114,8 @@ TiberNonlinLS::solve(void)
     // prepare jacobian and residual
     _assemble(u, rhs, NULL);
     _assemble(u, NULL, matrix);
+
+    _solver->set_ksp_options(tol, _lin_abs_tol, _lin_max_it);
     
     // solve the linear system
     _solver->solve(*matrix, *solution, *rhs, tol, _lin_max_it);

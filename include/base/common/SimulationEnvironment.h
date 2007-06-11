@@ -426,7 +426,11 @@ SimulationEnvironment::is_inner_boundary(const ElementSide& side) const
 
   if ((neighbour != NULL) &&
       (neighbour->subdomain_id() != (side.first)->subdomain_id()))
-    result = true;
+  {
+    ID neighbour_id = neighbour->subdomain_id();
+    if (_region_numbers.find(neighbour_id) != _region_numbers.end())
+      result = true;
+  }
 
   return result;
 }

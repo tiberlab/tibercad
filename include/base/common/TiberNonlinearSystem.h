@@ -105,6 +105,7 @@ class TiberNonlinearSystem : public ImplicitSystem
 
     //! Set the linear solver parameters
     void set_linear_solver_params(double relative_tolerance,
+                                  double absolute_tolerance,
                                   unsigned int maximum_iterations);
 
 
@@ -177,8 +178,12 @@ class TiberNonlinearSystem : public ImplicitSystem
     unsigned int _nonlin_max_it;
 
 
-    //! The linear tolerance
+    //! The linear relative tolerance
     double _lin_tol;
+
+
+    //! The linear absolute tolerance
+    double _lin_abs_tol;
 
 
     //! The linear solver maximum number of iterations
@@ -274,9 +279,10 @@ TiberNonlinearSystem::system_type(void) const
 inline
 void
 TiberNonlinearSystem::set_linear_solver_params(double relative_tolerance,
-    unsigned int maximum_iterations)
+    double absolute_tolerance, unsigned int maximum_iterations)
 {
   _lin_tol = relative_tolerance;
+  _lin_abs_tol = absolute_tolerance;
   _lin_max_it = maximum_iterations;
 }
 

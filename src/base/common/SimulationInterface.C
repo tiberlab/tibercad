@@ -392,7 +392,7 @@ SimulationInterface::do_plot(void)
   string suff;
   if (format == "gmv")
     suff = ".gmv";
-  else if (format == "tecplot")
+  else if (format == "ise")
     suff = ".plt";
   else if (format == "grace")
     suff = ".dat";

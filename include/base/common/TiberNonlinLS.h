@@ -7,7 +7,7 @@
 #include "TiberNonlinearSystem.h"
 
 
-template<typename> class LinearSolver;
+template<typename> class TiberPetscLinearSolver;
 
 
 //! An implementation of line search to solve nonlinear systems
@@ -56,7 +56,7 @@ class TiberNonlinLS : public TiberNonlinearSystem
     typedef TiberNonlinearSystem Parent;
 
     //! The linear solver to be used for the Newton iteration
-    LinearSolver<double>* _solver;
+    TiberPetscLinearSolver<double>* _solver;
 
 };
 

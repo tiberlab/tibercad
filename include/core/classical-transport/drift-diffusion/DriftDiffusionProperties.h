@@ -107,6 +107,10 @@ class DriftDiffusionProperties : public PhysicalModel
     DriftDiffusionDefs::Coupling get_coupling_type(void) const
       { return (DriftDiffusionDefs::Coupling) _coupling; };
 
+
+    //! Tells if this model is for a dielectric
+    bool is_dielectric(void) const;
+
     
     //! Setup the band edge data
     /*!
@@ -816,7 +820,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! The electron thermoelectric power
-    ThermoelectricPower* thermoelectric_power_;
+    ThermoelectricPower* _thermoelectric_power;
 
 
     //! The constant factor to calculate the effective density of states
@@ -824,6 +828,10 @@ class DriftDiffusionProperties : public PhysicalModel
      * The spin degeneracy has to be included in the effective mass
      */
     static const double _DOS_factor;
+
+
+    //! True if this is a dielectric
+    bool _is_dielectric;
 
 };
 
@@ -852,6 +860,16 @@ DriftDiffusionProperties::reinit(const Elem* elem)
     this->prepare_element_data();
   }
 }
+
+
+inline
+bool
+DriftDiffusionProperties::is_dielectric(void) const
+{
+  return _is_dielectric;
+}
+
+
  
 inline
 void

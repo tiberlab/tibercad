@@ -71,7 +71,7 @@ TiberNonlinPetsc::solve(void)
   // ('mean value' in the sense of eps = ||x|| / nn )
   double sqrt_nn = std::sqrt(get_mesh().n_nodes() * n_vars());
 
-  _solver->set_ksp_options(_lin_tol, _lin_max_it);
+  _solver->set_ksp_options(_lin_tol, _lin_abs_tol, _lin_max_it);
 
   _solver->set_snes_options(_nonlin_rel_tol, _nonlin_abs_tol,
       _nonlin_step_tol, _nonlin_max_it);
