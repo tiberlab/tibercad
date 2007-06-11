@@ -4317,7 +4317,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     }
 
 
-
     // constrain the jacobian and the rhs to account for constrained
     // DOFs
     // NOTE: this changes dof_indices that's why the application of

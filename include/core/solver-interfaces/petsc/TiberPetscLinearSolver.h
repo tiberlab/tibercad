@@ -43,15 +43,15 @@ class TiberPetscLinearSolver : public LinearSolver<T>
 
 
     //! Destructor.
-    ~TiberPetscLinearSolver(void);
+    virtual ~TiberPetscLinearSolver(void);
 
 
     //! Release all memory and clear data structures.
-    void clear(void);
+    virtual void clear(void);
 
 
     //! Initialize data structures if not done so already.
-    void init(void);
+    virtual void init(void);
 
 
     //! Set the options for the linear solver
@@ -67,7 +67,7 @@ class TiberPetscLinearSolver : public LinearSolver<T>
      * It calls the method below, using the
      * same matrix for the system and preconditioner matrices.
      */    
-    std::pair<unsigned int, Real> 
+    virtual std::pair<unsigned int, Real> 
       solve (SparseMatrix<T>  &matrix_in,
           NumericVector<T> &solution_in,
           NumericVector<T> &rhs_in,
@@ -79,7 +79,7 @@ class TiberPetscLinearSolver : public LinearSolver<T>
 
 
     //! Call the linear solver specifying explicitly the preconditioner matrix
-    std::pair<unsigned int, Real> 
+    virtual std::pair<unsigned int, Real> 
       solve (SparseMatrix<T>  &matrix,
           SparseMatrix<T>  &preconditioner,
           NumericVector<T> &solution,
