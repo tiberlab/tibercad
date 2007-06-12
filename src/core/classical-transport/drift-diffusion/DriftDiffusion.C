@@ -124,7 +124,7 @@ DriftDiffusion::SolverParameters::SolverParameters(void)
     nonlinear_step_tolerance(1e-3),
     nonlinear_max_iterations(20),
     linear_tolerance(1e-6),
-    linear_abs_tolerance(1e-15),
+    linear_abs_tolerance(1e-50),
     linear_max_iterations(500),
     ls_maxstep(1.0),
     ls_type(3),
@@ -1078,7 +1078,7 @@ void
 DriftDiffusion::solve_newton(void)
 {
   
-  //set_dirichlet_bc();
+  set_dirichlet_bc();
 
   bool failure = true;
   string msg("DriftDiffusion: solve failed (");
