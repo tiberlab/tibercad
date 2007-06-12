@@ -196,10 +196,6 @@ class SimulationEnvironment
      */
     bool is_inner_boundary(const ElementSide& side) const;
 
-
-    //! Check if a node lies on an inner boundary
-    bool is_inner_boundary(const Node* node) const;
-
     
     //! Get the iterator for the first boundary side
     const BoundarySideIterator boundary_sides_begin(void) const;
@@ -308,14 +304,6 @@ class SimulationEnvironment
     NodeMap _node_map;
 
 
-    //! A map that contains only inner boundary nodes
-    /*!
-     * An inner boundary is a n-1 dimensional domain inside of a
-     * simulation region
-     */
-    std::set<const Node*> _inner_boundary_nodes;
-
-    
     //! Tells if this environment is already initialized
     bool _is_initialized;
 
@@ -487,21 +475,6 @@ SimulationEnvironment::get_boundary(const Node* node) const
     return NULL;
 }
 
-
-
-inline
-bool
-SimulationEnvironment::is_inner_boundary(const Node* node) const
-{
-  bool result = false;
-
-  std::set<const Node*>::const_iterator it(_inner_boundary_nodes.find(node));
-
-  if (it != _inner_boundary_nodes.end())
-    result = true;
-  
-  return result;
-}
 
 
 

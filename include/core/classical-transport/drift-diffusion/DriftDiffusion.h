@@ -654,6 +654,13 @@ class DriftDiffusion : public SimulationInterface
 
 
     /*!
+     * \brief A list of nodes which lie on an inner boundary between
+     * a dielectric and a semiconductor
+     */
+    std::set<const Node*> _dielectric_boundary_nodes;
+
+
+    /*!
      * If @c true, the equation system needs to be rebuilt
      */
     bool _rebuild_eq_system;
@@ -722,17 +729,24 @@ class DriftDiffusion : public SimulationInterface
     void rebuild_equation_system(void);
 
     
-    /**
-     * Computes the scaling parameters according to the
+    /*!
+     * \brief Computes the scaling parameters according to the
      * scaling type \p type
      */
     void compute_scaling(Scaling::ScalingType type = Scaling::UNITS);
 
     
-    /**
-     * Fills the dirichlet nodes data structure.
-     */
+    
+    //! Fills the dirichlet nodes data structure.
     void find_dirichlet_nodes(void);
+
+
+    //! Find nodes on boundary between dielectric/semiconductor
+    void find_dielectric_boundary_nodes(void);
+    
+
+    //! Tells if node lies on an inner dielectric/semiconductor boundary
+    bool is_dielectric_boundary_node(const Node* node) const;
 
     
     //! Reset solver environment.
@@ -774,6 +788,7 @@ class DriftDiffusion : public SimulationInterface
      * \mu_p p \nabla\phi_p \right) \mathrm{d}\Gamma \f]
      */
     void calculate_currents_surfint(void);
+
 
     //! Calculate terminal currents
     /*!
@@ -979,6 +994,20 @@ DriftDiffusion::get_electric_potential(const Elem* elem,
 {
   get_solution(elem, p, potential);
 }
+
+
+
+inline
+bool
+DriftDiffusion::is_dielectric_boundary_node(const Node* node) const
+{
+  bool result = false;
+  if (_dielectric_boundary_nodes.find(node) != _dielectric_boundary_nodes.end())
+    result = true;
+
+  return result;
+}
+
 
 
 inline

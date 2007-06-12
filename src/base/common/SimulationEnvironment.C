@@ -238,8 +238,6 @@ SimulationEnvironment::update_boundary_node_map(void)
     {
       const ElementSide& elem_side = it->first;
       _node_map[(elem_side.first)->get_node(elem_side.second)] = it->second;
-      if (is_inner_boundary(elem_side))
-        _inner_boundary_nodes.insert((elem_side.first)->get_node(elem_side.second));
     }
   }
   else
@@ -269,10 +267,6 @@ SimulationEnvironment::update_boundary_node_map(void)
           AutoPtr<Elem> side = child->build_side(side_num);
           for (unsigned int i = 0; i < side->n_nodes(); i++)
             _node_map[side->get_node(i)] = it->second;
-
-          if (is_inner_boundary(elemside))
-            for (unsigned int i = 0; i < side->n_nodes(); i++)
-              _inner_boundary_nodes.insert(side->get_node(i));
         }
       }
     }

@@ -508,6 +508,48 @@ DriftDiffusion::find_dirichlet_nodes(void)
 
 
 
+void
+DriftDiffusion::find_dielectric_boundary_nodes(void)
+{
+  Mesh& mesh = get_mesh();
+  Mesh::element_iterator it = mesh.active_elements_begin();
+  const Mesh::element_iterator end = mesh.active_elements_end();
+  
+  for ( ; it != end; ++it)
+  {
+    const Elem* el = *it;
+
+    DriftDiffusionProperties* sc =
+      dynamic_cast<DriftDiffusionProperties*>(
+          _device->get_material(el->subdomain_id())->get_model(get_id()));
+    
+    // we are only interested in boundaries between semiconductor/dielectric
+    if (sc->is_dielectric())
+    {
+      for (unsigned s = 0; s < el->n_sides(); s++)
+      {
+        if (get_environment().is_inner_boundary(ElementSide(el, s)))
+        {
+          // get the model of the neighbor element
+          DriftDiffusionProperties* scn =
+            dynamic_cast<DriftDiffusionProperties*>(
+                _device->get_material(
+                  el->neighbor(s)->subdomain_id())->get_model(get_id()));
+
+          // if neighbor is not dielectric we record it
+          if (!scn->is_dielectric())
+          {
+            AutoPtr<Elem> side(el->build_side(s));
+            for (unsigned int i = 0; i < side->n_nodes(); i++)
+              _dielectric_boundary_nodes.insert(side->get_node(i));
+          }
+        }
+      }
+    }
+  }
+}
+
+
 
 void
 DriftDiffusion::reset_solver(void)
@@ -922,8 +964,6 @@ DriftDiffusion::rebuild_equation_system(void)
   if (!_rebuild_eq_system) return;
 
 
-  _device = &get_environment().get_device();
-
   EquationSystems& equation_systems = get_equation_systems();
 
   SolverParameters& solver_params = get_options().solver_params;
@@ -966,7 +1006,10 @@ void
 DriftDiffusion::do_init(void)
 {
 
+  _device = &get_environment().get_device();
+
   find_dirichlet_nodes();
+  find_dielectric_boundary_nodes();
 
   parse_const_options();
   
@@ -4305,7 +4348,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           Kpu(i, j) = Kpn(i, j) = Kpp(i, j) = 0.0;
         }
 
-        if (environment.is_inner_boundary(elem->get_node(i)))
+        if (is_dielectric_boundary_node(elem->get_node(i)))
           Knn(i, i) = Kpp(i, i) = 0.0;
         else
           Knn(i, i) = Kpp(i, i) = 1.0;
