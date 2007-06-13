@@ -450,13 +450,37 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
 
   // then sweep
-  const ModelOptions& sweepopts = parser.read_parameters("Solver", "sweep");
+  ModelOptions sweepopts = parser.read_parameters("Solver", "sweep");
   if (!solveropts.is_empty())
   {
+    if (!sweepopts.find_option("name"))
+      sweepopts["name"] = "sweep";
     SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
     sim->set_control(this);
     _simulations[sim->get_name()] = sim;
   }
+
+  sweepopts = parser.read_parameters("Solver", "sweep_1");
+  if (!solveropts.is_empty())
+  {
+    if (!sweepopts.find_option("name"))
+      sweepopts["name"] = "sweep_1";
+    SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
+    sim->set_control(this);
+    _simulations[sim->get_name()] = sim;
+  }
+
+  sweepopts = parser.read_parameters("Solver", "sweep_2");
+  if (!solveropts.is_empty())
+  {
+    if (!sweepopts.find_option("name"))
+      sweepopts["name"] = "sweep_2";
+    SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
+    sim->set_control(this);
+    _simulations[sim->get_name()] = sim;
+  }
+
+
 
 }
 
@@ -473,7 +497,7 @@ Control::run_simulation(void) throw (SolveFailedException)
 
   vector<string> names;
   opts.get_option("solve", names);
-  
+
   cout << "We solve: ";
   unsigned int n = names.size();
   for (unsigned int i = 0; i < n; i++)

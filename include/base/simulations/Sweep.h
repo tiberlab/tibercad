@@ -58,6 +58,18 @@ class Sweep : public SimulationInterface
     virtual void do_plot(void);
 
 
+    /*! \copydoc SimulationInterface::do_remember_current_solution() */
+    virtual ID do_remember_current_solution(ID id = 0);
+
+
+    /*! \copydoc SimulationInterface::do_set_to_remembered_solution() */
+    virtual void do_set_to_remembered_solution(ID id);
+
+
+    /*! \copydoc SimulationInterface::do_delete_remembered_solution() */
+    virtual void do_delete_remembered_solution(ID id);
+  
+
     
     /*! \copydoc SimulationInterface::parse_options() */
     virtual void parse_options(void);
@@ -90,6 +102,10 @@ class Sweep : public SimulationInterface
 
     //! The dependent variables we want to plot
     std::set<std::string> _plotvariables;
+
+
+    //! The ids of the remembered solutions
+    std::map<ID, std::vector<ID> > _remembered_sol_ids;
 
 
 };
