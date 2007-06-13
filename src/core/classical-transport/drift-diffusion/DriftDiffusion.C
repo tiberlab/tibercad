@@ -576,8 +576,6 @@ DriftDiffusion::cleanup_solver(void)
   _dirichlet_nodes.erase(_dirichlet_nodes.begin(),
       _dirichlet_nodes.end());
 
-  // clear variables vector
-  _variables.erase(_variables.begin(), _variables.end());
 
   reset_solver();
 }

@@ -678,11 +678,6 @@ class DriftDiffusion : public SimulationInterface
      */
     ContactData _boundary_currents;
 
-    /**
-     * The variable names in the same order as they appear in the
-     * solution vector
-     */
-    std::vector<std::string> _variables;
 
     //! The local density scaling
     std::map<const Node*, std::vector<double> > local_scaling_;

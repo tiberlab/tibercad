@@ -1,0 +1,161 @@
+
+# Description of  the  device physical regions
+$Device
+{
+   Region substrate 
+   {
+     reg_numb = 1
+     mat = Si
+     doping = 1e16 doping_type = acceptor
+   }
+   
+   Region contact
+   {
+     reg_numb = 2
+     mat = Si
+     doping = 1e19 doping_type = donor
+   }
+
+   Region oxide
+   {
+     reg_numb = 3
+     mat = SiO2
+     #doping = 1e16 doping_type = donor
+     dielectric = true
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+
+  model driftdiffusion
+  { 
+              
+    options
+    {
+     simulation_name = driftdiffusion
+
+     physical_regions = all
+    }
+
+    physical_model recombination
+    {
+      model = srh
+    }
+
+
+    BC_Regions  
+    {
+      BC_Region gate
+      {
+        BC_reg_numb = 2
+        type = schottky
+	barrier_height = 3.0
+	zero_grad_fermi_e = true
+	zero_grad_fermi_h = true
+        voltage = @Vg[0.0]
+      }
+
+      BC_Region source
+      {
+        BC_reg_numb = 1
+        type = ohmic
+	zero_grad_fermi_h = true
+        voltage = 0.0
+      }
+ 
+      BC_Region drain
+      {
+        BC_reg_numb = 3
+        type = ohmic
+	zero_grad_fermi_h = true
+        voltage = @Vd[0.1]
+      }
+ 
+
+    }   
+
+  }  
+
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+  driftdiffusion
+  {
+    nonlinear_solver = tiber
+    coupling = electrons
+    ksp_type = bcgsl
+    nonlin_max_it = 20
+    nonlin_rel_tol = 1e-12
+    nonlin_abs_tol = 1e-15
+    nonlin_step_tol = 1e-4
+    lin_rel_tol = 1e-6
+    lin_abs_tol = 1e-50
+    ls_max_step = 2
+    #pc_type = composite
+    #local_density_scaling = true
+    #current_integration_method = surfint
+    #relaxation_factor = 0.5
+  }
+
+
+  sweep
+  {
+    simulation = driftdiffusion
+    variable = Vg
+    start = 0.0
+    stop = -2.5
+    steps = 25
+    plotvariable = current
+  }
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+ 
+  driftdiffusion 
+  {
+    model = unstrained
+    statistics = FD
+  }
+
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+
+$Simulation
+{
+  searchpath = ../materials
+  meshfile = mosfet.msh
+  dimension = 2
+  temperature = 300
+  #solve = driftdiffusion
+  solve = (driftdiffusion, sweep)
+  resultpath = output
+  output_format = gmv
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, EField, ElPotential)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

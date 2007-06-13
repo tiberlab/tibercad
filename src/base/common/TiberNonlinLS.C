@@ -123,6 +123,9 @@ TiberNonlinLS::solve(void)
     // the l2 norm of the current residual
     norm_rhs = rhs->l2_norm();
     norm_res = norm_rhs;
+    
+    if (norm_res < eps_res)
+      break;
 
     u_old = u;
     norm_du_old = norm_du;
@@ -178,16 +181,17 @@ TiberNonlinLS::solve(void)
           ls_step--;
       }
     }
-    
-    // check for divergence
-    if ((norm_res > norm_rhs) || isnan(norm_res))
-      throw (SNESDivergedError(-4, i, norm_rhs));
-
 
     // check for convergence
     if ((norm_du < eps) || (norm_res < eps_res))
       break;
-    
+      
+
+    // check for divergence
+    if ((norm_res > norm_rhs) || isnan(norm_res))
+      throw (SNESDivergedError(-4, i, norm_rhs));
+
+  
 
     if (cauchy)
     //if ((ls_step >= max_ls_step) && (norm_res >= norm_rhs))
