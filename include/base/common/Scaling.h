@@ -36,7 +36,7 @@ class Scaling
       NONE,   /*!< all scaling parameters are 1 */
       UNITS,  /*!< units scaling, for drift-diffusion */
       DEMARI, /*!< De Mari scaling, for drift-diffusion */
-      CUSTOM, /*!< other */
+      CUSTOM  /*!< other */
     };
 
     //! Get the scaling type
@@ -238,6 +238,8 @@ Scaling::operator=(const Scaling& other)
   _mesh_units = other._mesh_units;
   _mobility = other._mobility;
   _density = other._density;
+
+  return *this;
 }
 
 

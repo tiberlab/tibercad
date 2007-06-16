@@ -23,7 +23,7 @@ namespace TiberCad
     CYLINDRICAL   /*!< cylinder symmetry */
   };
 
-};
+}
 
 
 #endif // _TIBERCAD_H_
