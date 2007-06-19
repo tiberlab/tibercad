@@ -227,6 +227,8 @@ Sweep::do_solve(void)
     }
   }
 
+  // the first solution
+  ID first_sol;
 
   // we make a copy of the current solutions
   // we need this in the case of a solver failure to go back
@@ -256,6 +258,11 @@ Sweep::do_solve(void)
     double step = goal - _last;
     double old_step = 0.0;
 
+
+    for (int j = 0; j < num_sim; j++)
+      _simulations[j]->set_to_remembered_solution(old_sol[j]);
+
+
     // we iterate until we arrive at the goal
     double value;
     do
@@ -271,21 +278,16 @@ Sweep::do_solve(void)
         value = goal;
       
       Variable::set_variable_value(_variable, value);
-      cout  << "Sweep value = " << value << endl;
+      cout  << "Sweep value " << _variable << " = " << value << endl;
       
       try
       {
-        bool plot_data = false;
         
         // prepare filename suffix
-        if (find_if(values_begin, values_end,
-              bind2nd(Utils::almost_equal(), _last)) != values_end)
         {
           ostringstream s;
-          s << suffix << "_" << _variable << "_" << _last;
+          s << suffix << "_" << _variable << "_" << value;
           get_control().set_filename_suffix(s.str());
-
-          plot_data = true;
         }
 
 
@@ -293,18 +295,25 @@ Sweep::do_solve(void)
           _simulations[j]->solve();
 
 
-        _last = Variable::get_variable_value(_variable);
+        //_last = Variable::get_variable_value(_variable);
+        _last = value;
 
 
-        // remember the current solution
+        // remember the current solution, but not for sweeps!
         for (int j = 0; j < num_sim; j++)
-          _simulations[j]->remember_current_solution(old_sol[j]);
+        {
+          if (_simulations[j]->get_type() != "sweep")
+            _simulations[j]->remember_current_solution(old_sol[j]);
+        }
 
 
         // write results, but only at desired sweep steps
-        if (plot_data)
+        if (find_if(values_begin, values_end,
+              bind2nd(Utils::almost_equal(), value)) != values_end)
+        {
           for (int j = 0; j < num_sim; j++)
             _simulations[j]->plot();
+        }
 
 
         // update "something-vs.-sweepvariable" files
@@ -355,6 +364,12 @@ Sweep::do_solve(void)
     }
     while (goal_sign * (value - goal) < -eps);
 
+
+    if (i == 0)
+    {
+      first_sol = remember_current_solution();
+    }
+
   }
 
 
@@ -379,7 +394,8 @@ Sweep::do_remember_current_solution(ID id)
   int num_sim = _simulations.size();
 
   map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
-  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
+  //map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
+  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.begin());
 
   if (it != end)
   {
@@ -411,7 +427,8 @@ Sweep::do_set_to_remembered_solution(ID id)
   int num_sim = _simulations.size();
 
   map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
-  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
+  //map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
+  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.begin());
 
   if (it != end)
     for (int i = 0; i < num_sim; i++)
@@ -426,7 +443,9 @@ Sweep::do_delete_remembered_solution(ID id)
   int num_sim = _simulations.size();
 
   map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
-  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
+  //map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
+  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.begin());
+
   if (it != end)
     for (int i = 0; i < num_sim; i++)
       _simulations[i]->delete_remembered_solution((it->second)[i]);

@@ -61,7 +61,8 @@ DriftDiffusion::Options::Options(void)
     scaling_type(Scaling::UNITS),
     coupling(FULLYCOUPLED),
     scheme(FEM),
-    current_calculation(RSTF)
+    current_calculation(RSTF),
+    exact_newton(true)
 {
 }
 
@@ -83,7 +84,8 @@ DriftDiffusion::Options::Options(const Options& rhs)
     scaling_type(rhs.scaling_type),
     coupling(rhs.coupling),
     scheme(rhs.scheme),
-    current_calculation(rhs.current_calculation)
+    current_calculation(rhs.current_calculation),
+    exact_newton(rhs.exact_newton)
 {
 }
 
@@ -110,6 +112,7 @@ DriftDiffusion::Options::operator=(const Options& rhs)
     coupling = rhs.coupling;
     scheme = rhs.scheme;
     current_calculation = rhs.current_calculation;
+    exact_newton = rhs.exact_newton;
   }
   return *this;
 }
@@ -920,6 +923,7 @@ DriftDiffusion::parse_options(void)
   myopts.mesh_refinement = opts.get_option("mesh_refinement",
       myopts.mesh_refinement);
 
+  myopts.exact_newton = opts.get_option("exact_newton", myopts.exact_newton);
 
   solver_params.nonlinear_tolerance = opts.get_option("nonlin_rel_tol",
       solver_params.nonlinear_tolerance);
@@ -3747,20 +3751,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     dXu.reposition(0, n_dofs);
     dXn.reposition(n_dofs, n_dofs);
     dXp.reposition(2 * n_dofs, n_dofs);
-/*
-    cerr << "Xu = [" << Xu(0);
-    for (int i = 1; i < n_dofs; i++)
-      cerr << ", " << Xu(i);
-    cerr << "]\n";
-    cerr << "Xn = [" << Xn(0);
-    for (int i = 1; i < n_dofs; i++)
-      cerr << ", " << Xn(i);
-    cerr << "]\n";
-    cerr << "Xp = [" << Xp(0);
-    for (int i = 1; i < n_dofs; i++)
-      cerr << ", " << Xp(i);
-    cerr << "]\n";
-*/
+
+
+
     DriftDiffusionProperties* sc =
       dynamic_cast<DriftDiffusionProperties*>(
           device.get_material(subdomain)->get_model(get_id()));
@@ -3941,7 +3934,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           sc->get_hole_density_derivative();
 
 
-      //if (jacobian != NULL)
         for (unsigned int i = 0; i < n_dofs; i++)
         {
           for (unsigned int j = 0; j < n_dofs; j++)
@@ -3950,43 +3942,41 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             // (for X_l = u_l we dont get anything, i.e. the
             // contributions to Kuu, Kun, Kup are zero)
 
-///*             
-            double dsigma_e_x_phi = dsigma_e * phi[j][qp];
-            double dsigma_h_x_phi = dsigma_h * phi[j][qp];
-            
-            for (unsigned int k = 0; k < n_dofs; k++)
+            if (_options.exact_newton)
             {
-              double laplace = (dphi[i][qp] * dphi[k][qp]);
-           
-              if (coupling & ECURRENT)
+              double dsigma_e_x_phi = dsigma_e * phi[j][qp];
+              double dsigma_h_x_phi = dsigma_h * phi[j][qp];
+
+              for (unsigned int k = 0; k < n_dofs; k++)
               {
-                double elem_contrib =
-                  dsigma_e_x_phi * laplace * Xn(k);
+                double laplace = (dphi[i][qp] * dphi[k][qp]);
 
-                if (coupling & POISSON)
-                  Knu(i,j) += elem_contrib;
-                  //Fu(i) -= elem_contrib * dXu(j);
+                if (coupling & ECURRENT)
+                {
+                  double elem_contrib =
+                    dsigma_e_x_phi * laplace * Xn(k);
 
-                Knn(i,j) -= elem_contrib;
-                //Fn(i) += elem_contrib * dXn(j);
-              }
+                  if (coupling & POISSON)
+                    Knu(i,j) += elem_contrib;
 
-              if (coupling & HCURRENT)
-              {
-                double elem_contrib =
-                  dsigma_h_x_phi * laplace * Xp(k);
-                
-                if (coupling & POISSON)
-                  Kpu(i,j) += elem_contrib;
-                  //Fu(i) -= elem_contrib * dXu(j);
+                  Knn(i,j) -= elem_contrib;
+                }
 
-                Kpp(i,j) -= elem_contrib;
-                //Fp(i) += elem_contrib * dXp(j);
+                if (coupling & HCURRENT)
+                {
+                  double elem_contrib =
+                    dsigma_h_x_phi * laplace * Xp(k);
+
+                  if (coupling & POISSON)
+                    Kpu(i,j) += elem_contrib;
+
+                  Kpp(i,j) -= elem_contrib;
+                }
               }
             }
 
 
-          //   // contribution of the Seebeck effect ->residual_derivative
+            // contribution of the Seebeck effect ->residual_derivative
             double dsigma_e_x_phi_x_Pe = dsigma_e * phi[j][qp] * eTEpower;
             double dsigma_h_x_phi_x_Ph = dsigma_h * phi[j][qp] * hTEpower;
 	    
@@ -4026,44 +4016,44 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             // The dFe_i/dX_j part
             double phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp];
 
-//if (i == j)
-            if (coupling & POISSON)
+            if (_options.exact_newton || (j == i))
             {
+              if (coupling & POISSON)
+              {
                 Kuu(i,j) -= drho[0] * phi_i_x_phi_j;
 
                 if (coupling & ECURRENT)
                   Kun(i,j) -= drho[1] * phi_i_x_phi_j;
 
                 if (coupling & HCURRENT)
-                Kup(i,j) -= drho[2] * phi_i_x_phi_j;
-            }            
-            
-//if (i == j)
-            if (coupling & ECURRENT)
-            {
-              // (1) would destroy M-Matrix property
-              // (2) is 0 for Boltzmann statistics
-              //if (coupling & POISSON)
-              //  Knu(i,j) -= dRn[0] * phi_i_x_phi_j;
-
-              Knn(i,j) -= dRn[1] * phi_i_x_phi_j / local_scaling[i][0];
-
-              if (coupling & HCURRENT)
-                Knp(i,j) -= dRn[2] * phi_i_x_phi_j / local_scaling[i][0];
-            }
-
-//if (i == j)
-            if (coupling & HCURRENT)
-            {
-              // (1) would destroy M-Matrix property
-              // (2) is 0 for Boltzmann statistics
-              //if (coupling & POISSON)
-              //  Kpu(i,j) += dRp[0] * phi_i_x_phi_j;
+                  Kup(i,j) -= drho[2] * phi_i_x_phi_j;
+              }            
 
               if (coupling & ECURRENT)
-                Kpn(i,j) += dRp[1] * phi_i_x_phi_j / local_scaling[i][1];
-              
-              Kpp(i,j) += dRp[2] * phi_i_x_phi_j / local_scaling[i][1];
+              {
+                // (1) would destroy M-Matrix property
+                // (2) is 0 for Boltzmann statistics
+                //if (coupling & POISSON)
+                //  Knu(i,j) -= dRn[0] * phi_i_x_phi_j;
+
+                Knn(i,j) -= dRn[1] * phi_i_x_phi_j / local_scaling[i][0];
+
+                if (coupling & HCURRENT)
+                  Knp(i,j) -= dRn[2] * phi_i_x_phi_j / local_scaling[i][0];
+              }
+
+              if (coupling & HCURRENT)
+              {
+                // (1) would destroy M-Matrix property
+                // (2) is 0 for Boltzmann statistics
+                //if (coupling & POISSON)
+                //  Kpu(i,j) += dRp[0] * phi_i_x_phi_j;
+
+                if (coupling & ECURRENT)
+                  Kpn(i,j) += dRp[1] * phi_i_x_phi_j / local_scaling[i][1];
+
+                Kpp(i,j) += dRp[2] * phi_i_x_phi_j / local_scaling[i][1];
+              }
             }
 
           }

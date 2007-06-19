@@ -67,6 +67,8 @@ TiberNonlinLS::clear(void)
   Parent::clear();
 }
 
+
+
 void
 TiberNonlinLS::user_initialization(void)
 {
@@ -248,6 +250,8 @@ TiberNonlinLS::solve(void)
     //if (norm_du < eps)
     if ((norm_du < eps) || (norm_res < eps_res))
       break;
+    else if (i == _nonlin_max_it)
+      throw (PetscDivergedError(-3, i, norm_rhs));
 
 
     //ostringstream o;
@@ -267,9 +271,6 @@ TiberNonlinLS::solve(void)
   cerr << "iterations: " << i << ", |du| = " << norm_du
     << ", |r| = " << norm_res << endl;
 
-  if (i >= _nonlin_max_it)
-    throw (PetscDivergedError(-3, i, norm_rhs));
-
-
+  
   update();
 }

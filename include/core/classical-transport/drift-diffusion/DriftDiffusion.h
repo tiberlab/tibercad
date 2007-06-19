@@ -385,6 +385,8 @@ class DriftDiffusion : public SimulationInterface
         //! How to calculate currents
         CurrentCalculation current_calculation; 
 
+        //! Use exact jacobian or not
+        bool exact_newton;
 
       private:
         
