@@ -15,6 +15,21 @@
 
 using namespace std;
 
+
+
+Sweep::~Sweep(void)
+{
+//  ID id = 1;
+//  map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
+//  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
+
+//  if (it != end)
+//    for (int i = 0; i < num_sim; i++)
+//      _simulations[i]->delete_remembered_solution((it->second)[i]);
+}
+
+
+
 void
 Sweep::do_init(void)
 {
@@ -227,8 +242,6 @@ Sweep::do_solve(void)
     }
   }
 
-  // the first solution
-  ID first_sol;
 
   // we make a copy of the current solutions
   // we need this in the case of a solver failure to go back
@@ -366,9 +379,7 @@ Sweep::do_solve(void)
 
 
     if (i == 0)
-    {
-      first_sol = remember_current_solution();
-    }
+      remember_solution();
 
   }
 
@@ -391,11 +402,20 @@ Sweep::do_solve(void)
 ID
 Sweep::do_remember_current_solution(ID id)
 {
+  //remember_solution();
+  
+  return 1;
+}
+
+
+ID
+Sweep::remember_solution(void)
+{
+  ID id = 1;
   int num_sim = _simulations.size();
 
   map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
-  //map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
-  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.begin());
+  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
 
   if (it != end)
   {
@@ -443,8 +463,7 @@ Sweep::do_delete_remembered_solution(ID id)
   int num_sim = _simulations.size();
 
   map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
-  //map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
-  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.begin());
+  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
 
   if (it != end)
     for (int i = 0; i < num_sim; i++)

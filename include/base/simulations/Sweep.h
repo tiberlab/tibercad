@@ -108,6 +108,9 @@ class Sweep : public SimulationInterface
     std::map<ID, std::vector<ID> > _remembered_sol_ids;
 
 
+    //! Remember the current solution
+    ID remember_solution(void);
+
 };
 
 
@@ -122,12 +125,6 @@ Sweep::Sweep(void)
     _min_step(1e-3),
     _max_step(1),
     _do_output(true)
-{
-}
-
-
-inline
-Sweep::~Sweep(void)
 {
 }
 

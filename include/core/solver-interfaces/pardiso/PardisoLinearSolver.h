@@ -79,7 +79,7 @@ class PardisoLinearSolver : public LinearSolver<T>
 	//! Initialize error flag 
         int  error;  
 
-	//! Print statistical information in file */
+	//! Print statistical information in file
         int  msglvl; 
 
         //! Real unsymmetric matrix 
