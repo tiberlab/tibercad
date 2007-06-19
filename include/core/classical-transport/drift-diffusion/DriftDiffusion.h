@@ -564,9 +564,18 @@ class DriftDiffusion : public SimulationInterface
       get_boundary_currents(void) const;
 
 
+     //!  Get electron thermoelectric power at the element centroid
     double get_electrons_thermoelectric_power(const Elem* elem);
 
+    //!  Get hole thermoelectric power at the element centroid
     double get_holes_thermoelectric_power(const Elem* elem);
+
+    //!  Get electron electron conducibility at the element centroid
+    double get_electron_conducibility(const Elem* elem);
+
+    //!  Get hole conducibility at the element centroid
+    double get_hole_conducibility(const Elem* elem);
+    
 
 
 

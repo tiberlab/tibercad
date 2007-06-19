@@ -62,10 +62,10 @@ public:
 
 
    //!provides electrons thermoelectric power [V/K]
-  double  ThermoelectricPower::get_electrons_thermoelectric_power(void) const;
+  double  get_electrons_thermoelectric_power(void) const;
 
    //!provides holes thermoelectric power [V/K]
-  double  ThermoelectricPower::get_holes_thermoelectric_power(void) const;
+  double  get_holes_thermoelectric_power(void) const;
   
   //! Update the value of the thermoelectric power
   void re_init(void);

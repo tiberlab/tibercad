@@ -134,6 +134,10 @@ TiberPetscLinearSolver<T>::solve(SparseMatrix<T>&  matrix_in,
   // Solve the linear system
   ierr = KSPSolve(_ksp, rhs->vec(), solution->vec());
   _checkerr(ierr);
+
+  std::cout<<solution->vec()<<std::endl;
+   std::cout<<"ciao"<<std::endl;
+
 	 
   // Get the number of iterations required for convergence
   ierr = KSPGetIterationNumber(_ksp, &its);

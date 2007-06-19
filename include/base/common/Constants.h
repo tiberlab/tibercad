@@ -58,6 +58,10 @@ namespace Constants
   //!Hartree [eV]
   extern const double Hartree;
 
+  //!Lorentz Numner [(W * Ohm) / ( K * K) ]
+  extern const double Lorenz_Number;
+
+
 }
 
 

@@ -87,7 +87,7 @@ class MacroHeatBalance : public SimulationInterface
 
 
   std::string system_name;
-
+  
   LinearImplicitSystem* my_system;  
  
   //! Order the solution in correct mode

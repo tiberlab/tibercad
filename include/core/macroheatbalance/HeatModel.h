@@ -7,7 +7,7 @@
 #include "ThermoelectricPower.h"
 #include "DriftDiffusion.h"
 #include "elem.h"
-
+#include "ParticleThermalConductivity.h"
 
 
 
@@ -29,7 +29,7 @@ class HeatModel: public PhysicalModel
   bool get_peltier_thomson_opt();
 
   //!Get the thermal lattice conductivity
-  void get_lattice_thermal_conductivity(Tensor2Sym& lattice_thermal_conductivity);
+  void get_thermal_conductivity(Tensor2Sym& thermal_conductivity);
   
   //! Init all fields
   void re_init();
@@ -63,9 +63,11 @@ class HeatModel: public PhysicalModel
 
      struct model_options
    {
-       bool joule_effect;
+     bool joule_effect;
 
-       bool peltier_thomson_effect;
+     bool peltier_thomson_effect;
+  
+     bool particle_thermal_conductivity;
 
    };
     
@@ -76,9 +78,9 @@ class HeatModel: public PhysicalModel
 
    model_options model_opt;
 
-   void  update_electrons_thermoelectric_powers();
+   void  update_thermoelectric_powers();
    
-   void  update_holes_thermoelectric_powers();
+   void  update_particle_thermal_conductivity();
 
    double _eTEpower;
 
@@ -89,10 +91,16 @@ class HeatModel: public PhysicalModel
    double _temperature;
 
    Tensor2Sym _lattice_thermal_conductivity; 
+
+   Tensor2Sym _electrons_thermal_conductivity; 
+   
+   Tensor2Sym _holes_thermal_conductivity; 
   
    // options model_opt;
 
    LatticeThermalConductivity* kappa;
+
+   ParticleThermalConductivity* kappa_carrier;
 
 
 
@@ -133,9 +141,13 @@ HeatModel* HeatModel::create()
 
 inline 
 void
-HeatModel::get_lattice_thermal_conductivity(Tensor2Sym& lattice_thermal_conductivity)
+HeatModel::get_thermal_conductivity(Tensor2Sym& thermal_conductivity)
 {
-  lattice_thermal_conductivity = _lattice_thermal_conductivity;
+  thermal_conductivity = _lattice_thermal_conductivity +
+    +  _electrons_thermal_conductivity
+    +  _holes_thermal_conductivity;
+  
+    
 }
 
 

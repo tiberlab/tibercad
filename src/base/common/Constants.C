@@ -55,3 +55,6 @@ Constants::bohr_radius = 4 * M_PI * epsilon * (hbar * hbar) /
 const double 
 Constants::Hartree = (hbar * hbar) /
   (electron_mass * bohr_radius * bohr_radius) / elementary_charge;
+
+const double
+Constants::Lorenz_Number = (4.0 * k_Boltzmann *  k_Boltzmann ) / (M_PI);

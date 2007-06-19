@@ -312,7 +312,7 @@ void MacroHeatBalance::build_nodal_results (const std::set< std::string > &varia
 	unsigned int id =  elem->node(n);
         
 	results[id]  =  (*(my_system->solution))(dof_indices[n]);       
-
+	//   std::cout<<results[id]<<std::endl;
 
       }
     }
@@ -517,7 +517,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
     init_heat_model(elem);
   
-    heat_model->get_lattice_thermal_conductivity(kappa);
+    heat_model->get_thermal_conductivity(kappa);
 
     eTEpower = heat_model->get_electrons_thermoelectric_power();	
    
@@ -589,7 +589,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 	   
 	          value += -JxW[qp] * kappa_value * dphi[p1][qp](i) * dphi[p2][qp](j) /(opt.length_scale * opt.length_scale);
-                
+                 
 		
 	      }//end loop over direction (2)
 
@@ -597,10 +597,12 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
              
 	      if (heat_model->get_peltier_thomson_opt())
 	      {
+		//cout<<"Peltier"<<endl;
 		
 		value += -JxW[qp]* phi[p1][qp] * dphi[p2][qp](i)*
 		  (eTEpower*currents[qp].jn(i) + hTEpower*currents[qp].jp(i) ) /(opt.length_scale);
-		
+
+		//cout<<(opt.length_scale)<<endl;
 	      }
 	      
 	       

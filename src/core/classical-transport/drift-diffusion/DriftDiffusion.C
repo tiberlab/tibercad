@@ -3102,6 +3102,12 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   }
 
   results.resize(elem_number * n_vars);
+
+
+  
+
+
+
 }
 
 
@@ -3285,41 +3291,160 @@ DriftDiffusion::set_dirichlet_bc(void)
 }
 
 
+double DriftDiffusion::get_electron_conducibility(const Elem* elem)
+{
+ 
+  if (is_solved() && (get_environment().contains_element(elem)))   
+  {  
+    
+    DriftDiffusionProperties* sc =
+      dynamic_cast<DriftDiffusionProperties*>(
+	 _device->get_material(elem->subdomain_id())->get_model(get_id()));
+
+
+    assert(sc != NULL);
+
+
+    sc->set_lattice_temperature(_device->get_temperature(elem));
+    sc->reinit(elem);
+
+    double T_lat = sc->get_lattice_temperature();
+    sc->set_carrier_temperatures(T_lat, T_lat);
+
+
+    Solution  potentials;
+    get_solution(elem,elem->centroid(),potentials); 
+    
+    sc->set_potentials(potentials.potential,potentials.fermi_e,potentials.fermi_h);
+       
+    sc->calculate_densities();
+
+    sc->calculate_mobilities();
+
+
+    double sigma_e = Constants::e * sc->get_electron_density() *
+        sc->get_electron_mobility();
+
+
+   return sigma_e;
+
+  }
+  else
+  {
+
+    return 0.0;
+
+  }
+
+
+
+}
+
+double DriftDiffusion::get_hole_conducibility(const Elem* elem)
+{
+  
+   if (is_solved() && (get_environment().contains_element(elem)))  
+  {  
+    
+    DriftDiffusionProperties* sc =
+      dynamic_cast<DriftDiffusionProperties*>(
+	    _device->get_material(elem->subdomain_id())->get_model(get_id()));
+    
+    
+    assert(sc != NULL);
+    
+    
+    sc->set_lattice_temperature(_device->get_temperature(elem));
+    sc->reinit(elem);
+    
+    double T_lat = sc->get_lattice_temperature();
+    sc->set_carrier_temperatures(T_lat, T_lat);
+
+
+    Solution  potentials;
+    get_solution(elem,elem->centroid(),potentials); 
+    
+    sc->set_potentials(potentials.potential,potentials.fermi_e,potentials.fermi_h);
+       
+    sc->calculate_densities();
+
+    sc->calculate_mobilities();
+
+
+    double sigma_h = Constants::e * sc->get_hole_density() *
+        sc->get_hole_mobility();
+
+
+   return sigma_h;
+
+  }
+  else
+  {
+
+    return 0.0;
+
+  }
+
+ 
+
+
+}   
+
+
 
 double DriftDiffusion::get_electrons_thermoelectric_power(const Elem* elem)
 {
      
-  DriftDiffusionProperties* model =
-    dynamic_cast<DriftDiffusionProperties*>(
-        _device->get_material(elem->subdomain_id())->get_model(get_id()));
 
+  
 
-  //initialization of the model
-  model->reinit(elem);
+  
+  if (is_solved() && (get_environment().contains_element(elem))) 
+  {  
+    
+    DriftDiffusionProperties* model =
+      dynamic_cast<DriftDiffusionProperties*>(
+	 _device->get_material(elem->subdomain_id())->get_model(get_id()));
+    
+    //initialization of the model
 
+    double T_lattice = _device->get_temperature(elem);
+  
+    
+    model->set_lattice_temperature(T_lattice);
 
-  //Set potentials
+    model->reinit(elem);
+    
+    
+    //Set potentials
+       
+    Solution  potentials;     
+    
+    get_solution(elem,elem->centroid(),potentials); 
+    
+    model->set_potentials(potentials.potential,potentials.fermi_e,potentials.fermi_h);
+    
+    
+    //Set Temperature
+    
+   
+    
+    model->compute_thermoelectric_powers(); 
+    
+    
+    return (model->get_electrons_thermoelectric_power());
+    
+    
+  }
+  else
+  {
 
-  Solution  potentials;     
+    return 0.0;
 
-  get_solution(elem,elem->centroid(),potentials); 
-
-  model->set_potentials(potentials.potential,potentials.fermi_e,potentials.fermi_h);
-
-
-  //Set Temperature
-
-  double T_lattice = _device->get_temperature(elem);
-
-  model->set_lattice_temperature(T_lattice);
-
-  model->compute_thermoelectric_powers(); 
-
-
-  return (model->get_electrons_thermoelectric_power());
-
+    }
+    
 }
-
+  
 
 
 
@@ -3327,35 +3452,48 @@ double DriftDiffusion::get_electrons_thermoelectric_power(const Elem* elem)
 double DriftDiffusion::get_holes_thermoelectric_power(const Elem* elem)
 {
 
-  DriftDiffusionProperties* model =
+
+  
+  if (is_solved() && (get_environment().contains_element(elem))) 
+  { 
+    
+    DriftDiffusionProperties* model =
     dynamic_cast<DriftDiffusionProperties*>(
-        _device->get_material(elem->subdomain_id())->get_model(get_id()));
-
-
+	_device->get_material(elem->subdomain_id())->get_model(get_id()));
+  
+  
   //initialization of the model
-  model->reinit(elem);
-
-
-  //Set potentials
-
-  Solution  potentials;     
-
-  get_solution(elem,elem->centroid(),potentials); 
-
-  model->set_potentials(potentials.potential,potentials.fermi_e,potentials.fermi_h);
-
-
-  //Set Temperature
 
   double T_lattice = _device->get_temperature(elem);
-
-  model->set_lattice_temperature(T_lattice);
-
+    
+  model->set_lattice_temperature(T_lattice); 
+  model->reinit(elem);
+  
+  
+  //Set potentials
+  
+  Solution  potentials;     
+  
+  get_solution(elem,elem->centroid(),potentials); 
+  
+  model->set_potentials(potentials.potential,potentials.fermi_e,potentials.fermi_h);
+  
+  
+  //Set Temperature
+  
+  
   model->compute_thermoelectric_powers(); 
-
+  
   return (model->get_holes_thermoelectric_power());
-
+  }
+  else
+  {
+    
+    return 0.0;
+    
+  }
 }
+
 
 
 
@@ -3640,7 +3778,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
            
      //Get the temperature given the element
     vector<double> T_nodes = sc->get_temperature_node();
-
+    
 
 
     vector<vector<double> > local_scaling(elem->n_nodes(), vector<double>(2, 1));
@@ -3758,7 +3896,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         if (!(coupling & HCURRENT))
           Kpp(i,i) += 1;
       }
-            
+      
       // 
       // for jacobian compute the other contributions
       // 
@@ -3846,39 +3984,42 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                 //Fp(i) += elem_contrib * dXp(j);
               }
             }
-//*/
 
-            // contribution of the Seebeck effect
+
+          //   // contribution of the Seebeck effect ->residual_derivative
             double dsigma_e_x_phi_x_Pe = dsigma_e * phi[j][qp] * eTEpower;
             double dsigma_h_x_phi_x_Ph = dsigma_h * phi[j][qp] * hTEpower;
+	    
             for (unsigned int k = 0; k < n_dofs; k++)
             {
               double laplace = dphi[i][qp] * dphi[k][qp];
-
+	      
               if (coupling & ECURRENT)
               {
                 double elem_contrib =
                   dsigma_e_x_phi_x_Pe * laplace * T_nodes[k] / local_scaling[i][0];
-
-                Knn(i,j) -= elem_contrib;
-
+		
+		Knn(i,j) -= elem_contrib;
+		
                 if (coupling & POISSON)
-                  Knu(i,j) += elem_contrib;
-
+		  Knu(i,j) += elem_contrib;
+		
               }
-
+	      
               if (coupling & HCURRENT)
               {
                 double elem_contrib =
                   dsigma_h_x_phi_x_Ph * laplace * T_nodes[k] / local_scaling[i][1];
-
-                Kpp(i,j) -= elem_contrib;
-
-                if (coupling & POISSON)
-                  Kpu(i,j) += elem_contrib;
-
-              }
+		
+		Kpp(i,j) -= elem_contrib;
+		
+		if (coupling & POISSON)
+		  Kpu(i,j) += elem_contrib;
+					     
+		}
             }
+	    
+
 
 
 
@@ -4053,28 +4194,33 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           else
             Fp(i) -= Xp(i);
         }
+	
 
-        // include Seebeck contribution
-        for (unsigned int i = 0; i < n_dofs; i++)
-        {
-          for (unsigned int k = 0; k < n_dofs; k++)
-          {
-            Real laplace = dphi[i][qp] * dphi[k][qp];
 
-            if (coupling & ECURRENT)
-              Fn(i) += sigma_e_x_Pe_x_J * laplace *
-                T_nodes[k] / local_scaling[i][0];
-
-            if (coupling & HCURRENT)
-              Fp(i) += sigma_h_x_Ph_x_J * laplace *
-                T_nodes[k] / local_scaling[i][1];
-          }
-        }
-
+        // include Seebeck contribution -> Residual
+	for (unsigned int i = 0; i < n_dofs; i++)
+	{
+	  for (unsigned int k = 0; k < n_dofs; k++)
+	  {
+	    Real laplace = dphi[i][qp] * dphi[k][qp];
+	    
+	    if (coupling & ECURRENT)
+	      Fn(i) += sigma_e_x_Pe_x_J * laplace *
+		T_nodes[k] / local_scaling[i][0];
+	    
+	    if (coupling & HCURRENT)
+	      Fp(i) += sigma_h_x_Ph_x_J * laplace *
+		T_nodes[k] / local_scaling[i][1];
+	  }
+	}
+	
+	
+	
+	
       }
     } // end loop over quadrature points
-
-
+    
+    
     
     // now loop over the element sides to find boundary elements
     // and to include von Neumann and mixed type boundary conditions
@@ -4090,7 +4236,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
       ElementSide side(top_parent, s);
-
+      
       const Elem* neighbour = elem->neighbor(s);
 
       // is this a boundary?

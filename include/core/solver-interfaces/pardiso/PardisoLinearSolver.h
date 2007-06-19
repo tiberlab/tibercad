@@ -70,6 +70,29 @@ class PardisoLinearSolver : public LinearSolver<T>
 
   private:
 
+        //! Maximum number of numerical factorizations. 
+	int maxfct; 
+
+	//! Which factorization to use. 
+        int  mnum; 
+
+	//! Initialize error flag 
+        int  error;  
+
+	//! Print statistical information in file */
+        int  msglvl; 
+
+        //! Real unsymmetric matrix 
+	int mtype; 
+
+        //! Number of right hand sides.
+  	int nrhs; 
+
+        //! Parameters of Pardiso solver
+	int iparm[64]; 
+
+
+
 
 
     //! Check PETSc error code

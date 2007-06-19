@@ -42,10 +42,7 @@ void  ThermoelectricPower::read_database(void)
   const ModelOptions& options = get_options();
   _TEmodel = options.get_option("model","constant");
 
-   
-  //std::cout<<std::endl;
-  // std::cout<<_TEmodel<<std::endl;
-  // std::cout<<std::endl;
+
 
   if  (_TEmodel == "constant")
   {
@@ -82,7 +79,11 @@ void ThermoelectricPower::do_init(void)
     
     _hTEpower =  Constants::k_B * (5.0 / 2.0 + _h_mobility_term -  (_hQfermi + _Ev) / (Constants::k_B * _Tloc)  );
 
+    _eTEpower = std::abs(_eTEpower);
+      
+    _hTEpower = std::abs(_hTEpower);
 
+    
   }
   else
   {
@@ -93,7 +94,7 @@ void ThermoelectricPower::do_init(void)
 
   } 
 
- 
+  
   
 }
 

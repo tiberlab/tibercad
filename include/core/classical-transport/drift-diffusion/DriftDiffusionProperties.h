@@ -850,15 +850,23 @@ DriftDiffusionProperties::create(const std::string& name,
       PhysicalModelInterface::create("dd_" + name, options));
 }
 
+
 inline
 void
 DriftDiffusionProperties::reinit(const Elem* elem)
 {
-  if (_elem != elem)
+ 
+  // std::cerr<<_elem<<std::endl;
+  if  ( _elem != elem) 
   {
+ 
     _elem = elem;
     this->prepare_element_data();
+    
   }
+
+
+
 }
 
 
