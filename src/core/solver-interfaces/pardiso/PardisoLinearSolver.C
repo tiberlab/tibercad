@@ -142,18 +142,23 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 
   //Get matrix
   C = matrix->mat();
-  ierr =   MatGetArray(C, &a);//CHKERRQ(ierr);
+  ierr =   MatGetArray(C, &a);
+  _checkerr(ierr);
   
 
   //Get rsh
   u = rhs->vec();
-  ierr = VecGetArray(u, &b);//CHKERRQ(ierr);
+  ierr = VecGetArray(u, &b);
+  _checkerr(ierr);
 
   //Get sol
-  ierr = VecGetArray(sol, &x);//CHKERRQ(ierr);
+  sol = solution->vec();
+  ierr = VecGetArray(sol, &x);
+  _checkerr(ierr);
 
   //Get n ia and ja
-  ierr = MatGetRowIJ(C, 1, PETSC_FALSE, &n, &ia, &ja, &done);//CHKERRQ(ierr);
+  ierr = MatGetRowIJ(C, 1, PETSC_FALSE, &n, &ia, &ja, &done);
+  _checkerr(ierr);
   
 
   if (done)
@@ -195,7 +200,7 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 
 
     if (error != 0) {
-      printf("\nERROR during symbolic factorization: %d", error);
+      printf("\nERROR during symbolic factorization: %d\n", error);
       exit(1);
     }
     printf("\nReordering completed ... ");

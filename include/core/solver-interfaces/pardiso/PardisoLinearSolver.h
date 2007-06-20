@@ -90,7 +90,11 @@ void
 PardisoLinearSolver::_checkerr(int errorcode) throw (LinearSolverException)
 {
   if (errorcode != 0)
-    throw(LinearSolverException("Petsc error in PardisoLinearSolver"));
+  {
+    std::ostringstream s;
+    s << "Petsc error in PardisoLinearSolver: " << errorcode;
+    throw(LinearSolverException(s.str()));
+  }
 }
 
 
