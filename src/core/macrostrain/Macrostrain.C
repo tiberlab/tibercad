@@ -488,7 +488,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
   FEType fe_type = dof_map.variable_type(uvar[0]);
  
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type));
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
  
 
 
@@ -502,7 +502,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
   // Declare a special finite element object for
   // boundary integration.
-  AutoPtr<FEBase>  fe_face(build_finite_element(dim, fe_type));
+  AutoPtr<FEBase>  fe_face(FEBase::build(dim, fe_type));
 
 
   // Boundary integration requires one quadraure rule,
@@ -1480,7 +1480,7 @@ void Macrostrain::update_eps0_list()
   
 
   FEType fe_type = dof_map.variable_type(0);
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type));
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
   
   std::vector<Point> point_vec(1);
@@ -1661,7 +1661,7 @@ void  Macrostrain::apply_periodic_bc()
   FEType fe_type = dof_map.variable_type(uvar[0]);
   
  
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type));
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
    
 
   
@@ -1856,7 +1856,7 @@ The constrants are the following:
  FEType fe_type = dof_map.variable_type(uvar[0]);
   
  
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type));
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
 
  DofConstraintRow constraint; 
 
@@ -2101,7 +2101,7 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
   FEType fe_type = dof_map.variable_type(0);
  
   
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type));
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
 
  
 
@@ -2509,7 +2509,7 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 
 
   FEType fe_type = dof_map.variable_type(0);
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type));
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
   
   std::vector<Point> point_vec(1);
@@ -3374,7 +3374,7 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
   FEType fe_type = dof_map.variable_type(0);
  
   
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type));
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
 
  
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
