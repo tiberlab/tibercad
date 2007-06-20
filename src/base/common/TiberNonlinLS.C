@@ -2,6 +2,7 @@
 
 
 #include "TiberNonlinLS.h"
+#include "TiberLinearSolver.h"
 #include "TiberPetscLinearSolver.h"
 #include "InitFailedException.h"
 
@@ -18,16 +19,13 @@ using namespace std;
 
 TiberNonlinLS::TiberNonlinLS(EquationSystems& es,
     const string& name, const unsigned int number)
-: Parent(es, name, number)
+: Parent(es, name, number),
+  _solver(NULL)
 {
-  _solver = new TiberPetscLinearSolver<double>();
-
-  if (_solver == NULL)
-    throw InitFailedException("Cannot create linear solver object.");
-
   // add a vector for the solution
   add_vector("sol");
 }
+
 
 
 TiberNonlinLS::~TiberNonlinLS(void)
@@ -72,6 +70,14 @@ TiberNonlinLS::clear(void)
 void
 TiberNonlinLS::user_initialization(void)
 {
+  if (_solver == NULL)
+  {
+    _solver = TiberLinearSolver::create(_linear_solver);
+
+    if (_solver == NULL)
+      throw InitFailedException("Cannot create linear solver object.");
+  }
+
   _solver->set_solver_type(_solver_type);
   _solver->set_preconditioner_type(_preconditioner_type);
 }
@@ -82,9 +88,6 @@ TiberNonlinLS::solve(void)
 {
 
   assert(_assemble != NULL);
-
-  EquationSystems& es = get_equation_systems();
-
 
   NumericVector<Number>& u = get_vector("sol");
   NumericVector<Number>& du = *solution;
@@ -107,7 +110,7 @@ TiberNonlinLS::solve(void)
   double norm_res, norm_rhs = 0;
 
   // the norm of the search step
-  double norm_du = 1e12, norm_du_old, norm_du_first = 1e12; 
+  double norm_du = 1e12, norm_du_old; 
 
   unsigned int i = 1;
   for ( ; i <= _nonlin_max_it; i++)

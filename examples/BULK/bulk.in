@@ -60,7 +60,8 @@ $Solver
 {
   driftdiffusion
   {
-    #nonlinear_solver = tiber
+    nonlinear_solver = tiber
+    #linear_solver = pardiso
     ksp_type = bcgsl
     nonlin_max_it = 20
     nonlin_abs_tol = 1e-12
@@ -104,12 +105,12 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = bulk2D.msh
-  dimension = 2
+  meshfile = bulk1D.msh
+  dimension = 1
   temperature = 300
   #solve = driftdiffusion
   solve = sweep
-  resultpath = output_2D
+  resultpath = output_1D
   #output_format = grace
   output_format = gmv
   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, current)

@@ -39,29 +39,36 @@ TiberNonlinearSystem::TiberNonlinearSystem(EquationSystems& es,
 
 TiberNonlinearSystem&
 TiberNonlinearSystem::create_nonlinear_system(EquationSystems& es,
-    const std::string& sysname, NonlinearSystemType type)
+    const std::string& sysname, NonlinearSystemType type,
+    const std::string& linear_solver)
 {
+  TiberNonlinearSystem* sys;
+  
   switch (type)
   {
     case TIBER:
-      return es.add_system<TiberNonlinLS>(sysname);
+      sys = &(es.add_system<TiberNonlinLS>(sysname));
       break;
     default: // PETSc
-      return es.add_system<TiberNonlinPetsc>(sysname);
+      sys = &(es.add_system<TiberNonlinPetsc>(sysname));
       break;
   }
+
+  sys->_linear_solver = linear_solver;
+  return *sys;
 }
 
 
 
 TiberNonlinearSystem&
 TiberNonlinearSystem::create_nonlinear_system(EquationSystems& es,
-    const std::string& sysname, const std::string& type)
+    const std::string& sysname, const std::string& type,
+    const std::string& linear_solver)
 {
   if (type == "tiber")
-    return es.add_system<TiberNonlinLS>(sysname);
+    return create_nonlinear_system(es, sysname, TIBER, linear_solver);
   else if (type == "petsc")
-    return es.add_system<TiberNonlinPetsc>(sysname);
+    return create_nonlinear_system(es, sysname, PETSC, linear_solver);
   else
   {
     std::string s = "TiberNonlinearSystem: unknown system type '" +

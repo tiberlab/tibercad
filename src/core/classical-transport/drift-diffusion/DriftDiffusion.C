@@ -10,8 +10,7 @@
 #include "Constants.h"
 #include "DriftDiffusionProperties.h"
 #include "RecombinationModelInterface.h"
-#include "TiberNonlinLS.h"
-#include "TiberNonlinPetsc.h"
+#include "TiberNonlinearSystem.h"
 #include "SolveFailedException.h"
 #include "GraceIO.h"
 
@@ -132,7 +131,9 @@ DriftDiffusion::SolverParameters::SolverParameters(void)
     ls_maxstep(1.0),
     ls_type(3),
     ksp_type(BICGSTAB),
-    pc_type(ILU_PRECOND)
+    pc_type(ILU_PRECOND),
+    nonlinear_solver("petsc"),
+    linear_solver("petsc")
 {
   // TODO read default values from some text file
 }
@@ -152,7 +153,9 @@ DriftDiffusion::SolverParameters::SolverParameters(const SolverParameters& rhs)
     ls_maxstep(rhs.ls_maxstep),
     ls_type(rhs.ls_type),
     ksp_type(rhs.ksp_type),
-    pc_type(rhs.pc_type)
+    pc_type(rhs.pc_type),
+    nonlinear_solver(rhs.nonlinear_solver),
+    linear_solver(rhs.linear_solver)
 {
 }
 
@@ -176,6 +179,8 @@ DriftDiffusion::SolverParameters::operator=(const SolverParameters& rhs)
     ls_type = rhs.ls_type;
     ksp_type = rhs.ksp_type;
     pc_type = rhs.pc_type;
+    nonlinear_solver = rhs.nonlinear_solver;
+    linear_solver = rhs.linear_solver;
   }
   return *this;
 }
@@ -855,7 +860,10 @@ DriftDiffusion::parse_const_options(void)
   else if (discretization == "sg")
     myopts.scheme = SG;
 
-  solver_params.nonlinear_solver = opts.get_option("nonlinear_solver", "petsc");
+  solver_params.nonlinear_solver =
+    opts.get_option("nonlinear_solver", solver_params.nonlinear_solver);
+  solver_params.linear_solver =
+    opts.get_option("linear_solver", solver_params.linear_solver);
 
   string ksptype = opts.get_option("ksp_type", "");
   if (ksptype == "") {}
@@ -973,7 +981,8 @@ DriftDiffusion::rebuild_equation_system(void)
   // the coupled DD system
   TiberNonlinearSystem& system =
     TiberNonlinearSystem::create_nonlinear_system(equation_systems,
-        get_equation_system_name(), solver_params.nonlinear_solver);
+        get_equation_system_name(), solver_params.nonlinear_solver,
+        solver_params.linear_solver);
 
   
   const unsigned int dim = get_mesh().mesh_dimension();

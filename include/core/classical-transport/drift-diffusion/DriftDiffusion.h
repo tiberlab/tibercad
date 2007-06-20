@@ -282,6 +282,9 @@ class DriftDiffusion : public SimulationInterface
          */
         std::string nonlinear_solver;
 
+        //! The linear solver to be used (PETSc, PARDISO etc)
+        std::string linear_solver;
+
 
       private:
 

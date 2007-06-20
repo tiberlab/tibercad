@@ -4,10 +4,11 @@
 #ifndef _TIBERPETSCLINEARSOLVER_H_
 #define _TIBERPETSCLINEARSOLVER_H_
 
+#include "TiberLinearSolver.h"
 #include "PetscRuntimeError.h"
 
 // Libmesh includes
-#include "linear_solver.h"
+//#include "linear_solver.h"
 #include "petsc_vector.h"
 #include "petsc_matrix.h"
 
@@ -32,8 +33,7 @@ extern "C" {
  * It is derived from the libmesh LinearSolver class
  *
  */
-template <typename T>
-class TiberPetscLinearSolver : public LinearSolver<T>
+class TiberPetscLinearSolver : public TiberLinearSolver
 {
 
   public:
@@ -55,11 +55,11 @@ class TiberPetscLinearSolver : public LinearSolver<T>
 
 
     //! Set the options for the linear solver
-    void set_ksp_options(double rtol = 1e-6, unsigned int max_it = 1000);
+    //void set_ksp_options(double rtol = 1e-6, unsigned int max_it = 1000);
 
 
     //! Set the options for the linear solver
-    void set_ksp_options(double rtol, double atol, unsigned int max_it = 1000);
+    //void set_ksp_options(double rtol, double atol, unsigned int max_it = 1000);
 
 
     //! Call the Petsc solver.
@@ -68,9 +68,9 @@ class TiberPetscLinearSolver : public LinearSolver<T>
      * same matrix for the system and preconditioner matrices.
      */    
     virtual std::pair<unsigned int, Real> 
-      solve (SparseMatrix<T>  &matrix_in,
-          NumericVector<T> &solution_in,
-          NumericVector<T> &rhs_in,
+      solve (SparseMatrix<Number>  &matrix_in,
+          NumericVector<Number> &solution_in,
+          NumericVector<Number> &rhs_in,
           const double tol,
           const unsigned int m_its)
       {
@@ -80,10 +80,10 @@ class TiberPetscLinearSolver : public LinearSolver<T>
 
     //! Call the linear solver specifying explicitly the preconditioner matrix
     virtual std::pair<unsigned int, Real> 
-      solve (SparseMatrix<T>  &matrix,
-          SparseMatrix<T>  &preconditioner,
-          NumericVector<T> &solution,
-          NumericVector<T> &rhs,
+      solve (SparseMatrix<Number>  &matrix,
+          SparseMatrix<Number>  &preconditioner,
+          NumericVector<Number> &solution,
+          NumericVector<Number> &rhs,
           const double tol,
           const unsigned int m_its);
 
@@ -102,9 +102,9 @@ class TiberPetscLinearSolver : public LinearSolver<T>
   private:
 
 
-    double _linear_rtol;
-    double _linear_atol;
-    int _linear_max_it;
+    //double _linear_rtol;
+    //double _linear_atol;
+    //int _linear_max_it;
 
 
     //! Preconditioner context
@@ -135,10 +135,9 @@ class TiberPetscLinearSolver : public LinearSolver<T>
 //
 
 
-template <typename T>
 inline
 void
-TiberPetscLinearSolver<T>::_checkerr(int errorcode) throw (PetscRuntimeError)
+TiberPetscLinearSolver::_checkerr(int errorcode) throw (PetscRuntimeError)
 {
   if (errorcode != 0)
     throw(PetscRuntimeError(errorcode));
@@ -148,12 +147,8 @@ TiberPetscLinearSolver<T>::_checkerr(int errorcode) throw (PetscRuntimeError)
 
 
 
-template <typename T>
 inline
-TiberPetscLinearSolver<T>::TiberPetscLinearSolver(void)
-  : _linear_rtol(1e-6),
-    _linear_atol(1e-50),
-    _linear_max_it(500)
+TiberPetscLinearSolver::TiberPetscLinearSolver(void)
 {
   if (libMesh::n_processors() == 1)
     this->_preconditioner_type = ILU_PRECOND;
@@ -163,15 +158,14 @@ TiberPetscLinearSolver<T>::TiberPetscLinearSolver(void)
 
 
 
-template <typename T>
 inline
-TiberPetscLinearSolver<T>::~TiberPetscLinearSolver(void)
+TiberPetscLinearSolver::~TiberPetscLinearSolver(void)
 {
   this->clear();
 }
 
 
-
+/*
 template <typename T>
 inline
 void
@@ -193,7 +187,7 @@ TiberPetscLinearSolver<T>::set_ksp_options(double rtol, double atol,
   _linear_atol = atol;
   _linear_max_it = max_it;
 }
-
+*/
 
 
 

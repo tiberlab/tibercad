@@ -3,6 +3,7 @@
 #ifndef _TIBERNONLINEARSYSTEM_H_
 #define _TIBERNONLINEARSYSTEM_H_
 
+//#include "ModelOptions.h"
 
 #include "implicit_system.h"
 #include "enum_solver_type.h"
@@ -69,7 +70,8 @@ class TiberNonlinearSystem : public ImplicitSystem
      * \return a reference to the newly created system
      */
     static TiberNonlinearSystem& create_nonlinear_system(EquationSystems& es,
-        const std::string& sysname, NonlinearSystemType type);
+        const std::string& sysname, NonlinearSystemType type,
+        const std::string& linear_solver = "petsc");
 
     
     //! To create a nonlinear system
@@ -80,7 +82,8 @@ class TiberNonlinearSystem : public ImplicitSystem
      * \return a reference to the newly created system
      */
     static TiberNonlinearSystem& create_nonlinear_system(EquationSystems& es,
-        const std::string& sysname, const std::string& type);
+        const std::string& sysname, const std::string& type,
+        const std::string& linear_solver = "petsc");
 
 
     /*! \copydoc ImplicitSystem::clear() */
@@ -201,6 +204,9 @@ class TiberNonlinearSystem : public ImplicitSystem
     //! The preconditioner type
     PreconditionerType _preconditioner_type;
    
+
+    //! The linear solver
+    std::string _linear_solver;
 
 
   private:

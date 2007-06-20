@@ -8,8 +8,7 @@
 
 
 
-template <typename T>
-void TiberPetscLinearSolver<T>::clear(void)
+void TiberPetscLinearSolver::clear(void)
 {
   if (this->initialized())
     {
@@ -32,8 +31,7 @@ void TiberPetscLinearSolver<T>::clear(void)
 
 
 
-template <typename T>
-void TiberPetscLinearSolver<T>::init(void)
+void TiberPetscLinearSolver::init(void)
 {
   // Initialize the data structures if not done so already.
   if (!this->initialized())
@@ -84,21 +82,20 @@ void TiberPetscLinearSolver<T>::init(void)
 
 
 
-template <typename T>
-  std::pair<unsigned int, Real> 
-TiberPetscLinearSolver<T>::solve(SparseMatrix<T>&  matrix_in,
-			     SparseMatrix<T>&  precond_in,
-			     NumericVector<T>& solution_in,
-			     NumericVector<T>& rhs_in,
+std::pair<unsigned int, Real> 
+TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
+			     SparseMatrix<Number>&  precond_in,
+			     NumericVector<Number>& solution_in,
+			     NumericVector<Number>& rhs_in,
 			     const double tol,
 			     const unsigned int m_its)
 {
   this->init ();
   
-  PetscMatrix<T>* matrix   = dynamic_cast<PetscMatrix<T>*>(&matrix_in);
-  PetscMatrix<T>* precond  = dynamic_cast<PetscMatrix<T>*>(&precond_in);
-  PetscVector<T>* solution = dynamic_cast<PetscVector<T>*>(&solution_in);
-  PetscVector<T>* rhs      = dynamic_cast<PetscVector<T>*>(&rhs_in);
+  PetscMatrix<Number>* matrix   = dynamic_cast<PetscMatrix<Number>*>(&matrix_in);
+  PetscMatrix<Number>* precond  = dynamic_cast<PetscMatrix<Number>*>(&precond_in);
+  PetscVector<Number>* solution = dynamic_cast<PetscVector<Number>*>(&solution_in);
+  PetscVector<Number>* rhs      = dynamic_cast<PetscVector<Number>*>(&rhs_in);
 
   // We cast to pointers so we can be sure that they succeeded
   // by comparing the result against NULL.
@@ -128,8 +125,8 @@ TiberPetscLinearSolver<T>::solve(SparseMatrix<T>&  matrix_in,
 
   // Set the tolerances for the iterative solver.  Use the user-supplied
   // tolerance for the relative residual & leave the others at default values.
-  ierr = KSPSetTolerances(_ksp, _linear_rtol, _linear_atol,
- 			   PETSC_DEFAULT, _linear_max_it);
+  ierr = KSPSetTolerances(_ksp, this->get_linear_rtol(), this->get_linear_atol(),
+ 			   PETSC_DEFAULT, this->get_linear_max_it());
 
   // Solve the linear system
   ierr = KSPSolve(_ksp, rhs->vec(), solution->vec());
@@ -150,8 +147,7 @@ TiberPetscLinearSolver<T>::solve(SparseMatrix<T>&  matrix_in,
 
 
 
-template <typename T>
-void TiberPetscLinearSolver<T>::get_residual_history(std::vector<double>& hist)
+void TiberPetscLinearSolver::get_residual_history(std::vector<double>& hist)
 {
   int ierr = 0;
   int its  = 0;
@@ -183,8 +179,7 @@ void TiberPetscLinearSolver<T>::get_residual_history(std::vector<double>& hist)
 
 
 
-template <typename T>
-Real TiberPetscLinearSolver<T>::get_initial_residual(void)
+Real TiberPetscLinearSolver::get_initial_residual(void)
 {
   int ierr = 0;
   int its  = 0;
@@ -213,8 +208,7 @@ Real TiberPetscLinearSolver<T>::get_initial_residual(void)
 
 
 
-template <typename T>
-void TiberPetscLinearSolver<T>::set_ksp_type(void)
+void TiberPetscLinearSolver::set_ksp_type(void)
 {
   int ierr = 0;
   
@@ -293,8 +287,7 @@ void TiberPetscLinearSolver<T>::set_ksp_type(void)
 
 
 
-template <typename T>
-void TiberPetscLinearSolver<T>::set_pc_type(void)
+void TiberPetscLinearSolver::set_pc_type(void)
 {
   int ierr = 0;
  
@@ -390,7 +383,7 @@ void TiberPetscLinearSolver<T>::set_pc_type(void)
 
 
 // Explicit instantiation
-template class TiberPetscLinearSolver<Number>;
+//template class TiberPetscLinearSolver<Number>;
  
 
 

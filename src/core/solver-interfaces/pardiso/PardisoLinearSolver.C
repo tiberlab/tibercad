@@ -33,17 +33,17 @@ extern "C" {int PARDISO
 
 extern "C"{ int omp_get_max_threads();}
 
-template <typename T>
+
+
 void
-PardisoLinearSolver<T>::clear(void)
+PardisoLinearSolver::clear(void)
 {
 
 }
 
 
-template <typename T>
 void
-PardisoLinearSolver<T>::init(void)
+PardisoLinearSolver::init(void)
 {
 
     mtype = 11; /* Real unsymmetric matrix */
@@ -96,21 +96,20 @@ PardisoLinearSolver<T>::init(void)
 }
 
 
-template <typename T>
- std::pair<unsigned int, Real> 
-PardisoLinearSolver<T>::solve(SparseMatrix<T>&  matrix_in,
-			     SparseMatrix<T>&  precond_in,
-			     NumericVector<T>& solution_in,
-			     NumericVector<T>& rhs_in,
+std::pair<unsigned int, Real> 
+PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
+			     SparseMatrix<Number>&  precond_in,
+			     NumericVector<Number>& solution_in,
+			     NumericVector<Number>& rhs_in,
 			     const double tol,
 			     const unsigned int m_its)
 {
 
 
-  PetscMatrix<T>* matrix   = dynamic_cast<PetscMatrix<T>*>(&matrix_in); 
-  PetscMatrix<T>* precond  = dynamic_cast<PetscMatrix<T>*>(&precond_in);
-  PetscVector<T>* solution = dynamic_cast<PetscVector<T>*>(&solution_in);
-  PetscVector<T>* rhs      = dynamic_cast<PetscVector<T>*>(&rhs_in);
+  PetscMatrix<Number>* matrix   = dynamic_cast<PetscMatrix<Number>*>(&matrix_in); 
+  PetscMatrix<Number>* precond  = dynamic_cast<PetscMatrix<Number>*>(&precond_in);
+  PetscVector<Number>* solution = dynamic_cast<PetscVector<Number>*>(&solution_in);
+  PetscVector<Number>* rhs      = dynamic_cast<PetscVector<Number>*>(&rhs_in);
 
 
    // We cast to pointers so we can be sure that they succeeded
@@ -255,14 +254,11 @@ PardisoLinearSolver<T>::solve(SparseMatrix<T>&  matrix_in,
   
     
   //Insert the vec object in the solution
-  PetscVector<T> sol_temp(sol);
+  PetscVector<Number> sol_temp(sol);
   *solution = sol_temp;
 
 
 }
 
 
-// Explicit instantiation
-template class PardisoLinearSolver<Number>;
- 
 
