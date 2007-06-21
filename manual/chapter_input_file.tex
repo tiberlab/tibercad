@@ -158,16 +158,17 @@ A detailed description of the possible parameters for these blocks  follows.
 options
     {
      simulation_name = driftdiffusion
-     physical_regions = all
+     #physical_regions = all
+     physical_regions = (1 , 2)
     }
 \end{verbatim}
 
 \textit{simulation\_name}: user-defined name of the particular instance of  the simulation model defined for this block. More than one simulation (with different  name and properties) can be  defined,in separated model blocks, which refer to a same  \TiberCAD  simulation model. If simulation\_name is  not assigned,  by default the \TiberCAD model name is taken as current simulation\_name.
 
-\textit{physical\_regions}: (list of) physical region(s) to  which the  present simulation model will be  applied.
+\textit{physical\_regions}: (list of) physical region(s) to  which the  present simulation model will be  applied. A list must be  written 
 Physical region(s) can be integer numbers, consistent with the physical regions set assigned through GMSH, or strings, corresponding to the  region names defined in ISE grid  file.
 Default value  is  "`all"' (all  physical regions of the  device).
-
+In a list, region ids or names must be separated by comma  and  enclosed between '(' and ')' parenthesis 
 
 
 \subsection{physical\_model block }
@@ -206,7 +207,8 @@ Currently available physical\_models and parameters:
       {
         BC_reg_numb = 2
         type = ohmic
-	      voltage = 0.0
+        #voltage = 0.0
+        voltage = @Vb[1.5]
       }
 \end{verbatim}
 
@@ -220,7 +222,7 @@ Currently available physical\_models and parameters:
 
 \textit{ type}: type of  boundary condition: ohmic,  schottky,...  ,  substrate (for strain calculations).
 
-\textit{ voltage}:  value of voltage [V] applied to the present BC region (for ohmic and  schottky BCs).
+\textit{ voltage}:  value of voltage [V] applied to the present BC region (for ohmic and  schottky BCs); it can be the  value of a sweep  variable 'Vb', indicated with  \symbol{64}Vb. A possible default value can be indicated in parenthesis:  \symbol{64}Vb[1.5]
 
 \textit{ zero\_grad\_fermi\_h}, \textit{ zero\_grad\_fermi\_e}: if true set  Neumann b.c. to the fermi level in the b.c. region.
 
@@ -240,19 +242,28 @@ If \textit{type} is \textsl{substrate}:
 \begin{verbatim}
 $Solver
 { 
- driftdiffusion
+driftdiffusion
   {
-    quasi_equilibrium = (cathode, anode)
-    nonlin_max_it = 25
-    nonlin_abs_tol = 1e-7
-  #  nonlin_step_tol = 1e-3
-    lin_max_it = 150
-    ksp_type = gmres
+
+    nonlinear_solver = tiber
+
+    ksp_type = bcgsl
+    nonlin_rel_tol = 1e-12
+    nonlin_abs_tol = 1e-15
+    nonlin_step_tol = 1e-2
+    #nonlin_rel_tol = 1e-12
+    lin_rel_tol = 1e-6
+    nonlin_max_it = 30
+    #local_density_scaling = true
+    #ls_type = none
+    discretization = fem
+    ls_max_step = 1
+    #pc_type = lu
     pc_type = composite
-    #pc_type = ilu
-    ls_max_step = 0.05
-    #current_integration_method = rstf
+    integration_order = 2
+    #relaxation_factor = 0.5
   }
+
 ...................
 
 \end{verbatim}
@@ -275,15 +286,23 @@ Two extra blocks can be  present:
 	
    \item \textbf{sweep} block, preceded by the keyword \char`\"{}\textbf{sweep}\char`\"{}. This block  contains  the  setting for a set of  calculations applied to a boundary region (e.g. to a drain contact for the calculation of a IV characteristic).
    
-   
-%\begin{verbatim}
-% BC_Region anode
-%      {
-%        BC_reg_numb = 2
-%        type = ohmic
-%	      voltage = 0.0
-%      }
-%\end{verbatim}
+
+\begin{verbatim}
+sweep
+  {
+    variable = Vb
+    start = 0.0
+    stop = 4.0
+    steps = 80
+    plotvariable = current
+  }
+\end{verbatim}
+
+\textbf{variable} : name of  the  variable to which   sweep is  applied: its value is assigned to a quantity (e.g. voltage) in a BC Region section.
+
+\textbf{start} , \textbf{stop}, \textbf{steps}: sweep starts from \textit{start} value, is repeated  \textit{steps} times and stops in \textit{stop}
+
+
 
   \item  \textbf{selfconsistent} block , preceded by the keyword \char`\"{}\textbf{selfconsistent }\char`\"{}. In this block it is possible to define a self-consistent calculation based on two different simulation models (e.g. driftdiffusion and excitontransport).
 
@@ -291,43 +310,45 @@ Two extra blocks can be  present:
 
 Here are some of  the  parameters:
 
-\textbf{quasi\_equilibrium:}
+\textit{nonlinear\_solver} = \textbf{tiber}  for  tibercad  non-linear solver (recommended).
 
-\textbf{nonlin\_max\_it}
+\textit{quasi\_equilibrium}
 
-\textbf{nonlin\_abs\_tol}
+\textit{nonlin\_max\_it}
 
-\textbf{lin\_max\_it}
+\textit{nonlin\_abs\_tol}
 
-\textbf{ksp\_type}
+\textit{lin\_max\_it}
 
-\textbf{pc\_type}
+\textit{ksp\_type}
 
-\textbf{ls\_max\_step}
+\textit{pc\_type}
 
-\textbf{ls\_type}
+\textit{ls\_max\_step}
 
-\textbf{current\_integration\_method}
+\textit{ls\_type}
+
+\textit{current\_integration\_method}
 
 
 %sweep
-\textbf{simulation} :  simulations to which sweep is  applied
+\textit{simulation} :  simulations to which sweep is  applied
 
-\textbf{boundary}: boundary region to which sweep is  applied
+\textit{boundary}: boundary region to which sweep is  applied
 
-\textbf{start} , \textbf{stop}, \textbf{steps} : sweep starts from \textit{start} value, is repeated  \textit{steps} times and stops in \textit{stop}
+\textit{start} , \textit{stop}, \textit{steps} : sweep starts from \textit{start} value, is repeated  \textit{steps} times and stops in \textit{stop}
 
-\textbf{plotvariable}
+\textit{plotvariable}
 
 %% selfconsistent
 
-\textbf{simulations} : simulations to be   executed in a self-consistent cycle. 
+\textit{simulations} : simulations to be   executed in a self-consistent cycle. 
 
 %thermal
-\textbf{current\_simulation}  :    current simulation model used for  thermal  model
+\textit{current\_simulation}  :    current simulation model used for  thermal  model
 
 %macrostrain
-\textbf{substrate} 
+\textit{substrate} 
 
 
 
@@ -338,20 +359,20 @@ The section is organized in blocks, each one preceded by a block-name equal to o
 
 Here are some of the possible parameters:
 
-\textbf{statistics} : FD
+\textit{statistics} : FD
 
-\textbf{model}: specification of generical drift-diffusion or  exciton transport  simulation.
+\textit{model}: specification of generical drift-diffusion or  exciton transport  simulation.
 Possible values: \textit{simple}, \textit{strained} ,  \textit{unstrained}.  
 
-\textbf{tau\_rad}, \textbf{tau\_nonrad},  tau\_diss
+\textit{tau\_rad}, \textit{tau\_nonrad},  tau\_diss
 
-\textbf{R}
+\textit{R}
 
-\textbf{eff\_mass}
+\textit{eff\_mass}
 
-\textbf{mobility}
+\textit{mobility}
 
-\textbf{generation\_model}
+\textit{generation\_model}
 
 
 
@@ -359,17 +380,17 @@ Possible values: \textit{simple}, \textit{strained} ,  \textit{unstrained}.
 
 In this  section one  can  specify  several general parameters and settings  for  the  actual  calculation to be  run, such as the mesh file to be  used, the dimension of  simulation, the process-flow of  simulation, etc.
 
-\textbf{searchpath} :  path for  material  files 
+\textit{searchpath} :  path for  material  files 
 
-\textbf{meshfile} : name of  mesh file. N.B.: the extension is mandatory! ( .grd for ISE-TCAD, .msh for gmsh v.1 )
+\textit{meshfile} : name of  mesh file. N.B.: the extension is mandatory! ( .grd for ISE-TCAD, .msh for gmsh v.1 )
 
-\textbf{mesh\_units} : units of  measurements used in the  meshing (relative to meters): e.g., $10^{-6}$ for  $\mu m$
+\textit{mesh\_units} : units of  measurements used in the  meshing (relative to meters): e.g., $10^{-6}$ for  $\mu m$
 
-\textbf{dimension} :  dimension of  simulation (1,2,3)
+\textit{dimension} :  dimension of  simulation (1,2,3)
 
-\textbf{temperature} :  temperature  of the system
+\textit{temperature} :  temperature  of the system
 
-\textbf{solve} : list of  simulations to  be  executed, in the order of  execution; if the list   contains "`sweep"', a sweep is  performed as specified in \textbf{sweep} block in the  \textbf{Solver} section.   
+\textit{solve} : list of  simulations to  be  executed, in the order of  execution; if the list   contains "`sweep"', a sweep is  performed as specified in \textit{sweep} block in the  \textit{Solver} section.   
 
 \begin{verbatim}
   solve =  (strain,driftdiffusion, quantum_electrons, quantum_holes)
@@ -377,9 +398,9 @@ In this  section one  can  specify  several general parameters and settings  for
 
 
 
-\textbf{resultpath} :  path for output  directory 
+\textit{resultpath} :  path for output  directory 
 
-\textbf{output\_format} : format of  the  output data: \textbf{gmv},  \textbf{tecplot}, \textbf{grace} (for xmgr, ascii data column type),  ....
+\textit{output\_format} : format of  the  output data: \textit{gmv},  \textit{tecplot}, \textit{grace} (for xmgr, ascii data column type),  ....
 
-\textbf{plot} :  list of output variables which are calculated and available in output  files.
+\textit{plot} :  list of output variables which are calculated and available in output  files.
 
