@@ -1,2 +1,88 @@
 \chapter{Simulation of strain}
-The theoretical model of strain simulation can be found in Refs.\cite{strain1, strain2}.
+\section{Theory}
+The theoretical model of strain simulation can be found in Refs.\cite{strain1, strain2}. The code can compute elastic deformations in a heterostructure and can calculate the deformed shape of the structure. The hetrostructure can be either grown on a substrate or not. External pressure may be applied to a structure as well.
+\section{Models section parameters}
+The {\bf Models} section looks like follows:
+\begin{verbatim}
+model macrostrain
+{
+    options
+    {
+         simulation_name = strain_in_transistor
+         physical_regions = (2, 3, 4)
+    }
+ }
+\end{verbatim}
+There are two possible kinds of boundary conditions.
+The mandatory keyword 
+
+\textit{type} = \{ substrate $\vert$ pressure \} 
+
+specifies the boundary condition type.
+\subsection{Substrate boundary condition}
+In this case the boundary condition region is the boundary between the device and the substate. The substrate does not belong to the device. Therefore it is necessary to define 
+both the boundary region number and the substrate material (like it is done in sec.~\ref{Device}).
+\newtheorem*{subst}{Role of substrate}
+\begin{subst}
+ In general, the ``substrate'' is a material that defines the lattice matching conditions, and not
+ necessarily a real solid body on which the device is grown.
+\end{subst}
+
+\begin{verbatim}
+BC_Region layer_of_Al_0.3_Ga_0.7_N
+{
+     BC_reg_numb = 14
+     type = substrate
+     mat = AlGaN
+     x = 0.3
+     structure = wz
+     y-growth-direction = (1,0,-1,0)
+     z-growth-direction = (-1,2,-1,0)
+     x-growth-direction = (0,0,0,1)
+}
+\end{verbatim}
+
+
+\subsection{External pressure boundary condition}
+The parameter \textit{pressure} specifies the value (in GPa)  of the normal pressure applied to the boundary region \textit{BC\_reg\_numb}. 
+\begin{verbatim}
+BC_Region tip_upon_a_surface
+{
+     BC_reg_numb = 12
+     type = pressure
+     pressure = 12.3
+}
+\end{verbatim}
+\newtheorem*{pressure}{Sign of pressure}
+\begin{pressure}
+ The value of pressure has a positive sign if the external force acts towards the surface.
+\end{pressure}
+
+\section{Solver parameters}
+Choice of the necessary parameters to be put in the section depends on the type of the structure, namely, if it has a substrate or not. 
+\subsection{Structure with a substrate}
+The only obligatory parameter is  \textit{subsrtate} that is a name of a substrate boundary condition, e.g:
+\begin{verbatim}
+strain_in_transistor
+{
+   substrate = layer_of_Al_0.3_Ga_0.7_N
+}
+\end{verbatim}
+
+\subsection{Structure without a substrate}
+The parameter \textit{substrate} should not be presentm but the following parameters should be defined.
+\begin{itemize}
+\item The reference lattice material
+is defined by a point coordinates using the parameter \textit{reference\_material\_point}.
+\item As it follows from Ref.~\cite{strain1}, the additional geometrical points have to be specified, as it depends on the device dimensionality. The corresponding parameters are:
+\textit{fixed\_point1}, \textit{fixed\_point2} and \textit{fixed\_point3}.
+\end{itemize}
+Example for a 2D simulation:
+\begin{verbatim}
+ strain_in_transistor
+{
+  reference_material_point  = (0, 100, 0)
+  fixed_point1 = (0, 0, 0)
+  fixed_point2 = (10, 0, 0)	 
+}
+\end{verbatim}
