@@ -76,6 +76,8 @@ class PardisoLinearSolver : public TiberLinearSolver
     //! Check PETSc error code
     static void _checkerr(int errorcode) throw (LinearSolverException);
 
+    //! Pardiso solver interface
+    void PardisoLinearSolver::solve_pardiso(double *mat, int *ia, int *ja, double *b, double *x, int n);
 };
 
 

@@ -61,7 +61,7 @@ $Solver
   driftdiffusion
   {
     nonlinear_solver = tiber
-    #linear_solver = pardiso
+    linear_solver = pardiso
     ksp_type = bcgsl
     nonlin_max_it = 20
     nonlin_abs_tol = 1e-12

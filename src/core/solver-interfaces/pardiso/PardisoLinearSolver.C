@@ -91,7 +91,7 @@ PardisoLinearSolver::init(void)
 	iparm[17] = -1; /* Output: Number of nonzeros in the factor LU */
 	iparm[18] = -1; /* Output: Mflops for LU factorization */
 	iparm[19] = 0; /* Output: Numbers of CG Iterations */
-
+ 
 
 }
 
@@ -124,11 +124,11 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 
   PetscErrorCode ierr;
   PetscInt       *ia, *ja;
-  PetscScalar    *a, *b, *x;
+  PetscScalar    *mat, *vec, *sol;
   PetscInt       n;
   PetscTruth     done;
   Mat            C;
-  Vec            u,sol;            
+  Vec            u,x;            
 
 
 
@@ -142,27 +142,54 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 
   //Get matrix
   C = matrix->mat();
-  ierr =   MatGetArray(C, &a);
-  _checkerr(ierr);
-  
 
   //Get rsh
   u = rhs->vec();
-  ierr = VecGetArray(u, &b);
-  _checkerr(ierr);
-
+ 
   //Get sol
-  sol = solution->vec();
-  ierr = VecGetArray(sol, &x);
-  _checkerr(ierr);
-
-  //Get n ia and ja
-  ierr = MatGetRowIJ(C, 1, PETSC_FALSE, &n, &ia, &ja, &done);
-  _checkerr(ierr);
+  x = solution->vec();
   
+  //Get n ia and ja
+  ierr = MatGetRowIJ(C, 1, PETSC_FALSE, &n, &ia, &ja, &done); _checkerr(ierr);
+ 
 
   if (done)
   {
+    ierr = MatGetArray(C, &mat); _checkerr(ierr);
+    ierr = VecGetArray(u, &vec); _checkerr(ierr);
+    ierr = VecGetArray(x, &sol); _checkerr(ierr);  
+  
+    solve_pardiso(mat, ia, ja, vec, sol, n);
+
+    ierr = VecRestoreArray(x, &sol);_checkerr(ierr);
+    
+  }  
+
+
+  ierr = PetscFinalize();_checkerr(ierr);
+
+
+
+    
+  //Insert the vec object in the solution
+  PetscVector<Number> sol_temp(x);
+  *solution = sol_temp;
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, double *x, int n)
+{
     
     /* -------------------------------------------------------------------- */
     /* .. Initialize the internal solver memory pointer. This is only */
@@ -184,7 +211,7 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
       pt[i] = 0;
     }
     
-
+    n++;
 
     /* -------------------------------------------------------------------- */
     /* .. Reordering and Symbolic Factorization. This step also allocates */
@@ -252,18 +279,7 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 	     iparm, &msglvl, &ddum, &ddum, &error);
     
     
-  }
-
-  
-  ierr = VecRestoreArray(sol, &x);//CHKERRQ(ierr); 
-  
-    
-  //Insert the vec object in the solution
-  PetscVector<Number> sol_temp(sol);
-  *solution = sol_temp;
-
-
 }
 
-
+  
 
