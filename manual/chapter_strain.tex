@@ -86,3 +86,37 @@ Example for a 2D simulation:
   fixed_point2 = (10, 0, 0)	 
 }
 \end{verbatim}
+\subsection{Additional parameters}
+
+\subsubsection{Numercal solver parameters}
+
+\textit{tolerance}: relative tolerance of the iterative solver, e.g.
+\begin{verbatim}
+ tolerance = 1e-10
+\end{verbatim}
+
+\subsubsection{Periodic boundary conditions}
+It is possible to specify periodic boundary conditions along the coordinate axes. The relative parameters are:
+
+\textit{periodicity\_x} = \{ true $\vert$ false \}
+
+\textit{periodicity\_y} = \{ true $\vert$ false \}
+
+\textit{periodicity\_z} = \{ true $\vert$ false \}
+
+The default value is {\bf false}.
+\subsubsection{Mesh refinement}
+For the details about mesh refinement confer the Libmesh library documentation.
+The parameter \textit{refinement\_steps } defines number of the refinement steps to be done with default value to be zero. The parameter 
+\textit{uniform\_refinement} = \{ true $\vert$ false \} is to choose between uniform and adaptive refinement. The default value is {\bf false}, i.e. adaptive refinement. 
+Example:
+ \begin{verbatim}
+ refinement_steps = 4
+ refine_fraction = 0.25
+ coarsen_fraction = 0
+ max_refinement_level = 10
+\end{verbatim}
+ 
+
+\subsubsection{Deformed shape calculation}
+
