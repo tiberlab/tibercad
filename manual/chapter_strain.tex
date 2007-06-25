@@ -55,13 +55,13 @@ BC_Region tip_upon_a_surface
 \end{verbatim}
 \newtheorem*{pressure}{Sign of pressure}
 \begin{pressure}
- The value of pressure has a positive sign if the external force acts towards the surface.
+ The value of pressure has a positive sign if the external force acts towards the surface, which in general has to be  the  boundary of a simulation environment.
 \end{pressure}
 
 \section{Solver parameters}
 Choice of the necessary parameters to be put in the section depends on the type of the structure, namely, if it has a substrate or not. 
 \subsection{Structure with a substrate}
-The only obligatory parameter is  \textit{subsrtate} that is a name of a substrate boundary condition, e.g:
+The only obligatory parameter is  \textit{substrate} that is a name of a substrate boundary condition, e.g:
 \begin{verbatim}
 strain_in_transistor
 {
@@ -70,11 +70,11 @@ strain_in_transistor
 \end{verbatim}
 
 \subsection{Structure without a substrate}
-The parameter \textit{substrate} should not be present but the following parameters should be defined.
+The parameter \textit{substrate} should not be present  but the following parameters should be defined.
 \begin{itemize}
 \item The reference lattice material
-is defined by a point coordinates using the parameter \textit{reference\_material\_point}.
-\item As it follows from Ref.~\cite{strain1}, the additional geometrical points have to be specified, as it depends on the device dimensionality. The corresponding parameters are:
+is defined by the coordinates of a point  belonging to this  material, using the parameter \textit{reference\_material\_point}.
+\item As it follows from Ref.~\cite{strain1},  additional geometrical points have to be specified, according  to the device dimensionality. The corresponding parameters are:
 \textit{fixed\_point1}, \textit{fixed\_point2} and \textit{fixed\_point3}.
 \end{itemize}
 Example for a 2D simulation:
@@ -88,7 +88,7 @@ Example for a 2D simulation:
 \end{verbatim}
 \subsection{Additional parameters}
 
-\subsubsection{Numerical solver parameters}
+\subsubsection{Numercal solver parameters}
 
 \textit{tolerance}: relative tolerance of the iterative solver, e.g.
 \begin{verbatim}
@@ -106,7 +106,7 @@ It is possible to specify periodic boundary conditions along the coordinate axes
 
 The default value is {\bf false}.
 \subsubsection{Mesh refinement}
-For the details about mesh refinement confer the Libmesh library documentation.
+For the details about mesh refinement refer to the Libmesh library documentation.
 The parameter \textit{refinement\_steps } defines number of the refinement steps to be done with default value to be zero. The parameter 
 \textit{uniform\_refinement} = \{ true $\vert$ false \} is to choose between uniform and adaptive refinement. The default value is {\bf false}, i.e. adaptive refinement. 
 Example:
