@@ -219,13 +219,13 @@ void KspaceIntegration::calculate_convergent_density()
 	ErrorVector error;
 	      
 	      
-	KellyErrorEstimator error_estimator;
+	
 	      
 	Tensor2Gen RotM_inv =  transform_matrix.transpose() ;
 	      
 	rotate_mesh(kmesh,  RotM_inv );
 	
-	error_estimator.estimate_error (*system,error);
+	estimate_error_for_refinement(error);
 	
 	rotate_mesh(kmesh, transform_matrix);
 	      
@@ -395,5 +395,13 @@ void KspaceIntegration::do_solve( )
 void KspaceIntegration::do_init(void)
 {
   Kspace::do_init();
+
+}
+//--------------------------------------------------------------------------------------//
+void KspaceIntegration::estimate_error_for_refinement(ErrorVector& error)
+{
+  KellyErrorEstimator error_estimator;
+
+  error_estimator.estimate_error (*system,error);
 
 }

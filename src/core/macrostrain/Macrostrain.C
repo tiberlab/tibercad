@@ -8,6 +8,9 @@ using namespace std;
 //-----------------------------------------------------------------//
 
 
+Device*  Macrostrain:: _device;
+Macrostrain* Macrostrain::static_this;
+
 
 //-----------------------------------------------------------------//
 void Macrostrain::build_elemental_results(const std::set<std::string>& variables,
@@ -116,9 +119,6 @@ throw (ModelErrorException)
 //----------------------------------------------------------------------------//
 
 
-
-Device*  Macrostrain:: _device;
-Macrostrain* Macrostrain::static_this;
 //-----------------------------------------------------------------//
 
 
@@ -141,7 +141,7 @@ void Macrostrain::parse_options( )
  coarsen_fraction = opt.get_option("coarsen_fraction", 0.0);
 
  max_ref_level = opt.get_option("max_refinement_level",10);
- tolerance  = opt.get_option("tolerance", 1e-6);  
+ tolerance  = opt.get_option("tolerance", 1e-10);  
  max_shape_steps = opt.get_option("number_shape_steps",0);
    
 
@@ -168,13 +168,16 @@ void Macrostrain::parse_options( )
    opt.get_option("fixed_point1",point);
    for (short i = 0; i < 3; i++)  fixed_point1(i) = point[i];
 
-
-   opt.get_option("fixed_point2",point);
-   for (short i = 0; i < 3; i++)  fixed_point2(i) = point[i];
-
-   opt.get_option("fixed_point3",point);
-   for (short i = 0; i < 3; i++)  fixed_point3(i) = point[i];
-
+   if (dim>1)
+   {
+     opt.get_option("fixed_point2",point);
+     for (short i = 0; i < 3; i++)  fixed_point2(i) = point[i];
+     if (dim>2)
+     {
+       opt.get_option("fixed_point3",point);
+       for (short i = 0; i < 3; i++)  fixed_point3(i) = point[i];
+     }
+   }
  }
   
 
@@ -231,6 +234,9 @@ void Macrostrain::do_init( )
   _device = &( si.get_device() );
 
 
+  get_scaling().set_length_scaling(  _device->get_mesh_units() );
+
+
   uname_vec[0]="ux";
   uname_vec[1]="uy";
   uname_vec[2]="uz";
@@ -279,7 +285,15 @@ void Macrostrain::do_init( )
     Point p;
     vector<double>  ref_point(3);
     ref_point[0] = 0; ref_point[1] = 0; ref_point[2] = 0;
-    // options.get_option("reference_material_point", ref_point);
+    
+    if (!options.find_option("reference_material_point"))
+    {
+      throw InitFailedException("Macrostrain: reference material point must be given");
+    }
+
+    options.get_option("reference_material_point", ref_point);
+
+
     for (short i = 0; i < 3; i++)  p(i) = ref_point[i];
     
     MeshBase::const_element_iterator el  = mesh->active_elements_begin();
@@ -308,6 +322,7 @@ void Macrostrain::do_init( )
     ID subdomain = elem1->subdomain_id();
     const Material* mat = _device->get_material(subdomain);
     substrate_crystal  = &(mat->get_rotated_crystal());
+   
     
   }
 
@@ -381,22 +396,22 @@ void Macrostrain::do_init( )
  unsigned int num_nodes = mesh->n_nodes();
  const Node& nd = mesh->node(0);
  for (unsigned i = 0; i < 3; i++)
-   {
-     min_coord[i] = nd(i);
-     max_coord[i] = nd(i);
-   }
+ {
+   min_coord[i] = nd(i);
+   max_coord[i] = nd(i);
+ }
 
  for (unsigned i = 1; i < num_nodes; i++)
+ {
+   const Node& nd = mesh->node(i);
+   for (unsigned i = 0; i < 3; i++)
    {
-     const Node& nd = mesh->node(i);
-     for (unsigned i = 0; i < 3; i++)
-       {
-	 if (min_coord[i] < nd(i)) min_coord[i] = nd(i);
-	 if (max_coord[i] > nd(i)) max_coord[i] = nd(i);
-	 
-       }
-
+     if (min_coord[i] < nd(i)) min_coord[i] = nd(i);
+     if (max_coord[i] > nd(i)) max_coord[i] = nd(i);
+     
    }
+   
+ }
    
   //-------------------------------------------------------------------//
 
@@ -410,10 +425,17 @@ void Macrostrain::do_init( )
 
 void Macrostrain::define_fixed_nodes()
 {
+  
   fixed_node1 = find_nearest_node(fixed_point1);
-  fixed_node2 = find_nearest_node(fixed_point2);
-  fixed_node3 = find_nearest_node(fixed_point3);
-
+ 
+  if (dim>1)
+  {
+    fixed_node2 = find_nearest_node(fixed_point2);
+    if (dim>2)
+    {
+      fixed_node3 = find_nearest_node(fixed_point3);
+    }
+  }
 
 }
 
@@ -488,7 +510,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
   FEType fe_type = dof_map.variable_type(uvar[0]);
  
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
  
 
 
@@ -502,7 +524,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
   // Declare a special finite element object for
   // boundary integration.
-  AutoPtr<FEBase>  fe_face(FEBase::build(dim, fe_type));
+  AutoPtr<FEBase>  fe_face(build_finite_element(dim, fe_type, true));
 
 
   // Boundary integration requires one quadraure rule,
@@ -673,14 +695,13 @@ void Macrostrain::do_assemble(EquationSystems& es,
     eps_const =  crystal_el->get_const_eps0(substrate_lat_const, eps0_var_log) 
       + eps0_of_elem[el_number] ;//+ substrate_shear;
     
-     
-    
+
+
 
 
     double lat_const[3];
     crystal_el->get_lat_const(lat_const);
      
-      
     //----------------------------------------------------------//
     //master equation:                                          //
     //                                                          //
@@ -1028,10 +1049,10 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
  
   
-  // system.matrix->print();
+  //system.matrix->print_matlab("matr.m");
 
  
-  // system.rhs->print();
+  //system.rhs->print_matlab("rhs.m");
 
   //-----------------------------------------------------------------------
   //Application of periodicity constraints
@@ -1480,7 +1501,7 @@ void Macrostrain::update_eps0_list()
   
 
   FEType fe_type = dof_map.variable_type(0);
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
   
   std::vector<Point> point_vec(1);
@@ -1661,7 +1682,7 @@ void  Macrostrain::apply_periodic_bc()
   FEType fe_type = dof_map.variable_type(uvar[0]);
   
  
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
    
 
   
@@ -1856,7 +1877,7 @@ The constrants are the following:
  FEType fe_type = dof_map.variable_type(uvar[0]);
   
  
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+ AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
 
  DofConstraintRow constraint; 
 
@@ -2101,7 +2122,7 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
   FEType fe_type = dof_map.variable_type(0);
  
   
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
 
  
 
@@ -2174,18 +2195,23 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
 	    const unsigned int n_u_dofs = dof_indices_component1.size(); 
 	  
 	    for (unsigned int p1=0; p1<n_u_dofs; p1++)
-	      {   
-
-		if (j<=dim) du_i_over_dx_j += 0.5 *  dphi[p1][0](j-1) * (*solution)(dof_indices_component1[p1]);
-	
-		
-		if (i<=dim) du_i_over_dx_j += 0.5 *  dphi[p1][0](i-1) * (*solution)(dof_indices_component2[p1]); 
-   
-
+	    {   
+	      
+	      if (j<= dim) 
+	      {
+		du_i_over_dx_j += 0.5 *  dphi[p1][0](j-1) * (*solution)(dof_indices_component1[p1]);
 	      }
+	      
+	      if (i<= dim)
+	      {
+		du_i_over_dx_j += 0.5 *  dphi[p1][0](i-1) * (*solution)(dof_indices_component2[p1]); 
+	      }
+	     
+	
+
+	    }
 	    
 	    
-	  
 	    double eps_value = eps0(i,j) + du_i_over_dx_j ;  
 	    
 	  
@@ -2509,7 +2535,7 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 
 
   FEType fe_type = dof_map.variable_type(0);
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
   
   std::vector<Point> point_vec(1);
@@ -3374,7 +3400,7 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
   FEType fe_type = dof_map.variable_type(0);
  
   
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
 
  
   const std::vector<std::vector<Real> >& phi = fe->get_phi();

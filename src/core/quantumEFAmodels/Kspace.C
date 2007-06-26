@@ -85,10 +85,11 @@ void Kspace::build_k_grid()
 				     type);
 
 
+
  
-  
   rotate_mesh(kmesh, transform_matrix);
 
+ 
   kmesh->print_info();
 
  
@@ -450,10 +451,17 @@ void Kspace::do_init()
   }
 
 
-  
-  integration_order =  FIRST;
 
+  {
+    string mesh_order  = mod_opt.get_option("mesh_order","FIRST"); ;
+    if (mesh_order == "FIRST")
+      integration_order =  FIRST;
+    else if (mesh_order == "SECOND")
+     integration_order =  SECOND;
+    else throw  InitFailedException("Kspace: incorrect mesh order: " + mesh_order + "\n" );
 
+      
+  }
 }
 //---------------------------------------------------------------------------------------------------------------//
 void Kspace::parse_options(void)
@@ -463,7 +471,7 @@ void Kspace::parse_options(void)
 }
 
 //---------------------------------------------------------------------------------------------------------------//
-void Kspace::rotate_mesh(Mesh* mesh, Tensor2Gen& RotMatrix)
+void Kspace::rotate_mesh (Mesh* mesh, Tensor2Gen& RotMatrix)
 {
 
   Tensor1 vec1;
@@ -478,6 +486,10 @@ void Kspace::rotate_mesh(Mesh* mesh, Tensor2Gen& RotMatrix)
 
        vec1 = RotMatrix * vec1;
 
+       
+
+       
+       
        mesh->node(n) = Point( vec1(1), vec1(2), vec1(3) );
 
      }
