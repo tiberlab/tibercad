@@ -107,13 +107,16 @@ class KspaceIntegration : public Kspace
    
 
    //!calculate density for a particular k-grid
-   void calculate_density();
+   virtual void calculate_density();
 
 
    //!put charge of each k-point into system solution
    void prepare_system_solution();
 
 
+
+   //!estimates error for mesh refinement KellyErrorEstimator is called
+   void estimate_error_for_refinement(ErrorVector& error);
 
 
    //! size of the real_space_density vector

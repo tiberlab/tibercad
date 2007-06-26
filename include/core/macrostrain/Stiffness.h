@@ -27,7 +27,7 @@ class Stiffness : public PhysicalModelInterface
   //!  Returns subtensor \f$ B_{kl} = C_{ijkl}, i = i_0, j = j_0 \f$ 
   Tensor2Sym get_another_subtensor(int i, int j); 
 
-  //! sets stiffness tensor in crystal system   
+  //! sets stiffness tensor in crystal system [Gpa]  
   void set_C_tensor_crystal(const Tensor4DSym&     C);
 
   //! creates new object
@@ -39,7 +39,7 @@ class Stiffness : public PhysicalModelInterface
  
  protected:
 
-  //! stiffness tensor in crystal system     (rank 4, double symmetric, 21 independent components)
+  //! stiffness tensor in crystal system     (rank 4, double symmetric, 21 independent components) [GPa]
   Tensor4DSym     C_cr    ;    
 
 

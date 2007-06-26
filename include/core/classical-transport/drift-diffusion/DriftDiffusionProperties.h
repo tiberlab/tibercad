@@ -477,10 +477,10 @@ class DriftDiffusionProperties : public PhysicalModel
     int get_number_of_recombination_models(void) const;
 
     //! Return the electrons_thermoelectric_power
-    const double DriftDiffusionProperties::get_electrons_thermoelectric_power();
+    const double get_electrons_thermoelectric_power();
 
     //! Return the holes_thermoelectric_power
-    const double DriftDiffusionProperties::get_holes_thermoelectric_power();
+    const double get_holes_thermoelectric_power();
 
     //! Computes the electrons and holes thermoelectric power
     void compute_thermoelectric_powers(void);
