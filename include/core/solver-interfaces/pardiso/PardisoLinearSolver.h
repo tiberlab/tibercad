@@ -77,7 +77,7 @@ class PardisoLinearSolver : public TiberLinearSolver
     static void _checkerr(int errorcode) throw (LinearSolverException);
 
     //! Pardiso solver interface
-    void PardisoLinearSolver::solve_pardiso(double *mat, int *ia, int *ja, double *b, double *x, int n);
+    void solve_pardiso(double *mat, int *ia, int *ja, double *b, double *x, int n);
 };
 
 

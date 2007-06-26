@@ -100,6 +100,8 @@ class TunnelingCurrent: public KspaceIntegration
    //!performes integration over energy on a fixed mesh
    double integrate_over_fix_energy(const Mesh* energy_mesh, double k[3], double electric_potential );
 
+
+
 };
 
 //---------------------------------------------------------

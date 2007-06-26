@@ -854,7 +854,7 @@ double TunnelingCurrent::integrate_over_energy(double kpar[3], double electric_p
 
   //------------------------------------------------------//
  
-
+ 
 
   result = integrate_over_fix_energy( Emesh, kpar, electric_potential  );
   
@@ -877,11 +877,15 @@ double TunnelingCurrent::integrate_over_energy(double kpar[3], double electric_p
     for ( ; do_integration ; )
     {
 
+      
+
       mesh_refinement.uniformly_refine(1);
 
       mesh_refinement.refine_and_coarsen_elements();
 
       result = integrate_over_fix_energy( Emesh,  kpar, electric_potential);
+
+     
 
       cerr << result << "   ";
 
@@ -917,6 +921,10 @@ double TunnelingCurrent::integrate_over_energy(double kpar[3], double electric_p
 }
 
 
+
+
+
+
 //==========================================================//
 double TunnelingCurrent::integrate_over_fix_energy(const Mesh* Emesh, double kpar[3], double electric_potential)
 {
@@ -928,6 +936,8 @@ double TunnelingCurrent::integrate_over_fix_energy(const Mesh* Emesh, double kpa
   AutoPtr<FEBase> fe (FEBase::build(1, fe_type));
 
   QGauss qrule (1,  NINTH);
+
+ 
     
   fe->attach_quadrature_rule (&qrule);
 
@@ -1004,3 +1014,7 @@ double TunnelingCurrent::integrate_over_fix_energy(const Mesh* Emesh, double kpa
 
   return result;
 }
+
+
+//===================================================================================//
+
