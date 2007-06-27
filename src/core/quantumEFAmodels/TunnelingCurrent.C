@@ -151,7 +151,12 @@ void TunnelingCurrent::parse_options(void)
 
   opt.energy_int_refinement = mod_opt.get_option("energy_integration_refinement", false);
   opt.init_nodes_for_energy_int =  mod_opt.get_option("initial_nodes_for_energy_integration", 3);
+
+
   opt.energy_int_tolerance = mod_opt.get_option("energy_integration_tolerance", 1e-2);
+  opt.energy_int_zero_limit = mod_opt.get_option("energy_integration_zero_limit", 1e-12);
+  opt.energy_int_uniform_refinement = mod_opt.get_option("energy_integral_uniform_refinement", false); 
+
   
 }
 
@@ -642,27 +647,7 @@ void TunnelingCurrent::estimate_error_for_refinement(ErrorVector& error)
   
 
 
-  //--------------------------------------------------
   
-  double mean_value = 0;
-  {
-
-    double temp = 0;
-    double volume_total = 0;
-    
-    MeshBase::const_element_iterator       elem_it  = kmesh->active_elements_begin();
-    const MeshBase::const_element_iterator elem_end = kmesh->active_elements_end(); 
-    for (; elem_it != elem_end; ++elem_it)
-    { 
-      const Elem* el = *elem_it;
-
-      volume_total += volume[el];
-      temp += abs(kspace_integral[el]);
-    }
-   
-    mean_value = temp/volume_total; 
-  }
-
 
   MeshBase::const_element_iterator       elem_it1  = kmesh->active_elements_begin();
   const MeshBase::const_element_iterator elem_end1 = kmesh->active_elements_end(); 
@@ -675,81 +660,15 @@ void TunnelingCurrent::estimate_error_for_refinement(ErrorVector& error)
     const unsigned int el_id = el->id();
 
 
-    double el_mean_value = kspace_integral[el]/volume[el];
-
-    unsigned int n = el->n_neighbors();
-    vector<double> neighbor_values;
-
-    for (unsigned int i = 0; i < n; i++)
-    {
-      const Elem* el_neighbor = el->neighbor(i);
-      if (el_neighbor != NULL)
-      {
-	if (el_neighbor->active())
-	{
-	  neighbor_values.push_back(  kspace_integral[el_neighbor]/volume[el_neighbor] );
-	}
-	else
-	{
-	  std::vector< const Elem * > active_family;
-
-	  el_neighbor->active_family_tree(active_family);
-
-	  const unsigned int active_family_size =  active_family.size();
-
-	  double t1 = 0;
-	  double t2 = 0;
-	 
-	  for (unsigned int i1 = 0; i1 < active_family_size; i1++)
-	  {
-	    if (active_family[i1]->is_neighbor(el))
-	    {
-	 
-	      t1 += volume[active_family[i1]];
-	      t2 += kspace_integral[ active_family[i1] ] * volume[active_family[i1]];
-	    }
-	  }
-	 
-	 
-	  neighbor_values.push_back(t2/t1);
-
-	}
-      }
-      else
-      {
-	//!here the periodicity (symmetry) of k-space has to be treated somehow....
-
-      }
-
-    }
-
-    double error_cell = 0;
-
+    error[el_id] = abs(kspace_integral[el]); //test
     
-   
-
-    for (unsigned int i = 0; i < neighbor_values.size(); i++)
-    {
-      
-      error_cell += abs(el_mean_value - neighbor_values[i])/mean_value;
-
-      error_cell += abs(el_mean_value - neighbor_values[i])/mean_value;
-
-      //  cerr <<  " " << neighbor_values[i] << "    " << mean_value  ;
-     
-
-    }
-
-    error[el_id] = kspace_integral[el]; //test
-    
-    error[el_id] = error_cell;
+  
 
   }
 
 
 
-  // for (unsigned int t = 0; t < error.size(); t++)
-  //  cerr << t << "  " << error[t] << "\n";
+ 
 
 
 }
@@ -828,7 +747,7 @@ double TunnelingCurrent::integrate_over_energy(double kpar[3], double electric_p
 
   //------------------------------------------------------//
   //Equation system
-  Mesh* Emesh = new Mesh(1);
+  Emesh = new Mesh(1);
 
   unsigned int num_nodes = opt.init_nodes_for_energy_int ;  
 
@@ -845,7 +764,7 @@ double TunnelingCurrent::integrate_over_energy(double kpar[3], double electric_p
   E2 = opt.Efermi_left;
   
 
-
+  E2 = opt.Efermi_left + 40.0 * SimulationOptions::temperature * Constants::k_Boltzmann;
 
   MeshTools::Generation::build_line (*Emesh, 
 				     num_nodes, E1, E2, 
@@ -854,7 +773,10 @@ double TunnelingCurrent::integrate_over_energy(double kpar[3], double electric_p
 
   //------------------------------------------------------//
  
- 
+  energy_integral.clear();
+
+  cerr << "------------------------------------------\n";
+
 
   result = integrate_over_fix_energy( Emesh, kpar, electric_potential  );
   
@@ -865,7 +787,7 @@ double TunnelingCurrent::integrate_over_energy(double kpar[3], double electric_p
 
     bool do_integration;
 
-    if (abs(result) < 1e-50)
+    if (abs(result) < opt.energy_int_zero_limit)
       do_integration = false;
     else
       do_integration = true;
@@ -878,14 +800,28 @@ double TunnelingCurrent::integrate_over_energy(double kpar[3], double electric_p
     {
 
       
+      if (opt.energy_int_uniform_refinement)
+	mesh_refinement.uniformly_refine(1);
+      else
+      {
 
-      mesh_refinement.uniformly_refine(1);
+	ErrorVector error = ErrorVector(Emesh->n_elem(), Emesh);
+      
+	estimate_error_for_energy_refinement(error);
+
+	mesh_refinement.refine_fraction() = 0.2;
+	mesh_refinement.coarsen_fraction() = 0.0;
+	mesh_refinement.max_h_level() = 20;
+
+	mesh_refinement.flag_elements_by_error_fraction(error);         
+
+      }
 
       mesh_refinement.refine_and_coarsen_elements();
 
       result = integrate_over_fix_energy( Emesh,  kpar, electric_potential);
 
-     
+      
 
       cerr << result << "   ";
 
@@ -935,8 +871,10 @@ double TunnelingCurrent::integrate_over_fix_energy(const Mesh* Emesh, double kpa
 
   AutoPtr<FEBase> fe (FEBase::build(1, fe_type));
 
-  QGauss qrule (1,  NINTH);
+  // QGauss qrule (1,  NINTH);
 
+
+  QGauss qrule (1,  FIFTH);
  
     
   fe->attach_quadrature_rule (&qrule);
@@ -959,19 +897,26 @@ double TunnelingCurrent::integrate_over_fix_energy(const Mesh* Emesh, double kpa
     {
       
       const Elem* el = *elem_it;
-      fe->reinit (el);
-      for (unsigned int qp=0; qp<qrule.n_points(); ++qp)
-      {      
-	energy_values.push_back(q_point[qp](0));
+
+      if (energy_integral.find(el) ==  energy_integral.end())
+      {
+
+	fe->reinit (el);
+
+	for (unsigned int qp=0; qp<qrule.n_points(); ++qp)
+	{      
+	  energy_values.push_back(q_point[qp](0));
+	}
+
       }
-    
     }
   }
+
   int energy_size = energy_values.size();
   transmission_values.resize(energy_size);
 
   {
-
+    
     double energy_array[energy_size];
     double transmission_array[energy_size];
     for (unsigned i1 = 0 ; i1 < energy_size  ; i1++)
@@ -984,8 +929,9 @@ double TunnelingCurrent::integrate_over_fix_energy(const Mesh* Emesh, double kpa
     int status = call_hetero(electric_potential, kpar, transmission_array, energy_array,  energy_size);
     
     for (unsigned int i1 = 0 ; i1 < energy_size  ; i1++)
-      transmission_values[i1] = transmission_array[i1];
+      transmission_values[i1] = transmission_array[i1] *  thermal_probability( opt.Efermi_left, energy_array[i1] );
 
+   
   }
 
 
@@ -993,23 +939,46 @@ double TunnelingCurrent::integrate_over_fix_energy(const Mesh* Emesh, double kpa
 
   MeshBase::const_element_iterator       elem_it  = Emesh->active_elements_begin();
   const MeshBase::const_element_iterator elem_end = Emesh->active_elements_end(); 
+ 
   unsigned int point = 0;
+
   for (; elem_it != elem_end; ++elem_it)
   {
     
     const Elem* el = *elem_it;
-    fe->reinit (el);
-    for (unsigned int qp=0; qp<qrule.n_points(); ++qp)
+    
+
+    if (energy_integral.find(el) ==  energy_integral.end())
     {
 
-      double Energy = q_point[qp](0);    
+      fe->reinit (el);
+
+      energy_integral[el] = 0.0;
+
+      for (unsigned int qp=0; qp<qrule.n_points(); ++qp)
+      {
+	
+	double Energy = q_point[qp](0);    
 
      
-      result += transmission_values[point] * JxW[qp];
+	energy_integral[el] += transmission_values[point] * JxW[qp] ;
 
-      point++;
+	point++;
+
+      }
     }
   }
+
+
+  elem_it  = Emesh->active_elements_begin();
+  for (; elem_it != elem_end; ++elem_it)
+  {
+    
+    const Elem* el = *elem_it;
+    result += energy_integral[el];
+
+  }
+
   
 
   return result;
@@ -1018,3 +987,27 @@ double TunnelingCurrent::integrate_over_fix_energy(const Mesh* Emesh, double kpa
 
 //===================================================================================//
 
+void TunnelingCurrent::estimate_error_for_energy_refinement(ErrorVector& error)
+{
+ std::fill (error.begin(), error.end(), 0.0);
+  
+
+  MeshBase::const_element_iterator       elem_it1  = Emesh->active_elements_begin();
+  const MeshBase::const_element_iterator elem_end1 = Emesh->active_elements_end(); 
+  for (; elem_it1 != elem_end1; ++elem_it1)
+  {
+
+   
+    // e is necessarily an active element on the local processor
+    const Elem* el = *elem_it1;
+    const unsigned int el_id = el->id();
+
+
+    error[el_id] = abs(energy_integral[el]); 
+    
+  
+
+  }
+
+
+}

@@ -34,7 +34,9 @@ class TunnelingCurrent: public KspaceIntegration
     unsigned int init_nodes_for_energy_int;
     double energy_int_tolerance;
     bool energy_int_refinement;
-
+    bool energy_int_uniform_refinement;
+    double  energy_int_refine_fraction;
+    double  energy_int_zero_limit;
   };
 
  protected:
@@ -101,6 +103,22 @@ class TunnelingCurrent: public KspaceIntegration
    double integrate_over_fix_energy(const Mesh* energy_mesh, double k[3], double electric_potential );
 
 
+   //!fermi distribution factor
+   /*!
+     \param fermi_energy Fermi energy [eV]
+     \param Energy [eV]
+   */
+   double thermal_probability(double fermi_energy, double Energy);
+
+
+
+   std::map<const Elem*, double> energy_integral;
+
+
+   void estimate_error_for_energy_refinement(ErrorVector& error);
+
+   Mesh* Emesh;
+
 
 };
 
@@ -112,6 +130,24 @@ inline TunnelingCurrent*  TunnelingCurrent::create()
 }
 
 
+
+inline double TunnelingCurrent::thermal_probability(double Fermi_energy, double Energy)
+{
+  
+
+  double T_EV = SimulationOptions::temperature * Constants::k_Boltzmann;
+  double exp_arg =  (Energy - Fermi_energy)/T_EV;
+  
+  double el_fermi;
+
+  if (exp_arg > 100 ) 
+    el_fermi = 0.0;
+  else
+    el_fermi = 1.0/(  1 +  std::exp(exp_arg)  );
+
+
+  return(el_fermi);
+}
 
 
 
