@@ -73,7 +73,8 @@ PardisoLinearSolver::init(void)
 	iparm[0] = 1; /* No solver default */
 	iparm[1] = 2; /* Fill-in reordering from METIS */
 	/* Numbers of processors, value of OMP_NUM_THREADS */
-	iparm[2] = omp_get_max_threads();
+	//iparm[2] = omp_get_max_threads();
+	iparm[2] = 1;
 	iparm[3] = 0; /* No iterative-direct algorithm */
 	iparm[4] = 0; /* No user fill-in reducing permutation */
 	iparm[5] = 0; /* Write solution into x */
@@ -120,6 +121,11 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
   assert(solution != NULL);
   assert(rhs      != NULL);
 
+  // Close the matrices and vectors in case this wasn't already done.
+  matrix->close();
+  precond->close();
+  solution->close();
+  rhs->close();
 
 
   PetscErrorCode ierr;
@@ -133,15 +139,21 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 
 
   //Initialize Petsc-------------------------------
-  int argc = 0;
-  char** args[0];
-  static char help[] = "Test";
-  PetscInitialize(&argc,args,(char *)0,help);
+  //int argc = 0;
+  //char** args[0];
+  //static char help[] = "Test";
+  //PetscInitialize(&argc,args,(char *)0,help);
   //------------------------------------------------ 
 
 
   //Get matrix
   C = matrix->mat();
+  //PetscViewerSetFormat(PETSC_VIEWER_STDOUT_SELF, PETSC_VIEWER_ASCII_INFO_DETAIL);
+  //MatView(C, PETSC_VIEWER_STDOUT_SELF);
+  //PetscViewer viewer;
+  //PetscViewerSetFormat(PETSC_VIEWER_STDOUT_SELF, PETSC_VIEWER_ASCII_MATLAB);
+  //PetscViewerASCIIOpen(PETSC_COMM_WORLD, "mat.m", &viewer);
+  //MatView(C, viewer);
 
   //Get rsh
   u = rhs->vec();
@@ -155,25 +167,44 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 
   if (done)
   {
+    std::cerr << "n = " << n << std::endl;
+    int nnz = ia[n] - 1;
+    std::cerr << "nnz = " << nnz << std::endl;
+    std::cerr << "ia = ";
+    for (int i = 0; i <= n; i++)
+      std::cerr << ia[i] << "  ";
+    std::cerr << std::endl;
+    std::cerr << "ja = ";
+    for (int i = 0; i < nnz; i++)
+      std::cerr << ja[i] << "  ";
+    std::cerr << std::endl;
     ierr = MatGetArray(C, &mat); _checkerr(ierr);
     ierr = VecGetArray(u, &vec); _checkerr(ierr);
     ierr = VecGetArray(x, &sol); _checkerr(ierr);  
+    std::cerr << "mat = ";
+    for (int i = 0; i < nnz; i++)
+      std::cerr << mat[i] << "  ";
+    std::cerr << std::endl;
   
     solve_pardiso(mat, ia, ja, vec, sol, n);
 
     ierr = VecRestoreArray(x, &sol);_checkerr(ierr);
+    ierr = VecRestoreArray(u, &vec);_checkerr(ierr);
+    ierr = MatRestoreArray(C, &mat);_checkerr(ierr);
     
   }  
+  ierr = MatRestoreRowIJ(C, 1, PETSC_FALSE, &n, &ia, &ja, &done);
+  _checkerr(ierr);
 
 
-  ierr = PetscFinalize();_checkerr(ierr);
+  //ierr = PetscFinalize();_checkerr(ierr);
 
 
 
     
   //Insert the vec object in the solution
-  PetscVector<Number> sol_temp(x);
-  *solution = sol_temp;
+  //PetscVector<Number> sol_temp(x);
+  //*solution = sol_temp;
 
 
 
@@ -196,7 +227,6 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
     /* necessary for the FIRST call of the PARDISO solver. */
     /* -------------------------------------------------------------------- */
     
-    
     /* Auxiliary variables. */
     double ddum; /* Double dummy */
     int idum; /* Integer dummy. */
@@ -211,7 +241,7 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
       pt[i] = 0;
     }
     
-    n++;
+    
 
     /* -------------------------------------------------------------------- */
     /* .. Reordering and Symbolic Factorization. This step also allocates */
@@ -252,9 +282,9 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
     phase = 33;
     iparm[7] = 2; /* Max numbers of iterative refinement steps. */
     /* Set right hand side to one. */
-    for (int i = 0; i < n; i++) {
-      b[i] = 1;
-    }
+    //for (int i = 0; i < n; i++) {
+    //  b[i] = 1;
+    //}
     PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
 	     &n, a, ia, ja, &idum, &nrhs,
 	     iparm, &msglvl, b, x, &error);
