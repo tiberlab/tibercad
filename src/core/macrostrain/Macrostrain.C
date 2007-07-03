@@ -689,8 +689,6 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
     C_tensor_el = macrostrain_model->get_stiffness();
     
-     
-     
 
     eps_const =  crystal_el->get_const_eps0(substrate_lat_const, eps0_var_log) 
       + eps0_of_elem[el_number] ;//+ substrate_shear;
@@ -846,7 +844,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 		    vec2(i) = eps_var(i,k+1);
 		}
 		
-		Ke_u_add_sub(p1,i1) += JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2 ));
+		Ke_u_add_sub(p1,i1) += JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2  ));
 	      }
 	    }
 	  } 
@@ -878,7 +876,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	      vec2 = 0;
 	      for (int i = 1; i<=dim; i++) vec2(i) = dphi[p2][qp](i-1) ;
 	      
-	      scal_prod = vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2);
+	      scal_prod = vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)*vec2);
 	      
 	      if (!belongs_to_substrate(p1, elem))
 	      {

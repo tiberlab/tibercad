@@ -298,8 +298,6 @@ void TunnelingCurrent::do_solve()
 	  estimate_error_for_refinement(error);
 
 	 
-	 
-	  //mesh_refinement.flag_elements_by_elem_fraction (error,KspaceIntegration::opt.refine_fraction,0.0, 10);
 	      
 	  mesh_refinement.flag_elements_by_error_fraction (error,KspaceIntegration::opt.refine_fraction,0.0, 10);
  
@@ -449,6 +447,10 @@ void TunnelingCurrent::calculate_density()
 	  f *= factor;
 	}
 	
+
+	f *= get_degeneracy_factor();
+
+
 	real_space_density[applied_voltage_elem] += f ;
 
 	kspace_integral[elem] += f;
@@ -775,12 +777,12 @@ double TunnelingCurrent::integrate_over_energy(double kpar[3], double electric_p
  
   energy_integral.clear();
 
-  cerr << "------------------------------------------\n";
+  //cerr << "------------------------------------------\n";
 
 
   result = integrate_over_fix_energy( Emesh, kpar, electric_potential  );
   
-  cerr << result << "   ";
+  // cerr << result << "   ";
 
   if (opt.energy_int_refinement)
   {
@@ -823,7 +825,7 @@ double TunnelingCurrent::integrate_over_energy(double kpar[3], double electric_p
 
       
 
-      cerr << result << "   ";
+      //cerr << result << "   ";
 
       if ( (abs(result) < 1e-20) || (abs(result_old - result)/abs(result) < opt.energy_int_tolerance) )
       {
@@ -842,7 +844,7 @@ double TunnelingCurrent::integrate_over_energy(double kpar[3], double electric_p
   }
 
 
-  cerr << "\n";
+  // cerr << "\n";
 
 
   delete Emesh;

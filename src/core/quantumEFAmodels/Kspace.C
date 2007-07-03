@@ -102,7 +102,21 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
 
 
   double norm_k = norm(k_vector);
-  kmin[0] = -norm_k/2.0;  kmax[0] = norm_k/2.0; num_nodes[0] = n;
+
+  if (wedge == HALF)
+  {
+    kmin[0] = 0.0; 
+    kmax[0] = norm_k/2.0;
+  }
+  else
+  {
+    kmin[0] = -norm_k/2.0;  
+    kmax[0] =  norm_k/2.0;
+  } 
+  
+
+  num_nodes[0] = n;
+
   kmin[1] = 0.0; kmin[2] = 0.0;
   kmax[1] = 0.0; kmax[2] = 0.0;
   
@@ -143,12 +157,37 @@ void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2
 {
 
   double norm_k1 = norm(k_vector1);
-  kmin[0] = -norm_k1/2.0;  kmax[0] = norm_k1/2.0; num_nodes[0] = n;
-
-
-  
   double norm_k2 = norm(k_vector2);
-  kmin[1] = -norm_k2/2.0;  kmax[1] = norm_k2/2.0; num_nodes[1] = m;
+
+  if (wedge == QUARTER)
+  {
+       
+    kmin[0] = 0;  kmax[0] = norm_k1/2.0; 
+  
+    kmin[1] = 0;  kmax[1] = norm_k2/2.0; 
+
+  }
+
+
+
+  if (wedge == HALF)
+  {
+     
+    kmin[0] = -norm_k1/2.0;  kmax[0] = norm_k1/2.0; 
+  
+    kmin[1] = 0;  kmax[1] = norm_k2/2.0; 
+
+  }  
+
+  if (wedge == ALL)
+  {
+   
+    kmin[0] = -norm_k1/2.0;  kmax[0] = norm_k1/2.0; num_nodes[0] = n;
+
+    kmin[1] = -norm_k2/2.0;  kmax[1] = norm_k2/2.0; num_nodes[1] = m;
+  }
+
+  num_nodes[0] = n; num_nodes[1] = m;
 
   kmin[2] = 0.0; kmax[2] = 0.0;
   
@@ -174,28 +213,45 @@ void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2
 				    unsigned int m, Tensor1 k_vector3, unsigned int k)
 {
 
+
   double norm_k1 = norm(k_vector1);
-  kmin[0] = -norm_k1/2.0;  kmax[0] = norm_k1/2.0; num_nodes[0] = n;
-
-
-  
   double norm_k2 = norm(k_vector2);
-  kmin[1] = -norm_k2/2.0;  kmax[1] = norm_k2/2.0; num_nodes[1] = m;
+  double norm_k3 = norm(k_vector3);
 
+ if (wedge == ALL)
+ {
 
   
-  double norm_k3 = norm(k_vector3);
-  kmin[2] = -norm_k3/2.0;  kmax[2] = norm_k3/2.0; num_nodes[2] = k;
+   kmin[0] = -norm_k1/2.0;  kmax[0] = norm_k1/2.0; num_nodes[0] = n;
+   
+   kmin[1] = -norm_k2/2.0;  kmax[1] = norm_k2/2.0; num_nodes[1] = m;
 
+   kmin[2] = -norm_k3/2.0;  kmax[2] = norm_k3/2.0; num_nodes[2] = k;
 
-  for (short i = 1; i < 4; i++)
-    {
-      transform_matrix(i,1) = k_vector1(i)/norm_k1; 
-      transform_matrix(i,2) = k_vector2(i)/norm_k2;
-      transform_matrix(i,3) = k_vector3(i)/norm_k3;
-    }
+ }
 
-  // k_dim = 3;
+ if (wedge == HALF)
+ {
+
+   kmin[0] = -norm_k1/2.0;  kmax[0] = norm_k1/2.0; num_nodes[0] = n;
+
+   kmin[1] = -norm_k2/2.0;  kmax[1] = norm_k2/2.0; num_nodes[1] = m;
+
+   kmin[2] = 0;  kmax[2] = norm_k3/2.0; num_nodes[2] = k;
+
+ }
+ 
+
+ 
+  
+ for (short i = 1; i < 4; i++)
+ {
+   transform_matrix(i,1) = k_vector1(i)/norm_k1; 
+   transform_matrix(i,2) = k_vector2(i)/norm_k2;
+   transform_matrix(i,3) = k_vector3(i)/norm_k3;
+ }
+
+ // k_dim = 3;
 
 }
 
@@ -229,6 +285,33 @@ void Kspace::do_init()
     ostringstream temp; temp << setw(4) << k_dim; 
     throw  InitFailedException("Kspace: number_of_nodes should contain " + temp.str() + " elements");
   }
+
+
+  {
+    string wedge_type = mod_opt.get_option("wedge", "all");
+    if (wedge_type == "all" )
+    {
+      wedge = ALL;
+      degeneracy_factor = 1.0;
+    }
+    else if (wedge_type == "half")
+    {
+      wedge = HALF;
+      degeneracy_factor = 2.0;
+    }
+    else if (wedge_type == "quarter")
+    {
+      wedge = QUARTER;
+      degeneracy_factor = 4.0;
+      if (k_dim == 1)
+	throw  InitFailedException("Kspace: wedge " + wedge_type + "cannot be used with 1D k-space");
+    }
+    else 
+    {
+      throw  InitFailedException("Kspace: unknown wedge: " + wedge_type + "\n");
+    }
+  }
+
 
   if (k_dim == 1)
   {

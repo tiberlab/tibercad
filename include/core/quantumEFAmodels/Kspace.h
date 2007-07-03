@@ -23,11 +23,24 @@ class Kspace : public SimulationInterface
   //!returns reference to kmesh object
   const Mesh& get_k_mesh(void) const; 
 
+
+  double get_degeneracy_factor(void) {return degeneracy_factor; };
+
+  enum Wedge
+  {
+    ALL = 0,
+    HALF = 1,
+    QUARTER =2
+  };
+
+
  private:
 
   Kspace(const Kspace& t);
   
-  
+  double degeneracy_factor;
+
+  Wedge wedge;
 
  protected:
 
