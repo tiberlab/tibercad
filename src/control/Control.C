@@ -13,6 +13,7 @@
 #include "SimulationEnvironment.h"
 #include "SimulationInterface.h"
 
+#include "equation_systems.h"
 
 #include <boost/filesystem/operations.hpp>
 
@@ -106,6 +107,8 @@ Control::init(void) throw (InitFailedException, ModelErrorException)
     const simulation_iterator simend(_simulations.end());
     for ( ; simit != simend; ++simit)
       (*simit)->init();
+
+    _device->get_equation_systems().init();
   }
   catch (runtime_error& e)
   {
@@ -122,6 +125,10 @@ Control::create_device(void)
 {
   using namespace boost::filesystem;
   
+#ifdef DEBUG
+  cerr << "Control::create_device() begin" << endl;
+#endif
+
   InputParser parser(_inputfile);
 
   ModelOptions opts = parser.read_parameters("Simulation");
@@ -168,6 +175,10 @@ Control::create_device(void)
   cout << "Control: simulation temperature = " <<
     SimulationOptions::temperature << " K" << endl << endl;
 
+  
+#ifdef DEBUG
+  cerr << "Control::create_device() end" << endl;
+#endif
 }
 
 
@@ -175,6 +186,10 @@ Control::create_device(void)
 void
 Control::create_materials(void)
 {
+  
+#ifdef DEBUG
+  cerr << "Control::create_materials() begin" << endl;
+#endif
 
   assert(_device != NULL);
 
@@ -211,6 +226,10 @@ Control::create_materials(void)
     Material* mat = Material::create(material, data.get_options());
     _device->set_material(mat, region_ids);
   }
+  
+#ifdef DEBUG
+  cerr << "Control::create_materials() end" << endl;
+#endif
 }
 
 
@@ -218,6 +237,10 @@ Control::create_materials(void)
 void
 Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 {
+  
+#ifdef DEBUG
+  cerr << "Control::setup_models() begin" << endl;
+#endif
 
   assert(_device != NULL);
 
@@ -481,6 +504,10 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   }
 
 
+  
+#ifdef DEBUG
+  cerr << "Control::setup_models() end" << endl;
+#endif
 
 }
 
