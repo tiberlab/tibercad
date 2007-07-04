@@ -78,6 +78,7 @@ class PardisoLinearSolver : public TiberLinearSolver
 
     //! Pardiso solver interface
     void solve_pardiso(double *mat, int *ia, int *ja, double *b, double *x, int n);
+  
 };
 
 

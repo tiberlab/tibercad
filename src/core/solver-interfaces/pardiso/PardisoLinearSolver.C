@@ -45,6 +45,10 @@ PardisoLinearSolver::clear(void)
 void
 PardisoLinearSolver::init(void)
 {
+   if (!this->initialized())
+   {
+    this->_is_initialized = true;
+     
 
     mtype = 11; /* Real unsymmetric matrix */
 
@@ -57,7 +61,7 @@ PardisoLinearSolver::init(void)
     error = 0;  /* Initialize error flag */
 
     msglvl = 1; /* Print statistical information in file */
-
+   }
 
 /* -------------------------------------------------------------------- */
 /* .. Setup Pardiso control parameters. */
@@ -106,6 +110,7 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 			     const unsigned int m_its)
 {
 
+  this->init ();
 
   PetscMatrix<Number>* matrix   = dynamic_cast<PetscMatrix<Number>*>(&matrix_in); 
   PetscMatrix<Number>* precond  = dynamic_cast<PetscMatrix<Number>*>(&precond_in);
@@ -134,85 +139,51 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
   PetscInt       n;
   PetscTruth     done;
   Mat            C;
-  Vec            u,x;            
-
-
-
-  //Initialize Petsc-------------------------------
-  //int argc = 0;
-  //char** args[0];
-  //static char help[] = "Test";
-  //PetscInitialize(&argc,args,(char *)0,help);
-  //------------------------------------------------ 
-
+  Vec            u,x;           
+  PetscInt nrows;
+  //---------------------------------------------------------------------------------
 
   //Get matrix
-  C = matrix->mat();
-  //PetscViewerSetFormat(PETSC_VIEWER_STDOUT_SELF, PETSC_VIEWER_ASCII_INFO_DETAIL);
-  //MatView(C, PETSC_VIEWER_STDOUT_SELF);
-  //PetscViewer viewer;
-  //PetscViewerSetFormat(PETSC_VIEWER_STDOUT_SELF, PETSC_VIEWER_ASCII_MATLAB);
-  //PetscViewerASCIIOpen(PETSC_COMM_WORLD, "mat.m", &viewer);
-  //MatView(C, viewer);
-
+   C = matrix->mat();
+  
   //Get rsh
-  u = rhs->vec();
+   u = rhs->vec();
  
   //Get sol
   x = solution->vec();
   
+  //---------------------------------------------------------------------
+
+
+
   //Get n ia and ja
-  ierr = MatGetRowIJ(C, 1, PETSC_FALSE, &n, &ia, &ja, &done); _checkerr(ierr);
- 
+   ierr = MatGetRowIJ(C,1, PETSC_FALSE,&nrows,&ia, &ja, &done); _checkerr(ierr);
 
   if (done)
   {
-    std::cerr << "n = " << n << std::endl;
-    int nnz = ia[n] - 1;
-    std::cerr << "nnz = " << nnz << std::endl;
-    std::cerr << "ia = ";
-    for (int i = 0; i <= n; i++)
-      std::cerr << ia[i] << "  ";
-    std::cerr << std::endl;
-    std::cerr << "ja = ";
-    for (int i = 0; i < nnz; i++)
-      std::cerr << ja[i] << "  ";
-    std::cerr << std::endl;
+   
+
+
     ierr = MatGetArray(C, &mat); _checkerr(ierr);
     ierr = VecGetArray(u, &vec); _checkerr(ierr);
     ierr = VecGetArray(x, &sol); _checkerr(ierr);  
-    std::cerr << "mat = ";
-    for (int i = 0; i < nnz; i++)
-      std::cerr << mat[i] << "  ";
-    std::cerr << std::endl;
-  
-    solve_pardiso(mat, ia, ja, vec, sol, n);
+
+    solve_pardiso(mat, ia, ja, vec, sol, nrows);
 
     ierr = VecRestoreArray(x, &sol);_checkerr(ierr);
     ierr = VecRestoreArray(u, &vec);_checkerr(ierr);
     ierr = MatRestoreArray(C, &mat);_checkerr(ierr);
-    
+
+   
   }  
-  ierr = MatRestoreRowIJ(C, 1, PETSC_FALSE, &n, &ia, &ja, &done);
-  _checkerr(ierr);
+  ierr = MatRestoreRowIJ(C, 1, PETSC_FALSE, &nrows, &ia, &ja, &done);_checkerr(ierr);
 
-
-  //ierr = PetscFinalize();_checkerr(ierr);
-
-
-
-    
-  //Insert the vec object in the solution
-  //PetscVector<Number> sol_temp(x);
-  //*solution = sol_temp;
-
-
-
-
+  //-----------------------------------------------------------
+  // ierr = MatView(C,PETSC_VIEWER_STDOUT_WORLD);_checkerr(ierr);
+  
+  
+  return std::make_pair(1,0.0);
 }
-
-
-
 
 
 
@@ -256,13 +227,13 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
 
 
 
-    if (error != 0) {
-      printf("\nERROR during symbolic factorization: %d\n", error);
-      exit(1);
-    }
-    printf("\nReordering completed ... ");
-    printf("\nNumber of nonzeros in factors = %d", iparm[17]);
-    printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
+    // if (error != 0) {
+    //  printf("\nERROR during symbolic factorization: %d\n", error);
+    //  exit(1);
+    // }
+    // printf("\nReordering completed ... ");
+    // printf("\nNumber of nonzeros in factors = %d", iparm[17]);
+    // printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
 
     /* -------------------------------------------------------------------- */
     /* .. Numerical factorization. */
@@ -275,7 +246,7 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
       printf("\nERROR during numerical factorization: %d", error);
       exit(2);
     }
-    printf("\nFactorization completed ... ");
+    // printf("\nFactorization completed ... ");
     /* -------------------------------------------------------------------- */
     /* .. Back substitution and iterative refinement. */
     /* -------------------------------------------------------------------- */
@@ -288,16 +259,18 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
     PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
 	     &n, a, ia, ja, &idum, &nrhs,
 	     iparm, &msglvl, b, x, &error);
-    if (error != 0) {
-      printf("\nERROR during solution: %d", error);
-      exit(3);
-    }
-    printf("\nSolve completed ... ");
-    printf("\nThe solution of the system is: ");
-    for (int i = 0; i < n; i++) {
-      printf("\n x [%d] = % f", i, x[i] );
-    }
-    printf ("\n");
+
+    // if (error != 0) {
+    //  printf("\nERROR during solution: %d", error);
+    //  exit(3);
+    // }
+
+    // printf("\nSolve completed ... ");
+    // printf("\nThe solution of the system is: ");
+    //for (int i = 0; i < n; i++) {
+    //  printf("\n x [%d] = % f", i, x[i] );
+    // }
+    //printf ("\n");
     
     
     /* -------------------------------------------------------------------- */
@@ -309,7 +282,7 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
 	     iparm, &msglvl, &ddum, &ddum, &error);
     
     
-}
+ }
 
   
 
