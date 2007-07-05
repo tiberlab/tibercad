@@ -987,10 +987,11 @@ DriftDiffusion::rebuild_equation_system(void)
   
   const unsigned int dim = get_mesh().mesh_dimension();
 
+  // TODO gives some problem in rev. 398
   // in 1D bcgs seems to work better than bcgsl
-  if (dim == 1)
-    if (solver_params.ksp_type == BICGSTAB)
-      solver_params.ksp_type = BICG;
+  //if (dim == 1)
+  //  if (solver_params.ksp_type == BICGSTAB)
+  //    solver_params.ksp_type = BICG;
 
   system.set_linear_solver_type(solver_params.ksp_type, solver_params.pc_type);
 
