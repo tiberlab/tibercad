@@ -22,14 +22,6 @@ void KspaceIntegration::calculate_density()
 
  
 
-
-  //----------------------------------------------------------------------//
-  //build equation system object
-
- 
-
- 
-
   const DofMap& dof_map = system->get_dof_map();
     
   FEType fe_type = dof_map.variable_type(0);
@@ -38,7 +30,7 @@ void KspaceIntegration::calculate_density()
     
   AutoPtr<FEBase> fe (FEBase::build(k_dim, fe_type));
 
-  QGauss qrule (k_dim, FIRST);
+  QGauss qrule (k_dim, THIRD);
     
   fe->attach_quadrature_rule (&qrule);
 
@@ -57,8 +49,13 @@ void KspaceIntegration::calculate_density()
  
    
 
-
  
+  double factor = 1.0;
+  {
+    for (short i = 0; i < k_dim; i++)  factor /= (2.0 * M_PI);
+    
+    factor *= get_degeneracy_factor();
+  }
   
 
   std::vector<unsigned int> dof_indices;
@@ -66,82 +63,86 @@ void KspaceIntegration::calculate_density()
 
   for ( ; it != it_el ; ++it) //loop over k space elements
   {
-
     const Elem* elem = *it;
-    fe->reinit (elem);
-
-   
-
-    dof_map.dof_indices (elem, dof_indices, 0);
     
-  
 
-    for (unsigned int qp=0; qp<qrule.n_points(); qp++)
-    {//qp
-      unsigned int num_nodes =  phi.size();
+    std::map<const Elem*, std::map <const Elem*, double> >::iterator it_k_elem;
+    
+    it_k_elem = kspace_local_density.find(elem);
+
+    if (it_k_elem == kspace_local_density.end())
+    {  
+
+      map<const Elem*, double>  dens_at_k_elem;
+
+      fe->reinit (elem);
+
+      dof_map.dof_indices (elem, dof_indices, 0);
+    
+      for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+      {//qp
+	
+      
+
+	map<const Elem*, double>  dens_at_k_point ;
+
+	double integrated_quantity;
+
+	calculate_for_k_point( q_point[qp], dens_at_k_point, integrated_quantity);
+	
+
+	kspace_integral[elem] += integrated_quantity * JxW[qp] * factor;
 
 
-      for (unsigned int i = 0; i <  num_nodes; i++)
-      {
-	const Node* nd = elem->get_node(i);
-	map <const Node*, map< const Elem*, double> > :: iterator node_it;
-
-	node_it = k_point_density.find(nd);
-	if (node_it != k_point_density.end())
-	{
-	  map<const Elem*, double>&  dens_at_k_node = node_it->second;
 	  
-	  map<const Elem*, double>::iterator   dens_at_k_node_it = dens_at_k_node.begin();
-	  map<const Elem*, double>::iterator   dens_at_k_node_end = dens_at_k_node.end();
 
 	
-
-	  for ( ; dens_at_k_node_it != dens_at_k_node_end ; ++dens_at_k_node_it) //loop over real space elements
-	  {
-	    const Elem* el = dens_at_k_node_it->first;
-	    
-		     
-
-	    double temp =  phi[i][qp] * (dens_at_k_node_it->second)*JxW[qp];
-	   
-
-	    real_space_density[el] +=  temp;
-	    
-	    
-	  }
-
+	map<const Elem*, double>::iterator   dens_at_k_node_it = dens_at_k_point.begin();
+	map<const Elem*, double>::iterator   dens_at_k_node_end = dens_at_k_point.end();
+	
 	
 
-	}
-	else
+	for ( ; dens_at_k_node_it != dens_at_k_node_end ; ++dens_at_k_node_it) //loop over real space elements
 	{
-	  cerr << "WARNING! QuantumDensity   node is missing\n";
+	  const Elem* el = dens_at_k_node_it->first;
+	  
+	  dens_at_k_elem[el] += (dens_at_k_node_it->second)*JxW[qp] * factor;
 	}
-
+	  
+ 
 	     
+	
+	
+      }
 
+      kspace_local_density.insert(pair<const Elem*,map<const Elem*, double> >(elem,dens_at_k_elem));
+    }
+  }
+
+  //--------------------------------------------------------------------------//
+  {//real space density calculation
+    map <const Elem*,map<const Elem*, double> > ::iterator it_k_space = kspace_local_density.begin();
+    map <const Elem*,map<const Elem*, double> > ::iterator it2 = kspace_local_density.end();
+    for ( ; it_k_space != it2 ; ++it_k_space)
+    {
+      map<const Elem*, double>& k_cell_map = it_k_space->second;
+
+      map<const Elem*, double>::iterator it_real_space =   k_cell_map.begin();
+      map<const Elem*, double>::iterator it_3 =   k_cell_map.end();
+
+
+      for ( ; it_real_space != it_3 ; ++it_real_space )
+      {
+	
+	real_space_density[it_real_space->first] += it_real_space->second;
       }
 
     }
-    
+
+
+
   }
-
-
-  //--------------------------------------------------------------------------//
-
-  // is in <cmath> : M_PI
-  //double pi = 4.0 * atan(1.0);
-  {
-    double factor = 1.0;
-
-    for (short i = 0; i < k_dim; i++)  factor /= (2.0 * M_PI);
-    
-    map<const Elem*, double>::iterator   it = real_space_density.begin();
-    map<const Elem*, double>::iterator   end_it = real_space_density.end();
-
-
-    for (; it != end_it; ++it)  (it->second) *= factor;
-  }
+  
 
 
   //--------------------------------------------------------------------------//
@@ -165,16 +166,17 @@ void KspaceIntegration::calculate_convergent_density()
   system->add_variable("u", integration_order);
 
   
-  //!system vector that contains charge density in k space from previous iteration
-  NumericVector<Number>& old_density = system->add_vector("old density");
+ 
 
   
   eq->init();
 
   
-  
+  kspace_local_density.clear();
  
-  calculate_at_each_k_point();
+  kspace_integral.clear();
+
+  volume.clear();
  
  
   real_space_density.clear();
@@ -185,8 +187,8 @@ void KspaceIntegration::calculate_convergent_density()
 
  
 
-  prepare_system_solution();
-
+  double x1;
+  double x2;
  
   
 
@@ -198,7 +200,6 @@ void KspaceIntegration::calculate_convergent_density()
      
      
 
-    old_density = * (system->solution);
       
 
     MeshRefinement mesh_refinement(*kmesh);
@@ -238,28 +239,17 @@ void KspaceIntegration::calculate_convergent_density()
 
 	eq->reinit();
 
-	calculate_at_each_k_point();
-	
+
+	old_real_space_density = real_space_density;
+
 	real_space_density.clear();
+
 	calculate_density();
 
-	prepare_system_solution();
+
+	norm_of_error = estimate_error();
 
 
-	old_density.add(-1.0, *(system->solution));
-	      
-	old_density.close();
-
-	double x1 = old_density.linfty_norm();
-
-	system->solution->close();
-
-	double x2 = ( system->solution->linfty_norm() );
-	      
-	norm_of_error = x1/x2;
-
-
-	old_density = *(system->solution);
 
 	std::cout << "k space grid has " << kmesh->n_nodes() << " nodes " << flush;
 	std::cout <<  "quantum density error " << norm_of_error << endl << flush;
@@ -279,81 +269,7 @@ void KspaceIntegration::calculate_convergent_density()
 
 }
 
-//----------------------------------------------------------------------------------------//
-void KspaceIntegration::prepare_system_solution()
-{
 
- 
-
-  unsigned int num_nodes = kmesh->n_nodes();
-
-  system->solution->init(num_nodes);
-
- 
-  const  DofMap& dof_map = system->get_dof_map();
-    
-  FEType fe_type = dof_map.variable_type(0);
-
-
-    
-  AutoPtr<FEBase> fe (FEBase::build(k_dim, fe_type));
-
-
-  QGauss qrule (k_dim, FIRST);
-    
-  fe->attach_quadrature_rule (&qrule);
-
-  std::vector<unsigned int> dof_indices;
-
-
-  MeshBase::element_iterator       it     = kmesh->active_elements_begin();
-  const MeshBase::element_iterator it_el  = kmesh->active_elements_end();
-
-
- 
-
-
-  for ( ; it != it_el ; ++it) 
-  {
-
-   
-    const Elem* elem = *it;
-
-    fe->reinit (elem);
-
-     
-
-    dof_map.dof_indices (elem, dof_indices);
-      
-
-    
-
-    unsigned int n_nodes = elem->n_nodes();
-
-    
-      
-    for (unsigned int n = 0; n < n_nodes; n++)
-    {
-      const	  Node*  node =  elem->get_node(n);
-      
-#ifdef DEBUG
-      cerr << (*node)(0) << "   " << (*node)(1) << "    " << (*node)(2) << "    " <<  k_point_charge[node] << "\n";
-#endif
-      
-
-      system->solution->set( dof_indices[n] ,  k_point_charge[node]);
- 	  
-
-
-	 
-
-    }  
-      
-
-  }
-
-
-}
 //------------------------------------------------------------------------------------//
 
 void KspaceIntegration::parse_options( )
@@ -400,8 +316,90 @@ void KspaceIntegration::do_init(void)
 //--------------------------------------------------------------------------------------//
 void KspaceIntegration::estimate_error_for_refinement(ErrorVector& error)
 {
-  KellyErrorEstimator error_estimator;
+  std::fill (error.begin(), error.end(), 0.0);
 
-  error_estimator.estimate_error (*system,error);
+ 
+  MeshBase::const_element_iterator       elem_it1  = kmesh->active_elements_begin();
+  const MeshBase::const_element_iterator elem_end1 = kmesh->active_elements_end(); 
+  
+  for (; elem_it1 != elem_end1; ++elem_it1)
+  {
+
+   
+    const Elem* el = *elem_it1;
+    const unsigned int el_id = el->id();
+
+
+    error[el_id] = abs(kspace_integral[el]); //test
+    
+  
+
+  }
+
+
+ 
+
+}
+
+//--------------------------------------------------------------------------------------//
+
+void KspaceIntegration::calculate_volumes(void)
+{
+ 
+  MeshBase::const_element_iterator       elem_it  = kmesh->active_elements_begin();
+  const MeshBase::const_element_iterator elem_end = kmesh->active_elements_end(); 
+  
+
+ 
+
+  for (; elem_it != elem_end; ++elem_it)
+  {
+ 
+    const Elem* el = *elem_it;
+   
+    if (volume.find(el) == volume.end())
+    {	         
+      volume[el] = el->volume(); 
+    }
+  }
+  
+  
+}
+//-------------------------------------------------------------------------------
+unsigned int KspaceIntegration::how_many_elements_to_do()
+{
+  unsigned int result = 0;
+
+  MeshBase::const_element_iterator       elem_it  = kmesh->active_elements_begin();
+  const MeshBase::const_element_iterator elem_end = kmesh->active_elements_end();
+  for (; elem_it != elem_end; ++elem_it)
+  {
+    const Elem* el = *elem_it;
+    if ( kspace_integral.find(el) ==  kspace_integral.end() ) result++;
+  }
+
+  return result;
+
+}
+//---------------------------------------------------------------------------------
+double  KspaceIntegration::estimate_error(void)
+{
+
+  double result;
+  double t1 = 0.0; double t2 = 0.0;
+
+
+  map<const Elem*, double>::iterator   it;
+  map<const Elem*, double>::iterator   it1 = real_space_density.begin();
+  map<const Elem*, double>::iterator   it2 = real_space_density.end();
+
+  for (it = it1; it != it2; ++it)
+  {
+    const Elem* el = it->first;
+    t1 += real_space_density[el] * real_space_density[el] * el->volume();
+    t2 += (real_space_density[el] - old_real_space_density[el]) *  (real_space_density[el] - old_real_space_density[el]) * el->volume();
+  }
+
+  result = t2/t1;
 
 }

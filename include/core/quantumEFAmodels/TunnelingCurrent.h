@@ -66,8 +66,7 @@ class TunnelingCurrent: public KspaceIntegration
 
    virtual void calculate_density(void);
 
-   //! we do not kelly here
-   virtual void estimate_error_for_refinement(ErrorVector& error);
+  
 
  private:
 
@@ -79,23 +78,14 @@ class TunnelingCurrent: public KspaceIntegration
 
    //!calculates everything that is necessary at a single k-point
    double calculte_at_k_point(const Point& k);
-
-
-   std::map<const Elem*, double> kspace_integral;
-
-
-   std::map<const Elem*, double> volume;
-
-
-   unsigned int how_many_elements_to_do();
-
-
-   void calculate_volumes(void);
+ 
 
 
    //!performes integration over energy. May refine mesh, if required
    double integrate_over_energy(double k[3], double electric_potential);
 
+   //!estimates error forenergy intetegration
+   void estimate_error_for_energy_refinement(ErrorVector& error);
 
    options opt;
 
@@ -115,7 +105,6 @@ class TunnelingCurrent: public KspaceIntegration
    std::map<const Elem*, double> energy_integral;
 
 
-   void estimate_error_for_energy_refinement(ErrorVector& error);
 
    Mesh* Emesh;
 

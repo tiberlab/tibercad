@@ -876,7 +876,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	      vec2 = 0;
 	      for (int i = 1; i<=dim; i++) vec2(i) = dphi[p2][qp](i-1) ;
 	      
-	      scal_prod = vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)*vec2);
+	      scal_prod = vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) *vec2);
 	      
 	      if (!belongs_to_substrate(p1, elem))
 	      {

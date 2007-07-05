@@ -1662,7 +1662,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
     
   slep_opt.S_file_name = "S.out";
 
-  slep_opt.eps_max_it = 3000;
+  slep_opt.eps_max_it =  opt.max_iteration_number;
 
   if (opt.solve_ev_problem_twice)
   {

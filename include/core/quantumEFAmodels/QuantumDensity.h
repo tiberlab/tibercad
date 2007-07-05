@@ -144,9 +144,7 @@ class QuantumDensity : public KspaceIntegration
 
 
 
-   //!calculates objects k_point_density and eigen_energy
-   virtual void calculate_at_each_k_point();
-
+  
 
   
 
@@ -166,6 +164,15 @@ class QuantumDensity : public KspaceIntegration
 
    //!is reimplemented here to be able to do output over k-space 
    virtual void 	do_plot (void);
+
+
+   //!calculates objects k_point_density and eigen_energy
+   virtual void calculate_for_k_point(const Point& k_point, 
+				     std::map<const Elem*, double>& density, 
+				     double& integrated_quantity);
+
+
+
 };
 
 

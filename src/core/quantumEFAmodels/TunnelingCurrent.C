@@ -78,7 +78,7 @@ void TunnelingCurrent::do_plot (void)
 
 
    
-      GMVIO_cell(*Vmesh).write_ascii_cell_data(filename, results, names);
+    GMVIO_cell(*Vmesh).write_ascii_cell_data(filename, results, names);
 
 
 
@@ -229,9 +229,7 @@ void TunnelingCurrent::do_solve()
     kmesh->print_info();
 
 
-    k_point_density.clear();
-    k_point_charge.clear();
-
+  
 
     kspace_integral.clear();
     volume.clear();
@@ -633,106 +631,16 @@ void TunnelingCurrent::k_space_output(void)
   
 }
 //==========================================================================//
-void TunnelingCurrent::estimate_error_for_refinement(ErrorVector& error)
-{
-  //------------------------------------------------
-  //volume of active alements
 
- 
-
-  //error.resize (kmesh->n_elem());
-
-  std::fill (error.begin(), error.end(), 0.0);
-
- 
-
-  
-
-
-  
-
-  MeshBase::const_element_iterator       elem_it1  = kmesh->active_elements_begin();
-  const MeshBase::const_element_iterator elem_end1 = kmesh->active_elements_end(); 
-  for (; elem_it1 != elem_end1; ++elem_it1)
-  {
-
-   
-    // e is necessarily an active element on the local processor
-    const Elem* el = *elem_it1;
-    const unsigned int el_id = el->id();
-
-
-    error[el_id] = abs(kspace_integral[el]); //test
-    
-  
-
-  }
 
 
 
  
 
 
-}
-//===================================================================
-unsigned int TunnelingCurrent::how_many_elements_to_do()
-{
-  unsigned int result = 0;
 
-  MeshBase::const_element_iterator       elem_it  = kmesh->active_elements_begin();
-  const MeshBase::const_element_iterator elem_end = kmesh->active_elements_end();
-  for (; elem_it != elem_end; ++elem_it)
-  {
-    const Elem* el = *elem_it;
-    if ( kspace_integral.find(el) ==  kspace_integral.end() ) result++;
-  }
 
-  return result;
 
-}
-//===================================================================
-
-void TunnelingCurrent::calculate_volumes(void)
-{
- 
-  MeshBase::const_element_iterator       elem_it  = kmesh->active_elements_begin();
-  const MeshBase::const_element_iterator elem_end = kmesh->active_elements_end(); 
-  
-
- 
-
-  for (; elem_it != elem_end; ++elem_it)
-  {
- 
-    const Elem* el = *elem_it;
-   
-    if (volume.find(el) == volume.end())
-    {	      
-     
-    
-      FEType fe_type (FIRST , LAGRANGE);
-      
-      AutoPtr<FEBase> fe (FEBase::build(k_dim,
-                                   fe_type));	      
-      QGauss qrule (k_dim, FIRST);
-
-      fe -> attach_quadrature_rule (&qrule);
-      
-      const std::vector<Real>& JxW = fe->get_JxW();
-    
-      fe->reinit(el);
-
-      double el_volume = 0.0;
-      
-      for (unsigned int qp=0; qp<qrule.n_points(); ++qp)
-	el_volume += JxW[qp];
-    
-      volume[el] = el_volume; 
-    }
-  }
-  
-  
-}
 
 //========================================================================//
 

@@ -82,27 +82,38 @@ class KspaceIntegration : public Kspace
   //!calculates the quantity performing mesh refinement of k-space, if required.
   virtual void calculate_convergent_density(void);
 
-  //!calculates everything that is necessary for eack k-point 
-  virtual void calculate_at_each_k_point() {};
+  //!calculates density that is necessary for eack k-point and a number that will be used for refinement 
+  virtual void calculate_for_k_point(const Point& k_point, 
+				     std::map<const Elem*, double>& density, 
+				     double& integrated_quantity) {};
 
-
-   //!map from node in the k-grid to a real space density, which is a map between real space elements and density   
-  std::map< const Node*, std::map <const Elem*, double>  > k_point_density;
-
-  //!map from node in the k-grid to a total charge (refinement criterion)
-   std::map< const Node*, double > k_point_charge;
   
 
-   
-   //!result after integration
-   std::map<const Elem*, double> real_space_density;
+  //!map from element in the k-grid to a real space density, which is a map between real space elements and density   
+  std::map< const Elem*, std::map <const Elem*, double>  > kspace_local_density;
 
 
-   //! equation system defined at k-space
-   EquationSystems*  eq;
+
+  //!map from Elem in the k-grid to an integrated quantity used for the refinement criterion
+  std::map<const Elem*, double> kspace_integral;
+
    
-   //! system 
-   LinearImplicitSystem* system;
+  //!result after integration
+  std::map<const Elem*, double> real_space_density;
+
+
+  std::map<const Elem*, double> old_real_space_density; 
+
+
+
+  virtual double estimate_error(void);
+
+  
+  //! equation system defined at k-space
+  EquationSystems*  eq;
+   
+  //! system 
+  LinearImplicitSystem* system;
    
    
 
@@ -110,9 +121,7 @@ class KspaceIntegration : public Kspace
    virtual void calculate_density();
 
 
-   //!put charge of each k-point into system solution
-   void prepare_system_solution();
-
+  
 
 
    //!estimates error for mesh refinement KellyErrorEstimator is called
@@ -125,6 +134,19 @@ class KspaceIntegration : public Kspace
 
    //!put data into opt
    virtual void parse_options(void);
+
+   //!volumes of the elements
+   std::map<const Elem*, double> volume;
+
+
+  
+   //!calculate  volumes of the elements
+   void calculate_volumes(void);
+   
+   //!how many elementsin k-space has to be done
+   unsigned int how_many_elements_to_do();
+   
+
   
    options opt;
 

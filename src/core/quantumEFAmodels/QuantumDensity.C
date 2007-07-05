@@ -39,15 +39,13 @@ void QuantumDensity::do_plot (void)
 
 
     if (format == "gmv")
-      GMVIO(get_k_mesh()).write_nodal_data(filename, results, names);
-    else if (format == "gnuplot")
-      GnuPlotIO(get_k_mesh()).write_nodal_data(filename, results, names);
+      GMVIO_cell(get_k_mesh()).write_ascii_cell_data(filename, results, names);
     else if (format == "ise")
-      TecplotIO(get_k_mesh()).write_nodal_data(filename, results, names);
+      TecplotIO_cell(get_k_mesh()).write_cell_data(filename, results, names);
     else
     {
       cout << "Output format not supported. Falling back to GMV." << endl;
-      GMVIO(get_k_mesh()).write_nodal_data(filename, results, names);
+      GMVIO_cell(get_k_mesh()).write_ascii_cell_data(filename, results, names);
     }
 
   }
@@ -262,83 +260,41 @@ QuantumDensity:: ~QuantumDensity()
 
 
 //================================================================//
-void QuantumDensity::calculate_at_each_k_point()
+void QuantumDensity::calculate_for_k_point(const Point& k_point, 
+				     std::map<const Elem*, double>& density, 
+				     double& integrated_quantity)
 {
 
- 
-
-  MeshBase::node_iterator       it     = kmesh->active_nodes_begin();
-  const MeshBase::node_iterator it_el  = kmesh->active_nodes_end();
+   
+  vector<double> k_vector(3, 0.0);
 
 
-
-  for ( ; it != it_el ; ++it) 
-    {
-      
-      const Node*  nd  = *it;
-
-      map<const Node*, map< const Elem*, double> >::iterator it1;
-
-      it1 =  k_point_density.find(nd);
-
-      if (it1 ==  k_point_density.end() )
-
-      {
-	vector<double> k_vector(3, 0.0);
-
-
-	k_vector[0] = (*nd)(0);
-	k_vector[1] = (*nd)(1);
-	k_vector[2] = (*nd)(2);
+  k_vector[0] = k_point(0);
+  k_vector[1] = k_point(1);
+  k_vector[2] = k_point(2);
 	  
 
-	ModelOptions quantum_model_opts;
+  ModelOptions quantum_model_opts;
 	  
 
-	quantum_model_opts.set_option("k_vector",  k_vector);
-	quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number ); 
-	quantum_model_opts["job"] = "density";
+  quantum_model_opts.set_option("k_vector",  k_vector);
+  quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number ); 
+  quantum_model_opts["job"] = "density";
 
  
 	  
-	quantum_model->set_options(quantum_model_opts);
+  quantum_model->set_options(quantum_model_opts);
 
 
-	quantum_model->solve();
+  quantum_model->solve();
 
-	map<const Elem*, double> dens = quantum_model->get_density();
-
-	if (it == kmesh->active_nodes_begin()) real_space_density_size = dens.size();
-	  
-	map<const Elem*, double>::iterator density_it = dens.begin();
-	map<const Elem*, double>::iterator density_end   = dens.end();
-	
+  density = quantum_model->get_density();
 
 
-	for ( ; density_it != density_end  ; ++density_it )
-	{
-	  density_it->second *= opt.degeneracy;	 
-	}
-     
-	k_point_density.insert( pair< const Node*, map<const Elem*, double> > (nd, dens) );
 
-	double rho = (quantum_model->get_integrated_probability()) * opt.degeneracy;
+  integrated_quantity = quantum_model->get_integrated_probability();
 
 	 
-	  
-	k_point_charge.insert(pair<const Node*, double > (nd, rho));
-	  
-
-	  
-
-      }
-
-    }
-
-
-#ifdef DEBUG
-  cerr << "Schroedinger equation at each point is solved\n";
-#endif 
  
 }
 
@@ -348,9 +304,40 @@ std::vector<double>   QuantumDensity::get_density_in_k_space(void)  const
   
   vector<double> result ;
 
-  eq->build_solution_vector  	( result) ;     
-  
-  return(result);
+  MeshBase::const_element_iterator       elem_it  = kmesh->active_elements_begin();
+  const MeshBase::const_element_iterator elem_end = kmesh->active_elements_end(); 
+
+  unsigned int n_active_elements = 0;
+
+  for ( ; elem_it !=  elem_end ; ++elem_it )
+  {
+    n_active_elements++;
+  }
+    
+    
+    
+
+  result.resize( n_active_elements );
+  elem_it  = kmesh->active_elements_begin();
+    
+  unsigned int j = 0;
+  for ( ; elem_it !=  elem_end; ++elem_it )
+  {
+    const Elem* el = *elem_it;
+   
+
+    map <const Elem*, double >::const_iterator it1 = kspace_integral.find(el);
+    map <const Elem*, double >::const_iterator it2 = volume.find(el);
+
+    result[j] = it1->second / it2->second;
+    
+
+    j++;
+  }
+
+
+
+ 
 }
 
 //=================================================================// 
