@@ -764,8 +764,9 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	  {//side loop
 	    Boundary* bd = si.get_boundary(std::pair<const Elem*,  unsigned int> (elem,side));
 	    
+	    
 	    if (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  )
-	      if (  bd->get_name() != substrate_name ) 
+	      if (  dynamic_cast<MacrostrainBoundaryProperties*>( bd->get_boundary_properties( get_id() ))->get_type() == "pressure" ) 
 	      { 	 
 		MacrostrainPressure* press =
 		  dynamic_cast< MacrostrainPressure* > (bd->get_boundary_properties (get_id()) ) ;

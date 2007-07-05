@@ -12,15 +12,18 @@ class MacrostrainBoundaryProperties: public BoundaryProperties
 
    static  MacrostrainBoundaryProperties* create(const std::string & name,  const ModelOptions &   options );
 
+   std::string get_type(void) const {return type; };
+
  protected:
 
   virtual void 	do_init (void) = 0;
 
+  std::string type; 
 
  private:
 
   
-
+ 
 
 }; 
 
