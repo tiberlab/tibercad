@@ -656,13 +656,13 @@ DriftDiffusion::do_solve(void)
       break;
   }
 
-  if (quasi_equilibrium)
-  {
-    cerr << "switching on continuity eq..." << endl;
-    opts.delete_option("quasi_equilibrium");
-    get_options().coupling = coupling;
-    solve_newton();
-  }
+//  if (quasi_equilibrium)
+//  {
+//    cerr << "switching on continuity eq..." << endl;
+//    opts.delete_option("quasi_equilibrium");
+//    get_options().coupling = coupling;
+//    solve_newton();
+//  }
 
 }
 
