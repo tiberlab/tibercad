@@ -218,7 +218,9 @@ void  MacroHeatBalance::do_solve()
   
   
   std::cout<<"Solving macro heat balance: finish"<<std::endl;
-  
+
+  cout<<get_type() 
+ <<endl; 
 }
 
 
@@ -783,7 +785,6 @@ void  MacroHeatBalance:: init_heat_model(const Elem* elem)
 
        dof_map.dof_indices (elem, dof_indices);  
 
-       
        ID subdomain = elem->subdomain_id();
     
        const Material* mat = _device->get_material(subdomain);
@@ -805,8 +806,6 @@ void  MacroHeatBalance:: init_heat_model(const Elem* elem)
        heat_model->set_element(elem);     
 
        heat_model->set_temperature(Tloc);
-
-   
 
        //Update model for a given element
        heat_model->re_init();

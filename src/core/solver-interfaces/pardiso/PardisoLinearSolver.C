@@ -227,14 +227,15 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
 
 
 
-    // if (error != 0) {
-    //  printf("\nERROR during symbolic factorization: %d\n", error);
-    //  exit(1);
-    // }
-    // printf("\nReordering completed ... ");
-    // printf("\nNumber of nonzeros in factors = %d", iparm[17]);
-    // printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
-
+      if (error != 0) {
+        printf("\nERROR during symbolic factorization: %d\n", error);
+        exit(1);
+        }
+#ifdef DEBUB
+      printf("\nReordering completed ... ");
+      printf("\nNumber of nonzeros in factors = %d", iparm[17]);
+      printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
+#endif
     /* -------------------------------------------------------------------- */
     /* .. Numerical factorization. */
     /* -------------------------------------------------------------------- */
@@ -242,37 +243,43 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
     PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
 	     &n, a, ia, ja, &idum, &nrhs,
 	     iparm, &msglvl, &ddum, &ddum, &error);
+
     if (error != 0) {
       printf("\nERROR during numerical factorization: %d", error);
       exit(2);
     }
-    // printf("\nFactorization completed ... ");
+
+#ifdef DEBUB
+    printf("\nFactorization completed ... ");
+#endif
+    
     /* -------------------------------------------------------------------- */
     /* .. Back substitution and iterative refinement. */
     /* -------------------------------------------------------------------- */
     phase = 33;
     iparm[7] = 2; /* Max numbers of iterative refinement steps. */
-    /* Set right hand side to one. */
-    //for (int i = 0; i < n; i++) {
-    //  b[i] = 1;
-    //}
+    
+
     PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
 	     &n, a, ia, ja, &idum, &nrhs,
 	     iparm, &msglvl, b, x, &error);
 
-    // if (error != 0) {
-    //  printf("\nERROR during solution: %d", error);
-    //  exit(3);
-    // }
+    if (error != 0) {
+      printf("\nERROR during solution: %d", error);
+      exit(3);
+    }
+      
 
-    // printf("\nSolve completed ... ");
-    // printf("\nThe solution of the system is: ");
+#ifdef DEBUB
+     printf("\nSolve completed ... ");
+    //printf("\nThe solution of the system is: ");
     //for (int i = 0; i < n; i++) {
     //  printf("\n x [%d] = % f", i, x[i] );
     // }
     //printf ("\n");
+#endif    
     
-    
+
     /* -------------------------------------------------------------------- */
     /* .. Termination and release of memory. */
     /* -------------------------------------------------------------------- */

@@ -39,7 +39,7 @@ PhysicalModelInterface* HeatModel::create_new (void) const
 void HeatModel::do_init()
 {
 
-  //  Read Model and return a pointer to drift diffusion simulation eventually
+  //Read Model and return a pointer to drift diffusion simulation eventually
 
   model_opt.joule_effect = get_options().get_option("Joule_Effect", false);
 
@@ -52,16 +52,14 @@ void HeatModel::do_init()
       model_opt.particle_thermal_conductivity    )
     {
 
-
      std::string drift_diffusion_simulation = get_options().get_option("current_simulation", "no_current");
 
      _dd_simul = dynamic_cast< DriftDiffusion* > ( SimulationInterface::find_simulation(drift_diffusion_simulation ) );
  
       if (_dd_simul == NULL)
       throw InitFailedException("Unknown current model" +  drift_diffusion_simulation );
-    }
 
-  
+    }
   
   //Read subModels 
 
