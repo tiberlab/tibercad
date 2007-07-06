@@ -12,8 +12,7 @@
 #include "Boundary.h"
 #include "SimulationEnvironment.h"
 #include "SimulationInterface.h"
-
-#include "equation_systems.h"
+#include "PetscRuntimeError.h"
 
 #include <boost/filesystem/operations.hpp>
 
@@ -108,7 +107,6 @@ Control::init(void) throw (InitFailedException, ModelErrorException)
     for ( ; simit != simend; ++simit)
       (*simit)->init();
 
-    _device->get_equation_systems().init();
   }
   catch (runtime_error& e)
   {
@@ -563,10 +561,18 @@ Control::run_simulation(void) throw (SolveFailedException)
         "    Cause: " << e.what();
       throw SolveFailedException(s.str());
     }
+    catch (...)
+    {
+      ostringstream s;
+      s << "Control: Solve of " << sim->get_name() << " failed." << endl <<
+        "    Cause: Unknown";
+      throw SolveFailedException(s.str());
+    }
 
     // now the actual solve
     sim->solve();
     sim->plot();
+
   }
  
 }

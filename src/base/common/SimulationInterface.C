@@ -310,7 +310,31 @@ SimulationInterface::solve(void) throw (SolveFailedException)
     _environment->prepare_for_solve();
 
 
-  do_solve();
+  try
+  {
+    do_solve();
+  }
+  catch (PetscRuntimeError& e)
+  {
+    ostringstream s;
+    s << "Control: Solve of " << get_name() << " failed." << endl <<
+      "    Cause: " << e.what() << " : " << e.get_reason();
+    throw SolveFailedException(s.str());
+  }
+  catch (runtime_error& e)
+  {
+    ostringstream s;
+    s << "Control: Solve of " << get_name() << " failed." << endl <<
+      "    Cause: " << e.what();
+    throw SolveFailedException(s.str());
+  }
+  catch (...)
+  {
+    ostringstream s;
+    s << "Control: Solve of " << get_name() << " failed." << endl <<
+      "    Cause: Unknown";
+    throw SolveFailedException(s.str());
+  }
 
   _is_solved = true;
   
