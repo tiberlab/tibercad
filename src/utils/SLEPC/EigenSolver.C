@@ -396,3 +396,125 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
 
 
 //--------------------------------------------------------------//
+int EigenSolver::init_H_matrix(unsigned int n)
+{
+
+  int ierr;
+
+  ierr = MatCreate(PETSC_COMM_WORLD,&A);
+  CHKERRQ(ierr);
+  
+  if (ierr = 0)
+  {
+    ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n);
+    CHKERRQ(ierr);
+  
+    if (ierr = 0)
+    {
+      ierr = MatSetFromOptions(A);
+      CHKERRQ(ierr);
+    }
+  }
+
+  return(ierr);
+  
+}
+
+
+//----------------------------------------------------------//
+int EigenSolver::init_S_matrix(unsigned int n)
+{
+
+  int ierr;
+
+  ierr = MatCreate(PETSC_COMM_WORLD,&B);
+  CHKERRQ(ierr);
+  
+  if (ierr = 0)
+  {
+    ierr = MatSetSizes(B,PETSC_DECIDE,PETSC_DECIDE,n,n);
+    CHKERRQ(ierr);
+  
+    if (ierr = 0)
+    {
+      ierr = MatSetFromOptions(B);
+      CHKERRQ(ierr);
+    }
+  }
+
+  return(ierr);
+  
+}
+//-----------------------------------------------------------------//
+int EigenSolver::finalize_H_assembly(void)
+{
+  int ierr;
+
+  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
+  CHKERRQ(ierr);
+  if (ierr = 0)
+  {
+    ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
+    CHKERRQ(ierr);
+  }
+
+  return(ierr);
+}
+//------------------------------------------------------------------//
+int EigenSolver::finalize_S_assembly(void)
+{
+  int ierr;
+
+  ierr = MatAssemblyBegin(B,MAT_FINAL_ASSEMBLY);
+  CHKERRQ(ierr);
+  if (ierr = 0)
+  {
+    ierr = MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);
+    CHKERRQ(ierr);
+  }
+
+  return(ierr);
+}
+//-------------------------------------------------------------------//
+
+int EigenSolver::insert_H_row( int row, const std::vector<unsigned int>& colums, const std::vector<Complex>& value_vector)
+{
+  int ierr;
+  int number_of_columns =  colums.size();
+  PetscInt col[number_of_columns];
+  PetscScalar value[number_of_columns];
+  
+  for (unsigned int i = 0; i < number_of_columns; i++)
+  {
+    col[i] = colums[i];
+    value[i] = value_vector[i];
+  }
+
+
+  ierr = MatSetValues(A,1,&row,number_of_columns,col,value,INSERT_VALUES);
+
+  CHKERRQ(ierr);
+  return(ierr);
+}
+
+//-------------------------------------------------------------------//
+
+int EigenSolver::insert_S_row( int row, const std::vector<unsigned int>& colums, const std::vector<Complex>& value_vector)
+{
+  int ierr;
+  int number_of_columns =  colums.size();
+  PetscInt col[number_of_columns];
+  PetscScalar value[number_of_columns];
+  
+  for (unsigned int i = 0; i < number_of_columns; i++)
+  {
+    col[i] = colums[i];
+    value[i] = value_vector[i];
+  }
+
+
+  ierr = MatSetValues(B,1,&row,number_of_columns,col,value,INSERT_VALUES);
+
+  CHKERRQ(ierr);
+  return(ierr);
+}

@@ -62,6 +62,24 @@ class EigenSolver
   //!has to be called after solving the eigenvalue problem
   static int clear_slepc(void);
 
+  //!init H_matrix
+  static int init_H_matrix(unsigned int size);
+
+  //!init S_matrix
+  static int init_S_matrix(unsigned int size);
+
+  //closes H matrix
+  static int finalize_H_assembly(void);
+
+  //close S matrix
+  static int finalize_S_assembly(void);
+
+
+  static int insert_H_row( int row, const std::vector<unsigned int>& colums, const std::vector<Complex>& value);
+
+  
+  static int insert_S_row( int row, const std::vector<unsigned int>& colums, const std::vector<Complex>& value);
+
 
  private:
 

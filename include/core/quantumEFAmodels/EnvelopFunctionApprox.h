@@ -400,6 +400,14 @@ class EnvelopFunctionApprox  : public SimulationInterface
   */
   void save_H_matrix(const std::string & file_name);
 
+
+
+  void copy_S_matrix_to_solver();
+
+  
+  void copy_H_matrix_to_solver();
+
+
   //!read SLEPc solutions
   /*!
  

@@ -1644,6 +1644,143 @@ void EnvelopFunctionApprox::save_H_matrix(const std::string & fname)
     }
   //------------------------------------------------------------------------------
 }
+
+
+//============================================================//
+
+void EnvelopFunctionApprox::copy_H_matrix_to_solver( )
+{
+
+ 
+  int size_matrix = Ham_real->n();
+  
+
+  EigenSolver::init_H_matrix(number_of_new_dofs);
+
+  
+  PetscMatrix<Number>* H_real_matrix = static_cast<PetscMatrix<Number>* >(Ham_real);
+
+  H_real_matrix->close();
+
+
+  PetscMatrix<Number>* H_imag_matrix = static_cast<PetscMatrix<Number>* >(Ham_imag);
+
+  H_imag_matrix->close();
+
+
+  //----------------------------------------------------------------------------------------------------//
+ 
+ 
+ 
+  //write data of columns in each row
+  
+  for (int row = 0 ; row < size_matrix; row++)
+    {
+      if (new_dofs[row].independent)
+	{
+	  int ierr = 0;
+	  const  PetscScalar *petsc_row_vals_real;
+	  const  PetscInt *petsc_cols_real;
+	  int n_cols_real = 0;
+	  
+	  const  PetscScalar *petsc_row_vals_imag;
+	  const  PetscInt *petsc_cols_imag;
+	  int n_cols_imag = 0;
+
+	  set<int> real_column, imag_column, complex_column;
+	  set<int>::iterator com_col_it;
+
+
+	  map<int,double> real_values, imag_values;
+	  map<int, double>::iterator  position;
+
+
+	  insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
+
+	  ierr = MatGetRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+	  real_column.clear();
+	  real_values.clear();
+	  for (int i = 0; i < n_cols_real; i++)
+	    {
+	      if (new_dofs[petsc_cols_real[i]].independent && (petsc_row_vals_real[i] != 0.0))
+		{
+		  real_column.insert(petsc_cols_real[i]);
+		  real_values.insert(make_pair(petsc_cols_real[i],petsc_row_vals_real[i] ));
+		}
+	    }
+
+	  ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+
+	  imag_column.clear();
+	  imag_values.clear();
+	  for (int i = 0; i < n_cols_real; i++)
+	    { 
+	      if (new_dofs[petsc_cols_imag[i]].independent && (petsc_row_vals_imag[i] != 0.0))
+		{
+		  imag_column.insert(petsc_cols_imag[i]);
+		  imag_values.insert(make_pair(petsc_cols_imag[i],petsc_row_vals_imag[i] ));
+		}
+	    }
+
+
+	  set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
+	  
+	  vector<unsigned int> column_vector;
+	  vector<Complex> row_values;
+
+
+	  for (com_col_it = complex_column.begin(); com_col_it != complex_column.end(); com_col_it++)
+	    {
+	      int n1 = *com_col_it;
+	      double value_r, value_i;
+
+	      //real part------	  
+	      position = real_values.find(n1);
+	      if (position != real_values.end()) 
+		value_r = position->second;
+	      else 
+		value_r = 0.0;
+	      
+	     
+
+	      //----------------
+	      //imag part 
+	      position = imag_values.find(n1);
+	      if (position != imag_values.end()) 
+		value_i = position->second;
+	      else 
+		value_i = 0.0;
+	     
+	      //----------------
+
+	      column_vector.push_back(new_dofs[n1].new_number);
+	      row_values.push_back(Complex(value_r, value_i));
+	      
+	    }
+     
+	  EigenSolver::insert_H_row( new_dofs[row].new_number, column_vector, row_values);
+    
+	  ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+
+	  ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
+	  CHKERRABORT(libMesh::COMM_WORLD,ierr);
+
+	  
+	  
+
+	} 
+    }
+  //------------------------------------------------------------------------------
+
+
+  EigenSolver::finalize_H_assembly();
+}
+
+
+
 void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, double st_shift_value)
 {
 
