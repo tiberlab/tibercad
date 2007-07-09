@@ -31,14 +31,16 @@ class EigenSolver
     std::string st_ksp_type;
     
     double spectrum_shift;
+
+    bool read_matrix_from_file;
     
   };
 
-  //!solves general eigenvalue problem matrix
+  //!solves general eigenvalue problem (Hx = gSx) matrix
   static int eig_value_problem_general(const SLEPCoptions& opt) ;
 
 
-  //!solves  eigenvalue problem matrix
+  //!solves  eigenvalue problem (Hx = gx)  matrix
   static int eig_value_problem(const SLEPCoptions& opt) ;
 
   //!has to be called at the beginning of tibecad
@@ -63,9 +65,15 @@ class EigenSolver
   static int clear_slepc(void);
 
   //!init H_matrix
+  /*!
+    \param size  matrix size
+   */
   static int init_H_matrix(unsigned int size);
 
   //!init S_matrix
+  /*!
+    \param size  matrix size
+   */
   static int init_S_matrix(unsigned int size);
 
   //closes H matrix
@@ -74,11 +82,21 @@ class EigenSolver
   //close S matrix
   static int finalize_S_assembly(void);
 
+  //!pass a row into H matrix
+  /*!
+    \param row row number
+    \param columns numbers of columns
+    \param value values of matrix elements
+  */
+  static int insert_H_row( int row, const std::vector<unsigned int>& columns, const std::vector<Complex>& value);
 
-  static int insert_H_row( int row, const std::vector<unsigned int>& colums, const std::vector<Complex>& value);
-
-  
-  static int insert_S_row( int row, const std::vector<unsigned int>& colums, const std::vector<Complex>& value);
+  //!pass a row into S matrix
+  /*!
+    \param row row number
+    \param columns numbers of columns
+    \param value values of matrix elements
+  */
+  static int insert_S_row( int row, const std::vector<unsigned int>& columns, const std::vector<Complex>& value);
 
 
  private:

@@ -1,9 +1,4 @@
 
-static char help[] = "Solves a generalized eigensystem Ax=kBx with matrices loaded from a file.\n\n"
-  "This example works for both real and complex numbers.\n\n"
-  "The command line options are:\n\n"
-  "  -f1 <filename>, where <filename> = matrix (A) file in PETSc binary form.\n"
-  "  -f2 <filename>, where <filename> = matrix (B) file in PETSc binary form.\n\n";
 
 #include <iostream>
 
@@ -65,17 +60,19 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);CHKERRQ(ierr);
  
 
-   
-  //
-  ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr); //their
-  ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
-  ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
+  if (opt.read_matrix_from_file)
+  {
+  
+    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr); //their
+    ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
+    ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
 
 
-  ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.S_file_name.c_str(),PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr); //their
-  ierr = MatLoad(viewer,MATAIJ,&B);CHKERRQ(ierr);
-  ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
+    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.S_file_name.c_str(),PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr); //their
+    ierr = MatLoad(viewer,MATAIJ,&B);CHKERRQ(ierr);
+    ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
 
+  }
 
   
 
@@ -402,21 +399,26 @@ int EigenSolver::init_H_matrix(unsigned int n)
   int ierr;
 
   ierr = MatCreate(PETSC_COMM_WORLD,&A);
+ 
   CHKERRQ(ierr);
   
-  if (ierr = 0)
-  {
-    ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n);
-    CHKERRQ(ierr);
+   
+  ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n);
+   
+  CHKERRQ(ierr);
   
-    if (ierr = 0)
-    {
-      ierr = MatSetFromOptions(A);
-      CHKERRQ(ierr);
-    }
-  }
+   
+  ierr = MatSetFromOptions(A);
+     
 
+  CHKERRQ(ierr);
+   
+  
+ 
+
+ 
   return(ierr);
+
   
 }
 
@@ -430,17 +432,14 @@ int EigenSolver::init_S_matrix(unsigned int n)
   ierr = MatCreate(PETSC_COMM_WORLD,&B);
   CHKERRQ(ierr);
   
-  if (ierr = 0)
-  {
-    ierr = MatSetSizes(B,PETSC_DECIDE,PETSC_DECIDE,n,n);
-    CHKERRQ(ierr);
   
-    if (ierr = 0)
-    {
-      ierr = MatSetFromOptions(B);
-      CHKERRQ(ierr);
-    }
-  }
+  ierr = MatSetSizes(B,PETSC_DECIDE,PETSC_DECIDE,n,n);
+  CHKERRQ(ierr);
+  
+   
+  ierr = MatSetFromOptions(B);
+  CHKERRQ(ierr);
+   
 
   return(ierr);
   
@@ -452,11 +451,10 @@ int EigenSolver::finalize_H_assembly(void)
 
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   CHKERRQ(ierr);
-  if (ierr = 0)
-  {
-    ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
-    CHKERRQ(ierr);
-  }
+ 
+  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
+  CHKERRQ(ierr);
+
 
   return(ierr);
 }
@@ -467,11 +465,10 @@ int EigenSolver::finalize_S_assembly(void)
 
   ierr = MatAssemblyBegin(B,MAT_FINAL_ASSEMBLY);
   CHKERRQ(ierr);
-  if (ierr = 0)
-  {
-    ierr = MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);
-    CHKERRQ(ierr);
-  }
+  
+  ierr = MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);
+  CHKERRQ(ierr);
+  
 
   return(ierr);
 }

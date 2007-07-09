@@ -380,31 +380,15 @@ class EnvelopFunctionApprox  : public SimulationInterface
   std::vector<std::string> psi_name;
 
 
-  //!vector that contains material number
-  //std::vector<unsigned int> material_of_elem;
+ 
+
+ 
 
 
-  //!create material_number vector
-  //void assemble_material_list(void);
-
-
-  //!saves S matrix in PETSc format
-  /*!
-    \param file_name name of binary file for S matrix
-  */
-  void save_S_matrix(const std::string & file_name);
-
-  //!saves H matrix in PETSc format
-  /*!
-    \param file_name name of binary file for S matrix
-  */
-  void save_H_matrix(const std::string & file_name);
-
-
-
+  //!passes S matrix to the eigensolver
   void copy_S_matrix_to_solver();
 
-  
+  //!passes H matrix to the eigensolver
   void copy_H_matrix_to_solver();
 
 
@@ -425,55 +409,7 @@ class EnvelopFunctionApprox  : public SimulationInterface
   std::vector<EnvelopFunctionApprox::dof_new> new_dofs;
 
  
-  //!swaps 4 byte variable for output
-  inline void endian_swap(unsigned int& x)
-    {
-      x = (x>>24) | 
-        ((x<<8) & 0x00FF0000) |
-        ((x>>8) & 0x0000FF00) |
-        (x<<24);
-    }
-
-
-  //!swaps 8 byte variable for output
-  // __int64 for MSVC, "long long" for gcc
-  inline void endian_swap1(unsigned long long& x)
-    {
-      x = (x>>56) | 
-        ((x<<40) & 0x00FF000000000000LL) |
-        ((x<<24) & 0x0000FF0000000000LL) |
-        ((x<<8)  & 0x000000FF00000000LL) |
-        ((x>>8)  & 0x00000000FF000000LL) |
-        ((x>>24) & 0x0000000000FF0000LL) |
-        ((x>>40) & 0x000000000000FF00LL) |
-        (x<<56);
-    }
-
-  
  
- inline void swap_double_buffer(char* x)
- {
-   char result[8];
-
-   result[0] = x[7];
-   result[1] = x[0];
-   result[2] = x[1];
-   result[3] = x[2];
-   result[4] = x[3];
-   result[5] = x[4];
-   result[6] = x[5];
-   result[7] = x[6];
-
-   x[0] = result[0];
-   x[1] = result[1];
-   x[2] = result[2];
-   x[3] = result[3];
-   x[4] = result[4];
-   x[5] = result[5];
-   x[6] = result[6];
-   x[7] = result[7];
- }
-
   
 
   //!creates dirichlet dofs
