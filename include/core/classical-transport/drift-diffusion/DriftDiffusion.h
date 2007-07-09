@@ -693,6 +693,10 @@ class DriftDiffusion : public SimulationInterface
     ContactData _boundary_currents;
 
 
+    //! The voltages of the former solve step
+    ContactData _voltages;
+
+
     //! The local density scaling
     std::map<const Node*, std::vector<double> > local_scaling_;
 

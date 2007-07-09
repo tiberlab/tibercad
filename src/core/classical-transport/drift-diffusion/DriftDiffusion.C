@@ -605,6 +605,29 @@ DriftDiffusion::do_solve(void)
   parse_options();
 
 
+  // we do not solve anything if the simulation voltages are the
+  // same as before
+
+  bool do_nothing = true;
+  ContactData::iterator it(_voltages.begin());
+  const ContactData::iterator end(_voltages.end());
+  for ( ; it != end; ++it)
+  {
+    ElectricalContact* bd = static_cast<ElectricalContact*>(
+        it->first->get_boundary_properties(get_id()));
+
+    double voltage = bd->get_simulation_voltage();
+
+    if (_voltages[it->first] != voltage)
+    {
+      _voltages[it->first] = voltage;
+      do_nothing = false;
+    }
+  }
+
+  if (do_nothing)
+    return;
+
   static map<ElectricalContact*, double> voltages;
   ModelOptions& opts = SimulationInterface::get_options();
   bool quasi_equilibrium = false;
@@ -1038,7 +1061,10 @@ DriftDiffusion::do_init(void)
   {
     BoundaryProperties* bd = it->second->get_boundary_properties(get_id());
     if (bd != NULL)
+    {
       _boundary_currents[it->second] = 0.0;
+      _voltages[it->second] = 0.0;
+    }
   }
 }
 
