@@ -1,0 +1,143 @@
+\chapter{Drift-diffusion simulation of electrons and holes}
+
+\section{Theory}
+
+The semi-classical transport simulation of electrons and holes is based on the drift-diffusion approximation (see e.g.~\cite{selberherr84}).
+
+Beside the electic potential the electro-chemical potentials are used as variables such that the system of PDEs to be solved readds as follows
+\begin{eqnarray}
+-\nabla(\varepsilon\nabla\varphi - P) & = & -e(n - p - N_d^+ + N_a^-) \nonumber \\
+-\nabla(\mu_n n \nabla\phi_n) & = & R \\
+-\nabla(\mu_p p \nabla\phi_p) & = & -R \nonumber
+\end{eqnarray}
+$P$ is the electric polarization due to e.g. piezoelectric effects and $R$ is the net recombination rate, i.e. recombination rate minus generation rate.
+The models for the mobilities and the net recombination rates can be specified in the ``physical\_model'' sections as described in the following.
+
+
+
+\section{Models section parameters}
+The {\bf Models} section looks like follows:
+\begin{verbatim}
+model driftdiffusion
+{
+    options
+    {
+         simulation_name = whatever_you_want
+         physical_regions = (2, 3, 4)
+    }
+
+    physical_model recombination
+    {
+      model = model_to_be_used
+      ...
+    }
+
+    physical_model electron_mobility
+    {
+      model = model_to_be_used
+    }
+
+    physical_model hole_mobility
+    {
+      model = model_to_be_used
+    }
+ }
+\end{verbatim}
+
+The ``physical\_model'' sections can be omitted.
+In this case default models are used, namely no recombination/generation for the recombination model and constant mobility for the mobility models.
+There can be more than one recombination model.
+
+
+\subsection{Recombination models}
+
+This section describes the currently available generation/recombination models.
+
+\subsubsection{Shockley-Read-Hall (SRH) recombination}
+The SRH recombination model can be enabled in the input file by specifying
+\begin{verbatim}
+physical_model recombination
+{
+  model = srh
+  ...
+}
+\end{verbatim}
+
+SRH recombination is defined as follows:
+\begin{equation}
+R_{SRH} = \frac{np - n_i^2}{(n + n_i e^{E^*/k_BT})\tau_p +
+    (p + n_i e^{-E^*/k_BT})\tau_n}
+\end{equation}
+$E^* = E_{trap} - (E_c + E_v)/2$ is the trap level with respect to the midband energy. $n_i$ is the intrinsic carrier density, $\tau_n$ and $\tau_p$ are the recombination times.
+The parameters are taken from the material database.
+The recombination times are dependent on temperature and doping density, e.g.
+\begin{eqnarray}
+\tau_n & = & \tau_n^0 \left(\frac{T}{T_0}\right)^{\alpha_n} \\
+\tau_n^0 & = & \tau_{min,n} + \frac{\tau_{max,n} - 
+     \tau_{min,n}}{1 + (N/N_{ref})^\gamma}
+\end{eqnarray}
+where $T_0$ is the reference temperature (300 K).
+Table~\ref{table:srh_params_db} shows the corresponding parameters for the material data files.
+\begin{table}[htb]
+\center
+\begin{tabular}{l||l|l}
+\textit{parameter} & \textit{electrons} & \textit{holes} \\
+\hline\hline
+$\tau_{min}$ & \texttt{taumin\_e} & \texttt{taumin\_h} \\
+$\tau_{max}$ & \texttt{taumax\_e} & \texttt{taumax\_h} \\
+$N_{ref}$ & \texttt{Nref\_e} & \texttt{Nref\_h} \\
+$\gamma$ & \texttt{gamma\_e} & \texttt{gamma\_h} \\
+$E^*$ & \multicolumn{2}{c}{\texttt{Etrap}} \\
+$\alpha$ & \texttt{Talpha\_e} & \texttt{Talpha\_h}
+\end{tabular}
+\caption{SRH material data file parameters}
+\label{table:srh_params_db}
+\end{table}
+
+The recombination times and trap level can be overridden from the input file by using the keywords of table~\ref{table:srh_params_input} in the appropriate \texttt{physical\_model} section or in the \texttt{Region} section (the latter overrides the former).
+\begin{table}[htb]
+\center
+\begin{tabular}{l||l}
+$tau_n$ & \texttt{tau\_n} \\
+$tau_p$ & \texttt{tau\_p} \\
+$E^*$ & \texttt{E\_t}
+\end{tabular}
+\caption{SRH input file parameters}
+\label{table:srh_params_input}
+\end{table}
+
+
+\subsubsection{Direct (radiative) recombination}
+The direct recombination model can be enabled in the input file by specifying
+\begin{verbatim}
+physical_model recombination
+{
+  model = direct
+  ...
+}
+\end{verbatim}
+
+Direct recombination is modeled as follows:
+\begin{equation}
+R_{direct} = C(np - n_i^2)
+\end{equation}
+The material data file and the input file use the same keyword \texttt{C} for the parameter $C$.
+The database value can be overridden from the input file as described for SRH recombination.
+
+
+
+\subsection{Mobility models}
+
+\subsubsection{Constant mobility model}
+
+
+\subsubsection{Doping dependent mobility model}
+
+
+
+\subsection{Boundary conditions}
+
+
+
+\section{Solver parameters}
+
