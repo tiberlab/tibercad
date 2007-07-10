@@ -128,10 +128,7 @@ class KspaceIntegration : public Kspace
    void estimate_error_for_refinement(ErrorVector& error);
 
 
-   //! size of the real_space_density vector
-   unsigned int real_space_density_size;
-
-
+  
    //!put data into opt
    virtual void parse_options(void);
 

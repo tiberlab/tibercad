@@ -1,5 +1,5 @@
 
-
+ 
 #include <iostream>
 
 #include <string.h>
@@ -90,6 +90,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
 
  
   ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  CHKERRQ(ierr);
+
 
   if (opt.solver_type == "arnoldi")
   {

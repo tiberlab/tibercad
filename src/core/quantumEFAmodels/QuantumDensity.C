@@ -139,6 +139,8 @@ void QuantumDensity::get_particle_density(const Elem* element, const std::vector
 void QuantumDensity::build_elemental_results(const std::set<std::string>& variables,
 				   std::vector<double>& results, std::vector<std::string>& legend)
 {
+ 
+
   if (variables.find("quantum_density") != variables.end() )
   {
     legend.resize(1, "particle_density[cm^-3]");
@@ -152,6 +154,9 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
     MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
     const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
     
+    unsigned int    real_space_density_size = real_space_density.size();
+    
+
     results.resize(real_space_density_size);
 
     unsigned int el_number = 0;
@@ -185,6 +190,8 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
     //-------------------------------------------------------------------------------------//
 
   }
+
+
 
 }
 

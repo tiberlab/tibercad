@@ -61,6 +61,9 @@ void KspaceIntegration::calculate_density()
   std::vector<unsigned int> dof_indices;
 
 
+ 
+
+
   for ( ; it != it_el ; ++it) //loop over k space elements
   {
     const Elem* elem = *it;
@@ -217,9 +220,9 @@ void KspaceIntegration::calculate_convergent_density()
       else
       {
 	      
-	ErrorVector error;
+
 	      
-	      
+	ErrorVector error = ErrorVector(kmesh->n_elem(), kmesh);  
 	
 	      
 	Tensor2Gen RotM_inv =  transform_matrix.transpose() ;
@@ -230,8 +233,15 @@ void KspaceIntegration::calculate_convergent_density()
 	
 	rotate_mesh(kmesh, transform_matrix);
 	      
+
+        mesh_refinement.refine_fraction() = opt.refine_fraction;
+
+	mesh_refinement.max_h_level() = 10;
+
+	mesh_refinement.coarsen_fraction() = 0.0;
+	
 	      
-	mesh_refinement.flag_elements_by_error_fraction (error,opt.refine_fraction,0.0, 10);
+	mesh_refinement.flag_elements_by_error_fraction (error);
 
 	      
 	mesh_refinement.refine_and_coarsen_elements();
@@ -251,8 +261,8 @@ void KspaceIntegration::calculate_convergent_density()
 
 
 
-	std::cout << "k space grid has " << kmesh->n_nodes() << " nodes " << flush;
-	std::cout <<  "quantum density error " << norm_of_error << endl << flush;
+	std::cerr << "k space grid has " << kmesh->n_nodes() << " nodes " << flush;
+	std::cerr <<  "quantum density error " << norm_of_error << endl << flush;
 
 	      
       }
@@ -316,6 +326,9 @@ void KspaceIntegration::do_init(void)
 //--------------------------------------------------------------------------------------//
 void KspaceIntegration::estimate_error_for_refinement(ErrorVector& error)
 {
+  
+
+
   std::fill (error.begin(), error.end(), 0.0);
 
  
@@ -397,9 +410,14 @@ double  KspaceIntegration::estimate_error(void)
   {
     const Elem* el = it->first;
     t1 += real_space_density[el] * real_space_density[el] * el->volume();
+
     t2 += (real_space_density[el] - old_real_space_density[el]) *  (real_space_density[el] - old_real_space_density[el]) * el->volume();
+
+
   }
 
   result = t2/t1;
+
+  return(result);
 
 }
