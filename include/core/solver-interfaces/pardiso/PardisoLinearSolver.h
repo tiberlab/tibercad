@@ -7,7 +7,7 @@
 
 #include "TiberLinearSolver.h"
 #include "LinearSolverException.h"
-
+#include "PardisoSolverException.h"
 
 
 
@@ -72,13 +72,13 @@ class PardisoLinearSolver : public TiberLinearSolver
     //! Parameters of Pardiso solver
     int iparm[64]; 
 
-
     //! Check PETSc error code
     static void _checkerr(int errorcode) throw (LinearSolverException);
 
     //! Pardiso solver interface
     void solve_pardiso(double *mat, int *ia, int *ja, double *b, double *x, int n);
-  
+
+   
 };
 
 

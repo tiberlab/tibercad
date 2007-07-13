@@ -121,7 +121,7 @@ void MacroHeatBalance::do_init( )
 void  MacroHeatBalance::do_solve()
 {
   
-   std::cout<<"Solving macro heat balance: start"<<std::endl;
+  //  std::cout<<"Solving macro heat balance: start"<<std::endl;
   
   parse_options();
   
@@ -217,10 +217,8 @@ void  MacroHeatBalance::do_solve()
   
   
   
-  std::cout<<"Solving macro heat balance: finish"<<std::endl;
+  //  std::cout<<"Solving macro heat balance: finish"<<std::endl;
 
-  cout<<get_type() 
- <<endl; 
 }
 
 

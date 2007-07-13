@@ -5,7 +5,7 @@
 
 #include "petsc_vector.h"
 #include "petsc_matrix.h"
-
+#include "PardisoSolverException.h"
 #include "petscmat.h"
 
 #ifndef USE_COMPLEX_NUMBERS
@@ -226,12 +226,17 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
 	     iparm, &msglvl, &ddum, &ddum, &error);
 
 
-
       if (error != 0) {
-        printf("\nERROR during symbolic factorization: %d\n", error);
-        exit(1);
+
+        //printf("\nERROR during symbolic factorization: %d\n", error);
+        //_check_pardiso_err(error);
+
+		throw PardisoSolverException(error);
+
+		// exit(1);
         }
-#ifdef DEBUB
+
+#ifdef DEBUG
       printf("\nReordering completed ... ");
       printf("\nNumber of nonzeros in factors = %d", iparm[17]);
       printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
@@ -241,15 +246,17 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
     /* -------------------------------------------------------------------- */
     phase = 22;
     PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
-	     &n, a, ia, ja, &idum, &nrhs,
+ 	     &n, a, ia, ja, &idum, &nrhs,
 	     iparm, &msglvl, &ddum, &ddum, &error);
 
     if (error != 0) {
-      printf("\nERROR during numerical factorization: %d", error);
-      exit(2);
+      // printf("\nERROR during numerical factorization: %d", error);
+      //_checkerr(error)
+      	throw PardisoSolverException(error);
+	 // exit(2);
     }
 
-#ifdef DEBUB
+#ifdef DEBUG
     printf("\nFactorization completed ... ");
 #endif
     
@@ -265,12 +272,13 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
 	     iparm, &msglvl, b, x, &error);
 
     if (error != 0) {
-      printf("\nERROR during solution: %d", error);
-      exit(3);
+      //printf("\nERROR during solution: %d", error);
+      	throw PardisoSolverException(error);
+       //exit(3);
     }
       
 
-#ifdef DEBUB
+#ifdef DEBUG
      printf("\nSolve completed ... ");
     //printf("\nThe solution of the system is: ");
     //for (int i = 0; i < n; i++) {
