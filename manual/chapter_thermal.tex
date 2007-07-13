@@ -1,0 +1,246 @@
+\chapter{Heat Balance simulation}
+\section{Theory}
+The theoretical model of the heat balance problem can be found in Refs. \cite{wachutka}. In the following a brief treatment is reported.
+
+\subsection{Heat Equation}
+The equation implemented is 
+
+\begin{equation}\label{heat_law}
+-\nabla \cdot\left(\kappa_{tot} \nabla T \right) = H_J + H_P
+\end{equation}
+
+where $T$ is the temperature, $\kappa_{tot}$ is the total thermal conductivity tensor, $H_J$ is the thermal source due to Joule's effecr and $H_P$ is the source due to Peltier's effect. 
+
+\subsection{Thermal conductivity}
+
+The term $\kappa_{tot}$ is  
+
+\begin{equation}\label{k_tot}
+\kappa_{tot}=\kappa_L + \kappa_n + \kappa_p
+\end{equation}
+
+where $\kappa_L$ is the lattice thermal conductivity whereas $\kappa_n$ and $\kappa_p$ are related to electrons and holes respectively. 
+
+The lattice thermal conductivity model can be constant or temperature dependent. In the latter case the following model are implemented (Ref. \cite{kmodel})
+
+\begin{equation}\label{k_T}
+\kappa(T)=\frac{1}{a + bT + cT^2}
+\end{equation}
+
+The carriers thermal conductivity are computed by the Wiedmann-Franz law
+\begin{equation}\label{k_n}
+k_n = \sigma_n L T \nonumber
+\end{equation}
+\begin{equation}\label{k_p}
+k_p = \sigma_p L T \nonumber
+\end{equation}
+where $L$ is the Lorenz number ($2.45\cdot 10^{-8} W*\Omega /K^2$) and $\sigma_n$, $\sigma_p$ are the electronic conductivity of electrons and holes, respectively.
+
+\subsection{Joule's effect}
+
+The heat source due to Joule's effect is 
+
+\begin{equation}\label{Hj}
+H_J=-\nabla \cdot\left(\varphi_n \mathbf{J_n} + \varphi_p \mathbf{J_p}\right)
+\end{equation}
+
+where $\varphi_n$ is the electro-chemical potential of the electrons and $\mathbf{J_n}$ is the electron current density.\\
+The terms $\varphi_p$ and $\mathbf{J_p}$ are the analogous quantities related to holes. 
+
+\subsection{Peltier's effect}
+
+The heat source due to Peltier's effect is 
+
+\begin{equation}\label{Hj}
+H_P=\nabla\cdot\left(T \mathbf{J_n}P_n + T \mathbf{J_n}P_n\right)
+\end{equation}
+
+where $P_n$ and $P_p$ are the thermoelectric powers of electrons and holes, respectively.
+
+The thermoelectric power models implemented are the constant one and the \textit{diffusivity} model. 
+The diffusivity model is
+
+\begin{equation}\label{Pn}
+P_n = -\frac{k_b}{q}\left[\frac{5}{2}+  \frac{T}{\mu_n} \frac{\partial\mu_n}{\partial T} +  \frac{q\varphi_n + E_c}{k_b T} \right]
+\end{equation}
+
+\begin{equation}\label{Pp}
+P_p = \frac{k_b}{q}\left[\frac{5}{2}+  \frac{T}{\mu_p} \frac{\partial\mu_p}{\partial T} -  \frac{q\varphi_p + E_v}{k_b T}  \right]
+\end{equation}
+
+where $k_b$ is the Boltzmann constant, $E_v$ is the edge of the valence band, $E_c$ is the edge of the conduction band, $q$ is the electron charge, and $\mu_n$ and $\mu_p$  are the mobilty of electrons and holes, respectively.
+
+The diffusivity model neglets the phonon's drag and until now works only for non degenerate case. 
+
+
+\section{Models section parameters}
+
+\begin{verbatim}
+
+model thermal
+{
+    options
+    {
+         simulation_name = heat  # name of simulation.
+         
+         physical_regions = all  # simulation environment
+    }  
+}
+
+\end{verbatim}
+
+\subsection{Physicals Models}
+\begin{verbatim}    
+physical_model Lattice_thermal_conductivity
+{
+    
+  model = <constant>          #temperature independent model
+      
+          temperature         #temperature dependent model 
+    
+}
+    
+    
+physical_model Particle_thermal_conductivity
+{
+    
+    
+  model = <constant>           # constant model (user define only)
+      
+           Wiedemann_Franz     # Wiedemann_Franz model  
+    
+    
+}
+
+
+
+
+\end{verbatim}
+
+Here it reports also the thermoelectric power model, but it belongs
+to {\bf drift diffusion model}. This part will be moved from here.
+
+\begin{verbatim}
+
+model driftdiffusion
+{
+    physical_model thermoelectric_power
+    {
+    model  = <constant>       # constant thermoelectric power 
+    
+           diffusivity_model  # diffusivity model is considered 
+    } 
+}
+
+
+\end{verbatim}
+
+\subsection{Boundary Condition}
+
+\begin{verbatim}
+BC_Region thermal_contact
+{
+   
+   BC_reg_numb = 1
+        
+   type = <reservoir>          # Drichelet Boundary Condition 
+
+   temperature = 300           # Contact Temperature.  
+        
+   @T[300]                     # Creation of the sweep variables.
+                                 300 K is the dafault
+                        
+}
+
+
+
+
+
+ 
+
+\end{verbatim}
+
+
+\section{Solver parameters}
+
+\begin{verbatim}
+$Solver
+{
+  thermal
+  {
+      max_error =   ...             # maximum error in
+                  <1e-2>            # self-consistent loop
+                                    # for lattice thermal
+                                    # conductivity. 
+                                    
+                             
+      update_temperature = <true>   # the result simulation updates
+                                    # the device temperature so other 
+                                    # simulation 
+                                    # could used it.
+                            
+                            false   # the result simulation doesn't
+                                    # update the device temperature.
+      
+      
+      kappa_solve = <no_self>       # the thermal conductivities (both 
+                                    # lattice and carreirs) are computed 
+                                    # one time.
+                                      
+      
+                   self_consistent  # the thermal conductivities (both  
+                                    # lattice and cattiers one) are    
+                                    # computed after every temparature 
+                                    # simulation.
+                                    # So, a self consistent loop is 
+                                    # done.
+                                      
+                                    # RACCOMANDATION: active this modality                                        
+                                    # only with non constant thermal model.
+   }                      
+}
+
+
+\end{verbatim}
+
+\section{Physics parameters}
+\begin{verbatim}
+$Physics
+{
+   thermal
+  {
+    Joule_Effect = <true>                    # The joule effect is 
+                                             # computed
+    
+                    false                    # Only heat transport is 
+                                             # considered.
+    
+    
+    Peltier_Effect = <false>                 # The Peltier 
+                                             # effect is negleted
+     
+                      true                   # The Peltier effect
+                                             # is considered
+                                                 
+    
+    Particle_thermal_conductivity = <false>  # The particles thermal 
+                                             # conductivity is negleted.
+                                              
+                                     true    # The particle thermal
+                                             # conductivity is considered
+                                      
+                                                                                     
+    current_simulation = ...                 # The name of the drift
+                                             # diffusion 
+                                             # simulation reference
+                      
+                        <no_current>         # No drift diffusion 
+                                             # simulation is condidered 
+                        
+                                             # RACCOMANDATION: consider
+                                             # a drift diffusion simulation
+                                             # only there is at least one                                         
+                                             # physical quantity that needs it.                                                               
+  }
+}
+\end{verbatim}
