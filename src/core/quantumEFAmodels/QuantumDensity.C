@@ -252,9 +252,9 @@ void QuantumDensity::parse_options( )
 
   opt.log_output              = mod_opt.get_option("log_output", false);
 
-  opt.intial_eigenstates_number = mod_opt.get_option("intial_eigenstates_number", 6);
+  opt.intial_eigenstates_number = mod_opt.get_option("initial_eigenstates_number", 6);
 
-
+ 
 }
 
 
@@ -285,6 +285,9 @@ void QuantumDensity::calculate_for_k_point(const Point& k_point,
 	  
 
   quantum_model_opts.set_option("k_vector",  k_vector);
+
+
+
   quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number ); 
   quantum_model_opts["job"] = "density";
 

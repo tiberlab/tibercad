@@ -886,7 +886,6 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
 
-
 	  element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
 	  
 	  //------------------------------------------------------------------------------------------
@@ -923,25 +922,26 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 		  //linear left
 		  
 		  for (short i = 0; i < dim; i++)
+		  {
 		    value -= JxW[qp]* dphi[p1][qp](i) * phi[p2][qp] * model_Ham[band1][band2].linear_left[i]
 		      * Complex(0.0, -1.0) /opt.length_scale;
-		  
+		  }
 		  //linear right
 
 		  for (short i = 0; i < dim; i++)
+		  {
 		    value += JxW[qp]* dphi[p2][qp](i) * phi[p1][qp] * model_Ham[band1][band2].linear_right[i] 
 		      * Complex(0.0, -1.0) /opt.length_scale;
-		  
+		   
+		  }
 		  //quadratic
 			   
 		  for (short i = 0; i < dim; i++)
 		    for (short j = 0; j < dim; j++)
 		    {
 		      value -= JxW[qp] * dphi[p1][qp](i) * dphi[p2][qp](j)*model_Ham[band1][band2].quad[i][j]
-			* Complex(0.0,-1.0) * Complex(0.0, -1.0) /opt.length_scale / opt.length_scale;
+			* Complex(0.0,-1.0) * Complex(0.0, -1.0) /opt.length_scale / opt.length_scale;	
 		      
-			
-				  
 		    }
 			   
 		  
@@ -1122,7 +1122,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
       }
 
-
+      
+    
 
       if (opt.discretization_method == FEM) ham_real.add( - opt.spectrum_shift/Hartree, s_real);//apply spectrum shift.
 
@@ -1399,14 +1400,18 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
     slep_opt.ev_number = 1;
 
    
-    slep_opt.eps_tolerance = 1e-5;
+    slep_opt.eps_tolerance = 1e-9;
    
    
   
     
     slep_opt.spectrum_shift = st_shift_value;
 
+
+    slep_opt.matrix_output = true;
   
+   
+
     {
       int result;
       if (opt.discretization_method == FEM) 
@@ -1415,9 +1420,13 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
 	result = EigenSolver::eig_value_problem(slep_opt);
 
 
-      if (result !=0 ) throw SolveFailedException("Eigensolver problem\n");
+      if (result !=0 )
+      {
+	throw SolveFailedException("Eigensolver problem\n");
+      }
     }
    
+
     read_SLEPC_solution(1);
 
     assert(solution.size() == 1);
@@ -1430,8 +1439,11 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
       st_shift_value -= 0.01/Hartree;
     else
       st_shift_value += 0.01/Hartree;
+
   }
 
+
+  slep_opt.matrix_output = false;
 
   
   slep_opt.eps_tolerance = 1e-9;
@@ -1440,15 +1452,22 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
   
   slep_opt.spectrum_shift  = st_shift_value;
   
+
+
   {
       int result;
       if (opt.discretization_method == FEM) 
 	result = EigenSolver::eig_value_problem_general(slep_opt);
       else
 	result = EigenSolver::eig_value_problem(slep_opt);
+      
+      
 
-
-      if (result !=0 ) throw SolveFailedException("Eigensolver problem\n");
+      if (result !=0 )
+      {
+	cerr << "result of EigenSolver is bad:  " << result << "\n";
+	throw SolveFailedException("Eigensolver problem\n");
+      }
   }
  
 
@@ -1499,9 +1518,9 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
  
   number_of_converged_solutions = EigenSolver::number_of_converged_eigenvalues();
 
-#ifdef DEBUG
-  cerr << " Number of converged solutions  " << number_of_converged_solutions << "\n";
-#endif
+
+
+  if (opt.log_output)  cerr << " Number of converged solutions  " << number_of_converged_solutions << "\n";
 
 
 
@@ -1518,10 +1537,10 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
       ev[ind].global_number = ind;
       
-      #ifdef DEBUG
-      cerr << ev[ind].global_number  << "    " << ev[ind].energy << "\n";
+      if (opt.log_output) 
+	cerr << ev[ind].global_number  << "    " << ev[ind].energy << "\n";
      
-     #endif
+    
     }
   
   //---------------------------------------------------------------------
@@ -3086,17 +3105,28 @@ void EnvelopFunctionApprox::calculate_convergent_density(double T)
  
   bool converged =( last_state_density/total_density  < opt.relative_density_tolerance ) ; 
 
+  
+
   if  (opt.convergent_density && (!converged))
     {
      
 
       number_of_states = (unsigned int) (number_of_states * opt.eigen_number_increase_factor) + 1;
       
-      opt.solve_ev_problem_twice = false;
+      //TODO:
+      
+      // this is to think about why it does not work!
+ 
+      //opt.solve_ev_problem_twice = false;
 
-      double st_shift_value = (solution[0].eigen_energy - opt.spectrum_shift)/Hartree;
+      //double st_shift_value = (solution[0].eigen_energy - opt.spectrum_shift)/Hartree;
 
-      solve_eigen_value_problem(number_of_states, st_shift_value);
+      //solve_eigen_value_problem(number_of_states, st_shift_value);
+
+      
+
+      
+      solve_eigen_value_problem(number_of_states);
 
       double total_density1 = get_integrated_probability();
 

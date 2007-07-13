@@ -33,6 +33,8 @@ class EigenSolver
     double spectrum_shift;
 
     bool read_matrix_from_file;
+
+    bool matrix_output;
     
   };
 

@@ -74,7 +74,23 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
 
   }
 
-  
+  if (opt.matrix_output)
+  {//test of the matrix
+
+
+    ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matA.m",&viewer_out); CHKERRQ(ierr);
+    ierr = PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
+    ierr = MatView(A, viewer_out); CHKERRQ(ierr);
+    ierr = PetscViewerDestroy(viewer_out);CHKERRQ(ierr);
+
+
+    ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matB.m",&viewer_out); CHKERRQ(ierr);
+    ierr = PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
+    ierr = MatView(B, viewer_out); CHKERRQ(ierr);
+    ierr = PetscViewerDestroy(viewer_out);CHKERRQ(ierr);
+
+  }
+
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 Create the eigensolver and set various options
@@ -135,7 +151,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
 
       ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);
 
-      //      ierr = KSPSetType( ksp, KSPBCGS);CHKERRQ(ierr);
+      ierr = KSPSetType( ksp, KSPBCGS);CHKERRQ(ierr);
 
       //rtol, abstol, dtol, maxits
       ierr = KSPSetTolerances(ksp,1e-10, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
@@ -148,7 +164,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
 
 
 
-  ierr = do_solve(opt);
+  ierr = do_solve(opt);  CHKERRQ(ierr);
 
  
 
@@ -228,7 +244,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
 
 
     //rtol, abstol, dtol, maxits
-    ierr = KSPSetTolerances(ksp,1e-10, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
+      ierr = KSPSetTolerances(ksp,1e-10, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
    
   }
   else if (opt.solver_type == "lapack")
@@ -378,8 +394,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
   else
     ncv = 32;
    
-  // ierr = EPSSetDimensions(eps,opt.ev_number, PETSC_DECIDE); CHKERRQ(ierr);
-
+ 
   ierr = EPSSetDimensions(eps,opt.ev_number, ncv); CHKERRQ(ierr);
 
 
