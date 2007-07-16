@@ -50,6 +50,7 @@
 #include  "ZbLatticeThermalConductivity.h"
 #include  "WzLatticeThermalConductivity.h"
 #include  "HeatModel.h"
+#include  "TightBindingModel.h"
 
 #include <dlfcn.h>
 #include <typeinfo>
@@ -154,6 +155,8 @@ PhysicalModelInterface::create(const string& name,
       mod = ThermoelectricPower::create();
     else if  (name == "particle_thermal_conductivity")
       mod = ParticleThermalConductivity::create();
+    else if (name == "tightbinding")
+      mod = TightBindingModel::create();
   }
 
 

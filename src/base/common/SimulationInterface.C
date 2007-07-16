@@ -13,6 +13,7 @@
 #include "QuantumDensity.h"
 #include "OpticsKP.h"
 #include "QuantumDispersion.h"
+#include "TightBinding.h"
 
 #include "TunnelingCurrent.h"
 
@@ -101,7 +102,9 @@ SimulationInterface::create(const string& type,
       sim = QuantumDispersion::create();
     else if (type == "tunnelingcurrent")
       sim = TunnelingCurrent::create();
-  }
+    else if (type == "tightbinding")
+      sim = TightBinding::create();
+}
 
   if (sim != NULL)
   {
