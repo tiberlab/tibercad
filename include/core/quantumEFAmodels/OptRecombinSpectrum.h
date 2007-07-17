@@ -47,7 +47,7 @@ class OptRecombinSpectrum : public KspaceIntegration
 
     double Gamma;//<! spectrum broadening [eV] 
 
-    Tensor1& polariz; //<! light  polarization [eV] 
+    Tensor1 polariz; //<! light  polarization [eV] 
 
 
   };

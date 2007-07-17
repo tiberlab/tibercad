@@ -169,6 +169,9 @@ class OpticsKP: public SimulationInterface
   */
   std::vector< std::vector <std::vector <  Complex  >  >  >   P_matrix;
 
+  std::vector<unsigned int> psivar;
+  
+
  protected:
 
   virtual void 	do_init(void);

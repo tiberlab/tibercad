@@ -177,7 +177,65 @@ void OpticsKP::do_init()
     my_Jacobian *= length_scale;
 
   //--------------------------------------------------------------------------------------------------------//
-  
+  const Mesh* mesh = &(es->get_mesh());
+
+
+ 
+
+  es->add_system<LinearImplicitSystem> (system_name);
+
+  system = &( es->get_system<LinearImplicitSystem>(system_name));
+
+
+  //---------------------------------------------------------------------------------------
+  //add variables
+
+  psivar.resize(8);
+
+  vector<string> psi_name;
+
+  psi_name.clear();
+
+  for (short i = 0; i < 8; i++)
+  {
+    std::ostringstream var_str;
+    var_str << "psi" << i ;
+    string name = var_str.str();
+    psi_name.push_back(name);
+
+    system->add_variable(name,FIRST);
+  }
+
+
+
+ 
+  for (unsigned int i = 0; i < 8; i++)
+  {
+    psivar[i] = system->variable_number(psi_name[i]);
+  }
+
+
+
+  system->add_matrix("Px_real"); 
+  Px_matr_real = & (system->get_matrix("Px_real"));
+
+  system->add_matrix("Py_real"); 
+  Py_matr_real = & (system->get_matrix("Py_real"));
+
+  system->add_matrix("Pz_real"); 
+  Pz_matr_real = & (system->get_matrix("Pz_real"));
+
+  system->add_matrix("Px_imag"); 
+  Px_matr_imag = & (system->get_matrix("Px_imag"));
+
+  system->add_matrix("Py_imag"); 
+  Py_matr_imag = & (system->get_matrix("Py_imag"));
+
+  system->add_matrix("Pz_imag"); 
+  Pz_matr_imag = & (system->get_matrix("Pz_imag"));
+ 
+  system->init();
+
 }
 
 
@@ -367,42 +425,12 @@ void OpticsKP::calculate_P_matrix_elements ( )
 void OpticsKP::calculate_matrix(void)
 {
   
-  
+  unsigned int dim = (es->get_mesh()).mesh_dimension();
+
+ 
+  //--------------------------------------------------------------------------------------------------------//
   const Mesh* mesh = &(es->get_mesh());
-
-
-  unsigned int dim = mesh->mesh_dimension();
-
-  es->add_system<LinearImplicitSystem> (system_name);
-
-  system = &( es->get_system<LinearImplicitSystem>(system_name));
-
-
-  //---------------------------------------------------------------------------------------
-  //add variables
-
-  vector<string> psi_name;
-
-  psi_name.clear();
-
-  for (short i = 0; i < 8; i++)
-  {
-    std::ostringstream var_str;
-    var_str << "psi" << i ;
-    string name = var_str.str();
-    psi_name.push_back(name);
-
-    system->add_variable(name,FIRST);
-  }
-
-
-
-  vector<unsigned int> psivar(8);
-  for (unsigned int i = 0; i < 8; i++)
-  {
-    psivar[i] = system->variable_number(psi_name[i]);
-  }
-
+ 
 
   //add matrixes
 
@@ -412,7 +440,7 @@ void OpticsKP::calculate_matrix(void)
   DofMap& dof_map = system->get_dof_map();
 
 
-
+/*
   system->add_matrix("Px_real"); 
   Px_matr_real = & (system->get_matrix("Px_real"));
 
@@ -431,10 +459,29 @@ void OpticsKP::calculate_matrix(void)
   system->add_matrix("Pz_imag"); 
   Pz_matr_imag = & (system->get_matrix("Pz_imag"));
 
-
+*/
  
 
-  system->init();
+
+ 
+  Px_matr_real->zero();
+
+  
+  Py_matr_real->zero();
+
+  
+  Pz_matr_real->zero();
+
+   
+  Px_matr_imag->zero(); 
+
+  
+  Py_matr_imag->zero(); 
+
+  
+  Pz_matr_imag->zero();
+
+  system->reinit();
 
 
 

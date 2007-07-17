@@ -8,7 +8,7 @@ using namespace std;
 
 void OptRecombinSpectrum::do_plot()
 {
-
+ // const Device& dev = get_environment().get_device();
 
   string suffix = get_control().get_filename_suffix();
   string outdir = get_control().get_output_dir();
@@ -113,7 +113,9 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
   
 
   vector<double> k_vector(3, 0.0);
+  
 
+  cerr << k_point << "\n";
 
   k_vector[0] = k_point(0);
   k_vector[1] = k_point(1);
@@ -151,10 +153,15 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
 
   std::map<const Elem*, double>& spectrum = density;
 
+
+  cerr << opt.polariz(1) << "\n";
+  cerr << opt.polariz(2) << "\n"; 
+  cerr << opt.polariz(3) << "\n";
+
   _optical_model->calculate_spectrum(*_energy_mesh, opt.Gamma, opt.polariz,  spectrum );
 
-  
-  // integrated_quantity needed for  mesh  refinement, for the  moment is  neglected.
+
+// integrated_quantity needed for  mesh  refinement, for the  moment is  neglected.
   integrated_quantity = 0.0;
 
 }
@@ -191,7 +198,11 @@ void OptRecombinSpectrum::do_init( )
   //--------------------------------------------------------------------------------------------//
 
   
-  //---------quantum models for initial and final states (from OpticsKP module)-----------------//
+
+
+//  const ModelOptions& mod_opt_optics =  _optical_model->see_options();
+
+ //---------quantum models for initial and final states (from OpticsKP module)---------------------------------
   _quantum_model_initial_state    = _optical_model->get_initial_state_model();
 
   _quantum_model_final_state    = _optical_model->get_final_state_model();
@@ -199,7 +210,32 @@ void OptRecombinSpectrum::do_init( )
 
  
 
+  // std::string quantum_in_simul_name,  std::string quantum_fin_simul_name;   ;
 
+ //  if  (mod_opt_optics.find_option("initial_state_model"))
+//   {
+//     std::string quantum_model;
+//     quantum_model = mod_opt_optics.get_option("initial_state_model" , "");
+//     _quantum_model_initial_state    = dynamic_cast<EnvelopFunctionApprox*> ( find_simulation ( quantum_model));
+//     if (  _quantum_model_initial_state == NULL)
+//       throw InitFailedException("Optical Spectrum: initial_state_model " + quantum_model + " does not exist\n");
+//   }
+//   else
+//     throw InitFailedException("Optical Spectrum: initial_state_model must be defined\n");
+//   //--------------------------
+
+ //  //final state----------------
+//   if  (mod_opt_optics.find_option("final_state_model"))
+//   {
+//     std::string quantum_model;
+//     quantum_model = mod_opt_optics.get_option("final_state_model" , "");
+//     _quantum_model_final_state    = dynamic_cast<EnvelopFunctionApprox*> ( find_simulation ( quantum_model));
+//     if (_quantum_model_final_state == NULL)
+//       throw InitFailedException("Optical Spectrum: final_state_model " + quantum_model + " does not exist\n");
+//   }
+//   else
+//     throw InitFailedException("Optical Spectrum: final_state_model must be defined\n");
+//   //---------------------------
 
   if (mod_spectrum.find_option("Emin"))
     opt.Emin = mod_spectrum.get_option("Emin", 0.0);
@@ -273,6 +309,14 @@ void OptRecombinSpectrum::parse_options( )
   }
   else
     InitFailedException("Optical Spectrum: polarization vector must be defined\n");
+
+
+
+
+//Tensor1& polariz
+
+ 
+
 
 
 }
