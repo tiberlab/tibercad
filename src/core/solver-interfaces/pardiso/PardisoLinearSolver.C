@@ -61,7 +61,6 @@ PardisoLinearSolver::init(void)
     error = 0;  /* Initialize error flag */
 
     msglvl = 1; /* Print statistical information in file */
-   }
 
 /* -------------------------------------------------------------------- */
 /* .. Setup Pardiso control parameters. */
@@ -97,6 +96,7 @@ PardisoLinearSolver::init(void)
 	iparm[18] = -1; /* Output: Mflops for LU factorization */
 	iparm[19] = 0; /* Output: Numbers of CG Iterations */
  
+   }
 
 }
 

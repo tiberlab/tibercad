@@ -2,6 +2,7 @@
 
 
 #include "TiberPetscLinearSolver.h"
+#include "TypeDefs.h"
 
 #include "libmesh_common.h"
 
@@ -90,7 +91,7 @@ TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 			     const double tol,
 			     const unsigned int m_its)
 {
-  this->init ();
+  this->init();
   
   PetscMatrix<Number>* matrix   = dynamic_cast<PetscMatrix<Number>*>(&matrix_in);
   PetscMatrix<Number>* precond  = dynamic_cast<PetscMatrix<Number>*>(&precond_in);
@@ -103,9 +104,12 @@ TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
   assert(precond  != NULL);
   assert(solution != NULL);
   assert(rhs      != NULL);
+
+  ignore_unused_variable(tol);
+  ignore_unused_variable(m_its);
   
   int ierr = 0;
-  int its = 0, max_its = static_cast<int>(m_its);
+  int its = 0;
   PetscReal final_resid = 0.;
 
   // Close the matrices and vectors in case this wasn't already done.
@@ -213,7 +217,7 @@ void TiberPetscLinearSolver::set_ksp_type(void)
   int ierr = 0;
   
   switch (this->_solver_type)
-    {
+  {
 
     case CG:
       ierr = KSPSetType (_ksp, (char*) KSPCG);
@@ -382,8 +386,5 @@ void TiberPetscLinearSolver::set_pc_type(void)
 
 
 
-// Explicit instantiation
-//template class TiberPetscLinearSolver<Number>;
- 
 
 

@@ -20,6 +20,11 @@
  *      e^{T_c(T/T_0 - 1)}
  *     \end{array}\right.
  * \f}
+ * The recombination times are doping dependent, e.g.:
+ * \f[
+ * \tau_n^0 = \tau_{min,n} + \frac{\tau_{max,n} -
+ *         \tau_{min,n}}{1 + (N/N_{ref})^\gamma}
+ * \f]
  */
 class SRHRecombination : public RecombinationModelInterface
 {

@@ -54,6 +54,7 @@ SRHRecombination::do_init(void)
 
   tau_n_ = get_material()->get_options().get_option("tau_n", tau_n_);
   tau_p_ = get_material()->get_options().get_option("tau_p", tau_p_);
+  E_t_   = get_material()->get_options().get_option("E_t", E_t_);
 }
 
 
@@ -64,18 +65,19 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
   
-  double n  = dd.get_electron_density();
-  double p  = dd.get_hole_density();
-  double ni = dd.get_intrinsic_density();
+  long double n  = dd.get_electron_density();
+  long double p  = dd.get_hole_density();
+  long double ni = dd.get_intrinsic_density();
   double T = dd.get_lattice_temperature();
 
-  double f = std::exp(E_t_ / T);
+  long double f = std::exp(E_t_ / T);
 
-  double tau_n = tau_n_ * std::pow(T / T0, Talpha_e_);
-  double tau_p = tau_p_ * std::pow(T / T0, Talpha_h_);
+  long double tau_n = tau_n_ * std::pow(T / T0, Talpha_e_);
+  long double tau_p = tau_p_ * std::pow(T / T0, Talpha_h_);
 
-  double denom = tau_p * (n + ni * f) + tau_n * (p + ni / f);
-  recomb_e = recomb_h = (n * p - ni * ni) / denom;
+  long double denom = tau_p * (n + ni * f) + tau_n * (p + ni / f);
+  long double tmp = n * p / denom;
+  recomb_e = recomb_h = tmp - ni * ni / denom;
 }
 
 
@@ -86,21 +88,24 @@ SRHRecombination::get_net_recombination_rate_derivatives(
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
   
-  double n  = dd.get_electron_density();
-  double p  = dd.get_hole_density();
-  double ni = dd.get_intrinsic_density();
+  long double n  = dd.get_electron_density();
+  long double p  = dd.get_hole_density();
+  long double ni = dd.get_intrinsic_density();
   double T = dd.get_lattice_temperature();
 
-  double f = std::exp(E_t_ / T);
+  long double f = std::exp(E_t_ / T);
 
-  double tau_n = tau_n_ * std::pow(T / T0, Talpha_e_);
-  double tau_p = tau_p_ * std::pow(T / T0, Talpha_h_);
+  long double tau_n = tau_n_ * std::pow(T / T0, Talpha_e_);
+  long double tau_p = tau_p_ * std::pow(T / T0, Talpha_h_);
 
-  double denom = tau_p * (n + ni * f) + tau_n * (p + ni / f);
-  double SRH = (n * p - ni * ni) / denom;
+  long double denom = tau_p * (n + ni * f) + tau_n * (p + ni / f);
+  long double tmp = n * p / denom;
+  long double SRH = tmp - ni * ni / denom;
 
-  double a = (p - tau_p * SRH) / denom;
-  double b = (n - tau_n * SRH) / denom; 
+  long double a = p / denom;
+  a = a - tau_p * SRH / denom;
+  long double b = n / denom; 
+  b = b - tau_n * SRH / denom; 
 
   recomb_e[0] = recomb_h[0] = a;
   recomb_e[1] = recomb_h[1] = b;

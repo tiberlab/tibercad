@@ -193,7 +193,8 @@ TiberNonlinLS::solve(void)
       
 
     // check for divergence
-    if ((norm_res > norm_rhs) || isnan(norm_res))
+    //if ((norm_res > norm_rhs) || isnan(norm_res))
+    if (isnan(norm_res))
       throw (SNESDivergedError(-4, i, norm_rhs));
 
   

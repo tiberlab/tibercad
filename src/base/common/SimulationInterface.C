@@ -149,10 +149,10 @@ SimulationInterface::destroy(SimulationInterface* p)
   if (p != NULL)
   {
 #ifdef DEBUG
-    cout << "Deleted simulator (ID = " << p->get_id() <<
+    cerr << "Deleted simulator (ID = " << p->get_id() <<
       " name = " << p->get_name() << " / type_id = " <<
       p->get_default_name() << ")";
-    cout << " address = " << p << endl;
+    cerr << " address = " << p << endl;
 #endif
 
     libhandle_t libhandle = p->_libhandle;
@@ -176,6 +176,10 @@ SimulationInterface::init(void) throw (InitFailedException)
 {
   if (!_is_initialized)
   {
+#ifdef DEBUG
+    cerr << "Initialize " << get_name() << "... ";
+#endif
+
     // build name for equation systems
     create_equation_system_name();
 
@@ -190,6 +194,10 @@ SimulationInterface::init(void) throw (InitFailedException)
   }
 
   _is_initialized = true;
+
+#ifdef DEBUG
+    cerr << "done" << endl;
+#endif
 }
 
 

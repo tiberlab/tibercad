@@ -570,8 +570,25 @@ Control::run_simulation(void) throw (SolveFailedException)
     }
 
     // now the actual solve
-    sim->solve();
-    sim->plot();
+    try
+    {
+      sim->solve();
+      sim->plot();
+    }
+    catch (runtime_error& e)
+    {
+      ostringstream s;
+      s << "Control: Solve of " << sim->get_name() << " failed." << endl <<
+        "    Cause: " << e.what();
+      throw SolveFailedException(s.str());
+    }
+    catch (...)
+    {
+      ostringstream s;
+      s << "Control: Solve of " << sim->get_name() << " failed." << endl <<
+        "    Cause: Unknown";
+      throw SolveFailedException(s.str());
+    }
 
   }
  

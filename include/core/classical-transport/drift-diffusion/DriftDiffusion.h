@@ -32,6 +32,7 @@ class Elem;
 class Point;
 class Node;
 class EquationSystems;
+class TiberLinearSolver;
 
 
 template<typename T> class DenseMatrix;
@@ -661,6 +662,14 @@ class DriftDiffusion : public SimulationInterface
     //! An internal pointer to the device
     Device* _device;
 
+
+    //! A linear solver
+    /*!
+     * The linear solver is used to get a good guess for the electro-chemical
+     * potentials
+     */
+    TiberLinearSolver* _linear_solver;
+
     /*!
      * A list of nodes with dirichlet boundary conditions
      */
@@ -900,6 +909,10 @@ class DriftDiffusion : public SimulationInterface
     void do_assembly(const NumericVector<Number>& x,
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
+    void assemble_linear_electrons(const NumericVector<Number>& x,
+        NumericVector<Number>* residual,
+        SparseMatrix<Number>* jacobian);
+    void solve_linear(void);
 
 
 };

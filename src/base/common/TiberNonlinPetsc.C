@@ -69,7 +69,7 @@ TiberNonlinPetsc::solve(void)
   
   // Petsc uses l2 norms, but we specify tolerances per node
   // ('mean value' in the sense of eps = ||x|| / nn )
-  double sqrt_nn = std::sqrt(get_mesh().n_nodes() * n_vars());
+  double sqrt_nn = std::sqrt((double) get_mesh().n_nodes() * n_vars());
 
   _solver->set_ksp_options(_lin_tol, _lin_abs_tol, _lin_max_it);
 

@@ -11,12 +11,12 @@ Beside the electic potential the electro-chemical potentials are used as variabl
 -\nabla(\mu_p p \nabla\phi_p) & = & -R \nonumber
 \end{eqnarray}
 $P$ is the electric polarization due to e.g. piezoelectric effects and $R$ is the net recombination rate, i.e. recombination rate minus generation rate.
-The models for the mobilities and the net recombination rates can be specified in the ``physical\_model'' sections as described in the following.
+The models for the mobilities and the net recombination rates can be specified in the \texttt{physical\_model} sections as described in the following.
 
 
 
-\section{Models section parameters}
-The {\bf Models} section looks like follows:
+\section{\texttt{Models} section}
+The \texttt{Models} section looks like follows:
 \begin{verbatim}
 model driftdiffusion
 {
@@ -44,7 +44,7 @@ model driftdiffusion
  }
 \end{verbatim}
 
-The ``physical\_model'' sections can be omitted.
+The \texttt{physical\_model} sections can be omitted.
 In this case default models are used, namely no recombination/generation for the recombination model and constant mobility for the mobility models.
 There can be more than one recombination model.
 
@@ -128,16 +128,111 @@ The database value can be overridden from the input file as described for SRH re
 
 \subsection{Mobility models}
 
+Mobility models have currently to be defined for electrons and holes independently.
+The corresponding keywords are \texttt{electron\_mobility} and \texttt{hole\_mobility}, i.e.
+
+\begin{verbatim}
+physical_model electron_mobility
+{
+  model = ...
+  ...
+}
+
+physical_model hole_mobility
+{
+  model = ...
+  ...
+}
+\end{verbatim}
+
+The default model is the constant mobility model.
+
 \subsubsection{Constant mobility model}
+
+The constant mobility model assumes a mobility which depends only on temperature by means of the following formula:
+\begin{equation}
+\mu = \mu_0 (T/T_0)^{-\gamma}
+\end{equation}
+In the material data file $\mu_0$ and $\gamma$ have to be specified with the keywords \texttt{mu\_max\_e}, \texttt{mu\_max\_h} and \texttt{exponent\_e}, \texttt{exponent\_h}, respectively.
+$\mu_o$ can be ovverridden from the \texttt{physical\_model} section using the keyword \texttt{mu} or from the \texttt{Region} sections using the keywords \texttt{mu\_e} and \texttt{mu\_h}.
 
 
 \subsubsection{Doping dependent mobility model}
 
+The doping dependent mobility model implements two models for mobility depending on the total doping density and the temperature.
+Currently the parameters can only be defined in the material data file.
+
+etc etc
 
 
 \subsection{Boundary conditions}
 
 
+\section{\texttt{Physics} section}
 
-\section{Solver parameters}
+In the \texttt{Physics} section one can define the model to be used to described the semiconductor.
+The different implemented models will be described in individual subsections as they can imply some special parameters.
+The common paramaters are given in table~\ref{table:dd_common}.
+\begin{table}[htb]
+\center
+\begin{tabular}{l||l|l}
+\textit{keyword} & \textit{possible values} & \textit{description} \\
+\hline \hline
+\texttt{model} & (see following subsections) & the model to use \\
+\texttt{statistics} & \texttt{B} $\vert$ \texttt{FD} & Boltzmann (default) or
+Fermi-Dirac statistics
+\end{tabular}
+\caption{Common options for all drift-diffusion semiconductor models}
+\label{table:dd_common}
+\end{table}
+When \texttt{model} isn't specified, the unstrained semiconductor model is used.
 
+
+\subsection{Simple semiconductor model}
+
+When specifying \texttt{model = simple} a very simple semiconductor model is used.
+For this model one has to provide conduction and valence band edges, the effective density of states masses and the permittivity in the \texttt{Region} sections.
+The corresponding keywords are given in table~\ref{table:simple_sc}.
+\begin{table}[htb]
+\center
+\begin{tabular}{l||l}
+\textit{keyword} & \textit{description} \\
+\hline \hline
+\texttt{Ec} & conduction band edge (eV) \\
+\texttt{Ev} & valence band edge (eV) \\
+\texttt{meff\_n} & conduction band effective DOS mass (m$_e$) \\
+\texttt{meff\_p} & valence band effective DOS mass (m$_e$) \\
+\texttt{permittivity} & relative permittivity
+\end{tabular}
+\caption{Parameters for the simple semiconductor model}
+\label{table:simple_sc}
+\end{table}
+
+
+\subsection{Unstrained semiconductor model}
+
+The unstrained semiconductor model is the default model.
+It can be chosen explicitly by \texttt{model = unstrained}.
+It uses a bulk $\mathbf{k}\cdot\mathbf{p}$ model to calculate the band parameters.
+The model reads all needed parameters from the material data file.
+
+
+
+\subsection{Strained semiconductor model}
+
+The strained semiconductor model is an extension of the unstrained semiconductor model.
+It can be switched on by specifying \texttt{model = strained}.
+For the calculation of the band parameters it will consider mechanical strain (cf. chapter~\ref{chap:strain}) as calculated from a strain simulation.
+As strain can be non-homogeneous, bulk properties are calculated and stored seperately for each element.
+
+The strain simulation can be specified in the \texttt{Physics} section by \texttt{strain\_simulation = <sim\_name>}, where \texttt{<sim\_name>} is the user defined name of the strain simulation.
+If omitted, the first available strain simulation will be used.
+
+
+\section{\texttt{Solver} section}
+
+The parameters for the numerical solver depend on the type of solver being used and on the device to be simulated.
+
+\subsection{Parameters for PETSc solvers}
+
+The 

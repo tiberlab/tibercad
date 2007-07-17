@@ -48,7 +48,7 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
   bool file_exists = true;
 
-#ifdef DEBUG
+#ifdef DEBUG_
   cerr << "Looking for library " + libfile + "... ";
 #endif
   if (exists("./" + libfile))
@@ -59,7 +59,7 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
     file_exists = false;
 
 
-#ifdef DEBUG
+#ifdef DEBUG_
   if (file_exists)
     cerr << "found." << endl;
   else
@@ -68,7 +68,7 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
   if (file_exists)
   {
-#ifdef DEBUG
+#ifdef DEBUG_
     cerr << "Trying to open " + libfile + "... ";
 #endif
 
@@ -92,7 +92,7 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
     else
       success = false;
 
-#ifdef DEBUG
+#ifdef DEBUG_
     if (success)
       cerr << "OK" << endl;
     else

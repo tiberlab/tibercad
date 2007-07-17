@@ -176,7 +176,7 @@ PhysicalModelInterface::create(const string& name,
     mod->_name = mod->_options.get_option("name", defaultname);
     mod->_options.delete_option("name");
 #ifdef DEBUG
-    cout << "Add model (ID = " << mod->get_id() <<
+    cerr << "Add model (ID = " << mod->get_id() <<
       " name = " << mod->get_name() << " type_id = " <<
       defaultname << ")\n";
 #endif
@@ -194,7 +194,7 @@ PhysicalModelInterface::destroy(PhysicalModelInterface* p)
   {
 #ifdef DEBUG
     string id = Utils::extract_typename(typeid(*p));
-    cout << "Delete model (ID = " << p->get_id() <<
+    cerr << "Delete model (ID = " << p->get_id() <<
       " name = " << p->get_name() << " type_id = " << id << ")\n";
 #endif
 
