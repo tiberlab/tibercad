@@ -175,7 +175,7 @@ The different implemented models will be described in individual subsections as 
 The common paramaters are given in table~\ref{table:dd_common}.
 \begin{table}[htb]
 \center
-\begin{tabular}{l||l|l}
+\begin{tabular}{l||l|p{7cm}}
 \textit{keyword} & \textit{possible values} & \textit{description} \\
 \hline \hline
 \texttt{model} & (see following subsections) & the model to use \\
@@ -235,4 +235,16 @@ The parameters for the numerical solver depend on the type of solver being used 
 
 \subsection{Parameters for PETSc solvers}
 
-The 
+Table~\ref{tab:petsc_params} lists all solver parameters significant for the PETSc linear and nonlinear solvers.
+\begin{table}[htb]
+\center
+\begin{tabular}{l||p{8cm}|l}
+\textit{keyword} & \textit{description} & \textit{default} \\
+\hline \hline
+\texttt{ksp\_type} & the linear solver type & \texttt{bcgsl} \\
+\texttt{nonlin\_rel\_tol} & relative tolerance for the residual $l_2$-norm (with respect to first nonlinear step) & \texttt{10e-9}
+\end{tabular}
+\caption{Parameters for the simple semiconductor model}
+\label{table:petsc_params}
+\end{table}
+
