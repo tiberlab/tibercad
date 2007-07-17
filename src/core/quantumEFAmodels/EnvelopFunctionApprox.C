@@ -201,7 +201,39 @@ void EnvelopFunctionApprox::get_integrated_quantities(const std::set<std::string
 						      std::vector<double>& values)
 {
 
+
 } 
+
+void EnvelopFunctionApprox::get_eigenenergies(std::vector<double>& values) const
+{
+
+ 
+  unsigned int n = solution.size();
+  values.resize(n);
+  for (unsigned int i = 0; i < n; i++)
+  {
+    values[i] = solution[i].eigen_energy;
+  }
+
+
+} 
+
+void EnvelopFunctionApprox::get_occupations(std::vector<double>& values) const
+{
+
+ 
+  unsigned int n = solution.size();
+  values.resize(n);
+
+  for (unsigned int i = 0; i < n; i++)
+  {
+    values[i ] = Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy,opt.Temperature);
+  }
+
+} 
+
+
+
 
 //===================================================//
 
@@ -3098,7 +3130,7 @@ void EnvelopFunctionApprox::calculate_convergent_density(double T)
   unsigned int n1 = solution.size();
 
   double last_state_density = Fermi_statistics_probability(solution[n1-1].eigen_energy, 
-							   solution[n1-1].Fermi_energy,
+							   solution[n1-1].Fermi_energy, 
 							   T);
 
   double total_density =  get_integrated_probability();

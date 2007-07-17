@@ -310,6 +310,15 @@ class EnvelopFunctionApprox  : public SimulationInterface
   //!returns map for kp bands
   inline const std::map<short, short>& get_kp_bands(void) const;
 
+
+  //! get the  vector of  eigenvalues 
+  void get_eigenenergies(std::vector<double>& values) const;
+
+  //! get occupation of eigenstates
+  void get_occupations(std::vector<double>& values) const;
+
+
+
  private:
 
   //!pointer to the device object
@@ -517,7 +526,7 @@ class EnvelopFunctionApprox  : public SimulationInterface
     \param Fermi_energy  Fermi energy [eV]
     \param temperature   temperature [K] 
    */
-  double Fermi_statistics_probability(double Energy, double Fermi_energy, double temperature);
+  double Fermi_statistics_probability(double Energy, double Fermi_energy, double temperature) const;
 
 
   //!Calculate number of bands in the Hamiltonian 
@@ -555,9 +564,14 @@ class EnvelopFunctionApprox  : public SimulationInterface
  
 
 
+
   //!in this class outputs eigenvalues 
   void get_integrated_quantities(const std::set<std::string>& names,
 				 std::vector<double>& values);
+
+
+ 
+
 
   virtual void 	do_init(void);
 
@@ -572,7 +586,8 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
 };
 //-------------------------------------------------------------------
-inline double EnvelopFunctionApprox::Fermi_statistics_probability(double Energy, double Fermi_energy, double Temperature)
+inline double EnvelopFunctionApprox::Fermi_statistics_probability(double Energy, double Fermi_energy,
+                                                                  double Temperature) const
 {
   
 

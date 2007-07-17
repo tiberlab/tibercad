@@ -58,3 +58,7 @@ Constants::Hartree = (hbar * hbar) /
 
 const double
 Constants::Lorenz_Number = (4.0 * k_Boltzmann *  k_Boltzmann ) / (M_PI);
+
+
+const double
+Constants::atomic_time = plancks_constant/Hartree;

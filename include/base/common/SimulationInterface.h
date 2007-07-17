@@ -358,7 +358,8 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     AutoPtr<FEBase> build_finite_element(unsigned int dim, FEType type,
         bool scale = false);
 
-
+  /*   //! Get the options for this simulator */
+/*     const ModelOptions& see_options(void); */
 
   protected:
 
@@ -721,6 +722,13 @@ SimulationInterface::get_options(void)
   return _options;
 }
 
+
+/* inline */
+/* const ModelOptions& */
+/* SimulationInterface::see_options(void) */
+/* { */
+/*   return _options; */
+/* } */
 
 
 inline

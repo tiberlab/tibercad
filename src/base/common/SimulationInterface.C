@@ -14,6 +14,7 @@
 #include "OpticsKP.h"
 #include "QuantumDispersion.h"
 #include "TightBinding.h"
+#include "OptRecombinSpectrum.h"
 
 #include "TunnelingCurrent.h"
 
@@ -104,6 +105,8 @@ SimulationInterface::create(const string& type,
       sim = TunnelingCurrent::create();
     else if (type == "tightbinding")
       sim = TightBinding::create();
+    else if (type == "opticalspectrum")
+      sim = OptRecombinSpectrum::create();
 }
 
   if (sim != NULL)

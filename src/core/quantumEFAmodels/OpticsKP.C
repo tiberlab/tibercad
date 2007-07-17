@@ -22,7 +22,7 @@ PhysicalModel* OpticsKP::create_physical_model(const ModelOptions& options) cons
 {
   ModelOptions kp8x8options = options;
 
-  kp8x8options["model"] = "kp";
+ kp8x8options["model"] = "kp";
   kp8x8options["kp_model"] = "8x8";
 
   EFAbulkModel* model = dynamic_cast<EFAbulkModel*> ( PhysicalModelInterface::create("EFAmodel", kp8x8options ) );
@@ -105,6 +105,24 @@ void OpticsKP::parse_options()
   }
 
 
+
+  
+  //k-vector
+  std::vector<double> k_vec(3, 0.0);
+  mod_opt.get_option("k_vector",k_vec);
+  if (k_vec.size() == 3)
+  {
+   
+    for (short i = 0; i < 3; i++) k_vector[i] = k_vec[i]; 
+    
+   
+  }
+  else
+    throw InitFailedException( "OpticsKP: k_vector size must be equal to 3 instead of " + k_vec.size()); 
+
+
+
+
 }
 
 //==============================================//
@@ -147,7 +165,7 @@ void OpticsKP::do_init()
   es = &(get_equation_systems());
 
   //-------------------------------
- //---------------------------------------------------------------------------------------------------------//
+  //---------------------------------------------------------------------------------------------------------//
   //My Jacobian 
   double mesh_units = get_environment().get_device().get_mesh_units();
   length_scale = mesh_units/bohr_radius;
@@ -158,9 +176,17 @@ void OpticsKP::do_init()
   for (short i = 1; i <= dim; i++)
     my_Jacobian *= length_scale;
 
-   //--------------------------------------------------------------------------------------------------------//
+  //--------------------------------------------------------------------------------------------------------//
   
 }
+
+
+//==============================================//
+
+
+
+
+
 
 //==============================================//
 void OpticsKP::do_solve()
@@ -170,13 +196,13 @@ void OpticsKP::do_solve()
 
   calculate_matrix();
 
-  //temporary_solution------------------------------
+ 
   unsigned int n1 =  _initial_eigen_state_numbers.size();
   unsigned int n2 =  _final_eigen_state_numbers.size();
-  std::vector< std::vector <std::vector <  Complex  >  >  >   P_matrix;
-  get_P_matrix_elements(P_matrix);
+  
+  calculate_P_matrix_elements( );
 
- 
+  //temporary_solution------------------------------
 
   std::ostringstream os3;
   os3 << "output/optics.out";
@@ -197,11 +223,122 @@ void OpticsKP::do_solve()
     }
 
   //------------------------------------------------
+
+ 
+
+
+
 }
 
 
+
 //=====================================================================================================
-void OpticsKP::get_P_matrix_elements (std::vector< std::vector <std::vector <  Complex  >  >  > &  P_matrix) 
+
+
+void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz, 
+                          std::map<const Elem*, double>& spectrum ) 
+{
+
+
+  spectrum.clear();
+
+
+ 
+
+  std::vector<double> fs_eigen_values;
+  std::vector<double> is_eigen_values;
+
+  std::vector<double> fs_occupations;
+  std::vector<double> is_occupations;
+
+  
+
+
+  double     trans_energy, f1, f2;
+ 
+
+  unsigned int n1 =  _initial_eigen_state_numbers.size();
+  unsigned int n2 =  _final_eigen_state_numbers.size();
+ 
+
+  initial_state_model->get_eigenenergies(is_eigen_values);  // initial =  electrons (?)
+
+   
+  final_state_model->get_eigenenergies(fs_eigen_values);
+
+
+  initial_state_model->get_occupations(is_occupations);
+
+  final_state_model->get_occupations(fs_occupations);
+
+
+
+ 
+
+
+  // loop on  eigenstates
+
+  for (unsigned i = 0; i < n1; i++)  // "upper" states
+  {
+     
+    for (unsigned j = 0; j < n2; j++)  // "lower" states
+    {
+
+      trans_energy =  is_eigen_values[_initial_eigen_state_numbers[i]] - fs_eigen_values[ _final_eigen_state_numbers[i]];
+
+
+      f1 = is_occupations[_initial_eigen_state_numbers[i]];   // occupation for  electron
+     
+      f2 = fs_occupations[_final_eigen_state_numbers[i]]; // occupation for  holes
+
+    
+
+      Complex Me = P_matrix[0][i][j] * polariz(1) + P_matrix[1][i][j] * polariz(2) +  P_matrix[2][i][j] * polariz(3);
+
+      
+      
+      MeshBase::const_element_iterator       el     = Energy.active_elements_begin();
+      const MeshBase::const_element_iterator end_el = Energy.active_elements_end();
+
+      for ( ; el!= end_el ; ++el)
+      {
+       
+        const Elem* elem = *el;
+
+        double En = elem->centroid()(0);
+
+        double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)  + (0.5*Gamma)*(0.5*Gamma)) * Hartree;
+ 
+
+        
+
+        spectrum[elem] += 2 * M_PI * Lorenzian * abs (Me) * abs (Me) * f1 * (1 - f2);
+
+      }   
+
+
+    }
+
+
+  }
+
+
+
+
+
+}
+
+
+
+
+
+//=====================================================================================================
+
+
+
+
+//=====================================================================================================
+void OpticsKP::calculate_P_matrix_elements ( ) 
 {
   unsigned int n_i =  _initial_eigen_state_numbers.size();
   unsigned int n_f =  _final_eigen_state_numbers.size();
@@ -210,17 +347,17 @@ void OpticsKP::get_P_matrix_elements (std::vector< std::vector <std::vector <  C
   P_matrix.clear();
   P_matrix.resize(3);
   for (unsigned i = 0; i < 3; i++)
-    {
-      P_matrix[i].resize(n_i);
-      for (unsigned j = 0; j < n_i; j++)   P_matrix[i][j].resize(n_f);
-    } 
+  {
+    P_matrix[i].resize(n_i);
+    for (unsigned j = 0; j < n_i; j++)   P_matrix[i][j].resize(n_f);
+  } 
 
   for (unsigned int i1 = 0; i1 < n_i; i1++)
     for (unsigned int i2 = 0; i2 < n_f; i2++)
-      {
-	vector<Complex> matr_elements =  calculate_matrix_element(i1, i2);
-	for (unsigned i = 0; i < 3; i++)  P_matrix[i][i1][i2] = matr_elements[i];
-      }
+    {
+      vector<Complex> matr_elements =  calculate_matrix_element(i1, i2);
+      for (unsigned i = 0; i < 3; i++)  P_matrix[i][i1][i2] = matr_elements[i];
+    }
 
 
 
@@ -367,130 +504,134 @@ void OpticsKP::calculate_matrix(void)
 
   double temp;
   for ( ; el != end_el ; ++el) 
-    {//el
-      // Store a pointer to the element we are currently
-      // working on.  This allows for nicer syntax later.
-      const Elem* elem = *el;
+  {//el
+    // Store a pointer to the element we are currently
+    // working on.  This allows for nicer syntax later.
+    const Elem* elem = *el;
 
-      const ID subdomain = elem->subdomain_id();
-      const Material* mat = _device->get_material(subdomain);
+    const ID subdomain = elem->subdomain_id();
+    const Material* mat = _device->get_material(subdomain);
 
-      element_hamiltonian = (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model(); 
+    element_hamiltonian = (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model(); 
 
-      element_kp_hamiltonian = dynamic_cast<KPbulkHamiltonian*>  (element_hamiltonian);
+    element_kp_hamiltonian = dynamic_cast<KPbulkHamiltonian*>  (element_hamiltonian);
    
-      
+    // ******************************************************* for k integration **********     
+     element_kp_hamiltonian->set_k_vector(k_vector);
+   
+    // *********************************************************************************
 
-      dof_map.dof_indices (elem, dof_indices); 
-      const unsigned int n_dofs   = dof_indices.size();
-      fe->reinit (elem);
 
-      Px_real.resize(n_dofs, n_dofs );
-      Px_imag.resize(n_dofs, n_dofs );
+    dof_map.dof_indices (elem, dof_indices); 
+    const unsigned int n_dofs   = dof_indices.size();
+    fe->reinit (elem);
 
-      Py_real.resize(n_dofs, n_dofs );
-      Py_imag.resize(n_dofs, n_dofs );
+    Px_real.resize(n_dofs, n_dofs );
+    Px_imag.resize(n_dofs, n_dofs );
 
-      Pz_real.resize(n_dofs, n_dofs );
-      Pz_imag.resize(n_dofs, n_dofs );
+    Py_real.resize(n_dofs, n_dofs );
+    Py_imag.resize(n_dofs, n_dofs );
+
+    Pz_real.resize(n_dofs, n_dofs );
+    Pz_imag.resize(n_dofs, n_dofs );
 
  
 
-      for (unsigned int qp=0; qp<qrule.n_points(); qp++)
-	{//qp
-	  const vector < vector <vector <EFAbulkHamiltonian::MatrixElement> > >&  
-	    P = element_kp_hamiltonian->get_optical_operator() ;
+    for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+    {//qp
+      const vector < vector <vector <EFAbulkHamiltonian::MatrixElement> > >&  
+        P = element_kp_hamiltonian->get_optical_operator() ;
 	  
 
 
-	  for (unsigned int band1 = 0; band1 < 8; band1++)
-	    {//band1
-	      dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
+      for (unsigned int band1 = 0; band1 < 8; band1++)
+      {//band1
+        dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
 	      
-	      const unsigned int n_psi_dofs = dof_indices_component.size();
-	      for (unsigned int band2 = 0; band2 < 8; band2++)
-		 {//band2
-		   Px_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
-		   Px_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+        const unsigned int n_psi_dofs = dof_indices_component.size();
+        for (unsigned int band2 = 0; band2 < 8; band2++)
+        {//band2
+          Px_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+          Px_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
 
-		   Py_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
-		   Py_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+          Py_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+          Py_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
 
-		   Pz_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
-		   Pz_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+          Pz_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+          Pz_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
 
-		   //Integration----------------------------------------------------------------
-		   for (unsigned int p1=0; p1<n_psi_dofs; p1++)
-		     {//p1
-		       for (unsigned int p2=0; p2<n_psi_dofs; p2++)
-			 {//p2
+          //Integration----------------------------------------------------------------
+          for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+          {//p1
+            for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+            {//p2
 			  
 			  
-			   vector<Complex> value(3, Complex(0.0,0.0));
+              vector<Complex> value(3, Complex(0.0,0.0));
 
-			   //----constant part-----------------------------------
-			   temp = JxW[qp] * phi[p1][qp] * phi[p2][qp];
+              //----constant part-----------------------------------
+              temp = JxW[qp] * phi[p1][qp] * phi[p2][qp];
 
-			   for (short pol = 0; pol < 3; pol++)
-			     value[pol] += temp * P[pol][band1][band2].constant ;
+              for (short pol = 0; pol < 3; pol++)
+                value[pol] += temp * P[pol][band1][band2].constant ;
 
 			 
 
-			   //----            ------------------------------------
+              //----            ------------------------------------
 			  
-			   //--------linear left-----------------------------------------
-			   for (short i = 0; i < dim; i++)
-			     {
-			       temp = JxW[qp]* dphi[p1][qp](i) * phi[p2][qp];
-			       for (short pol = 0; pol < 3; pol++)
-				 value[pol] -= temp * P[pol][band1][band2].linear_left[i]*Complex(0.0, -1.0) /length_scale; 
-			     } 
-			   //--------           ----------------------------------------
+              //--------linear left-----------------------------------------
+              for (short i = 0; i < dim; i++)
+              {
+                temp = JxW[qp]* dphi[p1][qp](i) * phi[p2][qp];
+                for (short pol = 0; pol < 3; pol++)
+                  value[pol] -= temp * P[pol][band1][band2].linear_left[i]*Complex(0.0, -1.0) /length_scale; 
+              } 
+              //--------           ----------------------------------------
 
 
-			   //--------linear right---------------------------------------
-			   for (short i = 0; i < dim; i++)
-			     {
-			       temp = JxW[qp]* dphi[p2][qp](i) * phi[p1][qp];
-			       for (short pol = 0; pol < 3; pol++)
-				value[pol] += temp * P[pol][band1][band2].linear_right[i] * Complex(0.0, -1.0) /length_scale;
-			     }
-                           //-----------------------------------------------------------
+              //--------linear right---------------------------------------
+              for (short i = 0; i < dim; i++)
+              {
+                temp = JxW[qp]* dphi[p2][qp](i) * phi[p1][qp];
+                for (short pol = 0; pol < 3; pol++)
+                  value[pol] += temp * P[pol][band1][band2].linear_right[i] * Complex(0.0, -1.0) /length_scale;
+              }
+              //-----------------------------------------------------------
 			     
-			   for (short pol = 0; pol < 3; pol++) value[pol] *= my_Jacobian;
+              for (short pol = 0; pol < 3; pol++) value[pol] *= my_Jacobian;
 
-			   Px_real_sub(p1,p2) += value[0].real();
-			   Py_real_sub(p1,p2) += value[1].real();
-			   Pz_real_sub(p1,p2) += value[2].real();
+              Px_real_sub(p1,p2) += value[0].real();
+              Py_real_sub(p1,p2) += value[1].real();
+              Pz_real_sub(p1,p2) += value[2].real();
 
-			   Px_imag_sub(p1,p2) += value[0].imag();
-			   Py_imag_sub(p1,p2) += value[1].imag();
-			   Pz_imag_sub(p1,p2) += value[2].imag();
+              Px_imag_sub(p1,p2) += value[0].imag();
+              Py_imag_sub(p1,p2) += value[1].imag();
+              Pz_imag_sub(p1,p2) += value[2].imag();
 			   
 
-			 }
+            }
 		  
 
-		     }
+          }
 
 
-		 }
+        }
 	      
-	    }
+      }
 
-	}
-      Px_matr_real->add_matrix(Px_real,dof_indices );
-      Py_matr_real->add_matrix(Py_real,dof_indices );
-      Pz_matr_real->add_matrix(Pz_real,dof_indices );
+    }
+    Px_matr_real->add_matrix(Px_real,dof_indices );
+    Py_matr_real->add_matrix(Py_real,dof_indices );
+    Pz_matr_real->add_matrix(Pz_real,dof_indices );
       
-      Px_matr_imag->add_matrix(Px_imag,dof_indices );
-      Py_matr_imag->add_matrix(Py_imag,dof_indices );
-      Pz_matr_imag->add_matrix(Pz_imag,dof_indices );
+    Px_matr_imag->add_matrix(Px_imag,dof_indices );
+    Py_matr_imag->add_matrix(Py_imag,dof_indices );
+    Pz_matr_imag->add_matrix(Pz_imag,dof_indices );
 	  
       
-      el_number++;
+    el_number++;
     
-    }
+  }
   
 }
 
@@ -549,116 +690,116 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
  
 
   for (short pol = 0; pol < 3; pol++)
-    {//polarization
-      for (int row = 0 ; row < size_matrix; row++)
-	{//rows of P matrix
+  {//polarization
+    for (int row = 0 ; row < size_matrix; row++)
+    {//rows of P matrix
 	  
-	 // short band_number1 = row%8;
-	  short band_number1 = row/number_of_nodes;
+      // short band_number1 = row%8;
+      short band_number1 = row/number_of_nodes;
 	 
-	  band_it = kp_bands_map_in.find( band_number1 );
+      band_it = kp_bands_map_in.find( band_number1 );
 	  
 
-	  if (band_it != kp_bands_map_in.end())
-	    {//band exists in kp model of the initial state
+      if (band_it != kp_bands_map_in.end())
+      {//band exists in kp model of the initial state
 	     
-	      unsigned int dof_in_initial_eigenvector = band_it->second * number_of_nodes + row%number_of_nodes;
-	      int ierr = 0;
-	      const  PetscScalar *petsc_row_vals_real;
-	      const  PetscInt *petsc_cols_real;
-	      int n_cols_real = 0;
+        unsigned int dof_in_initial_eigenvector = band_it->second * number_of_nodes + row%number_of_nodes;
+        int ierr = 0;
+        const  PetscScalar *petsc_row_vals_real;
+        const  PetscInt *petsc_cols_real;
+        int n_cols_real = 0;
 
-	      const  PetscScalar *petsc_row_vals_imag;
-	      const  PetscInt *petsc_cols_imag;
-	      int n_cols_imag = 0;
+        const  PetscScalar *petsc_row_vals_imag;
+        const  PetscInt *petsc_cols_imag;
+        int n_cols_imag = 0;
 	    
 
-	      map<int,double> real_values, imag_values;
-	      map<int, double>::iterator  position;
+        map<int,double> real_values, imag_values;
+        map<int, double>::iterator  position;
 	 
 
-	      set<int> real_column, imag_column, complex_column;
-	      set<int>::iterator com_col_it;
+        set<int> real_column, imag_column, complex_column;
+        set<int>::iterator com_col_it;
 
-	      insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
+        insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
 	      
 	      
-	      ierr = MatGetRow(P_real_p[pol]->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-	      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-	      real_column.clear();
+        ierr = MatGetRow(P_real_p[pol]->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
+        CHKERRABORT(libMesh::COMM_WORLD,ierr);
+        real_column.clear();
 	    
-	      for (int i = 0; i < n_cols_real; i++) 
-		if (petsc_row_vals_real[i] != 0.0)  
-		  {
-		    real_column.insert(petsc_cols_real[i]);
+        for (int i = 0; i < n_cols_real; i++) 
+          if (petsc_row_vals_real[i] != 0.0)  
+          {
+            real_column.insert(petsc_cols_real[i]);
 		 
-		    real_values.insert(make_pair(petsc_cols_real[i],petsc_row_vals_real[i] ));
-		  }
+            real_values.insert(make_pair(petsc_cols_real[i],petsc_row_vals_real[i] ));
+          }
 	    
 	      
-	      ierr = MatGetRow(P_imag_p[pol]->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-	      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-	      imag_column.clear();
+        ierr = MatGetRow(P_imag_p[pol]->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
+        CHKERRABORT(libMesh::COMM_WORLD,ierr);
+        imag_column.clear();
 
 	     
-	      for (int i = 0; i < n_cols_real; i++) 
-		if (petsc_row_vals_imag[i] != 0.0)   
-		  {	    
-		    imag_column.insert(petsc_cols_imag[i]);
-		    imag_values.insert(make_pair(petsc_cols_imag[i],petsc_row_vals_imag[i] ));
-		  }
+        for (int i = 0; i < n_cols_real; i++) 
+          if (petsc_row_vals_imag[i] != 0.0)   
+          {	    
+            imag_column.insert(petsc_cols_imag[i]);
+            imag_values.insert(make_pair(petsc_cols_imag[i],petsc_row_vals_imag[i] ));
+          }
 	    
 
-	      set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
+        set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
 	      
-	      for (com_col_it = complex_column.begin(); com_col_it != complex_column.end(); com_col_it++)
-		{
-		  int n1 = *com_col_it;
+        for (com_col_it = complex_column.begin(); com_col_it != complex_column.end(); com_col_it++)
+        {
+          int n1 = *com_col_it;
 		
-		  short band_number2  = n1/number_of_nodes;
+          short band_number2  = n1/number_of_nodes;
 
-		  band_it = kp_bands_map_fi.find(band_number2 );
+          band_it = kp_bands_map_fi.find(band_number2 );
 
-		  if (band_it != kp_bands_map_fi.end())
-		    {//band exists in kp model of the final state
-		      double value_real;
-		      double value_imag;
+          if (band_it != kp_bands_map_fi.end())
+          {//band exists in kp model of the final state
+            double value_real;
+            double value_imag;
 	    
-		      //real part------	  
-		      position = real_values.find(n1);
-		      if (position != real_values.end()) 
-			value_real = position->second;
-		      else 
-			value_real = 0.0;
+            //real part------	  
+            position = real_values.find(n1);
+            if (position != real_values.end()) 
+              value_real = position->second;
+            else 
+              value_real = 0.0;
 		        
-		      //imag part 
-		      position = imag_values.find(n1);
-		      if (position != imag_values.end()) 
-			value_imag = position->second;
-		      else 
-			value_imag = 0.0;
+            //imag part 
+            position = imag_values.find(n1);
+            if (position != imag_values.end()) 
+              value_imag = position->second;
+            else 
+              value_imag = 0.0;
 		
-		      Complex value_complex = Complex(value_real, value_imag);
+            Complex value_complex = Complex(value_real, value_imag);
 		      
 		     
-		      unsigned int dof_in_final_eigenvector = band_it->second * number_of_nodes + n1%number_of_nodes;
+            unsigned int dof_in_final_eigenvector = band_it->second * number_of_nodes + n1%number_of_nodes;
 
 		      
-		      result[pol] += value_complex * conj(eigen_vector_i[dof_in_initial_eigenvector]) * eigen_vector_f[dof_in_final_eigenvector];
+            result[pol] += value_complex * conj(eigen_vector_i[dof_in_initial_eigenvector]) * eigen_vector_f[dof_in_final_eigenvector];
 
 
-		    }
-		}
+          }
+        }
 
 
-	      ierr = MatRestoreRow(P_real_p[pol]->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-	      CHKERRABORT(libMesh::COMM_WORLD,ierr);
+        ierr = MatRestoreRow(P_real_p[pol]->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
+        CHKERRABORT(libMesh::COMM_WORLD,ierr);
 	    
-	      ierr = MatRestoreRow(P_imag_p[pol]->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-	      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-	    }
-	}
+        ierr = MatRestoreRow(P_imag_p[pol]->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
+        CHKERRABORT(libMesh::COMM_WORLD,ierr);
+      }
     }
+  }
   
   return(result);
 }

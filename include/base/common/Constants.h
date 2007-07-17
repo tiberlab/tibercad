@@ -62,6 +62,9 @@ namespace Constants
   extern const double Lorenz_Number;
 
 
+  //!Atomic unit of time [second] \f$ \hbar / Ha \f$
+  extern const double atomic_time;
+
 }
 
 
