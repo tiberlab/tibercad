@@ -64,15 +64,17 @@ class OpticsKP: public SimulationInterface
   
   //!calculate spectrum 
   /*!
+    \f$
+    
+    P(\hbar \omega) = \sum_{i,j} 2 \pi \omega |{\bf M_{i,j} e}|^2 f_i(E_i)(1 - f_j(E_j)) 
+    \frac{\Gamma/2}{(E_i - E_j - \hbar \omega)^2 + (\Gamma/2)^2}
+    \f$
+      
     \param Energy energy grid [eV]
     \param spectrum calculated spectrum (atomic units)
     \param Gamma broadering parameter [eV]
     \param polariz polarization vector of a linearly polarized light (must be a normalized one, \f$ |{\bf e}| = 1 \f$)
-    \f$
     
-    P(\hbar \omega) = \sum_{i,j} \omega |{\bf M_{i,j} e}|^2 f_i(E_i)(1 - f_j(E_j)) 
-    \frac{\Gamma/2}{(E_i - E_j - \hbar \omega)^2 + (\Gamma/2)}
-    \f$
 
 
   */
