@@ -160,18 +160,9 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
 
 
   
-  cerr << spectrum.size() << "\n";
+ 
 
 
-  {
-    std::map<const Elem*, double>::iterator it = spectrum.begin();
-
-    for ( ; it !=  spectrum.end()  ; ++it)
-    {
-      cerr << it->second << "   " << "\n";
-    }
-
-  }
 
 
   // integrated_quantity needed for  mesh  refinement, for the  moment is  neglected.
