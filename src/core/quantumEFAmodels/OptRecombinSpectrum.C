@@ -29,7 +29,25 @@ void OptRecombinSpectrum::do_plot()
      string filename(outdir + "/" + get_name() +
         "_spectrum" + suffix + suff);
 
-     vector<string> names(1,"power_density[W/eV]"); 
+     string dimension;
+     double area_dim_factor = 1;
+     if (k_dim == 1)
+     {
+       dimension = "/cm";
+       area_dim_factor  = (Constants::bohr_radius * 1e2);
+     }
+     else if (k_dim == 2)
+     {
+       dimension = "/cm^2";
+       area_dim_factor  = (Constants::bohr_radius * 1e2) * (Constants::bohr_radius * 1e2);
+     }
+     else if (k_dim == 3)
+     {
+       dimension = "/cm^3";
+       area_dim_factor  = (Constants::bohr_radius * 1e2) * (Constants::bohr_radius * 1e2) * (Constants::bohr_radius * 1e2);
+     }
+
+     vector<string> names(1,"power_density[W/eV" + dimension + "]"); 
 
      vector<double> results;
 
@@ -43,9 +61,11 @@ void OptRecombinSpectrum::do_plot()
        map<const Elem*, double>::iterator res_it = real_space_density.find(el);
        if (res_it != real_space_density.end())
        {
-         value = res_it->second; //[ 1/a.u._of_time]
-         value /= Constants::atomic_time; //[1/second]
-         value *= Constants::elementary_charge; //[J/(eV*second)]
+         value = res_it->second; //[ 1/a.u._of_time/((bohr_radius)^kdim)]
+         value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
+         value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
+	 value /= area_dim_factor ; //[J/(eV*second)/((cm)^kdim)]
+	 
        }
        else
        {

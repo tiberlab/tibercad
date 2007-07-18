@@ -148,14 +148,14 @@ class Macrostrain : public SimulationInterface
   */
   Tensor2Sym get_strain_crystal(const Elem* el); 
 
-  //!get polarization (piezo + pyro)
+  //!get polarization (piezo)
   /*!
     \param el pointer to the element
   */
   Tensor1 get_piezopolarization(const Elem* el);
 
 
-  //!get built-in polarization (piezo + pyro)  
+  //!get built-in polarization (piezo)  
  
   /*!
     \param el pointer to the element

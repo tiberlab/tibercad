@@ -13,7 +13,7 @@ class Piezoelectricity : public PhysicalModelInterface
   //!Empty constructor
   Piezoelectricity();
 
-  //! returns polarization (piezo + pyro) in crystal system
+  //! returns polarization (only piezo) in crystal system
   virtual Tensor1  get_polariz_cryst(Tensor2Sym& strain_cryst) = 0;
 
 
