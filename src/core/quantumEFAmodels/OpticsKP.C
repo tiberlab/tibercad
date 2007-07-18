@@ -187,7 +187,7 @@ void OpticsKP::do_init()
   system = &( es->get_system<LinearImplicitSystem>(system_name));
 
 
-  //---------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------------//
   //add variables
 
   psivar.resize(8);
@@ -214,7 +214,8 @@ void OpticsKP::do_init()
     psivar[i] = system->variable_number(psi_name[i]);
   }
 
-
+  //-----------------------------------------------------------------------------------------------------------//
+  //add matrixes
 
   system->add_matrix("Px_real"); 
   Px_matr_real = & (system->get_matrix("Px_real"));
@@ -260,8 +261,8 @@ void OpticsKP::do_solve()
   
   calculate_P_matrix_elements( );
 
-  //temporary_solution------------------------------
-
+  //temporary_solution----------------------------------------------------
+/*
   std::ostringstream os3;
   os3 << "output/optics.out";
 	  
@@ -279,8 +280,8 @@ void OpticsKP::do_solve()
       }
       out_optics << "\n";
     }
-
-  //------------------------------------------------
+*/
+  //------------------------------------------------------------------------
 
  
 
@@ -367,10 +368,8 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
         double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)  + (0.5*Gamma)*(0.5*Gamma)) * Hartree;
  
-
-        
-
         spectrum[elem] += 2 * M_PI * Lorenzian * abs (Me) * abs (Me) * f1 * (1 - f2);
+
 
       }   
 
@@ -432,35 +431,14 @@ void OpticsKP::calculate_matrix(void)
   const Mesh* mesh = &(es->get_mesh());
  
 
-  //add matrixes
-
+ 
   
 
 
   DofMap& dof_map = system->get_dof_map();
 
 
-/*
-  system->add_matrix("Px_real"); 
-  Px_matr_real = & (system->get_matrix("Px_real"));
 
-  system->add_matrix("Py_real"); 
-  Py_matr_real = & (system->get_matrix("Py_real"));
-
-  system->add_matrix("Pz_real"); 
-  Pz_matr_real = & (system->get_matrix("Pz_real"));
-
-  system->add_matrix("Px_imag"); 
-  Px_matr_imag = & (system->get_matrix("Px_imag"));
-
-  system->add_matrix("Py_imag"); 
-  Py_matr_imag = & (system->get_matrix("Py_imag"));
-
-  system->add_matrix("Pz_imag"); 
-  Pz_matr_imag = & (system->get_matrix("Pz_imag"));
-
-*/
- 
 
 
  
