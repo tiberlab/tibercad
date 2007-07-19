@@ -7,7 +7,7 @@ topdir := ../..
 
 subdirs := classical-transport macrostrain semiconductormodels
 subdirs += solver-interfaces macroheatbalance quantumEFAmodels tightbinding
-subdirs += poisson
+#subdirs += poisson
 
 
 include $(topdir)/Make.common
