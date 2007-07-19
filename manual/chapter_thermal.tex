@@ -90,8 +90,14 @@ model thermal
 \end{verbatim}
 
 \subsection{Physicals Models}
+
+If the necessary physical models are omitted the relative default are considered.
+
+
+The next model is always necessary.
+
 \begin{verbatim}    
-physical_model Lattice_thermal_conductivity
+physical_model Lattice_thermal_conductivity #Always found
 {
     
   model = <constant>          #temperature independent model
@@ -99,9 +105,13 @@ physical_model Lattice_thermal_conductivity
           temperature         #temperature dependent model 
     
 }
+\end{verbatim}
+
+The next model is necessary only if in the Physics Parameters section the flag \textit{ParticleThermalConductivity} is \textit{true}.
+
+\begin{verbatim}  
     
-    
-physical_model Particle_thermal_conductivity
+physical_model Particle_thermal_conductivity 
 {
     
     
@@ -111,10 +121,6 @@ physical_model Particle_thermal_conductivity
     
     
 }
-
-
-
-
 \end{verbatim}
 
 Here it reports also the thermoelectric power model, but it belongs
@@ -147,7 +153,7 @@ BC_Region thermal_contact
 
    temperature = 300           # Contact Temperature.  
         
-   @T[300]                     # Creation of the sweep variables.
+                 @T[300]       # Creation of the sweep variables.
                                  300 K is the dafault
                         
 }
@@ -174,29 +180,26 @@ $Solver
                                     # conductivity. 
                                     
                              
-      update_temperature = <true>   # the result simulation updates
-                                    # the device temperature so other 
-                                    # simulation 
-                                    # could used it.
+      update_temperature = <true>   # the device temperature is updated with 
+                                    # the simulation results (non uniform)
+                                    
                             
                             false   # the result simulation doesn't
-                                    # update the device temperature.
+                                    # update the device temperature is still
+                                    # as specified in input (uniform)
+				    
       
       
-      kappa_solve = <no_self>       # the thermal conductivities (both 
-                                    # lattice and carreirs) are computed 
-                                    # one time.
+      kappa_temperature_sc = <false>   # A temperature - thermal conductivity 
+                                       # (both lattice and carriers ones)                                                                                                       #  self consistent loop is not computed.
                                       
-      
-                   self_consistent  # the thermal conductivities (both  
-                                    # lattice and cattiers one) are    
-                                    # computed after every temparature 
-                                    # simulation.
-                                    # So, a self consistent loop is 
-                                    # done.
+                             	
+                               true    # A temperature - thermal conductivity 
+                                       # (both lattice and carriers ones)                                                                                                       #  self consistent loop is computed.
                                       
-                                    # RACCOMANDATION: active this modality                                        
-                                    # only with non constant thermal model.
+                    
+                                      
+                                       # HINT: active this modality                                                                                                             # only with non constant thermal model.
    }                      
 }
 
@@ -227,8 +230,9 @@ $Physics
                                              # conductivity is negleted.
                                               
                                      true    # The particle thermal
-                                             # conductivity is considered
-                                      
+                                             # conductivity is consider. 
+                                             # The relative physical model
+                                             # is ParticleThermalConductivity
                                                                                      
     current_simulation = ...                 # The name of the drift
                                              # diffusion 
@@ -237,10 +241,13 @@ $Physics
                         <no_current>         # No drift diffusion 
                                              # simulation is condidered 
                         
-                                             # RACCOMANDATION: consider
-                                             # a drift diffusion simulation
-                                             # only there is at least one                                         
-                                             # physical quantity that needs it.                                                               
+                                             # RACCOMANDATION: 
+                                             # A drift diffusion simulation
+                                             # shoud be considered only     
+                                             # if there is at least one                                         
+                                             # physical quantity that needs it
+					     # (one of the previous flags are
+					     # true) .                                                                
   }
 }
 \end{verbatim}

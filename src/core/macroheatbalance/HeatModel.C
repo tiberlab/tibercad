@@ -127,9 +127,6 @@ void HeatModel::do_init()
     }
    
 
-
-
-
 }
 
 

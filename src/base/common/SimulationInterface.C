@@ -15,7 +15,7 @@
 #include "QuantumDispersion.h"
 #include "TightBinding.h"
 #include "OptRecombinSpectrum.h"
-
+#include "Poisson.h"
 #include "TunnelingCurrent.h"
 
 #include "Sweep.h"
@@ -107,6 +107,8 @@ SimulationInterface::create(const string& type,
       sim = TightBinding::create();
     else if (type == "opticalspectrum")
       sim = OptRecombinSpectrum::create();
+    else if (type == "poisson")
+      sim = Poisson::create();
 }
 
   if (sim != NULL)

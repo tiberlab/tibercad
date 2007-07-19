@@ -46,9 +46,9 @@ void MacroHeatBalance::parse_options( )
 
   const ModelOptions& sim_opt = get_options();
 
-  opt.kappa_solve = sim_opt.get_option("kappa_solve", "no_self");
+  opt.kappa_solve = sim_opt.get_option("kappa_temperature_sc", "false");
  
-  if (opt.kappa_solve.compare("self_consistent") == 0 )
+  if (opt.kappa_solve.compare("true") == 0 )
   {  
     opt.max_error = sim_opt.get_option("max_error",1e-2);
   }
@@ -68,7 +68,7 @@ void MacroHeatBalance::do_init( )
 
   mesh = & (_device->get_mesh());
 
-  dim = mesh->mesh_dimension();
+   dim = mesh->mesh_dimension();
 
 
   double mesh_units = _device->get_mesh_units();
@@ -130,7 +130,7 @@ void  MacroHeatBalance::do_solve()
   my_system->solve();
   
   
-  if (opt.kappa_solve.compare("self_consistent") == 0)
+   if (opt.kappa_solve.compare("self_consistent") == 0)
   {
     cout<<endl;
     cout<<"Start loop over lattice thermal conductivity"<<endl; 
@@ -267,7 +267,7 @@ BoundaryProperties* MacroHeatBalance::create_boundary_model (const ModelOptions 
 //----------------------------------------------------------------------------------//
 MacroHeatBalance*  MacroHeatBalance::create (void)
 {
-  return new MacroHeatBalance();
+  return new MacroHeatBalance;
 }
 
 //----------------------------------------------------------------------------------//
@@ -312,7 +312,7 @@ void MacroHeatBalance::build_nodal_results (const std::set< std::string > &varia
 	unsigned int id =  elem->node(n);
         
 	results[id]  =  (*(my_system->solution))(dof_indices[n]);       
-	//   std::cout<<results[id]<<std::endl;
+     
 
       }
     }
@@ -487,6 +487,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   double my_Jacobian = 1.0;
   for (short i = 1; i <= dim; i++)  my_Jacobian *= opt.length_scale;
   //----------------------------------------------------------------//
+
 
 
  

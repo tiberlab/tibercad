@@ -12,6 +12,7 @@ void  ZbLatticeThermalConductivity::read_database(void)
     
 
   const Material* mat = get_material();
+
   GetPot data((mat->get_database()).get_data_file());
 
  
