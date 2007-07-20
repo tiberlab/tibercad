@@ -172,6 +172,10 @@ class OpticsKP: public SimulationInterface
   std::vector<unsigned int> psivar;
   
 
+//! Mesh for spectrum [eV];
+  Mesh* _energy_mesh;
+
+
  protected:
 
   virtual void 	do_init(void);
@@ -179,6 +183,10 @@ class OpticsKP: public SimulationInterface
   virtual void 	do_solve (void);
 
   virtual void 	parse_options (void);
+
+
+ //! plot the  spectrum results for the single k-point case
+  virtual void do_plot();
 
 
 };

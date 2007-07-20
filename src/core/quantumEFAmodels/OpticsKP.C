@@ -8,6 +8,8 @@
 #include "EFAbulkModel.h"
 #include "SimulationEnvironment.h"
 #include "Material.h"
+#include "Control.h"
+#include "GraceIO.h"
 using namespace std; 
 using namespace Constants;
 
@@ -48,7 +50,7 @@ OpticsKP::OpticsKP()
 
   initial_state_model = NULL;
   final_state_model = NULL;
-
+  _energy_mesh = NULL;
 
 }
 
@@ -840,3 +842,169 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 //----------------------------------------------------------------------------------------//
 
 
+
+ void OpticsKP::do_plot()
+
+
+{ // do_plot
+
+// get  spectrum calculation  options from  opticsKP model  section 
+// for  calculation of  spectrum for a single k-point
+
+ const ModelOptions& mod_spectrum = get_options();
+
+ double  Gamma = mod_spectrum.get_option("broadening", 0.007);
+
+ double   Emin,  Emax,dE;
+
+  vector<double> polarization;
+  mod_spectrum.get_option("polarization", polarization);
+
+  Tensor1 polariz;
+
+  if (polarization.size() == 3)
+  {
+    polariz(1) = polarization[0];
+    polariz(2) = polarization[1];
+    polariz(3) = polarization[2];
+    
+    if (norm (polariz) != 0)
+      polariz = polariz/norm( polariz );
+    else
+      InitFailedException("OpticsKP: polarization vector must be non zero");
+  }
+  else
+    InitFailedException("OpticsKP: polarization vector must be defined\n");
+
+
+ if (mod_spectrum.find_option("Emin"))
+    Emin = mod_spectrum.get_option("Emin", 0.0);
+  else
+     throw InitFailedException("OpticsKP: Emin must be defined\n");
+
+
+  
+  if (mod_spectrum.find_option("Emax"))
+     Emax = mod_spectrum.get_option("Emax", 0.0);
+  else
+    throw InitFailedException("OpticsKP: Emin must be defined\n");
+
+
+
+ if (Emax < Emin)  throw InitFailedException("OpticsKP: Emax < Emin");
+
+  if (mod_spectrum.find_option("dE"))
+   dE = mod_spectrum.get_option("dE", 0.0);
+  else
+    throw InitFailedException("OpticsKP: dE must be defined\n");
+
+
+  if (dE <= 0)  throw InitFailedException("OpticsKP: dE <= 0");
+   
+ unsigned int num_nodes = (int)((Emax - Emin)/dE) + 1; 
+
+
+ // do  energy_mesh
+  _energy_mesh = new Mesh(1);
+
+
+  
+  MeshTools::Generation::build_cube (*_energy_mesh, 
+				     num_nodes, 0, 0, 
+				     Emin, Emax, 
+				     0, 0, 
+				     0, 0,
+				     EDGE2);
+
+
+  //  calculate_spectrum             ************  only  for case  k_0
+  //calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz, 
+  //                         std::map<const Elem*, double>& spectrum ) 
+
+  std::map<const Elem*, double> spectrum;
+  spectrum.clear();
+
+
+  calculate_spectrum( *_energy_mesh, Gamma,polariz, spectrum ) ;
+
+
+
+  //  Emin max , Gamma, polariz,  =  given in  optics model ???
+
+  string dimension;
+  double area_dim_factor = 1;
+
+  vector<string> names(1,"power_density_k0[W/eV" + dimension + "]"); 
+
+  vector<double> results;
+
+
+  MeshBase::const_element_iterator       elem_it  = _energy_mesh->active_elements_begin();
+  const MeshBase::const_element_iterator elem_end = _energy_mesh->active_elements_end();
+
+  for(;elem_it != elem_end; ++elem_it)
+  {
+    const Elem* el = *elem_it;
+    double value;
+    map<const Elem*, double>::iterator res_it = spectrum.find(el);
+    if (res_it != spectrum.end())
+    {
+      value = res_it->second; //[ 1/a.u._of_time/((bohr_radius)^kdim)]
+      value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
+      value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
+      value /= area_dim_factor ; //[J/(eV*second)/((cm)^kdim)]
+	 
+    }
+    else
+    {
+      cerr << "WARNING!!!!";
+    }
+       
+
+
+    results.push_back(value);
+
+  } 
+
+
+
+
+
+  string suffix = get_control().get_filename_suffix();
+  string outdir = get_control().get_output_dir();
+  string format = get_control().get_output_format();
+
+  string suff;
+  if (format == "gmv")
+    suff = ".gmv";
+  else if (format == "ise")
+    suff = ".plt";
+  else if (format == "grace")
+    suff = ".dat";
+
+  const std::set< std::string >& plotvariables = get_control().get_plotvariables();
+  if (plotvariables.find("optical_spectrum_k_0") != plotvariables.end())
+  {
+    string filename(outdir + "/" + get_name() +
+                    "_spectrum_k_0" + suffix + suff);
+
+
+    // ..............................................
+
+    if (format == "gmv")
+      GMVIO_cell(*_energy_mesh).write_ascii_cell_data(filename, results, names);
+    else if (format == "ise")
+      TecplotIO_cell(*_energy_mesh).write_cell_data(filename, results, names);
+    else if (format == "grace")
+      GraceIO(*_energy_mesh).write_elemental_data(filename, results, names);
+    else
+    {
+      cout << "Output format not supported. Falling back to GMV." << endl;
+      GMVIO_cell(*_energy_mesh).write_ascii_cell_data(filename, results, names);
+    }
+
+
+  }
+
+
+}

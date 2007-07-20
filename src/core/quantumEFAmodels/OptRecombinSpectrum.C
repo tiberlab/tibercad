@@ -269,12 +269,7 @@ void OptRecombinSpectrum::do_init( )
 				     0, 0,
 				     EDGE2);
 
-
-
-
-  
-
-
+ 
 }
 
 
