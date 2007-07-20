@@ -1095,7 +1095,7 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 // public  method to  read  device regions
 
 //const map <ID, RegionStructure>& InputParser::read_device(void)
-const void InputParser::read_device(void)
+void InputParser::read_device(void)
 
 {
 
@@ -1176,7 +1176,7 @@ const void InputParser::read_device(void)
 
       cut_off_comment(atomistic_region_name, in_stream );  //  in  case  layer#commmm
 
-      cerr << " ************** ATOMISTIC ************ " <<  atomistic_region_name << endl;
+      //cerr << " ************** ATOMISTIC ************ " <<  atomistic_region_name << endl;
 
       temp_options.clear();
       parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }

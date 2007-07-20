@@ -89,6 +89,7 @@ Control::init(void) throw (InitFailedException, ModelErrorException)
     // create the device, simulations and models
     create_device();
     create_materials();
+    create_atomistic_structures();
     setup_models();
     
     // initialize the device
@@ -193,7 +194,12 @@ Control::create_materials(void)
 
   InputParser parser(_inputfile);
 
-  const map<ID, RegionStructure>& device_map = parser.read_device();
+  parser.read_device();
+
+  //
+  // first we process the physical regions
+  // 
+  const map<ID, RegionStructure>& device_map = parser.get_device_map();
 
   // iterate the map and create the materials
   map<ID, RegionStructure>::const_iterator mapit(device_map.begin());
@@ -227,6 +233,45 @@ Control::create_materials(void)
   
 #ifdef DEBUG
   cerr << "Control::create_materials() end" << endl;
+#endif
+}
+
+
+
+void
+Control::create_atomistic_structures(void)
+{
+  
+#ifdef DEBUG
+  cerr << "Control::create_atomistic_structures() begin" << endl;
+#endif
+
+  assert(_device != NULL);
+
+  InputParser parser(_inputfile);
+
+  parser.read_device();
+
+  //
+  // and now we look for atomistic structures
+  //
+  const map<ID, RegionStructure>& atomistic_map = parser.get_atomistic_map();
+
+  // iterate the map and create the materials
+  map<ID, RegionStructure>::const_iterator mapit(atomistic_map.begin());
+  const map<ID, RegionStructure>::const_iterator mapend(atomistic_map.end());
+  for ( ; mapit != mapend; ++mapit)
+  {
+    const RegionStructure& data = mapit->second;
+
+
+    //const string& material = data.get_material_name();
+    //Material* mat = Material::create(material, data.get_options());
+    //_device->set_material(mat, region_ids);
+  }
+ 
+#ifdef DEBUG
+  cerr << "Control::create_atomistic_structures() end" << endl;
 #endif
 }
 

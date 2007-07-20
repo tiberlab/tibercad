@@ -89,7 +89,7 @@ class InputParser{
    * get a map of  physical regions and get_atomistic_map to get  a map of atomistic regions.
    */
 //    const std::map <ID, RegionStructure>& read_device(void);
-  const void read_device(void);
+  void read_device(void);
 
 
   //!   Gets the map of   device description (continuous media regions) 

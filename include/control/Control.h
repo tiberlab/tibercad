@@ -232,6 +232,10 @@ class Control
     //! Create all the materials
     void create_materials(void);
 
+    
+    //! Create all atomistic structures
+    void create_atomistic_structures(void);
+
 
     //! Create and setup the models
     void setup_models(void) throw (InitFailedException, ModelErrorException);
