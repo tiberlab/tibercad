@@ -65,6 +65,9 @@ namespace Constants
   //!Atomic unit of time [second] \f$ \hbar / Ha \f$
   extern const double atomic_time;
 
+
+  //!Fine structure constant. In Gauss units: \f$ e^2/(\hbar c)  \f$
+  extern const double fine_structure_constant;
 }
 
 

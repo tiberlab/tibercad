@@ -66,6 +66,8 @@ void OptRecombinSpectrum::do_plot()
          value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
 	 value /= area_dim_factor ; //[J/(eV*second)/((cm)^kdim)]
 	 
+
+
        }
        else
        {
@@ -135,7 +137,7 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
   vector<double> k_vector(3, 0.0);
   
 
-  cerr << k_point << "\n";
+ 
 
   k_vector[0] = k_point(0);
   k_vector[1] = k_point(1);
@@ -168,7 +170,7 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
 
   _optical_model->solve();
 
-  // get  spectrum data ("density") = map <const Elem*, double>&
+ 
 
 
   std::map<const Elem*, double>& spectrum = density;
@@ -178,15 +180,15 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
  
   _optical_model->calculate_spectrum(*_energy_mesh, opt.Gamma, opt.polariz,  spectrum );
 
-
-  
- 
-
-
-
-
-  // integrated_quantity needed for  mesh  refinement, for the  moment is  neglected.
+  //for integrated quantity I take a sum of the map
   integrated_quantity = 0.0;
+
+  std::map<const Elem*, double>::iterator it = spectrum.begin();
+  std::map<const Elem*, double>::iterator it1 = spectrum.end();
+
+  for (;it != it1; ++it)
+    integrated_quantity +=abs(it->second);
+
 
 }
 

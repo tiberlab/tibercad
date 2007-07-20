@@ -66,8 +66,8 @@ class OpticsKP: public SimulationInterface
   /*!
     \f$
     
-    P(\hbar \omega) = \sum_{i,j} 2 \pi \omega |{\bf M_{i,j} e}|^2 f_i(E_i)(1 - f_j(E_j)) 
-    \frac{\Gamma/2}{(E_i - E_j - \hbar \omega)^2 + (\Gamma/2)^2}
+    P(\hbar \omega) = \sum_{i,j} \frac{1}{2\pi^2}  \frac{\omega^2_{ij} e^2 }{m^2 c^3}  |{\bf M_{i,j} e}|^2 f_i(E_i)(1 - f_j(E_j)) 
+    \frac{\Gamma/2} {(\hbar \omega_{ij} - \hbar \omega)^2 + (\Gamma/2)^2} d\Omega
     \f$
       
     \param Energy energy grid [eV]

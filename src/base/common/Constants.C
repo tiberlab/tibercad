@@ -62,3 +62,6 @@ Constants::Lorenz_Number = (4.0 * k_Boltzmann *  k_Boltzmann ) / (M_PI);
 
 const double
 Constants::atomic_time = plancks_constant/Hartree;
+
+const double
+Constants::fine_structure_constant = 1.0/137.0359895;

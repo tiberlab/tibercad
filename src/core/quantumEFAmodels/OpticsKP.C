@@ -366,9 +366,13 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
         double En = elem->centroid()(0);
 
-        double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)  + (0.5*Gamma)*(0.5*Gamma)) * Hartree;
+        double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)  + (0.5*Gamma)*(0.5*Gamma)) / Hartree;
+
+	double c = 1.0/Constants::fine_structure_constant;
+
+	double omega = trans_energy/Hartree;
  
-        spectrum[elem] += 2 * M_PI * Lorenzian * abs (Me) * abs (Me) * f1 * (1 - f2);
+        spectrum[elem] += 1 / (2 * M_PI * M_PI) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * (1 - f2);
 
 
       }   
