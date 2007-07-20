@@ -123,7 +123,7 @@ physical_model Particle_thermal_conductivity
 }
 \end{verbatim}
 
-Here it reports also the thermoelectric power model, but it belongs
+Here  also the thermoelectric power model is reported , but it belongs
 to {\bf drift diffusion model}. This part will be moved from here.
 
 \begin{verbatim}
@@ -149,12 +149,12 @@ BC_Region thermal_contact
    
    BC_reg_numb = 1
         
-   type = <reservoir>          # Drichelet Boundary Condition 
+   type = <reservoir>          # Dirichlet Boundary Condition 
 
    temperature = 300           # Contact Temperature.  
         
-                 @T[300]       # Creation of the sweep variables.
-                                 300 K is the dafault
+                 @T[300]       # Creation of the sweep variable.
+                                 300 K is the default
                         
 }
 
@@ -184,22 +184,22 @@ $Solver
                                     # the simulation results (non uniform)
                                     
                             
-                            false   # the result simulation doesn't
-                                    # update the device temperature is still
-                                    # as specified in input (uniform)
+                            false   # simulation results don't
+                                    # update the device temperature, which keeps 
+                                    # the value specified in input (uniform)
 				    
       
       
-      kappa_temperature_sc = <false>   # A temperature - thermal conductivity 
-                                       # (both lattice and carriers ones)                                                                                                       #  self consistent loop is not computed.
+      kappa_temperature_sc = <false>   # The temperature-thermal conductivity 
+                                       # (both lattice and carriers ones)                                             # self consistent loop is not computed.
                                       
                              	
-                               true    # A temperature - thermal conductivity 
-                                       # (both lattice and carriers ones)                                                                                                       #  self consistent loop is computed.
+                               true    # The temperature-thermal conductivity 
+                                       # (both lattice and carriers ones)                                             #  self consistent loop is computed.
                                       
                     
                                       
-                                       # HINT: active this modality                                                                                                             # only with non constant thermal model.
+                                       # HINT: active this modality                                                   # only with non constant thermal model.
    }                      
 }
 
@@ -223,14 +223,14 @@ $Physics
                                              # effect is negleted
      
                       true                   # The Peltier effect
-                                             # is considered
+                                             # is included.
                                                  
     
     Particle_thermal_conductivity = <false>  # The particles thermal 
                                              # conductivity is negleted.
                                               
                                      true    # The particle thermal
-                                             # conductivity is consider. 
+                                             # conductivity is taken into account. 
                                              # The relative physical model
                                              # is ParticleThermalConductivity
                                                                                      
@@ -239,14 +239,14 @@ $Physics
                                              # simulation reference
                       
                         <no_current>         # No drift diffusion 
-                                             # simulation is condidered 
+                                             # simulation is condidered (only heat transport)
                         
                                              # RACCOMANDATION: 
                                              # A drift diffusion simulation
                                              # shoud be considered only     
                                              # if there is at least one                                         
                                              # physical quantity that needs it
-					     # (one of the previous flags are
+					     # (that is, one of the previous flags are
 					     # true) .                                                                
   }
 }

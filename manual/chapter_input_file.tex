@@ -50,10 +50,16 @@ $Device
 \end{verbatim}
 
 
+In \char`\"{}\textbf{Device}\char`\"{} section, two possible kinds of  block can be  present:
+the  \textbf{Region} block (at least one) and the \textbf{Atomistic} block (there can be none).
+\textbf{Region} blocks contain the  description of the device in  continuous media approach.
+\textbf{Atomistic} blocks, if present,  specify a possible atomistic description associated to one or to a group 
+of  physical regions described by \textbf{Region} blocks. So, for each \textbf{Atomistic} block defined in Input file,
+an atomic structure description will be  generated and used to solve a simulation problem with an  atomistic approach.
+The association to the  physical (macroscopic) regions of the  device allows the implementation of  multi-scale calculations. 
 
 
-
-  In \char`\"{}\textbf{Device}\char`\"{} section, each block (Region-block) must be preceded by the keyword \char`\"{}\textbf{Region}\char`\"{}, followed by the  (single-word) name of the physical region.
+Each  \textbf{Region} block must be preceded by the keyword \char`\"{}\textbf{Region}\char`\"{}, followed by the  (single-word) name of the physical region.
 For an ISE  mesh it must  be  the  same name defined during the  modeling of the  device.
 
 \begin{verbatim}
@@ -70,7 +76,7 @@ For an ISE  mesh it must  be  the  same name defined during the  modeling of the
 \end{verbatim}
 %The following keywords must always be  present in the body of each Region-block:  mat, reg\_numb .
 %Other keywords  are optionals.
-Here are the  description of  the available keywords for a Region-block.
+Here are the  description of  the available keywords for a \textbf{Region} block.
 
 %In the  header of  each block:
 %\textit{Region} :   name of the  region; for ISE grid mesh it should  be  the  name defined during the  modeling of the  device.
@@ -93,6 +99,29 @@ Here are the  description of  the available keywords for a Region-block.
 
 \textit{doping\_level}: energy level of  the dopant [eV]
 
+
+
+
+
+Each  \textbf{Atomistic} block must be preceded by the keyword \char`\"{}\textbf{Atomistic}\char`\"{}, followed by the  (single-word) name of the atomistic region.
+
+\begin{verbatim}
+Atomistic  TB_1
+
+ {
+    # atomistic region
+
+    physical_regions = ( 1, 2, 3)  # device regions to be described 
+                                    # with atomistic model.
+
+ }
+\end{verbatim}
+
+Here are the  description of  the available keywords for an \textbf{Atomistic} block.
+
+\textit{physical\_regions} (mandatory) : list of the physical regions of the device associated to an atomistic description.
+
+% ...................................................................
 
 \section{Models section }
 
