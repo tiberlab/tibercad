@@ -652,17 +652,13 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	 Boundary* bd = se.get_boundary(nd); 
 	 
 	 bool belongs_to_reservoir = false;
-	 
-	 const unsigned int num_sides = elem->n_sides();
-	 
+	 	 
 	 if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
 	 {
 	   ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
 	   
 	   if (contact->get_type() == ThermalContact::Reservoir)   belongs_to_reservoir = true;
 	 }
-	 
-	 
 	 
 	 if ( !belongs_to_reservoir ) 
 	 {//not fixed temperature2
@@ -692,7 +688,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		 
 		 const std::vector<Point>& qface_point = fe_face->get_xyz();
 		 
-		 const std::vector<Point> & normal = fe_face->get_normals();
+		 const std::vector<Point>& normal = fe_face->get_normals();
 		 
 		    
 		 heat_model->get_dd_solution(qface_point,face_potentials,face_currents);  

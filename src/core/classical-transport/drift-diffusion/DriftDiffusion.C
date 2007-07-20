@@ -2141,6 +2141,7 @@ DriftDiffusion::calculate_currents_surfint(void)
 
             sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
+
             sc->set_electric_field(phi0 * e_field);
 
             sc->calculate_densities();
