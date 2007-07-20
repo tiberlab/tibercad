@@ -4,55 +4,6 @@
 #include "gnuplot_io.h"
 using namespace std;
 
-void QuantumDensity::do_plot (void)
-{
-  //---------------------------------------------------------------------------
-  //standard output
-  SimulationInterface::do_plot();
-  //---------------------------------------------------------------------------
-  //k-space output
-  const Device& dev = get_environment().get_device();
-
-  string suffix = get_control().get_filename_suffix();
-  string outdir = get_control().get_output_dir();
-  string format = get_control().get_output_format();
-
-  string suff;
-  if (format == "gmv")
-    suff = ".gmv";
-  else if (format == "ise")
-    suff = ".plt";
-
-  const std::set< std::string >& plotvariables = get_control().get_plotvariables();
-
-  if (plotvariables.find("k-space_density") != plotvariables.end())
-  {
-    string filename(outdir + "/" + get_name() +
-        "_k_space" + suffix + suff);
-
-   
-
-    vector<string> names(1,"density[atomic_units]");
-
-    const vector<double> results = get_density_in_k_space();
-  
-
-
-    if (format == "gmv")
-      GMVIO_cell(get_k_mesh()).write_ascii_cell_data(filename, results, names);
-    else if (format == "ise")
-      TecplotIO_cell(get_k_mesh()).write_cell_data(filename, results, names);
-    else
-    {
-      cout << "Output format not supported. Falling back to GMV." << endl;
-      GMVIO_cell(get_k_mesh()).write_ascii_cell_data(filename, results, names);
-    }
-
-  }
-
-  //----------------------------------------------------------------------------
-}
-
 
 
 void QuantumDensity::get_particle_density(const Elem* element, const std::vector<double>& quad_points, std::vector<double> density)
@@ -308,46 +259,5 @@ void QuantumDensity::calculate_for_k_point(const Point& k_point,
  
 }
 
-//=================================================================//
-std::vector<double>   QuantumDensity::get_density_in_k_space(void)  const
-{
-  
-  vector<double> result ;
-
-  MeshBase::const_element_iterator       elem_it  = kmesh->active_elements_begin();
-  const MeshBase::const_element_iterator elem_end = kmesh->active_elements_end(); 
-
-  unsigned int n_active_elements = 0;
-
-  for ( ; elem_it !=  elem_end ; ++elem_it )
-  {
-    n_active_elements++;
-  }
-    
-    
-    
-
-  result.resize( n_active_elements );
-  elem_it  = kmesh->active_elements_begin();
-    
-  unsigned int j = 0;
-  for ( ; elem_it !=  elem_end; ++elem_it )
-  {
-    const Elem* el = *elem_it;
-   
-
-    map <const Elem*, double >::const_iterator it1 = kspace_integral.find(el);
-    map <const Elem*, double >::const_iterator it2 = volume.find(el);
-
-    result[j] = it1->second / it2->second;
-    
-
-    j++;
-  }
-
-
-
- 
-}
 
 //=================================================================// 

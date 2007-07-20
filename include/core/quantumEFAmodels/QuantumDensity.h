@@ -115,8 +115,8 @@ class QuantumDensity : public KspaceIntegration
 
 
 
-  //!returns \f$ \rho({\bf k} ) = \int \rho{\bf{ k, r}}  d{\bf r} \f$
-  std::vector<double>  get_density_in_k_space(void)  const;
+ 
+ 
 
   //!creates a new object 
   static  QuantumDensity* create();
@@ -162,8 +162,6 @@ class QuantumDensity : public KspaceIntegration
 
    virtual void 	parse_options (void);
 
-   //!is reimplemented here to be able to do output over k-space 
-   virtual void 	do_plot (void);
 
 
    //!calculates objects k_point_density and eigen_energy

@@ -6,9 +6,11 @@
 #include "GraceIO.h"
 using namespace std;
 
+
 void OptRecombinSpectrum::do_plot()
 {
- // const Device& dev = get_environment().get_device();
+ 
+  KspaceIntegration::do_plot();
 
   string suffix = get_control().get_filename_suffix();
   string outdir = get_control().get_output_dir();

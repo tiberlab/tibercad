@@ -152,6 +152,14 @@ class KspaceIntegration : public Kspace
 
    virtual void do_init(void);
 
+  
+   //!does k-space output
+   virtual void do_plot(void);
+
+   //!calculates integrated quantity distribution over k space
+   virtual std::vector<double>  get_density_in_k_space(void)  const;
+   
+
  private:
 
    
