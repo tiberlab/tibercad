@@ -85,10 +85,31 @@ class InputParser{
 
   //!   Parses the  device section of  input  file 
   /*!
-   * Method to  read   the  device section of  input  file: returns a map 
-   * between region ID and its RegionStructure.
+   * Method to  read   the  device section of  input  file. Use get_device_map to  
+   * get a map of  physical regions and get_atomistic_map to get  a map of atomistic regions.
    */
-  const std::map <ID, RegionStructure>& read_device(void);
+//    const std::map <ID, RegionStructure>& read_device(void);
+  const void read_device(void);
+
+
+  //!   Gets the map of   device description (continuous media regions) 
+  /*!
+   * Returns   a  map which associates an incremental physical region ID
+   * with the associated RegionStructure object.
+   */
+  std::map <ID, RegionStructure>& get_device_map(void); 
+
+
+  //!   Gets the map of  atomistic regions. 
+  /*!
+   * Returns   a  map which associates an incremental atomistic  region ID 
+   * with the associated RegionStructure object (which should contain, among other parameters, 
+   * the  list of physical regions 
+   * associated to each atomistic region; for each of these an atomic structure description will be  generated
+   * by  the  atomistic generator).
+   */
+  std::map <ID, RegionStructure>& get_atomistic_map(void); 
+
 
 
   //!  Parses the "Models"  section  of the  input file. 
@@ -182,9 +203,14 @@ class InputParser{
 
 
   /*!
-   *   Map between physical region number  and  the Region Structure associated to it.
+   *   Map between physical region incremental ID  and  the Region Structure associated to it.
    */
   std::map <ID, RegionStructure> device_map;
+
+  /*!
+   *   Map between atomistic region  incremental ID   and  the Region Structure associated to it.
+   */
+  std::map <ID, RegionStructure> atomistic_regions_map;
   
   /*!
    *   Map between  model name and  \c ModelStructure object associated.
@@ -284,12 +310,7 @@ class InputParser{
   const  ModelOptions& get_options(void);
 
 
-  //!   Gets the map of   device description. 
-  /*!
-   * Returns   a  map which associates a physical region number 
-   * with the associated RegionStructure object.
-   */
-  std::map <ID, RegionStructure>& get_device_map(void); 
+  
 
 
 

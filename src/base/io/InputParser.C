@@ -681,8 +681,8 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 
 
   //*******  special  characters for  the  label
-  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',') 
-                         | ch_p('%')   | ch_p('@') | ch_p('[') | ch_p(']') );
+      rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',') 
+                             | ch_p('%')   | ch_p('@') | ch_p('[') | ch_p(']') );
 
   //    rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',')    );
   //  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+')    );
@@ -959,7 +959,7 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
                   for (int i =0; i< v_label_string.size();++i)
                   {
                     string_prop_labels.push_back(v_label_string[i]);
-                //    cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+                    //    cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
 
                     string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
 
@@ -1094,15 +1094,18 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 
 // public  method to  read  device regions
 
-const map <ID, RegionStructure>& InputParser::read_device(void)
+//const map <ID, RegionStructure>& InputParser::read_device(void)
+const void InputParser::read_device(void)
+
 {
 
-  std::string  label, keyword,region_name, section_name   ;
+  std::string  label, keyword,region_name, atomistic_region_name, section_name   ;
   std::ifstream in_stream (filename.c_str()) ;
   ID current_region_ID; //  to be  deleted
   bool  check_error;
-  ID region_counter;
+  ID region_counter,atomistic_region_counter ;
   region_counter = 0;
+  atomistic_region_counter = 0;
 
   reset_all_maps();
 
@@ -1137,7 +1140,7 @@ const map <ID, RegionStructure>& InputParser::read_device(void)
 
 
   //  ********************************
-  //  read keyword Region
+  //  read keyword Region  (or Atomistic )
   in_stream >> keyword;
 
   //  skip_comments(in_stream,keyword );
@@ -1157,110 +1160,170 @@ const map <ID, RegionStructure>& InputParser::read_device(void)
   while  (keyword !=  end_symb)
   {
 
-    if  (keyword != "Region")
+
+    if  (keyword == "Atomistic")
     {
-      throw InitFailedException("SYNTAX ERROR in input  file (device section): keyword Region is  missing! ");
-    
+      //      *********** read  atomistic ***********************
+
+      //     read   region_name
+      in_stream >>atomistic_region_name;
+      atomistic_region_counter++;
+      //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+      while (skip_comments(in_stream,region_name) == true )
+      {
+        in_stream >> atomistic_region_name; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+      } 
+
+      cut_off_comment(atomistic_region_name, in_stream );  //  in  case  layer#commmm
+
+      cerr << " ************** ATOMISTIC ************ " <<  atomistic_region_name << endl;
+
+      temp_options.clear();
+      parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
+
+      //....................
+
+      // create new RegionStructure
+      RegionStructure current_region_structure;
+
+      string  atomistic_region_numb  , def1;
+
+      // put  atomistic region_name  in RegionStructure
+      current_region_structure.set_region_name(atomistic_region_name );
+
+      current_region_structure.set_model_options(temp_options);
+      //  temp_options contains  atomistic ID and all  other data (list of phis region ID) 
+
+ //     atomistic_region_numb = temp_options.get_option( "atomistic_region_numb" ,def1);
+
+      atomistic_regions_map.insert(make_pair (atomistic_region_counter, current_region_structure ));
+
+
+
+
     }
 
-    //     read   region_name
-    in_stream >>region_name;
-    region_counter++;
 
-    //  cout <<  " region_name = " << region_name <<  endl; 
+    else if (keyword == "Region")
+    {  //  read  Physical Region
+
+      //    if  (keyword != "Region")
+      //     {
+      //       throw InitFailedException("SYNTAX ERROR in input  file (device section): keyword Region is  missing! ");
     
-    //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
-    while (skip_comments(in_stream,region_name) == true )
-    {
-      in_stream >> region_name; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-    } 
+      //     }
 
-    cut_off_comment(region_name, in_stream );  //  in  case  layer#commmm
+      //     read   region_name
+      in_stream >>region_name;
+      region_counter++;
+
+      //  cout <<  " region_name = " << region_name <<  endl; 
+    
+      //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+      while (skip_comments(in_stream,region_name) == true )
+      {
+        in_stream >> region_name; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+      } 
+
+      cut_off_comment(region_name, in_stream );  //  in  case  layer#commmm
   
        
  
-    //  parse_options(in_stream);   //    read  the  block  between  { and  }
+      //  parse_options(in_stream);   //    read  the  block  between  { and  }
 
 
 
-    //  ********************  NEW options  **********************
+      //  ********************  NEW options  **********************
 
    
 
 
-    // create  new ModelOptions  
-    // ModelOptions temp_region_options; private  member 
-    //  
+      // create  new ModelOptions  
+      // ModelOptions temp_region_options; private  member 
+      //  
 
-    temp_options.clear();
-    parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
+      temp_options.clear();
+      parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
 
-    // extract and delete name, ID and  mat   from  temp_region_options
-    // ................
-    string material, region_numb , def;
-
-
-    material  = temp_options.get_option( "mat" ,def);
-    // material  = temp_options.get_option( "material" ,def);
-
-    temp_options.delete_option ( "mat" );
-    //    temp_options.delete_option ( "material" );
-
-    region_numb = temp_options.get_option( "reg_numb" ,def);
-    //    region_numb = temp_options.get_option( "region_ID" ,def);
-
-    temp_options.delete_option ( "reg_numb" );
-    //    temp_options.delete_option ( "region_ID" );
+      // extract and delete name, ID and  mat   from  temp_region_options
+      // ................
+      string material, region_numb , def;
 
 
-    // create new RegionStructure
-    RegionStructure current_region_structure;
+      material  = temp_options.get_option( "mat" ,def);
+      // material  = temp_options.get_option( "material" ,def);
+
+      temp_options.delete_option ( "mat" );
+      //    temp_options.delete_option ( "material" );
+
+      region_numb = temp_options.get_option( "reg_numb" ,def);
+      //    region_numb = temp_options.get_option( "region_ID" ,def);
+
+      temp_options.delete_option ( "reg_numb" );
+      //    temp_options.delete_option ( "region_ID" );
 
 
-    //put  region_name  current_region_ID, material  and temp_region_options in RegionStructure
-
-    current_region_structure.set_region_name(region_name);
-    current_region_structure.set_region_ID(region_numb);
-
-    current_region_structure.set_material_name(material);
-    current_region_structure.set_model_options(temp_options);
-
-    //   current_region_structure.set_model_options(temp_region_options);
-    current_region_ID   = atoi(region_numb.c_str());
-
-    // ****************************************************
-    // instead of  current_region_ID,  put  incremental ID in map device_map: region_counter
-    // device_map.insert(make_pair (region_counter, current_region_structure )); 
-
-    device_map.insert(make_pair (region_counter, current_region_structure ));
-
-    //    device_map.insert(make_pair (current_region_ID, current_region_structure )); 
-
-    // ***************************************
+      // create new RegionStructure
+      RegionStructure current_region_structure;
 
 
-    //  put region_name in map  map_region <string,string >
-    // region_map.insert(make_pair ("region_name",region_name  ));  
-    string_prop_labels_map.insert(make_pair ("region_name",region_name  )); 
+      //put  region_name  current_region_ID, material  and temp_region_options in RegionStructure
+
+      current_region_structure.set_region_name(region_name);
+      current_region_structure.set_region_ID(region_numb);
+
+      current_region_structure.set_material_name(material);
+      current_region_structure.set_model_options(temp_options);
+
+      //   current_region_structure.set_model_options(temp_region_options);
+      current_region_ID   = atoi(region_numb.c_str());
+
+      // ****************************************************
+      // instead of  current_region_ID,  put  incremental ID in map device_map: region_counter
+      // device_map.insert(make_pair (region_counter, current_region_structure )); 
+
+      device_map.insert(make_pair (region_counter, current_region_structure ));
+
+      //    device_map.insert(make_pair (current_region_ID, current_region_structure )); 
+
+      // ***************************************
 
 
-    //  get   ID of   the  current region :
-    //    ID = map_region[reg_mumb]
-    //  current_region_ID   = atoi(string_prop_labels_map["reg_numb"].c_str());
-    // cout <<  current_region_ID << endl;
+      //  put region_name in map  map_region <string,string >
+      // region_map.insert(make_pair ("region_name",region_name  ));  
+      string_prop_labels_map.insert(make_pair ("region_name",region_name  )); //  Obsolete ???
 
 
-    //  put  in  map  <ID, map_region   >
-    //   the map map_region <string,string >
-    //  device_map.insert(make_pair (ID,map_region  ));   
+      //  get   ID of   the  current region :
+      //    ID = map_region[reg_mumb]
+      //  current_region_ID   = atoi(string_prop_labels_map["reg_numb"].c_str());
+      // cout <<  current_region_ID << endl;
 
-    //    device_map.insert(make_pair (current_region_ID, string_prop_labels_map ));  
+
+      //  put  in  map  <ID, map_region   >
+      //   the map map_region <string,string >
+      //  device_map.insert(make_pair (ID,map_region  ));   
+
+      //    device_map.insert(make_pair (current_region_ID, string_prop_labels_map ));  
 
 
-    //cout <<  "(device_map[current_region_ID])[mat]  =  " << (device_map[current_region_ID])["mat"] << endl  ;
+      //cout <<  "(device_map[current_region_ID])[mat]  =  " << (device_map[current_region_ID])["mat"] << endl  ;
 
-    //    next   Region    
-    string_prop_labels_map.clear();
+     
+      string_prop_labels_map.clear(); //  Obsolete ???
+
+
+    } //  end  read Region
+
+
+    else 
+    {
+      throw InitFailedException("SYNTAX ERROR in input  file (device section): keyword Region or Atomistic  is  missing! ");
+    
+    }
+
+
+    //    next   Region  
     in_stream >> keyword;
 
     //   skip_comments(in_stream,keyword );
@@ -1276,7 +1339,7 @@ const map <ID, RegionStructure>& InputParser::read_device(void)
   }  //end   while 
      
   // map <ID, RegionStructure>& InputParser::get_device_map(void)
-  return device_map;
+//    return device_map;  //  to  be  read  from  get_device_map  !!!!
 
 
 }      //  end   Device   section 
@@ -1293,6 +1356,12 @@ map <ID, RegionStructure>& InputParser::get_device_map(void)
 
 } 
 
+map <ID, RegionStructure>& InputParser::get_atomistic_map(void)
+{
+
+  return atomistic_regions_map;
+
+} 
 
 
 
