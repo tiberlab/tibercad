@@ -232,19 +232,103 @@ If omitted, the first available strain simulation will be used.
 \section{\texttt{Solver} section}
 
 The parameters for the numerical solver depend on the type of solver being used and on the device to be simulated.
+The linear and nonlinear solvers to be used can be chosen using the keywords \texttt{linear\_solver} and \texttt{nonlinear\_solver}, respectively.
+For the nonlinear solver one can chose between the PETSc implementation (\texttt{petsc}) and the \TiberCAD implementation (\texttt{tiber}) of line search.
+When using the \TiberCAD nonlinear solver, one can additionally chose between the PETSc (\texttt{petsc}) or PARDISO  (\texttt{pardiso}) linear solvers.
+The possible combinations are:
+\begin{verbatim}
+nonlinear_solver = petsc
+\end{verbatim}
+or
+\begin{verbatim}
+nonlinear_solver = tiber
+linear_solver = petsc | pardiso
+\end{verbatim}
 
 \subsection{Parameters for PETSc solvers}
 
-Table~\ref{tab:petsc_params} lists all solver parameters significant for the PETSc linear and nonlinear solvers.
+Tables~\ref{tab:petsc_nonlin_params} and~\ref{tab:petsc_lin_params} list all solver parameters significant for the PETSc linear and nonlinear solvers.
+A more detailed description of the most important parameters follows.
 \begin{table}[htb]
 \center
+\begin{minipage}{0.9\textwidth}
+\begin{tabular}{l||p{8cm}|l}
+\textit{keyword} & \textit{description} & \textit{default} \\
+\hline \hline
+\texttt{nonlin\_rel\_tol} & relative tolerance for the residual $l_2$-norm (with respect to first nonlinear step) & \texttt{10e-9} \\
+\texttt{nonlin\_abs\_tol} & absolute tolerance for the residual $l_2$-norm & \texttt{10e-15} \\
+\texttt{nonlin\_step\_tol} & tolerance for the $l_2$-norm of the nonlinear step & \texttt{10e-3} \\
+\texttt{ls\_max\_step} & the maximum $l_2$-norm for the line search step, in units of eV & \texttt{1} \\
+\texttt{nonlin\_max\_it} & maximum number of nonlinear iterations & \texttt{20} \\
+\end{tabular}
+\end{minipage}
+\caption{Parameters for the PETSc nonlinear solver}
+\label{tab:petsc_nonlin_params}
+\end{table}
+
+\begin{table}[htb]
+\center
+\begin{minipage}{0.9\textwidth}
 \begin{tabular}{l||p{8cm}|l}
 \textit{keyword} & \textit{description} & \textit{default} \\
 \hline \hline
 \texttt{ksp\_type} & the linear solver type & \texttt{bcgsl} \\
-\texttt{nonlin\_rel\_tol} & relative tolerance for the residual $l_2$-norm (with respect to first nonlinear step) & \texttt{10e-9}
+\texttt{pc\_type} & the preconditioner type & \texttt{ilu} \\
+\texttt{lin\_rel\_tol} & relative tolerance for the linear solver & \texttt{1e-6}\protect\footnote{The linear tolerance gets automatically decreased after each nonlinear step.} \\
+\texttt{lin\_abs\_tol} & absolute tolerance for the linear solver & \texttt{10e-50} \\
+\texttt{lin\_max\_it} & maximum number of linear iterations & \texttt{500} 
 \end{tabular}
-\caption{Parameters for the simple semiconductor model}
-\label{table:petsc_params}
+\end{minipage}
+\caption{Parameters for the PETSc linear solver}
+\label{tab:petsc_lin_params}
 \end{table}
 
+
+The \texttt{ksp\_type} specifies the type of Krylov subspace method to be used.
+The mostly used methods are
+\begin{description}
+\item{\texttt{bcgs}} A stabilized version of the biconjugate gradient method. This one works better in 1D than \texttt{bcgsl}.
+\item{\texttt{bcgsl}} (default) A modified version of  \texttt{bcgs}.
+\item{\texttt{gmres}} Generalized minimal residual method.
+\end{description}
+
+The \texttt{pc\_type} specifies the type of preconditioner to be used.
+The most useful ones are
+\begin{description}
+\item{\texttt{ilu}} (default) Incomplete LU factorization. Does not work for materials with high band gap.
+\item{\texttt{jacobi}} Jacobi preconditioning (diagonal scaling).
+\item{\texttt{composite}} Combination of \texttt{ilu} and \texttt{jacobi}.
+\end{description}
+
+The \texttt{ls\_max\_step} parameter defines an upper bound of the $l_2$-norm of the nonlinear line search step.
+It should be not too big to prevent the algorithm from diverging, but also not too small to minimize the number of iterations.
+Values between 1 and 10 should be a good choice.
+
+The \texttt{nonlin\_step\_tol} defines at which line search step size (in $l_2$-norm) the algorithm stops, i.e. assumes to have reached convergence.
+\texttt{nonlin\_step\_tol} is measured in eV.
+
+
+\subsection{Parameters for the \TiberCAD nonlinear solver}
+Table~\ref{tab:tiber_params} summarizes the parameters used for the \TiberCAD implementation of the line search algorithm.
+\begin{table}[htb]
+\center
+\begin{minipage}{0.9\textwidth}
+\begin{tabular}{l||p{8cm}|l}
+\textit{keyword} & \textit{description} & \textit{default} \\
+\hline \hline
+\texttt{nonlin\_rel\_tol} & relative tolerance for the residual $l_2$-norm (with respect to first nonlinear step) & \texttt{10e-9} \\
+\texttt{nonlin\_abs\_tol} & absolute tolerance for the residual $l_2$-norm & \texttt{10e-15} \\
+\texttt{nonlin\_step\_tol} & tolerance for the maximum norm of the nonlinear step (eV) & \texttt{10e-3} \\
+\texttt{nonlin\_max\_it} & maximum number of nonlinear iterations & \texttt{20} \\
+\end{tabular}
+\end{minipage}
+\caption{Parameters for the \TiberCAD line search}
+\label{tab:tiber_params}
+\end{table}
+
+The stopping criterion based on the line search step uses the maximum norm of the nonlinear step, i.e. convergence is controlled locally.
+In addition to the parameters in table~\ref{tab:tiber_params} one has to provide also parameters for the linear solver.
+
+\subsection{Parameters for the PARDISO linear solver}
+
+Currently the PARDISO interface has no adjustable parameters.
