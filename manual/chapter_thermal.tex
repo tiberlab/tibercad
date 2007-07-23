@@ -191,15 +191,18 @@ $Solver
       
       
       kappa_temperature_sc = <false>   # The temperature-thermal conductivity 
-                                       # (both lattice and carriers ones)                                             # self consistent loop is not computed.
+                                       # (both lattice and carriers ones)
+                                        # self consistent loop is not computed.
                                       
                              	
                                true    # The temperature-thermal conductivity 
-                                       # (both lattice and carriers ones)                                             #  self consistent loop is computed.
+                                       # (both lattice and carriers ones)
+                                       #  self consistent loop is computed.
                                       
                     
                                       
-                                       # HINT: active this modality                                                   # only with non constant thermal model.
+                                       # HINT: active this modality                                               
+                                       # only with non constant thermal model.
    }                      
 }
 
@@ -239,15 +242,16 @@ $Physics
                                              # simulation reference
                       
                         <no_current>         # No drift diffusion 
-                                             # simulation is condidered (only heat transport)
+                                             # simulation is condidered 
+                                             # (only heat transport)
                         
                                              # RACCOMANDATION: 
                                              # A drift diffusion simulation
                                              # shoud be considered only     
                                              # if there is at least one                                         
-                                             # physical quantity that needs it
-					     # (that is, one of the previous flags are
-					     # true) .                                                                
+                                             # physical quantity that needs it 
+                                             # (that is, one of the previous 
+                                             # flags are true) .                                                                
   }
 }
 \end{verbatim}
