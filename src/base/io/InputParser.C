@@ -1169,7 +1169,7 @@ void InputParser::read_device(void)
       in_stream >>atomistic_region_name;
       atomistic_region_counter++;
       //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
-      while (skip_comments(in_stream,region_name) == true )
+      while (skip_comments(in_stream,atomistic_region_name) == true )
       {
         in_stream >> atomistic_region_name; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
       } 
