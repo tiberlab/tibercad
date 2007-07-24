@@ -240,7 +240,7 @@ void KspaceIntegration::calculate_convergent_density()
  
   real_space_density.clear();
 
-
+  calculate_volumes();
 
   calculate_density();
 
@@ -309,6 +309,8 @@ void KspaceIntegration::calculate_convergent_density()
 	old_real_space_density = real_space_density;
 
 	real_space_density.clear();
+
+	calculate_volumes();
 
 	calculate_density();
 
@@ -506,7 +508,12 @@ std::vector<double>   KspaceIntegration::get_density_in_k_space(void)  const
    
 
     map <const Elem*, double >::const_iterator it1 = kspace_integral.find(el);
+    
+
     map <const Elem*, double >::const_iterator it2 = volume.find(el);
+
+
+ 
 
     result[j] = it1->second / it2->second;
     
