@@ -268,6 +268,37 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Get the relaxation factor
     double get_relaxation_factor(void) const;
 
+
+    /*!
+     * \copydoc convert_variable_name_to_id()
+     *
+     * Calls convert_variable_name_to_id()
+     */
+    ID get_variable_id(const std::string& variable_name) const;
+
+
+    /*!
+     *
+     * \copydoc get_solution_secure(const Elem*,
+     *   const std::vector<ID>&, std::vector<double>&) 
+     *
+     * Calls get_solution_secure(const Elem*,
+     *   const std::vector<ID>&, std::vector<double>&) 
+     */
+    void get_solution(const Elem* elem, const std::vector<ID>& ids,
+        std::vector<std::vector<double> >& values);
+
+
+    /*!
+     *
+     * \copydoc get_solution_secure(const Elem*, const std::vector<Point>&,
+     *   const std::vector<ID>&, std::vector<std::vector<double> >&)
+     *
+     * Calls get_solution_secure(const Elem*, const std::vector<Point>&,
+     *   const std::vector<ID>&, std::vector<std::vector<double> >&)
+     */
+    void get_solution(const Elem* elem, const std::vector<Point>& p,
+        const std::vector<ID>& ids, std::vector<std::vector<double> >& values);
     
     /*!
      * \copydoc build_nodal_results()
@@ -469,7 +500,61 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     
     //! Get the unique name for the equation system
     const std::string& get_equation_system_name(void) const;
+
     
+    //! Get the ID for a given variable name
+    /*!
+     * An ID of \c INVALID_ID represents an unknown variable.
+     *
+     * \param the name of the variable as a string
+     * \return the ID of the variable as a numerical value
+     */
+    virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
+    
+    
+    //! Get solution values on the nodes of a specified element
+    /*!
+     *
+     * \param elem a pointer to the element
+     * \param ids identifiers for the variables to be returned
+     * \param values a vector to store the values. The first index corresponds to
+     * the node.
+     *
+     */
+    virtual void get_solution_secure(const Elem* elem,
+        const std::vector<ID>& ids, std::vector<std::vector<double> >& values) {};
+
+
+    //! Get solution values on inner points of a specified element
+    /*!
+     *
+     * \param elem a pointer to the element
+     * \param p a vector with the points. All Points are assumed to lie in
+     * \c elem
+     * \param ids identifiers for the variables to be returned
+     * \param values a vector to store the values. The first index corresponds to
+     * the point.
+     * 
+     */
+    virtual void get_solution_secure(const Elem* elem,
+        const std::vector<Point>& p, const std::vector<ID>& ids,
+        std::vector<std::vector<double> >& values) {};
+
+    
+    //! Get the solution values on one point of an element
+    /*!
+     *
+     * \param elem a pointer to the element
+     * \param p the point (assumed to lie in \c elem)
+     * \param values a vector to store the values.
+     * 
+     */
+    virtual void get_solution_secure(const Elem* elem,
+        const Point& p, const std::vector<ID>& ids,
+        std::vector<double>& values);
+
+
+
 
     //! Build nodal result vector for the given variables
     /*!
@@ -858,6 +943,37 @@ SimulationInterface::set_scaling(const Scaling& scaling)
   _scaling = scaling;
 }
 
+
+inline
+ID
+SimulationInterface::get_variable_id(const std::string& variable_name) const
+{
+  return convert_variable_name_to_id(variable_name);
+}
+
+
+inline
+ID
+SimulationInterface::convert_variable_name_to_id(
+    const std::string& variable_name) const
+{
+  ignore_unused_variable(variable_name);
+  return INVALID_ID;
+}
+
+
+inline
+void
+SimulationInterface::get_solution_secure(const Elem* elem,
+    const Point& p, const std::vector<ID>& ids, std::vector<double>& values)
+{
+  std::vector<Point> pvec(1, p);
+  std::vector<std::vector<double> > valvec(1);
+  
+  get_solution_secure(elem, pvec, ids, valvec);
+
+  values = valvec[0];
+}
 
 
 

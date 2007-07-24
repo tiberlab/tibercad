@@ -43,7 +43,9 @@ SimpleSemiconductorModel::do_init(void)
   
   permittivity = opt.get_option("permittivity", 11.7);
 
-  polarization(0) = opt.get_option("Px", 0.0);
-  polarization(1) = opt.get_option("Py", 0.0);
-  polarization(2) = opt.get_option("Pz", 0.0);
+  pyro_polarization(0) = opt.get_option("Px", 0.0);
+  pyro_polarization(1) = opt.get_option("Py", 0.0);
+  pyro_polarization(2) = opt.get_option("Pz", 0.0);
+  
+  
 }

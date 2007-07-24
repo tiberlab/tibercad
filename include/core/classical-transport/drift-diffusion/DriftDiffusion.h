@@ -56,6 +56,21 @@ cre* mobilities and recombinations.
 class DriftDiffusion : public SimulationInterface
 {
   public:
+
+
+    //! The variables that can be provided
+    enum Variables
+    {
+      UNKNOWN = INVALID_ID,
+      ELECTRICPOTENTIAL,
+      EFERMI,
+      HFERMI,
+      CBANDEDGE,
+      VBANDEDGE,
+      EDENSITY,
+      HDENSITY
+    };
+      
  
     //! The solver methods that can be used
     enum SolverMethod
@@ -645,6 +660,28 @@ class DriftDiffusion : public SimulationInterface
     virtual double do_maximum_norm_of_difference(ID id);
 
 
+    /*! \copydoc SimulationInterface::convert_variable_to_id() */
+    virtual ID convert_variable_name_to_id(const std::string& variable_name);
+
+
+    /* \copydoc SimulationInterface::get_solution_secure(const Elem*,
+     * const std::vector<ID>&, std::vector<std::vector<double> >&)
+     */
+    virtual void get_solution_secure(const Elem* elem,
+        const std::vector<ID>& ids,
+        std::vector<std::vector<double> >& values);
+
+
+    /* \copydoc SimulationInterface::get_solution_secure(const Elem*,
+     * const std::vector<Point>&, const std::vector<ID>&,
+     * std::vector<std::vector<double> >&)
+     */
+    virtual void get_solution_secure(const Elem* elem,
+        const std::vector<Point>& p,
+        const std::vector<ID>& ids,
+        std::vector<std::vector<double> >& solution);
+
+
   private:
    
 
@@ -708,6 +745,7 @@ class DriftDiffusion : public SimulationInterface
 
     //! The local density scaling
     std::map<const Node*, std::vector<double> > local_scaling_;
+
 
     //! If true, local density scaling should be applied
     bool do_local_scaling_;

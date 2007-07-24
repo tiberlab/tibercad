@@ -747,3 +747,83 @@ SimulationInterface::get_integrated_quantities_description(
 
 
 
+void
+SimulationInterface::get_solution(const Elem* elem, const vector<ID>& ids,
+    vector<vector<double> >& values)
+{
+
+  SimulationEnvironment& env = get_environment();
+
+  if (!env.contains_element(elem))
+  {
+    // TODO look for nodes
+  }
+  else
+    get_solution_secure(elem, ids, values);
+
+}
+
+
+
+void
+SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
+    const vector<ID>& ids, vector<vector<double> >& values)
+{
+  unsigned int np = p.size();
+  values.resize(np);
+  if (np == 0) return;
+
+  // this will contain the element in which p lies and for which
+  // DriftDiffusion knows the potential
+  const Elem* el = elem;
+
+  SimulationEnvironment& env = get_environment();
+  
+  // check if elem is an active element of the simulation
+  if (!env.contains_element(elem))
+  {
+    // do we have a parent element in the list?
+    const Elem* parent = elem->parent();
+
+    while ((parent != NULL) && (!env.contains_element(parent)))
+      parent = parent->parent();
+
+    el = parent; // is NULL if no parent
+  }
+
+  if (el != NULL) // we found it!
+    get_solution_secure(el, p, ids, values);
+  else
+  {
+    // no parent, so check for children
+    vector<const Elem*> tree;
+    elem->family_tree(tree, false);
+
+    set<const Elem*> elem_list;
+    unsigned int len = tree.size();
+    for (unsigned int i = 0; i < len; i++)
+    {
+      const Elem* elem_i = tree[i];
+      if (env.contains_element(elem_i))
+        elem_list.insert(elem_i);
+    }
+    for (unsigned int i = 0; i < np; i++)
+    {
+      set<const Elem*>::iterator el_it = elem_list.begin();
+      set<const Elem*>::iterator el_end = elem_list.end();
+      for ( ; el_it != el_end; ++el_it)
+      {
+        el = *el_it;
+        if (el->contains_point(p[i]))
+        {
+          get_solution_secure(el, p[i], ids, values[i]);
+          // we have found it, so get out of the for loop
+          break;
+        }
+      }
+      if (el_it == el_end)
+        values[i].resize(0);
+    }
+  }
+}
+

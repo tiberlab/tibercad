@@ -741,6 +741,11 @@ DriftDiffusion::do_equilibrium(void)
   // make a rough guess
   guess_equilibrium();
 
+
+  //if (do_local_scaling_)
+  //  build_local_scaling();
+
+
   try
   {
     cerr << "Solving equilibrium" << endl;
@@ -876,7 +881,7 @@ DriftDiffusion::parse_const_options(void)
   else
     myopts.scaling_type = Scaling::UNITS;
 
-  do_local_scaling_ = opts.get_option("local_density_scaling", false);
+  do_local_scaling_ = opts.get_option("local_scaling", true);
 
   string discretization = opts.get_option("discretization", "");
   if (discretization == "fem")
@@ -1122,7 +1127,7 @@ void
 DriftDiffusion::solve_newton(void)
 {
   
-  //set_dirichlet_bc();
+  set_dirichlet_bc();
 
   bool failure = true;
   string msg("DriftDiffusion: solve failed (");
@@ -1133,7 +1138,6 @@ DriftDiffusion::solve_newton(void)
     //if (get_options().coupling != POISSON)
     //  solve_linear();
     
-    //get_options().coupling = POISSON;
     do_newton();
 
     failure = false;
@@ -1414,6 +1418,113 @@ DriftDiffusion::get_solution(const Elem* elem, const Point& p,
     get_solution_secure(el, p, solution);
   else
     solution = 0;
+}
+
+
+ID
+DriftDiffusion::convert_variable_name_to_id(const string& variable_name)
+{
+  ID id = INVALID_ID;
+
+  switch (variable_name[0])
+  {
+    case 'p':
+      if (variable_name == "potential")
+        id = ELECTRICPOTENTIAL;
+      break;
+    case 'f':
+      if (variable_name == "fermi_e")
+        id = EFERMI;
+      else if (variable_name == "fermi_h")
+        id = HFERMI;
+      break;
+    case 'v':
+      if (variable_name == "valence_band")
+        id = VBANDEDGE;
+      break;
+    case 'c':
+      if (variable_name == "conduction_band")
+        id = CBANDEDGE;
+      break;
+    default:
+      break;
+  }
+
+  return id;
+}
+
+      
+
+
+void
+DriftDiffusion::get_solution_secure(const Elem* elem,
+    const vector<ID>& ids, vector<vector<double> >& values)
+{
+}
+
+      
+
+
+void
+DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
+    const vector<ID>& ids, vector<vector<double> >& values)
+{
+  unsigned int np = p.size();
+  values.resize(np);
+  if ((np == 0) || (ids.size() == 0)) return;
+
+  TiberNonlinearSystem* system;
+  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
+      get_equation_system_name());
+
+  const NumericVector<Number>& ddsol = system->get_solution_vector();
+
+  const unsigned int dim = get_mesh().mesh_dimension();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_e");
+  const unsigned int ep_var = system->variable_number("fermi_h");
+
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+
+  vector<Point> points(np);
+  FEInterface::inverse_map(dim, fe_type, elem, p, points);
+  //for (unsigned int n = 0; n < np; n++)
+  //  points[n] = FEInterface::inverse_map(dim, fe_type, elem, p[n], 1e-6);
+
+  fe->reinit(elem, &points);
+
+  dof_map.dof_indices(elem, dof_indices_u, u_var);
+  dof_map.dof_indices(elem, dof_indices_en, en_var);
+  dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+  const unsigned int n_dofs = dof_indices_u.size();
+
+  // the scaling parameters to scale back the result
+  double phi0 = get_scaling().get_potential_scaling();
+
+  for (unsigned int n = 0; n < np; n++)
+  {
+    double u = 0;
+    // do interpolation
+    for (unsigned int i = 0; i < n_dofs; i++)
+      u  += phi[i][n] * ddsol(dof_indices_u[i]);
+
+    // scale the potential back
+    u  *= phi0;
+
+    values[n][0] = u;
+  }
 }
 
 
@@ -2141,7 +2252,6 @@ DriftDiffusion::calculate_currents_surfint(void)
 
             sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
-
             sc->set_electric_field(phi0 * e_field);
 
             sc->calculate_densities();
@@ -2228,6 +2338,167 @@ DriftDiffusion::calculate_currents_surfint(void)
 
 
 
+
+
+void
+DriftDiffusion::build_local_scaling(void)
+{
+  
+  TiberNonlinearSystem* system =
+    &get_equation_systems().get_system<TiberNonlinearSystem>(
+        get_equation_system_name());
+  
+  const NumericVector<Number>& solution = system->get_solution_vector();
+
+  // aliases for nicer code
+  const Device& device = *(_device);
+  const Mesh& mesh = get_mesh();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+
+  const Options& params = get_options();
+
+  // the scaling parameters to scale back the result
+  const Scaling& scaling = get_scaling();
+  const double phi0 = scaling.get_potential_scaling();
+  const double C0 = scaling.get_density_scaling();
+  const double l2 = scaling.get_lambda_squared() * Constants::e0 * 1e-2;
+
+
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_e");
+  const unsigned int ep_var = system->variable_number("fermi_h");
+  
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  QGauss qrule(dim, params.integration_order);
+  fe->attach_quadrature_rule(&qrule);
+
+
+  // Jacobian * quadrature weight at each integration point.   
+  const vector<Real>& JxW = fe->get_JxW();
+  //
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point = fe->get_xyz();
+  //
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+  //
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+
+
+
+  local_scaling_.clear();
+  {
+    MeshBase::const_element_iterator it =
+      mesh.active_elements_begin();
+    const MeshBase::const_element_iterator end =
+      mesh.active_elements_end(); 
+
+    for ( ; it != end; ++it)
+      for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
+        local_scaling_[(*it)->get_node(n)] = vector<double>(3, 0.0);
+  }
+
+
+  MeshBase::const_element_iterator it =
+    mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end =
+    mesh.active_elements_end(); 
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    ID subdomain = elem->subdomain_id();
+
+    dof_map.dof_indices(elem, dof_indices_u, u_var);
+    dof_map.dof_indices(elem, dof_indices_en, en_var);
+    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+    unsigned int n_dofs     = dof_indices_u.size();
+
+    DriftDiffusionProperties* sc =
+      dynamic_cast<DriftDiffusionProperties*>(
+          device.get_material(subdomain)->get_model(get_id()));
+    assert(sc != NULL); 
+
+    sc->set_lattice_temperature(_device->get_temperature(elem));
+    sc->reinit(elem);
+
+    fe->reinit(elem);
+
+    assert(elem->n_nodes() == dof_indices_u.size());
+
+    RealGradient field(0.0);
+    for (unsigned int i = 0; i < dof_indices_u.size(); i++)
+      field += dphi[i][0] * solution(dof_indices_u[i]);
+    field *= -phi0;
+
+
+    // loop over the quadrature points
+    for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
+    {
+      // get the solution values at the quadrature point
+      Real u  = 0.0;
+      Real en = 0.0;
+      Real ep = 0.0;
+      RealGradient e_field(0);
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        u  += phi[i][qp] * solution(dof_indices_u[i]);
+        en += phi[i][qp] * solution(dof_indices_en[i]);
+        ep += phi[i][qp] * solution(dof_indices_ep[i]);
+        e_field += dphi[i][qp] * solution(dof_indices_u[i]);
+      }
+
+
+
+      // prepare for calculating local properties
+      sc->set_coordinates(q_point[qp]);
+
+      double T_lat = sc->get_lattice_temperature();
+      // all are at lattice temperature
+        sc->set_carrier_temperatures(T_lat, T_lat);
+
+      sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+      sc->set_electric_field(phi0 * e_field);
+
+      sc->calculate_densities();
+      sc->calculate_mobilities();
+
+      double epsilon = sc->get_relative_permittivity();
+      double l2_eps = JxW[qp] * l2 * epsilon;
+
+      double sigma_e = JxW[qp] * //sc->get_electron_density();
+        sc->get_electron_mobility() * sc->get_electron_density();
+      double sigma_h = JxW[qp] * //sc->get_hole_density();
+        sc->get_hole_mobility() * sc->get_hole_density();
+
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        //local_scaling_[elem->get_node(i)][0] += sigma_e * phi[i][qp];
+        //local_scaling_[elem->get_node(i)][1] += sigma_h * phi[i][qp];
+        local_scaling_[elem->get_node(i)][0] +=
+          sigma_e * (dphi[i][qp] * dphi[i][qp]);
+        local_scaling_[elem->get_node(i)][1] +=
+          sigma_h * (dphi[i][qp] * dphi[i][qp]);
+        local_scaling_[elem->get_node(i)][2] +=
+          l2_eps * (dphi[i][qp] * dphi[i][qp]);
+      }
+
+
+    } // end loop over quadrature points
+  } // end loop over elements
+}
+/*
 void
 DriftDiffusion::build_local_scaling(void)
 {
@@ -2358,7 +2629,7 @@ DriftDiffusion::build_local_scaling(void)
     } // end if not infinite element
   } // end loop over elements
 }
-
+*/
 
 
 
@@ -3688,7 +3959,25 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   // element shape function gradients
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
-  
+
+
+  // references to boundary-specific data that will be used to
+  // assemble the system.
+  // Data will be given for each quadrature point.
+  // 
+  const vector<vector<Real> >&  phi_face = fe_face->get_phi();
+  //
+  const vector<vector<RealGradient> >&  dphi_face = fe_face->get_dphi();
+  //
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point_face = fe_face->get_xyz();
+  //
+  const vector<Point>& face_normals = fe_face->get_normals();
+  //
+  // Jacobian * quadrature weight at each integration point.   
+  const vector<Real>& JxW_face = fe_face->get_JxW();
+
+
   // the system matrix (will hold also element jacobian contribution)
   DenseMatrix<Number> Ke;
   // the system rhs (will hold also element rhs contribution)
@@ -3820,11 +4109,14 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     
 
 
-    vector<vector<double> > local_scaling(elem->n_nodes(), vector<double>(2, 1));
+    vector<vector<double> > local_scaling(elem->n_nodes(), vector<double>(3, 1));
     if (do_local_scaling_)
     {
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
         local_scaling[n] = local_scaling_[elem->get_node(n)];
+        //local_scaling[n][2] = 1.0;
+      }
     }
 
 
@@ -3917,7 +4209,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             J * (dphi[i][qp] * dphi[j][qp]);
           
           if (coupling & POISSON)
-            Kuu(i,j) += l2_eps * laplace;
+            Kuu(i,j) += l2_eps * laplace / local_scaling[i][2];
           
           if (coupling & ECURRENT)
             Knn(i,j) += sigma_e * laplace / local_scaling[i][0];
@@ -4064,13 +4356,13 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             {
               if (coupling & POISSON)
               {
-                Kuu(i,j) -= drho[0] * phi_i_x_phi_j;
+                Kuu(i,j) -= drho[0] * phi_i_x_phi_j / local_scaling[i][2];
 
                 if (coupling & ECURRENT)
-                  Kun(i,j) -= drho[1] * phi_i_x_phi_j;
+                  Kun(i,j) -= drho[1] * phi_i_x_phi_j / local_scaling[i][2];
 
                 if (coupling & HCURRENT)
-                  Kup(i,j) -= drho[2] * phi_i_x_phi_j;
+                  Kup(i,j) -= drho[2] * phi_i_x_phi_j / local_scaling[i][2];
               }            
 
               if (coupling & ECURRENT)
@@ -4212,7 +4504,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           long double net_recomb_h = J_x_Rp * phi[i][qp] / local_scaling[i][1];
           
           if (coupling & POISSON)
-            Fu(i) -= J_x_rho * phi[i][qp] + (P * dphi[i][qp]);
+            Fu(i) -= (J_x_rho * phi[i][qp] + (P * dphi[i][qp])) / local_scaling[i][2];
           else
             Fu(i) -= Xu(i);
           
@@ -4292,17 +4584,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         // NOTE: we have to integrate over the boundary also if there are
         //       no contacts because there could be polarization.
         //
-        const vector<vector<Real> >&  phi_face =
-          fe_face->get_phi();
-        const vector<vector<RealGradient> >&  dphi_face =
-          fe_face->get_dphi();
-          
-        // physical coordinates of the quadrature points
-        const vector<Point>& q_point_face = fe_face->get_xyz();
-
-        const vector<Point>& face_normals = fe_face->get_normals();
-
-        const vector<Real>& JxW_face = fe_face->get_JxW();
 
         if (dim > 1)
         {
@@ -4412,13 +4693,13 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               for (unsigned int i = 0; i < n_dofs; i++)
               {
                 if (coupling & POISSON)
-                  Fu(i) -= value_u * phi_face[i][qp];
+                  Fu(i) -= value_u * phi_face[i][qp] / local_scaling[i][2];
 
                 if (coupling & ECURRENT)
-                  Fn(i) -= value_n * phi_face[i][qp];
+                  Fn(i) -= value_n * phi_face[i][qp] / local_scaling[i][0];
 
                 if (coupling & HCURRENT)
-                  Fp(i) -= value_p * phi_face[i][qp];
+                  Fp(i) -= value_p * phi_face[i][qp] / local_scaling[i][1];
               }
             } 
           }
@@ -4497,8 +4778,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             double value_n = value[1] / (mu0 * C0_e);
             double value_p = value[2] / (mu0 * C0_h);
 
+
             if (coupling & POISSON)
-              Fu(s) -= value_u;
+              Fu(s) -= value_u / local_scaling[s][2];
 
             if (coupling & ECURRENT)
               Fn(s) -= value_n;
@@ -4741,6 +5023,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   //if (1)
   {
     static int cnt = 0;
+    static int cnt2 = 0;
     if (jacobian != NULL)
     {
       cerr << "write jacobian." << endl;
@@ -4753,8 +5036,12 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     {
       cerr << "write residual." << endl;
       ostringstream s;
-      s << "res_" << cnt << ".m";
+      s << "res_" << cnt2 << ".m";
       residual->print_matlab(s.str());
+      ostringstream so;
+      so << "sol_" << cnt2 << ".m";
+      x.print_matlab(so.str());
+      cnt2++;
     }
   }
 */  

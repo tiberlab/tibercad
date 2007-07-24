@@ -11,9 +11,10 @@ using namespace std;
 
 template <unsigned int Dim, FEFamily T>
 void
-FiniteElement<Dim, T>::reinit(const Elem* elem, const unsigned int side)
+FiniteElement<Dim, T>::reinit(const Elem* elem, const unsigned int side,
+    const Real tolerance)
 {
-  FE<Dim, T>::reinit(elem, side);
+  FE<Dim, T>::reinit(elem, side, tolerance);
 
   unsigned int dim = FE<Dim, T>::qrule->get_dim();
   unsigned int n_points = FE<Dim, T>::JxW.size();

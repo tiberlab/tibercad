@@ -55,7 +55,7 @@ class SemiconductorModel : public DriftDiffusionProperties
     virtual void do_init();
 
     //! Read the from database
-    virtual void read_database(void);
+    //virtual void read_database(void);
 
     /*! \copydoc DriftDiffusionProperties::create_new() */
     virtual PhysicalModelInterface* create_new(void) const;

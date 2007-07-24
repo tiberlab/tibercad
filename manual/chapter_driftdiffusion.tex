@@ -231,7 +231,26 @@ If omitted, the first available strain simulation will be used.
 
 \section{\texttt{Solver} section}
 
-The parameters for the numerical solver depend on the type of solver being used and on the device to be simulated.
+Many of parameters for the numerical solver depend on the type of solver being used and on the device to be simulated.
+Table~\ref{tab:dd_solver} lists the options that are independent on the type of solver used.
+\begin{table}[htb]
+\center
+\begin{minipage}{0.9\textwidth}
+\begin{tabular}{l||p{8cm}}
+\textit{keyword} & \textit{description}\footnote{the default is given in brackets} \\
+\hline \hline
+\texttt{coupling} & defines which equations to couple together. \texttt{poisson}: solve only poisson eq., \texttt{electrons}: electrons and poisson, \texttt{holes}: holes and poisson, \texttt{current}: only electron and hole currents, \texttt{<full>}: the fully coupled system \\
+\texttt{integration\_order} & order of the numerical gauss integration. Default is \texttt{2} \\
+\texttt{current\_integration\_method} & method for the calculation of the contact cutrrents. \texttt{surfint}: integrate the local current density over the contact surface, \texttt{<rstf>}: use the Ramo-Shockley test functions, gives better results \\
+\texttt{local\_scaling} & apply a local scaling scheme which leads to better scaled matrices. \texttt{<true>} or \texttt{false} \\
+\texttt{exact\_newton} & use exact or approximate (without some parts in the jacobian) Newton. \texttt{<true>} or \texttt{false}
+\end{tabular}
+\end{minipage}
+\caption{Parameters for the PETSc nonlinear solver}
+\label{tab:dd_solver}
+\end{table}
+
+
 The linear and nonlinear solvers to be used can be chosen using the keywords \texttt{linear\_solver} and \texttt{nonlinear\_solver}, respectively.
 For the nonlinear solver one can chose between the PETSc implementation (\texttt{petsc}) and the \TiberCAD implementation (\texttt{tiber}) of line search.
 When using the \TiberCAD nonlinear solver, one can additionally chose between the PETSc (\texttt{petsc}) or PARDISO  (\texttt{pardiso}) linear solvers.

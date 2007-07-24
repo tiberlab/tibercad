@@ -5,11 +5,15 @@
 #include "MobilityModelInterface.h"
 #include "ThermoelectricPower.h"
 #include "Material.h"
+#include "Database.h"
 #include "Dopant.h"
 #include "Constants.h"
 #include "InitFailedException.h"
-#include "elem.h"
 #include "MacroHeatBalance.h"
+#include "RotatedCrystal.h"
+
+#include "elem.h"
+#include "getpot.h"
 
 #include <cmath>
 
@@ -31,6 +35,8 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     hole_conductivity_derivatives(3, 0.0),
     electron_recombination_rate_derivatives(3, 0.0),
     hole_recombination_rate_derivatives(3, 0.0),
+    polarization(3, 0.0),
+    pyro_polarization(3, 0.0),
     _elem(NULL),
     _statistics(TiberCad::BOLTZMANN),
     _coupling(DriftDiffusionDefs::BOTH),
@@ -46,6 +52,24 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
 }
 
 
+void
+DriftDiffusionProperties::read_database(void)
+{
+  const Material* mat = get_material();
+  GetPot data((mat->get_database()).get_data_file());
+
+  permittivity = data("permittivity", 1.0);
+
+  // pyropolarization
+  Tensor1 pol;
+  pol(1) = pol(2) = 0.0;
+  pol(3) = data("Pz", 0.0);
+  pol = (mat->get_rotated_crystal()).RotMatrix * pol;
+  pyro_polarization(0) = pol(1);
+  pyro_polarization(1) = pol(2);
+  pyro_polarization(2) = pol(3);
+
+}
 
 
 void
@@ -125,7 +149,7 @@ DriftDiffusionProperties::do_init(void)
    it = get_options().submodels_begin("thermoelectric_power");
    end = get_options().submodels_end("thermoelectric_power");
 
-    if (it != end)
+   if (it != end)
    {
      _thermoelectric_power = dynamic_cast<ThermoelectricPower*>(
       PhysicalModelInterface::create("thermoelectric_power", it->second));
@@ -133,9 +157,8 @@ DriftDiffusionProperties::do_init(void)
     if (_thermoelectric_power == NULL)
       throw InitFailedException("Could not create thermoelectric power model");
 
-    _thermoelectric_power->init();  
- 
     _thermoelectric_power->set_material(get_material());
+    _thermoelectric_power->init();  
    }
 
 }
@@ -198,6 +221,14 @@ DriftDiffusionProperties::calculate_VCA(const PhysicalModelInterface* comp_A,
     (it->second)->build_alloy(scA->get_recombination_model(id),
                               scB->get_recombination_model(id), xa);
   }
+
+  // pyropolarization
+  pyro_polarization(0) = alloy(scA->pyro_polarization(0),
+      scB->pyro_polarization(0), xa);
+  pyro_polarization(1) = alloy(scA->pyro_polarization(1),
+      scB->pyro_polarization(1), xa);
+  pyro_polarization(2) = alloy(scA->pyro_polarization(2),
+      scB->pyro_polarization(2), xa);
 }
 
 

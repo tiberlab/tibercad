@@ -58,13 +58,13 @@ StrainedSemiconductorModel::prepare_element_data(void)
       elem_data.polarization(0) = pol(1); 
       elem_data.polarization(1) = pol(2); 
       elem_data.polarization(2) = pol(3); 
-      polarization = elem_data.polarization;
+      polarization += elem_data.polarization;
     }
     else
     {
       const ElementData& elem_data = it->second;
 
-      polarization = elem_data.polarization;
+      polarization += elem_data.polarization;
 
       get_conduction_band().band_edge = elem_data.Ec; 
       get_conduction_band().effective_mass = elem_data.mc; 

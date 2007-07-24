@@ -30,7 +30,8 @@ class FiniteElement : public FE<Dim, T>
     virtual void reinit(const Elem* elem,
         const std::vector<Point>* points = NULL);
 
-    virtual void reinit(const Elem* elem, const unsigned int side);
+    virtual void reinit(const Elem* elem, const unsigned int side,
+        const Real tolerance = TOLERANCE);
     
     //! Set the symmetry
     void set_symmetry(TiberCad::Symmetry symmetry);

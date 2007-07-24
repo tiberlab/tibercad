@@ -7,9 +7,9 @@
 
 #include "Alloy.h"
 
-#include "Database.h"
+//#include "Database.h"
 
-#include "getpot.h"
+//#include "getpot.h"
 
 #include <iostream>
 
@@ -53,7 +53,7 @@ SemiconductorModel::do_init(void)
   
 }
 
-
+/*
 void
 SemiconductorModel::read_database(void)
 {
@@ -72,7 +72,7 @@ SemiconductorModel::read_database(void)
     permittivity = data("permittivity", 9.5);
   }
 }
-
+*/
 
 void
 SemiconductorModel::calculate_VCA(const PhysicalModelInterface* comp_A,

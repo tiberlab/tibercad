@@ -15,6 +15,10 @@ typedef std::pair<const Elem*, unsigned int> ElementSide;
 //! A typedef to be used for numerical identifiers
 typedef unsigned int ID;
 
+#ifndef INVALID_ID
+# define INVALID_ID 0
+#endif
+
 
 //! A map which contains all nodes belonging to boundary conditions
 typedef std::map<ID, std::vector<ID> > BoundaryNodeMap;

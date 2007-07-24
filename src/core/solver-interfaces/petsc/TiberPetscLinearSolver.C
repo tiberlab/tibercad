@@ -255,7 +255,7 @@ void TiberPetscLinearSolver::set_ksp_type(void)
       break;
 
     case BICGSTAB:
-      ierr = KSPSetType (_ksp, (char*) KSPBCGS);
+      ierr = KSPSetType (_ksp, (char*) KSPBCGSL);
       _checkerr(ierr);
       break;
 

@@ -527,6 +527,11 @@ class DriftDiffusionProperties : public PhysicalModel
     //! The empty constructor.
     DriftDiffusionProperties(void);
 
+
+    /*! \copydoc PhysicalModel::read_database() */
+    virtual void read_database(void);
+
+    
     //! Initialize this model
     /*!
      * This reads the database and calls init for all submodels
@@ -658,6 +663,11 @@ class DriftDiffusionProperties : public PhysicalModel
     
     //! The total electric polarization
     RealVectorValue polarization;
+
+    
+    //! The pyroelectric polarization (will go into a model)
+    RealVectorValue pyro_polarization;
+
     
     //! The relative permittivity tensor
     //RealTensorValue permittivity;
@@ -856,16 +866,14 @@ void
 DriftDiffusionProperties::reinit(const Elem* elem)
 {
  
-  // std::cerr<<_elem<<std::endl;
   if  ( _elem != elem) 
   {
- 
     _elem = elem;
+
+    polarization = pyro_polarization;
+
     this->prepare_element_data();
-    
   }
-
-
 
 }
 

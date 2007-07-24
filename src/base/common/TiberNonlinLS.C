@@ -245,6 +245,11 @@ TiberNonlinLS::solve(void)
       norm_du *= alpha;
     }
 
+    //if (norm_du > _max_step_size)
+    //{
+    //  du.scale(_max_step_size / norm_du);
+    //  norm_du = _max_step_size;
+    //}
 
     cerr << "  it " << i << ", |du| = " << norm_du << ", |r| = " << norm_res << endl;
 
@@ -256,15 +261,6 @@ TiberNonlinLS::solve(void)
       break;
     else if (i == _nonlin_max_it)
       throw (PetscDivergedError(-3, i, norm_rhs));
-
-
-    //ostringstream o;
-    //o << "du_" << i << ".gmv";
-    //vector<string> names;
-    //vector<Number> sol;
-    //es.build_solution_vector(sol);
-    //es.build_variable_names(names);
-    //GraceIO(get_mesh()).write_nodal_data(o.str(), sol, names);
 
   }
 
