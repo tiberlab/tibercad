@@ -101,7 +101,7 @@ void EnvelopFunctionApprox::build_integrated_quantities_description (const std::
 void EnvelopFunctionApprox::build_elemental_results (const std::set< std::string > &variables, 
 					 std::vector< double > &results, std::vector< std::string > &legend)
 {
- 
+ /*
   double parallel_mass = 0.067* 0.95 +  0.026 * 0.05;
   const set<string>::const_iterator varend(variables.end());
   if (variables.find("test_density") != varend)
@@ -112,6 +112,8 @@ void EnvelopFunctionApprox::build_elemental_results (const std::set< std::string
     legend.resize(1);
     legend[0] = string("density");
   }
+*/
+
 }
 
 //---------------------------------------------------------------------------------//
@@ -2741,7 +2743,7 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 }
 
 //-------------------------------------------------------------------------------//
-
+/*
 std::vector<double> EnvelopFunctionApprox::estimate_density(double parallel_mass)
 {
   vector<double> result;
@@ -2789,7 +2791,7 @@ std::vector<double> EnvelopFunctionApprox::estimate_density(double parallel_mass
   return(result);
 
 }
-
+*/
 
 //------------------------------------------------------------------------------//
 

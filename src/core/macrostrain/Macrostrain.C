@@ -164,10 +164,10 @@ void Macrostrain::parse_options( )
    int ierr; 
  
    KSP KSP_of_solver = (dynamic_cast< PetscLinearSolver<Real>* > (  (my_system->linear_solver).get() )  )->ksp();
-   ierr = KSPSetType (KSP_of_solver, (char*) KSPBCGSL);       CHKERRABORT(libMesh::COMM_WORLD,ierr);
+   ierr = KSPSetType (KSP_of_solver, (char*) KSPBCGSL);    
 
    PC  PC_of_solver = (dynamic_cast< PetscLinearSolver<Real>* > (  (my_system->linear_solver).get() )  )->pc();
-   ierr = PCSetType (PC_of_solver, (char*) PCJACOBI);    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+   ierr = PCSetType (PC_of_solver, (char*) PCJACOBI);   
 
  }
 

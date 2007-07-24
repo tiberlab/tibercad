@@ -319,6 +319,22 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
 
 
+  //!calculates analitycal charge density for a 1D quantum structure (e.g. quantum well)
+  /*!
+    \f$  \rho({\bf r}) = \frac{mkT}{2 \pi \hbar^2}  |\psi({\bf r})|^2 \ln (1 + \exp (\frac{\mu - E}{kT}) )    \f$
+  */
+  std::vector<double> estimate_density1D(unsigned int state_number, double parallel_mass);
+
+
+  //!calculates analitycal charge density for a 1D quantum structure (e.g. quantum wire)
+  /*!
+    \f$  \rho({\bf r}) = |\psi({\bf r})|^2 \frac{1}{2} \sqrt{\left( \frac{mkT}{2\pi\hbar^2} \right)}  
+    F_{-1/2}\left(  \frac{\mu - E}{kT}         \right)       \f$
+  */
+  std::vector<double> estimate_density2D(unsigned int state_number, double parallel_mass);
+
+
+
  private:
 
   //!pointer to the device object
@@ -514,8 +530,9 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
 
 
+ 
 
-  std::vector<double> estimate_density(double parallel_mass);
+
 
 
   //!Calculates Fermi Dirac probability
