@@ -18,6 +18,8 @@ Device*   OpticsKP:: _device;
 OpticsKP::~OpticsKP()
 {
   // es->delete_system(system_name);
+ delete(_energy_mesh);
+
 }
 //===============================================//
 PhysicalModel* OpticsKP::create_physical_model(const ModelOptions& options) const throw (ModelErrorException)
@@ -949,6 +951,8 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
     map<const Elem*, double>::iterator res_it = spectrum.find(el);
     if (res_it != spectrum.end())
     {
+
+      //  "kdim" =1
       value = res_it->second; //[ 1/a.u._of_time/((bohr_radius)^kdim)]
       value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
       value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
