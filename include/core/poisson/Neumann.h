@@ -14,10 +14,10 @@ class Neumann : public PoissonContact, public Variable
   ~Neumann(){};
 
   //!Return the temperature of the contact
-  double get_field(void) const;
+  double get_polarization(void) const;
 
   //!Set the temperature of contact
-  void set_field(double field);
+  void set_polarization(double field);
    
   //!Create a Dirichlet object and return its pointer
   static  Neumann* create(void);
@@ -38,7 +38,7 @@ class Neumann : public PoissonContact, public Variable
 
  private:
 
-  double _field; 
+  double _polarization; 
 
 };
 
@@ -52,19 +52,19 @@ Neumann::create()
 
 inline 
 double
-Neumann::get_field( ) const
+Neumann::get_polarization( ) const
 {
 
-  return _field;
+  return _polarization;
 
 }
 
 inline 
 void  
-Neumann::set_field(double field ) 
+Neumann::set_polarization(double polarization ) 
 {
 
-   _field = field;
+   _polarization = polarization;
 
 }
 
@@ -74,7 +74,7 @@ void
 Neumann::set_variable_value(double value, ID id)
 {
   ignore_unused_variable(id);
-  set_field(value);
+  set_polarization(value);
 }
 
 
@@ -83,7 +83,7 @@ double
 Neumann::get_variable_value(ID id)
 {
   ignore_unused_variable(id);
-  return get_field();
+  return get_polarization();
 }
 
 #endif

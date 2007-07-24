@@ -7,12 +7,14 @@ PoissonContact::create(const std::string & name,  const ModelOptions &   options
 {
   PoissonContact* result = NULL;
 
+
+
   if (name == "Dirichlet")
     result = Dirichlet::create();
 
   if (name == "Neumann")
     result = Neumann::create();
-
+  
 
 
   if (result != NULL)

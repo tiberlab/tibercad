@@ -32,7 +32,7 @@
 #include "PoissonContact.h"
 #include "Dirichlet.h"
 #include "PoissonModel.h"
-
+#include "Neumann.h"
 using namespace std;
 Poisson* Poisson::static_this;
 Device* Poisson::_device;
@@ -66,8 +66,6 @@ void  Poisson::do_init( )
   opt.work_units = sim_opt.get_option("Work_length_units", 1e-2);
 
   opt.length_scale = mesh_units/opt.work_units;
-
-
 
   equation_systems = &(get_equation_systems());
 
@@ -134,9 +132,12 @@ BoundaryProperties* Poisson::create_boundary_model (const ModelOptions &options)
                     throw (ModelErrorException)
 
 {
+
+
+   const string& modelname = options.get_option("type", "Dirichlet");
+  
+
    
-   const string& modelname = options.get_option("type", "Dirichelet");
- 
    PoissonContact* model =  PoissonContact::create(modelname, options);
 
    if (model == NULL)  
@@ -272,7 +273,7 @@ void Poisson::assemble_poisson_matrix(EquationSystems& es,
 //----------------------------------------------------------------------------------//
 void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 {
-
+  
   SimulationEnvironment& se = get_environment(); 
 
   LinearImplicitSystem& system = *my_system;
@@ -283,18 +284,39 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   
   FEType fe_type = dof_map.variable_type(uvar);
   
+
+
+
+
+
+
+  // Declare a special finite element object for
+  // volume integration.
+
   AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
 
   //AutoPtr<FEBase> fe (build_finite_element(dim, fe_type));
-  
   QGauss qrule (dim, FIFTH); //may be could be decreased (CHECK!!!)
   
   // quadrature rule  
   fe->attach_quadrature_rule (&qrule);
   
+ // The element Jacobian * quadrature weight at each integration point.   
+  const std::vector<Real>& JxW = fe->get_JxW();
 
-   // The element Jacobian * quadrature weight at each integration point.   
-    const std::vector<Real>& JxW = fe->get_JxW();
+ // The physical XY locations of the quadrature points on the element.
+  // These might be useful for evaluating spatially varying material
+  // properties at the quadrature points.
+  const std::vector<Point>& q_point = fe->get_xyz();
+ 
+  // The element shape functions evaluated at the quadrature points.
+  const std::vector<std::vector<Real> >& phi = fe->get_phi();
+
+  // The element shape function gradients evaluated at the quadrature
+  // points.
+  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+
+
 
 
   // Declare a special finite element object for
@@ -312,27 +334,23 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   
   // Tell the finite element object to use our
   // quadrature rule.
-  
-  fe_face -> attach_quadrature_rule (&qface);
-  
+   fe_face -> attach_quadrature_rule (&qface);
+
+ // The element Jacobian * quadrature weight at each integration point.   
+   const std::vector<Real>& JxW_face = fe_face->get_JxW(); 
 
 
-  // Here we define some references to cell-specific data that
-  // will be used to assemble the lin ModelOptions&ear system.
-  //
-  
-  // The physical XY locations of the quadrature points on the element.
+   //The physical XY locations of the quadrature points on the element.
   // These might be useful for evaluating spatially varying material
   // properties at the quadrature points.
+   const std::vector<Point>& qface_point = fe_face->get_xyz();  
 
-  const std::vector<Point>& q_point = fe->get_xyz();
 
-  // The element shape functions evaluated at the quadrature points.
-  const std::vector<std::vector<Real> >& phi = fe->get_phi();
-
-  // The element shape function gradients evaluated at the quadrature
-  // points.
-  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+  // The element shape functions evaluated at the quadrature point
+   const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi(); 
+		 
+    // The normal to side
+   const std::vector<Point>& normal = fe_face->get_normals(); 
 
  
   std::vector<unsigned int> dof_indices;
@@ -341,18 +359,17 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
   DenseVector<Number>  Fe;
 
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
-
-
-  bool is_on_bounary = false;
-
+  bool node_on_boundary = false;
+  bool side_on_boundary = false;
+  bool is_dirichlet = false;
   PoissonContact* contact;
 
   //Model Variables
    double charge_density;
 
-   Tensor2Sym epsilon;
+   Tensor2Sym epsilon(0);
+
+   Tensor1 bi_pol(0);
 
   //-----------------------------------------------------------------//
   //My Jacobian. It is to pass to our work units
@@ -361,6 +378,9 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   for (short i = 1; i <= dim; i++)  my_Jacobian *= opt.length_scale;
   //----------------------------------------------------------------//
 
+
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
   for ( ; el != end_el ; ++el)   //loop over elements
   {  
@@ -374,8 +394,6 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
     const unsigned int n_dofs   = dof_indices.size();
     
     fe->reinit(elem);
-
-   
 
     Ke.resize(n_dofs, n_dofs);
 
@@ -392,7 +410,9 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   
     charge_density = poisson_model->get_charge_density();
 
-    epsilon = poisson_model->get_dielectric_constant();// *  opt.work_units;
+    epsilon = poisson_model->get_dielectric_constant();
+
+    bi_pol = poisson_model->get_built_in_polarization();
 
     
 
@@ -400,7 +420,6 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
       
     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
-      
     { // loop over test function
 
       //!let us check if it belongs to a reservoir boundary
@@ -408,21 +427,24 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 	
       Boundary* bd = se.get_boundary(nd); 
        
-      is_on_bounary =  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  );	
+      node_on_boundary =  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  );	
       
-      if ( is_on_bounary )
-      { //if belongs to boundary
+      if ( node_on_boundary )
+      { 
+          contact = dynamic_cast<PoissonContact*>( bd->get_boundary_properties (get_id()) );
+          is_dirichlet = (contact->get_type() == PoissonContact::Dirichlet);
+
+	  //          cout<<(contact->get_type() == PoissonContact::Dirichlet)<<endl;
+	  //  cout<<(contact->get_type() == PoissonContact::Dirichlet)<<endl;
+ 
+      }
+      
+      if ( is_dirichlet )
+      { 
 	
-	contact = dynamic_cast<PoissonContact*>( bd->get_boundary_properties (get_id()) );
-	
-	if (contact->get_type() == PoissonContact::Dirichlet)
-	{//heat reservoir---
-	    
  	  Ke(p1,p1) = 1.0;
 	  
 	  Fe(p1) = ( dynamic_cast<Dirichlet*> (contact) )->get_potential();
-          
-	}//end reservoir
 
       } 
       else 
@@ -442,7 +464,7 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
 	    double value = 0.0;
 	    
-	    
+	   
 	    for (short i = 0; i < dim; i++) 
 	    {//loop over direction (1); test function derivative
 
@@ -469,284 +491,116 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
            Ke(p1,p2) += value;
 
-          
-
 	    
 	  } //loop over basis functions
 	   
 	   //Fe construction----	
            
-	   Fe(p1) += JxW[qp] * charge_density * phi[p1][qp] *  my_Jacobian  * Constants::e / Constants::epsilon ;
+	   Fe(p1) += JxW[qp] * charge_density * phi[p1][qp] *  my_Jacobian  * Constants::e / Constants::epsilon;
+
+           //Add the polarization 
+
+	      for (short i = 0; i < dim; i++) 
+		Fe(p1) -= JxW[qp] * dphi[p1][qp](i) * bi_pol(i) * my_Jacobian *  Constants::e;
 	   
+
+
 	   //--------------------
-   
+	   
 	}//end Loop over quadrature points  
 	
-
-      } //end if it belongs to boundary
-
- 
-    } // end loop over test functions
-
-    //Add Neumann boundary condition
-    
-/*     if ( is_on_bounary ) */
-/*     { */
-
-/*       if (contact->get_type() == PoissonContact::Neumann) */
-/*       { */
+/* 	const unsigned int num_sides = elem->n_sides();  */
 	
-/* 	const unsigned int num_sides = elem->n_sides(); */
-	
-/* 	for (unsigned int side = 0; side<num_sides; side++) */
+/* 	for (unsigned int side = 0; side<num_sides; side++)  */
 /* 	{ */
-/* 	  const ElementSide elside(elem->top_parent(), side); */
 	  
-/* 	  if ( (se.is_on_boundary(   elside   ) ) //if belongs to a boundary of poisson simulation */
-/* 	    { 		    */
+/* 	  const ElementSide elside(elem->top_parent(), side);  */
+	  
+/* 	  Boundary* bd =   se.get_boundary(elside); */
+	  
+/* 	  side_on_boundary =  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL ) );   */
+	  
+/* 	  if (side_on_boundary) */
+/* 	  { */
+/* 	    contact =  dynamic_cast<PoissonContact*>( bd->get_boundary_properties (get_id()) ); */
+	    
+/* 	    if ( (contact->get_type() == PoissonContact::Neumann)) */
+/* 	    { */
 	      
-/* 	      if (dim > 1) */
+/* 	      double  D_condition  = ( dynamic_cast<Neumann*> (contact) )->get_polarization();  */
+	      
+/* 	      fe_face->reinit(elem, side); */
+	      
+/* 	      //  for (unsigned int p1=0; p1<n_dofs; p1++) //test functions  */
+/* 	      // { */
+/* 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++) */
+/* 	      { */
 		
-/* 	       { */
-		 
-/* 		 fe_face->reinit(elem, side); */
-		 
-/* 		 const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi(); */
-		 
-/* 		 const std::vector<Real>& JxW_face = fe_face->get_JxW(); */
-		 
-/* 		 const std::vector<Point>& qface_point = fe_face->get_xyz(); */
-		 
-/* 		 const std::vector<Point> & normal = fe_face->get_normals(); */
+/* 		//	Fe(p1) +=  JxW_face[qp] *  D_condition  * phi_face[p1][qp] *  my_Jacobian; */
 
-		 
-/* 		 for (short i = 0; i < 3; i++) */
-/* 		 { */
-/* 		   for (unsigned int qp=0; qp < qface.n_points(); qp++) */
-/* 		   { */
-/* 		     Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) *  */
-/* 		       ( face_currents[qp].jn(i)*face_potentials[qp].fermi_e + face_potentials[qp].fermi_h * face_currents[qp].jp(i) ) *  */
-/* 		       (my_Jacobian/opt.length_scale); */
-/* 		   } */
-/*                  } */
-
-
-/* 	       } */
-/* 	       else //dim = 1 */
-/* 	       { */
-		 
-/* 		 if (p1== side) */
-/* 		 { */
-/* 		   std::vector<double> normal(3); */
-/* 		   Point p = elem->point(side); */
-/* 		   Point pc = elem->centroid(); */
-		   
-		   
-		   
-/* 		   const double temp = sqrt((p(0) - pc(0)) * (p(0) - pc(0))  */
-/* 					    +(p(1) - pc(1)) * (p(1) - pc(1)) +  */
-/* 					    (p(2) - pc(2)) * (p(2) - pc(2))); */
-		   
-		   
-/* 		   for (short i = 0; i < 3; i++) */
-/* 		     normal[i] = (p(i) - pc(i))/temp; */
-		   
-		   
-/* 		   std::vector<Point> qface_point(1); */
-		   
-/* 		   qface_point[0] = elem->point(p1); */
-		   
-		   
-	
-/* 		   heat_model->get_dd_solution(qface_point,face_potentials,face_currents);  		    */
-		   
-/* 		   for (short i = 0; i < 3; i++) */
-/* 		   {   */
-/* 		     Fe(p1) +=   normal[i] *  */
-/* 		       ( face_currents[0].jn(i) * face_potentials[0].fermi_e + face_potentials[0].fermi_h * face_currents[0].jp(i) )   ; */
-		     
-		     
-/* 		   } */
-		   
-		   
-		   
-		   
-/* 		 } //if (dim > 1) */
-		 
-/* 	       } */
-/* 	     } // if ( (dd_simul->get_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation */
-/* 	   } //  for (unsigned int side = 0; side<num_sides; side++) */
-	   
-/* 	 } // if ( !belongs_to_reservoir )  */
-	 
-/*        }// for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T */
-       
-/*      } // (dd_simul != NULL) */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-     //The loop over element is the only loop that is surviving at this point
-  
-   /*   if (poisson_model->get_strain_opt()) */
-
-/*      { */
-/*        for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable V */
-/*        { */
-/* 	 //!let us check if it belongs to a dirichlet boundary */
-
-/* 	 const Node* nd = elem->get_node(p1); */
-	 
-/* 	 Boundary* bd = se.get_boundary(nd);  */
-	 
-/* 	 bool dirichlet_contact = false; */
-	 
-/* 	 if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) ) */
-/* 	 { */
-/* 	   PoissonContact* contact = dynamic_cast<PoissonContact*>( bd->get_boundary_properties (get_id()) );     */
-	   
-/* 	   if (contact->get_type() == PoissonContact::Dirichlet) dirichlet_contact = true; */
-/* 	 } */
-	 
-/* 	 if ( !dirichlet_contact )  */
-/* 	 {//not fixed potential */
-	   
-/* 	   const unsigned int num_sides = elem->n_sides(); */
-	   
-/* 	   for (unsigned int side = 0; side<num_sides; side++) */
-/* 	   { */
-/* 	     const ElementSide elside(elem->top_parent(), side); */
-	     
-/* 	     if ( (poisson_model->get_strain_environment()).is_on_boundary(elside) ) //if belongs to a boundary of current(!) simulation */
-/* 	     { */
+		
+/* 	      }  // for (unsigned int qp = 0; qp < qface.n_points(); qp++)    */
 	      
-/* 	       std::vector<DriftDiffusion::Solution>  face_potentials;    */
-	       
-/* 	       std::vector<DriftDiffusion::Currents>   face_currents; */
-		   
-
-/* 	       if (dim > 1) */
-/* 	       { */
-		 
-/* 		 fe_face->reinit(elem, side); */
-		 
-/* 		 const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi(); */
-		 
-/* 		 const std::vector<Real>& JxW_face = fe_face->get_JxW(); */
-		 
-
-/* 		 const std::vector<Point>& qface_point = fe_face->get_xyz(); */
-		 
-/* 		 const std::vector<Point> & normal = fe_face->get_normals(); */
-		 
-		    
-/* 		 heat_model->get_dd_solution(qface_point,face_potentials,face_currents);   */
-		     
-		 
-/* 		 for (short i = 0; i < 3; i++) */
-/* 		 { */
-/* 		   for (unsigned int qp=0; qp < qface.n_points(); qp++) */
-/* 		   { */
-/* 		     Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) *  */
-/* 		       ( face_currents[qp].jn(i)*face_potentials[qp].fermi_e + face_potentials[qp].fermi_h * face_currents[qp].jp(i) ) *  */
-/* 		       (my_Jacobian/opt.length_scale); */
-/* 		   } */
-/*                  } */
-
-
-/* 	       } */
-/* 	       else //dim = 1 */
-/* 	       { */
-		 
-/* 		 if (p1== side) */
-/* 		 { */
-/* 		   std::vector<double> normal(3); */
-/* 		   Point p = elem->point(side); */
-/* 		   Point pc = elem->centroid(); */
-		   
-		   
-		   
-/* 		   const double temp = sqrt((p(0) - pc(0)) * (p(0) - pc(0))  */
-/* 					    +(p(1) - pc(1)) * (p(1) - pc(1)) +  */
-/* 					    (p(2) - pc(2)) * (p(2) - pc(2))); */
-		   
-		   
-/* 		   for (short i = 0; i < 3; i++) */
-/* 		     normal[i] = (p(i) - pc(i))/temp; */
-		   
-		   
-/* 		   std::vector<Point> qface_point(1); */
-		   
-/* 		   qface_point[0] = elem->point(p1); */
-		   
-		   
+/* 	      // }// test function */
+	      
+/* 	    }//if Neumann */
+	    
+/* 	  }//if it is boundary with associated model */
+	  
+	  
+	  //Add piezopolarization surface
+          
+/*           bd =   poisson_model->get_piezo_environment().get_boundary(elside); */
+	  
+/*           if (bd != NULL) */
+/*           { */
+/* 	    fe_face->reinit(elem, side); */
+/* 	    if (dim>1) */
+/*             { */
+             
+/* 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++) */
+/* 	      { */
+/* 		for (short i = 0; i < dim; i++)  */
+/* 		  //		  Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(i) * my_Jacobian *  Constants::e * normal[qp](i);  */
+/* 	      } */
+/* 	    }     */
+/* 	    else */
+/* 	    { */
+/* 	      double x_c = elem->centroid()(0); */
+/* 	      double x_s = elem->point(p1)(0); */
+/* 	      double n_1d = 1.0; */
+	      
+/* 	      if (x_s < x_c) */
+/* 	      {  */
+/* 		n_1d = -1.0; */
+/* 	      }   */
+/* 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++) */
+/* 		Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(0) * my_Jacobian *  Constants::e * n_1d;  */
+	      
+/* 	    }//i dim >1    */
+	    
+/* 	  } // if (bd != NULL) */
+	  
+	// 	}//side */ */
 	
-/* 		   heat_model->get_dd_solution(qface_point,face_potentials,face_currents);  		    */
-		   
-/* 		   for (short i = 0; i < 3; i++) */
-/* 		   {   */
-/* 		     Fe(p1) +=   normal[i] *  */
-/* 		       ( face_currents[0].jn(i) * face_potentials[0].fermi_e + face_potentials[0].fermi_h * face_currents[0].jp(i) )   ; */
-		     
-		     
-/* 		   } */
-		   
-		   
-		   
-		   
-/* 		 } //if (dim > 1) */
-		 
-/* 	       } */
-/* 	     } // if ( (dd_simul->get_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation */
-/* 	   } //  for (unsigned int side = 0; side<num_sides; side++) */
-	   
-/* 	 } // if ( !belongs_to_reservoir )  */
-	 
-/*        }// for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T */
-       
-/*      } // (dd_simul != NULL) */
-
-
-
-     //Restore the boundary information for the next element
-     is_on_bounary = false;
-     //---------------------------------------------------
-
-
-
-
-     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
-     system.matrix->add_matrix (Ke, dof_indices);
-     system.rhs->add_vector    (Fe, dof_indices); 
+	//----------------------------------------
+	
+      } //end if it belongs to boundary
       
-      
+     } // end loop over test functions
+    
+    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
+    system.matrix->add_matrix (Ke, dof_indices);
+    system.rhs->add_vector    (Fe, dof_indices); 
+
+    
   } //End Loop over elements
-    
-
- 
-  //  system.matrix->print_matlab("Matr.m");
-  //  system.rhs->print();
-    
+  
+  
 } //do assembly
+
+
+
 
 void  Poisson:: init_poisson_model(const Elem* elem)
 {     

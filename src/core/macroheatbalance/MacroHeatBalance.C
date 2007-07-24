@@ -101,16 +101,15 @@ void MacroHeatBalance::do_init( )
 
   //Inizialize the solution to temperature of simulation options
 
-    MeshBase::const_node_iterator       nd     = mesh->active_nodes_begin();
-    const MeshBase::const_node_iterator nd_el  = mesh->active_nodes_end();
+  //MeshBase::const_node_iterator       nd     = mesh->active_nodes_begin();
+  // const MeshBase::const_node_iterator nd_el  = mesh->active_nodes_end();
+ 
 
-    unsigned int number_of_points = 0;
-    for ( ; nd != nd_el ; ++nd)  number_of_points++;
-
-    for ( unsigned int n = 0 ; n != number_of_points; ++n)
-    {
-      (*(my_system->solution)).set(n,SimulationOptions::temperature); 
-    }
+  my_system->solution->zero();
+  
+  my_system->solution->add(SimulationOptions::temperature);
+     
+    
    //-----------------------------------------------------------------
 
    
@@ -253,7 +252,7 @@ BoundaryProperties* MacroHeatBalance::create_boundary_model (const ModelOptions 
                     throw (ModelErrorException)
 
 {
-
+ 
    const string& modelname = options.get_option("type", "Heat_reservoir");
  
    ThermalContact* model = ThermalContact::create(modelname, options);

@@ -8,6 +8,9 @@
 PoissonModel::PoissonModel(void) :
   _charge_density(0.0),
   _epsilon(0),
+  _pyropolarization(0),
+  _piezopolarization(0),
+  _piezo_sim(NULL),
   chd_model(NULL),
   dielectric_model(NULL)
 {
@@ -36,6 +39,26 @@ PhysicalModelInterface* PoissonModel::create_new (void) const
 void PoissonModel::do_init()
 {
    
+    model_opt.pyro_pol = get_options().get_option("Pyropolarization", false);
+
+    if (model_opt.pyro_pol)
+    {
+
+
+
+
+    }
+
+
+
+
+
+    model_opt.piezo_pol = get_options().get_option("Piezoropolarization", false); 
+
+    
+
+
+
 
    PhysicalModelInterface::destroy(chd_model);
 
@@ -100,6 +123,15 @@ void PoissonModel::do_init()
    dielectric_model->init();
    
    _epsilon = dielectric_model->get_dielectric_constant();
+
+
+   
+
+
+
+
+
+
 }
 
 
@@ -126,6 +158,8 @@ void  PoissonModel::re_init()
 {
   
   update_charge_density();
+
+  update_built_in_polarization();
 
   //  update_dielectric_constant();      
 
@@ -156,4 +190,17 @@ void  PoissonModel::update_charge_density()
 
 //}
 
+void  PoissonModel::update_built_in_polarization()
+{
 
+
+
+}
+
+ 
+SimulationEnvironment& PoissonModel::get_piezo_environment()
+{
+
+  return _piezo_sim->get_environment();
+
+}

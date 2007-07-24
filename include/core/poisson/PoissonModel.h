@@ -7,6 +7,8 @@
 #include "SimulationInterface.h"
 #include "ChargeDensityModel.h"
 #include "DielectricModel.h"
+#include "Macrostrain.h"
+#include "SimulationEnvironment.h"
 
 //!Class that contains all the physical quantities necessary for the POISSON solver
 class PoissonModel: public PhysicalModel
@@ -24,8 +26,8 @@ class PoissonModel: public PhysicalModel
   
   void 	re_init(void);
   
-  //! update the charge density
-  void  update_charge_density(void);
+  //!Get the piezo simulation environment
+  SimulationEnvironment& get_piezo_environment();
   
   //!Set the current element
   void set_element(const Elem* elem);
@@ -36,10 +38,33 @@ class PoissonModel: public PhysicalModel
   //!Return the charge density for the current element
   Tensor2Sym get_dielectric_constant(); 
 
+  //!Return the piezopolarization a the given element
+  Tensor1 get_built_in_polarization(); 
 
 
  private:
+
+
+
+  Macrostrain* _piezo_sim;
+   
+  struct model_options
+  {
+     bool pyro_pol;  
+
+     bool piezo_pol;
+  
+   };
     
+  //!Options for Poisson model
+  model_options model_opt;
+
+  //! update the charge density
+  void  update_charge_density(void);  
+  
+  //! Update the built in polarization
+  void  update_built_in_polarization(void); 
+  
    //! Current element 
    const Elem* _elem; 
 
@@ -58,7 +83,11 @@ class PoissonModel: public PhysicalModel
    //!A pointer to dielectric constant model
    DielectricModel* dielectric_model;
 
-
+  //!Pyropolarization
+  Tensor1  _pyropolarization;
+ 
+  //!Piezopolarization
+  Tensor1  _piezopolarization;
   
  protected:
 
@@ -116,6 +145,16 @@ PoissonModel::get_dielectric_constant()
 
  
   return _epsilon;
+
+}
+
+inline
+Tensor1
+PoissonModel::get_built_in_polarization()
+{
+
+  return  (_pyropolarization + _piezopolarization);
+
 
 }
 
