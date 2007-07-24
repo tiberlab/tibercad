@@ -4,6 +4,7 @@
 #include "BoundaryProperties.h"
 #include "Boundary.h"
 #include "MacrostrainBoundaryProperties.h"
+#include "petsc_linear_solver.h"
 using namespace std;
 //-----------------------------------------------------------------//
 
@@ -154,11 +155,21 @@ void Macrostrain::parse_options( )
 
  // assert(periodicity_x == false);
 
+ 
 
   
  equation_systems->parameters.set<Real>("linear solver tolerance") = tolerance; 
 
+ {
+   int ierr; 
+ 
+   KSP KSP_of_solver = (dynamic_cast< PetscLinearSolver<Real>* > (  (my_system->linear_solver).get() )  )->ksp();
+   ierr = KSPSetType (KSP_of_solver, (char*) KSPBCGSL);       CHKERRABORT(libMesh::COMM_WORLD,ierr);
 
+   PC  PC_of_solver = (dynamic_cast< PetscLinearSolver<Real>* > (  (my_system->linear_solver).get() )  )->pc();
+   ierr = PCSetType (PC_of_solver, (char*) PCJACOBI);    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+
+ }
 
 
  if (!grown_on_substrate)
