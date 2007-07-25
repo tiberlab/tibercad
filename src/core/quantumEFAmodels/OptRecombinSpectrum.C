@@ -145,6 +145,7 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
   k_vector[1] = k_point(1);
   k_vector[2] = k_point(2);
 
+  
 
   ModelOptions  quantum_model_opts;
 
@@ -165,14 +166,18 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
 
 
 
+ _quantum_model_final_state->solve();
+ 
 
-  _quantum_model_initial_state->solve();
 
-  _quantum_model_final_state->solve();
+
+
+ _quantum_model_initial_state->solve();
+
+
 
   _optical_model->solve();
 
- 
 
 
   std::map<const Elem*, double>& spectrum = density;
@@ -190,6 +195,8 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
 
   for (;it != it1; ++it)
     integrated_quantity +=abs(it->second);
+
+
 
 
 }

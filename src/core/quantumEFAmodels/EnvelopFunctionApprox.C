@@ -682,11 +682,13 @@ void EnvelopFunctionApprox::do_solve()
 
  make_new_dofs();
 
+ 
  if ( opt.job ==   EIGENSTATES )   
    solve_eigen_value_problem( opt.number_of_eigenstates);
  else if ( opt.job == DENSITY )
    calculate_convergent_density(opt.Temperature);
-  
+
+ 
  
  
 }
@@ -1405,10 +1407,11 @@ void EnvelopFunctionApprox::copy_H_matrix_to_solver( )
 void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, double st_shift_value)
 {
 
-
-
+  
+ 
   calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
  
+
 
   EigenSolver::prepare_slepc();
 
@@ -1442,7 +1445,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
     slep_opt.spectrum_shift = st_shift_value;
 
 
-    slep_opt.matrix_output = true;
+    slep_opt.matrix_output = false;
   
    
 
@@ -1477,6 +1480,7 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
   }
 
 
+
   slep_opt.matrix_output = false;
 
   
@@ -1504,12 +1508,13 @@ void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, do
       }
   }
  
-
+ 
 
 
   read_SLEPC_solution(ev_number);
 
   int result = EigenSolver::clear_slepc();
+
  
   
 }

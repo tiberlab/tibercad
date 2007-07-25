@@ -6,6 +6,8 @@
 #include "slepceps.h"
 #include "EigenSolver.h"
 
+using namespace std;
+
 namespace
 {
 Mat A;
@@ -74,6 +76,9 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
 
   }
 
+ 
+
+
   if (opt.matrix_output)
   {//test of the matrix
 
@@ -90,7 +95,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     ierr = PetscViewerDestroy(viewer_out);CHKERRQ(ierr);
 
   }
-
+ 
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 Create the eigensolver and set various options
@@ -108,8 +113,15 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  CHKERRQ(ierr);
 
 
+
+
   if (opt.solver_type == "arnoldi")
   {
+
+     
+    
+
+
     ierr = EPSSetProblemType(eps,EPS_GNHEP);CHKERRQ(ierr);
     ierr = EPSSetType(eps, EPSARNOLDI); CHKERRQ(ierr);
     ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
@@ -159,7 +171,6 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     }
   }
  
-
 
 
 
@@ -343,6 +354,10 @@ double EigenSolver::get_eigenvalue( int i)
     }
 
   }
+
+
+  ierr =  VecDestroy( eigen_vector );
+
 }
 //-----------------------------------------------------------------------------//
 
@@ -387,7 +402,8 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
   int ierr;
 
   int ncv;
-  
+
+
 
   if (opt.ev_number > 8)
     ncv =  4*opt.ev_number;
@@ -397,6 +413,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
  
   ierr = EPSSetDimensions(eps,opt.ev_number, ncv); CHKERRQ(ierr);
 
+ 
 
   ierr = EPSSolve(eps);CHKERRQ(ierr);
   
