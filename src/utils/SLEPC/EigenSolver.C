@@ -6,29 +6,27 @@
 #include "slepceps.h"
 #include "EigenSolver.h"
 
-using namespace std;
-
 namespace
 {
-Mat A;
-Mat B;
-EPS eps;
+  Mat A; //Hamiltonian
+  Mat B; //S-matrix
+  EPS eps; //EigenSolver 
 }
 
 //-------------------------------------------------------------//
-void EigenSolver::slepc_init()
+void EigenSolver::slepc_init(int argc1, char** argv1)
 {
-  int argc1 = 0;
-  char **argv1;
-  argv1 = (char**) malloc(sizeof(char*));
-  argv1[0] = (char*) malloc(0);
+  // int argc1 = 0;
+  //char **argv1;
+  //argv1 = (char**) malloc(sizeof(char*));
+  //argv1[0] = (char*) malloc(0);
   
 
   SlepcInitialize(&argc1,&argv1,NULL,NULL);
 
 
-  free(argv1[0]);
-  free(argv1);
+  // free(argv1[0]);
+  // free(argv1);
 }
 
 //--------------------------------------------------------------//
@@ -76,9 +74,6 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
 
   }
 
- 
-
-
   if (opt.matrix_output)
   {//test of the matrix
 
@@ -95,7 +90,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     ierr = PetscViewerDestroy(viewer_out);CHKERRQ(ierr);
 
   }
- 
+
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 Create the eigensolver and set various options
@@ -113,15 +108,8 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  CHKERRQ(ierr);
 
 
-
-
   if (opt.solver_type == "arnoldi")
   {
-
-     
-    
-
-
     ierr = EPSSetProblemType(eps,EPS_GNHEP);CHKERRQ(ierr);
     ierr = EPSSetType(eps, EPSARNOLDI); CHKERRQ(ierr);
     ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
@@ -171,6 +159,8 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     }
   }
  
+
+
 
 
 
@@ -356,7 +346,7 @@ double EigenSolver::get_eigenvalue( int i)
   }
 
 
-  ierr =  VecDestroy( eigen_vector );
+  ierr = VecDestroy(eigen_vector);
 
 }
 //-----------------------------------------------------------------------------//
@@ -368,6 +358,11 @@ int EigenSolver::prepare_slepc()
   */
   int ierr;
   ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
+
+
+  ierr = EPSSetFromOptions(eps); CHKERRQ(ierr);
+
+
   return(ierr);
 }
 
@@ -402,8 +397,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
   int ierr;
 
   int ncv;
-
-
+  
 
   if (opt.ev_number > 8)
     ncv =  4*opt.ev_number;
@@ -413,7 +407,6 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
  
   ierr = EPSSetDimensions(eps,opt.ev_number, ncv); CHKERRQ(ierr);
 
- 
 
   ierr = EPSSolve(eps);CHKERRQ(ierr);
   
@@ -522,8 +515,12 @@ int EigenSolver::insert_H_row( int row, const std::vector<unsigned int>& colums,
 
   ierr = MatSetValues(A,1,&row,number_of_columns,col,value,INSERT_VALUES);
 
+
+
   CHKERRQ(ierr);
   return(ierr);
+
+  
 }
 
 //-------------------------------------------------------------------//
@@ -546,4 +543,19 @@ int EigenSolver::insert_S_row( int row, const std::vector<unsigned int>& colums,
 
   CHKERRQ(ierr);
   return(ierr);
+}
+//------------------------------------------------------------------------------------//
+int  EigenSolver::preallocate_H_matrix(unsigned int matrix_size,  int*  non_zeros)
+{
+  int ierr;
+  ierr = ierr = MatCreateSeqAIJ (PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &A);
+             
+  
+}
+//------------------------------------------------------------------------------------//
+int  EigenSolver::preallocate_S_matrix(unsigned int matrix_size,  int*  non_zeros)
+{
+  int ierr;
+  ierr = ierr = MatCreateSeqAIJ (PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &B);
+
 }

@@ -53,7 +53,7 @@ int main (int argc, char** argv)
 
   libMesh::init(argc, argv);
   {
-    EigenSolver::slepc_init();
+    EigenSolver::slepc_init(argc, argv);
 
     Control control(inputfile);
     

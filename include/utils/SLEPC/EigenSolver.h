@@ -46,7 +46,7 @@ class EigenSolver
   static int eig_value_problem(const SLEPCoptions& opt) ;
 
   //!has to be called at the beginning of tibecad
-  static void slepc_init(void);
+  static void slepc_init(int argc1, char** argv1);
   
   //!has to be called at the end of tibecad
   static void slepc_done(void);
@@ -78,6 +78,22 @@ class EigenSolver
    */
   static int init_S_matrix(unsigned int size);
 
+
+  //!allocates memory for H matrix (non-parallel version!!!) 
+  /*!
+    \param matrix_size size of the matrix 
+    \param non_zeros numbers of non-zero columns in each raw
+  */
+  static int preallocate_H_matrix(unsigned int matrix_size,  int*  non_zeros);
+
+  //!allocates memory for S matrix (non-parallel version!!!) 
+  /*!
+    \param matrix_size size of the matrix 
+    \param non_zeros numbers of non-zero columns in each raw
+  */
+  static int preallocate_S_matrix(unsigned int matrix_size,  int*  non_zeros);
+  
+
   //closes H matrix
   static int finalize_H_assembly(void);
 
@@ -99,6 +115,8 @@ class EigenSolver
     \param value values of matrix elements
   */
   static int insert_S_row( int row, const std::vector<unsigned int>& columns, const std::vector<Complex>& value);
+
+
 
 
  private:

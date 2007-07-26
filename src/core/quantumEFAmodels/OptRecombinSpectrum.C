@@ -145,7 +145,6 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
   k_vector[1] = k_point(1);
   k_vector[2] = k_point(2);
 
-  
 
   ModelOptions  quantum_model_opts;
 
@@ -165,24 +164,16 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
   _optical_model->set_options(optical_model_opts);
 
 
+  _quantum_model_initial_state->solve(); //calculate eigenstates
 
- _quantum_model_final_state->solve();
+  _quantum_model_final_state->solve(); //calculate eigenstates
+
+  _optical_model->solve(); //calculate matrix elements of P operator  
+
  
-
-
-
-
- _quantum_model_initial_state->solve();
-
-
-
-  _optical_model->solve();
-
 
 
   std::map<const Elem*, double>& spectrum = density;
-
- 
 
  
   _optical_model->calculate_spectrum(*_energy_mesh, opt.Gamma, opt.polariz,  spectrum );
@@ -195,8 +186,6 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
 
   for (;it != it1; ++it)
     integrated_quantity +=abs(it->second);
-
-
 
 
 }
