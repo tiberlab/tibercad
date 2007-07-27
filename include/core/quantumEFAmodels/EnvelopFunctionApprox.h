@@ -2,67 +2,13 @@
 #define _ENVELOPFUNCTIONAPPROX_H_
 //! A class that constructs Hamiltonian and S-matrix 
 
-// Basic include files needed for the mesh functionality.
-#include "libmesh.h"
-#include "mesh.h"
-#include "mesh_generation.h"
-#include "gmv_io.h"
-#include "linear_implicit_system.h"
-#include "nonlinear_implicit_system.h"
-#include "equation_systems.h"
 
-#include "getpot.h"
-// For mesh refinement
-
-
-#include "mesh_refinement.h"
-#include "error_vector.h"
-#include "kelly_error_estimator.h"
-
-// Define the Finite Element object.
-#include "fe.h"
-#include "elem.h"
-// Define Gauss quadrature rules.
-#include "quadrature_gauss.h" 
-
-// Define useful datatypes for finite element
-// matrix and vector components.
-#include "sparse_matrix.h"
-#include "numeric_vector.h"
-#include "dense_matrix.h"
-#include "dense_vector.h"
-
-// Define the DofMap, which handles degree of freedom
-// indexing.
-#include "dof_map.h"
-
-#include "fe_interface.h"
-#include "dense_submatrix.h"
-#include "dense_subvector.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <vector>
-#include <complex>
-
-
-#include <fstream>
-#include <iomanip>
-
-//------------------------------------------------------------------------------
-
-#include <complex>
-#include <vector>
-#include <petsc_matrix.h>
-#include "EFAbulkHamiltonian.h"
-#include <algorithm>
-#include <set>
-#include <tecplot_io.h>
-#include "mesh_data.h"
 #include "Macrostrain.h"
 #include "DriftDiffusion.h"
 #include "SimulationInterface.h"
+#include "EigenvalueProblem.h"
 
-class EnvelopFunctionApprox  : public SimulationInterface
+class EnvelopFunctionApprox  : public EigenvalueProblem
 {
  public:
   //!control options
@@ -174,12 +120,7 @@ class EnvelopFunctionApprox  : public SimulationInterface
   };
 
 
-  //! data structure that contain information about if the dof is independent or not
-  struct dof_new
-  {
-    bool independent;  //!< true if it is and independent dof
-    unsigned int new_number;  //!< new number in the independent dofs list
-  };
+ 
 
 
  
@@ -194,7 +135,7 @@ class EnvelopFunctionApprox  : public SimulationInterface
 
 
   //!computes Hamiltonian and S matrix
-  void calculate_Hamiltonian_and_S(void); 
+  virtual void calculate_Hamiltonian_and_S(void); 
 
 
 
@@ -378,17 +319,7 @@ class EnvelopFunctionApprox  : public SimulationInterface
   double my_Jacobian; 
 
   
-  //!dimension of the system
-  short dim;
-
-  //!pointer to the real part of the Hamiltonian
-  SparseMatrix<Number>* Ham_real;
-
-  //!pointer to the imaginary part of the Hamiltonian
-  SparseMatrix<Number>* Ham_imag;
-
-  //!pointer to the S matrix (it's real)
-  SparseMatrix<Number>* S_real;
+ 
 
 
   //!calculates \f$ |\langle \psi|\psi \rangle|^2 \f$ of an eigenstate
@@ -430,8 +361,7 @@ class EnvelopFunctionApprox  : public SimulationInterface
   */
   void read_SLEPC_solution(unsigned int number_of_ev);
 
-  //!vector: each element contains information about dof
-  std::vector<EnvelopFunctionApprox::dof_new> new_dofs;
+
 
  
  
@@ -448,12 +378,7 @@ class EnvelopFunctionApprox  : public SimulationInterface
   //!creates new_dofs vector
   void make_new_dofs(void);
 
-  //!number of independent dofs
-  int number_of_new_dofs;
-
-
-  //!total number of dofs 
-  int number_of_all_dofs;
+ 
 
 
   //!number of nodes used in the model

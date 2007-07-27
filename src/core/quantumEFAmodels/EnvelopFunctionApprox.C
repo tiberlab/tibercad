@@ -8,7 +8,7 @@
 
 
 #include "EigenSolver.h"
-
+ 
 
 #include <edge_edge2.h>
 
@@ -1212,7 +1212,6 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   
  
   
-  
 
   //  dof_map.print_dof_constraints();
      
@@ -1230,6 +1229,7 @@ void EnvelopFunctionApprox::copy_S_matrix_to_solver()
   PetscMatrix<Number>* p_matrix = static_cast<PetscMatrix<Number>* >(S_real);
 
   p_matrix->close();
+  
   
   //----------preallocate memory------------------------------------------------------
 
@@ -1258,7 +1258,6 @@ void EnvelopFunctionApprox::copy_S_matrix_to_solver()
 	  non_zeros_number[new_dofs[row].new_number]++;
 
 	 
-
 	}
       }
       

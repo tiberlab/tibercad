@@ -8,7 +8,8 @@ topdir := ../..
 subdirs := classical-transport macrostrain semiconductormodels
 subdirs += solver-interfaces macroheatbalance quantumEFAmodels tightbinding
 subdirs += poisson
-
+subdirs += eigenvalue
+subdirs += maxwell
 
 include $(topdir)/Make.common
 
