@@ -8,9 +8,7 @@
 
 //! Class to return the Optical Dielectric  constant
 /*!
-
-See lattice thermal conductivity.........
-
+  Used for Maxwell equations
 */
 
 class  OptDielectricConstant: public PhysicalModelInterface
@@ -32,7 +30,7 @@ class  OptDielectricConstant: public PhysicalModelInterface
   };
 
   //!Destructor
-  ~OptDielectricConstant(){ } ;
+  virtual ~OptDielectricConstant(){ } ;
 
 
   //!provides real part of dielectric constant   in simulation system
@@ -41,9 +39,8 @@ class  OptDielectricConstant: public PhysicalModelInterface
   //!provides imag. part of dielectric constant  in simulation system
   void get_dielectric_imag(Tensor2Sym& dielectric_constant_imag) const; 
 
- 
-     
-  virtual void update_tensor(void)=0;
+  //!creates new model
+  static OptDielectricConstant*  create(const std::string &name, const ModelOptions &options);
 
 
  private:
@@ -78,6 +75,9 @@ class  OptDielectricConstant: public PhysicalModelInterface
 
   //!rotates  dielectric  tensor into the simulation system
   void rotate_to_calculation_system(const Tensor2Gen& RotMatrix);
+
+  //!name of the dielectric function model
+  std::string _eps_model;
 
 
 };
@@ -115,6 +115,9 @@ OptDielectricConstant::rotate_to_calculation_system(const Tensor2Gen& RotMatrix)
 
 }
 
-
+inline OptDielectricConstant* OptDielectricConstant::create( const std::string& name,  const ModelOptions& options ) 
+{
+  return dynamic_cast<OptDielectricConstant*>(PhysicalModelInterface::create("opt_dielectric_constant_" + name, options));
+}
 
 #endif

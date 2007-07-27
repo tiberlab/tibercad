@@ -55,6 +55,10 @@
 #include  "ChargeDensityModel.h"
 #include  "DielectricModel.h"
 
+#include  "ZbOptDielectricConstant.h"
+#include  "WzOptDielectricConstant.h"
+
+
 #include <dlfcn.h>
 #include <typeinfo>
 #ifdef DEBUG
@@ -166,6 +170,10 @@ PhysicalModelInterface::create(const string& name,
       mod = ChargeDensityModel::create();
     else if  (name == "dielectric_model")
       mod = DielectricModel::create();
+    else if (name == "opt_dielectric_constant_zb")
+      mod = ZbOptDielectricConstant::create();
+    else if (name == "opt_dielectric_constant_wz")
+      mod = WzOptDielectricConstant::create();
  
   }
 

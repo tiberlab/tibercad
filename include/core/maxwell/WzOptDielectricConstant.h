@@ -9,30 +9,27 @@ class  WzOptDielectricConstant: public OptDielectricConstant
 {
  public:
   //!constructor
-WzOptDielectricConstant() {};
+  WzOptDielectricConstant() {};
  
  //!destructor
- ~WzOptDielectricConstant() {};
+ virtual ~WzOptDielectricConstant() {};
 
 
  inline  static WzOptDielectricConstant* create();
 
-  virtual void update_tensor();
+ 
 
 
  private:
 
-  std::string _eps_model;
-
-  double _eps_a_x; 
-  double _eps_b_x; 
-  double _eps_c_x;
-  double _eps_x;
-
-  double _eps_a_z; 
-  double _eps_b_z; 
-  double _eps_c_z;
-  double _eps_z;
+ 
+ //!epsilon along [10-10] direction
+ double _eps_a; 
+ 
+ //!epsilon along [0001] direction
+ double _eps_c; 
+  
+ 
 
  protected:
  
@@ -41,7 +38,8 @@ WzOptDielectricConstant() {};
 
   virtual void do_init(void);
 
- inline  virtual PhysicalModelInterface*  create_new (void) const;
+  
+  inline  virtual PhysicalModelInterface*  create_new (void) const;
 
 };
 

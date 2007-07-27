@@ -12,6 +12,11 @@
 
 #include <edge_edge2.h>
 
+
+
+// GNU scientific library
+#include <gsl/gsl_sf_fermi_dirac.h>
+
 using namespace std;
 using namespace Constants;
 
@@ -3378,3 +3383,39 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
 
 
 //========================================================================================//
+
+std::vector<double> EnvelopFunctionApprox::estimate_density1D(unsigned int state_number, double parallel_mass)
+{
+  vector<double> result;
+
+  const double T_EV = opt.Temperature * Constants::k_Boltzmann;
+  
+  const double mass_factor = parallel_mass/M_PI * (T_EV /Constants::Hartree);
+
+  const double Fermi_energy = solution[state_number].Fermi_energy;
+
+  const double Energy = solution[state_number].eigen_energy;
+
+  double prob_factor = std::log( 1.0 + exp( (Fermi_energy - Energy) / T_EV )  );
+
+  result  = calculate_cell_prob_function(state_number);
+
+  unsigned int n =  result.size();
+
+  for (unsigned int j = 0; j < n; j++ )
+  {
+    result[j] *=  prob_factor * mass_factor / 
+	( (Constants::bohr_radius) * (Constants::bohr_radius) * (Constants::bohr_radius) * 1.0e6 );
+  }
+
+}
+
+//========================================================================================//
+
+std::vector<double> EnvelopFunctionApprox::estimate_density2D(unsigned int state_number, double parallel_mass)
+{
+
+
+}
+
+//=======================================================================================//
