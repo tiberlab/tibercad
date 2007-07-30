@@ -57,7 +57,7 @@
 
 #include  "ZbOptDielectricConstant.h"
 #include  "WzOptDielectricConstant.h"
-
+#include  "MaxwellPhysicalModel.h"
 
 #include <dlfcn.h>
 #include <typeinfo>
@@ -174,7 +174,8 @@ PhysicalModelInterface::create(const string& name,
       mod = ZbOptDielectricConstant::create();
     else if (name == "opt_dielectric_constant_wz")
       mod = WzOptDielectricConstant::create();
- 
+    else if (name == "maxwell")
+      mod = MaxwellPhysicalModel::create();
   }
 
 
