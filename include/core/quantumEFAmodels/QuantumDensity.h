@@ -81,6 +81,9 @@ class QuantumDensity : public KspaceIntegration
   struct options
   {
     
+    bool analitic; //!estimate density analitically rather than calculte numerically
+    
+
 
     double Temperature;             //!< temperature [K]
     unsigned int degeneracy;        //!< degeneracy factor to mutiply the charge density 
@@ -88,7 +91,7 @@ class QuantumDensity : public KspaceIntegration
     unsigned int intial_eigenstates_number;  //!< number of required eigenstates for the first call of Schoedinger solver
 
   
-    bool log_output; 
+    bool log_output; //!perform some screen output for debugging
    
    
 
@@ -144,8 +147,8 @@ class QuantumDensity : public KspaceIntegration
 
 
 
-  
-
+   //!analitic (parabolic)  density calculation
+   void estimate_analitic_density(void) {};
   
 
  protected:
@@ -170,6 +173,9 @@ class QuantumDensity : public KspaceIntegration
 				     double& integrated_quantity);
 
 
+
+
+   virtual void do_solve();
 
 };
 

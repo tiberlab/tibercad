@@ -17,6 +17,7 @@
 #include "OptRecombinSpectrum.h"
 #include "Poisson.h"
 #include "TunnelingCurrent.h"
+#include "MaxwellEquations.h"
 
 #include "Sweep.h"
 #include "SelfconsistentSolver.h"
@@ -109,6 +110,9 @@ SimulationInterface::create(const string& type,
       sim = OptRecombinSpectrum::create();
     else if (type == "poisson")
       sim = Poisson::create();
+    else if (type == "maxwell")
+      sim = MaxwellEquations::create();
+
 }
 
   if (sim != NULL)

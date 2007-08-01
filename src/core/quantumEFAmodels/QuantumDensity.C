@@ -206,8 +206,22 @@ void QuantumDensity::parse_options( )
   opt.intial_eigenstates_number = mod_opt.get_option("initial_eigenstates_number", 6);
 
  
+  opt.analitic = mod_opt.get_option("analitic", true);
 }
 
+//============================================//
+void QuantumDensity:: do_solve()
+{
+  if (!opt.analitic)
+  {//numerical integration
+    KspaceIntegration::do_solve();
+  }
+  else
+  {
+    estimate_analitic_density();
+  }
+
+}
 
 
 //============================================//

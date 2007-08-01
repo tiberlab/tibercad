@@ -77,7 +77,32 @@ class EigenvalueProblem: public  SimulationInterface
     unsigned int new_number;  //!< new number in the independent dofs list
   };
 
-  EigenvalueProblem(void) {};
+  enum Method
+  {
+    FEM = 0,
+    BIM = 1
+  };
+
+  struct options
+  {
+    std::string solver;      //!< solver type
+   
+    unsigned int max_iteration_number; //!< maximum number of iterations for the eigenvalue solver
+    
+    double    eigen_solver_tolerance;  //!< tolerance for eigenvalue solver 
+   
+    bool solve_ev_problem_twice; //!< if true, calculate the first eigenvalue only and then run again
+   
+    unsigned int number_of_eigenstates; //!<number of eigenstates to be calculated
+    
+    Method discretization_method; //!<box integration or finite element
+   
+    bool Dirichlet_bc_everywhere; //!< apply dirichlet boundary conditions at all boundaries
+  
+  };
+
+
+  EigenvalueProblem(void);
 
   virtual ~EigenvalueProblem() {};
 
@@ -88,7 +113,7 @@ class EigenvalueProblem: public  SimulationInterface
   virtual void do_solve() {};
 
 
-  virtual void parse_options() {};
+  virtual void parse_options();
 
 
   virtual PhysicalModel*
@@ -104,12 +129,7 @@ class EigenvalueProblem: public  SimulationInterface
   //!calculates matricies H and S for the generalized problem Hx = gSx 
   virtual void calculate_Hamiltonian_and_S(void) {};
 
-  //!solves eigenvalue problem
-  /*!
-    \param ev_number number of eigenvalues requested
-    \param spectrum_shift additional spetrum shift [work units]
-  */
-  virtual void 	solve_eigen_value_problem (unsigned int ev_number, double spectrum_shift=0.0) {};
+ 
 
 
   //!dimension of the system
@@ -130,14 +150,14 @@ class EigenvalueProblem: public  SimulationInterface
 
 
 
-  //!creates complex matrix inside EigenSolver class
+  //!creates complex matrix inside EigenSolver class (TODO)
   /*!
     \param matrix  H or S
     \param m_real  real part of the matrix
     \param m_imag  imaginary part of the matrix. If NULL, matrix is considdred to be pure real
   */
   void create_complex_matrix(const MatrixName matrix, const SparseMatrix<Number>* m_real, 
-			     const SparseMatrix<Number>* m_imag = NULL ) {};
+  			     const SparseMatrix<Number>* m_imag = NULL ) {};
 
 
   //!number of independent dofs
@@ -151,6 +171,74 @@ class EigenvalueProblem: public  SimulationInterface
 
   //!vector: each element contains information about dof
   std::vector<EigenvalueProblem::dof_new> new_dofs;
+
+
+  //!creates new_dofs vector
+  void make_new_dofs(void);
+
+
+  //!pointer to mesh of the equation systems
+  Mesh* mesh;
+
+
+   //!pointer the equation systems object
+  EquationSystems* es;
+  
+  //!system that we add to the equation systems
+  LinearImplicitSystem* system;
+
+
+  //!diriclet DOFS
+  std::set<unsigned int>  dirichlet_dofs;
+
+  //!updates my_dof_constraints 
+  void make_constraints(void);
+
+
+  //! my copy of DofMap::_dof_constraints (I have to recalculate it because it is private)
+  DofConstraints 	my_dof_constraints;
+
+  
+  //!creates dirichlet dofs
+  void create_dirichlet_dofs(void);
+  
+
+  //!Apply Dirichlet boundary conditions to all boundary points!
+  void apply_diriclet_bc_at_all_boundaries();
+  
+
+  //!put spectrum shift energy to be almost equal to the 1st eigenvalue
+  virtual double get_new_spectrum_shift(void){};
+
+
+ 
+
+
+  //!solves eigenvalue problem
+  /*!
+    \param ev_number number of eigenvalues requested
+    \param spectrum_shift additional spectrum shift 
+  */
+  void solve_eigen_value_problem(unsigned int ev_number, double spectrum_shift = 0.0 );
+
+
+   //!read SLEPc solutions
+  /*!
+ 
+  1) Read all eigenvalues
+  2) Sort the eigenvalues and select those we want 
+  3) Read eigenvectors that correspond to the eigenvalues we want
+  4) do something else
+ 
+    \param number_of_ev number of eigen functions to read
+  */
+  virtual void read_SLEPC_solution(unsigned int number_of_ev) {};
+
+  //!options of any eigensolver problem
+  options solver_opt;
+
+
+
 
 };
 

@@ -20,11 +20,6 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   };
 
 
-  enum Method
-  {
-    FEM = 0,
-    BIM = 1
-  };
 
 
   //! data structure that contains options for effective mass
@@ -43,19 +38,11 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
 
     bool periodicity[3];    //!< periodic boundary conditions
 
-    std::string solver;     //!< solver type
-
-    std::string mpi_command_line; //!< something like:  mpirun -np 5 -machinefile machines
-
-    std::string solver_command_line; //!< additional line to pass parameters for the eigenvalue solver
-
-    unsigned int coeff_for_ncv; //!< eps_ncv = number_of_requested_ev * coeff_for_ncv
-
-    double eigen_solver_tolerance; //!< tolerance for eigenvalue solver [Ha]
+   
 
     std::string output_type; //!< output type 
 
-    unsigned int max_iteration_number; //!< maximum number of iterations for the eigenvalue solver
+   
 
     double spectrum_shift;    //!< shift of spectrum ised in matrix assembly[eV]
 
@@ -65,11 +52,6 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
 
     bool estimate_spectrum_shift; //!< calculate spectrum shift from band edges;
   
-
-    bool Dirichlet_bc_everywhere;//!< apply dirichlet boundary conditions at all boundaries
-
-
-    bool solve_ev_problem_twice;//!< if true, calculate the first eigenvalue only and then run again
 
 
     bool convergent_density;//!< if true, the number of eigenstates will be increased to reach the tolerance
@@ -86,7 +68,6 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
     bool log_output; //!< to do a lot of output on screen
 
 
-    unsigned int number_of_eigenstates; //!<number of eigenstates to be calculated
 
     JobKind job; //!< a job to do
 
@@ -97,7 +78,6 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
     bool local_occupation; //!<If a local occupation is considered 
 
 
-    Method discretization_method; //!<box integration or finite element 
 
   };
 
@@ -141,12 +121,7 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
 
   
 
-  //!solves eigenvalue problem
-  /*!
-    \param ev_number number of eigenvalues requested
-    \param spectrum_shift additional spetrum shift [eV]
-  */
-  void solve_eigen_value_problem(unsigned int ev_number, double spectrum_shift = 0.0 );
+ 
 
   //!writes on disk the eigenfunction
   /*!
@@ -282,12 +257,9 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   static  Device* _device;
 
 
-  //!Apply Dirichlet boundary conditions to all boundary points!
-  void apply_diriclet_bc_at_all_boundaries();
-  
-
+ 
   //!pointer to mesh of the equation systems
-  Mesh* mesh;
+  //Mesh* mesh;
 
   options opt;
 
@@ -295,7 +267,7 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   MeshData*  meshdata;
 
   //!pointer the equation systems object
-  EquationSystems* es;
+  //EquationSystems* es;
 
   
   std::string system_name;
@@ -307,13 +279,12 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   Macrostrain* strain;
 
   //!system that we add to the equation systems
-  LinearImplicitSystem* system;
+  //LinearImplicitSystem* system;
 
   //!diriclet nodes vector
   // std::vector<unsigned int>  dirichlet_nodes;
 
-  //!diriclet DOFS
-  std::set<unsigned int>  dirichlet_dofs;
+ 
   
   //!my Jacobian because I calculate everything in atomic units
   double my_Jacobian; 
@@ -367,16 +338,12 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
  
   
 
-  //!creates dirichlet dofs
-  void create_dirichlet_dofs(void);
-
 
 
   //!creates constraints
-  void make_constraints(void);
+  // void make_constraints(void);
 
-  //!creates new_dofs vector
-  void make_new_dofs(void);
+ 
 
  
 
@@ -404,8 +371,7 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   
 
 
-  //! my copy of DofMap::_dof_constraints (I have to recalculate it because it is private)
-  DofConstraints 	my_dof_constraints;
+ 
 
   //! Apply periodic boundary conditions
   void apply_periodic_bc();
@@ -483,6 +449,11 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
 
   //!k-vector in atomic units
   double k_vector[3];
+
+
+
+  //!put spectrum shift energy to be almost equal to the 1st eigenvalue
+  double get_new_spectrum_shift(void);
 
  protected:
 

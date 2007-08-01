@@ -361,36 +361,26 @@ EnvelopFunctionApprox::EnvelopFunctionApprox()
 void EnvelopFunctionApprox::parse_options()
 {
  
+
+  EigenvalueProblem::parse_options();
+
   const ModelOptions& mod_opt = get_options();
 
 
 
   opt.particle                = mod_opt.get_option("particle", "el");
 
+
+  opt.log_output              = mod_opt.get_option("log_output", false);  
+
  
+
  
-
-  opt.log_output              = mod_opt.get_option("log_output", false);
-
-  opt.solver                  = mod_opt.get_option("solver","arnoldi");
-  opt.eigen_solver_tolerance  = mod_opt.get_option("eigen_solver_tolerance",1e-9); 
-  opt.max_iteration_number    = mod_opt.get_option("max_iteration_number",10000);
-
-  opt.solve_ev_problem_twice  = mod_opt.get_option("solve_ev_problem_twice",true);
-  opt.Dirichlet_bc_everywhere = mod_opt.get_option("Dirichlet_bc_everywhere",false);
-  
-
-  opt.mpi_command_line        = mod_opt.get_option("mpi_command_line","");
-  opt.solver_command_line     = mod_opt.get_option("solver_command_line", 
-						   " -eps_largest_magnitude -st_type sinvert -st_ksp_rtol 1e-10 -st_ksp_type bcgs" );
 
   opt.output_type             = mod_opt.get_option("output_type","GMV");
 
   opt.eigen_number_increase_factor = mod_opt.get_option("eigen_number_increase_factor",1.2);
   
-
-  opt.number_of_eigenstates   = mod_opt.get_option("number_of_eigenstates", 6);
-
 
   opt.spectrum_shift          = mod_opt.get_option("spectrum_shift", 0.0);
 
@@ -505,18 +495,7 @@ void EnvelopFunctionApprox::parse_options()
 
   opt.local_occupation              = mod_opt.get_option("local_occupation", true);
 
-  //------------
-  {
-    std::string  method_name = mod_opt.get_option("method","FEM");
-    if (method_name == "FEM")
-      opt.discretization_method = FEM;
-    else if (method_name == "BIM")
-      opt.discretization_method = BIM;
-    else
-      throw InitFailedException( "EnvelopeFunctionApprox: Incorrect method " + method_name );  
 
-   
-  }
   //------------
 
 }
@@ -672,7 +651,7 @@ void EnvelopFunctionApprox::do_solve()
  parse_options();
 
 
- if (opt.Dirichlet_bc_everywhere)
+ if (solver_opt.Dirichlet_bc_everywhere)
    apply_diriclet_bc_at_all_boundaries();
  else
    create_dirichlet_dofs();
@@ -688,7 +667,7 @@ void EnvelopFunctionApprox::do_solve()
  make_new_dofs();
 
  if ( opt.job ==   EIGENSTATES )   
-   solve_eigen_value_problem( opt.number_of_eigenstates);
+   solve_eigen_value_problem( solver_opt.number_of_eigenstates);
  else if ( opt.job == DENSITY )
    calculate_convergent_density(opt.Temperature);
   
@@ -764,7 +743,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
   vector<double> box_volume(Ham_real->n(), 0.0);
    
-  if (opt.discretization_method == BIM)
+  if (solver_opt.discretization_method == BIM)
   {
     MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
     const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
@@ -897,7 +876,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       s_real.resize(n_dofs, n_dofs);
 
       // complex<double> operator_sign = Complex(0.0, -1.0);
-      if (opt.discretization_method == FEM)
+      if (solver_opt.discretization_method == FEM)
       {//FEM
 	fe->reinit (elem);
 
@@ -1021,7 +1000,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
       }
 
-      if (opt.discretization_method == BIM)
+      if (solver_opt.discretization_method == BIM)
       {//BIM
 
 	Point center = elem->centroid();
@@ -1164,11 +1143,11 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       
     
 
-      if (opt.discretization_method == FEM) ham_real.add( - opt.spectrum_shift/Hartree, s_real);//apply spectrum shift.
+      if (solver_opt.discretization_method == FEM) ham_real.add( - opt.spectrum_shift/Hartree, s_real);//apply spectrum shift.
 
       vector<unsigned int> dof_indices_tmp;
 
-      if (opt.discretization_method == FEM) 
+      if (solver_opt.discretization_method == FEM) 
       {
 	dof_indices_tmp = dof_indices;
 
@@ -1208,7 +1187,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   
  
 
-  if (opt.discretization_method == FEM)  copy_S_matrix_to_solver( );
+  if (solver_opt.discretization_method == FEM)  copy_S_matrix_to_solver( );
   
  
   
@@ -1540,124 +1519,32 @@ void EnvelopFunctionApprox::copy_H_matrix_to_solver( )
 
 
 
-void EnvelopFunctionApprox::solve_eigen_value_problem(unsigned int ev_number, double st_shift_value)
-{
-
- 
-  calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
- 
-  EigenSolver::prepare_slepc();
-
-  EigenSolver::SLEPCoptions slep_opt;
-
-  slep_opt.solver_type = opt.solver;
-
-  slep_opt.H_file_name = "H.out";
-    
-  slep_opt.S_file_name = "S.out";
-
-  slep_opt.eps_max_it =  opt.max_iteration_number;
-
-
-  slep_opt.read_matrix_from_file = false;
-
- 
-
-  if (opt.solve_ev_problem_twice)
-  {
-
-    st_shift_value = 0.0;
-
-
-    slep_opt.ev_number = 1;
-
-   
-    slep_opt.eps_tolerance = 1e-9;
-   
-   
-  
-    
-    slep_opt.spectrum_shift = st_shift_value;
-
-
-    slep_opt.matrix_output = false;
-  
-   
-
-    {
-      int result;
-      if (opt.discretization_method == FEM) 
-	result = EigenSolver::eig_value_problem_general(slep_opt);
-      else
-	result = EigenSolver::eig_value_problem(slep_opt);
-
-
-      if (result !=0 )
-      {
-	throw SolveFailedException("Eigensolver problem\n");
-      }
-    }
-   
-
-    read_SLEPC_solution(1);
-
-    assert(solution.size() == 1);
-
-   
-
-    st_shift_value = (solution[0].eigen_energy - opt.spectrum_shift)/Hartree;
-    
-    if (opt.particle == "el")
-      st_shift_value -= 0.01/Hartree;
-    else
-      st_shift_value += 0.01/Hartree;
-
-  }
-
-
-  slep_opt.matrix_output = false;
-
-  
-  slep_opt.eps_tolerance = 1e-9;
-
-  slep_opt.ev_number = ev_number;
-  
-  slep_opt.spectrum_shift  = st_shift_value;
-  
-
-
-  {
-      int result;
-      if (opt.discretization_method == FEM) 
-	result = EigenSolver::eig_value_problem_general(slep_opt);
-      else
-	result = EigenSolver::eig_value_problem(slep_opt);
-      
-      
-
-      if (result !=0 )
-      {
-	cerr << "result of EigenSolver is bad:  " << result << "\n";
-	throw SolveFailedException("Eigensolver problem\n");
-      }
-  }
- 
-
-
-
-  read_SLEPC_solution(ev_number);
-
-  int result = EigenSolver::clear_slepc();
- 
-  
-}
 
 //=============================================================//
+double EnvelopFunctionApprox::get_new_spectrum_shift(void)
+{
+  double st_shift_value ;
 
 
+  read_SLEPC_solution(1);
+  
+  assert(solution.size() == 1);
 
+   
+
+  st_shift_value = (solution[0].eigen_energy - opt.spectrum_shift)/Hartree;
+    
+  if (opt.particle == "el")
+    st_shift_value -= 0.01/Hartree;
+  else
+    st_shift_value += 0.01/Hartree;
+  
+  return st_shift_value;
+
+}
 
 //=========================================================================//
+
 void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 {//
   /*
@@ -1669,19 +1556,19 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   */
 
 
-  const short int_size = sizeof(int);
+  // const short int_size = sizeof(int);
 
-  const short double_size = sizeof(double);
+  //const short double_size = sizeof(double);
 
-  string fname_eigvals = "eigvals_SLEPC.out";
+  // string fname_eigvals = "eigvals_SLEPC.out";
 
 
 
-  char buffer[int_size];
-  char buffer_double[double_size];
-  unsigned int dummy;
+  // char buffer[int_size];
+  // char buffer_double[double_size];
+  //unsigned int dummy;
   
-  unsigned long long fict;
+  //unsigned long long fict;
 
  
   //--------------------------------------------------------------------
@@ -2183,185 +2070,10 @@ void EnvelopFunctionApprox::output_probability_function(unsigned int state_numbe
 
 
 
-void EnvelopFunctionApprox::apply_diriclet_bc_at_all_boundaries()
-{
-  MeshBase::const_element_iterator it = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end =  mesh->active_local_elements_end();
-
-  dirichlet_dofs.clear();
-  DofMap& dof_map = system->get_dof_map();
-  std::vector<unsigned int> dof_indices;
-
- 
-
-  for ( ; it != end; ++it)
-    {
-      const Elem* elem = *it;
-      unsigned int n_sides;
-
-      if ( dim > 1 ) 
-	n_sides = elem->n_sides();
-      else
-	n_sides = elem->n_nodes();
-     
-	 	
-      for (short i = 0; i < n_sides; i++)
-	{
-	 
-	  //check if the side is external -------------------------
-	  Elem* el1 = elem->neighbor(i);
-	  bool side_is_external = false;
-	  if (el1 == NULL) 
-	    side_is_external = true;
-	  else
-	    {
-	      std::vector< const Elem * > active_family;
-	      if ( el1->has_children() )
-		{
-		  el1->active_family_tree (active_family);
-	 
-		  if (active_family.size() == 0)
-		    side_is_external = true;
-		  //TODO
-		  /*
-		    has to be corrected because it may contain active child that does not belong to boundary
-		  */
-		}
-	      else
-		{//no children
-		  if ( !(el1->active()) )
-		    side_is_external = true;
-		}
-
-	    }
-	  //-------------------------------------------------------
-	
-
-
-
-	   if (   side_is_external   )  
-	    {
-	      
-	      if (dim > 1)
-		{//2D/3D
-		  for (unsigned int nd = 0; nd < elem->n_nodes(); nd++)
-		    {
-		      
-		      if (elem->is_node_on_side(nd, i))
-			for (short band = 0 ; band <  opt.number_of_bands; band++)
-			  {
-			    dof_map.dof_indices (elem, dof_indices,band); 
-			    dirichlet_dofs.insert(dof_indices[nd]);
-			  }
-		    }
-		      
-		}
-	      else
-		{//1D
-		  for (short band = 0 ; band <  opt.number_of_bands; band++)
-		    {
-		      dof_map.dof_indices (elem, dof_indices,band);
-		      dirichlet_dofs.insert(dof_indices[i]);
-		    }
-		}
-	    }
-	      
-	      
-	      
-	      
-	}
-	   
-	   
-    }
-    
-
-
-}
-//======================================================================//
-void  EnvelopFunctionApprox::create_dirichlet_dofs( )
-{
-  
-  SimulationEnvironment& se = get_environment(); 
-
-  DofMap& dof_map = system->get_dof_map();
-
-  MeshBase::const_element_iterator it = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end =  mesh->active_local_elements_end();
-
-  dirichlet_dofs.clear();
-
-
- 
-  std::vector<unsigned int> dof_indices;
-
-  for ( ; it != end; ++it)
-    {
-      const Elem* elem = *it;
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-	{ 
-	  unsigned int  node_id =  elem->node(n);
-
-	  const Node* nd = elem->get_node(n); 
-
-	  Boundary* bd = se.get_boundary(nd); 
-	 
-	  //does a node belong to a a dirichlet boundary condition
-
-	  if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
-	    if ( bd->get_name() == "Dirichlet" || bd->get_name() == "dirichlet" )
-	    {
-	      for (short band = 0 ; band <  opt.number_of_bands; band++)
-	      {
-		dof_map.dof_indices (elem, dof_indices,band); 
-		dirichlet_dofs.insert(dof_indices[n]);
-	      }
-	     
-	    }
-
-	  
-	}
-      
-    }
-  
-
-}
-
-//=======================================================================//
 
 
 //=======================================================================//
-void EnvelopFunctionApprox::make_constraints(void)
-{
- 
-  DofMap& dof_map = system->get_dof_map();
-  
- 
-  //----------------------------------------------------------------------------//
-  //I recalculate my copy of the dof constraints because I need them explicitely!
-  //  my_dof_constraints.clear(); not clear!!!
-
-  // Look at all the variables in the system
-  for (unsigned int variable_number=0; variable_number < dof_map.n_variables();
-        ++variable_number)
-    {
-      
-
-      MeshBase::const_element_iterator       elem_it  = mesh->elements_begin();
-      const MeshBase::const_element_iterator elem_end = mesh->elements_end(); 
-      
-      for ( ; elem_it != elem_end; ++elem_it)
-        FEInterface::compute_constraints (my_dof_constraints,
-                                          dof_map,
-                                          variable_number,
-                                          *elem_it);
-     }
- 
-  //-----------------------------------------------------------------------//
-  //TODO: add periodic boundary conditions constraints
-
-}
-//=======================================================================//
-
+/*
 void EnvelopFunctionApprox::make_new_dofs( )
 {
   new_dofs.clear();
@@ -2402,6 +2114,7 @@ void EnvelopFunctionApprox::make_new_dofs( )
   
 
 }
+*/
 //=======================================================================//
 bool EnvelopFunctionApprox::compare_eigen_energy_electrons(eigen_propblem_solution state1, eigen_propblem_solution state2)
 {
@@ -3414,7 +3127,29 @@ std::vector<double> EnvelopFunctionApprox::estimate_density1D(unsigned int state
 std::vector<double> EnvelopFunctionApprox::estimate_density2D(unsigned int state_number, double parallel_mass)
 {
 
+  vector<double> result;
 
+  const double T_EV = opt.Temperature * Constants::k_Boltzmann;
+
+  const double Fermi_energy = solution[state_number].Fermi_energy;
+
+  const double Energy = solution[state_number].eigen_energy;
+
+  const double prob_factor = gsl_sf_fermi_dirac_mhalf( (Fermi_energy - Energy)  / T_EV);
+
+  const double mass_factor = 0.5*sqrt( T_EV *  parallel_mass / (2.0*M_PI) );
+
+  result  = calculate_cell_prob_function(state_number);
+
+  unsigned int n =  result.size();
+
+  for (unsigned int j = 0; j < n; j++ )
+  {
+    result[j] *=  prob_factor * mass_factor / 
+	( (Constants::bohr_radius) * (Constants::bohr_radius) * (Constants::bohr_radius) * 1.0e6 );
+  }
+  
+  return(result);
 }
 
 //=======================================================================================//
