@@ -73,10 +73,12 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
 
   }
+  
+ 
 
   if (opt.matrix_output)
   {//test of the matrix
-
+   
 
     ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matA.m",&viewer_out); CHKERRQ(ierr);
     ierr = PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);

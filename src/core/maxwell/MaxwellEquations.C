@@ -239,13 +239,16 @@ void MaxwellEquations::do_init()
 
   dim = mesh->mesh_dimension();
 
-  system->add_variable("Ex",FIRST);
-  system->add_variable("Ey",FIRST);
-  system->add_variable("Ez",FIRST);
+  system->add_variable("Ax",FIRST);
+  system->add_variable("Ay",FIRST);
+  system->add_variable("Az",FIRST);
 
 
 
-  DofMap& dof_map = system->get_dof_map();
+
+ 
+
+  
    
   system->add_matrix("Ham_real"); //add matrix for a real part of the Hamiltonian
 
@@ -261,7 +264,7 @@ void MaxwellEquations::do_init()
 
   S_imag = &( system->get_matrix("S_imag") );
 
-  
+  system->init();
 
 }
 
@@ -455,9 +458,9 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
 
   vector<unsigned int> fieldvar(3);
  
-  fieldvar[0] = system->variable_number("Ex");
-  fieldvar[1] = system->variable_number("Ey");
-  fieldvar[2] = system->variable_number("Ez");
+  fieldvar[0] = system->variable_number("Ax");
+  fieldvar[1] = system->variable_number("Ay");
+  fieldvar[2] = system->variable_number("Az");
 
 
   DofMap& dof_map = system->get_dof_map();
@@ -530,21 +533,19 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
 
     for (unsigned int qp=0; qp<qrule.n_points(); qp++)
     {//qp
+
       for (short i = 0; i < 3; i++)
       {
 	 dof_map.dof_indices (elem, dof_indices_component, fieldvar[i]);
 	 const unsigned int n_i_dofs = dof_indices_component.size();
 
-	 for (short m = 0; m < 3; m++)
+	 for (short j = 0; j < 3; j++)
 	 {
-	  
+	    ham_real_sub.reposition(fieldvar[i]*n_i_dofs, fieldvar[j]*n_i_dofs, n_i_dofs, n_i_dofs);
 
-	   ham_real_sub.reposition(fieldvar[i]*n_i_dofs, fieldvar[m]*n_i_dofs, n_i_dofs, n_i_dofs);
+	    s_real_sub.reposition(fieldvar[i]*n_i_dofs,   fieldvar[j]*n_i_dofs, n_i_dofs, n_i_dofs);
 
-	   s_real_sub.reposition(fieldvar[i]*n_i_dofs, fieldvar[m]*n_i_dofs, n_i_dofs, n_i_dofs);
-
-	   s_imag_sub.reposition(fieldvar[i]*n_i_dofs, fieldvar[m]*n_i_dofs, n_i_dofs, n_i_dofs);
-	   
+	    s_imag_sub.reposition(fieldvar[i]*n_i_dofs,   fieldvar[j]*n_i_dofs, n_i_dofs, n_i_dofs);
 
 	   for (unsigned int p1=0; p1<n_i_dofs; p1++)
 	   {
@@ -553,26 +554,30 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
 	       double value = 0;
 	       complex<double> s_value = Complex(0.0, 0.0);
 
-	       s_value += JxW[qp] * phi[p1][qp] * phi[p2][qp] * eps_real( i, m);
+	       double eps_real_value;
+	       if ( i > j)
+		 eps_real_value = eps_real( i+1, j+1);
+	       else
+		 eps_real_value = eps_real( j+1, i+1);
+ 
+	        s_value += JxW[qp] * phi[p1][qp] * phi[p2][qp] * eps_real_value;
+	      
+	       for (short n = 0; n < dim; n++)
+		 value =  JxW[qp] * dphi[p1][qp](n) * dphi[p2][qp](n) * delta_Kronecker(i,j);
 
-	       for (short j = 0; j < dim; j++)
-		 for (short n = 0; n < dim; n++)
-		 {
-		   value = JxW[qp] * dphi[p1][qp](j) * dphi[p2][qp](n) * LeviCivita_product(i, j, n, m);
-
-		 }
-
-
+	       
 	       ham_real_sub(p1,p2) += value; 
 	       s_real_sub(p1,p2) += s_value.real();
 	       s_imag_sub(p1,p2) += s_value.imag();
+	       
 	     }
+
 	   }
 
 	 }
       }
 
-    
+
 
 
     }
@@ -596,9 +601,12 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
   }
   
 
+  Ham_real->print_matlab("Ham_real.m");
 
- copy_H_matrix_to_solver( );
- copy_S_matrix_to_solver( );
+
+
+  copy_H_matrix_to_solver( );
+  copy_S_matrix_to_solver( );
 
 
  
