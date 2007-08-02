@@ -5,6 +5,24 @@
 using namespace std;
 
 
+//===================================================================================//
+
+QuantumDensity::QuantumDensity()
+{
+  quantum_model = NULL;
+
+  
+
+ 
+}
+
+//============================================//
+QuantumDensity:: ~QuantumDensity()
+{
+ 
+}
+
+//============================================//
 
 void QuantumDensity::get_particle_density(const Elem* element, const std::vector<double>& quad_points, std::vector<double> density)
 {
@@ -146,16 +164,7 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
 
 }
 
-//===================================================================================//
 
-QuantumDensity::QuantumDensity()
-{
-  quantum_model = NULL;
-
-  
-
- 
-}
 
 //=======================================================================================//
 void QuantumDensity::do_init( )
@@ -224,11 +233,7 @@ void QuantumDensity:: do_solve()
 }
 
 
-//============================================//
-QuantumDensity:: ~QuantumDensity()
-{
- 
-}
+
 
 
 //================================================================//
@@ -275,3 +280,12 @@ void QuantumDensity::calculate_for_k_point(const Point& k_point,
 
 
 //=================================================================// 
+
+void QuantumDensity::estimate_analitic_density(void)
+{
+
+
+}
+
+
+//==================================================================//
