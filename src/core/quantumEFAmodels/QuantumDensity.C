@@ -285,6 +285,20 @@ void QuantumDensity::estimate_analitic_density(void)
 {
 
 
+   ModelOptions quantum_model_opts;
+   vector<double> k_vector(3, 0.0);
+
+   quantum_model_opts.set_option("k_vector",  k_vector);
+
+
+
+   quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number ); 
+   quantum_model_opts["job"] = "density";
+   quantum_model->set_options(quantum_model_opts);
+
+
+   quantum_model->solve();
+
 }
 
 

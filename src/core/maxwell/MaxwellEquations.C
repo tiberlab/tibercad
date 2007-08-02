@@ -97,8 +97,8 @@ void MaxwellEquations::build_nodal_results(const std::set<std::string>& variable
   
     for ( ; nd != nd_el ; ++nd)  number_of_points++;
 
-    legend.resize(1);
-    results.resize(number_of_points);
+    legend.resize(num_functions);
+    results.resize(number_of_points*num_functions);
    
 
     for (unsigned int i = 0; i < num_functions; i++)
