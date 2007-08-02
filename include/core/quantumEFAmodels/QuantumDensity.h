@@ -148,7 +148,7 @@ class QuantumDensity : public KspaceIntegration
 
 
    //!analitic (parabolic)  density calculation
-   void estimate_analitic_density(void) {};
+   void estimate_analitic_density(void) ;
   
 
  protected:
