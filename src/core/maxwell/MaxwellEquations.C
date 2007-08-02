@@ -31,8 +31,10 @@ void 	MaxwellEquations::build_integrated_quantities (const std::set< std::string
     values.resize(n);
     for (unsigned int i = 0; i < n; i++)
     {
-      values[i] = Constants::Hartree * (sqrt(solution[i].k_squared) * opt.work_units / Constants::bohr_radius) 
-	/ (1.0 / Constants::fine_structure_constant) ;
+    
+      
+      values[i] = Constants::Hartree * (sqrt(solution[i].k_squared) / (opt.work_units / Constants::bohr_radius)) 
+	* (1.0 / Constants::fine_structure_constant) ;
     }
   }
 
@@ -155,7 +157,7 @@ void MaxwellEquations::prepare_field_mod_squared(const unsigned int mode_number,
 
  std::vector<unsigned int> dof_indices;
 
- //!calculation of potential vector function
+ //!calculation of probability function
  for ( ; it != end; ++it)
  {
    const Elem* elem = *it;
@@ -467,11 +469,15 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
   
   FEType fe_type = dof_map.variable_type(fieldvar[0]);
 
-  AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
-  
   Scaling& scaling = get_scaling();
 
   scaling.set_length_scaling(opt.work_units);
+
+  scaling.set_calc_mesh_units(_device->get_mesh_units());
+
+  AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+  
+ 
   
  
   QGauss qrule (dim, SECOND);
@@ -530,6 +536,8 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
     s_real.resize(n_dofs, n_dofs);
 
     fe->reinit (elem);
+
+    
 
     for (unsigned int qp=0; qp<qrule.n_points(); qp++)
     {//qp
