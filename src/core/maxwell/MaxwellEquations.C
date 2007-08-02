@@ -155,7 +155,7 @@ void MaxwellEquations::prepare_field_mod_squared(const unsigned int mode_number,
 
  std::vector<unsigned int> dof_indices;
 
- //!calculation of probability function
+ //!calculation of potential vector function
  for ( ; it != end; ++it)
  {
    const Elem* elem = *it;
