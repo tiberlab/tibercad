@@ -8,6 +8,7 @@
 #include "elem.h"
 #include "PoissonModel.h"
 #include "linear_implicit_system.h"
+#include "point.h"
 
 class Device;
 class Mesh;
@@ -15,7 +16,7 @@ class Mesh;
 class Poisson : public SimulationInterface
 /*!
   
- \f$ \nabla_i \cdot(<epsilon \nabla_j \varphi + P) =-frac{\rho}{\epsilon}\f$
+ \f$ \nabla_i \cdot(<epsilon \nabla \varphi + \mathbf{P}) =-frac{\rho}{\epsilon}\f$
 */
 
 {
@@ -58,7 +59,10 @@ class Poisson : public SimulationInterface
 
   //!Create an Poisson object 
   static  Poisson*  create(void);
-  
+
+  //!Get a solution given the element and the point
+  void get_solution(const Elem* elem, const std::vector<Point>& p,
+		    std::vector<double>& solution);
   
  private:
   

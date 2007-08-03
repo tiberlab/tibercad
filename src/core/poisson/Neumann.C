@@ -17,7 +17,7 @@ Neumann::Neumann()
 void Neumann::do_init()
 {
  
-  std::string s(get_options().get_option("polarization", ""));
+  std::string s(get_options().get_option("Polarization","0.0"));
 
   set_polarization(check_and_register(s,0.0));
 

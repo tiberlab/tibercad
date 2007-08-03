@@ -24,13 +24,12 @@ void LatticeThermalConductivity::calculate_VCA (const PhysicalModelInterface *co
 
   const LatticeThermalConductivity* modB = dynamic_cast<const LatticeThermalConductivity*>(comp_B);
 
-
-   alloy(_conductivity,modA->_conductivity, modB->_conductivity, xa);  
-
-   Material* mat = get_material();
- 
-   const RotatedCrystal&   cr = mat->get_rotated_crystal();
- 
-   rotate_to_calculation_system(cr.RotMatrix);
+  alloy(_conductivity,modA->_conductivity, modB->_conductivity, xa);  
+  
+  Material* mat = get_material();
+  
+  const RotatedCrystal&   cr = mat->get_rotated_crystal();
+  
+  rotate_to_calculation_system(cr.RotMatrix);
 }
 

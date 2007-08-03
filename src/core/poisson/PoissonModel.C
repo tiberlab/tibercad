@@ -1,17 +1,18 @@
 #include "PoissonModel.h"
 #include "Material.h"
 #include "ChargeDensityModel.h"
- 
+#include "Database.h"
+#include "getpot.h" 
 
 
 
 PoissonModel::PoissonModel(void) :
-  _charge_density(0.0),
   _epsilon(0),
   _pyropolarization(0),
   _piezopolarization(0),
   _piezo_sim(NULL),
-  chd_model(NULL),
+  _chd_sim(NULL),
+  // chd_model(NULL),
   dielectric_model(NULL)
 {
 }
@@ -21,7 +22,7 @@ PoissonModel::PoissonModel(void) :
 PoissonModel::~PoissonModel(void)
 {
 
-PhysicalModelInterface::destroy(chd_model);
+  //PhysicalModelInterface::destroy(chd_model);
 
 PhysicalModelInterface::destroy(dielectric_model);
 
@@ -31,67 +32,100 @@ PhysicalModelInterface::destroy(dielectric_model);
 
 PhysicalModelInterface* PoissonModel::create_new (void) const
 {
-
    return new PoissonModel;
 }
 
 //==========================================================================//
 void PoissonModel::do_init()
 {
-   
+    //Pyropolarization
     model_opt.pyro_pol = get_options().get_option("Pyropolarization", false);
 
     if (model_opt.pyro_pol)
     {
 
+       const Material* mat = get_material();
+       GetPot data((mat->get_database()).get_data_file());
 
+       _pyropolarization(1) = data("Px",0.0);  
+       _pyropolarization(2) = data("Py",0.0); 
+       _pyropolarization(3) = data("Pz",0.0); 
+        
+        const RotatedCrystal&   cr = mat->get_rotated_crystal ();
+ 
+        _pyropolarization =cr.RotMatrix * _pyropolarization;
+        
+     }
 
-
-    }
-
-
-
-
-
-    model_opt.piezo_pol = get_options().get_option("Piezoropolarization", false); 
-
-    
-
-
-
-
-   PhysicalModelInterface::destroy(chd_model);
-
-
-   ModelOptions::const_submodel_iterator it,end;
-   it = get_options().submodels_begin("Charge_Density_Model");
-   end = get_options().submodels_end("Charge_Density_Model");
-
-
-   if (it != end)
+   
+    //Piezopolarization
+    model_opt.piezo_pol = get_options().get_option("Piezopolarization", false); 
+    if (model_opt.piezo_pol)
     {
 
-      chd_model = dynamic_cast<ChargeDensityModel*>(
-        PhysicalModelInterface::create("charge_density_model", it->second)); 
-  
-      if (chd_model == NULL)
-	throw InitFailedException("Could not create charge density model");
+      std::string piezo_sim_name = get_options().get_option("piezoelectricity_simulation", "no_sim");
+      _piezo_sim =  dynamic_cast<Macrostrain* > ( SimulationInterface::find_simulation(piezo_sim_name));
       
+      if (_piezo_sim == NULL) 
+	throw InitFailedException("Unknown strain simulation: " +  piezo_sim_name );
+      
+
+    }
+
+
+   //Density Charge Model
+
+    model_opt.chd_sim = get_options().get_option("Charge_density_simulation", true); 
+
+    if (model_opt.chd_sim)
+    {
+      std::string chd_sim_name = get_options().get_option("charge_density_simulation", "no_sim");
+      _chd_sim =  dynamic_cast<DriftDiffusion* > ( SimulationInterface::find_simulation(chd_sim_name));
+      
+      if (_chd_sim == NULL) 
+	throw InitFailedException("Unknown charge_density simulation: " +  chd_sim_name );
       
     }
-   else
-   {
     
-     chd_model = dynamic_cast<ChargeDensityModel*>(
-	 PhysicalModelInterface::create("charge_density_model")); 
-     
+
+    ModelOptions::const_submodel_iterator it,end; 
+
+ /*   PhysicalModelInterface::destroy(chd_model); */
+
+
+
+/*    it = get_options().submodels_begin("Charge_Density_Model"); */
+/*    end = get_options().submodels_end("Charge_Density_Model"); */
+
+
+/*    if (it != end) */
+/*     { */
+
+/*       chd_model = dynamic_cast<ChargeDensityModel*>( */
+/*         PhysicalModelInterface::create("charge_density_model", it->second));  */
   
-   }
+/*       if (chd_model == NULL) */
+/* 	throw InitFailedException("Could not create charge density model"); */
+      
+      
+/*     } */
+/*    else */
+/*    { */
+    
+/*      //The Simulation name is given from Physics Section (temporany solution) */
+ 
+/*      chd_model = dynamic_cast<ChargeDensityModel*>( */
+/*      PhysicalModelInterface::create("charge_density_model"),get_options());  */
+     
 
-  chd_model->set_material(get_material());
+/*    } */
 
-  chd_model->init();
+/*   chd_model->set_material(get_material()); */
 
+/*   chd_model->init(); */
+
+
+  //Dielectric Model
   PhysicalModelInterface::destroy(dielectric_model);
 
    it = get_options().submodels_begin("Dielectric_Model");
@@ -124,14 +158,6 @@ void PoissonModel::do_init()
    
    _epsilon = dielectric_model->get_dielectric_constant();
 
-
-   
-
-
-
-
-
-
 }
 
 
@@ -157,7 +183,7 @@ void PoissonModel::calculate_VCA (const PhysicalModelInterface *comp_A, const Ph
 void  PoissonModel::re_init()
 {
   
-  update_charge_density();
+  // update_charge_density();
 
   update_built_in_polarization();
 
@@ -169,11 +195,11 @@ void  PoissonModel::update_charge_density()
 { 
 
  
-  chd_model->set_element(_elem);
+  // chd_model->set_element(_elem);
 
-  chd_model->re_init();
+  // chd_model->re_init();
 
-  _charge_density = chd_model->get_charge_density();
+  //_charge_density = chd_model->get_charge_density();
 
 }
 
@@ -193,6 +219,26 @@ void  PoissonModel::update_charge_density()
 void  PoissonModel::update_built_in_polarization()
 {
 
+ if (model_opt.piezo_pol)
+  { 
+    SimulationEnvironment& se = _piezo_sim->get_environment();
+    
+    if  (se.contains_element(_elem))
+    {
+      
+      _piezopolarization =  _piezo_sim->get_piezopolarization(_elem);
+
+      
+    }
+    else
+    {
+      _piezopolarization=0;
+    }
+  }
+  else
+  {
+    _piezopolarization=0;
+  }
 
 
 }
@@ -201,6 +247,51 @@ void  PoissonModel::update_built_in_polarization()
 SimulationEnvironment& PoissonModel::get_piezo_environment()
 {
 
-  return _piezo_sim->get_environment();
+  if (model_opt.piezo_pol)
+  {return _piezo_sim->get_environment();}
+  // else
+  // {return NULL;}
 
+  
+
+}
+
+  
+void
+PoissonModel::get_charge_density(const std::vector<Point> q_point, std::vector<double>& charge_density)
+{
+
+  if (model_opt.chd_sim)
+  { 
+    SimulationEnvironment& se = _chd_sim->get_environment();
+    
+    if  (se.contains_element(_elem))
+    {
+      
+      //  _charge_density =  _chd_sim->ge
+      
+    }
+    else
+    {
+      charge_density.resize(_elem->n_nodes());
+      
+      charge_density.clear();
+    }
+  }
+  else
+  {
+    const Material* mat = get_material();
+    charge_density.resize(_elem->n_nodes());
+   
+    //for (unsigned int n = 0; n < _elem->n_nodes(); n++)
+    // {
+    //   charge_density[n] = mat->get_net_doping_density();
+    // }
+
+        charge_density.clear();
+
+
+
+  }
+  
 }

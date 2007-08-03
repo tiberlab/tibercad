@@ -77,13 +77,12 @@ if (_kappa_model != "constant")
    _conductivity(2,2) = k_x;
    _conductivity(3,3) = k_z;
 
-
-  
   Material* mat = get_material();
 
   const RotatedCrystal&   cr = mat->get_rotated_crystal ();
 
   rotate_to_calculation_system(cr.RotMatrix);
+
 }
 
 

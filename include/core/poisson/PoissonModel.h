@@ -32,35 +32,44 @@ class PoissonModel: public PhysicalModel
   //!Set the current element
   void set_element(const Elem* elem);
   
-  //!Return the charge density for the current element
-  double get_charge_density(); 
+  // //!Return the charge density for the current element
+  // double get_charge_density(); 
   
+   //!Return the charge density for the current element
+  std::vector<double> get_charge_density(); 
+
   //!Return the charge density for the current element
   Tensor2Sym get_dielectric_constant(); 
 
   //!Return the piezopolarization a the given element
   Tensor1 get_built_in_polarization(); 
 
+  //!charge density (electron/cm^3)
+  void get_charge_density(const std::vector<Point> q_point, std::vector<double>& charge_density);
 
  private:
 
+   //!A pointer to cherge density simulation
+  SimulationInterface* _chd_sim;
 
-
+  //!A pointer to cherge piezoelectricity simulation
   Macrostrain* _piezo_sim;
    
+  //Model options structure
   struct model_options
   {
      bool pyro_pol;  
 
      bool piezo_pol;
-  
+
+    bool  chd_sim;
    };
     
   //!Options for Poisson model
   model_options model_opt;
 
-  //! update the charge density
-  void  update_charge_density(void);  
+   //! update the charge density
+   void  update_charge_density(void);  
   
   //! Update the built in polarization
   void  update_built_in_polarization(void); 
@@ -74,11 +83,12 @@ class PoissonModel: public PhysicalModel
    //!relative dielectric constant
    Tensor2Sym _epsilon;
 
-   //!charge density (electron/cm^3)
-   double _charge_density;
+  // //!charge density (electron/cm^3)
+   //std::vector<double> _charge_density;
 
-   //!A pointer to cherge density object
-   ChargeDensityModel* chd_model;
+    
+  // //!A pointer to cherge density object
+  // ChargeDensityModel* chd_model;
 
    //!A pointer to dielectric constant model
    DielectricModel* dielectric_model;
@@ -127,14 +137,14 @@ PoissonModel::set_element(const Elem* elem)
 }
 
 
-inline   
-double
-PoissonModel::get_charge_density()
-{
+// inline   
+// double
+// PoissonModel::get_charge_density()
+// {
 
- return _charge_density;
+//  return _charge_density;
 
-}
+// }
 
 
 

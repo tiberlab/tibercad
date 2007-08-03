@@ -77,15 +77,17 @@ void  ChargeDensityModel::re_init(void)
     }
     else
     {
-      //   _charge_density = 0.0;
+        _charge_density = 0.0;
     }
   }
   else
   {
 
-    const  Material* mat = get_material();
+    // const  Material* mat = get_material();
  
-    _charge_density = mat->get_net_doping_density(); 
+    //_charge_density = mat->get_net_doping_density(); 
+       
+    _charge_density = 0.0;
      
   }
 }

@@ -8,6 +8,8 @@
 #include "fe_base.h"
 #include "elem.h"
 #include "quadrature_gauss.h" 
+
+
  
 // Define useful datatypes for finite element
 // matrix and vector components.
@@ -133,10 +135,9 @@ BoundaryProperties* Poisson::create_boundary_model (const ModelOptions &options)
 
 {
 
-
+  
    const string& modelname = options.get_option("type", "Dirichlet");
   
-
    
    PoissonContact* model =  PoissonContact::create(modelname, options);
 
@@ -284,12 +285,6 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   
   FEType fe_type = dof_map.variable_type(uvar);
   
-
-
-
-
-
-
   // Declare a special finite element object for
   // volume integration.
 
@@ -365,11 +360,11 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   PoissonContact* contact;
 
   //Model Variables
-   double charge_density;
+  std::vector<double> charge_density;
 
-   Tensor2Sym epsilon(0);
+  Tensor2Sym epsilon(0);
 
-   Tensor1 bi_pol(0);
+  Tensor1 bi_pol(0);
 
   //-----------------------------------------------------------------//
   //My Jacobian. It is to pass to our work units
@@ -408,7 +403,9 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
     init_poisson_model(elem);
   
-    charge_density = poisson_model->get_charge_density();
+    // charge_density = poisson_model->get_charge_density();
+
+    poisson_model->get_charge_density(q_point,charge_density);
 
     epsilon = poisson_model->get_dielectric_constant();
 
@@ -438,14 +435,15 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 	  //  cout<<(contact->get_type() == PoissonContact::Dirichlet)<<endl;
  
       }
-      
+       
       if ( is_dirichlet )
       { 
-	
+	  
  	  Ke(p1,p1) = 1.0;
 	  
 	  Fe(p1) = ( dynamic_cast<Dirichlet*> (contact) )->get_potential();
 
+          is_dirichlet = false;
       } 
       else 
       {
@@ -495,99 +493,102 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 	  } //loop over basis functions
 	   
 	   //Fe construction----	
-           
-	   Fe(p1) += JxW[qp] * charge_density * phi[p1][qp] *  my_Jacobian  * Constants::e / Constants::epsilon;
+	
+	   Fe(p1) += JxW[qp] * charge_density[qp] * phi[p1][qp] *  my_Jacobian  * Constants::e / Constants::epsilon;
 
            //Add the polarization 
 
 	      for (short i = 0; i < dim; i++) 
-		Fe(p1) -= JxW[qp] * dphi[p1][qp](i) * bi_pol(i) * my_Jacobian *  Constants::e;
-	   
-
+		Fe(p1) -= JxW[qp] * dphi[p1][qp](i) * bi_pol(i+1) * my_Jacobian * Constants::e / Constants::epsilon;
+	  
 
 	   //--------------------
 	   
 	}//end Loop over quadrature points  
 	
-/* 	const unsigned int num_sides = elem->n_sides();  */
+ 	const unsigned int num_sides = elem->n_sides();  
 	
-/* 	for (unsigned int side = 0; side<num_sides; side++)  */
-/* 	{ */
+ 	for (unsigned int side = 0; side<num_sides; side++) 
+ 	{
 	  
-/* 	  const ElementSide elside(elem->top_parent(), side);  */
+ 	  const ElementSide elside(elem->top_parent(), side); 
 	  
-/* 	  Boundary* bd =   se.get_boundary(elside); */
+ 	  Boundary* bd =   se.get_boundary(elside);
 	  
-/* 	  side_on_boundary =  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL ) );   */
+          side_on_boundary =  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL ) );  
 	  
-/* 	  if (side_on_boundary) */
-/* 	  { */
-/* 	    contact =  dynamic_cast<PoissonContact*>( bd->get_boundary_properties (get_id()) ); */
+ 	  if (side_on_boundary)  
+	  { 
+  	    contact =  dynamic_cast<PoissonContact*>( bd->get_boundary_properties (get_id()) ); 
 	    
-/* 	    if ( (contact->get_type() == PoissonContact::Neumann)) */
-/* 	    { */
+  	    if ( (contact->get_type() == PoissonContact::Neumann)) 
+ 	    { 
 	      
-/* 	      double  D_condition  = ( dynamic_cast<Neumann*> (contact) )->get_polarization();  */
-	      
-/* 	      fe_face->reinit(elem, side); */
-	      
-/* 	      //  for (unsigned int p1=0; p1<n_dofs; p1++) //test functions  */
-/* 	      // { */
-/* 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++) */
-/* 	      { */
-		
-/* 		//	Fe(p1) +=  JxW_face[qp] *  D_condition  * phi_face[p1][qp] *  my_Jacobian; */
+ 	      double  D_condition  = ( dynamic_cast<Neumann*> (contact) )->get_polarization();  
 
+	       D_condition /=epsilon(1,1);
+ 
+ 	      fe_face->reinit(elem, side);  
+	      
+	      for (unsigned int qp = 0; qp < qface.n_points(); qp++) 
+ 	      { 
+			      
+		//Fe(p1) =  JxW_face[qp] *  D_condition  * phi_face[p1][qp] *  my_Jacobian; 
+ 
 		
-/* 	      }  // for (unsigned int qp = 0; qp < qface.n_points(); qp++)    */
+ 	      }  // for (unsigned int qp = 0; qp < qface.n_points(); qp++)    
 	      
-/* 	      // }// test function */
 	      
-/* 	    }//if Neumann */
+	      
+ 	    }//if Neumann 
 	    
-/* 	  }//if it is boundary with associated model */
+	  }//if it is boundary with associated model 
 	  
+
+
 	  
-	  //Add piezopolarization surface
+	   //Add piezopolarization surface 
           
-/*           bd =   poisson_model->get_piezo_environment().get_boundary(elside); */
+           bd =   poisson_model->get_piezo_environment().get_boundary(elside); 
 	  
-/*           if (bd != NULL) */
-/*           { */
-/* 	    fe_face->reinit(elem, side); */
-/* 	    if (dim>1) */
-/*             { */
-             
-/* 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++) */
-/* 	      { */
-/* 		for (short i = 0; i < dim; i++)  */
-/* 		  //		  Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(i) * my_Jacobian *  Constants::e * normal[qp](i);  */
-/* 	      } */
-/* 	    }     */
-/* 	    else */
-/* 	    { */
-/* 	      double x_c = elem->centroid()(0); */
-/* 	      double x_s = elem->point(p1)(0); */
-/* 	      double n_1d = 1.0; */
+           if (bd != NULL) 
+           { 
+	    fe_face->reinit(elem, side);
+	    if (dim>1)
+            {
 	      
-/* 	      if (x_s < x_c) */
-/* 	      {  */
-/* 		n_1d = -1.0; */
-/* 	      }   */
-/* 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++) */
-/* 		Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(0) * my_Jacobian *  Constants::e * n_1d;  */
+	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+	      {
+		for (short i = 0; i < dim; i++) 
+		{
+		  Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(i+1) * my_Jacobian * normal[qp](i) *  Constants::e/Constants::epsilon ; 
+		}
+	      }
+	    }    
+	    else
+	    {
+	      double x_c = elem->centroid()(0);
+	      double x_s = elem->point(p1)(0);
+	      double n_1d = 1.0;
 	      
-/* 	    }//i dim >1    */
-	    
-/* 	  } // if (bd != NULL) */
-	  
-	// 	}//side */ */
+	      if (x_s < x_c)
+	      { 
+		n_1d = -1.0;
+	      }  
+	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+	      {
+		Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(0) * my_Jacobian * Constants::e * n_1d * Constants::e/Constants::epsilon; 
+	      }
+	      
+	    }//i dim >1   
+	   }// if (bd != NULL) 
+ 	}//side 
 	
 	//----------------------------------------
 	
-      } //end if it belongs to boundary
+      } //end if it is not a dirichlet boundary
       
-     } // end loop over test functions
+    } // end loop over test functions
     
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
     system.matrix->add_matrix (Ke, dof_indices);
@@ -616,4 +617,53 @@ void  Poisson:: init_poisson_model(const Elem* elem)
        //Update model for a given element
        poisson_model->re_init();
      
+}
+
+
+
+
+void
+Poisson::get_solution(const Elem* elem, const std::vector<Point>& p,
+		      std::vector<double>& solution)
+{
+  unsigned int np = p.size();
+
+  solution.resize(np);
+
+  if (np == 0) return;
+
+
+  const DofMap& dof_map = my_system->get_dof_map();
+
+  const unsigned int u_var = my_system->variable_number("V");
+
+  FEType fe_type = my_system->variable_type(u_var);
+
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+
+  std::vector<unsigned int> dof_indices;
+
+
+  // element shape functions
+
+  const vector<vector<Real> >& phi = fe->get_phi();
+
+  vector<Point> points(np);
+
+  FEInterface::inverse_map(dim, fe_type, elem, p, points);
+ 
+  fe->reinit(elem, &points);
+
+  dof_map.dof_indices(elem, dof_indices, u_var);
+
+  const unsigned int n_dofs = dof_indices.size();
+
+  for (unsigned int n = 0; n < np; n++)
+  {
+      // do interpolation
+    for (unsigned int i = 0; i < n_dofs; i++)
+      solution[n] += phi[i][n]  *  (*(my_system->solution))(dof_indices[i]); ;
+
+   
+  }
 }

@@ -79,9 +79,9 @@ void ThermoelectricPower::do_init(void)
     
     _hTEpower =  Constants::k_B * (5.0 / 2.0 + _h_mobility_term -  (_hQfermi + _Ev) / (Constants::k_B * _Tloc)  );
 
-    _eTEpower = std::abs(_eTEpower);
+    //_eTEpower = -std::abs(_eTEpower);
       
-    _hTEpower = std::abs(_hTEpower);
+    //_hTEpower = -std::abs(_hTEpower);
 
     
   }

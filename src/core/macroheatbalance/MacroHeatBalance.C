@@ -101,12 +101,9 @@ void MacroHeatBalance::do_init( )
 
   //Inizialize the solution to temperature of simulation options
 
-  //MeshBase::const_node_iterator       nd     = mesh->active_nodes_begin();
-  // const MeshBase::const_node_iterator nd_el  = mesh->active_nodes_end();
- 
 
   my_system->solution->zero();
-  
+   
   my_system->solution->add(SimulationOptions::temperature);
      
     
@@ -393,6 +390,10 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   
   FEType fe_type = dof_map.variable_type(uvar);
   
+
+
+  //Fe
+
   AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
 
   //AutoPtr<FEBase> fe (build_finite_element(dim, fe_type));
@@ -402,32 +403,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   // quadrature rule  
   fe -> attach_quadrature_rule (&qrule);
   
-  
-  // Declare a special finite element object for
-  // boundary integration.
 
-  AutoPtr<FEBase>  fe_face(FEBase::build(dim, fe_type));
-
-
-
-
-
-
-  // AutoPtr<FEBase>  fe_face(build_finite_element(dim, fe_type));
-  
-  // Boundary integration requires one quadraure rule,
-  // with dimensionality one less than the dimensionality
-  // o cout<<"Start loop over lattice thermal conductivity"<<endl;f the element.map
-  QGauss qface(dim-1, THIRD);
-  
-  // Tell the finite element object to use our
-  // quadrature rule.
-  
-  fe_face -> attach_quadrature_rule (&qface);
-  
-
-
-  // Here we define some references to cell-specific data that
+ // Here we define some references to cell-specific data that
   // will be used to assemble the lin ModelOptions&ear system.
   //
   // The element Jacobian * quadrature weight at each integration point.   
@@ -445,6 +422,43 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   // The element shape function gradients evaluated at the quadrature
   // points.
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+
+
+  //------------------------------
+
+
+  //Fe face
+
+  
+  // Declare a special finite element object for
+  // boundary integration.
+
+  AutoPtr<FEBase>  fe_face(FEBase::build(dim, fe_type));
+
+
+ // AutoPtr<FEBase>  fe_face(build_finite_element(dim, fe_type));
+  
+  // Boundary integration requires one quadraure rule,
+  // with dimensionality one less than the dimensionality
+  // o cout<<"Start loop over lattice thermal conductivity"<<endl;f the element.map
+  QGauss qface(dim-1, THIRD);
+  
+  // Tell the finite element object to use our
+  // quadrature rule.
+  
+  fe_face -> attach_quadrature_rule (&qface);
+  
+
+  const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
+  
+  const std::vector<Real>& JxW_face = fe_face->get_JxW();
+  
+  const std::vector<Point>& qface_point = fe_face->get_xyz();
+  
+  const std::vector<Point>& normal = fe_face->get_normals();
+  
+
+
 
  
   std::vector<unsigned int> dof_indices;
@@ -476,6 +490,10 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
   std::vector<DriftDiffusion::Currents>   currents;
 
+   std::vector<DriftDiffusion::Solution>  face_potentials;   
+	       
+   std::vector<DriftDiffusion::Currents>   face_currents;
+		   
 
   //----------------------------------------------------------LatticeThermalConductivity-------//
   
@@ -490,7 +508,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 
  
-   
+ 
 
   for ( ; el != end_el ; ++el)   //loop over elements
   {  
@@ -529,9 +547,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
       
     } 
     
-  
-  
- 
     
       
      for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
@@ -594,11 +609,15 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	      }//end loop over direction (2)
 
 	      //This includes the Peltier-Thomson effects   
-             
+
+
 	      if (heat_model->get_peltier_thomson_opt())
 	      {
 		//cout<<"Peltier"<<endl;
 		
+
+
+               
 		value += -JxW[qp]* phi[p1][qp] * dphi[p2][qp](i)*
 		  (eTEpower*currents[qp].jn(i) + hTEpower*currents[qp].jp(i) ) /(opt.length_scale);
 
@@ -619,7 +638,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	   if (heat_model->get_joule_opt())
 	   {
 	     //Inclusion of jolue effect  
-	     
+	   
 	     for (short i = 0; i < dim; i++) 
 	     { Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
 		 ( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
@@ -631,7 +650,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	   
 	   
 	}//end Loop over quadrature points  
-	
+	 
 
       } //end if it belongs to boundary
  
@@ -639,10 +658,12 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     } // end loop over test functions
       
      //The loop over element is the only loop that is surviving at this point
-  
+
+   
      
      if (heat_model->get_joule_opt())
      {
+            
        for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
        {
 	 //!let us check if it belongs to a reservoir boundary
@@ -671,29 +692,15 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	     if ( (heat_model->get_dd_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
 	     {
 	      
-	       std::vector<DriftDiffusion::Solution>  face_potentials;   
-	       
-	       std::vector<DriftDiffusion::Currents>   face_currents;
-		   
-
+	    
 	       if (dim > 1)
 	       {
 		 
 		 fe_face->reinit(elem, side);
-		 
-		 const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
-		 
-		 const std::vector<Real>& JxW_face = fe_face->get_JxW();
-		 
-		 const std::vector<Point>& qface_point = fe_face->get_xyz();
-		 
-		 const std::vector<Point>& normal = fe_face->get_normals();
-		 
-		    
+		 		    
 		 heat_model->get_dd_solution(qface_point,face_potentials,face_currents);  
 		     
-		 
-		 for (short i = 0; i < 3; i++)
+	   	 for (short i = 0; i < 3; i++)
 		 {
 		   for (unsigned int qp=0; qp < qface.n_points(); qp++)
 		   {
@@ -714,8 +721,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		   Point p = elem->point(side);
 		   Point pc = elem->centroid();
 		   
-		   
-		   
 		   const double temp = sqrt((p(0) - pc(0)) * (p(0) - pc(0)) 
 					    +(p(1) - pc(1)) * (p(1) - pc(1)) + 
 					    (p(2) - pc(2)) * (p(2) - pc(2)));
@@ -729,8 +734,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		   
 		   qface_point[0] = elem->point(p1);
 		   
-		   
-	
 		   heat_model->get_dd_solution(qface_point,face_potentials,face_currents);  		   
 		   
 		   for (short i = 0; i < 3; i++)
@@ -738,16 +741,14 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		     Fe(p1) +=   normal[i] * 
 		       ( face_currents[0].jn(i) * face_potentials[0].fermi_e + face_potentials[0].fermi_h * face_currents[0].jp(i) )   ;
 		     
-		     
-		   }
+		   }// for (short i = 0; i < 3; i++)
 		   
-		   
-		   
-		   
-		 } //if (dim > 1)
+		 } // if (p1== side)
 		 
-	       }
-	     } // if ( (dd_simul->get_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
+	       } //if (dim > 1)
+	       
+	     }// if ( (heat_model->get_dd_environment()).is_on_boundary(   elside   ) )
+	     
 	   } //  for (unsigned int side = 0; side<num_sides; side++)
 	   
 	 } // if ( !belongs_to_reservoir ) 
@@ -764,7 +765,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
       
   } //End Loop over elements
     
-
+  
  
   //   system.matrix->print_matlab("Matr.m");
   //  system.rhs->print();

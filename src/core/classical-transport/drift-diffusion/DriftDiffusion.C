@@ -4060,7 +4060,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     //         -           -          -  -
     //        | Kuu Kun Kup |        | Fu |
     //   Ke = | Knu Knn Knp |;  Fe = | Fn |
-    //        | Kpu Kpn Kpp |        | Fp |
+    //        | Kpu Kpn Kpp |        | Fp |S
     //         -           -          -  -
     //
     Kuu.reposition(0, 0, n_dofs, n_dofs);
@@ -4106,8 +4106,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
            
      //Get the temperature given the element
     vector<double> T_nodes = sc->get_temperature_node();
-    
-
+     
 
     vector<vector<double> > local_scaling(elem->n_nodes(), vector<double>(3, 1));
     if (do_local_scaling_)

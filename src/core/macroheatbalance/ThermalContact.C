@@ -13,7 +13,13 @@ ThermalContact::create(const std::string & name,  const ModelOptions &   options
     result = Reservoir::create();
 
   if (result != NULL)
-    result->set_options(options);
+  {
+     result->set_options(options);
+  }
+  else
+  {
+     
+  }
 
   return result;
 }

@@ -154,7 +154,8 @@ $Models
     {
       BC_Region thermal
       {
-        #BC_reg_numb = 3
+        type = Heat_reservoir
+        BC_reg_numb = 3
       }
     }
   }
@@ -228,8 +229,10 @@ $Solver
     #simulation = selfconsistent
     variable = Vb
     start = 0.0
-    stop = 3.5
-    steps = 70
+    stop = 0.1
+    steps = 2
+    #stop = 3.5
+    #steps = 70
     plotvariable = current
   }
 
@@ -240,7 +243,7 @@ $Solver
 
   thermal
   {
-    current_simulation = driftdiffusion
+    
   }
 
   macrostrain
@@ -259,8 +262,8 @@ $Physics
   driftdiffusion 
   {
     statistics = FD
-    model = strained
-    #model = unstrained
+    #model = strained
+    model = unstrained
   }
 
   excitons
@@ -273,6 +276,13 @@ $Physics
     eff_mass = 1.02
     mobility = 1500
     generation_model = exciton_generation
+  }
+  thermal
+  {
+
+   Joule_Effect = false
+   current_simulation = drifdiffusion 
+
   }
 }
 
@@ -287,7 +297,8 @@ $Simulation
   mesh_units = 1e-6
   dimension = 2
   temperature = 300
-  solve = (macrostrain, sweep)
+  #solve = (macrostrain, sweep)
+  solve = (sweep,tt)
   #solve = sweep
   resultpath = output
   #output_format = ise

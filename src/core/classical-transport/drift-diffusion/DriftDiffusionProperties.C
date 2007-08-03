@@ -136,10 +136,14 @@ DriftDiffusionProperties::do_init(void)
     
    //Add a pointer to heat simulation
 
+  std::string heat_simulation =  get_options().get_option("heat_simulation", "none");
+
    _heat_simul = dynamic_cast<MacroHeatBalance*>(
-       SimulationInterface::find_simulation(
-         get_options().get_option("heat_simulation", "none")));
-     
+       SimulationInterface::find_simulation( heat_simulation ));
+
+   if (_heat_simul == NULL)
+      throw InitFailedException("Unknown heat model" + heat_simulation    );
+ 
    
    
 
