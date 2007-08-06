@@ -34,6 +34,8 @@ void MaxwellPhysicalModel::do_init()
 
   _epsilon_model = OptDielectricConstant::create(get_material()->get_structure(), opt);
 
+  _epsilon_model->set_material(get_material());
+
   _epsilon_model->init();
 
 }
