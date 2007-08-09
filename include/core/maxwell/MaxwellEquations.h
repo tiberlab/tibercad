@@ -41,7 +41,7 @@ class MaxwellEquations : public EigenvalueProblem
    
   virtual BoundaryProperties*
     create_boundary_model(const ModelOptions& options) const
-    throw (ModelErrorException) {};
+    throw (ModelErrorException);
 
 
   static  MaxwellEquations* create();

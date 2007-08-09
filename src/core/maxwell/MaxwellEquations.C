@@ -3,7 +3,7 @@
 #include "EigenSolver.h"
 #include "SimulationEnvironment.h"
 #include "Material.h"
-
+//#include "EigenvalueBoundary.h"
 // GNU scientific library
 #include <gsl/gsl_math.h>
 
@@ -20,6 +20,30 @@ MaxwellEquations::MaxwellEquations()
   mesh = NULL;
 
   system = NULL;
+}
+
+//=======================================================================================================//
+//=====================================================//
+BoundaryProperties* MaxwellEquations::create_boundary_model(const ModelOptions& options) const  throw (ModelErrorException)
+{
+
+
+  /*
+
+  const string& modelname = options.get_option("type", "Dirichlet");
+
+  EigenvalueBoundary* model = EigenvalueBoundary::create(modelname, options);
+
+  
+  
+  if (model == NULL)
+  throw ModelErrorException(
+  "MaxwellEquations: No such boundary model: " + modelname);
+
+  
+  return model;
+  */
+  return NULL;
 }
 
 //=======================================================================================================//

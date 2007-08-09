@@ -104,6 +104,8 @@ throw (ModelErrorException)
   //const string& modelname = options.get_option("BC_region_name", "");
   //if (modelname != "substrate")
 
+ 
+  
   const string& modelname = options.get_option("type", "pressure");
 
   MacrostrainBoundaryProperties* model =
@@ -114,6 +116,9 @@ throw (ModelErrorException)
         "Macrostrain: No such boundary model: " + modelname);
 
   return model;
+  
+
+
 }
 
 

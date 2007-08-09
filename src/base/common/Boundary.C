@@ -42,4 +42,5 @@ Boundary::init(void)
 
   for ( ; it != end; ++it)
     it->second->init();
+  
 }

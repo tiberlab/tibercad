@@ -92,6 +92,8 @@ void EigenvalueProblem::make_constraints(void)
 void  EigenvalueProblem::create_dirichlet_dofs( )
 {
   
+  
+
   SimulationEnvironment& se = get_environment(); 
 
   DofMap& dof_map = system->get_dof_map();
@@ -118,9 +120,11 @@ void  EigenvalueProblem::create_dirichlet_dofs( )
       
       //does a node belong to a a dirichlet boundary condition
       
-      if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+      //   if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+       if (  (bd != NULL  ) )
 	if ( bd->get_name() == "Dirichlet" || bd->get_name() == "dirichlet" )
 	{
+	  
 	  for (short band = 0 ; band < number_of_variables ; band++)
 	  {
 	    dof_map.dof_indices (elem, dof_indices,band); 
