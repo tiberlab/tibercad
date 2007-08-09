@@ -48,6 +48,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   PetscMPIInt    rank,size;
   ST st;
   KSP ksp;
+  PC pc;
   
 
 
@@ -122,14 +123,22 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     
    
     ierr = STSetType(st,STSINV); CHKERRQ(ierr);
+  
     ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);
 
     ierr = KSPSetType( ksp, KSPBCGS);CHKERRQ(ierr);
 
+   
+
+    ierr = KSPGetPC( ksp,&pc);
+
+    if (opt.preconditioner == "cholesky")   ierr = PCSetType(pc,PCCHOLESKY);
 
     //rtol, abstol, dtol, maxits
     ierr = KSPSetTolerances(ksp,1e-10, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
-   
+    
+    
+
   }
   else if (opt.solver_type == "lapack")
   {

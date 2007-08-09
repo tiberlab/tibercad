@@ -143,8 +143,7 @@ class MaxwellEquations : public EigenvalueProblem
   virtual double get_new_spectrum_shift(void);
 
 
-  void copy_H_matrix_to_solver(void);
-
+ 
   void copy_S_matrix_to_solver(void);
 
 
@@ -164,7 +163,8 @@ class MaxwellEquations : public EigenvalueProblem
   inline static bool compare_eigenvalue(eigen_value state1, eigen_value state2);
   
 
-
+  //!calculates norm \f$ \left( \int  |{\bf A}|^2 dV  \right)^{1/2} \f$ 
+  double  eigenstate_norm(unsigned int state_number);
 
 
 };

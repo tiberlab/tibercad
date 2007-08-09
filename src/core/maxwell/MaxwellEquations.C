@@ -4,6 +4,9 @@
 #include "SimulationEnvironment.h"
 #include "Material.h"
 
+// GNU scientific library
+#include <gsl/gsl_math.h>
+
 using namespace std;
 using namespace Constants;
 
@@ -77,6 +80,9 @@ void 	MaxwellEquations::build_integrated_quantities_description (const std::set<
 void MaxwellEquations::build_nodal_results(const std::set<std::string>& variables,
 						std::vector<double>& results, std::vector<std::string>& legend)
 {
+
+ 
+
   const set<string>::const_iterator varend(variables.end());
 
   const Mesh& mesh1 = system->get_mesh();
@@ -111,6 +117,8 @@ void MaxwellEquations::build_nodal_results(const std::set<std::string>& variable
 
 
       prepare_field_mod_squared(i,  prob_data);
+
+ 
       
       for (unsigned int i1 = 0; i1<number_of_points; i1++)
 	results[ num_functions * i1 + i] = prob_data[i1];
@@ -119,7 +127,7 @@ void MaxwellEquations::build_nodal_results(const std::set<std::string>& variable
     }
     
     
-   
+    
     
 
   }
@@ -257,6 +265,12 @@ void MaxwellEquations::do_init()
   Ham_real = & (system->get_matrix("Ham_real"));
 
 
+  system->add_matrix("Ham_imag"); //add matrix for a real part of the Hamiltonian
+
+  Ham_imag = & (system->get_matrix("Ham_imag"));
+
+
+
   system->add_matrix("S_real"); //add  matrix for real part of S matrix
 
   S_real = &( system->get_matrix("S_real") );
@@ -277,8 +291,21 @@ void MaxwellEquations::parse_options()
   EigenvalueProblem::parse_options();
 
   const ModelOptions& mod_opt = get_options();
+
+
+
+
+  double spectrum_shift_in_eV   = mod_opt.get_option("spectrum_shift", 0.0);
  
-  opt.spectrum_shift          = mod_opt.get_option("spectrum_shift", 0.0);
+  opt.spectrum_shift    = gsl_pow_2(  spectrum_shift_in_eV/( Constants::Hartree) * (opt.work_units / Constants::bohr_radius)
+				      * Constants::fine_structure_constant) ;
+
+  solver_opt.solve_ev_problem_twice = mod_opt.get_option("solve_ev_problem_twice",false);
+
+
+  solver_opt.preconditioner =  mod_opt.get_option("preconditioner","cholesky");
+
+
 }
 
 //=======================================================================================================//
@@ -327,12 +354,52 @@ void MaxwellEquations::read_SLEPC_solution(unsigned int number_of_ev)
       ev[ind].global_number = ind;
         
     }
+
+  
+  
   
   //---------------------------------------------------------------------
-
+ 
    sort( ev.begin(), ev.end(), compare_eigenvalue);
 
-   unsigned int solution_size = number_of_converged_solutions;
+
+  
+
+   //let us find the ground state 
+   bool finish = false;
+   unsigned int ground_state_index = 0;
+
+   for (unsigned int i = 0; (i < number_of_converged_solutions && (!finish) ); i++)
+   {
+     if (ev[i].k_squared > opt.spectrum_shift)
+     {
+       ground_state_index = i;
+       finish = true;
+     }
+   }
+
+  
+
+
+   cerr << "ground_state_index  " << ground_state_index << "\n";
+
+ 
+
+
+
+   unsigned int solution_size;
+
+   if (number_of_converged_solutions - ground_state_index< number_of_ev)
+     solution_size = number_of_converged_solutions - ground_state_index ;
+   else
+     solution_size = number_of_ev;
+
+
+
+   // solution_size = number_of_converged_solutions;
+   // ground_state_index = 0;
+
+
 
    {
      MaxwellEquations::eigen_problem_solution temp1;
@@ -341,18 +408,25 @@ void MaxwellEquations::read_SLEPC_solution(unsigned int number_of_ev)
 
      solution.clear();
      solution.resize(solution_size, temp1);
+
+
+    
    }
 
    map<unsigned int, unsigned int>  global_to_sol_index;
    map<unsigned int, unsigned int> :: iterator it;
 
 
-   for (unsigned int i = 0; i <  solution_size ; i++)
+
+   for (unsigned int i =  ground_state_index; i < ground_state_index +  solution_size ; i++)
    {
-     global_to_sol_index.insert( make_pair(ev[i].global_number, i )  );
-     solution[i].k_squared = ev[i].k_squared;
+     global_to_sol_index.insert( make_pair(ev[i].global_number, i - ground_state_index )  );
+     solution[i - ground_state_index].k_squared = ev[i].k_squared;
+     
    }
  
+
+
    //--------------------------------------------------------------------
    //read eigenvectors
  
@@ -364,29 +438,38 @@ void MaxwellEquations::read_SLEPC_solution(unsigned int number_of_ev)
    for (unsigned int ind = 0; ind < number_of_converged_solutions; ind++)
    {
       
-     vector<Complex> temp;
-     
-     EigenSolver::get_eigen_vector( ind, temp);
-         
+    vector<Complex> temp;
+      
+    //EigenSolver::get_eigen_vector( ind, temp);
+    unsigned int ind1 = 0;
+    
+    EigenSolver::get_eigen_vector( ind, temp);
+   
      it = global_to_sol_index.find(ind);
      
-     if (  it  !=  global_to_sol_index.end() )
-      {
-	unsigned int solution_number = it->second;
+     if (  (it  !=  global_to_sol_index.end()) )
+     {
+
+    
+
+       unsigned int solution_number = it->second;
 	 
-	  
-	//-----------------------------------------------------------------------------
-	//put independent dofs in the eigenvectors that may contain also non independent dofs
-	for (unsigned j = 0; j < number_of_all_dofs; j++)
-	{
-	  if (new_dofs[j].independent)
-	  {
+  
+
+
+ 
+       //-----------------------------------------------------------------------------
+       //put independent dofs in the eigenvectors that may contain also non independent dofs
+       for (unsigned j = 0; j < number_of_all_dofs; j++)
+       {
+	 if (new_dofs[j].independent)
+	 {
+	   
+	   solution[solution_number].eigen_vector[j] = temp[new_dofs[j].new_number];
 	    
-	    solution[solution_number].eigen_vector[j] = temp[new_dofs[j].new_number];
 	    
-	    
-	  }
-	}
+	 }
+       }
 
 
 	//put constrained dofs
@@ -431,21 +514,26 @@ void MaxwellEquations::read_SLEPC_solution(unsigned int number_of_ev)
 
    }
 
-/* TODO
+  
+ 
    //normalization
    for (unsigned int i = 0; i < solution_size; i++)
-    {
-      const double norm = eigenstate_norm(i);
-
+   {
+     const double norm = eigenstate_norm(i);
+     
     
-      const unsigned int n1 =  solution[i].eigen_vector.size();
+     const unsigned int n1 =  solution[i].eigen_vector.size();
 
       
-      for (unsigned int j = 0; j < n1; j++)
-	solution[i].eigen_vector[j] /= Complex(norm, 0.0);
-    }
+     for (unsigned int j = 0; j < n1; j++)
+       solution[i].eigen_vector[j] /= Complex(norm, 0.0);
+   }
   
-  */ 
+  
+
+
+
+   
 
 
 }
@@ -454,7 +542,8 @@ void MaxwellEquations::read_SLEPC_solution(unsigned int number_of_ev)
 void MaxwellEquations::calculate_Hamiltonian_and_S(void)
 {
   Ham_real->zero();
-  
+  Ham_imag->zero();
+
   S_real->zero();
   S_imag->zero(); 
 
@@ -497,7 +586,8 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
  
   std::vector<unsigned int> dof_indices;
 
-  DenseMatrix<Number> ham_real; 
+  DenseMatrix<Number> ham_real;
+  DenseMatrix<Number> ham_imag;
   DenseMatrix<Number> s_imag;
   DenseMatrix<Number> s_real;
 
@@ -532,6 +622,7 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
 
 
     ham_real.resize(n_dofs, n_dofs);
+    ham_imag.resize(n_dofs, n_dofs);
     s_imag.resize(n_dofs, n_dofs);
     s_real.resize(n_dofs, n_dofs);
 
@@ -574,7 +665,9 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
 		 value =  JxW[qp] * dphi[p1][qp](n) * dphi[p2][qp](n) * delta_Kronecker(i,j);
 
 	       
-	       ham_real_sub(p1,p2) += value; 
+	       ham_real_sub(p1,p2) += value;
+	     
+ 
 	       s_real_sub(p1,p2) += s_value.real();
 	       s_imag_sub(p1,p2) += s_value.imag();
 	       
@@ -590,15 +683,28 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
 
     }
 
+
+
+    ham_real.add( - opt.spectrum_shift, s_real);
+    ham_imag.add( - opt.spectrum_shift, s_imag);
+    
     vector<unsigned int> dof_indices_tmp;
 
-    dof_indices_tmp = dof_indices;
-    dof_map.constrain_element_matrix(s_real, dof_indices_tmp);
-    S_real->add_matrix(s_real,dof_indices_tmp);
+   
 
     dof_indices_tmp = dof_indices;
     dof_map.constrain_element_matrix(ham_real, dof_indices_tmp);
     Ham_real->add_matrix(ham_real,dof_indices_tmp);
+
+
+    dof_indices_tmp = dof_indices;
+    dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp);
+    Ham_imag->add_matrix(ham_imag,dof_indices_tmp);
+
+
+    dof_indices_tmp = dof_indices;
+    dof_map.constrain_element_matrix(s_real, dof_indices_tmp);
+    S_real->add_matrix(s_real,dof_indices_tmp);
 
     dof_indices_tmp = dof_indices;
     dof_map.constrain_element_matrix(s_imag, dof_indices_tmp);
@@ -609,8 +715,7 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
   }
   
 
-  Ham_real->print_matlab("Ham_real.m");
-
+ 
 
 
   copy_H_matrix_to_solver( );
@@ -623,106 +728,6 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
 //---------------------------------------------------------------------//
 
 
-void MaxwellEquations::copy_H_matrix_to_solver(void)
-{
-  EigenSolver::init_H_matrix(number_of_new_dofs);
-
-  int size_matrix = Ham_real->m();
-
-  int non_zeros_number[number_of_new_dofs];
-
-  PetscMatrix<Number>* p_matrix = static_cast<PetscMatrix<Number>* >(Ham_real);
-
-  p_matrix->close();
-  
-  
-  //----------preallocate memory------------------------------------------------------
-
-  for (int row = 0 ; row < size_matrix; row++)
-  {
-    if (new_dofs[row].independent)
-    {
-      int ierr = 0;
-      const  PetscScalar *petsc_row_vals;
-      const PetscInt *petsc_cols;
-      int n_cols = 0;
-      
-      ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-      vector<unsigned int> column_vector;
-      vector<Complex> row_values;
-
-      non_zeros_number[new_dofs[row].new_number] = 0;
-
-      for (int col = 0; col < n_cols; col++)
-      {
-	if ((new_dofs[petsc_cols[col]].independent) &&  (petsc_row_vals[col] != 0.0))
-	{
-	 
-	  non_zeros_number[new_dofs[row].new_number]++;
-
-	 
-	}
-      }
-      
-      ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-     
-    }
-  }
-
-
-  EigenSolver::preallocate_H_matrix(number_of_new_dofs,  non_zeros_number);
-
-  //--------------assebmle data--------------------------------------------------------
-
-
-  for (int row = 0 ; row < size_matrix; row++)
-  {
-    if (new_dofs[row].independent)
-    {
-      int ierr = 0;
-      const  PetscScalar *petsc_row_vals;
-      const PetscInt *petsc_cols;
-      int n_cols = 0;
-      
-      ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-      vector<unsigned int> column_vector;
-      vector<Complex> row_values;
-
-      for (int col = 0; col < n_cols; col++)
-      {
-	if ((new_dofs[petsc_cols[col]].independent) &&  (petsc_row_vals[col] != 0.0))
-	{
-	 
-	  
-
-	  double value = petsc_row_vals[col];
-	  double zero = 0.0;
-
-	  column_vector.push_back(new_dofs[petsc_cols[col]].new_number);
-	  row_values.push_back(Complex(value, zero));
-	  
-	  
-	 
-
-	}
-      }
-
-      EigenSolver::insert_H_row( new_dofs[row].new_number, column_vector, row_values);
-
-      ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-     
-    }
-  }
-
-  EigenSolver::finalize_H_assembly(); 
-
-}
 
 //---------------------------------------------------------------------// 
 void MaxwellEquations::copy_S_matrix_to_solver(void)
@@ -960,3 +965,87 @@ double MaxwellEquations::get_new_spectrum_shift( )
 
 }
 //======================================================================//
+double  MaxwellEquations::eigenstate_norm(unsigned int state_number)
+{
+  double  result;
+  
+  const vector< Complex > &  eigen_vector =  solution[state_number].eigen_vector;
+  
+
+  DofMap& dof_map = system->get_dof_map();
+
+  FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
+
+  Scaling& scaling = get_scaling();
+
+  scaling.set_length_scaling(opt.work_units);
+
+  scaling.set_calc_mesh_units(_device->get_mesh_units());
+
+
+  AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+
+  QGauss qrule (dim, SECOND);
+
+  fe -> attach_quadrature_rule (&qrule);
+
+
+  const std::vector<Real>& JxW = fe->get_JxW();
+
+  const std::vector<std::vector<Real> >& phi = fe->get_phi();
+
+  std::vector<unsigned int> dof_indices;
+
+
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+
+
+ 
+ 
+
+
+  Complex temp(0.0, 0.0);
+  Complex eigen_f_value1, eigen_f_value2;
+
+  for ( ; el != end_el ; ++el) 
+  {//el
+      
+    const Elem* elem = *el;
+    fe->reinit (elem);
+    
+    for (short psi_index = 0; psi_index < 3; psi_index++)
+    {
+      dof_map.dof_indices (elem, dof_indices, psi_index);
+      const unsigned int n_psi_dofs = dof_indices.size();
+
+      for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+      {//qp	      
+	for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+	{
+	  eigen_f_value1 = eigen_vector[dof_indices[p1]];
+	  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+	  {
+	    eigen_f_value2 = eigen_vector[dof_indices[p2]];
+	    temp += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *  phi[p2][qp] * conj(eigen_f_value2) );
+	  }
+	}
+	      
+      }
+
+
+	
+	  
+    }
+      
+
+  }
+
+
+
+  result = sqrt( abs(temp)  );
+
+
+  return(result);
+
+} 

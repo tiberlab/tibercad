@@ -92,6 +92,9 @@ class QuantumDensity : public KspaceIntegration
 
   
     bool log_output; //!perform some screen output for debugging
+
+
+   
    
    
 
@@ -124,6 +127,9 @@ class QuantumDensity : public KspaceIntegration
   //!creates a new object 
   static  QuantumDensity* create();
 
+
+
+
  private:
 
 
@@ -150,6 +156,13 @@ class QuantumDensity : public KspaceIntegration
    //!analitic (parabolic)  density calculation
    void estimate_analitic_density(void) ;
   
+
+   //!k vector for effective mass calculation
+   std::vector<double> k_vector1;
+
+   //!k vector for effective mass calculation
+   std::vector<double> k_vector2;
+
 
  protected:
 

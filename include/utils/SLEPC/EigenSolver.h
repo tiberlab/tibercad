@@ -35,6 +35,8 @@ class EigenSolver
     bool read_matrix_from_file;
 
     bool matrix_output;
+
+    std::string preconditioner;
     
   };
 

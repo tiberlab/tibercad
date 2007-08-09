@@ -98,6 +98,9 @@ class EigenvalueProblem: public  SimulationInterface
     Method discretization_method; //!<box integration or finite element
    
     bool Dirichlet_bc_everywhere; //!< apply dirichlet boundary conditions at all boundaries
+
+    std::string preconditioner; //!< preconditioner name
+
   
   };
 
@@ -238,6 +241,13 @@ class EigenvalueProblem: public  SimulationInterface
   options solver_opt;
 
 
+
+  //!passes H matrix to the eigensolver
+  void copy_H_matrix_to_solver();
+
+
+
+  
 
 
 };
