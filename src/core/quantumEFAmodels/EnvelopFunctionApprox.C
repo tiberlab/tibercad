@@ -493,8 +493,7 @@ void EnvelopFunctionApprox::parse_options()
   opt.local_occupation              = mod_opt.get_option("local_occupation", true);
 
 
-  //------------
-
+ 
 }
 
 
@@ -662,6 +661,8 @@ void EnvelopFunctionApprox::do_solve()
  apply_periodic_bc();
 
  make_new_dofs();
+
+
 
  if ( opt.job ==   EIGENSTATES )   
    solve_eigen_value_problem( solver_opt.number_of_eigenstates);
@@ -2216,6 +2217,8 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
   result = sqrt( abs(temp) * my_Jacobian );
 
 
+ 
+
   return(result);
 
 } 
@@ -2571,6 +2574,11 @@ vector<double>  EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
 
 
+
+  my_Jacobian = 1.0;
+  for (short i = 1; i <= dim; i++)
+    my_Jacobian *= opt.length_scale;
+
  
   Complex eigen_f_value1, eigen_f_value2;
   unsigned int el_number = 0;
@@ -2891,7 +2899,7 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density1D(unsigned
   for ( ; el !=end_el; ++el)
   {
     
-    result_map[*el] = result[n] *  prob_factor * mass_factor;
+    result_map[*el] = result[n] *  prob_factor * mass_factor  ;
 
     n++;
   }
@@ -2906,6 +2914,7 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density1D(unsigned
 std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density2D(unsigned int state_number, double parallel_mass)
 {
 
+  
   vector<double> result;
   map<const Elem*, double> result_map;
 
@@ -2930,7 +2939,8 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density2D(unsigned
 
   for (  ; el !=end_el; ++el )
   {
-    result_map[*el] = result[n] *  prob_factor * mass_factor;  
+    
+    result_map[*el] = result[n] *  prob_factor * mass_factor ;  
 
     n++;
   }

@@ -376,7 +376,11 @@ void EigenvalueProblem::parse_options()
 
   solver_opt.solve_ev_problem_twice  = mod_opt.get_option("solve_ev_problem_twice",true);
 
+
+
   solver_opt.number_of_eigenstates   = mod_opt.get_option("number_of_eigenstates", 6);
+
+
 
   solver_opt.Dirichlet_bc_everywhere = mod_opt.get_option("Dirichlet_bc_everywhere",false);
 
