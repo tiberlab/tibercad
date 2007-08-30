@@ -41,7 +41,7 @@ AtomisticStructure::read_structure(const std::string& path)
   std::cerr << "AtomisticStructure::read_structure(path) begin \n";
 #endif
 
-  //! Delete eventually existing structure
+  // Delete eventually existing structure
   if (!(_structure_atoms.empty())) _structure_atoms.clear();
   if (!(_atom_types.empty())) _atom_types.clear();
 
@@ -55,14 +55,14 @@ AtomisticStructure::read_structure(const std::string& path)
     }
 
 
-  //! Recognize type of input file and read it properly
+  // Recognize type of input file and read it properly
   std::string extension = path.substr(path.size()-4);
 
-  //! XYZ file
+  // XYZ file
   if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
     {
 
-      //!First line is number of atoms
+      // First line is number of atoms
       getline(file, line);
       N_atoms = atoi(line.c_str());
 
@@ -74,13 +74,13 @@ AtomisticStructure::read_structure(const std::string& path)
 
       _N_atoms = N_atoms;
 
-      //!Skip second line
+      // Skip second line
       getline(file, line);
  
-      //!Start reading  lines
-      //! Note: Multiple initialization of line_string are allowed as inside a command block.
-      //! It's a suggested solution as it allows inner loop on record to work well 
-      //! without further line_string manipulation
+      // Start reading  lines
+      // Note: Multiple initialization of line_string are allowed as inside a command block.
+      // It's a suggested solution as it allows inner loop on record to work well 
+      // without further line_string manipulation
       while (getline(file, line))
 	{ 
 
@@ -119,11 +119,11 @@ AtomisticStructure::read_structure(const std::string& path)
 
       if ( (_structure_atoms.size()) != _N_atoms ) std::cerr << "Warning: in file xyz number of atoms is wrong \n";
 
-      //! Warning: XYZ file has no informations about structure periodicity
+      // Warning: XYZ file has no informations about structure periodicity
 
     }
 
-  //! GEN file
+  // GEN file
   else if ( (extension.compare(".gen") == 0) || (extension.compare(".GEN") == 0) )
 
     {
@@ -158,18 +158,18 @@ AtomisticStructure::read_structure(const std::string& path)
       line_string.str("");
       line_string << line;
             
-      //! I assum that GEN file is correct and there's no name repetition
+      // I assum that GEN file is correct and there's no name repetition
       while ( line_string >> record)
 	{
 	  _atom_types.push_back(record);
 	}
 
-      //!Cycle upon specified number of atoms (last rows are for periodicity vectors)
+      // Cycle upon specified number of atoms (last rows are for periodicity vectors)
       for (unsigned int i = 1; i <= N_atoms; i++)
 	{
 	  getline(file, line);
 	  std::stringstream line_string(line);
-	  //! First value is ignored (just atoms enumeration)
+	  // First value is ignored (just atoms enumeration)
 	  line_string >> record;
 
 	  line_string >> record;
@@ -186,11 +186,11 @@ AtomisticStructure::read_structure(const std::string& path)
 	  _structure_atoms.push_back(tmp_atom);
 	}
 
-      //! An additional line is present in GEN files. I don't know what does it mean, so
-      //! I jump it!
+      // An additional line is present in GEN files. I don't know what does it mean, so
+      // I jump it!
       getline(file, line);
 
-      //! If GEN refers to periodical structure I expect periodicity vectors
+      // If GEN refers to periodical structure I expect periodicity vectors
       if (_is_periodical)
 	{
 	  for (unsigned int i = 0; i < 3; i++)
@@ -232,7 +232,7 @@ AtomisticStructure::print_structure(const std::string& path)
 
   file.open(path.c_str());
 
-  //! Recognize type of input file and print it properly
+  // Recognize type of input file and print it properly
   std::string extension = path.substr(path.size()-4);
 
 if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
@@ -282,7 +282,7 @@ if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
 	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
 	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n"; 
 
-     //! Periodicity vectors at the bottom
+     // Periodicity vectors at the bottom
       if (_is_periodical)
 	{
 	  for (unsigned int i = 0; i < 3; i++)
