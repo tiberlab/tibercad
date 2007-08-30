@@ -640,7 +640,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	     //Inclusion of jolue effect  
 	   
 	     for (short i = 0; i < dim; i++) 
-	     { Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
+	     { 
+               Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
 		 ( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
 		 / opt.length_scale * my_Jacobian;
 	     }

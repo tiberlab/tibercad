@@ -244,6 +244,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     static SimulationInterface* find_simulation(const std::string& name);
 
+
+    //! Get a pointer to the simulation with ID \c id
+    static SimulationInterface* get_simulation(ID id);
+
     
     //! Check if this simulation is initialized
     bool is_initialized(void) const;
@@ -739,6 +743,20 @@ SimulationInterface::get_control(void)
 {
   assert(_control != NULL);
   return *_control;
+}
+
+
+inline
+SimulationInterface*
+SimulationInterface::get_simulation(ID id)
+{
+  SimulationInterface* sim = NULL;
+  
+  SimulationMap::iterator it(_simulation_map.find(id));
+  if (it != _simulation_map.end())
+    sim = it->second;
+
+  return sim;
 }
 
 

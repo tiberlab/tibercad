@@ -191,7 +191,10 @@ PhysicalModelInterface::create(const string& name,
     mod->set_options(options);
 
     //! set the name
-    string defaultname = mod->get_default_name();
+    // 2007-08-17
+    //    we don't set anymore a default name
+    //string defaultname = mod->get_default_name();
+    string defaultname = "";
     mod->_name = mod->_options.get_option("name", defaultname);
     mod->_options.delete_option("name");
 #ifdef DEBUG
@@ -304,6 +307,56 @@ PhysicalModelInterface::get_default_name(void) const
 
 
 
+template <typename T>
+T
+PhysicalModelInterface::get_parameter(const std::string& name,
+    T default_value) const
+{
+  T val(_options.get_option(name, default_value));
+
+  std::string code;
+
+  SimulationInterface* sim = 
+    SimulationInterface::get_simulation(get_simulator_id());
+  if (sim != NULL)
+    code = sim->get_name() + ".";
+
+  if (get_name() != "")
+    code += get_name() + ".";
+  
+  code += name;
+
+  val = get_material()->get_options().get_option(code, val);
+
+  return val;
+}
+
+
+
+template <typename T>
+void
+PhysicalModelInterface::get_parameter(const std::string& name,
+    std::vector<T>& vec) const
+{
+  _options.get_option(name, vec);
+
+  std::string code;
+
+  SimulationInterface* sim = 
+    SimulationInterface::get_simulation(get_simulator_id());
+  if (sim != NULL)
+    code = sim->get_name() + ".";
+
+  if (get_name() != "")
+    code += get_name() + ".";
+  
+  code += name;
+
+  get_material()->get_options().get_option(code, vec);
+}
+
+
+
 
 // explicit instantiations
 
@@ -314,3 +367,94 @@ PhysicalModelInterface::get_id_from_name<RecombinationModelInterface>(
 template ID
 PhysicalModelInterface::get_id_from_name<MobilityModelInterface>(
     const string& name);
+
+
+
+
+
+
+
+template
+double
+PhysicalModelInterface::get_parameter<double>(const string& name,
+    double val) const;
+
+template
+int
+PhysicalModelInterface::get_parameter<int>(const string& name,
+    int val) const;
+
+template
+unsigned int
+PhysicalModelInterface::get_parameter<unsigned int>(const string& name,
+    unsigned int val) const;
+
+template
+short
+PhysicalModelInterface::get_parameter<short>(const string& name,
+    short val) const;
+
+
+template
+bool
+PhysicalModelInterface::get_parameter<bool>(const string& name,
+    bool val) const;
+
+template
+char
+PhysicalModelInterface::get_parameter<char>(const string& name,
+    char val) const;
+
+template
+string
+PhysicalModelInterface::get_parameter<string>(const string& name,
+    string val) const;
+
+template
+const char*
+PhysicalModelInterface::get_parameter<const char*>(const string& name,
+    const char* val) const;
+
+
+
+
+
+
+
+template
+void
+PhysicalModelInterface::get_parameter<double>(const string& name,
+    vector<double>& vec) const;
+
+template
+void
+PhysicalModelInterface::get_parameter<int>(const string& name,
+    vector<int>& vec) const;
+
+template
+void
+PhysicalModelInterface::get_parameter<unsigned int>(const string& name,
+    vector<unsigned int>& vec) const;
+
+template
+void
+PhysicalModelInterface::get_parameter<short>(const string& name,
+    vector<short>& vec) const;
+
+
+template
+void
+PhysicalModelInterface::get_parameter<bool>(const string& name,
+    vector<bool>& vec) const;
+
+template
+void
+PhysicalModelInterface::get_parameter<char>(const string& name,
+    vector<char>& vec) const;
+
+template
+void
+PhysicalModelInterface::get_parameter<string>(const string& name,
+    vector<string>& vec) const;
+
+

@@ -79,6 +79,8 @@ SelfconsistentSolver::do_solve(void)
 
   assert(num_sim > 0);
 
+  parse_options();
+
   for (int i = 0; i < num_sim; i++)
     _simulations[i]->solve();
 

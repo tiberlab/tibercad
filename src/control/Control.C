@@ -403,15 +403,22 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     // parse the submodels
     // NOTE: different submodels could have the same identifier
     {
-      const multimap<const string, ModelOptions>& physmodels =
+      multimap<const string, ModelOptions>& physmodels =
         model_str->get_physical_model_map();
 
       multimap<const string,
-        ModelOptions>::const_iterator it(physmodels.begin());
+        ModelOptions>::iterator it(physmodels.begin());
       multimap<const string,
-        ModelOptions>::const_iterator end(physmodels.end());
+        ModelOptions>::iterator end(physmodels.end());
       for ( ; it != end; ++it)
+      {
+        // we set the name to the model type if not explicitly
+        // given by user
+        if (!(it->second).find_option("name"))
+          (it->second)["name"] = it->first;
+        
         physopts.add_submodel(it->first, it->second);
+      }
     }
 
 

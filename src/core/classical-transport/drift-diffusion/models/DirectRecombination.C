@@ -30,8 +30,7 @@ DirectRecombination::read_database(void)
 void
 DirectRecombination::do_init(void)
 {
-  C_ = get_options().get_option("C", C_);
-  C_ = (get_material()->get_options()).get_option("C", C_);
+  C_ = get_parameter("C", C_);
 }
 
 

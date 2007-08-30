@@ -350,6 +350,9 @@ ExcitonTransport::do_init(void)
 
   system.add_variable("fermi_x", libMeshEnums::FIRST);
 
+  // a local scaling
+  system.add_vector("local_scaling");
+
   system.nonlinear_solver->matvec = assemble;
 
   // set some parameters (but we don't use them in this way)
@@ -393,6 +396,126 @@ ExcitonTransport::set_initial_guess(double guess)
 
 
 
+void
+ExcitonTransport::build_local_scaling(void)
+{
+  NonlinearImplicitSystem* system = 
+    &get_equation_systems().get_system<NonlinearImplicitSystem>(
+      get_equation_system_name());
+  //TiberNonlinearSystem* system =
+  //  &get_equation_systems().get_system<TiberNonlinearSystem>(
+  //      get_equation_system_name());
+  
+  
+  const NumericVector<Number>& solution = *(system->solution);
+  //const NumericVector<Number>& solution = system->get_solution_vector();
+  NumericVector<Number>& locscal = system->get_vector("local_scaling");
+
+  // aliases for nicer code
+  const Device& device = *(_device);
+  const Mesh& mesh = get_mesh();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+
+  const Options& params = get_options();
+
+  // the scaling parameters to scale back the result
+  const Scaling& scaling = get_scaling();
+  const double phi0 = scaling.get_potential_scaling();
+  const double C0 = scaling.get_density_scaling();
+
+  const unsigned int var = system->variable_number("fermi_x");
+  
+  vector<unsigned int> dof_indices;
+
+  FEType fe_type = system->variable_type(var);
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  QGauss qrule(dim, params.integration_order);
+  fe->attach_quadrature_rule(&qrule);
+
+
+  // Jacobian * quadrature weight at each integration point.   
+  const vector<Real>& JxW = fe->get_JxW();
+  //
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point = fe->get_xyz();
+  //
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+  //
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+
+  locscal.zero();
+
+
+  MeshBase::const_element_iterator it =
+    mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end =
+    mesh.active_elements_end(); 
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    ID subdomain = elem->subdomain_id();
+
+    dof_map.dof_indices(elem, dof_indices, var);
+
+    unsigned int n_dofs     = dof_indices.size();
+
+    ExcitonProperties* sc =
+      dynamic_cast<ExcitonProperties*>(
+          device.get_material(subdomain)->get_model(get_id()));
+    assert(sc != NULL); 
+
+    sc->reinit(elem);
+
+    fe->reinit(elem);
+
+    assert(elem->n_nodes() == dof_indices_u.size());
+
+
+    // loop over the quadrature points
+    for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
+    {
+      // get the solution values at the quadrature point
+      Real ex  = 0.0;
+      for (unsigned int i = 0; i < n_dofs; i++)
+        ex  += phi[i][qp] * solution(dof_indices[i]);
+
+
+
+      // prepare for calculating local properties
+      sc->set_coordinates(q_point[qp]);
+
+      double T_lat = sc->get_lattice_temperature();
+      // all are at lattice temperature
+      sc->set_carrier_temperature(T_lat);
+
+      sc->set_effective_potential(ex);
+      sc->calculate_density();
+      sc->calculate_net_recombination_rate();
+
+
+      double sigma_x = JxW[qp] * sc->get_mobility() * sc->get_density();
+
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        //if (sigma_x > 1)
+        //  locscal.add(dof_indices[i], sigma_x * (dphi[i][qp] * dphi[i][qp]));
+        //else
+          locscal.set(dof_indices[i], 1.0);
+      }
+
+
+    } // end loop over quadrature points
+  } // end loop over elements
+
+}
+
 
 
 void
@@ -406,6 +529,8 @@ ExcitonTransport::do_solve(void)
   _this = this;
 
   parse_options();
+
+  build_local_scaling();
 
   // aliases for nicer code
   Options& params = get_options();
@@ -1225,6 +1350,8 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
   NonlinearImplicitSystem& system =
     eq_sys.get_system<NonlinearImplicitSystem>(get_equation_system_name());
 
+  NumericVector<Number>& locscal = system.get_vector("local_scaling");
+
   const unsigned int dim = mesh.mesh_dimension();
 
   const Device& device = *_device;
@@ -1422,14 +1549,14 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
               double elem_contrib =
                 dsigma_x_phi * laplace * X(k);
 
-              Ke(i,j) += elem_contrib;
+              Ke(i,j) += elem_contrib / locscal(dof_indices[i]);
 
             }
 
             // The dFe_i/dX_j part
             double phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp];
 
-            Ke(i,j) += dRx * phi_i_x_phi_j ;
+            Ke(i,j) += dRx * phi_i_x_phi_j / locscal(dof_indices[i]);
           }
         }
       }
@@ -1446,7 +1573,7 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
         {
           double net_recomb_x = J_x_Rx * phi[i][qp];
 
-          Fe(i) += net_recomb_x;
+          Fe(i) += net_recomb_x / locscal(dof_indices[i]);
         }
       }
 

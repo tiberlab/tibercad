@@ -99,7 +99,11 @@ DriftDiffusionProperties::do_init(void)
   if (it != end)
     _electron_mobility = create_mobility_model(it->second);
   else
-    _electron_mobility = create_mobility_model();
+  {
+    ModelOptions opts;
+    opts.set_option("name", string("electron_mobility"));
+    _electron_mobility = create_mobility_model(opts);
+  }
   _electron_mobility->set_carrier_type('e');
   _electron_mobility->init();
 
@@ -113,7 +117,11 @@ DriftDiffusionProperties::do_init(void)
   if (it != end)
     _hole_mobility = create_mobility_model(it->second);
   else
-    _hole_mobility = create_mobility_model();
+  {
+    ModelOptions opts;
+    opts.set_option("name", string("hole_mobility"));
+    _hole_mobility = create_mobility_model(opts);
+  }
   _hole_mobility->set_carrier_type('h');
   _hole_mobility->init();
 
@@ -134,14 +142,14 @@ DriftDiffusionProperties::do_init(void)
  
    
     
-  //  //Add a pointer to heat simulation
+  // Add a pointer to heat simulation
 
   std::string heat_simulation =  get_options().get_option("heat_simulation", "none");
 
   if (heat_simulation != "none")
   {
     _heat_simul = dynamic_cast<MacroHeatBalance*>(
-                                                  SimulationInterface::find_simulation( heat_simulation ));
+        SimulationInterface::find_simulation(heat_simulation));
 
     if (_heat_simul == NULL)
       throw InitFailedException("Unknown heat model" + heat_simulation    );
@@ -254,6 +262,7 @@ DriftDiffusionProperties::add_recombination_model(
   _recombination_models[id] = model;
   model->set_driftdiffusionproperties(this);
   model->set_material(get_material());
+  model->set_simulator_id(get_simulator_id());
   model->init();
 }
 
@@ -273,6 +282,7 @@ DriftDiffusionProperties::create_mobility_model(const ModelOptions& options)
  
   mobility_model->set_driftdiffusionproperties(this);
   mobility_model->set_material(get_material());
+  mobility_model->set_simulator_id(get_simulator_id());
 
   return mobility_model;
 }

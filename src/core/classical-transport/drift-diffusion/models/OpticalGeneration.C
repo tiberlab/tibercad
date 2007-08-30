@@ -17,8 +17,7 @@ void
 OpticalGeneration::do_init(void)
 {
   // G is a sweepable value, so check it!
-  std::string g_str(get_options().get_option("G", ""));
-  g_str = get_material()->get_options().get_option("G", g_str);
+  std::string g_str(get_parameter("G", ""));
   G_ = check_and_register(g_str, G_);
 }
 
@@ -30,6 +29,7 @@ OpticalGeneration::get_net_recombination_rates(double& recomb_e,
 
   recomb_e = recomb_h = -G_;
 }
+
 
 void
 OpticalGeneration::get_net_recombination_rate_derivatives(

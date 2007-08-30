@@ -608,8 +608,10 @@ DriftDiffusion::do_solve(void)
   parse_options();
 
 
+  /* This is really stupid! How do you want to make selfconsistent loops ???
   // we do not solve anything if the simulation voltages are the
   // same as before
+  // */
 
   bool do_nothing = true;
   ContactData::iterator it(_voltages.begin());
@@ -621,15 +623,15 @@ DriftDiffusion::do_solve(void)
 
     double voltage = bd->get_simulation_voltage();
 
-    if (_voltages[it->first] != voltage)
-    {
-      _voltages[it->first] = voltage;
-      do_nothing = false;
-    }
-  }
+    _voltages[it->first] = voltage;
 
+    if (voltage != 0.0)
+      do_nothing = false;
+  }
+  
   if (do_nothing)
     return;
+
 
   static map<ElectricalContact*, double> voltages;
   ModelOptions& opts = SimulationInterface::get_options();
@@ -2498,139 +2500,6 @@ DriftDiffusion::build_local_scaling(void)
     } // end loop over quadrature points
   } // end loop over elements
 }
-/*
-void
-DriftDiffusion::build_local_scaling(void)
-{
-  
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
-  
-  const NumericVector<Number>& solution = system->get_solution_vector();
-
-  // aliases for nicer code
-  const Device& device = *(_device);
-  const Mesh& mesh = get_mesh();
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int dim = mesh.mesh_dimension();
-  const unsigned int nn  = mesh.n_nodes();
-  vector<unsigned short int> node_conn(nn);
-
-  vector<double> nodal_val;
-
-  // the scaling parameters to scale back the result
-  const double phi0 = get_scaling().get_potential_scaling();
-
-  local_scaling_.clear();
-
-  // Get the number of elements that share each node.  We will
-  // compute the average value at each node.
-  {
-    MeshBase::const_element_iterator it =
-      mesh.active_elements_begin();
-    const MeshBase::const_element_iterator end =
-      mesh.active_elements_end(); 
-
-    for ( ; it != end; ++it)
-      for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
-      {
-	node_conn[(*it)->node(n)] += 1;
-        local_scaling_[(*it)->get_node(n)] = vector<double>(2, 1.0);
-      }
-
-  }
-
-  const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
-  
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::CONSTANT);
-  fe->attach_quadrature_rule(&qrule);
-
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-  MeshBase::const_element_iterator it =
-    mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end =
-    mesh.active_elements_end(); 
-
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-    ID subdomain = elem->subdomain_id();
-
-    {
-      dof_map.dof_indices(elem, dof_indices_u, u_var);
-      dof_map.dof_indices(elem, dof_indices_en, en_var);
-      dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-      DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(
-          device.get_material(subdomain)->get_model(get_id()));
-      assert(sc != NULL); 
-
-      sc->set_lattice_temperature(_device->get_temperature(elem));
-      sc->reinit(elem);
-
-      fe->reinit(elem);
-
-      assert(elem->n_nodes() == dof_indices_u.size());
-
-      RealGradient field(0.0);
-      for (unsigned int i = 0; i < dof_indices_u.size(); i++)
-        field += dphi[i][0] * solution(dof_indices_u[i]);
-      field *= -phi0;
-
-
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      {
-        double u  = phi0 * solution(dof_indices_u[n]);
-        double en = phi0 * solution(dof_indices_en[n]);
-        double ep = phi0 * solution(dof_indices_ep[n]);
-
-
-        // prepare for calculating local properties
-        sc->set_coordinates(elem->point(n));
-
-        double T_lat = sc->get_lattice_temperature();
-        // all are at lattice temperature
-        sc->set_carrier_temperatures(T_lat, T_lat);
-
-        sc->set_potentials(u, en, ep);
-        sc->set_electric_field(field);
-
-        sc->calculate_densities();
-        //sc->calculate_mobilities();
-
-        double sigma_e = sc->get_electron_density();
-        //  sc->get_electron_mobility() * sc->get_electron_density();
-        double sigma_h = sc->get_hole_density();
-        //  sc->get_hole_mobility() * sc->get_hole_density();
-
-
-        assert (node_conn[elem->node(n)] != 0);
-        double conn = static_cast<double>(node_conn[elem->node(n)]);
-
-        vector<double>& val = local_scaling_[elem->get_node(n)];
-        val[0] *= pow(sigma_e, 1.0 / conn);
-        val[1] *= pow(sigma_h, 1.0 / conn);
-
-      } // end loop over nodes
-    } // end if not infinite element
-  } // end loop over elements
-}
-*/
-
 
 
 
@@ -2798,7 +2667,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
 
       for (int i = 0; i < n; i++)
         rec_model_ids[ids[i]] =
-          sc->get_recombination_model(ids[i])->get_name();
+          sc->get_recombination_model(ids[i])->get_default_name();
     }
     num_rec = rec_model_ids.size();
     legend.resize(variables.size() + num_rec);
@@ -4060,7 +3929,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     //         -           -          -  -
     //        | Kuu Kun Kup |        | Fu |
     //   Ke = | Knu Knn Knp |;  Fe = | Fn |
-    //        | Kpu Kpn Kpp |        | Fp |S
+    //        | Kpu Kpn Kpp |        | Fp |
     //         -           -          -  -
     //
     Kuu.reposition(0, 0, n_dofs, n_dofs);

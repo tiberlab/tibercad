@@ -114,13 +114,13 @@ void
 ExcitonModel::do_init(void)
 {
 
-  _t_r = get_options().get_option("tau_rad", 1.0e45);
-  _t_nr = get_options().get_option("tau_nonrad", 1.0e45);
-  _t_diss = get_options().get_option("tau_diss", 1.0e45);
+  _t_r = get_parameter("tau_rad", 1.0e45);
+  _t_nr = get_parameter("tau_nonrad", 1.0e45);
+  _t_diss = get_parameter("tau_diss", 1.0e45);
 
-  _R = get_options().get_option("R", 0.025);
-  _m = get_options().get_option("eff_mass", 1.0);
-  _mu = get_options().get_option("mobility", 1500.0);
+  _R = get_parameter("R", 0.025);
+  _m = get_parameter("eff_mass", 1.0);
+  _mu = get_parameter("mobility", 1500.0);
 
   // look for the generation model
   // (default is no generation at all)

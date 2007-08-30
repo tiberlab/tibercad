@@ -482,6 +482,11 @@ class ExcitonTransport : public SimulationInterface
      */
     void compute_scaling(void);
 
+
+    //! Calculate the local scaling values
+    void build_local_scaling(void);
+
+
     //! Reset solver environment.
     /*! 
      * Deletes the \p EquationSystems object, the simulation voltages

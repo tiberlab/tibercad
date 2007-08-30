@@ -145,15 +145,15 @@ TiberNonlinPetsc::solve(void)
       // in the case of a zero pivot in (I)LU factorization
       // we try another preconditioner
       cerr << " (Zero pivot during ILU.)\n";
-      try
-      {
-        _solver->set_pc_type(PCCOMPOSITE);
-        result = _solver->solve(*matrix, *solution, *rhs, _lin_tol, _lin_max_it);
-        failure = false;
-      }
-      catch (...)
-      {
-      }
+      //try
+      //{
+      //  _solver->set_pc_type(PCCOMPOSITE);
+      //  result = _solver->solve(*matrix, *solution, *rhs, _lin_tol, _lin_max_it);
+      //  failure = false;
+      //}
+      //catch (...)
+      //{
+      //}
     }
   }
 

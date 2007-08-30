@@ -193,6 +193,36 @@ class PhysicalModelInterface
     //! Get a reference to the model options
     ModelOptions& get_options(void);
    
+
+    //! Get the value of a parameter from the input file
+    /*!
+     *
+     * This method looks first in the ModelOptions object, and then in the
+     * ModelOptions of the material.
+     *
+     * \param name the name of the option
+     * \param default_value the default value, which also defines
+     * the type of the option
+     * \return the value
+     */
+    template <typename T>
+    T get_parameter(const std::string& name, T default_value) const;
+
+
+    //! Get a parameter which is a vector of values (of the same type)
+    /*!
+     *
+     * This method looks first in the ModelOptions object, and then in the
+     * ModelOptions of the material.
+     *
+     * \param name the name of the option
+     * \param vec the vector, where the values will be stored. \c vec can
+     * contain default values, but it's size will be changed according to
+     * the vector found in the options.
+     */
+    template <typename T>
+    void get_parameter(const std::string& name, std::vector<T>& vec) const;
+    
     
     //! Initialize the model
     /*!

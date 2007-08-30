@@ -48,13 +48,9 @@ SRHRecombination::read_database(void)
 void
 SRHRecombination::do_init(void)
 {
-  tau_n_ = get_options().get_option("tau_n", tau_n_);
-  tau_p_ = get_options().get_option("tau_p", tau_p_);
-  E_t_   = get_options().get_option("E_t", E_t_);
-
-  tau_n_ = get_material()->get_options().get_option("tau_n", tau_n_);
-  tau_p_ = get_material()->get_options().get_option("tau_p", tau_p_);
-  E_t_   = get_material()->get_options().get_option("E_t", E_t_);
+  tau_n_ = get_parameter("tau_n", tau_n_);
+  tau_p_ = get_parameter("tau_p", tau_p_);
+  E_t_   = get_parameter("E_trap", E_t_);
 }
 
 
