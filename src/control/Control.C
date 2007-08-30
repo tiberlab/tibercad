@@ -13,6 +13,7 @@
 #include "SimulationEnvironment.h"
 #include "SimulationInterface.h"
 #include "PetscRuntimeError.h"
+#include "AtomisticStructure.h"
 
 #include <boost/filesystem/operations.hpp>
 
@@ -257,19 +258,28 @@ Control::create_atomistic_structures(void)
   //
   const map<ID, RegionStructure>& atomistic_map = parser.get_atomistic_map();
 
-  // iterate the map and create the materials
+  ModelOptions atomistic_options;
+
+ // iterate the map and create the structures
   map<ID, RegionStructure>::const_iterator mapit(atomistic_map.begin());
   const map<ID, RegionStructure>::const_iterator mapend(atomistic_map.end());
   for ( ; mapit != mapend; ++mapit)
   {
     const RegionStructure& data = mapit->second;
+    std::cout << " region name is " << data.get_region_name() << endl;
+    std::cout << " region ID is " << data.get_region_ID() << endl;
+
+    ModelOptions atomistic_options = data.get_options();
+
+    //std::cout << "Ho acchiappato le opzioni " << atomistic_options.get_option("physical_regions", "all") << endl;
+
+    const string& st_name = data.get_region_name();
+    AtomisticStructure* st = AtomisticStructure::create(st_name, data.get_options());
 
 
-    //const string& material = data.get_material_name();
-    //Material* mat = Material::create(material, data.get_options());
     //_device->set_material(mat, region_ids);
   }
- 
+
 #ifdef DEBUG
   cerr << "Control::create_atomistic_structures() end" << endl;
 #endif
