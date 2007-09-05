@@ -1430,24 +1430,38 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name)
 
   switch (variable_name[0])
   {
-    case 'p':
+    case 'E':
       if (variable_name == "ElPotential")
         id = ELPOTENTIAL;
+      else if (variable_name == "Ev")
+        id = VBANDEDGE;
+      else if (variable_name == "Ec")
+        id = CBANDEDGE;
+      else if (variable_name == "Eg")
+        id = BANDGAP;
       break;
-    case 'f':
+
+    case 'e':
+      if (variable_name == "eDensity")
+        id = EDENSITY;
+      else if (variable_name == "eMob")
+        id = EMOBILITY;
+      break;
+      
+    case 'h':
+      if (variable_name == "hDensity")
+        id = HDENSITY;
+      else if (variable_name == "hMob")
+        id = HMOBILITY;
+      break;
+      
+    case 'Q':
       if (variable_name == "QFermi_e")
         id = QFERMIE;
       else if (variable_name == "QFermi_h")
         id = QFERMIH;
       break;
-    case 'v':
-      if (variable_name == "Ev")
-        id = VBANDEDGE;
-      break;
-    case 'c':
-      if (variable_name == "Ec")
-        id = CBANDEDGE;
-      break;
+      
     default:
       break;
   }
