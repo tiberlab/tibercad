@@ -752,8 +752,8 @@ SimulationInterface::get_integrated_quantities_description(
 
 
 void
-SimulationInterface::get_solution(const Elem* elem, const vector<ID>& ids,
-    vector<vector<double> >& values)
+SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
+    vector<map<ID, double> >& values)
 {
 
   SimulationEnvironment& env = get_environment();
@@ -771,7 +771,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<ID>& ids,
 
 void
 SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
-    const vector<ID>& ids, vector<vector<double> >& values)
+    const set<ID>& ids, vector<map<ID, double> >& values)
 {
   unsigned int np = p.size();
   values.resize(np);
@@ -826,7 +826,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
         }
       }
       if (el_it == el_end)
-        values[i].resize(0);
+        values[i].clear();
     }
   }
 }

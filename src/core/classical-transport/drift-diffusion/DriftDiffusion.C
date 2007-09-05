@@ -1431,21 +1431,21 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name)
   switch (variable_name[0])
   {
     case 'p':
-      if (variable_name == "potential")
-        id = ELECTRICPOTENTIAL;
+      if (variable_name == "ElPotential")
+        id = ELPOTENTIAL;
       break;
     case 'f':
-      if (variable_name == "fermi_e")
-        id = EFERMI;
-      else if (variable_name == "fermi_h")
-        id = HFERMI;
+      if (variable_name == "QFermi_e")
+        id = QFERMIE;
+      else if (variable_name == "QFermi_h")
+        id = QFERMIH;
       break;
     case 'v':
-      if (variable_name == "valence_band")
+      if (variable_name == "Ev")
         id = VBANDEDGE;
       break;
     case 'c':
-      if (variable_name == "conduction_band")
+      if (variable_name == "Ec")
         id = CBANDEDGE;
       break;
     default:
@@ -1460,7 +1460,7 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name)
 
 void
 DriftDiffusion::get_solution_secure(const Elem* elem,
-    const vector<ID>& ids, vector<vector<double> >& values)
+    const set<ID>& ids, vector<map<ID, double> >& values)
 {
 }
 
@@ -1469,7 +1469,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
 void
 DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
-    const vector<ID>& ids, vector<vector<double> >& values)
+    const set<ID>& ids, vector<map<ID, double> >& values)
 {
   unsigned int np = p.size();
   values.resize(np);
@@ -1479,7 +1479,9 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
   system = &get_equation_systems().get_system<TiberNonlinearSystem>(
       get_equation_system_name());
 
-  const NumericVector<Number>& ddsol = system->get_solution_vector();
+  const Device& device = *(_device);
+
+  const NumericVector<Number>& solution = system->get_solution_vector();
 
   const unsigned int dim = get_mesh().mesh_dimension();
 
@@ -1498,13 +1500,27 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   // element shape functions
   const vector<vector<Real> >& phi = fe->get_phi();
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
   vector<Point> points(np);
   FEInterface::inverse_map(dim, fe_type, elem, p, points);
   //for (unsigned int n = 0; n < np; n++)
   //  points[n] = FEInterface::inverse_map(dim, fe_type, elem, p[n], 1e-6);
 
+
+  ID subdomain = elem->subdomain_id();
+
+  DriftDiffusionProperties* sc =
+    dynamic_cast<DriftDiffusionProperties*>(
+        device.get_material(subdomain)->get_model(get_id()));
+  assert(sc != NULL); 
+
+  sc->set_lattice_temperature(device.get_temperature(elem));
+  sc->reinit(elem);
+
   fe->reinit(elem, &points);
+
+  vector<double> T_nodes = sc->get_temperature_node();
 
   dof_map.dof_indices(elem, dof_indices_u, u_var);
   dof_map.dof_indices(elem, dof_indices_en, en_var);
@@ -1518,14 +1534,70 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
   for (unsigned int n = 0; n < np; n++)
   {
     double u = 0;
+    double en = 0.0;
+    double ep = 0.0;
+    RealGradient e_field(0);
     // do interpolation
     for (unsigned int i = 0; i < n_dofs; i++)
-      u  += phi[i][n] * ddsol(dof_indices_u[i]);
+    {
+      u  += phi[i][n] * solution(dof_indices_u[i]);
+      en += phi[i][0] * solution(dof_indices_en[i]);
+      ep += phi[i][0] * solution(dof_indices_ep[i]);
+
+      e_field += dphi[i][0] * solution(dof_indices_u[i]);
+    }
 
     // scale the potential back
     u  *= phi0;
+    en  *= phi0;
+    ep  *= phi0;
+    e_field *= -phi0;
 
-    values[n][0] = u;
+    sc->set_coordinates(points[n]);
+    double T_lat = sc->get_lattice_temperature();
+    // all are at lattice temperature
+    sc->set_carrier_temperatures(T_lat, T_lat);
+
+    sc->set_potentials(u, en, ep);
+
+    sc->set_electric_field(e_field);
+
+    sc->calculate_densities();
+    sc->calculate_mobilities();
+
+
+    if (ids.count(ELPOTENTIAL))
+      values[n][ELPOTENTIAL] = u;
+
+    if (ids.count(QFERMIE))
+      values[n][QFERMIE] = en;
+
+    if (ids.count(QFERMIH))
+      values[n][QFERMIH] = ep;
+
+    if (ids.count(VBANDEDGE))
+      values[n][VBANDEDGE] = sc->get_valence_band_edge();
+
+    if (ids.count(CBANDEDGE))
+      values[n][CBANDEDGE] = sc->get_conduction_band_edge();
+
+    if (ids.count(EDENSITY))
+      values[n][EDENSITY] = sc->get_electron_density();
+
+    if (ids.count(HDENSITY))
+      values[n][HDENSITY] = sc->get_hole_density();
+
+    if (ids.count(BANDGAP))
+      values[n][BANDGAP] =
+        sc->get_conduction_band_edge() - sc->get_valence_band_edge();
+
+    if (ids.count(EMOBILITY))
+      values[n][EMOBILITY] = sc->get_electron_mobility();
+
+    if (ids.count(HMOBILITY))
+      values[n][HMOBILITY] = sc->get_hole_mobility();
+
+
   }
 }
 

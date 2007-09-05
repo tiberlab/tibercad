@@ -62,13 +62,16 @@ class DriftDiffusion : public SimulationInterface
     enum Variables
     {
       UNKNOWN = INVALID_ID,
-      ELECTRICPOTENTIAL,
-      EFERMI,
-      HFERMI,
+      ELPOTENTIAL,
+      QFERMIE,
+      QFERMIH,
       CBANDEDGE,
       VBANDEDGE,
+      BANDGAP,
       EDENSITY,
-      HDENSITY
+      HDENSITY,
+      EMOBILITY,
+      HMOBILITY
     };
       
  
@@ -668,8 +671,8 @@ class DriftDiffusion : public SimulationInterface
      * const std::vector<ID>&, std::vector<std::vector<double> >&)
      */
     virtual void get_solution_secure(const Elem* elem,
-        const std::vector<ID>& ids,
-        std::vector<std::vector<double> >& values);
+        const std::set<ID>& ids,
+        std::vector<std::map<ID, double> >& values);
 
 
     /* \copydoc SimulationInterface::get_solution_secure(const Elem*,
@@ -678,8 +681,8 @@ class DriftDiffusion : public SimulationInterface
      */
     virtual void get_solution_secure(const Elem* elem,
         const std::vector<Point>& p,
-        const std::vector<ID>& ids,
-        std::vector<std::vector<double> >& solution);
+        const std::set<ID>& ids,
+        std::vector<std::map<ID, double> >& solution);
 
 
   private:

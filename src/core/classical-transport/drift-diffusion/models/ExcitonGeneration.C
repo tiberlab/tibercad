@@ -13,7 +13,7 @@ TIBER_MODULE(ExcitonGeneration, exciton_generation)
 void
 ExcitonGeneration::do_init(void)
 {
-  C_ = get_options().get_option("C", 1e-10);
+  C_ = get_parameter("C", 1e-10);
 }
 
 void

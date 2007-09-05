@@ -284,25 +284,25 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     /*!
      *
      * \copydoc get_solution_secure(const Elem*,
-     *   const std::vector<ID>&, std::vector<double>&) 
+     *   const std::set<ID>&, std::map<ID, double>&) 
      *
      * Calls get_solution_secure(const Elem*,
-     *   const std::vector<ID>&, std::vector<double>&) 
+     *   const std::set<ID>&, std::mapID, <double>&) 
      */
-    void get_solution(const Elem* elem, const std::vector<ID>& ids,
-        std::vector<std::vector<double> >& values);
+    void get_solution(const Elem* elem, const std::set<ID>& ids,
+        std::vector<std::map<ID, double> >& values);
 
 
     /*!
      *
      * \copydoc get_solution_secure(const Elem*, const std::vector<Point>&,
-     *   const std::vector<ID>&, std::vector<std::vector<double> >&)
+     *   const std::set<ID>&, std::vector<std::map<ID, double> >&)
      *
      * Calls get_solution_secure(const Elem*, const std::vector<Point>&,
-     *   const std::vector<ID>&, std::vector<std::vector<double> >&)
+     *   const std::set<ID>&, std::vector<std::map<ID, double> >&)
      */
     void get_solution(const Elem* elem, const std::vector<Point>& p,
-        const std::vector<ID>& ids, std::vector<std::vector<double> >& values);
+        const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
     
     /*!
      * \copydoc build_nodal_results()
@@ -526,7 +526,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      *
      */
     virtual void get_solution_secure(const Elem* elem,
-        const std::vector<ID>& ids, std::vector<std::vector<double> >& values) {};
+        const std::set<ID>& ids, std::vector<std::map<ID, double> >& values) {};
 
 
     //! Get solution values on inner points of a specified element
@@ -541,8 +541,8 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * 
      */
     virtual void get_solution_secure(const Elem* elem,
-        const std::vector<Point>& p, const std::vector<ID>& ids,
-        std::vector<std::vector<double> >& values) {};
+        const std::vector<Point>& p, const std::set<ID>& ids,
+        std::vector<std::map<ID, double> >& values) {};
 
     
     //! Get the solution values on one point of an element
@@ -554,8 +554,8 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * 
      */
     virtual void get_solution_secure(const Elem* elem,
-        const Point& p, const std::vector<ID>& ids,
-        std::vector<double>& values);
+        const Point& p, const std::set<ID>& ids,
+        std::map<ID, double>& values);
 
 
 
@@ -983,10 +983,10 @@ SimulationInterface::convert_variable_name_to_id(
 inline
 void
 SimulationInterface::get_solution_secure(const Elem* elem,
-    const Point& p, const std::vector<ID>& ids, std::vector<double>& values)
+    const Point& p, const std::set<ID>& ids, std::map<ID, double>& values)
 {
   std::vector<Point> pvec(1, p);
-  std::vector<std::vector<double> > valvec(1);
+  std::vector<std::map<ID, double> > valvec(1);
   
   get_solution_secure(elem, pvec, ids, valvec);
 
