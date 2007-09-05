@@ -284,14 +284,39 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     /*!
      *
      * \copydoc get_solution_secure(const Elem*,
-     *   const std::set<ID>&, std::map<ID, double>&) 
+     *   ID, std::vector<double>&) 
      *
      * Calls get_solution_secure(const Elem*,
-     *   const std::set<ID>&, std::mapID, <double>&) 
+     *   ID, std::vector<double>&) 
+     */
+    void get_solution(const Elem* elem, ID id,
+        std::vector<double>& values) {};
+
+
+
+    /*!
+     *
+     * \copydoc get_solution_secure(const Elem*,
+     *   const std::set<ID>&, std::vector<std::map<ID, double> >&) 
+     *
+     * Calls get_solution_secure(const Elem*,
+     *   const std::set<ID>&, std::vector<std::mapID, <double> >&) 
      */
     void get_solution(const Elem* elem, const std::set<ID>& ids,
         std::vector<std::map<ID, double> >& values);
 
+
+    /*!
+     *
+     * \copydoc get_solution_secure(const Elem*, const std::vector<Point>&,
+     *   const std::set<ID>&, std::vector<std::map<ID, double> >&)
+     *
+     * Calls get_solution_secure(const Elem*, const std::vector<Point>&,
+     *   const std::set<ID>&, std::vector<std::map<ID, double> >&)
+     */
+    void get_solution(const Elem* elem, const std::vector<Point>& p,
+        ID id, std::vector<double>& values) {};
+  
 
     /*!
      *
