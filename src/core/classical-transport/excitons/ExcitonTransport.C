@@ -475,7 +475,7 @@ ExcitonTransport::build_local_scaling(void)
 
     fe->reinit(elem);
 
-    assert(elem->n_nodes() == dof_indices_u.size());
+    //assert(elem->n_nodes() == dof_indices_u.size());
 
 
     // loop over the quadrature points
