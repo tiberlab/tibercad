@@ -383,6 +383,10 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         solveropts += parser.read_parameters("Solver", simulation_name);
     }
 
+    solveropts += simopts;
+    solveropts.delete_option("simulation_name");
+    solveropts.delete_option("physical_regions");
+    
     SimulationInterface* sim =
       SimulationInterface::create(modelname, solveropts);
     if (sim == NULL)

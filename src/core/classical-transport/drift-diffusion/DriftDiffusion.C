@@ -928,6 +928,10 @@ DriftDiffusion::parse_const_options(void)
   else if (pc == "eisenstat")
     solver_params.pc_type = EISENSTAT_PRECOND;
 
+
+  // the temperature simulation
+  string temp_simul = opts.get_option("thermal_simulation", "");
+  _lattice_temp.set_simulation(temp_simul);
 }
 
 

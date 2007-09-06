@@ -290,7 +290,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      *   ID, std::vector<double>&) 
      */
     void get_solution(const Elem* elem, ID id,
-        std::vector<double>& values) {};
+        std::vector<double>& values);
 
 
 
@@ -315,7 +315,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      *   const std::set<ID>&, std::vector<std::map<ID, double> >&)
      */
     void get_solution(const Elem* elem, const std::vector<Point>& p,
-        ID id, std::vector<double>& values) {};
+        ID id, std::vector<double>& values);
   
 
     /*!

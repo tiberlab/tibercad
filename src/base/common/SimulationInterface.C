@@ -831,3 +831,48 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
   }
 }
 
+
+
+void
+SimulationInterface::get_solution(const Elem* elem, ID id, vector<double>& values)
+{
+  set<ID> ids;
+  ids.insert(id);
+  vector<map<ID, double> > vals;
+  
+  get_solution(elem, ids, vals);
+
+  if (vals[0].size() != 0)
+  {
+    int n = vals.size();
+    values.resize(n);
+    for (int i = 0; i < n; i++)
+    {
+      values[i] = vals[i][id];
+    }
+  }
+}
+
+
+
+void
+SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
+        ID id, vector<double>& values)
+{
+  set<ID> ids;
+  ids.insert(id);
+  vector<map<ID, double> > vals;
+  
+  get_solution(elem, p, ids, vals);
+
+  if (vals[0].size() != 0)
+  {
+    int n = vals.size();
+    values.resize(n);
+    for (int i = 0; i < n; i++)
+    {
+      values[i] = vals[i][id];
+    }
+  }
+
+}
