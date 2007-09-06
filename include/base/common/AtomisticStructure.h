@@ -71,6 +71,8 @@ class AtomisticStructure
   //! Return a reference to atom types
   const std::vector<std::string>& get_atom_types (void);
 
+  //! Initialize the structure (up to now reading a structure from file is needed)
+  void init(void); 
 
 protected:
 
@@ -108,6 +110,9 @@ private:
   //! Periodicity vectors in canonical basis
   double _periodicity_vectors[3][3];
 
+  //! Tell if the object has been already initialized
+  bool _is_initialized;
+
 };
 
 //----------------------------------------------------
@@ -118,7 +123,7 @@ inline
 AtomisticStructure::AtomisticStructure(const std::string& name)
   :_name(name)
 { 
-  //! Default initializations
+  // Default initializations
   _N_atoms = 0;
   _is_periodical = false;
   for (unsigned int i = 0; i < 3; i++)
@@ -129,8 +134,6 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
 	}
     }
 
-  //read_structure("CNT20x0.gen");
-  //print_structure("CNT20x0tib.gen");
 }
 
 
@@ -144,6 +147,7 @@ inline
 void AtomisticStructure::set_options(const ModelOptions& options)
 {
   _options = options;
+
 }
 
 

@@ -10,7 +10,7 @@ AtomisticStructure::create(const std::string& name)
   st = new AtomisticStructure(name);
 
   std::cout << "Created AtomisticStructure " << st->get_name() << std::endl;
-  
+ 
 
   return st;
 }
@@ -27,6 +27,30 @@ AtomisticStructure::create(const std::string& name, const ModelOptions& options)
   return st;
 }
 
+
+void
+AtomisticStructure::init(void)
+{
+
+#ifdef DEBUG
+  std::cerr << "AtomisticStructure::init() begin \n";
+#endif
+
+  // Read structure from file
+  std::string path;
+
+  if (! get_options().find_option("path") )
+  std::cerr << "ERROR IN ATOMISTIC REGION DEFINITION: A PATH FOR STRUCTURE FILE MUST BE SPECIFIED" << std::endl;
+
+  path = get_options().get_option("path","none");
+  
+  if (path.compare("none") != 0) read_structure(path);
+
+#ifdef DEBUG
+  std::cerr << "AtomisticStructure::init() end \n";
+#endif
+
+}
 
 
 void 
@@ -186,8 +210,8 @@ AtomisticStructure::read_structure(const std::string& path)
 	  _structure_atoms.push_back(tmp_atom);
 	}
 
-      // An additional line is present in GEN files. I don't know what does it mean, so
-      // I jump it!
+      // An additional line is present in GEN files. It's the coordinates origin and it's
+      // not needed
       getline(file, line);
 
       // If GEN refers to periodical structure I expect periodicity vectors
@@ -276,8 +300,7 @@ if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
 	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(3)) << "\n"; 
        }
 
-     //A line of zeros is put here (don't know the meaning of these line.
-     // It's usually set at zero)
+     //A line of zeros is put here (coordinates origin)
      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
 	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
 	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n"; 
