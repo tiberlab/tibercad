@@ -83,6 +83,11 @@ DriftDiffusionProperties::do_init(void)
 
   _is_dielectric = get_material()->get_options().get_option("dielectric", false);
 
+
+  // the temperature simulation
+  string temp_simul = get_options().get_option("thermal_simulation", "");
+  _lattice_temp.set_simulation(temp_simul);
+
   
   //
   // mobilities
@@ -300,6 +305,36 @@ DriftDiffusionProperties::clear_recombination(void)
     PhysicalModelInterface::destroy(it->second);
 
   _recombination_models.clear();
+}
+
+
+
+void
+DriftDiffusionProperties::reinit(const Elem* elem)
+{
+ 
+  if  ( _elem != elem) 
+  {
+    _elem = elem;
+
+    // get the nodal temperatures
+    _lattice_temp.get_temperature(elem, _nodal_lattice_vt);
+    for (int i = 0; i < _nodal_lattice_vt.size(); i++)
+      _nodal_lattice_vt[i] *= Constants::k_B;
+
+    // get the mean temperature on the element
+    lattice_vt = Constants::k_B *
+      _lattice_temp.get_temperature(elem, elem->centroid());
+
+    // here we assume thermal equilibrium
+    electron_vt = hole_vt = lattice_vt;
+
+    
+    polarization = pyro_polarization;
+
+    this->prepare_element_data();
+  }
+
 }
 
 
@@ -626,7 +661,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   double eps = 1e-6, dens_max = 1e6;
   double error, residual_dens, y;
 
-  set_carrier_temperatures(kT, kT);
+  //set_carrier_temperatures(kT, kT);
 
   do
   {
@@ -724,7 +759,7 @@ void  DriftDiffusionProperties::compute_thermoelectric_powers()
 
 std::vector<double> DriftDiffusionProperties::get_temperature_node()
 {
-  
+/*  
   if (_heat_simul != NULL)
   {
     return (_heat_simul->get_temperature_node(_elem));
@@ -742,5 +777,6 @@ std::vector<double> DriftDiffusionProperties::get_temperature_node()
     
     return (Temperature); 
   }
-  
+  */
+  return _nodal_lattice_vt;
 }

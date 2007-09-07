@@ -7,7 +7,6 @@
 #include "SimulationOptions.h"
 #include "DriftDiffusionDefs.h"
 #include "Device.h"
-#include "TemperatureInterface.h"
 #include "PetscRuntimeError.h"
 #include "KSPDivergedError.h"
 #include "SNESDivergedError.h"
@@ -72,7 +71,16 @@ class DriftDiffusion : public SimulationInterface
       EDENSITY,
       HDENSITY,
       EMOBILITY,
-      HMOBILITY
+      HMOBILITY,
+      J,
+      JN,
+      JNX,
+      JNY,
+      JNZ,
+      JP,
+      JPX,
+      JPY,
+      JPZ
     };
       
  
@@ -702,10 +710,6 @@ class DriftDiffusion : public SimulationInterface
 
     //! An internal pointer to the device
     Device* _device;
-
-
-    //! The lattice temperature
-    TemperatureInterface _lattice_temp;
 
 
     //! A linear solver

@@ -11,6 +11,7 @@
 
 #include "PhysicalModel.h"
 
+#include "TemperatureInterface.h"
 #include "SimulationOptions.h"
 #include "DriftDiffusionDefs.h"
 #include "TiberCad.h"
@@ -738,13 +739,16 @@ class DriftDiffusionProperties : public PhysicalModel
 
   private:
 
-    //!A pointer to a heat simulation
+    //! The interface to the lattice temperature simulation
+    TemperatureInterface _lattice_temp;
+
+    //! A pointer to a heat simulation
     MacroHeatBalance* _heat_simul;
        
-    //Electrons thermoelectric power
+    //! Electron thermoelectric power
     double _eTEpower;
 
-    //Holes thermoelectric power
+    //! Hole thermoelectric power
     double _hTEpower; 
 
 
@@ -829,8 +833,12 @@ class DriftDiffusionProperties : public PhysicalModel
     MobilityModelInterface* _hole_mobility;
 
 
-    //! The electron thermoelectric power
+    //! The thermoelectric power
     ThermoelectricPower* _thermoelectric_power;
+
+
+    //! The nodal lattice temperature
+    std::vector<double> _nodal_lattice_vt;
 
 
     //! The constant factor to calculate the effective density of states
@@ -860,22 +868,6 @@ DriftDiffusionProperties::create(const std::string& name,
       PhysicalModelInterface::create("dd_" + name, options));
 }
 
-
-inline
-void
-DriftDiffusionProperties::reinit(const Elem* elem)
-{
- 
-  if  ( _elem != elem) 
-  {
-    _elem = elem;
-
-    polarization = pyro_polarization;
-
-    this->prepare_element_data();
-  }
-
-}
 
 
 inline

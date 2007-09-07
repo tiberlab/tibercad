@@ -89,3 +89,15 @@ TemperatureInterface::get_temperature(const Elem* elem,
       temperatures[i] = temp[i][_id];
   }
 }
+
+
+double
+TemperatureInterface::get_temperature(const Elem* elem, const Point& p)
+{
+  std::vector<Point> ps(1, p);
+  std::vector<double> temp(1);
+
+  get_temperature(elem, ps, temp);
+  
+  return temp[0];
+}

@@ -756,6 +756,8 @@ SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
     vector<map<ID, double> >& values)
 {
 
+  if ((ids.size() == 0) || (elem == NULL)) return;
+  
   SimulationEnvironment& env = get_environment();
 
   if (!env.contains_element(elem))
@@ -775,7 +777,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 {
   unsigned int np = p.size();
   values.resize(np);
-  if (np == 0) return;
+  if ((np == 0) || (ids.size() == 0) || (elem == NULL)) return;
 
   // this will contain the element in which p lies and for which
   // DriftDiffusion knows the potential

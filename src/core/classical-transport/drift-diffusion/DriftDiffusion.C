@@ -292,7 +292,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
       dynamic_cast<DriftDiffusionProperties*>(
           _device->get_material(elem->subdomain_id())->get_model(get_id()));
 
-    sc->set_lattice_temperature(_device->get_temperature(elem));
+    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
     sc->set_coordinates(elem->centroid());
     sc->set_potentials(sc->get_equilibrium_fermi_level());
@@ -928,10 +928,6 @@ DriftDiffusion::parse_const_options(void)
   else if (pc == "eisenstat")
     solver_params.pc_type = EISENSTAT_PRECOND;
 
-
-  // the temperature simulation
-  string temp_simul = opts.get_option("thermal_simulation", "");
-  _lattice_temp.set_simulation(temp_simul);
 }
 
 
@@ -1295,7 +1291,7 @@ DriftDiffusion::get_bands_secure(const Elem* elem, vector<double>& band_edges)
         _device->get_material(elem->subdomain_id())->get_model(get_id()));
   assert(sc != NULL); 
 
-  sc->set_lattice_temperature(_device->get_temperature(elem));
+  //sc->set_lattice_temperature(_device->get_temperature(elem));
   sc->reinit(elem);
 
   band_edges[0] = sc->get_conduction_band_edge();
@@ -1432,6 +1428,9 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name)
 {
   ID id = INVALID_ID;
 
+  // for an empty string we return immediately
+  if (variable_name == "") return id;
+
   switch (variable_name[0])
   {
     case 'E':
@@ -1459,6 +1458,37 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name)
         id = HMOBILITY;
       break;
       
+    case 'J':
+      if (variable_name.size() == 1)
+        id = J;
+      else
+      {
+        switch (variable_name[1])
+        {
+          case 'n':
+            if (variable_name.size() == 2)
+              id = JN;
+            else if (variable_name == "Jn_x")
+              id = JNX;
+            else if (variable_name == "Jn_y")
+              id = JNY;
+            if (variable_name == "Jn_z")
+              id = JNZ;
+            break;
+          case 'p':
+            if (variable_name.size() == 2)
+              id = JP;
+            else if (variable_name == "Jp_x")
+              id = JPX;
+            else if (variable_name == "Jp_y")
+              id = JPY;
+            if (variable_name == "Jp_z")
+              id = JPZ;
+            break;
+        }
+      }
+      break;
+      
     case 'Q':
       if (variable_name == "QFermi_e")
         id = QFERMIE;
@@ -1480,6 +1510,201 @@ void
 DriftDiffusion::get_solution_secure(const Elem* elem,
     const set<ID>& ids, vector<map<ID, double> >& values)
 {
+  unsigned int np = elem->n_nodes();
+  values.resize(np);
+
+  vector<Point> points(np);
+  for (int i = 0; i < np; i++)
+    points[i] = elem->local_node(elem->type(), i);
+
+  TiberNonlinearSystem* system;
+  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
+      get_equation_system_name());
+
+  const Device& device = *(_device);
+
+  const NumericVector<Number>& solution = system->get_solution_vector();
+
+  const unsigned int dim = get_mesh().mesh_dimension();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_e");
+  const unsigned int ep_var = system->variable_number("fermi_h");
+
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+  //FEInterface::inverse_map(dim, fe_type, elem, p, points);
+  //for (unsigned int n = 0; n < np; n++)
+  //  points[n] = FEInterface::inverse_map(dim, fe_type, elem, p[n], 1e-6);
+
+
+  ID subdomain = elem->subdomain_id();
+
+  DriftDiffusionProperties* sc =
+    dynamic_cast<DriftDiffusionProperties*>(
+        device.get_material(subdomain)->get_model(get_id()));
+  assert(sc != NULL); 
+
+  //sc->set_lattice_temperature(device.get_temperature(elem));
+  sc->reinit(elem);
+
+  fe->reinit(elem, &points);
+    
+  //Get the thermoelectric power
+  double Pn =  get_electrons_thermoelectric_power(elem);
+  double Pp =  get_holes_thermoelectric_power(elem);
+ 
+  vector<double> T_nodes = sc->get_temperature_node();
+
+  dof_map.dof_indices(elem, dof_indices_u, u_var);
+  dof_map.dof_indices(elem, dof_indices_en, en_var);
+  dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+  const unsigned int n_dofs = dof_indices_u.size();
+
+  // the scaling parameters to scale back the result
+  double phi0 = get_scaling().get_potential_scaling();
+
+  for (unsigned int n = 0; n < np; n++)
+  {
+    double en_x = 0.0, ep_x = 0.0;
+    double en_y = 0.0, ep_y = 0.0;
+    double en_z = 0.0, ep_z = 0.0;
+    double dT_x = 0.0;
+    double dT_y = 0.0;
+    double dT_z = 0.0;
+    double u  = phi0 * solution(dof_indices_u[n]);
+    double en = phi0 * solution(dof_indices_en[n]);
+    double ep = phi0 * solution(dof_indices_ep[n]);
+    RealGradient e_field(0);
+    // do interpolation
+    for (unsigned int i = 0; i < n_dofs; i++)
+    {
+      en_x  += dphi[i][n](0) * solution(dof_indices_en[i]);
+      en_y  += dphi[i][n](1) * solution(dof_indices_en[i]);
+      en_z  += dphi[i][n](2) * solution(dof_indices_en[i]);
+      
+      ep_x  += dphi[i][n](0) * solution(dof_indices_ep[i]);
+      ep_y  += dphi[i][n](1) * solution(dof_indices_ep[i]);
+      ep_z  += dphi[i][n](2) * solution(dof_indices_ep[i]);
+      
+      dT_x  += dphi[i][n](0) * T_nodes[i];
+      dT_y  += dphi[i][n](1) * T_nodes[i];
+      dT_z  += dphi[i][n](2) * T_nodes[i];
+
+      e_field += dphi[i][n] * solution(dof_indices_u[i]);
+    }
+
+    // scale the potential back
+    e_field *= -phi0;
+    en_x *= phi0;
+    en_y *= phi0;
+    en_z *= phi0;
+    ep_x *= phi0;
+    ep_y *= phi0;
+    ep_z *= phi0;
+
+    sc->set_coordinates(points[n]);
+    //double T_lat = sc->get_lattice_temperature();
+    // all are at lattice temperature
+    //sc->set_carrier_temperatures(T_lat, T_lat);
+
+    sc->set_potentials(u, en, ep);
+
+    sc->set_electric_field(e_field);
+
+    sc->calculate_densities();
+    sc->calculate_mobilities();
+
+    // we put the minus here for convenience
+    double sigma_e = -Constants::e * sc->get_electron_density() *
+      sc->get_electron_mobility();
+    double sigma_h = -Constants::e * sc->get_hole_density() *
+      sc->get_hole_mobility();
+
+    double jnx = sigma_e * (en_x + Pn * dT_x);
+    double jny = sigma_e * (en_y + Pn * dT_y);
+    double jnz = sigma_e * (en_z + Pn * dT_z);
+    double jpx = sigma_h * (ep_x + Pp * dT_x);
+    double jpy = sigma_h * (ep_y + Pp * dT_y);
+    double jpz = sigma_h * (ep_z + Pp * dT_z);
+
+
+    if (ids.count(ELPOTENTIAL))
+      values[n][ELPOTENTIAL] = u;
+
+    if (ids.count(QFERMIE))
+      values[n][QFERMIE] = en;
+
+    if (ids.count(QFERMIH))
+      values[n][QFERMIH] = ep;
+
+    if (ids.count(VBANDEDGE))
+      values[n][VBANDEDGE] = sc->get_valence_band_edge();
+
+    if (ids.count(CBANDEDGE))
+      values[n][CBANDEDGE] = sc->get_conduction_band_edge();
+
+    if (ids.count(EDENSITY))
+      values[n][EDENSITY] = sc->get_electron_density();
+
+    if (ids.count(HDENSITY))
+      values[n][HDENSITY] = sc->get_hole_density();
+
+    if (ids.count(BANDGAP))
+      values[n][BANDGAP] =
+        sc->get_conduction_band_edge() - sc->get_valence_band_edge();
+
+    if (ids.count(EMOBILITY))
+      values[n][EMOBILITY] = sc->get_electron_mobility();
+
+    if (ids.count(HMOBILITY))
+      values[n][HMOBILITY] = sc->get_hole_mobility();
+
+    if (ids.count(J))
+    {
+      double jx = jnx + jpx;
+      double jy = jny + jpy;
+      double jz = jnz + jpz;
+      values[n][J] = sqrt(jx * jx + jy * jy + jz * jz);
+    }
+
+    if (ids.count(JN))
+      values[n][JN] = sqrt(jnx * jnx + jny * jny + jnz * jnz);
+
+    if (ids.count(JP))
+      values[n][JP] = sqrt(jpx * jpx + jpy * jpy + jpz * jpz);
+
+    if (ids.count(JNX))
+      values[n][JNX] = jnx;
+
+    if (ids.count(JNY))
+      values[n][JNY] = jny;
+
+    if (ids.count(JNZ))
+      values[n][JNZ] = jnz;
+
+    if (ids.count(JPX))
+      values[n][JPX] = jpx;
+
+    if (ids.count(JPY))
+      values[n][JPY] = jpy;
+
+    if (ids.count(JPZ))
+      values[n][JPZ] = jpz;
+
+  }
 }
 
       
@@ -1491,7 +1716,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 {
   unsigned int np = p.size();
   values.resize(np);
-  if ((np == 0) || (ids.size() == 0)) return;
 
   TiberNonlinearSystem* system;
   system = &get_equation_systems().get_system<TiberNonlinearSystem>(
@@ -1533,11 +1757,15 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
         device.get_material(subdomain)->get_model(get_id()));
   assert(sc != NULL); 
 
-  sc->set_lattice_temperature(device.get_temperature(elem));
+  //sc->set_lattice_temperature(device.get_temperature(elem));
   sc->reinit(elem);
 
   fe->reinit(elem, &points);
-
+    
+  //Get the thermoelectric power
+  double Pn =  get_electrons_thermoelectric_power(elem);
+  double Pp =  get_holes_thermoelectric_power(elem);
+ 
   vector<double> T_nodes = sc->get_temperature_node();
 
   dof_map.dof_indices(elem, dof_indices_u, u_var);
@@ -1551,6 +1779,12 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   for (unsigned int n = 0; n < np; n++)
   {
+    double en_x = 0.0, ep_x = 0.0;
+    double en_y = 0.0, ep_y = 0.0;
+    double en_z = 0.0, ep_z = 0.0;
+    double dT_x = 0.0;
+    double dT_y = 0.0;
+    double dT_z = 0.0;
     double u = 0;
     double en = 0.0;
     double ep = 0.0;
@@ -1559,10 +1793,22 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     for (unsigned int i = 0; i < n_dofs; i++)
     {
       u  += phi[i][n] * solution(dof_indices_u[i]);
-      en += phi[i][0] * solution(dof_indices_en[i]);
-      ep += phi[i][0] * solution(dof_indices_ep[i]);
+      en += phi[i][n] * solution(dof_indices_en[i]);
+      ep += phi[i][n] * solution(dof_indices_ep[i]);
 
-      e_field += dphi[i][0] * solution(dof_indices_u[i]);
+      en_x  += dphi[i][n](0) * solution(dof_indices_en[i]);
+      en_y  += dphi[i][n](1) * solution(dof_indices_en[i]);
+      en_z  += dphi[i][n](2) * solution(dof_indices_en[i]);
+      
+      ep_x  += dphi[i][n](0) * solution(dof_indices_ep[i]);
+      ep_y  += dphi[i][n](1) * solution(dof_indices_ep[i]);
+      ep_z  += dphi[i][n](2) * solution(dof_indices_ep[i]);
+      
+      dT_x  += dphi[i][n](0) * T_nodes[i];
+      dT_y  += dphi[i][n](1) * T_nodes[i];
+      dT_z  += dphi[i][n](2) * T_nodes[i];
+
+      e_field += dphi[i][n] * solution(dof_indices_u[i]);
     }
 
     // scale the potential back
@@ -1570,11 +1816,17 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     en  *= phi0;
     ep  *= phi0;
     e_field *= -phi0;
+    en_x *= phi0;
+    en_y *= phi0;
+    en_z *= phi0;
+    ep_x *= phi0;
+    ep_y *= phi0;
+    ep_z *= phi0;
 
     sc->set_coordinates(points[n]);
-    double T_lat = sc->get_lattice_temperature();
+    //double T_lat = sc->get_lattice_temperature();
     // all are at lattice temperature
-    sc->set_carrier_temperatures(T_lat, T_lat);
+    //sc->set_carrier_temperatures(T_lat, T_lat);
 
     sc->set_potentials(u, en, ep);
 
@@ -1582,6 +1834,19 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     sc->calculate_densities();
     sc->calculate_mobilities();
+
+    // we put the minus here for convenience
+    double sigma_e = -Constants::e * sc->get_electron_density() *
+      sc->get_electron_mobility();
+    double sigma_h = -Constants::e * sc->get_hole_density() *
+      sc->get_hole_mobility();
+
+    double jnx = sigma_e * (en_x + Pn * dT_x);
+    double jny = sigma_e * (en_y + Pn * dT_y);
+    double jnz = sigma_e * (en_z + Pn * dT_z);
+    double jpx = sigma_h * (ep_x + Pp * dT_x);
+    double jpy = sigma_h * (ep_y + Pp * dT_y);
+    double jpz = sigma_h * (ep_z + Pp * dT_z);
 
 
     if (ids.count(ELPOTENTIAL))
@@ -1615,6 +1880,37 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     if (ids.count(HMOBILITY))
       values[n][HMOBILITY] = sc->get_hole_mobility();
 
+    if (ids.count(J))
+    {
+      double jx = jnx + jpx;
+      double jy = jny + jpy;
+      double jz = jnz + jpz;
+      values[n][J] = sqrt(jx * jx + jy * jy + jz * jz);
+    }
+
+    if (ids.count(JN))
+      values[n][JN] = sqrt(jnx * jnx + jny * jny + jnz * jnz);
+
+    if (ids.count(JP))
+      values[n][JP] = sqrt(jpx * jpx + jpy * jpy + jpz * jpz);
+
+    if (ids.count(JNX))
+      values[n][JNX] = jnx;
+
+    if (ids.count(JNY))
+      values[n][JNY] = jny;
+
+    if (ids.count(JNZ))
+      values[n][JNZ] = jnz;
+
+    if (ids.count(JPX))
+      values[n][JPX] = jpx;
+
+    if (ids.count(JPY))
+      values[n][JPY] = jpy;
+
+    if (ids.count(JPZ))
+      values[n][JPZ] = jpz;
 
   }
 }
@@ -1804,7 +2100,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   assert(sc != NULL); 
 
-  sc->set_lattice_temperature(_device->get_temperature(elem));
+  //sc->set_lattice_temperature(_device->get_temperature(elem));
   sc->reinit(elem);
 
 
@@ -1859,9 +2155,9 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     // prepare for calculating local properties
     sc->set_coordinates(points[n]);
 
-    double T_lat = sc->get_lattice_temperature();
+    //double T_lat = sc->get_lattice_temperature();
     // all are at lattice temperature
-    sc->set_carrier_temperatures(T_lat, T_lat);
+    //sc->set_carrier_temperatures(T_lat, T_lat);
 
     sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
@@ -2110,7 +2406,7 @@ DriftDiffusion::calculate_currents_rstf(void)
 
     fe->reinit(elem);
 
-    sc->set_lattice_temperature(_device->get_temperature(elem));
+    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
     
     //Get the thermoelectric power------------
@@ -2150,9 +2446,9 @@ DriftDiffusion::calculate_currents_rstf(void)
       // prepare for calculating local properties
       sc->set_coordinates(elem->centroid());
 
-      double T_lat = sc->get_lattice_temperature();
+      //double T_lat = sc->get_lattice_temperature();
       // all are at lattice temperature
-      sc->set_carrier_temperatures(T_lat, T_lat);
+      //sc->set_carrier_temperatures(T_lat, T_lat);
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
@@ -2291,7 +2587,7 @@ DriftDiffusion::calculate_currents_surfint(void)
         if (boundary == NULL)
           continue;
         
-        sc->set_lattice_temperature(_device->get_temperature(elem));
+        //sc->set_lattice_temperature(_device->get_temperature(elem));
         sc->reinit(elem);
         
 	//Get the thermoelectric power------------
@@ -2338,9 +2634,9 @@ DriftDiffusion::calculate_currents_surfint(void)
             // prepare for calculating local properties
             sc->set_coordinates(q_point[qp]);
 
-            double T_lat = sc->get_lattice_temperature();
+            //double T_lat = sc->get_lattice_temperature();
             // all are at lattice temperature
-            sc->set_carrier_temperatures(T_lat, T_lat);
+            //sc->set_carrier_temperatures(T_lat, T_lat);
 
             sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
@@ -2401,9 +2697,9 @@ DriftDiffusion::calculate_currents_surfint(void)
           // prepare for calculating local properties
           sc->set_coordinates(elem->point(s));
 
-          double T_lat = sc->get_lattice_temperature();
+          //double T_lat = sc->get_lattice_temperature();
           // all are at lattice temperature
-          sc->set_carrier_temperatures(T_lat, T_lat);
+          //sc->set_carrier_temperatures(T_lat, T_lat);
 
           sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
@@ -2522,7 +2818,7 @@ DriftDiffusion::build_local_scaling(void)
           device.get_material(subdomain)->get_model(get_id()));
     assert(sc != NULL); 
 
-    sc->set_lattice_temperature(_device->get_temperature(elem));
+    // sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
 
     fe->reinit(elem);
@@ -2556,9 +2852,9 @@ DriftDiffusion::build_local_scaling(void)
       // prepare for calculating local properties
       sc->set_coordinates(q_point[qp]);
 
-      double T_lat = sc->get_lattice_temperature();
+      //double T_lat = sc->get_lattice_temperature();
       // all are at lattice temperature
-        sc->set_carrier_temperatures(T_lat, T_lat);
+        //sc->set_carrier_temperatures(T_lat, T_lat);
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
       sc->set_electric_field(phi0 * e_field);
@@ -2889,7 +3185,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
           device.get_material(subdomain)->get_model(get_id()));
       assert(sc != NULL); 
 
-      sc->set_lattice_temperature(_device->get_temperature(elem));
+      //sc->set_lattice_temperature(_device->get_temperature(elem));
       sc->reinit(elem);
 
       fe->reinit(elem);
@@ -2912,9 +3208,9 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
         // prepare for calculating local properties
         sc->set_coordinates(elem->point(n));
 
-        double T_lat = sc->get_lattice_temperature();
+        //double T_lat = sc->get_lattice_temperature();
         // all are at lattice temperature
-        sc->set_carrier_temperatures(T_lat, T_lat);
+        //sc->set_carrier_temperatures(T_lat, T_lat);
 
         sc->set_potentials(u, en, ep);
         sc->set_electric_field(field);
@@ -3223,7 +3519,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
 
     assert(sc != NULL); 
 
-    sc->set_lattice_temperature(_device->get_temperature(elem));
+    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
 
     fe->reinit(elem);
@@ -3279,9 +3575,9 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     // prepare for calculating local properties
     sc->set_coordinates(elem->centroid());
 
-    double T_lat = sc->get_lattice_temperature();
+    //double T_lat = sc->get_lattice_temperature();
     // all are at lattice temperature
-    sc->set_carrier_temperatures(T_lat, T_lat);
+    //sc->set_carrier_temperatures(T_lat, T_lat);
 
     sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
@@ -3529,7 +3825,7 @@ DriftDiffusion::set_dirichlet_bc(void)
           device.get_material(subdomain)->get_model(get_id()));
     assert(sc != NULL);
 
-    sc->set_lattice_temperature(_device->get_temperature(elem));
+    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
 
     {
@@ -3585,11 +3881,11 @@ double DriftDiffusion::get_electron_conducibility(const Elem* elem)
     assert(sc != NULL);
 
 
-    sc->set_lattice_temperature(_device->get_temperature(elem));
+    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
 
-    double T_lat = sc->get_lattice_temperature();
-    sc->set_carrier_temperatures(T_lat, T_lat);
+    //double T_lat = sc->get_lattice_temperature();
+    //sc->set_carrier_temperatures(T_lat, T_lat);
 
 
     Solution  potentials;
@@ -3634,11 +3930,11 @@ double DriftDiffusion::get_hole_conducibility(const Elem* elem)
     assert(sc != NULL);
     
     
-    sc->set_lattice_temperature(_device->get_temperature(elem));
+    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
     
-    double T_lat = sc->get_lattice_temperature();
-    sc->set_carrier_temperatures(T_lat, T_lat);
+    //double T_lat = sc->get_lattice_temperature();
+    //sc->set_carrier_temperatures(T_lat, T_lat);
 
 
     Solution  potentials;
@@ -3691,7 +3987,7 @@ double DriftDiffusion::get_electrons_thermoelectric_power(const Elem* elem)
     double T_lattice = _device->get_temperature(elem);
   
     
-    model->set_lattice_temperature(T_lattice);
+    //model->set_lattice_temperature(T_lattice);
 
     model->reinit(elem);
     
@@ -3744,9 +4040,8 @@ double DriftDiffusion::get_holes_thermoelectric_power(const Elem* elem)
   
   //initialization of the model
 
-  double T_lattice = _device->get_temperature(elem);
-    
-  model->set_lattice_temperature(T_lattice); 
+  //double T_lattice = _device->get_temperature(elem);
+  //model->set_lattice_temperature(T_lattice); 
   model->reinit(elem);
   
   
@@ -4054,7 +4349,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
     assert(sc != NULL);
 
-    sc->set_lattice_temperature(_device->get_temperature(elem));
+    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
     
 
@@ -4099,9 +4394,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       // prepare for calculating local properties
       sc->set_coordinates(q_point[qp]);
 
-      double T_lat = sc->get_lattice_temperature();
+      //double T_lat = sc->get_lattice_temperature();
       // all are at lattice temperature
-      sc->set_carrier_temperatures(T_lat, T_lat);
+      //sc->set_carrier_temperatures(T_lat, T_lat);
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
@@ -5242,7 +5537,7 @@ DriftDiffusion::assemble_linear_electrons(const NumericVector<Number>& x,
 
     assert(sc != NULL);
 
-    sc->set_lattice_temperature(_device->get_temperature(elem));
+    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
     
 
@@ -5285,9 +5580,9 @@ DriftDiffusion::assemble_linear_electrons(const NumericVector<Number>& x,
       // prepare for calculating local properties
       sc->set_coordinates(q_point[qp]);
 
-      double T_lat = sc->get_lattice_temperature();
+      //double T_lat = sc->get_lattice_temperature();
       // all are at lattice temperature
-      sc->set_carrier_temperatures(T_lat, T_lat);
+      //sc->set_carrier_temperatures(T_lat, T_lat);
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 

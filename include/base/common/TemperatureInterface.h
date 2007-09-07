@@ -40,6 +40,10 @@ class TemperatureInterface
         std::vector<double>& temperatures);
 
 
+    //! Get the temperature in one point
+    double get_temperature(const Elem* elem, const Point& p);
+
+
   private:
 
     //! The temperature simulation
