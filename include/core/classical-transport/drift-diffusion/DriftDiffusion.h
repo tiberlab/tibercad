@@ -50,7 +50,29 @@ template<typename T> class SparseMatrix;
  * -\nabla(\mu_p p\nabla\phi_p) & = & R
  * \f}
  * using appropriate models for the ionization of dopants, polarization,
-cre* mobilities and recombinations.
+ * mobilities and recombinations.
+ *
+ *
+ * The get_solution() methods can provide the following variables:
+ * \li \c ElPotential electric potential (V)
+ * \li \c Ev valence band edge (eV)
+ * \li \c Ec conduction band edge (eV)
+ * \li \c Eg band gap (eV)
+ * \li \c eDensity electron density (cm^-3)
+ * \li \c hDensity hole density (cm^-3)
+ * \li \c eMob electron mobility (cm^2/Vs)
+ * \li \c hMob hole mobility (cm^2/Vs)
+ * \li \c QFermi_e electron electro-chemical potential (V)
+ * \li \c QFermi_h hole electro-chemical potential (V)
+ * \li \c J modulus of total current density
+ * \li \c Jn modulus of electron current density
+ * \li \c Jp modulus of hole current density
+ * \li \c Jn_x electron current density, x-component
+ * \li \c Jn_y electron current density, y-component
+ * \li \c Jn_z electron current density, z-component
+ * \li \c Jp_x hole current density, x-component
+ * \li \c Jp_y hole current density, y-component
+ * \li \c Jp_z hole current density, z-component
  * 
  */
 class DriftDiffusion : public SimulationInterface
