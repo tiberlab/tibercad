@@ -74,7 +74,10 @@ class QuantumDensity : public KspaceIntegration
 
  public:
   
-  
+  enum Variables
+  {
+    DENSITY = 0
+  };
   
 
   //!options for charge density
@@ -117,7 +120,7 @@ class QuantumDensity : public KspaceIntegration
     \param quad_points quadratur points in local coordinates
     \param density resulting density
   */
-  void get_particle_density(const Elem* element, const std::vector<double>& quad_points, std::vector<double> density);
+  void get_particle_density(const Elem* element, const std::vector<Point>& quad_points, std::vector<double>& density);
 
 
 
@@ -126,6 +129,21 @@ class QuantumDensity : public KspaceIntegration
 
   //!creates a new object 
   static  QuantumDensity* create();
+
+
+
+  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
+     
+     
+ 
+  virtual void get_solution_secure(const Elem* elem,
+         const std::set<ID>& ids, std::vector<std::map<ID, double> >& values); 
+
+ 
+  virtual void get_solution_secure(const Elem* elem,
+				   const std::vector<Point>& p, const std::set<ID>& ids,
+				   std::vector<std::map<ID, double> >& values);
+  
 
 
 
@@ -189,6 +207,10 @@ class QuantumDensity : public KspaceIntegration
 
 
    virtual void do_solve();
+
+
+   
+
 
 };
 

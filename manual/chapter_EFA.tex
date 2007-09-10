@@ -1,5 +1,12 @@
 \chapter{Envelop Function Approximation}
 The envelop function appriximation (EFA) simulation tool of \tibercad is developed in order to solve a single-particle Sch\"odinger equation for electrons and holes in a semiconductor crystal.
+This problem is an eigenvalue problem that is treated as a generalized complex eigenvalue problem 
+\begin{equation}
+	H\psi  = S \psi,
+\end{equation}
+where $H$ and $S$ are the Hamiltonian and $S$-matrix, respectively.
+
+
 \section{Models section parameters}
 The {\bf Models} section looks like follows:
 \begin{verbatim}
@@ -25,5 +32,39 @@ BC_Region infinite_barrier1
 \end{verbatim}
 
 \section{Solver parameters}
+There two groups of parameters. The first is group is related to general eigensolver problem, the second one is related to Schr\"odinger equation.
+\subsection{Eigenvalue problem parameters}
+This parameters are common for all eigenvalue problems. Their default values may be different for different eigenvalue problems, for example for the Schroedinger equation and for the electromagnetic eigenvalue problem.
+ 
+The eigenvalue problem can be solved either by iterative Arnoldi solver or by LAPACK solver.
+The relative parameter is
+
+\textit{solver} = \{ arnoldi $\vert$ lapack \}. The default value is arnoldi.
+
+In the case of the lapack solver all the eigenvalues are computed. In the case of arnoldi solver it is necessary to specify which and how many eigenvalues have to be computed. The idea is that the iterative solver calculates several eigenvalues that a close to a specific number, reffered to as the {\textit{spectral shift}}. 
+The relative parameters are:
+
+\begin{table}[htbp]
+	\begin{tabular}{|l||l|}
+	\hline
+	max\_iteration\_number & maximum number of iteration, used as a stop condition   \\
+	\hline
+	eigen\_solver\_tolerance & numerical eigensolver tolerance used as a convergence criteria \\
+	\hline
+	
+	\hline 
+	\end{tabular}	
+	\caption{Iterative eigensolver parameters}
+	\label{tab:EigenParam}
+\end{table}
+
+
+
+There is a way to impose automacally the Dirichlet boundary conditions over all the boundary of the simulation region. This is done by the paramerer
+
+\textit{Dirichlet\_bc\_everywhere} = \{true $\vert$ false\}. The default value for EFA problem is true.
+ 
+\subsection{Schr\"odinger equation parameters}
+
 \section{Physical Models parameters}
 \section{Output}

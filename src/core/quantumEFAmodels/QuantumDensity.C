@@ -23,8 +23,62 @@ QuantumDensity:: ~QuantumDensity()
 }
 
 //============================================//
+ID  QuantumDensity::convert_variable_name_to_id(const std::string& variable_name) const
+{
+  ID id = INVALID_ID;
 
-void QuantumDensity::get_particle_density(const Elem* element, const std::vector<double>& quad_points, std::vector<double> density)
+  // for an empty string we return immediately
+  if (variable_name == "") return id;
+
+  if (variable_name == "density")
+    id = DENSITY;
+
+  return id;
+
+  
+}
+
+//============================================//
+void QuantumDensity::get_solution_secure(const Elem* elem,
+         const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
+{
+ 
+}
+//============================================//
+void QuantumDensity::get_solution_secure(const Elem* elem,
+			 const std::vector<Point>& p, const std::set<ID>& ids,
+			 std::vector<std::map<ID, double> >& values)
+{
+  values.clear();
+
+  if (ids.find(DENSITY) != ids.end())
+  {
+    std::vector<double> density;
+
+    get_particle_density( elem,  p,  density);
+
+    unsigned int n = density.size();
+
+    values.resize(n);
+
+    for (unsigned int i = 0; i < n; i++)
+    {
+      std::map<ID, double> point_map;
+
+      point_map.insert(pair<ID, double>(DENSITY, density[i]));
+
+      values[i] = point_map;
+    }
+   
+  }
+ 
+}
+
+//============================================//
+
+
+//============================================//
+void QuantumDensity::get_particle_density(const Elem* element, const std::vector<Point>& quad_points, std::vector<double>& density)
 {
 
   unsigned int n = quad_points.size();
