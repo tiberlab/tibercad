@@ -1424,7 +1424,7 @@ DriftDiffusion::get_solution(const Elem* elem, const Point& p,
 
 
 ID
-DriftDiffusion::convert_variable_name_to_id(const string& variable_name)
+DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
 {
   ID id = INVALID_ID;
 
@@ -1511,7 +1511,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     const set<ID>& ids, vector<map<ID, double> >& values)
 {
   unsigned int np = elem->n_nodes();
-  values.resize(np);
 
   vector<Point> points(np);
   for (int i = 0; i < np; i++)
@@ -1715,7 +1714,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     const set<ID>& ids, vector<map<ID, double> >& values)
 {
   unsigned int np = p.size();
-  values.resize(np);
 
   TiberNonlinearSystem* system;
   system = &get_equation_systems().get_system<TiberNonlinearSystem>(

@@ -771,7 +771,7 @@ void  MacroHeatBalance:: init_heat_model(const Elem* elem)
 
 
 ID
-MacroHeatBalance::convert_variable_name_to_id(const string& variable_name)
+MacroHeatBalance::convert_variable_name_to_id(const string& variable_name) const
 {
 
   ID id = INVALID_ID;
@@ -783,7 +783,6 @@ MacroHeatBalance::convert_variable_name_to_id(const string& variable_name)
     // else
     //  throw InitFailedException("Unknown variable" + variable_name);
       
-
 
   return id;
 }

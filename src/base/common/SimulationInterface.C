@@ -765,7 +765,10 @@ SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
     // TODO look for nodes
   }
   else
+  {
+    values.resize(elem->n_nodes());
     get_solution_secure(elem, ids, values);
+  }
 
 }
 
@@ -776,8 +779,8 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
     const set<ID>& ids, vector<map<ID, double> >& values)
 {
   unsigned int np = p.size();
-  values.resize(np);
   if ((np == 0) || (ids.size() == 0) || (elem == NULL)) return;
+  values.resize(np);
 
   // this will contain the element in which p lies and for which
   // DriftDiffusion knows the potential

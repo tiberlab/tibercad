@@ -91,6 +91,7 @@ Control::init(void) throw (InitFailedException, ModelErrorException)
     create_device();
     create_materials();
     create_atomistic_structures();
+    setup_clusters();
     setup_models();
     
     // initialize the device
@@ -287,6 +288,15 @@ Control::create_atomistic_structures(void)
   cerr << "Control::create_atomistic_structures() end" << endl;
 #endif
 }
+
+
+
+void
+Control::setup_clusters(void)
+{
+}
+
+
 
 
 

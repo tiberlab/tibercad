@@ -136,7 +136,7 @@ virtual void get_solution_secure(const Elem* elem,
  protected:
 
   //! The correct keyword is "temperature"
-  virtual ID convert_variable_name_to_id(const std::string& variable_name);
+  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
  
   //! \copydoc  SimulationInterface::do_init() 
   virtual void 	do_init (void);

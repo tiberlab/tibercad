@@ -226,6 +226,17 @@ class Control
 
     
     //! Create the device
+    /*!
+     * The creation of a device involves the following function calls
+     * in the order as given here:
+     * \code
+     * create_device();
+     * create_materials();
+     * create_atomistic_structures();
+     * setup_clusters();
+     * setup_models();
+     * \endcode
+     */
     void create_device(void);
 
     
@@ -240,6 +251,14 @@ class Control
     //! Create and setup the models
     void setup_models(void) throw (InitFailedException, ModelErrorException);
 
+
+    //! Setup region clusters
+    /*!
+     * A region cluster contains different physical regions of the mesh
+     * which possibly overlap with the material regions described in the
+     * \c Region sections
+     */
+    void setup_clusters(void);
 
 };
 

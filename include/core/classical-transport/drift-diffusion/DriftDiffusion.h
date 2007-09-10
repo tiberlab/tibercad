@@ -694,11 +694,12 @@ class DriftDiffusion : public SimulationInterface
     virtual double do_maximum_norm_of_difference(ID id);
 
 
-    /*! \copydoc SimulationInterface::convert_variable_to_id() */
-    virtual ID convert_variable_name_to_id(const std::string& variable_name);
+    /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
+    virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
 
 
-    /* \copydoc SimulationInterface::get_solution_secure(const Elem*,
+    /*!
+     * \copydoc SimulationInterface::get_solution_secure(const Elem*,
      * const std::vector<ID>&, std::vector<std::vector<double> >&)
      */
     virtual void get_solution_secure(const Elem* elem,
@@ -706,7 +707,8 @@ class DriftDiffusion : public SimulationInterface
         std::vector<std::map<ID, double> >& values);
 
 
-    /* \copydoc SimulationInterface::get_solution_secure(const Elem*,
+    /*!
+     * \copydoc SimulationInterface::get_solution_secure(const Elem*,
      * const std::vector<Point>&, const std::vector<ID>&,
      * std::vector<std::vector<double> >&)
      */

@@ -8,12 +8,13 @@
 #include "elem.h"
 
 std::string
-TemperatureInterface::_variable_name = "T";
+TemperatureInterface::_variable_name = "temperature";
 
 
 
 TemperatureInterface::TemperatureInterface(void)
-  : _simulation(NULL)
+  : _simulation(NULL),
+    _id(INVALID_ID)
 {
 }
 
@@ -29,10 +30,11 @@ TemperatureInterface::set_simulation(const std::string& name)
       throw InitFailedException("No such simulation found: " + name);
 
     _id_set.clear();
-    ID _id = _simulation->get_variable_id(_variable_name);
+    _id = _simulation->get_variable_id(_variable_name);
+
     if (_id == INVALID_ID)
       throw InitFailedException("Simulation " + name +
-          " has no variable '" = _variable_name + "'");
+          " has no variable '" + _variable_name + "'");
 
     _id_set.insert(_id);
   }
@@ -70,7 +72,7 @@ TemperatureInterface::get_temperature(const Elem* elem,
     const std::vector<Point>& p, std::vector<double>& temperatures)
 {
   assert(elem != NULL);
-  
+
   int nn = p.size();
 
   temperatures.resize(nn);
