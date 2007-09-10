@@ -53,6 +53,8 @@ void QuantumDensity::get_solution_secure(const Elem* elem,
 
   if (ids.find(DENSITY) != ids.end())
   {
+    const double coeff =  1.0/ ( (Constants::bohr_radius) * (Constants::bohr_radius) * (Constants::bohr_radius) * 1.0e6 );
+
     std::vector<double> density;
 
     get_particle_density( elem,  p,  density);
@@ -65,7 +67,7 @@ void QuantumDensity::get_solution_secure(const Elem* elem,
     {
       std::map<ID, double> point_map;
 
-      point_map.insert(pair<ID, double>(DENSITY, density[i]));
+      point_map.insert(pair<ID, double>(DENSITY, density[i]*coeff));
 
       values[i] = point_map;
     }
@@ -75,6 +77,8 @@ void QuantumDensity::get_solution_secure(const Elem* elem,
 }
 
 //============================================//
+
+
 
 
 //============================================//
