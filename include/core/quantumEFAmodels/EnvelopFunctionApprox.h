@@ -250,6 +250,8 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   std::map<const Elem*, double> estimate_density2D(unsigned int state_number, double parallel_mass);
 
 
+  inline double get_particle_charge(void) const; 
+  
 
  private:
 
@@ -589,8 +591,13 @@ inline const std::map<short, short>& EnvelopFunctionApprox::get_kp_bands(void) c
 }
 
 //--------------------------------------------------------------------
-
-
+inline double EnvelopFunctionApprox::get_particle_charge(void) const
+{
+  if (opt.particle == "el")
+    return -1.0;
+  else
+    return +1.0;
+} 
 
 
 

@@ -233,7 +233,7 @@ void QuantumDensity::do_init( )
 
   Kspace::do_init();//--kspace domain--------------
 
- 
+   
 
   //---------quantum model---------------------------------------------------------------------//
   

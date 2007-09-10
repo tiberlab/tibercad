@@ -148,6 +148,9 @@ class QuantumDensity : public KspaceIntegration
 
 
 
+
+  inline double get_particle_charge() const;
+
  private:
 
 
@@ -220,6 +223,13 @@ class QuantumDensity : public KspaceIntegration
 inline QuantumDensity*  QuantumDensity::create()
 {
   return (new QuantumDensity );
+}
+
+//---------------------------------------------------------
+
+inline double QuantumDensity::get_particle_charge() const
+{
+  return( quantum_model->get_particle_charge() );
 }
 
 #endif
