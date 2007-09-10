@@ -82,6 +82,10 @@ class HeatModel: public PhysicalModel
    
    void  update_particle_thermal_conductivity();
 
+   std::vector< std::map< ID, double > >  dd_solution;
+
+   const std::set< ID > ids;
+
    double _eTEpower;
 
    double _hTEpower;

@@ -125,8 +125,17 @@ void HeatModel::do_init()
      kappa_carrier->set_material(get_material());
 
     }
-   
 
+    //Getting IDS
+
+    //std::vector< std::map< ID, double > >  dd_solution;
+
+    //const std::set< ID > ids;
+    //ids.set(_dd_simul-> convert_variable_name_to_id("ElPotential");
+    //ids.set(_dd_simul-> convert_variable_name_to_id("HoPotential");
+
+   
+    
 }
 
 
@@ -229,7 +238,13 @@ void HeatModel::get_dd_solution( std::vector<Point> g_point,
   if (_dd_simul != NULL & _dd_simul->is_solved())
   {
 
+  
 
+    // _dd_simul->get_solution (_elem,g_point,ids,dd_solution)                                       )
+
+
+
+    
 
     _dd_simul->get_solution(_elem,g_point,potentials);  
     

@@ -54,7 +54,10 @@ class PoissonModel: public PhysicalModel
 
   //!A pointer to cherge piezoelectricity simulation
   Macrostrain* _piezo_sim;
-   
+  
+  //! ID for charge density simulation
+  ID charge_id;
+
   //Model options structure
   struct model_options
   {

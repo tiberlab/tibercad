@@ -319,57 +319,12 @@ void MacroHeatBalance::build_nodal_results (const std::set< std::string > &varia
 
 
 
-double MacroHeatBalance::get_temperature_element(const Elem* elem) const
-{
-        
-
-       std::vector<unsigned int> dof_indices;
-
-       DofMap& dof_map = my_system->get_dof_map();
-
-       dof_map.dof_indices (elem, dof_indices); 
-
-       double T = 0.0;
-       for (unsigned int n = 0; n < elem->n_nodes(); n++)
-       {   
-	  T +=  (*(my_system->solution))(dof_indices[n]); 
-       }
-      
-       T /= elem->n_nodes();
-
-       return T;
-
-}
-
-
-
-std::vector<double>  MacroHeatBalance::get_temperature_node(const Elem* elem)
-{
-
-      std::vector<double> Tloc(elem->n_nodes());
-
-       std::vector<unsigned int> dof_indices;
-
-       DofMap& dof_map = my_system->get_dof_map();
-
-       dof_map.dof_indices (elem, dof_indices); 
-
-       for (unsigned int n = 0; n < elem->n_nodes(); n++)
-       {   
-	  Tloc[n] =  (*(my_system->solution))(dof_indices[n]); 
-       }
-    
-       return Tloc;
-
-}
-
 
 
 //----------------------------------------------------------------------------------//
 void MacroHeatBalance::assemble_heat_matrix(EquationSystems& es,
 				     const std::string& system_name)
 {
-
 
 
    static_this->do_assemble( es, system_name);
@@ -490,10 +445,17 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
   std::vector<DriftDiffusion::Currents>   currents;
 
-   std::vector<DriftDiffusion::Solution>  face_potentials;   
+  std::vector<DriftDiffusion::Solution>  face_potentials;   
 	       
-   std::vector<DriftDiffusion::Currents>   face_currents;
-		   
+  std::vector<DriftDiffusion::Currents>   face_currents;
+
+  //std::vector<Point> current_e,current_face_e;
+
+  // std::vector<Point> current_h,current_face_h;
+
+  //  std::vector<double> fermi_e,fermi_face_e;
+
+  // std::vector<double> fermi_h,fermi_face_h;		   
 
   //----------------------------------------------------------LatticeThermalConductivity-------//
   
@@ -614,9 +576,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	      if (heat_model->get_peltier_thomson_opt())
 	      {
 		//cout<<"Peltier"<<endl;
-		
-
-
                
 		value += -JxW[qp]* phi[p1][qp] * dphi[p2][qp](i)*
 		  (eTEpower*currents[qp].jn(i) + hTEpower*currents[qp].jp(i) ) /(opt.length_scale);
@@ -806,4 +765,151 @@ void  MacroHeatBalance:: init_heat_model(const Elem* elem)
        //Update model for a given element
        heat_model->re_init();
      
+}
+
+
+
+
+ID
+MacroHeatBalance::convert_variable_name_to_id(const string& variable_name)
+{
+
+  ID id = INVALID_ID;
+
+ 
+
+    if (variable_name == "temperature" )
+       id  = TEMPERATURE;
+    // else
+    //  throw InitFailedException("Unknown variable" + variable_name);
+      
+
+
+  return id;
+}
+
+
+
+
+void
+MacroHeatBalance::get_solution_secure(const Elem* elem,
+    const set<ID>& ids, vector<map<ID, double> >& values)
+{
+
+  LinearImplicitSystem& system = *my_system;
+
+  DofMap& dof_map =  system.get_dof_map();
+
+  vector<unsigned int> dof_indices;
+
+  dof_map.dof_indices (elem, dof_indices);  
+
+  for (unsigned int n = 0; n < elem->n_nodes(); n++)
+  {
+    
+     if (ids.count(TEMPERATURE))
+      values[n][TEMPERATURE] = (*(system.solution))(dof_indices[n]);
+
+  }
+   
+
+}
+
+void
+MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
+    const set<ID>& ids, vector<map<ID, double> >& values)
+{
+
+  unsigned int np = p.size();
+  values.resize(np);
+  if ((np == 0) || (ids.size() == 0)) return;
+
+  LinearImplicitSystem& system = *my_system;
+
+  DofMap& dof_map =  system.get_dof_map();
+
+  const unsigned int uvar = system.variable_number("T");
+
+  FEType fe_type = dof_map.variable_type(uvar);
+  
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+
+  // element shape functions
+   const vector<vector<Real> >& phi = fe->get_phi();
+
+  vector<Point> points(np);
+
+  FEInterface::inverse_map(dim, fe_type, elem, p, points);
+ 
+  fe->reinit(elem, &points);
+
+  vector<unsigned int> dof_indices;
+
+  dof_map.dof_indices (elem, dof_indices);  
+
+  const unsigned int n_dofs   = dof_indices.size();
+
+  for (unsigned int n = 0; n < np; n++)
+  {
+     double T = 0;
+
+    //do interpolation
+    for (unsigned int i = 0; i < n_dofs; i++)
+    {
+   
+      T  += phi[i][n] * (*(system.solution))(dof_indices[i]);
+    }
+    
+     if (ids.count(TEMPERATURE))
+      values[n][TEMPERATURE] = T;
+  }
+   
+}
+
+
+
+
+
+double MacroHeatBalance::get_temperature_element(const Elem* elem) const
+{
+        
+
+       std::vector<unsigned int> dof_indices;
+
+       DofMap& dof_map = my_system->get_dof_map();
+
+       dof_map.dof_indices (elem, dof_indices); 
+
+       double T = 0.0;
+       for (unsigned int n = 0; n < elem->n_nodes(); n++)
+       {   
+	  T +=  (*(my_system->solution))(dof_indices[n]); 
+       }
+      
+       T /= elem->n_nodes();
+
+       return T;
+
+}
+
+
+
+std::vector<double>  MacroHeatBalance::get_temperature_node(const Elem* elem)
+{
+
+      std::vector<double> Tloc(elem->n_nodes());
+
+       std::vector<unsigned int> dof_indices;
+
+       DofMap& dof_map = my_system->get_dof_map();
+
+       dof_map.dof_indices (elem, dof_indices); 
+
+       for (unsigned int n = 0; n < elem->n_nodes(); n++)
+       {   
+	  Tloc[n] =  (*(my_system->solution))(dof_indices[n]); 
+       }
+    
+       return Tloc;
+
 }

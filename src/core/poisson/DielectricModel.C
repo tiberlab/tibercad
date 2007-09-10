@@ -28,8 +28,7 @@ void  DielectricModel::calculate_VCA (const PhysicalModelInterface *comp_A,
 
   const DielectricModel* modB = dynamic_cast<const DielectricModel*>(comp_B);
 
-
-   alloy(_dielectric_constant,modA->_dielectric_constant, modB->_dielectric_constant,xa);  
+  alloy(_dielectric_constant,modA->_dielectric_constant, modB->_dielectric_constant,xa);  
 
   
 }
@@ -39,7 +38,7 @@ void  DielectricModel::calculate_VCA (const PhysicalModelInterface *comp_A,
 //--------------------------------------------------------//
 void   DielectricModel::read_database(void)
 {
-  
+   
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
   _ep_x = data("permittivity",1.0);  

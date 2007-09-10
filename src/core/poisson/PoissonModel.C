@@ -80,11 +80,13 @@ void PoissonModel::do_init()
     if (model_opt.chd_sim)
     {
       std::string chd_sim_name = get_options().get_option("charge_density_simulation", "no_sim");
-      _chd_sim =  dynamic_cast<DriftDiffusion* > ( SimulationInterface::find_simulation(chd_sim_name));
+      _chd_sim =  SimulationInterface::find_simulation(chd_sim_name);
       
       if (_chd_sim == NULL) 
 	throw InitFailedException("Unknown charge_density simulation: " +  chd_sim_name );
-      
+      else
+        charge_id = _chd_sim->get_variable_id("charge_density"); 
+
     }
     
 
@@ -158,6 +160,10 @@ void PoissonModel::do_init()
    
    _epsilon = dielectric_model->get_dielectric_constant();
 
+
+
+
+
 }
 
 
@@ -167,14 +173,16 @@ void PoissonModel::do_init()
 void PoissonModel::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 
-  const PoissonModel* matA = dynamic_cast< const PoissonModel*> (comp_A);
-  
-  const PoissonModel* matB = dynamic_cast< const PoissonModel*> (comp_B);
-  
-  
-  // _epsilon -> build_alloy(matA->get_dielectric, matB->chd_model, xa);
 
-  //   _charge_density -> build_alloy(matA->chd_model, matB->chd_model, xa);
+   const PoissonModel* matA = dynamic_cast< const PoissonModel*> (comp_A);
+  
+   const PoissonModel* matB = dynamic_cast< const PoissonModel*> (comp_B);
+  
+   dielectric_model->build_alloy(matA->dielectric_model, matB->dielectric_model,xa);
+
+   alloy( _pyropolarization(1),matA->_pyropolarization(1),matB->_pyropolarization(1),xa);
+   alloy( _pyropolarization(2),matA->_pyropolarization(2),matB->_pyropolarization(2),xa);
+   alloy( _pyropolarization(3),matA->_pyropolarization(3),matB->_pyropolarization(3),xa);
  
 }
 
@@ -268,13 +276,14 @@ PoissonModel::get_charge_density(const std::vector<Point> q_point, std::vector<d
     if  (se.contains_element(_elem))
     {
       
-      //  _charge_density =  _chd_sim->ge
+       _chd_sim->get_solution(_elem,q_point,charge_id, charge_density);
       
     }
     else
     {
-      charge_density.resize(_elem->n_nodes());
-      
+      // charge_density.resize(_elem->n_nodes());
+
+      charge_density.resize(q_point.size() );
       charge_density.clear();
     }
   }

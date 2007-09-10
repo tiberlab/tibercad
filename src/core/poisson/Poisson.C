@@ -667,3 +667,103 @@ Poisson::get_solution(const Elem* elem, const std::vector<Point>& p,
    
   }
 }
+
+
+
+
+
+/* ID */
+/* Poisson::convert_variable_name_to_id(const string& variable_name) */
+/* { */
+
+/*   ID id = INVALID_ID; */
+
+ 
+
+/*     if (variable_name == "potential" ) */
+/*        id  = TEMPERATURE; */
+/*     else */
+/*        throw InitFailedException("Unknown variable" + variable_name); */
+      
+
+
+/*   return id; */
+/* } */
+
+
+
+
+/* void */
+/* Poisson::get_solution_secure(const Elem* elem, */
+/*     const set<ID>& ids, vector<map<ID, double> >& values) */
+/* { */
+
+/*   LinearImplicitSystem& system = *my_system; */
+
+/*   DofMap& dof_map =  system.get_dof_map(); */
+
+/*   vector<unsigned int> dof_indices; */
+
+/*   dof_map.dof_indices (elem, dof_indices);   */
+
+/*   for (unsigned int n = 0; n < elem->n_nodes(); n++) */
+/*   { */
+    
+/*      if (ids.count(TEMPERATURE)) */
+/*       values[n][TEMPERATURE] = (*(system.solution))(dof_indices[n]); */
+
+/*   } */
+   
+
+/* } */
+
+/* void */
+/* MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p, */
+/*     const set<ID>& ids, vector<map<ID, double> >& values) */
+/* { */
+
+/*   unsigned int np = p.size(); */
+/*   values.resize(np); */
+/*   if ((np == 0) || (ids.size() == 0)) return; */
+
+/*   LinearImplicitSystem& system = *my_system; */
+
+/*   DofMap& dof_map =  system.get_dof_map(); */
+
+/*   const unsigned int uvar = system.variable_number("T"); */
+
+/*   FEType fe_type = dof_map.variable_type(uvar); */
+  
+/*   AutoPtr<FEBase> fe (FEBase::build(dim, fe_type)); */
+
+/*   // element shape functions */
+/*    const vector<vector<Real> >& phi = fe->get_phi(); */
+
+/*   vector<Point> points(np); */
+
+/*   FEInterface::inverse_map(dim, fe_type, elem, p, points); */
+ 
+/*   fe->reinit(elem, &points); */
+
+/*   vector<unsigned int> dof_indices; */
+
+/*   dof_map.dof_indices (elem, dof_indices);   */
+
+/*   const unsigned int n_dofs   = dof_indices.size(); */
+
+/*   for (unsigned int n = 0; n < np; n++) */
+/*   { */
+/*      double T = 0; */
+
+/*     //do interpolation */
+/*     for (unsigned int i = 0; i < n_dofs; i++) */
+/*     { */
+   
+/*       T  += phi[i][n] * (*(system.solution))(dof_indices[i]); */
+/*     } */
+    
+/*      if (ids.count(TEMPERATURE)) */
+/*       values[n][TEMPERATURE] = T; */
+/*   } */
+   
+/* } */

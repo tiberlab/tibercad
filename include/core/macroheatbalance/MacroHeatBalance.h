@@ -23,6 +23,17 @@ class MacroHeatBalance : public SimulationInterface
 {
  public:
 
+
+ enum Variables
+     {
+            UNKNOWN = INVALID_ID,
+            TEMPERATURE
+     };
+       
+
+
+
+
   //!options that we need for this simulation
   struct options
   {
@@ -39,6 +50,17 @@ class MacroHeatBalance : public SimulationInterface
     double length_scale; //!< mesh_units/work_units
 
   };
+
+  
+  
+  virtual void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
+				   const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
+   
+
+   
+virtual void get_solution_secure(const Elem* elem,
+				 const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
+
 
   //!Get a avarage temperature for a given element  
   double get_temperature_element(const Elem* elem) const;
@@ -84,7 +106,7 @@ class MacroHeatBalance : public SimulationInterface
   HeatModel* heat_model; 
 
   void init_heat_model(const Elem* elem);
-
+ 
 
   std::string system_name;
   
@@ -112,7 +134,9 @@ class MacroHeatBalance : public SimulationInterface
   Mesh* mesh;
 
  protected:
-  
+
+  //! The correct keyword is "temperature"
+  virtual ID convert_variable_name_to_id(const std::string& variable_name);
  
   //! \copydoc  SimulationInterface::do_init() 
   virtual void 	do_init (void);
