@@ -629,8 +629,9 @@ DriftDiffusion::do_solve(void)
       do_nothing = false;
   }
   
-  if (do_nothing)
-    return;
+  /* The same here: what about selfconsistency at 0 V ?? */
+  //if (do_nothing)
+  //  return;
 
 
   static map<ElectricalContact*, double> voltages;
@@ -1449,6 +1450,8 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
         id = EDENSITY;
       else if (variable_name == "eMob")
         id = EMOBILITY;
+      else if (variable_name == "eCond")
+        id = SIGMAE;
       break;
       
     case 'h':
@@ -1456,6 +1459,8 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
         id = HDENSITY;
       else if (variable_name == "hMob")
         id = HMOBILITY;
+      else if (variable_name == "hCond")
+        id = SIGMAH;
       break;
       
     case 'J':
@@ -1495,7 +1500,7 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
       else if (variable_name == "QFermi_h")
         id = QFERMIH;
       break;
-      
+
     default:
       break;
   }
@@ -1670,6 +1675,14 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     if (ids.count(HMOBILITY))
       values[n][HMOBILITY] = sc->get_hole_mobility();
+
+    if (ids.count(SIGMAE))
+      values[n][SIGMAE] = Constants::e *
+        sc->get_electron_mobility() * sc->get_electron_density();
+
+    if (ids.count(SIGMAH))
+      values[n][SIGMAH] = Constants::e *
+        sc->get_hole_mobility() * sc->get_hole_density();
 
     if (ids.count(J))
     {

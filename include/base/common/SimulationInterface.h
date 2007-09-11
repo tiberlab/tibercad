@@ -281,10 +281,13 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     ID get_variable_id(const std::string& variable_name) const;
 
 
+    //! Get solution values on the nodes of a specified element
     /*!
      *
-     * \copydoc get_solution_secure(const Elem*,
-     *   ID, std::vector<double>&) 
+     * \param elem a pointer to the element
+     * \param id identifier for the variable to be returned
+     * \param values a vector to store the values. The vector index corresponds to
+     * the node.
      *
      * Calls get_solution_secure(const Elem*,
      *   ID, std::vector<double>&) 
@@ -293,11 +296,13 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
         std::vector<double>& values);
 
 
-
+    //! Get solution values on the nodes of a specified element
     /*!
      *
-     * \copydoc get_solution_secure(const Elem*,
-     *   const std::set<ID>&, std::vector<std::map<ID, double> >&) 
+     * \param elem a pointer to the element
+     * \param ids identifiers for the variables to be returned
+     * \param values a vector to store the values. The vector index
+     * corresponds to the node.
      *
      * Calls get_solution_secure(const Elem*,
      *   const std::set<ID>&, std::vector<std::mapID, <double> >&) 
@@ -306,10 +311,15 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
         std::vector<std::map<ID, double> >& values);
 
 
+    //! Get solution values on inner points of a specified element
     /*!
      *
-     * \copydoc get_solution_secure(const Elem*, const std::vector<Point>&,
-     *   const std::set<ID>&, std::vector<std::map<ID, double> >&)
+     * \param elem a pointer to the element
+     * \param p a vector with the points. All Points are assumed to lie in
+     * \c elem
+     * \param id identifier for the variable to be returned
+     * \param values a vector to store the values. The vector index
+     * corresponds to the point.
      *
      * Calls get_solution_secure(const Elem*, const std::vector<Point>&,
      *   const std::set<ID>&, std::vector<std::map<ID, double> >&)
@@ -318,10 +328,15 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
         ID id, std::vector<double>& values);
   
 
+    //! Get solution values on inner points of a specified element
     /*!
      *
-     * \copydoc get_solution_secure(const Elem*, const std::vector<Point>&,
-     *   const std::set<ID>&, std::vector<std::map<ID, double> >&)
+     * \param elem a pointer to the element
+     * \param p a vector with the points. All Points are assumed to lie in
+     * \c elem
+     * \param ids identifiers for the variables to be returned
+     * \param values a vector to store the values. The vector index
+     * corresponds to the point.
      *
      * Calls get_solution_secure(const Elem*, const std::vector<Point>&,
      *   const std::set<ID>&, std::vector<std::map<ID, double> >&)
@@ -545,9 +560,12 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      *
      * \param elem a pointer to the element
      * \param ids identifiers for the variables to be returned
-     * \param values a vector to store the values. The first index corresponds to
-     * the node.
+     * \param values a vector to store the values. The first index
+     * corresponds to the node.
      *
+     * \pre 
+     * \li \c elem is an active element of this simulation
+     * \li values is already resized to the number of nodes
      */
     virtual void get_solution_secure(const Elem* elem,
         const std::set<ID>& ids, std::vector<std::map<ID, double> >& values) {};
@@ -560,9 +578,13 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param p a vector with the points. All Points are assumed to lie in
      * \c elem
      * \param ids identifiers for the variables to be returned
-     * \param values a vector to store the values. The first index corresponds to
-     * the point.
+     * \param values a vector to store the values. The first index
+     * corresponds to the point.
      * 
+     * \pre 
+     * \li \c elem is an active element of this simulation
+     * \li \c elem contains all points of \c p
+     * \li values is already resized to the number of points
      */
     virtual void get_solution_secure(const Elem* elem,
         const std::vector<Point>& p, const std::set<ID>& ids,
@@ -576,6 +598,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param p the point (assumed to lie in \c elem)
      * \param values a vector to store the values.
      * 
+     * \pre 
+     * \li \c elem is an active element of this simulation
+     * \li \c elem contains all points of \c p
+     * \li values is already resized to the number of points
      */
     virtual void get_solution_secure(const Elem* elem,
         const Point& p, const std::set<ID>& ids,

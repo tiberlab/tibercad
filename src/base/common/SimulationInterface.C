@@ -843,6 +843,8 @@ SimulationInterface::get_solution(const Elem* elem, ID id, vector<double>& value
 {
   set<ID> ids;
   ids.insert(id);
+  values.resize(elem->n_nodes());
+
   vector<map<ID, double> > vals;
   
   get_solution(elem, ids, vals);
@@ -866,6 +868,8 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 {
   set<ID> ids;
   ids.insert(id);
+  values.resize(p.size());
+
   vector<map<ID, double> > vals;
   
   get_solution(elem, p, ids, vals);

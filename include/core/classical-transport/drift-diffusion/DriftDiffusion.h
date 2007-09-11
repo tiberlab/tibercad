@@ -62,6 +62,8 @@ template<typename T> class SparseMatrix;
  * \li \c hDensity hole density (cm^-3)
  * \li \c eMob electron mobility (cm^2/Vs)
  * \li \c hMob hole mobility (cm^2/Vs)
+ * \li \c eCond electron conductivity (S/cm)
+ * \li \c hCond hole conductivity (S/cm)
  * \li \c QFermi_e electron electro-chemical potential (V)
  * \li \c QFermi_h hole electro-chemical potential (V)
  * \li \c J modulus of total current density
@@ -84,25 +86,27 @@ class DriftDiffusion : public SimulationInterface
     enum Variables
     {
       UNKNOWN = INVALID_ID,
-      ELPOTENTIAL,
-      QFERMIE,
-      QFERMIH,
-      CBANDEDGE,
-      VBANDEDGE,
-      BANDGAP,
-      EDENSITY,
-      HDENSITY,
-      EMOBILITY,
-      HMOBILITY,
-      J,
-      JN,
-      JNX,
-      JNY,
-      JNZ,
-      JP,
-      JPX,
-      JPY,
-      JPZ
+      ELPOTENTIAL,      //!< electric potential
+      QFERMIE,          //!< electron electro-chemical potential
+      QFERMIH,          //!< hole electro-chemical potential
+      CBANDEDGE,        //!< conduction band edge
+      VBANDEDGE,        //!< valence band edge
+      BANDGAP,          //!< band gap
+      EDENSITY,         //!< electron density
+      HDENSITY,         //!< hole density
+      EMOBILITY,        //!< electron mobility
+      HMOBILITY,        //!< hole mobility
+      SIGMAE,           //!< electron conductivity
+      SIGMAH,           //!< hole conductivity
+      J,                //!< total current density, modulus
+      JN,               //!< electron current density, modulus
+      JNX,              //!< electron current density, x-component
+      JNY,              //!< electron current density, y-component
+      JNZ,              //!< electron current density, z-component
+      JP,               //!< hole current density, modulus
+      JPX,              //!< hole current density, x-component
+      JPY,              //!< hole current density, y-component
+      JPZ               //!< hole current density, z-component
     };
       
  
