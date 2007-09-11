@@ -110,7 +110,7 @@ AtomisticStructure::read_structure(const std::string& path)
   std::ifstream file;
   std::string line, record;
   unsigned int N_atoms, n_specie;
-  atom tmp_atom;
+  Atom tmp_atom;
 
 #ifdef DEBUG
   std::cerr << "AtomisticStructure::read_structure(path) begin \n";

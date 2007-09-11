@@ -15,12 +15,12 @@
 #include<sstream>
 
 
-//! Contains atom definition
+//! Contains Atom definition
 /*!
  *Atom is defined by atomic specie and a three component
  *vector (from library tensor.h) for the position.
  */
-class atom
+class Atom
 {
 public:
   std::string specie;
@@ -71,10 +71,10 @@ class AtomisticStructure
   void set_device(Device* device);
 
   //! Return a reference to structure atoms
-  const std::vector<atom>& get_structure_atoms(void);
+  const std::vector<Atom>& get_structure_atoms(void);
 
   //! Assign structure atoms vector
-  void set_structure_atoms(const std::vector<atom>& atoms);
+  void set_structure_atoms(const std::vector<Atom>& atoms);
 
   //! Return a reference to atom types
   const std::vector<std::string>& get_atom_types (void);
@@ -107,7 +107,7 @@ private:
   std::set <std::string> _region;
 
   //! Vector containing structure atoms
-  std::vector<atom> _structure_atoms;
+  std::vector<Atom> _structure_atoms;
 
   //! List of all atom types in structure
   std::vector<std::string> _atom_types;
@@ -181,14 +181,14 @@ const std::string& AtomisticStructure::get_name(void)
 
 
 inline
-const std::vector<atom>& AtomisticStructure::get_structure_atoms(void)
+const std::vector<Atom>& AtomisticStructure::get_structure_atoms(void)
 {
   return _structure_atoms;
 }
 
 
 inline
-void AtomisticStructure::set_structure_atoms(const std::vector<atom>& atoms)
+void AtomisticStructure::set_structure_atoms(const std::vector<Atom>& atoms)
 {
   _structure_atoms = atoms;
 }
