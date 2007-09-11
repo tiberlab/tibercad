@@ -23,9 +23,62 @@ using namespace Constants;
 Device*   EnvelopFunctionApprox:: _device;
 
 
+//---------------------------------------------------------------------------------//
+
+
+
+inline void EnvelopFunctionApprox::get_electric_potential(const Elem* elem, const std::vector<Point>& q_point, 
+						   std::vector<double> electric_potential) const
+{
+  poisson_equation->get_solution (elem, q_point, potential_ID, electric_potential);
+}
+//---------------------------------------------------------------------------------//
+
+inline double EnvelopFunctionApprox::get_band_edge( const Elem* elem) const
+{
+
+  vector<double> values;
+  vector<Point> qp(1, elem->centroid());
+  
+
+  poisson_equation->get_solution (elem, qp, band_edge_ID, values);
+
+  return ( values[0] );
+}
 
 //---------------------------------------------------------------------------------//
-void EnvelopFunctionApprox::build_integrated_quantities (const std::set< std::string > &names, std::vector< double > &values)
+inline double EnvelopFunctionApprox::get_electric_potential(const Elem* elem, const Point&  qpoint) const
+{
+  vector<double> values;
+  vector<Point> qp(1, qpoint);
+  
+
+  poisson_equation->get_solution (elem, qp, potential_ID, values);
+
+ 
+  return ( values[0] );
+
+
+}
+//---------------------------------------------------------------------------------//
+
+inline double EnvelopFunctionApprox::get_electro_chem_potential(const Elem* elem) const
+{
+
+  vector<double> values;
+  vector<Point> qp(1, elem->centroid());
+  
+
+  poisson_equation->get_solution (elem, qp, electro_chem_pot_ID, values);
+
+  return ( values[0] );
+}
+
+
+
+
+//---------------------------------------------------------------------------------//
+void EnvelopFunctionApprox::build_integrated_quantities (const std::set< std::string > &names, std::vector< double > &values) 
 {
   const set<string>::const_iterator varend(names.end());
   values.resize(0);
@@ -291,61 +344,70 @@ double EnvelopFunctionApprox::get_band_edge() const
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
  
 
-  double cond_band_edge;
- 
-  double valence_band_edge;
+  
   
   vector <double> electric_potential(1, 0.0);
 
   
-  vector<double> band_edges;
+  double band_edge;
  
 
  
  
   for (; el != end_el ; ++el )
+  {
+    const Elem* elem = *el;
+    
+    fe->reinit (elem);
+
+   
+    
+    double temp = get_band_edge( elem);
+    
+   
+
+   
+
+   
+
+    
+    if ( elem == *(mesh->active_elements_begin()) )
     {
-      const Elem* elem = *el;
-     
-      fe->reinit (elem);
-
-      if (opt.consider_potential)
-	{
-	  poisson_equation -> get_electric_potential(elem, q_point, electric_potential);	  
-	}
-       
-      poisson_equation -> get_band_edges ( *el, band_edges );
-
-      short n1 = electric_potential.size();
-
-      if ( elem == *(mesh->active_elements_begin()) )
-	{
-	  cond_band_edge = band_edges[0] - electric_potential[0];
-	  valence_band_edge = band_edges[1] - electric_potential[0];
-	}
-
+      band_edge = temp; 
+    }
+    
       
 
-      for (unsigned int i = 0; i < n1; i++) 
-	{   
-	  if (cond_band_edge > band_edges[0] - electric_potential[i]) 
-	    cond_band_edge = band_edges[0] - electric_potential[i];
-
-	  if (valence_band_edge < band_edges[1] - electric_potential[i] ) 
-	    valence_band_edge = band_edges[1] - electric_potential[i];
-	  
-	}
   
+      
+    if (opt.particle == "el")
+    {
+      
+      if (band_edge > temp)
+	band_edge = temp;
+    }
+    else
+    {
+
+
+      if (band_edge < temp)
+	band_edge = temp;
+
     }
 
-
-
-
+	 
+	  
+    
   
-  if (opt.particle == "el")
-    return(cond_band_edge);
-  else  
-    return(valence_band_edge);
+  }
+
+
+
+
+ 
+  return(band_edge);
+    
+  
   
 
 }
@@ -413,16 +475,45 @@ void EnvelopFunctionApprox::parse_options()
   {
     opt.consider_potential = true;
     
-    poisson_equation  = dynamic_cast< DriftDiffusion* > (find_simulation ( poisson_model_name ));
+    poisson_equation  = find_simulation ( poisson_model_name );
     
     if (poisson_equation == NULL)
       throw InitFailedException( "Unknown poisson model " + poisson_model_name);
+
+    potential_ID = poisson_equation->get_variable_id("ElPotential");
+
+  
+
+    if (potential_ID ==  INVALID_ID) 
+      throw InitFailedException( "Unknown variable ");
+
+
+    if (opt.particle == "el")
+    {
+      electro_chem_pot_ID = poisson_equation->get_variable_id("QFermi_e");
+      band_edge_ID = poisson_equation->get_variable_id("Ec");
+      
+    }
+    else if (opt.particle=="hl")
+    {
+      band_edge_ID = poisson_equation->get_variable_id("Ev");
+      electro_chem_pot_ID = poisson_equation->get_variable_id("QFermi_h");
+      
+    }
+    
+
+    
 
   }
   else
   {
     opt.consider_potential = false;
   }
+
+
+
+
+
   //--------------------------------------------------------------------------------------------//
   //as default, we  estimate spectrum shift only in electric potential is defined
   opt.estimate_spectrum_shift =  opt.consider_potential;
@@ -895,8 +986,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	  if (opt.consider_potential)
 	  {
 
-	    electric_potential = poisson_equation -> get_electric_potential(elem, q_point[qp]);
-	     
+	    //  electric_potential = poisson_equation -> get_electric_potential(elem, q_point[qp]);
+	    electric_potential = get_electric_potential( elem, q_point[qp] );
 	  }
 
 
@@ -1013,8 +1104,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	if (opt.consider_potential)
 	{
 	  
-	  electric_potential = poisson_equation -> get_electric_potential(elem, center);
-	  
+	  // electric_potential = poisson_equation -> get_electric_potential(elem, center);
+	  electric_potential = get_electric_potential( elem, center );
 	}
 
 
@@ -2325,13 +2416,16 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 
       Point center = elem->centroid();
 
-      poisson_equation->get_solution(elem, center, dd_solution);
+      // poisson_equation->get_solution(elem, center, dd_solution);
+
+      chem_pot_value_eV = -get_electro_chem_potential(elem); 
 
       //why minus? because  DriftDiffusion::Solution contaions potential not energy
-      if (opt.particle == "el")
-	chem_pot_value_eV = -dd_solution.fermi_e;
-      else
-	chem_pot_value_eV = -dd_solution.fermi_h;
+      
+      // if (opt.particle == "el")
+      //	chem_pot_value_eV = -dd_solution.fermi_e;
+      //else
+      //	chem_pot_value_eV = -dd_solution.fermi_h;
 
      
       for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
@@ -2484,16 +2578,17 @@ void EnvelopFunctionApprox::calculate_density(double Temperature)
 
 	  Point center = el->centroid();
 
-	  poisson_equation->get_solution(el, center, dd_solution);
+	  // poisson_equation->get_solution(el, center, dd_solution);
 	  
-	  double chem_pot_value_eV;
+	  double chem_pot_value_eV = -get_electro_chem_potential(el);
 
 	  //!why minus? because I need energy, not a potential
-	  if (opt.particle == "el")
+	  /*
+	    if (opt.particle == "el")
 	    chem_pot_value_eV = -dd_solution.fermi_e;
-	  else
+	    else
 	    chem_pot_value_eV = -dd_solution.fermi_h;
-
+	  */
 	  prob_factor = Fermi_statistics_probability(Energy,  chem_pot_value_eV, Temperature); //Thermal probability
 	}
 	
@@ -2510,13 +2605,7 @@ void EnvelopFunctionApprox::calculate_density(double Temperature)
 	  _density[el] += temp;
 	
 	
-	//	if (el_number == 0) cerr <<  _density[el] << "   ";
-	//      if (el_number == 1) cerr <<  _density[el] << " \n  ";
-	//if (el_number == 1)
-	//  if (_density[el] < _density[*it_begin]) cerr << "problem\n";
-	
 
-	//_density[el] += temp;
 	el_number++;
       }
      
@@ -2887,6 +2976,9 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density1D(unsigned
   const double Energy = solution[state_number].eigen_energy;
 
   double prob_factor = std::log( 1.0 + exp( (Fermi_energy - Energy) / T_EV )  );
+
+
+ 
 
   result  = calculate_cell_prob_function(state_number);
 

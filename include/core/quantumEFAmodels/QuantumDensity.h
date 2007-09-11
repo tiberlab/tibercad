@@ -148,7 +148,7 @@ class QuantumDensity : public KspaceIntegration
 
 
 
-
+  //!returns particle charge
   inline double get_particle_charge() const;
 
  private:

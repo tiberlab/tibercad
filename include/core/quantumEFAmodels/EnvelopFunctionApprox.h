@@ -275,7 +275,16 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   std::string system_name;
 
   //!pointer to a drift-diffusion object that is used to get potential data 
-  DriftDiffusion* poisson_equation;
+  SimulationInterface* poisson_equation;
+
+  //! ID of electric potential in poisson_equation
+  ID potential_ID;
+
+  //! ID of electro chemical potential in poisson_equation for particles
+  ID electro_chem_pot_ID;
+
+  //! band edge ID in poisson_equation
+  ID band_edge_ID;
 
   //!pointer to the macrostrain object that is used to get strain data 
   Macrostrain* strain;
@@ -301,6 +310,8 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
     \param prob_data \f$ |\langle \psi|\psi \rangle|^2 \f$ of an eigenstate
   */
   void prepare_probability_function(const unsigned int state_number, std::vector<double>& prob_data);
+
+
 
 
 
@@ -456,6 +467,19 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   //!put spectrum shift energy to be almost equal to the 1st eigenvalue
   double get_new_spectrum_shift(void);
 
+
+  //!return electric potential (wrapper)
+  void  get_electric_potential(const Elem* elem, const std::vector<Point>& q_point, std::vector<double> electric_potential) const;
+
+  //!returns band edge (without potential)
+  double get_band_edge( const Elem* elem) const;
+
+  //!return electric potential from drift-diffusion
+  double get_electric_potential(const Elem* elem, const Point&  qp) const;
+
+  //!return electro chemical potential from drift-diffusion
+  double get_electro_chem_potential(const Elem* elem) const; 
+  
  protected:
 
 
