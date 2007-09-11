@@ -276,7 +276,6 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     /*!
      * \copydoc convert_variable_name_to_id()
      *
-     * Calls convert_variable_name_to_id()
      */
     ID get_variable_id(const std::string& variable_name) const;
 
@@ -289,8 +288,6 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param values a vector to store the values. The vector index corresponds to
      * the node.
      *
-     * Calls get_solution_secure(const Elem*,
-     *   ID, std::vector<double>&) 
      */
     void get_solution(const Elem* elem, ID id,
         std::vector<double>& values);
@@ -304,12 +301,37 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param values a vector to store the values. The vector index
      * corresponds to the node.
      *
-     * Calls get_solution_secure(const Elem*,
-     *   const std::set<ID>&, std::vector<std::mapID, <double> >&) 
      */
     void get_solution(const Elem* elem, const std::set<ID>& ids,
         std::vector<std::map<ID, double> >& values);
 
+
+    //! Get solution values on one inner point of a specified element
+    /*!
+     *
+     * \param elem a pointer to the element
+     * \param p the point (assumed to lie in \c elem)
+     * \param ids identifiers for the variables to be returned
+     * \param values a vector to store the values. The vector index
+     * corresponds to the point.
+     *
+     */
+    void get_solution(const Elem* elem, const Point& p,
+        const std::set<ID>& ids, std::map<ID, double>& values);
+  
+
+    //! Get solution values on one inner point of a specified element
+    /*!
+     *
+     * \param elem a pointer to the element
+     * \param p the point (assumed to lie in \c elem)
+     * \param id identifier for the variable to be returned
+     * \param values a vector to store the values. The vector index
+     * corresponds to the point.
+     *
+     */
+    double get_solution(const Elem* elem, const Point& p, ID id);
+  
 
     //! Get solution values on inner points of a specified element
     /*!
@@ -321,8 +343,6 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param values a vector to store the values. The vector index
      * corresponds to the point.
      *
-     * Calls get_solution_secure(const Elem*, const std::vector<Point>&,
-     *   const std::set<ID>&, std::vector<std::map<ID, double> >&)
      */
     void get_solution(const Elem* elem, const std::vector<Point>& p,
         ID id, std::vector<double>& values);
@@ -338,12 +358,11 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param values a vector to store the values. The vector index
      * corresponds to the point.
      *
-     * Calls get_solution_secure(const Elem*, const std::vector<Point>&,
-     *   const std::set<ID>&, std::vector<std::map<ID, double> >&)
      */
     void get_solution(const Elem* elem, const std::vector<Point>& p,
         const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
     
+
     /*!
      * \copydoc build_nodal_results()
      *

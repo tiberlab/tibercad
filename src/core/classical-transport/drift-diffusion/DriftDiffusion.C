@@ -1443,6 +1443,10 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
         id = CBANDEDGE;
       else if (variable_name == "Eg")
         id = BANDGAP;
+      else if (variable_name == "Ev0")
+        id = VBANDEDGEINTR;
+      else if (variable_name == "Ec0")
+        id = CBANDEDGEINTR;
       break;
 
     case 'e':
@@ -1655,10 +1659,16 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       values[n][QFERMIH] = ep;
 
     if (ids.count(VBANDEDGE))
-      values[n][VBANDEDGE] = sc->get_valence_band_edge();
+      values[n][VBANDEDGE] = sc->get_valence_band_edge() - u;
 
     if (ids.count(CBANDEDGE))
-      values[n][CBANDEDGE] = sc->get_conduction_band_edge();
+      values[n][CBANDEDGE] = sc->get_conduction_band_edge() - u;
+
+    if (ids.count(VBANDEDGEINTR))
+      values[n][VBANDEDGEINTR] = sc->get_valence_band_edge();
+
+    if (ids.count(CBANDEDGEINTR))
+      values[n][CBANDEDGEINTR] = sc->get_conduction_band_edge();
 
     if (ids.count(EDENSITY))
       values[n][EDENSITY] = sc->get_electron_density();
@@ -1870,10 +1880,16 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
       values[n][QFERMIH] = ep;
 
     if (ids.count(VBANDEDGE))
-      values[n][VBANDEDGE] = sc->get_valence_band_edge();
+      values[n][VBANDEDGE] = sc->get_valence_band_edge() - u;
 
     if (ids.count(CBANDEDGE))
-      values[n][CBANDEDGE] = sc->get_conduction_band_edge();
+      values[n][CBANDEDGE] = sc->get_conduction_band_edge() - u;
+
+    if (ids.count(VBANDEDGEINTR))
+      values[n][VBANDEDGEINTR] = sc->get_valence_band_edge();
+
+    if (ids.count(CBANDEDGEINTR))
+      values[n][CBANDEDGEINTR] = sc->get_conduction_band_edge();
 
     if (ids.count(EDENSITY))
       values[n][EDENSITY] = sc->get_electron_density();

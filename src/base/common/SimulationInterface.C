@@ -751,6 +751,9 @@ SimulationInterface::get_integrated_quantities_description(
 
 
 
+
+
+
 void
 SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
     vector<map<ID, double> >& values)
@@ -770,6 +773,35 @@ SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
     get_solution_secure(elem, ids, values);
   }
 
+}
+
+
+
+void
+SimulationInterface::get_solution(const Elem* elem, const Point& p,
+    const set<ID>& ids, map<ID, double>& values)
+{
+  vector<Point> points(1, p);
+  vector<map<ID, double> > vals(1);
+
+  get_solution(elem, points, ids, vals);
+  
+  values = vals[0];
+}
+
+
+
+double
+SimulationInterface::get_solution(const Elem* elem, const Point& p, ID id)
+{
+  vector<Point> points(1, p);
+  set<ID> ids;
+  ids.insert(id);
+  vector<map<ID, double> > vals(1);
+
+  get_solution(elem, points, ids, vals);
+
+  return vals[0][id];
 }
 
 
@@ -864,7 +896,7 @@ SimulationInterface::get_solution(const Elem* elem, ID id, vector<double>& value
 
 void
 SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
-        ID id, vector<double>& values)
+    ID id, vector<double>& values)
 {
   set<ID> ids;
   ids.insert(id);

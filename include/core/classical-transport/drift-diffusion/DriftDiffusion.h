@@ -55,8 +55,10 @@ template<typename T> class SparseMatrix;
  *
  * The get_solution() methods can provide the following variables:
  * \li \c ElPotential electric potential (V)
- * \li \c Ev valence band edge (eV)
  * \li \c Ec conduction band edge (eV)
+ * \li \c Ev valence band edge (eV)
+ * \li \c Ec0 "intrinsic" conduction band edge (without electric potential, eV)
+ * \li \c Ev0 "intrinsic" valence band edge (without electric potential, eV)
  * \li \c Eg band gap (eV)
  * \li \c eDensity electron density (cm^-3)
  * \li \c hDensity hole density (cm^-3)
@@ -91,6 +93,8 @@ class DriftDiffusion : public SimulationInterface
       QFERMIH,          //!< hole electro-chemical potential
       CBANDEDGE,        //!< conduction band edge
       VBANDEDGE,        //!< valence band edge
+      CBANDEDGEINTR,    //!< intrinsic conduction band edge
+      VBANDEDGEINTR,    //!< intrinsic valence band edge
       BANDGAP,          //!< band gap
       EDENSITY,         //!< electron density
       HDENSITY,         //!< hole density
