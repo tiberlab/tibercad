@@ -7,7 +7,6 @@
 #include "TiberCad.h"
 #include "TypeDefs.h"
 #include "ModelOptions.h"
-
 #include "elem.h"
 
 #include <vector>
@@ -17,6 +16,7 @@ class Material;
 class Control;
 class Mesh;
 class EquationSystems;
+class AtomisticStructure;
 
 //! Higher-level definition of the  structure to  be  simulated.
 /*!
@@ -83,6 +83,10 @@ class Device
      * \param region_id the region numbers this material should belong to
      */
     void set_material(Material* material, const std::vector<ID>& region_ids);
+
+
+    //! Set an atomistic structure to be kept in structures map
+    void set_atomistic_structure(const std::string name, AtomisticStructure* atomistic_structure);
 
 
     //! Set the Control module which will control this device
@@ -238,6 +242,11 @@ class Device
     //! The map that connects region number to material
     MaterialMap _material_map;
 
+
+    //! The map that connects atomistic structure names to pointers
+    //! (keep track of existing atomistic struxctures)
+    std::map<std::string,  AtomisticStructure* > _atomistic_structure_map;
+  
 
     //! A map with temperatures for elements
     TemperatureMap _elem_temp;
@@ -460,6 +469,13 @@ Device::get_temperature(const Elem* elem) const
     return find_temperature_for_elem(elem);
 }
 
+
+inline
+void 
+Device::set_atomistic_structure(const std::string name, AtomisticStructure* atomistic_structure)
+{
+  _atomistic_structure_map[name] = atomistic_structure;
+}
 
 
     

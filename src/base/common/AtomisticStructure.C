@@ -36,20 +36,71 @@ AtomisticStructure::init(void)
   std::cerr << "AtomisticStructure::init() begin \n";
 #endif
 
+  assert(_device != NULL);
+
   // Read structure from file
   std::string path;
 
-  if (! get_options().find_option("path") )
-  std::cerr << "ERROR IN ATOMISTIC REGION DEFINITION: A PATH FOR STRUCTURE FILE MUST BE SPECIFIED" << std::endl;
+  if (! _options.find_option("path") )
+    std::cerr << "ERROR IN ATOMISTIC REGION DEFINITION: A PATH FOR STRUCTURE FILE MUST BE SPECIFIED" << std::endl;
 
-  path = get_options().get_option("path","none");
+  path = _options.get_option("path","none");
   
   if (path.compare("none") != 0) read_structure(path);
+
+
+  if ( _options.find_option("physical_regions") )
+    {
+   
+      //Put physical regions specified in input file in _regions
+      //A vector is needed as temporary container
+      std::vector<std::string> region_string; 
+      _options.get_option("physical_regions", region_string);
+
+      for (int i = 0; i < region_string.size(); i++)
+	{std::cerr << "Assigning in set region_string " << region_string[i] << std::endl;
+	  _region.insert(region_string[i]);}
+      region_string.clear();
+
+      //If all regions are specified (value = "all", must fill with real names of all regions)
+      if ( _region.count("all") == 1)
+	{
+	  _region.clear();
+	  std::set < ID >::iterator region_ID_iterator = _device->get_region_ids().begin();
+
+	  for (int i = 0; i < _device->get_region_ids().size(); i++)
+	    {
+	      _region.insert( _device->get_region_name(*region_ID_iterator) );
+	      region_ID_iterator ++;
+	    }
+
+	}
+
+    }
+
+
+  for (std::set<std::string>::iterator i= _region.begin(); i !=_region.end(); i++)
+    {std::cerr << "WRITING " << std::endl;
+      std::cerr << "_REGION IS " << *i << std::endl;}
 
 #ifdef DEBUG
   std::cerr << "AtomisticStructure::init() end \n";
 #endif
 
+}
+
+
+const std::set<std::string>& 
+AtomisticStructure::get_region(void)
+{
+  return _region;
+}
+
+
+void 
+AtomisticStructure::set_device(Device* device)
+{
+  _device = device;
 }
 
 
@@ -333,3 +384,5 @@ if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
 #endif
 
 }
+
+

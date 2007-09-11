@@ -1,13 +1,15 @@
-
-
 #ifndef _ATOMISTICSTRUCTURE_H_
 #define _ATOMISTICSTRUCTURE_H_
 
 #include "tensor.h"
 #include "ModelOptions.h"
+#include "TypeDefs.h"
+#include "Control.h"
+#include "Device.h"
 
 //C++ includes
 #include <vector>
+#include <set>
 #include<iostream>
 #include<fstream>
 #include<sstream>
@@ -26,7 +28,7 @@ public:
 };
 
 //-------------------------------------------------
-// Inline Memeber Functions
+// Inline Member Functions
 //-------------------------------------------------
 
 
@@ -56,11 +58,17 @@ class AtomisticStructure
   //! Get the structure name
   const std::string& get_name(void);
 
+  //! Get set of regions cover by atomistic structure
+  const std::set<std::string>& get_region(void);
+
   //! Create a material with name /c name
   static AtomisticStructure* create(const std::string& name);
 
   //! Create a material with name /c name and options /c options
   static AtomisticStructure* create(const std::string& name, const ModelOptions& options);
+
+   //! Set the device we're working with
+  void set_device(Device* device);
 
   //! Return a reference to structure atoms
   const std::vector<atom>& get_structure_atoms(void);
@@ -79,7 +87,7 @@ protected:
   //! Set the model options
   void set_options(const ModelOptions& options);
 
-  //! Read structure from file
+   //! Read structure from file
   void read_structure(const std::string& path);
 
   //! Print structure to file (format depends on extension used)
@@ -93,6 +101,10 @@ private:
 
   //! Name of the structure (will be the same of associated Atomistic region)
   std::string _name;
+
+  //! Set of regions covered by atomistic structure (names: TiberCAD
+  //! defined regions)
+  std::set <std::string> _region;
 
   //! Vector containing structure atoms
   std::vector<atom> _structure_atoms;
@@ -112,6 +124,9 @@ private:
 
   //! Tell if the object has been already initialized
   bool _is_initialized;
+
+  //! Contains reference to device we're working with
+  Device* _device;
 
 };
 

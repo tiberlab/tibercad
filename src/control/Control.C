@@ -276,12 +276,17 @@ Control::create_atomistic_structures(void)
 
     const string& st_name = data.get_region_name();
     AtomisticStructure* st = AtomisticStructure::create(st_name, data.get_options());
+
+    //Set a reference to device. It's needed for keeping track of region informations
+    st->set_device( _device );
     
     //WARNING: For debugging purposes, initialization of
-    //atomistic structures is here, but it's not the right place!!!!!!!!!!!!!!!!!!!!!!
+    //atomistic structures is here, but it's not the right place! (maybe it is...)
     st->init();
 
-    //_device->set_material(mat, region_ids);
+    // Defined atomistic structure is put in the atomistic_structure_map
+    _device->set_atomistic_structure(st_name, st);
+    
   }
 
 #ifdef DEBUG

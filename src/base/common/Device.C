@@ -5,6 +5,7 @@
 #include "MeshUtils.h"
 #include "MeshInput.h"
 #include "SimulationOptions.h"
+#include "AtomisticStructure.h"
 
 #include "mesh.h"
 #include "mesh_data_elements.h"
@@ -152,7 +153,6 @@ Device::set_material(Material* material, const std::vector<ID>& region_ids)
   for (unsigned int i = 0; i < region_ids.size(); ++i)
     set_material(material, region_ids[i]);
 }
-
 
 
 void 
