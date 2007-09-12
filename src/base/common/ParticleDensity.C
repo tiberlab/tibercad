@@ -40,7 +40,9 @@ ParticleDensity::add_quantum_density(const std::string& name)
       throw InitFailedException(msg);
     }
 
+    // we assume that the density variable has this name:
     string density_name("density");
+    
     _density_id = qd->get_variable_id(density_name);
     if (_density_id == INVALID_ID)
     {
@@ -50,6 +52,7 @@ ParticleDensity::add_quantum_density(const std::string& name)
       throw InitFailedException(msg);
     }
 
+    // at this point we have for sure a quantum density simulation
     _quantum_density.insert(qd);
     use_quantum_density();
   }

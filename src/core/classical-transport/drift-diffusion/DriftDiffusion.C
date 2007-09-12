@@ -1110,7 +1110,7 @@ DriftDiffusion::get_solution_vector(void)
 
 
 void
-DriftDiffusion::do_newton(void)
+DriftDiffusion::do_newton(void) throw (SolverException)
 {
 
   EquationSystems& es = get_equation_systems();
@@ -1140,8 +1140,7 @@ DriftDiffusion::do_newton(void)
 
 
 double
-DriftDiffusion::do_gummel_iterations(int max_it)
-  throw (PetscRuntimeError, KSPDivergedError, SNESDivergedError)
+DriftDiffusion::do_gummel_iterations(int max_it) throw (SolverException)
 {
  
   TiberNonlinearSystem& system =
@@ -1176,7 +1175,7 @@ DriftDiffusion::do_gummel_iterations(int max_it)
 
     }
   }
-  catch (PetscRuntimeError err)
+  catch (SolverException& err)
   {
     get_options().coupling = coupling;
     throw(err);

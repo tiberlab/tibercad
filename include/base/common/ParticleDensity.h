@@ -130,7 +130,7 @@ class ParticleDensity
     bool _use_quantum;
 
 
-    //! The quantum density calculation
+    //! The quantum density calculation(s)
     std::set<SimulationInterface*> _quantum_density;
 
 

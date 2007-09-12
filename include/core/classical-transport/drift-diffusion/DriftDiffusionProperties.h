@@ -686,26 +686,6 @@ class DriftDiffusionProperties : public PhysicalModel
     //! The intrinsic density
     double intrinsic_density;
         
-
-    
-    //! Calculate the density and its derivatives
-    /*! 
-     * The method also returns the ratio 'first derivative over density'
-     * which is used for the mobility.
-     */
-    template<TiberCad::Statistics S>
-    void density_and_derivatives(double arg, double& density,
-        double& derivative, double& _2nd_derivative,
-        double& derivative_over_density) const;
-    
-    
-    //! Calculate the density for a given argument
-    /*!
-     * Basically an approximation for the Fermi integral with index 0.5 is
-     * returned if statistics is Fermi-Dirac
-     */
-    template<TiberCad::Statistics S> double density(double arg) const;
-
     
     //! Get the conduction band properties
     const BandProperties& get_conduction_band(void) const
@@ -1028,108 +1008,6 @@ DriftDiffusionProperties::get_statistics(void) const
 }
 
 
-template<TiberCad::Statistics S>
-inline
-double
-DriftDiffusionProperties::density(double arg) const
-{
-  
-  const double arg_max = 150;
-  const double arg_min = -50;
-
-  double dens;
-  switch (S)
-  {
-    case TiberCad::FERMIDIRAC:
-      if (arg < arg_max)
-      {
-        if (arg < arg_min)
-          dens = std::exp(arg);
-        else
-          dens = gsl_sf_fermi_dirac_half(arg);
-      }
-      else
-        dens = 2.0 * M_2_SQRTPI / 3.0 * std::pow(arg, 1.5);
-
-      break;
-
-    default:
-      if (arg < arg_max)
-        dens = std::exp(arg);
-      else
-        dens = std::exp(arg_max);
-  }
-  return dens;
-}
-
-
-template<TiberCad::Statistics S>
-inline
-void
-DriftDiffusionProperties::density_and_derivatives(double arg, double& density,
-    double& derivative, double& _2nd_derivative,
-    double& derivative_over_density) const
-{
-  
-  //const double arg_max = 150;
-  const double arg_max = 150;
-  const double arg_min = -50;
-
-  switch (S)
-  {
-    case TiberCad::FERMIDIRAC:
-      if (arg < arg_max)
-      {
-        if (arg < arg_min)
-        {
-          density = std::exp(arg);
-          derivative = density;
-          _2nd_derivative = density;
-          derivative_over_density = 1;
-        }
-        else
-        {
-          density = gsl_sf_fermi_dirac_half(arg);
-          derivative = gsl_sf_fermi_dirac_mhalf(arg);
-          // TODO implement d/dx F_-1/2(x)
-          double step = 1e-2 * std::fabs(arg) + 1e-2;
-          const double eps = 1e-6;
-          double error = 1;
-          _2nd_derivative = 0.5 * (gsl_sf_fermi_dirac_mhalf(arg + step)
-              - gsl_sf_fermi_dirac_mhalf(arg - step)) / step;
-          double old_d;
-          while (std::fabs(error) > eps)
-          {
-            old_d = _2nd_derivative;
-            step *= 0.5;
-            _2nd_derivative = 0.5 * (gsl_sf_fermi_dirac_mhalf(arg + step)
-                - gsl_sf_fermi_dirac_mhalf(arg - step)) / step;
-            error = _2nd_derivative - old_d;
-            if (std::fabs(_2nd_derivative) > eps)
-              error /= _2nd_derivative;
-          }
-          derivative_over_density = derivative / density;
-        }
-      }
-      else
-      {
-        density = 2.0 * M_2_SQRTPI / 3.0 * std::pow(arg, 1.5);
-        derivative = M_2_SQRTPI * std::sqrt(arg);
-        _2nd_derivative = 0.5 * M_2_SQRTPI / std::sqrt(arg);
-        derivative_over_density = derivative / density;
-      }
-      break;
-
-    default:
-      arg = (arg > arg_max) ? arg_max : arg;
-
-      density = std::exp(arg) + 2 * DBL_MIN;
-      derivative = density;
-      _2nd_derivative = density;
-      derivative_over_density = 1;
-      break;
-  }
-}
 
 
 inline

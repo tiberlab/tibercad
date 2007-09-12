@@ -355,7 +355,7 @@ DriftDiffusionProperties::calculate_densities(void)
 
   double Ec = get_conduction_band_edge();
   double Ev = get_valence_band_edge();
-/*  
+ 
   _electrons.set_classical_parameters(cb.effective_DOS,
       Ec - electric_potential, -fermi_e, kTe);
   electron_density = _electrons.get_particle_density();
@@ -365,9 +365,9 @@ DriftDiffusionProperties::calculate_densities(void)
       -Ev + electric_potential, fermi_h, kTh);
   hole_density = _holes.get_particle_density();
   hole_density_derivative = -_holes.get_particle_density_derivative();
-*/  
+ 
   // electron density
-  ///*
+  /*
   double n = 0, dn = 0, dn2 = 0, dn_over_n = 0, arg_e;
   if (_coupling & DriftDiffusionDefs::ELECTRONS)
   {
@@ -392,10 +392,10 @@ DriftDiffusionProperties::calculate_densities(void)
     electron_density = n;
     electron_density_derivative = dn;
   }
-  //*/
+  */
 
   // hole density
-  ///*
+  /*
   double p = 0, dp = 0, dp2 = 0, dp_over_p = 0, arg_h;
   if (_coupling & DriftDiffusionDefs::HOLES)
   {
@@ -434,7 +434,7 @@ DriftDiffusionProperties::calculate_densities(void)
       electron_density = get_intrinsic_density() / hole_density;
     electron_density_derivative = 0.0;
   }
-  //*/
+  */
 
 }
 

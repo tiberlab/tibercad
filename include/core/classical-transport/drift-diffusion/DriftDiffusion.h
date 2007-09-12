@@ -7,9 +7,7 @@
 #include "SimulationOptions.h"
 #include "DriftDiffusionDefs.h"
 #include "Device.h"
-#include "PetscRuntimeError.h"
-#include "KSPDivergedError.h"
-#include "SNESDivergedError.h"
+#include "SolverException.h"
 
 // Libmesh includes
 #include "libmesh_common.h"
@@ -820,8 +818,7 @@ class DriftDiffusion : public SimulationInterface
      * \return the final residual
      * \param the maximum number of iterations
      */
-    double do_gummel_iterations(int max_it)
-      throw (PetscRuntimeError, KSPDivergedError, SNESDivergedError);
+    double do_gummel_iterations(int max_it) throw (SolverException);
 
 
     //! Parse the options which will not change between calls to solve()
@@ -878,7 +875,7 @@ class DriftDiffusion : public SimulationInterface
 
 
     //! Do a Newton type iteration
-    void do_newton(void);
+    void do_newton(void) throw (SolverException);
 
     
     //! Calculate terminal currents
