@@ -6,7 +6,6 @@
 
 #include "InitFailedException.h"
 #include "PetscDivergedError.h"
-#include "SolveFailedException.h"
 
 
 #include "equation_systems.h"
@@ -110,7 +109,6 @@ TiberNonlinPetsc::solve(void)
 
 
   bool failure = true;
-  string msg("DriftDiffusion: solve failed (");
 
   pair<unsigned int, double> result;
 
@@ -133,38 +131,19 @@ TiberNonlinPetsc::solve(void)
     //if (e.get_reason() == -6)
     //  solver_params.ls_type = 0;
 
-    msg += e.what();
-    msg += ")\n";
-
+    reinit();
+    throw e;
   }
   catch (PetscRuntimeError& e)
   {
     std::cerr << "Petsc runtime error: " << e.get_reason() << std::endl;
     if (e.get_reason() == PETSC_ERR_MAT_LU_ZRPVT)
-    {
-      // in the case of a zero pivot in (I)LU factorization
-      // we try another preconditioner
       cerr << " (Zero pivot during ILU.)\n";
-      //try
-      //{
-      //  _solver->set_pc_type(PCCOMPOSITE);
-      //  result = _solver->solve(*matrix, *solution, *rhs, _lin_tol, _lin_max_it);
-      //  failure = false;
-      //}
-      //catch (...)
-      //{
-      //}
-    }
-  }
 
-  if (failure)
-  {
-    // we rebuild the equation system as could have been
-    // 'damaged' by the crash
     reinit();
-
-    throw SolveFailedException(msg);
+    throw e;
   }
+
 
   _n_nonlin_iterations = result.first;
   _final_residual_norm = result.second;

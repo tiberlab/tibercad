@@ -11,6 +11,7 @@
 
 #include "PhysicalModel.h"
 
+#include "ParticleDensity.h"
 #include "TemperatureInterface.h"
 #include "SimulationOptions.h"
 #include "DriftDiffusionDefs.h"
@@ -851,6 +852,9 @@ class DriftDiffusionProperties : public PhysicalModel
     //! True if this is a dielectric
     bool _is_dielectric;
 
+
+    ParticleDensity _electrons;
+    ParticleDensity _holes;
 };
 
 

@@ -613,7 +613,8 @@ DriftDiffusion::do_solve(void)
   // same as before
   // */
 
-  bool do_nothing = true;
+  //bool do_nothing = true;
+  bool accept_failure = true;
   ContactData::iterator it(_voltages.begin());
   const ContactData::iterator end(_voltages.end());
   for ( ; it != end; ++it)
@@ -623,10 +624,13 @@ DriftDiffusion::do_solve(void)
 
     double voltage = bd->get_simulation_voltage();
 
+    if (_voltages[it->first] != voltage)
+      accept_failure = false;
+
     _voltages[it->first] = voltage;
 
-    if (voltage != 0.0)
-      do_nothing = false;
+    //if (voltage != 0.0)
+    //  do_nothing = false;
   }
   
   /* The same here: what about selfconsistency at 0 V ?? */
@@ -669,29 +673,35 @@ DriftDiffusion::do_solve(void)
         }
       }
     }
-
   }
 
   if (do_local_scaling_)
     build_local_scaling();
 
-  switch (_options.solver_method)
-  {
-    case GUMMEL:
-      solve_gummel();
-      break;
-    default: // Newton method
-      solve_newton();
-      break;
-  }
 
-//  if (quasi_equilibrium)
-//  {
-//    cerr << "switching on continuity eq..." << endl;
-//    opts.delete_option("quasi_equilibrium");
-//    get_options().coupling = coupling;
-//    solve_newton();
-//  }
+  set_dirichlet_bc();
+  
+  try
+  {
+    switch (_options.solver_method)
+    {
+      case GUMMEL:
+        solve_gummel();
+        break;
+      default: // Newton method
+        do_newton();
+        break;
+    }
+  }
+  catch (SolverException& e)
+  {
+    if (!accept_failure)
+    {
+      string msg = "DriftDiffusion: solve failed (" +
+        string(e.what()) + ")";
+      throw SolveFailedException(msg);
+    }
+  }
 
 }
 
@@ -1125,42 +1135,6 @@ DriftDiffusion::do_newton(void)
 
 
 
-
-void
-DriftDiffusion::solve_newton(void)
-{
-  
-  set_dirichlet_bc();
-
-  bool failure = true;
-  string msg("DriftDiffusion: solve failed (");
-
-
-  try
-  {
-    //if (get_options().coupling != POISSON)
-    //  solve_linear();
-    
-    do_newton();
-
-    failure = false;
-  }
-  catch (...)
-  {
-  }
-
-
-  if (failure)
-  {
-    // we rebuild the equation system as could have been
-    // 'damaged' by the crash
-    //system.nonlinear_solver->clear();
-    //rebuild_equation_system();
-
-    throw SolveFailedException(msg);
-  }
-
-}
 
 
 

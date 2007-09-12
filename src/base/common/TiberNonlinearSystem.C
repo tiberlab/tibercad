@@ -8,7 +8,6 @@
 #include "TiberNonlinPetsc.h"
 
 #include "InitFailedException.h"
-#include "PetscDivergedError.h"
 
 
 #include "linear_solver.h"

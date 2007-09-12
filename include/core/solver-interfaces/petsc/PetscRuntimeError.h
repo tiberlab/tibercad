@@ -3,17 +3,19 @@
 #ifndef _PETSCRUNTIMEERROR_H_
 #define _PETSCRUNTIMEERROR_H_
 
-#include <stdexcept>
+#include "SolverException.h"
 
-class PetscRuntimeError : public std::runtime_error
+class PetscRuntimeError : public SolverException
 {
 
   public:
+
     PetscRuntimeError(int reason)
-      : std::runtime_error("Internal PETSc error."),
+      : SolverException("Internal PETSc error."),
         _reason(reason) {};
 
     int get_reason(void) { return _reason; };
+
 
   private:
 

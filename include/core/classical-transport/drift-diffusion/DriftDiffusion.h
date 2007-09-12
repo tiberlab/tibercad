@@ -873,9 +873,6 @@ class DriftDiffusion : public SimulationInterface
     void cleanup_solver(void);
 
 
-    //! Solve using Newton method
-    void solve_newton(void);
-
     //! Solve using an iterative Gummel scheme
     void solve_gummel(void);
 
@@ -883,6 +880,7 @@ class DriftDiffusion : public SimulationInterface
     //! Do a Newton type iteration
     void do_newton(void);
 
+    
     //! Calculate terminal currents
     /*!
      * Integrates numerically over the boundary elements.

@@ -23,6 +23,7 @@ $Models
     options
     {
      simulation_name = driftdiffusion
+     thermal_simulation = tt
 
      physical_regions = all
     }
