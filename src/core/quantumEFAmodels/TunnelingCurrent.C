@@ -171,7 +171,37 @@ void TunnelingCurrent::parse_options(void)
 //========================================================================//
 double TunnelingCurrent::get_current(double v)
 {
+  Point v_point;
+
+  v_point(0) = v; 
+
+
+  LinearImplicitSystem& system = Ves->get_system<LinearImplicitSystem> ("current");
   
+  const DofMap& dof_map = system.get_dof_map();
+    
+  FEType fe_type = dof_map.variable_type(0);
+    
+  AutoPtr<FEBase> fe (FEBase::build(1, fe_type));
+    
+  QGauss qrule (1, FIFTH);
+    
+  fe->attach_quadrature_rule (&qrule);
+    
+  const std::vector<Point>& q_point = fe->get_xyz();
+  
+  const std::vector<std::vector<Real> >& phi = fe->get_phi();
+  
+ 
+
+  MeshBase::element_iterator       it     = Vmesh->active_elements_begin();
+  const MeshBase::element_iterator it_elem_end  = Vmesh->active_elements_end();
+
+  for ( ;  it != it_elem_end ; ++it) 
+  {
+    
+
+  }
 
 }
 

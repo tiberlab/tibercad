@@ -321,6 +321,8 @@ void QuantumDensity:: do_solve()
 
   parse_options();
 
+  real_space_density.clear();
+
   if (!opt.analitic)
   {//numerical integration
     KspaceIntegration::do_solve();

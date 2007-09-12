@@ -2978,7 +2978,7 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density1D(unsigned
   double prob_factor = std::log( 1.0 + exp( (Fermi_energy - Energy) / T_EV )  );
 
 
- 
+  cerr << "state  " <<  state_number <<"     " <<  Energy << "eV\n";
 
   result  = calculate_cell_prob_function(state_number);
 
