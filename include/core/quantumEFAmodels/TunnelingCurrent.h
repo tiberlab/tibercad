@@ -12,17 +12,6 @@ class TunnelingCurrent: public KspaceIntegration
  public:
 
 
-  //! Consructor
-  TunnelingCurrent();
-
-  //! Destructor
-  ~TunnelingCurrent();
-
-
-  //!creates a new object 
-  static  TunnelingCurrent* create();
-
-
   struct options
   {
     double Efermi_left;
@@ -37,7 +26,26 @@ class TunnelingCurrent: public KspaceIntegration
     bool energy_int_uniform_refinement;
     double  energy_int_refine_fraction;
     double  energy_int_zero_limit;
+
+    std::string filename;
+    bool read_from_file;
+
   };
+
+
+  //! Consructor
+  TunnelingCurrent();
+
+  //! Destructor
+  ~TunnelingCurrent();
+
+
+  //!creates a new object 
+  static  TunnelingCurrent* create();
+
+
+ 
+  double get_current(double voltage);
 
  protected:
 
@@ -45,10 +53,7 @@ class TunnelingCurrent: public KspaceIntegration
    //virtual void calculate_at_each_k_point();
 
  
-   void build_V_grid();
-
-   //! Applied voltage mesh
-   Mesh* Vmesh;
+ 
 
 
    virtual void do_plot (void);
@@ -70,8 +75,20 @@ class TunnelingCurrent: public KspaceIntegration
 
  private:
 
-   //!used for all k-points
-   const Elem* applied_voltage_elem;
+   //!build applied voltage mesh
+   void build_V_grid();
+
+   //! Applied voltage mesh
+   Mesh* Vmesh;
+   
+   //!Equation Systems for voltage mesh
+   EquationSystems* Ves;
+
+   //! node in the voltage grid
+   const Node* applied_voltage_node;
+
+   //! result of the k-space integration
+   std::map <const Node*, double> current;
 
 
    void k_space_output(void);
@@ -100,25 +117,24 @@ class TunnelingCurrent: public KspaceIntegration
    */
    double thermal_probability(double fermi_energy, double Energy);
 
-
-
    std::map<const Elem*, double> energy_integral;
 
-
-
+   //mesh for energy integration
    Mesh* Emesh;
 
+  
 
+   
 };
 
-//---------------------------------------------------------
+//---------------------------------------------------------------------------//
 
 inline TunnelingCurrent*  TunnelingCurrent::create()
 {
   return (new TunnelingCurrent );
 }
 
-
+//---------------------------------------------------------------------------//
 
 inline double TunnelingCurrent::thermal_probability(double Fermi_energy, double Energy)
 {

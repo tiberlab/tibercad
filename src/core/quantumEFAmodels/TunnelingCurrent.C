@@ -20,6 +20,7 @@ TunnelingCurrent::TunnelingCurrent()
 {
   Vmesh = NULL;
 
+  Ves = NULL;
   //  kmesh = NULL;
 }
 
@@ -30,7 +31,7 @@ TunnelingCurrent:: ~TunnelingCurrent()
 {
   delete Vmesh;
   
-
+  delete  Ves;
   //delete kmesh;
 }
 
@@ -65,11 +66,11 @@ void TunnelingCurrent::do_plot (void)
 
     vector<double> results;
     unsigned int el_number = 0; 
-    results.resize(Vmesh->n_elem());
+    //results.resize(Vmesh->n_elem());
+    results.resize(Vmesh->n_nodes());
 
-
-    map < const Elem*, double > :: iterator it1 = real_space_density.begin();
-    for (; it1 !=  real_space_density.end() ;++it1)
+    map < const Node*, double > :: iterator it1 = current.begin();
+    for (; it1 !=  current.end() ;++it1)
     {
       results[el_number] = it1->second;
       el_number++;
@@ -78,7 +79,7 @@ void TunnelingCurrent::do_plot (void)
 
 
    
-    GMVIO_cell(*Vmesh).write_ascii_cell_data(filename, results, names);
+    GMVIO(*Vmesh).write_nodal_data(filename, results, names);
 
 
 
@@ -128,13 +129,21 @@ void TunnelingCurrent::build_V_grid()
 				     EDGE2);
 
 
+
+  Ves = new EquationSystems(*Vmesh);
   
+  Ves->add_system<LinearImplicitSystem> ("current");
+        
+  Ves->get_system("current").add_variable("I", FIRST);
+        
+  Ves->init();
+
 
  
   
 
 }
-
+//=========================================================================//
 void TunnelingCurrent::parse_options(void)
 {
 
@@ -159,6 +168,13 @@ void TunnelingCurrent::parse_options(void)
 
   
 }
+//========================================================================//
+double TunnelingCurrent::get_current(double v)
+{
+  
+
+}
+
 
 //========================================================================//
 void TunnelingCurrent::do_solve()
@@ -176,8 +192,8 @@ void TunnelingCurrent::do_solve()
   
 
 
-  MeshBase::element_iterator       it_elem     = Vmesh->active_elements_begin();
-  const MeshBase::element_iterator it_elem_end  = Vmesh->active_elements_end(); 
+  MeshBase::node_iterator       it_elem     = Vmesh->nodes_begin();
+  const MeshBase::node_iterator it_elem_end  = Vmesh->nodes_end(); 
  
 
  
@@ -192,10 +208,12 @@ void TunnelingCurrent::do_solve()
 
     unsigned int max_refinement = 0;
 
-    applied_voltage_elem  = *it_elem;
+    applied_voltage_node  = *it_elem;
 
     cerr << "------------------------------\n";
-    cerr << " applied volatage " << applied_voltage_elem->centroid() << "\n";
+    {  
+      cerr << " applied volatage " << (*applied_voltage_node)(0) << "\n";
+    }
     cerr << "------------------------------\n ";  
 
 
@@ -249,7 +267,7 @@ void TunnelingCurrent::do_solve()
 
 
     {
-      map < const Elem*, double > :: iterator it1 = real_space_density.find(applied_voltage_elem);
+      map < const Node*, double > :: iterator it1 = current.find(applied_voltage_node);
       x2 = it1->second;
     }
 
@@ -315,7 +333,7 @@ void TunnelingCurrent::do_solve()
 	  calculate_density();
 
 	  {
-	    map < const Elem*, double > :: iterator it1 = real_space_density.find(applied_voltage_elem);
+	    map < const Node*, double > :: iterator it1 = current.find(applied_voltage_node);
 	    x1 = it1->second;
 	  }
 
@@ -399,7 +417,7 @@ void TunnelingCurrent::calculate_density()
   const MeshBase::element_iterator it_el  = kmesh->active_elements_end();
   std::vector<unsigned int> dof_indices;
 
-  real_space_density[applied_voltage_elem] = 0;
+  current[applied_voltage_node] = 0;
 
   for ( ; it != it_el ; ++it) //loop over k space elements
   {
@@ -449,7 +467,7 @@ void TunnelingCurrent::calculate_density()
 	f *= get_degeneracy_factor();
 
 
-	real_space_density[applied_voltage_elem] += f ;
+	current[applied_voltage_node] += f ;
 
 	kspace_integral[elem] += f;
       
@@ -458,7 +476,7 @@ void TunnelingCurrent::calculate_density()
     else
     {
       
-      real_space_density[applied_voltage_elem] += kspace_integral[elem];
+      current[applied_voltage_node] += kspace_integral[elem];
 
     }
     
@@ -524,9 +542,9 @@ double TunnelingCurrent::calculte_at_k_point(const Point& k)
 
 
 
-  Point  x = applied_voltage_elem->centroid();
+  
 
-  double applied_voltage = x(0);
+  double applied_voltage = (*applied_voltage_node)(0);
  
 	   
   transm =integrate_over_energy(k_vector, applied_voltage);
@@ -568,7 +586,7 @@ void TunnelingCurrent::k_space_output(void)
   
   const std::set< std::string >& plotvariables = get_control().get_plotvariables();
 
-  double voltage = (applied_voltage_elem->centroid())(0);
+  double voltage = (*applied_voltage_node)(0);
   ostringstream v_s;
   v_s << voltage;
   if (plotvariables.find("k-space_tunneling") != plotvariables.end())
@@ -733,7 +751,7 @@ double TunnelingCurrent::integrate_over_energy(double kpar[3], double electric_p
 
       
 
-      //cerr << result << "   ";
+
 
       if ( (abs(result) < 1e-20) || (abs(result_old - result)/abs(result) < opt.energy_int_tolerance) )
       {
@@ -752,7 +770,7 @@ double TunnelingCurrent::integrate_over_energy(double kpar[3], double electric_p
   }
 
 
-  // cerr << "\n";
+ 
 
 
   delete Emesh;
