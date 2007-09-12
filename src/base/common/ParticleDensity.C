@@ -44,11 +44,12 @@ ParticleDensity::add_quantum_density(const std::string& name)
     string density_name("density");
     
     _density_id = qd->get_variable_id(density_name);
+
     if (_density_id == INVALID_ID)
     {
       string msg("ParticleDensity: ");
       msg += "quantum density simulation '" + name +
-        "' has no variable '" + density_name;
+        "' has no variable '" + density_name + "'";
       throw InitFailedException(msg);
     }
 

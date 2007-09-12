@@ -85,7 +85,7 @@ class DriftDiffusion : public SimulationInterface
     //! The variables that can be provided
     enum Variables
     {
-      UNKNOWN = INVALID_ID,
+      UNKNOWN = 0,
       ELPOTENTIAL,      //!< electric potential
       QFERMIE,          //!< electron electro-chemical potential
       QFERMIH,          //!< hole electro-chemical potential

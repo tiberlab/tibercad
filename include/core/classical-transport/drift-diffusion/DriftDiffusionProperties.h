@@ -23,6 +23,7 @@
 
 //#include "tensor_value.h"
 #include "vector_value.h"
+#include "point.h"
 
 // GNU scientific library
 #include <gsl/gsl_sf_fermi_dirac.h>
@@ -35,7 +36,6 @@
 
 
 // forward declarations
-class Point;
 class Elem;
 class Dopant;
 class RecombinationModelInterface;
@@ -777,7 +777,7 @@ class DriftDiffusionProperties : public PhysicalModel
     const Elem* _elem;
 
     //! The coordinates of the point we are working on
-    const Point* _coord;
+    Point _coord;
 
     //! The statistics used 
     TiberCad::Statistics _statistics;
@@ -867,7 +867,7 @@ inline
 void
 DriftDiffusionProperties::set_coordinates(const Point& p)
 {
-  _coord = &p;
+  _coord = p;
 }
 
 inline
@@ -937,7 +937,7 @@ inline
 const Point&
 DriftDiffusionProperties::get_coordinates(void) const
 {
-  return *_coord;
+  return _coord;
 }
  
 

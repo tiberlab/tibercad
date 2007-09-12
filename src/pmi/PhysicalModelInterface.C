@@ -200,7 +200,7 @@ PhysicalModelInterface::create(const string& name,
 #ifdef DEBUG
     cerr << "Add model (ID = " << mod->get_id() <<
       " name = " << mod->get_name() << " type_id = " <<
-      defaultname << ")\n";
+       mod->get_default_name() << ")\n";
 #endif
   }
 

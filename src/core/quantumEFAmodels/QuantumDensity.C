@@ -28,7 +28,7 @@ ID  QuantumDensity::convert_variable_name_to_id(const std::string& variable_name
   ID id = INVALID_ID;
 
   // for an empty string we return immediately
-  if (variable_name == "") return id;
+  //if (variable_name == "") return id;
 
   if (variable_name == "density")
     id = DENSITY;
@@ -49,7 +49,6 @@ void QuantumDensity::get_solution_secure(const Elem* elem,
 			 const std::vector<Point>& p, const std::set<ID>& ids,
 			 std::vector<std::map<ID, double> >& values)
 {
-  values.clear();
 
   if (ids.find(DENSITY) != ids.end())
   {
@@ -61,7 +60,7 @@ void QuantumDensity::get_solution_secure(const Elem* elem,
 
     unsigned int n = density.size();
 
-    values.resize(n);
+    //values.resize(n);
 
     for (unsigned int i = 0; i < n; i++)
     {

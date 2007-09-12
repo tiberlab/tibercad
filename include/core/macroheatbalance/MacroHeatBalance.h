@@ -26,7 +26,7 @@ class MacroHeatBalance : public SimulationInterface
 
  enum Variables
      {
-            UNKNOWN = INVALID_ID,
+            UNKNOWN = 0,
             TEMPERATURE
      };
        

@@ -80,9 +80,26 @@ DriftDiffusionProperties::do_init(void)
   if (get_options().get_option("statistics", stat) == "FD")
     set_statistics(TiberCad::FERMIDIRAC);
 
+  //
+  // setup holes and electrons
+  //
   _holes.set_particle_charge(1.0);
   _holes.set_statistics(_statistics);
   _electrons.set_statistics(_statistics);
+
+  // we could have quantum density simulations for them
+  {
+    vector<string> qd;
+    get_parameter("electron_quantum_density", qd);
+    for (int i = 0; i < qd.size(); i++)
+      _electrons.add_quantum_density(qd[i]);
+
+    qd.resize(0);
+    get_parameter("hole_quantum_density", qd);
+    for (int i = 0; i < qd.size(); i++)
+      _holes.add_quantum_density(qd[i]);
+  }
+
 
   _is_dielectric = get_material()->get_options().get_option("dielectric", false);
 
@@ -91,7 +108,7 @@ DriftDiffusionProperties::do_init(void)
   string temp_simul = get_options().get_option("thermal_simulation", "");
   _lattice_temp.set_simulation(temp_simul);
 
-  
+
   //
   // mobilities
   // 
@@ -319,6 +336,7 @@ DriftDiffusionProperties::reinit(const Elem* elem)
   if  ( _elem != elem) 
   {
     _elem = elem;
+    _coord = elem->centroid();
 
     // get the nodal temperatures
     _lattice_temp.get_temperature(elem, _nodal_lattice_vt);
@@ -356,86 +374,19 @@ DriftDiffusionProperties::calculate_densities(void)
   double Ec = get_conduction_band_edge();
   double Ev = get_valence_band_edge();
  
+  _electrons.set_element_and_point(_elem, _coord);
   _electrons.set_classical_parameters(cb.effective_DOS,
       Ec - electric_potential, -fermi_e, kTe);
   electron_density = _electrons.get_particle_density();
   electron_density_derivative = _electrons.get_particle_density_derivative();
   
+  _holes.set_element_and_point(_elem, _coord);
   _holes.set_classical_parameters(vb.effective_DOS,
       -Ev + electric_potential, fermi_h, kTh);
   hole_density = _holes.get_particle_density();
+  // TODO where to put the sign?
   hole_density_derivative = -_holes.get_particle_density_derivative();
  
-  // electron density
-  /*
-  double n = 0, dn = 0, dn2 = 0, dn_over_n = 0, arg_e;
-  if (_coupling & DriftDiffusionDefs::ELECTRONS)
-  {
-    arg_e = -fermi_e + electric_potential - Ec;
-    if (get_statistics() == TiberCad::FERMIDIRAC)
-    {
-      density_and_derivatives<TiberCad::FERMIDIRAC>(arg_e / kTe,
-          n, dn, dn2, dn_over_n);
-    }
-    else
-    {
-      density_and_derivatives<TiberCad::BOLTZMANN>(arg_e / kTe,
-          n, dn, dn2, dn_over_n);
-    }
-  
-    double Nc = cb.effective_DOS;
-    n *= Nc;
-    dn *= Nc / kTe;
-    dn2 *= Nc / (kTe * kTe);
-    dn_over_n /= kTe;
-
-    electron_density = n;
-    electron_density_derivative = dn;
-  }
-  */
-
-  // hole density
-  /*
-  double p = 0, dp = 0, dp2 = 0, dp_over_p = 0, arg_h;
-  if (_coupling & DriftDiffusionDefs::HOLES)
-  {
-    arg_h = fermi_h - electric_potential + Ev;
-
-    if (get_statistics() == TiberCad::FERMIDIRAC)
-    {
-      density_and_derivatives<TiberCad::FERMIDIRAC>(arg_h / kTh,
-          p, dp, dp2, dp_over_p);
-    }
-    else
-    {
-      density_and_derivatives<TiberCad::BOLTZMANN>(arg_h / kTh,
-          p, dp, dp2, dp_over_p);
-    }
-
-    double Nv = vb.effective_DOS;
-    p *= Nv;
-    dp *= -Nv / kTh;
-    dp2 *= Nv / (kTh * kTh);
-    dp_over_p /= -kTh;
-
-    hole_density = p;
-    hole_density_derivative = dp;
-  }
-  else
-  {
-    if (electron_density > 0.0)
-      hole_density = get_intrinsic_density() / electron_density;
-    hole_density_derivative = 0.0;
-  }
-
-  if (!(_coupling & DriftDiffusionDefs::ELECTRONS))
-  {
-    if (hole_density > 0.0)
-      electron_density = get_intrinsic_density() / hole_density;
-    electron_density_derivative = 0.0;
-  }
-  */
-
 }
 
 

@@ -86,7 +86,8 @@ class Device
 
 
     //! Set an atomistic structure to be kept in structures map
-    void set_atomistic_structure(const std::string name, AtomisticStructure* atomistic_structure);
+    void set_atomistic_structure(const std::string name,
+        AtomisticStructure* atomistic_structure);
 
 
     //! Set the Control module which will control this device

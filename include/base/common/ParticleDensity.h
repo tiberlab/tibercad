@@ -164,7 +164,7 @@ class ParticleDensity
 
     //! The argument that enters in the classical model
     /*!
-     * \f$ = \frac{E_F - E}{kT}\f$
+     * \f$ \mathtt{_argument} = \frac{E_F - E}{kT}\f$
      */
     double _argument;
 

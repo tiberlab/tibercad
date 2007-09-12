@@ -16,7 +16,7 @@ typedef std::pair<const Elem*, unsigned int> ElementSide;
 typedef unsigned int ID;
 
 #ifndef INVALID_ID
-# define INVALID_ID 0
+# define INVALID_ID UINT_MAX
 #endif
 
 
