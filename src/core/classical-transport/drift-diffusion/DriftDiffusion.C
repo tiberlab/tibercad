@@ -4360,7 +4360,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
            
      //Get the temperature given the element
     vector<double> T_nodes = sc->get_temperature_node();
-     
+   
 
     vector<vector<double> > local_scaling(elem->n_nodes(), vector<double>(3, 1));
     if (do_local_scaling_)

@@ -17,10 +17,23 @@ class Poisson : public SimulationInterface
 /*!
   
  \f$ \nabla_i \cdot(<epsilon \nabla \varphi + \mathbf{P}) =-frac{\rho}{\epsilon}\f$
+
+ * The get_solution() methods can provide the following variables:
+ * Electrostatic potential (V)
 */
 
 {
  public:
+  
+  //! internal variables
+  enum Variables
+    {
+      UNKNOW,
+      POTENTIAL
+    };
+  
+  /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
+  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
 
   //!options that we need for this simulation
   struct options
@@ -63,6 +76,24 @@ class Poisson : public SimulationInterface
   //!Get a solution given the element and the point
   void get_solution(const Elem* elem, const std::vector<Point>& p,
 		    std::vector<double>& solution);
+  
+  /*!
+   * \copydoc SimulationInterface::get_solution_secure(const Elem*,
+   * const std::vector<Point>&, const std::vector<ID>&,
+   * std::vector<std::vector<double> >&)
+   */
+  virtual void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
+				   const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
+  
+  
+  /*!
+   * \copydoc SimulationInterface::get_solution_secure(const Elem*,
+   * const std::vector<ID>&, std::vector<std::vector<double> >&)
+   */  
+  virtual void get_solution_secure(const Elem* elem,
+				   const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
+
+
   
  private:
   

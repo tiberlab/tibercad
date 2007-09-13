@@ -441,21 +441,23 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
    
 
-  std::vector<DriftDiffusion::Solution>  potentials;
+  std::vector<DriftDiffusion::Solution>  potentials; 
+  
+  std::vector<DriftDiffusion::Currents>   currents; 
 
-  std::vector<DriftDiffusion::Currents>   currents;
-
-  std::vector<DriftDiffusion::Solution>  face_potentials;   
+ std::vector<DriftDiffusion::Solution>  face_potentials;    
 	       
-  std::vector<DriftDiffusion::Currents>   face_currents;
+   std::vector<DriftDiffusion::Currents>   face_currents; 
 
-  //std::vector<Point> current_e,current_face_e;
+  std::vector<double> QfermiE;
+    
+  std::vector<double> QfermiH;
+    
+  std::vector<Point> JE;
+    
+  std::vector<Point> JH;
 
-  // std::vector<Point> current_h,current_face_h;
-
-  //  std::vector<double> fermi_e,fermi_face_e;
-
-  // std::vector<double> fermi_h,fermi_face_h;		   
+   
 
   //----------------------------------------------------------LatticeThermalConductivity-------//
   
@@ -505,9 +507,14 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
     if (heat_model->get_joule_opt())
     {
-      heat_model->get_dd_solution(q_point,potentials,currents); 
-      
+
+      heat_model->get_dd_solution_secure(q_point,QfermiE,QfermiH,JE,JH);
+
+      //  heat_model->get_dd_solution(q_point,potentials,currents); 
+
+
     } 
+    
     
     
       
@@ -577,8 +584,11 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	      {
 		//cout<<"Peltier"<<endl;
                
-		value += -JxW[qp]* phi[p1][qp] * dphi[p2][qp](i)*
-		  (eTEpower*currents[qp].jn(i) + hTEpower*currents[qp].jp(i) ) /(opt.length_scale);
+		//	value += -JxW[qp]* phi[p1][qp] * dphi[p2][qp](i)*
+		// (eTEpower*currents[qp].jn(i) + hTEpower*currents[qp].jp(i) ) /(opt.length_scale);
+
+	value += -JxW[qp]* phi[p1][qp] * dphi[p2][qp](i)*
+		  (eTEpower*JE[qp](i) + hTEpower*JH[qp](i) ) /(opt.length_scale);
 
 		//cout<<(opt.length_scale)<<endl;
 	      }
@@ -600,9 +610,14 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	   
 	     for (short i = 0; i < dim; i++) 
 	     { 
-               Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
-		 ( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
-		 / opt.length_scale * my_Jacobian;
+               //Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
+	       //	 ( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
+	       //	 / opt.length_scale * my_Jacobian;
+
+                Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
+	       	 ( JE[qp](i) * QfermiE[qp] +  QfermiH[qp] * JH[qp](i) )
+	       	 / opt.length_scale * my_Jacobian;
+
 	     }
 	     
 	   }   
@@ -657,16 +672,22 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	       {
 		 
 		 fe_face->reinit(elem, side);
-		 		    
+
+		 heat_model->get_dd_solution_secure(qface_point,QfermiE,QfermiH,JE,JH);
+		    
 		 heat_model->get_dd_solution(qface_point,face_potentials,face_currents);  
 		     
 	   	 for (short i = 0; i < 3; i++)
 		 {
 		   for (unsigned int qp=0; qp < qface.n_points(); qp++)
 		   {
-		     Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
-		       ( face_currents[qp].jn(i)*face_potentials[qp].fermi_e + face_potentials[qp].fermi_h * face_currents[qp].jp(i) ) * 
-		       (my_Jacobian/opt.length_scale);
+		     //Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
+		     //  ( face_currents[qp].jn(i)*face_potentials[qp].fermi_e + face_potentials[qp].fermi_h * face_currents[qp].jp(i) )                       *(my_Jacobian/opt.length_scale);
+
+                      Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
+		      ( JE[qp](i)*QfermiE[qp] + QfermiH[qp] * JH[qp](i) ) * (my_Jacobian/opt.length_scale);
+
+
 		   }
                  }
 
@@ -694,12 +715,17 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		   
 		   qface_point[0] = elem->point(p1);
 		   
-		   heat_model->get_dd_solution(qface_point,face_potentials,face_currents);  		   
-		   
+		   //heat_model->get_dd_solution(qface_point,face_potentials,face_currents);  		   
+
+		   heat_model->get_dd_solution_secure(qface_point,QfermiE,QfermiH,JE,JH);
+
 		   for (short i = 0; i < 3; i++)
 		   {  
-		     Fe(p1) +=   normal[i] * 
-		       ( face_currents[0].jn(i) * face_potentials[0].fermi_e + face_potentials[0].fermi_h * face_currents[0].jp(i) )   ;
+		     //Fe(p1) +=   normal[i] * 
+		     // ( face_currents[0].jn(i) * face_potentials[0].fermi_e + face_potentials[0].fermi_h * face_currents[0].jp(i) )   ;
+
+                      Fe(p1) +=   normal[i] * 
+		      ( JE[0](i) * QfermiE[0] + QfermiH[0] * JH[0](i) )   ;
 		     
 		   }// for (short i = 0; i < 3; i++)
 		   
@@ -780,9 +806,7 @@ MacroHeatBalance::convert_variable_name_to_id(const string& variable_name) const
 
     if (variable_name == "temperature" )
        id  = TEMPERATURE;
-    // else
-    //  throw InitFailedException("Unknown variable" + variable_name);
-      
+    
 
   return id;
 }

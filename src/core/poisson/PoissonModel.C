@@ -277,6 +277,7 @@ PoissonModel::get_charge_density(const std::vector<Point> q_point, std::vector<d
     {
       
        _chd_sim->get_solution(_elem,q_point,charge_id, charge_density);
+       
       
     }
     else

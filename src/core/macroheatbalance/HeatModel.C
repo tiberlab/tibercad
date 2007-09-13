@@ -14,7 +14,7 @@ HeatModel::HeatModel() :
   _lattice_thermal_conductivity(0),
   _electrons_thermal_conductivity(0),
   _holes_thermal_conductivity(0)
-{
+ {
 }
 	
  
@@ -55,9 +55,12 @@ void HeatModel::do_init()
      std::string drift_diffusion_simulation = get_options().get_option("current_simulation", "no_current");
 
      _dd_simul = dynamic_cast< DriftDiffusion* > ( SimulationInterface::find_simulation(drift_diffusion_simulation ) );
- 
-      if (_dd_simul == NULL)
-      throw InitFailedException("Unknown current model" +  drift_diffusion_simulation );
+     _dd_simul_si = SimulationInterface::find_simulation(drift_diffusion_simulation);
+     
+     _dd_simul = dynamic_cast< DriftDiffusion* > (_dd_simul);
+     
+     if (_dd_simul == NULL)
+       throw InitFailedException("Unknown current model" +  drift_diffusion_simulation );
 
     }
   
@@ -124,18 +127,56 @@ void HeatModel::do_init()
      
      kappa_carrier->set_material(get_material());
 
+     
+
     }
 
-    //Getting IDS
+    if (model_opt.joule_effect) 
+    {
+     dd_ID_je.insert(_dd_simul_si->get_variable_id("QFermi_e"));
+     dd_ID_je.insert(_dd_simul_si->get_variable_id("QFermi_h"));
+     dd_ID_je.insert(_dd_simul_si->get_variable_id("Jn_x"));
+     dd_ID_je.insert(_dd_simul_si->get_variable_id("Jn_y"));
+     dd_ID_je.insert(_dd_simul_si->get_variable_id("Jn_z"));
+     dd_ID_je.insert(_dd_simul_si->get_variable_id("Jp_x"));
+     dd_ID_je.insert(_dd_simul_si->get_variable_id("Jp_y"));
+     dd_ID_je.insert(_dd_simul_si->get_variable_id("Jp_z"));
+  
+     ID_je.resize(8);
+     ID_je[QFERMIE]=_dd_simul_si->get_variable_id("QFermi_e"); 
+     ID_je[QFERMIH]=_dd_simul_si->get_variable_id("QFermi_h");
+     ID_je[JNX]=_dd_simul_si->get_variable_id("Jn_x");
+     ID_je[JNY]=_dd_simul_si->get_variable_id("Jn_y");
+     ID_je[JNZ]=_dd_simul_si->get_variable_id("Jn_z");
+     ID_je[JPX]=_dd_simul_si->get_variable_id("Jp_x");
+     ID_je[JPY]=_dd_simul_si->get_variable_id("Jp_y");
+     ID_je[JPZ]=_dd_simul_si->get_variable_id("Jp_z");
+   } 
+ 
+   if (model_opt.particle_thermal_conductivity) 
+   {   
 
-    //std::vector< std::map< ID, double > >  dd_solution;
+   dd_ID_kpart.insert(_dd_simul_si->get_variable_id("CondE")); 
+   dd_ID_kpart.insert(_dd_simul_si->get_variable_id("CondH")); 
 
-    //const std::set< ID > ids;
-    //ids.set(_dd_simul-> convert_variable_name_to_id("ElPotential");
-    //ids.set(_dd_simul-> convert_variable_name_to_id("HoPotential");
+   ID_kpart.resize(2);
+   ID_kpart[CONDE] = (_dd_simul_si->get_variable_id("CondE")); 
+   ID_kpart[CONDH] = (_dd_simul_si->get_variable_id("CondH")); 
+   } 
 
+   if  (model_opt.peltier_thomson_effect) 
+   { 
+
+ 
+   dd_ID_TEpower.insert(_dd_simul_si->get_variable_id("TEpowerE")); 
+   dd_ID_TEpower.insert(_dd_simul_si->get_variable_id("TEpowerH")); 
+
+   ID_TEpower.resize(8);
+   ID_TEpower[TEPOWERE] = (_dd_simul_si->get_variable_id("TEpowerE")); 
+   ID_TEpower[TEPOWERH] = (_dd_simul_si->get_variable_id("TEpowerH")); 
+      
+   }  
    
-    
 }
 
 
@@ -177,10 +218,20 @@ void HeatModel::update_particle_thermal_conductivity()
     {
       //Insert phase    
       kappa_carrier->set_temperature(_temperature);
+
+      std::vector< std::map< ID, double > >  dd_sol_kpart;
+      std::vector<Point> centroid;
+      centroid[0]=_elem->centroid();
+    
+      _dd_simul_si->get_solution(_elem,centroid,dd_ID_kpart,dd_sol_kpart); 
+
+      //double sigma_e = _dd_simul->get_electron_conducibility(_elem);
       
-      double sigma_e = _dd_simul->get_electron_conducibility(_elem);
-      
-      double sigma_h = _dd_simul->get_hole_conducibility(_elem);
+      //double sigma_h = _dd_simul->get_hole_conducibility(_elem);
+
+      double sigma_e =  dd_sol_kpart[0].find(ID_kpart[CONDE])->second;
+  
+      double sigma_h =  dd_sol_kpart[0].find(ID_kpart[CONDH])->second;
       
       kappa_carrier->set_electrons_conducibility(sigma_e);
       
@@ -217,9 +268,20 @@ void HeatModel::update_thermoelectric_powers()
   if (model_opt.peltier_thomson_effect)
 
   {
-    _eTEpower = _dd_simul->get_electrons_thermoelectric_power(_elem);
+
+  std::vector< std::map< ID, double > >  dd_sol_te;
+  std::vector<Point> centroid;
+  centroid[0]=_elem->centroid();
+  
+  _dd_simul_si->get_solution(_elem,centroid,dd_ID_TEpower,dd_sol_te); 
+
+  _eTEpower =  dd_sol_te[0].find(ID_TEpower[TEPOWERE])->second; 
+      
+  _hTEpower =  dd_sol_te[0].find(ID_TEpower[TEPOWERH])->second;   
+
+    //_eTEpower = _dd_simul->get_electrons_thermoelectric_power(_elem);
     
-    _hTEpower = _dd_simul->get_holes_thermoelectric_power(_elem);
+    //_hTEpower = _dd_simul->get_holes_thermoelectric_power(_elem);
 
   }
 
@@ -227,29 +289,18 @@ void HeatModel::update_thermoelectric_powers()
 
 
 
-
-
 void HeatModel::get_dd_solution( std::vector<Point> g_point,
                                 std::vector<DriftDiffusion::Solution>& potentials,
-                                std::vector<DriftDiffusion::Currents>& currents)
+				 std::vector<DriftDiffusion::Currents>& currents)
 {
 
 
   if (_dd_simul != NULL & _dd_simul->is_solved())
   {
-
-  
-
-    // _dd_simul->get_solution (_elem,g_point,ids,dd_solution)                                       )
-
-
-
-    
-
+                             
     _dd_simul->get_solution(_elem,g_point,potentials);  
     
     _dd_simul->get_solution(_elem,g_point,currents);
-
  
 
   }
@@ -269,5 +320,42 @@ void HeatModel::get_dd_solution( std::vector<Point> g_point,
 
    
   }
+
+}
+
+
+ 
+void HeatModel::get_dd_solution_secure( std::vector<Point> g_point,
+                                        std::vector<double>& QfermiE,
+                                        std::vector<double>& QfermiH,
+                                        std::vector<Point>& JE,
+                                        std::vector<Point>& JH)
+{
+
+     std::vector< std::map< ID, double > >  dd_sol_je;
+
+     _dd_simul_si->get_solution(_elem,g_point,dd_ID_je,dd_sol_je); 
+         
+     for (unsigned int n=0; n<g_point.size(); n++) // loop over test function
+     {
+
+       QfermiE.resize(g_point.size());
+       QfermiH.resize(g_point.size());
+       JE.resize(g_point.size());
+       JH.resize(g_point.size());
+
+       QfermiE[n]  = dd_sol_je[n].find(ID_je[QFERMIE])->second;
+       QfermiH[n]  = dd_sol_je[n].find(ID_je[QFERMIH])->second;
+
+       JE[n](0) = dd_sol_je[n].find(ID_je[JNX])->second;
+
+       JE[n](1) = dd_sol_je[n].find(ID_je[JNY])->second;
+       JE[n](2) = dd_sol_je[n].find(ID_je[JNZ])->second;
+       JH[n](0) = dd_sol_je[n].find(ID_je[JPX])->second;
+       JH[n](1) = dd_sol_je[n].find(ID_je[JPY])->second;
+       JH[n](2) = dd_sol_je[n].find(ID_je[JPZ])->second;   
+     }
+ 
+  
 
 }

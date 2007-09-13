@@ -8,13 +8,18 @@
 #include "DriftDiffusion.h"
 #include "elem.h"
 #include "ParticleThermalConductivity.h"
-
+#include <point.h>
 
 
 //!Class that contains all the object, necessary for Heat Transport solver
 class HeatModel: public PhysicalModel
 {
  public:
+
+
+  
+
+
   //!Constructor
   HeatModel();
 
@@ -34,6 +39,13 @@ class HeatModel: public PhysicalModel
   //! Init all fields
   void re_init();
 
+
+  void get_dd_solution_secure( std::vector<Point> g_point,
+                                        std::vector<double>& QfermiE,
+                                        std::vector<double>& QfermiH,
+                                        std::vector<Point>& JE,
+					  std::vector<Point>& JH);
+
   void get_dd_solution(std::vector<Point> g_point,
                                 std::vector<DriftDiffusion::Solution>& potentials,
 				std::vector<DriftDiffusion::Currents>& currents);
@@ -50,8 +62,10 @@ class HeatModel: public PhysicalModel
    //!Get 
     bool get_joule_opt();
    
-    DriftDiffusion* get_dd_simulation();
+   SimulationInterface* get_dd_simulation();
 
+  //DriftDiffusion* get_dd_simulation();
+ 
    //! Set the temperature 
    void set_temperature(double temperature); 
 
@@ -60,8 +74,34 @@ class HeatModel: public PhysicalModel
 
 
  private:
+ //! The variables that can be provided
+    enum dd_var
+    {
+      QFERMIE,
+      QFERMIH,
+      JNX,
+      JNY,
+      JNZ,
+      JPX,
+      JPY,
+      JPZ
+     
+    };
 
-     struct model_options
+    enum dd_var_kpart
+    {
+      CONDE,
+      CONDH
+    };
+
+  enum dd_var_TE
+    {
+      TEPOWERE,
+      TEPOWERH
+      
+    };
+ 
+    struct model_options
    {
      bool joule_effect;
 
@@ -74,7 +114,33 @@ class HeatModel: public PhysicalModel
    //! Current element 
    const Elem* _elem; 
 
+
    DriftDiffusion* _dd_simul;
+
+   SimulationInterface* _dd_simul_si;
+
+   // For general solution
+
+   std::set< ID > dd_ID_je;
+
+  std::vector<ID> ID_je;
+
+
+
+   //!For particle solution
+
+
+  std::set< ID >  dd_ID_kpart;
+
+  std::vector<ID> ID_kpart;
+  
+  //For thermoelectric power
+
+  std::set< ID > dd_ID_TEpower;
+  
+  std::vector< ID > ID_TEpower;
+ 
+
 
    model_options model_opt;
 
@@ -82,9 +148,7 @@ class HeatModel: public PhysicalModel
    
    void  update_particle_thermal_conductivity();
 
-   std::vector< std::map< ID, double > >  dd_solution;
-
-   const std::set< ID > ids;
+   
 
    double _eTEpower;
 
@@ -217,7 +281,7 @@ return model_opt.peltier_thomson_effect;
 }
 
 inline
-DriftDiffusion* HeatModel::get_dd_simulation()
+SimulationInterface* HeatModel::get_dd_simulation()
 {
   return _dd_simul;
 

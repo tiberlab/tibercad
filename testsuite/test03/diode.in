@@ -1,0 +1,189 @@
+# diode example
+#
+
+
+# Description of  the  device physical regions
+$Device
+{
+   Region nside 
+   {
+
+     reg_numb = 2
+     mat = Si
+     doping = 1e18 doping_type = donor
+
+   }
+
+   Region pside 
+   {
+     reg_numb = 1
+     mat = Si
+     doping = 1e18 doping_type = acceptor
+
+    }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+
+  model thermal
+  {
+
+     options
+    { 
+      simulation_name = tt
+      physical_regions = all
+    }
+
+     physical_model Lattice_thermal_conductivity
+     {
+       kappa_model = constant
+     }
+
+    BC_Regions
+    {
+        BC_Region reservoir
+   	{
+    
+         BC_reg_numb = 1
+         temperature = 300
+   	}
+       
+        BC_Region reservoir
+   	{
+         BC_reg_numb = 2
+         temperature = 300
+	}
+     }
+     		    
+  }
+
+  model driftdiffusion
+  { 
+              
+    options
+    {
+      simulation_name = dd
+      physical_regions = all
+      
+    }
+
+    physical_model recombination
+     { 
+       model  =  srh
+     }                
+    
+    physical_model thermoelectric_power
+    {	
+            model  = diffusivity_model
+    } 	
+
+    BC_Regions  
+    {
+      BC_Region anode
+      {
+        BC_reg_numb = 1
+        type = ohmic
+        voltage = @Vb[0.0] 
+      }
+
+      BC_Region cathode
+      {
+        BC_reg_numb = 2
+        type = ohmic
+        voltage = 0.0
+      }
+ 
+    }   
+
+  
+
+  }  
+
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+
+{
+
+  thermal
+  {
+     kappa_temperature_sc = false   
+  }
+ 
+  selfconsistent
+  {
+     simulations = (dd,tt)
+  }
+
+  driftdiffusion
+  {
+
+    ksp_type = gmres
+    nonlin_abs_tol = 1e-8
+    lin_rel_tol = 1e-8
+    nonlin_max = 30
+    current_integration_method = rstf
+    
+  }
+
+  sweep
+  {
+    simulation = selfconsistent
+    variable = Vb
+    start = 0
+    stop = 1.0
+    steps = 10
+    max_step = 1
+    plotvariable = current
+  }
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+ 
+  driftdiffusion 
+  {
+    model = unstrained
+    thermal_simulation = tt
+  }
+
+  thermal
+  {
+    Joule_Effect = true
+    Peltier_Thomson_Effect = false
+    Particle_thermal_conductivity = false
+    current_simulation = dd
+  }
+
+
+
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+$Simulation
+{
+  searchpath = ../../examples/materials
+  meshfile = diode.msh
+  dimension = 1
+  temperature = 300
+  solve = (sweep)
+  resultpath = output
+  output_format = gmv
+  plot = (ElPotential,Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current,T)
+}
+
+
+
+
+

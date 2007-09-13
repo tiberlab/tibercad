@@ -18,6 +18,8 @@ class MacroHeatBalance : public SimulationInterface
 /*!
   
  \f$ -\nabla_i \cdot(k_{i,j} \nabla_j T)+ \nabla \cdot (T P_n J_n + T P_p J_p)=-\nabla cdot (J_n \phi_n + J_p \phi_p)\f$
+ * The get_solution() methods can provide the following variables:
+ * Temperature (K)
 */
 
 {
@@ -51,16 +53,23 @@ class MacroHeatBalance : public SimulationInterface
 
   };
 
-  
-  
+    
+  /*!
+   * \copydoc SimulationInterface::get_solution_secure(const Elem*,
+   * const std::vector<Point>&, const std::vector<ID>&,
+   * std::vector<std::vector<double> >&)
+   */
   virtual void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
 				   const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
-   
-
-   
-virtual void get_solution_secure(const Elem* elem,
-				 const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
-
+  
+  
+  /*!
+   * \copydoc SimulationInterface::get_solution_secure(const Elem*,
+   * const std::vector<ID>&, std::vector<std::vector<double> >&)
+   */  
+  virtual void get_solution_secure(const Elem* elem,
+				   const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
+  
 
   //!Get a avarage temperature for a given element  
   double get_temperature_element(const Elem* elem) const;
@@ -88,11 +97,8 @@ virtual void get_solution_secure(const Elem* elem,
   static MacroHeatBalance*  create(void);
   
 
-
-  
  private:
   
- 
 
 
    //! Quadrature point along the face of the element 
@@ -135,7 +141,7 @@ virtual void get_solution_secure(const Elem* elem,
 
  protected:
 
-  //! The correct keyword is "temperature"
+    /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
   virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
  
   //! \copydoc  SimulationInterface::do_init() 

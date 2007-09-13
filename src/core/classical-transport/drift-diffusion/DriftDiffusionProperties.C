@@ -340,8 +340,8 @@ DriftDiffusionProperties::reinit(const Elem* elem)
 
     // get the nodal temperatures
     _lattice_temp.get_temperature(elem, _nodal_lattice_vt);
-    for (int i = 0; i < _nodal_lattice_vt.size(); i++)
-      _nodal_lattice_vt[i] *= Constants::k_B;
+    //for (int i = 0; i < _nodal_lattice_vt.size(); i++)
+    //  _nodal_lattice_vt[i] *= Constants::k_B;
 
     // get the mean temperature on the element
     lattice_vt = Constants::k_B *
