@@ -632,6 +632,8 @@ Control::run_simulation(void) throw (SolveFailedException)
   {
     SimulationInterface* sim = simulations[i];
 
+    // Let's do this in the models
+    /*
     // we try first to solve the equilibrium solution, which
     // could be useful for most simulations
     try
@@ -652,6 +654,7 @@ Control::run_simulation(void) throw (SolveFailedException)
         "    Cause: Unknown";
       throw SolveFailedException(s.str());
     }
+    */
 
     // now the actual solve
     try

@@ -88,7 +88,15 @@ inline
 void
 ParticleDensity::classical_density<TiberCad::FERMIDIRAC>(void)
 {
-  _density = _N_eff * gsl_sf_fermi_dirac_half(_argument);
+  const double arg_max = 150;
+  const double arg_min = -50;
+
+  if (_argument < arg_min)
+    classical_density<TiberCad::BOLTZMANN>();
+  else if (_argument < arg_max)
+    _density = _N_eff * gsl_sf_fermi_dirac_half(_argument);
+  else
+    _density = 2.0 * M_2_SQRTPI / 3.0 * _N_eff * std::pow(_argument, 1.5);
 }
 
 
@@ -98,7 +106,15 @@ inline
 void
 ParticleDensity::classical_density_derivative<TiberCad::FERMIDIRAC>(void)
 {
-  _density_derivative = _N_eff * gsl_sf_fermi_dirac_mhalf(_argument) / _kT;
+  const double arg_max = 150;
+  const double arg_min = -50;
+
+  if (_argument < arg_min)
+    classical_density_derivative<TiberCad::BOLTZMANN>();
+  else if (_argument < arg_max)
+    _density_derivative = _N_eff * gsl_sf_fermi_dirac_mhalf(_argument) / _kT;
+  else
+    _density_derivative = M_2_SQRTPI * _N_eff * std::sqrt(_argument) / _kT;
 }
 
 
@@ -115,8 +131,12 @@ ParticleDensity::quantum_density(void)
   for ( ; it != end; ++it)
     if ((*it)->is_solved())
     {
-      flag = true;
-      _density += (*it)->get_solution(_elem, _p, _density_id);
+      double density;
+      if ((*it)->get_solution(_elem, _p, _density_id, density))
+      {
+        _density += density;
+        flag = true;
+      }
     }
     
   return flag;
@@ -135,7 +155,9 @@ ParticleDensity::quantum_density_derivative(void)
   for ( ; it != end; ++it)
     if ((*it)->is_solved())
     {
-      flag = true;
+      double density;
+      if ((*it)->get_solution(_elem, _p, _density_id, density))
+        flag = true;
     }
 
   return flag;
@@ -147,8 +169,8 @@ void
 ParticleDensity::calculate_density(void)
 {
   /* classical density is calculated when
-   * * either _use_quantum is false
-   * * or quantum_density() returns false
+   * - either _use_quantum is false
+   * - or quantum_density() returns false
    */
   if (!_use_quantum || !quantum_density())
   {

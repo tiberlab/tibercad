@@ -32,7 +32,7 @@ gamma1 = 3.76
 gamma2 = 0.82
 gamma3 = 1.42
 
-permittivity = 10.64
+permittivity = 10.064
 
 # lattice constant
 a = 0.56611

@@ -19,14 +19,16 @@ SelfconsistentSolver::do_init(void)
   int num_of_sims = sims.size();
 
   if (num_of_sims == 0)
-    throw InitFailedException("Sweep: No simulation names provided.");
+    throw InitFailedException(
+        "SelfconsistentSolver: No simulation names provided.");
   
   _simulations.resize(num_of_sims);
   for (int i = 0; i < num_of_sims; i++)
   {
     _simulations[i] = control.find_simulation(sims[i]);
     if (_simulations[i] == NULL)
-      throw InitFailedException("Sweep: Simulation " + sims[i] + " not found.");
+      throw InitFailedException("SelfconsistentSolver: Simulation " +
+          sims[i] + " not found.");
 
     if (!_simulations[i]->is_initialized())
       _simulations[i]->init();
@@ -48,9 +50,10 @@ SelfconsistentSolver::parse_options(void)
   _abs_tol = opts.get_option("abs_tolerance", _abs_tol);
   _relax = opts.get_option("relaxation_factor", _relax);
 
-  int num_sim = _simulations.size();
-  for (int i = 0; i < num_sim; i++)
-    _simulations[i]->set_relaxation_factor(_relax);
+
+  //int num_sim = _simulations.size();
+  //for (int i = 0; i < num_sim; i++)
+  //  _simulations[i]->set_relaxation_factor(_relax);
 }
 
 
@@ -84,6 +87,7 @@ SelfconsistentSolver::do_solve(void)
   for (int i = 0; i < num_sim; i++)
     _simulations[i]->solve();
 
+
   // we make a copy of the current solutions
   vector<ID> old_sol_ids(num_sim); 
   for (int i = 0; i < num_sim; i++)
@@ -91,13 +95,31 @@ SelfconsistentSolver::do_solve(void)
 
 
   // for the norms of the differences
-  vector<double> norms(num_sim);
+  vector<double> norms(num_sim, 0.0);
 
   for (unsigned int it = 0; it < _max_it; it++)
   {
 
     for (int i = 0; i < num_sim; i++)
+    {
       _simulations[i]->solve();
+      
+      // we get the norm of the difference before doing relaxation
+      double norm =
+        _simulations[i]->get_maximum_norm_of_difference(old_sol_ids[i]);
+
+      //if ((norms[i] > _abs_tol) && ((norm / norms[i]) < 0.5))
+      //  _relax = min(_relax * 1.5, 1.0);
+      //else if ((norms[i] > _abs_tol) && ((norm / norms[i]) > 1.5))
+      //  _relax = max(_relax / 2.0, 0.001);
+      //cerr << "relaxation: " << _relax << endl;
+
+      norms[i] = norm;
+
+      _simulations[i]->scale_solution(_relax);
+      _simulations[i]->add_scaled_remembered_solution(old_sol_ids[i],
+          1.0 - _relax);
+    }
 
     bool converged = true;
 
@@ -105,8 +127,6 @@ SelfconsistentSolver::do_solve(void)
     cerr << "iteration " << it << ": ";
     for (int i = 0; i < num_sim; i++)
     {
-      norms[i] = _simulations[i]->get_maximum_norm_of_difference(old_sol_ids[i]);
-
       if (norms[i] > _abs_tol)
         converged = false;
       

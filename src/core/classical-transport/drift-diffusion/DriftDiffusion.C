@@ -607,13 +607,12 @@ DriftDiffusion::do_solve(void)
   
   parse_options();
 
-
   /* This is really stupid! How do you want to make selfconsistent loops ???
   // we do not solve anything if the simulation voltages are the
   // same as before
   // */
 
-  //bool do_nothing = true;
+  bool equilibrium = true;
   bool accept_failure = true;
   ContactData::iterator it(_voltages.begin());
   const ContactData::iterator end(_voltages.end());
@@ -629,13 +628,23 @@ DriftDiffusion::do_solve(void)
 
     _voltages[it->first] = voltage;
 
-    //if (voltage != 0.0)
-    //  do_nothing = false;
+    if (voltage != 0.0)
+      equilibrium = false;
   }
   
   /* The same here: what about selfconsistency at 0 V ?? */
   //if (do_nothing)
   //  return;
+
+
+  if (!equilibrium_done())
+  {
+    solve_equilibrium();
+
+    // if we would repeat the equilibrium simulation, we can stop now
+    if (equilibrium)
+      return;
+  }
 
 
   static map<ElectricalContact*, double> voltages;
@@ -719,7 +728,7 @@ DriftDiffusion::do_equilibrium(void)
   // this is needed in the static assembly routine
   _this = this;
   
-  parse_options();
+  //parse_options();
 
 
   // first we have to compute the scaling

@@ -219,13 +219,27 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
 
     /*!
-     * \brief Get the maximum norm of the difference the current and a
-     * remembered solution.
+     * \brief Get the maximum norm of the difference between the
+     * current and a remembered solution.
      *
-     * Calls do_maximum_norm_of_difference();
+     * Calls do_maximum_norm_of_difference()
      *
      */
     double get_maximum_norm_of_difference(ID id);
+
+
+    //! Scale the current solution by a real factor
+    /*!
+     * Calls do_scale_solution()
+     */
+    void scale_solution(double factor);
+
+
+    //! Adds a scaled remembered solution to the current solution
+    /*!
+     * Calls do_add_scaled_remembered_solution()
+     */
+    void add_scaled_remembered_solution(ID id, double factor);
 
 
     //! Find a simulation with name \c name
@@ -266,11 +280,13 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     
     
     //! Set the relaxation factor
-    void set_relaxation_factor(double relax);
+    //void set_relaxation_factor(double relax);
 
     
     //! Get the relaxation factor
-    double get_relaxation_factor(void) const;
+    //double get_relaxation_factor(void) const;
+
+
 
 
     /*!
@@ -288,8 +304,9 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param values a vector to store the values. The vector index corresponds to
      * the node.
      *
+     * \return false if no data can be found for \c elem
      */
-    void get_solution(const Elem* elem, ID id,
+    bool get_solution(const Elem* elem, ID id,
         std::vector<double>& values);
 
 
@@ -301,8 +318,9 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param values a vector to store the values. The vector index
      * corresponds to the node.
      *
+     * \return false if no data can be found for \c elem
      */
-    void get_solution(const Elem* elem, const std::set<ID>& ids,
+    bool get_solution(const Elem* elem, const std::set<ID>& ids,
         std::vector<std::map<ID, double> >& values);
 
 
@@ -315,8 +333,9 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param values a vector to store the values. The vector index
      * corresponds to the point.
      *
+     * \return false if no data can be found for \c elem
      */
-    void get_solution(const Elem* elem, const Point& p,
+    bool get_solution(const Elem* elem, const Point& p,
         const std::set<ID>& ids, std::map<ID, double>& values);
   
 
@@ -326,11 +345,11 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param elem a pointer to the element
      * \param p the point (assumed to lie in \c elem)
      * \param id identifier for the variable to be returned
-     * \param values a vector to store the values. The vector index
-     * corresponds to the point.
+     * \param value the output value
      *
+     * \return false if no data can be found for \c elem
      */
-    double get_solution(const Elem* elem, const Point& p, ID id);
+    bool get_solution(const Elem* elem, const Point& p, ID id, double& value);
   
 
     //! Get solution values on inner points of a specified element
@@ -343,8 +362,9 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param values a vector to store the values. The vector index
      * corresponds to the point.
      *
+     * \return false if no data can be found for \c elem
      */
-    void get_solution(const Elem* elem, const std::vector<Point>& p,
+    bool get_solution(const Elem* elem, const std::vector<Point>& p,
         ID id, std::vector<double>& values);
   
 
@@ -358,10 +378,13 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param values a vector to store the values. The vector index
      * corresponds to the point.
      *
+     * \return false if no data can be found for \c elem
      */
-    void get_solution(const Elem* elem, const std::vector<Point>& p,
+    bool get_solution(const Elem* elem, const std::vector<Point>& p,
         const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
     
+
+
 
     /*!
      * \copydoc build_nodal_results()
@@ -519,6 +542,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     virtual ID do_remember_current_solution(ID id = 0);
 
+
+    //! Return true if the system has a solution vector
+    bool has_solution_vector(void);
+
     
     //! Get a pointer to the solution vector
     virtual NumericVector<double>& get_solution_vector(void);
@@ -546,7 +573,22 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * to reimplement this method when a simulation uses some scaling
      */
     virtual double do_maximum_norm_of_difference(ID id);
+
+
+    //! Scale the current solution
+    /*!
+     * \param factor the scaling factor
+     */
+    virtual void do_scale_solution(double factor);
     
+
+    //! Add a scaled remembered solution
+    /*!
+     * \param id the id of the remembered solution
+     * \param factor the scaling factor
+     */
+    virtual void do_add_scaled_remembered_solution(ID id, double factor);
+
 
     //! Parse the options
     /*!
@@ -721,7 +763,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
 
     //! For self-consistent calculations this could be useful
-    double _relaxation_factor;
+    //double _relaxation_factor;
 
 
 
@@ -921,8 +963,15 @@ SimulationInterface::is_solved(void) const
 
 
 
+inline
+bool
+SimulationInterface::equilibrium_done(void) const
+{
+  return _equilibrium_is_solved;
+}
 
 
+/*
 inline
 void
 SimulationInterface::set_relaxation_factor(double relax)
@@ -938,7 +987,7 @@ SimulationInterface::get_relaxation_factor(void) const
 {
   return _relaxation_factor;
 }
-
+*/
 
 
 inline
@@ -1013,6 +1062,23 @@ SimulationInterface::get_maximum_norm_of_difference(ID id)
 {
   return do_maximum_norm_of_difference(id);
 }
+
+
+inline
+void
+SimulationInterface::scale_solution(double factor)
+{
+  do_scale_solution(factor);
+}
+
+
+inline
+void
+SimulationInterface::add_scaled_remembered_solution(ID id, double factor)
+{
+  do_add_scaled_remembered_solution(id, factor);
+}
+
 
 
 inline

@@ -45,8 +45,8 @@ SimulationInterface::SimulationInterface(void)
   : _environment(0),
     _is_initialized(false),
     _is_solved(false),
-    _equilibrium_is_solved(false),
-    _relaxation_factor(1.0)
+    _equilibrium_is_solved(false)
+    //_relaxation_factor(1.0)
 {
   ID new_id = _simulation_map.size() + 1;
   _id = new_id;
@@ -131,10 +131,13 @@ SimulationInterface::create(const string& type,
     string defaultname = Utils::extract_typename(typeid(*sim));
     sim->_name = sim->get_options().get_option("name", defaultname);
     sim->_options.delete_option("name");
-    
+
+    // this is done in Selfconsistent
+    /*
     sim->_relaxation_factor =
       sim->get_options().get_option("relaxation_factor", sim->_relaxation_factor);
     sim->_options.delete_option("relaxation_factor");
+    */
 
 #ifdef DEBUG
     cout << "Added simulator" << endl;
@@ -363,10 +366,21 @@ SimulationInterface::solve(void) throw (SolveFailedException)
 
 
 
+bool
+SimulationInterface::has_solution_vector(void)
+{
+  const EquationSystems& eq = get_equation_systems();
+
+  return eq.has_system(get_equation_system_name());
+}
+
+
 
 NumericVector<double>&
 SimulationInterface::get_solution_vector(void)
 {
+  assert(has_solution_vector());
+
   const EquationSystems& eq = get_equation_systems();
   const System& sys = eq.get_system(get_equation_system_name());
 
@@ -550,6 +564,8 @@ SimulationInterface::do_plot(void)
 ID
 SimulationInterface::do_remember_current_solution(ID id)
 {
+  if (!has_solution_vector()) return INVALID_ID;
+
   map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
   map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
 
@@ -573,6 +589,7 @@ SimulationInterface::do_remember_current_solution(ID id)
 void
 SimulationInterface::do_set_to_remembered_solution(ID id)
 {
+  
   map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
   map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
 
@@ -585,6 +602,7 @@ SimulationInterface::do_set_to_remembered_solution(ID id)
 void
 SimulationInterface::do_delete_remembered_solution(ID id)
 {
+  
   map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
   map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
   if (it != end)
@@ -634,6 +652,32 @@ SimulationInterface::do_maximum_norm_of_difference(ID id)
 
   return norm;
 }
+
+
+
+
+
+void
+SimulationInterface::do_scale_solution(double factor)
+{
+  if (has_solution_vector())
+    get_solution_vector().scale(factor);
+}
+  
+
+
+
+void
+SimulationInterface::do_add_scaled_remembered_solution(ID id, double factor)
+{
+  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
+  if (it != end)
+  {
+    get_solution_vector().add(factor, *(it->second));
+  }
+}
+
 
 
 
@@ -754,14 +798,16 @@ SimulationInterface::get_integrated_quantities_description(
 
 
 
-void
+bool
 SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
     vector<map<ID, double> >& values)
 {
 
-  if ((ids.size() == 0) || (elem == NULL)) return;
+  if ((ids.size() == 0) || (elem == NULL)) return false;
   
   SimulationEnvironment& env = get_environment();
+
+  bool flag = true;
 
   if (!env.contains_element(elem))
   {
@@ -777,41 +823,49 @@ SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
 
 
 
-void
+bool
 SimulationInterface::get_solution(const Elem* elem, const Point& p,
     const set<ID>& ids, map<ID, double>& values)
 {
   vector<Point> points(1, p);
   vector<map<ID, double> > vals(1);
 
-  get_solution(elem, points, ids, vals);
+  bool flag = get_solution(elem, points, ids, vals);
   
   values = vals[0];
+
+  return flag;
 }
 
 
 
-double
-SimulationInterface::get_solution(const Elem* elem, const Point& p, ID id)
+bool
+SimulationInterface::get_solution(const Elem* elem, const Point& p,
+    ID id, double& value)
 {
   vector<Point> points(1, p);
   set<ID> ids;
   ids.insert(id);
   vector<map<ID, double> > vals(1);
 
-  get_solution(elem, points, ids, vals);
+  bool flag = get_solution(elem, points, ids, vals);
 
-  return vals[0][id];
+  value = vals[0][id];
+
+  return flag;
 }
 
 
 
-void
+bool
 SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
     const set<ID>& ids, vector<map<ID, double> >& values)
 {
+  bool flag = true;
+
   unsigned int np = p.size();
-  if ((np == 0) || (ids.size() == 0) || (elem == NULL)) return;
+  if ((np == 0) || (ids.size() == 0) || (elem == NULL)) return false;
+
   values.resize(np);
 
   // this will contain the element in which p lies and for which
@@ -863,14 +917,16 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
         }
       }
       if (el_it == el_end)
-        values[i].clear();
+        flag = false;
     }
   }
+
+  return flag;
 }
 
 
 
-void
+bool
 SimulationInterface::get_solution(const Elem* elem, ID id, vector<double>& values)
 {
   set<ID> ids;
@@ -879,7 +935,7 @@ SimulationInterface::get_solution(const Elem* elem, ID id, vector<double>& value
 
   vector<map<ID, double> > vals;
   
-  get_solution(elem, ids, vals);
+  bool flag = get_solution(elem, ids, vals);
 
   if (vals[0].size() != 0)
   {
@@ -890,11 +946,13 @@ SimulationInterface::get_solution(const Elem* elem, ID id, vector<double>& value
       values[i] = vals[i][id];
     }
   }
+
+  return flag;
 }
 
 
 
-void
+bool
 SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
     ID id, vector<double>& values)
 {
@@ -904,7 +962,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 
   vector<map<ID, double> > vals;
   
-  get_solution(elem, p, ids, vals);
+  bool flag = get_solution(elem, p, ids, vals);
 
   if (vals[0].size() != 0)
   {
@@ -916,4 +974,5 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
     }
   }
 
+  return flag;
 }

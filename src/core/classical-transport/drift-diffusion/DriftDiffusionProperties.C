@@ -225,7 +225,9 @@ DriftDiffusionProperties::calculate_VCA(const PhysicalModelInterface* comp_A,
   const DriftDiffusionProperties* scB =
     dynamic_cast<const DriftDiffusionProperties*>(comp_B);
 
+
   permittivity = alloy(scA->permittivity, scB->permittivity, xa);
+
 
   conduction_band.effective_mass =
     alloy(scA->conduction_band.effective_mass,

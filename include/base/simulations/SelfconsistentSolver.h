@@ -103,7 +103,7 @@ SelfconsistentSolver::SelfconsistentSolver(void)
   : _max_it(5),
     _rel_tol(1e-3),
     _abs_tol(1e-3),
-    _relax(0.5)
+    _relax(1.0)
 {
 }
 
