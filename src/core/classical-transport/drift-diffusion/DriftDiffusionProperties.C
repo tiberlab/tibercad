@@ -412,6 +412,7 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
   Material::dopant_iterator end(get_material()->donors_end());
   for ( ; it != end; ++it)
   {
+    (*it)->calculate_doping_density(_elem, _coord);
     Nd += (*it)->get_ionized_dopant_density(arg_e, kT);
     dNd += (*it)->get_ionized_dopant_density_derivative(arg_e, kT);
   }
@@ -422,6 +423,7 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
   end = get_material()->acceptors_end();
   for ( ; it != end; ++it)
   {
+    (*it)->calculate_doping_density(_elem, _coord);
     Na += (*it)->get_ionized_dopant_density(arg_h, kT);
     dNa -= (*it)->get_ionized_dopant_density_derivative(arg_h, kT);
   }

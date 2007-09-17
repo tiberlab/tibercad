@@ -3,12 +3,28 @@
 #ifndef _DOPANT_H_
 #define _DOPANT_H_
 
+#include "ModelOptions.h"
+
+#include <string>
+
+
+class Elem;
+class Point;
+
 
 //! Describes a dopant with a single energy level
 class Dopant
 {
 
   public:
+
+    //! The doping profile
+    enum DopingProfile
+    {
+      CONSTANT = 0, /*!< constant doping density */
+      VARIABLE,     /*!< spatially variable profile */
+      USERDEFINED   /*!< a user defined function */
+    };
 
     //! The type of the dopant
     enum DopingType
@@ -32,6 +48,14 @@ class Dopant
     //! Copy constructor
     Dopant(const Dopant& dopant);
 
+
+    // Destructor
+    virtual ~Dopant(void) {};
+
+
+    //! Create a doping with given profile and options
+    static Dopant* create(const std::string& profile, const ModelOptions& options);
+
     
     //! Get the doping density
     double get_doping_density(void) const;
@@ -52,13 +76,21 @@ class Dopant
     DopingType get_type(void) const;
 
     
-    void set_doping_density(double N);
+    //void set_doping_density(double N);
 
-    void set_ionisation_energy(double E_i);
+    //void set_ionisation_energy(double E_i);
 
-    void set_g_factor(int g);
+    //void set_g_factor(int g);
 
-    void set_type(DopingType type);
+    //void set_type(DopingType type);
+
+
+    //! Calculate the coordinate-dependent doping density
+    /*! 
+     * Sets the local doping density
+     */
+    void calculate_doping_density(const Elem* elem, const Point& p);
+
 
     //! Get the density of ionized dopants
     /*!
@@ -77,7 +109,22 @@ class Dopant
     double get_ionized_dopant_density_derivative(double arg, double kT);
 
 
+
+  protected:
+
+    //! Calculate the doping density
+    virtual double do_calculate_doping_density(const Elem* elem, const Point& p) {};
+
+
+    //! Get the options
+    ModelOptions& get_options(void);
+
+
+
   private:
+
+    //! The doping profile function
+    DopingProfile _profile;
 
     //! The doping density
     double _density;
@@ -91,6 +138,10 @@ class Dopant
     //! The g factor
     int _g_factor;
 
+
+    //! More options
+    ModelOptions _options;
+
 };
 
 
@@ -102,7 +153,8 @@ class Dopant
 inline
 Dopant::Dopant(double density, double ionisation_energy,
                int g_factor, DopingType type)
-  : _density(density),
+  : _profile(CONSTANT),
+    _density(density),
     _type(type),
     _ionisation_energy(ionisation_energy),
     _g_factor(g_factor)
@@ -111,7 +163,8 @@ Dopant::Dopant(double density, double ionisation_energy,
 
 inline
 Dopant::Dopant(const Dopant& dopant)
-  : _density(dopant._density),
+  : _profile(dopant._profile),
+    _density(dopant._density),
     _type(dopant._type),
     _ionisation_energy(dopant._ionisation_energy),
     _g_factor(dopant._g_factor)
@@ -124,6 +177,19 @@ Dopant::get_doping_density(void) const
 {
   return _density;
 }
+
+
+
+inline
+void
+Dopant::calculate_doping_density(const Elem* elem, const Point& p)
+{
+  if (_profile != CONSTANT)
+    _density = do_calculate_doping_density(elem, p);
+}
+
+
+
 
 inline
 double
@@ -146,6 +212,16 @@ Dopant::get_type(void) const
   return _type;
 }
 
+
+inline
+ModelOptions&
+Dopant::get_options(void)
+{
+  return _options;
+}
+
+
+/*
 inline
 void
 Dopant::set_doping_density(double N)
@@ -173,5 +249,7 @@ Dopant::set_type(Dopant::DopingType type)
 {
   _type = type;
 }
+*/
+
 
 #endif //_DOPANT_H_

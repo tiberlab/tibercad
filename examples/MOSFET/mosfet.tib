@@ -6,7 +6,7 @@ $Device
    {
      reg_numb = 1
      mat = Si
-     doping = 1e16 doping_type = acceptor
+     doping = 1e18 doping_type = acceptor
    }
    
    Region contact
@@ -20,7 +20,6 @@ $Device
    {
      reg_numb = 3
      mat = SiO2
-     #doping = 1e16 doping_type = donor
      dielectric = true
    }
 
@@ -72,7 +71,7 @@ $Models
         BC_reg_numb = 3
         type = ohmic
 	zero_grad_fermi_h = true
-        voltage = @Vd[0.1]
+        voltage = @Vd[0.5]
       }
  
 
@@ -88,18 +87,18 @@ $Solver
 {
   driftdiffusion
   {
-    nonlinear_solver = tiber
+    #nonlinear_solver = tiber
     coupling = electrons
-    ksp_type = bcgsl
+    #ksp_type = bcgsl
     nonlin_max_it = 20
-    nonlin_rel_tol = 1e-12
-    nonlin_abs_tol = 1e-15
+    #nonlin_rel_tol = 1e-12
+    #nonlin_abs_tol = 1e-15
     nonlin_step_tol = 1e-4
-    lin_rel_tol = 1e-6
-    lin_abs_tol = 1e-50
+    #lin_rel_tol = 1e-6
+    #lin_abs_tol = 1e-50
     ls_max_step = 2
+    pc_type = ilu
     #pc_type = composite
-    #local_density_scaling = true
     #current_integration_method = surfint
     #relaxation_factor = 0.5
   }
@@ -110,8 +109,8 @@ $Solver
     simulation = driftdiffusion
     variable = Vg
     start = 0.0
-    stop = -2.5
-    steps = 25
+    stop = -1.5
+    steps = 30
     plotvariable = current
   }
 }
@@ -140,8 +139,8 @@ $Simulation
   meshfile = mosfet.msh
   dimension = 2
   temperature = 300
-  #solve = driftdiffusion
-  solve = (driftdiffusion, sweep)
+  solve = sweep
+  #solve = (driftdiffusion, sweep)
   resultpath = output
   output_format = gmv
   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, EField, ElPotential)

@@ -6,6 +6,36 @@
 
 #include <cmath>
 
+
+Dopant*
+Dopant::create(const std::string& profile, const ModelOptions& options)
+{
+  Dopant* dop = NULL;
+
+  double density = options.get_option("density", 0.0);
+  double ionisation_energy = options.get_option("level", 0.025);
+  int g_factor = options.get_option("g", 2);
+  std::string type_s = options.get_option("type", "donor");
+  DopingType type = N_TYPE;
+  if (type_s == "acceptor")
+    type = P_TYPE;
+
+  if (profile == "constant")
+    dop = new Dopant(density, ionisation_energy, g_factor, type);
+
+  if (dop != NULL)
+  {
+    dop->_options = options;
+    (dop->_options).delete_option("density");
+    (dop->_options).delete_option("level");
+    (dop->_options).delete_option("g");
+    (dop->_options).delete_option("type");
+  }
+
+  return dop;
+}
+
+
 double
 Dopant::get_ionized_dopant_density(double arg, double kT)
 {
