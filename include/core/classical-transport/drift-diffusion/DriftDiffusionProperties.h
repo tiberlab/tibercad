@@ -169,6 +169,10 @@ class DriftDiffusionProperties : public PhysicalModel
     void set_electric_field(RealGradient E);
 
 
+    //! Get the electric field
+    const RealGradient& get_electric_field(void) const;
+
+
     //! Get the element we are currently working on
     const Elem* get_element(void) const;
 
@@ -585,10 +589,6 @@ class DriftDiffusionProperties : public PhysicalModel
     double fermi_h;
 
 
-    //! The electric field
-    RealGradient electric_field;
-
-
     //! The electron density
     /*!
      * The electron density is given by
@@ -731,6 +731,10 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Hole thermoelectric power
     double _hTEpower; 
+
+
+    //! The electric field
+    RealGradient electric_field;
 
 
     //! An iterator for the recombination models
@@ -894,6 +898,16 @@ DriftDiffusionProperties::set_electric_field(RealGradient E)
 {
   electric_field = E;
 }
+
+
+inline
+const RealGradient&
+DriftDiffusionProperties::get_electric_field(void) const
+{
+  return electric_field;
+}
+
+
 
 inline
 void

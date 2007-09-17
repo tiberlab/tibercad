@@ -1,13 +1,15 @@
-# SiO2
+# ZrO2
 
 dielectric = true
 
 structure = zb
 
-Eg_G = 11.25
+Eg_G = 5.7
 Eg_L = 9.5
 Eg_X = 9.0
-E_v = -3.66
+E_v = -2.47
+
+# values of Si !!
 
 delta = 0.044
 
@@ -31,4 +33,4 @@ uniax_def_pot_X = 9.16
 abs_def_pot_L = -2.07
 uniax_def_pot_L = 16.14
 
-permittivity = 3.9
+permittivity = 25

@@ -28,6 +28,7 @@
 #include "tecplot_IO_cell.h"
 #include "gnuplot_io.h"
 #include "GraceIO.h"
+#include "VTKIO.h"
 
 // LibMesh includes
 #include "system.h"
@@ -454,6 +455,8 @@ SimulationInterface::do_plot(void)
     suff = ".plt";
   else if (format == "grace")
     suff = ".dat";
+  else if (format == "vtk")
+    suff = ".vtk";
 
   vector<double> results;
   vector<string> names;
@@ -473,6 +476,8 @@ SimulationInterface::do_plot(void)
       TecplotIO(dev.get_mesh()).write_nodal_data(filename, results, names);
     else if (format == "grace")
       GraceIO(dev.get_mesh()).write_nodal_data(filename, results, names);
+    else if (format == "vtk")
+      VTKIO(dev.get_mesh()).write_nodal_data(filename, results, names);
     else
     {
       cout << "Output format not supported. Falling back to GMV." << endl;
@@ -495,6 +500,8 @@ SimulationInterface::do_plot(void)
       TecplotIO_cell(dev.get_mesh()).write_cell_data(filename, results, names);
     else if (format == "grace")
       GraceIO(dev.get_mesh()).write_elemental_data(filename, results, names);
+    else if (format == "vtk")
+      VTKIO(dev.get_mesh()).write_elemental_data(filename, results, names);
     else
     {
       cout << "Output format not supported. Falling back to GMV." << endl;

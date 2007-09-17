@@ -58,6 +58,7 @@ DriftDiffusionProperties::read_database(void)
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
 
+  _is_dielectric = data("dielectric", _is_dielectric);
   permittivity = data("permittivity", 1.0);
 
   // pyropolarization
@@ -101,7 +102,8 @@ DriftDiffusionProperties::do_init(void)
   }
 
 
-  _is_dielectric = get_material()->get_options().get_option("dielectric", false);
+  _is_dielectric = get_parameter("dielectric", _is_dielectric);
+  permittivity = get_parameter("permittivity", permittivity);
 
 
   // the temperature simulation
