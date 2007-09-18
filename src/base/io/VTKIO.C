@@ -70,13 +70,16 @@ void VTKIO::write_nodal_data(const std::string& fname,
   out << "DATASET UNSTRUCTURED_GRID\n";
   out << "POINTS " << n_nodes << " double\n";
 
+  std::map<unsigned int, unsigned int> vtk_node_ids;
   
   std::set<unsigned int>::iterator nodeit(node_ids.begin());
   const std::set<unsigned int>::iterator nodeend(node_ids.end());
-  for ( ; nodeit != nodeend; ++nodeit)
+  for (unsigned int vtk_id = 0; nodeit != nodeend; ++nodeit, vtk_id++)
   {
     const Node& node = mesh.node(*nodeit);
     out << node(0) << " " << node(1) << " " << node(2) << "\n";
+
+    vtk_node_ids[*nodeit] = vtk_id;
   }
 
   out << "\n";
@@ -111,7 +114,7 @@ void VTKIO::write_nodal_data(const std::string& fname,
     out << nn;
 
     for (unsigned int i = 0; i < nn; i++)
-      out << " " << elem->node(i);
+      out << " " << vtk_node_ids[elem->node(i)];
 
     out << "\n";
   }
@@ -164,7 +167,7 @@ void VTKIO::write_nodal_data(const std::string& fname,
 
         value = soln[global_id*n_vars + var];
 
-        node_map[global_id] = value;
+        node_map[vtk_node_ids[elem->node(i)]] = value;
       }
     }
 
