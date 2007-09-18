@@ -45,9 +45,7 @@ Utils::extract_vector(const string& input, vector<T>& vec)
   static const boost::regex regexp("[[:space:]]*?(?:(\\()|(\\[)|(\\{)|\\<){1}\
 (.*)(?(1)\\)|(?(2)\\]|(?(3)\\}|\\>))){1}[[:space:]]*?");
 
-  //typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
   typedef boost::tokenizer<boost::escaped_list_separator<char> > tokenizer;
-  //boost::char_separator<char> sep(",");
   boost::escaped_list_separator<char> sep;
 
   boost::cmatch matches;

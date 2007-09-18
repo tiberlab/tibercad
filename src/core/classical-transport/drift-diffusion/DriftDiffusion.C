@@ -3389,15 +3389,15 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     switch (dim)
     {
       case 3:
-        legend[EField + 2] = "E_z[V/cm]";
+        legend[EField + 2] = "E_z";
         n_vars++;
       case 2:
-        legend[EField + 1] = "E_y[V/cm]";
+        legend[EField + 1] = "E_y";
         n_vars++;
-        legend[EField + dim] = "|E|[V/cm]";
+        legend[EField + dim] = "modE";
         n_vars++;
       default:
-        legend[EField] = "E_x[V/cm]";
+        legend[EField] = "E_x";
         n_vars++;
     }
   }
@@ -3410,15 +3410,15 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     switch (dim)
     {
       case 3:
-        legend[Jn + 2] = "Jn_z[A*cm^-2]";
+        legend[Jn + 2] = "Jn_z";
         n_vars++;
       case 2:
-        legend[Jn + 1] = "Jn_y[A*cm^-2]";
+        legend[Jn + 1] = "Jn_y";
         n_vars++;
-        legend[Jn + dim] = "|Jn|[A*cm^-2]";
+        legend[Jn + dim] = "modJn";
         n_vars++;
       default:
-        legend[Jn] = "Jn_x[A*cm^-2]";
+        legend[Jn] = "Jn_x";
         n_vars++;
     }
   }
@@ -3432,15 +3432,15 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     switch (dim)
     {
       case 3:
-        legend[Jp + 2] = "Jp_z[A*cm^-2]";
+        legend[Jp + 2] = "Jp_z";
         n_vars++;
       case 2:
-        legend[Jp + 1] = "Jp_y[A*cm^-2]";
+        legend[Jp + 1] = "Jp_y";
         n_vars++;
-        legend[Jp + dim] = "|Jp|[A*cm^-2]";
+        legend[Jp + dim] = "modJp";
         n_vars++;
       default:
-        legend[Jp] = "Jp_x[A*cm^-2]";
+        legend[Jp] = "Jp_x";
         n_vars++;
     }
   }
@@ -3454,15 +3454,15 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     switch (dim)
     {
       case 3:
-        legend[J + 2] = "J_z[A*cm^-2]";
+        legend[J + 2] = "J_z";
         n_vars++;
       case 2:
-        legend[J + 1] = "J_y[A*cm^-2]";
+        legend[J + 1] = "J_y";
         n_vars++;
-        legend[J + dim] = "|J|[A*cm^-2]";
+        legend[J + dim] = "modJ";
         n_vars++;
       default:
-        legend[J] = "J_x[A*cm^-2]";
+        legend[J] = "J_x";
         n_vars++;
     }
   }

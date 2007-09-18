@@ -9,6 +9,7 @@
 
 // forward declaration
 class MeshBase;
+class Elem;
 
 
 //! Write nodal and elemental data using a grace-compatible format 
@@ -45,6 +46,31 @@ class VTKIO : public MeshOutput<MeshBase>
 
 
  private:
+
+  //! The VTK cell types
+  enum VTKCellType
+  {
+    VTK_UNKNOWN = 0,
+    VTK_VERTEX,
+    VTK_POLY_VERTEX,
+    VTK_LINE,
+    VTK_POLY_LINE,
+    VTK_TRIANGLE,
+    VTK_TRIANGLE_STRIP,
+    VTK_POLYGON,
+    VTK_PIXEL,
+    VTK_QUAD,
+    VTK_TETRA,
+    VTK_VOXEL,
+    VTK_HEXAHEDRON,
+    VTK_WEDGE,
+    VTK_PYRAMID
+  };
+
+  
+  //! Get the VTK cell type for an element
+  VTKCellType get_VTK_cell_type(const Elem* elem);
+  
 
 };
 
