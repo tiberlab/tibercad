@@ -28,7 +28,8 @@ class TunnelingCurrent: public KspaceIntegration
     double  energy_int_zero_limit;
 
     std::string filename;
-    bool read_from_file;
+    bool read_results_from_file;
+    bool write_results_to_file;
 
   };
 
@@ -117,13 +118,18 @@ class TunnelingCurrent: public KspaceIntegration
    */
    double thermal_probability(double fermi_energy, double Energy);
 
+   //!needed for integration over energy
    std::map<const Elem*, double> energy_integral;
 
-   //mesh for energy integration
+   //!mesh for energy integration
    Mesh* Emesh;
 
   
+   //! write current in file
+   void write_current();
 
+   //! read curren from file
+   void read_current();
    
 };
 

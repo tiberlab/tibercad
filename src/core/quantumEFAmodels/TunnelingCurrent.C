@@ -32,13 +32,71 @@ TunnelingCurrent:: ~TunnelingCurrent()
   delete Vmesh;
   
   delete  Ves;
-  //delete kmesh;
+  
 }
 
+//============================================//
+void TunnelingCurrent::write_current()
+{
+ std::ofstream current_file;
+ current_file.open(opt.filename.c_str());
+
+ if (!current_file.good())
+ {
+   cerr << "TunnelingCurrent: output file problem\n";
+   error();
+
+ }
+
+ MeshBase::node_iterator       it     = Vmesh->nodes_begin();
+ const MeshBase::node_iterator it_end  = Vmesh->nodes_end(); 
+
+ for ( ;  it != it_end ; ++it)
+ {
+   const Node* nd = *it;
+   current_file << setprecision(14) << current[nd] << "\n";
+
+ } 
+ 
+ current_file.close();
+
+}
+
+//============================================// 
+void TunnelingCurrent::read_current()
+{
+  std::ifstream current_file;
+  current_file.open(opt.filename.c_str());
+
+  if (!current_file.good())
+  {
+    cerr << "TunnelingCurrent: input file problem\n";
+    error();
+
+ }
+
+ MeshBase::node_iterator       it     = Vmesh->nodes_begin();
+ const MeshBase::node_iterator it_end  = Vmesh->nodes_end(); 
+
+ string string_from_file;
+
+ for ( ;  it != it_end ; ++it)
+ {
+   const Node* nd = *it;
+   
+   getline(current_file, string_from_file );
+  
+   istringstream input_string(string_from_file);
+  
+   input_string >> current[nd];
+   
+
+ } 
+ 
+ current_file.close();
 
 
-
-
+}
 //============================================//
 
 void TunnelingCurrent::do_plot (void)
@@ -166,42 +224,73 @@ void TunnelingCurrent::parse_options(void)
   opt.energy_int_zero_limit = mod_opt.get_option("energy_integration_zero_limit", 1e-12);
   opt.energy_int_uniform_refinement = mod_opt.get_option("energy_integral_uniform_refinement", false); 
 
+  string suffix = get_control().get_filename_suffix();
+  string outdir = get_control().get_output_dir();
+ 
+  opt.filename = outdir + "/" + get_name() + suffix;
+  opt.filename = mod_opt.get_option("filename",opt.filename);
+
+  opt.read_results_from_file = mod_opt.get_option("read_results_from_file", false);
+  
+  opt.write_results_to_file = mod_opt.get_option("write_results_to_file", true); 
+
   
 }
 //========================================================================//
 double TunnelingCurrent::get_current(double v)
 {
-  Point v_point;
 
-  v_point(0) = v; 
+  double result = 0;
+
+  vector<Point> v_point(1);
+
+  v_point[0](0) = v; 
 
 
   LinearImplicitSystem& system = Ves->get_system<LinearImplicitSystem> ("current");
   
   const DofMap& dof_map = system.get_dof_map();
     
-  FEType fe_type = dof_map.variable_type(0);
-    
-  AutoPtr<FEBase> fe (FEBase::build(1, fe_type));
-    
-  QGauss qrule (1, FIFTH);
-    
-  fe->attach_quadrature_rule (&qrule);
-    
-  const std::vector<Point>& q_point = fe->get_xyz();
   
-  const std::vector<std::vector<Real> >& phi = fe->get_phi();
-  
- 
+
 
   MeshBase::element_iterator       it     = Vmesh->active_elements_begin();
   const MeshBase::element_iterator it_elem_end  = Vmesh->active_elements_end();
 
-  for ( ;  it != it_elem_end ; ++it) 
+  bool not_found = true; 
+
+  for ( ;  ( (it != it_elem_end) && not_found) ; ++it) 
   {
-    
+    const Elem* el = *it;
+    if (el->contains_point(v_point[0]))
+    {
+      not_found = false;
+
+      FEType fe_type (FIRST , LAGRANGE);
+
+      AutoPtr<FEBase> fe (FEBase::build(1,    fe_type));
+   
+      vector<Point> points(1);
+      FEInterface::inverse_map(1, fe_type, el, v_point, points);
+
+      const std::vector<std::vector<Real> >& phi = fe->get_phi();
+
+      fe->reinit(el, &points);
+      
+      for (unsigned int i = 0; i < el->n_nodes(); i++)
+      {
+	const Node* nd = el->get_node(i);
+
+	result  += phi[i][0] * current[nd];      
+      }
+
+    }
 
   }
+
+  if (not_found) cerr <<"Warning!!!!\n";
+
+  return result;
 
 }
 
@@ -212,191 +301,199 @@ void TunnelingCurrent::do_solve()
 
   parse_options();
 
-  real_space_density.clear();
+ 
 
   build_V_grid();
 
   build_k_grid();
 
 
-  
-
-
-  MeshBase::node_iterator       it_elem     = Vmesh->nodes_begin();
-  const MeshBase::node_iterator it_elem_end  = Vmesh->nodes_end(); 
- 
-
- 
-
-  for ( ;  it_elem != it_elem_end ; ++it_elem) 
+  if ( opt.read_results_from_file )
+  {
+    read_current();
+  }
+  else
   {
 
+    real_space_density.clear();
 
 
-
-
-
-    unsigned int max_refinement = 0;
-
-    applied_voltage_node  = *it_elem;
-
-    cerr << "------------------------------\n";
-    {  
-      cerr << " applied volatage " << (*applied_voltage_node)(0) << "\n";
-    }
-    cerr << "------------------------------\n ";  
-
-
-    // kmesh = new Mesh(*(Kspace::kmesh));
-
-
-    {
-
-      ostringstream temp;
-      temp << "mesh_" << max_refinement << ".xda";
-      kmesh->write(temp.str()); 
-
-    }
-
-    eq = new EquationSystems(*kmesh);
-
-    eq->add_system<LinearImplicitSystem> ("k-integration");
-  
-    system = &(eq->get_system<LinearImplicitSystem> ("k-integration"));
-  
-    system->add_variable("u", integration_order);
-
-  
-    //!system vector that contains charge density in k space from previous iteration
-    // NumericVector<Number>& old_density = system->add_vector("old density");
-
-  
-    eq->init();
-
-
-    kmesh->print_info();
-
-
-  
-
-    kspace_integral.clear();
-    volume.clear();
-   
-
-    calculate_volumes();
-
-    calculate_density();
+    MeshBase::node_iterator       it_elem     = Vmesh->nodes_begin();
+    const MeshBase::node_iterator it_elem_end  = Vmesh->nodes_end(); 
  
 
-    //prepare_system_solution();
+ 
+
+    for ( ;  it_elem != it_elem_end ; ++it_elem) 
+    {
+
+
+
+
+
+
+      unsigned int max_refinement = 0;
+      
+      applied_voltage_node  = *it_elem;
+
+      cerr << "------------------------------\n";
+      {  
+	cerr << " applied volatage " << (*applied_voltage_node)(0) << "\n";
+      }
+      cerr << "------------------------------\n ";  
+      
+
+      // kmesh = new Mesh(*(Kspace::kmesh));
+
+
+      {
+	
+	ostringstream temp;
+	temp << "mesh_" << max_refinement << ".xda";
+	kmesh->write(temp.str()); 
+
+      }
+
+      eq = new EquationSystems(*kmesh);
+
+      eq->add_system<LinearImplicitSystem> ("k-integration");
+      
+      system = &(eq->get_system<LinearImplicitSystem> ("k-integration"));
+  
+      system->add_variable("u", integration_order);
+
+  
+      //!system vector that contains charge density in k space from previous iteration
+      // NumericVector<Number>& old_density = system->add_vector("old density");
+
+  
+      eq->init();
+
+
+      kmesh->print_info();
+
 
   
 
-    double x1;
-    double x2;
+      kspace_integral.clear();
+
+      volume.clear();
+    
+
+      calculate_volumes();
+
+      calculate_density();
+ 
+
+      //prepare_system_solution();
+
+  
+
+      double x1;
+      double x2;
 
 
-    {
-      map < const Node*, double > :: iterator it1 = current.find(applied_voltage_node);
-      x2 = it1->second;
-    }
+      {
+	map < const Node*, double > :: iterator it1 = current.find(applied_voltage_node);
+	x2 = it1->second;
+      }
 
-    cerr << "  x2 = "<< x2 << "\n";
+      cerr << "  x2 = "<< x2 << "\n";
 
-    if (KspaceIntegration::opt.k_domain_refinement) 
-    {
+      if (KspaceIntegration::opt.k_domain_refinement) 
+      {
 
 
-      //----------------------------------------
-      //refinement block
-      //---------------------------------------
-     
-     
-
-      MeshRefinement mesh_refinement(*kmesh);
-      
-
-      
-
-      
-      double norm_of_error = KspaceIntegration::opt.relative_accuracy;
-
-      
-      
-      for ( ; (norm_of_error >=  KspaceIntegration::opt.relative_accuracy) ;  ) 
-      {//for
+	//----------------------------------------
+	//refinement block
+	//---------------------------------------
 	
-	if (KspaceIntegration::opt.uniform_refinement)
-	  mesh_refinement.uniformly_refine(1);
-	else
-	{
+     
+
+	MeshRefinement mesh_refinement(*kmesh);
+      
+
+      
+
+      
+	double norm_of_error = KspaceIntegration::opt.relative_accuracy;
+
+      
+      
+	for ( ; (norm_of_error >=  KspaceIntegration::opt.relative_accuracy) ;  ) 
+	{//for
 	  
-	  ErrorVector error = ErrorVector(kmesh->n_elem(), kmesh);
+	  if (KspaceIntegration::opt.uniform_refinement)
+	    mesh_refinement.uniformly_refine(1);
+	  else
+	  {
+	    
+	    ErrorVector error = ErrorVector(kmesh->n_elem(), kmesh);
+	    
+	    
+	    // KellyErrorEstimator error_estimator;
 	  
-	  
-	  // KellyErrorEstimator error_estimator;
-	  
-	  Tensor2Gen RotM_inv =  transform_matrix.transpose() ;
-	  
-	  rotate_mesh(kmesh,  RotM_inv );
+	    Tensor2Gen RotM_inv =  transform_matrix.transpose() ;
+	    
+	    rotate_mesh(kmesh,  RotM_inv );
 	  
 
-	  estimate_error_for_refinement(error);
+	    estimate_error_for_refinement(error);
 
 	 
 	      
-	  mesh_refinement.flag_elements_by_error_fraction (error,KspaceIntegration::opt.refine_fraction,0.0, 10);
+	    mesh_refinement.flag_elements_by_error_fraction (error,KspaceIntegration::opt.refine_fraction,0.0, 10);
  
-	  mesh_refinement.refine_and_coarsen_elements();
+	    mesh_refinement.refine_and_coarsen_elements();
 
 
-	  rotate_mesh(kmesh, transform_matrix);
+	    rotate_mesh(kmesh, transform_matrix);
 
 	  
-	  eq->reinit();
+	    eq->reinit();
 	  
-	  kmesh->print_info();
+	    kmesh->print_info();
 	  
-	  cerr <<   "  we have to do  " <<  how_many_elements_to_do() << "  elements \n";
+	    cerr <<   "  we have to do  " <<  how_many_elements_to_do() << "  elements \n";
 	  
-	  calculate_volumes();
-	  calculate_density();
+	    calculate_volumes();
+	    calculate_density();
 
-	  {
-	    map < const Node*, double > :: iterator it1 = current.find(applied_voltage_node);
-	    x1 = it1->second;
-	  }
+	    {
+	      map < const Node*, double > :: iterator it1 = current.find(applied_voltage_node);
+	      x1 = it1->second;
+	    }
 
-	  cerr << "x1 = " << x1 << "  x2 = "<< x2 << "\n";
+	    cerr << "x1 = " << x1 << "  x2 = "<< x2 << "\n";
 	  
 	
 	  
-	  norm_of_error = std::abs(x1/x2 - 1.0);
-	  x2 = x1 ;
+	    norm_of_error = std::abs(x1/x2 - 1.0);
+	    x2 = x1 ;
 
 	 
 
-	  std::cout << "k space grid has " << kmesh->n_nodes() << " nodes " << flush;
-	  std::cout <<  "quantum density error " << norm_of_error << endl << flush;
+	    std::cout << "k space grid has " << kmesh->n_nodes() << " nodes " << flush;
+	    std::cout <<  "quantum density error " << norm_of_error << endl << flush;
 	  
 	  
+	  }
+
+	  max_refinement++;
 	}
 
-	max_refinement++;
-      }
 
-
-      k_space_output();
+	k_space_output();
 
 
    
 
-      mesh_refinement.uniformly_coarsen(MeshTools::n_levels(*kmesh));
+	mesh_refinement.uniformly_coarsen(MeshTools::n_levels(*kmesh));
 
       
 
      
-    }//end of refinement block
+      }//end of refinement block
     
     
 
@@ -405,12 +502,19 @@ void TunnelingCurrent::do_solve()
    
 
     
-    delete(eq);
+      delete(eq);
   
 
-  }//voltage loop
+    }//voltage loop
   
 
+    if (opt.write_results_to_file) write_current();
+
+
+  }
+
+
+ 
  
 }
 
