@@ -496,6 +496,9 @@ class DriftDiffusionProperties : public PhysicalModel
     std::vector<double> get_temperature_node(void);
 
 
+    //! Get the electric potential
+    double get_electric_potential(void) const;
+
 
     //! Get the electron electro-chemical potential
     double get_electron_electro_chemical_potential(void) const
@@ -881,6 +884,17 @@ DriftDiffusionProperties::set_carrier_temperatures(double T_e, double T_h)
   electron_vt = T_e;
   hole_vt = T_h;
 }
+
+
+
+inline
+double
+DriftDiffusionProperties::get_electric_potential(void) const
+{
+  return electric_potential;
+}
+
+
 
 inline
 void
