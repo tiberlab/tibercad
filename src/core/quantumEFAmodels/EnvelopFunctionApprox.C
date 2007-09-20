@@ -264,6 +264,8 @@ void EnvelopFunctionApprox::get_integrated_quantities(const std::set<std::string
 
 } 
 
+//---------------------------------------------------------------------------------//
+
 void EnvelopFunctionApprox::get_eigenenergies(std::vector<double>& values) const
 {
 
@@ -277,6 +279,8 @@ void EnvelopFunctionApprox::get_eigenenergies(std::vector<double>& values) const
 
 
 } 
+
+//---------------------------------------------------------------------------------//
 
 void EnvelopFunctionApprox::get_occupations(std::vector<double>& values) const
 {
@@ -295,7 +299,7 @@ void EnvelopFunctionApprox::get_occupations(std::vector<double>& values) const
 
 
 
-//===================================================//
+//====================================================================================//
 
 const std::vector< EnvelopFunctionApprox::eigen_propblem_solution >& EnvelopFunctionApprox::get_solution() const
 {

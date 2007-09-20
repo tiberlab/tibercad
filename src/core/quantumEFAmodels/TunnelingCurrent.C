@@ -3,7 +3,7 @@
 #include "TunnelingCurrent.h"
 #include "Control.h"
 #include "gnuplot_io.h"
-
+#include "VTKIO.h"
 #include "mesh_tools.h"
 
 using namespace std;
@@ -21,11 +21,11 @@ TunnelingCurrent::TunnelingCurrent()
   Vmesh = NULL;
 
   Ves = NULL;
-  //  kmesh = NULL;
+
 }
 
 
-//============================================//
+//===================================================================================//
 TunnelingCurrent:: ~TunnelingCurrent()
 
 {
@@ -35,7 +35,7 @@ TunnelingCurrent:: ~TunnelingCurrent()
   
 }
 
-//============================================//
+//===================================================================================//
 void TunnelingCurrent::write_current()
 {
  std::ofstream current_file;
@@ -62,7 +62,7 @@ void TunnelingCurrent::write_current()
 
 }
 
-//============================================// 
+//=====================================================================================// 
 void TunnelingCurrent::read_current()
 {
   std::ifstream current_file;
@@ -97,7 +97,7 @@ void TunnelingCurrent::read_current()
 
 
 }
-//============================================//
+//======================================================================================//
 
 void TunnelingCurrent::do_plot (void)
 {
@@ -110,7 +110,7 @@ void TunnelingCurrent::do_plot (void)
 
   string suff;
  
-  suff = ".gmv";
+  suff = ".dat";
   
   const std::set< std::string >& plotvariables = get_control().get_plotvariables();
 
@@ -137,7 +137,7 @@ void TunnelingCurrent::do_plot (void)
 
 
    
-    GMVIO(*Vmesh).write_nodal_data(filename, results, names);
+    GnuPlotIO(*Vmesh).write_nodal_data(filename, results, names);
 
 
 
@@ -157,7 +157,7 @@ void TunnelingCurrent::build_elemental_results(const std::set<std::string>& vari
 
 
 
-//============================================//
+//=================================================================================//
 void TunnelingCurrent::build_V_grid()
 {
 
@@ -770,6 +770,8 @@ void TunnelingCurrent::k_space_output(void)
       GMVIO_cell(*kmesh).write_ascii_cell_data(filename, results, names);
     else if (format == "ise")
       TecplotIO_cell(*kmesh).write_cell_data(filename, results, names);
+    else if (format == "vtk")
+      VTKIO(*kmesh).write_elemental_data(filename, results, names);
     else
     {
       cout << "Output format not supported. Falling back to GMV." << endl;
@@ -991,7 +993,8 @@ double TunnelingCurrent::integrate_over_fix_energy(const Mesh* Emesh, double kpa
     int status = call_hetero(electric_potential, kpar, transmission_array, energy_array,  energy_size);
     
     for (unsigned int i1 = 0 ; i1 < energy_size  ; i1++)
-      transmission_values[i1] = transmission_array[i1] *  thermal_probability( opt.Efermi_left, energy_array[i1] );
+      transmission_values[i1] = transmission_array[i1] * 
+	thermal_probability( opt.Efermi_left, energy_array[i1] );
 
    
   }

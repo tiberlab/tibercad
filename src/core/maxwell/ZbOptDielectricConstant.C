@@ -15,7 +15,7 @@ void  ZbOptDielectricConstant::read_database(void)
 
  
 
-  if (_eps_model != "constant")
+  if (_eps_model == "constant")
   {
     _eps = data("optical_epsilon", 1.0);
   
@@ -35,10 +35,10 @@ void  ZbOptDielectricConstant::do_init(void)
 
   _eps_model = options.get_option("model", "constant");
  
-  if (_eps_model != "constant")
+  if (_eps_model == "constant")
 
   { 
-    _eps = options.get_option("optical_epsilon", 1.0);
+    _eps = get_parameter("optical_epsilon", _eps);
     
 
   }
@@ -48,7 +48,16 @@ void  ZbOptDielectricConstant::do_init(void)
 
   }
 
+  const Material* mat = get_material();
 
+  const ModelOptions & options_mat = mat->get_options ();
+
+
+  if (_eps_model == "constant")
+  {
+
+    _eps = options_mat.get_option("optical_epsilon", _eps);
+  }
   
   _dielectric_constant_real(1,1) = _eps;
 

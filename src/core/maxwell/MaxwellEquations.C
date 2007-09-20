@@ -182,7 +182,7 @@ void MaxwellEquations::prepare_field_mod_squared(const unsigned int mode_number,
  vector< vector<Complex> >  field_data;
  field_data.resize(number_of_points);
 
- for (unsigned int i = 0; i < number_of_points; i++) field_data[i].resize( 3, Complex(0.0, 0.0) );
+ for (unsigned int i = 0; i < number_of_points; i++) field_data[i].resize( number_of_field_components, Complex(0.0, 0.0) );
 
  MeshBase::const_element_iterator it = mesh->active_elements_begin();
  const MeshBase::const_element_iterator end =  mesh->active_elements_end();
@@ -195,7 +195,7 @@ void MaxwellEquations::prepare_field_mod_squared(const unsigned int mode_number,
    const Elem* elem = *it;
       
 
-   for (short psi_index = 0; psi_index < 3; psi_index++)
+   for (short psi_index = 0; psi_index < number_of_field_components; psi_index++)
    {
      dof_map.dof_indices (elem, dof_indices, psi_index);
      for (unsigned int n = 0; n < elem->n_nodes(); n++)
@@ -217,7 +217,7 @@ void MaxwellEquations::prepare_field_mod_squared(const unsigned int mode_number,
  double t1;
  for (unsigned int i = 0; i < number_of_points; i++) 
  {
-   for (unsigned int j = 0; j < 3; j++)
+   for (unsigned int j = 0; j < number_of_field_components; j++)
    {
 
      t1 = std::abs(field_data[i][j]);
@@ -261,6 +261,15 @@ void MaxwellEquations::do_init()
 
   opt.work_units = mod_opt.get_option("length_units", 1e-6);
 
+
+  opt.scalar_approximation = mod_opt.get_option("scalar_approximation", false);
+
+  if (opt.scalar_approximation)
+    number_of_field_components = 1;
+  else
+    number_of_field_components = 3;
+
+
   es = &(get_equation_systems());
   
   mesh = &(es->get_mesh());
@@ -273,10 +282,14 @@ void MaxwellEquations::do_init()
 
   dim = mesh->mesh_dimension();
 
+ 
   system->add_variable("Ax",FIRST);
-  system->add_variable("Ay",FIRST);
-  system->add_variable("Az",FIRST);
-
+  if (!opt.scalar_approximation)
+ 
+  {
+    system->add_variable("Ay",FIRST);
+    system->add_variable("Az",FIRST);
+  }
 
 
 
@@ -571,12 +584,14 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
   S_real->zero();
   S_imag->zero(); 
 
-  vector<unsigned int> fieldvar(3);
+  vector<unsigned int> fieldvar(number_of_field_components);
  
   fieldvar[0] = system->variable_number("Ax");
-  fieldvar[1] = system->variable_number("Ay");
-  fieldvar[2] = system->variable_number("Az");
-
+  if (!opt.scalar_approximation)
+  {
+    fieldvar[1] = system->variable_number("Ay");
+    fieldvar[2] = system->variable_number("Az");
+  }
 
   DofMap& dof_map = system->get_dof_map();
   
@@ -641,6 +656,10 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
 
     model->get_dielectric_constant()->get_dielectric_real(eps_real);
 
+
+  
+
+
     dof_map.dof_indices (elem, dof_indices); 
     const unsigned int n_dofs   = dof_indices.size();
 
@@ -657,12 +676,12 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
     for (unsigned int qp=0; qp<qrule.n_points(); qp++)
     {//qp
 
-      for (short i = 0; i < 3; i++)
+      for (short i = 0; i < number_of_field_components; i++)
       {
 	 dof_map.dof_indices (elem, dof_indices_component, fieldvar[i]);
 	 const unsigned int n_i_dofs = dof_indices_component.size();
 
-	 for (short j = 0; j < 3; j++)
+	 for (short j = 0; j < number_of_field_components; j++)
 	 {
 	    ham_real_sub.reposition(fieldvar[i]*n_i_dofs, fieldvar[j]*n_i_dofs, n_i_dofs, n_i_dofs);
 
@@ -1038,7 +1057,7 @@ double  MaxwellEquations::eigenstate_norm(unsigned int state_number)
     const Elem* elem = *el;
     fe->reinit (elem);
     
-    for (short psi_index = 0; psi_index < 3; psi_index++)
+    for (short psi_index = 0; psi_index < number_of_field_components; psi_index++)
     {
       dof_map.dof_indices (elem, dof_indices, psi_index);
       const unsigned int n_psi_dofs = dof_indices.size();

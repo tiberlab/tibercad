@@ -53,6 +53,7 @@ class MaxwellEquations : public EigenvalueProblem
   {
     double work_units; //!< work units for length [m] 
     double spectrum_shift ;
+    bool scalar_approximation;
   
   };
 
@@ -165,6 +166,9 @@ class MaxwellEquations : public EigenvalueProblem
 
   //!calculates norm \f$ \left( \int  |{\bf A}|^2 dV  \right)^{1/2} \f$ 
   double  eigenstate_norm(unsigned int state_number);
+
+
+  short number_of_field_components;
 
 
 };
