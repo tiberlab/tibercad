@@ -40,9 +40,14 @@ LeakageCurrent::get_normal_derivative(DriftDiffusionDefs::Variable variable,
   double I = 0.0;
 
   if (_tc == NULL)
+  {
     I = _A * Vdiff * Vdiff * std::exp(Vdiff / _c);
+    if (Vdiff < 1.0)
+      I = 0.0;
+  }
   else
     I = _tc->get_current(Vdiff);
+
 
   if (-Vg < Ec)
     I = -I;

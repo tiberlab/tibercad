@@ -2378,7 +2378,7 @@ DriftDiffusion::calculate_currents_rstf(void)
   {
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
-
+        
     bool has_node = false;
     node_ids.resize(elem->n_nodes());
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
