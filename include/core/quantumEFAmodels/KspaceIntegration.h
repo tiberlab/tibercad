@@ -117,48 +117,52 @@ class KspaceIntegration : public Kspace
    
    
 
-   //!calculate density for a particular k-grid
-   virtual void calculate_density();
+  //!calculate density for a particular k-grid
+  virtual void calculate_density();
 
 
   
 
 
-   //!estimates error for mesh refinement KellyErrorEstimator is called
-   void estimate_error_for_refinement(ErrorVector& error);
+  //!estimates error for mesh refinement KellyErrorEstimator is called
+  void estimate_error_for_refinement(ErrorVector& error);
 
 
   
-   //!put data into opt
-   virtual void parse_options(void);
+  //!put data into opt
+  virtual void parse_options(void);
 
-   //!volumes of the elements
-   std::map<const Elem*, double> volume;
+  //!volumes of the elements
+  std::map<const Elem*, double> volume;
 
 
   
-   //!calculate  volumes of the elements
-   void calculate_volumes(void);
+  //!calculate  volumes of the elements
+  void calculate_volumes(void);
    
-   //!how many elementsin k-space has to be done
-   unsigned int how_many_elements_to_do();
+  //!how many elementsin k-space has to be done
+  unsigned int how_many_elements_to_do();
    
 
   
-   options opt;
+  options opt;
 
    
-   virtual void do_solve(void);
+  virtual void do_solve(void);
 
-   virtual void do_init(void);
+  virtual void do_init(void);
 
   
-   //!does k-space output
-   virtual void do_plot(void);
+  //!does k-space output
+  virtual void do_plot(void);
 
-   //!calculates integrated quantity distribution over k space
-   virtual std::vector<double>  get_density_in_k_space(void)  const;
+  //!calculates integrated quantity distribution over k space
+  virtual std::vector<double>  get_density_in_k_space(void)  const;
    
+
+  //!is used for k-space output
+  std::string additional_name_suffix;
+
 
  private:
 

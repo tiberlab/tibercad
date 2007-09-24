@@ -2475,56 +2475,7 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 
 }
 
-//-------------------------------------------------------------------------------//
-/*
-std::vector<double> EnvelopFunctionApprox::estimate_density(double parallel_mass)
-{
-  vector<double> result;
-  
 
-  double T_EV = opt.Temperature * Constants::k_Boltzmann;
-
-  unsigned int number_of_eigenfunctions = solution.size();
-
-  double mass_factor = parallel_mass/M_PI * (T_EV /Constants::Hartree);
- 
-  for (unsigned int i = 0; i < number_of_eigenfunctions; i++)
-  {
-    const double Fermi_energy = solution[i].Fermi_energy;
-
-   
-
-    const double Energy = solution[i].eigen_energy;
-
-   
-      
-    double prob_factor = std::log( 1.0 + exp( (Fermi_energy - Energy) / T_EV )  );
-    
-    vector<double> density_of_state = calculate_cell_prob_function(i);
-
-    unsigned int n =  density_of_state.size();
-
-    if (i == 0)
-    {
-      result.resize(n, 0.0);
-    }
-
-    for (unsigned int j = 0; j < n; j++)
-    {
-     
-
-      result[j] +=  density_of_state[j] * prob_factor * mass_factor / 
-	( (Constants::bohr_radius) * (Constants::bohr_radius) * (Constants::bohr_radius) * 1.0e6 );
-
-     
-    }
-
-  }
-
-  return(result);
-
-}
-*/
 
 //------------------------------------------------------------------------------//
 
@@ -2548,69 +2499,71 @@ void EnvelopFunctionApprox::calculate_density(double Temperature)
 
   unsigned int number_of_eigenfunctions = solution.size();
 
-  for (unsigned int i = 0; i < number_of_eigenfunctions; i++)
-    {
+  
+  
+  for (unsigned int i = 0; i < number_of_eigenfunctions; i++) 
+  {
       
     
 
-      const double Fermi_energy = solution[i].Fermi_energy;
+    const double Fermi_energy = solution[i].Fermi_energy;
 
-      const double Energy = solution[i].eigen_energy;
+    const double Energy = solution[i].eigen_energy;
       
-      double prob_factor = Fermi_statistics_probability(Energy, Fermi_energy, Temperature); //Thermal probability
+    double prob_factor = Fermi_statistics_probability(Energy, Fermi_energy, Temperature); //Thermal probability
 
      
-      density_of_state = calculate_cell_prob_function(i);
+    density_of_state = calculate_cell_prob_function(i);
 
     
-      const MeshBase::const_element_iterator it_end  = mesh1.active_elements_end();
-      const MeshBase::const_element_iterator it_begin  = mesh1.active_elements_begin();
+    const MeshBase::const_element_iterator it_end  = mesh1.active_elements_end();
+    const MeshBase::const_element_iterator it_begin  = mesh1.active_elements_begin();
 
-      MeshBase::const_element_iterator       it     =  it_begin;
+    MeshBase::const_element_iterator       it     =  it_begin;
 
-      unsigned int el_number = 0;
+    unsigned int el_number = 0;
       
-      for( ;it !=  it_end ;++it)
+    for( ;it !=  it_end ;++it)
+    {
+      const Elem* el = *it;
+      
+      
+      
+      if (opt.local_occupation)
       {
-	const Elem* el = *it;
+	DriftDiffusion::Solution dd_solution;
 	
-
-
-	if (opt.local_occupation)
-	{
-	  DriftDiffusion::Solution dd_solution;
-
-	  Point center = el->centroid();
-
-	  // poisson_equation->get_solution(el, center, dd_solution);
-	  
-	  double chem_pot_value_eV = -get_electro_chem_potential(el);
-
-	  //!why minus? because I need energy, not a potential
-	  /*
-	    if (opt.particle == "el")
-	    chem_pot_value_eV = -dd_solution.fermi_e;
-	    else
-	    chem_pot_value_eV = -dd_solution.fermi_h;
-	  */
-	  prob_factor = Fermi_statistics_probability(Energy,  chem_pot_value_eV, Temperature); //Thermal probability
-	}
+	Point center = el->centroid();
+	
+	// poisson_equation->get_solution(el, center, dd_solution);
+	
+	double chem_pot_value_eV = -get_electro_chem_potential(el);
+	
+	//!why minus? because I need energy, not a potential
+	/*
+	  if (opt.particle == "el")
+	  chem_pot_value_eV = -dd_solution.fermi_e;
+	  else
+	  chem_pot_value_eV = -dd_solution.fermi_h;
+	*/
+	prob_factor = Fermi_statistics_probability(Energy,  chem_pot_value_eV, Temperature); //Thermal probability
+      }
 	
 	
-	  double temp = density_of_state[el_number] * prob_factor;
+      double temp = density_of_state[el_number] * prob_factor;
 	
 
-	if (it == it_begin && i == 0)
-	{
+      if (it == it_begin && i == 0)
+      {
 	
-	  _density.insert(pair<const Elem*, double> (el, temp));
-	}
-	else
-	  _density[el] += temp;
-	
-	
-
-	el_number++;
+	_density.insert(pair<const Elem*, double> (el, temp));
+      }
+      else
+	_density[el] += temp;
+      
+      
+      
+      el_number++;
       }
      
      
@@ -2968,21 +2921,24 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
 
 std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density1D(unsigned int state_number, double parallel_mass)
 {
+
+
   vector<double> result;
   map<const Elem*, double> result_map;
 
+  
+
   const double T_EV = opt.Temperature * Constants::k_Boltzmann;
   
-  const double mass_factor = parallel_mass/M_PI * (T_EV /Constants::Hartree);
+  const double mass_factor = 0.5 * parallel_mass/M_PI * (T_EV /Constants::Hartree);
 
   const double Fermi_energy = solution[state_number].Fermi_energy;
 
   const double Energy = solution[state_number].eigen_energy;
 
+ 
+
   double prob_factor = std::log( 1.0 + exp( (Fermi_energy - Energy) / T_EV )  );
-
-
-  cerr << "state  " <<  state_number <<"     " <<  Energy << "eV\n";
 
   result  = calculate_cell_prob_function(state_number);
 
@@ -2996,7 +2952,7 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density1D(unsigned
   {
     
     result_map[*el] = result[n] *  prob_factor * mass_factor  ;
-
+   
     n++;
   }
 

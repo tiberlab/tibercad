@@ -4,6 +4,9 @@
 #include "SimulationEnvironment.h"
 #include "GMVIO_cell.h"
 #include "tecplot_IO_cell.h"
+#include "VTKIO.h"
+
+
 using namespace std;
 
 KspaceIntegration::KspaceIntegration()
@@ -34,11 +37,14 @@ void KspaceIntegration::do_plot()
   string format = get_control().get_output_format();
 
   string suff;
+
   if (format == "gmv")
     suff = ".gmv";
   else if (format == "ise")
     suff = ".plt";
-  else
+  else if (format == "vtk")
+    suff = ".vtk";
+  else 
     suff = ".gmv"; 
 
   const std::set< std::string >& plotvariables = get_control().get_plotvariables();
@@ -46,11 +52,11 @@ void KspaceIntegration::do_plot()
   if (plotvariables.find("k-space") != plotvariables.end())
   {
     string filename(outdir + "/" + get_name() +
-        "_k_space" + suffix + suff);
+        "_k_space" + suffix + additional_name_suffix + suff);
 
    
 
-    vector<string> names(1,"integrated_value[atomic_units]");
+    vector<string> names(1,"value[atomicUnits]");
 
    
 
@@ -61,6 +67,8 @@ void KspaceIntegration::do_plot()
       GMVIO_cell(get_k_mesh()).write_ascii_cell_data(filename, results, names);
     else if (format == "ise")
       TecplotIO_cell(get_k_mesh()).write_cell_data(filename, results, names);
+    else if (format == "vtk")
+      VTKIO(get_k_mesh()).write_elemental_data(filename, results, names); 
     else
     {
       cout << "Output format not supported. Falling back to GMV." << endl;
@@ -110,9 +118,10 @@ void KspaceIntegration::calculate_density()
   {
     for (short i = 0; i < k_dim; i++)  factor /= (2.0 * M_PI);
     
-    factor *= get_degeneracy_factor();
+    factor *= get_degeneracy_factor() * opt.degeneracy;
   }
-  
+
+ 
 
   std::vector<unsigned int> dof_indices;
 
@@ -180,11 +189,19 @@ void KspaceIntegration::calculate_density()
 
   //--------------------------------------------------------------------------//
   {//real space density calculation
-    map <const Elem*,map<const Elem*, double> > ::iterator it_k_space = kspace_local_density.begin();
-    map <const Elem*,map<const Elem*, double> > ::iterator it2 = kspace_local_density.end();
+  
+  
+   
+
+    MeshBase::element_iterator       it_k_space     = kmesh->active_elements_begin();
+    const MeshBase::element_iterator it2  = kmesh->active_elements_end();
+    
+
     for ( ; it_k_space != it2 ; ++it_k_space)
     {
-      map<const Elem*, double>& k_cell_map = it_k_space->second;
+      const Elem* el = *it_k_space;
+
+      map<const Elem*, double>& k_cell_map = kspace_local_density[el];
 
       map<const Elem*, double>::iterator it_real_space =   k_cell_map.begin();
       map<const Elem*, double>::iterator it_3 =   k_cell_map.end();
@@ -192,7 +209,6 @@ void KspaceIntegration::calculate_density()
 
       for ( ; it_real_space != it_3 ; ++it_real_space )
       {
-	
 	real_space_density[it_real_space->first] += it_real_space->second;
       }
 

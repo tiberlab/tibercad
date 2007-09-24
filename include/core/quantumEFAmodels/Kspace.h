@@ -24,7 +24,7 @@ class Kspace : public SimulationInterface
   const Mesh& get_k_mesh(void) const; 
 
 
-  double get_degeneracy_factor(void) {return degeneracy_factor; };
+  double get_degeneracy_factor(void) {   return  degeneracy_factor; };
 
   enum Wedge
   {

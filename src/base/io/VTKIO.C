@@ -224,7 +224,7 @@ void VTKIO::write_elemental_data(const std::string& fname,
     n_nodes = node_ids.size();
   }
 
-
+ 
 
   // Create an output stream for script file
   std::ofstream out(fname.c_str());
@@ -318,6 +318,7 @@ void VTKIO::write_elemental_data(const std::string& fname,
   out << "CELL_DATA " << n_active_elem << "\n";
 
   unsigned int var = 0;
+  
   for ( ; var < n_vars; var++)
   {
     // check if it is a vector
@@ -328,10 +329,11 @@ void VTKIO::write_elemental_data(const std::string& fname,
     tokenizer::iterator tokit(tokens.begin());
     tokenizer::iterator tokit_next(tokit);
     ++tokit_next;
-
+    
     if (tokit_next != tokens.end())
-    {
-      // it is a vector
+    { // it is a vector
+   
+
       std::string name(*tokit);
       std::string coord(*tokit_next);
 
@@ -345,6 +347,9 @@ void VTKIO::write_elemental_data(const std::string& fname,
         indices[2] = var;
       else
         continue;
+
+     
+
 
       // check the following variable
       if ((var + 1) < n_vars)
@@ -426,28 +431,28 @@ void VTKIO::write_elemental_data(const std::string& fname,
           value[2] = soln[global_id + indices[2]];
 
         vector_node_map[global_id] = value;
-
+	
         elem_number++;
       }
 
       out << std::setprecision(10);
-
+      
       vector_map_iterator map_it = vector_node_map.begin();
       const vector_map_iterator end_map_it = vector_node_map.end();
-
+      
       for( ; map_it != end_map_it; ++map_it)
       {
         vector_key_value_pair kvp = *map_it;
 
         out << kvp.second[0] << " "
-          << kvp.second[1] << " "
-          << kvp.second[2] << "\n";
+	    << kvp.second[1] << " "
+	    << kvp.second[2] << "\n";
       }
 
     }
     else
     {
-    
+     
       out << "SCALARS " <<  names[var] << " double\n";
       out << "LOOKUP_TABLE default\n";
 

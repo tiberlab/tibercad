@@ -101,7 +101,7 @@ void TunnelingCurrent::read_current()
 
 void TunnelingCurrent::do_plot (void)
 {
-  //k-space output
+  //IV-output
   const Device& dev = get_environment().get_device();
 
   string suffix = get_control().get_filename_suffix();
@@ -115,7 +115,7 @@ void TunnelingCurrent::do_plot (void)
   const std::set< std::string >& plotvariables = get_control().get_plotvariables();
 
   if (plotvariables.find("tunneling_current") != plotvariables.end())
- {
+  {
     string filename(outdir + "/" + get_name() +  suffix + suff);
 
    
@@ -124,7 +124,9 @@ void TunnelingCurrent::do_plot (void)
 
     vector<double> results;
     unsigned int el_number = 0; 
+
     //results.resize(Vmesh->n_elem());
+
     results.resize(Vmesh->n_nodes());
 
     map < const Node*, double > :: iterator it1 = current.begin();
@@ -494,12 +496,14 @@ void TunnelingCurrent::do_solve()
 
      
       }//end of refinement block
-    
-    
 
-
-   
-   
+      {//k-space output
+	std::ostringstream o;
+	o << (*applied_voltage_node)(0);
+	additional_name_suffix = o.str();
+	
+	KspaceIntegration::do_plot();
+      }
 
     
       delete(eq);
@@ -636,7 +640,7 @@ void TunnelingCurrent::calculate_density()
 double TunnelingCurrent::calculte_at_k_point(const Point& k)
 {
   double factor = Constants::e * Constants::e /
-    (  M_PI * (Constants::hbar)*( Constants::bohr_radius * Constants::bohr_radius )    ) /1e4;
+    (   (Constants::hbar)*( Constants::bohr_radius * Constants::bohr_radius )    ) /1e4;
 
   //factor = 1.0; //---------------test only----------------
 
