@@ -35,7 +35,7 @@ void VTKIO::write_nodal_data(const std::string& fname,
 
   std::set<unsigned int> node_ids;
 
-  // count nodes ...
+  // count nodes of active part of mesh ...
   {
     MeshBase::const_element_iterator       it  = mesh.active_elements_begin();
     const MeshBase::const_element_iterator end = mesh.active_elements_end(); 
@@ -205,11 +205,11 @@ void VTKIO::write_elemental_data(const std::string& fname,
 
   const MeshBase& mesh = MeshOutput<MeshBase>::mesh();
 
-  unsigned int n_nodes = 0;
 
-  // count nodes ...
+  std::set<unsigned int> node_ids;
+
+  // count nodes  of active part of mesh ...
   {
-    std::set<unsigned int> node_ids;
     MeshBase::const_element_iterator       it  = mesh.active_elements_begin();
     const MeshBase::const_element_iterator end = mesh.active_elements_end(); 
 
@@ -221,10 +221,11 @@ void VTKIO::write_elemental_data(const std::string& fname,
       for (unsigned int i = 0; i < nn; i++)
         node_ids.insert(elem->node(i));
     }
-    n_nodes = node_ids.size();
   }
 
- 
+  unsigned int n_nodes = node_ids.size();
+
+
 
   // Create an output stream for script file
   std::ofstream out(fname.c_str());
@@ -242,11 +243,16 @@ void VTKIO::write_elemental_data(const std::string& fname,
   out << "DATASET UNSTRUCTURED_GRID\n";
   out << "POINTS " << n_nodes << " double\n";
 
+  std::map<unsigned int, unsigned int> vtk_node_ids;
   
-  for (unsigned int i = 0; i < n_nodes; i++)
+  std::set<unsigned int>::iterator nodeit(node_ids.begin());
+  const std::set<unsigned int>::iterator nodeend(node_ids.end());
+  for (unsigned int vtk_id = 0; nodeit != nodeend; ++nodeit, vtk_id++)
   {
-    const Node& node = mesh.node(i);
+    const Node& node = mesh.node(*nodeit);
     out << node(0) << " " << node(1) << " " << node(2) << "\n";
+
+    vtk_node_ids[*nodeit] = vtk_id;
   }
 
   out << "\n";
@@ -281,7 +287,7 @@ void VTKIO::write_elemental_data(const std::string& fname,
     out << nn;
 
     for (unsigned int i = 0; i < nn; i++)
-      out << " " << elem->node(i);
+      out << " " << vtk_node_ids[elem->node(i)];
 
     out << "\n";
   }
@@ -318,7 +324,6 @@ void VTKIO::write_elemental_data(const std::string& fname,
   out << "CELL_DATA " << n_active_elem << "\n";
 
   unsigned int var = 0;
-  
   for ( ; var < n_vars; var++)
   {
     // check if it is a vector
@@ -329,27 +334,32 @@ void VTKIO::write_elemental_data(const std::string& fname,
     tokenizer::iterator tokit(tokens.begin());
     tokenizer::iterator tokit_next(tokit);
     ++tokit_next;
-    
-    if (tokit_next != tokens.end())
-    { // it is a vector
-   
 
+    bool is_vec = false;
+    if (tokit_next != tokens.end())
+    {
+      // is it a vector?
+      std::string coord(*tokit_next);
+
+      if ((coord == "x") || (coord == "y") || (coord == "z"))
+        is_vec = true;
+    }
+
+    if (is_vec)
+    {
+      // it is a vector
       std::string name(*tokit);
       std::string coord(*tokit_next);
 
       std::vector<int> indices(3, -1);
 
+      
       if (coord == "x")
         indices[0] = var;
       else if (coord == "y")
         indices[1] = var;
       else if (coord == "z")
         indices[2] = var;
-      else
-        continue;
-
-     
-
 
       // check the following variable
       if ((var + 1) < n_vars)
@@ -430,29 +440,29 @@ void VTKIO::write_elemental_data(const std::string& fname,
         if (indices[2] != -1)
           value[2] = soln[global_id + indices[2]];
 
-        vector_node_map[global_id] = value;
-	
+        vector_node_map[elem_number] = value;
+
         elem_number++;
       }
 
       out << std::setprecision(10);
-      
+
       vector_map_iterator map_it = vector_node_map.begin();
       const vector_map_iterator end_map_it = vector_node_map.end();
-      
+
       for( ; map_it != end_map_it; ++map_it)
       {
         vector_key_value_pair kvp = *map_it;
 
         out << kvp.second[0] << " "
-	    << kvp.second[1] << " "
-	    << kvp.second[2] << "\n";
+          << kvp.second[1] << " "
+          << kvp.second[2] << "\n";
       }
 
     }
     else
     {
-     
+    
       out << "SCALARS " <<  names[var] << " double\n";
       out << "LOOKUP_TABLE default\n";
 
