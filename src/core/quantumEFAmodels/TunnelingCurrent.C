@@ -134,7 +134,7 @@ void TunnelingCurrent::do_plot (void)
     {
       results[el_number] = it1->second;
       el_number++;
-      cerr << it1->second << "\n";
+      cerr  << (*it1->first)(0)  << "     " << it1->second << "\n";
     }
 
 

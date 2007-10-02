@@ -328,7 +328,7 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
   slep_opt.matrix_output = false;
 
   
-  slep_opt.eps_tolerance = 1e-9;
+  slep_opt.eps_tolerance = solver_opt.eigen_solver_tolerance;
 
   slep_opt.ev_number = ev_number;
   
