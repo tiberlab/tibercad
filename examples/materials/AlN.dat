@@ -97,6 +97,6 @@ Talpha_h = -1.5
 therm_lat_cond = 2.85
 
 
-#Optical dielectric (very approximate values :) )
-optical_epsilon_x = 1.0
-optical_epsilon_z = 1.0
+#Optical dielectric @3.5eV
+optical_epsilon_x = 2.1
+optical_epsilon_z = 2.1
