@@ -1636,12 +1636,17 @@ void Macrostrain::make_nodes_periodic()
 	{
 	  //----------------------------------------------------------------
 	  //check if the fixed_point 1 is good
-
-	  if ( ( std::abs( (*node_fix)(dir) - max_coord[dir]) < pos_tol)  ||
-	       ( std::abs( (*node_fix)(dir) - min_coord[dir]) < pos_tol)  )
+	  if(!grown_on_substrate)
+	    if ( ( std::abs( (*node_fix)(dir) - max_coord[dir]) < pos_tol)  ||
+		 ( std::abs( (*node_fix)(dir) - min_coord[dir]) < pos_tol)  )
 	    {
+	      cerr << "dir  " << dir << "\n";
+	      
+	      cerr << (*node_fix)(dir) << "   " << max_coord[dir] << "\n";
+	      
 	      cerr << "Fixed node 1 is on a boundary that periodic boundary conditions are applied for.\n\n This should be changed.\n";
 			 exit(1);
+			 
 	    }
 	  //------------------------------------------------------------------
 	  for (unsigned int n = 0; n < mesh.n_nodes(); n++) // Loop over all the nodes
