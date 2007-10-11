@@ -36,7 +36,7 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
     double  length_scale;   //!< mesh length scale [Bohr radius]
 
 
-    bool periodicity[3];    //!< periodic boundary conditions
+    //bool periodicity[3];    //!< periodic boundary conditions
 
    
 
@@ -386,10 +386,10 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
  
 
   //! Apply periodic boundary conditions
-  void apply_periodic_bc();
+  //void apply_periodic_bc();
 
   //! create list of nodes that lies at the periodic boundary
-  void make_nodes_periodic();
+  //void make_nodes_periodic();
 
 
   //!list of periodic nodes
@@ -398,14 +398,9 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   
 
 
-  //!simulation domain boundary
-  double min_coord[3];
+ 
   
-  //!simulation domain boundary
-  double max_coord[3];
-  
-  //! cheks if element lies on boundary
-  bool element_on_boundary(const Elem* element);
+
   
 
 
@@ -551,38 +546,7 @@ inline double EnvelopFunctionApprox::Fermi_statistics_probability(double Energy,
 }
 
 //-------------------------------------------------------------------
-inline bool EnvelopFunctionApprox::element_on_boundary(const Elem* element)
-{
-  bool result = false;
 
-  
-    
-  unsigned int n_sides ; 
-
-  if ( dim > 1 ) 
-    n_sides = element->n_sides();
-  else
-    n_sides = element->n_nodes();
-
-
-  for (short i = 0; i < n_sides; i++)
-    {
-      Elem* el1 = element->neighbor(i);
-      if ( (el1 == NULL)  ) 
-	  result = true;
-      else
-	if (!( el1 -> active() ))
-	  result = true;
-	  
-      if (result) break;
-	
-      
-    }
-
- 
-  return(result);
-  
-}
 //---------------------------------------------------------
 
 inline void EnvelopFunctionApprox::set_initial_eigenstates_number(unsigned int n)

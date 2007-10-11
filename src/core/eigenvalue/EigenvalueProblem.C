@@ -385,6 +385,8 @@ void EigenvalueProblem::parse_options()
   solver_opt.Dirichlet_bc_everywhere = mod_opt.get_option("Dirichlet_bc_everywhere",false);
 
 
+  //cerr <<  solver_opt.Dirichlet_bc_everywhere << "\n";
+
   {
     std::string  method_name = mod_opt.get_option("method","FEM");
     if (method_name == "FEM")
@@ -632,4 +634,221 @@ void EigenvalueProblem::copy_H_matrix_to_solver( )
   
 }
 
+//=======================================================================================/
+void EigenvalueProblem::apply_periodic_bc()
+{
 
+  
+
+  // Declare a performance log.  Give it a descriptive
+  // string to identify what part of the code we are
+  // logging, since there may be many PerfLogs in an
+  // application.
+
+
+  PerfLog perf_log ("Periodic bc. Assembly",false);
+
+  DofMap& dof_map = system->get_dof_map();
+
+  unsigned int number_of_variables = dof_map.n_variables();
+  
+ 
+  // The dimension that we are running
+  //const unsigned int dim = mesh.mesh_dimension();
+
+  // Get a reference to the LinearImplicitSystem we are solving
+
+
+  vector<unsigned int> uvar(number_of_variables);
+
+  for (unsigned int i = 0; i < number_of_variables; i++) 
+  {
+    uvar[i] = i;
+  }
+
+  unsigned int system_number=system->number();
+  
+ 
+  
+  FEType fe_type = dof_map.variable_type(uvar[0]);
+  
+ 
+  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+   
+
+  
+
+  // The element shape functions evaluated at the quadrature points.
+  const std::vector<std::vector<Real> >& phi = fe->get_phi();
+
+ 
+  std::vector<unsigned int> dof_indices;
+  std::vector<unsigned int> dof_indices_component;
+  
+  const double pos_tol = 1e-10;
+  const double func_tol = 1e-10;
+ 
+  //dof_map.print_dof_constraints();  
+
+  for (int i = 0; i < mesh->mesh_dimension(); i++) //Loop over all the mesh directions
+    { 
+      if  (solver_opt.periodicity[i]) //Check if the periodic b.c. are applied along the direction i
+	
+	{
+	 
+	  std :: vector <const Node*>& vec =  nodes_periodic[i];
+
+	  for (unsigned int n = 0; n < vec.size(); n++) // Loop over all the nodes
+	    {
+	      const Node* node1 = vec[n];
+	      
+	    
+		 
+	      for (unsigned int var_index = 0 ; var_index  <  number_of_variables;  var_index ++)
+		{//let us find dof for it-----------------
+		  
+
+		 // const Node& node = mesh.node(n);
+		  
+		  const unsigned int  n_dof = node1->dof_number(system_number,uvar[var_index],0);
+		
+		  //dof is found-------------------------------
+		 
+		
+
+
+		  if (! dof_map.is_constrained_dof(n_dof) ) //only if the dof is not constrained do the job
+		    {
+		      //let us make a  point that lies at the opposite side
+		      Point point2(*node1);
+		
+		      point2(i) = point2(i) + max_coord[i] - min_coord[i];
+		  
+		      
+		      //corresponding point is created
+		      
+		      
+		      //let us find an element this point belongs to and calculate the constraints
+
+		      //the most coarse element first
+		      unsigned int refinement_level = 0; 
+		      MeshBase::const_element_iterator el3  = mesh->active_elements_begin();
+		      MeshBase::const_element_iterator end_el3 = mesh->active_elements_end();
+		      
+		      const Elem* elem1;
+		      bool found = false; 
+
+		      unsigned int el_number = 0;
+
+		      for ( ; ( (el3 != end_el3) ) ; ++el3)  
+			{
+			  Elem* elem = *el3;
+			  
+			  if (element_on_boundary(elem))
+			    {
+			      if (elem->contains_point(point2))
+				{
+				  elem1 = elem;
+				  found = true;
+				  break;
+				  
+				}
+			    }
+			  el_number++;
+			}
+		      
+		      if (!found)  throw ModelErrorException("EnvelopFunctionApprox: Mesh periproblem");
+		  
+		      
+
+		      
+		      //active elem1 contains the opposite  point, we can constrain it now
+		      
+		      DofConstraintRow constraint;
+		      constraint.clear();
+		      
+		      dof_map.dof_indices (elem1, dof_indices_component, uvar[var_index]);
+		      
+		      std::vector<Point> point2_vec(1);
+		      
+		      point2_vec[0] = point2;
+		      
+		      std::vector<Point> point2_ref_vec(1);
+			  
+			  
+		      FEInterface::inverse_map (elem1->dim(), fe_type , elem1,  point2_vec,  point2_ref_vec)  ;
+		      
+		      fe->reinit (elem1, &point2_ref_vec);
+
+		      Point point_temp = point2_ref_vec[0];
+		     
+		      
+		      for (int i1 = 0; i1 < phi.size(); i1++)
+			{
+			
+			  if ( std::abs(phi[i1][0]) >  func_tol )  
+			    {
+			     
+			      constraint[dof_indices_component[i1]] = phi[i1][0];
+			    
+			    }
+			}
+		       
+
+		      dof_map.add_constraint_row (n_dof,  constraint); 
+                      my_dof_constraints.insert(pair<unsigned int, DofConstraintRow>(n_dof,  constraint));
+		      
+		    }
+		     
+		    
+		}
+	    }
+	  
+	  
+	}
+    }  
+ 
+}
+//---------------------------------------------------------------------------------------------
+
+void EigenvalueProblem::make_nodes_periodic()
+{
+  const double pos_tol = 1e-10;
+ 
+  nodes_periodic.clear();
+
+ 
+  
+
+  for (unsigned dir = 0; dir <=dim-1; dir++)
+  {//directions
+    std::vector < const Node*> temp_vec;
+    temp_vec.clear();
+    
+    if (solver_opt.periodicity[dir]) 
+    {  
+      for (unsigned int n = 0; n < mesh->n_nodes(); n++) // Loop over all the nodes
+      {
+	const Node* node1 = & (mesh->node(n));
+	if (node1->active())
+	{		
+	  if ( std::abs( (*node1)(dir) - min_coord[dir]) < pos_tol)  temp_vec.push_back(node1);
+	}
+      }
+    }
+    nodes_periodic.push_back(temp_vec);
+  }
+}
+
+//--------------------------------------------------------------------------------------//
+void EigenvalueProblem::do_init()
+{
+   //peiodicity can not be changed between runs because that will require cleaning of the DOF constraint table
+   const ModelOptions& mod_opt = get_options();
+
+   solver_opt.periodicity[0]          = mod_opt.get_option("x-periodicity", false);
+   solver_opt.periodicity[1]          = mod_opt.get_option("y-periodicity", false);
+   solver_opt.periodicity[2]          = mod_opt.get_option("z-periodicity", false);
+
+
+}

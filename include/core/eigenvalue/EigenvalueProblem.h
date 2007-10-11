@@ -101,7 +101,8 @@ class EigenvalueProblem: public  SimulationInterface
 
     std::string preconditioner; //!< preconditioner name
 
-  
+    bool periodicity[3];    //!< periodic boundary conditions
+
   };
 
 
@@ -111,7 +112,7 @@ class EigenvalueProblem: public  SimulationInterface
 
  protected:
 
-  virtual void do_init() {};
+  virtual void do_init();
 
   virtual void do_solve() {};
 
@@ -247,9 +248,66 @@ class EigenvalueProblem: public  SimulationInterface
 
 
 
+  //! Apply periodic boundary conditions
+  void apply_periodic_bc();
+
+  //! create list of nodes that lies at the periodic boundary
+  void make_nodes_periodic();
+
+
+  //!list of periodic nodes
+  std :: vector< std :: vector <const Node*> >  nodes_periodic; //dim node list's: each contains list of nodes that periodic b.c
+                                                                //must be applied to
+
+
+  //!simulation domain boundary
+  double min_coord[3];
+  
+  //!simulation domain boundary
+  double max_coord[3];
+
+  //! checks if element lies on boundary
+  bool element_on_boundary(const Elem* element);
   
 
 
 };
 
+
+//---------------------------------------------------------------------------------//
+
+inline bool EigenvalueProblem::element_on_boundary(const Elem* element)
+{
+  bool result = false;
+
+  
+    
+  unsigned int n_sides ; 
+
+  if ( dim > 1 ) 
+    n_sides = element->n_sides();
+  else
+    n_sides = element->n_nodes();
+
+
+  for (short i = 0; i < n_sides; i++)
+  {
+    Elem* el1 = element->neighbor(i);
+
+    if ( (el1 == NULL)  ) 
+      result = true;
+    else
+      if (!( el1 -> active() ))
+	result = true;
+	  
+    if (result) break;
+	
+      
+  }
+
+ 
+  return(result);
+  
+}
+//-----------------------------------------------------------------------------------//
 #endif 
