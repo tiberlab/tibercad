@@ -28,21 +28,7 @@ BoundaryProperties* MaxwellEquations::create_boundary_model(const ModelOptions& 
 {
 
 
-  /*
-
-  const string& modelname = options.get_option("type", "Dirichlet");
-
-  EigenvalueBoundary* model = EigenvalueBoundary::create(modelname, options);
-
-  
-  
-  if (model == NULL)
-  throw ModelErrorException(
-  "MaxwellEquations: No such boundary model: " + modelname);
-
-  
-  return model;
-  */
+ 
   return NULL;
 }
 
@@ -251,6 +237,9 @@ void MaxwellEquations::do_init()
 {
 
 
+  EigenvalueProblem::do_init();
+
+
   SimulationEnvironment& si = get_environment();   
 
   _device = &( si.get_device() );
@@ -361,6 +350,11 @@ void MaxwellEquations::do_solve()
 
   make_constraints(); //creates a copy of them
 
+  make_nodes_periodic();
+  
+  apply_periodic_bc();
+
+
   make_new_dofs();
 
   solve_eigen_value_problem( solver_opt.number_of_eigenstates);
@@ -385,6 +379,8 @@ void MaxwellEquations::read_SLEPC_solution(unsigned int number_of_ev)
   for (unsigned ind = 0; ind < number_of_converged_solutions; ind++)
     {
       
+      //cerr << EigenSolver::get_eigenvalue(ind) << "\n";
+
       ev[ind].k_squared =  EigenSolver::get_eigenvalue(ind) + opt.spectrum_shift;
       
 
@@ -482,70 +478,70 @@ void MaxwellEquations::read_SLEPC_solution(unsigned int number_of_ev)
     
     EigenSolver::get_eigen_vector( ind, temp);
    
-     it = global_to_sol_index.find(ind);
+    it = global_to_sol_index.find(ind);
      
-     if (  (it  !=  global_to_sol_index.end()) )
-     {
+    if (  (it  !=  global_to_sol_index.end()) )
+    {
 
     
 
-       unsigned int solution_number = it->second;
+      unsigned int solution_number = it->second;
 	 
   
 
 
  
-       //-----------------------------------------------------------------------------
-       //put independent dofs in the eigenvectors that may contain also non independent dofs
-       for (unsigned j = 0; j < number_of_all_dofs; j++)
-       {
-	 if (new_dofs[j].independent)
-	 {
+      //-----------------------------------------------------------------------------
+      //put independent dofs in the eigenvectors that may contain also non independent dofs
+      for (unsigned j = 0; j < number_of_all_dofs; j++)
+      {
+	if (new_dofs[j].independent)
+	{
 	   
-	   solution[solution_number].eigen_vector[j] = temp[new_dofs[j].new_number];
+	  solution[solution_number].eigen_vector[j] = temp[new_dofs[j].new_number];
 	    
 	    
-	 }
-       }
+	}
+      }
 
 
-	//put constrained dofs
+      //put constrained dofs
 	
 
    
 	
-	for (unsigned int j = 0; j < number_of_all_dofs; j++)
-	{
+      for (unsigned int j = 0; j < number_of_all_dofs; j++)
+      {
 
     	  
-	  std::map<unsigned int, DofConstraintRow> :: iterator it;
+	std::map<unsigned int, DofConstraintRow> :: iterator it;
 	  
-	  it = my_dof_constraints.find(j);
+	it = my_dof_constraints.find(j);
 	    
 
-	  if (it != my_dof_constraints.end() )
+	if (it != my_dof_constraints.end() )
+	{
+	  
+	  DofConstraintRow constr_row = it->second;
+	  
+	  std::map<unsigned int, Real>::iterator  c =  constr_row.begin();
+
+	  
+	  for ( ; c != constr_row.end() ; ++c )
 	  {
-	      
-	    DofConstraintRow constr_row = it->second;
-	    
-	    std::map<unsigned int, Real>::iterator  c =  constr_row.begin();
-
-	     
-	    for ( ; c != constr_row.end() ; ++c )
-	    {
-	      solution[solution_number].eigen_vector[j] += ( c->second ) * solution[solution_number].eigen_vector[(c->first)];
-	    }
-	    
-
-	     
+	    solution[solution_number].eigen_vector[j] += ( c->second ) * solution[solution_number].eigen_vector[(c->first)];
 	  }
+	    
+
+	     
+	}
 	   
 	  
-	}
+      }
 	    
 
 
-      }
+    }
       
       //------------------------------------------------------------------------
 
@@ -604,9 +600,7 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
   scaling.set_calc_mesh_units(_device->get_mesh_units());
 
   AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
-  
- 
-  
+    
  
   QGauss qrule (dim, SECOND);
 
@@ -703,9 +697,10 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
 		 eps_real_value = eps_real( j+1, i+1);
  
 	        s_value += JxW[qp] * phi[p1][qp] * phi[p2][qp] * eps_real_value;
+		
 	      
 	       for (short n = 0; n < dim; n++)
-		 value =  JxW[qp] * dphi[p1][qp](n) * dphi[p2][qp](n) * delta_Kronecker(i,j);
+		 value +=  JxW[qp] * dphi[p1][qp](n) * dphi[p2][qp](n) * delta_Kronecker(i,j);
 
 	       
 	       ham_real_sub(p1,p2) += value;
@@ -764,7 +759,9 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
   copy_H_matrix_to_solver( );
   copy_S_matrix_to_solver( );
 
+ 
 
+  // dof_map.print_dof_constraints();
  
 }
 

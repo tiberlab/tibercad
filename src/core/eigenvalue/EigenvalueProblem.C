@@ -843,6 +843,7 @@ void EigenvalueProblem::make_nodes_periodic()
 //--------------------------------------------------------------------------------------//
 void EigenvalueProblem::do_init()
 {
+
    //peiodicity can not be changed between runs because that will require cleaning of the DOF constraint table
    const ModelOptions& mod_opt = get_options();
 
@@ -850,5 +851,42 @@ void EigenvalueProblem::do_init()
    solver_opt.periodicity[1]          = mod_opt.get_option("y-periodicity", false);
    solver_opt.periodicity[2]          = mod_opt.get_option("z-periodicity", false);
 
+   EquationSystems* es = &(get_equation_systems());
+
+   Mesh& mesh1 = es->get_mesh();
+   
+   MeshBase::const_element_iterator       el     = mesh1.active_elements_begin();
+   const MeshBase::const_element_iterator end_el = mesh1.active_elements_end();
+
+   bool temp = true;
+
+   for ( ; el != end_el ; ++el) 
+   {
+     const Elem* elem = *el;
+     short n1 = elem->n_nodes();
+     for (short i1 = 0; i1 < n1 ; i1++)
+     {
+
+
+       const Point& p = elem->point(i1);
+       for (unsigned i = 0; i < 3; i++)
+       {
+
+	 if (temp)
+	 {
+	   min_coord[i] = p(i);
+	   max_coord[i] = p(i);
+	   temp = false;
+	 }
+
+
+	 if (min_coord[i] < p(i)) min_coord[i] = p(i);
+	 if (max_coord[i] > p(i)) max_coord[i] = p(i);
+	  
+       }
+	  
+     }
+
+   }
 
 }
