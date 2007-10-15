@@ -6,6 +6,11 @@
 WzPiezoelectricity::WzPiezoelectricity() : Piezoelectricity()
 {
   set_moduli(0,  0,  0,  0);
+
+  e33_bow = 0;
+  e31_bow = 0;
+  e15_bow = 0;
+  Pz_bow = 0;
 }
 
 //------------------------------------------------------------//
@@ -14,6 +19,12 @@ WzPiezoelectricity::WzPiezoelectricity(double  e33, double e31, double e15, doub
 {
 
   set_moduli(e33,  e31,  e15,  Pz);
+
+
+  e33_bow = 0;
+  e31_bow = 0;
+  e15_bow = 0;
+  Pz_bow = 0;
 
 }
 
@@ -32,7 +43,18 @@ void WzPiezoelectricity::read_database ( )
 
   e15 = data("e15", 0.0);
 
-   Pz = data("Pz", 0.0);
+  Pz = data("Pz", 0.0);
+
+
+  e33_bow = data("bow_e33", 0.0);
+  
+  e31_bow = data("bow_e31", 0.0);
+
+  e15_bow = data("bow_e15", 0.0);
+
+  Pz_bow = data("bow_Pz", 0.0);
+
+
 }
 
 //------------------------------------------------------------//
@@ -48,7 +70,13 @@ void WzPiezoelectricity::do_init(void)
 
    Pz = options.get_option("Pz", Pz);
 
-   
+   e33_bow = options.get_option("bow_e33",e33);
+  
+   e31_bow = options.get_option("bow_e31",e31);
+
+   e15_bow = options.get_option("bow_e15",e15);
+
+   Pz_bow = options.get_option("bow_Pz", Pz);
 
 }
 
@@ -81,6 +109,12 @@ void WzPiezoelectricity::copy_from (const PhysicalModelInterface *rhs)
   e15 = temp->e15;
   Pz  = temp->Pz;
 
+  e33_bow = temp->e33_bow;
+  e31_bow = temp->e31_bow;
+  e15_bow = temp->e15_bow;
+  Pz_bow  = temp->Pz_bow;
+
+
 } 
 
 //------------------------------------------------------------//
@@ -91,10 +125,10 @@ void WzPiezoelectricity:: calculate_VCA (const PhysicalModelInterface *comp_A, c
 
    const WzPiezoelectricity* tempB = dynamic_cast<const WzPiezoelectricity*> (comp_B);
 
-   e33 = alloy(tempA->e33, tempB->e33, xa);
-   e31 = alloy(tempA->e31, tempB->e31, xa);
-   e15 = alloy(tempA->e15, tempB->e15, xa);
-   Pz  = alloy(tempA->Pz , tempB->Pz , xa);
+   e33 = alloy(tempA->e33, tempB->e33, xa, e33_bow );
+   e31 = alloy(tempA->e31, tempB->e31, xa, e31_bow );
+   e15 = alloy(tempA->e15, tempB->e15, xa, e15_bow );
+   Pz  = alloy(tempA->Pz , tempB->Pz , xa, Pz_bow  );
 
 
 

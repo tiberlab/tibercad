@@ -41,6 +41,8 @@ class ZbPiezoelectricity : public Piezoelectricity
   //!piezoelectric constant
   double e14;
 
+  //!bowing parameter for the piezoelectric constant
+  double e14_bow;
 
  protected:
 

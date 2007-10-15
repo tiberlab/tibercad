@@ -27,6 +27,12 @@ class WzPiezoelectricity : public Piezoelectricity
   double e31;
   double e15;
   double Pz;
+
+
+  double e33_bow;
+  double e31_bow;
+  double e15_bow;
+  double Pz_bow;
     
 
  protected:

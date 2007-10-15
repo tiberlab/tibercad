@@ -6,6 +6,8 @@
 ZbPiezoelectricity::ZbPiezoelectricity() : Piezoelectricity()
 {
   e14 = 0;
+
+  e14_bow = 0;
 } 
 
 //---------------------------------------------------------------//
@@ -30,6 +32,7 @@ void ZbPiezoelectricity::read_database ()
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
   e14 = data("e14", 0.0);
+  e14_bow = data("bow_e14", 0.0);
 }
 
 
@@ -39,7 +42,7 @@ void ZbPiezoelectricity::do_init(void)
 {
    ModelOptions & options = get_options ();
    e14 = options.get_option("e14", e14);
-  
+   e14 = options.get_option("bow_e14", e14_bow);
 }
 
 //---------------------------------------------------------------//
@@ -54,7 +57,7 @@ void  ZbPiezoelectricity::copy_from (const PhysicalModelInterface* rhs)
 {
   const ZbPiezoelectricity* temp = dynamic_cast<const ZbPiezoelectricity*>(rhs);
   e14 = temp->e14;
-
+  e14_bow = temp->e14_bow;
 }
 
 //---------------------------------------------------------------//
@@ -66,7 +69,7 @@ void ZbPiezoelectricity::calculate_VCA(const PhysicalModelInterface *comp_A, con
 
    const ZbPiezoelectricity* B = dynamic_cast<const ZbPiezoelectricity*>(comp_B);
 
-   e14 = alloy(A->e14, B->e14, xa);
+   e14 = alloy(A->e14, B->e14, xa, e14_bow);
 
 }
 
