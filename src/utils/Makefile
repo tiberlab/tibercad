@@ -4,7 +4,7 @@
 topdir := ../..
 
 # we have to compile each module
-subdirs := SLEPC Tensor
+subdirs := SLEPC Tensor DFTB 
 
 include $(topdir)/Make.common
 

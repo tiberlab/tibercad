@@ -104,7 +104,11 @@ private:
 
   //! Set of regions covered by atomistic structure (names: TiberCAD
   //! defined regions)
-  std::set <std::string> _region;
+  std::set <std::string> _regionset;
+
+  //! Set of mesh regions covered by atomistic structure (numbers: mesh
+  //! regiones)
+  std::set <ID> _IDset;
 
   //! Vector containing structure atoms
   std::vector<Atom> _structure_atoms;

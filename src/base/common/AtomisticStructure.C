@@ -59,18 +59,18 @@ AtomisticStructure::init(void)
 
       for (int i = 0; i < region_string.size(); i++)
 	{std::cerr << "Assigning in set region_string " << region_string[i] << std::endl;
-	  _region.insert(region_string[i]);}
+	  _regionset.insert(region_string[i]);}
       region_string.clear();
 
       //If all regions are specified (value = "all", must fill with real names of all regions)
-      if ( _region.count("all") == 1)
+      if ( _regionset.count("all") == 1)
 	{
-	  _region.clear();
+	  _regionset.clear();
 	  std::set < ID >::iterator region_ID_iterator = _device->get_region_ids().begin();
 
 	  for (int i = 0; i < _device->get_region_ids().size(); i++)
 	    {
-	      _region.insert( _device->get_region_name(*region_ID_iterator) );
+	      _regionset.insert( _device->get_region_name(*region_ID_iterator) );
 	      region_ID_iterator ++;
 	    }
 
@@ -78,8 +78,25 @@ AtomisticStructure::init(void)
 
     }
 
+  std::set < std::string >::iterator region_iterator = _regionset.begin();
+  std::vector <ID> tmp_IDs;
+  for (int i = 0; i < _regionset.size(); i++)
+	    {
+	      tmp_IDs.clear();
+	      _device->get_region_ids ((*region_iterator), tmp_IDs);
+	      for (int j=0; j < tmp_IDs.size(); j++)
+		{
+                                    _IDset.insert( tmp_IDs[j] );
+		}
+	      //_IDset.insert( _device->get_region_name(*region_ID_iterator) );
+	      region_iterator ++;
+	    }
 
-  for (std::set<std::string>::iterator i= _region.begin(); i !=_region.end(); i++)
+  for (std::set<std::string>::iterator i= _regionset.begin(); i !=_regionset.end(); i++)
+    {std::cerr << "WRITING " << std::endl;
+      std::cerr << "_REGION IS " << *i << std::endl;}
+
+ for (std::set<ID>::iterator i= _IDset.begin(); i !=_IDset.end(); i++)
     {std::cerr << "WRITING " << std::endl;
       std::cerr << "_REGION IS " << *i << std::endl;}
 
@@ -93,7 +110,7 @@ AtomisticStructure::init(void)
 const std::set<std::string>& 
 AtomisticStructure::get_region(void)
 {
-  return _region;
+  return _regionset;
 }
 
 

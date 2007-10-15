@@ -9,10 +9,10 @@
 #include "SimulationInterface.h"
 
 
-
 //forward declaration
 class Device;
 class Mesh;
+class DftbpWrapper;
 
 //!Main class for Atomistic Tight Binding Models
 class TightBinding : public SimulationInterface{

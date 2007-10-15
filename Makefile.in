@@ -7,9 +7,9 @@ srcdir = @srcdir@
 include Make.common
 
 ifeq ($(build_modules), yes)
- MODULE_LIBS	:= lib/libeigen_solver.so lib/tibermodels/lib*.so
+ MODULE_LIBS	:= lib/libeigen_solver.so lib/libdftbpc.so lib/tibermodels/lib*.so
 else
- MODULE_LIBS	:= lib/libeigen_solver.so 
+ MODULE_LIBS	:= lib/libeigen_solver.so lib/libdftbpc.so 
 endif
 
 
