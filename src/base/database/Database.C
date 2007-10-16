@@ -4,7 +4,7 @@
 #include "InitFailedException.h"
 
 
-#include <boost/filesystem/operations.hpp>
+#include <fstream>
 
 
 
@@ -39,10 +39,10 @@ Database::get_alloy_components(const std::string& alloy,
 void
 Database::check_data_file(const std::string& name) const
 {
-  using namespace boost::filesystem;
 
-  path datafile(name);
-  if (!exists(datafile) || is_directory(datafile))
+  std::ifstream infile;
+  infile.open(name.c_str());
+  if (infile.fail() || !infile.good() || (infile.rdbuf()->in_avail() == 0))
   {
     std::string msg("Database: cannot find material data file ");
     msg += name;

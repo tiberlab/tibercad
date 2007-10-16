@@ -9,6 +9,7 @@
 
 #include <map>
 #include <set>
+#include <iostream>
 
 class Device;
 class Database;
@@ -313,10 +314,13 @@ inline
 void
 Control::set_filename_suffix(const std::string& suffix)
 {
-  if (suffix[0] != '_')
-    _filename_suffix = "_" + suffix;
-  else
-    _filename_suffix = suffix;
+  _filename_suffix = "";
+
+  if (suffix.size() > 0)
+    if (suffix[0] != '_')
+      _filename_suffix = "_" + suffix;
+    else if (suffix.size() > 1)
+      _filename_suffix = suffix;
 }
 
 

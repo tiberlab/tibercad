@@ -34,12 +34,12 @@ Control::Control(const std::string& inputfile)
     _outputdir("."),
     _filename_suffix("")
 {
-  using namespace boost::filesystem;
-  
   // we check here if the input file exists
-  path infile(_inputfile);
-  if (!exists(infile) || is_empty(infile) || is_directory(infile))
+  ifstream infile;
+  infile.open(_inputfile.c_str());
+  if (infile.fail() || !infile.good() || (infile.rdbuf()->in_avail() == 0))
     throw InitFailedException("Control: input file is invalid.");
+  infile.close();
 }
 
 
@@ -155,7 +155,7 @@ Control::create_device(void)
   // create output directory
   _outputdir = opts.get_option("resultpath", _outputdir);
   opts.delete_option("resultpath");
-  path outpath(_outputdir);
+  path outpath(_outputdir, native);
   if (!exists(outpath))
     create_directory(outpath);
     

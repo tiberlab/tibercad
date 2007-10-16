@@ -111,6 +111,17 @@ class Sweep : public SimulationInterface
     //! Remember the current solution
     ID remember_solution(void);
 
+
+    //! Do the sweep
+    void do_sweep(std::vector<double>& values,
+        std::vector<std::ofstream*>& plotfiles,
+        std::vector<std::map<double, std::vector<double> > >& sweep_data);
+
+
+    //! Plot the data
+    void plot_data(std::vector<std::ofstream*>& plotfiles,
+        std::vector<std::map<double, std::vector<double> > >& sweep_data);
+
 };
 
 
