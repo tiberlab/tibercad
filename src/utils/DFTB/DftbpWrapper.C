@@ -61,7 +61,7 @@ void DftbpWrapper::up_coords (int nAtom, double *newCoords) {
 
 
 //!Solve total system energy 
-void DftbpWrapper::get_energy (double energy) {
+void DftbpWrapper::get_energy (double &energy) {
     f77_dftbp_gettotalenergy(_handler, energy);
   }
 

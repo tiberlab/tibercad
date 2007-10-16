@@ -181,7 +181,6 @@ inline void f77_dftbp_gettotalenergy (f77_int const* handler, f77_double&
     energy)
 {
   dftbp_gettotalenergy_ (handler, energy);
-  std::cout << "In dftb.h energy is " << energy << std::endl;
 }
 
 

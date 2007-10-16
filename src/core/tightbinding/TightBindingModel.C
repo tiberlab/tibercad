@@ -9,7 +9,9 @@ using namespace std;
 //-----------------------------------------------------------
 
 
-TightBindingModel::TightBindingModel(){}
+TightBindingModel::TightBindingModel(){
+  cout << "Tight Binding Physical Model has been created" << endl;
+}
 
 
 TightBindingModel::~TightBindingModel(){}

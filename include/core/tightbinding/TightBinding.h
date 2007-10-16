@@ -1,7 +1,7 @@
 #ifndef _TIGHTBINDING_H_
 #define _TIGHTBINDING_H_
 
-
+using namespace std;
 
 //-----------------------------------------------------------------------------------------
 
@@ -14,18 +14,21 @@ class Device;
 class Mesh;
 class DftbpWrapper;
 
-//!Main class for Atomistic Tight Binding Models
+//!Main class for Atomistic Tight Binding simulation at equilibrium
+//! DFTB code is used for simulations
 class TightBinding : public SimulationInterface{
 
-public:
 
-  //!Constructor
+public:
+ 
+
+  //! Constructor
   TightBinding();
 
-  //!Destructor
+  //! Destructor
   ~TightBinding();
 
-  //!Create TightBinding object
+  //! Create TightBinding object
   static TightBinding* create();
 
   virtual PhysicalModel* create_physical_model(const ModelOptions &options) const 
@@ -37,7 +40,6 @@ public:
 
 private:
 
-
 protected:
 
   virtual void  do_init (void);
@@ -45,6 +47,7 @@ protected:
   virtual void do_solve (void);
 
   virtual void  parse_options(void);
+
 
 };
 

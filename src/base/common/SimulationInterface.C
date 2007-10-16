@@ -13,7 +13,7 @@
 #include "QuantumDensity.h"
 #include "OpticsKP.h"
 #include "QuantumDispersion.h"
-#include "TightBinding.h"
+#include "Dftb.h"
 #include "OptRecombinSpectrum.h"
 #include "Poisson.h"
 #include "TunnelingCurrent.h"
@@ -106,7 +106,7 @@ SimulationInterface::create(const string& type,
     else if (type == "tunnelingcurrent")
       sim = TunnelingCurrent::create();
     else if (type == "tightbinding")
-      sim = TightBinding::create();
+      sim = Dftb::create();
     else if (type == "opticalspectrum")
       sim = OptRecombinSpectrum::create();
     else if (type == "poisson")

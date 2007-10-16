@@ -16,7 +16,7 @@ all: libdftbpc.so
 
 
 libdftbpc.so:  DftbpWrapper.o
-	$(CXX) -shared -Wl,-soname,libdftbpc.so \
+	@$(CXX) -shared -Wl,-soname,libdftbpc.so \
 		-Wl,--version-script,export.map \
 		-o libdftbpc.so $<  \
 		-Wl,-Bsymbolic -Wl,-Bstatic \

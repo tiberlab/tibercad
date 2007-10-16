@@ -35,7 +35,7 @@ public:
 
   void up_coords (int nAtom, double *newCoords);
 
-  void get_energy (double energy);
+  void get_energy (double &energy);
 
   void addlattice (double *latVecs);
 
