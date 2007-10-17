@@ -24,7 +24,11 @@ void Dftb::do_init(void){
 
   if (get_options().find_option("atomistic_structure") )
     {
-
+      string name;
+      name = get_options().get_option("atomistic_structure", "none");
+      if (name.compare("none") != 0){
+      _atomistic_structure = get_environment().get_device().get_atomistic_structure(name);
+      }
     }
   else 
     {

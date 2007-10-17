@@ -272,8 +272,6 @@ Control::create_atomistic_structures(void)
 
     ModelOptions atomistic_options = data.get_options();
 
-    std::cout << "Ho acchiappato le opzioni " << atomistic_options.get_option("physical_regions", "all") << endl;
-
     const string& st_name = data.get_region_name();
     AtomisticStructure* st = AtomisticStructure::create(st_name, data.get_options());
 
