@@ -2682,19 +2682,25 @@ Tensor1 Macrostrain::get_built_in_polarization(const Elem* el, const Point& quad
   const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
 
   MacrostrainModel* macrostrain_model =  dynamic_cast<MacrostrainModel*>(   mat ->get_model(get_id())     );
-      
 
-  Tensor1 polariz = ( macrostrain_model->get_piezo() )-> get_polariz_cryst(strain_cr);
+
+  Tensor1 polariz(0);      
+
+  if (macrostrain_model != NULL)
+  {
+
+    polariz = ( macrostrain_model->get_piezo() )-> get_polariz_cryst(strain_cr);
   
 
 
-  // Tensor1 polariz = (piezo_it -> second)->get_polariz_cryst(strain_cr); //crystal system
+    // Tensor1 polariz = (piezo_it -> second)->get_polariz_cryst(strain_cr); //crystal system
 
-  // std::map< unsigned int, Macrostrain::strain_param>::iterator str_it =
-  //  strain_parameters.find( material) ;
+    // std::map< unsigned int, Macrostrain::strain_param>::iterator str_it =
+    //  strain_parameters.find( material) ;
 
-  polariz =( crystal_el->RotMatrix) * polariz; //calculation system
+    polariz =( crystal_el->RotMatrix) * polariz; //calculation system
 
+  }
   return(polariz);
 
 }

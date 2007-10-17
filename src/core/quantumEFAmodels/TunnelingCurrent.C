@@ -502,7 +502,7 @@ void TunnelingCurrent::do_solve()
 	o << (*applied_voltage_node)(0);
 	additional_name_suffix = o.str();
 	
-	KspaceIntegration::do_plot();
+	//	KspaceIntegration::do_plot();
       }
 
     
@@ -718,7 +718,8 @@ void TunnelingCurrent::k_space_output(void)
     suff = ".gmv";
   else if (format == "ise")
     suff = ".plt";
-  
+  else if (format == "vtk")
+    suff = ".vtk";
   
 
   
