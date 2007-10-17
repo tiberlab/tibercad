@@ -82,6 +82,12 @@ class AtomisticStructure
   //! Initialize the structure (up to now reading a structure from file is needed)
   void init(void); 
 
+  //! Number of atoms in structure
+  unsigned int N_atoms; 
+
+  //! Number of species
+  unsigned int N_types;
+
 protected:
 
   //! Set the model options
@@ -116,10 +122,7 @@ private:
   //! List of all atom types in structure
   std::vector<std::string> _atom_types;
 
-  //! Number of atoms in structure
-  unsigned int _N_atoms; 
-
-  //! Tell if atomistic structure has to be considered a periodical 
+   //! Tell if atomistic structure has to be considered a periodical 
   //! structure (true) or a cluster (false)
   bool _is_periodical;
 
@@ -137,29 +140,6 @@ private:
 //----------------------------------------------------
 // Inline member functions
 //----------------------------------------------------
-
-inline
-AtomisticStructure::AtomisticStructure(const std::string& name)
-  :_name(name)
-{ 
-  // Default initializations
-  _N_atoms = 0;
-  _is_periodical = false;
-  for (unsigned int i = 0; i < 3; i++)
-    {
-      for (unsigned int j = 0; j < 3; j++)
-	{
-	  _periodicity_vectors[i][j] = 0.0;
-	}
-    }
-
-}
-
-
-inline
-AtomisticStructure::~AtomisticStructure(void)
-{
-}
 
 
 inline

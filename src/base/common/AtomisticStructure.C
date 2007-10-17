@@ -1,5 +1,25 @@
-
 #include "AtomisticStructure.h"
+
+AtomisticStructure::AtomisticStructure(const std::string& name)
+  :_name(name)
+{ 
+  // Default initializations
+  N_atoms = 0;
+  _is_periodical = false;
+  for (unsigned int i = 0; i < 3; i++)
+    {
+      for (unsigned int j = 0; j < 3; j++)
+	{
+	  _periodicity_vectors[i][j] = 0.0;
+	}
+    }
+
+}
+
+
+AtomisticStructure::~AtomisticStructure(void)
+{
+}
 
 
 
@@ -164,9 +184,7 @@ AtomisticStructure::read_structure(const std::string& path)
 	  exit(1);
 	}
 
-      _N_atoms = N_atoms;
-
-      // Skip second line
+       // Skip second line
       getline(file, line);
  
       // Start reading  lines
@@ -209,7 +227,9 @@ AtomisticStructure::read_structure(const std::string& path)
 
 	}
 
-      if ( (_structure_atoms.size()) != _N_atoms ) std::cerr << "Warning: in file xyz number of atoms is wrong \n";
+      if ( (_structure_atoms.size()) != N_atoms ) std::cerr << "Warning: in file xyz number of atoms is wrong \n";
+
+      N_types = _atom_types.size();
 
       // Warning: XYZ file has no informations about structure periodicity
 
@@ -236,8 +256,6 @@ AtomisticStructure::read_structure(const std::string& path)
 	  exit(1);
 	}
 
-      _N_atoms = N_atoms;
-
       line_string >> record;
 
       if ( (record.compare("S") == 0) || (record.compare("s") == 0)) 
@@ -250,11 +268,13 @@ AtomisticStructure::read_structure(const std::string& path)
       line_string.str("");
       line_string << line;
             
-      // I assum that GEN file is correct and there's no name repetition
+      // I assume that GEN file is correct and there's no name repetition
       while ( line_string >> record)
 	{
 	  _atom_types.push_back(record);
 	}
+
+      N_types = _atom_types.size();
 
       // Cycle upon specified number of atoms (last rows are for periodicity vectors)
       for (unsigned int i = 1; i <= N_atoms; i++)

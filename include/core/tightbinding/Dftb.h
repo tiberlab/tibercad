@@ -1,24 +1,25 @@
 #ifndef _DFTB_H_
 #define _DFTB_H_
 
-using namespace std;
-
 //---------------------------------------------------------------------
 
 #include "TightBinding.h"
 #include "AtomisticStructure.h"
 #include "SimulationEnvironment.h"
 
-
+//! A class for Tight Binding simulations with DFTB+ code
+/*!
+ *This class provides methods for invoking DFTB+ (Density Functional
+ *Tight Binding) library, in order to make calculations at equilibrium
+ */
 class Dftb : public TightBinding{
 
 public:
 
 struct dftb_options
   {
-    vector<string> sk_files;
+    std::vector<std::string> sk_files;
   };
-
 
  //! Constructor
   Dftb(void);
@@ -26,7 +27,7 @@ struct dftb_options
   //! Destructor
   ~Dftb(void);
 
-  //! Create TightBinding object
+  //! Create object
   static Dftb* create();
 
 
@@ -35,11 +36,13 @@ struct dftb_options
   //! Get options suited for DFTB+ tight binding builder and solver
   void get_dftbp_options();
 
-  //! Structure containing options for DFTB+ tight binding builder and solver
+  //! A function for building a DFTB compatible char of SK names,
+  //! based on species
+  char* build_sk_names(void);
+
+ //! Structure containing options for DFTB+ tight binding builder and solver
   dftb_options _dftb_options;
 
-  //! Pointer to atomistic structure for the simulation
-  AtomisticStructure* _atomistic_structure;
 
 protected:
 

@@ -1,6 +1,5 @@
 //modules includes
 #include "Dftb.h"
-
 #include "BoundaryProperties.h"
 #include "PhysicalModel.h"
 #include "SimulationOptions.h"
@@ -8,34 +7,33 @@
 #include "ElectricalContact.h"
 #include "SimulationOptions.h"
 
-using namespace std;
+#include <cmath>
 
 //--------------------------------------------------------------
 
-Dftb::Dftb(void){};
+Dftb::Dftb(void){
+  _atomistic_structure = NULL;
+};
+
+
 
 Dftb::~Dftb(void){};
 
-void Dftb::do_init(void){
 
-  cerr << "Dftb Simulation Inizialization" << endl;
+void 
+Dftb::do_init(void){
 
-  _atomistic_structure = NULL;
+  std::cerr << "Dftb Simulation Inizialization" << std::endl;
 
-  if (get_options().find_option("atomistic_structure") )
-    {
-      string name;
-      name = get_options().get_option("atomistic_structure", "none");
-      if (name.compare("none") != 0){
-      _atomistic_structure = get_environment().get_device().get_atomistic_structure(name);
-      }
-    }
-  else 
-    {
-     cerr << "ERROR in Tight Binding Simulation: an atomistic structure  must be specified " 
-      << get_name() << endl;
-     exit(0);
-    }
+
+  // Getting reference to atomistic structure for calculation
+  _atomistic_structure = get_atomistic_structure();
+
+  std::cerr << "Caught atomistic structure " << _atomistic_structure->get_name() << std::endl;
+
+  // Building and searching SK files names
+  char* a = " ";
+  a = build_sk_names();
 
 
 }
@@ -44,3 +42,23 @@ void Dftb::do_init(void){
 void Dftb::do_solve(void){};
 
 void Dftb::parse_options(void){};
+
+
+char* Dftb::build_sk_names(void){
+
+  std::string sk_name;
+
+  //! This is the SK files path
+  const std::string path = " ";
+
+  // Iterative factorial is enough, number of species is a small value
+  int n_files = 0;
+  n_files = _atomistic_structure->N_types * _atomistic_structure->N_types;
+ 
+  std::cout << "NUMBER OF FILES IS " << n_files << std::endl;
+
+  //Static allocation. Size must be decided according to dftbp.h parameters
+
+
+
+};

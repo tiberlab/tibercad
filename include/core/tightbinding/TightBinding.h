@@ -1,12 +1,10 @@
 #ifndef _TIGHTBINDING_H_
 #define _TIGHTBINDING_H_
 
-using namespace std;
-
 //-----------------------------------------------------------------------------------------
 
-
 #include "SimulationInterface.h"
+#include "AtomisticStructure.h"
 
 
 //forward declaration
@@ -48,6 +46,11 @@ protected:
 
   virtual void  parse_options(void);
 
+  //! Pointer to atomistic structure for the simulation;
+  AtomisticStructure* _atomistic_structure;
+
+  //! Get the atomistic structure pointer from the name specified in input
+  AtomisticStructure* get_atomistic_structure(void);
 
 };
 

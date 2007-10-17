@@ -13,8 +13,6 @@
 //libmesh includes
 #include "mesh.h"
 
-using namespace std;
-
 //-----------------------------------------------------------------------
 
 TightBinding::TightBinding(){}
@@ -22,25 +20,29 @@ TightBinding::TightBinding(){}
 TightBinding::~TightBinding(){}
 
 
-void TightBinding::do_init(){
+void 
+TightBinding::do_init(){
 
-  cerr << "Tight Binding Simulation Inizialization..." << endl;
+  std::cerr << "Tight Binding Simulation Inizialization..." << std::endl;
 
-  string fake_option;
+  std::string fake_option;
 
   fake_option = get_options().get_option("fake_option","yo");
-  cout << "fake_option is " << fake_option << endl;
+  std::cout << "fake_option is " << fake_option << std::endl;
 
 }
 
 
-void TightBinding::do_solve(){}
+void 
+TightBinding::do_solve(){}
 
 
-void TightBinding::parse_options(){}
+void 
+TightBinding::parse_options(){}
 
 
-PhysicalModel*   TightBinding::create_physical_model (const ModelOptions &options) const 
+PhysicalModel*   
+TightBinding::create_physical_model (const ModelOptions &options) const 
                     throw (ModelErrorException)
 {
    
@@ -61,7 +63,7 @@ BoundaryProperties* TightBinding::create_boundary_model (const ModelOptions &opt
 
 {
  
-    const string& modelname = options.get_option("type", "Heat_reservoir");
+  const std::string& modelname = options.get_option("type", "Heat_reservoir");
   
     ElectricalContact* model = ElectricalContact::create(modelname, options);
  
@@ -70,4 +72,29 @@ BoundaryProperties* TightBinding::create_boundary_model (const ModelOptions &opt
  
    return model;
  
+}
+
+
+AtomisticStructure*
+TightBinding::get_atomistic_structure(void){
+
+  AtomisticStructure* atomistic_structure = NULL;
+
+  if (get_options().find_option("atomistic_structure") )
+    {
+      std::string name;
+      name = get_options().get_option("atomistic_structure", "none");
+      if (name.compare("none") != 0){
+      _atomistic_structure = get_environment().get_device().get_atomistic_structure(name);
+      }
+    }
+  else 
+    {
+      std::cerr << "ERROR in Tight Binding Simulation: an atomistic structure  must be specified " 
+		<< get_name() << std::endl;
+     exit(0);
+    }
+
+  return atomistic_structure;
+
 }
