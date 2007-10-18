@@ -47,6 +47,7 @@ Device::~Device()
   delete _eq_system;
   delete _boundary_nodes;
   delete _mesh;
+  delete _meshdata;
 }
 
 
@@ -69,22 +70,28 @@ Device::setup_mesh(void)
 {
 
   delete _mesh;
+
   
   int dim = _options.get_option("dimension", 2);
   _mesh = new Mesh(dim);
 
   const string& meshfile = _options["meshfile"];
+
+  _meshdata = new MeshData_elements(*_mesh);
   
-  MeshData_elements meshdata(*_mesh);
-  meshdata.enable_compatibility_mode();
+
+  (*_meshdata).enable_compatibility_mode();
+
 
   delete _boundary_nodes;
   _boundary_nodes = new map<unsigned int, vector<ID> >();
 
-  MeshInput::read_mesh(meshfile, dim, *_mesh, meshdata, *_boundary_nodes,
-      _region_names, _boundary_region_names);
 
-  MeshUtils::assign_subdomain_ids(*_mesh, meshdata);
+  MeshInput::read_mesh(meshfile, dim, *_mesh, *_meshdata, *_boundary_nodes,
+                       _region_names, _boundary_region_names);
+
+  MeshUtils::assign_subdomain_ids(*_mesh, *_meshdata);
+
   MeshUtils::get_subdomain_ids(*_mesh, _region_ids);
 
 #ifdef DEBUG
@@ -140,8 +147,8 @@ Device::set_material(Material* material, ID region_id)
 
   _material_map[region_id] = material;
   cout << "added material " << material->get_name()
-    << " for region number " << region_id
-    << " (" << get_region_name(region_id) << ")\n";
+       << " for region number " << region_id
+       << " (" << get_region_name(region_id) << ")\n";
 }
 
 

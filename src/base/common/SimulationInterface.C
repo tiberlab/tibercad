@@ -47,7 +47,7 @@ SimulationInterface::SimulationInterface(void)
     _is_initialized(false),
     _is_solved(false),
     _equilibrium_is_solved(false)
-    //_relaxation_factor(1.0)
+                                        //_relaxation_factor(1.0)
 {
   ID new_id = _simulation_map.size() + 1;
   _id = new_id;
@@ -67,7 +67,7 @@ SimulationInterface::~SimulationInterface(void)
 
 SimulationInterface*
 SimulationInterface::create(const string& type,
-        const ModelOptions& options)
+                            const ModelOptions& options)
 {
   SimulationInterface* sim = NULL;
 
@@ -114,7 +114,7 @@ SimulationInterface::create(const string& type,
     else if (type == "maxwell")
       sim = MaxwellEquations::create();
 
-}
+  }
 
   if (sim != NULL)
   {
@@ -135,9 +135,9 @@ SimulationInterface::create(const string& type,
 
     // this is done in Selfconsistent
     /*
-    sim->_relaxation_factor =
+      sim->_relaxation_factor =
       sim->get_options().get_option("relaxation_factor", sim->_relaxation_factor);
-    sim->_options.delete_option("relaxation_factor");
+      sim->_options.delete_option("relaxation_factor");
     */
 
 #ifdef DEBUG
@@ -209,7 +209,7 @@ SimulationInterface::init(void) throw (InitFailedException)
   _is_initialized = true;
 
 #ifdef DEBUG
-    cerr << "done" << endl;
+  cerr << "done" << endl;
 #endif
 }
 
@@ -392,7 +392,7 @@ SimulationInterface::get_solution_vector(void)
 
 BoundaryProperties*
 SimulationInterface::create_boundary_model(const ModelOptions& options) const
-      throw (ModelErrorException)
+  throw (ModelErrorException)
 {
   ignore_unused_variable(options);
 
@@ -403,7 +403,7 @@ SimulationInterface::create_boundary_model(const ModelOptions& options) const
       
 PhysicalModel*
 SimulationInterface::create_physical_model(const ModelOptions& options) const
-      throw (ModelErrorException)
+  throw (ModelErrorException)
 {
   ignore_unused_variable(options);
   
@@ -415,7 +415,7 @@ SimulationInterface::create_physical_model(const ModelOptions& options) const
 
 void
 SimulationInterface::get_integrated_quantities(
-    const std::set<std::string>& variables, std::vector<double>& values)
+                                               const std::set<std::string>& variables, std::vector<double>& values)
 {
 
   if (_environment != NULL)
@@ -466,7 +466,7 @@ SimulationInterface::do_plot(void)
   if (names.size() > 0)
   {
     string filename(outdir + "/" + get_name() +
-        "_nodal" + suffix + suff);
+                    "_nodal" + suffix + suff);
 
     if (format == "gmv")
       GMVIO(dev.get_mesh()).write_nodal_data(filename, results, names);
@@ -490,7 +490,7 @@ SimulationInterface::do_plot(void)
   if (names.size() > 0)
   {
     string filename(outdir + "/" + get_name() +
-        "_elemental" + suffix + suff);
+                    "_elemental" + suffix + suff);
 
     if (format == "gmv")
       GMVIO_cell(dev.get_mesh()).write_ascii_cell_data(filename, results, names);
@@ -509,10 +509,60 @@ SimulationInterface::do_plot(void)
     }
   }
 
+
+
+
+
+
+  // materials  output: for each simulation an output file with IDs of  physical regions activated for that simulation
+  //  IDs are taken from the meshdata object associated to the  device; IDs are data associated to elements
+
+  std::vector<Number> translated_data;
+  std::vector<std::string> data_names;
+
+  
+
+  (dev.get_meshdata())->activate(); 
+
+
+  (dev.get_meshdata())->translate_elem_data ( (dev.get_mesh()),
+                                              translated_data,
+                                              data_names);
+
+
+  string filename(outdir + "/" + get_name() +
+                  "_materials" + suffix + suff);
+  
+  if (data_names.size() > 0)
+  {
+
+    if (format == "gmv")
+      GMVIO_cell(dev.get_mesh()).write_ascii_cell_data(filename,translated_data ,data_names);
+    else if (format == "gnuplot")
+      cout << "GnuPlot does not currently support cell data." << endl;
+    else if (format == "ise")
+      TecplotIO_cell(dev.get_mesh()).write_cell_data(filename, translated_data ,data_names);
+    else if (format == "vtk")
+      VTKIO(dev.get_mesh()).write_elemental_data(filename, translated_data ,data_names);
+    else if (format == "grace")
+      GraceIO(dev.get_mesh()).write_elemental_data(filename,translated_data ,data_names );
+    else
+    {
+      cout << "Output format not supported. Falling back to GMV." << endl;
+      GMVIO_cell(dev.get_mesh()).write_ascii_cell_data(filename,translated_data ,data_names);
+    }
+
+  }
+
+
+
+  // ****************************************************
+
+
   // integrated properties
   vector<string> description;
   get_integrated_quantities_description(get_control().get_plotvariables(),
-      names, description);
+                                        names, description);
   if (names.size() > 0)
   {
     string filename(outdir + "/" + get_name() + suffix + ".dat");
@@ -690,7 +740,7 @@ SimulationInterface::do_add_scaled_remembered_solution(ID id, double factor)
 
 AutoPtr<FEBase>
 SimulationInterface::build_finite_element(unsigned int dim, FEType type,
-    bool scale)
+                                          bool scale)
 {
   assert(type.family == libMeshEnums::LAGRANGE);
 
@@ -702,35 +752,35 @@ SimulationInterface::build_finite_element(unsigned int dim, FEType type,
 
   switch (dim)
   {
-    case 1:
-      {
-        FiniteElement<1, libMeshEnums::LAGRANGE>* fem =
-          new FiniteElement<1, libMeshEnums::LAGRANGE>(type);
-        fem->set_symmetry(sym);
-        fem->set_scaling(x0, mu);
-        fe = fem;
-      }
-      break;
-    case 2:
-      {
-        FiniteElement<2, libMeshEnums::LAGRANGE>* fem =
-          new FiniteElement<2, libMeshEnums::LAGRANGE>(type);
-        fem->set_symmetry(sym);
-        fem->set_scaling(x0, mu);
-        fe = fem;
-      }
-      break;
-    case 3:
-      {
-        FiniteElement<3, libMeshEnums::LAGRANGE>* fem =
-          new FiniteElement<3, libMeshEnums::LAGRANGE>(type);
-        fem->set_symmetry(sym);
-        fem->set_scaling(x0, mu);
-        fe = fem;
-      }
-      break;
-    default:
-      fe = NULL;
+  case 1:
+    {
+      FiniteElement<1, libMeshEnums::LAGRANGE>* fem =
+        new FiniteElement<1, libMeshEnums::LAGRANGE>(type);
+      fem->set_symmetry(sym);
+      fem->set_scaling(x0, mu);
+      fe = fem;
+    }
+    break;
+  case 2:
+    {
+      FiniteElement<2, libMeshEnums::LAGRANGE>* fem =
+        new FiniteElement<2, libMeshEnums::LAGRANGE>(type);
+      fem->set_symmetry(sym);
+      fem->set_scaling(x0, mu);
+      fe = fem;
+    }
+    break;
+  case 3:
+    {
+      FiniteElement<3, libMeshEnums::LAGRANGE>* fem =
+        new FiniteElement<3, libMeshEnums::LAGRANGE>(type);
+      fem->set_symmetry(sym);
+      fem->set_scaling(x0, mu);
+      fe = fem;
+    }
+    break;
+  default:
+    fe = NULL;
   }
   assert(fe != NULL);
   
@@ -741,8 +791,8 @@ SimulationInterface::build_finite_element(unsigned int dim, FEType type,
 
 void
 SimulationInterface::get_elemental_results(
-    const std::set<std::string>& variables,
-    std::vector<double>& results, std::vector<std::string>& legend)
+                                           const std::set<std::string>& variables,
+                                           std::vector<double>& results, std::vector<std::string>& legend)
 {
   results.resize(0);
   legend.resize(0);
@@ -767,8 +817,8 @@ SimulationInterface::get_elemental_results(
 
 void
 SimulationInterface::get_nodal_results(
-    const std::set<std::string>& variables,
-    std::vector<double>& results, std::vector<std::string>& legend)
+                                       const std::set<std::string>& variables,
+                                       std::vector<double>& results, std::vector<std::string>& legend)
 {
   results.resize(0);
   legend.resize(0);
@@ -790,9 +840,9 @@ SimulationInterface::get_nodal_results(
 
 void
 SimulationInterface::get_integrated_quantities_description(
-    const std::set<std::string>& variables,
-    std::vector<std::string>& legend,
-    std::vector<std::string>& description)
+                                                           const std::set<std::string>& variables,
+                                                           std::vector<std::string>& legend,
+                                                           std::vector<std::string>& description)
 {
   legend.resize(0);
   description.resize(0);
@@ -807,7 +857,7 @@ SimulationInterface::get_integrated_quantities_description(
 
 bool
 SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
-    vector<map<ID, double> >& values)
+                                  vector<map<ID, double> >& values)
 {
 
   if ((ids.size() == 0) || (elem == NULL)) return false;
@@ -832,7 +882,7 @@ SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
 
 bool
 SimulationInterface::get_solution(const Elem* elem, const Point& p,
-    const set<ID>& ids, map<ID, double>& values)
+                                  const set<ID>& ids, map<ID, double>& values)
 {
   vector<Point> points(1, p);
   vector<map<ID, double> > vals(1);
@@ -848,7 +898,7 @@ SimulationInterface::get_solution(const Elem* elem, const Point& p,
 
 bool
 SimulationInterface::get_solution(const Elem* elem, const Point& p,
-    ID id, double& value)
+                                  ID id, double& value)
 {
   vector<Point> points(1, p);
   set<ID> ids;
@@ -866,7 +916,7 @@ SimulationInterface::get_solution(const Elem* elem, const Point& p,
 
 bool
 SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
-    const set<ID>& ids, vector<map<ID, double> >& values)
+                                  const set<ID>& ids, vector<map<ID, double> >& values)
 {
   bool flag = true;
 
@@ -961,7 +1011,7 @@ SimulationInterface::get_solution(const Elem* elem, ID id, vector<double>& value
 
 bool
 SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
-    ID id, vector<double>& values)
+                                  ID id, vector<double>& values)
 {
   set<ID> ids;
   ids.insert(id);

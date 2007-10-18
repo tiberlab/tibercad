@@ -8,6 +8,7 @@
 #include "TypeDefs.h"
 #include "ModelOptions.h"
 #include "elem.h"
+#include "mesh_data_elements.h"
 
 #include <vector>
 #include <set>
@@ -51,6 +52,8 @@ class Device
     //! Get a reference to the mesh
     Mesh& get_mesh(void) const;
 
+    //! Get a pointer to the meshdata
+    MeshData_elements* get_meshdata(void) const;
     
     //! Get a reference to the equation systems object
     EquationSystems& get_equation_systems(void) const;
@@ -260,7 +263,10 @@ class Device
     //! The mesh for this device
     Mesh* _mesh;
 
-    
+    //! The meshdata for this device
+    MeshData_elements* _meshdata;
+
+   
     //! The mesh unit in m
     /*!
      * A distance of 1 in the mesh corresponds to \c _mesh_units m
@@ -372,6 +378,15 @@ Device::get_mesh(void) const
 {
   return *_mesh;
 }
+
+
+inline
+MeshData_elements*
+Device::get_meshdata(void) const
+{
+  return  _meshdata;
+}
+
 
 
 inline

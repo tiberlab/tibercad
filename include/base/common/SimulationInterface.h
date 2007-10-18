@@ -11,6 +11,7 @@
 #include "ModelErrorException.h"
 #include "Scaling.h"
 #include "FiniteElement.h"
+#include "mesh_data_elements.h"
 
 // LibMesh includes
 // For debugging
