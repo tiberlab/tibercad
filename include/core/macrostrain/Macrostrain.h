@@ -84,6 +84,20 @@ class Macrostrain : public SimulationInterface
  public:
 
 
+  enum Variables
+  {
+    EPS_XX = 0,
+    EPS_YY = 1,
+    EPS_ZZ = 2,
+    EPS_XY = 3,
+    EPS_XZ = 4,
+    EPS_YZ = 5,
+    P_X = 6,
+    P_Y = 7,
+    P_Z = 8
+  };
+
+
   struct atom
   {
     int mat_number;
@@ -202,6 +216,18 @@ class Macrostrain : public SimulationInterface
     create_boundary_model(const ModelOptions& options) const
     throw (ModelErrorException);
   
+
+
+  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
+     
+     
+
+ 
+  virtual void get_solution_secure(const Elem* elem,
+				   const std::vector<Point>& p, const std::set<ID>& ids,
+				   std::vector<std::map<ID, double> >& values);
+  
+
 
 
  private:

@@ -43,6 +43,8 @@ void QuantumDensity::get_solution_secure(const Elem* elem,
          const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
 {
  
+  
+
 }
 //============================================//
 void QuantumDensity::get_solution_secure(const Elem* elem,
