@@ -50,7 +50,8 @@ protected:
   AtomisticStructure* _atomistic_structure;
 
   //! Get the atomistic structure pointer from the name specified in input
-  AtomisticStructure* get_atomistic_structure(void);
+  //! and fill the private member _atomistic_structure
+  void get_atomistic_structure(void);
 
 };
 

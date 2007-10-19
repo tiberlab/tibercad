@@ -16,9 +16,9 @@ class Dftb : public TightBinding{
 
 public:
 
-struct dftb_options
+struct DftbOptions
   {
-    std::vector<std::string> sk_files;
+    char* skNames;
   };
 
  //! Constructor
@@ -33,15 +33,17 @@ struct dftb_options
 
   private:
 
+
   //! Get options suited for DFTB+ tight binding builder and solver
   void get_dftbp_options();
 
   //! A function for building a DFTB compatible char of SK names,
   //! based on species
-  char* build_sk_names(void);
+  void build_sk_names(void);
 
  //! Structure containing options for DFTB+ tight binding builder and solver
-  dftb_options _dftb_options;
+  DftbOptions _dftb_options;
+
 
 
 protected:

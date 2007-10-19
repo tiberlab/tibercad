@@ -15,7 +15,10 @@
 
 //-----------------------------------------------------------------------
 
-TightBinding::TightBinding(){}
+TightBinding::TightBinding(){
+  _atomistic_structure = NULL;
+}
+
 
 TightBinding::~TightBinding(){}
 
@@ -75,7 +78,7 @@ BoundaryProperties* TightBinding::create_boundary_model (const ModelOptions &opt
 }
 
 
-AtomisticStructure*
+void
 TightBinding::get_atomistic_structure(void){
 
   AtomisticStructure* atomistic_structure = NULL;
@@ -94,7 +97,5 @@ TightBinding::get_atomistic_structure(void){
 		<< get_name() << std::endl;
      exit(0);
     }
-
-  return atomistic_structure;
 
 }

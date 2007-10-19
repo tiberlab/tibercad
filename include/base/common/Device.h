@@ -89,7 +89,7 @@ class Device
 
 
     //! Set an atomistic structure to be kept in structures map
-    void set_atomistic_structure(const std::string name,
+    void set_atomistic_structure(const std::string& name,
         AtomisticStructure* atomistic_structure);
 
 
@@ -492,7 +492,7 @@ Device::get_temperature(const Elem* elem) const
 
 inline
 void 
-Device::set_atomistic_structure(const std::string name, AtomisticStructure* atomistic_structure)
+Device::set_atomistic_structure(const std::string& name, AtomisticStructure* atomistic_structure)
 {
   _atomistic_structure_map[name] = atomistic_structure;
 }
@@ -502,7 +502,7 @@ inline
 AtomisticStructure*
 Device::get_atomistic_structure(const std::string& name)
 {
-  return _atomistic_structure_map[name.c_str()];
+  return _atomistic_structure_map[name];
 }; 
     
 #endif //  __DEVICE_H__
