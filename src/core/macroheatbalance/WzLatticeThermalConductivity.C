@@ -33,7 +33,7 @@ void  WzLatticeThermalConductivity::read_database(void)
    _kappa_x = data("therm_lat_cond_x", 0.0);
    _kappa_z = data("therm_lat_cond_z", 0.0);
   }
-  
+ 
 
 }
 
@@ -55,9 +55,9 @@ if (_kappa_model != "constant")
  _kappa_b_x = options.get_option("therm_lat_cond_x", _kappa_b_x );
  _kappa_c_x = options.get_option("therm_lat_cond_x", _kappa_c_x );
  
- _kappa_a_z = options.get_option("therm_lat_cond_x", _kappa_a_z );
- _kappa_b_z = options.get_option("therm_lat_cond_x", _kappa_b_z );
- _kappa_c_z = options.get_option("therm_lat_cond_x", _kappa_c_z );
+ _kappa_a_z = options.get_option("therm_lat_cond_z", _kappa_a_z );
+ _kappa_b_z = options.get_option("therm_lat_cond_z", _kappa_b_z );
+ _kappa_c_z = options.get_option("therm_lat_cond_z", _kappa_c_z );
 
   k_x = 1.0 / (_kappa_a_x + _kappa_b_x * _temperature +  _kappa_c_x * _temperature * _temperature );
 
@@ -70,18 +70,23 @@ if (_kappa_model != "constant")
   k_x = options.get_option("therm_lat_cond_x",_kappa_x);
   k_z = options.get_option("therm_lat_cond_z",_kappa_z);
 
+  
+
 }
 
 
-   _conductivity(1,1) = k_x;
-   _conductivity(2,2) = k_x;
-   _conductivity(3,3) = k_z;
+
+  _conductivity(1,1) = k_x;
+  _conductivity(2,2) = k_x;
+  _conductivity(3,3) = k_z;
 
   Material* mat = get_material();
 
   const RotatedCrystal&   cr = mat->get_rotated_crystal ();
 
   rotate_to_calculation_system(cr.RotMatrix);
+
+ 
 
 }
 

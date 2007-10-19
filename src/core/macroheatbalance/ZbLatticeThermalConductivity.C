@@ -28,6 +28,7 @@ void  ZbLatticeThermalConductivity::read_database(void)
   else
   { 
    _kappa = data("therm_lat_cond", 0.0);
+   //   std::cout<<_kappa<<std::endl;
   }
   
 

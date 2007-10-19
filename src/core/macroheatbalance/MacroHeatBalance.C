@@ -71,12 +71,18 @@ void MacroHeatBalance::do_init( )
    dim = mesh->mesh_dimension();
 
 
-  double mesh_units = _device->get_mesh_units();
+   //
 
-  opt.work_units = sim_opt.get_option("Work_length_units", 1e-2);
+   // double mesh_units = _device->get_mesh_units();
+   // opt.work_units = sim_opt.get_option("Work_length_units", 1e-2);
+   // opt.length_scale = mesh_units/opt.work_units;
 
-  opt.length_scale = mesh_units/opt.work_units;
 
+ // we calculate in cm!
+  double mesh_units = get_scaling().get_calc_mesh_units() / sim_opt.get_option("Work_length_units", 1e-2);
+  get_scaling().set_calc_mesh_units(mesh_units);
+  opt.length_scale = 1.0;
+  ///
 
 
   equation_systems = & (get_equation_systems());
@@ -349,9 +355,9 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
   //Fe
 
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  // AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
 
-  //AutoPtr<FEBase> fe (build_finite_element(dim, fe_type));
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type,true));
   
   QGauss qrule (dim, FIFTH); //may be could be decreased (CHECK!!!)
   
@@ -388,10 +394,10 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   // Declare a special finite element object for
   // boundary integration.
 
-  AutoPtr<FEBase>  fe_face(FEBase::build(dim, fe_type));
+  //AutoPtr<FEBase>  fe_face(FEBase::build(dim, fe_type));
 
 
- // AutoPtr<FEBase>  fe_face(build_finite_element(dim, fe_type));
+  AutoPtr<FEBase>  fe_face(build_finite_element(dim,fe_type,true));
   
   // Boundary integration requires one quadraure rule,
   // with dimensionality one less than the dimensionality
@@ -501,6 +507,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   
     heat_model->get_thermal_conductivity(kappa);
 
+    // std::cerr<<kappa<<std::endl;
+
     eTEpower = heat_model->get_electrons_thermoelectric_power();	
    
     hTEpower = heat_model->get_holes_thermoelectric_power();
@@ -514,7 +522,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 
     } 
-    
+     
     
     
       
@@ -571,7 +579,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		else
 		  kappa_value = kappa(i+1, j+1);
 
-	   
+	
 	          value += -JxW[qp] * kappa_value * dphi[p1][qp](i) * dphi[p2][qp](j) /(opt.length_scale * opt.length_scale);
                  
 		

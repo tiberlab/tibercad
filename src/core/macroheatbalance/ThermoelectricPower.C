@@ -72,6 +72,7 @@ void ThermoelectricPower::do_init(void)
     _hTEpower = options.get_option("hTEpower", _hTEpower );
 
     _eTEpower = -std::abs(_eTEpower);
+
       
     _hTEpower = -std::abs(_hTEpower); 
    

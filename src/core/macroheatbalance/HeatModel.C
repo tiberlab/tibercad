@@ -82,6 +82,7 @@ void HeatModel::do_init()
    kappa =dynamic_cast<LatticeThermalConductivity*>(
         PhysicalModelInterface::create("lat_therm_cond_" +
 		get_material()->get_structure(), it->second)); 
+
   
    if (kappa == NULL)
       throw InitFailedException("Could not create lattice thermal conductivity model");
@@ -93,6 +94,10 @@ void HeatModel::do_init()
      kappa = dynamic_cast<LatticeThermalConductivity*>(
 	  PhysicalModelInterface::create("lat_therm_cond_" +
 		get_material()->get_structure()));
+
+     //std::cout<<
+     //get_material()->get_name()<<std::endl;
+  
      
     }
  

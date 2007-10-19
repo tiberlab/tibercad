@@ -155,6 +155,7 @@ Material::create(const std::string& name)
 Material*
 Material::create(const std::string& name, const ModelOptions& options)
 {
+
   Material* mat = create(name);
 
   if (mat != NULL)
@@ -164,6 +165,10 @@ Material::create(const std::string& name, const ModelOptions& options)
     // set the crystal structure at this point
     mat->_structure = mat->_options.get_option("structure", "zb");
     mat->_options.delete_option("structure");
+
+    //std::cerr<<options.get_option(", "aa")<<std::endl;
+ //  std::cout<<mat->_options.get_option("structure", "aa")<<std::endl;
+ //  std::cout<<mat->_options.get_option("E_v", "uhm")<<std::endl; 
   }
 
   return mat;

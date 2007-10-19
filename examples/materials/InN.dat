@@ -3,6 +3,8 @@
 structure = wz;
 
 Eg_G = 0.78;
+#E_v = -2.34;
+# from Nextnano
 E_v = -0.462;
 
 m_c_xx = 0.07;
@@ -29,6 +31,7 @@ D5 = -4.0;
 D6 = -5.5;
 
 permittivity = 14.4;
+
 
 # lattice constants
 a = 0.3545
@@ -77,6 +80,21 @@ Cr_h = 9.68e16
 Cs_h = 7.2e20
 alpha_h = 1.45
 beta_h = 1.85
+
+# high field dependency
+Vsat_Formula = 2
+beta0_e = 2.2
+A_vsat_e = 2.6e+07 	
+B_vsat_e = 0
+vsat_min_e =  2.2e+07	
+beta0_h = 2.2
+A_vsat_h = 2.6e+07	
+B_vsat_h = 0
+vsat_min_h =  2.2e+07	
+#
+
+
+
 
 mumin_e = 88
 am_e = -0.67
