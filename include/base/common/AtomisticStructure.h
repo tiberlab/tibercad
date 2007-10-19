@@ -13,6 +13,7 @@
 #include<iostream>
 #include<fstream>
 #include<sstream>
+#include <map>
 
 
 //! Contains Atom definition
@@ -83,10 +84,17 @@ class AtomisticStructure
   void init(void); 
 
   //! Number of atoms in structure
-  unsigned int N_atoms; 
+  int N_atoms; 
 
   //! Number of species
-  unsigned int N_types;
+  int N_types;
+
+  //! Tell if atomistic structure has to be considered a periodical 
+  //! structure (true) or a cluster (false)
+  bool is_periodical;
+
+  //! Get index of atom type
+  int get_type_index(const std::string&);
 
 protected:
 
@@ -122,11 +130,10 @@ private:
   //! List of all atom types in structure
   std::vector<std::string> _atom_types;
 
-   //! Tell if atomistic structure has to be considered a periodical 
-  //! structure (true) or a cluster (false)
-  bool _is_periodical;
+  //! Atom types in a map with integer indexes (starting from 1)
+  std::map<const char*, int> _atom_types_map;
 
-  //! Periodicity vectors in canonical basis
+   //! Periodicity vectors in canonical basis
   double _periodicity_vectors[3][3];
 
   //! Tell if the object has been already initialized
@@ -182,6 +189,13 @@ inline
 const std::vector<std::string>& AtomisticStructure::get_atom_types(void)
 {
   return _atom_types;
+}
+
+
+inline  
+int AtomisticStructure::get_type_index(const std::string& type)
+{
+  return _atom_types_map[type.c_str()];
 }
 
 

@@ -5,7 +5,7 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
 { 
   // Default initializations
   N_atoms = 0;
-  _is_periodical = false;
+  is_periodical = false;
   for (unsigned int i = 0; i < 3; i++)
     {
       for (unsigned int j = 0; j < 3; j++)
@@ -65,13 +65,13 @@ AtomisticStructure::init(void)
     std::cerr << "ERROR IN ATOMISTIC REGION DEFINITION: A PATH FOR STRUCTURE FILE MUST BE SPECIFIED" << std::endl;
 
   path = _options.get_option("path","none");
-  
+std::cout << "Got options?" << std::endl;  
   if (path.compare("none") != 0) read_structure(path);
-
+std::cout << "read_structure run" << std::endl; 
 
   if ( _options.find_option("physical_regions") )
     {
-   
+std::cout << "found physical regions" << std::endl;    
       //Put physical regions specified in input file in _regions
       //A vector is needed as temporary container
       std::vector<std::string> region_string; 
@@ -146,7 +146,7 @@ AtomisticStructure::read_structure(const std::string& path)
 {
   std::ifstream file;
   std::string line, record;
-  unsigned int N_atoms, n_specie;
+  unsigned int n_specie;
   Atom tmp_atom;
 
 #ifdef DEBUG
@@ -157,7 +157,6 @@ AtomisticStructure::read_structure(const std::string& path)
   if (!(_structure_atoms.empty())) _structure_atoms.clear();
   if (!(_atom_types.empty())) _atom_types.clear();
 
-
   file.open(path.c_str(), std::ifstream::in);
 
   if (!file) 
@@ -166,14 +165,12 @@ AtomisticStructure::read_structure(const std::string& path)
       exit(1);   // call system to stop
     }
 
-
   // Recognize type of input file and read it properly
   std::string extension = path.substr(path.size()-4);
 
   // XYZ file
   if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
     {
-
       // First line is number of atoms
       getline(file, line);
       N_atoms = atoi(line.c_str());
@@ -204,7 +201,7 @@ AtomisticStructure::read_structure(const std::string& path)
 
 	      for (unsigned int i = 0; i < ( _atom_types.size()); i++)
 		{
-		  if ( record.compare(_atom_types[i]) == 0) not_present = true;
+		  if ( record.compare(_atom_types[i]) == 0) not_present = false;
 		}
 
 	      if (not_present) _atom_types.push_back(record);
@@ -245,7 +242,7 @@ AtomisticStructure::read_structure(const std::string& path)
       line_string >> record;
 
       N_atoms = atoi(line.c_str());
-
+   
 #ifdef DEBUG
       std::cerr << "N_atoms is " << N_atoms << std::endl;
 #endif
@@ -259,15 +256,17 @@ AtomisticStructure::read_structure(const std::string& path)
       line_string >> record;
 
       if ( (record.compare("S") == 0) || (record.compare("s") == 0)) 
-	_is_periodical = true;
+	is_periodical = true;
       else  if ( (record.compare("C") == 0) && (record.compare("c") == 0))
 	std::cerr << "Warning (in GEN file at first line): Cluster (C) or Supercell (S) must be specified. By default a Cluster (no periodicity) is considered. \n";
 
       getline(file, line);
 
-      line_string.str("");
+      //This line clean stringstream in a safe way !!!!!1
+      line_string.clear(std::stringstream::goodbit);  
+ 
       line_string << line;
-            
+           
       // I assume that GEN file is correct and there's no name repetition
       while ( line_string >> record)
 	{
@@ -281,16 +280,15 @@ AtomisticStructure::read_structure(const std::string& path)
 	{
 	  getline(file, line);
 	  std::stringstream line_string(line);
+
 	  // First value is ignored (just atoms enumeration)
 	  line_string >> record;
-
 	  line_string >> record;
 	  n_specie = atoi(record.c_str());
 	  tmp_atom.specie = _atom_types[n_specie -1];
 
 	  for (unsigned int j = 1; j <= 3; j++)
 	    { 
-
 	      line_string >> record;
 	      tmp_atom.position(j) = atof(record.c_str());
 	    }
@@ -303,7 +301,7 @@ AtomisticStructure::read_structure(const std::string& path)
       getline(file, line);
 
       // If GEN refers to periodical structure I expect periodicity vectors
-      if (_is_periodical)
+      if (is_periodical)
 	{
 	  for (unsigned int i = 0; i < 3; i++)
 	    {
@@ -326,6 +324,13 @@ AtomisticStructure::read_structure(const std::string& path)
 
   file.close();
 
+  //! Set _atom_types_map
+  for (int i = 0; i < _atom_types.size(); i++){
+    _atom_types_map[ _atom_types[i].c_str() ] = i + 1;
+
+  }
+
+std::cout << "in AtomisticStructure N_atoms is "<< N_atoms << std::endl;
 #ifdef DEBUG
   std::cerr << "AtomisticStructure::read_structure(path) end. \n";
 #endif
@@ -366,7 +371,7 @@ if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
    {
      file << _structure_atoms.size();
 
-     if (_is_periodical) file << std::setw(10) << "S \n";
+     if (is_periodical) file << std::setw(10) << "S \n";
      else file << std::setw(10) << "C \n";
 
      for (unsigned int i = 0; i < _atom_types.size(); i++)
@@ -394,7 +399,7 @@ if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
 	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n"; 
 
      // Periodicity vectors at the bottom
-      if (_is_periodical)
+      if (is_periodical)
 	{
 	  for (unsigned int i = 0; i < 3; i++)
 	    {
@@ -413,7 +418,7 @@ if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
    {
      std::cerr << "File extension does not correspond to any internal format. File not print. \n";
    }
-
+ 
  file.close();
 
 #ifdef DEBUG

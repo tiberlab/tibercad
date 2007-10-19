@@ -19,6 +19,13 @@ public:
 struct DftbOptions
   {
     char* skNames;
+    char* speciesNames;
+    int nAtom;
+    int nType;
+    double* coords;
+    int* species;
+    int iPeriodic;
+
   };
 
  //! Constructor
@@ -37,9 +44,11 @@ struct DftbOptions
   //! Get options suited for DFTB+ tight binding builder and solver
   void get_dftbp_options();
 
-  //! A function for building a DFTB compatible char of SK names,
-  //! based on species
-  void build_sk_names(void);
+  //! A function for building a DFTB compatible char of SK and species names
+  void build_names(void);
+
+  //! Function for building options from atomistic structure
+  void build_structure_options(void);
 
  //! Structure containing options for DFTB+ tight binding builder and solver
   DftbOptions _dftb_options;
