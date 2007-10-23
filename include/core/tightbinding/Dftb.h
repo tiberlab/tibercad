@@ -25,7 +25,14 @@ struct DftbOptions
     double* coords;
     int* species;
     int iPeriodic;
-
+    double* latVecs;
+    double eTemp;
+    int orbResolved;
+    int skInterp;
+    int nkPoints;
+    double *kPoints;
+    double* kWeights;
+    int* mAngs;
   };
 
  //! Constructor
@@ -50,10 +57,14 @@ struct DftbOptions
   //! Function for building options from atomistic structure
   void build_structure_options(void);
 
+  //! Function for building options from input
+  void build_input_options(void);
+
  //! Structure containing options for DFTB+ tight binding builder and solver
   DftbOptions _dftb_options;
 
-
+  //! Print all _dftb_options for debugging purposes
+  void print_dftb_options(void);
 
 protected:
 

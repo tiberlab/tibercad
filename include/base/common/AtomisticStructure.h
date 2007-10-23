@@ -80,6 +80,9 @@ class AtomisticStructure
   //! Return a reference to atom types
   const std::vector<std::string>& get_atom_types (void);
 
+  //! Get periodicity vectors for the structure
+  double* get_periodicity_vectors(void);
+
   //! Initialize the structure (up to now reading a structure from file is needed)
   void init(void); 
 
@@ -129,9 +132,6 @@ private:
 
   //! List of all atom types in structure
   std::vector<std::string> _atom_types;
-
-  //! Atom types in a map with integer indexes (starting from 1)
-  std::map<const char*, int> _atom_types_map;
 
    //! Periodicity vectors in canonical basis
   double _periodicity_vectors[3][3];
@@ -192,10 +192,9 @@ const std::vector<std::string>& AtomisticStructure::get_atom_types(void)
 }
 
 
-inline  
-int AtomisticStructure::get_type_index(const std::string& type)
-{
-  return _atom_types_map[type.c_str()];
+inline 
+double* AtomisticStructure::get_periodicity_vectors(void){
+  return &_periodicity_vectors[0][0];
 }
 
 

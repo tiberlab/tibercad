@@ -65,13 +65,11 @@ AtomisticStructure::init(void)
     std::cerr << "ERROR IN ATOMISTIC REGION DEFINITION: A PATH FOR STRUCTURE FILE MUST BE SPECIFIED" << std::endl;
 
   path = _options.get_option("path","none");
-std::cout << "Got options?" << std::endl;  
   if (path.compare("none") != 0) read_structure(path);
-std::cout << "read_structure run" << std::endl; 
 
   if ( _options.find_option("physical_regions") )
     {
-std::cout << "found physical regions" << std::endl;    
+
       //Put physical regions specified in input file in _regions
       //A vector is needed as temporary container
       std::vector<std::string> region_string; 
@@ -112,13 +110,13 @@ std::cout << "found physical regions" << std::endl;
 	      region_iterator ++;
 	    }
 
-  for (std::set<std::string>::iterator i= _regionset.begin(); i !=_regionset.end(); i++)
-    {std::cerr << "WRITING " << std::endl;
-      std::cerr << "_REGION IS " << *i << std::endl;}
+//   for (std::set<std::string>::iterator i= _regionset.begin(); i !=_regionset.end(); i++)
+//     {std::cerr << "WRITING " << std::endl;
+//       std::cerr << "_REGION IS " << *i << std::endl;}
 
- for (std::set<ID>::iterator i= _IDset.begin(); i !=_IDset.end(); i++)
-    {std::cerr << "WRITING " << std::endl;
-      std::cerr << "_REGION IS " << *i << std::endl;}
+//  for (std::set<ID>::iterator i= _IDset.begin(); i !=_IDset.end(); i++)
+//     {std::cerr << "WRITING " << std::endl;
+//       std::cerr << "_REGION IS " << *i << std::endl;}
 
 #ifdef DEBUG
   std::cerr << "AtomisticStructure::init() end \n";
@@ -190,7 +188,6 @@ AtomisticStructure::read_structure(const std::string& path)
       // without further line_string manipulation
       while (getline(file, line))
 	{ 
-
 	  std::stringstream line_string(line);
 	  // Extract atom type and check if it's a new type
 	  line_string >> record;
@@ -213,7 +210,7 @@ AtomisticStructure::read_structure(const std::string& path)
 
 	  tmp_atom.specie = record;
 
-	  for (unsigned int i = 1; i == 3; i++)
+	  for (unsigned int i = 1; i < 4; i++)
 	    { 
 
 	      line_string >> record;
@@ -262,10 +259,16 @@ AtomisticStructure::read_structure(const std::string& path)
 
       getline(file, line);
 
-      //This line clean stringstream in a safe way !!!!!1
+      //This line clean stringstream in a safe way 
       line_string.clear(std::stringstream::goodbit);  
- 
+
+      //Don't know why these spaces are needed!!!!!!!!!!!!!!! check it!!!!
+      line_string << "                       ";
+
       line_string << line;
+
+      std::cout << "line is " << line << std::endl;
+      std::cout << "line_string is " << line_string << std::endl;
            
       // I assume that GEN file is correct and there's no name repetition
       while ( line_string >> record)
@@ -324,13 +327,6 @@ AtomisticStructure::read_structure(const std::string& path)
 
   file.close();
 
-  //! Set _atom_types_map
-  for (int i = 0; i < _atom_types.size(); i++){
-    _atom_types_map[ _atom_types[i].c_str() ] = i + 1;
-
-  }
-
-std::cout << "in AtomisticStructure N_atoms is "<< N_atoms << std::endl;
 #ifdef DEBUG
   std::cerr << "AtomisticStructure::read_structure(path) end. \n";
 #endif
@@ -427,4 +423,17 @@ if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
 
 }
 
+
+
+int 
+AtomisticStructure::get_type_index(const std::string& type)
+{
+  int result = 1000;
+  for (int i = 0; i < N_types; i++){
+    if ( (type.compare( _atom_types[i] ) == 0) ) result = i + 1;
+  }
+
+  return result;
+
+}
 
