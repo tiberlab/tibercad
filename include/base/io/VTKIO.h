@@ -33,15 +33,15 @@ class VTKIO : public MeshOutput<MeshBase>
 
   
   //! Write a mesh with nodal data
-  virtual void write_nodal_data(const std::string&,
-      const std::vector<Number>&,
-      const std::vector<std::string>&);
+  virtual void write_nodal_data(const std::string& fname,
+      const std::vector<Number>& soln,
+      const std::vector<std::string>& names);
 
   
   //! Write a mesh with elemental data
-  virtual void write_elemental_data(const std::string&,
-      const std::vector<Number>&,
-      const std::vector<std::string>&);
+  virtual void write_elemental_data(const std::string& fname,
+      const std::vector<Number>& soln,
+      const std::vector<std::string>& names);
 
 
 

@@ -672,6 +672,7 @@ class DriftDiffusionProperties : public PhysicalModel
     
     //! The pyroelectric polarization (will go into a model)
     RealVectorValue pyro_polarization;
+    double bow_pyro;
 
     
     //! The relative permittivity tensor

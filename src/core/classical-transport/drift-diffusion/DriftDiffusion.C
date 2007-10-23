@@ -292,7 +292,6 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
       dynamic_cast<DriftDiffusionProperties*>(
           _device->get_material(elem->subdomain_id())->get_model(get_id()));
 
-    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
     sc->set_coordinates(elem->centroid());
     sc->set_potentials(sc->get_equilibrium_fermi_level());
@@ -1274,7 +1273,6 @@ DriftDiffusion::get_bands_secure(const Elem* elem, vector<double>& band_edges)
         _device->get_material(elem->subdomain_id())->get_model(get_id()));
   assert(sc != NULL); 
 
-  //sc->set_lattice_temperature(_device->get_temperature(elem));
   sc->reinit(elem);
 
   band_edges[0] = sc->get_conduction_band_edge();
@@ -1546,7 +1544,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
         device.get_material(subdomain)->get_model(get_id()));
   assert(sc != NULL); 
 
-  //sc->set_lattice_temperature(device.get_temperature(elem));
   sc->reinit(elem);
 
   fe->reinit(elem, &points);
@@ -1606,9 +1603,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     ep_z *= phi0;
 
     sc->set_coordinates(points[n]);
-    //double T_lat = sc->get_lattice_temperature();
     // all are at lattice temperature
-    //sc->set_carrier_temperatures(T_lat, T_lat);
 
     sc->set_potentials(u, en, ep);
 
@@ -1760,7 +1755,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
         device.get_material(subdomain)->get_model(get_id()));
   assert(sc != NULL); 
 
-  //sc->set_lattice_temperature(device.get_temperature(elem));
   sc->reinit(elem);
 
   fe->reinit(elem, &points);
@@ -1827,9 +1821,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     ep_z *= phi0;
 
     sc->set_coordinates(points[n]);
-    //double T_lat = sc->get_lattice_temperature();
-    // all are at lattice temperature
-    //sc->set_carrier_temperatures(T_lat, T_lat);
 
     sc->set_potentials(u, en, ep);
 
@@ -2109,7 +2100,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   assert(sc != NULL); 
 
-  //sc->set_lattice_temperature(_device->get_temperature(elem));
   sc->reinit(elem);
 
 
@@ -2164,9 +2154,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     // prepare for calculating local properties
     sc->set_coordinates(points[n]);
 
-    //double T_lat = sc->get_lattice_temperature();
-    // all are at lattice temperature
-    //sc->set_carrier_temperatures(T_lat, T_lat);
 
     sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
@@ -2415,7 +2402,6 @@ DriftDiffusion::calculate_currents_rstf(void)
 
     fe->reinit(elem);
 
-    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
     
     //Get the thermoelectric power------------
@@ -2455,9 +2441,6 @@ DriftDiffusion::calculate_currents_rstf(void)
       // prepare for calculating local properties
       sc->set_coordinates(elem->centroid());
 
-      //double T_lat = sc->get_lattice_temperature();
-      // all are at lattice temperature
-      //sc->set_carrier_temperatures(T_lat, T_lat);
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
@@ -2596,7 +2579,6 @@ DriftDiffusion::calculate_currents_surfint(void)
         if (boundary == NULL)
           continue;
         
-        //sc->set_lattice_temperature(_device->get_temperature(elem));
         sc->reinit(elem);
         
 	//Get the thermoelectric power------------
@@ -2643,9 +2625,6 @@ DriftDiffusion::calculate_currents_surfint(void)
             // prepare for calculating local properties
             sc->set_coordinates(q_point[qp]);
 
-            //double T_lat = sc->get_lattice_temperature();
-            // all are at lattice temperature
-            //sc->set_carrier_temperatures(T_lat, T_lat);
 
             sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
@@ -2706,9 +2685,6 @@ DriftDiffusion::calculate_currents_surfint(void)
           // prepare for calculating local properties
           sc->set_coordinates(elem->point(s));
 
-          //double T_lat = sc->get_lattice_temperature();
-          // all are at lattice temperature
-          //sc->set_carrier_temperatures(T_lat, T_lat);
 
           sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
@@ -2827,7 +2803,6 @@ DriftDiffusion::build_local_scaling(void)
           device.get_material(subdomain)->get_model(get_id()));
     assert(sc != NULL); 
 
-    // sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
 
     fe->reinit(elem);
@@ -2861,9 +2836,6 @@ DriftDiffusion::build_local_scaling(void)
       // prepare for calculating local properties
       sc->set_coordinates(q_point[qp]);
 
-      //double T_lat = sc->get_lattice_temperature();
-      // all are at lattice temperature
-        //sc->set_carrier_temperatures(T_lat, T_lat);
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
       sc->set_electric_field(phi0 * e_field);
@@ -3194,7 +3166,6 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
           device.get_material(subdomain)->get_model(get_id()));
       assert(sc != NULL); 
 
-      //sc->set_lattice_temperature(_device->get_temperature(elem));
       sc->reinit(elem);
 
       fe->reinit(elem);
@@ -3217,9 +3188,6 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
         // prepare for calculating local properties
         sc->set_coordinates(elem->point(n));
 
-        //double T_lat = sc->get_lattice_temperature();
-        // all are at lattice temperature
-        //sc->set_carrier_temperatures(T_lat, T_lat);
 
         sc->set_potentials(u, en, ep);
         sc->set_electric_field(field);
@@ -3528,7 +3496,6 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
 
     assert(sc != NULL); 
 
-    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
 
     fe->reinit(elem);
@@ -3584,9 +3551,6 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     // prepare for calculating local properties
     sc->set_coordinates(elem->centroid());
 
-    //double T_lat = sc->get_lattice_temperature();
-    // all are at lattice temperature
-    //sc->set_carrier_temperatures(T_lat, T_lat);
 
     sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
@@ -3834,7 +3798,6 @@ DriftDiffusion::set_dirichlet_bc(void)
           device.get_material(subdomain)->get_model(get_id()));
     assert(sc != NULL);
 
-    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
 
     {
@@ -3890,11 +3853,7 @@ double DriftDiffusion::get_electron_conducibility(const Elem* elem)
     assert(sc != NULL);
 
 
-    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
-
-    //double T_lat = sc->get_lattice_temperature();
-    //sc->set_carrier_temperatures(T_lat, T_lat);
 
 
     Solution  potentials;
@@ -3939,12 +3898,8 @@ double DriftDiffusion::get_hole_conducibility(const Elem* elem)
     assert(sc != NULL);
     
     
-    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
     
-    //double T_lat = sc->get_lattice_temperature();
-    //sc->set_carrier_temperatures(T_lat, T_lat);
-
 
     Solution  potentials;
     get_solution(elem,elem->centroid(),potentials); 
@@ -3996,7 +3951,6 @@ double DriftDiffusion::get_electrons_thermoelectric_power(const Elem* elem)
     double T_lattice = _device->get_temperature(elem);
   
     
-    //model->set_lattice_temperature(T_lattice);
 
     model->reinit(elem);
     
@@ -4049,8 +4003,6 @@ double DriftDiffusion::get_holes_thermoelectric_power(const Elem* elem)
   
   //initialization of the model
 
-  //double T_lattice = _device->get_temperature(elem);
-  //model->set_lattice_temperature(T_lattice); 
   model->reinit(elem);
   
   
@@ -4358,7 +4310,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
     assert(sc != NULL);
 
-    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
     
 
@@ -4402,10 +4353,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
       // prepare for calculating local properties
       sc->set_coordinates(q_point[qp]);
-
-      //double T_lat = sc->get_lattice_temperature();
-      // all are at lattice temperature
-      //sc->set_carrier_temperatures(T_lat, T_lat);
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
@@ -5546,7 +5493,6 @@ DriftDiffusion::assemble_linear_electrons(const NumericVector<Number>& x,
 
     assert(sc != NULL);
 
-    //sc->set_lattice_temperature(_device->get_temperature(elem));
     sc->reinit(elem);
     
 
@@ -5589,9 +5535,7 @@ DriftDiffusion::assemble_linear_electrons(const NumericVector<Number>& x,
       // prepare for calculating local properties
       sc->set_coordinates(q_point[qp]);
 
-      //double T_lat = sc->get_lattice_temperature();
       // all are at lattice temperature
-      //sc->set_carrier_temperatures(T_lat, T_lat);
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 

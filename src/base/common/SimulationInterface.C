@@ -24,11 +24,8 @@
 
 #include "Utils.h"
 
-#include "GMVIO_cell.h"
-#include "tecplot_IO_cell.h"
-#include "gnuplot_io.h"
-#include "GraceIO.h"
-#include "VTKIO.h"
+#include "DataOutput.h"
+
 
 // LibMesh includes
 #include "system.h"
@@ -47,7 +44,6 @@ SimulationInterface::SimulationInterface(void)
     _is_initialized(false),
     _is_solved(false),
     _equilibrium_is_solved(false)
-                                        //_relaxation_factor(1.0)
 {
   ID new_id = _simulation_map.size() + 1;
   _id = new_id;
@@ -415,7 +411,7 @@ SimulationInterface::create_physical_model(const ModelOptions& options) const
 
 void
 SimulationInterface::get_integrated_quantities(
-                                               const std::set<std::string>& variables, std::vector<double>& values)
+    const std::set<std::string>& variables, std::vector<double>& values)
 {
 
   if (_environment != NULL)
@@ -446,120 +442,64 @@ SimulationInterface::do_plot(void)
 
   string suffix = get_control().get_filename_suffix();
   string outdir = get_control().get_output_dir();
-  string format = get_control().get_output_format();
-
-  string suff;
-  if (format == "gmv")
-    suff = ".gmv";
-  else if (format == "ise")
-    suff = ".plt";
-  else if (format == "grace")
-    suff = ".dat";
-  else if (format == "vtk")
-    suff = ".vtk";
 
   vector<double> results;
   vector<string> names;
 
+  DataOutput data_output(dev.get_mesh(), get_control().get_output_format());
+
+
+  
+  // 
   // nodal values
+  //
   get_nodal_results(get_control().get_plotvariables(), results, names);
   if (names.size() > 0)
   {
-    string filename(outdir + "/" + get_name() +
-                    "_nodal" + suffix + suff);
-
-    if (format == "gmv")
-      GMVIO(dev.get_mesh()).write_nodal_data(filename, results, names);
-    else if (format == "gnuplot")
-      GnuPlotIO(dev.get_mesh()).write_nodal_data(filename, results, names);
-    else if (format == "ise")
-      TecplotIO(dev.get_mesh()).write_nodal_data(filename, results, names);
-    else if (format == "grace")
-      GraceIO(dev.get_mesh()).write_nodal_data(filename, results, names);
-    else if (format == "vtk")
-      VTKIO(dev.get_mesh()).write_nodal_data(filename, results, names);
-    else
-    {
-      cout << "Output format not supported. Falling back to GMV." << endl;
-      GMVIO(dev.get_mesh()).write_nodal_data(filename, results, names);
-    }
+    string filename(outdir + "/" + get_name() + "_nodal" + suffix);
+    data_output.write_nodal_data(filename, results, names);
   }
 
+
+
+  //
   // elemental values
+  //
   get_elemental_results(get_control().get_plotvariables(), results, names);
   if (names.size() > 0)
   {
-    string filename(outdir + "/" + get_name() +
-                    "_elemental" + suffix + suff);
-
-    if (format == "gmv")
-      GMVIO_cell(dev.get_mesh()).write_ascii_cell_data(filename, results, names);
-    else if (format == "gnuplot")
-      cout << "GnuPlot does not currently support cell data." << endl;
-    else if (format == "ise")
-      TecplotIO_cell(dev.get_mesh()).write_cell_data(filename, results, names);
-    else if (format == "grace")
-      GraceIO(dev.get_mesh()).write_elemental_data(filename, results, names);
-    else if (format == "vtk")
-      VTKIO(dev.get_mesh()).write_elemental_data(filename, results, names);
-    else
-    {
-      cout << "Output format not supported. Falling back to GMV." << endl;
-      GMVIO_cell(dev.get_mesh()).write_ascii_cell_data(filename, results, names);
-    }
+    string filename(outdir + "/" + get_name() + "_elemental" + suffix);
+    data_output.write_cell_data(filename, results, names);
   }
 
 
 
 
-
-
-  // materials  output: for each simulation an output file with IDs of  physical regions activated for that simulation
-  //  IDs are taken from the meshdata object associated to the  device; IDs are data associated to elements
+  // materials  output: for each simulation an output file with IDs of
+  // physical regions activated for that simulation
+  // IDs are taken from the meshdata object associated to the  device;
+  // IDs are data associated to elements
 
   std::vector<Number> translated_data;
   std::vector<std::string> data_names;
 
-  
-
   (dev.get_meshdata())->activate(); 
+  (dev.get_meshdata())->translate_elem_data(dev.get_mesh(),
+                                            translated_data,
+                                            data_names);
 
-
-  (dev.get_meshdata())->translate_elem_data ( (dev.get_mesh()),
-                                              translated_data,
-                                              data_names);
-
-
-  string filename(outdir + "/" + get_name() +
-                  "_materials" + suffix + suff);
-  
   if (data_names.size() > 0)
   {
-
-    if (format == "gmv")
-      GMVIO_cell(dev.get_mesh()).write_ascii_cell_data(filename,translated_data ,data_names);
-    else if (format == "gnuplot")
-      cout << "GnuPlot does not currently support cell data." << endl;
-    else if (format == "ise")
-      TecplotIO_cell(dev.get_mesh()).write_cell_data(filename, translated_data ,data_names);
-    else if (format == "vtk")
-      VTKIO(dev.get_mesh()).write_elemental_data(filename, translated_data ,data_names);
-    else if (format == "grace")
-      GraceIO(dev.get_mesh()).write_elemental_data(filename,translated_data ,data_names );
-    else
-    {
-      cout << "Output format not supported. Falling back to GMV." << endl;
-      GMVIO_cell(dev.get_mesh()).write_ascii_cell_data(filename,translated_data ,data_names);
-    }
-
+    string filename(outdir + "/" + get_name() + "_materials" + suffix);
+    data_output.write_cell_data(filename, translated_data, data_names);
   }
 
 
 
-  // ****************************************************
 
-
+  // 
   // integrated properties
+  //
   vector<string> description;
   get_integrated_quantities_description(get_control().get_plotvariables(),
                                         names, description);
@@ -791,8 +731,8 @@ SimulationInterface::build_finite_element(unsigned int dim, FEType type,
 
 void
 SimulationInterface::get_elemental_results(
-                                           const std::set<std::string>& variables,
-                                           std::vector<double>& results, std::vector<std::string>& legend)
+    const std::set<std::string>& variables,
+    std::vector<double>& results, std::vector<std::string>& legend)
 {
   results.resize(0);
   legend.resize(0);
@@ -816,9 +756,8 @@ SimulationInterface::get_elemental_results(
 
 
 void
-SimulationInterface::get_nodal_results(
-                                       const std::set<std::string>& variables,
-                                       std::vector<double>& results, std::vector<std::string>& legend)
+SimulationInterface::get_nodal_results(const std::set<std::string>& variables,
+    std::vector<double>& results, std::vector<std::string>& legend)
 {
   results.resize(0);
   legend.resize(0);
@@ -840,9 +779,9 @@ SimulationInterface::get_nodal_results(
 
 void
 SimulationInterface::get_integrated_quantities_description(
-                                                           const std::set<std::string>& variables,
-                                                           std::vector<std::string>& legend,
-                                                           std::vector<std::string>& description)
+    const std::set<std::string>& variables,
+    std::vector<std::string>& legend,
+    std::vector<std::string>& description)
 {
   legend.resize(0);
   description.resize(0);
@@ -864,18 +803,72 @@ SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
   
   SimulationEnvironment& env = get_environment();
 
+  const Elem* el = elem;
+
   bool flag = true;
 
   if (!env.contains_element(elem))
   {
-    // TODO look for nodes
+    // perhaps the parent is?
+    const Elem* parent = elem->parent();
+
+    while ((parent != NULL) && (!env.contains_element(parent)))
+      parent = parent->parent();
+
+    el = parent; // is NULL if no parent
+
+    if (el != NULL)
+    {
+      int nn = elem->n_nodes();
+
+      // the nodes are now inner points of the parent element
+      vector<Point> p(nn);
+      for (int i = 0; i < nn; i++)
+        p[i] = elem->point(i);
+      
+      values.resize(nn);
+      get_solution_secure(elem, p, ids, values);
+    }
+    else
+    {
+      // no active parent, so look for children
+      vector<const Elem*> tree;
+      elem->family_tree(tree, false);
+
+      set<const Elem*> elem_list;
+      unsigned int len = tree.size();
+      for (unsigned int i = 0; i < len; i++)
+      {
+        const Elem* elem_i = tree[i];
+        if (env.contains_element(elem_i))
+          elem_list.insert(elem_i);
+      }
+
+      unsigned int np = elem->n_nodes();
+      for (unsigned int i = 0; i < np; i++)
+      {
+        set<const Elem*>::iterator el_it = elem_list.begin();
+        set<const Elem*>::iterator el_end = elem_list.end();
+        for ( ; el_it != el_end; ++el_it)
+        {
+          el = *el_it;
+          if (el->contains_point(elem->point(i)))
+          {
+            get_solution_secure(el, elem->point(i), ids, values[i]);
+            // we have found it, so get out of the for loop
+            break;
+          }
+        }
+        if (el_it == el_end)
+          flag = false;
+      }
+    }
   }
   else
   {
     values.resize(elem->n_nodes());
     get_solution_secure(elem, ids, values);
   }
-
 }
 
 
@@ -916,7 +909,8 @@ SimulationInterface::get_solution(const Elem* elem, const Point& p,
 
 bool
 SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
-                                  const set<ID>& ids, vector<map<ID, double> >& values)
+                                  const set<ID>& ids,
+                                  vector<map<ID, double> >& values)
 {
   bool flag = true;
 
@@ -925,8 +919,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 
   values.resize(np);
 
-  // this will contain the element in which p lies and for which
-  // DriftDiffusion knows the potential
+  // this will contain the element in which p lie
   const Elem* el = elem;
 
   SimulationEnvironment& env = get_environment();

@@ -149,7 +149,7 @@ The default model is the constant mobility model.
 
 \subsubsection{Constant mobility model}
 
-The constant mobility model assumes a mobility which depends only on temperature by means of the following formula:
+The constant mobility model (identifier \texttt{constant}) assumes a mobility which depends only on temperature by means of the following formula:
 \begin{equation}
 \mu = \mu_0 (T/T_0)^{-\gamma}
 \end{equation}
@@ -159,11 +159,18 @@ $\mu_o$ can be ovverridden from the \texttt{physical\_model} section using the k
 
 \subsubsection{Doping dependent mobility model}
 
-The doping dependent mobility model implements two models for mobility depending on the total doping density and the temperature.
+The doping dependent mobility model  (identifier \texttt{doping\_dependent}) implements two models for mobility depending on the total doping density and the temperature.
 Currently the parameters can only be defined in the material data file.
 
 etc etc
 
+
+\subsubsection{Field dependent mobility model}
+
+Currently one mobility model depending on the modulus of the electric field is implemented (identifier \texttt{field\_dependent}).
+It is based on the following equation:
+\begin{equation}
+\end{equation}
 
 \subsection{Boundary conditions}
 

@@ -37,6 +37,7 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     hole_recombination_rate_derivatives(3, 0.0),
     polarization(3, 0.0),
     pyro_polarization(3, 0.0),
+    bow_pyro(0.0),
     _elem(NULL),
     _statistics(TiberCad::BOLTZMANN),
     _coupling(DriftDiffusionDefs::BOTH),
@@ -69,6 +70,7 @@ DriftDiffusionProperties::read_database(void)
   pyro_polarization(0) = pol(1);
   pyro_polarization(1) = pol(2);
   pyro_polarization(2) = pol(3);
+  bow_pyro = data("bow_Pz", 0.0);
 
 }
 
@@ -267,11 +269,11 @@ DriftDiffusionProperties::calculate_VCA(const PhysicalModelInterface* comp_A,
 
   // pyropolarization
   pyro_polarization(0) = alloy(scA->pyro_polarization(0),
-      scB->pyro_polarization(0), xa);
+      scB->pyro_polarization(0), xa, bow_pyro);
   pyro_polarization(1) = alloy(scA->pyro_polarization(1),
-      scB->pyro_polarization(1), xa);
+      scB->pyro_polarization(1), xa, bow_pyro);
   pyro_polarization(2) = alloy(scA->pyro_polarization(2),
-      scB->pyro_polarization(2), xa);
+      scB->pyro_polarization(2), xa, bow_pyro);
 }
 
 

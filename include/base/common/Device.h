@@ -188,9 +188,9 @@ class Device
     double get_temperature(const Elem* elem) const;
 
 
-  //! Get the pointer for the atomistic structure defined 
-  //! with \c name
-  AtomisticStructure* get_atomistic_structure(const std::string&);
+    //! Get the pointer for the atomistic structure defined 
+    //! with \c name
+    AtomisticStructure* get_atomistic_structure(const std::string&);
 
 
   private:

@@ -79,6 +79,14 @@ class Scaling
 
     void set_length_scaling(double x0);
 
+    //! Set the mesh units for calculation
+    /*!
+     * The default units length units for calculations are meters.
+     * So if \c mesh_units is 10e-6 (mesh drawn in micrometers) then
+     * \c calc_mesh_units will also be 10e-6. If one wants to calculate
+     * e.g. in centimeters, one has to set \c calc_mesh_units to
+     * 10e-4 = 100 * 10e-6 (as 1 micrometer = 1e-4 cm)
+     */
     void set_calc_mesh_units(double units);
   
     void set_mobility_scaling(double mu0);
