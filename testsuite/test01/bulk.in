@@ -95,7 +95,7 @@ $Physics
 
 $Simulation
 {
-  searchpath = ../../examples/materials
+  #searchpath = .
   meshfile = bulk.msh
   dimension = 1
   temperature = 300

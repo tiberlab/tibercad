@@ -21,7 +21,7 @@ clean:
 	@rm -f *~ *.xda *.xta *.ucd
 
 distclean: clean
-	@rm -f *.msh *.dat
+	@rm -f *.msh
 	@rm -rf output tibercad
 
 

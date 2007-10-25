@@ -78,7 +78,7 @@ $Models
     
     physical_model thermoelectric_power
     {	
-            model  = diffusivity_model
+       model  = diffusivity_model
     } 	
 
     BC_Regions  
@@ -118,6 +118,7 @@ $Solver
  
   selfconsistent
   {
+     flavour = relaxation
      simulations = (dd,tt)
   }
 
@@ -173,7 +174,7 @@ $Physics
 
 $Simulation
 {
-  searchpath = ../../examples/materials
+  #searchpath = .
   meshfile = diode.msh
   dimension = 1
   temperature = 300

@@ -20,7 +20,7 @@
 #include "MaxwellEquations.h"
 
 #include "Sweep.h"
-#include "SelfconsistentSolver.h"
+#include "RelaxationMethod.h"
 
 #include "Utils.h"
 
@@ -67,10 +67,16 @@ SimulationInterface::create(const string& type,
 {
   SimulationInterface* sim = NULL;
 
+  string type_name(type);
+  string flavour = options.get_option("flavour", "");
+  if (flavour.size() != 0)
+    type_name += "_" + flavour;
+  cerr << type_name << endl;
+
   // First we attempt to open a shared library
   //
   DLLoader::LibraryInterface iface;
-  bool success = DLLoader::open_library(type, iface);
+  bool success = DLLoader::open_library(type_name, iface);
 
   create_t create_fnc = (create_t) iface.create_fnc;
   destroy_t destroy_fnc = (destroy_t) iface.destroy_fnc;
@@ -79,35 +85,35 @@ SimulationInterface::create(const string& type,
     sim = create_fnc();
   else
   {
-    if (type == "driftdiffusion")
+    if (type_name == "driftdiffusion")
       sim = DriftDiffusion::create();
-    else if (type == "excitontransport")
+    else if (type_name == "excitontransport")
       sim = ExcitonTransport::create();
-    else if (type == "macrostrain")
+    else if (type_name == "macrostrain")
       sim = Macrostrain::create();
-    else if (type == "efaschroedinger")
+    else if (type_name == "efaschroedinger")
       sim = EnvelopFunctionApprox::create();
-    else if (type == "sweep")
+    else if (type_name == "sweep")
       sim = Sweep::create();
-    else if (type == "thermal")
+    else if (type_name == "thermal")
       sim = MacroHeatBalance::create();
-    else if (type == "selfconsistent")
-      sim = SelfconsistentSolver::create();
-    else if (type == "quantumdensity")
+    else if (type_name == "selfconsistent_relaxation")
+      sim = RelaxationMethod::create();
+    else if (type_name == "quantumdensity")
       sim = QuantumDensity::create();
-    else if (type == "opticskp")
+    else if (type_name == "opticskp")
       sim = OpticsKP::create();
-    else if (type == "quantumdispersion")
+    else if (type_name == "quantumdispersion")
       sim = QuantumDispersion::create();
-    else if (type == "tunnelingcurrent")
+    else if (type_name == "tunnelingcurrent")
       sim = TunnelingCurrent::create();
-    else if (type == "tightbinding")
+    else if (type_name == "tightbinding")
       sim = Dftb::create();
-    else if (type == "opticalspectrum")
+    else if (type_name == "opticalspectrum")
       sim = OptRecombinSpectrum::create();
-    else if (type == "poisson")
+    else if (type_name == "poisson")
       sim = Poisson::create();
-    else if (type == "maxwell")
+    else if (type_name == "maxwell")
       sim = MaxwellEquations::create();
 
   }
@@ -122,19 +128,15 @@ SimulationInterface::create(const string& type,
     sim->set_options(options);
 
     // we let it know what's its identifier
-    sim->set_type(type);
+    sim->set_type(type_name);
 
-    //! set the name
-    string defaultname = Utils::extract_typename(typeid(*sim));
+    // set the name
+    // we use the type name as found in the input file as default name
+    //string defaultname = Utils::extract_typename(typeid(*sim));
+    string defaultname(type);
     sim->_name = sim->get_options().get_option("name", defaultname);
     sim->_options.delete_option("name");
 
-    // this is done in Selfconsistent
-    /*
-      sim->_relaxation_factor =
-      sim->get_options().get_option("relaxation_factor", sim->_relaxation_factor);
-      sim->_options.delete_option("relaxation_factor");
-    */
 
 #ifdef DEBUG
     cout << "Added simulator" << endl;

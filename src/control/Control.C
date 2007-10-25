@@ -547,6 +547,14 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   {
     SimulationInterface* sim =
       SimulationInterface::create("selfconsistent", solveropts);
+
+    if (sim == NULL)
+    {
+      string msg("Control: No such simulation type: selfconsistent (flavour: ");
+      msg += solveropts.get_option("flavour", "");
+      throw ModelErrorException(msg);
+    }
+
     sim->set_control(this);
     _simulations[sim->get_name()] = sim;
   }
