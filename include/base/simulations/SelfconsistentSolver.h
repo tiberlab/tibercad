@@ -41,7 +41,10 @@ class SelfconsistentSolver : public SimulationInterface
     virtual void do_plot(void);
 
     
-    /*! \copydoc SimulationInterface::parse_options() */
+    /*! \copydoc SimulationInterface::parse_options()
+     * If this method is reimplemented in a derived class
+     * it has to called explicitly by \c SelfconsistentSolver::parse_options()
+     * */
     virtual void parse_options(void);
 
 

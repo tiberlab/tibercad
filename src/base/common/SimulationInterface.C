@@ -71,7 +71,6 @@ SimulationInterface::create(const string& type,
   string flavour = options.get_option("flavour", "");
   if (flavour.size() != 0)
     type_name += "_" + flavour;
-  cerr << type_name << endl;
 
   // First we attempt to open a shared library
   //
@@ -652,6 +651,15 @@ SimulationInterface::do_maximum_norm_of_difference(ID id)
   return norm;
 }
 
+
+
+
+void
+SimulationInterface::set_solution_vector(NumericVector<double>& new_solution)
+{
+  if (has_solution_vector())
+    get_solution_vector() = new_solution;
+}
 
 
 

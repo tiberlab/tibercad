@@ -229,6 +229,14 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     double get_maximum_norm_of_difference(ID id);
 
 
+    //! Set the current solution to a given value
+    /*!
+     * No checks will be done on the vector size!
+     * \param new_solution the new solution to set
+     */
+    void set_solution_vector(NumericVector<double>& new_solution);
+
+
     //! Scale the current solution by a real factor
     /*!
      * Calls do_scale_solution()
