@@ -151,7 +151,7 @@ class MaxwellEquations : public EigenvalueProblem
   //! calculated \f$ {\bf E(r)}^2 \f$
   /*!
     \param mode_number number of eigenmode
-    \param data  \f$ {\bf E(r)}^2
+    \param data  \f$ {\bf E(r)}^2 \f$
   */
   void prepare_field_mod_squared(const unsigned int mode_number, std::vector<double>& data);
 
@@ -169,6 +169,7 @@ class MaxwellEquations : public EigenvalueProblem
 
 
   short number_of_field_components;
+
 
 
 };
