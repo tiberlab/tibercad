@@ -43,12 +43,37 @@ template<typename T> class NonlinearSolver;
 
 //! The main class to perform exciton drift-diffusion calculations
 /*!
- * TODO
- * Some more details
+ * We solve the following equation:
+ * \f[-\nabla(\mu_x x\nabla\phi_x)  =  R\f]
+ *
+ * The get_solution() methods can provide the following variables:
+ * \li \c xDensity exciton density (cm^-3)
+ * \li \c xCond exciton conductivity (S/cm)
+ * \li \c xMob exciton mobility (cm^2/Vs)
+ * \li \c chemPot exciton chemical potential (eV)
+ * \li \c J modulus of total exciton flux (cm^-2)
+ * \li \c J_x exciton flux density, x-component
+ * \li \c J_y exciton flux density, y-component
+ * \li \c J_z exciton flux density, z-component
+ *
  */
 class ExcitonTransport : public SimulationInterface
 {
   public:
+
+    //! The variables that can be provided
+    enum Variables
+    {
+      UNKNOWN = 0,
+      CHEMPOT,          //!< chemical potential
+      XDENSITY,         //!< density
+      XMOBILITY,        //!< mobility
+      XSIGMA,           //!< conductivity
+      J,                //!< total flux, modulus
+      JX,               //!< flux, x-component
+      JY,               //!< flux, y-component
+      JZ                //!< flux, z-component
+    };
  
     //! This class defines parameters used by the underlying
     //! nonlinear solver
@@ -183,52 +208,6 @@ class ExcitonTransport : public SimulationInterface
     };
 
     
-    //! A structure to hold all components of the exciton flux
-    /*!
-     * This structure is used for the queries of the flux in
-     * certain points or elements. It stores the x,y and x components of the
-     * flux.
-     *
-     * Units are in \f$cm^{-2}s^{-1}\f$
-     */
-    class Current
-    {
-      public:
-
-        //! Constructor
-        Current(void);
-
-        //! Get the x-component of the flux
-        double j_x(void) const { return _j_x; };
-        
-        //! Get the y-component of the flux
-        double j_y(void) const { return _j_y; };
-        
-        //! Get the z-component of the flux
-        double j_z(void) const { return _j_z; };
-        
-        //! Get the i-th component of the flux
-        /*!
-         * 0 -> x, 1 -> y, 2 -> z
-         */
-        double j(unsigned int i = 0) const;
-              
-        // Get the absolute value of the flux
-        double j_abs(void) const;
-
-        //! Set all to some value
-        Current& operator=(double other);
-            
-      private:
-        
-        double _j_x;
-        double _j_y;
-        double _j_z;
-
-        friend class ExcitonTransport;
-    };
-
-    
 
 
     //! Destructor
@@ -287,21 +266,6 @@ class ExcitonTransport : public SimulationInterface
 
 
     /*!
-     * @returns the variable names in a vector.
-     */
-    const std::vector<std::string>& get_variable_names(void) const;
-
-    /*!
-     * @returns the current nodal solution vector.
-     *
-     * The vector is ordered as
-     *   [ var1\@node1 ... varn\@node1 var1\@node2 ... varn\@node2 ... ]
-     * where the ordering \p var1 ... \p var2 is the same as in the
-     * method \p get_variable_names()
-     */
-    const std::vector<Number>& get_solution(void) const;
-
-    /*!
      * @returns the number of nonlinear iterations needed for the solution
      */
     unsigned int get_n_nonlinear_iterations(void) const;
@@ -312,46 +276,6 @@ class ExcitonTransport : public SimulationInterface
     double get_final_residual(void) const;
 
 
-    //! Get the exciton effective potential in a given point
-    /*!
-     * If \c elem is not in the list of active elements for this simulation,
-     * a parent or children which contains \p will be looked for.
-     * 
-     * \param elem the pointer to the element
-     * \param p the point in which to calculate the potentials
-     * \return the effective potential (driving energy) in \c p [eV]
-     *
-     * \pre
-     * The element \c elem is assumed to contain the point \c p.
-     *
-     */
-    double get_solution(const Elem* elem, const Point& p);
-    
-
-    //! Get the a solution in a given point
-    /*!
-     * If \c elem is not in the list of active elements for this simulation,
-     * a parent or children which contains \p will be looked for.
-     * 
-     * \param[in] elem the pointer to the element
-     * \param[in] p the point in which to calculate the potentials
-     * \param[out] solution the solution at Point \c p
-     *
-     * \c solution can be either a double valued variable or of type
-     * ExcitonTransport::Current. In the former case, the effective exciton
-     * potential will be returned, in the latter the exciton flux.
-     */
-    template <typename T>
-    void get_solution(const Elem* elem, const Point& p, T& solution);
-
-
-    /*! \copydoc get_solution(const Elem*, const Point&, T&)
-     *
-     * This method returns the solutions at several points in an element.
-     */
-    template <typename T>
-    void get_solution(const Elem* elem, const std::vector<Point>& p, 
-        std::vector<T>& solution);
 
 
   protected:
@@ -390,6 +314,32 @@ class ExcitonTransport : public SimulationInterface
 
     /*! \copydoc SimulationInterface::do_maximum_norm_of_difference() */
     virtual double do_maximum_norm_of_difference(ID id);
+
+
+    /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
+    virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
+
+
+    /*!
+     * \copydoc SimulationInterface::get_solution_secure(const Elem*,
+     * const std::vector<ID>&, std::vector<std::vector<double> >&)
+     */
+    virtual void get_solution_secure(const Elem* elem,
+        const std::set<ID>& ids,
+        std::vector<std::map<ID, double> >& values);
+
+
+    /*!
+     * \copydoc SimulationInterface::get_solution_secure(const Elem*,
+     * const std::vector<Point>&, const std::vector<ID>&,
+     * std::vector<std::vector<double> >&)
+     */
+    virtual void get_solution_secure(const Elem* elem,
+        const std::vector<Point>& p,
+        const std::set<ID>& ids,
+        std::vector<std::map<ID, double> >& solution);
+
+
 
 
     
@@ -440,36 +390,6 @@ class ExcitonTransport : public SimulationInterface
     //! disable the copy assignment operator
     ExcitonTransport& operator=(const ExcitonTransport& rhs);
     
-    //! Get the solution at the point \c p in a given element
-    /*!
-     * \param elem the pointer to the element
-     * \param a vector containing the points in which to calculate the potential
-     * \param solution a vector where the solutions will be stored
-     *
-     * \note
-     * This implementation assumes, that \c elem is one of the active elements
-     * of this simulation and that it contains the points in \c p.
-     *
-     */
-    template <typename T>
-    void get_solution_secure(const Elem* elem, const Point& p,
-        T& solution);
- 
-    //! Get the electro-chemical potential at the points in \c p
-    /*!
-     * \param elem the pointer to the element
-     * \param a vector containing the points in which to calculate the potentials
-     * \param solution a vector where the potential will be stored
-     *
-     * \note
-     * This implementation assumes, that \c elem is one of the active elements
-     * of this simulation and that it contains the points in \c p.
-     *
-     */
-    template <typename T>
-    void get_solution_secure(const Elem* elem, const std::vector<Point>& p,
-        std::vector<T>& solution);
-
    
     /**
      * Set the options for the PETSc solver as given in @c SolverParameters
@@ -585,19 +505,6 @@ ExcitonTransport::get_mesh(void) const
   return _device->get_mesh();
 }
 
-template <typename T>
-inline
-void
-ExcitonTransport::get_solution_secure(const Elem* elem, const Point& p,
-        T& solution)
-{
-  std::vector<Point> pvec(1, p);
-  std::vector<T> sol(1);
-
-  get_solution_secure(elem, pvec, sol);
-
-  solution = sol[0];
-}
 
 
 inline
@@ -609,35 +516,6 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
   _this->do_assembly(x, residual, jacobian);
 }
 
-
-
-inline
-ExcitonTransport::Current::Current(void)
-  :  _j_x(0),
-     _j_y(0),
-     _j_z(0)
-{
-}
-
-
-
-inline
-ExcitonTransport::Current&
-ExcitonTransport::Current::operator=(double other)
-{
-  
-  _j_x = other;
-  _j_y = other;
-  _j_z = other;
-  return *this;
-}
-
-inline
-double
-ExcitonTransport::Current::j_abs(void) const
-{
-  return std::sqrt(j_x() * j_x() + j_y() * j_y() + j_z() * j_z());
-}
 
 
 

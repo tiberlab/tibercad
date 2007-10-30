@@ -288,15 +288,6 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     bool equilibrium_done(void) const;
     
     
-    //! Set the relaxation factor
-    //void set_relaxation_factor(double relax);
-
-    
-    //! Get the relaxation factor
-    //double get_relaxation_factor(void) const;
-
-
-
 
     /*!
      * \copydoc convert_variable_name_to_id()

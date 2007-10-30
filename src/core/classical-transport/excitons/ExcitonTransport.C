@@ -20,9 +20,9 @@
 #include "quadrature_gauss.h"
 #include "equation_systems.h"
 #include "nonlinear_implicit_system.h"
-#include "mesh_refinement.h"
-#include "error_vector.h"
-#include "kelly_error_estimator.h"
+//#include "mesh_refinement.h"
+//#include "error_vector.h"
+//#include "kelly_error_estimator.h"
 #include "sparse_matrix.h"
 #include "numeric_vector.h"
 #include "dense_submatrix.h"
@@ -604,301 +604,6 @@ ExcitonTransport::do_solve(void)
     throw SolveFailedException(msg);
   }
 
-}
-
-
-
-
-
-
-double
-ExcitonTransport::get_solution(const Elem* elem, const Point& p)
-{
-  double solution;
-
-  get_solution(elem, p, solution);
-
-  return solution;
-}
-
-
-
-template <typename T>
-void
-ExcitonTransport::get_solution(const Elem* elem, const Point& p, T& solution)
-{
-  solution = 0.0;
-
-  // this will contain the element in which p lies and for which
-  // DriftDiffusion knows the potential
-  const Elem* el = elem;
-
-  SimulationEnvironment& env = get_environment();
-  
-  
-  // check if elem is an active element of the simulation
-  if (!env.contains_element(elem))
-  {
-    // do we have a parent element in the list?
-    const Elem* parent = elem->parent();
-
-    while ((parent != NULL) && (!env.contains_element(parent)))
-      parent = parent->parent();
-
-    el = parent; // is NULL if no parent
-
-    // no parent, so check for children
-    if (el == NULL)
-    {
-      vector<const Elem*> tree;
-      elem->family_tree(tree, false);
-      
-      unsigned int len = tree.size();
-      for (unsigned int i = 0; i < len; i++)
-      {
-        const Elem* elem_i = tree[i];
-        if (env.contains_element(elem_i))
-        {
-          if (elem_i->contains_point(p))
-          {
-            // we have found it, so get out of the for loop
-            el = elem_i;
-            break;
-          }
-        }
-      }
-    }
-  }
-  // now el points to a valid element containing p or is NULL
-
-  if (el != NULL)
-    get_solution_secure(el, p, solution);
-
-}
-
-
-
-template <typename T>
-void
-ExcitonTransport::get_solution(const Elem* elem, const vector<Point>& p,
-    vector<T>& solution)
-{
-  unsigned int np = p.size();
-  solution.resize(np);
-  if (np == 0) return;
-
-  // this will contain the element in which p lies and for which
-  // DriftDiffusion knows the potential
-  const Elem* el = elem;
-
-  SimulationEnvironment& env = get_environment();
-  
-  // check if elem is an active element of the simulation
-  if (!env.contains_element(elem))
-  {
-    // do we have a parent element in the list?
-    const Elem* parent = elem->parent();
-
-    while ((parent != NULL) && (!env.contains_element(parent)))
-      parent = parent->parent();
-
-    el = parent; // is NULL if no parent
-  }
-
-  if (el != NULL) // we found it!
-    get_solution_secure(el, p, solution);
-  else
-  {
-    // no parent, so check for children
-    vector<const Elem*> tree;
-    elem->family_tree(tree, false);
-
-    set<const Elem*> elem_list;
-    unsigned int len = tree.size();
-    for (unsigned int i = 0; i < len; i++)
-    {
-      const Elem* elem_i = tree[i];
-      if (env.contains_element(elem_i))
-        elem_list.insert(elem_i);
-    }
-    for (unsigned int i = 0; i < np; i++)
-    {
-      set<const Elem*>::iterator el_it = elem_list.begin();
-      set<const Elem*>::iterator el_end = elem_list.end();
-      for ( ; el_it != el_end; ++el_it)
-      {
-        el = *el_it;
-        if (el->contains_point(p[i]))
-        {
-          get_solution_secure(el, p[i], solution[i]);
-          // we have found it, so get out of the for loop
-          break;
-        }
-      }
-      if (el_it == el_end)
-        solution[i] = 0;
-    }
-  }
-}
-
-
-
-
-
-template<>
-void
-ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
-    vector<double>& solution)
-{
-  unsigned int np = p.size();
-  solution.resize(np);
-  if (np == 0) return;
-
-  NonlinearImplicitSystem* system;
-  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
-      get_equation_system_name());
-
-  const NumericVector<Number>& ddsol = *(system->solution);
-
-  const unsigned int dim = get_mesh().mesh_dimension();
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int u_var = system->variable_number("fermi_x");
-
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-
-  vector<unsigned int> dof_indices_u;
-
-  // element shape functions
-  const vector<vector<Real> >& phi = fe->get_phi();
-
-  vector<Point> points(np);
-  FEInterface::inverse_map(dim, fe_type, elem, p, points);
-  //for (unsigned int n = 0; n < np; n++)
-  //  points[n] = FEInterface::inverse_map(dim, fe_type, elem, p[n], 1e-6);
-
-  fe->reinit(elem, &points);
-
-  dof_map.dof_indices(elem, dof_indices_u, u_var);
-
-  const unsigned int n_dofs = dof_indices_u.size();
-
-  // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
-
-  for (unsigned int n = 0; n < np; n++)
-  {
-    double u = 0;
-    // do interpolation
-    for (unsigned int i = 0; i < n_dofs; i++)
-      u  += phi[i][n] * ddsol(dof_indices_u[i]);
-
-    // scale the potential back
-    u  *= phi0;
-
-    solution[n] = u;
-  }
-}
-
-
-
-template<>
-void
-ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
-    vector<ExcitonTransport::Current>& solution)
-{
-  unsigned int np = p.size();
-  solution.resize(np);
-  if (np == 0) return;
-
-  NonlinearImplicitSystem* system;
-  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
-      get_equation_system_name());
-
-  const NumericVector<Number>& ddsol = *(system->solution);
-
-  const unsigned int dim = get_mesh().mesh_dimension();
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int u_var = system->variable_number("fermi_x");
-
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-
-  vector<unsigned int> dof_indices_u;
-
-  // element shape functions
-  const vector<vector<Real> >& phi = fe->get_phi();
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-  vector<Point> points(np);
-  FEInterface::inverse_map(dim, fe_type, elem, p, points);
-  //for (unsigned int n = 0; n < np; n++)
-  //  points[n] = FEInterface::inverse_map(dim, fe_type, elem, p[n], 1e-6);
-
-  fe->reinit(elem, &points);
-
-  dof_map.dof_indices(elem, dof_indices_u, u_var);
-
-  const unsigned int n_dofs = dof_indices_u.size();
-
-  ID subdomain = elem->subdomain_id();
-
-  ExcitonProperties* excitonmodel =
-    dynamic_cast<ExcitonProperties*>(
-        _device->get_material(subdomain)->get_model(get_id()));
-
-  assert(excitonmodel != NULL); 
-
-  excitonmodel->reinit(elem);
-
-
-
-  // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
-
-  for (unsigned int n = 0; n < np; n++)
-  {
-    double ex = 0;
-    double ex_x = 0.0;
-    double ex_y = 0.0;
-    double ex_z = 0.0;
-    // do interpolation
-    for (unsigned int i = 0; i < n_dofs; i++)
-    {
-      ex  += phi[i][n] * ddsol(dof_indices_u[i]);
-
-      ex_x  += dphi[i][n](0) * ddsol(dof_indices_u[i]);
-      ex_y  += dphi[i][n](1) * ddsol(dof_indices_u[i]);
-      ex_z  += dphi[i][n](2) * ddsol(dof_indices_u[i]);
-    }
-
-    // scale the potential back
-    ex  *= phi0;
-    ex_x *= phi0;
-    ex_y *= phi0;
-    ex_z *= phi0;
-
-    // prepare for calculating local properties
-    excitonmodel->set_coordinates(points[n]);
-
-    double T_lat = excitonmodel->get_lattice_temperature();
-    // all are at lattice temperature
-    excitonmodel->set_carrier_temperature(T_lat);
-
-    excitonmodel->set_effective_potential(ex);
-
-    excitonmodel->calculate_density();
-
-    double sigma = excitonmodel->get_density() * excitonmodel->get_mobility();
-
-    solution[n]._j_x = sigma * ex_x;
-    solution[n]._j_y = sigma * ex_y;
-    solution[n]._j_z = sigma * ex_z;
-  }
 }
 
 
@@ -1599,25 +1304,299 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
 }
 
 
-//
-// explicit instantiations of template methods
-//
 
-template void
-ExcitonTransport::get_solution<double>(const Elem* elem, const Point& p,
-    double& solution);
 
-template void
-ExcitonTransport::get_solution<ExcitonTransport::Current>(const Elem* elem,
-    const Point& p, ExcitonTransport::Current& solution);
 
-template void
-ExcitonTransport::get_solution<double>(const Elem* elem, const vector<Point>& p,
-    vector<double>& solution);
+ID
+ExcitonTransport::convert_variable_name_to_id(const string& variable_name) const
+{
+  ID id = INVALID_ID;
 
-template void
-ExcitonTransport::get_solution<ExcitonTransport::Current>(const Elem* elem,
-    const vector<Point>& p, vector<ExcitonTransport::Current>& solution);
+
+  if (variable_name == "chemPot")
+    id = CHEMPOT;
+  else if (variable_name == "xCond")
+    id = XSIGMA;
+  else if (variable_name == "xMob")
+    id = XMOBILITY;
+  else if (variable_name == "xDensity")
+    id = XDENSITY;
+  else if (variable_name == "J")
+    id = J;
+  else if (variable_name == "J_x")
+    id = JX;
+  else if (variable_name == "J_y")
+    id = JY;
+  else if (variable_name == "J_z")
+    id = JZ;
+
+
+  return id;
+}
+
+      
+
+
+void
+ExcitonTransport::get_solution_secure(const Elem* elem,
+    const set<ID>& ids, vector<map<ID, double> >& values)
+{
+  unsigned int np = elem->n_nodes();
+
+  vector<Point> points(np);
+  for (int i = 0; i < np; i++)
+    points[i] = elem->local_node(elem->type(), i);
+
+
+  NonlinearImplicitSystem* system;
+  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
+      get_equation_system_name());
+
+  const NumericVector<Number>& ddsol = *(system->solution);
+
+  const unsigned int dim = get_mesh().mesh_dimension();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int u_var = system->variable_number("fermi_x");
+
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+
+  vector<unsigned int> dof_indices_u;
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+
+  // element shape function gradients
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+
+  fe->reinit(elem, &points);
+
+  dof_map.dof_indices(elem, dof_indices_u, u_var);
+
+  const unsigned int n_dofs = dof_indices_u.size();
+
+  ID subdomain = elem->subdomain_id();
+
+  ExcitonProperties* excitonmodel =
+    dynamic_cast<ExcitonProperties*>(
+        _device->get_material(subdomain)->get_model(get_id()));
+
+  assert(excitonmodel != NULL); 
+
+  excitonmodel->reinit(elem);
+
+
+  // the scaling parameters to scale back the result
+  double phi0 = get_scaling().get_potential_scaling();
+
+  for (unsigned int n = 0; n < np; n++)
+  {
+    // the chemical potential
+    double ex = phi0 * ddsol(dof_indices_u[n]);
+
+    // do interpolation
+    double grad_x = 0.0;
+    double grad_y = 0.0;
+    double grad_z = 0.0;
+    double dT_x = 0.0;
+    double dT_y = 0.0;
+    double dT_z = 0.0;
+    for (unsigned int i = 0; i < n_dofs; i++)
+    {
+      grad_x  += dphi[i][n](0) * ddsol(dof_indices_u[i]);
+      grad_y  += dphi[i][n](1) * ddsol(dof_indices_u[i]);
+      grad_z  += dphi[i][n](2) * ddsol(dof_indices_u[i]);
+      
+      //dT_x  += dphi[i][n](0) * T_nodes[i];
+      //dT_y  += dphi[i][n](1) * T_nodes[i];
+      //dT_z  += dphi[i][n](2) * T_nodes[i];
+    }
+
+    // scale the potential back
+    grad_x *= phi0;
+    grad_y *= phi0;
+    grad_z *= phi0;
+
+
+    // prepare for calculating local properties
+    excitonmodel->set_coordinates(points[n]);
+
+    double T_lat = excitonmodel->get_lattice_temperature();
+    // all are at lattice temperature
+    excitonmodel->set_carrier_temperature(T_lat);
+
+    excitonmodel->set_effective_potential(ex);
+
+    excitonmodel->calculate_density();
+
+    double sigma = excitonmodel->get_density() * excitonmodel->get_mobility();
+
+
+    if (ids.count(CHEMPOT))
+      values[n][CHEMPOT] = ex;
+
+    if (ids.count(XSIGMA))
+      values[n][XSIGMA] = sigma;
+
+    if (ids.count(XMOBILITY))
+      values[n][XMOBILITY] = excitonmodel->get_mobility();
+
+    if (ids.count(XDENSITY))
+      values[n][XDENSITY] = excitonmodel->get_density();
+
+    if (ids.count(J))
+    {
+      double tmp = grad_x * grad_x + grad_y * grad_y + grad_z * grad_z;
+      values[n][J] = sigma * sqrt(tmp);
+    }
+
+    if (ids.count(JX))
+      values[n][JX] = sigma * grad_x;
+
+    if (ids.count(JY))
+      values[n][JY] = sigma * grad_y;
+
+    if (ids.count(JZ))
+      values[n][JZ] = sigma * grad_z;
+  }
+
+}
+
+      
+
+
+void
+ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
+    const set<ID>& ids, vector<map<ID, double> >& values)
+{
+  unsigned int np = p.size();
+
+  NonlinearImplicitSystem* system;
+  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
+      get_equation_system_name());
+
+  const NumericVector<Number>& ddsol = *(system->solution);
+
+  const unsigned int dim = get_mesh().mesh_dimension();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int u_var = system->variable_number("fermi_x");
+
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+
+  vector<unsigned int> dof_indices_u;
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+
+  // element shape function gradients
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+  vector<Point> points(np);
+  FEInterface::inverse_map(dim, fe_type, elem, p, points);
+  //for (unsigned int n = 0; n < np; n++)
+  //  points[n] = FEInterface::inverse_map(dim, fe_type, elem, p[n], 1e-6);
+
+  fe->reinit(elem, &points);
+
+  dof_map.dof_indices(elem, dof_indices_u, u_var);
+
+  const unsigned int n_dofs = dof_indices_u.size();
+
+
+  ID subdomain = elem->subdomain_id();
+
+  ExcitonProperties* excitonmodel =
+    dynamic_cast<ExcitonProperties*>(
+        _device->get_material(subdomain)->get_model(get_id()));
+
+  assert(excitonmodel != NULL); 
+
+  excitonmodel->reinit(elem);
+
+
+  // the scaling parameters to scale back the result
+  double phi0 = get_scaling().get_potential_scaling();
+
+  for (unsigned int n = 0; n < np; n++)
+  {
+    
+    // do interpolation
+    double ex = 0;
+    double grad_x = 0.0;
+    double grad_y = 0.0;
+    double grad_z = 0.0;
+    double dT_x = 0.0;
+    double dT_y = 0.0;
+    double dT_z = 0.0;
+    for (unsigned int i = 0; i < n_dofs; i++)
+    {
+      ex  += phi[i][n] * ddsol(dof_indices_u[i]);
+
+      grad_x  += dphi[i][n](0) * ddsol(dof_indices_u[i]);
+      grad_y  += dphi[i][n](1) * ddsol(dof_indices_u[i]);
+      grad_z  += dphi[i][n](2) * ddsol(dof_indices_u[i]);
+      
+      //dT_x  += dphi[i][n](0) * T_nodes[i];
+      //dT_y  += dphi[i][n](1) * T_nodes[i];
+      //dT_z  += dphi[i][n](2) * T_nodes[i];
+    }
+
+    // scale the potential back
+    ex  *= phi0;
+    grad_x *= phi0;
+    grad_y *= phi0;
+    grad_z *= phi0;
+
+
+    // prepare for calculating local properties
+    excitonmodel->set_coordinates(points[n]);
+
+    double T_lat = excitonmodel->get_lattice_temperature();
+    // all are at lattice temperature
+    excitonmodel->set_carrier_temperature(T_lat);
+
+    excitonmodel->set_effective_potential(ex);
+
+    excitonmodel->calculate_density();
+
+    double sigma = excitonmodel->get_density() * excitonmodel->get_mobility();
+
+
+    if (ids.count(CHEMPOT))
+      values[n][CHEMPOT] = ex;
+
+    if (ids.count(XSIGMA))
+      values[n][XSIGMA] = sigma;
+
+    if (ids.count(XMOBILITY))
+      values[n][XMOBILITY] = excitonmodel->get_mobility();
+
+    if (ids.count(XDENSITY))
+      values[n][XDENSITY] = excitonmodel->get_density();
+
+    if (ids.count(J))
+    {
+      double tmp = grad_x * grad_x + grad_y * grad_y + grad_z * grad_z;
+      values[n][J] = sigma * sqrt(tmp);
+    }
+
+    if (ids.count(JX))
+      values[n][JX] = sigma * grad_x;
+
+    if (ids.count(JY))
+      values[n][JY] = sigma * grad_y;
+
+    if (ids.count(JZ))
+      values[n][JZ] = sigma * grad_z;
+  }
+
+}
 
 
 

@@ -3000,7 +3000,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
   }
 
   int rho = -1;
-  if (variables.find("charge_densitity") != varend)
+  if (variables.find("charge_density") != varend)
   {
     rho = n_vars;
     legend[n_vars] = "total_charge_densitity";
@@ -4454,8 +4454,10 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         if (sc->is_dielectric())
           drho[2] = drho[1] = drho[0] = 0.0;
 
-        long double dRn_dn = sc->get_net_electron_recombination_rate_derivatives()[0];
-        long double dRn_dp = sc->get_net_electron_recombination_rate_derivatives()[1];
+        long double dRn_dn =
+          sc->get_net_electron_recombination_rate_derivatives()[0];
+        long double dRn_dp =
+          sc->get_net_electron_recombination_rate_derivatives()[1];
         long double dRp_dn = sc->get_net_hole_recombination_rate_derivatives()[0];
         long double dRp_dp = sc->get_net_hole_recombination_rate_derivatives()[1];
 
@@ -4888,10 +4890,14 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             if (residual != NULL)
             {
               double Pn = 0.0;
-              if (true_boundary)
+              if (true_boundary && (contact == NULL))
               {
                 // If we are on an outer boundary, we have to include
                 // the polarization
+                //
+                // NOTE:
+                // we only include the polarization when no boundary
+                // is defined
                 RealVectorValue P(sc->get_total_polarization());
                 Pn = (P * face_normals[qp]) / P0;
               }
@@ -4971,10 +4977,14 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           if (residual != NULL)
           {
             double Pn =  0.0;
-            if (true_boundary)
+            if (true_boundary && (contact == NULL))
             {
               // If we are on an outer boundary, we have to include
               // the polarization
+              //
+              // NOTE:
+              // we only include the polarization when no boundary
+              // is defined
               Pn = sc->get_total_polarization()(0) / P0;
             }
             // what is the outer normal in this point??
@@ -4992,10 +5002,10 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               Fu(s) -= value_u / local_scaling[s][2];
 
             if (coupling & ECURRENT)
-              Fn(s) -= value_n;
+              Fn(s) -= value_n / local_scaling[s][0];
 
             if (coupling & HCURRENT)
-              Fp(s) -= value_p;
+              Fp(s) -= value_p / local_scaling[s][1];
           }
         }
       }

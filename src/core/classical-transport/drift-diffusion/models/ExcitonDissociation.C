@@ -32,6 +32,8 @@ ExcitonDissociation::do_init(void)
         std::string(ex) + " not found");
     throw InitFailedException(msg);
   }
+
+  _Rdiss_id = exciton_sim_->get_variable_id("ChemPot");
 }
 
 void
@@ -50,10 +52,10 @@ ExcitonDissociation::get_net_recombination_rates(double& recomb_e,
       static_cast<ExcitonProperties*>(get_material()->get_model(ex_id));
     mod->reinit(el);
 
-    double u = exciton_sim_->get_solution(el, dd.get_coordinates());
-    mod->set_effective_potential(u);
-    mod->calculate_density();
-    recomb_e = -d_ * mod->get_dissociation_rate();
+    double x = 0.0;
+    bool succ = exciton_sim_->get_solution(el, dd.get_coordinates(), _Rdiss_id, x);
+    if (succ)
+      recomb_e = -d_ * mod->get_dissociation_rate();
   }
   else
     recomb_e = 0.0;

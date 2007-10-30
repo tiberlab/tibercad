@@ -6,6 +6,7 @@
 #include "RotatedCrystal.h"
 #include "Dopant.h"
 
+#include "getpot.h"
 
 Database*
 Material::_database;
@@ -162,13 +163,13 @@ Material::create(const std::string& name, const ModelOptions& options)
   {
     mat->set_options(options);
 
-    // set the crystal structure at this point
-    mat->_structure = mat->_options.get_option("structure", "zb");
-    mat->_options.delete_option("structure");
+    _database->set_material(mat->get_name());
+    GetPot data(_database->get_data_file());
+    mat->_structure = data("structure", "zb");
 
-    //std::cerr<<options.get_option(", "aa")<<std::endl;
- //  std::cout<<mat->_options.get_option("structure", "aa")<<std::endl;
- //  std::cout<<mat->_options.get_option("E_v", "uhm")<<std::endl; 
+    // set the crystal structure at this point
+    mat->_structure = mat->_options.get_option("structure", mat->_structure);
+    mat->_options.delete_option("structure");
   }
 
   return mat;

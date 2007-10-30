@@ -4,6 +4,7 @@
 #include "SchottkyContact.h"
 #include "FermiLevelPinning.h"
 #include "LeakageCurrent.h"
+#include "MaterialInterface.h"
 
 #include "ElectricalContact.h"
 
@@ -22,6 +23,8 @@ ElectricalContact::create(const std::string& name,
     ct = FermiLevelPinning::create();
   else if (name == "leakage_current")
     ct = LeakageCurrent::create();
+  else if (name == "interface")
+    ct = MaterialInterface::create();
   
   if (ct != NULL)
     ct->set_options(options);

@@ -62,6 +62,9 @@ class ExcitonDissociation : public RecombinationModelInterface
     //! The \c ExcitonTransport to use
     ExcitonTransport* exciton_sim_;
 
+    //! The ID of the needed variable
+    ID _Rdiss_id;
+
 };
 
 
