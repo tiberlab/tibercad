@@ -783,7 +783,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
  FEType fe_type = dof_map.variable_type(psivar[0]); //all the variable have the same FE representation
 
- // AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+
 
  AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 

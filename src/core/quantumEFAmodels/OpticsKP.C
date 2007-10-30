@@ -172,13 +172,16 @@ void OpticsKP::do_init()
   //---------------------------------------------------------------------------------------------------------//
   //My Jacobian 
   double mesh_units = get_environment().get_device().get_mesh_units();
-  length_scale = mesh_units/bohr_radius;
+ 
+  Scaling& scaling = get_scaling();
+
+  scaling.set_length_scaling(Constants::bohr_radius);
+
+  scaling.set_calc_mesh_units(mesh_units);
 
   unsigned int dim = (es->get_mesh()).mesh_dimension();
 
-  my_Jacobian = 1.0;
-  for (short i = 1; i <= dim; i++)
-    my_Jacobian *= length_scale;
+  
 
   //--------------------------------------------------------------------------------------------------------//
   const Mesh* mesh = &(es->get_mesh());
@@ -474,8 +477,10 @@ void OpticsKP::calculate_matrix(void)
 
   FEType fe_type = dof_map.variable_type(psivar[0]); //all the variable have the same FE representation
 
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+ 
 
+  AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+  
   // A 5th order Gauss quadrature rule for numerical integration.
   QGauss qrule (dim, FIFTH);
 
@@ -617,7 +622,7 @@ void OpticsKP::calculate_matrix(void)
               {
                 temp = JxW[qp]* dphi[p1][qp](i) * phi[p2][qp];
                 for (short pol = 0; pol < 3; pol++)
-                  value[pol] -= temp * P[pol][band1][band2].linear_left[i]*Complex(0.0, -1.0) /length_scale; 
+                  value[pol] -= temp * P[pol][band1][band2].linear_left[i]*Complex(0.0, -1.0) ; 
               } 
               //--------           ----------------------------------------
 
@@ -627,11 +632,11 @@ void OpticsKP::calculate_matrix(void)
               {
                 temp = JxW[qp]* dphi[p2][qp](i) * phi[p1][qp];
                 for (short pol = 0; pol < 3; pol++)
-                  value[pol] += temp * P[pol][band1][band2].linear_right[i] * Complex(0.0, -1.0) /length_scale;
+                  value[pol] += temp * P[pol][band1][band2].linear_right[i] * Complex(0.0, -1.0) ;
               }
               //-----------------------------------------------------------
 			     
-              for (short pol = 0; pol < 3; pol++) value[pol] *= my_Jacobian;
+              // for (short pol = 0; pol < 3; pol++) value[pol] *= my_Jacobian;
 
               Px_real_sub(p1,p2) += value[0].real();
               Py_real_sub(p1,p2) += value[1].real();

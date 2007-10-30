@@ -144,11 +144,7 @@ class OpticsKP: public SimulationInterface
   //!system that we add to the equation systems
   LinearImplicitSystem* system;
 
-  //!length scale from mesh units to atomic unit
-  double length_scale;
-
-  //!my Jacobian because I calculate everything in atomic units
-  double my_Jacobian; 
+   
 
   //!calculate P-vector matrix element between states i and j
   /*!
