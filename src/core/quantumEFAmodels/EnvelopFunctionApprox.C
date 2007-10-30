@@ -332,17 +332,7 @@ BoundaryProperties* EnvelopFunctionApprox::create_boundary_model(const ModelOpti
 double EnvelopFunctionApprox::get_band_edge() const
 {
      
-  DofMap& dof_map = system->get_dof_map();
-
-  FEType fe_type = dof_map.variable_type(0); 
-
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
-
-  QGauss qrule (dim, FIFTH);
-
-  fe -> attach_quadrature_rule (&qrule);
-
-  const std::vector<Point>& q_point = fe->get_xyz();
+  
 
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
@@ -362,7 +352,7 @@ double EnvelopFunctionApprox::get_band_edge() const
   {
     const Elem* elem = *el;
     
-    fe->reinit (elem);
+    
 
    
     
@@ -609,9 +599,7 @@ void EnvelopFunctionApprox::do_init( )
   _device = &( si.get_device() );
 
 
-  double mesh_units = get_environment().get_device().get_mesh_units();
- 
-  opt.length_scale = mesh_units/bohr_radius;
+  
 
   es = &(get_equation_systems());
 
@@ -662,11 +650,14 @@ void EnvelopFunctionApprox::do_init( )
  
 
   //---------------------------------------------------------------------------------------------------------//
-  //My Jacobian 
 
-   my_Jacobian = 1.0;
-   for (short i = 1; i <= dim; i++)
-     my_Jacobian *= opt.length_scale;
+  Scaling& scaling = get_scaling();
+
+  scaling.set_length_scaling(Constants::bohr_radius);
+
+  scaling.set_calc_mesh_units(_device->get_mesh_units());
+
+  
 
    //--------------------------------------------------------------------------------------------------------//
    MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
@@ -792,7 +783,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
  FEType fe_type = dof_map.variable_type(psivar[0]); //all the variable have the same FE representation
 
- AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+ // AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+
+ AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
   // A 5th order Gauss quadrature rule for numerical integration.
   QGauss qrule (dim, FIFTH);
@@ -884,10 +877,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	      
 	      FEType fe_type (FIRST , LAGRANGE);
 
-	      AutoPtr<FEBase> fe (FEBase::build(dim,
-                                   fe_type));
+	      //AutoPtr<FEBase> fe (FEBase::build(dim,  fe_type));
 
-	     
+	      AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 	      
 	      QGauss qrule (dim, FIRST);
 
@@ -919,7 +911,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 	   
 	  
-	  box_volume[dof_indices_component[p1]] += box_part_volume *  my_Jacobian;
+	  box_volume[dof_indices_component[p1]] += box_part_volume;
 
 	 
 
@@ -1037,14 +1029,14 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 		  for (short i = 0; i < dim; i++)
 		  {
 		    value -= JxW[qp]* dphi[p1][qp](i) * phi[p2][qp] * model_Ham[band1][band2].linear_left[i]
-		      * Complex(0.0, -1.0) /opt.length_scale;
+		      * Complex(0.0, -1.0);
 		  }
 		  //linear right
 
 		  for (short i = 0; i < dim; i++)
 		  {
 		    value += JxW[qp]* dphi[p2][qp](i) * phi[p1][qp] * model_Ham[band1][band2].linear_right[i] 
-		      * Complex(0.0, -1.0) /opt.length_scale;
+		      * Complex(0.0, -1.0);
 		   
 		  }
 		  //quadratic
@@ -1053,12 +1045,12 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 		    for (short j = 0; j < dim; j++)
 		    {
 		      value -= JxW[qp] * dphi[p1][qp](i) * dphi[p2][qp](j)*model_Ham[band1][band2].quad[i][j]
-			* Complex(0.0,-1.0) * Complex(0.0, -1.0) /opt.length_scale / opt.length_scale;	
+			* Complex(0.0,-1.0) * Complex(0.0, -1.0);	
 		      
 		    }
 			   
 		  
-		  value *= my_Jacobian;
+		 
 		  
 		  
 		  
@@ -1079,7 +1071,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 		{
 		  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
 		  {
-		    s_real_sub(p1,p2) += JxW[qp] * phi[p1][qp] * phi[p2][qp] * my_Jacobian;
+		    s_real_sub(p1,p2) += JxW[qp] * phi[p1][qp] * phi[p2][qp];
 		  }
 		}
 		      
@@ -1181,7 +1173,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 		  for (unsigned int qp=0; qp < dim; qp++)
 		    value +=   phi[p2][qp] * model_Ham[band1][band2].linear_left[i] * surface
-		      * Complex(0.0, -1.0) /opt.length_scale;
+		      * Complex(0.0, -1.0);
 
 		}
 
@@ -1189,7 +1181,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 		for (short i = 0; i < dim; i++)
 		  value +=  dphi[p2][dim](i) * model_Ham[band1][band2].linear_right[i] 
-		    * Complex(0.0, -1.0) /opt.length_scale * box_part_volume ;
+		    * Complex(0.0, -1.0)  * box_part_volume ;
 
 
 		//second order
@@ -1211,12 +1203,12 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 		     
 		      
 		      value +=   dphi[p2][qp](j)  * surface *
-			model_Ham[band1][band2].quad[i][j] * Complex(0.0,-1.0) * Complex(0.0, -1.0)/opt.length_scale/opt.length_scale;
+			model_Ham[band1][band2].quad[i][j] * Complex(0.0,-1.0) * Complex(0.0, -1.0);
 		      
 		    }
 		}
 
-		value *= my_Jacobian;
+	
 
 
 			  
@@ -2042,7 +2034,8 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
 
   FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
 
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  // AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
   QGauss qrule (dim, SECOND);
 
@@ -2060,13 +2053,9 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
 
-  //My Jacobian 
+ 
 
-  double length_scale = opt.length_scale;
-
-  my_Jacobian = 1.0;
-  for (short i = 1; i <= dim; i++)
-    my_Jacobian *= length_scale;
+  
 
 
   Complex temp(0.0, 0.0);
@@ -2107,7 +2096,7 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
 
 
 
-  result = sqrt( abs(temp) * my_Jacobian );
+  result = sqrt( abs(temp)  );
 
 
  
@@ -2158,11 +2147,7 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 
   //My Jacobian 
 
-  double length_scale = opt.length_scale;
-
-  my_Jacobian = 1.0;
-  for (short i = 1; i <= dim; i++)
-    my_Jacobian *= length_scale;
+ 
 
   
  
@@ -2170,7 +2155,8 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 
    FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
 
-   AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+   //  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+   AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
    // A 5th order Gauss quadrature rule for numerical integration.
    QGauss qrule (dim, SECOND);
@@ -2264,7 +2250,7 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 
 
   
-  result *= my_Jacobian;
+ 
 
  
   return(result.real());
@@ -2386,8 +2372,9 @@ vector<double>  EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int
 
   FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
 
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
-
+  // AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+  
   QGauss qrule (dim, FIFTH);
 
   fe -> attach_quadrature_rule (&qrule);
@@ -2419,9 +2406,7 @@ vector<double>  EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int
 
 
 
-  my_Jacobian = 1.0;
-  for (short i = 1; i <= dim; i++)
-    my_Jacobian *= opt.length_scale;
+ 
 
  
   Complex eigen_f_value1, eigen_f_value2;

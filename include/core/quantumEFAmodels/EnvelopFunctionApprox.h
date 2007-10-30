@@ -33,7 +33,7 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
 
     std::string particle;   //!< particle name "el" or "hl"
 
-    double  length_scale;   //!< mesh length scale [Bohr radius]
+    //double  length_scale;   //!< mesh length scale [Bohr radius]
 
 
     //bool periodicity[3];    //!< periodic boundary conditions
@@ -298,7 +298,7 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
  
   
   //!my Jacobian because I calculate everything in atomic units
-  double my_Jacobian; 
+  //double my_Jacobian; 
 
   
  
