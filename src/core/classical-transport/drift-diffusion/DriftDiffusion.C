@@ -4791,6 +4791,10 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         vector<double> coeff(3, 0.0);
         vector<double> value(3, 0.0);
 
+        // the derivatives
+        vector<vector<double> > dcoeff(3);
+        vector<vector<double> > dvalue(3);
+
         //
         // NOTE: we have to integrate over the boundary also if there are
         //       no contacts because there could be polarization.
@@ -4839,8 +4843,12 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               if (coupling & POISSON)
               {
                 contact->get_normal_derivative(POTENTIAL, a, c);
-                coeff[0] = a * x0;
-                value[0] = c * x0 / phi0;
+                contact->get_derivatives_of_normal_derivative(POTENTIAL,
+                    dcoeff[0], dvalue[0]);
+                //coeff[0] = a * x0;
+                coeff[0] = 0.0;
+                //value[0] = c * x0 / phi0;
+                value[0] = c / (x0 * C0);
               }
               if (coupling & ECURRENT)
               {
@@ -4884,6 +4892,29 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             // contribution to the jacobian
             if (jacobian != NULL)
             {
+/*
+              //double val_uu = J * (dcoeff[0][0] * u - dvalue[0][0]);
+              double val_uu = J * (- dvalue[0][0] / x0 / C0 * phi0);
+
+              for (unsigned int i = 0; i < n_dofs; i++)
+              {
+                for (unsigned int j = 0; j < n_dofs; j++)
+                {
+
+                  Real phi_i_x_phi_j =
+                    phi_face[i][qp] * phi_face[j][qp];
+
+                  if (coupling & POISSON)
+                    Kuu(i,j) += coeff[0] * phi_i_x_phi_j;
+
+                  if (coupling & ECURRENT)
+                    Knn(i,j) += coeff[1] * phi_i_x_phi_j;
+
+                  if (coupling & HCURRENT)
+                    Kpp(i,j) += coeff[2] * phi_i_x_phi_j;
+                }
+              }
+*/
             }
 
             // contribution to -Fe_i
@@ -4901,7 +4932,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                 RealVectorValue P(sc->get_total_polarization());
                 Pn = (P * face_normals[qp]) / P0;
               }
-              double value_u = J * (l2_eps * value[0] - Pn);
+              //double value_u = J * (l2_eps * value[0] - Pn);
+              double value_u = J * (value[0] - Pn);
               double value_n = J * value[1] / (mu0 * C0_e);
               double value_p = J * value[2] / (mu0 * C0_h);
 
@@ -4945,18 +4977,26 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             if (coupling & POISSON)
             {
               contact->get_normal_derivative(POTENTIAL, a, c);
-              coeff[0] = a * x0;
-              value[0] = c * x0 / phi0;
+              contact->get_derivatives_of_normal_derivative(POTENTIAL,
+                  dcoeff[0], dvalue[0]);
+              //coeff[0] = a * x0;
+              coeff[0] = 0.0;
+              //value[0] = c * x0 / phi0;
+              value[0] = c / (x0 * C0);
             }
             if (coupling & ECURRENT)
             {
               contact->get_normal_derivative(FERMIE, a, c);
+              contact->get_derivatives_of_normal_derivative(FERMIE,
+                  dcoeff[1], dvalue[1]);
               coeff[1] = a * x0;
               value[1] = c * x0 / phi0;
             }
             if (coupling & HCURRENT)
             {
               contact->get_normal_derivative(FERMIH, a, c);
+              contact->get_derivatives_of_normal_derivative(FERMIH,
+                  dcoeff[2], dvalue[2]);
               coeff[2] = a * x0;
               value[2] = c * x0 / phi0;
             }
@@ -4965,14 +5005,33 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
           // first the contributions to Ke_ij
           if (coupling & POISSON)
-            Kuu(s,s) += l2_eps * coeff[0];
+            Kuu(s,s) += l2_eps * coeff[0] / local_scaling[s][2];
 
           if (coupling & ECURRENT)
-            Knn(s,s) += coeff[1];
+            Knn(s,s) += coeff[1] / local_scaling[s][0];
 
           if (coupling & HCURRENT)
-            Kpp(s,s) += coeff[2];
+            Kpp(s,s) += coeff[2] / local_scaling[s][1];
 
+
+          // contribution to the jacobian
+          if (jacobian != NULL)
+          {
+            double val_uu = J * (- dvalue[0][0] / x0 / C0 * phi0);
+            double val_nn = J * (- dvalue[1][1] / mu0 / C0 * phi0);
+            double val_pp = J * (- dvalue[2][2] / mu0 / C0 * phi0);
+
+            if (coupling & POISSON)
+              Kuu(s,s) += val_uu / local_scaling[s][2];
+
+            if (coupling & ECURRENT)
+              Knn(s,s) += val_nn / local_scaling[s][0];
+
+            if (coupling & HCURRENT)
+              Kpp(s,s) += val_pp / local_scaling[s][1];
+          }
+
+          
           // contribution to -Fe_i
           if (residual != NULL)
           {
@@ -4986,14 +5045,16 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               // we only include the polarization when no boundary
               // is defined
               Pn = sc->get_total_polarization()(0) / P0;
+
+              // what is the outer normal in this point??
+              // Idea: if x(s) > x(centroid), normal is +1
+              //       else it is -1
+              double x_c = elem->centroid()(0);
+              double x_s = elem->point(s)(0);
+              Pn = (x_s > x_c) ? Pn : -Pn;
             }
-            // what is the outer normal in this point??
-            // Idea: if x(s) > x(centroid), normal is +1
-            //       else it is -1
-            double x_c = elem->centroid()(0);
-            double x_s = elem->point(s)(0);
-            Pn = (x_s > x_c) ? Pn : -Pn;
-            double value_u = l2_eps * value[0] - Pn;
+            //double value_u = l2_eps * value[0] - Pn;
+            double value_u = value[0] - Pn;
             double value_n = value[1] / (mu0 * C0_e);
             double value_p = value[2] / (mu0 * C0_h);
 

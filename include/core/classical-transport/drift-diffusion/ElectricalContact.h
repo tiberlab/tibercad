@@ -69,12 +69,22 @@ class ElectricalContact : public BoundaryProperties, public Variable
      * \f[\frac{\partial u}{\partial\vec{n}}=c - au\f]
      * where \f$c=\frac{\gamma}{\beta}\f$ and \f$a=\frac{\alpha}{\beta}\f$
      *
+     * NOTE: For the electric potential we assume \c c to be a surface charge
+     * density in units of cm^-2
+     *
      * \param[in] variable the variable for which coefficients should be returned
      * \param[out] a the coefficient a
      * \param[out] c the coefficient c
      */
     virtual void get_normal_derivative(DriftDiffusionDefs::Variable variable,
         double& a, double& c);
+
+
+    //! Get the derivatives of the parameters for the normal derivative
+    virtual void get_derivatives_of_normal_derivative(
+        DriftDiffusionDefs::Variable variable,
+        std::vector<double>& da, std::vector<double>& dc);
+        
 
     //! Get the boundary value for \c variable
     virtual double get_boundary_value(DriftDiffusionDefs::Variable variable);
@@ -88,6 +98,7 @@ class ElectricalContact : public BoundaryProperties, public Variable
      * electric field BC
      */
     void set_zero_derivative_bc(DriftDiffusionDefs::Variable variable);
+
 
   protected:
 
@@ -256,6 +267,17 @@ ElectricalContact::get_variable_value(ID id)
 {
   ignore_unused_variable(id);
   return get_simulation_voltage();
+}
+
+
+inline
+void
+ElectricalContact::get_derivatives_of_normal_derivative(
+    DriftDiffusionDefs::Variable variable,
+    std::vector<double>& da, std::vector<double>& dc)
+{
+  da = std::vector<double>(3, 0.0);
+  dc = std::vector<double>(3, 0.0);
 }
 
 

@@ -44,7 +44,6 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     _strain(0),
     _electron_mobility(NULL),
     _hole_mobility(NULL),
-    _heat_simul(NULL),
     _eTEpower(0),
     _hTEpower(0),
     _thermoelectric_power(NULL),
@@ -169,21 +168,6 @@ DriftDiffusionProperties::do_init(void)
     add_recombination_model(name, it->second);
   }
  
-   
-    
-  // Add a pointer to heat simulation
-
-  std::string heat_simulation =  get_options().get_option("heat_simulation", "none");
-
-  if (heat_simulation != "none")
-  {
-    _heat_simul = dynamic_cast<MacroHeatBalance*>(
-        SimulationInterface::find_simulation(heat_simulation));
-
-    if (_heat_simul == NULL)
-      throw InitFailedException("Unknown heat model" + heat_simulation    );
-  }
-   
    
 
    // create a pointer to thermoelectric power
@@ -735,24 +719,5 @@ void  DriftDiffusionProperties::compute_thermoelectric_powers()
 
 std::vector<double> DriftDiffusionProperties::get_temperature_node()
 {
-/*  
-  if (_heat_simul != NULL)
-  {
-    return (_heat_simul->get_temperature_node(_elem));
-  }
-  else
-  {
-    
-    std::vector<double> Temperature(_elem->n_nodes());
-    
-    for (unsigned int n = 0; n < _elem->n_nodes(); n++)
-    {   
-      Temperature[n] = lattice_vt / Constants::k_B ; 
-    }
-    
-    
-    return (Temperature); 
-  }
-  */
   return _nodal_lattice_vt;
 }

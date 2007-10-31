@@ -727,8 +727,6 @@ class DriftDiffusionProperties : public PhysicalModel
     //! The interface to the lattice temperature simulation
     TemperatureInterface _lattice_temp;
 
-    //! A pointer to a heat simulation
-    MacroHeatBalance* _heat_simul;
        
     //! Electron thermoelectric power
     double _eTEpower;
