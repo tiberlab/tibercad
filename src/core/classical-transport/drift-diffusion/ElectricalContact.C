@@ -7,6 +7,7 @@
 #include "MaterialInterface.h"
 
 #include "ElectricalContact.h"
+#include "DriftDiffusionProperties.h"
 
 
 ElectricalContact*
@@ -43,8 +44,18 @@ ElectricalContact::do_init(void)
   if (get_options().get_option("zero_grad_fermi_h", false))
     set_zero_derivative_bc(DriftDiffusionDefs::FERMIH);
 
+  _surfres = get_options().get_option("contact_resistance", 0.0);
+
   std::string s(get_options().get_option("voltage", ""));
   set_simulation_voltage(check_and_register(s, 0.0));
 }
 
 
+double
+ElectricalContact::get_contact_voltage_drop(void) const
+{
+  double j = Constants::e * (get_normal_hole_flux() - 
+      get_normal_electron_flux());
+
+  return _surfres * j;
+}

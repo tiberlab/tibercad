@@ -50,6 +50,12 @@ class ElectricalContact : public BoundaryProperties, public Variable
 
     //! Get the simulation voltage for this contact
     double get_simulation_voltage(void) const;
+
+    //! Get the inner voltage for this contact
+    /*!
+     * This takes surface resistance into account
+     */
+    double get_inner_voltage(void) const;
     
     //! Set the material
     /*!
@@ -57,6 +63,11 @@ class ElectricalContact : public BoundaryProperties, public Variable
      * condition
      */
     void set_material(DriftDiffusionProperties *properties);
+
+
+    //! Set the particle fluxes normal to the surface
+    void set_normal_fluxes(double jn, double jp);
+
     
     //! Get the type of boundary condition for \c variable
     BCType get_type(DriftDiffusionDefs::Variable variable) const;
@@ -124,6 +135,18 @@ class ElectricalContact : public BoundaryProperties, public Variable
     virtual double get_variable_value(ID id = 0);
 
 
+    //! Get the normal electron flux
+    double get_normal_electron_flux(void) const;
+
+
+    //! Get the normal hole flux
+    double get_normal_hole_flux(void) const;
+
+
+    //! Get the contact voltage drop
+    double get_contact_voltage_drop() const;
+
+
   private:
 
     BCType _potential_type;
@@ -134,6 +157,17 @@ class ElectricalContact : public BoundaryProperties, public Variable
     //! The boundary value (eg. applied voltage)
     double _boundary_value;
     
+
+    //! The normal electron flux
+    double _jn;
+    
+
+    //! The normal hole flux
+    double _jp;
+
+
+    //! The contact surface resistance
+    double _surfres;
 
     // A pointer to the DriftDiffusionProperties object
     DriftDiffusionProperties *_properties;
@@ -171,11 +205,51 @@ ElectricalContact::get_simulation_voltage(void) const
 
 
 inline
+double
+ElectricalContact::get_inner_voltage(void) const
+{
+  double v = get_simulation_voltage();
+  if (_surfres > 1e-12)
+    v += get_contact_voltage_drop();
+  
+  return v;
+}
+
+
+
+inline
 void
 ElectricalContact::set_material(DriftDiffusionProperties *properties)
 {
   _properties = properties;
 }
+
+
+inline
+void
+ElectricalContact::set_normal_fluxes(double jn, double jp)
+{
+  _jn = jn;
+  _jp = jp;
+}
+
+
+inline
+double
+ElectricalContact::get_normal_electron_flux(void) const
+{
+  return _jn;
+}
+
+
+inline
+double
+ElectricalContact::get_normal_hole_flux(void) const
+{
+  return _jp;
+}
+
+
 
 inline
 DriftDiffusionProperties&

@@ -877,6 +877,14 @@ class DriftDiffusion : public SimulationInterface
     //! Do a Newton type iteration
     void do_newton(void) throw (SolverException);
 
+
+    //! Calculate the terminal currents
+    /*!
+     * Calls \c calculate_currents_surfint() or
+     * calculate_currents_rstf()
+     */
+    void calculate_currents(void);
+
     
     //! Calculate terminal currents
     /*!
@@ -986,10 +994,6 @@ class DriftDiffusion : public SimulationInterface
     void do_assembly(const NumericVector<Number>& x,
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
-    void assemble_linear_electrons(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
-    void solve_linear(void);
 
 
 };
