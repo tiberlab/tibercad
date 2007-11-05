@@ -248,6 +248,8 @@ KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
 
   result.E_c =  (Ev_top + par.EgGamma)/Hartree;
 
+
+
   //--------------------------------------------------------------------
 
   double Ep; //Ep = P^2 / 2.0;
@@ -255,8 +257,17 @@ KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
   Ep = (1.0/par.m_G - 1.0)*
     par.EgGamma * ( (par.EgGamma +  par.delta )/(par.EgGamma + 2.0/3.0 * par.delta ) ) / Hartree;
 
+
+ 
+
+  
+
   result.P1 = std::sqrt(2.0 * Ep);
   result.P2 = std::sqrt(2.0 * Ep);
+
+
+
+  //result.P1 =  result.P2 = 0;
 
   //rescale L and N
   double t =   Ep/( (par.EgGamma +  par.delta/3.0)/Hartree );

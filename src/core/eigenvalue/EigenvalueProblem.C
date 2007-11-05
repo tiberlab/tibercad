@@ -388,7 +388,7 @@ void EigenvalueProblem::parse_options()
   //cerr <<  solver_opt.Dirichlet_bc_everywhere << "\n";
 
   {
-    std::string  method_name = mod_opt.get_option("method","FEM");
+    std::string  method_name = mod_opt.get_option("discretization_method","FEM");
     if (method_name == "FEM")
       solver_opt.discretization_method = FEM;
     else if (method_name == "BIM")

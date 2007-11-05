@@ -42,7 +42,7 @@ inline double EnvelopFunctionApprox::get_band_edge( const Elem* elem) const
   
 
   poisson_equation->get_solution (elem, qp, band_edge_ID, values);
-
+  
   return ( values[0] );
 }
 
@@ -102,7 +102,7 @@ void EnvelopFunctionApprox::build_integrated_quantities (const std::set< std::st
     values.resize(n + m);
     for (unsigned int i = 0; i < n; i++)
     {
-      values[i + m] = Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy,opt.Temperature);
+      values[i + m] = Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy,solution[i].Temperature);
     }
   }
 
@@ -291,7 +291,7 @@ void EnvelopFunctionApprox::get_occupations(std::vector<double>& values) const
 
   for (unsigned int i = 0; i < n; i++)
   {
-    values[i ] = Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy,opt.Temperature);
+    values[i ] = Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy, solution[i].Temperature);
   }
 
 } 
@@ -360,11 +360,6 @@ double EnvelopFunctionApprox::get_band_edge() const
     
    
 
-   
-
-   
-
-    
     if ( elem == *(mesh->active_elements_begin()) )
     {
       band_edge = temp; 
@@ -410,6 +405,8 @@ double EnvelopFunctionApprox::get_band_edge() const
 EnvelopFunctionApprox::EnvelopFunctionApprox()
 {
   poisson_equation = NULL;
+
+  temperature_simulation = NULL;
 
   strain = NULL;
 }
@@ -524,7 +521,7 @@ void EnvelopFunctionApprox::parse_options()
    
   }
     //--------------------------------------------------------------------------------------------//
-  
+ 
 
   //k-vector
   std::vector<double> k_vec(3, 0.0);
@@ -548,8 +545,25 @@ void EnvelopFunctionApprox::parse_options()
   else
     throw InitFailedException( "EnvelopeFunctionApprox: Incorrect job " + job_name );  
   //---------------------------------------------------------------------------------//
+  std::string  heat_model_name = mod_opt.get_option("heat_model","no_heat");
+  
+  if ( heat_model_name != "no_heat" )
+  {
+    temperature_simulation  = find_simulation ( heat_model_name );
+    
+    if (temperature_simulation == NULL)
+      throw InitFailedException( "Unknown heat model " + heat_model_name);
 
+    temperature_ID = temperature_simulation->get_variable_id("temperature");
+
+  }
+ 
+  //default value for temperature
   opt.Temperature = mod_opt.get_option("Temperature", 300.0);
+    
+  
+
+  //---------------------------------------------------------------------------------//
 
   opt.initial_eigenstates_number = mod_opt.get_option("initial_eigenstates_number", 6);
 
@@ -755,9 +769,9 @@ void EnvelopFunctionApprox::do_solve()
  if ( opt.job ==   EIGENSTATES )   
    solve_eigen_value_problem( solver_opt.number_of_eigenstates);
  else if ( opt.job == DENSITY )
-   calculate_convergent_density(opt.Temperature);
+   calculate_convergent_density();
   
- 
+
  
 }
 //===========================================================//
@@ -1022,8 +1036,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 		  complex<double> value = (0.0, 0.0);
 		  //constant
 		  value += JxW[qp] * phi[p1][qp] * phi[p2][qp] * model_Ham[band1][band2].constant ;
-		  
-		  
+		
 		  //linear left
 		  
 		  for (short i = 0; i < dim; i++)
@@ -1486,6 +1499,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   //let us find the ground electron or hole level
   unsigned int ground_state_index = 0;
   bool finish = false;
+
   for (unsigned int i = 0; (i < number_of_converged_solutions && (!finish) ); i++)
   {
     if (opt.particle == "el")
@@ -1508,6 +1522,8 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
 
   } 
+
+
  
 
   unsigned int solution_size;
@@ -1520,7 +1536,8 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   {
     EnvelopFunctionApprox::eigen_propblem_solution temp1;
     temp1.eigen_energy = 0;
-    temp1.Fermi_energy = 0;    
+    temp1.Fermi_energy = 0;  
+    temp1.Temperature = opt.Temperature;
     temp1.eigen_vector.resize(number_of_all_dofs, Complex(0.0, 0.0));
 
     solution.clear();
@@ -1662,6 +1679,13 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
     }
  
 
+  //Fermi energy calculation
+  if (temperature_simulation != NULL)
+    for (unsigned int i = 0; i < solution_size; i++)
+    {
+      solution[i].Temperature = calculate_temperature_averaged(i);
+      
+    }
  
 
   
@@ -1786,7 +1810,7 @@ void  EnvelopFunctionApprox::prepare_probability_function(const unsigned int sta
  
  
 
- 
+  prob_data.clear();
   
   prob_data.resize(number_of_points, 0.0);
 
@@ -1807,7 +1831,7 @@ void  EnvelopFunctionApprox::prepare_probability_function(const unsigned int sta
     {
       const Elem* elem = *it;
       
-
+     
       for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
 	{
 	  dof_map.dof_indices (elem, dof_indices, psi_index);
@@ -1829,7 +1853,8 @@ void  EnvelopFunctionApprox::prepare_probability_function(const unsigned int sta
   //calculation of |psi|^2
   double t1;
   for (unsigned int i = 0; i < number_of_points; i++) 
-  {
+  { 
+    //prob_data[i] = 0;
     for (unsigned int j = 0; j < opt.number_of_bands; j++)
     {
 
@@ -2259,11 +2284,162 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 
 }
 
+//----//==========================================================//
+
+
+double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
+{
+
+  Complex  result(0.0,0.0);
+
+
+  //-----------------------------------------------------//
+
+ 
+
+
+
+  const vector< Complex >&   eigen_vector =  solution[i].eigen_vector;
+  
+
+ 
+ 
+  //----------------------------------------------------//
+
+  
+  const Mesh* mesh = &(es->get_mesh());
+
+
+  unsigned int dim = mesh->mesh_dimension();
+  
+
+
+  system = &( es->get_system<LinearImplicitSystem>(system_name));
+
+  DofMap& dof_map = system->get_dof_map();
+  
+
+
+  
+
+  //My Jacobian 
+
+ 
+
+  
+ 
+   
+
+   FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
+
+   //  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+   AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+
+   // A 5th order Gauss quadrature rule for numerical integration.
+   QGauss qrule (dim, SECOND);
+
+   // Tell the finite element object to use our quadrature rule.
+   fe -> attach_quadrature_rule (&qrule);
+
+   // The element Jacobian * quadrature weight at each integration point.   
+   const std::vector<Real>& JxW = fe->get_JxW();
+
+   // properties at the quadrature points.
+   const std::vector<Point>& q_point = fe->get_xyz();
+   
+   // The element shape functions evaluated at the quadrature points.
+   const std::vector<std::vector<Real> >& phi = fe->get_phi();
+  
+
+   //------------------------------------------------------------
+   std::vector<unsigned int> dof_indices_component;
+ 
+   std::vector<unsigned int> dof_indices;
+
+   //-------------------------------------------------------------
+   
+  //----------------------------------------------------//
+
+
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+
+  
+  Complex eigen_f_value1;
+  Complex eigen_f_value2;
+
+
+ 
+  double Temperature;
+  vector<double> values;
+  vector<Point> qp(1);
+  
+  for ( ; el != end_el ; ++el) 
+    {//el
+
+      const Elem* elem = *el;
+      fe->reinit (elem);
+
+
+      Point center = elem->centroid();
+      qp[0] = center;
+     
+      temperature_simulation->get_solution(elem, qp, temperature_ID, values);
+
+      Temperature = values[0];
+
+     
+
+     
+      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+	{
+	  dof_map.dof_indices (elem, dof_indices, psi_index);
+	  const unsigned int n_psi_dofs = dof_indices.size();
+
+	  for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+	    {//qp
+	      
+	      for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+		{
+		  eigen_f_value1 = eigen_vector[dof_indices[p1]];
+		  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+
+		    {
+		      eigen_f_value2 = eigen_vector[dof_indices[p2]];
+		      result += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *  phi[p2][qp] * conj(eigen_f_value2) ) * Temperature;
+		    
+		    }
+		}
+
+	    }
+
+
+	
+	  
+	}
+      
+
+    }
+
+ 
+
+
+  
+ 
+
+ 
+  return(result.real());
+
+
+
+}
+
+//--------------------------------------------------------------------------//
 
 
 //------------------------------------------------------------------------------//
 
-void EnvelopFunctionApprox::calculate_density(double Temperature)
+void EnvelopFunctionApprox::calculate_density( )
 {
   DofMap& dof_map = system->get_dof_map();
 
@@ -2294,7 +2470,7 @@ void EnvelopFunctionApprox::calculate_density(double Temperature)
 
     const double Energy = solution[i].eigen_energy;
       
-    double prob_factor = Fermi_statistics_probability(Energy, Fermi_energy, Temperature); //Thermal probability
+    double prob_factor = Fermi_statistics_probability(Energy, Fermi_energy, solution[i].Temperature); //Thermal probability
 
      
     density_of_state = calculate_cell_prob_function(i);
@@ -2330,7 +2506,7 @@ void EnvelopFunctionApprox::calculate_density(double Temperature)
 	  else
 	  chem_pot_value_eV = -dd_solution.fermi_h;
 	*/
-	prob_factor = Fermi_statistics_probability(Energy,  chem_pot_value_eV, Temperature); //Thermal probability
+	prob_factor = Fermi_statistics_probability(Energy,  chem_pot_value_eV, solution[i].Temperature); //Thermal probability
       }
 	
 	
@@ -2419,9 +2595,11 @@ vector<double>  EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int
 
       const Elem* elem = *el;
       fe->reinit (elem);
-
+      
+   
+      
       for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
-	{
+      {
 	  dof_map.dof_indices (elem, dof_indices, psi_index);
 	  const unsigned int n_psi_dofs = dof_indices.size();
 
@@ -2569,7 +2747,7 @@ double EnvelopFunctionApprox::get_integrated_probability()
   for (unsigned int i = 0 ; i <  number_of_eigs; i++)
     { 
     
-      result += Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy,opt.Temperature);
+      result += Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy, solution[i].Temperature);
     }
  
   return(result);
@@ -2577,7 +2755,7 @@ double EnvelopFunctionApprox::get_integrated_probability()
 
 
 //=================================================================//
-void EnvelopFunctionApprox::calculate_convergent_density(double T)
+void EnvelopFunctionApprox::calculate_convergent_density( )
 {
 
  
@@ -2590,7 +2768,7 @@ void EnvelopFunctionApprox::calculate_convergent_density(double T)
 
   double last_state_density = Fermi_statistics_probability(solution[n1-1].eigen_energy, 
 							   solution[n1-1].Fermi_energy, 
-							   T);
+							   solution[n1-1].Temperature);
 
   double total_density =  get_integrated_probability();
  
@@ -2627,7 +2805,7 @@ void EnvelopFunctionApprox::calculate_convergent_density(double T)
     }
 
  
-  calculate_density(T );
+  calculate_density( );
  
 }
 

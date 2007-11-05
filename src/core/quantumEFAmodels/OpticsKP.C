@@ -468,7 +468,7 @@ void OpticsKP::calculate_matrix(void)
   Py_matr_imag->zero(); 
 
   
-  Pz_matr_imag->zero();
+  Pz_matr_imag-> zero();
 
   system->reinit();
 

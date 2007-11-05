@@ -103,6 +103,7 @@ void KPbulkHamiltonian::do_init()
 	{
 	  band_min = 0;
 	  band_max = 7;
+
 	}
       else
 	{
@@ -188,6 +189,7 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
   //create matrix 8x8
   const vector<KPbulkHamiltonian::MatrixElement>  temp(8);
 
+ 
   Ham.resize(8,temp);
   //--------------------------------------------------
 
@@ -297,18 +299,20 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
 
   //=======================================================================//
   //-------------H_cc------------------------------------------------------//
-  Ham[0][0].quad[0][0]= par.s2*0.5;       
-  Ham[0][0].quad[1][1]= par.s2*0.5;     
-  Ham[0][0].quad[2][2]= par.s1*0.5;
+  Ham[0][0].quad[0][0]= par.s2;       
+  Ham[0][0].quad[1][1]= par.s2;     
+  Ham[0][0].quad[2][2]= par.s1;
 
-  Ham[1][1].quad[0][0]= par.s2*0.5;       
-  Ham[1][1].quad[1][1]= par.s2*0.5;     
-  Ham[1][1].quad[2][2]= par.s1*0.5;
+  Ham[1][1].quad[0][0]= par.s2;       
+  Ham[1][1].quad[1][1]= par.s2;     
+  Ham[1][1].quad[2][2]= par.s1;
 
   //-----------------------------------------------------------------------//
   //cv part
   if (kpCVtermSymmetric)
     {
+   
+
       Ham[0][2].linear_left[0] = par.P2 * 0.5 *  Complex(0.0, 1.0);
       Ham[0][3].linear_left[1] = par.P2 * 0.5 *  Complex(0.0, 1.0);
       Ham[0][4].linear_left[2] = par.P1 * 0.5 *  Complex(0.0, 1.0);
@@ -328,8 +332,9 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
       Ham[1][7].linear_right[2] = par.P1* 0.5 *  Complex(0.0, 1.0);
 
 
+
      
-      
+     
       for (short i = 0; i < 2; i++)
 	for (short j = 2; j < 8; j++)
 	  for (short  i1 = 0; i1<=2; i1++)
@@ -337,6 +342,12 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
 	      Ham[j][i].linear_left[i1] =  conj(Ham[i][j].linear_left[i1]);
 	      Ham[j][i].linear_right[i1] = conj(Ham[i][j].linear_right[i1]);
 	    }
+
+
+
+      
+     
+      
 
 
     }
@@ -372,10 +383,7 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
   
   //------------------spin-orbit interaction------------------------//
 
-  /*Ham_const(3,4) = Ham_const(3,4)  + (0d0,-1d0)*d2*/  Ham[2][3].constant   += Complex(0.0,-1.0)*par.d2; 
-
-
-
+  /*Ham_const(3,4) = Ham_const(3,4)  + (0d0,-1d0)*d2*/  Ham[2][3].constant   +=  Complex(0.0,-1.0)*par.d2; 
   /*Ham_const(4,3) = Ham_const(4,3)  + (0d0, 1d0)*d2*/  Ham[3][2].constant   +=  Complex(0.0, 1.0)*par.d2;
 
   /*Ham_const(3,8) = Ham_const(3,8)  +  d3*/     Ham[2][7].constant += par.d3;

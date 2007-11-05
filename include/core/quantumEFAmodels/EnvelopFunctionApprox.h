@@ -97,6 +97,7 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
     double eigen_energy; //!< eigen energy [eV]
     std::vector< std::complex<double>  > eigen_vector; //< eigen vector
     double Fermi_energy; //< electro-chemical potential [eV] \f$ \langle \psi |\mu({\bf r} | \psi \rangle  \f$
+    double Temperature; //!< averaged temperature for the state [K] 
   };
 
 
@@ -158,8 +159,13 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   double calculate_fermi_averaged(unsigned int i);
 
 
-
-
+  
+  //!calculate averaged value of the temperature \f$\langle \psi|T|psi \rangle \$f
+  /*!
+    \param  i number of state
+   
+   */
+  double calculate_temperature_averaged(unsigned int i);
   
  
   //! claculate total density
@@ -173,10 +179,10 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
 
   //!obtain convergent density
   /*!
-    \param T temperature [K]
+    
    
   */
-  void  calculate_convergent_density(double T);
+  void  calculate_convergent_density( void );
   
 
 
@@ -186,11 +192,11 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
     The cell density reads:  \f$ \rho = \frac{1}{\Omega_0} \int_{\Omega_0}  \sum_i   |\psi_i({\bf r})|^2 \, dV  F_{fermi}(E_i), \f$
     where \f$ \Omega_0 \f$ is the element volume.
 
-    \param T temperature [K]
+   
   
 
   */
-  void  calculate_density(double T);
+  void  calculate_density(void);
 
 
   //! sets opt.initial_eigestates_number
@@ -276,6 +282,14 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
 
   //!pointer to a drift-diffusion object that is used to get potential data 
   SimulationInterface* poisson_equation;
+
+
+  //!pointer to a temperature simulation object that is used to get temperature data
+  SimulationInterface* temperature_simulation;
+
+  //! ID of temperature in heat equation
+  ID temperature_ID;
+
 
   //! ID of electric potential in poisson_equation
   ID potential_ID;

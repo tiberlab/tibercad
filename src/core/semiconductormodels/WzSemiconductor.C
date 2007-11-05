@@ -229,6 +229,8 @@ KPparams WzSemiconductor::calculate_8x8_kp_params (void )
   KPparams  result = calculate_6x6_kp_params();
 
   
+  
+
   //------------------------------------------------------------------
   //CONDUCTION BAND
   //we renormalize conduction band quadratic part to free electron mass
@@ -278,6 +280,8 @@ KPparams WzSemiconductor::calculate_8x8_kp_params (void )
 
   result.P1 = std::sqrt(2.0 * Ep1);
   result.P2 = std::sqrt(2.0 * Ep2);
+
+ 
 
 
   //-----------------------------------------------------------------
