@@ -53,26 +53,7 @@ SemiconductorModel::do_init(void)
   
 }
 
-/*
-void
-SemiconductorModel::read_database(void)
-{
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
 
-  permittivity = data("permittivity", 12.93);
- 
-
-  if (get_material()->get_structure() == "zb")
-  {
-    permittivity = data("permittivity", 12.93);
-  }
-  else
-  {
-    permittivity = data("permittivity", 9.5);
-  }
-}
-*/
 
 void
 SemiconductorModel::calculate_VCA(const PhysicalModelInterface* comp_A,

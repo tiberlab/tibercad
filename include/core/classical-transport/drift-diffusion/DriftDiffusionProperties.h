@@ -10,6 +10,7 @@
 
 
 #include "PhysicalModel.h"
+#include "Variable.h"
 
 #include "ParticleDensity.h"
 #include "TemperatureInterface.h"
@@ -51,7 +52,7 @@ class MacroHeatBalance;
  * Trying to add to identical models will result in a memory leak. This will
  * be corrected in future. }
  */
-class DriftDiffusionProperties : public PhysicalModel
+class DriftDiffusionProperties : public PhysicalModel, public Variable
 {
     
   public:
@@ -120,6 +121,10 @@ class DriftDiffusionProperties : public PhysicalModel
      * and sets the band edges.
      */
     void setup_band_edges(void);
+
+
+    //! Set the polarization vector
+    void set_polarization(const RealVectorValue& polarization);
 
 
     //! Set the coordinates
@@ -373,7 +378,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * pyroelectric and piezoelectric polarization
      */
     const RealVectorValue& get_total_polarization(void) const
-      { return polarization; };
+      { return _polarization; };
 
     
     //! Get the relative permittivity tensor
@@ -533,6 +538,13 @@ class DriftDiffusionProperties : public PhysicalModel
     };
 
 
+    //! The possible variables
+    enum Variables
+    {
+      UNKNOWN = 0,
+      RELAXPOLARIZ //!< Relaxation factor for the polarization
+    };
+
     //! The empty constructor.
     DriftDiffusionProperties(void);
 
@@ -554,6 +566,13 @@ class DriftDiffusionProperties : public PhysicalModel
     virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
+
+    //! Set the value of a variable
+    virtual void set_variable_value(double value, ID id = 0);
+
+    //! Get the value of a variable
+    virtual double get_variable_value(ID id = 0);
+    
 
     //! This method gets called from reinit()
     /*!
@@ -665,9 +684,6 @@ class DriftDiffusionProperties : public PhysicalModel
     
     //! The derivatives of the net hole recombination rate
     std::vector<double> hole_recombination_rate_derivatives;
-    
-    //! The total electric polarization
-    RealVectorValue polarization;
 
     
     //! The pyroelectric polarization (will go into a model)
@@ -737,6 +753,10 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! The electric field
     RealGradient electric_field;
+
+    
+    //! The total electric polarization
+    RealVectorValue _polarization;
 
 
     //! An iterator for the recombination models
@@ -839,8 +859,16 @@ class DriftDiffusionProperties : public PhysicalModel
     bool _is_dielectric;
 
 
+    //! The electrons 
     ParticleDensity _electrons;
+
+
+    //! The holes
     ParticleDensity _holes;
+
+
+    //! The relaxation factor for the polarization
+    double _relax_polariz;
 };
 
 
@@ -1054,6 +1082,13 @@ DriftDiffusionProperties::setup_band_edges(void)
     get_DOS_factor() * std::pow(kT * vb.effective_mass, 1.5);
 }
 
+inline
+void
+DriftDiffusionProperties::set_polarization(const RealVectorValue& polarization)
+{
+  _polarization += _relax_polariz * polarization;
+}
+
 
 inline
 int
@@ -1088,6 +1123,7 @@ DriftDiffusionProperties::create_new(void) const
 {
   return new DriftDiffusionProperties();
 }
+
 
 
 

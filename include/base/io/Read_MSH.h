@@ -15,12 +15,6 @@
 //
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <boost/spirit/core.hpp>
-#include <boost/spirit/actor/push_back_actor.hpp>
-#include <boost/spirit/dynamic.hpp>
-#include <boost/spirit/utility/confix.hpp>
-#include <iostream>
-#include <fstream>
 
 #include <vector>
 #include <string>
@@ -29,13 +23,11 @@
 #include "mesh_data.h"
 #include "libmesh.h"
 #include "mesh.h"
-#include "mesh_generation.h"
 
 
 
 ///////////////////////////////////////////////////////////////////////////////
 using namespace std;
-using namespace boost::spirit;
 
 ///////////////////////////////////////////////////////////////////////////////
 //

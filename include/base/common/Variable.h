@@ -20,6 +20,10 @@
  * \c variablename is the user defined name for the variable and \c defaultvalue
  * is the default value to be assigned to this variable.
  *
+ * A variable can be assigned to different parameteres in different
+ * models. When assigning the value, it will be set in all objects that
+ * use this variable.
+ *
  * When the variable is used, it has to be referred to using the user defined
  * name \c variablename.
  *
@@ -33,7 +37,8 @@ class Variable
   private:
 
     //! The type for the list of variables
-    typedef std::map<const std::string, std::pair<Variable*, ID> > VariableMap;
+    typedef std::multimap<const std::string,
+            std::pair<Variable*, ID> > VariableMap;
 
 
   public:
@@ -51,7 +56,7 @@ class Variable
      * \param var the variable name
      * \return a pointer to the variable object or NULL, if \c var doesn't exist
      */
-    static Variable* get_variable(const std::string& var);
+    //static Variable* get_variable(const std::string& var);
 
 
     //! Check if \c var is a valid variable variable
@@ -73,7 +78,10 @@ class Variable
     //! Get the value of variable \c var
     /*!
      * \param var the variable name
-     * \param value the value to set
+     * \return the value
+     *
+     * \note Makes no check about existence of the variable. Do this
+     * first using \c is_variable()
      */
     static double get_variable_value(const std::string& var);
 
@@ -114,6 +122,7 @@ class Variable
     /*!
      * A variable variable is defined in the input file using the notation
      * \c @name(defaultvalue)
+     *
      */
     static VariableMap _variables;
 

@@ -2,7 +2,6 @@
 
 #include "OhmicContact.h"
 #include "SchottkyContact.h"
-#include "FermiLevelPinning.h"
 #include "LeakageCurrent.h"
 #include "MaterialInterface.h"
 
@@ -20,8 +19,6 @@ ElectricalContact::create(const std::string& name,
     ct = OhmicContact::create();
   else if (name == "schottky")
     ct = SchottkyContact::create();
-  else if (name == "pinning")
-    ct = FermiLevelPinning::create();
   else if (name == "leakage_current")
     ct = LeakageCurrent::create();
   else if (name == "interface")

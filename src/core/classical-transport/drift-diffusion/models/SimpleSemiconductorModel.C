@@ -41,11 +41,4 @@ SimpleSemiconductorModel::do_init(void)
   get_conduction_band().effective_mass = opt.get_option("meff_n", 0.6);
   get_valence_band().effective_mass = opt.get_option("meff_p", 1.2);
   
-  permittivity = opt.get_option("permittivity", 11.7);
-
-  pyro_polarization(0) = opt.get_option("Px", 0.0);
-  pyro_polarization(1) = opt.get_option("Py", 0.0);
-  pyro_polarization(2) = opt.get_option("Pz", 0.0);
-  
-  
 }

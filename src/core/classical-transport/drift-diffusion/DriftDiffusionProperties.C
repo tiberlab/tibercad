@@ -35,7 +35,6 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     hole_conductivity_derivatives(3, 0.0),
     electron_recombination_rate_derivatives(3, 0.0),
     hole_recombination_rate_derivatives(3, 0.0),
-    polarization(3, 0.0),
     pyro_polarization(3, 0.0),
     bow_pyro(0.0),
     _elem(NULL),
@@ -46,8 +45,10 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     _hole_mobility(NULL),
     _eTEpower(0),
     _hTEpower(0),
+    _polarization(3, 0.0),
     _thermoelectric_power(NULL),
-    _is_dielectric(false)
+    _is_dielectric(false),
+    _relax_polariz(1.0)
 {
 }
 
@@ -75,12 +76,33 @@ DriftDiffusionProperties::read_database(void)
 
 
 void
+DriftDiffusionProperties::set_variable_value(double value, ID id)
+{
+  //if (id == RELAXPOLARIZ)
+    _relax_polariz = value;
+}
+
+
+double
+DriftDiffusionProperties::get_variable_value(ID id)
+{
+  return _relax_polariz;
+}
+
+
+
+void
 DriftDiffusionProperties::do_init(void)
 {
 
   const string stat("B");
   if (get_options().get_option("statistics", stat) == "FD")
     set_statistics(TiberCad::FERMIDIRAC);
+
+  
+  std::string s(get_parameter("relax_polarization", ""));
+  _relax_polariz = check_and_register(s, _relax_polariz);
+
 
   //
   // setup holes and electrons
@@ -105,6 +127,11 @@ DriftDiffusionProperties::do_init(void)
 
   _is_dielectric = get_parameter("dielectric", _is_dielectric);
   permittivity = get_parameter("permittivity", permittivity);
+
+
+  pyro_polarization(0) = get_parameter("Px", 0.0);
+  pyro_polarization(1) = get_parameter("Py", 0.0);
+  pyro_polarization(2) = get_parameter("Pz", 0.0);
 
 
   // the temperature simulation
@@ -340,10 +367,11 @@ DriftDiffusionProperties::reinit(const Elem* elem)
     // here we assume thermal equilibrium
     electron_vt = hole_vt = lattice_vt;
 
-    
-    polarization = pyro_polarization;
+    _polarization = 0.0;
 
     this->prepare_element_data();
+    
+    _polarization += _relax_polariz * pyro_polarization;
   }
 
 }
