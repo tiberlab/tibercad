@@ -113,9 +113,7 @@ Variable::check_and_register(const string& s, double defaultval, ID id)
               // we try to get the default value from an already registered
               // object, if present
               if (is_variable(name))
-              {
                 defaultval = get_variable_value(name);
-              }
             }
           }
 

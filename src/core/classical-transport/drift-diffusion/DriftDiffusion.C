@@ -728,22 +728,34 @@ DriftDiffusion::do_solve(void)
   const ContactData::iterator end(_boundary_currents.end());
 
   cout << endl;
-  cout << "contact: ";
-  for ( ; it != end; ++it)
-    cout << it->first->get_name() << "\t";
-  cout << endl;
-  cout << "voltage: ";
-  for (it = _boundary_currents.begin(); it != end; ++it)
+  int width = 20;
   {
+    ostringstream os;
+    os << "contact name:";
+    os.width(width - os.tellp());
+    os << "";
+    os << "contact voltage:";
+    os.width(2 * width - os.tellp());
+    os << "";
+    os << "contact current:";
+    cout << os.str() << endl;
+  }
+
+  for ( ; it != end; ++it)
+  {
+    ostringstream os;
+    os << setprecision(6);
     ElectricalContact* cnt =
       static_cast<ElectricalContact*>(it->first->get_boundary_properties(get_id()));
-    cout << cnt->get_simulation_voltage() << "\t";
+    os << it->first->get_name();
+    os.width(width - os.tellp());
+    os << "";
+    os << cnt->get_simulation_voltage();
+    os.width(2 * width - os.tellp());
+    os << "";
+    os << it->second * it->first->get_area_factor();
+    cout << os.str() << endl;
   }
-  cout << endl;
-  cout << "current: ";
-  for (it = _boundary_currents.begin(); it != end; ++it)
-    cout << it->second * it->first->get_area_factor() << "\t";
-  cout << endl;
   cout << endl;
   cout << "------------------------------------------------------------------->>"
     << endl;
@@ -4805,16 +4817,13 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     
     
     
+    // this is for surface resistance
     map<unsigned int, double> nodal_flux_n;
     for (unsigned int i = 0; i < elem->n_nodes(); i++)
       nodal_flux_n[elem->node(i)] = 0.0;
     map<unsigned int, double> nodal_flux_p(nodal_flux_n);
-    {
-      vector<Point> p(elem->n_nodes());
-      for (unsigned int i = 0; i < elem->n_nodes(); i++)
-        p[i] = elem->point(i);
-      fe->reinit(elem, &p);
-    }
+
+    set<unsigned int> nodes_on_boundary_sides;
 
     
     // now loop over the element sides to find boundary elements
@@ -4850,17 +4859,26 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
         fe_face->reinit(elem, s);
 
-
+        // calculate the fluxes on the nodes
         if ((contact != NULL) && (dim > 1))
         {
           AutoPtr<Elem> side(elem->build_side(s));
+          
+          vector<Point> p(side->n_nodes());
+          for (unsigned int i = 0; i < side->n_nodes(); i++)
+          {
+            nodes_on_boundary_sides.insert(side->node(i));
+            p[i] = side->point(i);
+          }
+          fe->reinit(elem, &p);
+
           for (unsigned int i = 0; i < side->n_nodes(); i++)
           {
             RealGradient e_field(0);
             RealGradient grad_en(0);
             RealGradient grad_ep(0);
             RealGradient grad_T(0);
-            for (unsigned int j = 0; j < side->n_nodes(); j++)
+            for (unsigned int j = 0; j < n_dofs; j++)
             {
               e_field += dphi[j][i] * Xu(j);
               grad_en += dphi[j][i] * Xn(j);
@@ -4873,23 +4891,21 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             sc->calculate_densities();
             sc->calculate_mobilities();
 
-            // we put the minus and phi0 here for convenience
+            // we put phi0 here for convenience
             double sigma_e = phi0 * sc->get_electron_mobility() *
               sc->get_electron_density();
-            double sigma_h = -phi0 * sc->get_hole_mobility() *
+            double sigma_h = phi0 * sc->get_hole_mobility() *
               sc->get_hole_density();
 
             double Pn =  get_electrons_thermoelectric_power(elem);
             double Pp =  get_holes_thermoelectric_power(elem);
 
-            double jn = 0.0;
-            double jp = 0.0;
             if (coupling & ECURRENT)
               nodal_flux_n[side->node(i)] = 
-                (sigma_e * grad_en + Pn * grad_T) * face_normals[i] / x0;
+                (sigma_e * grad_en + Pn * grad_T) * face_normals[0] / x0;
             if (coupling & HCURRENT)
               nodal_flux_p[side->node(i)] = 
-                (sigma_h * grad_ep + Pp * grad_T) * face_normals[i] / x0;
+                -(sigma_h * grad_ep + Pp * grad_T) * face_normals[0] / x0;
           }
         }
 
@@ -4916,53 +4932,55 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           // and polarization
           for (unsigned int qp = 0; qp < qface.n_points(); qp++)
           {
-
-            // get the solution values at the quadrature point
-            Real u  = 0.0;
-            Real en = 0.0;
-            Real ep = 0.0;
-            RealGradient e_field(0);
-            RealGradient grad_en(0);
-            RealGradient grad_ep(0);
-            RealGradient grad_T(0);
-            for (unsigned int i = 0; i < n_dofs; i++)
-            {
-              u  += phi_face[i][qp] * Xu(i);
-              en += phi_face[i][qp] * Xn(i);
-              ep += phi_face[i][qp] * Xp(i);
-              e_field += dphi_face[i][qp] * Xu(i);
-              grad_en += dphi_face[i][qp] * Xn(i);
-              grad_ep += dphi_face[i][qp] * Xp(i);
-            }
-            
-            sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-            sc->set_coordinates(q_point_face[qp]);
-            sc->set_electric_field(phi0 / x0 * e_field);
-            sc->calculate_densities();
-            sc->calculate_mobilities();
-
-            // we put the minus and phi0 here for convenience
-            double sigma_e = phi0 * sc->get_electron_mobility() *
-              sc->get_electron_density();
-            double sigma_h = -phi0 * sc->get_hole_mobility() *
-              sc->get_hole_density();
-
-            double Pn =  get_electrons_thermoelectric_power(elem);
-            double Pp =  get_holes_thermoelectric_power(elem);
-
-            double jn = 0.0;
-            double jp = 0.0;
-            if (coupling & ECURRENT)
-              jn = (sigma_e * grad_en + Pn * grad_T) * face_normals[qp] / x0;
-            if (coupling & HCURRENT)
-              jp = (sigma_h * grad_ep + Pp * grad_T) * face_normals[qp] / x0;
-    
+   
             double epsilon = sc->get_relative_permittivity();
             double l2_eps = l2 * epsilon;
 
             // get the boundary condition coefficients
             if (contact != NULL)
             {
+
+              // get the solution values at the quadrature point
+              Real u  = 0.0;
+              Real en = 0.0;
+              Real ep = 0.0;
+              RealGradient e_field(0);
+              RealGradient grad_en(0);
+              RealGradient grad_ep(0);
+              RealGradient grad_T(0);
+              for (unsigned int i = 0; i < n_dofs; i++)
+              {
+                u  += phi_face[i][qp] * Xu(i);
+                en += phi_face[i][qp] * Xn(i);
+                ep += phi_face[i][qp] * Xp(i);
+                e_field += dphi_face[i][qp] * Xu(i);
+                grad_en += dphi_face[i][qp] * Xn(i);
+                grad_ep += dphi_face[i][qp] * Xp(i);
+              }
+
+              sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+              sc->set_coordinates(q_point_face[qp]);
+              sc->set_electric_field(phi0 / x0 * e_field);
+              sc->calculate_densities();
+              sc->calculate_mobilities();
+
+              // we put the phi0 here for convenience
+              double sigma_e = phi0 * sc->get_electron_mobility() *
+                sc->get_electron_density();
+              double sigma_h = phi0 * sc->get_hole_mobility() *
+                sc->get_hole_density();
+
+              double Pn =  get_electrons_thermoelectric_power(elem);
+              double Pp =  get_holes_thermoelectric_power(elem);
+
+              double jn = 0.0;
+              double jp = 0.0;
+              if (coupling & ECURRENT)
+                jn = (sigma_e * grad_en + Pn * grad_T) * face_normals[qp] / x0;
+              if (coupling & HCURRENT)
+                jp = -(sigma_h * grad_ep + Pp * grad_T) * face_normals[qp] / x0;
+
+
               contact->set_material(sc);
               contact->set_normal_fluxes(jn, jp);
               double a, c;
@@ -5080,6 +5098,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         }
         else // i.e. dim == 1
         {
+          nodes_on_boundary_sides.insert(elem->node(s));
 
           // s is the node of the element lying on the boundary
           Real u  = Xu(s);
@@ -5108,10 +5127,10 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           sc->calculate_densities();
           sc->calculate_mobilities();
 
-          // we put the minus and phi0 here for convenience
+          // we put the phi0 here for convenience
           double sigma_e = phi0 * sc->get_electron_mobility() *
             sc->get_electron_density();
-          double sigma_h = -phi0 * sc->get_hole_mobility() *
+          double sigma_h = phi0 * sc->get_hole_mobility() *
             sc->get_hole_density();
 
           double Pn =  get_electrons_thermoelectric_power(elem);
@@ -5122,10 +5141,15 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           double sign = (x_s > x_c) ? 1 : -1;
 
           double jn = sign * (sigma_e * grad_en + Pn * grad_T) / x0;
-          double jp = sign * (sigma_h * grad_ep + Pp * grad_T) / x0;
+          double jp = -sign * (sigma_h * grad_ep + Pp * grad_T) / x0;
           
           double epsilon = sc->get_relative_permittivity();
           double l2_eps = l2 * epsilon;
+
+          if (coupling & ECURRENT)
+            nodal_flux_n[elem->node(s)] = jn;
+          if (coupling & HCURRENT)
+            nodal_flux_p[elem->node(s)] = jp;
 
           // get the boundary condition coefficients
           if (contact != NULL)
@@ -5289,34 +5313,76 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           contact->set_normal_fluxes(
               nodal_flux_n[elem->node(i)], nodal_flux_p[elem->node(i)]);
 
-          if (coupling & POISSON)
+          // we only impose Dirichlet type BCs if the node has an associated
+          // boundary side
+          if (nodes_on_boundary_sides.find(elem->node(i)) !=
+              nodes_on_boundary_sides.end())
           {
-            if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
+
+            if (coupling & POISSON)
             {
-              double val = (contact->get_boundary_value(POTENTIAL)
-                  + contact->get_inner_voltage()) / phi0;
-              Ke.condense(i, i, -val, Fe);
+              if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
+              {
+                double val = (contact->get_boundary_value(POTENTIAL)
+                    + contact->get_inner_voltage()) / phi0;
+                Ke.condense(i, i, -val, Fe);
+              }
+            }
+
+            if (coupling & ECURRENT)
+            {
+              if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
+              {
+                double val = (contact->get_boundary_value(FERMIE)
+                    + contact->get_inner_voltage()) / phi0;
+                Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
+              }
+            }
+
+            if (coupling & HCURRENT)
+            {
+              if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
+              {
+                double val = (contact->get_boundary_value(FERMIH)
+                    + contact->get_inner_voltage()) / phi0;
+                Ke.condense(i + 2 * n_dofs, i + 2 * n_dofs, -val, Fe);
+              }
             }
           }
-
-          if (coupling & ECURRENT)
+          else
           {
-            if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
-            {
-              double val = (contact->get_boundary_value(FERMIE)
-                  + contact->get_inner_voltage()) / phi0;
-              Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
-            }
-          }
+            // in this case we do not change the matrix and rhs
 
-          if (coupling & HCURRENT)
-          {
-            if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
+            if (coupling & POISSON)
             {
-              double val = (contact->get_boundary_value(FERMIH)
-                  + contact->get_inner_voltage()) / phi0;
-              Ke.condense(i + 2 * n_dofs, i + 2 * n_dofs, -val, Fe);
+              if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
+              {
+                for (int j = 0; j < n_dofs_tot; j++)
+                  Ke(i, j) = 0.0;
+                Fe(i) = 0;
+              }
             }
+
+            if (coupling & ECURRENT)
+            {
+              if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
+              {
+                for (int j = 0; j < n_dofs_tot; j++)
+                  Ke(i + n_dofs, j) = 0.0;
+                Fe(i + n_dofs) = 0;
+              }
+            }
+
+            if (coupling & HCURRENT)
+            {
+              if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
+              {
+                for (int j = 0; j < n_dofs_tot; j++)
+                  Ke(i + 2 * n_dofs, j) = 0.0;
+                Fe(i + 2 * n_dofs) = 0;
+              }
+            }
+
           }
         }
       }
@@ -5324,6 +5390,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     else
     {
       // TODO this needs to be checked!!!
+      // TODO Is now probably broken
 
       // Some nodes are constrained, so we have messed up our
       // matrix and vector. In particular, we could have included

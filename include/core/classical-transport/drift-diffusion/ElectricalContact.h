@@ -144,6 +144,10 @@ class ElectricalContact : public BoundaryProperties, public Variable
 
 
     //! Get the contact voltage drop
+    /*!
+     * A positive value means: the inner voltage is lower than
+     * the outer contact voltage
+     */
     double get_contact_voltage_drop() const;
 
 
@@ -210,7 +214,7 @@ ElectricalContact::get_inner_voltage(void) const
 {
   double v = get_simulation_voltage();
   if (_surfres > 1e-12)
-    v += get_contact_voltage_drop();
+    v -= get_contact_voltage_drop();
   
   return v;
 }

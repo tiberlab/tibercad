@@ -130,6 +130,9 @@ class SimulationEnvironment
     /*!
      * \param node a node 
      * \return a pointer to the boundary if found, \c NULL otherwise
+     *
+     * \note If two boundaries touch in node \c node, the return value
+     * is unpredictable.
      */
     Boundary* get_boundary(const Node* node) const;
 

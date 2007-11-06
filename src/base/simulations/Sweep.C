@@ -10,7 +10,7 @@
 
 #include "fstream"
 
-#include <boost/tokenizer.hpp>
+//#include <boost/tokenizer.hpp>
 
 
 using namespace std;
@@ -34,7 +34,7 @@ void
 Sweep::do_init(void)
 {
 
-  using namespace boost;
+  //using namespace boost;
 
   ModelOptions& opts = get_options();
   Control& control = get_control();

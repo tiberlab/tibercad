@@ -172,7 +172,35 @@ It is based on the following equation:
 \begin{equation}
 \end{equation}
 
+
+
+
+
+
+
+
+
 \subsection{Boundary conditions}
+
+Boundary conditions are implemented for ohmic contacts, Schottky contacts and free surfaces.
+Contacts are boundary models that allow a nonzero normal electrical current.
+For this type of boundaries one can define a contact resistance using the \texttt{contact\_resistance} option.
+The contact resistance has units $\Omega\mathrm{cm}^2$.
+The applied voltage is specified with the option \texttt{voltage}.
+A variable can be assigned to this.
+
+The ohmic contact (identifier \texttt{ohmic}) has no further parameters.
+
+A Schottky contact  (identifier \texttt{schottky}) has the additional parameter \texttt{barrier\_height}, which signifies the energy difference between the semiconductor conduction band and the fermi energy in the metal.
+
+The free surface or interface model (identifier \texttt{interface})  currently models surface states in a similar as donors, with the only difference that the density is measured in  $\mathrm{cm}^{-2}$.
+The parameters are \texttt{Ns} (density of states), \texttt{Es} (energy with respect to the conduction band edge) and \texttt{g} (multiplicity of the states).
+
+The type of boundary model is chosen by the parameter \texttt{type}, e.g. \texttt{type = schottky}.
+
+
+
+
 
 
 \section{\texttt{Physics} section}

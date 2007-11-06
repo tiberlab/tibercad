@@ -44,11 +44,11 @@ class Variable
   public:
 
     //! Empty constructor
-    Variable(void);
+    Variable(void) { };
 
 
     //! Destructor
-    virtual ~Variable(void);
+    virtual ~Variable(void) { };
 
 
     //! Get the variable object that has the variable \c var
@@ -128,22 +128,6 @@ class Variable
 
 };
 
-
-
-//
-// inline members
-// 
-
-inline 
-Variable::Variable(void)
-{
-}
-
-
-inline
-Variable::~Variable(void)
-{
-}
 
 
 

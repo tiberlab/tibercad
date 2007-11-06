@@ -54,5 +54,6 @@ ElectricalContact::get_contact_voltage_drop(void) const
   double j = Constants::e * (get_normal_hole_flux() - 
       get_normal_electron_flux());
 
-  return _surfres * j;
+  // a negative current means inflowing current
+  return -_surfres * j;
 }
