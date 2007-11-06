@@ -484,6 +484,9 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
         if (abs(step) < _min_step)
           throw SolveFailedException("Sweep: step size small.");
 
+        if (i == 0)
+          throw SolveFailedException("Sweep: Failure in first step.");
+
         // set to the remembered solution
         for (int j = 0; j < num_sim; j++)
           _simulations[j]->set_to_remembered_solution(old_sol[j]);
