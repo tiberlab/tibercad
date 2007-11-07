@@ -6,6 +6,7 @@
 #include "TypeDefs.h"
 #include "Control.h"
 #include "Device.h"
+#include "AtomisticGenerator.h"
 
 //C++ includes
 #include <vector>
@@ -70,6 +71,9 @@ class AtomisticStructure
 
    //! Set the device we're working with
   void set_device(Device* device);
+
+  //! Get Device reference
+  Device*  get_device(void);
 
   //! Return a reference to structure atoms
   const std::vector<Atom>& get_structure_atoms(void);
@@ -195,6 +199,12 @@ const std::vector<std::string>& AtomisticStructure::get_atom_types(void)
 inline 
 double* AtomisticStructure::get_periodicity_vectors(void){
   return &_periodicity_vectors[0][0];
+}
+
+
+inline
+Device* AtomisticStructure::get_device(void){
+  return _device;
 }
 
 

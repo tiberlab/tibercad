@@ -16,7 +16,6 @@
 //***************************************************************************
 
 #include "fortran.h"
-#include <iostream>
 
 // Some defintions for constants used by DFTB+
 const int DFTBP_MC = 50;
@@ -108,7 +107,7 @@ inline void f77_dftbp_addlattice (f77_int const* handler, f77_double const*
 }
 
 
-extern "C" void dftbp_addkpoints_(f77_int const*, f77_int const&, f77_double 
+extern "C" void dftbp_addkpoints_ (f77_int const*, f77_int const&, f77_double 
     const*, f77_double const*);
 
 // Corresponding F77 arguments for f77_dftbp_addkpoints:

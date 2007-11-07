@@ -302,9 +302,11 @@ void Dftb::print_dftb_options(void){
   n_files = _atomistic_structure->N_types * _atomistic_structure->N_types;
   std::cout << "skNames are " << std::endl;
  for (int i = 0; i < n_files * DFTBP_LC; i++) {std::cout << "Char " << i << " is " << _dftb_options.skNames[i] << std::endl;}
+std::cout << "skNames string lenght is " << strlen(_dftb_options.skNames);
  
  std::cout << "speciesNames are " << std::endl;
  for (int i = 0; i <  _atomistic_structure->N_types * DFTBP_MC; i++) {std::cout << "Char " << i << " is " << _dftb_options.speciesNames[i] << std::endl;}
+std::cout << "speciesNames string lenght is " << strlen(_dftb_options.speciesNames);
 
  std::cout << "latVecs are " << std::endl;
  for (int i = 0; i < 9; i++){

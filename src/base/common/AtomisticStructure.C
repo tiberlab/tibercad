@@ -118,6 +118,10 @@ AtomisticStructure::init(void)
 //     {std::cerr << "WRITING " << std::endl;
 //       std::cerr << "_REGION IS " << *i << std::endl;}
 
+
+  AtomisticGenerator* prova =  AtomisticGenerator::create(this);
+  prova->do_init();
+
 #ifdef DEBUG
   std::cerr << "AtomisticStructure::init() end \n";
 #endif
