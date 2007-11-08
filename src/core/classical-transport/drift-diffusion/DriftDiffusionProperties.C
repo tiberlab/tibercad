@@ -129,9 +129,9 @@ DriftDiffusionProperties::do_init(void)
   permittivity = get_parameter("permittivity", permittivity);
 
 
-  pyro_polarization(0) = get_parameter("Px", 0.0);
-  pyro_polarization(1) = get_parameter("Py", 0.0);
-  pyro_polarization(2) = get_parameter("Pz", 0.0);
+  pyro_polarization(0) = get_parameter("Px", pyro_polarization(0));
+  pyro_polarization(1) = get_parameter("Py", pyro_polarization(1));
+  pyro_polarization(2) = get_parameter("Pz", pyro_polarization(2));
 
 
   // the temperature simulation
