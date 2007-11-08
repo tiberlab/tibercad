@@ -1,5 +1,5 @@
 #include "AtomisticGenerator.h"
-
+using namespace std;
 
 AtomAG::AtomAG(){
   flag = 0;

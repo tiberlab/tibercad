@@ -22,6 +22,7 @@ class QuantumDispersion : public Kspace
   {
     unsigned int min_eigenvalue_number;
     unsigned int max_eigenvalue_number;
+    bool bulk_calculation;
   };
   
 

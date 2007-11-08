@@ -63,7 +63,7 @@ void 	QuantumDispersion::parse_options (void)
   const ModelOptions& mod_opt = get_options();
   opt.min_eigenvalue_number = mod_opt.get_option("min_eigenvalue_number", 0);
   opt.max_eigenvalue_number = mod_opt.get_option("max_eigenvalue_number", 10);
-
+  opt.bulk_calculation = mod_opt.get_option("bulk_calculation", false);
   
 
 }
@@ -88,6 +88,8 @@ void 	QuantumDispersion::do_plot (void)
     suff = ".gmv";
   else if (format == "ise")
     suff = ".plt";
+   else if (format == "grace")
+    suff = ".dat";
 
   const std::set< std::string >& plotvariables = get_control().get_plotvariables();
 
@@ -107,6 +109,7 @@ void 	QuantumDispersion::do_plot (void)
     unsigned int number_of_k_points = kmesh->n_nodes();
     results.resize( number_of_eigs_to_store * number_of_k_points );
 
+   
    
 
     for (unsigned int i = 0; i < number_of_eigs_to_store ; i++)
@@ -159,6 +162,7 @@ void QuantumDispersion::calculate_eigen_energy()
   for (unsigned int i = 0; i < number_of_k_points; i++)
   {
    
+   
     const Node  k_point = kmesh->node(i);
 
    
@@ -174,7 +178,10 @@ void QuantumDispersion::calculate_eigen_energy()
 
     quantum_model_opts.set_option("number_of_eigenstates",opt.max_eigenvalue_number + 1); 
   
-    quantum_model_opts["job"] = "eigenstates";
+    if (opt.bulk_calculation)
+      quantum_model_opts["job"] = "bulk";
+    else
+      quantum_model_opts["job"] = "eigenstates";
 
 
     quantum_model->set_options(quantum_model_opts);

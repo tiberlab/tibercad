@@ -236,7 +236,7 @@ KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
   //we start from 6x6 kp parameters  
   KPparams  result = calculate_6x6_kp_params();
 
-
+ 
  
   //------------------------------------------------------------------
   //CONDUCTION BAND
@@ -248,7 +248,7 @@ KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
 
   result.E_c =  (Ev_top + par.EgGamma)/Hartree;
 
-
+  
 
   //--------------------------------------------------------------------
 
@@ -262,15 +262,24 @@ KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
 
   
 
-  result.P1 = std::sqrt(2.0 * Ep);
-  result.P2 = std::sqrt(2.0 * Ep);
+  result.P1 = std::sqrt(2.0 * Ep)/10;
+  result.P2 = std::sqrt(2.0 * Ep)/10;
 
 
+
+ 
 
   //result.P1 =  result.P2 = 0;
 
   //rescale L and N
   double t =   Ep/( (par.EgGamma +  par.delta/3.0)/Hartree );
+  
+  cerr << Ep * Hartree << "\n";
+
+  cerr << result.L1 << "   "  << result.L2 << "        " << result.N1 << "    " << result.N2 << "\n";
+  cerr << t << "\n";
+
+  /*
 
   result.L1 += t;
   result.L2 += t;
@@ -281,6 +290,8 @@ KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
 
   result.N1_yx = result.M1;  result.N2_yx = result.N1_yx;
   result.N1_xy = result.N1 - result.N1_yx; result.N2_xy = result.N1_xy;
+
+  */
 
   return(result);
 }

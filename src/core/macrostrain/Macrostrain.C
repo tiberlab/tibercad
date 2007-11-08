@@ -5,6 +5,9 @@
 #include "Boundary.h"
 #include "MacrostrainBoundaryProperties.h"
 #include "petsc_linear_solver.h"
+#include "petscksp.h"
+
+
 using namespace std;
 //-----------------------------------------------------------------//
 
@@ -265,6 +268,85 @@ void Macrostrain::parse_options( )
   
  equation_systems->parameters.set<Real>("linear solver tolerance") = tolerance; 
 
+
+
+
+ 
+  
+ my_system->linear_solver = AutoPtr< LinearSolver< Real > >(my_solver);
+
+
+
+ SolverType solver_type;
+
+ PreconditionerType pc_type;
+
+ string ksptype;
+
+ string pc; 
+
+ if (dim == 1)
+ {
+   ksptype = "gmres";
+
+   pc =  "ilu" ;
+ }
+ else
+ { 
+   ksptype = "bcgsl";
+
+   pc =  "jacobi" ;
+ }
+
+ ksptype = opt.get_option("ksp_type", ksptype );
+
+ if (ksptype == "") {}
+ else if (ksptype == "bcgsl")
+  solver_type  = BICGSTAB;
+ else if (ksptype == "gmres")
+  solver_type = GMRES;
+ else if (ksptype == "bcgs")
+  solver_type = BICG;
+ else if (ksptype == "cg")
+  solver_type = CG;
+ else if (ksptype == "richardson")
+  solver_type = RICHARDSON;
+
+
+
+ pc = opt.get_option("pc_type", pc);
+
+ if (pc == "") {}
+ else if (pc == "ilu")
+   pc_type = ILU_PRECOND;
+ else if (pc == "composite")
+   pc_type = USER_PRECOND;
+ else if (pc == "jacobi")
+   pc_type = JACOBI_PRECOND;
+ else if (pc == "lu")
+   pc_type = LU_PRECOND;
+ else if (pc == "cholesky")
+   pc_type = CHOLESKY_PRECOND;
+ else if (pc == "eisenstat")
+   pc_type = EISENSTAT_PRECOND;
+  
+
+ my_system->linear_solver->set_solver_type(solver_type);
+
+ my_system->linear_solver->set_preconditioner_type(pc_type);
+
+/*
+ {
+   
+   //  int ierr; 
+
+   //KSP ksp_of_my_solver = (dynamic_cast< PetscLinearSolver<Real>* > (  (my_system->linear_solver).get() )   )->ksp();
+   //ierr = KSPMonitorSet(ksp_of_my_solver,KSPMonitorDefault(),PETSC_NULL,0);
+ 
+ }
+*/
+
+/*
  {
    int ierr; 
  
@@ -275,7 +357,7 @@ void Macrostrain::parse_options( )
    ierr = PCSetType (PC_of_solver, (char*) PCJACOBI);   
 
  }
-
+*/
 
  if (!grown_on_substrate)
  {
@@ -530,8 +612,9 @@ void Macrostrain::do_init( )
  }
    
   //-------------------------------------------------------------------//
+ my_solver =  TiberLinearSolver::create ("petsc");
 
-
+ my_solver->init();
 
   //------init is done---------------------------------------------------------------------//
 }
@@ -3822,6 +3905,8 @@ double Macrostrain::norm_of_difference(NumericVector<Number>& solution1, Numeric
 //-------------------------------------------------------------------------------------------/
 Macrostrain::~Macrostrain()
 {
+
+
   equation_systems->delete_system(system_name);
 }
 
@@ -3832,4 +3917,6 @@ Macrostrain::~Macrostrain()
 Macrostrain::Macrostrain(void )
 {
   poisson_equation = NULL;
+
+  my_solver = NULL;
 }

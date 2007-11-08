@@ -128,7 +128,7 @@ void KPbulkHamiltonian::do_init()
 
   //prepare k.p parameter
   par = semiconductor->calculate_kp_params (model_name);
-
+ 
   //nullify strain
   strainM = Tensor2Sym(0);
 
@@ -308,6 +308,8 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
   Ham[1][1].quad[2][2]= par.s1;
 
   //-----------------------------------------------------------------------//
+
+ 
   //cv part
   if (kpCVtermSymmetric)
     {
@@ -406,16 +408,15 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
 
 
   for (short i = 0; i < 8; i++)
+  {  
+    for (short j = 0; j < 8; j++)
     {
-    
-      for (short j = 0; j < 8; j++)
-	{
-	  rotate_linear( Ham[i][j].linear_left);
-	  rotate_linear( Ham[i][j].linear_right);
-	  rotate_quad(Ham[i][j].quad);
+      rotate_linear( Ham[i][j].linear_left);
+      rotate_linear( Ham[i][j].linear_right);
+      rotate_quad(Ham[i][j].quad);
 	
-	}
     }
+  }
 
  
   //-----------------------------------------------------------------!
@@ -497,30 +498,30 @@ void KPbulkHamiltonian:: calculate_Hamiltonian_k_par (void)
 
 
   for (short i = band_min; i <= band_max; i++)
-     for (short j = band_min; j <= band_max; j++)
-       {
+    for (short j = band_min; j <= band_max; j++)
+    {
 	 
-	 //------we have to change constant term
-	 for (short i1 = 0; i1 < 3; i1++)
-	   {
-	     result[i][j].constant += Ham[i][j].linear_left[i1]  * k_vector[i1];
-	     result[i][j].constant += Ham[i][j].linear_right[i1] * k_vector[i1];
-	     for (short j1 = 0; j1 < 3; j1++)
-	       {
-		 result[i][j].constant += Ham[i][j].quad[i1][j1] * k_vector[i1] * k_vector[j1]; 
-	       }
-	   }
+      //------we have to change constant term
+      for (short i1 = 0; i1 < 3; i1++)
+      {
+	result[i][j].constant += Ham[i][j].linear_left[i1]  * k_vector[i1];
+	result[i][j].constant += Ham[i][j].linear_right[i1] * k_vector[i1];
+	for (short j1 = 0; j1 < 3; j1++)
+	{
+	  result[i][j].constant += Ham[i][j].quad[i1][j1] * k_vector[i1] * k_vector[j1]; 
+	}
+      }
 
- 	 //------we have to change linear term
+      //------we have to change linear term
+      
+      for (short i1 = 0; i1 < 3; i1++)
+	for (short j1 = 0; j1 < 3; j1++)
+	{
+	  result[i][j].linear_left[i1]  += Ham[i][j].quad[i1][j1] * k_vector[j1];
+	  result[i][j].linear_right[j1] += Ham[i][j].quad[i1][j1] * k_vector[i1];
+	}
 
-	  for (short i1 = 0; i1 < 3; i1++)
- 	    for (short j1 = 0; j1 < 3; j1++)
-	      {
-		result[i][j].linear_left[i1]  += Ham[i][j].quad[i1][j1] * k_vector[j1];
-		result[i][j].linear_right[j1] += Ham[i][j].quad[i1][j1] * k_vector[i1];
-	      }
-
-       }
+    }
   
 
   //-------------------------------------------------//
@@ -546,6 +547,7 @@ void KPbulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, d
   
 
   const vector<Complex>  strain_Ham_Bir_Pikus1(8,Complex(0.0,0.0));
+  
   vector< vector<Complex > > strain_Ham_Bir_Pikus;
   strain_Ham_Bir_Pikus.resize(8,strain_Ham_Bir_Pikus1);
 
@@ -593,9 +595,9 @@ void KPbulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, d
 
   
   for (short i = 0; i < 8 ; i++)
-    {
-      strain_Ham_Bir_Pikus[i][i] -= el_potential/Hartree;
-    }
+  {
+    strain_Ham_Bir_Pikus[i][i] -= el_potential/Hartree;
+  }
   
 
   //--------------------------------------------------

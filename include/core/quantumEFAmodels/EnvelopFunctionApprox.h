@@ -16,7 +16,8 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   enum JobKind
   {
      EIGENSTATES = 0,
-     DENSITY = 1
+     DENSITY = 1,
+     BULKEIGENSTATES=2
   };
 
 
@@ -77,7 +78,7 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
 
     bool local_occupation; //!<If a local occupation is considered 
 
-
+   
 
   };
 
@@ -259,6 +260,8 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   inline double get_particle_charge(void) const; 
   
 
+  
+
  private:
 
   //!pointer to the device object
@@ -412,18 +415,11 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   
 
 
- 
-  
-
-  
-
-
   //! calculates the norm of the eigenstate \f$ \sqrt {| \langle \psi|\psi \rangle |} \f$
   /*!
     \param state_number number of the eigenstate
   */
   double eigenstate_norm(unsigned int state_number);
-
 
  
   
@@ -439,12 +435,6 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
     \param i number of the eigenstate
   */
   std::vector<double> calculate_cell_prob_function(unsigned int i);
-
-
-
- 
-
-
 
 
   //!Calculates Fermi Dirac probability
@@ -488,7 +478,16 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
 
   //!return electro chemical potential from drift-diffusion
   double get_electro_chem_potential(const Elem* elem) const; 
+
+
+  //!point for bulk dispersion
+  Point _bulk_point;
   
+
+
+  //! bulk eigenstates
+  void solve_bulk(void);
+
  protected:
 
 

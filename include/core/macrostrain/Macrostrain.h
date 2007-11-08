@@ -71,8 +71,7 @@
 #include "Device.h"
 #include "MacrostrainModel.h"
 #include "DriftDiffusion.h"
-
-
+#include "TiberLinearSolver.h"
 
 //! A class to calculate strain and shape
 class Macrostrain : public SimulationInterface
@@ -512,6 +511,9 @@ class Macrostrain : public SimulationInterface
 
   //! Preapare all 3 components of the polarization vector for output
   void prepare_polarization_data_for_output( std::vector<std::string>& polariz_names, std::vector<double>& polariz_data );
+
+  //! solver that will solve a system
+  TiberLinearSolver* my_solver;
 
 
  protected:

@@ -212,13 +212,34 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
   ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);CHKERRQ(ierr);
  
 
+   if (opt.read_matrix_from_file)
+  {
+  
+    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr); //their
+    ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
+    ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
+
+
+  
+
+  }
+  
+ 
+
+  if (opt.matrix_output)
+  {//test of the matrix
    
-  //
-  ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr); //their
-  ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
-  ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
+
+    ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matA.m",&viewer_out); CHKERRQ(ierr);
+    ierr = PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
+    ierr = MatView(A, viewer_out); CHKERRQ(ierr);
+    ierr = PetscViewerDestroy(viewer_out);CHKERRQ(ierr);
 
 
+   
+
+  } 
+ 
 
   
 

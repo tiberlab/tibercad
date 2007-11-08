@@ -17,6 +17,13 @@
 // GNU scientific library
 #include <gsl/gsl_sf_fermi_dirac.h>
 
+
+extern "C" 
+{ 
+   void zheev_(char& jobs, char& UPLO, int& N, Complex* ham6x6matrix, int& N, 
+	       double* eigvals,  Complex* WORK, int& LWORK, double* RWORK, int& info); 
+};
+
 using namespace std;
 using namespace Constants;
 
@@ -80,6 +87,9 @@ inline double EnvelopFunctionApprox::get_electro_chem_potential(const Elem* elem
 //---------------------------------------------------------------------------------//
 void EnvelopFunctionApprox::build_integrated_quantities (const std::set< std::string > &names, std::vector< double > &values) 
 {
+
+  
+
   const set<string>::const_iterator varend(names.end());
   values.resize(0);
   
@@ -154,6 +164,9 @@ void EnvelopFunctionApprox::build_integrated_quantities_description (const std::
 
 }
 
+
+
+
 //---------------------------------------------------------------------------------//
 
 void EnvelopFunctionApprox::build_elemental_results (const std::set< std::string > &variables, 
@@ -178,77 +191,81 @@ void EnvelopFunctionApprox::build_elemental_results (const std::set< std::string
 void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& variables,
 						std::vector<double>& results, std::vector<std::string>& legend)
 {
-  const set<string>::const_iterator varend(variables.end());
 
-  const Mesh& mesh1 = system->get_mesh();
-
-
-  const bool output_psi = variables.find("EigenFunctions") != varend ;
-  const bool output_level = variables.find("EnergyLevels") != varend ;
-
-  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
-  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
-
-  unsigned int number_of_points = 0;
-  unsigned int num_var = 0;
-  const unsigned int num_functions = solution.size();
-  unsigned int temp = 0;
-  
-  for ( ; nd != nd_el ; ++nd)  number_of_points++;
-
-  if (output_psi)  num_var += num_functions;
-
-  if (output_level)  num_var += num_functions;
-  
-  if (output_psi || output_level)
+  if (opt.job != BULKEIGENSTATES)
   {
 
-    legend.resize(num_var);
-    results.resize(number_of_points * num_var);
-   
+    const set<string>::const_iterator varend(variables.end());
 
-    if (output_psi)
+    const Mesh& mesh1 = system->get_mesh();
+
+
+    const bool output_psi = variables.find("EigenFunctions") != varend ;
+    const bool output_level = variables.find("EnergyLevels") != varend ;
+    
+    MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
+    const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
+
+    unsigned int number_of_points = 0;
+    unsigned int num_var = 0;
+    const unsigned int num_functions = solution.size();
+    unsigned int temp = 0;
+  
+    for ( ; nd != nd_el ; ++nd)  number_of_points++;
+    
+    if (output_psi)  num_var += num_functions;
+
+    if (output_level)  num_var += num_functions;
+  
+    if (output_psi || output_level)
     {
-      temp = num_functions;
-      for (unsigned int i = 0; i < num_functions; i++)
+      
+      legend.resize(num_var);
+      results.resize(number_of_points * num_var);
+      
+      
+      if (output_psi)
       {
-	std::ostringstream i_str;
-	i_str << "state_number_" << i ; //The states are numbered starting from 0 
-	legend[i] = i_str.str();
+	temp = num_functions;
+	for (unsigned int i = 0; i < num_functions; i++)
+	{
+	  std::ostringstream i_str;
+	  i_str << "state_number_" << i ; //The states are numbered starting from 0 
+	  legend[i] = i_str.str();
 
-	std::vector<double> prob_data(number_of_points, 0.0);
+	  std::vector<double> prob_data(number_of_points, 0.0);
 
 
 
-	prepare_probability_function(i,  prob_data);
+	  prepare_probability_function(i,  prob_data);
 
-	for (unsigned int i1 = 0; i1<number_of_points; i1++)
-	  results[num_var * i1 + i] = prob_data[i1];
+	  for (unsigned int i1 = 0; i1<number_of_points; i1++)
+	    results[num_var * i1 + i] = prob_data[i1];
 
       
+	}
       }
-    }
     
-    if (output_level)
-    {
-      for (unsigned int i = 0; i < num_functions; i++)
+      if (output_level)
       {
-	std::ostringstream i_str;
-	i_str << "energy_number_" << i ; //The states are numbered starting from 0 
-	legend[i + temp] = i_str.str();
+	for (unsigned int i = 0; i < num_functions; i++)
+	{
+	  std::ostringstream i_str;
+	  i_str << "energy_number_" << i ; //The states are numbered starting from 0 
+	  legend[i + temp] = i_str.str();
 
 	
-	for (unsigned int i1 = 0; i1<number_of_points; i1++)
-	  results[num_var * i1 + i + temp] = solution[i].eigen_energy;
+	  for (unsigned int i1 = 0; i1<number_of_points; i1++)
+	    results[num_var * i1 + i + temp] = solution[i].eigen_energy;
       
+	}
       }
-    }
   
     
 
-  }
+    }
 
- 
+  }
   
 
 }
@@ -542,6 +559,8 @@ void EnvelopFunctionApprox::parse_options()
     opt.job = EIGENSTATES;
   else if (job_name == "density")
     opt.job = DENSITY;
+  else if (job_name == "bulk")
+    opt.job = BULKEIGENSTATES;
   else
     throw InitFailedException( "EnvelopeFunctionApprox: Incorrect job " + job_name );  
   //---------------------------------------------------------------------------------//
@@ -592,7 +611,25 @@ void EnvelopFunctionApprox::parse_options()
   opt.local_occupation              = mod_opt.get_option("local_occupation", true);
 
 
+
+  //--------------------------------------------------
+  //point for bulk calculation
+  if (opt.job == BULKEIGENSTATES)
+  {
+    if (mod_opt.find_option("bulk_point"))
+    {
+      vector<double> point;
  
+      mod_opt.get_option("bulk_point",point);
+      for (short i = 0; i < 3; i++)  _bulk_point(i) = point[i];
+    }
+    else
+    {
+      throw InitFailedException( "You have to specify a bulk_point");
+    }
+  }
+
+
 }
 
 
@@ -748,30 +785,36 @@ void EnvelopFunctionApprox::do_solve()
  
  parse_options();
 
-
- if (solver_opt.Dirichlet_bc_everywhere)
-   apply_diriclet_bc_at_all_boundaries();
+ if (opt.job == BULKEIGENSTATES )
+ {
+   solve_bulk();
+ }
  else
-   create_dirichlet_dofs();
+ {
+
+   if (solver_opt.Dirichlet_bc_everywhere)
+     apply_diriclet_bc_at_all_boundaries();
+   else
+     create_dirichlet_dofs();
  
 
- make_constraints(); //creates a copy of them
+   make_constraints(); //creates a copy of them
 
   
- make_nodes_periodic();
+   make_nodes_periodic();
   
- apply_periodic_bc();
+   apply_periodic_bc();
 
- make_new_dofs();
+   make_new_dofs();
 
 
 
- if ( opt.job ==   EIGENSTATES )   
-   solve_eigen_value_problem( solver_opt.number_of_eigenstates);
- else if ( opt.job == DENSITY )
-   calculate_convergent_density();
+   if ( opt.job ==   EIGENSTATES )   
+     solve_eigen_value_problem( solver_opt.number_of_eigenstates);
+   else if ( opt.job == DENSITY )
+     calculate_convergent_density();
   
-
+ }
  
 }
 //===========================================================//
@@ -867,21 +910,21 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	  {
 
 	    Edge2 box_part_1D;
-	    Point& 	pbox0 =  box_part_1D.point(0);
-	    Point& 	pbox1 =  box_part_1D.point(1);
+	   
 	    
-	    Point point1 = elem->point(0);
-	    Point p_center = elem->centroid();
+	    Node point1(elem->point(0),999);
+	    Node p_center(elem->centroid(),1000);
 	    
 	    if (p1 == 0)
 	    {
-	      pbox0 = point1;
-	      pbox1 = p_center;
+	      box_part_1D.set_node(0) = &point1;
+	      box_part_1D.set_node(1) = &p_center;
+	    
 	    }
 	    else
 	    {
-	      pbox0 = p_center;
-	      pbox1 = point1;
+	      box_part_1D.set_node(1) = &point1;
+	      box_part_1D.set_node(0) = &p_center;
 	    }
 
 	    box_part_elem = &box_part_1D;
@@ -1036,6 +1079,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 		  complex<double> value = (0.0, 0.0);
 		  //constant
 		  value += JxW[qp] * phi[p1][qp] * phi[p2][qp] * model_Ham[band1][band2].constant ;
+		 
 		
 		  //linear left
 		  
@@ -1045,13 +1089,14 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 		      * Complex(0.0, -1.0);
 		  }
 		  //linear right
-
+		  
 		  for (short i = 0; i < dim; i++)
 		  {
 		    value += JxW[qp]* dphi[p2][qp](i) * phi[p1][qp] * model_Ham[band1][band2].linear_right[i] 
 		      * Complex(0.0, -1.0);
 		   
 		  }
+		  
 		  //quadratic
 			   
 		  for (short i = 0; i < dim; i++)
@@ -1500,6 +1545,9 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   unsigned int ground_state_index = 0;
   bool finish = false;
 
+  cerr <<  opt.spectrum_shift << "\n";
+
+
   for (unsigned int i = 0; (i < number_of_converged_solutions && (!finish) ); i++)
   {
     if (opt.particle == "el")
@@ -1589,7 +1637,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
       if (  it  !=  global_to_sol_index.end() )
       {
 	unsigned int solution_number = it->second;
-	 
+	
 
 	//-----------------------------------------------------------------------------
 	//put independent dofs in the eigenvectors that may contain also non independent dofs
@@ -2963,3 +3011,81 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density2D(unsigned
 }
 
 //=======================================================================================//
+
+void EnvelopFunctionApprox::solve_bulk(void)
+{
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+
+
+  bool found = false; 
+  const Elem* mat_elem;
+
+  for ( ; (el != end_el) || (!found) ; ++el)
+  {
+    const Elem* elem = *el;
+    if (elem->contains_point(_bulk_point))
+    {
+      found = true;
+      mat_elem = elem;
+
+    }
+
+  }
+
+  if (!found) throw SolveFailedException("Bad material point\n");
+
+  EFAbulkHamiltonian* element_hamiltonian;
+
+  const ID subdomain = mat_elem->subdomain_id();
+
+  const Material* mat = _device->get_material(subdomain);
+
+  element_hamiltonian = (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model();
+
+  element_hamiltonian->set_k_vector(k_vector);
+
+  element_hamiltonian->calculate_Hamiltonian_k_par();
+
+  std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&  
+	    model_Ham = ( element_hamiltonian->get_Hamiltonian() );
+  
+  
+  std::complex<double> ham_matrix[opt.number_of_bands * opt.number_of_bands ];
+ 
+  for (unsigned int band1 = 0; band1 < opt.number_of_bands; band1++)
+    for (unsigned int band2 = 0; band2 < opt.number_of_bands; band2++)
+    {
+      ham_matrix[band1 + band2 * opt.number_of_bands] = model_Ham[band1][band2].constant;
+    }
+
+
+  solution.clear();
+  solution.resize(opt.number_of_bands);
+
+  {
+     char jobs = 'N';
+     char UPLO = 'U'; 
+     int  N = opt.number_of_bands;
+     double eigvals[opt.number_of_bands];
+     std::complex<double> WORK[2*opt.number_of_bands-1];
+     int LWORK = 2*opt.number_of_bands-1;
+     double RWORK[3*opt.number_of_bands-2];
+     int info;
+       
+     zheev_(jobs, UPLO, N, ham_matrix, N, eigvals, WORK, LWORK, RWORK, info);
+
+     if (info !=0 ) throw SolveFailedException("LAPACK problem\n");;
+ 
+     for (short i = 0; i < opt.number_of_bands ; i++)   
+     {
+       
+       solution[i].eigen_energy = eigvals[i]*Hartree;
+       
+     }
+  }
+
+ 
+  
+
+}
