@@ -14,6 +14,10 @@
 #include "AtomisticStructure.h"
 #include "TypeDefs.h"
 #include "Material.h"
+#include "mesh.h"
+#include "mesh_base.h"
+#include "elem.h"
+#include "point.h"
 
 class Material;
 

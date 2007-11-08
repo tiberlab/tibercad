@@ -113,6 +113,21 @@ region_material->get_options().get_option("z-growth-direction", growth_direction
   std::cout << "Material is " << material << std::endl;
       std::cout << "structure is " << structure << std::endl; 
 std::cout << "Miller indexes are " << miller  << std::endl;
+
+
+//Set Geometric informations
+//----------------------------------------------------------------------------------------------
+	//Get informations about edges point af atomic region
+MeshBase::const_element_iterator el = _as->get_device()->get_mesh().elements_begin();	
+const MeshBase::const_element_iterator el_end = _as->get_device()->get_mesh().elements_end();
+	
+	std::cout << "POINTS " << std::endl;
+	
+	do{
+                std::cout << (**el).point(1)(0) << std::endl;
+		el++;
+	      }while(el != el_end);
+	
 	
   std::cout << "Ending AtomisticGenerator::do_init() " << std::endl;
 
@@ -199,7 +214,7 @@ AtomisticGenerator::set_lattice_type(const std::string lattice_name)
   else std::cout << "Lattice type " << _lattice_type << " doesn't exist" << std::endl;
   
 #ifdef DEBUG
-  std::cerr << "done" << endl;
+  std::cerr << "done" << std::endl;
 #endif
 
 };
@@ -340,7 +355,7 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
 assert(~(_crystal_basis.empty()));
 
 #ifdef DEBUG
- std::cerr << "done" << endl;
+ std::cerr << "done" << std::endl;
 #endif
 };
 

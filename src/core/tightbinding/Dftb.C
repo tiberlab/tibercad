@@ -45,7 +45,7 @@ Dftb::do_init(void){
   //Create DFTB+ instance, initialize it and sets parameters
   DftbpWrapper* inst;
   inst = new DftbpWrapper;
-
+std::cout << "Am I periodic?? " << _dftb_options.iPeriodic << std::endl;
   inst->fill_param(_dftb_options.nAtom, _dftb_options.nType, 
 		   _dftb_options.eTemp, _dftb_options.iPeriodic, _dftb_options.speciesNames, 
 		   _dftb_options.species);
@@ -248,6 +248,9 @@ void Dftb::build_input_options(){
 
   _dftb_options.skInterp = get_options().get_option("skInterp", 2);
 
+	if (get_options().find_option("iPeriodic")){
+		_dftb_options.iPeriodic = get_options().get_option("iPeriodic", 0);
+	}
 
     _dftb_options.mAngs = new int[_dftb_options.nType];
   for (int i = 0; i < _dftb_options.nType; i++)   _dftb_options.mAngs[i] = 1;
@@ -258,29 +261,61 @@ void Dftb::build_input_options(){
 
   //A METHOD FOR INSERTING KPOINTS MUST STILL BE DECIDED. ONLY DEFAULT AVAILABLE
   _dftb_options.kPoints = new double [   _dftb_options.nkPoints * 3 ];
+  if ( _dftb_options.nkPoints == 1) {
+	  _dftb_options.kPoints[0] = 0.25;
+    _dftb_options.kPoints[1] = 0.25;
+    _dftb_options.kPoints[2] = 0.25;
+  }
+	  else
   if ( _dftb_options.nkPoints == 4) {
     _dftb_options.kPoints[0] = 0.25;
     _dftb_options.kPoints[1] = 0.25;
     _dftb_options.kPoints[2] = 0.25;
-    _dftb_options.kPoints[3] = -0.25;
-    _dftb_options.kPoints[4] = 0.25;
-    _dftb_options.kPoints[5] = 0.25;
-    _dftb_options.kPoints[6] = 0.25;
-     _dftb_options.kPoints[7] = -0.25;
-     _dftb_options.kPoints[8] = 0.25;
-     _dftb_options.kPoints[9] = -0.25;
-     _dftb_options.kPoints[10] = -0.25;
-     _dftb_options.kPoints[11] = 0.25;
-
-    _dftb_options.kWeights = new double[  _dftb_options.nkPoints];
-    _dftb_options.kWeights[0] = 1.0;
-    _dftb_options.kWeights[1] = 1.0;
-    _dftb_options.kWeights[2] = 1.0;
-    _dftb_options.kWeights[3] = 1.0;
+     _dftb_options.kPoints[3] = -0.25;
+      _dftb_options.kPoints[4] = 0.25;
+      _dftb_options.kPoints[5] = 0.25;
+      _dftb_options.kPoints[6] = 0.25;
+       _dftb_options.kPoints[7] = -0.25;
+       _dftb_options.kPoints[8] = 0.25;
+       _dftb_options.kPoints[9] = -0.25;
+       _dftb_options.kPoints[10] = -0.25;
+       _dftb_options.kPoints[11] = 0.25;
+ 
 }
-
+else 
+	if ( _dftb_options.nkPoints == 8) {
+	_dftb_options.kPoints[0] = 0.25;
+    _dftb_options.kPoints[1] = 0.25;
+    _dftb_options.kPoints[2] = 0.25;
+     _dftb_options.kPoints[3] = -0.25;
+      _dftb_options.kPoints[4] = 0.25;
+      _dftb_options.kPoints[5] = 0.25;
+      _dftb_options.kPoints[6] = 0.25;
+       _dftb_options.kPoints[7] = -0.25;
+       _dftb_options.kPoints[8] = 0.25;
+       _dftb_options.kPoints[9] = -0.25;
+       _dftb_options.kPoints[10] = -0.25;
+       _dftb_options.kPoints[11] = 0.25;
+	_dftb_options.kPoints[12] = 0.5;
+    _dftb_options.kPoints[13] = 0.5;
+    _dftb_options.kPoints[14] = 0.5;
+     _dftb_options.kPoints[15] = -0.5;
+      _dftb_options.kPoints[16] = 0.5;
+      _dftb_options.kPoints[17] = 0.5;
+      _dftb_options.kPoints[18] = 0.5;
+       _dftb_options.kPoints[19] = -0.5;
+       _dftb_options.kPoints[20] = 0.5;
+       _dftb_options.kPoints[21] = -0.5;
+       _dftb_options.kPoints[22] = -0.5;
+       _dftb_options.kPoints[23] = 0.5;
+}
   else {std::cout << "Error, up to now only default 4 k points available" << std::endl;exit(0);}
   
+     _dftb_options.kWeights = new double[  _dftb_options.nkPoints];
+for (int i = 0; i < _dftb_options.nkPoints; i++){ 
+     _dftb_options.kWeights[i] = 1.0;
+}
+
 };
 
 
