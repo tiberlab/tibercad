@@ -618,23 +618,23 @@ DriftDiffusion::do_solve(void)
   bool equilibrium = true;
   bool accept_failure = true;
   {
-  ContactData::iterator it(_voltages.begin());
-  const ContactData::iterator end(_voltages.end());
-  for ( ; it != end; ++it)
-  {
-    ElectricalContact* bd = static_cast<ElectricalContact*>(
-        it->first->get_boundary_properties(get_id()));
+    ContactData::iterator it(_voltages.begin());
+    const ContactData::iterator end(_voltages.end());
+    for ( ; it != end; ++it)
+    {
+      ElectricalContact* bd = static_cast<ElectricalContact*>(
+          it->first->get_boundary_properties(get_id()));
 
-    double voltage = bd->get_simulation_voltage();
+      double voltage = bd->get_simulation_voltage();
 
-    if (_voltages[it->first] != voltage)
-      accept_failure = false;
+      if (_voltages[it->first] != voltage)
+        accept_failure = false;
 
-    _voltages[it->first] = voltage;
+      _voltages[it->first] = voltage;
 
-    if (voltage != 0.0)
-      equilibrium = false;
-  }
+      if (voltage != 0.0)
+        equilibrium = false;
+    }
   }
   
   /* The same here: what about selfconsistency at 0 V ?? */

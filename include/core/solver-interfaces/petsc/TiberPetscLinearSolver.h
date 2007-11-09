@@ -6,6 +6,7 @@
 
 #include "TiberLinearSolver.h"
 #include "PetscRuntimeError.h"
+#include "KSPDivergedError.h"
 
 // Libmesh includes
 //#include "linear_solver.h"
@@ -54,20 +55,12 @@ class TiberPetscLinearSolver : public TiberLinearSolver
     virtual void init(void);
 
 
-    //! Set the options for the linear solver
-    //void set_ksp_options(double rtol = 1e-6, unsigned int max_it = 1000);
-
-
-    //! Set the options for the linear solver
-    //void set_ksp_options(double rtol, double atol, unsigned int max_it = 1000);
-
-
     //! Call the Petsc solver.
     /*!
      * It calls the method below, using the
      * same matrix for the system and preconditioner matrices.
      */    
-    virtual std::pair<unsigned int, Real> 
+    virtual std::pair<unsigned int, double> 
       solve (SparseMatrix<Number>  &matrix_in,
           NumericVector<Number> &solution_in,
           NumericVector<Number> &rhs_in,
@@ -79,7 +72,7 @@ class TiberPetscLinearSolver : public TiberLinearSolver
 
 
     //! Call the linear solver specifying explicitly the preconditioner matrix
-    virtual std::pair<unsigned int, Real> 
+    virtual std::pair<unsigned int, double> 
       solve (SparseMatrix<Number>  &matrix,
           SparseMatrix<Number>  &preconditioner,
           NumericVector<Number> &solution,
@@ -98,18 +91,17 @@ class TiberPetscLinearSolver : public TiberLinearSolver
     //! Returns just the initial residual for the solve just completed
     double get_initial_residual();
 
+    
     //! Returns KSP context
     KSP get_ksp(void);
 
+    
     //! Returns preconditioner context
     PC  get_pc(void);
 
+
+
   private:
-
-
-    //double _linear_rtol;
-    //double _linear_atol;
-    //int _linear_max_it;
 
 
     //! Preconditioner context
@@ -130,6 +122,10 @@ class TiberPetscLinearSolver : public TiberLinearSolver
 
     //! Check PETSc error code
     static void _checkerr(int errorcode) throw (PetscRuntimeError);
+
+
+    //! Check convergence
+    void check_convergence(void) throw (KSPDivergedError);
 
 };
 

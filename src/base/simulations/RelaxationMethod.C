@@ -30,15 +30,15 @@ RelaxationMethod::do_solve(void)
   SimulationIterator it(simulations_begin());
   const SimulationIterator end(simulations_end());
 
+try {
   for ( ; it != end; ++it)
     (*it)->solve();
-
+} catch (...) { cerr << "#############" << endl;}
 
   // we make a copy of the current solutions
   vector<ID> old_sol_ids(num_sim); 
   for (int i = 0; i < num_sim; i++)
     old_sol_ids[i] = simulation(i)->remember_current_solution();
-
 
   // for the norms of the differences
   vector<double> norms(num_sim, 0.0);

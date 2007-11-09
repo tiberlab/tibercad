@@ -371,10 +371,10 @@ ExcitonTransport::do_init(void)
   // compute scaling factors
   compute_scaling();
 
-  set_initial_guess(2.5);
-
 
   _rebuild_eq_system = false;
+
+  set_initial_guess(2.5);
 }
 
 

@@ -83,7 +83,7 @@ void TiberPetscLinearSolver::init(void)
 
 
 
-std::pair<unsigned int, Real> 
+std::pair<unsigned int, double> 
 TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 			     SparseMatrix<Number>&  precond_in,
 			     NumericVector<Number>& solution_in,
@@ -136,6 +136,8 @@ TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
   ierr = KSPSolve(_ksp, rhs->vec(), solution->vec());
   _checkerr(ierr);
 
+  check_convergence();
+
 	 
   // Get the number of iterations required for convergence
   ierr = KSPGetIterationNumber(_ksp, &its);
@@ -183,7 +185,7 @@ void TiberPetscLinearSolver::get_residual_history(std::vector<double>& hist)
 
 
 
-Real TiberPetscLinearSolver::get_initial_residual(void)
+double TiberPetscLinearSolver::get_initial_residual(void)
 {
   int ierr = 0;
   int its  = 0;
@@ -209,6 +211,27 @@ Real TiberPetscLinearSolver::get_initial_residual(void)
   return *p;
 }
 
+
+
+
+void
+TiberPetscLinearSolver::check_convergence(void) throw (KSPDivergedError)
+{
+
+    KSPConvergedReason reason;
+    KSPGetConvergedReason(_ksp, &reason);
+	 
+    // Get the number of iterations required for convergence
+    //KSPGetIterationNumber(_ksp, &its);
+	 
+    // Get the norm of the final residual to return to the user.
+    //KSPGetResidualNorm(_ksp, &final_resid);
+	
+  int its  = 0;
+  double fnorm = 0;
+    if (reason <= 0)
+      throw(KSPDivergedError(reason, its, fnorm));
+}
 
 
 
