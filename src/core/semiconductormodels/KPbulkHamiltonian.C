@@ -336,13 +336,16 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
 
 
      
-     
+
       for (short i = 0; i < 2; i++)
 	for (short j = 2; j < 8; j++)
 	  for (short  i1 = 0; i1<=2; i1++)
 	    {
-	      Ham[j][i].linear_left[i1] =  conj(Ham[i][j].linear_left[i1]);
-	      Ham[j][i].linear_right[i1] = conj(Ham[i][j].linear_right[i1]);
+	        Ham[j][i].linear_left[i1] =  conj(Ham[i][j].linear_left[i1]);
+	        Ham[j][i].linear_right[i1] = conj(Ham[i][j].linear_right[i1]);
+
+	     
+	      
 	    }
 
 

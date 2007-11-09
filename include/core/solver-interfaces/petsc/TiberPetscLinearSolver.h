@@ -98,6 +98,11 @@ class TiberPetscLinearSolver : public TiberLinearSolver
     //! Returns just the initial residual for the solve just completed
     double get_initial_residual();
 
+    //! Returns KSP context
+    KSP get_ksp(void);
+
+    //! Returns preconditioner context
+    PC  get_pc(void);
 
   private:
 
@@ -165,6 +170,17 @@ TiberPetscLinearSolver::~TiberPetscLinearSolver(void)
 }
 
 
+inline
+KSP TiberPetscLinearSolver::get_ksp(void)
+{
+  return _ksp;
+}
+
+inline 
+PC TiberPetscLinearSolver::get_pc(void)
+{
+  return _pc;
+}
 /*
 template <typename T>
 inline

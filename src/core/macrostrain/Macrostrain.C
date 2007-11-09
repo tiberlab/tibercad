@@ -4,8 +4,9 @@
 #include "BoundaryProperties.h"
 #include "Boundary.h"
 #include "MacrostrainBoundaryProperties.h"
-#include "petsc_linear_solver.h"
-#include "petscksp.h"
+#include "TiberPetscLinearSolver.h"
+
+
 
 
 using namespace std;
@@ -335,18 +336,19 @@ void Macrostrain::parse_options( )
 
  my_system->linear_solver->set_preconditioner_type(pc_type);
 
-/*
+ my_solver->init();
+
  {
    
-   //  int ierr; 
+   int ierr; 
 
-   //KSP ksp_of_my_solver = (dynamic_cast< PetscLinearSolver<Real>* > (  (my_system->linear_solver).get() )   )->ksp();
-   //ierr = KSPMonitorSet(ksp_of_my_solver,KSPMonitorDefault(),PETSC_NULL,0);
+   KSP ksp_of_my_solver = (dynamic_cast< TiberPetscLinearSolver* > (  (my_system->linear_solver).get() )   )->get_ksp();
+   ierr = KSPSetMonitor(ksp_of_my_solver,KSPDefaultMonitor, PETSC_NULL,0);
  
  }
-*/
 
 /*
+
  {
    int ierr; 
  
@@ -357,6 +359,7 @@ void Macrostrain::parse_options( )
    ierr = PCSetType (PC_of_solver, (char*) PCJACOBI);   
 
  }
+
 */
 
  if (!grown_on_substrate)
@@ -614,7 +617,7 @@ void Macrostrain::do_init( )
   //-------------------------------------------------------------------//
  my_solver =  TiberLinearSolver::create ("petsc");
 
- my_solver->init();
+
 
   //------init is done---------------------------------------------------------------------//
 }
