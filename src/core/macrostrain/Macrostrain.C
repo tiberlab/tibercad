@@ -338,14 +338,22 @@ void Macrostrain::parse_options( )
 
  my_solver->init();
 
- {
+
+
+ 
    
+ bool monitor = opt.get_option("monitor", false);
+
+ if (monitor)
+ {
+     
    int ierr; 
 
    KSP ksp_of_my_solver = (dynamic_cast< TiberPetscLinearSolver* > (  (my_system->linear_solver).get() )   )->get_ksp();
+
    ierr = KSPSetMonitor(ksp_of_my_solver,KSPDefaultMonitor, PETSC_NULL,0);
- 
  }
+
 
 /*
 
