@@ -125,7 +125,8 @@ class TiberPetscLinearSolver : public TiberLinearSolver
 
 
     //! Check convergence
-    void check_convergence(void) throw (KSPDivergedError);
+    std::pair<unsigned int, double> check_convergence(void)
+      throw (KSPDivergedError);
 
 };
 
