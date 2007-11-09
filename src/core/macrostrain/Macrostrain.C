@@ -259,7 +259,7 @@ void Macrostrain::parse_options( )
  atom_structure_filename = opt.get_option("atom_structure_filename", "");
  atom_displacements_filename = opt.get_option("atom_displacements_filename","");
    
-
+ unsigned int max_ksp_iterations = opt.get_option("max_iterations",1000);
  
 
  // assert(periodicity_x == false);
@@ -335,6 +335,9 @@ void Macrostrain::parse_options( )
  my_system->linear_solver->set_solver_type(solver_type);
 
  my_system->linear_solver->set_preconditioner_type(pc_type);
+
+
+ my_solver->set_ksp_options ( tolerance, max_ksp_iterations);
 
  my_solver->init();
 
