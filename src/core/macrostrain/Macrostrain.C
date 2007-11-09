@@ -1255,14 +1255,17 @@ void Macrostrain::do_assemble(EquationSystems& es,
   }
 
       
-
- 
+/*
+{
+  system.matrix->close();
   
-  //system.matrix->print_matlab("matr.m");
+  system.matrix->print_matlab("matr.m");
 
- 
-  //system.rhs->print_matlab("rhs.m");
+  system.rhs->close();
 
+  system.rhs->print_matlab("rhs.m");
+}
+*/
   //-----------------------------------------------------------------------
   //Application of periodicity constraints
 
