@@ -264,14 +264,8 @@ void Macrostrain::parse_options( )
 
  // assert(periodicity_x == false);
 
- 
-
-  
+   
  equation_systems->parameters.set<Real>("linear solver tolerance") = tolerance; 
-
-
-
-
  
   
  my_system->linear_solver = AutoPtr< LinearSolver< Real > >(my_solver);
@@ -332,6 +326,10 @@ void Macrostrain::parse_options( )
    pc_type = EISENSTAT_PRECOND;
   
 
+
+ 
+ KSPLGMonitorCreate (NULL, get_name().c_str(),0,0,400,400, &_lg);
+
  my_system->linear_solver->set_solver_type(solver_type);
 
  my_system->linear_solver->set_preconditioner_type(pc_type);
@@ -355,6 +353,21 @@ void Macrostrain::parse_options( )
    KSP ksp_of_my_solver = (dynamic_cast< TiberPetscLinearSolver* > (  (my_system->linear_solver).get() )   )->get_ksp();
 
    ierr = KSPSetMonitor(ksp_of_my_solver,KSPDefaultMonitor, PETSC_NULL,0);
+
+  
+ }
+
+ bool xmonitor = opt.get_option("xmonitor", false);
+
+ 
+ if (xmonitor)
+ {
+     
+   int ierr; 
+
+   KSP ksp_of_my_solver = (dynamic_cast< TiberPetscLinearSolver* > (  (my_system->linear_solver).get() )   )->get_ksp(); 
+
+   ierr = KSPSetMonitor ( ksp_of_my_solver,KSPLGMonitor,_lg,0);
  }
 
 
@@ -3923,6 +3936,7 @@ double Macrostrain::norm_of_difference(NumericVector<Number>& solution1, Numeric
 Macrostrain::~Macrostrain()
 {
 
+  KSPLGMonitorDestroy (_lg);
 
   equation_systems->delete_system(system_name);
 }

@@ -72,7 +72,7 @@
 #include "MacrostrainModel.h"
 #include "DriftDiffusion.h"
 #include "TiberLinearSolver.h"
-
+#include "petscksp.h"  
 //! A class to calculate strain and shape
 class Macrostrain : public SimulationInterface
 /*!
@@ -514,6 +514,9 @@ class Macrostrain : public SimulationInterface
 
   //! solver that will solve a system
   TiberLinearSolver* my_solver;
+
+  //! Petsc draw context;
+  PetscDrawLG _lg; 
 
 
  protected:
