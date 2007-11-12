@@ -616,7 +616,9 @@ DriftDiffusion::do_solve(void)
   */
 
   bool equilibrium = true;
-  bool accept_failure = true;
+  // this does not what we think in some cases!
+  //bool accept_failure = true;
+  bool accept_failure = false;
   {
     ContactData::iterator it(_voltages.begin());
     const ContactData::iterator end(_voltages.end());

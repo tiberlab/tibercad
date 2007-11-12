@@ -1,3 +1,5 @@
+dielectric = true
+
 structure = zb
 
 #Lattice thermal conductivity [W/(cm*K)]
