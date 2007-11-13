@@ -328,7 +328,7 @@ void Macrostrain::parse_options( )
 
 
  
- KSPLGMonitorCreate (NULL, get_name().c_str(),0,0,400,400, &_lg);
+
 
  my_system->linear_solver->set_solver_type(solver_type);
 
@@ -363,6 +363,8 @@ void Macrostrain::parse_options( )
  if (xmonitor)
  {
      
+   KSPLGMonitorCreate (NULL, get_name().c_str(),0,0,400,400, &_lg);
+
    int ierr; 
 
    KSP ksp_of_my_solver = (dynamic_cast< TiberPetscLinearSolver* > (  (my_system->linear_solver).get() )   )->get_ksp(); 
@@ -642,6 +644,10 @@ void Macrostrain::do_init( )
  my_solver =  TiberLinearSolver::create ("petsc");
 
 
+  //---------------------------------------------------------------------------------------------------------//
+
+
+
 
   //------init is done---------------------------------------------------------------------//
 }
@@ -736,7 +742,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
   FEType fe_type = dof_map.variable_type(uvar[0]);
  
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //I need scaling here 
  
 
 
@@ -750,7 +756,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
   // Declare a special finite element object for
   // boundary integration.
-  AutoPtr<FEBase>  fe_face(build_finite_element(dim, fe_type, true));
+  AutoPtr<FEBase>  fe_face(build_finite_element(dim, fe_type, true)); //I need scaling here 
 
 
   // Boundary integration requires one quadraure rule,
@@ -975,7 +981,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	      }
 	      
 	      
-	      Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)* vec2 ));
+	      Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)* vec2 )) ;
 	    } 
 	  }
 	       
@@ -1071,7 +1077,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 		    vec2(i) = eps_var(i,k+1);
 		}
 		
-		Ke_u_add_sub(p1,i1) += JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2  ));
+		Ke_u_add_sub(p1,i1) += JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) * vec2  )) ;
 	      }
 	    }
 	  } 
@@ -1103,12 +1109,13 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	      vec2 = 0;
 	      for (int i = 1; i<=dim; i++) vec2(i) = dphi[p2][qp](i-1) ;
 	      
-	      scal_prod = vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) *vec2);
+	      scal_prod = vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) *vec2) ;
 	      
 	      if (!belongs_to_substrate(p1, elem))
 	      {
-		Ke_sub(p1,p2) += JxW[qp]*scal_prod;
-		
+	
+		 Ke_sub(p1,p2) += JxW[qp]*scal_prod ;
+	
 	      }
 	      else
 	      {
@@ -1729,7 +1736,7 @@ void Macrostrain::update_eps0_list()
   
 
   FEType fe_type = dof_map.variable_type(0);
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));//no scaling here!
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
   
   std::vector<Point> point_vec(1);
@@ -1915,7 +1922,7 @@ void  Macrostrain::apply_periodic_bc()
   FEType fe_type = dof_map.variable_type(uvar[0]);
   
  
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));  //no scaling here
    
 
   
@@ -2110,7 +2117,7 @@ The constrants are the following:
  FEType fe_type = dof_map.variable_type(uvar[0]);
   
  
- AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
+ //AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
 
  DofConstraintRow constraint; 
 
@@ -2355,7 +2362,7 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
   FEType fe_type = dof_map.variable_type(0);
  
   
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
 
  
 
@@ -2768,7 +2775,7 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 
 
   FEType fe_type = dof_map.variable_type(0);
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
   
   std::vector<Point> point_vec(1);
@@ -3639,7 +3646,7 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
   FEType fe_type = dof_map.variable_type(0);
  
   
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
 
  
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
@@ -3936,7 +3943,7 @@ double Macrostrain::norm_of_difference(NumericVector<Number>& solution1, Numeric
 Macrostrain::~Macrostrain()
 {
 
-  KSPLGMonitorDestroy (_lg);
+ 
 
   equation_systems->delete_system(system_name);
 }

@@ -519,6 +519,8 @@ class Macrostrain : public SimulationInterface
   PetscDrawLG _lg; 
 
 
+
+ 
  protected:
 
 
@@ -543,6 +545,9 @@ class Macrostrain : public SimulationInterface
    */
   virtual void build_elemental_results(const std::set<std::string>& variables,
 				       std::vector<double>& results, std::vector<std::string>& legend) ;
+
+ 
+
 
   
  
