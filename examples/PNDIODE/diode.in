@@ -78,7 +78,6 @@ $Solver
     nonlin_max_it = 30
     # local_scaling = false
     ls_max_step = 1
-    #pc_type = composite
   }
 
   sweep
@@ -118,7 +117,7 @@ $Simulation
   resultpath = output_1D
   #output_format = grace
   output_format = gmv
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob, current)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob)
 }
 
 

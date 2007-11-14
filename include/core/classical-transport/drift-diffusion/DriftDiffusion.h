@@ -75,6 +75,8 @@ template<typename T> class SparseMatrix;
  * \li \c Jp_x hole current density, x-component
  * \li \c Jp_y hole current density, y-component
  * \li \c Jp_z hole current density, z-component
+ * \li \c recombination.some_name the net recombination rate of model \c some_name
+ * \li \c recombination.total the total net recombination rate
  * 
  */
 class DriftDiffusion : public SimulationInterface
@@ -86,29 +88,31 @@ class DriftDiffusion : public SimulationInterface
     enum Variables
     {
       UNKNOWN = 0,
-      ELPOTENTIAL,      //!< electric potential
-      QFERMIE,          //!< electron electro-chemical potential
-      QFERMIH,          //!< hole electro-chemical potential
-      CBANDEDGE,        //!< conduction band edge
-      VBANDEDGE,        //!< valence band edge
-      CBANDEDGEINTR,    //!< intrinsic conduction band edge
-      VBANDEDGEINTR,    //!< intrinsic valence band edge
-      BANDGAP,          //!< band gap
-      EDENSITY,         //!< electron density
-      HDENSITY,         //!< hole density
-      EMOBILITY,        //!< electron mobility
-      HMOBILITY,        //!< hole mobility
-      SIGMAE,           //!< electron conductivity
-      SIGMAH,           //!< hole conductivity
-      J,                //!< total current density, modulus
-      JN,               //!< electron current density, modulus
-      JNX,              //!< electron current density, x-component
-      JNY,              //!< electron current density, y-component
-      JNZ,              //!< electron current density, z-component
-      JP,               //!< hole current density, modulus
-      JPX,              //!< hole current density, x-component
-      JPY,              //!< hole current density, y-component
-      JPZ               //!< hole current density, z-component
+      ELPOTENTIAL,      /*!< electric potential */
+      QFERMIE,          /*!< electron electro-chemical potential */
+      QFERMIH,          /*!< hole electro-chemical potential */
+      CBANDEDGE,        /*!< conduction band edge */
+      VBANDEDGE,        /*!< valence band edge */
+      CBANDEDGEINTR,    /*!< intrinsic conduction band edge */
+      VBANDEDGEINTR,    /*!< intrinsic valence band edge */
+      BANDGAP,          /*!< band gap */
+      EDENSITY,         /*!< electron density */
+      HDENSITY,         /*!< hole density */
+      EMOBILITY,        /*!< electron mobility */
+      HMOBILITY,        /*!< hole mobility */
+      SIGMAE,           /*!< electron conductivity */
+      SIGMAH,           /*!< hole conductivity */
+      J,                /*!< total current density, modulus */
+      JN,               /*!< electron current density, modulus */
+      JNX,              /*!< electron current density, x-component */
+      JNY,              /*!< electron current density, y-component */
+      JNZ,              /*!< electron current density, z-component */
+      JP,               /*!< hole current density, modulus */
+      JPX,              /*!< hole current density, x-component */
+      JPY,              /*!< hole current density, y-component */
+      JPZ,              /*!< hole current density, z-component */
+      RECOMB,           /*!< total recombination rate */
+      MODELS = 100      /*!< base number for models */
     };
       
  

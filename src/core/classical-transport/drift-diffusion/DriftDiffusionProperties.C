@@ -9,7 +9,6 @@
 #include "Dopant.h"
 #include "Constants.h"
 #include "InitFailedException.h"
-#include "MacroHeatBalance.h"
 #include "RotatedCrystal.h"
 
 #include "elem.h"
@@ -457,11 +456,9 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
   electron_recombination_rate = 0;
   electron_recombination_rate_derivatives[0] = 0;
   electron_recombination_rate_derivatives[1] = 0;
-  //electron_recombination_rate_derivatives[2] = 0;
   hole_recombination_rate = 0;
   hole_recombination_rate_derivatives[0] = 0;
   hole_recombination_rate_derivatives[1] = 0;
-  //hole_recombination_rate_derivatives[2] = 0;
 
   double Re, Rh;
   vector<double> dRe(3), dRh(3);
@@ -476,11 +473,9 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
     electron_recombination_rate += Re;
     electron_recombination_rate_derivatives[0] += dRe[0];
     electron_recombination_rate_derivatives[1] += dRe[1];
-    //electron_recombination_rate_derivatives[2] += dRe[2];
     hole_recombination_rate += Rh;
     hole_recombination_rate_derivatives[0] += dRh[0];
     hole_recombination_rate_derivatives[1] += dRh[1];
-    //hole_recombination_rate_derivatives[2] += dRh[2];
   }
 }
 

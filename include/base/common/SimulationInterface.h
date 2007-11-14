@@ -504,8 +504,8 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Solve for equilibrium
     /*!
      * Can be implemented in derived classes to solve for some
-     * equilibrium state. This method will be called for any simulation
-     * before calling solve().
+     * equilibrium state.
+     * It has to be called explicitly.
      *
      * Use it e.g. to solve the Poisson equation for equilibrium, to set
      * some reasonable starting values etc.

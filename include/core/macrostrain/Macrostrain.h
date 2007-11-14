@@ -66,7 +66,6 @@
 #include "tecplot_IO_cell.h"
 //------------------------------------------------------------------------------
 
-#include "PhysicalProperties.h"
 #include "SimulationInterface.h"
 #include "Device.h"
 #include "MacrostrainModel.h"

@@ -54,6 +54,9 @@ examples: all
 	@$(MAKE) -C examples
 
 
+.PHONY: manual
+manual:
+	@$(MAKE) -C manual
 
 
 tags:

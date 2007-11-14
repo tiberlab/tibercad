@@ -7,8 +7,6 @@
 
 #include "Utils.h"
 
-//#include "enum_solver_type.h"
-//#include "enum_preconditioner_type.h"
 
 #include <cctype>
 #include <iostream>
@@ -16,11 +14,6 @@
 
 using namespace std;
 
-//template<>
-//SolverType
-//Utils::convert<SolverType>(const string& val)
-//{
-//}
 
 string
 Utils::extract_typename(const type_info& info)
@@ -35,6 +28,29 @@ Utils::extract_typename(const type_info& info)
 
   return s;
 }
+
+
+
+
+void
+Utils::tokenize(const std::string& input, std::vector<std::string>& tokens,
+    const char* delimiter)
+{
+  typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+  boost::char_separator<char> sep(delimiter);
+  
+  tokenizer tok(input, sep);
+
+  tokens.resize(0);
+
+  tokenizer::iterator it = tok.begin();
+  const tokenizer::iterator end = tok.end();
+  for (unsigned int k = 0 ; it != end; ++it, k++)
+    tokens.push_back(*it);
+}
+
+
+
 
 
 template <typename T>

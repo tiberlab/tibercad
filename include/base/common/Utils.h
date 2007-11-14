@@ -42,6 +42,15 @@ class Utils
     static void extract_vector(const std::string& input, std::vector<T>& vec);
 
 
+    //! Tokenize a string
+    /*!
+     * Cuts a string into tokens using \c delimiter (default '.') and returns
+     * the tokens in \c tokens
+     */
+    static void tokenize(const std::string& input,
+        std::vector<std::string>& tokens, const char* delimiter = ".");
+
+
     //! A functor that checks if two double values are almost equal
     /*!
      * \em almost \em equal means the following:

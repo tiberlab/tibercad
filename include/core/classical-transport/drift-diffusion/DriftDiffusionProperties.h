@@ -30,7 +30,7 @@
 #include <gsl/gsl_sf_fermi_dirac.h>
 
 #include <float.h>
-#include <MacroHeatBalance.h>
+//#include <MacroHeatBalance.h>
 #include <vector>
 #include <set>
 #include <map>
@@ -42,7 +42,7 @@ class Dopant;
 class RecombinationModelInterface;
 class MobilityModelInterface;
 class ThermoelectricPower;
-class MacroHeatBalance;
+//class MacroHeatBalance;
 
 
 
@@ -590,6 +590,9 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     //! \copydoc PhysicalModel::copy_from()
     virtual void copy_from(const PhysicalModelInterface* rhs);
 
+
+    //! Get the strain as writable reference
+    Tensor2Sym& get_strain(void);
     
     //! The lattice temperature in eV (\f$= k_B T_{lat} / e\f$)
     double lattice_vt;
@@ -1045,6 +1048,15 @@ DriftDiffusionProperties::get_strain(void) const
 {
   return _strain;
 }
+
+
+inline
+Tensor2Sym&
+DriftDiffusionProperties::get_strain(void) 
+{
+  return _strain;
+}
+
 
 
 inline

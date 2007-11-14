@@ -891,8 +891,9 @@ SimulationInterface::get_solution(const Elem* elem, const Point& p,
   vector<map<ID, double> > vals(1);
 
   bool flag = get_solution(elem, points, ids, vals);
-  
-  values = vals[0];
+ 
+  if (flag)
+    values = vals[0];
 
   return flag;
 }
@@ -910,7 +911,8 @@ SimulationInterface::get_solution(const Elem* elem, const Point& p,
 
   bool flag = get_solution(elem, points, ids, vals);
 
-  value = vals[0][id];
+  if (flag)
+    value = vals[0][id];
 
   return flag;
 }

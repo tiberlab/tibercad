@@ -3,18 +3,20 @@
 #include "StrainedSemiconductorModel.h"
 #include "DDsemiconductor.h"
 #include "Macrostrain.h"
-//#include "tensor.h"
 #include "Utils.h"
 
 #include "elem.h"
 
 #include <iostream>
+#include <map>
+#include <vector>
 
 
 TIBER_MODULE(StrainedSemiconductorModel, strained)
 
 
 
+using namespace std;
 using namespace DriftDiffusionDefs;
 
 StrainedSemiconductorModel::StrainedSemiconductorModel(void)
@@ -37,15 +39,37 @@ StrainedSemiconductorModel::prepare_element_data(void)
     const DataMap::const_iterator it = element_data_.find(elem);
     if (it == end)
     {
-      // set strain
-      set_strain(strain_model_->get_strain_crystal(elem));
+      // where to put the elemental data
+      ElementData& elem_data = element_data_[elem];
+      
+      map<ID, double> data;
+      bool ok = strain_model_->get_solution(elem, elem->centroid(),
+          _strain_ids_set, data);
+
+      if (ok)
+      {
+        // set strain
+        get_strain()(1,1) = data[_strain_ids[0]];
+        get_strain()(2,2) = data[_strain_ids[1]];
+        get_strain()(3,3) = data[_strain_ids[2]];
+        get_strain()(2,1) = data[_strain_ids[3]];
+        get_strain()(3,2) = data[_strain_ids[4]];
+        get_strain()(3,1) = data[_strain_ids[5]];
+
+        elem_data.polarization(0) = data[_strain_ids[6]]; 
+        elem_data.polarization(1) = data[_strain_ids[7]]; 
+        elem_data.polarization(2) = data[_strain_ids[8]]; 
+        set_polarization(elem_data.polarization);
+      }
+      else
+        get_strain() = 0;
+
       get_physical_model()->set_strain(get_strain());
 
       // call method of parent class
       SemiconductorModel::calculate_equilibrium_properties();
 
       // put them into element_data_
-      ElementData& elem_data = element_data_[elem];
       elem_data.Ec = get_conduction_band_edge();
       elem_data.Ev = get_valence_band_edge();
       elem_data.mc = get_conduction_band().effective_mass;
@@ -53,12 +77,6 @@ StrainedSemiconductorModel::prepare_element_data(void)
       elem_data.Ef0 = get_equilibrium_fermi_level();
       elem_data.ni = get_intrinsic_density();
 
-      Tensor1 pol =
-        strain_model_->get_built_in_polarization(elem, elem->centroid());
-      elem_data.polarization(0) = pol(1); 
-      elem_data.polarization(1) = pol(2); 
-      elem_data.polarization(2) = pol(3); 
-      set_polarization(elem_data.polarization);
     }
     else
     {
@@ -111,19 +129,45 @@ StrainedSemiconductorModel::do_init(void)
   SemiconductorModel::do_init();
 
   
-  std::string strain_sim =
-    get_options().get_option("strain_simulation",
-        Utils::extract_typename(typeid(strain_model_)));
-  
-  // find the strain calculation to use
-  strain_model_ = dynamic_cast<Macrostrain*>(
-      SimulationInterface::find_simulation(strain_sim));
+  string strain_sim = get_options().get_option("strain_simulation", "");
 
-  if (strain_model_ == NULL)
+  if (strain_sim == "")
+    ignore_strain_ = true;
+  else
   {
-    std::string msg("Simulation "+std::string(strain_sim)+" not found");
-    throw InitFailedException(msg);
+    // find the strain calculation to use
+    strain_model_ = SimulationInterface::find_simulation(strain_sim);
+
+    if (strain_model_ == NULL)
+    {
+      string msg("Simulation " + string(strain_sim) + " not found,");
+      msg += " but needed for StrainedSemiconductorModel.";
+      throw InitFailedException(msg);
+    }
+
+    _strain_ids.resize(9);
+    _strain_ids[0] = strain_model_->get_variable_id("eps_xx");
+    _strain_ids[1] = strain_model_->get_variable_id("eps_yy");
+    _strain_ids[2] = strain_model_->get_variable_id("eps_zz");
+    _strain_ids[3] = strain_model_->get_variable_id("eps_xy");
+    _strain_ids[4] = strain_model_->get_variable_id("eps_yz");
+    _strain_ids[5] = strain_model_->get_variable_id("eps_xz");
+    _strain_ids[6] = strain_model_->get_variable_id("Px");
+    _strain_ids[7] = strain_model_->get_variable_id("Py");
+    _strain_ids[8] = strain_model_->get_variable_id("Pz");
+
+    for (unsigned int i = 0; i < 9; i++)
+    {
+      // check
+      if (_strain_ids[i] == INVALID_ID)
+      {
+        string msg("Simulation " + string(strain_sim));
+        msg += " does not provide all variables needed";
+        msg += " for StrainedSemiconductorModel.";
+        throw InitFailedException(msg);
+      }
+      _strain_ids_set.insert(_strain_ids[i]);
+    }
   }
 
-  ignore_strain_ = get_options().get_option("ignore_strain", false);
 }

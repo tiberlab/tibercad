@@ -31,7 +31,6 @@
 // C++ includes
 
 using namespace std;
-using namespace DriftDiffusionDefs;
 
 
 ExcitonTransport*
@@ -374,7 +373,6 @@ ExcitonTransport::do_init(void)
 
   _rebuild_eq_system = false;
 
-  set_initial_guess(2.5);
 }
 
 

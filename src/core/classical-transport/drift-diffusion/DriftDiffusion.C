@@ -618,6 +618,7 @@ DriftDiffusion::do_solve(void)
   bool equilibrium = true;
   // this does not what we think in some cases!
   //bool accept_failure = true;
+  bool same_potentials = true;
   bool accept_failure = false;
   {
     ContactData::iterator it(_voltages.begin());
@@ -630,7 +631,8 @@ DriftDiffusion::do_solve(void)
       double voltage = bd->get_simulation_voltage();
 
       if (_voltages[it->first] != voltage)
-        accept_failure = false;
+        same_potentials = false;
+        //accept_failure = false;
 
       _voltages[it->first] = voltage;
 
@@ -658,10 +660,30 @@ DriftDiffusion::do_solve(void)
   }
 
 
+  int coupling = get_options().coupling;
+  
+  if (equilibrium)
+    get_options().coupling = POISSON;
+  else if (same_potentials)
+  {
+    get_options().coupling = POISSON;
+    try
+    {
+      do_newton();
+    }
+    catch (SolverException& e)
+    {
+      string msg = "DriftDiffusion: solve failed (" +
+        string(e.what()) + ")";
+      throw SolveFailedException(msg);
+    }
+    get_options().coupling = coupling;
+  }
+
+  /*
   static map<ElectricalContact*, double> voltages;
   ModelOptions& opts = SimulationInterface::get_options();
   bool quasi_equilibrium = false;
-  int coupling = get_options().coupling;
   if (opts.find_option("quasi_equilibrium"))
   {
     vector<string> qfpot(2, "");
@@ -694,6 +716,7 @@ DriftDiffusion::do_solve(void)
       }
     }
   }
+  */
 
   if (do_local_scaling_)
     build_local_scaling();
@@ -722,6 +745,8 @@ DriftDiffusion::do_solve(void)
       throw SolveFailedException(msg);
     }
   }
+
+  get_options().coupling = coupling;
 
   // calculate the currents to print them on screen
   calculate_currents();
@@ -1536,6 +1561,27 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
         id = QFERMIH;
       break;
 
+    case 'r':
+      {
+        vector<string> rec;
+        Utils::tokenize(variable_name, rec);
+        if (rec.size() > 1)
+        {
+          if (rec[0] == "recombination")
+          {
+            if (rec[1] == "total")
+              id = RECOMB;
+            else
+            {
+              ID rec_id = PhysicalModelInterface::get_id_from_name<
+                RecombinationModelInterface>(rec[1]);
+              id = MODELS + rec_id;
+            }
+          }
+        }
+      }
+      
+
     default:
       break;
   }
@@ -1753,6 +1799,15 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     if (ids.count(JPZ))
       values[n][JPZ] = jpz;
+
+    set<ID>::iterator first(ids.begin());
+    set<ID>::iterator it(ids.end());
+    --it;
+    while ((*it > MODELS) && (it != first))
+    {
+      values[n][*it] = sc->get_net_recombination_rate(*it - MODELS);
+      --it;
+    }
 
   }
 }

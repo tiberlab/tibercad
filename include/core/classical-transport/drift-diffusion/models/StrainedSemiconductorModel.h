@@ -8,7 +8,7 @@
 #include <map>
 
 class Elem;
-class Macrostrain;
+class SimulationInterface;
 
 //! A drift-diffusion model for a strained semiconductor
 /*!
@@ -81,10 +81,16 @@ class StrainedSemiconductorModel : public SemiconductorModel
     StrainedSemiconductorModel&
       operator=(const StrainedSemiconductorModel& model);
     
-    Macrostrain* strain_model_;
+    SimulationInterface* strain_model_;
     bool ignore_strain_;
 
     DataMap element_data_;
+
+    //! The ids for the different variables from macrostrain
+    std::vector<ID> _strain_ids;
+
+    //! The ids in a set
+    std::set<ID> _strain_ids_set;
 
 };
 

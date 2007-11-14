@@ -39,3 +39,4 @@ Extrude Line {l4, {0.0, y, 0.0}}
 Physical Surface(1) = {1};
 Physical Line(1) = {9,13};
 Physical Line(2) = {1,2,3,4};
+Physical Line(3) = {5,17};

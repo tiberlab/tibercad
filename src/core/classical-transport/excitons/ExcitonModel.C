@@ -141,6 +141,10 @@ ExcitonModel::do_init(void)
     throw InitFailedException(msg);
   }
 
+  std::string varname("recombination.");
+  varname += get_options().get_option("generation_model", "");
+  //_gen_model = _dd_sim->get_variable_id(varname);
+
 }
 
 
