@@ -283,6 +283,10 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
 
   slep_opt.preconditioner = solver_opt.preconditioner;
 
+
+ 
+
+
   if (solver_opt.solve_ev_problem_twice)
   {
 
@@ -320,13 +324,13 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
    
     st_shift_value = get_new_spectrum_shift();
 
-   
-
+  
   }
 
 
-  slep_opt.matrix_output = true;
+ 
 
+  slep_opt.matrix_output = false;
   
   slep_opt.eps_tolerance = solver_opt.eigen_solver_tolerance;
 
@@ -334,24 +338,25 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
   
   slep_opt.spectrum_shift  = st_shift_value;
   
+ 
 
 
   {
-      int result;
-      if (solver_opt.discretization_method == FEM) 
-	result = EigenSolver::eig_value_problem_general(slep_opt);
-      else
-	result = EigenSolver::eig_value_problem(slep_opt);
+    int result;
+    if (solver_opt.discretization_method == FEM) 
+      result = EigenSolver::eig_value_problem_general(slep_opt);
+    else
+      result = EigenSolver::eig_value_problem(slep_opt);
       
       
 
-      if (result !=0 )
-      {
-	cerr << "result of EigenSolver is bad:  " << result << "\n";
-	throw SolveFailedException("Eigensolver problem\n");
-      }
+    if (result !=0 )
+    {
+      cerr << "result of EigenSolver is bad:  " << result << "\n";
+      throw SolveFailedException("Eigensolver problem\n");
+    }
   }
- 
+  
 
 
 

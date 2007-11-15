@@ -1459,7 +1459,7 @@ double EnvelopFunctionApprox::get_new_spectrum_shift(void)
   
   assert(solution.size() == 1);
 
-   
+ 
 
   st_shift_value = (solution[0].eigen_energy - opt.spectrum_shift)/Hartree;
     
@@ -1545,7 +1545,6 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   unsigned int ground_state_index = 0;
   bool finish = false;
 
-  cerr <<  opt.spectrum_shift << "\n";
 
 
   for (unsigned int i = 0; (i < number_of_converged_solutions && (!finish) ); i++)
@@ -2280,6 +2279,7 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
       // poisson_equation->get_solution(elem, center, dd_solution);
 
       chem_pot_value_eV = -get_electro_chem_potential(elem); 
+     
 
       //why minus? because  DriftDiffusion::Solution contaions potential not energy
       
@@ -2822,14 +2822,16 @@ void EnvelopFunctionApprox::calculate_convergent_density( )
  
   bool converged =( last_state_density/total_density  < opt.relative_density_tolerance ) ; 
 
-  
+ 
 
-  if  (opt.convergent_density && (!converged))
+  for  ( ; opt.convergent_density && (!converged); )
     {
-     
+          
 
       number_of_states = (unsigned int) (number_of_states * opt.eigen_number_increase_factor) + 1;
       
+     
+
       //TODO:
       
       // this is to think about why it does not work!
@@ -2841,13 +2843,17 @@ void EnvelopFunctionApprox::calculate_convergent_density( )
       //solve_eigen_value_problem(number_of_states, st_shift_value);
 
       
-
       
       solve_eigen_value_problem(number_of_states);
 
       double total_density1 = get_integrated_probability();
+      
+    
+      if ( abs(total_density1 - total_density)/total_density < opt.relative_density_tolerance )  
+      {
 
-      if ( abs(total_density1 - total_density)/total_density < opt.relative_density_tolerance )  converged = true;
+	converged = true;
+      }
 
       total_density = total_density1;
     }
@@ -2937,6 +2943,8 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density1D(unsigned
 
   
 
+  
+
   const double T_EV = opt.Temperature * Constants::k_Boltzmann;
   
   const double mass_factor = 0.5 * parallel_mass/M_PI * (T_EV /Constants::Hartree);
@@ -2947,9 +2955,20 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density1D(unsigned
 
  
 
-  double prob_factor = std::log( 1.0 + exp( (Fermi_energy - Energy) / T_EV )  );
+  double prob_factor;
 
+  
+  if (opt.particle == "el")
+  {
+    prob_factor = std::log( 1.0 + exp( (Fermi_energy - Energy) / T_EV )  );
+  }
+  else 
+  {
+    prob_factor = std::log( 1.0 + exp( -(Fermi_energy - Energy) / T_EV )  );
+  }
+ 
   result  = calculate_cell_prob_function(state_number);
+ 
 
   unsigned int n = 0;
 
@@ -2986,7 +3005,18 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density2D(unsigned
 
   const double Energy = solution[state_number].eigen_energy;
 
-  const double prob_factor = gsl_sf_fermi_dirac_mhalf( (Fermi_energy - Energy)  / T_EV);
+  double prob_factor;
+  
+  if (opt.particle == "el")
+  {
+    prob_factor = gsl_sf_fermi_dirac_mhalf( (Fermi_energy - Energy)  / T_EV);
+  }
+  else
+  {
+    prob_factor = gsl_sf_fermi_dirac_mhalf( -(Fermi_energy - Energy)  / T_EV);
+  }
+
+ 
 
   const double mass_factor = 0.5*sqrt( T_EV *  parallel_mass / (2.0*M_PI) );
 
