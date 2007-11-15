@@ -57,14 +57,16 @@ _dftb_options.orbResolved, _dftb_options.skInterp, _dftb_options.nType);
 
   std::cout << "addskdata done" << std::endl;
 
-  inst->addlattice(_dftb_options.latVecs);
+if (_dftb_options.iPeriodic == 1) 
+	{inst->addlattice(_dftb_options.latVecs);
+  std::cout << "addlattice done" << std::endl;}
 
-  std::cout << "addlattice done" << std::endl;
+if (_dftb_options.iPeriodic == 1) 
+	{inst->addkpoints(_dftb_options.nkPoints, _dftb_options.kPoints, _dftb_options.kWeights);
+ std::cout << "addkPoints done" << std::endl;}
 
- inst->addkpoints(_dftb_options.nkPoints, _dftb_options.kPoints, _dftb_options.kWeights);
-
- std::cout << "addkPoints done" << std::endl;
-
+ std::cout << "initdftb begins" << std::endl;
+ 
  inst->initdftb();
 
  std::cout << "initdftb done" << std::endl; 
@@ -78,9 +80,14 @@ _dftb_options.orbResolved, _dftb_options.skInterp, _dftb_options.nType);
 
  std::cerr << "Done " << energy << std::endl;
 
-
-
-}
+double* charges;
+ charges = new double[_dftb_options.nAtom];
+ inst->getchargesperatom(_dftb_options.nAtom, charges);
+ for (int i = 0; i < _dftb_options.nAtom; i++){
+	 std::cout << "Charge in Atom " << i << " is " << charges[i] << std::endl;
+ }
+ 
+ }
 
 
 void Dftb::do_solve(void){};
@@ -95,8 +102,7 @@ void Dftb::build_names(void){
 
   std::string sk_name = "";
   std::ifstream file;
-  std::vector<std::string> atom_types;
-  atom_types = _atomistic_structure->get_atom_types ();
+  std::vector<std::string> atom_types(_atomistic_structure->get_atom_types());
 
 
 
@@ -256,6 +262,7 @@ void Dftb::build_input_options(){
   for (int i = 0; i < _dftb_options.nType; i++)   _dftb_options.mAngs[i] = 1;
 
 
+  if (_dftb_options.iPeriodic == 1){
   //CAREFULL!!! TEMPORARY DEFAULTS! RIGHT ONES MUST BE DISCUSSED
   _dftb_options.nkPoints = get_options().get_option("nkPoints", 4);
 
@@ -314,6 +321,8 @@ else
      _dftb_options.kWeights = new double[  _dftb_options.nkPoints];
 for (int i = 0; i < _dftb_options.nkPoints; i++){ 
      _dftb_options.kWeights[i] = 1.0;
+}
+
 }
 
 };

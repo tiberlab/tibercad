@@ -36,7 +36,6 @@ AtomisticStructure::create(const std::string& name)
 }
 
 
-
 AtomisticStructure* 
 AtomisticStructure::create(const std::string& name, const ModelOptions& options)
 {
@@ -64,10 +63,7 @@ AtomisticStructure::init(void)
   if (! _options.find_option("path") )
     std::cerr << "ERROR IN ATOMISTIC REGION DEFINITION: A PATH FOR STRUCTURE FILE MUST BE SPECIFIED" << std::endl;
 
-  path = _options.get_option("path","none");
-  if (path.compare("none") != 0) read_structure(path);
-
-  if ( _options.find_option("physical_regions") )
+   if ( _options.find_option("physical_regions") )
     {
 
       //Put physical regions specified in input file in _regions
@@ -94,45 +90,45 @@ AtomisticStructure::init(void)
 
 	}
 
+      else std::cerr << "Error in AtomisticStructure: at least a physical region must be defined in input" << std::endl;
+
+      //Build an array of physical regions ID
+      for (std::set<std::string>::iterator i = _regionset.begin(); i != _regionset.end(); i++)
+	{
+	  std::vector<ID> tmp_ID;
+	  _device->get_region_ids( (*i), tmp_ID);
+	  for (int j = 0; j < tmp_ID.size(); j++) {_IDset.insert(tmp_ID[j]);}
+	}
     }
 
-  std::set < std::string >::iterator region_iterator = _regionset.begin();
-  std::vector <ID> tmp_IDs;
-  for (int i = 0; i < _regionset.size(); i++)
-	    {
-	      tmp_IDs.clear();
-	      _device->get_region_ids ((*region_iterator), tmp_IDs);
-	      for (int j=0; j < tmp_IDs.size(); j++)
-		{
-                                    _IDset.insert( tmp_IDs[j] );
-		}
-	      //_IDset.insert( _device->get_region_name(*region_ID_iterator) );
-	      region_iterator ++;
-	    }
+     for (std::set<std::string>::iterator i= _regionset.begin(); i !=_regionset.end(); i++)
+       {std::cerr << "WRITING " << std::endl;
+         std::cerr << "_REGION IS " << *i << std::endl;}
 
-//   for (std::set<std::string>::iterator i= _regionset.begin(); i !=_regionset.end(); i++)
-//     {std::cerr << "WRITING " << std::endl;
-//       std::cerr << "_REGION IS " << *i << std::endl;}
-
-//  for (std::set<ID>::iterator i= _IDset.begin(); i !=_IDset.end(); i++)
-//     {std::cerr << "WRITING " << std::endl;
-//       std::cerr << "_REGION IS " << *i << std::endl;}
+    for (std::set<ID>::iterator i= _IDset.begin(); i !=_IDset.end(); i++)
+       {std::cerr << "WRITING " << std::endl;
+         std::cerr << "_REGION IS " << *i << std::endl;}
 
 
-  AtomisticGenerator* prova =  AtomisticGenerator::create(this);
-  prova->do_init();
+
+
+  if (_options.find_option("path")){
+    path = _options.get_option("path","none");
+    if (path.compare("none") != 0) read_structure(path);
+  }
+  else   
+    {
+      _structure_atoms.clear();
+      AtomisticGenerator* generate =  AtomisticGenerator::create(this);
+      generate->do_init();
+      print_structure("structure.xyz");
+    }
+
 
 #ifdef DEBUG
   std::cerr << "AtomisticStructure::init() end \n";
 #endif
 
-}
-
-
-const std::set<std::string>& 
-AtomisticStructure::get_region(void)
-{
-  return _regionset;
 }
 
 
@@ -183,7 +179,7 @@ AtomisticStructure::read_structure(const std::string& path)
 	  exit(1);
 	}
 
-       // Skip second line
+      // Skip second line
       getline(file, line);
  
       // Start reading  lines
@@ -274,7 +270,6 @@ AtomisticStructure::read_structure(const std::string& path)
       std::cout << "line is " << line << std::endl;
       std::cout << "line_string is " << line_string << std::endl;
            
-      // I assume that GEN file is correct and there's no name repetition
       while ( line_string >> record)
 	{
 	  _atom_types.push_back(record);
@@ -352,53 +347,53 @@ AtomisticStructure::print_structure(const std::string& path)
   // Recognize type of input file and print it properly
   std::string extension = path.substr(path.size()-4);
 
-if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
-  {
-    file << _structure_atoms.size() << std::endl << std::endl;
+  if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
+    {
+      file << _structure_atoms.size() << std::endl << std::endl;
 
-    for (unsigned int i = 0; i < _structure_atoms.size(); i++)
-      {
-	file << std::setw(2) << _structure_atoms[i].specie 
-	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(1)) 
-	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(2)) 
-	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(3)) << "\n"; 
+      for (unsigned int i = 0; i < _structure_atoms.size(); i++)
+	{
+	  file << std::setw(2) << _structure_atoms[i].specie 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(1)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(2)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(3)) << "\n"; 
 
-      }
+	}
 
-  }
+    }
 
- else if ( (extension.compare(".gen") == 0) || (extension.compare(".GEN") == 0) )
-   {
-     file << _structure_atoms.size();
+  else if ( (extension.compare(".gen") == 0) || (extension.compare(".GEN") == 0) )
+    {
+      file << _structure_atoms.size();
 
-     if (is_periodical) file << std::setw(10) << "S \n";
-     else file << std::setw(10) << "C \n";
+      if (is_periodical) file << std::setw(10) << "S \n";
+      else file << std::setw(10) << "C \n";
 
-     for (unsigned int i = 0; i < _atom_types.size(); i++)
-       {
-	 file << std::setw(4) << _atom_types[i];
-       }
-     file << std::endl;
+      for (unsigned int i = 0; i < _atom_types.size(); i++)
+	{
+	  file << std::setw(4) << _atom_types[i];
+	}
+      file << std::endl;
 
-     for (unsigned int i = 0; i < _structure_atoms.size(); i++)
-       {
-	 unsigned int n_specie;
-	 for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
-	   {
-	     if (_atom_types[n_specie].compare(_structure_atoms[i].specie) == 0) break;
-	   }
-	 file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
-	     << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(1)) 
-	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(2)) 
-	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(3)) << "\n"; 
-       }
+      for (unsigned int i = 0; i < _structure_atoms.size(); i++)
+	{
+	  unsigned int n_specie;
+	  for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
+	    {
+	      if (_atom_types[n_specie].compare(_structure_atoms[i].specie) == 0) break;
+	    }
+	  file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(1)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(2)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(3)) << "\n"; 
+	}
 
-     //A line of zeros is put here (coordinates origin)
-     file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
+      //A line of zeros is put here (coordinates origin)
+      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
 	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
 	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n"; 
 
-     // Periodicity vectors at the bottom
+      // Periodicity vectors at the bottom
       if (is_periodical)
 	{
 	  for (unsigned int i = 0; i < 3; i++)
@@ -412,17 +407,17 @@ if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
 	    }
 	}
 
-   }
+    }
 
- else
-   {
-     std::cerr << "File extension does not correspond to any internal format. File not print. \n";
-   }
+  else
+    {
+      std::cerr << "File extension does not correspond to any internal format. File not print. \n";
+    }
  
- file.close();
+  file.close();
 
 #ifdef DEBUG
- std::cerr << "AtomisticStructure::print_structure(path) end. \n";
+  std::cerr << "AtomisticStructure::print_structure(path) end. \n";
 #endif
 
 }

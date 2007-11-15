@@ -77,4 +77,6 @@ void DftbpWrapper::addkpoints (int nKPoint, double *kPoints, double *kWeights) {
   }
 
 
-
+void DftbpWrapper::getchargesperatom(int nAtom, double* charges) {
+	f77_dftbp_getchargesperatom (_handler, nAtom, charges);
+}

@@ -40,6 +40,8 @@ public:
   void addlattice (double *latVecs);
 
   void addkpoints (int nKPoint, double *kPoints, double *kWeights);
+  
+  void getchargesperatom (int nAtom, double* charges);
 
 private:
   int _handler[DFTBP_HSIZE];

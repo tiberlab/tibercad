@@ -183,5 +183,19 @@ inline void f77_dftbp_gettotalenergy (f77_int const* handler, f77_double&
 }
 
 
+extern "C" void dftbp_getchargesperatom_ (f77_int const*, f77_int const&, 
+    f77_double*);
+
+// Corresponding F77 arguments for f77_dftbp_getchargesperatom:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: nAtom
+// real(dp), intent(out) :: charges(nAtom)
+inline void f77_dftbp_getchargesperatom (f77_int const* handler, f77_int const& 
+    nAtom, f77_double* charges)
+{
+  dftbp_getchargesperatom_ (handler, nAtom, charges);
+}
+
+
 #endif
 
