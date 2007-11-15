@@ -94,7 +94,7 @@ void Macrostrain::get_solution_secure(const Elem* elem,
       values[n][EPS_YZ] = strain_el(3,2);
 
     if (ids.count(EPS_XZ))
-      values[n][EPS_XZ] = strain_el(3,2);
+      values[n][EPS_XZ] = strain_el(3,1);
     
 
     if (ids.count(P_X))
