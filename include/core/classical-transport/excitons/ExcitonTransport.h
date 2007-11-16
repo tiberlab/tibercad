@@ -65,14 +65,15 @@ class ExcitonTransport : public SimulationInterface
     enum Variables
     {
       UNKNOWN = 0,
-      CHEMPOT,          //!< chemical potential
-      XDENSITY,         //!< density
-      XMOBILITY,        //!< mobility
-      XSIGMA,           //!< conductivity
-      J,                //!< total flux, modulus
-      JX,               //!< flux, x-component
-      JY,               //!< flux, y-component
-      JZ                //!< flux, z-component
+      CHEMPOT,          /*!< chemical potential */
+      XDENSITY,         /*!< density */
+      XMOBILITY,        /*!< mobility */
+      XSIGMA,           /*!< conductivity */
+      J,                /*!< total flux, modulus */
+      JX,               /*!< flux, x-component */
+      JY,               /*!< flux, y-component */
+      JZ,               /*!< flux, z-component */
+      RDISS             /*!< dissociation rate */
     };
  
     //! This class defines parameters used by the underlying

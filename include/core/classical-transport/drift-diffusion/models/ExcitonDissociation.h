@@ -6,7 +6,7 @@
 #include "RecombinationModelInterface.h"
 #include "TypeDefs.h"
 
-class ExcitonTransport;
+class SimulationInterface;
 
 
 //! Implementation of Exciton dissociation
@@ -60,7 +60,7 @@ class ExcitonDissociation : public RecombinationModelInterface
     double d_;
 
     //! The \c ExcitonTransport to use
-    ExcitonTransport* exciton_sim_;
+    SimulationInterface* exciton_sim_;
 
     //! The ID of the needed variable
     ID _Rdiss_id;

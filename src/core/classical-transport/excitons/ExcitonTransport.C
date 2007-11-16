@@ -1329,6 +1329,8 @@ ExcitonTransport::convert_variable_name_to_id(const string& variable_name) const
     id = JY;
   else if (variable_name == "J_z")
     id = JZ;
+  else if (variable_name == "dissociation")
+    id = RDISS;
 
 
   return id;
@@ -1446,6 +1448,9 @@ ExcitonTransport::get_solution_secure(const Elem* elem,
 
     if (ids.count(XDENSITY))
       values[n][XDENSITY] = excitonmodel->get_density();
+
+    if (ids.count(RDISS))
+      values[n][RDISS] = excitonmodel->get_dissociation_rate();
 
     if (ids.count(J))
     {
@@ -1579,6 +1584,9 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     if (ids.count(XDENSITY))
       values[n][XDENSITY] = excitonmodel->get_density();
+
+    if (ids.count(RDISS))
+      values[n][RDISS] = excitonmodel->get_dissociation_rate();
 
     if (ids.count(J))
     {

@@ -10,7 +10,6 @@
 
 #include "fstream"
 
-//#include <boost/tokenizer.hpp>
 
 
 using namespace std;
@@ -19,13 +18,6 @@ using namespace std;
 
 Sweep::~Sweep(void)
 {
-//  ID id = 1;
-//  map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
-//  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
-
-//  if (it != end)
-//    for (int i = 0; i < num_sim; i++)
-//      _simulations[i]->delete_remembered_solution((it->second)[i]);
 }
 
 
@@ -34,7 +26,6 @@ void
 Sweep::do_init(void)
 {
 
-  //using namespace boost;
 
   ModelOptions& opts = get_options();
   Control& control = get_control();
@@ -134,8 +125,8 @@ Sweep::parse_options(void)
 
 
 
-  // unused
-  //_do_output = opts.get_option("output", _do_output);
+  // whether to plot data or not
+  _plot_data = opts.get_option("plot_data", _plot_data);
 }
 
 
@@ -163,6 +154,10 @@ Sweep::do_equilibrium(void)
 void
 Sweep::do_plot(void)
 {
+  int num_sim = _simulations.size();
+  
+  for (int i = 0; i < num_sim; i++)
+    _simulations[i]->plot();
 }
 
 
@@ -449,11 +444,14 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
 
 
         // write results, but only at desired sweep steps
-        if (find_if(values_begin, values_end,
-              bind2nd(Utils::almost_equal(), value)) != values_end)
+        if (_plot_data)
         {
-          for (int j = 0; j < num_sim; j++)
-            _simulations[j]->plot();
+          if (find_if(values_begin, values_end,
+                bind2nd(Utils::almost_equal(), value)) != values_end)
+          {
+            for (int j = 0; j < num_sim; j++)
+              _simulations[j]->plot();
+          }
         }
 
 
@@ -563,7 +561,6 @@ Sweep::do_set_to_remembered_solution(ID id)
   int num_sim = _simulations.size();
 
   map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
-  //map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
   map<ID, vector<ID> >::iterator it(_remembered_sol_ids.begin());
 
   if (it != end)
@@ -587,3 +584,38 @@ Sweep::do_delete_remembered_solution(ID id)
 }
 
 
+void
+Sweep::build_integrated_quantities(
+    const set<std::string>& variables,
+    vector<double>& values)
+{
+  vector<double> vals;
+
+  int num_sim = _simulations.size();
+  for (int i = 0; i < num_sim; i++)
+  {
+    _simulations[i]->get_integrated_quantities(variables, vals);
+    values.insert(values.end(), vals.begin(), vals.end());
+  }
+}
+
+
+
+void
+Sweep::build_integrated_quantities_description(
+    const set<string>& variables,
+    vector<string>& legend,
+    vector<string>& description)
+{
+  vector<string> leg;
+  vector<string> desc;
+
+  int num_sim = _simulations.size();
+  for (int i = 0; i < num_sim; i++)
+  {
+    _simulations[i]->get_integrated_quantities_description(variables,
+        leg, desc);
+    legend.insert(legend.end(), leg.begin(), leg.end());
+    description.insert(description.end(), desc.begin(), desc.end());
+  }
+}

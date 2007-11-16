@@ -1,9 +1,10 @@
 // $Id$
 
 #include "ExcitonDissociation.h"
+#include "SimulationInterface.h"
 
-#include "ExcitonTransport.h"
-#include "ExcitonProperties.h"
+//#include "ExcitonTransport.h"
+//#include "ExcitonProperties.h"
 #include "DriftDiffusionProperties.h"
 
 #include "Material.h"
@@ -13,18 +14,18 @@
 TIBER_MODULE(ExcitonDissociation, exciton_dissociation)
 
 
-
 void
 ExcitonDissociation::do_init(void)
 {
   d_ = get_options().get_option("damping", 1.0);
 
   std::string ex = get_options().get_option("exciton_simulation",
-      Utils::extract_typename(typeid(exciton_sim_)));
+      "excitontransport");
+  //    Utils::extract_typename(typeid(exciton_sim_)));
 
   // find the exciton simulation to use
-  exciton_sim_ = dynamic_cast<ExcitonTransport*>(
-      SimulationInterface::find_simulation(ex));
+  //exciton_sim_ = dynamic_cast<ExcitonTransport*>(
+  exciton_sim_ = SimulationInterface::find_simulation(ex);
 
   if (exciton_sim_ == NULL)
   {
@@ -33,7 +34,8 @@ ExcitonDissociation::do_init(void)
     throw InitFailedException(msg);
   }
 
-  _Rdiss_id = exciton_sim_->get_variable_id("ChemPot");
+  _Rdiss_id = exciton_sim_->get_variable_id("dissociation");
+  std::cerr << "We exist." << std::endl;
 }
 
 void
@@ -47,15 +49,16 @@ ExcitonDissociation::get_net_recombination_rates(double& recomb_e,
   // we only use the exciton simulation if it has been solved before
   if (exciton_sim_->is_solved())
   {
-    ID ex_id = exciton_sim_->get_id();
-    ExcitonProperties* mod =
-      static_cast<ExcitonProperties*>(get_material()->get_model(ex_id));
-    mod->reinit(el);
+    //ID ex_id = exciton_sim_->get_id();
+    //ExcitonProperties* mod =
+    //  static_cast<ExcitonProperties*>(get_material()->get_model(ex_id));
+    //mod->reinit(el);
+    //recomb_e = -d_ * mod->get_dissociation_rate();
 
     double x = 0.0;
     bool succ = exciton_sim_->get_solution(el, dd.get_coordinates(), _Rdiss_id, x);
     if (succ)
-      recomb_e = -d_ * mod->get_dissociation_rate();
+      recomb_e = -d_ * x;
   }
   else
     recomb_e = 0.0;

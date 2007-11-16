@@ -1803,12 +1803,14 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     set<ID>::iterator first(ids.begin());
     set<ID>::iterator it(ids.end());
     --it;
-    while ((*it > MODELS) && (it != first))
+    while (*it > MODELS)
     {
       values[n][*it] = sc->get_net_recombination_rate(*it - MODELS);
+      if (it == first)
+        break;
+
       --it;
     }
-
   }
 }
 
@@ -2017,6 +2019,18 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     if (ids.count(JPZ))
       values[n][JPZ] = jpz;
+
+    set<ID>::iterator first(ids.begin());
+    set<ID>::iterator it(ids.end());
+    --it;
+    while (*it > MODELS)
+    {
+      values[n][*it] = sc->get_net_recombination_rate(*it - MODELS);
+      if (it == first)
+        break;
+
+      --it;
+    }
 
   }
 }
@@ -3542,6 +3556,28 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     }
   }
 
+  int Polariz = -1;
+  if ((variables.find("Polarization") != varend) ||
+      (variables.find("polarization") != varend))
+  {
+    legend.resize(legend.size() + dim);
+    Polariz = n_vars;
+    switch (dim)
+    {
+      case 3:
+        legend[Polariz + 2] = "P_z";
+        n_vars++;
+      case 2:
+        legend[Polariz + 1] = "P_y";
+        n_vars++;
+        legend[Polariz + dim] = "modP";
+        n_vars++;
+      default:
+        legend[Polariz] = "P_x";
+        n_vars++;
+    }
+  }
+
 
   int PDens = -1;
   if (variables.find("PowerDensity")!= varend)
@@ -3686,6 +3722,22 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
           results[id + EField + dim] = e_field.size();
         default:
           results[id + EField] = e_field(0);
+      }
+    }
+
+
+    if (Polariz != -1)
+    {
+      const RealVectorValue& pol = sc->get_total_polarization();
+      switch (dim)
+      {
+        case 3:
+          results[id + Polariz + 2] = pol(2);
+        case 2:
+          results[id + Polariz + 1] = pol(1);
+          results[id + Polariz + dim] = pol.size();
+        default:
+          results[id + Polariz] = pol(0);
       }
     }
 

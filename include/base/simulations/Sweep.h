@@ -75,6 +75,28 @@ class Sweep : public SimulationInterface
     virtual void parse_options(void);
     
 
+    /*! \copydoc SimulationInterface::build_integrated_quantities()
+     *
+     * This will build the integrated quantities from all its
+     * simulations.
+     */
+    virtual void build_integrated_quantities(
+        const std::set<std::string>& variables,
+        std::vector<double>& values);
+
+    
+    /*! \copydoc SimulationInterface::build_integrated_quantities()
+     *
+     * This will build the integrated quantities descriptions 
+     * from all its simulations.
+     */
+    virtual void build_integrated_quantities_description(
+        const std::set<std::string>& variables,
+        std::vector<std::string>& legend,
+        std::vector<std::string>& description);
+
+
+
   private:
 
     //! The simulations for which wew do the sweep
@@ -97,7 +119,7 @@ class Sweep : public SimulationInterface
 
 
     //! Write results to file after every step if true
-    bool _do_output;
+    bool _plot_data;
 
 
     //! The dependent variables we want to plot
@@ -135,7 +157,7 @@ Sweep::Sweep(void)
   : _variable(""),
     _min_step(1e-3),
     _max_step(1),
-    _do_output(true)
+    _plot_data(false)
 {
 }
 
