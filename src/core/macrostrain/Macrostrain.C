@@ -268,7 +268,7 @@ void Macrostrain::parse_options( )
  equation_systems->parameters.set<Real>("linear solver tolerance") = tolerance; 
  
   
- my_system->linear_solver = AutoPtr< LinearSolver< Real > >(my_solver);
+
 
 
 
@@ -642,7 +642,7 @@ void Macrostrain::do_init( )
    
   //-------------------------------------------------------------------//
  my_solver =  TiberLinearSolver::create ("petsc");
-
+ my_system->linear_solver = AutoPtr< LinearSolver< Real > >(my_solver);
 
   //---------------------------------------------------------------------------------------------------------//
 
