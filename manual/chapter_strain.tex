@@ -95,6 +95,31 @@ Example for a 2D simulation:
 \begin{verbatim}
  tolerance = 1e-10
 \end{verbatim}
+The default  value is 1e-13.
+
+\textit{ksp\_type} =  type of  solver: \textbf{gmres},  \textbf{bcgsl},  \textbf{bcgs}, \textbf{cg}, \textbf{richardson}.
+
+Default is: 
+
+\textbf{gmres}  for  1D 
+
+\textbf{bcgsl} for 2D and  3D
+\\
+\textit{pc} =  type of  pre-conditioner :  \textbf{ilu},  \textbf{composite},  \textbf{jacobi}, \textbf{lu}, \textbf{cholesky}, \textbf{eisenstat}.
+\\
+Default is : 
+
+\textbf{ilu}  for  1D 
+
+\textbf{jacobi}  for 2D and  3D
+
+\textit{max\_iterations}  =  max  number of iterations (default = 1000)
+
+\textit{monitor}, \textit{xmonitor}:  if  \textbf{true},  textual or graphical monitor of convergence process is  enabled (default = \textbf{false})
+
+
+
+
 
 \subsubsection{Periodic boundary conditions}
 It is possible to specify periodic boundary conditions along the coordinate axes. The relative parameters are:

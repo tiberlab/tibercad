@@ -60,11 +60,123 @@ The relative parameters are:
 
 
 
-There is a way to impose automacally the Dirichlet boundary conditions over all the boundary of the simulation region. This is done by the paramerer
+There is a way to impose automacally the Dirichlet boundary conditions over all the boundary of the simulation region. This is done by the parameter
 
 \textit{Dirichlet\_bc\_everywhere} = \{true $\vert$ false\}. The default value for EFA problem is true.
+
+Other options:
+
+\textit{x-periodicity} = false (default)
+
+\textit{number\_of\_eigenstates} =  number of eigenstates to be computed
+
+ \textit{poisson\_model\_name} = associated poisson model 
+
+ \textit{strain\_model\_name} = associated strain model  
+
+ \textit{particle} = \textbf{el} $\vert$ \textbf{hl} ; to specify a quantum model  for  electrons or  holes.
+
  
 \subsection{Schr\"odinger equation parameters}
 
 \section{Physical Models parameters}
+
+In \textbf{Physics} section, for  each  quantum model,  one  has  to  specify the  physical model to be  applied :
+
+ \begin{verbatim}
+QW1_holes
+  {
+    particle = hl
+    model = kp   #  k.p  for  valence  band
+    kp_model = 6x6
+
+  }
+\end{verbatim}
+
+Here,  \textbf{QW1\_holes} is  the name  of  a  quantum (efaschrodinger) model.
+
+\textit{particle} = \textbf{el} $\vert$ \textbf{hl},  specifies if  the physical model applies to  electrons or  holes.
+
+\textit{model} = \textbf{kp} $\vert$ \textbf{conduction\_band} :  $k\cdot p$  or  single  conduction band model.
+
+if $k\cdot p$ model is  applied, specify:
+
+\textit{kp\_model} = \textbf{6x6} $\vert$   \textbf{8x8}.
+
+
+
+
+
+
+
+
+\section{Optical properties}
+
+By defining  the  \textbf{opticskp}  model,  calculation of  optical  properties  is  enabled; in particular, the  optical kp matrix elements are calculated from the  quantum models specified in \textbf{Solver} section:
+\begin{verbatim}
+  opticskp
+  {
+    initial_state_model = QW1_electrons # quantum_el
+    final_state_model =   QW1_holes # quantum_hl
+    initial_eigenstates = (0, 19)
+    final_eigenstates   = (0, 19)
+  }
+\end{verbatim}
+Here, \textit{initial\_state\_model}  and \textit{final\_state\_model} are, respectively, the quantum models associated  to the initial state of optical transition (e.g. electron), and  to the final state of optical transition (e.g. hole).
+\textit{initial\_eigenstates} and \textit{final\_eigenstates}  refer to the range of  eigenstates to be taken in account for  optical calculations 
+
+By defining the  model  \textit{opticalspectrum},  optical matrix elements are used to calculate the  associated (emission) spectrum, with a possible k-space integration (performed by default).
+In \textbf{Solver} section:
+\begin{verbatim}
+ opticalspectrum
+  {
+    k_space_dimension = 1 #   1  dimension only  for  k space in a 2D  simulation 
+    k-space_basis = true
+    k1 = (0, 0, 0.1)
+  #  k2 = (0, 0.1, 0)
+
+    refine_fraction =  0.30  # 1.0 # 0.30 #  0.20   1.0 ->  uniform refinement !!
+    relative_accuracy =  0.01  # 0.07  # 0.01
+    refine_k_space = true
+
+    number_of_nodes = 2 # (2,2)  # 4 4   nodes  =  numb. of  elememts in k mesh, along x and y
+    wedge = half #quarter
+ 
+    optical_matr_elem_model=opticskp
+
+    polarization =  (0, 0, 1)
+
+    Emin = 3.0
+    Emax  = 5.0
+    dE = 0.001
+  }
+\end{verbatim}
+\textit{k\_space\_dimension}  = \textbf{1} for 2D simulations,  \textbf{2}  for  1D  simulations.
+k-\textit{space\_basis} is \textbf{true} if  the k-space is  defined by means of k-vectors; if  \textbf{false}, vectors are expressed in real space  
+
+If \textit{refine\_k\_space} = \textbf{true}, that is  adaptive  k-mesh  refinement is  enabled,  all the  elements whose error is  greater than the  value (1-\textit{refine\_fraction})* (maximum error)  are going  to  be  refined.
+In this case, 'Error'  is  just the  integrated quantity.
+ The  refinement will end when the \textit{relative\_accuracy} is obtained.
+
+\textit{number\_of\_nodes} = numb. of  elememts in k mesh, along each direction
+
+\textit{wedge} = half $\vert$  quarter,  to  reduce  calculation time,  by  exploiting  symmetry.
+
+\textit{optical\_matr\_elem\_model} = name of  the  \textit{opticskp} model associated 
+
+\textit{polarization} =  light polarization (vector)
+
+\textit{Emin}, \textit{Emax}, \textit{dE} :  energy range  and step of  spectrum calculation.
+
+
+In section \textbf{Simulation},  the  following  output quantities must  be  indicated in  the   plot list:
+%
+\textbf{optical\_spectrum}, \textbf{k-space} 
+
+
+
+
 \section{Output}
+
+
+
