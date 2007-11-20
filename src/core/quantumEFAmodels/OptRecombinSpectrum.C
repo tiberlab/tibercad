@@ -83,17 +83,9 @@ void OptRecombinSpectrum::do_plot()
      } 
 
      
-     if (format == "gmv")
-       GMVIO_cell(*_energy_mesh).write_ascii_cell_data(filename, results, names);
-     else if (format == "ise")
-       TecplotIO_cell(*_energy_mesh).write_cell_data(filename, results, names);
-     else if (format == "grace")
-       GraceIO(*_energy_mesh).write_elemental_data(filename, results, names);
-     else
-     {
-       cout << "Output format not supported. Falling back to GMV." << endl;
-       GMVIO_cell(*_energy_mesh).write_ascii_cell_data(filename, results, names);
-     }
+    
+     GraceIO(*_energy_mesh).write_elemental_data(filename, results, names);
+    
 
 
   }
