@@ -17,7 +17,7 @@ objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
 all: tibercad
 
 tibercad: $(objects)
-	$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad \
+	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad \
 		-Wl,-export-dynamic -ltibercad -lmkl_solver \
 		$(LIBS) $(LDFLAGS) \
 		-lhetero -lifcore -limf -L /usr/pack/intel_fc-9.0-ma/lib/ \
