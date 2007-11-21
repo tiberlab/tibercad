@@ -1,8 +1,9 @@
 
  
 #include <iostream>
+#include <cassert>
+#include <string>
 
-#include <string.h>
 #include "slepceps.h"
 #include "EigenSolver.h"
 
@@ -12,7 +13,7 @@ namespace
   Mat B; //S-matrix
   EPS eps; //EigenSolver 
 }
-
+int EigenSolver::_size_of_matrix;
 //-------------------------------------------------------------//
 void EigenSolver::slepc_init(int argc1, char** argv1)
 {
@@ -64,14 +65,19 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   if (opt.read_matrix_from_file)
   {
   
-    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr); //their
+     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr); //their
+     //ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
+
     ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
 
 
     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.S_file_name.c_str(),PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr); //their
+    //ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.S_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
+
     ierr = MatLoad(viewer,MATAIJ,&B);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
+  
 
   }
   
@@ -98,7 +104,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 Create the eigensolver and set various options
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
+ 
   /* 
      Set operators. In this case, it is a generalized eigenvalue problem
   */
@@ -114,6 +120,9 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   if (opt.solver_type == "arnoldi")
   {
     ierr = EPSSetProblemType(eps,EPS_GNHEP);CHKERRQ(ierr);
+    
+    //ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
+
     ierr = EPSSetType(eps, EPSARNOLDI); CHKERRQ(ierr);
     ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
  
@@ -123,18 +132,43 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     
    
     ierr = STSetType(st,STSINV); CHKERRQ(ierr);
+
+    
   
     ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);
 
-    ierr = KSPSetType( ksp, KSPBCGS);CHKERRQ(ierr);
+    if (opt.st_ksp_type == "bcgsl")
+      ierr = KSPSetType( ksp, KSPBCGS);
+    else if (opt.st_ksp_type == "gmres" )
+       ierr = KSPSetType( ksp, KSPGMRES);
+    else if (opt.st_ksp_type == "bcgs" )
+       ierr = KSPSetType( ksp, KSPBCGS);
+    else if (opt.st_ksp_type == "cg" )
+      ierr = KSPSetType( ksp, KSPCG);
+    else if (opt.st_ksp_type == "richardson" )
+      ierr = KSPSetType( ksp, KSPCG);
+    else if (opt.st_ksp_type == "preonly")
+      ierr = KSPSetType( ksp, KSPPREONLY);
 
-   
+    
 
     ierr = KSPGetPC( ksp,&pc);
 
-    if (opt.preconditioner == "cholesky")   ierr = PCSetType(pc,PCCHOLESKY);
+    if (opt.pc_type == "cholesky")
+      ierr = PCSetType(pc,PCCHOLESKY);
+    else if (opt.pc_type == "jacobi" )
+      ierr =  PCSetType(pc,PCJACOBI);
+    else if (opt.pc_type == "ilu" )
+      ierr =  PCSetType(pc,PCILU);
+    else if (opt.pc_type == "composite" )
+      ierr =  PCSetType(pc,PCCOMPOSITE);
+  
 
-    //rtol, abstol, dtol, maxits
+   
+
+   
+    
+
     ierr = KSPSetTolerances(ksp,1e-10, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
     
     
@@ -216,6 +250,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
   {
   
     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr); //their
+    // ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
     ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
 
@@ -325,6 +360,9 @@ int EigenSolver::number_of_converged_eigenvalues()
 {
   int ierr, nconv; 
   ierr =  EPSGetConverged(eps,&nconv);CHKERRQ(ierr);
+
+ 
+
   return(nconv);
 }
 //--------------------------------------------------------------//
@@ -428,7 +466,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
 
   int ierr;
 
-  int ncv;
+  int ncv, nconv;
   
 
   if (opt.ev_number > 8)
@@ -436,14 +474,21 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
   else
     ncv = 32;
    
+
+  if (ncv > _size_of_matrix) ncv = _size_of_matrix;
  
+ 
+
   ierr = EPSSetDimensions(eps,opt.ev_number, ncv); CHKERRQ(ierr);
 
-
-  ierr = EPSSolve(eps);CHKERRQ(ierr);
   
+  ierr = EPSSolve(eps);
+
  
 
+  ierr =  EPSGetConverged(eps,&nconv);CHKERRQ(ierr);
+  
+ 
   return ierr;
 
 }
@@ -579,15 +624,19 @@ int EigenSolver::insert_S_row( int row, const std::vector<unsigned int>& colums,
 //------------------------------------------------------------------------------------//
 int  EigenSolver::preallocate_H_matrix(unsigned int matrix_size,  int*  non_zeros)
 {
+
   int ierr;
-  ierr = ierr = MatCreateSeqAIJ (PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &A);
-             
+  
+  ierr = MatCreateSeqAIJ (PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &A);
+
+  _size_of_matrix = matrix_size;       
   
 }
 //------------------------------------------------------------------------------------//
 int  EigenSolver::preallocate_S_matrix(unsigned int matrix_size,  int*  non_zeros)
 {
   int ierr;
-  ierr = ierr = MatCreateSeqAIJ (PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &B);
-
+  
+  ierr = MatCreateSeqAIJ (PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &B);
+ 
 }

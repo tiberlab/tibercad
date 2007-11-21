@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <string>
-
+//#include <complex>
 
 typedef std::complex<double> Complex;
 
@@ -28,7 +28,7 @@ class EigenSolver
     
     double st_ksp_rtol;
     
-    std::string st_ksp_type;
+    std::string st_ksp_type; //!< Liner system solution method 
     
     double spectrum_shift;
 
@@ -36,7 +36,10 @@ class EigenSolver
 
     bool matrix_output;
 
-    std::string preconditioner;
+    std::string pc_type; //!<preconditioner name
+
+
+   
     
   };
 
@@ -126,7 +129,7 @@ class EigenSolver
   static int do_solve(const SLEPCoptions& opt);
 
   
-
+  static  int _size_of_matrix;
 
 
 };

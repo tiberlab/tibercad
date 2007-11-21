@@ -1460,7 +1460,6 @@ double EnvelopFunctionApprox::get_new_spectrum_shift(void)
   assert(solution.size() == 1);
 
  
-
   st_shift_value = (solution[0].eigen_energy - opt.spectrum_shift)/Hartree;
     
   if (opt.particle == "el")
@@ -1506,8 +1505,6 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
  
   number_of_converged_solutions = EigenSolver::number_of_converged_eigenvalues();
 
-
-
   if (opt.log_output)  cerr << " Number of converged solutions  " << number_of_converged_solutions << "\n";
 
 
@@ -1518,18 +1515,18 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   vector<EnvelopFunctionApprox::eigen_energy>   ev(number_of_converged_solutions);
 
   for (unsigned ind = 0; ind < number_of_converged_solutions; ind++)
-    {
+  {
       
-      ev[ind].energy =  EigenSolver::get_eigenvalue(ind) * Hartree + opt.spectrum_shift;
+    ev[ind].energy =  EigenSolver::get_eigenvalue(ind) * Hartree + opt.spectrum_shift;
       
 
-      ev[ind].global_number = ind;
+    ev[ind].global_number = ind;
       
-      if (opt.log_output) 
-	cerr << ev[ind].global_number  << "    " << ev[ind].energy << "\n";
+    if (opt.log_output) 
+      cerr << ev[ind].global_number  << "    " << ev[ind].energy << "\n";
      
     
-    }
+  }
   
   //---------------------------------------------------------------------
   //sorting of the solutions
@@ -1604,7 +1601,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
 
   map<unsigned int, unsigned int>  global_to_sol_index;
-  map<unsigned int, unsigned int> :: iterator it;
+  map<unsigned int, unsigned int>  :: iterator it;
 
 
   for (unsigned int i = ground_state_index; i < ground_state_index + solution_size ; i++)

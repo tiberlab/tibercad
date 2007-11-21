@@ -241,8 +241,8 @@ KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
   //------------------------------------------------------------------
   //CONDUCTION BAND
   //we renormalize conduction band quadratic part to free electron mass
-  result.s1 = 0.5;
-  result.s2 = 0.5;
+  result.s1 = 1.0;
+  result.s2 = 1.0;
 
   double Ev_top = par.Ev + ((1.0/3.0) * par.delta );
 
@@ -254,10 +254,12 @@ KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
 
   double Ep; //Ep = P^2 * 2.0;
   
-   Ep = (1.0/par.m_G - 1.0)*
+   Ep = 0.5*(1.0/par.m_G - 1.0)*
      par.EgGamma * ( (par.EgGamma +  par.delta )/(par.EgGamma + 2.0/3.0 * par.delta ) ) / Hartree;
 
 
+
+   
 
  
 
@@ -267,15 +269,15 @@ KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
   //  result.P2 = std::sqrt(2.0 * Ep);
 
 
-  result.P1 = std::sqrt(0.5 * Ep);
-  result.P2 = std::sqrt(0.5 * Ep);
+  result.P1 = 0.5*std::sqrt(0.5 * Ep);
+  result.P2 = 0.5*std::sqrt(0.5 * Ep);
  
 
   //result.P1 =  result.P2 = 0;
 
   //rescale L and N
   double t =   0.5*Ep/( (par.EgGamma +  par.delta/3.0)/Hartree );
-  /*
+  
   cerr << Ep * Hartree << "\n";
 
   cerr << result.L1 << "   "  << result.L2 << "        " << result.N1 << "    " << result.N2 << "\n";
@@ -293,7 +295,7 @@ KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
   result.N1_yx = result.M1;  result.N2_yx = result.N1_yx;
   result.N1_xy = result.N1 - result.N1_yx; result.N2_xy = result.N1_xy;
 
-  */
+  
 
   return(result);
 }

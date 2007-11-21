@@ -281,11 +281,11 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
 
   slep_opt.matrix_output = false;
 
-  slep_opt.preconditioner = solver_opt.preconditioner;
+  slep_opt.pc_type = solver_opt.preconditioner;
 
-
+  slep_opt.st_ksp_type = solver_opt.st_ksp_type;
  
-
+ 
 
   if (solver_opt.solve_ev_problem_twice)
   {
@@ -304,7 +304,7 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
     slep_opt.spectrum_shift = st_shift_value;
 
 
-    slep_opt.matrix_output = false;
+    slep_opt.matrix_output = true;
   
    
 
@@ -320,6 +320,8 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
       {
 	throw SolveFailedException("Eigensolver problem\n");
       }
+
+    
     }
    
     st_shift_value = get_new_spectrum_shift();
@@ -375,7 +377,7 @@ void EigenvalueProblem::parse_options()
 
   solver_opt.solver = mod_opt.get_option("solver","arnoldi");
 
-  solver_opt.max_iteration_number = mod_opt.get_option("max_iteration_number",10000);
+  solver_opt.max_iteration_number = mod_opt.get_option("max_iteration_number",30000);
 
   solver_opt.eigen_solver_tolerance  = mod_opt.get_option("eigen_solver_tolerance",1e-9);
 
@@ -404,20 +406,64 @@ void EigenvalueProblem::parse_options()
    
   }
 
-  { 
-    std::string prec =  mod_opt.get_option("preconditioner","default");
-    if (!(prec == "default" || prec == "cholesky"))
+
+  {
+    std::string solution_method = mod_opt.get_option("solution_method", "matlab");
+    if ( solution_method == "matlab")
     {
-      throw InitFailedException( "EigenvalueProblem: Incorrect preconditioner name" + prec);  
+      solver_opt.strategy = "matlab"; 
+      solver_opt.preconditioner = "cholesky";
+      solver_opt.st_ksp_type = "preonly";
     }
     else
     {
-      solver_opt.preconditioner = prec;
-
+      solver_opt.strategy = "general";
+      solver_opt.preconditioner = "jacobi";
+      solver_opt.st_ksp_type = "bcgsl";
     }
 
 
   }
+
+
+  { 
+    std::string prec =  mod_opt.get_option("pc_type","default");
+    if (prec != "default")
+    {
+      if (prec == "cholesky" || prec == "jacobi" || prec == "ilu" || prec == "composite")
+      {
+	throw InitFailedException( "EigenvalueProblem: Incorrect preconditioner name" + prec);  
+      }
+      else
+      {
+	solver_opt.preconditioner = prec;
+
+      }
+    }
+
+  }
+
+  {
+    std::string ksp =  mod_opt.get_option("ksp_type","default");
+    
+    if (ksp != "default")
+    {
+      if ( ksp == "bcgsl" || ksp == "gmres" || ksp == "bcgs" || ksp == "cg" || ksp == "richardson" || ksp == "preonly")
+      {
+	throw InitFailedException( "EigenvalueProblem: Incorrect ksp" + ksp);  		
+      }
+    
+      else
+      {
+	solver_opt.st_ksp_type = ksp;
+      }
+    }
+  }
+
+
+
+  
+ 
 
 
 }

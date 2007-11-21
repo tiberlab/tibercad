@@ -103,6 +103,12 @@ class EigenvalueProblem: public  SimulationInterface
 
     bool periodicity[3];    //!< periodic boundary conditions
 
+
+    std::string st_ksp_type; //!< Liner system solution method 
+    
+
+    std::string strategy; //<matlab (algorithm used in Matlab) or general (recommended by SLEPC)
+    
   };
 
 
