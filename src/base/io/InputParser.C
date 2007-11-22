@@ -1100,11 +1100,15 @@ void InputParser::read_device(void)
 {
 
   std::string  label, keyword,region_name, atomistic_region_name, section_name   ;
+  std::string cluster_name;
+
   std::ifstream in_stream (filename.c_str()) ;
   ID current_region_ID; //  to be  deleted
   bool  check_error;
-  ID region_counter,atomistic_region_counter ;
+  ID region_counter,atomistic_region_counter, cluster_counter ;
   region_counter = 0;
+  cluster_counter = 0;
+
   atomistic_region_counter = 0;
 
   reset_all_maps();
@@ -1194,7 +1198,7 @@ void InputParser::read_device(void)
       current_region_structure.set_model_options(temp_options);
       //  temp_options contains  atomistic ID and all  other data (list of phis region ID) 
 
- //     atomistic_region_numb = temp_options.get_option( "atomistic_region_numb" ,def1);
+      //     atomistic_region_numb = temp_options.get_option( "atomistic_region_numb" ,def1);
 
       atomistic_regions_map.insert(make_pair (atomistic_region_counter, current_region_structure ));
 
@@ -1249,18 +1253,41 @@ void InputParser::read_device(void)
       // ................
       string material, region_numb , def;
 
+      def = "";
 
+      //  temp for  back-compatibility
+      //
       material  = temp_options.get_option( "mat" ,def);
-      // material  = temp_options.get_option( "material" ,def);
-
       temp_options.delete_option ( "mat" );
-      //    temp_options.delete_option ( "material" );
+      //      cerr << "****************** mat =  " << material << " ******************"<<  endl;
+
+
+      if (material == "")
+      {
+        material  = temp_options.get_option( "material" ,def);
+        temp_options.delete_option ( "material" );
+        //        cerr << "****************** material !! =  " << material << " ******************"<<  endl;
+
+      }
 
       region_numb = temp_options.get_option( "reg_numb" ,def);
-      //    region_numb = temp_options.get_option( "region_ID" ,def);
-
       temp_options.delete_option ( "reg_numb" );
-      //    temp_options.delete_option ( "region_ID" );
+      //      cerr << "****************** reg_numb =  " << region_numb << " ******************"<<  endl;
+
+
+
+      if ( region_numb == "")
+      {
+        region_numb = temp_options.get_option( "mesh_regions" ,def);
+        temp_options.delete_option ( "mesh_regions" );
+        //      cerr << "****************** mesh_regions !!! =  " << region_numb << " ******************"<<  endl;
+
+      }
+
+
+
+
+    
 
 
       // create new RegionStructure
@@ -1276,7 +1303,7 @@ void InputParser::read_device(void)
       current_region_structure.set_model_options(temp_options);
 
       //   current_region_structure.set_model_options(temp_region_options);
-      current_region_ID   = atoi(region_numb.c_str());
+      //    current_region_ID   = atoi(region_numb.c_str());   OBSOLETE ????
 
       // ****************************************************
       // instead of  current_region_ID,  put  incremental ID in map device_map: region_counter
@@ -1291,7 +1318,7 @@ void InputParser::read_device(void)
 
       //  put region_name in map  map_region <string,string >
       // region_map.insert(make_pair ("region_name",region_name  ));  
-      string_prop_labels_map.insert(make_pair ("region_name",region_name  )); //  Obsolete ???
+      //   string_prop_labels_map.insert(make_pair ("region_name",region_name  )); //  Obsolete ???
 
 
       //  get   ID of   the  current region :
@@ -1310,10 +1337,69 @@ void InputParser::read_device(void)
       //cout <<  "(device_map[current_region_ID])[mat]  =  " << (device_map[current_region_ID])["mat"] << endl  ;
 
      
-      string_prop_labels_map.clear(); //  Obsolete ???
+      //     string_prop_labels_map.clear(); //  Obsolete ???
 
 
     } //  end  read Region
+
+
+
+
+    else if (keyword == "Cluster")
+    {  //  read  Cluster
+
+      //  Cluster section contains a list of  mesh_regions :
+      //  e.g., mesh_regions = ( 2, 5,6) ;  these  regions  CAN have  different materials associated !!!
+      // 
+      //  clusters will be  put  in  a  separated map  cluster_map 
+      //  to  avoid  confusion with  Regions of the device
+
+      string  region_numb , def;
+
+      //     read cluster_name
+      in_stream >>cluster_name;
+      //   region_counter++;
+      cluster_counter++;
+
+      //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+      while (skip_comments(in_stream,cluster_name) == true )
+      {
+        in_stream >> cluster_name; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+      } 
+
+      cut_off_comment(cluster_name, in_stream );  //  in  case  layer#commmm
+
+      temp_options.clear();
+      parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
+
+      // get mesh_region(s)
+      region_numb = temp_options.get_option( "mesh_regions" ,def);
+
+      // create new RegionStructure  with  empty fields (material, region_ID, material_name)
+      RegionStructure current_region_structure;
+
+      // put mesh region(s) associated to cluster
+      current_region_structure.set_region_ID(region_numb);
+
+      // put options of cluster 
+      current_region_structure.set_model_options(temp_options);
+
+      // put name of the cluster
+      current_region_structure.set_region_name(cluster_name);
+
+      // ***NO !     // insert in  map of the device as made with the simple Region !!!
+      //      device_map.insert(make_pair (region_counter, current_region_structure ));
+
+      // insert in  map cluster_map  
+      cluster_map.insert(make_pair (cluster_counter, current_region_structure ));
+
+
+
+
+    }// end read cluster
+
+
+
 
 
     else 
@@ -1339,7 +1425,7 @@ void InputParser::read_device(void)
   }  //end   while 
      
   // map <ID, RegionStructure>& InputParser::get_device_map(void)
-//    return device_map;  //  to  be  read  from  get_device_map  !!!!
+  //    return device_map;  //  to  be  read  from  get_device_map  !!!!
 
 
 }      //  end   Device   section 
@@ -1355,6 +1441,16 @@ map <ID, RegionStructure>& InputParser::get_device_map(void)
   return device_map;
 
 } 
+
+map <ID, RegionStructure>& InputParser::get_cluster_map(void) 
+
+{
+
+  return cluster_map ;
+
+} 
+
+
 
 map <ID, RegionStructure>& InputParser::get_atomistic_map(void)
 {
@@ -2170,3 +2266,141 @@ bool InputParser::skip_to_bracket(ifstream& in_stream)
   }
 
 } //  end  method
+
+
+
+//  *************************************************
+//  read  $Scale section 
+
+
+void InputParser::read_scale(void)
+{// read_scale
+
+
+
+  std::string  label, keyword,region_name, atomistic_region_name, section_name   ;
+  std::ifstream in_stream (filename.c_str()) ;
+  ID atomistic_region_counter ;
+  bool  check_error;
+  atomistic_region_counter = 0;
+
+
+  if ( !in_stream.good() )
+  {
+
+    throw InitFailedException("ERROR: Input file not good." );
+    
+  }
+
+  section_name =  "Scale";
+
+  section_name = "$"+section_name;
+
+  find_keyword( in_stream,section_name  );
+
+  check_error = skip_to_bracket(in_stream);  // go on reading until the  char  '{' is  read  
+  if (check_error == true)
+    throw InitFailedException("ERROR: Scale  block  missing."); 
+
+  //  read keyword Atomistic 
+  in_stream >> keyword;
+
+
+
+  //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+  while (skip_comments(in_stream,keyword ) == true )
+  {
+    in_stream >> keyword; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+  } 
+
+  cut_off_comment(keyword, in_stream); //  case  Atomistic#commmm
+
+
+  while  (keyword !=  end_symb)
+  { // while
+
+    //cerr << " keyword = "<< keyword << endl ;
+
+    if  (keyword == "Atomistic")
+    {
+      //      *********** read  atomistic ***********************
+
+      //     read   region_name
+      in_stream >>atomistic_region_name;
+      atomistic_region_counter++;
+      //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+      while (skip_comments(in_stream,atomistic_region_name) == true )
+      {
+        in_stream >> atomistic_region_name; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+      } 
+
+      cut_off_comment(atomistic_region_name, in_stream );  //  in  case  layer#commmm
+
+      //    cerr << " ************** ATOMISTIC ************ " <<  atomistic_region_name << endl;
+
+      temp_options.clear();
+      parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
+
+      //....................
+
+      // create new RegionStructure
+      RegionStructure current_region_structure;
+
+      string  atomistic_region_numb  , def1;
+
+      // put  atomistic region_name  in RegionStructure
+      current_region_structure.set_region_name(atomistic_region_name );
+
+      current_region_structure.set_model_options(temp_options);
+      //  temp_options contains  atomistic ID and all  other data (list of phis region ID) 
+
+      //     atomistic_region_numb = temp_options.get_option( "atomistic_region_numb" ,def1);
+
+      atomistic_regions_map.insert(make_pair (atomistic_region_counter, current_region_structure ));
+
+
+
+
+    }
+
+    else if (keyword == "Lumped")
+    {
+   
+
+      throw InitFailedException("SYNTAX ERROR in input  file (Scale section): keyword Lumped not implemented! ");
+
+      // TO  BE  IMPLEMENTED 
+
+    }
+
+    else 
+    {
+      throw InitFailedException("SYNTAX ERROR in input  file (Scale section): keyword Atomistic  is  missing! ");
+    
+    }
+
+
+    //    next   block  
+    in_stream >> keyword;
+
+    //   skip_comments(in_stream,keyword );
+
+    while (skip_comments(in_stream,keyword ) == true )
+    {
+      in_stream >> keyword; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+    cut_off_comment(keyword, in_stream); //  case  Atomistic#commmm
+
+
+
+
+  }//end   while 
+
+
+
+} //  end   Scale   section 
+
+
+
+// ********************************************************************

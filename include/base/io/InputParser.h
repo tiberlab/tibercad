@@ -53,8 +53,12 @@
  * Format is free for these assignements, provided they are separated by spaces. 
  * Everything following a '#' is  a  comment and  is  disregarded.
  *
- * Public method read_device()  parses and extracts information 
- * from device section.
+ * Public method \c read_device() and \c get_device_map() parse and extract information 
+ * from device section.  Method \c get_cluster_map() extracts information about clusters.
+ *
+ * Public method \c read_scale()  parses information  from
+ * the  Scale section,  containing Atomistic regions definition.
+ *
  * read_models()  method  parses and extracts information from Models section.
  *  Models data are stored in the class \c ModelStructure.
  * Public methods read_parameters()   parse and extract 
@@ -85,11 +89,21 @@ class InputParser{
 
   //!   Parses the  device section of  input  file 
   /*!
-   * Method to  read   the  device section of  input  file. Use get_device_map to  
-   * get a map of  physical regions and get_atomistic_map to get  a map of atomistic regions.
+   * Method to  read   the  device section of  the input  file. Use get_device_map to  
+   * get a map of  physical regions.
    */
-//    const std::map <ID, RegionStructure>& read_device(void);
+  //    const std::map <ID, RegionStructure>& read_device(void);
   void read_device(void);
+
+
+
+  //!   Parses the  Scale section of  input  file 
+  /*!
+   * Method to  read   the  "scale"  section of  the input  file. Use get_atomistic_map to get  
+   * a map of atomistic regions.
+   */
+  void read_scale(void);
+
 
 
   //!   Gets the map of   device description (continuous media regions) 
@@ -98,6 +112,15 @@ class InputParser{
    * with the associated RegionStructure object.
    */
   std::map <ID, RegionStructure>& get_device_map(void); 
+
+
+
+  //!   Gets the map of   the clusters of the device  (continuous media description) 
+  /*!
+   * Returns   a  map which associates an incremental cluster ID
+   * with the associated RegionStructure object.
+   */
+  std::map <ID, RegionStructure>& get_cluster_map(void);
 
 
   //!   Gets the map of  atomistic regions. 
@@ -206,6 +229,13 @@ class InputParser{
    *   Map between physical region incremental ID  and  the Region Structure associated to it.
    */
   std::map <ID, RegionStructure> device_map;
+
+
+  /*!
+   *   Map between cluster incremental ID  and  the Region Structure associated to it.
+   */
+  std::map <ID, RegionStructure> cluster_map;
+
 
   /*!
    *   Map between atomistic region  incremental ID   and  the Region Structure associated to it.
