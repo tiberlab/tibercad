@@ -436,7 +436,7 @@ void EigenvalueProblem::parse_options()
     std::string prec =  mod_opt.get_option("pc_type","default");
     if (prec != "default")
     {
-      if (prec == "cholesky" || prec == "jacobi" || prec == "ilu" || prec == "composite")
+      if (!(prec == "cholesky" || prec == "jacobi" || prec == "ilu" || prec == "composite"))
       {
 	throw InitFailedException( "EigenvalueProblem: Incorrect preconditioner name" + prec);  
       }
@@ -454,7 +454,7 @@ void EigenvalueProblem::parse_options()
     
     if (ksp != "default")
     {
-      if ( ksp == "bcgsl" || ksp == "gmres" || ksp == "bcgs" || ksp == "cg" || ksp == "richardson" || ksp == "preonly")
+      if (!( ksp == "bcgsl" || ksp == "gmres" || ksp == "bcgs" || ksp == "cg" || ksp == "richardson" || ksp == "preonly"))
       {
 	throw InitFailedException( "EigenvalueProblem: Incorrect ksp" + ksp);  		
       }
