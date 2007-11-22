@@ -25,8 +25,8 @@ libeigen_solver.so:  EigenSolver.o
 		-Wl,--version-script,export.map \
 		-o libeigen_solver.so $<  \
 		-Wl,-Bsymbolic -Wl,-Bstatic \
-		-L$(SLEPC_LIB_DIR) -lslepc -lslepcfortran \
-		-L$(PETSC_LIB_DIR) -lmpiuni -lpetscts \
+		-L$(SLEPC_LIB_DIR) -lslepc \
+		-L$(PETSC_LIB_DIR) -lpetscts \
 		  -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc \
 		$(ARPACK_LIB) \
 		-L/usr/pack/mpich-1.2.7p1-ma/lib -lfmpich \

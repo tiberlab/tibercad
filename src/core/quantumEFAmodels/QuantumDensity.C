@@ -358,6 +358,7 @@ void QuantumDensity::calculate_for_k_point(const Point& k_point,
 
   ModelOptions quantum_model_opts;
 	  
+  if (opt.log_output) cout << "QuantumDensity:  k-vector =  " << k_point << "\n" << flush;
 
   quantum_model_opts.set_option("k_vector",  k_vector);
 
@@ -375,11 +376,15 @@ void QuantumDensity::calculate_for_k_point(const Point& k_point,
 
   density = quantum_model->get_density();
 
-
+ 
 
   integrated_quantity = quantum_model->get_integrated_probability();
 
-	 
+  if (opt.log_output) 
+  {
+    cout << "QuantumDensity: total_density = " << integrated_quantity <<"\n" << flush;
+  }
+  	 
  
 }
 

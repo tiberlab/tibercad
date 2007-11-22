@@ -2817,7 +2817,7 @@ void EnvelopFunctionApprox::calculate_convergent_density( )
 
   double total_density =  get_integrated_probability();
  
-  bool converged =( last_state_density/total_density  < opt.relative_density_tolerance ) ; 
+  bool converged =( last_state_density/total_density  < opt.relative_density_tolerance/10 ) ; 
 
  
 
@@ -2845,6 +2845,7 @@ void EnvelopFunctionApprox::calculate_convergent_density( )
 
       double total_density1 = get_integrated_probability();
       
+      
     
       if ( abs(total_density1 - total_density)/total_density < opt.relative_density_tolerance )  
       {
@@ -2853,6 +2854,8 @@ void EnvelopFunctionApprox::calculate_convergent_density( )
       }
 
       total_density = total_density1;
+
+     
     }
 
  

@@ -123,6 +123,12 @@ class EigenSolver
 
 
 
+  //!set initial vector
+  /*!
+    \param  initial_vector initial vector 
+  */
+  static void set_initial_vector( const std::vector<Complex>& initial_vector);
+
 
  private:
 

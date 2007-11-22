@@ -65,15 +65,15 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   if (opt.read_matrix_from_file)
   {
   
-     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr); //their
-     //ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
+  
+    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
 
     ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
 
 
-    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.S_file_name.c_str(),PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr); //their
-    //ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.S_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
+   
+    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.S_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
 
     ierr = MatLoad(viewer,MATAIJ,&B);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
@@ -117,22 +117,26 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  CHKERRQ(ierr);
 
 
-  if (opt.solver_type == "arnoldi")
+  if (opt.solver_type == "arnoldi" || opt.solver_type == "krylovshur" )
   {
     ierr = EPSSetProblemType(eps,EPS_GNHEP);CHKERRQ(ierr);
     
-    //ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
+    // ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
 
-    ierr = EPSSetType(eps, EPSARNOLDI); CHKERRQ(ierr);
+    if (opt.solver_type == "arnoldi")
+      ierr = EPSSetType(eps, EPSARNOLDI);
+    else
+      ierr = EPSSetType(eps, EPSKRYLOVSCHUR);
+
     ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
- 
-
+   
     ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
     ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
     
    
-    ierr = STSetType(st,STSINV); CHKERRQ(ierr);
-
+     ierr = STSetType(st,STSINV); CHKERRQ(ierr);
+    
+    
     
   
     ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);
@@ -165,7 +169,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   
 
    
-
+   
    
     
 
@@ -196,11 +200,42 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
 
       ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);
 
+
       ierr = KSPSetType( ksp, KSPBCGS);CHKERRQ(ierr);
 
-      //rtol, abstol, dtol, maxits
-      ierr = KSPSetTolerances(ksp,1e-10, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
 
+      ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);
+
+      if (opt.st_ksp_type == "bcgsl")
+	ierr = KSPSetType( ksp, KSPBCGS);
+      else if (opt.st_ksp_type == "gmres" )
+	ierr = KSPSetType( ksp, KSPGMRES);
+      else if (opt.st_ksp_type == "bcgs" )
+	 ierr = KSPSetType( ksp, KSPBCGS);
+       else if (opt.st_ksp_type == "cg" )
+	 ierr = KSPSetType( ksp, KSPCG);
+       else if (opt.st_ksp_type == "richardson" )
+	 ierr = KSPSetType( ksp, KSPCG);
+       else if (opt.st_ksp_type == "preonly")
+	 ierr = KSPSetType( ksp, KSPPREONLY);
+       
+    
+
+       ierr = KSPGetPC( ksp,&pc);
+       
+       if (opt.pc_type == "cholesky")
+	 ierr = PCSetType(pc,PCCHOLESKY);
+       else if (opt.pc_type == "jacobi" )
+	 ierr =  PCSetType(pc,PCJACOBI);
+       else if (opt.pc_type == "ilu" )
+	 ierr =  PCSetType(pc,PCILU);
+       else if (opt.pc_type == "composite" )
+	 ierr =  PCSetType(pc,PCCOMPOSITE);
+       
+     
+       //rtol, abstol, dtol, maxits
+       ierr = KSPSetTolerances(ksp,1e-10, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
+       
     }
   }
  
@@ -247,10 +282,10 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
  
 
    if (opt.read_matrix_from_file)
-  {
+   { 
   
-    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),PETSC_FILE_RDONLY,&viewer);CHKERRQ(ierr); //their
-    // ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
+    
+    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
     ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
 
@@ -381,7 +416,7 @@ double EigenSolver::get_eigenvalue( int i)
 //----------------------------------------------------------------//
 
 
- void EigenSolver::get_eigen_vector( int i, std::vector<Complex>& eigen_vector_out)
+void EigenSolver::get_eigen_vector( int i, std::vector<Complex>& eigen_vector_out)
 {
   int ierr, vec_size;
   PetscScalar kr, ki;
@@ -419,6 +454,40 @@ double EigenSolver::get_eigenvalue( int i)
   ierr = VecDestroy(eigen_vector);
 
 }
+//-----------------------------------------------------------------------------//
+void EigenSolver::set_initial_vector( const std::vector<Complex>& in_vector)
+{
+
+  int ierr;
+
+  Vec v0;
+
+  
+
+  MatGetVecs(A,PETSC_NULL,&v0);
+  
+  PetscScalar y[_size_of_matrix];
+  PetscInt ix[_size_of_matrix];
+
+  for (int j= 0; j < _size_of_matrix ; j++)
+  {
+    y[j]  = in_vector[j];
+
+    ix[j] = j;
+  }
+
+
+  VecSetValues(v0,_size_of_matrix,ix,y,INSERT_VALUES);
+
+ 
+
+  EPSSetInitialVector(eps, v0);
+  
+ 
+  ierr = VecDestroy(v0);
+}
+
+
 //-----------------------------------------------------------------------------//
 
 int EigenSolver::prepare_slepc()
@@ -481,7 +550,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
 
   ierr = EPSSetDimensions(eps,opt.ev_number, ncv); CHKERRQ(ierr);
 
-  
+   
   ierr = EPSSolve(eps);
 
  

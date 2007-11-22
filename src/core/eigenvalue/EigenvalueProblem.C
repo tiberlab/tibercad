@@ -286,6 +286,8 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
   slep_opt.st_ksp_type = solver_opt.st_ksp_type;
  
  
+  vector<Complex> initial_vector;
+
 
   if (solver_opt.solve_ev_problem_twice)
   {
@@ -304,7 +306,7 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
     slep_opt.spectrum_shift = st_shift_value;
 
 
-    slep_opt.matrix_output = true;
+    slep_opt.matrix_output = false;
   
    
 
@@ -326,6 +328,10 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
    
     st_shift_value = get_new_spectrum_shift();
 
+    
+    EigenSolver::get_eigen_vector( 0, initial_vector);
+    
+    EigenSolver::set_initial_vector(initial_vector);
   
   }
 
@@ -375,7 +381,7 @@ void EigenvalueProblem::parse_options()
 {
   const ModelOptions& mod_opt = get_options();
 
-  solver_opt.solver = mod_opt.get_option("solver","arnoldi");
+  solver_opt.solver = mod_opt.get_option("solver","krylovshur");
 
   solver_opt.max_iteration_number = mod_opt.get_option("max_iteration_number",30000);
 
