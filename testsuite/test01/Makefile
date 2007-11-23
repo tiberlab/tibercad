@@ -2,27 +2,20 @@
 
 topdir := ../..
 
-include $(topdir)/Make.common
+inputfile = bulk.tib
 
 
-.PHONY: run
-
-DIM := 1
+.PHONY: run clean distclean
 
 
-run: bulk.msh
-	@echo "Running test01 ..."
+run: 
+	@echo "Running test in $(notdir $(PWD)) ..."
 	@echo ""
 	@ln -f -s $(topdir)/bin/tibercad
-	@./tibercad bulk.in
+	@./tibercad $(inputfile)
 
 
 clean:
-	@rm -f *~ *.xda *.xta *.ucd
-
-distclean: clean
-	@rm -f *.msh *.dat
-	@rm -rf output tibercad
+	@rm -rf *~ *.xda *.xta *.ucd tibercad output
 
 
-include $(topdir)/Make.rules

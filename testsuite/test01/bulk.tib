@@ -102,6 +102,7 @@ $Simulation
   solve = sweep
   resultpath = output
   output_format = grace
+  plot = (Ec, Ev)
 }
 
 

@@ -54,6 +54,10 @@ examples: all
 	@$(MAKE) -C examples
 
 
+run_tests:
+	@cd testsuite && ./run_tests -t all -v
+
+
 .PHONY: manual
 manual:
 	@$(MAKE) -C manual

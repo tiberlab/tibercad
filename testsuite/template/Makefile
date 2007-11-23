@@ -1,8 +1,8 @@
-# $Id: Makefile 473 2007-09-07 15:06:21Z maufder $
+# $Id$
 
 topdir := ../..
 
-inputfile = diode.tib
+inputfile = put_your_filename_here.tib
 
 
 .PHONY: run clean distclean

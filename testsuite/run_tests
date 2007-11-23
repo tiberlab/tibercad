@@ -1,0 +1,141 @@
+#!/usr/bin/env perl
+
+use strict;
+
+use TestSuite qw(run_test
+                 read_configuration
+                 get_option
+                 set_option
+                 check_compilation
+                 send_email);
+
+use Term::ANSIColor;
+use Getopt::Long;
+
+
+
+sub usage {
+print "
+USAGE: run_tests [OPTIONS]
+
+  OPTIONS are:
+    --verbose | -v              : do more output
+    --quiet | --noverbose       : do less output
+    --config=<file> | -c <file> : use <file> as global configuration file
+    --sendmail | --mail |
+                 -s | -m        : send error report to recipients specified
+                                  in configuration
+    --test=<a,b,c,..> | -t <..> : perform tests a, b, c
+    --help | -h                 : this help message
+
+  Tests can be:
+    directory name : run make in the named directory and perform checks
+                      according to the configuration in this directory.
+    \"compile\"      : compile in the toplevel directory
+    \"all\"          : do all tests
+
+";
+
+exit;
+}
+
+
+
+my $configfile = "test.conf";
+
+
+# for the final summary
+my %checklist;
+
+# if we need to inform the developers
+our $failure_detected = 0;
+
+# level of verbosity
+our $verbose = '';
+
+# the tests to perform
+our @tests = ();
+
+# whether to send mail
+our $sendmail = '';
+
+
+
+## check a test result and set the global result accordingly
+sub check($) {
+  $failure_detected = 1 if ($_[0] == 1);
+}
+
+
+
+##
+## main
+##
+
+## parse the options
+GetOptions('verbose!' => \$verbose,
+           'quiet' => sub {$verbose = 0},
+           'config=s' => \$configfile,
+           'sendmail|mail!' => \$sendmail,
+           'test=s' => \@tests,
+           'help' => \&usage);
+
+@tests = split(/,/,join(',',@tests));
+
+
+set_option('verbose', $verbose);
+
+
+my $datetime = localtime;
+print "\nStarting TiberCAD test suite at $datetime\n";
+
+
+read_configuration($configfile);
+
+
+if (scalar grep(/compile|all/, @tests)) {
+  my $topdir = get_option("topdir");
+  my $compile = check_compilation($topdir);
+  check($compile);
+  $checklist{'compilation'} = $compile;
+}
+
+
+opendir CWD, ".";
+while ((my $dir = readdir CWD)) {
+
+  (($dir =~ /^test[0-9]+/) && (-d $dir)) || next;
+
+  if (scalar grep(/$dir|all/, @tests)) {
+    my $result = run_test($dir);
+    check($result);
+    $checklist{$dir} = $result;
+  }
+}
+
+
+print(color("red"), "\n*** WARNING ***  Errors detected in test suite.",
+      color("reset")) if ($failure_detected == 1);
+
+
+
+
+if ($failure_detected and $sendmail) {
+
+  my $msg = "Errors detected in TiberCAD test suite.\n";
+  $msg = "${msg}Run: $datetime\n\n";
+  $msg = "${msg}The following tests failed:\n";
+
+  while (my ($test, $result) = each(%checklist)) {
+    $msg = "${msg}   $test\n" if $result;
+  }
+
+  my %message = (
+    'subject' => "Subject: TiberCAD test suite error report\n",
+    'message' => $msg);
+  send_email(\%message);
+}
+
+
+$datetime = localtime;
+print "\nTiberCAD test suite finished at ", $datetime, "\n\n";

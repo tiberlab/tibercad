@@ -1,0 +1,29 @@
+HOW TO CREATE TESTSUITE EXAMPLES
+--------------------------------
+
+1. Create a new directory called testXXX, where XXX is a number
+
+2. Copy the files from template into testXXX and adapt them to your needs
+
+3. Add the input and mesh file (and perhaps the source for the mesh
+   for future reference) and the material files to the directory
+
+4. Put the reference output files into a subdirectory "reference"
+
+5. As output directory, specify "output"
+
+6. Before committing, check if it works...
+
+
+HOW TO RUN TESTSUITE EXAMPLES
+-----------------------------
+
+./run_tests -t <directory_name>
+
+See ./run_tests -h for help
+
+To run all tests you can also say
+
+make run_tests
+
+in the toplevel directory.

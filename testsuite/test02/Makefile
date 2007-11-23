@@ -2,27 +2,20 @@
 
 topdir := ../..
 
-include $(topdir)/Make.common
+inputfile = diode.tib
 
 
-.PHONY: run
-
-DIM := 1
+.PHONY: run clean distclean
 
 
-run: diode.msh
-	@echo "Running test02 ..."
+run: 
+	@echo "Running test in $(notdir $(PWD)) ..."
 	@echo ""
 	@ln -f -s $(topdir)/bin/tibercad
-	@./tibercad diode.in
+	@./tibercad $(inputfile)
 
 
 clean:
-	@rm -f *~ *.xda *.xta *.ucd
-
-distclean: clean
-	@rm -f *.msh
-	@rm -rf output tibercad
+	@rm -rf *~ *.xda *.xta *.ucd tibercad output
 
 
-include $(topdir)/Make.rules
