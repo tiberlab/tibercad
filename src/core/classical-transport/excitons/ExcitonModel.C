@@ -29,9 +29,6 @@ ExcitonModel::do_mobility(void)
 void
 ExcitonModel::do_recombination(void)
 {
-  double inv_tau = 1.0 / _t_nr + 1.0 / _t_r + 1.0 / _t_diss;
-  net_recomb_rate = density * inv_tau;
-  recombination_rate_derivative = density_derivative * inv_tau;
 
   ID dd_id = _dd_sim->get_id();
   DriftDiffusionProperties* ddprop =
@@ -40,6 +37,12 @@ ExcitonModel::do_recombination(void)
   
   double kT = ddprop->get_lattice_temperature();
   ddprop->set_carrier_temperatures(kT, kT);
+
+  double inv_tau = 1.0 / _t_nr + 1.0 / _t_r + 1.0 / (_t_diss);
+
+  net_recomb_rate = density * inv_tau;
+  recombination_rate_derivative = density_derivative * inv_tau;
+
 
   DriftDiffusion::Solution sol;
   _dd_sim->get_solution(get_element(), get_coordinates(), sol);

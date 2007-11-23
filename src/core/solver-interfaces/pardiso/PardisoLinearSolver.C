@@ -228,12 +228,16 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
 
       if (error != 0) {
 
-        //printf("\nERROR during symbolic factorization: %d\n", error);
-        //_check_pardiso_err(error);
+        printf("\nERROR during symbolic factorization: %d\n", error);
+        
+	phase = -1; /* Release internal memory. */
+	PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
+		 &n, &ddum, ia, ja, &idum, &nrhs,
+		 iparm, &msglvl, &ddum, &ddum, &error);
 
-		throw PardisoSolverException(error);
+	throw PardisoSolverException(error);
 
-		// exit(1);
+	
         }
 
 #ifdef DEBUG
@@ -250,10 +254,13 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
 	     iparm, &msglvl, &ddum, &ddum, &error);
 
     if (error != 0) {
-      // printf("\nERROR during numerical factorization: %d", error);
-      //_checkerr(error)
+    
+         phase = -1; /* Release internal memory. */
+	 PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
+		  &n, &ddum, ia, ja, &idum, &nrhs,
+		  iparm, &msglvl, &ddum, &ddum, &error);
       	throw PardisoSolverException(error);
-	 // exit(2);
+	
     }
 
 #ifdef DEBUG
@@ -271,21 +278,24 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
 	     &n, a, ia, ja, &idum, &nrhs,
 	     iparm, &msglvl, b, x, &error);
 
+
     if (error != 0) {
-      //printf("\nERROR during solution: %d", error);
+
+        phase = -1; /* Release internal memory. */
+	PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
+		 &n, &ddum, ia, ja, &idum, &nrhs,
+		 iparm, &msglvl, &ddum, &ddum, &error);
+
+	printf("\nERROR during solution: %d", error);
       	throw PardisoSolverException(error);
-       //exit(3);
+      
     }
       
 
-#ifdef DEBUG
-     printf("\nSolve completed ... ");
-    //printf("\nThe solution of the system is: ");
-    //for (int i = 0; i < n; i++) {
-    //  printf("\n x [%d] = % f", i, x[i] );
-    // }
-    //printf ("\n");
-#endif    
+   #ifdef DEBUG
+       printf("\nSolve completed ... ");
+   
+   #endif    
     
 
     /* -------------------------------------------------------------------- */

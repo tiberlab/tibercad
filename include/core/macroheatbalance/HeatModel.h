@@ -9,7 +9,7 @@
 #include "elem.h"
 #include "ParticleThermalConductivity.h"
 #include <point.h>
-
+#include "Constants.h"
 
 //!Class that contains all the object, necessary for Heat Transport solver
 class HeatModel: public PhysicalModel
@@ -41,14 +41,17 @@ class HeatModel: public PhysicalModel
 
 
   void get_dd_solution_secure( std::vector<Point> g_point,
-                                        std::vector<double>& QfermiE,
-                                        std::vector<double>& QfermiH,
-                                        std::vector<Point>& JE,
-					  std::vector<Point>& JH);
+			       std::vector<double>& QfermiE,
+			       std::vector<double>& QfermiH,
+			       std::vector<Point>& JE,
+			       std::vector<Point>& JH);
+  
+  void get_ex_solution_secure( std::vector<Point> g_point,
+			       std::vector<double>& ex_potential,
+			       std::vector<Point>& J_ex,
+                               std::vector<double>& radiative_power);
+  
 
-  void get_dd_solution(std::vector<Point> g_point,
-                                std::vector<DriftDiffusion::Solution>& potentials,
-				std::vector<DriftDiffusion::Currents>& currents);
 
    //!Set the current element
    void set_element(const Elem* elem);
@@ -59,12 +62,11 @@ class HeatModel: public PhysicalModel
    //!Return the holes thermoelectric_power
    double get_holes_thermoelectric_power();
 
-   //!Get 
+   //!get the information about the drift diffusion simulation
     bool get_joule_opt();
-   
-   SimulationInterface* get_dd_simulation();
 
-  //DriftDiffusion* get_dd_simulation();
+   //!get the information about the excitons simulation
+    bool get_excitons_opt();
  
    //! Set the temperature 
    void set_temperature(double temperature); 
@@ -72,6 +74,8 @@ class HeatModel: public PhysicalModel
    //! Get the Simulation Environment of the DD simulation
    SimulationEnvironment& get_dd_environment();
 
+ //! Get the Simulation Environment of the Excitons simulation
+   SimulationEnvironment& get_ex_environment();
 
  private:
  //! The variables that can be provided
@@ -100,7 +104,16 @@ class HeatModel: public PhysicalModel
       TEPOWERH
       
     };
- 
+
+    enum ex_var
+    {
+      JEX_X,
+      JEX_Y,
+      JEX_Z,
+      EX_POTENTIAL,
+      RADPOWER
+      
+    };
     struct model_options
    {
      bool joule_effect;
@@ -108,6 +121,8 @@ class HeatModel: public PhysicalModel
      bool peltier_thomson_effect;
   
      bool particle_thermal_conductivity;
+ 
+     bool excitons;
 
    };
     
@@ -115,9 +130,11 @@ class HeatModel: public PhysicalModel
    const Elem* _elem; 
 
 
-   DriftDiffusion* _dd_simul;
+   //! drift diffusion simulation
+   SimulationInterface* _dd_simul;
 
-   SimulationInterface* _dd_simul_si;
+   //! excitons simulation
+   SimulationInterface* _ex_simul;
 
    // For general solution
 
@@ -125,12 +142,15 @@ class HeatModel: public PhysicalModel
 
   std::vector<ID> ID_je;
 
+  //!For excitons solution
+   std::set< ID > ex_set_ID;
+
+   std::vector<ID> ID_ex;
+
 
 
    //!For particle solution
-
-
-  std::set< ID >  dd_ID_kpart;
+   std::set< ID >  dd_ID_kpart;
 
   std::vector<ID> ID_kpart;
   
@@ -264,6 +284,24 @@ HeatModel::get_joule_opt()
 }
 
 inline
+bool
+HeatModel::get_excitons_opt()
+{
+
+  return model_opt.excitons;
+
+}
+
+inline
+SimulationEnvironment&
+HeatModel::get_ex_environment()
+{
+
+  return _ex_simul->get_environment();
+
+}
+
+inline
 SimulationEnvironment&
 HeatModel::get_dd_environment()
 {
@@ -280,11 +318,5 @@ return model_opt.peltier_thomson_effect;
 
 }
 
-inline
-SimulationInterface* HeatModel::get_dd_simulation()
-{
-  return _dd_simul;
-
-}
 
 #endif

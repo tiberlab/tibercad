@@ -40,7 +40,9 @@ class ExcitonProperties : public PhysicalModel
     static ExcitonProperties* create(const std::string& name,
         const ModelOptions& options = ModelOptions());
 
-
+     //! Returns the exciton energy \f$ Eg - R \f$
+     double get_exciton_energy(void);
+      
     //! Set the statistics to be used
     /*!
      * \param statistics the statistics
@@ -416,6 +418,12 @@ ExcitonProperties::get_lattice_temperature(void)
   return exciton_vt;
 }
 
+inline
+double
+ExcitonProperties::get_exciton_energy(void)
+{
+  return _energy;
+}
     
 inline
 double

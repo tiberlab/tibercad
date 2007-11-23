@@ -1,6 +1,6 @@
 #include "ThermalContact.h"
 
-
+#include "FluxContact.h" 
 #include "Reservoir.h" 
 
 //==================================================================================//
@@ -12,8 +12,12 @@ ThermalContact::create(const std::string & name,  const ModelOptions &   options
   if (name == "Heat_reservoir")
     result = Reservoir::create();
 
+  if (name == "Thermal_flux")
+    result = FluxContact::create();
+
   if (result != NULL)
   {
+       
      result->set_options(options);
   }
   else

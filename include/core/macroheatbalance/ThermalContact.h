@@ -13,7 +13,7 @@ class ThermalContact: public BoundaryProperties
   enum Type
   {
     Reservoir = 0,
-    Peltier = 1
+    Neumann = 1
   };
 
  //!Constructor

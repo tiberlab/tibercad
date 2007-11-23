@@ -48,9 +48,6 @@ class MacroHeatBalance : public SimulationInterface
     double max_error; //!< Max tollerance for self-consistent loop  
 
     double work_units; //!< SI units, has to be consistent with the database parameters
-
-    double length_scale; //!< mesh_units/work_units
-
   };
 
     

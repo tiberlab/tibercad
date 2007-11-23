@@ -33,6 +33,7 @@
 #include "Material.h"
 #include "Boundary.h"
 #include "Reservoir.h"
+#include "FluxContact.h"
 #include "SimulationOptions.h"
 
 using namespace std;
@@ -81,8 +82,7 @@ void MacroHeatBalance::do_init( )
  // we calculate in cm!
   double mesh_units = get_scaling().get_calc_mesh_units() / sim_opt.get_option("Work_length_units", 1e-2);
   get_scaling().set_calc_mesh_units(mesh_units);
-  opt.length_scale = 1.0;
-  ///
+  
 
 
   equation_systems = & (get_equation_systems());
@@ -258,6 +258,7 @@ BoundaryProperties* MacroHeatBalance::create_boundary_model (const ModelOptions 
  
    const string& modelname = options.get_option("type", "Heat_reservoir");
  
+  
    ThermalContact* model = ThermalContact::create(modelname, options);
 
    if (model == NULL)  
@@ -463,17 +464,15 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     
   std::vector<Point> JH;
 
-   
+  std::vector<Point> JEX;
 
+  std::vector<double> EX_pot;
+  
+  std::vector<double> Rad_ex_power;
+
+  ThermalContact* contact; 
   //----------------------------------------------------------LatticeThermalConductivity-------//
   
-
-  //-----------------------------------------------------------------//
-  //My Jacobian. It is to pass to our work units
-  
-  double my_Jacobian = 1.0;
-  for (short i = 1; i <= dim; i++)  my_Jacobian *= opt.length_scale;
-  //----------------------------------------------------------------//
 
 
 
@@ -483,6 +482,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   for ( ; el != end_el ; ++el)   //loop over elements
   {  
 
+	  
   
     //Inizialize the element environment
     const Elem* elem = *el;
@@ -518,40 +518,48 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
       heat_model->get_dd_solution_secure(q_point,QfermiE,QfermiH,JE,JH);
 
-      //  heat_model->get_dd_solution(q_point,potentials,currents); 
-
 
     } 
      
-    
-    
-      
+     if (heat_model->get_excitons_opt())
+     {
+
+       heat_model->get_ex_solution_secure(q_point,EX_pot,JEX,Rad_ex_power);
+
+     }
+     
+     
      for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
-      
-    { // loop over test function
-
-      //!let us check if it belongs to a reservoir boundary
-      const Node* nd = elem->get_node(p1);
-	
-      Boundary* bd = se.get_boundary(nd); 
-	
-      if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
-
-      { //if belongs to boundary
-
-	ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );
-	if (contact->get_type() == ThermalContact::Reservoir)
-	{//heat reservoir---{//loop over basis functions
-	    
-	  Ke(p1,p1) = 1.0;
-	  
-	  Fe(p1) = ( dynamic_cast<Reservoir*> (contact) )->get_temperature();
-        
-	  
-	}//end reservoir
-      } 
-      else 
-      {
+     { // loop over test function
+       
+       bool reservoir_contact = false;
+	 
+       //!let us check if it belongs to a reservoir boundary
+       const Node* nd = elem->get_node(p1);
+       
+       Boundary* bd = se.get_boundary(nd); 
+       
+       if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+       { //if belongs to boundary
+	 
+	 contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );
+	 
+	 if (contact->get_type() == ThermalContact::Reservoir)
+	 {//heat reservoir---{//loop over basis functions
+	   reservoir_contact = true;
+	 }
+       }
+       
+       if (reservoir_contact)
+       {//heat reservoir---
+	 
+	 Ke(p1,p1) = 1.0;
+	 
+	 Fe(p1) = ( dynamic_cast<Reservoir*> (contact) )->get_temperature();
+	 
+       } 
+       else 
+       {
 	for (unsigned int qp=0; qp<qrule.n_points(); qp++)  
 	{//Loop over quadrature points 
 
@@ -580,7 +588,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		  kappa_value = kappa(i+1, j+1);
 
 	
-	          value += -JxW[qp] * kappa_value * dphi[p1][qp](i) * dphi[p2][qp](j) /(opt.length_scale * opt.length_scale);
+		value += -JxW[qp] * kappa_value * dphi[p1][qp](i) * dphi[p2][qp](j);
                  
 		
 	      }//end loop over direction (2)
@@ -590,21 +598,17 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 	      if (heat_model->get_peltier_thomson_opt())
 	      {
-		//cout<<"Peltier"<<endl;
                
-		//	value += -JxW[qp]* phi[p1][qp] * dphi[p2][qp](i)*
-		// (eTEpower*currents[qp].jn(i) + hTEpower*currents[qp].jp(i) ) /(opt.length_scale);
-
 	value += -JxW[qp]* phi[p1][qp] * dphi[p2][qp](i)*
-		  (eTEpower*JE[qp](i) + hTEpower*JH[qp](i) ) /(opt.length_scale);
+		  (eTEpower*JE[qp](i) + hTEpower*JH[qp](i) );
 
-		//cout<<(opt.length_scale)<<endl;
+	       
 	      }
 	      
 	       
 	    }//end loop over direction (1)												
 	    
-	   value *= my_Jacobian;
+	  
 	    
 
            Ke(p1,p2) += value;
@@ -618,18 +622,32 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	   
 	     for (short i = 0; i < dim; i++) 
 	     { 
-               //Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
-	       //	 ( currents[qp].jn(i)*potentials[qp].fermi_e + potentials[qp].fermi_h * currents[qp].jp(i) )
-	       //	 / opt.length_scale * my_Jacobian;
-
-                Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
-	       	 ( JE[qp](i) * QfermiE[qp] +  QfermiH[qp] * JH[qp](i) )
-	       	 / opt.length_scale * my_Jacobian;
+             
+	       Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
+	       	 ( JE[qp](i) * QfermiE[qp] +  QfermiH[qp] * JH[qp](i) );
 
 	     }
 	     
 	   }   
+
+           //Exciton contribute
+	   if (heat_model->get_excitons_opt())
+	   {  
 	   
+	     for (short i = 0; i < dim; i++) 
+	     { 
+	    
+                Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
+		  ( JEX[qp](i) *  EX_pot[qp] );
+	       	 
+               
+	     }
+
+	     Fe(p1) -= phi[p1][qp] * JxW[qp] * Rad_ex_power[qp]*Constants::e;
+		         
+
+	     
+	   }   
 	   
 	   
 	}//end Loop over quadrature points  
@@ -642,7 +660,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
       
      //The loop over element is the only loop that is surviving at this point
 
-   
+     //Joule effect
      
      if (heat_model->get_joule_opt())
      {
@@ -661,6 +679,9 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	   ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
 	   
 	   if (contact->get_type() == ThermalContact::Reservoir)   belongs_to_reservoir = true;
+
+          
+
 	 }
 	 
 	 if ( !belongs_to_reservoir ) 
@@ -683,17 +704,14 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 		 heat_model->get_dd_solution_secure(qface_point,QfermiE,QfermiH,JE,JH);
 		    
-		 heat_model->get_dd_solution(qface_point,face_potentials,face_currents);  
-		     
+		   
 	   	 for (short i = 0; i < 3; i++)
 		 {
 		   for (unsigned int qp=0; qp < qface.n_points(); qp++)
 		   {
-		     //Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
-		     //  ( face_currents[qp].jn(i)*face_potentials[qp].fermi_e + face_potentials[qp].fermi_h * face_currents[qp].jp(i) )                       *(my_Jacobian/opt.length_scale);
-
-                      Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
-		      ( JE[qp](i)*QfermiE[qp] + QfermiH[qp] * JH[qp](i) ) * (my_Jacobian/opt.length_scale);
+		   
+		         Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
+			   ( JE[qp](i)*QfermiE[qp] + QfermiH[qp] * JH[qp](i) );
 
 
 		   }
@@ -723,18 +741,14 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		   
 		   qface_point[0] = elem->point(p1);
 		   
-		   //heat_model->get_dd_solution(qface_point,face_potentials,face_currents);  		   
-
 		   heat_model->get_dd_solution_secure(qface_point,QfermiE,QfermiH,JE,JH);
 
 		   for (short i = 0; i < 3; i++)
 		   {  
-		     //Fe(p1) +=   normal[i] * 
-		     // ( face_currents[0].jn(i) * face_potentials[0].fermi_e + face_potentials[0].fermi_h * face_currents[0].jp(i) )   ;
 
-                      Fe(p1) +=   normal[i] * 
+		          Fe(p1) +=   normal[i] * 
 		      ( JE[0](i) * QfermiE[0] + QfermiH[0] * JH[0](i) )   ;
-		     
+		       
 		   }// for (short i = 0; i < 3; i++)
 		   
 		 } // if (p1== side)
@@ -752,13 +766,173 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
      } // (dd_simul != NULL)
 
 
-     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
-     system.matrix->add_matrix (Ke, dof_indices);
-     system.rhs->add_vector    (Fe, dof_indices); 
+     //Excitons effect
+
+     if (heat_model->get_excitons_opt())
+     {
+            
+       for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+       {
+	 //!let us check if it belongs to a reservoir boundary
+	 const Node* nd = elem->get_node(p1);
+	 
+	 Boundary* bd = se.get_boundary(nd); 
+	 
+	 bool belongs_to_reservoir = false;
+	 	 
+	 if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+	 {
+	   ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
+	   
+	   if (contact->get_type() == ThermalContact::Reservoir)   belongs_to_reservoir = true;
+	 }
+	 
+	 if ( !belongs_to_reservoir ) 
+	 {//not fixed temperature2
+	   
+	   const unsigned int num_sides = elem->n_sides();
+	   
+	   for (unsigned int side = 0; side<num_sides; side++)
+	   {
+	     const ElementSide elside(elem->top_parent(), side);
+	     
+	     if ( (heat_model->get_ex_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of excitons simulation
+	     {
+	      
+	    
+	       if (dim > 1)
+	       {
+		 
+		 fe_face->reinit(elem, side);
+
+		 heat_model->get_ex_solution_secure(qface_point,EX_pot,JEX,Rad_ex_power);
+		    
+		   
+	   	 for (short i = 0; i < 3; i++)
+		 {
+		   for (unsigned int qp=0; qp < qface.n_points(); qp++)
+		   {
+		   
+                      Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
+		      ( JEX[qp](i) * EX_pot[qp] ) ;
+
+
+		   }
+                 }
+
+
+	       }
+	       else //dim = 1
+	       {
+		 
+		 if (p1== side)
+		 {
+		   std::vector<double> normal(3);
+		   Point p = elem->point(side);
+		   Point pc = elem->centroid();
+		   
+		   const double temp = sqrt((p(0) - pc(0)) * (p(0) - pc(0)) 
+					    +(p(1) - pc(1)) * (p(1) - pc(1)) + 
+					    (p(2) - pc(2)) * (p(2) - pc(2)));
+		   
+		   
+		   for (short i = 0; i < 3; i++)
+		     normal[i] = (p(i) - pc(i))/temp;
+		   
+		   
+		   std::vector<Point> qface_point(1);
+		   
+		   qface_point[0] = elem->point(p1);
+		   
+		   heat_model->get_ex_solution_secure(qface_point,EX_pot,JEX,Rad_ex_power);
+
+		   for (short i = 0; i < 3; i++)
+		   {  
+
+                      Fe(p1) +=   normal[i] * 
+		      ( JEX[0](i) * EX_pot[0] )   ;
+		     
+		   }// for (short i = 0; i < 3; i++)
+		   
+		 } // if (p1== side)
+		 
+	       } //if (dim > 1)
+	       
+	     }// if ( (heat_model->get_dd_environment()).is_on_boundary(   elside   ) )
+	     
+	   } //  for (unsigned int side = 0; side<num_sides; side++)
+	   
+	 } // if ( !belongs_to_reservoir ) 
+	 
+       }// for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+       
+     } // if (heat_model->get_excitons_opt())
+
+
+     //Contact Resistance
+            
+     for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+      {
+       //!let us check if it belongs to a reservoir boundary
+       const Node* nd = elem->get_node(p1);
+       
+       Boundary* bd = se.get_boundary(nd); 
+       
+       if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+       {
+	 ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
+	 
+ 	 if (contact->get_type() == ThermalContact::Neumann)  
+	 {
+
+	   double rho_e = ( dynamic_cast<FluxContact*> (contact) )->get_electrons_resistivity();
+	
+           double rho_h = ( dynamic_cast<FluxContact*> (contact) )->get_holes_resistivity();
+            
+	    
+
+ 	   const unsigned int num_sides = elem->n_sides();
+	 
+ 	   for (unsigned int side = 0; side<num_sides; side++)
+ 	   {
+ 	     const ElementSide elside(elem->top_parent(), side);
+	     
+ 	     if ( (heat_model->get_dd_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
+ 	     {
+	     
+ 	       fe_face->reinit(elem, side);
+	       
+	       heat_model->get_dd_solution_secure(qface_point,QfermiE,QfermiH,JE,JH);
+	       
+	       for (short i = 0; i < 3; i++)
+	       {
+		 for (unsigned int qp=0; qp < qface.n_points(); qp++)
+		 {
+		   
+		   Fe(p1) -= Constants::e * JxW_face[qp] * phi_face[p1][qp] * (JE[qp](i)*JE[qp](i) * rho_e + JH[qp](i) * JH[qp](i) * rho_h); 
+		     
+		 }
+	       }
+	       
+	     } // if on boudary of dd
+	     
+	   } // side
       
+       }//   if (contact->get_type() == ThermalContact::Neumann) 
+      }// if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+     
+   }// for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+  
+	 
+  dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
+  system.matrix->add_matrix (Ke, dof_indices);
+  system.rhs->add_vector    (Fe, dof_indices); 
+ 
+  // system.matrix->print_matlab("matr.m"); 
+  
+     
       
   } //End Loop over elements
-    
   
  
   //   system.matrix->print_matlab("Matr.m");

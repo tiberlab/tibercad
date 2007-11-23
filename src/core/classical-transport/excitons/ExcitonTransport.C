@@ -1,3 +1,4 @@
+
 // $Id$
 
 // module includes
@@ -1329,8 +1330,12 @@ ExcitonTransport::convert_variable_name_to_id(const string& variable_name) const
     id = JY;
   else if (variable_name == "J_z")
     id = JZ;
+  else if (variable_name == "Rad_power")
+    id = RADPOWER;
+
   else if (variable_name == "dissociation")
     id = RDISS;
+
 
 
   return id;
@@ -1466,6 +1471,11 @@ ExcitonTransport::get_solution_secure(const Elem* elem,
 
     if (ids.count(JZ))
       values[n][JZ] = sigma * grad_z;
+
+     if (ids.count(RADPOWER))
+       values[n][RADPOWER] =  excitonmodel->get_density()/excitonmodel->get_radiative_recombination_rate() *
+	 (excitonmodel->get_exciton_energy());
+
   }
 
 }
