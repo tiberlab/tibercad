@@ -421,6 +421,8 @@ void QuantumDensity::estimate_analitic_density(void)
 
   vector<double> effective_mass(number_of_eigenstates);
 
+  cerr << "number of eigenstates k = 0 " <<  number_of_eigenstates << "\n";
+
   const Mesh& mesh = get_equation_systems().get_mesh();
 
   if (	k_dim == 2 )
@@ -433,6 +435,7 @@ void QuantumDensity::estimate_analitic_density(void)
     quantum_model_opts["job"] = "eigenstates";
 
     quantum_model_opts.set_option("number_of_eigenstates", number_of_eigenstates);
+   
     
     double k_max1 = sqrt( k_vector1[0]*k_vector1[0] + k_vector1[1]*k_vector1[1] + k_vector1[2]*k_vector1[2]  );
     double k_max2 = sqrt( k_vector2[0]*k_vector2[0] + k_vector2[1]*k_vector2[1] + k_vector2[2]*k_vector2[2]  );
@@ -449,6 +452,8 @@ void QuantumDensity::estimate_analitic_density(void)
     
 
     quantum_model->get_eigenenergies (energy_k_1);
+
+    cerr << "number of eigenstates k = k1 " << energy_k_1.size()  << "\n";
     
     quantum_model_opts.set_option("k_vector2",  k_vector2);
     quantum_model->set_options(quantum_model_opts);
@@ -457,7 +462,8 @@ void QuantumDensity::estimate_analitic_density(void)
 
     quantum_model->get_eigenenergies (energy_k_2);
      
-    
+    cerr << "number of eigenstates k = k2 " << energy_k_2.size()  << "\n";
+
     number_of_eigenstates = (quantum_model->get_solution()).size();
 
     for (short i = 0; i < number_of_eigenstates; i++)
