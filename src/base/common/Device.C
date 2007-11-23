@@ -152,8 +152,9 @@ Device::set_material(Material* material, ID region_id)
 }
 
 
+
 void
-Device::set_material(Material* material, const std::vector<ID>& region_ids)
+Device::set_material(Material* material, const vector<ID>& region_ids)
 {
   assert(material != NULL);
 
@@ -162,21 +163,29 @@ Device::set_material(Material* material, const std::vector<ID>& region_ids)
 }
 
 
+
 void 
-Device::get_region_ids(const std::string& name, vector<ID>& ids) const
+Device::get_region_ids(const string& name, vector<ID>& ids) const
 {
   ids.resize(0);
-  map<ID, string>::const_iterator it(_region_names.begin());
-  const map<ID, string>::const_iterator end(_region_names.end());
-  for ( ; it != end; ++it)
-    if (it->second == name)
-      ids.push_back(it->first);
+
+  ClusterMap::const_iterator clit(_cluster_map.find(name));
+  if (clit != _cluster_map.end())
+    ids = clit->second;
+  else
+  {
+    map<ID, string>::const_iterator it(_region_names.begin());
+    const map<ID, string>::const_iterator end(_region_names.end());
+    for ( ; it != end; ++it)
+      if (it->second == name)
+        ids.push_back(it->first);
+  }
 }
 
 
 
 void
-Device::get_boundary_region_ids(const std::string& name, vector<ID>& ids) const
+Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
 {
   ids.resize(0);
   map<ID, string>::const_iterator it(_boundary_region_names.begin());
@@ -189,7 +198,7 @@ Device::get_boundary_region_ids(const std::string& name, vector<ID>& ids) const
 
 
 void 
-Device::set_region_name(const std::string& name, const vector<ID>& ids)
+Device::set_region_name(const string& name, const vector<ID>& ids)
 {
   for (unsigned int i = 0 ; i < ids.size(); ++i)
     _region_names[ids[i]] = name;
@@ -198,10 +207,25 @@ Device::set_region_name(const std::string& name, const vector<ID>& ids)
 
 
 void
-Device::set_boundary_region_name(const std::string& name, const vector<ID>& ids)
+Device::set_boundary_region_name(const string& name, const vector<ID>& ids)
 {
   for (unsigned int i = 0 ; i < ids.size(); ++i)
     _boundary_region_names[ids[i]] = name;
+}
+
+
+
+void
+Device::set_cluster(const string& name, const vector<ID>& ids)
+{
+  if (_cluster_map.find(name) != _cluster_map.end()) {
+    string msg("Cluster ");
+    msg += name;
+    msg += " already defined.";
+    throw InitFailedException(msg);
+  }
+
+  _cluster_map[name] = ids;
 }
 
 

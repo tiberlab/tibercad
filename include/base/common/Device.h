@@ -155,6 +155,9 @@ class Device
 
 
     //! Get the region IDs of the region with name \c name
+    /*!
+     * \c name can be the name of a region or of a cluster
+     */
     void get_region_ids(const std::string& name, std::vector<ID>& ids) const;
 
 
@@ -170,6 +173,10 @@ class Device
     //! Set the name for a boundary region
     void set_boundary_region_name(const std::string& name,
         const std::vector<ID>& ids);
+
+
+    //! Define a cluster
+    void set_cluster(const std::string& name, const std::vector<ID>& ids);
 
 
     //! Get the type of symmetry
@@ -201,6 +208,9 @@ class Device
 
     //! A typdef for convenience
     typedef std::map<ID, Material*> MaterialMap;
+
+    //! A typdef for convenience
+    typedef std::map<std::string, std::vector<ID> > ClusterMap;
 
 
     //! Empty Constructor
@@ -304,6 +314,10 @@ class Device
 
     //! A map that assigns boundary region IDs to boundary region names
     std::map<ID, std::string> _boundary_region_names;
+
+
+    //! A map containing all clusters
+    ClusterMap _cluster_map;
 
 
     //! The symmetry of the device
@@ -463,7 +477,7 @@ Device::get_symmetry(void) const
 }
 
 
-
+///*
 inline
 void
 Device::set_temperature(const Elem* elem, double temperature)
@@ -475,9 +489,9 @@ Device::set_temperature(const Elem* elem, double temperature)
   if (el != NULL)
     delete_from_temperature_map(el);
 }
+//*/
 
-
-
+///*
 inline
 double
 Device::get_temperature(const Elem* elem) const
@@ -488,7 +502,7 @@ Device::get_temperature(const Elem* elem) const
   else
     return find_temperature_for_elem(elem);
 }
-
+//*/
 
 inline
 void 

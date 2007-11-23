@@ -251,7 +251,7 @@ TiberNonlinLS::solve(void)
     //  norm_du = _max_step_size;
     //}
 
-    cerr << "  it " << i << ", |du| = " << norm_du << ", |r| = " << norm_res << endl;
+    cout << "  it " << i << ", |du| = " << norm_du << ", |r| = " << norm_res << endl;
 
     tol *= tol;
       
@@ -268,7 +268,7 @@ TiberNonlinLS::solve(void)
   _final_residual_norm = norm_res;
   _last_step_size = norm_du;
 
-  cerr << "iterations: " << i << ", |du| = " << norm_du
+  cout << "iterations: " << i << ", |du| = " << norm_du
     << ", |r| = " << norm_res << endl;
 
   

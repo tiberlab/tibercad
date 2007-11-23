@@ -90,8 +90,8 @@ Control::init(void) throw (InitFailedException, ModelErrorException)
     // create the device, simulations and models
     create_device();
     create_materials();
-    create_atomistic_structures();
     setup_clusters();
+    create_atomistic_structures();
     setup_models();
     
     // initialize the device
@@ -210,14 +210,33 @@ Control::create_materials(void)
   {
     const RegionStructure& data = mapit->second;
 
-    vector<ID> region_ids;
-    Utils::extract_vector(data.get_region_ID(), region_ids);
+    // we read the region numbers as strings as they could be region names
+    vector<string> region_ids_str;
+    Utils::extract_vector(data.get_region_ID(), region_ids_str);
 
+    // for the numeric region IDs
+    vector<ID> region_ids;
+
+    unsigned int n_ids = region_ids_str.size();
     // if no numbers are specified we try to get them from the region name
-    if (region_ids.size() == 0)
+    if (n_ids == 0)
       _device->get_region_ids(data.get_region_name(), region_ids);
     else
+    {
+      vector<ID> tmp_id;
+      for (unsigned int i = 0; i < n_ids; i++)
+      {
+        // either it is a name or a number
+        // try first name
+        _device->get_region_ids(region_ids_str[i], tmp_id);
+        if (tmp_id.size() > 0)
+          region_ids.insert(region_ids.end(), tmp_id.begin(), tmp_id.end());
+        else
+          region_ids.push_back(Utils::convert<unsigned int>(region_ids_str[i]));
+      }
+
       _device->set_region_name(data.get_region_name(), region_ids);
+    }
     
 
     if (region_ids.size() == 0)
@@ -297,6 +316,43 @@ Control::create_atomistic_structures(void)
 void
 Control::setup_clusters(void)
 {
+  InputParser parser(_inputfile);
+
+  parser.read_device();
+
+  const map<ID, RegionStructure>& cluster_map = parser.get_cluster_map();
+
+  map<ID, RegionStructure>::const_iterator mapit(cluster_map.begin());
+  const map<ID, RegionStructure>::const_iterator mapend(cluster_map.end());
+  for ( ; mapit != mapend; ++mapit)
+  {
+    const RegionStructure& data = mapit->second;
+
+    // we read the region numbers as strings as they could be region names
+    vector<string> region_ids_str;
+    Utils::extract_vector(data.get_region_ID(), region_ids_str);
+
+    // for the numeric region IDs
+    vector<ID> region_ids;
+
+    unsigned int n_ids = region_ids_str.size();
+    if (n_ids >= 0)
+    {
+      vector<ID> tmp_id;
+      for (unsigned int i = 0; i < n_ids; i++)
+      {
+        // either it is a name or a number
+        // try first name
+        _device->get_region_ids(region_ids_str[i], tmp_id);
+        if (tmp_id.size() > 0)
+          region_ids.insert(region_ids.end(), tmp_id.begin(), tmp_id.end());
+        else
+          region_ids.push_back(Utils::convert<unsigned int>(region_ids_str[i]));
+      }
+
+      _device->set_cluster(data.get_region_name(), region_ids);
+    }
+  }
 }
 
 

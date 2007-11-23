@@ -149,7 +149,7 @@ if ($failure_detected and $sendmail) {
   }
 
   my %message = (
-    'subject' => "Subject: TiberCAD test suite error report\n",
+    'subject' => "TiberCAD test suite error report\n",
     'message' => $msg);
   send_email(\%message);
 }

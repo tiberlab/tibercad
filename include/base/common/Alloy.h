@@ -44,8 +44,8 @@ class Alloy : public Material
      * \param x the molar fraction of \f$AC\f$
      * \param bowing the bowing parameter
      */
-    static double calculate_VCA_parameter(double ac, double bc,
-        double x, double bowing = 0.0);
+    //static double calculate_VCA_parameter(double ac, double bc,
+    //    double x, double bowing = 0.0);
 
 
     
@@ -96,13 +96,13 @@ class Alloy : public Material
 //--------------------------------------------------------------
 
 
-inline
-double
-Alloy::calculate_VCA_parameter(double ac, double bc,
-    double x, double bowing)
-{
-  return bc + (ac - bc) * x - bowing * x * (1 - x);
-}
+//inline
+//double
+//Alloy::calculate_VCA_parameter(double ac, double bc,
+//    double x, double bowing)
+//{
+//  return bc + (ac - bc) * x - bowing * x * (1 - x);
+//}
 
 
 
