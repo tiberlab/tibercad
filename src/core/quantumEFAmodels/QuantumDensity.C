@@ -458,6 +458,7 @@ void QuantumDensity::estimate_analitic_density(void)
     quantum_model->get_eigenenergies (energy_k_2);
      
     
+    number_of_eigenstates = (quantum_model->get_solution()).size();
 
     for (short i = 0; i < number_of_eigenstates; i++)
     {
@@ -524,6 +525,10 @@ void QuantumDensity::estimate_analitic_density(void)
      quantum_model->get_eigenenergies (energy_k_1);
      
      double k_max = sqrt( k_vector1[0]*k_vector1[0] + k_vector1[1]*k_vector1[1] + k_vector1[2]*k_vector1[2]  );
+
+    
+     number_of_eigenstates = (quantum_model->get_solution()).size();
+
 
      for (unsigned int i = 0; i < number_of_eigenstates; i++)
      {
