@@ -11,7 +11,7 @@ use TestSuite qw(run_test
 
 use Term::ANSIColor;
 use Getopt::Long;
-
+use Cwd;
 
 
 sub usage {
@@ -86,15 +86,30 @@ GetOptions('verbose!' => \$verbose,
 set_option('verbose', $verbose);
 
 
-my $datetime = localtime;
-print "\nStarting TiberCAD test suite at $datetime\n";
-
 
 read_configuration($configfile);
 
 
+my $topdir = get_option("topdir");
+
+# get some repository info
+my @svninfo = (`svn info $topdir`);
+($#svninfo <= 0) && die "Is $topdir under subversion control?";
+my $revision = (grep(/Revision/, @svninfo))[0];
+my $last_changed_author = (grep(/Author/, @svninfo))[0];
+chomp($revision);
+chomp($last_changed_author);
+
+
+my $datetime = localtime;
+print("\nStarting TiberCAD test suite at $datetime\n");
+print("Repository info:\n") if $verbose;
+print("     $revision\n") if $verbose;
+print("     $last_changed_author\n") if $verbose;
+
+
+
 if (scalar grep(/compile|all/, @tests)) {
-  my $topdir = get_option("topdir");
   my $compile = check_compilation($topdir);
   check($compile);
   $checklist{'compilation'} = $compile;
@@ -122,7 +137,10 @@ print(color("red"), "\n*** WARNING ***  Errors detected in test suite.\n",
 
 if ($failure_detected and $sendmail) {
 
-  my $msg = "Errors detected in TiberCAD test suite.\n";
+  my $msg = "Errors detected in TiberCAD test suite.\n\n";
+  $msg = "${msg}Repository info:\n";
+  $msg = "${msg}     $revision\n";
+  $msg = "${msg}     $last_changed_author\n\n";
   $msg = "${msg}Run: $datetime\n\n";
   $msg = "${msg}The following tests failed:\n";
 
