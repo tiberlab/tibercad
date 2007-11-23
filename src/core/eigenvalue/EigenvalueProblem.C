@@ -306,7 +306,7 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
     slep_opt.spectrum_shift = st_shift_value;
 
 
-    slep_opt.matrix_output = false;
+    slep_opt.matrix_output = true;
   
    
 
