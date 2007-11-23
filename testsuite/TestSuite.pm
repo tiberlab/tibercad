@@ -68,7 +68,7 @@ $to_dev_null = " >& /dev/null";
 $textwidth = 50;
 $padchar = ".";
 $default_precision = 1e-6;
-@known_suffixes = ("dat");
+@known_suffixes = ('dat', 'gmv');
 %options = (
     'verbose' => 0,
     'smtp_server' => "localhost",
@@ -150,12 +150,20 @@ sub compare_results_with_reference;
 
 
 ##
-## Extract data fields from a data file with integrated properties
-## (usually created in sweeps)
+## Extract data fields from a .dat data file
+## (usually created in sweeps and for grace)
 ##
 ## Returns the data in a list
 ##
 sub extract_data_from_characteristic($$);
+
+
+##
+## Extract data fields from a .gmv file
+##
+## Returns the data in a list
+##
+sub extract_data_from_gmv($$);
 
 
 ##
@@ -361,7 +369,7 @@ sub compare_results_with_reference {
     my $reffile = "$refdir/$file";
 
     my ($filename, $path, $suffix) = fileparse($file, @known_suffixes);
-    defined($suffix) || die "Filetype unknown: $file";
+    length($suffix) || die "Filetype unknown: $file";
     (-e $reffile ) || die "No such reference file: $reffile";
 
     if ($#{$vars} <= 0) {
@@ -396,12 +404,16 @@ sub compare_results_with_reference {
           };
 
           /gmv/   && do {
+            $extract_func = \&extract_data_from_gmv;
             last SWITCH;
           };
       }
 
       @data1 = &$extract_func($variable, $datafile);
       @data2 = &$extract_func($variable, $reffile);
+
+      ($#data2 > 0) ||
+        die "Variable $variable seems to not exist in $reffile";
 
       my $fail = compare_data_vectors(\@data1, \@data2, $prec);
 
@@ -440,7 +452,7 @@ sub extract_data_from_characteristic($$) {
   my $index = 0;
   foreach my $item (split(/\s+/, <SF>))
   {
-    ($item =~ /$variable/) && last;
+    ($item =~ /\Q$variable/) && last;
 
     $index++;
   }
@@ -460,6 +472,40 @@ sub extract_data_from_characteristic($$) {
 
 
 
+
+
+sub extract_data_from_gmv($$) {
+
+  my ($variable, $file) = @_;
+
+  open(SF, '<', $file);
+
+  eof(SF) && die "Data file does not exist.";
+
+
+  # first, goto variable section
+  while (not eof) {
+    my $line = <SF>;
+    ($line =~ /^variable/) && last;
+  }
+
+  # now, find the variable
+  my @data = ();
+  while (not eof) {
+    my $line = <SF>;
+    if ($line =~ /\Q$variable/) {
+      @data = split(/\s+/, <SF>);
+      last;
+    }
+  }
+
+  return @data;
+}
+
+
+
+
+
 sub compare_data_vectors($$$) {
 
   my @data1 = @{$_[0]};
@@ -468,11 +514,11 @@ sub compare_data_vectors($$$) {
 
   my $n = $#data1;
 
-  my $difference = 0;
+  my $difference = 1;
   for (my $i = 0; $i < $n; $i++) {
     my $diff = $data1[$i] - $data2[$i];
-    if (abs($diff) > $prec) {
-      $difference = 1;
+    if (abs($diff) <= $prec) {
+      $difference = 0;
       last;
     }
   }
@@ -546,7 +592,8 @@ sub send_email($)
   if (length($rcpt) > 0) {
     print("Sending report to $rcpt\n") if verbose();
 
-    my $smtp = Net::SMTP->new(get_option("smtp_server"));
+    my $smtp = Net::SMTP->new(get_option("smtp_server"),
+        Debug => 1);
 
     $smtp->mail($from);
     $smtp->to($rcpt);
