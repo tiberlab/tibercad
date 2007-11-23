@@ -114,7 +114,7 @@ while ((my $dir = readdir CWD)) {
 }
 
 
-print(color("red"), "\n*** WARNING ***  Errors detected in test suite.",
+print(color("red"), "\n*** WARNING ***  Errors detected in test suite.\n",
       color("reset")) if ($failure_detected == 1);
 
 
