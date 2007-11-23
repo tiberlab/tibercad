@@ -514,11 +514,13 @@ sub compare_data_vectors($$$) {
 
   my $n = $#data1;
 
-  my $difference = 1;
+  ($n == $#data2) || return 1;
+
+  my $difference = 0;
   for (my $i = 0; $i < $n; $i++) {
     my $diff = $data1[$i] - $data2[$i];
-    if (abs($diff) <= $prec) {
-      $difference = 0;
+    if (abs($diff) > $prec * (1.0 + abs($data1[$i]))) {
+      $difference = 1;
       last;
     }
   }
@@ -593,7 +595,7 @@ sub send_email($)
     print("Sending report to $rcpt\n") if verbose();
 
     my $smtp = Net::SMTP->new(get_option("smtp_server"),
-        Debug => 1);
+                              Debug => 0);
 
     $smtp->mail($from);
     $smtp->to($rcpt);
