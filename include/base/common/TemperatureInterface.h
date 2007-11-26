@@ -1,5 +1,9 @@
 // $Id$
 
+
+#ifndef _TEMPERATUREINTERFACE_H_
+#define _TEMPERATUREINTERFACE_H_
+
 #include "TypeDefs.h"
 
 
@@ -62,3 +66,6 @@ class TemperatureInterface
     std::set<ID> _id_set;
 
 };
+
+
+#endif // _TEMPERATUREINTERFACE_H_

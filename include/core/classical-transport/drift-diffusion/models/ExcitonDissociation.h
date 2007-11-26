@@ -60,7 +60,7 @@ class ExcitonDissociation : public RecombinationModelInterface
     double d_;
 
     //! The \c ExcitonTransport to use
-    SimulationInterface* exciton_sim_;
+    SimulationInterface* _exciton_sim;
 
     //! The ID of the needed variable
     ID _Rdiss_id;
@@ -76,7 +76,7 @@ class ExcitonDissociation : public RecombinationModelInterface
 inline
 ExcitonDissociation::ExcitonDissociation(void)
   : d_(1.0),
-    exciton_sim_(NULL)
+    _exciton_sim(NULL)
 {
 }
 
@@ -104,7 +104,7 @@ ExcitonDissociation::copy_from(const PhysicalModelInterface* rhs)
   RecombinationModelInterface::copy_from(rhs);
   
   const ExcitonDissociation* mod = dynamic_cast<const ExcitonDissociation*>(rhs);
-  exciton_sim_ = mod->exciton_sim_;
+  _exciton_sim = mod->_exciton_sim;
   d_ = mod->d_;
 }
 

@@ -30,10 +30,10 @@
 #include <gsl/gsl_sf_fermi_dirac.h>
 
 #include <float.h>
-//#include <MacroHeatBalance.h>
 #include <vector>
 #include <set>
 #include <map>
+#include <stack>
 
 
 // forward declarations
@@ -42,7 +42,6 @@ class Dopant;
 class RecombinationModelInterface;
 class MobilityModelInterface;
 class ThermoelectricPower;
-//class MacroHeatBalance;
 
 
 
@@ -56,6 +55,118 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
 {
     
   public:
+
+    //! A nested class that holds all point data
+    class PointData
+    {
+      public:
+
+        //! Constructor
+        PointData(void);
+
+        //! The lattice temperature in eV (\f$= k_B T_{lat} / e\f$)
+        double lattice_vt;
+
+        //! The electron temperature in eV (\f$= k_B T_e / e\f$)
+        double electron_vt;
+
+        //! The hole temperature in eV (\f$= k_B T_h / e\f$)
+        double hole_vt;
+
+
+        //! The electric poential
+        double electric_potential;
+
+        //! The electron electro-chemical potential
+        double fermi_e;
+
+        //! The hole electro-chemical potential
+        double fermi_h;
+
+
+        //! The electron density
+        /*!
+         * The electron density is given by
+         * \f[n = N_c e^{\frac{e\varphi - e\phi_n - E_c}{k_B T_e}}\f]
+         */
+        double electron_density;
+
+        //! The electron density derivative with respect to the electric potential
+        /*!
+         * The derivative with respect to the electro-chemical potential
+         * has the same value but opposite sign.
+         */
+        double electron_density_derivative;
+
+        //! The hole density
+        /*!
+         * The hole density is given by
+         * \f[p = N_v e^{-\frac{e\varphi - e\phi_p - E_v}{k_B T_h}}\f]
+         */
+        double hole_density;
+
+        //! The hole density derivative
+        /*!
+         * The derivative with respect to the electro-chemical potential
+         * has the same value but opposite sign.
+         */
+        double hole_density_derivative;
+
+
+        //! The ionized donor density
+        double ionized_donor_density;
+
+        //! The ionized donor density derivative
+        double ionized_donor_density_derivative;
+
+        //! The ionized acceptor density
+        double ionized_acceptor_density;
+
+        //! The ionized acceptor density derivative
+        double ionized_acceptor_density_derivative;
+
+        //! The total charge density
+        double charge_density;
+
+        //! The electron mobility
+        double electron_mobility;
+
+        //! The hole mobility
+        double hole_mobility;
+
+        //! The electron conductivity
+        double electron_conductivity;
+
+        //! The derivatives of the electron conductivity
+        std::vector<double> electron_conductivity_derivatives;
+
+        //! The hole conductivity
+        double hole_conductivity;
+
+        //! The derivatives of the hole conductivity
+        std::vector<double> hole_conductivity_derivatives;
+
+        //! The net electron recombination rate
+        double electron_recombination_rate;
+
+        //! The derivatives of the net electron recombination rate
+        std::vector<double> electron_recombination_rate_derivatives;
+
+        //! The net hole recombination rate
+        double hole_recombination_rate;
+
+        //! The derivatives of the net hole recombination rate
+        std::vector<double> hole_recombination_rate_derivatives;
+
+
+
+      private:
+
+        //! We let DriftDiffusionProperties talk to it directly
+        friend class DriftDiffusionProperties;
+    };
+
+
        
     //! A default (empty) destructor.
     virtual ~DriftDiffusionProperties(void);
@@ -87,6 +198,23 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      */
     TiberCad::Statistics get_statistics(void) const;
 
+
+    //! Lock the parameters
+    /*!
+     * Call this method before reinit()
+     *
+     * You can provide a pointer to a PointData object created outside
+     * or let it create one internally
+     */
+    void lock(PointData* pd = NULL);
+
+
+    //! Unlock the parameters
+    /*!
+     * Call this after all calculations on the element hav been done
+     */
+    void unlock(void);
+    
     
     //! (Re-)Initialize for the given element
     /*!
@@ -253,7 +381,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      * \return the electron density
      */
     double get_electron_density(void) const
-      { return electron_density; };
+      { return _pd->electron_density; };
      
     
     //! Get the electron density derivative
@@ -262,7 +390,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      * electric potential
      */
     double get_electron_density_derivative(void) const
-      { return electron_density_derivative; };
+      { return _pd->electron_density_derivative; };
     
     
     //! Get the hole density
@@ -272,7 +400,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      * \return the hole density
      */
     double get_hole_density(void) const
-      { return hole_density; };
+      { return _pd->hole_density; };
      
     
     //! Get the ehole density derivative
@@ -281,7 +409,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      * electric potential
      */
     double get_hole_density_derivative(void) const
-      { return hole_density_derivative; };
+      { return _pd->hole_density_derivative; };
     
 
     //! Get the ionized donor density
@@ -289,7 +417,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      * \return the ionized donor density
      */
     double get_ionized_donor_density(void) const
-      { return ionized_donor_density; };
+      { return _pd->ionized_donor_density; };
      
     
     //! Get the ionized donor density derivative
@@ -298,7 +426,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      * electric potential
      */
     double get_ionized_donor_density_derivative(void) const
-      { return ionized_donor_density_derivative; };
+      { return _pd->ionized_donor_density_derivative; };
         
     
     //! Get the ionized acceptor density
@@ -306,7 +434,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      * \return the ionized acceptor density
      */
     double get_ionized_acceptor_density(void) const
-      { return ionized_acceptor_density; };
+      { return _pd->ionized_acceptor_density; };
      
     
     //! Get the ionized acceptor density derivative
@@ -315,7 +443,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      * electric potential
      */
     double get_ionized_acceptor_density_derivative(void) const
-      { return ionized_acceptor_density_derivative; };
+      { return _pd->ionized_acceptor_density_derivative; };
     
     
     //! Get the total charge density
@@ -337,7 +465,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      * Get \f$R_{net} = R - G\f$ as
      */
     double get_net_electron_recombination_rate(void) const
-      { return electron_recombination_rate; };
+      { return _pd->electron_recombination_rate; };
       
     
     //! Get the net electron recombination rate derivatives
@@ -348,7 +476,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      */
     const std::vector<double>&
       get_net_electron_recombination_rate_derivatives(void) const
-        { return electron_recombination_rate_derivatives; };
+        { return _pd->electron_recombination_rate_derivatives; };
     
     
     //! Get the net hole recombination rate
@@ -358,7 +486,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      *
      */
     double get_net_hole_recombination_rate(void) const
-      { return hole_recombination_rate; };
+      { return _pd->hole_recombination_rate; };
       
     
     //! Get the net hole recombination rate derivatives
@@ -369,7 +497,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      */
     const std::vector<double>&
       get_net_hole_recombination_rate_derivatives(void) const
-        { return hole_recombination_rate_derivatives; };
+        { return _pd->hole_recombination_rate_derivatives; };
 
     
     //! Get the total electric polarization
@@ -408,7 +536,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      * \return the electron mobility
      */
     double get_electron_mobility(void) const
-      { return electron_mobility; };
+      { return _pd->electron_mobility; };
       
     
     //! Get the hole mobility
@@ -416,7 +544,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      * \return the hole mobility
      */
     double get_hole_mobility(void) const
-      { return hole_mobility; };
+      { return _pd->hole_mobility; };
 
 
     //! Get the electron conductivity derivatives
@@ -497,7 +625,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     void compute_thermoelectric_powers(void);
 
   
-    //! Get the all nodals temperature for a given element
+    //! Get the all nodal temperatures for a given element
     std::vector<double> get_temperature_node(void);
 
 
@@ -507,12 +635,12 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
 
     //! Get the electron electro-chemical potential
     double get_electron_electro_chemical_potential(void) const
-      { return fermi_e; };
+      { return _pd->fermi_e; };
 
 
     //! Get the hole electro-chemical potential
     double get_hole_electro_chemical_potential(void) const
-      { return fermi_h; };
+      { return _pd->fermi_h; };
 
 
 
@@ -591,103 +719,13 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     virtual void copy_from(const PhysicalModelInterface* rhs);
 
 
+    //! Get the point data structure
+    PointData& get_pd(void);
+
+
     //! Get the strain as writable reference
     Tensor2Sym& get_strain(void);
     
-    //! The lattice temperature in eV (\f$= k_B T_{lat} / e\f$)
-    double lattice_vt;
-
-    //! The electron temperature in eV (\f$= k_B T_e / e\f$)
-    double electron_vt;
-
-    //! The hole temperature in eV (\f$= k_B T_h / e\f$)
-    double hole_vt;
-
-
-    //! The electric poential
-    double electric_potential;
-
-    //! The electron electro-chemical potential
-    double fermi_e;
-
-    //! The hole electro-chemical potential
-    double fermi_h;
-
-
-    //! The electron density
-    /*!
-     * The electron density is given by
-     * \f[n = N_c e^{\frac{e\varphi - e\phi_n - E_c}{k_B T_e}}\f]
-     */
-    double electron_density;
-
-    //! The electron density derivative with respect to the electric potential
-    /*!
-     * The derivative with respect to the electro-chemical potential
-     * has the same value but opposite sign.
-     */
-    double electron_density_derivative;
-
-    //! The hole density
-    /*!
-     * The hole density is given by
-     * \f[p = N_v e^{-\frac{e\varphi - e\phi_p - E_v}{k_B T_h}}\f]
-     */
-    double hole_density;
-
-    //! The hole density derivative
-    /*!
-     * The derivative with respect to the electro-chemical potential
-     * has the same value but opposite sign.
-     */
-    double hole_density_derivative;
-  
-
-    //! The ionized donor density
-    double ionized_donor_density;
-
-    //! The ionized donor density derivative
-    double ionized_donor_density_derivative;
-        
-    //! The ionized acceptor density
-    double ionized_acceptor_density;
-
-    //! The ionized acceptor density derivative
-    double ionized_acceptor_density_derivative;
-
-    //! The total charge density
-    double charge_density;
-
-    //! The electron mobility
-    double electron_mobility;
-
-    //! The hole mobility
-    double hole_mobility;
-    
-    //! The electron conductivity
-    double electron_conductivity;
-    
-    //! The derivatives of the electron conductivity
-    std::vector<double> electron_conductivity_derivatives;
-    
-    //! The hole conductivity
-    double hole_conductivity;
-    
-    //! The derivatives of the hole conductivity
-    std::vector<double> hole_conductivity_derivatives;
-    
-    //! The net electron recombination rate
-    double electron_recombination_rate;
-    
-    //! The derivatives of the net electron recombination rate
-    std::vector<double> electron_recombination_rate_derivatives;
-    
-    //! The net hole recombination rate
-    double hole_recombination_rate;
-    
-    //! The derivatives of the net hole recombination rate
-    std::vector<double> hole_recombination_rate_derivatives;
-
     
     //! The pyroelectric polarization (will go into a model)
     RealVectorValue pyro_polarization;
@@ -745,6 +783,10 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
 
     //! The interface to the lattice temperature simulation
     TemperatureInterface _lattice_temp;
+
+
+    //! The point-wise data
+    PointData* _pd;
 
        
     //! Electron thermoelectric power
@@ -872,6 +914,14 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
 
     //! The relaxation factor for the polarization
     double _relax_polariz;
+
+
+    //! The stack for point data locking
+    /*!
+     * The second value tells whether to delete the data after use
+     */
+    std::stack<std::pair<PointData*, bool> > _pd_stack;
+
 };
 
 
@@ -911,8 +961,8 @@ inline
 void
 DriftDiffusionProperties::set_carrier_temperatures(double T_e, double T_h)
 {
-  electron_vt = T_e;
-  hole_vt = T_h;
+  _pd->electron_vt = T_e;
+  _pd->hole_vt = T_h;
 }
 
 
@@ -921,7 +971,7 @@ inline
 double
 DriftDiffusionProperties::get_electric_potential(void) const
 {
-  return electric_potential;
+  return _pd->electric_potential;
 }
 
 
@@ -931,9 +981,9 @@ void
 DriftDiffusionProperties::set_potentials(double potential, double Ef_e,
     double Ef_h)
 {
-  electric_potential = potential;
-  fermi_e = Ef_e;
-  fermi_h = Ef_h;
+  _pd->electric_potential = potential;
+  _pd->fermi_e = Ef_e;
+  _pd->fermi_h = Ef_h;
 }
 
 inline
@@ -957,11 +1007,11 @@ inline
 void
 DriftDiffusionProperties::set_densities(double n, double p)
 {
-  electron_density = n;
-  hole_density = p;
-  electron_density_derivative = n / electron_vt;
-  hole_density = p;
-  hole_density_derivative = -p / hole_vt;
+  _pd->electron_density = n;
+  _pd->hole_density = p;
+  _pd->electron_density_derivative = n / _pd->electron_vt;
+  _pd->hole_density = p;
+  _pd->hole_density_derivative = -p / _pd->hole_vt;
 }
 
 
@@ -970,7 +1020,7 @@ inline
 void
 DriftDiffusionProperties::set_lattice_temperature(double T)
 {
-  lattice_vt = T * Constants::k_B;
+  _pd->lattice_vt = T * Constants::k_B;
 }
 
 
@@ -979,7 +1029,7 @@ inline
 double
 DriftDiffusionProperties::get_lattice_temperature(void) const
 {
-  return lattice_vt;
+  return _pd->lattice_vt;
 }
 
 
@@ -1003,8 +1053,8 @@ inline
 double
 DriftDiffusionProperties::get_charge_density(void) const
 {
-  return hole_density - electron_density + ionized_donor_density -
-    ionized_acceptor_density;
+  return _pd->hole_density - _pd->electron_density +
+    _pd->ionized_donor_density - _pd->ionized_acceptor_density;
 }
 
 
@@ -1081,8 +1131,8 @@ inline
 void
 DriftDiffusionProperties::setup_band_edges(void)
 {
-  double kT = lattice_vt;
-  electron_vt = hole_vt = kT;
+  double kT = _pd->lattice_vt;
+  _pd->electron_vt = _pd->hole_vt = kT;
   
   BandProperties& cb = conduction_band;
   BandProperties& vb = valence_band;
@@ -1137,6 +1187,13 @@ DriftDiffusionProperties::create_new(void) const
 }
 
 
+
+inline
+DriftDiffusionProperties::PointData&
+DriftDiffusionProperties::get_pd(void)
+{
+  return *_pd;
+}
 
 
 #endif /* _DRIFTDIFFUSIONPROPERTIES_H_ */

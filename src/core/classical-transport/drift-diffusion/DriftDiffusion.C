@@ -662,6 +662,9 @@ DriftDiffusion::do_solve(void)
 
   int coupling = get_options().coupling;
   
+  // TODO 
+  same_potentials = false;
+  
   if (equilibrium)
     get_options().coupling = POISSON;
   else if (same_potentials)
@@ -845,11 +848,11 @@ DriftDiffusion::do_equilibrium(void)
 
   try
   {
-    cerr << "Solving equilibrium" << endl;
+    cout << "Solving equilibrium" << endl;
 
     do_newton();
     
-    cerr << "Equilibrium done" << endl;
+    cout << "Equilibrium done" << endl;
   }
   catch (runtime_error& e)
   {
@@ -1553,7 +1556,14 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
         }
       }
       break;
-      
+         
+    case 'P':
+      if (variable_name == "Pn")
+        id = PN;
+      else if (variable_name == "Pp")
+        id = PP;
+      break;
+   
     case 'Q':
       if (variable_name == "QFermi_e")
         id = QFERMIE;
@@ -1641,6 +1651,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
         device.get_material(subdomain)->get_model(get_id()));
   assert(sc != NULL); 
 
+  sc->lock();
   sc->reinit(elem);
 
   fe->reinit(elem, &points);
@@ -1811,7 +1822,17 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
       --it;
     }
+
+    if (ids.count(PN))
+      values[n][PN] = get_electrons_thermoelectric_power(elem);
+
+    if (ids.count(PP))
+      values[n][PP] = get_holes_thermoelectric_power(elem);
+
+
   }
+
+  sc->unlock();
 }
 
       
@@ -1863,9 +1884,11 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
         device.get_material(subdomain)->get_model(get_id()));
   assert(sc != NULL); 
 
+  sc->lock();
   sc->reinit(elem);
 
   fe->reinit(elem, &points);
+
     
   //Get the thermoelectric power
   double Pn =  get_electrons_thermoelectric_power(elem);
@@ -2032,7 +2055,15 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
       --it;
     }
 
+    if (ids.count(PN))
+      values[n][PN] = get_electrons_thermoelectric_power(elem);
+
+    if (ids.count(PP))
+      values[n][PP] = get_holes_thermoelectric_power(elem);
+
   }
+
+  sc->unlock();
 }
 
 

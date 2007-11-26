@@ -3,15 +3,19 @@
 #ifndef _EXCITONPROPERTIES_H_
 #define _EXCITONPROPERTIES_H_
 
+
+#ifndef TIBER_MODULE_NAME
+# define TIBER_MODULE_NAME ex
+#endif
+
+
 #include "PhysicalModel.h"
 #include "SimulationOptions.h"
+#include "TemperatureInterface.h"
 #include "DriftDiffusionDefs.h"
 #include "TiberCad.h"
 
 #include "vector_value.h"
-
-// GNU scientific library
-//#include <gsl/gsl_sf_fermi_dirac.h>
 
 #include <vector>
 
@@ -187,13 +191,14 @@ class ExcitonProperties : public PhysicalModel
 
     virtual void do_mobility(void) {};
 
-
+  
     //! This method gets called from reinit()
     /*!
      * It can be used to setup data that is constant in an element, e.g.
      * strain related stuff, band edges.
      */
     virtual void prepare_element_data(void) {};
+
 
     //! The lattice temperature in eV (\f$= k_B T_{lat} / e\f$)
     double lattice_vt;
@@ -237,6 +242,9 @@ class ExcitonProperties : public PhysicalModel
     //! The assignment operator is disabled
     ExcitonProperties& operator=(const ExcitonProperties& rhs);
 
+    //! The interface to the lattice temperature simulation
+    TemperatureInterface _lattice_temp;
+
     //! The element we are currently working on
     const Elem* _elem;
 
@@ -269,40 +277,6 @@ class ExcitonProperties : public PhysicalModel
 // inline members
 //
 
-inline
-ExcitonProperties::~ExcitonProperties(void)
-{
-}
-
-
-inline
-ExcitonProperties::ExcitonProperties(void)
-  : _elem(NULL),
-    _statistics(TiberCad::BOLTZMANN)
-{
-}
-
-
-inline
-ExcitonProperties*
-ExcitonProperties::create(const std::string& name,
-    const ModelOptions& options)
-{
-  return dynamic_cast<ExcitonProperties*>(
-      PhysicalModelInterface::create("exmodel_" + name, options));
-}
-
-
-inline
-void
-ExcitonProperties::reinit(const Elem* elem)
-{
-  if (this->_elem != elem)
-  {
-    this->_elem = elem;
-    this->prepare_element_data();
-  }
-}
 
 
 inline

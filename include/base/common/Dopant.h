@@ -113,7 +113,7 @@ class Dopant
   protected:
 
     //! Calculate the doping density
-    virtual double do_calculate_doping_density(const Elem* elem, const Point& p) {};
+    virtual double do_calculate_doping_density(const Elem* elem, const Point& p);
 
 
     //! Get the options
@@ -219,6 +219,16 @@ Dopant::get_options(void)
 {
   return _options;
 }
+
+
+
+inline
+double
+Dopant::do_calculate_doping_density(const Elem* elem, const Point& p)
+{
+  return 0.0;
+}
+
 
 
 /*

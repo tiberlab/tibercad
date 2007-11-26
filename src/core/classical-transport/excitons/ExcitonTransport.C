@@ -476,8 +476,6 @@ ExcitonTransport::build_local_scaling(void)
 
     fe->reinit(elem);
 
-    //assert(elem->n_nodes() == dof_indices_u.size());
-
 
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
@@ -1332,7 +1330,6 @@ ExcitonTransport::convert_variable_name_to_id(const string& variable_name) const
     id = JZ;
   else if (variable_name == "Rad_power")
     id = RADPOWER;
-
   else if (variable_name == "dissociation")
     id = RDISS;
 

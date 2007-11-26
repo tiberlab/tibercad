@@ -11,7 +11,7 @@
 
 #include <string>
 
-class DriftDiffusion;
+class SimulationInterface;
 
 //! A simple Exciton model
 class ExcitonModel : public ExcitonProperties
@@ -83,8 +83,11 @@ class ExcitonModel : public ExcitonProperties
     //! The ID for the generation model to be used
     ID _gen_model;
 
+    //! The ID for the band gap variable
+    ID _Eg_id;
+
     //! The DriftDiffusion simulation to be used
-    DriftDiffusion* _dd_sim;
+    SimulationInterface* _dd_sim;
 
 };
 

@@ -75,6 +75,8 @@ template<typename T> class SparseMatrix;
  * \li \c Jp_x hole current density, x-component
  * \li \c Jp_y hole current density, y-component
  * \li \c Jp_z hole current density, z-component
+ * \li \c Pn electron thermoelectric power
+ * \li \c Pp hole thermoelectric power
  * \li \c recombination.some_name the net recombination rate of model \c some_name
  * \li \c recombination.total the total net recombination rate
  * 
@@ -111,6 +113,8 @@ class DriftDiffusion : public SimulationInterface
       JPX,              /*!< hole current density, x-component */
       JPY,              /*!< hole current density, y-component */
       JPZ,              /*!< hole current density, z-component */
+      PN,               /*!< electron thermoelectric power */
+      PP,               /*!< hole thermoelectric power */
       RECOMB,           /*!< total recombination rate */
       MODELS = 100      /*!< base number for models */
     };

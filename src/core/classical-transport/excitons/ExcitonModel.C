@@ -2,18 +2,17 @@
 
 
 #include "ExcitonModel.h"
-#include "RecombinationModelInterface.h"
+#include "SimulationInterface.h"
 
-#include "SemiconductorModel.h"
 #include "SimulationOptions.h"
 #include "Constants.h"
 
 #include "SolveFailedException.h"
 
-#include "DriftDiffusion.h"
 #include "Material.h"
 #include "Utils.h"
 
+#include "elem.h"
 
 ExcitonModel::ExcitonModel(void)
 {
@@ -29,33 +28,14 @@ ExcitonModel::do_mobility(void)
 void
 ExcitonModel::do_recombination(void)
 {
-
-  ID dd_id = _dd_sim->get_id();
-  DriftDiffusionProperties* ddprop =
-    static_cast<DriftDiffusionProperties*>(get_material()->get_model(dd_id));
-
-  
-  double kT = ddprop->get_lattice_temperature();
-  ddprop->set_carrier_temperatures(kT, kT);
-
-  double inv_tau = 1.0 / _t_nr + 1.0 / _t_r + 1.0 / (_t_diss);
-
+  double inv_tau = 1.0 / _t_nr + 1.0 / _t_r + 1.0 / _t_diss;
   net_recomb_rate = density * inv_tau;
   recombination_rate_derivative = density_derivative * inv_tau;
 
 
-  DriftDiffusion::Solution sol;
-  _dd_sim->get_solution(get_element(), get_coordinates(), sol);
-  ddprop->set_potentials(sol.potential, sol.fermi_e, sol.fermi_h);
-  ddprop->calculate_densities();
-  RecombinationModelInterface* recmod =
-    ddprop->get_recombination_model(_gen_model);
-  if (recmod != NULL)
-  {
-    double G, dummy;
-    recmod->get_net_recombination_rates(G, dummy);
-    net_recomb_rate -= G;
-  }
+  double G;
+  _dd_sim->get_solution(get_element(), get_coordinates(), _gen_model, G);
+  net_recomb_rate -= G;
 }
 
 
@@ -87,20 +67,18 @@ ExcitonModel::prepare_element_data(void)
   if (!_dd_sim->is_solved())
     throw (SolveFailedException("ExcitonModel needs solved DriftDiffusion."));
 
-  // reinit DriftDiffusionProperties
-  ID dd_id = _dd_sim->get_id();
-  DriftDiffusionProperties* ddprop =
-    static_cast<DriftDiffusionProperties*>(get_material()->get_model(dd_id));
-  ddprop->reinit(get_element());
+  double Eg;
+  bool ok = ((SimulationInterface*)_dd_sim)->get_solution(get_element(),
+      get_element()->centroid(), _Eg_id, Eg);
+  set_energy(Eg - _R);
+  if (!ok)
+    throw SolveFailedException("Exciton model needs everywhere drift-diffusion.");
 
-  // this does not depend on the coordinate
-  set_energy(ddprop->get_band_gap() - _R);
-
-  double kT = ddprop->get_lattice_temperature();
-  exciton_vt = lattice_vt = kT;
+  // lattice_vt was taken from TemperatureInterface
+  exciton_vt = lattice_vt;
 
   // it's for cm
-  double DOS = 3 * std::pow(2 * M_PI * Constants::me * kT * _m /
+  double DOS = 3 * std::pow(2 * M_PI * Constants::me * lattice_vt * _m /
       (Constants::h * Constants::h) * Constants::e, 1.5) / 1e6;
 
   set_density_of_states(DOS);
@@ -125,17 +103,11 @@ ExcitonModel::do_init(void)
   _m = get_parameter("eff_mass", 1.0);
   _mu = get_parameter("mobility", 1500.0);
 
-  // look for the generation model
-  // (default is no generation at all)
-  _gen_model = get_id_from_name<RecombinationModelInterface>(
-    get_options().get_option("generation_model", ""));
 
-  std::string dd = get_options().get_option("DD_simulation",
-      Utils::extract_typename(typeid(_dd_sim)));
+  std::string dd = get_options().get_option("DD_simulation", "driftdiffusion");
 
   // find the drift-diffusion simulation to use
-  _dd_sim = dynamic_cast<DriftDiffusion*>(
-      SimulationInterface::find_simulation(dd));
+  _dd_sim = SimulationInterface::find_simulation(dd);
 
   if (_dd_sim == NULL)
   {
@@ -146,7 +118,16 @@ ExcitonModel::do_init(void)
 
   std::string varname("recombination.");
   varname += get_options().get_option("generation_model", "");
-  //_gen_model = _dd_sim->get_variable_id(varname);
+  _gen_model = _dd_sim->get_variable_id(varname);
+
+  _Eg_id = _dd_sim->get_variable_id("Eg");
+
+  if ((_gen_model == INVALID_ID) || (_Eg_id == INVALID_ID))
+  {
+    std::string msg("ExcitonModel: Simulation " +
+        std::string(dd) + " does not provide all necessary variables");
+    throw InitFailedException(msg);
+  }
 
 }
 
