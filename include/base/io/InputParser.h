@@ -282,6 +282,16 @@ class InputParser{
    */
   void find_keyword(std::ifstream& in_stream, const std::string& keyword);
 
+
+  /*!
+   *  Utility  to  find an optional  keyword in the input file; 
+   * returns true if it is  present or  false if  not.
+   *    
+   */
+  bool find_optional_keyword(std::ifstream& in_stream, const std::string& keyword);
+
+
+
   /*!
    *  Utility  to  find a  keyword in a section
    *    

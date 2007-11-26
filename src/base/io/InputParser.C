@@ -485,6 +485,8 @@ const  ModelOptions&  InputParser::read_parameters(std::string section_name)
 void InputParser::reset_all_maps()
 {
  
+  atomistic_regions_map.clear();
+
   model_BC_map.clear();
   physical_model_map.clear();
 
@@ -556,6 +558,9 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
   {
 
 
+
+
+
     cerr << " Error: keyword "<< keyword <<  "  not  found !  " << endl ;
     throw InitFailedException("ERROR "); 
     //  exit(1);
@@ -564,11 +569,86 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
 
 }
 
+//**************************************************
+
+
+  // private  method: utility  to  find an optional  keyword 
+bool InputParser::find_optional_keyword(ifstream& in_stream, const std::string& keyword)
+
+{
+
+  bool found = false;
+  std::string str,  label;
+
+
+  if ( !in_stream.good() )
+  {
+
+    throw InitFailedException("ERROR: Input file not good.");
+    // std::cerr << "ERROR: Input file not good." 
+    //               << std::endl;
+    //   error();
+  }
+  in_stream >>  label;
+
+  while (skip_comments(in_stream,label ) == true )
+  {
+    in_stream >> label; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+  } 
+
+  cut_off_comment(label, in_stream); //  case  Region#commmm
+
+  
+  while (  ( found == false) && (!in_stream.eof()) ) //   
+  { //while
+        
+    if  (label == keyword  )
+    {
+      found = true;
+      break;
+    }  
+
+    in_stream >>  label;
+
+    while (skip_comments(in_stream,label ) == true )
+    {
+      in_stream >> label; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+    cut_off_comment(label, in_stream);
+              
+  }   
+
+  return found;
+
+
+  //  if (found == false)
+
+  //  {
+
+  //    return found;
+
+
+
+  //   cerr << " Error: keyword "<< keyword <<  "  not  found !  " << endl ;
+  //   throw InitFailedException("ERROR "); 
+  //   //  exit(1);
+
+  //  }
+
+
+
+}
 
 
 
 
-//void InputParser::read_models()
+//**************************************************
+
+
+
+
+  //void InputParser::read_models()
 const multimap <const string, ModelStructure*>& InputParser::read_models()
 
 {
@@ -2282,6 +2362,7 @@ void InputParser::read_scale(void)
   std::ifstream in_stream (filename.c_str()) ;
   ID atomistic_region_counter ;
   bool  check_error;
+  bool found = false;
   atomistic_region_counter = 0;
 
 
@@ -2296,7 +2377,12 @@ void InputParser::read_scale(void)
 
   section_name = "$"+section_name;
 
-  find_keyword( in_stream,section_name  );
+  //  find_keyword( in_stream,section_name  );
+  found = find_optional_keyword( in_stream,section_name  );
+
+  // ************************
+  if  (found == false) return; // $Scale section not  found;  atomistic_regions_map will be  void
+  // ************************
 
   check_error = skip_to_bracket(in_stream);  // go on reading until the  char  '{' is  read  
   if (check_error == true)
