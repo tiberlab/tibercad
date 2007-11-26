@@ -61,8 +61,8 @@ SemiconductorModel::calculate_VCA(const PhysicalModelInterface* comp_A,
 {
   DriftDiffusionProperties::calculate_VCA(comp_A, comp_B, xa);
 
-  double (*alloy)(double, double, double, double) =
-    Alloy::calculate_VCA_parameter;
+  //double (*alloy)(double, double, double, double) =
+  //  Alloy::calculate_VCA_parameter;
 
   const SemiconductorModel* scA =
     dynamic_cast<const SemiconductorModel*>(comp_A);
