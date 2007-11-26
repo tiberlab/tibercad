@@ -271,7 +271,7 @@ Control::create_atomistic_structures(void)
 
   InputParser parser(_inputfile);
 
-  parser.read_device();
+  parser.read_scale();
 
   //
   // and now we look for atomistic structures
