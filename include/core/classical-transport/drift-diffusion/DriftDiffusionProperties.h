@@ -615,18 +615,19 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     //! Returns the number of recombination models
     int get_number_of_recombination_models(void) const;
 
-    //! Return the electrons_thermoelectric_power
-    const double get_electrons_thermoelectric_power();
 
-    //! Return the holes_thermoelectric_power
-    const double get_holes_thermoelectric_power();
+    //! Returns the thermoelectric power for electrons
+    double get_electron_thermoelectric_power() const;
 
-    //! Computes the electrons and holes thermoelectric power
+    //! Returns the thermoelectric power for holes 
+    double get_hole_thermoelectric_power() const;
+
+    //! Computes the electron and hole thermoelectric powers
     void compute_thermoelectric_powers(void);
 
   
     //! Get the all nodal temperatures for a given element
-    std::vector<double> get_temperature_node(void);
+    std::vector<double>& get_temperature_at_nodes(void);
 
 
     //! Get the electric potential
@@ -1159,22 +1160,20 @@ DriftDiffusionProperties::get_number_of_recombination_models(void) const
   return _recombination_models.size();
 }
 
+
 inline
-const 
-double DriftDiffusionProperties::get_electrons_thermoelectric_power()
+double
+DriftDiffusionProperties::get_electron_thermoelectric_power(void) const
 {
-
-  return(_eTEpower);
-
+  return _eTEpower;
 }
 
+
 inline
-const
-double DriftDiffusionProperties::get_holes_thermoelectric_power()
+double
+DriftDiffusionProperties::get_hole_thermoelectric_power(void) const
 {
-
-  return(_hTEpower);
-
+  return _hTEpower;
 }
 
 

@@ -1656,11 +1656,12 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   fe->reinit(elem, &points);
     
-  //Get the thermoelectric power
-  double Pn =  get_electrons_thermoelectric_power(elem);
-  double Pp =  get_holes_thermoelectric_power(elem);
+  // Get the thermoelectric power
+  sc->compute_thermoelectric_powers();
+  double Pn =  sc->get_electron_thermoelectric_power();
+  double Pp =  sc->get_hole_thermoelectric_power();
  
-  vector<double> T_nodes = sc->get_temperature_node();
+  vector<double> T_nodes = sc->get_temperature_at_nodes();
 
   dof_map.dof_indices(elem, dof_indices_u, u_var);
   dof_map.dof_indices(elem, dof_indices_en, en_var);
@@ -1824,10 +1825,16 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     }
 
     if (ids.count(PN))
-      values[n][PN] = get_electrons_thermoelectric_power(elem);
+    {
+      sc->compute_thermoelectric_powers();
+      values[n][PN] = sc->get_electron_thermoelectric_power();
+    }
 
     if (ids.count(PP))
-      values[n][PP] = get_holes_thermoelectric_power(elem);
+    {
+      sc->compute_thermoelectric_powers();
+      values[n][PP] = sc->get_hole_thermoelectric_power();
+    }
 
 
   }
@@ -1891,10 +1898,11 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     
   //Get the thermoelectric power
-  double Pn =  get_electrons_thermoelectric_power(elem);
-  double Pp =  get_holes_thermoelectric_power(elem);
+  sc->compute_thermoelectric_powers();
+  double Pn =  sc->get_electron_thermoelectric_power();
+  double Pp =  sc->get_hole_thermoelectric_power();
  
-  vector<double> T_nodes = sc->get_temperature_node();
+  vector<double> T_nodes = sc->get_temperature_at_nodes();
 
   dof_map.dof_indices(elem, dof_indices_u, u_var);
   dof_map.dof_indices(elem, dof_indices_en, en_var);
@@ -2056,10 +2064,16 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     }
 
     if (ids.count(PN))
-      values[n][PN] = get_electrons_thermoelectric_power(elem);
+    {
+      sc->compute_thermoelectric_powers();
+      values[n][PN] = sc->get_electron_thermoelectric_power();
+    }
 
     if (ids.count(PP))
-      values[n][PP] = get_holes_thermoelectric_power(elem);
+    {
+      sc->compute_thermoelectric_powers();
+      values[n][PP] = sc->get_hole_thermoelectric_power();
+    }
 
   }
 
@@ -2068,7 +2082,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
 
 
-
+/*
 template <>
 void
 DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
@@ -2436,7 +2450,7 @@ DriftDiffusion::get_solution(const Elem* elem,
 
 }
 
-
+*/
 
 
 
@@ -2556,11 +2570,12 @@ DriftDiffusion::calculate_currents_rstf(void)
     sc->reinit(elem);
     
     //Get the thermoelectric power------------
-    double Pn =  get_electrons_thermoelectric_power(elem) / phi0;
-    double Pp =  get_holes_thermoelectric_power(elem) / phi0;
+    sc->compute_thermoelectric_powers();
+    double Pn =  sc->get_electron_thermoelectric_power() / phi0;
+    double Pp =  sc->get_hole_thermoelectric_power() / phi0;
 
     //Get the temperature given the element
-    vector<double> T_nodes =  sc->get_temperature_node();
+    vector<double> T_nodes =  sc->get_temperature_at_nodes();
 
         
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
@@ -2733,11 +2748,12 @@ DriftDiffusion::calculate_currents_surfint(void)
         sc->reinit(elem);
         
 	//Get the thermoelectric power------------
-        double Pn = get_electrons_thermoelectric_power(elem) / phi0;
-        double Pp = get_holes_thermoelectric_power(elem) / phi0;
+        sc->compute_thermoelectric_powers();
+        double Pn = sc->get_electron_thermoelectric_power() / phi0;
+        double Pp = sc->get_hole_thermoelectric_power() / phi0;
        
         //Get the temperature given the element
-        vector<double> T_nodes = sc->get_temperature_node();
+        vector<double> T_nodes = sc->get_temperature_at_nodes();
 
         // only for dim > 1 we need to integrate
         if (dim > 1)
@@ -3674,12 +3690,13 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
 
     fe->reinit(elem);
     
-    //Get the thermoelectric power------------
-    double Pn =  get_electrons_thermoelectric_power(elem);
-    double Pp =  get_holes_thermoelectric_power(elem);
+    // Get the thermoelectric power------------
+    sc->compute_thermoelectric_powers();
+    double Pn =  sc->get_electron_thermoelectric_power();
+    double Pp =  sc->get_hole_thermoelectric_power();
       
     //Get the temperature given the element
-    vector<double> T_nodes = sc->get_temperature_node();
+    vector<double> T_nodes = sc->get_temperature_at_nodes();
 
 
     unsigned int n_dofs = dof_indices_u.size();
@@ -4037,7 +4054,7 @@ DriftDiffusion::set_dirichlet_bc(void)
   }
 }
 
-
+/*
 double DriftDiffusion::get_electron_conducibility(const Elem* elem)
 {
  
@@ -4128,9 +4145,9 @@ double DriftDiffusion::get_hole_conducibility(const Elem* elem)
 
 
 }   
+*/
 
-
-
+/*
 double DriftDiffusion::get_electrons_thermoelectric_power(const Elem* elem)
 {
      
@@ -4170,7 +4187,7 @@ double DriftDiffusion::get_electrons_thermoelectric_power(const Elem* elem)
     model->compute_thermoelectric_powers(); 
     
     
-    return (model->get_electrons_thermoelectric_power());
+    return (model->get_electron_thermoelectric_power());
     
     
   }
@@ -4219,7 +4236,7 @@ double DriftDiffusion::get_holes_thermoelectric_power(const Elem* elem)
   
   model->compute_thermoelectric_powers(); 
   
-  return (model->get_holes_thermoelectric_power());
+  return (model->get_hole_thermoelectric_power());
   }
   else
   {
@@ -4228,6 +4245,7 @@ double DriftDiffusion::get_holes_thermoelectric_power(const Elem* elem)
     
   }
 }
+*/
 
 
 
@@ -4235,8 +4253,7 @@ double DriftDiffusion::get_holes_thermoelectric_power(const Elem* elem)
 
 
 
-
-  void
+void
 DriftDiffusion::assemble_system(const NumericVector<Number>& x,
     NumericVector<Number>* residual,
     SparseMatrix<Number>* jacobian)
@@ -4513,12 +4530,13 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     
 
     //Get the thermoelectric power
-    double eTEpower =  get_electrons_thermoelectric_power(elem) / phi0;
-    double hTEpower =  get_holes_thermoelectric_power(elem) / phi0;
+    sc->compute_thermoelectric_powers();
+    double eTEpower =  sc->get_electron_thermoelectric_power() / phi0;
+    double hTEpower =  sc->get_hole_thermoelectric_power() / phi0;
 
            
      //Get the temperature given the element
-    vector<double> T_nodes = sc->get_temperature_node();
+    vector<double> T_nodes = sc->get_temperature_at_nodes();
    
 
     vector<vector<double> > local_scaling(elem->n_nodes(), vector<double>(3, 1));
@@ -5037,8 +5055,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             double sigma_h = phi0 * sc->get_hole_mobility() *
               sc->get_hole_density();
 
-            double Pn =  get_electrons_thermoelectric_power(elem);
-            double Pp =  get_holes_thermoelectric_power(elem);
+            sc->compute_thermoelectric_powers();
+            double Pn =  sc->get_electron_thermoelectric_power();
+            double Pp =  sc->get_hole_thermoelectric_power();
 
             if (coupling & ECURRENT)
               nodal_flux_n[side->node(i)] = 
@@ -5110,8 +5129,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               double sigma_h = phi0 * sc->get_hole_mobility() *
                 sc->get_hole_density();
 
-              double Pn =  get_electrons_thermoelectric_power(elem);
-              double Pp =  get_holes_thermoelectric_power(elem);
+              sc->compute_thermoelectric_powers();
+              double Pn =  sc->get_electron_thermoelectric_power();
+              double Pp =  sc->get_hole_thermoelectric_power();
 
               double jn = 0.0;
               double jp = 0.0;
@@ -5273,8 +5293,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           double sigma_h = phi0 * sc->get_hole_mobility() *
             sc->get_hole_density();
 
-          double Pn =  get_electrons_thermoelectric_power(elem);
-          double Pp =  get_holes_thermoelectric_power(elem);
+          sc->compute_thermoelectric_powers();
+          double Pn =  sc->get_electron_thermoelectric_power();
+          double Pp =  sc->get_hole_thermoelectric_power();
 
           double x_c = elem->centroid()(0);
           double x_s = elem->point(s)(0);
@@ -5652,33 +5673,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   else
     residual->close();
 
-/*
-  if (coupling & ECURRENT)
-  //if (1)
-  {
-    static int cnt = 0;
-    static int cnt2 = 0;
-    if (jacobian != NULL)
-    {
-      cerr << "write jacobian." << endl;
-      ostringstream s;
-      s << "jac_" << cnt << ".m";
-      jacobian->print_matlab(s.str());
-      cnt++;
-    }
-    else
-    {
-      cerr << "write residual." << endl;
-      ostringstream s;
-      s << "res_" << cnt2 << ".m";
-      residual->print_matlab(s.str());
-      ostringstream so;
-      so << "sol_" << cnt2 << ".m";
-      x.print_matlab(so.str());
-      cnt2++;
-    }
-  }
-*/  
+  
   perf_log.stop_event("assembly");
 } 
 
@@ -5692,7 +5687,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 //
 // explicit instantiations of template methods
 //
-
+/*
 template void
 DriftDiffusion::get_solution<double>(const Elem* elem, const Point& p,
     double& solution);
@@ -5725,7 +5720,7 @@ DriftDiffusion::get_solution<DriftDiffusion::Currents>(const Elem* elem,
 template void
 DriftDiffusion::get_solution<DriftDiffusion::EField>(const Elem* elem,
     const vector<Point>& p, vector<DriftDiffusion::EField>& solution);
-
+*/
 
 
 

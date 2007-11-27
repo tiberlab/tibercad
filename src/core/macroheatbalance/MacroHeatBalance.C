@@ -27,7 +27,6 @@
 
 #include "LatticeThermalConductivity.h"
 #include "ZbLatticeThermalConductivity.h"
-#include "ThermoelectricPower.h"
 #include "HeatModel.h"
 #include "SimulationEnvironment.h"
 #include "Material.h"

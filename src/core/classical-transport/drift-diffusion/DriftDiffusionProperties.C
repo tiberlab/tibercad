@@ -204,24 +204,27 @@ DriftDiffusionProperties::do_init(void)
   }
  
    
+  //
+  // Thermoelectric power
+  // 
 
-   // create a pointer to thermoelectric power
-   PhysicalModelInterface::destroy(_thermoelectric_power);
-   
-   it = get_options().submodels_begin("thermoelectric_power");
-   end = get_options().submodels_end("thermoelectric_power");
+  it = get_options().submodels_begin("thermoelectric_power");
+  end = get_options().submodels_end("thermoelectric_power");
+  if (it != end)
+  {
+    PhysicalModelInterface::destroy(_thermoelectric_power);
 
-   if (it != end)
-   {
-     _thermoelectric_power = dynamic_cast<ThermoelectricPower*>(
-      PhysicalModelInterface::create("thermoelectric_power", it->second));
+    _thermoelectric_power = dynamic_cast<ThermoelectricPower*>(
+        PhysicalModelInterface::create("thermoelectric_power", it->second));
 
     if (_thermoelectric_power == NULL)
       throw InitFailedException("Could not create thermoelectric power model");
 
     _thermoelectric_power->set_material(get_material());
+    _thermoelectric_power->set_driftdiffusionproperties(this);
+    _thermoelectric_power->set_simulator_id(get_simulator_id());
     _thermoelectric_power->init();  
-   }
+  }
 
 }
 
@@ -754,37 +757,37 @@ DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
 
 
 
-void  DriftDiffusionProperties::compute_thermoelectric_powers()
+void  DriftDiffusionProperties::compute_thermoelectric_powers(void)
 {
-
   if (_thermoelectric_power != NULL)
   {
 
-    _thermoelectric_power->set_fermi_potential(_pd->fermi_e,_pd->fermi_h);
+    _thermoelectric_power->set_fermi_potential(_pd->fermi_e, _pd->fermi_h);
     
-    double cb = get_conduction_band_edge()-_pd->electric_potential;
+    double cb = get_conduction_band_edge() - _pd->electric_potential;
     
-    double vb = get_valence_band_edge()-_pd->electric_potential;
+    double vb = get_valence_band_edge() - _pd->electric_potential;
     
-    _thermoelectric_power->set_band_edges(cb,vb);
+    _thermoelectric_power->set_band_edges(cb, vb);
  
-    _thermoelectric_power->set_mobility_term(5.0,5.0);
+    _thermoelectric_power->set_mobility_term(5.0, 5.0);
 
     
-    _thermoelectric_power->set_temperature(_pd->lattice_vt / Constants::k_B);
+    _thermoelectric_power->set_temperature(_pd->lattice_vt);
     
-    _thermoelectric_power->re_init();
+    _thermoelectric_power->calculate();
     
     _eTEpower = _thermoelectric_power->get_electrons_thermoelectric_power();
 
     _hTEpower = _thermoelectric_power->get_holes_thermoelectric_power();
     
   }
- 
-
 }
 
-std::vector<double> DriftDiffusionProperties::get_temperature_node()
+
+
+
+std::vector<double>& DriftDiffusionProperties::get_temperature_at_nodes()
 {
   return _nodal_lattice_vt;
 }
