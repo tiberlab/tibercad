@@ -144,6 +144,15 @@ class Sweep : public SimulationInterface
     void plot_data(std::vector<std::ofstream*>& plotfiles,
         std::vector<std::map<double, std::vector<double> > >& sweep_data);
 
+
+    //! Prepare the plot files
+    /*!
+     * First creates the needed files.
+     * Then writes some information on the data to be written into the header
+     * of the data files.
+     * Return true if there is some data to plot.
+     */
+    bool prepare_plot_files(std::vector<std::ofstream*>& plotfiles);
 };
 
 

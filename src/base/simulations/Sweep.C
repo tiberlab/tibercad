@@ -180,14 +180,97 @@ Sweep::do_solve(void)
   vector<map<double, vector<double> > > sweep_data(num_sim);
 
   // we make a plot file for each simulation
-  bool do_plotting = false;
   vector<ofstream*> plotfiles(num_sim);
+
+  bool do_plotting = prepare_plot_files(plotfiles);
+   
+  // if there are negative and positive values, we split them apart
+  vector<double> pos_values;
+  vector<double> neg_values;
+
+  unsigned int n = _values.size();
+
+  try
+  {
+    for (unsigned int i = 0; i < n; i++)
+    {
+      if (_values[i] >= 0.0)
+        pos_values.push_back(_values[i]);
+      else
+        neg_values.push_back(_values[i]);
+    }
+
+    if (neg_values.size() == 0)
+      do_sweep(pos_values, plotfiles, sweep_data);
+    else
+    {
+      reverse(neg_values.begin(), neg_values.end());
+
+      if (pos_values.size() > 1)
+      {
+        vector<double> first_val(1, pos_values[0]);
+        pos_values.erase(pos_values.begin());
+
+        do_sweep(first_val, plotfiles, sweep_data);
+        // to remember the first solution
+        vector<ID> old_sol(num_sim);
+        for (int i = 0; i < num_sim; i++)
+          old_sol[i] = _simulations[i]->remember_current_solution();
+
+        do_sweep(pos_values, plotfiles, sweep_data);
+
+        // reset to the first solution
+        for (int i = 0; i < num_sim; i++)
+        {
+          _simulations[i]->set_to_remembered_solution(old_sol[i]);
+          _simulations[i]->delete_remembered_solution(old_sol[i]);
+        }
+
+        Variable::set_variable_value(_variable, first_val[0]);
+      }
+      else
+        do_sweep(pos_values, plotfiles, sweep_data);
+
+
+      do_sweep(neg_values, plotfiles, sweep_data);
+    }
+  }
+  catch (SolveFailedException& e)
+  {
+    get_control().set_filename_suffix(suffix);
+    if (prepare_plot_files(plotfiles))
+      plot_data(plotfiles, sweep_data);
+
+    throw e;
+  }
+
+  if (prepare_plot_files(plotfiles))
+    plot_data(plotfiles, sweep_data);
+}
+
+
+
+
+bool
+Sweep::prepare_plot_files(std::vector<std::ofstream*>& plotfiles)
+{
+  int num_sim = _simulations.size();
+
+  assert(plotfiles.size() == num_sim);
+
+  bool do_plotting = false;
+
+  // the current filename suffix
+  string suffix = get_control().get_filename_suffix();
+  // the output directory
+  string outdir = get_control().get_output_dir();
+
   for (int i = 0; i < num_sim; i++)
   {
     // some sanity check
     assert(_simulations[i] != NULL);
     assert(_simulations[i]->is_initialized());
-    
+
     vector<string> legend;
     vector<string> description;
     _simulations[i]->get_integrated_quantities_description(_plotvariables,
@@ -198,6 +281,11 @@ Sweep::do_solve(void)
       plotfiles[i] = NULL;
     else
     {
+      if (plotfiles[i] != NULL)
+      {
+        plotfiles[i]->close();
+        delete plotfiles[i];
+      }
 
       ostringstream suff;
       suff.precision(3);
@@ -205,10 +293,10 @@ Sweep::do_solve(void)
       string plotfilename(outdir + "/" + get_name() + "_" +
           _simulations[i]->get_name() + suffix + "_" + suff.str() + ".dat");
 
-      plotfiles[i] = new ofstream;
+      plotfiles[i] = new ofstream(plotfilename.c_str(), ios_base::trunc);
       ofstream& file = *plotfiles[i];
 
-      file.open(plotfilename.c_str());
+      //file.open(plotfilename.c_str());
 
       if (!file.good())
         throw SolveFailedException("Sweep: Could not open plotfile " +
@@ -241,67 +329,7 @@ Sweep::do_solve(void)
     }
   }
 
-   
-  // if there are negative and positive values, we split them apart
-  vector<double> pos_values;
-  vector<double> neg_values;
-
-  unsigned int n = _values.size();
-
-  try
-  {
-  for (unsigned int i = 0; i < n; i++)
-  {
-    if (_values[i] >= 0.0)
-      pos_values.push_back(_values[i]);
-    else
-      neg_values.push_back(_values[i]);
-  }
-
-  if (neg_values.size() == 0)
-    do_sweep(pos_values, plotfiles, sweep_data);
-  else
-  {
-    reverse(neg_values.begin(), neg_values.end());
-
-    if (pos_values.size() > 1)
-    {
-      vector<double> first_val(1, pos_values[0]);
-      pos_values.erase(pos_values.begin());
-      
-      do_sweep(first_val, plotfiles, sweep_data);
-      // to remember the first solution
-      vector<ID> old_sol(num_sim);
-      for (int i = 0; i < num_sim; i++)
-        old_sol[i] = _simulations[i]->remember_current_solution();
-      
-      do_sweep(pos_values, plotfiles, sweep_data);
-
-      // reset to the first solution
-      for (int i = 0; i < num_sim; i++)
-      {
-        _simulations[i]->set_to_remembered_solution(old_sol[i]);
-        _simulations[i]->delete_remembered_solution(old_sol[i]);
-      }
-
-      Variable::set_variable_value(_variable, first_val[0]);
-    }
-    else
-      do_sweep(pos_values, plotfiles, sweep_data);
-
-      
-    do_sweep(neg_values, plotfiles, sweep_data);
-  }
-  }
-  catch (SolveFailedException& e)
-  {
-    get_control().set_filename_suffix(suffix);
-    plot_data(plotfiles, sweep_data);
-    throw e;
-  }
-
-  if (do_plotting)
-    plot_data(plotfiles, sweep_data);
+  return do_plotting;
 }
 
 
@@ -316,8 +344,8 @@ Sweep::plot_data(vector<ofstream*>& plotfiles,
   for (int j = 0; j < num_sim; j++)
   {
     if (plotfiles[j] != NULL)
-      // it means we have something to plot
     {
+      // it means we have something to plot
       map<double, vector<double> >::iterator it(sweep_data[j].begin());
       map<double, vector<double> >::iterator end(sweep_data[j].end());
 
@@ -460,12 +488,23 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
         for (int j = 0; j < num_sim; j++)
         {
           if (plotfiles[j] != NULL)
-            // it means we have something to plot
           {
+            // it means we have something to plot
             _simulations[j]->get_integrated_quantities(_plotvariables,
                 plotvalues);
 
             sweep_data[j][_last] = plotvalues;
+
+            ostringstream l;
+            l << setprecision(12) << _last;
+            unsigned int n_data = plotvalues.size();
+            for (unsigned int k = 0; k < n_data; k++)
+              l << "   " << plotvalues[k];
+            l << endl;
+
+            ofstream& file = *plotfiles[j];
+            file << l.str();
+            file.flush();
           }
         }
 
