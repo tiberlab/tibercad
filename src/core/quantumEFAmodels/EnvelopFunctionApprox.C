@@ -2687,13 +2687,7 @@ vector<double>  EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int
 	  
       for (unsigned int qp=0; qp<qrule.n_points(); ++qp)
 	el_volume += JxW[qp];
- 
-
-      //cerr << 	el_volume << "   " << (elem->volume() * (_device->get_mesh_units()) / (Constants::bohr_radius)) << "\n";
-   
-     
-      //  result[el_number] = std::abs(result_complex[el_number])/ (elem->volume() * (_device->get_mesh_units()) / (Constants::bohr_radius));
-
+      
       result[el_number] = std::abs(result_complex[el_number])/el_volume;
      
       el_number++;
@@ -2992,7 +2986,7 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density1D(unsigned
   }
 
 
-  cerr  << state_number <<"    " << Energy <<"        " <<  prob_factor<<"        " << parallel_mass << "\n";
+ 
  
   result  = calculate_cell_prob_function(state_number);
  
