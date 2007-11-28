@@ -192,7 +192,7 @@ void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& var
 						std::vector<double>& results, std::vector<std::string>& legend)
 {
 
-  if (opt.job != BULKEIGENSTATES)
+  if (opt.job != BULKEIGENSTATES || opt.job != BULKDENSITY )
   {
 
     const set<string>::const_iterator varend(variables.end());
@@ -561,6 +561,8 @@ void EnvelopFunctionApprox::parse_options()
     opt.job = DENSITY;
   else if (job_name == "bulk")
     opt.job = BULKEIGENSTATES;
+  else if (job_name == "bulkdensity")
+    opt.job = BULKDENSITY;
   else
     throw InitFailedException( "EnvelopeFunctionApprox: Incorrect job " + job_name );  
   //---------------------------------------------------------------------------------//
@@ -580,6 +582,7 @@ void EnvelopFunctionApprox::parse_options()
   //default value for temperature
   opt.Temperature = mod_opt.get_option("Temperature", 300.0);
     
+ 
   
 
   //---------------------------------------------------------------------------------//
@@ -614,7 +617,7 @@ void EnvelopFunctionApprox::parse_options()
 
   //--------------------------------------------------
   //point for bulk calculation
-  if (opt.job == BULKEIGENSTATES)
+  if (opt.job == BULKEIGENSTATES || opt.job == BULKDENSITY)
   {
     if (mod_opt.find_option("bulk_point"))
     {
@@ -792,26 +795,28 @@ void EnvelopFunctionApprox::do_solve()
  else
  {
 
-   if (solver_opt.Dirichlet_bc_everywhere)
-     apply_diriclet_bc_at_all_boundaries();
-   else
-     create_dirichlet_dofs();
+   if  ( opt.job ==   EIGENSTATES || opt.job == DENSITY )
+   {
+     if (solver_opt.Dirichlet_bc_everywhere)
+       apply_diriclet_bc_at_all_boundaries();
+     else
+       create_dirichlet_dofs();
  
 
-   make_constraints(); //creates a copy of them
+     make_constraints(); //creates a copy of them
 
   
-   make_nodes_periodic();
+     make_nodes_periodic();
   
-   apply_periodic_bc();
+     apply_periodic_bc();
 
-   make_new_dofs();
-
+     make_new_dofs();
+   }
 
 
    if ( opt.job ==   EIGENSTATES )   
      solve_eigen_value_problem( solver_opt.number_of_eigenstates);
-   else if ( opt.job == DENSITY )
+   else if ( opt.job == DENSITY || opt.job == BULKDENSITY)
      calculate_convergent_density();
   
  }
@@ -1723,7 +1728,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
     }
  
 
-  //Fermi energy calculation
+  //Temperature calculation
   if (temperature_simulation != NULL)
     for (unsigned int i = 0; i < solution_size; i++)
     {
@@ -2682,10 +2687,15 @@ vector<double>  EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int
 	  
       for (unsigned int qp=0; qp<qrule.n_points(); ++qp)
 	el_volume += JxW[qp];
-      
+ 
+
+      //cerr << 	el_volume << "   " << (elem->volume() * (_device->get_mesh_units()) / (Constants::bohr_radius)) << "\n";
    
      
-      result[el_number] = std::abs(result_complex[el_number])/ el_volume;
+      //  result[el_number] = std::abs(result_complex[el_number])/ (elem->volume() * (_device->get_mesh_units()) / (Constants::bohr_radius));
+
+      result[el_number] = std::abs(result_complex[el_number])/el_volume;
+     
       el_number++;
 
     }
@@ -2803,32 +2813,43 @@ double EnvelopFunctionApprox::get_integrated_probability()
 void EnvelopFunctionApprox::calculate_convergent_density( )
 {
 
- 
+  if (opt.job == BULKDENSITY)
+  {
+    //temporary solution
 
-  unsigned int number_of_states = opt.initial_eigenstates_number;
+    solve_bulk();
+    
+    double total_density =  get_integrated_probability();
 
-  solve_eigen_value_problem(number_of_states);
+    _density.clear();
 
-  unsigned int n1 = solution.size();
+    _density[NULL] = total_density;
 
-  double last_state_density = Fermi_statistics_probability(solution[n1-1].eigen_energy, 
-							   solution[n1-1].Fermi_energy, 
-							   solution[n1-1].Temperature);
 
-  double total_density =  get_integrated_probability();
- 
-  bool converged =( last_state_density/total_density  < opt.relative_density_tolerance/10 ) ; 
+   
+    
+  }
+  else
+  {
+    unsigned int number_of_states = opt.initial_eigenstates_number;
 
- 
+    solve_eigen_value_problem(number_of_states);
 
-  for  ( ; opt.convergent_density && (!converged); )
+    
+    
+    double total_density =  get_integrated_probability();
+    
+    bool converged = false;
+    
+
+    for  ( ; opt.convergent_density && (!converged); )
     {
-          
-
+      
+      
       number_of_states = (unsigned int) (number_of_states * opt.eigen_number_increase_factor) + 1;
       
      
-
+      
       //TODO:
       
       // this is to think about why it does not work!
@@ -2859,8 +2880,9 @@ void EnvelopFunctionApprox::calculate_convergent_density( )
     }
 
  
-  calculate_density( );
- 
+    calculate_density( );
+
+  }
 }
 
 //==============================================================================//  
@@ -2955,6 +2977,8 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density1D(unsigned
 
  
 
+
+
   double prob_factor;
 
   
@@ -2966,6 +2990,9 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density1D(unsigned
   {
     prob_factor = std::log( 1.0 + exp( -(Fermi_energy - Energy) / T_EV )  );
   }
+
+
+  cerr  << state_number <<"    " << Energy <<"        " <<  prob_factor<<"        " << parallel_mass << "\n";
  
   result  = calculate_cell_prob_function(state_number);
  
@@ -3063,6 +3090,8 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   }
 
+  Point qp = mat_elem->centroid(); 
+
   if (!found) throw SolveFailedException("Bad material point\n");
 
   EFAbulkHamiltonian* element_hamiltonian;
@@ -3076,6 +3105,26 @@ void EnvelopFunctionApprox::solve_bulk(void)
   element_hamiltonian->set_k_vector(k_vector);
 
   element_hamiltonian->calculate_Hamiltonian_k_par();
+
+  Tensor2Sym strain_crystal_system(0);
+
+  double electric_potential = 0;
+
+  if (opt.consider_strain) 
+  {
+    
+    strain_crystal_system = strain->get_strain_crystal(mat_elem , qp);
+  }
+
+  if (opt.consider_potential)
+  {
+    
+   
+    electric_potential = get_electric_potential( mat_elem, qp );
+  }
+  
+  element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
+  
 
   std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&  
 	    model_Ham = ( element_hamiltonian->get_Hamiltonian() );
@@ -3116,6 +3165,41 @@ void EnvelopFunctionApprox::solve_bulk(void)
   }
 
  
+
+  unsigned int n = solution.size();
+  
+  for (unsigned int i = 0; i < n ; i++)
+  {
+     solution[i].Fermi_energy = 0;  
+     solution[i].Temperature = opt.Temperature;
+
+
+    if (poisson_equation != NULL)
+    	solution[i].Fermi_energy = -get_electro_chem_potential(mat_elem);
+      
+     
+ 
   
 
+   
+    //Temperature calculation
+    
+    if (temperature_simulation != NULL)
+      {
+
+	Point center = mat_elem->centroid();
+	
+	vector<double> values;
+	vector<Point> qp(1);
+
+	qp[0] = center;
+     
+	temperature_simulation->get_solution(mat_elem, qp, temperature_ID, values);
+
+	solution[i].Temperature = values[0];
+      
+      }
+      
+  }
+  
 }

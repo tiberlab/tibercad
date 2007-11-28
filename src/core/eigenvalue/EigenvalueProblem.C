@@ -14,6 +14,8 @@ EigenvalueProblem::EigenvalueProblem(void)
 
   system = NULL;
 
+  _hamiltonian_size = 0;
+
 }
 
 //===============================================================//
@@ -262,8 +264,17 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
 {
 
  
+ 
+
+  
+
   calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
  
+
+  if (ev_number > _hamiltonian_size)
+    throw SolveFailedException("EigenvalueProblem: number of requested eigenvalues is bigger than the  Hamiltonian size");
+  
+
   EigenSolver::prepare_slepc();
 
   EigenSolver::SLEPCoptions slep_opt;
@@ -575,7 +586,7 @@ void EigenvalueProblem::copy_H_matrix_to_solver( )
   }
 
   EigenSolver::preallocate_H_matrix(number_of_new_dofs,  non_zeros_number);
-  
+  _hamiltonian_size = number_of_new_dofs;
 
   //----------------------------------------------------------------------------------------------------//
  

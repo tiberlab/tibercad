@@ -241,7 +241,28 @@ void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2
 
  }
  
+ if (wedge == QUARTER)
+ {
 
+   kmin[0] = -norm_k1/2.0;  kmax[0] = norm_k1/2.0; num_nodes[0] = n;
+
+   kmin[1] = 0;  kmax[1] = norm_k2/2.0; num_nodes[1] = m;
+
+   kmin[2] = 0;  kmax[2] = norm_k3/2.0; num_nodes[2] = k;
+
+ }
+ 
+
+ if (wedge == EIGHTH)
+ {
+
+   kmin[0] = 0;  kmax[0] = norm_k1/2.0; num_nodes[0] = n;
+
+   kmin[1] = 0;  kmax[1] = norm_k2/2.0; num_nodes[1] = m;
+
+   kmin[2] = 0;  kmax[2] = norm_k3/2.0; num_nodes[2] = k;
+
+ }
  
   
  for (short i = 1; i < 4; i++)
@@ -250,6 +271,8 @@ void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2
    transform_matrix(i,2) = k_vector2(i)/norm_k2;
    transform_matrix(i,3) = k_vector3(i)/norm_k3;
  }
+
+
 
  // k_dim = 3;
 
@@ -305,6 +328,13 @@ void Kspace::do_init()
       degeneracy_factor = 4.0;
       if (k_dim == 1)
 	throw  InitFailedException("Kspace: wedge " + wedge_type + "cannot be used with 1D k-space");
+    }
+    else if (wedge_type == "eighth")
+    {
+      wedge = EIGHTH;
+      degeneracy_factor = 8.0;
+      if (k_dim != 3)
+	throw  InitFailedException("Kspace: wedge " + wedge_type + "cannot be used only with 3D k-space");
     }
     else 
     {

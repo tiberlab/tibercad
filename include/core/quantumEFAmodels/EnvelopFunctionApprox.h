@@ -15,9 +15,10 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
 
   enum JobKind
   {
-     EIGENSTATES = 0,
-     DENSITY = 1,
-     BULKEIGENSTATES=2
+    EIGENSTATES = 0, //!< eigenenergies
+    DENSITY = 1, //!<particle density
+    BULKEIGENSTATES=2, //!< bulk eigenenergies
+    BULKDENSITY = 3 //!< bulk density
   };
 
 
@@ -548,8 +549,7 @@ inline double EnvelopFunctionApprox::Fermi_statistics_probability(double Energy,
     el_fermi = 1.0/(  1 +  std::exp(exp_arg)  );
 
 
-  
-
+ 
   if (opt.particle == "el")
     return(el_fermi);
   else

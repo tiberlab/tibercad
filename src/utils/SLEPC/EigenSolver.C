@@ -538,12 +538,16 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
   int ncv, nconv;
   
 
+  
+    
+
   if (opt.ev_number > 8)
     ncv =  4*opt.ev_number;
   else
     ncv = 32;
    
 
+ 
   if (ncv > _size_of_matrix) ncv = _size_of_matrix;
  
  

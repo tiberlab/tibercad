@@ -65,6 +65,9 @@ class KspaceIntegration : public Kspace
     unsigned int maximum_ref_level; //!< maximum level for k space refinement
    
     unsigned int degeneracy;        //!< degeneracy factor
+
+    bool log_output;  //!<perflog output
+
   }; 
 
 
@@ -144,6 +147,8 @@ class KspaceIntegration : public Kspace
   unsigned int how_many_elements_to_do();
    
 
+
+
   
   options opt;
 
@@ -163,6 +168,8 @@ class KspaceIntegration : public Kspace
   //!is used for k-space output
   std::string additional_name_suffix;
 
+
+  
 
  private:
 

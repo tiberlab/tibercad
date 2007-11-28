@@ -88,16 +88,16 @@ class QuantumDensity : public KspaceIntegration
     
 
 
-    double Temperature;             //!< temperature [K]
+   
     unsigned int degeneracy;        //!< degeneracy factor to mutiply the charge density 
 
     unsigned int intial_eigenstates_number;  //!< number of required eigenstates for the first call of Schoedinger solver
 
   
-    bool log_output; //!perform some screen output for debugging
+    bool log_output; //!<perform some screen output for debugging
 
 
-   
+    bool bulk_calculation; //!< bulk charge density 
    
    
 
@@ -211,9 +211,14 @@ class QuantumDensity : public KspaceIntegration
 
    virtual void do_solve();
 
+   //!only for bulk
+   virtual void  build_integrated_quantities (const std::set< std::string > &variables, std::vector< double > &values);
 
-   
-
+   //!only for bulk
+   virtual void build_integrated_quantities_description(
+        const std::set<std::string>& variables,
+        std::vector<std::string>& legend,
+        std::vector<std::string>& description);
 
 };
 

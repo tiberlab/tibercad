@@ -168,63 +168,102 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
 				   std::vector<double>& results, std::vector<std::string>& legend)
 {
  
-
-  if (variables.find("quantum_density") != variables.end() )
-  {
-    legend.resize(1, "particle_density[cm^-3]");
-
-    //------------------------------------------------------------------------------------//
-    //!from map to vector
-    Mesh & mesh = get_environment().get_mesh();
-    
-    map<const Elem*, double>::iterator it = real_space_density.begin();
-
-    MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-    
-    unsigned int    real_space_density_size = real_space_density.size();
-    
-
-    results.resize(real_space_density_size);
-
-    unsigned int el_number = 0;
-
-    for (; el !=end_el ; ++el)
+  if (!opt.bulk_calculation)
+    if (variables.find("quantum_density") != variables.end() )
     {
-      const Elem* elem = *el; 
+      legend.resize(1, "particle_density[cm^-3]");
+      
+      //------------------------------------------------------------------------------------//
+      //!from map to vector
+      Mesh & mesh = get_environment().get_mesh();
+      
+      map<const Elem*, double>::iterator it = real_space_density.begin();
+      
+      MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+      const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+      
+      unsigned int    real_space_density_size = real_space_density.size();
+      
 
-      it = real_space_density.find(elem);
+      results.resize(real_space_density_size);
 
-      if (it != real_space_density.end())
-	results[el_number] = it->second;
-      else
-	cerr << "WARNING: not all elements have a calculated density\n";
+      unsigned int el_number = 0;
+      
+      for (; el !=end_el ; ++el)
+      {
+	const Elem* elem = *el; 
+	
+	it = real_space_density.find(elem);
+	
+	if (it != real_space_density.end())
+	  results[el_number] = it->second;
+	else
+	  cerr << "WARNING: not all elements have a calculated density\n";
 
-      el_number++;
-    }
-    //-------------------------------------------------------------------------------------//
+	el_number++;
+      }
+      //-------------------------------------------------------------------------------------//
 
-    //now I have to transform from atomic units to [cm^-3]    
-
-    const double coeff =  1.0/ ( (Constants::bohr_radius) * (Constants::bohr_radius) * (Constants::bohr_radius) * 1.0e6 );
-
-    for (unsigned int i = 0; i < real_space_density_size; i++)
-    {
-           results[i] *= coeff;
-    }
+      //now I have to transform from atomic units to [cm^-3]    
+      
+      const double coeff =  1.0/ ( (Constants::bohr_radius) * (Constants::bohr_radius) * (Constants::bohr_radius) * 1.0e6 );
+      
+      for (unsigned int i = 0; i < real_space_density_size; i++)
+      {
+	results[i] *= coeff;
+      }
   
 
 
-    //-------------------------------------------------------------------------------------//
-
-  }
+      //-------------------------------------------------------------------------------------//
+      
+    }
 
 
 
 }
 
 
+//=======================================================================================//
+void  QuantumDensity::build_integrated_quantities (const std::set< std::string > &variables, std::vector< double > &values)
+{
 
+ 
+
+  if (variables.find("quantum_density") != variables.end() )
+  {
+   
+    
+    values.resize(1);
+    values[0] = real_space_density[NULL];
+    
+    //now I have to transform from atomic units to [cm^-3]    
+      
+    const double coeff =  1.0/ ( (Constants::bohr_radius) * (Constants::bohr_radius) * (Constants::bohr_radius) * 1.0e6 );
+    
+   
+    values[0] *= coeff;
+   
+   
+    
+  }
+}
+
+//==========================================================================================//
+void QuantumDensity::build_integrated_quantities_description(const std::set<std::string>& variables, 
+							     std::vector<std::string>& legend, 
+							     std::vector<std::string>& description)
+{
+  legend.resize(1);
+  legend[0] = " ";
+ 
+  if (variables.find("quantum_density") != variables.end() )
+  {
+    description.resize(1);
+    description[0] = "Density 1/cm^3";
+  }
+
+}
 //=======================================================================================//
 void QuantumDensity::do_init( )
 {
@@ -267,7 +306,7 @@ void QuantumDensity::parse_options( )
 
   const ModelOptions& mod_opt = get_options();
  
-  opt.Temperature             = mod_opt.get_option("Temperature", opt.Temperature);
+ 
 
   opt.log_output              = mod_opt.get_option("log_output", false);
 
@@ -277,6 +316,9 @@ void QuantumDensity::parse_options( )
   opt.analitic = mod_opt.get_option("analitic", true);
 
   opt.degeneracy  = mod_opt.get_option("degeneracy",1);
+
+  opt.bulk_calculation = mod_opt.get_option("bulk_calculation", false);
+
 
   if (opt.analitic)
   {
@@ -364,8 +406,12 @@ void QuantumDensity::calculate_for_k_point(const Point& k_point,
 
 
 
-  quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number ); 
-  quantum_model_opts["job"] = "density";
+  quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number );
+
+  if (opt.bulk_calculation)
+    quantum_model_opts["job"] = "bulkdensity";
+  else
+    quantum_model_opts["job"] = "density";
 
  
 	  
@@ -469,10 +515,12 @@ void QuantumDensity::estimate_analitic_density(void)
     for (short i = 0; i < number_of_eigenstates; i++)
     {
        
+     
       double imass1  = (2.0 * abs(energy_k_0[i] - energy_k_1[i] ) ) / Constants::Hartree /(k_max1 * k_max1);
       double imass2  = (2.0 * abs(energy_k_0[i] - energy_k_2[i] ) ) / Constants::Hartree /(k_max2 * k_max2);
       
-      
+     
+
  
       effective_mass[i] = 1.0/sqrt(imass1 * imass2);
 

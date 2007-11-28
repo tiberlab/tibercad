@@ -30,53 +30,56 @@ void KspaceIntegration::do_plot()
   SimulationInterface::do_plot();
   //---------------------------------------------------------------------------
   //k-space output
-  const Device& dev = get_environment().get_device();
-
-  string suffix = get_control().get_filename_suffix();
-  string outdir = get_control().get_output_dir();
-  string format = get_control().get_output_format();
-
-  string suff;
-
-  if (format == "gmv")
-    suff = ".gmv";
-  else if (format == "ise")
-    suff = ".plt";
-  else if (format == "vtk")
-    suff = ".vtk";
-  else 
-    suff = ".gmv"; 
-
-  const std::set< std::string >& plotvariables = get_control().get_plotvariables();
-
-  if (plotvariables.find("k-space") != plotvariables.end())
+  if (kmesh != NULL)
   {
-    string filename(outdir + "/" + get_name() +
-        "_k_space" + suffix + additional_name_suffix + suff);
 
-   
+    const Device& dev = get_environment().get_device();
 
-    vector<string> names(1,"value[atomicUnits]");
+    string suffix = get_control().get_filename_suffix();
+    string outdir = get_control().get_output_dir();
+    string format = get_control().get_output_format();
 
-   
-
-    const vector<double> results = get_density_in_k_space();
-  
+    string suff;
 
     if (format == "gmv")
-      GMVIO_cell(get_k_mesh()).write_ascii_cell_data(filename, results, names);
+      suff = ".gmv";
     else if (format == "ise")
-      TecplotIO_cell(get_k_mesh()).write_cell_data(filename, results, names);
+      suff = ".plt";
     else if (format == "vtk")
-      VTKIO(get_k_mesh()).write_elemental_data(filename, results, names); 
-    else
+      suff = ".vtk";
+    else 
+      suff = ".gmv"; 
+
+    const std::set< std::string >& plotvariables = get_control().get_plotvariables();
+
+    if (plotvariables.find("k-space") != plotvariables.end())
     {
-      cout << "Output format not supported. Falling back to GMV." << endl;
-      GMVIO_cell(get_k_mesh()).write_ascii_cell_data(filename, results, names);
+      string filename(outdir + "/" + get_name() +
+		      "_k_space" + suffix + additional_name_suffix + suff);
+
+   
+
+      vector<string> names(1,"value[atomicUnits]");
+
+   
+
+      const vector<double> results = get_density_in_k_space();
+  
+
+      if (format == "gmv")
+	GMVIO_cell(get_k_mesh()).write_ascii_cell_data(filename, results, names);
+      else if (format == "ise")
+	TecplotIO_cell(get_k_mesh()).write_cell_data(filename, results, names);
+      else if (format == "vtk")
+	VTKIO(get_k_mesh()).write_elemental_data(filename, results, names); 
+      else
+      {
+	cout << "Output format not supported. Falling back to GMV." << endl;
+	GMVIO_cell(get_k_mesh()).write_ascii_cell_data(filename, results, names);
+      }
+      
     }
-
   }
-
   //----------------------------------------------------------------------------
 
 }
@@ -319,6 +322,12 @@ void KspaceIntegration::calculate_convergent_density()
 	mesh_refinement.refine_and_coarsen_elements();
 	     
 
+	if (opt.log_output)
+	{
+	  kmesh->print_info();
+	  cout.flush();
+	}
+
 	eq->reinit();
 
 
@@ -334,10 +343,11 @@ void KspaceIntegration::calculate_convergent_density()
 	norm_of_error = estimate_error();
 
 
-
-	std::cerr << "k space grid has " << kmesh->n_nodes() << " nodes " << flush;
-	std::cerr <<  "quantum density error " << norm_of_error << endl << flush;
-
+	if (opt.log_output)
+	{
+	  std::cerr << "k space grid has " << kmesh->n_nodes() << " nodes " << flush;
+	  std::cerr <<  "quantum density error " << norm_of_error << endl << flush;
+	}
 	      
       }
 
@@ -371,7 +381,7 @@ void KspaceIntegration::parse_options( )
 
   opt.degeneracy                = mod_opt.get_option("degeneracy",1);
   opt.k_domain_refinement       = mod_opt.get_option("refine_k_space", false);
-
+  opt.log_output                = mod_opt.get_option("k_space_log_output",  false);
 
 
 }
@@ -483,9 +493,17 @@ double  KspaceIntegration::estimate_error(void)
   for (it = it1; it != it2; ++it)
   {
     const Elem* el = it->first;
-    t1 += real_space_density[el] * real_space_density[el] * el->volume();
 
-    t2 += (real_space_density[el] - old_real_space_density[el]) *  (real_space_density[el] - old_real_space_density[el]) * el->volume();
+    double volume;
+    
+    if (el != NULL) 
+      volume =  el->volume();
+    else
+      volume = 1.0; // bulk calculus 
+
+    t1 += real_space_density[el] * real_space_density[el] * volume;
+
+    t2 += (real_space_density[el] - old_real_space_density[el]) *  (real_space_density[el] - old_real_space_density[el]) * volume;
 
 
   }

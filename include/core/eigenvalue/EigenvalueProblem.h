@@ -277,6 +277,13 @@ class EigenvalueProblem: public  SimulationInterface
   
 
 
+
+ private:
+
+  //!size of the Hamiltonian matrix
+  unsigned int _hamiltonian_size;
+
+
 };
 
 

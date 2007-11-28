@@ -250,6 +250,8 @@ void ZbDDsemiconductor::calculate_valence_band_extremum(void)
 
 	  
       extremum.mass_DOS = std::pow(1.0/imass_DOS,1.0/3.0);
+
+    
       result.push_back(extremum);
     }
   }

@@ -40,7 +40,7 @@ void DDsemiconductor::do_init ()
   
   energy_cutoff = opt.get_option("energy_cutoff", 4.0);
   strained      = false;
-  k_max         = opt.get_option("k_max", 1e-5);
+  k_max         = opt.get_option("k_max", 1e-3);
 
   PhysicalModelInterface::destroy(semiconductor);
   
