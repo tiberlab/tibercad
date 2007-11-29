@@ -1,5 +1,4 @@
 #include "MacroHeatBalance.h"
-#include "DriftDiffusion.h"
 #include "BoundaryProperties.h"
 #include "PhysicalModel.h"
 #include "mesh.h"
@@ -444,16 +443,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   
 
   //Define the vectors which store the Drift Diffusion solutions
-
-   
-
-  std::vector<DriftDiffusion::Solution>  potentials; 
-  
-  std::vector<DriftDiffusion::Currents>   currents; 
-
- std::vector<DriftDiffusion::Solution>  face_potentials;    
-	       
-   std::vector<DriftDiffusion::Currents>   face_currents; 
 
   std::vector<double> QfermiE;
     

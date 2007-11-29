@@ -2266,7 +2266,6 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
   Complex eigen_f_value2;
 
 
-  DriftDiffusion::Solution dd_solution;
   double chem_pot_value_eV;
   
   for ( ; el != end_el ; ++el) 
@@ -2278,19 +2277,10 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 
       Point center = elem->centroid();
 
-      // poisson_equation->get_solution(elem, center, dd_solution);
-
       chem_pot_value_eV = -get_electro_chem_potential(elem); 
      
 
-      //why minus? because  DriftDiffusion::Solution contaions potential not energy
       
-      // if (opt.particle == "el")
-      //	chem_pot_value_eV = -dd_solution.fermi_e;
-      //else
-      //	chem_pot_value_eV = -dd_solution.fermi_h;
-
-     
       for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
 	{
 	  dof_map.dof_indices (elem, dof_indices, psi_index);
@@ -2541,21 +2531,12 @@ void EnvelopFunctionApprox::calculate_density( )
       
       if (opt.local_occupation)
       {
-	DriftDiffusion::Solution dd_solution;
 	
 	Point center = el->centroid();
 	
-	// poisson_equation->get_solution(el, center, dd_solution);
-	
 	double chem_pot_value_eV = -get_electro_chem_potential(el);
 	
-	//!why minus? because I need energy, not a potential
-	/*
-	  if (opt.particle == "el")
-	  chem_pot_value_eV = -dd_solution.fermi_e;
-	  else
-	  chem_pot_value_eV = -dd_solution.fermi_h;
-	*/
+
 	prob_factor = Fermi_statistics_probability(Energy,  chem_pot_value_eV, solution[i].Temperature); //Thermal probability
       }
 	
