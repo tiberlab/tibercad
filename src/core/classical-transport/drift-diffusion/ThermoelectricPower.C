@@ -81,8 +81,8 @@ ThermoelectricPower::do_init(void)
   {
     _TEmodel = CONSTANT;
 
-    _eTEpower = -std::abs(get_parameter("eTEpower", _eTEpower));
-    _hTEpower = -std::abs(get_parameter("hTEpower", _hTEpower));
+    _eTEpower = get_parameter("eTEpower", _eTEpower);
+    _hTEpower = get_parameter("hTEpower", _hTEpower);
   }
   else if (TEmodel == "diffusivity_model")
     _TEmodel = DIFFUSIVITY;

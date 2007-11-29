@@ -177,24 +177,24 @@ void HeatModel::do_init()
    if (model_opt.particle_thermal_conductivity) 
    {   
 
-   dd_ID_kpart.insert(_dd_simul->get_variable_id("CondE")); 
-   dd_ID_kpart.insert(_dd_simul->get_variable_id("CondH")); 
+   dd_ID_kpart.insert(_dd_simul->get_variable_id("eCond")); 
+   dd_ID_kpart.insert(_dd_simul->get_variable_id("hCond")); 
 
    ID_kpart.resize(2);
-   ID_kpart[CONDE] = (_dd_simul->get_variable_id("CondE")); 
-   ID_kpart[CONDH] = (_dd_simul->get_variable_id("CondH")); 
+   ID_kpart[CONDE] = (_dd_simul->get_variable_id("eCond")); 
+   ID_kpart[CONDH] = (_dd_simul->get_variable_id("hCond")); 
    } 
 
    if  (model_opt.peltier_thomson_effect) 
    { 
 
  
-   dd_ID_TEpower.insert(_dd_simul->get_variable_id("TEpowerE")); 
-   dd_ID_TEpower.insert(_dd_simul->get_variable_id("TEpowerH")); 
+   dd_ID_TEpower.insert(_dd_simul->get_variable_id("Pn")); 
+   dd_ID_TEpower.insert(_dd_simul->get_variable_id("Pp")); 
 
    ID_TEpower.resize(2);
-   ID_TEpower[TEPOWERE] = (_dd_simul->get_variable_id("TEpowerE")); 
-   ID_TEpower[TEPOWERH] = (_dd_simul->get_variable_id("TEpowerH")); 
+   ID_TEpower[TEPOWERE] = (_dd_simul->get_variable_id("Pn")); 
+   ID_TEpower[TEPOWERH] = (_dd_simul->get_variable_id("Pp")); 
       
    }  
 
