@@ -71,6 +71,7 @@ $default_precision = 1e-6;
 @known_suffixes = ('dat', 'gmv');
 %options = (
     'verbose' => 0,
+    'purge' => 0,
     'smtp_server' => "localhost",
     'mail_sender' => "$ENV{USER}",
     'package' => "unknown"
@@ -221,6 +222,13 @@ sub split_variable($);
 sub verbose;
 
 
+##
+## Tells whether to purge data
+##
+sub purge;
+
+
+
 
 ###################################################################
 ## Implementations
@@ -315,7 +323,7 @@ sub run_test($) {
 
   my $failure = run_executable();
   $failure = compare_results_with_reference() unless $failure;
-  cleanup_test_dir();
+  cleanup_test_dir() if purge();
 
   chdir($olddir);
 
@@ -664,6 +672,11 @@ sub split_variable($) {
 
 sub verbose {
   return $options{"verbose"};
+}
+
+
+sub purge {
+  return $options{"purge"};
 }
 
 
