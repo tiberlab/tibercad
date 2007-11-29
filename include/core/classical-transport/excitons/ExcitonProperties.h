@@ -12,7 +12,6 @@
 #include "PhysicalModel.h"
 #include "SimulationOptions.h"
 #include "TemperatureInterface.h"
-#include "DriftDiffusionDefs.h"
 #include "TiberCad.h"
 
 #include "vector_value.h"

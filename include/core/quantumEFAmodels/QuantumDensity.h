@@ -60,7 +60,7 @@
 #include <set>
 #include <tecplot_io.h>
 #include "mesh_data.h"
-#include "DriftDiffusion.h"
+#include "SimulationOptions.h"
 #include "EnvelopFunctionApprox.h"
 #include "tensor.h"
 #include "KspaceIntegration.h"

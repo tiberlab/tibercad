@@ -22,7 +22,6 @@
 #include <set>
 #include <tecplot_io.h>
 
-#include "DriftDiffusion.h"
 #include "EnvelopFunctionApprox.h"
 #include "tensor.h"
 #include "KspaceIntegration.h"

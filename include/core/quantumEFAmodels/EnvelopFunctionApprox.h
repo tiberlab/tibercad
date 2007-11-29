@@ -4,7 +4,6 @@
 
 
 #include "Macrostrain.h"
-#include "DriftDiffusion.h"
 #include "SimulationInterface.h"
 #include "EigenvalueProblem.h"
 

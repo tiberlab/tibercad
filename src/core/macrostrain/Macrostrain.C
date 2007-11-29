@@ -432,7 +432,7 @@ void Macrostrain::parse_options( )
     {
       converse_piezo_effect = true;
     
-      poisson_equation  = dynamic_cast< DriftDiffusion* > (find_simulation ( poisson_model_name ));
+      poisson_equation  = find_simulation ( poisson_model_name );
     
       if (poisson_equation == NULL)
 	throw InitFailedException( "Unknown poisson model " + poisson_model_name);

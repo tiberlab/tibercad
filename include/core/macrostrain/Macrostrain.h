@@ -69,7 +69,6 @@
 #include "SimulationInterface.h"
 #include "Device.h"
 #include "MacrostrainModel.h"
-#include "DriftDiffusion.h"
 #include "TiberLinearSolver.h"
 #include "petscksp.h"  
 //! A class to calculate strain and shape
@@ -234,7 +233,7 @@ class Macrostrain : public SimulationInterface
   bool converse_piezo_effect;
 
   //!pointer to a drift-diffusion object that is used to get electric-field  data 
-  DriftDiffusion* poisson_equation;
+  SimulationInterface* poisson_equation;
 
   //!pointer to the equation systems 
   EquationSystems*   equation_systems; 

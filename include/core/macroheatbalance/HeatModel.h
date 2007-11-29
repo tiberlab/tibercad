@@ -5,10 +5,10 @@
 #include "PhysicalModel.h"
 #include "LatticeThermalConductivity.h"
 #include "ThermoelectricPower.h"
-#include "DriftDiffusion.h"
+#include "SimulationInterface.h"
 #include "elem.h"
 #include "ParticleThermalConductivity.h"
-#include <point.h>
+#include "point.h"
 #include "Constants.h"
 
 //!Class that contains all the object, necessary for Heat Transport solver
@@ -29,7 +29,6 @@ class HeatModel: public PhysicalModel
    //! creates a new object
   static HeatModel* create();
   
-    //! Pointer to a DriftDiffusion simulation
  
   bool get_peltier_thomson_opt();
 
