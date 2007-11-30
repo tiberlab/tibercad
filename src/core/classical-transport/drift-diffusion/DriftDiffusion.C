@@ -1182,7 +1182,7 @@ DriftDiffusion::do_init(void)
 
 
 NumericVector<double>&
-DriftDiffusion::get_solution_vector(void)
+DriftDiffusion::solution_vector(void)
 {
   EquationSystems& es = get_equation_systems();
 

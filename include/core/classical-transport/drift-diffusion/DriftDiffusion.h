@@ -452,8 +452,8 @@ class DriftDiffusion : public SimulationInterface
     virtual void parse_options(void);
 
     
-    /*! \copydoc SimulationInterface::get_solution_vector() */
-    virtual NumericVector<double>& get_solution_vector(void);
+    /*! \copydoc SimulationInterface::solution_vector() */
+    virtual NumericVector<double>& solution_vector(void);
     
 
     /*! \copydoc SimulationInterface::build_nodal_results() */

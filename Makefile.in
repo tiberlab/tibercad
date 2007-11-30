@@ -55,7 +55,7 @@ examples: all
 
 
 run_tests:
-	@cd testsuite && ./run_tests -t all -v
+	@cd testsuite && ./run_tests -t all -v -i
 
 
 .PHONY: manual

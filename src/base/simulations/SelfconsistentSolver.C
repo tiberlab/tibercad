@@ -34,6 +34,13 @@ SelfconsistentSolver::do_init(void)
       _simulations[i]->init();
   }
 
+  if (!_simulations[num_of_sims - 1]->has_solution_vector())
+  {
+    ostringstream s;
+    s << "SelfconsistentSolver: Simulation "
+      << _simulations[num_of_sims - 1]->get_name() << " has no solution vector!";
+    throw InitFailedException(s.str());
+  }
   
   // we set our environment to that of the first simulation
   set_environment(&_simulations[0]->get_environment());
@@ -69,6 +76,31 @@ SelfconsistentSolver::do_equilibrium(void)
 
 
 
+
+NumericVector<double>&
+SelfconsistentSolver::solution_vector(void)
+{
+  int num_sim = _simulations.size();
+  return _simulations[num_sim - 1]->get_solution_vector();
+}
+
+
+
+void
+SelfconsistentSolver::initialize(void)
+{
+  solve_simulations();
+}
+
+
+
+void
+SelfconsistentSolver::solve_simulations(void)
+{
+  int num_sim = _simulations.size();
+  for (int i = 0; i < num_sim; i++)
+    _simulations[i]->solve();
+}
 
 
 

@@ -228,6 +228,13 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     double get_maximum_norm_of_difference(ID id);
 
+    
+    //! Get a pointer to the solution vector
+    /*!
+     * Calls solution_vector()
+     */
+    NumericVector<double>& get_solution_vector(void);
+
 
     //! Set the current solution to a given value
     /*!
@@ -286,7 +293,11 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! Check if the equilibrium for this simulation has been calculated
     bool equilibrium_done(void) const;
-    
+
+
+
+    //! Return true if the system has a solution vector
+    bool has_solution_vector(void);
     
 
     /*!
@@ -542,13 +553,9 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     virtual ID do_remember_current_solution(ID id = 0);
 
-
-    //! Return true if the system has a solution vector
-    bool has_solution_vector(void);
-
     
     //! Get a pointer to the solution vector
-    virtual NumericVector<double>& get_solution_vector(void);
+    virtual NumericVector<double>& solution_vector(void);
 
 
     //! Set to the remembered solution number \c id
@@ -1129,6 +1136,12 @@ SimulationInterface::get_solution_secure(const Elem* elem,
 }
 
 
+inline
+NumericVector<double>&
+SimulationInterface::get_solution_vector(void)
+{
+  return solution_vector();
+}
 
 
 #endif // _SIMULATIONINTERFACE_H_

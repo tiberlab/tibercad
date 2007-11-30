@@ -73,6 +73,23 @@ class SelfconsistentSolver : public SimulationInterface
         std::vector<std::string>& description);
 
 
+    //! Returns the solution vector of the last simulation
+    virtual NumericVector<double>& solution_vector(void);
+
+    
+    //! Initialize the solver
+    /*!
+     * Can be used to initialize the solutions.
+     *
+     * The default implementation just solves once all simulations.
+     */
+    virtual void initialize(void);
+
+
+    //! Solve all simulations
+    void solve_simulations(void);
+
+
     //! Get the maximum number of iterations
     unsigned int get_maximum_iterations(void) const;
 
@@ -102,6 +119,8 @@ class SelfconsistentSolver : public SimulationInterface
      * Returns \c NULL if index \c i >= # of simulations
      */
     SimulationInterface* simulation(unsigned int i);
+
+
 
   private:
 

@@ -375,7 +375,7 @@ SimulationInterface::has_solution_vector(void)
 
 
 NumericVector<double>&
-SimulationInterface::get_solution_vector(void)
+SimulationInterface::solution_vector(void)
 {
   assert(has_solution_vector());
 

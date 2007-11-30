@@ -30,10 +30,7 @@ RelaxationMethod::do_solve(void)
   SimulationIterator it(simulations_begin());
   const SimulationIterator end(simulations_end());
 
-try {
-  for ( ; it != end; ++it)
-    (*it)->solve();
-} catch (...) { cerr << "#############" << endl;}
+  initialize();
 
   // we make a copy of the current solutions
   vector<ID> old_sol_ids(num_sim); 
