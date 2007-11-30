@@ -21,7 +21,7 @@ objects		:= $(patsubst %.cpp, %.o, $(srcfiles))
 all: $(objects)
 	@$(CXX) -fPIC -shared -o $(topdir)/lib/libnewmat.so $(objects)
 
-#@ar rcs $(topdir)/lib/libnewmat.a $(objects)
+
 
 
 

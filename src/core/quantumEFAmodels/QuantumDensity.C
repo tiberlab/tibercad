@@ -255,7 +255,7 @@ void QuantumDensity::build_integrated_quantities_description(const std::set<std:
 							     std::vector<std::string>& description)
 {
   legend.resize(1);
-  legend[0] = " ";
+  legend[0] = "density";
  
   if (variables.find("quantum_density") != variables.end() )
   {

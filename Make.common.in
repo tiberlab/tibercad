@@ -57,6 +57,7 @@ LDFLAGS += @GSL_LIBS@
 LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib
 LDFLAGS += -Wl,-rpath,$(topdir)/lib/tibermodels -L$(topdir)/lib/tibermodels
 LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib -ltensor
+LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib -lnewmat
 
 TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*")
 
