@@ -28,6 +28,7 @@ USAGE: run_tests [OPTIONS]
     --test=<a,b,c,..> | -t <..> : perform tests a, b, c
     --purge | -p                : delete output after run
     --help | -h                 : this help message
+    --info | -i                 : print info about the repository
 
   Tests can be:
     directory name : run make in the named directory and perform checks
@@ -63,6 +64,8 @@ our @tests = ();
 # whether to send mail
 our $sendmail = '';
 
+# print repository info
+our $info = '';
 
 
 ## check a test result and set the global result accordingly
@@ -83,7 +86,8 @@ GetOptions('verbose!' => \$verbose,
            'config=s' => \$configfile,
            'sendmail|mail!' => \$sendmail,
            'test=s' => \@tests,
-           'help' => \&usage);
+           'help' => \&usage,
+           'info' => \$info);
 
 
 @tests = split(/,/,join(',',@tests));
@@ -110,9 +114,9 @@ chomp($last_changed_author);
 
 my $datetime = localtime;
 print("\nStarting TiberCAD test suite at $datetime\n");
-print("Repository info:\n") if $verbose;
-print("     $revision\n") if $verbose;
-print("     $last_changed_author\n") if $verbose;
+print("Repository info:\n") if $info;
+print("     $revision\n") if $info;
+print("     $last_changed_author\n") if $info;
 
 
 
