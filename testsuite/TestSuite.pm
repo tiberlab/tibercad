@@ -380,8 +380,10 @@ sub compare_results_with_reference {
     length($suffix) || die "Filetype unknown: $file";
     (-e $reffile ) || die "No such reference file: $reffile";
 
-    if ($#{$vars} <= 0) {
-      print(pad_to_textwidth("    $file", $padchar)) if verbose();
+    if ($#{$vars} < 0) {
+      print(pad_to_textwidth("    $file (no variables to check)",
+                                                 $padchar)) if verbose();
+
       print_result(not -e $datafile) if verbose();
       next;
     }
@@ -391,7 +393,7 @@ sub compare_results_with_reference {
       print_result(1) if verbose();
       next;
     }
-    print("\n") if ($#{$vars} > 0 && verbose());
+    print("\n") if ($#{$vars} >= 0 && verbose());
 
 
     foreach my $var (@{$vars}) {
@@ -417,11 +419,12 @@ sub compare_results_with_reference {
           };
       }
 
-      @data1 = &$extract_func($variable, $datafile);
       @data2 = &$extract_func($variable, $reffile);
 
       ($#data2 > 0) ||
         die "Variable $variable seems to not exist in $reffile";
+
+      @data1 = &$extract_func($variable, $datafile);
 
       my $fail = compare_data_vectors(\@data1, \@data2, $prec);
 
@@ -444,6 +447,7 @@ sub extract_data_from_characteristic($$) {
 
   eof(SF) && die "Data file does not exist.";
 
+  my @data = ();
 
   my $pos = 0;
   my $oldpos = 0;
@@ -457,10 +461,13 @@ sub extract_data_from_characteristic($$) {
 
   seek SF, $pos, 0;
 
+  my @vars = (split(/\s+/, <SF>));
+  if ($#vars < 0) { die "Data file has no data??" };
+
   my $index = 0;
-  foreach my $item (split(/\s+/, <SF>))
+  foreach my $item (@vars)
   {
-    ($item =~ /\Q$variable/) && last;
+    ($item eq $variable) && last;
 
     $index++;
   }
@@ -468,8 +475,8 @@ sub extract_data_from_characteristic($$) {
   # the first one is the hash
   $index--;
 
+  if ($index == $#vars) { return @data };
 
-  my @data = ();
   while (not eof)  {
     my @l = (split(/\s+/, <SF>));
     push @data, ($l[$index]);
@@ -500,8 +507,10 @@ sub extract_data_from_gmv($$) {
   # now, find the variable
   my @data = ();
   while (not eof) {
-    my $line = <SF>;
-    if ($line =~ /\Q$variable/) {
+    my @line = (split(/\s+/, <SF>));
+    if ($#line < 0) { next };
+
+    if ($line[0] eq $variable) {
       @data = split(/\s+/, <SF>);
       last;
     }
@@ -522,7 +531,7 @@ sub compare_data_vectors($$$) {
 
   my $n = $#data1;
 
-  ($n == $#data2) || return 1;
+  if ($n != $#data2) { return 1 };
 
   my $difference = 0;
   for (my $i = 0; $i < $n; $i++) {
