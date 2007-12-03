@@ -141,8 +141,11 @@ of the  \textbf{Cluster}.
 \textit{mesh\_regions} (mandatory): list of the physical regions (region ID(s) (for GMSH) as  specified in the meshing  program , or ISE-TCAD name(s))
 to  be  grouped in the  cluster.
 
+\vspace{2ex}
 
-
+\textbf{Regions} and  \textbf{Clusters} represent the macroscopical description of the  device or  structure to be be simulated in \textbf{TiberCAD}.
+In the  rest of  the  input  file,  the physical regions associated to \textbf{Models} or  \textbf{Atomistic}  descriptions will be indicated by means of  the  
+\textbf{TiberCAD} \textbf{Region} and  \textbf{Cluster}  names.
 
 % Each  \textbf{Atomistic} block must be preceded by the keyword \char`\"{}\textbf{Atomistic}\char`\"{}, followed by the  (single-word) name of the atomistic region.
 % 
@@ -181,16 +184,17 @@ Each  \textbf{Atomistic} block must be preceded by the keyword \char`\"{}\textbf
 \begin{verbatim}
 Atomistic  TB_1
  {
-    physical_regions = ( 1, 2, 3)  # physical  regions to be described 
+    physical_regions = ( barrier_1, qwell, barrier_2) 
+			            # physical  regions to be described 
                                     # with atomistic model.
  }
 \end{verbatim}
 
 Here are the  description of  the available keywords for an \textbf{Atomistic} block.
 
-\textit{physical\_regions} (mandatory): list of the physical regions (mesh\_regions, clusters, \textbf{TiberCAD} \textbf{Regions} 
-\footnote{not yet implemented} )  of 
+\textit{physical\_regions} (mandatory): list of the physical regions ( \textbf{TiberCAD} \textbf{Regions} or \textbf{Clusters} )  of 
 the device associated to an atomistic description.
+
 
 % ...................................................................
 
@@ -230,8 +234,8 @@ $Models
    In \char`\"{}\textbf{Models}\char`\"{} section, one or more  model-blocks must be present: each model-block must be preceded by the keyword \char`\"{}\textbf{model}\char`\"{}, followed by the (single-word) model name. 
  This must be the   name of  one of the  \TiberCAD  simulation models.
  
-Here are the simulation models implemented until now:  \textbf{driftdiffusion} , \textbf{thermal}  ,  \textbf{excitontransport},  \textbf{macrostrain}.
-   
+Here are the simulation models implemented until now:  \textbf{driftdiffusion}, \textbf{thermal}  ,  \textbf{excitontransport},  \textbf{macrostrain},
+\textbf{efaschroedinger}, \textbf{opticskp},  \textbf{opticalspectrum}.
    Each model-block can  contain the following optional blocks:
    
  %  one or more optional Boundary Condition regions blocks (\textbf{BC\_\-regions}-block).
@@ -261,16 +265,19 @@ options
     {
      simulation_name = driftdiffusion
      #physical_regions = all
-     physical_regions = (1 , 2)
+     physical_regions = (channel_1 , channel_2)
     }
 \end{verbatim}
 
 \textit{simulation\_name}: user-defined name of the particular instance of  the simulation model defined for this block. More than one simulation (with different  name and properties) can be  defined,in separated model blocks, which refer to a same  \TiberCAD  simulation model. If simulation\_name is  not assigned,  by default the \TiberCAD model name is taken as current simulation\_name.
 
-\textit{physical\_regions}: (list of) physical region(s) to  which the  present simulation model will be  applied. A list must be  written 
-Physical region(s) can be integer numbers, consistent with the physical regions set assigned through GMSH, or strings, corresponding to the  region names defined in ISE grid  file.
+\textit{physical\_regions}: (list of) physical region(s) to  which the  present simulation model will be  applied.
+Physical region(s) are the  \textbf{TiberCAD regions} or  \textbf{clusters} as  defined in  \textbf{Device}  section 
+
+% can be either integer numbers, consistent with the physical regions set assigned through GMSH, or strings, 
+% corresponding to the  region names defined in ISE grid  file, or  even .
 Default value  is  "`all"' (all  physical regions of the  device).
-In a list, region ids or names must be separated by comma  and  enclosed between '(' and ')' parenthesis 
+In a list, the names must be separated by comma  and  enclosed between '(' and ')' parenthesis 
 
 
 \subsection{physical\_model block }

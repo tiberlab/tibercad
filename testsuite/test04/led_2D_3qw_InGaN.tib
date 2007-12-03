@@ -1,0 +1,425 @@
+
+#
+# y-growth-direction !!!!
+#
+
+$Device
+{
+
+
+
+ Region region_1  #pGaN_pcontact
+   {
+   #  reg_numb = 10
+     structure = wz
+     z-growth-direction = (1,0,-1,0)
+     x-growth-direction = (-1,2,-1,0)
+     y-growth-direction = (0,0,0,-1)
+
+     mat = GaN
+     doping = 3e19
+     doping_type = acceptor 
+     doping_level = 0.170
+   }
+
+
+
+
+   Region region_2   #  AlGaN
+   {
+
+ #    reg_numb = 11
+     structure = wz
+     z-growth-direction = (1,0,-1,0)
+     x-growth-direction = (-1,2,-1,0)
+     y-growth-direction = (0,0,0,-1)
+     mat = AlGaN
+     x=0.2
+     doping = 3e19  
+     doping_type =  acceptor 
+     doping_level = 0.170
+
+   }
+
+
+
+   Region region_3   # GaN_barr_intrinsic
+   {
+ #    reg_numb = 12
+     structure = wz
+     z-growth-direction = (1,0,-1,0)
+     x-growth-direction = (-1,2,-1,0)
+     y-growth-direction = (0,0,0,-1)
+     mat = GaN
+     doping = 1e15
+     doping_type = donor 
+     doping_level = 0.025
+
+   }
+
+
+
+   Region InGaN_QW
+   {
+     reg_numb =   (3,8,16)           #(3,8,13)
+     structure = wz
+     z-growth-direction = (1,0,-1,0)
+     x-growth-direction = (-1,2,-1,0)
+     y-growth-direction = (0,0,0,-1)
+     mat = InGaN
+     x = 0.14
+     doping = 1e15
+     doping_type = donor 
+     doping_level = 0.025
+
+   }
+
+
+
+   Region GaN_Barrier
+   {
+     reg_numb = (1,4,5,11,13,15,17)        #(1,4,5)
+     structure = wz
+    z-growth-direction = (1,0,-1,0)
+     x-growth-direction = (-1,2,-1,0)
+     y-growth-direction = (0,0,0,-1)
+     mat = GaN
+     doping = 3e18  
+     doping_type = donor 
+     doping_level = 0.025
+   }
+
+
+
+#   Region AlInN_OX  # OX
+#   {
+#   #  reg_numb = 2 
+#     #structure = wz
+#     #y-growth-direction = (1,0,-1,0)
+#     #z-growth-direction = (-1,2,-1,0)
+#     #x-growth-direction = (0,0,0,1)
+#     mat = SiO2     
+#   }
+
+   Region Ex_AlInN_OX  # OX
+   {
+     reg_numb = 2 
+     structure = wz
+     z-growth-direction = (1,0,-1,0)
+     x-growth-direction = (-1,2,-1,0)
+     y-growth-direction = (0,0,0,-1)
+     mat =  GaN # AlInN #SiO2 
+ #    x = 0.82 # 0.78
+     doping = 3e18 # 1e19 
+     doping_type = donor 
+     doping_level = 0.025
+   }
+
+
+
+
+   Region AlInN  #AlInN
+   {
+   #  reg_numb = 7  
+     structure = wz
+     z-growth-direction = (1,0,-1,0)
+     x-growth-direction = (-1,2,-1,0)
+     y-growth-direction = (0,0,0,-1)
+     mat =  GaN # AlInN
+   #  x = 0.82 # 0.78 # 0.82 # 0.70 #0.82   nominal  0.82 
+     doping = 3e18 # 1e19 
+     doping_type = donor 
+     doping_level = 0.025
+     
+   }
+
+
+   Region region_10_lump_2 #GaN_ncontact
+   {
+  #   reg_numb = 6
+     structure = wz
+     z-growth-direction = (1,0,-1,0)
+     x-growth-direction = (-1,2,-1,0)
+     y-growth-direction = (0,0,0,-1)
+     mat = GaN 
+     doping = 3e18  
+     doping_type = donor
+     doping_level = 0.025
+   }
+
+
+   Region region_0 #AIR
+   {
+   #  reg_numb = 9
+     mat = Air 
+   }
+
+ 
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+
+   model thermal
+  {
+
+     options
+    { 
+      simulation_name = tt
+      physical_regions = all
+    }
+
+     physical_model Lattice_thermal_conductivity
+     {
+       kappa_model = constant
+     }
+     BC_Regions
+    {
+        BC_Region reservoir
+   	{
+    
+         BC_reg_numb = 1
+         temperature = 300
+   	}
+
+        BC_Region reservoir
+   	{
+    
+         BC_reg_numb = 2
+         temperature = 300
+   	}
+ 
+     }
+
+  }
+
+ model driftdiffusion
+  { 
+
+    options
+    {
+ 
+     simulation_name = driftdiffusion
+
+     physical_regions = (1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)
+
+    }
+
+    physical_model recombination
+    {
+      model = srh
+    }
+
+    physical_model recombination
+    {
+      model = direct
+      C =  0.47e-10  
+
+    }
+
+
+    BC_Regions  
+    {
+      BC_Region p_contact
+      {
+        BC_reg_numb = 4
+        type = ohmic
+      	zero_grad_fermi_e = true
+	voltage = @Vb[0.0] 
+      }
+      
+      
+      BC_Region n_contact
+      {
+        BC_reg_numb = 3
+        type = ohmic
+ 	zero_grad_fermi_h = true
+        voltage = 0.0
+      }
+
+      
+ 
+    }   
+
+ } 
+
+ model macrostrain
+  {
+    options
+    {
+      simulation_name = strain
+      physical_regions = (1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)
+    }
+
+    BC_Regions  
+    {
+      BC_Region substr
+      {
+        BC_reg_numb = 2
+	type = substrate
+        material = GaN
+	structure = wz
+        z-growth-direction = (1,0,-1,0)
+        x-growth-direction = (-1,2,-1,0)
+        y-growth-direction = (0,0,0,-1)
+      }
+    }
+  }
+ 
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+   thermal
+  {
+     kappa_temperature_sc = false   
+  }
+ 
+
+   driftdiffusion   #  fino a V 3.07
+   {
+
+    nonlin_max_it = 50 #25
+    nonlin_step_tol = 1e-3 #  1e-5
+    ls_max_step =  1.0  # 2 #0.8 # 1.5  #1.0 # 1.5  #1.0 #2       # 1.0  fino a P = 0.33
+    pc_type = composite
+ #   ksp_type = gmres
+
+   }
+
+#  driftdiffusion
+#  {
+#    nonlinear_solver = tiber
+# #   linear_solver = pardiso
+#    coupling = full
+#    nonlin_rel_tol = 1e-12  #1e-14  
+#    nonlin_abs_tol =  1e-50  
+#    nonlin_step_tol = 1e-3
+
+#    lin_rel_tol = 1e-6
+#    nonlin_max_it = 30
+#    discretization = fem
+#    ls_max_step = 3 #4 #1.0 
+#    pc_type = lu  #lu   #  ilu  =  incomplete lu,  better for  big  problems
+
+#  }
+
+
+
+#sweep_1  # inner
+#{
+#  simulation = dd
+#  variable = ...
+#  etc etc
+#}
+
+#sweep_2 # outer
+#{
+#  simulation = sweep_1
+#  etc etc
+#} 
+
+
+  sweep_1 # outer
+   {
+ #   simulation = (driftdiffusion,tt)
+     simulation = sweep_2 # driftdiffusion
+    variable = Vb
+    start = 0
+    stop = 4  #5
+    steps =  50 # 25
+    plotvariable = current
+    plot_data = true
+
+  }
+
+   sweep_2 
+   {
+     simulation = driftdiffusion #sweep_1
+     variable = polariz
+     start = 0
+     stop = 1
+     steps =  10 #20 # 5
+  #   plotvariable = current
+
+   } 
+
+
+
+
+
+  
+
+
+  macrostrain
+  {
+    substrate = substr
+ #   xmonitor =  true
+    monitor = true
+
+
+ #   tolerance = 1e-8 # 1e-8 ok senza  oxide
+  # ksp_type = cg #gmres
+    max_iterations = 15000
+   pc = composite
+
+
+  }
+
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+
+ thermal
+  {
+    Joule_Effect = true
+    Peltier_Thomson_Effect = false
+    Particle_thermal_conductivity = false
+    current_simulation = driftdiffusion 
+  }
+
+  driftdiffusion 
+  {
+    relax_polarization = @polariz[0.0]
+
+    strain_simulation = strain
+    statistics = FD
+    model = strained 
+  }
+   
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+
+$Simulation
+{
+
+  searchpath = ../../examples/materials # material
+  meshfile =  mesh_led_tri_msh.grd # led_quantum_msh.grd   # mesa_msh.grd
+  mesh_units = 1e-6      
+  dimension = 2
+  temperature = 300
+#  solve = (strain,sweep)
+#  solve = (strain,driftdiffusion) # sweep
+  solve = (strain, sweep_1)
+
+  #symmetry = cylindrical
+  resultpath =  output # output_test_no_ox_no_alinn_relP  #output_test_alinn_no_pyro_relP  #input_siO2_str_noncyl
+  plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, Occupation, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent)
+  output_format = ise # vtk
+}
+
+
+
+
+
