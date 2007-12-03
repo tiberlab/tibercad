@@ -21,7 +21,7 @@
 
 #include "Sweep.h"
 #include "RelaxationMethod.h"
-
+#include "ModifiedBroyden.h"
 #include "Utils.h"
 
 #include "DataOutput.h"
@@ -98,6 +98,8 @@ SimulationInterface::create(const string& type,
       sim = MacroHeatBalance::create();
     else if (type_name == "selfconsistent_relaxation")
       sim = RelaxationMethod::create();
+    else if (type_name == "selfconsistent_broyden")
+      sim = ModifiedBroyden::create();
     else if (type_name == "quantumdensity")
       sim = QuantumDensity::create();
     else if (type_name == "opticskp")

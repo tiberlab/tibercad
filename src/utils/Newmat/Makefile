@@ -26,7 +26,7 @@ all: $(objects)
 
 
 %.o: %.cpp
-	@$(CXX) -fPIC $(TIBER_INCLUDES) -c $<
+	@$(CXX) -fPIC $(CPPFLAGS) -c $<
 
 
 include $(topdir)/Make.rules

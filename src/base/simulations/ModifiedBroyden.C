@@ -13,8 +13,7 @@ void ModifiedBroyden::do_solve(void)
 
   do_iteration();
 
-  get_X_from_iteration();
-
+  
 
   evaluate_and_save_F();
  
@@ -31,11 +30,13 @@ void ModifiedBroyden::do_solve(void)
 
   for (   ; !converged  ;   )
   {
+
+    _it_number++;
+
+    if (_it_number > get_maximum_iterations() ) 
+      throw SolveFailedException("ModifiedBroyden::Number of iterations exceeded\n");
+
     do_iteration();
-
-    get_X_from_iteration();
-
-    _vector_size = _X.size();
 
     evaluate_and_save_F();
 
@@ -78,9 +79,11 @@ void ModifiedBroyden::do_solve(void)
 
 inline void ModifiedBroyden::evaluate_and_save_F(void)
 {
+  const NumericVector<double>& _X1  = solution_vector(); //after iteration
+ 
   vector<double> temp(_vector_size);
   for (unsigned int i = 0; i < _vector_size; i++ )
-    temp[i] = _X[i] - _X1[i];
+    temp[i] = _X[i] - _X1(i);
 
   _F.insert( pair<unsigned int, vector<double> > (_it_number, temp) );
   
@@ -329,3 +332,49 @@ inline void ModifiedBroyden::update_omega_vector(void)
 
 }
 //--------------------------------------------------------------------------------------//
+void ModifiedBroyden::parse_options(void)
+{
+  SelfconsistentSolver::parse_options();
+
+  const ModelOptions& mod_opt = get_options();
+
+  _omega_0 = mod_opt.get_option("omega_0",0.5);
+
+  _alpha = mod_opt.get_option("alpha",0.15);
+
+  _number_of_x_to_use = mod_opt.get_option("history_length",10);
+
+  
+  
+}
+
+
+//-------------------------------------------------------------------------------------//
+void ModifiedBroyden::do_init(void)
+{
+  
+  SelfconsistentSolver::do_init();
+
+
+}
+//-------------------------------------------------------------------------------------//
+inline void ModifiedBroyden::do_iteration(void)
+{
+  solve_simulations();   	
+}
+
+
+//-------------------------------------------------------------------------------------//
+inline void ModifiedBroyden::init_X(void)
+{
+  initialize();  
+  const NumericVector<double>& temp  = solution_vector(); //after iteration
+
+  _vector_size = temp.size();
+
+  _X.resize(_vector_size);
+
+  for (unsigned int i = 0; i < _vector_size; i++ )
+    _X[i] = temp(i);
+  
+}

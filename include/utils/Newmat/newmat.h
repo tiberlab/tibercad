@@ -5,6 +5,7 @@
 #ifndef NEWMAT_LIB
 #define NEWMAT_LIB 0
 
+
 #include "include.h"
 
 #include "boolean.h"

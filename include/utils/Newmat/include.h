@@ -4,8 +4,12 @@
 /// \file include.h
 /// Set options and and details of include files.
 
+
+
 #ifndef INCLUDE_LIB
 #define INCLUDE_LIB
+
+#include "libmesh_common.h"
 
 #define use_namespace                   // define name spaces
 
@@ -298,7 +302,7 @@ typedef double long_Real;
 #endif
 
 #ifdef USING_DOUBLE                     // set precision type to double
-typedef double Real;
+//typedef double Real;
 typedef long double long_Real;
 #endif
 
