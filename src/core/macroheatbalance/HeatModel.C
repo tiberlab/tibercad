@@ -306,25 +306,30 @@ void HeatModel::update_thermoelectric_powers()
   {
 
   std::vector< std::map< ID, double > >  dd_sol_te;
+
   std::vector<Point> centroid;
-  centroid[0]=_elem->centroid();
+  
+  centroid.resize(1);  
+
+   centroid[0]=_elem->centroid();
   
   _dd_simul->get_solution(_elem,centroid,dd_ID_TEpower,dd_sol_te); 
 
-  _eTEpower =  dd_sol_te[0].find(ID_TEpower[TEPOWERE])->second; 
+   _eTEpower =  dd_sol_te[0].find(ID_TEpower[TEPOWERE])->second; 
       
   _hTEpower =  dd_sol_te[0].find(ID_TEpower[TEPOWERH])->second;   
+ 
+ 
+  // std::vector< std::map< ID, double > >  dd_sol_kpart;
+  // _dd_simul->get_solution(_elem,centroid,dd_ID_kpart,dd_sol_kpart); 
 
-   std::vector< std::map< ID, double > >  dd_sol_kpart;
-  _dd_simul->get_solution(_elem,centroid,dd_ID_kpart,dd_sol_kpart); 
-
-   double sigma_e =  dd_sol_kpart[0].find(ID_kpart[CONDE])->second;
+  // double sigma_e =  dd_sol_kpart[0].find(ID_kpart[CONDE])->second;
   
-     double sigma_h =  dd_sol_kpart[0].find(ID_kpart[CONDH])->second;
+  //   double sigma_h =  dd_sol_kpart[0].find(ID_kpart[CONDH])->second;
 
-    double P_tot = (sigma_e * _eTEpower +  sigma_h * _hTEpower) /( sigma_e + sigma_h);
+  //  double P_tot = (sigma_e * _eTEpower +  sigma_h * _hTEpower) /( sigma_e + sigma_h);
 
-    std::cout<<P_tot<<std::endl; 
+  // std::cout<<P_tot<<std::endl; 
 
   }
 
