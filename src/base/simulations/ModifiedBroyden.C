@@ -6,8 +6,14 @@ using namespace std;
 
 void ModifiedBroyden::do_solve(void)
 {
+ 
+
+  parse_options();
+
 
   _it_number = 1;
+
+  
 
   init_X();
 
@@ -19,11 +25,11 @@ void ModifiedBroyden::do_solve(void)
  
 
   calculate_kappa_matrix();
-
+ 
   calculate_new_first_iteraion_solution();
 
   
-
+ 
 
   bool converged = false;
 
@@ -33,42 +39,73 @@ void ModifiedBroyden::do_solve(void)
 
     _it_number++;
 
-    if (_it_number > get_maximum_iterations() ) 
-      throw SolveFailedException("ModifiedBroyden::Number of iterations exceeded\n");
+    try{
+      cerr << "Modified Broyden iteration number  " <<  _it_number << "\n";
 
-    do_iteration();
+      if (_it_number > get_maximum_iterations() ) 
+	throw SolveFailedException("ModifiedBroyden::Number of iterations exceeded\n");
+      
+      do_iteration();
 
-    evaluate_and_save_F();
+      cerr << "1\n";
 
-    calculate_kappa_matrix();
+      evaluate_and_save_F();
 
+      cerr << "1.5\n";
 
-    update_omega_vector();
+      calculate_kappa_matrix();
+
     
-    calculate_mu_and_w_diag();
-
-    calculate_tilde_a();
-
-    calculate_lambda();
-
-    update_tilde_a();
-
-    calculate_a();
-
-    calcvulate_beta_matrix();
-
-    calculate_zeta_matrix();
-
-    calculate_eta_vector();
-
-    calculate_p_matrix();
-
-    calculate_new_solution();
     
+      cerr << "2\n";
 
-    double x = estimate_error();
+      update_omega_vector();
 
-    if (x < get_relative_tolerance() ) converged = true;
+     
+      calculate_mu_and_w_diag();
+     
+      calculate_tilde_a();
+      
+      calculate_lambda();
+
+      update_tilde_a();
+      
+      
+      cerr << "3\n";
+
+      calculate_a();
+     
+       cerr << "3.1\n";
+      calcvulate_beta_matrix();
+      
+      cerr << "3.2\n";
+      calculate_zeta_matrix();
+
+      cerr << "4\n";
+     
+      calculate_eta_vector();
+
+      cerr << "4.1\n";
+     
+      calculate_p_matrix();
+
+      cerr << "4.2\n";
+      
+      calculate_new_solution();
+      
+      
+      double x = estimate_error();
+      
+      cerr << "Modified Broiden: Error = " << x << "\n";
+
+      if (x < get_relative_tolerance() ) converged = true;
+    }      
+    catch(RBD_COMMON::BaseException& e)
+    {
+      cerr << e.what() << "\n";
+      throw SolveFailedException("Error in Mathematics");
+    }
+    
 
   }
 
@@ -95,29 +132,39 @@ inline void ModifiedBroyden::evaluate_and_save_F(void)
 inline void ModifiedBroyden::calculate_kappa_matrix(void)
 {
 
+
+
   NEWMAT::SymmetricMatrix k_temp;
 
   if (_it_number > 1)  k_temp = _kappa;
 
   _kappa.ReSize(_it_number);
 
-  _kappa.Inject(k_temp);
+  if (_it_number > 1) 
+  {
+   
+    _kappa.SymSubMatrix(1,_it_number - 1) = k_temp;
 
-   k_temp.Release();
-    
-   for (unsigned int i = 1; i <= _it_number; i++)
-   {
-     double t = 0;
+   
+  }
      
-     for (unsigned int j = 0; j <  _vector_size; j++)
-       t += _F[i][j] * _F[_it_number][j];
+  k_temp.Release();
+
+
+  for (unsigned int i = 1; i <= _it_number; i++)
+  {
+    double t = 0;
      
-     _kappa(_it_number,  i) = t;
+    for (unsigned int j = 0; j <  _vector_size; j++)
+      t += _F[i][j] * _F[_it_number][j];
+     
+    _kappa(_it_number,  i) = t;
      
 
-   }
-
-
+  }
+  
+ 
+ 
 }
 //--------------------------------------------------------//
 inline void ModifiedBroyden::calculate_mu_and_w_diag(void)
@@ -125,17 +172,21 @@ inline void ModifiedBroyden::calculate_mu_and_w_diag(void)
 
   //--------------------------------------------------------
   //calculation of mu
+
   NEWMAT::DiagonalMatrix mu_temp;
 
-  mu_temp = _mu;
+  if (_it_number > 2)
+    mu_temp = _mu;
+  
 
   _mu.ReSize(_it_number - 1);
 
-  _mu.Inject(mu_temp);
+  if (_it_number > 2)
+    _mu.SymSubMatrix(1,_it_number-2) = mu_temp;
 
   mu_temp.Release();
 
-  _mu(_it_number - 1) = 1.0/sqrt(
+  _mu(_it_number - 1, _it_number - 1) = 1.0/sqrt(
 				 _kappa(_it_number,_it_number) - 
 				 2.0*_kappa(_it_number,_it_number-1) +
 				 _kappa(_it_number-1,_it_number-1) 
@@ -147,11 +198,13 @@ inline void ModifiedBroyden::calculate_mu_and_w_diag(void)
   //calculation of w 
   NEWMAT::DiagonalMatrix w_temp;
 
-  w_temp = _w;
+  if (_it_number > 2)
+    w_temp = _w;
 
   _w.ReSize(_it_number - 1);
 
-  _w.Inject(w_temp);
+  if (_it_number > 2) 
+    _w.SymSubMatrix(1,_it_number-2) = w_temp;
 
   w_temp.Release();
   
@@ -166,11 +219,13 @@ inline void ModifiedBroyden::calculate_tilde_a(void)
 {
   NEWMAT::Matrix a_tilde_temp;
 
-  a_tilde_temp = _a_tilde;
+  if (_it_number > 2)
+    a_tilde_temp = _a_tilde;
 
   _a_tilde.ReSize(_it_number - 1, _it_number - 1);
 
-  _a_tilde.Inject(a_tilde_temp);
+  if (_it_number > 2)
+    _a_tilde.SymSubMatrix(1,_it_number-2) = a_tilde_temp;
 
   a_tilde_temp.Release();
 
@@ -190,7 +245,7 @@ inline void ModifiedBroyden::calculate_lambda(void)
   
   _lambda.ReSize(_it_number - 1);
 
-  for (unsigned i = 1; i <= _it_number - 1; i++)
+  for (unsigned int i = 1; i <= _it_number - 1; i++)
     _lambda(i) = _mu(i,i) * (_kappa(_it_number, i+1) - _kappa(_it_number,i));
   
 
@@ -220,9 +275,15 @@ inline  void ModifiedBroyden:: calculate_a(void)
 inline void ModifiedBroyden::calcvulate_beta_matrix(void)
 {
    NEWMAT::DiagonalMatrix I(_it_number -1);
+
+   I = 1;
+
    NEWMAT::SymmetricMatrix t(_it_number -1);
   
   t = (_omega_0 * I + _a);
+
+
+  
 
   _beta = t.i();
 
@@ -231,9 +292,24 @@ inline void ModifiedBroyden::calcvulate_beta_matrix(void)
 inline void ModifiedBroyden::calculate_zeta_matrix(void)
 {
 
-  NEWMAT::Matrix _beta_primed = _beta.SubMatrix(1,_it_number-1,1,_it_number-2);
+  NEWMAT::Matrix _zeta_old = _zeta;
 
-  _zeta = _beta * _w * _mu + (_omega_0 * _omega_0) * _beta_primed * _zeta;
+  _zeta.ReSize(_it_number - 1, _it_number - 1);
+
+  _zeta = _beta * _w * _mu;
+
+  if (_it_number > 2) 
+  {
+    NEWMAT::Matrix _beta_primed = _beta.SubMatrix(1,_it_number-1,1,_it_number-2);
+    
+    _zeta.SubMatrix(1,_it_number-1,1,_it_number-2) += (_omega_0 * _omega_0) * _beta_primed * _zeta_old;
+
+    _beta_primed.Release();
+  }
+
+  _zeta_old.Release();
+
+
 }
 //------------------------------------------------------------//
 
@@ -251,15 +327,16 @@ inline void ModifiedBroyden::calculate_p_matrix(void)
 
   _p.ReSize(_it_number, _it_number);
 
-  _p.Inject(_p_temp);
+  if (_it_number > 2)
+    _p.SymSubMatrix(1, _it_number - 1) = _p_temp;
 
   _p_temp.Release();
 
-  for (unsigned int i = 1 ; i < _it_number; i++)
+  for (unsigned int i = 2 ; i < _it_number; i++)
   {
     double t = 0;
 
-    for (unsigned int j = 1 ; j < _it_number - 1; j++)
+    for (unsigned int j = i ; j < _it_number - 1; j++)
     {
       t += _eta(j)  * _p (j,i);      
     }
@@ -284,7 +361,7 @@ inline void  ModifiedBroyden::calculate_new_solution(void)
       t += _p(_it_number,i)*_F[i][k];
     
 
-    _X_correction[k] = _alpha * (_p(_it_number, _it_number) - 1.0)*_F[_it_number][k] + _alpha*t;
+    _X_correction[k] = _alpha * ( _p(_it_number, _it_number) - 1.0)*_F[_it_number][k] + _alpha*t;
 
     _X[k] +=  _X_correction[k];
 
@@ -321,19 +398,29 @@ inline double ModifiedBroyden::estimate_error()
 //--------------------------------------------------------------------------------------//
 inline void ModifiedBroyden::update_omega_vector(void)
 {
+ 
+
   _omega.ReSize(_it_number - 1);
 
   _omega = 1;
 
-  for (unsigned int i = 1 ; i <= _it_number -  _number_of_x_to_use ; i++)
+
+  if (_it_number > _number_of_x_to_use)
   {
-    _omega(i) = 0;
+    int number_of_zeros =  _it_number -  _number_of_x_to_use; 
+
+    for ( int i = 1 ;  i <= number_of_zeros ; i++)
+      _omega(i) = 0;
+    
   }
 
+  
 }
 //--------------------------------------------------------------------------------------//
 void ModifiedBroyden::parse_options(void)
 {
+ 
+
   SelfconsistentSolver::parse_options();
 
   const ModelOptions& mod_opt = get_options();
@@ -344,6 +431,8 @@ void ModifiedBroyden::parse_options(void)
 
   _number_of_x_to_use = mod_opt.get_option("history_length",10);
 
+  
+  
   
   
 }
@@ -376,5 +465,8 @@ inline void ModifiedBroyden::init_X(void)
 
   for (unsigned int i = 0; i < _vector_size; i++ )
     _X[i] = temp(i);
+
+
+  _X_correction.resize(_vector_size);
   
 }
