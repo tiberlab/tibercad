@@ -160,18 +160,20 @@ void
 ThermoelectricPower::set_band_edges(double Ec, double Ev)
 {
   _Ec = Ec;
-  _Ev = Ev;
-}
 
+  _Ev = Ev;
+ 
+}
 
 
 inline
 void
 ThermoelectricPower::set_temperature(double Tloc)
 {
-  _Tloc = Tloc;
-}
 
+  _Tloc = Tloc;
+ 
+}
 
 
 inline

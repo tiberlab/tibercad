@@ -315,6 +315,16 @@ void HeatModel::update_thermoelectric_powers()
       
   _hTEpower =  dd_sol_te[0].find(ID_TEpower[TEPOWERH])->second;   
 
+   std::vector< std::map< ID, double > >  dd_sol_kpart;
+  _dd_simul->get_solution(_elem,centroid,dd_ID_kpart,dd_sol_kpart); 
+
+   double sigma_e =  dd_sol_kpart[0].find(ID_kpart[CONDE])->second;
+  
+     double sigma_h =  dd_sol_kpart[0].find(ID_kpart[CONDH])->second;
+
+    double P_tot = (sigma_e * _eTEpower +  sigma_h * _hTEpower) /( sigma_e + sigma_h);
+
+    std::cout<<P_tot<<std::endl; 
 
   }
 

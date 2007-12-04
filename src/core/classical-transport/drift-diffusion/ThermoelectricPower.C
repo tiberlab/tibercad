@@ -65,6 +65,7 @@ ThermoelectricPower::read_database(void)
 
   _eTEpower = data("eTEpower", 0.0);
   _hTEpower = data("hTEpower", 0.0); 
+
 }
 
 
@@ -105,6 +106,8 @@ ThermoelectricPower::calculate(void)
     _hTEpower =  Constants::k_B * (5.0 / 2.0 + _h_mobility_term -
         (_hQfermi + _Ev) / _Tloc);
   }
+  
+
 }
 
 

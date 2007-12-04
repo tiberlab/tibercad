@@ -73,6 +73,7 @@ $Models
 
     physical_model recombination
      { 
+       name = non_radiative
        model  =  srh
      }                
     
