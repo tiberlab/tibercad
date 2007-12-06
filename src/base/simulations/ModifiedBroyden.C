@@ -1,6 +1,7 @@
 // $Id$
 
 #include "ModifiedBroyden.h"
+#include "newmatio.h"
 using namespace std;
 //---------------------------------------------------//
 
@@ -17,7 +18,7 @@ void ModifiedBroyden::do_solve(void)
 
   init_X();
 
-  do_iteration();
+ 
 
   
 
@@ -36,28 +37,26 @@ void ModifiedBroyden::do_solve(void)
 
   for (   ; !converged  ;   )
   {
-
+    
     _it_number++;
 
     try{
-      cerr << "Modified Broyden iteration number  " <<  _it_number << "\n";
+     
 
       if (_it_number > get_maximum_iterations() ) 
 	throw SolveFailedException("ModifiedBroyden::Number of iterations exceeded\n");
       
-      do_iteration();
-
-      cerr << "1\n";
+     
+    
 
       evaluate_and_save_F();
 
-      cerr << "1.5\n";
-
+   
       calculate_kappa_matrix();
 
     
     
-      cerr << "2\n";
+     
 
       update_omega_vector();
 
@@ -71,34 +70,40 @@ void ModifiedBroyden::do_solve(void)
       update_tilde_a();
       
       
-      cerr << "3\n";
+    
 
       calculate_a();
      
-       cerr << "3.1\n";
+    
       calcvulate_beta_matrix();
       
-      cerr << "3.2\n";
+    
       calculate_zeta_matrix();
 
-      cerr << "4\n";
+    
      
       calculate_eta_vector();
 
-      cerr << "4.1\n";
+   
      
       calculate_p_matrix();
 
-      cerr << "4.2\n";
+     
       
       calculate_new_solution();
       
       
       double x = estimate_error();
-      
-      cerr << "Modified Broiden: Error = " << x << "\n";
 
-      if (x < get_relative_tolerance() ) converged = true;
+      cout.flush();
+      cout << "<<<<--------------------------------------------\n";
+      cout << "    Modified Broiden:  iteration number  " <<  _it_number <<"   Error = " << x << "\n";
+      cout << "-------------------------------------------->>>>\n";
+      cout.flush();
+	
+      if (x < get_relative_tolerance() ) 
+	converged = true;
+
     }      
     catch(RBD_COMMON::BaseException& e)
     {
@@ -116,11 +121,34 @@ void ModifiedBroyden::do_solve(void)
 
 inline void ModifiedBroyden::evaluate_and_save_F(void)
 {
-  const NumericVector<double>& _X1  = solution_vector(); //after iteration
- 
+  
+
+
+  NumericVector< double > & solution_before	= get_solution_vector ();
+
+
+  //-------------//
+  //set solution from previuos Broyden step
+
+  for (unsigned int i = 0; i < _vector_size; i++)
+    solution_before.set(i, _X[i]);
+
+  //--------------//
+  //do calculation
+
+  solve_simulations();
+
+
+  NumericVector< double > & solution_after	= get_solution_vector ();
+
+
+
   vector<double> temp(_vector_size);
+
   for (unsigned int i = 0; i < _vector_size; i++ )
-    temp[i] = _X[i] - _X1(i);
+  {
+    temp[i] = _X[i] - solution_after(i);  
+  }
 
   _F.insert( pair<unsigned int, vector<double> > (_it_number, temp) );
   
@@ -156,8 +184,10 @@ inline void ModifiedBroyden::calculate_kappa_matrix(void)
     double t = 0;
      
     for (unsigned int j = 0; j <  _vector_size; j++)
-      t += _F[i][j] * _F[_it_number][j];
-     
+    {
+      
+      t +=  _F[i][j] * _F[_it_number][j];
+    }
     _kappa(_it_number,  i) = t;
      
 
@@ -173,26 +203,16 @@ inline void ModifiedBroyden::calculate_mu_and_w_diag(void)
   //--------------------------------------------------------
   //calculation of mu
 
-  NEWMAT::DiagonalMatrix mu_temp;
-
-  if (_it_number > 2)
-    mu_temp = _mu;
   
-
   _mu.ReSize(_it_number - 1);
 
-  if (_it_number > 2)
-    _mu.SymSubMatrix(1,_it_number-2) = mu_temp;
+  for (unsigned int i = 1; i <= _it_number - 1; i++)
+  {
+     _mu(i, i) = 1.0/sqrt(	 _kappa(i+1,i+1) -  2.0*_kappa(i+1,i) +  _kappa(i,i) );
 
-  mu_temp.Release();
+     _mu(i,i) = sqrt(_mu(i,i));//I think it should be, but not present in the paper!
+  }
 
-  _mu(_it_number - 1, _it_number - 1) = 1.0/sqrt(
-				 _kappa(_it_number,_it_number) - 
-				 2.0*_kappa(_it_number,_it_number-1) +
-				 _kappa(_it_number-1,_it_number-1) 
-				 );
-
- 
 
   //--------------------------------------------------------//
   //calculation of w 
@@ -210,7 +230,7 @@ inline void ModifiedBroyden::calculate_mu_and_w_diag(void)
   
   _w(_it_number - 1) =  _omega(_it_number - 1);
 
-  
+
   
 }
 //---------------------------------------------------------//
@@ -280,7 +300,7 @@ inline void ModifiedBroyden::calcvulate_beta_matrix(void)
 
    NEWMAT::SymmetricMatrix t(_it_number -1);
   
-  t = (_omega_0 * I + _a);
+   t = (_omega_0 * I + _a);
 
 
   
@@ -332,15 +352,18 @@ inline void ModifiedBroyden::calculate_p_matrix(void)
 
   _p_temp.Release();
 
-  for (unsigned int i = 2 ; i < _it_number; i++)
+
+  for (unsigned int i = 2 ; i <= _it_number; i++)
   {
     double t = 0;
 
-    for (unsigned int j = i ; j < _it_number - 1; j++)
+
+    for (unsigned int j = i ; j <= _it_number - 1; j++)
     {
       t += _eta(j)  * _p (j,i);      
     }
 
+   
     _p(_it_number,i) =  _eta(i - 1) - t;
 
   }
@@ -358,12 +381,25 @@ inline void  ModifiedBroyden::calculate_new_solution(void)
     double t = 0;
 
     for (unsigned int i = 2; i <= _it_number - 1; i++)
+    {
       t += _p(_it_number,i)*_F[i][k];
-    
+     
+    }
 
-    _X_correction[k] = _alpha * ( _p(_it_number, _it_number) - 1.0)*_F[_it_number][k] + _alpha*t;
+    //-----------------------------------------------
+    //Broyden-Johnson step
 
+     _X_correction[k] = _alpha * ( _p(_it_number, _it_number) - 1.0) * _F[_it_number][k] + _alpha*t; 
+
+     //--------------------------------------------
+
+     //-------------------------------------------
+     //test -- will be linear relaxation 
+     //_X_correction[k] =  _alpha * (- 1.0)*_F[_it_number][k]  ;  
+     //------------------------------------------
     _X[k] +=  _X_correction[k];
+
+   
 
   }
 
@@ -389,10 +425,16 @@ inline double ModifiedBroyden::estimate_error()
   for (unsigned int i = 0; i < _vector_size; i++)
   {
     t1 += _X_correction[i] * _X_correction[i];
-    t2 += _X[i] * _X[i];
+
+    t2 += _X[i] * _X[i] ;
   }
   
-  return(t1/t2);
+  t1 /= _vector_size;
+  t2 /= _vector_size;
+
+  
+
+  return(sqrt(t1)/sqrt(t2));
 
 }
 //--------------------------------------------------------------------------------------//
@@ -425,7 +467,7 @@ void ModifiedBroyden::parse_options(void)
 
   const ModelOptions& mod_opt = get_options();
 
-  _omega_0 = mod_opt.get_option("omega_0",0.5);
+  _omega_0 = mod_opt.get_option("omega_0",1.0);
 
   _alpha = mod_opt.get_option("alpha",0.15);
 
@@ -447,25 +489,28 @@ void ModifiedBroyden::do_init(void)
 
 }
 //-------------------------------------------------------------------------------------//
-inline void ModifiedBroyden::do_iteration(void)
-{
-  solve_simulations();   	
-}
 
 
 //-------------------------------------------------------------------------------------//
 inline void ModifiedBroyden::init_X(void)
 {
-  initialize();  
-  const NumericVector<double>& temp  = solution_vector(); //after iteration
+  initialize();
+  
+  const NumericVector<double>& solution  = get_solution_vector(); //after iteration //should be
 
-  _vector_size = temp.size();
+
+
+
+  _vector_size = solution.size();
 
   _X.resize(_vector_size);
 
   for (unsigned int i = 0; i < _vector_size; i++ )
-    _X[i] = temp(i);
+  {
+      _X[i] = solution(i);
+   
 
+  }
 
   _X_correction.resize(_vector_size);
   

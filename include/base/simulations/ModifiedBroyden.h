@@ -35,16 +35,16 @@ class ModifiedBroyden:  public SelfconsistentSolver
   /*! \copydoc SimulationInterface::parse_options() */
   virtual void parse_options(void);
   
- 
+  
 
   
  private:
 
   
-  void init_X(void);
+  
+  //! Initializes solution
+  virtual void init_X(void);
 
-
-  void do_iteration(void);
 
 
  
@@ -60,17 +60,19 @@ class ModifiedBroyden:  public SelfconsistentSolver
   void evaluate_and_save_F(void);
 
 
-  /*! \f$ \kappa_{in} = \kappa_{ni} =  F(x_n)^T \cdot F(x_i) \f$ */
+  //! \f$ \kappa_{in} = \kappa_{ni} =  F(x_n)^T \cdot F(x_i) \f$ */
   void calculate_kappa_matrix(void); 
 
 
-  /*! \f$ x_{n+1} = x_{n} + \alpha * (p_{nn} - 1)F(x_n) + \alpha \sum_{i=2}^{n-1} p_{ni}F(X_i) \f$ */
+  //! Modified Broden step: \f$ x_{n+1} = x_{n} + \alpha * (p_{nn} - 1)F(x_n) + \alpha \sum_{i=2}^{n-1} p_{ni}F(X_i) \f$ */
   void calculate_new_solution();
 
+  //! Calculation of $\kappa$ and $\mu$. I think that in the paper there is a missprint (see bellow) 
   /*! \f$ 
 
     \mu_{i,n-1} = \mu_{n-1,i} = 0 (i = 1,...,n-2), \\
-    \mu_{n-1, n-1} = (\kappa_{nn} - 2\kappa_{n,n-1} + k_{n-1, n -1 })^{-1/2}; \\
+    \mu_{n-1, n-1} = (\kappa_{nn} - 2\kappa_{n,n-1} + k_{n-1, n -1 })^{-1/2} \rm{in the paper}; \\
+    \mu_{n-1, n-1} = (\kappa_{nn} - 2\kappa_{n,n-1} + k_{n-1, n -1 })^{-1/4} \rm{I think}
 
     w_{ij} = \omega_{i}\delta_{ij}.
 
@@ -78,6 +80,7 @@ class ModifiedBroyden:  public SelfconsistentSolver
   */
   void calculate_mu_and_w_diag(void);
 
+  //!calculation of \f$ \tilde a \f$ (see below)
   /*!
     \f$
     \tilde a_{n-1,i} = \lambda_i (i = 1,...,n-2)
@@ -86,6 +89,7 @@ class ModifiedBroyden:  public SelfconsistentSolver
   */
   void calculate_tilde_a(void);
 
+  //!recalculation of \f$ \tilde a \f$ (see below)
   /*!
     \f$
     \tilde a_{n-1, i} = \mu_{n-1, n-1}(\lambda_i - \tilde a_{n-1,i})  (i = 1,...,n-2)
@@ -93,38 +97,41 @@ class ModifiedBroyden:  public SelfconsistentSolver
    */
   void update_tilde_a(void);
 
-  /*!
-  \f$ \lambda_i = \mu_{ii} (\kappa_{n,i+1} -\kappa_{ni} ) (i = 1,...,n-1) \f$
   
-  */
+  //! Calculate \f$ \lambda \f$: \f$ \lambda_i = \mu_{ii} (\kappa_{n,i+1} -\kappa_{ni} ) (i = 1,...,n-1) \f$
   void calculate_lambda(void);
 
-  /*! 
-    \f$ a_{ij} = a_{ji} = w_{ii} w_{jj} \tilde a_{ij} (i \ge j = 1,...,n-1) \f$
-  */
+  
+  //!calculate \f$ a \f$ matrix  \f$ a_{ij} = a_{ji} = w_{ii} w_{jj} \tilde a_{ij} (i \ge j = 1,...,n-1) \f$
   void calculate_a(void);
 
 
-  /*!
-    \f$ {\mathbf \beta} = (\omega_0^2 I + {\bf a})^{-1}  \f$
-   */
+  
+  //!calculate \f$ {\mathbf \beta} \f$  matrix  \f$ {\mathbf \beta} = (\omega_0^2 I + {\bf a})^{-1}  \f$
   void calcvulate_beta_matrix(void);
 
+  //!calculation of \f$ {\mathbf \zeta}^{(n)} \f$ (in the paper the formula is a bit unclear, see below)
   /*!
+    The paper says:
     \f$ {\mathbf \zeta}^{(n)} = {\bf \beta} \cdot {\bf w} \cdot {\bf \mu} + \omega_0^2 {\bf \beta'} \cdot {\bf \zeta}^{(n-1)} \f$
+    
+    But \f$ {\bf \beta} \cdot {\bf w} \cdot {\bf \mu} \f$ is \f$ (n-1) \times (n-1) \f$ matrix and 
+    \f$ {\bf \beta'} \cdot {\bf \zeta}^{(n-1)} \f$ is \f$ (n-1) \times (n-2) \f$ matrix. 
+    So, I add the only the \f$ (n-1) \times (n-2) \f$ submatrix
+
    */
   void calculate_zeta_matrix(void);
 
-  /*!
-    \f$ {\bf \eta } = {\bf w} \cdot {\bf \zeta}^{(n)} \cdot {\bf \lambda} \f$
-  */
+  
+  //! calculation of \f${\mathbf \eta  } \f$ \f$ {\bf \eta } = {\bf w} \cdot {\bf \zeta}^{(n)} \cdot {\bf \lambda} \f$
+  
   void calculate_eta_vector(void);
 
-  /*!
-    \f$ p_{ni} = \eta_{ni} - \sum_{j=1}^{n-1} \eta_j p_{ji} (i = 2,...,n)\f$
-  */
+  //! calculation of \f$ p \f$ matrix:   \f$ p_{ni} = \eta_{ni} - \sum_{j=1}^{n-1} \eta_j p_{ji} (i = 2,...,n)\f$
   void calculate_p_matrix(void);
   
+
+  //! Definition of \f$ \omega_i \f$ weights (see below)
   /*!
     \f$
     \omega_i = \left\{ \begin{array}{rcl}
@@ -134,6 +141,7 @@ class ModifiedBroyden:  public SelfconsistentSolver
                    \right. 
             
     \f$
+    where \f$ m \f$ is the history length.
   */
   void update_omega_vector(void);
   
@@ -176,12 +184,15 @@ class ModifiedBroyden:  public SelfconsistentSolver
   //!how many solutions to consider
   unsigned int _number_of_x_to_use;
 
+  //! \f$ \omega_0  \f$ from the paper 
   double _omega_0;
 
-
+  //! \f$ \alpha \f$ from the paper (relaxation parameter)
   double _alpha; 
 
 
+
+  bool _converged;
   
 
 }; 
