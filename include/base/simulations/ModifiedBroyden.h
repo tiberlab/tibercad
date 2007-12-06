@@ -117,7 +117,7 @@ class ModifiedBroyden:  public SelfconsistentSolver
     
     But \f$ {\bf \beta} \cdot {\bf w} \cdot {\bf \mu} \f$ is \f$ (n-1) \times (n-1) \f$ matrix and 
     \f$ {\bf \beta'} \cdot {\bf \zeta}^{(n-1)} \f$ is \f$ (n-1) \times (n-2) \f$ matrix. 
-    So, I add the only the \f$ (n-1) \times (n-2) \f$ submatrix
+    So, I add  to  the \f$ (n-1) \times (n-2) \f$ submatrix of \f$ {\bf \beta} \cdot {\bf w} \cdot {\bf \mu} \f$
 
    */
   void calculate_zeta_matrix(void);
