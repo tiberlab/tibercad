@@ -56,6 +56,7 @@ SelfconsistentSolver::parse_options(void)
   _rel_tol = opts.get_option("rel_tolerance", _rel_tol);
   _abs_tol = opts.get_option("abs_tolerance", _abs_tol);
   _monitor = opts.get_option("monitor", false);
+  _xmonitor = opts.get_option("xmonitor", false);
 
 }
 

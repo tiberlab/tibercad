@@ -106,6 +106,9 @@ class SelfconsistentSolver : public SimulationInterface
     bool get_monitor(void) const;
 
 
+    //! Get xmonitor
+    bool get_xmonitor(void) const;
+
     //! Get an iterator for the first simulation
     SimulationIterator simulations_begin(void);
 
@@ -145,7 +148,9 @@ class SelfconsistentSolver : public SimulationInterface
 
     //! screen output of the convergence process 
     bool _monitor;
-
+    
+    //! graphical output of the convergence process 
+    bool _xmonitor;
 
 };
 
@@ -194,6 +199,14 @@ bool
 SelfconsistentSolver::get_monitor(void) const
 {
   return _monitor;
+}
+
+
+inline 
+bool
+SelfconsistentSolver::get_xmonitor(void) const
+{
+  return _xmonitor;
 }
 
 

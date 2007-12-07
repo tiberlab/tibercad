@@ -2,12 +2,20 @@
 
 #include "ModifiedBroyden.h"
 #include "newmatio.h"
+#include "petsc.h"
 using namespace std;
 //---------------------------------------------------//
 
 void ModifiedBroyden::do_solve(void)
 {
  
+  bool do_x_monitor = false;
+
+  PetscDraw draw;
+  PetscDrawLG lg;
+  PetscDrawAxis axis;	
+  PetscDrawViewPorts *ports;
+  PetscErrorCode ierr;
 
   parse_options();
 
@@ -30,8 +38,27 @@ void ModifiedBroyden::do_solve(void)
  
   calculate_new_first_iteraion_solution();
 
-  
- 
+  if (get_xmonitor())
+  {
+    const char* title;  
+    title = get_name().c_str() ;
+   
+    ierr = PetscDrawCreate(PETSC_COMM_SELF,0,title,0,0,500,500,&draw);
+    if (ierr == 0) do_x_monitor = true;
+  }
+
+  if (do_x_monitor)
+  {
+    PetscDrawSetFromOptions(draw);
+    PetscDrawViewPortsCreate(draw,1,&ports);
+    PetscDrawViewPortsSet(ports,0);
+
+    PetscDrawLGCreate(draw,1,&lg);
+    PetscDrawLGGetAxis(lg,&axis);
+    PetscDrawAxisSetColors(axis,PETSC_DRAW_BLACK,PETSC_DRAW_RED,PETSC_DRAW_BLUE);
+    PetscDrawAxisSetLabels(axis,"Realtive error logarithm","iteration","");
+  }
+
 
 
 
@@ -105,19 +132,34 @@ void ModifiedBroyden::do_solve(void)
 	cout << "--------------------------------------------------------------->>>>\n";
 	cout.flush();
       }
-
       
-
+      if (do_x_monitor)
+      {
+	double xd = _it_number;
+	double yd = log(_rel_error)/log(10);
+	PetscDrawLGAddPoint(lg,&xd,&yd);
+	PetscDrawLGIndicateDataPoints(lg); 
+	PetscDrawLGDraw(lg);
+      }
     }      
     catch(RBD_COMMON::BaseException& e)
     {
       cerr << e.what() << "\n";
       throw SolveFailedException("Error in Mathematics");
     }
-    
 
+    
   }
 
+  
+  if (do_x_monitor)
+  {
+   PetscDrawFlush(draw);
+   PetscSleep(2);
+   PetscDrawViewPortsDestroy(ports);
+   PetscDrawLGDestroy(lg);
+   PetscDrawDestroy(draw);
+  }
 }
 
 
