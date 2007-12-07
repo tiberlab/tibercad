@@ -67,16 +67,19 @@ class ModifiedBroyden:  public SelfconsistentSolver
   //! Modified Broden step: \f$ x_{n+1} = x_{n} + \alpha * (p_{nn} - 1)F(x_n) + \alpha \sum_{i=2}^{n-1} p_{ni}F(X_i) \f$ */
   void calculate_new_solution();
 
-  //! Calculation of $\kappa$ and $\mu$. I think that in the paper there is a missprint (see bellow) 
-  /*! \f$ 
-
-    \mu_{i,n-1} = \mu_{n-1,i} = 0 (i = 1,...,n-2), \\
-    \mu_{n-1, n-1} = (\kappa_{nn} - 2\kappa_{n,n-1} + k_{n-1, n -1 })^{-1/2} \rm{in the paper}; \\
-    \mu_{n-1, n-1} = (\kappa_{nn} - 2\kappa_{n,n-1} + k_{n-1, n -1 })^{-1/4} \rm{I think}
-
-    w_{ij} = \omega_{i}\delta_{ij}.
-
+  //! Calculation of \f$ \kappa \f$ and \f$ \mu \f$. I think that in the paper there is a missprint (see bellow) 
+  /*! 
     \f$ 
+
+  \mu_{i,n-1} = \mu_{n-1,i} = 0 (i = 1,...,n-2), \\
+  \\   
+  \mbox{in the paper:}\mu_{n-1, n-1} = (\kappa_{nn} - 2\kappa_{n,n-1} + k_{n-1, n -1 })^{-1/2} \\
+  \\  
+  \mbox{I think:}\mu_{n-1, n-1} = (\kappa_{nn} - 2\kappa_{n,n-1} + k_{n-1, n -1 })^{-1/4}  \\
+  \\
+  w_{ij} = \omega_{i}\delta_{ij}.
+
+   \f$ 
   */
   void calculate_mu_and_w_diag(void);
 
@@ -114,16 +117,15 @@ class ModifiedBroyden:  public SelfconsistentSolver
   /*!
     The paper says:
     \f$ {\mathbf \zeta}^{(n)} = {\bf \beta} \cdot {\bf w} \cdot {\bf \mu} + \omega_0^2 {\bf \beta'} \cdot {\bf \zeta}^{(n-1)} \f$
-    
+    \\
     But \f$ {\bf \beta} \cdot {\bf w} \cdot {\bf \mu} \f$ is \f$ (n-1) \times (n-1) \f$ matrix and 
     \f$ {\bf \beta'} \cdot {\bf \zeta}^{(n-1)} \f$ is \f$ (n-1) \times (n-2) \f$ matrix. 
     So, I add  to  the \f$ (n-1) \times (n-2) \f$ submatrix of \f$ {\bf \beta} \cdot {\bf w} \cdot {\bf \mu} \f$
-
-   */
+  */
   void calculate_zeta_matrix(void);
 
   
-  //! calculation of \f${\mathbf \eta  } \f$ \f$ {\bf \eta } = {\bf w} \cdot {\bf \zeta}^{(n)} \cdot {\bf \lambda} \f$
+  //! calculation of \f${\mathbf \eta  } \f$: \f$ {\bf \eta } = {\bf w} \cdot {\bf \zeta}^{(n)} \cdot {\bf \lambda} \f$
   
   void calculate_eta_vector(void);
 
@@ -146,7 +148,7 @@ class ModifiedBroyden:  public SelfconsistentSolver
   void update_omega_vector(void);
   
   //! estimates error
-  double estimate_error();
+  double estimate_step();
 
 
   
@@ -191,9 +193,14 @@ class ModifiedBroyden:  public SelfconsistentSolver
   double _alpha; 
 
 
-
+  //!if the solution is converged, i.e. \f$ \frac{(F^T \cdot F)^{1/2}}{\{(X^T \cdot X)^{1/2}}} < \varepsilon \f$
   bool _converged;
-  
+
+  //!relative error \f$ \frac{(F^T \cdot F)^{1/2}}{\{(X^T \cdot X)^{1/2}}}  \f$
+  double _rel_error;
+
+ 
+
 
 }; 
 

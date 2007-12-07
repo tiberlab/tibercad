@@ -102,6 +102,10 @@ class SelfconsistentSolver : public SimulationInterface
     double get_absolute_tolerance(void) const;
 
 
+    //! Get monitor
+    bool get_monitor(void) const;
+
+
     //! Get an iterator for the first simulation
     SimulationIterator simulations_begin(void);
 
@@ -138,6 +142,9 @@ class SelfconsistentSolver : public SimulationInterface
 
     //! The ids of the remembered solutions
     std::map<ID, std::vector<ID> > _remembered_sol_ids;
+
+    //! screen output of the convergence process 
+    bool _monitor;
 
 
 };
@@ -181,6 +188,14 @@ SelfconsistentSolver::get_absolute_tolerance(void) const
 {
   return _abs_tol;
 }
+
+inline 
+bool
+SelfconsistentSolver::get_monitor(void) const
+{
+  return _monitor;
+}
+
 
 inline
 SelfconsistentSolver::SimulationIterator

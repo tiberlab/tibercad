@@ -24,6 +24,7 @@ void ModifiedBroyden::do_solve(void)
 
   evaluate_and_save_F();
  
+  
 
   calculate_kappa_matrix();
  
@@ -32,10 +33,9 @@ void ModifiedBroyden::do_solve(void)
   
  
 
-  bool converged = false;
 
 
-  for (   ; !converged  ;   )
+  for (   ; !_converged  ;   )
   {
     
     _it_number++;
@@ -93,16 +93,20 @@ void ModifiedBroyden::do_solve(void)
       calculate_new_solution();
       
       
-      double x = estimate_error();
+      double x = estimate_step();
 
-      cout.flush();
-      cout << "<<<<--------------------------------------------\n";
-      cout << "    Modified Broiden:  iteration number  " <<  _it_number <<"   Error = " << x << "\n";
-      cout << "-------------------------------------------->>>>\n";
-      cout.flush();
-	
-      if (x < get_relative_tolerance() ) 
-	converged = true;
+      if (get_monitor())
+      {
+	double x = estimate_step();
+	cout.flush();
+	cout << "<<<<------------------------------------------------------------\n";
+	cout << get_name() << " (Broiden-Johnson):  iteration " <<  _it_number 
+	     <<"  Correction = " << x <<"  Error = " << _rel_error << "\n";
+	cout << "--------------------------------------------------------------->>>>\n";
+	cout.flush();
+      }
+
+      
 
     }      
     catch(RBD_COMMON::BaseException& e)
@@ -149,6 +153,30 @@ inline void ModifiedBroyden::evaluate_and_save_F(void)
   {
     temp[i] = _X[i] - solution_after(i);  
   }
+
+  //----------------------
+  //check if converged
+  double t1 = 0;
+  double t2 = 0;
+  
+  for (unsigned int i = 0; i < _vector_size; i++)
+  {
+    t1 += temp[i] * temp[i];
+
+    t2 += _X[i] * _X[i] ;
+  }
+
+
+  _rel_error = sqrt(t1/t2);
+
+  if (_rel_error <=  get_relative_tolerance())
+    _converged = true;
+  else
+    _converged = false;
+
+ 
+  //----------------------
+
 
   _F.insert( pair<unsigned int, vector<double> > (_it_number, temp) );
   
@@ -417,7 +445,7 @@ inline void ModifiedBroyden::calculate_new_first_iteraion_solution(void)
   
 }
 //-------------------------------------------------------------------------------------//
-inline double ModifiedBroyden::estimate_error()
+inline double ModifiedBroyden::estimate_step()
 {
   double t1 = 0;
   double t2 = 0;

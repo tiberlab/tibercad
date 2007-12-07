@@ -55,6 +55,7 @@ SelfconsistentSolver::parse_options(void)
   _max_it = opts.get_option("max_iterations", _max_it);
   _rel_tol = opts.get_option("rel_tolerance", _rel_tol);
   _abs_tol = opts.get_option("abs_tolerance", _abs_tol);
+  _monitor = opts.get_option("monitor", false);
 
 }
 
