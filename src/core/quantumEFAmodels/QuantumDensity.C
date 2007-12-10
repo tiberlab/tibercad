@@ -12,7 +12,7 @@ QuantumDensity::QuantumDensity()
   quantum_model = NULL;
 
   
-
+ 
  
 }
 
@@ -377,6 +377,38 @@ void QuantumDensity:: do_solve()
     estimate_analitic_density();
   }
 
+
+  
+
+ 
+  {
+
+    if (_solution_vector.get() == NULL)
+      _solution_vector = NumericVector<double>::build();
+   
+  
+    _solution_vector->init(real_space_density.size());
+
+
+    Mesh & mesh = get_environment().get_mesh();
+
+    MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+      
+    
+
+    unsigned int el_number = 0;
+      
+    for (; el !=end_el ; ++el)
+    {
+      const Elem* elem = *el; 
+
+      _solution_vector->set(el_number,real_space_density[elem]);
+     
+      el_number++;
+    }
+  }
+
 }
 
 
@@ -632,3 +664,24 @@ void QuantumDensity::estimate_analitic_density(void)
 
 
 //==================================================================================================================//
+void QuantumDensity::do_set_solution_vector(const NumericVector< double > & new_solution)
+{
+  get_solution_vector() = new_solution;
+
+  Mesh & mesh = get_environment().get_mesh();
+
+  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+  
+  unsigned int el_number = 0;
+      
+  for (; el !=end_el ; ++el)
+  {
+    const Elem* elem = *el; 
+
+    real_space_density[elem] =  (*_solution_vector)(el_number);
+     
+    el_number++;
+  }
+    
+}

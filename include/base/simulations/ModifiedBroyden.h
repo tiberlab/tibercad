@@ -167,8 +167,8 @@ class ModifiedBroyden:  public SelfconsistentSolver
 
 
   //! current solution old
-  std::vector <double> _X;
- 
+  //std::vector <double> _X;
+  AutoPtr <  NumericVector<double> > _X;
  
 
 
@@ -193,10 +193,10 @@ class ModifiedBroyden:  public SelfconsistentSolver
   double _alpha; 
 
 
-  //!if the solution is converged, i.e. \f$ \frac{(F^T \cdot F)^{1/2}}{\{(X^T \cdot X)^{1/2}}} < \varepsilon \f$
+  //!if the solution is converged, i.e. \f$ \frac{(F^T \cdot F)^{1/2}} { {(X^T \cdot X)^{1/2} } } < \varepsilon \f$
   bool _converged;
 
-  //!relative error \f$ \frac{(F^T \cdot F)^{1/2}}{\{(X^T \cdot X)^{1/2}}}  \f$
+  //!relative error \f$ \frac{(F^T \cdot F)^{1/2}} {{(X^T \cdot X)^{1/2}}}  \f$
   double _rel_error;
 
  

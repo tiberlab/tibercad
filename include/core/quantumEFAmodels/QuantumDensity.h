@@ -184,6 +184,9 @@ class QuantumDensity : public KspaceIntegration
    //!k vector for effective mass calculation
    std::vector<double> k_vector2;
 
+   //!vector of solution necessary for self-consistent solver
+   AutoPtr< NumericVector<double> >  _solution_vector;
+
 
  protected:
 
@@ -208,7 +211,7 @@ class QuantumDensity : public KspaceIntegration
 
 
 
-
+   
    virtual void do_solve();
 
    //!only for bulk
@@ -219,6 +222,13 @@ class QuantumDensity : public KspaceIntegration
         const std::set<std::string>& variables,
         std::vector<std::string>& legend,
         std::vector<std::string>& description);
+
+
+   virtual NumericVector< double > & 	get_solution_vector (void);
+
+   //!here it copies new_solution both into _solution_vector and KspaceIntegration::real_space_density
+   virtual void do_set_solution_vector(const NumericVector< double > & new_solution);
+
 
 };
 
@@ -237,4 +247,12 @@ inline double QuantumDensity::get_particle_charge() const
   return( quantum_model->get_particle_charge() );
 }
 
+//---------------------------------------------------------
+inline NumericVector< double > &  QuantumDensity::get_solution_vector (void)
+{
+  
+  return (*_solution_vector);
+
+}
+//--------------------------------------------------------
 #endif
