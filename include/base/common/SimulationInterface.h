@@ -228,6 +228,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     double get_maximum_norm_of_difference(ID id);
 
+
+    //! Return true if the system has a solution vector
+    bool has_solution_vector(void);
+
     
     //! Get a pointer to the solution vector
     /*!
@@ -238,10 +242,9 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! Set the current solution to a given value
     /*!
-     * No checks will be done on the vector size!
-     * \param new_solution the new solution to set
+     * Calls do_set_solution_vector()
      */
-    void set_solution_vector(NumericVector<double>& new_solution);
+    void set_solution_vector(const NumericVector<double>& new_solution);
 
 
     //! Scale the current solution by a real factor
@@ -293,11 +296,6 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! Check if the equilibrium for this simulation has been calculated
     bool equilibrium_done(void) const;
-
-
-
-    //! Return true if the system has a solution vector
-    bool has_solution_vector(void);
     
 
     /*!
@@ -553,10 +551,28 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     virtual ID do_remember_current_solution(ID id = 0);
 
+
+    //! Tells the base class if the model has a solution vector
+    /*!
+     * \param flag = true: the model has a solution vector
+     */
+    void has_solution_vector(bool flag);
+
     
     //! Get a pointer to the solution vector
     virtual NumericVector<double>& solution_vector(void);
 
+
+    //! Set a new solution vector
+    /*!
+     * The default implementation just makes
+     * \c solution_vector() = \c new_solution
+     * 
+     * No checks will be done on the vector size!
+     * \param new_solution the new solution to set
+     */
+    virtual void do_set_solution_vector(const NumericVector<double>& new_solution);
+    
 
     //! Set to the remembered solution number \c id
     virtual void do_set_to_remembered_solution(ID id);
@@ -769,8 +785,8 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     bool _equilibrium_is_solved;
 
 
-    //! For self-consistent calculations this could be useful
-    //double _relaxation_factor;
+    //! Do we have a solution vector or not
+    bool _has_solution_vector;
 
 
 
@@ -1142,6 +1158,24 @@ SimulationInterface::get_solution_vector(void)
 {
   return solution_vector();
 }
+
+inline
+void
+SimulationInterface::set_solution_vector(const NumericVector<double>& new_solution)
+{
+  if (has_solution_vector())
+    do_set_solution_vector(new_solution);
+}
+
+
+inline
+bool
+SimulationInterface::has_solution_vector(void)
+{
+  return _has_solution_vector;
+}
+
+
 
 
 #endif // _SIMULATIONINTERFACE_H_

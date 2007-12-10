@@ -336,22 +336,20 @@ Control::setup_clusters(void)
     vector<ID> region_ids;
 
     unsigned int n_ids = region_ids_str.size();
-    if (n_ids >= 0)
+    vector<ID> tmp_id;
+    for (unsigned int i = 0; i < n_ids; i++)
     {
-      vector<ID> tmp_id;
-      for (unsigned int i = 0; i < n_ids; i++)
-      {
-        // either it is a name or a number
-        // try first name
-        _device->get_region_ids(region_ids_str[i], tmp_id);
-        if (tmp_id.size() > 0)
-          region_ids.insert(region_ids.end(), tmp_id.begin(), tmp_id.end());
-        else
-          region_ids.push_back(Utils::convert<unsigned int>(region_ids_str[i]));
-      }
-
-      _device->set_cluster(data.get_region_name(), region_ids);
+      // either it is a name or a number
+      // try first name
+      _device->get_region_ids(region_ids_str[i], tmp_id);
+      if (tmp_id.size() > 0)
+        region_ids.insert(region_ids.end(), tmp_id.begin(), tmp_id.end());
+      else
+        region_ids.push_back(Utils::convert<unsigned int>(region_ids_str[i]));
     }
+
+    if (region_ids.size() > 0)
+      _device->set_cluster(data.get_region_name(), region_ids);
   }
 }
 

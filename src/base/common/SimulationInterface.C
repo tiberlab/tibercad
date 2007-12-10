@@ -43,7 +43,8 @@ SimulationInterface::SimulationInterface(void)
   : _environment(0),
     _is_initialized(false),
     _is_solved(false),
-    _equilibrium_is_solved(false)
+    _equilibrium_is_solved(false),
+    _has_solution_vector(true)
 {
   ID new_id = _simulation_map.size() + 1;
   _id = new_id;
@@ -366,16 +367,6 @@ SimulationInterface::solve(void) throw (SolveFailedException)
 
 
 
-bool
-SimulationInterface::has_solution_vector(void)
-{
-  const EquationSystems& eq = get_equation_systems();
-
-  return eq.has_system(get_equation_system_name());
-}
-
-
-
 NumericVector<double>&
 SimulationInterface::solution_vector(void)
 {
@@ -386,6 +377,17 @@ SimulationInterface::solution_vector(void)
 
   return *sys.solution;
 }
+
+
+
+void
+SimulationInterface::do_set_solution_vector(
+    const NumericVector<double>& new_solution)
+{
+  get_solution_vector() = new_solution;
+}
+
+
 
 
 
@@ -651,16 +653,6 @@ SimulationInterface::do_maximum_norm_of_difference(ID id)
   }
 
   return norm;
-}
-
-
-
-
-void
-SimulationInterface::set_solution_vector(NumericVector<double>& new_solution)
-{
-  if (has_solution_vector())
-    get_solution_vector() = new_solution;
 }
 
 

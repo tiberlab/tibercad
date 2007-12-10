@@ -42,9 +42,17 @@ void ModifiedBroyden::do_solve(void)
   {
     const char* title;  
     title = get_name().c_str() ;
+
+    do_x_monitor = true;
    
-    ierr = PetscDrawCreate(PETSC_COMM_SELF,0,title,0,0,500,500,&draw);
-    if (ierr == 0) do_x_monitor = true;
+    try
+    {
+      ierr = PetscDrawCreate(PETSC_COMM_SELF,0,title,0,0,500,500,&draw);
+    }
+    catch (...)
+    {
+      do_x_monitor = false;
+    }
   }
 
   if (do_x_monitor)
@@ -56,7 +64,7 @@ void ModifiedBroyden::do_solve(void)
     PetscDrawLGCreate(draw,1,&lg);
     PetscDrawLGGetAxis(lg,&axis);
     PetscDrawAxisSetColors(axis,PETSC_DRAW_BLACK,PETSC_DRAW_RED,PETSC_DRAW_BLUE);
-    PetscDrawAxisSetLabels(axis,"Realtive error logarithm","iteration","");
+    PetscDrawAxisSetLabels(axis,"Relative error logarithm","iteration","");
   }
 
 
@@ -71,7 +79,7 @@ void ModifiedBroyden::do_solve(void)
      
 
       if (_it_number > get_maximum_iterations() ) 
-	throw SolveFailedException("ModifiedBroyden::Number of iterations exceeded\n");
+        throw SolveFailedException("ModifiedBroyden::Number of iterations exceeded\n");
       
      
     
@@ -138,8 +146,8 @@ void ModifiedBroyden::do_solve(void)
 	double xd = _it_number;
 	double yd = log(_rel_error)/log(10);
 	PetscDrawLGAddPoint(lg,&xd,&yd);
-	PetscDrawLGIndicateDataPoints(lg); 
 	PetscDrawLGDraw(lg);
+	PetscDrawLGIndicateDataPoints(lg); 
       }
     }      
     catch(RBD_COMMON::BaseException& e)
@@ -539,7 +547,7 @@ void ModifiedBroyden::parse_options(void)
 
   _omega_0 = mod_opt.get_option("omega_0",1.0);
 
-  _alpha = mod_opt.get_option("alpha",0.15);
+  _alpha = mod_opt.get_option("relaxation_factor",0.15);
 
   _number_of_x_to_use = mod_opt.get_option("history_length",10);
 
