@@ -224,7 +224,7 @@ class QuantumDensity : public KspaceIntegration
         std::vector<std::string>& description);
 
 
-   virtual NumericVector< double > & 	get_solution_vector (void);
+   virtual NumericVector< double > & 	do_get_solution_vector (void);
 
    //!here it copies new_solution both into _solution_vector and KspaceIntegration::real_space_density
    virtual void do_set_solution_vector(const NumericVector< double > & new_solution);
@@ -248,7 +248,7 @@ inline double QuantumDensity::get_particle_charge() const
 }
 
 //---------------------------------------------------------
-inline NumericVector< double > &  QuantumDensity::get_solution_vector (void)
+inline NumericVector< double > &  QuantumDensity::do_get_solution_vector (void)
 {
   
   return (*_solution_vector);

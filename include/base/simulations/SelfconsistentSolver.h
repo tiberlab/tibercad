@@ -74,7 +74,7 @@ class SelfconsistentSolver : public SimulationInterface
 
 
     //! Returns the solution vector of the last simulation
-    virtual NumericVector<double>& solution_vector(void);
+    virtual NumericVector<double>& do_get_solution_vector(void);
 
     
     //! Initialize the solver

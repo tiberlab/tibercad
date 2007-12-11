@@ -80,7 +80,7 @@ SelfconsistentSolver::do_equilibrium(void)
 
 
 NumericVector<double>&
-SelfconsistentSolver::solution_vector(void)
+SelfconsistentSolver::do_get_solution_vector(void)
 {
   int num_sim = _simulations.size();
   return _simulations[num_sim - 1]->get_solution_vector();

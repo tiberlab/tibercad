@@ -168,6 +168,7 @@ Sweep::Sweep(void)
     _max_step(1),
     _plot_data(false)
 {
+  has_solution_vector(false);
 }
 
 

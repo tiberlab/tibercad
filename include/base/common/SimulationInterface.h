@@ -235,7 +235,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     
     //! Get a pointer to the solution vector
     /*!
-     * Calls solution_vector()
+     * Calls do_get_solution_vector()
      */
     NumericVector<double>& get_solution_vector(void);
 
@@ -560,7 +560,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     
     //! Get a pointer to the solution vector
-    virtual NumericVector<double>& solution_vector(void);
+    virtual NumericVector<double>& do_get_solution_vector(void);
 
 
     //! Set a new solution vector
@@ -1156,7 +1156,7 @@ inline
 NumericVector<double>&
 SimulationInterface::get_solution_vector(void)
 {
-  return solution_vector();
+  return do_get_solution_vector();
 }
 
 inline
@@ -1173,6 +1173,14 @@ bool
 SimulationInterface::has_solution_vector(void)
 {
   return _has_solution_vector;
+}
+
+
+inline
+void
+SimulationInterface::has_solution_vector(bool flag)
+{
+  _has_solution_vector = flag;
 }
 
 
