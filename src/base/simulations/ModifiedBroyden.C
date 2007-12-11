@@ -19,6 +19,7 @@ void ModifiedBroyden::do_solve(void)
 
   parse_options();
 
+  clear_F();
 
   _it_number = 1;
 
@@ -173,7 +174,12 @@ void ModifiedBroyden::do_solve(void)
    PetscDrawLGDestroy(lg);
    PetscDrawDestroy(draw);
   }
+
+  clear_F();
+
 }
+
+
 
 
 //------------------------------------------------------------//
@@ -183,50 +189,39 @@ inline void ModifiedBroyden::evaluate_and_save_F(void)
   
 
 
-  NumericVector< double > & solution_before	= get_solution_vector ();
-
-
-  //-------------//
-  //set solution from previuos Broyden step
-
-  // for (unsigned int i = 0; i < _vector_size; i++)
-  //  solution_before.set(i, (*_X)(i));
-
-
-  set_solution_vector(*_X);
+  set_solution_vector(*_X); //set solution from previuos Broyden step
  
 
-  //--------------//
-  //do calculation
-
-  solve_simulations();
+  solve_simulations();//do calculation
 
 
   NumericVector< double > & solution_after	= get_solution_vector ();
 
 
+  NumericVector<double>&  difference =  add_F_vector(_it_number);
 
-  vector<double> temp(_vector_size);
+  difference.init(_vector_size);
+  
+ 
 
-  for (unsigned int i = 0; i < _vector_size; i++ )
-  {
-    temp[i] = (*_X)(i) - solution_after(i);  
-  }
+  difference = *_X;
+  difference.close();
+
+  difference -= solution_after;
+  difference.close();
 
   //----------------------
   //check if converged
-  double t1 = 0;
-  double t2 = 0;
-  
-  for (unsigned int i = 0; i < _vector_size; i++)
-  {
-    t1 += temp[i] * temp[i];
+  double t1 = difference.l2_norm();
 
-    t2 += (*_X)(i) * (*_X)(i) ;
-  }
+  _X->close();
+  double t2 = _X->l2_norm();
 
 
-  _rel_error = sqrt(t1/t2);
+
+
+
+  _rel_error = (t1/t2);
 
   if (_rel_error <=  get_relative_tolerance())
     _converged = true;
@@ -237,7 +232,7 @@ inline void ModifiedBroyden::evaluate_and_save_F(void)
   //----------------------
 
 
-  _F.insert( pair<unsigned int, vector<double> > (_it_number, temp) );
+  //_F.insert( pair<unsigned int, NumericVector<double>* >  (_it_number, difference ) );
   
   
 }
@@ -269,13 +264,10 @@ inline void ModifiedBroyden::calculate_kappa_matrix(void)
   for (unsigned int i = 1; i <= _it_number; i++)
   {
     double t = 0;
-     
-    for (unsigned int j = 0; j <  _vector_size; j++)
-    {
-      
-      t +=  _F[i][j] * _F[_it_number][j];
-    }
-    _kappa(_it_number,  i) = t;
+
+   
+    
+    _kappa(_it_number,  i) = _F[i]->dot( *(_F[_it_number]) );
      
 
   }
@@ -471,29 +463,36 @@ inline void  ModifiedBroyden::calculate_new_solution(void)
 
     for (unsigned int i = 2; i <= _it_number - 1; i++)
     {
-      t += _p(_it_number,i)*_F[i][k];
+      t += _p(_it_number,i)* (*(_F[i]))(k);
      
     }
 
     //-----------------------------------------------
     //Broyden-Johnson step
 
-     _X_correction[k] = _alpha * ( _p(_it_number, _it_number) - 1.0) * _F[_it_number][k] + _alpha*t; 
+    _X_correction->set(k,  _alpha * ( _p(_it_number, _it_number) - 1.0) * (*(_F[_it_number]))(k) + _alpha*t); 
 
      //--------------------------------------------
 
      //-------------------------------------------
      //test -- will be linear relaxation 
      //_X_correction[k] =  _alpha * (- 1.0)*_F[_it_number][k]  ;  
+
+   
+     
      //------------------------------------------
      //_X[k] +=  _X_correction[k];
 
-     _X->add(k, _X_correction[k]);
+    //_X->add(k, (*_X_correction)(k));
    
+
+    
 
   }
 
-  
+  *_X += *_X_correction;
+
+  _X->close();
 
 }
 
@@ -504,9 +503,9 @@ inline void ModifiedBroyden::calculate_new_first_iteraion_solution(void)
  {
    //_X[k] -= _alpha * _F[1][k];
 
-   _X->add(k, -_alpha * _F[1][k]);
+   _X->add(k, -_alpha * (*(_F[1]))(k));
  }
-  
+   _X->close();
 }
 //-------------------------------------------------------------------------------------//
 inline double ModifiedBroyden::estimate_step()
@@ -516,7 +515,7 @@ inline double ModifiedBroyden::estimate_step()
   
   for (unsigned int i = 0; i < _vector_size; i++)
   {
-    t1 += _X_correction[i] * _X_correction[i];
+    t1 += (*_X_correction)(i) * (*_X_correction)(i);
 
     t2 += (*_X)(i) * (*_X)(i) ;
   }
@@ -592,26 +591,32 @@ inline void ModifiedBroyden::init_X(void)
   
   const NumericVector<double>& solution  = get_solution_vector(); //after iteration //should be
 
-
-
-
   _vector_size = solution.size();
 
-  _X = NumericVector<double>::build();
-
-  // _X.resize(_vector_size);
-
-  _X->init(_vector_size);
-
-  for (unsigned int i = 0; i < _vector_size; i++ )
+ 
+  if (_X.get() == NULL) 
   {
-    // _X[i] = solution(i);
-   
-    _X->set(i,solution(i));
-
-
+    _X = NumericVector<double>::build();
+    _X->init(_vector_size);
+  }
+  else
+  {
+    _X->init(0);
+    _X->init(_vector_size);
   }
 
-  _X_correction.resize(_vector_size);
+
+  *_X = solution;
+
+  if (_X_correction.get() == NULL)
+  {  
+    _X_correction =  NumericVector<double>::build();
+    _X_correction->init(_vector_size);
+  }
+  else
+  {
+    _X_correction->init(0);
+    _X_correction->init(_vector_size);
+  }
   
 }

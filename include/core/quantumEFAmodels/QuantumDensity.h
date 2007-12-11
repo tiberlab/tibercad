@@ -227,7 +227,7 @@ class QuantumDensity : public KspaceIntegration
    virtual NumericVector< double > & 	do_get_solution_vector (void);
 
    //!here it copies new_solution both into _solution_vector and KspaceIntegration::real_space_density
-   virtual void do_set_solution_vector(const NumericVector< double > & new_solution);
+   virtual void do_set_solution_vector(const NumericVector<double> & new_solution);
 
 
 };

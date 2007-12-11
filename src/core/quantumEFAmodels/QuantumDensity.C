@@ -384,11 +384,15 @@ void QuantumDensity:: do_solve()
   {
 
     if (_solution_vector.get() == NULL)
+    {    
       _solution_vector = NumericVector<double>::build();
-   
-  
-    _solution_vector->init(real_space_density.size());
-
+      _solution_vector->init(real_space_density.size());
+    }
+    else
+    {
+      _solution_vector->init(0);
+      _solution_vector->init(real_space_density.size());
+    }
 
     Mesh & mesh = get_environment().get_mesh();
 
@@ -666,7 +670,9 @@ void QuantumDensity::estimate_analitic_density(void)
 //==================================================================================================================//
 void QuantumDensity::do_set_solution_vector(const NumericVector< double > & new_solution)
 {
-  get_solution_vector() = new_solution;
+
+
+  *_solution_vector = new_solution;
 
   Mesh & mesh = get_environment().get_mesh();
 
