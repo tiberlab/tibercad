@@ -229,11 +229,7 @@ inline void ModifiedBroyden::evaluate_and_save_F(void)
     _converged = false;
 
  
-  //----------------------
-
-
-  //_F.insert( pair<unsigned int, NumericVector<double>* >  (_it_number, difference ) );
-  
+ 
   
 }
 
@@ -457,55 +453,25 @@ inline void ModifiedBroyden::calculate_p_matrix(void)
 inline void  ModifiedBroyden::calculate_new_solution(void)
 {
 
-  for (unsigned int k = 0; k < _vector_size; k++)
-  {
-    double t = 0;
+  _X_correction->zero(); 
 
-    for (unsigned int i = 2; i <= _it_number - 1; i++)
-    {
-      t += _p(_it_number,i)* (*(_F[i]))(k);
+  _X_correction->add(_alpha * ( _p(_it_number, _it_number) - 1.0), *(_F[_it_number]) );
+
+  for (unsigned int i = 2; i <= _it_number - 1; i++)
+    _X_correction->add( _p(_it_number,i), *(_F[i]) );
      
-    }
-
-    //-----------------------------------------------
-    //Broyden-Johnson step
-
-    _X_correction->set(k,  _alpha * ( _p(_it_number, _it_number) - 1.0) * (*(_F[_it_number]))(k) + _alpha*t); 
-
-     //--------------------------------------------
-
-     //-------------------------------------------
-     //test -- will be linear relaxation 
-     //_X_correction[k] =  _alpha * (- 1.0)*_F[_it_number][k]  ;  
-
-   
-     
-     //------------------------------------------
-     //_X[k] +=  _X_correction[k];
-
-    //_X->add(k, (*_X_correction)(k));
-   
-
-    
-
-  }
-
   *_X += *_X_correction;
 
-  _X->close();
-
+  
 }
 
 //-------------------------------------------------------------------------------------//
 inline void ModifiedBroyden::calculate_new_first_iteraion_solution(void)
 {
- for (unsigned int k = 0; k < _vector_size; k++)
- {
-   //_X[k] -= _alpha * _F[1][k];
 
-   _X->add(k, -_alpha * (*(_F[1]))(k));
- }
-   _X->close();
+ _X->add(-_alpha,*(_F[1])); 
+
+ 
 }
 //-------------------------------------------------------------------------------------//
 inline double ModifiedBroyden::estimate_step()

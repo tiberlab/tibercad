@@ -238,6 +238,7 @@ void  ModifiedBroyden::clear_F(void)
     delete it->second;
   
 
+  _F.clear();
 }
 
 #endif //_MBSELFCONSISTENT_H_
