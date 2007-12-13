@@ -64,9 +64,6 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
         //! Constructor
         PointData(void);
 
-        //! The lattice temperature in eV (\f$= k_B T_{lat} / e\f$)
-        double lattice_vt;
-
         //! The electron temperature in eV (\f$= k_B T_e / e\f$)
         double electron_vt;
 
@@ -890,6 +887,10 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     ThermoelectricPower* _thermoelectric_power;
 
 
+    //! The lattice temperature in eV (\f$= k_B T_{lat} / e\f$)
+    double _lattice_vt;
+
+
     //! The nodal lattice temperature
     std::vector<double> _nodal_lattice_vt;
 
@@ -1021,7 +1022,7 @@ inline
 void
 DriftDiffusionProperties::set_lattice_temperature(double T)
 {
-  _pd->lattice_vt = T * Constants::k_B;
+  _lattice_vt = T * Constants::k_B;
 }
 
 
@@ -1030,7 +1031,7 @@ inline
 double
 DriftDiffusionProperties::get_lattice_temperature(void) const
 {
-  return _pd->lattice_vt;
+  return _lattice_vt;
 }
 
 
@@ -1132,7 +1133,7 @@ inline
 void
 DriftDiffusionProperties::setup_band_edges(void)
 {
-  double kT = _pd->lattice_vt;
+  double kT = _lattice_vt;
   _pd->electron_vt = _pd->hole_vt = kT;
   
   BandProperties& cb = conduction_band;

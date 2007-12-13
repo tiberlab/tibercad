@@ -406,11 +406,8 @@ DriftDiffusionProperties::reinit(const Elem* elem)
     //  _nodal_lattice_vt[i] *= Constants::k_B;
 
     // get the mean temperature on the element
-    _pd->lattice_vt = Constants::k_B *
+    _lattice_vt = Constants::k_B *
       _lattice_temp.get_temperature(elem, elem->centroid());
-
-    // here we assume thermal equilibrium
-    _pd->electron_vt = _pd->hole_vt = _pd->lattice_vt;
 
     _polarization = 0.0;
 
@@ -418,6 +415,9 @@ DriftDiffusionProperties::reinit(const Elem* elem)
     
     _polarization += _relax_polariz * pyro_polarization;
   }
+
+  // here we assume thermal equilibrium
+  _pd->electron_vt = _pd->hole_vt = _lattice_vt;
 
 }
 
@@ -427,7 +427,7 @@ DriftDiffusionProperties::reinit(const Elem* elem)
 void
 DriftDiffusionProperties::calculate_densities(void)
 {
-  //double kT = lattice_vt;
+  //double kT = _lattice_vt;
   double kTe = _pd->electron_vt;
   double kTh = _pd->hole_vt;
   
@@ -458,7 +458,7 @@ DriftDiffusionProperties::calculate_densities(void)
 void
 DriftDiffusionProperties::calculate_ionized_dopants(void)
 {
-  double kT = _pd->lattice_vt;
+  double kT = _lattice_vt;
 
   double Ec = get_conduction_band_edge();
   double Ev = get_valence_band_edge();
@@ -531,7 +531,7 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
 void
 DriftDiffusionProperties::calculate_mobilities(void)
 {
-  //double kT = lattice_vt;
+  //double kT = _lattice_vt;
 
   double mue = _electron_mobility->get_mobility();
   //double electron_diffusivity = kT * mue;
@@ -773,7 +773,7 @@ void  DriftDiffusionProperties::compute_thermoelectric_powers(void)
     _thermoelectric_power->set_mobility_term(5.0, 5.0);
 
     
-    _thermoelectric_power->set_temperature(_pd->lattice_vt);
+    _thermoelectric_power->set_temperature(_lattice_vt);
     
     _thermoelectric_power->calculate();
     

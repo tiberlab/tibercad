@@ -33,10 +33,6 @@ void
 ConstantMobility::do_init(void)
 {
   mu0_ = get_parameter("mu", mu0_);
-  //mu0_ = get_options().get_option("mu", mu0_);
-  //std::string s("mu_");
-  //s += get_carrier_type();
-  //mu0_ = get_material()->get_options().get_option(s, mu0_);
 }
 
 
