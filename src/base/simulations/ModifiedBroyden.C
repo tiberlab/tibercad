@@ -27,9 +27,7 @@ void ModifiedBroyden::do_solve(void)
 
   init_X();
 
- 
 
-  
 
   evaluate_and_save_F();
  
@@ -83,50 +81,7 @@ void ModifiedBroyden::do_solve(void)
         throw SolveFailedException("ModifiedBroyden::Number of iterations exceeded\n");
       
      
-    
-
-      evaluate_and_save_F();
-
-   
-      calculate_kappa_matrix();
-
-    
-    
-     
-
-      update_omega_vector();
-
-     
-      calculate_mu_and_w_diag();
-     
-      calculate_tilde_a();
-      
-      calculate_lambda();
-
-      update_tilde_a();
-      
-      
-    
-
-      calculate_a();
-     
-    
-      calcvulate_beta_matrix();
-      
-    
-      calculate_zeta_matrix();
-
-    
-     
-      calculate_eta_vector();
-
-   
-     
-      calculate_p_matrix();
-
-     
-      
-      calculate_new_solution();
+      do_step();
       
       
       double x = estimate_step();
@@ -179,135 +134,41 @@ void ModifiedBroyden::do_solve(void)
 
 }
 
-
-
-
 //------------------------------------------------------------//
-
-inline void ModifiedBroyden::evaluate_and_save_F(void)
+inline void ModifiedBroyden::do_step(void)
 {
-  
-
-
-  set_solution_vector(*_X); //set solution from previuos Broyden step
- 
-
-  solve_simulations();//do calculation
-
-
-  NumericVector< double > & solution_after	= get_solution_vector ();
-
-
-  NumericVector<double>&  difference =  add_F_vector(_it_number);
-
-  difference.init(_vector_size);
-  
- 
-
-  difference = *_X;
-  difference.close();
-
-  difference -= solution_after;
-  difference.close();
-
-  //----------------------
-  //check if converged
-  double t1 = difference.l2_norm();
-
-  _X->close();
-  double t2 = _X->l2_norm();
-
-
-
-
-
-  _rel_error = (t1/t2);
-
-  if (_rel_error <=  get_relative_tolerance())
-    _converged = true;
-  else
-    _converged = false;
-
- 
- 
-  
-}
-
-//------------------------------------------------------------//
-
-inline void ModifiedBroyden::calculate_kappa_matrix(void)
-{
-
-
-
-  NEWMAT::SymmetricMatrix k_temp;
-
-  if (_it_number > 1)  k_temp = _kappa;
-
-  _kappa.ReSize(_it_number);
-
-  if (_it_number > 1) 
-  {
+  evaluate_and_save_F();
    
-    _kappa.SymSubMatrix(1,_it_number - 1) = k_temp;
+  calculate_kappa_matrix();
 
-   
-  }
+  update_omega_vector();
+
+  calculate_mu_and_w_diag();
      
-  k_temp.Release();
+  calculate_tilde_a();
+      
+  calculate_lambda();
 
-
-  for (unsigned int i = 1; i <= _it_number; i++)
-  {
-    double t = 0;
-
-   
-    
-    _kappa(_it_number,  i) = _F[i]->dot( *(_F[_it_number]) );
+  update_tilde_a();
+      
+  calculate_a();
      
+  calculate_beta_matrix();
+       
+  calculate_zeta_matrix();
+   
+  calculate_eta_vector();
+     
+  calculate_p_matrix();     
+      
+  calculate_new_solution();
 
-  }
-  
- 
- 
 }
-//--------------------------------------------------------//
-inline void ModifiedBroyden::calculate_mu_and_w_diag(void)
-{
-
-  //--------------------------------------------------------
-  //calculation of mu
-
-  
-  _mu.ReSize(_it_number - 1);
-
-  for (unsigned int i = 1; i <= _it_number - 1; i++)
-  {
-     _mu(i, i) = 1.0/sqrt(	 _kappa(i+1,i+1) -  2.0*_kappa(i+1,i) +  _kappa(i,i) );
-
-     _mu(i,i) = sqrt(_mu(i,i));//I think it should be, but not present in the paper!
-  }
 
 
-  //--------------------------------------------------------//
-  //calculation of w 
-  NEWMAT::DiagonalMatrix w_temp;
-
-  if (_it_number > 2)
-    w_temp = _w;
-
-  _w.ReSize(_it_number - 1);
-
-  if (_it_number > 2) 
-    _w.SymSubMatrix(1,_it_number-2) = w_temp;
-
-  w_temp.Release();
-  
-  _w(_it_number - 1) =  _omega(_it_number - 1);
 
 
-  
-}
+
 //---------------------------------------------------------//
 
 inline void ModifiedBroyden::calculate_tilde_a(void)
@@ -367,47 +228,7 @@ inline  void ModifiedBroyden:: calculate_a(void)
       _a(i,j) = _w(i,i)*_w(j,j) * _a_tilde(i,j);
 }
 //------------------------------------------------------------// 
-inline void ModifiedBroyden::calcvulate_beta_matrix(void)
-{
-   NEWMAT::DiagonalMatrix I(_it_number -1);
 
-   I = 1;
-
-   NEWMAT::SymmetricMatrix t(_it_number -1);
-  
-  
-
-   t = (_omega_0 * I + _a);
-
-
-  
-
-  _beta = t.i();
-
-}
-//------------------------------------------------------------//
-inline void ModifiedBroyden::calculate_zeta_matrix(void)
-{
-
-  NEWMAT::Matrix _zeta_old = _zeta;
-
-  _zeta.ReSize(_it_number - 1, _it_number - 1);
-
-  _zeta = _beta * _w * _mu;
-
-  if (_it_number > 2) 
-  {
-    NEWMAT::Matrix _beta_primed = _beta.SubMatrix(1,_it_number-1,1,_it_number-2);
-    
-    _zeta.SubMatrix(1,_it_number-1,1,_it_number-2) += (_omega_0 * _omega_0) * _beta_primed * _zeta_old;
-
-    _beta_primed.Release();
-  }
-
-  _zeta_old.Release();
-
-
-}
 //------------------------------------------------------------//
 
 inline void ModifiedBroyden::calculate_eta_vector(void)
@@ -466,13 +287,7 @@ inline void  ModifiedBroyden::calculate_new_solution(void)
 }
 
 //-------------------------------------------------------------------------------------//
-inline void ModifiedBroyden::calculate_new_first_iteraion_solution(void)
-{
 
- _X->add(-_alpha,*(_F[1])); 
-
- 
-}
 //-------------------------------------------------------------------------------------//
 inline double ModifiedBroyden::estimate_step()
 {
@@ -495,26 +310,7 @@ inline double ModifiedBroyden::estimate_step()
 
 }
 //--------------------------------------------------------------------------------------//
-inline void ModifiedBroyden::update_omega_vector(void)
-{
- 
 
-  _omega.ReSize(_it_number - 1);
-
-  _omega = 1;
-
-
-  if (_it_number > _number_of_x_to_use)
-  {
-    int number_of_zeros =  _it_number -  _number_of_x_to_use; 
-
-    for ( int i = 1 ;  i <= number_of_zeros ; i++)
-      _omega(i) = 0;
-    
-  }
-
-  
-}
 //--------------------------------------------------------------------------------------//
 void ModifiedBroyden::parse_options(void)
 {
@@ -555,7 +351,10 @@ inline void ModifiedBroyden::init_X(void)
 {
   initialize();
   
-  const NumericVector<double>& solution  = get_solution_vector(); //after iteration //should be
+  const NumericVector<double>& solution  = get_solution_vector(); 
+
+
+ 
 
   _vector_size = solution.size();
 
@@ -573,6 +372,9 @@ inline void ModifiedBroyden::init_X(void)
 
 
   *_X = solution;
+
+ 
+ 
 
   if (_X_correction.get() == NULL)
   {  

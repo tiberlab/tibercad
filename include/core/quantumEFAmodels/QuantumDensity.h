@@ -250,7 +250,9 @@ inline double QuantumDensity::get_particle_charge() const
 //---------------------------------------------------------
 inline NumericVector< double > &  QuantumDensity::do_get_solution_vector (void)
 {
-  
+
+ 
+
   return (*_solution_vector);
 
 }

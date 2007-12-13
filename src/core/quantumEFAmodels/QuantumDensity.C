@@ -671,8 +671,11 @@ void QuantumDensity::estimate_analitic_density(void)
 void QuantumDensity::do_set_solution_vector(const NumericVector< double > & new_solution)
 {
 
+ 
 
   *_solution_vector = new_solution;
+
+  
 
   Mesh & mesh = get_environment().get_mesh();
 

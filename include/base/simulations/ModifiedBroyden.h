@@ -1,12 +1,13 @@
+// $Id$
 
 #ifndef _MBSELFCONSISTENT_H_
 #define _MBSELFCONSISTENT_H_
 #include "newmat.h"
 #include "newmatap.h"
-
+#include "newmatio.h"
 #include "SelfconsistentSolver.h"
 
-//! Based on the paper Journal of Chemical Physics v.108 p.4426
+//! Based on the paper Journal of Chemical Physics v.108 p.4426 (Appendix A)
 class ModifiedBroyden:  public SelfconsistentSolver
 {
 
@@ -36,14 +37,8 @@ class ModifiedBroyden:  public SelfconsistentSolver
   virtual void parse_options(void);
   
   
-
-  
- private:
-
-  
-  
   //! Initializes solution
-  virtual void init_X(void);
+  void init_X(void);
 
 
 
@@ -53,19 +48,18 @@ class ModifiedBroyden:  public SelfconsistentSolver
     \f$ X_2 = X_1 - \alpha F(X_1) \f$ 
   */
   void calculate_new_first_iteraion_solution(void);
-
   
-
-  //! \f$ F(x) = x - x' \f$  */
-  void evaluate_and_save_F(void);
-
 
   //! \f$ \kappa_{in} = \kappa_{ni} =  F(x_n)^T \cdot F(x_i) \f$ */
   void calculate_kappa_matrix(void); 
 
+  //! Modified Broden step: \f$ X_{n+1} = X_{n} + \alpha * (p_{nn} - 1)F(x_n) + \alpha \sum_{i=2}^{n-1} p_{ni}F(X_i) \f$ */
+  virtual void calculate_new_solution();
 
-  //! Modified Broden step: \f$ x_{n+1} = x_{n} + \alpha * (p_{nn} - 1)F(x_n) + \alpha \sum_{i=2}^{n-1} p_{ni}F(X_i) \f$ */
-  void calculate_new_solution();
+
+  //! \f$ F(x) = x - x' \f$  */
+  void evaluate_and_save_F(void);
+
 
   //! Calculation of \f$ \kappa \f$ and \f$ \mu \f$. I think that in the paper there is a missprint (see bellow) 
   /*! 
@@ -90,28 +84,21 @@ class ModifiedBroyden:  public SelfconsistentSolver
     \tilde a_{n-1,n-1} = 1
     \f$
   */
-  void calculate_tilde_a(void);
+  virtual void calculate_tilde_a(void);
 
-  //!recalculation of \f$ \tilde a \f$ (see below)
-  /*!
-    \f$
-    \tilde a_{n-1, i} = \mu_{n-1, n-1}(\lambda_i - \tilde a_{n-1,i})  (i = 1,...,n-2)
-    \f$
-   */
-  void update_tilde_a(void);
 
-  
   //! Calculate \f$ \lambda \f$: \f$ \lambda_i = \mu_{ii} (\kappa_{n,i+1} -\kappa_{ni} ) (i = 1,...,n-1) \f$
-  void calculate_lambda(void);
+  virtual void calculate_lambda(void);
 
-  
+
   //!calculate \f$ a \f$ matrix  \f$ a_{ij} = a_{ji} = w_{ii} w_{jj} \tilde a_{ij} (i \ge j = 1,...,n-1) \f$
-  void calculate_a(void);
+  virtual void calculate_a(void);
+
 
 
   
   //!calculate \f$ {\mathbf \beta} \f$  matrix  \f$ {\mathbf \beta} = (\omega_0^2 I + {\bf a})^{-1}  \f$
-  void calcvulate_beta_matrix(void);
+  void calculate_beta_matrix(void);
 
   //!calculation of \f$ {\mathbf \zeta}^{(n)} \f$ (in the paper the formula is a bit unclear, see below)
   /*!
@@ -124,15 +111,9 @@ class ModifiedBroyden:  public SelfconsistentSolver
   */
   void calculate_zeta_matrix(void);
 
-  
-  //! calculation of \f${\mathbf \eta  } \f$: \f$ {\bf \eta } = {\bf w} \cdot {\bf \zeta}^{(n)} \cdot {\bf \lambda} \f$
-  
-  void calculate_eta_vector(void);
 
-  //! calculation of \f$ p \f$ matrix:   \f$ p_{ni} = \eta_{ni} - \sum_{j=1}^{n-1} \eta_j p_{ji} (i = 2,...,n)\f$
-  void calculate_p_matrix(void);
-  
 
+  
   //! Definition of \f$ \omega_i \f$ weights (see below)
   /*!
     \f$
@@ -146,32 +127,6 @@ class ModifiedBroyden:  public SelfconsistentSolver
     where \f$ m \f$ is the history length.
   */
   void update_omega_vector(void);
-  
-  //! estimates error
-  double estimate_step();
-
-
-  
-
-  NEWMAT::SymmetricMatrix _kappa, _a, _beta;
-  
-  NEWMAT::DiagonalMatrix  _w, _mu; 
-
-  NEWMAT::Matrix    _p, _zeta, _a_tilde;
-
-  NEWMAT::ColumnVector  _lambda, _omega, _eta;
-
-
-  //! \f$  F = X - X'  \f$
-  //std::map<unsigned int, std::vector <double> > _F;
-  std::map<unsigned int,  NumericVector<double>* > _F;
-  
-  //!adds vector to _F map
-  NumericVector< Number >& add_F_vector(unsigned int number);
-
-
-  //! clears memory in _F map
-  void clear_F(void);
 
 
 
@@ -191,14 +146,92 @@ class ModifiedBroyden:  public SelfconsistentSolver
   unsigned int _vector_size;
 
 
+  //! algorithm of the modified Broyden (Johnson) method
+  virtual void do_step(void);
+
+
+  NEWMAT::SymmetricMatrix _kappa, _a, _beta;
+  
+  NEWMAT::DiagonalMatrix  _w, _mu; 
+
+
+  NEWMAT::Matrix _zeta, _a_tilde;
+
+  NEWMAT::ColumnVector _omega;
+
+  //! \f$ \alpha \f$ from the paper (relaxation parameter)
+  double _alpha; 
+
+
+  //! \f$  F = X - X'  \f$
+  //std::map<unsigned int, std::vector <double> > _F;
+  std::map<unsigned int,  NumericVector<double>* > _F;
+
+
+  
   //!how many solutions to consider
   unsigned int _number_of_x_to_use;
+
+ private:
+
+  
+  
+  
+
+  //!recalculation of \f$ \tilde a \f$ (see below)
+  /*!
+    \f$
+    \tilde a_{n-1, i} = \mu_{n-1, n-1}(\lambda_i - \tilde a_{n-1,i})  (i = 1,...,n-2)
+    \f$
+   */
+  void update_tilde_a(void);
+  
+  
+  
+  //! calculation of \f${\mathbf \eta  } \f$: \f$ {\bf \eta } = {\bf w} \cdot {\bf \zeta}^{(n)} \cdot {\bf \lambda} \f$
+  
+  void calculate_eta_vector(void);
+
+  //! calculation of \f$ p \f$ matrix:   \f$ p_{ni} = \eta_{ni} - \sum_{j=1}^{n-1} \eta_j p_{ji} (i = 2,...,n)\f$
+  void calculate_p_matrix(void);
+  
+
+  
+  //! estimates error
+  double estimate_step();
+
+
+  
+
+  
+
+  
+
+  NEWMAT::ColumnVector  _lambda,  _eta;
+
+  NEWMAT::Matrix    _p;
+
+
+  
+  
+  //!adds vector to _F map
+  NumericVector< Number >& add_F_vector(unsigned int number);
+
+
+  //! clears memory in _F map
+  void clear_F(void);
+
+
+
+  
+
+
+ 
 
   //! \f$ \omega_0  \f$ from the paper 
   double _omega_0;
 
-  //! \f$ \alpha \f$ from the paper (relaxation parameter)
-  double _alpha; 
+ 
 
 
   //!if the solution is converged, i.e. \f$ \frac{(F^T \cdot F)^{1/2}} { {(X^T \cdot X)^{1/2} } } < \varepsilon \f$
@@ -208,8 +241,6 @@ class ModifiedBroyden:  public SelfconsistentSolver
   double _rel_error;
 
  
-
-
 }; 
 
 
@@ -240,5 +271,203 @@ void  ModifiedBroyden::clear_F(void)
 
   _F.clear();
 }
+
+inline 
+void ModifiedBroyden::evaluate_and_save_F(void)
+{
+  
+
+ 
+  set_solution_vector(*_X); //set solution from previuos Broyden step
+ 
+ 
+
+  solve_simulations();//do calculation
+
+
+  NumericVector< double > & solution_after	= get_solution_vector ();
+
+  
+ 
+
+  NumericVector<double>&  difference =  add_F_vector(_it_number);
+
+  difference.init(_vector_size);
+  
+ 
+
+  difference = *_X;
+  difference.close();
+
+  difference -= solution_after;
+  difference.close();
+
+  //----------------------
+  //check if converged
+  double t1 = difference.l2_norm();
+
+  _X->close();
+  double t2 = _X->l2_norm();
+
+
+
+
+
+  _rel_error = (t1/t2);
+
+  if (_rel_error <=  get_relative_tolerance())
+    _converged = true;
+  else
+    _converged = false;
+
+}
+
+
+inline 
+void ModifiedBroyden::calculate_kappa_matrix(void)
+{
+
+
+
+  NEWMAT::SymmetricMatrix k_temp;
+
+  if (_it_number > 1)  k_temp = _kappa;
+
+  _kappa.ReSize(_it_number);
+
+  if (_it_number > 1) 
+  {
+   
+    _kappa.SymSubMatrix(1,_it_number - 1) = k_temp;
+
+   
+  }
+     
+  k_temp.Release();
+
+
+  for (unsigned int i = 1; i <= _it_number; i++)
+    _kappa(_it_number,  i) = _F[i]->dot( *(_F[_it_number]) );
+   
+  
+  
+
+ 
+ 
+}
+
+inline 
+void ModifiedBroyden::calculate_mu_and_w_diag(void)
+{
+
+  //--------------------------------------------------------
+  //calculation of mu
+
+  
+  _mu.ReSize(_it_number - 1);
+
+  for (unsigned int i = 1; i <= _it_number - 1; i++)
+  {
+     _mu(i, i) = 1.0/sqrt(	 _kappa(i+1,i+1) -  2.0*_kappa(i+1,i) +  _kappa(i,i) );
+
+     _mu(i,i) = sqrt(_mu(i,i));//I think it should be, but not present in the paper!
+  }
+
+
+  //--------------------------------------------------------//
+  //calculation of w 
+  NEWMAT::DiagonalMatrix w_temp;
+
+  if (_it_number > 2)
+    w_temp = _w;
+
+  _w.ReSize(_it_number - 1);
+
+  if (_it_number > 2) 
+    _w.SymSubMatrix(1,_it_number-2) = w_temp;
+
+  w_temp.Release();
+  
+  _w(_it_number - 1) =  _omega(_it_number - 1);
+
+
+  
+}
+
+
+inline 
+void ModifiedBroyden::calculate_new_first_iteraion_solution(void)
+{
+
+ _X->add(-_alpha,*(_F[1])); 
+
+ 
+}
+
+
+inline 
+void ModifiedBroyden::calculate_beta_matrix(void)
+{
+   NEWMAT::DiagonalMatrix I(_it_number -1);
+
+   I = 1;
+
+   NEWMAT::SymmetricMatrix t(_it_number -1);
+   
+
+   t = (_omega_0 * I + _a);
+ 
+
+  _beta = t.i();
+
+}
+
+inline
+void ModifiedBroyden::calculate_zeta_matrix(void)
+{
+
+  NEWMAT::Matrix _zeta_old = _zeta;
+
+  _zeta.ReSize(_it_number - 1, _it_number - 1);
+
+  _zeta = _beta * _w * _mu;
+
+  if (_it_number > 2) 
+  {
+    NEWMAT::Matrix _beta_primed = _beta.SubMatrix(1,_it_number-1,1,_it_number-2);
+    
+    _zeta.SubMatrix(1,_it_number-1,1,_it_number-2) += (_omega_0 * _omega_0) * _beta_primed * _zeta_old;
+
+    _beta_primed.Release();
+  }
+
+  _zeta_old.Release();
+
+
+}
+
+
+inline
+void ModifiedBroyden::update_omega_vector(void)
+{
+ 
+
+  _omega.ReSize(_it_number - 1);
+
+  _omega = 1;
+
+/*
+  if (_it_number > _number_of_x_to_use)
+  {
+    int number_of_zeros =  _it_number -  _number_of_x_to_use; 
+
+    for ( int i = 1 ;  i <= number_of_zeros ; i++)
+      _omega(i) = 0;
+    
+  }
+*/
+  
+}
+
 
 #endif //_MBSELFCONSISTENT_H_
