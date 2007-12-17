@@ -1,4 +1,4 @@
-// $Id$
+ // $Id$
 
 #include "ModifiedBroyden.h"
 #include "newmatio.h"
@@ -320,7 +320,15 @@ void ModifiedBroyden::parse_options(void)
 
   const ModelOptions& mod_opt = get_options();
 
-  _omega_0 = mod_opt.get_option("omega_0",1.0);
+  if (mod_opt.find_option("omega_0"))
+  {
+    _omega_0 = mod_opt.get_option("omega_0",1.0);
+    _estimate_omega_0 = false;
+  } 
+  else
+  {
+    _estimate_omega_0 = true;
+  }
 
 
   _alpha = mod_opt.get_option("relaxation_factor",0.3);
@@ -387,4 +395,9 @@ inline void ModifiedBroyden::init_X(void)
     _X_correction->init(_vector_size);
   }
   
+
+  if  (_estimate_omega_0)
+    _omega_0 = _X->l2_norm();
+  
+ 
 }

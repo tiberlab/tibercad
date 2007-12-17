@@ -240,6 +240,9 @@ class ModifiedBroyden:  public SelfconsistentSolver
   //!relative error \f$ \frac{(F^T \cdot F)^{1/2}} {{(X^T \cdot X)^{1/2}}}  \f$
   double _rel_error;
 
+  //! if true then \f$ \omega_0 = |X| \f$
+  bool _estimate_omega_0;
+
  
 }; 
 

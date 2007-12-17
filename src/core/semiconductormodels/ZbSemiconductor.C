@@ -260,7 +260,7 @@ KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
 
 
    
-
+   Ep = 1.2;
  
 
   
@@ -280,7 +280,9 @@ KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
   
   cerr << Ep * Hartree << "\n";
 
-  cerr << result.L1 << "   "  << result.L2 << "        " << result.N1 << "    " << result.N2 << "\n";
+  cerr << "L1=  " <<  result.L1 << "   L2=   "  << result.L2 << "     N1=   " 
+       << result.N1 << "  N2=   " << result.N2 << "\n";
+
   cerr << t << "\n";
 
   
