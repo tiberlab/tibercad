@@ -113,6 +113,7 @@ class SelfconsistentSolver : public SimulationInterface
     //! Get xmonitor
     bool get_xmonitor(void) const;
 
+
     //! Get an iterator for the first simulation
     SimulationIterator simulations_begin(void);
 
@@ -132,6 +133,9 @@ class SelfconsistentSolver : public SimulationInterface
     SimulationInterface* simulation(unsigned int i);
 
 
+    //! Get the last simulation, that provides also the solution vector
+    SimulationInterface* get_last_simulation(void);
+
 
   private:
 
@@ -150,10 +154,10 @@ class SelfconsistentSolver : public SimulationInterface
     //! The ids of the remembered solutions
     std::map<ID, std::vector<ID> > _remembered_sol_ids;
 
-    //! screen output of the convergence process 
+    //! Screen output of the convergence process 
     bool _monitor;
     
-    //! graphical output of the convergence process 
+    //! Graphical output of the convergence process 
     bool _xmonitor;
 
 };
@@ -167,7 +171,7 @@ inline
 SelfconsistentSolver::SelfconsistentSolver(void)
   : _max_it(5),
     _rel_tol(1e-3),
-    _abs_tol(1e-3)
+    _abs_tol(1e-6)
 {
 }
 
@@ -197,6 +201,7 @@ SelfconsistentSolver::get_absolute_tolerance(void) const
 {
   return _abs_tol;
 }
+
 
 inline 
 bool
@@ -245,6 +250,14 @@ SelfconsistentSolver::simulation(unsigned int i)
     return _simulations[i];
   else
     return NULL;
+}
+
+
+inline
+SimulationInterface*
+SelfconsistentSolver::get_last_simulation(void)
+{
+  return _simulations[_simulations.size() - 1];
 }
 
 

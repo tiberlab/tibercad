@@ -1451,7 +1451,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
         device.get_material(subdomain)->get_model(get_id()));
   assert(sc != NULL); 
 
-  sc->lock();
+  //sc->lock();
   sc->reinit(elem);
 
   fe->reinit(elem, &points);
@@ -1639,7 +1639,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   }
 
-  sc->unlock();
+  //sc->unlock();
 }
 
       
@@ -1691,7 +1691,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
         device.get_material(subdomain)->get_model(get_id()));
   assert(sc != NULL); 
 
-  sc->lock();
+  //sc->lock();
   sc->reinit(elem);
 
   fe->reinit(elem, &points);
@@ -1877,7 +1877,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   }
 
-  sc->unlock();
+  //sc->unlock();
 }
 
 

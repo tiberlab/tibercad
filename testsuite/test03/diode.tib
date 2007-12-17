@@ -120,7 +120,7 @@ $Solver
   selfconsistent
   {
      flavour = relaxation
-     simulations = (dd,tt)
+     simulations = (dd, tt)
   }
 
   driftdiffusion
@@ -179,9 +179,9 @@ $Simulation
   meshfile = diode.msh
   dimension = 1
   temperature = 300
-  solve = (sweep)
+  solve = sweep
   resultpath = output
-  output_format = gmv
+  output_format = grace
   plot = (ElPotential,Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current,T)
 }
 

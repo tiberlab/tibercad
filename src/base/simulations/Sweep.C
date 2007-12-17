@@ -454,49 +454,33 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
           get_control().set_filename_suffix(s.str());
         }
 
-
-        for (int j = 0; j < num_sim; j++)
-          _simulations[j]->solve();
-
-
-        //_last = Variable::get_variable_value(_variable);
-        _last = value;
-
-
-        // remember the current solution, but not for sweeps!
-        for (int j = 0; j < num_sim; j++)
-        {
-          if (_simulations[j]->get_type() != "sweep")
-            _simulations[j]->remember_current_solution(old_sol[j]);
-        }
-
-
+        bool plot_data = false;
         // write results, but only at desired sweep steps
         if (_plot_data)
-        {
           if (find_if(values_begin, values_end,
                 bind2nd(Utils::almost_equal(), value)) != values_end)
           {
-            for (int j = 0; j < num_sim; j++)
-              _simulations[j]->plot();
+            plot_data = true;
           }
-        }
 
 
-        // update "something-vs.-sweepvariable" files
-        // Here we do it also for intermediate steps
+        // the loop over the simulations
         for (int j = 0; j < num_sim; j++)
         {
+          _simulations[j]->solve();
+
+          // update "something-vs.-sweepvariable" files
+          // Here we do it also for intermediate steps
           if (plotfiles[j] != NULL)
           {
             // it means we have something to plot
             _simulations[j]->get_integrated_quantities(_plotvariables,
                 plotvalues);
 
-            sweep_data[j][_last] = plotvalues;
+            sweep_data[j][value] = plotvalues;
 
             ostringstream l;
-            l << setprecision(12) << _last;
+            l << setprecision(12) << value;
             unsigned int n_data = plotvalues.size();
             for (unsigned int k = 0; k < n_data; k++)
               l << "   " << plotvalues[k];
@@ -506,7 +490,20 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
             file << l.str();
             file.flush();
           }
+
+          if (plot_data)
+            _simulations[j]->plot();
+
+
+          // remember the current solution, but not for sweeps!
+          if (_simulations[j]->get_type() != "sweep")
+            _simulations[j]->remember_current_solution(old_sol[j]);
         }
+
+
+
+        _last = value;
+
 
 
         // try to increase step, but only if it worked twice

@@ -33,16 +33,18 @@ RelaxationMethod::do_solve(void)
   initialize();
 
   // we make a copy of the current solutions
-  vector<ID> old_sol_ids(num_sim); 
-  for (int i = 0; i < num_sim; i++)
-    old_sol_ids[i] = simulation(i)->remember_current_solution();
+  //vector<ID> old_sol_ids(num_sim); 
+  //for (int i = 0; i < num_sim; i++)
+  //  old_sol_ids[i] = simulation(i)->remember_current_solution();
+
+  ID old_sol_id = get_last_simulation()->remember_current_solution();
 
   // for the norms of the differences
-  vector<double> norms(num_sim, 0.0);
+  //vector<double> norms(num_sim, 0.0);
 
   for (unsigned int it = 0; it < get_maximum_iterations(); it++)
   {
-
+/*
     for (int i = 0; i < num_sim; i++)
     {
       simulation(i)->solve();
@@ -62,11 +64,16 @@ RelaxationMethod::do_solve(void)
       simulation(i)->scale_solution(_relax);
       simulation(i)->add_scaled_remembered_solution(old_sol_ids[i], 1.0 - _relax);
     }
+*/
+    solve_simulations();
+
+    double norm = get_last_simulation()->get_maximum_norm_of_difference(old_sol_id);
 
     bool converged = true;
 
     // check for the difference between old and new solutions
     cerr << "iteration " << it << ": ";
+    /*
     for (int i = 0; i < num_sim; i++)
     {
       if (norms[i] > get_absolute_tolerance())
@@ -75,17 +82,26 @@ RelaxationMethod::do_solve(void)
       cerr << "norm[" << i << "] = " << norms[i] << " ";
     }
     cerr << endl;
+    */
+    if (norm > get_absolute_tolerance())
+      converged = false;
+    cerr << "norm = " << norm << endl;
 
     if (converged)
       break;
+
+    get_last_simulation()->scale_solution(_relax);
+    get_last_simulation()->add_scaled_remembered_solution(old_sol_id, 1.0 - _relax);
+    get_last_simulation()->remember_current_solution(old_sol_id);
     
-    for (int i = 0; i < num_sim; i++)
-      simulation(i)->remember_current_solution(old_sol_ids[i]);
+    //for (int i = 0; i < num_sim; i++)
+    //  simulation(i)->remember_current_solution(old_sol_ids[i]);
   }
 
   // clean up
-  for (int i = 0; i < num_sim; i++)
-    simulation(i)->delete_remembered_solution(old_sol_ids[i]);
+  //for (int i = 0; i < num_sim; i++)
+  //  simulation(i)->delete_remembered_solution(old_sol_ids[i]);
+  get_last_simulation()->delete_remembered_solution(old_sol_id);
 }
 
 
