@@ -80,10 +80,10 @@ class  WzSemiconductor : public Semiconductor
     //!crystal field spliting energy [eV]
     double  delta_cr; 
    
-    //! optical matrix element \f$ \frac{\langle X|{\bf P}|S \rangle ^2}{2m_0} \f$  [eV]
+    //! optical matrix element \f$ 2\frac{\langle X |{\bf P}|S \rangle ^2}{m_0} \f$  [eV]
     double Ep_1 ;
 
-    //! optical matrix element \f$ \frac{\langle |{\bf P}|S \rangle ^2}{2m_0} \f$  [eV]
+    //! optical matrix element \f$ 2\frac{\langle Z |{\bf P}|S \rangle ^2}{m_0} \f$  [eV]
     double Ep_2 ;
 
   };
@@ -97,18 +97,33 @@ class  WzSemiconductor : public Semiconductor
   //! Calculates k.p parameters in atomic units for 6 band valence band calculation (see below)
   /*!
     \f$
-    L_1 = \dfrac{1}{2} (A_5 + A_4 + A_2  - 1); \\
-    L_2 = \dfrac{1}{2} (A_1 - 1.0);\\
-    M_1 = \dfrac{1}{2} (A_4 + A_2 - A_5 - 1);\\
-    M_2 = \dfrac{1}{2} (A_1 + A_3 - 1);\\
-    M_3 = \dfrac{1}{2} (A_2 - 1.0); \\
-    N_1 = A_5; \\
-    N_2 = \dfrac{A_6}{\sqrt{2}}\\;
-    \mbox{}
-    N_1^{yx} = M1; N_1^{xy} = N_1 - N_1^{yx} \\
-    N_2^{yx} = N_1^{yx};N_2^{xy} = result.N1_xy
-    
+    L_1 = \frac{1}{2} (A_5 + A_4 + A_2  - 1) \\
+    L_2 = \frac{1}{2} (A_1 - 1.0)\\
+    M_1 = \frac{1}{2} (A_4 + A_2 - A_5 - 1)\\
+    M_2 = \frac{1}{2} (A_1 + A_3 - 1)\\
+    M_3 = \frac{1}{2} (A_2 - 1.0) \\
+    N_1 = A_5 \\
+    N_2 = \frac{A_6}{\sqrt{2}}\\
+    \mbox{} \\
+    N_1^{yx} = M_1; N_1^{xy} = N_1 - N_1^{yx} \\
+    N_2^{yx} = M_2; N_2^{xy} = N_2 - N_2^{xy} \\
+    \mbox{}\\
+    l_1 = D_5 + D_4 + D_2 \\
+    l_2 = D_1 \\
+    m_1 = D_4 + D_2 - D_5 \\
+    m_2 = D_1 + D_3 \\
+    m_3 = D_2 \\
+    n_1 = 2 D_5\\
+    n_2 = \sqrt{2} D_6 \\
+    \mbox{}\\
+    d_1 = \Delta_{cr} \\
+    d_2 = \Delta_{so} \\
+    d_3 = \Delta_{so} \\  
+    \mbox{}\\
+    P_1 = \sqrt(Ep_1/2)\\
+    P_2 = \sqrt(Ep_2/2)\\
     \f$
+    
   */
   virtual KPparams calculate_6x6_kp_params (void );
 

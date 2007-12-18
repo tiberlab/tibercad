@@ -378,8 +378,8 @@ KPparams WzSemiconductor::calculate_6x6_kp_params (void )
 
   
   //conduction-valence band coupling. may be needed only for optics
-  result.P1 = std::sqrt(par.Ep_1 * 2.0 / Hartree);
-  result.P2 = std::sqrt(par.Ep_2 * 2.0 / Hartree);
+  result.P1 = std::sqrt(par.Ep_1 * 0.5 / Hartree);
+  result.P2 = std::sqrt(par.Ep_2 * 0.5 / Hartree);
 
 
   return(result);

@@ -38,6 +38,7 @@ class ZbSemiconductor  : public Semiconductor
     double def_vol_L;  //!<  volume deformation potential for L point \f$ \Xi_d + \frac{1}{3}\Xi_u \f$ [eV]
     double def_uniax_L; //!< uniaxial deformation potential for L point \f$ \Xi_u \f$ [eV]
     double delta; //!< spin-orbit \f$ \Delta \f$ [eV]
+    double Ep; //!< optical matrix element \f$ 2\frac{\langle X |{\bf P}|S \rangle ^2}{m_0} \f$  [eV]
   };
 
   

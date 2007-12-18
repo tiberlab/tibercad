@@ -57,6 +57,8 @@ void ZbSemiconductor::do_init()
     par.def_uniax_X = options.get_option("uniax_def_pot_X",  par.def_uniax_X);
     par.def_vol_L   = options.get_option("abs_def_pot_L",      par.def_vol_L);
     par.def_uniax_L = options.get_option("uniax_def_pot_L",  par.def_uniax_L);
+
+    par.Ep = options.get_option("Ep", par.Ep);
   }
   //------------------------------------------------------------------------------
   //bowing
@@ -86,6 +88,8 @@ void ZbSemiconductor::do_init()
     bow.def_uniax_X = options.get_option("uniax_def_pot_X",  bow.def_uniax_X);
     bow.def_vol_L   = options.get_option("abs_def_pot_L",      bow.def_vol_L);
     bow.def_uniax_L = options.get_option("uniax_def_pot_L",  bow.def_uniax_L);
+
+    bow.Ep = options.get_option("bow_Ep_1", bow.Ep);
   }
 
 
@@ -127,6 +131,8 @@ void ZbSemiconductor::read_database( )
   par.def_uniax_X = data("uniax_def_pot_X", 14.26);
   par.def_vol_L = data("abs_def_pot_L", -4.91);
   par.def_uniax_L = data("uniax_def_pot_L", 6.5);
+
+  par.Ep = data("Ep", 25.0);
   
 }
 //----------------------------------------------//
@@ -178,7 +184,7 @@ void ZbSemiconductor::read_bowing_parameters()
   bow.def_vol_L = data("bow_abs_def_pot_L", 0.0);
   bow.def_uniax_L = data("bow_uniax_def_pot_L", 0.0);
 
-
+  bow.Ep = data("bow_Ep", 0.0);
 }
 
 
@@ -361,6 +367,9 @@ KPparams ZbSemiconductor::calculate_6x6_kp_params (void )
   result.d1 = 0.0 ; //no crystal field splitting
   result.d2 = (par.delta/3) / Hartree;
   result.d3 = (par.delta/3) / Hartree;
+
+  result.P1  = std::sqrt(par.Ep * 0.5 / Hartree);
+  result.P2  = result.P1;
 
   return(result);
  
