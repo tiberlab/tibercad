@@ -234,8 +234,8 @@ KPparams WzSemiconductor::calculate_8x8_kp_params (void )
   //------------------------------------------------------------------
   //CONDUCTION BAND
   //we renormalize conduction band quadratic part to free electron mass
-  result.s1 = 0.5;
-  result.s2 = 0.5;
+  result.s1 = 1.0;
+  result.s2 = 1.0;
 
 
   //---------------------------------
@@ -269,17 +269,19 @@ KPparams WzSemiconductor::calculate_8x8_kp_params (void )
 
   //-----------------------------------------------------------------
   //to check!
-  double Ep1,Ep2; //Ep = P^2 / 2.0;
+  double Ep1,Ep2; //Ep = P^2 * 2.0 (atomic units);
+
+  double s = 1.0;
   
-  Ep1 = (1.0/par.m_c_zz - 1.0)*
+  Ep1 = s*(1.0/par.m_c_zz - 1.0)*
     par.EgGamma * ( (par.EgGamma +  par.delta_s )/(par.EgGamma + 2.0/3.0 * par.delta_s ) ) / Hartree;
 
-  Ep2 = (1.0/par.m_c_xx - 1.0)*
+  Ep2 = s*(1.0/par.m_c_xx - 1.0)*
     par.EgGamma * ( (par.EgGamma +  par.delta_s )/(par.EgGamma + 2.0/3.0 * par.delta_s ) ) / Hartree;
   
 
-  result.P1 = std::sqrt(2.0 * Ep1);
-  result.P2 = std::sqrt(2.0 * Ep2);
+  result.P1 = std::sqrt(0.5 * Ep1);
+  result.P2 = std::sqrt(0.5 * Ep2);
 
  
 
@@ -287,8 +289,8 @@ KPparams WzSemiconductor::calculate_8x8_kp_params (void )
   //-----------------------------------------------------------------
   //to check !
   //rescale L and N
-  double t1 =   Ep1/( (par.EgGamma +  par.delta_s/3.0)/Hartree );
-  double t2 =   Ep2/( (par.EgGamma +  par.delta_s/3.0)/Hartree );
+  double t1 =   0.5*Ep1/( (par.EgGamma +  par.delta_s/3.0)/Hartree );
+  double t2 =   0.5*Ep2/( (par.EgGamma +  par.delta_s/3.0)/Hartree );
 
   result.L1 += t1;
   result.L2 += t2;
