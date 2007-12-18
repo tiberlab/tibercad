@@ -94,11 +94,29 @@ class  WzSemiconductor : public Semiconductor
  
   
 
-  //! Calculates k.p parameters in atomic units for 6 band valence band calculation (not coded yet!)
-   virtual KPparams calculate_6x6_kp_params (void );
+  //! Calculates k.p parameters in atomic units for 6 band valence band calculation (see below)
+  /*!
+    \f$
+    L_1 = \dfrac{1}{2} (A_5 + A_4 + A_2  - 1); \\
+    L_2 = \dfrac{1}{2} (A_1 - 1.0);\\
+    M_1 = \dfrac{1}{2} (A_4 + A_2 - A_5 - 1);\\
+    M_2 = \dfrac{1}{2} (A_1 + A_3 - 1);\\
+    M_3 = \dfrac{1}{2} (A_2 - 1.0); \\
+    N_1 = A_5; \\
+    N_2 = \dfrac{A_6}{\sqrt{2}}\\;
+    \mbox{}
+    N_1^{yx} = M1; N_1^{xy} = N_1 - N_1^{yx} \\
+    N_2^{yx} = N_1^{yx};N_2^{xy} = result.N1_xy
+    
+    \f$
+  */
+  virtual KPparams calculate_6x6_kp_params (void );
 
-  //! Calculates k.p parameters in atomic units for 8 band valence band calculation (not coded yet!)
-   virtual KPparams calculate_8x8_kp_params (void );
+  //! Calculates k.p parameters in atomic units for 8 band valence band calculation (see below)
+  /*
+    
+   */
+  virtual KPparams calculate_8x8_kp_params (void );
 
   //! Get a writeable reference to the physical parameters
   WzDDparameters& get_parameters(void);

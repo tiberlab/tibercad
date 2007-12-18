@@ -52,7 +52,7 @@ class ZbSemiconductor  : public Semiconductor
 
   
 
-  //! Calculates k.p parameters in atomic units for 6 band valence band calculation
+  //! Calculates k.p parameters in atomic units for 6 band valence band calculation (see below)
 
   /*! Valence band k.p parameters:
 
@@ -89,7 +89,23 @@ class ZbSemiconductor  : public Semiconductor
  
   virtual KPparams calculate_6x6_kp_params (void );
 
-  //! Calculates k.p parameters in atomic units for 8 band valence band calculation (not coded yet!)
+  //! Calculates k.p parameters in atomic units for 8 band valence band calculation (see below)
+  /*!
+    \f$ 
+   
+     S = 1, \mbox{i.e.}  H_{cc} = \frac{k^2}{2m_0}; \\
+     E_c = E_v + \frac{\Delta}{3} + Eg; \\
+     E_p = 2 \frac{P^2}{m_0};\\
+     E_p = S \left(\frac{m_0}{m_c} - 1 \right) E_g \frac{E_g + \Delta}{E_g + 2/3 \Delta}\\
+     \f$  
+
+    \f$ 
+    L^{8 \times 8} =  L^{6 \times 6} + \frac{P^2}{E_g + {\Delta}/{3}} ;\\
+    N^{8 \times 8} =  N^{6 \times 6} + \frac{P^2}{E_g + {\Delta}/{3}} ;\\
+    M^{8 \times 8} =  M^{6 \times 6}. \\
+    \f$
+
+  */
   virtual KPparams calculate_8x8_kp_params (void );
 
   static ZbSemiconductor* create();

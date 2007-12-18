@@ -338,10 +338,10 @@ KPparams WzSemiconductor::calculate_6x6_kp_params (void )
 
   //------------------------------------------------------------------------------//
   // has to be checked!!!
-  result.N1_yx = result.M1;  result.N2_yx = result.N1_yx;
+  result.N1_yx = result.M1;  result.N2_yx = result.M2;
 
   
-  result.N1_xy = result.N1 - result.N1_yx; result.N2_xy = result.N1_xy;
+  result.N1_xy = result.N1 - result.N1_yx; result.N2_xy = result.N2 - result.N2_yx;
   //-------------------------------------------------------------------------------//
   //-------------------------------------------------------------------------------//
  
