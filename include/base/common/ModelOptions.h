@@ -22,6 +22,9 @@ class ModelOptions
 
     //! typedef for convenience
     typedef std::map<const std::string, std::string> OptionsMap;
+
+    //! typedef for options iterator
+    typedef OptionsMap::const_iterator const_option_iterator;
     
     //! typedef for the map of submodels
     typedef std::multimap<const std::string, ModelOptions> SubmodelMap;
@@ -184,6 +187,12 @@ class ModelOptions
     const_submodel_iterator submodels_end(void) const;
 
 
+    //! Get the iterator to the first option
+    const_option_iterator options_begin(void) const;
+
+
+    //! Get the past-the-end iterator for the options
+    const_option_iterator options_end(void) const;
 
 
   private:
@@ -351,6 +360,21 @@ ModelOptions::has_submodel(const std::string& name)
 }
 
 
+
+inline
+ModelOptions::const_option_iterator
+ModelOptions::options_begin(void) const
+{
+  return _options.begin();
+}
+
+
+inline
+ModelOptions::const_option_iterator 
+ModelOptions::options_end(void) const
+{
+  return _options.end();
+}
 
     
 #endif // _MODELOPTIONS_H_
