@@ -398,6 +398,5 @@ inline void ModifiedBroyden::init_X(void)
 
   if  (_estimate_omega_0)
     _omega_0 = _X->l2_norm();
-  
  
 }

@@ -307,6 +307,8 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
   Ham[1][1].quad[1][1]= 0.5*par.s2;     
   Ham[1][1].quad[2][2]= 0.5*par.s1;
 
+
+ 
   //-----------------------------------------------------------------------//
 
  

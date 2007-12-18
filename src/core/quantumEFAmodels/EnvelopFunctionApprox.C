@@ -1573,7 +1573,10 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   } 
 
 
- 
+  if (!finish)
+  {
+    throw ModelErrorException("EnvelopFunctionApprox: ground state is not found. Correct spectrum_shift or increase number of states");
+  }
 
   unsigned int solution_size;
   if (number_of_converged_solutions - ground_state_index < number_of_ev)
