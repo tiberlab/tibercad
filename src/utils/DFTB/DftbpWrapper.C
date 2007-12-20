@@ -77,6 +77,13 @@ void DftbpWrapper::addkpoints (int nKPoint, double *kPoints, double *kWeights) {
   }
 
 
+//! Set automatic kpoints, based on supercell folding
+//! See DFTB+ 1.0 manual for further informations.
+void DftbpWrapper::addsupersampling(double *coeffs, double *shifts, int noinv) {
+  f77_dftbp_addsupersampling(_handler, coeffs, shifts, noinv);
+    }
+
+
 void DftbpWrapper::getchargesperatom(int nAtom, double* charges) {
 	f77_dftbp_getchargesperatom (_handler, nAtom, charges);
 }

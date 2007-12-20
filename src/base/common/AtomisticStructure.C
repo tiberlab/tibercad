@@ -1,4 +1,7 @@
 #include "AtomisticStructure.h"
+#include "AtomisticGenerator.h"
+#include "AtomisticGenerator1D.h"
+
 
 AtomisticStructure::AtomisticStructure(const std::string& name)
   :_name(name)
@@ -119,9 +122,14 @@ AtomisticStructure::init(void)
   else   
     {
       _structure_atoms.clear();
-      AtomisticGenerator* generate =  AtomisticGenerator::create(this);
+
+
+      AtomisticGenerator* generate = dynamic_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, get_device()->get_mesh().mesh_dimension()) );
+
+
       generate->do_init();
       print_structure("structure.xyz");
+      print_structure("structure.gen");
     }
 
 

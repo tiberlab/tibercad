@@ -1,27 +1,29 @@
 #include "AtomisticGenerator.h"
+#include "AtomisticStructure.h"
+#include "AtomisticGenerator1D.h"
 
 
-
-const double AtomisticGenerator::tol = 1e-14;
+const double AtomisticGenerator::tol = 1e-3;
 
 const double AtomisticGenerator::scale = 1e2;
 
 
-AtomisticGenerator::AtomisticGenerator(AtomisticStructure* const as)
-{
-  _as = as;
-	_rotation(1,1) = 1.0; _rotation(1,2) = 0.0; _rotation(1,3) = 0.0; _rotation(2,1) = 0.0; _rotation(2,2) = 1.0;
-	_rotation(2,3) = 0.0; _rotation(3,1) = 0.0; _rotation(3,2) = 0.0; _rotation(3,3) = 1.0;
-}
+// AtomisticGenerator::AtomisticGenerator(AtomisticStructure* const as)
+// {
+//   _as = as;
+// 	_rotation(1,1) = 1.0; _rotation(1,2) = 0.0; _rotation(1,3) = 0.0; _rotation(2,1) = 0.0; _rotation(2,2) = 1.0;
+// 	_rotation(2,3) = 0.0; _rotation(3,1) = 0.0; _rotation(3,2) = 0.0; _rotation(3,3) = 1.0;
+// }
 
 
-AtomisticGenerator* 
-AtomisticGenerator::create(AtomisticStructure* const as)
-{ 
-  AtomisticGenerator* ag =  NULL;
-  ag = new AtomisticGenerator(as);
-  return ag;
-}
+ AtomisticGenerator* 
+ AtomisticGenerator::create(AtomisticStructure* const as, unsigned int dimension)
+ { 
+   AtomisticGenerator* ag =  NULL;
+
+   if (dimension == 1)  ag = AtomisticGenerator1D::create(as);
+   return ag;
+ }
 
 
 void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string filename){
@@ -85,18 +87,18 @@ AtomisticGenerator::do_init()
   //Set appropriate options for corresponding materials and structures
   if ( material.compare("Si") == 0 ) 
     {std::cout << "Setting silicon options " << std::endl;
-	    ax = 5.43102064; ay = ax; az = ax; set_lattice_type("fcc"); set_crystal_basis("zincblende", "A", "A");}
+      ax = 5.4307; ay = ax; az = ax; set_lattice_type("fcc"); set_crystal_basis("zincblende", "A", "A");}
   else if (material.compare("GaAs") == 0)
     {ax = 5.6535;  ay = ax; az = ax; set_lattice_type("fcc"); set_crystal_basis("zincblende", "A", "B");}
   else if ( material.compare("Diamond") == 0 ) 
     {ax =3.56685; ay = ax; az = ax; set_lattice_type("fcc"); set_crystal_basis("diamond", "A");}
  else if ( material.compare("GaN") == 0 ) 
-    {ax =3.190; ay = ax; az = 5.190; set_lattice_type("hexagonal"); set_crystal_basis("wurtzite", "A", "B", 0.0);}
+   {ax =3.190; ay = ax; az = 5.190; set_lattice_type("hexagonal"); set_crystal_basis("wurtzite", "A", "B", 0.0);}
     //...to be completed...
 
 
     
-    
+      
     
     
     
@@ -104,39 +106,44 @@ AtomisticGenerator::do_init()
 
     Tensor2Gen miller(1);
     miller(2,2) = 0.0; 
+    miller(3,3) = 0.0;
     
     std::vector<int> growth_direction;
+
+    if (! ( (region_material->get_options().find_option("x_growth_direction")) || (_as->get_options().find_option("x_growth_direction")) ) )
+      std::cerr << "Warning, no x_growth_direction is set for atomistic structure " << _as->get_name() << " Setting (1,0,0) as default " << std::endl;
+
     if (region_material != NULL){
-	if (region_material->get_options().find_option("x-growth-direction")){
-region_material->get_options().get_option("x-growth-direction", growth_direction);
+	if (region_material->get_options().find_option("x_growth_direction")){
+region_material->get_options().get_option("x_growth_direction", growth_direction);
 		miller(1,1) = growth_direction[0]; miller(2,1) = growth_direction[1]; miller(3,1) = growth_direction[2];
 		if (growth_direction.size() == 4) miller(3,1) = growth_direction[3];
 	}
-	if (region_material->get_options().find_option("y-growth-direction")){
-region_material->get_options().get_option("y-growth-direction", growth_direction);
+	if (region_material->get_options().find_option("y_growth_direction")){
+region_material->get_options().get_option("y_growth_direction", growth_direction);
 		miller(1,2) = growth_direction[0]; miller(2,2) = growth_direction[1]; miller(3,2) = growth_direction[2];
 		if (growth_direction.size() == 4) miller(3,2) = growth_direction[3];
 	}
-	if (region_material->get_options().find_option("z-growth-direction")){
-region_material->get_options().get_option("z-growth-direction", growth_direction);
+	if (region_material->get_options().find_option("z_growth_direction")){
+region_material->get_options().get_option("z_growth_direction", growth_direction);
 		miller(1,3) = growth_direction[0]; miller(2,3) = growth_direction[1]; miller(3,3) = growth_direction[2];
 		if (growth_direction.size() == 4) miller(3,3) = growth_direction[3];
 	}
     }
     
     //If Miller indexes specified in Atomistic options, take them
-  	if (_as->get_options().find_option("x-growth-direction")){
-region_material->get_options().get_option("x-growth-direction", growth_direction);
+  	if (_as->get_options().find_option("x_growth_direction")){
+region_material->get_options().get_option("x_growth_direction", growth_direction);
 		miller(1,1) = growth_direction[0]; miller(2,1) = growth_direction[1]; miller(3,1) = growth_direction[2];
 		if (growth_direction.size() == 4) miller(3,1) = growth_direction[3];
 	}
-	if (_as->get_options().find_option("y-growth-direction")){
-region_material->get_options().get_option("y-growth-direction", growth_direction);
+	if (_as->get_options().find_option("y_growth_direction")){
+region_material->get_options().get_option("y_growth_direction", growth_direction);
 		miller(1,2) = growth_direction[0]; miller(2,2) = growth_direction[1]; miller(3,2) = growth_direction[2];
 		if (growth_direction.size() == 4) miller(3,2) = growth_direction[3];
 	}
-	if (_as->get_options().find_option("z-growth-direction")){
-region_material->get_options().get_option("z-growth-direction", growth_direction);
+	if (_as->get_options().find_option("z_growth_direction")){
+region_material->get_options().get_option("z_growth_direction", growth_direction);
 		miller(1,3) = growth_direction[0]; miller(2,3) = growth_direction[1]; miller(3,3) = growth_direction[2];
 		if (growth_direction.size() == 4) miller(3,3) = growth_direction[3];
 	}  
@@ -145,10 +152,6 @@ region_material->get_options().get_option("z-growth-direction", growth_direction
 
     //-------------------------------------------------------------------------------------------
     
-  std::cout << "Material is " << material << std::endl;
-      std::cout << "structure is " << structure << std::endl; 
-std::cout << "Miller indexes are " << miller  << std::endl;
-
 
 
     // Set the vectore of elements covered by structure, useful for change specie and cut
@@ -161,14 +164,22 @@ std::cout << "Miller indexes are " << miller  << std::endl;
       }
    
 
-//Build up structure
+
+//Build up structure with proper options
 //----------------------------------------------------------------------------------------------
-build();
+  build();
 	
- change_specie();
+
+  std::string preserve;
+  preserve = _as->get_options().get_option("preserve", "none");
+ change_specie(preserve);
 
 
-print_basis(_structure_basis, "supercell.xyz");	
+ std::string passivation;
+ passivation = _as->get_options().get_option("passivation", "no");
+
+ if (passivation.compare("yes") == 0){passivate();}
+
 
 //----------------------------------------------------------------------------------------------
 	
@@ -195,63 +206,18 @@ _as->N_atoms = _structure_basis.size();
 _as->_atom_types.push_back(*types);
  }
 
-	
-  std::cout << "Ending AtomisticGenerator::do_init() " << std::endl;
 
+#ifdef DEBUG	
+  std::cout << "Ending AtomisticGenerator::do_init() " << std::endl;
+#endif
 
  };
 
- 
- void 
- AtomisticGenerator::build()
- {
-//Common building operations
-	 make_conv_cell();
-	 make_conv_basis();
-
-	 unsigned int dimension = _as->get_device()->get_mesh().mesh_dimension(); 
-	
-	std::cout << "Mesh dimension is " << dimension << std::endl;
-	 
-	if (dimension == 1) build1D();
-	else std::cerr << "Warning: only atomistic 1D is supported now" << std::endl;
-	 
- }
-
-void 
- AtomisticGenerator::build1D()
- {
-	 //Check edges of segment for building structure
-	 MeshBase::node_iterator nd = _as->get_device()->get_mesh().nodes_begin();	
-         const MeshBase::node_iterator nd_end = _as->get_device()->get_mesh().nodes_end();
-
-	 double edge_min, edge_max;
-         edge_min = (**nd)(0); edge_max = (**nd)(0);
-	 nd++;
-	 
-	for ( ; nd != nd_end; nd++ ){
-		if ( (**nd)(0) < edge_min ) edge_min = (**nd)(0);
-		if ( (**nd)(0) > edge_max ) edge_max = (**nd)(0);	
-        };
-	
-	std::cout << "edge_min is " << edge_min << std::endl;
-	std::cout << "edge_max is " << edge_max << std::endl;
-	
-	_local_origin(1) = edge_min; _local_origin(2) = 0.0; _local_origin(3) = 0.0;
-	double l1 = (edge_max - edge_min) * scale; double l2 = 0.0; double l3 = 0.0;
-	make_supercell( l1, l2, l3, true, true);
-	
-	std::cout << "Period is " << _period << std::endl;
-	
- }
- 
-
-
 
 
 void 
-AtomisticGenerator::change_specie(){
-  std::cout << "Begin Change_specie " << std::endl;
+AtomisticGenerator::change_specie(std::string preserve){
+ 
   std::set<ID> IDs = _as->get_IDset();
 
   std::map<std::string , std::string> assign;
@@ -260,52 +226,121 @@ AtomisticGenerator::change_specie(){
 
   for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); reg++){
 
- std::string material;
- Material* material_pointer = NULL;
+    std::string material;
+    Material* material_pointer = NULL;
 
- material_pointer = _as->get_device()->get_material( (*reg) );
- material = material_pointer->get_name();
- std::cout << "Material in change_specie is " << material << std::endl;
- assign.clear();
+    material_pointer = _as->get_device()->get_material( (*reg) );
+    material = material_pointer->get_name();
+    assign.clear();
 
- //If some doping is present, a strategy must be studied and implemented here,
- // as we can choose arbitrarily species name (e.g. calling one doping Silicon Si1 and another one Si2)
- if ( material.compare("Si") == 0 ) {assign["A"] = "Si";}
- else if ( material.compare("GaN") == 0) {assign["A"] = "Ga"; assign["B"] = "N";}
- else if ( material.compare("GaAs") == 0) {assign["A"] = "Ga"; assign["B"] = "As";}
- else if ( material.compare("AlAs") == 0) {assign["A"] = "Al"; assign["B"] = "As";}
- else if ( material.compare("Diamond") == 0 ) {assign["A"] = "C";}
+    //If some doping is present, a strategy must be studied and implemented here,
+    // as we can choose arbitrarily species name (e.g. calling one doping Silicon Si1 and another one Si2)
+    if ( material.compare("Si") == 0 ) {assign["A"] = "Si";}
+    else if ( material.compare("GaN") == 0) {assign["A"] = "Ga"; assign["B"] = "N";}
+    else if ( material.compare("GaAs") == 0) {assign["A"] = "Ga"; assign["B"] = "As";}
+    else if ( material.compare("AlAs") == 0) {assign["A"] = "Al"; assign["B"] = "As";}
+    else if ( material.compare("Diamond") == 0 ) {assign["A"] = "C";}
  
- const std::map<std::string, std::string>::iterator assign_last = assign.end();
+    const std::map<std::string, std::string>::iterator assign_last = assign.end();
  
- std::cout << "Assign[A] " << assign["A"] << std::endl; 
-std::cout << "Assign[B] " << assign["B"] << std::endl; 
- //Cycle upon all atoms and change specie according to assign map
- Point p(0.0, 0.0, 0.0);
- for ( std::vector<Atom>::iterator atom = _super_basis.begin(); atom != _super_basis.end(); atom++){
-   for (std::vector<Elem*>::iterator it = _structure_elements.begin(); it != _structure_elements.end(); it++){
-     p(0) = (*atom).position(1) / scale;
-     Elem* elem = *it;
-     if ( elem->subdomain_id() == *reg){
-     if ( elem->contains_point(p) ) {
-       if ( assign.find( (*atom).specie ) != assign_last ){
-       std::string tmp =  assign[(*atom).specie];
-       (*atom).specie = tmp;
-       _structure_basis.push_back(*atom); } 
-}
-     }
- }
+    std::cout << "Assign[A] " << assign["A"] << std::endl; 
+    std::cout << "Assign[B] " << assign["B"] << std::endl; 
+    //Cycle upon all atoms and change specie according to assign map
+    Point p(0.0, 0.0, 0.0);
 
- }
 
+    //Different strategies if preserving conventional cell or preserving basis are needed
+    if (preserve.compare("none") == 0)
+      {
+
+	for ( std::vector<Atom>::iterator atom = _super_basis.begin(); atom != _super_basis.end(); atom++){
+	  for (std::vector<Elem*>::iterator it = _structure_elements.begin(); it != _structure_elements.end(); it++){
+	    p(0) = (*atom).position(1) / scale;
+	    Elem* elem = *it;
+	    if ( elem->subdomain_id() == *reg){
+	      if ( elem->contains_point(p) ) {
+		if ( assign.find( (*atom).specie ) != assign_last ){
+		  std::string tmp =  assign[(*atom).specie];
+		  (*atom).specie = tmp;
+		  (*atom).id = *reg;
+		  _structure_basis.push_back(*atom); } 
+	      }
+	    }
+	  }
+
+	}
+      }
+
+
+    if (preserve.compare("lattice") == 0)
+      {
+
+	Atom tmp_atom;
+	for ( std::vector<Tensor1>::iterator lattice = _super_lattice.begin(); lattice != _super_lattice.end(); lattice++){
+	  for (std::vector<Elem*>::iterator it = _structure_elements.begin(); it != _structure_elements.end(); it++){
+	    p(0) = (*lattice)(1) / scale;
+	    Elem* elem = *it;
+	    if ( elem->subdomain_id() == *reg){
+	      if ( elem->contains_point(p) ) {
+
+		for ( std::vector<Atom>::iterator atom = _crystal_basis.begin(); atom != _crystal_basis.end(); atom++){
+
+		  //tmp_atom.specie = (*atom).specie;
+		  //		    std::cout << "specie" << tmp_atom.specie <<std::endl;
+		  tmp_atom.position=_local_origin +  (*lattice) + _rotation*_prim_vec*(*atom).position;
+		  tmp_atom.id = *reg;
+		  if ( assign.find( (*atom).specie ) != assign_last ){
+		    std::string tmp =  assign[(*atom).specie];
+		    tmp_atom.specie = tmp;
+		    _structure_basis.push_back(tmp_atom); } 
+
+		}
+	      }
+	    }
+	  }
+
+	}
+      }
+
+    if (preserve.compare("conventional") == 0)
+      {
+
+	Atom tmp_atom;           
+	for ( std::vector<Tensor1>::iterator conv = _super_conv.begin(); conv != _super_conv.end(); conv++){
+	   for (std::vector<Elem*>::iterator it = _structure_elements.begin(); it != _structure_elements.end(); it++){
+	    p(0) = (*conv)(1) / scale;
+	    Elem* elem = *it;
+	    if ( elem->subdomain_id() == *reg){
+	      if ( elem->contains_point(p) ) {
+		for ( std::vector<Tensor1>::iterator conv_lattice_basis_it = _conv_lattice_basis.begin(); conv_lattice_basis_it != _conv_lattice_basis.end(); conv_lattice_basis_it++){
+		  for ( std::vector<Atom>::iterator atom = _crystal_basis.begin(); atom != _crystal_basis.end(); atom++){
+		    tmp_atom.position=_local_origin +  (*conv) + (*conv_lattice_basis_it) + _rotation*_prim_vec*(*atom).position;
+		    tmp_atom.id = *reg;
+		    if ( assign.find( (*atom).specie ) != assign_last ){
+		      std::string tmp =  assign[(*atom).specie];
+		      tmp_atom.specie = tmp;
+		      _structure_basis.push_back(tmp_atom); } 
+		  }
+		}
+	      }
+	    }
+
+	  }
+	}
+      }
+
+      
   }
-
-
 }
 
 
 
 
+
+void AtomisticGenerator::set_cutoff()
+{
+  _cutoff["Si"] = 1.81;
+};
 
 
 
@@ -324,6 +359,7 @@ std::cout << "Assign[B] " << assign["B"] << std::endl;
   Tensor1 tmp_check, tmp_conv;
   bool check_boundary, check_boundary2;
 
+ 
   //Check values. l1,l2,l3 cannot be unwisely large (no more than (1um)^3)
   assert((l1*l2*l3) < 1e+12);
 
@@ -343,18 +379,18 @@ std::cout << "Assign[B] " << assign["B"] << std::endl;
 
   //Set supercell periodical vectors
   Tensor2Gen lmat(0);
-  lmat(1,1) = (n1 + 1); lmat(2,2) = (n2 + 1); lmat(3,3) = (n3 +1);
-  _period = _conv_vect * lmat;
-  std::cout << "Period is " << _period << std::endl;
 
-  std::cout << "supercell lenghts are " << l1 << " " << l2 << " " << l3 << std::endl;
-  std::cout << "conventional cell lenghts are " << conv_l1 << " " << conv_l2 << " " << conv_l3 << std::endl;
+  // Periodicity along x direction is set to a big value (double of structure lenght) (non periodic along x)
+  lmat(1,1) = (n1 + 1) * 2; 
+  lmat(2,2) = (n2 + 1); lmat(3,3) = (n3 +1);
+
+  _period = _conv_vect * lmat;
+
   //Define vectors with same direction of conventional cell vectors, but with size specifed by l1,l2,l3
   supercell_vect(1,1) = _conv_vect(1,1) * (l1 / conv_l1); supercell_vect(2,1) = _conv_vect(2,1) * (l1 / conv_l1); supercell_vect(3,1) = _conv_vect(3,1) * (l1 / conv_l1);
   supercell_vect(1,2) = _conv_vect(1,2) * (l2 / conv_l2); supercell_vect(2,2) = _conv_vect(2,2) * (l2 / conv_l2); supercell_vect(3,2) = _conv_vect(3,2) * (l2 / conv_l2);
   supercell_vect(1,3) = _conv_vect(1,3) * (l3 / conv_l3); supercell_vect(2,3) = _conv_vect(2,3) * (l3 / conv_l3); supercell_vect(3,3) = _conv_vect(3,3) * (l3 / conv_l3);
   inv_supercell_vect = inv(supercell_vect);
-  std::cout << "supercell_vect are " << supercell_vect ;
 
   for (i = -1 ; i <= n1 + 1 ; i++){
     for (j = -1 ; j <= n2 + 1 ; j++){
@@ -363,11 +399,11 @@ std::cout << "Assign[B] " << assign["B"] << std::endl;
 	conv_iterator = _conv_lattice_basis.begin();
 
 	//Fill conventional edges basis (super_conv)
-	//~ if ( (i != -1)&&(i <= n1 )&&(j != -1)&&(j <= n2)&& (l != -1)&&(l <= n3) ){
-	//~ tmp_conv(1) = (i * _conv_vect(1,1)) + (j * _conv_vect(1,2)) + (l * _conv_vect(1,3));
-	//~ tmp_conv(2) = (i * _conv_vect(2,1)) + (j * _conv_vect(2,2)) + (l * _conv_vect(2,3));
-	//~ tmp_conv(3) = (i * _conv_vect(3,1)) + (j * _conv_vect(3,2)) + (l * _conv_vect(3,3));
-	//~ super_conv.push_back(tmp_conv);}
+	if ( (i != -1)&&(i <= n1 )&&(j != -1)&&(j <= n2)&& (l != -1)&&(l <= n3) ){
+	tmp_conv(1) = (i * _conv_vect(1,1)) + (j * _conv_vect(1,2)) + (l * _conv_vect(1,3));
+	tmp_conv(2) = (i * _conv_vect(2,1)) + (j * _conv_vect(2,2)) + (l * _conv_vect(2,3));
+	tmp_conv(3) = (i * _conv_vect(3,1)) + (j * _conv_vect(3,2)) + (l * _conv_vect(3,3));
+	_super_conv.push_back(tmp_conv);}
 
 	do{ 
 	  //Assign lattice point position 
@@ -395,7 +431,7 @@ std::cout << "Assign[B] " << assign["B"] << std::endl;
 
 	      do{
 		basis_atom = (*basis_iterator);
-                                    basis_atom.position=lattice_point+_rotation*_prim_vec*(*basis_iterator).position;
+                                    basis_atom.position = lattice_point+_rotation*_prim_vec*(*basis_iterator).position;
 		
 		_super_basis.push_back(basis_atom);
 		basis_iterator++;
@@ -414,7 +450,7 @@ std::cout << "Assign[B] " << assign["B"] << std::endl;
 
 	    do{
 	      basis_atom = (*basis_iterator);
-	      basis_atom.position = lattice_point+_rotation*_prim_vec*(*basis_iterator).position;
+	      basis_atom.position = lattice_point + _rotation*_prim_vec*(*basis_iterator).position;
 		
 	      //Check if basis atom is inside bonduary when preserve_basis is off
 	      if ((i >= n1) || (i <= 0) || (j >= n2) || (j<= 0) || (l >= n3) || (l <= 0)) {
@@ -442,9 +478,6 @@ std::cout << "Assign[B] " << assign["B"] << std::endl;
 void 
 AtomisticGenerator::set_lattice_type(const std::string lattice_name)
 {
-#ifdef DEBUG
-  std::cerr << "Calling set_lattice_type ... ";
-#endif
 
   Tensor2Gen prim_vec_dir;
 
@@ -497,7 +530,7 @@ AtomisticGenerator::set_lattice_type(const std::string lattice_name)
 
     _prim_vec(1,1) = prim_vec_dir(1,1) * ax; _prim_vec(2,1) = prim_vec_dir(2,1) * ax; 
     _prim_vec(1,2) = prim_vec_dir(1,2) * ax; _prim_vec(2,2) = prim_vec_dir(2,2) * ax; 
-    _prim_vec(3,3) = prim_vec_dir(3,3) * az;
+    _prim_vec(1,3) = 0.0; _prim_vec(2,3) = 0.0; _prim_vec(3,3) = prim_vec_dir(3,3) * az;
 
   } 
 
@@ -517,19 +550,11 @@ AtomisticGenerator::set_lattice_type(const std::string lattice_name)
 
   else std::cout << "Lattice type " << _lattice_type << " doesn't exist" << std::endl;
   
-#ifdef DEBUG
-  std::cerr << "done" << std::endl;
-#endif
-
 };
 
 
 void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const std::string specie1, const std::string specie2, double u)
 {
-#ifdef DEBUG
-  std::cerr << "Calling set_crystal_basis ...";
-#endif
-
   //Set the atomic basis.
   //Vectors are defined in primitive vectors basis.
   _basis_type = basis_name;
@@ -538,7 +563,7 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
   assert(_crystal_basis.empty());
 
   if (_basis_type.compare("cubic") == 0){
-    if (specie1.compare("not_specified") == 0) tmp.specie = "Po";
+    if (specie1.compare("not_specified") == 0) tmp.specie = "A";
     else tmp.specie = specie1;
      tmp.position(1) = 0.0; tmp.position(2) = 0.0; tmp.position(3) = 0.0;
     _crystal_basis.push_back(tmp);
@@ -546,7 +571,7 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
 
   else if (_basis_type.compare("diamond") == 0){
  
-    if (specie1.compare("not_specified") == 0) tmp.specie = "C";
+    if (specie1.compare("not_specified") == 0) tmp.specie = "A";
     else tmp.specie = specie1;
      tmp.position(1) = -1.0 / 8.0; tmp.position(2) = -1.0/8.0; tmp.position(3) = -1.0/8.0;
     _crystal_basis.push_back(tmp);
@@ -557,12 +582,12 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
 
   else if (_basis_type.compare("zincblende") == 0){
 
-    if (specie1.compare("not_specified") == 0) tmp.specie = "Ga";
+    if (specie1.compare("not_specified") == 0) tmp.specie = "A";
     else tmp.specie = specie1;
     tmp.position(1) = 0.0; tmp.position(2) = 0.0; tmp.position(3) = 0.0;
     _crystal_basis.push_back(tmp);
  
-    if (specie1.compare("not_specified") == 0) tmp.specie = "As";
+    if (specie1.compare("not_specified") == 0) tmp.specie = "B";
     else tmp.specie = specie2;
     tmp.position(1) = 1.0 / 4.0; tmp.position(2) = 1.0 / 4.0; tmp.position(3) = 1.0 / 4.0;
     _crystal_basis.push_back(tmp);
@@ -570,7 +595,7 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
 
   else if (_basis_type.compare("cristobalite") == 0){
 
-    if (specie1.compare("not_specified") == 0) tmp.specie = "Si";
+    if (specie1.compare("not_specified") == 0) tmp.specie = "A";
     else tmp.specie = specie1;
     tmp.position(1) = 1.0 / 8.0; tmp.position(2) = 1.0 / 8.0; tmp.position(3) = 1.0 / 8.0;
     _crystal_basis.push_back(tmp);
@@ -578,7 +603,7 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
     tmp.position(1) = -1.0 / 8.0; tmp.position(2) = -1.0 / 8.0; tmp.position(3) = -1.0 / 8.0;
     _crystal_basis.push_back(tmp);
 
-    if (specie1.compare("not_specified") == 0) tmp.specie = "O";
+    if (specie1.compare("not_specified") == 0) tmp.specie = "B";
     else tmp.specie = specie2;
     tmp.position(1) = 0.0; tmp.position(2) = 0.0; tmp.position(3) = 0.0;
     _crystal_basis.push_back(tmp);
@@ -595,12 +620,12 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
 
   else if (_basis_type.compare("NaCl") == 0){
 
-    if (specie1.compare("not_specified") == 0) tmp.specie = "Na";
+    if (specie1.compare("not_specified") == 0) tmp.specie = "A";
     else tmp.specie = specie1;
     tmp.position(1) = 0.0; tmp.position(2) = 0.0; tmp.position(3) = 0.0;
     _crystal_basis.push_back(tmp);
 
-    if (specie1.compare("not_specified") == 0) tmp.specie = "Cl";
+    if (specie1.compare("not_specified") == 0) tmp.specie = "B";
     else tmp.specie = specie2;
     tmp.position(1) = 1.0 / 2.0; tmp.position(2) =1.0 / 2.0; tmp.position(3) = 1.0 / 2.0;
     _crystal_basis.push_back(tmp);
@@ -610,7 +635,7 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
   else if(_basis_type.compare("wurtzite") == 0){
 
     if (u == 0.0) u = 3.0 / 8.0;
-    if (specie1.compare("not_specified") == 0) tmp.specie = "Ga";
+    if (specie1.compare("not_specified") == 0) tmp.specie = "A";
     else tmp.specie = specie1;
     tmp.position(1) = 1.0 / 3.0; tmp.position(2) = 2.0 / 3.0; tmp.position(3) = 0.0;
     _crystal_basis.push_back(tmp);
@@ -618,7 +643,7 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
     tmp.position(1) = 2.0 / 3.0; tmp.position(2) = 1.0 / 3.0; tmp.position(3) = 1.0 / 2.0;
     _crystal_basis.push_back(tmp);
 
-    if (specie1.compare("not_specified") == 0) tmp.specie = "N";
+    if (specie1.compare("not_specified") == 0) tmp.specie = "B";
     else tmp.specie = specie2;
      tmp.position(1) = 1.0 / 3.0; tmp.position(2) = 2.0 / 3.0; tmp.position(3) = u;
     _crystal_basis.push_back(tmp);
@@ -630,7 +655,7 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
   else if (_basis_type.compare("TiO2") == 0) {
 
    if (u == 0.0) u = 0.25;
-   if (specie1.compare("not_specified") == 0) tmp.specie = "Ti";
+   if (specie1.compare("not_specified") == 0) tmp.specie = "A";
    else tmp.specie = specie1;
    tmp.position(1) = -1.0 / 8.0; tmp.position(2) = 5.0 / 8.0; tmp.position(3) = 1.0 / 4.0;
    _crystal_basis.push_back(tmp);
@@ -638,7 +663,7 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
    tmp.position(1) = 1.0 / 8.0; tmp.position(2) = 3.0 / 8.0; tmp.position (3) = 3.0 / 4.0;
    _crystal_basis.push_back(tmp);
 
-   if (specie1.compare("not_specified") == 0) tmp.specie = "O";
+   if (specie1.compare("not_specified") == 0) tmp.specie = "B";
    else tmp.specie = specie1;
    tmp.position(1) = -u; tmp.position(2) = 0.25 - u; tmp.position(3) = 2.0 * u;
    _crystal_basis.push_back(tmp);
@@ -670,8 +695,9 @@ assert(~(_crystal_basis.empty()));
 void AtomisticGenerator::set_prim_miller(Tensor2Gen cut_planes)
 {
 	//Reduce cut planes if they're not in minimal integer form
+ 
 	cut_planes = reduce_vector(cut_planes);
-	
+ 
   //Transform miller indexes in primitive reciprocal vectors basis 
   //Needed when conventional cell differs from primitive cell
   Tensor2Gen prim_miller_basis = reciprocal(_prim_vec);
@@ -705,6 +731,7 @@ void AtomisticGenerator::set_prim_miller(Tensor2Gen cut_planes)
     scale_to_int(_prim_miller);
 };
 
+ 
 };
 
 
@@ -720,32 +747,61 @@ void AtomisticGenerator::make_conv_cell()
   Tensor1 m1,m2,m3,select_vect(0);
   Tensor1 conv1, conv2, conv3;
   int i;
-std::cout << "1" << std::endl;
-	std::cout << "prim_vec is " << _prim_vec << std::endl;
   Tensor2Gen prim_miller_basis;
+
   prim_miller_basis = reciprocal(_prim_vec);
   _conv_prim = inv(_prim_vec) * prim_miller_basis * _prim_miller;
   scale_to_int(_conv_prim);
   _conv_vect = _prim_vec * _conv_prim;
-std::cout << "2" << std::endl;
+
   for (i = 1; i <= 3; i++) {conv1(i) = _conv_vect(i, 1); conv2(i) = _conv_vect(i, 2); conv3(i) = _conv_vect(i, 3);};
 
-  //If not all miller indexes are specified, build others as a default 
-  if (norm(conv1) < tol) {conv1(1) = - conv3(3); conv1(2) = 0.0; conv1(3) = conv3(1);}
-  
-  //If only z and x miller indexes are specifed, get y miller index
-  if (norm(conv2) < tol) {
+  //At least x growth index must be specified (growth direction in 1D structure)
+  assert (norm(conv1) > tol);
+
+  // If no other indexes are specified, set y growth direction by default (orthogonal to x index)
+  if ((norm(conv2) < tol)&&(norm(conv3) < tol)) {
+
+   std::cerr << "Warning: only x growht direction is defined. Building other direction orthogonal " << std::endl;
+
+  conv2(1) = - conv1(3); conv2(2) = 0.0; conv2(3) = conv1(1);
+  conv3 =  vectorProduct(conv1, conv2);
+  conv3 = conv3 / norm(conv3);
+}
+
+  //If only one index is not specified, build it by default (orthogonal)
+  else if (norm(conv2) < tol){
+
+std::cerr << "Warning: only x and z growht direction is defined. Building y direction orthogonal " << std::endl;
+
     conv2 =  vectorProduct(conv1, conv3);
     conv2 = conv2 / norm(conv2);
+  }
+
+  else if (norm(conv3) < tol){
+
+std::cerr << "Warning: only x and y growht direction is defined. Building z direction orthogonal " << std::endl;
+
+    conv3 =  vectorProduct(conv1, conv2);
+    conv3 = conv3 / norm(conv3);
   };
-std::cout << "3" << std::endl;
+
+
+//   //If not all miller indexes are specified, build others as a default 
+//   if (norm(conv1) < tol) {conv1(1) = - conv3(3); conv1(2) = 0.0; conv1(3) = conv3(1);}
+  
+//   //If only z and x miller indexes are specifed, get y miller index
+//   if (norm(conv2) < tol) {
+//     conv2 =  vectorProduct(conv1, conv3);
+//     conv2 = conv2 / norm(conv2);
+//   };
+
 
   for (i = 1; i <= 3; i++) {_conv_vect(i, 1) = conv1(i); _conv_vect(i, 2) = conv2(i); _conv_vect(i, 3) = conv3(i);};
-  std::cout << "conv_vect is " << _conv_vect;
+  
 
   _conv_prim = inv(_prim_vec) * _conv_vect;
   scale_to_int(_conv_prim);
-  std::cout << "conv_prim is " << _conv_prim;
   _conv_vect = _prim_vec * _conv_prim;
 
   // Calculate distance between equivalent planes for every cut plane
@@ -774,6 +830,17 @@ void AtomisticGenerator::make_conv_basis()
   vec_y(1) = _conv_vect(1,2); vec_y(2) = _conv_vect(2,2); vec_y(3) = _conv_vect(3,2);
   vec_z(1) = _conv_vect(1,3); vec_z(2) = _conv_vect(2,3); vec_z(3) = _conv_vect(3,3);
 
+
+ //If z and y vectors are not orthogonal, build rotation vector y as a vector orthogonal to x
+  if ( (vec_z * vec_y ) > 1e-10) {
+
+    if ( (vec_y * vec_x) < 1e-10 ) {vec_z = vectorProduct(vec_x, vec_y);}
+    else if  ( (vec_z * vec_x) < 1e-10)  {vec_y = vectorProduct(vec_x, vec_z);}
+    else {std::cout << "Warning: at least x or y growth direction should be orthogonal to z growth direction" << std::endl;}
+
+  }
+
+
   //vec_y = vectorProduct(vec_x, vec_z);
   if (((vec_x * vec_y) < 1e-10) && ((vec_x * vec_z) < 1e-10) && ((vec_y * vec_z) < 1e-10)) { 
 
@@ -789,6 +856,7 @@ void AtomisticGenerator::make_conv_basis()
     rot_tmp(1,1) = 1.0; rot_tmp(1,2) = 0.0; rot_tmp(1,3) = 0.0;
     rot_tmp(2,1) = 0.0; rot_tmp(2,2) = 1.0; rot_tmp(2,3) = 0.0;
     rot_tmp(3,1) = 0.0; rot_tmp(3,2) = 0.0; rot_tmp(3,3) = 1.0;
+   std::cout << "Warning: no rotation has been done, orientation of atoms in space depends on primitive vectors definitions" << std::endl;
   }
  
   //Also a user-defined rotation is allowed, which put the axes in a direction different
@@ -807,9 +875,9 @@ void AtomisticGenerator::make_conv_basis()
   lower_3 = int(std::min(0.0,std::min(_conv_prim(3,1),std::min(_conv_prim(3,2),_conv_prim(3,3)))));
   upper_3 = int(std::max(0.0,std::max(_conv_prim(3,1),std::max(_conv_prim(3,2),_conv_prim(3,3)))));
 
-  for (int i = lower_1; i <= upper_1; i++){
-    for (int j = lower_2; j <= upper_2; j++){
-      for (int l = lower_3; l <= upper_3; l++){
+  for (int i = lower_1 - 1; i <= upper_1 + 1; i++){
+    for (int j = lower_2 - 1; j <= upper_2 + 1; j++){
+      for (int l = lower_3 - 1; l <= upper_3 + 1; l++){
 
 	prim_position(1) = double(i); prim_position(2) = double(j); prim_position(3) = double(l);
 	
@@ -826,7 +894,6 @@ void AtomisticGenerator::make_conv_basis()
 	if (check_boundary){
 	  tmp_position = _rotation * _prim_vec * prim_position;
 	  _conv_lattice_basis.push_back(tmp_position);
-	  std::cout << "In conv_lattice_basis I put atom in " << tmp_position;
 }	 
 
       };
@@ -836,10 +903,182 @@ void AtomisticGenerator::make_conv_basis()
 };
 
 
+
+//Bond map generation (cluster)
+unsigned int**  AtomisticGenerator::bond_map_gen(std::vector<Atom> &basis){
+
+  int i, j, n, n_atom = basis.size();
+  unsigned int**  bond_map;
+  double cutofftmp;
+
+#ifdef DEBUG
+  std::cout << "Building bond map" << std::endl;
+#endif
+
+  set_cutoff();
+ 
+  //Dynamic Allocation of bond_map and 0 initialization
+  bond_map = new unsigned int* [n_atom];
+  for (i = 0; i < n_atom; i++)  {
+    bond_map[i] = new unsigned int [9];
+    for (j = 0; j < 9; j++) bond_map[i][j] = 0;
+  }  
+
+  for (i = 0; i < n_atom; i ++){
+  
+    for (j = i + 1; j < n_atom; j ++){
+
+    cutofftmp = _cutoff[basis[i].specie.c_str()] + _cutoff[basis[j].specie.c_str()];
+
+    if ( cutofftmp == 0.0 ) std::cout << "WARNING, A CUTOFF DISTANCE IS NOT DEFINED " << std::endl;    
+   
+      {
+ 
+      if ( norm( basis[i].position - basis[j].position) < cutofftmp ){
+	
+	for (n = 0; n < 8; n++){
+	  if (bond_map[i][n] == 0) {bond_map[i][n] = j; bond_map[i][8]++; break;}
+	}
+	
+	for (n = 0; n < 8; n++){
+	  if (bond_map[j][n] == 0) {bond_map[j][n] = i; bond_map[j][8]++; break;} 
+	}
+      }
+
+      }
+
+    }
+  }
+
+  return bond_map;  
+};
+
+
+
+//Hydrogen passivation. Atom basis and associated bond map are needed
+void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis, unsigned int** bond_map){
+
+  Tensor1 u, u1, u2, r1, r2, r3, O;
+  double R1, R2;
+  const double sq3 = sqrt(3.0);
+  const double d = 1.0;
+  int i;
+  std::vector<Atom> hydrogens;
+  Atom tmp;
+  double sin109, cos109;
+
+  sin109 = sin ( ( 180.0 / ( asin(1.0) * 2.0 ) ) * 109.471 );
+  cos109 = cos ( ( 180.0 / ( asin(1.0) * 2.0 ) ) * 109.471 );
+
+
+ if (bond_map == NULL) {
+bond_map = bond_map_gen(basis);
+ }
+
+  for (i = 0; i < basis.size(); i++){
+   
+    if ( bond_map[i][8] == 3 ){
+
+      O = basis[i].position;
+      r1 = basis[ bond_map[i][0] ].position - O;
+      r2 = basis[ bond_map[i][1] ].position - O;
+      r3 = basis[ bond_map[i][2] ].position - O;
+
+      u1 = r1 + r2 + r3;
+      R1 = norm(u1);
+      u1 = -d * (u1/R1);
+
+      tmp.specie = "H";
+      tmp.flag = basis[i].flag;
+      tmp.position = O + u1;
+      hydrogens.push_back(tmp);
+    }
+
+    else if  ( bond_map[i][8] == 2 ){
+
+      O = basis[i].position;
+      r1 = basis[ bond_map[i][0] ].position - O;
+      r2 = basis[ bond_map[i][1] ].position - O;
+
+      u1 = r1 + r2;
+      u2 = vectorProduct(r1, r2);
+      R1 = norm(u1); R2 = norm(u2);
+
+      u = - (u1 / R1) - sq3 * (u2 / R2);
+      u = d * (u / 2.0);
+
+      tmp.specie = "H";
+      tmp.flag = basis[i].flag;
+      tmp.position = O + u;
+      hydrogens.push_back(tmp);
+
+      u = - (u1 / R1) + sq3 * (u2 / R2);
+      u = d * (u / 2.0);
+
+      tmp.specie = "H";
+      tmp.flag = basis[i].flag;
+      tmp.position = O + u;
+      hydrogens.push_back(tmp);
+    }
+
+    else if (bond_map[i][8] == 1){
+
+      O = basis[i].position;
+      r1 = basis[ bond_map[i][0] ].position - O;
+
+      Tensor2Gen vect_rot(0);
+      vect_rot(1,1) = cos109; vect_rot(1,2) = sin109; vect_rot(1,3) = 0.0;
+      vect_rot(2,1) = sin109; vect_rot(2,2) = cos109; vect_rot(2,3) = 0.0;
+      vect_rot(3,1) = 0.0; vect_rot(3,2) = 0.0; vect_rot(3,3) = 1.0;
+
+      u = vect_rot * r1;
+      R1 = norm(r1);
+      r2 = u * R1;
+      u = d * (u / norm(u));
+
+      tmp.specie = "H";
+      tmp.position = O + u;
+      tmp.flag = basis[i].flag;
+      hydrogens.push_back(tmp);
+
+      u1 = r1 + r2;
+      u2 = vectorProduct(r1, r2);
+      R1 = norm(u1); R2 = norm(u2);
+
+      u = - (u1 / R1) - sq3 * (u2 / R2);
+      u = d * (u / 2.0);
+
+      tmp.specie = "H";
+      tmp.position = O + u;
+      tmp.flag = basis[i].flag;
+      hydrogens.push_back(tmp);
+
+      u = - (u1 / R1) + sq3 * (u2 / R2);
+      u = d * (u / 2.0);
+
+      tmp.specie = "H";
+      tmp.flag = basis[i].flag;
+      tmp.position = O + u;
+      hydrogens.push_back(tmp);
+    }
+
+    else if (bond_map[i][8] != 4) {std::cout << "Warning! An atom is bonded to 0 or more than 4 atoms" << std::endl;}
+
+  }
+  for (i = 0; i < hydrogens.size(); i++) {basis.push_back( hydrogens[i] );}
+
+
+
+};
+
+
+
+
 //Some data manipulation function useful only in this class
 
 
-Tensor2Gen AtomisticGenerator::reciprocal(Tensor2Gen real_basis)
+Tensor2Gen 
+AtomisticGenerator::reciprocal(Tensor2Gen real_basis)
 {
   //Build the reciprocal basis related to input 2-rank tensor
   Tensor1 a1,a2,a3;
@@ -872,7 +1111,8 @@ Tensor2Gen AtomisticGenerator::reciprocal(Tensor2Gen real_basis)
 };
 
 
-int AtomisticGenerator::compare_tol(double a, double b)
+int 
+AtomisticGenerator::compare_tol(double a, double b)
 {
   //Comparison routine with a tolerance defined as internal constant.
   //If absolute value of difference between a and b is minor than tolerance, 
@@ -882,7 +1122,8 @@ int AtomisticGenerator::compare_tol(double a, double b)
 };
 
 
-int AtomisticGenerator::double_to_int_cast_checked(double a)
+int 
+AtomisticGenerator::double_to_int_cast_checked(double a)
 {
   //Convert a double to the nearest integer, within a certain tolerance
   int n;
@@ -893,7 +1134,8 @@ int AtomisticGenerator::double_to_int_cast_checked(double a)
 };
 
 
-double AtomisticGenerator::double_to_int_value_checked(double a)
+double 
+AtomisticGenerator::double_to_int_value_checked(double a)
 {
   //Gives the double number equal to the integer nearest to a, within a certain tolerance
   double b;
@@ -902,7 +1144,8 @@ double AtomisticGenerator::double_to_int_value_checked(double a)
 };
 
 
-void AtomisticGenerator::double_to_int_value_checked(Tensor1& a)
+void 
+AtomisticGenerator::double_to_int_value_checked(Tensor1& a)
 {
   double tmp;;
 
@@ -912,7 +1155,8 @@ void AtomisticGenerator::double_to_int_value_checked(Tensor1& a)
 };
 
 
-int AtomisticGenerator::gcd(int a, int b)
+int 
+AtomisticGenerator::gcd(int a, int b)
 {
   //Calculate greater common denominator between integers
   //(return 0 if gcd(a,0) or gcd(0,a)
@@ -934,7 +1178,8 @@ int AtomisticGenerator::gcd(int a, int b)
 };
 
 
-Tensor1 AtomisticGenerator::reduce_vector(Tensor1 v)
+Tensor1 
+AtomisticGenerator::reduce_vector(Tensor1 v)
 {
   //Reduce a vector of double containing integer values to its minimal form
   Tensor1 v_tmp;
@@ -954,43 +1199,42 @@ Tensor1 AtomisticGenerator::reduce_vector(Tensor1 v)
 
 void AtomisticGenerator::scale_to_int(Tensor1& a)
 {
-  //Expand a double vector to a vector having same direction but integer values
-  //If vector is not in a reduced form (having integer values with gcd > 1) it's reduced
-  //If input is a zero vector, a zero vector is returned
-  double min_value;
-  int i;
+//Expand a double vector to a vector having same direction but integer values
+//If vector is not in a reduced form (having integer values with gcd > 1) it's reduced
+//If input is a zero vector, a zero vector is returned
+
+//Check if a is already integer
+  if ( (fabs(a(1) - round(a(1))) < tol) && (fabs(a(2) - round(a(2))) < tol) && (fabs(a(3) - round(a(3))) < tol) )
+    {
+      a(1) = double_to_int_value_checked(a(1));
+      a(2) = double_to_int_value_checked(a(2));
+      a(3) = double_to_int_value_checked(a(3));
+    }
+
+  else
+
+    {
+    
+  int i = 0;
   Tensor1 a_tmp;
-  Tensor1 a_nonzero;
 
-  if (norm(a) < tol) {a_tmp(1) = 0.0; a_tmp(2) = 0.0; a_tmp(3) = 0.0; a = a_tmp; }
-
-  else {
- 
-  a_nonzero = a;
-  if (compare_tol(a(1),0)) a_nonzero(1) = std::max(std::abs(a(2)),std::abs(a(3)));
-  if (compare_tol(a(2),0)) a_nonzero(2) = std::max(std::abs(a(1)),std::abs(a(3)));
-  if (compare_tol(a(3),0)) a_nonzero(3) = std::max(std::abs(a(2)),std::abs(a(1)));
- 
-  min_value = 0;
-  //Select minimum value in vector a (0 not allowed from previous constrain)
-  min_value = std::min(std::abs(a_nonzero(1)),std::min(std::abs(a_nonzero(2)),std::abs(a_nonzero(3))));
-
-  assert((min_value != 0) && (min_value > 0));
-
-  a_tmp=a * (1 / min_value);
-  i = 0;
   do{
     i = i + 1;
-    a = a_tmp * i;
+    a_tmp = a * i;
+   }while (  ( fabs (a_tmp(1) - round(a_tmp(1))) >= tol)  ||  (fabs(a_tmp(2) - round(a_tmp(2))) >= tol)  || (fabs(a_tmp(3) - round(a_tmp(3))) >= tol) );
 
-  }while ((std::abs(ceil(a(1)) - std::floor(a(1))) > (2 * tol)) && (std::abs(ceil(a(2)) - std::floor(a(2))) > (2 * tol)) && (std::abs(std::ceil(a(3)) - std::floor(a(3))) > (2 * tol)));
+  a(1) = a_tmp(1); a(2) = a_tmp(2); a(3) = a_tmp(3);
+
+    }
+
   a = reduce_vector(a);
-  }
 
-};
+}
 
 
-void AtomisticGenerator::scale_to_int(Tensor2Gen& a)
+
+void 
+AtomisticGenerator::scale_to_int(Tensor2Gen& a)
 {
   //Same of scale_to_int with Tensor1 argument, considering the columns of a 2-rank tensor
   Tensor1 tmp;
@@ -1010,7 +1254,8 @@ void AtomisticGenerator::scale_to_int(Tensor2Gen& a)
 };
 
 
-Tensor2Gen AtomisticGenerator::reduce_vector(Tensor2Gen a)
+Tensor2Gen 
+AtomisticGenerator::reduce_vector(Tensor2Gen a)
 {
   //Same of reduce_vector with Tensor1 argument, considering the columns of a 2-rank tensor
   Tensor1 tmp1,tmp2;

@@ -1,39 +1,46 @@
 #ifndef _ATOMISTICGENERATOR_H_
 #define _ATOMISTICGENERATOR_H_
 
+//--------------------------------------------------------------------------------------------
+
 #include <stdio.h>
 #include <cmath>
 #include <iostream>
 #include <vector>
 #include <fstream>
 #include <iomanip>
-#include <time.h>
+//#include <time.h>
 #include <map>
 #include <set>
-#include "AtomisticStructure.h"
 #include "Atom.h"
 #include "tensor.h"
 #include "ModelOptions.h"
 #include "TypeDefs.h"
 #include "Material.h"
 #include "mesh.h"
-#include "mesh_base.h"
-#include "elem.h"
-#include "point.h"
-#include "node.h"
+//#include "mesh_base.h"
+//#include "elem.h"
+//#include "point.h"
+//#include "node.h"
 
-//class Material;
+
+//forward declaration
+class AtomisticStructure;
+
+
+
+
 	
 class AtomisticGenerator 
 {
 
 public:
 
-  AtomisticGenerator(AtomisticStructure* const as);
+ //  AtomisticGenerator(AtomisticStructure* const as);
 
-  ~AtomisticGenerator(void);
+//   ~AtomisticGenerator(void);
 
-  static AtomisticGenerator* create(AtomisticStructure* const as);
+  static AtomisticGenerator* create(AtomisticStructure* const as, unsigned int dimension);
 
   //! Tolerance defined internally for casting and comparison
   static const double tol;
@@ -54,10 +61,10 @@ public:
   //Print atom_basis in xyz file (for debugging)
   void print_basis(std::vector<Atom> &basis, const std::string filename);
  
-private:
+protected:
 
   //! Change atom species according to regions
-  void change_specie();
+  void change_specie(std::string preserve);
 
   //! Primitive vectors in real space, stored by columns in a 3x3 matrix
   Tensor2Gen _prim_vec;
@@ -68,7 +75,7 @@ private:
   Tensor2Gen _conv_prim;
 
   //! Conventional cell basis atoms
-  std::vector<Tensor1> conv_lattice_basis;
+  std::vector<Tensor1> _conv_lattice_basis;
 
   //!Rotation tensor
   Tensor2Gen _rotation;
@@ -84,10 +91,7 @@ private:
 
   //! Atomic basis arrays
   std::vector<Atom> _crystal_basis;
-  
-  //! Conventional cell lattice points
-  std::vector<Tensor1> _conv_lattice_basis;
-  
+    
   //! Supercell atom basis points
   std::vector<Atom> _super_basis;
 
@@ -96,9 +100,34 @@ private:
 
   //!Supercell lattice points
   std::vector<Tensor1> _super_lattice;
+
+  //! Supercell conventional cell edges points
+  std::vector<Tensor1> _super_conv;
+
+  //! Missing super_conv (vector of conventional cells edges). 
+  //!If it will be needed remember to uncomment proper lines in make_supercell!!!!!!!!!!!!!!!!
+
+
+ //Bond map generation
+  unsigned int **   bond_map_gen(std::vector<Atom> &basis);
+
+  // Build cutoff distancies map
+  void set_cutoff();
+
+
+  //Passivation routine for bulk structures (periodicization is achieved in derived classes, in hydrogenation routine)
+  void passivate_cluster(std::vector<Atom> &basis, unsigned int** bond_map = NULL);
+
+
+  //! Real passivation routine (implemented in derived classes, it takes in account periodicity)
+  virtual void passivate() = 0;
+
   
   //!Supercell periodicity vectors
   Tensor2Gen _period;
+
+  //Map for cutoff parameters
+  std::map<std::string, double> _cutoff;
 
   //! AtomisticStructure instance which invoked AtomisticGenerator 
   //Note: pointer is constant, variable pointed is not constant
@@ -126,44 +155,46 @@ private:
   //! A function to build supercells
   void make_supercell(double l1, double l2, double l3, bool preserve_basis, bool preserve_conv);
 
-  //! Function with common operations for building atomistic structure (local calls to build1D, build2D, build3D)
-  void build();
+  //! Virtual function for building up the structure. 
+  virtual void build() = 0;
 
-  //! Function which builds 1D atomistic structure (one conventional cella in 0 directions)
-  void build1D();
+
 
 
   //Some data manipulation function useful only in this class
+
+
+
   
   //Calculate a reciprocal basis from a real basis
-  Tensor2Gen reciprocal(Tensor2Gen real_basis);
+  static Tensor2Gen reciprocal(Tensor2Gen real_basis);
   
   //Find greater common denominator between two integers
-  int gcd(int a, int b);
+  static int gcd(int a, int b);
 
   //Reduce vector, dividing its members for GCD (cast from double to int temporary)
-  Tensor1 reduce_vector(Tensor1 v);
+  static Tensor1 reduce_vector(Tensor1 v);
 
   //Reduce vectors contained in a 2D tensor
-  Tensor2Gen reduce_vector(Tensor2Gen a);
+  static Tensor2Gen reduce_vector(Tensor2Gen a);
 
   //Comparison with tolerance
-  int compare_tol(double a, double b);
+  static int compare_tol(double a, double b);
 
   //Casting from double to int, checking that fractional part is minor than an internal  tolerance
-  int double_to_int_cast_checked(double a);
+  static int double_to_int_cast_checked(double a);
 
   //Reduce double to nearest integer and checked whatever difference is greater than internal tolerance
-  double double_to_int_value_checked(double a);
+  static double double_to_int_value_checked(double a);
 
   //same on entire tensor (in place)
-  void double_to_int_value_checked(Tensor1& a);
+  static void double_to_int_value_checked(Tensor1& a);
 
   //Scale a vector with fractional parts to all integer vector
-  void scale_to_int(Tensor1& a); 
+  static void scale_to_int(Tensor1& a); 
 
   //Same work with 3 vectors composing a tensor2Gen
-  void scale_to_int(Tensor2Gen& a);
+  static void scale_to_int(Tensor2Gen& a);
 
 };
 
@@ -172,7 +203,7 @@ private:
 
 
 
-#endif // _ATOMISTICSTRUCTURE_H_
+#endif // _ATOMISTICGENERATOR_H_
 
 
 

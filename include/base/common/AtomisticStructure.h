@@ -6,7 +6,8 @@
 #include "TypeDefs.h"
 #include "Control.h"
 #include "Device.h"
-#include "AtomisticGenerator.h"
+//#include "AtomisticGenerator.h"
+//#include "AtomisticGenerator1D.h"
 #include "Atom.h"
 
 //C++ includes

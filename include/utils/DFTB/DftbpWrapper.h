@@ -40,6 +40,8 @@ public:
   void addlattice (double *latVecs);
 
   void addkpoints (int nKPoint, double *kPoints, double *kWeights);
+
+  void addsupersampling (double *coeffs, double *shifts, int noinv);
   
   void getchargesperatom (int nAtom, double* charges);
 

@@ -2,7 +2,8 @@
 #define _ATOM_H_
 
 #include "tensor.h"
-
+#include "TypeDefs.h"
+ 
 
 //! Contains Atom definition
 /*!
@@ -32,6 +33,12 @@
 	 //! An integer which says if an atom belongs to device (0)
 	 //! or to contact (number of contact). Useful in electronic transport
 	 unsigned int contact;
+
+   //! ID of region containing the atom
+   ID id;
+
+   //! A general purpose integer flag (for example used in passivation)
+   unsigned int flag;
 	 
  };
 

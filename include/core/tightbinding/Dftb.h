@@ -33,6 +33,9 @@ struct DftbOptions
     double *kPoints;
     double* kWeights;
     int* mAngs;
+    bool supersampling;
+    double* samplingcoeffs;
+    double* samplingshift;
   };
 
  //! Constructor
