@@ -317,7 +317,7 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
     slep_opt.spectrum_shift = st_shift_value;
 
 
-    slep_opt.matrix_output = true;
+    slep_opt.matrix_output = false;
   
    
 
@@ -425,20 +425,25 @@ void EigenvalueProblem::parse_options()
 
 
   {
-    std::string solution_method = mod_opt.get_option("solution_method", "matlab");
+    std::string solution_method = mod_opt.get_option("solution_method", "combined");
     if ( solution_method == "matlab")
     {
       solver_opt.strategy = "matlab"; 
       solver_opt.preconditioner = "cholesky";
       solver_opt.st_ksp_type = "preonly";
     }
-    else
+    else if (solution_method == "general")
     {
       solver_opt.strategy = "general";
       solver_opt.preconditioner = "jacobi";
       solver_opt.st_ksp_type = "bcgsl";
     }
-
+    else if (solution_method == "combined")
+    {
+      solver_opt.strategy = "combined";
+      solver_opt.preconditioner = "cholesky";
+      solver_opt.st_ksp_type = "bcgsl";
+    }
 
   }
 

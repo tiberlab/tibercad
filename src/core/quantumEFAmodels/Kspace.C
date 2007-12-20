@@ -120,7 +120,7 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
   kmin[1] = 0.0; kmin[2] = 0.0;
   kmax[1] = 0.0; kmax[2] = 0.0;
   
-  //TODO hasto be changed!!
+  //TODO has to be changed!!
   Tensor1 basis1 = k_vector/norm_k;
 
   if (basis1(1) == 1)
@@ -150,6 +150,9 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
  
 
   // k_dim = 1;
+
+ 
+
 }
 
 //-----------------------------------------------------------------------------//

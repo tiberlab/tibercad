@@ -124,7 +124,7 @@ void 	QuantumDispersion::do_plot (void)
     
 
 
-   
+    
     
 
     if (format == "gmv")
@@ -134,7 +134,16 @@ void 	QuantumDispersion::do_plot (void)
     else if (format == "ise")
       TecplotIO(get_k_mesh()).write_nodal_data(filename, results, names);
     else if (format == "grace")
-      GraceIO(get_k_mesh()).write_nodal_data(filename, results, names);
+    {
+      //1D only
+      Mesh* kmesh1D = new Mesh(get_k_mesh());
+      Tensor2Gen inv_transform_matrix = transform_matrix.transpose();
+      rotate_mesh (kmesh1D, inv_transform_matrix);
+
+      GraceIO(*kmesh1D).write_nodal_data(filename, results, names);
+
+      delete kmesh1D;
+    }
     else
     {
       cout << "Output format not supported. Falling back to GMV." << endl;
