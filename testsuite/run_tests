@@ -7,11 +7,13 @@ use TestSuite qw(run_test
                  get_option
                  set_option
                  check_compilation
-                 send_email);
+                 send_email
+                 cleanup_test_dir);
 
 use Term::ANSIColor;
 use Getopt::Long;
 use Cwd;
+use Net::Domain qw(hostname);
 
 
 sub usage {
@@ -26,7 +28,9 @@ USAGE: run_tests [OPTIONS]
                  -s | -m        : send error report to recipients specified
                                   in configuration
     --test=<a,b,c,..> | -t <..> : perform tests a, b, c
-    --purge | -p                : delete output after run
+    --purge | -p                : delete output of each test after run if
+                                  test was succesful. If specified more than
+                                  once, deletes output in any case
     --help | -h                 : this help message
     --info | -i                 : print info about the repository
 
@@ -56,7 +60,7 @@ our $failure_detected = 0;
 our $verbose = '';
 
 # delete output after run (default: false)
-our $purge = '';
+our $purge = 0;
 
 # the tests to perform
 our @tests = ();
@@ -82,7 +86,7 @@ sub check($) {
 ## parse the options
 GetOptions('verbose!' => \$verbose,
            'quiet' => sub {$verbose = 0},
-           'purge' => \$purge,
+           'purge+' => \$purge,
            'config=s' => \$configfile,
            'sendmail|mail!' => \$sendmail,
            'test=s' => \@tests,
@@ -94,8 +98,6 @@ GetOptions('verbose!' => \$verbose,
 
 
 set_option('verbose', $verbose);
-set_option('purge', $purge);
-
 
 
 read_configuration($configfile);
@@ -136,6 +138,10 @@ while ((my $dir = readdir CWD)) {
     my $result = run_test($dir);
     check($result);
     $checklist{$dir} = $result;
+
+    if (($purge > 1) || ($purge && not $result)) {
+      cleanup_test_dir($dir);
+    }
   }
 }
 
@@ -158,6 +164,11 @@ if ($failure_detected and $sendmail) {
   while (my ($test, $result) = each(%checklist)) {
     $msg = "${msg}   $test\n" if $result;
   }
+
+  my $cwd = cwd();
+  my $host = hostname();
+  $msg = "${msg}\nYou can find the output data and logs of the ";
+  $msg = "${msg}failed tests\non ${host} in ${cwd}/testXX.\n";
 
   my %message = (
     'subject' => "TiberCAD test suite error report\n",

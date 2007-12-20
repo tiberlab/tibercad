@@ -26,7 +26,8 @@ BEGIN {
                   read_configuration
                   get_option
                   set_option
-                  send_email);
+                  send_email
+                  cleanup_test_dir);
 
 }
 our @EXPORT_OK;
@@ -50,6 +51,7 @@ our $config;
 our $outdir;
 our $refdir;
 our $to_dev_null;
+our $to_log_file;
 our $textwidth;
 our $padchar;
 our $default_precision;
@@ -65,13 +67,13 @@ $config = "test.conf";
 $outdir = "output";
 $refdir = "reference";
 $to_dev_null = " >& /dev/null";
+$to_log_file = " >& log";
 $textwidth = 50;
 $padchar = ".";
 $default_precision = 1e-6;
 @known_suffixes = ('dat', 'gmv');
 %options = (
     'verbose' => 0,
-    'purge' => 0,
     'smtp_server' => "localhost",
     'mail_sender' => "$ENV{USER}",
     'package' => "unknown"
@@ -139,7 +141,7 @@ sub run_executable;
 ##
 ## Cleans up the directory
 ##
-sub cleanup_test_dir;
+sub cleanup_test_dir($);
 
 
 ##
@@ -221,11 +223,6 @@ sub split_variable($);
 ##
 sub verbose;
 
-
-##
-## Tells whether to purge data
-##
-sub purge;
 
 
 
@@ -323,7 +320,6 @@ sub run_test($) {
 
   my $failure = run_executable();
   $failure = compare_results_with_reference() unless $failure;
-  cleanup_test_dir() if purge();
 
   chdir($olddir);
 
@@ -342,7 +338,7 @@ sub run_executable {
 
   print(pad_to_textwidth("Run", $padchar)) if verbose();
 
-  $fail = system("$make_run $to_dev_null");
+  $fail = system("$make_run $to_log_file");
 
   print_result($fail) if verbose();
 
@@ -351,9 +347,9 @@ sub run_executable {
 
 
 
-sub cleanup_test_dir {
+sub cleanup_test_dir($) {
 
-  system("$make clean $to_dev_null");
+  system("$make -C $_[0] clean $to_dev_null");
 }
 
 
@@ -683,10 +679,6 @@ sub verbose {
   return $options{"verbose"};
 }
 
-
-sub purge {
-  return $options{"purge"};
-}
 
 
 
