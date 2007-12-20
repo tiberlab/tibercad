@@ -252,7 +252,7 @@ KPparams WzSemiconductor::calculate_8x8_kp_params (void )
   
     double E1 = d1 + d2;
 
-    double E2 = (d1 - d2)/2.0 + sqrt( (d1-  d2)*( d1- d2) / 4.0 + 2.0 * d3 * d3 );
+    double E2 = (d1 - d2)/2.0 + sqrt( (d1 -  d2)*( d1 - d2) / 4.0 + 2.0 * d3 * d3 );
 
     if (E1 > E2)
       Ev_top = par.Ev + E1;
@@ -262,10 +262,12 @@ KPparams WzSemiconductor::calculate_8x8_kp_params (void )
  
 
 
-    double Ev_top = par.Ev + ((1.0/3.0) * par.delta_s );
+   
   }
 
   result.E_c =  (Ev_top + par.EgGamma)/Hartree;
+
+
 
   //-----------------------------------------------------------------
   //to check!
