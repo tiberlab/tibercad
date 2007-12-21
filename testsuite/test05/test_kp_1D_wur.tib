@@ -1,0 +1,352 @@
+$Device
+{
+
+  Region well
+  {
+    reg_numb = 1
+    mat = GaN
+    x = 0.4
+
+    structure = wz
+    y-growth-direction = (1,0,-1,0)
+    z-growth-direction = (-1,2,-1,0)
+    x-growth-direction = (0,0,0,1)
+
+   
+    
+
+    doping = 1e18
+    doping_type = acceptor
+    doping_level = 0.025
+
+  }
+
+  Region  buffer
+  {
+    reg_numb = 2
+    mat = AlGaN
+    x = 0.3
+    structure = wz
+    y-growth-direction = (1,0,-1,0)
+    z-growth-direction = (-1,2,-1,0)
+    x-growth-direction = (0,0,0,1)
+
+
+   
+   
+
+    doping = 5e16
+    doping_type = acceptor
+    doping_level = 0.025
+    
+   
+  }
+  
+  
+
+  Region  buffer
+  {
+    reg_numb = 3
+    mat = AlGaN
+    x = 0.3
+    structure = wz
+    y-growth-direction = (1,0,-1,0)
+    z-growth-direction = (-1,2,-1,0)
+    x-growth-direction = (0,0,0,1)
+   
+   
+
+
+    doping = 5e16
+    doping_type = acceptor
+    doping_level = 0.025
+    
+   
+  }
+
+
+  
+
+}
+
+$Models
+{
+
+  model macrostrain
+  {
+
+    options
+    {          
+      simulation_name = str
+
+      physical_regions = all
+    }
+
+  
+  
+    
+    BC_Regions  
+    {
+      BC_Region substrate
+      {
+	BC_reg_numb = 1
+	type = substrate
+	material = AlGaN
+	x = 0.3
+	structure = wz
+	y-growth-direction = (1,0,-1,0)
+	z-growth-direction = (-1,2,-1,0)
+	x-growth-direction = (0,0,0,1)
+
+	
+      }
+    }
+
+  } 
+
+
+  model  driftdiffusion
+  { 
+
+    options
+    {          
+      simulation_name = dd
+      
+      physical_regions = all
+    }
+
+    physical_model recombination
+    { 
+      model = srh
+    }                
+
+    
+  
+     
+
+    physical_model electron_mobility
+    { 
+      model = doping_dependent
+    }                
+
+
+    physical_model hole_mobility
+    { 
+      model = doping_dependent
+    }                
+
+
+    BC_Regions  
+    {
+
+      BC_Region cathode
+      {
+        BC_reg_numb = 1
+	#zero_grad_fermi_e = true
+        type = ohmic
+      
+      }
+
+
+      BC_Region anode
+      {
+	BC_reg_numb = 2
+	#zero_grad_fermi_e = true
+	type = ohmic
+	voltage = @Vb[0.0]  
+      }
+ 
+    }   
+
+  }
+
+
+ 
+
+
+  model efaschroedinger
+
+  {
+
+   
+    options
+    {
+     simulation_name = quantum_el
+     physical_regions = all
+    }
+
+
+  }
+
+
+  model efaschroedinger
+
+  {
+
+   
+    options
+    {
+     simulation_name = quantum_hl
+     physical_regions = all
+    }
+
+  
+  }
+  
+
+  model quantumdispersion
+  {
+    options
+    {
+      simulation_name = dispersion_el
+      physical_regions = all
+    }
+    
+  }
+
+
+  model quantumdispersion
+  {
+    options
+    {
+      simulation_name = dispersion_hl
+      physical_regions = all
+    }
+    
+  }
+
+
+}
+
+$Solver
+{
+
+ macrostrain
+  {
+    substrate = substrate
+
+  }
+
+ 
+  driftdiffusion
+  {
+    coupling = poisson
+    nonlin_max_it = 70
+    nonlin_rel_tol = 1e-10
+    nonlin_abs_tol = 1e-10
+    nonlin_step_tol = 1e-9
+    ls_max_step = 4
+    #ls_type = none
+    discretization = fem
+    integration_order = 2
+    #pc_type = composite
+    ksp_type = bcgs
+    #quasi_equilibrium = (cathode, anode)
+
+    #current_integration_method = surfint
+  }
+
+
+
+  quantum_el
+  {   
+    Dirichlet_bc_everywhere = true
+    particle = el
+    number_of_eigenstates = 6
+    poisson_model_name = dd
+    strain_model_name = macrostrain
+    convergent_density = true
+    log_output = true
+
+    solver = krylovshur 
+    
+
+  }
+
+  quantum_hl
+  {
+    x-periodicity = false
+    Dirichlet_bc_everywhere = false
+    particle = hl
+    number_of_eigenstates = 30
+    poisson_model_name = dd
+    strain_model_name = macrostrain
+    convergent_density = true
+    solver = krylovshur
+
+    log_output = true
+
+
+  }
+
+
+ 
+
+
+
+  quantumdispersion
+  {
+    log_output = true
+    wedge = half
+    k_space_dimension = 1
+    k1 = (0, 0.1, 0)
+    number_of_nodes = (10)
+ 
+    min_eigenvalue_number = 0
+    max_eigenvalue_number = 9
+  }
+  
+
+
+  dispersion_el
+  {
+    quantum_simulation = quantum_el
+  }
+
+
+  dispersion_hl
+  {
+    quantum_simulation = quantum_hl
+  }
+
+
+}
+
+
+$Physics
+{
+
+ 
+  quantum_el 
+  {
+    model = conduction_band
+
+    particle = el
+    model = kp   #  k.p  for  valence  band
+    kp_model = 8x8
+  }
+
+
+  quantum_hl
+  {
+    particle = hl
+    model = kp   #  k.p  for  valence  band
+    kp_model = 8x8
+  }
+  
+ 
+}
+
+$Simulation
+{  
+  meshfile = quantum_well.msh
+  mesh_units = 1e-9
+  dimension = 1
+  temperature = 300
+
+  solve = (str, dd, quantum_el, quantum_hl, dispersion_el, dispersion_hl)  
+
+  resultpath = output
+  output_format = grace
+  plot = (strain, polarization, Ec, Ev, EField , EigenFunctions, EigenEnergy, EnergyLevels,k-space_dispersion)
+}
