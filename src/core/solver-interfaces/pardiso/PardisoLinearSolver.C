@@ -157,7 +157,13 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 
 
   //Get n ia and ja
-   ierr = MatGetRowIJ(C,1, PETSC_FALSE,&nrows,&ia, &ja, &done); _checkerr(ierr);
+#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
+      && (PETSC_VERSION_SUBMINOR >= 2))
+  ierr = MatGetRowIJ(C,1, PETSC_FALSE, PETSC_FALSE, &nrows,&ia, &ja, &done);
+#else
+  ierr = MatGetRowIJ(C,1, PETSC_FALSE,&nrows,&ia, &ja, &done);
+#endif
+  _checkerr(ierr);
 
   if (done)
   {
@@ -176,7 +182,16 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 
    
   }  
-  ierr = MatRestoreRowIJ(C, 1, PETSC_FALSE, &nrows, &ia, &ja, &done);_checkerr(ierr);
+
+#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
+      && (PETSC_VERSION_SUBMINOR >= 2))
+  ierr = MatRestoreRowIJ(C, 1, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &done);
+#else
+  ierr = MatRestoreRowIJ(C, 1, PETSC_FALSE, &nrows, &ia, &ja, &done);
+#endif
+  _checkerr(ierr);
+
+
 
   //-----------------------------------------------------------
   // ierr = MatView(C,PETSC_VIEWER_STDOUT_WORLD);_checkerr(ierr);

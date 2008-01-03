@@ -18,10 +18,10 @@ all: tibercad
 
 tibercad: $(objects)
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad \
-		-Wl,-export-dynamic -ltibercad -lmkl_solver \
-		$(LIBS) $(LDFLAGS) \
-		-lhetero -lifcore -limf -L /usr/pack/intel_fc-9.0-ma/lib/ \
-		-Wl,-rpath,/usr/pack/intel_fc-9.0-ma/lib
+		-Wl,-export-dynamic -ltibercad \
+		$(LDFLAGS)
+#		-lifcore -limf -L /usr/pack/intel_fc-9.0-ma/lib/ \
+#		-Wl,-rpath,/usr/pack/intel_fc-9.0-ma/lib
 #	@$(CXX) $(CXXFLAGS) $(objects) $(TIBER_OBJECTS) 
 #	-o $(topdir)/bin/tibercad $(LIBS) $(LDFLAGS)
 

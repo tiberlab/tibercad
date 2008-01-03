@@ -9,28 +9,28 @@ include Make.common
 ifeq ($(build_modules), yes)
  MODULE_LIBS	:= lib/libeigen_solver.so lib/libdftbpc.so lib/tibermodels/lib*.so
 else
- MODULE_LIBS	:= lib/libeigen_solver.so lib/libdftbpc.so 
+ MODULE_LIBS	:= -leigen_solver -ldftbpc -lhetero
 endif
 
 
 all: src
 	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
 		-Wl,-soname,libtibercad.so.0 -o lib/libtibercad.so.0.0 \
-		$(LDFLAGS) $(MODULE_LIBS) $(LIBS)
+		$(MODULE_LIBS) -lmkl_solver -lmkl_lapack $(LDFLAGS)
 	@cd lib && ln -f -s libtibercad.so.0.0 libtibercad.so.0 \
 		&& ln -f -s libtibercad.so.0 libtibercad.so && cd ..
-	@$(MAKE) -C src/tibercad tibercad
+	@$(MAKE) --no-print-directory -C src/tibercad tibercad
 
 
 clean: src
-	@$(MAKE) -C examples clean
-	@$(MAKE) -C src/tibercad clean
+	@$(MAKE) --no-print-directory -C examples clean
+	@$(MAKE) --no-print-directory -C src/tibercad clean
 
 
 
 distclean: src doc
-	@$(MAKE) -C examples distclean
-	@$(MAKE) -C src/tibercad distclean
+	@$(MAKE) --no-print-directory -C examples distclean
+	@$(MAKE) --no-print-directory -C src/tibercad distclean
 	@rm -rf lib/*
 	@rm -f bin/tibercad
 
@@ -38,20 +38,20 @@ distclean: src doc
 .PHONY: src
 src:
 	@mkdir -p lib/tibermodels
-	@$(MAKE) -C src $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
 
 
 
 .PHONY: doc
 doc:
-	@$(MAKE) -C doc $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C doc $(MAKECMDGOALS)
 
 
 
 
 .PHONY: examples
 examples: all
-	@$(MAKE) -C examples
+	@$(MAKE) --no-print-directory -C examples
 
 
 run_tests:
@@ -60,7 +60,7 @@ run_tests:
 
 .PHONY: manual
 manual:
-	@$(MAKE) -C manual
+	@$(MAKE) --no-print-directory -C manual
 
 
 tags:

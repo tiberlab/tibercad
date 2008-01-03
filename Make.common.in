@@ -5,11 +5,10 @@ topdir := @abs_top_builddir@
 
 
 # libmesh can be found here
-libmesh := @LIBMESH_PREFIX@
-include $(libmesh)/Make.common
+#libmesh := @LIBMESH_PREFIX@
+libmesh_config := @LIBMESH_CONFIG@
 
-# libmesh and petsc were not compiled with it, but it resolves a link
-# problem if one links on a machine with debian `etch'
+# the compiler
 CXX = @CXX@
 CC = @CC@
 
@@ -23,46 +22,68 @@ GMSH := @GMSH@
 ##
 ##
 
+# the default method is optimised
+ifeq (x$(METHOD),x)
+  METHOD := opt
+endif
+
+ifeq ($(METHOD),opt)
+  mode := "optimized"
+endif
+ifeq ($(METHOD),dbg)
+  mode := "debug"
+endif
+
+
 # some handy defaults
-DIM := 2
-ORDER := 1
+#DIM := 2
+#ORDER := 1
 
 # build modules or not
 build_modules := @BUILD_TIBER_MODULES@
+
+# The file extension for object files.
+# foo.C is compiled to foo.$(obj-suffix)
+obj-suffix := $(METHOD).o
+
+
+# shared library extension
+shared_libext := .so
+ifeq ($(findstring cygwin,$(hostos)),cygwin)
+  shared_libext := .dll
+endif
+
 
 
 # TIBERCAD includes
 include_dirs := $(shell find $(topdir)/include -type d -a ! -path "*.svn*")
 TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 
-CXXFLAGS += -fPIC
 
+CXXFLAGS := $(shell export METHOD=$(METHOD) && $(libmesh_config) --cxxflags)
+INCLUDE  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --include)
+LDFLAGS  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --ldflags)
 
-ifdef DEBUG
-  CXXFLAGS += -g
-endif
 
 ifdef PROFILE
   CXXFLAGS += -pg
 endif
 
-CXXFLAGS += $(TIBER_INCLUDES)
-
-CXXFLAGS += @BOOST_CXXFLAGS@
-LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
-
-CXXFLAGS += @GSL_CFLAGS@
-LDFLAGS += @GSL_LIBS@
 
 LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib
 LDFLAGS += -Wl,-rpath,$(topdir)/lib/tibermodels -L$(topdir)/lib/tibermodels
 LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib -ltensor
 LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib -lnewmat
 
+LDFLAGS += @GSL_LIBS@
+
+LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
+
+
 TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*")
 
 
-NON_TIBER_INCLUDES := $(INCLUDE) @GSL_CFLAGS@ @BOOST_CXXFLAGS@
+NON_TIBER_INCLUDES := $(INCLUDE) @GSL_CFLAGS@ @BOOST_CPPFLAGS@
 NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
 
 
@@ -82,4 +103,5 @@ all: $(subdirs)
 clean: $(subdirs) src-clean
 
 distclean: $(subdirs) src-distclean
+
 

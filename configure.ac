@@ -71,17 +71,39 @@ AC_SUBST([GMSH])
 #
 
 # without libmesh nothing works
-TC_LIBMESH
-if test "${LIBMESH_PREFIX:-no}" == "no"
+AC_MSG_NOTICE([])
+AC_MSG_NOTICE([****************************************])
+AC_MSG_NOTICE([* Checking for libMesh])
+AC_MSG_NOTICE([****************************************])
+
+TC_LIBMESH_PATH
+TC_LIBMESH_CONFIG
+if test "${LIBMESH_CONFIG:-no}" == "no"
 then
   AC_MSG_NOTICE([])
   AC_MSG_ERROR([libMesh not found, but needed for tibercad!])
 fi
 
+AC_MSG_NOTICE([])
+
+
 # check for SLEPc
+AC_MSG_NOTICE([])
+AC_MSG_NOTICE([****************************************])
+AC_MSG_NOTICE([* Checking for (complex) SLEPc])
+AC_MSG_NOTICE([****************************************])
+
 TC_SLEPC
 
+AC_MSG_NOTICE([])
+
+
 # boost includes
+AC_MSG_NOTICE([])
+AC_MSG_NOTICE([****************************************])
+AC_MSG_NOTICE([* Checking for boost...])
+AC_MSG_NOTICE([****************************************])
+
 TC_BOOST
 if test "$tc_cv_boost" == no
 then
@@ -102,6 +124,8 @@ if test "${tc_cv_boost_filesystem_lib-no}" == "no"; then
   AC_MSG_NOTICE([])
   AC_MSG_ERROR([Boost:filesystem is not available, but it is needed for TiberCAD!])
 fi
+
+AC_MSG_NOTICE([])
 
 
 # GSL GNU scientific library
@@ -137,6 +161,7 @@ AC_CONFIG_FILES([Make.common
                  doc/Doxyfile
                  Makefile
                  doc/Makefile
+                 src/utils/DFTB/Makefile
                  src/utils/SLEPC/Makefile])
 
 #

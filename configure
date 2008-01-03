@@ -312,7 +312,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CC CFLAGS ac_ct_CC PERL DOXYGEN DOT DOT_PATH HAVE_DOT LATEX LATEX_PATH GENERATE_LATEX GMSH CXXCPP EGREP LIBMESH_PREFIX COMPLEX_PETSC_DIR COMPLEX_PETSC_ARCH SLEPC_DIR BOOST_CXXFLAGS BOOST_REGEX_LIB BOOST_FILESYSTEM_LIB GSL_CONFIG GSL_LIBS GSL_CFLAGS LIBOBJS BUILD_TIBER_MODULES LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CC CFLAGS ac_ct_CC PERL DOXYGEN DOT DOT_PATH HAVE_DOT LATEX LATEX_PATH GENERATE_LATEX GMSH CXXCPP EGREP LIBMESH_PREFIX LIBMESH_CONFIG COMPLEX_PETSC_DIR COMPLEX_PETSC_ARCH SLEPC_DIR BOOST_CPPFLAGS BOOST_REGEX_LIB BOOST_FILESYSTEM_LIB GSL_CONFIG GSL_LIBS GSL_CFLAGS LIBOBJS BUILD_TIBER_MODULES LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -861,6 +861,8 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-libmesh-prefix=DIR
                           specify the libmesh installation prefix
+  --with-libmesh-config=PROG
+                          specify the libmesh-config tool
   --with-petsc-prefix=DIR specify the (complex) PETSc installation prefix
   --with-petsc-arch=ARCH  specify the (complex) PETSc ARCH to be used
   --with-slepc-prefix=DIR specify the SLEPc installation prefix
@@ -2870,6 +2872,15 @@ fi
 #
 
 # without libmesh nothing works
+{ echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
+{ echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
+{ echo "$as_me:$LINENO: * Checking for libMesh" >&5
+echo "$as_me: * Checking for libMesh" >&6;}
+{ echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
+
 
 ac_ext=cc
 ac_cpp='$CXXCPP $CPPFLAGS'
@@ -3353,21 +3364,12 @@ fi
 done
 
 
-{ echo "$as_me:$LINENO: " >&5
-echo "$as_me: " >&6;}
- { echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
- { echo "$as_me:$LINENO: * Checking for libMesh..." >&5
-echo "$as_me: * Checking for libMesh..." >&6;}
- { echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
 
 # Check whether --with-libmesh-prefix or --without-libmesh-prefix was given.
 if test "${with_libmesh_prefix+set}" = set; then
   withval="$with_libmesh_prefix"
   tc_libmesh_prefix=$with_libmesh_prefix
 fi;
-echo "$tc_libmesh_prefix"
     CPPFLAGS_save="$CPPFLAGS"
   CPPFLAGS="-I$tc_libmesh_prefix/include/base"
   if test "${ac_cv_header_libmesh_config_h+set}" = set; then
@@ -3513,19 +3515,63 @@ fi
 
 
   CPPFLAGS="$CPPFLAGS_save"
-  if test "${LIBMESH_PREFIX:+set}" == "set"; then
-    { echo "$as_me:$LINENO: libMesh installation found in $tc_libmesh_prefix" >&5
-echo "$as_me: libMesh installation found in $tc_libmesh_prefix" >&6;}
-    { echo "$as_me:$LINENO: " >&5
-echo "$as_me: " >&6;}
-  else
-    { echo "$as_me:$LINENO: No libMesh installation found!" >&5
-echo "$as_me: No libMesh installation found!" >&6;}
-    { echo "$as_me:$LINENO: " >&5
-echo "$as_me: " >&6;}
-  fi
 
-if test "${LIBMESH_PREFIX:-no}" == "no"
+ tc_libmesh_config="libmesh-config"
+
+# Check whether --with-libmesh-config or --without-libmesh-config was given.
+if test "${with_libmesh_config+set}" = set; then
+  withval="$with_libmesh_config"
+  tc_libmesh_config=$with_libmesh_config
+fi;
+  tc_libmesh_config_name="`expr "//$tc_libmesh_config" : '.*/\([^/]*\)'`"
+  tc_libmesh_config_path="`expr "$tc_libmesh_config" : '\(.*\)/'`"
+  if test "${LIBMESH_PREFIX:+set}" == "set"; then
+    tc_libmesh_config_path="${tc_libmesh_config_path}:${LIBMESH_PREFIX}/contrib/bin"
+  fi
+    # Extract the first word of "$tc_libmesh_config_name", so it can be a program name with args.
+set dummy $tc_libmesh_config_name; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_LIBMESH_CONFIG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $LIBMESH_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_LIBMESH_CONFIG="$LIBMESH_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $tc_libmesh_config_path
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_LIBMESH_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  test -z "$ac_cv_path_LIBMESH_CONFIG" && ac_cv_path_LIBMESH_CONFIG=""""
+  ;;
+esac
+fi
+LIBMESH_CONFIG=$ac_cv_path_LIBMESH_CONFIG
+
+if test -n "$LIBMESH_CONFIG"; then
+  echo "$as_me:$LINENO: result: $LIBMESH_CONFIG" >&5
+echo "${ECHO_T}$LIBMESH_CONFIG" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+  { echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
+
+if test "${LIBMESH_CONFIG:-no}" == "no"
 then
   { echo "$as_me:$LINENO: " >&5
 echo "$as_me: " >&6;}
@@ -3534,21 +3580,20 @@ echo "$as_me: error: libMesh not found, but needed for tibercad!" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
+{ echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
+
+
 # check for SLEPc
 { echo "$as_me:$LINENO: " >&5
 echo "$as_me: " >&6;}
- { echo "$as_me:$LINENO: ****************************************" >&5
+{ echo "$as_me:$LINENO: ****************************************" >&5
 echo "$as_me: ****************************************" >&6;}
- { echo "$as_me:$LINENO: * Checking for complex version of PETSc" >&5
-echo "$as_me: * Checking for complex version of PETSc" >&6;}
- { echo "$as_me:$LINENO: * NOTE: the real version of PETSc used" >&5
-echo "$as_me: * NOTE: the real version of PETSc used" >&6;}
- { echo "$as_me:$LINENO: *       for libmesh is taken from the" >&5
-echo "$as_me: *       for libmesh is taken from the" >&6;}
- { echo "$as_me:$LINENO: *       libmesh configuration" >&5
-echo "$as_me: *       libmesh configuration" >&6;}
- { echo "$as_me:$LINENO: ****************************************" >&5
+{ echo "$as_me:$LINENO: * Checking for (complex) SLEPc" >&5
+echo "$as_me: * Checking for (complex) SLEPc" >&6;}
+{ echo "$as_me:$LINENO: ****************************************" >&5
 echo "$as_me: ****************************************" >&6;}
+
 
 # Check whether --with-petsc-prefix or --without-petsc-prefix was given.
 if test "${with_petsc_prefix+set}" = set; then
@@ -3566,25 +3611,37 @@ fi;
  COMPLEX_PETSC_ARCH="$tc_petsc_arch"
 
 
- { echo "$as_me:$LINENO: " >&5
-echo "$as_me: " >&6;}
- { echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
- { echo "$as_me:$LINENO: * Checking for SLEPc" >&5
-echo "$as_me: * Checking for SLEPc" >&6;}
- { echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
 
 # Check whether --with-slepc-prefix or --without-slepc-prefix was given.
 if test "${with_slepc_prefix+set}" = set; then
   withval="$with_slepc_prefix"
   tc_slepc_prefix=$with_slepc_prefix
 fi;
- SLEPC_DIR="$tc_slepc_prefix"
+      SLEPC_DIR="$tc_slepc_prefix"
 
+ if test "$tc_cv_have_slepc" == "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_COMPLEX_SLEPC 1
+_ACEOF
+
+ fi
+
+
+{ echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
 
 
 # boost includes
+{ echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
+{ echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
+{ echo "$as_me:$LINENO: * Checking for boost..." >&5
+echo "$as_me: * Checking for boost..." >&6;}
+{ echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
+
 echo "$as_me:$LINENO: checking whether the compiler implements namespaces" >&5
 echo $ECHO_N "checking whether the compiler implements namespaces... $ECHO_C" >&6
 if test "${ac_cv_cxx_namespaces+set}" = set; then
@@ -3660,14 +3717,6 @@ _ACEOF
 
 fi
 
-{ echo "$as_me:$LINENO: " >&5
-echo "$as_me: " >&6;}
-{ echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
-{ echo "$as_me:$LINENO: * Checking for boost..." >&5
-echo "$as_me: * Checking for boost..." >&6;}
-{ echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
 if test "${tc_cv_boost_prefix+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
@@ -3680,14 +3729,14 @@ fi;
 
 fi
 if test "${tc_cv_boost_prefix+set}" == "set"; then
- BOOST_CXXFLAGS="-I$tc_cv_boost_prefix/include"
+ BOOST_CPPFLAGS="-I$tc_cv_boost_prefix/include"
 
 fi
 if test "${tc_cv_boost+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   CPPFLAGS_save=$CPPFLAGS
- CPPFLAGS=$BOOST_CXXFLAGS
+ CPPFLAGS=$BOOST_CPPFLAGS
  if test "${ac_cv_header_boost_version_hpp+set}" = set; then
   echo "$as_me:$LINENO: checking for boost/version.hpp" >&5
 echo $ECHO_N "checking for boost/version.hpp... $ECHO_C" >&6
@@ -3841,10 +3890,6 @@ cat >>confdefs.h <<\_ACEOF
 #define HAVE_BOOST 1
 _ACEOF
 
-  { echo "$as_me:$LINENO: Ok. Boost is out there." >&5
-echo "$as_me: Ok. Boost is out there." >&6;}
-  { echo "$as_me:$LINENO: " >&5
-echo "$as_me: " >&6;}
 fi
 
 if test "$tc_cv_boost" == no
@@ -3869,7 +3914,7 @@ if test "${with_boost_regex_lib+set}" = set; then
   tc_cv_boost_regex_lib="$with_boost_regex_lib"
 fi;
  CXXFLAGS_save=$CXXFLAGS
- CXXFLAGS=$BOOST_CXXFLAGS
+ CXXFLAGS=$BOOST_CPPFLAGS
  LDFLAGS_save=$LDFLAGS
  if test "x$tc_cv_boost_prefix" != "x"; then
    tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_prefix}/lib -L${tc_cv_boost_prefix}/lib"
@@ -3973,7 +4018,7 @@ if test "${with_boost_filesystem_lib+set}" = set; then
   tc_cv_boost_filesystem_lib="$with_boost_filesystem_lib"
 fi;
  CXXFLAGS_save=$CXXFLAGS
- CXXFLAGS=$BOOST_CXXFLAGS
+ CXXFLAGS=$BOOST_CPPFLAGS
  LDFLAGS_save=$LDFLAGS
  if test "x$tc_cv_boost_prefix" != "x"; then
    tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_prefix}/lib -L${tc_cv_boost_prefix}/lib"
@@ -4064,6 +4109,9 @@ echo "$as_me: " >&6;}
 echo "$as_me: error: Boost:filesystem is not available, but it is needed for TiberCAD!" >&2;}
    { (exit 1); exit 1; }; }
 fi
+
+{ echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
 
 
 # GSL GNU scientific library
@@ -5028,7 +5076,7 @@ done
 
           ac_config_files="$ac_config_files stamp-h"
 
-                                                  ac_config_files="$ac_config_files Make.common doc/Doxyfile Makefile doc/Makefile src/utils/SLEPC/Makefile"
+                                                            ac_config_files="$ac_config_files Make.common doc/Doxyfile Makefile doc/Makefile src/utils/DFTB/Makefile src/utils/SLEPC/Makefile"
 
 
 #
@@ -5624,6 +5672,7 @@ do
   "doc/Doxyfile" ) CONFIG_FILES="$CONFIG_FILES doc/Doxyfile" ;;
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "doc/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
+  "src/utils/DFTB/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/utils/DFTB/Makefile" ;;
   "src/utils/SLEPC/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/utils/SLEPC/Makefile" ;;
   "include/base/common/tiber_config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS include/base/common/tiber_config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
@@ -5732,10 +5781,11 @@ s,@GMSH@,$GMSH,;t t
 s,@CXXCPP@,$CXXCPP,;t t
 s,@EGREP@,$EGREP,;t t
 s,@LIBMESH_PREFIX@,$LIBMESH_PREFIX,;t t
+s,@LIBMESH_CONFIG@,$LIBMESH_CONFIG,;t t
 s,@COMPLEX_PETSC_DIR@,$COMPLEX_PETSC_DIR,;t t
 s,@COMPLEX_PETSC_ARCH@,$COMPLEX_PETSC_ARCH,;t t
 s,@SLEPC_DIR@,$SLEPC_DIR,;t t
-s,@BOOST_CXXFLAGS@,$BOOST_CXXFLAGS,;t t
+s,@BOOST_CPPFLAGS@,$BOOST_CPPFLAGS,;t t
 s,@BOOST_REGEX_LIB@,$BOOST_REGEX_LIB,;t t
 s,@BOOST_FILESYSTEM_LIB@,$BOOST_FILESYSTEM_LIB,;t t
 s,@GSL_CONFIG@,$GSL_CONFIG,;t t

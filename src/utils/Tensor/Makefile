@@ -11,11 +11,11 @@ srcfiles 	:= $(wildcard *.cpp)
 
 #
 # object files
-objects		:= $(patsubst %.cpp, %.o, $(srcfiles))
+objects		:= $(patsubst %.cpp, %.$(obj-suffix), $(srcfiles))
 
 
 
-.PHONY: all clean
+.PHONY: all
 
 
 all: $(objects)
@@ -23,10 +23,6 @@ all: $(objects)
 
 #@ar rcs $(topdir)/lib/libtensor.a $(objects)
 
-
-
-%.o: %.cpp
-	@$(CXX) -fPIC $(TIBER_INCLUDES) -c $<
 
 
 include $(topdir)/Make.rules

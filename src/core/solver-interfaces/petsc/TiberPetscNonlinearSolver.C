@@ -345,7 +345,13 @@ void TiberPetscNonlinearSolver<T>::init(void) throw (PetscRuntimeError)
 
 #endif	     
 
+#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
+    (PETSC_VERSION_SUBMINOR >= 2))
+    SNESMonitorSet(_snes, __tiber_petsc_snes_monitor, (void*) this, PETSC_NULL);
+#else
     SNESSetMonitor(_snes, __tiber_petsc_snes_monitor, (void*) this, PETSC_NULL);
+#endif
+
     PetscPushErrorHandler(__tiber_petsc_snes_error_handler, (void*) this);
 
 

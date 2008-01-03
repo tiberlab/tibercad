@@ -4,9 +4,13 @@
 
 
 src-clean:
+	@echo -n "Cleaning up ."
+	@echo `expr "$$PWD" : "$(topdir)\(.*\)"`
 	-@rm -f *.o *~ .*.d *~
 
 src-distclean:
+	@echo -n "Cleaning up ."
+	@echo `expr "$$PWD" : "$(topdir)\(.*\)"`
 	-@rm -f *.so *.o .*.d *~
 
 
@@ -14,6 +18,24 @@ src-distclean:
 $(subdirs):
 	@$(MAKE) -C $@ $(MAKECMDGOALS)
 
+
+
+%.$(obj-suffix) : %.C
+	@echo "Compiling C++ (in "$(mode)" mode) "$<"..."
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+
+
+
+%.$(obj-suffix) : %.cpp
+	@echo "Compiling C++ (in "$(mode)" mode) "$<"..."
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+
+
+
+%.$(obj-suffix): %.c
+	@echo "Compiling C (in "$(mode)" mode) "$<"..."
+	@$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+	
 
 .%.d: %.C
 	@$(CC) -MT $(basename $<).$(obj-suffix) -MM $(CPPFLAGS) $< > $@.$$$$; \
@@ -25,6 +47,7 @@ $(subdirs):
 	@$(GMSH) -format msh -order $(ORDER) -$(DIM) -o $<.msh $<
 	@$(topdir)/bin/renumber_msh $<.msh $@
 	@rm $<.msh
+
 
 %.s: %.C .%.d
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S $<
