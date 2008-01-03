@@ -1,0 +1,31 @@
+
+CXX      = @CXX@
+
+
+CXXFLAGS = -fPIC -I ../../../include/utils/DFTB
+
+
+all: libdftbpc.so
+
+
+libdftbpc.so:  DftbpWrapper.o
+	@$(CXX) -shared -Wl,-soname,libdftbpc.so \
+		-Wl,--version-script,export.map \
+		-o libdftbpc.so $<  \
+		-Wl,-Bsymbolic -Wl,-Bstatic \
+		-L. libdftbp.a \
+		-Wl,-Bdynamic
+	@cp libdftbpc.so ../../../lib
+
+%.o: %.C
+	@$(CXX) $(CXXFLAGS) -c $<
+
+
+clean:
+	@echo "cleaning up ./src/utils/DFTB"
+	@rm -f *.o libdftbpc.so
+
+distclean: clean
+
+
+
