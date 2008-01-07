@@ -164,6 +164,8 @@ In the  rest of  the  input  file,  the physical regions associated to \textbf{M
 % Here are the  description of  the available keywords for an \textbf{Atomistic} block.
 % 
 % \textit{physical\_regions} (mandatory) : list of the physical regions of the device associated to an atomistic description.
+% \textit{all} keyword is the default and associates the atomistic description to all physical regions.
+
 
 % ...................................................................
 
@@ -193,7 +195,34 @@ Atomistic  TB_1
 Here are the  description of  the available keywords for an \textbf{Atomistic} block.
 
 \textit{physical\_regions} (mandatory): list of the physical regions ( \textbf{TiberCAD} \textbf{Regions} or \textbf{Clusters} )  of 
-the device associated to an atomistic description.
+the device associated to an atomistic description. \textit{all} keyword is default, and is used to specifie all physical regions.
+
+\textit{path} (optional): path for importing an atomistic structure from file. \textit{xyz} and \textit{gen} formats are supported, 
+and are automatically recognized by file extension. Atom position are imported as is, so they must be coherent with mesh geometry.
+
+If no path is specified, the Atomistic Generator is invoked to build the atomistic structure. The structure built will construct a bulk crystal
+structure, covering with proper atomic species the regions and taking in account the dimensional nature of the problem (up to now 1D
+structures are supported). 
+Atomistic Generator options are here described, and must be put in Atomistic section.
+
+\textit{reference\_region} (mandatory): the Atomistic Generator can only build pseudomorphic etherostructures. Reference region must be defined
+to specify which region ( \textbf{TiberCAD} \textbf{Regions}) should be checked to get structure parameters such as lattice constants, 
+depending on material defined in the reference region.
+
+\textit{passivation} (optional): if set to \textit{no}, no passivation is performed. If \textit{yes} is specified, hydrogenation of structure
+is performed, taking in account structure periodicity. Up to now hydrogenation is supported fo Silicon structures. \textit{no} is default option.
+
+\textit{preserve} (optional): it should be necessary to build a structure in which atom basis or conventional cell should be preserved, 
+regardless to mesh geometry. If \textit{none} is specified, no conservation is performed and there are only atoms strictly belonging to 
+geometrical regions. If \textit{lattice} is specified, atom basis is preserved (e.g. to preserve anion/cation couples). If 
+\textit{conventional} is specified, conventional cell is preserved. Default is  \textit{none}.
+
+\textit{y\_lenght} (optional): Atomistic Generator builds the minimum periodical structure along \textit{y} and \textit{z} directions.
+If y\_lenght is specified, the structure will be at least y\_lenght sized along y\_growth\_direction. Exact lenght is internally defined
+in order to keep structure periodicity.
+
+\textit{z\_lenght} (optional): same as above, for the \textit{z} direction.
+  
 
 
 % ...................................................................
