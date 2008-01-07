@@ -51,10 +51,10 @@ void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string
 
 
 void 
-AtomisticGenerator::do_init()
+AtomisticGenerator::do_init(double a1, double a2, double a3)
 {
 
-  std::cout << "Beginning AtomisticGenerator::do_init()" << std::endl;
+  std::cout << "Building Atomistic Structure " << _as->get_name() << std::endl;
   
 	
 // Set material informations 
@@ -87,18 +87,23 @@ AtomisticGenerator::do_init()
   //Set appropriate options for corresponding materials and structures
   if ( material.compare("Si") == 0 ) 
     {std::cout << "Setting silicon options " << std::endl;
-      ax = 5.4307; ay = ax; az = ax; set_lattice_type("fcc"); set_crystal_basis("zincblende", "A", "A");}
+      ax = 5.4307; ay = ax; az = ax; 
+      if (a1 != 0.0) ax = a1; if (a2 != 0.0) ay = a1; if (a3 != 0.0) az = a1;
+      set_lattice_type("fcc"); set_crystal_basis("zincblende", "A", "A");}
   else if (material.compare("GaAs") == 0)
-    {ax = 5.6535;  ay = ax; az = ax; set_lattice_type("fcc"); set_crystal_basis("zincblende", "A", "B");}
+    {ax = 5.6535;  ay = ax; az = ax; 
+     if (a1 != 0.0) ax = a1; if (a2 != 0.0) ay = a1; if (a3 != 0.0) az = a1;
+     set_lattice_type("fcc"); set_crystal_basis("zincblende", "A", "B");}
   else if ( material.compare("Diamond") == 0 ) 
-    {ax =3.56685; ay = ax; az = ax; set_lattice_type("fcc"); set_crystal_basis("diamond", "A");}
+    {ax =3.56685; ay = ax; az = ax; 
+      if (a1 != 0.0) ax = a1; if (a2 != 0.0) ay = a1; if (a3 != 0.0) az = a1;
+     set_lattice_type("fcc"); set_crystal_basis("diamond", "A");}
  else if ( material.compare("GaN") == 0 ) 
-   {ax =3.190; ay = ax; az = 5.190; set_lattice_type("hexagonal"); set_crystal_basis("wurtzite", "A", "B", 0.0);}
+   {ax =3.190; ay = ax; az = 5.190; 
+     if (a1 != 0.0) ax = a1; if (a2 != 0.0) ay = a1; if (a3 != 0.0) az = a1;
+    set_lattice_type("hexagonal"); set_crystal_basis("wurtzite", "A", "B", 0.0);}
     //...to be completed...
 
-
-    
-      
     
     
     
@@ -242,9 +247,7 @@ AtomisticGenerator::change_specie(std::string preserve){
     else if ( material.compare("Diamond") == 0 ) {assign["A"] = "C";}
  
     const std::map<std::string, std::string>::iterator assign_last = assign.end();
- 
-    std::cout << "Assign[A] " << assign["A"] << std::endl; 
-    std::cout << "Assign[B] " << assign["B"] << std::endl; 
+  
     //Cycle upon all atoms and change specie according to assign map
     Point p(0.0, 0.0, 0.0);
 
@@ -285,8 +288,6 @@ AtomisticGenerator::change_specie(std::string preserve){
 
 		for ( std::vector<Atom>::iterator atom = _crystal_basis.begin(); atom != _crystal_basis.end(); atom++){
 
-		  //tmp_atom.specie = (*atom).specie;
-		  //		    std::cout << "specie" << tmp_atom.specie <<std::endl;
 		  tmp_atom.position=_local_origin +  (*lattice) + _rotation*_prim_vec*(*atom).position;
 		  tmp_atom.id = *reg;
 		  if ( assign.find( (*atom).specie ) != assign_last ){
@@ -683,9 +684,6 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
 
 assert(~(_crystal_basis.empty()));
 
-#ifdef DEBUG
- std::cerr << "done" << std::endl;
-#endif
 };
 
 

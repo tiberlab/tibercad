@@ -286,9 +286,7 @@ Control::create_atomistic_structures(void)
   for ( ; mapit != mapend; ++mapit)
   {
     const RegionStructure& data = mapit->second;
-    std::cout << " region name is " << data.get_region_name() << endl;
-    std::cout << " region ID is " << data.get_region_ID() << endl;
-
+    
     ModelOptions atomistic_options = data.get_options();
 
     const string& st_name = data.get_region_name();

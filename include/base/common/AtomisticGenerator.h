@@ -49,7 +49,7 @@ public:
   static const double scale;
 
   //! Initialize structure informations
-  void do_init(void);
+  void do_init(double a1 = 0.0, double a2 = 0.0, double a3 = 0.0);
 
 
   //! Lattice constants  

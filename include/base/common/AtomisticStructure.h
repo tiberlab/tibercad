@@ -77,7 +77,7 @@ public:
   double* get_periodicity_vectors(void);
 
   //! Initialize the structure (up to now reading a structure from file is needed)
-  void init(void); 
+  void init(double a1 = 0.0, double a2 = 0.0, double a3 = 0.0); 
 
   //! Number of atoms in structure
   int N_atoms; 

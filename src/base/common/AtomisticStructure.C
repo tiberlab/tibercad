@@ -51,7 +51,7 @@ AtomisticStructure::create(const std::string& name, const ModelOptions& options)
 
 
 void
-AtomisticStructure::init(void)
+AtomisticStructure::init(double a1, double a2, double a3)
 {
 
 #ifdef DEBUG
@@ -104,13 +104,13 @@ AtomisticStructure::init(void)
 	}
     }
 
-     for (std::set<std::string>::iterator i= _regionset.begin(); i !=_regionset.end(); i++)
-       {std::cerr << "WRITING " << std::endl;
-         std::cerr << "_REGION IS " << *i << std::endl;}
+   //   for (std::set<std::string>::iterator i= _regionset.begin(); i !=_regionset.end(); i++)
+//        {std::cerr << "WRITING " << std::endl;
+//          std::cerr << "_REGION IS " << *i << std::endl;}
 
-    for (std::set<ID>::iterator i= _IDset.begin(); i !=_IDset.end(); i++)
-       {std::cerr << "WRITING " << std::endl;
-         std::cerr << "_REGION IS " << *i << std::endl;}
+//     for (std::set<ID>::iterator i= _IDset.begin(); i !=_IDset.end(); i++)
+//        {std::cerr << "WRITING " << std::endl;
+//          std::cerr << "_REGION IS " << *i << std::endl;}
 
 
 
@@ -127,7 +127,7 @@ AtomisticStructure::init(void)
       AtomisticGenerator* generate = dynamic_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, get_device()->get_mesh().mesh_dimension()) );
 
 
-      generate->do_init();
+      generate->do_init(a1, a2, a3);
       print_structure("structure.xyz");
       print_structure("structure.gen");
     }
