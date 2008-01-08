@@ -1,0 +1,131 @@
+# InN
+
+structure = wz;
+
+Eg_G = 0.78;
+#E_v = -2.34;
+# from Nextnano
+E_v = -0.462;
+
+m_c_xx = 0.07;
+m_c_zz = 0.07;
+
+A1 = -8.21;
+A2 = -0.68;
+A3 = 7.57;
+A4 = -5.23;
+A5 = -5.11;
+A6 = -5.96;
+
+delta_cr = 0.04;
+delta_s = 0.005;
+
+a_x = -3.5;
+a_z = -3.5;
+
+D1 = -3.7;
+D2 = 4.5;
+D3 = 8.2;
+D4 = -4.1;
+D5 = -4.0;
+D6 = -5.5;
+
+permittivity = 14.4;
+
+
+# lattice constants
+a = 0.3545
+c = 0.5703
+
+# stiffness data
+C11 = 223.0
+C12 = 115.0
+C13 = 92.0
+C33 = 224.0
+C44 = 48.0
+
+# piezoelectricity data
+e33 = 0.97
+e31 = -0.57
+e15 = -0.4
+Pz = -0.042
+
+
+
+#
+# mobility
+#
+
+# mobility
+mu_max_e = 2400.0
+exponent_e = 1.9
+mu_max_h = 2400.0
+exponent_h = 1.9
+
+# doping dependent
+mobility_formula = 1
+mumin1_e = 120
+mumin2_e = 115
+mu1_e = 130
+Pc_e = 6.5e17
+Cr_e = 9.68e16
+Cs_e = 7.2e20
+alpha_e = 1.45
+beta_e = 1.85
+mumin1_h = 44.9
+mumin2_h = 0
+mu1_h = 50
+Pc_h = 6.5e17
+Cr_h = 9.68e16
+Cs_h = 7.2e20
+alpha_h = 1.45
+beta_h = 1.85
+
+# high field dependency
+Vsat_Formula = 2
+beta0_e = 2.2
+A_vsat_e = 2.6e+07 	
+B_vsat_e = 0
+vsat_min_e =  2.2e+07	
+beta0_h = 2.2
+A_vsat_h = 2.6e+07	
+B_vsat_h = 0
+vsat_min_h =  2.2e+07	
+#
+
+
+
+
+mumin_e = 88
+am_e = -0.67
+mud_e = 2.2e+03
+ad_e = -4
+N0_e = 1.25+17
+an_e = 1.9
+a_e = 0.98
+aa_e = -0.15
+mumin_h = 54.3
+am_h = -0.57
+mud_h = 4.07e+02
+ad_h = -2.23
+N0_h = 2.35e+17
+an_h = 2.4
+a_h = 0.88
+aa_h = -0.146
+
+# SRH recombination
+Etrap    = 0.0
+taumin_e = 0.0
+taumax_e = 1.0e-9
+Nref_e   = 1.0e+18
+gamma_e  = 1
+Talpha_e = -1.5
+taumin_h = 0.0
+taumax_h = 1.0e-9
+Nref_h   = 1.0e+18
+gamma_h  = 1
+Talpha_h = -1.5
+
+#Lattice thermal conductivity
+therm_lat_cond_x = 0.45
+therm_lat_cond_z = 0.45
