@@ -74,6 +74,7 @@ $default_precision = 1e-6;
 @known_suffixes = ('dat', 'gmv');
 %options = (
     'verbose' => 0,
+    'testonly' => 0,
     'smtp_server' => "localhost",
     'mail_sender' => "$ENV{USER}",
     'package' => "unknown"
@@ -318,7 +319,10 @@ sub run_test($) {
   chdir($dir);
   print("\nRunning test in $dir ...\n") if verbose();
 
-  my $failure = run_executable();
+  my $failure = 0;
+  if (not $options{'testonly'}) {
+    $failure = run_executable();
+  }
   $failure = compare_results_with_reference() unless $failure;
 
   chdir($olddir);

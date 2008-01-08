@@ -359,7 +359,7 @@ $Solver
   {
     substrate = substr
  #   xmonitor =  true
-    monitor = true
+    #monitor = true
 
 
  #   tolerance = 1e-8 # 1e-8 ok senza  oxide

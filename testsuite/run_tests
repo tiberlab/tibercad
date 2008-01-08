@@ -24,10 +24,10 @@ USAGE: run_tests [OPTIONS]
     --verbose | -v              : do more output
     --quiet | --noverbose       : do less output
     --config=<file> | -c <file> : use <file> as global configuration file
-    --sendmail | --mail |
-                 -s | -m        : send error report to recipients specified
+    --mail | -m                 : send error report to recipients specified
                                   in configuration
     --test=<a,b,c,..> | -t <..> : perform tests a, b, c
+    --skip                      : only check data, don't run the tests
     --purge | -p                : delete output of each test after run if
                                   test was succesful. If specified more than
                                   once, deletes output in any case
@@ -65,6 +65,9 @@ our $purge = 0;
 # the tests to perform
 our @tests = ();
 
+# skip running the tests
+our $skip = '';
+
 # whether to send mail
 our $sendmail = '';
 
@@ -88,7 +91,8 @@ GetOptions('verbose!' => \$verbose,
            'quiet' => sub {$verbose = 0},
            'purge+' => \$purge,
            'config=s' => \$configfile,
-           'sendmail|mail!' => \$sendmail,
+           'mail!' => \$sendmail,
+           'skip!' => \$skip,
            'test=s' => \@tests,
            'help' => \&usage,
            'info' => \$info);
@@ -98,6 +102,7 @@ GetOptions('verbose!' => \$verbose,
 
 
 set_option('verbose', $verbose);
+set_option('testonly', $skip);
 
 
 read_configuration($configfile);
