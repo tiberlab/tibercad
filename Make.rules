@@ -2,12 +2,21 @@
 
 # Useful rules
 
+.PHONY: all-recursive clean-recursive distclean-recursive
+all-recursive: $(subdirs)
 
+clean-recursive: $(subdirs)
+
+distclean-recursive: $(subdirs)
+
+
+.PHONY: src-clean
 src-clean:
 	@echo -n "Cleaning up ."
 	@echo `expr "$$PWD" : "$(topdir)\(.*\)"`
 	-@rm -f *.o *~ .*.d *~
 
+.PHONY: src-distclean
 src-distclean:
 	@echo -n "Cleaning up ."
 	@echo `expr "$$PWD" : "$(topdir)\(.*\)"`
@@ -16,7 +25,7 @@ src-distclean:
 
 .PHONY: $(subdirs)
 $(subdirs):
-	@$(MAKE) -C $@ $(MAKECMDGOALS)
+	@$(MAKE) --no-print-directory -C $@ $(MAKECMDGOALS)
 
 
 

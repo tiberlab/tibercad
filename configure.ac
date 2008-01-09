@@ -13,6 +13,9 @@ AC_REVISION([$Revision: 0.1$])
 AC_LANG([C++])
 
 
+# The host
+AC_CANONICAL_HOST
+
 
 #
 # Check for programs.
@@ -133,6 +136,15 @@ TC_GSL
 # add RPATH to LDFLAGS
 [GSL_LIBS=`echo "$GSL_LIBS" | sed -r 's/-L([^[:space:]]+)/-Wl,-rpath,\1 -L\1/'`]
 
+
+# PARDISO
+TC_PARDISO
+
+# DFTB+
+TC_DFTB
+
+# HETERO
+TC_HETERO
   
 #
 # Checks for header files.

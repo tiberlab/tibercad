@@ -109,8 +109,10 @@ SimulationInterface::create(const string& type,
       sim = QuantumDispersion::create();
     else if (type_name == "tunnelingcurrent")
       sim = TunnelingCurrent::create();
+#ifdef ENABLE_DFTB
     else if (type_name == "tightbinding")
       sim = Dftb::create();
+#endif
     else if (type_name == "opticalspectrum")
       sim = OptRecombinSpectrum::create();
     else if (type_name == "poisson")

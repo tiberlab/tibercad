@@ -7,6 +7,9 @@ export CC=gcc-4.1.1
   --with-petsc-prefix=/usr/pack/petsc-2.3.2-ma \
   --with-petsc-arch=linux-gnu-complex \
   --with-slepc-prefix=/usr/pack/slepc-2.3.2-ma \
+  --with-mkl=/usr/pack/intel_mkl-8.0-ma \
   --disable-modules \
+  --enable-pardiso \
+  --enable-dftb \
+  --enable-hetero \
   --with-libmesh-prefix=/usr/pack/libmesh-0.6.0_20070607cvs-ma 
-#  --with-libmesh-prefix=/home/nano0/maufder/Projects/TIBERCAD/libmesh-0.6.1 

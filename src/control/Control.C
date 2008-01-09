@@ -64,7 +64,6 @@ Control::~Control(void)
   Device::destroy(_device);
 
   delete _database;
-
 }
 
 
@@ -82,6 +81,7 @@ Control::invalidate_environments(void)
 void
 Control::init(void) throw (InitFailedException, ModelErrorException)
 {
+
   try
   {
     _database = new Database();

@@ -12,7 +12,11 @@ using namespace std;
 
 extern "C"
 {
+#ifdef ENABLE_HETERO
   int call_hetero(double potential, double *kpar, double *transmission, double* Energy, int N);
+#else
+  int call_hetero(double potential, double *kpar, double *transmission, double* Energy, int N) {};
+#endif
 }
 //===================================================================================//
 
@@ -34,6 +38,17 @@ TunnelingCurrent:: ~TunnelingCurrent()
   delete  Ves;
   
 }
+
+
+
+TunnelingCurrent*  TunnelingCurrent::create()
+{
+#ifndef ENABLE_HETERO
+  throw InitFailedException("Cannot create TunnelinCurrent model: Hetero is disabled.");
+#endif
+  return (new TunnelingCurrent );
+}
+
 
 //===================================================================================//
 void TunnelingCurrent::write_current()

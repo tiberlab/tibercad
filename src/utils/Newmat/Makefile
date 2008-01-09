@@ -19,7 +19,7 @@ objects		:= $(patsubst %.cpp, %.$(obj-suffix), $(srcfiles))
 
 
 all: $(objects)
-	@$(CXX) -fPIC -shared -o $(topdir)/lib/libnewmat.so $(objects)
+	@$(CXX) -fPIC -shared -o $(topdir)/lib/libnewmat.$(shared_libext) $(objects)
 
 
 

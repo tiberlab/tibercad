@@ -3,10 +3,13 @@
 
 topdir := ../..
 
-# we have to compile each module
-subdirs := SLEPC Tensor DFTB Newmat
-
 include $(topdir)/Make.common
+
+# we have to compile each module
+subdirs := SLEPC Tensor Newmat
+ifeq ($(enable_dftb), yes)
+ subdirs += DFTB
+endif
 
 
 include $(topdir)/Make.rules

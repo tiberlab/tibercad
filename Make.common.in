@@ -3,10 +3,22 @@
 # Common definitions for all Makefiles
 topdir := @abs_top_builddir@
 
+# The OS
+hostos := @host_os@
 
 # libmesh can be found here
 #libmesh := @LIBMESH_PREFIX@
 libmesh_config := @LIBMESH_CONFIG@
+
+# use or not PARDISO
+enable_pardiso = @ENABLE_PARDISO@
+
+# do we have DFTB?
+enable_dftb = @ENABLE_DFTB@
+
+# do we have HETERO?
+enable_hetero = @ENABLE_HETERO@
+
 
 # the compiler
 CXX = @CXX@
@@ -48,9 +60,9 @@ obj-suffix := $(METHOD).o
 
 
 # shared library extension
-shared_libext := .so
+shared_libext := so
 ifeq ($(findstring cygwin,$(hostos)),cygwin)
-  shared_libext := .dll
+  shared_libext := dll
 endif
 
 
@@ -71,19 +83,22 @@ endif
 
 
 LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib
-LDFLAGS += -Wl,-rpath,$(topdir)/lib/tibermodels -L$(topdir)/lib/tibermodels
-LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib -ltensor
-LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib -lnewmat
+ifeq ($(build_modules), yes)
+ LDFLAGS += -Wl,-rpath,$(topdir)/lib/tibermodels -L$(topdir)/lib/tibermodels
+endif
+LDFLAGS += -ltensor -lnewmat
 
 LDFLAGS += @GSL_LIBS@
 
 LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
 
+LDFLAGS += -L@MKL_LIBDIR@ -Wl,-rpath,@MKL_LIBDIR@
 
-TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*")
+
+TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*")
 
 
-NON_TIBER_INCLUDES := $(INCLUDE) @GSL_CFLAGS@ @BOOST_CPPFLAGS@
+NON_TIBER_INCLUDES := $(INCLUDE) @GSL_CFLAGS@ @BOOST_CPPFLAGS@ -I@MKL_INCLUDEDIR@
 NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
 
 
@@ -98,10 +113,10 @@ vpath %.h $(include_dirs)
 .PHONY: all clean distclean
 
 # default target
-all: $(subdirs)
+all: all-recursive
 
-clean: $(subdirs) src-clean
+clean: clean-recursive src-clean
 
-distclean: $(subdirs) src-distclean
+distclean: distclean-recursive src-distclean
 
 

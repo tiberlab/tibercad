@@ -122,6 +122,69 @@ AC_CACHE_CHECK([wether Boost::filesystem is available], tc_cv_boost_filesystem_l
 ])dnl
 
 
+dnl check for MKL
+dnl
+AC_DEFUN([TC_MKL],
+[AC_CACHE_CHECK([whether MKL is available], tc_cv_mkl_dir,
+ [AC_ARG_WITH([mkl], AS_HELP_STRING([--with-mkl=DIR],
+ 	[specify the MKL installation path]),
+	[tc_cv_mkl_dir="$with_mkl"])
+  if test "x$tc_cv_mkl_dir" != "x"; then
+    AC_SUBST([MKL_LIBDIR], "$tc_cv_mkl_dir/lib/32")
+    AC_SUBST([MKL_INCLUDEDIR], "$tc_cv_mkl_dir/include")
+  else
+    tc_cv_mkl_dir="no"
+  fi
+ ])dnl
+])dnl
+
+
+dnl enable or disable PARDISO
+dnl
+AC_DEFUN([TC_PARDISO],
+[AC_REQUIRE([TC_MKL])dnl
+ AC_ARG_ENABLE([pardiso], AS_HELP_STRING([--enable-pardiso],
+	[enable PARDISO linear solver]),
+	[if test $enableval != "no"; then
+	  AC_DEFINE([ENABLE_PARDISO], [1],
+	  	[Define to 1 if pardiso is enabled])
+	  AC_SUBST([ENABLE_PARDISO], ["yes"])
+	else
+	  AC_SUBST([ENABLE_PARDISO], ["no"])
+	fi], [AC_SUBST([ENABLE_PARDISO], ["no"])])
+])dnl
+
+
+dnl enable or disable DFTB
+dnl
+AC_DEFUN([TC_DFTB],
+[AC_ARG_ENABLE([dftb], AS_HELP_STRING([--enable-dftb],
+	[enable DFTB+ for tight-binding]),
+	[if test $enableval != "no"; then
+	  AC_DEFINE([ENABLE_DFTB], [1],
+	  	[Define to 1 if DFTB+ is enabled])
+	  AC_SUBST([ENABLE_DFTB], ["yes"])
+	else
+	  AC_SUBST([ENABLE_DFTB], ["no"])
+	fi], [AC_SUBST([ENABLE_DFTB], ["no"])])
+])dnl
+
+
+dnl enable or disable Hetero
+dnl
+AC_DEFUN([TC_HETERO],
+[AC_ARG_ENABLE([hetero], AS_HELP_STRING([--enable-hetero],
+	[enable HETERO for tunneling current]),
+	[if test $enableval != "no"; then
+	  AC_DEFINE([ENABLE_HETERO], [1],
+	  	[Define to 1 if HETERO is enabled])
+	  AC_SUBST([ENABLE_HETERO], ["yes"])
+	else
+	  AC_SUBST([ENABLE_HETERO], ["no"])
+	fi], [AC_SUBST([ENABLE_HETERO], ["no"])])
+])dnl
+
+
 
 dnl check for GNU GSL
 dnl

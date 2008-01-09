@@ -11,11 +11,11 @@ void ModifiedBroyden::do_solve(void)
  
   bool do_x_monitor = false;
 
-  PetscDraw draw;
-  PetscDrawLG lg;
-  PetscDrawAxis axis;	
-  PetscDrawViewPorts *ports;
-  PetscErrorCode ierr;
+  //PetscDraw draw;
+  //PetscDrawLG lg;
+  //PetscDrawAxis axis;	
+  //PetscDrawViewPorts *ports;
+  //PetscErrorCode ierr;
 
   parse_options();
 
@@ -44,27 +44,27 @@ void ModifiedBroyden::do_solve(void)
 
     do_x_monitor = true;
    
-    try
-    {
-      ierr = PetscDrawCreate(PETSC_COMM_SELF,0,title,0,0,500,500,&draw);
-    }
-    catch (...)
-    {
-      do_x_monitor = false;
-    }
+    //try
+    //{
+    //  ierr = PetscDrawCreate(PETSC_COMM_SELF,0,title,0,0,500,500,&draw);
+    //}
+    //catch (...)
+    //{
+    //  do_x_monitor = false;
+    //}
   }
 
-  if (do_x_monitor)
-  {
-    PetscDrawSetFromOptions(draw);
-    PetscDrawViewPortsCreate(draw,1,&ports);
-    PetscDrawViewPortsSet(ports,0);
+  //if (do_x_monitor)
+  //{
+  //  PetscDrawSetFromOptions(draw);
+  //  PetscDrawViewPortsCreate(draw,1,&ports);
+  //  PetscDrawViewPortsSet(ports,0);
 
-    PetscDrawLGCreate(draw,1,&lg);
-    PetscDrawLGGetAxis(lg,&axis);
-    PetscDrawAxisSetColors(axis,PETSC_DRAW_BLACK,PETSC_DRAW_RED,PETSC_DRAW_BLUE);
-    PetscDrawAxisSetLabels(axis,"Relative error logarithm","iteration","");
-  }
+  //  PetscDrawLGCreate(draw,1,&lg);
+  //  PetscDrawLGGetAxis(lg,&axis);
+  //  PetscDrawAxisSetColors(axis,PETSC_DRAW_BLACK,PETSC_DRAW_RED,PETSC_DRAW_BLUE);
+  //  PetscDrawAxisSetLabels(axis,"Relative error logarithm","iteration","");
+  //}
 
 
 
@@ -104,9 +104,9 @@ void ModifiedBroyden::do_solve(void)
       {
 	double xd = _it_number;
 	double yd = log(_rel_error)/log(10);
-	PetscDrawLGAddPoint(lg,&xd,&yd);
-	PetscDrawLGDraw(lg);
-	PetscDrawLGIndicateDataPoints(lg); 
+	//PetscDrawLGAddPoint(lg,&xd,&yd);
+	//PetscDrawLGDraw(lg);
+	//PetscDrawLGIndicateDataPoints(lg); 
       }
 
 
@@ -123,11 +123,11 @@ void ModifiedBroyden::do_solve(void)
   
   if (do_x_monitor)
   {
-   PetscDrawFlush(draw);
-   PetscSleep(2);
-   PetscDrawViewPortsDestroy(ports);
-   PetscDrawLGDestroy(lg);
-   PetscDrawDestroy(draw);
+   //PetscDrawFlush(draw);
+   //PetscSleep(2);
+   //PetscDrawViewPortsDestroy(ports);
+   //PetscDrawLGDestroy(lg);
+   //PetscDrawDestroy(draw);
   }
 
   clear_F();
@@ -281,7 +281,7 @@ inline void  ModifiedBroyden::calculate_new_solution(void)
   for (unsigned int i = 2; i <= _it_number - 1; i++)
     _X_correction->add( _p(_it_number,i), *(_F[i]) );
      
-  *_X += *_X_correction;
+  *__X += *_X_correction;
 
   
 }
@@ -298,7 +298,7 @@ inline double ModifiedBroyden::estimate_step()
   {
     t1 += (*_X_correction)(i) * (*_X_correction)(i);
 
-    t2 += (*_X)(i) * (*_X)(i) ;
+    t2 += (*__X)(i) * (*__X)(i) ;
   }
   
   t1 /= _vector_size;
@@ -367,19 +367,19 @@ inline void ModifiedBroyden::init_X(void)
   _vector_size = solution.size();
 
  
-  if (_X.get() == NULL) 
+  if (__X.get() == NULL) 
   {
-    _X = NumericVector<double>::build();
-    _X->init(_vector_size);
+    __X = NumericVector<double>::build();
+    __X->init(_vector_size);
   }
   else
   {
-    _X->init(0);
-    _X->init(_vector_size);
+    __X->init(0);
+    __X->init(_vector_size);
   }
 
 
-  *_X = solution;
+  *__X = solution;
 
  
  
@@ -397,6 +397,6 @@ inline void ModifiedBroyden::init_X(void)
   
 
   if  (_estimate_omega_0)
-    _omega_0 = _X->l2_norm();
+    _omega_0 = __X->l2_norm();
  
 }

@@ -18,7 +18,7 @@ void DIISMBmethod::calculate_new_solution()
 
   // _X_correction->add(- _alpha  , *(_F[_it_number]) );
    
-  *_X += *_X_correction;
+  *__X += *_X_correction;
 }
 
 

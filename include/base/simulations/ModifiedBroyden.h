@@ -131,7 +131,7 @@ class ModifiedBroyden:  public SelfconsistentSolver
 
 
   //! current solution 
-  AutoPtr <  NumericVector<double> > _X;
+  AutoPtr <  NumericVector<double> > __X;
  
 
 
@@ -281,7 +281,7 @@ void ModifiedBroyden::evaluate_and_save_F(void)
   
 
  
-  set_solution_vector(*_X); //set solution from previuos Broyden step
+  set_solution_vector(*__X); //set solution from previuos Broyden step
  
  
 
@@ -299,7 +299,7 @@ void ModifiedBroyden::evaluate_and_save_F(void)
   
  
 
-  difference = *_X;
+  difference = *__X;
   difference.close();
 
   difference -= solution_after;
@@ -309,8 +309,8 @@ void ModifiedBroyden::evaluate_and_save_F(void)
   //check if converged
   double t1 = difference.l2_norm();
 
-  _X->close();
-  double t2 = _X->l2_norm();
+  __X->close();
+  double t2 = __X->l2_norm();
 
 
 
@@ -402,7 +402,7 @@ inline
 void ModifiedBroyden::calculate_new_first_iteraion_solution(void)
 {
 
- _X->add(-_alpha,*(_F[1])); 
+ __X->add(-_alpha,*(_F[1])); 
 
  
 }

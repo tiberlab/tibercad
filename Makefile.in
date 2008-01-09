@@ -6,20 +6,43 @@ srcdir = @srcdir@
 
 include Make.common
 
+
+
 ifeq ($(build_modules), yes)
- MODULE_LIBS	:= lib/libeigen_solver.so lib/libdftbpc.so lib/tibermodels/lib*.so
+ MODULE_LIBS := -leigen_solver lib/tibermodels/lib*.so
 else
- MODULE_LIBS	:= -leigen_solver -ldftbpc -lhetero
+ MODULE_LIBS := -leigen_solver
+endif
+
+ifeq ($(enable_pardiso), yes)
+ MODULE_LIBS += -lmkl_solver -lguide
+endif
+
+ifeq ($(enable_dftb), yes)
+ MODULE_LIBS += -ldftbpc
+endif
+
+ifeq ($(enable_hetero), yes)
+ MODULE_LIBS += -lhetero -lmkl_p4 -lguide
 endif
 
 
-all: src
+
+all: lib/libtibercad.$(shared_libext)
+
+
+lib/libtibercad.$(shared_libext): src
+	@echo "Linking libtibercad.$(shared_libext) ..."
 	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
-		-Wl,-soname,libtibercad.so.0 -o lib/libtibercad.so.0.0 \
-		$(MODULE_LIBS) -lmkl_solver -lmkl_lapack $(LDFLAGS)
-	@cd lib && ln -f -s libtibercad.so.0.0 libtibercad.so.0 \
-		&& ln -f -s libtibercad.so.0 libtibercad.so && cd ..
+		-o lib/libtibercad.$(shared_libext) \
+		$(MODULE_LIBS) $(LDFLAGS)
 	@$(MAKE) --no-print-directory -C src/tibercad tibercad
+
+#	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
+		-Wl,-soname,libtibercad.so.0 -o lib/libtibercad.so.0.0 \
+		$(MODULE_LIBS) -lmkl_lapack $(LDFLAGS)
+#	@cd lib && ln -f -s libtibercad.so.0.0 libtibercad.so.0 \
+		&& ln -f -s libtibercad.so.0 libtibercad.so && cd ..
 
 
 clean: src

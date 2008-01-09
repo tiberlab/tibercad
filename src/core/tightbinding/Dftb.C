@@ -1,3 +1,9 @@
+// $Id$
+
+#include "tiber_config.h"
+
+#ifdef ENABLE_DFTB
+
 //modules includes
 #include "Dftb.h"
 #include "BoundaryProperties.h"
@@ -404,3 +410,6 @@ void Dftb::print_dftb_options(void){
   std::cout << "skInterp is " << _dftb_options.skInterp << std::endl;
 
 };
+
+
+#endif // ENABLE_DFTB

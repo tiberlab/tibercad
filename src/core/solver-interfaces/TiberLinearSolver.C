@@ -1,9 +1,11 @@
 // $Id$
 
-
+#include "tiber_config.h"
 #include "TiberLinearSolver.h"
 #include "TiberPetscLinearSolver.h"
-#include "PardisoLinearSolver.h"
+#ifdef ENABLE_PARDISO
+# include "PardisoLinearSolver.h"
+#endif
 #include "InitFailedException.h"
 
 
@@ -14,9 +16,10 @@ TiberLinearSolver::create(const std::string& type)
 
   if (type == "petsc")
     solver = new TiberPetscLinearSolver();
+#ifdef ENABLE_PARDISO
   else if (type == "pardiso")
     solver = new PardisoLinearSolver();
-    //solver = NULL;
+#endif
   
   if (solver == NULL)
   {

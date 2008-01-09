@@ -135,13 +135,6 @@ class TunnelingCurrent: public KspaceIntegration
 
 //---------------------------------------------------------------------------//
 
-inline TunnelingCurrent*  TunnelingCurrent::create()
-{
-  return (new TunnelingCurrent );
-}
-
-//---------------------------------------------------------------------------//
-
 inline double TunnelingCurrent::thermal_probability(double Fermi_energy, double Energy)
 {
   

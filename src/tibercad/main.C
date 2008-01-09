@@ -3,19 +3,17 @@
 
 #include "Control.h"
 #include "DLLoader.h"
+#include "TiberCad.h"
 
-#include "libmesh.h"
 
 #include <iostream>
 
-#include "EigenSolver.h"
 
 
 using namespace std;
 
 
-// This is the first TiberCAD main !!!
-// It will be extended with tools for command line argument parsing
+// Will be extended with tools for command line argument parsing
 // and so on
 int main (int argc, char** argv)
 {
@@ -51,20 +49,28 @@ int main (int argc, char** argv)
     // Set up search path for materials
   }
 
-  libMesh::init(argc, argv);
-  {
-    EigenSolver::slepc_init(argc, argv);
+  //
+  // here begins real TiberCAD
+  //
+  TiberCad::init(argc, argv);
+  try {
 
     Control control(inputfile);
     
     control.init();
     control.run_simulation();
+    cout << "Simulation finished..." << endl << "Goodbye" << endl;
 
-    EigenSolver::slepc_done();
+  }
+  catch (exception& e)
+  {
+    cout << "ERROR: " << e.what() << endl;
+  }
+  catch (...)
+  {
+    cout << "ERROR: TiberCAd crashed for unknown reason." << endl;
   }
 
-  cout << "Simulation finished..." << endl << "Goodbye" << endl;
-
-  return libMesh::close();
+  return TiberCad::cleanup();
 }
 

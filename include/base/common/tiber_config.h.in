@@ -1,4 +1,3 @@
-/* include/base/common/optional.h.in.  Generated from configure.ac by autoheader.  */
 
 /* define if boost is available. */
 #undef HAVE_BOOST
@@ -23,3 +22,12 @@
 
 /* Define to 1 if you have the isinf function */
 #undef HAVE_ISINF
+
+/* Define to 1 if pardiso is enabled */
+#undef ENABLE_PARDISO
+
+/* Define to 1 if DFTB+ is enabled */
+#undef ENABLE_DFTB
+
+/* Define to 1 if HETERO is enabled */
+#undef ENABLE_HETERO
