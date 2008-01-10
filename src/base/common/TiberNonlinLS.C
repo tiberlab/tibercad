@@ -124,13 +124,21 @@ TiberNonlinLS::solve(void)
     
     // solve the linear system
     _solver->solve(*matrix, *solution, *rhs, tol, _lin_max_it);
+#ifndef DEBUG
+    cout << "." << flush;
+#endif
 
     // the l2 norm of the current residual
     norm_rhs = rhs->l2_norm();
     norm_res = norm_rhs;
     
     if (norm_res < eps_res)
+    {
+#ifndef DEBUG
+      cout << endl;
+#endif
       break;
+    }
 
     u_old = u;
     norm_du_old = norm_du;
@@ -189,13 +197,23 @@ TiberNonlinLS::solve(void)
 
     // check for convergence
     if ((norm_du < eps) || (norm_res < eps_res))
+    {
+#ifndef DEBUG
+      cout << endl;
+#endif
       break;
+    }
       
 
     // check for divergence
     //if ((norm_res > norm_rhs) || isnan(norm_res))
     if (isnan(norm_res))
+    {
+#ifndef DEBUG
+      cout << endl;
+#endif
       throw (SNESDivergedError(-4, i, norm_rhs));
+    }
 
   
 
@@ -251,16 +269,28 @@ TiberNonlinLS::solve(void)
     //  norm_du = _max_step_size;
     //}
 
+#ifdef DEBUG
     cout << "  it " << i << ", |du| = " << norm_du << ", |r| = " << norm_res << endl;
+#endif
 
     tol *= tol;
       
 
     //if (norm_du < eps)
     if ((norm_du < eps) || (norm_res < eps_res))
+    {
+#ifndef DEBUG
+      cout << endl;
+#endif
       break;
+    }
     else if (i == _nonlin_max_it)
+    {
+#ifndef DEBUG
+      cout << endl << flush;
+#endif
       throw (PetscDivergedError(-3, i, norm_rhs));
+    }
 
   }
 

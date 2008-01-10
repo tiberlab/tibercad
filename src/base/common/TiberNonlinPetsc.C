@@ -148,8 +148,8 @@ TiberNonlinPetsc::solve(void)
   _n_nonlin_iterations = result.first;
   _final_residual_norm = result.second;
 
-  cerr << "iterations: " << _n_nonlin_iterations <<
-    ", |r| = " << _final_residual_norm << endl;
+  cout << "iterations: " << _n_nonlin_iterations <<
+    ", residual = " << _final_residual_norm << endl;
 
   update();
 }

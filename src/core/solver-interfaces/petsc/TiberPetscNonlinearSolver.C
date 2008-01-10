@@ -43,16 +43,28 @@ extern "C"
     KSPConvergedReason reason;
     KSPGetConvergedReason(ksp, &reason);
 
+#ifdef DEBUG
     if (its == 0)
       std::cerr << "it " << its << ", fnorm = " << fnorm << "\n";
+#endif
 
     if (fnorm != fnorm)
+    {
+#ifndef DEBUG
+      std::cout << std::endl << std::flush;
+#endif
       throw(KSPDivergedError(-8, its, fnorm));
+    }
 
     // check for convergence
     //if ((reason < 0) && (reason != -3) && (reason != -4))
     if ((reason < 0) && (reason != -3))
+    {
+#ifndef DEBUG
+      std::cout << std::endl << std::flush;
+#endif
       throw(KSPDivergedError(reason, its, fnorm));
+    }
 
 
     // we increase tolerance for linear solver at each nonlinear step
@@ -137,7 +149,7 @@ extern "C"
     throw(PetscRuntimeError(n));
   }
 
-
+/*
   // Checks the update vector before updating
   PetscErrorCode
   __tiber_snes_ls_precheck(SNES snes, Vec x, Vec y, void* ctx,
@@ -218,12 +230,14 @@ extern "C"
     
     return ierr;
   }
+*/
 
 
 
 
-
+  //
   // Convergence test
+  // 
 # if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
     (PETSC_VERSION_SUBMINOR >= 2))
   PetscErrorCode
@@ -232,10 +246,15 @@ extern "C"
   {
     int ierr = 0;
 
+#ifdef DEBUG
     std::cerr << "iteration " << it << ": xnorm = " << xnorm <<
       " gnorm = " << gnorm << " fnorm = " << fnorm << "\n";
+#else
+    std::cout << "." << std::flush;
+#endif
 
     return SNESConverged_LS(snes, it, xnorm, gnorm, fnorm, reason, ctx);
+    // TODO check gnorm
   }
 #else
   PetscErrorCode
@@ -244,8 +263,12 @@ extern "C"
   {
     int ierr = 0;
 
+#ifdef DEBUG
     std::cerr << "xnorm = " << xnorm << " gnorm = " << gnorm <<
       " fnorm = " << fnorm << "\n";
+#else
+    std::cout << "." << std::flush;
+#endif
 
     return SNESConverged_LS(snes, xnorm, gnorm, fnorm, reason, ctx);
   }
@@ -357,15 +380,17 @@ void TiberPetscNonlinearSolver<T>::init(void) throw (PetscRuntimeError)
 
     ierr = SNESSetType(_snes, SNESLS);
     _checkerr(ierr);
+
+/*
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
     (PETSC_VERSION_SUBMINOR >= 2))
-    //ierr = SNESLineSearchSetPreCheck(_snes,
-    //    __tiber_snes_ls_precheck, (void*) this);
+    ierr = SNESLineSearchSetPreCheck(_snes,
+        __tiber_snes_ls_precheck, (void*) this);
 
-    //ierr = SNESLineSearchSetPostCheck(_snes,
-    //    __tiber_snes_ls_postcheck, (void*) this);
+    ierr = SNESLineSearchSetPostCheck(_snes,
+        __tiber_snes_ls_postcheck, (void*) this);
 #endif
-
+*/
 
     SNESSetConvergenceTest(_snes, __tiber_snes_convergence_test, (void*) this);
 
@@ -565,6 +590,8 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
       throw (SNESDivergedError(reason, n_iterations, fnorm));
 #endif
   }
+
+  std::cout << std::endl;
 
   // return the # of its. and the final residual norm.  Note that
   // n_iterations may be zero for PETSc versions 2.2.x and greater.

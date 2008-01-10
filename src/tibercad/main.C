@@ -1,5 +1,6 @@
 // $Id$
 
+#include "boost/algorithm/string/trim.hpp"
 
 #include "Control.h"
 #include "DLLoader.h"
@@ -18,16 +19,22 @@ using namespace std;
 int main (int argc, char** argv)
 {
 
+  cout << "TiberCAD version 0.1.0" << endl << endl;
+
+  // take input file from command line or ask for it
   string inputfile;
   if (argc > 1)
     inputfile = string(argv[1]);
   else
   {
-    cerr << "Usage: tibercad <inputfile>" << endl;
-    return 1;
-  }
+    //cerr << "Usage: tibercad <inputfile>" << endl;
+    //return 1;
 
-  cout << "TiberCAD version 0.1.0" << endl << endl;
+    cout << "input file: ";
+    cin >> inputfile;
+    boost::algorithm::trim(inputfile);
+    cout << endl;
+  }
 
   // Set up some path
   {
