@@ -30,6 +30,14 @@ AC_PROG_CC
 #AC_DISABLE_STATIC
 #AC_PROG_LIBTOOL
 
+# check for libreadline
+VL_LIB_READLINE
+[LIBREADLINE]=""
+if test "$vl_cv_lib_readline" != "no"
+then
+  [LIBREADLINE]="$vl_cv_lib_readline"
+fi
+AC_SUBST([LIBREADLINE])
 
 # check for perl
 AC_PATH_PROG([PERL], [perl])
@@ -168,14 +176,6 @@ AC_TYPE_SIZE_T
 AC_FUNC_ERROR_AT_LINE
 AC_CHECK_FUNCS([pow sqrt isinf isnan])
 
-AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
-AC_CONFIG_FILES([Make.common
-                 doc/Doxyfile
-                 Makefile
-                 doc/Makefile
-                 src/utils/DFTB/Makefile
-                 src/utils/SLEPC/Makefile])
-
 #
 # check for other options
 #
@@ -208,5 +208,14 @@ then
   AC_MSG_NOTICE([])
 fi
 
+
+AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
+AC_CONFIG_FILES([Make.common
+                 doc/Doxyfile
+                 Makefile
+                 doc/Makefile
+                 src/tibercad/Makefile
+                 src/utils/DFTB/Makefile
+                 src/utils/SLEPC/Makefile])
 
 AC_OUTPUT

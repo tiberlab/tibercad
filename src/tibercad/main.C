@@ -2,12 +2,21 @@
 
 #include "boost/algorithm/string/trim.hpp"
 
+#include "tiber_config.h"
+
 #include "Control.h"
 #include "DLLoader.h"
 #include "TiberCad.h"
 
 
 #include <iostream>
+#ifdef HAVE_LIBREADLINE
+# ifdef HAVE_READLINE_READLINE_H
+#  include <readline/readline.h>
+# else
+#  include <readline.h>
+# endif
+#endif
 
 
 
@@ -30,10 +39,17 @@ int main (int argc, char** argv)
     //cerr << "Usage: tibercad <inputfile>" << endl;
     //return 1;
 
-    cout << "input file: ";
+#ifdef HAVE_LIBREADLINE
+    char *line = readline ("Enter input file: ");
+    inputfile = string(line);
+    free(line);
+#else
+    cout << "Enter input file: ";
     cin >> inputfile;
+#endif
     boost::algorithm::trim(inputfile);
     cout << endl;
+
   }
 
   // Set up some path

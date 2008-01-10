@@ -4,6 +4,7 @@ topdir := ../..
 
 include $(topdir)/Make.common
 
+ADDITIONAL_LIBS = @LIBREADLINE@
 
 #
 # source files
@@ -20,7 +21,7 @@ tibercad: $(objects)
 	@echo "Compiling tibercad executable ..."
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad \
 		-Wl,-export-dynamic -L$(topdir)/lib \
-		-Wl,-rpath,$(topdir)/lib -ltibercad
+		-Wl,-rpath,$(topdir)/lib -ltibercad $(ADDITIONAL_LIBS)
 
 
 
