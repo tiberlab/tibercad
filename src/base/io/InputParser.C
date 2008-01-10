@@ -103,13 +103,23 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
           in_stream.get(ch);
         }
 
-        if (ch == '#' )  //  skip  comments 
-        { 
-          in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
-          //      and   read  the  next keyword !!!
+        // *******************************  FOR DOS termination files (CR/LF)
+        if  ( int(ch) == 13 )
+        {
           in_stream.get(ch);
-             
         }
+
+
+        //*******************************
+
+
+            if (ch == '#' )  //  skip  comments 
+          { 
+            in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
+            //      and   read  the  next keyword !!!
+            in_stream.get(ch);
+             
+          }
 
 
       } while ( (ch == '\n') || (ch == ' ') || (ch == '#') );
@@ -412,6 +422,10 @@ const  ModelOptions& InputParser::read_parameters(std::string section_name, cons
          
           temp_options.clear();
 
+
+  
+
+
   if (!found_model)
   {
     return  temp_options;  //  model keyword  not  found-> returns empty ModelOptions !!
@@ -529,6 +543,10 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
     in_stream >> label; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
   } 
 
+
+
+  cut_off_CR(label, in_stream);
+
   cut_off_comment(label, in_stream); //  case  Region#commmm
 
   
@@ -538,6 +556,9 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
     if  (label == keyword  )
     {
       found = true;
+
+
+     
       break;
     }  
 
@@ -1045,6 +1066,9 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 
                     //region_options.set_option(v_label_string[i],v_string[i])) ;
                     region_options.set_option(v_label_string[i],v_string[i]) ;
+
+
+                   
 
                   }
                 }
@@ -2297,6 +2321,32 @@ void InputParser::cut_off_comment(string& label,  ifstream& in_stream)
 
 
 
+
+//  to handle CR DOS files line termination  
+void InputParser::cut_off_CR(string& label,  ifstream& in_stream)
+{
+
+  string::size_type loc = label.find_first_of( "CR", 0 );
+  if( loc != string::npos )
+  {
+    //    cout << "Found # at " << loc << endl;
+    label.erase(loc);
+
+    in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line
+
+  }
+  //  else
+  //    cout << "Didn't find # " << endl;        
+  // lab1.erase(loc);
+
+} //  end  method
+
+
+
+// ****************************************
+
+
+
 bool InputParser::skip_to_bracket(ifstream& in_stream)
 
 {
@@ -2315,13 +2365,21 @@ bool InputParser::skip_to_bracket(ifstream& in_stream)
       in_stream.get(ch);
     }
 
-    if (ch == '#' )  //  skip  comments 
-    { 
-      in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
-      //      and   read  the  next keyword !!!
+    // *******************************   FOR DOS termination files (CR/LF)
+    if  ( int(ch) == 13 )
+    {
       in_stream.get(ch);
-             
     }
+
+
+    //********************************
+        if (ch == '#' )  //  skip  comments 
+      { 
+        in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
+        //      and   read  the  next keyword !!!
+        in_stream.get(ch);
+             
+      }
 
 
   } while ( (ch == '\n') || (ch == ' ') || (ch == '#') );
