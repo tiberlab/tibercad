@@ -195,27 +195,29 @@ Atomistic  TB_1
 Here are the  description of  the available keywords for an \textbf{Atomistic} block.
 
 \textit{physical\_regions} (mandatory): list of the physical regions ( \textbf{TiberCAD} \textbf{Regions} or \textbf{Clusters} )  of 
-the device associated to an atomistic description. \textit{all} keyword is default, and is used to specifie all physical regions.
+the device associated to an atomistic description. \textit{all}  (default)  is used to specify all the physical regions.
 
-\textit{path} (optional): path for importing an atomistic structure from file. \textit{xyz} and \textit{gen} formats are supported, 
-and are automatically recognized by file extension. Atom position are imported as is, so they must be coherent with mesh geometry.
+\textit{path} (optional): path for importing an atomistic structure from an external file. \textit{xyz} and \textit{gen} formats are supported, 
+and are automatically recognized by file extension. Each of the atom positions is imported as is, so the atom  coordinates must be consistent with the  geometry of the device.
 
-If no path is specified, the Atomistic Generator is invoked to build the atomistic structure. The structure built will construct a bulk crystal
-structure, covering with proper atomic species the regions and taking in account the dimensional nature of the problem (up to now 1D
-structures are supported). 
-Atomistic Generator options are here described, and must be put in Atomistic section.
+If no path is specified, the T\textbf{iberCAD Atomistic Generator}  builds the atomistic structure; it is  constructed as a bulk crystal
+structure, covering with proper atomic species the physical regions and taking in account the dimension  of the problem (up to now 1D
+structures are supported)............ 
 
-\textit{reference\_region} (mandatory): the Atomistic Generator can only build pseudomorphic etherostructures. Reference region must be defined
-to specify which region ( \textbf{TiberCAD} \textbf{Regions}) should be checked to get structure parameters such as lattice constants, 
-depending on material defined in the reference region.
+Atomistic Generator options, to be put in the Atomistic section, are  described in the  following.
 
-\textit{passivation} (optional): if set to \textit{no}, no passivation is performed. If \textit{yes} is specified, hydrogenation of structure
-is performed, taking in account structure periodicity. Up to now hydrogenation is supported fo Silicon structures. \textit{no} is default option.
+\textit{reference\_region} (mandatory): the Atomistic Generator can only build pseudomorphical heterostructures. A reference region must be defined
+to specify from which region ( \textbf{TiberCAD} \textbf{Regions})  to get structure parameters such as lattice constants, which  
+depend  on the material defined in the reference region.
 
-\textit{preserve} (optional): it should be necessary to build a structure in which atom basis or conventional cell should be preserved, 
-regardless to mesh geometry. If \textit{none} is specified, no conservation is performed and there are only atoms strictly belonging to 
-geometrical regions. If \textit{lattice} is specified, atom basis is preserved (e.g. to preserve anion/cation couples). If 
-\textit{conventional} is specified, conventional cell is preserved. Default is  \textit{none}.
+\textit{passivation} (optional): \textit{no} is default option. If set to \textit{no}, no passivation is performed. If \textit{yes} is specified, a hydrogenation of the structure
+is performed, taking into account the structure periodicity. Up to now, hydrogenation is supported fo Silicon structures. .
+
+\textit{preserve} (optional): Default is  \textit{none}.  In some cases it is requested to build a structure in which the atom basis or the conventional cell has be preserved, 
+regardless to mesh geometry. 
+If \textit{none} is specified, no conservation is performed and only atoms strictly belonging to 
+geometrical regions are put in  the atomic structure. If \textit{lattice} is specified, atom basis is preserved (e.g. to preserve anion/cation couples). If 
+\textit{conventional} is specified, conventional cell is preserved. ..............
 
 \textit{y\_lenght} (optional): Atomistic Generator builds the minimum periodical structure along \textit{y} and \textit{z} directions.
 If y\_lenght is specified, the structure will be at least y\_lenght sized along y\_growth\_direction. Exact lenght is internally defined
