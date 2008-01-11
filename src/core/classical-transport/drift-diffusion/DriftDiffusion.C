@@ -563,7 +563,7 @@ DriftDiffusion::reset_solver(void)
 {
   if (!_rebuild_eq_system)
   {
-    get_equation_systems().delete_system(get_equation_system_name());
+    //get_equation_systems().delete_system(get_equation_system_name());
     _rebuild_eq_system = true;
   }
 }

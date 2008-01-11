@@ -3960,7 +3960,7 @@ Macrostrain::~Macrostrain()
 
  
 
-  equation_systems->delete_system(system_name);
+  //equation_systems->delete_system(system_name);
 }
 
 
