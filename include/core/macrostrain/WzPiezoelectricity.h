@@ -13,6 +13,16 @@ class WzPiezoelectricity : public Piezoelectricity
 
   void set_moduli(double  e33, double e31, double e15, double Pz);
   
+  //!calculates piezopolarization in crystal system
+  /*!
+    \param strain_cryst strain tensor in crystal system
+
+    \f$ 
+    P_x = 2e_{15} \epsilon_{xz} \\ 
+    P_y = 2e_{15} \epsilon_{yz} \\
+    P_z = e_{31}  \epsilon_{xx} +  e_{31}  \epsilon_{yy} + e_{33}  \epsilon_{zz}
+    \f$
+  */
   Tensor1 get_polariz_cryst(Tensor2Sym& strain_cryst);
 
   virtual void calculate_product_by_vector(const Tensor1& f, Tensor2Sym& r) const;

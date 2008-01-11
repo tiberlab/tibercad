@@ -144,11 +144,10 @@ Tensor1 WzPiezoelectricity::get_polariz_cryst(Tensor2Sym& strain_cryst)
   Tensor1 polariz;
 
   polariz(1) = 2*e15*strain_cryst(3,1);
-  polariz(2) = 2*e15*strain_cryst(2,1);
+
+  polariz(2) = 2*e15*strain_cryst(3,2);
+
   polariz(3) = e31*strain_cryst(1,1) + e31*strain_cryst(2,2) + e33*strain_cryst(3,3);
-
- 
-
 
 
   return(polariz);
