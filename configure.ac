@@ -6,7 +6,6 @@ AC_PREREQ(2.59)
 
 AC_CONFIG_SRCDIR([include/base/common/TiberCad.h])
 AC_CONFIG_HEADER([include/base/common/tiber_config.h])
-AC_PACKAGE_VERSION
 
 AC_REVISION([$Revision: 0.1$])
 
