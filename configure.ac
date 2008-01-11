@@ -1,11 +1,12 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([TiberCAD], [0.1.0], [bug@tibercad.org])
+AC_INIT([TiberCAD], [0.1.0], [developers@tibercad.org])
 AC_PREREQ(2.59)
 
 AC_CONFIG_SRCDIR([include/base/common/TiberCad.h])
 AC_CONFIG_HEADER([include/base/common/tiber_config.h])
+AC_PACKAGE_VERSION
 
 AC_REVISION([$Revision: 0.1$])
 
@@ -76,6 +77,23 @@ fi
 AC_PATH_PROG([GMSH], [gmsh])
 AC_SUBST([GMSH])
 
+
+# on cygwin we check for Bytessence InstallMaker
+[BINSTALLMAKER="no"]
+case $host_os in
+  *cygwin* ) 
+	AC_PATH_PROG([BINSTALLMAKER], [BInstallMaker.exe], ["no"],
+	["/cygdrive/c/Programme/Bytessence\ InstallMaker":"/cygdrive/c/Programmi/Bytessence\ InstallMaker":"/cygdrive/c/Programs/Bytessence\ InstallMaker":"/cygdrive/c/Program\ Files/Bytessence\ InstallMaker"])
+	[WININSTALLERDIR=`cygpath --path --windows "${ac_pwd}/wininstaller"`]
+	AC_SUBST([WININSTALLERDIR])
+	[TIBERSHAREDIR=`cygpath --path --windows "${ac_pwd}/share"`]
+	AC_SUBST([TIBERSHAREDIR])
+	[BINSTALLMAKERDIR="`expr "$BINSTALLMAKER" : '\(.*\)/'`"]
+	[BINSTALLMAKERDIR=`cygpath --path --windows "$BINSTALLMAKERDIR"`]
+	AC_SUBST([BINSTALLMAKERDIR]) ;;
+         * )  ;;
+esac
+AC_SUBST([BINSTALLMAKER])
 
 #
 # Checks for libraries.
@@ -216,6 +234,7 @@ AC_CONFIG_FILES([Make.common
                  doc/Makefile
                  src/tibercad/Makefile
                  src/utils/DFTB/Makefile
-                 src/utils/SLEPC/Makefile])
+                 src/utils/SLEPC/Makefile
+		 wininstaller/tibercad.bim])
 
 AC_OUTPUT

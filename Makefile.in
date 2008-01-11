@@ -3,9 +3,10 @@
 
 srcdir = @srcdir@
 
-
 include Make.common
 
+
+BINSTALLMAKER = @BINSTALLMAKER@
 
 
 ifeq ($(build_modules), yes)
@@ -48,12 +49,14 @@ lib/libtibercad.$(shared_libext): src
 clean: src
 	@$(MAKE) --no-print-directory -C examples clean
 	@$(MAKE) --no-print-directory -C src/tibercad clean
+	@rm -rf wininstaller/files/*
 
 
 
 distclean: src doc
 	@$(MAKE) --no-print-directory -C examples distclean
 	@$(MAKE) --no-print-directory -C src/tibercad distclean
+	@rm -rf wininstaller/files/*
 	@rm -rf lib/*
 	@rm -f bin/tibercad
 
@@ -84,6 +87,19 @@ run_tests:
 .PHONY: manual
 manual:
 	@$(MAKE) --no-print-directory -C manual
+
+
+
+.PHONY: wininstaller
+wininstaller:
+	@mkdir -p wininstaller/files && \
+	cd wininstaller/files && \
+	cp bin/tibercad wininstaller/files ; \
+	cp lib/*.dll wininstaller/files ; \
+	cp share/tibercad.ico wininstaller/files ; \
+	cp share/Copyright.txt wininstaller/files ; 
+
+
 
 
 tags:

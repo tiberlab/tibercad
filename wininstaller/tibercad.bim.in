@@ -1,0 +1,55 @@
+; 
+; Please do not modify this file by hand
+; It may crash the program if mistakes are found
+; Use BIM to modify it << Ha, see what we can do!!
+; 
+; The file header
+[Header]
+FileID = Bytessence Install Maker
+FileVersion = 1
+; The general information tab
+[GeneralInformation]
+AppName = @PACKAGE_NAME@
+Version = @PACKAGE_VERSION@
+CompanyName = TiberLab
+Website = www.tibercad.org
+Email = @PACKAGE_BUGREPORT@
+OutPutFile = @WININSTALLERDIR@\tibercad_install.exe
+Compression = 1
+W98 = 1
+WME = 1
+WNT = 1
+W2K = 1
+WXP = 1
+WV = 1
+DotNet = 0
+; Files and settings tab
+[FilesAndSettings]
+UseWizBitmap = 1
+UseHeadBitmap = 1
+WizBitmap = @BINSTALLMAKERDIR@\Splash\Pure\Wizard.bmp
+HeadBitmap = @BINSTALLMAKERDIR@\Splash\Classic\Header.bmp
+ReadMe = 
+License = @TIBERSHAREDIR@\Copyright.txt
+RequireReadme = 0
+RequireLicense = 1
+IconFile = @TIBERSHAREDIR@\tibercad.ico
+HeaderTextColour = 0
+; The languages
+[Localization]
+Entry0 = English¶Trutia Alexandru¶@BINSTALLMAKERDIR@\Localization\English.ini
+; The installation folder
+[Folder]
+Folder = @WININSTALLERDIR@\files
+; iTasks
+[InstTasks]
+; uTasks
+[UninstTasks]
+; uConfig
+[uConfig]
+SkipFilesExt = 0
+SkipFilesString = 
+RebootRequired = 0
+[iConfig]
+RebootRequired = 0
+; EOF()

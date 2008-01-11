@@ -14,15 +14,23 @@ srcfiles 	:= $(wildcard *.C)
 # object files
 objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
 
+ifeq ($(findstring cygwin,$(hostos)),cygwin)
+  objects += tibercad_res.o
+endif
+
 
 all: tibercad
 
-tibercad: $(objects)
+tibercad: $(objects) 
 	@echo "Compiling tibercad executable ..."
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad \
 		-Wl,-export-dynamic -L$(topdir)/lib \
 		-Wl,-rpath,$(topdir)/lib -ltibercad $(ADDITIONAL_LIBS)
 
+
+
+tibercad_res.o : $(topdir)/share/tibercad.rc
+	windres -I $(topdir)/share $^ -o $@
 
 
 include $(topdir)/Make.rules
