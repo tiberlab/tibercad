@@ -60,7 +60,9 @@
 #include  "WzOptDielectricConstant.h"
 #include  "MaxwellPhysicalModel.h"
 
-#include <dlfcn.h>
+#include "WzPyroPolarization.h"
+
+
 #include <typeinfo>
 #ifdef DEBUG
 #include <iostream>
@@ -179,6 +181,10 @@ PhysicalModelInterface::create(const string& name,
       mod = WzOptDielectricConstant::create();
     else if (name == "maxwell")
       mod = MaxwellPhysicalModel::create();
+    else if (name == "pyropolarization")
+      mod = PyroPolarization::create();
+    else if (name == "pyropolarization_wz")
+      mod = WzPyroPolarization::create();
   }
 
 

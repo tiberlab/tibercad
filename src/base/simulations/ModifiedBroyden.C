@@ -19,17 +19,17 @@ void ModifiedBroyden::do_solve(void)
 
   parse_options();
 
-  clear_F();
+  clear_f();
 
   _it_number = 1;
 
   
 
-  init_X();
+  init_x();
 
 
 
-  evaluate_and_save_F();
+  evaluate_and_save_f();
  
   
 
@@ -130,14 +130,14 @@ void ModifiedBroyden::do_solve(void)
    //PetscDrawDestroy(draw);
   }
 
-  clear_F();
+  clear_f();
 
 }
 
 //------------------------------------------------------------//
 inline void ModifiedBroyden::do_step(void)
 {
-  evaluate_and_save_F();
+  evaluate_and_save_f();
    
   calculate_kappa_matrix();
 
@@ -274,14 +274,14 @@ inline void ModifiedBroyden::calculate_p_matrix(void)
 inline void  ModifiedBroyden::calculate_new_solution(void)
 {
 
-  _X_correction->zero(); 
+  _x_correction->zero(); 
 
-  _X_correction->add(_alpha * ( _p(_it_number, _it_number) - 1.0), *(_F[_it_number]) );
+  _x_correction->add(_alpha * ( _p(_it_number, _it_number) - 1.0), *(_f[_it_number]) );
 
   for (unsigned int i = 2; i <= _it_number - 1; i++)
-    _X_correction->add( _p(_it_number,i), *(_F[i]) );
+    _x_correction->add( _p(_it_number,i), *(_f[i]) );
      
-  *__X += *_X_correction;
+  *_x += *_x_correction;
 
   
 }
@@ -296,9 +296,9 @@ inline double ModifiedBroyden::estimate_step()
   
   for (unsigned int i = 0; i < _vector_size; i++)
   {
-    t1 += (*_X_correction)(i) * (*_X_correction)(i);
+    t1 += (*_x_correction)(i) * (*_x_correction)(i);
 
-    t2 += (*__X)(i) * (*__X)(i) ;
+    t2 += (*_x)(i) * (*_x)(i) ;
   }
   
   t1 /= _vector_size;
@@ -355,7 +355,7 @@ void ModifiedBroyden::do_init(void)
 
 
 //-------------------------------------------------------------------------------------//
-inline void ModifiedBroyden::init_X(void)
+inline void ModifiedBroyden::init_x(void)
 {
   initialize();
   
@@ -367,36 +367,36 @@ inline void ModifiedBroyden::init_X(void)
   _vector_size = solution.size();
 
  
-  if (__X.get() == NULL) 
+  if (_x.get() == NULL) 
   {
-    __X = NumericVector<double>::build();
-    __X->init(_vector_size);
+    _x = NumericVector<double>::build();
+    _x->init(_vector_size);
   }
   else
   {
-    __X->init(0);
-    __X->init(_vector_size);
+    _x->init(0);
+    _x->init(_vector_size);
   }
 
 
-  *__X = solution;
+  *_x = solution;
 
  
  
 
-  if (_X_correction.get() == NULL)
+  if (_x_correction.get() == NULL)
   {  
-    _X_correction =  NumericVector<double>::build();
-    _X_correction->init(_vector_size);
+    _x_correction =  NumericVector<double>::build();
+    _x_correction->init(_vector_size);
   }
   else
   {
-    _X_correction->init(0);
-    _X_correction->init(_vector_size);
+    _x_correction->init(0);
+    _x_correction->init(_vector_size);
   }
   
 
   if  (_estimate_omega_0)
-    _omega_0 = __X->l2_norm();
+    _omega_0 = _x->l2_norm();
  
 }

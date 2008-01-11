@@ -60,6 +60,15 @@ our %options;
 
 
 
+%options = (
+    'verbose' => 0,
+    'testonly' => 0,
+    'smtp_server' => "localhost",
+    'mail_sender' => "$ENV{USER}",
+    'package' => "unknown",
+    'logfile' => "run.log"
+    );
+
 $make_run = "make run";
 $make = "make";
 $makefile = "Makefile";
@@ -67,18 +76,11 @@ $config = "test.conf";
 $outdir = "output";
 $refdir = "reference";
 $to_dev_null = " >& /dev/null";
-$to_log_file = " >& log";
+$to_log_file = " >& $options{'logfile'}";
 $textwidth = 50;
 $padchar = ".";
 $default_precision = 1e-6;
 @known_suffixes = ('dat', 'gmv');
-%options = (
-    'verbose' => 0,
-    'testonly' => 0,
-    'smtp_server' => "localhost",
-    'mail_sender' => "$ENV{USER}",
-    'package' => "unknown"
-    );
 
 
 

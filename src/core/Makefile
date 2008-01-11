@@ -10,6 +10,7 @@ subdirs += solver-interfaces macroheatbalance quantumEFAmodels tightbinding
 subdirs += poisson
 subdirs += eigenvalue
 subdirs += maxwell
+subdirs += models
 
 include $(topdir)/Make.common
 

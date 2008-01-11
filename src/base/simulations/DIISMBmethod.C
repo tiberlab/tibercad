@@ -4,21 +4,21 @@
 inline
 void DIISMBmethod::calculate_new_solution()
 {
-  _X_correction->zero(); 
+  _x_correction->zero(); 
 
-  _X_correction->add(_alpha * ( _s(_it_number, _it_number) - 1.0), *(_F[_it_number]) );
+  _x_correction->add(_alpha * ( _s(_it_number, _it_number) - 1.0), *(_f[_it_number]) );
 
   for (unsigned int i = 2; i <= _it_number - 1; i++)
   {
-    _X_correction->add( _s(_it_number,i), *(_F[i]) );
+    _x_correction->add( _s(_it_number,i), *(_f[i]) );
   
     cerr << _s(_it_number,i) << "\n";
   }
 
 
-  // _X_correction->add(- _alpha  , *(_F[_it_number]) );
+  // _x_correction->add(- _alpha  , *(_f[_it_number]) );
    
-  *__X += *_X_correction;
+  *_x += *_x_correction;
 }
 
 
@@ -333,7 +333,7 @@ void DIISMBmethod::do_step(void)
 {
  
   cerr <<"1\n";
-  evaluate_and_save_F();
+  evaluate_and_save_f();
  
 
   calculate_kappa_matrix();

@@ -42,6 +42,7 @@ class Dopant;
 class RecombinationModelInterface;
 class MobilityModelInterface;
 class ThermoelectricPower;
+class PyroPolarization;
 
 
 
@@ -726,8 +727,8 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     
     
     //! The pyroelectric polarization (will go into a model)
-    RealVectorValue pyro_polarization;
-    double bow_pyro;
+    //RealVectorValue pyro_polarization;
+    //double bow_pyro;
 
     
     //! The relative permittivity tensor
@@ -797,6 +798,8 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     //! The electric field
     RealGradient electric_field;
 
+    //! The pyropolarization
+    PyroPolarization* _pyropolarization;
     
     //! The total electric polarization
     RealVectorValue _polarization;

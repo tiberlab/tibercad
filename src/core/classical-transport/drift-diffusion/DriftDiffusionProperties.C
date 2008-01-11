@@ -10,6 +10,7 @@
 #include "Constants.h"
 #include "InitFailedException.h"
 #include "RotatedCrystal.h"
+#include "PyroPolarization.h"
 
 #include "elem.h"
 #include "getpot.h"
@@ -41,8 +42,8 @@ DriftDiffusionProperties::_DOS_factor = pow(2.0 * M_PI * Constants::me /
 
 DriftDiffusionProperties::DriftDiffusionProperties(void)
   : _pd(NULL),
-    pyro_polarization(3, 0.0),
-    bow_pyro(0.0),
+    //pyro_polarization(3, 0.0),
+    //bow_pyro(0.0),
     _elem(NULL),
     _statistics(TiberCad::BOLTZMANN),
     _coupling(DriftDiffusionDefs::BOTH),
@@ -51,6 +52,7 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     _hole_mobility(NULL),
     _eTEpower(0),
     _hTEpower(0),
+    _pyropolarization(NULL),
     _polarization(3, 0.0),
     _thermoelectric_power(NULL),
     _is_dielectric(false),
@@ -71,14 +73,15 @@ DriftDiffusionProperties::read_database(void)
   permittivity = data("permittivity", 1.0);
 
   // pyropolarization
-  Tensor1 pol;
-  pol(1) = pol(2) = 0.0;
-  pol(3) = data("Pz", 0.0);
-  pol = (mat->get_rotated_crystal()).RotMatrix * pol;
-  pyro_polarization(0) = pol(1);
-  pyro_polarization(1) = pol(2);
-  pyro_polarization(2) = pol(3);
-  bow_pyro = data("bow_Pz", 0.0);
+  //Tensor1 pol;
+  //pol(1) = pol(2) = 0.0;
+  //pol(3) = data("Pz", 0.0);
+  //pol = (mat->get_rotated_crystal()).RotMatrix * pol;
+  //pyro_polarization(0) = pol(1);
+  //pyro_polarization(1) = pol(2);
+  //pyro_polarization(2) = pol(3);
+  //bow_pyro = data("bow_Pz", 0.0);
+
 
 }
 
@@ -136,10 +139,16 @@ DriftDiffusionProperties::do_init(void)
   _is_dielectric = get_parameter("dielectric", _is_dielectric);
   permittivity = get_parameter("permittivity", permittivity);
 
+  PhysicalModelInterface::destroy(_pyropolarization);
+  _pyropolarization = PyroPolarization::create(get_material());
+  _pyropolarization->set_material(get_material());
+  _pyropolarization->set_simulator_id(get_simulator_id());
+  _pyropolarization->init();  
 
-  pyro_polarization(0) = get_parameter("Px", pyro_polarization(0));
-  pyro_polarization(1) = get_parameter("Py", pyro_polarization(1));
-  pyro_polarization(2) = get_parameter("Pz", pyro_polarization(2));
+  // TODO read pyropolarization from input
+  //pyro_polarization(0) = get_parameter("Px", pyro_polarization(0));
+  //pyro_polarization(1) = get_parameter("Py", pyro_polarization(1));
+  //pyro_polarization(2) = get_parameter("Pz", pyro_polarization(2));
 
 
   // the temperature simulation
@@ -234,6 +243,7 @@ DriftDiffusionProperties::do_init(void)
 DriftDiffusionProperties::~DriftDiffusionProperties(void)
 {
   clear_recombination();
+  PhysicalModelInterface::destroy(_pyropolarization);
   PhysicalModelInterface::destroy(_electron_mobility);
   PhysicalModelInterface::destroy(_hole_mobility);
   PhysicalModelInterface::destroy(_thermoelectric_power);
@@ -289,13 +299,17 @@ DriftDiffusionProperties::calculate_VCA(const PhysicalModelInterface* comp_A,
                               scB->get_recombination_model(id), xa);
   }
 
+  _pyropolarization->build_alloy(scA->_pyropolarization,
+      scB->_pyropolarization, xa);
+
   // pyropolarization
-  pyro_polarization(0) = alloy(scA->pyro_polarization(0),
-      scB->pyro_polarization(0), xa, bow_pyro);
-  pyro_polarization(1) = alloy(scA->pyro_polarization(1),
-      scB->pyro_polarization(1), xa, bow_pyro);
-  pyro_polarization(2) = alloy(scA->pyro_polarization(2),
-      scB->pyro_polarization(2), xa, bow_pyro);
+  //pyro_polarization(0) = alloy(scA->pyro_polarization(0),
+  //    scB->pyro_polarization(0), xa, bow_pyro);
+  //pyro_polarization(1) = alloy(scA->pyro_polarization(1),
+  //    scB->pyro_polarization(1), xa, bow_pyro);
+  //pyro_polarization(2) = alloy(scA->pyro_polarization(2),
+  //    scB->pyro_polarization(2), xa, bow_pyro);
+
 }
 
 
@@ -413,7 +427,12 @@ DriftDiffusionProperties::reinit(const Elem* elem)
 
     this->prepare_element_data();
     
-    _polarization += _relax_polariz * pyro_polarization;
+    //_polarization += _relax_polariz * pyro_polarization;
+    // pyropolarization is Tensor1
+    _pyropolarization->calculate_polarization(_elem, _coord, _lattice_vt);
+    _polarization(0) += _relax_polariz * _pyropolarization->get_polarization()(1);
+    _polarization(1) += _relax_polariz * _pyropolarization->get_polarization()(2);
+    _polarization(2) += _relax_polariz * _pyropolarization->get_polarization()(3);
   }
 
   // here we assume thermal equilibrium
