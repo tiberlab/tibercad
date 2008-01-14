@@ -1,0 +1,29 @@
+# $Id$
+#
+
+
+BINSTALLMAKER = @BINSTALLMAKER@
+
+
+.PHONY: wininstaller
+wininstaller: 
+	@echo "Preparing Windows installer package ..."
+	@./prepare_files.sh windows
+
+
+.PHONY: deb
+deb:
+	@echo "Preparing debian package ..."
+	@./prepare_files.sh linux deb
+
+.PHONY: tgz
+tgz:
+	@echo "Preparing .tar.gz package ..."
+	@./prepare_files.sh linux tgz
+
+.PHONY: tbz
+tbz:
+	@echo "Preparing .tar.bz2 package ..."
+	@./prepare_files.sh linux tbz
+
+

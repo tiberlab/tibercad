@@ -6,8 +6,6 @@ srcdir = @srcdir@
 include Make.common
 
 
-BINSTALLMAKER = @BINSTALLMAKER@
-
 
 ifeq ($(build_modules), yes)
  MODULE_LIBS := -leigen_solver lib/tibermodels/lib*.so

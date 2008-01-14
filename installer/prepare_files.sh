@@ -23,6 +23,10 @@ make_windows_package () {
     cp `cygpath -u -a $lib` ${files}
   done
 
+  exec "$BINSTALLMAKER" windows/tibercad.bim
+  
+  rm -rf $files
+
   return
 }
 
@@ -72,6 +76,14 @@ make_tbz () {
 
 make_deb () {
 
+  mkdir -p debfiles/usr
+  mkdir -p debfiles/usr/share/tibercad
+  mkdir -p debfiles/usr/share/doc/tibercad
+  mv $files/bin debfiles/usr/bin
+  mv $files/lib debfiles/usr/lib/tibercad
+  mv ${files}/share/* debfiles/usr/share/
+  mv ${files}/share/Copyright.txt debfiles/usr/share/doc/
+  mv ${files}/doc/* debfiles/usr/share/doc/tibercad/
 
   return
 }
@@ -101,20 +113,21 @@ case $1 in
 
   linux ) {
     name=tibercad-$version
+    prepare_linux_package
+
     case $2 in
 
       deb )
-        prepare_linux_package
         make_deb ;;
 
       tgz )
-        prepare_linux_package
         make_tgz ;;
 
       * )
-        prepare_linux_package
         make_tbz ;;
     esac
+
+    rm -rf $files
   } ;;
 
   * ) ;;

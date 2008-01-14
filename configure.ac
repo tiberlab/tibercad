@@ -237,6 +237,7 @@ AC_CONFIG_FILES([Make.common
                  src/tibercad/Makefile
                  src/utils/DFTB/Makefile
                  src/utils/SLEPC/Makefile
+                 installer/Makefile
 		 installer/windows/tibercad.bim])
 
 AC_OUTPUT
