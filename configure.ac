@@ -9,6 +9,8 @@ AC_CONFIG_HEADER([include/base/common/tiber_config.h])
 
 AC_REVISION([$Revision: 0.1$])
 
+AC_DEFINE([TIBERVERSION],"AC_PACKAGE_VERSION",[the TiberCAD version])
+
 # Make compilation tests using C++
 AC_LANG([C++])
 

@@ -52,3 +52,6 @@
 
 /* define if we are in cygwin */
 #undef CYGWIN
+
+/* the TiberCAD version */
+#undef TIBERVERSION

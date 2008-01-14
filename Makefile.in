@@ -87,18 +87,8 @@ manual:
 	@$(MAKE) --no-print-directory -C manual pdf
 
 
-
-.PHONY: wininstaller
-wininstaller: 
-	@echo "Preparing Windows installer package ..."
-	@cd installer && ./prepare_files.sh win
-	@exec "$(BINSTALLMAKER)" installer/windows/tibercad.bim
-	@rm -rf installer/windows/files
-
-
-.PHONY: deb
-deb:
-	@echo "Preparing debian package ..."
+wininstaller deb tgz tbz:
+	@$(MAKE) --no-print-directory -C installer $(MAKECMDGOALS)
 
 
 

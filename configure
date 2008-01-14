@@ -1350,6 +1350,12 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
+
+cat >>confdefs.h <<\_ACEOF
+#define TIBERVERSION "0.1.0"
+_ACEOF
+
+
 # Make compilation tests using C++
 ac_ext=cc
 ac_cpp='$CXXCPP $CPPFLAGS'

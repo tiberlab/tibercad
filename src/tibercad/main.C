@@ -28,7 +28,7 @@ using namespace std;
 int main (int argc, char** argv)
 {
 
-  cout << "TiberCAD version 0.1.0" << endl << endl;
+  cout << "TiberCAD version " << TIBERVERSION << endl << endl;
 
   // take input file from command line or ask for it
   string inputfile;
@@ -88,10 +88,18 @@ int main (int argc, char** argv)
   catch (exception& e)
   {
     cout << "ERROR: " << e.what() << endl;
+#ifdef CYGWIN
+    cout << "press any key ...";
+    cin;
+#endif
   }
   catch (...)
   {
     cout << "ERROR: TiberCAD crashed for unknown reason." << endl;
+#ifdef CYGWIN
+    cout << "press any key ...";
+    cin;
+#endif
   }
 
   return TiberCad::cleanup();
