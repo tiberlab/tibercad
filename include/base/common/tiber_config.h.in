@@ -49,3 +49,6 @@
 
 /* Define to 1 if you have the <history.h> header file. */
 #undef HAVE_HISTORY_H
+
+/* define if we are in cygwin */
+#undef CYGWIN

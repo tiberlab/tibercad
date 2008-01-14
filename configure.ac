@@ -89,7 +89,8 @@ case $host_os in
 	AC_SUBST([TIBERSHAREDIR])
 	[BINSTALLMAKERDIR="`expr "$BINSTALLMAKER" : '\(.*\)/'`"]
 	[BINSTALLMAKERDIR=`cygpath --path --windows "$BINSTALLMAKERDIR"`]
-	AC_SUBST([BINSTALLMAKERDIR]) ;;
+	AC_SUBST([BINSTALLMAKERDIR])
+        AC_DEFINE([CYGWIN], [1], [define if we are in cygwin]) ;;
          * )  ;;
 esac
 AC_SUBST([BINSTALLMAKER])

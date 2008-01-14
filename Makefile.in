@@ -95,6 +95,7 @@ wininstaller:
 	@exec "$(BINSTALLMAKER)" installer/windows/tibercad.bim
 	@rm -rf installer/windows/files
 
+
 .PHONY: deb
 deb:
 	@echo "Preparing debian package ..."
