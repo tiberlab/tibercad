@@ -83,7 +83,7 @@ case $host_os in
   *cygwin* ) 
 	AC_PATH_PROG([BINSTALLMAKER], [BInstallMaker.exe], ["no"],
 	["/cygdrive/c/Programme/Bytessence\ InstallMaker":"/cygdrive/c/Programmi/Bytessence\ InstallMaker":"/cygdrive/c/Programs/Bytessence\ InstallMaker":"/cygdrive/c/Program\ Files/Bytessence\ InstallMaker"])
-	[WININSTALLERDIR=`cygpath --path --windows "${ac_pwd}/wininstaller"`]
+	[WININSTALLERDIR=`cygpath --path --windows "${ac_pwd}/installer/windows"`]
 	AC_SUBST([WININSTALLERDIR])
 	[TIBERSHAREDIR=`cygpath --path --windows "${ac_pwd}/share"`]
 	AC_SUBST([TIBERSHAREDIR])
@@ -234,6 +234,6 @@ AC_CONFIG_FILES([Make.common
                  src/tibercad/Makefile
                  src/utils/DFTB/Makefile
                  src/utils/SLEPC/Makefile
-		 wininstaller/tibercad.bim])
+		 installer/windows/tibercad.bim])
 
 AC_OUTPUT

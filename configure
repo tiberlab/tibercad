@@ -4561,7 +4561,7 @@ echo "${ECHO_T}no" >&6; }
 fi
 
 
-	WININSTALLERDIR=`cygpath --path --windows "${ac_pwd}/wininstaller"`
+	WININSTALLERDIR=`cygpath --path --windows "${ac_pwd}/installer/windows"`
 
 	TIBERSHAREDIR=`cygpath --path --windows "${ac_pwd}/share"`
 
@@ -6456,7 +6456,7 @@ fi
 
 ac_config_files="$ac_config_files stamp-h"
 
-ac_config_files="$ac_config_files Make.common doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/DFTB/Makefile src/utils/SLEPC/Makefile wininstaller/tibercad.bim"
+ac_config_files="$ac_config_files Make.common doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/DFTB/Makefile src/utils/SLEPC/Makefile installer/windows/tibercad.bim"
 
 
 cat >confcache <<\_ACEOF
@@ -7020,7 +7020,7 @@ do
     "src/tibercad/Makefile") CONFIG_FILES="$CONFIG_FILES src/tibercad/Makefile" ;;
     "src/utils/DFTB/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/DFTB/Makefile" ;;
     "src/utils/SLEPC/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/SLEPC/Makefile" ;;
-    "wininstaller/tibercad.bim") CONFIG_FILES="$CONFIG_FILES wininstaller/tibercad.bim" ;;
+    "installer/windows/tibercad.bim") CONFIG_FILES="$CONFIG_FILES installer/windows/tibercad.bim" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

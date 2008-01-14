@@ -48,10 +48,10 @@ clean:  clean-local
 	done
 
 clean-local:
-	rm -f *.ind *.idx *.aux *.lof *.log *.lot *.dvi *.out \
+	-rm -f *.ind *.idx *.aux *.lof *.log *.lot *.dvi *.out \
 	      *.toc *.ilg *.bbl *.blg *~
 
 distclean: clean
-	rm -f *.pdf *.ps
+	-rm -f *.pdf *.ps
 
 	

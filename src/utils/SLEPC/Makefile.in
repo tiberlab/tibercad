@@ -59,7 +59,7 @@ all: ../../../lib/libeigen_solver.$(shared_libext)
 
 
 clean:
-	@echo "cleaning up ./src/utils/SLEPC"
+	@echo "Cleaning up ./src/utils/SLEPC"
 	@rm -f *.o
 
 distclean: clean

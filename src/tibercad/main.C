@@ -91,7 +91,7 @@ int main (int argc, char** argv)
   }
   catch (...)
   {
-    cout << "ERROR: TiberCAd crashed for unknown reason." << endl;
+    cout << "ERROR: TiberCAD crashed for unknown reason." << endl;
   }
 
   return TiberCad::cleanup();
