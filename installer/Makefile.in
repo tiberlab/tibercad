@@ -3,12 +3,15 @@
 
 
 BINSTALLMAKER = @BINSTALLMAKER@
+export BINSTALLMAKER
 
 
 .PHONY: wininstaller
 wininstaller: 
 	@echo "Preparing Windows installer package ..."
 	@./prepare_files.sh windows
+	@exec "$(BINSTALLMAKER)" windows/tibercad.bim
+	@rm -rf windows/files
 
 
 .PHONY: deb

@@ -23,10 +23,6 @@ make_windows_package () {
     cp `cygpath -u -a $lib` ${files}
   done
 
-  exec "$BINSTALLMAKER" windows/tibercad.bim
-  
-  rm -rf $files
-
   return
 }
 
@@ -101,6 +97,8 @@ version=`awk '/TIBERVERSION/ {print $3}' \
 test $# -ge 1 || exit 1
 
 files=$1/files
+echo $BINSTALLMAKER
+exit 0
 
 # delete everything
 rm -rf ${files}
