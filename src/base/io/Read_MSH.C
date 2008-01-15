@@ -30,12 +30,12 @@ using namespace boost::spirit;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Class  for  parser of  GMSH  .MSH file (v. 1) :   get  nodes of  BC regions 
-// (1D  physical regions)
+//  Class  for  parsing of  GMSH  .MSH file (v. 1 and 2 ) :   get  nodes of  BC regions 
+// (1D  physical regions for 2D simulations and 2D physical regions for 3D simulations)
 //
 //   and  creates .xta and  .xda  files for  mesh and  meshdata in Libmesh 
 //
-//   -------------------------------------------
+// -------------------------------------------
 //  MUST   include  SPIRIT  libraries !
 // -----------------------------------------------
 //
@@ -56,6 +56,8 @@ Read_MSH::Read_MSH(string filename, unsigned int sim_dim,
 {
 
   dim =  sim_dim; 
+  version = 1;  //  by default it's version 1 of .msh file  format
+  // in scan_input it is override if there is a MeshFormat section
 
   initialize_vectors();   //  to  be  continued...
 
@@ -114,7 +116,12 @@ void Read_MSH::initialize_vectors()
 
 
 
-//  parser of  ELEMENT  section of  .msh  file  (version 1)
+//  parser of  ELEMENT  section of  .msh  file  (version 1 and 2)
+//
+//  ****  VERSION  2.0 ***
+// element   line : elem number, type of  elem, number of tags (default=3) ,
+// tag1=physical_region, tag2=geom_region, tag3= 0 ("mesh_partition"), list of the nodes
+//
 void Read_MSH::parse_elem_section(ifstream& in_stream )
 {
      
@@ -152,22 +159,19 @@ void Read_MSH::parse_elem_section(ifstream& in_stream )
     {
 	  
       elem_values.push_back(v);
-	                          
-	
+	                         	
       v.clear();
-	     
-                             
-                             
+	                                                              
     } 
 
-
   } 
-      
-     
+    
 }
 
 
 
+
+// NOT  USED  !!??
 //  check if  $ELM  header  is  found 
 void Read_MSH::find_elem_section(char const* str, ifstream& in_stream)
 {
@@ -198,10 +202,12 @@ void Read_MSH::scan_input(string file_name)
 
 {
 
-  std::string str;
+  std::string str,  End_mesh_format  ;
 
   std::ifstream in_stream (file_name.c_str());
 
+  int file_type,data_size;
+  double version_number;
 
 
   if ( !in_stream.good() )
@@ -211,53 +217,12 @@ void Read_MSH::scan_input(string file_name)
     //   error();
   }
 
-
-  //cout << "/////////////////////////////////////////////////////////\n\n";
-  //cout << "\t\tA space  separated list parser for Spirit...\n\n";
-  //cout << "\t\t read  from .msh  file ELEM and NODES section \n\n";
-  //
-  //cout << "/////////////////////////////////////////////////////////\n\n";
-
-
-  //getline(in_stream, str);
-  //  while (str.empty() )
-  //    {
-  //      getline(in_stream, str);
-  //    }
- 
-
-
   while (getline(in_stream, str))  //   
   {
+
     read_data_section(str.c_str(),in_stream);
 	   
   }
-
-
-
-
-
-  //   while (getline(in_stream, str))  //   
-  //     {
-      
-
-  //       find_node_section(str.c_str(),in_stream);
-     
-  //       //  find_elem_section(str.c_str(),in_stream);
-  
-
-  //     }
-
-  //  cout << "fine  node section"<< endl;
-
-  //    while (getline(in_stream, str))  // 
-  //     {
-
-  //       find_elem_section(str.c_str(),in_stream);
-  
-
-  //     }
-
 
 
 }
@@ -314,7 +279,7 @@ void Read_MSH::get_BC_info()
   for (unsigned int i =0; i< elem_values.size();++i)
   {
 
-    el_type = elem_values[i][1];
+    el_type = elem_values[i][1];   //  OK  VERSION 2
 
     switch(dim) {
     case 1:
@@ -359,7 +324,21 @@ void Read_MSH::get_BC_info()
   for (unsigned int i =0; i< BC_elem_line.size(); ++i)
   {
 
-    BC_id = BC_elem_line[i][2]  ;
+
+    if (version == 1)
+    {
+      BC_id = BC_elem_line[i][2]  ;
+    }
+
+    else if (version == 2)
+    {
+      BC_id =  BC_elem_line[i][3]  ;
+    }
+   
+
+    // **** VERSION 2 ***
+    //  BC_id =  BC_elem_line[i][3]  ; !!!!!!!!!!!!!
+    //
 
     p1 = find(BC_id_vec.begin(), BC_id_vec.end(), BC_id );  
     // find if physic_id has  been already taken
@@ -367,7 +346,7 @@ void Read_MSH::get_BC_info()
     if (p1 ==  BC_id_vec.end())   //  not  found
     {
       BC_id_vec.push_back(BC_id);
-   //   cout << " BC_id_vec " << BC_id << endl ;
+      //   cout << " BC_id_vec " << BC_id << endl ;
     }
 
   }
@@ -413,6 +392,9 @@ void Read_MSH::get_BC_info()
   unsigned int new_node_id;
   double old_node_id = 0.0;
 
+  unsigned int number_of_tags;  // for  version 2
+  number_of_tags = 0;
+
   vector<unsigned int> node_id;
 
   id = 0;
@@ -431,52 +413,93 @@ void Read_MSH::get_BC_info()
   for (unsigned int i =0; i< BC_elem_line.size(); ++i)
   {
 
-    id = BC_elem_line[i][2]  ;
+    if (version == 1)
+    {
+      id = BC_elem_line[i][2]  ;
+    }
+    else if (version == 2)
+    {
+      id = BC_elem_line[i][3]  ;
+    }
 
-    number_of_nodes = BC_elem_line[i][4];  //  number  of  nodes  
-    // belonging  to current  element
-    //   cout<< " number_of_nodes  = " << number_of_nodes<< endl;
+    // **** VERSION 2 ***
+    // id = BC_elem_line[i][3]  ;
+    //
 
-    for (unsigned int j =0; j<  number_of_nodes; ++j)
+
+    if (version == 1)
+    {
+      number_of_nodes = BC_elem_line[i][4];  //  number  of  nodes  
+      // belonging  to current  element
+    }
+    else if (version == 2)
     {
 
-      //  cout<< " (BC_elem_line[i][5+j]  = " << BC_elem_line[i][5+j]<< endl ;
-
-
-      // ************************************
-      // NEW  CHANGE :  13.12.05
-      //  convert  to  new  node  numeration :
-      // ************************************
-
-      //  num_of_nodes = total  number  of  nodes in the  mesh
-
-      old_node_id = (double)(BC_elem_line[i][5+j]);
-      for (unsigned int k =0; k<num_of_nodes ; ++k)
-      { 
-	     
-        if  (node_label[k] ==  old_node_id)
-        { new_node_id = k; }
-
-        //  	{ new_node_id = k+1; }
-        // +1  -1  -> +0 ,  to  get  nodes  starting  from  zero [ see write_xda ( )]
-      }
-
-
-      //	  node_id.push_back(BC_elem_line[i][5+j]) ;
-      node_id.push_back( new_node_id);
-
-      old_node_id = 0;
-      new_node_id =0;
-
-
-
-      //  node1 = BC_elem_line[i][5]  ;
-      // cout<<  node1  << endl ;
-
-      //   node2 = BC_elem_line[i][6]  ;
-      // cout<<  node2  << endl ;
+      number_of_tags = BC_elem_line[i][2];
+      number_of_nodes = (BC_elem_line[i].size() ) - (3 + number_of_tags);
 
     }
+
+    //**************  VERSION 2
+        // number_of_nodes = BC_elem_line[i].size() - (3 + BC_elem_line[i][2])   (see  get_elem_nodes() )
+
+
+        //   cout<< " number_of_nodes  = " << number_of_nodes<< endl;
+
+        for (unsigned int j =0; j<  number_of_nodes; ++j)
+        {
+
+          //  cout<< " (BC_elem_line[i][5+j]  = " << BC_elem_line[i][5+j]<< endl ;
+
+
+          // ************************************
+          // NEW  CHANGE :  13.12.05
+          //  convert  to  new  node  numeration :
+          // ************************************
+
+          //  num_of_nodes = total  number  of  nodes in the  mesh
+
+
+
+          if (version == 1)
+          {
+            old_node_id = (double)(BC_elem_line[i][5+j]);
+          }
+          else if (version == 2)
+          {
+            old_node_id = (double)(BC_elem_line[i][3 + number_of_tags+j]);
+          }
+          // **************  VERSION 2
+          // number_of_tags = BC_elem_line[i][2]
+          //  BC_elem_line[i][3 + number_of_tags+j])
+
+
+          for (unsigned int k =0; k<num_of_nodes ; ++k)
+          { 
+	     
+            if  (node_label[k] ==  old_node_id)
+            { new_node_id = k; }
+
+            //  	{ new_node_id = k+1; }
+            // +1  -1  -> +0 ,  to  get  nodes  starting  from  zero [ see write_xda ( )]
+          }
+
+
+          //	  node_id.push_back(BC_elem_line[i][5+j]) ;
+          node_id.push_back( new_node_id);
+
+          old_node_id = 0;
+          new_node_id =0;
+
+
+
+          //  node1 = BC_elem_line[i][5]  ;
+          // cout<<  node1  << endl ;
+
+          //   node2 = BC_elem_line[i][6]  ;
+          // cout<<  node2  << endl ;
+
+        }
    
     //  pos = find_pos(id,BC_reg_ID);
     pos = find_pos(id,BC_id_vec);
@@ -585,8 +608,18 @@ void Read_MSH::get_BC_info()
     for (unsigned int i =0; i< BC_elem_line.size(); ++i)
     {
 
-      id = BC_elem_line[i][2]  ;
 
+      if (version == 1)
+      {
+        id = BC_elem_line[i][2]  ;
+      }
+      else if (version == 2)
+      {
+        id = BC_elem_line[i][3]  ;
+      }
+      // **** VERSION 2 ***
+      //  id = BC_elem_line[i][3]  ;
+      //
 
       el_id = BC_elem_line[i][0]  ;
 
@@ -634,12 +667,12 @@ void Read_MSH::get_BC_info()
     //  BoundCond.insert(make_pair(BC_reg_ID[i], BC_nodes[i]) );
     BoundCond.insert(make_pair(BC_id_vec[i], BC_nodes[i]) );
     //    cout << BC_reg_ID[i]<< endl ;
- //   cout << "BC_id_vec[i]" << BC_id_vec[i]<<  endl ;
+    //   cout << "BC_id_vec[i]" << BC_id_vec[i]<<  endl ;
 
- //    for (unsigned int j =0; j< BC_nodes[i].size();++j)
-//     {
-//       cout << "BC_nodes[i][j]" << BC_nodes[i][j]<<  endl ;
-//     }
+    //    for (unsigned int j =0; j< BC_nodes[i].size();++j)
+    //     {
+    //       cout << "BC_nodes[i][j]" << BC_nodes[i][j]<<  endl ;
+    //     }
 
 
   }
@@ -1417,10 +1450,12 @@ void Read_MSH::get_elem_nodes()
   vector<unsigned int> :: iterator p;
   gmsh_elem_type.clear();
 
+ 
+
   for (unsigned int i =0; i< elem_values.size();++i)
   { //for
 
-    el_type = elem_values[i][1];
+    el_type = elem_values[i][1];   // OK FOR VERSION 2
 
     
     //    gmsh_elem_type = el_type;
@@ -1532,6 +1567,9 @@ void Read_MSH::get_elem_nodes()
 
   }
 
+  //
+  //NOW IN elem_line THERE ARE ONLY THE ELEMENT ENTRIES CONSISTENT WITH DIM OF PROBLEM !!!
+  //
 
 
   unsigned int new_node_id;
@@ -1539,6 +1577,9 @@ void Read_MSH::get_elem_nodes()
   unsigned int count = 0;
   unsigned int  number_of_nodes_in_elem = 0;
   vector<unsigned int> node_id_list;
+
+  unsigned int number_of_tags;
+  number_of_tags = 0;
 
   //  int count_ok = 0;
   //   int count_swap= 0;
@@ -1548,13 +1589,33 @@ void Read_MSH::get_elem_nodes()
   //  unsigned int temp,type ;
   unsigned int type;
 
+   
+
+  
+
   for (unsigned int i =0; i< elem_line.size(); ++i)
   {  // list of lines
 
-    number_of_nodes_in_elem = elem_line[i][4];
+
+   
+
+    if (version == 1)
+    {
+      number_of_nodes_in_elem = elem_line[i][4];
+    }
+    else if (version == 2)
+    {
+      number_of_tags = elem_line[i][2];
+      number_of_nodes_in_elem = ( elem_line[i].size() ) - (3 + number_of_tags);
+
+    }
+
+    //**************  VERSION 2
+        //elem_line[i].size() -  (1 + 1+ + 1 + number_of_tags),  that is
+        //    number_of_nodes_in_elem = elem_line[i].size() - (3 + elem_line[i][2])
 
                   
-    type =  elem_line[i][1];
+        type =  elem_line[i][1];   //  ok VERSION 2 
 
 
 
@@ -1563,8 +1624,21 @@ void Read_MSH::get_elem_nodes()
     {
 
 
-      node_id  = (double)(elem_line[i][5+j]);// ?????? TO DO: change  node_label 
-      //                                      and  node_entry to  int !!!
+
+      if (version == 1)
+      {
+        node_id  = (double)(elem_line[i][5+j]);// ?????? TO DO: change  node_label 
+        //                                      and  node_entry to  int !!!
+      }
+      else if (version == 2)
+      {      
+        node_id  = (double)(elem_line[i][3 + number_of_tags+j]);
+      }
+
+      // **************  VERSION 2
+      //  elem_line[i][3 + number_of_tags+j])
+      //
+
       for (unsigned int k =0; k<num_of_nodes ; ++k)
       { 
         //  cout << " node_label[k]" <<  node_label[k]<< endl;
@@ -1656,9 +1730,20 @@ void Read_MSH::get_elem_nodes()
 
 
         current_element.nodes = node_id_list;
-    current_element.type =  elem_line[i][1];
+    current_element.type =  elem_line[i][1]; //  ok VERSION 2 
 
-    current_element.phys_id =  elem_line[i][2];
+    if (version == 1)
+    {
+      current_element.phys_id =  elem_line[i][2];
+    }
+    else if (version == 2)
+    {
+      current_element.phys_id = elem_line[i][3];
+    }
+
+    // **** VERSION 2 ***
+    // current_element.phys_id = elem_line[i][3]; !!!!!!!!!!!!!!!
+
 
     All_elements.push_back(current_element);
     // cout << "******************" << current_element.type<< endl ;
@@ -1681,7 +1766,8 @@ void Read_MSH::get_elem_nodes()
 
 
   el_weight = count ;
-  num_of_elem = elem_nodes.size();
+  num_of_elem = elem_nodes.size();  //  NECESSARY FOR .XDA FILE (num_of_elem = NUMBER OF PROPER ELEMENTS 
+  //  TO  BE  PUT  IN  LIBMESH  FILE,  (DIFFERENT FROM THE  TOTAL NUMB. OF  GMSH ELEM.  !!!!)
 
   //   cout << "   count_ok = " << count_ok << endl;
   //   cout << "   count_swap = " <<  count_swap << endl;
@@ -1754,6 +1840,22 @@ void Read_MSH::parse_node_section(ifstream& in_stream )
       break;
     }
 
+
+    //  for  version 2 
+    if (parse(str.c_str(), str_p("$EndNodes") ).full) 
+
+      //    if (  parse(str.c_str(), r) .full )
+           
+    {
+
+      //	  cout << " BREAK   "  <<endl ;  
+      end_nodes = true; 
+      break;
+    }
+
+
+
+
     // if     trovato $ENDNOD 
     //   {exit
     //      }
@@ -1763,6 +1865,8 @@ void Read_MSH::parse_node_section(ifstream& in_stream )
       
      
 } // end  parse nodes
+
+
 
 
 
@@ -1789,6 +1893,8 @@ void Read_MSH::find_node_section(char const* str, ifstream& in_stream)
 
 
 
+
+// OK FOR  VERSION 2!!
 // get  node  data  for  each  node
 void Read_MSH::get_nodes_coord()
 { //get_nodes_coord
@@ -1842,27 +1948,65 @@ void Read_MSH::read_data_section(char const* str,ifstream& in_stream )
              space_p).full)
   {
     //  cout << name<< endl;
-    if (name == "ELM")
+    //    if (name == "ELM")
+
+
+    if ( (name == "ELM") || (name == "Elements") )
       //	if (name == name_data )
     {
       parse_elem_section(in_stream);
 
     }
 
-    else if  (name == "NOD")
+    //   else if  (name == "NOD")
+    else if  ( (name == "NOD") ||  (name == "Nodes") )
     {
       //  parse_2(in_stream);
       parse_node_section(in_stream);
 
     }
 
+    // **********************  version 2
+    else if (name == "MeshFormat")
+    {
+      parse_meshformat_section(in_stream);
+
+    }
+
+    //*********************
 
 
-  }
+
+        }
 
 
 
 }
+
+
+
+void Read_MSH::parse_meshformat_section(ifstream&  in_stream)
+{
+
+  std::string  End_mesh_format  ;
+  int file_type,data_size;
+  double version_number;
+
+  in_stream >>  version_number ;  // int(version_number ) = 2
+
+  version = int(version_number );  //  global variable private  member
+
+  if (version != 2)
+    throw InitFailedException("ERROR: this GMSH mesh file version is not yet implemented"); 
+
+
+  in_stream >>  file_type ;
+  in_stream >>  data_size ;
+
+  in_stream >>  End_mesh_format ;
+
+}
+
 
 
 

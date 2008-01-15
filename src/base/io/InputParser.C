@@ -503,6 +503,8 @@ void InputParser::reset_all_maps()
 
   model_BC_map.clear();
   physical_model_map.clear();
+  blocks_map.clear();
+
 
   // prop_labels_map.clear();
   string_prop_labels_map.clear();
@@ -1806,7 +1808,8 @@ InputParser::parse_model(ifstream& in_stream)
 
             while (skip_comments(in_stream, physical_model_name ) == true )
             {
-              in_stream >>  model_name ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+              in_stream >>  physical_model_name ; // if  the  whole  line has  ben  skipped: 
+              //read  the  next keyword !!! 
             } 
 
             cut_off_comment(physical_model_name, in_stream); //  case  recombination#commmm
@@ -2548,3 +2551,128 @@ void InputParser::read_scale(void)
 
 
 // ********************************************************************
+
+
+
+
+// parse a number n of  subblocks of kind 
+//  keyword  "blockname"
+//  { .........
+//  }
+//  and  put the contents in a map<block_name,ModelOption>
+
+void
+InputParser::parse_n_subblocks(ifstream& in_stream,  string& keyword)
+{
+
+  string  label, block_name ;
+
+
+  // read  the  next  label
+
+  in_stream >>  label ;
+
+ 
+
+  while (skip_comments(in_stream,  label ) == true )
+  {
+    in_stream >> label  ; // if  the  whole  line has
+    //  been  skipped: read  the next keyword !!! 
+  } 
+
+  cut_off_comment(label, in_stream); //  case  Recomb#commmm
+
+  //       if (!check_label(model_section_keywords, label))
+  //         throw InitFailedException("SYNTAX ERROR in input  file: unknown keyword in models section! ");
+
+ 
+ 
+
+  //  READ the block-keyword
+
+  while (  (label == keyword  ) && (!in_stream.eof()) ) 
+    
+  {  //  while loop  blocks
+
+    // block n
+               
+
+    //  READ the block name
+
+    in_stream >>  block_name ;
+
+  
+
+
+    while (skip_comments(in_stream,block_name  ) == true )
+    {
+      in_stream >> block_name  ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+    cut_off_comment(block_name, in_stream); //
+
+    temp_options.clear();
+
+    //    read  the  block  between  { and  }
+    parse_options(in_stream,temp_options  );
+
+
+
+    // read  the  next  label
+    in_stream >>  label ;
+    while (skip_comments(in_stream,  label ) == true )
+    {
+      in_stream >> label  ; // if  the  whole  line has
+      //  been  skipped: read  the next keyword !!! 
+    } 
+    cut_off_comment(label, in_stream); //  case  Recomb#commmm
+
+
+    blocks_map.insert(make_pair (block_name,temp_options));
+
+
+  }
+
+
+}
+
+
+//  read a  std::multimap <const std::string,ModelOptions> blocks_map  corresponding to a block with n 
+//  subblocks
+
+const multimap <string,ModelOptions>& InputParser::read_subblocks(string section_name,string block_type)   {
+
+  std::string  label ;
+  std::ifstream in_stream (filename.c_str()) ;
+
+  reset_all_maps();
+
+ 
+
+  if ( !in_stream.good() )
+  {
+    throw InitFailedException("ERROR: Input file not good."); 
+    //  std::cerr << "ERROR: Input file not good." 
+    //               << std::endl;
+    //   error();
+  }
+
+  section_name = "$"+section_name;
+
+ 
+
+  //find section name
+  find_keyword( in_stream,section_name  );
+
+  // go to the  first '{'
+  skip_to_bracket(in_stream);
+
+  //read all the  subblocks of  type "block_type" in the section
+  //  (included header)
+  parse_n_subblocks(in_stream,  block_type);
+
+  // returns the map of ModelOptions with the contents of the  block
+  return blocks_map;
+
+
+}

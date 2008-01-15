@@ -164,7 +164,15 @@ class InputParser{
 
 
 
-
+ //!  Gets the contents of the blocks of  a  section. 
+  /*!
+   * Method to  get the contents of all the blocks of  type \c block_type  in the 
+   * section \c section_name.
+   * Returns a map between block name and the ModelOptions with data. 
+   * 
+   */
+const std::multimap <std::string,ModelOptions>& 
+  read_subblocks(std::string section_name, std::string block_type ) ;
 
  
 
@@ -270,6 +278,12 @@ class InputParser{
    *   ModelOptions  object for  the  options read in  each  section.
    */
   ModelOptions temp_options;
+
+
+ /*!
+   *   Map between   a block name and the options of the block (stored in ModelOptions).
+   */
+  std::multimap <std::string,ModelOptions> blocks_map;
 
 
 
@@ -392,6 +406,16 @@ class InputParser{
    * 
    */
   bool skip_to_bracket(std::ifstream& in_stream);
+
+
+
+  //!
+  /*!
+   *   Method   to  parse a series of n blocks with of  "keyword" type (e.g. physical model). 
+   *    the contents are put in a map<block_name,ModelOption>  (blocks_map)
+   */
+  void parse_n_subblocks(std::ifstream& in_stream,  std::string& keyword);
+
 
 
 };

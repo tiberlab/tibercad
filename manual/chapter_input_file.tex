@@ -267,7 +267,7 @@ $Models
  
 Here are the simulation models implemented until now:  \textbf{driftdiffusion}, \textbf{thermal}  ,  \textbf{excitontransport},  \textbf{macrostrain},
 \textbf{efaschroedinger}, \textbf{opticskp},  \textbf{opticalspectrum}.
-   Each model-block can  contain the following optional blocks:
+   Each model-block can  contain some  optional blocks, to be written in the  following order:
    
  %  one or more optional Boundary Condition regions blocks (\textbf{BC\_\-regions}-block).
    
@@ -285,7 +285,7 @@ Here are the simulation models implemented until now:  \textbf{driftdiffusion}, 
 
 
  
-A detailed description of the possible parameters for these blocks  follows.
+These optional blocks must be strictly in this order: first the \textbf{options}, then the \textbf{physical\_\-model}, and finally the \textbf{BC\_\-regions}-blocks. A detailed description of the possible parameters for these blocks  follows.
 
 
 
