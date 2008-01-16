@@ -4,6 +4,7 @@
 #include "EFAbulkModel.h"
 #include "Material.h"
 #include "Boundary.h"
+#include "TiberMath.h"
 #include <gnuplot_io.h>
 
 
@@ -14,8 +15,6 @@
 
 
 
-// GNU scientific library
-#include <gsl/gsl_sf_fermi_dirac.h>
 
 
 extern "C" 
@@ -3014,11 +3013,11 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density2D(unsigned
   
   if (opt.particle == "el")
   {
-    prob_factor = gsl_sf_fermi_dirac_mhalf( (Fermi_energy - Energy)  / T_EV);
+    prob_factor = TiberCad::fermidirac_mhalf( (Fermi_energy - Energy)  / T_EV);
   }
   else
   {
-    prob_factor = gsl_sf_fermi_dirac_mhalf( -(Fermi_energy - Energy)  / T_EV);
+    prob_factor = TiberCad::fermidirac_mhalf( -(Fermi_energy - Energy)  / T_EV);
   }
 
  

@@ -120,8 +120,10 @@ AC_DEFUN([TC_MKL],
   if test "x$tc_cv_mkl_dir" != "x"; then
     AC_SUBST([MKL_LIBDIR], "$tc_cv_mkl_dir/lib/32")
     AC_SUBST([MKL_INCLUDEDIR], "$tc_cv_mkl_dir/include")
+    AC_SUBST([HAVE_MKL], "yes")
   else
     tc_cv_mkl_dir="no"
+    AC_SUBST([HAVE_MKL], "no")
   fi
  ])dnl
 ])dnl

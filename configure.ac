@@ -26,6 +26,8 @@ AC_CANONICAL_HOST
 # compilers
 AC_PROG_CXX
 AC_PROG_CC
+AC_PROG_FC
+AC_PROG_F77
 
 # libtool
 #AC_LIBTOOL_DLOPEN
@@ -33,12 +35,13 @@ AC_PROG_CC
 #AC_PROG_LIBTOOL
 
 # check for libreadline
-VL_LIB_READLINE
+# we cannot use it directly, it is GPL! We are not, sigh..
+# VL_LIB_READLINE
 [LIBREADLINE]=""
-if test "$vl_cv_lib_readline" != "no"
-then
-  [LIBREADLINE]="$vl_cv_lib_readline"
-fi
+#if test "$vl_cv_lib_readline" != "no"
+#then
+#  [LIBREADLINE]="$vl_cv_lib_readline"
+#fi
 AC_SUBST([LIBREADLINE])
 
 # check for perl
@@ -93,7 +96,7 @@ case $host_os in
 	[BINSTALLMAKERDIR=`cygpath --path --windows "$BINSTALLMAKERDIR"`]
 	AC_SUBST([BINSTALLMAKERDIR])
         AC_DEFINE([CYGWIN], [1], [define if we are in cygwin]) ;;
-         * )  ;;
+  * )  ;;
 esac
 AC_SUBST([BINSTALLMAKER])
 
@@ -160,9 +163,10 @@ AC_MSG_NOTICE([])
 
 
 # GSL GNU scientific library
-TC_GSL
+# we don't use it as it is GPL
+#TC_GSL
 # add RPATH to LDFLAGS
-[GSL_LIBS=`echo "$GSL_LIBS" | sed -r 's/-L([^[:space:]]+)/-Wl,-rpath,\1 -L\1/'`]
+#[GSL_LIBS=`echo "$GSL_LIBS" | sed -r 's/-L([^[:space:]]+)/-Wl,-rpath,\1 -L\1/'`]
 
 
 # PARDISO
@@ -218,14 +222,6 @@ then
   AC_MSG_WARN([ gmsh was not found. You will not be able to run all of the])
   AC_MSG_WARN([ examples. Install gmsh or provide complete path.])
   AC_MSG_WARN([])
-fi
-
-if test "${GSL_CONFIG+set}" != "set"
-then
-  AC_MSG_NOTICE([])
-  AC_MSG_WARN([ GSL was not found. You will not be able to use])
-  AC_MSG_WARN([ Fermi-Dirac statistics.])
-  AC_MSG_NOTICE([])
 fi
 
 

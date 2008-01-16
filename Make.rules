@@ -46,6 +46,12 @@ $(subdirs):
 	@$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 	
 
+%.$(obj-suffix): %.f
+	@echo "Compiling F77 (in "$(mode)" mode) "$<"..."
+	@$(F77) $(FFLAGS) $(CPPFLAGS) -c $< -o $@
+	
+
+
 .%.d: %.C
 	@$(CC) -MT $(basename $<).$(obj-suffix) -MM $(CPPFLAGS) $< > $@.$$$$; \
 	sed 's,\($*\)\.$(obj-suffix)[ :]*,\1.\*\.o $@ : ,g' < $@.$$$$ > $@; \

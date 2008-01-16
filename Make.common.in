@@ -19,10 +19,15 @@ enable_dftb = @ENABLE_DFTB@
 # do we have HETERO?
 enable_hetero = @ENABLE_HETERO@
 
+# do we have MKL?
+have_mkl = @HAVE_MKL@
 
-# the compiler
+
+# the compilers
 CXX = @CXX@
 CC = @CC@
+FC = @FC@
+F77 = @F77@
 
 
 # gmsh
@@ -75,12 +80,15 @@ TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 CXXFLAGS := $(shell export METHOD=$(METHOD) && $(libmesh_config) --cxxflags)
 INCLUDE  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --include)
 LDFLAGS  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --ldflags)
+FFLAGS   :=
 
 
 ifdef PROFILE
   CXXFLAGS += -pg
 endif
-
+ifeq ($(METHOD),dbg)
+  FFLAGS += -g
+endif
 
 LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib
 ifeq ($(build_modules), yes)
@@ -88,19 +96,27 @@ ifeq ($(build_modules), yes)
 endif
 LDFLAGS += -ltensor -lnewmat
 
-LDFLAGS += @GSL_LIBS@
+#LDFLAGS += @GSL_LIBS@
 
 LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
 
-LDFLAGS += -L@MKL_LIBDIR@ -Wl,-rpath,@MKL_LIBDIR@
-
+LDFLAGS += -lg2c
 
 TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*")
 
 
-NON_TIBER_INCLUDES := $(INCLUDE) @GSL_CFLAGS@ @BOOST_CPPFLAGS@ -I@MKL_INCLUDEDIR@
-NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
+#NON_TIBER_INCLUDES := $(INCLUDE) @GSL_CFLAGS@ @BOOST_CPPFLAGS@ -I@MKL_INCLUDEDIR@
 
+NON_TIBER_INCLUDES := $(INCLUDE) @BOOST_CPPFLAGS@ 
+
+ifeq ($(have_mkl),yes)
+ LDFLAGS += -L@MKL_LIBDIR@ -Wl,-rpath,@MKL_LIBDIR@
+ NON_TIBER_INCLUDES +=  -I@MKL_INCLUDEDIR@
+endif
+
+
+
+NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
 
 CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))

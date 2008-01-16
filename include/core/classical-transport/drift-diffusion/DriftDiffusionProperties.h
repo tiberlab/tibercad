@@ -26,8 +26,6 @@
 #include "vector_value.h"
 #include "point.h"
 
-// GNU scientific library
-#include <gsl/gsl_sf_fermi_dirac.h>
 
 #include <float.h>
 #include <vector>

@@ -36,19 +36,17 @@ int main (int argc, char** argv)
     inputfile = string(argv[1]);
   else
   {
-    //cerr << "Usage: tibercad <inputfile>" << endl;
-    //return 1;
 
 #ifdef HAVE_LIBREADLINE
     char *line = readline ("Enter input file: ");
     inputfile = string(line);
     free(line);
-#else
-    cout << "Enter input file: ";
-    cin >> inputfile;
-#endif
     boost::algorithm::trim(inputfile);
     cout << endl;
+#else
+    cerr << "Usage: tibercad <inputfile>" << endl;
+    return 1;
+#endif
 
   }
 
@@ -90,7 +88,7 @@ int main (int argc, char** argv)
     cout << "ERROR: " << e.what() << endl;
 #ifdef CYGWIN
     cout << "press any key ...";
-    cin;
+    cin.get();
 #endif
   }
   catch (...)
@@ -98,7 +96,7 @@ int main (int argc, char** argv)
     cout << "ERROR: TiberCAD crashed for unknown reason." << endl;
 #ifdef CYGWIN
     cout << "press any key ...";
-    cin;
+    cin.get();
 #endif
   }
 
