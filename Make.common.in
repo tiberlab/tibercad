@@ -27,7 +27,6 @@ have_mkl = @HAVE_MKL@
 CXX = @CXX@
 CC = @CC@
 FC = @FC@
-F77 = @F77@
 
 
 # gmsh
@@ -80,14 +79,14 @@ TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 CXXFLAGS := $(shell export METHOD=$(METHOD) && $(libmesh_config) --cxxflags)
 INCLUDE  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --include)
 LDFLAGS  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --ldflags)
-FFLAGS   :=
+FCFLAGS   :=
 
 
 ifdef PROFILE
   CXXFLAGS += -pg
 endif
 ifeq ($(METHOD),dbg)
-  FFLAGS += -g
+  FCFLAGS += -g
 endif
 
 LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib
@@ -100,7 +99,8 @@ LDFLAGS += -ltensor -lnewmat
 
 LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
 
-LDFLAGS += -lg2c
+# TODO fortran compiler libraries
+LDFLAGS += @FCLIBS@
 
 TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*")
 

@@ -48,7 +48,7 @@ $(subdirs):
 
 %.$(obj-suffix): %.f
 	@echo "Compiling F77 (in "$(mode)" mode) "$<"..."
-	@$(F77) $(FFLAGS) $(CPPFLAGS) -c $< -o $@
+	@$(FC) $(FCFLAGS) $(CPPFLAGS) -c $< -o $@
 	
 
 

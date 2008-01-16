@@ -2,6 +2,7 @@
  
 export CXX=g++-4.1.1
 export CC=gcc-4.1.1
+export FC=ifort-9.0
 
 ./configure --with-boost-prefix=/usr/pack/boost-1.33.1-ma \
   --with-petsc-prefix=/usr/pack/petsc-2.3.2-ma \
