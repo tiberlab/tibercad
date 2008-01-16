@@ -45,7 +45,11 @@ int main (int argc, char** argv)
     cout << endl;
 #else
     cerr << "Usage: tibercad <inputfile>" << endl << endl;
+# ifdef CYGWIN
+    cout << "press any key ...";
+    cin.get();
     return 1;
+# endif
 #endif
 
   }

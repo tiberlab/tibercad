@@ -3,7 +3,6 @@
 
 
 BINSTALLMAKER = @BINSTALLMAKER@
-export BINSTALLMAKER
 
 
 .PHONY: wininstaller
