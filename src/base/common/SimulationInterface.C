@@ -529,9 +529,10 @@ SimulationInterface::do_plot(void)
       unsigned int nn = names.size();
       unsigned int nr = results.size();
 
-      // if nn == nr, we print data in columns, otherwise on a row
-      if (nn == nr)
+      // if nn != nr, we print data in columns, otherwise on a row
+      if (nn != nr)
       {
+        // TODO is completely without logic
         ostringstream l;
         l << setprecision(12);
         for (unsigned int i = 0; i < nn; i++)

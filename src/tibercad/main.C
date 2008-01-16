@@ -44,7 +44,7 @@ int main (int argc, char** argv)
     boost::algorithm::trim(inputfile);
     cout << endl;
 #else
-    cerr << "Usage: tibercad <inputfile>" << endl;
+    cerr << "Usage: tibercad <inputfile>" << endl << endl;
     return 1;
 #endif
 
