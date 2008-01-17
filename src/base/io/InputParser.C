@@ -787,6 +787,8 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
       rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',') 
                              | ch_p('%')   | ch_p('@') | ch_p('[') | ch_p(']') );
 
+  rule<>dot = ch_p('.');
+
   //    rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',')    );
   //  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+')    );
 
@@ -799,6 +801,7 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 
 
   // ******** label = name of  property
+
   rule<>label  = *(special_char)>>  (+alnum_p)>>   * ( (special_char ) >> *(+alnum_p) ) ;
 
   //  rule<>list_string =  ch_p('(') >> *(space_p) >> (label)>>  *( *(space_p) >> (label) ) >> ch_p(')');
@@ -820,7 +823,14 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 
   // rule<>tag_value = if_p('(')[(list_string) ].else_p[label];
   // **********  property value  can  be  a  single string (label) or  a  list ( x , y, z )
-  rule<>tag_value =  list_string | label;
+
+//  
+//  rule<>tag_value =  list_string | label;
+
+// for  the  case "searchpath =  ."  (path = local dir)
+  rule<>extended_label = label | dot;
+
+  rule<>tag_value =  list_string | extended_label;
 
   // ********************************************  NEW 30.11.06  *******************
   //tag_value
