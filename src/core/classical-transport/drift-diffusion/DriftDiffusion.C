@@ -1522,17 +1522,17 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     sc->calculate_mobilities();
 
     // we put the minus here for convenience
-    double sigma_e = -Constants::e * sc->get_electron_density() *
+    double sigma_e = Constants::e * sc->get_electron_density() *
       sc->get_electron_mobility();
-    double sigma_h = -Constants::e * sc->get_hole_density() *
+    double sigma_h = Constants::e * sc->get_hole_density() *
       sc->get_hole_mobility();
 
-    double jnx = sigma_e * (en_x + Pn * dT_x);
-    double jny = sigma_e * (en_y + Pn * dT_y);
-    double jnz = sigma_e * (en_z + Pn * dT_z);
-    double jpx = sigma_h * (ep_x + Pp * dT_x);
-    double jpy = sigma_h * (ep_y + Pp * dT_y);
-    double jpz = sigma_h * (ep_z + Pp * dT_z);
+    double jnx = -sigma_e * (en_x + Pn * dT_x);
+    double jny = -sigma_e * (en_y + Pn * dT_y);
+    double jnz = -sigma_e * (en_z + Pn * dT_z);
+    double jpx = -sigma_h * (ep_x + Pp * dT_x);
+    double jpy = -sigma_h * (ep_y + Pp * dT_y);
+    double jpz = -sigma_h * (ep_z + Pp * dT_z);
 
 
     if (ids.count(ELPOTENTIAL))
@@ -1573,12 +1573,10 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       values[n][HMOBILITY] = sc->get_hole_mobility();
 
     if (ids.count(SIGMAE))
-      values[n][SIGMAE] = Constants::e *
-        sc->get_electron_mobility() * sc->get_electron_density();
+      values[n][SIGMAE] = sigma_e;
 
     if (ids.count(SIGMAH))
-      values[n][SIGMAH] = Constants::e *
-        sc->get_hole_mobility() * sc->get_hole_density();
+      values[n][SIGMAH] = sigma_h;
 
     if (ids.count(J))
     {
@@ -1769,17 +1767,17 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     sc->calculate_mobilities();
 
     // we put the minus here for convenience
-    double sigma_e = -Constants::e * sc->get_electron_density() *
+    double sigma_e = Constants::e * sc->get_electron_density() *
       sc->get_electron_mobility();
-    double sigma_h = -Constants::e * sc->get_hole_density() *
+    double sigma_h = Constants::e * sc->get_hole_density() *
       sc->get_hole_mobility();
 
-    double jnx = sigma_e * (en_x + Pn * dT_x);
-    double jny = sigma_e * (en_y + Pn * dT_y);
-    double jnz = sigma_e * (en_z + Pn * dT_z);
-    double jpx = sigma_h * (ep_x + Pp * dT_x);
-    double jpy = sigma_h * (ep_y + Pp * dT_y);
-    double jpz = sigma_h * (ep_z + Pp * dT_z);
+    double jnx = -sigma_e * (en_x + Pn * dT_x);
+    double jny = -sigma_e * (en_y + Pn * dT_y);
+    double jnz = -sigma_e * (en_z + Pn * dT_z);
+    double jpx = -sigma_h * (ep_x + Pp * dT_x);
+    double jpy = -sigma_h * (ep_y + Pp * dT_y);
+    double jpz = -sigma_h * (ep_z + Pp * dT_z);
 
 
     if (ids.count(ELPOTENTIAL))
@@ -1818,6 +1816,13 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     if (ids.count(HMOBILITY))
       values[n][HMOBILITY] = sc->get_hole_mobility();
+
+    if (ids.count(SIGMAE))
+      values[n][SIGMAE] = sigma_e;
+
+    if (ids.count(SIGMAH))
+      values[n][SIGMAH] = sigma_h;
+
 
     if (ids.count(J))
     {
