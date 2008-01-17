@@ -47,8 +47,7 @@ where
 
 \begin{itemize}
  \item \char`\"{}\textit{tagname}\char`\"{} is a string
-\item \char`\"{}\textit{tagvalue}\char`\"{} is a single numerical or string item or
-\item a list of items between \char`\"{}(\char`\"{} and \char`\"{})\char`\"{} parenthesis and separated by commas.
+\item \char`\"{}\textit{tagvalue}\char`\"{} is a single numerical or string item or a list of items between \char`\"{}(\char`\"{} and \char`\"{})\char`\"{} parenthesis and separated by commas.
 e.g. \textit{(cathode, anode)} 
 \end{itemize}
 
@@ -470,10 +469,12 @@ Two extra blocks can be  present:
 \begin{verbatim}
 sweep
   {
+    simulation = driftdiffusion 
     variable = Vb
     start = 0.0
     stop = 4.0
     steps = 80
+    plot_data = true
     plotvariable = current
   }
 \end{verbatim}
@@ -482,53 +483,75 @@ sweep
 
 \textbf{start} , \textbf{stop}, \textbf{steps}: sweep starts from \textit{start} value, is repeated  \textit{steps} times and stops in \textit{stop}
 
+\textbf{simulation} : name of  the  simulation (model) associated to the  sweep  calculation.
+
+\textbf{plotvariable} : specify  the  integrated quantity to  be  calculated during the sweep and that will be shown in the output  file 
+sweep\_\textit{modelname}\_\textit{sweepvariable}.dat,  eg.  sweep\_driftdiffusion\_Vb.dat  for  a  sweep of  current calculation on the  variable \textit{Vb} (typically a contact voltage)  
+
+\textbf{plot\_data} : default is  \textit{false}; if  it is  set  to \textit{true}  output data  will be  written for  each  step of the  sweep calculation, otherwise just  the  results  for  the  final step  will  be  present  in  the  output.
 
 
   \item  \textbf{selfconsistent} block , preceded by the keyword \char`\"{}\textbf{selfconsistent }\char`\"{}. In this block it is possible to define a self-consistent calculation based on two different simulation models (e.g. driftdiffusion and excitontransport).
+\begin{verbatim}
+selfconsistent
+  {
+    flavour = relaxation
+    simulations = (driftdiffusion,  excitons)
+  }
+\end{verbatim}
+In  \textbf{simulations}  the  list of  simulations to  be  performed self-consistently is  specified.
+%\textit{flavour}   defines ...
+
+Now  it  is  possible  to  execute the  specified simulations in self  consistent  way,  by  using the \textbf{selfconsistent} keyword 
+like  a  simulation name, 
+in the 
+\textbf{solve}  assignement,  e.g.  \textit{solve = selfconsistent} ,    or  even  in  the  \textbf{sweep} section,  with, for  example,  
+ \textit{simulation = selfconsistent}.
+
 
 \end{itemize}
 
-Here are some of  the  parameters:
-
-\textit{nonlinear\_solver} = \textbf{tiber}  for  tibercad  non-linear solver (recommended).
-
-\textit{quasi\_equilibrium}
-
-\textit{nonlin\_max\_it}
-
-\textit{nonlin\_abs\_tol}
-
-\textit{lin\_max\_it}
-
-\textit{ksp\_type}
-
-\textit{pc\_type}
-
-\textit{ls\_max\_step}
-
-\textit{ls\_type}
-
-\textit{current\_integration\_method}
-
-
-%sweep
-\textit{simulation} :  simulations to which sweep is  applied
-
-\textit{boundary}: boundary region to which sweep is  applied
-
-\textit{start} , \textit{stop}, \textit{steps} : sweep starts from \textit{start} value, is repeated  \textit{steps} times and stops in \textit{stop}
-
-\textit{plotvariable}
-
-%% selfconsistent
-
-\textit{simulations} : simulations to be   executed in a self-consistent cycle. 
-
-%thermal
-\textit{current\_simulation}  :    current simulation model used for  thermal  model
-
-%macrostrain
-\textit{substrate} 
+% Here are some of  the  parameters:
+% 
+% \textit{nonlinear\_solver} = \textbf{tiber}  for  tibercad  non-linear solver (recommended).
+% 
+% \textit{quasi\_equilibrium}
+% 
+% \textit{nonlin\_max\_it}
+% 
+% \textit{nonlin\_abs\_tol}
+% 
+% \textit{lin\_max\_it}
+% 
+% \textit{ksp\_type}
+% 
+% \textit{pc\_type}
+% 
+% \textit{ls\_max\_step}
+% 
+% \textit{ls\_type}
+% 
+% \textit{current\_integration\_method}
+% 
+% 
+% %sweep
+% \textit{simulation} :  simulations to which sweep is  applied
+% 
+% \textit{boundary}: boundary region to which sweep is  applied
+% 
+% \textit{start} , \textit{stop}, \textit{steps} : sweep starts from \textit{start} value, is repeated  \textit{steps} times and stops in \textit{stop}
+% 
+% \textit{plotvariable}
+% 
+% %% selfconsistent
+% 
+% \textit{simulations} : simulations to be   executed in a self-consistent cycle. 
+% 
+% %thermal
+% \textit{current\_simulation}  :    current simulation model used for  thermal  model
+% 
+% %macrostrain
+% \textit{substrate} 
 
 
 
@@ -591,4 +614,46 @@ In this  section one  can  specify  several general parameters and settings  for
 \textit{output\_format} : format of  the  output data: \textit{gmv},  \textit{tecplot}, \textit{grace} (for xmgr, ascii data column type),  ....
 
 \textit{plot} :  list of output variables which are calculated and available in output  files.
+
+\section{Output description}
+
+
+At the end of  the  execution, the  program will  write  the  results of  the  simulation  in the  directory specified by \textit{resultpath} , with the  format  specified by \textit{output\_format}.  The  output  variables  are specified in  the  list  \textit{plot}.
+
+TiberCAD  output is  divided in  three  classes: \textbf{nodal}, \textbf{elemental} and  \textbf{integrated}  quantities.
+
+\textbf{Nodal}  quantities are all  the  quantities associated with the nodes of  the  mesh,  such as  Fermi level,  electron and  hole  density,  conduction and  valence band, etc..  The output  values for  these  quantities are reported in  the  files  \textit{modelname}\_nodal.\textit{ext} ,  where  \textit{modelname} is  the simulation model used for the  calculations and  \textit{ext} is  the  extension of  the  chosen  file  format. 
+
+In the  case  a  sweep  calculation is  performed and  the  \textbf{plot\_data} keyword is  set  to  \textit{true}, the output files  are of  the  kind \textit{modelname}\_nodal\_\textit{sweepvariable}\_\textit{step}.\textit{ext}, where  \textit{sweepvariable} is  the  variable with respect to  which the  sweep is  performed (e.g. gate voltage) and  \textit{step} is  the  value of  this  variable  at that step;  e.g  \textit{driftdiffusion\_nodal\_Vb\_0.000.dat} for the  result at the step Vb = 0.0 . 
+
+\textbf{Elemental}  quantities are all  the  quantities associated with the elements of  the  mesh,  such as  current density.
+The output  values for  these  quantities are reported in  the  files  \textit{modelname}\_elemental.\textit{ext} .
+
+In the  case  a  sweep  calculation is  performed and  the  \textbf{plot\_data} keyword is  set  to  \textit{true},
+ the output files  are of  the  kind \textit{modelname}\_elemental\_\textit{sweepvariable}\_\textit{step}.\textit{ext}.
+e.g. \textit{driftdiffusion\_elemental\_Vb\_1.150.dat}
+
+\textbf{Integrated}  quantities are the  quantities which  are  not  associated to the  mesh but  are obtained by an integration on real or reciprocal space,  for  example  current at the  contacts of  a  diode or  quantized energy levels  in  a  quantum  well.
+These \textbf{Integrated}  quantities  are displayed in separated files,  with the  format \textit{simulationname}.\textit{ext}
+ e.g  \textit{quantum\_electrons.dat},  where \textit{simulationname} is  the  name of the model (simulation) associated to the  results. 
+
+ If  a  sweep  is  performed,  the output  file gets the  format   sweep\_\textit{simulationname\_variablename.ext},
+where  \textit{variablename} is the variable  with respect to  which the  sweep is  performed, e.g. \textit{sweep\_driftdiffusion\_Vb.dat}.
+Inside the  file,   output values for all  the  steps  of  calculation are shown.
+
+Finally,  a  last class of  output files is  the  \textbf{Materials}  output. These  files  contain the information about   the physical regions of  the  device;  for  each  class  of  simulation, a  different material file is  produced, containing  all and  only the  mesh regions associated to that simulation model. The  file has the  format  \textit{simulationname}\_materials.\textit{ext},   e.g.
+\textit{driftdiffusion\_materials.dat }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
