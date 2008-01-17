@@ -270,6 +270,7 @@ inline
 Material::Material(const std::string& name)
   : _name(name),
     _structure("zb"), 
+    _rotated_crystal(NULL),
     _is_initialized(false)
 {
 }

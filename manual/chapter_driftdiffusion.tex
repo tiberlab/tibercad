@@ -14,9 +14,74 @@ $P$ is the electric polarization due to e.g. piezoelectric effects and $R$ is th
 The models for the mobilities and the net recombination rates can be specified in the \texttt{physical\_model} sections as described in the following.
 
 
+\section{Plot variables}
+
+See tables~\ref{table:dd_nodal}, \ref{table:dd_elemental} and \ref{table:dd_scalar}.
+
+
+\begin{table}[htb]
+\center
+\begin{tabular}{l|l|l}
+\multicolumn{3}{c}{\textbf{Nodal quantities}} \\
+\hline 
+\texttt{Ec} & Conduction band edge & eV \\
+\texttt{Ec0} & Conduction band edge & eV \\
+\texttt{Ev} & Valence band edge without electric potential & eV \\
+\texttt{Ev0} & Valence band edge without electric potential & eV \\
+\texttt{Eg} & Band gap & eV \\
+\texttt{QFermi\_e} & Electro-chemical potential of electrons & eV \\
+\texttt{QFermi\_h} & Electro-chemical potential of holes & eV \\
+\texttt{ElPotential} & Electric potential & V \\
+\texttt{eDensity} & Electron density & cm$^{-3}$ \\
+\texttt{hDensity} & Hole density & cm$^{-3}$ \\
+\texttt{eMob} & Electron mobility & cm$^2V^{-1}s^{-1}$ \\
+\texttt{hMob} & Hole mobility & cm$^2V^{-1}s^{-1}$ \\
+\texttt{Nd} & Ionized donor density & cm$^{-3}$ \\
+\texttt{Na} & Ionized acceptor density & cm$^{-3}$ \\
+\texttt{charge\_density} & Total charge density & cm$^{-3}$ \\
+\texttt{NetRecombination} & \begin{minipage}[t]{8cm}
+The net recombination rate for each recombination model and the total rate
+\end{minipage}& cm$^{-3}$s$^{-1}$
+\end{tabular}
+\caption{Nodal quantities}
+\label{table:dd_nodal}
+\end{table}
+
+\begin{table}[htb]
+\center
+\begin{tabular}{l|l|l}
+\multicolumn{3}{c}{\textbf{Elemental quantities}} \\
+\hline 
+\texttt{EField} & Electric Field & Vcm$^{-1}$ \\
+\texttt{Current} & Total current density & Acm$^{-2}$ \\
+\texttt{eCurrent} & Electron current density & Acm$^{-2}$ \\
+\texttt{hCurrent} & Hole current density & Acm$^{-2}$ \\
+\texttt{Polarization} & Electric Polarization & Cm$^{-2}$
+\end{tabular}
+\caption{Elemental quantities}
+\label{table:dd_elemental}
+\end{table}
+
+\begin{table}[htb]
+\center
+\begin{minipage}{8cm}
+\center
+\begin{tabular}{l|l|l}
+\multicolumn{3}{c}{\textbf{Scalar quantities}} \\
+\hline 
+\texttt{current} & Contact currents & *\footnote{depends on dimension and symmetry}\\ 
+\end{tabular}
+\end{minipage}
+\caption{Scalar quantities}
+\label{table:dd_scalar}
+\end{table}
+
+
+
 
 \section{\texttt{Models} section}
-The \texttt{Models} section looks like follows:
+The \Models{} section looks as given in~\inputref{dd:models}
+\begin{inputfile}
 \begin{verbatim}
 model driftdiffusion
 {
@@ -43,8 +108,12 @@ model driftdiffusion
     }
  }
 \end{verbatim}
+\caption{\Models{} section for drift-diffusion}
+\label{dd:models}
+\end{inputfile}
 
-The \texttt{physical\_model} sections can be omitted.
+
+The \physicalmodel{} sections can be omitted.
 In this case default models are used, namely no recombination/generation for the recombination model and constant mobility for the mobility models.
 There can be more than one recombination model.
 
@@ -54,7 +123,8 @@ There can be more than one recombination model.
 This section describes the currently available generation/recombination models.
 
 \subsubsection{Shockley-Read-Hall (SRH) recombination}
-The SRH recombination model can be enabled in the input file by specifying
+The SRH recombination model can be enabled in the input file as shown in~\inputref{dd:srh}
+\begin{inputfile}
 \begin{verbatim}
 physical_model recombination
 {
@@ -62,6 +132,9 @@ physical_model recombination
   ...
 }
 \end{verbatim}
+\caption{Declaration of SRH recombination model}
+\label{dd:srh}
+\end{inputfile}
 
 SRH recombination is defined as follows:
 \begin{equation}

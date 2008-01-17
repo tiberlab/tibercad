@@ -1,36 +1,94 @@
-\documentclass[12pt]{book}
+\RequirePackage{ifpdf}
+\ifpdf
+\documentclass[12pt,            % 11pt Font
+               a4paper,         % a4-Paperformat
+               twoside,         % twoside 
+%%             fleqn,           % Equations appear flush left
+%%             draft,
+               pdftex
+               ]{book}
+\else
+\documentclass[12pt,            % 11pt Font
+               a4paper,         % a4-Paperformat
+               twoside,         % twoside 
+%%             fleqn,           % Equations appear flush left
+%%             draft,
+%%               openright        % Chapters begin on odd (right) page
+              ]{book}
+\fi
 
-\newcommand{\tibercad}{{{T\scriptsize{}IBER\normalsize{}CAD }}}
-\newcommand{\TiberCAD}{{{T\scriptsize{}IBER\normalsize{}CAD }}}
-\usepackage{amsthm}
-\theoremstyle{plain}
 \textwidth  450pt  
+\oddsidemargin 3mm
+\evensidemargin 8mm
+%\evensidemargin 5mm
 
-\oddsidemargin 5mm
-%\evensidemargin 8mm
-\evensidemargin 5mm
-
-\baselineskip 10mm
+%\baselineskip 10mm
 \textheight 580pt
-\parindent 5mm
+%\parindent 5mm
 
 %\renewcommand{\baselinestretch}{1.55} %spaziatura 
 
 
+\ifpdf
+ \usepackage[pdftex]{graphicx}
+ \usepackage{pdflscape}
+\else
+ \usepackage[dvips]{graphicx}
+ \usepackage{lscape}
+\fi
+
+\usepackage{ae} 
+\usepackage{color}
+\ifpdf
+ \usepackage{pdfpages}
+ \usepackage[colorlinks,plainpages=false]{hyperref}% generates colored links
+\fi
+
+\usepackage[small,bf]{caption}    
+
+\newcommand{\tibercad}{{{T\scriptsize{}IBER\normalsize{}CAD }}}
+\newcommand{\TiberCAD}{{{T\scriptsize{}IBER\normalsize{}CAD }}}
+\newcommand{\Models}{\texttt{Models}}
+\newcommand{\physicalmodel}{\texttt{physical\_model}}
+
+
+\usepackage{amsthm}
+\theoremstyle{plain}
+
+\usepackage{float}
+
+%\floatstyle{boxed}
+\newfloat{code}{htp}{lop}
+\floatname{code}{Input}
+\newenvironment{inputfile}{\begin{code}\begin{center}\begin{minipage}{0.8\textwidth}\rule{\textwidth}{0.1pt}}{\rule{\textwidth}{0.1pt}\end{minipage}\end{center}\end{code}}
+\newcommand{\inputref}[1]{Input~\ref{#1}}
+
+
 \begin{document}
+
+\ifpdf
+ \DeclareGraphicsExtensions{.jpg, .png, .pdf}
+\else
+ \DeclareGraphicsExtensions{.eps}
+\fi
+
+
+
 \title{TiberCAD User Manual}
-\author{Fabio Sacconi, Matthias Auf~der~Maur, Michael Povolotskyi, Giuseppe Romano } 
+\author{Fabio Sacconi, Matthias Auf~der~Maur, \\ Michael Povolotskyi, Giuseppe Romano } 
 \maketitle
 
 
 \pagenumbering{Roman}
 
+\ifpdf\phantomsection\fi
+\addcontentsline{toc}{chapter}{Contents}
 \tableofcontents
 %\listoffigures
 \newpage 
 %\pagestyle{fancy}
 
-\headsep 50pt
+%\headsep 50pt
                                
 \pagenumbering{arabic}
 
@@ -45,9 +103,11 @@
 
 
 
+\ifpdf\phantomsection\fi
+\addcontentsline{toc}{chapter}{Bibliography}
 \bibliographystyle{IEEE}
-
 \bibliography{references}
+
 
 \end{document}
 

@@ -8,7 +8,9 @@
 inline
 Alloy::Alloy(const std::string& name)
   : Material(name),
-    _molar_fraction(0.0)
+    _molar_fraction(0.0),
+    _cryst_A(NULL),
+    _cryst_B(NULL)
 {
   get_database().get_alloy_components(name, _name_A, _name_B);
 #ifdef DEBUG
