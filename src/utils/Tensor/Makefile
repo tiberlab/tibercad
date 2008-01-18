@@ -16,12 +16,16 @@ objects		:= $(patsubst %.cpp, %.$(obj-suffix), $(srcfiles))
 
 
 .PHONY: all
+all:  $(topdir)/lib/libtensor.a
 
 
-all: $(objects)
+$(topdir)/lib/libtensor.a: $(objects)
+	@ar cru $(topdir)/lib/libtensor.a $(objects)
+	@ranlib $(topdir)/lib/libtensor.a
+
+$(topdir)/lib/libtensor.$(shared_libext): $(objects)
 	@$(CXX) -fPIC -shared -o $(topdir)/lib/libtensor.$(shared_libext) $(objects)
 
-#@ar rcs $(topdir)/lib/libtensor.a $(objects)
 
 
 

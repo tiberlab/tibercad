@@ -16,11 +16,15 @@ objects		:= $(patsubst %.cpp, %.$(obj-suffix), $(srcfiles))
 
 
 .PHONY: all
+all: $(topdir)/lib/libnewmat.a
 
 
-all: $(objects)
+$(topdir)/lib/libnewmat.a: $(objects)
+	@$(AR) cru $(topdir)/lib/libnewmat.a $(objects)
+	@ranlib $(topdir)/lib/libnewmat.a
+
+$(topdir)/lib/libnewmat.$(shared_libext): $(objects)
 	@$(CXX) -fPIC -shared -o $(topdir)/lib/libnewmat.$(shared_libext) $(objects)
-
 
 
 

@@ -2,6 +2,9 @@
 
 # Common definitions for all Makefiles
 topdir := @abs_top_builddir@
+prefix := @prefix@
+exec_prefix := @exec_prefix@
+libdir := @libdir@
 
 # The OS
 hostos := @host_os@
@@ -89,9 +92,11 @@ ifeq ($(METHOD),dbg)
   FCFLAGS += -g
 endif
 
-LDFLAGS += -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib
+#LDFLAGS += -Wl,-rpath,$(libdir)/lib -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib
+LDFLAGS += -Wl,-rpath,$(libdir)/lib -L$(topdir)/lib
 ifeq ($(build_modules), yes)
- LDFLAGS += -Wl,-rpath,$(topdir)/lib/tibermodels -L$(topdir)/lib/tibermodels
+ #LDFLAGS += -Wl,-rpath,$(libdir)/lib/tibermodels -Wl,-rpath,$(topdir)/lib/tibermodels -L$(topdir)/lib/tibermodels
+ LDFLAGS += -Wl,-rpath,$(libdir)/lib/tibermodels -L$(topdir)/lib/tibermodels
 endif
 LDFLAGS += -ltensor -lnewmat
 
