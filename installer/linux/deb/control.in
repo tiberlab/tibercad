@@ -4,7 +4,7 @@ Section: non-free/science
 Priority: optional
 Architecture: i386
 Suggests: grace, gmsh
-Depends: refblas3, lapack3, libboost-regex1.33.1, libboost-filesystem1.33.1
+Depends: refblas3 | atlas3-base | libblas.so.3, lapack3 | atlas3-base | liblapack.so.3, libboost-regex1.33.1, libboost-filesystem1.33.1
 Installed-Size: %computed_size%
 Maintainer: TiberCAD developers <developers@tibercad.org>
 Description: Multiscale simulation of electronic and optoelectronic

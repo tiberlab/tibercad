@@ -4,6 +4,7 @@
 
 make_windows_package () {
 
+  mkdir -m 0755 ${files}
   mkdir -p ${files}/doc
   mkdir -p ${files}/examples
 
@@ -29,6 +30,7 @@ make_windows_package () {
 
 prepare_linux_package () {
 
+  mkdir -m 0755 ${files}
   mkdir -p ${files}/bin
   mkdir -p ${files}/lib/tibermodels
   mkdir -p ${files}/doc
@@ -43,6 +45,9 @@ prepare_linux_package () {
   if test -e ${topdir}/manual/tiber_manual.pdf ; then
     cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
   fi
+
+  chmod -R a+r ${files}
+  chmod a+x ${files}/bin/tibercad
 
   return
 }
@@ -68,12 +73,13 @@ make_deb () {
 
   files=debfiles/usr
   mkdir -m 0755 debfiles
-  mkdir -p debfiles/usr/bin
-  mkdir -p debfiles/usr/lib/tibermodels
-  mkdir -p debfiles/usr/share/tibercad
-  mkdir -p debfiles/usr/share/doc/tibercad
+  mkdir -p ${files}/bin
+  mkdir -p ${files}/lib/tibermodels
+  mkdir -p ${files}/share/tibercad
+  mkdir -p ${files}/share/doc/tibercad
 
   cp ${topdir}/bin/tibercad ${files}/bin
+  chmod a+x ${files}/bin/tibercad
   cp ${topdir}/lib/lib*.so* ${files}/lib
   find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
   cp ${topdir}/share/tibercad.ico ${files}/share/tibercad
@@ -81,6 +87,9 @@ make_deb () {
   if test -e ${topdir}/manual/tiber_manual.pdf ; then
     cp ${topdir}/manual/tiber_manual.pdf ${files}/share/doc/tibercad/manual.pdf
   fi
+
+  chmod -R a+r debfiles
+  chmod a+x ${files}/bin/tibercad
 
   size=`du -s debfiles | awk '{print $1}'` 
   rm -rf debfiles/DEBIAN
@@ -125,19 +134,22 @@ case $1 in
     case $2 in
 
       deb )
-        make_deb ;;
+        make_deb
+        ;;
 
       tgz )
         files=$name
         prepare_linux_package
         make_tgz
-        rm -rf $files ;;
+        rm -rf $files
+        ;;
 
       * )
         files=$name
         prepare_linux_package
         make_tbz
-        rm -rf $files ;;
+        rm -rf $files
+        ;;
     esac
 
   } ;;
