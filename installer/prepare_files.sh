@@ -37,7 +37,7 @@ prepare_linux_package () {
 
   cp ${topdir}/bin/tibercad ${files}/bin
   cp ${topdir}/lib/lib*.so* ${files}/lib
-  cp ${topdir}/lib/tibermodels/*.so ${files}/lib/tibermodels
+  find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
   cp ${topdir}/share/tibercad.ico ${files}/share
   cp ${topdir}/share/Copyright.txt ${files}/share
   if test -e ${topdir}/manual/tiber_manual.pdf ; then
@@ -50,36 +50,47 @@ prepare_linux_package () {
 
 make_tgz () {
 
-  mv $files $name
   echo "Creating linux/${name}.tar.gz ..."
   tar zcf linux/${name}.tar.gz $name
-
-  mv $name $files
 
   return
 }
 
 make_tbz () {
 
-  mv $files $name
   echo "Creating linux/${name}.tar.bz2 ..."
   tar jcf linux/${name}.tar.bz2 $name
-
-  mv $name $files
 
   return
 }
 
 make_deb () {
 
-  mkdir -p debfiles/usr
+  files=debfiles/usr
+  mkdir -m 0755 debfiles
+  mkdir -p debfiles/usr/bin
+  mkdir -p debfiles/usr/lib/tibermodels
   mkdir -p debfiles/usr/share/tibercad
   mkdir -p debfiles/usr/share/doc/tibercad
-  mv $files/bin debfiles/usr/bin
-  mv $files/lib debfiles/usr/lib/tibercad
-  mv ${files}/share/* debfiles/usr/share/
-  mv ${files}/share/Copyright.txt debfiles/usr/share/doc/
-  mv ${files}/doc/* debfiles/usr/share/doc/tibercad/
+
+  cp ${topdir}/bin/tibercad ${files}/bin
+  cp ${topdir}/lib/lib*.so* ${files}/lib
+  find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
+  cp ${topdir}/share/tibercad.ico ${files}/share/tibercad
+  cp ${topdir}/share/Copyright.txt ${files}/share/tibercad
+  if test -e ${topdir}/manual/tiber_manual.pdf ; then
+    cp ${topdir}/manual/tiber_manual.pdf ${files}/share/doc/tibercad/manual.pdf
+  fi
+
+  size=`du -s debfiles | awk '{print $1}'` 
+  rm -rf debfiles/DEBIAN
+  mkdir -m 0755 debfiles/DEBIAN
+  sed "s/%computed_size%/$size/" linux/deb/control > debfiles/DEBIAN/control
+  cd debfiles
+  find usr/ -type f -exec md5sum {} >> DEBIAN/md5sums \;
+  cd ..
+  dpkg-deb --build debfiles linux
+  rm -rf debfiles
 
   return
 }
@@ -101,6 +112,7 @@ files=$1/files
 # delete everything
 rm -rf ${files}
 
+umask 022
 
 case $1 in
 
@@ -109,7 +121,6 @@ case $1 in
 
   linux ) {
     name=tibercad-$version
-    prepare_linux_package
 
     case $2 in
 
@@ -117,13 +128,18 @@ case $1 in
         make_deb ;;
 
       tgz )
-        make_tgz ;;
+        files=$name
+        prepare_linux_package
+        make_tgz
+        rm -rf $files ;;
 
       * )
-        make_tbz ;;
+        files=$name
+        prepare_linux_package
+        make_tbz
+        rm -rf $files ;;
     esac
 
-    rm -rf $files
   } ;;
 
   * ) ;;
