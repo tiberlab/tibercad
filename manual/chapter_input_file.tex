@@ -567,23 +567,20 @@ driftdiffusion
   }
 \end{verbatim}
 
+For example in this case:
 
-Here are some of the possible parameters:
-
-\textit{statistics} : FD
-
-\textit{model}: specification of generical drift-diffusion or  exciton transport  simulation.
+\textbf{model}: specification of generical drift-diffusion or  exciton transport  simulation.
 Possible values: \textit{simple}; \textit{strained}: effects of  strain (deformation potentials, piezo and pyro polarization fields) are taken in  account  ;  \textit{unstrained}: effects of  strain are NOT taken in  account (even if  strain calculation is  being  performed !).  
 
-\textit{tau\_rad}, \textit{tau\_nonrad},  tau\_diss
-
-\textit{R}
-
-\textit{eff\_mass}
-
-\textit{mobility}
-
-\textit{generation\_model}
+% \textit{tau\_rad}, \textit{tau\_nonrad},  tau\_diss
+% 
+% \textit{R}
+% 
+% \textit{eff\_mass}
+% 
+% \textit{mobility}
+% 
+% \textit{generation\_model}
 
 
 
@@ -611,9 +608,9 @@ In this  section one  can  specify  several general parameters and settings  for
 
 \textit{resultpath} :  path for output  directory 
 
-\textit{output\_format} : format of  the  output data: \textit{gmv},  \textit{tecplot}, \textit{grace} (for xmgr, ascii data column type),  ....
+\textit{output\_format} : format of  the  output data: \textit{gmv} for  \textbf{GMV} ,  \textit{ise}  for  \textbf{Tecplot} , \textit{grace} for \textbf{xmgr} (ascii data column type),  \textit{vtk} for  \textbf{Paraview}.
 
-\textit{plot} :  list of output variables which are calculated and available in output  files.
+\textit{plot} :  list of output variables which are calculated and available in output  files. See the  corresponding chapters for the  available output variables for each model.
 
 \section{Output description}
 
@@ -649,6 +646,479 @@ Finally,  a  last class of  output files is  the  \textbf{Materials}  output. Th
 
 
 
+\section{Physical and boundary regions in  TiberCAD }
+
+
+When TiberCAD  is  run,  it  reads  the  mesh  file which  contains  the finite element  grid  which meshes the  geometrical description of  the  device or  nanostructure,  and  which will be  the  basis of  PDE  discretization.
+
+
+To  execute the  proper  simulations, TiberCAD needs  some  information about  the   physical and boundary regions  associated with the  mesh:
+a physical region associate all  the  elements  corresponding to  an  homogeneous  part  of  the  device (usually  related to  the  same  material or  doping).  These regions  are  referred to as \textbf{mesh\_regions}  in  TiberCAD.
+\
+Boundary regions  are  needed to  specify   boundary  conditions (b.c.)  for  the  solution of  the PDEs  of  our  simulation.
+By  default,  to all   the  external boundary  of  the  device  a  Neumann b.c. is  imposed,   meaning  null  derivative  of  electric  field  and  zero  flux  of  current  normal to  the  boundary.  These are  the  usual  b.c.  applied in  the   simulation  of  electronic  devices;  in   particular, these  conditions are  implicitly  satisfied by using  the  finite  element  formulation..
+Usually,  one  needs  to  impose   also   specifical  b.c.  to  the  device,  relative,  most  often, to  contacts of  some  kind (ohmic, schottky),  but  also to  heat and  temperature b.c.  or  reference substrates  for  strain  calculations.
+These  regions,  (constituted by  surfaces , lines or  points,  respectively  for  3D  ,  2D  and  1D  simulations) are  referred to  in  TiberCAD with  the  keyword   \textbf{BC\_reg\_numb}.
+
+
+It  is  important to  know  that  the  information about  the   physical and boundary regions  must  be  present in  the  mesh  file  before it  is  read  by  TiberCAD,  and  thus  have  to  be  produced by  making  use of  the  modeling/mesher  software.
+As  for  now,  TiberCAD is  compatible  with the  mesh  output  of  the  following   softwares :  GMSH v.2 and  ISE-TCAD  v.9.5.
+
+By  means  of  the  utility DEVISE    of  ISE-TCAD  v.9.5,  it  is  possible  to  design and  mesh  a  device;  after the  meshing  has  been    successfully completed,  an  output  file is  produced,   with  the  extension  \textit{.grd}.  This  file  contains  all  the  description of  the  mesh and  also  the  list  of  the  user defined  material  regions    and  contact  regions.
+By  reading  this  \textit{.grd} file  in  TiberCAD,  one  can  refer  to  the  ISE TCAD material  regions,  simply  with  the  user-defined name,  which is  present  in  the    \textit{.grd}  file.  This  name  should  be  unique in  the  whole  device.
+In the  same way,  ISE TCAD Boundary regions (\textit{Contacts})  can  be  referred to in   TiberCAD  by  means  of  their  user-defined name, present in  the   \textit{.grd} output  file,  too.
+
+If  GMSH  program  is  used  to  model and  mesh  the  device,  a  bit  more  care  has  to  be  taken.
+In  the  context of  GMSH,  it  is  possible to  define  several 1,  2  and  3D \textit{Physical Entities}.
+These \textit{Physical Entities} allow  to  associate one or more  geometrical  entities to  a  single  numerical  ID, so  that  several  
+\textbf{mesh\_regions}  and  \textbf{BC\_reg\_numb} can  be  defined and  referred  to  by  TiberCAD.  
+Here is  a  simple example  of   a  script  to  generate a  1D geometrical  model ( \textit{*.geo})  file in  GMSH 
+
+\begin{verbatim}
+Point(1) = {-25,0,0,0.5};
+Point(2) = {0,0,0,0.002};
+Point(3) = {25,0,0,0.5};
+Line(1) = {1,2};
+Line(2) = {2,3};
+
+
+Physical Line(1) = {2};
+Physical Line(2) = {1};
+Physical Point(1) = {3};
+Physical Point(2) = {1};
+\end{verbatim}
+
+Here,  first the  \textbf{Point}s  and  \textbf{Line}s  geometrical  entities  are  defined.  Then,  two  physical  regions are  defined, each  associated to  one  of  the  two  geometrical  entities:  \textbf{Physical Line(1)}  and \textbf{ Physical Line(2)}.  In this  way,  these  physical  regions are made  available for  TiberCAD,  and  will be  used  to  associate them  to  a  TiberCAD region through the  keyword \textbf{mesh\_regions },  as  follows:
+
+
+\begin{verbatim}
+Region reg_1
+   {
+     mesh_regions  = 1
+
+............
+
+Region  reg_2
+   {
+     mesh_regions  = 2
+
+...........
+\end{verbatim}
+
+
+Then,  in  the  GMSH  script,  two  \textbf{Physical Point }  are  defined, \textbf{1}  and \textbf{ 2},   and  associated to  the  first  and  to  the   last  point  of  our  1D  device.  These  points  are  needed  to  impose  some  boundary  conditions   and  in this  way  they  are made  available for  TiberCAD,  and  will be  used  to  associate each  of  them  to  a  boundary  condition  region, through the  keyword  \textbf{BC\_reg\_numb}
+
+\begin{verbatim}
+BC_Regions  
+    {
+      BC_Region cathode
+      {
+        BC_reg_numb = 1
+
+......................
+
+	BC_Region anode
+        {
+          BC_reg_numb = 2
+
+....................
+
+\end{verbatim}
+
+
+In  2D  case,  a  set  of  \textbf{Physical Surface}  will  be  defined  to  be  used  as   \textbf{mesh\_regions},  while  
+\textbf{Physical Line}  is  used  for  boundary  condition.
+
+Finally,  in  3D  case,  \textbf{Physical Volume} is   used  to  define  \textbf{mesh\_regions},  while \textbf{Physical Surface} is  used  to  define  boundary  conditions.
+
+
+
+
+\section{Example  of  Input file}
+
+Here is  an  example  of  the  input  file  template:
+
+
+
+\begin{verbatim}
+ 
+
+
+# Description of  the  device physical regions
+$Device
+{
+   
+# Syntax:
+#
+# Region  "Tiber_region"
+# mesh_regions    = "list gmsh reg ID" | "list ISE_TCAD reg names"
+# 
+#if  mesh_regions is empty ->  mesh_regions = "Tiber_region"
+#
+
+ Region buffer
+   {
+     mesh_regions  = 1
+     structure = wz
+     y-growth-direction = (1,0,-1,0)
+     z-growth-direction = (-1,2,-1,0)
+     x-growth-direction = (0,0,0,1)
+     material = GaN
+     doping = 1e15 
+     doping_type = donor 
+     #doping_level = 0.025
+   }
+
+
+
+ Region barrier_1
+   {
+     mesh_regions    = (2,3)
+     structure = wz
+     y-growth-direction = (1,0,-1,0)
+     z-growth-direction = (-1,2,-1,0)
+     x-growth-direction = (0,0,0,1)
+     material = AlInN
+     x =     0.80 # 
+     doping = 1e15
+     doping_type = donor 
+     #doping_level = 0.025
+   }
+
+
+
+
+ Region QWell
+   {
+     mesh_regions  = 4
+     structure = wz
+     y-growth-direction = (1,0,-1,0)
+     z-growth-direction = (-1,2,-1,0)
+     x-growth-direction = (0,0,0,1)
+     material = GaN
+     doping = 1e15 # 
+     doping_type = donor #
+     # doping_level = 0.025
+   }
+
+
+ Region barrier_2
+   {
+     mesh_regions    = (5,6)
+     structure = wz
+     y-growth-direction = (1,0,-1,0)
+     z-growth-direction = (-1,2,-1,0)
+     x-growth-direction = (0,0,0,1)
+     material = AlInN
+     x =   0.80 #
+     doping = 1e15 #  
+     doping_type = donor 
+     # doping_level = 0.025
+   }
+
+
+# Cluster = group of  mesh_regions with DIFFERENT  material (in general) 
+
+# Syntax:
+#
+# Cluster  "Tiber_cluster"
+# mesh_regions    = "list gmsh reg ID" | "list ISE_TCAD reg names"
+#
+#  "Tiber_cluster" to be used in Models section 
+
+   Cluster  Quantum_1
+
+   {
+
+     mesh_regions    = (3,4, 5)
+
+   }
+
+
+}
+
+
+#Definition of  the description scale (only for not-Continuous Media regions  )
+# Syntax:
+#
+# "level"  "scale_cluster"
+# "level" = "Atomistic | ..." 
+# physical_regions =  "list (Tiber_region | Tiber_cluster) " 
+#
+#*******  $Scale section is  optional *********
+#
+
+$Scale
+{
+
+
+  Atomistic  TB_1
+
+  {
+
+    physical_regions =  (barrier_1 , QWell  ,  barrier_2 )
+
+  }
+
+
+  Atomistic  TB_2
+
+  {
+
+    physical_regions =  ...........  
+
+  }
+
+
+}
+
+
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+
+ model driftdiffusion
+  { 
+
+    options
+    {
+     simulation_name = driftdiffusion
+
+     physical_regions = all
+    }
+
+    physical_model recombination
+    {
+      model = srh
+    }
+
+    physical_model recombination
+    {
+      model = direct
+      C = 1.1e-8
+    }
+
+
+    BC_Regions  
+    {
+      BC_Region cathode
+      {
+        BC_reg_numb = 1
+        type = ohmic
+      	zero_grad_fermi_h = true
+        voltage = 0.0
+      }
+      
+      
+      BC_Region anode
+      {
+        BC_reg_numb = 2
+        type = ohmic
+	zero_grad_fermi_e = true
+	voltage = 0.0
+      }
+
+      
+ 
+    }   
+
+
+ } 
+
+
+ model macrostrain
+  {
+    options
+    {
+      simulation_name = strain
+      physical_regions = all
+    }
+
+    BC_Regions  
+    {
+      BC_Region substr
+      {
+        BC_reg_numb = 1
+	type = substrate
+        material = GaN
+	structure = wz
+        y-growth-direction = (1,0,-1,0)
+        z-growth-direction = (-1,2,-1,0)
+        x-growth-direction = (0,0,0,1)
+      }
+    }
+  }
+
+
+  model efaschroedinger
+
+  {
+
+   
+    options
+    {
+      simulation_name = quantum_electrons
+
+# Syntax:
+#
+# physical_regions =  "list (Tiber_region | Tiber_cluster) " 
+
+      physical_regions = Quantum_1
+
+     
+    }
+
+  
+  }
+
+ model efaschroedinger
+
+  {
+
+   
+    options
+    {
+     simulation_name = quantum_holes
+     physical_regions = Quantum_1
+
+ 
+
+    }
+
+  
+  }
+
+ 
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+  
+
+ 
+driftdiffusion
+  {
+    coupling = poisson
+    ksp_type = bcgsl
+    nonlin_abs_tol = 1e-10
+    nonlin_step_tol = 1e-2
+    #nonlin_rel_tol = 1e-12
+    lin_rel_tol = 1e-6
+    nonlin_max_it = 30
+    #local_density_scaling = true
+    #ls_type = none
+    discretization = fem
+    ls_max_step = 1
+    #pc_type = lu
+    pc_type = composite
+    integration_order = 2
+    #relaxation_factor = 0.5
+  }
+
+
+
+ macrostrain
+  {
+    substrate = substr
+  }
+
+  efaschroedinger
+  {
+    x-periodicity = false
+    Dirichlet_bc_everywhere = true
+#   particle = hl
+    number_of_eigenstates = 30
+ #   model = conduction_band  #eff mass  cb
+    poisson_model_name = driftdiffusion  #  potential from driftdiffusion 
+    strain_model_name = macrostrain
+    convergent_density = true
+  } 
+
+ quantum_electrons 
+  {
+    particle = el
+   
+  }
+
+ quantum_holes
+  {
+    particle = hl
+    
+  }
+
+
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+  
+  driftdiffusion 
+  {
+    statistics = FD
+    model = strained  #  
+ #  model = unstrained  # 
+  }
+   
+ quantum_electrons 
+  {
+    particle = el
+    model = conduction_band   #eff mass  cb 
+  }
+
+  quantum_holes
+  {
+    particle = hl
+    model = kp   #  k.p  for  valence  band
+    kp_model = 6x6
+
+  }
+
+
+
+
+}
+
+
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+$Simulation
+{
+
+ searchpath = ../../examples/materials 
+     
+ mesh_units = 1e-9       #nm !!
+ dimension = 1
+ meshfile = test.msh
+ temperature = 300
+  solve =  (strain, driftdiffusion, quantum_electrons,quantum_holes )
+#   solve = (strain, driftdiffusion)
+#  solve = driftdiffusion
+# solve = strain
+   resultpath =  output_  
+ # plot = (Ec,Ev,QFermi_e, QFermi_h, T)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent)
+ 
+  output_format = grace
+
+}
+
+
+
+
+
+
+
+
+\end{verbatim}
 
 
 
