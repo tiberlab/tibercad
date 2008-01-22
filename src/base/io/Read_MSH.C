@@ -2277,8 +2277,8 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
     //       z4 =  node_coord[( temp_nodes_list[4]) ][2];
 
 
-//    if (type == 5)  //  HEX8
-      if ( (type == 5) || (type == 7) ) //  HEX8 or  PYR5
+    if (type == 5)  //  HEX8
+ //     if ( (type == 5) || (type == 7) ) //  HEX8 or  PYR5
 
     {
 
@@ -2300,6 +2300,32 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
       a33 = z4 - z0;
 
     }
+
+    else if (type == 7)  //  PYR5
+
+    {
+
+      x4 =  node_coord[( temp_nodes_list[4]) ][0];
+      y4 =  node_coord[( temp_nodes_list[4]) ][1];
+      z4 =  node_coord[( temp_nodes_list[4]) ][2];
+
+ 
+      a11 = x1-x0;
+      a21 = y1-y0;
+      a31 = z1-z0;
+
+      a12 = x4-x0;
+      a22 = y4 - y0;
+      a32 = z4- z0;
+
+      a13 =x3 - x0;
+      a23 = y3 - y0;
+      a33 = z3 - z0;
+
+    }
+
+
+
 
     else  //    TET4 , PRISM6
 
