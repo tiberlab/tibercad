@@ -2277,7 +2277,9 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
     //       z4 =  node_coord[( temp_nodes_list[4]) ][2];
 
 
-    if (type == 5)  //  HEX8
+//    if (type == 5)  //  HEX8
+      if ( (type == 5) || (type == 7) ) //  HEX8 or  PYR5
+
     {
 
       x4 =  node_coord[( temp_nodes_list[4]) ][0];
