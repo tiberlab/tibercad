@@ -1385,7 +1385,8 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
             {
               ID rec_id = PhysicalModelInterface::get_id_from_name<
                 RecombinationModelInterface>(rec[1]);
-              id = MODELS + rec_id;
+              if (rec_id != INVALID_ID)
+                id = MODELS + rec_id;
             }
           }
         }
