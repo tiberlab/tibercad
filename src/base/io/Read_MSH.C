@@ -2405,6 +2405,16 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
         }
 
 
+      case 7: //  PYR5
+
+        // swap node_id_list[1] and  node_id_list[3]
+        temp = 0;
+        temp = node_id_list[1];
+        node_id_list[1] = node_id_list[3];
+        node_id_list[3] = temp;
+
+
+
         break;
 
 	   
