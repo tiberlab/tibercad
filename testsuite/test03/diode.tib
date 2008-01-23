@@ -127,8 +127,9 @@ $Solver
   {
 
     ksp_type = gmres
-    nonlin_abs_tol = 1e-8
-    lin_rel_tol = 1e-8
+    #nonlin_abs_tol = 1e-8
+    #lin_rel_tol = 1e-8
+    nonlin_step_tol = 1e-6
     nonlin_max = 30
     current_integration_method = rstf
     

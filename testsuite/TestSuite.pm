@@ -79,7 +79,7 @@ $to_dev_null = " >& /dev/null";
 $to_log_file = " >& $options{'logfile'}";
 $textwidth = 50;
 $padchar = ".";
-$default_precision = 1e-6;
+$default_precision = 1e-5;
 @known_suffixes = ('dat', 'gmv');
 
 
