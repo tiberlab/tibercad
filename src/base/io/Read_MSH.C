@@ -1021,7 +1021,7 @@ void  Read_MSH::write_xda ( )
     //                  PRISM15,    // 14
     //                  PRISM18,    // 15
 
-    //                  PYRAMID5,   // 16
+    //                  PYRAMID5,   // 16    BEWARE :   Element NOT correctly handled in  LIBMESH !! (23.11.08)
     //
     //
     // ************************************************************
@@ -1119,7 +1119,10 @@ void  Read_MSH::write_xda ( )
       case 7:
         //  PYRAMID5,   // 16
         //  elem_type = 16 ;
-        elem_type.push_back(16);
+        // BEWARE !   PYRAMID  element  not  correctly  handled in  LIBMESH
+        //
+        throw InitFailedException("ERROR: PYRAMID5 element not implemented...");
+        //   elem_type.push_back(16);
         break;
 
       case 8:
