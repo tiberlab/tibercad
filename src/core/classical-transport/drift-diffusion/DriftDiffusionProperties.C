@@ -550,22 +550,17 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
 void
 DriftDiffusionProperties::calculate_mobilities(void)
 {
-  //double kT = _lattice_vt;
+  double kT = _lattice_vt;
 
+  // use generalized Einstein relations!
   double mue = _electron_mobility->get_mobility();
-  //double electron_diffusivity = kT * mue;
+  double Dn = kT * mue;
+  mue = Dn * get_electron_density_derivative() / get_electron_density();
   _pd->electron_mobility = mue;
-  //electron_mobility = electron_diffusivity * dn_over_n;
-  //electron_conductivity = electron_diffusivity * dn;
-  //electron_conductivity_derivatives[0] = electron_diffusivity * dn2;
-  //electron_conductivity_derivatives[1] = electron_diffusivity * dn2;
   double muh = _hole_mobility->get_mobility();
-  //double hole_diffusivity = kT * muh;
+  double Dp = kT * muh;
+  muh = -Dp * get_hole_density_derivative() / get_hole_density();
   _pd->hole_mobility = muh;
-  //hole_mobility = -hole_diffusivity * dp_over_p;
-  //hole_conductivity = -hole_diffusivity * dp;
-  //hole_conductivity_derivatives[0] = -hole_diffusivity * dp2;
-  //hole_conductivity_derivatives[2] = -hole_diffusivity * dp2;
 }
 
 
