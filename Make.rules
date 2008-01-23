@@ -59,9 +59,11 @@ $(subdirs):
 
 
 %.msh: %.geo
-	@$(GMSH) -format msh -order $(ORDER) -$(DIM) -o $<.msh $<
-	@$(topdir)/bin/renumber_msh $<.msh $@
-	@rm $<.msh
+	@$(GMSH) -format msh -order $(ORDER) -$(DIM) -o $@ $<
+
+#	@$(GMSH) -format msh -order $(ORDER) -$(DIM) -o $<.msh $<
+#	@$(topdir)/bin/renumber_msh $<.msh $@
+#	@rm $<.msh
 
 
 %.s: %.C .%.d

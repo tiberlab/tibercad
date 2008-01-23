@@ -36,9 +36,10 @@ SimpleSemiconductorModel::do_init(void)
   // for the moment we read them from the materials section
   ModelOptions& opt = get_material()->get_options();
 
-  get_conduction_band().band_edge = opt.get_option("Ec", 2.269);
+  get_conduction_band().band_edge = opt.get_option("Ec", 2.2277);
   get_valence_band().band_edge = opt.get_option("Ev", 1.1047);
-  get_conduction_band().effective_mass = opt.get_option("meff_n", 0.6);
-  get_valence_band().effective_mass = opt.get_option("meff_p", 1.2);
+  double deg = std::pow(2.0, 2.0 / 3.0);
+  get_conduction_band().effective_mass = deg * opt.get_option("meff_n", 1.08);
+  get_valence_band().effective_mass = deg * opt.get_option("meff_p", 1.15);
   
 }

@@ -1043,7 +1043,7 @@ DriftDiffusion::parse_options(void)
   Options& myopts = get_options();
 
   myopts.integration_order = static_cast<libMeshEnums::Order>(
-      opts.get_option("integration_order", 5));
+      opts.get_option("integration_order", 10));
 
   string coupling = opts.get_option("coupling", "");
   if (coupling == "full")
@@ -2447,7 +2447,8 @@ DriftDiffusion::build_local_scaling(void)
       sc->calculate_mobilities();
 
       double epsilon = sc->get_relative_permittivity();
-      double l2_eps = JxW[qp] * l2 * epsilon;
+      //double l2_eps = JxW[qp] * l2 * epsilon;
+      double l2_eps = JxW[qp] * epsilon;
 
       double sigma_e = JxW[qp] * //sc->get_electron_density();
         sc->get_electron_mobility() * sc->get_electron_density();
@@ -4909,9 +4910,15 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   } // end loop over elements
 
   if (jacobian != NULL)
+  {
     jacobian->close();
+    jacobian->print_matlab("J.m");
+  }
   else
+  {
     residual->close();
+    residual->print_matlab("F.m");
+  }
 
   
   perf_log.stop_event("assembly");
