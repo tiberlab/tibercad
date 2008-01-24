@@ -10,7 +10,7 @@
 
 // Local Includes
 #include "TiberPetscNonlinearSolver.h"
-
+#define DEBUG
 
 
 /*
