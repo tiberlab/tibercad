@@ -297,6 +297,8 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
   slep_opt.st_ksp_type = solver_opt.st_ksp_type;
  
  
+  slep_opt.monitor = solver_opt.monitor;
+
   vector<Complex> initial_vector;
 
 
@@ -409,6 +411,9 @@ void EigenvalueProblem::parse_options()
   solver_opt.Dirichlet_bc_everywhere = mod_opt.get_option("Dirichlet_bc_everywhere",false);
 
 
+  solver_opt.monitor = mod_opt.get_option("monitor", false);
+
+
   //cerr <<  solver_opt.Dirichlet_bc_everywhere << "\n";
 
   {
@@ -425,7 +430,18 @@ void EigenvalueProblem::parse_options()
 
 
   {
-    std::string solution_method = mod_opt.get_option("solution_method", "combined");
+
+    unsigned int dim = get_environment().get_mesh().mesh_dimension();
+    
+    std::string default_method;
+
+    if (dim == 1)
+      default_method = std::string("combined");
+    else
+      default_method = std::string("general");
+
+    std::string solution_method = mod_opt.get_option("solution_method", default_method );
+
     if ( solution_method == "matlab")
     {
       solver_opt.strategy = "matlab"; 

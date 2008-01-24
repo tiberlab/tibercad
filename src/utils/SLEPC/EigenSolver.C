@@ -550,13 +550,15 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
  
   if (ncv > _size_of_matrix) ncv = _size_of_matrix;
  
- 
+
+  if (opt.monitor) EPSSetMonitor(eps, EPSDefaultMonitor, PETSC_NULL);
+
+  
 
   ierr = EPSSetDimensions(eps,opt.ev_number, ncv); CHKERRQ(ierr);
 
    
   ierr = EPSSolve(eps);
-
  
 
   ierr =  EPSGetConverged(eps,&nconv);CHKERRQ(ierr);

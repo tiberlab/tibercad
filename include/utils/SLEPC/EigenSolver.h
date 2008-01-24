@@ -39,7 +39,7 @@ class EigenSolver
     std::string pc_type; //!<preconditioner name
 
 
-   
+    bool monitor;   //<! activates monitor if true
     
   };
 

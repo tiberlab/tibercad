@@ -85,29 +85,32 @@ class EigenvalueProblem: public  SimulationInterface
 
   struct options
   {
-    std::string solver;      //!< solver type
+    std::string solver;                 //!< solver type
    
-    unsigned int max_iteration_number; //!< maximum number of iterations for the eigenvalue solver
+    unsigned int max_iteration_number;  //!< maximum number of iterations for the eigenvalue solver
     
-    double    eigen_solver_tolerance;  //!< tolerance for eigenvalue solver 
+    double    eigen_solver_tolerance;   //!< tolerance for eigenvalue solver 
    
-    bool solve_ev_problem_twice; //!< if true, calculate the first eigenvalue only and then run again
+    bool solve_ev_problem_twice;        //!< if true, calculate the first eigenvalue only and then run again
    
-    unsigned int number_of_eigenstates; //!<number of eigenstates to be calculated
+    unsigned int number_of_eigenstates; //!< number of eigenstates to be calculated
     
-    Method discretization_method; //!<box integration or finite element
+    Method discretization_method;       //!< box integration or finite element
    
-    bool Dirichlet_bc_everywhere; //!< apply dirichlet boundary conditions at all boundaries
+    bool Dirichlet_bc_everywhere;       //!< apply dirichlet boundary conditions at all boundaries
 
-    std::string preconditioner; //!< preconditioner name
+    std::string preconditioner;         //!< preconditioner name
 
-    bool periodicity[3];    //!< periodic boundary conditions
+    bool periodicity[3];                //!< periodic boundary conditions
 
 
-    std::string st_ksp_type; //!< Liner system solution method 
+    std::string st_ksp_type;            //!< Liner system solution method 
     
 
-    std::string strategy; //<matlab (algorithm used in Matlab) or general (recommended by SLEPC)
+    std::string strategy;               //<! matlab (algorithm used in Matlab) or general (recommended by SLEPC)
+
+    bool monitor;   //<! activates convergence monitor if true
+
     
   };
 

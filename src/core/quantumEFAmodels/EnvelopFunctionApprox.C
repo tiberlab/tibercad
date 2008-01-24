@@ -999,7 +999,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
 
-
+ 
 
   for ( ; el != end_el ; ++el) 
     {//el
@@ -1332,12 +1332,12 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
   copy_H_matrix_to_solver( );
-
   
  
 
   if (solver_opt.discretization_method == FEM)  copy_S_matrix_to_solver( );
   
+
  
   
 
@@ -1915,6 +1915,8 @@ void  EnvelopFunctionApprox::prepare_probability_function(const unsigned int sta
     // if (state_number == 0) cerr << prob_data[i] << "\n";
   }
 }
+  
+
 
 
 void EnvelopFunctionApprox::output_probability_function(unsigned int state_number,  const std::string& filename)
