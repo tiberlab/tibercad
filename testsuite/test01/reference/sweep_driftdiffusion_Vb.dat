@@ -3,7 +3,7 @@
 # Data:
 #    * Contact currents. Units Acm^-2
 #
-# x     anode  cathode
+# Vb     anode  cathode
 0   0   0
 0.1   -2265.95799733   2265.95799733
 0.2   -4531.91599467   4531.91599467

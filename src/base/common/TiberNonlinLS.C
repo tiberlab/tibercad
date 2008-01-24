@@ -13,6 +13,7 @@
 #include "linear_solver.h"
 #include "equation_systems.h"
 
+#define DEBUG
 
 using namespace std;
 

@@ -204,7 +204,8 @@ Sweep::do_solve(void)
       do_sweep(pos_values, plotfiles, sweep_data);
     else
     {
-      reverse(neg_values.begin(), neg_values.end());
+      if (neg_values[0] < neg_values[neg_values.size() - 1])
+        reverse(neg_values.begin(), neg_values.end());
 
       if (pos_values.size() > 1)
       {
@@ -307,7 +308,7 @@ Sweep::prepare_plot_files(std::vector<std::ofstream*>& plotfiles)
       // print some header
       // 
       ostringstream s;
-      s << "# Parameter sweep " << "(" << ")" << endl;
+      s << "# Parameter sweep " << "(" << get_name() << ")" << endl;
       s << "# Simulation: " << _simulations[i]->get_name() << endl;
       file << s.str();
 
@@ -318,7 +319,7 @@ Sweep::prepare_plot_files(std::vector<std::ofstream*>& plotfiles)
 
       
       ostringstream l;
-      l << "#" << endl << "# x   "; // x is out sweep variable
+      l << "#" << endl << "# " << _variable << "   ";
       unsigned int n = legend.size();
       for (unsigned int j = 0; j < n; j++)
         l << "  " << legend[j];

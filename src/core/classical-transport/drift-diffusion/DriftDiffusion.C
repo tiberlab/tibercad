@@ -1043,7 +1043,7 @@ DriftDiffusion::parse_options(void)
   Options& myopts = get_options();
 
   myopts.integration_order = static_cast<libMeshEnums::Order>(
-      opts.get_option("integration_order", 10));
+      opts.get_option("integration_order", 5));
 
   string coupling = opts.get_option("coupling", "");
   if (coupling == "full")
@@ -2447,13 +2447,27 @@ DriftDiffusion::build_local_scaling(void)
       sc->calculate_mobilities();
 
       double epsilon = sc->get_relative_permittivity();
-      //double l2_eps = JxW[qp] * l2 * epsilon;
-      double l2_eps = JxW[qp] * epsilon;
+      double l2_eps = JxW[qp] * l2 * epsilon;
+      //double l2_eps = JxW[qp] * epsilon;
 
       double sigma_e = JxW[qp] * //sc->get_electron_density();
         sc->get_electron_mobility() * sc->get_electron_density();
       double sigma_h = JxW[qp] * //sc->get_hole_density();
         sc->get_hole_mobility() * sc->get_hole_density();
+
+
+
+        long double dn_dphi = sc->get_electron_density_derivative();
+        long double dp_dphi = sc->get_hole_density_derivative();
+        long double dNd_dphi = sc->get_ionized_donor_density_derivative();
+        long double dNa_dphi = sc->get_ionized_acceptor_density_derivative();
+
+        long double drho;
+        drho = JxW[qp] * (dp_dphi - dNa_dphi -dn_dphi + dNd_dphi) * phi0 / C0;
+        if (sc->is_dielectric())
+          drho = 0.0;
+
+
 
       for (unsigned int i = 0; i < n_dofs; i++)
       {
@@ -2464,7 +2478,8 @@ DriftDiffusion::build_local_scaling(void)
         local_scaling_[elem->get_node(i)][1] +=
           sigma_h * (dphi[i][qp] * dphi[i][qp]);
         local_scaling_[elem->get_node(i)][2] +=
-          l2_eps * (dphi[i][qp] * dphi[i][qp]);
+          l2_eps * (dphi[i][qp] * dphi[i][qp]) -
+          drho * phi[i][qp] * phi[i][qp];
       }
 
 
