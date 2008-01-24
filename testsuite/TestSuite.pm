@@ -79,7 +79,7 @@ $to_dev_null = " >& /dev/null";
 $to_log_file = " >& $options{'logfile'}";
 $textwidth = 50;
 $padchar = ".";
-$default_precision = 1e-5;
+$default_precision = 1e-3;
 @known_suffixes = ('dat', 'gmv');
 
 
@@ -423,7 +423,7 @@ sub compare_results_with_reference {
 
       @data2 = &$extract_func($variable, $reffile);
 
-      ($#data2 > 0) ||
+      ($#data2 >= 0) ||
         die "Variable $variable seems to not exist in $reffile";
 
       @data1 = &$extract_func($variable, $datafile);
