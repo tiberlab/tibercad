@@ -2450,22 +2450,22 @@ DriftDiffusion::build_local_scaling(void)
       double l2_eps = JxW[qp] * l2 * epsilon;
       //double l2_eps = JxW[qp] * epsilon;
 
-      double sigma_e = JxW[qp] * //sc->get_electron_density();
+      double sigma_e = JxW[qp] *
         sc->get_electron_mobility() * sc->get_electron_density();
-      double sigma_h = JxW[qp] * //sc->get_hole_density();
+      double sigma_h = JxW[qp] *
         sc->get_hole_mobility() * sc->get_hole_density();
 
 
 
-        long double dn_dphi = sc->get_electron_density_derivative();
-        long double dp_dphi = sc->get_hole_density_derivative();
-        long double dNd_dphi = sc->get_ionized_donor_density_derivative();
-        long double dNa_dphi = sc->get_ionized_acceptor_density_derivative();
+      double dn_dphi = sc->get_electron_density_derivative();
+      double dp_dphi = sc->get_hole_density_derivative();
+      double dNd_dphi = sc->get_ionized_donor_density_derivative();
+      double dNa_dphi = sc->get_ionized_acceptor_density_derivative();
 
-        long double drho;
-        drho = JxW[qp] * (dp_dphi - dNa_dphi -dn_dphi + dNd_dphi) * phi0 / C0;
-        if (sc->is_dielectric())
-          drho = 0.0;
+      double drho;
+      drho = JxW[qp] * (dp_dphi - dNa_dphi - dn_dphi + dNd_dphi) * phi0 / C0;
+      if (sc->is_dielectric())
+        drho = 0.0;
 
 
 
@@ -2489,6 +2489,15 @@ DriftDiffusion::build_local_scaling(void)
 
 
 
+NumericVector<double>&
+DriftDiffusion::do_get_solution_vector(void)
+{
+  TiberNonlinearSystem* system =
+    &get_equation_systems().get_system<TiberNonlinearSystem>(
+        get_equation_system_name());
+
+  return system->get_solution_vector();
+}
 
 
 
@@ -2501,8 +2510,9 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
   TiberNonlinearSystem* system =
     &get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
-
-  const NumericVector<Number>& solution = system->get_solution_vector();
+cerr << "build_nodal_results\n";
+  //const NumericVector<Number>& solution = system->get_solution_vector();
+  const NumericVector<Number>& solution = get_solution_vector();
 
   // aliases for nicer code
   const Device& device = *(_device);
@@ -4276,6 +4286,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         // calculate the fluxes on the nodes
         if ((contact != NULL) && (dim > 1))
         {
+/*
           AutoPtr<Elem> side(elem->build_side(s));
           
           vector<Point> p(side->n_nodes());
@@ -4322,6 +4333,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               nodal_flux_p[side->node(i)] = 
                 -(sigma_h * grad_ep + Pp * grad_T) * face_normals[0] / x0;
           }
+*/
         }
 
 

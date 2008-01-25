@@ -480,6 +480,10 @@ class DriftDiffusion : public SimulationInterface
         std::vector<std::string>& description);
 
 
+    /*! \copydoc SimulationInterface::do_get_solution_vector() */
+    virtual NumericVector<double>& do_get_solution_vector(void);
+
+    
     /*! \copydoc SimulationInterface::do_maximum_norm_of_difference() */
     virtual double do_maximum_norm_of_difference(ID id);
 

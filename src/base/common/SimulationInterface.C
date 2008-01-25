@@ -372,8 +372,6 @@ SimulationInterface::solve(void) throw (SolveFailedException)
 NumericVector<double>&
 SimulationInterface::do_get_solution_vector(void)
 {
-  assert(has_solution_vector());
-
   const EquationSystems& eq = get_equation_systems();
   const System& sys = eq.get_system(get_equation_system_name());
 

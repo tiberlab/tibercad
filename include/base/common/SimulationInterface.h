@@ -1156,8 +1156,11 @@ inline
 NumericVector<double>&
 SimulationInterface::get_solution_vector(void)
 {
+  assert(has_solution_vector());
+
   return do_get_solution_vector();
 }
+
 
 inline
 void
