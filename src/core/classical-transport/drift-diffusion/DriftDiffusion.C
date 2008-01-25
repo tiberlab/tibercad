@@ -4286,7 +4286,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         // calculate the fluxes on the nodes
         if ((contact != NULL) && (dim > 1))
         {
-/*
           AutoPtr<Elem> side(elem->build_side(s));
           
           vector<Point> p(side->n_nodes());
@@ -4295,6 +4294,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             nodes_on_boundary_sides.insert(side->node(i));
             p[i] = side->point(i);
           }
+
+/*
           fe->reinit(elem, &p);
 
           for (unsigned int i = 0; i < side->n_nodes(); i++)
