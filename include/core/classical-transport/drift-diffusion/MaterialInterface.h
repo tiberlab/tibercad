@@ -7,10 +7,9 @@
 #include "ElectricalContact.h"
 
 
-//! A simple class to impose a current density on a boundary
+//! A simple class to impose a charge density on a surface
 /*!
- * For now one can only impose electron current density, and in the
- * input file it is called voltage
+ *
  */
 class MaterialInterface : public ElectricalContact
 {
@@ -72,7 +71,7 @@ MaterialInterface::create(void)
 inline
 MaterialInterface::MaterialInterface(void)
   : _Ns(0.0),
-    _Es(0.2),
+    _Es(-1.0),
     _g_factor(2)
 {
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::NEUMANN);

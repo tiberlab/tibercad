@@ -2340,6 +2340,7 @@ DriftDiffusion::build_local_scaling(void)
   const Scaling& scaling = get_scaling();
   const double phi0 = scaling.get_potential_scaling();
   const double C0 = scaling.get_density_scaling();
+  const double mu0 = scaling.get_mobility_scaling();
   const double l2 = scaling.get_lambda_squared() * Constants::e0 * 1e-2;
 
 
@@ -2451,10 +2452,9 @@ DriftDiffusion::build_local_scaling(void)
       //double l2_eps = JxW[qp] * epsilon;
 
       double sigma_e = JxW[qp] *
-        sc->get_electron_mobility() * sc->get_electron_density();
+        sc->get_electron_mobility() * sc->get_electron_density() / mu0;
       double sigma_h = JxW[qp] *
-        sc->get_hole_mobility() * sc->get_hole_density();
-
+        sc->get_hole_mobility() * sc->get_hole_density() / mu0;
 
 
       double dn_dphi = sc->get_electron_density_derivative();
@@ -2510,8 +2510,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
   TiberNonlinearSystem* system =
     &get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
-cerr << "build_nodal_results\n";
-  //const NumericVector<Number>& solution = system->get_solution_vector();
+
   const NumericVector<Number>& solution = get_solution_vector();
 
   // aliases for nicer code
@@ -4940,7 +4939,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    //jacobian->print_matlab("J.m");
+    jacobian->print_matlab("J.m");
   }
   else
   {
