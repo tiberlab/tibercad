@@ -121,6 +121,7 @@ $Solver
   {
      flavour = relaxation
      simulations = (dd, tt)
+     abs_tolerance = 1e-5
   }
 
   driftdiffusion
@@ -132,6 +133,7 @@ $Solver
     nonlin_step_tol = 1e-6
     nonlin_max = 30
     current_integration_method = rstf
+    local_scaling = false
     
   }
 
