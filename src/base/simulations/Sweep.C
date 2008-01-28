@@ -496,14 +496,12 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
             _simulations[j]->plot();
 
 
-          // remember the current solution, but not for sweeps!
+          // remember the current solution
+          // for sweeps we return to the former solution!
           if (_simulations[j]->get_type() != "sweep")
             _simulations[j]->remember_current_solution(old_sol[j]);
           else
-          {
-            cerr << old_sol[j] << endl;
             _simulations[j]->set_to_remembered_solution(old_sol[j]);
-          }
         }
 
 

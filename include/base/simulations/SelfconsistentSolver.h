@@ -171,7 +171,7 @@ inline
 SelfconsistentSolver::SelfconsistentSolver(void)
   : _max_it(5),
     _rel_tol(1e-3),
-    _abs_tol(1e-6)
+    _abs_tol(1e-3)
 {
 }
 
