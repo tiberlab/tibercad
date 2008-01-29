@@ -9,7 +9,7 @@
 MaterialInterface::MaterialInterface(void)
   : _Ns(0.0),
     _Es(-1.0),
-    _g_factor(1)
+    _g_factor(0.5)
 {
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::NEUMANN);
   set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::NEUMANN);
