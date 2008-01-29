@@ -6,6 +6,19 @@
 
 
 
+MaterialInterface::MaterialInterface(void)
+  : _Ns(0.0),
+    _Es(-1.0),
+    _g_factor(1)
+{
+  set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::NEUMANN);
+  set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::NEUMANN);
+  set_type(DriftDiffusionDefs::FERMIH, ElectricalContact::NEUMANN);
+}
+
+
+
+
 void
 MaterialInterface::do_init(void)
 {
@@ -34,9 +47,9 @@ MaterialInterface::get_normal_derivative(DriftDiffusionDefs::Variable variable,
       double V = get_material().get_electric_potential();
       double Efn = get_material().get_electron_electro_chemical_potential();
 
-      double arg = (V - Efn - Ec + _Es) / kT;
+      double arg = -(V - Efn - Ec + _Es) / kT;
       double denom = 1.0 + _g_factor * std::exp(arg);
-      c = _Ns / denom;
+      c = -_Ns / denom;
     }
     else
       c = _Ns;
@@ -59,12 +72,12 @@ MaterialInterface::get_derivatives_of_normal_derivative(
     double V = get_material().get_electric_potential();
     double Efn = get_material().get_electron_electro_chemical_potential();
 
-    double arg = (V - Efn - Ec + _Es) / kT;
+    double arg = -(V - Efn - Ec + _Es) / kT;
     double tmp = _g_factor * std::exp(arg);
     double denom = 1.0 + tmp;
     denom *= denom;
     
-    //dc[0] = -_Ns * tmp / (denom * kT);
+    //dc[0] = _Ns * tmp / (denom * kT);
     dc[0] = 0.0;
     dc[1] = -dc[0];
   }

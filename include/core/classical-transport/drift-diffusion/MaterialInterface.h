@@ -68,17 +68,5 @@ MaterialInterface::create(void)
 
 
 
-inline
-MaterialInterface::MaterialInterface(void)
-  : _Ns(0.0),
-    _Es(-1.0),
-    _g_factor(2)
-{
-  set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::NEUMANN);
-  set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::NEUMANN);
-  set_type(DriftDiffusionDefs::FERMIH, ElectricalContact::NEUMANN);
-}
-
-
 
 #endif // _MATERIALINTERFACE_H_
