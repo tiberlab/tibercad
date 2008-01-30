@@ -67,17 +67,23 @@ MaterialInterface::get_derivatives_of_normal_derivative(
 
   if (variable == DriftDiffusionDefs::POTENTIAL)
   {
-    double kT = get_material().get_lattice_temperature();
-    double Ec = get_material().get_conduction_band_edge();
-    double V = get_material().get_electric_potential();
-    double Efn = get_material().get_electron_electro_chemical_potential();
+    if (_Es > 0.0)
+    {
+      double kT = get_material().get_lattice_temperature();
+      double Ec = get_material().get_conduction_band_edge();
+      double V = get_material().get_electric_potential();
+      double Efn = get_material().get_electron_electro_chemical_potential();
 
-    double arg = -(V - Efn - Ec + _Es) / kT;
-    double tmp = _g_factor * std::exp(arg);
-    double denom = 1.0 + tmp;
-    denom *= denom;
-    
-    dc[0] = -_Ns * tmp / (denom * kT);
+      double arg = -(V - Efn - Ec + _Es) / kT;
+      double tmp = _g_factor * std::exp(arg);
+      double denom = 1.0 + tmp;
+      denom *= denom;
+
+      dc[0] = -_Ns * tmp / (denom * kT);
+    }
+    else
+      dc[0] = 0.0;
+
     dc[1] = -dc[0];
   }
 }

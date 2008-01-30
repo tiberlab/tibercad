@@ -4593,7 +4593,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                   dcoeff[0], dvalue[0]);
               //coeff[0] = a * x0;
               coeff[0] = 0.0;
-              //value[0] = c * x0 / phi0;
               value[0] = c / (x0 * C0);
             }
             if (coupling & ECURRENT)
@@ -4629,18 +4628,18 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           // contribution to the jacobian
           if (jacobian != NULL)
           {
-            double val_uu = J * (- dvalue[0][0] / x0 / C0 * phi0);
-            double val_nn = J * (- dvalue[1][1] / mu0 / C0 * phi0);
-            double val_pp = J * (- dvalue[2][2] / mu0 / C0 * phi0);
+            double val_uu = dvalue[0][0] / x0 / C0 * phi0;
+            double val_nn = dvalue[1][1] / mu0 / C0 * phi0;
+            double val_pp = dvalue[2][2] / mu0 / C0 * phi0;
 
             if (coupling & POISSON)
-              Kuu(s,s) += val_uu / local_scaling[s][2];
+              Kuu(s,s) -= val_uu / local_scaling[s][2];
 
             if (coupling & ECURRENT)
-              Knn(s,s) += val_nn / local_scaling[s][0];
+              Knn(s,s) -= val_nn / local_scaling[s][0];
 
             if (coupling & HCURRENT)
-              Kpp(s,s) += val_pp / local_scaling[s][1];
+              Kpp(s,s) -= val_pp / local_scaling[s][1];
           }
 
           
