@@ -3598,7 +3598,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   const double phi0 = scaling.get_potential_scaling();
   const double C0 = scaling.get_density_scaling();
   const double mu0 = scaling.get_mobility_scaling();
-  // x 1e4 because we calculate in cm
+  // x 1e4 because we calculate in cm, but P comes in C/m^2
   const double P0 = (Constants::e * x0 * C0) * 1e4;
   // density scaling for electrons
   double C0_e = C0;
@@ -4465,9 +4465,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             // contribution to the jacobian
             if (jacobian != NULL)
             {
-/*
               //double val_uu = J * (dcoeff[0][0] * u - dvalue[0][0]);
-              double val_uu = J * (- dvalue[0][0] / x0 / C0 * phi0);
+              double val_uu = J * ( dvalue[0][0] / x0 / C0 * phi0);
 
               for (unsigned int i = 0; i < n_dofs; i++)
               {
@@ -4478,16 +4477,15 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                     phi_face[i][qp] * phi_face[j][qp];
 
                   if (coupling & POISSON)
-                    Kuu(i,j) += coeff[0] * phi_i_x_phi_j;
+                    Kuu(i,j) -= val_uu * phi_i_x_phi_j / local_scaling[i][2];
 
-                  if (coupling & ECURRENT)
-                    Knn(i,j) += coeff[1] * phi_i_x_phi_j;
+                  //if (coupling & ECURRENT)
+                  //  Knn(i,j) += coeff[1] * phi_i_x_phi_j;
 
-                  if (coupling & HCURRENT)
-                    Kpp(i,j) += coeff[2] * phi_i_x_phi_j;
+                  //if (coupling & HCURRENT)
+                  //  Kpp(i,j) += coeff[2] * phi_i_x_phi_j;
                 }
               }
-*/
             }
 
             // contribution to -Fe_i
@@ -4939,7 +4937,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    //jacobian->print_matlab("J.m");
+    jacobian->print_matlab("J.m");
   }
   else
   {

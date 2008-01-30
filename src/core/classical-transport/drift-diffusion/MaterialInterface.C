@@ -77,8 +77,7 @@ MaterialInterface::get_derivatives_of_normal_derivative(
     double denom = 1.0 + tmp;
     denom *= denom;
     
-    //dc[0] = _Ns * tmp / (denom * kT);
-    dc[0] = 0.0;
+    dc[0] = -_Ns * tmp / (denom * kT);
     dc[1] = -dc[0];
   }
 }
