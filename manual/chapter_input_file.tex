@@ -273,6 +273,11 @@ in order to keep structure periodicity.
 \section{Models section }
 
 
+\label{section:models}
+ 
+
+
+
 
 \begin{verbatim}
 $Models
@@ -418,6 +423,8 @@ If \textit{type} is \textsl{substrate} (for \textbf{strain} calculations):
 
 \section{Solver section }
 
+\label{section:solver}
+
 \begin{verbatim}
 $Solver
 { 
@@ -557,6 +564,9 @@ in the
 
 
 \section{Physics section }
+
+\label{section:physics}
+
 In this section several physical parameters can be entered,  in  addition to or  overwriting  the material parameters present in the material files.
 The section is organized in blocks, each one preceded by a block-name equal to one of the  user-defined simulation name. Physical parameters defined in each block refer to that particular simulation.
 
@@ -644,92 +654,92 @@ Finally,  a  last class of  output files is  the  \textbf{Materials}  output. Th
 
 
 
-
-
-\section{Physical and boundary regions in  TiberCAD }
-
-
-When TiberCAD  is  run,  it  reads  the  mesh  file which  contains  the finite element  grid  which meshes the  geometrical description of  the  device or  nanostructure,  and  which will be  the  basis of  PDE  discretization.
-
-
-To  execute the  proper  simulations, TiberCAD needs  some  information about  the   physical and boundary regions  associated with the  mesh:
-a physical region associate all  the  elements  corresponding to  an  homogeneous  part  of  the  device (usually  related to  the  same  material or  doping).  These regions  are  referred to as \textbf{mesh\_regions}  in  TiberCAD.
-\
-Boundary regions  are  needed to  specify   boundary  conditions (b.c.)  for  the  solution of  the PDEs  of  our  simulation.
-By  default,  to all   the  external boundary  of  the  device  a  Neumann b.c. is  imposed,   meaning  null  derivative  of  electric  field  and  zero  flux  of  current  normal to  the  boundary.  These are  the  usual  b.c.  applied in  the   simulation  of  electronic  devices;  in   particular, these  conditions are  implicitly  satisfied by using  the  finite  element  formulation..
-Usually,  one  needs  to  impose   also   specifical  b.c.  to  the  device,  relative,  most  often, to  contacts of  some  kind (ohmic, schottky),  but  also to  heat and  temperature b.c.  or  reference substrates  for  strain  calculations.
-These  regions,  (constituted by  surfaces , lines or  points,  respectively  for  3D  ,  2D  and  1D  simulations) are  referred to  in  TiberCAD with  the  keyword   \textbf{BC\_reg\_numb}.
-
-
-It  is  important to  know  that  the  information about  the   physical and boundary regions  must  be  present in  the  mesh  file  before it  is  read  by  TiberCAD,  and  thus  have  to  be  produced by  making  use of  the  modeling/mesher  software.
-As  for  now,  TiberCAD is  compatible  with the  mesh  output  of  the  following   softwares :  GMSH v.2 and  ISE-TCAD  v.9.5.
-
-By  means  of  the  utility DEVISE    of  ISE-TCAD  v.9.5,  it  is  possible  to  design and  mesh  a  device;  after the  meshing  has  been    successfully completed,  an  output  file is  produced,   with  the  extension  \textit{.grd}.  This  file  contains  all  the  description of  the  mesh and  also  the  list  of  the  user defined  material  regions    and  contact  regions.
-By  reading  this  \textit{.grd} file  in  TiberCAD,  one  can  refer  to  the  ISE TCAD material  regions,  simply  with  the  user-defined name,  which is  present  in  the    \textit{.grd}  file.  This  name  should  be  unique in  the  whole  device.
-In the  same way,  ISE TCAD Boundary regions (\textit{Contacts})  can  be  referred to in   TiberCAD  by  means  of  their  user-defined name, present in  the   \textit{.grd} output  file,  too.
-
-If  GMSH  program  is  used  to  model and  mesh  the  device,  a  bit  more  care  has  to  be  taken.
-In  the  context of  GMSH,  it  is  possible to  define  several 1,  2  and  3D \textit{Physical Entities}.
-These \textit{Physical Entities} allow  to  associate one or more  geometrical  entities to  a  single  numerical  ID, so  that  several  
-\textbf{mesh\_regions}  and  \textbf{BC\_reg\_numb} can  be  defined and  referred  to  by  TiberCAD.  
-Here is  a  simple example  of   a  script  to  generate a  1D geometrical  model ( \textit{*.geo})  file in  GMSH 
-
-\begin{verbatim}
-Point(1) = {-25,0,0,0.5};
-Point(2) = {0,0,0,0.002};
-Point(3) = {25,0,0,0.5};
-Line(1) = {1,2};
-Line(2) = {2,3};
-
-
-Physical Line(1) = {2};
-Physical Line(2) = {1};
-Physical Point(1) = {3};
-Physical Point(2) = {1};
-\end{verbatim}
-
-Here,  first the  \textbf{Point}s  and  \textbf{Line}s  geometrical  entities  are  defined.  Then,  two  physical  regions are  defined, each  associated to  one  of  the  two  geometrical  entities:  \textbf{Physical Line(1)}  and \textbf{ Physical Line(2)}.  In this  way,  these  physical  regions are made  available for  TiberCAD,  and  will be  used  to  associate them  to  a  TiberCAD region through the  keyword \textbf{mesh\_regions },  as  follows:
-
-
-\begin{verbatim}
-Region reg_1
-   {
-     mesh_regions  = 1
-
-............
-
-Region  reg_2
-   {
-     mesh_regions  = 2
-
-...........
-\end{verbatim}
-
-
-Then,  in  the  GMSH  script,  two  \textbf{Physical Point }  are  defined, \textbf{1}  and \textbf{ 2},   and  associated to  the  first  and  to  the   last  point  of  our  1D  device.  These  points  are  needed  to  impose  some  boundary  conditions   and  in this  way  they  are made  available for  TiberCAD,  and  will be  used  to  associate each  of  them  to  a  boundary  condition  region, through the  keyword  \textbf{BC\_reg\_numb}
-
-\begin{verbatim}
-BC_Regions  
-    {
-      BC_Region cathode
-      {
-        BC_reg_numb = 1
-
-......................
-
-	BC_Region anode
-        {
-          BC_reg_numb = 2
-
-....................
-
-\end{verbatim}
-
-
-In  2D  case,  a  set  of  \textbf{Physical Surface}  will  be  defined  to  be  used  as   \textbf{mesh\_regions},  while  
-\textbf{Physical Line}  is  used  for  boundary  condition.
-
-Finally,  in  3D  case,  \textbf{Physical Volume} is   used  to  define  \textbf{mesh\_regions},  while \textbf{Physical Surface} is  used  to  define  boundary  conditions.
+% 
+% 
+% \section{Physical and boundary regions in  TiberCAD }
+% 
+% 
+% When TiberCAD  is  run,  it  reads  the  mesh  file which  contains  the finite element  grid  which meshes the  geometrical description of  the  device or  nanostructure,  and  which will be  the  basis of  PDE  discretization.
+% 
+% 
+% To  execute the  proper  simulations, TiberCAD needs  some  information about  the   physical and boundary regions  associated with the  mesh:
+% a physical region associates all  the  elements  corresponding to  an  homogeneous  part  of  the  device (usually  related to  the  same  material or  doping).  These regions  are  referred to as \textbf{mesh\_regions}  in  TiberCAD.
+% \
+% Boundary regions  are  needed to  specify   boundary  conditions (b.c.)  for  the  solution of  the PDEs  of  our  simulation.
+% By  default,  to all   the  external boundary  of  the  device  a  Neumann b.c. is  imposed,   meaning  null  derivative  of  electric  field  and  zero  flux  of  current  normal to  the  boundary.  These are  the  usual  b.c.  applied in  the   simulation  of  electronic  devices;  in   particular, these  conditions are  implicitly  satisfied by using  the  finite  element  formulation..
+% Usually,  one  needs  to  impose   also   specifical  b.c.  to  the  device,  relative,  most  often, to  contacts of  some  kind (ohmic, schottky),  but  also   heat and  temperature b.c.  or  reference substrates  for  strain  calculations.
+% These  regions,  (constituted by  surfaces , lines or  points,  respectively  for  3D  ,  2D  and  1D  simulations) are  referred to  in  TiberCAD with  the  keyword   \textbf{BC\_reg\_numb}.
+% 
+% 
+% It  is  important to  know  that  the  information about  the   physical and boundary regions  must  be  present in  the  mesh  file  before it  is  read  by  TiberCAD,  and  thus  have  to  be  produced by  making  use of  the  modeling/mesher  software.
+% As  for  now,  TiberCAD is  compatible  with the  mesh  output  of  the  following   softwares :  GMSH v.2 and  ISE-TCAD  v.9.5.
+% 
+% By  means  of  the  utility DEVISE    of  ISE-TCAD  v.9.5,  it  is  possible  to  design and  mesh  a  device;  after the  meshing  has  been    successfully completed,  an  output  file is  produced,   with  the  extension  \textit{.grd}.  This  file  contains  all  the  description of  the  mesh and  also  the  list  of  the  user defined  material  regions    and  contact  regions.
+% By  reading  this  \textit{.grd} file  in  TiberCAD,  one  can  refer  to  the  ISE TCAD material  regions,  simply  with  the  user-defined name,  which is  present  in  the    \textit{.grd}  file.  This  name  should  be  unique in  the  whole  device.
+% In the  same way,  ISE TCAD Boundary regions (\textit{Contacts})  can  be  referred to in   TiberCAD  by  means  of  their  user-defined name, present in  the   \textit{.grd} output  file,  too.
+% 
+% If  GMSH  program  is  used  to  model and  mesh  the  device,  a  bit  more  care  has  to  be  taken.
+% In  the  context of  GMSH,  it  is  possible to  define  several 1,  2  and  3D \textit{Physical Entities}.
+% These \textit{Physical Entities} allow  to  associate one or more  geometrical  entities to  a  single  numerical  ID, so  that  several  
+% \textbf{mesh\_regions}  and  \textbf{BC\_reg\_numb} can  be  defined and  referred  to  by  TiberCAD.  
+% Here is  a  simple example  of   a  script  to  generate a  1D geometrical  model ( \textit{*.geo})  file in  GMSH 
+% 
+% \begin{verbatim}
+% Point(1) = {-25,0,0,0.5};
+% Point(2) = {0,0,0,0.002};
+% Point(3) = {25,0,0,0.5};
+% Line(1) = {1,2};
+% Line(2) = {2,3};
+% 
+% 
+% Physical Line(1) = {2};
+% Physical Line(2) = {1};
+% Physical Point(1) = {3};
+% Physical Point(2) = {1};
+% \end{verbatim}
+% 
+% Here,  first the  \textbf{Point}s  and  \textbf{Line}s  geometrical  entities  are  defined.  Then,  two  physical  regions are  defined, each  associated to  one  of  the  two  geometrical  entities:  \textbf{Physical Line(1)}  and \textbf{ Physical Line(2)}.  In this  way,  these  physical  regions are made  available for  TiberCAD,  and  will be  used  to  associate them  to  a  TiberCAD region through the  keyword \textbf{mesh\_regions },  as  follows:
+% 
+% 
+% \begin{verbatim}
+% Region reg_1
+%    {
+%      mesh_regions  = 1
+% 
+% ............
+% 
+% Region  reg_2
+%    {
+%      mesh_regions  = 2
+% 
+% ...........
+% \end{verbatim}
+% 
+% 
+% Then,  in  the  GMSH  script,  two  \textbf{Physical Point }  are  defined, \textbf{1}  and \textbf{ 2},   and  associated to  the  first  and  to  the   last  point  of  our  1D  device.  These  points  are  needed  to  impose  some  boundary  conditions   and  in this  way  they  are made  available for  TiberCAD,  and  will be  used  to  associate each  of  them  to  a  boundary  condition  region, through the  keyword  \textbf{BC\_reg\_numb}
+% 
+% \begin{verbatim}
+% BC_Regions  
+%     {
+%       BC_Region cathode
+%       {
+%         BC_reg_numb = 1
+% 
+% ......................
+% 
+% 	BC_Region anode
+%         {
+%           BC_reg_numb = 2
+% 
+% ....................
+% 
+% \end{verbatim}
+% 
+% 
+% In  2D  case,  a  set  of  \textbf{Physical Surface}  will  be  defined  to  be  used  as   \textbf{mesh\_regions},  while  
+% \textbf{Physical Line}  is  used  for  boundary  conditions.
+% 
+% Finally,  in  3D  case,  \textbf{Physical Volume} is   used  to  define  \textbf{mesh\_regions},  while \textbf{Physical Surface} is  used  to  define  boundary  conditions.
 
 
 

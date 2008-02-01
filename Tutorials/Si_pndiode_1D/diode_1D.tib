@@ -2,20 +2,18 @@
 
 $Device
 {
-   
+   Region n_side 
+   {
+     reg_numb = 2
+     mat = Si
+     doping = 1e18 doping_type = donor
+   }
 
    Region p_side 
    {
      reg_numb = 1
      mat = Si
      doping = 1e18 doping_type = acceptor
-   }
-
-   Region n_side 
-   {
-     reg_numb = 2
-     mat = Si
-     doping = 1e18 doping_type = donor
    }
 
 }
@@ -29,7 +27,7 @@ $Models
               
     options
     {
-     simulation_name = driftdiffusion
+     simulation_name = driftdiffusion_1
      physical_regions = all
     }
 
@@ -102,6 +100,7 @@ $Solver
     steps = 120 #40
     plotvariable = current
     plot_data = true  #  to  write  data  for  each  step
+    simulation = driftdiffusion_1
   }
 }
 
@@ -125,14 +124,14 @@ $Physics
 $Simulation
 {
   searchpath = ../materials/ 
-  meshfile = diode_1D.msh #
+  meshfile = diode_1D.msh #test.msh #diode.msh
   dimension = 1
   temperature = 300
   solve = sweep
-  resultpath = output_1D_tut1 # 
+  resultpath = out_test_1D_tut_2 # out_test_1D_int_order10 #    output_1D_tut1 # output_1D_OK_SRH_v1.2_Fermi  # test_out # output_mobility_masetti_field_dep
   output_format = grace
 
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob, current)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob)
 }
 
 
