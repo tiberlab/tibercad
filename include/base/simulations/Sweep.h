@@ -96,6 +96,10 @@ class Sweep : public SimulationInterface
         std::vector<std::string>& description);
 
 
+    //! Get the the variables for the characteristics plots
+    const std::set<std::string>& get_plotvariables(void) const;
+
+
 
   private:
 

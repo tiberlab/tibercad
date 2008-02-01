@@ -22,10 +22,21 @@ Sweep::~Sweep(void)
 
 
 
+
+const set<string>&
+Sweep::get_plotvariables(void) const
+{
+  if (_plotvariables.size() != 0)
+    return _plotvariables;
+
+  return get_control().get_plotvariables();
+}
+
+
+
 void
 Sweep::do_init(void)
 {
-
 
   ModelOptions& opts = get_options();
   Control& control = get_control();
@@ -73,14 +84,6 @@ Sweep::do_init(void)
     msg += "the sweep variable.";
     throw InitFailedException(msg);
   }
-
-  if (!Variable::is_variable(_variable))
-  {
-    ostringstream o;
-    o << "Sweep: The variable " << _variable << " is not defined.";
-    throw InitFailedException(o.str());
-  }
-
 }
 
 
@@ -117,7 +120,16 @@ Sweep::parse_options(void)
   opts.get_option("values", _values);
 
 
-  //! read the variables we want to plot (type IV characteristic)
+  // check if our variable exists
+  if (!Variable::is_variable(_variable))
+  {
+    ostringstream o;
+    o << "Sweep: The variable " << _variable << " is not defined.";
+    throw InitFailedException(o.str());
+  }
+
+
+  // read the variables we want to plot (type IV characteristic)
   vector<string> vars;
   opts.get_option("plotvariable", vars);
   for (unsigned int i = 0; i < vars.size(); i++)
@@ -274,7 +286,7 @@ Sweep::prepare_plot_files(std::vector<std::ofstream*>& plotfiles)
 
     vector<string> legend;
     vector<string> description;
-    _simulations[i]->get_integrated_quantities_description(_plotvariables,
+    _simulations[i]->get_integrated_quantities_description(get_plotvariables(),
         legend, description);
 
     // should we plot something?
@@ -475,7 +487,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
           if (plotfiles[j] != NULL)
           {
             // it means we have something to plot
-            _simulations[j]->get_integrated_quantities(_plotvariables,
+            _simulations[j]->get_integrated_quantities(get_plotvariables(),
                 plotvalues);
 
             sweep_data[j][value] = plotvalues;

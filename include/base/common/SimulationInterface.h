@@ -465,6 +465,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     Control& get_control(void);
 
 
+    //! Get the Control object
+    const Control& get_control(void) const;
+
+
     //! Set the scaling parameters
     void set_scaling(const Scaling& scaling);
 
@@ -878,6 +882,16 @@ SimulationInterface::get_control(void)
   assert(_control != NULL);
   return *_control;
 }
+
+
+inline
+const Control&
+SimulationInterface::get_control(void) const
+{
+  assert(_control != NULL);
+  return *_control;
+}
+
 
 
 inline

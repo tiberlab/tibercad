@@ -3334,7 +3334,8 @@ DriftDiffusion::build_integrated_quantities(const set<string>& names,
 {
   const set<string>::const_iterator varend(names.end());
 
-  if (names.find("current") != varend)
+  if ((names.find("ContactCurrents") != varend) ||
+      (names.find("current") != varend))
   {
     if (get_options().current_calculation == RSTF)
       calculate_currents_rstf();
@@ -4482,11 +4483,11 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                   {
                     Kuu(i,j) -= fac_u * dvalue[0][0] * phi_i_x_phi_j;
 
-                    if (coupling & ECURRENT)
-                      Kun(i,j) -= fac_u * dvalue[0][1] * phi_i_x_phi_j;
+                    //if (coupling & ECURRENT)
+                    //  Kun(i,j) -= fac_u * dvalue[0][1] * phi_i_x_phi_j;
 
-                    if (coupling & HCURRENT)
-                      Kun(i,j) -= fac_u * dvalue[0][2] * phi_i_x_phi_j;
+                    //if (coupling & HCURRENT)
+                    //  Kup(i,j) -= fac_u * dvalue[0][2] * phi_i_x_phi_j;
                   }
 
                   //if (coupling & ECURRENT)
