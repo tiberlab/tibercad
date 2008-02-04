@@ -3371,7 +3371,8 @@ DriftDiffusion::build_integrated_quantities_description(
 {
   const set<string>::const_iterator varend(names.end());
 
-  if (names.find("current") != varend)
+  if ((names.find("ContactCurrents") != varend) ||
+      (names.find("current") != varend))
   {
     legend.resize(_boundary_currents.size());
 
