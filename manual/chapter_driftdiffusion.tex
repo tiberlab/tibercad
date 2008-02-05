@@ -4,7 +4,7 @@
 
 The semi-classical transport simulation of electrons and holes is based on the drift-diffusion approximation (see e.g.~\cite{selberherr84}).
 
-Beside the electic potential the electro-chemical potentials are used as variables such that the system of PDEs to be solved readds as follows
+Beside the electric potential the electro-chemical potentials are used as variables such that the system of PDEs to be solved reads as follows
 \begin{eqnarray}
 -\nabla(\varepsilon\nabla\varphi - P) & = & -e(n - p - N_d^+ + N_a^-) \nonumber \\
 -\nabla(\mu_n n \nabla\phi_n) & = & R \\
@@ -69,7 +69,7 @@ The net recombination rate for each recombination model and the total rate
 \begin{tabular}{l|l|l}
 \multicolumn{3}{c}{\textbf{Scalar quantities}} \\
 \hline 
-\texttt{current} & Contact currents & *\footnote{depends on dimension and symmetry}\\ 
+\texttt{ContactCurrents} & Contact currents & *\footnote{depends on dimension and symmetry}\\ 
 \end{tabular}
 \end{minipage}
 \caption{Scalar quantities}
@@ -224,19 +224,79 @@ The default model is the constant mobility model.
 
 The constant mobility model (identifier \texttt{constant}) assumes a mobility which depends only on temperature by means of the following formula:
 \begin{equation}
-\mu = \mu_0 (T/T_0)^{-\gamma}
+\mu_{const} = \mu_0 (T/T_0)^{-\gamma}
 \end{equation}
 In the material data file $\mu_0$ and $\gamma$ have to be specified with the keywords \texttt{mu\_max\_e}, \texttt{mu\_max\_h} and \texttt{exponent\_e}, \texttt{exponent\_h}, respectively.
-$\mu_o$ can be ovverridden from the \texttt{physical\_model} section using the keyword \texttt{mu} or from the \texttt{Region} sections using the keywords \texttt{mu\_e} and \texttt{mu\_h}.
+$\mu_0$ can be ovverridden from the \texttt{physical\_model} section using the keyword \texttt{mu} or from the \texttt{Region} sections using the keywords \texttt{mu\_e} and \texttt{mu\_h}.
 
 
 \subsubsection{Doping dependent mobility model}
 
 The doping dependent mobility model  (identifier \texttt{doping\_dependent}) implements two models for mobility depending on the total doping density and the temperature.
-Currently the parameters can only be defined in the material data file.
+The model that is used depends on the value of the \verb+mobility_formula+ parameter.
 
-etc etc
+\bigskip
+\noindent\textsl{Model by Masetti et al.}~\cite{masetti}
+\smallskip
 
+\noindent The model by Masetti et al. is identified by \verb+mobility_formula = 1+.
+It uses the following formula:
+\begin{align}
+\mu = \mu_{min,1} * \mathrm{e}^{-P_c/N} +
+  \frac{\mu_{const} - \mu_{min,2}}{1 + (N/C_r)^\alpha} -
+  \frac{\mu_1}{1 + (C_s/N)^\beta}
+\end{align}
+where $N$ is the total doping density and $\mu_{const}$ the mobility obtained from the constant mobility model.
+The parameters are specified as given in table~\ref{table:mobility_masetti}.
+\begin{table}[htb]
+\center
+\begin{tabular}{l||l|l}
+\textit{parameter} & \textit{electrons} & \textit{holes} \\
+\hline\hline
+$\mu_{min,1}$ &  \verb+mumin1_e+ &  \verb+mumin1_h+\\
+$\mu_{min,2}$ & \verb+mumin2_e+  & \verb+mumin2_h+ \\
+$\mu_1$ & \verb+mu1_e+  & \verb+mu1_h+ \\
+$P_c$ & \verb+Pc_e+ & \verb+Pc_h+ \\
+$C_r$ & \verb+Cr_e+ & \verb+Cr_h+ \\
+$C_s$ & \verb+Cs_e+ & \verb+Cs_h+ \\
+$\alpha$ & \verb+alpha_e+ & \verb+alpha_h+ \\
+$\beta$ & \verb+beta_e+ & \verb+beta_h+ \\
+\end{tabular}
+\caption{Data file parameters for the mobility model by Masetti et al.}
+\label{table:mobility_masetti}
+\end{table}
+
+
+\bigskip
+\noindent\textsl{Model by Arora}~\cite{arora}
+\smallskip
+
+\noindent The model by Arora is identified by \verb+mobility_formula = 2+.
+It reads:
+\begin{align}
+\mu = \mu_{min} +& \frac{\mu_d}{1+(N/N_0)^{A^*}} \\
+\text{with} \nonumber \\
+\mu_{min} = A_{min}(T/T_0)^{\alpha_m},& \quad \mu_d = A_d(T/T_0)^{\alpha_d} \nonumber \\
+N_0 = A_N(T/T_0)^{\alpha_N},& \quad A^* = A_a(T/T_0)^{\alpha_a} \nonumber 
+\end{align}
+The parameters are given in table~\ref{table:mobility_arora}.
+\begin{table}[htb]
+\center
+\begin{tabular}{l||l|l}
+\textit{parameter} & \textit{electrons} & \textit{holes} \\
+\hline\hline
+$A_{min}$ &  \verb+mumin_e+ &  \verb+mumin_h+\\
+$A_d$ &  \verb+mud_e+ &  \verb+mud_h+\\
+$A_N$ &  \verb+N0_e+ &  \verb+N0_h+\\
+$A_a$ &  \verb+a_e+ &  \verb+a_h+\\
+$\alpha_m$ &  \verb+am_e+ &  \verb+am_h+\\
+$\alpha_d$ &  \verb+ad_e+ &  \verb+ad_h+\\
+$\alpha_N$ &  \verb+an_e+ &  \verb+an_h+\\
+$\alpha_a$ &  \verb+aa_e+ &  \verb+aa_h+\\
+\end{tabular}
+\caption{Data file parameters for the mobility model by Arora.}
+\label{table:mobility_arora}
+\end{table}
 
 \subsubsection{Field dependent mobility model}
 
@@ -260,17 +320,33 @@ Contacts are boundary models that allow a nonzero normal electrical current.
 For this type of boundaries one can define a contact resistance using the \texttt{contact\_resistance} option.
 The contact resistance has units $\Omega\mathrm{cm}^2$.
 The applied voltage is specified with the option \texttt{voltage}.
-A variable can be assigned to this.
+A variable can be assigned to this, using the \verb+@+-syntax.
 
 The ohmic contact (identifier \texttt{ohmic}) has no further parameters.
 
 A Schottky contact  (identifier \texttt{schottky}) has the additional parameter \texttt{barrier\_height}, which signifies the energy difference between the semiconductor conduction band and the fermi energy in the metal.
 
-The free surface or interface model (identifier \texttt{interface})  currently models surface states in a similar as donors, with the only difference that the density is measured in  $\mathrm{cm}^{-2}$.
-The parameters are \texttt{Ns} (density of states), \texttt{Es} (energy with respect to the conduction band edge) and \texttt{g} (multiplicity of the states).
-
 The type of boundary model is chosen by the parameter \texttt{type}, e.g. \texttt{type = schottky}.
 
+The free surface or interface model (identifier \texttt{interface}) models surface charges.
+Two modes are possible:
+\begin{description}
+ \item[constant charge] a constant charge can be assigned by specifying only the sheet 
+  carrier density \texttt{Ns} in $cm^{-2}$.
+  The sheet charge density will then  be \texttt{Ns} multiplied by the elementary
+  charge $e$. A positive \texttt{Ns} produces a positive surface charge.
+ 
+ \item[electronic surface states] in this case the surface charge is produced by
+  electrons occupying a surface state with a density of states in form of a delta function.
+  The density of occupied states then reads
+  \[
+  n_s = \frac{N_s}{1 + \frac{1}{g}\exp(\frac{E_c - \Delta E_s - e\varphi + e\phi_n}{k_BT})}
+  \]
+  The density of states $N_s$ is specified by \verb+Ns+, the energy of the state with respect to the conduction band $\Delta E_s$ by \verb+Es+.
+  $g$ denotes the multiplicity of the state and defaults to 2.
+  It can be changed by assigning a value to \verb+g+.
+
+\end{description}
 
 
 
