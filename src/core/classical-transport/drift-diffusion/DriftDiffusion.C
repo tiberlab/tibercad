@@ -682,43 +682,6 @@ DriftDiffusion::do_solve(void)
     get_options().coupling = coupling;
   }
 
-  /*
-  static map<ElectricalContact*, double> voltages;
-  ModelOptions& opts = SimulationInterface::get_options();
-  bool quasi_equilibrium = false;
-  if (opts.find_option("quasi_equilibrium"))
-  {
-    vector<string> qfpot(2, "");
-    opts.get_option("quasi_equilibrium", qfpot);
-    assert(qfpot.size() == 2);
-    Boundary* boundary1 = get_environment().get_boundary(qfpot[0]);
-    Boundary* boundary2 = get_environment().get_boundary(qfpot[1]);
-    ElectricalContact* contact1;
-    ElectricalContact* contact2;
-    if ((boundary1 != NULL) && (boundary2 != NULL))
-    {
-      contact1 = dynamic_cast<ElectricalContact*>(
-          boundary1->get_boundary_properties(get_id()));
-      contact2 = dynamic_cast<ElectricalContact*>(
-          boundary2->get_boundary_properties(get_id()));
-
-      if ((contact1 != NULL) && (contact2 != NULL))
-      {
-        if ((contact1->get_simulation_voltage() != voltages[contact1]) ||
-            (contact2->get_simulation_voltage() != voltages[contact2]))
-        {
-          voltages[contact1] = contact1->get_simulation_voltage();
-          voltages[contact2] = contact2->get_simulation_voltage();
-          set_electron_fermi_level(contact1->get_simulation_voltage());
-          set_hole_fermi_level(contact2->get_simulation_voltage());
-          get_options().coupling = POISSON;
-          quasi_equilibrium = true;
-          cerr << "solving quasi-equilibrium..." << endl;
-        }
-      }
-    }
-  }
-  */
 
   if (do_local_scaling_)
     build_local_scaling();

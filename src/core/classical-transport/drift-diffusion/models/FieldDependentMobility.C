@@ -21,6 +21,10 @@ FieldDependentMobility::read_database(void)
   std::string s("beta0_");
   s += get_carrier_type();
   _beta = data(s.c_str(), _beta);
+  
+  s = "betaexp_";
+  s += get_carrier_type();
+  _betaexp = data(s.c_str(), _betaexp);
 
   _vsat_formula = data("Vsat_Formula", _vsat_formula);
 
@@ -28,7 +32,7 @@ FieldDependentMobility::read_database(void)
   {
     s = "vsat0_";
     s += get_carrier_type();
-    _vsat_max = data(s.c_str(), _vsat_max);
+    _vsat0 = data(s.c_str(), _vsat0);
 
     s = "vsatexp_";
     s += get_carrier_type();
@@ -38,11 +42,15 @@ FieldDependentMobility::read_database(void)
   {
     s = "A_vsat_";
     s += get_carrier_type();
-    _vsat_max = data(s.c_str(), _vsat_max);
+    _vsat0 = data(s.c_str(), _vsat0);
 
     s = "B_vsat_";
     s += get_carrier_type();
     _vsat_b = data(s.c_str(), _vsat_b);
+
+    s = "vsat_min";
+    s += get_carrier_type();
+    _vsat_min = data(s.c_str(), _vsat_min);
   }
 
 }
@@ -53,16 +61,18 @@ void
 FieldDependentMobility::do_init(void)
 {
   _beta = get_parameter("beta0", _beta);
+  _betaexp = get_parameter("betaexp", _betaexp);
   _vsat_formula = get_parameter("Vsat_Formula", _vsat_formula);
   if (_vsat_formula == 1)
   {
-    _vsat_max = get_parameter("vsat0", _vsat_max);
+    _vsat0 = get_parameter("vsat0", _vsat0);
     _vsat_b = get_parameter("vsatexp", _vsat_b);
   }
   else
   {
-    _vsat_max = get_parameter("A_vsat", _vsat_max);
+    _vsat0 = get_parameter("A_vsat", _vsat0);
     _vsat_b = get_parameter("B_vsat", _vsat_b);
+    _vsat_min = get_parameter("vsat_min", _vsat_min);
   }
 
   std::string low_field_model = get_parameter("low_field_model", "constant");
@@ -91,14 +101,15 @@ FieldDependentMobility::get_mobility(void)
 
   double vsat;
   if (_vsat_formula == 1)
-    vsat = _vsat_max * std::pow(T / T0, -_vsat_b);
+    vsat = _vsat0 * std::pow(T / T0, -_vsat_b);
   else
-    vsat = _vsat_max - _vsat_b * (T / T0);
+    vsat = std::max(_vsat0 - _vsat_b * (T / T0), _vsat_min);
 
   double mu_lowfield = _low_field_mob->get_mobility();
 
+  double beta = _beta * std::pow(T / T0, _betaexp);
   double tmp = 1.0 + std::pow(mu_lowfield * E / vsat, _beta);
-  double mu = mu_lowfield * std::pow(tmp, -1.0/_beta);
+  double mu = mu_lowfield * std::pow(tmp, -1.0/beta);
 
   return mu;
 }
@@ -124,8 +135,10 @@ FieldDependentMobility::calculate_VCA(const PhysicalModelInterface* comp_A,
     dynamic_cast<const FieldDependentMobility*>(comp_B);
 
   _beta = alloy(scA->_beta, scB->_beta, xa);
-  _vsat_max = alloy(scA->_vsat_max, scB->_vsat_max, xa);
+  _betaexp = alloy(scA->_betaexp, scB->_betaexp, xa);
+  _vsat0 = alloy(scA->_vsat0, scB->_vsat0, xa);
   _vsat_b = alloy(scA->_vsat_b, scB->_vsat_b, xa);
+  _vsat_min = alloy(scA->_vsat_min, scB->_vsat_min, xa);
 
   _low_field_mob->build_alloy(scA->_low_field_mob, scB->_low_field_mob, xa);
 }

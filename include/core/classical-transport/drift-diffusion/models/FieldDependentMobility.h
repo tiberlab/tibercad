@@ -61,12 +61,20 @@ class FieldDependentMobility : public MobilityModelInterface
     double _beta;
 
 
+    //! The exponent for the temperetaure dependence of _beta
+    double _betaexp;
+
+
     //! The maximum saturation velocity
-    double _vsat_max;
+    double _vsat0;
 
 
     //! For the temparature dependence of v_sat
     double _vsat_b;
+
+
+    //! The minimum of vsat for formula 2
+    double _vsat_min;
 
 
     //! The formula to be used
@@ -86,8 +94,10 @@ class FieldDependentMobility : public MobilityModelInterface
 inline
 FieldDependentMobility::FieldDependentMobility(void)
   : _beta(1),
-    _vsat_max(1e3),
+    _betaexp(0.0),
+    _vsat0(1.13e7),
     _vsat_b(1),
+    _vsat_min(5e5),
     _vsat_formula(1),
     _low_field_mob(NULL)
 {
@@ -119,7 +129,7 @@ FieldDependentMobility::copy_from(const PhysicalModelInterface* rhs)
   const FieldDependentMobility* mod =
     dynamic_cast<const FieldDependentMobility*>(rhs);
   _beta = mod->_beta;
-  _vsat_max = mod->_vsat_max;
+  _vsat0 = mod->_vsat0;
   _vsat_b = mod->_vsat_b;
   _vsat_formula = mod->_vsat_formula;
 }

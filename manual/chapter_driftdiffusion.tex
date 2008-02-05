@@ -301,12 +301,45 @@ $\alpha_a$ &  \verb+aa_e+ &  \verb+aa_h+\\
 \subsubsection{Field dependent mobility model}
 
 Currently one mobility model depending on the modulus of the electric field is implemented (identifier \texttt{field\_dependent}).
-It is based on the following equation:
+It is based on the Caughey-Thomas model, refined by Canali~\cite{canali}:
 \begin{equation}
+\mu = \frac{\mu_{lowfield}}{\left(1 + \left(\frac{\mu_{lowfield} |\mathbf{E}|}{v_{sat}}\right)^\beta \right)^{1/\beta}}
 \end{equation}
+with
+\[
+\beta = \beta_0(T/T_0)^b 
+\]
+$|\mathbf{E}|$ is the modulus of the electric field, $\mu_{lowfield}$ is the low-field mobility.
+For the latter one can  specify the model to be used using the parameter \verb+lowfield_model+.
+As default the doping dependent model is used.
 
+There are two models for $v_{sat}$, identified with \verb+Vsat_Formula = 1+ and \verb+Vsat_Formula = 2+.
+Formula 1 reads
+\[
+v_{sat} = v_{sat,0} (T/T_0)^{-\gamma}
+\]
+Formula 2 reads
+\[
+v_{sat} = \max(A_{vsat} - B_{vsat} (T/T_0), v_{min})
+\]
 
-
+The parameters for the field dependent mobility model are summarized in table~\ref{table:mobility_field_dep}.
+\begin{table}[htb]
+\center
+\begin{tabular}{l||l|l}
+\textit{parameter} & \textit{electrons} & \textit{holes} \\
+\hline\hline
+$\beta_0$ &  \verb+beta0_e+ &  \verb+beta0_h+\\
+$b$ &  \verb+betaexp_e+ &  \verb+betaexp_h+ \\
+$v_{sat,0}$ &  \verb+vsat0_e+ &  \verb+vsat0_h+\\
+$\gamma$ &  \verb+vsatexp_e+ &  \verb+vsatexp_h+\\
+$A_{vsat}$ &  \verb+A_vsat_e+ &  \verb+A_vsat_h+\\
+$B_{vsat}$ &  \verb+B_vsat_e+ &  \verb+B_vsat_h+\\
+$v_{min}$ &  \verb+vsat_min_e+ &  \verb+vsat_min_h+\\
+\end{tabular}
+\caption{Data file parameters for the mobility model by Arora.}
+\label{table:mobility_field_dep}
+\end{table}
 
 
 
