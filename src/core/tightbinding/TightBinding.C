@@ -45,8 +45,8 @@ TightBinding::parse_options(){}
 
 
 PhysicalModel*   
-TightBinding::create_physical_model (const ModelOptions &options) const 
-                    throw (ModelErrorException)
+TightBinding::create_physical_model (const ModelOptions &options,
+    const Material* mat) const throw (ModelErrorException)
 {
    
    TightBindingModel* model = dynamic_cast<TightBindingModel*> ( PhysicalModelInterface::create("tightbinding",options) );

@@ -33,6 +33,8 @@ void
 ConstantMobility::do_init(void)
 {
   mu0_ = get_parameter("mu", mu0_);
+  // we allow also mu_e and mu_h
+  mu0_ = get_parameter(std::string("mu_") + get_carrier_type(), mu0_);
 }
 
 

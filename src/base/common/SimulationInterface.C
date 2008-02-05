@@ -403,10 +403,12 @@ SimulationInterface::create_boundary_model(const ModelOptions& options) const
 
       
 PhysicalModel*
-SimulationInterface::create_physical_model(const ModelOptions& options) const
+SimulationInterface::create_physical_model(const ModelOptions& options,
+    const Material* mat) const
   throw (ModelErrorException)
 {
   ignore_unused_variable(options);
+  ignore_unused_variable(mat);
   
   return NULL;
 }

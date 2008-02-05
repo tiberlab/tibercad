@@ -85,6 +85,7 @@ inline
 PyroPolarization::PyroPolarization(void)
   : _polarization(0)
 {
+  set_name("PyroPolarization");
 }
 
 

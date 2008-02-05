@@ -129,15 +129,6 @@ class EigenvalueProblem: public  SimulationInterface
   virtual void parse_options();
 
 
-  virtual PhysicalModel*
-    create_physical_model(const ModelOptions& options) const
-    throw (ModelErrorException) {};
-    
-   
-  virtual BoundaryProperties*
-    create_boundary_model(const ModelOptions& options) const
-    throw (ModelErrorException) {};
-
 
   //!calculates matricies H and S for the generalized problem Hx = gSx 
   virtual void calculate_Hamiltonian_and_S(void) {};

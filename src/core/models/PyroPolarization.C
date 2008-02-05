@@ -41,6 +41,6 @@ PyroPolarization::create(const Material* mat)
         PhysicalModelInterface::create("pyropolarization_wz"));
   else
     pyro = new PyroPolarization();
-
+  
   return pyro;
 }

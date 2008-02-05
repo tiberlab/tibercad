@@ -235,8 +235,9 @@ MacroHeatBalance::MacroHeatBalance()
 
 }
 //----------------------------------------------------------------------------------//
-PhysicalModel*   MacroHeatBalance::create_physical_model (const ModelOptions &options) const 
-                    throw (ModelErrorException)
+PhysicalModel*
+MacroHeatBalance::create_physical_model(const ModelOptions &options,
+    const Material* mat) const throw (ModelErrorException)
 {
   
   HeatModel* model = dynamic_cast<HeatModel*> ( PhysicalModelInterface::create("thermal",options) );

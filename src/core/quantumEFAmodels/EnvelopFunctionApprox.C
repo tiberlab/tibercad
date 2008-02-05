@@ -324,7 +324,8 @@ const std::vector< EnvelopFunctionApprox::eigen_propblem_solution >& EnvelopFunc
   
 
 //====================================================//
-PhysicalModel* EnvelopFunctionApprox::create_physical_model(const ModelOptions& options) const throw (ModelErrorException)
+PhysicalModel* EnvelopFunctionApprox::create_physical_model(const ModelOptions& options,
+    const Material* mat) const throw (ModelErrorException)
 {
 
 

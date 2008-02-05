@@ -327,15 +327,23 @@ PhysicalModelInterface::get_parameter(const std::string& name,
 
   SimulationInterface* sim = 
     SimulationInterface::get_simulation(get_simulator_id());
+
+  // first ask for the plain name
+  val = get_material()->get_options().get_option(name, val);
+
+  // first override
   if (sim != NULL)
+  {
     code = sim->get_name() + ".";
+    val = get_material()->get_options().get_option(code + name, val);
+  }
 
+  // second override
   if (get_name() != "")
+  {
     code += get_name() + ".";
-  
-  code += name;
-
-  val = get_material()->get_options().get_option(code, val);
+    val = get_material()->get_options().get_option(code + name, val);
+  }
 
   return val;
 }

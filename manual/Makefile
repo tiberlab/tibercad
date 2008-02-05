@@ -13,7 +13,8 @@ MANUAL=tiber_manual
 
 
 all: $(MANUAL).dvi
-#all: $(MANUAL).pdf 
+
+manual: pdf 
 
 pdf: $(MANUAL).pdf
 

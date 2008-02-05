@@ -22,7 +22,8 @@ OpticsKP::~OpticsKP()
 
 }
 //===============================================//
-PhysicalModel* OpticsKP::create_physical_model(const ModelOptions& options) const throw (ModelErrorException)
+PhysicalModel* OpticsKP::create_physical_model(const ModelOptions& options,
+    const Material* mat) const throw (ModelErrorException)
 {
   ModelOptions kp8x8options = options;
 

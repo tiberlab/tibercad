@@ -206,8 +206,8 @@ DriftDiffusion::~DriftDiffusion(void)
 
 
 PhysicalModel*
-DriftDiffusion::create_physical_model(const ModelOptions& options) const
-throw (ModelErrorException)
+DriftDiffusion::create_physical_model(const ModelOptions& options,
+    const Material* mat) const throw (ModelErrorException)
 {
   const string& modelname = options.get_option("model", "unstrained");
 

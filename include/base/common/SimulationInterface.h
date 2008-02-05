@@ -67,6 +67,7 @@ class EquationSystems;
 class PhysicalModel;
 class BoundaryProperties;
 class Control;
+class Material;
 class Mesh;
 class Point;
 
@@ -132,7 +133,8 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * a ModelErrorException.
      */
     virtual PhysicalModel*
-      create_physical_model(const ModelOptions& options) const
+      create_physical_model(const ModelOptions& options,
+                            const Material* mat) const
       throw (ModelErrorException);
 
     

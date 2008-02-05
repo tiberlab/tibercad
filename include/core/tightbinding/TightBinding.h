@@ -29,8 +29,8 @@ public:
   //! Create TightBinding object
   static TightBinding* create();
 
-  virtual PhysicalModel* create_physical_model(const ModelOptions &options) const 
-    throw (ModelErrorException);
+  virtual PhysicalModel* create_physical_model(const ModelOptions &options,
+      const Material* mat) const throw (ModelErrorException);
 
   virtual BoundaryProperties* create_boundary_model(const ModelOptions &options) const 
     throw (ModelErrorException);

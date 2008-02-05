@@ -182,8 +182,8 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
 //-------------------------------------------------------------------------//
 
 PhysicalModel*
-Macrostrain::create_physical_model(const ModelOptions& options) const
-throw (ModelErrorException)
+Macrostrain::create_physical_model(const ModelOptions& options,
+    const Material* mat) const throw (ModelErrorException)
 {
   const string& modelname = options.get_option("model", "macrostrain");
 

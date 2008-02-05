@@ -41,8 +41,8 @@ class OpticsKP: public SimulationInterface
   */ 
 
   virtual PhysicalModel*
-    create_physical_model(const ModelOptions& options) const
-    throw (ModelErrorException);
+    create_physical_model(const ModelOptions& options,
+        const Material* mat) const throw (ModelErrorException);
     
   
   //!Here returns NULL

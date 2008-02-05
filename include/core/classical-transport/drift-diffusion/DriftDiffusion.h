@@ -338,8 +338,8 @@ class DriftDiffusion : public SimulationInterface
     
     /*! \copydoc SimulationInterface::create_physical_model() */
     virtual PhysicalModel*
-      create_physical_model(const ModelOptions& options) const
-      throw (ModelErrorException);
+      create_physical_model(const ModelOptions& options,
+          const Material* mat) const throw (ModelErrorException);
 
 
     /*! \copydoc SimulationInterface::create_boundary_model() */

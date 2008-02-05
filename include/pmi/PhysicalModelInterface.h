@@ -194,11 +194,21 @@ class PhysicalModelInterface
     ModelOptions& get_options(void);
    
 
+    //! Set the name of a model
+    /*!
+     * Use with caution as it could break standard behaviour!
+     */
+    void set_name(const std::string& name);
+
+
     //! Get the value of a parameter from the input file
     /*!
      *
      * This method looks first in the ModelOptions object, and then in the
-     * ModelOptions of the material.
+     * ModelOptions of the material. It will try in this order:
+     * \li \c name
+     * \li \c modelname.name
+     * \li \c simulationname.modelname.name
      *
      * \param name the name of the option
      * \param default_value the default value, which also defines
@@ -213,7 +223,10 @@ class PhysicalModelInterface
     /*!
      *
      * This method looks first in the ModelOptions object, and then in the
-     * ModelOptions of the material.
+     * ModelOptions of the material. It will try in this order:
+     * \li \c name
+     * \li \c modelname.name
+     * \li \c simulationname.modelname.name
      *
      * \param name the name of the option
      * \param vec the vector, where the values will be stored. \c vec can
@@ -476,6 +489,15 @@ const std::string&
 PhysicalModelInterface::get_name(void) const
 {
   return _name;
+}
+
+
+
+inline
+void
+PhysicalModelInterface::set_name(const std::string& name)
+{
+  _name = name;
 }
 
 

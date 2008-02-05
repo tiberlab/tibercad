@@ -116,8 +116,8 @@ Poisson::Poisson()
 }
 //----------------------------------------------------------------------------------//
 
-PhysicalModel*   Poisson::create_physical_model (const ModelOptions &options) const 
-                    throw (ModelErrorException)
+PhysicalModel*   Poisson::create_physical_model (const ModelOptions &options,
+    const Material* mat) const throw (ModelErrorException)
 {
   
   PoissonModel* model = dynamic_cast<PoissonModel*> ( PhysicalModelInterface::create("poisson",options) );

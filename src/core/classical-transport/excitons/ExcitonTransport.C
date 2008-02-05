@@ -146,8 +146,8 @@ ExcitonTransport::~ExcitonTransport(void)
 
 
 PhysicalModel*
-ExcitonTransport::create_physical_model(const ModelOptions& options) const
-throw (ModelErrorException)
+ExcitonTransport::create_physical_model(const ModelOptions& options,
+    const Material* mat) const throw (ModelErrorException)
 {
   const string& modelname = options.get_option("model", "simple");
 

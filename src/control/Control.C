@@ -521,7 +521,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
 
       // here we actually create the model
-      PhysicalModel* model = sim->create_physical_model(physopts);
+      PhysicalModel* model = sim->create_physical_model(physopts, mat);
 
       // NOTE: model could be NULL, but we don't care about. Who tells us that
       // every simulation necessarily needs a model?
