@@ -323,26 +323,31 @@ PhysicalModelInterface::get_parameter(const std::string& name,
 {
   T val(_options.get_option(name, default_value));
 
-  std::string code;
+  const Material* mat = get_material();
 
-  SimulationInterface* sim = 
-    SimulationInterface::get_simulation(get_simulator_id());
-
-  // first ask for the plain name
-  val = get_material()->get_options().get_option(name, val);
-
-  // first override
-  if (sim != NULL)
+  if (mat != NULL)
   {
-    code = sim->get_name() + ".";
-    val = get_material()->get_options().get_option(code + name, val);
-  }
+    std::string code;
 
-  // second override
-  if (get_name() != "")
-  {
-    code += get_name() + ".";
-    val = get_material()->get_options().get_option(code + name, val);
+    SimulationInterface* sim = 
+      SimulationInterface::get_simulation(get_simulator_id());
+
+    // first ask for the plain name
+    val = mat->get_options().get_option(name, val);
+
+    // first override
+    if (sim != NULL)
+    {
+      code = sim->get_name() + ".";
+      val = mat->get_options().get_option(code + name, val);
+    }
+
+    // second override
+    if (get_name() != "")
+    {
+      code += get_name() + ".";
+      val = mat->get_options().get_option(code + name, val);
+    }
   }
 
   return val;
@@ -357,19 +362,32 @@ PhysicalModelInterface::get_parameter(const std::string& name,
 {
   _options.get_option(name, vec);
 
-  std::string code;
+  const Material* mat = get_material();
 
-  SimulationInterface* sim = 
-    SimulationInterface::get_simulation(get_simulator_id());
-  if (sim != NULL)
-    code = sim->get_name() + ".";
+  if (mat != NULL)
+  {
+    std::string code;
 
-  if (get_name() != "")
-    code += get_name() + ".";
-  
-  code += name;
+    SimulationInterface* sim = 
+      SimulationInterface::get_simulation(get_simulator_id());
 
-  get_material()->get_options().get_option(code, vec);
+    // first ask for the plain name
+    mat->get_options().get_option(name, vec);
+
+    // first override
+    if (sim != NULL)
+    {
+      code = sim->get_name() + ".";
+      mat->get_options().get_option(code + name, vec);
+    }
+
+    // second override
+    if (get_name() != "")
+    {
+      code += get_name() + ".";
+      mat->get_options().get_option(code + name, vec);
+    }
+  }
 }
 
 

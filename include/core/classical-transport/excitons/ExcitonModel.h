@@ -10,6 +10,7 @@
 
 
 #include <string>
+#include <map>
 
 class SimulationInterface;
 
@@ -88,6 +89,10 @@ class ExcitonModel : public ExcitonProperties
 
     //! The DriftDiffusion simulation to be used
     SimulationInterface* _dd_sim;
+
+    //! The band gap for each element
+    std::map<const Elem*, double> _bandgap_data;
+
 
 };
 

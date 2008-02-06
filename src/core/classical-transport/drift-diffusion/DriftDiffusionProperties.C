@@ -42,8 +42,6 @@ DriftDiffusionProperties::_DOS_factor = pow(2.0 * M_PI * Constants::me /
 
 DriftDiffusionProperties::DriftDiffusionProperties(void)
   : _pd(NULL),
-    //pyro_polarization(3, 0.0),
-    //bow_pyro(0.0),
     _elem(NULL),
     _statistics(TiberCad::BOLTZMANN),
     _coupling(DriftDiffusionDefs::BOTH),
@@ -71,16 +69,6 @@ DriftDiffusionProperties::read_database(void)
 
   _is_dielectric = data("dielectric", _is_dielectric);
   permittivity = data("permittivity", 1.0);
-
-  // pyropolarization
-  //Tensor1 pol;
-  //pol(1) = pol(2) = 0.0;
-  //pol(3) = data("Pz", 0.0);
-  //pol = (mat->get_rotated_crystal()).RotMatrix * pol;
-  //pyro_polarization(0) = pol(1);
-  //pyro_polarization(1) = pol(2);
-  //pyro_polarization(2) = pol(3);
-  //bow_pyro = data("bow_Pz", 0.0);
 
 
 }
@@ -302,13 +290,6 @@ DriftDiffusionProperties::calculate_VCA(const PhysicalModelInterface* comp_A,
   _pyropolarization->build_alloy(scA->_pyropolarization,
       scB->_pyropolarization, xa);
 
-  // pyropolarization
-  //pyro_polarization(0) = alloy(scA->pyro_polarization(0),
-  //    scB->pyro_polarization(0), xa, bow_pyro);
-  //pyro_polarization(1) = alloy(scA->pyro_polarization(1),
-  //    scB->pyro_polarization(1), xa, bow_pyro);
-  //pyro_polarization(2) = alloy(scA->pyro_polarization(2),
-  //    scB->pyro_polarization(2), xa, bow_pyro);
 
 }
 
@@ -427,7 +408,6 @@ DriftDiffusionProperties::reinit(const Elem* elem)
 
     this->prepare_element_data();
     
-    //_polarization += _relax_polariz * pyro_polarization;
     // pyropolarization is Tensor1
     _pyropolarization->calculate_polarization(_elem, _coord, _lattice_vt);
     _polarization(0) += _relax_polariz * _pyropolarization->get_polarization()(1);

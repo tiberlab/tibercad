@@ -68,11 +68,20 @@ ExcitonModel::prepare_element_data(void)
     throw (SolveFailedException("ExcitonModel needs solved DriftDiffusion."));
 
   double Eg;
-  bool ok = ((SimulationInterface*)_dd_sim)->get_solution(get_element(),
-      get_element()->centroid(), _Eg_id, Eg);
-  set_energy(Eg - _R);
-  if (!ok)
-    throw SolveFailedException("Exciton model needs everywhere drift-diffusion.");
+  std::map<const Elem*, double>::iterator it(_bandgap_data.find(get_element()));
+  if (it != _bandgap_data.end())
+    set_energy(it->second);
+  else
+  {
+    bool ok = ((SimulationInterface*)_dd_sim)->get_solution(get_element(),
+        get_element()->centroid(), _Eg_id, Eg);
+
+    if (!ok)
+      throw SolveFailedException("Exciton model needs everywhere drift-diffusion.");
+
+    set_energy(Eg - _R);
+    _bandgap_data[get_element()] = Eg - _R;
+  }
 
   // lattice_vt was taken from TemperatureInterface
   exciton_vt = lattice_vt;
@@ -94,7 +103,6 @@ ExcitonModel::read_database(void)
 void
 ExcitonModel::do_init(void)
 {
-
   _t_r = get_parameter("tau_rad", 1.0e45);
   _t_nr = get_parameter("tau_nonrad", 1.0e45);
   _t_diss = get_parameter("tau_diss", 1.0e45);

@@ -39,6 +39,7 @@ void
 ExcitonDissociation::get_net_recombination_rates(double& recomb_e,
     double& recomb_h)
 {
+
   DriftDiffusionProperties& dd = get_driftdiffusionproperties();
   
   const Elem* el = dd.get_element();
@@ -64,8 +65,8 @@ void
 ExcitonDissociation::get_net_recombination_rate_derivatives(
     std::vector<double>& recomb_e, std::vector<double>& recomb_h)
 {
+  recomb_e[0] = recomb_h[0] = 0.0;
   recomb_e[1] = recomb_h[1] = 0.0;
-  recomb_e[2] = recomb_h[2] = 0.0;
 }
 
 

@@ -23,7 +23,7 @@ void WzSemiconductor::do_init()
   
   ModelOptions & options = get_options ();
   {
-    par.EgGamma      = options.get_option("Eg_G",par.EgGamma );
+    par.EgGamma      = options.get_option("Eg_G", par.EgGamma );
     par.Ev           = options.get_option("E_v", par.Ev );
     
     par.m_c_zz       = options.get_option("m_c_zz", par.m_c_zz);

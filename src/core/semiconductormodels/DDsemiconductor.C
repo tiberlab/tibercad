@@ -45,6 +45,15 @@ void DDsemiconductor::do_init ()
   PhysicalModelInterface::destroy(semiconductor);
   
   semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
+  if (semiconductor == NULL)
+  {
+    string msg("DDsemiconductor: cannot create model for material with ");
+    msg += get_material()->get_structure();
+    msg += " structure.";
+    throw InitFailedException(msg);
+  }
+
+  semiconductor->set_material(get_material());
 
   semiconductor->init();
   
