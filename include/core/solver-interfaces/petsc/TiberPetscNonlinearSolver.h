@@ -97,6 +97,9 @@ class TiberPetscNonlinearSolver : public NonlinearSolver<T>
     double _nonlinear_atol;
     double _nonlinear_stol;
     int _nonlinear_max_it;
+
+    //! Is used to intercept spurious solver failures in the first iteration
+    double _emergency_fnorm;
     
     double _linear_rtol;
     double _linear_atol;
@@ -115,6 +118,11 @@ class TiberPetscNonlinearSolver : public NonlinearSolver<T>
     static void _checkerr(int errorcode) throw (PetscRuntimeError);
 
 };
+
+
+//
+// inline methods
+// 
 
 template <typename T>
 inline

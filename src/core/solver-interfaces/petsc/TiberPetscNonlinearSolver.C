@@ -19,6 +19,7 @@
 extern "C"
 {
 
+
   // Older versions of PETSc do not have the different int typedefs.
   // On 64-bit machines, PetscInt may actually be a long long int.
   // This change occurred in Petsc-2.2.1.
@@ -288,9 +289,10 @@ TiberPetscNonlinearSolver<T>::TiberPetscNonlinearSolver(void)
   : _nonlinear_rtol(1e-15),
     _nonlinear_atol(1e-18),
     _nonlinear_stol(1e-6),
+    _nonlinear_max_it(20),
+    _emergency_fnorm(1e-9),
     _linear_rtol(1e-6),
     _linear_atol(1e-15),
-    _nonlinear_max_it(20),
     _linear_max_it(500),
     _ls_type(3),
     _ls_maxstep(1e3),
@@ -583,11 +585,15 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
       if (ksp_reason == -3 || ksp_reason >= 0)
         throw_ex = false;
     }
+    else if ((reason == -6) && (n_iterations == 1) && (fnorm < _emergency_fnorm))
+      throw_ex = false;
+
     if (throw_ex)
       throw (SNESDivergedError(reason, n_iterations, fnorm));
 #else
     if (reason != -3)
-      throw (SNESDivergedError(reason, n_iterations, fnorm));
+      if (!((reason == -6) && (n_iterations == 1) && (fnorm < _emergency_fnorm)))
+        throw (SNESDivergedError(reason, n_iterations, fnorm));
 #endif
   }
 
