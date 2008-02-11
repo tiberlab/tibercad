@@ -7,6 +7,7 @@
 #include "Control.h"
 #include "DLLoader.h"
 #include "TiberCad.h"
+#include "License.h"
 
 
 #include <iostream>
@@ -29,6 +30,7 @@ int main (int argc, char** argv)
 {
 
   cout << "TiberCAD version " << TIBERVERSION << endl << endl;
+
 
   // take input file from command line or ask for it
   string inputfile;
@@ -54,7 +56,7 @@ int main (int argc, char** argv)
 
   }
 
-  // Set up some path
+  // do some preparation
   {
     // the TiberCAD root
     string tiberroot;
@@ -72,6 +74,32 @@ int main (int argc, char** argv)
     //DLLoader::prepend_to_library_path(".");
 
     // Set up search path for materials
+
+#ifdef LICENSE_CHECK
+    // check the license
+    bool lic_ok = false;
+    string default_licfile("tibercad.lic");
+    char* licfile = getenv("TIBERLICENSEFILE");
+    if (licfile != NULL)
+      lic_ok = License::check_license(licfile);
+
+    if (!lic_ok)
+      lic_ok = License::check_license(default_licfile);
+
+    if (!lic_ok)
+      lic_ok = License::check_license(tiberroot + "/" + default_licfile);
+
+    if (!lic_ok)
+      lic_ok = License::check_license(tiberroot + "/license/" + default_licfile);
+
+    if (!lic_ok)
+    {
+      cerr << "Sorry, cannot start TiberCAD as I could not find a valid "
+        << "license." << endl;
+      exit(1);
+    }
+#endif
+
   }
 
   //

@@ -4,7 +4,7 @@ topdir := ../..
 
 include $(topdir)/Make.common
 
-ADDITIONAL_LIBS = @LIBREADLINE@
+ADDITIONAL_LIBS = @LIBREADLINE@ $(topdir)/src/utils/license/liblicense.a
 PACKAGEFLAGS = -Wl,-rpath,$(topdir)/lib
 
 #
