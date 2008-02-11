@@ -4,6 +4,7 @@
 
 
 
+
 AtomisticGenerator1D* 
 AtomisticGenerator1D::create(AtomisticStructure* const as)
 { 
@@ -15,12 +16,16 @@ AtomisticGenerator1D::create(AtomisticStructure* const as)
 
 AtomisticGenerator1D::AtomisticGenerator1D(AtomisticStructure* const as)
 {
-  _as = as;
+  _dim = 1;
+                   _as = as;
 	_rotation(1,1) = 1.0; _rotation(1,2) = 0.0; _rotation(1,3) = 0.0; _rotation(2,1) = 0.0; _rotation(2,2) = 1.0;
 	_rotation(2,3) = 0.0; _rotation(3,1) = 0.0; _rotation(3,2) = 0.0; _rotation(3,3) = 1.0;
 
 	ax = 0.0; ay = 0.0; az = 0.0;
 }
+
+
+AtomisticGenerator1D::~AtomisticGenerator1D(void){};
 
 
  void 

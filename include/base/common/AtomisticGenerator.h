@@ -36,9 +36,9 @@ class AtomisticGenerator
 
 public:
 
- //  AtomisticGenerator(AtomisticStructure* const as);
+  AtomisticGenerator(void);
 
-//   ~AtomisticGenerator(void);
+  virtual   ~AtomisticGenerator(void);
 
   static AtomisticGenerator* create(AtomisticStructure* const as, unsigned int dimension);
 
@@ -103,6 +103,9 @@ protected:
 
   //! Supercell conventional cell edges points
   std::vector<Tensor1> _super_conv;
+
+  //! Dimensionality of the system (1, 2 or 3)
+  unsigned int _dim;
 
   //! Missing super_conv (vector of conventional cells edges). 
   //!If it will be needed remember to uncomment proper lines in make_supercell!!!!!!!!!!!!!!!!

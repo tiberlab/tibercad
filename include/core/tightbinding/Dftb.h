@@ -16,8 +16,13 @@ class Dftb : public TightBinding{
 
 public:
 
-struct DftbOptions
+class DftbOptions
   {
+  public:
+
+    DftbOptions(void);
+    ~DftbOptions(void);
+
     char* skNames;
     char* speciesNames;
     int nAtom;
@@ -36,7 +41,15 @@ struct DftbOptions
     bool supersampling;
     double* samplingcoeffs;
     double* samplingshift;
+
   };
+
+
+  class DftbSolverOptions{
+  public:
+    std::string solver;
+  };
+
 
  //! Constructor
   Dftb(void);
@@ -63,11 +76,18 @@ struct DftbOptions
   //! Function for building options from input
   void build_input_options(void);
 
- //! Structure containing options for DFTB+ tight binding builder and solver
+ //! Structure containing options for DFTB+ tight binding builder
   DftbOptions _dftb_options;
+
+ //! Structure containing options for DFTB+ tight binding solver
+  DftbSolverOptions _dftb_solver_options;
+
 
   //! Print all _dftb_options for debugging purposes
   void print_dftb_options(void);
+
+  //! Dftb instance associated to the simulation
+  DftbpWrapper* inst;
 
 protected:
 

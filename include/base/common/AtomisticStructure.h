@@ -6,8 +6,6 @@
 #include "TypeDefs.h"
 #include "Control.h"
 #include "Device.h"
-//#include "AtomisticGenerator.h"
-//#include "AtomisticGenerator1D.h"
 #include "Atom.h"
 
 //C++ includes
@@ -105,6 +103,12 @@ public:
   std::vector<std::string> _atom_types;
 
 
+ //! Print structure to file (format depends on extension used)
+  void print_structure(const std::string& path);
+
+  //! A tool for printing atomic charges on output 
+  void print_structure(const std::string& path, double const* const charges);
+
 protected:
 
   //! Set the model options
@@ -113,9 +117,7 @@ protected:
   //! Read structure from file
   void read_structure(const std::string& path);
 
-  //! Print structure to file (format depends on extension used)
-  void print_structure(const std::string& path);
-
+ 
 
 private:
 

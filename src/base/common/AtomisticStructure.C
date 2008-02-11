@@ -1,6 +1,7 @@
 #include "AtomisticStructure.h"
 #include "AtomisticGenerator.h"
 #include "AtomisticGenerator1D.h"
+#include "AtomisticGenerator2D.h"
 
 
 AtomisticStructure::AtomisticStructure(const std::string& name)
@@ -63,10 +64,10 @@ AtomisticStructure::init(double a1, double a2, double a3)
   // Read structure from file
   std::string path;
 
-  if (! _options.find_option("path") )
-    std::cerr << "ERROR IN ATOMISTIC REGION DEFINITION: A PATH FOR STRUCTURE FILE MUST BE SPECIFIED" << std::endl;
+  if (_options.find_option("path") )
+    std::cerr << "Reading structure from file. Any further information will be neglected" << std::endl;
 
-   if ( _options.find_option("physical_regions") )
+  if ( _options.find_option("physical_regions") ) 
     {
 
       //Put physical regions specified in input file in _regions
@@ -93,8 +94,6 @@ AtomisticStructure::init(double a1, double a2, double a3)
 
 	}
 
-      else std::cerr << "Error in AtomisticStructure: at least a physical region must be defined in input" << std::endl;
-
       //Build an array of physical regions ID
       for (std::set<std::string>::iterator i = _regionset.begin(); i != _regionset.end(); i++)
 	{
@@ -104,13 +103,15 @@ AtomisticStructure::init(double a1, double a2, double a3)
 	}
     }
 
-   //   for (std::set<std::string>::iterator i= _regionset.begin(); i !=_regionset.end(); i++)
-//        {std::cerr << "WRITING " << std::endl;
-//          std::cerr << "_REGION IS " << *i << std::endl;}
+   else std::cerr << "Error in AtomisticStructure: at least a physical region must be defined in input" << std::endl;
 
-//     for (std::set<ID>::iterator i= _IDset.begin(); i !=_IDset.end(); i++)
-//        {std::cerr << "WRITING " << std::endl;
-//          std::cerr << "_REGION IS " << *i << std::endl;}
+  //   for (std::set<std::string>::iterator i= _regionset.begin(); i !=_regionset.end(); i++)
+  //        {std::cerr << "WRITING " << std::endl;
+  //          std::cerr << "_REGION IS " << *i << std::endl;}
+
+  //     for (std::set<ID>::iterator i= _IDset.begin(); i !=_IDset.end(); i++)
+  //        {std::cerr << "WRITING " << std::endl;
+  //          std::cerr << "_REGION IS " << *i << std::endl;}
 
 
 
@@ -123,11 +124,13 @@ AtomisticStructure::init(double a1, double a2, double a3)
     {
       _structure_atoms.clear();
 
-
-      AtomisticGenerator* generate = dynamic_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, get_device()->get_mesh().mesh_dimension()) );
-
+      AtomisticGenerator* generate;
+      if ( get_device()->get_mesh().mesh_dimension() == 1 ) generate = dynamic_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, 1 ) );
+      if ( get_device()->get_mesh().mesh_dimension() == 2 )  generate = dynamic_cast<AtomisticGenerator2D*> ( AtomisticGenerator::create(this, 2 ) );
+ 
 
       generate->do_init(a1, a2, a3);
+
       print_structure("structure.xyz");
       print_structure("structure.gen");
     }
@@ -429,6 +432,100 @@ AtomisticStructure::print_structure(const std::string& path)
 #endif
 
 }
+
+
+
+void 
+AtomisticStructure::print_structure(const std::string& path, double const* const charges)
+{
+  std::ofstream file;
+
+#ifdef DEBUG
+  std::cerr << "AtomisticStructure::print_structure(path) begin. \n";
+#endif
+
+  file.open(path.c_str());
+
+  // Recognize type of input file and print it properly
+  std::string extension = path.substr(path.size()-4);
+
+  if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
+    {
+      file << _structure_atoms.size() << std::endl << std::endl;
+
+      for (unsigned int i = 0; i < _structure_atoms.size(); i++)
+	{
+	  file << std::setw(2) << _structure_atoms[i].specie 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(1)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(2)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(3)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(charges[i]) << "\n"; 
+	}
+
+    }
+
+  else if ( (extension.compare(".gen") == 0) || (extension.compare(".GEN") == 0) )
+    {
+      file << _structure_atoms.size();
+
+      if (is_periodical) file << std::setw(10) << "S \n";
+      else file << std::setw(10) << "C \n";
+
+      for (unsigned int i = 0; i < _atom_types.size(); i++)
+	{
+	  file << std::setw(4) << _atom_types[i];
+	}
+      file << std::endl;
+
+      for (unsigned int i = 0; i < _structure_atoms.size(); i++)
+	{
+	  unsigned int n_specie;
+	  for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
+	    {
+	      if (_atom_types[n_specie].compare(_structure_atoms[i].specie) == 0) break;
+	    }
+	  file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(1)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(2)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(3)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(charges[i]) << "\n";  
+	}
+
+      //A line of zeros is put here (coordinates origin)
+      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
+	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
+	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n"; 
+
+      // Periodicity vectors at the bottom
+      if (is_periodical)
+	{
+	  for (unsigned int i = 0; i < 3; i++)
+	    {
+	      for (unsigned int j = 0; j < 3; j++)
+		{
+		  file << std::setw(20) << std::setprecision(10) << std::fixed <<
+		    _periodicity_vectors[i][j];
+		}  
+	      file << "\n";
+	    }
+	}
+
+    }
+
+  else
+    {
+      std::cerr << "File extension does not correspond to any internal format. File not print. \n";
+    }
+ 
+  file.close();
+
+#ifdef DEBUG
+  std::cerr << "AtomisticStructure::print_structure(path) end. \n";
+#endif
+
+}
+
+
 
 
 

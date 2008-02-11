@@ -20,18 +20,53 @@
 
 //--------------------------------------------------------------
 
-Dftb::Dftb(void){
-  _dftb_options.iPeriodic = 0;
-  _dftb_options.nAtom = 0;
-  _dftb_options.nType = 0;
-  _dftb_options.latVecs = new double[9];
-  _dftb_options.samplingcoeffs = new double[9];
-  _dftb_options.samplingshift = new double[3];
+Dftb::Dftb(void)
+  : _dftb_options()
+{
+  inst = new DftbpWrapper;
 };
 
 
-
 Dftb::~Dftb(void){};
+
+
+Dftb::DftbOptions::DftbOptions(void){
+  iPeriodic = 0;
+  nAtom = 0;
+  nType = 0;
+  latVecs = new double[9];
+  for (int i = 0; i < 9; i++) {latVecs[i] = 0.0;}
+  samplingcoeffs = new double[9];
+  samplingshift = new double[3];
+};
+
+
+Dftb::DftbOptions::~DftbOptions(void){
+  delete samplingcoeffs;
+  delete samplingshift;
+};
+
+
+void Dftb::parse_options(void){
+
+  //Set up file names for Slater Koster files
+  build_names();
+
+  //Set up structure options from atomistic structure
+  build_structure_options();
+
+  //Set up input options for building up simulation
+  build_input_options();
+
+  //Set up input options for the solver (up to now only internal solver is supported)
+  _dftb_solver_options.solver = "internal";
+
+
+#ifdef DEBUG
+  print_dftb_options();
+#endif
+
+};
 
 
 void 
@@ -44,20 +79,12 @@ Dftb::do_init(void){
   get_atomistic_structure();
   std::cerr << "Caught atomistic structure " << _atomistic_structure->get_name() << std::endl;
 
+
   // Setting options for DFTB+ calls
-  build_names();
-  build_structure_options();
-  build_input_options();
+  parse_options();
 
 
-#ifdef DEBUG
-  print_dftb_options();
-#endif
-
-
-  //Create DFTB+ instance, initialize it and sets parameters
-  DftbpWrapper* inst;
-  inst = new DftbpWrapper;
+  //  Initialize Dftb instance it and sets parameters
   std::cout << "Am I periodic?? " << _dftb_options.iPeriodic << std::endl;
   inst->fill_param(_dftb_options.nAtom, _dftb_options.nType, 
 		   _dftb_options.eTemp, _dftb_options.iPeriodic, _dftb_options.speciesNames, 
@@ -95,26 +122,42 @@ else
   inst->up_coords(_dftb_options.nAtom, _dftb_options.coords);
 
   std::cout << "up_coords" << std::endl; 
+ 
+ 
+}
 
-  double energy = 0;
-  inst->get_energy(energy);
+
+
+void Dftb::do_solve(void){
+
+#ifdef DEBUG
+  std::cout << "Calling Dftb->do_solve() " << std::endl;
+#endif
+
+
+  if (_dftb_solver_options.solver.compare("internal") == 0) {
+
+   double energy = 0;
+   inst->get_energy(energy);
 
   std::cerr << "Done " << energy << std::endl;
 
   double* charges;
   charges = new double[_dftb_options.nAtom];
   inst->getchargesperatom(_dftb_options.nAtom, charges);
-  std::cout << "Charges:  " << std::endl;
-  for (int i = 0; i < _dftb_options.nAtom; i++){
-    std::cout << charges[i] << std::endl;
-  }
  
-}
+  _atomistic_structure->print_structure("TB_out.xyz",charges);
+
+  }
 
 
-void Dftb::do_solve(void){};
+#ifdef DEBUG
+  std::cout << "Dfbt->solve() done" << std::endl;
+#endif
 
-void Dftb::parse_options(void){};
+};
+
+
 
 
 
@@ -378,25 +421,25 @@ void Dftb::print_dftb_options(void){
 
   std::cout << "DFTB_OPTIONS: " << std::endl;
 
-  std::cout << "coords are " << std::endl;
-  for (int i = 0; i < _dftb_options.nAtom * 3; i++){
-    std::cout << "coords["<<i<<"] is " <<  _dftb_options.coords[ i ] << std::endl;
-  }
+  // std::cout << "coords are " << std::endl;
+//   for (int i = 0; i < _dftb_options.nAtom * 3; i++){
+//     std::cout << "coords["<<i<<"] is " <<  _dftb_options.coords[ i ] << std::endl;
+//   }
 
-  std::cout << "species are " << std::endl;
-  for (int i = 0; i < _dftb_options.nAtom; i++){
-    std::cout << "species["<<i<<"] is " <<  _dftb_options.species[ i ] << std::endl;
-  }
+//   std::cout << "species are " << std::endl;
+//   for (int i = 0; i < _dftb_options.nAtom; i++){
+//     std::cout << "species["<<i<<"] is " <<  _dftb_options.species[ i ] << std::endl;
+//   }
 
   int n_files = 0;
-  n_files = _atomistic_structure->N_types * _atomistic_structure->N_types;
-  std::cout << "skNames are " << std::endl;
-  for (int i = 0; i < n_files * DFTBP_LC; i++) {std::cout << "Char " << i << " is " << _dftb_options.skNames[i] << std::endl;}
-  std::cout << "skNames string lenght is " << strlen(_dftb_options.skNames);
+  // n_files = _atomistic_structure->N_types * _atomistic_structure->N_types;
+ //  std::cout << "skNames are " << std::endl;
+//   for (int i = 0; i < n_files * DFTBP_LC; i++) {std::cout << "Char " << i << " is " << _dftb_options.skNames[i] << std::endl;}
+//   std::cout << "skNames string lenght is " << strlen(_dftb_options.skNames);
  
-  std::cout << "speciesNames are " << std::endl;
-  for (int i = 0; i <  _atomistic_structure->N_types * DFTBP_MC; i++) {std::cout << "Char " << i << " is " << _dftb_options.speciesNames[i] << std::endl;}
-  std::cout << "speciesNames string lenght is " << strlen(_dftb_options.speciesNames);
+//   std::cout << "speciesNames are " << std::endl;
+//   for (int i = 0; i <  _atomistic_structure->N_types * DFTBP_MC; i++) {std::cout << "Char " << i << " is " << _dftb_options.speciesNames[i] << std::endl;}
+//   std::cout << "speciesNames string lenght is " << strlen(_dftb_options.speciesNames);
 
   std::cout << "latVecs are " << std::endl;
   for (int i = 0; i < 9; i++){
