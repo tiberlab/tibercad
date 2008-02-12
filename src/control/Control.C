@@ -137,12 +137,15 @@ Control::create_device(void)
   _database->set_search_path(opts.get_option("searchpath", "."));
   opts.delete_option("searchpath");
 
+  // initialize global simulation options
+  SimulationOptions::initialize(opts);
+
   // the simulation temperature
-  SimulationOptions::temperature = opts.get_option("temperature", 300.0);
+  //SimulationOptions::temperature = opts.get_option("temperature", 300.0);
 
   // incomplete or complete ionization of dopants
-  SimulationOptions::incomplete_ionization =
-    opts.get_option("incomplete_ionization", true);
+  //SimulationOptions::incomplete_ionization =
+  //  opts.get_option("incomplete_ionization", true);
 
 
   //! read the variables we want to plot
