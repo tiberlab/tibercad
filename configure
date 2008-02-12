@@ -312,7 +312,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CC CFLAGS ac_ct_CC FC FCFLAGS ac_ct_FC FCLIBS LIBREADLINE PERL DOXYGEN DOT DOT_PATH HAVE_DOT LATEX LATEX_PATH GENERATE_LATEX GMSH BINSTALLMAKER WININSTALLERDIR TIBERSHAREDIR BINSTALLMAKERDIR CXXCPP EGREP LIBMESH_PREFIX LIBMESH_CONFIG COMPLEX_PETSC_DIR COMPLEX_PETSC_ARCH SLEPC_DIR BOOST_CPPFLAGS BOOST_REGEX_LIB BOOST_FILESYSTEM_LIB MKL_LIBDIR MKL_INCLUDEDIR HAVE_MKL ENABLE_PARDISO ENABLE_DFTB ENABLE_HETERO LIBOBJS BUILD_TIBER_MODULES LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CC CFLAGS ac_ct_CC FC FCFLAGS ac_ct_FC FCLIBS LIBREADLINE PERL DOXYGEN DOT DOT_PATH HAVE_DOT LATEX LATEX_PATH GENERATE_LATEX GMSH BINSTALLMAKER WININSTALLERDIR TIBERSHAREDIR BINSTALLMAKERDIR CXXCPP EGREP LIBMESH_PREFIX LIBMESH_CONFIG COMPLEX_PETSC_DIR COMPLEX_PETSC_ARCH SLEPC_DIR BOOST_CPPFLAGS BOOST_REGEX_LIB BOOST_FILESYSTEM_LIB MKL_LIBDIR MKL_INCLUDEDIR HAVE_MKL ENABLE_PARDISO ENABLE_DFTB ENABLE_HETERO LIBOBJS BUILD_TIBER_MODULES LICENSE_CHECK LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -870,6 +870,7 @@ Optional Features:
   --enable-hetero         enable HETERO for tunneling current
   --enable-modules        build TiberCAD models as dynamically loadable
                           libraries
+  --enable-license-check  enable license check
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -2828,7 +2829,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2831:" \
+echo "$as_me:2832:" \
      "checking for Fortran compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -3020,7 +3021,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FCFLAGS
 FCFLAGS="$FCFLAGS $ac_verb"
-(eval echo $as_me:3023: \"$ac_link\") >&5
+(eval echo $as_me:3024: \"$ac_link\") >&5
 ac_fc_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_fc_v_output" >&5
 FCFLAGS=$ac_save_FFLAGS
@@ -3098,7 +3099,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FCFLAGS
 FCFLAGS="$FCFLAGS $ac_cv_prog_fc_v"
-(eval echo $as_me:3101: \"$ac_link\") >&5
+(eval echo $as_me:3102: \"$ac_link\") >&5
 ac_fc_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_fc_v_output" >&5
 FCFLAGS=$ac_save_FFLAGS
@@ -5845,6 +5846,29 @@ else
 fi;
 
 
+# use licensing tools
+# Check whether --enable-license-check or --disable-license-check was given.
+if test "${enable_license_check+set}" = set; then
+  enableval="$enable_license_check"
+  if test $enableval != "no"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define LICENSE_CHECK 1
+_ACEOF
+
+	  LICENSE_CHECK="yes"
+
+	else
+	  LICENSE_CHECK="no"
+
+	fi
+else
+  LICENSE_CHECK="no"
+
+fi;
+
+
+
 
 if test "x$DOXYGEN" == x
 then
@@ -6550,6 +6574,7 @@ s,@ENABLE_DFTB@,$ENABLE_DFTB,;t t
 s,@ENABLE_HETERO@,$ENABLE_HETERO,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@BUILD_TIBER_MODULES@,$BUILD_TIBER_MODULES,;t t
+s,@LICENSE_CHECK@,$LICENSE_CHECK,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
 

@@ -208,6 +208,10 @@ AC_CHECK_FUNCS([pow sqrt isinf isnan])
 # enable/disable modules
 TC_BUILD_MODULES
 
+# use licensing tools
+TC_LICENSE
+
+
 
 if test "x$DOXYGEN" == x
 then
