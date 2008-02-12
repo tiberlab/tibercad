@@ -83,6 +83,14 @@ void 	QuantumDispersion::do_plot (void)
   string outdir = get_control().get_output_dir();
   string format = get_control().get_output_format();
 
+
+  unsigned int kdim =  get_k_mesh().mesh_dimension();
+    
+  if (kdim > 1)
+    if (format == "grace")  
+      format = "ise"; //because grace can output ONLY 1D data
+
+
   string suff;
   if (format == "gmv")
     suff = ".gmv";
@@ -125,7 +133,7 @@ void 	QuantumDispersion::do_plot (void)
 
 
     
-    
+
 
     if (format == "gmv")
       GMVIO(get_k_mesh()).write_nodal_data(filename, results, names);
