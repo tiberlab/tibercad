@@ -31,7 +31,7 @@ create_license: create_license.$(obj-suffix) liblicense.a
 
 
 $(topdir)/contrib/crypto++/libcryptopp.a: $(topdir)/contrib/crypto++/stamp-h
-	@$(MAKE) -C $(topdir)/contrib/crypto++
+	@$(MAKE) CC=$(CC) CXX=$(CXX) -C $(topdir)/contrib/crypto++
 
 
 $(topdir)/contrib/crypto++/stamp-h: $(topdir)/contrib/crypto++/cryptopp552.zip
@@ -40,5 +40,6 @@ $(topdir)/contrib/crypto++/stamp-h: $(topdir)/contrib/crypto++/cryptopp552.zip
 
 distclean:
 	@rm -f liblicense.a create_license
+	@$(MAKE) -C $(topdir)/contrib/crypto++ clean
 
 include $(topdir)/Make.rules
