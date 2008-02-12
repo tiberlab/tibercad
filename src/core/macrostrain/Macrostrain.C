@@ -1552,28 +1552,29 @@ void Macrostrain::do_solve()
 		<< "  after step number " << r_step << "\n";
      
       if (intermediate_output)
-	{      
+      {      
 	  
-	  std::ostringstream os;
-	  os << "displacement_field.dat.00" << r_step;
+	std::ostringstream os;
+	os << "displacement_field.dat.00" << r_step;
 
 
-	  if (output_type=="GMV")  GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
-	  if (output_type=="tecplot")   TecplotIO_cell(mesh,false).write_equation_systems(os.str(), *equation_systems);
+	if (output_type=="GMV")  GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
+	if (output_type=="tecplot")   TecplotIO_cell(mesh,false).write_equation_systems(os.str(), *equation_systems);
 
-	  std::ostringstream os_mesh;
-	  os_mesh << "mesh" << r_step << ".ucd";
-	  if (dim > 1) mesh.write(os_mesh.str());
+	std::ostringstream os_mesh;
+	os_mesh << "mesh" << r_step << ".ucd";
+	if (dim > 1) mesh.write(os_mesh.str());
 	  
-	  std::ostringstream os1;
-	  os1 <<"strain.dat.00" << r_step;
-	  output_strain(os1.str());	 
+	std::ostringstream os1;
+	os1 <<"strain.dat.00" << r_step;
+	output_strain(os1.str());	 
 	  
-	  std::ostringstream os2;
-	  os2 <<"add_var.00" << r_step;
+	std::ostringstream os2;
+	os2 <<"add_var.00" << r_step;
 	  
-	  output_add_strain_variables(os2.str());
-	}
+	output_add_strain_variables(os2.str());
+      }
+
       std::cout << "\n" ;
       std::cout << "Final Mesh after  " <<  max_r_steps <<" refinements  steps   " <<  "\n" ;
       mesh.print_info();
@@ -1680,48 +1681,47 @@ void Macrostrain::do_solve()
   //------write-------------------------------------------------------------------------------------//
   //--  output of the final result
   if (intermediate_output)
-    {
-      if (dim > 1) mesh.write("mesh0.ucd");
+  {
+    if (dim > 1) mesh.write("mesh0.ucd");
 
 	  
-      std::ostringstream os;
-      os << "displacement_field.dat" ;
+    std::ostringstream os;
+    os << "displacement_field.dat" ;
 
-      if (output_type=="GMV") GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
-      if (output_type=="tecplot")   TecplotIO_cell(mesh,false).write_equation_systems (os.str(), *equation_systems);
+    if (output_type=="GMV") GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
+    if (output_type=="tecplot")   TecplotIO_cell(mesh,false).write_equation_systems (os.str(), *equation_systems);
+    
+    std::ostringstream os_mesh;
+    os_mesh << "mesh"<< ".ucd";
+    if (dim > 1) mesh.write(os_mesh.str());
+      
+    std::ostringstream os1;
+    os1 <<"strain.dat" ;
+    output_strain(os1.str() );
+    
+      
+    std::ostringstream os2;
+    os2 <<"add_var";
+      
+    output_add_strain_variables(os2.str());
+      
+   
+  }
 
-      std::ostringstream os_mesh;
-      os_mesh << "mesh"<< ".ucd";
-      if (dim > 1) mesh.write(os_mesh.str());
-      
-      std::ostringstream os1;
-      os1 <<"strain.dat" ;
-      output_strain(os1.str() );
-      
-      
-      std::ostringstream os2;
-      os2 <<"add_var";
-      
-      output_add_strain_variables(os2.str());
-      
-      if (calculate_atom_displacements)
-	{
-	  std::ostringstream disp_file;
-	  disp_file << atom_displacements_filename <<".out";
-	  write_atom_displacements(disp_file.str());
-	}
-    }
+
+  if (calculate_atom_displacements)
+  {
+    std::ostringstream disp_file;
+    disp_file << atom_displacements_filename <<".out";
+    write_atom_displacements(disp_file.str());
+  }
 
   //--------------------------------------------------------------------------------------------------//
   calculate_result_elem_strain_map();
 
 
  
-  /*
-    std::ostringstream os1;
-    os1 <<"strain.dat" ;
-    output_strain(os1.str() );
-  */
+ 
   //--------------------------------------------------------------------------------------------------//
  }
 
