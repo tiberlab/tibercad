@@ -1,13 +1,13 @@
+
 ; 
 ; Please do not modify this file by hand
 ; It may crash the program if mistakes are found
 ; Use BIM to modify it << Ha, see what we can do!!
 ; 
-; The file header
 [Header]
 FileID = Bytessence Install Maker
-FileVersion = 1
-; The general information tab
+FileVersion = 2
+; 
 [GeneralInformation]
 AppName = @PACKAGE_NAME@
 Version = @PACKAGE_VERSION@
@@ -23,33 +23,47 @@ W2K = 1
 WXP = 1
 WV = 1
 DotNet = 0
-; Files and settings tab
+RunIfDepNotFound = 
+; 
 [FilesAndSettings]
-UseWizBitmap = 1
-UseHeadBitmap = 1
 WizBitmap = @BINSTALLMAKERDIR@\Splash\Pure\Wizard.bmp
 HeadBitmap = @BINSTALLMAKERDIR@\Splash\Classic\Header.bmp
 ReadMe = 
 License = @TIBERSHAREDIR@\Copyright.txt
 RequireReadme = 0
 RequireLicense = 1
-IconFile = @TIBERSHAREDIR@\tibercad.ico
+IconFile = @TIBERSHAREDIR@\share\tibercad.ico
 HeaderTextColour = 0
-; The languages
+; 
 [Localization]
-Entry0 = English�Trutia Alexandru�@BINSTALLMAKERDIR@\Localization\English.ini
-; The installation folder
+Entry0 = English¶Trutia Alexandru¶@BINSTALLMAKERDIR@\Localization\English.ini
+; 
 [Folder]
 Folder = @WININSTALLERDIR@\files
-; iTasks
+; 
 [InstTasks]
-; uTasks
+fileassoc = ASSOCIATEEXTENSION¶tib¶TiberCAD input file¶<DefaultInstallPath>\tibercad.exe¶0
+; 
 [UninstTasks]
-; uConfig
+; 
 [uConfig]
-SkipFilesExt = 0
-SkipFilesString = 
 RebootRequired = 0
+UninstNorm = 0
+UninstAll = 0
+SkipExtString = 
+IconExtUninst = 0
+IconExtCustom = 0
+IconExtPath = 
+IconExtIndex = 0
+; 
 [iConfig]
 RebootRequired = 0
+PathChangeable = 1
+DefaultPath = 
+AutoCreateStartMenu = 1
+CreateUninstallLink = 0
+CreateInternetLink = 1
+ForceGroupCreation = 1
+UninstOlderFirst = 1
+; 
 ; EOF()
