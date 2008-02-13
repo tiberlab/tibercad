@@ -96,7 +96,11 @@ int main (int argc, char** argv)
     {
       cerr << "Sorry, cannot start TiberCAD as I could not find a valid "
         << "license." << endl;
-      exit(1);
+# ifdef CYGWIN
+      cout << endl << "press any key ...";
+      cin.get();
+# endif
+      return 1;
     }
 #endif
 

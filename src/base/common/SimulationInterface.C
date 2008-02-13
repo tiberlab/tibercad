@@ -807,6 +807,7 @@ SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
 {
 
   if ((ids.size() == 0) || (elem == NULL)) return false;
+  if (!is_solved()) return false;
   
   SimulationEnvironment& env = get_environment();
 
@@ -925,6 +926,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 
   unsigned int np = p.size();
   if ((np == 0) || (ids.size() == 0) || (elem == NULL)) return false;
+  if (!is_solved()) return false;
 
   values.resize(np);
 

@@ -66,6 +66,10 @@ template<typename T> class SparseMatrix;
  * \li \c hCond hole conductivity (S/cm)
  * \li \c QFermi_e electron electro-chemical potential (V)
  * \li \c QFermi_h hole electro-chemical potential (V)
+ * \li \c E modulus of electric field (V/cm)
+ * \li \c Ex electric field, x-component
+ * \li \c Ey electric field, y-component
+ * \li \c Ez electric field, z-component
  * \li \c J modulus of total current density
  * \li \c Jn modulus of electron current density
  * \li \c Jp modulus of hole current density
@@ -104,6 +108,10 @@ class DriftDiffusion : public SimulationInterface
       HMOBILITY,        /*!< hole mobility */
       SIGMAE,           /*!< electron conductivity */
       SIGMAH,           /*!< hole conductivity */
+      E,                /*!< modulus of electric field */
+      EX,               /*!< electric field, x-component */
+      EY,               /*!< electric field, y-component */
+      EZ,               /*!< electric field, z-component */
       J,                /*!< total current density, modulus */
       JN,               /*!< electron current density, modulus */
       JNX,              /*!< electron current density, x-component */

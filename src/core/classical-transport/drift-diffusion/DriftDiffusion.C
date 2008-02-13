@@ -1257,7 +1257,15 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
   switch (variable_name[0])
   {
     case 'E':
-      if (variable_name == "ElPotential")
+      if (variable_name == "E")
+        id = E;
+      else if (variable_name == "Ex")
+        id = EX;
+      else if (variable_name == "Ey")
+        id = EY;
+      else if (variable_name == "Ez")
+        id = EZ;
+      else if (variable_name == "ElPotential")
         id = ELPOTENTIAL;
       else if (variable_name == "Ev")
         id = VBANDEDGE;
@@ -1542,6 +1550,18 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     if (ids.count(SIGMAH))
       values[n][SIGMAH] = sigma_h;
 
+    if (ids.count(E))
+      values[n][E] = e_field.size();
+
+    if (ids.count(EX))
+      values[n][EX] = e_field(0);
+
+    if (ids.count(EY))
+      values[n][EY] = e_field(1);
+
+    if (ids.count(EZ))
+      values[n][EZ] = e_field(2);
+
     if (ids.count(J))
     {
       double jx = jnx + jpx;
@@ -1786,6 +1806,18 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     if (ids.count(SIGMAH))
       values[n][SIGMAH] = sigma_h;
+
+    if (ids.count(E))
+      values[n][E] = e_field.size();
+
+    if (ids.count(EX))
+      values[n][EX] = e_field(0);
+
+    if (ids.count(EY))
+      values[n][EY] = e_field(1);
+
+    if (ids.count(EZ))
+      values[n][EZ] = e_field(2);
 
 
     if (ids.count(J))

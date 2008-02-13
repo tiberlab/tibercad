@@ -169,7 +169,7 @@ inline
 Sweep::Sweep(void)
   : _variable(""),
     _min_step(1e-3),
-    _max_step(1),
+    _max_step(10),
     _plot_data(false)
 {
   has_solution_vector(false);
