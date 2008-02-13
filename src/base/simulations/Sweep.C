@@ -529,9 +529,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
       }
       catch (...)
       {
-        cerr << "failed  (last = " << _last << ")\n";
         step = (value - _last) / 2.0;
-        cerr << "new step = " << step << endl;
         if (abs(step) < _min_step)
           throw SolveFailedException("Sweep: step size small.");
 
