@@ -309,9 +309,25 @@ $Models
    In \char`\"{}\textbf{Models}\char`\"{} section, one or more  model-blocks must be present: each model-block must be preceded by the keyword \char`\"{}\textbf{model}\char`\"{}, followed by the (single-word) model name. 
  This must be the   name of  one of the  \TiberCAD  simulation models.
  
-Here are the simulation models implemented until now:  \textbf{driftdiffusion}, \textbf{thermal}  ,  \textbf{excitontransport},  \textbf{macrostrain},
-\textbf{efaschroedinger}, \textbf{opticskp},  \textbf{opticalspectrum}.
-   Each model-block can  contain some  optional blocks, to be written in the  following order:
+Here are the simulation models implemented until now: 
+
+ \begin{itemize}
+\item 
+\textbf{driftdiffusion}: Poisson-driftdiffusion transport  of  electrons  and  holes
+\item \textbf{thermal}:  Heat balance simulation
+ \item \textbf{excitontransport}: Exciton transport  model
+\item \textbf{macrostrain}: Calculation of Elastic  deformations in  heterostructures
+\item \textbf{efaschroedinger}: Envelop Function Approximation (EFA) solution of single-particle Schr\"odinger equation for electrons and holes
+\item \textbf{quantumdensity}: Calculation of  quantum density of electrons  and  holes.
+\item \textbf{quantumdispersion}: Dispersion of  quantized states in  \textbf{k} space 
+\item  \textbf{opticskp}: Optical properties (optical kp matrix elements)
+\item  \textbf{opticalspectrum}: Emission spectrum (with \textbf{k}-space integration)
+\end{itemize}
+For a  complete description of  these  simulation models,  see  the  next  chapters.
+
+
+
+Each model-block can  contain some  optional blocks, to be written in the  following order:
    
  %  one or more optional Boundary Condition regions blocks (\textbf{BC\_\-regions}-block).
    
