@@ -428,10 +428,10 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
   for (unsigned int i = 0; i < n; i++)
   {
     double goal = values[i];
-    double goal_sign = (goal < 0.0) ? -1 : 1;
 
     _last = Variable::get_variable_value(_variable);
     double step = goal - _last;
+    double step_sign = (step < 0.0) ? -1 : 1;
     double old_step = 0.0;
 
 
@@ -445,11 +445,10 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     {
       // check for step > max_step
       double absstep = abs(step);
-      double sign = step < 0.0 ? -1 : 1;
-      step = (absstep > _max_step) ? _max_step * sign : step;
+      step = (absstep > _max_step) ? _max_step * step_sign : step;
 
       value = _last + step;
-      double diff = goal_sign * (goal - value);
+      double diff = step_sign * (goal - value);
       if (diff < 0.0)
         value = goal;
       
@@ -530,7 +529,9 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
       }
       catch (...)
       {
+        cerr << "failed  (last = " << _last << ")\n";
         step = (value - _last) / 2.0;
+        cerr << "new step = " << step << endl;
         if (abs(step) < _min_step)
           throw SolveFailedException("Sweep: step size small.");
 
@@ -547,7 +548,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
         value = _last;
       }
     }
-    while (goal_sign * (value - goal) < -eps);
+    while (step_sign * (value - goal) < -eps);
 
 
     if (i == 0)
