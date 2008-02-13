@@ -7,6 +7,7 @@ make_windows_package () {
   mkdir -m 0755 ${files}
   mkdir -p ${files}/doc
   mkdir -p ${files}/examples
+  mkdir -p ${files}/materials
 
   # copy all files
   cp ${topdir}/bin/tibercad ${files}
@@ -16,6 +17,8 @@ make_windows_package () {
   if test -e ${topdir}/manual/tiber_manual.pdf ; then
     cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
   fi
+  cp -r ${topdir}/Tutorials/* ${files}/examples
+  cp ${topdir}/examples/materials/* ${files}/materials
 
   # copy cygwin system libraries
   test ! -x /usr/bin/cygcheck.exe && exit 1
