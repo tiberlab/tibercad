@@ -59,10 +59,12 @@ TemperatureInterface::get_temperature(const Elem* elem,
   else
   {
     std::vector<std::map<ID, double> > temp;
-    _simulation->get_solution(elem, _id_set, temp);
-
-    for (int i = 0; i < nn; i++)
-      temperatures[i] = temp[i][_id];
+    if (_simulation->get_solution(elem, _id_set, temp))
+      for (int i = 0; i < nn; i++)
+        temperatures[i] = temp[i][_id];
+    else
+      for (int i = 0; i < nn; i++)
+        temperatures[i] = SimulationOptions::temperature;
   }
 }
 
@@ -85,10 +87,12 @@ TemperatureInterface::get_temperature(const Elem* elem,
   else
   {
     std::vector<std::map<ID, double> > temp;
-    _simulation->get_solution(elem, p, _id_set, temp);
-
-    for (int i = 0; i < nn; i++)
-      temperatures[i] = temp[i][_id];
+    if (_simulation->get_solution(elem, p, _id_set, temp))
+      for (int i = 0; i < nn; i++)
+        temperatures[i] = temp[i][_id];
+    else
+      for (int i = 0; i < nn; i++)
+        temperatures[i] = SimulationOptions::temperature;
   }
 }
 
