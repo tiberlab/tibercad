@@ -120,20 +120,24 @@ $Solver
   selfconsistent
   {
      flavour = relaxation
+     relaxation_factor = 0.05
      simulations = (dd, tt)
-     abs_tolerance = 1e-5
+     abs_tolerance = 1e-3
+     rel_tolerance = 1e-6
+     monitor = true
   }
 
   driftdiffusion
   {
 
-    ksp_type = gmres
+    nonlinear_solver = tiber
+    #ksp_type = gmres
     #nonlin_abs_tol = 1e-8
     #lin_rel_tol = 1e-8
-    nonlin_step_tol = 1e-6
+    nonlin_step_tol = 1e-3
     nonlin_max = 30
     current_integration_method = rstf
-    local_scaling = false
+    #local_scaling = false
     
   }
 
