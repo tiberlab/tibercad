@@ -2848,11 +2848,13 @@ void EnvelopFunctionApprox::calculate_convergent_density( )
       double total_density1 = get_integrated_probability();
       
       
-    
-      if ( abs(total_density1 - total_density)/total_density < opt.relative_density_tolerance )  
+      if (total_density1 < 1e-14)
+      { 
+        converged = true;
+      }
+      else if ( abs(total_density1 - total_density)/total_density < opt.relative_density_tolerance )  
       {
-
-	converged = true;
+        converged = true;
       }
 
       total_density = total_density1;
