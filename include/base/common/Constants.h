@@ -62,12 +62,23 @@ namespace Constants
   extern const double Lorenz_Number;
 
 
+  //!Speed of light [m/s]
+  extern const double c;
+
+
   //!Atomic unit of time [second] \f$ \hbar / Ha \f$
   extern const double atomic_time;
 
 
-  //!Fine structure constant. In Gauss units: \f$ e^2/(\hbar c)  \f$
+  //!Fine structure constant. In Gauss units: \f$ e^2/(\hbar c)  \f$ In SI units: \f$  e^2/(\hbar c 4 \pi \varepsilon_0)  \f$
   extern const double fine_structure_constant;
+
+  //!Unit of polarization 1e-5 * c
+  extern const double polarization_gauss_unit;
+ 
+  //!Unit of field 1e6/c
+  extern const double field_gauss_unit;
+
 }
 
 

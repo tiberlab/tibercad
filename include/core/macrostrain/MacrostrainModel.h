@@ -7,6 +7,8 @@
 #include "Piezoelectricity.h"
 #include "RotatedCrystal.h"
 #include "MacrostrainModelInterface.h"
+#include "tensor.h"
+#include "elem.h"
 
 //!Class that contains all the objects, necessary for Macrostrain solver
 
@@ -36,6 +38,8 @@ class MacrostrainModel: public MacrostrainModelInterface
 
   inline Piezoelectricity* get_piezo(void);
 
+  //!  calculates \f$ \sigma_{jk} = d_{i,jk}E_i \f$
+  void get_converse_piezo_stress(Tensor2Sym& eps, const Elem* element);
 
  
 
@@ -48,11 +52,19 @@ class MacrostrainModel: public MacrostrainModelInterface
   Piezoelectricity* piezo;
 
 
- 
+  //! A pointer to the Poissons solver
+  SimulationInterface* poisson;
   
   //!copy constructor should not be used
   MacrostrainModel (const MacrostrainModel &  t) {};
- 
+
+  //! set of ID's of the electric field components
+  std::set< ID > Poisson_variables_ID;
+
+  //!  ID's of the electric field components
+  ID id_Ex; 
+  ID id_Ey;
+  ID id_Ez;
 
  protected:
 

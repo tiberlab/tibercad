@@ -58,20 +58,26 @@ void WzStiffness::read_database ( )
 //----------------------------------------------//
 void WzStiffness::do_init(void)
 {
-   ModelOptions & options = get_options ();
-   double c11 = options.get_option ("C11", C_cr(1,1,1,1));
-   double c12 = options.get_option ("C12", C_cr(2,2,1,1));
-   double c13 = options.get_option ("C13", C_cr(3,3,1,1));
-   double c33 = options.get_option ("C33", C_cr(3,3,3,3));
-   double c44 = options.get_option ("C44", C_cr(3,2,3,2));
+  
+  
 
-   set_moduli(c11,  c12,  c13,  c33,  c44);
+  ModelOptions & options = get_options ();
+  double c11 = options.get_option ("C11", C_cr(1,1,1,1));
+  double c12 = options.get_option ("C12", C_cr(2,2,1,1));
+  double c13 = options.get_option ("C13", C_cr(3,3,1,1));
+  double c33 = options.get_option ("C33", C_cr(3,3,3,3));
+  double c44 = options.get_option ("C44", C_cr(3,2,3,2));
 
-   Material*   mat = get_material();
+  set_moduli(c11,  c12,  c13,  c33,  c44);
 
-   const RotatedCrystal&   cr = mat->get_rotated_crystal ();
+  Material*   mat = get_material();
 
-   rotate_to_calc_system(cr.RotMatrix);
+  const RotatedCrystal&   cr = mat->get_rotated_crystal ();
+
+  rotate_to_calc_system(cr.RotMatrix);
+
+
+   
 
 }
 

@@ -56,6 +56,8 @@ void ZbStiffness::read_database ( )
 //-----------------------------------------------//
 void ZbStiffness::do_init ( )
 {
+  
+
   ModelOptions & options = get_options ();
   
   double c12 = options.get_option ("C12", C_cr(2,2,1,1)); 
@@ -63,7 +65,6 @@ void ZbStiffness::do_init ( )
   double c44 = options.get_option ("C44", C_cr(3,2,3,2));
 
   set_moduli( c11, c12,  c44);
-
 
   Material*   mat = get_material();
 

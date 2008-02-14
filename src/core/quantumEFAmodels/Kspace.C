@@ -31,69 +31,72 @@ void Kspace::build_k_grid()
 {
 
 
-  //build mesh
-  kmesh = new Mesh(k_dim);
-
-
-
-  ElemType type;
-  if (integration_order == SECOND)
+  if (k_dim > 0)
   {
 
-    if (k_dim == 1)
+    //build mesh
+    kmesh = new Mesh(k_dim);
+
+
+
+    ElemType type;
+    if (integration_order == SECOND)
     {
-      type = EDGE3;
-    }
+
+      if (k_dim == 1)
+      {
+	type = EDGE3;
+      }
     
-    if (k_dim == 2)
-    {
-      type = QUAD8;
+      if (k_dim == 2)
+      {
+	type = QUAD8;
    
-    }
+      }
     
-    if (k_dim == 3)
-    {
-      type = HEX27;
+      if (k_dim == 3)
+      {
+	type = HEX27;
+      }
     }
-  }
-  else 
-  {
-    if (k_dim == 1)
+    else 
     {
-      type = EDGE2;
-    }
+      if (k_dim == 1)
+      {
+	type = EDGE2;
+      }
     
-    if (k_dim == 2)
-    {
-      type = QUAD4;
+      if (k_dim == 2)
+      {
+	type = QUAD4;
    
-    }
+      }
     
-    if (k_dim == 3)
-    {
-      type = HEX8;
+      if (k_dim == 3)
+      {
+	type = HEX8;
+      }
+
+
     }
 
-
-  }
-
-  MeshTools::Generation::build_cube (*kmesh, 
-				     num_nodes[0], num_nodes[1], num_nodes[2], 
-				     kmin[0], kmax[0], 
-				     kmin[1], kmax[1], 
+    MeshTools::Generation::build_cube (*kmesh, 
+				       num_nodes[0], num_nodes[1], num_nodes[2], 
+				       kmin[0], kmax[0], 
+				       kmin[1], kmax[1], 
 				     kmin[2], kmax[2],
 				     type);
 
 
 
  
-  rotate_mesh(kmesh, transform_matrix);
-
- 
-  kmesh->print_info();
-
- 
+    rotate_mesh(kmesh, transform_matrix);
   
+ 
+    kmesh->print_info();
+
+ 
+  }
 
 }
 //---------------------------------------------------------------------------//
@@ -298,20 +301,24 @@ void Kspace::do_init()
   if (! mod_opt.find_option("k_space_dimension") ) 
     throw  InitFailedException("Kspace: k_space_dimension must be defined");
   
-  k_dim = mod_opt.get_option("k_space_dimension",1);
-
-
-  
-  mod_opt.get_option("number_of_nodes",num_nodes);
-
+  k_dim = mod_opt.get_option("k_space_dimension",0);
+ 
   bool k_basis =  mod_opt.get_option("k-space_basis",true);
+  
 
-  if ( num_nodes.size() != k_dim ) 
+  if (k_dim > 0)
   {
-    ostringstream temp; temp << setw(4) << k_dim; 
-    throw  InitFailedException("Kspace: number_of_nodes should contain " + temp.str() + " elements");
-  }
+  
+    mod_opt.get_option("number_of_nodes",num_nodes);
 
+   
+
+    if ( num_nodes.size() != k_dim ) 
+    {
+      ostringstream temp; temp << setw(4) << k_dim; 
+      throw  InitFailedException("Kspace: number_of_nodes should contain " + temp.str() + " elements");
+    }
+  }
 
   {
     string wedge_type = mod_opt.get_option("wedge", "all");
@@ -561,9 +568,13 @@ void Kspace::do_init()
 
 
   } 
+  else if (k_dim == 0)
+  {
+    //do nothing
+  } 
   else
   {
-     throw  InitFailedException("Kspace: k_space_dimension should be or 1 or 2 or 3");
+     throw  InitFailedException("Kspace: k_space_dimension should be or 0 or  1 or 2 or 3");
   }
 
 

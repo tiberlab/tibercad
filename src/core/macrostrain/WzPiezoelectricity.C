@@ -160,7 +160,7 @@ void  WzPiezoelectricity::calculate_product_by_vector(const Tensor1& f, Tensor2S
 {
   r = 0;
   r(3,1) = f(1) * e15;
-  r(2,1) = f(2) * e15;
+  r(3,2) = f(2) * e15;
   r(1,1) = f(3) * e31;
   r(2,2) = f(3) * e31;
   r(3,3) = f(3) * e33;

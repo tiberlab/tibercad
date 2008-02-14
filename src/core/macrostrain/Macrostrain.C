@@ -874,11 +874,14 @@ void Macrostrain::do_assemble(EquationSystems& es,
   
 
   Tensor1 vec1;
-  Tensor1 vec2;
+  Tensor1 vec2, vec3;
 
   Tensor2Sym eps_var;
 
   Tensor2Sym eps_const;
+
+  Tensor2Sym stress_converse_piezo;
+
 
   Tensor2Sym C_kl;
 
@@ -941,19 +944,22 @@ void Macrostrain::do_assemble(EquationSystems& es,
       + eps0_of_elem[el_number] ;//+ substrate_shear;
     
 
-
+    macrostrain_model->get_converse_piezo_stress(stress_converse_piezo, elem);
 
 
     double lat_const[3];
     crystal_el->get_lat_const(lat_const);
      
-    //----------------------------------------------------------//
-    //master equation:                                          //
-    //                                                          //
-    //     d/dx_i  ( C_ijkl (du_k/dx_l + eps0_kl)) =0           //
-    //                                                          //
-    //                                                          //
-    //----------------------------------------------------------//
+    //-------------------------------------------------------------//
+    //master equation:                                             //
+    // without converse piezo effect                               //
+    //     d/dx_i  ( C_ijkl (du_k/dx_l + eps0_kl)) = 0  
+    // 
+    // with converse piezo effect  
+    //     d/dx_i  ( C_ijkl (du_k/dx_l + eps0_kl) + d_k,ij Ek) =   0
+    //                                                             //
+    //                                                             //
+    //-------------------------------------------------------------//
     
     for (unsigned int j = 0; j<=2; j++)
     {//loop over j: master equation discretization
@@ -974,6 +980,15 @@ void Macrostrain::do_assemble(EquationSystems& es,
       //  | C_ijkl eps0_kl df/dx_i dV
       //  /
       //
+
+      //!first we calculate volume part
+      //  /
+      //  | (C_ijkl eps0_kl + d_k,ij Ek) df/dx_i dV
+      //  /
+      //
+      
+
+
       for (unsigned int p1=0; p1<n_u_dofs; p1++)
       {//nodes loop
 	if (!belongs_to_substrate(p1, elem))
@@ -987,16 +1002,23 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	    for (unsigned int k = 0; k <= 2; k++)
 	    {
 	      vec2 = 0;
+	      vec3 = 0;
 	      for (int i = 1; i <=3; i++ ) 
 	      {	     	
 		if (k+1 > i)
+		{
 		  vec2(i) = eps_const(k+1,i);
+		  vec3(i) = stress_converse_piezo(k+1,i);
+		}
 		else
+		{
 		  vec2(i) = eps_const(i,k+1);
+		  vec3(i) = stress_converse_piezo(i,k+1); 
+		}
 	      }
 	      
 	      
-	      Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)* vec2 )) ;
+	      Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)* vec2 + vec3 ) ) ;
 	    } 
 	  }
 	       

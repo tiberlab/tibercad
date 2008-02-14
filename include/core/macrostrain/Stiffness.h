@@ -6,6 +6,8 @@
 #include <cmath>
 #include "PhysicalModelInterface.h"
 #include "PhysicalModel.h"
+#include "SimulationInterface.h"
+
 
 //! A class that containes Young modules for the elasticity problem
 
@@ -37,6 +39,7 @@ class Stiffness : public PhysicalModelInterface
  private:
 
  
+ 
  protected:
 
   //! stiffness tensor in crystal system     (rank 4, double symmetric, 21 independent components) [GPa]
@@ -46,7 +49,7 @@ class Stiffness : public PhysicalModelInterface
   virtual void read_database ( ) {};
 
 
-  virtual void do_init(void) = 0;
+  virtual void do_init(void)=0;
 
 
   virtual void copy_from (const PhysicalModelInterface *rhs);
@@ -56,6 +59,8 @@ class Stiffness : public PhysicalModelInterface
 
 
   virtual PhysicalModelInterface* create_new(void) const = 0;
+
+ 
 
 
 };

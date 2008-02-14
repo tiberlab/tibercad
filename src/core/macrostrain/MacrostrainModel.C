@@ -6,7 +6,7 @@ MacrostrainModel::MacrostrainModel() : MacrostrainModelInterface()
 
   piezo     = NULL;
 
-  
+  poisson = NULL;
 
 }
 
@@ -50,22 +50,43 @@ void MacrostrainModel::do_init()
   piezo->init();
 
 
+  std::string poisson_name = opt.get_option("poisson_equation" , "no_poisson" );
+
+
+  if (poisson_name != "no_poisson")
+  {
+    poisson =  SimulationInterface::find_simulation( poisson_name ) ;
+    if (poisson == NULL)
+      throw InitFailedException("MacrostrainModel: Unknown poisson model" + poisson_name);
+
+    
+
+    id_Ex = poisson->get_variable_id("Ex"); 
+    Poisson_variables_ID.insert(id_Ex);
+    
+    id_Ey = poisson->get_variable_id("Ey"); 
+    Poisson_variables_ID.insert(id_Ey);
+    
+    id_Ez = poisson->get_variable_id("Ez"); 
+    Poisson_variables_ID.insert(id_Ez);
+
+  
+    
+
+  }
+
+
+
 }
 
 
 //================================================================//
 void MacrostrainModel::copy_from(const PhysicalModelInterface *rhs)
 {
- /*
-  // copy is not necessary as they are created in do_init()
+ 
+  // copy is not necessary as everything is created in do_init()
   
-  //const  MacrostrainModel*   temp = dynamic_cast<const MacrostrainModel* >  (rhs);
-  
-  //stiffness = dynamic_cast<Stiffness* >( (temp->stiffness)->copy() );
-
-  //piezo =  dynamic_cast<Piezoelectricity* >(  (temp->piezo)->copy() );
-  */
-
+ 
 }
 
 //==========================================================================//
@@ -113,3 +134,51 @@ void MacrostrainModel::add_piezo(Piezoelectricity* pz)
 
 
 //============================================================================//
+void MacrostrainModel::get_converse_piezo_stress(Tensor2Sym& sigma, const Elem* element)
+{
+
+  //crystal system
+  sigma = 0;
+
+  if (poisson != NULL)
+  {
+
+    Point q_point = element->centroid();
+    std::vector<Point> q_point_vec(1, q_point); 
+    const std::set< ID > ids;
+   
+    std::vector< std::map< ID, double > >  field_components;
+
+    bool got_solution = poisson->get_solution (element, q_point_vec, Poisson_variables_ID, field_components);
+
+   
+
+    if (got_solution)
+    {
+      Tensor1 field;
+      
+
+      field(1) = field_components[0][id_Ex];
+      field(2) = field_components[0][id_Ey];
+      field(3) = field_components[0][id_Ez];
+
+
+      Material*   mat = get_material();
+
+      const RotatedCrystal&   cr = mat->get_rotated_crystal ();
+
+      field = cr.RotMatrix.transpose() * field; //convert to crystal system
+
+      piezo->calculate_product_by_vector(field, sigma);//calculate in the crystal system
+
+      sigma =  sym( cr.RotMatrix * sigma  * cr.RotMatrix.transpose()); //convert to calculation system
+
+
+      std::cerr << std::setw(12) << sigma  <<"\n";
+
+    }
+  }
+
+}
+
+

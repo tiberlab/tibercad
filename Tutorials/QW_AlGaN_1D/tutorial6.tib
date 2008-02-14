@@ -246,14 +246,7 @@ $Solver
 
 
 
-  quantumdispersion
-  {
-    log_output = true
-    
-   
-   
-  }
-  
+
 
 
   dispersion1D_el

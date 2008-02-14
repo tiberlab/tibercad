@@ -6,6 +6,7 @@ void Stiffness::copy_from (const PhysicalModelInterface *rhs)
 {
 
   const Stiffness* mod = dynamic_cast<const Stiffness*>(rhs);
+
   C_cr = mod->C_cr;
 
   
@@ -19,13 +20,9 @@ void Stiffness:: calculate_VCA (const PhysicalModelInterface *comp_A, const Phys
   const Stiffness* modA = dynamic_cast<const Stiffness*>(comp_A);
 
   const Stiffness* modB = dynamic_cast<const Stiffness*>(comp_B);
-
-
   
   alloy(C_cr,  modA->C_cr, modB->C_cr, xa);
  
-  
-
   Material*   mat = get_material();
 
   const RotatedCrystal&   cr = mat->get_rotated_crystal ();
@@ -34,17 +31,16 @@ void Stiffness:: calculate_VCA (const PhysicalModelInterface *comp_A, const Phys
   
 
 }
-
-
-
-
-
+//--------------------------------------------------------------------//
 
 //--------------------------------------------------------------------//
 
 Stiffness::Stiffness() : PhysicalModelInterface( )
 {
   C_cr = 0;
+
+
+
 }
  
 //--------------------------------------------------------------------//

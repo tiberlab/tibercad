@@ -383,7 +383,7 @@ void QuantumDensity:: do_solve()
 
  
   {
-
+    
     if (_solution_vector.get() == NULL)
     {    
       _solution_vector = NumericVector<double>::build();
@@ -663,6 +663,25 @@ void QuantumDensity::estimate_analitic_density(void)
      
 
    }
+  else if (k_dim == 0)
+  {
+    MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+
+    const std::map< const Elem*,double > & state_density =  quantum_model->get_density(); 
+
+    for (; el != end_el ; ++el)
+    {
+      const Elem* elem = *el;
+
+      const std::map< const Elem*,double >::const_iterator it =  state_density.find(elem);
+      if (it != state_density.end())
+	real_space_density[elem] += it->second * opt.degeneracy;
+	  
+	    
+    }
+
+  }
 
 
 }

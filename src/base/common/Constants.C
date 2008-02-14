@@ -59,9 +59,18 @@ Constants::Hartree = (hbar * hbar) /
 const double
 Constants::Lorenz_Number = (4.0 * k_Boltzmann *  k_Boltzmann ) / (M_PI);
 
+const double
+Constants::c = 299792458; 
+
 
 const double
 Constants::atomic_time = plancks_constant/Hartree;
 
 const double
-Constants::fine_structure_constant = 1.0/137.0359895;
+Constants::fine_structure_constant = (elementary_charge * elementary_charge) /( plancks_constant/(2.0*M_PI) * c * 4.0 * M_PI * epsilon ); 
+
+const double
+Constants::polarization_gauss_unit = 1e-5 * c * 1e2; 
+
+const double
+Constants::field_gauss_unit = 1e6 /(c * 1e2);

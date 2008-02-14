@@ -6,7 +6,7 @@
 #include "Boundary.h"
 #include "TiberMath.h"
 #include <gnuplot_io.h>
-
+#include "SimulationOptions.h"
 
 #include "EigenSolver.h"
  
@@ -581,7 +581,7 @@ void EnvelopFunctionApprox::parse_options()
   }
  
   //default value for temperature
-  opt.Temperature = mod_opt.get_option("Temperature", 300.0);
+  opt.Temperature = mod_opt.get_option("Temperature", SimulationOptions::temperature);
     
  
   
