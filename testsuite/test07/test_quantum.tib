@@ -1,0 +1,341 @@
+$Device
+{
+
+  Region well
+  {
+    reg_numb = 1
+    mat = GaAs
+
+    doping = 1e15
+    doping_type = donor
+    doping_level = 0.025
+
+  }
+
+  Region  buffer
+  {
+    reg_numb = (2, 4)
+    mat = AlGaAs
+    x = 0.3
+
+     doping = 1e17
+    doping_type = donor
+    doping_level = 0.025
+    
+   
+  }
+  
+  
+
+  Region  buffer
+  {
+    reg_numb = (3, 5)
+    mat = AlGaAs
+    x = 0.3
+
+    doping = 1e17
+    doping_type = donor
+    doping_level = 0.025
+   
+  }
+
+
+  
+
+}
+
+$Models
+{
+
+  model macrostrain
+  {
+
+    options
+    {          
+      simulation_name = str
+
+      physical_regions = all
+    }
+
+  
+  
+    
+    BC_Regions  
+    {
+      BC_Region substrate
+      {
+	BC_reg_numb = 1
+	type = substrate
+	material = GaAs
+      }
+    }
+
+  } 
+
+
+  model  driftdiffusion
+  { 
+
+    options
+    {          
+      simulation_name = dd
+      
+      physical_regions = all
+    }
+
+    physical_model recombination
+    { 
+      model = srh
+    }                
+
+    
+  
+     
+
+    physical_model electron_mobility
+    { 
+      model = doping_dependent
+    }                
+
+
+    physical_model hole_mobility
+    { 
+      model = doping_dependent
+    }                
+
+
+    BC_Regions  
+    {
+
+      BC_Region cathode
+      {
+        BC_reg_numb = 1
+	#zero_grad_fermi_e = true
+        type = ohmic
+      
+      }
+
+
+      BC_Region anode
+      {
+	BC_reg_numb = 2
+	#zero_grad_fermi_e = true
+	type = ohmic
+	voltage = @Vb[0.0]  
+      }
+ 
+    }   
+
+  }
+
+
+ 
+
+
+  model efaschroedinger
+
+  {
+
+   
+    options
+    {
+     simulation_name = quantum_el
+     physical_regions = (1, 4, 5)
+    }
+
+
+  }
+
+
+  model efaschroedinger
+
+  {
+
+   
+    options
+    {
+     simulation_name = quantum_hl
+     physical_regions = all
+    }
+
+  
+  }
+  
+
+  model quantumdensity
+  {
+
+  
+    options 
+    {
+      simulation_name = dens_el
+      physical_regions = (1,4,5)
+    }
+
+
+  }
+
+  
+
+
+
+}
+
+$Solver
+{
+
+ macrostrain
+  {
+    substrate = substrate
+    reference_material_point = (5.0, 0.0, 0.0)
+    fixed_point1 = (7.0, 0.0, 0.0)
+   # intermediate_output = true
+  }
+
+ 
+  driftdiffusion
+  {
+    coupling = poisson
+    nonlin_max_it = 70
+    nonlin_rel_tol = 1e-10
+    nonlin_abs_tol = 1e-10
+    nonlin_step_tol = 1e-9
+    ls_max_step = 4
+    #ls_type = none
+    discretization = fem
+    integration_order = 2
+    #pc_type = composite
+    ksp_type = bcgs
+    #quasi_equilibrium = (cathode, anode)
+
+    #current_integration_method = surfint
+  }
+
+
+
+  quantum_el
+  {
+    Dirichlet_bc_everywhere = false
+    particle = el
+    number_of_eigenstates = 22
+    poisson_model_name = dd
+    strain_model_name = macrostrain
+    convergent_density = true
+    #log_output = true
+    #solve_problem_twice = true
+    solver = lapack
+    #k_vector = (0,   0.00985844,    0.0223584)
+
+  }
+
+  quantum_hl
+  {
+    x-periodicity = false
+    Dirichlet_bc_everywhere = true
+    particle = hl
+    number_of_eigenstates = 10
+    poisson_model_name = dd
+    strain_model_name = macrostrain
+    convergent_density = true
+    solver = arnoldi
+    log_output = false
+  }
+
+
+  sweep
+  {
+    variable = Vb
+    start = 0.0
+    stop =  0.3  #3.5 # 1.0
+    steps = 10  # 70 # 20
+    plotvariable = current
+  }
+
+
+
+  dens_el
+  {
+    k_space_dimension = 2
+    k-space_basis = true
+    k1 = (0, 0, 0.1)
+    k2 = (0, 0.1, 0)
+    
+
+    number_of_nodes = (4,4)
+    wedge = quarter
+
+    quantum_simulation = quantum_el
+
+    degeneracy = 2
+    refine_fraction = 0.20
+    relative_accuracy = 0.01
+    refine_k_space = true
+    output_density_in_k_space = true
+    uniform_refinement = false
+    mesh_order = FIRST
+
+    initial_eigenstates_number = 20
+    analitic = true
+  }
+
+
+  selfconsistent
+  {
+    flavour = broyden
+    #flavour = relaxation
+    simulations = (dd,dens_el)
+    relaxation_factor = 0.1
+    history_length = 5
+    omega_0 = 0.5
+    max_iterations = 100
+    abs_tolerance = 5e-4
+    rel_tolerance = 1e-2
+  }
+
+}
+
+
+$Physics
+{
+
+  driftdiffusion
+  {
+    electron_quantum_density = dens_el
+    statistics = FD
+  }
+
+  quantum_el 
+  {
+    model = conduction_band    
+  }
+
+
+  quantum_hl
+  {
+    particle = hl
+    model = kp   #  k.p  for  valence  band
+    kp_model = 6x6
+  }
+  
+  dens_el
+  {
+    
+  
+    Temperature = 300
+  }
+
+
+}
+
+$Simulation
+{
+  #searchpath = ../materials 
+  meshfile = quantum_well.msh
+  mesh_units = 1e-9
+  dimension = 1
+  temperature = 300
+  solve = (str, selfconsistent)
+  resultpath = output
+  output_format = grace
+  plot = (strain, polarization, Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, Current, EigenFunctions, EigenEnergy, EnergyLevels,quantum_density)
+}
