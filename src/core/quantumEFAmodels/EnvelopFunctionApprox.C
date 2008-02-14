@@ -47,7 +47,8 @@ inline double EnvelopFunctionApprox::get_band_edge( const Elem* elem) const
   vector<Point> qp(1, elem->centroid());
   
 
-  poisson_equation->get_solution (elem, qp, band_edge_ID, values);
+  if (!poisson_equation->get_solution(elem, qp, band_edge_ID, values))
+    throw ModelErrorException("efaschroedinger needs solved Poisson equation");
   
   return ( values[0] );
 }

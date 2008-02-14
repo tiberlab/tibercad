@@ -11,8 +11,6 @@ QuantumDensity::QuantumDensity()
 {
   quantum_model = NULL;
 
-  
- 
  
 }
 
@@ -290,6 +288,9 @@ void QuantumDensity::do_init( )
     throw  InitFailedException("QuantumDensity: quantum_simulation  has to be specified");
   }
 
+  // create it here to not have a NULL pointer
+  _solution_vector = NumericVector<double>::build();
+  _solution_vector->init(0);
  
   //--------------------------------------------------------------------------------------------//
 

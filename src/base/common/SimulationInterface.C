@@ -998,7 +998,7 @@ SimulationInterface::get_solution(const Elem* elem, ID id, vector<double>& value
   
   bool flag = get_solution(elem, ids, vals);
 
-  if (vals[0].size() != 0)
+  if (flag && (vals[0].size() != 0))
   {
     int n = vals.size();
     values.resize(n);
@@ -1025,7 +1025,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
   
   bool flag = get_solution(elem, p, ids, vals);
 
-  if (vals[0].size() != 0)
+  if (flag && (vals[0].size() != 0))
   {
     int n = vals.size();
     values.resize(n);

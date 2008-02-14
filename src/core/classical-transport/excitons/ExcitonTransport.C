@@ -903,15 +903,15 @@ ExcitonTransport::build_elemental_results(const set<string>& variables,
     switch (dim)
     {
       case 3:
-        legend[J + 2] = "Jx_z[cm^2*s^-1]";
+        legend[J + 2] = "Jx_z";
         n_vars++;
       case 2:
-        legend[J + 1] = "Jx_y[cm^2*s^-1]";
+        legend[J + 1] = "Jx_y";
         n_vars++;
-        legend[J + dim] = "|J|[cm^2*s^-1]";
+        legend[J + dim] = "|J|";
         n_vars++;
       default:
-        legend[J] = "Jx_x[cm^-2*s^-1)]";
+        legend[J] = "Jx_x";
         n_vars++;
     }
   }
@@ -995,7 +995,8 @@ ExcitonTransport::build_elemental_results(const set<string>& variables,
     excitonmodel->calculate_density();
 
 
-    double sigma = excitonmodel->get_density() * excitonmodel->get_mobility();
+    // we put the minus sign here
+    double sigma = -excitonmodel->get_density() * excitonmodel->get_mobility();
 
     unsigned int id = n_vars * elem_number;
 
@@ -1457,17 +1458,17 @@ ExcitonTransport::get_solution_secure(const Elem* elem,
     if (ids.count(J))
     {
       double tmp = grad_x * grad_x + grad_y * grad_y + grad_z * grad_z;
-      values[n][J] = sigma * sqrt(tmp);
+      values[n][J] = -sigma * sqrt(tmp);
     }
 
     if (ids.count(JX))
-      values[n][JX] = sigma * grad_x;
+      values[n][JX] = -sigma * grad_x;
 
     if (ids.count(JY))
-      values[n][JY] = sigma * grad_y;
+      values[n][JY] = -sigma * grad_y;
 
     if (ids.count(JZ))
-      values[n][JZ] = sigma * grad_z;
+      values[n][JZ] = -sigma * grad_z;
 
      if (ids.count(RADPOWER))
        values[n][RADPOWER] =  excitonmodel->get_density()/excitonmodel->get_radiative_recombination_rate() *
@@ -1598,17 +1599,17 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
     if (ids.count(J))
     {
       double tmp = grad_x * grad_x + grad_y * grad_y + grad_z * grad_z;
-      values[n][J] = sigma * sqrt(tmp);
+      values[n][J] = -sigma * sqrt(tmp);
     }
 
     if (ids.count(JX))
-      values[n][JX] = sigma * grad_x;
+      values[n][JX] = -sigma * grad_x;
 
     if (ids.count(JY))
-      values[n][JY] = sigma * grad_y;
+      values[n][JY] = -sigma * grad_y;
 
     if (ids.count(JZ))
-      values[n][JZ] = sigma * grad_z;
+      values[n][JZ] = -sigma * grad_z;
   }
 
 }
