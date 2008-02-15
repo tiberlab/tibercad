@@ -230,6 +230,16 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     double get_maximum_norm_of_difference(ID id);
 
+    /*!
+     * \brief Get the l2 norm of the difference between the
+     * current and a remembered solution.
+     *
+     * Calls do_l2_norm_of_difference()
+     *
+     */
+    double get_l2_norm_of_difference(ID id);
+
+
 
     //! Return true if the system has a solution vector
     bool has_solution_vector(void);
@@ -602,6 +612,23 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * to reimplement this method when a simulation uses some scaling
      */
     virtual double do_maximum_norm_of_difference(ID id);
+    
+
+    //! Build the l2 norm of the solution difference
+    /*!
+     * This method returns the l2 norm \f$\Vert x - x_i\Vert_2\f$
+     * of the difference between the current solution \f$x\f$ and some
+     * remembered solution \f$x_i\f$
+     *
+     * \param id the id of the remembered solution.
+     *
+     * If the remembered solution doesn't exist, return value is zero.
+     *
+     * The default action should be ok in most cases. But it could be useful
+     * to reimplement this method when a simulation uses some scaling
+     */
+    virtual double do_l2_norm_of_difference(ID id);
+
 
 
     //! Scale the current solution
@@ -1093,6 +1120,15 @@ SimulationInterface::delete_remembered_solution(ID id)
 {
   do_delete_remembered_solution(id);
 }
+
+
+inline
+double
+SimulationInterface::get_l2_norm_of_difference(ID id)
+{
+  return do_l2_norm_of_difference(id);
+}
+
 
 
 inline

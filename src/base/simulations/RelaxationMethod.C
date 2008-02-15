@@ -40,15 +40,25 @@ RelaxationMethod::do_solve(void)
     solve_simulations();
 
     double norm = get_last_simulation()->get_maximum_norm_of_difference(old_sol_id);
+    double rel_err = get_last_simulation()->get_l2_norm_of_difference(old_sol_id);
 
     bool converged = true;
 
-    // check for the difference between old and new solutions
-    cerr << "iteration " << it << ": ";
+    if (get_monitor())
+    {
+      cout.flush();
+      cout << "<<<<------------------------------------------------------------\n";
+      cout << get_name() << " (Relaxation): iteration " << it << "\n"
+           << "  correction (max norm):  " << norm << endl 
+           << "  relative error (l2)  :  " << rel_err << endl;
+      cerr << "norm = " << norm << endl;
+      cout << "--------------------------------------------------------------->>>>"
+        << endl;
+    }
 
+    // check for the difference between old and new solutions
     if (norm > get_absolute_tolerance())
       converged = false;
-    cerr << "norm = " << norm << endl;
 
     if (converged)
       break;

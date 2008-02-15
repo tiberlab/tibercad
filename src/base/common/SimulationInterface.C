@@ -660,6 +660,33 @@ SimulationInterface::do_maximum_norm_of_difference(ID id)
 
 
 
+double
+SimulationInterface::do_l2_norm_of_difference(ID id)
+{
+  double norm = 0.0;
+
+  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
+  if (it != end)
+  {
+    NumericVector<double>& old = *(it->second);
+    NumericVector<double>& current = get_solution_vector();
+
+    assert(old.size() == current.size());
+
+    unsigned int n = old.size();
+    for (unsigned int i = 0; i < n; i++)
+    {
+      double d = current(i) - old(i);
+      norm += d * d;
+    }
+  }
+
+  return sqrt(norm);
+}
+
+
+
 
 void
 SimulationInterface::do_scale_solution(double factor)
