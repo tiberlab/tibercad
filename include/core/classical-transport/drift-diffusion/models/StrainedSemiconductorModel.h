@@ -81,8 +81,18 @@ class StrainedSemiconductorModel : public SemiconductorModel
     StrainedSemiconductorModel&
       operator=(const StrainedSemiconductorModel& model);
     
+    //! The model that provides strain
     SimulationInterface* strain_model_;
+
+    //! Do we ignore strain?
     bool ignore_strain_;
+
+    //! Should we always recompute band parameters?
+    /*!
+     * Use this for converse piezoelectric effect
+     */
+    bool _recompute_band_parameters;
+
 
     DataMap element_data_;
 

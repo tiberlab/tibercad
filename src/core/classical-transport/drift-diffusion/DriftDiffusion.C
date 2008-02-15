@@ -209,7 +209,12 @@ PhysicalModel*
 DriftDiffusion::create_physical_model(const ModelOptions& options,
     const Material* mat) const throw (ModelErrorException)
 {
-  const string& modelname = options.get_option("model", "unstrained");
+  string modelname;
+  
+  if (options.find_option("strain_simulation"))
+    modelname = options.get_option("model", "strained");
+  else
+    modelname = options.get_option("model", "unstrained");
 
   DriftDiffusionProperties* model =
     DriftDiffusionProperties::create(modelname, options);
@@ -3791,13 +3796,13 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     sc->reinit(elem);
     
 
-    //Get the thermoelectric power
+    // Get the thermoelectric power
     sc->compute_thermoelectric_powers();
     double eTEpower =  sc->get_electron_thermoelectric_power() / phi0;
     double hTEpower =  sc->get_hole_thermoelectric_power() / phi0;
 
            
-     //Get the temperature given the element
+    // Get the temperature given the element
     vector<double> T_nodes = sc->get_temperature_at_nodes();
    
 

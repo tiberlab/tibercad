@@ -21,7 +21,8 @@ using namespace DriftDiffusionDefs;
 
 StrainedSemiconductorModel::StrainedSemiconductorModel(void)
   : strain_model_(NULL),
-    ignore_strain_(false)
+    ignore_strain_(false),
+    _recompute_band_parameters(false)
 {
 }
 
@@ -37,7 +38,7 @@ StrainedSemiconductorModel::prepare_element_data(void)
 
     const DataMap::const_iterator end = element_data_.end();
     const DataMap::const_iterator it = element_data_.find(elem);
-    if (it == end)
+    if ((it == end) || _recompute_band_parameters)
     {
       // where to put the elemental data
       ElementData& elem_data = element_data_[elem];
@@ -129,7 +130,9 @@ StrainedSemiconductorModel::do_init(void)
   SemiconductorModel::do_init();
 
   
-  string strain_sim = get_options().get_option("strain_simulation", "");
+  string strain_sim = get_parameter("strain_simulation", "");
+  _recompute_band_parameters = get_parameter("recompute_band_parameters",
+      _recompute_band_parameters);
 
   if (strain_sim == "")
     ignore_strain_ = true;
@@ -168,6 +171,8 @@ StrainedSemiconductorModel::do_init(void)
       }
       _strain_ids_set.insert(_strain_ids[i]);
     }
+
+    
   }
 
 }
