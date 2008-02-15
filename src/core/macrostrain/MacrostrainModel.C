@@ -162,19 +162,35 @@ void MacrostrainModel::get_converse_piezo_stress(Tensor2Sym& sigma, const Elem* 
       field(2) = field_components[0][id_Ey];
       field(3) = field_components[0][id_Ez];
 
-
+     
       Material*   mat = get_material();
 
       const RotatedCrystal&   cr = mat->get_rotated_crystal ();
 
-      field = cr.RotMatrix.transpose() * field; //convert to crystal system
+      field = cr.RotMatrix.transpose() * field; //convert to crystal system [V/cm];
 
+      field =  100 * field ; //convert [V/m]
+
+      field = field / Constants::field_gauss_unit; //convert to gauss units
+
+     
       piezo->calculate_product_by_vector(field, sigma);//calculate in the crystal system
+
+      
+      
 
       sigma =  sym( cr.RotMatrix * sigma  * cr.RotMatrix.transpose()); //convert to calculation system
 
+     
 
-      std::cerr << std::setw(12) << sigma  <<"\n";
+      // sigma = sigma / Constants::polarization_gauss_unit; //SI units
+
+      sigma = sigma * Constants::c * 10.0 / 1e4 / 10.0; //SI units 
+
+      //  std::cerr << Constants::polarization_gauss_unit << "\n";
+
+      sigma = sigma * 1e-9; //GPa units
+     
 
     }
   }

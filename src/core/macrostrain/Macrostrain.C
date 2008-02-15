@@ -403,19 +403,39 @@ void Macrostrain::parse_options( )
 
 */
 
+
+
  if (!grown_on_substrate)
  {
    vector<double> point;
+   if ( ! opt.find_option("fixed_point1"))
+   {
+     throw InitFailedException( "Macrostrain: fixed_point1 is not defined");
+   }
+     
 
    opt.get_option("fixed_point1",point);
    for (short i = 0; i < 3; i++)  fixed_point1(i) = point[i];
+   
+
 
    if (dim>1)
    {
+
+     if ( ! opt.find_option("fixed_point2"))
+     {
+       throw InitFailedException( "Macrostrain: fixed_point2 is not defined");
+     }
+
      opt.get_option("fixed_point2",point);
      for (short i = 0; i < 3; i++)  fixed_point2(i) = point[i];
      if (dim>2)
      {
+       if ( ! opt.find_option("fixed_point3"))
+       {
+	 throw InitFailedException( "Macrostrain: fixed_point2 is not defined");
+       }
+
        opt.get_option("fixed_point3",point);
        for (short i = 0; i < 3; i++)  fixed_point3(i) = point[i];
      }
@@ -894,7 +914,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
   unsigned int el_number = 0; 
   
   system.matrix->zero();
-
+  system.rhs->zero();
 
   Stiffness* C_tensor_el;
  
@@ -1017,7 +1037,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 		}
 	      }
 	      
-	      
+	     
 	      Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)* vec2 + vec3 ) ) ;
 	    } 
 	  }
@@ -1208,7 +1228,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	Fe_add_sub.reposition(n_dofs + eq_number,1);
 	
 	  
-	Fe_add_sub(0) -=  JxW[qp] * doubleContraction(C_kl , eps_const ) *lattice_factor  ;
+	Fe_add_sub(0) -=  JxW[qp] * doubleContraction(C_kl , eps_const ) * lattice_factor  ;
 	  
 	//-------------------------------------
 	  
@@ -1246,7 +1266,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	  Ke_add_add_sub.reposition(n_dofs + eq_number,n_dofs + i1,1,1);
 	  eps_var = crystal_el->get_var_eps0( add_var[i1].name );
 	  
-	  Ke_add_add_sub(0,0) += JxW[qp]  * doubleContraction(eps_var,C_kl) *  lattice_factor;
+	  Ke_add_add_sub(0,0) += JxW[qp]  *  doubleContraction(eps_var,C_kl)   *  lattice_factor;
 	  
 	  
 	}
@@ -1426,6 +1446,7 @@ void Macrostrain::do_solve()
 
 {
   
+
   parse_options();
 
 
@@ -1487,6 +1508,7 @@ void Macrostrain::do_solve()
 
   if (intermediate_output)
     {
+      
       if (output_type=="GMV") GMVIO (mesh).write_equation_systems ("displacement_field.dat.000", *equation_systems);
       if (output_type=="tecplot") TecplotIO_cell(mesh,false).write_equation_systems ("displacement_field.dat.000", *equation_systems);
 

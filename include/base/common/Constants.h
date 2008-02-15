@@ -73,10 +73,9 @@ namespace Constants
   //!Fine structure constant. In Gauss units: \f$ e^2/(\hbar c)  \f$ In SI units: \f$  e^2/(\hbar c 4 \pi \varepsilon_0)  \f$
   extern const double fine_structure_constant;
 
-  //!Unit of polarization 1e-5 * c
-  extern const double polarization_gauss_unit;
  
-  //!Unit of field 1e6/c
+ 
+  //!Unit of field c/1e6  (300B/cm)
   extern const double field_gauss_unit;
 
 }
