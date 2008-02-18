@@ -314,7 +314,7 @@ void QuantumDensity::parse_options( )
   opt.intial_eigenstates_number = mod_opt.get_option("initial_eigenstates_number", 6);
 
  
-  opt.analitic = mod_opt.get_option("analitic", true);
+  opt.analitic = mod_opt.get_option("analytic", true);
 
   opt.degeneracy  = mod_opt.get_option("degeneracy",1);
 
