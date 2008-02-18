@@ -630,6 +630,7 @@ void Macrostrain::do_init( )
     FEType fe_type(CONSTANT,MONOMIAL);
     my_system->add_variable("fict", fe_type);
   }
+  
   //---------------------------------------------------------------------------------------//
   
   my_system->attach_assemble_function (assemble_strain_matrix);
@@ -773,7 +774,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
   // const DofMap& dof_map = system.get_dof_map();
   DofMap& dof_map = system.get_dof_map();
  
- 
+  
 
   FEType fe_type = dof_map.variable_type(uvar[0]);
  
@@ -934,8 +935,10 @@ void Macrostrain::do_assemble(EquationSystems& es,
     // current element.  These define where in the global
     // matrix and right-hand-side this element will
     // contribute to.
-    dof_map.dof_indices (elem, dof_indices);   
-    const unsigned int n_dofs   = dof_indices.size(); //in fact, could be  dof_indices.size() - 1, fict is not used 
+    dof_map.dof_indices (elem, dof_indices);
+   
+    dof_map.dof_indices (elem, dof_indices_component, uvar[0]);
+    const unsigned int n_dofs   = dof_indices_component.size() * 3; //in fact, could be  dof_indices.size() - 1, fict is not used 
 
     fe->reinit  (elem);
   
@@ -1228,7 +1231,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	Fe_add_sub.reposition(n_dofs + eq_number,1);
 	
 	  
-	Fe_add_sub(0) -=  JxW[qp] * doubleContraction(C_kl , eps_const ) * lattice_factor  ;
+	Fe_add_sub(0) -=  JxW[qp] * doubleContraction(C_kl +  stress_converse_piezo, eps_const ) * lattice_factor  ;
 	  
 	//-------------------------------------
 	  
@@ -1268,7 +1271,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	  
 	  Ke_add_add_sub(0,0) += JxW[qp]  *  doubleContraction(eps_var,C_kl)   *  lattice_factor;
 	  
-	  
+
 	}
       }
       
@@ -1282,31 +1285,11 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
 
 	  
-
-    if  (number_of_add_var != 0)
-    {
-      
-      if ( el_number >=  number_of_add_var )
-      {
-	dof_map.dof_indices (elem, dof_indices_component, uvar[0]);
-	const unsigned int n_u_dofs = dof_indices_component.size(); 
-	Ke_sub.reposition(3*n_u_dofs,3*n_u_dofs, 1, 1);
-	Ke_sub(0,0) += 1.0;
-      }
-      
-      
-	  
-    }
-
-	  
     // end of superlattice equations
     //--------------------------------------------------------------------------
 
 	  
-	  
-    
-
-    
+   
      
        
     for (unsigned i =0 ; i < n_dofs; i++)
@@ -1334,8 +1317,38 @@ void Macrostrain::do_assemble(EquationSystems& es,
     el_number++;
   }
 
+
+  //-------------------------------------------------------//
+  //diagonal of the unused ficticious variables 
+  if  (number_of_add_var != 0)
+  {
+    el     = mesh.active_elements_begin();
+    el_number = 0;
+    for ( ; el != end_el ; ++el) 
+    { 
+      const Elem* elem = *el;
+
+      dof_map.dof_indices (elem, dof_indices);
+     
+      unsigned int n = dof_indices.size();
+      Ke_total.resize (n,n);
+
+
+      if ( el_number >=  number_of_add_var )
+      {
+	Ke_sub.reposition(n - 1,n - 1, 1, 1);
+	Ke_sub(0,0) += 1.0;
+      }
+
+      system.matrix->add_matrix (Ke_total, dof_indices);
       
-/*
+      el_number++;
+    }
+
+  }
+
+     
+
 {
   system.matrix->close();
   
@@ -1345,7 +1358,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
   system.rhs->print_matlab("rhs.m");
 }
-*/
+
   //-----------------------------------------------------------------------
   //Application of periodicity constraints
 
@@ -1354,7 +1367,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
   //-----------------------------------------------------------------------
   //dof_map.print_dof_constraints(); 	  	
 
-  //  system.matrix->print();
+//   system.matrix->print();
 
    
  
