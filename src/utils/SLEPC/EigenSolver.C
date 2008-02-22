@@ -549,8 +549,12 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
  
   if (ncv > _size_of_matrix) ncv = _size_of_matrix;
  
-
+#if ((SLEPC_VERSION_MAJOR == 2) && (SLEPC_VERSION_MINOR == 3) && \
+    (SLEPC_VERSION_SUBMINOR <= 2))
   if (opt.monitor) EPSSetMonitor(eps, EPSDefaultMonitor, PETSC_NULL);
+#else
+  if (opt.monitor) EPSMonitorSet(eps, EPSMonitorDefault, PETSC_NULL, PETSC_NULL);
+#endif
 
   
 
