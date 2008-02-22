@@ -111,13 +111,13 @@ $Physics
 $Simulation
 {
   searchpath = ../materials
-  meshfile = bulk2D.msh
-  dimension = 2
+  meshfile = bulk1D.msh
+  dimension = 1
   mesh_units = 1e-3
   temperature = 300
   #solve = driftdiffusion
   solve = sweep
-  resultpath = output_2D
+  resultpath = output_1D
   #output_format = grace
   #output_format = gmv
   output_format = vtk
