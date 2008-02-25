@@ -51,14 +51,14 @@ AtomisticGenerator1D::~AtomisticGenerator1D(void){};
         };
 	
 	_local_origin(1) = edge_min; _local_origin(2) = 0.0; _local_origin(3) = 0.0;
-	double l1 = (edge_max - edge_min) * scale; 
+	double l1 = (fabs(edge_max - edge_min)) * scale; 
 
 	//Minimum periodic direction is considered along y and z axis, but eventually other lenghts can be 
 	//specified by user in input (conventional cells along these direction are assured also in this case!!)
 	double l2 = _as->get_options().get_option("y_lenght", 0.0);
 	double l3 = _as->get_options().get_option("z_lenght", 0.0);
    
-	make_supercell( l1, l2, l3, true, true);
+	make_supercell( l1, l2, l3);
 
 	//print_basis(_super_basis, "supercell.xyz");
 	

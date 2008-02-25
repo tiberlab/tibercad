@@ -156,7 +156,7 @@ protected:
   void make_conv_basis();
   
   //! A function to build supercells
-  void make_supercell(double l1, double l2, double l3, bool preserve_basis, bool preserve_conv);
+  void make_supercell(double l1, double l2, double l3, bool preserve_basis = true, bool preserv_conv = true);
 
   //! Virtual function for building up the structure. 
   virtual void build() = 0;

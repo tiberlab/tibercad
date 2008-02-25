@@ -2,6 +2,7 @@
 #include "AtomisticGenerator.h"
 #include "AtomisticGenerator1D.h"
 #include "AtomisticGenerator2D.h"
+#include "AtomisticGenerator3D.h"
 
 
 AtomisticStructure::AtomisticStructure(const std::string& name)
@@ -105,13 +106,13 @@ AtomisticStructure::init(double a1, double a2, double a3)
 
    else std::cerr << "Error in AtomisticStructure: at least a physical region must be defined in input" << std::endl;
 
-  //   for (std::set<std::string>::iterator i= _regionset.begin(); i !=_regionset.end(); i++)
-  //        {std::cerr << "WRITING " << std::endl;
-  //          std::cerr << "_REGION IS " << *i << std::endl;}
+     for (std::set<std::string>::iterator i= _regionset.begin(); i !=_regionset.end(); i++)
+          {std::cerr << "WRITING " << std::endl;
+            std::cerr << "_REGION IS " << *i << std::endl;}
 
-  //     for (std::set<ID>::iterator i= _IDset.begin(); i !=_IDset.end(); i++)
-  //        {std::cerr << "WRITING " << std::endl;
-  //          std::cerr << "_REGION IS " << *i << std::endl;}
+       for (std::set<ID>::iterator i= _IDset.begin(); i !=_IDset.end(); i++)
+          {std::cerr << "WRITING " << std::endl;
+            std::cerr << "_REGION IS " << *i << std::endl;}
 
 
 
@@ -127,9 +128,17 @@ AtomisticStructure::init(double a1, double a2, double a3)
       AtomisticGenerator* generate;
       if ( get_device()->get_mesh().mesh_dimension() == 1 ) generate = dynamic_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, 1 ) );
       if ( get_device()->get_mesh().mesh_dimension() == 2 )  generate = dynamic_cast<AtomisticGenerator2D*> ( AtomisticGenerator::create(this, 2 ) );
+      if ( get_device()->get_mesh().mesh_dimension() == 3 )  generate = dynamic_cast<AtomisticGenerator3D*> ( AtomisticGenerator::create(this, 3 ) );
  
+#ifdef DEBUG
+      std::cerr << "Calling AtomisticGenerator::do_init() in " << get_device()->get_mesh().mesh_dimension() << " dimensions " << std::endl;
+#endif
 
       generate->do_init(a1, a2, a3);
+
+#ifdef DEBUG
+      std::cerr << "Printing structure to file " << std::endl;
+#endif
 
       print_structure("structure.xyz");
       print_structure("structure.gen");
