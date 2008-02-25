@@ -23,8 +23,8 @@ void WzSemiconductor::do_init()
   
   ModelOptions & options = get_options ();
   {
-    par.EgGamma      = options.get_option("Eg_G", par.EgGamma );
-    par.Ev           = options.get_option("E_v", par.Ev );
+    par.EgGamma      = get_parameter("Eg_G", par.EgGamma );
+    par.Ev           = get_parameter("E_v", par.Ev );
     
     par.m_c_zz       = options.get_option("m_c_zz", par.m_c_zz);
     par.m_c_xx       = options.get_option("m_c_xx", par.m_c_xx);
@@ -54,7 +54,7 @@ void WzSemiconductor::do_init()
   }
 
   {
-    bow.EgGamma      = options.get_option("bow_Eg_G",bow.EgGamma );
+    bow.EgGamma      = get_parameter("bow_Eg_G",bow.EgGamma );
     bow.Ev           = options.get_option("bow_E_v", bow.Ev );
     
     bow.m_c_zz       = options.get_option("bow_m_c_zz", bow.m_c_zz);
