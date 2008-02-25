@@ -8,6 +8,7 @@
 #include "DLLoader.h"
 #include "TiberCad.h"
 #include "License.h"
+#include "Utils.h"
 
 
 #include <iostream>
@@ -63,6 +64,9 @@ int main (int argc, char** argv)
     char* root = getenv("TIBERCADROOT");
     if (root != NULL)
       tiberroot = string(root);
+
+    Utils::convert_path(tiberroot);
+
 
     // Set up search path for libraries
     DLLoader::set_library_path(tiberroot + "/lib/tibermodels");
