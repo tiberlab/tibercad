@@ -144,8 +144,8 @@ class HeatModel: public PhysicalModel
        			const ModelOptions& options = ModelOptions());
 
    //! Add a thermal conductivity model
-   void add_thermal_conductivity_model(const std::string& model_name, 
-				       const ModelOptions& options);
+    void add_thermal_conductivity_model(const std::string& model_name, 
+  			       const ModelOptions& options);
 
    //! Clear all heat source models
    void clear_heat_sources(void);
