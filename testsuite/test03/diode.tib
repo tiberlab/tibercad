@@ -38,10 +38,14 @@ $Models
       physical_regions = all
     }
 
-     physical_model Lattice_thermal_conductivity
-     {
-       kappa_model = constant
-     }
+    physical_model heat_source
+    {
+
+      model = drift_diffusion_dissipation
+
+      drift_diffusion_simulation = driftdiffusion 
+
+    }
 
     BC_Regions
     {
@@ -73,14 +77,32 @@ $Models
 
     physical_model recombination
      { 
-       name = non_radiative
        model  =  srh
      }                
     
     physical_model thermoelectric_power
     {	
        model  = diffusivity_model
-    } 	
+    } 
+
+    physical_model electron_mobility
+    {
+
+      model = field_dependent
+
+      low_field_model = doping_dependent   
+
+    }
+
+    physical_model hole_mobility
+    {
+
+      model = field_dependent
+
+      low_field_model = doping_dependent
+
+    }
+  
 
     BC_Regions  
     {
@@ -112,10 +134,6 @@ $Solver
 
 {
 
-  thermal
-  {
-     kappa_temperature_sc = false   
-  }
  
   selfconsistent
   {
@@ -132,13 +150,9 @@ $Solver
   {
 
     nonlinear_solver = tiber
-    #ksp_type = gmres
-    #nonlin_abs_tol = 1e-8
-    #lin_rel_tol = 1e-8
     nonlin_step_tol = 1e-3
     nonlin_max = 30
     current_integration_method = rstf
-    #local_scaling = false
     
   }
 
@@ -166,15 +180,6 @@ $Physics
     thermal_simulation = tt
   }
 
-  thermal
-  {
-    Joule_Effect = true
-    Peltier_Thomson_Effect = false
-    Particle_thermal_conductivity = false
-    current_simulation = dd
-  }
-
-
 
 }
 
@@ -183,14 +188,14 @@ $Physics
 
 $Simulation
 {
-  #searchpath = .
+
   meshfile = diode.msh
   dimension = 1
   temperature = 300
   solve = sweep
   resultpath = output
   output_format = grace
-  plot = (ElPotential,Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current,T)
+  plot = (ElPotential,Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current,Pn,Pp,T,HeatSource)
 }
 
 

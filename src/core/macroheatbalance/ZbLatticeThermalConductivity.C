@@ -6,7 +6,7 @@
 //--------------------------------------------------------//
 void  ZbLatticeThermalConductivity::read_database(void)
 {
-
+ 
   const ModelOptions& options = get_options();
   _kappa_model = options.get_option("kappa_model","constant");
     
@@ -28,7 +28,7 @@ void  ZbLatticeThermalConductivity::read_database(void)
   else
   { 
    _kappa = data("therm_lat_cond", 0.0);
-   //   std::cout<<_kappa<<std::endl;
+  
   }
   
 

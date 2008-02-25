@@ -67,22 +67,12 @@ void MacroHeatBalance::do_init( )
 
   mesh = & (_device->get_mesh());
 
-   dim = mesh->mesh_dimension();
+  dim = mesh->mesh_dimension();
 
-
-   //
-
-   // double mesh_units = _device->get_mesh_units();
-   // opt.work_units = sim_opt.get_option("Work_length_units", 1e-2);
-   // opt.length_scale = mesh_units/opt.work_units;
-
-
- // we calculate in cm!
+  // we calculate in cm!
   double mesh_units = get_scaling().get_calc_mesh_units() / sim_opt.get_option("Work_length_units", 1e-2);
   get_scaling().set_calc_mesh_units(mesh_units);
   
-
-
   equation_systems = & (get_equation_systems());
 
   system_name = get_equation_system_name();
@@ -93,14 +83,13 @@ void MacroHeatBalance::do_init( )
 
   my_system->add_variable("T", FIRST);
 
+  // my_system->add_variable("J", FIRST);
 
    // Insert the pointer to function that LibMesh library has to use    
   my_system->attach_assemble_function (assemble_heat_matrix);
 
    // Initialize the data structures for the equation system.
   my_system->init();	
-
-
 
 
   //Inizialize the solution to temperature of simulation options
@@ -185,7 +174,6 @@ void  MacroHeatBalance::do_solve()
   {
 
 
-    
     std::vector<unsigned int> dof_indices;
     
     DofMap& dof_map = my_system->get_dof_map();
@@ -255,7 +243,7 @@ BoundaryProperties* MacroHeatBalance::create_boundary_model (const ModelOptions 
 
 {
  
-   const string& modelname = options.get_option("type", "Heat_reservoir");
+   const string& modelname = options.get_option("type", "heat_reservoir");
  
   
    ThermalContact* model = ThermalContact::create(modelname, options);
@@ -272,54 +260,10 @@ MacroHeatBalance*  MacroHeatBalance::create (void)
   return new MacroHeatBalance;
 }
 
-//----------------------------------------------------------------------------------//
-void MacroHeatBalance::build_nodal_results (const std::set< std::string > &variables, 
-				     std::vector< double > &results, 
-				     std::vector< std::string > &legend)
-{
+
+
 
  
-
-  if (variables.find("T") != variables.end())
-  {
-    legend.resize(1);
-    legend[0] = "Temperature[K]";
-
-
-
-    MeshBase::const_node_iterator       nd     = mesh->active_nodes_begin();
-    const MeshBase::const_node_iterator nd_el  = mesh->active_nodes_end();
-
-    unsigned int number_of_points = 0;
-    for ( ; nd != nd_el ; ++nd)  number_of_points++;
-
-    results.resize(number_of_points, 0.0);
-
-    
-    MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
-    const MeshBase::const_element_iterator end =     mesh->active_local_elements_end();
-
-    std::vector<unsigned int> dof_indices;
-
-    DofMap& dof_map = my_system->get_dof_map();
-
-    for ( ; it != end; ++it)
-    { 
-      const Elem* elem = *it;
-
-      dof_map.dof_indices (elem, dof_indices); 
-
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      {
-	unsigned int id =  elem->node(n);
-        
-	results[id]  =  (*(my_system->solution))(dof_indices[n]);       
-     
-
-      }
-    }
-  }
-}
 
 
 
@@ -350,12 +294,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   DofMap& dof_map = system.get_dof_map();
   
   FEType fe_type = dof_map.variable_type(uvar);
-  
-
-
-  //Fe
-
-  // AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
 
   AutoPtr<FEBase> fe (build_finite_element(dim, fe_type,true));
   
@@ -387,7 +325,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
   //------------------------------
 
-
   //Fe face
 
   
@@ -407,7 +344,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   // Tell the finite element object to use our
   // quadrature rule.
   
-  fe_face -> attach_quadrature_rule (&qface);
+  fe_face->attach_quadrature_rule(&qface);
   
 
   const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
@@ -418,9 +355,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   
   const std::vector<Point>& normal = fe_face->get_normals();
   
-
-
-
  
   std::vector<unsigned int> dof_indices;
   
@@ -440,492 +374,188 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
   double hTEpower;
 
-  //------------------------------
-  
+  std::vector<double> heat_source;
 
-  //Define the vectors which store the Drift Diffusion solutions
-
-  std::vector<double> QfermiE;
-    
-  std::vector<double> QfermiH;
-    
-  std::vector<Point> JE;
-    
-  std::vector<Point> JH;
-
-  std::vector<Point> JEX;
-
-  std::vector<double> EX_pot;
-  
-  std::vector<double> Rad_ex_power;
-
+  std::vector<RealGradient> flux_heat_source;
+ 
+ 
+ 
   ThermalContact* contact; 
   //----------------------------------------------------------LatticeThermalConductivity-------//
-  
-
-
-
- 
- 
 
   for ( ; el != end_el ; ++el)   //loop over elements
   {  
 
-	  
-  
-    //Inizialize the element environment
     const Elem* elem = *el;
 
     dof_map.dof_indices (elem, dof_indices);  
 
-    const unsigned int n_dofs   = dof_indices.size();
+    const unsigned int n_dofs = dof_indices.size();
     
-    fe->reinit (elem);
+    fe->reinit(elem);
     
-    Ke.resize(n_dofs, n_dofs);
-
+    Ke.resize(n_dofs,n_dofs);
+ 
     Fe.resize(n_dofs);
     
     Fe.zero();  
      
     Ke.zero();
-
-    //Init e read from heat model
-
+ 
     init_heat_model(elem);
-  
+ 
+    heat_model->get_total_heat_source(q_point,heat_source);
+
+    heat_model->get_total_flux_heat_source(q_point,flux_heat_source);
+
     heat_model->get_thermal_conductivity(kappa);
-
-    // std::cerr<<kappa<<std::endl;
-
-    eTEpower = heat_model->get_electrons_thermoelectric_power();	
-   
-    hTEpower = heat_model->get_holes_thermoelectric_power();
-
-    if (heat_model->get_joule_opt())
-    {
-
-      heat_model->get_dd_solution_secure(q_point,QfermiE,QfermiH,JE,JH);
-
-
-    } 
-     
-     if (heat_model->get_excitons_opt())
-     {
-
-       heat_model->get_ex_solution_secure(q_point,EX_pot,JEX,Rad_ex_power);
-
-     }
-     
-     
-     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
-     { // loop over test function
+    
+    for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
+    { // loop over test function
+      
+      bool reservoir_contact = false;
+      
+      //!let us check if it belongs to a reservoir boundary
+      const Node* nd = elem->get_node(p1);
+      
+      Boundary* bd = se.get_boundary(nd); 
+      
+      if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+      { //if belongs to boundary
+	
+	contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );
+	
+	if (contact->get_type() == ThermalContact::Reservoir)
+	{//heat reservoir---{//loop over basis functions
+	  reservoir_contact = true;
+	}
+      }
        
-       bool reservoir_contact = false;
-	 
-       //!let us check if it belongs to a reservoir boundary
-       const Node* nd = elem->get_node(p1);
-       
-       Boundary* bd = se.get_boundary(nd); 
-       
-       if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
-       { //if belongs to boundary
-	 
-	 contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );
-	 
-	 if (contact->get_type() == ThermalContact::Reservoir)
-	 {//heat reservoir---{//loop over basis functions
-	   reservoir_contact = true;
-	 }
-       }
-       
-       if (reservoir_contact)
-       {//heat reservoir---
-	 
-	 Ke(p1,p1) = 1.0;
-	 
-	 Fe(p1) = ( dynamic_cast<Reservoir*> (contact) )->get_temperature();
-	 
-       } 
-       else 
-       {
+      if (reservoir_contact)
+      {//heat reservoir---
+	
+	Ke(p1,p1) = 1.0;
+	
+	Fe(p1) = ( dynamic_cast<Reservoir*> (contact) )->get_temperature();
+	
+      } 
+      else 
+      {
 	for (unsigned int qp=0; qp<qrule.n_points(); qp++)  
 	{//Loop over quadrature points 
-
-	  //------------------------
-	  //volume integration for matrix
-	  // - \int_V \frac{\patial \phi_{\alpha}{\partial x_i}\kappa_{i,j} \frac{\par tial \phi_{\beta}{\partial x_j} dx
-	  	  
-	   for (unsigned int p2=0; p2<n_dofs; p2++) 
-
+	  
+	  for (unsigned int p2=0; p2<n_dofs; p2++) 
 	  {//loop over basis functions
-            
-
+              
 	    double value = 0.0;
-	    
 	    
 	    for (short i = 0; i < dim; i++) 
 	    {//loop over direction (1); test function derivative
-
+	      
 	      for (short j = 0; j < dim; j++)
 	      {//loop over direction (2); basis function derivative
-
+		
 		double kappa_value;
 		if (i < j) 
 		  kappa_value = kappa(j+1, i+1);
 		else
 		  kappa_value = kappa(i+1, j+1);
-
-	
-		value += -JxW[qp] * kappa_value * dphi[p1][qp](i) * dphi[p2][qp](j);
-                 
+		
+		
+		value += JxW[qp] * ( dphi[p1][qp](i) * kappa_value - flux_heat_source[qp](j) ) * dphi[p2][qp](j);
 		
 	      }//end loop over direction (2)
-
-	      //This includes the Peltier-Thomson effects   
-
-
-	      if (heat_model->get_peltier_thomson_opt())
-	      {
-               
-	value += -JxW[qp]* phi[p1][qp] * dphi[p2][qp](i)*
-		  (eTEpower*JE[qp](i) + hTEpower*JH[qp](i) );
-
-	       
-	      }
 	      
-	       
-	    }//end loop over direction (1)												
+	    }//end loop over direction (1)											         
 	    
-	  
-	    
-
-           Ke(p1,p2) += value;
+	    Ke(p1,p2) += value;
 	    
 	  } //loop over basis functions
 	  
-	 
-	   if (heat_model->get_joule_opt())
-	   {
-	     //Inclusion of jolue effect  
-	   
-	     for (short i = 0; i < dim; i++) 
-	     { 
-             
-	       Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
-	       	 ( JE[qp](i) * QfermiE[qp] +  QfermiH[qp] * JH[qp](i) );
-
-	     }
-	     
-	   }   
-
-           //Exciton contribute
-	   if (heat_model->get_excitons_opt())
-	   {  
-	   
-	     for (short i = 0; i < dim; i++) 
-	     { 
-	    
-                Fe(p1) -= dphi[p1][qp](i) * JxW[qp] *
-		  ( JEX[qp](i) *  EX_pot[qp] );
-	       	 
-               
-	     }
-
-	     Fe(p1) -= phi[p1][qp] * JxW[qp] * Rad_ex_power[qp]*Constants::e;
-		         
-
-	     
-	   }   
-	   
-	   
+	  Fe(p1) +=JxW[qp] * heat_source[qp] * phi[p1][qp];
+	  
 	}//end Loop over quadrature points  
-	 
-
-      } //end if it belongs to boundary
- 
-
-    } // end loop over test functions
-      
-     //The loop over element is the only loop that is surviving at this point
-
-     //Joule effect
-     
-     if (heat_model->get_joule_opt())
-     {
-            
-       for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
-       {
-	 //!let us check if it belongs to a reservoir boundary
-	 const Node* nd = elem->get_node(p1);
-	 
-	 Boundary* bd = se.get_boundary(nd); 
-	 
-	 bool belongs_to_reservoir = false;
-	 	 
-	 if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
-	 {
-	   ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
-	   
-	   if (contact->get_type() == ThermalContact::Reservoir)   belongs_to_reservoir = true;
-
-          
-
-	 }
-	 
-	 if ( !belongs_to_reservoir ) 
-	 {//not fixed temperature2
-	   
-	   const unsigned int num_sides = elem->n_sides();
-	   
-	   for (unsigned int side = 0; side<num_sides; side++)
-	   {
-	     const ElementSide elside(elem->top_parent(), side);
-	     
-	     if ( (heat_model->get_dd_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
-	     {
-	      
-	    
-	       if (dim > 1)
-	       {
-		 
-		 fe_face->reinit(elem, side);
-
-		 heat_model->get_dd_solution_secure(qface_point,QfermiE,QfermiH,JE,JH);
-		    
-		   
-	   	 for (short i = 0; i < 3; i++)
-		 {
-		   for (unsigned int qp=0; qp < qface.n_points(); qp++)
-		   {
-		   
-		         Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
-			   ( JE[qp](i)*QfermiE[qp] + QfermiH[qp] * JH[qp](i) );
-
-
-		   }
-                 }
-
-
-	       }
-	       else //dim = 1
-	       {
-		 
-		 if (p1== side)
-		 {
-		   std::vector<double> normal(3);
-		   Point p = elem->point(side);
-		   Point pc = elem->centroid();
-		   
-		   const double temp = sqrt((p(0) - pc(0)) * (p(0) - pc(0)) 
-					    +(p(1) - pc(1)) * (p(1) - pc(1)) + 
-					    (p(2) - pc(2)) * (p(2) - pc(2)));
-		   
-		   
-		   for (short i = 0; i < 3; i++)
-		     normal[i] = (p(i) - pc(i))/temp;
-		   
-		   
-		   std::vector<Point> qface_point(1);
-		   
-		   qface_point[0] = elem->point(p1);
-		   
-		   heat_model->get_dd_solution_secure(qface_point,QfermiE,QfermiH,JE,JH);
-
-		   for (short i = 0; i < 3; i++)
-		   {  
-
-		          Fe(p1) +=   normal[i] * 
-		      ( JE[0](i) * QfermiE[0] + QfermiH[0] * JH[0](i) )   ;
-		       
-		   }// for (short i = 0; i < 3; i++)
-		   
-		 } // if (p1== side)
-		 
-	       } //if (dim > 1)
-	       
-	     }// if ( (heat_model->get_dd_environment()).is_on_boundary(   elside   ) )
-	     
-	   } //  for (unsigned int side = 0; side<num_sides; side++)
-	   
-	 } // if ( !belongs_to_reservoir ) 
-	 
-       }// for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
-       
-     } // (dd_simul != NULL)
-
-
-     //Excitons effect
-
-     if (heat_model->get_excitons_opt())
-     {
-            
-       for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
-       {
-	 //!let us check if it belongs to a reservoir boundary
-	 const Node* nd = elem->get_node(p1);
-	 
-	 Boundary* bd = se.get_boundary(nd); 
-	 
-	 bool belongs_to_reservoir = false;
-	 	 
-	 if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
-	 {
-	   ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
-	   
-	   if (contact->get_type() == ThermalContact::Reservoir)   belongs_to_reservoir = true;
-	 }
-	 
-	 if ( !belongs_to_reservoir ) 
-	 {//not fixed temperature2
-	   
-	   const unsigned int num_sides = elem->n_sides();
-	   
-	   for (unsigned int side = 0; side<num_sides; side++)
-	   {
-	     const ElementSide elside(elem->top_parent(), side);
-	     
-	     if ( (heat_model->get_ex_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of excitons simulation
-	     {
-	      
-	    
-	       if (dim > 1)
-	       {
-		 
-		 fe_face->reinit(elem, side);
-
-		 heat_model->get_ex_solution_secure(qface_point,EX_pot,JEX,Rad_ex_power);
-		    
-		   
-	   	 for (short i = 0; i < 3; i++)
-		 {
-		   for (unsigned int qp=0; qp < qface.n_points(); qp++)
-		   {
-		   
-                      Fe(p1) += (JxW_face[qp] * phi_face[p1][qp]) * normal[qp](i) * 
-		      ( JEX[qp](i) * EX_pot[qp] ) ;
-
-
-		   }
-                 }
-
-
-	       }
-	       else //dim = 1
-	       {
-		 
-		 if (p1== side)
-		 {
-		   std::vector<double> normal(3);
-		   Point p = elem->point(side);
-		   Point pc = elem->centroid();
-		   
-		   const double temp = sqrt((p(0) - pc(0)) * (p(0) - pc(0)) 
-					    +(p(1) - pc(1)) * (p(1) - pc(1)) + 
-					    (p(2) - pc(2)) * (p(2) - pc(2)));
-		   
-		   
-		   for (short i = 0; i < 3; i++)
-		     normal[i] = (p(i) - pc(i))/temp;
-		   
-		   
-		   std::vector<Point> qface_point(1);
-		   
-		   qface_point[0] = elem->point(p1);
-		   
-		   heat_model->get_ex_solution_secure(qface_point,EX_pot,JEX,Rad_ex_power);
-
-		   for (short i = 0; i < 3; i++)
-		   {  
-
-                      Fe(p1) +=   normal[i] * 
-		      ( JEX[0](i) * EX_pot[0] )   ;
-		     
-		   }// for (short i = 0; i < 3; i++)
-		   
-		 } // if (p1== side)
-		 
-	       } //if (dim > 1)
-	       
-	     }// if ( (heat_model->get_dd_environment()).is_on_boundary(   elside   ) )
-	     
-	   } //  for (unsigned int side = 0; side<num_sides; side++)
-	   
-	 } // if ( !belongs_to_reservoir ) 
-	 
-       }// for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
-       
-     } // if (heat_model->get_excitons_opt())
-
-
-     //Contact Resistance
-            
-     for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
-      {
-       //!let us check if it belongs to a reservoir boundary
-       const Node* nd = elem->get_node(p1);
-       
-       Boundary* bd = se.get_boundary(nd); 
-       
-       if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
-       {
-	 ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
-	 
- 	 if (contact->get_type() == ThermalContact::Neumann)  
-	 {
-
-	   double rho_e = ( dynamic_cast<FluxContact*> (contact) )->get_electrons_resistivity();
 	
-           double rho_h = ( dynamic_cast<FluxContact*> (contact) )->get_holes_resistivity();
+	
+      } //end if it belongs to boundary
+      
+      
+    } // end loop over test functions
+    
+
+
+
+  //    //The loop over element is the only loop that is surviving at this point
+
+  
+
+   //   //Contact Resistance
+            
+//      for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+//       {
+//        //!let us check if it belongs to a reservoir boundary
+//        const Node* nd = elem->get_node(p1);
+       
+//        Boundary* bd = se.get_boundary(nd); 
+       
+//        if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+//        {
+// 	 ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );    
+	 
+//  	 if (contact->get_type() == ThermalContact::Neumann)  
+// 	 {
+
+// 	   double rho_e = ( dynamic_cast<FluxContact*> (contact) )->get_electrons_resistivity();
+	
+//            double rho_h = ( dynamic_cast<FluxContact*> (contact) )->get_holes_resistivity();
             
 	    
 
- 	   const unsigned int num_sides = elem->n_sides();
+//  	   const unsigned int num_sides = elem->n_sides();
 	 
- 	   for (unsigned int side = 0; side<num_sides; side++)
- 	   {
- 	     const ElementSide elside(elem->top_parent(), side);
+//  	   for (unsigned int side = 0; side<num_sides; side++)
+//  	   {
+//  	     const ElementSide elside(elem->top_parent(), side);
 	     
- 	     if ( (heat_model->get_dd_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
- 	     {
+//  	     if ( (heat_model->get_dd_environment()).is_on_boundary(   elside   ) ) //if belongs to a boundary of current(!) simulation
+//  	     {
 	     
- 	       fe_face->reinit(elem, side);
+//  	       fe_face->reinit(elem, side);
 	       
-	       heat_model->get_dd_solution_secure(qface_point,QfermiE,QfermiH,JE,JH);
+// 	       heat_model->get_dd_solution_secure(qface_point,QfermiE,QfermiH,JE,JH);
 	       
-	       for (short i = 0; i < 3; i++)
-	       {
-		 for (unsigned int qp=0; qp < qface.n_points(); qp++)
-		 {
+// 	       for (short i = 0; i < 3; i++)
+// 	       {
+// 		 for (unsigned int qp=0; qp < qface.n_points(); qp++)
+// 		 {
 		   
-		   Fe(p1) -= Constants::e * JxW_face[qp] * phi_face[p1][qp] * (JE[qp](i)*JE[qp](i) * rho_e + JH[qp](i) * JH[qp](i) * rho_h); 
+// 		   Fe(p1) -= Constants::e * JxW_face[qp] * phi_face[p1][qp] * (JE[qp](i)*JE[qp](i) * rho_e + JH[qp](i) * JH[qp](i) * rho_h); 
 		     
-		 }
-	       }
+// 		 }
+// 	       }
 	       
-	     } // if on boudary of dd
+// 	     } // if on boudary of dd
 	     
-	   } // side
+// 	   } // side
       
-       }//   if (contact->get_type() == ThermalContact::Neumann) 
-      }// if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
+//        }//   if (contact->get_type() == ThermalContact::Neumann) 
+//       }// if (  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  ) )
      
-   }// for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+//    }// for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
   
-	 
+  
   dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
   system.matrix->add_matrix (Ke, dof_indices);
   system.rhs->add_vector    (Fe, dof_indices); 
- 
+  
   // system.matrix->print_matlab("matr.m"); 
   
-     
-      
+  
   } //End Loop over elements
   
- 
+  
   //   system.matrix->print_matlab("Matr.m");
-  //  system.rhs->print();
+  //   system.rhs->print();
     
 } //do assembly
 
@@ -973,7 +603,6 @@ MacroHeatBalance::convert_variable_name_to_id(const string& variable_name) const
 
   ID id = INVALID_ID;
 
- 
 
     if (variable_name == "temperature" )
        id  = TEMPERATURE;
@@ -981,7 +610,6 @@ MacroHeatBalance::convert_variable_name_to_id(const string& variable_name) const
 
   return id;
 }
-
 
 
 
@@ -996,7 +624,7 @@ MacroHeatBalance::get_solution_secure(const Elem* elem,
 
   vector<unsigned int> dof_indices;
 
-  dof_map.dof_indices (elem, dof_indices);  
+  dof_map.dof_indices(elem, dof_indices);  
 
   for (unsigned int n = 0; n < elem->n_nodes(); n++)
   {
@@ -1008,6 +636,8 @@ MacroHeatBalance::get_solution_secure(const Elem* elem,
    
 
 }
+
+
 
 void
 MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
@@ -1026,13 +656,16 @@ MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   FEType fe_type = dof_map.variable_type(uvar);
   
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  //  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type,true)); 
 
   // element shape functions
-   const vector<vector<Real> >& phi = fe->get_phi();
+  const vector<vector<Real> >& phi = fe->get_phi();
 
   vector<Point> points(np);
 
+  //std::cout<<p.size()<<std::endl;
   FEInterface::inverse_map(dim, fe_type, elem, p, points);
  
   fe->reinit(elem, &points);
@@ -1064,46 +697,258 @@ MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
 
 
-double MacroHeatBalance::get_temperature_element(const Elem* elem) const
+
+
+
+
+
+void
+MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables,
+					  std::vector<double>& results, std::vector<std::string>& legend)
 {
-        
 
-       std::vector<unsigned int> dof_indices;
+  
+  // we only do something if we are on processor 0
+  // TODO parallelize
+  if (libMesh::processor_id() != 0)
+    return;
 
-       DofMap& dof_map = my_system->get_dof_map();
+  const set<string>::const_iterator varend(variables.end());
+  
+  vector<ID> ids;
+  unsigned int nm; 
+  
 
-       dof_map.dof_indices (elem, dof_indices); 
 
-       double T = 0.0;
-       for (unsigned int n = 0; n < elem->n_nodes(); n++)
-       {   
-	  T +=  (*(my_system->solution))(dof_indices[n]); 
-       }
+  legend.resize(0); 
+  unsigned int n_vars = 0;  
+  
+  int HS = -1;
+  if (variables.find("HeatSource") != varend)
+  {
+    const Device& device = *(_device);
+
+    HS = n_vars;
+
+    std::map<ID, std::map<ID,std::string> > heat_source_ids;
+    
+    MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
+
+    MeshBase::const_element_iterator it_end =    mesh->active_local_elements_end(); 
+
+    // assert(it_end != mesh->active_local_elements_end());
+    
+    HeatModel* heat_model = NULL;
+    
+    const Elem* elem = *it;
+    
+    ID subdomain = elem->subdomain_id();
+    
+    heat_model= dynamic_cast<HeatModel*>(
+					 device.get_material(subdomain)->get_model(get_id()));
+    
+    nm = heat_model->get_heat_source_IDs(ids);
+    
+    for (int i = 0; i < nm; i++)
+    {
+         
+      std::vector<std::string> local_legend  =
+ 	heat_model->get_heat_source_model(ids[i])->get_legend(); 
       
-       T /= elem->n_nodes();
+      unsigned int ns_loc = local_legend.size();
 
-       return T;
+      unsigned int ns = 0;
+      for (unsigned int n_loc = 0;  n_loc < ns_loc; ++n_loc )
+      {
+          
+	legend.push_back(local_legend[n_loc]);
+        
+	n_vars++;
+	ns++;
+	 
+      }
+      if (ns>1)
+      {
+	n_vars++;
+	legend.push_back( heat_model->get_heat_source_model(ids[i])->get_default_name() ); 
+      }
+    }
+    if (nm>1)
+    {
+      n_vars++;
+      legend.push_back("TotalHeatSource"); 
+    }
+    
+  }
 
+  const unsigned int nn  = mesh->n_nodes();
+    
+  //results.resize(nn * n_vars,0.0);
+  results.resize(0,0.0);
+
+  legend.resize(n_vars);
+ 
+  std::vector<unsigned int> dof_indices;
+  DofMap& dof_map = my_system->get_dof_map();
+  
+  MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end =     mesh->active_local_elements_end();
+  
+ 
+  unsigned int elem_number = 0;
+  for ( ; it != end; ++it)
+  { 
+    
+
+    const Elem* elem = *it;
+
+    unsigned int id = n_vars * elem_number;
+    
+    dof_map.dof_indices (elem, dof_indices); 
+
+    std::vector<Point> _node(1);
+
+    _node[0]=(elem->centroid());
+      
+    if (HS != -1)
+    {
+           
+      ID subdomain = elem->subdomain_id();
+	
+      const Material* mat = _device->get_material(subdomain);
+	
+      HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
+	
+      heat_model->set_element(elem);     
+	
+      heat_model->re_init();
+	
+      unsigned int k = 0;
+      
+      std::vector<double> total_heat_source(nm);
+
+      total_heat_source.clear();
+
+      total_heat_source.resize(nm);
+	
+      for (int i = 0; i < nm; i++)
+      {
+	  
+	std::vector<std::vector<double> > heat_source;
+	 
+	heat_model->get_heat_source_model(ids[i])->get_heat_source_output(_node,elem,heat_source);
+	 
+	unsigned int ns = 0;
+      
+	for (unsigned int n_loc = 0 ; n_loc<heat_source[0].size() ; ++n_loc)
+	{ 
+	   
+	  //results[id + HS + k] = heat_source[0][n_loc];
+          results.push_back(heat_source[0][n_loc]);
+	 
+	  total_heat_source[i] =  total_heat_source[i] + heat_source[0][n_loc];
+
+	  //std::cout<<id + HS + k<<std::endl;
+          //std::cout<< results.size() <<std::endl;
+       
+	  ++k;
+	  ++ns;
+	  
+	}
+	
+	//Write the total heat of the i-heat source
+	if (ns>1)
+	{
+	  results.push_back( total_heat_source[i]);
+	  //  results[id + HS + k] = total_heat_source[i];
+          // std::cout<<id + HS + k<<std::endl;
+	}
+	
+      }
+      
+      //Write the total heat
+      if (nm>1)
+      {
+	double total_heat = 0.0;
+	
+	for (int i = 0; i < nm; i++)
+	{
+	  total_heat = total_heat + total_heat_source[i];
+	  
+	}
+	results[id + HS + k] = total_heat;
+	
+	
+      }//	if (nm>1)
+      
+    } //if (HS != -1)
+
+      
+        elem_number++;
+  } //over elements
+
+  results.resize(elem_number * n_vars);
 }
 
 
 
-std::vector<double>  MacroHeatBalance::get_temperature_node(const Elem* elem)
+
+
+//----------------------------------------------------------------------------------//
+void MacroHeatBalance::build_nodal_results (const std::set< std::string > &variables, 
+				     std::vector< double > &results, 
+				     std::vector< std::string > &legend)
 {
 
-      std::vector<double> Tloc(elem->n_nodes());
+  
 
-       std::vector<unsigned int> dof_indices;
+  
+ 
+  const set<string>::const_iterator varend(variables.end());
+  
 
-       DofMap& dof_map = my_system->get_dof_map();
+  legend.resize(0); 
+  unsigned int n_vars = 0;
 
-       dof_map.dof_indices (elem, dof_indices); 
+  int Temp = -1;
+  if (variables.find("T") != varend)
+  {
+    Temp = n_vars; 
+    legend.push_back("Temperature[K]");
+    n_vars++;
+  }
 
-       for (unsigned int n = 0; n < elem->n_nodes(); n++)
-       {   
-	  Tloc[n] =  (*(my_system->solution))(dof_indices[n]); 
-       }
+  const unsigned int nn  = mesh->n_nodes();
+  
+  results.resize(nn * n_vars,0.0);
+  
+  std::vector<unsigned int> dof_indices;
+  DofMap& dof_map = my_system->get_dof_map();
+  
+  MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end =     mesh->active_local_elements_end();
+  
+ 
+  for ( ; it != end; ++it)
+  { 
+    const Elem* elem = *it;
     
-       return Tloc;
+    dof_map.dof_indices (elem, dof_indices); 
+     
+    for (unsigned int n = 0; n < elem->n_nodes(); n++)
+    {
+      
+      unsigned int id =  (elem->node(n) * n_vars) ;
+      
+      if (Temp != -1)
+      {
+	
+	results[id+Temp]  =  (*(my_system->solution))(dof_indices[n]);       
+	
+      }
+      
+    }  
+     
+  }
 
 }

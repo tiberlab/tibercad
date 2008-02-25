@@ -625,6 +625,8 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     //! Get the all nodal temperatures for a given element
     std::vector<double>& get_temperature_at_nodes(void);
 
+    //! Get the temperature for a coordinate point
+    double get_temperature_at_coordinate(void);
 
     //! Get the electric potential
     double get_electric_potential(void) const;
@@ -1033,6 +1035,15 @@ double
 DriftDiffusionProperties::get_lattice_temperature(void) const
 {
   return _lattice_vt;
+}
+
+inline
+double  
+DriftDiffusionProperties::get_temperature_at_coordinate(void)
+{
+   
+  return  _lattice_temp.get_temperature(_elem,_coord);
+  
 }
 
 

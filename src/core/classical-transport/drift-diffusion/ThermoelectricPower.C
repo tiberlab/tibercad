@@ -16,8 +16,7 @@ ThermoelectricPower::ThermoelectricPower(void)
     _hQfermi(0.0),
     _Ec(0.0),
     _Ev(0.0),
-    _e_mobility_term(0.0),
-    _h_mobility_term(0.0),
+    _phi(0.0),
     _TEmodel(CONSTANT)
 {
 }
@@ -76,7 +75,7 @@ void
 ThermoelectricPower::do_init(void)
 {
 
-  std::string TEmodel = get_parameter("model", "constant");
+  std::string TEmodel = get_parameter("model", "diffusivity_model");
 
   if (TEmodel == "constant")
   {
@@ -100,13 +99,14 @@ ThermoelectricPower::calculate(void)
 {
   if (_TEmodel == DIFFUSIVITY)
   {
-    _eTEpower = -Constants::k_B * (5.0 / 2.0 + _e_mobility_term +
-        (_eQfermi +  _Ec) / _Tloc);
+    _eTEpower = -Constants::k_B * (5.0 / 2.0 + (_eQfermi +  _Ec - _phi) / _Tloc);
 
-    _hTEpower =  Constants::k_B * (5.0 / 2.0 + _h_mobility_term -
-        (_hQfermi + _Ev) / _Tloc);
+    _hTEpower =  Constants::k_B * (5.0 / 2.0 - (_hQfermi + _Ev - _phi) / _Tloc);
   }
-  
+  assert( _eTEpower < 0.0 );
+  assert( _eTEpower > 0.0 );
+ 
+
 
 }
 

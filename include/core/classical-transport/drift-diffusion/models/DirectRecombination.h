@@ -74,7 +74,7 @@ class DirectRecombination : public RecombinationModelInterface
 
 inline
 DirectRecombination::DirectRecombination(void)
-  : C_(1e-10)
+  : C_(0.0)
 {
 }
 

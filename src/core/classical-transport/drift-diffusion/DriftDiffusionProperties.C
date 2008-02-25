@@ -763,9 +763,10 @@ void  DriftDiffusionProperties::compute_thermoelectric_powers(void)
     double vb = get_valence_band_edge() - _pd->electric_potential;
     
     _thermoelectric_power->set_band_edges(cb, vb);
- 
-    _thermoelectric_power->set_mobility_term(5.0, 5.0);
 
+    double phi = _pd->electric_potential;
+ 
+    _thermoelectric_power->set_electric_potential(phi);
     
     _thermoelectric_power->set_temperature(_lattice_vt);
     
@@ -785,3 +786,4 @@ std::vector<double>& DriftDiffusionProperties::get_temperature_at_nodes()
 {
   return _nodal_lattice_vt;
 }
+  

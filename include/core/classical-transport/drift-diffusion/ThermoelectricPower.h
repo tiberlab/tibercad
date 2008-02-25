@@ -42,14 +42,14 @@ class ThermoelectricPower : public DriftDiffusionModelInterface
     //! set the electro-chemical potential for electrons and holes
     void set_fermi_potential(double eQfermi, double hQfermi);
 
+    //! set the electrostatic potential 
+    void set_electric_potential(double phi);
+
     //! set the band edge of conduction band and valence band
     void set_band_edges(double Ec, double Ev);
 
     //! set the local temperature
     void set_temperature(double Tloc);
-
-    //! set the mobility term  for electron \f$\alpha_n\f$ and hole \f$\alpha_p\f$ 
-    void set_mobility_term(double e_mobility_term, double h_mobility_term);
 
     //!provides electrons thermoelectric power [V/K]
     double get_electrons_thermoelectric_power(void) const;
@@ -101,9 +101,7 @@ class ThermoelectricPower : public DriftDiffusionModelInterface
 
     double _Ev;
 
-    double _e_mobility_term;  
-
-    double _h_mobility_term;  
+    double _phi;
 
     //! Model for thermoelectric power 
     TEPModel _TEmodel;
@@ -145,13 +143,12 @@ ThermoelectricPower::set_fermi_potential(double eQfermi, double hQfermi)
 
 inline
 void
-ThermoelectricPower::set_mobility_term(double e_mobility_term, double h_mobility_term)
+ThermoelectricPower::set_electric_potential(double phi)
 {
-  _e_mobility_term = e_mobility_term;
-
-  _h_mobility_term = h_mobility_term;
-
+  _phi = phi;
 }
+
+
 
 
 

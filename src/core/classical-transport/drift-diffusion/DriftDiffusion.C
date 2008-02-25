@@ -305,6 +305,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     sc->calculate_ionized_dopants();
     sc->calculate_mobilities();
 
+
     // TODO get max of polarisation
     
     double mu = sc->get_hole_mobility();
@@ -1255,13 +1256,15 @@ ID
 DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
 {
   ID id = INVALID_ID;
-
+  
   // for an empty string we return immediately
   if (variable_name == "") return id;
-
+  
   switch (variable_name[0])
   {
-    case 'E':
+  case 'E':
+      if (variable_name == "ElPotential")
+        id = ELPOTENTIAL;
       if (variable_name == "E")
         id = E;
       else if (variable_name == "Ex")
@@ -1270,8 +1273,6 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
         id = EY;
       else if (variable_name == "Ez")
         id = EZ;
-      else if (variable_name == "ElPotential")
-        id = ELPOTENTIAL;
       else if (variable_name == "Ev")
         id = VBANDEDGE;
       else if (variable_name == "Ec")
@@ -1283,7 +1284,7 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
       else if (variable_name == "Ec0")
         id = CBANDEDGEINTR;
       break;
-
+      
     case 'e':
       if (variable_name == "eDensity")
         id = EDENSITY;
@@ -1292,7 +1293,30 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
       else if (variable_name == "eCond")
         id = SIGMAE;
       break;
-      
+
+    case 'H':
+      switch (variable_name[1])
+      { 
+        case 'J':
+       	  if (variable_name == "HJouleN")
+	    id = EJOULE;
+	  else if (variable_name == "HJouleP")
+	    id = HJOULE;
+	  else if (variable_name == "HJnGradPhie")
+	    id = JNGRADPHIE;
+	  else if (variable_name == "HJpGradPhih")
+	    id = JPGRADPHIH;
+          break;
+        case 'P':
+       	  if (variable_name == "HPelThomE")
+	    id = EPTSOURCE;
+	  else if (variable_name == "HPelThomH")
+	    id = HPTSOURCE;
+	  break;
+
+      } 
+      break;
+
     case 'h':
       if (variable_name == "hDensity")
         id = HDENSITY;
@@ -1338,6 +1362,18 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
         id = PN;
       else if (variable_name == "Pp")
         id = PP;
+      if (variable_name == "PeltierNx")
+        id = PELTIERNX;
+      else if (variable_name == "PeltierNy")
+        id = PELTIERNY;
+      else if (variable_name == "PeltierNz")
+        id = PELTIERNZ;
+      if (variable_name == "PeltierPx")
+        id = PELTIERPX;
+      else if (variable_name == "PeltierPy")
+        id = PELTIERPY;
+      else if (variable_name == "PeltierPz")
+        id = PELTIERPZ;
       break;
    
     case 'Q':
@@ -1345,6 +1381,11 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
         id = QFERMIE;
       else if (variable_name == "QFermi_h")
         id = QFERMIH;
+      break;
+    
+    case 'T':
+      if (variable_name == "Temp")
+	id = TEMP;
       break;
 
     case 'r':
@@ -1426,6 +1467,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
   DriftDiffusionProperties* sc =
     dynamic_cast<DriftDiffusionProperties*>(
         device.get_material(subdomain)->get_model(get_id()));
+
   assert(sc != NULL); 
 
   //sc->lock();
@@ -1434,7 +1476,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
   fe->reinit(elem, &points);
     
   // Get the thermoelectric power
-  sc->compute_thermoelectric_powers();
+  sc->compute_thermoelectric_powers(); 
   double Pn =  sc->get_electron_thermoelectric_power();
   double Pp =  sc->get_hole_thermoelectric_power();
  
@@ -1454,6 +1496,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     double en_x = 0.0, ep_x = 0.0;
     double en_y = 0.0, ep_y = 0.0;
     double en_z = 0.0, ep_z = 0.0;
+
     double dT_x = 0.0;
     double dT_y = 0.0;
     double dT_z = 0.0;
@@ -1462,6 +1505,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     double ep = phi0 * solution(dof_indices_ep[n]);
     RealGradient e_field(0);
     // do interpolation
+
     for (unsigned int i = 0; i < n_dofs; i++)
     {
       en_x  += dphi[i][n](0) * solution(dof_indices_en[i]);
@@ -1477,6 +1521,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       dT_z  += dphi[i][n](2) * T_nodes[i];
 
       e_field += dphi[i][n] * solution(dof_indices_u[i]);
+
     }
 
     // scale the potential back
@@ -1488,6 +1533,11 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     ep_y *= phi0;
     ep_z *= phi0;
 
+
+    sc->set_coordinates(*(elem->get_node(n)));
+
+    double T =  sc->get_temperature_at_coordinate();
+
     sc->set_coordinates(points[n]);
     // all are at lattice temperature
 
@@ -1496,6 +1546,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     sc->set_electric_field(e_field);
 
     sc->calculate_densities();
+
     sc->calculate_mobilities();
 
     // we put the minus here for convenience
@@ -1511,6 +1562,10 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     double jpy = -sigma_h * (ep_y + Pp * dT_y);
     double jpz = -sigma_h * (ep_z + Pp * dT_z);
 
+    // Get the thermoelectric power at coordinate
+    sc->compute_thermoelectric_powers(); 
+    double Pn =  sc->get_electron_thermoelectric_power();
+    double Pp =  sc->get_hole_thermoelectric_power();
 
     if (ids.count(ELPOTENTIAL))
       values[n][ELPOTENTIAL] = u;
@@ -1599,28 +1654,112 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     if (ids.count(JPZ))
       values[n][JPZ] = jpz;
 
+    if (ids.count(JNGRADPHIE))
+      values[n][JNGRADPHIE] = - jnx * en_x - jny * en_y - jnz * en_z; 
+    
+    if (ids.count(JPGRADPHIH))
+      values[n][JPGRADPHIH] = - jpx * ep_x - jpy * ep_y - jpz * ep_z;
+    
+    if (ids.count(EJOULE))
+      values[n][EJOULE] = ( jnx * jnx + jny * jny + jnz * jnz ) / sigma_e;
+    
+    if (ids.count(HJOULE))
+      values[n][HJOULE] =  (jpx * jpx + jpy * jpy + jpz * jpz )/ sigma_h;
+    
+    if (ids.count(PELTIERNX))
+      values[n][PELTIERNX] =   T * Pn * jnx; 
+    
+    if (ids.count(PELTIERNY))
+      values[n][PELTIERNY] =   T * Pn * jny; 
+
+    if (ids.count(PELTIERNZ))
+      values[n][PELTIERNZ] =   T * Pn * jnz; 
+
+    if (ids.count(PELTIERPX))
+      values[n][PELTIERPX] =   T * Pp * jpx; 
+    
+    if (ids.count(PELTIERPY))
+      values[n][PELTIERPY] =   T * Pp * jpy; 
+
+    if (ids.count(PELTIERPZ))
+      values[n][PELTIERPZ] =   T * Pp * jpz; 
+
+    if (ids.count(TEMP))
+      values[n][TEMP] = T; 
+
+    if (ids.count(EPTSOURCE))
+    {
+      double Pn = 0.0;
+      double Pn_x = 0.0, Pn_y =0.0, Pn_z = 0.0;
+      double u = 0.0, en =0.0, ep = 0.0;
+
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        u  = phi0 * solution(dof_indices_u[i]);
+	en = phi0 * solution(dof_indices_en[i]);
+	ep = phi0 * solution(dof_indices_ep[i]);
+        sc->set_coordinates(elem->node(i));
+	sc->set_potentials(u, en, ep);
+	sc->compute_thermoelectric_powers(); 
+        Pn = sc->get_electron_thermoelectric_power();
+        Pn_x += Pn * dphi[i][n](0); 
+        Pn_y += Pn * dphi[i][n](1); 
+        Pn_z += Pn * dphi[i][n](2); 
+      }
+
+      values[n][EPTSOURCE] =  - T * (Pn_x * jnx + Pn_y * jny + Pn_z * jnz); 
+ 
+    }
+    if (ids.count(HPTSOURCE))
+    {
+      double Pp = 0.0;
+      double Pp_x = 0.0, Pp_y =0.0, Pp_z = 0.0;
+      double u = 0.0, en = 0.0, ep = 0.0;
+
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        u  = phi0 * solution(dof_indices_u[i]);
+	en = phi0 * solution(dof_indices_en[i]);
+	ep = phi0 * solution(dof_indices_ep[i]);
+        sc->set_coordinates(elem->node(i));
+	sc->set_potentials(u, en, ep);
+	sc->compute_thermoelectric_powers(); 
+        Pp = sc->get_electron_thermoelectric_power();
+        Pp_x += Pp * dphi[i][n](0); 
+        Pp_y += Pp * dphi[i][n](1); 
+        Pp_z += Pp * dphi[i][n](2); 
+      }
+
+      values[n][HPTSOURCE] =  - T * (Pp_x * jpx + Pp_y * jpy + Pp_z * jpz); 
+ 
+    }
     set<ID>::iterator first(ids.begin());
     set<ID>::iterator it(ids.end());
-    --it;
-    while (*it > MODELS)
+    --it; 
+
+    while (*it > MODELS )
     {
-      values[n][*it] = sc->get_net_recombination_rate(*it - MODELS);
+   
+	values[n][*it] = sc->get_net_recombination_rate(*it - MODELS);
+
       if (it == first)
         break;
-
       --it;
+
     }
 
     if (ids.count(PN))
     {
-      sc->compute_thermoelectric_powers();
-      values[n][PN] = sc->get_electron_thermoelectric_power();
+      sc->compute_thermoelectric_powers(); 
+      double Pn =  sc->get_electron_thermoelectric_power();
+      values[n][PN] = Pn;
     }
 
     if (ids.count(PP))
     {
-      sc->compute_thermoelectric_powers();
-      values[n][PP] = sc->get_hole_thermoelectric_power();
+      sc->compute_thermoelectric_powers(); 
+      double Pp =  sc->get_hole_thermoelectric_power();
+      values[n][PP] = Pp;
     }
 
 
@@ -1705,6 +1844,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     double en_x = 0.0, ep_x = 0.0;
     double en_y = 0.0, ep_y = 0.0;
     double en_z = 0.0, ep_z = 0.0;
+
     double dT_x = 0.0;
     double dT_y = 0.0;
     double dT_z = 0.0;
@@ -1713,6 +1853,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     double ep = 0.0;
     RealGradient e_field(0);
     // do interpolation
+
     for (unsigned int i = 0; i < n_dofs; i++)
     {
       u  += phi[i][n] * solution(dof_indices_u[i]);
@@ -1732,8 +1873,10 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
       dT_z  += dphi[i][n](2) * T_nodes[i];
 
       e_field += dphi[i][n] * solution(dof_indices_u[i]);
+     
+ 
     }
-
+   
     // scale the potential back
     u  *= phi0;
     en  *= phi0;
@@ -1745,6 +1888,12 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     ep_x *= phi0;
     ep_y *= phi0;
     ep_z *= phi0;
+ 
+
+   
+    sc->set_coordinates(p[n]);
+
+    double T =  sc->get_temperature_at_coordinate();
 
     sc->set_coordinates(points[n]);
 
@@ -1767,7 +1916,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     double jpx = -sigma_h * (ep_x + Pp * dT_x);
     double jpy = -sigma_h * (ep_y + Pp * dT_y);
     double jpz = -sigma_h * (ep_z + Pp * dT_z);
-
 
     if (ids.count(ELPOTENTIAL))
       values[n][ELPOTENTIAL] = u;
@@ -1812,6 +1960,10 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     if (ids.count(SIGMAH))
       values[n][SIGMAH] = sigma_h;
 
+
+    if (ids.count(TEMP))
+      values[n][TEMP] = T; 
+
     if (ids.count(E))
       values[n][E] = e_field.size();
 
@@ -1823,8 +1975,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     if (ids.count(EZ))
       values[n][EZ] = e_field(2);
-
-
     if (ids.count(J))
     {
       double jx = jnx + jpx;
@@ -1856,29 +2006,118 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     if (ids.count(JPZ))
       values[n][JPZ] = jpz;
+  
+    if (ids.count(JNGRADPHIE))
+      values[n][JNGRADPHIE] = - jnx * en_x - jny * en_y - jnz * en_z; 
+    
+    if (ids.count(JPGRADPHIH))
+      values[n][JPGRADPHIH] = - jpx * ep_x - jpy * ep_y - jpz * ep_z;
+    
+    if (ids.count(EJOULE))
+      values[n][EJOULE] = ( jnx * jnx + jny * jny + jnz * jnz ) / sigma_e;
+    
+    if (ids.count(HJOULE))
+      values[n][HJOULE] =  (jpx * jpx + jpy * jpy + jpz * jpz )/ sigma_h;
+    
+    if (ids.count(PELTIERNX))
+      values[n][PELTIERNX] =   T * Pn * jnx; 
+
+    if (ids.count(PELTIERNY))
+      values[n][PELTIERNY] =   T * Pn * jny; 
+
+    if (ids.count(PELTIERNZ))
+      values[n][PELTIERNZ] =   T * Pn * jnz; 
+
+    if (ids.count(PELTIERPX))
+      values[n][PELTIERPX] =   T * Pp * jpx; 
+    
+    if (ids.count(PELTIERPY))
+      values[n][PELTIERPY] =   T * Pp * jpy; 
+
+    if (ids.count(PELTIERPZ))
+      values[n][PELTIERPZ] =   T * Pp * jpz; 
+
+
+     if (ids.count(EPTSOURCE))
+    {
+      double Pn = 0.0;
+      double Pn_x = 0.0, Pn_y =0.0, Pn_z = 0.0;
+      double u = 0.0, en =0.0, ep = 0.0;
+
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        
+        u  = phi0 * solution(dof_indices_u[i]);
+	en = phi0 * solution(dof_indices_en[i]);
+	ep = phi0 * solution(dof_indices_ep[i]);
+        sc->set_coordinates(elem->node(i));
+	sc->set_potentials(u, en, ep);
+	sc->compute_thermoelectric_powers(); 
+        Pn = sc->get_electron_thermoelectric_power();
+        Pn_x += Pn * dphi[i][n](0); 
+        Pn_y += Pn * dphi[i][n](1); 
+        Pn_z += Pn * dphi[i][n](2); 
+       
+      }
+
+      values[n][EPTSOURCE] =  - T * (Pn_x * jnx + Pn_y * jny + Pn_z * jnz); 
+       
+    }
+    if (ids.count(HPTSOURCE))
+    {
+      double Pp = 0.0;
+      double Pp_x = 0.0, Pp_y =0.0, Pp_z = 0.0;
+      double u = 0.0, en = 0.0, ep = 0.0;
+
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        u  = phi0 * solution(dof_indices_u[i]);
+	en = phi0 * solution(dof_indices_en[i]);
+	ep = phi0 * solution(dof_indices_ep[i]);
+        sc->set_coordinates(elem->node(i));
+	sc->set_potentials(u, en, ep);
+	sc->compute_thermoelectric_powers(); 
+        Pp = sc->get_electron_thermoelectric_power();
+        Pp_x += Pp * dphi[i][n](0); 
+        Pp_y += Pp * dphi[i][n](1); 
+        Pp_z += Pp * dphi[i][n](2); 
+      }
+
+      values[n][HPTSOURCE] =  - T * (Pp_x * jpx + Pp_y * jpy + Pp_z * jpz); 
+     
+    }
+
+
+    if (ids.count(TEMP))
+      values[n][TEMP] = T; 
 
     set<ID>::iterator first(ids.begin());
     set<ID>::iterator it(ids.end());
-    --it;
-    while (*it > MODELS)
+    --it; 
+
+
+    while (*it > MODELS )
     {
-      values[n][*it] = sc->get_net_recombination_rate(*it - MODELS);
+ 
+	values[n][*it] = sc->get_net_recombination_rate(*it - MODELS);
+      
       if (it == first)
         break;
-
       --it;
     }
-
+ 
     if (ids.count(PN))
     {
-      sc->compute_thermoelectric_powers();
-      values[n][PN] = sc->get_electron_thermoelectric_power();
+      sc->compute_thermoelectric_powers(); 
+      double Pn =  sc->get_electron_thermoelectric_power();
+      values[n][PN] = Pn;
     }
 
     if (ids.count(PP))
     {
-      sc->compute_thermoelectric_powers();
-      values[n][PP] = sc->get_hole_thermoelectric_power();
+      sc->compute_thermoelectric_powers(); 
+      double Pp =  sc->get_hole_thermoelectric_power();
+      values[n][PP] = Pp;
     }
 
   }
@@ -2627,6 +2866,22 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     n_vars++;
   }
 
+  int Pn = -1;
+  if (variables.find("Pn") != varend)
+  {
+    Pn = n_vars;
+    legend[n_vars] = "Pn";
+    n_vars++;
+  }
+
+  int Pp = -1;
+  if (variables.find("Pp") != varend)
+  {
+    Pp = n_vars;
+    legend[n_vars] = "Pp";
+    n_vars++;
+  }
+
   int rho = -1;
   if (variables.find("charge_density") != varend)
   {
@@ -2821,6 +3076,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
         sc->set_electric_field(field);
 
         sc->calculate_densities();
+        sc->compute_thermoelectric_powers();
         sc->calculate_ionized_dopants();
         sc->calculate_mobilities();
         sc->calculate_net_recombination_rates();
@@ -2897,7 +3153,18 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
           local[id + mup] += nodal_val / conn;
         }
 
+	if (Pn != -1)
+        {
+          double nodal_val = sc->get_electron_thermoelectric_power();
+          local[id + Pn] += nodal_val / conn;
+        } 
 
+	if (Pp != -1)
+        {
+          double nodal_val = sc->get_hole_thermoelectric_power();
+          local[id + Pp] += nodal_val / conn;
+        }
+ 
         if (phi != -1)
           local[id + phi] += u / conn;
 

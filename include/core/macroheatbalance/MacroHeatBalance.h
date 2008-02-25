@@ -68,12 +68,6 @@ class MacroHeatBalance : public SimulationInterface
 				   const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
   
 
-  //!Get a avarage temperature for a given element  
-  double get_temperature_element(const Elem* elem) const;
-
-  //!Get a temperature for all nodes of a given element
-  std::vector<double> get_temperature_node(const Elem* elem);
-
   //!Constructor
   MacroHeatBalance();
   
@@ -120,6 +114,12 @@ class MacroHeatBalance : public SimulationInterface
 				     std::vector< double > &results, 
 				     std::vector< std::string > &legend);
 
+   
+  //! Order the solution in correct mode
+  virtual void build_elemental_results(const std::set<std::string>& variables,
+				       std::vector<double>& results, 
+				       std::vector<std::string>& legend);
+  
   
   static MacroHeatBalance* static_this;
 

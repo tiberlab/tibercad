@@ -1,257 +1,122 @@
 \chapter{Heat Balance simulation}
-\section{Theory}
-The theoretical model of the heat balance problem can be found in Refs. \cite{wachutka}. In the following a brief treatment is reported.
 
-\subsection{Heat Equation}
-The equation implemented is 
+The theoretical model of the heat balance problem can be found in Ref.\cite{wachutka}. 
+\section{Heat equation}
+The steady state heat equation with the continuity equation read as
 
 \begin{equation}\label{heat_law}
--\nabla \cdot\left(\kappa_{tot} \nabla T \right) = H_J + H_P
+\nabla \cdot\left(- \kappa \nabla T + \mathbf{J_{S}} \right) = H_{S}
 \end{equation}
 
-where $T$ is the temperature, $\kappa_{tot}$ is the total thermal conductivity tensor, $H_J$ is the thermal source due to Joule's effecr and $H_P$ is the source due to Peltier's effect. 
+where $T$ is the temperature and $\kappa$ is the thermal conductivity tensor.
+The source terms are rapresented by $\mathbf{J_S}$ and $H_S$ which are, respectively, the heat flux source and the heat source due to other physical subsystems.
 
-\subsection{Thermal conductivity}
+\section{Physical model}
 
-The term $\kappa_{tot}$ is  
+Negleting particle effects, the thermal conductivity is only due to the lattice contribution. The lattice thermal conductivity is readen from the database.
 
-\begin{equation}\label{k_tot}
-\kappa_{tot}=\kappa_L + \kappa_n + \kappa_p
-\end{equation}
+The thermal model is tagged as \textit{thermal}. In \textbf{options} subsection we indicate the simulation name (\textit{simulation\_name = whatever\_you\_want}) and the simulation domain (\textit{physical\_regions = wherever\_you\_want})
 
-where $\kappa_L$ is the lattice thermal conductivity whereas $\kappa_n$ and $\kappa_p$ are related to electrons and holes respectively. 
-
-The lattice thermal conductivity model can be constant or temperature dependent. In the latter case the following model are implemented (Ref. \cite{kmodel})
-
-\begin{equation}\label{k_T}
-\kappa(T)=\frac{1}{a + bT + cT^2}
-\end{equation}
-
-The carriers thermal conductivity are computed by the Wiedmann-Franz law
-\begin{equation}\label{k_n}
-k_n = \sigma_n L T \nonumber
-\end{equation}
-\begin{equation}\label{k_p}
-k_p = \sigma_p L T \nonumber
-\end{equation}
-where $L$ is the Lorenz number ($2.45\cdot 10^{-8} W*\Omega /K^2$) and $\sigma_n$, $\sigma_p$ are the electronic conductivity of electrons and holes, respectively.
-
-\subsection{Joule's effect}
-
-The heat source due to Joule's effect is 
-
-\begin{equation}\label{Hj}
-H_J=-\nabla \cdot\left(\varphi_n \mathbf{J_n} + \varphi_p \mathbf{J_p}\right)
-\end{equation}
-
-where $\varphi_n$ is the electro-chemical potential of the electrons and $\mathbf{J_n}$ is the electron current density.\\
-The terms $\varphi_p$ and $\mathbf{J_p}$ are the analogous quantities related to holes. 
-
-\subsection{Peltier's effect}
-
-The heat source due to Peltier's effect is 
-
-\begin{equation}\label{Hj}
-H_P=\nabla\cdot\left(T \mathbf{J_n}P_n + T \mathbf{J_n}P_n\right)
-\end{equation}
-
-where $P_n$ and $P_p$ are the thermoelectric powers of electrons and holes, respectively.
-
-The thermoelectric power models implemented are the constant one and the \textit{diffusivity} model. 
-The diffusivity model is
-
-\begin{equation}\label{Pn}
-P_n = -\frac{k_b}{q}\left[\frac{5}{2}+  \frac{T}{\mu_n} \frac{\partial\mu_n}{\partial T} +  \frac{q\varphi_n + E_c}{k_b T} \right]
-\end{equation}
-
-\begin{equation}\label{Pp}
-P_p = \frac{k_b}{q}\left[\frac{5}{2}+  \frac{T}{\mu_p} \frac{\partial\mu_p}{\partial T} -  \frac{q\varphi_p + E_v}{k_b T}  \right]
-\end{equation}
-
-where $k_b$ is the Boltzmann constant, $E_v$ is the edge of the valence band, $E_c$ is the edge of the conduction band, $q$ is the electron charge, and $\mu_n$ and $\mu_p$  are the mobilty of electrons and holes, respectively.
-
-The diffusivity model neglets the phonon's drag and until now works only for non degenerate case. 
-
-
-\section{Models section parameters}
 
 \begin{verbatim}
 
 model thermal
-{
-    options
-    {
-         simulation_name = heat  # name of simulation.
-         
-         physical_regions = all  # simulation environment
-    }  
+ {
+
+  options
+  { 
+    simulation_name = whatever_you_want
+    physical_regions = wherever_you_want
+  }
+
+    ...
 }
 
 \end{verbatim}
 
-\subsection{Physicals Models}
 
-If the necessary physical models are omitted the relative default are considered.
+\subsection{Electron and hole dissipations}
 
 
-The next model is always necessary.
+Electron and hole dissipations give the following sources
 
-\begin{verbatim}    
-physical_model Lattice_thermal_conductivity #Always found
-{
-    
-  model = <constant>          #temperature independent model
-      
-          temperature         #temperature dependent model 
-    
-}
-\end{verbatim}
+\begin{equation}\label{Jp}
+\mathbf{J_{S}} = - T P_n \mathbf{J_n} -  T P_p \mathbf{J_p}
+\end{equation}
 
-The next model is necessary only if in the Physics Parameters section the flag \textit{ParticleThermalConductivity} is \textit{true}.
+\begin{equation}\label{Hp}
+H_{S} = - \mathbf{J_n} \cdot \nabla \varphi_n - \mathbf{J_p} \cdot \nabla \varphi_p
+\end{equation}
 
-\begin{verbatim}  
-    
-physical_model Particle_thermal_conductivity 
-{
-    
-    
-  model = <constant>           # constant model (user define only)
-      
-           Wiedemann_Franz     # Wiedemann_Franz model  
-    
-    
-}
-\end{verbatim}
+where $P_n$ and $P_p$ are the electron and hole thermoelectric power, respectively.
 
-Here  also the thermoelectric power model is reported , but it belongs
-to {\bf drift diffusion model}. This part will be moved from here.
+
+The physical model \textbf{heat\_source} allows to include a specific source identified by its \textbf{model} name.
+Concerning electron and hole dissipations the model is 
+
+
+named \textit{drift\_diffusion\_dissipation}, as reported below.
 
 \begin{verbatim}
 
-model driftdiffusion
-{
-    physical_model thermoelectric_power
-    {
-    model  = <constant>       # constant thermoelectric power 
-    
-           diffusivity_model  # diffusivity model is considered 
-    } 
-}
+   physical_model heat_source
+   {		
+     model = drift_diffusion_dissipation
 
+     drift_diffusion_simulation = dd
+   }
 
 \end{verbatim}
 
-\subsection{Boundary Condition}
+With the notation \textit{drift\_diffusion\_simulation = dd\_simul\_name} we indicate the drift diffusion simulation name.
+
+\subsection{Boundary conditions}
+
+
+The boundary conditions can fix the temperature at a specific contact. This Dirichlet like condition can be interpreted as a heat reservoir and is identified as \textit{type = heat\_reservoir}. Below is reported an example.
+
 
 \begin{verbatim}
-BC_Region thermal_contact
+
+
+
+
+
+BC_Regions
 {
-   
-   BC_reg_numb = 1
-        
-   type = <reservoir>          # Dirichlet Boundary Condition 
-
-   temperature = 300           # Contact Temperature.  
-        
-                 @T[300]       # Creation of the sweep variable.
-                                 300 K is the default
-                        
-}
-
-
-
-
-
- 
-
-\end{verbatim}
-
-
-\section{Solver parameters}
-
-\begin{verbatim}
-$Solver
-{
-  thermal
+  BC_Region name_BC_region
   {
-      max_error =   ...             # maximum error in
-                  <1e-2>            # self-consistent loop
-                                    # for lattice thermal
-                                    # conductivity. 
-                                    
-                             
-      update_temperature = <true>   # the device temperature is updated with 
-                                    # the simulation results (non uniform)
-                                    
-                            
-                            false   # simulation results don't
-                                    # update the device temperature, which keeps 
-                                    # the value specified in input (uniform)
-				    
-      
-      
-      kappa_temperature_sc = <false>   # The temperature-thermal conductivity 
-                                       # (both lattice and carriers ones)
-                                        # self consistent loop is not computed.
-                                      
-                             	
-                               true    # The temperature-thermal conductivity 
-                                       # (both lattice and carriers ones)
-                                       #  self consistent loop is computed.
-                                      
-                    
-                                      
-                                       # HINT: active this modality                                               
-                                       # only with non constant thermal model.
-   }                      
-}
-
-
-\end{verbatim}
-
-\section{Physics parameters}
-\begin{verbatim}
-$Physics
-{
-   thermal
-  {
-    Joule_Effect = <true>                    # The joule effect is 
-                                             # computed
-    
-                    false                    # Only heat transport is 
-                                             # considered.
-    
-    
-    Peltier_Effect = <false>                 # The Peltier 
-                                             # effect is negleted
-     
-                      true                   # The Peltier effect
-                                             # is included.
-                                                 
-    
-    Particle_thermal_conductivity = <false>  # The particles thermal 
-                                             # conductivity is negleted.
-                                              
-                                     true    # The particle thermal
-                                             # conductivity is taken into account. 
-                                             # The relative physical model
-                                             # is ParticleThermalConductivity
-                                                                                     
-    current_simulation = ...                 # The name of the drift
-                                             # diffusion 
-                                             # simulation reference
-                      
-                        <no_current>         # No drift diffusion 
-                                             # simulation is condidered 
-                                             # (only heat transport)
-                        
-                                             # RACCOMANDATION: 
-                                             # A drift diffusion simulation
-                                             # shoud be considered only     
-                                             # if there is at least one                                         
-                                             # physical quantity that needs it 
-                                             # (that is, one of the previous 
-                                             # flags are true) .                                                                
+    type = heat_reservoir
+    BC_reg_numb = 3
+    temperature = 300
   }
 }
 \end{verbatim}
+
+
+
+With the notation \textit{temperature = 300} we fix the temperature (300 K in this case) at the contact associated to \textit{BC\_reg\_numb = 3}.
+
+
+\section{Output data}
+
+In this section we describe the \textit{thermal} quantities that can be plotted.
+The available quantities are \textit{T} (nodal-based variable) and \textit{HeatSource} (element-based variable).
+The former allows to plot the temperature and the latter refers to all sources considerated in the simulation. In the table we report all sources associated to drift diffusion simulations.
+
+
+
+\begin{table}[htb]
+\center
+\begin{tabular}{l||l||l}
+\textit{Expression} & \textit{Heat source} & \textit{Label}\\
+\hline\hline
+$\frac{\left| \mathbf{J_n} \right| ^2}{\sigma_n}$ & \textit{Electrons Joule's effect} & EJoule\\
+$\frac{|\mathbf{J_p}|^2}{\sigma_p}$ & \textit{Holes Joule's effect} & HJoule\\
+$qR\left(\phi_p - \phi_n + T \left( P_p - P_n \right) \right)$ & \textit{Recombination effect} &  Rec\\
+$ -T \mathbf{J_n} \cdot \nabla P_n $ & \textit{Electrons Peltier-Thomson effect} & EPelTh \\
+$ -T \mathbf{J_p} \cdot \nabla P_p $ & \textit{Holes Peltier-Thomson effect} & HPelTh
+\end{tabular}
+\caption{Drift diffusion heat sources}
+\label{table:srh_params_db}
+\end{table}

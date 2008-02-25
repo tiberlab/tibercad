@@ -2,17 +2,17 @@
 #include "Material.h"
 #include "LatticeThermalConductivity.h"
 #include "SimulationInterface.h"
+#include "HeatSourceInterface.h"
+
 
 
 HeatModel::HeatModel() :
   kappa(NULL),
   kappa_carrier(NULL),
-  _eTEpower(0),
-  _hTEpower(0),
   _elem(NULL),
-  _dd_simul(NULL),
   _lattice_thermal_conductivity(0),
   _electrons_thermal_conductivity(0),
+  _heat_source_interface(NULL),
   _holes_thermal_conductivity(0)
  {
 }
@@ -22,9 +22,14 @@ HeatModel::HeatModel() :
 
 HeatModel::~HeatModel()
 {
-
+  
   PhysicalModelInterface::destroy(kappa);
   PhysicalModelInterface::destroy(kappa_carrier);
+  
+
+
+  clear_heat_sources();
+  //clear_thermal_conductivity();
 
 }
 
@@ -39,66 +44,49 @@ PhysicalModelInterface* HeatModel::create_new (void) const
 void HeatModel::do_init()
 {
 
-  //Read Model and return a pointer to drift diffusion simulation eventually
-
-  model_opt.joule_effect = get_options().get_option("Joule_Effect", false);
-
-  model_opt.peltier_thomson_effect = get_options().get_option("Peltier_Thomson_Effect", false);
-
-  model_opt.particle_thermal_conductivity = get_options().get_option("Particle_thermal_conductivity", false);
-
-  if (model_opt.joule_effect                  |
-      model_opt.peltier_thomson_effect        |  
-      model_opt.particle_thermal_conductivity    )
-    {
-
-     std::string drift_diffusion_simulation = get_options().get_option("current_simulation", "no_current");
-
-    
-     _dd_simul = SimulationInterface::find_simulation(drift_diffusion_simulation);
-     
-    
-     
-     if (_dd_simul == NULL)
-       throw InitFailedException("Unknown drift diffusion simulation" +  drift_diffusion_simulation );
-
-    }
+  ModelOptions::const_submodel_iterator it;
+  ModelOptions::const_submodel_iterator end;
   
+  //Heat source models
+  it = get_options().submodels_begin("heat_source");
+  end = get_options().submodels_end("heat_source");
 
-   model_opt.excitons = get_options().get_option("Excitons_dissipation", false);
+  for ( ; it != end; ++it)
+  {
+    const std::string& name = (it->second).get_option("model", "");
+    add_heat_source_model(name,it->second);
+  }
 
-   if (model_opt.excitons)
-    {
-
-     std::string excitons_name_simulation = get_options().get_option("excitons_simulation", "no_excitons");
-
-     _ex_simul = SimulationInterface::find_simulation(excitons_name_simulation);
-
-      if ( _ex_simul == NULL)
-          throw InitFailedException("Unknown excitons simulation" + excitons_name_simulation);
-
-    }
+//   //Thermal conductivity models
+//   it = get_options().submodels_begin("thermal_conductivity");
+//   end = get_options().submodels_end("thermal_conductivity");
+  
+//   for ( ; it != end; ++it)
+//   {
+//     const std::string& name = (it->second).get_option("type", "");
+//     add_thermal_conductivity_model(name,it->second);
+//   }
 
 
-  //Read subModels 
 
-  //Lattice thermal conductivuty
+
+
+
 
   PhysicalModelInterface::destroy(kappa);
 
-
-  ModelOptions::const_submodel_iterator it,end;
-   it = get_options().submodels_begin("Lattice_thermal_condictivity");
-   end = get_options().submodels_end("Lattice_thermal_condictivity");
+  it = get_options().submodels_begin("Lattice_thermal_condictivity");
+  end = get_options().submodels_end("Lattice_thermal_condictivity");
 
 
-   if (it != end)
-    {
-
-   kappa =dynamic_cast<LatticeThermalConductivity*>(
-        PhysicalModelInterface::create("lat_therm_cond_" +
-		get_material()->get_structure(), it->second)); 
-
+  if (it != end)
+  {
+    
+    
+    kappa =dynamic_cast<LatticeThermalConductivity*>(
+		      PhysicalModelInterface::create("lat_therm_cond_" +
+		      get_material()->get_structure(), it->second)); 
+    
   
    if (kappa == NULL)
       throw InitFailedException("Could not create lattice thermal conductivity model");
@@ -110,112 +98,20 @@ void HeatModel::do_init()
      kappa = dynamic_cast<LatticeThermalConductivity*>(
 	  PhysicalModelInterface::create("lat_therm_cond_" +
 		get_material()->get_structure()));
-
-     //std::cout<<
-     //get_material()->get_name()<<std::endl;
   
      
     }
  
 
-  kappa->set_temperature(SimulationOptions::temperature);
+    kappa->set_temperature(SimulationOptions::temperature);
     
-  kappa->set_material(get_material());
+    kappa->set_material(get_material());
 
-  kappa->init();
+    kappa->init();
 
 
 
-  //Particle thermal conductivity
 
-   PhysicalModelInterface::destroy(kappa_carrier);
-   
-   it = get_options().submodels_begin("Particle_thermal_conductivity");
-   end = get_options().submodels_end("particle_thermal_conductivity");
-
-   if (it != end)
-   {
-
-     kappa_carrier = dynamic_cast<ParticleThermalConductivity*>(
-	     PhysicalModelInterface::create("particle_thermal_conductivity", it->second));
-     
-     if (kappa_carrier == NULL)
-       throw InitFailedException("Could not create particle thermal conductivity power model");
-     
-     
-
-     kappa_carrier->init();  
-     
-     kappa_carrier->set_material(get_material());
-
-     
-
-    }
-
-    if (model_opt.joule_effect) 
-    {
-     dd_ID_je.insert(_dd_simul->get_variable_id("QFermi_e"));
-     dd_ID_je.insert(_dd_simul->get_variable_id("QFermi_h"));
-     dd_ID_je.insert(_dd_simul->get_variable_id("Jn_x"));
-     dd_ID_je.insert(_dd_simul->get_variable_id("Jn_y"));
-     dd_ID_je.insert(_dd_simul->get_variable_id("Jn_z"));
-     dd_ID_je.insert(_dd_simul->get_variable_id("Jp_x"));
-     dd_ID_je.insert(_dd_simul->get_variable_id("Jp_y"));
-     dd_ID_je.insert(_dd_simul->get_variable_id("Jp_z"));
-  
-     ID_je.resize(8);
-     ID_je[QFERMIE]=_dd_simul->get_variable_id("QFermi_e"); 
-     ID_je[QFERMIH]=_dd_simul->get_variable_id("QFermi_h");
-     ID_je[JNX]=_dd_simul->get_variable_id("Jn_x");
-     ID_je[JNY]=_dd_simul->get_variable_id("Jn_y");
-     ID_je[JNZ]=_dd_simul->get_variable_id("Jn_z");
-     ID_je[JPX]=_dd_simul->get_variable_id("Jp_x");
-     ID_je[JPY]=_dd_simul->get_variable_id("Jp_y");
-     ID_je[JPZ]=_dd_simul->get_variable_id("Jp_z");
-   } 
- 
-   if (model_opt.particle_thermal_conductivity) 
-   {   
-
-   dd_ID_kpart.insert(_dd_simul->get_variable_id("eCond")); 
-   dd_ID_kpart.insert(_dd_simul->get_variable_id("hCond")); 
-
-   ID_kpart.resize(2);
-   ID_kpart[CONDE] = (_dd_simul->get_variable_id("eCond")); 
-   ID_kpart[CONDH] = (_dd_simul->get_variable_id("hCond")); 
-   } 
-
-   if  (model_opt.peltier_thomson_effect) 
-   { 
-
- 
-   dd_ID_TEpower.insert(_dd_simul->get_variable_id("Pn")); 
-   dd_ID_TEpower.insert(_dd_simul->get_variable_id("Pp")); 
-
-   ID_TEpower.resize(2);
-   ID_TEpower[TEPOWERE] = (_dd_simul->get_variable_id("Pn")); 
-   ID_TEpower[TEPOWERH] = (_dd_simul->get_variable_id("Pp")); 
-      
-   }  
-
-   if (model_opt.excitons) 
-   {
-    
-     ex_set_ID.insert(_ex_simul->get_variable_id("J_x"));
-     ex_set_ID.insert(_ex_simul->get_variable_id("J_y"));
-     ex_set_ID.insert(_ex_simul->get_variable_id("J_z"));
-     ex_set_ID.insert(_ex_simul->get_variable_id("chemPot"));
-     ex_set_ID.insert(_ex_simul->get_variable_id("Rad_power"));
-  
-     ID_ex.resize(5);
-     ID_ex[JEX_X]=_ex_simul->get_variable_id("J_x"); 
-     ID_ex[JEX_Y]=_ex_simul->get_variable_id("J_y");
-     ID_ex[JEX_Z]=_ex_simul->get_variable_id("J_z");
-     ID_ex[EX_POTENTIAL]=_ex_simul->get_variable_id("chemPot");
-     ID_ex[RADPOWER]=_ex_simul->get_variable_id("Rad_power");
-   }
-
- 
    
 }
 
@@ -240,50 +136,49 @@ void HeatModel::calculate_VCA (const PhysicalModelInterface *comp_A, const Physi
 
 void HeatModel::re_init()
 {
-  
+
   update_lattice_thermal_conductivity();
 
-  update_particle_thermal_conductivity();
-  
-  update_thermoelectric_powers();
-    
+  // update_particle_thermal_conductivity();  
       
 }
 
-void HeatModel::update_particle_thermal_conductivity()
-{
-  if (model_opt.particle_thermal_conductivity)
-  {
-    if (kappa_carrier != NULL)
-    {
-      //Insert phase    
-      kappa_carrier->set_temperature(_temperature);
+// void HeatModel::update_particle_thermal_conductivity()
+// {
+//   if (model_opt.particle_thermal_conductivity)
+//   {
+//     if (kappa_carrier != NULL)
+//     {
+//       //Insert phase    
+//       kappa_carrier->set_temperature(_temperature);
 
-      std::vector< std::map< ID, double > >  dd_sol_kpart;
-      std::vector<Point> centroid;
-      centroid[0]=_elem->centroid();
-    
-      _dd_simul->get_solution(_elem,centroid,dd_ID_kpart,dd_sol_kpart); 
+//       std::vector< std::map< ID, double > >  dd_sol_kpart;
+//       std::vector<Point> centroid(1);
+   
 
-      double sigma_e =  dd_sol_kpart[0].find(ID_kpart[CONDE])->second;
-  
-      double sigma_h =  dd_sol_kpart[0].find(ID_kpart[CONDH])->second;
+//       centroid[0]= _elem->centroid();
+
+//       _dd_simul->get_solution(_elem,centroid,dd_ID_kpart,dd_sol_kpart); 
+
+//       double sigma_e =  dd_sol_kpart[0].find(ID_kpart[CONDE])->second;
+
+//       double sigma_h =  dd_sol_kpart[0].find(ID_kpart[CONDH])->second;
       
-      kappa_carrier->set_electrons_conducibility(sigma_e);
+//       kappa_carrier->set_electrons_conducibility(sigma_e);
       
-      kappa_carrier->set_holes_conducibility(sigma_h);
+//       kappa_carrier->set_holes_conducibility(sigma_h);
       
-      //Update phase
-      kappa_carrier->re_init(); 
+//       //Update phase
+//       kappa_carrier->re_init(); 
       
-      //Getting result phase
-      kappa_carrier->get_electrons_thermal_conductivity(_electrons_thermal_conductivity);
+//       //Getting result phase
+//       kappa_carrier->get_electrons_thermal_conductivity(_electrons_thermal_conductivity);
       
-      kappa_carrier->get_holes_thermal_conductivity(_holes_thermal_conductivity);
-    }
+//       kappa_carrier->get_holes_thermal_conductivity(_holes_thermal_conductivity);
+//     }
     
-  }
-}
+//   }
+// }
 
 void HeatModel::update_lattice_thermal_conductivity()
 {
@@ -298,112 +193,178 @@ void HeatModel::update_lattice_thermal_conductivity()
 
 }
 
-void HeatModel::update_thermoelectric_powers()
+
+void
+HeatModel::add_heat_source_model(const std::string& model_name, 
+                                const ModelOptions& options)
 {
 
-  if (model_opt.peltier_thomson_effect)
 
+  HeatSourceInterface* model =
+      HeatSourceInterface::create(model_name, options);
+ 
+  if (model == NULL)
+    throw InitFailedException("No such heat source model: " + model_name);
+ 
+  ID id = model->get_id();
+  _heat_source_models[id] = model;
+  model->set_material(get_material());
+  model->set_simulator_id(get_simulator_id());
+  model->init();
+
+
+
+}
+
+void
+HeatModel::add_thermal_conductivity_model(const std::string& model_name, 
+                                const ModelOptions& options)
+{
+
+  //  std::cout<< get_material()->get_structure()<<std::endl;
+  // if (model_name == "lattice")
+  //{   model_name = "lat_therm_cond_" + get_material()->get_structure();}
+	  
+
+  ThermalConductivityInterface* model =
+      ThermalConductivityInterface::create(model_name, options);
+ 
+  if (model == NULL)
+    throw InitFailedException("No such thermal conductivity model: " + model_name);
+ 
+  ID id = model->get_id();
+  _thermal_conductivity_models[id] = model;
+  model->set_material(get_material());
+  model->set_simulator_id(get_simulator_id());
+  model->init();
+
+
+
+}
+
+
+void
+HeatModel::get_total_heat_source(std::vector<Point> h_point,
+		  std::vector<double>& total_heat_source)
+{
+
+  unsigned int np = h_point.size();
+
+  total_heat_source.clear();
+  total_heat_source.resize(np);
+ 
+  outer_source_iterator it_outer = _heat_source_models.begin();
+  outer_source_iterator end_outer = _heat_source_models.end();
+  
+  for ( ; it_outer != end_outer; ++it_outer)
   {
 
-  std::vector< std::map< ID, double > >  dd_sol_te;
+    std::vector<double>   partial_heat_source;
+    
+    (it_outer->second)->get_heat_source(h_point,_elem,partial_heat_source);
 
-  std::vector<Point> centroid;
-  
-  centroid.resize(1);  
-
-   centroid[0]=_elem->centroid();
-  
-  _dd_simul->get_solution(_elem,centroid,dd_ID_TEpower,dd_sol_te); 
-
-   _eTEpower =  dd_sol_te[0].find(ID_TEpower[TEPOWERE])->second; 
+    for (unsigned int n = 0;  n < np; ++n)
+    {
       
-  _hTEpower =  dd_sol_te[0].find(ID_TEpower[TEPOWERH])->second;   
- 
- 
-  // std::vector< std::map< ID, double > >  dd_sol_kpart;
-  // _dd_simul->get_solution(_elem,centroid,dd_ID_kpart,dd_sol_kpart); 
+      total_heat_source[n] = total_heat_source[n] + partial_heat_source[n];;
+      
+    }
+  }
+}
 
-  // double sigma_e =  dd_sol_kpart[0].find(ID_kpart[CONDE])->second;
+
+
+
+
+void  
+HeatModel::get_total_flux_heat_source(std::vector<Point> h_point,
+				   std::vector<RealGradient>& total_flux_heat_source)
+{
+
+  unsigned int np = h_point.size();
+
+  total_flux_heat_source.clear();
+  total_flux_heat_source.resize(np);
+ 
+  outer_source_iterator it_outer = _heat_source_models.begin();
+  outer_source_iterator end_outer = _heat_source_models.end();
   
-  //   double sigma_h =  dd_sol_kpart[0].find(ID_kpart[CONDH])->second;
+  for ( ; it_outer != end_outer; ++it_outer)
+  {
 
-  //  double P_tot = (sigma_e * _eTEpower +  sigma_h * _hTEpower) /( sigma_e + sigma_h);
+    std::vector<RealGradient >  flux_heat_source;
+    
+    (it_outer->second)->get_flux_heat_source(h_point,_elem,flux_heat_source);
 
-  // std::cout<<P_tot<<std::endl; 
+    for (unsigned int n = 0;  n < np; ++n)
+    {
+      
+        total_flux_heat_source[n](0) = total_flux_heat_source[n](0) + flux_heat_source[n](0);
+	total_flux_heat_source[n](1) = total_flux_heat_source[n](1) + flux_heat_source[n](1);
+	total_flux_heat_source[n](2) = total_flux_heat_source[n](2) + flux_heat_source[n](2);
 
+ 
+      
+    }
   }
 
+
 }
 
- 
-void HeatModel::get_dd_solution_secure( std::vector<Point> g_point,
-                                        std::vector<double>& QfermiE,
-                                        std::vector<double>& QfermiH,
-                                        std::vector<Point>& JE,
-                                        std::vector<Point>& JH)
+
+void
+HeatModel::clear_heat_sources(void)
 {
 
-     std::vector< std::map< ID, double > >  dd_sol_je;
+outer_source_iterator it =   _heat_source_models.begin();
+outer_source_iterator end =  _heat_source_models.end();
 
-     _dd_simul->get_solution(_elem,g_point,dd_ID_je,dd_sol_je); 
-         
-     for (unsigned int n=0; n<g_point.size(); n++) // loop over test function
-     {
-
-       QfermiE.resize(g_point.size());
-       QfermiH.resize(g_point.size());
-       JE.resize(g_point.size());
-       JH.resize(g_point.size());
-
-       QfermiE[n]  = dd_sol_je[n].find(ID_je[QFERMIE])->second;
-       QfermiH[n]  = dd_sol_je[n].find(ID_je[QFERMIH])->second;
-
-       JE[n](0) = dd_sol_je[n].find(ID_je[JNX])->second;
-
-       JE[n](1) = dd_sol_je[n].find(ID_je[JNY])->second;
-       JE[n](2) = dd_sol_je[n].find(ID_je[JNZ])->second;
-       JH[n](0) = dd_sol_je[n].find(ID_je[JPX])->second;
-       JH[n](1) = dd_sol_je[n].find(ID_je[JPY])->second;
-       JH[n](2) = dd_sol_je[n].find(ID_je[JPZ])->second;   
-     }
- 
+for ( ; it != end; ++it)
+ {
   
+     PhysicalModelInterface::destroy(it->second);
+
+ }
+
+     _heat_source_models.clear();
 
 }
 
-void  HeatModel::get_ex_solution_secure( std::vector<Point> g_point,
-			       std::vector<double>& ex_potential,
-					 std::vector<Point>& J_ex,
-					 std::vector<double>& radiative_power
-                                     )
+void
+HeatModel::clear_thermal_conductivity(void)
 {
+                                 
 
-     std::vector< std::map< ID, double > >  ex_sol;
+outer_conductivity_iterator it =  _thermal_conductivity_models.begin();
+outer_conductivity_iterator end = _thermal_conductivity_models.end();
 
-     _ex_simul->get_solution(_elem,g_point,ex_set_ID,ex_sol); 
-         
-     for (unsigned int n=0; n<g_point.size(); n++) // loop over test function
-     {
-
-       ex_potential.resize(g_point.size());
-
-      
-       J_ex.resize(g_point.size());
-
-       ex_potential[n]  = Constants::e * ex_sol[n].find(ID_ex[EX_POTENTIAL])->second;
-     
-
-       J_ex[n](0) = ex_sol[n].find(ID_ex[JEX_X])->second;
-       J_ex[n](1) = ex_sol[n].find(ID_ex[JEX_Y])->second;
-       J_ex[n](2) = ex_sol[n].find(ID_ex[JEX_Z])->second;
-
-       radiative_power.resize(g_point.size());
-       radiative_power[n] =  ex_sol[n].find(ID_ex[RADPOWER])->second;
- 
-
-      
-     }
- 
+for ( ; it != end; ++it)
+ {
   
+     PhysicalModelInterface::destroy(it->second);
+
+ }
+
+     _thermal_conductivity_models.clear();
 
 }
+
+
+int
+HeatModel::get_heat_source_IDs(std::vector<ID>& ids)
+{
+  int n =  _heat_source_models.size();
+
+  ids.resize(n);
+
+  outer_source_iterator it =  _heat_source_models.begin();
+  outer_source_iterator end = _heat_source_models.end();
+  int ctr = 0;
+  for ( ; it != end; ++it, ctr++)
+    ids[ctr] = (it->first);
+
+  return n;
+}
+
+
+      

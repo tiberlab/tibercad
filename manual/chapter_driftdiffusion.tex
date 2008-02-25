@@ -6,11 +6,11 @@ The semi-classical transport simulation of electrons and holes is based on the d
 
 Beside the electric potential the electro-chemical potentials are used as variables such that the system of PDEs to be solved reads as follows
 \begin{eqnarray}
--\nabla(\varepsilon\nabla\varphi - P) & = & -e(n - p - N_d^+ + N_a^-) \nonumber \\
--\nabla(\mu_n n \nabla\phi_n) & = & R \\
--\nabla(\mu_p p \nabla\phi_p) & = & -R \nonumber
+-\nabla(\varepsilon\nabla\varphi - \mathbf{P}) & = & -e(n - p - N_d^+ + N_a^-) \nonumber \\
+-\nabla(\mu_n n ( \nabla\phi_n + P_n \nabla T)  ) & = & R \\
+-\nabla(\mu_p p (\nabla\phi_p + P_p \nabla T) ) & = & -R \nonumber
 \end{eqnarray}
-$P$ is the electric polarization due to e.g. piezoelectric effects and $R$ is the net recombination rate, i.e. recombination rate minus generation rate.
+$P$ is the electric polarization due to e.g. piezoelectric effects and $R$ is the net recombination rate, i.e. recombination rate minus generation rate. $P_n$ and $P_p$ are the electron and hole thermoelectric power, respectively.
 The models for the mobilities and the net recombination rates can be specified in the \texttt{physical\_model} sections as described in the following.
 
 
@@ -39,7 +39,10 @@ See tables~\ref{table:dd_nodal}, \ref{table:dd_elemental} and \ref{table:dd_scal
 \texttt{Nd} & Ionized donor density & cm$^{-3}$ \\
 \texttt{Na} & Ionized acceptor density & cm$^{-3}$ \\
 \texttt{charge\_density} & Total charge density & cm$^{-3}$ \\
+\texttt{Pn} & Electron thermoelectric power & V K$^{-1}$ \\
+\texttt{Pp} & Hole thermoelectric power & V K$^{-1}$ \\
 \texttt{NetRecombination} & \begin{minipage}[t]{8cm}
+
 The net recombination rate for each recombination model and the total rate
 \end{minipage}& cm$^{-3}$s$^{-1}$
 \end{tabular}
@@ -106,6 +109,12 @@ model driftdiffusion
     {
       model = model_to_be_used
     }
+
+    physical_model thermoelectric_power
+    {
+      model = model_to_be_used
+    }
+   
  }
 \end{verbatim}
 \caption{\Models{} section for drift-diffusion}
@@ -197,7 +206,31 @@ R_{direct} = C(np - n_i^2)
 The material data file and the input file use the same keyword \texttt{C} for the parameter $C$.
 The database value can be overridden from the input file as described for SRH recombination.
 
+\subsection{Thermoelectric power models}
 
+
+The thermoelectric power models are the same for electrons and holes.
+The keywords is \texttt{thermoelectric\_power}, i.e
+
+\begin{verbatim}
+physical_model thermoelectric_power
+{
+  model = ...
+}
+
+\end{verbatim}
+The model keyword can be \texttt{constant} (i.e. the thermoelectric powers are readen from the database) or
+\texttt{diffusivity\_model} where the thermoelectric powers are computed by
+
+\begin{equation}
+P_n = - \frac{k_b}{q}\left( \frac{5}{2} + \frac{e \phi_n + E_c - e \varphi}{k_b T} \right)
+\end{equation}
+
+\begin{equation}
+P_p = \frac{k_b}{q}\left( \frac{5}{2} - \frac{e \phi_p + E_v - e \varphi}{k_b T} \right)
+\end{equation}
+
+The default is $P_n = P_p = 0$.
 
 \subsection{Mobility models}
 

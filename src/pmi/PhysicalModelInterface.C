@@ -55,6 +55,8 @@
 #include  "PoissonModel.h"
 #include  "ChargeDensityModel.h"
 #include  "DielectricModel.h"
+#include  "HeatSourceInterface.h"
+#include  "DriftDiffusionHeatSource.h"
 
 #include  "ZbOptDielectricConstant.h"
 #include  "WzOptDielectricConstant.h"
@@ -185,6 +187,9 @@ PhysicalModelInterface::create(const string& name,
       mod = PyroPolarization::create();
     else if (name == "pyropolarization_wz")
       mod = WzPyroPolarization::create();
+    else if  (name == "drift_diffusion_dissipation")
+      mod = DriftDiffusionHeatSource::create();
+
   }
 
 

@@ -9,7 +9,7 @@ ThermalContact::create(const std::string & name,  const ModelOptions &   options
 {
   ThermalContact* result = NULL;
 
-  if (name == "Heat_reservoir")
+  if (name == "heat_reservoir")
     result = Reservoir::create();
 
   if (name == "Thermal_flux")

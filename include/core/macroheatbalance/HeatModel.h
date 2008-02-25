@@ -4,20 +4,18 @@
 
 #include "PhysicalModel.h"
 #include "LatticeThermalConductivity.h"
-#include "ThermoelectricPower.h"
 #include "SimulationInterface.h"
 #include "elem.h"
 #include "ParticleThermalConductivity.h"
 #include "point.h"
 #include "Constants.h"
+#include "HeatSourceInterface.h"
+#include "ThermalConductivityInterface.h"       
 
 //!Class that contains all the object, necessary for Heat Transport solver
 class HeatModel: public PhysicalModel
 {
  public:
-
-
-  
 
 
   //!Constructor
@@ -28,9 +26,6 @@ class HeatModel: public PhysicalModel
    
    //! creates a new object
   static HeatModel* create();
-  
- 
-  bool get_peltier_thomson_opt();
 
   //!Get the thermal lattice conductivity
   void get_thermal_conductivity(Tensor2Sym& thermal_conductivity);
@@ -38,58 +33,33 @@ class HeatModel: public PhysicalModel
   //! Init all fields
   void re_init();
 
-
-  void get_dd_solution_secure( std::vector<Point> g_point,
-			       std::vector<double>& QfermiE,
-			       std::vector<double>& QfermiH,
-			       std::vector<Point>& JE,
-			       std::vector<Point>& JH);
-  
-  void get_ex_solution_secure( std::vector<Point> g_point,
-			       std::vector<double>& ex_potential,
-			       std::vector<Point>& J_ex,
-                               std::vector<double>& radiative_power);
-  
-
-
    //!Set the current element
    void set_element(const Elem* elem);
 
-   //!Return the electrons thermoelectric_power
-   double get_electrons_thermoelectric_power();
-
-   //!Return the holes thermoelectric_power
-   double get_holes_thermoelectric_power();
-
-   //!get the information about the drift diffusion simulation
-    bool get_joule_opt();
-
-   //!get the information about the excitons simulation
-    bool get_excitons_opt();
- 
    //! Set the temperature 
    void set_temperature(double temperature); 
 
-   //! Get the Simulation Environment of the DD simulation
-   SimulationEnvironment& get_dd_environment();
+   //!Get individually all heat source contributions
+   void get_heat_source_vector(std::vector<Point> h_point,
+			      std::vector<std::vector<double> >& vector_heat_source);
 
- //! Get the Simulation Environment of the Excitons simulation
-   SimulationEnvironment& get_ex_environment();
+   //!Get total heat source
+   void get_total_heat_source(std::vector<Point> h_point,
+		  std::vector<double>& total_heat_source);
+
+   //!Get total the heat source model given an ID
+   HeatSourceInterface* get_heat_source_model(ID id);
+  
+   //! Get the ids of the heat source models 
+   int get_heat_source_IDs(std::vector<ID>& ids);
+
+   //! Get the total heat flux source given a points
+   void get_total_flux_heat_source(std::vector<Point> h_point,
+					std::vector<RealGradient>& total_flux_heat_source);
+
 
  private:
- //! The variables that can be provided
-    enum dd_var
-    {
-      QFERMIE,
-      QFERMIH,
-      JNX,
-      JNY,
-      JNZ,
-      JPX,
-      JPY,
-      JPZ
-     
-    };
+ 
 
     enum dd_var_kpart
     {
@@ -97,118 +67,104 @@ class HeatModel: public PhysicalModel
       CONDH
     };
 
-  enum dd_var_TE
-    {
-      TEPOWERE,
-      TEPOWERH
-      
-    };
 
-    enum ex_var
-    {
-      JEX_X,
-      JEX_Y,
-      JEX_Z,
-      EX_POTENTIAL,
-      RADPOWER
-      
-    };
     struct model_options
    {
-     bool joule_effect;
-
-     bool peltier_thomson_effect;
   
      bool particle_thermal_conductivity;
- 
-     bool excitons;
 
    };
     
    //! Current element 
    const Elem* _elem; 
 
-
-   //! drift diffusion simulation
-   SimulationInterface* _dd_simul;
-
-   //! excitons simulation
-   SimulationInterface* _ex_simul;
-
-   // For general solution
-
-   std::set< ID > dd_ID_je;
-
-  std::vector<ID> ID_je;
-
-  //!For excitons solution
-   std::set< ID > ex_set_ID;
-
-   std::vector<ID> ID_ex;
-
+  
 
 
    //!For particle solution
    std::set< ID >  dd_ID_kpart;
 
-  std::vector<ID> ID_kpart;
-  
-  //For thermoelectric power
-
-  std::set< ID > dd_ID_TEpower;
-  
-  std::vector< ID > ID_TEpower;
- 
-
+   std::vector<ID> ID_kpart;
 
    model_options model_opt;
 
-   void  update_thermoelectric_powers();
-   
+  
+
+   //!Iterator for thermal conductivity model
+   typedef std::map<ID, ThermalConductivityInterface*>::iterator outer_conductivity_iterator;
+
+   //!Iterator for heat source model
+   typedef std::map<ID, HeatSourceInterface*>::iterator outer_source_iterator;
+
+   //!Heat sources iterator within a specific heat source model
+   typedef std::map<ID,double>::iterator inner_source_iterator;
+
+   //!Thermal conductivity iterator within a specific thermal conductivity model
+   typedef std::map<ID,Tensor2Sym>::iterator inner_conductivity_iterator;
+
+   //!Heat flux source within a specific heat source model
+   typedef std::map<ID,RealGradient>::iterator inner_flux_source_iterator;
+ 
+   //!Update particle thermal conductivity
    void  update_particle_thermal_conductivity();
 
-   
-
-   double _eTEpower;
-
-   double _hTEpower;
- 
+   //!Update lattice thermal conductivity
    void  update_lattice_thermal_conductivity(void); 
   
+   //! Temperature 
    double _temperature;
 
+   //! Lattice thermal conductivity
    Tensor2Sym _lattice_thermal_conductivity; 
 
+   //! Electron thermal conductivity
    Tensor2Sym _electrons_thermal_conductivity; 
    
+   //! Hole thermal conductivity
    Tensor2Sym _holes_thermal_conductivity; 
-  
-   // options model_opt;
-
+ 
+   //! Lattice thermal conductivity model
    LatticeThermalConductivity* kappa;
 
+   //! Particle thermal conductivity model
    ParticleThermalConductivity* kappa_carrier;
 
+   //! Pointer to a heat source model
+   HeatSourceInterface* _heat_source_interface;
+ 
+   //!Thermal conductivity model map
+   std::map<ID, ThermalConductivityInterface*> _thermal_conductivity_models;
 
+   //!Heat Source model map
+   std::map<ID, HeatSourceInterface*> _heat_source_models;
+ 
 
+   //! Add a heat source model 
+   void add_heat_source_model(const std::string& model_name,
+       			const ModelOptions& options = ModelOptions());
 
-   
+   //! Add a thermal conductivity model
+   void add_thermal_conductivity_model(const std::string& model_name, 
+				       const ModelOptions& options);
+
+   //! Clear all heat source models
+   void clear_heat_sources(void);
+
+    //! Clear thermal conductivity models
+   void clear_thermal_conductivity(void);
+
    //!copy constructor should not be used
-   HeatModel (const HeatModel &  t) {};
+    HeatModel (const HeatModel &  t) {};
   
  protected:
 
   virtual PhysicalModelInterface* create_new (void) const;
 
-
   virtual void copy_from(const PhysicalModelInterface *rhs){};
-
 
   virtual void read_database (void){};
  
-
   virtual void read_bowing_parameters (void) {};
-
 
   virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
 
@@ -230,9 +186,9 @@ inline
 void
 HeatModel::get_thermal_conductivity(Tensor2Sym& thermal_conductivity)
 {
-  thermal_conductivity = _lattice_thermal_conductivity +
-    +  _electrons_thermal_conductivity
-    +  _holes_thermal_conductivity;
+  thermal_conductivity = _lattice_thermal_conductivity;
+    // +  _electrons_thermal_conductivity
+    // +  _holes_thermal_conductivity;
   
     
 }
@@ -246,23 +202,6 @@ HeatModel::set_temperature(double temperature)
   _temperature = temperature;
 }
 
-inline
-double
-HeatModel::get_electrons_thermoelectric_power()
-{
-
-  return _eTEpower;
-
-}
-
-inline   
-double
-HeatModel::get_holes_thermoelectric_power()
-{
-
-   return _hTEpower; 
-
-}
 
 inline
 void 
@@ -273,49 +212,19 @@ HeatModel::set_element(const Elem* elem)
 
 }
 
-inline
-bool
-HeatModel::get_joule_opt()
-{
-
-  return model_opt.joule_effect;
-
-}
 
 inline
-bool
-HeatModel::get_excitons_opt()
+HeatSourceInterface*
+HeatModel::get_heat_source_model(ID id)
 {
+HeatSourceInterface* heat_source_model = NULL;
+outer_source_iterator it =  _heat_source_models.find(id);
+if (it !=   _heat_source_models.end())
+   heat_source_model = it->second;
+ 
+   return heat_source_model;
+ }
 
-  return model_opt.excitons;
-
-}
-
-inline
-SimulationEnvironment&
-HeatModel::get_ex_environment()
-{
-
-  return _ex_simul->get_environment();
-
-}
-
-inline
-SimulationEnvironment&
-HeatModel::get_dd_environment()
-{
-
-  return _dd_simul->get_environment();
-
-}
-
-inline
-bool
-HeatModel::get_peltier_thomson_opt()
-{
-return model_opt.peltier_thomson_effect;
-
-}
 
 
 #endif
