@@ -25,6 +25,11 @@ class ModifiedBroyden:  public SelfconsistentSolver
 
  protected:
 
+
+  double _scale_factor; 
+
+
+
   /*! \copydoc SimulationInterface::do_init() */
   virtual void do_init(void);
 
@@ -50,7 +55,7 @@ class ModifiedBroyden:  public SelfconsistentSolver
   void calculate_new_first_iteraion_solution(void);
   
 
-  //! \f$ \kappa_{in} = \kappa_{ni} =  F(x_n)^T \cdot F(x_i) \f$ */
+ //! \f$ \kappa_{in} = \kappa_{ni} =  F(x_n)^T \cdot F(x_i) \f$ */
   void calculate_kappa_matrix(void); 
 
   //! Modified Broden step: \f$ X_{n+1} = X_{n} + \alpha * (p_{nn} - 1)F(x_n) + \alpha \sum_{i=2}^{n-1} p_{ni}F(X_i) \f$ */
@@ -279,11 +284,12 @@ inline
 void ModifiedBroyden::evaluate_and_save_f(void)
 {
   
-
+  _x->scale(1.0/_scale_factor);
  
   set_solution_vector(*_x); //set solution from previuos Broyden step
  
- 
+  _x->scale(_scale_factor);
+
 
   solve_simulations();//do calculation
 
@@ -302,7 +308,10 @@ void ModifiedBroyden::evaluate_and_save_f(void)
   difference = *_x;
   difference.close();
 
-  difference -= solution_after;
+  // difference -= solution_after;
+
+  difference.add(-1.0 * _scale_factor,solution_after);
+ 
   difference.close();
 
   //----------------------
@@ -373,7 +382,7 @@ void ModifiedBroyden::calculate_mu_and_w_diag(void)
   {
      _mu(i, i) = 1.0/sqrt(	 _kappa(i+1,i+1) -  2.0*_kappa(i+1,i) +  _kappa(i,i) );
 
-     _mu(i,i) = sqrt(_mu(i,i));//I think it should be, but not present in the paper!
+        _mu(i,i) = sqrt(_mu(i,i));//I think it should be, but not present in the paper!
   }
 
 
@@ -418,10 +427,16 @@ void ModifiedBroyden::calculate_beta_matrix(void)
    NEWMAT::SymmetricMatrix t(_it_number -1);
    
 
-   t = (_omega_0 * I + _a);
- 
+   t = (_omega_0 * I + _a); // should be
+
+   
+   
+  
 
   _beta = t.i();
+
+ 
+
 
 }
 
@@ -457,9 +472,12 @@ void ModifiedBroyden::update_omega_vector(void)
 
   _omega.ReSize(_it_number - 1);
 
-  _omega = 1;
+  // _omega = _omega_0;
 
-/*
+
+   _omega = 1;
+
+
   if (_it_number > _number_of_x_to_use)
   {
     int number_of_zeros =  _it_number -  _number_of_x_to_use; 
@@ -468,7 +486,7 @@ void ModifiedBroyden::update_omega_vector(void)
       _omega(i) = 0;
     
   }
-*/
+
   
 }
 

@@ -36,16 +36,15 @@ There two groups of parameters. The first is group is related to general eigenso
 \subsection{Eigenvalue problem parameters}
 This parameters are common for all eigenvalue problems. Their default values may be different for different eigenvalue problems, for example for the Schroedinger equation and for the electromagnetic eigenvalue problem.
  
-The eigenvalue problem can be solved either by iterative Arnoldi solver or by LAPACK solver.
+The eigenvalue problem can be solved either by the solvers that are implemented into the SLEPc library.
 The relative parameter is
 
-\textit{solver} = \{ arnoldi $\vert$ lapack \}. The default value is arnoldi.
+\textit{solver} = \{ arnoldi $\vert$ lapack $\vert$ krylovshur \}. The default value is \texttt{krylovshur}.
 
-In the case of the lapack solver all the eigenvalues are computed. In the case of arnoldi solver it is necessary to specify which and how many eigenvalues have to be computed. The idea is that the iterative solver calculates several eigenvalues that a close to a specific number, reffered to as the {\textit{spectral shift}}. 
+In the case of the lapack solver all the eigenvalues are computed. In the case of arnoldi or krylovshur solver it is necessary to specify which and how many eigenvalues have to be computed. The idea is that the iterative solver calculates several eigenvalues that a close to a specific number, reffered to as the {\textit{spectral shift}}. 
 The relative parameters are:
-
 \begin{table}[htbp]
-	\begin{tabular}{|l||l|}
+	\begin{tabular}{l|l}
 	\hline
 	max\_iteration\_number & maximum number of iteration, used as a stop condition   \\
 	\hline
@@ -58,7 +57,7 @@ The relative parameters are:
 	\label{tab:EigenParam}
 \end{table}
 
-
+For the iterative solvers the important parameters that may significantly change the performance are the \textit{Krylov subspase method} type and the \textit{preconditioner} type. 
 
 There is a way to impose automacally the Dirichlet boundary conditions over all the boundary of the simulation region. This is done by the parameter
 

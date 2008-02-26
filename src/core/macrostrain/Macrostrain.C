@@ -969,6 +969,8 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
     macrostrain_model->get_converse_piezo_stress(stress_converse_piezo, elem);
 
+    
+
 
     double lat_const[3];
     crystal_el->get_lat_const(lat_const);
@@ -979,7 +981,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
     //     d/dx_i  ( C_ijkl (du_k/dx_l + eps0_kl)) = 0  
     // 
     // with converse piezo effect  
-    //     d/dx_i  ( C_ijkl (du_k/dx_l + eps0_kl) + d_k,ij Ek) =   0
+    //     d/dx_i  ( C_ijkl (du_k/dx_l + eps0_kl) - d_k,ij Ek) =   0
     //                                                             //
     //                                                             //
     //-------------------------------------------------------------//
@@ -1041,7 +1043,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	      }
 	      
 	     
-	      Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)* vec2 + vec3 ) ) ;
+	      Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)* vec2 - vec3 ) ) ;
 	    } 
 	  }
 	       
@@ -1231,7 +1233,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	Fe_add_sub.reposition(n_dofs + eq_number,1);
 	
 	  
-	Fe_add_sub(0) -=  JxW[qp] * doubleContraction(C_kl +  stress_converse_piezo, eps_const ) * lattice_factor  ;
+	Fe_add_sub(0) -=  JxW[qp] * doubleContraction(C_kl -  stress_converse_piezo, eps_const ) * lattice_factor  ;
 	  
 	//-------------------------------------
 	  

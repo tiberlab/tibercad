@@ -1,5 +1,6 @@
 #include "MacrostrainModel.h"
 #include "Material.h"
+#include <iostream>
 MacrostrainModel::MacrostrainModel() : MacrostrainModelInterface() 
 {
   stiffness = NULL;
@@ -151,7 +152,7 @@ void MacrostrainModel::get_converse_piezo_stress(Tensor2Sym& sigma, const Elem* 
 
     bool got_solution = poisson->get_solution (element, q_point_vec, Poisson_variables_ID, field_components);
 
-   
+  
 
     if (got_solution)
     {
@@ -163,6 +164,7 @@ void MacrostrainModel::get_converse_piezo_stress(Tensor2Sym& sigma, const Elem* 
       field(3) = field_components[0][id_Ez];
 
      
+      
       Material*   mat = get_material();
 
       const RotatedCrystal&   cr = mat->get_rotated_crystal ();

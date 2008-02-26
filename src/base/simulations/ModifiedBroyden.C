@@ -1,4 +1,4 @@
- // $Id$
+// $Id$
 
 #include "ModifiedBroyden.h"
 #include "newmatio.h"
@@ -337,7 +337,7 @@ void ModifiedBroyden::parse_options(void)
   _number_of_x_to_use = mod_opt.get_option("history_length",10);
 
   
-  
+  _scale_factor = mod_opt.get_option("scale_factor", 1);
   
   
 }
@@ -362,7 +362,7 @@ inline void ModifiedBroyden::init_x(void)
   const NumericVector<double>& solution  = get_solution_vector(); 
 
 
- 
+  
 
   _vector_size = solution.size();
 
@@ -381,7 +381,7 @@ inline void ModifiedBroyden::init_x(void)
 
   *_x = solution;
 
- 
+  _x->scale(_scale_factor);
  
 
   if (_x_correction.get() == NULL)
@@ -394,7 +394,12 @@ inline void ModifiedBroyden::init_x(void)
     _x_correction->init(0);
     _x_correction->init(_vector_size);
   }
+   
+
   
+  _x->print();
+ 
+
 
   if  (_estimate_omega_0)
     _omega_0 = _x->l2_norm();

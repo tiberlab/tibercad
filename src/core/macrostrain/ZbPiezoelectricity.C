@@ -33,6 +33,9 @@ void ZbPiezoelectricity::read_database ()
   GetPot data((mat->get_database()).get_data_file());
   e14 = data("e14", 0.0);
   e14_bow = data("bow_e14", 0.0);
+
+  
+ 
 }
 
 
@@ -41,8 +44,13 @@ void ZbPiezoelectricity::read_database ()
 void ZbPiezoelectricity::do_init(void)
 {
    ModelOptions & options = get_options ();
+
+  
    e14 = options.get_option("e14", e14);
+
    e14_bow = options.get_option("bow_e14", e14_bow);
+
+ 
 }
 
 //---------------------------------------------------------------//
@@ -78,10 +86,13 @@ void ZbPiezoelectricity::calculate_VCA(const PhysicalModelInterface *comp_A, con
 
 Tensor1  ZbPiezoelectricity::get_polariz_cryst(Tensor2Sym& strain_cryst)
 {
+
   Tensor1 polariz;
+
   polariz(1) = 2*e14*strain_cryst(3,2);
   polariz(2) = 2*e14*strain_cryst(3,1);
   polariz(3) = 2*e14*strain_cryst(2,1);
+
   return(polariz);
 }
 //-----------------------------------------------------------------//
