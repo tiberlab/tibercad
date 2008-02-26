@@ -5,9 +5,9 @@ export CC=gcc-4.1.1
 export FC=ifort-9.0
 
 ./configure --with-boost-prefix=/usr/pack/boost-1.33.1-ma \
-  --with-petsc-prefix=/usr/pack/petsc-2.3.0-ma \
+  --with-petsc-prefix=/usr/pack/petsc-2.3.2-ma \
   --with-petsc-arch=linux-gnu-complex \
-  --with-slepc-prefix=/usr/pack/slepc-2.3.0-ma \
+  --with-slepc-prefix=/usr/pack/slepc-2.3.2-ma \
   --with-mkl=/usr/pack/intel_mkl-8.0-ma \
   --disable-modules \
   --enable-pardiso \
