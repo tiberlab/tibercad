@@ -42,7 +42,7 @@ void ZbPiezoelectricity::do_init(void)
 {
    ModelOptions & options = get_options ();
    e14 = options.get_option("e14", e14);
-   e14 = options.get_option("bow_e14", e14_bow);
+   e14_bow = options.get_option("bow_e14", e14_bow);
 }
 
 //---------------------------------------------------------------//
