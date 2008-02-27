@@ -4,24 +4,17 @@
 #include "boost/regex.hpp"
 #include "boost/tokenizer.hpp"
 #include "boost/algorithm/string/trim.hpp"
-#include "boost/filesystem/path.hpp"
 
 #include "Utils.h"
 
 
 #include <cctype>
 #include <iostream>
+#include <sstream>
 
 
 using namespace std;
 
-string
-Utils::convert_path(const string& pathstring)
-{
-  boost::filesystem::path p(pathstring);
-  //cerr << "path : " <<  p.string() << endl;
-  return p.string();
-}
 
 string
 Utils::extract_typename(const type_info& info)

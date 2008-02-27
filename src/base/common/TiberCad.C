@@ -13,6 +13,9 @@ int
 TiberCad::cmdline_argc = 0;
 
 
+std::string
+TiberCad::tiberroot = "";
+
 
 void
 TiberCad::init(int argc, char** argv)
@@ -20,6 +23,11 @@ TiberCad::init(int argc, char** argv)
   // perhaps we can use the commandline arguments somewhere?
   cmdline_argc = argc;
   cmdline_argv = argv;
+
+  // read TIBERCADROOT from environment
+  char* root = getenv("TIBERCADROOT");
+  tiberroot = std::string(root);
+
   
   // prepare libMesh
   libMesh::init(cmdline_argc, cmdline_argv);
