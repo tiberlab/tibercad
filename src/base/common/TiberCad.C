@@ -26,7 +26,8 @@ TiberCad::init(int argc, char** argv)
 
   // read TIBERCADROOT from environment
   char* root = getenv("TIBERCADROOT");
-  tiberroot = std::string(root);
+  if (root != NULL)
+    tiberroot = std::string(root);
 
   
   // prepare libMesh
