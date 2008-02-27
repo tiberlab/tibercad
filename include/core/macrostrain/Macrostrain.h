@@ -226,7 +226,8 @@ class Macrostrain : public SimulationInterface
 				   std::vector<std::map<ID, double> >& values);
   
 
-
+  //!will be removed in future
+  void write_atom_potential();
 
  private:
 
@@ -454,7 +455,7 @@ class Macrostrain : public SimulationInterface
 
   void write_atom_displacements(const std::string filename);
 
-  void write_atom_potential();
+ 
 
   bool calculate_atom_displacements;
  
