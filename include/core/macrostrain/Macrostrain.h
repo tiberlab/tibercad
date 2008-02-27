@@ -454,11 +454,17 @@ class Macrostrain : public SimulationInterface
 
   void write_atom_displacements(const std::string filename);
 
+
+  void write_atom_potential(const std::string filename);
+
   bool calculate_atom_displacements;
  
   std::string atom_structure_filename;
  
-  std::string atom_displacements_filename;  
+  std::string atom_displacements_filename;
+
+  std::string atom_potential_filename;
+  
 
   std::string atom_output_type;
 

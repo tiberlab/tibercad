@@ -59,7 +59,7 @@ void Macrostrain::get_solution_secure(const Elem* elem,
 {
   unsigned int np = p.size();
  
-
+ 
 
   Tensor2Sym strain_el = result_strain[elem];
 
@@ -258,7 +258,10 @@ void Macrostrain::parse_options( )
  calculate_atom_displacements = opt.get_option("calculate_atom_displacements", false);
  atom_structure_filename = opt.get_option("atom_structure_filename", "");
  atom_displacements_filename = opt.get_option("atom_displacements_filename","");
-   
+ atom_potential_filename = opt.get_option("atom_potential_filename","");
+  
+
+  
  unsigned int max_ksp_iterations = opt.get_option("max_iterations",1000);
  
 
@@ -1652,8 +1655,9 @@ void Macrostrain::do_solve()
       std::ostringstream disp_file;
       disp_file << atom_displacements_filename << ".out"  ;
      
+   
 
-      write_atom_displacements(disp_file.str());
+      write_atom_displacements( disp_file.str());
     }
   //------------------------------------------------------------------------------------
   //geometry relaxation
@@ -1719,7 +1723,9 @@ void Macrostrain::do_solve()
 	    {
 	      std::ostringstream disp_file;
 	      disp_file << atom_displacements_filename << geom_it <<".out";
-	      write_atom_displacements(disp_file.str());
+
+	     
+	      write_atom_displacements( disp_file.str() );
 	    }
 
 	}
@@ -1772,7 +1778,11 @@ void Macrostrain::do_solve()
   {
     std::ostringstream disp_file;
     disp_file << atom_displacements_filename <<".out";
-    write_atom_displacements(disp_file.str());
+
+
+   
+
+    write_atom_displacements(disp_file.str() );
   }
 
   //--------------------------------------------------------------------------------------------------//
@@ -3661,6 +3671,55 @@ void Macrostrain::read_atom_structure(const std::string filename)
   
 
 }
+
+//-------------------------------------------------------------------------------------------/
+void  Macrostrain::write_atom_potential(const std::string filename)
+{
+
+  std::ofstream potential_file;
+
+  if (poisson_equation != NULL)
+  {
+
+    ID pot_ID = poisson_equation->get_variable_id("ElPotential");
+
+
+    potential_file.open( atom_potential_filename.c_str() );
+    if (!potential_file.good())
+    {
+      cerr << "Error: file with atom potentials can not be opened\n";
+      cerr <<  atom_potential_filename.c_str() << "\n";
+      error();	
+    }
+
+    unsigned int Number_of_atom = atom_structure.size();
+    vector<Point> point_vec(1);
+    double potential_value;
+
+    for (unsigned int i = 0; i < Number_of_atom ; i++)
+    {//atoms loop
+      if (atom_structure[i].element != NULL)
+      {
+
+	point_vec[0] =  atom_structure[i].relative_point ;
+	vector<double> values;
+	poisson_equation->get_solution(atom_structure[i].element, point_vec, pot_ID, values);
+	potential_value = values[0];
+      }
+
+      potential_file << setw(20) <<   setprecision(12) << potential_value << "\n";
+
+
+    }
+
+  }
+
+
+
+}
+
+
+
 //-------------------------------------------------------------------------------------------/
 void  Macrostrain::write_atom_displacements(const std::string filename)
 {//-------------------------------------------------------------------
@@ -3669,17 +3728,25 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
 
  //file opening
   string  string_from_file;
+
   std::ifstream atom_in_file;
   std::ofstream displacement_file;
+
+  
+ 
+  
 
   displacement_file.open(filename.c_str());
 
   if (!displacement_file.good())
-    {
-      cerr << "Error: file with atom displacements can not be opened\n";
-      cerr << filename.c_str() << "\n";
-      error();	
-    }
+  {
+    cerr << "Error: file with atom displacements can not be opened\n";
+    cerr << filename.c_str() << "\n";
+    error();	
+  }
+
+
+ 
 
   //--------------------------------------------------------------------
  if (atom_output_type=="uptight")
@@ -3746,7 +3813,15 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
 	{//atom belongs to the simulation domain
 	 
 	  vector <double> new_pos_of_atom(3,0.0);
+	  
+
+	  
+
 	  point_vec[0] =  atom_structure[i].relative_point ;
+	  
+	  
+
+
 	  fe->reinit(atom_structure[i].element, &point_vec);
 
 
@@ -3860,6 +3935,9 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
 	      double x;
 	      double y;
 	      double z;
+
+	      
+	      
 	      input_string >>mat >> t >> x >> y >> z ;
 	  
 	    
@@ -3878,6 +3956,10 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,1)  ;
 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,2)  ;
 		}
+
+
+	  
+
 	    }
 
 	  displacement_file <<  '\n';
@@ -3894,6 +3976,10 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
 
 
 }
+//-------------------------------------------------------------------------------------
+
+
+
 
 //-------------------------------------------------------------------------------------------/
 bool Macrostrain::may_belong_to_element(const Elem* element, Point& point)
