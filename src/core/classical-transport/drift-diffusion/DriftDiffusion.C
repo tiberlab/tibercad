@@ -14,6 +14,9 @@
 #include "TiberLinearSolver.h"
 #include "SolveFailedException.h"
 
+//////// QUIRK
+#include "Macrostrain.h"
+
 // libmesh includes
 #include "node.h"
 #include "mesh.h"
@@ -41,7 +44,6 @@ using namespace DriftDiffusionDefs;
 TIBER_MODULE(DriftDiffusion,driftdiffusion)
 
 
-
 DriftDiffusion*
 DriftDiffusion::_this;
 
@@ -61,7 +63,8 @@ DriftDiffusion::Options::Options(void)
     coupling(FULLYCOUPLED),
     scheme(FEM),
     current_calculation(RSTF),
-    exact_newton(true)
+    exact_newton(true),
+    write_atomic_potentials(NULL)
 {
 }
 
@@ -84,7 +87,8 @@ DriftDiffusion::Options::Options(const Options& rhs)
     coupling(rhs.coupling),
     scheme(rhs.scheme),
     current_calculation(rhs.current_calculation),
-    exact_newton(rhs.exact_newton)
+    exact_newton(rhs.exact_newton),
+    write_atomic_potentials(write_atomic_potentials)
 {
 }
 
@@ -112,6 +116,7 @@ DriftDiffusion::Options::operator=(const Options& rhs)
     scheme = rhs.scheme;
     current_calculation = rhs.current_calculation;
     exact_newton = rhs.exact_newton;
+    write_atomic_potentials = rhs.write_atomic_potentials;
   }
   return *this;
 }
@@ -717,6 +722,11 @@ DriftDiffusion::do_solve(void)
     }
   }
 
+  /////////////////// QUIRK >>
+  if (get_options().write_atomic_potentials != NULL)
+    get_options().write_atomic_potentials->write_atom_potential();
+  /////////////////// << QUIRK
+      
   get_options().coupling = coupling;
 
   // calculate the currents to print them on screen
@@ -1025,6 +1035,17 @@ DriftDiffusion::parse_options(void)
     myopts.coupling = HCURRENT | POISSON;
   else if (coupling == "current")
     myopts.coupling = CURRENTS;
+
+  /////////// QUIRK
+  if (opts.find_option("write_atomic_potentials"))
+  {
+    string str = opts.get_option("write_atomic_potentials", "macrostrain");
+    myopts.write_atomic_potentials =
+      dynamic_cast<Macrostrain*>(SimulationInterface::find_simulation(str));
+    if (myopts.write_atomic_potentials == NULL)
+      throw InitFailedException("Problem with write_atomic_potentials");
+  }
+          
           
 
   myopts.mesh_refinement = opts.get_option("mesh_refinement",

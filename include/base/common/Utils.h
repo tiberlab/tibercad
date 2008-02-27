@@ -107,9 +107,6 @@ class Utils
 
 
 
-    static std::string convert_path(const std::string& path);
-
-
 
 
   private:

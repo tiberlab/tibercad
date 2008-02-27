@@ -3,6 +3,9 @@
 #ifndef _TIBERCAD_H_
 #define _TIBERCAD_H_
 
+#include <string>
+
+
 //! Some useful common definitions for TiberCAD
 namespace TiberCad
 {
@@ -31,9 +34,16 @@ namespace TiberCad
   extern int cmdline_argc;
 
 
+  //! The installation root directory
+  /*!
+   * This is read from the environment
+   */
+  extern std::string tiberroot;
+
+
   //! An initialization routine
   /*!
-   * This routine calls init() of libmesh and other libraries, if needed
+   * This routine calls init() of libmesh and other libraries, if needed.
    */
   void init(int argc, char** argv);
 

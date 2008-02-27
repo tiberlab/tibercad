@@ -35,10 +35,18 @@ int main(int argc, char** argv)
     exit(1);
   }
 
-  if (!License::check_license(filename))
+  
+  char* licfile = getenv("TIBERLICENSEFILE");
+  setenv("TIBERLICENSEFILE", filename.c_str(), 1);
+  if (!License::check_license())
     cerr << "Ouch... something went wrong, could not successfully "
       << "verify signature." << endl
       << "Or did you set the expiry date in the past?" << endl;
+
+  if (licfile != NULL)
+    setenv("TIBERLICENSEFILE", licfile, 1);
+  else
+    unsetenv("TIBERLICENSEFILE");
 
   return 0;
 }

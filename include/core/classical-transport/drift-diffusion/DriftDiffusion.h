@@ -32,6 +32,8 @@ class Node;
 class EquationSystems;
 class TiberLinearSolver;
 
+/////// QUIRK
+class Macrostrain;
 
 template<typename T> class DenseMatrix;
 template<typename T> class NumericVector;
@@ -339,6 +341,9 @@ class DriftDiffusion : public SimulationInterface
 
         //! Use exact jacobian or not
         bool exact_newton;
+
+        /////// QUIRK
+        Macrostrain* write_atomic_potentials;
 
       private:
         

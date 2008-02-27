@@ -4,6 +4,7 @@
 
 #include "License.h"
 #include "Utils.h"
+#include "TiberCad.h"
 
 #include "hex.h"
 #include "randpool.h"
@@ -151,18 +152,56 @@ License::create_license(std::string& licensefile, const std::string& private_key
 
 
 bool
-License::check_license(const std::string& licensefile, const std::string& tool)
+License::check_license(const std::string& tool)
 {
   bool result = false;
-  
+
+  string default_licfile("tibercad.lic");
+  string licensefile(default_licfile);
+
   LicenseData data;
-  if (read_license_file(licensefile, data))
+
+  string tiberroot;
+  char* root = getenv("TIBERCADROOT");
+  if (root != NULL)
+    tiberroot = string(root);
+  
+  // we could have specified it in the environment
+  char* licfile = getenv("TIBERLICENSEFILE");
+  if (licfile != NULL)
   {
-    result = verify_string(_public_key, data.holder + data.expiry, data.signature);
+    licensefile = licfile;
+    if (read_license_file(licensefile, data))
+      result = verify_string(_public_key, data.holder + data.expiry, data.signature);
   }
+  
+  // if not, we check a few default locations
+  if (!result)
+  {
+    licensefile = default_licfile;
+    if (read_license_file(licensefile, data))
+      result = verify_string(_public_key, data.holder + data.expiry, data.signature);
+  }
+
+  if (!result)
+  {
+    licensefile = tiberroot + "/" + default_licfile;
+    if (read_license_file(licensefile, data))
+      result = verify_string(_public_key, data.holder + data.expiry, data.signature);
+  }
+  
+  if (!result)
+  {
+    licensefile = tiberroot + "/license/" + default_licfile;
+    if (read_license_file(licensefile, data))
+      result = verify_string(_public_key, data.holder + data.expiry, data.signature);
+  }
+
 
   if (result)
   {
+    cout << "Found license file: " << licensefile << ". "
+      << "Validate ... ";
     // now we check the system date
     time_t t = time(NULL);
     tm* now = gmtime(&t);
@@ -193,6 +232,11 @@ License::check_license(const std::string& licensefile, const std::string& tool)
       else if (now_month == exp_month)
         if (now_day > exp_day)
           result = false;
+
+    if (result)
+      cout << "OK" << endl;
+    else
+      cout << "expired license" << endl;
   }
 
   return result;

@@ -16,9 +16,9 @@ class License
       std::string signature;
     };
 
+
     //! Returns true if license is ok
-    static bool check_license(const std::string& licensefile,
-        const std::string& tool = "");
+    static bool check_license(const std::string& tool = "");
     
     //! Create (sign) the license file
     static bool create_license(std::string& licensefile,
