@@ -3673,7 +3673,7 @@ void Macrostrain::read_atom_structure(const std::string filename)
 }
 
 //-------------------------------------------------------------------------------------------/
-void  Macrostrain::write_atom_potential(const std::string filename)
+void  Macrostrain::write_atom_potential()
 {
 
   std::ofstream potential_file;
