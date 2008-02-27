@@ -758,9 +758,9 @@ void  DriftDiffusionProperties::compute_thermoelectric_powers(void)
 
     _thermoelectric_power->set_fermi_potential(_pd->fermi_e, _pd->fermi_h);
     
-    double cb = get_conduction_band_edge() - _pd->electric_potential;
+    double cb = get_conduction_band_edge();
     
-    double vb = get_valence_band_edge() - _pd->electric_potential;
+    double vb = get_valence_band_edge();
     
     _thermoelectric_power->set_band_edges(cb, vb);
 

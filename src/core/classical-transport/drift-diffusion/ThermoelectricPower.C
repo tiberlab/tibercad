@@ -103,8 +103,7 @@ ThermoelectricPower::calculate(void)
 
     _hTEpower =  Constants::k_B * (5.0 / 2.0 - (_hQfermi + _Ev - _phi) / _Tloc);
   }
-  assert( _eTEpower < 0.0 );
-  assert( _eTEpower > 0.0 );
+ 
  
 
 
