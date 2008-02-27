@@ -60,20 +60,18 @@ int main (int argc, char** argv)
   // do some preparation
   {
     // the TiberCAD root
-    string tiberroot;
-    char* root = getenv("TIBERCADROOT");
-    if (root != NULL)
-      tiberroot = string(root);
+    //char* root = getenv("TIBERCADROOT");
+    //if (root != NULL)
+    //  TiberCAD::tiberroot = string(root);
 
-    Utils::convert_path(tiberroot);
 
 
     // Set up search path for libraries
-    DLLoader::set_library_path(tiberroot + "/lib/tibermodels");
+    //DLLoader::set_library_path(tiberroot + "/lib/tibermodels");
 
-    char* modelpath = getenv("TIBERMODELPATH");
-    if (modelpath != NULL)
-      DLLoader::prepend_to_library_path(modelpath);
+    //char* modelpath = getenv("TIBERMODELPATH");
+    //if (modelpath != NULL)
+    //  DLLoader::prepend_to_library_path(modelpath);
 
     //DLLoader::prepend_to_library_path(".");
 
@@ -81,22 +79,7 @@ int main (int argc, char** argv)
 
 #ifdef LICENSE_CHECK
     // check the license
-    bool lic_ok = false;
-    string default_licfile("tibercad.lic");
-    char* licfile = getenv("TIBERLICENSEFILE");
-    if (licfile != NULL)
-      lic_ok = License::check_license(licfile);
-
-    if (!lic_ok)
-      lic_ok = License::check_license(default_licfile);
-
-    if (!lic_ok)
-      lic_ok = License::check_license(tiberroot + "/" + default_licfile);
-
-    if (!lic_ok)
-      lic_ok = License::check_license(tiberroot + "/license/" + default_licfile);
-
-    if (!lic_ok)
+    if (!License::check_license())
     {
       cerr << "Sorry, cannot start TiberCAD as I could not find a valid "
         << "license." << endl;
