@@ -532,14 +532,26 @@ DriftDiffusionProperties::calculate_mobilities(void)
 {
   double kT = _lattice_vt;
 
-  // use generalized Einstein relations!
+  // electrons
   double mue = _electron_mobility->get_mobility();
-  double Dn = kT * mue;
-  mue = Dn * get_electron_density_derivative() / get_electron_density();
+  double arg_e = -_pd->fermi_e + _pd->electric_potential - get_conduction_band_edge();
+  if (arg_e > -10 * _lattice_vt)
+  {
+    // use generalized Einstein relations!
+    double Dn = kT * mue;
+    mue = Dn * get_electron_density_derivative() / get_electron_density();
+  }
   _pd->electron_mobility = mue;
+    
+  // holes
   double muh = _hole_mobility->get_mobility();
-  double Dp = kT * muh;
-  muh = -Dp * get_hole_density_derivative() / get_hole_density();
+  double arg_h = _pd->fermi_h - _pd->electric_potential + get_valence_band_edge();
+  if (arg_h > -10 * _lattice_vt)
+  {
+    // use generalized Einstein relations!
+    double Dp = kT * muh;
+    muh = -Dp * get_hole_density_derivative() / get_hole_density();
+  }
   _pd->hole_mobility = muh;
 }
 
