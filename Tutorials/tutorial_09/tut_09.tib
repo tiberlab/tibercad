@@ -1,0 +1,196 @@
+# diode example
+
+# Description of  the  device physical regions
+$Device
+{
+   Region n_side 
+   {
+     reg_numb = 1
+     mat = Si
+     doping = 1e18 doping_type = donor
+     }
+
+   Region p_side 
+   {
+     reg_numb = 2
+     mat = Si
+     doping = 1e19 doping_type = acceptor
+
+   }
+
+   Region air
+   {
+     reg_numb = 3
+     mat = Air
+
+   }
+
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{
+  
+  model thermal
+  {
+
+     options
+    { 
+      simulation_name = tt
+      physical_regions = all
+    }
+
+      physical_model heat_source
+     {
+      model = drift_diffusion_dissipation
+
+      drift_diffusion_simulation = dd
+     }
+
+
+     BC_Regions
+     {
+        BC_Region reservoir
+   	{
+    
+         BC_reg_numb = 3
+         temperature = 300
+   	}
+ 
+     }
+
+  }
+
+
+  model driftdiffusion
+  { 
+              
+    options
+    {
+     simulation_name = dd
+     physical_regions = (1,2)
+    }
+
+     physical_model recombination
+     { 
+       model  =  srh
+     }
+
+     physical_model thermoelectric_power
+     {
+
+      model = diffusivity_model
+
+     }
+
+
+    physical_model electron_mobility
+    {
+      model = field_dependent
+
+      low_field_model = doping_dependent    
+    }
+
+    physical_model hole_mobility
+    {
+
+      model = field_dependent
+
+      low_field_model = doping_dependent
+
+    }
+
+    BC_Regions  
+    {
+      BC_Region anode
+      {
+        BC_reg_numb = 1
+        type = ohmic
+        voltage = @Vb[0.0]
+      }
+
+      BC_Region cathode
+      {
+        BC_reg_numb = 2
+        type = ohmic
+        voltage = 0.0
+      }
+ 
+    }   
+  }  
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+
+  driftdiffusion
+  {
+    nonlin_max_it = 25
+    nonlin_step_tol = 1e-5
+    ls_max_step = 2
+  }
+
+  selfconsistent
+  {
+     flavour = relaxation
+     simulations = (dd,tt)
+     abs_tolerance = 1e-5
+     monitor = true
+  }
+
+
+
+  sweep
+  {
+    simulation = selfconsistent
+    variable = Vb
+    start = 0.0
+    stop = 1.0
+    steps = 20
+    plot_data = true
+    plotvariable = current
+  }
+
+
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+
+
+  driftdiffusion 
+  {
+     statistics = FD
+     thermal_simulation = tt
+
+  }
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+
+$Simulation
+{
+  searchpath = ../../materials
+  meshfile = tut_09.msh
+  dimension = 2
+  temperature = 300
+  solve = sweep
+  resultpath = output_tut_09
+  symmetry = cylindrical
+  output_format = vtk
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob, current, NetRecombination,T,HeatSource,Pn,Pp)
+}
+
+
+
+
+
