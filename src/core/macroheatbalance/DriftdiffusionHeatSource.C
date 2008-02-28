@@ -81,7 +81,7 @@ void  DriftDiffusionHeatSource::do_init(void)
      _legend.resize(5);
      _legend[0]="Ejoule";
      _legend[1]="Hjoule";
-     _legend[2]="Rec";
+     _legend[2]="RecSRH";
      _legend[3]="EPelTh";
      _legend[4]="HPelTh";
 

@@ -2,7 +2,7 @@
 
 The theoretical model of the heat balance problem can be found in Ref.\cite{wachutka}. 
 \section{Heat equation}
-The steady state heat equation with the continuity equation read as
+The steady state heat equation with the continuity equation reads as
 
 \begin{equation}\label{heat_law}
 \nabla \cdot\left(- \kappa \nabla T + \mathbf{J_{S}} \right) = H_{S}
@@ -13,7 +13,7 @@ The source terms are rapresented by $\mathbf{J_S}$ and $H_S$ which are, respecti
 
 \section{Physical model}
 
-Negleting particle effects, the thermal conductivity is only due to the lattice contribution. The lattice thermal conductivity is readen from the database.
+Negleting particle effects, the thermal conductivity is only due to the lattice contribution. The lattice thermal conductivity is read from the database.
 
 The thermal model is tagged as \textit{thermal}. In \textbf{options} subsection we indicate the simulation name (\textit{simulation\_name = whatever\_you\_want}) and the simulation domain (\textit{physical\_regions = wherever\_you\_want})
 
@@ -51,10 +51,10 @@ H_{S} = - \mathbf{J_n} \cdot \nabla \varphi_n - \mathbf{J_p} \cdot \nabla \varph
 where $P_n$ and $P_p$ are the electron and hole thermoelectric power, respectively.
 
 
-The physical model \textbf{heat\_source} allows to include a specific source identified by its \textbf{model} name.
-Concerning electron and hole dissipations the model is 
+The physical model \textbf{heat\_source} includes a specific source identified by its \textbf{model} name.
+Concerning electron and hole dissipations the model is
 
-
+ 
 named \textit{drift\_diffusion\_dissipation}, as reported below.
 
 \begin{verbatim}
@@ -63,18 +63,19 @@ named \textit{drift\_diffusion\_dissipation}, as reported below.
    {		
      model = drift_diffusion_dissipation
 
-     drift_diffusion_simulation = dd
+     drift_diffusion_simulation = dd_simul_name
    }
 
 \end{verbatim}
 
-With the notation \textit{drift\_diffusion\_simulation = dd\_simul\_name} we indicate the drift diffusion simulation name.
+In order to include such a heat source we have to use a drift diffusion simulation.
+
+The syntax \textit{drift\_diffusion\_simulation = dd\_simul\_name} allows this connection.
 
 \subsection{Boundary conditions}
 
 
-The boundary conditions can fix the temperature at a specific contact. This Dirichlet like condition can be interpreted as a heat reservoir and is identified as \textit{type = heat\_reservoir}. Below is reported an example.
-
+The boundary conditions can fix the temperature at a specific contact. This Dirichlet like condition can be interpreted as a heat reservoir and is identified with \textit{type = heat\_reservoir}. Below an example is reported.
 
 \begin{verbatim}
 
@@ -101,8 +102,14 @@ With the notation \textit{temperature = 300} we fix the temperature (300 K in th
 \section{Output data}
 
 In this section we describe the \textit{thermal} quantities that can be plotted.
-The available quantities are \textit{T} (nodal-based variable) and \textit{HeatSource} (element-based variable).
-The former allows to plot the temperature and the latter refers to all sources considerated in the simulation. In the table we report all sources associated to drift diffusion simulations.
+The plot keywords are \textit{T} (node-based data) and \textit{HeatSource} (element-based data), i.e.
+
+\begin{verbatim}
+plot = (......,T,HeatSource,.....)
+\end{verbatim}
+  
+The keyword \textit{T} is referred to the temperature data (node-based data).
+The keyword \textit{HeatSource} allows to plot all heat sources considerated in the simulation. In the table we report all sources associated to drift diffusion simulations.
 
 
 
