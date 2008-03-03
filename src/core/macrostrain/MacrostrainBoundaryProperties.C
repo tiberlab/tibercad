@@ -84,8 +84,12 @@ void MacrostrainPressure::do_init()
 }
 
 //=====================================================================================//
-void MacrostrainExtended::do_init()
+void MacrostrainExtended::do_init(void)
 {
   type = "extended";
 }
+  
+MacrostrainExtended::MacrostrainExtended()
+{
 
+}

@@ -6,8 +6,7 @@ class MacrostrainExtended : public MacrostrainBoundaryProperties
  public:
   MacrostrainExtended();
   
-  ~MacrostrainExtended();
-
+ 
  
 
   static MacrostrainExtended* create(void);
@@ -15,7 +14,6 @@ class MacrostrainExtended : public MacrostrainBoundaryProperties
  protected:
 
   virtual void 	do_init (void);
-
 
  private:
 
