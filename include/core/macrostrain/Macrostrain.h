@@ -231,8 +231,7 @@ class Macrostrain : public SimulationInterface
 
  private:
 
-  //!consider converse piezo-effect or not 
-  bool converse_piezo_effect;
+  
 
   //!pointer to a drift-diffusion object that is used to get electric-field  data 
   SimulationInterface* poisson_equation;

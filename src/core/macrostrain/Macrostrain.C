@@ -461,25 +461,24 @@ void Macrostrain::parse_options( )
     output_type = opt.get_option("output_type","GMV");
  
 
-   
-    //-----------------------------------------------------------------//
-    //converse piezo-electric effect
-    
-    std::string poisson_model_name = opt.get_option("poisson_model_name","no_poisson");
-    if ( poisson_model_name != "no_poisson" )
     {
-      converse_piezo_effect = true;
-    
-      poisson_equation  = find_simulation ( poisson_model_name );
-    
-      if (poisson_equation == NULL)
-	throw InitFailedException( "Unknown poisson model " + poisson_model_name);
+      //-----------------------------------------------------------------//
+      //potential on atoms
+      //should be removed
+      
+      std::string poisson_model_name = opt.get_option("poisson_model_name","no_poisson");
+      if ( poisson_model_name != "no_poisson" )
+      {
 
+    
+	poisson_equation  = find_simulation ( poisson_model_name );
+	
+	if (poisson_equation == NULL)
+	  throw InitFailedException( "Unknown poisson model " + poisson_model_name);
+
+      }
     }
-    else
-    {
-       converse_piezo_effect = false;
-    }
+   
 
 }
 
@@ -1353,7 +1352,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
   }
 
      
-
+/*
 {
   system.matrix->close();
   
@@ -1363,7 +1362,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
   system.rhs->print_matlab("rhs.m");
 }
-
+*/
   //-----------------------------------------------------------------------
   //Application of periodicity constraints
 
@@ -3675,6 +3674,8 @@ void Macrostrain::read_atom_structure(const std::string filename)
 //-------------------------------------------------------------------------------------------/
 void  Macrostrain::write_atom_potential()
 {
+
+  cerr << "uuuuu------------------------------------------------------uuuuuu " << "\n" ;
 
   std::ofstream potential_file;
 

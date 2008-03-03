@@ -660,6 +660,11 @@ DriftDiffusion::do_solve(void)
   {
     solve_equilibrium();
 
+    /////////////////// QUIRK >>
+    if (get_options().write_atomic_potentials != NULL)
+      get_options().write_atomic_potentials->write_atom_potential();
+    /////////////////// << QUIRK
+ 
     // if we would repeat the equilibrium simulation, we can stop now
     if (equilibrium)
     {
