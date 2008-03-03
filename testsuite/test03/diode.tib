@@ -142,19 +142,29 @@ $Solver
      simulations = (dd, tt)
      abs_tolerance = 1e-5
      rel_tolerance = 1e-6
-     max_iterations = 20
+     max_iterations = 30
      monitor = true
   }
 
+#  driftdiffusion
+#  {
+
+#    nonlinear_solver = tiber
+#    nonlin_step_tol = 1e-3
+#    nonlin_max = 30
+#    current_integration_method = rstf
+    
+#  }
+
   driftdiffusion
   {
-
-    nonlinear_solver = tiber
-    nonlin_step_tol = 1e-3
-    nonlin_max = 30
-    current_integration_method = rstf
-    
+    nonlin_rel_tol = 1e-12
+    nonlin_step_tol = 1e-6
+    nonlin_max_it = 30
+    ls_max_step = 1
   }
+
+
 
   sweep
   {

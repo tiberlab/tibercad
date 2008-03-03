@@ -116,8 +116,9 @@ DriftDiffusionHeatSource::get_heat_source(std::vector<Point> h_point,const Elem*
 	double JpGradPhiH = solution[n].find(ID_vector[JPGRADPHIH])->second;
         double SrhSource =  Constants::e * R * (phi_h - phi_e);
 
-	heat_source[n]= JnGradPhiE + JpGradPhiH + SrhSource;
 
+	heat_source[n]= JnGradPhiE + JpGradPhiH + SrhSource;
+           
 	
       }
       
