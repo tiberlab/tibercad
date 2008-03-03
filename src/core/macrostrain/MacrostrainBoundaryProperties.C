@@ -1,6 +1,7 @@
 #include "MacrostrainBoundaryProperties.h"
-
- 
+#include "MacrostrainPressure.h"
+#include "MacrostrainSubstrate.h"
+#include "MacrostrainExtended.h" 
 
 
 MacrostrainBoundaryProperties::MacrostrainBoundaryProperties() : BoundaryProperties()
@@ -19,6 +20,8 @@ MacrostrainBoundaryProperties::create(const std::string & name,  const ModelOpti
     result = MacrostrainSubstrate::create();
   else if (name == "pressure")
     result = MacrostrainPressure::create();
+  else if (name == "extended")
+    result = MacrostrainExtended::create();
 
   if (result != NULL)
     result->set_options(options);
@@ -78,5 +81,11 @@ void MacrostrainPressure::do_init()
 
   type = "pressure";
 
+}
+
+//=====================================================================================//
+void MacrostrainExtended::do_init()
+{
+  type = "extended";
 }
 

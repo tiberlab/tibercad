@@ -4,6 +4,8 @@
 #include "BoundaryProperties.h"
 #include "Boundary.h"
 #include "MacrostrainBoundaryProperties.h"
+#include "MacrostrainPressure.h"
+#include "MacrostrainSubstrate.h"
 #include "TiberPetscLinearSolver.h"
 
 
@@ -1052,7 +1054,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	    
 	  
 
-	  //! may be there is external pressure, so we have to calculate a surface part
+	  //! may be there is external pressure or extended device, so we have to calculate a surface part
 	  //
 	  //
 	  //
@@ -1100,6 +1102,28 @@ void Macrostrain::do_assemble(EquationSystems& es,
 		  Fe_sub(p1) -=  press->get_value() * normal;
 		}
 		  
+	      }
+	      else if (dynamic_cast<MacrostrainBoundaryProperties*>( bd->get_boundary_properties( get_id() ))->get_type() == "extended")
+	      {
+		if (dim > 1)
+		{
+		  const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
+		  
+		  const std::vector<Real>& JxW_face = fe_face->get_JxW();
+		  
+		  const std::vector<Point >& qface_point = fe_face->get_xyz();
+		  
+		  const std::vector<Point> & normal = fe_face->get_normals();
+			        
+		  fe_face->reinit(elem, side);
+			         
+		 
+		  
+		} 
+		else
+		{
+		  
+		}
 	      }
 	  }//end of side loop
 	}
@@ -3675,7 +3699,7 @@ void Macrostrain::read_atom_structure(const std::string filename)
 void  Macrostrain::write_atom_potential()
 {
 
-  cerr << "uuuuu------------------------------------------------------uuuuuu " << "\n" ;
+ 
 
   std::ofstream potential_file;
 
