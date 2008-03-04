@@ -198,7 +198,6 @@ $Physics
 
 $Simulation
 {
-
   meshfile = diode.msh
   dimension = 1
   temperature = 300

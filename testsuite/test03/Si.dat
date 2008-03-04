@@ -74,11 +74,25 @@ beta_h = 2
 # high field dependency
 Vsat_Formula = 1
 beta0_e = 1.109
+betaexp_e = 0.66
 vsat0_e = 1.07e7
 vsatexp_e = 0.87
 beta0_h = 1.213
+betaexp_h = 0.17
 vsat0_h = 8.37e6
 vsatexp_h = 0.52
+
+# SRH recombination
+Etrap    = 0.0
+taumin_e = 0.0
+taumax_e = 1.0e-5
+Nref_e   = 1.0e+16
+gamma_e  = 1
+taumin_h = 0.0
+taumax_h = 3.0e-6
+Nref_h   = 1.0e+16
+gamma_h  = 1
+
 
 
 
@@ -92,4 +106,4 @@ therm_lat_cond_c = 1.65e-6   #[(cm)/(W K)]
 
 #Thermoelectric power [V/k]
 eTEpower = -0.001
-hTEpower = -0.001
+hTEpower =  0.001
