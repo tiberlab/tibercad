@@ -87,3 +87,72 @@ void DftbpWrapper::addsupersampling(double *coeffs, double *shifts, int noinv) {
 void DftbpWrapper::getchargesperatom(int nAtom, double* charges) {
 	f77_dftbp_getchargesperatom (_handler, nAtom, charges);
 }
+
+
+void DftbpWrapper::getmatrix(int nrow, int ncol, int nzval, int isreal, int *colind, int *rowpnt, double *val, std::string matrix, double *kPoint) {
+
+  f77_dftbp_recreatecsrbuffer(_handler, nrow, ncol, nzval, isreal);
+  int nrow1 = nrow + 1;
+
+  std::cout << "Getting hamiltonian " << std::endl;
+  std::cout << "Number of rows is " << nrow << std::endl;
+  std::cout << "Number of columns is " << ncol << std::endl;
+  std::cout << "Number of non zero values is " << nzval << std::endl;
+  std::cout << "Real/Complex flag " << isreal << std::endl;
+
+  if (kPoint == NULL) {
+
+    colind = new int[nzval];
+    rowpnt = new int[nrow1];
+    val = new double[nzval];
+
+    if (isreal == 0) std::cerr << "ERROR: requested a real H or S while complex calculation is computed" << std::endl;   
+
+    if (matrix.compare("H") == 0) {
+      
+      f77_dftbp_getrcsrhamiltonian (_handler, nrow1, nzval, colind, rowpnt, val);
+
+    }
+
+    else if (matrix.compare("S") == 0) {
+
+      f77_dftbp_getrcsroverlap (_handler, nrow1, nzval, colind, rowpnt, val);
+
+    }
+
+    else std::cerr << "Invalid matrix selection in DftbpWrapper::getmatrix(...). Choose between H and S" << std::endl;
+
+      }
+
+  else {
+
+    colind = new int[nzval];
+    rowpnt = new int[nrow1];
+
+    //Note: to val is associated a fortran complez vector, that's why allocation is double-sized.
+    //val should be read as a [re1, im1, re2, im2.....] array
+    val = new double[nzval*2];
+
+    if (isreal == 1) std::cerr << "ERROR: requested a complex H or S while complex calculation is computed" << std::endl;   
+    assert(isreal==0);
+
+    if (matrix.compare("H") == 0) {
+
+     f77_dftbp_getzcsrhamiltonian (_handler, kPoint, nrow1, nzval, colind, rowpnt, val);
+
+    }
+
+    else if (matrix.compare("S") == 0) {
+
+     f77_dftbp_getzcsroverlap (_handler, kPoint, nrow1, nzval, colind, rowpnt, val);
+
+    }
+
+    else std::cerr << "Invalid matrix selection in DftbpWrapper::getmatrix(...). Choose between H and S" << std::endl;
+
+  }
+
+
+  std::cout << "First value of H " << colind[0] << " " << rowpnt[0] << " " << val[0] << " " << val[1] << std::endl;
+
+}

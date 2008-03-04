@@ -7,7 +7,7 @@
 
 const double AtomisticGenerator::tol = 1e-2;
 
-const double AtomisticGenerator::scale = 10;
+const double AtomisticGenerator::scale = 4;
 
 
 AtomisticGenerator::AtomisticGenerator(void) {};
@@ -254,6 +254,7 @@ AtomisticGenerator::change_specie(std::string preserve){
     // as we can choose arbitrarily species name (e.g. calling one doping Silicon Si1 and another one Si2)
     if ( material.compare("Si") == 0 ) {assign["A"] = "Si";}
     else if ( material.compare("GaN") == 0) {assign["A"] = "Ga"; assign["B"] = "N";}
+    else if ( material.compare("AlN") == 0) {assign["A"] = "Al"; assign["B"] = "P";}
     else if ( material.compare("GaAs") == 0) {assign["A"] = "Ga"; assign["B"] = "As";}
     else if ( material.compare("AlAs") == 0) {assign["A"] = "Al"; assign["B"] = "As";}
     else if ( material.compare("Diamond") == 0 ) {assign["A"] = "C";}
@@ -263,7 +264,6 @@ AtomisticGenerator::change_specie(std::string preserve){
     //Cycle upon all atoms and change specie according to assign map
     Point p(0.0, 0.0, 0.0);
 
-
     //Different strategies if preserving conventional cell or preserving basis are needed
     if (preserve.compare("none") == 0)
       {
@@ -272,9 +272,7 @@ AtomisticGenerator::change_specie(std::string preserve){
 	//if it falls exactly on the boundary
 
 	for ( std::vector<Atom>::iterator atom = _super_basis.begin(); atom != _super_basis.end(); atom++){
-	  bool not_already_included = true; 
- 
-                    
+	                      
 	    p(0) = (*atom).position(1) / scale;
 	    
 	    if ( (_dim == 2) || (_dim == 3) )   p(1) = (*atom).position(2) / scale;
@@ -285,14 +283,20 @@ AtomisticGenerator::change_specie(std::string preserve){
 
 	    Elem* elem = *it;
 	    if ( elem->subdomain_id() == *reg){
-	      if ( (elem->contains_point(p) ) && (not_already_included) ) {
-		not_already_included = false;
+
+	      if (Macrostrain::may_belong_to_element(elem, p)){
+
+	      if ( (elem->contains_point(p) ) ) {
 		if ( assign.find( (*atom).specie ) != assign_last ){
 		  std::string tmp =  assign[(*atom).specie];
 		  (*atom).specie = tmp;
 		  (*atom).id = *reg;
-		  _structure_basis.push_back(*atom); } 
+		  _structure_basis.push_back(*atom); }
+		break; 
 	      }
+
+		  }
+
 	    }
 	  }
 
@@ -305,7 +309,7 @@ AtomisticGenerator::change_specie(std::string preserve){
 
 	Atom tmp_atom;
 	for ( std::vector<Tensor1>::iterator lattice = _super_lattice.begin(); lattice != _super_lattice.end(); lattice++){
-	  bool not_already_included = true;    
+	      
 
 	    p(0) = (*lattice)(1) / scale;
 
@@ -318,8 +322,10 @@ AtomisticGenerator::change_specie(std::string preserve){
 	    Elem* elem = *it;
 
 	    if ( elem->subdomain_id() == *reg){
-	      if ( (elem->contains_point(p) ) && (not_already_included) ) {
-		not_already_included = false;
+
+	      if (Macrostrain::may_belong_to_element(elem,p)){
+
+	      if ( (elem->contains_point(p) ) ) {
 
 		for ( std::vector<Atom>::iterator atom = _crystal_basis.begin(); atom != _crystal_basis.end(); atom++){
 
@@ -330,9 +336,12 @@ AtomisticGenerator::change_specie(std::string preserve){
 		    std::string tmp =  assign[(*atom).specie];
 		    tmp_atom.specie = tmp;
 		    _structure_basis.push_back(tmp_atom); } 
-
 		}
+		break;
 	      }
+
+	      }
+
 	    }
 	  }
 
@@ -344,7 +353,7 @@ AtomisticGenerator::change_specie(std::string preserve){
 
 	Atom tmp_atom;           
 	for ( std::vector<Tensor1>::iterator conv = _super_conv.begin(); conv != _super_conv.end(); conv++){
-	  bool not_already_included = true;
+	 
 	  for (std::vector<Elem*>::iterator it = _structure_elements.begin(); it != _structure_elements.end(); it++){
 
 	    p(0) = (*conv)(1) / scale;
@@ -355,8 +364,10 @@ AtomisticGenerator::change_specie(std::string preserve){
 
 	    Elem* elem = *it;
 	    if ( elem->subdomain_id() == *reg){
-	      if ( (elem->contains_point(p) ) && (not_already_included) ) {
-		not_already_included = false; 
+
+	      if (Macrostrain::may_belong_to_element(elem,p)){
+
+	      if ( (elem->contains_point(p) ) ) {
 		for ( std::vector<Tensor1>::iterator conv_lattice_basis_it = _conv_lattice_basis.begin(); conv_lattice_basis_it != _conv_lattice_basis.end(); conv_lattice_basis_it++){
 		  for ( std::vector<Atom>::iterator atom = _crystal_basis.begin(); atom != _crystal_basis.end(); atom++){
 		    tmp_atom.position= (*conv) + (*conv_lattice_basis_it) + _rotation*_prim_vec*(*atom).position;
@@ -367,7 +378,11 @@ AtomisticGenerator::change_specie(std::string preserve){
 		      _structure_basis.push_back(tmp_atom); } 
 		  }
 		}
+		break;
 	      }
+
+	      }
+
 	    }
 
 	  }
@@ -390,6 +405,9 @@ AtomisticGenerator::change_specie(std::string preserve){
 void AtomisticGenerator::set_cutoff()
 {
   _cutoff["Si"] = 1.81;
+  _cutoff["Ga"] = 1.2;
+  _cutoff["N"] = 1.2;
+  _cutoff["Al"] = 1.2;
 };
 
 

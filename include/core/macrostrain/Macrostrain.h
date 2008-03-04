@@ -229,6 +229,9 @@ class Macrostrain : public SimulationInterface
   //!will be removed in future
   void write_atom_potential();
 
+  //! Preliminary check to see if a point could belong to an element (much faster than exact calculation)
+static bool may_belong_to_element(const Elem* element, Point& point);
+
  private:
 
   
@@ -474,8 +477,6 @@ class Macrostrain : public SimulationInterface
 
 
  
-
-  bool may_belong_to_element(const Elem* element, Point& point);
 
   unsigned int find_nearest_node(Point& point);
 

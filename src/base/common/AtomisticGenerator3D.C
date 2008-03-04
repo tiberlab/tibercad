@@ -89,7 +89,7 @@ AtomisticGenerator3D::build()
 
   make_supercell( l1, l2, l3);
 
-  print_basis(_super_basis, "supercell.xyz");
+  //print_basis(_super_basis, "supercell.xyz");
 	
   //std::cout << "Period is " << _period << std::endl;
 

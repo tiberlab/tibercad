@@ -197,5 +197,95 @@ inline void f77_dftbp_getchargesperatom (f77_int const* handler, f77_int const&
 }
 
 
+extern "C" void dftbp_recreatecsrbuffer_ (f77_int const*, f77_int&, f77_int&, 
+    f77_int&, f77_int&);
+
+// Corresponding F77 arguments for f77_dftbp_recreatecsrbuffer:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(out) :: nRow
+// integer, intent(out) :: nCol
+// integer, intent(out) :: nVal
+// integer, intent(out) :: isReal
+inline void f77_dftbp_recreatecsrbuffer (f77_int const* handler, f77_int& nRow, 
+    f77_int& nCol, f77_int& nVal, f77_int& isReal)
+{
+  dftbp_recreatecsrbuffer_ (handler, nRow, nCol, nVal, isReal);
+}
+
+
+extern "C" void dftbp_getrcsrhamiltonian_ (f77_int const*, f77_int const&, 
+    f77_int const&, f77_int*, f77_int*, f77_double*);
+
+// Corresponding F77 arguments for f77_dftbp_getrcsrhamiltonian:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: nRow1
+// integer, intent(in) :: nVal
+// integer, intent(out) :: colInd(nVal)
+// integer, intent(out) :: rowPtr(nRow1)
+// real(dp), intent(out) :: val(nVal)
+inline void f77_dftbp_getrcsrhamiltonian (f77_int const* handler, f77_int 
+    const& nRow1, f77_int const& nVal, f77_int* colInd, f77_int* rowPtr, 
+    f77_double* val)
+{
+  dftbp_getrcsrhamiltonian_ (handler, nRow1, nVal, colInd, rowPtr, val);
+}
+
+
+extern "C" void dftbp_getzcsrhamiltonian_ (f77_int const*, f77_double const*, 
+    f77_int const&, f77_int const&, f77_int*, f77_int*, f77_double*);
+
+// Corresponding F77 arguments for f77_dftbp_getzcsrhamiltonian:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// real(dp), intent(in) :: kPoint(3)
+// integer, intent(in) :: nRow1
+// integer, intent(in) :: nVal
+// integer, intent(out) :: colInd(nVal)
+// integer, intent(out) :: rowPtr(nRow1)
+// complex(dp), intent(out) :: val(nVal)
+inline void f77_dftbp_getzcsrhamiltonian (f77_int const* handler, f77_double 
+    const* kPoint, f77_int const& nRow1, f77_int const& nVal, f77_int* colInd, 
+    f77_int* rowPtr, f77_double* val)
+{
+  dftbp_getzcsrhamiltonian_ (handler, kPoint, nRow1, nVal, colInd, rowPtr, val);
+}
+
+
+extern "C" void dftbp_getrcsroverlap_ (f77_int const*, f77_int const&, f77_int 
+    const&, f77_int*, f77_int*, f77_double*);
+
+// Corresponding F77 arguments for f77_dftbp_getrcsroverlap:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: nRow1
+// integer, intent(in) :: nVal
+// integer, intent(out) :: colInd(nVal)
+// integer, intent(out) :: rowPtr(nRow1)
+// real(dp), intent(out) :: val(nVal)
+inline void f77_dftbp_getrcsroverlap (f77_int const* handler, f77_int const& 
+    nRow1, f77_int const& nVal, f77_int* colInd, f77_int* rowPtr, f77_double* 
+    val)
+{
+  dftbp_getrcsroverlap_ (handler, nRow1, nVal, colInd, rowPtr, val);
+}
+
+
+extern "C" void dftbp_getzcsroverlap_ (f77_int const*, f77_double const*, 
+    f77_int const&, f77_int const&, f77_int*, f77_int*, f77_double*);
+
+// Corresponding F77 arguments for f77_dftbp_getzcsroverlap:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// real(dp), intent(in) :: kPoint(3)
+// integer, intent(in) :: nRow1
+// integer, intent(in) :: nVal
+// integer, intent(out) :: colInd(nVal)
+// integer, intent(out) :: rowPtr(nRow1)
+// complex(dp), intent(out) :: val(nVal)
+inline void f77_dftbp_getzcsroverlap (f77_int const* handler, f77_double const* 
+    kPoint, f77_int const& nRow1, f77_int const& nVal, f77_int* colInd, 
+    f77_int* rowPtr, f77_double* val)
+{
+  dftbp_getzcsroverlap_ (handler, kPoint, nRow1, nVal, colInd, rowPtr, val);
+}
+
+
 #endif
 

@@ -59,7 +59,7 @@ void Dftb::parse_options(void){
   build_input_options();
 
   //Set up input options for the solver (up to now only internal solver is supported)
-  _dftb_solver_options.solver = "internal";
+  _dftb_solver_options.solver = "external";
 
 
 #ifdef DEBUG
@@ -134,15 +134,13 @@ void Dftb::do_solve(void){
   std::cout << "Calling Dftb->do_solve() " << std::endl;
 #endif
 
-
-  if (_dftb_solver_options.solver.compare("internal") == 0) {
-
+  //get_energy is anyway needed for the correct assembling of Hamiltonian
    double energy = 0;
    inst->get_energy(energy);
 
-  std::cerr << "Done " << energy << std::endl;
+  if (_dftb_solver_options.solver.compare("internal") == 0) {
 
-  double* charges;
+   double* charges;
   charges = new double[_dftb_options.nAtom];
   inst->getchargesperatom(_dftb_options.nAtom, charges);
  
@@ -150,6 +148,17 @@ void Dftb::do_solve(void){
 
   }
 
+  int nrow,ncol,nzval,isreal;
+  //inst->getrealhamiltonian(nrow,ncol,nzval,isreal);
+
+  int *colind, *rowpnt;
+  double* val;
+  std::string matrix;
+  matrix = "H";
+  double* kPoint;
+  kPoint = new double[3];
+  kPoint[0] = 0.0; kPoint[1] = 0.0; kPoint[2] = 0.0;
+  inst->getmatrix(nrow, ncol, nzval, isreal, colind, rowpnt, val, matrix);
 
 #ifdef DEBUG
   std::cout << "Dfbt->solve() done" << std::endl;
@@ -343,6 +352,9 @@ void Dftb::build_input_options(){
     _dftb_options.iPeriodic = get_options().get_option("iPeriodic", 0);
   }
 
+
+
+  //CHANGE THE METHOD TO ASSIGN MAXIMUM ANGOLAR MOMENTUM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   _dftb_options.mAngs = new int[_dftb_options.nType];
   for (int i = 0; i < _dftb_options.nType; i++)   _dftb_options.mAngs[i] = 1;
 
