@@ -1,5 +1,5 @@
-\chapter{Envelop Function Approximation}
-The envelop function appriximation (EFA) simulation tool of \tibercad is developed in order to solve a single-particle Schr\"odinger equation for electrons and holes in a semiconductor crystal.
+\chapter{Envelope Function Approximation}
+The envelope function appriximation (EFA) simulation tool of \tibercad is developed in order to solve a single-particle Schr\"odinger equation for electrons and holes in a semiconductor crystal.
 This problem is an eigenvalue problem that is treated as a generalized complex eigenvalue problem 
 \begin{equation}
 	H\psi  = S \psi,
@@ -32,7 +32,8 @@ BC_Region infinite_barrier1
 \end{verbatim}
 
 \section{Solver parameters}
-There two groups of parameters. The first is group is related to general eigensolver problem, the second one is related to Schr\"odinger equation.
+
+There are two groups of parameters. The first  group is related to the general eigensolver problem, the second one is related to the Schr\"odinger equation.
 \subsection{Eigenvalue problem parameters}
 This parameters are common for all eigenvalue problems. Their default values may be different for different eigenvalue problems, for example for the Schroedinger equation and for the electromagnetic eigenvalue problem.
  
@@ -59,18 +60,18 @@ The relative parameters are:
 
 If the spectral\_shift is not defined then it will be calculated internally from the band edges.
 
-For the iterative solvers the important parameters, that may significantly change the performance, are the \textit{Krylov subspase method} type and the \textit{preconditioner} type. 
+For the iterative solvers the important parameters, that may significantly change the performance, are the \textit{Krylov subspace method} type and the \textit{preconditioner} type. 
 
-The Krylov method is defined as follows:\\
+The \textbf{Krylov} method is defined as follows:\\
 \textit{ksp\_type} = \{  bcgsl $\vert$ gmres  $\vert$ bcgs  $\vert$ cg  
 $\vert$ richardson $\vert$ preonly  \}
 
-The preconditioner type is defined as follows:\\
+The \textbf{preconditioner} type is defined as follows:\\
 \textit{pc\_type} = \{  cholesky $\vert$  jacobi $\vert$  ilu  $\vert$ composite \}
 
 
 
-There is a way to impose automacally the Dirichlet boundary conditions over all the boundary of the simulation region. This is done by the parameter
+There is a way to impose automatically the Dirichlet boundary conditions over all the boundary of the simulation region. This is done by the parameter
 
 \textit{Dirichlet\_bc\_everywhere} = \{true $\vert$ false\}. The default value for EFA problem is true.
 

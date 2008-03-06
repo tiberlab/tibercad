@@ -1,7 +1,7 @@
 \chapter{Simulation of strain}
 \label{chap:strain}
 \section{Theory}
-The theoretical model of strain simulation can be found in Refs.\cite{strain1, strain2}. The code can compute elastic deformations in a heterostructure and can calculate the deformed shape of the structure. The hetrostructure can be either grown on a substrate or not. External pressure may be applied to a structure as well.
+The theoretical model of strain simulation can be found in Refs.\cite{strain1, strain2}. The code can compute elastic deformations in a heterostructure and can calculate the deformed shape of the structure. The heterostructure can be either grown on a substrate or not. External pressure may be applied to a structure as well.
 \section{Models section parameters}
 The {\bf Models} section looks like follows:
 \begin{verbatim}
@@ -20,9 +20,11 @@ The mandatory keyword
 \textit{type} = \{ substrate $\vert$ pressure \} 
 
 specifies the boundary condition type.
+
 \subsection{Substrate boundary condition}
-In this case the boundary condition region is the boundary between the device and the substate. The substrate does not belong to the device. Therefore it is necessary to define 
+In this case the boundary condition region is the boundary between the device and the substrate. The substrate does not belong to the device. Therefore it is necessary to define 
 both the boundary region number and the substrate material (like it is done in sec.~\ref{Device}).
+
 \newtheorem*{subst}{Role of substrate}
 \begin{subst}
  In general, the ``substrate'' is a material that defines the lattice matching conditions, and not
@@ -56,13 +58,13 @@ BC_Region tip_upon_a_surface
 \end{verbatim}
 \newtheorem*{pressure}{Sign of pressure}
 \begin{pressure}
- The value of pressure has a positive sign if the external force acts towards the surface, which in general has to be  the  boundary of a simulation environment.
+ The value of the pressure has a positive sign if the external force acts towards the surface, which in general has to be  the  boundary of a simulation environment.
 \end{pressure}
 
 \section{Solver parameters}
-Choice of the necessary parameters to be put in the section depends on the type of the structure, namely, if it has a substrate or not. 
+The choice of the necessary parameters to be put in the \textbf{Solver} section depends on the type of the strain boundary condition for the structure, namely, if it is considered as grown on  a substrate or not. 
 \subsection{Structure with a substrate}
-The only obligatory parameter is  \textit{substrate} that is a name of a substrate boundary condition, e.g:
+The only mandatory parameter is  \textit{substrate}, to  which   a name of a substrate boundary condition region has to be  assigned, e.g (referring to the previous example):
 \begin{verbatim}
 strain_in_transistor
 {
@@ -71,7 +73,8 @@ strain_in_transistor
 \end{verbatim}
 
 \subsection{Structure without a substrate}
-The parameter \textit{substrate} should not be present  but the following parameters should be defined.
+
+The parameter \textit{substrate} should not be present; instead,  but the following parameters should be defined.
 \begin{itemize}
 \item The reference lattice material
 is defined by the coordinates of a point  belonging to this  material, using the parameter \textit{reference\_material\_point}.
@@ -101,17 +104,25 @@ The default  value is 1e-13.
 
 Default is: 
 
+\begin{itemize}
+\item 
 \textbf{gmres}  for  1D 
+\item 
+\textbf{bcgsl} for 2D and  3D  
+\end{itemize}
 
-\textbf{bcgsl} for 2D and  3D
-\\
+
 \textit{pc} =  type of  pre-conditioner :  \textbf{ilu},  \textbf{composite},  \textbf{jacobi}, \textbf{lu}, \textbf{cholesky}, \textbf{eisenstat}.
 \\
 Default is : 
 
+\begin{itemize}
+\item 
 \textbf{ilu}  for  1D 
+\item 
+\textbf{jacobi}  for 2D and  3D    
+\end{itemize}
 
-\textbf{jacobi}  for 2D and  3D
 
 \textit{max\_iterations}  =  max  number of iterations (default = 1000)
 
@@ -133,8 +144,8 @@ It is possible to specify periodic boundary conditions along the coordinate axes
 The default value is {\bf false}.
 \subsubsection{Mesh refinement}
 For the details about mesh refinement refer to the Libmesh library documentation.
-The parameter \textit{refinement\_steps } defines number of the refinement steps to be done with default value to be zero. The parameter 
-\textit{uniform\_refinement} = \{ true $\vert$ false \} is to choose between uniform and adaptive refinement. The default value is {\bf false}, i.e. adaptive refinement. 
+The parameter \textit{refinement\_steps } defines the number of the refinement steps to be done (with default value equal to zero). The parameter 
+\textit{uniform\_refinement} = \{ true $\vert$ false \} is used to choose between uniform and adaptive refinement. The default value is {\bf false}, i.e. adaptive refinement. 
 Example:
  \begin{verbatim}
  refinement_steps = 4

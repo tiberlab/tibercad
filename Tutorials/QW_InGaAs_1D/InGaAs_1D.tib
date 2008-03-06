@@ -170,20 +170,19 @@ driftdiffusion
   {
     coupling = poisson
     nonlinear_solver = tiber
-   # ksp_type = bcgsl
-    nonlin_abs_tol = 1e-13 #  1e-10
-    nonlin_step_tol = 1e-5 #  1e-2
-    #nonlin_rel_tol = 1e-12
+ 
+    nonlin_abs_tol = 1e-13 # 
+    nonlin_step_tol = 1e-5 # 
+ 
     lin_rel_tol = 1e-6
     nonlin_max_it = 30
-    #local_density_scaling = true
-    #ls_type = none
+   
     discretization = fem
     ls_max_step = 1
     pc_type = lu
-    #pc_type = composite
+  
     integration_order = 2
-    #relaxation_factor = 0.5
+    
   }
 
 
@@ -191,25 +190,19 @@ driftdiffusion
  macrostrain
   {
     substrate = substr
- #   tolerance = 1e-3
 
   }
 
   efaschroedinger
   {
-
-    #solver = default =   krylovshur (OK)
-    #solver = lapack
-  #  solution_method = general
+  
     x-periodicity = false
     Dirichlet_bc_everywhere = true
-#   particle = hl
-#    number_of_eigenstates = 6 #30
- #   model = conduction_band  #eff mass  cb
+
     poisson_model_name = driftdiffusion  #  potential from driftdiffusion 
     strain_model_name = macrostrain
     convergent_density = true
- #   monitor = true
+
   } 
 
  quantum_electrons 
@@ -272,18 +265,15 @@ $Simulation
 {
 
   searchpath = ../../../examples/materials   
-  meshfile = InGaAs_QW8nm_500nodi.msh #  InGaAs_QW8nm.msh  #
+  meshfile = InGaAs_1D.msh #
     
   mesh_units = 1e-9       #nm !!
   dimension = 1
   temperature = 300
   solve =  (strain, driftdiffusion, quantum_electrons,quantum_holes )
-# solve = driftdiffusion
-#   solve = (strain, driftdiffusion)
-#  solve = driftdiffusion 
-# solve = strain
-  resultpath =  output_test_default # output_qw8nm_In0.4GaAs_sol_general #  output_test_qw_InGaN_minus.one
- # plot = (Ec,Ev,QFermi_e, QFermi_h, T)
+
+  resultpath =  output # 
+
   plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent)
  
   output_format = grace
