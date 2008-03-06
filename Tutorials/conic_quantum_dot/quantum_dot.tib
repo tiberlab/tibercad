@@ -1,0 +1,367 @@
+$Device
+{
+
+  Region dot
+  {
+    reg_numb = 1
+    mat = GaN
+    x = 0.0
+
+    structure = wz
+
+   # x-growth-direction = (1,0,-1,0)
+   # y-growth-direction = (-1,2,-1,0)   
+   # z-growth-direction = (0,0,0,1)
+
+
+    y-growth-direction = (-1,0,1,0)
+    x-growth-direction = (-1,2,-1,0)   
+    z-growth-direction = (0,0,0,1)
+
+    #y-growth-direction = (0,1,0)
+    #z-growth-direction = (0,0,1)
+    #x-growth-direction = (1,0,0)
+    
+
+    doping = 1e15
+    doping_type = acceptor
+    doping_level = 0.025
+
+  }
+
+  Region  buffer
+  {
+    reg_numb = 2
+    mat = AlGaN
+    x = 0.3
+    structure = wz
+   
+
+    y-growth-direction = (-1,0,1,0)
+    x-growth-direction = (-1,2,-1,0)   
+    z-growth-direction = (0,0,0,1)
+   
+
+    doping = 1e15
+    doping_type = acceptor
+    doping_level = 0.025
+    
+   
+  }
+
+  Region  buffer1
+  {
+    reg_numb = 3
+    mat = AlGaN
+    x = 0.3
+    structure = wz
+   
+    y-growth-direction = (-1,0,1,0)
+    x-growth-direction = (-1,2,-1,0)   
+    z-growth-direction = (0,0,0,1)
+
+    doping = 1e15
+    doping_type = acceptor
+    doping_level = 0.025
+    
+   
+  }
+  
+  Region  buffer2
+  {
+    reg_numb = 4
+    mat = AlGaN
+    x = 0.3
+    structure = wz
+   
+    y-growth-direction = (-1,0,1,0)
+    x-growth-direction = (-1,2,-1,0)   
+    z-growth-direction = (0,0,0,1)
+
+
+
+    doping = 1e15
+    doping_type = acceptor
+    doping_level = 0.025
+    
+   
+  }
+
+
+  Cluster Quantum_dot
+  {
+    mesh_regions =(1,2)
+  }
+  
+  
+
+}
+
+$Models
+{
+
+  model macrostrain
+  {
+
+    options
+    {          
+      simulation_name = str
+
+      physical_regions = all
+    }
+
+  
+  
+    
+    BC_Regions  
+    {
+      BC_Region substrate
+      {
+	BC_reg_numb = 1
+	type = substrate
+	material = AlGaN
+	x = 0.3
+	structure = wz
+
+	y-growth-direction = (-1,0,1,0)
+	x-growth-direction = (-1,2,-1,0)   
+	z-growth-direction = (0,0,0,1)
+
+
+      }
+    }
+
+  } 
+
+
+  model  driftdiffusion
+  { 
+
+    options
+    {          
+      simulation_name = dd
+      
+      physical_regions = all
+    }
+
+    physical_model recombination
+    { 
+      model = srh
+    }                
+
+     physical_model recombination
+    { 
+     model = direct
+     C = 1.1e-8
+   
+    }  
+  
+     
+
+    physical_model electron_mobility
+    { 
+      model = doping_dependent
+    }                
+
+
+    physical_model hole_mobility
+    { 
+      model = doping_dependent
+    }                
+
+
+    BC_Regions  
+    {     
+
+      BC_Region surface_states1
+      {
+        BC_reg_numb = 2
+    	type = interface
+    	Ns = -1e10
+ 
+	
+      }
+
+
+      BC_Region surface_states2
+      {
+        BC_reg_numb = 3
+    	type = interface
+    	Ns = -1e10
+   
+	
+      }
+ 
+   
+ 
+    }   
+
+
+   
+
+  }
+
+
+ 
+
+
+  model efaschroedinger
+
+  {
+
+   
+    options
+    {
+     simulation_name = quantum_el
+     physical_regions = Quantum_dot #(1,2)
+    }
+
+
+  }
+
+
+  model efaschroedinger
+
+  {
+
+   
+    options
+    {
+     simulation_name = quantum_hl
+     physical_regions =  Quantum_dot # (1,2)
+    }
+
+  
+  }
+  
+
+ 
+
+
+
+}
+
+$Solver
+{
+
+ macrostrain
+  {
+   substrate = substrate
+
+    tolerance = 1e-6
+
+    xmonitor = true
+  }
+
+ 
+  driftdiffusion
+  {
+    coupling = poisson
+
+    nonlinear_solver = tiber
+    linear_solver = pardiso
+   
+    nonlin_max_it = 15
+    nonlin_rel_tol = 1e-12
+ 
+    nonlin_step_tol = 1e-5
+  
+    ls_max_step = 4
+
+  }
+
+ 
+
+  quantum_el
+  {
+   
+    Dirichlet_bc_everywhere = true
+    particle = el
+    number_of_eigenstates = 5
+    poisson_model_name = dd
+    strain_model_name = macrostrain
+    convergent_density = true
+    log_output = true
+  
+    solver = krylovshur 
+   
+
+   
+    monitor = true
+    ksp_type = bcgsl
+    pc_type =  jacobi
+  }
+
+  quantum_hl
+  {
+    x-periodicity = false
+    Dirichlet_bc_everywhere = true
+    particle = hl
+    number_of_eigenstates = 8
+    poisson_model_name = dd
+    strain_model_name = macrostrain
+    convergent_density = true
+  
+    solver = krylovshur
+   
+    log_output = true
+    monitor = true
+
+    ksp_type = bcgsl
+    pc_type =  jacobi
+
+  }
+
+
+
+
+}
+
+
+$Physics
+{
+
+ 
+  quantum_el 
+  {
+    model = conduction_band  
+
+    particle = el
+
+  }
+
+
+  quantum_hl
+  {
+    particle = hl
+    model = kp   #  k.p  for  valence  band
+    kp_model = 6x6
+  }
+
+  driftdiffusion
+  {
+ 
+    strain_simulation = str
+    statistics = FD
+
+    model = strained
+    
+  }  
+
+}
+
+$Simulation
+{
+  searchpath = ../../../examples/materials     
+  meshfile = quantum_dot.msh #
+  mesh_units = 1e-9
+  dimension = 3
+  temperature = 300
+
+  solve = (str, dd, quantum_el, quantum_hl )
+ 
+
+  resultpath = output #
+  output_format = ise
+  plot = (strain, polarization, Ec, Ev, QFermi_e, QFermi_h, EField , ElPotential,  EigenFunctions, EigenEnergy, EnergyLevels)
+}
