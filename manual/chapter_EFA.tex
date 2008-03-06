@@ -21,7 +21,7 @@ model efaschroedinger
 }
 \end{verbatim}
 
-The boundary conditions of the simulation domain are open.
+The default boundary conditions of the simulation domain  are open (that is  zero flux for single-band calculation).
 It is possible to specify Dirichlet boundary conditions:
  \begin{verbatim}
 BC_Region infinite_barrier1
@@ -31,13 +31,17 @@ BC_Region infinite_barrier1
 }
 \end{verbatim}
 
+There is a way to impose automatically the Dirichlet boundary conditions over all the boundary of the simulation region. This is done by the parameter
+
+\textit{Dirichlet\_bc\_everywhere} = \{true $\vert$ false\} in \textbf{Solver} section. The default value for EFA problem is true.
+
 \section{Solver parameters}
 
 There are two groups of parameters. The first  group is related to the general eigensolver problem, the second one is related to the Schr\"odinger equation.
 \subsection{Eigenvalue problem parameters}
-This parameters are common for all eigenvalue problems. Their default values may be different for different eigenvalue problems, for example for the Schroedinger equation and for the electromagnetic eigenvalue problem.
+These parameters are common for all eigenvalue problems. Their default values may be different for different eigenvalue problems, for example for the Schroedinger equation and for the electromagnetic eigenvalue problem.
  
-The eigenvalue problem can be solved either by the solvers that are implemented into the SLEPc library.
+The eigenvalue problem can be solved  by the solvers that are implemented into the SLEPc library.
 The relative parameter is
 
 \textit{solver} = \{ arnoldi $\vert$ lapack $\vert$ krylovshur \}. The default value is \texttt{krylovshur}.
@@ -51,7 +55,7 @@ The relative parameters are:
 	\hline
 	eigen\_solver\_tolerance & numerical eigensolver tolerance used as a convergence criteria \\
 	\hline
-	spectral\_shift & the value in eV to which the closest eigenvalues are found. \\
+	spectral\_shift &  the closest eigenvalues to this value (eV) are found. \\
 	\hline 
 	\end{tabular}	
 	\caption{Iterative eigensolver parameters}
@@ -71,9 +75,7 @@ The \textbf{preconditioner} type is defined as follows:\\
 
 
 
-There is a way to impose automatically the Dirichlet boundary conditions over all the boundary of the simulation region. This is done by the parameter
 
-\textit{Dirichlet\_bc\_everywhere} = \{true $\vert$ false\}. The default value for EFA problem is true.
 
 Other options:
 

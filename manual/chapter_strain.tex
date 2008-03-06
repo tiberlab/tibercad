@@ -23,7 +23,8 @@ specifies the boundary condition type.
 
 \subsection{Substrate boundary condition}
 In this case the boundary condition region is the boundary between the device and the substrate. The substrate does not belong to the device. Therefore it is necessary to define 
-both the boundary region number and the substrate material (like it is done in sec.~\ref{Device}).
+both the boundary region number and the substrate material
+% (like it is done in sec.~\ref{Device}).
 
 \newtheorem*{subst}{Role of substrate}
 \begin{subst}
@@ -74,11 +75,11 @@ strain_in_transistor
 
 \subsection{Structure without a substrate}
 
-The parameter \textit{substrate} should not be present; instead,  but the following parameters should be defined.
+In this case, the parameter \textit{substrate} should not be present; instead, the following parameters should be defined.
 \begin{itemize}
 \item The reference lattice material
 is defined by the coordinates of a point  belonging to this  material, using the parameter \textit{reference\_material\_point}.
-\item As it follows from Ref.~\cite{strain1},  additional geometrical points have to be specified, according  to the device dimensionality. The corresponding parameters are:
+\item As  follows from Ref.~\cite{strain1},  additional geometrical points have to be specified, according  to the device dimensionality. The corresponding parameters are:
 \textit{fixed\_point1}, \textit{fixed\_point2} and \textit{fixed\_point3}.
 \end{itemize}
 Example for a 2D simulation:
@@ -142,7 +143,9 @@ It is possible to specify periodic boundary conditions along the coordinate axes
 \textit{periodicity\_z} = \{ true $\vert$ false \}
 
 The default value is {\bf false}.
+
 \subsubsection{Mesh refinement}
+
 For the details about mesh refinement refer to the Libmesh library documentation.
 The parameter \textit{refinement\_steps } defines the number of the refinement steps to be done (with default value equal to zero). The parameter 
 \textit{uniform\_refinement} = \{ true $\vert$ false \} is used to choose between uniform and adaptive refinement. The default value is {\bf false}, i.e. adaptive refinement. 
