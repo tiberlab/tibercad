@@ -230,7 +230,7 @@ class Macrostrain : public SimulationInterface
   void write_atom_potential();
 
   //! Preliminary check to see if a point could belong to an element (much faster than exact calculation)
-static bool may_belong_to_element(const Elem* element, Point& point);
+  static bool may_belong_to_element(const Elem* element, Point& point);
 
  private:
 
@@ -523,12 +523,16 @@ static bool may_belong_to_element(const Elem* element, Point& point);
   //! Petsc draw context;
   PetscDrawLG _lg; 
 
-
-
+  //! recalculate partial the derivatives of the basis functions for the zero-gradient boundary condition
+  /*!
+    \param deriv_vectors input: initial derivatives; output: recalculated derivatives
+    \param normal normal vector
+  */
+  void adjust_derivatives(Tensor1& deriv_vectors, const Point& normal); 
  
  protected:
 
-
+ 
 
   virtual void do_init(void);
 

@@ -1024,35 +1024,25 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	{//not a substrate
 	  for (unsigned int qp=0; qp<qrule.n_points(); qp++)
 	  {//qp
-	    vec1 = 0;
-	    for (int i = 1; i<=dim; i++) vec1(i) = dphi[p1][qp](i-1);
-	    
-	    //-------------eps0 part------------------
-	    for (unsigned int k = 0; k <= 2; k++)
+	   
+	    //-------------eps0 part and converse piezo volumic part
+	   
+	    for (int i = 1; i<=dim; i++)
 	    {
-	      vec2 = 0;
-	      vec3 = 0;
-	      for (int i = 1; i <=3; i++ ) 
-	      {	     	
-		if (k+1 > i)
-		{
-		  vec2(i) = eps_const(k+1,i);
-		  vec3(i) = stress_converse_piezo(k+1,i);
-		}
-		else
-		{
-		  vec2(i) = eps_const(i,k+1);
-		  vec3(i) = stress_converse_piezo(i,k+1); 
-		}
-	      }
+	      double stress;
 	      
-	     
-	      Fe_sub(p1) -= JxW[qp]*(vec1 * ( C_tensor_el->get_subtensor(j+1,k+1)* vec2 - vec3 ) ) ;
-	    } 
+	      if (i > j+1)
+		stress = stress_converse_piezo(i, j+1);
+	      else
+		stress = stress_converse_piezo(j+1, i);
+
+	      Fe_sub(p1) -= JxW[qp] * dphi[p1][qp](i-1) *
+		( doubleContraction(C_tensor_el->get_another_subtensor(i,j+1), eps_const) - stress );
+	    }
+ 
 	  }
 	       
-	    
-	  
+	   
 
 	  //! may be there is external pressure or extended device, so we have to calculate a surface part
 	  //
@@ -1107,6 +1097,12 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	      {
 		if (dim > 1)
 		{
+
+
+		 
+		  const std::vector<std::vector<RealGradient> >& dphi_face = fe_face->get_dphi();
+
+
 		  const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
 		  
 		  const std::vector<Real>& JxW_face = fe_face->get_JxW();
@@ -1117,7 +1113,25 @@ void Macrostrain::do_assemble(EquationSystems& es,
 			        
 		  fe_face->reinit(elem, side);
 			         
-		 
+		  for (unsigned int qp=0; qp< qface.n_points(); qp++)
+		  {
+
+		   
+		     
+		    Tensor2Gen t = doubleContraction(C_tensor_el->C_calc, eps_const) - stress_converse_piezo;
+		      
+		    Tensor1 v;
+		    v(1) = normal[qp](0);  v(2) = normal[qp](1);  v(3) = normal[qp](2);
+
+		    Tensor1 v1 = t*v;
+		    
+			
+		    Fe_sub(p1) += JxW_face[qp] * phi_face[p1][qp] * v1(j+1);
+
+		     
+
+		    
+		  } 
 		  
 		} 
 		else
@@ -1214,7 +1228,69 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	  }
 	  
 	}
-	
+
+
+	//if there are extended boundary condition we need surface integration!
+	for (unsigned int side=0; side<num_sides; side++)
+	{//side loop
+	  Boundary* bd = si.get_boundary(std::pair<const Elem*,  unsigned int> (elem,side));
+	  if (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  )
+	    if (dynamic_cast<MacrostrainBoundaryProperties*>( bd->get_boundary_properties( get_id() ))->get_type() == "extended")
+	    {
+ 
+	     
+
+	      const std::vector<std::vector<RealGradient> >& dphi_face = fe_face->get_dphi();
+
+	      const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
+		  
+	      const std::vector<Real>& JxW_face = fe_face->get_JxW();
+		  
+	      const std::vector<Point >& qface_point = fe_face->get_xyz();
+		  
+	      const std::vector<Point> & normal = fe_face->get_normals();
+			        
+	      fe_face->reinit(elem, side);
+
+	    
+	    
+
+	      for (unsigned int p1=0; p1<n_u_dofs; p1++)
+	      {
+		if (!belongs_to_substrate(p1, elem))
+		  for (unsigned int p2=0; p2<n_u_dofs; p2++)
+		  {
+		  
+
+		    for (unsigned int qp=0; qp<qface.n_points(); qp++)
+		    {
+
+		      vec2 = 0;
+		      for (int i = 0; i < dim; i++) vec2(i+1) = dphi_face[p2][qp](i) ;
+
+
+		      adjust_derivatives(vec2,  normal[qp]);
+
+		      
+		      vec1 = 0;
+		      for (int i = 0; i < dim; i++) vec1(i+1) = phi_face[p1][qp]* normal[qp](i);
+		      
+
+		      const double scal_prod =  vec1 * ( C_tensor_el->get_subtensor(j+1,k+1) *vec2);
+
+		      Ke_sub(p1,p2) -= JxW_face[qp] * scal_prod ;
+		   
+		    
+
+		    }
+		  }
+
+	      }		      
+	  
+
+	  }
+
+	}
 		
       }
 		      
@@ -1376,17 +1452,18 @@ void Macrostrain::do_assemble(EquationSystems& es,
   }
 
      
-/*
+
+
 {
-  system.matrix->close();
+  //system.matrix->close();
   
-  system.matrix->print_matlab("matr.m");
+  // system.matrix->print_matlab("matr.m");
 
-  system.rhs->close();
+   system.rhs->close();
 
-  system.rhs->print_matlab("rhs.m");
+   system.rhs->print_matlab("rhs.m");
 }
-*/
+
   //-----------------------------------------------------------------------
   //Application of periodicity constraints
 
@@ -4136,7 +4213,40 @@ Macrostrain::~Macrostrain()
 
 //-------------------------------------------------------------------------------------------//
 
+void Macrostrain::adjust_derivatives(Tensor1& deriv_vectors, const Point& normal)
+{
+  short index;
 
+  if ( ( abs(normal(0)) >= abs(normal(1)) ) && ( abs(normal(0)) >= abs(normal(2) )) )
+    index  =  0;
+  else if ( ( abs(normal(1)) >= abs(normal(0)) ) && ( abs(normal(1)) >= abs(normal(2) ))  )
+    index  =  1;
+  else
+    index  =  2;
+
+  assert(abs(normal(index)) > 1e-10);
+
+  deriv_vectors(index + 1) = 0;
+  
+  if ( index == 0 )   
+    deriv_vectors(1) = -normal(1)/normal(index)*deriv_vectors(2) - normal(2)/normal(index)* deriv_vectors(3);
+
+
+  else if ( index == 1 )   
+    deriv_vectors(2) =  -normal(2)/normal(index)*deriv_vectors(3) - normal(0)/normal(index)* deriv_vectors(1);
+  
+
+  else if ( index == 2 )   
+   deriv_vectors(3) =  -normal(0)/normal(index)*deriv_vectors(1) - normal(1)/normal(index)* deriv_vectors(2);
+  
+
+
+
+
+}
+
+
+//-------------------------------------------------------------------------------------------//
 Macrostrain::Macrostrain(void )
 {
   poisson_equation = NULL;

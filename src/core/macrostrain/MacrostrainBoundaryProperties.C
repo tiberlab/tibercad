@@ -20,7 +20,7 @@ MacrostrainBoundaryProperties::create(const std::string & name,  const ModelOpti
     result = MacrostrainSubstrate::create();
   else if (name == "pressure")
     result = MacrostrainPressure::create();
-  else if (name == "extended")
+  else if (name == "extended_material")
     result = MacrostrainExtended::create();
 
   if (result != NULL)
@@ -89,7 +89,3 @@ void MacrostrainExtended::do_init(void)
   type = "extended";
 }
   
-MacrostrainExtended::MacrostrainExtended()
-{
-
-}

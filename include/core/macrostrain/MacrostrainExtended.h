@@ -4,9 +4,9 @@
 class MacrostrainExtended : public MacrostrainBoundaryProperties
 {
  public:
-  MacrostrainExtended();
+  MacrostrainExtended() {};
   
- 
+  virtual  ~MacrostrainExtended() {};
  
 
   static MacrostrainExtended* create(void);
