@@ -4,6 +4,7 @@
 #include "boost/regex.hpp"
 #include "boost/tokenizer.hpp"
 #include "boost/algorithm/string/trim.hpp"
+#include "boost/filesystem/operations.hpp"
 
 #include "Utils.h"
 
@@ -51,6 +52,15 @@ Utils::tokenize(const std::string& input, std::vector<std::string>& tokens,
 }
 
 
+
+
+string
+Utils::dirname(const std::string& file)
+{
+  boost::filesystem::path p(file, boost::filesystem::native);
+
+  return p.branch_path().string();
+}
 
 
 

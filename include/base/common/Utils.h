@@ -107,6 +107,10 @@ class Utils
 
 
 
+    //! Return the directory part of a filename
+    static std::string dirname(const std::string& file);
+
+
 
 
   private:
