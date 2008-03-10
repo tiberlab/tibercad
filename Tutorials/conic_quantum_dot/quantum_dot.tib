@@ -352,7 +352,7 @@ $Physics
 
 $Simulation
 {
-  searchpath = ../../../examples/materials     
+  searchpath = ../../materials     
   meshfile = quantum_dot.msh #
   mesh_units = 1e-9
   dimension = 3

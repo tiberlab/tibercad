@@ -279,7 +279,7 @@ $Physics
 # Definition of  model-indipendent parameters of the Simulation
 $Simulation
 {
-  searchpath = ../../../examples/materials  #../materials    
+  searchpath = ../../materials  #../materials    
   meshfile = nanocolumn.msh # column_old.msh
   mesh_units = 1e-9
   dimension = 3

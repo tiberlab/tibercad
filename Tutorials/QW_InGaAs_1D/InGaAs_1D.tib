@@ -264,7 +264,7 @@ $Physics
 $Simulation
 {
 
-  searchpath = ../../../examples/materials   
+  searchpath = ../../materials   
   meshfile = InGaAs_1D.msh #
     
   mesh_units = 1e-9       #nm !!

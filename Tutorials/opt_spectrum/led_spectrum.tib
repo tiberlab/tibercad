@@ -585,7 +585,7 @@ $Simulation
 {
 
 
-  searchpath =  ../../../../examples/materials       
+  searchpath =  ../../materials       
   meshfile = led_spectrum.msh # LED_UV_3QW_test_for_DD_well2nm.msh  
     
   mesh_units = 1e-9       #nm 
