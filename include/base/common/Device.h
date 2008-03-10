@@ -517,6 +517,6 @@ AtomisticStructure*
 Device::get_atomistic_structure(const std::string& name)
 {
   return _atomistic_structure_map[name];
-}; 
+} 
     
 #endif //  __DEVICE_H__

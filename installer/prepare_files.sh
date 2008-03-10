@@ -17,8 +17,21 @@ make_windows_package () {
   if test -e ${topdir}/manual/tiber_manual.pdf ; then
     cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
   fi
-  cp -r ${topdir}/Tutorials/* ${files}/examples
-  cp ${topdir}/examples/materials/* ${files}/materials
+  cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
+  find ${files} -type d -name ".svn*" -exec rm -rf {} \;
+  cp ${topdir}/materials/[^.]* ${files}/materials
+
+  curdir=`pwd`
+  cd ${files}
+
+  #zip -r -l data.zip materials examples
+  zip -r  data.zip materials examples
+  cp /usr/bin/unzipsfx.exe data.exe
+  cat data.zip >> data.exe
+  zip -A data.exe
+  rm -f data.zip
+
+  cd $curdir
 
   # copy cygwin system libraries
   test ! -x /usr/bin/cygcheck.exe && exit 1

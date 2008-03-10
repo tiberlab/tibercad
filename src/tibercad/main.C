@@ -59,6 +59,15 @@ int main (int argc, char** argv)
 
   // do some preparation
   {
+#ifdef CYGWIN
+    // in windows argv[0] is the absolute path
+    char* root = getenv("TIBERCADROOT");
+    if (root == NULL)
+    {
+      string exepath(Utils::dirname(argv[0]));
+      setenv("TIBERCADROOT", exepath.c_str(), 1);
+    }
+#endif
     // the TiberCAD root
     //char* root = getenv("TIBERCADROOT");
     //if (root != NULL)

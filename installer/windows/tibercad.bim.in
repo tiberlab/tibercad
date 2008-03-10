@@ -42,7 +42,9 @@ Entry0 = EnglishÂ¶Trutia AlexandruÂ¶@BINSTALLMAKERDIR@\Localization\English.ini
 Folder = @WININSTALLERDIR@\files
 ; 
 [InstTasks]
-fileassoc = ASSOCIATEEXTENSIONÂ¶tibÂ¶TiberCAD input fileÂ¶<DefaultInstallPath>\tibercad.exeÂ¶0
+fileassoc = ASSOCIATEEXTENSION¶tib¶TiberCAD input file¶<DefaultInstallPath>\tibercad.exe¶0
+extract = RUN¶1¶1¶1¶<DefaultInstallPath>\data.exe¶¶
+mklicdir = CREATEFOLDER¶<DefaultInstallPath>\license
 ; 
 [UninstTasks]
 ; 
@@ -61,7 +63,7 @@ RebootRequired = 0
 PathChangeable = 1
 DefaultPath = 
 AutoCreateStartMenu = 1
-CreateUninstallLink = 0
+CreateUninstallLink = 1
 CreateInternetLink = 1
 ForceGroupCreation = 1
 UninstOlderFirst = 1
