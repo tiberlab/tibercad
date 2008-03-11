@@ -74,7 +74,6 @@ int main (int argc, char** argv)
     //  TiberCAD::tiberroot = string(root);
 
 
-
     // Set up search path for libraries
     //DLLoader::set_library_path(tiberroot + "/lib/tibermodels");
 
@@ -118,19 +117,15 @@ int main (int argc, char** argv)
   catch (exception& e)
   {
     cout << "ERROR: " << e.what() << endl;
-#ifdef CYGWIN
-    cout << "press any key ...";
-    cin.get();
-#endif
   }
   catch (...)
   {
     cout << "ERROR: TiberCAD crashed for unknown reason." << endl;
-#ifdef CYGWIN
-    cout << "press any key ...";
-    cin.get();
-#endif
   }
+#ifdef CYGWIN
+  cout << "press any key ...";
+  cin.get();
+#endif
 
   return TiberCad::cleanup();
 }

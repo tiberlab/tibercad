@@ -2125,26 +2125,12 @@ void   Read_MSH::read_mesh_and_data(Mesh& mesh, MeshData_elements&  mesh_data )
 
 {
 
-  //Mesh mesh (2);
-
-  //MeshData_elements  mesh_data(mesh);
-  //mesh_data.enable_compatibility_mode();
-
-  // string  mesh_file_inp = "in.xda";
-
   string  mesh_file_data = "elem_data.xta";
-
   string  mesh_file_inp = "in.xda";
-
-  //  string  mesh_file_inp = "in_pippo.xda";
-
-
-
 
   mesh.read (mesh_file_inp,&mesh_data  ); 
   
   mesh_data.read(mesh_file_data);
-
 
 }
 

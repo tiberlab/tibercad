@@ -11,9 +11,8 @@
 void
 MeshUtils::assign_subdomain_ids(Mesh& mesh, MeshData_elements& meshdata)
 {
-
-  Mesh::element_iterator it = mesh.elements_begin();
-  const Mesh::element_iterator end = mesh.elements_end();
+  Mesh::element_iterator it = mesh.local_elements_begin();
+  const Mesh::element_iterator end = mesh.local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -22,7 +21,6 @@ MeshUtils::assign_subdomain_ids(Mesh& mesh, MeshData_elements& meshdata)
     if (meshdata.has_data(elem))
     {
       int id = static_cast<int>(meshdata(elem));
-
       elem->subdomain_id() = id;
     }
   }
@@ -35,8 +33,8 @@ MeshUtils::get_subdomain_ids(Mesh& mesh, std::set<ID>& subdomain_ids)
 {
   subdomain_ids.clear();
 
-  Mesh::element_iterator it = mesh.elements_begin();
-  const Mesh::element_iterator end = mesh.elements_end();
+  Mesh::element_iterator it = mesh.local_elements_begin();
+  const Mesh::element_iterator end = mesh.local_elements_end();
 
   for ( ; it != end; ++it)
   {

@@ -38,7 +38,11 @@ Control::Control(const std::string& inputfile)
   ifstream infile;
   infile.open(_inputfile.c_str());
   if (infile.fail() || !infile.good() || (infile.rdbuf()->in_avail() == 0))
+  {
+    infile.close();
     throw InitFailedException("Control: input file is invalid.");
+  }
+  
   infile.close();
 }
 
@@ -460,7 +464,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     sim->set_control(this);
 
     _simulations[sim->get_name()] = sim;
-
+    
     // create the environment
     SimulationEnvironment* env = new SimulationEnvironment(device, phys_regions);
     _simulation_environments[sim] = env;

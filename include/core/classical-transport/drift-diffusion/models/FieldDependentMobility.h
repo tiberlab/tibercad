@@ -57,6 +57,13 @@ class FieldDependentMobility : public MobilityModelInterface
 
   private:
 
+    enum DrivingForce
+    {
+      EFIELD,
+      GRADFERMI,
+    };
+
+
     //! The exponent
     double _beta;
 
@@ -83,6 +90,10 @@ class FieldDependentMobility : public MobilityModelInterface
 
     //! The low-field mobility
     MobilityModelInterface* _low_field_mob;
+
+
+    //! The driving force to be used
+    DrivingForce _force;
       
 
 };
@@ -99,7 +110,8 @@ FieldDependentMobility::FieldDependentMobility(void)
     _vsat_b(1),
     _vsat_min(5e5),
     _vsat_formula(1),
-    _low_field_mob(NULL)
+    _low_field_mob(NULL),
+    _force(EFIELD)
 {
 }
 

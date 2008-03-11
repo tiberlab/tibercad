@@ -296,10 +296,21 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      * \param E the electric field
      */
     void set_electric_field(RealGradient E);
-
+    
+    //! Set the gradient of the electron electr-chemical potential
+    void set_grad_fermi_e(RealGradient grad_Fe);
+    
+    //! Set the gradient of the hole electr-chemical potential
+    void set_grad_fermi_h(RealGradient grad_Fh);
 
     //! Get the electric field
     const RealGradient& get_electric_field(void) const;
+
+    //! Get the gradient of the electron electr-chemical potential
+    const RealGradient& get_grad_fermi_e(void) const;
+
+    //! Get the gradient of the hole electr-chemical potential
+    const RealGradient& get_grad_fermi_h(void) const;
 
 
     //! Get the element we are currently working on
@@ -796,7 +807,14 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
 
 
     //! The electric field
-    RealGradient electric_field;
+    RealGradient _electric_field;
+
+    //! The gradient of the electron chemical-potential
+    RealGradient _grad_fermi_e;
+
+    //! The gradient of the hole chemical-potential
+    RealGradient _grad_fermi_h;
+
 
     //! The pyropolarization
     PyroPolarization* _pyropolarization;
@@ -995,16 +1013,51 @@ inline
 void
 DriftDiffusionProperties::set_electric_field(RealGradient E)
 {
-  electric_field = E;
+  _electric_field = E;
 }
+
+inline
+void
+DriftDiffusionProperties::set_grad_fermi_e(RealGradient grad_Fe)
+{
+  _grad_fermi_e = grad_Fe;
+}
+
+
+inline
+void
+DriftDiffusionProperties::set_grad_fermi_h(RealGradient grad_Fh)
+{
+  _grad_fermi_h = grad_Fh;
+}
+
 
 
 inline
 const RealGradient&
 DriftDiffusionProperties::get_electric_field(void) const
 {
-  return electric_field;
+  return _electric_field;
 }
+
+
+
+inline
+const RealGradient&
+DriftDiffusionProperties::get_grad_fermi_e(void) const
+{
+  return _grad_fermi_e;
+}
+
+
+
+inline
+const RealGradient&
+DriftDiffusionProperties::get_grad_fermi_h(void) const
+{
+  return _grad_fermi_h;
+}
+
 
 
 

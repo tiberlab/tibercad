@@ -305,6 +305,8 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     sc->set_coordinates(elem->centroid());
     sc->set_potentials(sc->get_equilibrium_fermi_level());
     sc->set_electric_field(RealGradient(0));
+    sc->set_grad_fermi_e(RealGradient(0));
+    sc->set_grad_fermi_h(RealGradient(0));
 
     sc->calculate_densities();
     sc->calculate_ionized_dopants();
@@ -1570,6 +1572,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     sc->set_potentials(u, en, ep);
 
     sc->set_electric_field(e_field);
+    sc->set_grad_fermi_e(RealGradient(en_x, en_y, en_z));
+    sc->set_grad_fermi_h(RealGradient(ep_x, ep_y, ep_z));
 
     sc->calculate_densities();
 
@@ -1926,6 +1930,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     sc->set_potentials(u, en, ep);
 
     sc->set_electric_field(e_field);
+    sc->set_grad_fermi_e(RealGradient(en_x, en_y, en_z));
+    sc->set_grad_fermi_h(RealGradient(ep_x, ep_y, ep_z));
 
     sc->calculate_densities();
     sc->calculate_mobilities();
@@ -2064,7 +2070,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
       values[n][PELTIERPZ] =   T * Pp * jpz; 
 
 
-     if (ids.count(EPTSOURCE))
+    if (ids.count(EPTSOURCE))
     {
       double Pn = 0.0;
       double Pn_x = 0.0, Pn_y =0.0, Pn_z = 0.0;
@@ -2311,6 +2317,8 @@ DriftDiffusion::calculate_currents_rstf(void)
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
       sc->set_electric_field(phi0 * e_field);
+      sc->set_grad_fermi_e(phi0 * dEfn);
+      sc->set_grad_fermi_h(phi0 * dEfp);
 
       sc->calculate_densities();
       sc->calculate_mobilities();
@@ -2496,6 +2504,8 @@ DriftDiffusion::calculate_currents_surfint(void)
             sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
             sc->set_electric_field(phi0 * e_field);
+            sc->set_grad_fermi_e(phi0 * dEfn);
+            sc->set_grad_fermi_h(phi0 * dEfp);
 
             sc->calculate_densities();
 
@@ -2557,6 +2567,8 @@ DriftDiffusion::calculate_currents_surfint(void)
           sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
           sc->set_electric_field(phi0 * e_field);
+          sc->set_grad_fermi_e(phi0 * RealGradient(dEfn, 0, 0));
+          sc->set_grad_fermi_h(phi0 * RealGradient(dEfp, 0, 0));
 
           sc->calculate_densities();
 
@@ -2708,6 +2720,8 @@ DriftDiffusion::build_local_scaling(void)
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
       sc->set_electric_field(phi0 * e_field);
+      sc->set_grad_fermi_e(RealGradient(0.0));
+      sc->set_grad_fermi_h(RealGradient(0.0));
 
       sc->calculate_densities();
       sc->calculate_mobilities();
@@ -3082,9 +3096,17 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
       assert(elem->n_nodes() == dof_indices_u.size());
 
       RealGradient field(0.0);
+      RealGradient grad_Fe(0.0);
+      RealGradient grad_Fh(0.0);
       for (unsigned int i = 0; i < dof_indices_u.size(); i++)
+      {
         field += dphi[i][0] * solution(dof_indices_u[i]);
+        grad_Fe += dphi[i][0] * solution(dof_indices_en[i]);
+        grad_Fh += dphi[i][0] * solution(dof_indices_ep[i]);
+      }
       field *= -phi0;
+      grad_Fe *= -phi0;
+      grad_Fh *= -phi0;
 
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
@@ -3100,6 +3122,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
 
         sc->set_potentials(u, en, ep);
         sc->set_electric_field(field);
+        sc->set_grad_fermi_e(grad_Fe);
+        sc->set_grad_fermi_h(grad_Fh);
 
         sc->calculate_densities();
         sc->compute_thermoelectric_powers();
@@ -3499,6 +3523,8 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
     sc->set_electric_field(e_field);
+    sc->set_grad_fermi_e(RealGradient(en_x, en_y, en_z));
+    sc->set_grad_fermi_h(RealGradient(ep_x, ep_y, ep_z));
 
     sc->calculate_densities();
     sc->calculate_mobilities();
@@ -4120,12 +4146,16 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       Real en = 0.0;
       Real ep = 0.0;
       RealGradient e_field(0);
+      RealGradient grad_en(0);
+      RealGradient grad_ep(0);
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         u  += phi[i][qp] * Xu(i);
         en += phi[i][qp] * Xn(i);
         ep += phi[i][qp] * Xp(i);
         e_field += dphi[i][qp] * Xu(i);
+        grad_en += dphi[i][qp] * Xn(i);
+        grad_ep += dphi[i][qp] * Xp(i);
       }
 
       // prepare for calculating local properties
@@ -4134,6 +4164,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
       sc->set_electric_field(phi0 * e_field);
+      sc->set_grad_fermi_e(phi0 * grad_en);
+      sc->set_grad_fermi_h(phi0 * grad_ep);
 
       sc->calculate_densities();
 
@@ -4683,6 +4715,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
               sc->set_coordinates(q_point_face[qp]);
               sc->set_electric_field(phi0 / x0 * e_field);
+              sc->set_grad_fermi_e(phi0 / x0 * grad_en);
+              sc->set_grad_fermi_h(phi0 / x0 * grad_ep);
               sc->calculate_densities();
               sc->calculate_mobilities();
 
@@ -4855,6 +4889,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           }
           
           sc->set_electric_field(phi0 / x0 * e_field);
+          sc->set_grad_fermi_e(phi0 / x0 * RealGradient(grad_en, 0.0, 0.0));
+          sc->set_grad_fermi_h(phi0 / x0 * RealGradient(grad_ep, 0.0, 0.0));
           sc->calculate_densities();
           sc->calculate_mobilities();
 

@@ -184,7 +184,7 @@ class SimulationEnvironment
     bool is_on_boundary(const ElementSide& side) const;
 
 
-    //! Check if an ElementSide lies on a any boundary
+    //! Check if an ElementSide lies on any boundary
     bool is_boundary(const ElementSide& side) const;
 
 

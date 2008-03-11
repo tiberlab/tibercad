@@ -89,6 +89,18 @@ FieldDependentMobility::do_init(void)
   _low_field_mob->set_material(get_material());
   _low_field_mob->init();
 
+  std::string force = get_parameter("driving_force", "efield");
+  if (force == "efield")
+    _force = GRADFERMI;
+  else if (force == "grad_fermi")
+    _force = EFIELD;
+  else
+  {
+    std::string msg("FieldDependentMobility: Unknown driving force '");
+    msg += force + "'.";
+    throw InitFailedException(msg);
+  }
+    
 }
 
 
@@ -97,7 +109,14 @@ double
 FieldDependentMobility::get_mobility(void)
 {
   double T = get_driftdiffusionproperties().get_lattice_temperature();
-  double E = get_driftdiffusionproperties().get_electric_field().size();
+  double E = 0.0;
+  if (_force == GRADFERMI)
+    if (get_carrier_type() == 'e')
+      E = get_driftdiffusionproperties().get_grad_fermi_e().size();
+    else
+      E = get_driftdiffusionproperties().get_grad_fermi_h().size();
+  else
+    E = get_driftdiffusionproperties().get_electric_field().size();
 
   double vsat;
   if (_vsat_formula == 1)

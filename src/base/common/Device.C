@@ -93,6 +93,15 @@ Device::setup_mesh(void)
   MeshUtils::assign_subdomain_ids(*_mesh, *_meshdata);
 
   MeshUtils::get_subdomain_ids(*_mesh, _region_ids);
+  //for (set<ID>::iterator r = _region_ids.begin(); r != _region_ids.end(); ++r)
+  //  cerr << *r << " ";
+  //cerr << endl;
+
+  /*
+   * NOTE:
+   * In parallel case, the local mesh does not contain all elements
+   * and therefore only a part of the region IDs are present
+   */
 
 #ifdef DEBUG
   cout << endl << "Device::setup_mesh(): ";
@@ -133,10 +142,17 @@ Device::set_material(Material* material, ID region_id)
 
   if (_region_ids.find(region_id) == _region_ids.end())
   {
-    ostringstream s;
-    s << "Device: physical region " << region_id <<
-      " does not exist in mesh file.";
-    throw InitFailedException(s.str());
+    /*
+     * In single processor case this has to be considered an error,
+     * in parallel we should do the check in a different manner
+     */
+    if (libMesh::n_processors() == 1)
+    {
+      ostringstream s;
+      s << "Device: physical region " << region_id <<
+        " does not exist in mesh file.";
+      throw InitFailedException(s.str());
+    }
   }
   if (_material_map.find(region_id) != _material_map.end())
   {

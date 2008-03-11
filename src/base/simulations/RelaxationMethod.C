@@ -25,52 +25,64 @@ RelaxationMethod::do_solve(void)
 {
   parse_options();
 
-  int num_sim = get_number_of_simulations();
-
-  SimulationIterator it(simulations_begin());
-  const SimulationIterator end(simulations_end());
-
   initialize();
 
-  ID old_sol_id = get_last_simulation()->remember_current_solution();
+  AutoPtr<NumericVector<double> > x_old = NumericVector<double>::build();
+  x_old->init(get_solution_vector().size());
 
   for (unsigned int it = 0; it < get_maximum_iterations(); it++)
   {
+    *x_old += get_solution_vector();
+
+    if (it > 0)
+      set_solution_vector(*x_old);
+    
+    double x_old_norm = x_old->l2_norm();
+    {
+      //ostringstream file;
+      //file << "X_" << it << ".m";
+      //get_solution_vector().print_matlab(file.str());
+    }
 
     solve_simulations();
 
-    double norm = get_last_simulation()->get_maximum_norm_of_difference(old_sol_id);
-    double rel_err = get_last_simulation()->get_l2_norm_of_difference(old_sol_id);
+    get_solution_vector() -= *x_old;
+    double norm = get_solution_vector().linfty_norm();
+    double rel_err =  get_solution_vector().l2_norm() / x_old_norm;
+    {
+      //ostringstream file;
+      //file << "dX_" << it << ".m";
+      //get_solution_vector().print_matlab(file.str());
+    }
+      
 
     bool converged = true;
 
     if (get_monitor())
     {
       cout.flush();
-      cout << "<<<<------------------------------------------------------------\n";
-      cout << get_name() << " (Relaxation): iteration " << it << "\n"
-           << "  correction (max norm):  " << norm << endl 
+      cout << "<<<<------------------------------------------------------------"
+           << endl
+           << get_name() << " (Relaxation): iteration " << it
+           << "  correction (max norm):  " << norm
            << "  relative error (l2)  :  " << rel_err << endl;
-      cerr << "norm = " << norm << endl;
       cout << "--------------------------------------------------------------->>>>"
         << endl;
     }
 
     // check for the difference between old and new solutions
-    if (norm > get_absolute_tolerance())
+    if ((norm > get_absolute_tolerance()) && (rel_err > get_relative_tolerance()))
       converged = false;
 
     if (converged)
+    {
+      get_solution_vector() += *x_old;
       break;
+    }
 
-    get_last_simulation()->scale_solution(_relax);
-    get_last_simulation()->add_scaled_remembered_solution(old_sol_id, 1.0 - _relax);
-    get_last_simulation()->remember_current_solution(old_sol_id);
-    
+    get_solution_vector().scale(_relax);
+
   }
-
-  // clean up
-  get_last_simulation()->delete_remembered_solution(old_sol_id);
 }
 
 

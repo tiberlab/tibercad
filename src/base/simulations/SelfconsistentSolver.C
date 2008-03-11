@@ -102,6 +102,7 @@ void
 SelfconsistentSolver::initialize(void)
 {
   solve_simulations();
+  //get_last_simulation()->solve();
 }
 
 
