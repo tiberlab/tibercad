@@ -58,10 +58,13 @@ TiberNonlinLS::reinit(void)
 void
 TiberNonlinLS::clear(void)
 {
-  _solver->clear();
+  if (_solver != NULL)
+  {
+    _solver->clear();
 
-  _solver->set_solver_type(_solver_type);
-  _solver->set_preconditioner_type(_preconditioner_type);
+    _solver->set_solver_type(_solver_type);
+    _solver->set_preconditioner_type(_preconditioner_type);
+  }
 
   Parent::clear();
 }
@@ -71,12 +74,16 @@ TiberNonlinLS::clear(void)
 void
 TiberNonlinLS::user_initialization(void)
 {
+   
   if (_solver == NULL)
   {
     _solver = TiberLinearSolver::create(_linear_solver);
 
     if (_solver == NULL)
+    {
+      std::cerr << "Linear solver " << _linear_solver << " is not available." << std::endl;
       throw InitFailedException("Cannot create linear solver object.");
+    }
   }
 
   _solver->set_solver_type(_solver_type);

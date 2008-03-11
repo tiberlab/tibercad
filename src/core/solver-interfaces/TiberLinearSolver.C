@@ -20,15 +20,15 @@ TiberLinearSolver::create(const std::string& type)
   else if (type == "pardiso")
     solver = new PardisoLinearSolver();
 #endif
-  
+
   if (solver == NULL)
   {
-    std::string msg = "TiberLinearSolver: no such solver ";
-    msg += type;
+    std::string msg = "TiberLinearSolver: no such solver '";
+    msg += type + "'";
     throw InitFailedException(msg);
   }
 #ifdef DEBUG
-  std::cerr << "Created linear solver type" << type << std::endl;
+  std::cerr << "Created linear solver type " << type << std::endl;
 #endif
 
   return solver;
