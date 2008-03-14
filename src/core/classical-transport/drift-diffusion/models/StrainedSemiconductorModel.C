@@ -194,7 +194,7 @@ StrainedSemiconductorModel::do_print_info(void)
   if (SimulationOptions::verbose() > 1)
   {
     cout << endl;
-    cout << space << "unstrained band parameters";
+    cout << space << "unstrained band parameters" << endl;
     set_lattice_temperature(SimulationOptions::T);
     get_physical_model()->calculate_conduction_band_extremum();
     get_physical_model()->calculate_valence_band_extremum();
