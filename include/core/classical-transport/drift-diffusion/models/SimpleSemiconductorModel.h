@@ -72,6 +72,10 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
      */
     virtual void prepare_element_data(void);
 
+    /*! \copydoc PhysicalModelInterface::do_print_info() */
+    virtual void do_print_info(void);
+
+
   private:
 
     typedef DriftDiffusionProperties Parent;

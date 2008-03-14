@@ -176,3 +176,59 @@ StrainedSemiconductorModel::do_init(void)
   }
 
 }
+
+
+void
+StrainedSemiconductorModel::do_print_info(void)
+{
+  string space("    ");
+
+  cout << space << "strained semiconductor model";
+  if (ignore_strain_)
+    cout << " (but strain is ignored!!)";
+  cout << endl;
+  cout << space << "strain simulation: " << strain_model_->get_name() << endl;
+  if (_recompute_band_parameters)
+    cout << "recompute band parameters before each simulation" << endl;
+  
+  if (SimulationOptions::verbose() > 1)
+  {
+    cout << endl;
+    cout << space << "unstrained band parameters";
+    set_lattice_temperature(SimulationOptions::T);
+    get_physical_model()->calculate_conduction_band_extremum();
+    get_physical_model()->calculate_valence_band_extremum();
+    extract_band_properties();
+    setup_band_edges();
+    calculate_equilibrium_properties();
+
+    const std::vector<DDsemiconductor::band_extremum>& cbs =
+      get_physical_model()->get_conduction_band_energy_mass();
+    cout << space << " - conduction bands:\n";
+    for (int i = 0 ; i < cbs.size(); i++)
+    {
+      cout << space << "   Ec = " << cbs[i].energy
+        << ", m = " << cbs[i].mass_DOS
+        << ", d = " << cbs[i].degeneracy << endl;
+    }
+    cout << space << "   Nc = " << get_conduction_band().effective_DOS << " cm^-3"
+      << "  m_dos = " << get_conduction_band().effective_mass << "\n";
+
+    //_bulk_model->calculate_valence_band_extremum();
+    const std::vector<DDsemiconductor::band_extremum>& vbs =
+      get_physical_model()->get_valence_band_energy_mass();
+    cout << space << " - valence bands:\n";
+    for (int i = 0 ; i < vbs.size(); i++)
+    {
+      cout << space << "   Ev = " << vbs[i].energy
+        << ", m = " << vbs[i].mass_DOS
+        << ", d = " << vbs[i].degeneracy << endl;
+    }
+    cout << space << "   Nv = " << get_valence_band().effective_DOS << " cm^-3"
+      << "  m_dos = " << get_valence_band().effective_mass << "\n";
+
+    cout << space << " - Ef0 = " << get_equilibrium_fermi_level()
+      << ", ni = " << std::sqrt(get_intrinsic_density_squared());
+    cout << endl;
+  }
+}

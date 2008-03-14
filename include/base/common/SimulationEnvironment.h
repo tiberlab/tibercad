@@ -56,6 +56,10 @@ class SimulationEnvironment
     //! Get a reference to the device
     Device& get_device(void);
 
+    
+    //! Get a const reference to the device
+    const Device& get_device(void) const;
+
 
     //! Get a reference to the mesh
     Mesh& get_mesh(void);
@@ -248,6 +252,13 @@ class SimulationEnvironment
     void invalidate(void);
 
 
+    //! Get the region numbers
+    const std::set<ID>& get_region_ids(void) const;
+
+
+    //! Get the region names
+    void get_region_names(std::set<std::string>& names) const;
+
 
   private:
 
@@ -329,6 +340,14 @@ SimulationEnvironment::get_device(void)
 {
   return *_device;
 }
+
+inline
+const Device&
+SimulationEnvironment::get_device(void) const
+{
+  return *_device;
+}
+
 
 
 inline
@@ -570,6 +589,14 @@ SimulationEnvironment::get_boundary_nodes(const std::string& name,
 {
   const Boundary* bd = get_boundary(name);
   get_boundary_nodes(bd, nodelist);
+}
+
+
+inline
+const std::set<ID>&
+SimulationEnvironment::get_region_ids(void) const
+{
+  return _region_numbers;
 }
 
 

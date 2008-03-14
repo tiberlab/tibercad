@@ -475,6 +475,10 @@ class DriftDiffusion : public SimulationInterface
      */
     virtual void do_solve(void);
 
+
+    /*! \copydoc SimulationInterface::do_print_info() */
+    virtual void do_print_info(void);
+
     
     /*! \copydoc SimulationInterface::parse_options() */
     virtual void parse_options(void);

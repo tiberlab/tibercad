@@ -173,7 +173,10 @@ class PhysicalModelInterface
         const PhysicalModelInterface* comp_B, double xa);
 
 
+    //! Print some info
+    void print_info(void);
     
+
 
   protected:
 
@@ -199,6 +202,14 @@ class PhysicalModelInterface
      * Use with caution as it could break standard behaviour!
      */
     void set_name(const std::string& name);
+
+
+    //! Print some info
+    /*!
+     * The implementation should add 4 spaces at the beginning of 
+     * each line.
+     */
+    virtual void do_print_info(void){};
 
 
     //! Get the value of a parameter from the input file
@@ -321,7 +332,6 @@ class PhysicalModelInterface
     void alloy(Tensor2Sym& result, const Tensor2Sym& val_a,
         const Tensor2Sym& val_b, double xa,
         const Tensor2Sym& bowing = Tensor2Sym(0)); 
-
 
 
 
@@ -562,6 +572,7 @@ PhysicalModelInterface::build_alloy(const PhysicalModelInterface* comp_A,
   calculate_VCA(comp_A, comp_B, xa);
 }
 
+
 inline
 void
 PhysicalModelInterface::calculate_VCA(const PhysicalModelInterface* comp_A,
@@ -572,6 +583,13 @@ PhysicalModelInterface::calculate_VCA(const PhysicalModelInterface* comp_A,
   ignore_unused_variable(xa);
 }
 
+
+inline
+void
+PhysicalModelInterface::print_info(void)
+{
+  do_print_info();
+}
 
 
 #endif // _PHYSICALMODELINTERFACE_H_

@@ -25,12 +25,18 @@ class SimulationOptions
     static bool incomplete_ionization;
 
 
+    //! Tell verbosity
+    static int verbose(void);
+
+
     //! Initialize the simulation options
     static void initialize(const ModelOptions& opts);
 
 
   private:
     
+    //! Level of verbosity
+    static int _verbose;
 
 };
 

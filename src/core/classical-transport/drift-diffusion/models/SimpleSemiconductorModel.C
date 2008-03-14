@@ -8,6 +8,7 @@ TIBER_MODULE(SimpleSemiconductorModel, simple)
 
 
 
+using namespace std;
 using namespace DriftDiffusionDefs;
 
 
@@ -42,4 +43,16 @@ SimpleSemiconductorModel::do_init(void)
   get_conduction_band().effective_mass = deg * opt.get_option("meff_n", 1.08);
   get_valence_band().effective_mass = deg * opt.get_option("meff_p", 1.15);
   
+}
+
+void
+SimpleSemiconductorModel::do_print_info(void)
+{
+  string space("    ");
+  
+  cout << space << "simple semiconductor model" << endl;
+  cout << space << "Ec = " << get_conduction_band().band_edge <<
+    ", m_DOS = " << get_conduction_band().effective_mass << endl;
+  cout << space << "Ev = " << get_valence_band().band_edge <<
+    ", m_DOS = " << get_valence_band().effective_mass << endl;
 }

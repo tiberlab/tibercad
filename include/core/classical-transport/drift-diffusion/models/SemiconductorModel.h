@@ -45,8 +45,6 @@ class SemiconductorModel : public DriftDiffusionProperties
     virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
-    //! \deprecated { Was for debugging }
-    void print_info(void) const;
 
     
   protected:
@@ -84,6 +82,10 @@ class SemiconductorModel : public DriftDiffusionProperties
 
     //! Set the object to unprepared state
     void set_to_unprepared(void);
+
+    /*! \copydoc PhysicalModelInterface::do_print_info() */
+    virtual void do_print_info(void);
+
 
   private:
 

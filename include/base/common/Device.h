@@ -7,6 +7,8 @@
 #include "TiberCad.h"
 #include "TypeDefs.h"
 #include "ModelOptions.h"
+#include "DeviceException.h"
+
 #include "elem.h"
 #include "mesh_data_elements.h"
 
@@ -141,7 +143,7 @@ class Device
      * If a region has no name associated, it will be assigned the
      * empty string.
      */
-    const std::string& get_region_name(ID id);
+    const std::string& get_region_name(ID id) const;
 
 
     //! Get the name of a boundary region
@@ -151,7 +153,7 @@ class Device
      * If a region has no name associated, it will be assigned the
      * empty string.
      */
-    const std::string& get_boundary_region_name(ID id);
+    const std::string& get_boundary_region_name(ID id) const;
 
 
     //! Get the region IDs of the region with name \c name
@@ -453,18 +455,35 @@ Device::get_region_ids(void) const
 
 inline
 const std::string&
-Device::get_region_name(ID id)
+Device::get_region_name(ID id) const
 {
-  return _region_names[id];
+  std::map<ID, std::string>::const_iterator it(_region_names.find(id));
+
+  if (it == _region_names.end())
+  {
+    std::ostringstream s;
+    s << "Tried to access unknown region with id " << id;
+    throw (DeviceException(s.str()));
+  }
+  return it->second;
 }
+
 
 
 
 inline
 const std::string&
-Device::get_boundary_region_name(ID id)
+Device::get_boundary_region_name(ID id) const
 {
-  return _boundary_region_names[id];
+  std::map<ID, std::string>::const_iterator it(_boundary_region_names.find(id));
+
+  if (it == _boundary_region_names.end())
+  {
+    std::ostringstream s;
+    s << "Tried to access unknown boundary region with id " << id;
+    throw (DeviceException(s.str()));
+  }
+  return it->second;
 }
 
 

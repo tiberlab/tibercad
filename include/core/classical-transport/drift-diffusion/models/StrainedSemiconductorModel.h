@@ -59,6 +59,10 @@ class StrainedSemiconductorModel : public SemiconductorModel
     //! \copydoc DriftDiffusionProperties::copy_from()
     virtual void copy_from(const PhysicalModelInterface* rhs);
 
+    /*! \copydoc PhysicalModelInterface::do_print_info() */
+    virtual void do_print_info(void);
+
+
   private:
 
     //! The data structure for the cached data

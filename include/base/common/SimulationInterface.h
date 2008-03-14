@@ -154,6 +154,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Initialize the system
     /*!
      * This method calls do_init() after some health checks
+     * and do_print_info();
      */
     void init(void) throw (InitFailedException);
 
@@ -501,6 +502,14 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
         bool scale = false);
 
 
+    //! Tell the level of verbosity
+    int verbose(void) const;
+
+    
+    //! Set the level of verbosity
+    int& verbose(void);
+    
+
 
   protected:
 
@@ -555,6 +564,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * sweeps, selfconsitent solvers etc.
      */
     virtual void do_plot(void);
+
+
+    //! Print simulation info
+    virtual void do_print_info(void);
 
     
     //! Remember the current solution
@@ -779,6 +792,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
 
 
+
   private:
 
     //! A typedef for convenience
@@ -886,6 +900,9 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! A map with remembered solutions
     std::map<ID, NumericVector<double>*> _remembered_solutions;
 
+
+    //! The level of verbosity
+    int _verbosity;
 
 
 };
@@ -1236,6 +1253,24 @@ void
 SimulationInterface::has_solution_vector(bool flag)
 {
   _has_solution_vector = flag;
+}
+
+
+
+inline
+int
+SimulationInterface::verbose(void) const
+{
+  return _verbosity;
+}
+
+
+
+inline
+int&
+SimulationInterface::verbose(void)
+{
+  return _verbosity;
 }
 
 

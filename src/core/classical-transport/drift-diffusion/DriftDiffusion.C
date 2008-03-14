@@ -941,6 +941,37 @@ DriftDiffusion::guess_equilibrium(void)
 
 
 
+void
+DriftDiffusion::do_print_info(void)
+{
+  parse_const_options();
+  parse_options();
+
+  Options& myopts = get_options();
+  SolverParameters& solver_params = myopts.solver_params;
+
+  string space("  ");
+
+  cout << space << "solving for : ";
+  if (myopts.coupling & POISSON)
+    cout << "poisson ";
+  if (myopts.coupling & ELECTRONS)
+    cout << "electrons ";
+  if (myopts.coupling & HOLES)
+    cout << "holes ";
+  cout << endl;
+
+  if (do_local_scaling_)
+    cout << space << "using local scaling" << endl;
+
+  cout << space << "nonlinear solver is: " <<
+    solver_params.nonlinear_solver << endl;
+  cout << space << "linear solver is: " <<
+    solver_params.linear_solver << endl;
+
+}
+
+
 
 
 
@@ -1012,8 +1043,6 @@ DriftDiffusion::parse_const_options(void)
     solver_params.pc_type = EISENSTAT_PRECOND;
 
 }
-
-
 
 
 

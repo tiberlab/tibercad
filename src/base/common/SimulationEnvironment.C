@@ -355,3 +355,15 @@ SimulationEnvironment::get_boundary_nodes(const Boundary* boundary,
       nodelist.insert(it->first);
   }
 }
+
+
+void
+SimulationEnvironment::get_region_names(set<string>& names) const
+{
+  names.clear();
+  const set<ID>& ids = get_region_ids();
+  for (set<ID>::const_iterator it(ids.begin()); it != ids.end(); ++it)
+  {
+    names.insert(get_device().get_region_name(*it));
+  }
+}

@@ -122,6 +122,7 @@ SemiconductorModel::extract_band_properties(void)
     bulk_model_->get_valence_band_energy_mass();
   // get maximum
   id = 0;
+  // TODO should be local temperature
   double kT = SimulationOptions::T * Constants::k_B;
   double delta_max = 4.0 * kT;
   for (int i = 1; i < vbs.size(); i++)
@@ -145,39 +146,6 @@ SemiconductorModel::extract_band_properties(void)
 }
 
 
-void
-SemiconductorModel::print_info(void) const
-{
-  //_bulk_model->calculate_conduction_band_extremum();
-  const std::vector<DDsemiconductor::band_extremum>& cbs =
-    bulk_model_->get_conduction_band_energy_mass();
-  cout << " - conduction bands:\n";
-  for (int i = 0 ; i < cbs.size(); i++)
-  {
-    cout << "   Ec = " << cbs[i].energy
-      << ", m = " << cbs[i].mass_DOS
-      << ", d = " << cbs[i].degeneracy << endl;
-  }
-  cout << "   Nc = " << get_conduction_band().effective_DOS << " cm^-3"
-    << "  m_dos = " << get_conduction_band().effective_mass << "\n";
-
-  //_bulk_model->calculate_valence_band_extremum();
-  const std::vector<DDsemiconductor::band_extremum>& vbs =
-    bulk_model_->get_valence_band_energy_mass();
-  cout << " - valence bands:\n";
-  for (int i = 0 ; i < vbs.size(); i++)
-  {
-    cout << "   Ev = " << vbs[i].energy
-      << ", m = " << vbs[i].mass_DOS
-      << ", d = " << vbs[i].degeneracy << endl;
-  }
-  cout << "   Nv = " << get_valence_band().effective_DOS << " cm^-3"
-    << "  m_dos = " << get_valence_band().effective_mass << "\n";
-
-  cout << " - Ef0 = " << get_equilibrium_fermi_level()
-    << ", ni^2 = " << get_intrinsic_density_squared();
-  cout << endl;
-}
 
 void
 SemiconductorModel::calculate_equilibrium_properties(void)
@@ -195,7 +163,52 @@ SemiconductorModel::calculate_equilibrium_properties(void)
   // call the method of the parent class
   Parent::calculate_equilibrium_properties();
 
-  //cerr << get_material()->get_name() << ":" << endl;
-  //print_info();
 }
 
+
+void
+SemiconductorModel::do_print_info(void)
+{
+  string space("    ");
+
+  cout << space << "unstrained semiconductor model" << endl;
+  if (SimulationOptions::verbose() > 1)
+  {
+    cout << endl;
+    set_lattice_temperature(SimulationOptions::T);
+    bulk_model_->calculate_conduction_band_extremum();
+    bulk_model_->calculate_valence_band_extremum();
+    extract_band_properties();
+    setup_band_edges();
+    calculate_equilibrium_properties();
+
+    const std::vector<DDsemiconductor::band_extremum>& cbs =
+      bulk_model_->get_conduction_band_energy_mass();
+    cout << space << " - conduction bands:\n";
+    for (int i = 0 ; i < cbs.size(); i++)
+    {
+      cout << space << "   Ec = " << cbs[i].energy
+        << ", m = " << cbs[i].mass_DOS
+        << ", d = " << cbs[i].degeneracy << endl;
+    }
+    cout << space << "   Nc = " << get_conduction_band().effective_DOS << " cm^-3"
+      << "  m_dos = " << get_conduction_band().effective_mass << "\n";
+
+    //_bulk_model->calculate_valence_band_extremum();
+    const std::vector<DDsemiconductor::band_extremum>& vbs =
+      bulk_model_->get_valence_band_energy_mass();
+    cout << space << " - valence bands:\n";
+    for (int i = 0 ; i < vbs.size(); i++)
+    {
+      cout << space << "   Ev = " << vbs[i].energy
+        << ", m = " << vbs[i].mass_DOS
+        << ", d = " << vbs[i].degeneracy << endl;
+    }
+    cout << space << "   Nv = " << get_valence_band().effective_DOS << " cm^-3"
+      << "  m_dos = " << get_valence_band().effective_mass << "\n";
+
+    cout << space << " - Ef0 = " << get_equilibrium_fermi_level()
+      << ", ni = " << std::sqrt(get_intrinsic_density_squared());
+    cout << endl;
+  }
+}

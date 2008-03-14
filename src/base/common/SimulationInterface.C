@@ -4,6 +4,7 @@
 #include "SimulationEnvironment.h"
 #include "Control.h"
 #include "DLLoader.h"
+#include "Material.h"
 
 #include "DriftDiffusion.h"
 #include "ExcitonTransport.h"
@@ -44,7 +45,8 @@ SimulationInterface::SimulationInterface(void)
     _is_initialized(false),
     _is_solved(false),
     _equilibrium_is_solved(false),
-    _has_solution_vector(true)
+    _has_solution_vector(true),
+    _verbosity(1)
 {
   ID new_id = _simulation_map.size() + 1;
   _id = new_id;
@@ -185,6 +187,13 @@ SimulationInterface::destroy(SimulationInterface* p)
 
 
 
+void
+SimulationInterface::do_print_info(void)
+{
+  cout << "  no information available";
+}
+
+
 
 void
 SimulationInterface::init(void) throw (InitFailedException)
@@ -204,6 +213,8 @@ SimulationInterface::init(void) throw (InitFailedException)
       _scaling.set_calc_mesh_units((_environment->get_device()).get_mesh_units());
     }
 
+    
+    _verbosity = get_options().get_option("verbose", _verbosity);
     do_init();
     
   }
@@ -213,6 +224,38 @@ SimulationInterface::init(void) throw (InitFailedException)
 #ifdef DEBUG
   cerr << "done" << endl;
 #endif
+
+  if (verbose() > 0)
+  {
+    cout << endl << 
+      ">>================================================================<<"
+      << endl << "Simulation options for " << get_name() << " (" <<
+      get_default_name() << ")" << endl << endl;
+    do_print_info();
+    cout << endl;
+    
+    set<string> names;
+    get_environment().get_region_names(names);
+    for (set<string>::const_iterator it(names.begin()); it != names.end(); ++it)
+    {
+      Device& dev = get_environment().get_device();
+      vector<ID> ids;
+      dev.get_region_ids(*it, ids);
+      assert(ids.size() != 0);
+      PhysicalModel* mod =
+        dev.get_material(ids[0])->get_model(get_id());
+      if (mod != NULL)
+      {
+        cout << "  Model details (region " << *it << "):" << endl;
+        mod->print_info();
+        cout << endl;
+      }
+    }
+    
+    cout << endl <<
+      ">>================================================================<<"
+      << endl << endl;
+  }
 }
 
 

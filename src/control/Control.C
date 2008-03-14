@@ -470,6 +470,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     _simulation_environments[sim] = env;
     sim->set_environment(env);
 
+    sim->verbose() = SimulationOptions::verbose();
+
 
     //
     // now we have to create the models
@@ -606,8 +608,9 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       msg += solveropts.get_option("flavour", "");
       throw ModelErrorException(msg);
     }
-
     sim->set_control(this);
+    //sim->verbose() = SimulationOptions::verbose();
+    sim->verbose() = 0;
     _simulations[sim->get_name()] = sim;
   }
 
@@ -620,6 +623,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       sweepopts["name"] = "sweep";
     SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
     sim->set_control(this);
+    //sim->verbose() = SimulationOptions::verbose();
+    sim->verbose() = 0;
     _simulations[sim->get_name()] = sim;
   }
 
@@ -630,6 +635,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       sweepopts["name"] = "sweep_1";
     SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
     sim->set_control(this);
+    //sim->verbose() = SimulationOptions::verbose();
+    sim->verbose() = 0;
     _simulations[sim->get_name()] = sim;
   }
 
@@ -640,6 +647,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       sweepopts["name"] = "sweep_2";
     SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
     sim->set_control(this);
+    //sim->verbose() = SimulationOptions::verbose();
+    sim->verbose() = 0;
     _simulations[sim->get_name()] = sim;
   }
 

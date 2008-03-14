@@ -58,7 +58,6 @@ TemperatureInterface::get_temperature(const Elem* elem,
   }
   else
   {
-    
     std::vector<std::map<ID, double> > temp;
     if (_simulation->get_solution(elem, _id_set, temp))
       for (int i = 0; i < nn; i++)
