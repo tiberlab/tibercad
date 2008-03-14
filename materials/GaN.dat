@@ -2,7 +2,8 @@
 
 structure = wz
 
-Eg_G = 3.51
+Eg_G = 3.4
+#Eg_G = 3.51
 #E_v = -2.64
 # from Nextnano
 E_v = -0.726
