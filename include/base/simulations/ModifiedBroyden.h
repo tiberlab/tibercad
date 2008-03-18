@@ -327,6 +327,8 @@ void ModifiedBroyden::evaluate_and_save_f(void)
 
   _rel_error = (t1/t2);
 
+  cerr << "relative error " << _rel_error << "\n";
+
   if (_rel_error <=  get_relative_tolerance())
     _converged = true;
   else

@@ -397,7 +397,7 @@ inline void ModifiedBroyden::init_x(void)
    
 
   
-  _x->print();
+ 
  
 
 

@@ -7,7 +7,7 @@
 #include "MacrostrainPressure.h"
 #include "MacrostrainSubstrate.h"
 #include "TiberPetscLinearSolver.h"
-
+ 
 
 
 
@@ -353,6 +353,7 @@ void Macrostrain::parse_options( )
  if (monitor)
  {
      
+
    int ierr; 
 
    KSP ksp_of_my_solver = (dynamic_cast< TiberPetscLinearSolver* > (  (my_system->linear_solver).get() )   )->get_ksp();
@@ -367,46 +368,43 @@ void Macrostrain::parse_options( )
   
  }
 
- bool xmonitor = opt.get_option("xmonitor", false);
+ _xmonitor = opt.get_option("xmonitor", false);
 
- 
- if (xmonitor)
+ if (_xmonitor)
  {
+   if (!_monitor_is_open) 
+   {
+#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
+     && (PETSC_VERSION_SUBMINOR >= 2))
+     KSPMonitorLGCreate (NULL, get_name().c_str(),0,0,400,400, &_lg);
+#else
+     KSPLGMonitorCreate (NULL, get_name().c_str(),0,0,400,400, &_lg);
+#endif
+
+
+     int ierr; 
+
+     KSP ksp_of_my_solver = (dynamic_cast< TiberPetscLinearSolver* > (  (my_system->linear_solver).get() )   )->get_ksp(); 
+
+#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
+     && (PETSC_VERSION_SUBMINOR >= 2))
+     ierr = KSPMonitorSet ( ksp_of_my_solver,KSPMonitorLG,_lg,0);
+#else
+     ierr = KSPSetMonitor ( ksp_of_my_solver,KSPLGMonitor,_lg,0);
+#endif
      
-#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
-      && (PETSC_VERSION_SUBMINOR >= 2))
-   KSPMonitorLGCreate (NULL, get_name().c_str(),0,0,400,400, &_lg);
-#else
-   KSPLGMonitorCreate (NULL, get_name().c_str(),0,0,400,400, &_lg);
-#endif
-
-   int ierr; 
-
-   KSP ksp_of_my_solver = (dynamic_cast< TiberPetscLinearSolver* > (  (my_system->linear_solver).get() )   )->get_ksp(); 
-
-#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
-      && (PETSC_VERSION_SUBMINOR >= 2))
-   ierr = KSPMonitorSet ( ksp_of_my_solver,KSPMonitorLG,_lg,0);
-#else
-   ierr = KSPSetMonitor ( ksp_of_my_solver,KSPLGMonitor,_lg,0);
-#endif
- }
+     _monitor_is_open = true;
+   }
+   
 
 
-/*
+   
+}
 
- {
-   int ierr; 
- 
-   KSP KSP_of_solver = (dynamic_cast< PetscLinearSolver<Real>* > (  (my_system->linear_solver).get() )  )->ksp();
-   ierr = KSPSetType (KSP_of_solver, (char*) KSPBCGSL);    
 
-   PC  PC_of_solver = (dynamic_cast< PetscLinearSolver<Real>* > (  (my_system->linear_solver).get() )  )->pc();
-   ierr = PCSetType (PC_of_solver, (char*) PCJACOBI);   
 
- }
 
-*/
+
 
 
 
@@ -1455,13 +1453,21 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
 
 {
+  static int counter = 0;
+
+  
+  std::ostringstream os;
+  os << "rhs" << counter << ".m";
+
   //system.matrix->close();
   
-  // system.matrix->print_matlab("matr.m");
+  //system.matrix->print_matlab(os.str().c_str());
 
-   system.rhs->close();
+  system.rhs->close();
 
-   system.rhs->print_matlab("rhs.m");
+  system.rhs->print_matlab(os.str().c_str());
+
+  counter++;
 }
 
   //-----------------------------------------------------------------------
@@ -1560,6 +1566,8 @@ Mesh* Macrostrain::get_mesh()
 }
 
 //-----------------------------------------------------------------//
+
+//-----------------------------------------------------------------//
 void Macrostrain::do_solve()
 
 {
@@ -1614,9 +1622,11 @@ void Macrostrain::do_solve()
 
   
    
+ 
+  
 
   my_system->solve();
-
+  
  
   
   old_solution = * (my_system->solution);
@@ -1706,9 +1716,12 @@ void Macrostrain::do_solve()
       mesh.print_info();
       
       my_system->solution->zero();
+
       
+
       my_system->solve();
       
+     
 
       std::cout << "Norm of the difference  " << norm_of_difference( old_solution, *(my_system->solution) ) 
 		<< "  after step number " << r_step << "\n";
@@ -1792,8 +1805,14 @@ void Macrostrain::do_solve()
       //apply_periodic_bc();
       
       equation_systems->print_info();
+
+     
       
       my_system->solve();
+
+
+     
+
       if (intermediate_output)
 	{
 
@@ -4252,4 +4271,6 @@ Macrostrain::Macrostrain(void )
   poisson_equation = NULL;
 
   my_solver = NULL;
+
+  _monitor_is_open = false;
 }

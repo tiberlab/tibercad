@@ -367,9 +367,10 @@ class Macrostrain : public SimulationInterface
   bool periodicity[3]; 
 
 
+  //! show convergence monitor on X window
+  bool _xmonitor;
 
-
-
+  bool _monitor_is_open;
 
   
 

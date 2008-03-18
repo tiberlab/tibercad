@@ -28,8 +28,8 @@ both the boundary region number and the substrate material
 
 \newtheorem*{subst}{Role of substrate}
 \begin{subst}
- In general, the ``substrate'' is a material that defines the lattice matching conditions, and not
- necessarily a real solid body on which the device is grown.
+ In general, the ``substrate'' is a material that defines the lattice matching
+ conditions, and not necessarily a real solid body on which the device is grown.
 \end{subst}
 
 \begin{verbatim}
@@ -73,7 +73,7 @@ strain_in_transistor
 }
 \end{verbatim}
 
-\subsection{Structure without a substrate}
+\subsection{Structure without a substrate (freestanding)}
 
 In this case, the parameter \textit{substrate} should not be present; instead, the following parameters should be defined.
 \begin{itemize}
@@ -82,6 +82,31 @@ is defined by the coordinates of a point  belonging to this  material, using the
 \item As  follows from Ref.~\cite{strain1},  additional geometrical points have to be specified, according  to the device dimensionality. The corresponding parameters are:
 \textit{fixed\_point1}, \textit{fixed\_point2} and \textit{fixed\_point3}.
 \end{itemize}
+Since the elasticity energy is invariant with respect  to  translations and rotations of the structure, then, for the sake of uniqueness of solutions of the equations,  another set of constraints is required.  Hereafter we assume that a mesh is defined over the simulation domain and the displacement field ${\bf u}(\rvec)$ is defined at the mesh nodes. 
+
+ Let $\cal D$ be  the dimensionality of the structure minus the number of directions along which the structure is
+ periodic. If ${\cal D} > 0$, then a Dirichlet boundary condition is applied at an arbitrarily chosen  
+ node $i_0$: 
+\begin{equation} 
+{\bf u} (\rvec_{i_0}) = {\bf 0},
+ \end{equation}
+in order to prevent the structure from  undesirable translations.
+In the case of ${\cal D} > 1$, another node  $i_1$ is chosen and a constraint
+ \begin{equation}
+ ({\bf u} (\rvec_{i_0}) - {\bf u} (\rvec_{i_1}))\cdot(\rvec_{i_0} - \rvec_{i_1}) = 0
+ \label{constr2D}
+ \end{equation}
+is applied, in order to keep the direction between the nodes $i_0, i_1$ unchanged.  If ${\cal D} = 3$, another node $i_2$ is chosen and additional constraint is set:
+\begin{equation}
+ \left( \rvec_{i_0}- \rvec_{i_1}, \rvec_{i_0} - \rvec_{i_2}, {\bf u}_{i_2} \right) =0,
+\end{equation}
+so the node $i_2$ has to belong to the $(\rvec_{i_0}, \rvec_{i_1}, \rvec_{i_2})$ plane. 
+ 
+
+
+
+
+
 Example for a 2D simulation:
 \begin{verbatim}
  strain_in_transistor
