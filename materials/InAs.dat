@@ -35,7 +35,11 @@ Eg_X = 1.37
 #Eg_X = 1.433
 
 
+varshni_alfa_G = 0.276e-3
+varshni_beta_G = 93
 
+varshni_alfa_X = 0.276e-3
+varshni_beta_X = 93
 
 
 m_G = 0.026

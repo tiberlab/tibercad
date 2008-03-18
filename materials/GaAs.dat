@@ -29,6 +29,10 @@ Eg_X = 1.899
 #Eg_L = 1.815
 #Eg_X = 1.981
 
+varshni_alfa = 0.5405e-3
+varshni_beta =  204 
+
+
 
 m_G = 0.067
 m_L_l = 1.9

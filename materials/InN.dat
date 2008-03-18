@@ -2,10 +2,24 @@
 
 structure = wz;
 
-Eg_G = 0.78;
+
+# T=300 K
+Eg_G = 0.76
+
+
+# T = 0
+#Eg_G = 0.78
+
+
 #E_v = -2.34;
 # from Nextnano
 E_v = -0.462;
+
+
+varshni_alfa = 0.245e-3
+varshni_beta = 624
+
+
 
 m_c_xx = 0.07;
 m_c_zz = 0.07;

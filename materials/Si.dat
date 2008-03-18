@@ -4,11 +4,19 @@ structure = zb
 
 Eg_G = 3.385
 Eg_L = 1.635
-# 0 K
+
+# T=0 K
 #Eg_X = 1.165
-# 300 K
+
+
+# T=300 K
 Eg_X = 1.12
 E_v = 1.09
+
+varshni_alfa = 0.7e-3
+varshni_beta = 1108
+# pss 41, 994  (1999)
+
 
 delta = 0.044
 
