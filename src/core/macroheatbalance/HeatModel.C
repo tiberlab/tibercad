@@ -243,6 +243,7 @@ HeatModel::add_thermal_conductivity_model(const std::string& model_name,
 }
 
 
+
 void
 HeatModel::get_total_heat_source(std::vector<Point> h_point,
 		  std::vector<double>& total_heat_source)
@@ -259,14 +260,21 @@ HeatModel::get_total_heat_source(std::vector<Point> h_point,
   for ( ; it_outer != end_outer; ++it_outer)
   {
 
-    std::vector<double>   partial_heat_source;
+    std::vector<std::vector<double> >  partial_heat_source;
     
-    (it_outer->second)->get_heat_source(h_point,_elem,partial_heat_source);
+    (it_outer->second)->get_heat_sources(h_point,_elem,partial_heat_source);
 
+    unsigned int ns_tot = partial_heat_source[0].size();
+    
     for (unsigned int n = 0;  n < np; ++n)
     {
-      
-      total_heat_source[n] = total_heat_source[n] + partial_heat_source[n];;
+          
+      for (unsigned int ns = 0; ns < ns_tot ; ++ns)
+      {
+	
+	total_heat_source[n] = total_heat_source[n] + partial_heat_source[n][ns];
+
+      }
       
     }
   }
@@ -274,17 +282,15 @@ HeatModel::get_total_heat_source(std::vector<Point> h_point,
 
 
 
-
-
-void  
-HeatModel::get_total_flux_heat_source(std::vector<Point> h_point,
-				   std::vector<RealGradient>& total_flux_heat_source)
+void 
+HeatModel::get_total_power_flux(std::vector<Point> h_point,
+				std::vector<RealGradient>& total_power_flux,bool check_boundary)
 {
-
+  
   unsigned int np = h_point.size();
 
-  total_flux_heat_source.clear();
-  total_flux_heat_source.resize(np);
+  total_power_flux.clear();
+  total_power_flux.resize(np);
  
   outer_source_iterator it_outer = _heat_source_models.begin();
   outer_source_iterator end_outer = _heat_source_models.end();
@@ -292,22 +298,26 @@ HeatModel::get_total_flux_heat_source(std::vector<Point> h_point,
   for ( ; it_outer != end_outer; ++it_outer)
   {
 
-    std::vector<RealGradient >  flux_heat_source;
+    std::vector<std::vector<RealGradient> >  partial_power_fluxes;
     
-    (it_outer->second)->get_flux_heat_source(h_point,_elem,flux_heat_source);
+    (it_outer->second)->get_power_fluxes(h_point,_elem,partial_power_fluxes,check_boundary);
 
+    unsigned int nf_tot =partial_power_fluxes[0].size();
+    
     for (unsigned int n = 0;  n < np; ++n)
     {
-      
-        total_flux_heat_source[n](0) = total_flux_heat_source[n](0) + flux_heat_source[n](0);
-	total_flux_heat_source[n](1) = total_flux_heat_source[n](1) + flux_heat_source[n](1);
-	total_flux_heat_source[n](2) = total_flux_heat_source[n](2) + flux_heat_source[n](2);
+          
+      for (unsigned int ns = 0; ns < nf_tot ; ++ns)
+      {
+	
+	total_power_flux[n](0) = total_power_flux[n](0) + partial_power_fluxes[n][ns](0);
+        total_power_flux[n](1) = total_power_flux[n](1) + partial_power_fluxes[n][ns](1);
+	total_power_flux[n](2) = total_power_flux[n](2) + partial_power_fluxes[n][ns](2);
 
- 
+      }
       
     }
   }
-
 
 }
 
@@ -364,6 +374,7 @@ HeatModel::get_heat_source_IDs(std::vector<ID>& ids)
     ids[ctr] = (it->first);
 
   return n;
+
 }
 
 

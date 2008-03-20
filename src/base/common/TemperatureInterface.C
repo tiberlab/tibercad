@@ -51,6 +51,7 @@ TemperatureInterface::get_temperature(const Elem* elem,
 
   temperatures.resize(nn);
 
+
   if (_simulation == NULL)
   {
     for (int i = 0; i < nn; i++)
@@ -59,12 +60,15 @@ TemperatureInterface::get_temperature(const Elem* elem,
   else
   {
     std::vector<std::map<ID, double> > temp;
+
     if (_simulation->get_solution(elem, _id_set, temp))
       for (int i = 0; i < nn; i++)
         temperatures[i] = temp[i][_id];
+    
     else
       for (int i = 0; i < nn; i++)
         temperatures[i] = SimulationOptions::temperature;
+     
   }
 }
 

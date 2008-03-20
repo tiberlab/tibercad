@@ -19,23 +19,23 @@ public:
 
   
   //!Get total heat source 
-  virtual void get_heat_source(std::vector<Point> h_point,const Elem* elem,
-			       std::vector< double >& heat_source){};
+  virtual void get_heat_sources(std::vector<Point> h_point,const Elem* elem,
+				std::vector< std::vector<double> >& heat_source){};
 
   //!Get total heat flux  
-  virtual void get_flux_heat_source(std::vector<Point> h_point,const Elem* elem,
-			       std::vector< RealGradient  >& heat_source){};
+  virtual void get_power_fluxes(std::vector<Point> h_point,const Elem* elem,
+				std::vector< std::vector<RealGradient>  >& heat_source, bool check_boundary){};
+                     
 
-  //!Get heat source contributions  
-  virtual void get_heat_source_output(std::vector<Point> h_point,const Elem* elem,
-				     std::vector< std::vector< double > >& heat_source){};
-
-  
   static HeatSourceInterface* create(const std::string& name,
 	       const ModelOptions& options = ModelOptions());
 
-  //! Get the legend
-  virtual std::vector<std::string>  get_legend(void){};
+  //! Get the heat source legend
+  virtual std::vector<std::string>  get_source_legend(void){};
+
+  //! Get the flux legend
+  virtual std::vector<std::string>  get_flux_legend(void){};
+
 	
 
 private:

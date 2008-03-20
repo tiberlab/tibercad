@@ -131,15 +131,15 @@ class DriftDiffusion : public SimulationInterface
       HJOULE,           /*!< holes Joule's effect */
       JNGRADPHIE,       /*!< electrons Joule's effect */
       JPGRADPHIH,       /*!< holes Joule's effect */
-      PELTIERNX,        /*!< electron Peltier coefficient, x direction */     
-      PELTIERNY,        /*!< electron Peltier coefficient, y direction */     
-      PELTIERNZ,        /*!< electron Peltier coefficient, z direction */      
-      PELTIERPX,        /*!< hole Peltier coefficient, x direction */     
-      PELTIERPY,        /*!< hole Peltier coefficient, y direction */     
-      PELTIERPZ,        /*!< hole Peltier coefficient, z direction */ 
+      POWERNX,        /*!< electron power flux, x direction */     
+      POWERNY,        /*!< electron power flux, y direction */     
+      POWERNZ,        /*!< electron power flux, z direction */      
+      POWERPX,        /*!< hole power flux, x direction */     
+      POWERPY,        /*!< hole power flux, y direction */     
+      POWERPZ,        /*!< hole power flux, z direction */ 
       EPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
       HPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
-      TEMP,
+      TEMP,                /*!< Temperature */
       MODELS = 100      /*!< base number for models */
      
     };

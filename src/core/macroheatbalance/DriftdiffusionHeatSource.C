@@ -3,7 +3,7 @@
 #include "Material.h"
 #include "Database.h"
 #include "Constants.h"
-#include "SimulationEnvironment.h"
+
 
 
 
@@ -48,7 +48,7 @@ void  DriftDiffusionHeatSource::do_init(void)
       if ( _simul == NULL)
 	throw InitFailedException("Could not find " + drift_diffusion_simulation);
 
-     std::string name_model = get_options().get_option("recombination_type", "srh");
+     std::string name_model = get_options(). get_option("recombination_type", "srh");
      std::string rec_string = "recombination." + name_model;
 
 
@@ -63,146 +63,144 @@ void  DriftDiffusionHeatSource::do_init(void)
      ID_vector[PHIH]=_simul->get_variable_id("QFermi_h"); 
      ID_vector[PN]=_simul->get_variable_id("Pn"); 
      ID_vector[PP]=_simul->get_variable_id("Pp");  
-     ID_vector[TOLD]=_simul->get_variable_id("Temp"); 
+     ID_vector[TEMP]=_simul->get_variable_id("Temp"); 
      ID_vector[SRHREC]=_simul->get_variable_id(rec_string); 
-     ID_vector[PELTIERNX]=_simul->get_variable_id("PeltierNx"); 
-     ID_vector[PELTIERNY]=_simul->get_variable_id("PeltierNy"); 
-     ID_vector[PELTIERNZ]=_simul->get_variable_id("PeltierNz");  
-     ID_vector[PELTIERPX]=_simul->get_variable_id("PeltierPx"); 
-     ID_vector[PELTIERPY]=_simul->get_variable_id("PeltierPy"); 
-     ID_vector[PELTIERPZ]=_simul->get_variable_id("PeltierPz"); 
-     ID_vector[PELTHOME]=_simul->get_variable_id("HPelThomE"); 
-     ID_vector[PELTHOMH]=_simul->get_variable_id("HPelThomH"); 
+     ID_vector[WNX]=_simul->get_variable_id("PowerNx"); 
+     ID_vector[WNY]=_simul->get_variable_id("PowerNy"); 
+     ID_vector[WNZ]=_simul->get_variable_id("PowerNz");  
+     ID_vector[WPX]=_simul->get_variable_id("PowerPx"); 
+     ID_vector[WPY]=_simul->get_variable_id("PowerPy"); 
+     ID_vector[WPZ]=_simul->get_variable_id("PowerPz");  
+     ID_vector[PELTHE]=_simul->get_variable_id("HPelThomE"); 
+     ID_vector[PELTHH]=_simul->get_variable_id("HPelThomH");  
+
 
      for (unsigned int n=0; n<ID_vector.size(); ++n)
        ID_set.insert(ID_vector[n]);
+
+
+     _source_legend.resize(5);
+     _source_legend[0]="Ejoule";
+     _source_legend[1]="Hjoule";
+     _source_legend[2]="RecSRH";
+     _source_legend[3]="EPelTh";
+     _source_legend[4]="HPelTh";
+
+     _flux_legend.resize(2);
+     _flux_legend[0]="Wn";
+     _flux_legend[1]="Wp";
+ 
      
-
-     _legend.resize(5);
-     _legend[0]="Ejoule";
-     _legend[1]="Hjoule";
-     _legend[2]="RecSRH";
-     _legend[3]="EPelTh";
-     _legend[4]="HPelTh";
-
 
 }
 
 
 
+
 void
-DriftDiffusionHeatSource::get_heat_source(std::vector<Point> h_point,const Elem* elem,
-                                	   std::vector< double > & heat_source)          
+DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point,const Elem* elem,
+					  std::vector< std::vector<double > >& heat_source)          
 {
+  // std::cout<<"start"<<std::endl;
   heat_source.clear();
   heat_source.resize(h_point.size());
-
-  SimulationEnvironment& env =  _simul->get_environment();  
-    
-    if  (env.contains_element(elem) & _simul->is_initialized())
-    {
-      std::vector< std::map< ID, double > > solution;
-
-      _simul->get_solution(elem,h_point,ID_set,solution); 
-
-      for(unsigned n =0; n<h_point.size();++n)
-      {
-
-	double R     = solution[n].find(ID_vector[SRHREC])->second;
-	double phi_h = solution[n].find(ID_vector[PHIH])->second;
-	double phi_e = solution[n].find(ID_vector[PHIE])->second;
-
-	double JnGradPhiE = solution[n].find(ID_vector[JNGRADPHIE])->second; 
-	double JpGradPhiH = solution[n].find(ID_vector[JPGRADPHIH])->second;
-        double SrhSource =  Constants::e * R * (phi_h - phi_e);
-
-
-	heat_source[n]= JnGradPhiE + JpGradPhiH + SrhSource;
-           
-	
-      }
-      
-    }
-
- 
-}
-
-void
-DriftDiffusionHeatSource::get_heat_source_output(std::vector<Point> h_point,const Elem* elem,
-						 std::vector< std::vector<double > >& heat_source)          
-{
-   heat_source.clear();
-   heat_source.resize(h_point.size());
-
-  SimulationEnvironment& env =  _simul->get_environment();  
-    
-    if  (env.contains_element(elem) & _simul->is_initialized())
-    {
-      std::vector< std::map< ID, double > > solution;
- 
-      _simul->get_solution(elem,h_point,ID_set,solution); 
-
-      for(unsigned n =0; n<h_point.size();++n)
-      {
-
-	double R      = solution[n].find(ID_vector[SRHREC])->second;
-        double Ejoule = solution[n].find(ID_vector[EJOULE])->second; 
-        double Hjoule = solution[n].find(ID_vector[HJOULE])->second; 
-	double Pn     = solution[n].find(ID_vector[PN]    )->second; 
-	double Pp     = solution[n].find(ID_vector[PP]    )->second; 
-        double T      = solution[n].find(ID_vector[TOLD]  )->second; 
-	double phie   = solution[n].find(ID_vector[PHIE]  )->second; 
-	double phih   = solution[n].find(ID_vector[PHIH]  )->second; 
-	double pte   = solution[n].find(ID_vector[PELTHOME]  )->second; 
-	double pth   = solution[n].find(ID_vector[PELTHOMH]  )->second; 
-       
-        
-	heat_source[n].push_back(Ejoule);
-	heat_source[n].push_back(Hjoule);   
-	heat_source[n].push_back(Constants::e * R * (phih-phie + T * (Pp - Pn) ) );
-	// heat_source[n].push_back(Constants::e * R * T * (Pp - Pn) ) ;
-       	heat_source[n].push_back(pte);  
-	heat_source[n].push_back(pth);      
-
-	
-       } 
-      
-    }
-
-}
-
-void
-DriftDiffusionHeatSource::get_flux_heat_source(std::vector<Point> h_point,const Elem* elem,
-					       std::vector<RealGradient>& vector_heat_source)          
-{
-
-  vector_heat_source.clear();
-  vector_heat_source.resize(h_point.size());
-
-  SimulationEnvironment& env =  _simul->get_environment();  
-    
-  if  (env.contains_element(elem) & _simul->is_initialized())
+  for(unsigned int n =0 ; n<h_point.size();n++)
   {
+    heat_source[n].clear();
+    heat_source[n].resize(5,0.0);
+  }
 
+  std::vector< std::map< ID, double > > solution;
+  
+  if  (_simul->get_solution(elem,h_point,ID_set,solution))
+  {
+  
+    for(unsigned n =0; n<h_point.size();++n)
+    { 
+      
+      double R      = solution[n].find(ID_vector[SRHREC]  )->second;
+      double Ejoule = solution[n].find(ID_vector[EJOULE]  )->second; 
+      double Hjoule = solution[n].find(ID_vector[HJOULE]  )->second; 
+      double Pn     = solution[n].find(ID_vector[PN]      )->second; 
+      double Pp     = solution[n].find(ID_vector[PP]      )->second; 
+      double T      = solution[n].find(ID_vector[TEMP]    )->second; 
+      double phie   = solution[n].find(ID_vector[PHIE]    )->second; 
+      double phih   = solution[n].find(ID_vector[PHIH]    )->second; 
+      double pte    = solution[n].find(ID_vector[PELTHE]  )->second; 
+      double pth    = solution[n].find(ID_vector[PELTHH]  )->second; 
+      
+      heat_source[n].resize(5);
+      heat_source[n][0] = Ejoule;
+      heat_source[n][1] = Hjoule;   
+      heat_source[n][2] = Constants::e * R * (phih-phie + T * (Pp - Pn) ) ;
+      heat_source[n][3] = pte;  
+      heat_source[n][4] = pth;      
+      
+      
+      
+    } 
+  }
+  
+   
+    
+    // for (unsigned int i=0; i<heat_source.size(); ++i)
+    // std::cout<<heat_source[i][1]<<std::endl;
+
+    //   std::cout<<h_point.size()<<std::endl;
+
+  
+}
+
+
+
+
+
+void
+DriftDiffusionHeatSource::get_power_fluxes(std::vector<Point> h_point,const Elem* elem,
+					   std::vector<std::vector<RealGradient> >& power_fluxes,bool check_boundary)          
+{
+  
+  power_fluxes.clear();
+  power_fluxes.resize(h_point.size());
+  for(unsigned int n =0 ; n<h_point.size();n++)
+  {
+    power_fluxes[n].clear();
+    power_fluxes[n].resize(2);
+  }
+  
+  
+  
+  std::vector< std::map< ID, double > > solution;
+  
+  if  (_simul->get_solution(elem,h_point,ID_set,solution) )
+  {
+    
     std::vector< std::map< ID, double > > solution;
-
-     _simul->get_solution(elem,h_point,ID_set,solution); 
-
+    
+    _simul->get_solution(elem,h_point,ID_set,solution); 
+    
     for(unsigned int n =0 ; n<h_point.size();n++)
     {
+      
+      
+      double Wn_x = solution[n].find(ID_vector[WNX])->second;
+      double Wn_y = solution[n].find(ID_vector[WNY])->second;
+      double Wn_z = solution[n].find(ID_vector[WNZ])->second; 
+      
+      
+      double Wp_x = solution[n].find(ID_vector[WPX])->second;
+      double Wp_y = solution[n].find(ID_vector[WPY])->second;
+      double Wp_z = solution[n].find(ID_vector[WPZ])->second;
+      
+      power_fluxes[n][0](0) = Wn_x; 
+      power_fluxes[n][0](1) = Wn_y; 
+      power_fluxes[n][0](2) = Wn_z; 
+      
+      power_fluxes[n][1](0) = Wp_x; 
+      power_fluxes[n][1](1) = Wp_y; 
+      power_fluxes[n][1](2) = Wp_z;
 
-      double PINX = solution[n].find(ID_vector[PELTIERNX])->second;
-      double PINY = solution[n].find(ID_vector[PELTIERNY])->second;
-      double PINZ = solution[n].find(ID_vector[PELTIERNZ])->second;
-      double PIPX = solution[n].find(ID_vector[PELTIERPX])->second;
-      double PIPY = solution[n].find(ID_vector[PELTIERPY])->second;
-      double PIPZ = solution[n].find(ID_vector[PELTIERPZ])->second;
     
-
-      vector_heat_source[n](0) = PINX + PIPX; 
-      vector_heat_source[n](1) = PINY + PIPY; 
-      vector_heat_source[n](2) = PINZ + PIPZ; 
-     
     }
 
     
@@ -212,8 +210,3 @@ DriftDiffusionHeatSource::get_flux_heat_source(std::vector<Point> h_point,const 
 }
 
 
-
-
-
-
-//-------------------------------------------------------------------------//

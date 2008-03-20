@@ -28,17 +28,19 @@ public:
   static  DriftDiffusionHeatSource* create();
  
 
-  virtual void get_heat_source_output(std::vector<Point> h_point,const Elem* elem,
+  virtual void get_heat_sources(std::vector<Point> h_point,const Elem* elem,
 			       std::vector< std::vector< double > >& heat_source);
 
 
-  virtual void get_heat_source(std::vector<Point> h_point,const Elem* elem,
-				      std::vector< double >& heat_source);
+  virtual void get_power_fluxes(std::vector<Point> h_point,const Elem* elem,
+				std::vector<std::vector<RealGradient> >& power_fluxes, bool check_boundary);
+               
+					
 
-  virtual void get_flux_heat_source(std::vector<Point> h_point,const Elem* elem,
-			       std::vector<RealGradient>& heat_source);
      
-  virtual std::vector<std::string>  get_legend();
+  virtual std::vector<std::string>  get_source_legend();
+
+  virtual std::vector<std::string>  get_flux_legend();
 
 private:
 
@@ -54,22 +56,24 @@ private:
       PHIH,  
       PN,
       PP,
-      TOLD,
+      TEMP,
+      PELTHE,
+      PELTHH,
       SRHREC,
-      PELTIERNX,
-      PELTIERNY,
-      PELTIERNZ,
-      PELTIERPX,
-      PELTIERPY,
-      PELTIERPZ,
-      PELTHOME,
-      PELTHOMH
+      WNX,
+      WNY,
+      WNZ,
+      WPX,
+      WPY,
+      WPZ
       
     };
 
 
    
-  std::vector<std::string> _legend;
+  std::vector<std::string> _flux_legend;
+
+  std::vector<std::string> _source_legend;
 
   SimulationInterface* _simul;
 
@@ -104,13 +108,6 @@ protected:
 
 
 
-inline
-void    DriftDiffusionHeatSource::get_total_heat_source()
-{
-  
- 
-}
-
 
 
 inline
@@ -130,11 +127,22 @@ DriftDiffusionHeatSource::create()
 
 inline
 std::vector<std::string>
-DriftDiffusionHeatSource::get_legend(void)
+DriftDiffusionHeatSource::get_source_legend(void)
 {
 
- return  _legend;
+ return  _source_legend;
 
 }
+
+
+inline
+std::vector<std::string>
+DriftDiffusionHeatSource::get_flux_legend(void)
+{
+
+ return  _flux_legend;
+
+}
+
 
 #endif

@@ -29,7 +29,10 @@ class MacroHeatBalance : public SimulationInterface
  enum Variables
      {
             UNKNOWN = 0,
-            TEMPERATURE
+            TEMPERATURE,
+            JQX,
+            JQY,
+	    JQZ
      };
        
 
@@ -39,15 +42,18 @@ class MacroHeatBalance : public SimulationInterface
   //!options that we need for this simulation
   struct options
   {
-    double  lin_tol; //!< linear tolerance 
-    std::string  current_simulation; //!< name of drift-diffusion simmulation
-    std::string  thomson_peltier_effect;
   
     std::string  kappa_solve; //!< Model for lattice thermal conductivity
       
     double max_error; //!< Max tollerance for self-consistent loop  
 
     double work_units; //!< SI units, has to be consistent with the database parameters
+
+    /**
+     * The order of gauss integration
+     */
+    libMeshEnums::Order integration_order;
+
   };
 
     
@@ -87,10 +93,25 @@ class MacroHeatBalance : public SimulationInterface
   //!Create an MacroHeatBalance object 
   static MacroHeatBalance*  create(void);
   
+  /*! \copydoc SimulationInterface::build_integrated_quantities() */
+  virtual void build_integrated_quantities(
+					   const std::set<std::string>& names,
+					   std::vector<double>& values);
+  
+  
+  /*! \copydoc SimulationInterface::build_integrated_quantities_description()
+   */
+  virtual void build_integrated_quantities_description(
+						       const std::set<std::string>& names,
+						       std::vector<std::string>& legend,
+						       std::vector<std::string>& description);
+
 
  private:
   
+  std::string heat_legend;
 
+  std::set<ID> JQ_var;
 
    //! Quadrature point along the face of the element 
   const std::vector<Point> qface_point;
@@ -119,11 +140,19 @@ class MacroHeatBalance : public SimulationInterface
   virtual void build_elemental_results(const std::set<std::string>& variables,
 				       std::vector<double>& results, 
 				       std::vector<std::string>& legend);
-  
+
+  //! Calculate Power Dissipated 
+  /*!
+   * Integrates numerically over the boundary elements.
+   * The power dissipated is then:
+   *
+   * \f[P = \int_{\Gamma} -\kappa \nabla T \cdot \mathbf{N} \mathrm{d}\Gamma \f]
+   */
+  void calculate_power_surfint(void);
   
   static MacroHeatBalance* static_this;
 
-  options opt;
+  options myopts;
 
   //!non-static method that actually does matrix assembling 
   void do_assemble(EquationSystems& es, const std::string& system_name);
@@ -132,6 +161,9 @@ class MacroHeatBalance : public SimulationInterface
 
   //!Dimension of meshmap
   short dim;  
+
+  //!Power Dissipated
+  double _power;
 
   //!Pointer to mesh
   Mesh* mesh;

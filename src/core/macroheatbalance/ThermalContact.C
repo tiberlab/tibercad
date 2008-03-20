@@ -2,6 +2,7 @@
 
 #include "FluxContact.h" 
 #include "Reservoir.h" 
+#include "ThermalResistance.h"
 
 //==================================================================================//
 ThermalContact*
@@ -14,6 +15,10 @@ ThermalContact::create(const std::string & name,  const ModelOptions &   options
 
   if (name == "Thermal_flux")
     result = FluxContact::create();
+
+  if (name == "thermal_resistance")
+    result = ThermalResistance::create();
+ 
 
   if (result != NULL)
   {

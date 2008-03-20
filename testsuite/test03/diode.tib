@@ -32,7 +32,7 @@ $Models
   model thermal
   {
 
-     options
+    options
     { 
       simulation_name = tt
       physical_regions = all
@@ -40,24 +40,24 @@ $Models
 
     physical_model heat_source
     {
-
       model = drift_diffusion_dissipation
 
       drift_diffusion_simulation = driftdiffusion 
-
     }
+
 
     BC_Regions
     {
         BC_Region reservoir
    	{
-    
+         type = heat_reservoir
          BC_reg_numb = 1
          temperature = 300
    	}
        
         BC_Region reservoir
    	{
+	 type = heat_reservoir
          BC_reg_numb = 2
          temperature = 300
 	}
@@ -75,34 +75,26 @@ $Models
       
     }
 
+
+     physical_model electron_mobility
+    {
+      model = doping_dependent
+    }
+
+    physical_model hole_mobility
+    {
+      model = doping_dependent
+    } 
+
     physical_model recombination
-     { 
+     {
        model  =  srh
      }                
     
     physical_model thermoelectric_power
     {	
        model  = diffusivity_model
-    } 
-
-    physical_model electron_mobility
-    {
-
-      model = field_dependent
-
-      low_field_model = doping_dependent   
-
-    }
-
-    physical_model hole_mobility
-    {
-
-      model = field_dependent
-
-      low_field_model = doping_dependent
-
-    }
-  
+    } 	
 
     BC_Regions  
     {
@@ -133,8 +125,6 @@ $Models
 $Solver
 
 {
-
- 
   selfconsistent
   {
      flavour = relaxation
@@ -146,16 +136,6 @@ $Solver
      monitor = true
   }
 
-#  driftdiffusion
-#  {
-
-#    nonlinear_solver = tiber
-#    nonlin_step_tol = 1e-3
-#    nonlin_max = 30
-#    current_integration_method = rstf
-    
-#  }
-
   driftdiffusion
   {
     nonlin_rel_tol = 1e-12
@@ -165,17 +145,17 @@ $Solver
   }
 
 
-
   sweep
   {
     simulation = selfconsistent
     variable = Vb
     start = 0
-    stop = 1.0
-    steps = 10
+    stop = 1.5
+    steps = 15
     max_step = 1
-    plotvariable = current
+    #plotvariable = current
   }
+
 }
 
 
@@ -198,13 +178,17 @@ $Physics
 
 $Simulation
 {
-  meshfile = diode.msh
+
+  meshfile = test_03.msh
   dimension = 1
   temperature = 300
   solve = sweep
   resultpath = output
   output_format = grace
-  plot = (ElPotential,Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current,Pn,Pp,T,HeatSource)
+  plot = (ContactCurrents,HeatSource,T,PowerFlux)
+
+    
+ 
 }
 
 

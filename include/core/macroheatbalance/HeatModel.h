@@ -39,24 +39,23 @@ class HeatModel: public PhysicalModel
    //! Set the temperature 
    void set_temperature(double temperature); 
 
-   //!Get individually all heat source contributions
-   void get_heat_source_vector(std::vector<Point> h_point,
-			      std::vector<std::vector<double> >& vector_heat_source);
-
-   //!Get total heat source
-   void get_total_heat_source(std::vector<Point> h_point,
-		  std::vector<double>& total_heat_source);
-
-   //!Get total the heat source model given an ID
-   HeatSourceInterface* get_heat_source_model(ID id);
   
-   //! Get the ids of the heat source models 
-   int get_heat_source_IDs(std::vector<ID>& ids);
+  //!Get total the heat source model given an ID
+  HeatSourceInterface* get_heat_source_model(ID id);
+  
+  
+  //! Get the ids of the heat source models 
+  int get_heat_source_IDs(std::vector<ID>& ids);
+  
 
-   //! Get the total heat flux source given a points
-   void get_total_flux_heat_source(std::vector<Point> h_point,
-					std::vector<RealGradient>& total_flux_heat_source);
+  //!Get total heat source
+  void get_total_heat_source(std::vector<Point> h_point,
+			     std::vector<double>& total_heat_source);
 
+  //!Get total power flux
+  void get_total_power_flux(std::vector<Point> h_point,
+			    std::vector<RealGradient>& total_power_flux,
+			    bool check_boundary);
 
  private:
  
@@ -217,12 +216,15 @@ inline
 HeatSourceInterface*
 HeatModel::get_heat_source_model(ID id)
 {
+
 HeatSourceInterface* heat_source_model = NULL;
 outer_source_iterator it =  _heat_source_models.find(id);
 if (it !=   _heat_source_models.end())
    heat_source_model = it->second;
- 
+  
    return heat_source_model;
+
+   
  }
 
 
