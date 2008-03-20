@@ -234,7 +234,8 @@ class Macrostrain : public SimulationInterface
 
  private:
 
-  
+  //!true the constrains have to be applied
+  bool _first_run;
 
   //!pointer to a drift-diffusion object that is used to get electric-field  data 
   SimulationInterface* poisson_equation;

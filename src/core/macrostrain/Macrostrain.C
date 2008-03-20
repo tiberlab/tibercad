@@ -1450,7 +1450,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
   }
 
      
-
+/*
 
 {
   static int counter = 0;
@@ -1470,6 +1470,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
   counter++;
 }
 
+*/
   //-----------------------------------------------------------------------
   //Application of periodicity constraints
 
@@ -1596,6 +1597,7 @@ void Macrostrain::do_solve()
 
  
   initialize_eps0_list();
+
   initialize_el_number_map();
 
   define_fixed_nodes();
@@ -1614,12 +1616,15 @@ void Macrostrain::do_solve()
 
   set_up_additional_dofs();
 
-  my_system->solution->zero();
+  if (_first_run)
+  {
 
-  apply_periodic_bc();
+    my_system->solution->zero();
 
-  apply_antirotation_constraints();
+    apply_periodic_bc();
 
+    apply_antirotation_constraints();
+  }
   
    
  
@@ -1908,7 +1913,7 @@ void Macrostrain::do_solve()
   calculate_result_elem_strain_map();
 
 
- 
+  _first_run = false;
  
   //--------------------------------------------------------------------------------------------------//
  }
@@ -4273,4 +4278,8 @@ Macrostrain::Macrostrain(void )
   my_solver = NULL;
 
   _monitor_is_open = false;
+
+
+  _first_run = true;
+
 }
