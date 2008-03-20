@@ -81,7 +81,8 @@ TiberNonlinLS::user_initialization(void)
 
     if (_solver == NULL)
     {
-      std::cerr << "Linear solver " << _linear_solver << " is not available." << std::endl;
+      std::cerr << "Linear solver " << _linear_solver <<
+        " is not available." << std::endl;
       throw InitFailedException("Cannot create linear solver object.");
     }
   }

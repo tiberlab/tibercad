@@ -37,11 +37,11 @@ SimpleSemiconductorModel::do_init(void)
   // for the moment we read them from the materials section
   ModelOptions& opt = get_material()->get_options();
 
-  get_conduction_band().band_edge = opt.get_option("Ec", 2.2277);
+  get_conduction_band().band_edge = opt.get_option("Ec", 2.2288);
   get_valence_band().band_edge = opt.get_option("Ev", 1.1047);
   double deg = std::pow(2.0, 2.0 / 3.0);
-  get_conduction_band().effective_mass = deg * opt.get_option("meff_n", 1.08);
-  get_valence_band().effective_mass = deg * opt.get_option("meff_p", 1.15);
+  get_conduction_band().effective_mass = deg * opt.get_option("meff_n", 1.082);
+  get_valence_band().effective_mass = deg * opt.get_option("meff_p", 1.1432);
   
 }
 
@@ -50,9 +50,15 @@ SimpleSemiconductorModel::do_print_info(void)
 {
   string space("    ");
   
+  double deg = std::pow(2.0, 2.0 / 3.0);
   cout << space << "simple semiconductor model" << endl;
   cout << space << "Ec = " << get_conduction_band().band_edge <<
-    ", m_DOS = " << get_conduction_band().effective_mass << endl;
+    ", m_DOS = " << get_conduction_band().effective_mass / deg << endl;
   cout << space << "Ev = " << get_valence_band().band_edge <<
-    ", m_DOS = " << get_valence_band().effective_mass << endl;
+    ", m_DOS = " << get_valence_band().effective_mass / deg << endl;
+  cout << space << "Eg = " <<
+    get_conduction_band().band_edge - get_valence_band().band_edge <<
+    ", Ef0 = " << get_equilibrium_fermi_level()
+      << ", ni = " << std::sqrt(get_intrinsic_density_squared());
+  cout << endl;
 }

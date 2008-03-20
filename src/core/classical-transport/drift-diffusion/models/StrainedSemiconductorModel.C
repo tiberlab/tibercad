@@ -187,7 +187,8 @@ StrainedSemiconductorModel::do_print_info(void)
   if (ignore_strain_)
     cout << " (but strain is ignored!!)";
   cout << endl;
-  cout << space << "strain simulation: " << strain_model_->get_name() << endl;
+  if (!ignore_strain_ && (strain_model_ != NULL))
+    cout << space << "strain simulation: " << strain_model_->get_name() << endl;
   if (_recompute_band_parameters)
     cout << "recompute band parameters before each simulation" << endl;
   
@@ -202,6 +203,8 @@ StrainedSemiconductorModel::do_print_info(void)
     setup_band_edges();
     calculate_equilibrium_properties();
 
+    double deg = std::pow(2.0, 2.0 / 3.0);
+
     const std::vector<DDsemiconductor::band_extremum>& cbs =
       get_physical_model()->get_conduction_band_energy_mass();
     cout << space << " - conduction bands:\n";
@@ -212,7 +215,7 @@ StrainedSemiconductorModel::do_print_info(void)
         << ", d = " << cbs[i].degeneracy << endl;
     }
     cout << space << "   Nc = " << get_conduction_band().effective_DOS << " cm^-3"
-      << "  m_dos = " << get_conduction_band().effective_mass << "\n";
+      << "  m_dos = " << get_conduction_band().effective_mass / deg << "\n";
 
     //_bulk_model->calculate_valence_band_extremum();
     const std::vector<DDsemiconductor::band_extremum>& vbs =
@@ -225,9 +228,11 @@ StrainedSemiconductorModel::do_print_info(void)
         << ", d = " << vbs[i].degeneracy << endl;
     }
     cout << space << "   Nv = " << get_valence_band().effective_DOS << " cm^-3"
-      << "  m_dos = " << get_valence_band().effective_mass << "\n";
+      << "  m_dos = " << get_valence_band().effective_mass / deg << "\n";
 
-    cout << space << " - Ef0 = " << get_equilibrium_fermi_level()
+    cout << space << " - Eg = " <<
+      get_conduction_band().band_edge - get_valence_band().band_edge <<
+      ", Ef0 = " << get_equilibrium_fermi_level()
       << ", ni = " << std::sqrt(get_intrinsic_density_squared());
     cout << endl;
   }
