@@ -179,7 +179,7 @@ $Physics
 $Simulation
 {
 
-  meshfile = test_03.msh
+  meshfile = diode.msh
   dimension = 1
   temperature = 300
   solve = sweep
