@@ -91,9 +91,9 @@ FieldDependentMobility::do_init(void)
 
   std::string force = get_parameter("driving_force", "efield");
   if (force == "efield")
-    _force = GRADFERMI;
-  else if (force == "grad_fermi")
     _force = EFIELD;
+  else if (force == "grad_fermi")
+    _force = GRADFERMI;
   else
   {
     std::string msg("FieldDependentMobility: Unknown driving force '");
