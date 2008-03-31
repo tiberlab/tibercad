@@ -201,7 +201,7 @@ SimulationInterface::init(void) throw (InitFailedException)
   if (!_is_initialized)
   {
 #ifdef DEBUG
-    cerr << "Initialize " << get_name() << "... ";
+    cerr << "Initialize " << get_name() << "... " << endl;
 #endif
 
     // build name for equation systems
@@ -222,7 +222,7 @@ SimulationInterface::init(void) throw (InitFailedException)
   _is_initialized = true;
 
 #ifdef DEBUG
-  cerr << "done" << endl;
+  cerr << "init of " << get_name() << " done" << endl;
 #endif
 
   if (verbose() > 0)
@@ -230,7 +230,11 @@ SimulationInterface::init(void) throw (InitFailedException)
     cout << endl << 
       ">>================================================================<<"
       << endl << "Simulation options for " << get_name() << " (" <<
-      get_default_name() << ")" << endl << endl;
+      get_default_name() << ")"
+#ifdef DEBUG
+      << " ptr = " << this
+#endif
+      << endl << endl;
     do_print_info();
     cout << endl;
     

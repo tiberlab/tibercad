@@ -63,8 +63,8 @@ RelaxationMethod::do_solve(void)
       cout.flush();
       cout << "<<<<------------------------------------------------------------"
            << endl
-           << get_name() << " (Relaxation): iteration " << it
-           << "  correction (max norm):  " << norm
+           << get_name() << " (Relaxation): iteration " << it << endl
+           << "  correction (max norm):  " << norm << endl
            << "  relative error (l2)  :  " << rel_err << endl;
       cout << "--------------------------------------------------------------->>>>"
         << endl;

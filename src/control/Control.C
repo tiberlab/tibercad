@@ -108,11 +108,13 @@ Control::init(void) throw (InitFailedException, ModelErrorException)
       envit->second->init();
 
 
-    // initialize the simulations
+    // initialize the simulations, but only if they are not initialized yet
+    // (the latter should not happen, however)
     simulation_iterator simit(_simulations.begin());
     const simulation_iterator simend(_simulations.end());
     for ( ; simit != simend; ++simit)
-      (*simit)->init();
+      if (!(*simit)->is_initialized())
+        (*simit)->init();
 
   }
   catch (runtime_error& e)
@@ -141,6 +143,9 @@ Control::create_device(void)
   _database->set_search_path(opts.get_option("searchpath", "."));
   opts.delete_option("searchpath");
 
+#ifdef DEBUG
+  cerr << " initialize global simulation options" << endl;
+#endif
   // initialize global simulation options
   SimulationOptions::initialize(opts);
 
@@ -152,6 +157,9 @@ Control::create_device(void)
   for (unsigned int i = 0; i < vars.size(); i++)
     _plotvariables.insert(vars[i]);
 
+#ifdef DEBUG
+  cerr << " create output directory" << endl;
+#endif
   // create output directory
   _outputdir = opts.get_option("resultpath", _outputdir);
   opts.delete_option("resultpath");
@@ -166,6 +174,9 @@ Control::create_device(void)
   _output_format = opts.get_option("output_format", "gmv");
 
 
+#ifdef DEBUG
+  cerr << " create device" << endl;
+#endif
   _device = Device::create(opts);
 
 

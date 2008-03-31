@@ -39,7 +39,12 @@ class TiberNonlinearSystem : public ImplicitSystem
       TIBER,
 
       /*! The PETSc nonlinear solver */
-      PETSC
+      PETSC,
+
+      /*! The Bank and Rose nonlinear method (Bank, R. E. and Rose, D. J.:
+       * "Global Approximate Newton Methods", Numerische Mathematik 37(2), 1981.
+       */
+      BANKROSE
     };
 
     

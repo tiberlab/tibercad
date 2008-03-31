@@ -30,8 +30,9 @@ SelfconsistentSolver::do_init(void)
       throw InitFailedException("SelfconsistentSolver: Simulation " +
           sims[i] + " not found.");
 
-    if (!_simulations[i]->is_initialized())
-      _simulations[i]->init();
+    // No, No, No. That's no good.
+    //if (!_simulations[i]->is_initialized())
+    //  _simulations[i]->init();
   }
 
   if (!_simulations[num_of_sims - 1]->has_solution_vector())

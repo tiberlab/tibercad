@@ -5,6 +5,7 @@
 
 // the implemented systems/solvers
 #include "TiberNonlinLS.h"
+#include "TiberNonlinBR.h"
 #include "TiberNonlinPetsc.h"
 
 #include "InitFailedException.h"
@@ -48,6 +49,9 @@ TiberNonlinearSystem::create_nonlinear_system(EquationSystems& es,
     case TIBER:
       sys = &(es.add_system<TiberNonlinLS>(sysname));
       break;
+    case BANKROSE:
+      sys = &(es.add_system<TiberNonlinBR>(sysname));
+      break;
     default: // PETSc
       sys = &(es.add_system<TiberNonlinPetsc>(sysname));
       break;
@@ -68,6 +72,8 @@ TiberNonlinearSystem::create_nonlinear_system(EquationSystems& es,
     return create_nonlinear_system(es, sysname, TIBER, linear_solver);
   else if (type == "petsc")
     return create_nonlinear_system(es, sysname, PETSC, linear_solver);
+  else if (type == "bankrose")
+    return create_nonlinear_system(es, sysname, BANKROSE, linear_solver);
   else
   {
     std::string s = "TiberNonlinearSystem: unknown system type '" +
