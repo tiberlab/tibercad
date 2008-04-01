@@ -1,0 +1,197 @@
+# diode example
+#
+
+
+# Description of  the  device physical regions
+$Device
+{
+   Region nside 
+   {
+
+     reg_numb = 2
+     mat = Si
+     doping = 1e18 doping_type = donor
+
+   }
+
+   Region pside 
+   {
+     reg_numb = 1
+     mat = Si
+     doping = 1e18 doping_type = acceptor
+
+    }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+
+  model thermal
+  {
+
+    options
+    { 
+      simulation_name = tt
+      physical_regions = all
+    }
+
+    physical_model heat_source
+    {
+      model = drift_diffusion_dissipation
+
+      drift_diffusion_simulation = driftdiffusion 
+    }
+
+
+    BC_Regions
+    {
+        BC_Region reservoir
+   	{
+         type = heat_reservoir
+         BC_reg_numb = 1
+         temperature = 300
+   	}
+       
+        BC_Region reservoir
+   	{
+	 type = heat_reservoir
+         BC_reg_numb = 2
+         temperature = 300
+	}
+     }
+     		    
+  }
+
+  model driftdiffusion
+  { 
+              
+    options
+    {
+      simulation_name = dd
+      physical_regions = all
+      
+    }
+
+
+     physical_model electron_mobility
+    {
+      model = doping_dependent
+    }
+
+    physical_model hole_mobility
+    {
+      model = doping_dependent
+    } 
+
+    physical_model recombination
+     {
+       model  =  srh
+     }                
+    
+    physical_model thermoelectric_power
+    {	
+       model  = diffusivity_model
+    } 	
+
+    BC_Regions  
+    {
+      BC_Region anode
+      {
+        BC_reg_numb = 1
+        type = ohmic
+        voltage = @Vb[0.0] 
+      }
+
+      BC_Region cathode
+      {
+        BC_reg_numb = 2
+        type = ohmic
+        voltage = 0.0
+      }
+ 
+    }   
+
+  
+
+  }  
+
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+
+{
+  selfconsistent
+  {
+     flavour = relaxation
+     relaxation_factor = 0.5
+     simulations = (dd, tt)
+     abs_tolerance = 1e-5
+     rel_tolerance = 1e-6
+     max_iterations = 30
+     monitor = true
+  }
+
+  driftdiffusion
+  {
+    nonlin_rel_tol = 1e-12
+    nonlin_step_tol = 1e-6
+    nonlin_max_it = 30
+    ls_max_step = 1
+  }
+
+
+  sweep
+  {
+    simulation = selfconsistent
+    variable = Vb
+    start = 0
+    stop = 1.5
+    steps = 15
+    max_step = 1
+    #plotvariable = current
+  }
+
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+ 
+  driftdiffusion 
+  {
+    model = unstrained
+    thermal_simulation = tt
+  }
+
+
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+$Simulation
+{
+
+  meshfile = test_03.msh
+  dimension = 1
+  temperature = 300
+  solve = sweep
+  resultpath = output
+  output_format = grace
+  plot = (ContactCurrents,HeatSource,T,PowerFlux,Pn,Pp)
+
+    
+ 
+}
+
+
+
+
+
