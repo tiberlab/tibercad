@@ -6,7 +6,7 @@
 #include "tecplot_IO_cell.h"
 #include "VTKIO.h"
 
-
+ 
 using namespace std;
 
 KspaceIntegration::KspaceIntegration()
@@ -381,7 +381,7 @@ void KspaceIntegration::parse_options( )
 
   opt.degeneracy                = mod_opt.get_option("degeneracy",1);
   opt.k_domain_refinement       = mod_opt.get_option("refine_k_space", false);
-  opt.log_output                = mod_opt.get_option("k_space_log_output",  false);
+  opt.log_output                = mod_opt.get_option("log_output",  false);
 
 
 }

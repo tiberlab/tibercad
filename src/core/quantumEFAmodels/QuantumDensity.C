@@ -321,6 +321,9 @@ void QuantumDensity::parse_options( )
   opt.bulk_calculation = mod_opt.get_option("bulk_calculation", false);
 
 
+ 
+
+
   if (opt.analitic)
   {
     if (k_dim == 1)
@@ -372,16 +375,22 @@ void QuantumDensity:: do_solve()
   if (!opt.analitic)
   {//numerical integration
     KspaceIntegration::do_solve();
+
+   
   }
   else
   {
+    
+
     estimate_analitic_density();
+
+    
   }
 
 
   
 
- 
+  if (!opt.bulk_calculation)
   {
     
     if (_solution_vector.get() == NULL)
@@ -412,6 +421,7 @@ void QuantumDensity:: do_solve()
      
       el_number++;
     }
+
   }
 
 }
@@ -425,6 +435,8 @@ void QuantumDensity::calculate_for_k_point(const Point& k_point,
 				     std::map<const Elem*, double>& density, 
 				     double& integrated_quantity)
 {
+
+
 
    
   vector<double> k_vector(3, 0.0);
@@ -445,12 +457,25 @@ void QuantumDensity::calculate_for_k_point(const Point& k_point,
 
   quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number );
 
-  if (opt.bulk_calculation)
-    quantum_model_opts["job"] = "bulkdensity";
-  else
-    quantum_model_opts["job"] = "density";
+  
 
+
+  if (opt.bulk_calculation)
+  {
+    quantum_model_opts["job"] = "bulkdensity";
+  }
+  else
+  {
+    quantum_model_opts["job"] = "density";
+  }
  
+
+
+  if (opt.bulk_calculation) 
+    cerr << "bulk";
+  else
+    cerr << "non bulk" << "\n";
+
 	  
   quantum_model->set_options(quantum_model_opts);
 

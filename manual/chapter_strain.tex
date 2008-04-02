@@ -17,7 +17,7 @@ model macrostrain
 There are two possible kinds of boundary conditions.
 The mandatory keyword 
 
-\textit{type} = \{ substrate $\vert$ pressure \} 
+\textit{type} = \{ substrate $\vert$ pressure $\vert$ extended\_material\} 
 
 specifies the boundary condition type.
 
@@ -220,3 +220,8 @@ The iterative cycle usually converges after 3 - 4 iterations.
 The only parameter that controls shape calculation is
 \textit{number\_shape\_steps}. The value defines number of iterations. The default value is zero, that means no shape deformation calculation.
 
+\section{Physics section parameters}
+There is a possibility to consider converse piezoelectric effect. For this it is necessary to specify a name of another simulation that can provide electric field.
+
+
+\section{Output} 
