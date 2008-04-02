@@ -59,8 +59,27 @@ BC_Region tip_upon_a_surface
 \end{verbatim}
 \newtheorem*{pressure}{Sign of pressure}
 \begin{pressure}
- The value of the pressure has a positive sign if the external force acts towards the surface, which in general has to be  the  boundary of a simulation environment.
+ The value of the pressure has a positive sign if the external force acts towards the
+ surface, which in general has to be  the  boundary of a simulation environment.
 \end{pressure}
+
+\subsection{Extended device boundary condition}
+If device that is grown on a substrate is very large we may want to simulate a part of it only. In this case the simulation domain boundary is not a free surface any more.
+The boundary conditions are as follows:
+\begin{equation}
+   \int C_{ijkl} \frac{\partial u_k}{\partial x_k} n_i d\partial\Omega = 0
+\end{equation}
+The syntax is as follows:
+\begin{verbatim}
+BC_Region boundary1
+{
+   BC_reg_numb = 12
+   type = extended_material
+}
+\end{verbatim}
+
+
+
 
 \section{Solver parameters}
 The choice of the necessary parameters to be put in the \textbf{Solver} section depends on the type of the strain boundary condition for the structure, namely, if it is considered as grown on  a substrate or not. 
@@ -86,21 +105,21 @@ Since the elasticity energy is invariant with respect  to  translations and rota
 
  Let $\cal D$ be  the dimensionality of the structure minus the number of directions along which the structure is
  periodic. If ${\cal D} > 0$, then a Dirichlet boundary condition is applied at an arbitrarily chosen  
- node $i_0$: 
+ node $i_1$: 
 \begin{equation} 
-{\bf u} (\rvec_{i_0}) = {\bf 0},
+{\bf u} (\rvec_{i_1}) = {\bf 0},
  \end{equation}
 in order to prevent the structure from  undesirable translations.
-In the case of ${\cal D} > 1$, another node  $i_1$ is chosen and a constraint
+In the case of ${\cal D} > 1$, another node  $i_2$ is chosen and a constraint
  \begin{equation}
- ({\bf u} (\rvec_{i_0}) - {\bf u} (\rvec_{i_1}))\cdot(\rvec_{i_0} - \rvec_{i_1}) = 0
+ ({\bf u} (\rvec_{i_1}) - {\bf u} (\rvec_{i_2}))\cdot(\rvec_{i_1} - \rvec_{i_2}) = 0
  \label{constr2D}
  \end{equation}
-is applied, in order to keep the direction between the nodes $i_0, i_1$ unchanged.  If ${\cal D} = 3$, another node $i_2$ is chosen and additional constraint is set:
+is applied, in order to keep the direction between the nodes $i_1, i_2$ unchanged.  If ${\cal D} = 3$, another node $i_3$ is chosen and additional constraint is set:
 \begin{equation}
- \left( \rvec_{i_0}- \rvec_{i_1}, \rvec_{i_0} - \rvec_{i_2}, {\bf u}_{i_2} \right) =0,
+ \left( \rvec_{i_1}- \rvec_{i_2}, \rvec_{i_1} - \rvec_{i_3}, {\bf u}_{i_3} \right) =0,
 \end{equation}
-so the node $i_2$ has to belong to the $(\rvec_{i_0}, \rvec_{i_1}, \rvec_{i_2})$ plane. 
+so the node $i_3$ has to belong to the $(\rvec_{i_1}, \rvec_{i_2}, \rvec_{i_3})$ plane. 
  
 
 
@@ -182,6 +201,22 @@ Example:
  max_refinement_level = 10
 \end{verbatim}
  
-
 \subsubsection{Deformed shape calculation}
+
+The displacement field and lattice matching parameters that are found from
+master equations can be used in order to define a new shape of the heterostructure. This new shape is the first approximation to the equilibrium one. The next approximations are obtained iteratively by the following steps: at the $n$-th iteration the master equations are solved using the lattice matching deformation $\eps_{ij}^n$ which is defined as
+\begin{equation}
+\label{eps1}
+\eps_{ij}^n = \frac{1}{2}\left(\frac{\partial u_i^{n-1}}{\partial x_j} +
+                               \frac{\partial u_j^{n-1}}{\partial x_i}\right)
++ \eps_{ij}^{n-1},
+\end{equation}
+where the displacement field ${\bf u}^{n-1}$ has been taken from the iteration 
+$n - 1$. 
+Then the new shape is defined by using the displacements from the last step solution,
+and the iterative process is repeated until the displacement field vanishes and additional lattice parameters stabilise. 
+The iterative cycle usually converges after 3 - 4 iterations.
+
+The only parameter that controls shape calculation is
+\textit{number\_shape\_steps}. The value defines number of iterations. The default value is zero, that means no shape deformation calculation.
 
