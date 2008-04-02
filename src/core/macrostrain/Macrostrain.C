@@ -359,7 +359,7 @@ void Macrostrain::parse_options( )
    KSP ksp_of_my_solver = (dynamic_cast< TiberPetscLinearSolver* > (  (my_system->linear_solver).get() )   )->get_ksp();
 
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
-      && (PETSC_VERSION_SUBMINOR >= 2))
+      && (PETSC_VERSION_SUBMINOR > 2))
    ierr = KSPMonitorSet(ksp_of_my_solver,KSPMonitorDefault, PETSC_NULL,0);
 #else
    ierr = KSPSetMonitor(ksp_of_my_solver,KSPDefaultMonitor, PETSC_NULL,0);
@@ -375,7 +375,7 @@ void Macrostrain::parse_options( )
    if (!_monitor_is_open) 
    {
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
-     && (PETSC_VERSION_SUBMINOR >= 2))
+     && (PETSC_VERSION_SUBMINOR > 2))
      KSPMonitorLGCreate (NULL, get_name().c_str(),0,0,400,400, &_lg);
 #else
      KSPLGMonitorCreate (NULL, get_name().c_str(),0,0,400,400, &_lg);
@@ -387,7 +387,7 @@ void Macrostrain::parse_options( )
      KSP ksp_of_my_solver = (dynamic_cast< TiberPetscLinearSolver* > (  (my_system->linear_solver).get() )   )->get_ksp(); 
 
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
-     && (PETSC_VERSION_SUBMINOR >= 2))
+     && (PETSC_VERSION_SUBMINOR > 2))
      ierr = KSPMonitorSet ( ksp_of_my_solver,KSPMonitorLG,_lg,0);
 #else
      ierr = KSPSetMonitor ( ksp_of_my_solver,KSPLGMonitor,_lg,0);
