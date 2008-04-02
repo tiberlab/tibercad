@@ -2,7 +2,7 @@
 
 topdir := ../..
 
-inputfile = diode.tib
+inputfile = test_03.tib
 
 
 .PHONY: run clean distclean
