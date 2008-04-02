@@ -471,12 +471,6 @@ void QuantumDensity::calculate_for_k_point(const Point& k_point,
  
 
 
-  if (opt.bulk_calculation) 
-    cerr << "bulk";
-  else
-    cerr << "non bulk" << "\n";
-
-	  
   quantum_model->set_options(quantum_model_opts);
 
 
