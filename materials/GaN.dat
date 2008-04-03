@@ -120,6 +120,7 @@ gamma_h  = 1
 Talpha_h = -1.5
 
 # direct
+C = 0.47e-10
 
 #Lattice thermal conductivity 
 therm_lat_cond_x = 1.3

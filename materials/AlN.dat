@@ -119,6 +119,9 @@ Nref_h   = 1.0e+16
 gamma_h  = 1
 Talpha_h = -1.5
 
+# direct recombination
+C = 0.18e-10
+
 #Lattice thermal conductivity
 therm_lat_cond_x = 2.85
 therm_lat_cond_z = 2.85
