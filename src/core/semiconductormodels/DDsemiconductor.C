@@ -156,7 +156,7 @@ const std::vector<DDsemiconductor::band_extremum>& DDsemiconductor::get_conducti
 const std::vector<DDsemiconductor::band_extremum>& DDsemiconductor::get_valence_band_energy_mass(void) const
 {
 
-  cerr << "dd " << valence_band.size() << "\n";
+ 
   
   return(valence_band);
 

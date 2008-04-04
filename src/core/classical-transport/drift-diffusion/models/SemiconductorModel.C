@@ -129,8 +129,7 @@ SemiconductorModel::extract_band_properties(void)
   double delta_max = 4.0 * kT;
   for (int i = 1; i < vbs.size(); i++)
   {
-    cerr << i << "    " << vbs.size() << "         " << vbs[i].energy << "\n";
-
+   
     if (vbs[i].energy > vbs[id].energy)
       id = i;
   }

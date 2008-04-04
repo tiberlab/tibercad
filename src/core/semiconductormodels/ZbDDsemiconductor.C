@@ -263,7 +263,6 @@ void ZbDDsemiconductor::calculate_valence_band_extremum(void)
   valence_band = result;
 
 
-  cerr << valence_band.size() << "\n";
 
 }
 
