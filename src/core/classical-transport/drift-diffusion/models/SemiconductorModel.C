@@ -120,7 +120,7 @@ SemiconductorModel::extract_band_properties(void)
   // treat valence band
   const std::vector<DDsemiconductor::band_extremum>& vbs =
     bulk_model_->get_valence_band_energy_mass();
-  cerr << "extr" << vbs.size() << "\n";
+  
 
   // get maximum
   id = 0;
