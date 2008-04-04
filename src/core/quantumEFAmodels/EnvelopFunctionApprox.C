@@ -94,6 +94,8 @@ void EnvelopFunctionApprox::build_integrated_quantities (const std::set< std::st
   values.resize(0);
   
 
+
+
   if (names.find("EigenEnergy") != varend)
   {
     unsigned int n = solution.size();
@@ -612,7 +614,7 @@ void EnvelopFunctionApprox::parse_options()
   opt.convergent_density = mod_opt.get_option("convergent_density", true);
 
 
-  opt.local_occupation              = mod_opt.get_option("local_occupation", true);
+  opt.local_occupation = mod_opt.get_option("local_occupation", true);
 
 
 
@@ -791,7 +793,12 @@ void EnvelopFunctionApprox::do_solve()
 
  if (opt.job == BULKEIGENSTATES )
  {
+   
+
    solve_bulk();
+   
+   
+
  }
  else
  {
@@ -3106,6 +3113,9 @@ void EnvelopFunctionApprox::solve_bulk(void)
     electric_potential = get_electric_potential( mat_elem, qp );
   }
   
+ 
+
+ 
   element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
   
 
@@ -3119,6 +3129,8 @@ void EnvelopFunctionApprox::solve_bulk(void)
     for (unsigned int band2 = 0; band2 < opt.number_of_bands; band2++)
     {
       ham_matrix[band1 + band2 * opt.number_of_bands] = model_Ham[band1][band2].constant;
+     
+
     }
 
 
@@ -3147,14 +3159,17 @@ void EnvelopFunctionApprox::solve_bulk(void)
      }
   }
 
+
+
+
  
 
   unsigned int n = solution.size();
   
   for (unsigned int i = 0; i < n ; i++)
   {
-     solution[i].Fermi_energy = 0;  
-     solution[i].Temperature = opt.Temperature;
+    solution[i].Fermi_energy = 0;  
+    solution[i].Temperature = opt.Temperature;
 
 
     if (poisson_equation != NULL)
@@ -3168,21 +3183,22 @@ void EnvelopFunctionApprox::solve_bulk(void)
     //Temperature calculation
     
     if (temperature_simulation != NULL)
-      {
+    {
 
-	Point center = mat_elem->centroid();
+      Point center = mat_elem->centroid();
 	
-	vector<double> values;
-	vector<Point> qp(1);
+      vector<double> values;
+      vector<Point> qp(1);
 
-	qp[0] = center;
+      qp[0] = center;
      
-	temperature_simulation->get_solution(mat_elem, qp, temperature_ID, values);
+      temperature_simulation->get_solution(mat_elem, qp, temperature_ID, values);
 
-	solution[i].Temperature = values[0];
+      solution[i].Temperature = values[0];
       
-      }
+    }
       
   }
   
+
 }

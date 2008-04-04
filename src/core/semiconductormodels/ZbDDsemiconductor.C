@@ -212,6 +212,9 @@ void ZbDDsemiconductor::calculate_valence_band_extremum(void)
   Tensor2Sym imass;
 
  
+  
+
+
   for (short ind = 0; ind < 3; ind++)
   {
    
@@ -258,6 +261,10 @@ void ZbDDsemiconductor::calculate_valence_band_extremum(void)
   
  
   valence_band = result;
+
+
+  cerr << valence_band.size() << "\n";
+
 }
 
 //---------------------------------------------------------//

@@ -982,7 +982,10 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 
   string suffix = get_control().get_filename_suffix();
   string outdir = get_control().get_output_dir();
-  string format = get_control().get_output_format();
+  //string format = get_control().get_output_format();
+
+
+  string format = "grace";
 
   string suff;
   if (format == "gmv")

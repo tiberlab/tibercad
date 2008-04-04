@@ -120,6 +120,8 @@ SemiconductorModel::extract_band_properties(void)
   // treat valence band
   const std::vector<DDsemiconductor::band_extremum>& vbs =
     bulk_model_->get_valence_band_energy_mass();
+  cerr << "extr" << vbs.size() << "\n";
+
   // get maximum
   id = 0;
   // TODO should be local temperature
@@ -127,6 +129,8 @@ SemiconductorModel::extract_band_properties(void)
   double delta_max = 4.0 * kT;
   for (int i = 1; i < vbs.size(); i++)
   {
+    cerr << i << "    " << vbs.size() << "         " << vbs[i].energy << "\n";
+
     if (vbs[i].energy > vbs[id].energy)
       id = i;
   }
