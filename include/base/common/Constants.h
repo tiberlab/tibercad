@@ -66,7 +66,7 @@ namespace Constants
   extern const double c;
 
 
-  //!Atomic unit of time [second] \f$ \hbar / Ha \f$
+  //!Atomic unit of time [second] \f$ \hbar / Ha \f$ (is about 2.4e-17)
   extern const double atomic_time;
 
 

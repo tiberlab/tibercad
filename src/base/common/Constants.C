@@ -64,7 +64,7 @@ Constants::c = 299792458;
 
 
 const double
-Constants::atomic_time = plancks_constant/Hartree;
+Constants::atomic_time = hbar/(Hartree*elementary_charge);
 
 const double
 Constants::fine_structure_constant = (elementary_charge * elementary_charge) 
