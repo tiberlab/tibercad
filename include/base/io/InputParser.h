@@ -414,7 +414,8 @@ const std::multimap <std::string,ModelOptions>&
    *   Method   to  parse a series of n blocks with of  "keyword" type (e.g. physical model). 
    *    the contents are put in a map<block_name,ModelOption>  (blocks_map)
    */
-  void parse_n_subblocks(std::ifstream& in_stream,  std::string& keyword);
+//  void parse_n_subblocks(std::ifstream& in_stream,  std::string& keyword);
+ void parse_n_subblocks(std::ifstream& in_stream);
 
 
 

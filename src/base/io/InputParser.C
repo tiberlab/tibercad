@@ -2566,13 +2566,14 @@ void InputParser::read_scale(void)
 
 
 // parse a number n of  subblocks of kind 
-//  keyword  "blockname"
+//  "block_name"
 //  { .........
 //  }
 //  and  put the contents in a map<block_name,ModelOption>
 
 void
-InputParser::parse_n_subblocks(ifstream& in_stream,  string& keyword)
+//InputParser::parse_n_subblocks(ifstream& in_stream,  string& keyword)
+InputParser::parse_n_subblocks(ifstream& in_stream)
 {
 
   string  label, block_name ;
@@ -2582,15 +2583,13 @@ InputParser::parse_n_subblocks(ifstream& in_stream,  string& keyword)
 
   in_stream >>  label ;
 
- 
-
-  while (skip_comments(in_stream,  label ) == true )
+  while (skip_comments(in_stream, label ) == true )
   {
     in_stream >> label  ; // if  the  whole  line has
     //  been  skipped: read  the next keyword !!! 
   } 
 
-  cut_off_comment(label, in_stream); //  case  Recomb#commmm
+  cut_off_comment( label  , in_stream); //  case  Recomb#commmm
 
   //       if (!check_label(model_section_keywords, label))
   //         throw InitFailedException("SYNTAX ERROR in input  file: unknown keyword in models section! ");
@@ -2600,24 +2599,30 @@ InputParser::parse_n_subblocks(ifstream& in_stream,  string& keyword)
 
   //  READ the block-keyword
 
-  while (  (label == keyword  ) && (!in_stream.eof()) ) 
+  while (  ( label !=  end_symb    ) && (!in_stream.eof()) ) 
     
   {  //  while loop  blocks
 
     // block n
                
 
-    //  READ the block name
 
-    in_stream >>  block_name ;
+
+
+ //    //  READ the block name
+
+//     in_stream >>  block_name ;
 
   
 
 
-    while (skip_comments(in_stream,block_name  ) == true )
-    {
-      in_stream >> block_name  ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-    } 
+//     while (skip_comments(in_stream,block_name  ) == true )
+//     {
+//       in_stream >> block_name  ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+//     } 
+
+
+    block_name = label;
 
     cut_off_comment(block_name, in_stream); //
 
@@ -2655,6 +2660,10 @@ const multimap <string,ModelOptions>& InputParser::read_subblocks(string section
   std::string  label ;
   std::ifstream in_stream (filename.c_str()) ;
 
+  bool found_block;
+  found_block = false;
+
+
   reset_all_maps();
 
  
@@ -2677,9 +2686,16 @@ const multimap <string,ModelOptions>& InputParser::read_subblocks(string section
   // go to the  first '{'
   skip_to_bracket(in_stream);
 
+
+ found_block  =  find_keyword_in_section( in_stream,  block_type );  //   read   block name  string (e.g. "Sweep") 
+
+
+
   //read all the  subblocks of  type "block_type" in the section
   //  (included header)
-  parse_n_subblocks(in_stream,  block_type);
+//  parse_n_subblocks(in_stream,  block_type);
+ parse_n_subblocks(in_stream);
+
 
   // returns the map of ModelOptions with the contents of the  block
   return blocks_map;
