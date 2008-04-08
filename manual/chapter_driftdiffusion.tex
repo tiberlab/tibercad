@@ -21,7 +21,7 @@ See tables~\ref{table:dd_nodal}, \ref{table:dd_elemental} and \ref{table:dd_scal
 
 \begin{table}[htb]
 \center
-\begin{tabular}{l|l|l}
+\begin{tabular}{l|p{8cm}|l}
 \multicolumn{3}{c}{\textbf{Nodal quantities}} \\
 \hline 
 \texttt{Ec} & Conduction band edge & eV \\
@@ -29,8 +29,8 @@ See tables~\ref{table:dd_nodal}, \ref{table:dd_elemental} and \ref{table:dd_scal
 \texttt{Ev} & Valence band edge without electric potential & eV \\
 \texttt{Ev0} & Valence band edge without electric potential & eV \\
 \texttt{Eg} & Band gap & eV \\
-\texttt{QFermi\_e} & Electro-chemical potential of electrons & eV \\
-\texttt{QFermi\_h} & Electro-chemical potential of holes & eV \\
+\texttt{QFermi\_e} & Electro-chemical potential of electrons & eV ($-e\phi_n$) \\
+\texttt{QFermi\_h} & Electro-chemical potential of holes & eV ($-e\phi_p$) \\
 \texttt{ElPotential} & Electric potential & V \\
 \texttt{eDensity} & Electron density & cm$^{-3}$ \\
 \texttt{hDensity} & Hole density & cm$^{-3}$ \\
@@ -41,10 +41,12 @@ See tables~\ref{table:dd_nodal}, \ref{table:dd_elemental} and \ref{table:dd_scal
 \texttt{charge\_density} & Total charge density & cm$^{-3}$ \\
 \texttt{Pn} & Electron thermoelectric power & V K$^{-1}$ \\
 \texttt{Pp} & Hole thermoelectric power & V K$^{-1}$ \\
-\texttt{NetRecombination} & \begin{minipage}[t]{8cm}
-
-The net recombination rate for each recombination model and the total rate
-\end{minipage}& cm$^{-3}$s$^{-1}$
+\texttt{NetRecombination} & %\begin{minipage}[t]{8cm}
+%
+%The net recombination rate for each recombination model and the total rate
+%\end{minipage}& cm$^{-3}$s$^{-1}$
+ The net recombination rate for each recombination model and the total rate &
+ cm$^{-3}$s$^{-1}$
 \end{tabular}
 \caption{Nodal quantities}
 \label{table:dd_nodal}
@@ -52,10 +54,12 @@ The net recombination rate for each recombination model and the total rate
 
 \begin{table}[htb]
 \center
-\begin{tabular}{l|l|l}
+\begin{tabular}{l|p{5cm}|l}
 \multicolumn{3}{c}{\textbf{Elemental quantities}} \\
 \hline 
 \texttt{EField} & Electric Field & Vcm$^{-1}$ \\
+\texttt{GradFermiE} & Gradient of the electron  electro-chemical potential& Vcm$^{-1}$ \\
+\texttt{GradFermiH} & Gradient of the hole  electro-chemical potential& Vcm$^{-1}$ \\
 \texttt{Current} & Total current density & Acm$^{-2}$ \\
 \texttt{eCurrent} & Electron current density & Acm$^{-2}$ \\
 \texttt{hCurrent} & Hole current density & Acm$^{-2}$ \\
@@ -390,7 +394,9 @@ A variable can be assigned to this, using the \verb+@+-syntax.
 
 The ohmic contact (identifier \texttt{ohmic}) has no further parameters.
 
-A Schottky contact  (identifier \texttt{schottky}) has the additional parameter \texttt{barrier\_height}, which signifies the energy difference between the semiconductor conduction band and the fermi energy in the metal.
+A Schottky contact  (identifier \texttt{schottky}) has the additional parameter \texttt{barrier}, which signifies the energy difference between the semiconductor band edge and the fermi energy in the metal.
+As default, the barrier is taken with respect to the conduction band.
+By specifying \verb+band = v+ the barrier can be imposed with respect o the valence band (p-type contact).
 
 The type of boundary model is chosen by the parameter \texttt{type}, e.g. \texttt{type = schottky}.
 
