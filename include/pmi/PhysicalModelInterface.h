@@ -212,6 +212,10 @@ class PhysicalModelInterface
     virtual void do_print_info(void){};
 
 
+    //! Tells if a parameter has been specified in the input file
+    bool has_parameter(const std::string& name) const;
+
+
     //! Get the value of a parameter from the input file
     /*!
      *

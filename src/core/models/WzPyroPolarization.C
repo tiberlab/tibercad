@@ -30,7 +30,11 @@ WzPyroPolarization::read_database(void)
 void
 WzPyroPolarization::do_init(void)
 {
-  _Pz = get_parameter("Pz", _Pz);
+  if (has_parameter("Pz"))
+  {
+    _Pz = get_parameter("Pz", _Pz);
+    _Pz_bow = 0.0;
+  }
   _Pz_bow = get_parameter("Pz_bow", _Pz_bow);
 
   Tensor1 pol(0);

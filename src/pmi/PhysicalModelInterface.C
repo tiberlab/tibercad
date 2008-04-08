@@ -320,6 +320,40 @@ PhysicalModelInterface::get_default_name(void) const
 }
 
 
+bool
+PhysicalModelInterface::has_parameter(const std::string& name) const
+{
+  bool found = _options.find_option(name);
+
+  if (!found)
+  {
+    const Material* mat = get_material();
+    if (mat != NULL)
+    {
+      SimulationInterface* sim = 
+        SimulationInterface::get_simulation(get_simulator_id());
+
+      found = mat->get_options().find_option(name);
+
+      if (!found)
+      {
+        std::string code(sim->get_name() + ".");
+
+        found = mat->get_options().find_option(code + name);
+
+        if (!found)
+        {
+          code += get_name() + ".";
+          found = mat->get_options().find_option(code + name);
+        }
+      }
+    }
+  }
+
+  return found;
+}
+
+
 
 template <typename T>
 T

@@ -5,6 +5,7 @@
 
 #include "ElectricalContact.h"
 #include "DriftDiffusionProperties.h"
+#include "ModelErrorException.h"
 
 using namespace DriftDiffusionDefs;
 
@@ -34,6 +35,10 @@ class SchottkyContact : public ElectricalContact
     double _barrier;
 
 
+    //! The band (\c c or \c v)
+    char _band;
+
+
     //! Whether to consider doping dependence of barrier height
     bool _doping_dependent;
 };
@@ -56,7 +61,8 @@ SchottkyContact::create(void)
 
 inline
 SchottkyContact::SchottkyContact(void)
-  : _doping_dependent(false)
+  : _band('c'),
+    _doping_dependent(false)
 {
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::DIRICHLET);
   set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::DIRICHLET);
@@ -73,7 +79,10 @@ SchottkyContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
   switch (variable)
   {
     case DriftDiffusionDefs::POTENTIAL:
-      val = get_material().get_conduction_band_edge() - _barrier;
+      if (_band == 'c')
+        val = get_material().get_conduction_band_edge() - _barrier;
+      else
+        val = get_material().get_valence_band_edge() + _barrier;
       break;
     case DriftDiffusionDefs::FERMIE:
       break;
@@ -94,6 +103,11 @@ SchottkyContact::do_init(void)
 
   _doping_dependent = get_options().get_option("doping_dependent_height", false); 
   _barrier = get_options().get_option("barrier_height", 0.8);
+  _barrier = get_options().get_option("barrier", _barrier);
+  std::string band = get_options().get_option("band", "c");
+  _band = band[0];
+  if ((_band != 'c') && (_band != 'v'))
+    throw ModelErrorException("SchottkyContact: undefined band specified");
 }
 
 

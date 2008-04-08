@@ -54,7 +54,8 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     _polarization(3, 0.0),
     _thermoelectric_power(NULL),
     _is_dielectric(false),
-    _relax_polariz(1.0)
+    _relax_polariz(1.0),
+    _generalized_einstein_relation(true)
 {
   _pd = new PointData();
   _pd_stack.push(pair<PointData*, bool>(_pd, 1));
@@ -69,7 +70,6 @@ DriftDiffusionProperties::read_database(void)
 
   _is_dielectric = data("dielectric", _is_dielectric);
   permittivity = data("permittivity", 1.0);
-
 
 }
 
@@ -102,6 +102,10 @@ DriftDiffusionProperties::do_init(void)
   std::string s(get_parameter("relax_polarization", ""));
   _relax_polariz = check_and_register(s, _relax_polariz);
 
+
+  _generalized_einstein_relation =
+    get_options().get_option("generalized_einstein_relation",
+        _generalized_einstein_relation);
 
   //
   // setup holes and electrons
@@ -534,24 +538,32 @@ DriftDiffusionProperties::calculate_mobilities(void)
 
   // electrons
   double mue = _electron_mobility->get_mobility();
-  double arg_e = -_pd->fermi_e + _pd->electric_potential - get_conduction_band_edge();
-  if (arg_e > -10 * _lattice_vt)
-  {
-    // use generalized Einstein relations!
-    double Dn = kT * mue;
-    mue = Dn * get_electron_density_derivative() / get_electron_density();
-  }
-  _pd->electron_mobility = mue;
+  double arg_e = -_pd->fermi_e +
+    _pd->electric_potential - get_conduction_band_edge();
     
   // holes
   double muh = _hole_mobility->get_mobility();
-  double arg_h = _pd->fermi_h - _pd->electric_potential + get_valence_band_edge();
-  if (arg_h > -10 * _lattice_vt)
+  double arg_h = _pd->fermi_h -
+    _pd->electric_potential + get_valence_band_edge();
+
+  if (_generalized_einstein_relation)
   {
     // use generalized Einstein relations!
-    double Dp = kT * muh;
-    muh = -Dp * get_hole_density_derivative() / get_hole_density();
+
+    if (arg_e > -10 * _lattice_vt)
+    {
+      double Dn = kT * mue;
+      mue = Dn * get_electron_density_derivative() / get_electron_density();
+    }
+
+    if (arg_h > -10 * _lattice_vt)
+    {
+      double Dp = kT * muh;
+      muh = -Dp * get_hole_density_derivative() / get_hole_density();
+    }
   }
+
+  _pd->electron_mobility = mue;
   _pd->hole_mobility = muh;
 }
 

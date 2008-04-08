@@ -16,6 +16,7 @@
 #include "AtomisticStructure.h"
 
 #include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/convenience.hpp>
 
 #include <iostream>
 #include <vector>
@@ -165,10 +166,20 @@ Control::create_device(void)
   opts.delete_option("resultpath");
   path outpath(_outputdir, native);
   if (!exists(outpath))
-    create_directory(outpath);
+  {
+    // we catch any error here without doing anything yet
+    try {
+      create_directories(outpath);
+    }
+    catch (...) {}
+  }
     
   if (!(exists(outpath) && is_directory(outpath)))
-    throw InitFailedException("Control: cannot create / use output directory.");
+  {
+    string msg("Control: cannot create ore use '");
+    msg += outpath.string() + "' as output directory.";
+    throw InitFailedException(msg);
+  }
 
 
   _output_format = opts.get_option("output_format", "gmv");
@@ -606,6 +617,31 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   // 
 
   // first selfconsistency
+  const multimap<string, ModelOptions>& scs =
+    parser.read_subblocks("Solver", "Selfconsistent");
+
+  multimap<string, ModelOptions>::const_iterator sc_it(scs.begin());
+  multimap<string, ModelOptions>::const_iterator sc_end(scs.end());
+  for ( ; sc_it != sc_end; ++sc_it)
+  {
+    const ModelOptions& solveropts = sc_it->second;
+    if (!solveropts.is_empty())
+    {
+      SimulationInterface* sim =
+        SimulationInterface::create("selfconsistent", solveropts);
+
+      if (sim == NULL)
+        throw ModelErrorException("Could not create Selfconsistent simulation");
+
+      sim->set_control(this);
+      sim->verbose() = 0;
+      sim->set_name(sc_it->first);
+      _simulations[sim->get_name()] = sim;
+    }
+  }
+
+  
+  // TODO will be deleted
   const ModelOptions& solveropts =
     parser.read_parameters("Solver", "selfconsistent");
   if (!solveropts.is_empty())
@@ -626,9 +662,14 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   }
 
 
+  
   // then sweep
+  //
+  // first we look for a single sweep defined directly in the sweep block
+  //
+  // TODO the following blocks are only for now, they should be deleted
   ModelOptions sweepopts = parser.read_parameters("Solver", "sweep");
-  if (!solveropts.is_empty())
+  if (!sweepopts.is_empty())
   {
     if (!sweepopts.find_option("name"))
       sweepopts["name"] = "sweep";
@@ -640,7 +681,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   }
 
   sweepopts = parser.read_parameters("Solver", "sweep_1");
-  if (!solveropts.is_empty())
+  if (!sweepopts.is_empty())
   {
     if (!sweepopts.find_option("name"))
       sweepopts["name"] = "sweep_1";
@@ -652,7 +693,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   }
 
   sweepopts = parser.read_parameters("Solver", "sweep_2");
-  if (!solveropts.is_empty())
+  if (!sweepopts.is_empty())
   {
     if (!sweepopts.find_option("name"))
       sweepopts["name"] = "sweep_2";
@@ -663,7 +704,34 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     _simulations[sim->get_name()] = sim;
   }
 
+  {
+    // we might have several sweeps
+    const multimap<string, ModelOptions>& sws =
+      parser.read_subblocks("Solver", "Sweep");
+    cerr << sws.size() << endl;
 
+    multimap<string, ModelOptions>::const_iterator sw_it(sws.begin());
+    multimap<string, ModelOptions>::const_iterator sw_end(sws.end());
+    for ( ; sw_it != sw_end; ++sw_it)
+    {
+      cerr << sw_it->first << endl;
+      const ModelOptions& solveropts = sw_it->second;
+      if (!solveropts.is_empty())
+      {
+        SimulationInterface* sim =
+          SimulationInterface::create("sweep", solveropts);
+
+        if (sim == NULL)
+          throw ModelErrorException("Could not create Selfconsistent simulation");
+
+        sim->set_control(this);
+        sim->verbose() = 0;
+        sim->set_name(sw_it->first);
+        _simulations[sim->get_name()] = sim;
+      }
+    }
+  }
+   
   
 #ifdef DEBUG
   cerr << "Control::setup_models() end" << endl;

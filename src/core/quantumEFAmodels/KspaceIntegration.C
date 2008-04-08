@@ -98,6 +98,7 @@ void KspaceIntegration::calculate_density()
   AutoPtr<FEBase> fe (FEBase::build(k_dim, fe_type));
 
   QGauss qrule (k_dim, THIRD);
+  //QGauss qrule (k_dim, SEVENTH);
     
   fe->attach_quadrature_rule (&qrule);
 

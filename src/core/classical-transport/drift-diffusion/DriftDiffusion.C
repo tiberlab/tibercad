@@ -3348,6 +3348,48 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     }
   }
 
+  int GradFermiE = -1;
+  if (variables.find("GradFermiE") != varend)
+  {
+    legend.resize(legend.size() + dim);
+    GradFermiE = n_vars;
+    switch (dim)
+    {
+      case 3:
+        legend[GradFermiE + 2] = "grad_fermi_e_z";
+        n_vars++;
+      case 2:
+        legend[GradFermiE + 1] = "grad_fermi_e_y";
+        n_vars++;
+        legend[GradFermiE + dim] = "mod_grad_fermi_e";
+        n_vars++;
+      default:
+        legend[GradFermiE] = "grad_fermi_e_x";
+        n_vars++;
+    }
+  }
+
+  int GradFermiH = -1;
+  if (variables.find("GradFermiH") != varend)
+  {
+    legend.resize(legend.size() + dim);
+    GradFermiH = n_vars;
+    switch (dim)
+    {
+      case 3:
+        legend[GradFermiH + 2] = "grad_fermi_h_z";
+        n_vars++;
+      case 2:
+        legend[GradFermiH + 1] = "grad_fermi_h_y";
+        n_vars++;
+        legend[GradFermiH + dim] = "mod_grad_fermi_h";
+        n_vars++;
+      default:
+        legend[GradFermiH] = "grad_fermi_h_x";
+        n_vars++;
+    }
+  }
+
   int Jn = -1;
   if (variables.find("eCurrent") != varend)
   {
@@ -3565,9 +3607,9 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     sc->compute_thermoelectric_powers();
 
 
-    double Pn =  sc->get_electron_thermoelectric_power();
+    double Pn = sc->get_electron_thermoelectric_power();
 
-    double Pp =  sc->get_hole_thermoelectric_power();
+    double Pp = sc->get_hole_thermoelectric_power();
       
     double sigma_e = Constants::e * sc->get_electron_density() *
       sc->get_electron_mobility();
@@ -3587,6 +3629,38 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
           results[id + EField + dim] = e_field.size();
         default:
           results[id + EField] = e_field(0);
+      }
+    }
+
+
+    if (GradFermiE != -1)
+    {
+      switch (dim)
+      {
+        case 3:
+          results[id + GradFermiE + 2] = en_z;
+        case 2:
+          results[id + GradFermiE + 1] = en_y;
+          results[id + GradFermiE + dim] = 
+            sqrt(en_x * en_x + en_y * en_y + en_z * en_z);
+        default:
+          results[id + GradFermiE] = en_x;
+      }
+    }
+
+
+    if (GradFermiH != -1)
+    {
+      switch (dim)
+      {
+        case 3:
+          results[id + GradFermiH + 2] = ep_z;
+        case 2:
+          results[id + GradFermiH + 1] = ep_y;
+          results[id + GradFermiH + dim] =
+            sqrt(ep_x * ep_x + ep_y * ep_y + ep_z * ep_z);
+        default:
+          results[id + GradFermiH] = ep_x;
       }
     }
 

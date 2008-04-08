@@ -92,6 +92,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Get the ID of this simulation
     ID get_id(void) const;
 
+
+    //! Set a name for this simulation
+    void set_name(const std::string& name);
+
     
     //! Get the user defined name of this simulation
     const std::string& get_name(void) const;
@@ -990,6 +994,15 @@ const std::string&
 SimulationInterface::get_name(void) const
 {
   return _name;
+}
+
+
+
+inline
+void
+SimulationInterface::set_name(const std::string& name)
+{
+  _name = name;
 }
 
 

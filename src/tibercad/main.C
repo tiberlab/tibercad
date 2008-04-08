@@ -49,7 +49,7 @@ int main (int argc, char** argv)
 #else
     cerr << "Usage: tibercad <inputfile>" << endl << endl;
 # ifdef CYGWIN
-    cout << "press any key ...";
+    cout << "press Enter ...";
     cin.get();
     return 1;
 # endif
@@ -92,7 +92,7 @@ int main (int argc, char** argv)
       cerr << "Sorry, cannot start TiberCAD as I could not find a valid "
         << "license." << endl;
 # ifdef CYGWIN
-      cout << endl << "press any key ...";
+      cout << endl << "press Enter ...";
       cin.get();
 # endif
       return 1;
@@ -123,7 +123,7 @@ int main (int argc, char** argv)
     cout << "ERROR: TiberCAD crashed for unknown reason." << endl;
   }
 #ifdef CYGWIN
-  cout << "press any key ...";
+  cout << "press Enter ...";
   cin.get();
 #endif
 
