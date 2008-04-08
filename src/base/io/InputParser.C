@@ -2594,9 +2594,8 @@ InputParser::parse_n_subblocks(ifstream& in_stream)
   //       if (!check_label(model_section_keywords, label))
   //         throw InitFailedException("SYNTAX ERROR in input  file: unknown keyword in models section! ");
 
+cerr << label << endl; 
  
- 
-
   //  READ the block-keyword
 
   while (  ( label !=  end_symb    ) && (!in_stream.eof()) ) 
@@ -2660,8 +2659,7 @@ const multimap <string,ModelOptions>& InputParser::read_subblocks(string section
   std::string  label ;
   std::ifstream in_stream (filename.c_str()) ;
 
-  bool found_block;
-  found_block = false;
+  bool found_block = false;
 
 
   reset_all_maps();
@@ -2677,7 +2675,6 @@ const multimap <string,ModelOptions>& InputParser::read_subblocks(string section
   }
 
   section_name = "$"+section_name;
-
  
 
   //find section name
@@ -2687,18 +2684,18 @@ const multimap <string,ModelOptions>& InputParser::read_subblocks(string section
   skip_to_bracket(in_stream);
 
 
- found_block  =  find_keyword_in_section( in_stream,  block_type );  //   read   block name  string (e.g. "Sweep") 
+  found_block  =  find_keyword_in_section( in_stream,  block_type );  //   read   block name  string (e.g. "Sweep") 
+
+  if (found_block)
+  {
+    skip_to_bracket(in_stream);
 
 
-
-  //read all the  subblocks of  type "block_type" in the section
-  //  (included header)
-//  parse_n_subblocks(in_stream,  block_type);
- parse_n_subblocks(in_stream);
-
+    //read all the  subblocks of  type "block_type" in the section
+    //  (included header)
+    parse_n_subblocks(in_stream);
+  }
 
   // returns the map of ModelOptions with the contents of the  block
   return blocks_map;
-
-
 }
