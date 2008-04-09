@@ -417,6 +417,12 @@ const std::multimap <std::string,ModelOptions>&
 //  void parse_n_subblocks(std::ifstream& in_stream,  std::string& keyword);
  void parse_n_subblocks(std::ifstream& in_stream);
 
+ //!   Utility  to skip a whole block and move  to the next  block. 
+  /*!
+   * 
+   */
+ void skip_block(std::ifstream& in_stream);
+
 
 
 };

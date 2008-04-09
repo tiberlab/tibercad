@@ -86,7 +86,7 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
     //   cerr <<  " +++++++++keyword =  " << keyword << " ++++++++label  =  " << label <<  endl;
 
     if  (label == keyword  )
-    { // if
+    { // if label  == keyword
 
       //cerr <<  " -----------keyword =  " << keyword << " ----------label  =  " << label <<  endl;
       //*********************************************
@@ -139,91 +139,13 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
       }
       else in_stream.putback(ch );
 
+    }  // end if 
 
 
+    else   skip_block(in_stream);  //  if the label != keyword, skip the  whole  block 
+    // in {} (to avoid confusion with labels)
 
 
-      // ------------------------------------------------
-
-
-
-
-      //         in_stream.get(ch); // get next char
-      //       // cerr <<  " in_stream.get(ch)" <<  ch  <<  endl;
-      //       while (ch == '\n')  //  if  starts with new line !!
-      //       {
-      //         cout  <<  "  ch = new line   "<<  endl << endl;
-      //         in_stream.get(ch);
-      //       }
-
-      //       while(ch == ' ')        //  skip  blanks
-      //       {
-      //         in_stream.get(ch);
-
-      //         //  OR  ch != ' ' ,  OR  ch = EOL
-      //         while (ch == '\n')
-      //         {
-      //           cout  <<  "  ch = new line   "<<  endl << endl;
-      //           in_stream.get(ch);
-      //         }
-
-      //         cout  <<  "  ch:   "<< ch <<  endl << endl;
-      //       }
-
-      //       while (ch == '#' )  //  skip  comments   // ***  if ?
-      //       {
-      //         in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
-      //         //   in_stream >> item;  //      and   read  the  next keyword !!!
-      //         in_stream.get(ch);
-
-      //         while(ch == ' ') //  skip  blanks
-      //         {
-
-
-
-      //           in_stream.get(ch);
-      //           //  OR  ch != ' ' ,  OR  ch = EOL
-      //           while (ch == '\n')
-      //           {
-      //             cout  <<  "  ch = new line   "<<  endl << endl;
-      //             in_stream.get(ch);
-      //           }
-
-      //           cout  <<  "  ch:   "<< ch <<  endl << endl;
-      //         }
-
-      //       } 
-
-
-
-
-
-
-
-      //       // then  check  if  first char (not  blank) is  "{"
-      //       if (ch == '{')
-      //       {
-      //         cout  <<  "  ch { :   "<< ch <<  endl << endl;
-      //         // then  putback char  and  return  found = true, break
-      //         //  
-
-      //         in_stream.putback(ch );
-
-      //         found = true;
-      //         break;
-
-      //       }
-
-      //       else in_stream.putback(ch );
-
-      //*************************************************************
-
-
-
-
-          //       found = true;
-          //       break;
-          }  
 
     in_stream >>  label;
     // cerr <<  " BEFORE cut_off_comment(label)  "  <<  label <<  endl;
@@ -231,7 +153,7 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
     cut_off_comment(label, in_stream); //  erase comment in  case label#my_comment....
     // cerr <<  " AFTER cut_off_comment(label)  "  <<  label <<  endl;
 
-  }   
+  }   //  end  while
 
 
   //   if (found == false)
@@ -2579,6 +2501,67 @@ InputParser::parse_n_subblocks(ifstream& in_stream)
   string  label, block_name ;
 
 
+
+// //  check  if  there  is just  one  sweep  block
+// // if we find  a  { ,  then  it  is  a  simple  sweep  block
+
+//    in_stream.get(ch); // get next char
+//       do{
+      
+//         if  ( (ch == ' ') || (ch == '\n'))
+//         {
+//           in_stream.get(ch);
+//         }
+
+//         // *******************************  FOR DOS termination files (CR/LF)
+//         if  ( int(ch) == 13 )
+//         {
+//           in_stream.get(ch);
+//         }
+
+
+//         //*******************************
+//      if (ch == '#' )  //  skip  comments 
+//           { 
+//             in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
+//             //      and   read  the  next keyword !!!
+//             in_stream.get(ch);
+             
+//           }
+//    } while ( (ch == '\n') || (ch == ' ') || (ch == '#') );
+
+
+//       // then  check  if  first char (not  blank) is  "{"
+//       if (ch == '{')
+//       {
+//         //   cout  <<  "  ch { :   "<< ch <<  endl << endl;
+//         in_stream.putback(ch );
+
+
+
+// // *************  parse_options !!!!!!!!!
+
+//   temp_options.clear();
+
+//     //    read  the  block  between  { and  }
+//     parse_options(in_stream,temp_options  );
+//   blocks_map.insert(make_pair (block_name,temp_options));
+
+
+//  //        found = true;
+//          break;
+
+      
+
+//       }
+
+//       else in_stream.putback(ch );  //  first  not  blank char is  != { ,  
+//       // get  back pointer and  go to read sweep label 
+
+
+
+//  !! there  are  more than  1  sweep  blocks !!
+
   // read  the  next  label
 
   in_stream >>  label ;
@@ -2594,7 +2577,7 @@ InputParser::parse_n_subblocks(ifstream& in_stream)
   //       if (!check_label(model_section_keywords, label))
   //         throw InitFailedException("SYNTAX ERROR in input  file: unknown keyword in models section! ");
 
-cerr << label << endl; 
+// cerr << label << endl; 
  
   //  READ the block-keyword
 
@@ -2605,20 +2588,6 @@ cerr << label << endl;
     // block n
                
 
-
-
-
- //    //  READ the block name
-
-//     in_stream >>  block_name ;
-
-  
-
-
-//     while (skip_comments(in_stream,block_name  ) == true )
-//     {
-//       in_stream >> block_name  ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-//     } 
 
 
     block_name = label;
@@ -2651,8 +2620,9 @@ cerr << label << endl;
 }
 
 
-//  read a  std::multimap <const std::string,ModelOptions> blocks_map  corresponding to a block with n 
-//  subblocks
+//  read a  std::multimap <const std::string,ModelOptions> blocks_map  corresponding to a 
+// block "block_type", inside the  section  section_name;  block "block_type"  has  n 
+//  subblocks, 
 
 const multimap <string,ModelOptions>& InputParser::read_subblocks(string section_name,string block_type)   {
 
@@ -2699,3 +2669,30 @@ const multimap <string,ModelOptions>& InputParser::read_subblocks(string section
   // returns the map of ModelOptions with the contents of the  block
   return blocks_map;
 }
+
+
+
+// ****************************************
+
+
+
+void InputParser::skip_block(ifstream& in_stream)
+
+{
+
+  bool check_error = false;  
+  char ch ;
+
+  //*************************
+
+
+      in_stream.get(ch); // get next char
+  do{
+         
+    in_stream.get(ch);
+  
+  } while (ch != '}');
+
+
+} //  end  method
+
