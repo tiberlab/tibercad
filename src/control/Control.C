@@ -708,7 +708,6 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     // we might have several sweeps
     const multimap<string, ModelOptions>& sws =
       parser.read_subblocks("Solver", "Sweep");
-    cerr << sws.size() << endl;
 
     multimap<string, ModelOptions>::const_iterator sw_it(sws.begin());
     multimap<string, ModelOptions>::const_iterator sw_end(sws.end());
