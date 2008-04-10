@@ -2,7 +2,7 @@ SHELL=/bin/sh
 
 SOURCES=$(wildcard *.tex)
 
-SUBDIRS=
+SUBDIRS=figures
 
 RECURSIVEPDF=$(addsuffix .makepdf,$(SUBDIRS))
 RECURSIVEPS=$(addsuffix .makeps,$(SUBDIRS))
