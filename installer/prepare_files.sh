@@ -100,32 +100,38 @@ make_tbz () {
 
 make_deb () {
 
-  files=debfiles/usr
+  bindir=debfiles/usr/bin
+  files=debfiles/usr/share/tibercad-$version
   mkdir -m 0755 debfiles
-  mkdir -p ${files}/bin
+  mkdir -p ${bindir}
   mkdir -p ${files}/lib/tibermodels
-  mkdir -p ${files}/share/tibercad
-  mkdir -p ${files}/share/tibercad/doc
-  mkdir -p ${files}/share/tibercad/examples
-  mkdir -p ${files}/share/tibercad/license
-  mkdir -p ${files}/share/tibercad/materials
-  #mkdir -p ${files}/share/doc/tibercad
+  mkdir -p ${files}/bin
+  mkdir -p ${files}/doc
+  mkdir -p ${files}/examples
+  mkdir -p ${files}/license
+  mkdir -p ${files}/materials
 
   cp ${topdir}/bin/tibercad ${files}/bin
-  chmod a+x ${files}/bin/tibercad
   cp ${topdir}/lib/lib*.so* ${files}/lib
   find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
-  cp ${topdir}/share/tibercad.ico ${files}/share/tibercad
-  cp ${topdir}/share/Copyright.txt ${files}/share/tibercad
+  cp ${topdir}/share/tibercad.ico ${files}
+  cp ${topdir}/share/Copyright.txt ${files}
   if test -e ${topdir}/manual/tiber_manual.pdf ; then
-    cp ${topdir}/manual/tiber_manual.pdf ${files}/share/tibercad/doc/manual.pdf
+    cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
   fi
-  cp -r ${topdir}/Tutorials/[^.]* ${files}/share/tibercad/examples
+  cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
-  cp ${topdir}/materials/[^.]* ${files}/share/tibercad/materials
+  cp ${topdir}/materials/[^.]* ${files}/materials
 
   chmod -R a+r debfiles
   chmod a+x ${files}/bin/tibercad
+
+  sed -e "s/<INSTALLDIR>/\/usr\/share\/tibercad-$version/g" ${topdir}/installer/linux/tar/tibercad.sh > ${files}/bin/tibercad.sh
+  cp ${topdir}/installer/linux/tar/tibercad.sh ${files}/bin
+  chmod a+x ${files}/bin/tibercad.sh
+  cd ${bindir}
+  ln -s ../share/tibercad-${version}/bin/tibercad.sh tibercad
+  cd ../../..
 
   size=`du -s debfiles | awk '{print $1}'` 
   rm -rf debfiles/DEBIAN
