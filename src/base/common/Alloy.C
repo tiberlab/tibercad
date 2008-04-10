@@ -12,6 +12,8 @@ Alloy::Alloy(const std::string& name)
     _cryst_A(NULL),
     _cryst_B(NULL)
 {
+  _is_alloy = true;
+
   get_database().get_alloy_components(name, _name_A, _name_B);
 #ifdef DEBUG
   std::cout << name << " is an alloy with components " <<

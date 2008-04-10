@@ -51,8 +51,8 @@ int main (int argc, char** argv)
 # ifdef CYGWIN
     cout << "press Enter ...";
     cin.get();
-    return 1;
 # endif
+    return 1;
 #endif
 
   }

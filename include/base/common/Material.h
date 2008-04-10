@@ -63,6 +63,10 @@ class Material
     static Material* create(const std::string& name,
         const ModelOptions& options);
 
+
+    //! Tells if this material is an alloy
+    bool is_alloy(void) const;
+
     
     //! Initialize the material
     /*!
@@ -207,6 +211,9 @@ class Material
     ModelMap::iterator models_end(void);
 
 
+    //! True if this is an alloy
+    bool _is_alloy;
+
     
   private:
 
@@ -268,11 +275,19 @@ class Material
 
 inline
 Material::Material(const std::string& name)
-  : _name(name),
+  : _is_alloy(false),
+    _name(name),
     _structure("zb"), 
     _rotated_crystal(NULL),
     _is_initialized(false)
 {
+}
+
+inline
+bool
+Material::is_alloy(void) const
+{
+  return _is_alloy;
 }
 
 
