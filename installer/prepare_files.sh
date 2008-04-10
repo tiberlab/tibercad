@@ -127,7 +127,6 @@ make_deb () {
   chmod a+x ${files}/bin/tibercad
 
   sed -e "s/<INSTALLDIR>/\/usr\/share\/tibercad-$version/g" ${topdir}/installer/linux/tar/tibercad.sh > ${files}/bin/tibercad.sh
-  cp ${topdir}/installer/linux/tar/tibercad.sh ${files}/bin
   chmod a+x ${files}/bin/tibercad.sh
   cd ${bindir}
   ln -s ../share/tibercad-${version}/bin/tibercad.sh tibercad
