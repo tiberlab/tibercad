@@ -1,0 +1,22 @@
+#!/bin/sh
+
+VER=@PACKAGE_VERSION@
+
+# put your installation directory here (this is done automatically by the
+# installation script)
+export TIBERCADROOT=<INSTALLDIR>
+
+if [ -z $LD_LIBRARY_PATH ]
+then
+  export LD_LIBRARY_PATH=${TIBERCADROOT}/lib:${TIBERCADROOT}/libtibermodels
+else
+  export LD_LIBRARY_PATH=${TIBERCADROOT}/lib:${TIBERCADROOT}/libtibermodels:$LD_LIBRARY_PATH
+fi
+
+tibercad=${TIBERCADROOT}/bin/tibercad-$VER
+if [ -x $tibercad ]
+then
+  exec $tibercad $@
+else
+  echo "Cannot execute $tibercad. Perhaps broken installation?"
+fi

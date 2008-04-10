@@ -240,6 +240,8 @@ AC_CONFIG_FILES([Make.common
                  src/utils/SLEPC/Makefile
                  installer/Makefile
 		 installer/windows/tibercad.bim
-                 installer/linux/deb/control])
+                 installer/linux/deb/control
+                 installer/linux/tar/install
+                 installer/linux/tar/tibercad.sh])
 
 AC_OUTPUT

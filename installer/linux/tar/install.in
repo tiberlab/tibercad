@@ -1,0 +1,67 @@
+#!/bin/sh
+
+TIBERVER=@PACKAGE_VERSION@
+
+
+echo "###################################################"
+echo "#      TiberCAD ver. $TIBERVER  installation      #"
+echo "###################################################"
+
+echo ""
+echo -n "Provide installation directory: "
+read instpath
+
+echo ""
+
+# try to create directory
+if [ -f $instpath ]
+then
+  echo "$instpath is an existing file and not a directory!"
+  exit 1
+fi
+
+if [ ! -d $instpath ]
+then
+  mkdir -p $instpath 2> /dev/null
+fi
+
+if [ $? -ne 0 ]
+then
+  echo "Could not create directory $instpath!"
+  exit 1
+fi
+
+# check if we can write to $instpath
+mkdir $instpath/tibertestdir 2> /dev/null
+if [ $? -ne 0 ]
+then
+  echo "I cannot write to $instpath!"
+  exit 1
+fi
+rmdir  $instpath/tibertestdir
+
+
+echo "Starting installation to $instpath"
+
+# check if dir is empty
+content=`ls -A $instpath`
+if [ ! -z "$content" ]
+then
+  echo -n "Installation directory is not empty. Do you really want to proceed ? "
+  read answer
+  if [ $answer != "y" -a $answer != "yes" ]
+  then
+    exit 0
+  fi
+fi
+
+
+
+cp -r bin materials examples license lib doc share $instpath
+
+mv ${instpath}/bin/tibercad ${instpath}/bin/tibercad-$TIBERVER
+pathstring=`echo "$instpath" | sed -e 's/\//\\\\\//g'`
+sed -e "s/<INSTALLDIR>/$pathstring/g" ${instpath}/bin/tibercad.sh > ${instpath}/bin/tibercad
+chmod a+x ${instpath}/bin/tibercad
+
+

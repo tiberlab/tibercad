@@ -52,7 +52,17 @@ prepare_linux_package () {
   mkdir -p ${files}/doc
   mkdir -p ${files}/examples
   mkdir -p ${files}/share
+  mkdir -p ${files}/license
+  mkdir -p ${files}/materials
 
+  cp ${topdir}/installer/linux/tar/install ${files}
+  chmod a+x ${files}/install
+  cp ${topdir}/installer/linux/tar/tibercad.sh ${files}/bin
+  chmod a+x ${files}/bin/tibercad.sh
+
+  # get some of the libraries
+  libs=`ldd ${topdir}/lib/libtibercad.so | grep boost | awk '{print $3}'`
+  cp $libs ${files}/lib
   cp ${topdir}/bin/tibercad ${files}/bin
   cp ${topdir}/lib/lib*.so* ${files}/lib
   find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
@@ -61,6 +71,9 @@ prepare_linux_package () {
   if test -e ${topdir}/manual/tiber_manual.pdf ; then
     cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
   fi
+  cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
+  find ${files} -type d -name ".svn*" -exec rm -rf {} \;
+  cp ${topdir}/materials/[^.]* ${files}/materials
 
   chmod -R a+r ${files}
   chmod a+x ${files}/bin/tibercad
@@ -92,7 +105,11 @@ make_deb () {
   mkdir -p ${files}/bin
   mkdir -p ${files}/lib/tibermodels
   mkdir -p ${files}/share/tibercad
-  mkdir -p ${files}/share/doc/tibercad
+  mkdir -p ${files}/share/tibercad/doc
+  mkdir -p ${files}/share/tibercad/examples
+  mkdir -p ${files}/share/tibercad/license
+  mkdir -p ${files}/share/tibercad/materials
+  #mkdir -p ${files}/share/doc/tibercad
 
   cp ${topdir}/bin/tibercad ${files}/bin
   chmod a+x ${files}/bin/tibercad
@@ -101,8 +118,11 @@ make_deb () {
   cp ${topdir}/share/tibercad.ico ${files}/share/tibercad
   cp ${topdir}/share/Copyright.txt ${files}/share/tibercad
   if test -e ${topdir}/manual/tiber_manual.pdf ; then
-    cp ${topdir}/manual/tiber_manual.pdf ${files}/share/doc/tibercad/manual.pdf
+    cp ${topdir}/manual/tiber_manual.pdf ${files}/share/tibercad/doc/manual.pdf
   fi
+  cp -r ${topdir}/Tutorials/[^.]* ${files}/share/tibercad/examples
+  find ${files} -type d -name ".svn*" -exec rm -rf {} \;
+  cp ${topdir}/materials/[^.]* ${files}/share/tibercad/materials
 
   chmod -R a+r debfiles
   chmod a+x ${files}/bin/tibercad
