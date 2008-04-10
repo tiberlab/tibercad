@@ -33,7 +33,58 @@ $Device
 $Models
 {
   
-  model thermal
+  model driftdiffusion
+  { 
+              
+    options
+    {
+     simulation_name = dd
+     physical_regions = (1,2)
+    }
+
+     physical_model recombination
+     { 
+       model  =  srh
+     }
+
+     physical_model thermoelectric_power
+     {
+       model = diffusivity_model
+     }
+
+     physical_model electron_mobility
+     {
+       model = doping_dependent
+     }
+
+     physical_model hole_mobility
+     {
+       model = doping_dependent
+     }
+
+     
+
+
+    BC_Regions  
+    {
+      BC_Region anode
+      {
+        BC_reg_numb = 1
+        type = ohmic
+        voltage = @Vb[0.0]
+      }
+
+      BC_Region cathode
+      {
+        BC_reg_numb = 2
+        type = ohmic
+        voltage = 0.0
+      }
+ 
+    }   
+  }  
+  
+   model thermal
   {
 
      options
@@ -54,72 +105,22 @@ $Models
      {
         BC_Region reservoir
    	{
-    
+	 BC_reg_numb = 3
+         type = heat_reservoir 
          BC_reg_numb = 3
          temperature = 300
    	}
  
-     }
-
-  }
-
-
-  model driftdiffusion
-  { 
-              
-    options
-    {
-     simulation_name = dd
-     physical_regions = (1,2)
+        BC_Region thermal_resistance	
+        {
+         BC_reg_numb = 4
+	 r_surf = 0.5
+         type = thermal_surface_resistance
+         temperature = 300
+       }
     }
 
-     physical_model recombination
-     { 
-       model  =  srh
-     }
-
-     physical_model thermoelectric_power
-     {
-
-      model = diffusivity_model
-
-     }
-
-
-    physical_model electron_mobility
-    {
-      model = field_dependent
-
-      low_field_model = doping_dependent    
-    }
-
-    physical_model hole_mobility
-    {
-
-      model = field_dependent
-
-      low_field_model = doping_dependent
-
-    }
-
-    BC_Regions  
-    {
-      BC_Region anode
-      {
-        BC_reg_numb = 1
-        type = ohmic
-        voltage = @Vb[0.0]
-      }
-
-      BC_Region cathode
-      {
-        BC_reg_numb = 2
-        type = ohmic
-        voltage = 0.0
-      }
- 
-    }   
-  }  
+   }
 }
 
 
@@ -149,10 +150,8 @@ $Solver
     simulation = selfconsistent
     variable = Vb
     start = 0.0
-    stop = 1.0
-    steps = 20
-    plot_data = true
-    plotvariable = current
+    stop = 1.2
+    steps = 12
   }
 
 
@@ -163,8 +162,6 @@ $Solver
 # Definition of  Model dependent physical parameters
 $Physics
 {
-
-
   driftdiffusion 
   {
      statistics = FD
@@ -179,15 +176,15 @@ $Physics
 
 $Simulation
 {
-  searchpath = ../../materials
+
   meshfile = tut_09.msh
   dimension = 2
   temperature = 300
   solve = sweep
-  resultpath = output_tut_09
+  resultpath = output_tut9
   symmetry = cylindrical
   output_format = vtk
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob, current, NetRecombination,T,HeatSource,Pn,Pp)
+ plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob, current, NetRecombination,Pn,Pp,T,HeatSource,PowerFlux)
 }
 
 

@@ -7,7 +7,7 @@
 FluxContact::FluxContact()
 {
   
-  set_type(ThermalContact::Neumann);
+  set_type(ThermalContact::FluxContact);
 
 }
 
@@ -17,13 +17,9 @@ FluxContact::FluxContact()
 void FluxContact::do_init()
 {
  
-  double rho_e = get_options().get_option("electrons_resistivity",0.0);
+  double flux = get_options().get_option("power_density",0.0);
 
-  double rho_h = get_options().get_option("holes_resistivity",0.0);
-
-  set_electrons_resistivity(rho_e);
-
-  set_holes_resistivity(rho_h);
+  set_heat_flux(flux);
   
 
 }

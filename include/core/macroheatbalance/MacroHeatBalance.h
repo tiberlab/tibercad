@@ -123,7 +123,7 @@ class MacroHeatBalance : public SimulationInterface
   
   HeatModel* heat_model; 
 
-  void init_heat_model(const Elem* elem);
+  //void init_heat_model(const Elem* elem);
  
 
   std::string system_name;

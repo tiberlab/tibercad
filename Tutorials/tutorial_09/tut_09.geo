@@ -10,15 +10,15 @@ sub_x = -2 * scale;
 
 
 
-ms = 1;
+ms  =2;
 
-c_cont1 = 0.05 * scale * ms;
-c_cont2 = 0.1 * scale * ms;
+c_cont1 = 0.001 * scale * ms;
+c_cont2 = 0.02 * scale * ms;
 c_jun = 0.03 * scale * ms;
 c_sub = 0.2 * scale * ms;
 c_sub2 = 0.05 * scale * ms ;
 c_sub_long = 2 *scale * ms ;
-c_air = 2 * scale * ms;
+c_air = 1 * scale * ms;
 
 
 p1=newp;Point(p1) = {0, 0, 0, c_sub};
@@ -81,6 +81,7 @@ Physical Surface(3) = {s4}; // thermal
 
 lp1=newl;Physical Line(1) = {l10}; // anode
 lp2=newl;Physical Line(2) = {l3}; // cathode
-Physical Line(3) = {l15,l16,l17,-l1}; // thermal
+Physical Line(3) = {l15,l16,l17}; // thermal
+Physical Line(4) = {l1}; // thermal
 
 

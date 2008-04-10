@@ -14,7 +14,7 @@ HeatModel::HeatModel() :
   _electrons_thermal_conductivity(0),
   _heat_source_interface(NULL),
   _holes_thermal_conductivity(0)
- {
+{
 }
 	
  
@@ -117,7 +117,6 @@ void HeatModel::do_init()
 
 
 
-
 //==========================================================================//
 void HeatModel::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
@@ -129,7 +128,6 @@ void HeatModel::calculate_VCA (const PhysicalModelInterface *comp_A, const Physi
  
   kappa->build_alloy(matA->kappa, matB->kappa, xa);
 
- 
 }
 
 
@@ -138,6 +136,9 @@ void HeatModel::re_init()
 {
 
   update_lattice_thermal_conductivity();
+
+  //update_heat_source_model();
+
 
   // update_particle_thermal_conductivity();  
       
@@ -208,6 +209,8 @@ HeatModel::add_heat_source_model(const std::string& model_name,
  
   ID id = model->get_id();
   _heat_source_models[id] = model;
+
+  model->set_heat_model(this);
   model->set_material(get_material());
   model->set_simulator_id(get_simulator_id());
   model->init();
@@ -262,21 +265,15 @@ HeatModel::get_total_heat_source(std::vector<Point> h_point,
 
     std::vector<std::vector<double> >  partial_heat_source;
     
-    (it_outer->second)->get_heat_sources(h_point,_elem,partial_heat_source);
+    (it_outer->second)->get_heat_sources(h_point,partial_heat_source);
 
     unsigned int ns_tot = partial_heat_source[0].size();
     
     for (unsigned int n = 0;  n < np; ++n)
-    {
-          
       for (unsigned int ns = 0; ns < ns_tot ; ++ns)
-      {
-	
-	total_heat_source[n] = total_heat_source[n] + partial_heat_source[n][ns];
+     	total_heat_source[n] += partial_heat_source[n][ns_tot];
 
-      }
-      
-    }
+
   }
 }
 
@@ -284,7 +281,7 @@ HeatModel::get_total_heat_source(std::vector<Point> h_point,
 
 void 
 HeatModel::get_total_power_flux(std::vector<Point> h_point,
-				std::vector<RealGradient>& total_power_flux,bool check_boundary)
+				std::vector<RealGradient>& total_power_flux)
 {
   
   unsigned int np = h_point.size();
@@ -300,25 +297,16 @@ HeatModel::get_total_power_flux(std::vector<Point> h_point,
 
     std::vector<std::vector<RealGradient> >  partial_power_fluxes;
     
-    (it_outer->second)->get_power_fluxes(h_point,_elem,partial_power_fluxes,check_boundary);
+    (it_outer->second)->get_power_fluxes(h_point,partial_power_fluxes);
 
     unsigned int nf_tot =partial_power_fluxes[0].size();
     
     for (unsigned int n = 0;  n < np; ++n)
-    {
-          
-      for (unsigned int ns = 0; ns < nf_tot ; ++ns)
-      {
-	
-	total_power_flux[n](0) = total_power_flux[n](0) + partial_power_fluxes[n][ns](0);
-        total_power_flux[n](1) = total_power_flux[n](1) + partial_power_fluxes[n][ns](1);
-	total_power_flux[n](2) = total_power_flux[n](2) + partial_power_fluxes[n][ns](2);
-
-      }
-      
-    }
+      for (unsigned int kd =0; kd<3; ++kd)
+	for (unsigned int ns = 0; ns < nf_tot ; ++ns)
+	  total_power_flux[n](kd) +=  partial_power_fluxes[n][ns](kd);
+    
   }
-
 }
 
 
@@ -375,7 +363,25 @@ HeatModel::get_heat_source_IDs(std::vector<ID>& ids)
 
   return n;
 
+
 }
 
 
-      
+// void
+// HeatModel:: update_heat_source_model()
+// {
+
+//   outer_source_iterator it =  _heat_source_models.begin();
+//   outer_source_iterator end = _heat_source_models.end();
+  
+//   for ( ; it != end; ++it, it++ )
+//   {
+
+//     //    it->set_element();
+//     //it->set_side();
+
+//     //it->re_init();
+
+//   }
+
+// }

@@ -6,7 +6,6 @@
 
 
 
-
 //! This class handles the heat source
 
 
@@ -27,18 +26,22 @@ public:
   //! Costructor
   static  DriftDiffusionHeatSource* create();
  
-
-  virtual void get_heat_sources(std::vector<Point> h_point,const Elem* elem,
+ 
+  virtual void get_heat_sources(std::vector<Point> h_point,
 			       std::vector< std::vector< double > >& heat_source);
 
 
-  virtual void get_power_fluxes(std::vector<Point> h_point,const Elem* elem,
-				std::vector<std::vector<RealGradient> >& power_fluxes, bool check_boundary);
+  virtual void get_power_fluxes(std::vector<Point> h_point,
+				std::vector<std::vector<RealGradient> >& power_fluxes);
                
 					
-
-     
-  virtual std::vector<std::string>  get_source_legend();
+  //!Set the current element
+   virtual void set_heat_model(HeatModel* heat_model);
+    
+  //!Init the heat source model
+  // virtual void re_init(void){};
+ 
+  virtual std::vector<std::string>  get_source_legend(const std::set<std::string>& variables);
 
   virtual std::vector<std::string>  get_flux_legend();
 
@@ -70,21 +73,30 @@ private:
     };
 
 
-   
+  unsigned int n_s;
+     
+  unsigned int n_f;
+
   std::vector<std::string> _flux_legend;
 
   std::vector<std::string> _source_legend;
 
   SimulationInterface* _simul;
 
+  HeatModel* _heat_model;
 
   //!Source variables
   std::set<ID> ID_set;
 
   std::vector<ID> ID_vector;
 
+  //!Set the current element
+  //void set_element(const Elem* elem);
+  
+  //!Set the current elemement side index
+  //void  set_side(unsigned int side);
 
-
+ 
 protected:
 
     
@@ -125,15 +137,6 @@ DriftDiffusionHeatSource::create()
 
 
 
-inline
-std::vector<std::string>
-DriftDiffusionHeatSource::get_source_legend(void)
-{
-
- return  _source_legend;
-
-}
-
 
 inline
 std::vector<std::string>
@@ -144,5 +147,33 @@ DriftDiffusionHeatSource::get_flux_legend(void)
 
 }
 
+inline
+void 
+DriftDiffusionHeatSource::set_heat_model(HeatModel* heat_model)
+{
+
+ _heat_model = heat_model;
+
+}
+
+// inline
+// void 
+// DriftDiffusionHeatSource::set_element(const Elem* elem)
+// {
+
+//   _elem = elem;
+
+// }
+
+
+
+// inline
+// void 
+// DriftDiffusionHeatSource::set_side(unsigned int side)
+// {
+
+//   _side = side;
+
+// }
 
 #endif

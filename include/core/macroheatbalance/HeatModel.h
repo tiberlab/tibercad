@@ -29,14 +29,26 @@ class HeatModel: public PhysicalModel
 
   //!Get the thermal lattice conductivity
   void get_thermal_conductivity(Tensor2Sym& thermal_conductivity);
-  
-  //! Init all fields
-  void re_init();
+ 
+     //! Init all fields
+   void re_init();
 
    //!Set the current element
    void set_element(const Elem* elem);
 
-   //! Set the temperature 
+   //!Set the current elemement side index
+   void set_side(int side);
+   
+   //!Set the current elemement side index
+    int get_side(void);
+
+
+   //!Get the current element
+    const Elem* get_element(void);
+
+
+
+   //! Get the temperature 
    void set_temperature(double temperature); 
 
   
@@ -54,11 +66,17 @@ class HeatModel: public PhysicalModel
 
   //!Get total power flux
   void get_total_power_flux(std::vector<Point> h_point,
-			    std::vector<RealGradient>& total_power_flux,
-			    bool check_boundary);
+			    std::vector<RealGradient>& total_power_flux);
+
+
+  // //!Update the heat source models
+  // void update_heat_source_model();
+		   
+
 
  private:
  
+
 
     enum dd_var_kpart
     {
@@ -76,9 +94,11 @@ class HeatModel: public PhysicalModel
     
    //! Current element 
    const Elem* _elem; 
-
   
+   //! Current side  
+   //unsigned int _side;
 
+    int _side;
 
    //!For particle solution
    std::set< ID >  dd_ID_kpart;
@@ -209,6 +229,32 @@ HeatModel::set_element(const Elem* elem)
 
   _elem = elem;
 
+}
+
+
+
+inline
+void 
+HeatModel::set_side(int side)
+{
+
+  _side = side;
+
+}
+
+
+inline
+const Elem* 
+HeatModel::get_element(void)
+{
+  return _elem;
+}
+
+inline
+int 
+HeatModel::get_side(void)
+{
+ return _side;
 }
 
 

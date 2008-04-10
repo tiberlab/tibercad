@@ -3,10 +3,10 @@
 #include "Material.h"
 #include "Database.h"
 #include "Constants.h"
-
-
-
-
+#include "SimulationEnvironment.h"
+#include "HeatModel.h"
+#include "BoundaryProperties.h"
+#include "Boundary.h"
 //-------------------------------------------------------------------------//
 
 void  DriftDiffusionHeatSource::copy_from(const PhysicalModelInterface *rhs)
@@ -39,7 +39,7 @@ void   DriftDiffusionHeatSource::calculate_VCA (const PhysicalModelInterface *co
 void  DriftDiffusionHeatSource::do_init(void)
 {
 
-
+     set_name("DD");
 
      std::string drift_diffusion_simulation = get_options().get_option("drift_diffusion_simulation", "no_current");
 
@@ -79,17 +79,21 @@ void  DriftDiffusionHeatSource::do_init(void)
        ID_set.insert(ID_vector[n]);
 
 
-     _source_legend.resize(5);
-     _source_legend[0]="Ejoule";
-     _source_legend[1]="Hjoule";
-     _source_legend[2]="RecSRH";
-     _source_legend[3]="EPelTh";
-     _source_legend[4]="HPelTh";
+      n_s = 5;
+     
+     _source_legend.resize(n_s);
+     _source_legend[0]="eJoule";
+     _source_legend[1]="hJoule";
+     _source_legend[2]="RecHeat";
+     _source_legend[3]="ePelTh";
+     _source_legend[4]="hPelTh";
 
-     _flux_legend.resize(2);
+     n_f = 2;
+
+     _flux_legend.resize(n_f);
      _flux_legend[0]="Wn";
      _flux_legend[1]="Wp";
- 
+   
      
 
 }
@@ -98,7 +102,7 @@ void  DriftDiffusionHeatSource::do_init(void)
 
 
 void
-DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point,const Elem* elem,
+DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point,
 					  std::vector< std::vector<double > >& heat_source)          
 {
   // std::cout<<"start"<<std::endl;
@@ -107,8 +111,10 @@ DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point,const Elem
   for(unsigned int n =0 ; n<h_point.size();n++)
   {
     heat_source[n].clear();
-    heat_source[n].resize(5,0.0);
+    heat_source[n].resize(n_s,0.0);
   }
+  
+  const Elem*  elem = _heat_model->get_element();
 
   std::vector< std::map< ID, double > > solution;
   
@@ -129,7 +135,10 @@ DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point,const Elem
       double pte    = solution[n].find(ID_vector[PELTHE]  )->second; 
       double pth    = solution[n].find(ID_vector[PELTHH]  )->second; 
       
-      heat_source[n].resize(5);
+      heat_source[n].resize(n_s);
+      //      if  (_source_legend.find("eJoule"))
+      //	heat_source[n].push.back(Ejoule);
+  
       heat_source[n][0] = Ejoule;
       heat_source[n][1] = Hjoule;   
       heat_source[n][2] = Constants::e * R * (phih-phie + T * (Pp - Pn) ) ;
@@ -137,17 +146,10 @@ DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point,const Elem
       heat_source[n][4] = pth;      
       
       
-      
     } 
   }
   
    
-    
-    // for (unsigned int i=0; i<heat_source.size(); ++i)
-    // std::cout<<heat_source[i][1]<<std::endl;
-
-    //   std::cout<<h_point.size()<<std::endl;
-
   
 }
 
@@ -156,29 +158,45 @@ DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point,const Elem
 
 
 void
-DriftDiffusionHeatSource::get_power_fluxes(std::vector<Point> h_point,const Elem* elem,
-					   std::vector<std::vector<RealGradient> >& power_fluxes,bool check_boundary)          
+DriftDiffusionHeatSource::get_power_fluxes(std::vector<Point> h_point,
+                                           std::vector<std::vector<RealGradient> >& power_fluxes)          
 {
   
   power_fluxes.clear();
   power_fluxes.resize(h_point.size());
   for(unsigned int n =0 ; n<h_point.size();n++)
+
   {
     power_fluxes[n].clear();
-    power_fluxes[n].resize(2);
+    power_fluxes[n].resize(n_f);
   }
   
+  const Elem*  elem = _heat_model->get_element();
+
+  int side = _heat_model->get_side();
+   //if side = -1 the check has not be done
+
   
+  //if  no_check = true the check boundary is off
+  bool do_calc = true;
   
+  if (side >= 0 )
+  { 
+   
+    const ElementSide elside(elem->top_parent(), side);
+    
+    do_calc =false; 
+    
+    if (_simul->get_environment().is_outer_boundary(elside))
+      do_calc = true;
+
+  }
+      
   std::vector< std::map< ID, double > > solution;
-  
-  if  (_simul->get_solution(elem,h_point,ID_set,solution) )
-  {
-    
-    std::vector< std::map< ID, double > > solution;
-    
-    _simul->get_solution(elem,h_point,ID_set,solution); 
-    
+
+  if  (_simul->get_solution(elem,h_point,ID_set,solution) && do_calc)
+  {  
+
     for(unsigned int n =0 ; n<h_point.size();n++)
     {
       
@@ -198,15 +216,41 @@ DriftDiffusionHeatSource::get_power_fluxes(std::vector<Point> h_point,const Elem
       
       power_fluxes[n][1](0) = Wp_x; 
       power_fluxes[n][1](1) = Wp_y; 
-      power_fluxes[n][1](2) = Wp_z;
-
-    
+      power_fluxes[n][1](2) = Wp_z;             
+      
+     
+      
     }
 
     
   }
 
- 
+
 }
 
 
+std::vector<std::string>
+DriftDiffusionHeatSource::get_source_legend(const std::set<std::string>& variables)
+{
+  const std::set<std::string>::const_iterator varend(variables.end());
+  
+  //if (variables.find("eJoule") != varend)
+  //    _source_legend.push_back("eJoule");
+  
+  //  if (variables.find("hJoule") != varend)
+  //    _source_legend.push_back("hJoule");
+  
+  //  if (variables.find("RecHeat") != varend)
+  //    _source_legend.push_back("RecHeat"); 
+
+  //  if (variables.find("ePelTh") != varend)
+  //     _source_legend.push_back("ePelTh"); 
+
+  //  if (variables.find("hPelTh") != varend)
+  //    _source_legend.push_back("hPelTh"); 
+
+
+
+ return  _source_legend;
+
+}

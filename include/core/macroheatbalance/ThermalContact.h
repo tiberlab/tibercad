@@ -13,8 +13,9 @@ class ThermalContact: public BoundaryProperties
   enum Type
   {
     Reservoir = 0,
-    Neumann = 1,
-    ThermalResistance = 2
+    FluxContact = 1,
+    ThermalSurfaceResistance = 2,
+    ThermalSurfaceConductance = 3
   };
 
  //!Constructor

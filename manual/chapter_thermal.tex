@@ -5,11 +5,11 @@ The theoretical model of the heat balance problem can be found in Ref.\cite{wach
 The steady state heat equation with the continuity equation reads as
 
 \begin{equation}\label{heat_law}
-\nabla \cdot\left(- \kappa \nabla T + \mathbf{J_{S}} \right) = H_{S}
+\nabla \cdot\left(- \kappa \nabla T  \right) = H_S
 \end{equation}
 
-where $T$ is the temperature and $\kappa$ is the thermal conductivity tensor.
-The source terms are rapresented by $\mathbf{J_S}$ and $H_S$ which are, respectively, the heat flux source and the heat source due to other physical subsystems.
+where $T$ is the temperature, $\kappa$ is the thermal conductivity tensor and $H_S$ is the total heat source.
+The latter term is the sum of the heat sources specified by the submodels described below.
 
 \section{Physical model}
 
@@ -38,17 +38,34 @@ model thermal
 \subsection{Electron and hole dissipations}
 
 
-Electron and hole dissipations give the following sources
+Electron and hole dissipations give the following heat source
 
-\begin{equation}\label{Jp}
-\mathbf{J_{S}} = - T P_n \mathbf{J_n} -  T P_p \mathbf{J_p}
+
+\begin{equation}
+H_{S} =-\nabla \cdot \left((P_n T + \phi_n)\mathbf{J_n} + (P_p T + \phi_p)\mathbf{J_p}\right) 
 \end{equation}
 
-\begin{equation}\label{Hp}
-H_{S} = - \mathbf{J_n} \cdot \nabla \varphi_n - \mathbf{J_p} \cdot \nabla \varphi_p
-\end{equation}
+where $P_n$ and $P_p$ are the thermoelectric power of electrons and holes, respectively. $\phi_n$ and $\phi_p$ arethe electro-chemical potentials.
 
-where $P_n$ and $P_p$ are the electron and hole thermoelectric power, respectively.
+The equation \ref{Hs} represents severals heat source contributes. Their estimates are reported in table \ref{table:heat_sources}.  
+
+\begin{table}[htb]
+\center
+\begin{tabular}{l||l}
+\textit{Expression} & \textit{Heat source}\\
+\hline\hline
+$\frac{\left| \mathbf{J_n} \right| ^2}{\sigma_n}$ & \textit{Electron Joule's effect}\\
+$\frac{|\mathbf{J_p}|^2}{\sigma_p}$ & \textit{Hole Joule's effect}\\
+$qR_{SRH}\left(\phi_p - \phi_n + T \left( P_p - P_n \right) \right)$ & \textit{Recombination effect}\\
+$ -T \mathbf{J_n} \cdot \nabla P_n $ & \textit{Electron Peltier-Thomson effect}\\
+$ -T \mathbf{J_p} \cdot \nabla P_p $ & \textit{Hole Peltier-Thomson effect}
+\end{tabular}
+\caption{Drift diffusion heat sources}
+\label{table:heat_sources}
+\end{table}
+
+
+
 
 
 The physical model \textbf{heat\_source} includes a specific source identified by its \textbf{model} name.
@@ -72,17 +89,26 @@ In order to include such a heat source we have to use a drift diffusion simulati
 
 The syntax \textit{drift\_diffusion\_simulation = dd\_simul\_name} allows this connection.
 
+
+
+
 \subsection{Boundary conditions}
 
+By default thermally insulating surfaces are considered, i.e. 
 
-The boundary conditions can fix the temperature at a specific contact. This Dirichlet like condition can be interpreted as a heat reservoir and is identified with \textit{type = heat\_reservoir}. Below an example is reported.
+\begin{equation}\label{TH}
+\mathbf{J_q}\cdot \mathbf{N} = 0
+\end{equation}
+
+On the opposite side is possible to include an ideal thermally conducting interface by fixing the temperature to the external one, i.e. : 
+
+\begin{equation}\label{T}
+T = T_{ext}
+\end{equation}
+
+This condition can be imposed with the following notation
 
 \begin{verbatim}
-
-
-
-
-
 BC_Regions
 {
   BC_Region name_BC_region
@@ -94,36 +120,163 @@ BC_Regions
 }
 \end{verbatim}
 
+Once a \texttt{BC\_Region} in the \texttt{thermal} section is inserted \texttt{heat\_reservoir} is the default \texttt{type}. The default \texttt{temperature} is that indicated in the solve section.   
 
+In between of such extreme sistuations is possible to take into account a thermally resistive interface, i.e.
 
-With the notation \textit{temperature = 300} we fix the temperature (300 K in this case) at the contact associated to \textit{BC\_reg\_numb = 3}.
+\begin{equation}\label{TH}
+\mathbf{J_q}\cdot \mathbf{N} = G_s (T - T_{ext})
+\end{equation}
 
+where $G_s$ is the thermal surface conductance and $T_{ext}$ is the external temperature.
 
-\section{Output data}
-
-In this section we describe the \textit{thermal} quantities that can be plotted.
-The plot keywords are \textit{T} (node-based data) and \textit{HeatSource} (element-based data), i.e.
+One can include this condition with 
 
 \begin{verbatim}
-plot = (......,T,HeatSource,.....)
+BC_Regions
+{
+  BC_Region name_BC_region
+  {
+    type = thermal_surface_conductance
+    BC_reg_numb = 3
+    g_surf = 0.01
+    temperature = 300
+  }
+}
 \end{verbatim}
-  
-The keyword \textit{T} is referred to the temperature data (node-based data).
-The keyword \textit{HeatSource} allows to plot all heat sources considerated in the simulation. In the table we report all sources associated to drift diffusion simulations.
+
+where \texttt{g\_surf} indicates $G_s$ and \texttt{temperature} stands for $T_{ext}$.
+
+Alternatively, is possible to indicate the $R_s = 1/G\_s$ quantity i.e. the thermal surface resistance. The notation is
+
+
+\begin{verbatim}
+BC_Regions
+{
+  BC_Region name_BC_region
+  {
+    type = thermal_surface_resistance
+    BC_reg_numb = 3
+    r_surf = 100 
+    temperature = 300
+  }
+}
+\end{verbatim}
+
+Furthermore, is possibile to fix the normal thermal power density  to a user given value $J_{ext}$, i.e.
+
+\begin{equation}\label{TH}
+\mathbf{J_q}\cdot \mathbf{N} = J_{ext}
+\end{equation}
+
+This condition is identified with 
+
+\begin{verbatim}
+BC_Regions
+{
+  BC_Region name_BC_region
+  {
+    type = thermal_flux
+    BC_reg_numb = 3
+    power_density = 100 
+  }
+}
+\end{verbatim}
 
 
 
 \begin{table}[htb]
 \center
-\begin{tabular}{l||l||l}
-\textit{Expression} & \textit{Heat source} & \textit{Label}\\
+\begin{tabular}{l||l||l||l}
+\textit{description} & \textit{type} & \textit{parameters} & \textit{units}\\
 \hline\hline
-$\frac{\left| \mathbf{J_n} \right| ^2}{\sigma_n}$ & \textit{Electrons Joule's effect} & EJoule\\
-$\frac{|\mathbf{J_p}|^2}{\sigma_p}$ & \textit{Holes Joule's effect} & HJoule\\
-$qR_{SRH}\left(\phi_p - \phi_n + T \left( P_p - P_n \right) \right)$ & \textit{Recombination effect} &  RecSRH\\
-$ -T \mathbf{J_n} \cdot \nabla P_n $ & \textit{Electrons Peltier-Thomson effect} & EPelTh \\
-$ -T \mathbf{J_p} \cdot \nabla P_p $ & \textit{Holes Peltier-Thomson effect} & HPelTh
+Ideal insulating interface & (Default) & (No parameners) &   \\
+Ideal conducting interface & \texttt{heat\_reservoir} & \texttt{temperature} & $K$\\
+Resistive interface &\texttt{thermal\_surface\_resistance } & \texttt{temperature} & $K$ \\
+ & & \texttt{r\_surf} & $cm^2 K W^{-1}$\\
+Resistive interface &\texttt{thermal\_surface\_conductance} & \texttt{temperature}\\
+ & & \texttt{g\_surf} & $cm^{-2} K^{-1} W$\\
+Power density condition& \texttt{thermal\_flux} & \texttt{power\_density} & $Wcm^{-2}$
 \end{tabular}
-\caption{Drift diffusion heat sources}
+\caption{Thermal boundary conditions}
 \label{table:srh_params_db}
 \end{table}
+
+
+
+
+
+\section{Output data}
+ 
+In the plot section the keyword \texttt{T} is referred to the temperature data.
+The keyword \textit{HeatSource} allows to plot all heat sources considerated in the simulation.
+
+
+\begin{verbatim}
+plot = (......,T,HeatSource,PowerFlux,PowerDissipated...)
+\end{verbatim}
+
+
+See tables~\ref{table:tt_scalar}-\ref{table:tt_scalar_integrated}.
+
+
+\begin{table}[htb]
+\center
+\begin{tabular}{l|l|l}
+\multicolumn{3}{c}{\textbf{Nodal scalar quantities}} \\
+\hline 
+\texttt{Temperature} & Temperature & K \\
+\end{tabular}
+\caption{Nodal quantities}
+\label{table:tt_nodal}
+\end{table}
+
+
+\begin{table}[htb]
+\center
+\begin{tabular}{l|l|l}
+\multicolumn{3}{c}{\textbf{Elemental scalar quantities}} \\
+\hline 
+\texttt{eJoule}  & Electron Joule effect            & $Wcm^{-3}$ \\
+\texttt{hJoule}  & Hole Joule effect                & $Wcm^{-3}$ \\
+\texttt{RecHeat} & Recombination heat               & $Wcm^{-3}$ \\
+\texttt{ePelTh}  & Electron Peltier-Thomson effect  & $Wcm^{-3}$ \\
+\texttt{hPelTh}  & Hole Peltier-Thomson effect      & $Wcm^{-3}$ \\
+\end{tabular}
+\caption{Elemental scalar quantities}
+\label{table:tt_scalar_elemental}
+\end{table}
+
+\begin{table}[htb]
+\center
+\begin{tabular}{l|l|l}
+\multicolumn{3}{c}{\textbf{Elemental vector quantities}} \\
+\hline 
+\texttt{Wq}      & Thermal flux                     & $Wcm^{-2}$ \\
+\texttt{Wn}      & Electron power flux              & $Wcm^{-2}$ \\
+\texttt{Wp}      & Hole power flux                  & $Wcm^{-2}$ \\
+\texttt{DDW}     & Electron and hole power flux     & $Wcm^{-2}$ \\
+\texttt{W}       & Total power flux                 & $Wcm^{-2}$ \\
+\end{tabular}
+\caption{Elemental quantities}
+\label{table:tt_vector_elemental}
+\end{table}
+
+
+\begin{table}[htb]
+\center
+\begin{minipage}{8cm}
+\center
+\begin{tabular}{l|l|l}
+\multicolumn{3}{c}{\textbf{Integrated scalar quantities}} \\
+\hline 
+\texttt{PowerDissipated} & Power dissipated & *\footnote{depends on dimension and symmetry}\\ 
+\end{tabular}
+\end{minipage}
+\caption{Integrated quantities}
+\label{table:tt_scalar_integrated}
+\end{table}
+
+
+  
+

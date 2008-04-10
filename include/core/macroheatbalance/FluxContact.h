@@ -13,16 +13,13 @@ class FluxContact : public ThermalContact
   //!Destructor 
   ~FluxContact(){};
   //!Return the electrons_resistivity of the contact
-  double get_electrons_resistivity(void) const;
+  double get_heat_flux(void) const;
 
   //!Return the holes_resistivity of the contact
   double get_holes_resistivity(void) const;
 
   //!Set the electrons_resistivity of the contact
-  void set_electrons_resistivity(double rho_e);
-
-    //!Set the holes_resistivity of the contact
-  void set_holes_resistivity(double rho_h);
+  void set_heat_flux(double rho_e);
 
   //!Create a Reservoir object and return its pointer
   static  FluxContact* create(void);
@@ -34,9 +31,8 @@ class FluxContact : public ThermalContact
 
  private:
 
-  double _rho_e; 
+  double _flux; 
 
-  double _rho_h; 
 
 };
 
@@ -51,38 +47,19 @@ FluxContact::create()
 
 inline 
 double
-FluxContact::get_electrons_resistivity( ) const
+FluxContact::get_heat_flux( ) const
 {
 
-  return _rho_e;
-
-}
-
-inline 
-double
-FluxContact::get_holes_resistivity( ) const
-{
-
-  return _rho_h;
-
-}
-
-
-inline 
-void  
-FluxContact::set_electrons_resistivity(double rho_e ) 
-{
-
-   _rho_e = rho_e;
+  return _flux;
 
 }
 
 inline 
 void  
-FluxContact::set_holes_resistivity(double rho_h ) 
+FluxContact::set_heat_flux(double flux) 
 {
 
-   _rho_h = rho_h;
+   _flux = flux;
 
 }
 
