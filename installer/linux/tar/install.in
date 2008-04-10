@@ -61,7 +61,56 @@ cp -r bin materials examples license lib doc share $instpath
 
 mv ${instpath}/bin/tibercad ${instpath}/bin/tibercad-$TIBERVER
 pathstring=`echo "$instpath" | sed -e 's/\//\\\\\//g'`
-sed -e "s/<INSTALLDIR>/$pathstring/g" ${instpath}/bin/tibercad.sh > ${instpath}/bin/tibercad
-chmod a+x ${instpath}/bin/tibercad
+sed -e "s/<INSTALLDIR>/$pathstring/g" ${instpath}/bin/tibercad.sh > ${instpath}/bin/tibercad.sh.tmp
+mv -f ${instpath}/bin/tibercad.sh.tmp ${instpath}/bin/tibercad.sh
+chmod a+x ${instpath}/bin/tibercad.sh
 
+cd ${instpath}/bin
+ln -s tibercad.sh tibercad
 
+touch ${instpath}/files.lst
+find ${instpath} -type f > ${instpath}/files.lst
+cat > ${instpath}/bin/uninstall <<EOF
+#!/bin/sh
+
+echo "Do you really want to uninstall TiberCAD ver. $TIBERVER? "
+read answer
+case $answer in
+  y*)
+    rm -f \`cat ${instpath}/files.lst\`
+    rm -f ${instpath}/bin/uninstall
+    rm -r ${instpath}
+    ;;
+
+  *) ;;
+esac
+EOF
+chmod a+x ${instpath}/bin/uninstall
+
+echo ""
+echo "Create a link to tibercad in "
+echo " 1. /usr/local/bin"
+echo " 2. /usr/bin"
+echo " 3. none"
+echo -n "Your choice [1]: "
+
+read answer
+
+bindir=/usr/local/bin
+case $answer in
+  2) bindir=/usr/bin ;;
+  3) bindir= ;;
+  *) ;;
+esac
+
+if [ ! -z $bindir ]
+then
+  cd $bindir
+  ln -s ${instpath}/bin/tibercad.sh tibercad
+  echo "$bindir/tibercad" >> ${instpath}/files.lst
+fi
+
+echo ""
+echo "Thank you for having installed TiberCAD."
+echo "Please report bugs to developers@tibercad.org"
+echo ""

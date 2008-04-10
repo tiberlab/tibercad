@@ -62,6 +62,11 @@ prepare_linux_package () {
 
   # get some of the libraries
   libs=`ldd ${topdir}/lib/libtibercad.so | grep boost | awk '{print $3}'`
+  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep lapack | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep blas | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep stdc | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep gcc_s | awk '{print $3}'`"
+  echo $libs
   cp $libs ${files}/lib
   cp ${topdir}/bin/tibercad ${files}/bin
   chmod a+x ${files}/bin/tibercad
@@ -77,7 +82,7 @@ prepare_linux_package () {
   cp ${topdir}/materials/[^.]* ${files}/materials
 
   chmod -R a+r ${files}
-  find debfiles -type d -exec chmod a+x {} \;
+  find ${files} -type d -exec chmod a+x {} \;
 
   su -c "chown -R 0:0 ${files} && tar $MODE $ARCHIVE $files && chmod a+w $ARCHIVE && rm -rf $files"
 
