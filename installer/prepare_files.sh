@@ -64,6 +64,7 @@ prepare_linux_package () {
   libs=`ldd ${topdir}/lib/libtibercad.so | grep boost | awk '{print $3}'`
   cp $libs ${files}/lib
   cp ${topdir}/bin/tibercad ${files}/bin
+  chmod a+x ${files}/bin/tibercad
   cp ${topdir}/lib/lib*.so* ${files}/lib
   find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
   cp ${topdir}/share/tibercad.ico ${files}/share
@@ -76,27 +77,13 @@ prepare_linux_package () {
   cp ${topdir}/materials/[^.]* ${files}/materials
 
   chmod -R a+r ${files}
-  chmod a+x ${files}/bin/tibercad
+  find debfiles -type d -exec chmod a+x {} \;
+
+  su -c "chown -R 0:0 ${files} && tar $MODE $ARCHIVE $files && chmod a+w $ARCHIVE && rm -rf $files"
 
   return
 }
 
-
-make_tgz () {
-
-  echo "Creating linux/${name}.tar.gz ..."
-  tar zcf linux/${name}.tar.gz $name
-
-  return
-}
-
-make_tbz () {
-
-  echo "Creating linux/${name}.tar.bz2 ..."
-  tar jcf linux/${name}.tar.bz2 $name
-
-  return
-}
 
 make_deb () {
 
@@ -111,7 +98,8 @@ make_deb () {
   mkdir -p ${files}/license
   mkdir -p ${files}/materials
 
-  cp ${topdir}/bin/tibercad ${files}/bin
+  cp ${topdir}/bin/tibercad ${files}/bin/tibercad-$version
+  chmod a+x ${files}/bin/tibercad-$version
   cp ${topdir}/lib/lib*.so* ${files}/lib
   find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
   cp ${topdir}/share/tibercad.ico ${files}
@@ -124,7 +112,7 @@ make_deb () {
   cp ${topdir}/materials/[^.]* ${files}/materials
 
   chmod -R a+r debfiles
-  chmod a+x ${files}/bin/tibercad
+  find debfiles -type d -exec chmod a+x {} \;
 
   sed -e "s/<INSTALLDIR>/\/usr\/share\/tibercad-$version/g" ${topdir}/installer/linux/tar/tibercad.sh > ${files}/bin/tibercad.sh
   chmod a+x ${files}/bin/tibercad.sh
@@ -139,8 +127,7 @@ make_deb () {
   cd debfiles
   find usr/ -type f -exec md5sum {} >> DEBIAN/md5sums \;
   cd ..
-  dpkg-deb --build debfiles linux
-  rm -rf debfiles
+  su -c "chown -R 0:0 debfiles && dpkg-deb --build debfiles linux && chmod a+w linux/*.deb && rm -rf debfiles"
 
   return
 }
@@ -180,16 +167,18 @@ case $1 in
 
       tgz )
         files=$name
+        echo "Creating linux/${name}.tar.gz ..."
+        ARCHIVE=linux/${name}.tar.gz
+        MODE=zcf
         prepare_linux_package
-        make_tgz
-        rm -rf $files
         ;;
 
       * )
         files=$name
+        echo "Creating linux/${name}.tar.bz2 ..."
+        ARCHIVE=linux/${name}.tar.bz2
+        MODE=jcf
         prepare_linux_package
-        make_tbz
-        rm -rf $files
         ;;
     esac
 
