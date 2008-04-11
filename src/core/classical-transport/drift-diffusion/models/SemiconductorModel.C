@@ -143,7 +143,7 @@ SemiconductorModel::extract_band_properties(void)
       tmp += vbs[i].degeneracy * std::pow(vbs[i].mass_DOS, 1.5)
         * std::exp(-delta / kT);
 
-    //cerr << i << ", Ev = " << vbs[i].energy << ", m = " << vbs[i].mass_DOS << ", d = " << vbs[i].degeneracy << endl;
+  //  cerr << i << ", Ev = " << vbs[i].energy << ", m = " << vbs[i].mass_DOS << ", d = " << vbs[i].degeneracy << endl;
   }
   get_valence_band().effective_mass = std::pow(tmp, 2.0 / 3.0);
   //cerr << "DOS mass = " << get_valence_band().effective_mass  << "\n***\n";
@@ -182,11 +182,11 @@ SemiconductorModel::do_print_info(void)
   {
     cout << endl;
     set_lattice_temperature(SimulationOptions::T);
-    bulk_model_->calculate_conduction_band_extremum();
-    bulk_model_->calculate_valence_band_extremum();
-    extract_band_properties();
-    setup_band_edges();
+    //bulk_model_->calculate_conduction_band_extremum();
+    //bulk_model_->calculate_valence_band_extremum();
+    //extract_band_properties();
     calculate_equilibrium_properties();
+    setup_band_edges();
 
     double deg = std::pow(2.0, 2.0 / 3.0);
 

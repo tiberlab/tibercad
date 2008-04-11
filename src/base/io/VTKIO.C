@@ -13,13 +13,13 @@
 #include <map>
 #include <stdexcept>
 
-VTKIO::VTKIO(const MeshBase& mesh)
+TiberVTKIO::TiberVTKIO(const MeshBase& mesh)
   : MeshOutput<MeshBase>(mesh)
 {
 }
 
 
-void VTKIO::write_nodal_data(const std::string& fname,
+void TiberVTKIO::write_nodal_data(const std::string& fname,
     const std::vector<Number>& soln,
     const std::vector<std::string>& names)
 {
@@ -192,7 +192,7 @@ void VTKIO::write_nodal_data(const std::string& fname,
 
 
 
-void VTKIO::write_elemental_data(const std::string& fname,
+void TiberVTKIO::write_elemental_data(const std::string& fname,
     const std::vector<Number>& soln,
     const std::vector<std::string>& names)
 {
@@ -503,8 +503,8 @@ void VTKIO::write_elemental_data(const std::string& fname,
 
 
 
-VTKIO::VTKCellType
-VTKIO::get_VTK_cell_type(const Elem* elem)
+TiberVTKIO::VTKCellType
+TiberVTKIO::get_VTK_cell_type(const Elem* elem)
 {
   assert(elem != NULL);
 

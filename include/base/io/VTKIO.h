@@ -1,8 +1,8 @@
 // $Id$
 
 
-#ifndef _VTKIO_H_
-#define _VTKIO_H_
+#ifndef _TIBERVTKIO_H_
+#define _TIBERVTKIO_H_
 
 #include "mesh_output.h"
 
@@ -13,7 +13,7 @@ class Elem;
 
 
 //! Write nodal and elemental data using a grace-compatible format 
-class VTKIO : public MeshOutput<MeshBase>
+class TiberVTKIO : public MeshOutput<MeshBase>
 {
  public:
 
@@ -22,7 +22,7 @@ class VTKIO : public MeshOutput<MeshBase>
   /*!
    * \param mesh a reference to a constant mesh object.
    */
-  VTKIO(const MeshBase& mesh);
+  TiberVTKIO(const MeshBase& mesh);
 
 
   //! Write the mesh to the specified file.

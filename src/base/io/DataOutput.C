@@ -35,7 +35,7 @@ DataOutput::write_nodal_data(const std::string& filename,
   else if (_format == "gnuplot")
     GnuPlotIO(*_mesh).write_nodal_data(filename + ".dat", data, legend);
   else if (_format == "vtk")
-    VTKIO(*_mesh).write_nodal_data(filename + ".vtk", data, legend);
+    TiberVTKIO(*_mesh).write_nodal_data(filename + ".vtk", data, legend);
   else
     GMVIO(*_mesh).write_nodal_data(filename + ".gmv", data, legend);
 }
@@ -58,7 +58,7 @@ DataOutput::write_cell_data(const std::string& filename,
   else if (_format == "gnuplot")
     std::cout << "GnuPlot does not currently support cell data." << std::endl;
   else if (_format == "vtk")
-    VTKIO(*_mesh).write_elemental_data(filename + ".vtk", data, legend);
+    TiberVTKIO(*_mesh).write_elemental_data(filename + ".vtk", data, legend);
   else
     GMVIO_cell(*_mesh).write_ascii_cell_data(filename + ".gmv", data, legend);
 }

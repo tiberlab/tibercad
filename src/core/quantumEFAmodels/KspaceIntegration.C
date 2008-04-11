@@ -71,7 +71,7 @@ void KspaceIntegration::do_plot()
       else if (format == "ise")
 	TecplotIO_cell(get_k_mesh()).write_cell_data(filename, results, names);
       else if (format == "vtk")
-	VTKIO(get_k_mesh()).write_elemental_data(filename, results, names); 
+	TiberVTKIO(get_k_mesh()).write_elemental_data(filename, results, names); 
       else
       {
 	cout << "Output format not supported. Falling back to GMV." << endl;

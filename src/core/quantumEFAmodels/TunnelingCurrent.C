@@ -791,7 +791,7 @@ void TunnelingCurrent::k_space_output(void)
     else if (format == "ise")
       TecplotIO_cell(*kmesh).write_cell_data(filename, results, names);
     else if (format == "vtk")
-      VTKIO(*kmesh).write_elemental_data(filename, results, names);
+      TiberVTKIO(*kmesh).write_elemental_data(filename, results, names);
     else
     {
       cout << "Output format not supported. Falling back to GMV." << endl;
