@@ -66,10 +66,9 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep blas | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep stdc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep gcc_s | awk '{print $3}'`"
-  echo $libs
   cp $libs ${files}/lib
-  cp ${topdir}/bin/tibercad ${files}/bin
-  chmod a+x ${files}/bin/tibercad
+  cp ${topdir}/bin/tibercad ${files}/bin/tibercad-$version
+  chmod a+x ${files}/bin/tibercad-$version
   cp ${topdir}/lib/lib*.so* ${files}/lib
   find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
   cp ${topdir}/share/tibercad.ico ${files}/share

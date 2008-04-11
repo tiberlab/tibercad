@@ -59,7 +59,6 @@ fi
 
 cp -r bin materials examples license lib doc share $instpath
 
-mv ${instpath}/bin/tibercad ${instpath}/bin/tibercad-$TIBERVER
 pathstring=`echo "$instpath" | sed -e 's/\//\\\\\//g'`
 sed -e "s/<INSTALLDIR>/$pathstring/g" ${instpath}/bin/tibercad.sh > ${instpath}/bin/tibercad.sh.tmp
 mv -f ${instpath}/bin/tibercad.sh.tmp ${instpath}/bin/tibercad.sh
