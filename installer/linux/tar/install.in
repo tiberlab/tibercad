@@ -75,8 +75,8 @@ cat > ${instpath}/bin/uninstall <<EOF
 
 echo "Do you really want to uninstall TiberCAD ver. $TIBERVER? "
 read answer
-case $answer in
-  y*)
+case \$answer in
+  y|yes)
     rm -f \`cat ${instpath}/files.lst\`
     rm -f ${instpath}/bin/uninstall
     rm -r ${instpath}
