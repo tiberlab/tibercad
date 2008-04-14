@@ -13,7 +13,7 @@ The latter term is the sum of the heat sources specified by the submodels descri
 
 \section{Physical model}
 
-Negleting particle effects, the thermal conductivity is only due to the lattice contribution. The lattice thermal conductivity is read from the database.
+By neglecting particle effects, the thermal conductivity is only due to the lattice contribution. The lattice thermal conductivity is read from the database.
 
 The thermal model is tagged as \textit{thermal}. In \textbf{options} subsection we indicate the simulation name (\textit{simulation\_name = whatever\_you\_want}) and the simulation domain (\textit{physical\_regions = wherever\_you\_want})
 
@@ -41,13 +41,13 @@ model thermal
 Electron and hole dissipations give the following heat source
 
 
-\begin{equation}
+\begin{equation}\label{Hs}
 H_{S} =-\nabla \cdot \left((P_n T + \phi_n)\mathbf{J_n} + (P_p T + \phi_p)\mathbf{J_p}\right) 
 \end{equation}
 
-where $P_n$ and $P_p$ are the thermoelectric power of electrons and holes, respectively. $\phi_n$ and $\phi_p$ arethe electro-chemical potentials.
+where $P_n$ and $P_p$ are the thermoelectric power of electrons and holes, respectively. $\phi_n$ and $\phi_p$ are the electro-chemical potentials.
 
-The equation \ref{Hs} represents severals heat source contributes. Their estimates are reported in table \ref{table:heat_sources}.  
+The equation \ref{Hs} represents several heat source contributes. Their estimates are reported in table \ref{table:heat_sources}.  
 
 \begin{table}[htb]
 \center
@@ -70,8 +70,6 @@ $ -T \mathbf{J_p} \cdot \nabla P_p $ & \textit{Hole Peltier-Thomson effect}
 
 The physical model \textbf{heat\_source} includes a specific source identified by its \textbf{model} name.
 Concerning electron and hole dissipations the model is
-
- 
 named \textit{drift\_diffusion\_dissipation}, as reported below.
 
 \begin{verbatim}
@@ -94,13 +92,13 @@ The syntax \textit{drift\_diffusion\_simulation = dd\_simul\_name} allows this c
 
 \subsection{Boundary conditions}
 
-By default thermally insulating surfaces are considered, i.e. 
+By default, thermally insulating surfaces are considered, i.e. 
 
 \begin{equation}\label{TH}
 \mathbf{J_q}\cdot \mathbf{N} = 0
 \end{equation}
 
-On the opposite side is possible to include an ideal thermally conducting interface by fixing the temperature to the external one, i.e. : 
+On the opposite side it is possible to include an ideal thermally conducting interface by fixing the temperature to the external one, i.e. : 
 
 \begin{equation}\label{T}
 T = T_{ext}
@@ -120,9 +118,9 @@ BC_Regions
 }
 \end{verbatim}
 
-Once a \texttt{BC\_Region} in the \texttt{thermal} section is inserted \texttt{heat\_reservoir} is the default \texttt{type}. The default \texttt{temperature} is that indicated in the solve section.   
+Once a \texttt{BC\_Region}  is inserted in the \texttt{thermal} section, \texttt{heat\_reservoir} is the default \texttt{type}. The default \texttt{temperature} is the one indicated in the solve section.   
 
-In between of such extreme sistuations is possible to take into account a thermally resistive interface, i.e.
+Between  such extreme situations, it is possible to take into account a thermally resistive interface, i.e.
 
 \begin{equation}\label{TH}
 \mathbf{J_q}\cdot \mathbf{N} = G_s (T - T_{ext})
@@ -130,7 +128,7 @@ In between of such extreme sistuations is possible to take into account a therma
 
 where $G_s$ is the thermal surface conductance and $T_{ext}$ is the external temperature.
 
-One can include this condition with 
+One can include this condition with the BC type \textbf{thermal\_surface\_conductance}:
 
 \begin{verbatim}
 BC_Regions
@@ -147,7 +145,7 @@ BC_Regions
 
 where \texttt{g\_surf} indicates $G_s$ and \texttt{temperature} stands for $T_{ext}$.
 
-Alternatively, is possible to indicate the $R_s = 1/G\_s$ quantity i.e. the thermal surface resistance. The notation is
+Alternatively, it is possible to indicate the $R_s = 1/G\_s$ quantity i.e. the thermal surface resistance. The notation is
 
 
 \begin{verbatim}
@@ -163,13 +161,13 @@ BC_Regions
 }
 \end{verbatim}
 
-Furthermore, is possibile to fix the normal thermal power density  to a user given value $J_{ext}$, i.e.
+Furthermore, it is possibile to fix the normal thermal power density  to a  given value $J_{ext}$, i.e.
 
 \begin{equation}\label{TH}
 \mathbf{J_q}\cdot \mathbf{N} = J_{ext}
 \end{equation}
 
-This condition is identified with 
+This condition is set with the BC type \textbf{thermal\_flux}:
 
 \begin{verbatim}
 BC_Regions
@@ -190,7 +188,7 @@ BC_Regions
 \begin{tabular}{l||l||l||l}
 \textit{description} & \textit{type} & \textit{parameters} & \textit{units}\\
 \hline\hline
-Ideal insulating interface & (Default) & (No parameners) &   \\
+Ideal insulating interface & (Default) & (No parameters) &   \\
 Ideal conducting interface & \texttt{heat\_reservoir} & \texttt{temperature} & $K$\\
 Resistive interface &\texttt{thermal\_surface\_resistance } & \texttt{temperature} & $K$ \\
  & & \texttt{r\_surf} & $cm^2 K W^{-1}$\\
@@ -208,8 +206,8 @@ Power density condition& \texttt{thermal\_flux} & \texttt{power\_density} & $Wcm
 
 \section{Output data}
  
-In the plot section the keyword \texttt{T} is referred to the temperature data.
-The keyword \textit{HeatSource} allows to plot all heat sources considerated in the simulation.
+In the plot section the keyword \texttt{T} refers to the temperature output.
+The keyword \textit{HeatSource} allows to plot all heat sources considered in the simulation.
 
 
 \begin{verbatim}
@@ -217,7 +215,7 @@ plot = (......,T,HeatSource,PowerFlux,PowerDissipated...)
 \end{verbatim}
 
 
-See tables~\ref{table:tt_scalar}-\ref{table:tt_scalar_integrated}.
+See tables~\ref{table:tt_nodal}-\ref{table:tt_scalar_integrated}.
 
 
 \begin{table}[htb]
@@ -258,7 +256,7 @@ See tables~\ref{table:tt_scalar}-\ref{table:tt_scalar_integrated}.
 \texttt{DDW}     & Electron and hole power flux     & $Wcm^{-2}$ \\
 \texttt{W}       & Total power flux                 & $Wcm^{-2}$ \\
 \end{tabular}
-\caption{Elemental quantities}
+\caption{Elemental vector quantities}
 \label{table:tt_vector_elemental}
 \end{table}
 
