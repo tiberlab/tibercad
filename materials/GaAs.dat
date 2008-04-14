@@ -5,9 +5,9 @@ structure = zb
 E_v = 1.346
 
 # 300 K
-Eg_G = 1.422
-Eg_L = 1.707
-Eg_X = 1.899
+#Eg_G = 1.422
+#Eg_L = 1.707
+#Eg_X = 1.899
 
 # 200 K
 #Eg_G = 1.465
@@ -25,13 +25,19 @@ Eg_X = 1.899
 #Eg_X = 1.899
 
 # 0 K values
-#Eg_G = 1.519
-#Eg_L = 1.815
-#Eg_X = 1.981
+Eg_G = 1.519
+Eg_L = 1.815
+Eg_X = 1.981
 
-varshni_alfa = 0.5405e-3
-varshni_beta =  204 
+varshni_alpha_G = 0.5405e-3
+varshni_beta_G =  204 
 
+
+varshni_alpha_X = 0.460e-3
+varshni_beta_X =  204 
+
+varshni_alpha_L = 0.605e-3
+varshni_beta_L =  204
 
 
 m_G = 0.067

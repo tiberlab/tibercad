@@ -2,6 +2,7 @@
 #include "Database.h"
 #include "Alloy.h"
 #include "getpot.h"
+#include "SimulationOptions.h"
 typedef std::complex<double> Complex;
 extern "C" 
 { 
@@ -14,12 +15,31 @@ const double Semiconductor::Hartree = 27.2113961;
 
 using namespace std; 
 
- 
+Semiconductor::Semiconductor()
+{
+  modelA = NULL;
+
+  modelB = NULL;
+
+} 
 
 //--------------------------------------------------------------------------------------------//
 void Semiconductor::do_init ()
 {
- 
+  ModelOptions & options = get_options ();
+
+  _consider_temperature = get_parameter("consider_temperature",  true );
+
+
+  _temperature = get_parameter("temperature", SimulationOptions::T);
+
+
+  // the temperature simulation
+  string temp_simul = get_options().get_option("thermal_simulation", "");
+  
+  temp_interface.set_simulation(temp_simul);
+
+  
 }
 
 
@@ -36,3 +56,18 @@ KPparams   Semiconductor::calculate_kp_params (std::string kp_model )
 
 
 //---------------------------------------------------------------------------------------------//
+inline 
+void Semiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+{
+
+  modelA = dynamic_cast<const Semiconductor* > (comp_A);
+
+  modelB = dynamic_cast<const Semiconductor* > (comp_B);
+
+
+  _xa = xa;
+
+  do_calculate_VCA (comp_A, comp_B,  xa);
+
+
+}

@@ -39,6 +39,17 @@ class ZbSemiconductor  : public Semiconductor
     double def_uniax_L; //!< uniaxial deformation potential for L point \f$ \Xi_u \f$ [eV]
     double delta; //!< spin-orbit \f$ \Delta \f$ [eV]
     double Ep; //!< optical matrix element \f$ 2\frac{\langle X |{\bf P}|S \rangle ^2}{m_0} \f$  [eV]
+
+    double varshni_alpha_G; //!< Varshni parameter alpha for Gamma valley
+    double varshni_alpha_X; //!< Varshni parameter alpha for X valley
+    double varshni_alpha_L; //!< Varshni parameter alpha for L valley
+
+    double varshni_beta_G; //!< Varshni parameter beta for Gamma valley
+    double varshni_beta_X; //!< Varshni parameter beta for X valley
+    double varshni_beta_L; //!< Varshni parameter beta for L valley
+
+    
+
   };
 
   
@@ -48,8 +59,12 @@ class ZbSemiconductor  : public Semiconductor
   ZbSemiconductor(void);
   
 
-  //! Get a writeable reference to the physical parameters
-  ZbDDparameters& get_parameters(void);
+  //! Get a  reference to the physical parameters
+  const ZbDDparameters& get_parameters(void) ;
+
+
+  //! Get a  reference to the initial physical parameters
+  const ZbDDparameters& get_initial_parameters(void) const;
 
   
 
@@ -88,7 +103,7 @@ class ZbSemiconductor  : public Semiconductor
 
   */
  
-  virtual KPparams calculate_6x6_kp_params (void );
+  virtual KPparams do_calculate_6x6_kp_params (void );
 
   //! Calculates k.p parameters in atomic units for 8 band valence band calculation (see below)
   /*!
@@ -107,7 +122,10 @@ class ZbSemiconductor  : public Semiconductor
     \f$
 
   */
-  virtual KPparams calculate_8x8_kp_params (void );
+  virtual KPparams do_calculate_8x8_kp_params (void );
+
+  //! apply varshni formulas
+  virtual void apply_temperature(void) ;
 
   static ZbSemiconductor* create();
 
@@ -116,8 +134,11 @@ class ZbSemiconductor  : public Semiconductor
   //-------------------------------------------------------------------------------//
   //material data block:
 
-
+  //! parameters that TiberCAD should use (e.g. for the actual temperature)
   ZbDDparameters  par;
+
+  //!initial parameters from the database (e.g. zero temperature)
+  ZbDDparameters  par_initial;
 
   ZbDDparameters  bow;
 
@@ -144,7 +165,7 @@ class ZbSemiconductor  : public Semiconductor
 
   virtual void read_bowing_parameters(void);
  
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
+  virtual void do_calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
   
 
  
@@ -161,5 +182,22 @@ inline ZbSemiconductor* ZbSemiconductor::create()
 {
   return new ZbSemiconductor();
 }
+
+
+
+inline const ZbSemiconductor::ZbDDparameters& ZbSemiconductor::get_parameters() 
+{
+  
+  if (_consider_temperature) apply_temperature();
+
+  return(par);
+}
+
+
+inline const ZbSemiconductor::ZbDDparameters& ZbSemiconductor::get_initial_parameters(void) const
+{
+  return (par_initial);
+}
+
 
 #endif 

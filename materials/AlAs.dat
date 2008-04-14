@@ -3,24 +3,27 @@
 structure = zb
 
 # 0 K data
-#Eg_G = 3.099
-#Eg_L = 2.4597
-#Eg_X = 2.2397
+Eg_G = 3.099
+Eg_L = 2.4597
+Eg_X = 2.2397
 
 
 
 # T = 300K
-Eg_G = 3.003
-Eg_L = 2.352
-Eg_X = 2.164
+#Eg_G = 3.003
+#Eg_L = 2.352
+#Eg_X = 2.164
+
 E_v = 0.857
 
-varshni_alfa_G = 0.885e-3
+varshni_alpha_G = 0.885e-3
 varshni_beta_G = 530
 
-varshni_alfa_X = 0.70e-3
+varshni_alpha_X = 0.70e-3
 varshni_beta_X = 530
 
+varshni_alpha_L = 0.605e-3
+varshni_beta_L = 530
 
 
 m_G = 0.15

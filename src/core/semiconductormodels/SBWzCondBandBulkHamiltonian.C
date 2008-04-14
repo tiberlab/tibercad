@@ -9,7 +9,7 @@ void SBWzCondBandBulkHamiltonian::do_init()
 
   SBCondBandBulkHamiltonian::do_init();
 
-  calculate_for_init( );
+  if (!(get_material()->is_alloy())) calculate_for_init( );
   
 }
 
@@ -17,7 +17,7 @@ void SBWzCondBandBulkHamiltonian::do_init()
 void SBWzCondBandBulkHamiltonian:: calculate_for_init( )
 {
  
-  WzSemiconductor::WzDDparameters& par = (dynamic_cast<WzSemiconductor*> (semiconductor)) -> get_parameters();
+  const WzSemiconductor::WzDDparameters& par = (dynamic_cast<WzSemiconductor*> (semiconductor)) -> get_parameters();
 
   wz_par = &par;
 

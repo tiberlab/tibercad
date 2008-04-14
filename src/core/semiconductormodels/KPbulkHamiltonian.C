@@ -76,11 +76,14 @@ void KPbulkHamiltonian::do_init()
 
   PhysicalModelInterface::destroy(semiconductor);
 
+
+ 
   semiconductor = Semiconductor::create( get_material() -> get_structure(), opt  );
 
   semiconductor->set_material(get_material());
 
   semiconductor->init();
+  
 
   model_name = opt.get_option("kp_model","6x6");
 
@@ -88,7 +91,7 @@ void KPbulkHamiltonian::do_init()
 
   kpCVtermSymmetric = opt.get_option("kpCVtermSymmetric", true);
   
-
+ 
   nullify_parameters();
 
   if (model_name == "6x6")
@@ -126,25 +129,26 @@ void KPbulkHamiltonian::do_init()
       i1++;
     }
 
-  //prepare k.p parameter
-  par = semiconductor->calculate_kp_params (model_name);
- 
   //nullify strain
   strainM = Tensor2Sym(0);
 
-  
-  //calculate general Hamiltonian 
-  calculate_Hamiltonian_gen();
+  if (!(get_material()->is_alloy()))
+  {
+    //prepare k.p parameter
+    par = semiconductor->calculate_kp_params (model_name);
+   
+    //calculate general Hamiltonian 
+    calculate_Hamiltonian_gen();
 
-  //apply k|| vector (even if it is zero-vector !!!)
-  calculate_Hamiltonian_k_par();
+    //apply k|| vector (even if it is zero-vector !!!)
+    calculate_Hamiltonian_k_par();
 
+    //-----------------------------------------------
+    //calculate optical operator
+    calculate_optical_operator();
+    calculate_optical_operator_k_par();
   //-----------------------------------------------
-  //calculate optical operator
-  calculate_optical_operator();
-  calculate_optical_operator_k_par();
-  //-----------------------------------------------
-
+  }
 
 
 }

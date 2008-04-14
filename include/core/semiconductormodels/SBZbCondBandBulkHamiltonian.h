@@ -36,8 +36,7 @@ class SBZbCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
 
  private:
 
-  ZbSemiconductor::ZbDDparameters* zb_par;
-
+  const ZbSemiconductor::ZbDDparameters* zb_par;
 
  protected:
 

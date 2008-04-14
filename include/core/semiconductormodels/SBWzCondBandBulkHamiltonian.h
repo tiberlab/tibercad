@@ -30,7 +30,7 @@ class SBWzCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
 
  
 
-  WzSemiconductor::WzDDparameters*  wz_par; 
+  const WzSemiconductor::WzDDparameters*  wz_par; 
 
  protected:
 

@@ -74,6 +74,11 @@ class EFAbulkHamiltonian: public PhysicalModelInterface
   */
   static EFAbulkHamiltonian* create (const std::string& structure,  const ModelOptions& options = ModelOptions());
 
+
+  //! sets temperature
+  virtual void set_temperature(double Temperature) {};
+
+
  protected:
   
 

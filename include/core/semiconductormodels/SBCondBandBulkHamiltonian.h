@@ -21,6 +21,9 @@ class SBCondBandBulkHamiltonian: public SBbulkHamiltonian
   
   
 
+ virtual void set_temperature(double Temperature);
+
+
  protected:
 
  virtual PhysicalModelInterface* create_new(void) const = 0 ;
@@ -93,5 +96,13 @@ inline void SBCondBandBulkHamiltonian::calculate_VCA (const PhysicalModelInterfa
   calculate_for_init();
 
 }
+
+//-------------------------------------------------------------------------------------------//
+inline 
+void SBCondBandBulkHamiltonian::set_temperature(double Temperature)
+{
+  semiconductor->set_temperature(Temperature);
+}
+
 
 #endif

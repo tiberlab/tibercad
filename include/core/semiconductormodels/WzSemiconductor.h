@@ -86,6 +86,13 @@ class  WzSemiconductor : public Semiconductor
     //! optical matrix element \f$ 2\frac{\langle Z |{\bf P}|S \rangle ^2}{m_0} \f$  [eV]
     double Ep_2 ;
 
+
+    //! Varshni parameter alpha for Gamma valley
+    double varshni_alpha_G;
+    //!Varshni parameter beta for Gamma valley
+    double varshni_beta_G; 
+
+
   };
 
   //Constructor
@@ -125,23 +132,37 @@ class  WzSemiconductor : public Semiconductor
     \f$
     
   */
-  virtual KPparams calculate_6x6_kp_params (void );
+  virtual KPparams do_calculate_6x6_kp_params (void );
 
   //! Calculates k.p parameters in atomic units for 8 band valence band calculation (see below)
   /*
     
    */
-  virtual KPparams calculate_8x8_kp_params (void );
+  virtual KPparams do_calculate_8x8_kp_params (void );
+
+
+ 
 
   //! Get a writeable reference to the physical parameters
-  WzDDparameters& get_parameters(void);
+  const WzDDparameters& get_parameters(void);
+
+  //! Get a  reference to the initial physical parameters
+  const WzDDparameters& get_initial_parameters(void) const;
+
 
  
   static WzSemiconductor* create(void); 
  
+  //! apply varshni formulas
+  virtual void apply_temperature(void);
+
  private:
-  //!parameters
+  //!parameters that TiberCAD should use (e.g. for the actual temperature)
   WzDDparameters par; 
+
+  //!initial parameters from the database (e.g. zero temperature)
+  WzDDparameters  par_initial;
+
 
   //!bowing parameters
   WzDDparameters bow; 
@@ -163,7 +184,7 @@ class  WzSemiconductor : public Semiconductor
 
   virtual void read_bowing_parameters(void);
  
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
+  virtual void do_calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
 
 
 };
@@ -181,13 +202,17 @@ inline WzSemiconductor* WzSemiconductor::create()
 
 
 inline
-WzSemiconductor::WzDDparameters&
-WzSemiconductor::get_parameters(void)
+const WzSemiconductor::WzDDparameters& WzSemiconductor::get_parameters(void)
 {
+  if (_consider_temperature) apply_temperature();
   return par;
 }
 
-
+inline  
+const WzSemiconductor::WzDDparameters& WzSemiconductor::get_initial_parameters() const
+{
+  return par_initial;
+}
 
 
 #endif 

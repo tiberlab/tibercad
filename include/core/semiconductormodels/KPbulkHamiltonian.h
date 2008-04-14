@@ -15,17 +15,11 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
 {
  public:
 
-  
-
-
-
-
  
 
 
   //! default constructor. 
   KPbulkHamiltonian(void);
-
 
 
  
@@ -60,6 +54,14 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
 
 
   static KPbulkHamiltonian* create( );
+
+
+  //!set semiconductor
+  void set_semiconductor(Semiconductor* semicond);
+
+
+  //! sets temperature
+  virtual void set_temperature(double Temperature);
  
 
  private:
@@ -142,5 +144,10 @@ inline PhysicalModelInterface* KPbulkHamiltonian::create_new() const
   return new KPbulkHamiltonian();
 }
 
+inline
+void  KPbulkHamiltonian::set_temperature(double Temperature)
+{
+  semiconductor->set_temperature(Temperature);
+}
 
 #endif

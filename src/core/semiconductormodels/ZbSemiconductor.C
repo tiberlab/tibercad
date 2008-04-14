@@ -15,10 +15,7 @@ extern "C"
 const double ZbSemiconductor::Hartree = 27.2113961;
 //---------------------------------------------//
 
-ZbSemiconductor::ZbDDparameters& ZbSemiconductor::get_parameters()
-{
-  return(par);
-}
+
 
 
 //--------------------------------------------//
@@ -58,6 +55,18 @@ void ZbSemiconductor::do_init()
     par.def_uniax_L = get_parameter("uniax_def_pot_L",  par.def_uniax_L);
 
     par.Ep = options.get_option("Ep", par.Ep);
+
+
+
+    par.varshni_alpha_G = options.get_option("varshni_alpha_G", par.varshni_alpha_G);
+    par.varshni_alpha_L = options.get_option("varshni_alpha_L", par.varshni_alpha_L);
+    par.varshni_alpha_X = options.get_option("varshni_alpha_X", par.varshni_alpha_X);
+
+
+    par.varshni_beta_G = options.get_option("varshni_beta_G",  par.varshni_beta_G);
+    par.varshni_beta_L = options.get_option("varshni_beta_L",  par.varshni_beta_L);
+    par.varshni_beta_X = options.get_option("varshni_beta_X",  par.varshni_beta_X);
+
   }
   //------------------------------------------------------------------------------
   //bowing
@@ -89,8 +98,16 @@ void ZbSemiconductor::do_init()
     bow.def_uniax_L = options.get_option("uniax_def_pot_L",  bow.def_uniax_L);
 
     bow.Ep = options.get_option("bow_Ep_1", bow.Ep);
+
+    
+
   }
 
+  //----------------------------------------------------------------------------
+  {
+    //here zero temperature and work parameters coinside
+    par_initial = par;
+  }
 
   
 }
@@ -103,6 +120,8 @@ void ZbSemiconductor::read_database( )
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
 
+
+ 
 
   // defaults for GaAs
   par.EgGamma = data("Eg_G", 1.519);
@@ -132,6 +151,25 @@ void ZbSemiconductor::read_database( )
   par.def_uniax_L = data("uniax_def_pot_L", 6.5);
 
   par.Ep = data("Ep", 25.0);
+
+
+  par.varshni_alpha_G = data("varshni_alpha_G", 0.0);
+  par.varshni_alpha_L = data("varshni_alpha_L", 0.0);
+  par.varshni_alpha_X = data("varshni_alpha_X", 0.0);
+
+
+  par.varshni_beta_G = data("varshni_beta_G", 0.0);
+  par.varshni_beta_L = data("varshni_beta_L", 0.0);
+  par.varshni_beta_X = data("varshni_beta_X", 0.0);
+
+
+ 
+  //----------------------------------------------------------------------------
+  {
+    //here zero temperature and work parameters coinside
+    par_initial = par;
+  }
+
   
 }
 //----------------------------------------------//
@@ -144,6 +182,8 @@ void ZbSemiconductor::copy_from (const PhysicalModelInterface *rhs)
   par = mod->par;
 
   bow = mod->bow;
+
+  par_initial = par;
 
 }
 
@@ -188,7 +228,7 @@ void ZbSemiconductor::read_bowing_parameters()
 
 
 //---------------------------------------------//
-void ZbSemiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void ZbSemiconductor::do_calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 
   const ZbSemiconductor* modA = dynamic_cast<const ZbSemiconductor*> (comp_A);
@@ -220,7 +260,7 @@ void ZbSemiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const
   par.def_vol_L   = alloy( modA->par.def_vol_L, modB->par.def_vol_L, xa, bow.def_vol_L);
   par.def_uniax_L = alloy( modA->par.def_uniax_L, modB->par.def_uniax_L , xa, bow.def_uniax_L);
   
-
+  par_initial = par;
 
 }
 
@@ -234,7 +274,7 @@ ZbSemiconductor::ZbSemiconductor( )
 
 //-----------------------------------------------------------//
 
-KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
+KPparams ZbSemiconductor::do_calculate_8x8_kp_params (void )
 {
 
 
@@ -295,7 +335,7 @@ KPparams ZbSemiconductor::calculate_8x8_kp_params (void )
 
 //-----------------------------------------------------------//
  
-KPparams ZbSemiconductor::calculate_6x6_kp_params (void )
+KPparams ZbSemiconductor::do_calculate_6x6_kp_params (void )
 
 {
  
@@ -375,8 +415,59 @@ KPparams ZbSemiconductor::calculate_6x6_kp_params (void )
 }
 
 //=================================================================================//
+void ZbSemiconductor::apply_temperature(void) 
+{
+  par = par_initial;
+
+ 
+
+  if (get_material()->is_alloy())
+  {
+   
+   
+
+    const ZbSemiconductor::ZbDDparameters& parA_zero =  (dynamic_cast<const ZbSemiconductor*> (modelA))->get_initial_parameters();
+
+    const ZbSemiconductor::ZbDDparameters& parB_zero =  (dynamic_cast<const ZbSemiconductor*> (modelB))->get_initial_parameters();
 
 
 
+    double EgGammaA = parA_zero.EgGamma 
+      - parA_zero.varshni_alpha_G * _temperature*_temperature/(_temperature + parA_zero.varshni_beta_G);
+    double EgGammaB = parB_zero.EgGamma 
+      - parB_zero.varshni_alpha_G * _temperature*_temperature/(_temperature + parB_zero.varshni_beta_G);
+
+    par.EgGamma = alloy( EgGammaA, EgGammaB, _xa, bow.EgGamma);
+
+
+    double EgXA = parA_zero.EgX 
+      - parA_zero.varshni_alpha_G * _temperature*_temperature/(_temperature + parA_zero.varshni_beta_G);
+    double EgXB = parB_zero.EgX 
+      - parB_zero.varshni_alpha_G * _temperature*_temperature/(_temperature + parB_zero.varshni_beta_G);
+
+    par.EgX = alloy( EgXA, EgXB, _xa, bow.EgX);
+
+
+
+    double EgLA = parA_zero.EgL 
+      - parA_zero.varshni_alpha_G * _temperature*_temperature/(_temperature + parA_zero.varshni_beta_G);
+    double EgLB = parB_zero.EgL 
+      - parB_zero.varshni_alpha_G * _temperature*_temperature/(_temperature + parB_zero.varshni_beta_G);
+
+    par.EgL = alloy( EgLA, EgLB, _xa, bow.EgL);
+
+
+
+  }
+  else
+  {
+   
+   
+
+    par.EgGamma = par_initial.EgGamma - par.varshni_alpha_G * _temperature*_temperature/(_temperature + par.varshni_beta_G) ;
+    par.EgX = par_initial.EgX - par.varshni_alpha_X * _temperature*_temperature/(_temperature + par.varshni_beta_X) ;
+    par.EgL = par_initial.EgL - par.varshni_alpha_L * _temperature*_temperature/(_temperature + par.varshni_beta_L) ;
+  }
+}
 
 //============================================================================================//

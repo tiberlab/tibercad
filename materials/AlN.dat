@@ -3,19 +3,19 @@
 structure = wz;
 
 # T = 300
-Eg_G = 6.16
+#Eg_G = 6.16
 
 
 # T = 0
-#Eg_G = 6.25;
+Eg_G = 6.25;
 
 
 #E_v = -3.44;
 # from Nextnano
 E_v = -1.526;
 
-varshni_alfa = 1.799e-3
-varshni_beta =  1462
+varshni_alpha_G = 1.799e-3
+varshni_beta_G =  1462
 
 m_c_xx = 0.3;
 m_c_zz = 0.32;

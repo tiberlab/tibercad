@@ -29,6 +29,12 @@ class DDsemiconductor : public PhysicalModelInterface
 
   void set_strain(const Tensor2Sym& strain);
 
+  //!sets temperature for semiconductor object
+  void set_temperature(const double T);
+
+  //! sets temperature for semiconductor object based on coordinate
+  void set_temperature(const Elem* element, const Point& point);
+
 
   //! energy cut-off value
   /*!
@@ -58,10 +64,19 @@ class DDsemiconductor : public PhysicalModelInterface
 
 
   //! calculate information about conduction bands
-  virtual void  calculate_conduction_band_extremum(void) = 0;
+  void  calculate_conduction_band_extremum(void);
 
   //! calculate information about valence bands
-  virtual void  calculate_valence_band_extremum(void) = 0;
+  void  calculate_valence_band_extremum(void);
+
+
+
+  //! calculate information about conduction bands
+  void  calculate_conduction_band_extremum(const Elem* element, const Point& point);
+
+  //! calculate information about valence bands
+  void  calculate_valence_band_extremum(const Elem* element, const Point& point);
+
 
 
   //! calculates dispersion along a line in k-space
@@ -82,6 +97,9 @@ class DDsemiconductor : public PhysicalModelInterface
   
   //! creates new object
   static DDsemiconductor* create(const std::string& name,  const ModelOptions& options);
+
+
+ 
  
 
  private:
@@ -129,6 +147,14 @@ class DDsemiconductor : public PhysicalModelInterface
  
   virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
 
+
+  //! calculate information about conduction bands
+  virtual void  do_calculate_conduction_band_extremum(void) = 0;
+
+  //! calculate information about valence bands
+  virtual void  do_calculate_valence_band_extremum(void) = 0;
+
+
 };
 
 
@@ -140,9 +166,68 @@ inline DDsemiconductor* DDsemiconductor::create(const std::string& name,
   return dynamic_cast<DDsemiconductor*>(
       PhysicalModelInterface::create("DDsemicond_" + name, options));
 }
+
+
+inline 
+void  DDsemiconductor::calculate_conduction_band_extremum(const Elem* element, const Point& point)
+{
+
+
+  semiconductor->set_temperature( element, point);
+
+  calculate_conduction_band_extremum();
+
+}
+
+inline
+void  DDsemiconductor::calculate_valence_band_extremum(const Elem* element, const Point& point)
+{
+
+
+  semiconductor->set_temperature( element, point);
  
 
+  calculate_valence_band_extremum();
 
+}
+
+
+inline void DDsemiconductor::calculate_conduction_band_extremum()
+{
+
+  std::cerr << "DDsemiconductor::calculate_conduction_band_extremum()" << "\n"; 
+
+  do_calculate_conduction_band_extremum();
+}
+
+
+inline void  DDsemiconductor::calculate_valence_band_extremum()
+{
+  do_calculate_valence_band_extremum();
+}
+
+
+inline void DDsemiconductor::set_temperature(const double T)
+{
+  semiconductor->set_temperature(T);
+ 
+}
+
+inline void DDsemiconductor::set_temperature(const Elem* element, const Point& point)
+{
+  semiconductor->set_temperature( element, point);
+}
+
+
+inline const std::vector<DDsemiconductor::band_extremum>& DDsemiconductor::get_conduction_band_energy_mass(void) const
+{
+   return(conduction_band);
+} 
+
+inline  const std::vector<DDsemiconductor::band_extremum>& DDsemiconductor::get_valence_band_energy_mass(void) const
+{
+  return(valence_band);
+}
 
 
 #endif

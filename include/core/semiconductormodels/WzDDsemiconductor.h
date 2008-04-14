@@ -29,17 +29,7 @@ class  WzDDsemiconductor : public DDsemiconductor
   virtual ~WzDDsemiconductor(void) {};
 
  
-  //! calculates information about conduction bands
-  /*!
-    \f$ E_c^{\Gamma} = E_{c0}^{\Gamma} + a_{x}  (\varepsilon_{xx} + \varepsilon_{yy}) + a_z \varepsilon_{zz} \f$
-  */
-  virtual void  calculate_conduction_band_extremum(void);
-
-  //!calculates information about valence bands
-  /*!
-    Uses 6 band Luttinger kp theory 
-  */
-  virtual void  calculate_valence_band_extremum(void);
+  
 
   
 
@@ -56,9 +46,20 @@ class  WzDDsemiconductor : public DDsemiconductor
   
 
  protected:
+
   PhysicalModelInterface* create_new(void) const;
   
+  //! calculates information about conduction bands
+  /*!
+    \f$ E_c^{\Gamma} = E_{c0}^{\Gamma} + a_{x}  (\varepsilon_{xx} + \varepsilon_{yy}) + a_z \varepsilon_{zz} \f$
+  */
+  virtual void  do_calculate_conduction_band_extremum(void);
 
+  //!calculates information about valence bands
+  /*!
+    Uses 6 band Luttinger kp theory 
+  */
+  virtual void  do_calculate_valence_band_extremum(void);
 
 };
 

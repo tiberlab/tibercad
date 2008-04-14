@@ -17,7 +17,7 @@ void SBZbCondBandBulkHamiltonian::do_init()
   
   
 
-  calculate_for_init();
+  if (!(get_material()->is_alloy()))  calculate_for_init();
 
  
 
@@ -27,30 +27,31 @@ void SBZbCondBandBulkHamiltonian::do_init()
 //===========================================================================//
 void SBZbCondBandBulkHamiltonian::calculate_for_init(void)
 {
- ZbSemiconductor::ZbDDparameters& par = (dynamic_cast<ZbSemiconductor*> (semiconductor)) -> get_parameters();
+  const ZbSemiconductor::ZbDDparameters& par = (dynamic_cast<ZbSemiconductor*> (semiconductor)) -> get_parameters();
 
-  zb_par = &par;
+ zb_par = &par;
 
-  const ModelOptions& opt =  get_options ();
 
-  min_name = opt.get_option("minimum_name", "Gamma");
+ const ModelOptions& opt =  get_options ();
+ 
+ min_name = opt.get_option("minimum_name", "Gamma");
   
-  if (min_name == "Gamma")
-    {
-      imass = Tensor2Sym(0);
-      imass(1,1) = 1.0/par.m_G;
-      imass(2,2) = 1.0/par.m_G;
-      imass(3,3) = 1.0/par.m_G;
+ if (min_name == "Gamma")
+ {
+   imass = Tensor2Sym(0);
+   imass(1,1) = 1.0/par.m_G;
+   imass(2,2) = 1.0/par.m_G;
+   imass(3,3) = 1.0/par.m_G;
 
-      edge = ( par.Ev + ((1.0/3.0) * par.delta ) + par.EgGamma)/Hartree;
-
-      kp_bands.resize(1,0);
-
-    }
+   edge = ( par.Ev + ((1.0/3.0) * par.delta ) + par.EgGamma)/Hartree;
+   
+   kp_bands.resize(1,0);
+      
+ }
   
-  calculate_Hamiltonian_gen();
+ calculate_Hamiltonian_gen();
 
-  calculate_Hamiltonian_k_par();
+ calculate_Hamiltonian_k_par();
 
 
 

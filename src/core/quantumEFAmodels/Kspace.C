@@ -84,8 +84,8 @@ void Kspace::build_k_grid()
 				       num_nodes[0], num_nodes[1], num_nodes[2], 
 				       kmin[0], kmax[0], 
 				       kmin[1], kmax[1], 
-				     kmin[2], kmax[2],
-				     type);
+				       kmin[2], kmax[2],
+				       type);
 
 
 
@@ -540,8 +540,8 @@ void Kspace::do_init()
       
       for (short i = 0; i < 3; i++)  vec2_real(i + 1) = k_vector[i]/(Constants::bohr_radius / mesh_units);
 
-      if (! mod_opt.find_option("k3") ) throw  InitFailedException("Kspace: k3 vectror must be defined"); 
-      mod_opt.get_option("k3", k_vector);
+      if (! mod_opt.find_option("r3") ) throw  InitFailedException("Kspace: r3 vectror must be defined"); 
+      mod_opt.get_option("r3", k_vector);
 
       if (k_vector.size() != 3) throw  InitFailedException("Kspace: k3 vectror size must be equal to 3");
       

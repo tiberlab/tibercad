@@ -45,6 +45,7 @@ void DDsemiconductor::do_init ()
   PhysicalModelInterface::destroy(semiconductor);
   
   semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
+
   if (semiconductor == NULL)
   {
     string msg("DDsemiconductor: cannot create model for material with ");
@@ -62,6 +63,8 @@ void DDsemiconductor::do_init ()
   ModelOptions  kp_options; 
   kp_options["model"] = "kp";
   kp_options["kp_model"] = "6x6";
+  
+
 
   bulk_ham = dynamic_cast<KPbulkHamiltonian*>(
       EFAbulkHamiltonian::create(get_material()->get_structure(), kp_options));
@@ -70,6 +73,8 @@ void DDsemiconductor::do_init ()
     throw InitFailedException("DDsemiconductor::do_init ()     bulk_ham == NULL ");
 
   bulk_ham->set_material(get_material());
+
+ 
    
   bulk_ham->init();
   
@@ -90,12 +95,13 @@ void DDsemiconductor::read_database(void)
 //---------------------------------------------------------------------------------------------//
 void DDsemiconductor::copy_from (const PhysicalModelInterface *rhs)
 {
-    const DDsemiconductor* mod = dynamic_cast<const DDsemiconductor*>(rhs);
+  const DDsemiconductor* mod = dynamic_cast<const DDsemiconductor*>(rhs);
   
-    strain = mod->strain;
-    energy_cutoff = mod->energy_cutoff;
+  strain = mod->strain;
+ 
+  energy_cutoff = mod->energy_cutoff;
     
-    k_max = mod->k_max;
+  k_max = mod->k_max;
 
 }
 
@@ -114,6 +120,8 @@ void DDsemiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const
 
   semiconductor -> build_alloy(modA->semiconductor, modB->semiconductor, xa);
   bulk_ham -> build_alloy(modA->bulk_ham, modB->bulk_ham, xa);
+
+
   
 }
 
@@ -143,24 +151,10 @@ void DDsemiconductor::set_strain(const Tensor2Sym& strain_1)
 
 }
 
- 
-
-//---------------------------------------------------------------------------------------------//
-const std::vector<DDsemiconductor::band_extremum>& DDsemiconductor::get_conduction_band_energy_mass(void) const
-{
-
-   return(conduction_band);
-
-} 
-//---------------------------------------------------------------------------------------------//
-const std::vector<DDsemiconductor::band_extremum>& DDsemiconductor::get_valence_band_energy_mass(void) const
-{
-
- 
   
-  return(valence_band);
 
-}
+//---------------------------------------------------------------------------------------------//
+
 
 //---------------------------------------------------------------------------------------------//
 

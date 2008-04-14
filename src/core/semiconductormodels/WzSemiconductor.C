@@ -51,6 +51,12 @@ void WzSemiconductor::do_init()
   
     par.Ep_1 = options.get_option("Ep_1", par.Ep_1);
     par.Ep_2 = options.get_option("Ep_2", par.Ep_2);
+
+    par.varshni_alpha_G = options.get_option("varshni_alpha_G", par.varshni_alpha_G );
+    par.varshni_beta_G = options.get_option("varshni_beta_G",  par.varshni_beta_G);
+   
+
+
   }
 
   {
@@ -84,6 +90,14 @@ void WzSemiconductor::do_init()
     bow.Ep_2 = options.get_option("bow_Ep_2", bow.Ep_2);
   }
  
+
+
+   {
+    //here zero temperature and work parameters coinside
+    par_initial = par;
+   }
+
+
 }
 
 //--------------------------------------------------//
@@ -162,6 +176,16 @@ void WzSemiconductor::read_database( )
   par.Ep_1 = data("Ep_1", 14.0);
   par.Ep_2 = data("Ep_2", 14.0);
 
+  par.varshni_alpha_G = data("varshni_alpha_G", 0.0);
+  par.varshni_beta_G  = data("varshni_beta_G", 0.0);
+
+
+  {
+    //here zero temperature and work parameters coinside
+    par_initial = par;
+  }
+
+ 
 
 }
 
@@ -176,13 +200,17 @@ void WzSemiconductor::copy_from (const PhysicalModelInterface *rhs)
   par = mod->par;
   bow = mod->bow;
 
+  {
+    //here zero temperature and work parameters coinside
+    par_initial = par;
+  }
 
    
 
 }
 
 //--------------------------------------------------------------------//
-void WzSemiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void WzSemiconductor::do_calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
  
 
@@ -220,10 +248,16 @@ void WzSemiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const
   par.Ep_2 = alloy(modA->par.Ep_2, modB->par.Ep_2, xa, bow.Ep_2);
 
 
+  {
+    //here zero temperature and work parameters coinside
+    par_initial = par;
+  }
+
+
 
 }
 //--------------------------------------------------
-KPparams WzSemiconductor::calculate_8x8_kp_params (void )
+KPparams WzSemiconductor::do_calculate_8x8_kp_params (void )
 {
   //we start from 6x6 kp parameters  
   KPparams  result = calculate_6x6_kp_params();
@@ -311,7 +345,7 @@ KPparams WzSemiconductor::calculate_8x8_kp_params (void )
 }
 
 //--------------------------------------------------
-KPparams WzSemiconductor::calculate_6x6_kp_params (void )
+KPparams WzSemiconductor::do_calculate_6x6_kp_params (void )
 
 {
  
@@ -386,4 +420,33 @@ KPparams WzSemiconductor::calculate_6x6_kp_params (void )
 
   return(result);
  
+}
+
+
+//---------------------------
+void WzSemiconductor::apply_temperature(void)
+{
+
+  par = par_initial;
+
+
+  
+  if (get_material()->is_alloy())
+  {
+    const WzSemiconductor::WzDDparameters& parA_zero =  (dynamic_cast<const WzSemiconductor*> (modelA))->get_initial_parameters();
+
+    const WzSemiconductor::WzDDparameters& parB_zero =  (dynamic_cast<const WzSemiconductor*> (modelB))->get_initial_parameters();
+
+     double EgGammaA = parA_zero.EgGamma 
+      - parA_zero.varshni_alpha_G * _temperature*_temperature/(_temperature + parA_zero.varshni_beta_G);
+    double EgGammaB = parB_zero.EgGamma 
+      - parB_zero.varshni_alpha_G * _temperature*_temperature/(_temperature + parB_zero.varshni_beta_G);
+
+    par.EgGamma = alloy( EgGammaA, EgGammaB, _xa, bow.EgGamma);
+
+  }
+  else
+  {
+    par.EgGamma = par_initial.EgGamma - par.varshni_alpha_G * _temperature*_temperature/(_temperature + par.varshni_beta_G) ;
+  }
 }

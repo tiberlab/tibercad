@@ -10,7 +10,7 @@ using namespace std;
 
 
 //-------------------------------------------------------------/
-void WzDDsemiconductor::calculate_conduction_band_extremum(void)
+void WzDDsemiconductor::do_calculate_conduction_band_extremum(void)
 {
   vector<DDsemiconductor::band_extremum> result;
  
@@ -51,7 +51,7 @@ void WzDDsemiconductor::calculate_conduction_band_extremum(void)
 }
 //----------------------------------------------------/
 
-void  WzDDsemiconductor::calculate_valence_band_extremum(void)
+void  WzDDsemiconductor::do_calculate_valence_band_extremum(void)
 {
   vector<DDsemiconductor::band_extremum>   result;
 
