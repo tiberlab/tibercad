@@ -6,16 +6,22 @@ Eg_G = 3.385
 Eg_L = 1.635
 
 # T=0 K
-#Eg_X = 1.165
+Eg_X = 1.165
 
 
 # T=300 K
-Eg_X = 1.12
+#Eg_X = 1.12
 E_v = 1.09
 
-varshni_alfa = 0.7e-3
-varshni_beta = 1108
-# pss 41, 994  (1999)
+varshni_alpha_G = 0.5367e-3
+varshni_beta_G =  745.8
+
+varshni_alpha_X = 0.5367e-3
+varshni_beta_X =  745.8
+
+varshni_alpha_L = 0.5367e-3
+varshni_beta_L = 745.8
+
 
 
 delta = 0.044
