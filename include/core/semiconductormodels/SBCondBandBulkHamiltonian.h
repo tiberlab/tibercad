@@ -78,6 +78,8 @@ inline void SBCondBandBulkHamiltonian::do_init()
 
   semiconductor = Semiconductor::create( get_material() -> get_structure(), opt);
 
+  semiconductor->set_material(get_material());
+
   semiconductor->init();
   
 }
