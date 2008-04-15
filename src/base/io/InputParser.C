@@ -72,7 +72,17 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
   }
   in_stream >>  label;
 
-  // cerr <<  " BEFORE cut_off_comment(label)  "  <<  label <<  endl;
+
+  //  it can be a comment  ! 
+  //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+  while (skip_comments(in_stream,label) == true )
+  {
+    in_stream >> label; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+  } 
+
+
+
+ 
   cut_off_comment(label, in_stream); //  erase comment in  case label#my_comment....
   //  cerr <<  " cut_off_comment(label)  "  <<  label <<  endl;
 
@@ -141,17 +151,26 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
 
     }  // end if 
 
-
     else   skip_block(in_stream);  //  if the label != keyword, skip the  whole  block 
-    // in {} (to avoid confusion with labels)
+                                   //  in {} (to avoid confusion with labels)
 
 
 
     in_stream >>  label;
     // cerr <<  " BEFORE cut_off_comment(label)  "  <<  label <<  endl;
 
+    //  it can be a comment  ! 
+    //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+    while (skip_comments(in_stream,label) == true )
+    {
+      in_stream >> label; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+
+
     cut_off_comment(label, in_stream); //  erase comment in  case label#my_comment....
     // cerr <<  " AFTER cut_off_comment(label)  "  <<  label <<  endl;
+
+    // -> next  check on  label 
 
   }   //  end  while
 
