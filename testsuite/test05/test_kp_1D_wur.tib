@@ -316,6 +316,10 @@ $Solver
 $Physics
 {
 
+  driftdiffusion
+  {
+    strain_simulation = macrostrain
+  }
  
   quantum_el 
   {

@@ -302,6 +302,7 @@ $Physics
   {
     electron_quantum_density = dens_el
     statistics = FD
+    strain_simulation = str
   }
 
   quantum_el 
