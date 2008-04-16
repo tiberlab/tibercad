@@ -51,16 +51,10 @@ $Models
         BC_Region reservoir
    	{
          type = heat_reservoir
-         BC_reg_numb = 1
+         BC_reg_numb = (1,2)
          temperature = 300
    	}
        
-        BC_Region reservoir
-   	{
-	 type = heat_reservoir
-         BC_reg_numb = 2
-         temperature = 300
-	}
      }
      		    
   }
@@ -150,10 +144,9 @@ $Solver
     simulation = selfconsistent
     variable = Vb
     start = 0
-    stop = 1.5
-    steps = 15
+    stop = 1.2
+    steps = 12
     max_step = 1
-    #plotvariable = current
   }
 
 }
@@ -183,9 +176,9 @@ $Simulation
   dimension = 1
   temperature = 300
   solve = sweep
-  resultpath = output
+  resultpath = reference
   output_format = grace
-  plot = (ContactCurrents,HeatSource,T,PowerFlux,Pn,Pp)
+  plot = (ContactCurrents,Pn,Pp,thermal)
 
     
  

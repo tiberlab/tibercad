@@ -216,7 +216,6 @@ HeatModel::add_heat_source_model(const std::string& model_name,
   model->init();
 
 
-
 }
 
 void
@@ -252,7 +251,7 @@ HeatModel::get_total_heat_source(std::vector<Point> h_point,
 		  std::vector<double>& total_heat_source)
 {
 
-  unsigned int np = h_point.size();
+  ID np = h_point.size();
 
   total_heat_source.clear();
   total_heat_source.resize(np);
@@ -260,18 +259,20 @@ HeatModel::get_total_heat_source(std::vector<Point> h_point,
   outer_source_iterator it_outer = _heat_source_models.begin();
   outer_source_iterator end_outer = _heat_source_models.end();
   
+  std::set<ID> TotalSet;
+  TotalSet.insert(100);
+
   for ( ; it_outer != end_outer; ++it_outer)
   {
 
-    std::vector<std::vector<double> >  partial_heat_source;
-    
-    (it_outer->second)->get_heat_sources(h_point,partial_heat_source);
+    //std::vector<std::vector<double> >  partial_heat_source;
 
-    unsigned int ns_tot = partial_heat_source[0].size();
-    
-    for (unsigned int n = 0;  n < np; ++n)
-      for (unsigned int ns = 0; ns < ns_tot ; ++ns)
-     	total_heat_source[n] += partial_heat_source[n][ns_tot];
+    std::vector<std::map<ID,double> >  partial_heat_source;
+
+    (it_outer->second)->get_heat_sources(h_point,TotalSet,partial_heat_source);
+
+    for (ID n = 0;  n < np; ++n)
+      total_heat_source[n] = partial_heat_source[n].begin()->second;
 
 
   }
@@ -291,22 +292,22 @@ HeatModel::get_total_power_flux(std::vector<Point> h_point,
  
   outer_source_iterator it_outer = _heat_source_models.begin();
   outer_source_iterator end_outer = _heat_source_models.end();
+
+  std::set<ID> TotalSet;
+  TotalSet.insert(100);
   
-  for ( ; it_outer != end_outer; ++it_outer)
+  for ( ; it_outer != end_outer; it_outer++)
   {
 
-    std::vector<std::vector<RealGradient> >  partial_power_fluxes;
+    std::vector<std::map<ID,RealGradient> >  partial_power_fluxes;
     
-    (it_outer->second)->get_power_fluxes(h_point,partial_power_fluxes);
+    (it_outer->second)->get_power_fluxes(h_point,TotalSet,partial_power_fluxes);
 
-    unsigned int nf_tot =partial_power_fluxes[0].size();
-    
-    for (unsigned int n = 0;  n < np; ++n)
-      for (unsigned int kd =0; kd<3; ++kd)
-	for (unsigned int ns = 0; ns < nf_tot ; ++ns)
-	  total_power_flux[n](kd) +=  partial_power_fluxes[n][ns](kd);
-    
-  }
+    for (ID n = 0;  n < np; ++n)
+      total_power_flux[n] = (partial_power_fluxes[n].begin()->second);
+      
+   }
+ 
 }
 
 

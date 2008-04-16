@@ -758,6 +758,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
     return;
 
   const set<string>::const_iterator varend(variables.end());
+
   
   vector<ID> ids;
   unsigned int nm; 
@@ -770,16 +771,16 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
   const unsigned int dim = mesh->mesh_dimension();
   legend.resize(variables.size());
 
-  int HS = -1;
-  if (variables.find("HeatSource") != varend)
-  {
+ 
+  //if (variables.find("HeatSource") != varend)
+  //{
     const Device& device = *(_device);
 
-    HS = n_vars;
+    //  HS = n_vars;
 
     std::map<ID, std::map<ID,std::string> > heat_source_ids;
     
-    MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
+    MeshBase::const_element_iterator it_temp =    mesh->active_local_elements_begin();
 
     MeshBase::const_element_iterator it_end =    mesh->active_local_elements_end(); 
 
@@ -787,7 +788,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
     
     HeatModel* heat_model = NULL;
     
-    const Elem* elem = *it;
+    const Elem* elem = *it_temp;
     
     ID subdomain = elem->subdomain_id();
     
@@ -795,179 +796,142 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 					 device.get_material(subdomain)->get_model(get_id()));
     
     nm = heat_model->get_heat_source_IDs(ids);
-    
-  
+ 
+    std::vector<std::set<ID> > source_index(nm); 
+ 
     for (int i = 0; i < nm; i++)
-    {
-         
-      std::vector<std::string> source_legend  =
- 	heat_model->get_heat_source_model(ids[i])->get_source_legend(variables); 
+    {	  
       
-      unsigned int legsize = source_legend.size();
+      std::map<ID,std::string> source_legend =  
+	heat_model->get_heat_source_model(ids[i])->get_source_legend(variables);
+ 
+      std::map<ID,std::string>::iterator leg(source_legend.begin());
+      std::map<ID,std::string>::iterator leg_end(source_legend.end());
 
-      legend.resize(legend.size() + legsize);
-
-      for (unsigned int n = 0;  n < legsize; ++n )
+      for (;leg != leg_end; leg++)
       {
-        
-	legend[n_vars]=source_legend[n];
-        
-	n_vars++;
-	 
-      }
 
-      if (source_legend.size()>1)
-      {
 	legend.resize(legend.size() + 1);
-	legend[n_vars]= heat_model->get_heat_source_model(ids[i])->get_name() + "TotalHeat";
-	n_vars++;
-      }
-        
+	legend[n_vars]=leg->second;
+	source_index[i].insert(leg->first);
+        n_vars++;
+      }    
     }
-    if (nm>1)
+
+    if (variables.count("TotalHeat")  ||
+	variables.count("HeatSource") ||
+	variables.count("thermal"))
     {
       legend.resize(legend.size() + 1);
-      legend[n_vars]= "TotalHeat";
+      legend[n_vars]="TotalHeat";
       n_vars++;
     }
 
-
-  }
-
-  int PF = -1;
-  if (variables.find("PowerFlux") != varend)
-  {
+    int HS = -1;
+    if (n_vars>0)
+      HS=0;
+    
+    ID PF_temp = n_vars;
 
      unsigned int k = 0;
 
-     PF = n_vars;
-   
-     W.push_back(n_vars);
-
-     legend.resize(legend.size() + dim);
-
-     switch (dim)
+     if (variables.count("thermal") ||
+         variables.count("ThermalFlux")      ||
+         variables.count("PowerFlux") )
      {
-     case 3:
-       legend[W[k] + 2] = heat_legend + "_z";
-       n_vars++;
-     case 2:
-       legend[W[k] + 1] =  heat_legend + "_y";
-       n_vars++;
-       legend[W[k] + dim] = "mod" + heat_legend ;
-       n_vars++;
-     default:
-       legend[W[k] ] = heat_legend + "_x";
-       n_vars++;
-     }
-     ++k;
-     //Other power fluxes
-
-    const Device& device = *(_device);
-    
-    std::map<ID, std::map<ID,std::string> > heat_source_ids;
-    
-    MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
-    
-    MeshBase::const_element_iterator it_end =    mesh->active_local_elements_end(); 
-    
-    // assert(it_end != mesh->active_local_elements_end());
-    
-    HeatModel* heat_model = NULL;
-    
-    const Elem* elem = *it;
-    
-   
-    ID subdomain = elem->subdomain_id();
-    
-    const Material* mat = _device->get_material(subdomain);
-    
-    heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  ); 
-
-    nm = heat_model->get_heat_source_IDs(ids);
-
-
-    for (int i = 0; i < nm; i++)
-    {
-      std::vector<std::string> flux_legend  =
-	heat_model->get_heat_source_model(ids[i])->get_flux_legend(); 
      
-      for (unsigned int n = 0;  n < flux_legend.size(); ++n )
-      {
-
-	W.push_back(n_vars);
-        legend.resize(legend.size() + dim);
-
-	switch (dim)
-	{
-	case 3:
-	  legend[W[k] + 2] = flux_legend[n] + "_z";
-	  n_vars++;
-	case 2:
-	  legend[W[k] + 1] =  flux_legend[n] + "_y";
-	  n_vars++;
-	  legend[W[k] + dim] = "mod" + flux_legend[n] ;
-	  n_vars++;
-	default:
-	  legend[W[k] ] = flux_legend[n] + "_x";
-	  n_vars++;
-	}
-	++k;
-	
-      }
-      //Include Total Power Flux for a model
-      if (flux_legend.size()>1)
-      {
-	std::string name = heat_model->get_heat_source_model(ids[i])->get_name(); 
-	W.push_back(n_vars);
-        legend.resize(legend.size() + dim);
-
-	switch (dim)
-	{
-	case 3:
-	  legend[W[k] + 2] = name + "W" + "_z";
-	  n_vars++;
-	case 2:
-	  legend[W[k] + 1] =  name + "W" + "_y";
-	  n_vars++;
-	  legend[W[k] + dim] = "mod" + name + "W" ;
-	  n_vars++;
-	default:
-	  legend[W[k] ] =  name + "W" + "_x";
-	  n_vars++;
-	}
-	++k;
-	
-      }
-
-    }//loop ever the models
-   
-    if ( nm > 0)
-    {
-      W.push_back(n_vars);
-      legend.resize(legend.size() + dim);
+       W.push_back(n_vars);
+      
+       legend.resize(legend.size() + dim);
       
       switch (dim)
       {
       case 3:
-	legend[W[k] + 2] =  "W_z";
+	legend[W[k] + 2] = heat_legend + "_z";
 	n_vars++;
       case 2:
-	legend[W[k] + 1] =  "W_y";
+	legend[W[k] + 1] =  heat_legend + "_y";
 	n_vars++;
-	legend[W[k] + dim] = "modW";
+	legend[W[k] + dim] = "mod" + heat_legend ;
 	n_vars++;
       default:
-	legend[W[k] ] = "W_x";
+	legend[W[k] ] = heat_legend + "_x";
 	n_vars++;
       }
+      ++k;
     }
-  }
 
+   
+    //Other fluxes
+     std::vector<std::set<ID> > flux_index(nm);
+     for (int i = 0; i < nm; i++)
+     {
+       std::map<ID,std::string> flux_legend  =
+	 heat_model->get_heat_source_model(ids[i])->get_flux_legend(variables); 
+
+       std::map<ID,std::string>::iterator leg(flux_legend.begin());
+       std::map<ID,std::string>::iterator leg_end(flux_legend.end());
+       
+       for (; leg != leg_end; leg++)
+       {
+	 W.push_back(n_vars);
+	 legend.resize(legend.size() + dim);
+	 
+         flux_index[i].insert(leg->first);
+	 std::string label = leg->second;
+	 
+	 switch (dim)
+	 {
+	 case 3:
+	   legend[W[k] + 2] = label + "_z";
+	   n_vars++;
+	 case 2:
+	   legend[W[k] + 1] =  label + "_y";
+	   n_vars++;
+	   legend[W[k] + dim] = "mod" + label;
+	   n_vars++;
+	 default:
+	   legend[W[k] ] = label + "_x";
+	   n_vars++;
+	 }
+	 ++k;
+       } 
+     }
+     
+     if (variables.count("thermal") ||
+	 variables.count("PowerFlux")      ||
+	 variables.count("TotalFlux") )
+     {
+       
+       W.push_back(n_vars);
+       legend.resize(legend.size() + dim);
+       
+       switch (dim)
+       {
+       case 3:
+	 legend[W[k] + 2] = "W_z";
+	 n_vars++;
+       case 2:
+	 legend[W[k] + 1] = "W_y";
+	 n_vars++;
+	 legend[W[k] + dim] ="modW";
+	 n_vars++;
+       default:
+	 legend[W[k] ] ="W_x";
+	 n_vars++;
+       }
+       ++k;
+       
+     }
+    
+  
+     int PF = -1;  
+     if (n_vars>PF_temp)    
+       PF = PF_temp;
+      
 
   legend.resize(n_vars);
-
-    
+  
   results.resize(nn * n_vars,0.0);
 
   LinearImplicitSystem& system = *my_system;
@@ -1023,67 +987,46 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
     heat_model->re_init();
 
-
-    
     if (HS != -1)
     {
-            
-  
-  
-      std::vector<double> total_heat_source(nm);
-
-      total_heat_source.clear();
-
-      total_heat_source.resize(nm);
-	
+      
       unsigned int k = 0;
-      double total_heat = 0.0;
 
       for (int i = 0; i < nm; i++)
       {
-	  
-	std::vector<std::vector<double> > heat_source;
-       
-  
-	heat_model->get_heat_source_model(ids[i])->get_heat_sources(_node,heat_source);
-        
-        double total_model_source = 0.0;       
-	for (unsigned int n_s = 0 ; n_s<heat_source[0].size() ; ++n_s)
-	{ 
-	  
-          results[id + HS + k] = heat_source[0][n_s];
-	  
-	  total_model_source += heat_source[0][n_s]; 
-      
-          ++k;
-	  
-	}
+        std::vector<std::map<ID, double> > heat_sources;  
+	
+        heat_model->get_heat_source_model(ids[i])->get_heat_sources(_node,source_index[i],heat_sources);
 
-        //Include Total Heat source for a model
-        if (heat_source[0].size() > 1)
-    	{  
-	  results[id + HS + k] = total_model_source;
-          ++k;
+	std::map<ID,double>::iterator  it_s(heat_sources[0].begin());
+	std::map<ID,double>::iterator  it_end(heat_sources[0].end());
+
+
+	for (;it_s != it_end; it_s++)         
+        {
+          results[id + HS + k] = it_s->second;
+          ++k; 
 	}
-        total_heat += total_model_source;
 
       }
-      //Include Total Heat source 
-      if (nm > 1)
-	results[id + HS + k] = total_heat;
-      
+
+      //  //Include Total Heat source 
+      if (variables.count("TotalHeat")  ||
+	  variables.count("HeatSource") ||
+	  variables.count("thermal"))
+      {
+        std::vector< double > total_heat_source; 
+
+	heat_model->get_total_heat_source(_node,total_heat_source);
+	results[id + HS + k] =  total_heat_source[0];
+
+      }
 	
     } //if (HS != -1)
 
     
     if (PF != -1)
     {
-  
-      
-
-      double Px_tot = 0.0;
-      double Py_tot = 0.0;
-      double Pz_tot = 0.0;
      
       std::vector< std::map< ID, double > > jq_solution;
 
@@ -1093,55 +1036,42 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
       //Thermal flux
       unsigned int k = 0;  
 
-      double Px = jq_solution[0].find(JQX)->second;
-      double Py = jq_solution[0].find(JQY)->second;
-      double Pz = jq_solution[0].find(JQZ)->second;
-      
-      Px_tot += Px;
-      Py_tot += Py; 
-      Pz_tot += Pz;
-
-      // std::cout<<"Pq"<<Px<<std::endl;
+      double Pqx = jq_solution[0].find(JQX)->second;
+      double Pqy = jq_solution[0].find(JQY)->second;
+      double Pqz = jq_solution[0].find(JQZ)->second;
+   
 
       switch (dim)
       {
       case 3:
-	results[id + W[k] + 2] = Pz;
+	results[id + W[k] + 2] = Pqz;
       case 2:
-	results[id + W[k] + 1] = Py;
-	results[id + W[k] + dim] = sqrt(Px * Px + Py * Py + Pz * Pz);
+	results[id + W[k] + 1] = Pqy;
+	results[id + W[k] + dim] = sqrt(Pqx * Pqx + Pqy * Pqy + Pqz * Pqz);
       default:
-	results[id + W[k] ] = Px;
+	results[id + W[k] ] = Pqx;
       }
 
       ++k;
       
 
       //Other power flux
-      std::vector<std::vector<RealGradient> > power_flux;
-      
-      power_flux.clear();
+      std::vector<std::map<ID,RealGradient> > power_flux;
       
       for (int i = 0; i < nm; i++)
       {
-	
-	heat_model->get_heat_source_model(ids[i])->get_power_fluxes(_node,power_flux);
+	heat_model->get_heat_source_model(ids[i])->get_power_fluxes(_node,flux_index[i],power_flux);
 
-	double Px_model = 0.0;	
-	double Py_model = 0.0;
-	double Pz_model = 0.0;
 
-	for (unsigned int n_p = 0 ; n_p<power_flux[0].size() ; ++n_p)
-	{   
-        
+       	std::map<ID,RealGradient>::iterator  it_s(power_flux[0].begin());
+	std::map<ID,RealGradient>::iterator  it_end(power_flux[0].end());
+ 
+	for (;it_s != it_end; it_s++)         
+        {
 
-	  double Px = power_flux[0][n_p](0);
-	  double Py = power_flux[0][n_p](1);
-	  double Pz = power_flux[0][n_p](2);
-
-          Px_model += Px; 
-	  Py_model += Py; 
-	  Pz_model += Pz; 
+          double Px = (it_s->second) (0);
+	  double Py = (it_s->second) (1);
+	  double Pz = (it_s->second) (2);
 
 	  switch (dim)
 	  {
@@ -1155,38 +1085,27 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 	  }
           ++k;
 
-	}//loop over submodels
-  
-        //Write data for a given model
-	if (power_flux[0].size()>1)
-	{
-	  switch (dim)
-	  {
-	  case 3:
-	    results[id + W[k] + 2] = Pz_model;
-	  case 2:
-	    results[id + W[k] + 1] = Py_model;
-	    results[id + W[k] + dim] = sqrt(Px_model * Px_model + Py_model * Py_model + Pz_model * Pz_model);
-	  default:
-	    results[id + W[k] ] = Px_model;
-	  }
-          ++k;
 	}
-
-	Px_tot += Px_model;
-	Py_tot += Py_model;
-	Pz_tot += Pz_model;
-		
-      }//loop over models
-        
-
-      if (nm>0)
-      {
        
-	switch (dim)
-	{
-	case 3:
-	  results[id + W[k] + 2] = Pz_tot;
+      }//loop over models
+
+      if (variables.count("TotalFlux")  ||
+	  variables.count("thermal")    ||
+	  variables.count("PowerFlux") )
+      {
+	
+	std::vector<RealGradient > total_power_flux; 
+
+	heat_model->get_total_power_flux(_node,total_power_flux);
+
+	double Px_tot = total_power_flux[0](0) + Pqx; 
+	double Py_tot = total_power_flux[0](1) + Pqy; 
+	double Pz_tot = total_power_flux[0](2) + Pqz; 
+
+ 	switch (dim)
+ 	{
+ 	case 3:
+ 	  results[id + W[k] + 2] = Pz_tot;
 	case 2:
 	  results[id + W[k] + 1] = Py_tot;
 	  results[id + W[k] + dim] = sqrt(Px_tot * Px_tot + Py_tot * Py_tot + Pz_tot * Pz_tot);
@@ -1194,14 +1113,12 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 	  results[id + W[k] ] = Px_tot;
 	}
 	
-      }// if (nm>0)
-
+      }
 
     }
 
-
     elem_number++;
-  } //over elements
+  } //over element
 
   results.resize(elem_number * n_vars);
 }
@@ -1215,66 +1132,62 @@ void MacroHeatBalance::build_nodal_results (const std::set< std::string > &varia
 				     std::vector< double > &results, 
 				     std::vector< std::string > &legend)
 {
-
-;
-
-  const set<string>::const_iterator varend(variables.end());
   
 
   legend.resize(0); 
   unsigned int n_vars = 0;
-
+  
   int Temp = -1;
-  if (variables.find("T") != varend)
+  if (variables.count("LatticeTemp") ||
+      variables.count("thermal")   )
   {
     Temp = n_vars; 
-    legend.push_back("Temperature[K]");
+    legend.push_back("LatticeTemp");
     n_vars++;
-  }
-
-  const unsigned int nn  = mesh->n_nodes();
-  
-  results.resize(nn * n_vars,0.0);
-  
-  std::vector<unsigned int> dof_indices;
-  DofMap& dof_map = my_system->get_dof_map();
-  
-  MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end =     mesh->active_local_elements_end();
-  
- 
-  for ( ; it != end; ++it)
-  { 
-    const Elem* elem = *it;
     
-    dof_map.dof_indices (elem, dof_indices); 
-     
-    for (unsigned int n = 0; n < elem->n_nodes(); n++)
-    {
+    
+    const unsigned int nn  = mesh->n_nodes();
+    
+    results.resize(nn * n_vars,0.0);
+    
+    std::vector<unsigned int> dof_indices;
+    DofMap& dof_map = my_system->get_dof_map();
+    
+    MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
+    const MeshBase::const_element_iterator end =     mesh->active_local_elements_end();
+    
+    
+    for ( ; it != end; ++it)
+    { 
+      const Elem* elem = *it;
       
-      unsigned int id =  (elem->node(n) * n_vars) ;
+      dof_map.dof_indices (elem, dof_indices); 
       
-      if (Temp != -1)
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
 	
-	results[id+Temp]  =  (*(my_system->solution))(dof_indices[n]);       
-
-      }
+	unsigned int id =  (elem->node(n) * n_vars) ;
+	
+	if (Temp != -1)
+	{
+	  
+	  results[id+Temp]  =  (*(my_system->solution))(dof_indices[n]);       
+	}
+	
+      }  
       
-    }  
-     
+    }
   }
 }
-
 void
 MacroHeatBalance::build_integrated_quantities_description(
     const std::set<std::string>& names,
     std::vector<std::string>& legend,
     std::vector<std::string>& description)
 {
-  const set<string>::const_iterator varend(names.end());
 
-  if (names.find("PowerDissipated") != varend)
+
+  if (names.count("PowerDissipated"))
   {
     legend.resize(1);
 
@@ -1303,9 +1216,9 @@ void
 MacroHeatBalance::build_integrated_quantities(const set<string>& names,
     vector<double>& values)
 {
-  const set<string>::const_iterator varend(names.end());
 
-  if (names.find("PowerDissipated") != varend)
+
+  if (names.count("PowerDissipated"))
   {
     
     calculate_power_surfint();
@@ -1338,16 +1251,17 @@ MacroHeatBalance::calculate_power_surfint(void)
   FEType fe_type = dof_map.variable_type(var);
  
   AutoPtr<FEBase> fe_face (build_finite_element(dim, fe_type)); 
+ 
+  libMeshEnums::Order integration_order;
 
-  // libMeshEnums::Order integration_order;
   //if (dim == 1)
-  //  integration_order = libMeshEnums::CONSTANT;
+  //integration_order = libMeshEnums::CONSTANT;
   //else
   //  integration_order = _options.integration_order;
   
   //QGauss qface(dim - 1,integration_order);
 
-  QGauss qface(dim - 1,FIFTH);
+  QGauss qface(dim - 1, FIFTH);
 
   fe_face->attach_quadrature_rule(&qface);
 
@@ -1405,67 +1319,29 @@ MacroHeatBalance::calculate_power_surfint(void)
 	
 	heat_model->re_init();
 
-
-	//init_heat_model(elem);
+	fe_face->reinit(elem, s);
 	
-	//	assert(_heat_model != NULL);
+	std::vector< std::map< ID, double > > jq_solution;
+	
+	get_solution(elem,q_point,JQ_var,jq_solution); 
+	
+	int phi_size = phi.size();
+	
+	RealGradient P;
+	
+	for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+	{
+	  
+	  P(0) = jq_solution[qp].find(JQX)->second;
+	  P(1) = jq_solution[qp].find(JQY)->second;
+	  P(2) = jq_solution[qp].find(JQZ)->second;
 
-	// only for dim > 1 we need to integrate
-        if (dim > 1)
-        {
-	  fe_face->reinit(elem, s);
-
-	  std::vector< std::map< ID, double > > jq_solution;
-
-	  get_solution(elem,q_point,JQ_var,jq_solution); 
-     
-          int phi_size = phi.size();
-    
-      	  RealGradient P;
-
-          for (unsigned int qp = 0; qp < qface.n_points(); qp++)
-          {
-     
-	    P(0) = jq_solution[qp].find(JQX)->second;
-	    P(1) = jq_solution[qp].find(JQY)->second;
-	    P(2) = jq_solution[qp].find(JQZ)->second;
-           
-	    _power += JxW[qp] * P * face_normals[qp]; 
-              
-          } 
-
-        }
-        else
-        {
-
-          vector<Point> v(1, elem->point(s));
-          fe_face->reinit(elem, &v);
-
-    	  std::vector< std::map< ID, double > > jq_solution;
-
-	  get_solution(elem,v,JQ_var,jq_solution); 
+	  _power += JxW[qp] * P * face_normals[qp]; 
           
-	  double P = jq_solution[0].find(JQX)->second;
-
-          // what is the outer normal in this point??
-          // Idea: if x(s) > x(centroid), normal is +1
-          //       else it is -1
-          double x_c = elem->centroid()(0);
-          double x_s = elem->point(s)(0);
-          if (x_s < x_c)
-          {
-            P = - P;
-          }
-	  // std::cout<<P<<std::endl;
-          _power += P;
-
-        }
+	} 
       }
     } // end loop over elem sides
   } // end loop over elements
-
- 
-
 }
 
 

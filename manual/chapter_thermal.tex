@@ -9,7 +9,7 @@ The steady state heat equation with the continuity equation reads as
 \end{equation}
 
 where $T$ is the temperature, $\kappa$ is the thermal conductivity tensor and $H_S$ is the total heat source.
-The latter term is the sum of the heat sources specified by the submodels described below.
+The latter term is the sum of the heat sources specified by the submodels described below. The term between the brackets represents the thermal flux $\mathbf{J_q}$.
 
 \section{Physical model}
 
@@ -41,21 +41,22 @@ model thermal
 Electron and hole dissipations give the following heat source
 
 
+
 \begin{equation}\label{Hs}
-H_{S} =-\nabla \cdot \left((P_n T + \phi_n)\mathbf{J_n} + (P_p T + \phi_p)\mathbf{J_p}\right) 
+H_{S} =-\nabla \cdot \left[(P_n T + \phi_n)\mathbf{J_n} + (P_p T + \phi_p)\mathbf{J_p}\right] 
 \end{equation}
 
 where $P_n$ and $P_p$ are the thermoelectric power of electrons and holes, respectively. $\phi_n$ and $\phi_p$ are the electro-chemical potentials.
 
-The equation \ref{Hs} represents several heat source contributes. Their estimates are reported in table \ref{table:heat_sources}.  
+The equation \ref{Hs} represents severals heat source contributions. Their estimates are reported in table \ref{table:heat_sources}. 
 
 \begin{table}[htb]
 \center
 \begin{tabular}{l||l}
 \textit{Expression} & \textit{Heat source}\\
 \hline\hline
-$\frac{\left| \mathbf{J_n} \right| ^2}{\sigma_n}$ & \textit{Electron Joule's effect}\\
-$\frac{|\mathbf{J_p}|^2}{\sigma_p}$ & \textit{Hole Joule's effect}\\
+$\frac{\left| \mathbf{J_n} \right| ^2}{\sigma_n}$ & \textit{Electron Joule effect}\\
+$\frac{|\mathbf{J_p}|^2}{\sigma_p}$ & \textit{Hole Joule effect}\\
 $qR_{SRH}\left(\phi_p - \phi_n + T \left( P_p - P_n \right) \right)$ & \textit{Recombination effect}\\
 $ -T \mathbf{J_n} \cdot \nabla P_n $ & \textit{Electron Peltier-Thomson effect}\\
 $ -T \mathbf{J_p} \cdot \nabla P_p $ & \textit{Hole Peltier-Thomson effect}
@@ -193,7 +194,7 @@ Ideal conducting interface & \texttt{heat\_reservoir} & \texttt{temperature} & $
 Resistive interface &\texttt{thermal\_surface\_resistance } & \texttt{temperature} & $K$ \\
  & & \texttt{r\_surf} & $cm^2 K W^{-1}$\\
 Resistive interface &\texttt{thermal\_surface\_conductance} & \texttt{temperature}\\
- & & \texttt{g\_surf} & $cm^{-2} K^{-1} W$\\
+ & & \texttt{g\_surf} & $W K^{-1}cm^{-2} $\\
 Power density condition& \texttt{thermal\_flux} & \texttt{power\_density} & $Wcm^{-2}$
 \end{tabular}
 \caption{Thermal boundary conditions}
@@ -203,27 +204,30 @@ Power density condition& \texttt{thermal\_flux} & \texttt{power\_density} & $Wcm
 
 
 
-
 \section{Output data}
  
+<<<<<<< .mine
+=======
 In the plot section the keyword \texttt{T} refers to the temperature output.
 The keyword \textit{HeatSource} allows to plot all heat sources considered in the simulation.
+>>>>>>> .r875
+
+The variable labels are listed in the tables~\ref{table:tt_scalar_elemental}-\ref{table:tt_vector_elemental}.
 
 
-\begin{verbatim}
-plot = (......,T,HeatSource,PowerFlux,PowerDissipated...)
-\end{verbatim}
-
+<<<<<<< .mine
+=======
 
 See tables~\ref{table:tt_nodal}-\ref{table:tt_scalar_integrated}.
 
 
+>>>>>>> .r875
 \begin{table}[htb]
 \center
 \begin{tabular}{l|l|l}
 \multicolumn{3}{c}{\textbf{Nodal scalar quantities}} \\
 \hline 
-\texttt{Temperature} & Temperature & K \\
+\texttt{LatticeTemp} & Temperature & K \\
 \end{tabular}
 \caption{Nodal quantities}
 \label{table:tt_nodal}
@@ -235,11 +239,12 @@ See tables~\ref{table:tt_nodal}-\ref{table:tt_scalar_integrated}.
 \begin{tabular}{l|l|l}
 \multicolumn{3}{c}{\textbf{Elemental scalar quantities}} \\
 \hline 
-\texttt{eJoule}  & Electron Joule effect            & $Wcm^{-3}$ \\
-\texttt{hJoule}  & Hole Joule effect                & $Wcm^{-3}$ \\
-\texttt{RecHeat} & Recombination heat               & $Wcm^{-3}$ \\
-\texttt{ePelTh}  & Electron Peltier-Thomson effect  & $Wcm^{-3}$ \\
-\texttt{hPelTh}  & Hole Peltier-Thomson effect      & $Wcm^{-3}$ \\
+\texttt{eJoule}     & Electron Joule effect               & $Wcm^{-3}$ \\
+\texttt{hJoule}     & Hole Joule effect                   & $Wcm^{-3}$ \\
+\texttt{RecHeat}    & Recombination heat                  & $Wcm^{-3}$ \\
+\texttt{ePelTh}     & Electron Peltier-Thomson effect     & $Wcm^{-3}$ \\
+\texttt{hPelTh}     & Hole Peltier-Thomson effect         & $Wcm^{-3}$ \\
+\texttt{TotalHeat}  &TotalHeat                            & $Wcm^{-3}$ \\
 \end{tabular}
 \caption{Elemental scalar quantities}
 \label{table:tt_scalar_elemental}
@@ -253,7 +258,6 @@ See tables~\ref{table:tt_nodal}-\ref{table:tt_scalar_integrated}.
 \texttt{Wq}      & Thermal flux                     & $Wcm^{-2}$ \\
 \texttt{Wn}      & Electron power flux              & $Wcm^{-2}$ \\
 \texttt{Wp}      & Hole power flux                  & $Wcm^{-2}$ \\
-\texttt{DDW}     & Electron and hole power flux     & $Wcm^{-2}$ \\
 \texttt{W}       & Total power flux                 & $Wcm^{-2}$ \\
 \end{tabular}
 \caption{Elemental vector quantities}
@@ -261,20 +265,20 @@ See tables~\ref{table:tt_nodal}-\ref{table:tt_scalar_integrated}.
 \end{table}
 
 
-\begin{table}[htb]
-\center
-\begin{minipage}{8cm}
-\center
-\begin{tabular}{l|l|l}
-\multicolumn{3}{c}{\textbf{Integrated scalar quantities}} \\
-\hline 
-\texttt{PowerDissipated} & Power dissipated & *\footnote{depends on dimension and symmetry}\\ 
-\end{tabular}
-\end{minipage}
-\caption{Integrated quantities}
-\label{table:tt_scalar_integrated}
-\end{table}
+%\begin{table}[htb]
+%\center
+%\begin{minipage}{8cm}
+%\center
+%\begin{tabular}{l|l|l}
+%\multicolumn{3}{c}{\textbf{Integrated scalar quantities}} \\
+%\hline 
+%\texttt{PowerDissipated} & Power dissipated & *\footnote{depends on dimension and symmetry}\\ 
+%\end{tabular}
+%\end{minipage}
+%\caption{Integrated quantities}
+%\label{table:tt_scalar_integrated}
+%\end{table}
 
 
-  
-
+Is also possible to identify all heat sources with the keyword \texttt{HeatSource} and  all power fluxes with \texttt{PowerFlux}.
+Finally, with the keyword \texttt{thermal} all quantities concerning the thermal simulation will be stored.

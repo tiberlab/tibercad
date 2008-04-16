@@ -27,27 +27,34 @@ public:
   static  DriftDiffusionHeatSource* create();
  
  
-  virtual void get_heat_sources(std::vector<Point> h_point,
-			       std::vector< std::vector< double > >& heat_source);
+  //  virtual void get_heat_sources(std::vector<Point> h_point,
+  //		       std::vector< std::vector< double > >& heat_source);
 
 
-  virtual void get_power_fluxes(std::vector<Point> h_point,
-				std::vector<std::vector<RealGradient> >& power_fluxes);
-               
-					
+  virtual void get_power_fluxes(std::vector<Point> h_point, const std::set<ID>& ids,
+				std::vector<std::map<ID,RealGradient> >& power_fluxes);
+
+
+  virtual void get_heat_sources(std::vector<Point> h_point, const std::set<ID>& ids,	
+				std::vector<std::map<ID, double> >& heat_sources);     
+
+
+  
+  virtual std::map<ID,std::string> get_source_legend(const std::set<std::string>& variables);
+
+  virtual std::map<ID,std::string> get_flux_legend(const std::set<std::string>& variables);
+
+
   //!Set the current element
    virtual void set_heat_model(HeatModel* heat_model);
-    
-  //!Init the heat source model
-  // virtual void re_init(void){};
- 
-  virtual std::vector<std::string>  get_source_legend(const std::set<std::string>& variables);
+   
 
-  virtual std::vector<std::string>  get_flux_legend();
+
+
 
 private:
 
-  //  std::vector<std::string> _legend;
+  
 
   enum heat_variables
     {
@@ -73,13 +80,11 @@ private:
     };
 
 
-  unsigned int n_s;
-     
-  unsigned int n_f;
 
-  std::vector<std::string> _flux_legend;
 
-  std::vector<std::string> _source_legend;
+  std::map<ID,std::string> _flux_legend;
+
+  std::map<ID,std::string> _source_legend;
 
   SimulationInterface* _simul;
 
@@ -90,11 +95,7 @@ private:
 
   std::vector<ID> ID_vector;
 
-  //!Set the current element
-  //void set_element(const Elem* elem);
-  
-  //!Set the current elemement side index
-  //void  set_side(unsigned int side);
+
 
  
 protected:
@@ -138,14 +139,6 @@ DriftDiffusionHeatSource::create()
 
 
 
-inline
-std::vector<std::string>
-DriftDiffusionHeatSource::get_flux_legend(void)
-{
-
- return  _flux_legend;
-
-}
 
 inline
 void 
@@ -157,23 +150,23 @@ DriftDiffusionHeatSource::set_heat_model(HeatModel* heat_model)
 }
 
 // inline
-// void 
-// DriftDiffusionHeatSource::set_element(const Elem* elem)
+// std::map<ID,std::string>
+// DriftDiffusionHeatSource::get_source_legend(void)
 // {
-
-//   _elem = elem;
+ 
+//  return  _source_legend;
 
 // }
-
-
 
 // inline
-// void 
-// DriftDiffusionHeatSource::set_side(unsigned int side)
+// std::map<ID,std::string>
+// DriftDiffusionHeatSource::get_flux_legend(void)
 // {
 
-//   _side = side;
+  
+//  return  _flux_legend;
 
 // }
+
 
 #endif
