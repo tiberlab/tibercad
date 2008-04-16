@@ -17,8 +17,8 @@
 
 #include "SimpleSemiconductorModel.h"
 #include "SemiconductorModel.h"
-#include "StrainedSemiconductorModel.h"
 #endif
+
 #include "MobilityModelInterface.h"
 #include "RecombinationModelInterface.h"
 
@@ -118,10 +118,8 @@ PhysicalModelInterface::create(const string& name,
       mod = FieldDependentMobility::create();
     else if (name == "dd_simple")
       mod = SimpleSemiconductorModel::create();
-    else if (name == "dd_unstrained")
+    else if (name == "dd_default")
       mod = SemiconductorModel::create();
-    else if (name == "dd_strained")
-      mod = StrainedSemiconductorModel::create();
     else if (name == "exmodel_simple")
 #else    
     if (name == "exmodel_simple")
@@ -183,7 +181,7 @@ PhysicalModelInterface::create(const string& name,
       mod = WzOptDielectricConstant::create();
     else if (name == "maxwell")
       mod = MaxwellPhysicalModel::create();
-    else if (name == "pyropolarization")
+    else if (name == "pyropolarization_zb")
       mod = PyroPolarization::create();
     else if (name == "pyropolarization_wz")
       mod = WzPyroPolarization::create();

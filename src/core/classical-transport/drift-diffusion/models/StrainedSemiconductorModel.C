@@ -21,8 +21,7 @@ using namespace DriftDiffusionDefs;
 
 StrainedSemiconductorModel::StrainedSemiconductorModel(void)
   : strain_model_(NULL),
-    ignore_strain_(false),
-    _recompute_band_parameters(false)
+    ignore_strain_(false)
 {
 }
 
@@ -36,13 +35,14 @@ StrainedSemiconductorModel::prepare_element_data(void)
     const Elem* elem = get_element();
     assert(elem != NULL);
 
-    const DataMap::const_iterator end = element_data_.end();
-    const DataMap::const_iterator it = element_data_.find(elem);
+    const DataMap::const_iterator end = get_data_map().end();
+    const DataMap::const_iterator it = get_data_map().find(elem);
     if ((it == end) || _recompute_band_parameters)
     {
       // where to put the elemental data
-      ElementData& elem_data = element_data_[elem];
+      ElementData& elem_data = get_data_map()[elem];
       
+      /*
       map<ID, double> data;
       bool ok = strain_model_->get_solution(elem, elem->centroid(),
           _strain_ids_set, data);
@@ -64,13 +64,14 @@ StrainedSemiconductorModel::prepare_element_data(void)
       }
       else
         get_strain() = 0;
+      */
 
       get_physical_model()->set_strain(get_strain());
 
       // call method of parent class
       SemiconductorModel::calculate_equilibrium_properties();
 
-      // put them into element_data_
+      // put them into get_data_map()
       elem_data.Ec = get_conduction_band_edge();
       elem_data.Ev = get_valence_band_edge();
       elem_data.mc = get_conduction_band().effective_mass;
@@ -104,14 +105,6 @@ StrainedSemiconductorModel::prepare_element_data(void)
 
 
 void
-StrainedSemiconductorModel::reset(void)
-{
-  DataMap::iterator begin = element_data_.begin();
-  DataMap::iterator end = element_data_.end();
-  element_data_.erase(begin, end);
-}
-
-void
 StrainedSemiconductorModel::copy_from(const PhysicalModelInterface* rhs)
 {
   SemiconductorModel::copy_from(rhs);
@@ -131,8 +124,6 @@ StrainedSemiconductorModel::do_init(void)
 
   
   string strain_sim = get_parameter("strain_simulation", "");
-  _recompute_band_parameters = get_parameter("recompute_band_parameters",
-      _recompute_band_parameters);
 
   if (strain_sim == "")
     ignore_strain_ = true;

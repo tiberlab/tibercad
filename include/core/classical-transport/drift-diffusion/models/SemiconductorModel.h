@@ -5,6 +5,7 @@
 
 #include "SimulationOptions.h"
 #include "DriftDiffusionProperties.h"
+#include "StrainInterface.h"
 
 #include <vector>
 #include <string>
@@ -15,23 +16,17 @@
 class Elem;
 class DDsemiconductor;
 
-//! A generic semiconductor model
+
+//! A semiconductor model using k.p theory
 /*!
  * This model calculates band properties using the \c DDsemiconductor
- * interface. It is not intended for use in strained structures.
+ * interface, which is based on k.p theory.
  * 
  */
 class SemiconductorModel : public DriftDiffusionProperties
 {
   public:
     
-    //! The constructor
-    /*!
-     * This constructor can be called be derived classes to specify
-     * a different model name.
-     */
-    SemiconductorModel(void);
-
     //! The destructor
     virtual ~SemiconductorModel(void);
 
@@ -41,13 +36,38 @@ class SemiconductorModel : public DriftDiffusionProperties
     /*! \copydoc DriftDiffusionProperties::calculate_equilibrium_properties() */
     virtual void calculate_equilibrium_properties(void);
 
-    /*! \copydoc DriftDiffusionProperties::calculate_VCA() */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
 
+    //! Clean the internal cache of element data
+    /*!
+     * Band and equilibrium parameters are cached for each element so they
+     * don't have to be recalculated during drift diffusion solving steps
+     */
+    void reset(void);
 
     
   protected:
+    
+    //! The constructor
+    SemiconductorModel(void);
+
+
+    //! The data structure for element-wise cached data
+    struct ElementData
+    {
+      double Ec;
+      double Ev;
+      double mc;
+      double mv;
+
+      double Ef0;
+      double ni;
+
+      RealVectorValue polarization;
+    };
+
+    //! A data map type
+    typedef std::map<const Elem*, ElementData> DataMap;
+  
 
     /*! \copydoc DriftDiffusionProperties::do_init() */
     virtual void do_init();
@@ -60,6 +80,10 @@ class SemiconductorModel : public DriftDiffusionProperties
 
     /*! \copydoc DriftDiffusionProperties::copy_from() */
     virtual void copy_from(const PhysicalModelInterface* rhs);
+
+    /*! \copydoc DriftDiffusionProperties::calculate_VCA() */
+    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+        const PhysicalModelInterface* comp_B, double xa);
 
     //! Get the physical semiconductor model
     /*!
@@ -83,9 +107,15 @@ class SemiconductorModel : public DriftDiffusionProperties
     //! Set the object to unprepared state
     void set_to_unprepared(void);
 
+
     /*! \copydoc PhysicalModelInterface::do_print_info() */
     virtual void do_print_info(void);
 
+
+    //! Get the data map with the element wise cached data
+    DataMap& get_data_map(void);
+
+    bool _recompute_band_parameters;
 
   private:
 
@@ -94,17 +124,29 @@ class SemiconductorModel : public DriftDiffusionProperties
     SemiconductorModel(const SemiconductorModel& model);
     SemiconductorModel& operator=(const SemiconductorModel& model);
 
+
     //! A flag to tell the state of this object
     /*!
      * \c true means that all data is prepared and ready for use
      */
     bool is_prepared_;
 
+
     //! The physical model for this semiconductor
     /*!
      * The physical model is based on an effective mass approximation
      */
     DDsemiconductor* bulk_model_;
+
+
+    //! The map with the element wise data
+    DataMap _element_data;
+
+
+    //! Should we always recompute band parameters?
+    /*!
+     * Use this for selfconsistent simulations
+     */
 
 
 };
@@ -147,6 +189,14 @@ SemiconductorModel::copy_from(const PhysicalModelInterface* rhs)
   const SemiconductorModel* mod = dynamic_cast<const SemiconductorModel*>(rhs);
   is_prepared_ = mod->is_prepared_;
 
+}
+
+
+inline
+SemiconductorModel::DataMap&
+SemiconductorModel::get_data_map(void)
+{
+  return _element_data;
 }
 
 

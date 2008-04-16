@@ -14,7 +14,7 @@
 #include <iostream>
 
 
-TIBER_MODULE(SemiconductorModel, unstrained)
+TIBER_MODULE(SemiconductorModel, default)
 
 
 using namespace DriftDiffusionDefs;
@@ -23,13 +23,23 @@ using namespace std;
 
 SemiconductorModel::~SemiconductorModel(void)
 {
+  reset();
   PhysicalModelInterface::destroy(bulk_model_);
 }
 
 SemiconductorModel::SemiconductorModel(void)
   : bulk_model_(NULL),
-    is_prepared_(false)
+    is_prepared_(false),
+    _recompute_band_parameters(false)
 {
+}
+
+void
+SemiconductorModel::reset(void)
+{
+  DataMap::iterator begin = get_data_map().begin();
+  DataMap::iterator end = get_data_map().end();
+  _element_data.erase(begin, end);
 }
 
 
@@ -40,6 +50,9 @@ SemiconductorModel::do_init(void)
 
   const ModelOptions& opt = get_options();
 
+  _recompute_band_parameters = get_parameter("recompute_band_parameters",
+      _recompute_band_parameters);
+
   PhysicalModelInterface::destroy(bulk_model_);
 
   bulk_model_ = DDsemiconductor::create(get_material()->get_structure(), opt);
@@ -48,6 +61,7 @@ SemiconductorModel::do_init(void)
     throw InitFailedException("Unknown structure for DDsemiconductor");
 
   bulk_model_->set_material(get_material());
+  bulk_model_->set_simulator_id(get_simulator_id());
 
   bulk_model_->init();
   
@@ -59,10 +73,7 @@ void
 SemiconductorModel::calculate_VCA(const PhysicalModelInterface* comp_A,
     const PhysicalModelInterface* comp_B, double xa)
 {
-  DriftDiffusionProperties::calculate_VCA(comp_A, comp_B, xa);
-
-  //double (*alloy)(double, double, double, double) =
-  //  Alloy::calculate_VCA_parameter;
+  Parent::calculate_VCA(comp_A, comp_B, xa);
 
   const SemiconductorModel* scA =
     dynamic_cast<const SemiconductorModel*>(comp_A);
@@ -71,9 +82,6 @@ SemiconductorModel::calculate_VCA(const PhysicalModelInterface* comp_A,
 
   bulk_model_->build_alloy(scA->bulk_model_, scB->bulk_model_, xa);
 
-  permittivity = alloy(scA->permittivity, scB->permittivity,
-        xa, 0.0);
-
 }
 
 
@@ -81,23 +89,57 @@ SemiconductorModel::calculate_VCA(const PhysicalModelInterface* comp_A,
 void
 SemiconductorModel::prepare_element_data(void)
 {
-  if (!is_prepared_)
+  const Elem* elem = get_element();
+  assert(elem != NULL);
+
+  if (is_inhomogeneous())
   {
-    try
+    const DataMap::const_iterator end = get_data_map().end();
+    const DataMap::const_iterator it = get_data_map().find(elem);
+    if ((it == end) || _recompute_band_parameters)
+    {
+      ElementData& elem_data = get_data_map()[elem];
+
+      calculate_equilibrium_properties();
+
+      elem_data.Ec = get_conduction_band_edge();
+      elem_data.Ev = get_valence_band_edge();
+      elem_data.mc = get_conduction_band().effective_mass;
+      elem_data.mv = get_valence_band().effective_mass;
+      elem_data.Ef0 = get_equilibrium_fermi_level();
+      elem_data.ni = get_intrinsic_density();
+
+    }
+    else
+    {
+      const ElementData& elem_data = it->second;
+
+      //set_polarization(elem_data.polarization);
+
+      get_conduction_band().band_edge = elem_data.Ec; 
+      get_conduction_band().effective_mass = elem_data.mc; 
+      get_valence_band().band_edge = elem_data.Ev; 
+      get_valence_band().effective_mass = elem_data.mv; 
+
+      equilibrium_fermi_level = elem_data.Ef0;
+      intrinsic_density = elem_data.ni;
+
+      // this sets the band edges and the effective DOS in the base class
+      setup_band_edges();
+    }
+  }
+  else
+  {
+    if (!is_prepared_ || _recompute_band_parameters)
     {
       calculate_equilibrium_properties();
+      is_prepared_ = true;
     }
-    catch (...)
-    {
-    }
-  
-    is_prepared_ = true;
   }
 }
 
 
 //
-// TODO
 // Very crude implementation at the moment
 // 
 void
@@ -124,8 +166,9 @@ SemiconductorModel::extract_band_properties(void)
 
   // get maximum
   id = 0;
-  // TODO should be local temperature
-  double kT = SimulationOptions::T * Constants::k_B;
+  
+  //double kT = SimulationOptions::T * Constants::k_B;
+  double kT = get_lattice_temperature();
   double delta_max = 4.0 * kT;
   for (int i = 1; i < vbs.size(); i++)
   {
@@ -159,6 +202,10 @@ SemiconductorModel::calculate_equilibrium_properties(void)
 
   assert(bulk_model_ != NULL);
 
+  // it wants temperature in K
+  bulk_model_->set_temperature(get_lattice_temperature() / Constants::k_B);
+  bulk_model_->set_strain(get_strain());
+
   // calculate conduction and valence band data
   bulk_model_->calculate_conduction_band_extremum();
   bulk_model_->calculate_valence_band_extremum();
@@ -172,19 +219,20 @@ SemiconductorModel::calculate_equilibrium_properties(void)
 }
 
 
+
 void
 SemiconductorModel::do_print_info(void)
 {
   string space("    ");
 
-  cout << space << "unstrained semiconductor model" << endl;
+  cout << space << "default semiconductor model (using k.p)" << endl;
+  Parent::do_print_info();
+
   if (SimulationOptions::verbose() > 1)
   {
     cout << endl;
     set_lattice_temperature(SimulationOptions::T);
-    //bulk_model_->calculate_conduction_band_extremum();
-    //bulk_model_->calculate_valence_band_extremum();
-    //extract_band_properties();
+
     calculate_equilibrium_properties();
     setup_band_edges();
 
@@ -202,7 +250,6 @@ SemiconductorModel::do_print_info(void)
     cout << space << "   Nc = " << get_conduction_band().effective_DOS << " cm^-3"
       << "  m_dos = " << get_conduction_band().effective_mass / deg << "\n";
 
-    //_bulk_model->calculate_valence_band_extremum();
     const std::vector<DDsemiconductor::band_extremum>& vbs =
       bulk_model_->get_valence_band_energy_mass();
     cout << space << " - valence bands:\n";

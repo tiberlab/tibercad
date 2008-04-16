@@ -48,6 +48,7 @@ SimpleSemiconductorModel::do_init(void)
 void
 SimpleSemiconductorModel::do_print_info(void)
 {
+
   string space("    ");
   
   set_lattice_temperature(SimulationOptions::T);
@@ -55,7 +56,10 @@ SimpleSemiconductorModel::do_print_info(void)
   calculate_equilibrium_properties();
 
   double deg = std::pow(2.0, 2.0 / 3.0);
-  cout << space << "simple semiconductor model" << endl;
+  cout << space << "simple semiconductor model " <<
+    "(with constant band parameters)" << endl;
+  DriftDiffusionProperties::do_print_info();
+
   cout << space << "Ec = " << get_conduction_band().band_edge <<
     ", m_DOS = " << get_conduction_band().effective_mass / deg <<
     ", Nc = " << get_conduction_band().effective_DOS << endl;

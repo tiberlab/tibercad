@@ -32,7 +32,11 @@ class TemperatureInterface
 
 
     //! Specify the temperature simulation to use
-    void set_simulation(const std::string& name);
+    /*!
+     * Returns true if \c name refers to a valid temperature
+     * simulation.
+     */
+    bool set_simulation(const std::string& name);
 
     
     //! Get the nodal temperatures
@@ -46,6 +50,15 @@ class TemperatureInterface
 
     //! Get the temperature in one point
     double get_temperature(const Elem* elem, const Point& p);
+
+
+    //! Tells if this interface has a simulation associated
+    bool has_simulation(void) const;
+
+
+    //! Get the associated simulation
+    SimulationInterface* get_simulation(void);
+
 
 
   private:
@@ -66,6 +79,26 @@ class TemperatureInterface
     std::set<ID> _id_set;
 
 };
+
+
+//
+// inline members
+//
+
+inline
+bool
+TemperatureInterface::has_simulation(void) const
+{
+  return (_simulation == NULL) ? false : true;
+}
+
+
+inline
+SimulationInterface*
+TemperatureInterface::get_simulation(void)
+{
+  return _simulation;
+}
 
 
 #endif // _TEMPERATUREINTERFACE_H_

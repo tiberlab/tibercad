@@ -431,6 +431,9 @@ PhysicalModelInterface::PhysicalModelInterface(void)
   : _libhandle(NULL),
     _create(NULL),
     _destroy(NULL),
+    _id(INVALID_ID),
+    _simulator_id(INVALID_ID),
+    _name(""),
     _material(NULL)
 {
 }

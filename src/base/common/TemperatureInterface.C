@@ -20,9 +20,10 @@ TemperatureInterface::TemperatureInterface(void)
 
 
 
-void
+bool
 TemperatureInterface::set_simulation(const std::string& name)
 {
+  bool answer = false;
   if (name != "")
   {
     _simulation = SimulationInterface::find_simulation(name);
@@ -37,7 +38,11 @@ TemperatureInterface::set_simulation(const std::string& name)
           " has no variable '" + _variable_name + "'");
 
     _id_set.insert(_id);
+
+    answer = true;
   }
+
+  return answer;
 }
 
 

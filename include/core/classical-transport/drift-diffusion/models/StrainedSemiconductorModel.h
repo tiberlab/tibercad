@@ -37,13 +37,6 @@ class StrainedSemiconductorModel : public SemiconductorModel
     //! Include strain related effects
     void include_strain(void);
 
-    //! Clean the internal cache of element data
-    /*!
-     * Band and equilibrium parameters are cached for each element so they
-     * don't have to be recalculated during drift diffusion solving steps
-     */
-    void reset(void);
-
 
   protected:
 
@@ -64,23 +57,7 @@ class StrainedSemiconductorModel : public SemiconductorModel
 
 
   private:
-
-    //! The data structure for the cached data
-    struct ElementData
-    {
-      double Ec;
-      double Ev;
-      double mc;
-      double mv;
-
-      double Ef0;
-      double ni;
-
-      RealVectorValue polarization;
-    };
-
-    typedef std::map<const Elem*, ElementData> DataMap;
-    
+  
     StrainedSemiconductorModel(const StrainedSemiconductorModel& model);
     StrainedSemiconductorModel&
       operator=(const StrainedSemiconductorModel& model);
@@ -91,14 +68,6 @@ class StrainedSemiconductorModel : public SemiconductorModel
     //! Do we ignore strain?
     bool ignore_strain_;
 
-    //! Should we always recompute band parameters?
-    /*!
-     * Use this for converse piezoelectric effect
-     */
-    bool _recompute_band_parameters;
-
-
-    DataMap element_data_;
 
     //! The ids for the different variables from macrostrain
     std::vector<ID> _strain_ids;

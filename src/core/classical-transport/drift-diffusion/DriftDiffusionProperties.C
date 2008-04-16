@@ -4,6 +4,7 @@
 #include "RecombinationModelInterface.h"
 #include "MobilityModelInterface.h"
 #include "ThermoelectricPower.h"
+#include "SimulationInterface.h"
 #include "Material.h"
 #include "Database.h"
 #include "Dopant.h"
@@ -41,7 +42,8 @@ DriftDiffusionProperties::_DOS_factor = pow(2.0 * M_PI * Constants::me /
 
 
 DriftDiffusionProperties::DriftDiffusionProperties(void)
-  : _pd(NULL),
+  : _is_inhomogeneous(false),
+    _pd(NULL),
     _elem(NULL),
     _statistics(TiberCad::BOLTZMANN),
     _coupling(DriftDiffusionDefs::BOTH),
@@ -145,7 +147,13 @@ DriftDiffusionProperties::do_init(void)
 
   // the temperature simulation
   string temp_simul = get_options().get_option("thermal_simulation", "");
-  _lattice_temp.set_simulation(temp_simul);
+  _is_inhomogeneous |= _lattice_temp.set_simulation(temp_simul);
+
+
+  // the strain simulation
+  string strain_simul = get_options().get_option("strain_simulation", "");
+  _is_inhomogeneous |= _strain_if.set_simulation(strain_simul);
+  
 
 
   //
@@ -408,15 +416,16 @@ DriftDiffusionProperties::reinit(const Elem* elem)
     _lattice_vt = Constants::k_B *
       _lattice_temp.get_temperature(elem, elem->centroid());
 
-    _polarization = 0.0;
-
-    this->prepare_element_data();
+    _strain_if.get_strain_data(elem, _strain, _polarization);
     
     // pyropolarization is Tensor1
     _pyropolarization->calculate_polarization(_elem, _coord, _lattice_vt);
-    _polarization(0) += _relax_polariz * _pyropolarization->get_polarization()(1);
-    _polarization(1) += _relax_polariz * _pyropolarization->get_polarization()(2);
-    _polarization(2) += _relax_polariz * _pyropolarization->get_polarization()(3);
+    _polarization(0) += _pyropolarization->get_polarization()(1);
+    _polarization(1) += _pyropolarization->get_polarization()(2);
+    _polarization(2) += _pyropolarization->get_polarization()(3);
+    _polarization *= _relax_polariz;
+
+    this->prepare_element_data();
   }
 
   // here we assume thermal equilibrium
@@ -583,7 +592,8 @@ DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
     double Nc = cb.effective_DOS;
 
     if (_pd->electron_density > 0.0)
-      _pd->fermi_e = -kTe * log(_pd->electron_density / Nc) - Ec + _pd->electric_potential;
+      _pd->fermi_e = -kTe * log(_pd->electron_density / Nc) - Ec +
+        _pd->electric_potential;
     else
       _pd->fermi_e = -10.0;
 
@@ -600,7 +610,8 @@ DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
     double Nv = vb.effective_DOS;
   
     if (_pd->hole_density > 0.0)
-      _pd->fermi_h = kTh * log(_pd->hole_density / Nv) - Ev + _pd->electric_potential;
+      _pd->fermi_h = kTh * log(_pd->hole_density / Nv) - Ev +
+        _pd->electric_potential;
     else
       _pd->fermi_h = -10.0;
 
@@ -720,7 +731,8 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
     double f  = _pd->hole_density - _pd->electron_density +
       _pd->ionized_donor_density - _pd->ionized_acceptor_density;
     double df = _pd->hole_density_derivative - _pd->electron_density_derivative +
-      _pd->ionized_donor_density_derivative - _pd->ionized_acceptor_density_derivative;
+      _pd->ionized_donor_density_derivative - 
+      _pd->ionized_acceptor_density_derivative;
 
 
     // At low temperatures everything is very sensitive on dx, so we don't
@@ -774,12 +786,11 @@ DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
 
 
 
-
-void  DriftDiffusionProperties::compute_thermoelectric_powers(void)
+void
+DriftDiffusionProperties::compute_thermoelectric_powers(void)
 {
   if (_thermoelectric_power != NULL)
   {
-
     _thermoelectric_power->set_fermi_potential(_pd->fermi_e, _pd->fermi_h);
     
     double cb = get_conduction_band_edge();
@@ -805,9 +816,28 @@ void  DriftDiffusionProperties::compute_thermoelectric_powers(void)
 
 
 
-
-std::vector<double>& DriftDiffusionProperties::get_temperature_at_nodes()
+std::vector<double>&
+DriftDiffusionProperties::get_temperature_at_nodes()
 {
   return _nodal_lattice_vt;
 }
   
+
+
+void
+DriftDiffusionProperties::do_print_info(void)
+{
+  string space("    ");
+  if (_strain_if.has_simulation())
+    cout << space << "using strain simulation: " <<
+      _strain_if.get_simulation()->get_name() << endl;
+  else if (trace(_strain) == 0.0)
+    cout << space << "unstrained" << endl;
+  else
+    cout << space << "using strain from input file";
+
+  if (_lattice_temp.has_simulation())
+    cout << space << "using temperature simulation: " <<
+      _lattice_temp.get_simulation()->get_name() << endl;
+
+}

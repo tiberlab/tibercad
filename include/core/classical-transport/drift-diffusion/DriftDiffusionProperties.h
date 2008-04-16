@@ -14,6 +14,7 @@
 
 #include "ParticleDensity.h"
 #include "TemperatureInterface.h"
+#include "StrainInterface.h"
 #include "SimulationOptions.h"
 #include "DriftDiffusionDefs.h"
 #include "TiberCad.h"
@@ -726,6 +727,10 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     virtual void copy_from(const PhysicalModelInterface* rhs);
 
 
+    //! \copydoc PhysicalModel::do_print_info(void)
+    virtual void do_print_info(void);
+    
+
     //! Get the point data structure
     PointData& get_pd(void);
 
@@ -733,11 +738,6 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     //! Get the strain as writable reference
     Tensor2Sym& get_strain(void);
     
-    
-    //! The pyroelectric polarization (will go into a model)
-    //RealVectorValue pyro_polarization;
-    //double bow_pyro;
-
     
     //! The relative permittivity tensor
     //RealTensorValue permittivity;
@@ -785,11 +785,29 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
       { return _DOS_factor; }
 
 
+    //! Get the temperature interface
+    TemperatureInterface& get_temperature_interface(void);
+
+    //! Get the strain interface
+    StrainInterface& get_strain_interface(void);
+
+
+    //! Tells if we should assume inhomogeneous band parameters
+    bool is_inhomogeneous(void) const;
+
 
   private:
 
     //! The interface to the lattice temperature simulation
     TemperatureInterface _lattice_temp;
+
+
+    //! The interface to a strain simulation
+    StrainInterface _strain_if;
+
+
+    //! \c true if we should assume inhomogeneous band parameters
+    bool _is_inhomogeneous;
 
 
     //! The point-wise data
@@ -1250,6 +1268,30 @@ DriftDiffusionProperties::get_pd(void)
 {
   return *_pd;
 }
+
+
+inline
+TemperatureInterface&
+DriftDiffusionProperties::get_temperature_interface(void)
+{
+  return _lattice_temp;
+}
+
+inline
+StrainInterface&
+DriftDiffusionProperties::get_strain_interface(void)
+{
+  return _strain_if;
+}
+
+
+inline
+bool
+DriftDiffusionProperties::is_inhomogeneous(void) const
+{
+  return _is_inhomogeneous;
+}
+
 
 
 #endif /* _DRIFTDIFFUSIONPROPERTIES_H_ */

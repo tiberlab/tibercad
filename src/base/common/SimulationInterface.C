@@ -250,7 +250,8 @@ SimulationInterface::init(void) throw (InitFailedException)
         dev.get_material(ids[0])->get_model(get_id());
       if (mod != NULL)
       {
-        cout << "  ** Model details (region " << *it << "):" << endl;
+        cout << "  ** Model details (region " << *it << ", " << 
+          dev.get_material(ids[0])->get_name() << "):" << endl;
         mod->print_info();
         cout << endl;
       }

@@ -40,7 +40,8 @@ PyroPolarization::create(const Material* mat)
     pyro = dynamic_cast<PyroPolarization*>(
         PhysicalModelInterface::create("pyropolarization_wz"));
   else
-    pyro = new PyroPolarization();
+    pyro = dynamic_cast<PyroPolarization*>(
+        PhysicalModelInterface::create("pyropolarization_zb"));
   
   return pyro;
 }

@@ -216,10 +216,15 @@ DriftDiffusion::create_physical_model(const ModelOptions& options,
 {
   string modelname;
   
-  if (options.find_option("strain_simulation"))
-    modelname = options.get_option("model", "strained");
-  else
-    modelname = options.get_option("model", "unstrained");
+  modelname = options.get_option("model", "default");
+  
+  if ((modelname == "unstrained") || (modelname == "strained"))
+  {
+    cout << "*** drift-diffusion model '" << modelname << "' is deprecated."
+      << endl << "*** Use 'model = default' instead or don't specify model."
+      << endl;
+    modelname = "default";
+  }
 
   DriftDiffusionProperties* model =
     DriftDiffusionProperties::create(modelname, options);
