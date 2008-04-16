@@ -35,6 +35,8 @@ class Stiffness : public PhysicalModelInterface
   //! creates new object
   static Stiffness* create(const std::string& name,  const ModelOptions& options);
  
+  void  calculate_strain_from_stress(const Tensor2Sym& stress, Tensor2Sym strain ) const;
+  
 
  private:
 

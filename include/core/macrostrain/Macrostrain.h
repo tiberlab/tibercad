@@ -67,12 +67,13 @@
 //------------------------------------------------------------------------------
 
 #include "SimulationInterface.h"
+#include "StrainSimulation.h"
 #include "Device.h"
 #include "MacrostrainModel.h"
 #include "TiberLinearSolver.h"
 #include "petscksp.h"  
 //! A class to calculate strain and shape
-class Macrostrain : public SimulationInterface
+class Macrostrain : public StrainSimulation
 /*!
   Class uses the macroscopic strain theory
 */
@@ -81,18 +82,7 @@ class Macrostrain : public SimulationInterface
  public:
 
 
-  enum Variables
-  {
-    EPS_XX = 0,
-    EPS_YY = 1,
-    EPS_ZZ = 2,
-    EPS_XY = 3,
-    EPS_XZ = 4,
-    EPS_YZ = 5,
-    P_X = 6,
-    P_Y = 7,
-    P_Z = 8
-  };
+
 
 
   struct atom
@@ -202,11 +192,7 @@ class Macrostrain : public SimulationInterface
   static Macrostrain* create(void);
       
 
-  /*! \copydoc SimulationInterface::create_physical_model() */
-  virtual PhysicalModel*
-    create_physical_model(const ModelOptions& options,
-        const Material* mat) const
-    throw (ModelErrorException);
+ 
 
 
   /*! \copydoc SimulationInterface::create_boundary_model() */
@@ -284,8 +270,8 @@ class Macrostrain : public SimulationInterface
   const RotatedCrystal* substrate_crystal;
 
  
-  //! strain tensor of an element from previous iteration
-  std::vector<Tensor2Sym>       eps0_of_elem;     // eps of an element from previous iteration
+  //! strain tensor of an element from previous iteration (calculation system)
+  std::vector<Tensor2Sym>       eps0_of_elem;    
 
 
  

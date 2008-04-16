@@ -183,21 +183,6 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
 
 //-------------------------------------------------------------------------//
 
-PhysicalModel*
-Macrostrain::create_physical_model(const ModelOptions& options,
-    const Material* mat) const throw (ModelErrorException)
-{
-  const string& modelname = options.get_option("model", "macrostrain");
-
-  MacrostrainModelInterface* model =
-    MacrostrainModelInterface::create(modelname, options);
-
-  if (model == NULL)
-    throw ModelErrorException(
-        "Macrostrain: No such physical model: " + modelname);
-
-  return model;
-}
 
 
 //---------------------------------------------------------------------------//

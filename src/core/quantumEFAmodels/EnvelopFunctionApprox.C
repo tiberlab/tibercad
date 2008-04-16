@@ -569,9 +569,9 @@ void EnvelopFunctionApprox::parse_options()
   else
     throw InitFailedException( "EnvelopeFunctionApprox: Incorrect job " + job_name );  
   //---------------------------------------------------------------------------------//
-  std::string  heat_model_name = mod_opt.get_option("heat_model","no_heat");
+  std::string  heat_model_name = mod_opt.get_option("heat_model","");
   
-  if ( heat_model_name != "no_heat" )
+  if ( heat_model_name != "" )
   {
     temperature_simulation  = find_simulation ( heat_model_name );
     
@@ -582,6 +582,9 @@ void EnvelopFunctionApprox::parse_options()
 
   }
  
+  
+  temp_interface.set_simulation(heat_model_name);
+
   //default value for temperature
   opt.Temperature = mod_opt.get_option("Temperature", SimulationOptions::temperature);
     
@@ -1019,9 +1022,14 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       const ID subdomain = elem->subdomain_id();
       const Material* mat = _device->get_material(subdomain);
 
+     
+
       element_hamiltonian = (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model(); 
+      
+      element_hamiltonian->set_temperature(temp_interface.get_temperature( elem, elem->centroid()));
 
       element_hamiltonian->set_k_vector(k_vector);
+
       element_hamiltonian->calculate_Hamiltonian_k_par();
 
 
@@ -1059,7 +1067,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	  }
 
 
-
+	  
 
 	  element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
 	  

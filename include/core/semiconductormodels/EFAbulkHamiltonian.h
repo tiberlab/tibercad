@@ -144,6 +144,7 @@ inline  EFAbulkHamiltonian* EFAbulkHamiltonian::create (const std::string& name,
   if (! (options.find_option("model")) )
   {
     std::cerr << "EFAbulkHamiltonian* EFAbulkHamiltonian::create   model must be specified \n"; 
+    options.print_all();
     exit(1);
   }
 

@@ -19,6 +19,8 @@
 #include "Poisson.h"
 #include "TunnelingCurrent.h"
 #include "MaxwellEquations.h"
+#include "CrackStrain.h"
+
 
 #include "Sweep.h"
 #include "RelaxationMethod.h"
@@ -93,6 +95,8 @@ SimulationInterface::create(const string& type,
       sim = ExcitonTransport::create();
     else if (type_name == "macrostrain")
       sim = Macrostrain::create();
+    else if (type_name == "crackstrain")
+      sim = CrackStrain::create();
     else if (type_name == "efaschroedinger")
       sim = EnvelopFunctionApprox::create();
     else if (type_name == "sweep")

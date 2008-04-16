@@ -6,6 +6,7 @@
 #include "Macrostrain.h"
 #include "SimulationInterface.h"
 #include "EigenvalueProblem.h"
+#include "TemperatureInterface.h"
 
 class EnvelopFunctionApprox  : public EigenvalueProblem
 {
@@ -267,7 +268,8 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   //!pointer to the device object
   static  Device* _device;
 
-
+  //! interface for temperature acquisition
+  TemperatureInterface temp_interface;
  
   //!pointer to mesh of the equation systems
   //Mesh* mesh;

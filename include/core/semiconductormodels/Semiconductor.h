@@ -9,7 +9,7 @@
 #include "tensor.h"
 #include <vector>
 #include "PhysicalModelInterface.h"
-#include <TemperatureInterface.h>
+#include "TemperatureInterface.h"
 
 #include "KPparameters.h"
 

@@ -22,6 +22,8 @@ void EFAbulkModel::do_init()
 
   const ModelOptions& opt =  get_options ();
 
+ 
+
   _bulkHamiltonian = EFAbulkHamiltonian::create(get_material() -> get_structure(), opt);
 
   _bulkHamiltonian->set_material(get_material());
