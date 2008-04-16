@@ -194,9 +194,6 @@ void  DDsemiconductor::calculate_valence_band_extremum(const Elem* element, cons
 
 inline void DDsemiconductor::calculate_conduction_band_extremum()
 {
-
-  std::cerr << "DDsemiconductor::calculate_conduction_band_extremum()" << "\n"; 
-
   do_calculate_conduction_band_extremum();
 }
 
