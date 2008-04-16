@@ -705,7 +705,7 @@ DriftDiffusion::do_solve(void)
     build_local_scaling();
 
 
-  //set_dirichlet_bc();
+  set_dirichlet_bc();
   
   try
   {
@@ -4784,8 +4784,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         vector<double> value(3, 0.0);
 
         // the derivatives
-        vector<vector<double> > dcoeff(3);
-        vector<vector<double> > dvalue(3);
+        vector<vector<double> > dcoeff(3, vector<double>(3, 0.0));
+        vector<vector<double> > dvalue(3, vector<double>(3, 0.0));
 
         //
         // NOTE: we have to integrate over the boundary also if there are
