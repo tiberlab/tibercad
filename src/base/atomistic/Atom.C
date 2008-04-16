@@ -2,7 +2,7 @@
 
 
 Atom::Atom(){
-                  id = 0;
+        id = 0;
 	flag = 0;
 }
 	
