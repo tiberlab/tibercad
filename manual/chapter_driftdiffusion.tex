@@ -426,28 +426,35 @@ Two modes are possible:
 
 \section{\texttt{Physics} section}
 
-In the \texttt{Physics} section one can define the model to be used to described the semiconductor.
-The different implemented models will be described in individual subsections as they can imply some special parameters.
-The common paramaters are given in table~\ref{table:dd_common}.
+Options for controlling the drift-diffusion semiconductor models can be specified in the \texttt{Physics} section.
+The corresponding paramaters are given in table~\ref{table:dd_common}.
 \begin{table}[htb]
 \center
-\begin{tabular}{l||l|p{7cm}}
+\begin{tabular}{l||p{3cm}|p{7cm}}
 \textit{keyword} & \textit{possible values} & \textit{description} \\
 \hline \hline
-\texttt{model} & (see following subsections) & the model to use \\
+\texttt{model} & (see following subsections) & the model to use for the description of the conduction and valence band properties\\
 \texttt{statistics} & \texttt{B} $\vert$ \texttt{FD} & Boltzmann (default) or
-Fermi-Dirac statistics
+Fermi-Dirac statistics \\
+\texttt{strain\_simulation} & \textsl{name} & the strain simulation to be used \\
+\texttt{thermal\_simulation} & \textsl{name} & the thermal simulation to be used \\
+\texttt{electron\_quantum\_density} & \textsl{name} & the quantum density simulation to be used for the electron density \\
+\texttt{hole\_quantum\_density} & \textsl{name} & the quantum density simulation to be used for the hole density
 \end{tabular}
-\caption{Common options for all drift-diffusion semiconductor models}
+\caption{Common options for the drift-diffusion semiconductor models}
 \label{table:dd_common}
 \end{table}
-When \texttt{model} isn't specified, the unstrained semiconductor model is used.
+When \texttt{model} is not specified, the default semiconductor model based on bulk $\mathbf{k}\cdot\mathbf{p}$ theory is used.
+
+The \texttt{electron\_quantum\_density} and \texttt{hole\_quantum\_density} will use the particle densities calculated from the corresponding \texttt{quantum\_density} simulation.
+In regions where no quantum density is available, the classical density will be used.
+The \texttt{electron\_quantum\_density} and \texttt{hole\_quantum\_quantum\_density} keywords can be used also in the \Region{} sections to be able to use different quantum density simulations in different regions.
 
 
 \subsection{Simple semiconductor model}
 
 When specifying \texttt{model = simple} a very simple semiconductor model is used.
-For this model one has to provide conduction and valence band edges, the effective density of states masses and the permittivity in the \texttt{Region} sections.
+For this model one has to provide conduction and valence band edges and the effective density of states masses in the \texttt{Region} sections.
 The corresponding keywords are given in table~\ref{table:simple_sc}.
 \begin{table}[htb]
 \center
@@ -456,32 +463,22 @@ The corresponding keywords are given in table~\ref{table:simple_sc}.
 \hline \hline
 \texttt{Ec} & conduction band edge (eV) \\
 \texttt{Ev} & valence band edge (eV) \\
-\texttt{meff\_n} & conduction band effective DOS mass (m$_e$) \\
-\texttt{meff\_p} & valence band effective DOS mass (m$_e$) \\
-\texttt{permittivity} & relative permittivity
+\texttt{m\_dos\_e} & conduction band effective DOS mass (m$_e$) \\
+\texttt{m\_dos\_h} & valence band effective DOS mass (m$_e$) \\
 \end{tabular}
 \caption{Parameters for the simple semiconductor model}
 \label{table:simple_sc}
 \end{table}
 
 
-\subsection{Unstrained semiconductor model}
+\subsection{Default semiconductor model}
 
-The unstrained semiconductor model is the default model.
-It can be chosen explicitly by \texttt{model = unstrained}.
-It uses a bulk $\mathbf{k}\cdot\mathbf{p}$ model to calculate the band parameters.
+The default semiconductor model uses a bulk $\mathbf{k}\cdot\mathbf{p}$ model to calculate the band parameters.
+It can be chosen explicitly by \texttt{model = default}.
 The model reads all needed parameters from the material data file.
 
+The band parameters are calculated considering locally strain and lattice temperature as obtained from the corresponding simulations specified using the \texttt{strain\_simulation} and \texttt{thermal\_simulation} keywords.
 
-
-\subsection{Strained semiconductor model}
-
-The strained semiconductor model is an extension of the unstrained semiconductor model.
-For the calculation of the band parameters it will consider mechanical strain (cf. chapter~\ref{chap:strain}) as calculated from a strain simulation.
-As strain can be non-homogeneous, bulk properties are calculated and stored seperately for each element.
-
-The strain simulation has to  be specified in the \texttt{Physics} section by \texttt{strain\_simulation = <sim\_name>}, where \texttt{<sim\_name>} is the user defined name of the strain simulation.
-If \texttt{strain\_simulation} is not specified, the default unstrained model is used.
 
 
 \section{\texttt{Solver} section}
@@ -605,4 +602,7 @@ In addition to the parameters in table~\ref{tab:tiber_params} one has to provide
 
 \subsection{Parameters for the PARDISO linear solver}
 
-Currently the PARDISO interface has no adjustable parameters.
+\textbf{NOTE:} the PARDISO linear solver is currently not included in the distribution.
+
+
+\noindent Currently the PARDISO interface has no adjustable parameters.
