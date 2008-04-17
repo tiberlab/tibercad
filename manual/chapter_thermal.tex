@@ -181,10 +181,7 @@ BC_Regions
   }
 }
 \end{verbatim}
-
-
-
-\begin{table}[htb]
+\begin{table}[htbp]
 \center
 \begin{tabular}{l||l||l||l}
 \textit{description} & \textit{type} & \textit{parameters} & \textit{units}\\
@@ -200,28 +197,11 @@ Power density condition& \texttt{thermal\_flux} & \texttt{power\_density} & $Wcm
 \caption{Thermal boundary conditions}
 \label{table:srh_params_db}
 \end{table}
-
-
-
-
 \section{Output data}
  
-<<<<<<< .mine
-=======
-In the plot section the keyword \texttt{T} refers to the temperature output.
-The keyword \textit{HeatSource} allows to plot all heat sources considered in the simulation.
->>>>>>> .r875
-
-The variable labels are listed in the tables~\ref{table:tt_scalar_elemental}-\ref{table:tt_vector_elemental}.
+The variable labels are listed in the tables~\ref{table:tt_nodal}-\ref{table:tt_vector_elemental}.
 
 
-<<<<<<< .mine
-=======
-
-See tables~\ref{table:tt_nodal}-\ref{table:tt_scalar_integrated}.
-
-
->>>>>>> .r875
 \begin{table}[htb]
 \center
 \begin{tabular}{l|l|l}
@@ -229,7 +209,7 @@ See tables~\ref{table:tt_nodal}-\ref{table:tt_scalar_integrated}.
 \hline 
 \texttt{LatticeTemp} & Temperature & K \\
 \end{tabular}
-\caption{Nodal quantities}
+\caption{Nodal scalar quantities}
 \label{table:tt_nodal}
 \end{table}
 
@@ -265,19 +245,6 @@ See tables~\ref{table:tt_nodal}-\ref{table:tt_scalar_integrated}.
 \end{table}
 
 
-%\begin{table}[htb]
-%\center
-%\begin{minipage}{8cm}
-%\center
-%\begin{tabular}{l|l|l}
-%\multicolumn{3}{c}{\textbf{Integrated scalar quantities}} \\
-%\hline 
-%\texttt{PowerDissipated} & Power dissipated & *\footnote{depends on dimension and symmetry}\\ 
-%\end{tabular}
-%\end{minipage}
-%\caption{Integrated quantities}
-%\label{table:tt_scalar_integrated}
-%\end{table}
 
 
 Is also possible to identify all heat sources with the keyword \texttt{HeatSource} and  all power fluxes with \texttt{PowerFlux}.
