@@ -258,8 +258,8 @@ $Solver
   {
     coupling = poisson
 
-    nonlinear_solver = tiber
-    linear_solver = pardiso
+    #nonlinear_solver = tiber
+    #linear_solver = pardiso
    
     nonlin_max_it = 15
     nonlin_rel_tol = 1e-12
