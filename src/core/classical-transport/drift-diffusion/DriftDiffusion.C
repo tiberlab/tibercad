@@ -4076,7 +4076,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
   
-  QGauss qface(dim - 1, integration_order);
+  QGauss qface(dim - 1, (libMeshEnums::Order) (integration_order + 1));
   fe_face->attach_quadrature_rule(&qface);
 
   
@@ -4156,7 +4156,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (jacobian != NULL)
     jacobian->zero();
 
-  
 
 
   MeshBase::const_element_iterator el =
