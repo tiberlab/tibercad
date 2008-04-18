@@ -111,8 +111,6 @@ $Physics
 {
   driftdiffusion 
   {
-    model = unstrained
-
     statistics =  FD
   }
 }
@@ -126,6 +124,7 @@ $Simulation
   searchpath = ../../materials 
   meshfile = diode_1D.msh #test.msh #diode.msh
   dimension = 1
+  verbose = 2
   temperature = 300
   solve = sweep
   resultpath = out_test_1D_tut_2 # out_test_1D_int_order10 #    output_1D_tut1 # output_1D_OK_SRH_v1.2_Fermi  # test_out # output_mobility_masetti_field_dep

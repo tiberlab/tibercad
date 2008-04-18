@@ -145,7 +145,10 @@ Material::create(const std::string& name)
   else
     mat = new Material(name);
 
-  std::cout << "Created Material " << mat->get_name() << "\n";
+  _database->set_material(name);
+  std::cout << "Created Material " << mat->get_name() << 
+    " (using parameter file " << _database->get_data_file() << ")" <<
+    std::endl;
 
   return mat;
 }

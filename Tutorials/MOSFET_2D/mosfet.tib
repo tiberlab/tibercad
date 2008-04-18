@@ -110,7 +110,7 @@ $Solver
     #lin_abs_tol = 1e-50
     ls_max_step = 2
     #pc_type = composite
-    #local_density_scaling = true
+    #local_scaling = false
     #current_integration_method = surfint
     #relaxation_factor = 0.5
   }
@@ -149,7 +149,6 @@ $Physics
  
   driftdiffusion 
   {
-    model = unstrained
     statistics = FD
   }
 

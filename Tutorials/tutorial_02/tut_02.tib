@@ -151,8 +151,6 @@ $Physics
 {
   driftdiffusion 
   {
-    model = unstrained
-
     statistics =  FD
   }
 

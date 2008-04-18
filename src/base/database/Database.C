@@ -1,6 +1,7 @@
 // $Id$
 
 #include "Database.h"
+#include "TiberCad.h"
 #include "InitFailedException.h"
 
 
@@ -36,16 +37,40 @@ Database::get_alloy_components(const std::string& alloy,
 }
 
 
-void
+bool
 Database::check_data_file(const std::string& name) const
 {
+  bool ans = true;
 
   std::ifstream infile;
   infile.open(name.c_str());
   if (infile.fail() || !infile.good() || (infile.rdbuf()->in_avail() == 0))
-  {
-    std::string msg("Database: cannot find material data file ");
-    msg += name;
-    throw InitFailedException(msg);
-  }
+    ans = false;
+
+  return ans;
 }
+
+
+
+const std::string
+Database::get_data_file(void) const
+{
+  std::string s(_path);
+  s += "/" + _material + ".dat";
+
+  if (!check_data_file(s))
+  {
+    s = TiberCad::tiberroot + "/materials/" + _material + ".dat";
+
+    if ((TiberCad::tiberroot.size() == 0) || (!check_data_file(s)))
+    {
+      std::string msg("Database: cannot find material data file ");
+      msg += _material + ".dat";
+      throw InitFailedException(msg);
+    }
+  }
+
+  return s;
+}
+
+

@@ -88,6 +88,7 @@ $Simulation
 {
   searchpath = ../../materials
   meshfile = bulk.msh
+  verbose = 2
   dimension = 1
   temperature = 300
   solve = sweep

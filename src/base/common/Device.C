@@ -164,7 +164,8 @@ Device::set_material(Material* material, ID region_id)
   _material_map[region_id] = material;
   cout << "added material " << material->get_name()
        << " for region number " << region_id
-       << " (" << get_region_name(region_id) << ")\n";
+       << " (" << get_region_name(region_id) << ")"
+       << endl << endl;
 }
 
 

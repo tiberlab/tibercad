@@ -514,7 +514,6 @@ $Physics
   driftdiffusion 
   {
     statistics = FD
-    model = strained 
     strain_simulation = strain
   
   }

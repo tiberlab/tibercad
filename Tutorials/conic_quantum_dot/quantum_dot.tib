@@ -343,8 +343,6 @@ $Physics
  
     strain_simulation = str
     statistics = FD
-
-    model = strained
     
   }  
 

@@ -309,7 +309,6 @@ $Physics
   driftdiffusion
   {
 
-    model = strained
     strain_simulation = str
   }
 

@@ -31,22 +31,9 @@ class Database
     std::string _path;
     std::string _material;
 
-    void check_data_file(const std::string& name) const;
+    bool check_data_file(const std::string& name) const;
 
 };
-
-
-inline
-const std::string
-Database::get_data_file(void) const
-{
-  std::string s(_path);
-  s += "/" + _material + ".dat";
-
-  check_data_file(s);
-
-  return s;
-}
 
 
 #endif // _DATABASE_H_
