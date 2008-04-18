@@ -47,10 +47,14 @@ int main (int argc, char** argv)
     boost::algorithm::trim(inputfile);
     cout << endl;
 #else
-    cerr << "Usage: tibercad <inputfile>" << endl << endl;
 # ifdef CYGWIN
+    cout << "Usage:" << endl
+      << "  from command line: tibercad <inputfile>" << endl
+      << "  or double click on inputfile" << endl << endl;
     cout << "press Enter ...";
     cin.get();
+# else
+    cout << "Usage: tibercad <inputfile>" << endl << endl;
 # endif
     return 1;
 #endif

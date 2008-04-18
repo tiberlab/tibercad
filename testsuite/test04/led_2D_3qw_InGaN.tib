@@ -359,7 +359,7 @@ $Solver
   macrostrain
   {
     substrate = substr
- #   xmonitor =  true
+    xmonitor =  true
     #monitor = true
 
 
