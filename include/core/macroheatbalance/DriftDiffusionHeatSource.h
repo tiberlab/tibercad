@@ -6,8 +6,6 @@
 
 
 
-//! This class handles the heat source
-
 
 class DriftDiffusionHeatSource : public HeatSourceInterface
 {
@@ -26,11 +24,8 @@ public:
   //! Costructor
   static  DriftDiffusionHeatSource* create();
  
- 
-  //  virtual void get_heat_sources(std::vector<Point> h_point,
-  //		       std::vector< std::vector< double > >& heat_source);
-
-
+  
+  
   virtual void get_power_fluxes(std::vector<Point> h_point, const std::set<ID>& ids,
 				std::vector<std::map<ID,RealGradient> >& power_fluxes);
 
@@ -39,63 +34,72 @@ public:
 				std::vector<std::map<ID, double> >& heat_sources);     
 
 
-  
+  //! \copydoc HeatSourceInterface::get_source_legend(const std::set<std::string>& variables);
   virtual std::map<ID,std::string> get_source_legend(const std::set<std::string>& variables);
 
+  //!  \copydoc HeatSourceInterface::get_flux_legend(const std::set<std::string>& variables);
   virtual std::map<ID,std::string> get_flux_legend(const std::set<std::string>& variables);
 
 
   //!Set the current element
-   virtual void set_heat_model(HeatModel* heat_model);
-   
+  virtual void set_heat_model(HeatModel* heat_model); 
+  
+  //! \copydoc PhysicalModel::do_print_info(void)
+  virtual void do_print_info(void);
 
-
-
+   //! A class that handles the heat source model option
+   class HeatSourceParameters
+   {
+   public:
+     //!Constructor
+     HeatSourceParameters(void);
+    
+     //! name of this heat source model
+     std::string model_name;
+     
+     //! name of the drift diffusion siulation
+     std::string dd_simul_name;
+    
+  };
 
 private:
 
-  
+  //!Heat model option 
+  HeatSourceParameters heat_source_opt;  
+
 
   enum heat_variables
     {
-      JNGRADPHIE,
-      JPGRADPHIH,
-      EJOULE,
+      EJOULE = 0,
       HJOULE,  
-      PHIE,
-      PHIH,  
-      PN,
-      PP,
-      TEMP,
-      PELTHE,
-      PELTHH,
-      SRHREC,
+      RECHEAT,
+      EPELTH,
+      HPELTH,
       WNX,
       WNY,
       WNZ,
       WPX,
       WPY,
       WPZ
-      
     };
 
-
-
-
+  //!Power flux legend
   std::map<ID,std::string> _flux_legend;
 
+  //!Heat Source legend
   std::map<ID,std::string> _source_legend;
 
+  //!Pointer to drift diffusion simulation
   SimulationInterface* _simul;
 
+  //!Pointer to heat model
   HeatModel* _heat_model;
 
-  //!Source variables
+  //!Heat source variables for drift diffusion
   std::set<ID> ID_set;
 
-  std::vector<ID> ID_vector;
-
-
+  //!Variable map
+  std::map<ID,ID> var_map;
 
  
 protected:

@@ -1346,3 +1346,11 @@ MacroHeatBalance::calculate_power_surfint(void)
 
 
 
+void
+MacroHeatBalance::do_print_info(void)
+{
+
+  string space("  ");
+  cout << space << "linear solver is: petsc" <<std::endl;
+   
+}

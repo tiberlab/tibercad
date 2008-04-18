@@ -140,7 +140,8 @@ class DriftDiffusion : public SimulationInterface
       EPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
       HPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
       TEMP,                /*!< Temperature */
-      MODELS = 100      /*!< base number for models */
+      MODELS = 100,      /*!< base number for models */
+      HEATMODELS = 1000  /*!< base number for heat models */
      
     };
       

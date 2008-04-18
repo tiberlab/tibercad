@@ -367,6 +367,20 @@ HeatModel::get_heat_source_IDs(std::vector<ID>& ids)
 
 }
 
+void
+HeatModel::do_print_info(void)
+{
+  std::string space = "        ";
+
+  std::cout<<space<<"Heat sources:"<<std::endl;
+  outer_source_iterator it =  _heat_source_models.begin();
+  outer_source_iterator end = _heat_source_models.end();
+  for ( ; it != end; ++it)
+    (it->second)->print_info();
+
+
+}
+
 
 // void
 // HeatModel:: update_heat_source_model()

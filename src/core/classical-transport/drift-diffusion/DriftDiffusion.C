@@ -1468,6 +1468,19 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
                 id = MODELS + rec_id;
             }
           }
+	  else if (rec[0] == "recHeat")
+	  {
+	    if (rec[1] == "total")
+              id = RECOMB;
+            else
+            {
+              ID rec_id = PhysicalModelInterface::get_id_from_name<
+	      RecombinationModelInterface>(rec[1]);
+              if (rec_id != INVALID_ID)
+                id = HEATMODELS + rec_id;
+            }   
+                    
+	  }
         }
       }
       
@@ -1479,7 +1492,7 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
   return id;
 }
 
-      
+        
 
 
 void
@@ -1815,13 +1828,23 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     while (*it > MODELS )
     {
+      if (*it > HEATMODELS)
+      {
+	double rec= sc->get_net_recombination_rate(*it - HEATMODELS);
+	values[n][*it] = Constants::e * rec * (ep-en + T * (Pp-Pn));
+      }
+      else
 	values[n][*it] = sc->get_net_recombination_rate(*it - MODELS);
-
+      
       if (it == first)
         break;
       --it;
 
     }
+
+   
+
+
 
 
 
@@ -2180,14 +2203,20 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     while (*it > MODELS )
     {
- 
+      if (*it > HEATMODELS)
+      {
+	double rec= sc->get_net_recombination_rate(*it - HEATMODELS);
+	values[n][*it] = Constants::e * rec * (ep-en + T * (Pp-Pn));
+      }
+      else
 	values[n][*it] = sc->get_net_recombination_rate(*it - MODELS);
       
       if (it == first)
         break;
       --it;
+
     }
- 
+   
 
 
   }
@@ -4076,7 +4105,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
   
-  QGauss qface(dim - 1, (libMeshEnums::Order) (integration_order + 1));
+  QGauss qface(dim - 1, integration_order);
   fe_face->attach_quadrature_rule(&qface);
 
   
@@ -4156,6 +4185,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (jacobian != NULL)
     jacobian->zero();
 
+  
 
 
   MeshBase::const_element_iterator el =

@@ -106,6 +106,8 @@ class MacroHeatBalance : public SimulationInterface
 						       std::vector<std::string>& legend,
 						       std::vector<std::string>& description);
 
+   /*! \copydoc SimulationInterface::do_print_info() */
+    virtual void do_print_info(void);
 
  private:
   

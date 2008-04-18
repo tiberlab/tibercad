@@ -46,7 +46,8 @@ class HeatModel: public PhysicalModel
    //!Get the current element
     const Elem* get_element(void);
 
-
+   //! \copydoc PhysicalModel::do_print_info(void)
+    void do_print_info(void);
 
    //! Get the temperature 
    void set_temperature(double temperature); 
@@ -68,10 +69,6 @@ class HeatModel: public PhysicalModel
   void get_total_power_flux(std::vector<Point> h_point,
 			    std::vector<RealGradient>& total_power_flux);
 
-
-  // //!Update the heat source models
-  // void update_heat_source_model();
-		   
 
 
  private:

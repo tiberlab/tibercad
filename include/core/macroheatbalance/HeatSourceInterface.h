@@ -26,20 +26,19 @@ public:
   virtual void get_power_fluxes(std::vector<Point> h_point, const std::set<ID>& ids,
 				std::vector<std::map<ID,RealGradient> >& heat_source){};
                      
-
+  
   static HeatSourceInterface* create(const std::string& name,
 	       const ModelOptions& options = ModelOptions());
 
+  
+  //! Get the source legend
   virtual std::map<ID,std::string> get_source_legend(const std::set<std::string>& variables){};
 
   //! Get the flux legend
   virtual std::map<ID,std::string>  get_flux_legend(const std::set<std::string>& variables){};
 
-
   //! Set the heat model
   virtual void set_heat_model(HeatModel* _heat_model){};
-
-
 
   
 
