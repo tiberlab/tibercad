@@ -359,11 +359,11 @@ $Solver
   macrostrain
   {
     substrate = substr
-    xmonitor =  true
+    #xmonitor =  true
     #monitor = true
 
 
- #   tolerance = 1e-8 # 1e-8 ok senza  oxide
+    tolerance = 1e-6 # 1e-8 ok senza  oxide
   # ksp_type = cg #gmres
     max_iterations = 15000
    pc = composite
