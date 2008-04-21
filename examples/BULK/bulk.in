@@ -110,7 +110,7 @@ $Physics
 
 $Simulation
 {
-  searchpath = ../materials
+  searchpath = ../../materials
   meshfile = bulk1D.msh
   dimension = 1
   mesh_units = 1e-3

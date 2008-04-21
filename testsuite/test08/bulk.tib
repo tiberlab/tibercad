@@ -1,0 +1,141 @@
+
+# Description of  the  device physical regions
+$Device
+{
+   Region bulk 
+   {
+     reg_numb = 1
+     mat = GaAs
+     doping = 1e15 doping_type = donor
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+
+  model driftdiffusion
+  { 
+              
+    options
+    {
+     simulation_name = dd
+
+     physical_regions = all
+    }
+
+
+    BC_Regions  
+    {
+      BC_Region anode
+      {
+        BC_reg_numb = 1
+        type = ohmic
+        voltage = 0.0
+      }
+
+      BC_Region cathode
+      {
+        BC_reg_numb = 2
+        type = ohmic
+        voltage = 0.0
+      }
+    }   
+  }  
+
+
+
+  model thermal
+  {
+
+    options
+    { 
+      simulation_name = tt
+      physical_regions = all
+    }
+
+    BC_Regions
+    {
+        BC_Region reservoir
+   	{
+         type = heat_reservoir
+         BC_reg_numb = 1
+         temperature = 300
+   	}
+       
+        BC_Region reservoir
+   	{
+	 type = heat_reservoir
+         BC_reg_numb = 2
+         temperature = 400
+	}
+     }
+     		    
+  }
+
+
+
+
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+  driftdiffusion
+  {
+    coupling = poisson
+    nonlinear_solver = tiber
+    ksp_type = bcgs
+    nonlin_max_it = 20
+    nonlin_step_tol = 1e-4
+    ls_max_step = 2
+  }
+
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+ 
+  driftdiffusion 
+  {
+    thermal_simulation = tt
+  }
+
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+
+$Simulation
+{
+  #searchpath = .
+  meshfile = bulk.msh
+  dimension = 1
+  mesh_units = 1e-9
+  temperature = 200
+  solve = (tt, dd)
+  resultpath = output
+  output_format = grace
+  plot = (Ec, Ev, Eg, LatticeTemp)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

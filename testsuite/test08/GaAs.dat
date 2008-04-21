@@ -1,0 +1,120 @@
+# GaAs-zb
+
+structure = zb
+
+E_v = 1.346
+
+# 300 K
+#Eg_G = 1.422
+#Eg_L = 1.707
+#Eg_X = 1.899
+
+# 200 K
+#Eg_G = 1.465
+#Eg_L = 1.707
+#Eg_X = 1.899
+
+# 150 K
+#Eg_G = 1.485
+#Eg_L = 1.707
+#Eg_X = 1.899
+
+# 100 K
+#Eg_G = 1.501
+#Eg_L = 1.707
+#Eg_X = 1.899
+
+# 0 K values
+Eg_G = 1.519
+Eg_L = 1.815
+Eg_X = 1.981
+
+varshni_alpha_G = 0.5405e-3
+varshni_beta_G =  204 
+
+
+varshni_alpha_X = 0.460e-3
+varshni_beta_X =  204 
+
+varshni_alpha_L = 0.605e-3
+varshni_beta_L =  204
+
+
+m_G = 0.067
+m_L_l = 1.9
+m_L_t = 0.0754
+m_X_l = 1.3
+m_X_t = 0.23
+
+a_c = -9.36
+abs_def_pot_L = -4.91
+abs_def_pot_X = -0.16
+uniax_def_pot_L = 6.5
+uniax_def_pot_X = 14.26
+
+a_v = -1.21
+b = -2.0
+d = -4.8
+
+delta = 0.341
+gamma1 = 6.98
+gamma2 = 2.06
+gamma3 = 2.93
+
+
+permittivity = 12.93
+
+
+# lattice constant
+a = 0.565325
+
+# stiffness data
+C11 = 122.1
+C12 = 56.6
+C44 = 60.0
+
+# piezoelectricity
+e14 = -0.16
+
+
+# mobility
+mu_max_e = 8500.0
+mu_max_h = 400.0
+
+mumin_e = 2.1360e+03
+am_e = -7.4570e-01
+mud_e = 6.3310e+03
+ad_e = -2.6870e+00
+N0_e = 7.3450e+16
+an_e = 3.535
+a_e = 0.6273
+aa_e = -1.4410e-01
+mumin_h = 21.48
+am_h = -1.1240e+00
+mud_h = 3.3120e+02
+ad_h = -2.3660e+00
+N0_h = 5.1360e+17
+an_h = 3.69
+a_h = 0.8057
+aa_h = 0.0
+
+# SRH recombination
+Etrap    = 0.0
+taumin_e = 0.0
+taumax_e = 1.0e-9
+Nref_e   = 1.0e+16
+gamma_e  = 1
+taumin_h = 0.0
+taumax_h = 1.0e-9
+Nref_h   = 1.0e+16
+gamma_h  = 1
+
+
+
+#Lattice thermal conductivity [W/(cm*K)]
+therm_lat_cond = 0.55
+
+
+#Thermoelectric power [mV/K]
+eTEpower = -200
+hTEpower = 200
