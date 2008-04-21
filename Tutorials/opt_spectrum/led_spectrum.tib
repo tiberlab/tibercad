@@ -597,7 +597,7 @@ $Simulation
  solve = (strain, sweep, QW3_electrons,QW3_holes, spectrum    )
 
 
-  resultpath =  output_no_therm_V4_QW3 # 
+  resultpath =   output_V4_QW3
  
   plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, Occupation, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent,  optical_spectrum, k-space  )
  
