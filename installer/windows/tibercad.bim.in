@@ -50,7 +50,7 @@ mklicdir = CREATEFOLDER¶<DefaultInstallPath>\license
 ; 
 [uConfig]
 RebootRequired = 0
-UninstNorm = 0
+UninstNorm = 1
 UninstAll = 0
 SkipExtString = 
 IconExtUninst = 0

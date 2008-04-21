@@ -61,9 +61,13 @@ int main (int argc, char** argv)
 
   }
 
+
   // do some preparation
   {
 #ifdef CYGWIN
+    // we first convert the filename to something mor UNIX like
+    Utils::convert_path_to_unix(inputfile);
+
     // in windows argv[0] is the absolute path
     char* root = getenv("TIBERCADROOT");
     if (root == NULL)

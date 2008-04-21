@@ -111,6 +111,9 @@ class Utils
     static std::string dirname(const std::string& file);
 
 
+    //! Convert a windows style path to something more UNIX like
+    static void convert_path_to_unix(std::string& path);
+
 
 
   private:
