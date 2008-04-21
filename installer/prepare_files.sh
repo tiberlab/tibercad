@@ -21,17 +21,17 @@ make_windows_package () {
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   cp ${topdir}/materials/[^.]* ${files}/materials
 
-  curdir=`pwd`
-  cd ${files}
+  #curdir=`pwd`
+  #cd ${files}
 
   #zip -r -l data.zip materials examples
-  zip -r  data.zip materials examples
-  cp /usr/bin/unzipsfx.exe data.exe
-  cat data.zip >> data.exe
-  zip -A data.exe
-  rm -f data.zip
+  #zip -r  data.zip materials examples
+  #cp /usr/bin/unzipsfx.exe data.exe
+  #cat data.zip >> data.exe
+  #zip -A data.exe
+  #rm -f data.zip
 
-  cd $curdir
+  #cd $curdir
 
   # copy cygwin system libraries
   test ! -x /usr/bin/cygcheck.exe && exit 1

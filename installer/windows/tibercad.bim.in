@@ -25,38 +25,37 @@ WV = 1
 DotNet = 0
 RunIfDepNotFound = 
 ; 
-[FilesAndSettings]
-WizBitmap = @BINSTALLMAKERDIR@\Splash\Pure\Wizard.bmp
+[Look]
+HeaderTextColour = 0
+WizBitmap = @BINSTALLMAKERDIR@\Splash\Classic\Wizard.bmp
 HeadBitmap = @BINSTALLMAKERDIR@\Splash\Classic\Header.bmp
+IconFile = @TIBERSHAREDIR@\share\tibercad.ico
+[FilesAndSettings]
 ReadMe = 
 License = @TIBERSHAREDIR@\Copyright.txt
 RequireReadme = 0
 RequireLicense = 1
-IconFile = @TIBERSHAREDIR@\share\tibercad.ico
-HeaderTextColour = 0
-; 
-[Localization]
-Entry0 = EnglishÂ¶Trutia AlexandruÂ¶@BINSTALLMAKERDIR@\Localization\English.ini
 ; 
 [Folder]
-Folder = @WININSTALLERDIR@\files
+Folder = @WININSTALLERDIR@\files\
 ; 
+[Localization]
+Entry0 = English¶Bytessence¶@BINSTALLMAKERDIR@\Localization\English.ini
+;
 [InstTasks]
 fileassoc = ASSOCIATEEXTENSION¶tib¶TiberCAD input file¶<DefaultInstallPath>\tibercad.exe¶0
-extract = RUN¶1¶1¶1¶<DefaultInstallPath>\data.exe¶¶
 mklicdir = CREATEFOLDER¶<DefaultInstallPath>\license
 ; 
 [UninstTasks]
 ; 
 [uConfig]
 RebootRequired = 0
-UninstNorm = 1
-UninstAll = 0
 SkipExtString = 
 IconExtUninst = 0
 IconExtCustom = 0
 IconExtPath = 
 IconExtIndex = 0
+CreateUninstaller = 1
 ; 
 [iConfig]
 RebootRequired = 0
