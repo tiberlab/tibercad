@@ -710,7 +710,7 @@ DriftDiffusion::do_solve(void)
     build_local_scaling();
 
 
-  set_dirichlet_bc();
+  //set_dirichlet_bc();
   
   try
   {
