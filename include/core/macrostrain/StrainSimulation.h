@@ -3,7 +3,9 @@
  
 #include "SimulationInterface.h"
 #include "tensor.h"
-#include "Device.h"
+
+class  Device;
+
 class StrainSimulation:  public SimulationInterface
 {
  public:

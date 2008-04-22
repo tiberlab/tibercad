@@ -4,6 +4,7 @@
 #include "SimulationEnvironment.h"
 #include "MacrostrainModel.h"
 #include "Material.h"
+#include "Device.h"
 
 Device*  StrainSimulation:: _device;
 
