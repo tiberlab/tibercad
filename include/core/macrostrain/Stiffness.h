@@ -35,7 +35,7 @@ class Stiffness : public PhysicalModelInterface
   //! creates new object
   static Stiffness* create(const std::string& name,  const ModelOptions& options);
  
-  void  calculate_strain_from_stress(const Tensor2Sym& stress, Tensor2Sym strain ) const;
+  void  calculate_strain_from_stress(const Tensor2Sym& stress, Tensor2Sym& strain ) const;
   
 
  private:
@@ -110,5 +110,13 @@ inline Tensor2Sym Stiffness::get_another_subtensor(const int i, const int j)
   return(temp);
 }
 
+//----------------------------------------------------------------------------------------------//
+
+inline void   Stiffness::calculate_strain_from_stress(const Tensor2Sym& stress, Tensor2Sym& strain) const
+{
+
+  strain = solve(C_calc, stress);
+
+}
 
 #endif

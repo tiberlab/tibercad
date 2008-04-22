@@ -60,10 +60,5 @@ inline void Stiffness::set_C_tensor_crystal(const Tensor4DSym&     C)
 }
 
 //--------------------------------------------------------------------//
-inline void   Stiffness::calculate_strain_from_stress(const Tensor2Sym& stress, Tensor2Sym strain) const
-{
 
-  strain = solve(C_calc, stress);
-
-}
 

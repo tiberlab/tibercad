@@ -2,7 +2,8 @@
 #define _STRAINSIMULATION_H_
  
 #include "SimulationInterface.h"
-
+#include "tensor.h"
+#include "Device.h"
 class StrainSimulation:  public SimulationInterface
 {
  public:
@@ -23,25 +24,44 @@ class StrainSimulation:  public SimulationInterface
 
 
   /*! \copydoc SimulationInterface::create_physical_model() */
-  virtual PhysicalModel*
-
-    create_physical_model(const ModelOptions& options,
-			  const Material* mat) const
-    throw (ModelErrorException);
+  virtual PhysicalModel*   create_physical_model(const ModelOptions& options,
+			   const Material* mat) const  throw (ModelErrorException);
 
 
 
- 
+  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
+
+
+  virtual void get_solution_secure(const Elem* elem,
+				   const std::vector<Point>& p, const std::set<ID>& ids,
+				   std::vector<std::map<ID, double> >& values);
+  
 
 
  protected:
   
   
+  //!map betwen the element and the result strain in crystal system
+  /*!
+    the map is created at the end of the method solve()
+    it contains only the active elements for this strain simulation
+   */
+  std::map<const Elem*, Tensor2Sym> result_strain;
+  
+  static Device*   _device;
 
+  virtual void do_init(void);
+
+  //virtual void parse_options(void) ;
+ 
+  //virtual void do_solve(void);
 
  private:
 
 
 };
+
+ 
+
 
 #endif

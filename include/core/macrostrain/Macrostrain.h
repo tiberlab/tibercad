@@ -55,7 +55,7 @@
 
 #include "Stiffness.h"
 #include "RotatedCrystal.h"
-#include "tensor.h"
+
 #include "GMVIO_cell.h"
 
 #include "Piezoelectricity.h"
@@ -202,15 +202,12 @@ class Macrostrain : public StrainSimulation
   
 
 
-  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
+ 
      
      
 
  
-  virtual void get_solution_secure(const Elem* elem,
-				   const std::vector<Point>& p, const std::set<ID>& ids,
-				   std::vector<std::map<ID, double> >& values);
-  
+ 
 
   //!will be removed in future
   void write_atom_potential();
@@ -229,8 +226,7 @@ class Macrostrain : public StrainSimulation
   //!pointer to the equation systems 
   EquationSystems*   equation_systems; 
 
-  //!pointer to the device object
-  static  Device* _device;
+  
 
   //!pointer to the  system used in the simulation 
   LinearImplicitSystem* my_system;
@@ -240,12 +236,7 @@ class Macrostrain : public StrainSimulation
   //!name of my system
   std::string system_name;
 
-  //!map betwen the element and the result strain in crystal system
-  /*!
-    the map is created at the end of the method Macrostrain::solve()
-    it contains only the active elements for this strain simulation
-   */
-  std::map<const Elem*, Tensor2Sym> result_strain;
+  
 
 
   //!pointer to the mesh
