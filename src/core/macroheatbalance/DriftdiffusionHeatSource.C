@@ -148,7 +148,7 @@ DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point, const std
 	heat_sources[n][HPELTH]=hPelTh;
 
       if  (ids.count(100))
-	heat_sources[n][5]=eJoule + hJoule + RecHeat + ePelTh + hPelTh;
+	heat_sources[n][100]=eJoule + hJoule + RecHeat + ePelTh + hPelTh;
         
 
     } 
@@ -167,16 +167,16 @@ DriftDiffusionHeatSource::get_power_fluxes(std::vector<Point> h_point, const std
   power_fluxes.clear();
   power_fluxes.resize(h_point.size());
   for(unsigned int n =0 ; n<h_point.size();n++)
-  {
     power_fluxes[n].clear();
-    //    power_fluxes[n].resize(ids.size()); 
-  }
-  
+ 
+
+ 
   const Elem*  elem = _heat_model->get_element();
 
   int side = _heat_model->get_side();
    //if side = -1 the check has not be done
-  
+
+
   //if  no_check = true the check boundary is off
   bool do_calc = true;
   
@@ -225,9 +225,11 @@ DriftDiffusionHeatSource::get_power_fluxes(std::vector<Point> h_point, const std
 	  
 	  if (ids.count(100))
 	  {
-	    power_fluxes[n][1](0) = Wn_x + Wp_x; 
-	    power_fluxes[n][1](1) = Wn_y + Wp_y; 
-	    power_fluxes[n][1](2) = Wn_z + Wp_z;  
+	   
+	    power_fluxes[n][100](0) = Wn_x + Wp_x; 
+	    power_fluxes[n][100](1) = Wn_y + Wp_y; 
+	    power_fluxes[n][100](2) = Wn_z + Wp_z;  
+	   
 	  }           
 	  
 

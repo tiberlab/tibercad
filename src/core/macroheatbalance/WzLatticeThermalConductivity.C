@@ -70,15 +70,13 @@ if (_kappa_model != "constant")
   k_x = options.get_option("therm_lat_cond_x",_kappa_x);
   k_z = options.get_option("therm_lat_cond_z",_kappa_z);
 
-  
-
 }
-
 
 
   _conductivity(1,1) = k_x;
   _conductivity(2,2) = k_x;
   _conductivity(3,3) = k_z;
+
 
   Material* mat = get_material();
 
@@ -116,13 +114,13 @@ if (_kappa_model != "constant")
 
   const RotatedCrystal&   cr = mat->get_rotated_crystal ();
 
+  
   rotate_to_calculation_system(cr.RotMatrix);
 
  }
 
+  
 
 
-  
-  
 
 }

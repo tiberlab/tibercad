@@ -394,7 +394,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
     heat_model->get_thermal_conductivity(kappa);
 
-   
+
     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
     { // loop over test function
       
@@ -416,7 +416,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	      if (i < j) 
 		kappa_value = kappa(j+1, i+1);
 	      else
-		kappa_value = kappa(i+1, j+1);
+		kappa_value = kappa(i+1, j+1);	      
 	      
 	      value += JxW[qp] * dphi[p1][qp](i) * kappa_value * dphi[p2][qp](j); 
 	      
@@ -429,7 +429,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	} //loop over basis functions
 	
 	//Fe(p1) +=JxW[qp] * heat_source[qp] * phi[p1][qp];
-        
+
 	Fe(p1) += JxW[qp] * flux_power[qp] * dphi[p1][qp];
 	
       }//end Loop over quadrature points  
@@ -460,6 +460,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
 	{
 	  double Fe_surf = JxW_face[qp] * phi_face[p1][qp] * flux_power[qp] * normal[qp];
+	 
 	  Fe(p1) -= Fe_surf;
 	  
 	}
@@ -577,7 +578,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
       
     }// for (unsigned int side = 0; side<num_sides; side++)
     
-    
+
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
     system.matrix->add_matrix (Ke, dof_indices);
     system.rhs->add_vector    (Fe, dof_indices); 
@@ -1172,6 +1173,7 @@ void MacroHeatBalance::build_nodal_results (const std::set< std::string > &varia
 	{
 	  
 	  results[id+Temp]  =  (*(my_system->solution))(dof_indices[n]);       
+
 	}
 	
       }  

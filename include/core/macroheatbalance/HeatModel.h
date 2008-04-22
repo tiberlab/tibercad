@@ -104,8 +104,6 @@ class HeatModel: public PhysicalModel
 
    model_options model_opt;
 
-  
-
    //!Iterator for thermal conductivity model
    typedef std::map<ID, ThermalConductivityInterface*>::iterator outer_conductivity_iterator;
 

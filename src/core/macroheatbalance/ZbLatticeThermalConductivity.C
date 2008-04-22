@@ -31,7 +31,7 @@ void  ZbLatticeThermalConductivity::read_database(void)
   
   }
   
-
+ 
 }
 
 //---------------------------------------------------------//

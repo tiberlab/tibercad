@@ -71,8 +71,6 @@ void HeatModel::do_init()
 
 
 
-
-
   PhysicalModelInterface::destroy(kappa);
 
   it = get_options().submodels_begin("Lattice_thermal_condictivity");
@@ -99,9 +97,11 @@ void HeatModel::do_init()
 	  PhysicalModelInterface::create("lat_therm_cond_" +
 		get_material()->get_structure()));
   
-     
+     //std::cout<<get_material()->get_structure()<<std::endl;
+
     }
  
+  // std::cout<<get_material()->get_structure()<<std::endl;
 
     kappa->set_temperature(SimulationOptions::temperature);
     
@@ -125,8 +125,9 @@ void HeatModel::calculate_VCA (const PhysicalModelInterface *comp_A, const Physi
 
   const HeatModel* matB = dynamic_cast< const HeatModel*> (comp_B);
 
- 
   kappa->build_alloy(matA->kappa, matB->kappa, xa);
+
+  
 
 }
 
@@ -136,50 +137,10 @@ void HeatModel::re_init()
 {
 
   update_lattice_thermal_conductivity();
-
-  //update_heat_source_model();
-
-
-  // update_particle_thermal_conductivity();  
       
 }
 
-// void HeatModel::update_particle_thermal_conductivity()
-// {
-//   if (model_opt.particle_thermal_conductivity)
-//   {
-//     if (kappa_carrier != NULL)
-//     {
-//       //Insert phase    
-//       kappa_carrier->set_temperature(_temperature);
 
-//       std::vector< std::map< ID, double > >  dd_sol_kpart;
-//       std::vector<Point> centroid(1);
-   
-
-//       centroid[0]= _elem->centroid();
-
-//       _dd_simul->get_solution(_elem,centroid,dd_ID_kpart,dd_sol_kpart); 
-
-//       double sigma_e =  dd_sol_kpart[0].find(ID_kpart[CONDE])->second;
-
-//       double sigma_h =  dd_sol_kpart[0].find(ID_kpart[CONDH])->second;
-      
-//       kappa_carrier->set_electrons_conducibility(sigma_e);
-      
-//       kappa_carrier->set_holes_conducibility(sigma_h);
-      
-//       //Update phase
-//       kappa_carrier->re_init(); 
-      
-//       //Getting result phase
-//       kappa_carrier->get_electrons_thermal_conductivity(_electrons_thermal_conductivity);
-      
-//       kappa_carrier->get_holes_thermal_conductivity(_holes_thermal_conductivity);
-//     }
-    
-//   }
-// }
 
 void HeatModel::update_lattice_thermal_conductivity()
 {
@@ -259,8 +220,9 @@ HeatModel::get_total_heat_source(std::vector<Point> h_point,
   outer_source_iterator it_outer = _heat_source_models.begin();
   outer_source_iterator end_outer = _heat_source_models.end();
   
+  ID IDtot = 100;
   std::set<ID> TotalSet;
-  TotalSet.insert(100);
+  TotalSet.insert(IDtot);
 
   for ( ; it_outer != end_outer; ++it_outer)
   {
@@ -272,7 +234,7 @@ HeatModel::get_total_heat_source(std::vector<Point> h_point,
     (it_outer->second)->get_heat_sources(h_point,TotalSet,partial_heat_source);
 
     for (ID n = 0;  n < np; ++n)
-      total_heat_source[n] = partial_heat_source[n].begin()->second;
+      total_heat_source[n] = partial_heat_source[n][IDtot];
 
 
   }
@@ -287,14 +249,16 @@ HeatModel::get_total_power_flux(std::vector<Point> h_point,
   
   unsigned int np = h_point.size();
 
-  total_power_flux.clear();
+  //
   total_power_flux.resize(np);
  
   outer_source_iterator it_outer = _heat_source_models.begin();
   outer_source_iterator end_outer = _heat_source_models.end();
 
+
+  ID IDtot = 100;
   std::set<ID> TotalSet;
-  TotalSet.insert(100);
+  TotalSet.insert(IDtot);
   
   for ( ; it_outer != end_outer; it_outer++)
   {
@@ -303,8 +267,9 @@ HeatModel::get_total_power_flux(std::vector<Point> h_point,
     
     (it_outer->second)->get_power_fluxes(h_point,TotalSet,partial_power_fluxes);
 
-    for (ID n = 0;  n < np; ++n)
-      total_power_flux[n] = (partial_power_fluxes[n].begin()->second);
+    for (ID n = 0;  n < np; ++n) 
+      total_power_flux[n] = partial_power_fluxes[n][IDtot];
+    
       
    }
  
