@@ -71,9 +71,13 @@ void CrackStrain::do_solve()
 
     stiffness->calculate_strain_from_stress (stress,  strain);
 
+
+
     const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
     
     Tensor2Gen RotM = (crystal_el->RotMatrix).transpose();//get rotation matrix
+
+    // RotM  = 1;
       
     Tensor2Gen eps1 = (RotM * strain) * RotM.transpose();  //transform to crystal system
 
@@ -81,10 +85,11 @@ void CrackStrain::do_solve()
 
     assert (norm(strain - eps1) < 1e-6); //is it really symmetric
 
+
     result_strain.insert(std::pair <const Elem*, Tensor2Sym>  (elem, strain));
 
     
-    //result_strain.insert(std::pair <const Elem*, Tensor2Sym>  (elem, stress));
+    // result_strain.insert(std::pair <const Elem*, Tensor2Sym>  (elem, stress));
     
   }
 
@@ -115,22 +120,31 @@ void CrackStrain::calculate_stress(Tensor2Sym& stress, const double x_input, con
   }
   else
   {
-    if (x >= 0.0)
-      teta = std::asin(y/rho);
-    else
-      teta = M_PI - std::asin(y/rho);
+   
+    if (x>0) 
+      teta = std::atan2(y,x);
+    else if ((x<0)&&(y>=0))
+      teta = std::atan2(y,x) + M_PI;
+    else if ((x<0) && (y < 0))
+      teta = std::atan2(y,x) - M_PI;
+    else if (x == 0 && y > 0)
+      teta = M_PI/2.0;
+    else 
+      teta = -M_PI/2.0;
+
+
   }
 
 
-  double t = _Ki/std::sqrt(2*M_PI*rho);
+  double t = _Ki/std::sqrt(2.0*M_PI*rho);
 
  
 
-  stress(1,1) = t * std::cos(teta/2) * (1 - std::sin(teta/2)*std::sin(3/2*teta));
+  stress(1,1) = t * std::cos(teta/2.0) * (1.0 - std::sin(teta/2.0)*std::sin(3.0/2.0*teta)  );
  
-  stress(2,2) = t * std::cos(teta/2) * (1 + std::sin(teta/2)*std::sin(3/2*teta));
+  stress(2,2) = t * std::cos(teta/2.0) * (1.0 + std::sin(teta/2.0)*std::sin(3.0/2.0*teta));
   
-  stress(2,1) = t * std::sin(teta/2) * std::cos(teta/2) * std::cos(3*teta/2);
+  stress(2,1) = t * std::sin(teta/2.0) * std::cos(teta/2.0) * std::cos(3.0*teta/2.0);
   
 
 }
@@ -147,8 +161,11 @@ void CrackStrain::build_elemental_results(const std::set<std::string>& variables
   std::vector<std::string> pol_names;
   std::vector<double> pol_data;  
 
-   prepare_strain_data_for_output( eps_names,  eps_data);
-   prepare_polarization_data_for_output( pol_names,  pol_data);
+  prepare_strain_data_for_output( eps_names,  eps_data);
+  prepare_polarization_data_for_output( pol_names,  pol_data);
+
+  // for (unsigned int i= 0; i < pol_data.size() ; i++)
+  //  cerr << pol_data[i] << "\n";
 
 
   
@@ -211,12 +228,14 @@ void CrackStrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
   char num_j[2];
   string eps_ij;
 
-  unsigned int index = 0;
+  
   unsigned int Number_of_elements = mesh.n_active_elem();
 
   eps_data.resize(Number_of_elements*6);
   eps_names.resize(6);
 
+
+  unsigned int index = 0;
   for (int i = 1; i <=3 ; i++)
     for (int j = 1; j <=i; j++)
     {
@@ -229,27 +248,59 @@ void CrackStrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
 
       eps_names[index] = eps_ij ;
 
-
-      MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-      const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-
-      unsigned int elem_number = 0;
-
-      for ( ; el != end_el ; ++el) 
-      {
-
-	const Elem* elem = *el;
-
-	
-	
-
-	eps_data[index + elem_number * 6  ] = result_strain[elem] (i,j);
-	elem_number++;
-      }
-  
       index++;
 
     }
+
+  
+
+
+  
+
+
+  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+
+  unsigned int elem_number = 0;
+      
+  Tensor2Sym strain;
+      
+  for ( ; el != end_el ; ++el) 
+  {
+
+    const Elem* elem = *el;
+
+    ID subdomain = elem->subdomain_id();
+    
+    const Material* mat = _device->get_material(subdomain);
+
+	
+    const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
+
+    Tensor2Gen RotM = crystal_el->RotMatrix;//get rotation matrix
+    
+    Tensor2Gen eps1 = (RotM * result_strain[elem]) * RotM.transpose();  //transform to calculation system
+    
+    strain  = sym(eps1); //result has to be symmetric
+
+    index = 0;
+	
+    for (int i = 1; i <=3 ; i++)
+      for (int j = 1; j <=i; j++)
+      {
+
+	eps_data[index + elem_number * 6  ] = strain(i,j);
+	    
+	index++;
+      }
+
+
+    elem_number++;
+  }
+  
+      
+
+
 }
 
 
@@ -296,7 +347,14 @@ void CrackStrain::prepare_polarization_data_for_output( std::vector<std::string>
 
     Tensor1 polariz = ( macrostrain_model->get_piezo() ) -> get_polariz_cryst(result_strain[elem]); //crystal system
 
-    polariz =(crystal_el->RotMatrix) * polariz; //calculation system
+   
+
+
+    polariz_vec =(crystal_el->RotMatrix) * polariz; //calculation system
+
+   
+
+   
     
     polariz_data[0 + el_number*3] = polariz_vec (1);
     polariz_data[1 + el_number*3] = polariz_vec (2);
