@@ -9,7 +9,7 @@ $Device
    {
 
      reg_numb = 2
-     mat = Si
+     material = Si
      doping = 1e18 doping_type = donor
 
    }
@@ -17,7 +17,7 @@ $Device
    Region pside 
    {
      reg_numb = 1
-     mat = Si
+     material = Si
      doping = 1e18 doping_type = acceptor
 
     }
@@ -159,10 +159,8 @@ $Physics
  
   driftdiffusion 
   {
-    model = unstrained
     thermal_simulation = tt
   }
-
 
 }
 
@@ -180,8 +178,6 @@ $Simulation
   output_format = grace
   plot = (ContactCurrents,Pn,Pp,thermal)
 
-    
- 
 }
 
 
