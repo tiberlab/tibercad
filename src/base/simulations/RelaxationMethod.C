@@ -29,6 +29,7 @@ RelaxationMethod::do_solve(void)
 
   AutoPtr<NumericVector<double> > x_old = NumericVector<double>::build();
   x_old->init(get_solution_vector().size());
+  x_old->close();
 
   for (unsigned int it = 0; it < get_maximum_iterations(); it++)
   {
