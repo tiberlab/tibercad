@@ -2,10 +2,20 @@
 
 structure = wz
 
-Eg_G = 3.51
+
+# T=300 K
+# Eg_G = 3.4376
+
+# T = 0
+ Eg_G = 3.51
+
+
 #E_v = -2.64
 # from Nextnano
 E_v = -0.726
+
+varshni_alpha_G = 0.909e-3
+varshni_beta_G = 830
 
 m_c_xx = 0.202
 m_c_zz = 0.206
@@ -109,6 +119,7 @@ gamma_h  = 1
 Talpha_h = -1.5
 
 # direct
+C = 0.47e-10
 
 #Lattice thermal conductivity 
 therm_lat_cond_x = 1.3

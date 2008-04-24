@@ -2,10 +2,20 @@
 
 structure = wz;
 
+# T = 300
+#Eg_G = 6.1581
+
+
+# T = 0
 Eg_G = 6.25;
+
+
 #E_v = -3.44;
 # from Nextnano
 E_v = -1.526;
+
+varshni_alpha_G = 1.799e-3
+varshni_beta_G =  1462
 
 m_c_xx = 0.3;
 m_c_zz = 0.32;
@@ -108,6 +118,9 @@ taumax_h = 1.0e-9
 Nref_h   = 1.0e+16
 gamma_h  = 1
 Talpha_h = -1.5
+
+# direct recombination
+C = 0.18e-10
 
 #Lattice thermal conductivity
 therm_lat_cond_x = 2.85

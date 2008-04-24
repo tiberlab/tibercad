@@ -257,8 +257,8 @@ $Solver
     strain_model_name = macrostrain
     convergent_density = true
     log_output = true
-
-    solver = krylovshur 
+  #  solver = lapack
+  #  solver = krylovshur 
     
 
   }
@@ -272,10 +272,10 @@ $Solver
     poisson_model_name = dd
     strain_model_name = macrostrain
     convergent_density = true
-    solver = krylovshur
+ #   solver = krylovshur
 
     log_output = true
-
+ #   solver = lapack
 
   }
 
@@ -347,7 +347,7 @@ $Simulation
   mesh_units = 1e-9
   dimension = 1
   temperature = 300
-
+  verbose = 1
   solve = (str, dd, quantum_el, quantum_hl, dispersion_el, dispersion_hl)  
 
   resultpath = output

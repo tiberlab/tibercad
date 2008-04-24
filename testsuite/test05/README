@@ -1,3 +1,4 @@
-test 05
+test 09
 
-checks dispersion of quantized electrin and hole states in a quantum well
+checks dispersion of quantized electron and hole states in a quantum well
+the band gap is calculated according to the temperature
