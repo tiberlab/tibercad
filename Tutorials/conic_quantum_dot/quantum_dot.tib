@@ -250,7 +250,6 @@ $Solver
 
     tolerance = 1e-6
 
-    xmonitor = true
   }
 
  

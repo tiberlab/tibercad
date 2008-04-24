@@ -933,7 +933,7 @@ $Models
       {
         BC_reg_numb = 1
         type = ohmic
-      	zero_grad_fermi_h = true
+      	
         voltage = 0.0
       }
       
@@ -942,7 +942,7 @@ $Models
       {
         BC_reg_numb = 2
         type = ohmic
-	zero_grad_fermi_e = true
+	
 	voltage = 0.0
       }
 
@@ -992,8 +992,7 @@ $Models
 # physical_regions =  "list (Tiber_region | Tiber_cluster) " 
 
       physical_regions = Quantum_1
-
-     
+    
     }
 
   
@@ -1003,17 +1002,13 @@ $Models
 
   {
 
-   
     options
     {
      simulation_name = quantum_holes
      physical_regions = Quantum_1
 
- 
-
     }
 
-  
   }
 
  
@@ -1088,8 +1083,10 @@ $Physics
   driftdiffusion 
   {
     statistics = FD
-    model = strained  #  
- #  model = unstrained  # 
+    
+    strain_simulation = macrostrain  #  default driftdiffusion model including 
+				     #	local strain  obtained from "macrostrain"
+
   }
    
  quantum_electrons 
@@ -1119,18 +1116,16 @@ $Physics
 $Simulation
 {
 
- searchpath = ../../examples/materials 
+ searchpath = ../../materials 
      
  mesh_units = 1e-9       #nm !!
  dimension = 1
  meshfile = test.msh
  temperature = 300
   solve =  (strain, driftdiffusion, quantum_electrons,quantum_holes )
-#   solve = (strain, driftdiffusion)
-#  solve = driftdiffusion
-# solve = strain
+
    resultpath =  output_  
- # plot = (Ec,Ev,QFermi_e, QFermi_h, T)
+ 
   plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent)
  
   output_format = grace

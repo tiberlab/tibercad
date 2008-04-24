@@ -265,6 +265,8 @@ class Read_MSH
   //! Parse  MeshFormat section (version 2)
   void parse_meshformat_section(ifstream&  in_stream);
 
+  void cut_off_CR(string& label,  ifstream& in_stream);
+
 
 };
 

@@ -131,8 +131,14 @@ void Read_MSH::parse_elem_section(ifstream& in_stream )
   v.clear();
      
   //  rule  for element  line  (list  of  integers uint)
+  //  rule<>list_of_numbers_space_sep = uint_p[push_back_a(v)] >> 
+  //    *( *(space_p) >> uint_p[push_back_a(v)]);
+
+  // 24.4.08
   rule<>list_of_numbers_space_sep = uint_p[push_back_a(v)] >> 
-    *( *(space_p) >> uint_p[push_back_a(v)]);
+    *( *(space_p) >> uint_p[push_back_a(v)])  >> *(anychar_p)  ;
+
+
      
   //rule<> r = *(space_p)>> uint_p[assign_a(id)] >> *(space_p) >>
   // list_of_numbers_space_sep  >> *(anychar_p);
@@ -193,16 +199,13 @@ void Read_MSH::find_elem_section(char const* str, ifstream& in_stream)
 
 
 
-
-
-
-
-// scan  .msh  file  name,  line  by  line 
+// **************************************  
+// scan  .msh  file  name
 void Read_MSH::scan_input(string file_name)
 
 {
 
-  std::string str,  End_mesh_format  ;
+  std::string  Nodes_label, Elements_label ,label ;
 
   std::ifstream in_stream (file_name.c_str());
 
@@ -217,13 +220,24 @@ void Read_MSH::scan_input(string file_name)
     //   error();
   }
 
-  while (getline(in_stream, str))  //   
-  {
+  in_stream >> label;
 
-    read_data_section(str.c_str(),in_stream);
-	   
+  // **********************  version 2
+  if (label == "$MeshFormat")
+  {
+    parse_meshformat_section(in_stream);
+    in_stream >> label;
+ 
+
   }
 
+  //  in_stream >> Nodes_label;
+  parse_node_section(in_stream);
+
+ 
+
+  in_stream >> Elements_label;
+  parse_elem_section(in_stream);
 
 }
 
@@ -231,7 +245,13 @@ void Read_MSH::scan_input(string file_name)
 
 
 
-// utility method  to  read  element  lines ...
+
+
+//**********************************************
+
+
+
+  // utility method  to  read  element  lines ...
 void  Read_MSH::get_data ( vector< vector<unsigned int> >& glob_elem_values )
 {
   glob_elem_values = elem_values;
@@ -735,6 +755,20 @@ unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,
 // public  method  to  get  map    <BC_region, BC_nodes> 
 void  Read_MSH::get_BC_data (map<unsigned int, vector<unsigned int> >& BoundCond_map )
 {
+
+  std::map< unsigned int,std::vector<unsigned int> >::iterator it(BoundCond.begin());
+  const std::map< unsigned int,std::vector<unsigned int> >::iterator end(BoundCond.end());
+  for ( ; it != end; ++it)
+  {
+
+    //   cerr << "BC_map ID  =  " << (it->first) <<  endl;
+    for ( int i =0; i < ((it->second).size()); ++i)
+    {
+      //    cerr <<  " node " << i << "  " << (it->second)[i] << endl;
+    }
+
+  }
+
 
   BoundCond_map = BoundCond;
  
@@ -1782,94 +1816,55 @@ void Read_MSH::get_elem_nodes()
 
 
 
+
+
+
+
+// ************************* NEW
 //  parser of  NODES  section of  .msh  file  (version 1)
 void Read_MSH::parse_node_section(ifstream& in_stream )
 { // parse nodes
 
-  bool end_nodes = false;
+  //  bool end_nodes = false;
  
+  double node_id, x_coord, y_coord, z_coord; 
 
-  string  str;
+  string  str, end_nodes_label   ;
   vector<double> v;
   v.clear();
-     
-  //  rule  for node  line  (list  of  real)
-  rule<>list_of_numbers_space_sep = real_p[push_back_a(v)] >> 
-    *( *(space_p) >> real_p[push_back_a(v)]);
-     
-  //rule<> r = *(space_p)>> uint_p[assign_a(id)] >> *(space_p) 
-  // >>list_of_numbers_space_sep  >> *(anychar_p);
 
-  rule<> r = list_of_numbers_space_sep; 
-
-
-
-  //  reads  nodes  total number (one  integer)
-  getline(in_stream, str);
-  if (parse(str.c_str(), uint_p[assign_a(num_of_nodes)] >> 
-            *(space_p)   , space_p).full) 
-  {
-    //   cout << " NUMERO  NODI *********"<< num_of_nodes  <<endl ;
-  } 
-      
-      
-  // reads  NODE   line : NODE  number, 3  coordinates
-  //  and  put it in vector node_entry
  
-  while  (getline(in_stream, str))      //   
+  in_stream >> num_of_nodes;
+ 
+  for (int i =0; i< num_of_nodes;++i)
   {
-      
-    if (  parse(str.c_str(), r) .full )
-           
-    {
-	  
-      node_entry.push_back(v);
-      //     cout << v[0] <<endl ;                
-	
-      v.clear();
-	     
-                             
-                             
-    } 
 
-    if (parse(str.c_str(), str_p("$ENDNOD") ).full) 
+    v.clear();
 
-      //    if (  parse(str.c_str(), r) .full )
-           
-    {
+    in_stream >>  node_id;
+    v.push_back( node_id);
 
-      //	  cout << " BREAK   "  <<endl ;  
-      end_nodes = true; 
-      break;
-    }
+    in_stream >>  x_coord;
+    v.push_back( x_coord);
+
+    in_stream >>  y_coord ;
+    v.push_back(y_coord );
+
+    in_stream >>  z_coord;
+    v.push_back(z_coord );
+
+    node_entry.push_back(v);
 
 
-    //  for  version 2 
-    if (parse(str.c_str(), str_p("$EndNodes") ).full) 
-
-      //    if (  parse(str.c_str(), r) .full )
-           
-    {
-
-      //	  cout << " BREAK   "  <<endl ;  
-      end_nodes = true; 
-      break;
-    }
+  }
 
 
+  in_stream >> end_nodes_label;
+
+}
 
 
-    // if     trovato $ENDNOD 
-    //   {exit
-    //      }
-
-
-  } 
-      
-     
-} // end  parse nodes
-
-
+// ************************* END NEW ***********************
 
 
 
@@ -1937,54 +1932,54 @@ void Read_MSH::get_nodes_coord()
 
 
 
-void Read_MSH::read_data_section(char const* str,ifstream& in_stream )
-// void InputParser::read_data_section(char const* str)
+// void Read_MSH::read_data_section(char const* str,ifstream& in_stream )
+// // void InputParser::read_data_section(char const* str)
 
 
-// void read_data_section(char const* str,ifstream& in_stream )
+// // void read_data_section(char const* str,ifstream& in_stream )
 
-{
+// {
 
-  string name;
+//   string name;
 
-  if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p],
-             space_p).full)
-  {
-    //  cout << name<< endl;
-    //    if (name == "ELM")
-
-
-    if ( (name == "ELM") || (name == "Elements") )
-      //	if (name == name_data )
-    {
-      parse_elem_section(in_stream);
-
-    }
-
-    //   else if  (name == "NOD")
-    else if  ( (name == "NOD") ||  (name == "Nodes") )
-    {
-      //  parse_2(in_stream);
-      parse_node_section(in_stream);
-
-    }
-
-    // **********************  version 2
-    else if (name == "MeshFormat")
-    {
-      parse_meshformat_section(in_stream);
-
-    }
-
-    //*********************
+//   if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p],
+//              space_p).full)
+//   {
+//     //  cout << name<< endl;
+//     //    if (name == "ELM")
 
 
+//     if ( (name == "ELM") || (name == "Elements") )
+//       //	if (name == name_data )
+//     {
+//       parse_elem_section(in_stream);
 
-        }
+//     }
+
+//     //   else if  (name == "NOD")
+//     else if  ( (name == "NOD") ||  (name == "Nodes") )
+//     {
+//       //  parse_2(in_stream);
+//       parse_node_section(in_stream);
+
+//     }
+
+//     // **********************  version 2
+//     else if (name == "MeshFormat")
+//     {
+//       parse_meshformat_section(in_stream);
+
+//     }
+
+//     //*********************
 
 
 
-}
+//         }
+
+
+
+// }
 
 
 
@@ -2267,7 +2262,7 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
 
 
     if (type == 5)  //  HEX8
- //     if ( (type == 5) || (type == 7) ) //  HEX8 or  PYR5
+      //     if ( (type == 5) || (type == 7) ) //  HEX8 or  PYR5
 
     {
 
@@ -2540,3 +2535,26 @@ void   Read_MSH:: cross_check_regions( vector<unsigned int>&  user_reg_list,
 
 
 }
+
+
+
+//  to handle CR DOS files line termination  
+void Read_MSH::cut_off_CR(string& label,  ifstream& in_stream)
+{
+
+  string::size_type loc = label.find_first_of( "CR", 0 );
+  if( loc != string::npos )
+  {
+    //    cout << "Found CR at " << loc << endl;
+    label.erase(loc);
+
+    in_stream.ignore(256,'\n');  //  if  the   read keyword is CR or  begins with CR : ignore  all  the  line
+
+  }
+  
+
+} //  end  method
+
+
+
+// ****************************************
