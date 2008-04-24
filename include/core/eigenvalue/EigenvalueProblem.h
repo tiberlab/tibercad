@@ -111,6 +111,9 @@ class EigenvalueProblem: public  SimulationInterface
 
     bool monitor;   //<! activates convergence monitor if true
 
+
+    double spectrum_inversion_tolerance; //<! tolerance for spectrum inversion
+
     
   };
 

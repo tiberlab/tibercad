@@ -299,6 +299,9 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
  
   slep_opt.monitor = solver_opt.monitor;
 
+  slep_opt.spectrum_inversion_tolerance = solver_opt.spectrum_inversion_tolerance;
+
+
   vector<Complex> initial_vector;
 
 
@@ -413,6 +416,8 @@ void EigenvalueProblem::parse_options()
 
   solver_opt.monitor = mod_opt.get_option("monitor", false);
 
+
+  solver_opt.spectrum_inversion_tolerance = mod_opt.get_option("spectrum_inversion_tolerance", 1e-8);
 
   //cerr <<  solver_opt.Dirichlet_bc_everywhere << "\n";
 

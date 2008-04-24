@@ -26,18 +26,43 @@ Semiconductor::Semiconductor()
 //--------------------------------------------------------------------------------------------//
 void Semiconductor::do_init ()
 {
+  
+  int verbose = SimulationOptions::verbose();
+
+
   ModelOptions & options = get_options ();
 
   _consider_temperature = get_parameter("consider_temperature",  true );
 
 
+
+
+  if  (verbose > 0) 
+    if (_consider_temperature)
+      std::cout << "Semiconductor: band gap depends on temperature\n";
+    else
+      std::cout << "Semiconductor: band gap does not depend on temperature\n";
+
+
+
+
+
   _temperature = get_parameter("temperature", SimulationOptions::T);
+
+
+
 
 
   // the temperature simulation
   string temp_simul = get_options().get_option("thermal_simulation", "");
+
   
   temp_interface.set_simulation(temp_simul);
+
+  if  (verbose > 0) 
+    if (temp_simul != "")
+      std::cout << "Semiconductor: temparature is taken from the simulation " << temp_simul << "\n";
+
 
   
 }

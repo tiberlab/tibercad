@@ -316,7 +316,20 @@ void KspaceIntegration::calculate_convergent_density()
 
 	mesh_refinement.coarsen_fraction() = 0.0;
 	
-	      
+	{	      
+	  cerr << error.size() << "\n";
+	  cerr << "---------------------------------------\n";
+	  
+	  for (unsigned int i = 0; i < error.size(); i++ )
+	  {
+	    cerr << setprecision(10) <<  error[i] << "\n";
+	  }
+	  cerr << "---------------------------------------\n";
+	  error.plot_error("error.gmv", *kmesh);
+
+	}
+
+
 	mesh_refinement.flag_elements_by_error_fraction (error);
 
 	      

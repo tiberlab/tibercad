@@ -36,12 +36,16 @@ class EigenSolver
 
     bool matrix_output;
 
-    std::string pc_type; //!<preconditioner name
-
+    std::string pc_type; //<! preconditioner name
 
     bool monitor;   //<! activates monitor if true
+
+    double spectrum_inversion_tolerance; //<! toterance for spectrum inversion
     
   };
+
+ 
+
 
   //!solves general eigenvalue problem (Hx = gSx) matrix
   static int eig_value_problem_general(const SLEPCoptions& opt) ;
@@ -139,5 +143,7 @@ class EigenSolver
 
 
 };
+
+
 
 #endif
