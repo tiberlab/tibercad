@@ -802,40 +802,6 @@
  }
  
  
---- include/geom/elem.h.orig	2007-12-21 18:04:51.000000000 +0100
-+++ include/geom/elem.h	2007-07-23 09:52:57.000000000 +0200
-@@ -575,6 +575,13 @@
-    */
-   unsigned int p_level () const;
- 
-+  /**
-+   *@returns a point describing node coordinates related to master 
-+   *element, depending on which type of element and which node
-+   *are passed.
-+   */
-+  static Point local_node(ElemType, int);
-+
- 
- 
- #ifdef ENABLE_AMR
---- src/mesh/mesh_refinement.C.orig	2007-06-07 13:43:59.000000000 +0200
-+++ src/mesh/mesh_refinement.C	2007-06-07 13:54:48.000000000 +0200
-@@ -1264,9 +1264,12 @@
- 
-       for ( ; elem_it != elem_end; ++elem_it)
-         {
--	  (*elem_it)->set_refinement_flag(Elem::COARSEN);
--          if ((*elem_it)->parent()) 
--	    (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
-+          if ((*elem_it)->level() != 0)
-+          {
-+            (*elem_it)->set_refinement_flag(Elem::COARSEN);
-+            if ((*elem_it)->parent()) 
-+              (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
-+          }
-         }
- 
-       // Coarsen all the elements we just flagged.
 --- include/base/getpot.h.orig	2008-04-24 10:42:57.437500000 +0200
 +++ include/base/getpot.h	2008-04-24 11:21:42.265625000 +0200
 @@ -543,10 +543,17 @@
@@ -866,3 +832,37 @@
        return token;
      }
      else if( tmp == '\'' && last_letter != '\\' ) {
+--- ./src/mesh/mesh_refinement.C.orig	2007-10-23 01:23:25.000000000 +0200
++++ ./src/mesh/mesh_refinement.C	2008-04-24 11:52:04.000000000 +0200
+@@ -1276,9 +1276,12 @@
+ 
+       for ( ; elem_it != elem_end; ++elem_it)
+         {
+-	  (*elem_it)->set_refinement_flag(Elem::COARSEN);
+-          if ((*elem_it)->parent()) 
+-	    (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
++          if ((*elem_it)->level() != 0)
++          {
++            (*elem_it)->set_refinement_flag(Elem::COARSEN);
++            if ((*elem_it)->parent()) 
++              (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
++          }
+         }
+ 
+       // Coarsen all the elements we just flagged.
+--- ./include/geom/elem.h.orig	2007-10-21 22:48:41.000000000 +0200
++++ ./include/geom/elem.h	2008-04-24 11:52:04.000000000 +0200
+@@ -750,6 +750,13 @@
+ 
+ #endif
+ 
++  /**
++   *@returns a point describing node coordinates related to master 
++   *element, depending on which type of element and which node
++   *are passed.
++   */
++  static Point local_node(ElemType, int);
++
+ 
+ protected:
+   /**
