@@ -40,7 +40,7 @@ RequireLicense = 1
 Folder = @WININSTALLERDIR@\files\
 ; 
 [Localization]
-Entry0 = English¶Bytessence¶@BINSTALLMAKERDIR@\Localization\English.ini
+Entry0 = English¶Bytessence/Michel Van Passel¶@BINSTALLMAKERDIR@\Localization\English@ascii.ini
 ;
 [InstTasks]
 fileassoc = ASSOCIATEEXTENSION¶tib¶TiberCAD input file¶<DefaultInstallPath>\tibercad.exe¶0

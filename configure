@@ -4035,8 +4035,10 @@ fi
 BINSTALLMAKER="no"
 case $host_os in
   *cygwin* )
-	# Extract the first word of "BInstallMaker.exe", so it can be a program name with args.
-set dummy BInstallMaker.exe; ac_word=$2
+	for ac_prog in BInstallMaker.exe BInstallMakerA.exe
+do
+  # Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
 { echo "$as_me:$LINENO: checking for $ac_word" >&5
 echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
 if test "${ac_cv_path_BINSTALLMAKER+set}" = set; then
@@ -4063,7 +4065,6 @@ done
 done
 IFS=$as_save_IFS
 
-  test -z "$ac_cv_path_BINSTALLMAKER" && ac_cv_path_BINSTALLMAKER=""no""
   ;;
 esac
 fi
@@ -4076,6 +4077,10 @@ else
 echo "${ECHO_T}no" >&6; }
 fi
 
+
+  test -n "$BINSTALLMAKER" && break
+done
+test -n "$BINSTALLMAKER" || BINSTALLMAKER=""no""
 
 	WININSTALLERDIR=`cygpath --windows "${ac_pwd}/installer/windows"`
 

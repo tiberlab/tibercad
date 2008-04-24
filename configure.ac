@@ -87,7 +87,7 @@ AC_SUBST([GMSH])
 [BINSTALLMAKER="no"]
 case $host_os in
   *cygwin* ) 
-	AC_PATH_PROG([BINSTALLMAKER], [BInstallMaker.exe], ["no"],
+	AC_PATH_PROGS([BINSTALLMAKER], [BInstallMaker.exe BInstallMakerA.exe], ["no"],
 	["/cygdrive/c/Programme/Bytessence\ InstallMaker":"/cygdrive/c/Programmi/Bytessence\ InstallMaker":"/cygdrive/c/Programs/Bytessence\ InstallMaker":"/cygdrive/c/Program\ Files/Bytessence\ InstallMaker"])
 	[WININSTALLERDIR=`cygpath --windows "${ac_pwd}/installer/windows"`]
 	AC_SUBST([WININSTALLERDIR])
