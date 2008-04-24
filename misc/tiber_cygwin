@@ -1,0 +1,10 @@
+./configure --with-libmesh-prefix=`pwd`/../libmesh-0.6.1 \
+            --with-boost-regex-lib=/usr/lib/libboost_regex-gcc-mt-s.a \
+	    --disable-pardiso \
+	    --disable-dftb \
+	    --disable-hetero \
+	    --enable-license-check \
+            --with-boost-filesystem-lib=/usr/lib/libboost_filesystem-gcc-mt-s.a \
+            --with-slepc-prefix=`pwd`/../slepc-2.3.3 \
+            --with-petsc-arch=cygwin-c-complex \
+            --with-petsc-prefix=`pwd`/../petsc-2.3.3-p8 

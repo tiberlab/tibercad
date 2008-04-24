@@ -1,0 +1,11 @@
+export PETSC_DIR=`pwd`/../petsc-2.3.2-p8
+
+export SLEPC_DIR=`pwd`
+
+export PETSC_ARCH=cygwin-c-complex
+./config/configure.py
+make
+
+export PETSC_ARCH=cygwin-c-complex-opt
+./config/configure.py
+make
