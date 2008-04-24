@@ -837,32 +837,8 @@
  
        // Coarsen all the elements we just flagged.
 --- include/base/getpot.h.orig	2008-04-24 10:42:57.437500000 +0200
-+++ include/base/getpot.h	2008-04-23 18:14:20.234375000 +0200
-@@ -480,6 +480,7 @@
-   std::ifstream  i(FileName);
-   if( ! i ) return std::vector<std::string>();
-   // argv[0] == the filename of the file that was read in
-+std::cerr << "read_in_file end\n";
-   return __read_in_stream(i);
- }
- 
-@@ -488,6 +489,7 @@
- inline std::vector<std::string>
- GetPot::__read_in_stream(std::istream& istr)
- {
-+std::cerr << "read_in_stream begin\n";
-   std::vector<std::string>  brute_tokens;
-   while(istr) {
-     __skip_whitespace(istr);
-@@ -525,6 +527,7 @@
-       i1=i2; i2=i3; i3++;
-     }
-   }
-+std::cerr << "read_in_stream end\n";
-   return arglist;
- }
- 
-@@ -543,10 +546,17 @@
++++ include/base/getpot.h	2008-04-24 11:21:42.265625000 +0200
+@@ -543,10 +543,17 @@
      // found a non whitespace 
      if( tmp == '#' ) {
        // comment => skip until end of line
@@ -881,7 +857,7 @@
        continue; 
      }
      else {
-@@ -569,7 +579,7 @@
+@@ -569,7 +576,7 @@
    while(1+1 == 2) {
      last_letter = tmp; tmp = istr.get();
      if( tmp == EOF 
