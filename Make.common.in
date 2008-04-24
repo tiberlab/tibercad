@@ -32,6 +32,10 @@ CC = @CC@
 FC = @FC@
 
 
+# the subversion revision number
+SVNREVISION = $(shell svn info | awk '/Revision/ {print $$2}')
+
+
 # gmsh
 GMSH := @GMSH@
 
@@ -84,6 +88,8 @@ INCLUDE  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --include)
 LDFLAGS  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --ldflags)
 FCFLAGS   :=
 
+# define subversion revision for C++
+CXXFLAGS += "-DSVNREVISION="$(SVNREVISION)
 
 ifdef PROFILE
   CXXFLAGS += -pg
@@ -107,7 +113,7 @@ LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
 # TODO fortran compiler libraries
 LDFLAGS += @FCLIBS@
 
-TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*")
+TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.[FCfc]" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" | sed "s/\.[FCfc]/\.$(obj-suffix)/g")
 
 
 #NON_TIBER_INCLUDES := $(INCLUDE) @GSL_CFLAGS@ @BOOST_CPPFLAGS@ -I@MKL_INCLUDEDIR@

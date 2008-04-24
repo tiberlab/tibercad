@@ -20,7 +20,7 @@ src-clean:
 src-distclean:
 	@echo -n "Cleaning up ."
 	@echo `expr "$$PWD" : "$(topdir)\(.*\)"`
-	-@rm -f *.so *.dll *.o .*.d *~
+	-@rm -f *.so *.dll *.a *.o .*.d *~
 
 
 .PHONY: $(subdirs)

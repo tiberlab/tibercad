@@ -1,15 +1,24 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([TiberCAD], [0.1.0], [developers@tibercad.org])
+AC_INIT([TiberCAD], [], [developers@tibercad.org])
 AC_PREREQ(2.59)
 
 AC_CONFIG_SRCDIR([include/base/common/TiberCad.h])
 AC_CONFIG_HEADER([include/base/common/tiber_config.h])
 
-AC_REVISION([$Revision: 0.1$])
+AC_REVISION([$Revision: 1.0$])
 
-AC_DEFINE([TIBERVERSION],"AC_PACKAGE_VERSION",[the TiberCAD version])
+tc_fullversion=`cat VERSION | sed 's/\./ /g'`
+tc_version_major=`echo $tc_fullversion | awk '{print $1}'`
+tc_version_minor=`echo $tc_fullversion | awk '{print $2}'`
+tc_version_subminor=`echo $tc_fullversion | awk '{print $3}'`
+AC_DEFINE_UNQUOTED([TIBERMAJORVERSION],[$tc_version_major],
+  [TiberCAD version major])
+AC_DEFINE_UNQUOTED([TIBERMINORVERSION],[$tc_version_minor],
+  [TiberCAD version minor])
+AC_DEFINE_UNQUOTED([TIBERSUBMINORVERSION],[$tc_version_subminor],
+  [TiberCAD version subminor])
 
 # Make compilation tests using C++
 AC_LANG([C++])

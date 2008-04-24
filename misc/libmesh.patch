@@ -809,7 +809,7 @@
      if( tmp == '#' ) {
        // comment => skip until end of line
 -      while( tmp != '\n' ) {
-+      while( (tmp != '\n') || (tmp != '\r') ) {
++      while( (tmp != '\n') && (tmp != '\r') ) {
  	if( ! istr ) { istr.unget(); return; }
  	tmp = istr.get();
        }

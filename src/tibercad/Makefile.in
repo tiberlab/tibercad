@@ -29,6 +29,15 @@ tibercad: $(objects)
 		-ltibercad $(ADDITIONAL_LIBS) $(PACKAGEFLAGS)
 
 
+tibercad_static: $(objects)
+	@echo "Compiling statically linked tibercad executable ..."
+	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad_static \
+		-Wl,-export-dynamic -L$(topdir)/lib \
+		-Wl,-rpath,$(libdir) -Wl,-Bstatic -ltibercad -Wl,-Bdynamic \
+		$(ADDITIONAL_LIBS) \
+		$(MODULE_LIBS) $(LDFLAGS) $(PACKAGEFLAGS)
+
+
 
 tibercad_res.o : $(topdir)/share/tibercad.rc
 	windres -I $(topdir)/share $^ -o $@

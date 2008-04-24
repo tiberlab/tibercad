@@ -143,8 +143,7 @@ make_deb () {
 ################### main ####################################
 
 topdir=..
-version=`awk '/TIBERVERSION/ {print $3}' \
-  ${topdir}/include/base/common/tiber_config.h | sed 's/"//g'`
+version=`cat $topdir/VERSION`
 
 test $# -ge 1 || exit 1
 

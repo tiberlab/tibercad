@@ -702,7 +702,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \li values is already resized to the number of nodes
      */
     virtual void get_solution_secure(const Elem* elem,
-        const std::set<ID>& ids, std::vector<std::map<ID, double> >& values) {};
+        const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
 
 
     //! Get solution values on inner points of a specified element
@@ -722,7 +722,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     virtual void get_solution_secure(const Elem* elem,
         const std::vector<Point>& p, const std::set<ID>& ids,
-        std::vector<std::map<ID, double> >& values) {};
+        std::vector<std::map<ID, double> >& values);
 
     
     //! Get the solution values on one point of an element
@@ -781,7 +781,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     virtual void build_integrated_quantities(
         const std::set<std::string>& variables,
-        std::vector<double>& values) {};
+        std::vector<double>& values);
 
     //! Create legend and description for integrated quantities
     /*!
@@ -792,7 +792,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     virtual void build_integrated_quantities_description(
         const std::set<std::string>& variables,
         std::vector<std::string>& legend,
-        std::vector<std::string>& description) {};
+        std::vector<std::string>& description);
 
 
 
@@ -1286,6 +1286,54 @@ SimulationInterface::verbose(void)
   return _verbosity;
 }
 
+
+
+inline
+void
+SimulationInterface::get_solution_secure(const Elem* elem,
+        const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
+{
+  ignore_unused_variable(elem);
+  ignore_unused_variable(ids);
+  ignore_unused_variable(values);
+}
+
+
+inline
+void
+SimulationInterface::get_solution_secure(const Elem* elem,
+        const std::vector<Point>& p, const std::set<ID>& ids,
+        std::vector<std::map<ID, double> >& values)
+{
+  ignore_unused_variable(elem);
+  ignore_unused_variable(p);
+  ignore_unused_variable(ids);
+  ignore_unused_variable(values);
+}
+
+
+inline
+void
+SimulationInterface::build_integrated_quantities(
+        const std::set<std::string>& variables,
+        std::vector<double>& values)
+{
+  ignore_unused_variable(variables);
+  ignore_unused_variable(values);
+}
+
+
+inline
+void
+SimulationInterface::build_integrated_quantities_description(
+        const std::set<std::string>& variables,
+        std::vector<std::string>& legend,
+        std::vector<std::string>& description)
+{
+  ignore_unused_variable(variables);
+  ignore_unused_variable(legend);
+  ignore_unused_variable(description);
+}
 
 
 

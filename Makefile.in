@@ -25,6 +25,8 @@ ifeq ($(enable_hetero), yes)
  MODULE_LIBS += -lhetero -lmkl_p4 -lguide
 endif
 
+export MODULE_LIBS
+
 
 all: lib/libtibercad.$(shared_libext)
 	@$(MAKE) --no-print-directory -C src/tibercad tibercad
@@ -41,6 +43,16 @@ lib/libtibercad.$(shared_libext): src
 		$(MODULE_LIBS) -lmkl_lapack $(LDFLAGS)
 #	@cd lib && ln -f -s libtibercad.so.0.0 libtibercad.so.0 \
 		&& ln -f -s libtibercad.so.0 libtibercad.so && cd ..
+
+static: lib/libtibercad.a
+	@$(MAKE) --no-print-directory -C src/tibercad tibercad_static
+
+.PHONY: lib/libtibercad.a
+lib/libtibercad.a:
+	@$(MAKE) --no-print-directory -C src all
+	@echo "Linking libtibercad.a ..."
+	@$(AR) rcs $@ $(TIBER_OBJECTS)
+
 
 
 clean: src

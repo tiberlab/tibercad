@@ -54,6 +54,26 @@ namespace TiberCad
    */
   int cleanup(void);
 
+
+  //! The TiberCAD major version
+  extern const int MajorVersion;
+
+
+  //! The TiberCAD minor version
+  extern const int MinorVersion;
+
+
+  //! The TiberCAD subminor version
+  extern const int SubMinorVersion;
+
+
+  //! The TiberCAD subversion release number
+  extern const int SvnRevision;
+
+
+  //! The full TiberCAD version string
+  std::string TiberCadVersion(bool include_svn_release = true);
+
 }
 
 
