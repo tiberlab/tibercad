@@ -121,7 +121,7 @@ chomp($last_changed_author);
 ((@tests eq 0) and not $info) && usage();
 
 my $datetime = localtime;
-print("\nStarting TiberCAD test suite at $datetime\n") if $verbose;
+print("\nStarting TiberCAD test suite at $datetime\n");
 print("\nRepository info:\n") if $info;
 print("     $revision\n") if $info;
 print("     $last_changed_author\n") if $info;
@@ -188,4 +188,4 @@ if ($failure_detected and $sendmail) {
 
 
 $datetime = localtime;
-print "\nTiberCAD test suite finished at ", $datetime, "\n\n" if $verbose;
+print "\nTiberCAD test suite finished at ", $datetime, "\n\n";
