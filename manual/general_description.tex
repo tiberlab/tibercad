@@ -1,5 +1,43 @@
-\chapter{General  description}
+\chapter{Overview}
 
+
+
+
+\section{Simulation  models }
+
+TiberCAD is  a multiphysics software tool; it  includes several simulation models, each  describing a physical problem to be solved, e.g DriftDiffusion (to solve Poisson and DriftDiffusion equations) , EFASchroedinger (to solve Schroedinger equation in envelope function  approximation) , Macrostrain (to calculate macroscopical strain with an elastic model) and others.
+
+One \textbf{simulation} is a particular set of equations, boundary conditions, physical parameters, solver parameters, which describes a physical problem to be solved by \TiberCAD.
+A valid \TiberCAD \textbf{simulation} must belong to one of the predefined \TiberCAD \textbf{simulation} \textbf{models}
+(see section \ref{section:models}).
+
+To create a \TiberCAD \textbf{simulation}, we first have to declare the \TiberCAD \textbf{model} class to which our simulation belongs: 
+
+
+\begin{verbatim}
+  $Models
+{
+model driftdiffusion
+{
+...........
+\end{verbatim}
+
+Here, we declare that the simulation to be created will belong to the \textbf{model} class driftdiffusion (\textit{model driftdiffusion})
+In the next \textit{Options} block, we define the \textbf{name} of the \TiberCAD \textbf{simulation} (\textit{simulationname = }) and the \TiberCAD regions to which it will be applied ( e.g., \textit{physical\_regions = all}, where 'all' means the whole device) 
+
+In general, several \TiberCAD \textbf{simulations} belonging to the same \textbf{model} can be created; each of them must have a different name.   As we will see in the following (see \ref{section:solver},\ref{section:physics}) , it is possible to specify physical and solver parameters for a single \TiberCAD \textbf{simulation}, by referring to its  \textbf{name}. Anyway, it is also possible to specify parameters \textbf{common} to all the \TiberCAD \textbf{simulations} belonging to the same \textbf{model}, by referring to the name of the \TiberCAD model instead (in this case \textit{'driftdiffusion' }).
+
+\section{Simulation  environments }
+
+\TiberCAD allows  to  compute  different  physical models in  different parts of  a  device or  nanostructure by  coupling in a general way different  \textit{simulation  environments}.
+ A \textit{simulation  environment} is  composed  by  all  the  physical regions to  which  a  particular model  is  assigned.
+A \textit{simulation  environment} is  therefore  defined by  the  mesh  elements belonging to its physical regions and  by  the  \textbf{simulation model} which has  been  associated to  these  regions.
+This  association is  made possible  by  the  definition of  \TiberCAD \textbf{Regions} and  \textbf{Clusters}.
+Different   \textit{simulation  environments} can  have  physical regions  in  common.
+In this  way,  each  simulation  is  run  on  a  subset  of  the  device  and  can  be possibly  coupled  (even self-consistently)   with  a simulation  run on  a  different subset  of  the  device corresponding to a \textit{simulation  environment} with a  non-void  intersection with  the  first  one.  The  coupling  of  the  two  simulations is  performed 
+%at  the  boundary between  the  two  \textit{simulation  environments}, 
+ by  means  of  appropriate  Boundary  Conditions (e.g. Current Density, Voltage,...)
+In  principle, the  two \textit{simulation  environments}  can    refer to  two simulations at  different scale , e.g. atomistic  tight-binding  and  macroscopic drift-diffusion. This  allows an effective  \textbf{multi-scale} simulation of the  device to be  studied.
 
 
 
@@ -10,7 +48,7 @@ When TiberCAD  is  run,  it  reads  the  mesh  file which  contains  the finite 
 
 
 To  execute the  proper  simulations, TiberCAD needs  some  information about  the   physical and boundary regions  associated with the  mesh:
-a physical region associates all  the  elements  corresponding to  an  homogeneous  part  of  the  device (usually  related to  the  same  material or  doping).  These regions  are  referred to as \textbf{mesh\_regions}  in  TiberCAD.
+a physical region associates all  the  elements  corresponding to  an  homogeneous  part  of  the  device (usually  related to  the  same  material or  doping).   In  TiberCAD, these regions  are  referred to as \textbf{mesh\_regions} .
 \
 Boundary regions  are  needed to  specify   boundary  conditions (b.c.)  for  the  solution of  the PDEs  of  our  simulation.
 By  default,  to all   the  external boundary  of  the  device  a  Neumann b.c. is  imposed,   meaning  null  derivative  of  electric  field  and  zero  flux  of  current  normal to  the  boundary.  These are  the  usual  b.c.  applied in  the   simulation  of  electronic  devices;  in   particular, these  conditions are  implicitly  satisfied by using  the  finite  element  formulation..
@@ -19,9 +57,9 @@ These  regions,  (constituted by  surfaces , lines or  points,  respectively  fo
 
 
 It  is  important to  know  that  the  information about  the   physical and boundary regions  must  be  present in  the  mesh  file  before it  is  read  by  TiberCAD,  and  thus  have  to  be  produced by  making  use of  the  modeling/mesher  software.
-As  for  now,  TiberCAD is  compatible  with the  mesh  output  of  the  following   softwares :  GMSH v.2 and  ISE-TCAD  v.9.5.
+As  for  now,  TiberCAD supports  the  mesh  output  of  the  following   software tools:  \textbf{GMSH v.2} and  \textbf{ISE-TCAD  v.9.5}.
 
-By  means  of  the  utility DEVISE    of  ISE-TCAD  v.9.5,  it  is  possible  to  design and  mesh  a  device;  after the  meshing  has  been    successfully completed,  an  output  file is  produced,   with  the  extension  \textit{.grd}.  This  file  contains  all  the  description of  the  mesh and  also  the  list  of  the  user defined  material  regions    and  contact  regions.
+By  means  of  the  utility DEVISE    of  ISE-TCAD  v.9.5,  it  is  possible  to  design and  mesh  a  device;  after the  meshing  has  been    successfully performed,  an  output  file is  produced,   with  the  extension  \textit{.grd}.  This  file  contains    the  description of  the  mesh and  also  the  list  of  the  user defined  material  regions    and  contact  regions.
 By  reading  this  \textit{.grd} file  in  TiberCAD,  one  can  refer  to  the  ISE TCAD material  regions,  simply  with  the  user-defined name,  which is  present  in  the    \textit{.grd}  file.  This  name  should  be  unique in  the  whole  device.
 In the  same way,  ISE TCAD Boundary regions (\textit{Contacts})  can  be  referred to in   TiberCAD  by  means  of  their  user-defined name, present in  the   \textit{.grd} output  file,  too.
 
@@ -29,7 +67,7 @@ If  GMSH  program  is  used  to  model and  mesh  the  device,  a  bit  more  ca
 In  the  context of  GMSH,  it  is  possible to  define  several 1,  2  and  3D \textit{Physical Entities}.
 These \textit{Physical Entities} allow  to  associate one or more  geometrical  entities to  a  single  numerical  ID, so  that  several  
 \textbf{mesh\_regions}  and  \textbf{BC\_reg\_numb} can  be  defined and  referred  to  by  TiberCAD.  
-Here is  a  simple example  of   a  script  to  generate a  1D geometrical  model ( \textit{*.geo})  file in  GMSH 
+Here is  a  simple example  of   a  script  to  generate a  1D geometrical  model ( \textit{*.geo})  file in  GMSH: (see also  chapter \ref{chap:Gettingstarted1D})
 
 \begin{verbatim}
 Point(1) = {-25,0,0,0.5};
@@ -99,48 +137,6 @@ In  2D  case,  a  set  of  \textbf{Physical Surface}  will  be  defined  to  be 
 \textbf{Physical Line}  is  used  for  boundary  conditions.
 
 Finally,  in  3D  case,  \textbf{Physical Volume} is   used  to  define  \textbf{mesh\_regions},  while \textbf{Physical Surface} is  used  to  define  boundary  conditions.
-
-
-
-\section{Simulation  models }
-
-TiberCAD is  a multiphysics software tool; it  includes several simulation models, each one describing a physical problem to be solved, e.g DriftDiffusion (to solve Poisson and DriftDiffusion equations) , EFASchroedinger (to solve Schroedinger equation in effective mass approximation) , Macrostrain (to calculate macroscopical strain with an elastic model) and others.
-
-One \textbf{simulation} is a particular set of equations, boundary conditions, physical parameters, solver parameters, which describes a physical problem to be solved by \TiberCAD.
-A valid \TiberCAD \textbf{simulation} must belong to one of the predefined \TiberCAD \textbf{simulation} \textbf{models}
-(see section \ref{section:models}).
-
-To create a \TiberCAD \textbf{simulation}, we first have to declare the \TiberCAD \textbf{model} class to which our simulation belongs: 
-
-
-\begin{verbatim}
-  $Models
-{
-model driftdiffusion
-{
-...........
-\end{verbatim}
-
-Here, we declare that the simulation to be created will belong to the \textbf{model} class driftdiffusion (\textit{model driftdiffusion})
-In the next \textit{Options} block, we define the \textbf{name} of the \TiberCAD \textbf{simulation} (\textit{simulationname = }) and the \TiberCAD regions to which it will be applied ( e.g., \textit{physical\_regions = all}, where 'all' means the whole device) 
-
-In general, several \TiberCAD \textbf{simulations} belonging to the same \textbf{model} can be created; each of them must have a different name. This name must also be different from the \textbf{model} name.  As we will see in the following (see \ref{section:solver},\ref{section:physics}) , it is possible to specify physical and solver parameters for a single \TiberCAD \textbf{simulation}, by referring to its  \textbf{name}. Anyway, it is also possible to specify parameters \textbf{common} to all the \TiberCAD \textbf{simulations} belonging to the same \textbf{model}, by referring to the name of the \TiberCAD model instead (in this case \textit{'driftdiffusion' })
-
-
-
-
-\section{Simulation  environment }
-
-\TiberCAD allows  to  compute  different  physical models in  different parts of  a  device or  nanostructure by  coupling in a general way different  \textit{simulation  environments }.
- A \textit{simulation  environment } is  composed  by  all  the  physical regions to  which  a  particular model  is  assigned.
-A \textit{simulation  environment } is  therefore  defined by  the  mesh  elements belonging to its physical regions and  by  the  \textbf{simulation model} which has  been  associated to  these  regions.
-This  association is  made possible  by  the  definition of  \TiberCAD \textbf{Regions} and  \textbf{Clusters}.
-Different   \textit{simulation  environments} can  have  physical regions  in  common.
-In this  way,  each  simulation  is  run  on  a  subset  of  the  device  and  can  be possibly  coupled  (even self-consistently)   with  a simulation  run on  a  different subset  of  the  device corresponding to a \textit{simulation  environment} with a  non-void  intersection with  the  first  one.  The  coupling  of  the  two  simulations is  performed 
-%at  the  boundary between  the  two  \textit{simulation  environments}, 
- by  means  of  appropriate  Boundary  Conditions (e.g. Current Density, Voltage,...)
-In  general the  two \textit{simulation  environments}  can    refer to  simulations at  different scale , e.g. atomistic  tight-binding  and  macroscopic drift-diffusion. This  allows an effective  \textbf{multi-scale} simulation of the  device to be  studied 
-
 
 
 
