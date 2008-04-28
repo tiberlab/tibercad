@@ -1,0 +1,12 @@
+# AlGaN bowing parameters
+
+bow_Eg_G = 0.7
+bow_Eg_X = 0.61
+bow_Eg_L = 0.8
+
+
+# spontaneous polariz.
+bow_Pz = -0.021
+
+
+
