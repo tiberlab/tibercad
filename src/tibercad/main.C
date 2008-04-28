@@ -20,6 +20,9 @@
 # endif
 #endif
 
+#ifdef CYGWIN
+# include <windows.h>
+#endif
 
 
 using namespace std;
@@ -31,7 +34,6 @@ int main (int argc, char** argv)
 {
 
   cout << "TiberCAD version " << TiberCad::TiberCadVersion() << endl << endl;
-
 
   // take input file from command line or ask for it
   string inputfile;
@@ -65,14 +67,20 @@ int main (int argc, char** argv)
   // do some preparation
   {
 #ifdef CYGWIN
-    // we first convert the filename to something mor UNIX like
+    // we first convert the filename to something more UNIX like
     Utils::convert_path_to_unix(inputfile);
 
     // in windows argv[0] is the absolute path
     char* root = getenv("TIBERCADROOT");
     if (root == NULL)
     {
-      string exepath(Utils::dirname(argv[0]));
+      const size_t bufsize = 1024;
+      char buffer[bufsize];
+      if (!GetModuleFileName(NULL, buffer, bufsize))
+        cout << "Problems detecting installation path." << endl;
+      string program(buffer);
+      Utils::convert_path_to_unix(program);
+      string exepath(Utils::dirname(program));
       setenv("TIBERCADROOT", exepath.c_str(), 1);
     }
 #endif
