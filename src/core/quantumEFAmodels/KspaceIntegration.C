@@ -6,6 +6,7 @@
 #include "tecplot_IO_cell.h"
 #include "VTKIO.h"
 
+#include "SimulationOptions.h"
  
 using namespace std;
 
@@ -87,7 +88,7 @@ void KspaceIntegration::do_plot()
 void KspaceIntegration::calculate_density()
 {
 
- 
+  int verbose = SimulationOptions::verbose();
 
   const DofMap& dof_map = system->get_dof_map();
     
@@ -160,8 +161,25 @@ void KspaceIntegration::calculate_density()
 
 	double integrated_quantity;
 
+
+	if (verbose > 2)
+	{
+	  std::cout << "Simulation " << get_name() << "   " << "KspaceIntegration::calculate_density() \n";
+	  std::cout << "k_point  " <<  q_point[qp] << "\n";
+	  std::cout << flush ;
+	}
+
+
 	calculate_for_k_point( q_point[qp], dens_at_k_point, integrated_quantity);
 	
+
+	if (verbose > 2)
+	{
+	  std::cout << "Quantity used for mesh refinement  " << integrated_quantity <<  "\n";
+	  std::cout << flush ;
+	}
+	
+
 
 	kspace_integral[elem] += integrated_quantity * JxW[qp] * factor;
 
@@ -234,6 +252,11 @@ void KspaceIntegration::calculate_convergent_density()
 {
   
 
+  
+
+  int verbose = SimulationOptions::verbose();
+
+
   build_k_grid();
 
   eq = new EquationSystems(*kmesh);
@@ -278,8 +301,11 @@ void KspaceIntegration::calculate_convergent_density()
     //---------------------------------------
      
      
-
-      
+    if (verbose > 1)
+    {
+      std::cout << "Simulation " << get_name() << " " << "is performing k space refinement\n";
+      cout.flush();
+    } 
 
     MeshRefinement mesh_refinement(*kmesh);
 
@@ -316,16 +342,20 @@ void KspaceIntegration::calculate_convergent_density()
 
 	mesh_refinement.coarsen_fraction() = 0.0;
 	
+
+
+	if (verbose > 2)
 	{	      
-	  cerr << error.size() << "\n";
-	  cerr << "---------------------------------------\n";
+	  cout << "Error vector has " << error.size() << "\n";
 	  
-	  for (unsigned int i = 0; i < error.size(); i++ )
+	  unsigned int n = error.size();
+
+	  for (unsigned int i = 0; i < n; i++ )
 	  {
-	    cerr << setprecision(10) <<  error[i] << "\n";
+	    cout << setprecision(10) <<  error[i] << "\n";
 	  }
-	  cerr << "---------------------------------------\n";
-	  error.plot_error("error.gmv", *kmesh);
+
+	  cout.flush();
 
 	}
 
@@ -336,9 +366,13 @@ void KspaceIntegration::calculate_convergent_density()
 	mesh_refinement.refine_and_coarsen_elements();
 	     
 
-	if (opt.log_output)
+	if (verbose > 1)
 	{
+
+	  cout << "The new mesh: \n\n";
+
 	  kmesh->print_info();
+
 	  cout.flush();
 	}
 
@@ -357,10 +391,12 @@ void KspaceIntegration::calculate_convergent_density()
 	norm_of_error = estimate_error();
 
 
-	if (opt.log_output)
+	if (verbose > 1)
 	{
-	  std::cerr << "k space grid has " << kmesh->n_nodes() << " nodes " << flush;
-	  std::cerr <<  "quantum density error " << norm_of_error << endl << flush;
+	  std::cout << "k space grid has " << kmesh->n_nodes() << " nodes " << flush;
+	  std::cout <<  "density error " << norm_of_error << endl << flush;
+
+	  
 	}
 	      
       }

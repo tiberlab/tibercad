@@ -589,7 +589,7 @@ $Simulation
 
   searchpath =  ../../materials       
   meshfile = led_spectrum.msh # LED_UV_3QW_test_for_DD_well2nm.msh  
-    
+  verbose = 3    
   mesh_units = 1e-9       #nm 
   dimension = 1
   temperature = 300 

@@ -7,7 +7,7 @@
 #include "MacrostrainPressure.h"
 #include "MacrostrainSubstrate.h"
 #include "TiberPetscLinearSolver.h"
- 
+#include "SimulationOptions.h" 
 
 
 
@@ -630,8 +630,14 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
  
  
-
+  int verbose = SimulationOptions::verbose();
  
+
+  if (verbose > 0) 
+  {
+    cout << "Siumulation " << get_name() << " is starting the matrix assembly << \n";
+  }
+
 
   int temp_i;
   temp_i = 0;
@@ -1397,7 +1403,11 @@ void Macrostrain::do_assemble(EquationSystems& es,
   std:: cout << "Constraint dofs number " <<  system.n_constrained_dofs()   	<< "\n";
 #endif
       
-
+  if (verbose > 0) 
+  {
+    cout << "Siumulation " << get_name() << " has finished the matrix assembly << \n";
+    
+  }
 
 }
 
@@ -1474,6 +1484,9 @@ void Macrostrain::do_solve()
 {
   
 
+  int verbose = SimulationOptions::verbose();
+
+
   parse_options();
 
 
@@ -1504,7 +1517,7 @@ void Macrostrain::do_solve()
 
   make_nodes_periodic();
 
-  //init_u_node(); //not necessary
+ 
   
   init_substrate();
 
@@ -1561,7 +1574,7 @@ void Macrostrain::do_solve()
 
   for (unsigned int r_step = 1; r_step <= max_r_steps; ++r_step)
     {
-      std::cerr << "\nRefining the mesh... (Step" << r_step << ")\n" << std::endl;
+      if (verbose > 1)  cout << "\nRefining the mesh... (Step" << r_step << ")\n" << flush;
       
 
       
@@ -1686,7 +1699,8 @@ void Macrostrain::do_solve()
 
   for (unsigned int geom_it = 1 ; geom_it <= max_shape_steps; geom_it++)
     {
-      
+      if (verbose > 1)  cout << "\n Geometry relaxation of the mesh... (Step" << geom_it << ")\n" << flush;
+
       if (geom_it > 1) update_u_node();
       
       equation_systems->print_info();

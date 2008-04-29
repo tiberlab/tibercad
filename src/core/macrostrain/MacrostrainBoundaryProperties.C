@@ -2,7 +2,7 @@
 #include "MacrostrainPressure.h"
 #include "MacrostrainSubstrate.h"
 #include "MacrostrainExtended.h" 
-
+#include "MacrostrainSupport.h"
 
 MacrostrainBoundaryProperties::MacrostrainBoundaryProperties() : BoundaryProperties()
 {
@@ -22,6 +22,8 @@ MacrostrainBoundaryProperties::create(const std::string & name,  const ModelOpti
     result = MacrostrainPressure::create();
   else if (name == "extended_material")
     result = MacrostrainExtended::create();
+   else if (name == "support")
+    result = MacrostrainSupport::create();
 
   if (result != NULL)
     result->set_options(options);

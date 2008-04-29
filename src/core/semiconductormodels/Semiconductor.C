@@ -27,7 +27,7 @@ Semiconductor::Semiconductor()
 void Semiconductor::do_init ()
 {
   
-  int verbose = SimulationOptions::verbose();
+  int verbose = SimulationOptions::verbose ();
 
 
   ModelOptions & options = get_options ();
