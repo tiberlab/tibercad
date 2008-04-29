@@ -14,6 +14,7 @@ make_windows_package () {
   cp ${topdir}/lib/*.dll ${files}
   cp ${topdir}/share/tibercad.ico ${files}
   cp ${topdir}/share/Copyright.txt ${files}
+  sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/Readme.txt
   if test -e ${topdir}/manual/tiber_manual.pdf ; then
     cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
   fi
@@ -26,6 +27,7 @@ make_windows_package () {
   find ./materials -type f -exec unix2dos {} \;
   find ./examples -type f -exec unix2dos {} \;
   unix2dos Copyright.txt
+  unix2dos Readme.txt
 
   #zip -r -l data.zip materials examples
   #zip -r  data.zip materials examples
@@ -76,6 +78,7 @@ prepare_linux_package () {
   find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
   cp ${topdir}/share/tibercad.ico ${files}/share
   cp ${topdir}/share/Copyright.txt ${files}/share
+  sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/doc/Readme.txt
   if test -e ${topdir}/manual/tiber_manual.pdf ; then
     cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
   fi
@@ -111,6 +114,7 @@ make_deb () {
   find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
   cp ${topdir}/share/tibercad.ico ${files}
   cp ${topdir}/share/Copyright.txt ${files}
+  sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/doc/Readme.txt
   if test -e ${topdir}/manual/tiber_manual.pdf ; then
     cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
   fi

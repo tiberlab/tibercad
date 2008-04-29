@@ -31,9 +31,9 @@ WizBitmap = @BINSTALLMAKERDIR@\Splash\Classic\Wizard.bmp
 HeadBitmap = @BINSTALLMAKERDIR@\Splash\Classic\Header.bmp
 IconFile = @TIBERSHAREDIR@\share\tibercad.ico
 [FilesAndSettings]
-ReadMe = 
+ReadMe = @WININSTALLERDIR@\files\Readme.txt
 License = @TIBERSHAREDIR@\Copyright.txt
-RequireReadme = 0
+RequireReadme = 1
 RequireLicense = 1
 ; 
 [Folder]
