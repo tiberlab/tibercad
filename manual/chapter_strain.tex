@@ -14,7 +14,7 @@ model macrostrain
     }
  }
 \end{verbatim}
-There are two possible kinds of boundary conditions.
+There are three possible kinds of boundary conditions.
 The mandatory keyword 
 
 \textit{type} = \{ substrate $\vert$ pressure $\vert$ extended\_material\} 
@@ -143,7 +143,7 @@ Example for a 2D simulation:
 \begin{verbatim}
  tolerance = 1e-10
 \end{verbatim}
-The default  value is 1e-13.
+The default  value is 1e-10.
 
 \textit{ksp\_type} =  type of  solver: \textbf{gmres},  \textbf{bcgsl},  \textbf{bcgs}, \textbf{cg}, \textbf{richardson}.
 

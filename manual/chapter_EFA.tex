@@ -57,6 +57,8 @@ The relative parameters are:
 	\hline
 	spectral\_shift &  the closest eigenvalues to this value (eV) are found. \\
 	\hline 
+	spectrum\_inversion\_tolerance & tolerance used for linear solver  \\
+	\hline
 	\end{tabular}	
 	\caption{Iterative eigensolver parameters}
 	\label{tab:EigenParam}
@@ -66,7 +68,7 @@ If the spectral\_shift is not defined then it will be calculated internally from
 
 For the iterative solvers the important parameters, that may significantly change the performance, are the \textit{Krylov subspace method} type and the \textit{preconditioner} type. 
 
-The \textbf{Krylov} method is defined as follows:\\
+The Krylov method is defined as follows:\\
 \textit{ksp\_type} = \{  bcgsl $\vert$ gmres  $\vert$ bcgs  $\vert$ cg  
 $\vert$ richardson $\vert$ preonly  \}
 
@@ -74,36 +76,56 @@ The \textbf{preconditioner} type is defined as follows:\\
 \textit{pc\_type} = \{  cholesky $\vert$  jacobi $\vert$  ilu  $\vert$ composite \}
 
 
-
-
-
 Other options:
-
-\textit{x-periodicity} = false (default)
-
+\begin{itemize}
+\item 
+\textit{x-periodicity} = \{ true $\vert$ \textbf{false}\} 
+\item 
+\textit{y-periodicity} = \{ true $\vert$ \textbf{false}\} 
+\item 
+\textit{z-periodicity} = \{ true $\vert$ \textbf{false}\}
+\item 
 \textit{number\_of\_eigenstates} =  number of eigenstates to be computed
+\end{itemize}
 
- \textit{poisson\_model\_name} = associated poisson model 
-
- \textit{strain\_model\_name} = associated strain model  
-
- \textit{particle} = \textbf{el} $\vert$ \textbf{hl} ; to specify a quantum model  for  electrons or  holes.
+ 
+ 
 
  
 \subsection{Schr\"odinger equation parameters}
+
+\begin{itemize}
+\item 
+\textit{particle}  = \{ el $\vert$ hl \}; specifies a particle type, according to each the eigenvalues are sorted
+\item
+\textit{strain\_model\_name} = name of the simulation that can provide elastic strain
+\item
+\textit{poisson\_model\_name} = name of the simulation that can provide electric and electrochemical potential
+\item
+\textit{heat\_model} = name of the simulation that can provide
+\item
+\textit{relative\_density\_tolerance} = relative tolerance for charge density calculation 
+\item
+\textit{initial\_eigenstates\_number} = initial eigenstates number for charge density calculation 
+\item
+\textit{convergent\_density} = \{ true $\vert$ \textbf{false} \} if true than number of eigenstates will be increased in oder to reach convergent density.
+\item 
+\textit{eigen\_number\_increase\_factor} = factor to increase eigenvalues number for the next charge density calculation 
+
+\end{itemize}
+
 
 \section{Physical Models parameters}
 
 In \textbf{Physics} section, for  each  quantum model,  one  has  to  specify the  physical model to be  applied :
 
- \begin{verbatim}
+\begin{verbatim}
 QW1_holes
-  {
-    particle = hl
-    model = kp   #  k.p  for  valence  band
-    kp_model = 6x6
-
-  }
+{
+   particle = hl
+   model = kp   #  k.p  for  valence  band
+   kp_model = 6x6
+}
 \end{verbatim}
 
 Here,  \textbf{QW1\_holes} is  the name  of  a  quantum (efaschrodinger) model.
