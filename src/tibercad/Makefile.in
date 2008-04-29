@@ -39,7 +39,7 @@ tibercad_static: $(objects)
 
 
 
-tibercad_res.o : $(topdir)/share/tibercad.rc $(topdir)/include/base/common/tiber_config.h
+tibercad_res.o : $(topdir)/share/tibercad.rc $(topdir)/share/tibercad.ico $(topdir)/include/base/common/tiber_config.h
 	windres -I $(topdir)/share -I $(topdir)/include/base/common \
 	  -O coff -D SVNREVISION=$(SVNREVISION) $< -o $@
 

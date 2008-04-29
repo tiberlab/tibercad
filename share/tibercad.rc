@@ -5,7 +5,7 @@
 
 #define DOQUOTE(x) #x 
 #define QUOTE(x) DOQUOTE(x)
-#define DOCONCAT(a, b, c, d) a ## . ## b ## . ## c ## . ## d ## 
+#define DOCONCAT(a, b, c, d) a ## . ## b ## . ## c ## . ## d 
 #define CONCAT(a, b, c, d) DOCONCAT(a, b, c, d)
 #define VER_FULL CONCAT(TIBERMAJORVERSION, TIBERMINORVERSION, \
 			TIBERSUBMINORVERSION, SVNREVISION)

@@ -9,6 +9,8 @@
 #include "License.h"
 #include "Utils.h"
 
+#include "tiber_config.h"
+
 
 #include <iostream>
 #ifdef HAVE_LIBREADLINE
