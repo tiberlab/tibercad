@@ -198,13 +198,28 @@ Now we define the \textbf{Simulation} \textit{dd}: it belongs to  the class \tex
 
 \end{verbatim}
 
-This time, for this simulation we declare two \textbf{driftdiffusion physical models}, respectively about \textbf{mobility} (\textit{field\_dependent}) and  \textbf{recombination} (\textit{srh});  see  the reference manual  for  the  details.
+We declare two \textbf{driftdiffusion physical models}:
+ the  first defines a   \textit{srh} \textbf{recombination}  model (see \ref{dd:recomb_models}); the  second 
+defines a \textit{field-dependent} \textbf{mobility} model for  electrons which implements a \textit{doping  dependence} for the \textbf{low-field  mobility} (see \ref{dd:mobility_models}).
+
+% respectively about \textbf{mobility} (\textit{field\_dependent}) and  \textbf{recombination} (\textit{srh});  see  the reference manual  for  the  details \ref{dd:recomb_models}, \ref{dd:mobility_models}
 
 \begin{verbatim}
-   physical_model recombination
-    ...................
+
+    physical_model recombination
+    {
+      model = srh
+    }
 
     physical_model electron_mobility
+    {
+
+      model = field_dependent
+      low_field_model = doping_dependent   
+
+    }
+
+
 
 \end{verbatim}
 
@@ -217,8 +232,6 @@ The source, drain  and gate contacts of the Mosfet device  are defined as \textb
         BC_reg_numb = 2
         type = schottk
         barrier_height = 3.0
-	zero_grad_fermi_e = true
-	zero_grad_fermi_h = true
         voltage = @Vg[0.0]
       }
 
@@ -226,7 +239,6 @@ The source, drain  and gate contacts of the Mosfet device  are defined as \textb
       {
         BC_reg_numb = 1
         type = ohmic
-	zero_grad_fermi_h = true
         voltage = 0.0
       }
  
@@ -234,7 +246,6 @@ The source, drain  and gate contacts of the Mosfet device  are defined as \textb
       {
         BC_reg_numb = 3
         type = ohmic
-	zero_grad_fermi_h = true
         voltage = @Vd[0.5]
       }
 
