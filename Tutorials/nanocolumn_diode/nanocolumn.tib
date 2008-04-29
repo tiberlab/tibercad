@@ -10,8 +10,8 @@ $Device
 
   Region well
   {
-    reg_numb = 1
-    mat = GaN
+    mesh_regions = 1
+    material = GaN
   
     structure = wz
     x-growth-direction = (1,0,-1,0)
@@ -25,8 +25,8 @@ $Device
 
    Region  layer1
    {
-     reg_numb = 2
-     mat = AlGaN
+     mesh_regions = 2
+     material = AlGaN
      x = 0.2
      structure = wz
      x-growth-direction = (1,0,-1,0)
@@ -43,8 +43,8 @@ $Device
 
    Region barrier1
    {
-     reg_numb = 3
-     mat = AlGaN
+     mesh_regions = 3
+     material = AlGaN
      x = 0.2
      structure = wz
      x-growth-direction = (1,0,-1,0)
@@ -62,8 +62,8 @@ $Device
 
    Region barrier2
    {
-     reg_numb = 4
-     mat = AlGaN
+     mesh_regions = 4
+     material = AlGaN
      x = 0.2
      structure = wz
      x-growth-direction = (1,0,-1,0)
@@ -77,8 +77,8 @@ $Device
    
    Region layer2
    {
-     reg_numb = 5
-     mat = AlGaN
+     mesh_regions = 5
+     material = AlGaN
      x = 0.2
      structure = wz
 
@@ -152,7 +152,7 @@ $Models
     physical_model recombination
     { 
      model = direct
-     C = 1.1e-8
+   
    
     }          
            
@@ -279,8 +279,8 @@ $Physics
 # Definition of  model-indipendent parameters of the Simulation
 $Simulation
 {
-  searchpath = ../../materials  #../materials    
-  meshfile = nanocolumn.msh # column_old.msh
+#  searchpath = ../../materials  #../materials    
+  meshfile = nanocolumn.msh # 
   mesh_units = 1e-9
   dimension = 3
   temperature = 300

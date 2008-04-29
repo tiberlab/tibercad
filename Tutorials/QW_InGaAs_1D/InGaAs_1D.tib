@@ -79,7 +79,7 @@ $Models
     physical_model recombination
     {
       model = direct
-      C = 1.1e-8
+      
     }
 
 
@@ -89,7 +89,7 @@ $Models
       {
         BC_reg_numb = 1
         type = ohmic
-      	zero_grad_fermi_h = true
+      
         voltage = 0.0
       }
       
@@ -98,7 +98,7 @@ $Models
       {
         BC_reg_numb = 2
         type = ohmic
-	zero_grad_fermi_e = true
+
 	voltage = 0.0
       }
 
@@ -263,7 +263,7 @@ $Physics
 $Simulation
 {
 
-  searchpath = ../../materials   
+#  searchpath = ../../materials   
   meshfile = InGaAs_1D.msh #
     
   mesh_units = 1e-9       #nm !!

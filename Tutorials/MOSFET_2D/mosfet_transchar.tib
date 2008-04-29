@@ -65,8 +65,7 @@ $Models
         BC_reg_numb = 2
         type = schottky
 	barrier_height = 3.0
-	zero_grad_fermi_e = true
-	zero_grad_fermi_h = true
+
         voltage = @Vg[0.0]
       }
 
@@ -74,7 +73,7 @@ $Models
       {
         BC_reg_numb = 1
         type = ohmic
-	zero_grad_fermi_h = true
+
         voltage = 0.0
       }
  
@@ -82,7 +81,7 @@ $Models
       {
         BC_reg_numb = 3
         type = ohmic
-	zero_grad_fermi_h = true
+
         voltage = @Vd[0.5]
       }
    
@@ -159,7 +158,7 @@ $Physics
 
 $Simulation
 {
-  searchpath =    ../../materials   
+#  searchpath =    ../../materials   
   meshfile = mosfet.msh
   dimension = 2
   temperature = 300

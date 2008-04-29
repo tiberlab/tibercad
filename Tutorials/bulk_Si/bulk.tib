@@ -4,8 +4,8 @@ $Device
 {
    Region bulk 
    {
-     reg_numb = 1
-     mat = Si
+     mesh_regions = 1
+     material = Si
      doping = 1e16 doping_type = donor
    }
 
@@ -86,7 +86,7 @@ $Physics
 
 $Simulation
 {
-  searchpath = ../../materials
+#  searchpath = ../../materials
   meshfile = bulk.msh
   verbose = 2
   dimension = 1

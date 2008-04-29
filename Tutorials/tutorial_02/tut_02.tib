@@ -163,7 +163,7 @@ $Physics
 
 $Simulation
 {
-  searchpath = ../../materials/ 
+#  searchpath = ../../materials/ 
   meshfile = tut_02.msh
   dimension = 1
   temperature = 300

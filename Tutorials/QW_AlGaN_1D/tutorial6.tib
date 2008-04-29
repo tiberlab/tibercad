@@ -4,7 +4,7 @@ $Device
   Region well
   {
     mesh_regions = 1
-    mat = GaN
+    material = GaN
     
     structure = wz
     y-growth-direction = (1,0,-1,0)
@@ -20,7 +20,7 @@ $Device
   Region  buffer
   {
     mesh_regions  = 2
-    mat = AlGaN
+    material = AlGaN
     x = 0.3
 
 
@@ -41,7 +41,7 @@ $Device
   Region  buffer
   {
     mesh_regions = 3
-    mat = AlGaN
+    material = AlGaN
     x = 0.3
     structure = wz
     y-growth-direction = (1,0,-1,0)

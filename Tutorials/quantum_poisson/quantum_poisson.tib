@@ -138,9 +138,7 @@ $Solver
  macrostrain
   {
     substrate = substrate
-    reference_material_point = (5.0, 0.0, 0.0)
-    fixed_point1 = (7.0, 0.0, 0.0)
-   # intermediate_output = true
+
   }
 
  
@@ -237,7 +235,7 @@ $Physics
 
 $Simulation
 {
-  searchpath = ../../materials       
+#  searchpath = ../../materials       
   meshfile = quantum_poisson.msh #
   mesh_units = 1e-9
   dimension = 1

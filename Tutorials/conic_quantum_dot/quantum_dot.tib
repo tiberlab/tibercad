@@ -3,26 +3,18 @@ $Device
 
   Region dot
   {
-    reg_numb = 1
-    mat = GaN
+    mesh_regions  = 1
+    material = GaN
     x = 0.0
 
     structure = wz
 
-   # x-growth-direction = (1,0,-1,0)
-   # y-growth-direction = (-1,2,-1,0)   
-   # z-growth-direction = (0,0,0,1)
-
-
+   
     y-growth-direction = (-1,0,1,0)
     x-growth-direction = (-1,2,-1,0)   
     z-growth-direction = (0,0,0,1)
 
-    #y-growth-direction = (0,1,0)
-    #z-growth-direction = (0,0,1)
-    #x-growth-direction = (1,0,0)
     
-
     doping = 1e15
     doping_type = acceptor
     doping_level = 0.025
@@ -31,8 +23,8 @@ $Device
 
   Region  buffer
   {
-    reg_numb = 2
-    mat = AlGaN
+    mesh_regions = 2
+    material = AlGaN
     x = 0.3
     structure = wz
    
@@ -51,8 +43,8 @@ $Device
 
   Region  buffer1
   {
-    reg_numb = 3
-    mat = AlGaN
+    mesh_regions = 3
+    material = AlGaN
     x = 0.3
     structure = wz
    
@@ -69,8 +61,8 @@ $Device
   
   Region  buffer2
   {
-    reg_numb = 4
-    mat = AlGaN
+    mesh_regions = 4
+    material = AlGaN
     x = 0.3
     structure = wz
    
@@ -349,7 +341,7 @@ $Physics
 
 $Simulation
 {
-  searchpath = ../../materials     
+#  searchpath = ../../materials     
   meshfile = quantum_dot.msh #
   mesh_units = 1e-9
   dimension = 3

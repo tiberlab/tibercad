@@ -5,23 +5,23 @@ $Device
 {
    Region n_side 
    {
-     reg_numb = 1
-     mat = Si
+     mesh_regions = 1
+     material = Si
      doping = 1e18 doping_type = donor
      }
 
    Region p_side 
    {
-     reg_numb = 2
-     mat = Si
+     mesh_regions = 2
+     material = Si
      doping = 1e19 doping_type = acceptor
 
    }
 
    Region air
    {
-     reg_numb = 3
-     mat = Air
+     mesh_regions = 3
+     material = Air
 
    }
 
@@ -176,7 +176,7 @@ $Physics
 
 $Simulation
 {
-  searchpath = ../../materials
+#  searchpath = ../../materials
   meshfile = tut_09.msh
   dimension = 2
   temperature = 300
