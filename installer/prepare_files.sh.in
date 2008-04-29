@@ -29,12 +29,18 @@ make_windows_package () {
   unix2dos Copyright.txt
   unix2dos Readme.txt
 
-  #zip -r -l data.zip materials examples
-  #zip -r  data.zip materials examples
-  #cp /usr/bin/unzipsfx.exe data.exe
-  #cat data.zip >> data.exe
-  #zip -A data.exe
-  #rm -f data.zip
+  cd ${topdir}/contrib
+  if [ ! -d gmsh-2.2.0 ]
+  then
+    mkdir gmsh-2.2.0
+    cd gmsh-2.2.0
+    wget http://www.geuz.org/gmsh/bin/Windows/gmsh-2.2.0-Windows.zip
+  fi
+  cd ${curdir}
+  cd ${files}
+  mkdir -p contrib/gmsh-2.2.0
+  cd contrib/gmsh-2.2.0
+  unzip ${topdir}/contrib/gmsh-2.2.0/gmsh-2.2.0-Windows.zip
 
   cd $curdir
 
@@ -149,7 +155,7 @@ make_deb () {
 
 ################### main ####################################
 
-topdir=..
+topdir=@abs_top_builddir@
 version=`cat $topdir/VERSION`
 
 test $# -ge 1 || exit 1
