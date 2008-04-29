@@ -103,7 +103,7 @@ Physical Surface(3) = {46}; // SiO2
 \item 
 Definition of  the \textbf{Physical surfaces} : each of them is composed by one or more geometrical \textbf{Plane Surface}. For example, \textbf{Physical surface} 2 comprises the two separated contact regions, while \textbf{Physical surface} 3 corresponds to the  oxide  region.
 
-The  \textbf{Physical surfaces} are the 2D Physical regions of  the  mesh and will  be  assigned to the related \TiberCAD regions through the keyword \textit{mesh\_regions}  (see   Step  )                                                                                                                   \end{itemize}                                                                   
+The  \textbf{Physical surfaces} are the 2D Physical regions of  the  mesh and will  be  assigned to the related \TiberCAD{} regions through the keyword \textit{mesh\_regions}  (see   Step  )                                                                                                                   \end{itemize}                                                                   
 
 
 \begin{verbatim}
@@ -114,7 +114,7 @@ Physical Line(3) = {19}; // drain
 \begin{itemize}
 \item 
 Definition of the  \textbf{Phisical Lines}: In this 2D simulation, 1D physical regions are used to carry information about boundary condition regions. In  other word, each \textbf{Phisical Line} corresponds to a boundary condition (a contact in the case of a driftdiffusion calculation): thus Physical Line 1 refers to source contact, P.L. 2 to gate contact, P.L. 3 to drain contact.
-The numerical identifications of these \textbf{Phisical Lines} will be  asigned to \TiberCAD \textbf{BC regions} by means of the \textit{BC\_reg\_numb} instruction.
+The numerical identifications of these \textbf{Phisical Lines} will be  asigned to \TiberCAD{} \textbf{BC regions} by means of the \textit{BC\_reg\_numb} instruction.
 \end{itemize}
 
 In fig.  \ref{geo}  the  obtained  geometrical  model is  shown.
@@ -147,14 +147,14 @@ Alternatively, a \textit{non-interactive} mode is also available in GMSH, withou
 
 
 
-\section*{Step 3: TiberCAD  Input file  }
+\section*{Step 3: TiberCAD{}  Input file  }
 
-Now we have to write down the \TiberCAD \textbf{input file} (see \textit{mosfet.tib} in  the  Tutorials).
+Now we have to write down the \TiberCAD{} \textbf{input file} (see \textit{mosfet.tib} in  the  Tutorials).
 
 
 \subsection* {1 - Definition of Device Regions}
 
-Three  \TiberCAD regions are  defined: to each of them, one  mesh\_region is  associated, that is the Phisical Surfaces  \textbf{1, 2} and  \textbf{3} defined in  Step 1. However, in general more than one  mesh\_region can be  associate to a single \TiberCAD region, if this is convenient.
+Three  \TiberCAD{} regions are  defined: to each of them, one  mesh\_region is  associated, that is the Phisical Surfaces  \textbf{1, 2} and  \textbf{3} defined in  Step 1. However, in general more than one  mesh\_region can be  associate to a single \TiberCAD{} region, if this is convenient.
 
 \begin{verbatim}
  Region substrate 
@@ -312,9 +312,9 @@ $Simulation
 
 Output files with conduction and valence band profiles, quasi-fermi levels, electron and hole  density, recombination, electric field and potential (\textit{plot = Ec,Ev,....}.) will be  generated, together (\textit{ContactCurrents}) with  a file with  all the calculated values of the drain current at the contacts for each  gate bias  step  (the IV characteristics).
 
-\section*{Step 4: Run TiberCAD}
+\section*{Step 4: Run TiberCAD{}}
 
-Now we can run TiberCAD:
+Now we can run TiberCAD{}:
 
 \texttt{tibercad  mosfet.tib}
 

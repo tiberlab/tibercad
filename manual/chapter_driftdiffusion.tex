@@ -354,7 +354,7 @@ $|\mathbf{E}|$ is the modulus of the electric field, $\mu_{lowfield}$ is the low
 For the latter one can  specify the model to be used using the parameter \verb+lowfield_model+.
 As default the doping dependent model is used.
 
-There are two models for $v_{sat}$, identified with \verb+Vsat_Formula = 1+ and \verb+Vsat_Formula = 2+.
+There are two models for $v_{sat}$, identified with \verb+Vsat_Formula = 1+ and \verb+2+.
 Formula 1 reads
 \[
 v_{sat} = v_{sat,0} (T/T_0)^{-\gamma}
@@ -396,11 +396,13 @@ The contact resistance has units $\Omega\mathrm{cm}^2$.
 The applied voltage is specified with the option \texttt{voltage}.
 A variable can be assigned to this, using the \verb+@+-syntax.
 
+For a finer control of the behaviour at electrical contacts, the options \keyword{zero\_field}, \keyword{zero\_grad\_fermi\_e} and \keyword{zero\_grad\_fermi\_h} can be used, which when set to \verb+true+ will impose zero normal electric field and zero normal gradient of the electron and hole electro-chemical potential, respectively.
+
 The ohmic contact (identifier \texttt{ohmic}) has no further parameters.
 
 A Schottky contact  (identifier \texttt{schottky}) has the additional parameter \texttt{barrier}, which signifies the energy difference between the semiconductor band edge and the fermi energy in the metal.
 As default, the barrier is taken with respect to the conduction band.
-By specifying \verb+band = v+ the barrier can be imposed with respect o the valence band (p-type contact).
+By specifying \verb+band = v+ the barrier can be imposed with respect to the valence band (p-type contact).
 
 The type of boundary model is chosen by the parameter \texttt{type}, e.g. \texttt{type = schottky}.
 
@@ -409,7 +411,7 @@ Two modes are possible:
 \begin{description}
  \item[constant charge] a constant charge can be assigned by specifying only the sheet 
   carrier density \texttt{Ns} in $cm^{-2}$.
-  The sheet charge density will then  be \texttt{Ns} multiplied by the elementary
+  The sheet charge density will then  equal \texttt{Ns} multiplied by the elementary
   charge $e$. A positive \texttt{Ns} produces a positive surface charge.
  
  \item[electronic surface states] in this case the surface charge is produced by
@@ -434,7 +436,7 @@ Options for controlling the drift-diffusion semiconductor models can be specifie
 The corresponding paramaters are given in table~\ref{table:dd_common}.
 \begin{table}[htb]
 \center
-\begin{tabular}{l||p{3cm}|p{7cm}}
+\begin{tabular}{l||p{2.5cm}|p{6cm}}
 \textit{keyword} & \textit{possible values} & \textit{description} \\
 \hline \hline
 \texttt{model} & (see following subsections) & the model to use for the description of the conduction and valence band properties\\
@@ -453,6 +455,12 @@ When \texttt{model} is not specified, the default semiconductor model based on b
 The \texttt{electron\_quantum\_density} and \texttt{hole\_quantum\_density} will use the particle densities calculated from the corresponding \texttt{quantum\_density} simulation.
 In regions where no quantum density is available, the classical density will be used.
 The \texttt{electron\_quantum\_density} and \texttt{hole\_quantum\_quantum\_density} keywords can be used also in the \Region{} sections to be able to use different quantum density simulations in different regions.
+
+The \keyword{strain\_simulation} option is used to specify the simulation that provides strain in the case of strained systems.
+If it is omitted, an unstrained system is assumed for the drift-diffusion calculation.
+
+The \keyword{thermal\_simulation} option is used to specify the simulation that provides the lattice temperature for non-isothermal simulations.
+If it is omitted, the simulation temperature as provided in the \Simulation{} section of the input file (or, if not provided, the default value of 300 K) is used.
 
 
 \subsection{Simple semiconductor model}
@@ -508,8 +516,8 @@ Table~\ref{tab:dd_solver} lists the options that are independent on the type of 
 
 
 The linear and nonlinear solvers to be used can be chosen using the keywords \texttt{linear\_solver} and \texttt{nonlinear\_solver}, respectively.
-For the nonlinear solver one can chose between the PETSc implementation (\texttt{petsc}) and the \TiberCAD implementation (\texttt{tiber}) of line search.
-When using the \TiberCAD nonlinear solver, one can additionally chose between the PETSc (\texttt{petsc}) or PARDISO  (\texttt{pardiso}) linear solvers.
+For the nonlinear solver one can chose between the PETSc implementation (\texttt{petsc}) and the \TiberCAD{} implementation (\texttt{tiber}) of line search.
+When using the \TiberCAD{} nonlinear solver, one can additionally chose between the PETSc (\texttt{petsc}) or PARDISO  (\texttt{pardiso}) linear solvers.
 The possible combinations are:
 \begin{verbatim}
 nonlinear_solver = petsc
@@ -583,8 +591,8 @@ The \texttt{nonlin\_step\_tol} defines at which line search step size (in $l_2$-
 \texttt{nonlin\_step\_tol} is measured in eV.
 
 
-\subsection{Parameters for the \TiberCAD nonlinear solver}
-Table~\ref{tab:tiber_params} summarizes the parameters used for the \TiberCAD implementation of the line search algorithm.
+\subsection{Parameters for the \TiberCAD{} nonlinear solver}
+Table~\ref{tab:tiber_params} summarizes the parameters used for the \TiberCAD{} implementation of the line search algorithm.
 \begin{table}[htb]
 \center
 \begin{minipage}{0.9\textwidth}
@@ -597,7 +605,7 @@ Table~\ref{tab:tiber_params} summarizes the parameters used for the \TiberCAD im
 \texttt{nonlin\_max\_it} & maximum number of nonlinear iterations & \texttt{20} \\
 \end{tabular}
 \end{minipage}
-\caption{Parameters for the \TiberCAD line search}
+\caption{Parameters for the \TiberCAD{} line search}
 \label{tab:tiber_params}
 \end{table}
 

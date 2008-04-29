@@ -37,6 +37,8 @@
  \usepackage{lscape}
 \fi
 
+\usepackage{url} 
+
 \usepackage{ae} 
 \usepackage{color}
 \ifpdf
@@ -46,12 +48,14 @@
 
 \usepackage[small,bf]{caption}    
 
-\newcommand{\tibercad}{{{T\scriptsize{}IBER\normalsize{}CAD }}}
-\newcommand{\TiberCAD}{{{T\scriptsize{}IBER\normalsize{}CAD }}}
+\newcommand{\TiberCAD}{{{T{\scriptsize IBER}CAD}}}
+\newcommand{\tibercad}{\TiberCAD}
 \newcommand{\Models}{\texttt{Models}}
 \newcommand{\Device}{\texttt{Device}}
 \newcommand{\Region}{\texttt{Region}}
+\newcommand{\Simulation}{\texttt{Simulation}}
 \newcommand{\physicalmodel}{\texttt{physical\_model}}
+\newcommand{\keyword}[1]{\texttt{#1}}
 \newcommand{\rvec}{{\bf r}}
 \newcommand{\eps}{{\varepsilon}}
 
@@ -62,9 +66,9 @@
 
 %\floatstyle{boxed}
 \newfloat{code}{htp}{lop}
-\floatname{code}{Input}
+\floatname{code}{Listing}
 \newenvironment{inputfile}{\begin{code}\begin{center}\begin{minipage}{0.8\textwidth}\rule{\textwidth}{0.1pt}}{\rule{\textwidth}{0.1pt}\end{minipage}\end{center}\end{code}}
-\newcommand{\inputref}[1]{Input~\ref{#1}}
+\newcommand{\inputref}[1]{Listing~\ref{#1}}
 
 
 \begin{document}
@@ -77,7 +81,7 @@
 
 
 
-\title{TiberCAD User Manual}
+\title{T{\large IBER}CAD User Manual}
 \author{Fabio Sacconi, Matthias Auf~der~Maur, \\ Michael Povolotskyi, Giuseppe Romano } 
 \maketitle
 

@@ -2,7 +2,7 @@
 
 \chapter{Getting  started 1D}
 \label{chap:Gettingstarted1D}
-In this  section we  will  see,  step by  step,  how  to use  \TiberCAD to simulate numerically a  semiconductor  device.
+In this  section we  will  see,  step by  step,  how  to use  \TiberCAD{} to simulate numerically a  semiconductor  device.
 As a very  simple example  we  will  refer  to  the  \textbf{Tutorial 0} (Si bulk) that you  can  find  in  the  \textit{Tutorials}  directory.
 
 
@@ -66,7 +66,7 @@ Physical Line(1) = {1};
 \end{verbatim}
 
 The expression(s) inside the braces on the right hand side  give the identification numbers of all the geometrical lines that need to be grouped inside the \textbf{physical line}.
-In this way, in general, \textbf{physical regions} are created which associate together geometrical regions, and then the related mesh elements, which share some common physical properties. It's only these physical regions which can be referred to outside GMSH. In \TiberCAD, this is done by associating one or more physical regions to a \textbf{TiberCAD region }through the keyword \textbf{mesh\_regions} (see in the following).
+In this way, in general, \textbf{physical regions} are created which associate together geometrical regions, and then the related mesh elements, which share some common physical properties. It's only these physical regions which can be referred to outside GMSH. In \TiberCAD{}, this is done by associating one or more physical regions to a \textbf{TiberCAD{} region }through the keyword \textbf{mesh\_regions} (see in the following).
 
 \begin{itemize}
 \item Definition of two physical entities\textbf{ Physical Point}:  
@@ -77,8 +77,8 @@ Physical Point(1) = {1};
 Physical Point(2) = {2}; 
 \end{verbatim}
 
-    \textbf{N.B}.: In general, in a \textit{nD} simulation, \textit{(n-1)D }physical regions (points in 1D, lines in 2D, surfaces in 3D) are used by \TiberCAD to impose the required boundary conditions.
-      Each  \textit{(n-1)D } physical region defined in this way in GMSH will be associated in \TiberCAD to a boundary condition region, through the keyword \textbf{BC\_reg\_numb}. Thus, in this case, Physical points \textbf{1} and \textbf{2} will be associated respectively to two BC regions (see in the following).
+    \textbf{N.B}.: In general, in a \textit{nD} simulation, \textit{(n-1)D }physical regions (points in 1D, lines in 2D, surfaces in 3D) are used by \TiberCAD{} to impose the required boundary conditions.
+      Each  \textit{(n-1)D } physical region defined in this way in GMSH will be associated in \TiberCAD{} to a boundary condition region, through the keyword \textbf{BC\_reg\_numb}. Thus, in this case, Physical points \textbf{1} and \textbf{2} will be associated respectively to two BC regions (see in the following).
 
 
 
@@ -101,19 +101,19 @@ some command line options are:
 
 \textit{-o} mesh\_file\textit{.msh} to specify the name of the mesh file to be generated
 
-In this way, a \textit{.msh} has been generated and is ready to be read in \TiberCAD. 
+In this way, a \textit{.msh} has been generated and is ready to be read in \TiberCAD{}. 
 
 
 
 
 
-\section*{Step 3: TiberCAD  Input file  }
+\section*{Step 3: TiberCAD{}  Input file  }
 
-Now we have to write down the \TiberCAD \textbf{input file} (see \textit{bulk.tib} in  the  Tutorials).
+Now we have to write down the \TiberCAD{} \textbf{input file} (see \textit{bulk.tib} in  the  Tutorials).
 
 
 \subsection* {1 - Definition of Device Regions}
-First, we have to list all the \TiberCAD Regions present in our Device: a \TiberCAD \textbf{Region} is usually a section of the device featuring the same material and possibly the same doping.
+First, we have to list all the \TiberCAD{} Regions present in our Device: a \TiberCAD{} \textbf{Region} is usually a section of the device featuring the same material and possibly the same doping.
 \begin{verbatim}
 $Device
 {
@@ -126,11 +126,11 @@ doping = 1e16 doping_type = donor
 
 }
 \end{verbatim}
-The \TiberCAD \textbf{Region} bulk is made of Silicon and n-doped with a concentration $10^{16} cm^{-3}$ .
+The \TiberCAD{} \textbf{Region} bulk is made of Silicon and n-doped with a concentration $10^{16} cm^{-3}$ .
 
-Through the keyword  \textbf{mesh\_regions} , one or more of the \textit{physical regions} (\textit{Physical Lines} in 1D, \textit{Physical Surfaces} in 2D, \textit{Physical Volumes} in 3D) previously defined in the GMSH mesh can be associated to the present  \TiberCAD \textbf{Region}.
+Through the keyword  \textbf{mesh\_regions} , one or more of the \textit{physical regions} (\textit{Physical Lines} in 1D, \textit{Physical Surfaces} in 2D, \textit{Physical Volumes} in 3D) previously defined in the GMSH mesh can be associated to the present  \TiberCAD{} \textbf{Region}.
 
-With \textit{mesh\_regions = 1}, we associate the Physical Line 1, defined in the Step 1, to the \TiberCAD \textbf{Region} \textit{bulk}.
+With \textit{mesh\_regions = 1}, we associate the Physical Line 1, defined in the Step 1, to the \TiberCAD{} \textbf{Region} \textit{bulk}.
 
 \subsection* {2 - Definition of Simulation}
 
@@ -147,7 +147,7 @@ physical_regions = all
 }
 \end{verbatim}
 
-The \TiberCAD \textbf{simulation} \textit{driftdiffusion\_1} , belonging to the  \textbf{model} \textbf{driftdiffusion}, will be applied to the whole device structure (\textit{physical\_regions = all}).
+The \TiberCAD{} \textbf{simulation} \textit{driftdiffusion\_1} , belonging to the  \textbf{model} \textbf{driftdiffusion}, will be applied to the whole device structure (\textit{physical\_regions = all}).
 
 
 \subsection* {3 - Definition of Boundary Conditions}
@@ -170,8 +170,8 @@ voltage = 0.0
 \end{verbatim}
 Both contacts are defined as \textit{ohmic}, cathod is assigned a fixed \textit{voltage = 0.0}, while anode voltage is given by the value of the variable \textit{Vb (voltage = @Vb)}.
 
-Through the keyword  \textbf{BC\_reg\_numb} , one or more of the \textbf{(n-1)D} physical regions (Physical Points in 1D, Physical Lines in 2D, Physical Surfaces in 3D) previously defined in the GMSH mesh can be associated to the present  \TiberCAD \textbf{BC Region}.
-With \textit{BC\_reg\_numb = 1}, we associate the Physical Point 1, defined in the \textbf{Step 1}, to the \TiberCAD \textbf{BC Region} \textit{anode}; with \textit{BC\_reg\_numb = 2}, we associate the Physical Point 2, defined in the \textbf{Step 1}, to the \TiberCAD \textbf{BC Region} \textit{cathode}.
+Through the keyword  \textbf{BC\_reg\_numb} , one or more of the \textbf{(n-1)D} physical regions (Physical Points in 1D, Physical Lines in 2D, Physical Surfaces in 3D) previously defined in the GMSH mesh can be associated to the present  \TiberCAD{} \textbf{BC Region}.
+With \textit{BC\_reg\_numb = 1}, we associate the Physical Point 1, defined in the \textbf{Step 1}, to the \TiberCAD{} \textbf{BC Region} \textit{anode}; with \textit{BC\_reg\_numb = 2}, we associate the Physical Point 2, defined in the \textbf{Step 1}, to the \TiberCAD{} \textbf{BC Region} \textit{cathode}.
 
 \subsection* {4 - Definition of Simulation parameters}
 
@@ -209,9 +209,9 @@ Output files with conduction and valence band profiles (\textit{plot = Ec,Ev.}.)
 
 
 
-\section*{Step 4: Run TiberCAD}
+\section*{Step 4: Run TiberCAD{}}
 
-Now we can run TiberCAD:
+Now we can run TiberCAD{}:
 
 \texttt{tibercad  bulk.tib}
 
