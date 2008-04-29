@@ -65,8 +65,7 @@ $Models
         BC_reg_numb = 2
         type = schottky
 	barrier_height = 3.0
-	zero_grad_fermi_e = true
-	zero_grad_fermi_h = true
+
         voltage = @Vg[0.0]
       }
 
@@ -74,7 +73,7 @@ $Models
       {
         BC_reg_numb = 1
         type = ohmic
-	zero_grad_fermi_h = true
+
         voltage = 0.0
       }
  
@@ -82,7 +81,7 @@ $Models
       {
         BC_reg_numb = 3
         type = ohmic
-	zero_grad_fermi_h = true
+
         voltage = @Vd[0.5]
       }
    
@@ -122,7 +121,7 @@ $Solver
     variable = Vd
     start = 0.0
     stop = 2.0 #0.1
-    steps = 20 #50 #200  #200 #1
+    steps = 20 #50 
 
     plotvariable = current
  #   plot_data = true
@@ -160,13 +159,13 @@ $Physics
 
 $Simulation
 {
-  searchpath =  ../../materials 
+ # searchpath =  ../../materials 
   meshfile = mosfet.msh
   dimension = 2
   temperature = 300
   solve = sweep_2
   #solve = (driftdiffusion, sweep)
-  resultpath = output_IV_char_2  #output_test2  #output_IV_char  #output_test
+  resultpath = output_IV_char  
   #output_format = gmv
   output_format = vtk
   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, EField, ElPotential)
