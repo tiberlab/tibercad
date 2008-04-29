@@ -1,0 +1,10 @@
+
+License file creation
+---------------------
+
+1) compile in src/utils/license
+2) take example file src/utils/license/example.lic and copy it to
+   tibercad.lic
+3) edit tibercad.lic: change LICENSE HOLDER and EXPIRY
+   Format for EXPIRY: yyyy-mm-dd
+4) run bin/create_license with tibercad.lic as argument

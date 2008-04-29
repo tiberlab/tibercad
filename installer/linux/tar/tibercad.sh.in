@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VER=@PACKAGE_VERSION@
+VER=@TIBERVERSION@
 
 # put your installation directory here (this is done automatically by the
 # installation script)

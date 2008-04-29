@@ -20,6 +20,9 @@ AC_DEFINE_UNQUOTED([TIBERMINORVERSION],[$tc_version_minor],
 AC_DEFINE_UNQUOTED([TIBERSUBMINORVERSION],[$tc_version_subminor],
   [TiberCAD version subminor])
 
+[TIBERVERSION]="$tc_version_major.$tc_version_minor.$tc_version_subminor"
+AC_SUBST([TIBERVERSION])
+
 # Make compilation tests using C++
 AC_LANG([C++])
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TIBERVER=@PACKAGE_VERSION@
+TIBERVER=@TIBERVERSION@
 
 
 echo "###################################################"

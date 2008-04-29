@@ -17,7 +17,7 @@ objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
 
 
 .PHONY: all
-all:  liblicense.a create_license
+all:  liblicense.a $(topdir)/bin/create_license
 
 # we take the library of crypto++ and add our stuff...
 liblicense.a: $(topdir)/contrib/crypto++/libcryptopp.a $(objects)
@@ -26,7 +26,7 @@ liblicense.a: $(topdir)/contrib/crypto++/libcryptopp.a $(objects)
 	@ranlib $@
 
 
-create_license: create_license.$(obj-suffix) liblicense.a
+$(topdir)/bin/create_license: create_license.$(obj-suffix) liblicense.a
 	$(CXX) -o $@ $< liblicense.a -lpthread
 
 

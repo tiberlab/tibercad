@@ -317,8 +317,7 @@ $Physics
 
 $Simulation
 {
- # searchpath = .
-# ../../examples/materials    
+  searchpath = .
   meshfile = dot5.msh
   mesh_units = 1e-9
   dimension = 3

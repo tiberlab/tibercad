@@ -141,7 +141,7 @@ Control::create_device(void)
 
   ModelOptions opts = parser.read_parameters("Simulation");
 
-  _database->set_search_path(opts.get_option("searchpath", "."));
+  _database->set_search_path(opts.get_option("searchpath", ""));
   opts.delete_option("searchpath");
 
 #ifdef DEBUG

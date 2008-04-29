@@ -11,7 +11,7 @@ class Database
   public:
 
     //! Constructor
-    Database(void) : _path("."), _material("Si") {};
+    Database(void) : _path(""), _material("Si") {};
 
     void set_search_path(const std::string& path)
       { _path = path; };

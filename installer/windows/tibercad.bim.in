@@ -10,7 +10,7 @@ FileVersion = 2
 ; 
 [GeneralInformation]
 AppName = TiberCAD
-Version = !TIBERVERSION!
+Version = @TIBERVERSION@
 CompanyName = TiberLab
 Website = www.tibercad.org
 Email = @PACKAGE_BUGREPORT@

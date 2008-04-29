@@ -59,7 +59,7 @@ Database::get_data_file(void) const
   std::string s(_path);
   s += "/" + _material + ".dat";
 
-  if (!check_data_file(s))
+  if ((_path.size() == 0) || !check_data_file(s))
   {
     s = TiberCad::tiberroot + "/materials/" + _material + ".dat";
 

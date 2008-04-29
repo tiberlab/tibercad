@@ -330,7 +330,7 @@ $Physics
 
 $Simulation
 {
-  #searchpath = ../materials 
+  searchpath = . 
   meshfile = quantum_well.msh
   mesh_units = 1e-9
   dimension = 1
