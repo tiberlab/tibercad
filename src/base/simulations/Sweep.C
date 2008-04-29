@@ -570,6 +570,7 @@ Sweep::do_remember_current_solution(ID id)
 {
   // we only remember the first solution!
   //return remember_solution();
+  ignore_unused_variable(id);
   
   return 1;
 }

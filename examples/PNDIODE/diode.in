@@ -122,8 +122,8 @@ $Physics
 
 $Simulation
 {
-  searchpath = ../materials
-  meshfile = diode_mdr.grd
+  searchpath = ../../materials
+  meshfile = diode.msh
   incomplete_ionization = false
   dimension = 2
   temperature = 300

@@ -2,7 +2,6 @@
 
 #include "boost/algorithm/string/trim.hpp"
 
-#include "tiber_config.h"
 
 #include "Control.h"
 #include "DLLoader.h"
