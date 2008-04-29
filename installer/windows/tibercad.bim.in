@@ -9,8 +9,8 @@ FileID = Bytessence Install Maker
 FileVersion = 2
 ; 
 [GeneralInformation]
-AppName = @PACKAGE_NAME@
-Version = @PACKAGE_VERSION@
+AppName = TiberCAD
+Version = !TIBERVERSION!
 CompanyName = TiberLab
 Website = www.tibercad.org
 Email = @PACKAGE_BUGREPORT@

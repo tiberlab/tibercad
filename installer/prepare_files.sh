@@ -21,8 +21,11 @@ make_windows_package () {
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   cp ${topdir}/materials/[^.]* ${files}/materials
 
-  #curdir=`pwd`
-  #cd ${files}
+  curdir=`pwd`
+  cd ${files}
+  find ./materials -type f -exec unix2dos {} \;
+  find ./examples -type f -exec unix2dos {} \;
+  unix2dos Copyright.txt
 
   #zip -r -l data.zip materials examples
   #zip -r  data.zip materials examples
@@ -31,7 +34,7 @@ make_windows_package () {
   #zip -A data.exe
   #rm -f data.zip
 
-  #cd $curdir
+  cd $curdir
 
   # copy cygwin system libraries
   test ! -x /usr/bin/cygcheck.exe && exit 1

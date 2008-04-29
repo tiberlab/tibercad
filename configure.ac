@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([TiberCAD], [], [developers@tibercad.org])
+AC_INIT([TiberCAD], [1.0], [support@tibercad.org])
 AC_PREREQ(2.59)
 
 AC_CONFIG_SRCDIR([include/base/common/TiberCad.h])

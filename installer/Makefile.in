@@ -2,12 +2,18 @@
 #
 
 
+include ../Make.common
+
 BINSTALLMAKER = @BINSTALLMAKER@
 
 
 .PHONY: wininstaller
 wininstaller: 
 	@echo "Preparing Windows installer package ..."
+	@mv windows/tibercad.bim windows/tibercad.bim.$$$$ ; \
+	 sed 's/!TIBERVERSION!/$(TIBERVERSION)/' \
+	 windows/tibercad.bim.$$$$ > windows/tibercad.bim ; \
+	 rm -f windows/tibercad.bim.$$$$
 	@./prepare_files.sh windows
 	@exec "$(BINSTALLMAKER)" windows/tibercad.bim
 	@rm -rf windows/files

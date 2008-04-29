@@ -3,6 +3,14 @@
 #include <winver.h>
 #include <windows.h>
 
+#define DOQUOTE(x) #x 
+#define QUOTE(x) DOQUOTE(x)
+#define DOCONCAT(a, b, c, d) a ## . ## b ## . ## c ## . ## d ## 
+#define CONCAT(a, b, c, d) DOCONCAT(a, b, c, d)
+#define VER_FULL CONCAT(TIBERMAJORVERSION, TIBERMINORVERSION, \
+			TIBERSUBMINORVERSION, SVNREVISION)
+#define VER_STRING QUOTE(VER_FULL)
+
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 100	ICON	tibercad.ico
@@ -16,8 +24,8 @@ FILEOS VOS__WINDOWS32
 {
  BLOCK "StringFileInfo" {
   BLOCK "040904E4" {
-   VALUE "FileVersion", "0.1.0\0"
-   VALUE "ProductVersion", "0.1.0\0"
+   VALUE "FileVersion", VER_STRING
+   VALUE "ProductVersion", VER_STRING
    VALUE "FileDescription", "TiberCAD simulator executable\0"
    VALUE "CompanyName", "TiberLAB\0"
    VALUE "LegalCopyright", "Copyright (C) TiberLAB, 2008\0"
