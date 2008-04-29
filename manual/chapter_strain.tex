@@ -222,6 +222,31 @@ The only parameter that controls shape calculation is
 
 \section{Physics section parameters}
 There is a possibility to consider converse piezoelectric effect. For this it is necessary to specify a name of another simulation that can provide electric field.
-
+The parameter is {\textit{poisson\_equation}}. Example:
+\begin{verbatim}
+ macrostrain
+ {
+    poisson_equation = DriftDiffusion
+ }
+\end{verbatim}
+\newtheorem*{conv:piezo}{Interaction with other simulations}
+\begin{conv:piezo}
+ In order to take into account the converse piezzo effect, the poisson equation has to recalculate the necessary parameters after the strain simulation. To do so, the following parameters has to be set in the Physics section of the drift-diffusion equation (for detailes see Sec.~\ref{Drift:diff:physics}):
+\begin{verbatim}
+driftdiffusion
+{
+    model = strained
+    strain_simulation = str
+    recompute_band_parameters = true 
+}
+\end{verbatim}
+\end{conv:piezo}
 
 \section{Output} 
+The output variables are:
+\begin{itemize}
+\item 
+\textbf{strain}  strain tensor (6 components) in calculation system  
+\item 
+\textbf{polarization}  piezo polarization vector (3 components) in calculation system    
+\end{itemize}
