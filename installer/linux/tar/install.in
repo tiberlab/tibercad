@@ -8,10 +8,12 @@ echo "#      TiberCAD ver. $TIBERVER  installation      #"
 echo "###################################################"
 
 echo ""
-echo -n "Provide installation directory: "
+echo -n "Provide installation directory [/usr/local/tibercad-$TIBERVER]: "
 read instpath
 
 echo ""
+
+[ -z $instpath ] && instpath=/usr/local/tibercad-$TIBERVER
 
 # try to create directory
 if [ -f $instpath ]
@@ -27,7 +29,7 @@ fi
 
 if [ $? -ne 0 ]
 then
-  echo "Could not create directory $instpath!"
+  echo "Could not create directory $instpath! Perhaps you don't have permissions?"
   exit 1
 fi
 
@@ -47,7 +49,7 @@ echo "Starting installation to $instpath"
 content=`ls -A $instpath`
 if [ ! -z "$content" ]
 then
-  echo -n "Installation directory is not empty. Do you really want to proceed ? "
+  echo -n "Installation directory is not empty. Do you really want to proceed? "
   read answer
   if [ $answer != "y" -a $answer != "yes" ]
   then
