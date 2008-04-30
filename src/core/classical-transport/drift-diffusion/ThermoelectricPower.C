@@ -1,7 +1,5 @@
 // $Id$
 
-
-
 #include "ThermoelectricPower.h"
 #include "getpot.h"
 #include "Material.h"
@@ -16,7 +14,10 @@ ThermoelectricPower::ThermoelectricPower(void)
     _hQfermi(0.0),
     _Ec(0.0),
     _Ev(0.0),
-    _phi(0.0),
+    _ElPot(0.0),
+    _ElectricField(0.0),
+    _eFermiGrad(0.0),
+    _hFermiGrad(0.0),
     _TEmodel(CONSTANT)
 {
 }
@@ -69,8 +70,6 @@ ThermoelectricPower::read_database(void)
 
 
 
-
-
 void
 ThermoelectricPower::do_init(void)
 {
@@ -79,6 +78,7 @@ ThermoelectricPower::do_init(void)
 
   if (TEmodel == "constant")
   {
+ 
     _TEmodel = CONSTANT;
 
     _eTEpower = get_parameter("eTEpower", _eTEpower);
@@ -99,15 +99,30 @@ ThermoelectricPower::calculate(void)
 {
   if (_TEmodel == DIFFUSIVITY)
   {
-    _eTEpower = -Constants::k_B * (5.0 / 2.0 + (_eQfermi +  _Ec - _phi) / _Tloc);
+    _eTEpower = -Constants::k_B * (5.0 / 2.0 + (_eQfermi +  _Ec - _ElPot) / _Tloc);
 
-    _hTEpower =  Constants::k_B * (5.0 / 2.0 - (_hQfermi + _Ev - _phi) / _Tloc);
+    _hTEpower =  Constants::k_B * (5.0 / 2.0 - (_hQfermi + _Ev - _ElPot) / _Tloc);
   }
- 
- 
-
 
 }
+
+
+void
+ThermoelectricPower::calculate_derivatives(void)
+{
+
+  if (_TEmodel == DIFFUSIVITY)
+  {
+
+    _eTEpowerGrad = - Constants::k_B / _Tloc * (_eFermiGrad +  _ElectricField);
+
+    _hTEpowerGrad = - Constants::k_B / _Tloc * (_hFermiGrad +  _ElectricField);
+   
+   
+  }
+
+}
+
 
 
 

@@ -392,6 +392,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
       { return _pd->electron_density; };
      
     
+
     //! Get the electron density derivative
     /*!
      * \return the electron density derivative with respect to the
@@ -633,6 +634,14 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     //! Computes the electron and hole thermoelectric powers
     void compute_thermoelectric_powers(void);
 
+    //! Computes the electron and hole thermoelectric power derivatives
+    void compute_thermoelectric_power_gradient(void);
+
+    //!provides holes thermoelectric power [V/K]
+    RealGradient get_electron_thermoelectric_power_gradient(void) const;
+
+    //!provides holes thermoelectric power [V/K]
+    RealGradient get_hole_thermoelectric_power_gradient(void) const;
   
     //! Get the all nodal temperatures for a given element
     std::vector<double>& get_temperature_at_nodes(void);
@@ -814,12 +823,17 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     PointData* _pd;
 
        
+    //! Electron thermoelectric power gradient
+    RealGradient _eTEpowerGrad;
+
+    //! Hole thermoelectric power gradient
+    RealGradient _hTEpowerGrad; 
+
     //! Electron thermoelectric power
     double _eTEpower;
 
     //! Hole thermoelectric power
-    double _hTEpower; 
-
+    double _hTEpower;
 
     //! The electric field
     RealGradient _electric_field;
@@ -1251,7 +1265,25 @@ DriftDiffusionProperties::get_hole_thermoelectric_power(void) const
   return _hTEpower;
 }
 
+inline
+RealGradient 
+DriftDiffusionProperties::get_electron_thermoelectric_power_gradient(void) const
+{
 
+  return  _eTEpowerGrad;
+
+} 
+
+inline
+RealGradient 
+DriftDiffusionProperties::get_hole_thermoelectric_power_gradient(void) const
+{
+
+  return  _hTEpowerGrad;
+
+}
+  
+  
 
 inline
 PhysicalModelInterface*

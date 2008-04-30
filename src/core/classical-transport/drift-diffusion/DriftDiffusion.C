@@ -1627,7 +1627,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     sc->compute_thermoelectric_powers(); 
 
     double Pn =  sc->get_electron_thermoelectric_power();
-    
     double Pp =  sc->get_hole_thermoelectric_power();
     
     double sigma_e = Constants::e * sc->get_electron_density() *
@@ -1740,8 +1739,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     if (ids.count(EJOULE))
       values[n][EJOULE] = ( jnx * jnx + jny * jny + jnz * jnz ) / sigma_e;
 
-   
-    
     if (ids.count(HJOULE))
       values[n][HJOULE] =  (jpx * jpx + jpy * jpy + jpz * jpz )/ sigma_h;
     
@@ -1773,55 +1770,21 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     if (ids.count(TEMP))
       values[n][TEMP] = T;
 
-
-
     if (ids.count(EPTSOURCE))
     {
-      double Pn = 0.0;
-      double Pn_x = 0.0, Pn_y =0.0, Pn_z = 0.0;
-      double u = 0.0, en =0.0, ep = 0.0;
-
-      for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        u  = phi0 * solution(dof_indices_u[i]);
-	en = phi0 * solution(dof_indices_en[i]);
-	ep = phi0 * solution(dof_indices_ep[i]);
-        sc->set_coordinates(elem->node(i));
-	sc->set_potentials(u, en, ep);
-	sc->compute_thermoelectric_powers(); 
-        Pn = sc->get_electron_thermoelectric_power();
-        Pn_x += Pn * dphi[i][n](0); 
-        Pn_y += Pn * dphi[i][n](1); 
-        Pn_z += Pn * dphi[i][n](2); 
-      }
-
-      values[n][EPTSOURCE] =  - T * (Pn_x * jnx + Pn_y * jny + Pn_z * jnz); 
- 
+      sc->compute_thermoelectric_power_gradient(); 
+      RealGradient PnGrad =  sc->get_electron_thermoelectric_power_gradient();     
+      values[n][EPTSOURCE] =  -T * ( PnGrad(0) * jnx + PnGrad(1) * jny + PnGrad(2) * jnz );
     }
+    
     if (ids.count(HPTSOURCE))
     {
-      double Pp = 0.0;
-      double Pp_x = 0.0, Pp_y =0.0, Pp_z = 0.0;
-      double u = 0.0, en = 0.0, ep = 0.0;
-
-      for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        u  = phi0 * solution(dof_indices_u[i]);
-	en = phi0 * solution(dof_indices_en[i]);
-	ep = phi0 * solution(dof_indices_ep[i]);
-        sc->set_coordinates(elem->node(i));
-	sc->set_potentials(u, en, ep);
-	sc->compute_thermoelectric_powers(); 
-        Pp = sc->get_electron_thermoelectric_power();
-        Pp_x += Pp * dphi[i][n](0); 
-        Pp_y += Pp * dphi[i][n](1); 
-        Pp_z += Pp * dphi[i][n](2); 
-      }
-
-      values[n][HPTSOURCE] =  - T * (Pp_x * jpx + Pp_y * jpy + Pp_z * jpz); 
-     
- 
+      sc->compute_thermoelectric_power_gradient(); 
+      RealGradient PpGrad =  sc->get_hole_thermoelectric_power_gradient();
+      values[n][HPTSOURCE] =  -T * ( PpGrad(0) * jpx + PpGrad(1) * jpy + PpGrad(2) * jpz );
     }
+
+
     set<ID>::iterator first(ids.begin());
     set<ID>::iterator it(ids.end());
     --it; 
@@ -2139,55 +2102,20 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     if (ids.count(TEMP))
       values[n][TEMP] = T;
-    
+
     if (ids.count(EPTSOURCE))
     {
-      double Pn = 0.0;
-      double Pn_x = 0.0, Pn_y =0.0, Pn_z = 0.0;
-      double u = 0.0, en =0.0, ep = 0.0;
-
-      for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        
-        u  = phi0 * solution(dof_indices_u[i]);
-	en = phi0 * solution(dof_indices_en[i]);
-	ep = phi0 * solution(dof_indices_ep[i]);
-        sc->set_coordinates(elem->node(i));
-	sc->set_potentials(u, en, ep);
-	sc->compute_thermoelectric_powers(); 
-        Pn = sc->get_electron_thermoelectric_power();
-        Pn_x += Pn * dphi[i][n](0); 
-        Pn_y += Pn * dphi[i][n](1); 
-        Pn_z += Pn * dphi[i][n](2); 
-       
-      }
-
-      values[n][EPTSOURCE] =  - T * (Pn_x * jnx + Pn_y * jny + Pn_z * jnz); 
-       
+      sc->compute_thermoelectric_power_gradient(); 
+      RealGradient PnGrad =  sc->get_electron_thermoelectric_power_gradient();     
+      values[n][EPTSOURCE] =  -T * ( PnGrad(0) * jnx + PnGrad(1) * jny + PnGrad(2) * jnz );
     }
+    
     if (ids.count(HPTSOURCE))
     {
-      double Pp = 0.0;
-      double Pp_x = 0.0, Pp_y =0.0, Pp_z = 0.0;
-      double u = 0.0, en = 0.0, ep = 0.0;
-
-      for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        u  = phi0 * solution(dof_indices_u[i]);
-	en = phi0 * solution(dof_indices_en[i]);
-	ep = phi0 * solution(dof_indices_ep[i]);
-        sc->set_coordinates(elem->node(i));
-	sc->set_potentials(u, en, ep);
-	sc->compute_thermoelectric_powers(); 
-        Pp = sc->get_electron_thermoelectric_power();
-        Pp_x += Pp * dphi[i][n](0); 
-        Pp_y += Pp * dphi[i][n](1); 
-        Pp_z += Pp * dphi[i][n](2); 
-      }
-
-      values[n][HPTSOURCE] =  - T * (Pp_x * jpx + Pp_y * jpy + Pp_z * jpz); 
+      sc->compute_thermoelectric_power_gradient(); 
+      RealGradient PpGrad =  sc->get_hole_thermoelectric_power_gradient();
+      values[n][HPTSOURCE] =  -T * ( PpGrad(0) * jpx + PpGrad(1) * jpy + PpGrad(2) * jpz );
     }
-
 
     if (ids.count(PN))
       values[n][PN] = Pn;
@@ -2640,7 +2568,6 @@ DriftDiffusion::calculate_currents_surfint(void)
           sc->calculate_densities();
 
           sc->calculate_mobilities();
-
 
           Real cond_e = Constants::e * sc->get_electron_mobility() *
             sc->get_electron_density();
@@ -3489,6 +3416,47 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     }
   }
 
+  int dPn = -1;
+  if (variables.find("GradPn") != varend)
+  {
+    legend.resize(legend.size() + dim);
+    dPn = n_vars;
+    switch (dim)
+    {
+      case 3:
+        legend[dPn + 2] = "GradTepE_z";
+        n_vars++;
+      case 2:
+        legend[dPn + 1] = "GradTepE_y";
+        n_vars++;
+        legend[dPn + dim] = "modGradTepE";
+        n_vars++;
+      default:
+        legend[dPn] = "GradTepE_x";
+        n_vars++;
+    }
+  }
+
+  int dPp = -1;
+  if (variables.find("GradPp") != varend)
+  {
+    legend.resize(legend.size() + dim);
+    dPp = n_vars;
+    switch (dim)
+    {
+      case 3:
+        legend[dPp + 2] = "GradTepH_z";
+        n_vars++;
+      case 2:
+        legend[dPp + 1] = "GradTepH_y";
+        n_vars++;
+        legend[dPp + dim] = "modGradTepH";
+        n_vars++;
+      default:
+        legend[dPp] = "GradTepH_x";
+        n_vars++;
+    }
+  }
 
   int Polariz = -1;
   if ((variables.find("Polarization") != varend) ||
@@ -3640,10 +3608,13 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
 
     sc->compute_thermoelectric_powers();
 
+    sc->compute_thermoelectric_power_gradient();
 
     double Pn = sc->get_electron_thermoelectric_power();
-
     double Pp = sc->get_hole_thermoelectric_power();
+    RealGradient GradPn = sc->get_electron_thermoelectric_power_gradient();
+    RealGradient GradPp = sc->get_hole_thermoelectric_power_gradient();
+
       
     double sigma_e = Constants::e * sc->get_electron_density() *
       sc->get_electron_mobility();
@@ -3675,8 +3646,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
           results[id + GradFermiE + 2] = en_z;
         case 2:
           results[id + GradFermiE + 1] = en_y;
-          results[id + GradFermiE + dim] = 
-            sqrt(en_x * en_x + en_y * en_y + en_z * en_z);
+          results[id + GradFermiE + dim] =  sqrt(en_x * en_x + en_y * en_y + en_z * en_z);
         default:
           results[id + GradFermiE] = en_x;
       }
@@ -3768,8 +3738,39 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     }
 
 
+    if (dPn != -1)
+    {
+      double dPn_x = GradPn(0);
+      double dPn_y = GradPn(1);
+      double dPn_z = GradPn(2);
+      switch (dim)
+      {
+        case 3:
+          results[id + dPn + 2] = dPn_z;
+        case 2:
+          results[id + dPn + 1] = dPn_y;
+          results[id + dPn + dim] = sqrt(dPn_x * dPn_x + dPn_y * dPn_y + dPn_z * dPn_z);
+        default:
+          results[id + dPn] = dPn_x;
+      }
+    }
 
-
+    if (dPp != -1)
+    {
+      double dPp_x = GradPp(0);
+      double dPp_y = GradPp(1);
+      double dPp_z = GradPp(2);
+      switch (dim)
+      {
+        case 3:
+          results[id + dPp + 2] = dPp_z;
+        case 2:
+          results[id + dPp + 1] = dPp_y;
+          results[id + dPp + dim] = sqrt(dPp_x * dPp_x + dPp_y * dPp_y + dPp_z * dPp_z);
+        default:
+          results[id + dPp] = dPp_x;
+      }
+    }
 
 
     if (PDens != -1)

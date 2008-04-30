@@ -51,8 +51,6 @@ void  DriftDiffusionHeatSource::do_init(void)
 {
 
 
-
-
   heat_source_opt.model_name = "Drift diffusion dissipation";
   
   heat_source_opt.dd_simul_name = get_options().get_option("drift_diffusion_simulation", "no_current");
@@ -111,9 +109,6 @@ DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point, const std
   const Elem*  elem = _heat_model->get_element();
 
   std::vector< std::map< ID, double > > solution;
-
-
-  
  
 
   if  (_simul->get_solution(elem,h_point,ID_set,solution))

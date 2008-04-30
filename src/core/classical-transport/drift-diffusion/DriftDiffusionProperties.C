@@ -16,6 +16,7 @@
 #include "elem.h"
 #include "getpot.h"
 
+
 #include <cmath>
 
 
@@ -52,6 +53,8 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     _hole_mobility(NULL),
     _eTEpower(0),
     _hTEpower(0),
+    _eTEpowerGrad(0.0),
+    _hTEpowerGrad(0.0),
     _pyropolarization(NULL),
     _polarization(3, 0.0),
     _thermoelectric_power(NULL),
@@ -791,17 +794,13 @@ DriftDiffusionProperties::compute_thermoelectric_powers(void)
 {
   if (_thermoelectric_power != NULL)
   {
-    _thermoelectric_power->set_fermi_potential(_pd->fermi_e, _pd->fermi_h);
+    _thermoelectric_power->set_potentials(_pd->fermi_e, _pd->fermi_h,_pd->electric_potential);
     
     double cb = get_conduction_band_edge();
     
     double vb = get_valence_band_edge();
     
     _thermoelectric_power->set_band_edges(cb, vb);
-
-    double phi = _pd->electric_potential;
- 
-    _thermoelectric_power->set_electric_potential(phi);
     
     _thermoelectric_power->set_temperature(_lattice_vt);
     
@@ -814,7 +813,23 @@ DriftDiffusionProperties::compute_thermoelectric_powers(void)
   }
 }
 
+void
+DriftDiffusionProperties::compute_thermoelectric_power_gradient(void)
+{
+   if (_thermoelectric_power != NULL)
+   {
+     _thermoelectric_power->set_potential_gradients(_grad_fermi_e,_grad_fermi_h,_electric_field);
 
+     _thermoelectric_power->set_temperature(_lattice_vt);
+
+     _thermoelectric_power->calculate_derivatives();
+
+     _eTEpowerGrad =  _thermoelectric_power->get_electron_thermoelectric_power_gradient();
+
+     _hTEpowerGrad =  _thermoelectric_power->get_hole_thermoelectric_power_gradient();
+
+    }
+}
 
 std::vector<double>&
 DriftDiffusionProperties::get_temperature_at_nodes()
