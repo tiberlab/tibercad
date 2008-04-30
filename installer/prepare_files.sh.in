@@ -65,6 +65,7 @@ prepare_linux_package () {
   mkdir -p ${files}/share
   mkdir -p ${files}/license
   mkdir -p ${files}/materials
+  mkdir -p ${files}/contrib
 
   cp ${topdir}/installer/linux/tar/install ${files}
   chmod a+x ${files}/install
@@ -78,8 +79,8 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep stdc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep gcc_s | awk '{print $3}'`"
   cp $libs ${files}/lib
-  cp ${topdir}/bin/tibercad ${files}/bin/tibercad-$version
-  chmod a+x ${files}/bin/tibercad-$version
+  cp ${topdir}/bin/tibercad ${files}/bin
+  chmod a+x ${files}/bin/tibercad
   cp ${topdir}/lib/lib*.so* ${files}/lib
   find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
   cp ${topdir}/share/tibercad.ico ${files}/share
@@ -91,6 +92,9 @@ prepare_linux_package () {
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   cp ${topdir}/materials/[^.]* ${files}/materials
+
+  cp -r  ${topdir}/contrib/gmsh-2.2.0 ${files}/contrib
+  chmod a+x ${files}/contrib/gmsh-2.2.0/gmsh
 
   chmod -R a+r ${files}
   find ${files} -type d -exec chmod a+x {} \;
@@ -104,7 +108,8 @@ prepare_linux_package () {
 make_deb () {
 
   bindir=debfiles/usr/bin
-  files=debfiles/usr/share/tibercad-$version
+  #files=debfiles/usr/share/tibercad-$version
+  files=debfiles/usr/share/tibercad
   mkdir -m 0755 debfiles
   mkdir -p ${bindir}
   mkdir -p ${files}/lib/tibermodels
@@ -113,9 +118,10 @@ make_deb () {
   mkdir -p ${files}/examples
   mkdir -p ${files}/license
   mkdir -p ${files}/materials
+  mkdir -p ${files}/contrib
 
-  cp ${topdir}/bin/tibercad ${files}/bin/tibercad-$version
-  chmod a+x ${files}/bin/tibercad-$version
+  cp ${topdir}/bin/tibercad ${files}/bin
+  chmod a+x ${files}/bin/tibercad
   cp ${topdir}/lib/lib*.so* ${files}/lib
   find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
   cp ${topdir}/share/tibercad.ico ${files}
@@ -128,10 +134,11 @@ make_deb () {
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   cp ${topdir}/materials/[^.]* ${files}/materials
 
-  chmod -R a+r debfiles
-  find debfiles -type d -exec chmod a+x {} \;
+  cp -r  ${topdir}/contrib/gmsh-2.2.0 ${files}/contrib
+  chmod a+x ${files}/contrib/gmsh-2.2.0/gmsh
 
-  sed -e "s/<INSTALLDIR>/\/usr\/share\/tibercad-$version/g" ${topdir}/installer/linux/tar/tibercad.sh > ${files}/bin/tibercad.sh
+  #sed -e "s/<INSTALLDIR>/\/usr\/share\/tibercad-$version/g" ${topdir}/installer/linux/tar/tibercad.sh > ${files}/bin/tibercad.sh
+  sed -e "s/<INSTALLDIR>/\/usr\/share\/tibercad/g" ${topdir}/installer/linux/tar/tibercad.sh > ${files}/bin/tibercad.sh
   chmod a+x ${files}/bin/tibercad.sh
   cd ${bindir}
   ln -s ../share/tibercad-${version}/bin/tibercad.sh tibercad
@@ -141,6 +148,14 @@ make_deb () {
   rm -rf debfiles/DEBIAN
   mkdir -m 0755 debfiles/DEBIAN
   sed "s/%computed_size%/$size/" linux/deb/control > debfiles/DEBIAN/control
+  cp linux/deb/postinst debfiles/DEBIAN
+  cp linux/deb/prerm debfiles/DEBIAN
+  chmod a+x debfiles/DEBIAN/postinst
+  chmod a+x debfiles/DEBIAN/prerm
+
+  chmod -R a+r debfiles
+  find debfiles -type d -exec chmod a+x {} \;
+
   cd debfiles
   find usr/ -type f -exec md5sum {} >> DEBIAN/md5sums \;
   cd ..
