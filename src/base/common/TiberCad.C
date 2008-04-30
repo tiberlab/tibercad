@@ -1,6 +1,7 @@
 // $Id$
 
 #include "tiber_config.h"
+#include "svnrevision.h"
 #include "TiberCad.h"
 #include "EigenSolver.h"
 

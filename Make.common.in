@@ -92,7 +92,7 @@ LDFLAGS  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --ldflags)
 FCFLAGS   :=
 
 # define subversion revision for C++
-CXXFLAGS += "-DSVNREVISION="$(SVNREVISION)
+#CXXFLAGS += "-DSVNREVISION="$(SVNREVISION)
 
 ifdef PROFILE
   CXXFLAGS += -pg
