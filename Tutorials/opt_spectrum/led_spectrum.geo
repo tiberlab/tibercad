@@ -157,6 +157,3 @@ Physical Line(12) = {14};   //  p-AlGaN
 
 
 
-//  Quantum1 = physical 4,5
-//  Quantum2 = physical  6,7
-//  Quantum3 = physical  8,9,10
