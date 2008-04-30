@@ -7,6 +7,28 @@ function install_gmsh {
   echo "Installing GMSH to ${instpath}/contrib/gmsh-2.2.0"
   cp -r contrib ${instpath}
 
+  cat > ${instpath}/bin/gmsh <<EOF
+#!/bin/sh
+
+export TIBERCADROOT=$instpath
+
+if [ -z $LD_LIBRARY_PATH ]
+then
+  export LD_LIBRARY_PATH=${TIBERCADROOT}/lib
+else
+  export LD_LIBRARY_PATH=${TIBERCADROOT}/lib:$LD_LIBRARY_PATH
+fi
+
+gmsh=${TIBERCADROOT}/contrib/gmsh-2.2.0/gmsh
+if [ -x $gmsh ]
+then
+  exec $gmsh $@
+else
+  echo "Cannot execute $gmsh. Perhaps broken installation?"
+fi
+
+EOF
+
   echo ""
   echo "Create a link to gmsh in "
   echo " 1. /usr/local/bin"
@@ -38,7 +60,7 @@ function install_gmsh {
       echo "GMSH seems already installed. I will not create the link."
     else
       rm -f gmsh
-      ln -s ${instpath}/contrib/gmsh-2.2.0/gmsh gmsh
+      ln -s ${instpath}/bin/gmsh gmsh
       echo "$bindir/gmsh" >> ${instpath}/files.lst
     fi
     cd $here
