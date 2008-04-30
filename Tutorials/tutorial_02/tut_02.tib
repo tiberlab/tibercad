@@ -31,25 +31,6 @@ $Models
     {
       simulation_name = dd
       physical_regions = all
-    }
-
-    
-    physical_model electron_mobility
-    {
-
-      model = field_dependent
-
-      low_field_model = doping_dependent   
-
-    }
-
-    physical_model hole_mobility
-    {
-
-      model = field_dependent
-
-      low_field_model = doping_dependent
-
     } 
 
      physical_model recombination
@@ -57,7 +38,6 @@ $Models
        model  =  srh
      }               
  
-
     BC_Regions  
     {
       BC_Region anode
@@ -125,6 +105,7 @@ $Models
 $Solver
 
 {
+
   driftdiffusion
   {
     nonlin_rel_tol = 1e-12
@@ -138,9 +119,8 @@ $Solver
     simulation = (dd,tt)
     variable = Vb
     start = 0.0
-    stop = 1.2  
-    steps = 20
-    plot_data = true  
+    stop = 1.2
+    steps = 12
   }
 }
 
@@ -151,6 +131,8 @@ $Physics
 {
   driftdiffusion 
   {
+    model = unstrained
+
     statistics =  FD
   }
 
@@ -163,15 +145,14 @@ $Physics
 
 $Simulation
 {
-#  searchpath = ../../materials/ 
+  searchpath =.
   meshfile = tut_02.msh
   dimension = 1
   temperature = 300
   solve = sweep
-  resultpath = output_tut_02
+  resultpath = output_tut2
   output_format = grace
-
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob, current,eSource,hSource,RecSource,ContactCurrents,NetRecombination,HeatSource,T)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob, current,ContactCurrents,NetRecombination,thermal)
 
 }
 
