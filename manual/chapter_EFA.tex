@@ -157,10 +157,18 @@ By defining  the  \textbf{opticskp}  model,  calculation of  optical  properties
     final_eigenstates   = (0, 19)
   }
 \end{verbatim}
-Here, \textit{initial\_state\_model}  and \textit{final\_state\_model} are, respectively, the quantum models associated  to the initial state of optical transition (e.g. electron), and  to the final state of optical transition (e.g. hole).
-\textit{initial\_eigenstates} and \textit{final\_eigenstates}  refer to the range of  eigenstates to be taken in account for  optical calculations 
+Here, \textit{initial\_state\_model}  and \textit{final\_state\_model} are, respectively, the quantum models (\textbf{efaschroedinger} model) associated respectively  to the initial state of optical transition (e.g. electron), and  to the final state of optical transition (e.g. hole).
+\textit{initial\_eigenstates} and \textit{final\_eigenstates}  refer to the range of  eigenstates to be taken in account for  optical calculations. 
+By specifying, in \textbf{Solver} section, a  range of energy values in this  way:
+\begin{verbatim}
+    Emin = 3.0
+    Emax  = 5.0
+    dE = 0.001
+\end{verbatim}
+the  emission optical  spectrum for  \textbf{k}=0 is  calculated.
 
-By defining the  model  \textit{opticalspectrum},  optical matrix elements are used to calculate the  associated (emission) spectrum, with a possible k-space integration (performed by default).
+
+By defining the  model  \textbf{opticalspectrum},  optical matrix elements are used to calculate the  associated (emission) spectrum with a  k-space integration.
 In \textbf{Solver} section:
 \begin{verbatim}
  opticalspectrum
@@ -186,6 +194,8 @@ In \textbf{Solver} section:
     dE = 0.001
   }
 \end{verbatim}
+The parameters:
+
 \textit{k\_space\_dimension}  = \textbf{1} for 2D simulations,  \textbf{2}  for  1D  simulations.
 k-\textit{space\_basis} is \textbf{true} if  the k-space is  defined by means of k-vectors; if  \textbf{false}, vectors are expressed in real space  
 
@@ -204,14 +214,25 @@ In this case, 'Error'  is  just the  integrated quantity.
 \textit{Emin}, \textit{Emax}, \textit{dE} :  energy range  and step of  spectrum calculation.
 
 
-In section \textbf{Simulation},  the  following  output quantities must  be  indicated in  the   plot list:
-%
-\textbf{optical\_spectrum}, \textbf{k-space} 
+
 
 
 
 
 \section{Output}
+
+The output  variables are:
+
+
+
+For optics  calculations:
+\begin{itemize}
+\item \textbf{optical\_spectrum\_k\_0} : optical emission spectrum for\textbf{ k}=0
+\item  \textbf{optical\_spectrum}: k-space integrated optical emission spectrum
+\item  \textbf{k-space} 
+
+\end{itemize}
+
 
 
 
