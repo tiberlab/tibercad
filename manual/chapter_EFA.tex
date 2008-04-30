@@ -139,32 +139,33 @@ if ${\bf k\cdot p}$ model is  applied, specify:
 \begin{itemize}
  \item {\textbf{EigenEnergy}} Eigen energy in eV
  \item {\textbf{EigenFunctions}} $|\psi({\bf r})|^2$ function of the eigenstate
- \item {\textbf{Occupation}} probability to find the state occupied. It is calculted assuming Fermi distribution and mean electrochemical potential and temperature: 
+ \item {\textbf{Occupation}} probability to find the state occupied. It is calculted 
+assuming Fermi distribution and mean electrochemical potential and temperature: 
 \begin{gather}
 \bar \mu = \langle \psi|\mu({\bf r})|\psi \rangle \\
 \bar T = \langle \psi|T({\bf r})|\psi \rangle 
 \end{gather}
- \item {\textbf{EnergyLevels}} graphical output used for showing the energy level over the band diagram 
+ \item {\textbf{EnergyLevels}} graphical output used for showing the energy 
+level over the band diagram 
 \end{itemize}
 
 
 
 
-
-
-
-\section{Optical properties}
+\chapter{Simulation opticskp}
 
 By defining  the  \textbf{opticskp}  model,  calculation of  optical  properties  is  enabled; in particular, the  optical kp matrix elements are calculated from the  quantum models specified in \textbf{Solver} section:
 \begin{verbatim}
-  opticskp
-  {
+opticskp
+{
     initial_state_model = QW1_electrons # quantum_el
     final_state_model =   QW1_holes # quantum_hl
     initial_eigenstates = (0, 19)
     final_eigenstates   = (0, 19)
-  }
+}
 \end{verbatim}
+
+
 Here, \textit{initial\_state\_model}  and \textit{final\_state\_model} are, respectively, the quantum models (\textbf{efaschroedinger} model) associated respectively  to the initial state of optical transition (e.g. electron), and  to the final state of optical transition (e.g. hole).
 \textit{initial\_eigenstates} and \textit{final\_eigenstates}  refer to the range of  eigenstates to be taken in account for  optical calculations. 
 By specifying, in \textbf{Solver} section, a  range of energy values in this  way:
@@ -175,41 +176,42 @@ By specifying, in \textbf{Solver} section, a  range of energy values in this  wa
 \end{verbatim}
 the  emission optical  spectrum for  \textbf{k}=0 is  calculated.
 
-
+\chapter{Simulation opticalspectrum}
 By defining the  model  \textbf{opticalspectrum},  optical matrix elements are used to calculate the  associated (emission) spectrum with a  k-space integration.
 In \textbf{Solver} section:
 \begin{verbatim}
- opticalspectrum
-  {
-    k_space_dimension = 1 #   1  dimension only  for  k space in a 2D  simulation 
+opticalspectrum
+{
+    k_space_dimension = 2 
     k-space_basis = true
     k1 = (0, 0, 0.1)
-  #  k2 = (0, 0.1, 0)
+    k2 = (0, 0.1, 0)
 
-    refine_fraction =  0.30  # 1.0 # 0.30 #  0.20   1.0 ->  uniform refinement !!
-    relative_accuracy =  0.01  # 0.07  # 0.01
+    refine_fraction =  0.30  
+    relative_accuracy =  0.01  
     refine_k_space = true
 
-    number_of_nodes = 2 # (2,2)  # 4 4   nodes  =  numb. of  elememts in k mesh, along x and y
-    wedge = half #quarter
+    number_of_nodes = 2 
+    wedge = half 
  
-    optical_matr_elem_model=opticskp
+    optical_matr_elem_model = opticskp
 
     polarization =  (0, 0, 1)
 
     Emin = 3.0
     Emax  = 5.0
     dE = 0.001
-  }
+}
 \end{verbatim}
 The parameters:
 
-\textit{k\_space\_dimension}  = \textbf{1} for 2D simulations,  \textbf{2}  for  1D  simulations.
+\textit{k\_space\_dimension}  = \textbf{1} for 2D simulations,  
+\textbf{2}  for  1D  simulations.
 k-\textit{space\_basis} is \textbf{true} if  the k-space is  defined by means of k-vectors; if  \textbf{false}, vectors are expressed in real space  
 
 If \textit{refine\_k\_space} = \textbf{true}, that is  adaptive  k-mesh  refinement is  enabled,  all the  elements whose error is  greater than the  value (1-\textit{refine\_fraction})* (maximum error)  are going  to  be  refined.
 In this case, 'Error'  is  just the  integrated quantity.
- The  refinement will end when the \textit{relative\_accuracy} is obtained.
+The  refinement will end when the \textit{relative\_accuracy} is obtained.
 
 \textit{number\_of\_nodes} = numb. of  elememts in k mesh, along each direction
 
@@ -222,23 +224,23 @@ In this case, 'Error'  is  just the  integrated quantity.
 \textit{Emin}, \textit{Emax}, \textit{dE} :  energy range  and step of  spectrum calculation.
 
 
-
-
+The spectrum is calculated in the following way:
+\begin{equation}
+P(\hbar \omega) = \sum_{i,j} \frac{1}{2\pi^2}  \frac{\omega^2_{ij} e^2 }{m^2 c^3}  
+|{\bf M_{i,j} e}|^2 f_i(E_i)(1 - f_j(E_j)) 
+\frac{\Gamma/2} {(\hbar \omega_{ij} - \hbar \omega)^2 + (\Gamma/2)^2} d\Omega
+\end{equation},
+where $f_i$ and $f_j$ are the Fermi distributions.
 
 
 
 \section{Output}
 
-The output  variables are:
-
-
-
-For optics  calculations:
+The output  variables are optics  calculations.
 \begin{itemize}
 \item \textbf{optical\_spectrum\_k\_0} : optical emission spectrum for\textbf{ k}=0
 \item  \textbf{optical\_spectrum}: k-space integrated optical emission spectrum
-\item  \textbf{k-space} 
-
+\item  \textbf{k-space}: output in k-space of the integrated quantity
 \end{itemize}
 
 
