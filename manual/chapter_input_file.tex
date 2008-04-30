@@ -657,11 +657,11 @@ In the  case  a  sweep  calculation is  performed and  the  \textbf{plot\_data} 
 e.g. \textit{driftdiffusion\_elemental\_Vb\_1.150.dat}
 
 \textbf{Integrated}  quantities are the  quantities which  are  not  associated to the  mesh but  are obtained by an integration on real or reciprocal space,  for  example  current at the  contacts of  a  diode or  quantized energy levels  in  a  quantum  well.
-These \textbf{Integrated}  quantities  are displayed in separated files,  with the  format \textit{simulationname}.\textit{ext}
- e.g  \textit{quantum\_electrons.dat},  where \textit{simulationname} is  the  name of the model (simulation) associated to the  results. 
-
- If  a  sweep  is  performed,  the output  file gets the  format   sweep\_\textit{simulationname\_variablename.ext},
-where  \textit{variablename} is the variable  with respect to  which the  sweep is  performed, e.g. \textit{sweep\_driftdiffusion\_Vb.dat}.
+These \textbf{Integrated}  quantities  are displayed in separated files,  with the  format \textit{simname}.\textit{ext}, 
+ e.g  \textit{quantum\_electrons.dat},  where \textit{simname} is  the  name of the model (simulation) associated to the  results. 
+%
+ If  a  sweep  is  performed,  the output  file gets the  format   sweep\_\textit{simname\_varname.ext},
+where  \textit{varname} is the variable  with respect to  which the  sweep is  performed, for example    \textit{sweep\_driftdiffusion\_Vb.dat}.
 Inside the  file,   output values for all  the  steps  of  calculation are shown.
 
 Finally,  a  last class of  output files is  the  \textbf{Materials}  output. These  files  contain the information about   the physical regions of  the  device;  for  each  class  of  simulation, a  different material file is  produced, containing  all and  only the  mesh regions associated to that simulation model. The  file has the  format  \textit{simulationname}\_materials.\textit{ext},   e.g.
@@ -1126,7 +1126,12 @@ $Simulation
 
    resultpath =  output_  
  
-  plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, EField ,
+          eDensity, hDensity, eCurrent, hCurrent,
+          Current, NetRecombination, eMob, hMob, T, 
+            strain, polarization, xEffPot, xDensity,
+          xMob, ExcitonRecombination, EigenFunctions, 
+          EigenEnergy,EnergyLevels,   xCurrent)
  
   output_format = grace
 
