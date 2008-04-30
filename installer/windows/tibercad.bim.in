@@ -43,7 +43,7 @@ Folder = @WININSTALLERDIR@\files\
 Entry0 = English¶Bytessence/Michel Van Passel¶@BINSTALLMAKERDIR@\Localization\English@ascii.ini
 ;
 [InstTasks]
-fileassoc = ASSOCIATEEXTENSION¶tib¶TiberCAD input file¶<DefaultInstallPath>\tibercad.exe¶0
+fileassoc = ASSOCIATEEXTENSION¶tib¶TiberCAD input file¶<DefaultInstallPath>\tibercad.exe¶1
 mklicdir = CREATEFOLDER¶<DefaultInstallPath>\license
 assocgeo = ASSOCIATEEXTENSION¶geo¶GMSH geo file¶<DefaultInstallPath>/contrib/gmsh-2.2.0/gmsh.exe¶0
 linkgmsh = NORMALLINK¶17¶gmsh¶<DefaultInstallPath>/contrib/gmsh-2.2.0/gmsh.exe¶0¶0¶GMSH 2.2.0
