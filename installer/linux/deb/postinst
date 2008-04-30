@@ -9,16 +9,18 @@ fi
 
 if [ -L /usr/bin/gmsh ]
 then
-  target=`ls -l /usr/bin/gmsh | awk -F '>' '{print $2}' |grep "/usr/share/tibercad"`
+  target=`ls -l /usr/bin/gmsh | awk -F '>' '{print $2}' | grep "/usr/share/tibercad"`
   if [ -z $target ]
   then
     echo "GMSH is already installed on your system (version `/usr/bin/gmsh -version`)"
     echo "The version installed along with TiberCAD can be accessed in /usr/share/tibercad/contrib/gmsh-2.2.0"
     exit 0
+  else
+    rm /usr/bin/gmsh
   fi
 fi
 
 if [ -f /usr/share/tibercad/contrib/gmsh-2.2.0/gmsh ]
 then
-  cd /usr/bin && rm gmsh && ln -s /usr/share/tibercad/contrib/gmsh-2.2.0/gmsh gmsh
+  cd /usr/bin && ln -s /usr/share/tibercad/contrib/gmsh-2.2.0/gmsh gmsh
 fi

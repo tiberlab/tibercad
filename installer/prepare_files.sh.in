@@ -141,7 +141,7 @@ make_deb () {
   sed -e "s/<INSTALLDIR>/\/usr\/share\/tibercad/g" ${topdir}/installer/linux/tar/tibercad.sh > ${files}/bin/tibercad.sh
   chmod a+x ${files}/bin/tibercad.sh
   cd ${bindir}
-  ln -s ../share/tibercad-${version}/bin/tibercad.sh tibercad
+  ln -s ../share/tibercad/bin/tibercad.sh tibercad
   cd ../../..
 
   size=`du -s debfiles | awk '{print $1}'` 
@@ -152,6 +152,8 @@ make_deb () {
   cp linux/deb/prerm debfiles/DEBIAN
   chmod a+x debfiles/DEBIAN/postinst
   chmod a+x debfiles/DEBIAN/prerm
+
+  find ${files}/materials -type f | sed 's/debfiles//g' > debfiles/DEBIAN/conffiles
 
   chmod -R a+r debfiles
   find debfiles -type d -exec chmod a+x {} \;
