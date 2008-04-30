@@ -117,27 +117,35 @@ Other options:
 
 \section{Physical Models parameters}
 
-In \textbf{Physics} section, for  each  quantum model,  one  has  to  specify the  physical model to be  applied :
+\begin{itemize}
+\item
+\textit{particle} = \{el $\vert$ hl \}  
+\item
+\textit{model} = \{ conduction\_band $\vert$ kp \} single conduction band ($\Gamma$ point) or ${\bf k \cdot p}$.
+\item
+\textit{kp\_model} = \{ 6$\times$6 $\vert$ 8$\times$8 \}
+\end{itemize}
 
-\begin{verbatim}
-QW1_holes
-{
-   particle = hl
-   model = kp   #  k.p  for  valence  band
-   kp_model = 6x6
-}
-\end{verbatim}
+Here,  the \textit{particle} name is  the name  of  a  quantum (efaschrodinger) model. \textit{kp\_model} has to be present if the model is \textit{kp}.
 
-Here,  \textbf{QW1\_holes} is  the name  of  a  quantum (efaschrodinger) model.
 
-\textit{particle} = \textbf{el} $\vert$ \textbf{hl},  specifies if  the physical model applies to  electrons or  holes.
+\textit{model} = \textbf{kp} $\vert$ \textbf{conduction\_band} :  ${\bf k\cdot p}$  or  single  conduction band model.
 
-\textit{model} = \textbf{kp} $\vert$ \textbf{conduction\_band} :  $k\cdot p$  or  single  conduction band model.
-
-if $k\cdot p$ model is  applied, specify:
+if ${\bf k\cdot p}$ model is  applied, specify:
 
 \textit{kp\_model} = \textbf{6x6} $\vert$   \textbf{8x8}.
 
+\section{Output}
+\begin{itemize}
+ \item {\textbf{EigenEnergy}} Eigen energy in eV
+ \item {\textbf{EigenFunctions}} $|\psi({\bf r})|^2$ function of the eigenstate
+ \item {\textbf{Occupation}} probability to find the state occupied. It is calculted assuming Fermi distribution and mean electrochemical potential and temperature: 
+\begin{gather}
+\bar \mu = \langle \psi|\mu({\bf r})|\psi \rangle \\
+\bar T = \langle \psi|T({\bf r})|\psi \rangle 
+\end{gather}
+ \item {\textbf{EnergyLevels}} graphical output used for showing the energy level over the band diagram 
+\end{itemize}
 
 
 
