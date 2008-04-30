@@ -58,38 +58,51 @@ volume = 1;
 
 
 
-Extrude Surface {1, {0.0,0.0,h1}} { Recombine; Layers{ {40}, {volume}, {1.0}}; };  //AlGaN 
+
+
+t[] = Extrude   {0.0,0.0,h1} { Surface{1}; Layers {40}; Recombine; };  //AlGaN 
+volume = t[1];
 AlGaN_volumes[0] = volume;
 Call add_AlGaN_side_surfaces;
 volume++;
 
 
 
-Extrude Surface {news - 1, {0.0,0.0,hb }} { Recombine; Layers{ {12}, {volume}, {1.0}}; }; //AlGaN
+
+
+
+t[] = Extrude {0.0,0.0,hb} {Surface{news - 1}; Layers {12}; Recombine; } ;//AlGaN 
+volume = t[1];
 AlGaN_volumes[1] = volume;
 Call add_AlGaN_side_surfaces;
 volume++;
 
 //----i_part--------------------------------------------------------------------------
 
-Extrude Surface {news - 1, {0.0,0.0,hw}} { Recombine; Layers{ {12}, {volume}, {1.0}}; }; //GaN
-GaN_volumes[0 ] =  volume;
+
+
+t[] = Extrude {0.0,0.0,hw} {Surface{news - 1};Layers{12}; Recombine; };//GaN
+volume = t[1];
+GaN_volumes[0] =  volume;
 Call add_GaN_side_surfaces;
 volume++;
 
 
 //----p_part------------------------------------------------------------------------
 
-Extrude Surface {news - 1, {0.0,0.0,hb }} { Recombine; Layers{ {12}, {volume}, {1.0}}; }; //AlGaN
+
+
+t[] = Extrude {0.0,0.0,hb} {Surface{news - 1}; Layers {12}; Recombine; } ;//AlGaN 
+volume = t[1];
+
 AlGaN_volumes[2] = volume;
 Call add_AlGaN_side_surfaces;
 volume++;
 
 
 
-
-
-Extrude Surface {news - 1, {0.0,0.0,h1 }} { Recombine; Layers{ {40}, {volume}, {1.0}}; }; //AlGaN
+t[] = Extrude {0.0,0.0,h1} {Surface{news - 1}; Layers {40}; Recombine; } ;//AlGaN 
+volume = t[1];
 AlGaN_volumes[3] = volume;
 Call add_AlGaN_side_surfaces;
 volume++;
@@ -113,23 +126,18 @@ Physical Volume(5) =AlGaN_volumes[3];
 
 
 
-//Physical Volume(1) ={AlGaN_volumes[0],AlGaN_volumes[1]};
-//Physical Volume(2) =GaN_volumes[0] ;
-//Physical Volume(3) ={AlGaN_volumes[2],AlGaN_volumes[3]};
-
-
 
 
 
 //------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------
 //Physical surfaces------------------------------------------------------------------------
+
 Physical Surface(1) =  {news - 1}; //p_contact
 Physical Surface(2) = {1}; //n_contact
 Physical Surface(3) =  GaN_side_surface[];    //GaN side surfaces
 Physical Surface(4) =  AlGaN_side_surface[];  //AlGaN side surfaces
-//Physical Surface(2) = {1}; //n_contact
-//Physical Surface(1) =  {news - 1}; //p_contact
+
 
 
 
