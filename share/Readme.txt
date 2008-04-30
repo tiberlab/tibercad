@@ -57,6 +57,12 @@ its filename.
 The installation procedure for the Linux version of TiberCAD depends on your
 distribution. Download the installer package that best fits your setup.
 
+  The standard method to launch TiberCAD is by means of a shell script that is
+installed alongside the TiberCAD executable. It takes care of setting all
+necessary environment variables. If for some reason you have to run the executable
+directly, remember to set TIBERCADROOT to the TiberCAD installation directory
+(INSTALLPATH) and LD_LIBRARY_PATH to INSTALLPATH/lib.
+
 1.3.1 Debian
 
 A package for Debian 4.0 `etch' for the i386 architecture is provided (.deb).
