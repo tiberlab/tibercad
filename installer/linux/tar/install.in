@@ -2,6 +2,50 @@
 
 TIBERVER=@TIBERVERSION@
 
+function install_gmsh {
+
+  echo "Installing GMSH to ${instpath}/contrib/gmsh-2.2.0"
+  cp -r contrib ${instpath}
+
+  echo ""
+  echo "Create a link to gmsh in "
+  echo " 1. /usr/local/bin"
+  echo " 2. /usr/bin"
+  echo " 3. none"
+  echo -n "Your choice [1]: "
+
+  read answer
+
+  bindir=/usr/local/bin
+  case $answer in
+    2) bindir=/usr/bin ;;
+    3) bindir= ;;
+    *) ;;
+  esac
+
+  if [ ! -z $bindir ]
+  then
+    here=`pwd`
+    cd $bindir
+    target=gmsh
+    if [ -L gmsh ]
+    then
+      target=`ls -l gmsh | awk -F '>' '{print $2}' | grep "${instpath}/contrib"`
+    fi
+
+    if [ -f gmsh ] || [ -z $target ]
+    then
+      echo "GMSH seems already installed. I will not create the link."
+    else
+      rm -f gmsh
+      ln -s ${instpath}/contrib/gmsh-2.2.0/gmsh gmsh
+      echo "$bindir/gmsh" >> ${instpath}/files.lst
+    fi
+    cd $here
+  fi
+
+}
+
 
 echo "###################################################"
 echo "#      TiberCAD ver. $TIBERVER  installation      #"
@@ -49,12 +93,14 @@ echo "Starting installation to $instpath"
 content=`ls -A $instpath`
 if [ ! -z "$content" ]
 then
-  echo -n "Installation directory is not empty. Do you really want to proceed? "
-  read answer
-  if [ $answer != "y" -a $answer != "yes" ]
-  then
-    exit 0
-  fi
+  echo -n "Installation directory is not empty. Do you really want to proceed [n]? "
+  read -e answer
+
+  [ -z $answer ] && answer='n'
+  case $answer in
+    n|no) exit 0 ;;
+    *) ;;
+  esac
 fi
 
 
@@ -66,16 +112,15 @@ sed -e "s/<INSTALLDIR>/$pathstring/g" ${instpath}/bin/tibercad.sh > ${instpath}/
 mv -f ${instpath}/bin/tibercad.sh.tmp ${instpath}/bin/tibercad.sh
 chmod a+x ${instpath}/bin/tibercad.sh
 
-cd ${instpath}/bin
-ln -s tibercad.sh tibercad
 
 touch ${instpath}/files.lst
 find ${instpath} -type f > ${instpath}/files.lst
 cat > ${instpath}/bin/uninstall <<EOF
 #!/bin/sh
 
-echo "Do you really want to uninstall TiberCAD ver. $TIBERVER? "
+echo -n "Do you really want to uninstall TiberCAD ver. $TIBERVER and all of its components [n]?"
 read answer
+[ -z \$answer ] && answer='n'
 case \$answer in
   y|yes)
     rm -f \`cat ${instpath}/files.lst\`
@@ -106,10 +151,22 @@ esac
 
 if [ ! -z $bindir ]
 then
+  here=`pwd`
   cd $bindir
+  [ -L tibercad ] && rm -f tibercad
   ln -s ${instpath}/bin/tibercad.sh tibercad
   echo "$bindir/tibercad" >> ${instpath}/files.lst
+  cd $here
 fi
+
+echo ""
+echo -n "Do you want to install GMSH version 2.2.0 [y]?"
+read answer
+[ -z $answer ] && answer='y'
+case $answer in
+  y|yes) install_gmsh ;;
+  *) ;;
+esac
 
 echo ""
 echo "Thank you for having installed TiberCAD."
