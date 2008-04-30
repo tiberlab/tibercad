@@ -127,7 +127,7 @@ $Simulation
   verbose = 2
   temperature = 300
   solve = sweep
-  resultpath = out_test_1D_tut_2 #
+  resultpath = out_diode_1D
   output_format = grace
 
   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob)
