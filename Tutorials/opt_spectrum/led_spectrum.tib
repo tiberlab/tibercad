@@ -10,12 +10,12 @@ $Device
 
  Region n-AlGaN
    {
-     reg_numb = 1
+     mesh_regions = 1
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
      x-growth-direction = (0,0,0,1)
-     mat = AlGaN
+     material = AlGaN
      x=0.20
      doping = 5e18
      doping_type = donor 
@@ -24,12 +24,12 @@ $Device
 
  Region AlInN
    {
-     reg_numb = 2
+     mesh_regions = 2
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
      x-growth-direction = (0,0,0,1)
-     mat = AlInN
+     material = AlInN
      x=0.78 
      doping = 1e19
      doping_type = donor 
@@ -42,12 +42,12 @@ $Device
 
  Region AlGaN_barrier1_no_quantum
    {
-     reg_numb = 3
+     mesh_regions = 3
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
      x-growth-direction = (0,0,0,1)
-     mat = AlGaN
+     material = AlGaN
      x = 0.2 
      doping = 3e18 #
      doping_type = donor 
@@ -56,12 +56,12 @@ $Device
 
    Region AlGaN_barrier_quantum
    {
-     reg_numb = (4,6,8)
+     mesh_regions = (4,6,8)
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
      x-growth-direction = (0,0,0,1)
-     mat = AlGaN
+     material = AlGaN
      x = 0.2 
      doping = 3e18 
      doping_type = donor 
@@ -72,12 +72,12 @@ $Device
 
  Region GaN_QWell
    {
-     reg_numb = (5,7,9)
+     mesh_regions = (5,7,9)
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
      x-growth-direction = (0,0,0,1)
-     mat = GaN
+     material = GaN
      doping = 1e15  #  intrinsic  
      doping_type = donor #
     
@@ -89,12 +89,12 @@ $Device
 
    Region i_AlGaN1_quantum
    {
-     reg_numb = 10
+     mesh_regions = 10
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
      x-growth-direction = (0,0,0,1)
-     mat = AlGaN
+     material = AlGaN
      x = 0.2 
      doping = 1e15  #  intrinsic
      doping_type = donor 
@@ -108,12 +108,12 @@ $Device
 
    Region i_AlGaN2_noquantum
    {
-     reg_numb = 11
+     mesh_regions = 11
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
      x-growth-direction = (0,0,0,1)
-     mat = AlGaN
+     material = AlGaN
      x = 0.2 
      doping = 1e15  #  intrinsic 
      doping_type = donor 
@@ -128,12 +128,12 @@ $Device
 
  Region p_AlGaN
    {
-     reg_numb = 12
+     mesh_regions = 12
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
      x-growth-direction = (0,0,0,1)
-     mat = AlGaN
+     material = AlGaN
      x = 0.250 
      doping = 3e19
      doping_type = acceptor 
