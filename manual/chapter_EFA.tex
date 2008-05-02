@@ -191,8 +191,8 @@ opticalspectrum
     relative_accuracy =  0.01  
     refine_k_space = true
 
-    number_of_nodes = 2 
-    wedge = half 
+    number_of_nodes = (2, 2) 
+    wedge = quarter
  
     optical_matr_elem_model = opticskp
 
@@ -239,10 +239,52 @@ where $f_i$ and $f_j$ are the Fermi distributions.
 The output  variables are optics  calculations.
 \begin{itemize}
 \item \textbf{optical\_spectrum\_k\_0} : optical emission spectrum for\textbf{ k}=0
-\item  \textbf{optical\_spectrum}: k-space integrated optical emission spectrum
-\item  \textbf{k-space}: output in k-space of the integrated quantity
+%\item  \textbf{optical\_spectrum}: k-space integrated optical emission spectrum
+%\item  \textbf{k-space}: output in k-space of the integrated quantity
 \end{itemize}
 
 
+\chapter{Quantum dispersion}
+There is a possibility to calculate the dependence of quantum eigenstates on ${\bf k}$-vector.
+Such dependence is called \textit{dispersion}. The simulation name is \textbf{quantumdispersion}. Example:
+\begin{verbatim}
+ model quantumdispersion
+  {
+    options
+    {
+      simulation_name = dispersion1D_el
+      physical_regions = all
+    }
+    
+  }
+\end{verbatim}
 
+\section{Solver options}
+The dispersion of quantum states is calculate at k-points that are nodes of the mesh in k-space. 
+\begin{itemize}
+ \item \textbf{quantum\_simulation} name of the Schr\"odinger equation simulation
+ \item \textbf{min\_eigenvalue\_number}, \textbf{max\_eigenvalue\_number}: the dispersion is 
+calculated for the states number ${\rm max\_eigenvalue\_number} \ge i \ge 
+{\rm min\_eigenvalue\_number} $ 
+\end{itemize}
+The rest of the parameters (wedge, k\_space\_dimension, etc...) define the k-space
+
+
+\begin{verbatim}
+ dispersion1D_el
+  {
+    quantum_simulation = quantum_el
+    min_eigenvalue_number = 0
+    max_eigenvalue_number = 5
+
+    wedge = half
+    k_space_dimension = 1
+    k1 = (0, 0.1, 0)
+    number_of_nodes = (10)
+    
+  }
+\end{verbatim}
+
+\section{Output}
+The output variable name is \textbf{k-space\_dispersion}.
 
