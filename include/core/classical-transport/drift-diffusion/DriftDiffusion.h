@@ -131,8 +131,6 @@ class DriftDiffusion : public SimulationInterface
       RECOMB,           /*!< total recombination rate */
       EJOULE,           /*!< electrons Joule's effect */
       HJOULE,           /*!< holes Joule's effect */
-      JNGRADPHIE,       /*!< electrons Joule's effect */
-      JPGRADPHIH,       /*!< holes Joule's effect */
       POWERNX,          /*!< electron power flux, x direction */     
       POWERNY,          /*!< electron power flux, y direction */     
       POWERNZ,          /*!< electron power flux, z direction */      
@@ -141,7 +139,7 @@ class DriftDiffusion : public SimulationInterface
       POWERPZ,          /*!< hole power flux, z direction */ 
       EPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
       HPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
-      TEMP,             /*!< Temperature */
+      HRECOMB,          /*!< Recombination heat  */
       MODELS = 100,     /*!< base number for models */
       HEATMODELS = 1000 /*!< base number for heat models */
      

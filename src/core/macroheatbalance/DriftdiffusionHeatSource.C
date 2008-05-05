@@ -70,7 +70,8 @@ void  DriftDiffusionHeatSource::do_init(void)
   var_map[EJOULE]=_simul->get_variable_id("HJouleN");
 
   var_map[HJOULE]=_simul->get_variable_id("HJouleP"); 
-  var_map[RECHEAT]=_simul->get_variable_id(rec_string); 
+  //var_map[RECHEAT]=_simul->get_variable_id(rec_string); 
+  var_map[RECHEAT]=_simul->get_variable_id("HRecomb");
   var_map[EPELTH]=_simul->get_variable_id("HPelThomE");  
   var_map[HPELTH]=_simul->get_variable_id("HPelThomH"); 
   var_map[WNX]=_simul->get_variable_id("PowerNx"); 
@@ -124,7 +125,6 @@ DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point, const std
       double RecHeat = solution[n].find(var_map[RECHEAT])->second;
       double ePelTh = solution[n].find(var_map[EPELTH])->second;
       double hPelTh = solution[n].find(var_map[HPELTH])->second;
-
 
 
       if  (ids.count(EJOULE))

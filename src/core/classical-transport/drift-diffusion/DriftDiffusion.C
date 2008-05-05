@@ -1364,10 +1364,6 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
 	    id = EJOULE;
 	  else if (variable_name == "HJouleP")
 	    id = HJOULE;
-	  else if (variable_name == "HJnGradPhie")
-	    id = JNGRADPHIE;
-	  else if (variable_name == "HJpGradPhih")
-	    id = JPGRADPHIH;
           break;
         case 'P':
        	  if (variable_name == "HPelThomE")
@@ -1375,7 +1371,10 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
 	  else if (variable_name == "HPelThomH")
 	    id = HPTSOURCE;
 	  break;
-    
+        case 'R':
+          if (variable_name == "HRecomb")
+	    id = HRECOMB;
+	  break;
       } 
       break;
 
@@ -1444,12 +1443,8 @@ DriftDiffusion::convert_variable_name_to_id(const string& variable_name) const
       else if (variable_name == "QFermi_h")
         id = QFERMIH;
       break;
-      
-    case 'T':
-    if (variable_name == "Temp")
-      id = TEMP;
-    break;
-	
+
+
     case 'r':
       {
         vector<string> rec;
@@ -1544,6 +1539,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
         device.get_material(subdomain)->get_model(get_id()));
 
   assert(sc != NULL); 
+
+
 
   //sc->lock();
   sc->reinit(elem);
@@ -1729,12 +1726,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     if (ids.count(JPZ))
       values[n][JPZ] = jpz;
-
-    if (ids.count(JNGRADPHIE))
-      values[n][JNGRADPHIE] = - jnx * en_x - jny * en_y - jnz * en_z; 
-    
-    if (ids.count(JPGRADPHIH))
-      values[n][JPGRADPHIH] = - jpx * ep_x - jpy * ep_y - jpz * ep_z;
     
     if (ids.count(EJOULE))
       values[n][EJOULE] = ( jnx * jnx + jny * jny + jnz * jnz ) / sigma_e;
@@ -1763,12 +1754,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     if (ids.count(PN))
       values[n][PN] = Pn;
     
-
     if (ids.count(PP))
       values[n][PP] = Pp;
-
-    if (ids.count(TEMP))
-      values[n][TEMP] = T;
 
     if (ids.count(EPTSOURCE))
     {
@@ -1784,6 +1771,17 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       values[n][HPTSOURCE] =  -T * ( PpGrad(0) * jpx + PpGrad(1) * jpy + PpGrad(2) * jpz );
     }
 
+    if (ids.count(HRECOMB))
+    { 
+      vector<ID> rec_model_ids;
+      int n_rec = sc->get_net_recombination_rate_IDs(rec_model_ids);
+      double rec = 0.0;
+      for (int i = 0; i < n_rec; i++)
+	rec += sc->get_net_recombination_rate(rec_model_ids[i]);
+      
+      values[n][HRECOMB] = Constants::e * rec * (ep-en + T * (Pp-Pn));
+    }
+    
 
     set<ID>::iterator first(ids.begin());
     set<ID>::iterator it(ids.end());
@@ -1968,9 +1966,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     double sigma_h = Constants::e * sc->get_hole_density() *
       sc->get_hole_mobility();
 
-//  std::cout<<   sc->get_electron_mobility()<<std::endl;
-//  std::cout<<sc->get_hole_mobility()<<std::endl;
-//  std::cout<<  "  "<<std::endl;
 
     double jnx = -sigma_e * (en_x + Pn_el * dT_x);
     double jny = -sigma_e * (en_y + Pn_el * dT_y);
@@ -2064,24 +2059,13 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     if (ids.count(JPZ))
       values[n][JPZ] = jpz;
-  
-    if (ids.count(JNGRADPHIE))
-      values[n][JNGRADPHIE] = - jnx * en_x - jny * en_y - jnz * en_z; 
-    
-    if (ids.count(JPGRADPHIH))
-      values[n][JPGRADPHIH] = - jpx * ep_x - jpy * ep_y - jpz * ep_z;
-    
+
     if (ids.count(EJOULE))
-    {
       values[n][EJOULE] = ( jnx * jnx + jny * jny + jnz * jnz ) / sigma_e;
-     
-      
-    }
     
     if (ids.count(HJOULE))
       values[n][HJOULE] =  (jpx * jpx + jpy * jpy + jpz * jpz )/ sigma_h;
     
-
     if (ids.count(POWERNX))
       values[n][POWERNX] = (Pn * T + en) * jnx;
     
@@ -2099,9 +2083,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     if (ids.count(POWERPZ))
       values[n][POWERPZ] = (Pp * T + ep) * jpz;
-
-    if (ids.count(TEMP))
-      values[n][TEMP] = T;
 
     if (ids.count(EPTSOURCE))
     {
@@ -2122,7 +2103,18 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
     
     if (ids.count(PP))
       values[n][PP] = Pp;
-  
+
+    if (ids.count(HRECOMB))
+    { 
+      vector<ID> rec_model_ids;
+      int n_rec = sc->get_net_recombination_rate_IDs(rec_model_ids);
+      double rec = 0.0;
+      for (int i = 0; i < n_rec; i++)
+	rec += sc->get_net_recombination_rate(rec_model_ids[i]);
+          
+      values[n][HRECOMB] = Constants::e * rec * (ep-en + T * (Pp-Pn));
+    }
+   
 
     set<ID>::iterator first(ids.begin());
     set<ID>::iterator it(ids.end());
