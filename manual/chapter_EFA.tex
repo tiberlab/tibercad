@@ -126,12 +126,15 @@ Other options:
 \textit{kp\_model} = \{ 6$\times$6 $\vert$ 8$\times$8 \}
 \end{itemize}
 
-Here,  the \textit{particle} name is  the name  of  a  quantum (efaschrodinger) model. \textit{kp\_model} has to be present if the model is \textit{kp}.
+Here,  the \textit{particle} name is  the name  of  a particle type (\textit{electron} or  \textit{hole}).
+%  quantum (efaschrodinger) model. 
+
+% If the model is \textit{kp}, \textit{kp\_model} has to be present.
 
 
 \textit{model} = \textbf{kp} $\vert$ \textbf{conduction\_band} :  ${\bf k\cdot p}$  or  single  conduction band model.
 
-if ${\bf k\cdot p}$ model is  applied, specify:
+If ${\bf k\cdot p}$ model is  applied, specify:
 
 \textit{kp\_model} = \textbf{6x6} $\vert$   \textbf{8x8}.
 
@@ -139,7 +142,7 @@ if ${\bf k\cdot p}$ model is  applied, specify:
 \begin{itemize}
  \item {\textbf{EigenEnergy}} Eigen energy in eV
  \item {\textbf{EigenFunctions}} $|\psi({\bf r})|^2$ function of the eigenstate
- \item {\textbf{Occupation}} probability to find the state occupied. It is calculted 
+ \item {\textbf{Occupation}} probability to find the state occupied. It is calculated 
 assuming Fermi distribution and mean electrochemical potential and temperature: 
 \begin{gather}
 \bar \mu = \langle \psi|\mu({\bf r})|\psi \rangle \\
@@ -236,12 +239,13 @@ where $f_i$ and $f_j$ are the Fermi distributions.
 
 \section{Output}
 
-The output  variables are optics  calculations.
+The output  variables for  optics  calculations are:
 \begin{itemize}
-\item \textbf{optical\_spectrum\_k\_0} : optical emission spectrum for\textbf{ k}=0
-%\item  \textbf{optical\_spectrum}: k-space integrated optical emission spectrum
+\item \textbf{optical\_spectrum\_k\_0} : optical emission spectrum for\textbf{ k}=0, calculated  through \textbf{opticskp} model
+\item  \textbf{optical\_spectrum}: k-space integrated optical emission spectrum, calculated by \textbf{opticalspectrum} model
 %\item  \textbf{k-space}: output in k-space of the integrated quantity
 \end{itemize}
+
 
 
 \chapter{Quantum dispersion}
@@ -264,7 +268,9 @@ The dispersion of quantum states is calculate at k-points that are nodes of the 
 \begin{itemize}
  \item \textbf{quantum\_simulation} name of the Schr\"odinger equation simulation
  \item \textbf{min\_eigenvalue\_number}, \textbf{max\_eigenvalue\_number}: the dispersion is 
-calculated for the states number ${\rm max\_eigenvalue\_number} \ge i \ge 
+calculated for the states number $i$ , where
+
+ ${\rm max\_eigenvalue\_number} \ge i \ge 
 {\rm min\_eigenvalue\_number} $ 
 \end{itemize}
 The rest of the parameters (wedge, k\_space\_dimension, etc...) define the k-space
