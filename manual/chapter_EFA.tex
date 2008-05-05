@@ -154,7 +154,6 @@ level over the band diagram
 
 
 
-
 \chapter{Simulation opticskp}
 
 By defining  the  \textbf{opticskp}  model,  calculation of  optical  properties  is  enabled; in particular, the  optical kp matrix elements are calculated from the  quantum models specified in \textbf{Solver} section:
@@ -178,6 +177,22 @@ By specifying, in \textbf{Solver} section, a  range of energy values in this  wa
     dE = 0.001
 \end{verbatim}
 the  emission optical  spectrum for  \textbf{k}=0 is  calculated.
+The spectrum is calculated in the following way:
+
+\begin{equation}
+P(\hbar \omega) = \sum_{i,j} \frac{1}{2\pi^2}  \frac{\omega^2_{ij} e^2 }{m^2 c^3}  
+|{\bf M_{i,j} e}|^2 f_i(E_i)(1 - f_j(E_j)) 
+\frac{\Gamma/2} {(\hbar \omega_{ij} - \hbar \omega)^2 + (\Gamma/2)^2} d\Omega,
+\end{equation}
+where $f_i$ and $f_j$ are the Fermi distributions.
+
+\section{Output}
+
+The output  variables for  optics  calculations are:
+\begin{itemize}
+\item \textbf{optical\_spectrum\_k\_0} : optical emission spectrum for\textbf{k}=0, calculated  through \textbf{opticskp} model
+%\item  \textbf{k-space}: output in k-space of the integrated quantity
+\end{itemize}
 
 \chapter{Simulation opticalspectrum}
 By defining the  model  \textbf{opticalspectrum},  optical matrix elements are used to calculate the  associated (emission) spectrum with a  k-space integration.
@@ -227,13 +242,7 @@ The  refinement will end when the \textit{relative\_accuracy} is obtained.
 \textit{Emin}, \textit{Emax}, \textit{dE} :  energy range  and step of  spectrum calculation.
 
 
-The spectrum is calculated in the following way:
-\begin{equation}
-P(\hbar \omega) = \sum_{i,j} \frac{1}{2\pi^2}  \frac{\omega^2_{ij} e^2 }{m^2 c^3}  
-|{\bf M_{i,j} e}|^2 f_i(E_i)(1 - f_j(E_j)) 
-\frac{\Gamma/2} {(\hbar \omega_{ij} - \hbar \omega)^2 + (\Gamma/2)^2} d\Omega
-\end{equation},
-where $f_i$ and $f_j$ are the Fermi distributions.
+
 
 
 
@@ -241,9 +250,7 @@ where $f_i$ and $f_j$ are the Fermi distributions.
 
 The output  variables for  optics  calculations are:
 \begin{itemize}
-\item \textbf{optical\_spectrum\_k\_0} : optical emission spectrum for\textbf{ k}=0, calculated  through \textbf{opticskp} model
 \item  \textbf{optical\_spectrum}: k-space integrated optical emission spectrum, calculated by \textbf{opticalspectrum} model
-%\item  \textbf{k-space}: output in k-space of the integrated quantity
 \end{itemize}
 
 
@@ -293,4 +300,36 @@ The rest of the parameters (wedge, k\_space\_dimension, etc...) define the k-spa
 
 \section{Output}
 The output variable name is \textbf{k-space\_dispersion}.
+
+\chapter{Quantum Density}
+\begin{verbatim}
+dens_el
+{
+    k_space_dimension = 2
+    k-space_basis = true
+    k1 = (0, 0, 0.1)
+    k2 = (0, 0.1, 0)
+    number_of_nodes = (4,4)
+    wedge = quarter
+    refine_fraction = 0.20
+    relative_accuracy = 0.01
+    refine_k_space = true
+    uniform_refinement = false
+    mesh_order = FIRST
+    
+    quantum_simulation = quantum_el
+    degeneracy = 2
+    initial_eigenstates_number = 10
+    analitic = false
+}
+\end{verbatim}
+\begin{itemize}
+ \item \textbf{quantum\_simulation} name of the Schr\"odinger simulation
+ \item \textbf{degeneracy} deneneracy of the quantum state
+ \item \textbf{initial\_eigenstates\_number} initial number of eigenstates for  the Schr\"odinger equation
+ \item \textbf{analytic} = \{ true $\vert$ false \} If true then the density is calculated 
+analytically.
+\end{itemize}
+
+
 
