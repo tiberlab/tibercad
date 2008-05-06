@@ -16,30 +16,12 @@ class WzLatticeThermalConductivity: public LatticeThermalConductivity
 
 
  //! Update the lattice thermal conductivity given the Temperature
-   virtual void update_tensor(); 
-
-  /*!
-    \f$ k_x = k_y = \frac{1}{a_x + b_x  T + c_x  T^2 }  \f$
-
-
-    \f$ k_z = \frac{1}{a_z + b_z  T + c_z  T^2 }  \f$
-    If kappa_model is constant this method doesn't update the lattice thermal conductivity
-  */
-
+  virtual void re_init(){}; 
 
 
  private:
 
-  std::string _kappa_model;
-
-  double _kappa_a_x; 
-  double _kappa_b_x; 
-  double _kappa_c_x;
   double _kappa_x;
-
-  double _kappa_a_z; 
-  double _kappa_b_z; 
-  double _kappa_c_z;
   double _kappa_z;
 
  protected:

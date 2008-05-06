@@ -46,7 +46,6 @@
 
 
 #include "ThermoelectricPower.h"
-#include "ParticleThermalConductivity.h"
 
 #include  "ZbLatticeThermalConductivity.h"
 #include  "WzLatticeThermalConductivity.h"
@@ -165,8 +164,6 @@ PhysicalModelInterface::create(const string& name,
       mod = HeatModel::create();
     else if (name == "thermoelectric_power") 
       mod = ThermoelectricPower::create();
-    else if  (name == "particle_thermal_conductivity")
-      mod = ParticleThermalConductivity::create();
     else if  (name == "poisson")
       mod = PoissonModel::create();
     else if (name == "tightbinding")
