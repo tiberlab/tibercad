@@ -182,7 +182,6 @@ fi
 export TIBERCADROOT LD_LIBRARY_PATH
 
 
-tibercad=\${TIBERCADROOT}/\${ARCH}/bin/tibercad
 if [ -x \$executable ]
 then
   exec \$executable \$@
