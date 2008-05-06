@@ -186,7 +186,7 @@ void Dftb::build_names(void){
   const std::string prefix = "";
 
   int n_files = 0;
-  n_files = _atomistic_structure->N_types * _atomistic_structure->N_types;
+  n_files = _atomistic_structure->get_N_types() * _atomistic_structure->get_N_types();
 
 
   //Static allocation. Size must be decided according to dftbp.h parameters
@@ -198,8 +198,8 @@ void Dftb::build_names(void){
 
   // Cycle upon species and build names
   int counter = 0;
-  for (int i = 0; i < ( _atomistic_structure->N_types); i++){
-    for (int j = 0; j < (_atomistic_structure->N_types); j++){
+  for (int i = 0; i < ( _atomistic_structure->get_N_types() ); i++){
+    for (int j = 0; j < (_atomistic_structure->get_N_types() ); j++){
     
       sk_name.clear();
       sk_name.append(prefix);
@@ -248,10 +248,10 @@ void Dftb::build_names(void){
 
 
   // SPECIES NAMES
-  _dftb_options.speciesNames = (char *) malloc( _atomistic_structure->N_types * DFTBP_MC * sizeof(char));
+  _dftb_options.speciesNames = (char *) malloc( _atomistic_structure->get_N_types() * DFTBP_MC * sizeof(char));
 
   counter = 0;
-  for (int i = 0; i < _atomistic_structure->N_types; i++){
+  for (int i = 0; i < _atomistic_structure->get_N_types(); i++){
 
     for (int str_i = 0; str_i <  DFTBP_MC - 1; str_i++){
       if (str_i <  atom_types[i].size() ) _dftb_options.speciesNames[str_i + counter * DFTBP_MC] = atom_types[i][str_i];
@@ -260,7 +260,7 @@ void Dftb::build_names(void){
     counter++;
   }
 
-  _dftb_options.speciesNames[ _atomistic_structure->N_types * DFTBP_MC - 1] = '\0';
+  _dftb_options.speciesNames[ _atomistic_structure->get_N_types() * DFTBP_MC - 1] = '\0';
 
 
 };
@@ -272,8 +272,8 @@ void Dftb::build_structure_options(){
 
   std::cout << "build_structure_options begin" << std::endl;
 
-  _dftb_options.nAtom = _atomistic_structure->N_atoms;
-  _dftb_options.nType = _atomistic_structure->N_types;
+  _dftb_options.nAtom = _atomistic_structure->get_N_atoms();
+  _dftb_options.nType = _atomistic_structure->get_N_types();
 
   _dftb_options.coords = new double[_dftb_options.nAtom * 3];
 
@@ -283,9 +283,9 @@ void Dftb::build_structure_options(){
   //! Setting coordinates in DFTB format
   for (int i = 0; i < _dftb_options.nAtom; i++){
 
-    _dftb_options.coords[ (i*3) ] = basis[i].position(1);
-    _dftb_options.coords[ (i*3) + 1 ] = basis[i].position(2);
-    _dftb_options.coords[ (i*3) + 2 ] = basis[i].position(3);
+    _dftb_options.coords[ (i*3) ] = basis[i].get_position(1);
+    _dftb_options.coords[ (i*3) + 1 ] = basis[i].get_position(2);
+    _dftb_options.coords[ (i*3) + 2 ] = basis[i].get_position(3);
 
   }
 
@@ -293,11 +293,11 @@ void Dftb::build_structure_options(){
   _dftb_options.species = new int [ _dftb_options.nAtom ];
 
   for (int i = 0; i < _dftb_options.nAtom; i++){
-    _dftb_options.species[i] = _atomistic_structure->get_type_index(basis[i].specie);
+    _dftb_options.species[i] = _atomistic_structure->get_type_index(basis[i].get_specie());
 
   }
 
-  _dftb_options.iPeriodic = _atomistic_structure->is_periodical;
+  _dftb_options.iPeriodic = _atomistic_structure->is_periodic();
 
   //If system is not periodical lattice vectors are set to 0 by default in AtomisticStructure.
   //Check if huge value is needed instead of zero value
