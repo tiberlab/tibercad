@@ -12,19 +12,19 @@ function install_gmsh {
 
 export TIBERCADROOT=$instpath
 
-if [ -z $LD_LIBRARY_PATH ]
+if [ -z \$LD_LIBRARY_PATH ]
 then
-  export LD_LIBRARY_PATH=${TIBERCADROOT}/lib
+  export LD_LIBRARY_PATH=\${TIBERCADROOT}/lib
 else
-  export LD_LIBRARY_PATH=${TIBERCADROOT}/lib:$LD_LIBRARY_PATH
+  export LD_LIBRARY_PATH=\${TIBERCADROOT}/lib:\$LD_LIBRARY_PATH
 fi
 
-gmsh=${TIBERCADROOT}/contrib/gmsh-2.2.0/gmsh
-if [ -x $gmsh ]
+gmsh=\${TIBERCADROOT}/contrib/gmsh-2.2.0/gmsh
+if [ -x \$gmsh ]
 then
-  exec $gmsh $@
+  exec \$gmsh \$@
 else
-  echo "Cannot execute $gmsh. Perhaps broken installation?"
+  echo "Cannot execute \$gmsh. Perhaps broken installation?"
 fi
 
 EOF
@@ -127,12 +127,42 @@ fi
 
 
 
-cp -r bin materials examples license lib doc share $instpath
+cp -r bin materials examples license i386 doc share $instpath
 
-pathstring=`echo "$instpath" | sed -e 's/\//\\\\\//g'`
-sed -e "s/<INSTALLDIR>/$pathstring/g" ${instpath}/bin/tibercad.sh > ${instpath}/bin/tibercad.sh.tmp
-mv -f ${instpath}/bin/tibercad.sh.tmp ${instpath}/bin/tibercad.sh
-chmod a+x ${instpath}/bin/tibercad.sh
+#pathstring=`echo "$instpath" | sed -e 's/\//\\\\\//g'`
+#sed -e "s/<INSTALLDIR>/$pathstring/g" ${instpath}/bin/tibercad.sh > ${instpath}/bin/tibercad.sh.tmp
+#mv -f ${instpath}/bin/tibercad.sh.tmp ${instpath}/bin/tibercad.sh
+
+cat > ${instpath}/bin/TiberCAD.sh <<EOF
+#!/bin/sh
+
+VER=$TIBERVER
+
+# put your installation directory here (this is done automatically by the
+# installation script)
+export TIBERCADROOT=${instpath}
+
+if [ -z \$LD_LIBRARY_PATH ]
+then
+  export LD_LIBRARY_PATH=\${TIBERCADROOT}/lib:\${TIBERCADROOT}/libtibermodels
+else
+  export LD_LIBRARY_PATH=\${TIBERCADROOT}/lib:\${TIBERCADROOT}/libtibermodels:\$LD_LIBRARY_PATH
+fi
+
+tibercad=\${TIBERCADROOT}/bin/tibercad
+if [ -x \$tibercad ]
+then
+  exec \$tibercad \$@
+else
+  echo "Cannot execute \$tibercad. Perhaps broken installation?"
+fi
+
+EOF
+chmod a+x ${instpath}/bin/TiberCAD.sh
+
+cwd=`pwd`
+cd ${instpath}/bin && ln -s TiberCAD.sh tibercad
+cd $cwd
 
 
 touch ${instpath}/files.lst
@@ -140,14 +170,16 @@ find ${instpath} -type f > ${instpath}/files.lst
 cat > ${instpath}/bin/uninstall <<EOF
 #!/bin/sh
 
+instpath=${instpath}
+
 echo -n "Do you really want to uninstall TiberCAD ver. $TIBERVER and all of its components [n]?"
 read answer
 [ -z \$answer ] && answer='n'
 case \$answer in
   y|yes)
-    rm -f \`cat ${instpath}/files.lst\`
-    rm -f ${instpath}/bin/uninstall
-    rm -r ${instpath}
+    rm -f \`cat \${instpath}/files.lst\`
+    rm -f \${instpath}/bin/uninstall
+    rm -r \${instpath}
     ;;
 
   *) ;;
@@ -176,7 +208,7 @@ then
   here=`pwd`
   cd $bindir
   [ -L tibercad ] && rm -f tibercad
-  ln -s ${instpath}/bin/tibercad.sh tibercad
+  ln -s ${instpath}/bin/tibercad tibercad
   echo "$bindir/tibercad" >> ${instpath}/files.lst
   cd $here
 fi

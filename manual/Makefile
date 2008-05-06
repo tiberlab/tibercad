@@ -1,6 +1,13 @@
-SHELL=/bin/sh
+topdir=..
 
-SOURCES=$(wildcard *.tex)
+# the subversion revision number
+SVNREVISION = $(shell svn info | awk '/Revision/ {print $$2}')
+
+# the full TiberCAD version number
+TIBERVERSION = $(shell echo "`cat $(topdir)/VERSION`.$(SVNREVISION)")
+
+
+SOURCES=$(wildcard *.tex) version.tex
 
 SUBDIRS=figures
 
@@ -42,6 +49,10 @@ $(RECURSIVEPS): $(SUBDIRS)
 	bibtex $(basename $<)
 	pdflatex $<
 	pdflatex $<
+
+.PHONY: version.tex
+version.tex:
+	@echo $(TIBERVERSION) > $@
 
 clean:  clean-local
 	@for subdir in ${SUBDIRS} ; do	\

@@ -32,6 +32,8 @@ Contents:
 
 In the following, VERSION denotes the version number of the TiberCAD release
 you downloaded and INSTALLPATH denotes the directory where TiberCAD gets installed.
+Version 2.2.0 of GMSH (http://www.geuz.org/gmsh) will be installed together with
+TiberCAD. For the Lunix version you need OpenGL libraries installed on your system.
 
 
 1.1 Prerequisites
@@ -70,8 +72,8 @@ Install it as root using dpkg or similar:
 
   # dpkg --install tibercad_VERSION_ARCH.deb
 
-  The package will be installed in /usr/share/tibercad-VERSION. Next, copy your
-license file (tibercad.lic) into /usr/share/tibercad-VERSION/license/ without
+  The package will be installed in /usr/share/tibercad. Next, copy your
+license file (tibercad.lic) into /usr/share/tibercad/license/ without
 changing the filename.
 
   You should now be ready to run your first TiberCAD example.
@@ -85,7 +87,7 @@ NOTE: The debian version of TiberCAD depends on the following Debian packages:
 1.3.2 Other
 
 If you have a distribution other than Debian 4.0 or you want to install TiberCAD
-into a different directory, then use the .tgz or .tbz installation packages.
+into a different directory, then use the .tar.gz installation packages.
 Unpack the archive, cd to the unpacked directory tibercad-VERSION and run the
 install script.
 

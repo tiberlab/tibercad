@@ -44,6 +44,16 @@
 \ifpdf
  \usepackage{pdfpages}
  \usepackage[colorlinks,plainpages=false]{hyperref}% generates colored links
+ \newcommand{\mailto}[1]{\href{mailto:#1}{#1}}
+ \hypersetup{
+   pdfauthor = {F. Sacconi, M. Auf der Maur, M. Povolotskyi, G. Romano, A. Pecchia, G. Penazzi, S.  Bellocchio,  A. Di Carlo},
+   pdftitle = {TiberCAD Manual},
+   pdfsubject = {TiberCAD user manual},
+   pdfkeywords = {TiberCAD, device simulator, manual},
+   pdfcreator = {LaTeX with hyperref package},
+  }
+\else
+ \newcommand{\mailto}[1]{\url{#1}}
 \fi
 
 \usepackage[small,bf]{caption}    
@@ -58,6 +68,13 @@
 \newcommand{\keyword}[1]{\texttt{#1}}
 \newcommand{\rvec}{{\bf r}}
 \newcommand{\eps}{{\varepsilon}}
+
+\ifpdf
+\newcommand{\clear}{\newpage}
+\else
+\newcommand{\clear}{\newpage{\pagestyle{empty}\cleardoublepage}}
+\fi
+
 
 \usepackage{amsthm,amsmath}
 \theoremstyle{plain}
@@ -87,29 +104,54 @@ Stefano  Bellocchio,  Aldo Di Carlo}
 \maketitle
 
 
+\thispagestyle{empty}
+\vspace*{\textheight}
+\vspace{-3cm}
+\noindent\TiberCAD{} User Manual \smallskip \smallskip \\
+\begin{tabular}{@{}l@{ }l}
+\copyright & TiberCAD authors (F. Sacconi, M. Auf~der~Maur, M. Povolotskyi, \\
+ & G. Romano, A. Pecchia, G. Penazzi, S. Bellocchio, A. Di Carlo), 2008
+\end{tabular} \smallskip \smallskip \\
+Document revision \input{version}
+
+
+\clear
+\setcounter{page}{1}
 \pagenumbering{Roman}
 
 \ifpdf\phantomsection\fi
 \addcontentsline{toc}{chapter}{Contents}
 \tableofcontents
 %\listoffigures
-\newpage 
+
+\clear
 %\pagestyle{fancy}
-
 %\headsep 50pt
+
+\include{installation}
+
                                
+
+
+
+\clear
 \pagenumbering{arabic}
-
-
-
 \include{general_description}
+\clear
 \include{getting_started_1}
+\clear
 \include{getting_started_2}
+\clear
 \include{chapter_input_file}
+\clear
 \include{chapter_strain}
+\clear
 \include{chapter_driftdiffusion}
+\clear
 \include{chapter_thermal}
+\clear
 \include{chapter_EFA}
+\clear
 
 
 
