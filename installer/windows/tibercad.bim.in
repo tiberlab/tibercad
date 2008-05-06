@@ -48,6 +48,7 @@ mklicdir = CREATEFOLDER¶<DefaultInstallPath>\license
 assocgeo = ASSOCIATEEXTENSION¶geo¶GMSH geo file¶<DefaultInstallPath>/contrib/gmsh-2.2.0/gmsh.exe¶0
 linkgmsh = NORMALLINK¶17¶gmsh¶<DefaultInstallPath>/contrib/gmsh-2.2.0/gmsh.exe¶0¶0¶GMSH 2.2.0
 linkgmshmanual = NORMALLINK¶17¶GMSH manual¶<DefaultInstallPath>/contrib/gmsh-2.2.0/gmsh.pdf¶0¶0¶GMSH 2.2.0 Manual
+linktibermanual = NORMALLINK¶17¶TiberCAD manual¶<DefaultInstallPath>/doc/manual.pdf¶0¶0¶TiberCAD Manual
 ; 
 [UninstTasks]
 ; 
