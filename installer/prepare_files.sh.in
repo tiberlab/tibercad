@@ -62,9 +62,12 @@ make_windows_package () {
 
 prepare_linux_package () {
 
+  ARCH=i386-linux
+
   mkdir -m 0755 ${files}
   mkdir -p ${files}/bin
-  mkdir -p ${files}/lib/tibermodels
+  mkdir -p ${files}/${ARCH}/bin
+  mkdir -p ${files}/${ARCH}/lib/tibermodels
   mkdir -p ${files}/doc
   mkdir -p ${files}/examples
   mkdir -p ${files}/share
@@ -74,8 +77,8 @@ prepare_linux_package () {
 
   cp ${topdir}/installer/linux/tar/install ${files}
   chmod a+x ${files}/install
-  cp ${topdir}/installer/linux/tar/tibercad.sh ${files}/bin
-  chmod a+x ${files}/bin/tibercad.sh
+  #cp ${topdir}/installer/linux/tar/tibercad.sh ${files}/bin
+  #chmod a+x ${files}/bin/tibercad.sh
 
   # get some of the libraries
   libs=`ldd ${topdir}/lib/libtibercad.so | grep boost | awk '{print $3}'`
@@ -83,11 +86,11 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep blas | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep stdc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep gcc_s | awk '{print $3}'`"
-  cp $libs ${files}/lib
-  cp ${topdir}/bin/tibercad ${files}/bin
-  chmod a+x ${files}/bin/tibercad
-  cp ${topdir}/lib/lib*.so* ${files}/lib
-  find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
+  cp $libs ${files}/${ARCH}/lib
+  cp ${topdir}/bin/tibercad ${files}/${ARCH}/bin
+  chmod a+x ${files}/${ARCH}/bin/tibercad
+  cp ${topdir}/lib/lib*.so* ${files}/${ARCH}/lib
+  find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/${ARCH}/lib/tibermodels \;
   cp ${topdir}/share/tibercad.ico ${files}/share
   cp ${topdir}/share/Copyright.txt ${files}/share
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/doc/Readme.txt

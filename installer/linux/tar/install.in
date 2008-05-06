@@ -172,7 +172,7 @@ cat > ${instpath}/bin/uninstall <<EOF
 
 instpath=${instpath}
 
-echo -n "Do you really want to uninstall TiberCAD ver. $TIBERVER and all of its components [n]?"
+echo -n "Do you really want to uninstall TiberCAD ver. $TIBERVER and all of its components [n]? "
 read answer
 [ -z \$answer ] && answer='n'
 case \$answer in
