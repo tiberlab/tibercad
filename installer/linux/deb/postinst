@@ -16,7 +16,7 @@ then
     echo "The version installed along with TiberCAD can be accessed in /usr/share/tibercad/contrib/gmsh-2.2.0"
     exit 0
   else
-    rm /usr/bin/gmsh
+    rm -f /usr/bin/gmsh
   fi
 fi
 

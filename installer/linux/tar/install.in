@@ -2,32 +2,24 @@
 
 TIBERVER=@TIBERVERSION@
 
+ARCH=i386-linux
+
+GMSH_VER=2.2.0
+
+
+
 function install_gmsh {
 
-  echo "Installing GMSH to ${instpath}/contrib/gmsh-2.2.0"
+  echo "Installing GMSH to ${instpath}/contrib/gmsh-$GMSH_VER"
   cp -r contrib ${instpath}
 
-  cat > ${instpath}/bin/gmsh <<EOF
-#!/bin/sh
+  here=`pwd`
 
-export TIBERCADROOT=$instpath
+  cd ${instpath}/bin && ln -s TiberCAD.sh gmsh
+  mkdir -p ${instpath}/man/man.1
+  cd ${instpath}/man/man.1 && ln -s ${instpath}/contrib/gmsh-$GMSH_VER/gmsh.1 gmsh.1
 
-if [ -z \$LD_LIBRARY_PATH ]
-then
-  export LD_LIBRARY_PATH=\${TIBERCADROOT}/lib
-else
-  export LD_LIBRARY_PATH=\${TIBERCADROOT}/lib:\$LD_LIBRARY_PATH
-fi
-
-gmsh=\${TIBERCADROOT}/contrib/gmsh-2.2.0/gmsh
-if [ -x \$gmsh ]
-then
-  exec \$gmsh \$@
-else
-  echo "Cannot execute \$gmsh. Perhaps broken installation?"
-fi
-
-EOF
+  find ${instpath}/contrib -type f >> ${instpath}/files.lst
 
   echo ""
   echo "Create a link to gmsh in "
@@ -47,7 +39,6 @@ EOF
 
   if [ ! -z $bindir ]
   then
-    here=`pwd`
     cd $bindir
     target=gmsh
     if [ -L gmsh ]
@@ -55,7 +46,7 @@ EOF
       target=`ls -l gmsh | awk -F '>' '{print $2}' | grep "${instpath}/contrib"`
     fi
 
-    if [ -f gmsh ] || [ -z $target ]
+    if [ -z $target ] || [ -f gmsh ]
     then
       echo "GMSH seems already installed. I will not create the link."
     else
@@ -63,14 +54,21 @@ EOF
       ln -s ${instpath}/bin/gmsh gmsh
       echo "$bindir/gmsh" >> ${instpath}/files.lst
     fi
-    cd $here
   fi
 
+  cd $here
 }
 
 
+
+#################################################################################
+#
+#    MAIN
+#
+#
+
 echo "###################################################"
-echo "#      TiberCAD ver. $TIBERVER  installation      #"
+echo "#      TiberCAD ver. $TIBERVER  installation      "
 echo "###################################################"
 
 echo ""
@@ -127,7 +125,7 @@ fi
 
 
 
-cp -r bin materials examples license i386 doc share $instpath
+cp -r bin materials examples license $ARCH doc share $instpath
 
 #pathstring=`echo "$instpath" | sed -e 's/\//\\\\\//g'`
 #sed -e "s/<INSTALLDIR>/$pathstring/g" ${instpath}/bin/tibercad.sh > ${instpath}/bin/tibercad.sh.tmp
@@ -137,36 +135,72 @@ cat > ${instpath}/bin/TiberCAD.sh <<EOF
 #!/bin/sh
 
 VER=$TIBERVER
+ARCH=${ARCH}
 
 # put your installation directory here (this is done automatically by the
 # installation script)
-export TIBERCADROOT=${instpath}
+TIBERCADROOT=${instpath}
 
+
+# we will need some of our libraries in LD_LIBRARY_PATH
+TIBER_LD_LIBRARY_PATH=\${TIBERCADROOT}/\${ARCH}/lib
+
+
+# the program to call
+prog=\`basename \$0\`
+progname=""
+
+case \$prog in
+
+  tibercad*)
+    TIBER_LD_LIBRARY_PATH=\${TIBER_LD_LIBRARY_PATH}:\${TIBERCADROOT}/\${ARCH}/lib/tibermodels
+    progname="tibercad"
+    executable="\${TIBERCADROOT}/\${ARCH}/bin/\$progname"
+    ;;
+
+  gmsh*)
+    progname="gmsh"
+    executable="\${TIBERCADROOT}/contrib/gmsh-2.2.0/\$progname"
+    ;;
+
+  *)
+    echo "\${prog}: Unknown TiberCAD tool"
+    echo "Known programs are: tibercad, gmsh"
+    ;;
+
+esac
+
+
+# prepend out LD_LIBRARY_PATH stuff
 if [ -z \$LD_LIBRARY_PATH ]
 then
-  export LD_LIBRARY_PATH=\${TIBERCADROOT}/lib:\${TIBERCADROOT}/libtibermodels
+  LD_LIBRARY_PATH=\$TIBER_LD_LIBRARY_PATH
 else
-  export LD_LIBRARY_PATH=\${TIBERCADROOT}/lib:\${TIBERCADROOT}/libtibermodels:\$LD_LIBRARY_PATH
+  LD_LIBRARY_PATH=\${TIBER_LD_LIBRARY_PATH}:\$LD_LIBRARY_PATH
 fi
 
-tibercad=\${TIBERCADROOT}/bin/tibercad
-if [ -x \$tibercad ]
+export TIBERCADROOT LD_LIBRARY_PATH
+
+
+tibercad=\${TIBERCADROOT}/\${ARCH}/bin/tibercad
+if [ -x \$executable ]
 then
-  exec \$tibercad \$@
+  exec \$executable \$@
 else
-  echo "Cannot execute \$tibercad. Perhaps broken installation?"
+  echo "Cannot execute \$progname. Perhaps broken installation?"
 fi
 
 EOF
 chmod a+x ${instpath}/bin/TiberCAD.sh
 
-cwd=`pwd`
+here=`pwd`
 cd ${instpath}/bin && ln -s TiberCAD.sh tibercad
-cd $cwd
+cd $here
 
 
 touch ${instpath}/files.lst
 find ${instpath} -type f > ${instpath}/files.lst
+
 cat > ${instpath}/bin/uninstall <<EOF
 #!/bin/sh
 
@@ -207,14 +241,54 @@ if [ ! -z $bindir ]
 then
   here=`pwd`
   cd $bindir
-  [ -L tibercad ] && rm -f tibercad
-  ln -s ${instpath}/bin/tibercad tibercad
-  echo "$bindir/tibercad" >> ${instpath}/files.lst
+
+  if [ -L tibercad ]
+  then
+    target=`ls -l tibercad | awk -F '>' '{print $2}' | grep "${instpath}"`
+    if [ -z $target ]
+    then
+      echo "You have already a link to another TiberCAD installation. I will skip and not create the link."
+      echo ""
+    else
+      rm -f tibercad
+    fi
+  fi
+    
+  if [ ! -e tibercad ]
+  then
+    ln -s ${instpath}/bin/tibercad tibercad
+    echo "$bindir/tibercad" >> ${instpath}/files.lst
+  else
+    echo -n "You have already an executable named tibercad. I will skip and not create the link."
+    echo ""
+  fi
+
   cd $here
 fi
 
+
+# install license file
 echo ""
-echo -n "Do you want to install GMSH version 2.2.0 [y]?"
+echo "You can provide the path to a license file, if you already have one."
+echo -n "license file []: "
+read answer
+if [ ! -f $answer ]
+then
+  echo "The path you provided cannot be used."
+  echo "Don't forget to copy your license file to $instpath/license/tibercad.lic after installation."
+else
+  if [ -z $answer ]
+  then
+    echo "Don't forget to copy your license file to $instpath/license/tibercad.lic after installation."
+  else
+    echo "Copying $answer to $instpath/license/tibercad.lic"
+    cp $answer $instpath/license/tibercad.lic
+  fi
+fi
+
+
+echo ""
+echo -n "Do you want to install GMSH version $GMSH_VER [y]? "
 read answer
 [ -z $answer ] && answer='y'
 case $answer in

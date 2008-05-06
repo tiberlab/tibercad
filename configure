@@ -6590,7 +6590,7 @@ fi
 
 ac_config_files="$ac_config_files stamp-h"
 
-ac_config_files="$ac_config_files Make.common doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/DFTB/Makefile src/utils/SLEPC/Makefile installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install installer/linux/tar/tibercad.sh"
+ac_config_files="$ac_config_files Make.common doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/DFTB/Makefile src/utils/SLEPC/Makefile installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install"
 
 ac_config_files="$ac_config_files installer/prepare_files.sh"
 
@@ -7160,7 +7160,6 @@ do
     "installer/windows/tibercad.bim") CONFIG_FILES="$CONFIG_FILES installer/windows/tibercad.bim" ;;
     "installer/linux/deb/control") CONFIG_FILES="$CONFIG_FILES installer/linux/deb/control" ;;
     "installer/linux/tar/install") CONFIG_FILES="$CONFIG_FILES installer/linux/tar/install" ;;
-    "installer/linux/tar/tibercad.sh") CONFIG_FILES="$CONFIG_FILES installer/linux/tar/tibercad.sh" ;;
     "installer/prepare_files.sh") CONFIG_FILES="$CONFIG_FILES installer/prepare_files.sh" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
