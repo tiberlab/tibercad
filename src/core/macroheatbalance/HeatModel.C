@@ -227,15 +227,12 @@ HeatModel::get_total_heat_source(std::vector<Point> h_point,
   for ( ; it_outer != end_outer; ++it_outer)
   {
 
-    //std::vector<std::vector<double> >  partial_heat_source;
-
     std::vector<std::map<ID,double> >  partial_heat_source;
 
     (it_outer->second)->get_heat_sources(h_point,TotalSet,partial_heat_source);
 
     for (ID n = 0;  n < np; ++n)
-      total_heat_source[n] = partial_heat_source[n][IDtot];
-
+      total_heat_source[n] += partial_heat_source[n][IDtot];
 
   }
 }
@@ -249,7 +246,7 @@ HeatModel::get_total_power_flux(std::vector<Point> h_point,
   
   unsigned int np = h_point.size();
 
-  //
+  total_power_flux.clear();
   total_power_flux.resize(np);
  
   outer_source_iterator it_outer = _heat_source_models.begin();
@@ -260,6 +257,7 @@ HeatModel::get_total_power_flux(std::vector<Point> h_point,
   std::set<ID> TotalSet;
   TotalSet.insert(IDtot);
   
+
   for ( ; it_outer != end_outer; it_outer++)
   {
 
@@ -268,7 +266,8 @@ HeatModel::get_total_power_flux(std::vector<Point> h_point,
     (it_outer->second)->get_power_fluxes(h_point,TotalSet,partial_power_fluxes);
 
     for (ID n = 0;  n < np; ++n) 
-      total_power_flux[n] = partial_power_fluxes[n][IDtot];
+      total_power_flux[n] += partial_power_fluxes[n][IDtot];
+    
     
       
    }

@@ -344,9 +344,9 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   Tensor2Sym kappa; 
 
 
-  std::vector<double> heat_source;
+  //std::vector<double> heat_source;
 
-  std::vector<RealGradient> flux_power;
+  //std::vector<RealGradient> flux_power;
 
 
 
@@ -387,9 +387,13 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     heat_model->set_side(-1);
 
     heat_model->re_init();   
- 
+
+
+
+    std::vector<double> heat_source;
     heat_model->get_total_heat_source(q_point,heat_source);
 
+    std::vector<RealGradient> flux_power;
     heat_model->get_total_power_flux(q_point,flux_power);
 
     heat_model->get_thermal_conductivity(kappa);
@@ -461,7 +465,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	{
 	  double Fe_surf = JxW_face[qp] * phi_face[p1][qp] * flux_power[qp] * normal[qp];
 	 
-	  Fe(p1) -= Fe_surf;
+	   Fe(p1) -= Fe_surf;
 	  
 	}
       }
@@ -814,7 +818,8 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
 	legend.resize(legend.size() + 1);
 	legend[n_vars]=leg->second;
-	source_index[i].insert(leg->first);
+
+      source_index[i].insert(leg->first);
         n_vars++;
       }    
     }
@@ -831,13 +836,14 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
     int HS = -1;
     if (n_vars>0)
       HS=0;
-    
+  
+
     ID PF_temp = n_vars;
 
      unsigned int k = 0;
 
      if (variables.count("thermal") ||
-         variables.count("ThermalFlux")      ||
+         variables.count("Wq")      ||
          variables.count("PowerFlux") )
      {
      
@@ -925,7 +931,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
        
      }
     
-  
+
      int PF = -1;  
      if (n_vars>PF_temp)    
        PF = PF_temp;
@@ -1028,34 +1034,34 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
     
     if (PF != -1)
     {
-     
+      unsigned int k = 0; 
+
       std::vector< std::map< ID, double > > jq_solution;
-
       get_solution(elem,_node,JQ_var,jq_solution); 
-
-
-      //Thermal flux
-      unsigned int k = 0;  
-
+ 	
       double Pqx = jq_solution[0].find(JQX)->second;
       double Pqy = jq_solution[0].find(JQY)->second;
       double Pqz = jq_solution[0].find(JQZ)->second;
-   
 
-      switch (dim)
+      if (variables.count("thermal") ||
+	  variables.count("ThermalFlux")      ||
+	  variables.count("PowerFlux") )
       {
-      case 3:
-	results[id + W[k] + 2] = Pqz;
-      case 2:
-	results[id + W[k] + 1] = Pqy;
-	results[id + W[k] + dim] = sqrt(Pqx * Pqx + Pqy * Pqy + Pqz * Pqz);
-      default:
-	results[id + W[k] ] = Pqx;
-      }
-
-      ++k;
       
-
+	switch (dim)
+	{
+	case 3:
+	  results[id + W[k] + 2] = Pqz;
+	case 2:
+	  results[id + W[k] + 1] = Pqy;
+	  results[id + W[k] + dim] = sqrt(Pqx * Pqx + Pqy * Pqy + Pqz * Pqz);
+	default:
+	  results[id + W[k] ] = Pqx;
+	}
+	
+	++k;
+      }
+      
       //Other power flux
       std::vector<std::map<ID,RealGradient> > power_flux;
       

@@ -130,9 +130,9 @@ $Solver
   {
      flavour = relaxation
      relaxation_factor = 0.5
-     simulations = (dd, tt)
+     simulations = (dd,tt)
      abs_tolerance = 1e-5
-     rel_tolerance = 1e-6
+     rel_tolerance = 1e-5
      max_iterations = 30
      monitor = true
   }
@@ -172,7 +172,7 @@ $Simulation
   solve = sweep
   resultpath = output
   output_format = grace
-  plot = (thermal,ContactCurrents,Pn,Pp)
+  plot = (ContactCurrents,Pn,Pp,thermal)
 }
 
 

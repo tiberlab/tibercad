@@ -158,8 +158,6 @@ print(color("red"), "\n*** WARNING ***  Errors detected in test suite.\n",
       color("reset")) if ($failure_detected == 1);
 
 
-
-
 if ($failure_detected and $sendmail) {
 
   my $msg = "Errors detected in TiberCAD test suite.\n\n";
