@@ -328,7 +328,16 @@ dens_el
  \item \textbf{degeneracy} deneneracy of the quantum state
  \item \textbf{initial\_eigenstates\_number} initial number of eigenstates for  the Schr\"odinger equation
  \item \textbf{analytic} = \{ true $\vert$ false \} If true then the density is calculated 
-analytically.
+analytically. 
+
+Analitcal calculation of density is done in the following way. For each eigenstate we calculate the effective mass assuming quadratic dispersion. Then the charge density is calculate as follows:
+\begin{gather}
+   \rho_{1D}({\bf r}) = g\frac{mkT}{2 \pi \hbar^2}  |\psi({\bf r})|^2 \ln \left(1 + 
+\exp \left( \frac{\mu - E}{kT} \right) \right) \\      
+\rho_{2D}({\bf r}) = g|\psi({\bf r})|^2 \frac{1}{2} \sqrt{\left( \frac{mkT}{2\pi\hbar^2} \right)}  F_{-1/2}\left(  \frac{\mu - E}{kT}         \right),       
+\end{gather}
+where $\rho_{1D}$ and $\rho_{2D}$ are the 1D and 2D charge densities; $m$ is the avaraged mass (the mass is different for each quantized state and is position independent); $g$ is the degeneracy of the states.  
+
 \end{itemize}
 
 
