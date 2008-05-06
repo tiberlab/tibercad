@@ -45,7 +45,7 @@ make_windows_package () {
   mkdir -p contrib/gmsh-2.2.0
   cd contrib/gmsh-2.2.0
   unzip ${topdir}/contrib/gmsh-2.2.0/gmsh-2.2.0-Windows.zip
-  cp ${topdir}/contrib/gmsh.pdf contrib/gmsh-2.2.0
+  cp ${topdir}/contrib/gmsh-2.2.0/gmsh.pdf .
 
   cd $curdir
 
