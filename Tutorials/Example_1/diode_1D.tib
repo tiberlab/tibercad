@@ -1,0 +1,139 @@
+# diode example
+
+$Device
+{
+   Region n_side 
+   {
+     mesh_regions = 2
+     material = Si
+     doping = 1e18 doping_type = donor
+   }
+
+   Region p_side 
+   {
+     mesh_regions = 1
+     material  = Si
+     doping = 1e18 doping_type = acceptor
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+  model driftdiffusion
+  { 
+              
+    options
+    {
+     simulation_name = driftdiffusion_1
+     physical_regions = all
+    }
+
+
+           
+    physical_model electron_mobility
+    {
+
+      model = field_dependent
+      
+
+      low_field_model = doping_dependent   #Masetti  model for Si !!!
+
+    }
+
+    physical_model hole_mobility
+    {
+      model = field_dependent
+
+      
+      low_field_model = doping_dependent
+
+
+    }
+
+
+     physical_model recombination
+     { 
+       model  =  srh
+     }                
+
+    BC_Regions  
+    {
+      BC_Region anode
+      {
+        BC_reg_numb = 1
+        type = ohmic
+        voltage = @Vb[0.0]
+      }
+
+      BC_Region cathode
+      {
+        BC_reg_numb = 2
+        type = ohmic
+        voltage = 0.0
+      }
+ 
+    }   
+  }  
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+
+{
+  driftdiffusion
+  {
+    nonlin_rel_tol = 1e-12
+    nonlin_step_tol = 1e-6
+    nonlin_max_it = 30
+    ls_max_step = 1
+  }
+
+  sweep
+  {
+    variable = Vb
+    start = 0.0
+    stop = 1.2  #2.0
+    steps = 120 #40
+    plotvariable = current
+    plot_data = true  #  to  write  data  for  each  step
+    simulation = driftdiffusion_1
+  }
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+  driftdiffusion 
+  {
+    statistics =  FD
+  }
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+
+$Simulation
+{
+#  searchpath = ../../materials 
+  meshfile = diode_1D.msh #test.msh #diode.msh
+  dimension = 1
+  verbose = 2
+  temperature = 300
+  solve = sweep
+  resultpath = out_diode_1D
+  output_format = grace
+
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob)
+}
+
+
+
+
+

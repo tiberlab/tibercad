@@ -1,0 +1,285 @@
+
+# Description of  the  device physical regions
+$Device
+{
+   
+ Region buffer
+   {
+     mesh_regions = 1
+      
+     material = GaAs
+
+   }
+
+
+
+
+ Region barrier_1
+   {
+     mesh_regions = (2,3)
+     
+     material =  GaAs
+     
+   }
+
+
+
+
+   Region QWell
+   {
+     mesh_regions = 4
+    
+     material = InGaAs 
+     x=0.40 
+
+   }
+
+
+   Region barrier_2
+   {
+     mesh_regions = (5,6)
+    
+     material = GaAs
+    
+   }
+
+
+   Cluster Quantum_1
+   {
+     mesh_regions = (3,4, 5)
+   }
+
+
+
+}
+
+
+
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+
+ model driftdiffusion
+  { 
+
+    options
+    {
+     simulation_name = driftdiffusion
+
+     physical_regions = all
+    }
+
+    physical_model recombination
+    {
+      model = srh
+    }
+
+    physical_model recombination
+    {
+      model = direct
+      
+    }
+
+
+    BC_Regions  
+    {
+      BC_Region cathode
+      {
+        BC_reg_numb = 1
+        type = ohmic
+      
+        voltage = 0.0
+      }
+      
+      
+      BC_Region anode 
+      {
+        BC_reg_numb = 2
+        type = ohmic
+
+	voltage = 0.0
+      }
+
+
+    }
+
+  } 
+
+ model macrostrain
+  {
+    options
+    {
+      simulation_name = strain
+      physical_regions = all
+    }
+
+    BC_Regions  
+    {
+      BC_Region substr
+      {
+        BC_reg_numb = 1
+	type = substrate
+        material = GaAs
+	structure = zb  
+   
+      }
+    }
+  }
+
+  model efaschroedinger
+
+  {
+
+   
+    options
+    {
+      simulation_name = quantum_electrons
+      physical_regions = Quantum_1  #(3,4,5  )
+    }
+
+  
+  }
+
+ model efaschroedinger
+
+  {
+
+   
+    options
+    {
+     simulation_name = quantum_holes
+     physical_regions = Quantum_1  # (3,4,5  )
+    }
+
+  
+  }
+
+ 
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+  
+
+ 
+driftdiffusion
+  {
+    coupling = poisson
+    nonlinear_solver = tiber
+ 
+    nonlin_abs_tol = 1e-13 # 
+    nonlin_step_tol = 1e-5 # 
+ 
+    lin_rel_tol = 1e-6
+    nonlin_max_it = 30
+   
+    discretization = fem
+    ls_max_step = 1
+    pc_type = lu
+  
+    integration_order = 2
+    
+  }
+
+
+
+ macrostrain
+  {
+    substrate = substr
+
+  }
+
+  efaschroedinger
+  {
+  
+    x-periodicity = false
+    Dirichlet_bc_everywhere = true
+
+    poisson_model_name = driftdiffusion  #  potential from driftdiffusion 
+    strain_model_name = macrostrain
+    convergent_density = true
+
+  } 
+
+ quantum_electrons 
+  {
+    particle = el
+    number_of_eigenstates = 6
+   
+  }
+
+ quantum_holes
+  {
+    particle = hl
+    number_of_eigenstates = 12
+
+  }
+
+
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+  
+  driftdiffusion 
+  {
+
+ 
+    statistics = FD
+    strain_simulation = strain
+ 
+  }
+   
+ quantum_electrons 
+  {
+    particle = el
+    model = conduction_band   #eff mass  cb 
+  }
+
+  quantum_holes
+  {
+    particle = hl
+    model = kp   #  k.p  for  valence  band
+    kp_model = 6x6
+
+  }
+
+
+
+
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+
+$Simulation
+{
+
+#  searchpath = ../../materials   
+  meshfile = InGaAs_1D.msh #
+    
+  mesh_units = 1e-9       #nm !!
+  dimension = 1
+  temperature = 300
+  solve =  (strain, driftdiffusion, quantum_electrons,quantum_holes )
+
+  resultpath =  output # 
+
+  plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent)
+ 
+  output_format = grace
+
+}
+
+
+
+
+
