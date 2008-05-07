@@ -33,7 +33,7 @@ FC = @FC@
 
 
 # the subversion revision number
-SVNREVISION = $(shell svn info | awk '/Revision/ {print $$2}')
+SVNREVISION = $(shell svn info | awk '/^Last Changed Rev/ {print $$4}')
 
 # the full TiberCAD version number
 TIBERVERSION = $(shell echo "`cat $(topdir)/VERSION`.$(SVNREVISION)")
