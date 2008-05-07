@@ -4,7 +4,7 @@ topdir=..
 SVNREVISION = $(shell svn info | awk '/Revision/ {print $$2}')
 
 # the full TiberCAD version number
-TIBERVERSION = $(shell echo "`cat $(topdir)/VERSION`.$(SVNREVISION)")
+TIBERVERSION = $(shell echo "`cat $(topdir)/VERSION`-$(SVNREVISION)")
 
 
 SOURCES=$(wildcard *.tex) version.tex
