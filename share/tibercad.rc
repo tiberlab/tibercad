@@ -1,4 +1,4 @@
-#include "tiber_config.h"
+#include "tiber_version.h"
 
 #include <winver.h>
 #include <windows.h>
