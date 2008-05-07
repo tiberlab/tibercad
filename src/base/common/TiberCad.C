@@ -35,6 +35,7 @@ const int
 TiberCad::SvnRevision = SVNREVISION;
 
 
+
 std::string
 TiberCad::TiberCadVersion(bool include_svn_release)
 {
