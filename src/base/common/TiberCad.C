@@ -1,6 +1,6 @@
 // $Id$
 
-#include "tiber_config.h"
+#include "tiber_version.h"
 #include "svnrevision.h"
 #include "TiberCad.h"
 #include "EigenSolver.h"
@@ -20,15 +20,15 @@ TiberCad::tiberroot = "";
 
 
 const int
-TiberCad::MajorVersion = 0;
+TiberCad::MajorVersion = TIBERMAJORVERSION;
 
 
 const int
-TiberCad::MinorVersion = 1;
+TiberCad::MinorVersion = TIBERMINORVERSION;
 
 
 const int
-TiberCad::SubMinorVersion = 0;
+TiberCad::SubMinorVersion = TIBERSUBMINORVERSION;
 
 
 const int
@@ -41,7 +41,7 @@ TiberCad::TiberCadVersion(bool include_svn_release)
   std::ostringstream os;
   os << MajorVersion << "." << MinorVersion << "." << SubMinorVersion;
   if (include_svn_release)
-    os << "." << SvnRevision;
+    os << "-" << SvnRevision;
 
   return os.str();
 }

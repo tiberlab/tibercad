@@ -53,14 +53,5 @@
 /* define if we are in cygwin */
 #undef CYGWIN
 
-/* TiberCAD version major */
-#undef TIBERMAJORVERSION
-
-/* TiberCAD version minor */
-#undef TIBERMINORVERSION
-
-/* TiberCAD version subminor */
-#undef TIBERSUBMINORVERSION
-
 /* Define to 1 if license check is enabled */
 #undef LICENSE_CHECK

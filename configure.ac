@@ -5,7 +5,8 @@ AC_INIT([TiberCAD], [1.0], [support@tibercad.org])
 AC_PREREQ(2.59)
 
 AC_CONFIG_SRCDIR([include/base/common/TiberCad.h])
-AC_CONFIG_HEADER([include/base/common/tiber_config.h])
+AC_CONFIG_HEADER([include/base/common/tiber_config.h
+                  include/base/common/tiber_version.h])
 
 AC_REVISION([$Revision: 1.0$])
 
