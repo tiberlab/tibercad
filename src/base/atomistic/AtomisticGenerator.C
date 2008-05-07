@@ -42,10 +42,10 @@ void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string
   
   do{
 
-    output_file << std::setw(2) << (*basis_iterator).specie 
-		<< std::setw(20) << std::setprecision(10)<< std::fixed  << double((*basis_iterator).position(1)) 
-		<< std::setw(20) << std::setprecision(10)<< std::fixed  << double((*basis_iterator).position(2)) 
-		<< std::setw(20) << std::setprecision(10)<< std::fixed  << double((*basis_iterator).position(3)) << "\n"; 
+    output_file << std::setw(2) << (*basis_iterator).get_specie() 
+		<< std::setw(20) << std::setprecision(10)<< std::fixed  << double((*basis_iterator).get_position(1)) 
+		<< std::setw(20) << std::setprecision(10)<< std::fixed  << double((*basis_iterator).get_position(2)) 
+		<< std::setw(20) << std::setprecision(10)<< std::fixed  << double((*basis_iterator).get_position(3)) << "\n"; 
 
     basis_iterator++;
 
@@ -202,22 +202,30 @@ AtomisticGenerator::do_init(double a1, double a2, double a3)
 
   Atom tmp_atom;
   _as->set_structure_atoms(_structure_basis);
-  for (int i = 0; i < 3 ; i++){
-    for (int j = 0; j < 3 ; j++){
-      _as->_periodicity_vectors[i][j] = _period(i+1,j+1);
-    }
-  }
-  _as->N_atoms = _structure_basis.size();
+  //for (int i = 0; i < 3 ; i++){
+  //  for (int j = 0; j < 3 ; j++){
+  //    _as->_periodicity_vectors[i][j] = _period(i+1,j+1);
+  //  }
+  // }
+  _as->set_periodicity_vectors(_period);
+
+  _as->set_N_atoms( _structure_basis.size() );
 
   std::set<std::string> atom_types;
-  for (int i = 0; i < _structure_basis.size(); i++){
-    atom_types.insert(_structure_basis[i].specie);
+
+  for (int i = 0; i < _structure_basis.size(); i++)
+  {
+    atom_types.insert(_structure_basis[i].get_specie());
   }
-  _as->N_types = atom_types.size();
-  _as->_atom_types.clear();
-  for (std::set<std::string>::iterator types = atom_types.begin(); types != atom_types.end(); types++){
-    _as->_atom_types.push_back(*types);
-  }
+  _as->set_N_types ( atom_types.size() );
+
+  _as->clear_atom_types();
+
+  //for (std::set<std::string>::iterator types = atom_types.begin(); types != atom_types.end(); types++)
+  //{
+  //  _as->_atom_types.push_back(*types);
+  //}
+  _as->set_atom_types(atom_types);
 
 
 #ifdef DEBUG	
@@ -271,15 +279,17 @@ AtomisticGenerator::change_specie(std::string preserve){
 	//bool not_already_included is needed because a point can be contained by more than one element
 	//if it falls exactly on the boundary
 
-	for ( std::vector<Atom>::iterator atom = _super_basis.begin(); atom != _super_basis.end(); atom++){
+	for ( std::vector<Atom>::iterator atom = _super_basis.begin();
+                                               atom != _super_basis.end(); atom++){
 	                      
-	    p(0) = (*atom).position(1) / scale;
+	    p(0) = (*atom).get_position(1) / scale;
 	    
-	    if ( (_dim == 2) || (_dim == 3) )   p(1) = (*atom).position(2) / scale;
+	    if ( (_dim == 2) || (_dim == 3) )   p(1) = (*atom).get_position(2) / scale;
 
-	    if ( (_dim == 3) )  p(2) = (*atom).position(3) / scale;
+	    if ( (_dim == 3) )  p(2) = (*atom).get_position(3) / scale;
 
-	  for (std::vector<Elem*>::iterator it = _structure_elements.begin(); it != _structure_elements.end(); it++){
+	  for (std::vector<Elem*>::iterator it = _structure_elements.begin();
+                                                            it != _structure_elements.end(); it++){
 
 	    Elem* elem = *it;
 	    if ( elem->subdomain_id() == *reg){
@@ -287,10 +297,10 @@ AtomisticGenerator::change_specie(std::string preserve){
 	      if (Macrostrain::may_belong_to_element(elem, p)){
 
 	      if ( (elem->contains_point(p) ) ) {
-		if ( assign.find( (*atom).specie ) != assign_last ){
-		  std::string tmp =  assign[(*atom).specie];
-		  (*atom).specie = tmp;
-		  (*atom).id = *reg;
+		if ( assign.find( (*atom).get_specie() ) != assign_last ){
+		  std::string tmp =  assign[(*atom).get_specie()];
+		  (*atom).set_specie(tmp);
+		  (*atom).set_ID( *reg );
 		  _structure_basis.push_back(*atom); }
 		break; 
 	      }
@@ -308,7 +318,8 @@ AtomisticGenerator::change_specie(std::string preserve){
       {
 
 	Atom tmp_atom;
-	for ( std::vector<Tensor1>::iterator lattice = _super_lattice.begin(); lattice != _super_lattice.end(); lattice++){
+	for ( std::vector<Tensor1>::iterator lattice = _super_lattice.begin(); 
+                                           lattice != _super_lattice.end(); lattice++){
 	      
 
 	    p(0) = (*lattice)(1) / scale;
@@ -317,7 +328,8 @@ AtomisticGenerator::change_specie(std::string preserve){
 
 	    if ( (_dim == 3) )  p(2) = (*lattice)(3) / scale;
 
-	  for (std::vector<Elem*>::iterator it = _structure_elements.begin(); it != _structure_elements.end(); it++){
+	  for (std::vector<Elem*>::iterator it = _structure_elements.begin(); 
+                                                     it != _structure_elements.end(); it++){
 
 	    Elem* elem = *it;
 
@@ -327,14 +339,15 @@ AtomisticGenerator::change_specie(std::string preserve){
 
 	      if ( (elem->contains_point(p) ) ) {
 
-		for ( std::vector<Atom>::iterator atom = _crystal_basis.begin(); atom != _crystal_basis.end(); atom++){
+		for ( std::vector<Atom>::iterator atom = _crystal_basis.begin(); 
+                                                          atom != _crystal_basis.end(); atom++){
 
-		  tmp_atom.position=(*lattice) + _rotation*_prim_vec*(*atom).position;
-		  tmp_atom.id = *reg;
+		  tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_position() );
+		  tmp_atom.set_ID( *reg );
 
-		  if ( assign.find( (*atom).specie ) != assign_last ){
-		    std::string tmp =  assign[(*atom).specie];
-		    tmp_atom.specie = tmp;
+		  if ( assign.find( (*atom).get_specie() ) != assign_last ){
+		    std::string tmp =  assign[(*atom).get_specie()];
+		    tmp_atom.set_specie(tmp);
 		    _structure_basis.push_back(tmp_atom); } 
 		}
 		break;
@@ -368,13 +381,16 @@ AtomisticGenerator::change_specie(std::string preserve){
 	      if (Macrostrain::may_belong_to_element(elem,p)){
 
 	      if ( (elem->contains_point(p) ) ) {
-		for ( std::vector<Tensor1>::iterator conv_lattice_basis_it = _conv_lattice_basis.begin(); conv_lattice_basis_it != _conv_lattice_basis.end(); conv_lattice_basis_it++){
-		  for ( std::vector<Atom>::iterator atom = _crystal_basis.begin(); atom != _crystal_basis.end(); atom++){
-		    tmp_atom.position= (*conv) + (*conv_lattice_basis_it) + _rotation*_prim_vec*(*atom).position;
-		    tmp_atom.id = *reg;
-		    if ( assign.find( (*atom).specie ) != assign_last ){
-		      std::string tmp =  assign[(*atom).specie];
-		      tmp_atom.specie = tmp;
+		for ( std::vector<Tensor1>::iterator conv_lattice_basis_it = _conv_lattice_basis.begin(); 
+                                      conv_lattice_basis_it != _conv_lattice_basis.end(); conv_lattice_basis_it++){
+		  for ( std::vector<Atom>::iterator atom = _crystal_basis.begin(); 
+                                                                              atom != _crystal_basis.end(); atom++){
+		    tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) + 
+                                                                        _rotation*_prim_vec*(*atom).get_position());
+		    tmp_atom.set_ID( *reg );
+		    if ( assign.find( (*atom).get_specie() ) != assign_last ){
+		      std::string tmp =  assign[(*atom).get_specie()];
+		      tmp_atom.set_specie(tmp);
 		      _structure_basis.push_back(tmp_atom); } 
 		  }
 		}
@@ -507,7 +523,8 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3, bool pr
 
 	      do{
 		basis_atom = (*basis_iterator);
-		basis_atom.position = _local_origin + lattice_point+_rotation*_prim_vec*(*basis_iterator).position;
+		basis_atom.set_position ( _local_origin + lattice_point+
+					  _rotation*_prim_vec*(*basis_iterator).get_position() );
 		
 		_super_basis.push_back(basis_atom);
 		basis_iterator++;
@@ -526,11 +543,12 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3, bool pr
 
 	    do{
 	      basis_atom = (*basis_iterator);
-	      basis_atom.position = _local_origin + lattice_point + _rotation*_prim_vec*(*basis_iterator).position;
+	      basis_atom.set_position ( _local_origin + lattice_point + 
+					_rotation*_prim_vec*(*basis_iterator).get_position() );
 		
 	      //Check if basis atom is inside bonduary when preserve_basis is off
 	      if ((i >= n1) || (i <= 0) || (j >= n2) || (j<= 0) || (l >= n3) || (l <= 0)) {
-		tmp_check = inv_supercell_vect * basis_atom.position;
+		tmp_check = inv_supercell_vect * basis_atom.get_position();
 		check_boundary2 = ((tmp_check(1) >= -tol) && (tmp_check(1) <(1.0 + tol))) &&
 		  ((tmp_check(2) >= -tol) && (tmp_check(2) < (1.0 + tol))) &&
 		  ((tmp_check(3) >= -tol) && (tmp_check(3) < (1.0 + tol)));
@@ -719,75 +737,87 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
   //Vectors are defined in primitive vectors basis.
   _basis_type = basis_name;
   Atom tmp;
+  Tensor1 T;
+
 
   assert(_crystal_basis.empty());
 
   if (_basis_type.compare("cubic") == 0){
-    if (specie1.compare("not_specified") == 0) tmp.specie = "A";
-    else tmp.specie = specie1;
-    tmp.position(1) = 0.0; tmp.position(2) = 0.0; tmp.position(3) = 0.0;
+    if (specie1.compare("not_specified") == 0) tmp.set_specie("A");
+    else tmp.set_specie(specie1);
+    T(1)=0.0; T(2)=0.0; T(3)=0.0;
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
   }
 
   else if (_basis_type.compare("diamond") == 0){
  
-    if (specie1.compare("not_specified") == 0) tmp.specie = "A";
-    else tmp.specie = specie1;
-    tmp.position(1) = -1.0 / 8.0; tmp.position(2) = -1.0/8.0; tmp.position(3) = -1.0/8.0;
+    if (specie1.compare("not_specified") == 0) tmp.set_specie("A");
+    else tmp.set_specie(specie1);
+     T(1)= -1.0 / 8.0; T(2)= -1.0 / 8.0; T(3)= -1.0 / 8.0;
+     tmp.set_position(T); 
     _crystal_basis.push_back(tmp);
 
-    tmp.position(1)=1.0/8.0; tmp.position(2)=1.0/8.0; tmp.position(3)=1.0/8.0;
-    _crystal_basis.push_back(tmp);
   }
 
   else if (_basis_type.compare("zincblende") == 0){
 
-    if (specie1.compare("not_specified") == 0) tmp.specie = "A";
-    else tmp.specie = specie1;
-    tmp.position(1) = 0.0; tmp.position(2) = 0.0; tmp.position(3) = 0.0;
+    if (specie1.compare("not_specified") == 0) tmp.set_specie("A");
+    else tmp.set_specie(specie1);
+     T(1)=0.0; T(2)=0.0; T(3)=0.0;
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
  
-    if (specie1.compare("not_specified") == 0) tmp.specie = "B";
-    else tmp.specie = specie2;
-    tmp.position(1) = 1.0 / 4.0; tmp.position(2) = 1.0 / 4.0; tmp.position(3) = 1.0 / 4.0;
+    if (specie1.compare("not_specified") == 0) tmp.set_specie("B");
+    else tmp.set_specie(specie2);
+    T(1)= 1.0 / 4.0; T(2)= 1.0 / 4.0; T(3)= 1.0 / 4.0;
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
   }
 
   else if (_basis_type.compare("cristobalite") == 0){
 
-    if (specie1.compare("not_specified") == 0) tmp.specie = "A";
-    else tmp.specie = specie1;
-    tmp.position(1) = 1.0 / 8.0; tmp.position(2) = 1.0 / 8.0; tmp.position(3) = 1.0 / 8.0;
+    if (specie1.compare("not_specified") == 0) tmp.set_specie("A");
+    else tmp.set_specie(specie1);
+    T(1)= 1.0 / 8.0; T(2)= 1.0 / 8.0; T(3)= 1.0 / 8.0;
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    tmp.position(1) = -1.0 / 8.0; tmp.position(2) = -1.0 / 8.0; tmp.position(3) = -1.0 / 8.0;
+    T(1)= -1.0 / 8.0; T(2)= -1.0 / 8.0; T(3)= -1.0 / 8.0;
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    if (specie1.compare("not_specified") == 0) tmp.specie = "B";
-    else tmp.specie = specie2;
-    tmp.position(1) = 0.0; tmp.position(2) = 0.0; tmp.position(3) = 0.0;
+    if (specie1.compare("not_specified") == 0) tmp.set_specie("B");
+    else tmp.set_specie(specie2);
+    T(1)=0.0; T(2)=0.0; T(3)=0.0;
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    tmp.position(1) = 1.0 / 2.0; tmp.position(2) = 0.0; tmp.position(3) = 0.0;
+    T(1)= 1.0/2.0; T(2)=0.0; T(3)=0.0;
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    tmp.position(1) = 0.0; tmp.position(2) = 1.0 / 2.0; tmp.position(3) = 0.0;
+    T(1)= 0.0; T(2)= 1.0 / 2.0; T(3)= 0.0;
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    tmp.position(1) = 0.0; tmp.position(2) = 0.0; tmp.position(3) = 1.0 / 2.0;
+    T(1)= 0.0; T(2)= 0.0; T(3)= 1.0 / 2.0; 
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
   }
 
   else if (_basis_type.compare("NaCl") == 0){
 
-    if (specie1.compare("not_specified") == 0) tmp.specie = "A";
-    else tmp.specie = specie1;
-    tmp.position(1) = 0.0; tmp.position(2) = 0.0; tmp.position(3) = 0.0;
+    if (specie1.compare("not_specified") == 0) tmp.set_specie("A");
+    else tmp.set_specie(specie1);
+    T(1)=0.0; T(2)=0.0; T(3)=0.0;
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    if (specie1.compare("not_specified") == 0) tmp.specie = "B";
-    else tmp.specie = specie2;
-    tmp.position(1) = 1.0 / 2.0; tmp.position(2) =1.0 / 2.0; tmp.position(3) = 1.0 / 2.0;
+    if (specie1.compare("not_specified") == 0) tmp.set_specie("B");
+    else tmp.set_specie(specie2);
+    T(1)= 1.0 / 2.0; T(2)= 1.0 / 2.0; T(3)= 1.0 / 2.0; 
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
   }
@@ -795,46 +825,57 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
   else if(_basis_type.compare("wurtzite") == 0){
 
     if (u == 0.0) u = 3.0 / 8.0;
-    if (specie1.compare("not_specified") == 0) tmp.specie = "A";
-    else tmp.specie = specie1;
-    tmp.position(1) = 1.0 / 3.0; tmp.position(2) = 2.0 / 3.0; tmp.position(3) = 0.0;
+    if (specie1.compare("not_specified") == 0) tmp.set_specie("A");
+    else tmp.set_specie(specie1);
+    T(1)= 1.0 / 3.0; T(2)= 2.0 / 3.0; T(3)= 1.0 / 2.0; 
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    tmp.position(1) = 2.0 / 3.0; tmp.position(2) = 1.0 / 3.0; tmp.position(3) = 1.0 / 2.0;
+    T(1)= 2.0 / 3.0; T(2)= 1.0 / 3.0; T(3)= 1.0 / 2.0; 
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    if (specie1.compare("not_specified") == 0) tmp.specie = "B";
-    else tmp.specie = specie2;
-    tmp.position(1) = 1.0 / 3.0; tmp.position(2) = 2.0 / 3.0; tmp.position(3) = u;
+    if (specie1.compare("not_specified") == 0) tmp.set_specie("B");
+    else tmp.set_specie(specie2);
+    T(1)= 1.0 / 3.0; T(2)= 2.0 / 3.0; T(3)= u; 
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    tmp.position(1) = 2.0 / 3.0; tmp.position(2) = 1.0 / 3.0; tmp.position(3) = 1.0 / 2.0 + u;
+    T(1)= 2.0 / 3.0; T(2)= 1.0 / 3.0; T(3)= 1.0 / 2.0 + u; 
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp); 
   }
 
   else if (_basis_type.compare("TiO2") == 0) {
 
     if (u == 0.0) u = 0.25;
-    if (specie1.compare("not_specified") == 0) tmp.specie = "A";
-    else tmp.specie = specie1;
-    tmp.position(1) = -1.0 / 8.0; tmp.position(2) = 5.0 / 8.0; tmp.position(3) = 1.0 / 4.0;
+    if (specie1.compare("not_specified") == 0) tmp.set_specie("A");
+    else tmp.set_specie(specie1);
+
+    T(1)= -1.0 / 8.0; T(2)= 5.0 / 8.0; T(3)= 1.0 / 4.0; 
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    tmp.position(1) = 1.0 / 8.0; tmp.position(2) = 3.0 / 8.0; tmp.position (3) = 3.0 / 4.0;
+    T(1)= 1.0 / 8.0; T(2)= 3.0 / 8.0; T(3)= 3.0 / 4.0; 
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    if (specie1.compare("not_specified") == 0) tmp.specie = "B";
-    else tmp.specie = specie1;
-    tmp.position(1) = -u; tmp.position(2) = 0.25 - u; tmp.position(3) = 2.0 * u;
+    if (specie1.compare("not_specified") == 0) tmp.set_specie("B");
+    else tmp.set_specie(specie1);
+    T(1)= -u; T(2)= 0.25-u; T(3)= 2.0*u; 
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    tmp.position(1) = - u  -  0.25; tmp.position(2) = 0.5 - u; tmp.position(3) = 0.5 + 2.0 * u;
+    T(1)= -u-0.25; T(2)= 0.5-u; T(3)= 0.5 + 2.0*u; 
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    tmp.position(1) = + u; tmp.position(2) = - 0.25 - u; tmp.position(3) = 1.0 - 2.0 * u;
+    T(1)= u; T(2)= -0.25-u; T(3)= 1.0 - 2.0*u; 
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
-    tmp.position(1) = + 0.25 + u; tmp.position(2) =  0.5 + u; tmp.position(3) = 0.5 - 2.0 * u;
+    T(1)= 0.25 + u; T(2)= 0.5 + u; T(3)= 0.5 - 2.0*u; 
+    tmp.set_position(T);
     _crystal_basis.push_back(tmp);
 
   }
@@ -1091,13 +1132,13 @@ unsigned int**  AtomisticGenerator::bond_map_gen(std::vector<Atom> &basis){
   
     for (j = i + 1; j < n_atom; j ++){
 
-      cutofftmp = _cutoff[basis[i].specie.c_str()] + _cutoff[basis[j].specie.c_str()];
+      cutofftmp = _cutoff[basis[i].get_specie().c_str()] + _cutoff[basis[j].get_specie().c_str()];
 
       if ( cutofftmp == 0.0 ) std::cout << "WARNING, A CUTOFF DISTANCE IS NOT DEFINED " << std::endl;    
    
       {
  
-	if ( norm( basis[i].position - basis[j].position) < cutofftmp ){
+	if ( norm( basis[i].get_position() - basis[j].get_position()) < cutofftmp ){
 	
 	  for (n = 0; n < 8; n++){
 	    if (bond_map[i][n] == 0) {bond_map[i][n] = j; bond_map[i][8]++; break;}
@@ -1142,26 +1183,26 @@ void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis, unsigned in
    
     if ( bond_map[i][8] == 3 ){
 
-      O = basis[i].position;
-      r1 = basis[ bond_map[i][0] ].position - O;
-      r2 = basis[ bond_map[i][1] ].position - O;
-      r3 = basis[ bond_map[i][2] ].position - O;
+      O = basis[i].get_position();
+      r1 = basis[ bond_map[i][0] ].get_position() - O;
+      r2 = basis[ bond_map[i][1] ].get_position() - O;
+      r3 = basis[ bond_map[i][2] ].get_position() - O;
 
       u1 = r1 + r2 + r3;
       R1 = norm(u1);
       u1 = -d * (u1/R1);
 
-      tmp.specie = "H";
-      tmp.flag = basis[i].flag;
-      tmp.position = O + u1;
+      tmp.set_specie("H");
+      tmp.set_flag( basis[i].get_flag() );
+      tmp.set_position ( O + u1 );
       hydrogens.push_back(tmp);
     }
 
     else if  ( bond_map[i][8] == 2 ){
 
-      O = basis[i].position;
-      r1 = basis[ bond_map[i][0] ].position - O;
-      r2 = basis[ bond_map[i][1] ].position - O;
+      O = basis[i].get_position();
+      r1 = basis[ bond_map[i][0] ].get_position() - O;
+      r2 = basis[ bond_map[i][1] ].get_position() - O;
 
       u1 = r1 + r2;
       u2 = vectorProduct(r1, r2);
@@ -1170,24 +1211,24 @@ void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis, unsigned in
       u = - (u1 / R1) - sq3 * (u2 / R2);
       u = d * (u / 2.0);
 
-      tmp.specie = "H";
-      tmp.flag = basis[i].flag;
-      tmp.position = O + u;
+      tmp.set_specie("H");
+      tmp.set_flag( basis[i].get_flag() );
+      tmp.set_position ( O + u );
       hydrogens.push_back(tmp);
 
       u = - (u1 / R1) + sq3 * (u2 / R2);
       u = d * (u / 2.0);
 
-      tmp.specie = "H";
-      tmp.flag = basis[i].flag;
-      tmp.position = O + u;
+      tmp.set_specie("H");
+      tmp.set_flag( basis[i].get_flag() );
+      tmp.set_position ( O + u );
       hydrogens.push_back(tmp);
     }
 
     else if (bond_map[i][8] == 1){
 
-      O = basis[i].position;
-      r1 = basis[ bond_map[i][0] ].position - O;
+      O = basis[i].get_position();
+      r1 = basis[ bond_map[i][0] ].get_position() - O;
 
       Tensor2Gen vect_rot(0);
       vect_rot(1,1) = cos109; vect_rot(1,2) = sin109; vect_rot(1,3) = 0.0;
@@ -1199,9 +1240,9 @@ void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis, unsigned in
       r2 = u * R1;
       u = d * (u / norm(u));
 
-      tmp.specie = "H";
-      tmp.position = O + u;
-      tmp.flag = basis[i].flag;
+      tmp.set_specie("H");
+      tmp.set_position ( O + u );
+      tmp.set_flag ( basis[i].get_flag() );
       hydrogens.push_back(tmp);
 
       u1 = r1 + r2;
@@ -1211,17 +1252,17 @@ void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis, unsigned in
       u = - (u1 / R1) - sq3 * (u2 / R2);
       u = d * (u / 2.0);
 
-      tmp.specie = "H";
-      tmp.position = O + u;
-      tmp.flag = basis[i].flag;
+      tmp.set_specie("H");
+      tmp.set_position ( O + u );
+      tmp.set_flag( basis[i].get_flag() );
       hydrogens.push_back(tmp);
 
       u = - (u1 / R1) + sq3 * (u2 / R2);
       u = d * (u / 2.0);
 
-      tmp.specie = "H";
-      tmp.flag = basis[i].flag;
-      tmp.position = O + u;
+      tmp.set_specie("H");
+      tmp.set_flag( basis[i].get_flag() );
+      tmp.set_position ( O + u );
       hydrogens.push_back(tmp);
     }
 

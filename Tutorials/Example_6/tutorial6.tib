@@ -334,9 +334,10 @@ $Physics
 
 $Simulation
 {  
+
   meshfile = quantum_well.msh
   mesh_units = 1e-9
-  searchpath = ../../materials
+ 
   dimension = 1
   temperature = 300
   solve = (str, dd, quantum_el, quantum_hl,  dispersion1D_el, dispersion1D_hl, dispersion2D_el, dispersion2D_hl )   

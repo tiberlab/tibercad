@@ -108,7 +108,7 @@ subdirectory you can find several examples ready to run. They are the same as
 the tutorials on http://www.tibercad.org/documentation/tutorial/list.
 
   If you have write permission in the installation directory, you can go to
-e.g. bulk_Si and start the simulation by double clicking the bulk.tib input file.
+e.g. Example_0 and start the simulation by double clicking the bulk.tib input file.
 If not, copy the whole directory to a location in your personal area and run the
 examples from there.
 
@@ -125,9 +125,9 @@ In the INSTALLDIR/examples directory of the TiberCAD installation you can find
 several examples ready to run. They are the same as the tutorials on
 http://www.tibercad.org/documentation/tutorial/list.
 
-  Copy the directory of the example you want to run, e.g. bulk_Si, to your home
-  directory or any place you have write permissions for. Change to the newly
-  created directory and run TiberCAD by (assuming the bulk_Si example)
+  Copy the directory of the example you want to run, e.g. Example_0, to your home
+directory or any place you have write permissions for. Change to the newly
+created directory and run TiberCAD by (assuming Example_0)
 
   $ tibercad bulk.tib
 
@@ -137,3 +137,5 @@ http://www.tibercad.org/documentation/tutorial/list.
 3 Bug reports / Feedback
 
 Please send bug reports, feedback or suggestions to support@tibercad.org.
+For bug reports please include the full TiberCAD version number as reported
+in the first output line when running the program.

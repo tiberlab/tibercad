@@ -166,6 +166,7 @@ AtomisticStructure::read_structure(const std::string& path)
   std::string line, record;
   unsigned int n_specie;
   Atom tmp_atom;
+  Tensor1 pos;
 
 #ifdef DEBUG
   std::cerr << "AtomisticStructure::read_structure(path) begin \n";
@@ -228,14 +229,16 @@ AtomisticStructure::read_structure(const std::string& path)
 	      _atom_types.push_back(record);
 	    }
 
-	  tmp_atom.specie = record;
+	  tmp_atom.set_specie( record );
 
 	  for (unsigned int i = 1; i < 4; i++)
 	    { 
 
 	      line_string >> record;
-	      tmp_atom.position(i) = atof(record.c_str());
+	      pos(i) = atof(record.c_str());
 	    }
+
+	  tmp_atom.set_position( pos );
 
 	  _structure_atoms.push_back(tmp_atom);
 
@@ -307,14 +310,14 @@ AtomisticStructure::read_structure(const std::string& path)
 	  line_string >> record;
 	  line_string >> record;
 	  n_specie = atoi(record.c_str());
-	  tmp_atom.specie = _atom_types[n_specie -1];
+	  tmp_atom.set_specie ( _atom_types[n_specie -1] );
 
 	  for (unsigned int j = 1; j <= 3; j++)
 	    { 
 	      line_string >> record;
-	      tmp_atom.position(j) = atof(record.c_str());
+	      pos(j) =  atof(record.c_str());
 	    }
-
+	  tmp_atom.set_position( pos );
 	  _structure_atoms.push_back(tmp_atom);
 	}
 
@@ -373,10 +376,10 @@ AtomisticStructure::print_structure(const std::string& path)
 
       for (unsigned int i = 0; i < _structure_atoms.size(); i++)
 	{
-	  file << std::setw(2) << _structure_atoms[i].specie 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(1)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(2)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(3)) << "\n"; 
+	  file << std::setw(2) << _structure_atoms[i].get_specie() 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) << "\n"; 
 
 	}
 
@@ -400,12 +403,12 @@ AtomisticStructure::print_structure(const std::string& path)
 	  unsigned int n_specie;
 	  for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
 	    {
-	      if (_atom_types[n_specie].compare(_structure_atoms[i].specie) == 0) break;
+	      if (_atom_types[n_specie].compare(_structure_atoms[i].get_specie()) == 0) break;
 	    }
 	  file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(1)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(2)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(3)) << "\n"; 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) << "\n"; 
 	}
 
       //A line of zeros is put here (coordinates origin)
@@ -464,10 +467,10 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
 
       for (unsigned int i = 0; i < _structure_atoms.size(); i++)
 	{
-	  file << std::setw(2) << _structure_atoms[i].specie 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(1)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(2)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(3)) 
+	  file << std::setw(2) << _structure_atoms[i].get_specie() 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) 
 	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(charges[i]) << "\n"; 
 	}
 
@@ -491,12 +494,12 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
 	  unsigned int n_specie;
 	  for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
 	    {
-	      if (_atom_types[n_specie].compare(_structure_atoms[i].specie) == 0) break;
+	      if (_atom_types[n_specie].compare(_structure_atoms[i].get_specie()) == 0) break;
 	    }
 	  file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(1)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(2)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].position(3)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) 
 	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(charges[i]) << "\n";  
 	}
 
@@ -550,3 +553,27 @@ AtomisticStructure::get_type_index(const std::string& type)
 
 }
 
+
+
+void
+AtomisticStructure::set_periodicity_vectors(const Tensor2Gen& T)
+{
+    for (int i = 0; i < 3 ; i++)
+      {
+	for (int j = 0; j < 3 ; j++)
+	  {
+	    _periodicity_vectors[i][j] = T(i+1,j+1);
+	  }
+      }
+}
+
+void
+AtomisticStructure::set_atom_types(const std::set<std::string>& atom_types)
+{
+
+  for (std::set<std::string>::iterator types = atom_types.begin(); types != atom_types.end(); types++)
+  {
+    _atom_types.push_back( *types );
+  }
+
+}

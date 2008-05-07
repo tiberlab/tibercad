@@ -132,7 +132,7 @@ stamp-h: config.h.in config.status
 Makefile: Makefile.in Make.common.in config.status
 	./config.status
 
-config.status: configure
+config.status: configure VERSION
 	./config.status --recheck
 
 

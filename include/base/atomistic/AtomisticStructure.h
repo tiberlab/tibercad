@@ -71,11 +71,55 @@ public:
   //! Return a reference to atom types
   const std::vector<std::string>& get_atom_types (void);
 
-  //! Get periodicity vectors for the structure
+  //! Get periodicity vectors for the structure:
+  //! Careful ! this is passing a reference. maybe dangerous
   double* get_periodicity_vectors(void);
 
   //! Initialize the structure (up to now reading a structure from file is needed)
   void init(double a1 = 0.0, double a2 = 0.0, double a3 = 0.0); 
+
+  //! Get index of atom type
+  int get_type_index(const std::string&);
+  
+  void add_atom_type(const std::string&);
+  
+ //! Print structure to file (format depends on extension used)
+  void print_structure(const std::string& path);
+
+  //! A tool for printing atomic charges on output 
+  void print_structure(const std::string& path, double const* const charges);
+
+  // get the number of atoms in the structure
+  int get_N_atoms() const {return N_atoms;}
+
+  // set number of atoms
+  void set_N_atoms(long N) {N_atoms=N;}
+
+  // get the number of types in the structure
+  int get_N_types() const {return N_types;}
+
+  // set number of atoms
+  void set_N_types(int N) {N_types=N;}
+
+  // say if it is periodic
+  bool is_periodic() const {return is_periodical;}
+
+  void set_periodicity_vectors(const Tensor2Gen& T);
+
+  void clear_atom_types(){_atom_types.clear();};
+
+  void set_atom_types(const std::set<std::string>& types);
+
+protected:
+
+  //! Set the model options
+  void set_options(const ModelOptions& options);
+
+  //! Read structure from file
+  void read_structure(const std::string& path);
+
+
+private:
 
   //! Number of atoms in structure
   int N_atoms; 
@@ -87,11 +131,6 @@ public:
   //! structure (true) or a cluster (false)
   bool is_periodical;
 
-  //! Get index of atom type
-  int get_type_index(const std::string&);
-  
-  void add_atom_type(const std::string&);
-  
   //! Vector containing structure atoms
   std::vector<Atom> _structure_atoms;
 
@@ -102,24 +141,6 @@ public:
   //std::vector<std::string> _atom_types;
   std::vector<std::string> _atom_types;
 
-
- //! Print structure to file (format depends on extension used)
-  void print_structure(const std::string& path);
-
-  //! A tool for printing atomic charges on output 
-  void print_structure(const std::string& path, double const* const charges);
-
-protected:
-
-  //! Set the model options
-  void set_options(const ModelOptions& options);
-
-  //! Read structure from file
-  void read_structure(const std::string& path);
-
- 
-
-private:
 
   //! Options for the structure (from Atomistic Region)
   ModelOptions _options;

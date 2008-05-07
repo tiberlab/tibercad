@@ -83,7 +83,7 @@ void AtomisticGenerator1D::passivate(){
   for (i = 0; i < _structure_basis.size(); i++){
 
     tmp = _structure_basis[i];
-    tmp.flag = 1;
+    tmp.set_flag(1);
     periodic_basis.push_back(tmp);
 
     for (j = -1; j < 2; j++){
@@ -92,7 +92,8 @@ void AtomisticGenerator1D::passivate(){
    if ( (j == 0)&&(k == 0) ) continue;
 
     tmp=_structure_basis[i];
-    tmp.position = tmp.position + j * y_period + k * z_period;
+    tmp.set_position(tmp.get_position() + j * y_period + k * z_period );
+    //tmp.position = tmp.position + j * y_period + k * z_period;
     periodic_basis.push_back(tmp);
 
   }
@@ -107,7 +108,7 @@ void AtomisticGenerator1D::passivate(){
   _structure_basis.clear();
 
   for (i = 0; i < periodic_basis.size(); i++){
-    if (periodic_basis[i].flag == 1) _structure_basis.push_back(periodic_basis[i]);
+    if (periodic_basis[i].get_flag() == 1) _structure_basis.push_back(periodic_basis[i]);
 
 
 }

@@ -8,12 +8,9 @@
 
 HeatModel::HeatModel() :
   kappa(NULL),
-  kappa_carrier(NULL),
   _elem(NULL),
   _lattice_thermal_conductivity(0),
-  _electrons_thermal_conductivity(0),
-  _heat_source_interface(NULL),
-  _holes_thermal_conductivity(0)
+  _heat_source_interface(NULL)
 {
 }
 	
@@ -24,12 +21,9 @@ HeatModel::~HeatModel()
 {
   
   PhysicalModelInterface::destroy(kappa);
-  PhysicalModelInterface::destroy(kappa_carrier);
   
-
-
   clear_heat_sources();
-  //clear_thermal_conductivity();
+
 
 }
 
@@ -56,18 +50,6 @@ void HeatModel::do_init()
     const std::string& name = (it->second).get_option("model", "");
     add_heat_source_model(name,it->second);
   }
-
-//   //Thermal conductivity models
-//   it = get_options().submodels_begin("thermal_conductivity");
-//   end = get_options().submodels_end("thermal_conductivity");
-  
-//   for ( ; it != end; ++it)
-//   {
-//     const std::string& name = (it->second).get_option("type", "");
-//     add_thermal_conductivity_model(name,it->second);
-//   }
-
-
 
 
 
@@ -96,12 +78,8 @@ void HeatModel::do_init()
      kappa = dynamic_cast<LatticeThermalConductivity*>(
 	  PhysicalModelInterface::create("lat_therm_cond_" +
 		get_material()->get_structure()));
-  
-     //std::cout<<get_material()->get_structure()<<std::endl;
 
     }
- 
-  // std::cout<<get_material()->get_structure()<<std::endl;
 
     kappa->set_temperature(SimulationOptions::temperature);
     
@@ -133,29 +111,6 @@ void HeatModel::calculate_VCA (const PhysicalModelInterface *comp_A, const Physi
 
 
 
-void HeatModel::re_init()
-{
-
-  update_lattice_thermal_conductivity();
-      
-}
-
-
-
-void HeatModel::update_lattice_thermal_conductivity()
-{
-  //Insert phase
-  kappa->set_temperature(_temperature);
-
-  //Update phase
-  kappa->update_tensor();
-
-  //Getting result phase
-  kappa->get_conductivity(_lattice_thermal_conductivity);
-
-}
-
-
 void
 HeatModel::add_heat_source_model(const std::string& model_name, 
                                 const ModelOptions& options)
@@ -178,33 +133,6 @@ HeatModel::add_heat_source_model(const std::string& model_name,
 
 
 }
-
-void
-HeatModel::add_thermal_conductivity_model(const std::string& model_name, 
-                                const ModelOptions& options)
-{
-
-  //  std::cout<< get_material()->get_structure()<<std::endl;
-  // if (model_name == "lattice")
-  //{   model_name = "lat_therm_cond_" + get_material()->get_structure();}
-	  
-
-  ThermalConductivityInterface* model =
-      ThermalConductivityInterface::create(model_name, options);
- 
-  if (model == NULL)
-    throw InitFailedException("No such thermal conductivity model: " + model_name);
- 
-  ID id = model->get_id();
-  _thermal_conductivity_models[id] = model;
-  model->set_material(get_material());
-  model->set_simulator_id(get_simulator_id());
-  model->init();
-
-
-
-}
-
 
 
 void
@@ -293,25 +221,6 @@ for ( ; it != end; ++it)
 
 }
 
-void
-HeatModel::clear_thermal_conductivity(void)
-{
-                                 
-
-outer_conductivity_iterator it =  _thermal_conductivity_models.begin();
-outer_conductivity_iterator end = _thermal_conductivity_models.end();
-
-for ( ; it != end; ++it)
- {
-  
-     PhysicalModelInterface::destroy(it->second);
-
- }
-
-     _thermal_conductivity_models.clear();
-
-}
-
 
 int
 HeatModel::get_heat_source_IDs(std::vector<ID>& ids)
@@ -345,22 +254,18 @@ HeatModel::do_print_info(void)
 
 }
 
+void
+HeatModel::re_init(void)
+{
+ 
+  update_lattice_thermal_conductivity();
 
-// void
-// HeatModel:: update_heat_source_model()
-// {
+}
 
-//   outer_source_iterator it =  _heat_source_models.begin();
-//   outer_source_iterator end = _heat_source_models.end();
-  
-//   for ( ; it != end; ++it, it++ )
-//   {
+void 
+HeatModel::update_lattice_thermal_conductivity(void)
+{
 
-//     //    it->set_element();
-//     //it->set_side();
+ kappa->get_conductivity(_lattice_thermal_conductivity);
 
-//     //it->re_init();
-
-//   }
-
-// }
+}

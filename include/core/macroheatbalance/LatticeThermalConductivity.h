@@ -36,7 +36,7 @@ public:
 
   void set_temperature(double temperature);
      
-  virtual void update_tensor(void)=0;
+  virtual void re_init(void)=0;
 
 
 private:

@@ -131,60 +131,7 @@ void  MacroHeatBalance::do_solve()
   
   my_system->solve();
   
-
-  
- //   if (opt.kappa_solve.compare("self_consistent") == 0)
-//   {
-//     cout<<endl;
-//     cout<<"Start loop over lattice thermal conductivity"<<endl; 
-//     cout<<endl;
-    
-//     double norm_error;
-    
-//     norm_error = opt.max_error + 1;
-    
-//     //Inizialize the old_soluction----------------------------------------
-//     vector<double> old_solution((*(my_system->solution)).size());
-    
-
-//     for ( unsigned int n = 0 ; n != (*(my_system->solution)).size(); ++n) 
-//     { old_solution[n] = (*(my_system->solution))(n);}
-    
-//      //-------------------------------------------------------------------  
-    
-//     for (; norm_error> opt.max_error;)
-//     {
-      
-      
-//       my_system->solve();
-      
-       
-//       //Compute error and old_solution
-//       norm_error = 0.0;
-//       for ( unsigned int n = 0 ; n !=  (*(my_system->solution)).size(); ++n)
-//       {
-// 	norm_error += (old_solution[n]-(*(my_system->solution))(n)) * (old_solution[n]-(*(my_system->solution))(n));
-// 	old_solution[n] = (*(my_system->solution))(n);
-        
-//       }
-      
-      
-//       norm_error = sqrt(norm_error);
-      
-//       //------------------------ 
-      
-//        cout<<"Error_norm = " <<norm_error<<endl;
-       
-//      } //end for 
-//     cout<<endl;
-//     cout<<"End loop over lattice thermal conductivity"<<endl;	
-//     cout<<endl;   
-    
-//   }//end if
-  
-  
  
-
 }
 
 
@@ -389,7 +336,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     heat_model->re_init();   
 
 
-
     std::vector<double> heat_source;
     heat_model->get_total_heat_source(q_point,heat_source);
 
@@ -397,7 +343,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     heat_model->get_total_power_flux(q_point,flux_power);
 
     heat_model->get_thermal_conductivity(kappa);
-
 
     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
     { // loop over test function
@@ -652,15 +597,15 @@ MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   LinearImplicitSystem& system = *my_system;
 
-  DofMap& dof_map =  system.get_dof_map();
+  DofMap& dof_map = system.get_dof_map();
 
-  const NumericVector<double>&  solution = *(system.solution);
+  const NumericVector<double>& solution = *(system.solution);
 
   const unsigned int var = system.variable_number("T");
 
   FEType fe_type = dof_map.variable_type(var);
 
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type,true)); 
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true)); 
 
   // element shape functions
   const vector<vector<Real> >& phi = fe->get_phi();
@@ -675,9 +620,9 @@ MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   vector<unsigned int> dof_indices;
 
-  dof_map.dof_indices (elem, dof_indices);  
+  dof_map.dof_indices(elem, dof_indices);  
 
-  const unsigned int n_dofs   = dof_indices.size();
+  const unsigned int n_dofs = dof_indices.size();
 
         
 
@@ -686,7 +631,7 @@ MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
   
   ID subdomain = elem->subdomain_id();
   const Material* mat = _device->get_material(subdomain);
-  HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
+  HeatModel* heat_model = (dynamic_cast<HeatModel*>(mat->get_model(get_id())));
   heat_model->set_element(elem);     
   heat_model->set_side(-1);
   heat_model->re_init(); 
@@ -695,7 +640,6 @@ MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   for (unsigned int n = 0; n < np; n++)
   {
-
 
     double T = 0.0;
     std::vector<double> Jq(3);
@@ -725,14 +669,9 @@ MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
       
     }
 
-
      if (ids.count(TEMPERATURE))
-     {
-      values[n][TEMPERATURE] = T;
-      // std::cout<<T<<std::endl;
-
-     }
-
+       values[n][TEMPERATURE] = T;
+     
      if (ids.count(JQX))
       values[n][JQX] = Jq[0];
 
@@ -818,8 +757,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
 	legend.resize(legend.size() + 1);
 	legend[n_vars]=leg->second;
-
-      source_index[i].insert(leg->first);
+	source_index[i].insert(leg->first);
         n_vars++;
       }    
     }
@@ -843,7 +781,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
      unsigned int k = 0;
 
      if (variables.count("thermal") ||
-         variables.count("Wq")      ||
+         variables.count("ThermalFlux")      ||
          variables.count("PowerFlux") )
      {
      
@@ -931,7 +869,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
        
      }
     
-
+   
      int PF = -1;  
      if (n_vars>PF_temp)    
        PF = PF_temp;

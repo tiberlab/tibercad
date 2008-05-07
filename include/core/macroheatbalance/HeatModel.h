@@ -6,11 +6,10 @@
 #include "LatticeThermalConductivity.h"
 #include "SimulationInterface.h"
 #include "elem.h"
-#include "ParticleThermalConductivity.h"
 #include "point.h"
 #include "Constants.h"
 #include "HeatSourceInterface.h"
-#include "ThermalConductivityInterface.h"       
+
 
 //!Class that contains all the object, necessary for Heat Transport solver
 class HeatModel: public PhysicalModel
@@ -31,7 +30,7 @@ class HeatModel: public PhysicalModel
   void get_thermal_conductivity(Tensor2Sym& thermal_conductivity);
  
      //! Init all fields
-   void re_init();
+   void re_init(void);
 
    //!Set the current element
    void set_element(const Elem* elem);
@@ -93,9 +92,7 @@ class HeatModel: public PhysicalModel
    const Elem* _elem; 
   
    //! Current side  
-   //unsigned int _side;
-
-    int _side;
+   int _side;
 
    //!For particle solution
    std::set< ID >  dd_ID_kpart;
@@ -104,8 +101,6 @@ class HeatModel: public PhysicalModel
 
    model_options model_opt;
 
-   //!Iterator for thermal conductivity model
-   typedef std::map<ID, ThermalConductivityInterface*>::iterator outer_conductivity_iterator;
 
    //!Iterator for heat source model
    typedef std::map<ID, HeatSourceInterface*>::iterator outer_source_iterator;
@@ -119,9 +114,6 @@ class HeatModel: public PhysicalModel
    //!Heat flux source within a specific heat source model
    typedef std::map<ID,RealGradient>::iterator inner_flux_source_iterator;
  
-   //!Update particle thermal conductivity
-   void  update_particle_thermal_conductivity();
-
    //!Update lattice thermal conductivity
    void  update_lattice_thermal_conductivity(void); 
   
@@ -129,43 +121,23 @@ class HeatModel: public PhysicalModel
    double _temperature;
 
    //! Lattice thermal conductivity
-   Tensor2Sym _lattice_thermal_conductivity; 
-
-   //! Electron thermal conductivity
-   Tensor2Sym _electrons_thermal_conductivity; 
-   
-   //! Hole thermal conductivity
-   Tensor2Sym _holes_thermal_conductivity; 
+   Tensor2Sym _lattice_thermal_conductivity;  
  
    //! Lattice thermal conductivity model
    LatticeThermalConductivity* kappa;
 
-   //! Particle thermal conductivity model
-   ParticleThermalConductivity* kappa_carrier;
-
    //! Pointer to a heat source model
    HeatSourceInterface* _heat_source_interface;
- 
-   //!Thermal conductivity model map
-   std::map<ID, ThermalConductivityInterface*> _thermal_conductivity_models;
 
    //!Heat Source model map
    std::map<ID, HeatSourceInterface*> _heat_source_models;
  
-
    //! Add a heat source model 
    void add_heat_source_model(const std::string& model_name,
        			const ModelOptions& options = ModelOptions());
 
-   //! Add a thermal conductivity model
-    void add_thermal_conductivity_model(const std::string& model_name, 
-  			       const ModelOptions& options);
-
    //! Clear all heat source models
    void clear_heat_sources(void);
-
-    //! Clear thermal conductivity models
-   void clear_thermal_conductivity(void);
 
    //!copy constructor should not be used
     HeatModel (const HeatModel &  t) {};
@@ -201,10 +173,7 @@ void
 HeatModel::get_thermal_conductivity(Tensor2Sym& thermal_conductivity)
 {
   thermal_conductivity = _lattice_thermal_conductivity;
-    // +  _electrons_thermal_conductivity
-    // +  _holes_thermal_conductivity;
-  
-    
+   
 }
 
 

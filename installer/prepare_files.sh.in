@@ -162,11 +162,70 @@ make_deb () {
   fi
 
 
-  #sed -e "s/<INSTALLDIR>/\/usr\/share\/tibercad-$version/g" ${topdir}/installer/linux/tar/tibercad.sh > ${files}/bin/tibercad.sh
-  sed -e "s/<INSTALLDIR>/\/usr\/share\/tibercad/g" ${topdir}/installer/linux/tar/tibercad.sh > ${files}/bin/tibercad.sh
-  chmod a+x ${files}/bin/tibercad.sh
+  #sed -e "s/<INSTALLDIR>/\/usr\/share\/tibercad/g" ${topdir}/installer/linux/tar/tibercad.sh > ${files}/bin/tibercad.sh
+  cat > ${files}/bin/TiberCAD.sh <<EOF
+#!/bin/sh
+
+VER=$version
+
+# put your installation directory here (this is done automatically by the
+# installation script)
+TIBERCADROOT=/usr/share/tibercad
+
+
+# we will need some of our libraries in LD_LIBRARY_PATH
+TIBER_LD_LIBRARY_PATH=\${TIBERCADROOT}/lib
+
+
+# the program to call
+prog=\`basename \$0\`
+progname=""
+
+case \$prog in
+
+  tibercad*)
+    TIBER_LD_LIBRARY_PATH=\${TIBER_LD_LIBRARY_PATH}:\${TIBERCADROOT}/lib/tibermodels
+    progname="tibercad"
+    executable="\${TIBERCADROOT}/bin/\$progname"
+    ;;
+
+  gmsh*)
+    progname="gmsh"
+    executable="\${TIBERCADROOT}/contrib/gmsh-2.2.0/\$progname"
+    ;;
+
+  *)
+    echo "\${prog}: Unknown TiberCAD tool"
+    echo "Known programs are: tibercad, gmsh"
+    ;;
+
+esac
+
+
+# prepend out LD_LIBRARY_PATH stuff
+if [ -z \$LD_LIBRARY_PATH ]
+then
+  LD_LIBRARY_PATH=\$TIBER_LD_LIBRARY_PATH
+else
+  LD_LIBRARY_PATH=\${TIBER_LD_LIBRARY_PATH}:\$LD_LIBRARY_PATH
+fi
+
+export TIBERCADROOT LD_LIBRARY_PATH
+
+
+if [ -x \$executable ]
+then
+  exec \$executable \$@
+else
+  echo "Cannot execute \$progname. Perhaps broken installation?"
+fi
+
+EOF
+
+
+  chmod a+x ${files}/bin/TiberCAD.sh
   cd ${bindir}
-  ln -s ../share/tibercad/bin/tibercad.sh tibercad
+  ln -s ../share/tibercad/bin/TiberCAD.sh tibercad
   cd ../../..
 
   size=`du -s debfiles | awk '{print $1}'` 
