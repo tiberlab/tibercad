@@ -34,7 +34,7 @@ License::_public_key = "30819D300D06092A864886F70D010101050003818B00308187028181
 
 
 bool
-License::read_license_file(const std::string& licensefile, LicenseData& data)
+License::read_license_file(const string& licensefile, LicenseData& data)
 {
 
   fstream file;
@@ -117,12 +117,12 @@ License::read_license_file(const std::string& licensefile, LicenseData& data)
 
 
 bool
-License::create_license(std::string& licensefile, const std::string& private_key)
+License::create_license(string& licensefile, const string& holder,
+    const string& expiry, const char* private_key)
 {
   bool result = false;
 
   LicenseData data;
-  if (read_license_file(licensefile, data))
   {
 
     const char* header =
@@ -132,15 +132,15 @@ License::create_license(std::string& licensefile, const std::string& private_key
         "# Do not touch the lines below!\n" \
         "#\n";
 
-    string to_sign = data.holder + data.expiry;
+    string to_sign = holder + expiry;
 
     string signed_string;
     sign_string(private_key, to_sign, signed_string);
 
     ofstream out(licensefile.c_str());
     out << header
-      << "HOLDER " << data.holder << endl
-      << "EXPIRY " << data.expiry << endl
+      << "HOLDER " << holder << endl
+      << "EXPIRY " << expiry << endl
       << "LICENSE " << signed_string << endl
       << "END";
 
@@ -265,7 +265,7 @@ License::verify_string(const string& pubkey, const string& message,
 
 
 void
-License::sign_string(const string& privkey, const string& message,
+License::sign_string(const char* privkey, const string& message,
     string& signature)
 {
   StringSource privString(privkey, true, new HexDecoder);

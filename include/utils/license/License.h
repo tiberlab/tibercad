@@ -22,7 +22,8 @@ class License
     
     //! Create (sign) the license file
     static bool create_license(std::string& licensefile,
-        const std::string& private_key);
+        const std::string& holder, const std::string& expiry,
+        const char* private_key);
 
 
   private:
@@ -42,7 +43,7 @@ class License
     static bool verify_string(const std::string& pubkey,
         const std::string& message, const std::string& signature);
 
-    static void sign_string(const std::string& privkey,
+    static void sign_string(const char* privkey,
         const std::string& message, std::string& signature);
     
     static void hex_encode(const std::string& in, std::string& out);

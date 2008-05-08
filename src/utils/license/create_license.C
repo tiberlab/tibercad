@@ -2,7 +2,7 @@
 
 #include "License.h"
 
-
+#include <getopt.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -17,19 +17,49 @@ const char* private_key = "30820273020100300D06092A864886F70D01010105000482025D3
 
 void usage(void);
 
-
+/*
+ * Create a license file
+ */
 int main(int argc, char** argv)
 {
-
   if (argc == 1)
+  {
+    usage();
+    exit(0);
+  }
+
+  string filename("tibercad.lic");
+
+  int c;
+  extern char *optarg;
+  extern int optind, optopt;
+  while ((c = getopt(argc, argv, "f:")) != -1)
+  {
+    switch(c)
+    {
+      case 'f':
+        filename = optarg;
+        break;
+
+      case '?':
+      case ':':
+        usage();
+        break;
+    }
+  }
+  
+  // we need two obligatory arguments
+  if (argc < optind + 2)
   {
     usage();
     exit(1);
   }
 
-  string filename(argv[1]);
+  string holder(argv[optind]);
+  string expiry(argv[optind + 1]);
 
-  if (!License::create_license(filename, private_key))
+
+  if (!License::create_license(filename, holder, expiry, private_key))
   {
     cerr << "License creation failed" << endl;
     exit(1);
@@ -39,14 +69,13 @@ int main(int argc, char** argv)
   char* licfile = getenv("TIBERLICENSEFILE");
   setenv("TIBERLICENSEFILE", filename.c_str(), 1);
   if (!License::check_license())
+  {
     cerr << "Ouch... something went wrong, could not successfully "
       << "verify signature." << endl
       << "Or did you set the expiry date in the past?" << endl;
+    exit(1);
+  }
 
-  if (licfile != NULL)
-    setenv("TIBERLICENSEFILE", licfile, 1);
-  else
-    unsetenv("TIBERLICENSEFILE");
 
   return 0;
 }
@@ -54,7 +83,18 @@ int main(int argc, char** argv)
 
 void usage(void)
 {
-  cout << "Usage:" << endl << endl
-       << "       create_license <filename>" << endl << endl;
+  cout << "Usage:" << endl
+       << endl
+       << "       create_license [-f filename] holder expiry_date" << endl
+       << endl
+       << "       Format for expiry date: YYYY-MM-DD" << endl
+       << "       holder has to be quoted if containing spaces" << endl
+       << endl
+       << "       Default filename is 'tibercad.lic'" << endl
+       << "       NOTE: existing files will be overwritten without warning!" << endl
+       << endl
+       << "       Example:" << endl
+       << "           $ create_license \"University of Rome\" 2008-08-31" << endl
+       << endl;
 }
 
