@@ -142,6 +142,7 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
 
 
   quantum_model_opts.set_option("k_vector",  k_vector);
+
   quantum_model_opts["job"] = "eigenstates";
 
   _quantum_model_initial_state->set_options(quantum_model_opts);

@@ -267,7 +267,7 @@ void OpticsKP::do_solve()
   unsigned int n2 =  _final_eigen_state_numbers.size();
   
   calculate_P_matrix_elements( );
-
+ 
   //temporary_solution----------------------------------------------------
 /*
   std::ostringstream os3;
@@ -290,9 +290,20 @@ void OpticsKP::do_solve()
 */
   //------------------------------------------------------------------------
 
- 
+ /*
+  for (int i = 0; i < n1; i++) 
+    for (int j = 0; j < n2; j++) 
+    {
+     
+      for (int p = 0; p < 3; p++) 
+      {
+	cerr << p << "  " << i  <<"   " << j   <<  P_matrix[p][i][j] << "\n";
 
 
+      }
+      
+    }
+*/
 
 }
 
@@ -359,9 +370,11 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
     
 
+    
+
       Complex Me = P_matrix[0][i][j] * polariz(1) + P_matrix[1][i][j] * polariz(2) +  P_matrix[2][i][j] * polariz(3);
 
-      
+     
       
       MeshBase::const_element_iterator       el     = Energy.active_elements_begin();
       const MeshBase::const_element_iterator end_el = Energy.active_elements_end();
@@ -864,25 +877,8 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 
  double   Emin,  Emax,dE;
 
-  vector<double> polarization;
-  mod_spectrum.get_option("polarization", polarization);
 
-  Tensor1 polariz;
-
-  if (polarization.size() == 3)
-  {
-    polariz(1) = polarization[0];
-    polariz(2) = polarization[1];
-    polariz(3) = polarization[2];
-    
-    if (norm (polariz) != 0)
-      polariz = polariz/norm( polariz );
-    else
-      InitFailedException("OpticsKP: polarization vector must be non zero");
-  }
-  else
-    InitFailedException("OpticsKP: polarization vector must be defined\n");
-
+ 
 
  if (mod_spectrum.find_option("Emin"))
     Emin = mod_spectrum.get_option("Emin", 0.0);
@@ -928,11 +924,27 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   //calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz, 
   //                         std::map<const Elem*, double>& spectrum ) 
 
-  std::map<const Elem*, double> spectrum;
-  spectrum.clear();
+  //std::map<const Elem*, double> spectrum;
+
+  std::map<const Elem*, double> spectrum_x;
+  std::map<const Elem*, double> spectrum_y;
+  std::map<const Elem*, double> spectrum_z;
+
+  Tensor1 polariz_x(0); polariz_x(1) = 1.0;
+  Tensor1 polariz_y(0); polariz_y(2) = 1.0;
+  Tensor1 polariz_z(0); polariz_z(3) = 1.0;
 
 
-  calculate_spectrum( *_energy_mesh, Gamma,polariz, spectrum ) ;
+  
+
+
+  // calculate_spectrum( *_energy_mesh, Gamma,polariz, spectrum ) ;
+
+  calculate_spectrum( *_energy_mesh, Gamma,polariz_x, spectrum_x ) ;
+  calculate_spectrum( *_energy_mesh, Gamma,polariz_y, spectrum_y ) ;
+  calculate_spectrum( *_energy_mesh, Gamma,polariz_z, spectrum_z ) ;
+
+  
 
 
 
@@ -941,38 +953,61 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   string dimension;
   double area_dim_factor = 1;
 
-  vector<string> names(1,"power_density_k0[W/eV" + dimension + "]"); 
+ 
+
+  vector<string> names(3);
+
+  names[0] = "power_density_k0_Px[W/eV]";
+  names[1] = "power_density_k0_Py[W/eV]";
+  names[2] = "power_density_k0_Pz[W/eV]";
+ 
 
   vector<double> results;
+
+  {
+    MeshBase::const_element_iterator       elem_it  = _energy_mesh->active_elements_begin();
+    const MeshBase::const_element_iterator elem_end = _energy_mesh->active_elements_end();
+    int n = 0;
+    for(;elem_it != elem_end; ++elem_it)
+      n++;
+    
+    results.resize(n*3);
+  }
 
 
   MeshBase::const_element_iterator       elem_it  = _energy_mesh->active_elements_begin();
   const MeshBase::const_element_iterator elem_end = _energy_mesh->active_elements_end();
-
+  int point = 0;
   for(;elem_it != elem_end; ++elem_it)
   {
     const Elem* el = *elem_it;
     double value;
-    map<const Elem*, double>::iterator res_it = spectrum.find(el);
-    if (res_it != spectrum.end())
-    {
+   
 
-      //  kdim = 0 
-      value = res_it->second; //[ 1/a.u._of_time/((bohr_radius)^kdim)]
-      value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
-      value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
-      value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
-	 
-    }
-    else
-    {
-      cerr << "WARNING!!!!";
-    }
-       
+    //--x - polarization
+    value = spectrum_x[el];
+    value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
+    value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
+    value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
+    results[3*point + 0] = value;
 
+    //--y - polarization
+    value = spectrum_y[el];
+    value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
+    value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
+    value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
+    results[3*point + 1] = value;
 
-    results.push_back(value);
+    //--z - polarization
+    value = spectrum_z[el];
+    value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
+    value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
+    value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
+    results[3*point + 2] = value;
 
+   
+
+    point++;
   } 
 
 
