@@ -45,8 +45,11 @@ extern "C"
     KSPGetConvergedReason(ksp, &reason);
 
 #ifdef DEBUG
+# if (((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
+      && (PETSC_VERSION_SUBMINOR < 3))) 
     if (its == 0)
       std::cerr << "it " << its << ", fnorm = " << fnorm << "\n";
+# endif
 #endif
 
     if (fnorm != fnorm)
@@ -485,7 +488,7 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
   KSPGetPC(ksp, &pc);
 
   // get the type of preconditioner
-  PCType pc_type;
+  PCType pc_type = 0;
   PCGetType(pc, &pc_type);
 
   // - the very first time, there's no preconditioner yet

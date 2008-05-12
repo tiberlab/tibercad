@@ -80,14 +80,17 @@ TiberNonlinPetsc::solve(void)
   KSPType ksp;
   switch (_solver_type)
   {
-    case BICGSTAB:
-      ksp = KSPBCGSL;
-      break;
     case BICG:
       ksp = KSPBCGS;
       break;
+      
     case GMRES:
       ksp = KSPGMRES;
+      break;
+      
+    case BICGSTAB:
+    default:
+      ksp = KSPBCGSL;
       break;
   }
   _solver->set_ksp_type(ksp);
@@ -95,14 +98,25 @@ TiberNonlinPetsc::solve(void)
   PCType pc;
   switch (_preconditioner_type)
   {
-    case ILU_PRECOND:
-      pc = PCILU;
+    case IDENTITY_PRECOND:
+      pc = PCNONE;
       break;
+
     case JACOBI_PRECOND:
       pc = PCJACOBI;
       break;
+
     case USER_PRECOND:
       pc = PCCOMPOSITE;
+      break;
+
+    case LU_PRECOND:
+      pc = PCLU;
+      break;
+
+    case ILU_PRECOND:
+    default:
+      pc = PCILU;
       break;
   }
   _solver->set_pc_type(pc);

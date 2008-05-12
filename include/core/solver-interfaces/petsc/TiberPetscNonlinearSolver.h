@@ -157,7 +157,7 @@ void
 TiberPetscNonlinearSolver<T>::set_ksp_options(double rtol,
     unsigned int max_it)
 {
-  set_ksp_options(rtol, 1e-15, max_it);
+  set_ksp_options(rtol, 1e-50, max_it);
 }
 
 template <typename T>

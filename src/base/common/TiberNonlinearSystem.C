@@ -29,6 +29,7 @@ TiberNonlinearSystem::TiberNonlinearSystem(EquationSystems& es,
   _nonlin_abs_tol(1e-15),
   _nonlin_max_it(20),
   _lin_tol(1e-6),
+  _lin_abs_tol(1e-50),
   _lin_max_it(500),
   _solver_type(BICGSTAB),
   _preconditioner_type(ILU_PRECOND)

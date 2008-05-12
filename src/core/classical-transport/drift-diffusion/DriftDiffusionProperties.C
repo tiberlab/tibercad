@@ -737,7 +737,6 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
       _pd->ionized_donor_density_derivative - 
       _pd->ionized_acceptor_density_derivative;
 
-
     // At low temperatures everything is very sensitive on dx, so we don't
     // allow it to be bigger than k*T. At high temperatures this should not
     // have any impact

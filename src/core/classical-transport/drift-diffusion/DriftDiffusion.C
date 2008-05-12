@@ -1046,7 +1046,10 @@ DriftDiffusion::parse_const_options(void)
     solver_params.pc_type = CHOLESKY_PRECOND;
   else if (pc == "eisenstat")
     solver_params.pc_type = EISENSTAT_PRECOND;
+  else if (pc == "none")
+    solver_params.pc_type = IDENTITY_PRECOND;
 
+  cerr << "pctype = " << solver_params.pc_type << endl;
 }
 
 

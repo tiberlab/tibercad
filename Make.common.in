@@ -99,6 +99,7 @@ ifdef PROFILE
 endif
 ifeq ($(METHOD),dbg)
   FCFLAGS += -g
+  CXXFLAGS += -Woverloaded-virtuals
 endif
 
 #LDFLAGS += -Wl,-rpath,$(libdir)/lib -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib

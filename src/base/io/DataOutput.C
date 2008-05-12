@@ -10,6 +10,7 @@
 
 
 #include "mesh.h"
+#include "gmsh_io.h"
 
 
 DataOutput::DataOutput(const Mesh& mesh, const std::string& format)
@@ -27,7 +28,6 @@ DataOutput::write_nodal_data(const std::string& filename,
     const std::vector<std::string>& legend)
 {
   // default is GMV
-  
   if (_format == "ise")
     TecplotIO(*_mesh).write_nodal_data(filename + ".plt", data, legend);
   else if (_format == "grace")
@@ -36,6 +36,8 @@ DataOutput::write_nodal_data(const std::string& filename,
     GnuPlotIO(*_mesh).write_nodal_data(filename + ".dat", data, legend);
   else if (_format == "vtk")
     TiberVTKIO(*_mesh).write_nodal_data(filename + ".vtk", data, legend);
+  else if (_format == "gmsh")
+    GmshIO(*_mesh).write_nodal_data(filename + ".msh", data, legend);
   else
     GMVIO(*_mesh).write_nodal_data(filename + ".gmv", data, legend);
 }
