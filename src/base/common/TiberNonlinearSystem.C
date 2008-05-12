@@ -82,3 +82,32 @@ TiberNonlinearSystem::create_nonlinear_system(EquationSystems& es,
     throw InitFailedException(s);
   }
 }
+
+
+TiberNonlinearSystem*
+TiberNonlinearSystem::create(EquationSystems& es,
+    const std::string& sysname, const ModelOptions& options)
+{
+  TiberNonlinearSystem* sys = NULL;
+
+  std::string type(options.get_option("nonlinear_solver", "petsc"));
+  if (type == "tiber")
+    sys = &(es.add_system<TiberNonlinPetsc>(sysname));
+  else if (type == "petsc")
+    sys = &(es.add_system<TiberNonlinLS>(sysname));
+  else if (type == "bankrose")
+    sys = &(es.add_system<TiberNonlinBR>(sysname));
+  else
+  {
+    std::string s = "Unknown type '" +
+      type + "' for nonlinear system system " + sysname;
+    throw InitFailedException(s);
+  }
+
+  assert(sys != NULL);
+
+  sys->_linear_solver = options.get_option("linear_solver", "petsc");
+
+  return sys;
+}
+

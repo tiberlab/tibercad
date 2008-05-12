@@ -4,8 +4,9 @@
 #define _TIBERNONLINEARSYSTEM_H_
 
 //#include "ModelOptions.h"
+#include "TiberEqSystem.h"
 
-#include "implicit_system.h"
+//#include "implicit_system.h"
 #include "enum_solver_type.h"
 #include "enum_preconditioner_type.h"
 
@@ -25,7 +26,7 @@ class EquationSystems;
  * The relaxation factors \f$t_k\f$ are currently calculated using a
  * standard line search algorithm.
  */
-class TiberNonlinearSystem : public ImplicitSystem
+class TiberNonlinearSystem : public TiberEqSystem
 {
 
   public:
@@ -89,6 +90,18 @@ class TiberNonlinearSystem : public ImplicitSystem
     static TiberNonlinearSystem& create_nonlinear_system(EquationSystems& es,
         const std::string& sysname, const std::string& type,
         const std::string& linear_solver = "petsc");
+    
+
+    //! Create a nonlinear system
+    /*!
+     * \param es the EquationSystems object where the new system will be added
+     * \param sysname the name of the new system
+     * \param type the type of system to create as string
+     * \return a reference to the newly created system
+     */
+    static TiberNonlinearSystem* create(EquationSystems& es,
+        const std::string& sysname, const ModelOptions& options);
+
 
 
     /*! \copydoc ImplicitSystem::clear() */
@@ -217,7 +230,7 @@ class TiberNonlinearSystem : public ImplicitSystem
   private:
 
     //! The parent class type
-    typedef ImplicitSystem Parent;
+    typedef TiberEqSystem Parent;
 
 };
 
