@@ -89,7 +89,7 @@ void DftbpWrapper::getchargesperatom(int nAtom, double* charges) {
 }
 
 
-void DftbpWrapper::getmatrix(int nrow, int ncol, int nzval, int isreal, int *colind, int *rowpnt, double *val, std::string matrix, double *kPoint) {
+void DftbpWrapper::getmatrix(int &nrow, int &ncol, int &nzval, int &isreal, int* &colind, int* &rowpnt, double* &val, std::string matrix, double *kPoint) {
 
   f77_dftbp_recreatecsrbuffer(_handler, nrow, ncol, nzval, isreal);
   int nrow1 = nrow + 1;
@@ -102,15 +102,20 @@ void DftbpWrapper::getmatrix(int nrow, int ncol, int nzval, int isreal, int *col
 
   if (kPoint == NULL) {
 
+    std::cerr << "Pointer in Wrapper " << colind << std::endl;
     colind = new int[nzval];
     rowpnt = new int[nrow1];
     val = new double[nzval];
+ std::cerr << "Pointer in Wrapper " << colind << std::endl;
 
     if (isreal == 0) std::cerr << "ERROR: requested a real H or S while complex calculation is computed" << std::endl;   
 
     if (matrix.compare("H") == 0) {
-      
+        std::cerr << "Getting real Hamiltonian " << std::endl;
       f77_dftbp_getrcsrhamiltonian (_handler, nrow1, nzval, colind, rowpnt, val);
+ std::cout << "First value of H " << colind[0] << " " << rowpnt[0] << " " << val[0] << " " << std::endl;
+  std::cout << "Second value of H " << colind[1] << " " << rowpnt[0] << " " << val[1] << " " << std::endl;
+std::cout << "Number of rows is " << nrow << std::endl;
 
     }
 
@@ -137,7 +142,7 @@ void DftbpWrapper::getmatrix(int nrow, int ncol, int nzval, int isreal, int *col
     assert(isreal==0);
 
     if (matrix.compare("H") == 0) {
-
+      
      f77_dftbp_getzcsrhamiltonian (_handler, kPoint, nrow1, nzval, colind, rowpnt, val);
 
     }
@@ -153,6 +158,12 @@ void DftbpWrapper::getmatrix(int nrow, int ncol, int nzval, int isreal, int *col
   }
 
 
-  std::cout << "First value of H " << colind[0] << " " << rowpnt[0] << " " << val[0] << " " << val[1] << std::endl;
-
+  std::cout << "First value of H " << colind[0] << " " << rowpnt[0] << " " << val[0] << " " << std::endl;
+  std::cout << "Second value of H " << colind[1] << " " << rowpnt[0] << " " << val[1] << " " << std::endl;
+  std::cout << "Last value of H " << colind[nzval - 1] << " " << rowpnt[nrow1] << " " << val[nzval - 1] << " " << std::endl;
+std::cout << "Number of rows is " << nrow << std::endl;
 }
+
+
+
+

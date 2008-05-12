@@ -275,11 +275,13 @@ AtomisticStructure::read_structure(const std::string& path)
 
       line_string >> record;
 
-      if ( (record.compare("S") == 0) || (record.compare("s") == 0)) 
+   if ( (record.compare("S") == 0) || (record.compare("s") == 0)) 
 	is_periodical = true;
       else  if ( (record.compare("C") == 0) && (record.compare("c") == 0))
+	is_periodical = false;
+      else
 	std::cerr << "Warning (in GEN file at first line): Cluster (C) or Supercell (S) must be specified. By default a Cluster (no periodicity) is considered. \n";
-
+     
       getline(file, line);
 
       //This line clean stringstream in a safe way 

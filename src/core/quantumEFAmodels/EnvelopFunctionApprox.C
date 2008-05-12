@@ -434,7 +434,6 @@ EnvelopFunctionApprox::EnvelopFunctionApprox()
 void EnvelopFunctionApprox::parse_options()
 {
  
-
   EigenvalueProblem::parse_options();
 
   const ModelOptions& mod_opt = get_options();
@@ -570,7 +569,7 @@ void EnvelopFunctionApprox::parse_options()
     throw InitFailedException( "EnvelopeFunctionApprox: Incorrect job " + job_name );  
   //---------------------------------------------------------------------------------//
   std::string  heat_model_name = mod_opt.get_option("heat_model","");
-  
+
   if ( heat_model_name != "" )
   {
     temperature_simulation  = find_simulation ( heat_model_name );

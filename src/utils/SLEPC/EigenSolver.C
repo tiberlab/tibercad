@@ -71,7 +71,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
 
-
+  ierr = MatGetSize(A, &_size_of_matrix, NULL);
    
     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.S_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
 
@@ -289,7 +289,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
     ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
 
-
+  ierr = MatGetSize(A, &_size_of_matrix, NULL);
   
 
   }

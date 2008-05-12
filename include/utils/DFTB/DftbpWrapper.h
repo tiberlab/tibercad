@@ -4,6 +4,7 @@
 #include "dftbp.h"
 #include <iostream>
 #include <assert.h>
+#include <complex>
 
 //-----------------------------------------------------------------------
 
@@ -105,6 +106,14 @@ public:
   void getchargesperatom (int nAtom, double* charges);
 
 
+  //!Get DFTB instance handler
+  inline
+  const int* get_handler(void)
+  {
+    return _handler;
+  };
+
+
   //!Get Real/Complex Hamiltonian/Overlap in CSR sparse format
   /*!
    * \param nrow (out) number of rows
@@ -118,9 +127,9 @@ public:
    * \param kPoint[3] (in) if not specified, a real matrix in Gamma point is expected. If specified, H or S for that K point is given  
    * WARNING: colind, rowpnt and val are internally allocated
    */
-  void getmatrix(int nrow, int ncol, int nzval, int isreal, int *colind, int *rowpnt, double *val, std::string matrix, double *kPoint = NULL);
+  void getmatrix(int &nrow, int &ncol, int &nzval, int &isreal, int* &colind, int* &rowpnt, double* &val, std::string matrix, double *kPoint = NULL);
 
-
+  
 private:
   int _handler[DFTBP_HSIZE];
 
