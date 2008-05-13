@@ -2,12 +2,12 @@
 
 #include "TiberEqSystem.h"
 #include "TiberNonlinearSystem.h"
+#include "TiberLinearSystem.h"
 #include "InitFailedException.h"
 
-TiberEqSystem::TiberEqSystem(EquationSystems& es,
-    const std::string& name, const unsigned int number)
-  : ImplicitSystem(es, name, number),
-    _type(LINEAR)
+
+TiberEqSystem::TiberEqSystem(void)
+  : _type(LINEAR)
 {
 }
 
@@ -42,6 +42,7 @@ TiberEqSystem::create(EquationSystems& es,
   switch (type)
   {
     case LINEAR:
+      sys = TiberLinearSystem::create(es, sysname, options);
       break;
 
     case NONLINEAR:

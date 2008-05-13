@@ -6,8 +6,6 @@
 
 #include "ModelOptions.h"
 
-#include "implicit_system.h"
-
 #include <string>
 
 class EquationSystems;
@@ -17,7 +15,7 @@ class EquationSystems;
  * This base class provides some more functionality than the libMesh classes
  * which are useful in TiberCAD.
  */
-class TiberEqSystem : public ImplicitSystem
+class TiberEqSystem
 {
 
   public:
@@ -58,7 +56,7 @@ class TiberEqSystem : public ImplicitSystem
     //! Create a system
     /*!
      * \param[in] es the EquationSystems object
-     * \param[in] sysname the name of teh new system
+     * \param[in] sysname the name of the new system
      * \param[in] type the type of system (linear, nonlinear)
      * \param[in] options the options for the new system
      * \return a reference to the newly created system
@@ -84,14 +82,18 @@ class TiberEqSystem : public ImplicitSystem
   protected:
 
     //! Constructor
-    TiberEqSystem(EquationSystems& es,
-                  const std::string& name,
-                  const unsigned int number);
+    TiberEqSystem(void);
 
 
     //! Get access to the options
     ModelOptions& get_options(void);
 
+
+    //! Set the system type
+    /*!
+     * Call this from derived classes to set the correct system type
+     */
+    void set_type(SystemType type);
 
 
   private:
@@ -142,6 +144,13 @@ TiberEqSystem::get_type(void) const
   return _type;
 }
 
+
+inline
+void
+TiberEqSystem::set_type(SystemType type)
+{
+  _type = type;
+}
 
 
 #endif // _TIBEREQSYSTEM_H_

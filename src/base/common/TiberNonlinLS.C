@@ -77,6 +77,7 @@ TiberNonlinLS::user_initialization(void)
    
   if (_solver == NULL)
   {
+    //_solver = TiberLinearSolver::create(get_options());
     _solver = TiberLinearSolver::create(_linear_solver);
 
     if (_solver == NULL)

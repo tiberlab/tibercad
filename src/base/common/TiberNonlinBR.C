@@ -74,7 +74,6 @@ TiberNonlinBR::clear(void)
 void
 TiberNonlinBR::user_initialization(void)
 {
-   
   if (_solver == NULL)
   {
     _solver = TiberLinearSolver::create(_linear_solver);

@@ -54,6 +54,14 @@ class TiberNonlinPetsc : public TiberNonlinearSystem
     //! The nonlinear solver to be used
     TiberPetscNonlinearSolver<double>* _solver;
 
+
+    //! Set up PC (preconditioner)
+    void setup_pc(void);
+
+
+    //! Set up KSP (Krylov solver)
+    void setup_ksp(void);
+
 };
 
 

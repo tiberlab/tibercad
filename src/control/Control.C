@@ -460,6 +460,10 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
     // read options for this simulation (from Solver section)
     ModelOptions solveropts(parser.read_parameters("Solver", modelname));
+
+    // we put the parameters in the $Solver section as submodel parameters
+    // so we can hand them over in a cleaner way
+    solveropts.add_submodel("$Solver", solveropts);
     
     // get the user defined name (if defined...)
     const string& simulation_name = simopts.get_option("simulation_name", "");
@@ -473,6 +477,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         solveropts += parser.read_parameters("Solver", simulation_name);
     }
 
+    // TODO we should change the handling of options
     solveropts += simopts;
     solveropts.delete_option("simulation_name");
     solveropts.delete_option("physical_regions");

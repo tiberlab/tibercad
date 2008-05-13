@@ -3,30 +3,16 @@
 #ifndef _TIBERNONLINEARSYSTEM_H_
 #define _TIBERNONLINEARSYSTEM_H_
 
-//#include "ModelOptions.h"
 #include "TiberEqSystem.h"
 
-//#include "implicit_system.h"
+#include "implicit_system.h"
 #include "enum_solver_type.h"
 #include "enum_preconditioner_type.h"
 
 
-template<typename> class LinearSolver;
-class EquationSystems;
 
-
-//! A generic class to solve nonlinear systems
-/*!
- * This implementation uses an approximate Newton scheme to solve a
- * nonlinear system
- * \f[g'(x^k)\delta x^k = -g(x^k)\f]
- * with update strategy
- * \f[x^{k+1} = x^k + t_k\delta x^k
- * 
- * The relaxation factors \f$t_k\f$ are currently calculated using a
- * standard line search algorithm.
- */
-class TiberNonlinearSystem : public TiberEqSystem
+//! Base class for TiberCAD nonlinear systems
+class TiberNonlinearSystem : public TiberEqSystem, public ImplicitSystem
 {
 
   public:
@@ -49,13 +35,6 @@ class TiberNonlinearSystem : public TiberEqSystem
     };
 
     
-    //! The type of norms
-    enum NormType
-    {
-      MAX_NORM,  //< the maximum norm
-      l2_NORM,   //< the l2 norm
-    };
-
     
     //! The type of the assembly routine
     typedef void (*AssemblyRoutine)(const NumericVector<Number> &X,
@@ -96,8 +75,8 @@ class TiberNonlinearSystem : public TiberEqSystem
     /*!
      * \param es the EquationSystems object where the new system will be added
      * \param sysname the name of the new system
-     * \param type the type of system to create as string
-     * \return a reference to the newly created system
+     * \param options the options for this system
+     * \return a pointer to the newly created system
      */
     static TiberNonlinearSystem* create(EquationSystems& es,
         const std::string& sysname, const ModelOptions& options);
@@ -229,8 +208,6 @@ class TiberNonlinearSystem : public TiberEqSystem
 
   private:
 
-    //! The parent class type
-    typedef TiberEqSystem Parent;
 
 };
 

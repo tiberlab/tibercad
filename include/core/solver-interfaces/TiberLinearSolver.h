@@ -8,6 +8,7 @@
 // Libmesh includes
 #include "linear_solver.h"
 
+class ModelOptions;
 
 
 //! The TiberCAD linear solver interface to PETSc
@@ -32,6 +33,10 @@ class TiberLinearSolver : public LinearSolver<Number>
     
     //! Create a linear solver
     static TiberLinearSolver* create(const std::string& type);
+
+    
+    //! Create a linear solver
+    static TiberLinearSolver* create(const ModelOptions& options);
     
 
     //! Release all memory and clear data structures.
@@ -48,6 +53,10 @@ class TiberLinearSolver : public LinearSolver<Number>
 
     //! Set the options for the linear solver
     void set_ksp_options(double rtol, double atol, unsigned int max_it = 1000);
+
+
+    //! Set options
+    void set_options(const ModelOptions& options);
 
 
     //! Call the  solver.
@@ -76,16 +85,29 @@ class TiberLinearSolver : public LinearSolver<Number>
           const unsigned int m_its) = 0;
 
 
+    //! Get the relative linear tolerance
+    double get_linear_rtol();
+
+    //! Get the absolute linear tolerance
+    double get_linear_atol();
+
+    //! Get the maximum number of iterations
+    int get_linear_max_it();
+
   protected:
 
-    double get_linear_rtol();
-    double get_linear_atol();
-    int get_linear_max_it();
+    //! Parse the options for solver specific stuff
+    virtual void parse_options(const ModelOptions& options) { };
 
   private:
 
+    //! The relative linear tolerance
     double _linear_rtol;
+
+    //! The absolute linear tolerance
     double _linear_atol;
+      
+    //! The maximum number of iterations
     int _linear_max_it;
 
 };

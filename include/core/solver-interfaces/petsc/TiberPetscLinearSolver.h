@@ -178,29 +178,7 @@ PC TiberPetscLinearSolver::get_pc(void)
 {
   return _pc;
 }
-/*
-template <typename T>
-inline
-void
-TiberPetscLinearSolver<T>::set_ksp_options(double rtol,
-    unsigned int max_it)
-{
-  set_ksp_options(rtol, 1e-50, max_it);
-}
 
-
-
-template <typename T>
-inline
-void
-TiberPetscLinearSolver<T>::set_ksp_options(double rtol, double atol,
-    unsigned int max_it)
-{
-  _linear_rtol = rtol;
-  _linear_atol = atol;
-  _linear_max_it = max_it;
-}
-*/
 
 
 

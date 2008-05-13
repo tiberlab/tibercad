@@ -59,6 +59,54 @@ TiberNonlinPetsc::clear(void)
 
 
 void
+TiberNonlinPetsc::setup_pc(void)
+{
+  const string& pc = get_options()["pc_type"];
+  if ((pc == "") || (pc == "ilu"))
+    _solver->set_pc_type(PCILU);
+  else if (pc == "lu")
+    _solver->set_pc_type(PCLU);
+  else if (pc == "jacobi")
+    _solver->set_pc_type(PCJACOBI);
+  else if (pc == "composite")
+    _solver->set_pc_type(PCCOMPOSITE);
+  else if (pc == "none")
+    _solver->set_pc_type(PCNONE);
+  else if (pc == "cholesky")
+    _solver->set_pc_type(PCCHOLESKY);
+  else
+  {
+    cerr << "PETSc nonlinear solver: unknown preconditioner \'"
+      << pc << "\'. Falling back to \'ilu\'" << endl;
+    _solver->set_pc_type(PCILU);
+  }
+}
+
+
+
+void
+TiberNonlinPetsc::setup_ksp(void)
+{
+  const string& ksp = get_options()["ksp_type"];
+  if ((ksp == "") || (ksp == "bcgsl"))
+    _solver->set_ksp_type(KSPBCGSL);
+  else if (ksp == "bcgs")
+    _solver->set_ksp_type(KSPBCGS);
+  else if (ksp == "gmres")
+    _solver->set_ksp_type(KSPGMRES);
+  else if (ksp == "pconly")
+    _solver->set_ksp_type(KSPPREONLY);
+  else
+  {
+    cerr << "PETSc nonlinear solver: unknown Krylov method \'"
+      << ksp << "\'. Falling back to \'bcgsl\'" << endl;
+    _solver->set_ksp_type(KSPBCGSL);
+  }
+}
+
+
+
+void
 TiberNonlinPetsc::solve(void)
 {
 

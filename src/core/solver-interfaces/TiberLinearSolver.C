@@ -7,12 +7,25 @@
 # include "PardisoLinearSolver.h"
 #endif
 #include "InitFailedException.h"
+#include "ModelOptions.h"
 
 
 TiberLinearSolver*
 TiberLinearSolver::create(const std::string& type)
 {
+  ModelOptions opts;
+  opts["linear_solver"] = type;
+  
+  return create(opts);
+}
+ 
+
+TiberLinearSolver*
+TiberLinearSolver::create(const ModelOptions& options)
+{
   TiberLinearSolver* solver = NULL;
+
+  std::string type(options.get_option("linear_solver", "petsc"));
 
   if (type == "petsc")
     solver = new TiberPetscLinearSolver();
@@ -33,4 +46,14 @@ TiberLinearSolver::create(const std::string& type)
 
   return solver;
 }
-        
+         
+
+void
+TiberLinearSolver::set_options(const ModelOptions& options)
+{
+  _linear_rtol = options.get_option("lin_rel_tol", _linear_rtol);
+  _linear_atol = options.get_option("lin_abs_tol", _linear_atol);
+  _linear_max_it = options.get_option("lin_max_it", _linear_max_it);
+
+  parse_options(options);
+}

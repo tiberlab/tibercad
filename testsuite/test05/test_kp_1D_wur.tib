@@ -235,7 +235,7 @@ $Solver
     nonlin_rel_tol = 1e-10
     nonlin_abs_tol = 1e-10
     nonlin_step_tol = 1e-9
-    ls_max_step = 4
+    ls_max_step = 40
     #ls_type = none
     discretization = fem
     integration_order = 2

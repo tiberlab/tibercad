@@ -1049,7 +1049,6 @@ DriftDiffusion::parse_const_options(void)
   else if (pc == "none")
     solver_params.pc_type = IDENTITY_PRECOND;
 
-  cerr << "pctype = " << solver_params.pc_type << endl;
 }
 
 

@@ -20,7 +20,8 @@ using namespace std;
 
 TiberNonlinearSystem::TiberNonlinearSystem(EquationSystems& es,
     const string& name, const unsigned int number)
-: Parent(es, name, number),
+: TiberEqSystem(),
+  ImplicitSystem(es, name, number),
   _n_nonlin_iterations(0),
   _final_residual_norm(1e20),
   _last_step_size(1e20),
@@ -34,6 +35,7 @@ TiberNonlinearSystem::TiberNonlinearSystem(EquationSystems& es,
   _solver_type(BICGSTAB),
   _preconditioner_type(ILU_PRECOND)
 {
+  set_type(NONLINEAR);
 }
 
 
@@ -105,8 +107,7 @@ TiberNonlinearSystem::create(EquationSystems& es,
   }
 
   assert(sys != NULL);
-
-  sys->_linear_solver = options.get_option("linear_solver", "petsc");
+  sys->set_options(options);
 
   return sys;
 }
