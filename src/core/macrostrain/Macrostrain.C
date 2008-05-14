@@ -608,9 +608,7 @@ void Macrostrain::define_fixed_nodes()
 void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 				     const std::string& system_name)
 {
-
   static_this->do_assemble( es, system_name);
-
 }
 
 
@@ -629,7 +627,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
   if (verbose > 0) 
   {
-    cout << "Siumulation " << get_name() << " is starting the matrix assembly << \n";
+    cout << "Simulation " << get_name() << " is starting the matrix assembly \n" << flush ;
   }
 
 
@@ -1371,37 +1369,35 @@ void Macrostrain::do_assemble(EquationSystems& es,
 }
 
 */
-  //-----------------------------------------------------------------------
-  //Application of periodicity constraints
-
-
-
-  //-----------------------------------------------------------------------
-  //dof_map.print_dof_constraints(); 	  	
-
-//   system.matrix->print();
-
+   //-----------------------------------------------------------------------
+   //Application of periodicity constraints
    
+
+
+   //-----------------------------------------------------------------------
+   //dof_map.print_dof_constraints(); 	  	
+
+   //   system.matrix->print();
+
+   // system.rhs->print();  
  
 
-#ifdef DEBUG
-  std:: cout<< "matrix is done \n";  
+   if (verbose > 4)
+   {
+     std:: cout<< "matrix is done \n";  
    
-  // system.rhs->print();
-
-
-  std:: cout << "Active dofs number   " << system.n_active_dofs()   	<< "\n";
-
-  std:: cout << "Total dofs number   " << system.n_dofs()   	<< "\n";
-
-  std:: cout << "Constraint dofs number " <<  system.n_constrained_dofs()   	<< "\n";
-#endif
-      
-  if (verbose > 0) 
-  {
-    cout << "Siumulation " << get_name() << " has finished the matrix assembly << \n";
+     std:: cout << "Active dofs number   " << system.n_active_dofs()   	<< "\n";
+     
+     std:: cout << "Total dofs number   " << system.n_dofs()   	<< "\n";
+     
+     std:: cout << "Constraint dofs number " <<  system.n_constrained_dofs()   	<< "\n";
+   }
+ 
+   if (verbose > 0) 
+   {
+     cout << "Simulation " << get_name() << " has finished the matrix assembly << \n" << flush;
     
-  }
+   }
 
 }
 
@@ -1511,7 +1507,7 @@ void Macrostrain::do_solve()
 
   make_nodes_periodic();
 
- 
+  init_u_node();
   
   init_substrate();
 
@@ -1530,15 +1526,23 @@ void Macrostrain::do_solve()
 
     apply_periodic_bc();
 
+
+    if (verbose > 2) cout << "apply_antirotation_constraints ... " << flush;
+
     apply_antirotation_constraints();
+
+    if (verbose > 2) cout << "done \n" << flush;
+
   }
   
    
  
-  
+  if (verbose > 2) cout << "Assemble and solve the linear system ...\n" << flush ;
 
   my_system->solve();
   
+  if (verbose > 2) cout << "The linear system is solved... \n" << flush ;
+
  
   
   old_solution = * (my_system->solution);
@@ -1568,7 +1572,7 @@ void Macrostrain::do_solve()
 
   for (unsigned int r_step = 1; r_step <= max_r_steps; ++r_step)
     {
-      if (verbose > 1)  cout << "\nRefining the mesh... (Step" << r_step << ")\n" << flush;
+      if (verbose > 0)  cout << "\nRefining the mesh... (Step" << r_step << ")\n" << flush;
       
 
       
@@ -1634,9 +1638,9 @@ void Macrostrain::do_solve()
       my_system->solve();
       
      
-
-      std::cout << "Norm of the difference  " << norm_of_difference( old_solution, *(my_system->solution) ) 
-		<< "  after step number " << r_step << "\n";
+      if (verbose > 1)
+	std::cout << "Norm of the difference  " << norm_of_difference( old_solution, *(my_system->solution) ) 
+		  << "  after step number " << r_step << "\n" << flush;
      
       if (intermediate_output)
       {      
@@ -1662,10 +1666,17 @@ void Macrostrain::do_solve()
 	output_add_strain_variables(os2.str());
       }
 
-      std::cout << "\n" ;
-      std::cout << "Final Mesh after  " <<  max_r_steps <<" refinements  steps   " <<  "\n" ;
-      mesh.print_info();
-      std::cerr << "Grid refinement is done \n";
+      if (verbose > 1)
+      {
+
+	std::cout << "\n" ;
+	std::cout << "Final Mesh after  " <<  max_r_steps <<" refinements  steps   " <<  "\n" ;
+	mesh.print_info();
+	std::cout << flush;
+      }
+
+      if (verbose > 0) std::cerr << "Grid refinement is done \n" << flush;
+     
     }
 
 
@@ -1695,7 +1706,13 @@ void Macrostrain::do_solve()
     {
       if (verbose > 1)  cout << "\n Geometry relaxation of the mesh... (Step" << geom_it << ")\n" << flush;
 
-      if (geom_it > 1) update_u_node();
+     
+      if (verbose > 2) cout << "Update nodes..." << flush ;
+      
+      update_u_node();
+      
+      if (verbose > 2) cout << "done\n" << flush ;
+      
       
       equation_systems->print_info();
       //------move nodes------------------------------------------
@@ -1720,11 +1737,12 @@ void Macrostrain::do_solve()
       equation_systems->print_info();
 
      
-      
+      if (verbose > 2) cout << "Will solve...   " << flush;
+
       my_system->solve();
 
-
-     
+      if (verbose  > 2) cout << "solved \n" << flush;
+    
 
       if (intermediate_output)
 	{
@@ -1771,8 +1789,7 @@ void Macrostrain::do_solve()
 
  
 
-  if (max_shape_steps >= 1) update_u_node(); //temporary
-
+ 
   update_u_node();
  
   //------write-------------------------------------------------------------------------------------//
@@ -3377,44 +3394,48 @@ void Macrostrain::update_u_node()
     }
 
 
- 
+
+  vector <double> du(3);
 
   map<const Node*, vector<double> > temp;
+  {
+    MeshBase::const_element_iterator el  = mesh.active_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
 
-  MeshBase::const_element_iterator el  = mesh.active_elements_begin();
-  MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+    for ( ; el != end_el ; ++el) 
+    { 
+      const Elem* elem = *el;
 
-  for ( ; el != end_el ; ++el) 
-  { 
-    const Elem* elem = *el;
+      const unsigned int num_nodes = elem->n_nodes();
 
-    const unsigned int num_nodes = elem->n_nodes();
-
-    for (short i = 0; i < num_nodes; i++)
-    {
-      const Node* nd = elem->get_node(i);
-
-      if (temp.find(nd) == temp.end())
+      for (short i = 0; i < num_nodes; i++)
       {
-	vector <double> du(3);
-	for (unsigned int i = 0; i < 3; i++) //<3 , not < dim (necessary for atoms!) 
-	{
-	  const unsigned int  n_dof = nd->dof_number(system_number,uvar[i],0);
-	  du[i] = (*solution)(n_dof);
-	}
-	temp.insert( pair<const Node*,vector<double> > (nd,du)  ); 
-      }
+	const Node* nd = elem->get_node(i);
 
+	if (temp.find(nd) == temp.end())
+	{
+	  
+	  for (unsigned int i = 0; i < 3; i++) //<3 , not < dim (necessary for atoms!) 
+	  {
+	    const unsigned int  n_dof = nd->dof_number(system_number,uvar[i],0);
+	    du[i] = (*solution)(n_dof);
+	  }
+	  temp.insert( pair<const Node*,vector<double> > (nd,du)  ); 
+	}
+
+     
+      }
      
     }
-     
+
   }
+
 
 
   map<const Node*, vector<double> >::iterator it = u_node.begin();
   map<const Node*, vector<double> >::iterator it_end = u_node.end();
 
-  for( ; it != it_end ; )
+  for( ; it != it_end ; ++it)
   {
     const Node* nd = it->first;
 

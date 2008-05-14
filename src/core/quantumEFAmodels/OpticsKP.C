@@ -10,6 +10,7 @@
 #include "Material.h"
 #include "Control.h"
 #include "GraceIO.h"
+#include "SimulationOptions.h"
 using namespace std; 
 using namespace Constants;
 
@@ -257,8 +258,14 @@ void OpticsKP::do_init()
 //==============================================//
 void OpticsKP::do_solve()
 {
+  int verbose = SimulationOptions::verbose();
 
+  if (verbose > 0)
+    cout << "calculation of  matrix elelements for dipole optical transition..." << flush;
+ 
   parse_options();
+
+
 
   calculate_matrix();
 
@@ -268,6 +275,10 @@ void OpticsKP::do_solve()
   
   calculate_P_matrix_elements( );
  
+
+  if (verbose > 0)
+    cout << "done\n" << flush;
+
   //temporary_solution----------------------------------------------------
 /*
   std::ostringstream os3;
@@ -290,20 +301,24 @@ void OpticsKP::do_solve()
 */
   //------------------------------------------------------------------------
 
- /*
-  for (int i = 0; i < n1; i++) 
-    for (int j = 0; j < n2; j++) 
-    {
-     
-      for (int p = 0; p < 3; p++) 
+ 
+ 
+  if (verbose > 2)
+  {
+    for (int i = 0; i < n1; i++) 
+      for (int j = 0; j < n2; j++) 
       {
-	cerr << p << "  " << i  <<"   " << j   <<  P_matrix[p][i][j] << "\n";
+     
+	for (int p = 0; p < 3; p++) 
+	{
+	  cout << "polarization = " <<  p << "  " << "state i = " << i  <<"   " << "state j =   " 
+	       << j <<"      "  << P_matrix[p][i][j] << "\n" << flush; 
 
 
+	}
+	
       }
-      
-    }
-*/
+  }
 
 }
 
@@ -319,7 +334,7 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
   spectrum.clear();
 
-
+ 
  
 
   std::vector<double> fs_eigen_values;
@@ -361,12 +376,12 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
     for (unsigned j = 0; j < n2; j++)  // "lower" states
     {
 
-      trans_energy =  is_eigen_values[_initial_eigen_state_numbers[i]] - fs_eigen_values[ _final_eigen_state_numbers[i]];
+      trans_energy =  is_eigen_values[_initial_eigen_state_numbers[i]] - fs_eigen_values[ _final_eigen_state_numbers[j]];
 
 
       f1 = is_occupations[_initial_eigen_state_numbers[i]];   // occupation for  electron
      
-      f2 = fs_occupations[_final_eigen_state_numbers[i]]; // occupation for  holes
+      f2 = fs_occupations[_final_eigen_state_numbers[j]]; // occupation for  holes
 
     
 
@@ -374,6 +389,8 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
       Complex Me = P_matrix[0][i][j] * polariz(1) + P_matrix[1][i][j] * polariz(2) +  P_matrix[2][i][j] * polariz(3);
 
+
+      
      
       
       MeshBase::const_element_iterator       el     = Energy.active_elements_begin();
@@ -938,11 +955,12 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   
 
 
+
   // calculate_spectrum( *_energy_mesh, Gamma,polariz, spectrum ) ;
 
-  calculate_spectrum( *_energy_mesh, Gamma,polariz_x, spectrum_x ) ;
-  calculate_spectrum( *_energy_mesh, Gamma,polariz_y, spectrum_y ) ;
-  calculate_spectrum( *_energy_mesh, Gamma,polariz_z, spectrum_z ) ;
+  calculate_spectrum( *_energy_mesh, Gamma, polariz_x, spectrum_x ) ;
+  calculate_spectrum( *_energy_mesh, Gamma, polariz_y, spectrum_y ) ;
+  calculate_spectrum( *_energy_mesh, Gamma, polariz_z, spectrum_z ) ;
 
   
 
@@ -978,6 +996,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   MeshBase::const_element_iterator       elem_it  = _energy_mesh->active_elements_begin();
   const MeshBase::const_element_iterator elem_end = _energy_mesh->active_elements_end();
   int point = 0;
+
   for(;elem_it != elem_end; ++elem_it)
   {
     const Elem* el = *elem_it;
