@@ -350,12 +350,12 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
     for (unsigned j = 0; j < n2; j++)  // "lower" states
     {
 
-      trans_energy =  is_eigen_values[_initial_eigen_state_numbers[i]] - fs_eigen_values[ _final_eigen_state_numbers[i]];
+      trans_energy =  is_eigen_values[_initial_eigen_state_numbers[i]] - fs_eigen_values[ _final_eigen_state_numbers[j]];
 
 
       f1 = is_occupations[_initial_eigen_state_numbers[i]];   // occupation for  electron
      
-      f2 = fs_occupations[_final_eigen_state_numbers[i]]; // occupation for  holes
+      f2 = fs_occupations[_final_eigen_state_numbers[j]]; // occupation for  holes
 
     
 
