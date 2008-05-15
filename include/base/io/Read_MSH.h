@@ -1,20 +1,4 @@
-/*=============================================================================
-  Copyright (c) 2002-2003 Joel de Guzman
-  http://spirit.sourceforge.net/
 
-
-  Use, modification and distribution is subject to the Boost Software
-  License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
-  http://www.boost.org/LICENSE_1_0.txt)
-  =============================================================================*/
-///////////////////////////////////////////////////////////////////////////////
-//
-// 
-//
-//  
-//
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include <vector>
 #include <string>
@@ -265,7 +249,22 @@ class Read_MSH
   //! Parse  MeshFormat section (version 2)
   void parse_meshformat_section(ifstream&  in_stream);
 
+
+  //! Utility to eliminate dos line  terminations
   void cut_off_CR(string& label,  ifstream& in_stream);
+
+
+
+
+
+
+
+  //!  map <elem_type,nodes_number> with  the number of nodes for  each  GMSH element type
+  std::map<unsigned int,unsigned int > eletypes_imp;
+
+  //! Initializes the  eletypes_imp  map
+  void init_element_types();
+
 
 
 };

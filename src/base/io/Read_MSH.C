@@ -1,16 +1,6 @@
-/*=============================================================================
-  Copyright (c) 2002-2003 Joel de Guzman
-  http://spirit.sourceforge.net/
 
-  Use, modification and distribution is subject to the Boost Software
-  License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
-  http://www.boost.org/LICENSE_1_0.txt)
-  =============================================================================*/
 
-///////////////////////////////////////////////////////////////////////////////
-#include <boost/spirit/core.hpp>
-#include <boost/spirit/actor/push_back_actor.hpp>
-#include <boost/spirit/dynamic.hpp>
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -26,7 +16,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 using namespace std;
-using namespace boost::spirit;
+//using namespace boost::spirit;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -35,9 +25,7 @@ using namespace boost::spirit;
 //
 //   and  creates .xta and  .xda  files for  mesh and  meshdata in Libmesh 
 //
-// -------------------------------------------
-//  MUST   include  SPIRIT  libraries !
-// -----------------------------------------------
+//
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -122,85 +110,267 @@ void Read_MSH::initialize_vectors()
 // element   line : elem number, type of  elem, number of tags (default=3) ,
 // tag1=physical_region, tag2=geom_region, tag3= 0 ("mesh_partition"), list of the nodes
 //
+// void Read_MSH::parse_elem_section(ifstream& in_stream )
+// {
+     
+//   unsigned int n_elem;
+//   string  str;
+//   vector<unsigned int> v;
+//   v.clear();
+     
+//   //  rule  for element  line  (list  of  integers uint)
+//   //  rule<>list_of_numbers_space_sep = uint_p[push_back_a(v)] >> 
+//   //    *( *(space_p) >> uint_p[push_back_a(v)]);
+
+//   // 24.4.08
+//   rule<>list_of_numbers_space_sep = uint_p[push_back_a(v)] >> 
+//     *( *(space_p) >> uint_p[push_back_a(v)])  >> *(anychar_p)  ;
+
+
+     
+//   //rule<> r = *(space_p)>> uint_p[assign_a(id)] >> *(space_p) >>
+//   // list_of_numbers_space_sep  >> *(anychar_p);
+
+//   rule<> r = list_of_numbers_space_sep; 
+
+
+//   //  reads  elements' total number (one  integer)
+//   getline(in_stream, str);
+//   if (parse(str.c_str(), uint_p[assign_a(n_elem)] >> *(space_p), space_p).full) 
+//   {
+//     // cout << n_elem<<endl ;
+//   } 
+      
+      
+//   // reads  element   line : elem number, type of  elem, phys reg,  geom reg, 
+//   // number "n" of nodes in elem, "n" nodes
+//   //  and  put it in vector elem_values 
+//   while (getline(in_stream, str))  //   
+//   {
+      
+//     if (  parse(str.c_str(), r) .full )
+           
+//     {
+	  
+//       elem_values.push_back(v);
+	                         	
+//       v.clear();
+	                                                              
+//     } 
+
+//   } 
+    
+// }
+
+//  NEW !!!  8-5-2008
+
+// ****************************************
+
+
 void Read_MSH::parse_elem_section(ifstream& in_stream )
 {
-     
-  unsigned int n_elem;
-  string  str;
-  vector<unsigned int> v;
-  v.clear();
-     
-  //  rule  for element  line  (list  of  integers uint)
-  //  rule<>list_of_numbers_space_sep = uint_p[push_back_a(v)] >> 
-  //    *( *(space_p) >> uint_p[push_back_a(v)]);
 
-  // 24.4.08
-  rule<>list_of_numbers_space_sep = uint_p[push_back_a(v)] >> 
-    *( *(space_p) >> uint_p[push_back_a(v)])  >> *(anychar_p)  ;
+  unsigned int n_elem,elem_number,elem_type,number_of_tags, tag_item, nodes_number , node_item  ;
+
+  vector<unsigned int>      current_element_tags;
+
+  init_element_types();
+  // //  reads  elements' total number (one  integer)
+
+  in_stream >> n_elem;
 
 
-     
-  //rule<> r = *(space_p)>> uint_p[assign_a(id)] >> *(space_p) >>
-  // list_of_numbers_space_sep  >> *(anychar_p);
+  for (unsigned int j=0; j<n_elem ;++j)
 
-  rule<> r = list_of_numbers_space_sep; 
+  { // nth_element
+
+    current_element_tags.clear();
+
+    if  (version == 2)
+    { // version
+
+      in_stream >> elem_number;
+      current_element_tags.push_back(elem_number);
+
+      in_stream >> elem_type;
+      current_element_tags.push_back(elem_type);
 
 
-  //  reads  elements' total number (one  integer)
-  getline(in_stream, str);
-  if (parse(str.c_str(), uint_p[assign_a(n_elem)] >> *(space_p), space_p).full) 
-  {
-    // cout << n_elem<<endl ;
-  } 
-      
-      
-  // reads  element   line : elem number, type of  elem, phys reg,  geom reg, 
-  // number "n" of nodes in elem, "n" nodes
-  //  and  put it in vector elem_values 
-  while (getline(in_stream, str))  //   
-  {
-      
-    if (  parse(str.c_str(), r) .full )
-           
-    {
-	  
-      elem_values.push_back(v);
-	                         	
-      v.clear();
-	                                                              
-    } 
+      in_stream >> number_of_tags;
+      current_element_tags.push_back(number_of_tags);
 
-  } 
-    
+
+      for (unsigned int i=0; i<number_of_tags ;++i)
+
+      {
+
+        in_stream >> tag_item;
+        //      tag.push_back(tag_item);
+        current_element_tags.push_back(tag_item);
+
+
+      }
+
+
+      //   nodes_number = get_number_of_nodes_in_element_type(elem_type);
+      nodes_number =  eletypes_imp[elem_type];
+
+      for (unsigned int i=0; i<nodes_number ;++i)
+
+      {
+
+        in_stream >> node_item;
+        //   node.push_back(node_item);
+        current_element_tags.push_back(node_item);
+
+      }
+
+
+
+    }
+
+
+    elem_values.push_back(current_element_tags);
+    // next element
+
+  }
+
+
 }
 
 
 
 
-// NOT  USED  !!??
-//  check if  $ELM  header  is  found 
-void Read_MSH::find_elem_section(char const* str, ifstream& in_stream)
+// unsigned int Read_MSH::get_number_of_nodes_in_element_type(int element_type )
+// {
+
+//   unsigned  int  number_of_nodes;
+
+//   switch(element_type) {
+//   case 1:       
+//     number_of_nodes = 2;
+//     break;
+//   case 2:
+//     number_of_nodes = 3;
+//     break;
+//   case 3:
+//     number_of_nodes = 4;
+//     break;
+//   case 4:
+//     number_of_nodes = 4;
+//     break;
+//   case 5:
+//     number_of_nodes = 8;
+//     break;
+//   case 6:
+//     number_of_nodes = 6;
+//     break;
+//   case 7:
+//     number_of_nodes = 5;
+//     break;
+//   case 8:
+//     number_of_nodes = 3;
+//     break;
+//   case 9:
+//     number_of_nodes = 6;
+//     break;
+//   case 10:
+//     number_of_nodes = 9;
+//     break;
+//   case 11:
+//     number_of_nodes = 10;
+//     break;
+//   case 12:
+//     number_of_nodes = 27;
+//     break;
+//   case 13:
+//     number_of_nodes = 18;
+//     break;
+//   case 14:
+//     number_of_nodes = 14;
+//     break;
+
+
+//   case 15:
+//     number_of_nodes = 1;
+//     break;
+//   default:
+//     cout <<  "Error : wrong element type"; 
+
+//   }
+
+//   return  number_of_nodes;
+
+
+
+// }
+
+
+// initialize  map with  the number of nodes for  each  GMSH element type
+void Read_MSH::init_element_types()
 {
+
+  // std::map<unsigned int, elementDefinition> eletypes_imp;
+
+ 
+
+  eletypes_imp[1] = 2 ;
+  eletypes_imp[2] = 3 ;
+  eletypes_imp[3] = 4 ;
+  eletypes_imp[4] = 4 ;
+  eletypes_imp[5] = 8 ;
+  eletypes_imp[6] = 6 ;
+  eletypes_imp[7] = 5 ;
+  eletypes_imp[8] = 3 ;
+  eletypes_imp[9] = 6 ;
+
+  eletypes_imp[10] = 9 ;
+  eletypes_imp[11] = 10 ;
+  eletypes_imp[12] = 27 ;
+  eletypes_imp[13] = 18 ;
+  eletypes_imp[14] = 14 ;
+  eletypes_imp[15] = 1 ;
+
+
+
+}
+
+
+//******************************************
+
+
+
+
+
+
+
+
+
+
+  // // NOT  USED  !!??
+  // //  check if  $ELM  header  is  found 
+  // void Read_MSH::find_elem_section(char const* str, ifstream& in_stream)
+  // {
          
-  string name;
+  //   string name;
     
-  if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p], space_p).full)
-  {
-    // cout << name<< endl;
-    if (name == "ELM")
+  //   if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p], space_p).full)
+  //   {
+  //     // cout << name<< endl;
+  //     if (name == "ELM")
 
-    {
-      parse_elem_section(in_stream);
-    }
+  //     {
+  //       parse_elem_section(in_stream);
+  //     }
          
          
-  }
-}                                                                     
+  //   }
+  // }                                                                     
 
 
 
-// **************************************  
-// scan  .msh  file  name
+  // **************************************  
+  // scan  .msh  file  name
 void Read_MSH::scan_input(string file_name)
 
 {
@@ -298,6 +468,8 @@ void Read_MSH::get_BC_info()
   //  makes vector with lines of BC elements   
   for (unsigned int i =0; i< elem_values.size();++i)
   {
+
+
 
     el_type = elem_values[i][1];   //  OK  VERSION 2
 
@@ -1869,25 +2041,25 @@ void Read_MSH::parse_node_section(ifstream& in_stream )
 
 
 
-//  check if  $NOD  header  is  found 
-void Read_MSH::find_node_section(char const* str, ifstream& in_stream)
-{ //
+// //  check if  $NOD  header  is  found 
+// void Read_MSH::find_node_section(char const* str, ifstream& in_stream)
+// { //
          
-  string name;
+//   string name;
     
-  if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p],
-             space_p).full)
-  {
-    //    cout << name<< endl;
-    if (name == "NOD")
+//   if  (parse(str, if_p("$")[(+alpha_p)[assign_a(name)]].else_p[nothing_p],
+//              space_p).full)
+//   {
+//     //    cout << name<< endl;
+//     if (name == "NOD")
 
-    {
-      parse_node_section(in_stream);
-    }
+//     {
+//       parse_node_section(in_stream);
+//     }
          
          
-  }
-}                                                                     
+//   }
+// }                                                                     
 
 
 
