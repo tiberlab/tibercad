@@ -170,9 +170,12 @@ void Read_MSH::initialize_vectors()
 void Read_MSH::parse_elem_section(ifstream& in_stream )
 {
 
-  unsigned int n_elem,elem_number,elem_type,number_of_tags, tag_item, nodes_number , node_item  ;
+  unsigned int n_elem,elem_number,elem_type,number_of_tags, tag_item,  tag_item_1, tag_item_2,
+    nodes_number , node_item  ;
 
   vector<unsigned int>      current_element_tags;
+
+  current_element_tags.clear();
 
   init_element_types();
   // //  reads  elements' total number (one  integer)
@@ -187,7 +190,9 @@ void Read_MSH::parse_elem_section(ifstream& in_stream )
     current_element_tags.clear();
 
     if  (version == 2)
-    { // version
+    { // version 2
+
+
 
       in_stream >> elem_number;
       current_element_tags.push_back(elem_number);
@@ -229,11 +234,65 @@ void Read_MSH::parse_elem_section(ifstream& in_stream )
 
     }
 
+    else if (version == 1)
+    { // version 1
+
+
+
+      in_stream >> elem_number;
+      current_element_tags.push_back(elem_number);
+
+ 
+
+      in_stream >> elem_type;
+      current_element_tags.push_back(elem_type);
+
+
+
+      in_stream >> tag_item_1;  //reg-phys
+      current_element_tags.push_back(tag_item_1);
+
+
+
+      in_stream >> tag_item_2;   //reg-elementary
+      current_element_tags.push_back(tag_item_2);
+
+ 
+
+      in_stream >> tag_item;  //number-of-nodes
+      //    nodes_number = tag_item;
+      current_element_tags.push_back(tag_item);
+
+
+      nodes_number =  eletypes_imp[elem_type];
+
+ 
+
+      for (unsigned int k=0; k<nodes_number ;++k)
+
+      {
+
+        in_stream >> node_item;
+       
+        current_element_tags.push_back(node_item);
+
+
+      }
+
+ 
+
+
+
+    }
+
 
     elem_values.push_back(current_element_tags);
     // next element
+    current_element_tags.clear();
+
 
   }
+
 
 
 }
