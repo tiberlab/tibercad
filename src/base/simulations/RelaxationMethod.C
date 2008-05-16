@@ -47,6 +47,7 @@ RelaxationMethod::do_solve(void)
 
     solve_simulations();
 
+    get_solution_vector().close();
     get_solution_vector() -= *x_old;
     double norm = get_solution_vector().linfty_norm();
     double rel_err =  get_solution_vector().l2_norm() / x_old_norm;
