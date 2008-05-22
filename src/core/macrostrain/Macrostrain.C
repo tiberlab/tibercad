@@ -476,6 +476,9 @@ void Macrostrain::do_init( )
       }
 	  
     }
+
+    if (elem1 == NULL) 
+      throw InitFailedException("Macrostrain: reference point is  wrong (probably, it does not belong to the simulation domain)");
       
     ID subdomain = elem1->subdomain_id();
     const Material* mat = _device->get_material(subdomain);
@@ -827,6 +830,8 @@ void Macrostrain::do_assemble(EquationSystems& es,
   for ( ; el != end_el ; ++el) 
   {//el
     
+    // cerr << el_number << "\n";
+
     // Store a pointer to the element we are currently
     // working on.  This allows for nicer syntax later.
     const Elem* elem = *el;
@@ -900,7 +905,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
       Fe_sub.reposition (uvar[j]*n_u_dofs, n_u_dofs);
       
       const unsigned int num_sides =  elem->n_sides(); 
-      //!first we calculate volume part
+      //!first we calculate volume partg
       //  /
       //  | C_ijkl eps0_kl df/dx_i dV
       //  /
@@ -1111,14 +1116,16 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	      
 	      if (!belongs_to_substrate(p1, elem))
 	      {
-	
-		 Ke_sub(p1,p2) += JxW[qp]*scal_prod ;
-	
+		Ke_sub(p1,p2) += JxW[qp]*scal_prod ;
 	      }
 	      else
 	      {
 		Ke_sub(p1,p2) = delta(p1,p2)*delta(j,k);
 	      }
+	      //! Here we impose the substrate point (or fixed point) is not coupled at all.
+	      if ( belongs_to_substrate(p2, elem) && (p1 != p2) )
+	      	  Ke_sub(p1,p2) = 0;
+
 	    }
 	    
 	  }
@@ -1408,6 +1415,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
  bool Macrostrain::belongs_to_substrate(unsigned int n, const Elem* elem )
  {
 
+   // return(false); //test
 
 
    if (grown_on_substrate)
@@ -1444,6 +1452,8 @@ void Macrostrain::do_assemble(EquationSystems& es,
      }
 
  
+   
+
  }
 
 //-----------------------------------------------------------------//
