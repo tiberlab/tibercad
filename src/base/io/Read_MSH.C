@@ -456,9 +456,16 @@ void Read_MSH::scan_input(string file_name)
   {
     parse_meshformat_section(in_stream);
     in_stream >> label;
- 
 
   }
+
+  if (label == "$PhysicalNames")
+  {
+    parse_physicalnames_section(in_stream);
+    in_stream >> label;
+
+  }
+
 
   //  in_stream >> Nodes_label;
   parse_node_section(in_stream);
@@ -2238,6 +2245,42 @@ void Read_MSH::parse_meshformat_section(ifstream&  in_stream)
 
 
 
+void Read_MSH::parse_physicalnames_section(ifstream&  in_stream)
+{
+
+  std::string end_label,  physical_name;
+  int  physical_number, number_physical_names ;
+
+
+  in_stream >> number_physical_names;
+
+  for (unsigned int i=0; i<number_physical_names; i++)
+  {
+
+    in_stream >>  physical_number;
+    in_stream >>  physical_name;
+
+    physical_names_map.insert(make_pair(physical_name,physical_number ) );
+
+  }
+
+  in_stream >> end_label;  //  read  "$EndPhysicalNames"
+  std::map< std::string, unsigned int >::iterator envit(physical_names_map.begin());
+  const std::map< std::string, unsigned int >::iterator envend(physical_names_map.end());
+  for ( ; envit != envend; ++envit)
+    cerr << (envit->first) <<  "  " << (envit->second) << endl;
+
+
+}
+
+
+void Read_MSH::get_physical_names_map( std::map< std::string, unsigned int >& phys_names_map  )
+{
+
+  phys_names_map = physical_names_map;
+
+ 
+}
 
 
 // ************************************************************************

@@ -102,6 +102,9 @@ class Read_MSH
   void  get_elem_phys_map (map<unsigned int,unsigned int> &elem_phys  );
 
 
+  //! gets map of GMSH  physical names for physical regions  and  BC  regions
+  void get_physical_names_map( map< string, unsigned int >& phys_names_map);
+
 
 
  private:
@@ -162,6 +165,10 @@ class Read_MSH
   vector<Element> All_elements;
 
   vector<Element>  list_elements;  //  list for   .xta  file  
+
+ 
+  //! map of  GMSH  physical names for physical regions  and  BC  regions 
+  map< string, unsigned int >  physical_names_map;
 
 
 
@@ -255,16 +262,14 @@ class Read_MSH
 
 
 
-
-
-
-
   //!  map <elem_type,nodes_number> with  the number of nodes for  each  GMSH element type
   std::map<unsigned int,unsigned int > eletypes_imp;
 
   //! Initializes the  eletypes_imp  map
   void init_element_types();
 
+  //! Parse Physical Names  section
+  void parse_physicalnames_section(ifstream&  in_stream);
 
 
 };
