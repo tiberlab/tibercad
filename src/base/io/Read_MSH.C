@@ -2265,10 +2265,9 @@ void Read_MSH::parse_physicalnames_section(ifstream&  in_stream)
   }
 
   in_stream >> end_label;  //  read  "$EndPhysicalNames"
-  std::map< std::string, unsigned int >::iterator envit(physical_names_map.begin());
-  const std::map< std::string, unsigned int >::iterator envend(physical_names_map.end());
-  for ( ; envit != envend; ++envit)
-    cerr << (envit->first) <<  "  " << (envit->second) << endl;
+
+
+  
 
 
 }
