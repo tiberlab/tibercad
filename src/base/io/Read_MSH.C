@@ -2260,7 +2260,9 @@ void Read_MSH::parse_physicalnames_section(ifstream&  in_stream)
     in_stream >>  physical_number;
     in_stream >>  physical_name;
 
-    physical_names_map.insert(make_pair(physical_name,physical_number ) );
+    assert(physical_name.size() >= 2);
+    physical_names_map.insert(
+        make_pair(physical_number,physical_name.substr(1, physical_name.size() - 2)));
 
   }
 
@@ -2273,7 +2275,7 @@ void Read_MSH::parse_physicalnames_section(ifstream&  in_stream)
 }
 
 
-void Read_MSH::get_physical_names_map( std::map< std::string, unsigned int >& phys_names_map  )
+void Read_MSH::get_physical_names_map( std::map< unsigned int, std::string>& phys_names_map  )
 {
 
   phys_names_map = physical_names_map;

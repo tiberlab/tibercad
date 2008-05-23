@@ -11,8 +11,6 @@
 
 #include <InitFailedException.h>
 
-///////////////////////////////////////////////////////////////////////////////
-using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -31,8 +29,8 @@ using namespace std;
  *  separately:
  * they  are  extracted from the  elements  list and  a list of  nodes for  each of  such "boundary regions"
  * (1D lines for 2D  problems and  2D surfaces for 3D problems) is  created.
- * This  list can be accessed through   \c get_BC_data , which returns a map between 
- * Boundary Condition Region number (BC id) and a vector of node id.
+ * This  list can be accessed through   \c get_BC_data , which returns astd::map between 
+ * Boundary Condition Region number (BC id) and a std::vector of node id.
  */
 
 class Read_MSH
@@ -40,9 +38,9 @@ class Read_MSH
 
  public:
 
-  //  MSH_parser(string filename , vector<int>& BC_reg_ID, int sim_dim );
+  //  MSH_parser(std::string filename , std::vector<int>& BC_reg_ID, int sim_dim );
   
-  //  Read_MSH(string filename, vector<int>& phys_reg_ID, vector<int>& BC_reg_ID, int sim_dim  );
+  //  Read_MSH(std::string filename, std::vector<int>& phys_reg_ID, std::vector<int>& BC_reg_ID, int sim_dim  );
 
 
   //! Constructor. 
@@ -52,58 +50,58 @@ class Read_MSH
    *  writes .xda and  .xta  file for  Libmesh.
    *  needs :
    * \param filename name of  the  GMSH  .msh file (v. 1.0)
-   * \param  phys_reg_ID  vector of physical region IDs,  
-   * \param BC_reg_ID vector of   bound. conditions region  ID (2D or 1D)
+   * \param  phys_reg_ID  std::vector of physical region IDs,  
+   * \param BC_reg_ID std::vector of   bound. conditions region  ID (2D or 1D)
    * \param  sim_dim dimension  of the   simulation
    * \param  mesh  reference to  \c Mesh
    * \param  mesh_data   reference to  \c MeshData_elements
    * 
    */
-  //  Read_MSH(string filename, vector<unsigned int>& phys_reg_ID,
-  //           vector<unsigned int>& BC_reg_ID, unsigned int sim_dim, 
+  //  Read_MSH(std::string filename, std::vector<unsigned int>& phys_reg_ID,
+  //           std::vector<unsigned int>& BC_reg_ID, unsigned int sim_dim, 
   //           Mesh& mesh, MeshData_elements&  mesh_data);
 
-  Read_MSH(string filename, unsigned int sim_dim, 
+  Read_MSH(std::string filename, unsigned int sim_dim, 
            Mesh& mesh, MeshData_elements&  mesh_data);
 
   //! Destructor
   ~Read_MSH();
 
 
-  // void  MSH_parser::get_data ( vector< vector<double> >& glob_reg_values,
-  // vector<int>& glob_reg_id,  vector<string>& glob_mat);
+  // void  MSH_parser::get_data ( std::vector< std::vector<double> >& glob_reg_values,
+  // std::vector<int>& glob_reg_id,  std::vector<std::string>& glob_mat);
 
-  void  get_data ( vector< vector<unsigned int> >& glob_elem_values);
+  void  get_data ( std::vector< std::vector<unsigned int> >& glob_elem_values);
 
 
-  //! Gets  map  between  Boundary condition Regions and their nodes   
+  //! Gets std::map  between  Boundary condition Regions and their nodes   
   /*!
    * Used to get the nodes belonging to the user-defined BC regions 
-   * \param BoundCond_map map between BC region ID and vector of its nodes 
+   * \param BoundCond_mapstd::map between BC region ID and std::vector of its nodes 
    * 
    */
-  void  get_BC_data (   map<unsigned int, vector<unsigned int> >&  BoundCond_map);
+  void  get_BC_data (  std::map<unsigned int, std::vector<unsigned int> >&  BoundCond_map);
 
 
-  //! Gets  map  between  Boundary condition Regions and their nodes and elements 
+  //! Gets std::map  between  Boundary condition Regions and their nodes and elements 
   /*!
    * Used to get the nodes and the elements (case of 3D simulation)  belonging 
    * to the user-defined BC regions. 
-   * \param BoundCond_map map between BC region ID and vector of its nodes 
-   * \param BoundCond_el_map  map between BC region ID and vector of its elements
+   * \param BoundCond_mapstd::map between BC region ID and std::vector of its nodes 
+   * \param BoundCond_el_map std::map between BC region ID and std::vector of its elements
    */
-  void  get_BC_data (   map<unsigned int, vector<unsigned int> >&  BoundCond_map,
-                        map<unsigned int, vector<unsigned int> >&  BoundCond_el_map);
+  void  get_BC_data (  std::map<unsigned int, std::vector<unsigned int> >&  BoundCond_map,
+                       std::map<unsigned int, std::vector<unsigned int> >&  BoundCond_el_map);
 
 
 
-  void  get_elem_data (map<unsigned int, vector<unsigned int> >& PhysReg_elements_map);
+  void  get_elem_data (std::map<unsigned int, std::vector<unsigned int> >& PhysReg_elements_map);
 
-  void  get_elem_phys_map (map<unsigned int,unsigned int> &elem_phys  );
+  void  get_elem_phys_map (std::map<unsigned int,unsigned int> &elem_phys  );
 
 
-  //! gets map of GMSH  physical names for physical regions  and  BC  regions
-  void get_physical_names_map( map< string, unsigned int >& phys_names_map);
+  //! getsstd::map of GMSH  physical names for physical regions  and  BC  regions
+  void get_physical_names_map(std::map<unsigned int, std::string >& phys_names_map);
 
 
 
@@ -119,56 +117,56 @@ class Read_MSH
 
   unsigned int dim;
 
-  map<unsigned int, vector<unsigned int> >  BoundCond;
+ std::map<unsigned int, std::vector<unsigned int> >  BoundCond;
 
-  map<unsigned int, vector<unsigned int> >  BoundCond_elements;
+ std::map<unsigned int, std::vector<unsigned int> >  BoundCond_elements;
   
-  map<unsigned int, vector<unsigned int> > PhysReg_elements;
+ std::map<unsigned int, std::vector<unsigned int> > PhysReg_elements;
 
-  map<unsigned int, unsigned int >   elem_region_map;
-
-
-
-  vector< vector<unsigned int> > elem_values  ;
-
-  vector< vector<double> > node_entry  ;
-
-  vector< vector<double> >  node_coord ;
+ std::map<unsigned int, unsigned int >   elem_region_map;
 
 
 
-  vector< vector<unsigned int> > elem_nodes  ;
+  std::vector< std::vector<unsigned int> > elem_values  ;
 
-  vector<double> node_label;
+  std::vector< std::vector<double> > node_entry  ;
+
+  std::vector< std::vector<double> >  node_coord ;
+
+
+
+  std::vector< std::vector<unsigned int> > elem_nodes  ;
+
+  std::vector<double> node_label;
 
 
   unsigned int  el_weight, num_of_elem, num_of_nodes,  num_bc, 
     num_mesh_block ; //, num_elem_per_type;
 
-  vector<unsigned int> gmsh_elem_type;
+  std::vector<unsigned int> gmsh_elem_type;
 
-  vector<unsigned int> elem_type;
+  std::vector<unsigned int> elem_type;
 
-  vector<unsigned int> num_elem_per_type ;
+  std::vector<unsigned int> num_elem_per_type ;
 
 
 
   struct Element {
 
-    vector<unsigned int> nodes;
+    std::vector<unsigned int> nodes;
     unsigned int type;
     unsigned int phys_id  ;
 
   };
 
 
-  vector<Element> All_elements;
+  std::vector<Element> All_elements;
 
-  vector<Element>  list_elements;  //  list for   .xta  file  
+  std::vector<Element>  list_elements;  //  list for   .xta  file  
 
  
-  //! map of  GMSH  physical names for physical regions  and  BC  regions 
-  map< string, unsigned int >  physical_names_map;
+  //!std::map of  GMSH  physical names for physical regions  and  BC  regions 
+ std::map<unsigned int, std::string>  physical_names_map;
 
 
 
@@ -180,24 +178,24 @@ class Read_MSH
   /*!
    *  Parse the element section of  GMSH .msh file (1 or 2).
    */
-  void parse_elem_section(ifstream& in_stream );
+  void parse_elem_section(std::ifstream& in_stream );
 
 
-  void find_elem_section(char const* str, ifstream& in_stream);
+  void find_elem_section(char const* str, std::ifstream& in_stream);
 
 
   //! call parser of  .msh  file  
-  void scan_input(string file_name);
+  void scan_input(std::string file_name);
 
 
 
-  //  unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   vector<unsigned int>& BC_reg_ID );
+  //  unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   std::vector<unsigned int>& BC_reg_ID );
 
   unsigned int  find_pos( unsigned int  reg_id , 
-                          vector<unsigned int>& user_reg_ID );
+                          std::vector<unsigned int>& user_reg_ID );
 
 
-  //  void get_BC_info( vector<unsigned int>& BC_reg_ID );
+  //  void get_BC_info( std::vector<unsigned int>& BC_reg_ID );
 
   //!  Extracts nodes which  belong to  bound cond reg. (DIM-1 phys.reg.)  
   /*! 
@@ -209,7 +207,7 @@ class Read_MSH
 
 
   // get  physical  regions
-  //  void get_physical_elem(vector<unsigned int>& phys_reg_ID);
+  //  void get_physical_elem(std::vector<unsigned int>& phys_reg_ID);
   //! Associate elements to corrispondent physical region
   /*! 
    * Associate elements to corrispondent physical region
@@ -229,16 +227,16 @@ class Read_MSH
 
 
   //!  parser of  NODES  section of  .msh  file  (version 1)
-  void parse_node_section(ifstream& in_stream );
+  void parse_node_section(std::ifstream& in_stream );
 
   //  check if  $NOD  header  is  found   OBSOLETE ????
-  void find_node_section(char const* str, ifstream& in_stream);
+  void find_node_section(char const* str, std::ifstream& in_stream);
 
   //!  get  node  data  for  each  node
   void get_nodes_coord();
 
   //! Read a block in  mesh  file
-  void read_data_section(char const* str,ifstream& in_stream );
+  void read_data_section(char const* str,std::ifstream& in_stream );
 
   //!  write  .xta file (data file for  meshdata (elem_data.xta )  
   void  write_xta();
@@ -247,29 +245,29 @@ class Read_MSH
   void   read_mesh_and_data(Mesh& mesh, MeshData_elements&  mesh_data );
 
   //  check if orientation  of  nodes  is  positive,  otherwise swap  nodes  of  element
-  void  check_orientation( vector<unsigned int>&  node_id_list,  unsigned  int type );
+  void  check_orientation( std::vector<unsigned int>&  node_id_list,  unsigned  int type );
 
   ////  cross check between physic_id_vec and phys_reg_ID
-  void  cross_check_regions( vector<unsigned int>&  user_reg_list 
-                             ,vector<unsigned int>&  gmsh_reg_list, string type );
+  void  cross_check_regions( std::vector<unsigned int>&  user_reg_list 
+                             ,std::vector<unsigned int>&  gmsh_reg_list, std::string type );
 
   //! Parse  MeshFormat section (version 2)
-  void parse_meshformat_section(ifstream&  in_stream);
+  void parse_meshformat_section(std::ifstream&  in_stream);
 
 
   //! Utility to eliminate dos line  terminations
-  void cut_off_CR(string& label,  ifstream& in_stream);
+  void cut_off_CR(std::string& label,  std::ifstream& in_stream);
 
 
 
-  //!  map <elem_type,nodes_number> with  the number of nodes for  each  GMSH element type
+  //! std::map <elem_type,nodes_number> with  the number of nodes for  each  GMSH element type
   std::map<unsigned int,unsigned int > eletypes_imp;
 
-  //! Initializes the  eletypes_imp  map
+  //! Initializes the  eletypes_imp std::map
   void init_element_types();
 
   //! Parse Physical Names  section
-  void parse_physicalnames_section(ifstream&  in_stream);
+  void parse_physicalnames_section(std::ifstream&  in_stream);
 
 
 };

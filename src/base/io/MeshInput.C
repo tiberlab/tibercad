@@ -23,12 +23,9 @@ void MeshInput::read_mesh(const string& file_name,unsigned int sim_dim,
                           map<unsigned int, vector<unsigned int> >& BoundCond ,
                           map<ID, string >& region_names_map,
                           map<ID, string >& BC_region_names_map)
-
-
 {
 
   // See if the file exists.  
-  
   ifstream in (file_name.c_str());
      
   if (!in.good())
@@ -42,19 +39,33 @@ void MeshInput::read_mesh(const string& file_name,unsigned int sim_dim,
   if  ( file_name.rfind(".grd") < file_name.size() )
   {
 
-    ReadISEGrid  ISE_mesh( file_name.c_str() , mesh, mesh_data );
+    ReadISEGrid ISE_mesh( file_name.c_str() , mesh, mesh_data );
     ISE_mesh.get_BC_data (BoundCond );
-    ISE_mesh.get_region_names_map (region_names_map );  //  not empty only  for  ISE  grid
-    ISE_mesh.get_BC_region_names_map (BC_region_names_map ); //  not empty only  for  ISE  grid
+    ISE_mesh.get_region_names_map (region_names_map );
+    ISE_mesh.get_BC_region_names_map (BC_region_names_map );
 
   }
-
   else if ( file_name.rfind(".msh") < file_name.size() )
   {
-    Read_MSH  GMSH_mesh( file_name,sim_dim, mesh, mesh_data );
-    GMSH_mesh.get_BC_data (BoundCond );
+    Read_MSH GMSH_mesh(file_name, sim_dim, mesh, mesh_data);
+    GMSH_mesh.get_BC_data(BoundCond);
+
+    // assign the names
+    map<ID, string> names;
+    GMSH_mesh.get_physical_names_map(names);
+    if (names.size() > 0)
+    {
+      map<ID, string>::const_iterator it(names.begin());
+      const map<ID, string>::const_iterator end(names.end());
+      for ( ; it != end; ++it)
+      {
+        if (BoundCond.find(it->first) != BoundCond.end())
+          BC_region_names_map[it->first] = it->second;
+        else
+          region_names_map[it->first] = it->second;
+      }
+    }
+
   }
-
-
 
 }
