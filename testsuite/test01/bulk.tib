@@ -4,7 +4,6 @@ $Device
 {
    Region bulk 
    {
-     reg_numb = 1
      mat = Si
      doping = 1e16 doping_type = donor
    }
@@ -31,14 +30,12 @@ $Models
     {
       BC_Region anode
       {
-        BC_reg_numb = 1
         type = ohmic
         voltage = @Vb
       }
 
       BC_Region cathode
       {
-        BC_reg_numb = 2
         type = ohmic
         voltage = 0.0
       }
