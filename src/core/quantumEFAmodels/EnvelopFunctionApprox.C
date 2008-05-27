@@ -737,16 +737,17 @@ void EnvelopFunctionApprox::do_init( )
 	  {
 
 	    if (temp)
-	      {
-		min_coord[i] = p(i);
-		max_coord[i] = p(i);
-		temp = false;
-	      }
-
-
-	    if (min_coord[i] < p(i)) min_coord[i] = p(i);
-	    if (max_coord[i] > p(i)) max_coord[i] = p(i);
-	  
+	    {
+	      min_coord[i] = p(i);
+	      max_coord[i] = p(i);
+	      temp = false;
+	    }
+	    else
+	    {
+	    
+	      if (min_coord[i] < p(i)) min_coord[i] = p(i);
+	      if (max_coord[i] > p(i)) max_coord[i] = p(i);
+	    }
 	  }
 	  
 	}

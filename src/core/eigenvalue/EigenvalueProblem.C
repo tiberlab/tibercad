@@ -972,11 +972,12 @@ void EigenvalueProblem::do_init()
 	   max_coord[i] = p(i);
 	   temp = false;
 	 }
+	 else
+	 {
 
-
-	 if (min_coord[i] < p(i)) min_coord[i] = p(i);
-	 if (max_coord[i] > p(i)) max_coord[i] = p(i);
-	  
+	   if (min_coord[i] < p(i)) min_coord[i] = p(i);
+	   if (max_coord[i] > p(i)) max_coord[i] = p(i);
+	 }
        }
 	  
      }

@@ -622,6 +622,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 				     const std::string& system_name)
 
 { //
+ 
 
  
  
@@ -678,6 +679,8 @@ void Macrostrain::do_assemble(EquationSystems& es,
   DofMap& dof_map = system.get_dof_map();
  
   
+  
+
 
   FEType fe_type = dof_map.variable_type(uvar[0]);
  
@@ -819,6 +822,9 @@ void Macrostrain::do_assemble(EquationSystems& es,
   
   system.matrix->zero();
   system.rhs->zero();
+
+  
+  
 
   Stiffness* C_tensor_el;
  
@@ -1122,7 +1128,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	      {
 		Ke_sub(p1,p2) = delta(p1,p2)*delta(j,k);
 	      }
-	      
+	      //! Here we impose the substrate point (or fixed point) is not coupled at all.
 	      if ( belongs_to_substrate(p2, elem) && (p1 != p2) )
 	      	  Ke_sub(p1,p2) = 0;
 
@@ -1262,8 +1268,10 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	  {
 	    vec2 = 0; 
 	    for (unsigned int l = 1; l <= dim; l++) vec2(l) = dphi[p1][qp](l-1) ;
-	    
-	    Ke_add_u_sub(eq_number, p1) += JxW[qp] * (vec1*vec2) * lattice_factor ;
+	   
+
+	    if ( !belongs_to_substrate(p1, elem))
+	      Ke_add_u_sub(eq_number, p1) += JxW[qp] * (vec1*vec2) * lattice_factor ;
 	    
 	  }
 	}
@@ -1415,7 +1423,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
  bool Macrostrain::belongs_to_substrate(unsigned int n, const Elem* elem )
  {
 
-   // return(false); //test
+   //  return(false); //test
 
 
    if (grown_on_substrate)
@@ -1545,8 +1553,11 @@ void Macrostrain::do_solve()
 
   }
   
-   
  
+ 
+ 
+  reallocate_matrix();
+
   if (verbose > 2) cout << "Assemble and solve the linear system ...\n" << flush ;
 
   my_system->solve();
@@ -1643,7 +1654,7 @@ void Macrostrain::do_solve()
       
       my_system->solution->zero();
 
-      
+     
 
       my_system->solve();
       
@@ -1849,6 +1860,9 @@ void Macrostrain::do_solve()
 
 
   _first_run = false;
+
+
+ 
  
   //--------------------------------------------------------------------------------------------------//
  }
@@ -4171,7 +4185,7 @@ double Macrostrain::norm_of_difference(NumericVector<Number>& solution1, Numeric
 Macrostrain::~Macrostrain()
 {
 
- 
+  
 
   //equation_systems->delete_system(system_name);
 }
@@ -4211,7 +4225,52 @@ void Macrostrain::adjust_derivatives(Tensor1& deriv_vectors, const Point& normal
 
 }
 
+//-------------------------------------------------------------------------------------------//
+void Macrostrain::reallocate_matrix(void)
+{
+  {
+    LinearImplicitSystem& system = *my_system;
 
+    DofMap& dof_map = system.get_dof_map();
+
+    std::vector< unsigned int > n_nz =	dof_map.get_n_nz();
+    std::vector< unsigned int > n_oz =	dof_map.get_n_oz();
+
+
+    int n = system.matrix->n();
+
+    for (int i = 0; i < n; i++)
+      n_nz[i] += add_dofs_vector.size() ;
+
+
+    for (short j = 0 ; j <add_dofs_vector.size(); j++)
+      n_nz[ add_dofs_vector[j] ] = n;
+
+
+
+
+   
+    //!system matrix
+    Mat _matr =  (dynamic_cast<PetscMatrix<Number>* >(system.matrix) ) ->mat();
+
+    int ierr;
+
+    int non_zeros[n];
+
+    for (int i = 0; i < n; i++)
+      non_zeros[i] = n_nz[i];
+
+    ierr = MatDestroy(_matr);
+
+    ierr = MatCreateSeqAIJ (PETSC_COMM_WORLD, n, n, 0, non_zeros, &_matr);
+
+    ierr = MatSetFromOptions (_matr);
+
+    
+
+  }
+ 
+}
 //-------------------------------------------------------------------------------------------//
 Macrostrain::Macrostrain(void )
 {
