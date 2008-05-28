@@ -31,6 +31,7 @@
 #include "dense_submatrix.h"
 #include "dense_subvector.h"
 
+
 // C++ includes
 
 using namespace std;
@@ -306,12 +307,12 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
       dynamic_cast<DriftDiffusionProperties*>(
           _device->get_material(elem->subdomain_id())->get_model(get_id()));
 
-    sc->reinit(elem);
     sc->set_coordinates(elem->centroid());
     sc->set_potentials(sc->get_equilibrium_fermi_level());
     sc->set_electric_field(RealGradient(0));
     sc->set_grad_fermi_e(RealGradient(0));
     sc->set_grad_fermi_h(RealGradient(0));
+    sc->reinit(elem);
 
     sc->calculate_densities();
     sc->calculate_ionized_dopants();
@@ -846,7 +847,7 @@ DriftDiffusion::do_equilibrium(void)
   }
   catch (runtime_error& e)
   {
-    cerr << "ATTENTION: Equilibrium did not converge: " << e.what() << endl;
+    cerr << "Equilibrium did not converge: " << e.what() << endl;
     throw (e);
   }
 
@@ -1165,6 +1166,7 @@ DriftDiffusion::rebuild_equation_system(void)
   system.add_variable("fermi_e", libMeshEnums::FIRST);
   system.add_variable("fermi_h", libMeshEnums::FIRST);
 
+
   // the linear solver is used to get good guesses for the electro-chemical
   // potentials
   _linear_solver = TiberLinearSolver::create("petsc");
@@ -1172,6 +1174,23 @@ DriftDiffusion::rebuild_equation_system(void)
 
   // finally initialize the newly created system
   system.init();
+
+
+
+///// TEST
+/*
+
+  MeshBase::element_iterator it = get_mesh().active_local_elements_begin();
+  Elem* elem = *it;
+  for (unsigned int n=0; n<elem->n_nodes(); n++)
+  {
+    elem->get_node(n)->set_n_comp(system.number(), system.variable_number("fermi_e"), 0);
+  }
+
+  system.get_dof_map().reinit(get_mesh());
+
+*/
+
 
   _rebuild_eq_system = false;
 
@@ -1229,7 +1248,7 @@ DriftDiffusion::solution_vector(void)
 
 
 void
-DriftDiffusion::do_newton(void) throw (SolverException)
+DriftDiffusion::do_newton(void)
 {
 
   EquationSystems& es = get_equation_systems();
@@ -4255,7 +4274,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           device.get_material(subdomain)->get_model(get_id()));
 
     assert(sc != NULL);
-
     sc->reinit(elem);
     
 
@@ -5421,12 +5439,12 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    //jacobian->print_matlab("J.m");
+    jacobian->print_matlab("J.m");
   }
   else
   {
     residual->close();
-    //residual->print_matlab("F.m");
+    residual->print_matlab("F.m");
   }
 
   

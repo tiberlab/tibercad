@@ -14,7 +14,7 @@ all: run
 
 run1d: DIM := 1
 run2d: DIM := 2
-run2dtri: DIM := 2
+run2d_tri: DIM := 2
 run3d: DIM := 3
 $(targets): run%d: bulk%D.msh run
 run2d_tri: run%d_tri: bulk2Dtri.msh 

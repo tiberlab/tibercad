@@ -696,7 +696,7 @@ class DriftDiffusion : public SimulationInterface
 
 
     //! Do a Newton type iteration
-    void do_newton(void) throw (SolverException);
+    void do_newton(void);
 
 
     //! Calculate the terminal currents

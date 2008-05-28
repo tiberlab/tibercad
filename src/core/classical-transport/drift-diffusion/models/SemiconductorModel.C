@@ -186,7 +186,7 @@ SemiconductorModel::extract_band_properties(void)
       tmp += vbs[i].degeneracy * std::pow(vbs[i].mass_DOS, 1.5)
         * std::exp(-delta / kT);
 
-  //  cerr << i << ", Ev = " << vbs[i].energy << ", m = " << vbs[i].mass_DOS << ", d = " << vbs[i].degeneracy << endl;
+    //cerr << i << ", Ev = " << vbs[i].energy << ", m = " << vbs[i].mass_DOS << ", d = " << vbs[i].degeneracy << endl;
   }
   get_valence_band().effective_mass = std::pow(tmp, 2.0 / 3.0);
   //cerr << "DOS mass = " << get_valence_band().effective_mass  << "\n***\n";

@@ -1,12 +1,15 @@
 #include "ZbDDsemiconductor.h"
- #include "ZbSemiconductor.h"
- #include "DDsemiconductor.h"
- #include "Semiconductor.h"
- #include "getpot.h"
- #include "Alloy.h"
- #include "Database.h"
+#include "ZbSemiconductor.h"
+#include "DDsemiconductor.h"
+#include "Semiconductor.h"
+#include "Constants.h"
+#include "getpot.h"
+#include "Alloy.h"
+#include "Database.h"
+#include "SolverException.h"
  
- using namespace std;
+using namespace std;
+using namespace Constants;
  
  
  //---------------------------------------------//
@@ -251,6 +254,9 @@
  
        imass.invariants(&temp1, &temp2,&imass_DOS);
  
+       assert(imass_DOS > 0.0);
+       if (imass_DOS <= 0.0)
+         throw SolverException("Negative valence band DOS mass");
            
        extremum.mass_DOS = std::pow(1.0/imass_DOS,1.0/3.0);
  

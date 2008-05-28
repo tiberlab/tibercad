@@ -392,13 +392,13 @@ SimulationInterface::solve(void) throw (SolveFailedException)
   {
     do_solve();
   }
-  catch (PetscRuntimeError& e)
-  {
-    ostringstream s;
-    s << "Control: Solve of " << get_name() << " failed." << endl <<
-      "    Cause: " << e.what() << " : " << e.get_reason();
-    throw SolveFailedException(s.str());
-  }
+  //catch (PetscRuntimeError& e)
+  //{
+  //  ostringstream s;
+  //  s << "Control: Solve of " << get_name() << " failed." << endl <<
+  //    "    Cause: " << e.what() << " : " << e.get_reason();
+  //  throw SolveFailedException(s.str());
+  //}
   catch (runtime_error& e)
   {
     ostringstream s;

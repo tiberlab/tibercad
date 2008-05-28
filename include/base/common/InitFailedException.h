@@ -23,6 +23,12 @@ class InitFailedException : public std::runtime_error
 
 };
 
+    //void * array[25];
+    //size_t entries = backtrace(array, sizeof(array) / sizeof(void*));
+    //char ** symbols = backtrace_symbols(array, entries);
+    //for ( size_t i = 2; i < entries; i++ ) {
+    //   cerr <<  symbols[i] << endl;
+    //}
 
 
 #endif // _INITFAILEDEXCEPTION_H_

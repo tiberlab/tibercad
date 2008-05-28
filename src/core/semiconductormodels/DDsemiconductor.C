@@ -1,5 +1,6 @@
 #include "DDsemiconductor.h"
 #include "EFAbulkHamiltonian.h"
+#include "Constants.h"
 #include "Database.h"
 #include "Alloy.h"
 #include "getpot.h"
@@ -10,7 +11,6 @@ extern "C"
   void zheev_(char& jobs, char& UPLO, int& N, Complex* ham6x6matrix, int& N, double* eigvals,  Complex* WORK, int& LWORK, double* RWORK, int& info); 
 };
 
-const double DDsemiconductor::Hartree = 27.2113961;
 
 
 using namespace std; 
@@ -40,7 +40,7 @@ void DDsemiconductor::do_init ()
   
   energy_cutoff = opt.get_option("energy_cutoff", 4.0);
   strained      = false;
-  k_max         = opt.get_option("k_max", 1e-3);
+  k_max         = opt.get_option("k_max", 5e-4);
 
   PhysicalModelInterface::destroy(semiconductor);
   
@@ -132,7 +132,7 @@ void DDsemiconductor::set_strain(const Tensor2Sym& strain_1)
 {
   
  
-  if (norm( strain_1 ) > 1e-5 ) 
+  if (norm( strain_1 ) > 5e-5 ) 
     {
       strain = strain_1;
       strained = true;
@@ -219,7 +219,7 @@ vector< vector<double> > DDsemiconductor::calculate_vb_bulk_states(const vector<
     for (short i = 0; i < 6; i++)
     {
       
-      eigvals_calculated[i] = eigvals[i]*Hartree;
+      eigvals_calculated[i] = eigvals[i]*Constants::Hartree;
       
     }
 

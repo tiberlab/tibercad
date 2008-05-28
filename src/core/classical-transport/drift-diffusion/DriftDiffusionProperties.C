@@ -43,7 +43,8 @@ DriftDiffusionProperties::_DOS_factor = pow(2.0 * M_PI * Constants::me /
 
 
 DriftDiffusionProperties::DriftDiffusionProperties(void)
-  : _is_inhomogeneous(false),
+  : equilibrium_fermi_level(0.0),
+    _is_inhomogeneous(false),
     _pd(NULL),
     _elem(NULL),
     _statistics(TiberCad::BOLTZMANN),
@@ -405,7 +406,7 @@ void
 DriftDiffusionProperties::reinit(const Elem* elem)
 {
  
-  if  ( _elem != elem) 
+  if (_elem != elem) 
   {
     _elem = elem;
     _coord = elem->centroid();
@@ -427,7 +428,6 @@ DriftDiffusionProperties::reinit(const Elem* elem)
     _polarization(1) += _pyropolarization->get_polarization()(2);
     _polarization(2) += _pyropolarization->get_polarization()(3);
     _polarization *= _relax_polariz;
-
     this->prepare_element_data();
   }
 
@@ -711,6 +711,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   // In some cases guess can be Inf or NaN. Then we set it to midband energy
   if (isinf(guess) || isnan(guess))
     guess = 0.5 * (cb.band_edge + vb.band_edge);
+
 
   /*
    * We use standard Newton. This should work always, as the density

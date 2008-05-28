@@ -115,9 +115,6 @@ class DDsemiconductor : public PhysicalModelInterface
  protected:
 
 
-  //! Hartree energy in eV
-  static const double Hartree;
-
   //!pointer to an object that can calculate the conduction band properties 
   Semiconductor* semiconductor;
 

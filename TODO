@@ -1,0 +1,5 @@
+2008-05-28 Povolotskyi
+	( ) implement model for Zb valence band mass at small strain
+
+2008-05-28 Auf der Maur
+	(DONE) throw exception when vb DOS mass negative

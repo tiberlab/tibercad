@@ -87,7 +87,7 @@ $Solver
     start = 0.0
     stop = 1.0
     steps = 10
-    plotvariable = current
+    plot_data = true
   }
 }
 
@@ -111,13 +111,13 @@ $Physics
 $Simulation
 {
   searchpath = ../../materials
-  meshfile = bulk1D.msh
-  dimension = 1
+  meshfile = bulk2Dtri.msh
+  dimension = 2
   mesh_units = 1e-3
   temperature = 300
   #solve = driftdiffusion
   solve = sweep
-  resultpath = output_1D
+  resultpath = output_tri
   #output_format = grace
   #output_format = gmv
   output_format = vtk
