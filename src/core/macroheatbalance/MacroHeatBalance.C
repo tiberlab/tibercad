@@ -1,5 +1,8 @@
+// $Id$
+
 #include "MacroHeatBalance.h"
 #include "BoundaryProperties.h"
+#include "TiberLinearSystem.h"
 #include "PhysicalModel.h"
 #include "mesh.h"
 #include "dof_map.h"
@@ -81,13 +84,10 @@ void MacroHeatBalance::do_init( )
 
   get_scaling().set_calc_mesh_units(mesh_units);
   
-  equation_systems = & (get_equation_systems());
 
-  system_name = get_equation_system_name();
+  my_system = TiberLinearSystem::create(get_equation_systems(),
+      get_equation_system_name(), get_solver_options());
 
-  equation_systems->add_system<LinearImplicitSystem> (system_name);
-
-  my_system = &( equation_systems->get_system<LinearImplicitSystem>(system_name)  );
 
   my_system->add_variable("T", FIRST);
 
@@ -129,6 +129,7 @@ void  MacroHeatBalance::do_solve()
   
   static_this = this;
   
+  my_system->set_options(get_solver_options());
   my_system->solve();
   
  
@@ -212,7 +213,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
   SimulationEnvironment& se = get_environment(); 
 
-  LinearImplicitSystem& system = *my_system;
+  TiberLinearSystem& system = *my_system;
   
   const unsigned int uvar = system.variable_number("T");
   
@@ -595,7 +596,7 @@ MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
   values.resize(np);
   if ((np == 0) || (ids.size() == 0)) return;
 
-  LinearImplicitSystem& system = *my_system;
+  TiberLinearSystem& system = *my_system;
 
   DofMap& dof_map = system.get_dof_map();
 
@@ -879,7 +880,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
   
   results.resize(nn * n_vars,0.0);
 
-  LinearImplicitSystem& system = *my_system;
+  TiberLinearSystem& system = *my_system;
 
   const unsigned int  var = system.variable_number("T");
 
@@ -1186,7 +1187,7 @@ MacroHeatBalance::calculate_power_surfint(void)
   if (libMesh::processor_id() != 0)
     return;
 
-  LinearImplicitSystem& system = *my_system;
+  TiberLinearSystem& system = *my_system;
   
   const unsigned int  var = system.variable_number("T");
 
@@ -1297,6 +1298,6 @@ MacroHeatBalance::do_print_info(void)
 {
 
   string space("  ");
-  cout << space << "linear solver is: petsc" <<std::endl;
+  //cout << space << "linear solver is: petsc" <<std::endl;
    
 }

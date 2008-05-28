@@ -1,3 +1,5 @@
+// $Id$
+
 #include "Macrostrain.h"
 #include "SimulationEnvironment.h"
 #include "Material.h"
@@ -6,9 +8,11 @@
 #include "MacrostrainBoundaryProperties.h"
 #include "MacrostrainPressure.h"
 #include "MacrostrainSubstrate.h"
-#include "TiberPetscLinearSolver.h"
 #include "SimulationOptions.h" 
+#include "TiberLinearSystem.h"
 
+#include "TiberLinearSolver.h"
+#include "TiberPetscLinearSolver.h"
 
 
 using namespace std;
@@ -145,7 +149,6 @@ void Macrostrain::parse_options( )
  coarsen_fraction = opt.get_option("coarsen_fraction", 0.0);
 
  max_ref_level = opt.get_option("max_refinement_level",10);
- tolerance  = opt.get_option("tolerance", 1e-10);  
  max_shape_steps = opt.get_option("number_shape_steps",0);
    
 
@@ -156,145 +159,42 @@ void Macrostrain::parse_options( )
   
 
   
- unsigned int max_ksp_iterations = opt.get_option("max_iterations",1000);
- 
-
  // assert(periodicity_x == false);
 
    
- equation_systems->parameters.set<Real>("linear solver tolerance") = tolerance; 
- 
-  
 
+ // set default options for solver
+ ModelOptions& solver_opts = get_solver_options();
 
-
-
- SolverType solver_type;
-
- PreconditionerType pc_type;
-
- string ksptype;
-
- string pc; 
-
- if (dim == 1)
+ if (solver_opts.find_option("tolerance"))
  {
-   ksptype = "gmres";
-
-   pc =  "ilu" ;
- }
- else
- { 
-   ksptype = "bcgsl";
-
-   pc =  "jacobi" ;
+   cerr << "Macrostrain: Solver option \'tolerance\' is deprecated. "
+     << "Use \'lin_rel_tol\' instead." << endl;
+   solver_opts["lin_rel_tol"] = solver_opts["tolerance"];
+   solver_opts.delete_option("tolerance");
  }
 
- ksptype = opt.get_option("ksp_type", ksptype );
-
- if (ksptype == "") {}
- else if (ksptype == "bcgsl")
-  solver_type  = BICGSTAB;
- else if (ksptype == "gmres")
-  solver_type = GMRES;
- else if (ksptype == "bcgs")
-  solver_type = BICG;
- else if (ksptype == "cg")
-  solver_type = CG;
- else if (ksptype == "richardson")
-  solver_type = RICHARDSON;
-
-
-
- pc = opt.get_option("pc_type", pc);
-
- if (pc == "") {}
- else if (pc == "ilu")
-   pc_type = ILU_PRECOND;
- else if (pc == "composite")
-   pc_type = USER_PRECOND;
- else if (pc == "jacobi")
-   pc_type = JACOBI_PRECOND;
- else if (pc == "lu")
-   pc_type = LU_PRECOND;
- else if (pc == "cholesky")
-   pc_type = CHOLESKY_PRECOND;
- else if (pc == "eisenstat")
-   pc_type = EISENSTAT_PRECOND;
-  
-
-
- 
-
-
- my_system->linear_solver->set_solver_type(solver_type);
-
- my_system->linear_solver->set_preconditioner_type(pc_type);
-
-
- my_solver->set_ksp_options ( tolerance, max_ksp_iterations);
-
- my_solver->init();
-
-
-
- 
-   
- bool monitor = opt.get_option("monitor", false);
-
- if (monitor)
+ if (solver_opts.find_option("max_iterations"))
  {
-     
-
-   int ierr; 
-
-   KSP ksp_of_my_solver = (dynamic_cast< TiberPetscLinearSolver* > (  (my_system->linear_solver).get() )   )->get_ksp();
-
-#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
-      && (PETSC_VERSION_SUBMINOR > 2))
-   ierr = KSPMonitorSet(ksp_of_my_solver,KSPMonitorDefault, PETSC_NULL,0);
-#else
-   ierr = KSPSetMonitor(ksp_of_my_solver,KSPDefaultMonitor, PETSC_NULL,0);
-#endif
-
-  
+   cerr << "Macrostrain: Solver option \'max_iterations\' is deprecated. "
+     << "Use \'lin_max_it\' instead." << endl;
+   solver_opts["lin_max_it"] = solver_opts["max_iterations"];
+   solver_opts.delete_option("max_iterations");
  }
 
- _xmonitor = opt.get_option("xmonitor", false);
-
- if (_xmonitor)
+ if (solver_opts.find_option("pc"))
  {
-   if (!_monitor_is_open) 
-   {
-#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
-     && (PETSC_VERSION_SUBMINOR > 2))
-     KSPMonitorLGCreate (NULL, get_name().c_str(),0,0,400,400, &_lg);
-#else
-     KSPLGMonitorCreate (NULL, get_name().c_str(),0,0,400,400, &_lg);
-#endif
+   cerr << "Macrostrain: Solver option \'pc\' is obsolete. "
+     << "Use \'pc_type\' instead." << endl;
+   solver_opts["pc_type"] = solver_opts["pc"];
+   solver_opts.delete_option("pc");
+ }
 
+ if (solver_opts.get_option("ksp_type", "") == "")
+   solver_opts["ksp_type"] = (dim == 1) ? "gmres" : "bcgsl";
 
-     int ierr; 
-
-     KSP ksp_of_my_solver = (dynamic_cast< TiberPetscLinearSolver* > (  (my_system->linear_solver).get() )   )->get_ksp(); 
-
-#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
-     && (PETSC_VERSION_SUBMINOR > 2))
-     ierr = KSPMonitorSet ( ksp_of_my_solver,KSPMonitorLG,_lg,0);
-#else
-     ierr = KSPSetMonitor ( ksp_of_my_solver,KSPLGMonitor,_lg,0);
-#endif
-     
-     _monitor_is_open = true;
-   }
-   
-
-
-   
-}
-
-
-
+ if (solver_opts.get_option("pc_type", "") == "")
+   solver_opts["pc_type"] = (dim == 1) ? "ilu" : "jacobi";
 
 
 
@@ -502,12 +402,8 @@ void Macrostrain::do_init( )
 
   //--------------------------------------------------------------------------------------//
   //add new system
-  system_name = get_equation_system_name ( );
-  
- 
-  equation_systems->add_system<LinearImplicitSystem> (system_name);
-
-  my_system = &( equation_systems->get_system<LinearImplicitSystem>(system_name)  );
+  my_system = TiberLinearSystem::create(*equation_systems,
+      get_equation_system_name(), get_solver_options());
 
   //--------------------------------------------------------------------------------------//
 
@@ -575,13 +471,6 @@ void Macrostrain::do_init( )
    
  }
    
-  //-------------------------------------------------------------------//
- my_solver =  TiberLinearSolver::create ("petsc");
- my_system->linear_solver = AutoPtr< LinearSolver< Real > >(my_solver);
-
-  //---------------------------------------------------------------------------------------------------------//
-
-
 
 
   //------init is done---------------------------------------------------------------------//
@@ -1557,6 +1446,7 @@ void Macrostrain::do_solve()
  
  
   reallocate_matrix();
+  my_system->set_options(get_solver_options());
 
   if (verbose > 2) cout << "Assemble and solve the linear system ...\n" << flush ;
 
@@ -4276,10 +4166,7 @@ Macrostrain::Macrostrain(void )
 {
   poisson_equation = NULL;
 
-  my_solver = NULL;
-
-  _monitor_is_open = false;
-
+  my_system = NULL;
 
   _first_run = true;
 

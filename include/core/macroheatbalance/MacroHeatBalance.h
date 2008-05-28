@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _MACROHEATBALANCE_H_
 #define _MACROHEATBALANCE_H_
 
@@ -9,10 +11,13 @@
 #include "SimulationInterface.h"
 
 #include "HeatModel.h"
-#include "linear_implicit_system.h"
-class DriftDiffusion;
+
+
+class TiberLinearSystem;
 class Device;
 class Mesh;
+
+
 //!  Class to solve heat transport problem
 class MacroHeatBalance : public SimulationInterface
 /*!
@@ -23,17 +28,18 @@ class MacroHeatBalance : public SimulationInterface
 */
 
 {
+
  public:
 
 
- enum Variables
-     {
-            UNKNOWN = 0,
-            TEMPERATURE,
-            JQX,
-            JQY,
-	    JQZ
-     };
+   enum Variables
+   {
+     UNKNOWN = 0,
+     TEMPERATURE,
+     JQX,
+     JQY,
+     JQZ
+   };
        
 
 
@@ -130,7 +136,7 @@ class MacroHeatBalance : public SimulationInterface
 
   std::string system_name;
   
-  LinearImplicitSystem* my_system;  
+  TiberLinearSystem* my_system;  
  
   //! Order the solution in correct mode
   virtual void 	build_nodal_results(const std::set< std::string > &variables, 

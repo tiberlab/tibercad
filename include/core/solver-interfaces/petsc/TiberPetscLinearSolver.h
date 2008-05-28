@@ -9,7 +9,6 @@
 #include "KSPDivergedError.h"
 
 // Libmesh includes
-//#include "linear_solver.h"
 #include "petsc_vector.h"
 #include "petsc_matrix.h"
 
@@ -55,31 +54,12 @@ class TiberPetscLinearSolver : public TiberLinearSolver
     virtual void init(void);
 
 
-    //! Call the Petsc solver.
-    /*!
-     * It calls the method below, using the
-     * same matrix for the system and preconditioner matrices.
-     */    
-    virtual std::pair<unsigned int, double> 
-      solve (SparseMatrix<Number>  &matrix_in,
-          NumericVector<Number> &solution_in,
-          NumericVector<Number> &rhs_in,
-          const double tol,
-          const unsigned int m_its)
-      {
-        return this->solve(matrix_in, matrix_in, solution_in, rhs_in, tol, m_its);
-      }
-
-
-    //! Call the linear solver specifying explicitly the preconditioner matrix
-    virtual std::pair<unsigned int, double> 
-      solve (SparseMatrix<Number>  &matrix,
-          SparseMatrix<Number>  &preconditioner,
+    //! Solve the linear system
+    virtual std::pair<unsigned int, Real>
+      solve(SparseMatrix<Number> &matrix,
+          SparseMatrix<Number> &preconditioner,
           NumericVector<Number> &solution,
-          NumericVector<Number> &rhs,
-          const double tol,
-          const unsigned int m_its);
-
+          NumericVector<Number> &rhs);
 
     /*!
      * \brief Fills the input vector with the sequence of residual norms
@@ -96,37 +76,51 @@ class TiberPetscLinearSolver : public TiberLinearSolver
     KSP get_ksp(void);
 
     
-    //! Returns preconditioner context
-    PC  get_pc(void);
+
+
+  protected:
+
+    /*!  \copydoc TiberLinearSolver::parse_options() */
+    virtual void parse_options(const ModelOptions& options);
+
+
+    //! Setup the textual and graphical convergence monitors
+    void setup_monitors(void);
 
 
 
   private:
 
 
-    //! Preconditioner context
-    PC _pc; 
-
-
     //! Krylov subspace context
     KSP _ksp;
 
+    //! The KSP type
+    KSPType _ksp_type;
 
-    //! Set the KSP type
-    void set_ksp_type(void);
+    //! The PC type
+    PCType _pc_type;
 
+    //! The graphical monitor
+    PetscDrawLG _LG_monitor;
 
-    //! Set the KSP type
-    void set_pc_type(void);
+    //! Do we want monitor?
+    bool _monitor;
+
+    //! Do we want X monitor?
+    bool _xmonitor;
+
+    //! Tells if xmonitor is already opened
+    bool _xmonitor_open;
 
 
     //! Check PETSc error code
-    static void _checkerr(int errorcode) throw (PetscRuntimeError);
+    static void _checkerr(int errorcode);
 
 
     //! Check convergence
-    std::pair<unsigned int, double> check_convergence(void)
-      throw (KSPDivergedError);
+    std::pair<unsigned int, double> check_convergence(void);
+
 
 };
 
@@ -139,23 +133,10 @@ class TiberPetscLinearSolver : public TiberLinearSolver
 
 inline
 void
-TiberPetscLinearSolver::_checkerr(int errorcode) throw (PetscRuntimeError)
+TiberPetscLinearSolver::_checkerr(int errorcode)
 {
   if (errorcode != 0)
     throw(PetscRuntimeError(errorcode));
-}
-
-
-
-
-
-inline
-TiberPetscLinearSolver::TiberPetscLinearSolver(void)
-{
-  if (libMesh::n_processors() == 1)
-    this->_preconditioner_type = ILU_PRECOND;
-  else
-    this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
 }
 
 
@@ -171,12 +152,6 @@ inline
 KSP TiberPetscLinearSolver::get_ksp(void)
 {
   return _ksp;
-}
-
-inline 
-PC TiberPetscLinearSolver::get_pc(void)
-{
-  return _pc;
 }
 
 

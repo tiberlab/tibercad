@@ -6,7 +6,6 @@
 
 
 #include "TiberLinearSolver.h"
-#include "LinearSolverException.h"
 #include "PardisoSolverException.h"
 
 
@@ -43,9 +42,7 @@ class PardisoLinearSolver : public TiberLinearSolver
       solve (SparseMatrix<Number>  &matrix,
           SparseMatrix<Number>  &preconditioner,
           NumericVector<Number> &solution,
-          NumericVector<Number> &rhs,
-          const double tol,
-          const unsigned int m_its);
+          NumericVector<Number> &rhs);
 
 
 
@@ -73,7 +70,7 @@ class PardisoLinearSolver : public TiberLinearSolver
     int iparm[64]; 
 
     //! Check PETSc error code
-    static void _checkerr(int errorcode) throw (LinearSolverException);
+    static void _checkerr(int errorcode);
 
     //! Pardiso solver interface
     void solve_pardiso(double *mat, int *ia, int *ja, double *b, double *x, int n);
@@ -90,14 +87,10 @@ class PardisoLinearSolver : public TiberLinearSolver
 
 inline
 void
-PardisoLinearSolver::_checkerr(int errorcode) throw (LinearSolverException)
+PardisoLinearSolver::_checkerr(int errorcode)
 {
   if (errorcode != 0)
-  {
-    std::ostringstream s;
-    s << "Petsc error in PardisoLinearSolver: " << errorcode;
-    throw(LinearSolverException(s.str()));
-  }
+    throw PardisoSolverException(errorcode);
 }
 
 

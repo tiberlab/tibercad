@@ -134,7 +134,6 @@ SimulationInterface::create(const string& type,
     sim->_create = create_fnc;
     sim->_destroy = destroy_fnc;
 
-
     sim->set_options(options);
 
     // we let it know what's its identifier
@@ -1116,3 +1115,16 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 
   return flag;
 }
+
+
+ModelOptions&
+SimulationInterface::get_solver_options(void)
+{
+  if (!_options.has_submodel("$Solver"))
+    _options.add_submodel("$Solver", ModelOptions());
+
+  ModelOptions::submodel_iterator it(_options.submodels_begin("$Solver"));
+
+  return it->second;
+}
+                   

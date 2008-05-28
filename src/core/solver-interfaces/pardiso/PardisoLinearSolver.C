@@ -105,9 +105,7 @@ std::pair<unsigned int, Real>
 PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 			     SparseMatrix<Number>&  precond_in,
 			     NumericVector<Number>& solution_in,
-			     NumericVector<Number>& rhs_in,
-			     const double tol,
-			     const unsigned int m_its)
+			     NumericVector<Number>& rhs_in)
 {
 
   this->init ();

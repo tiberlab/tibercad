@@ -65,8 +65,9 @@ $Solver
   {
     nonlin_rel_tol = 1e-12
     nonlin_step_tol = 1e-6
-    nonlin_max_it = 30
-    ls_max_step = 1
+    #nonlin_max_it = 30
+    #ls_max_step = 1
+    #xmonitor = true
   }
 
   sweep

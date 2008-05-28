@@ -1,5 +1,10 @@
 // $Id$
 
+#include "TiberPetscNonlinearSolver.h"
+#include "TiberPetscUtils.h"
+#include "ModelOptions.h"
+#include "KSPDivergedError.h"
+#include "SNESDivergedError.h"
 
 // libmesh includes
 #include "libmesh_common.h"
@@ -8,8 +13,6 @@
 
 // C++ includes
 
-// Local Includes
-#include "TiberPetscNonlinearSolver.h"
 #define DEBUG
 
 
@@ -33,7 +36,7 @@ extern "C"
   // this function is called by PETSc at the end of each nonlinear step  
   PetscErrorCode
   __tiber_petsc_snes_monitor(SNES _snes, PetscInt its, PetscReal fnorm,
-      void *) throw (PetscRuntimeError, KSPDivergedError)
+      void *ctx)
   {
 
     int ierr = 0;
@@ -70,6 +73,17 @@ extern "C"
       throw(KSPDivergedError(reason, its, fnorm));
     }
 
+#ifdef DEBUG
+# if (((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
+      && (PETSC_VERSION_SUBMINOR < 3))) 
+    if (its == 0)
+      std::cerr << "it " << its << ", fnorm = " << fnorm << "\n";
+# endif
+#endif
+
+    TiberPetscNonlinearSolver* solver =
+      static_cast<TiberPetscNonlinearSolver*>(ctx);
+    solver->draw_point(its, fnorm);
 
     // we increase tolerance for linear solver at each nonlinear step
     double rtol, atol, stol;
@@ -94,8 +108,8 @@ extern "C"
     assert (r   != NULL);
     assert (ctx != NULL);
     
-    TiberPetscNonlinearSolver<Number>* solver =
-      static_cast<TiberPetscNonlinearSolver<Number>*>(ctx);
+    TiberPetscNonlinearSolver* solver =
+      static_cast<TiberPetscNonlinearSolver*>(ctx);
     
     PetscVector<Number> X_global(x), R(r);
     PetscVector<Number> X_local(X_global.size());
@@ -121,8 +135,8 @@ extern "C"
 
     assert (ctx != NULL);
     
-    TiberPetscNonlinearSolver<Number>* solver =
-      static_cast<TiberPetscNonlinearSolver<Number>*>(ctx);
+    TiberPetscNonlinearSolver* solver =
+      static_cast<TiberPetscNonlinearSolver*>(ctx);
     
     PetscMatrix<Number> PC(*pc);
     PetscMatrix<Number> Jac(*jac);
@@ -150,91 +164,11 @@ extern "C"
       const char* file, const char* dir, PetscErrorCode n,
       int p, const char* mess, void* ctx) throw (PetscRuntimeError)
   {
+    TiberPetscNonlinearSolver* solver =
+      static_cast<TiberPetscNonlinearSolver*>(ctx);
     throw(PetscRuntimeError(n));
   }
 
-/*
-  // Checks the update vector before updating
-  PetscErrorCode
-  __tiber_snes_ls_precheck(SNES snes, Vec x, Vec y, void* ctx,
-      PetscTruth* y_changed)
-  {
-    int ierr = 0;
-    bool change = false;
-
-    PetscScalar* vv;
-    ierr = VecGetArray(y, &vv);
-    if (ierr != 0) throw(PetscRuntimeError(ierr));
-
-    PetscInt n;
-    ierr = VecGetLocalSize(y, &n);
-
-    for (int i = 0; i < n; i++)
-    {
-      if (vv[i] > 10)
-      {
-        vv[i] = 10;
-        change = true;
-      }
-      else if (vv[i] < -10)
-      {
-        vv[i] = -10;
-        change = true;
-      }
-    }
-    
-    ierr = VecRestoreArray(y, &vv);
-    if (ierr != 0) throw(PetscRuntimeError(ierr));
-
-    if (change)
-      *y_changed = PETSC_TRUE;
-    else
-      *y_changed = PETSC_FALSE;
-    
-    return ierr;
-  }
-
-
-  // Checks the update vector before updating
-  PetscErrorCode
-  __tiber_snes_ls_postcheck(SNES snes, Vec x, Vec y, Vec w, void* ctx,
-      PetscTruth* y_changed, PetscTruth* w_changed)
-  {
-    int ierr = 0;
-    bool change = false;
-
-    PetscScalar* vv;
-    ierr = VecGetArray(y, &vv);
-    if (ierr != 0) throw(PetscRuntimeError(ierr));
-
-    PetscInt n;
-    ierr = VecGetLocalSize(y, &n);
-
-    for (int i = 0; i < n; i++)
-    {
-      if (vv[i] > 1)
-      {
-        vv[i] = 1;
-        change = true;
-      }
-      else if (vv[i] < -1)
-      {
-        vv[i] = -1;
-        change = true;
-      }
-    }
-    
-    ierr = VecRestoreArray(y, &vv);
-    if (ierr != 0) throw(PetscRuntimeError(ierr));
-
-    if (change)
-      *y_changed = PETSC_TRUE;
-    else
-      *y_changed = PETSC_FALSE;
-    
-    return ierr;
-  }
-*/
 
 
 
@@ -286,51 +220,31 @@ extern "C"
 
 
 
-template <typename T>
-TiberPetscNonlinearSolver<T>::TiberPetscNonlinearSolver(void)
-  throw (PetscRuntimeError) 
-  : _nonlinear_rtol(1e-15),
-    _nonlinear_atol(1e-18),
-    _nonlinear_stol(1e-6),
-    _nonlinear_max_it(20),
-    _emergency_fnorm(1e-9),
-    _linear_rtol(1e-6),
-    _linear_atol(1e-15),
-    _linear_max_it(500),
+TiberPetscNonlinearSolver::TiberPetscNonlinearSolver(void)
+  : _emergency_fnorm(1e-9),
     _ls_type(3),
-    _ls_maxstep(1e3),
+    _ls_maxstep(1e5),
     _ksp_type(KSPBCGSL),
     _pc_type(PCILU)
 {
 }
 
 
-template <typename T>
 void
-TiberPetscNonlinearSolver<T>::set_snes_options(double rtol, double atol,
-    double stol, unsigned int max_it)
+TiberPetscNonlinearSolver::parse_options(const ModelOptions& options)
 {
-  _nonlinear_rtol = rtol;
-  _nonlinear_atol = atol;
-  _nonlinear_stol = stol;
-  _nonlinear_max_it = max_it;
-}
+  _ls_type = TiberPetscUtils::extract_LSType(options);
 
-template <typename T>
-void
-TiberPetscNonlinearSolver<T>::set_snes_ls_options(int ls_type, 
-    double ls_maxstep)
-{
-  _ls_type = ls_type;
-  _ls_maxstep = ls_maxstep;
+  _ksp_type = TiberPetscUtils::extract_KSPType(options);
+
+  _pc_type = TiberPetscUtils::extract_PCType(options);
+
+  _ls_maxstep = options.get_option("max_step", _ls_maxstep);
 }
 
 
 
-
-
-template <typename T>
-void TiberPetscNonlinearSolver<T>::clear(void) throw (PetscRuntimeError)
+void TiberPetscNonlinearSolver::clear(void)
 {
   if (this->initialized())
   {
@@ -345,8 +259,7 @@ void TiberPetscNonlinearSolver<T>::clear(void) throw (PetscRuntimeError)
 
 
 
-template <typename T>
-void TiberPetscNonlinearSolver<T>::init(void) throw (PetscRuntimeError)
+void TiberPetscNonlinearSolver::init(void)
 {  
   // Initialize the data structures if not done so already.
   if (!this->initialized())
@@ -407,19 +320,15 @@ void TiberPetscNonlinearSolver<T>::init(void) throw (PetscRuntimeError)
 }
 
 
-template <typename T>
 std::pair<unsigned int, Real> 
-TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
-    NumericVector<T>& solution,
-    NumericVector<T>& residual,
-    const double rtol,
-    const unsigned int iter)
-  throw (PetscRuntimeError, KSPDivergedError, SNESDivergedError)
+TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
+    NumericVector<double>& solution,
+    NumericVector<double>& residual)
 {
 
-  PetscMatrix<T>* jac = dynamic_cast<PetscMatrix<T>*>(&jacobian);
-  PetscVector<T>* x   = dynamic_cast<PetscVector<T>*>(&solution);
-  PetscVector<T>* r   = dynamic_cast<PetscVector<T>*>(&residual);
+  PetscMatrix<double>* jac = dynamic_cast<PetscMatrix<double>*>(&jacobian);
+  PetscVector<double>* x   = dynamic_cast<PetscVector<double>*>(&solution);
+  PetscVector<double>* r   = dynamic_cast<PetscVector<double>*>(&residual);
 
   // We cast to pointers so we can be sure that they succeeded
   // by comparing the result against NULL.
@@ -432,14 +341,14 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
 
   // for the case it was cleared before
   this->init();
-  
+
   // set solver options
-  SNESSetTolerances(_snes, _nonlinear_atol, _nonlinear_rtol,
-      _nonlinear_stol, _nonlinear_max_it, _linear_max_it);
+  SNESSetTolerances(_snes, get_nonlinear_atol(), get_nonlinear_rtol(),
+      get_nonlinear_stol(), get_nonlinear_max_it(), get_linear_max_it());
 
 # if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
     (PETSC_VERSION_SUBMINOR >= 2))
-  SNESSetMaxLinearSolveFailures(_snes, _nonlinear_max_it);
+  SNESSetMaxLinearSolveFailures(_snes, get_nonlinear_max_it());
 #endif
 
   switch (_ls_type)
@@ -480,9 +389,9 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
 
   ierr = KSPSetType(ksp, _ksp_type);
   _checkerr(ierr);
-  
-  KSPSetTolerances(ksp, _linear_rtol, _linear_atol, PETSC_DEFAULT,
-      _linear_max_it);
+
+  KSPSetTolerances(ksp, get_linear_rtol(), get_linear_atol(), PETSC_DEFAULT,
+      get_linear_max_it());
  
   PC pc;
   KSPGetPC(ksp, &pc);
@@ -608,9 +517,5 @@ TiberPetscNonlinearSolver<T>::solve(SparseMatrix<T>&  jacobian,
 }
 
 
-
-
-// Explicit instantiation
-template class TiberPetscNonlinearSolver<Real>;
 
 

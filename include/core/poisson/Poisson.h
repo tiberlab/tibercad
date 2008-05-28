@@ -7,11 +7,14 @@
 #include "SimulationInterface.h"
 #include "elem.h"
 #include "PoissonModel.h"
-#include "linear_implicit_system.h"
 #include "point.h"
 
+class TiberLinearSystem;
 class Device;
 class Mesh;
+
+
+
 //!  Class to solve Poisson problem
 class Poisson : public SimulationInterface
 /*!
@@ -108,7 +111,7 @@ class Poisson : public SimulationInterface
 
   std::string system_name;
   
-  LinearImplicitSystem* my_system;  
+  TiberLinearSystem* my_system;  
  
   //! Order the solution in correct mode
   virtual void 	build_nodal_results(const std::set< std::string > &variables, 

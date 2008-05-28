@@ -155,6 +155,22 @@ class ModelOptions
     bool has_submodel(const std::string& name);
 
 
+    //! Get the iterator for a certain submodel
+    /*!
+     * \param name the name of the model to look for
+     * \return the const iterator for the first appearance of the model
+     */
+    submodel_iterator submodels_begin(const std::string& name);
+
+
+    //! Get the past-the-end iterator for a certain submodel
+    /*!
+     * \param name the name of the model to look for
+     * \return the past-the-end iterator for the model
+     */
+    submodel_iterator submodels_end(const std::string& name);
+
+
     //! Get the const iterator for a certain submodel
     /*!
      * \param name the name of the model to look for
@@ -171,6 +187,7 @@ class ModelOptions
     const_submodel_iterator submodels_end(const std::string& name) const;
 
 
+
     //! Get the iterator for the first submodel
     submodel_iterator submodels_begin(void);
 
@@ -179,7 +196,7 @@ class ModelOptions
     submodel_iterator submodels_end(void);
 
     
-    //! Get the iterator for the first submodel
+    //! Get the const iterator for the first submodel
     const_submodel_iterator submodels_begin(void) const;
 
     
@@ -187,7 +204,7 @@ class ModelOptions
     const_submodel_iterator submodels_end(void) const;
 
 
-    //! Get the iterator to the first option
+    //! Get the const iterator to the first option
     const_option_iterator options_begin(void) const;
 
 
@@ -282,6 +299,24 @@ ModelOptions::is_empty(void) const
 
 
 inline
+ModelOptions::submodel_iterator
+ModelOptions::submodels_begin(void)
+{
+  return _submodels.begin();
+}
+
+
+
+inline
+ModelOptions::submodel_iterator
+ModelOptions::submodels_end(void)
+{
+  return _submodels.end();
+}
+
+
+
+inline
 ModelOptions::const_submodel_iterator
 ModelOptions::submodels_begin(void) const
 {
@@ -301,25 +336,6 @@ ModelOptions::submodels_end(void) const
 
 
 inline
-ModelOptions::submodel_iterator
-ModelOptions::submodels_begin(void)
-{
-  return _submodels.begin();
-}
-
-
-
-
-inline
-ModelOptions::submodel_iterator
-ModelOptions::submodels_end(void)
-{
-  return _submodels.end();
-}
-
-
-
-inline
 ModelOptions::const_submodel_iterator
 ModelOptions::submodels_begin(const std::string& name) const
 {
@@ -334,6 +350,24 @@ ModelOptions::submodels_end(const std::string& name) const
 {
   return _submodels.upper_bound(name);
 }
+
+
+inline
+ModelOptions::submodel_iterator
+ModelOptions::submodels_begin(const std::string& name)
+{
+  return _submodels.lower_bound(name);
+}
+
+
+
+inline
+ModelOptions::submodel_iterator
+ModelOptions::submodels_end(const std::string& name)
+{
+  return _submodels.upper_bound(name);
+}
+
 
 
 

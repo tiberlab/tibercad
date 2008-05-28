@@ -10,6 +10,25 @@
 #include "ModelOptions.h"
 
 
+namespace
+{
+  const double default_linear_rtol = 1e-6;
+  const double default_linear_atol = 1e-50;
+  const int default_linear_max_it = 500;
+}
+
+
+
+
+TiberLinearSolver::TiberLinearSolver(void)
+  : _linear_rtol(default_linear_rtol),
+    _linear_atol(default_linear_atol),
+    _linear_max_it(default_linear_max_it)
+{
+}
+
+
+
 TiberLinearSolver*
 TiberLinearSolver::create(const std::string& type)
 {
@@ -51,9 +70,11 @@ TiberLinearSolver::create(const ModelOptions& options)
 void
 TiberLinearSolver::set_options(const ModelOptions& options)
 {
-  _linear_rtol = options.get_option("lin_rel_tol", _linear_rtol);
-  _linear_atol = options.get_option("lin_abs_tol", _linear_atol);
-  _linear_max_it = options.get_option("lin_max_it", _linear_max_it);
+  _linear_rtol = options.get_option("lin_rel_tol", default_linear_rtol);
+  _linear_atol = options.get_option("lin_abs_tol", default_linear_atol);
+  _linear_max_it = options.get_option("lin_max_it", default_linear_max_it);
+
+  _sim_name = options.get_option("name", "?");
 
   parse_options(options);
 }

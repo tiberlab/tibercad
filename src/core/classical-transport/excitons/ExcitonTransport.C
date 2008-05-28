@@ -8,7 +8,6 @@
 #include "Scaling.h"
 #include "Constants.h"
 #include "ExcitonProperties.h"
-#include "TiberPetscNonlinearSolver.h"
 #include "FiniteElement.h"
 
 // libmesh includes
@@ -20,7 +19,7 @@
 #include "fe_interface.h"
 #include "quadrature_gauss.h"
 #include "equation_systems.h"
-#include "nonlinear_implicit_system.h"
+#include "TiberNonlinearSystem.h"
 //#include "mesh_refinement.h"
 //#include "error_vector.h"
 //#include "kelly_error_estimator.h"
@@ -56,8 +55,7 @@ ExcitonTransport::Options::Options(const Options& rhs)
     refine_fraction(rhs.refine_fraction),
     coarsen_fraction(rhs.coarsen_fraction),
     refinement_tolerance(rhs.refinement_tolerance),
-    integration_order(rhs.integration_order),
-    solver_params(rhs.solver_params)
+    integration_order(rhs.integration_order)
 {
 }
 
@@ -73,62 +71,11 @@ ExcitonTransport::Options::operator=(const Options& rhs)
     coarsen_fraction = rhs.coarsen_fraction;
     refinement_tolerance = rhs.refinement_tolerance;
     integration_order = rhs.integration_order;
-    solver_params = rhs.solver_params;
   }
   return *this;
 }
 
 
-
-ExcitonTransport::SolverParameters::SolverParameters(void)
-  : nonlinear_tolerance(1e-9),
-    nonlinear_abs_tolerance(1e-15),
-    nonlinear_step_tolerance(1e-6),
-    nonlinear_max_iterations(20),
-    linear_tolerance(1e-6),
-    linear_abs_tolerance(1e-15),
-    linear_max_iterations(500),
-    ls_maxstep(0.025),
-    ls_type(3),
-    ksp_type(KSPBCGSL),
-    pc_type(PCCOMPOSITE)
-{
-}
-
-ExcitonTransport::SolverParameters::SolverParameters(const SolverParameters& rhs)
-  : nonlinear_tolerance(rhs.nonlinear_tolerance),
-    nonlinear_abs_tolerance(rhs.nonlinear_abs_tolerance),
-    nonlinear_step_tolerance(rhs.nonlinear_step_tolerance),
-    nonlinear_max_iterations(rhs.nonlinear_max_iterations),
-    linear_tolerance(rhs.linear_tolerance),
-    linear_abs_tolerance(rhs.linear_abs_tolerance),
-    linear_max_iterations(rhs.linear_max_iterations),
-    ls_maxstep(rhs.ls_maxstep),
-    ls_type(rhs.ls_type),
-    ksp_type(rhs.ksp_type),
-    pc_type(rhs.pc_type)
-{
-}
-
-ExcitonTransport::SolverParameters&
-ExcitonTransport::SolverParameters::operator=(const SolverParameters& rhs)
-{
-  if (&rhs != this)
-  {
-    nonlinear_tolerance = rhs.nonlinear_tolerance;
-    nonlinear_abs_tolerance = rhs.nonlinear_abs_tolerance;
-    nonlinear_step_tolerance = rhs.nonlinear_step_tolerance;
-    nonlinear_max_iterations = rhs.nonlinear_max_iterations;
-    linear_tolerance = rhs.linear_tolerance;
-    linear_abs_tolerance = rhs.linear_abs_tolerance;
-    linear_max_iterations = rhs.linear_max_iterations;
-    ls_maxstep = rhs.ls_maxstep;
-    ls_type = rhs.ls_type;
-    ksp_type = rhs.ksp_type;
-    pc_type = rhs.pc_type;
-  }
-  return *this;
-}
 
 
 ExcitonTransport::ExcitonTransport(void)
@@ -248,37 +195,6 @@ ExcitonTransport::cleanup_solver(void)
 }
 
 
-void
-ExcitonTransport::set_solver_params(NonlinearSolver<Number>& solver)
-{
-  SolverClass& solver_class =
-    static_cast<SolverClass&>(solver);
-
-  SolverParameters& solver_params = _options.solver_params;
-
-  const double phi0 = get_scaling().get_potential_scaling();
-
-  unsigned int nonlin_max_its = solver_params.nonlinear_max_iterations;
-
-  double sqrt_n = sqrt((double) get_mesh().n_nodes());
-
-  solver_class.set_snes_options(solver_params.nonlinear_tolerance,
-      solver_params.nonlinear_abs_tolerance * sqrt_n,
-      solver_params.nonlinear_step_tolerance, nonlin_max_its);
-  
-  solver_class.set_snes_ls_options(solver_params.ls_type,
-      solver_params.ls_maxstep * sqrt_n / phi0);
-
-  solver_class.set_ksp_options(solver_params.linear_tolerance,
-      solver_params.linear_abs_tolerance * sqrt_n,
-      solver_params.linear_max_iterations);
-
-  solver_class.set_ksp_type(solver_params.ksp_type);
-  solver_class.set_pc_type(solver_params.pc_type);
-}
-
-
-
 
 void
 ExcitonTransport::parse_options(void)
@@ -286,45 +202,24 @@ ExcitonTransport::parse_options(void)
 
   const ModelOptions& opts = SimulationInterface::get_options();
   Options& myopts = get_options();
-  SolverParameters& solver_params = myopts.solver_params;
 
   myopts.integration_order = static_cast<libMeshEnums::Order>(
       opts.get_option("integration_order", (int) myopts.integration_order));
 
   myopts.mesh_refinement = opts.get_option("mesh_refinement", false);
 
-  solver_params.nonlinear_tolerance = opts.get_option("nonlin_rel_tol",
-      solver_params.nonlinear_tolerance);
-  solver_params.nonlinear_abs_tolerance = opts.get_option("nonlin_abs_tol",
-      solver_params.nonlinear_abs_tolerance);
-  solver_params.nonlinear_step_tolerance = opts.get_option("nonlin_step_tol",
-      solver_params.nonlinear_step_tolerance);
-  solver_params.nonlinear_max_iterations = opts.get_option("nonlin_max_it",
-      solver_params.nonlinear_max_iterations);
-  solver_params.linear_tolerance = opts.get_option("lin_rel_tol",
-      solver_params.linear_tolerance);
-  solver_params.linear_abs_tolerance = opts.get_option("lin_abs_tol",
-      solver_params.linear_abs_tolerance);
-  solver_params.linear_max_iterations = opts.get_option("lin_max_it",
-      solver_params.linear_max_iterations);
-  solver_params.ls_maxstep = opts.get_option("ls_maxstep",
-      solver_params.ls_maxstep);
-
-  string pc = opts.get_option("pc_type", "");
-  if (pc == "") {}
-  else if (pc == "ilu")
-    solver_params.pc_type = PCILU;
-  else if (pc == "composite")
-    solver_params.pc_type = PCCOMPOSITE;
-  else if (pc == "jacobi")
-    solver_params.pc_type = PCJACOBI;
-  else if (pc == "lu")
-    solver_params.pc_type = PCLU;
-  else if (pc == "cholesky")
-    solver_params.pc_type = PCCHOLESKY;
-
+  const unsigned int dim = get_mesh().mesh_dimension();
+  if (dim == 1)
+  {
+    ModelOptions& solveropts = get_solver_options();
+    string ksp_type(solveropts.get_option("ksp_type", "bcgsl"));
+    if (ksp_type == "bcgsl")
+      solveropts["ksp_type"] = "bcgs";
+  }
 
 }
+
+
 
 void
 ExcitonTransport::do_init(void)
@@ -336,35 +231,19 @@ ExcitonTransport::do_init(void)
   EquationSystems& equation_systems = get_equation_systems();
 
   // create the exciton continuity equation
-  NonlinearImplicitSystem& system =
-    equation_systems.add_system<NonlinearImplicitSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem& system =
+    *TiberNonlinearSystem::create(equation_systems,
+        get_equation_system_name(), get_solver_options());
 
-
-  // we use PETSc
-  system.nonlinear_solver =
-    AutoPtr<NonlinearSolver<Number> >(new SolverClass);
-
-  // set the options for the PETSc nonlinear solver
-  set_solver_params(*system.nonlinear_solver);
 
   system.add_variable("fermi_x", libMeshEnums::FIRST);
 
   // a local scaling
   system.add_vector("local_scaling");
 
-  system.nonlinear_solver->matvec = assemble;
+  system.attach_assembly_routine(assemble);
 
-  // set some parameters (but we don't use them in this way)
-  // they have to exist for libmesh 
-  SolverParameters& solver_params = get_options().solver_params;
-
-  equation_systems.parameters.set<unsigned int>(
-    "nonlinear solver maximum iterations") = 100;
-      
-  equation_systems.parameters.set<Real>("nonlinear solver tolerance") = 1e-6;
-
-
+  //
   // initialize the newly created system
   system.init();
 
@@ -385,14 +264,12 @@ ExcitonTransport::set_initial_guess(double guess)
 {
   assert(_rebuild_eq_system == false);
 
-  NonlinearImplicitSystem& system =
-    get_equation_systems().get_system<NonlinearImplicitSystem>(
+  TiberNonlinearSystem& system =
+    get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
 
-  NumericVector<Number>& solution = *(system.solution);
-
-  solution.zero();
-  solution.add(guess);
+  system.get_solution_vector().zero();
+  system.get_solution_vector().add(guess);
 }
 
 
@@ -400,16 +277,12 @@ ExcitonTransport::set_initial_guess(double guess)
 void
 ExcitonTransport::build_local_scaling(void)
 {
-  NonlinearImplicitSystem* system = 
-    &get_equation_systems().get_system<NonlinearImplicitSystem>(
-      get_equation_system_name());
-  //TiberNonlinearSystem* system =
-  //  &get_equation_systems().get_system<TiberNonlinearSystem>(
-  //      get_equation_system_name());
+  TiberNonlinearSystem* system =
+    &get_equation_systems().get_system<TiberNonlinearSystem>(
+        get_equation_system_name());
   
   
   const NumericVector<Number>& solution = *(system->solution);
-  //const NumericVector<Number>& solution = system->get_solution_vector();
   NumericVector<Number>& locscal = system->get_vector("local_scaling");
 
   // aliases for nicer code
@@ -531,77 +404,35 @@ ExcitonTransport::do_solve(void)
 
   build_local_scaling();
 
-  // aliases for nicer code
-  Options& params = get_options();
-  SolverParameters& solver_params = params.solver_params;
 
-  Mesh& mesh = get_mesh();
-  const unsigned int dim = mesh.mesh_dimension();
   EquationSystems& equation_systems = get_equation_systems();
 
-  if (dim == 1)
-    if (solver_params.ksp_type == KSPBCGSL)
-      solver_params.ksp_type = KSPBCGS;
 
-
-  NonlinearImplicitSystem& system =
-    equation_systems.get_system<NonlinearImplicitSystem>(
+  TiberNonlinearSystem& system =
+    equation_systems.get_system<TiberNonlinearSystem>(
         get_equation_system_name());
 
-  NumericVector<Number>& solution = *(system.solution);
+  NumericVector<Number>& solution = system.get_solution_vector();
 
   // set the solver parameters (they could have change since we made
   // the first calculation)
-  set_solver_params(*system.nonlinear_solver);
+  system.set_options(get_solver_options());
 
-
-  bool failure = true;
-  string msg("ExcitonTransport: solve failed (");
 
   try
   {
     system.solve();
-
-    failure = false;
   }
-  catch (PetscDivergedError& e)
+  catch (SolverException& e)
   {
-    if (e.get_solver_type() == 1) cerr << "KSP ";
-    else cerr << "SNES ";
-    cerr << "diverged: " << e.get_reason() <<
-      " at iteration " << e.get_iteration() <<
-      " (fnorm = " << e.get_fnorm() << ")\n";
-
-    msg += e.what();
-    msg += ")\n";
-  }
-  catch (PetscRuntimeError& e)
-  {
-    cerr << "Petsc runtime error: " << e.get_reason();
-    if (e.get_reason() == PETSC_ERR_MAT_LU_ZRPVT)
-    {
-      // in the case of a zero pivot in (I)LU factorization
-      // we try another preconditioner
-      cerr << " (Zero pivot during ILU.)";
-      PCType old_pc = solver_params.pc_type;
-      solver_params.pc_type = PCJACOBI;
-      set_solver_params(*system.nonlinear_solver);
-      solver_params.pc_type = old_pc;
-    }
-    cerr << "\n";
-    msg += e.what();
-    msg += ")\n";
-  }
-
-  _n_nonlinear_iterations = system.n_nonlinear_iterations();
-  _final_residual = system.final_nonlinear_residual();
-
-  if (failure)
-  {
-    system.nonlinear_solver->clear();
-    do_init();
+    string msg("ExcitonTransport: solve failed (");
+      string(e.what()) + ")";
     throw SolveFailedException(msg);
   }
+
+
+  _n_nonlinear_iterations = system.n_nonlinear_iterations();
+  _final_residual = system.final_residual_norm();
 
 }
 
@@ -615,15 +446,15 @@ ExcitonTransport::build_nodal_results(const set<string>& variables,
     vector<double>& results, vector<string>& legend)
 {
   
-  NonlinearImplicitSystem* system;
+  TiberNonlinearSystem* system;
 
-  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
+  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
       get_equation_system_name());
 
   // aliases for nicer code
   const Device& device = *(_device);
   const Mesh& mesh = get_mesh();
-  const NumericVector<Number>& solution = *(system->solution);
+  const NumericVector<Number>& solution = system->get_solution_vector();
 
   const DofMap& dof_map = system->get_dof_map();
 
@@ -872,15 +703,15 @@ ExcitonTransport::build_elemental_results(const set<string>& variables,
   if (libMesh::processor_id() != 0)
     return;
   
-  NonlinearImplicitSystem* system;
+  TiberNonlinearSystem* system;
 
-  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
+  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
       get_equation_system_name());
 
   // aliases for nicer code
   const Device& device = *(_device);
   const Mesh& mesh = get_mesh();
-  const NumericVector<Number>& solution = *(system->solution);
+  const NumericVector<Number>& solution = system->get_solution_vector();
 
   const DofMap& dof_map = system->get_dof_map();
 
@@ -1052,8 +883,8 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
   const Mesh& mesh = get_mesh();
 
   EquationSystems& eq_sys = get_equation_systems();
-  NonlinearImplicitSystem& system =
-    eq_sys.get_system<NonlinearImplicitSystem>(get_equation_system_name());
+  TiberNonlinearSystem& system =
+    eq_sys.get_system<TiberNonlinearSystem>(get_equation_system_name());
 
   NumericVector<Number>& locscal = system.get_vector("local_scaling");
 
@@ -1353,8 +1184,8 @@ ExcitonTransport::get_solution_secure(const Elem* elem,
     points[i] = elem->local_node(elem->type(), i);
 
 
-  NonlinearImplicitSystem* system;
-  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
+  TiberNonlinearSystem* system;
+  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
       get_equation_system_name());
 
   const NumericVector<Number>& ddsol = *(system->solution);
@@ -1471,8 +1302,9 @@ ExcitonTransport::get_solution_secure(const Elem* elem,
       values[n][JZ] = -sigma * grad_z;
 
      if (ids.count(RADPOWER))
-       values[n][RADPOWER] =  excitonmodel->get_density()/excitonmodel->get_radiative_recombination_rate() *
-	 (excitonmodel->get_exciton_energy());
+       values[n][RADPOWER] = 
+         excitonmodel->get_exciton_energy() * excitonmodel->get_density() / 
+         excitonmodel->get_radiative_recombination_rate();
 
   }
 
@@ -1487,8 +1319,8 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
 {
   unsigned int np = p.size();
 
-  NonlinearImplicitSystem* system;
-  system = &get_equation_systems().get_system<NonlinearImplicitSystem>(
+  TiberNonlinearSystem* system;
+  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
       get_equation_system_name());
 
   const NumericVector<Number>& ddsol = *(system->solution);

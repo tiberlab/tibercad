@@ -12,8 +12,6 @@
 // Libmesh includes
 #include "libmesh_common.h"
 #include "enum_order.h"
-#include "enum_solver_type.h"
-#include "enum_preconditioner_type.h"
 
 
 // C++ includes
@@ -182,67 +180,6 @@ class DriftDiffusion : public SimulationInterface
     
 
     
-    //! This class defines parameters used by the underlying
-    //! nonlinear solver
-    /*!
-     *  For details refer to the
-     * <A HREF="http://www-unix.mcs.anl.gov/petsc/petsc-2">online
-     * PETSc documentation</A>.
-     */
-    class SolverParameters
-    {
-      public:
-        SolverParameters(void);
-        
-        SolverParameters(const SolverParameters& rhs);
-        
-        SolverParameters& operator=(const SolverParameters& rhs);
-      
-        double nonlinear_tolerance;
-        double nonlinear_abs_tolerance;
-        double nonlinear_step_tolerance;
-        unsigned int nonlinear_max_iterations;
-        double linear_tolerance;
-        double linear_abs_tolerance;
-        unsigned int linear_max_iterations;
-        
-        //! The line search maximum step size per grid point
-        double ls_maxstep;
-
-        //! The line search type
-        int ls_type;
-
-        //! The linear solver type
-        /*!
-         * The implementation of the linear solver depends on the
-         * underlying library to be used.
-         *
-         */
-        SolverType ksp_type;
-
-        //! The preconditioner
-        /*!
-         * The implementation of the preconditioner depends on the
-         * underlying library to be used.
-         * 
-         */
-        PreconditionerType pc_type;
-
-        //! The nonlinear solver type
-        /*!
-         * This means the implementation of the nonlinear system solver
-         */
-        std::string nonlinear_solver;
-
-        //! The linear solver to be used (PETSc, PARDISO etc)
-        std::string linear_solver;
-
-
-      private:
-
-        friend class DriftDiffusion;
-    };
-    
     /**
      * This class defines various parameters that control a
      * drift-diffusion calculation
@@ -314,12 +251,6 @@ class DriftDiffusion : public SimulationInterface
          * the Gummel method
          */
         int max_gummel_iterations;
-
-        /**
-         * The nonlinear/linear (PETSc-)solver parameters
-         */
-        SolverParameters solver_params;
-
 
         //! The type of scaling to be applied
         /*!
@@ -568,7 +499,7 @@ class DriftDiffusion : public SimulationInterface
      * The linear solver is used to get a good guess for the electro-chemical
      * potentials
      */
-    TiberLinearSolver* _linear_solver;
+    //TiberLinearSolver* _linear_solver;
 
     /*!
      * A list of nodes with dirichlet boundary conditions
@@ -639,7 +570,7 @@ class DriftDiffusion : public SimulationInterface
      * \return the final residual
      * \param the maximum number of iterations
      */
-    double do_gummel_iterations(int max_it) throw (SolverException);
+    //double do_gummel_iterations(int max_it) throw (SolverException);
 
 
     //! Parse the options which will not change between calls to solve()
@@ -692,7 +623,7 @@ class DriftDiffusion : public SimulationInterface
 
 
     //! Solve using an iterative Gummel scheme
-    void solve_gummel(void);
+    //void solve_gummel(void);
 
 
     //! Do a Newton type iteration

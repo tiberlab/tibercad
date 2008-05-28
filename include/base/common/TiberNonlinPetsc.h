@@ -7,7 +7,7 @@
 #include "TiberNonlinearSystem.h"
 
 
-template<typename> class TiberPetscNonlinearSolver;
+class TiberPetscNonlinearSolver;
 
 
 //! An implementation of line search to solve nonlinear systems
@@ -33,10 +33,6 @@ class TiberNonlinPetsc : public TiberNonlinearSystem
     virtual void reinit(void);
 
 
-    /*! \copydoc TiberNonlinearSystem::solve() */
-    virtual void solve(void);
-
-
     /*! \copydoc TiberNonlinearSystem::system_type() */
     virtual std::string system_type(void) const;
 
@@ -46,21 +42,20 @@ class TiberNonlinPetsc : public TiberNonlinearSystem
 
 
 
+  protected:
+
+    /*! \copydoc TiberNonlinearSystem::do_solve() */
+    virtual void do_solve(void);
+
+
+    
   private:
 
     //! The parent class type
     typedef TiberNonlinearSystem Parent;
 
     //! The nonlinear solver to be used
-    TiberPetscNonlinearSolver<double>* _solver;
-
-
-    //! Set up PC (preconditioner)
-    void setup_pc(void);
-
-
-    //! Set up KSP (Krylov solver)
-    void setup_ksp(void);
+    TiberPetscNonlinearSolver* _solver;
 
 };
 

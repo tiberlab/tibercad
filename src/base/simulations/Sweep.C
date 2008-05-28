@@ -55,9 +55,9 @@ Sweep::do_init(void)
     if (_simulations[i] == NULL)
       throw InitFailedException("Sweep: Simulation " + sims[i] + " not found.");
 
-    // No, No, No. That's no good.
-    //if (!_simulations[i]->is_initialized())
-    //  _simulations[i]->init();
+    // If it is not already initialized, we initialize now
+    if (!_simulations[i]->is_initialized())
+      _simulations[i]->init();
   }
 
   // if user didn't provide a simulation name, we take the first available

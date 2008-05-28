@@ -20,95 +20,35 @@ using namespace std;
 
 TiberNonlinBR::TiberNonlinBR(EquationSystems& es,
     const string& name, const unsigned int number)
-: Parent(es, name, number),
-  _solver(NULL)
+: Parent(es, name, number)
 {
-  // add a vector for the solution
-  add_vector("sol");
 }
 
 
 
 TiberNonlinBR::~TiberNonlinBR(void)
 {
-  clear();
-
-  delete _solver;
-}
-
-
-
-
-void
-TiberNonlinBR::reinit(void)
-{
-  _solver->clear();
-
-  _solver->set_solver_type(_solver_type);
-  _solver->set_preconditioner_type(_preconditioner_type);
-
-  // we could have changed the solver type
-  user_initialization();
-
-  Parent::reinit();
 }
 
 
 
 void
-TiberNonlinBR::clear(void)
-{
-  if (_solver != NULL)
-  {
-    _solver->clear();
-
-    _solver->set_solver_type(_solver_type);
-    _solver->set_preconditioner_type(_preconditioner_type);
-  }
-
-  Parent::clear();
-}
-
-
-
-void
-TiberNonlinBR::user_initialization(void)
-{
-  if (_solver == NULL)
-  {
-    _solver = TiberLinearSolver::create(_linear_solver);
-
-    if (_solver == NULL)
-    {
-      std::cerr << "Linear solver " << _linear_solver <<
-        " is not available." << std::endl;
-      throw InitFailedException("Cannot create linear solver object.");
-    }
-  }
-
-  _solver->set_solver_type(_solver_type);
-  _solver->set_preconditioner_type(_preconditioner_type);
-}
-
-
-void
-TiberNonlinBR::solve(void)
+TiberNonlinBR::do_solve(void)
 {
 
   assert(_assemble != NULL);
 
-  NumericVector<Number>& u = get_vector("sol");
+  //NumericVector<Number>& u = get_vector("sol");
+  NumericVector<Number>& u = get_solution_vector();
   NumericVector<Number>& du = *solution;
   AutoPtr<NumericVector<Number> > u_old_ptr = u.clone();
   NumericVector<Number>& u_old = *u_old_ptr;
 
   // the l_infty tolerance for the step size
-  double eps = _nonlin_step_tol;
+  double eps = get_nonlinear_stol();
   
   // the tolerance for the residual
-  double eps_res = _nonlin_abs_tol;
-
-  double tol = _lin_tol;
+  double eps_res = get_nonlinear_atol();
 
 
   // the (final) residual norm
@@ -122,17 +62,18 @@ TiberNonlinBR::solve(void)
   double K = 0;
 
   unsigned int i = 1;
-  for ( ; i <= _nonlin_max_it; i++)
+  for ( ; i <= get_nonlinear_max_it(); i++)
   {
 
     // prepare jacobian and residual
     _assemble(u, rhs, NULL);
     _assemble(u, NULL, matrix);
 
-    _solver->set_ksp_options(tol, _lin_abs_tol, _lin_max_it);
+    get_linear_solver()->set_options(get_options());
     
     // solve the linear system
-    _solver->solve(*matrix, *solution, *rhs, tol, _lin_max_it);
+    get_linear_solver()->solve(*matrix, *solution, *rhs);
+
 #ifndef DEBUG
     cout << "." << flush;
 #endif
@@ -141,6 +82,17 @@ TiberNonlinBR::solve(void)
     norm_rhs = rhs->l2_norm();
 
     u_old = u;
+
+    norm_du = du.linfty_norm();
+
+    /*
+    double norm_du2 = du.l2_norm();
+    if (norm_du2 > get_max_step())
+    {
+      du.scale(get_max_step() / norm_du2);
+      norm_du = du.linfty_norm();
+    }
+    */
 
     while (1)
     {
@@ -172,9 +124,6 @@ TiberNonlinBR::solve(void)
       }
     }
 
-    
-    norm_du = du.linfty_norm();
-
 
     // check for divergence
     if (isnan(norm_rhs))
@@ -190,6 +139,8 @@ TiberNonlinBR::solve(void)
     cout << "  it " << i << ", |du| = " << norm_du << ", |r| = " << norm_rhs << endl;
 #endif
 
+    draw_point(i, norm_rhs);
+
     // check for convergence
     if ((norm_du < eps) || (norm_rhs < eps_res))
     {
@@ -198,7 +149,7 @@ TiberNonlinBR::solve(void)
 #endif
       break;
     }
-    else if (i == _nonlin_max_it)
+    else if (i == get_nonlinear_max_it())
     {
 #ifndef DEBUG
       cout << endl << flush;

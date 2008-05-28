@@ -228,8 +228,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     
     //! Set the coupling type
     void set_coupling_type(int coupling)
- 
-    { _coupling = coupling; };
+      { _coupling = coupling; };
     
     //! Get the coupling type
     DriftDiffusionDefs::Coupling get_coupling_type(void) const

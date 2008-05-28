@@ -12,7 +12,6 @@
 #include "mesh.h"
 #include "mesh_generation.h"
 #include "gmv_io.h"
-#include "linear_implicit_system.h"
 #include "equation_systems.h"
 
 #include "getpot.h"
@@ -70,8 +69,9 @@
 #include "StrainSimulation.h"
 #include "Device.h"
 #include "MacrostrainModel.h"
-#include "TiberLinearSolver.h"
-#include "petscksp.h"  
+
+class TiberLinearSystem;
+
 //! A class to calculate strain and shape
 class Macrostrain : public StrainSimulation
 /*!
@@ -235,7 +235,7 @@ class Macrostrain : public StrainSimulation
   
 
   //!pointer to the  system used in the simulation 
-  LinearImplicitSystem* my_system;
+  TiberLinearSystem* my_system;
   
  
 
@@ -350,11 +350,6 @@ class Macrostrain : public StrainSimulation
   
   bool periodicity[3]; 
 
-
-  //! show convergence monitor on X window
-  bool _xmonitor;
-
-  bool _monitor_is_open;
 
   
 
@@ -502,11 +497,6 @@ class Macrostrain : public StrainSimulation
   //! Preapare all 3 components of the polarization vector for output
   void prepare_polarization_data_for_output( std::vector<std::string>& polariz_names, std::vector<double>& polariz_data );
 
-  //! solver that will solve a system
-  TiberLinearSolver* my_solver;
-
-  //! Petsc draw context;
-  PetscDrawLG _lg; 
 
   //! recalculate partial the derivatives of the basis functions for the zero-gradient boundary condition
   /*!

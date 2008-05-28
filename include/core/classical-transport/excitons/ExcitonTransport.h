@@ -32,13 +32,11 @@ extern "C" {
 class Mesh;
 class Elem;
 class EquationSystems;
-class NonlinearImplicitSystem;
 class ExcitonProperties;
 
 template<typename T> class NumericVector;
 template<typename T> class SparseMatrix;
 
-template<typename T> class TiberPetscNonlinearSolver;
 template<typename T> class NonlinearSolver;
 
 //! The main class to perform exciton drift-diffusion calculations
@@ -77,67 +75,6 @@ class ExcitonTransport : public SimulationInterface
       RDISS             /*!< dissociation rate */
     };
  
-    //! This class defines parameters used by the underlying
-    //! nonlinear solver
-    /*!
-     *  For details refer to the
-     * <A HREF="http://www-unix.mcs.anl.gov/petsc/petsc-2">online
-     * PETSc documentation</A>.
-     */
-    class SolverParameters
-    {
-      public:
-        SolverParameters(void);
-        
-        SolverParameters(const SolverParameters& rhs);
-        
-        SolverParameters& operator=(const SolverParameters& rhs);
-      
-        double nonlinear_tolerance;
-        double nonlinear_abs_tolerance;
-        double nonlinear_step_tolerance;
-        unsigned int nonlinear_max_iterations;
-        double linear_tolerance;
-        double linear_abs_tolerance;
-        unsigned int linear_max_iterations;
-        
-        //! The line search maximum step size per grid point
-        double ls_maxstep;
-
-        //! The line search type
-        int ls_type;
-
-        //! The linear (KSP) solver type
-        /*!
-         * This defines what type of linear solver to be used. For
-         * details refer to the
-         * <A HREF="http://www-unix.mcs.anl.gov/petsc/petsc-2">online
-         * PETSc documentation</A>.
-         *
-         * \note
-         * Usually \c KSPBCGS or \c KSPBCGSL seem to be the most stable
-         * solver types
-         */
-        KSPType ksp_type;
-
-        //! The preconditioner (PC)
-        /*!
-         * This defines the type of preconditioner to be used. For
-         * details refer to the
-         * <A HREF="http://www-unix.mcs.anl.gov/petsc/petsc-2">online
-         * PETSc documentation</A>.
-         *
-         * \note
-         * In most cases \c PCILU seems to be a good choice, but sometimes
-         * there are problems with zero pivot values. In this case, the use of
-         * \c PCJACOBI can solve it.
-         */
-        PCType pc_type;
-
-      private:
-
-        friend class ExcitonTransport;
-    };
     
     /**
      * This class defines various parameters that control a
@@ -197,11 +134,6 @@ class ExcitonTransport : public SimulationInterface
          * The order of gauss integration
          */
         libMeshEnums::Order integration_order;
-
-        /**
-         * The nonlinear/linear (PETSc-)solver parameters
-         */
-        SolverParameters solver_params;
 
 
       private:
@@ -347,8 +279,6 @@ class ExcitonTransport : public SimulationInterface
     
   private:
 
-    // for nicer code
-    typedef TiberPetscNonlinearSolver<Real> SolverClass;
 
     //! A static reference to \c this
     /*!
@@ -393,11 +323,6 @@ class ExcitonTransport : public SimulationInterface
     ExcitonTransport& operator=(const ExcitonTransport& rhs);
     
    
-    /**
-     * Set the options for the PETSc solver as given in @c SolverParameters
-     */
-    void set_solver_params(NonlinearSolver<Number>& solver);
-
     /**
      * Computes the scaling parameters according to the
      * scaling type \p type

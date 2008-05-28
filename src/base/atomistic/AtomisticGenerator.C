@@ -3,7 +3,7 @@
 #include "AtomisticGenerator1D.h"
 #include "AtomisticGenerator2D.h"
 #include "AtomisticGenerator3D.h"
-
+#include "Macrostrain.h"
 
 const double AtomisticGenerator::tol = 1e-2;
 

@@ -11,7 +11,6 @@
 #include "DriftDiffusionProperties.h"
 #include "RecombinationModelInterface.h"
 #include "TiberNonlinearSystem.h"
-#include "TiberLinearSolver.h"
 #include "SolveFailedException.h"
 
 //////// QUIRK
@@ -83,7 +82,6 @@ DriftDiffusion::Options::Options(const Options& rhs)
     integration_order(rhs.integration_order),
     solver_method(rhs.solver_method),
     max_gummel_iterations(rhs.max_gummel_iterations),
-    solver_params(rhs.solver_params),
     scaling_type(rhs.scaling_type),
     coupling(rhs.coupling),
     scheme(rhs.scheme),
@@ -111,7 +109,6 @@ DriftDiffusion::Options::operator=(const Options& rhs)
     integration_order = rhs.integration_order;
     solver_method = rhs.solver_method;
     max_gummel_iterations = rhs.max_gummel_iterations;
-    solver_params = rhs.solver_params;
     scaling_type = rhs.scaling_type;
     coupling = rhs.coupling;
     scheme = rhs.scheme;
@@ -126,77 +123,8 @@ DriftDiffusion::Options::operator=(const Options& rhs)
 
 
 
-DriftDiffusion::SolverParameters::SolverParameters(void)
-  : nonlinear_tolerance(1e-9), 
-    nonlinear_abs_tolerance(1e-15),
-    nonlinear_step_tolerance(1e-3),
-    nonlinear_max_iterations(20),
-    linear_tolerance(1e-6),
-    linear_abs_tolerance(1e-50),
-    linear_max_iterations(500),
-    ls_maxstep(1.0),
-    ls_type(3),
-    ksp_type(BICGSTAB),
-    pc_type(ILU_PRECOND),
-    nonlinear_solver("petsc"),
-    linear_solver("petsc")
-{
-  // TODO read default values from some text file
-}
-
-
-
-
-
-DriftDiffusion::SolverParameters::SolverParameters(const SolverParameters& rhs)
-  : nonlinear_tolerance(rhs.nonlinear_tolerance), 
-    nonlinear_abs_tolerance(rhs.nonlinear_abs_tolerance),
-    nonlinear_step_tolerance(rhs.nonlinear_step_tolerance),
-    nonlinear_max_iterations(rhs.nonlinear_max_iterations),
-    linear_tolerance(rhs.linear_tolerance),
-    linear_abs_tolerance(rhs.linear_abs_tolerance),
-    linear_max_iterations(rhs.linear_max_iterations),
-    ls_maxstep(rhs.ls_maxstep),
-    ls_type(rhs.ls_type),
-    ksp_type(rhs.ksp_type),
-    pc_type(rhs.pc_type),
-    nonlinear_solver(rhs.nonlinear_solver),
-    linear_solver(rhs.linear_solver)
-{
-}
-
-
-
-
-
-DriftDiffusion::SolverParameters&
-DriftDiffusion::SolverParameters::operator=(const SolverParameters& rhs)
-{
-  if (&rhs != this)
-  {
-    nonlinear_tolerance = rhs.nonlinear_tolerance; 
-    nonlinear_abs_tolerance = rhs.nonlinear_abs_tolerance;
-    nonlinear_step_tolerance = rhs.nonlinear_step_tolerance;
-    nonlinear_max_iterations = rhs.nonlinear_max_iterations;
-    linear_tolerance = rhs.linear_tolerance;
-    linear_abs_tolerance = rhs.linear_abs_tolerance;
-    linear_max_iterations = rhs.linear_max_iterations;
-    ls_maxstep = rhs.ls_maxstep;
-    ls_type = rhs.ls_type;
-    ksp_type = rhs.ksp_type;
-    pc_type = rhs.pc_type;
-    nonlinear_solver = rhs.nonlinear_solver;
-    linear_solver = rhs.linear_solver;
-  }
-  return *this;
-}
-
-
-
-
 DriftDiffusion::DriftDiffusion(void)
-  : _rebuild_eq_system(true),
-    _linear_solver(NULL)
+  : _rebuild_eq_system(true)
 {
 }
 
@@ -307,6 +235,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
       dynamic_cast<DriftDiffusionProperties*>(
           _device->get_material(elem->subdomain_id())->get_model(get_id()));
 
+    //sc->set_coupling_type(get_options().coupling);
     sc->set_coordinates(elem->centroid());
     sc->set_potentials(sc->get_equilibrium_fermi_level());
     sc->set_electric_field(RealGradient(0));
@@ -602,8 +531,6 @@ DriftDiffusion::cleanup_solver(void)
   _dirichlet_nodes.erase(_dirichlet_nodes.begin(),
       _dirichlet_nodes.end());
 
-  delete _linear_solver;
-
   reset_solver();
 }
 
@@ -718,7 +645,7 @@ DriftDiffusion::do_solve(void)
     switch (_options.solver_method)
     {
       case GUMMEL:
-        solve_gummel();
+        //solve_gummel();
         break;
       default: // Newton method
         do_newton();
@@ -807,8 +734,9 @@ DriftDiffusion::do_equilibrium(void)
     get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
   
-  SolverParameters& solver_params = get_options().solver_params;
-  solver_params.nonlinear_max_iterations = 150;
+  ModelOptions& solveropts = get_solver_options();
+  int max_it = solveropts.get_option("nonlin_max_it", -1);
+  solveropts.set_option("nonlin_max_it", 150);
 
 
   int coupling = get_options().coupling;
@@ -863,6 +791,11 @@ DriftDiffusion::do_equilibrium(void)
   
   // reset the coupling
   get_options().coupling = coupling;
+
+  if (max_it != -1)
+    solveropts.set_option("nonlin_max_it", max_it);
+  else
+    solveropts.delete_option("nonlin_max_it");
 }
 
 
@@ -954,7 +887,6 @@ DriftDiffusion::do_print_info(void)
   parse_options();
 
   Options& myopts = get_options();
-  SolverParameters& solver_params = myopts.solver_params;
 
   string space("  ");
 
@@ -969,12 +901,12 @@ DriftDiffusion::do_print_info(void)
 
   if (do_local_scaling_)
     cout << space << "using local scaling" << endl;
-
+/*
   cout << space << "nonlinear solver is: " <<
     solver_params.nonlinear_solver << endl;
   cout << space << "linear solver is: " <<
     solver_params.linear_solver << endl;
-
+*/
 }
 
 
@@ -984,7 +916,6 @@ DriftDiffusion::do_print_info(void)
 void
 DriftDiffusion::parse_const_options(void)
 {
-  SolverParameters& solver_params = get_options().solver_params;
 
   const ModelOptions& opts = SimulationInterface::get_options();
   Options& myopts = get_options();
@@ -1012,44 +943,6 @@ DriftDiffusion::parse_const_options(void)
     myopts.scheme = BOX;
   else if (discretization == "sg")
     myopts.scheme = SG;
-
-  solver_params.nonlinear_solver =
-    opts.get_option("nonlinear_solver", solver_params.nonlinear_solver);
-  solver_params.linear_solver =
-    opts.get_option("linear_solver", solver_params.linear_solver);
-
-  string ksptype = opts.get_option("ksp_type", "");
-  if (ksptype == "") {}
-  else if (ksptype == "bcgsl")
-    solver_params.ksp_type = BICGSTAB;
-  else if (ksptype == "gmres")
-    solver_params.ksp_type = GMRES;
-  else if (ksptype == "bcgs")
-    solver_params.ksp_type = BICG;
-  else if (ksptype == "cg")
-    solver_params.ksp_type = CG;
-  else if (ksptype == "richardson")
-    solver_params.ksp_type = RICHARDSON;
-
-
-
-  string pc = opts.get_option("pc_type", "");
-  if (pc == "") {}
-  else if (pc == "ilu")
-    solver_params.pc_type = ILU_PRECOND;
-  else if (pc == "composite")
-    solver_params.pc_type = USER_PRECOND;
-  else if (pc == "jacobi")
-    solver_params.pc_type = JACOBI_PRECOND;
-  else if (pc == "lu")
-    solver_params.pc_type = LU_PRECOND;
-  else if (pc == "cholesky")
-    solver_params.pc_type = CHOLESKY_PRECOND;
-  else if (pc == "eisenstat")
-    solver_params.pc_type = EISENSTAT_PRECOND;
-  else if (pc == "none")
-    solver_params.pc_type = IDENTITY_PRECOND;
-
 }
 
 
@@ -1060,7 +953,6 @@ DriftDiffusion::parse_options(void)
   PerfLog perf_log("DriftDiffusion parse_options()", false);
   perf_log.start_event("parse");
   
-  SolverParameters& solver_params = get_options().solver_params;
 
   const ModelOptions& opts = SimulationInterface::get_options();
   Options& myopts = get_options();
@@ -1097,34 +989,6 @@ DriftDiffusion::parse_options(void)
 
   myopts.exact_newton = opts.get_option("exact_newton", myopts.exact_newton);
 
-  solver_params.nonlinear_tolerance = opts.get_option("nonlin_rel_tol",
-      solver_params.nonlinear_tolerance);
-  solver_params.nonlinear_abs_tolerance = opts.get_option("nonlin_abs_tol",
-      solver_params.nonlinear_abs_tolerance);
-  solver_params.nonlinear_step_tolerance = opts.get_option("nonlin_step_tol",
-      solver_params.nonlinear_step_tolerance);
-  solver_params.nonlinear_max_iterations = opts.get_option("nonlin_max_it",
-      solver_params.nonlinear_max_iterations);
-  solver_params.linear_tolerance = opts.get_option("lin_rel_tol",
-      solver_params.linear_tolerance);
-  solver_params.linear_abs_tolerance = opts.get_option("lin_abs_tol",
-      solver_params.linear_abs_tolerance);
-  solver_params.linear_max_iterations = opts.get_option("lin_max_it", 500);
-
-
-  
-  string lstype = opts.get_option("ls_type", "");
-  if (lstype == "") {}
-  else if (lstype == "none")
-    solver_params.ls_type = 1;
-  else if (lstype == "cubic")
-    solver_params.ls_type = 3;
-  else if (lstype == "quadratic")
-    solver_params.ls_type = 2;
-
-  solver_params.ls_maxstep = opts.get_option("ls_max_step",
-      solver_params.ls_maxstep);
-
   perf_log.stop_event("parse");
 }
 
@@ -1140,36 +1004,36 @@ DriftDiffusion::rebuild_equation_system(void)
 
   EquationSystems& equation_systems = get_equation_systems();
 
-  SolverParameters& solver_params = get_options().solver_params;
+
+  // default is bcgsl
+  ModelOptions& solveropts = get_solver_options();
+  if (!solveropts.find_option("ksp_type"))
+    solveropts["ksp_type"] = "bcgsl";
+
+  // in 1D bcgs seems to work better than bcgsl
+  const unsigned int dim = get_mesh().mesh_dimension();
+  if ((dim == 1) && (solveropts["ksp_type"] == "bcgsl"))
+    solveropts["ksp_type"] = "bcgs";
+
+
+  if (solveropts.get_option("lin_abs_tol", -1.0) < 0)
+    solveropts["lin_abs_tol"] = "1e-15";
+
+  if (solveropts.get_option("nonlin_abs_tol", -1.0) < 0)
+    solveropts["nonlin_abs_tol"] = "1e-15";
+
 
   // the coupled DD system
   TiberNonlinearSystem& system =
-    TiberNonlinearSystem::create_nonlinear_system(equation_systems,
-        get_equation_system_name(), solver_params.nonlinear_solver,
-        solver_params.linear_solver);
-
+    *TiberNonlinearSystem::create(equation_systems,
+      get_equation_system_name(), get_solver_options());
   
-  const unsigned int dim = get_mesh().mesh_dimension();
-
-  // TODO gives some problem in rev. 398
-  // in 1D bcgs seems to work better than bcgsl
-  if (dim == 1)
-    if (solver_params.ksp_type == BICGSTAB)
-      solver_params.ksp_type = BICG;
-
-  system.set_linear_solver_type(solver_params.ksp_type, solver_params.pc_type);
-
   system.attach_assembly_routine(assemble_system);
 
 
   system.add_variable("potential", libMeshEnums::FIRST);
   system.add_variable("fermi_e", libMeshEnums::FIRST);
   system.add_variable("fermi_h", libMeshEnums::FIRST);
-
-
-  // the linear solver is used to get good guesses for the electro-chemical
-  // potentials
-  _linear_solver = TiberLinearSolver::create("petsc");
 
 
   // finally initialize the newly created system
@@ -1256,18 +1120,8 @@ DriftDiffusion::do_newton(void)
   TiberNonlinearSystem& system =
     es.get_system<TiberNonlinearSystem>(get_equation_system_name());
 
-  SolverParameters& solver_params = get_options().solver_params;
-  
-  system.set_linear_solver_params(solver_params.linear_tolerance,
-      solver_params.linear_abs_tolerance,
-      solver_params.linear_max_iterations);
 
-  system.set_nonlinear_solver_params(solver_params.nonlinear_tolerance,
-      solver_params.nonlinear_abs_tolerance,
-      solver_params.nonlinear_step_tolerance,
-      solver_params.ls_maxstep,
-      solver_params.nonlinear_max_iterations);
-
+  system.set_options(get_solver_options());
   system.solve();
 }
 
@@ -1275,62 +1129,6 @@ DriftDiffusion::do_newton(void)
 
 
 
-
-
-double
-DriftDiffusion::do_gummel_iterations(int max_it) throw (SolverException)
-{
- 
-  TiberNonlinearSystem& system =
-    get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
-
-  NumericVector<Number>& u = system.get_solution_vector();
-  NumericVector<Number>& du = *(system.solution);
-  
-  SolverParameters& solver_params = get_options().solver_params;
-  int nonlin_max_it = solver_params.nonlinear_max_iterations;
-  int coupling = get_options().coupling;
-
-  try
-  {
-    for (int i = 0; i < max_it; i++)
-    {
-      get_options().coupling = ECURRENT;
-      do_newton();
-      double norm_du = max(norm_du, du.linfty_norm());
-
-      get_options().coupling = HCURRENT;
-      do_newton();
-      norm_du = max(norm_du, du.linfty_norm());
-
-      get_options().coupling = POISSON;
-      do_newton();
-      norm_du = du.linfty_norm();
-
-      double norm_res = system.rhs->l2_norm();
-    cerr << "  Gummel it " << i << ", |du| = " << norm_du << ", |r| = " << norm_res << endl;
-
-    }
-  }
-  catch (SolverException& err)
-  {
-    get_options().coupling = coupling;
-    throw(err);
-  }
-  get_options().coupling = coupling;
- 
-  return 0;
-}
-
-
-
-
-void
-DriftDiffusion::solve_gummel(void)
-{
-  do_gummel_iterations(get_options().max_gummel_iterations);
-}
 
 
 
@@ -1565,6 +1363,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   //sc->lock();
   sc->reinit(elem);
+  //sc->set_coupling_type(get_options().coupling);
 
   fe->reinit(elem, &points);
     
@@ -1888,6 +1687,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   //sc->lock();
   sc->reinit(elem); //centroid
+  //sc->set_coupling_type(get_options().coupling);
 
   fe->reinit(elem, &points);
 
@@ -2282,6 +2082,7 @@ DriftDiffusion::calculate_currents_rstf(void)
     fe->reinit(elem);
 
     sc->reinit(elem);
+    //sc->set_coupling_type(get_options().coupling);
     
     //Get the thermoelectric power------------
     sc->compute_thermoelectric_powers();
@@ -2462,6 +2263,7 @@ DriftDiffusion::calculate_currents_surfint(void)
           continue;
         
         sc->reinit(elem);
+        //sc->set_coupling_type(get_options().coupling);
         
 	//Get the thermoelectric power------------
         sc->compute_thermoelectric_powers();
@@ -2623,6 +2425,7 @@ DriftDiffusion::build_local_scaling(void)
   // the scaling parameters to scale back the result
   const Scaling& scaling = get_scaling();
   const double phi0 = scaling.get_potential_scaling();
+  const double x0 = scaling.get_length_scaling();
   const double C0 = scaling.get_density_scaling();
   const double mu0 = scaling.get_mobility_scaling();
   const double l2 = scaling.get_lambda_squared() * Constants::e0 * 1e-2;
@@ -2692,6 +2495,7 @@ DriftDiffusion::build_local_scaling(void)
     assert(sc != NULL); 
 
     sc->reinit(elem);
+    //sc->set_coupling_type(get_options().coupling);
 
     fe->reinit(elem);
 
@@ -2726,7 +2530,7 @@ DriftDiffusion::build_local_scaling(void)
 
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-      sc->set_electric_field(phi0 * e_field);
+      sc->set_electric_field(phi0 / x0 * e_field);
       sc->set_grad_fermi_e(RealGradient(0.0));
       sc->set_grad_fermi_h(RealGradient(0.0));
 
@@ -3097,6 +2901,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
       assert(sc != NULL); 
 
       sc->reinit(elem);
+      //sc->set_coupling_type(get_options().coupling);
 
       fe->reinit(elem);
 
@@ -3555,6 +3360,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     assert(sc != NULL); 
 
     sc->reinit(elem);
+    //sc->set_coupling_type(get_options().coupling);
 
     fe->reinit(elem);
     
@@ -3959,6 +3765,7 @@ DriftDiffusion::set_dirichlet_bc(void)
     assert(sc != NULL);
 
     sc->reinit(elem);
+    //sc->set_coupling_type(get_options().coupling);
 
     {
       // loop over all nodes and check if it is a dirichlet type node
@@ -4275,6 +4082,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
     assert(sc != NULL);
     sc->reinit(elem);
+    //sc->set_coupling_type(coupling);
     
 
     // Get the thermoelectric power
@@ -4325,9 +4133,10 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
 
-      sc->set_electric_field(phi0 * e_field);
-      sc->set_grad_fermi_e(phi0 * grad_en);
-      sc->set_grad_fermi_h(phi0 * grad_ep);
+      double grad_fac = phi0 / x0;
+      sc->set_electric_field(grad_fac * e_field);
+      sc->set_grad_fermi_e(grad_fac * grad_en);
+      sc->set_grad_fermi_h(grad_fac * grad_ep);
 
       sc->calculate_densities();
 

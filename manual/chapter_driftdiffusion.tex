@@ -344,8 +344,14 @@ $\alpha_a$ &  \verb+aa_e+ &  \verb+aa_h+\\
 
 \subsubsection{Field dependent mobility model}
 
-Currently one mobility model depending on the modulus of the electric field is implemented (identifier \texttt{field\_dependent}).
-It is based on the Caughey-Thomas model, refined by Canali~\cite{canali}:
+The field dependent mobility model describes the degradation of mobility at high driving fields.
+It is identified by the identifier \texttt{field\_dependent}.
+The electric field or the gradient of the electro-chemical potential can be chosen as driving force:
+\begin{verbatim}
+driving_force = efield | grad_fermi
+\end{verbatim}
+
+The model is based on the Caughey-Thomas model, refined by Canali~\cite{canali}:
 \begin{equation}
 \mu = \frac{\mu_{lowfield}}{\left(1 + \left(\frac{\mu_{lowfield} |\mathbf{E}|}{v_{sat}}\right)^\beta \right)^{1/\beta}}
 \end{equation}
@@ -353,7 +359,7 @@ with
 \[
 \beta = \beta_0(T/T_0)^b 
 \]
-$|\mathbf{E}|$ is the modulus of the electric field, $\mu_{lowfield}$ is the low-field mobility.
+$|\mathbf{E}|$ is the modulus of the driving field, $\mu_{lowfield}$ is the low-field mobility.
 For the latter one can  specify the model to be used using the parameter \verb+lowfield_model+.
 As default the doping dependent model is used.
 

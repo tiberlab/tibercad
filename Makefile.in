@@ -102,6 +102,9 @@ wininstaller deb tgz tbz: manual
 	@$(MAKE) --no-print-directory -C installer $(MAKECMDGOALS)
 
 
+clean-dep:
+	@find . -name ".*.d*" -exec rm -f {} \;
+
 
 tags:
 	@echo $(tibermodules)

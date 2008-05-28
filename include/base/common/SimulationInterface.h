@@ -529,6 +529,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     ModelOptions& get_options(void);
 
 
+    //! Get the solver options
+    ModelOptions& get_solver_options(void);
+
+
     //! Do the initialization
     /*!
      * Has to be implemented by derived classes.

@@ -52,12 +52,13 @@ $Solver
 {
   driftdiffusion
   {
-    nonlinear_solver = tiber
+    #nonlinear_solver = tiber
     #linear_solver = pardiso
-    ksp_type = bcgs
+    #ksp_type = bcgsl
+    #pc_type = lu
     nonlin_max_it = 20
     nonlin_step_tol = 1e-4
-    ls_max_step = 2
+    #ls_max_step = 20
   }
 
 

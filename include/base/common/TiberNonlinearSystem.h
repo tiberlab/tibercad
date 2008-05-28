@@ -10,6 +10,8 @@
 #include "enum_preconditioner_type.h"
 
 
+class XMonitor;
+
 
 //! Base class for TiberCAD nonlinear systems
 class TiberNonlinearSystem : public TiberEqSystem, public ImplicitSystem
@@ -46,30 +48,7 @@ class TiberNonlinearSystem : public TiberEqSystem, public ImplicitSystem
     //! Destructor
     virtual ~TiberNonlinearSystem(void) {};
 
-
-    //! To create a nonlinear system
-    /*!
-     * \param es the EquationSystems object where the new system will be added
-     * \param sysname the name of the new system
-     * \param type the type of system to create
-     * \return a reference to the newly created system
-     */
-    static TiberNonlinearSystem& create_nonlinear_system(EquationSystems& es,
-        const std::string& sysname, NonlinearSystemType type,
-        const std::string& linear_solver = "petsc");
-
-    
-    //! To create a nonlinear system
-    /*!
-     * \param es the EquationSystems object where the new system will be added
-     * \param sysname the name of the new system
-     * \param type the type of system to create as string
-     * \return a reference to the newly created system
-     */
-    static TiberNonlinearSystem& create_nonlinear_system(EquationSystems& es,
-        const std::string& sysname, const std::string& type,
-        const std::string& linear_solver = "petsc");
-    
+   
 
     //! Create a nonlinear system
     /*!
@@ -92,33 +71,15 @@ class TiberNonlinearSystem : public TiberEqSystem, public ImplicitSystem
 
 
     /*! \copydoc ImplicitSystem::solve() */
-    virtual void solve(void) = 0;
+    virtual void solve(void);
 
 
     /*! \copydoc ImplicitSystem::system_type() */
-    virtual std::string system_type(void) const;
+    virtual std::string system_type(void) const = 0;
 
 
     //! Get the solution vector
     virtual NumericVector<double>& get_solution_vector(void) = 0;
-
-
-    //! Set the linear solver parameters
-    void set_linear_solver_params(double relative_tolerance,
-                                  double absolute_tolerance,
-                                  unsigned int maximum_iterations);
-
-
-    //! Set the linear solver type
-    void set_linear_solver_type(SolverType solver_type, PreconditionerType pc);
-
-
-    //! Set the nonlinear solver parameters
-    void set_nonlinear_solver_params(double relative_tolerance,
-                                     double absolute_tolerance,
-                                     double step_tolerance,
-                                     double max_step,
-                                     unsigned int maximum_iterations);
 
 
     //! Attach the assembly routine
@@ -149,6 +110,9 @@ class TiberNonlinearSystem : public TiberEqSystem, public ImplicitSystem
     //! The assembly routine
     AssemblyRoutine _assemble;
 
+    //! The real solve method, to be reimplemented in derived classes
+    virtual void do_solve(void) = 0;
+
  
     //! The nonlinear iterations
     unsigned int _n_nonlin_iterations;
@@ -162,52 +126,26 @@ class TiberNonlinearSystem : public TiberEqSystem, public ImplicitSystem
     double _last_step_size;
 
 
-    //! The tolerance for the nonlinear step size
-    double _nonlin_step_tol;
+    //! Get the pointer to the X monitor
+    /*!
+     * Use this with caution, especially don't forget to check for NULL pointer
+     */
+    XMonitor* get_xmonitor(void);
 
 
-    //! The relative tolerance for the residual norm
-    double _nonlin_rel_tol;
-
-
-    //! The absolute tolerance for the residual norm
-    double _nonlin_abs_tol;
-
-
-    //! The nonlinear maximum number of iterations
-    unsigned int _nonlin_max_it;
-
-
-    //! The linear relative tolerance
-    double _lin_tol;
-
-
-    //! The linear absolute tolerance
-    double _lin_abs_tol;
-
-
-    //! The linear solver maximum number of iterations
-    unsigned int _lin_max_it;
-
-
-    //! The maximum step size
-    double _max_step_size;
-
-
-    //! The linear solver type
-    SolverType _solver_type;
-
-
-    //! The preconditioner type
-    PreconditionerType _preconditioner_type;
-   
-
-    //! The linear solver
-    std::string _linear_solver;
+    //! Add a point to the X monitor
+    /*!
+     * \param iteration the iteration number
+     * \param err the error
+     * \param logarithm if \c true, plot \c log10(error)
+     */
+    void draw_point(double iteration, double error, bool logarithm = true);
 
 
   private:
 
+    //! The X monitor
+    XMonitor* _xmonitor;
 
 };
 
@@ -230,7 +168,7 @@ inline
 void
 TiberNonlinearSystem::clear(void)
 {
-  Parent::clear();
+  ImplicitSystem::clear();
 }
 
 
@@ -239,7 +177,7 @@ inline
 void
 TiberNonlinearSystem::reinit(void)
 {
-  Parent::reinit();
+  ImplicitSystem::reinit();
 }
 
 
@@ -270,45 +208,10 @@ TiberNonlinearSystem::last_step_size(void) const
 
 
 inline
-std::string
-TiberNonlinearSystem::system_type(void) const
+XMonitor*
+TiberNonlinearSystem::get_xmonitor(void)
 {
-  return "TiberNonlinear";
-}
-
-
-inline
-void
-TiberNonlinearSystem::set_linear_solver_params(double relative_tolerance,
-    double absolute_tolerance, unsigned int maximum_iterations)
-{
-  _lin_tol = relative_tolerance;
-  _lin_abs_tol = absolute_tolerance;
-  _lin_max_it = maximum_iterations;
-}
-
-
-inline
-void
-TiberNonlinearSystem::set_nonlinear_solver_params(double relative_tolerance,
-    double absolute_tolerance, double step_tolerance, double max_step,
-    unsigned int maximum_iterations)
-{
-  _nonlin_rel_tol = relative_tolerance;
-  _nonlin_abs_tol = absolute_tolerance;
-  _nonlin_step_tol = step_tolerance;
-  _max_step_size = max_step;
-  _nonlin_max_it = maximum_iterations;
-}
-
-
-inline
-void
-TiberNonlinearSystem::set_linear_solver_type(SolverType solver_type,
-    PreconditionerType pc)
-{
-  _solver_type = solver_type;
-  _preconditioner_type = pc;
+  return _xmonitor;
 }
 
 

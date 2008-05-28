@@ -18,7 +18,6 @@
 #include "TypeDefs.h"
 #include "Material.h"
 #include "mesh.h"
-#include "Macrostrain.h"
 
 //forward declaration
 class AtomisticStructure;

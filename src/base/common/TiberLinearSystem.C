@@ -2,6 +2,7 @@
 
 #include "TiberLinearSystem.h"
 #include "TiberLinearSolver.h"
+#include "InitFailedException.h"
 
 
 #include "equation_systems.h"
@@ -27,7 +28,9 @@ TiberLinearSystem::create(EquationSystems& es,
   TiberLinearSystem* sys = NULL;
   sys = &(es.add_system<TiberLinearSystem>(sysname));
 
-  assert(sys != NULL);
+  if (sys == NULL)
+    throw InitFailedException("Could not create linear system " + sysname);
+
   sys->set_options(options);
 
   return sys;

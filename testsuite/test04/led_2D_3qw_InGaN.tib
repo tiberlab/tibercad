@@ -288,6 +288,7 @@ $Solver
     ls_max_step =  10  # 2 #0.8 # 1.5  #1.0 # 1.5  #1.0 #2       # 1.0  fino a P = 0.33
     pc_type = ilu
  #   ksp_type = gmres
+    #xmonitor = true
 
    }
 
@@ -364,9 +365,11 @@ $Solver
 
 
     tolerance = 1e-6 # 1e-8 ok senza  oxide
+    lin_rel_tol = 1e-6
   # ksp_type = cg #gmres
-    max_iterations = 15000
-   pc = composite
+    #max_iterations = 15000
+    lin_max_it = 15000
+   pc_type = composite
 
 
   }

@@ -81,11 +81,18 @@ ModelOptions::get_option(const string& name,
 ModelOptions&
 ModelOptions::operator+=(const ModelOptions& rhs)
 {
-  OptionsMap::const_iterator it = rhs._options.begin();
-  const OptionsMap::const_iterator end = rhs._options.end();
+  OptionsMap::const_iterator it(rhs._options.begin());
+  const OptionsMap::const_iterator end(rhs._options.end());
 
   for ( ; it != end; ++it)
     _options[it->first] = it->second;
+
+
+  const_submodel_iterator subit(rhs.submodels_begin());
+  const const_submodel_iterator subend(rhs.submodels_end());
+
+  for ( ; subit != subend; ++subit)
+    add_submodel(subit->first, subit->second);
 
   return *this;
 }
@@ -99,6 +106,7 @@ ModelOptions::operator+=(const map<const string, string>& rhs)
 
   for ( ; it != end; ++it)
     _options[it->first] = it->second;
+
 
   return *this;
 }

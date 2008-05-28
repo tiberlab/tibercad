@@ -1,4 +1,8 @@
+// $Id$
+
+
 #include "Poisson.h"
+#include "TiberLinearSystem.h"
 #include "BoundaryProperties.h"
 #include "PhysicalModel.h"
 #include "mesh.h"
@@ -35,7 +39,11 @@
 #include "Dirichlet.h"
 #include "PoissonModel.h"
 #include "Neumann.h"
+
 using namespace std;
+
+
+
 Poisson* Poisson::static_this;
 Device* Poisson::_device;
 //-----------------------------------------------------------------//
@@ -69,13 +77,18 @@ void  Poisson::do_init( )
 
   opt.length_scale = mesh_units/opt.work_units;
 
-  equation_systems = &(get_equation_systems());
 
-  system_name = get_equation_system_name();
+  my_system = TiberLinearSystem::create(get_equation_systems(),
+      get_equation_system_name(), get_solver_options());
 
-  equation_systems->add_system<LinearImplicitSystem> (system_name);
 
-  my_system = &( equation_systems->get_system<LinearImplicitSystem>(system_name)  );
+  //equation_systems = &(get_equation_systems());
+
+  //system_name = get_equation_system_name();
+
+  //equation_systems->add_system<LinearImplicitSystem> (system_name);
+
+  //my_system = &( equation_systems->get_system<LinearImplicitSystem>(system_name));
 
   my_system->add_variable("V", FIRST);
 
@@ -96,6 +109,7 @@ void  Poisson::do_solve()
   
   static_this = this;
   
+  my_system->set_options(get_solver_options());
   my_system->solve();
 
 }

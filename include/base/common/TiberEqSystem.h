@@ -67,6 +67,15 @@ class TiberEqSystem
 
 
     //! Set options
+    /*!
+     * set_options() has to be called after creation of the system.
+     *
+     * \param options the options as obtained from get_solver_options()
+     * in SimulationInterface
+     *
+     * If the correct options are passed, they will contain a field with
+     * key "name" wich is the name of the associated SimulationInterface.
+     */
     void set_options(const ModelOptions& options);
 
 
@@ -96,6 +105,14 @@ class TiberEqSystem
     void set_type(SystemType type);
 
 
+    //! Parse the options
+    /*!
+     * This method is called from set_options() and can be used to
+     * extract some option.
+     */
+    virtual void parse_options(void) { };
+
+
   private:
 
     //! The options for this system
@@ -118,6 +135,7 @@ void
 TiberEqSystem::set_options(const ModelOptions& options)
 {
   _options += options;
+  parse_options();
 }
 
 

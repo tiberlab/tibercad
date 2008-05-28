@@ -2,9 +2,26 @@
 
 
 #include "TiberPetscLinearSolver.h"
-#include "TypeDefs.h"
+#include "TiberPetscUtils.h"
+#include "ModelOptions.h"
 
 #include "libmesh_common.h"
+
+
+
+TiberPetscLinearSolver::TiberPetscLinearSolver(void)
+  : _ksp(NULL),
+    _ksp_type(KSPBCGS),
+    _pc_type(PCILU),
+    _monitor(false),
+    _xmonitor(true),
+    _xmonitor_open(false)
+{
+//  if (libMesh::n_processors() == 1)
+//    this->_preconditioner_type = ILU_PRECOND;
+//  else
+//    this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
+}
 
 
 
@@ -13,7 +30,7 @@ void TiberPetscLinearSolver::clear(void)
 {
   if (this->initialized())
     {
-      this->_is_initialized = false;
+      _is_initialized = false;
 
       int ierr = 0;
       
@@ -21,12 +38,12 @@ void TiberPetscLinearSolver::clear(void)
       _checkerr(ierr);
 	     
       // Mimic PETSc default solver and preconditioner
-      this->_solver_type = GMRES;
+      //_solver_type = GMRES;
 
-      if (libMesh::n_processors() == 1)
-	this->_preconditioner_type = ILU_PRECOND;
-      else
-	this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
+      //if (libMesh::n_processors() == 1)
+      //  this->_preconditioner_type = ILU_PRECOND;
+      //else
+      //  this->_preconditioner_type = BLOCK_JACOBI_PRECOND;
     }
 }
 
@@ -47,16 +64,12 @@ void TiberPetscLinearSolver::init(void)
     _checkerr(ierr);
 
     // Create the preconditioner context
-    ierr = KSPGetPC(_ksp, &_pc);
-    _checkerr(ierr);
+    //ierr = KSPGetPC(_ksp, &_pc);
+    //_checkerr(ierr);
 
     // We start with 0 for the correction
     //ierr = KSPSetInitialGuessNonzero(_ksp, PETSC_TRUE);
     //_checkerr(ierr);
-
-    // Set user-specified  solver and preconditioner types
-    set_ksp_type();
-    set_pc_type();
 
     // Set the options from user-input (for tests only)
     //ierr = KSPSetFromOptions (_ksp);
@@ -87,9 +100,7 @@ std::pair<unsigned int, double>
 TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 			     SparseMatrix<Number>&  precond_in,
 			     NumericVector<Number>& solution_in,
-			     NumericVector<Number>& rhs_in,
-			     const double tol,
-			     const unsigned int m_its)
+			     NumericVector<Number>& rhs_in)
 {
   this->init();
   
@@ -105,8 +116,6 @@ TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
   assert(solution != NULL);
   assert(rhs      != NULL);
 
-  ignore_unused_variable(tol);
-  ignore_unused_variable(m_its);
   
   int ierr = 0;
 
@@ -117,6 +126,41 @@ TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
   rhs->close();
 
 
+  // Set user-specified solver and preconditioner types
+  ierr = KSPSetType(_ksp, _ksp_type);
+  _checkerr(ierr);
+
+  PC pc;
+  ierr = KSPGetPC(_ksp, &pc);
+  _checkerr(ierr);
+
+  ierr = PCSetType(pc, _pc_type);
+  _checkerr(ierr);
+  // for composite type, do some extra stuff
+  if (strcmp(_pc_type, PCCOMPOSITE) == 0)
+  {
+    ierr = PCCompositeSetType(pc, PC_COMPOSITE_MULTIPLICATIVE);
+    _checkerr(ierr);
+
+    ierr = PCCompositeAddPC(pc, PCJACOBI);
+    _checkerr(ierr);
+    ierr = PCCompositeAddPC(pc, PCILU);
+    _checkerr(ierr);
+
+    PC sub_pc;
+    ierr = PCCompositeGetPC(pc, 1, &sub_pc);
+    _checkerr(ierr);
+#if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
+    PCILUSetZeroPivot(sub_pc, 1e-32);
+    PCILUSetDamping(sub_pc, 1e-3);
+#else
+    PCFactorSetShiftNonzero(sub_pc, 1e-3);
+    PCFactorSetZeroPivot(sub_pc, 1e-32);
+    //PCILUReorderForNonzeroDiagonal(sub_pc, 1e-32);
+#endif
+  }
+
+  setup_monitors();
 
   // we want PETSc >= 2.2.1 !
       
@@ -127,8 +171,8 @@ TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 
   // Set the tolerances for the iterative solver.  Use the user-supplied
   // tolerance for the relative residual & leave the others at default values.
-  ierr = KSPSetTolerances(_ksp, this->get_linear_rtol(), this->get_linear_atol(),
- 			   PETSC_DEFAULT, this->get_linear_max_it());
+  ierr = KSPSetTolerances(_ksp, get_linear_rtol(), get_linear_atol(),
+ 			   PETSC_DEFAULT, get_linear_max_it());
 
   // Solve the linear system
   ierr = KSPSolve(_ksp, rhs->vec(), solution->vec());
@@ -205,7 +249,7 @@ double TiberPetscLinearSolver::get_initial_residual(void)
 
 
 std::pair<unsigned int, double>
-TiberPetscLinearSolver::check_convergence(void) throw (KSPDivergedError)
+TiberPetscLinearSolver::check_convergence(void)
 {
 	
   int its = 0;
@@ -227,180 +271,73 @@ TiberPetscLinearSolver::check_convergence(void) throw (KSPDivergedError)
 }
 
 
-
-void TiberPetscLinearSolver::set_ksp_type(void)
+void
+TiberPetscLinearSolver::setup_monitors(void)
 {
-  int ierr = 0;
-  
-  switch (this->_solver_type)
+  if (_ksp != NULL)
   {
-
-    case CG:
-      ierr = KSPSetType (_ksp, (char*) KSPCG);
-      _checkerr(ierr);
-      break;
-
-    case CR:
-      ierr = KSPSetType (_ksp, (char*) KSPCR);
-      _checkerr(ierr);
-      break;
-
-    case CGS:
-      ierr = KSPSetType (_ksp, (char*) KSPCGS);
-      _checkerr(ierr);
-      break;
-
-    case BICG:
-      ierr = KSPSetType (_ksp, (char*) KSPBICG);
-      _checkerr(ierr);
-      break;
-
-    case TCQMR:
-      ierr = KSPSetType (_ksp, (char*) KSPTCQMR);
-      _checkerr(ierr);
-      break;
- 
-    case TFQMR:
-      ierr = KSPSetType (_ksp, (char*) KSPTFQMR);
-      _checkerr(ierr);
-      break;
-
-    case LSQR:
-      ierr = KSPSetType (_ksp, (char*) KSPLSQR);
-      _checkerr(ierr);
-      break;
-
-    case BICGSTAB:
-      ierr = KSPSetType (_ksp, (char*) KSPBCGSL);
-      _checkerr(ierr);
-      break;
-
-    case MINRES:
-      ierr = KSPSetType (_ksp, (char*) KSPMINRES);
-      _checkerr(ierr);
-      break;
-
-    case GMRES:
-      ierr = KSPSetType (_ksp, (char*) KSPGMRES);
-      _checkerr(ierr);
-      break;
-
-    case RICHARDSON:
-      ierr = KSPSetType (_ksp, (char*) KSPRICHARDSON);
-      _checkerr(ierr);
-      break;
-
-    case CHEBYSHEV: 
-      ierr = KSPSetType (_ksp, (char*) KSPCHEBYCHEV);
-      _checkerr(ierr);
-      break;
-
-    default:
-      throw PetscRuntimeError(PETSC_ERR_ARG_UNKNOWN_TYPE);
+    int ierr = 0;
+    if (_monitor)
+    {
+#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
+    && (PETSC_VERSION_SUBMINOR > 2))
+      ierr = KSPMonitorSet(_ksp, KSPMonitorDefault, PETSC_NULL, 0);
+#else
+      ierr = KSPSetMonitor(_ksp, KSPDefaultMonitor, PETSC_NULL, 0);
+#endif
     }
-}
+    else
+      ierr = KSPMonitorCancel(_ksp);
+      // does not work:
+      //ierr = KSPMonitorSet(_ksp, PETSC_NULL, PETSC_NULL, 0);
+
+    _checkerr(ierr);
 
 
-
-
-
-
-
-
-void TiberPetscLinearSolver::set_pc_type(void)
-{
-  int ierr = 0;
- 
-  switch (this->_preconditioner_type)
-  {
-    case IDENTITY_PRECOND:
-      ierr = PCSetType (_pc, (char*) PCNONE);
-      _checkerr(ierr);
-      break;
-
-    case CHOLESKY_PRECOND:
-      ierr = PCSetType (_pc, (char*) PCCHOLESKY);
-      _checkerr(ierr);
-
-    case ICC_PRECOND:
-      ierr = PCSetType (_pc, (char*) PCICC);
-      _checkerr(ierr);
-      break;
-
-    case ILU_PRECOND:
-      ierr = PCSetType (_pc, (char*) PCILU);
-      _checkerr(ierr);
-      break;
-
-    case LU_PRECOND:
-      ierr = PCSetType (_pc, (char*) PCLU);
-      _checkerr(ierr);
-      break;
-
-    case ASM_PRECOND:
-      ierr = PCSetType (_pc, (char*) PCASM);
-      _checkerr(ierr);
-      break;
-
-    case JACOBI_PRECOND:
-      ierr = PCSetType (_pc, (char*) PCJACOBI);
-      _checkerr(ierr);
-      break;
-
-    case BLOCK_JACOBI_PRECOND:
-      ierr = PCSetType (_pc, (char*) PCBJACOBI);
-      _checkerr(ierr);
-      break;
-
-    case SOR_PRECOND:
-      ierr = PCSetType (_pc, (char*) PCSOR);
-      _checkerr(ierr);
-      break;
-
-    case EISENSTAT_PRECOND:
-      ierr = PCSetType (_pc, (char*) PCEISENSTAT);
-      _checkerr(ierr);
-      break;
-
-    case USER_PRECOND:
-      // abused for composite PC
-      ierr = PCSetType (_pc, (char*) PCCOMPOSITE);
-      _checkerr(ierr);
-      ierr = PCCompositeSetType(_pc, PC_COMPOSITE_MULTIPLICATIVE);
-      ierr = PCCompositeAddPC(_pc, PCJACOBI);
-      ierr = PCCompositeAddPC(_pc, PCILU);
-
-      PC sub_pc;
-      ierr = PCCompositeGetPC(_pc, 1, &sub_pc);
-      _checkerr(ierr);
-
-#if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
-      PCILUSetZeroPivot(sub_pc, 1e-54);
-      PCLUSetZeroPivot(sub_pc, 1e-54);
-      PCILUSetDamping(sub_pc, 1e-3);
+    if (_xmonitor)
+    {
+      if (!_xmonitor_open)
+      {
+        std::string sim_name(get_simulation_name());
+        sim_name += ": Linear solver convergence monitor";
+#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
+    && (PETSC_VERSION_SUBMINOR > 2))
+        ierr = KSPMonitorLGCreate(NULL, sim_name.c_str(),0,0,400,400, &_LG_monitor);
 #else
-      PCFactorSetShiftNonzero(sub_pc, 1e-3);
-      PCFactorSetZeroPivot(sub_pc, 1e-54);
-      //PCILUReorderForNonzeroDiagonal(sub_pc, 1e-32);
+        ierr = KSPLGMonitorCreate(NULL, sim_name.c_str(),0,0,400,400, &_LG_monitor);
 #endif
-      break;
-
-    default:
-      throw PetscRuntimeError(PETSC_ERR_ARG_UNKNOWN_TYPE);
+    _checkerr(ierr);
+    
+#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
+    && (PETSC_VERSION_SUBMINOR > 2))
+        ierr = KSPMonitorSet(_ksp, KSPMonitorLG, _LG_monitor, 0);
+#else
+        ierr = KSPSetMonitor(_ksp, KSPLGMonitor, _LG_monitor, 0);
+#endif
+    _checkerr(ierr);
+      
+        _xmonitor_open = true;
+      }
+    }
+    else if (_xmonitor_open)
+    {
+      // close xmonitor
+    }
   }
-
- 
-#if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
-  PCILUSetZeroPivot(_pc, 1e-54);
-  PCLUSetZeroPivot(_pc, 1e-54);
-#else
-  PCFactorSetZeroPivot(_pc, 1e-54);
-  //PCILUReorderForNonzeroDiagonal(pc, 1e-32);
-#endif
 }
 
 
 
+void
+TiberPetscLinearSolver::parse_options(const ModelOptions& options)
+{
+  _ksp_type = TiberPetscUtils::extract_KSPType(options);
+
+  _pc_type = TiberPetscUtils::extract_PCType(options);
+
+  _monitor = options.get_option("monitor", false);
+  _xmonitor = options.get_option("xmonitor", false);
+}
 
 
 

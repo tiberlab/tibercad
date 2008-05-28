@@ -4,21 +4,20 @@
 #ifndef _PARDISOSOLVEREXCEPTION_H_
 #define _PARDISOSOLVEREXCEPTION_H_
 
-#include "LinearSolverException.h"
+#include "SolverException.h"
 
 #include <stdexcept>
 #include <string>
 
-//! An exception class for the linear solver interfaces
-class PardisoSolverException : public LinearSolverException
+//! An exception class for the PARDISO solver
+class PardisoSolverException : public SolverException
 {
 
  public:
   
   PardisoSolverException(int error)
-    :LinearSolverException("Error in Pardiso solver"){};
+    : SolverException("Error in Pardiso solver") { };
     
-
 
 
   private:
@@ -29,4 +28,4 @@ class PardisoSolverException : public LinearSolverException
 
 
 
-#endif // _LINEARSOLVEREXCEPTION_H_
+#endif // _PARDISOSOLVEREXCEPTION_H_

@@ -4,14 +4,14 @@
 #define _TIBERNONLINLS_H_
 
 
-#include "TiberNonlinearSystem.h"
+#include "TiberLineSearch.h"
 
 
 class TiberLinearSolver;
 
 
 //! An implementation of line search to solve nonlinear systems
-class TiberNonlinLS : public TiberNonlinearSystem
+class TiberNonlinLS : public TiberLineSearch
 {
 
   public:
@@ -25,38 +25,22 @@ class TiberNonlinLS : public TiberNonlinearSystem
     virtual ~TiberNonlinLS(void);
 
 
-    /*! \copydoc TiberNonlinearSystem::clear() */
-    virtual void clear(void);
-
-
-    /*! \copydoc TiberNonlinearSystem::reinit() */
-    virtual void reinit(void);
-
-
-    /*! \copydoc TiberNonlinearSystem::solve() */
-    virtual void solve(void);
-
-
-    /*! \copydoc System:user_initialization() */
-    virtual void user_initialization(void);
-
-
     /*! \copydoc TiberNonlinearSystem::system_type() */
     virtual std::string system_type(void) const;
 
 
-    //! Get the solution vector
-    virtual NumericVector<double>& get_solution_vector(void);
+  protected:
+
+
+    /*! \copydoc TiberNonlinearSystem::do_solve() */
+    virtual void do_solve(void);
 
 
 
   private:
 
     //! The parent class type
-    typedef TiberNonlinearSystem Parent;
-
-    //! The linear solver to be used for the Newton iteration
-    TiberLinearSolver* _solver;
+    typedef TiberLineSearch Parent;
 
 };
 
@@ -72,15 +56,6 @@ std::string
 TiberNonlinLS::system_type(void) const
 {
   return "TiberNonlinLS";
-}
-
-
-
-inline
-NumericVector<double>&
-TiberNonlinLS::get_solution_vector(void)
-{
-  return get_vector("sol");
 }
 
 

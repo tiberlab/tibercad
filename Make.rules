@@ -14,13 +14,13 @@ distclean-recursive: $(subdirs)
 src-clean:
 	@echo -n "Cleaning up ."
 	@echo `expr "$$PWD" : "$(topdir)\(.*\)"`
-	-@rm -f *.o *~ .*.d *~
+	-@rm -f *.o *~ .*.d* *~
 
 .PHONY: src-distclean
 src-distclean:
 	@echo -n "Cleaning up ."
 	@echo `expr "$$PWD" : "$(topdir)\(.*\)"`
-	-@rm -f *.so *.dll *.a *.o .*.d *~
+	-@rm -f *.so *.dll *.a *.o .*.d* *~
 
 
 .PHONY: $(subdirs)
@@ -70,7 +70,7 @@ $(subdirs):
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S $<
 
 
-ifneq ($(MAKECMDGOALS),clean)
+ifeq (,$(findstring clean,$(MAKECMDGOALS)))
 ifneq (x$(srcfiles),x)
 -include $(patsubst %,.%,$(srcfiles:.C=.d))
 endif

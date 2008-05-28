@@ -89,7 +89,7 @@ FieldDependentMobility::do_init(void)
   _low_field_mob->set_material(get_material());
   _low_field_mob->init();
 
-  std::string force = get_parameter("driving_force", "efield");
+  std::string force = get_parameter("driving_force", "grad_fermi");
   if (force == "efield")
     _force = EFIELD;
   else if (force == "grad_fermi")

@@ -20,97 +20,37 @@ using namespace std;
 
 TiberNonlinLS::TiberNonlinLS(EquationSystems& es,
     const string& name, const unsigned int number)
-: Parent(es, name, number),
-  _solver(NULL)
+: Parent(es, name, number)
 {
-  // add a vector for the solution
-  add_vector("sol");
 }
 
 
 
 TiberNonlinLS::~TiberNonlinLS(void)
 {
-  clear();
-
-  delete _solver;
 }
 
 
 
 
-void
-TiberNonlinLS::reinit(void)
-{
-  _solver->clear();
-
-  _solver->set_solver_type(_solver_type);
-  _solver->set_preconditioner_type(_preconditioner_type);
-
-  // we could have changed the solver type
-  user_initialization();
-
-  Parent::reinit();
-}
-
-
 
 void
-TiberNonlinLS::clear(void)
-{
-  if (_solver != NULL)
-  {
-    _solver->clear();
-
-    _solver->set_solver_type(_solver_type);
-    _solver->set_preconditioner_type(_preconditioner_type);
-  }
-
-  Parent::clear();
-}
-
-
-
-void
-TiberNonlinLS::user_initialization(void)
-{
-   
-  if (_solver == NULL)
-  {
-    //_solver = TiberLinearSolver::create(get_options());
-    _solver = TiberLinearSolver::create(_linear_solver);
-
-    if (_solver == NULL)
-    {
-      std::cerr << "Linear solver " << _linear_solver <<
-        " is not available." << std::endl;
-      throw InitFailedException("Cannot create linear solver object.");
-    }
-  }
-
-  _solver->set_solver_type(_solver_type);
-  _solver->set_preconditioner_type(_preconditioner_type);
-}
-
-
-void
-TiberNonlinLS::solve(void)
+TiberNonlinLS::do_solve(void)
 {
 
   assert(_assemble != NULL);
 
-  NumericVector<Number>& u = get_vector("sol");
+  NumericVector<Number>& u = get_solution_vector();
   NumericVector<Number>& du = *solution;
   AutoPtr<NumericVector<Number> > u_old_ptr = u.clone();
   NumericVector<Number>& u_old = *u_old_ptr;
 
   // the l_infty tolerance for the step size
-  double eps = _nonlin_step_tol;
+  double eps = get_nonlinear_stol();
   
   // the tolerance for the residual
-  double eps_res = _nonlin_abs_tol;
+  double eps_res = get_nonlinear_atol();
 
-  double tol = _lin_tol;
 
   int max_ls_step = 5;
 
@@ -122,18 +62,23 @@ TiberNonlinLS::solve(void)
   // the norm of the search step
   double norm_du = 1e12, norm_du_old; 
 
+  // let the solver know the options
+  get_linear_solver()->set_options(get_options());
+  double tol = get_linear_solver()->get_linear_rtol();
+
+
   unsigned int i = 1;
-  for ( ; i <= _nonlin_max_it; i++)
+  for ( ; i <= get_nonlinear_max_it(); i++)
   {
 
     // prepare jacobian and residual
     _assemble(u, rhs, NULL);
     _assemble(u, NULL, matrix);
 
-    _solver->set_ksp_options(tol, _lin_abs_tol, _lin_max_it);
+    get_linear_solver()->set_linear_rtol(tol);
     
     // solve the linear system
-    _solver->solve(*matrix, *solution, *rhs, tol, _lin_max_it);
+    get_linear_solver()->solve(*matrix, *solution, *rhs);
 #ifndef DEBUG
     cout << "." << flush;
 #endif
@@ -283,6 +228,8 @@ TiberNonlinLS::solve(void)
     cout << "  it " << i << ", |du| = " << norm_du << ", |r| = " << norm_res << endl;
 #endif
 
+    draw_point(i, norm_res);
+
     tol *= tol;
       
 
@@ -294,7 +241,7 @@ TiberNonlinLS::solve(void)
 #endif
       break;
     }
-    else if (i == _nonlin_max_it)
+    else if (i == get_nonlinear_max_it())
     {
 #ifndef DEBUG
       cout << endl << flush;
