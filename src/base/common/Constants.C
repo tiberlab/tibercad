@@ -13,7 +13,7 @@ const double&
 Constants::kb = k_Boltzmann;
 
 const double
-Constants::elementary_charge = 1.60219e-19;
+Constants::elementary_charge = 1.602176487e-19;
 
 const double&
 Constants::e = elementary_charge;
@@ -25,7 +25,7 @@ const double&
 Constants::eV = electron_volt;
 
 const double
-Constants::epsilon = 8.85374e-12;
+Constants::epsilon = 8.854187871e-12;
 
 const double&
 Constants::eps = epsilon;
@@ -34,13 +34,13 @@ const double&
 Constants::e0 = epsilon;
 
 const double
-Constants::electron_mass = 9.10956e-31;
+Constants::electron_mass = 9.10938215e-31;
 
 const double&
 Constants::me = electron_mass;
 
 const double
-Constants::plancks_constant = 6.62620e-34;
+Constants::plancks_constant = 6.62606896e-34;
 
 const double&
 Constants::h = plancks_constant;
@@ -52,7 +52,7 @@ const double
 Constants::bohr_radius = 4 * M_PI * epsilon * (hbar * hbar) /
   (electron_mass * elementary_charge * elementary_charge);
 
-const double 
+const double
 Constants::Hartree = (hbar * hbar) /
   (electron_mass * bohr_radius * bohr_radius) / elementary_charge;
 
@@ -60,7 +60,7 @@ const double
 Constants::Lorenz_Number = (4.0 * k_Boltzmann *  k_Boltzmann ) / (M_PI);
 
 const double
-Constants::c = 299792458; 
+Constants::c = 299792458.0; 
 
 
 const double
