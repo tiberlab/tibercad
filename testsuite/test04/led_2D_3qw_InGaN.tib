@@ -285,7 +285,7 @@ $Solver
 
     nonlin_max_it = 50 #25
     nonlin_step_tol = 1e-3 #  1e-5
-    ls_max_step =  10  # 2 #0.8 # 1.5  #1.0 # 1.5  #1.0 #2       # 1.0  fino a P = 0.33
+    ls_max_step =  2  # 2 #0.8 # 1.5  #1.0 # 1.5  #1.0 #2       # 1.0  fino a P = 0.33
     pc_type = ilu
  #   ksp_type = gmres
     #xmonitor = true
