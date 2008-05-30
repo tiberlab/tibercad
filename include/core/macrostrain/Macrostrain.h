@@ -218,6 +218,9 @@ class Macrostrain : public StrainSimulation
  private:
 
 
+  //!if true then all the fixed points are zero displacement
+  bool fix_all_fixed_points;
+
 
   //! reallocate system matrix
   void reallocate_matrix(void);
@@ -400,13 +403,13 @@ class Macrostrain : public StrainSimulation
   unsigned int fixed_node1;
   unsigned int fixed_node2;
   unsigned int fixed_node3;
-  
-
+ 
  
 
   Point fixed_point1 ; //x,y,z
   Point fixed_point2 ;
   Point fixed_point3 ;
+ 
 
   //------------------------------------------------------------------
   //!number of boundary condition that defines substrate

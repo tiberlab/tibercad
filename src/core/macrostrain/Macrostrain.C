@@ -158,6 +158,9 @@ void Macrostrain::parse_options( )
  atom_potential_filename = opt.get_option("atom_potential_filename","");
   
 
+
+ fix_all_fixed_points = opt.get_option("fix_all_fixed_points", false);
+
   
  // assert(periodicity_x == false);
 
@@ -235,6 +238,10 @@ void Macrostrain::parse_options( )
        for (short i = 0; i < 3; i++)  fixed_point3(i) = point[i];
      }
    }
+
+   
+
+
  }
   
 
@@ -1303,6 +1310,16 @@ void Macrostrain::do_assemble(EquationSystems& es,
     
    }
 
+/*
+   {
+
+     for (int i = 0; i < system.matrix->n(); i++)
+     {
+       cerr << (*system.matrix)(i,i) << "\n";
+     }
+
+   }
+*/
 }
 
 
@@ -1312,7 +1329,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
  bool Macrostrain::belongs_to_substrate(unsigned int n, const Elem* elem )
  {
 
-   //  return(false); //test
+  
 
 
    if (grown_on_substrate)
@@ -1338,13 +1355,13 @@ void Macrostrain::do_assemble(EquationSystems& es,
        // std :: cerr << elem->node(n) << "  " << fixed_node_number << "\n";
        //return(elem->node(n) == fixed_node_number);
 
-       if (elem->node(n) == fixed_node1 ) 
-	 {
-	  
-	   return(true);
-	   
-	 }
-       else 	
+       if (elem->node(n) == fixed_node1) 
+	 return(true);
+       else if ((dim > 1) && (fix_all_fixed_points && (elem->node(n) == fixed_node2)))
+	 return true;
+       else if ((dim > 2) && (fix_all_fixed_points && (elem->node(n) == fixed_node3)))
+	 return true;
+       else
 	 return(false);
      }
 
@@ -1436,7 +1453,7 @@ void Macrostrain::do_solve()
 
     if (verbose > 2) cout << "apply_antirotation_constraints ... " << flush;
 
-    apply_antirotation_constraints();
+    if (!fix_all_fixed_points) apply_antirotation_constraints(); 
 
     if (verbose > 2) cout << "done \n" << flush;
 
