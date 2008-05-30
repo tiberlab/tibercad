@@ -121,3 +121,30 @@ therm_lat_cond_c = 1.65e-6   #[(cm)/(W K)]
 #Thermoelectric power [V/k]
 eTEpower = -0.001
 hTEpower =  0.001
+
+
+
+
+#Atomistic structure informations
+#
+ax = 5.4307
+ay = 5.4307
+az = 5.4307
+lattice_type = fcc
+
+#Basis 
+
+#Number of basis specie
+n_basis_specie = 1
+#Number of basis atoms for any specie
+n_1 = 2
+#Basis vectors T_"specie"_"#of atom"_"direction"
+T_1_1_x = 0.0
+T_1_1_y = 0.0
+T_1_1_z = 0.0
+T_1_2_x = 0.25
+T_1_2_y = 0.25
+T_1_2_z = 0.25
+
+#Name of species
+specie_1 = Si

@@ -36,6 +36,7 @@ public:
    */
   AtomisticStructure(const std::string& name);
 
+  //! Destructor for AtomisticStructure class object
   ~AtomisticStructure(void);
 
   //! Get the structure options
@@ -75,8 +76,8 @@ public:
   //! Careful ! this is passing a reference. maybe dangerous
   double* get_periodicity_vectors(void);
 
-  //! Initialize the structure (up to now reading a structure from file is needed)
-  void init(double a1 = 0.0, double a2 = 0.0, double a3 = 0.0); 
+  //! Initialize the structure 
+  void init(void); 
 
   //! Get index of atom type
   int get_type_index(const std::string&);

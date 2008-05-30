@@ -61,7 +61,7 @@ void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string
 
 
 void 
-AtomisticGenerator::do_init(double a1, double a2, double a3)
+AtomisticGenerator::do_init()
 {
 
   std::cout << "Building Atomistic Structure " << _as->get_name() << std::endl;
@@ -72,13 +72,8 @@ AtomisticGenerator::do_init(double a1, double a2, double a3)
   std::string structure;
   structure = "none";
 
-  std::string material;
   Material* region_material = NULL;
-  if ( _as->get_options().find_option("material")) {
-    material = _as->get_options().get_option("material", "Si");
-  }
-  else
-    {
+  
       if (!(_as->get_options().find_option("reference_region"))){
 	std::cerr << "No material could be set " << std::endl;}
       std::vector<ID> ids;
@@ -86,39 +81,16 @@ AtomisticGenerator::do_init(double a1, double a2, double a3)
       ref_region = _as->get_options().get_option("reference_region", "None");
       _as->get_device()->get_region_ids(ref_region, ids);
       region_material = _as->get_device()->get_material(ids[0]);
-      material = region_material->get_name();
       structure =  region_material->get_structure();
-    }
-
-  if (_as->get_options().find_option("structure")){
-    _as->get_options().get_option("structure", "zb");
-  }
-
-  //Set appropriate options for corresponding materials and structures
-  if ( material.compare("Si") == 0 ) 
-    {std::cout << "Setting silicon options " << std::endl;
-      ax = 5.4307; ay = ax; az = ax; 
-      if (a1 != 0.0) ax = a1; if (a2 != 0.0) ay = a1; if (a3 != 0.0) az = a1;
-      set_lattice_type("fcc"); set_crystal_basis("zincblende", "A", "A");}
-  else if (material.compare("GaAs") == 0)
-    {ax = 5.6535;  ay = ax; az = ax; 
-      if (a1 != 0.0) ax = a1; if (a2 != 0.0) ay = a1; if (a3 != 0.0) az = a1;
-      set_lattice_type("fcc"); set_crystal_basis("zincblende", "A", "B");}
-  else if ( material.compare("Diamond") == 0 ) 
-    {ax =3.56685; ay = ax; az = ax; 
-      if (a1 != 0.0) ax = a1; if (a2 != 0.0) ay = a1; if (a3 != 0.0) az = a1;
-      set_lattice_type("fcc"); set_crystal_basis("diamond", "A");}
-  else if ( material.compare("GaN") == 0 ) 
-    {ax =3.190; ay = ax; az = 5.190; 
-      if (a1 != 0.0) ax = a1; if (a2 != 0.0) ay = a1; if (a3 != 0.0) az = a1;
-      set_lattice_type("hexagonal"); set_crystal_basis("wurtzite", "A", "B", 0.0);}
-  //...to be completed...
-
     
-    
+
+  std::cerr << "Calling parse_parameters() " <<std::endl;
+  parse_parameters(region_material);
+  std::cerr << "Ended parse_parameters()" << std::endl;
+
+   
     
   //Set Growth direction informations
-
   Tensor2Gen miller(1);
   miller(2,2) = 0.0; 
   miller(3,3) = 0.0;
@@ -242,32 +214,47 @@ AtomisticGenerator::change_specie(std::string preserve){
 #ifdef DEBUG 
   std::cerr << "Cutting atoms and changing species...";
 #endif
- 
-  std::set<ID> IDs = _as->get_IDset();
 
-  std::map<std::string , std::string> assign;
+  std::set<ID> IDs = _as->get_IDset();
+  std::map<unsigned int , std::string> assign;
 
   _structure_basis.clear();
 
   for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); reg++){
 
-    std::string material;
-    Material* material_pointer = NULL;
+    const Material* mat = _as->get_device()->get_material( (*reg) );
 
-    material_pointer = _as->get_device()->get_material( (*reg) );
-    material = material_pointer->get_name();
+    GetPot data((mat->get_database()).get_data_file());
+  
     assign.clear();
+
+    //Build up conversion map from file
+    for (int i = 1; i <= data("n_basis_specie", 0); i++)
+      {
+   std::string record;
+   std::string s;
+   std::stringstream out;
+
+   out << i;
+   s = out.str();
+
+   record = "specie_" + s;
+   assign[i] = data(record.c_str(),"none");
+
+      }
+
+
 
     //If some doping is present, a strategy must be studied and implemented here,
     // as we can choose arbitrarily species name (e.g. calling one doping Silicon Si1 and another one Si2)
-    if ( material.compare("Si") == 0 ) {assign["A"] = "Si";}
-    else if ( material.compare("GaN") == 0) {assign["A"] = "Ga"; assign["B"] = "N";}
-    else if ( material.compare("AlN") == 0) {assign["A"] = "Al"; assign["B"] = "P";}
-    else if ( material.compare("GaAs") == 0) {assign["A"] = "Ga"; assign["B"] = "As";}
-    else if ( material.compare("AlAs") == 0) {assign["A"] = "Al"; assign["B"] = "As";}
-    else if ( material.compare("Diamond") == 0 ) {assign["A"] = "C";}
+  //   if ( material.compare("Si") == 0 ) {assign["A"] = "Si";}
+//     else if ( material.compare("GaN") == 0) {assign["A"] = "Ga"; assign["B"] = "N";}
+//     else if ( material.compare("AlN") == 0) {assign["A"] = "Al"; assign["B"] = "N";}
+//     else if ( material.compare("GaAs") == 0) {assign["A"] = "Ga"; assign["B"] = "As";}
+//     else if ( material.compare("AlAs") == 0) {assign["A"] = "Al"; assign["B"] = "As";}
+//     else if ( material.compare("Diamond") == 0 ) {assign["A"] = "C";}
  
-    const std::map<std::string, std::string>::iterator assign_last = assign.end();
+    const std::map<unsigned int, std::string>::iterator assign_last = assign.end();
   
     //Cycle upon all atoms and change specie according to assign map
     Point p(0.0, 0.0, 0.0);
@@ -297,9 +284,10 @@ AtomisticGenerator::change_specie(std::string preserve){
 	      if (Macrostrain::may_belong_to_element(elem, p)){
 
 	      if ( (elem->contains_point(p) ) ) {
-		if ( assign.find( (*atom).get_specie() ) != assign_last ){
-		  std::string tmp =  assign[(*atom).get_specie()];
+		if ( assign.find( (*atom).get_flag() ) != assign_last ){
+		  std::string tmp =  assign[(*atom).get_flag()];
 		  (*atom).set_specie(tmp);
+		  (*atom).set_flag(0);
 		  (*atom).set_ID( *reg );
 		  _structure_basis.push_back(*atom); }
 		break; 
@@ -345,8 +333,8 @@ AtomisticGenerator::change_specie(std::string preserve){
 		  tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_position() );
 		  tmp_atom.set_ID( *reg );
 
-		  if ( assign.find( (*atom).get_specie() ) != assign_last ){
-		    std::string tmp =  assign[(*atom).get_specie()];
+		  if ( assign.find( (*atom).get_flag() ) != assign_last ){
+		    std::string tmp =  assign[(*atom).get_flag()];
 		    tmp_atom.set_specie(tmp);
 		    _structure_basis.push_back(tmp_atom); } 
 		}
@@ -388,8 +376,8 @@ AtomisticGenerator::change_specie(std::string preserve){
 		    tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) + 
                                                                         _rotation*_prim_vec*(*atom).get_position());
 		    tmp_atom.set_ID( *reg );
-		    if ( assign.find( (*atom).get_specie() ) != assign_last ){
-		      std::string tmp =  assign[(*atom).get_specie()];
+		    if ( assign.find( (*atom).get_flag() ) != assign_last ){
+		      std::string tmp =  assign[(*atom).get_flag()];
 		      tmp_atom.set_specie(tmp);
 		      _structure_basis.push_back(tmp_atom); } 
 		  }
@@ -740,7 +728,7 @@ void AtomisticGenerator::set_crystal_basis(const std::string basis_name, const s
   Tensor1 T;
 
 
-  assert(_crystal_basis.empty());
+  //assert(_crystal_basis.empty());
 
   if (_basis_type.compare("cubic") == 0){
     if (specie1.compare("not_specified") == 0) tmp.set_specie("A");
@@ -934,7 +922,67 @@ void AtomisticGenerator::set_prim_miller(Tensor2Gen cut_planes)
 
 
 
+ 
+void AtomisticGenerator::parse_parameters(const Material* mat)
+{
 
+GetPot data((mat->get_database()).get_data_file());
+Atom tmp;
+Tensor1 T;
+ int i, j;
+
+ //WORKS ONLY FOR BULK, EXTEND TO ALLOY
+ std::cerr << "Parsing parameters " << std::endl;
+
+ ax = data("ax", 0.0);
+ ay = data("ay", 0.0);
+ az = data("az", 0.0);
+
+ set_lattice_type(data("lattice_type", "none"));
+
+ for (i = 1; i <= data("n_basis_specie", 0); i++)
+   {
+   std::string record;
+   std::string s;
+   std::stringstream out;
+
+   out << i;
+   s = out.str();
+
+   record = "n_" + s;
+
+   for (j = 1; j <= (data(record.c_str(), 0)); j++)
+     {
+       record = "T_" + s + "_";
+       out.str(std::string());
+       out.clear(std::stringstream::goodbit);
+       out << j;
+       s = out.str();
+       std::cerr << "s is " << s << std::endl; 
+       s = record + s;
+
+       //Putting specie (defined by an integer) temporary in flag data
+       tmp.set_flag(i);
+
+       record = s + "_x";
+       std::cerr << "Record is " << record << std::endl;
+       T(1) = data(record.c_str(), 0.0);
+       record = s + "_y";
+       T(2) = data(record.c_str(), 0.0);
+       record = s + "_z";
+       T(3) = data(record.c_str(), 0.0);
+
+       tmp.set_position(T);
+ 
+       //Insert tmp in basis
+       _crystal_basis.push_back(tmp);
+
+     }
+
+ }
+
+
+};
 
 
 

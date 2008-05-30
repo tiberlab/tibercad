@@ -9,7 +9,7 @@
 #include <vector>
 #include <fstream>
 #include <iomanip>
-//#include <time.h>
+#include <sstream>
 #include <map>
 #include <set>
 #include "Atom.h"
@@ -18,6 +18,7 @@
 #include "TypeDefs.h"
 #include "Material.h"
 #include "mesh.h"
+#include "Database.h"
 
 //forward declaration
 class AtomisticStructure;
@@ -44,8 +45,7 @@ public:
   static const double scale;
 
   //! Initialize structure informations
-  void do_init(double a1 = 0.0, double a2 = 0.0, double a3 = 0.0);
-
+  void do_init();
 
   //! Lattice constants  
   double ax, ay, az;
@@ -156,7 +156,8 @@ protected:
   //! Virtual function for building up the structure. 
   virtual void build() = 0;
 
-
+  //! Parsing of atomistic infos to build lattice and basis vectors
+  void parse_parameters(const Material* mat);
 
 
   //Some data manipulation function useful only in this class

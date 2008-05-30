@@ -53,7 +53,7 @@ AtomisticStructure::create(const std::string& name, const ModelOptions& options)
 
 
 void
-AtomisticStructure::init(double a1, double a2, double a3)
+AtomisticStructure::init()
 {
 
 #ifdef DEBUG
@@ -106,16 +106,6 @@ AtomisticStructure::init(double a1, double a2, double a3)
 
    else std::cerr << "Error in AtomisticStructure: at least a physical region must be defined in input" << std::endl;
 
-     for (std::set<std::string>::iterator i= _regionset.begin(); i !=_regionset.end(); i++)
-          {std::cerr << "WRITING " << std::endl;
-            std::cerr << "_REGION IS " << *i << std::endl;}
-
-       for (std::set<ID>::iterator i= _IDset.begin(); i !=_IDset.end(); i++)
-          {std::cerr << "WRITING " << std::endl;
-            std::cerr << "_REGION IS " << *i << std::endl;}
-
-
-
 
   if (_options.find_option("path")){
     path = _options.get_option("path","none");
@@ -134,7 +124,7 @@ AtomisticStructure::init(double a1, double a2, double a3)
       std::cerr << "Calling AtomisticGenerator::do_init() in " << get_device()->get_mesh().mesh_dimension() << " dimensions " << std::endl;
 #endif
 
-      generate->do_init(a1, a2, a3);
+      generate->do_init();
 
 #ifdef DEBUG
       std::cerr << "Printing structure to file " << std::endl;
@@ -284,11 +274,16 @@ AtomisticStructure::read_structure(const std::string& path)
      
       getline(file, line);
 
-      //This line clean stringstream in a safe way 
-      line_string.clear(std::stringstream::goodbit);  
+     //  //This line clean stringstream in a safe way 
+//       line_string.clear(std::stringstream::goodbit);  
 
-      //Don't know why these spaces are needed!!!!!!!!!!!!!!! check it!!!!
-      line_string << "                       ";
+//       //Don't know why these spaces are needed!!!!!!!!!!!!!!! check it!!!!
+//       line_string << "                       ";
+
+//try in this way
+      line_string.str(std::string());
+      line_string.clear(std::stringstream::goodbit);  
+//---------------------------------------------
 
       line_string << line;
 
