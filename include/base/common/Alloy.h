@@ -48,7 +48,11 @@ class Alloy : public Material
     //    double x, double bowing = 0.0);
 
 
+  //! Return the name of component material A
+  const std::string& get_name_A(void) const;
     
+ //! Return the name of component material B
+  const std::string& get_name_B(void) const;
 
 
   protected:
@@ -105,7 +109,20 @@ class Alloy : public Material
 //}
 
 
+inline
+const std::string&
+Alloy::get_name_A(void) const
+{
+  return _name_A;
+}
 
+
+inline
+const std::string&
+Alloy::get_name_B(void) const
+{
+  return _name_B;
+}
 
 
 #endif /* _ALLOY_H_ */

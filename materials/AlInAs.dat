@@ -25,3 +25,10 @@ bow_delta = 0.15
 #bow_gamma2 = -10.38
 #bow_gamma3 = -11.34
 
+#Atomistic structure informations
+#
+n_basis_specie=2
+
+specie_1=AlIn
+specie_2=As
+

@@ -991,10 +991,13 @@ void AtomisticGenerator::parse_parameters(const Material* mat)
 
   if (mat->is_alloy())
     {
-
-      const Material* mat_alloy = dynamic_cast<const Alloy*>(mat);
       //Cannot act dynamic cast on mat itself because constant
-    
+      const Alloy* mat_alloy = dynamic_cast<const Alloy*>(mat);
+
+      // At least one parental specie isa always defined, and it's needed 
+      // for all kind of alloys 
+     const Material* parent1 = Material::create(mat_alloy->get_name_A());
+     GetPot data_parent1((parent1->get_database()).get_data_file());
 
       if (data("alloy_type", "none") == "ternary")
 	{
@@ -1003,10 +1006,9 @@ void AtomisticGenerator::parse_parameters(const Material* mat)
       std::cerr << "Parsing parameters for binary alloy" << mat_alloy->get_name() << std::endl;
 
       // Get parent materials      
-      const Material* parent1 = Material::create(data("parent_1", "none"));
-      const Material* parent2 = Material::create(data("parent_2", "none"));
+      const Material* parent2 = Material::create(mat_alloy->get_name_B());
 
-     GetPot data_parent1((parent1->get_database()).get_data_file());
+     GetPot data_alloy((mat_alloy->get_database()).get_data_file());
      GetPot data_parent2((parent2->get_database()).get_data_file());
 
      ax_1 = data_parent1("a", 0.0);
@@ -1029,7 +1031,47 @@ void AtomisticGenerator::parse_parameters(const Material* mat)
 
 	}
 
+     set_lattice_type(data_parent1("lattice_type", "none"));
 
+     for (i = 1; i <= data("n_basis_specie", 0); i++)
+	{
+	  std::string record;
+	  std::string s;
+	  std::stringstream out;
+
+	  out << i;
+	  s = out.str();
+
+	  record = "n_" + s;
+
+	  for (j = 1; j <= (data(record.c_str(), 0)); j++)
+	    {
+	      record = "T_" + s + "_";
+	      out.str(std::string());
+	      out.clear(std::stringstream::goodbit);
+	      out << j;
+	      s = out.str();
+	      std::cerr << "s is " << s << std::endl; 
+	      s = record + s;
+
+	      //Putting specie (defined by an integer) temporary in flag data
+	      tmp.set_flag(i);
+
+	      record = s + "_x";
+	      std::cerr << "Record is " << record << std::endl;
+	      T(1) = data(record.c_str(), 0.0);
+	      record = s + "_y";
+	      T(2) = data(record.c_str(), 0.0);
+	      record = s + "_z";
+	      T(3) = data(record.c_str(), 0.0);
+
+	      tmp.set_position(T);
+ 
+	      //Insert tmp in basis
+	      _crystal_basis.push_back(tmp);
+
+	    }
+	}
 
 
     }
