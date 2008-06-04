@@ -652,65 +652,65 @@ AtomisticGenerator::set_lattice_type(const std::string lattice_name)
     
   if (_lattice_type.compare("cubic") == 0) {
 
-    assert((ax == ay) && (ay == az));
+    assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
 
     prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0; prim_vec_dir(3,1) = 0;
     prim_vec_dir(1,2) = 0; prim_vec_dir(2,2) = 1; prim_vec_dir(3,2) = 0;
     prim_vec_dir(1,3) = 0; prim_vec_dir(2,3) = 0; prim_vec_dir(3,3) = 1;
 
-    _prim_vec = prim_vec_dir * ax;
+    _prim_vec = prim_vec_dir * _lattice_constant[0];
 
   } 
 
   else if (_lattice_type.compare("bcc") == 0) {
 
-    assert((ax == ay) && (ay == az));
+    assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
 
     prim_vec_dir(1,1) = -0.5; prim_vec_dir(2,1) = 0.5; prim_vec_dir(3,1) = 0.5;
     prim_vec_dir(1,2) = 0.5; prim_vec_dir(2,2) = -0.5; prim_vec_dir(3,2) = 0.5;
     prim_vec_dir(1,3) = 0.5; prim_vec_dir(2,3) = 0.5; prim_vec_dir(3,3) = -0.5;
 
-    _prim_vec = prim_vec_dir * ax;
+    _prim_vec = prim_vec_dir * _lattice_constant[0];
 
   } 
 
   else if (_lattice_type.compare("fcc") == 0) {
 
-    assert((ax == ay) && (ay == az));
+    assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
 
     prim_vec_dir(1,1) = 0.0; prim_vec_dir(2,1) = 0.5; prim_vec_dir(3,1) = 0.5;
     prim_vec_dir(1,2) = 0.5; prim_vec_dir(2,2) = 0.0; prim_vec_dir(3,2) = 0.5;
     prim_vec_dir(1,3) = 0.5; prim_vec_dir(2,3) = 0.5; prim_vec_dir(3,3) = 0.0;
 
-    _prim_vec = prim_vec_dir * ax;
+    _prim_vec = prim_vec_dir * _lattice_constant[0];
 
   } 
 
   else if (_lattice_type.compare("hexagonal") == 0) {
 
-    assert(ax == ay);
+    assert(_lattice_constant[0] == _lattice_constant[1]);
 
     prim_vec_dir(1,1) = 0.5; prim_vec_dir(2,1) = -sqrt(3.0) / 2.0; prim_vec_dir(3,1) = 0.0;
     prim_vec_dir(1,2) = 0.5; prim_vec_dir(2,2) = sqrt(3.0) / 2.0; prim_vec_dir(3,2) = 0.0;
     prim_vec_dir(1,3) = 0.0; prim_vec_dir(2,3) = 0.0; prim_vec_dir(3,3) = 1.0;
 
-    _prim_vec(1,1) = prim_vec_dir(1,1) * ax; _prim_vec(2,1) = prim_vec_dir(2,1) * ax; 
-    _prim_vec(1,2) = prim_vec_dir(1,2) * ax; _prim_vec(2,2) = prim_vec_dir(2,2) * ax; 
-    _prim_vec(1,3) = 0.0; _prim_vec(2,3) = 0.0; _prim_vec(3,3) = prim_vec_dir(3,3) * az;
+    _prim_vec(1,1) = prim_vec_dir(1,1) * _lattice_constant[0]; _prim_vec(2,1) = prim_vec_dir(2,1) * _lattice_constant[0]; 
+    _prim_vec(1,2) = prim_vec_dir(1,2) * _lattice_constant[0]; _prim_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[0]; 
+    _prim_vec(1,3) = 0.0; _prim_vec(2,3) = 0.0; _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
 
   } 
 
   else if (_lattice_type.compare("anatase") == 0) {
 
-    assert(ax == ay);
+    assert(_lattice_constant[0] == _lattice_constant[1]);
 
     prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0.0; prim_vec_dir(3,1) = 0.0;
     prim_vec_dir(1,2) = 0.0; prim_vec_dir(2,2) = 1.0; prim_vec_dir(3,2) = 0.0;
     prim_vec_dir(1,3) = 0.5; prim_vec_dir(2,3) = 0.5; prim_vec_dir(3,3) = 0.5;
 
-    _prim_vec(1,1) = prim_vec_dir(1,1) * ax; 
-    _prim_vec(2,2) = prim_vec_dir(2,2) * ax; 
-    _prim_vec(1,3) = prim_vec_dir(1,3) * ax; _prim_vec(2,3) = prim_vec_dir(2,3) * ax; _prim_vec(3,3) = prim_vec_dir(3,3) * az;
+    _prim_vec(1,1) = prim_vec_dir(1,1) * _lattice_constant[0]; 
+    _prim_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[0]; 
+    _prim_vec(1,3) = prim_vec_dir(1,3) * _lattice_constant[0]; _prim_vec(2,3) = prim_vec_dir(2,3) * _lattice_constant[0]; _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
 
   }
 
@@ -890,30 +890,30 @@ void AtomisticGenerator::set_prim_miller(Tensor2Gen cut_planes)
 
   if (_lattice_type.compare("cubic") == 0){
     //In cubic lattice conventional cell equals to unit cell
-    _prim_miller = cut_planes / (ax);
+    _prim_miller = cut_planes / (_lattice_constant[0]);
   }
 
   else if (_lattice_type.compare("bcc") == 0){
-    _prim_miller = (inv(prim_miller_basis) * cut_planes / (ax));
+    _prim_miller = (inv(prim_miller_basis) * cut_planes / (_lattice_constant[0]));
     scale_to_int(_prim_miller);
   }
 
   else if (_lattice_type.compare("fcc") == 0){
-    _prim_miller=inv(prim_miller_basis) * cut_planes / (ax);
+    _prim_miller=inv(prim_miller_basis) * cut_planes / (_lattice_constant[0]);
     scale_to_int(_prim_miller);
   }
 
   else if (_lattice_type.compare("hexagonal") == 0){
-    _prim_miller(1,1) = cut_planes(1,1) / ax; _prim_miller(2,1) = cut_planes(2,1) / ay; _prim_miller(3,1) = cut_planes(3,1) / az;
-    _prim_miller(1,2) = cut_planes(1,2) / ax; _prim_miller(2,2) = cut_planes(2,2) / ay; _prim_miller(3,2) = cut_planes(3,2) / az;
-    _prim_miller(1,3) = cut_planes(1,3) / ax; _prim_miller(2,3) = cut_planes(2,3) / ay; _prim_miller(3,3)=cut_planes(3,3) / az;
+    _prim_miller(1,1) = cut_planes(1,1) / _lattice_constant[0]; _prim_miller(2,1) = cut_planes(2,1) / _lattice_constant[1]; _prim_miller(3,1) = cut_planes(3,1) / _lattice_constant[2];
+    _prim_miller(1,2) = cut_planes(1,2) / _lattice_constant[0]; _prim_miller(2,2) = cut_planes(2,2) / _lattice_constant[1]; _prim_miller(3,2) = cut_planes(3,2) / _lattice_constant[2];
+    _prim_miller(1,3) = cut_planes(1,3) / _lattice_constant[0]; _prim_miller(2,3) = cut_planes(2,3) / _lattice_constant[1]; _prim_miller(3,3)=cut_planes(3,3) / _lattice_constant[2];
     scale_to_int(_prim_miller);
   }
 
   else {
-    _prim_miller(1,1) = cut_planes(1,1) / ax; _prim_miller(2,1) = cut_planes(2,1) / ay; _prim_miller(3,1) = cut_planes(3,1) / az;
-    _prim_miller(1,2) = cut_planes(1,2) / ax; _prim_miller(2,2) = cut_planes(2,2) / ay; _prim_miller(3,2) = cut_planes(3,2) / az;
-    _prim_miller(1,3) = cut_planes(1,3) / ax; _prim_miller(2,3) = cut_planes(2,3) / ay; _prim_miller(3,3) = cut_planes(3,3) / az;
+    _prim_miller(1,1) = cut_planes(1,1) / _lattice_constant[0]; _prim_miller(2,1) = cut_planes(2,1) / _lattice_constant[1]; _prim_miller(3,1) = cut_planes(3,1) / _lattice_constant[2];
+    _prim_miller(1,2) = cut_planes(1,2) / _lattice_constant[0]; _prim_miller(2,2) = cut_planes(2,2) / _lattice_constant[1]; _prim_miller(3,2) = cut_planes(3,2) / _lattice_constant[2];
+    _prim_miller(1,3) = cut_planes(1,3) / _lattice_constant[0]; _prim_miller(2,3) = cut_planes(2,3) / _lattice_constant[1]; _prim_miller(3,3) = cut_planes(3,3) / _lattice_constant[2];
     scale_to_int(_prim_miller);
   };
 
@@ -926,60 +926,113 @@ void AtomisticGenerator::set_prim_miller(Tensor2Gen cut_planes)
 void AtomisticGenerator::parse_parameters(const Material* mat)
 {
 
-GetPot data((mat->get_database()).get_data_file());
-Atom tmp;
-Tensor1 T;
- int i, j;
+  GetPot data((mat->get_database()).get_data_file());
+  Atom tmp;
+  Tensor1 T;
+  int i, j;
 
- //WORKS ONLY FOR BULK, EXTEND TO ALLOY
- std::cerr << "Parsing parameters " << std::endl;
 
- ax = data("ax", 0.0);
- ay = data("ay", 0.0);
- az = data("az", 0.0);
+  if ( !(mat->is_alloy()) )
+    {
+      //WORKS ONLY FOR BULK, EXTEND TO ALLOY
+      std::cerr << "Parsing parameters for bulk material" << mat->get_name() << std::endl;
 
- set_lattice_type(data("lattice_type", "none"));
+      _lattice_constant[0] = data("a", 0.0);
+      if (_lattice_constant[0] == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
 
- for (i = 1; i <= data("n_basis_specie", 0); i++)
-   {
-   std::string record;
-   std::string s;
-   std::stringstream out;
+      _lattice_constant[1] = data("b", 0.0);
+      if (_lattice_constant[1] == 0.0) _lattice_constant[1] = _lattice_constant[0];
 
-   out << i;
-   s = out.str();
+      _lattice_constant[2] = data("c", 0.0);
+      if (_lattice_constant[2] == 0.0) _lattice_constant[2] = _lattice_constant[0];
 
-   record = "n_" + s;
+      set_lattice_type(data("lattice_type", "none"));
 
-   for (j = 1; j <= (data(record.c_str(), 0)); j++)
-     {
-       record = "T_" + s + "_";
-       out.str(std::string());
-       out.clear(std::stringstream::goodbit);
-       out << j;
-       s = out.str();
-       std::cerr << "s is " << s << std::endl; 
-       s = record + s;
+      for (i = 1; i <= data("n_basis_specie", 0); i++)
+	{
+	  std::string record;
+	  std::string s;
+	  std::stringstream out;
 
-       //Putting specie (defined by an integer) temporary in flag data
-       tmp.set_flag(i);
+	  out << i;
+	  s = out.str();
 
-       record = s + "_x";
-       std::cerr << "Record is " << record << std::endl;
-       T(1) = data(record.c_str(), 0.0);
-       record = s + "_y";
-       T(2) = data(record.c_str(), 0.0);
-       record = s + "_z";
-       T(3) = data(record.c_str(), 0.0);
+	  record = "n_" + s;
 
-       tmp.set_position(T);
+	  for (j = 1; j <= (data(record.c_str(), 0)); j++)
+	    {
+	      record = "T_" + s + "_";
+	      out.str(std::string());
+	      out.clear(std::stringstream::goodbit);
+	      out << j;
+	      s = out.str();
+	      std::cerr << "s is " << s << std::endl; 
+	      s = record + s;
+
+	      //Putting specie (defined by an integer) temporary in flag data
+	      tmp.set_flag(i);
+
+	      record = s + "_x";
+	      std::cerr << "Record is " << record << std::endl;
+	      T(1) = data(record.c_str(), 0.0);
+	      record = s + "_y";
+	      T(2) = data(record.c_str(), 0.0);
+	      record = s + "_z";
+	      T(3) = data(record.c_str(), 0.0);
+
+	      tmp.set_position(T);
  
-       //Insert tmp in basis
-       _crystal_basis.push_back(tmp);
+	      //Insert tmp in basis
+	      _crystal_basis.push_back(tmp);
 
-     }
+	    }
+	}
+    }
 
- }
+  if (mat->is_alloy())
+    {
+
+      const Material* mat_alloy = dynamic_cast<const Alloy*>(mat);
+      //Cannot act dynamic cast on mat itself because constant
+    
+
+      if (data("alloy_type", "none") == "ternary")
+	{
+
+	  double ax_1, ay_1, az_1, ax_2, ay_2, az_2;
+      std::cerr << "Parsing parameters for binary alloy" << mat_alloy->get_name() << std::endl;
+
+      // Get parent materials      
+      const Material* parent1 = Material::create(data("parent_1", "none"));
+      const Material* parent2 = Material::create(data("parent_2", "none"));
+
+     GetPot data_parent1((parent1->get_database()).get_data_file());
+     GetPot data_parent2((parent2->get_database()).get_data_file());
+
+     ax_1 = data_parent1("a", 0.0);
+      if (ax_1 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
+
+      ay_1 = data_parent1("b", 0.0);
+      if (ay_1 == 0.0) ay_1 = ax_1;
+
+      az_1 = data_parent1("c", 0.0);
+      if (az_1 == 0.0) az_1 = ax_1;
+
+      ax_2 = data_parent2("a", 0.0);
+      if (ax_2 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
+
+      ay_2 = data_parent2("b", 0.0);
+      if (ay_2 == 0.0) ay_2 = ax_2;
+
+      az_2 = data_parent2("c", 0.0);
+      if (az_2 == 0.0) az_2 = ax_2;
+
+	}
+
+
+
+
+    }
 
 
 };

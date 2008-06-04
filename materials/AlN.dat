@@ -136,9 +136,6 @@ optical_epsilon_z = 1.0
 
 #Atomistic structure informations
 #
-ax =3.111
-ax =3.111
-az = 4.978
 lattice_type = hexagonal
 
 #Basis 

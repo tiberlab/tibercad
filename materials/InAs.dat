@@ -120,9 +120,6 @@ gamma_h  = 1
 
 #Atomistic structure informations
 #
-ax = 6.0360
-ay = 6.0360
-az = 6.0360
 lattice_type = fcc
 
 #Basis 

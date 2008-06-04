@@ -65,9 +65,6 @@ e14 = -0.015
 
 #Atomistic structure informations
 #
-ax = 5.6200
-ay = 5.6200
-az = 5.6200
 lattice_type = fcc
 
 #Basis 

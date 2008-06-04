@@ -17,6 +17,7 @@
 #include "ModelOptions.h"
 #include "TypeDefs.h"
 #include "Material.h"
+#include "Alloy.h"
 #include "mesh.h"
 #include "Database.h"
 
@@ -47,9 +48,6 @@ public:
   //! Initialize structure informations
   void do_init();
 
-  //! Lattice constants  
-  double ax, ay, az;
-
   //! Set primitive vectors, depending on lattice name
   void set_lattice_type(const std::string lattice_name);
 
@@ -57,6 +55,9 @@ public:
   void print_basis(std::vector<Atom> &basis, const std::string filename);
  
 protected:
+
+ //lattice constants
+  double _lattice_constant[3];
 
   //! Change atom species according to regions
   void change_specie(std::string preserve);

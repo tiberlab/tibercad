@@ -163,7 +163,6 @@ class Material
     //! Get the past-the-end iterator for the acceptors
     dopant_iterator acceptors_end(void) const;
 
-
     
   protected:
 

@@ -127,9 +127,6 @@ hTEpower =  0.001
 
 #Atomistic structure informations
 #
-ax = 5.4307
-ay = 5.4307
-az = 5.4307
 lattice_type = fcc
 
 #Basis 
