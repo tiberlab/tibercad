@@ -79,7 +79,7 @@ void MacrostrainPressure::do_init()
 {
   const ModelOptions& options =	get_options ();
 
-  value = options.get_option("pressure", 0);
+  value = options.get_option("pressure", 0.0);
 
   type = "pressure";
 
