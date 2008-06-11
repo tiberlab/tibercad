@@ -336,7 +336,7 @@ TiberPetscLinearSolver::parse_options(const ModelOptions& options)
   _pc_type = TiberPetscUtils::extract_PCType(options);
 
   _monitor = options.get_option("monitor", false);
-  _xmonitor = options.get_option("xmonitor", false);
+  _xmonitor = options.get_option("linear_xmonitor", false);
 }
 
 

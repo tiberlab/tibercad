@@ -161,6 +161,7 @@ void Macrostrain::parse_options( )
 
  fix_all_fixed_points = opt.get_option("fix_all_fixed_points", false);
 
+ _preallocate = opt.get_option("preallocate_matrix", _preallocate);
   
  // assert(periodicity_x == false);
 
@@ -1462,7 +1463,12 @@ void Macrostrain::do_solve()
  
  
  
-  reallocate_matrix();
+  if (!_is_reallocated && _preallocate)
+  {
+    reallocate_matrix();
+    _is_reallocated = true;
+  }
+
   my_system->set_options(get_solver_options());
 
   if (verbose > 2) cout << "Assemble and solve the linear system ...\n" << flush ;
@@ -4180,6 +4186,8 @@ void Macrostrain::reallocate_matrix(void)
 }
 //-------------------------------------------------------------------------------------------//
 Macrostrain::Macrostrain(void )
+  : _is_reallocated(false),
+    _preallocate(true)
 {
   poisson_equation = NULL;
 

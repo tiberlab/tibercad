@@ -20,6 +20,8 @@ void CrackStrain::parse_options()
 
   _Ki = opt.get_option("Ki", 0.0);
 
+  _sigma_ys = opt.get_option("sigma_ys", 0.0);
+
  
 
 
@@ -131,21 +133,48 @@ void CrackStrain::calculate_stress(Tensor2Sym& stress, const double x_input, con
       teta = M_PI/2.0;
     else 
       teta = -M_PI/2.0;
-
-
   }
 
+  teta = std::abs(teta);
 
-  double t = _Ki/std::sqrt(2.0*M_PI*rho);
+  //rho_b *= std::pow(std::cos(teta/2.0) * (1 + std::abs(std::sin(teta/2.0))), 2.0);
+  // Tresca
+  //double rho_b = _Ki * _Ki / (2 * M_PI * _sigma_ys * _sigma_ys);
+  //rho_b *= std::pow(std::cos(teta/2.0) * (1 + std::sin(teta/2.0)), 2.0);
+  // Von Mises
+  double rho_b = _Ki * _Ki / (4 * M_PI * _sigma_ys * _sigma_ys);
+  rho_b *= 1 + 1.5 * std::sin(teta) * std::sin(teta) + std::cos(teta);
 
+
+  //if (rho < rho_b)
+  if (rho < 2 * rho_b)
+  {
+
+    double t = _Ki/std::sqrt(2.0*M_PI*(rho_b));
+
+    stress(1,1) = t * std::cos(teta/2.0) * (1.0 - std::sin(teta/2.0)*std::sin(3.0/2.0*teta)  );
  
+    stress(2,2) = t * std::cos(teta/2.0) * (1.0 + std::sin(teta/2.0)*std::sin(3.0/2.0*teta));
+  
+    stress(2,1) = t * std::sin(teta/2.0) * std::cos(teta/2.0) * std::cos(3.0*teta/2.0);
 
-  stress(1,1) = t * std::cos(teta/2.0) * (1.0 - std::sin(teta/2.0)*std::sin(3.0/2.0*teta)  );
+    stress(1,1) = 2.0;
+    stress(2,2) = 2.0;
+    stress(2,1) = 2.0;
+  }
+  else
+  {
+
+    //double t = _Ki/std::sqrt(2.0*M_PI*(rho));
+    double t = _Ki/std::sqrt(2.0*M_PI*(rho - rho_b));
+
+    stress(1,1) = t * std::cos(teta/2.0) * (1.0 - std::sin(teta/2.0)*std::sin(3.0/2.0*teta)  );
  
-  stress(2,2) = t * std::cos(teta/2.0) * (1.0 + std::sin(teta/2.0)*std::sin(3.0/2.0*teta));
+    stress(2,2) = t * std::cos(teta/2.0) * (1.0 + std::sin(teta/2.0)*std::sin(3.0/2.0*teta));
   
-  stress(2,1) = t * std::sin(teta/2.0) * std::cos(teta/2.0) * std::cos(3.0*teta/2.0);
-  
+    stress(2,1) = t * std::sin(teta/2.0) * std::cos(teta/2.0) * std::cos(3.0*teta/2.0);
+  }
+
 
 }
 

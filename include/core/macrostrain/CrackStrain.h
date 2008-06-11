@@ -35,6 +35,8 @@ class CrackStrain : public StrainSimulation
 
   double _y0;
 
+  double _sigma_ys;
+
   //!calculate stress analitically
   void calculate_stress(Tensor2Sym& stress, const double x, const double y) const;
 

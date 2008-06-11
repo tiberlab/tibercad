@@ -225,6 +225,8 @@ class Macrostrain : public StrainSimulation
   //! reallocate system matrix
   void reallocate_matrix(void);
 
+  bool _is_reallocated;
+  bool _preallocate;
 
   //!true the constrains have to be applied
   bool _first_run;
