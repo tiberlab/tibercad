@@ -77,6 +77,17 @@ Physical Point(1) = {1};
 Physical Point(2) = {2}; 
 \end{verbatim}
 
+Beginning  from  GMSH v.2, it  is  possible, alternatively,   to  assign  more  convenient \textbf{Physical Names}  to  the  Physical entities, instead of  numerical IDs.  \textbf{Physical Names} consist of  strings  enclosed between  quotation marks.
+The  syntax is the  following:
+
+\begin{verbatim}
+Physical Line("bulk") = {1}
+............
+Physical Point("Anode") = {1};
+\end{verbatim}
+
+
+
     \textbf{N.B}.: In general, in a \textit{nD} simulation, \textit{(n-1)D }physical regions (points in 1D, lines in 2D, surfaces in 3D) are used by \TiberCAD{} to impose the required boundary conditions.
       Each  \textit{(n-1)D } physical region defined in this way in GMSH will be associated in \TiberCAD{} to a boundary condition region, through the keyword \textbf{BC\_reg\_numb}. Thus, in this case, Physical points \textbf{1} and \textbf{2} will be associated respectively to two BC regions (see in the following).
 
@@ -172,6 +183,29 @@ Both contacts are defined as \textit{ohmic}, cathod is assigned a fixed \textit{
 
 Through the keyword  \textbf{BC\_reg\_numb} , one or more of the \textbf{(n-1)D} physical regions (Physical Points in 1D, Physical Lines in 2D, Physical Surfaces in 3D) previously defined in the GMSH mesh can be associated to the present  \TiberCAD{} \textbf{BC Region}.
 With \textit{BC\_reg\_numb = 1}, we associate the Physical Point 1, defined in the \textbf{Step 1}, to the \TiberCAD{} \textbf{BC Region} \textit{anode}; with \textit{BC\_reg\_numb = 2}, we associate the Physical Point 2, defined in the \textbf{Step 1}, to the \TiberCAD{} \textbf{BC Region} \textit{cathode}.
+
+Alternatively, one can make  use  of  the  \textbf{physical names} associated to the physical regions in the  meshing  tool.
+In  this  case, we  simply associate the  \textbf{(n-1)D} physical region,  respectively  ``anode'' and  ``cathode'',  by  means  of  the  \TiberCAD{} \textbf{BC Region name}:
+
+ \begin{verbatim}
+BC_Region anode
+{
+
+type = ohmic
+voltage = @Vb
+}
+
+BC_Region cathode
+{
+
+type = ohmic
+voltage = 0.0
+}
+\end{verbatim}
+
+Note that, in  this  case, the \TiberCAD{} \textbf{BC Region name} needs to  be  identical to  one of the  \textbf{physical names} defined during the  modeling of the  device  with   GMSH.
+
+
 
 \subsection* {4 - Definition of Simulation parameters}
 
