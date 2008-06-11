@@ -3106,6 +3106,43 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   unsigned int n_vars = 0;
   const set<string>::const_iterator varend(variables.end());
 
+  int BandEdges = -1;
+  if (variables.find("BandEdges") != varend)
+  {
+    const Elem* elem = *mesh.active_elements_begin();
+    
+    DriftDiffusionProperties* sc =
+      dynamic_cast<DriftDiffusionProperties*>(
+          device.get_material(elem->subdomain_id())->get_model(get_id()));
+
+    assert(sc != NULL); 
+
+    sc->reinit(elem);
+    sc->calculate_equilibrium_properties();
+
+    const vector<double>& cb = sc->get_conduction_bands();
+    const vector<double>& vb = sc->get_valence_bands();
+    int n_bands = cb.size() + vb.size();
+    legend.resize(legend.size() + n_bands);
+    BandEdges = n_vars;
+
+    for (unsigned int i = 0; i < cb.size(); i++)
+    {
+      ostringstream os;
+      os << "CB" << i;
+      legend[n_vars] = os.str();
+      n_vars++;
+    }
+
+    for (unsigned int i = 0; i < vb.size(); i++)
+    {
+      ostringstream os;
+      os << "VB" << i;
+      legend[n_vars] = os.str();
+      n_vars++;
+    }
+  }
+
   int EField = -1;
   if (variables.find("EField") != varend)
   {
@@ -3300,7 +3337,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
 
 
   int PDens = -1;
-  if (variables.find("PowerDensity")!= varend)
+  if (variables.find("PowerDensity") != varend)
   {
     PDens = n_vars;
     legend[n_vars] = "power_density[W*cm^-3]";
@@ -3441,6 +3478,20 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
       sc->get_hole_mobility();
 
     unsigned int id = n_vars * elem_number;
+
+    if (BandEdges != -1)
+    {
+      sc->calculate_equilibrium_properties();
+      const vector<double>& cb = sc->get_conduction_bands();
+      const vector<double>& vb = sc->get_valence_bands();
+
+      for (unsigned int i = 0; i < cb.size(); i++)
+        results[id + BandEdges + i] = cb[i];
+
+      for (unsigned int i = 0; i < vb.size(); i++)
+        results[id + BandEdges + cb.size() + i] = vb[i];
+    }
+
 
     if (EField != -1)
     {
@@ -4230,6 +4281,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         long double drho[3];
         drho[1] = (dn_dphi - dNd_dphi) * phi0 / C0;
         drho[2] = -(dp_dphi - dNa_dphi) * phi0 / C0;
+        //drho[2] = 0.0;
         drho[0] = -(drho[1] + drho[2]);
         if (sc->is_dielectric())
           drho[2] = drho[1] = drho[0] = 0.0;
@@ -4299,7 +4351,10 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
                   Kpp(i,j) -= elem_contrib;
                 }
+
               }
+              //if (!(coupling & HCURRENT))
+              //  Kpn(i,i) -= 1;
             }
 
 
@@ -4343,14 +4398,19 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             // The dFe_i/dX_j part
             long double phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp];
 
-            if (_options.exact_newton || (j == i))
+            //if (_options.exact_newton || (j == i))
             {
               if (coupling & POISSON)
               {
                 Kuu(i,j) -= drho[0] * phi_i_x_phi_j / local_scaling[i][2];
 
                 if (coupling & ECURRENT)
+                {
                   Kun(i,j) -= drho[1] * phi_i_x_phi_j / local_scaling[i][2];
+                  //if (!(coupling & HCURRENT))
+                  //  Kun(i,j) -= drho[2] * phi_i_x_phi_j / local_scaling[i][2];
+                }
+                
 
                 if (coupling & HCURRENT)
                   Kup(i,j) -= drho[2] * phi_i_x_phi_j / local_scaling[i][2];
@@ -4366,6 +4426,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
                 if (coupling & HCURRENT)
                   Knp(i,j) -= dRn[2] * phi_i_x_phi_j / local_scaling[i][0];
+                //else
+                //  Knn(i,j) += dRn[2] * phi_i_x_phi_j / local_scaling[i][0];
               }
 
               if (coupling & HCURRENT)
@@ -4476,6 +4538,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       if (residual != NULL)
       {
         // charge density
+        //long double J_x_rho = J * (sc->get_charge_density() - p)/ C0;
         long double J_x_rho = J * sc->get_charge_density() / C0;
         if (sc->is_dielectric())
           J_x_rho = 0.0;
@@ -4508,6 +4571,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           if (coupling & HCURRENT)
             Fp(i) += net_recomb_h;
           else
+          //  Fp(i) -= Xn(i);
             Fp(i) -= Xp(i);
         }
 	

@@ -580,19 +580,28 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
       { return equilibrium_fermi_level; };
 
     
-    //! Get the conduction band edge
+    //! Get the lowest conduction band edge
     double get_conduction_band_edge(void) const
       { return conduction_band.band_edge; };
 
+    //! Get all conduction bands
+    const std::vector<double>& get_conduction_bands(void)
+      { return conduction_band.band_edges; };
+
     
-    //! Get the valence band edge
+    //! Get the highest valence band edge
     double get_valence_band_edge(void) const
       { return valence_band.band_edge; };
+
+    //! Get all valence bands
+    const std::vector<double>& get_valence_bands(void)
+      { return valence_band.band_edges; };
 
     
     //! Get the band gap
     double get_band_gap(void) const
       { return conduction_band.band_edge - valence_band.band_edge; };
+
 
     void get_net_recombination_rates(std::vector<double>& rates);
     
@@ -679,6 +688,9 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
 
       //! The band edge energy
       double band_edge;
+
+      //! All the band energies
+      std::vector<double> band_edges;
     };
 
 

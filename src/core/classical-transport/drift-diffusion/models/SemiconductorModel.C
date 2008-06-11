@@ -148,8 +148,13 @@ SemiconductorModel::extract_band_properties(void)
   // treat conduction band
   const std::vector<DDsemiconductor::band_extremum>& cbs =
     bulk_model_->get_conduction_band_energy_mass();
+
+  get_conduction_band().band_edges.resize(1);
+
   // get minimum
   int id = 0;
+  get_conduction_band().band_edges[0] = cbs[0].energy;
+
   for (int i = 1; i < cbs.size(); i++)
   {
     if (cbs[i].energy < cbs[id].energy)
@@ -163,15 +168,18 @@ SemiconductorModel::extract_band_properties(void)
   const std::vector<DDsemiconductor::band_extremum>& vbs =
     bulk_model_->get_valence_band_energy_mass();
   
+  get_valence_band().band_edges.resize(vbs.size());
 
   // get maximum
   id = 0;
+  get_valence_band().band_edges[0] = vbs[0].energy;
   
   //double kT = SimulationOptions::T * Constants::k_B;
   double kT = get_lattice_temperature();
   double delta_max = 4.0 * kT;
   for (int i = 1; i < vbs.size(); i++)
   {
+    get_valence_band().band_edges[i] = vbs[i].energy;
     if (vbs[i].energy > vbs[id].energy)
       id = i;
   }
