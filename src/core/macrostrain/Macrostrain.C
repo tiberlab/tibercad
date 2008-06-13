@@ -4204,7 +4204,7 @@ void Macrostrain::reallocate_matrix(void)
 //-------------------------------------------------------------------------------------------//
 Macrostrain::Macrostrain(void )
   : _is_reallocated(false),
-    _preallocate(true)
+    _preallocate(false)
 {
   poisson_equation = NULL;
 
