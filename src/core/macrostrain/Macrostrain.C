@@ -3687,6 +3687,8 @@ void  Macrostrain::write_atom_potential()
       error();	
     }
 
+ 
+
     unsigned int Number_of_atom = atom_structure.size();
     vector<Point> point_vec(1);
     double potential_value;
@@ -3696,7 +3698,22 @@ void  Macrostrain::write_atom_potential()
       if (atom_structure[i].element != NULL)
       {
 
-	point_vec[0] =  atom_structure[i].relative_point ;
+        switch (dim)
+        {
+          case 1:
+            point_vec[0] =  FE<1,LAGRANGE>::map(atom_structure[i].element,
+                atom_structure[i].relative_point);
+            break;
+          case 2:
+            point_vec[0] =  FE<2,LAGRANGE>::map(atom_structure[i].element,
+                atom_structure[i].relative_point);
+            break;
+          case 3:
+            point_vec[0] =  FE<3,LAGRANGE>::map(atom_structure[i].element,
+                atom_structure[i].relative_point);
+            break;
+        }
+
 	vector<double> values;
 	poisson_equation->get_solution(atom_structure[i].element, point_vec, pot_ID, values);
 	potential_value = values[0];
