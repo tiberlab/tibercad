@@ -28,14 +28,14 @@ test:
 	libtool --mode=link g++ -module $(LDFLAGS) -o libdd_mob_constant.la ConstantMobility.lo -rpath $(topdir)/lib/tibermodels -dlopen libunstrained.la
 
 
-%.so : %.$(obj-suffix)
+%.so : %.C
 	@soname=lib`$(CPP) $(CPPFLAGS) -dM $(@:.so=.C) \
 		| awk '/TIBER_MODULE_NAME/ { module = $$3; } \
 		  	END { if (module != "") printf("%s_", module) }'`; \
 				soname=$$soname`grep TIBER_MODULE $(@:.so=.C) | \
 					sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`.so ; \
 		echo "Linking module $$soname ..."; \
-		$(CXX) -shared $(CXXFLAGS) -Wl,-soname,$$soname -o $@ $<; \
+		$(CXX) -shared  $(CPPFLAGS) $(CXXFLAGS) -Wl,-soname,$$soname -o $@ $<; \
 		cp $@ $(topdir)/lib/tibermodels/$$soname
 
 
