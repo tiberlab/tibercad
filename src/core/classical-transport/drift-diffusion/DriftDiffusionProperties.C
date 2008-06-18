@@ -23,6 +23,9 @@
 using namespace std;
 
 
+
+
+
 DriftDiffusionProperties::PointData::PointData(void)
   : //electron_conductivity_derivatives(3, 0.0),
     //hole_conductivity_derivatives(3, 0.0),
@@ -855,3 +858,4 @@ DriftDiffusionProperties::do_print_info(void)
       _lattice_temp.get_simulation()->get_name() << endl;
 
 }
+

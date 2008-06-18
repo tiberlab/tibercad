@@ -608,4 +608,23 @@ PhysicalModelInterface::print_info(void)
 }
 
 
+template <typename T>
+ID
+PhysicalModelInterface::get_id_from_name(const std::string& name)
+{
+  ID id = 0;
+
+  PhysicalModelInterface* rec = T::create(name);
+
+  if (rec != NULL)
+    id = rec->get_id();
+
+  // rec is either valid or NULL
+  destroy(rec);
+  
+
+  return id;
+}
+
+
 #endif // _PHYSICALMODELINTERFACE_H_
