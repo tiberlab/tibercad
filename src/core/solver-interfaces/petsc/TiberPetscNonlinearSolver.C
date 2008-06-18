@@ -183,7 +183,7 @@ extern "C"
     int ierr = 0;
 
 #ifdef DEBUG
-    std::cerr << "iteration " << it << "step = " << gnorm <<
+    std::cerr << "iteration " << it << ": step = " << gnorm <<
       " residual = " << fnorm << std::endl;
 #else
     std::cout << "." << std::flush;
