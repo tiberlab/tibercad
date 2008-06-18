@@ -525,6 +525,7 @@ class DriftDiffusion : public SimulationInterface
      */
     Options _options;
     
+    bool _electronsonly;
 
     //! The boundary currents
     /*!

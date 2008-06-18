@@ -10,6 +10,7 @@
 #include "Constants.h"
 #include "DriftDiffusionProperties.h"
 #include "RecombinationModelInterface.h"
+#include "MobilityModelInterface.h"
 #include "TiberNonlinearSystem.h"
 #include "SolveFailedException.h"
 
@@ -971,6 +972,13 @@ DriftDiffusion::parse_options(void)
     myopts.coupling = HCURRENT | POISSON;
   else if (coupling == "current")
     myopts.coupling = CURRENTS;
+
+  _electronsonly = false;
+  //if ((myopts.coupling & ECURRENT) && !(myopts.coupling & HCURRENT))
+  //_electronsonly = (myopts.coupling & HCURRENT) ? false : true;
+  if (opts.get_option("ignore_holes", false))
+    _electronsonly = true;
+
 
   /////////// QUIRK
   if (opts.find_option("write_atomic_potentials"))
@@ -4280,8 +4288,10 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
         long double drho[3];
         drho[1] = (dn_dphi - dNd_dphi) * phi0 / C0;
-        drho[2] = -(dp_dphi - dNa_dphi) * phi0 / C0;
-        //drho[2] = 0.0;
+        if (_electronsonly)
+          drho[2] = 0.0;
+        else
+          drho[2] = -(dp_dphi - dNa_dphi) * phi0 / C0;
         drho[0] = -(drho[1] + drho[2]);
         if (sc->is_dielectric())
           drho[2] = drho[1] = drho[0] = 0.0;
@@ -4309,53 +4319,68 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
         // d(sigma_n)/du * element-jacobian
         // sigma_n = mu_n * n means the conductivity of electrons
+        // the factor phi_0 comes from the derivative with respect to the potential
         long double dsigma_e = J * phi0 / (mu0 * C0_e) * mue * dn_dphi;
         long double dsigma_h = J * phi0 / (mu0 * C0_h) * muh * dp_dphi;
+
+        // field dependent mobility
+        // the factor phi_0 / x0 comes from the derivative with respect to the 
+        // gradient of the potential
+        RealGradient dmu_e(0);
+        sc->get_electron_mobility_model()->get_derivative_grad_fermi(dmu_e);
+        dmu_e *= J * phi0 / (mu0 * C0_e) * n / x0;
+        RealGradient dmu_h(0);
+        sc->get_hole_mobility_model()->get_derivative_grad_fermi(dmu_h);
+        dmu_h *= J * phi0 / (mu0 * C0_h) * p / x0;
 
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
+          double lap_e = (dphi[i][qp] * grad_en) / local_scaling[i][0];
+          double lap_h = (dphi[i][qp] * grad_ep) / local_scaling[i][1];
+          long double dsigma_e_x_lap = dsigma_e * lap_e;
+          long double dsigma_h_x_lap = dsigma_h * lap_h;
+
           for (unsigned int j = 0; j < n_dofs; j++)
           {
             // first the dKe_il/dX_j * X_l part
             // (for X_l = u_l we dont get anything, i.e. the
             // contributions to Kuu, Kun, Kup are zero)
+            //
+            // NOTE: we do not make a loop over l, but use precalculated
+            // gradients
 
             if (_options.exact_newton)
             {
-              long double dsigma_e_x_phi = dsigma_e * phi[j][qp];
-              long double dsigma_h_x_phi = dsigma_h * phi[j][qp];
+              long double dsigma_e_x_phi = dsigma_e_x_lap * phi[j][qp];
+              long double dsigma_h_x_phi = dsigma_h_x_lap * phi[j][qp];
 
-              for (unsigned int k = 0; k < n_dofs; k++)
+              long double dmu_e_x_dphi = dmu_e * dphi[j][qp];
+              long double dmu_h_x_dphi = dmu_h * dphi[j][qp];
+              //dmu_e_x_dphi = 0.0;
+
+              if (coupling & ECURRENT)
               {
-                long double laplace = (dphi[i][qp] * dphi[k][qp]);
+                if (coupling & POISSON)
+                  Knu(i,j) += dsigma_e_x_phi;
 
-                if (coupling & ECURRENT)
-                {
-                  long double elem_contrib =
-                    dsigma_e_x_phi * laplace * Xn(k) / local_scaling[i][0];
-
-                  if (coupling & POISSON)
-                    Knu(i,j) += elem_contrib;
-
-                  Knn(i,j) -= elem_contrib;
-                }
-
-                if (coupling & HCURRENT)
-                {
-                  long double elem_contrib =
-                    dsigma_h_x_phi * laplace * Xp(k) / local_scaling[i][1];
-
-                  if (coupling & POISSON)
-                    Kpu(i,j) += elem_contrib;
-
-                  Kpp(i,j) -= elem_contrib;
-                }
-
+                Knn(i,j) += dmu_e_x_dphi * lap_e - dsigma_e_x_phi;
               }
+
+              if (coupling & HCURRENT)
+              {
+                if (coupling & POISSON)
+                  Kpu(i,j) += dsigma_h_x_phi;
+
+                Kpp(i,j) += dmu_h_x_dphi * lap_h - dsigma_h_x_phi;
+              }
+
+
               //if (!(coupling & HCURRENT))
               //  Kpn(i,i) -= 1;
             }
+
+
 
 
             // contribution of the Seebeck effect ->residual_derivative
@@ -4445,91 +4470,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
           }
         }
-/*
-        if (residual != NULL)
-        {
-          for (unsigned int i = 0; i < n_dofs; i++)
-          {
-            for (unsigned int j = 0; j < n_dofs; j++)
-            {
-
-              double dsigma_e_x_phi = dsigma_e * phi[j][qp] * 0.1;
-              double dsigma_h_x_phi = dsigma_h * phi[j][qp] * 0.1;
-
-
-              for (unsigned int k = 0; k < n_dofs; k++)
-              {
-                double laplace = (dphi[i][qp] * dphi[k][qp]);
-
-                if (coupling & ECURRENT)
-                {
-                  double elem_contrib =
-                    dsigma_e_x_phi * laplace * Xn(k);
-
-                  if (coupling & POISSON)
-                    Fn(i) += elem_contrib * dXu(j);
-
-                  Fn(i) -= elem_contrib * dXn(j);
-                }
-
-                if (coupling & HCURRENT)
-                {
-                  double elem_contrib =
-                    dsigma_h_x_phi * laplace * Xp(k);
-
-                  if (coupling & POISSON)
-                    Fp(i) += elem_contrib * dXu(j);
-
-                  Fp(i) -= elem_contrib * dXp(j);
-                }
-              }
-
-
-              if (i != j)
-              {
-                double phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp] * 0.1;
-
-                if (coupling & POISSON)
-                {
-                  Fu(i) -= drho[0] * phi_i_x_phi_j * dXu(j);
-
-                  if (coupling & ECURRENT)
-                    Fu(i) -= drho[1] * phi_i_x_phi_j * dXn(j);
-
-                  if (coupling & HCURRENT)
-                    Fu(i) -= drho[2] * phi_i_x_phi_j * dXp(j);
-                }            
-
-                if (coupling & ECURRENT)
-                {
-                  // (1) would destroy M-Matrix property
-                  // (2) is 0 for Boltzmann statistics
-                  //if (coupling & POISSON)
-                  //  Knu(i,j) -= dRn[0] * phi_i_x_phi_j;
-
-                  Fn(i) -= dRn[1] * phi_i_x_phi_j / local_scaling[i][0] * dXn(j);
-
-                  if (coupling & HCURRENT)
-                    Fn(i) -= dRn[2] * phi_i_x_phi_j / local_scaling[i][0] * dXp(j);
-                }
-
-                if (coupling & HCURRENT)
-                {
-                  // (1) would destroy M-Matrix property
-                  // (2) is 0 for Boltzmann statistics
-                  //if (coupling & POISSON)
-                  //  Kpu(i,j) += dRp[0] * phi_i_x_phi_j;
-
-                  if (coupling & ECURRENT)
-                    Fp(i) += dRp[1] * phi_i_x_phi_j / local_scaling[i][1] * dXn(j);
-
-                  Fp(i) += dRp[2] * phi_i_x_phi_j / local_scaling[i][1] * dXp(j);
-                }
-              }
-            }
-          }
-        } // if (residual != NULL)
-*/
 
       }
 
@@ -4538,8 +4478,11 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       if (residual != NULL)
       {
         // charge density
-        //long double J_x_rho = J * (sc->get_charge_density() - p)/ C0;
-        long double J_x_rho = J * sc->get_charge_density() / C0;
+        long double J_x_rho;
+        if (_electronsonly)
+          J_x_rho = J * (sc->get_charge_density() - p)/ C0;
+        else
+          J_x_rho = J * sc->get_charge_density() / C0;
         if (sc->is_dielectric())
           J_x_rho = 0.0;
 

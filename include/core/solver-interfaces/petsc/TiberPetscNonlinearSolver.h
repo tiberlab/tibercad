@@ -48,6 +48,11 @@ class TiberPetscNonlinearSolver : public TiberNonlinearSolver
         NumericVector<double>& solution,
         NumericVector<double>& residual);
 
+    //! Get the divergence tolerance
+    double get_divergence_tol(void) const;
+
+    //! Set or get the old gnorm
+    double& old_gnorm(void);
 
 
   protected:
@@ -64,7 +69,19 @@ class TiberPetscNonlinearSolver : public TiberNonlinearSolver
     //! The line search type
     int _ls_type;
 
+    //! The maximum linesearch step
     double _ls_maxstep;
+
+    //! The previous gnorm for divergence test
+    double _old_gnorm;
+
+    //! The divergence tolerance
+    /*!
+     * If gnorm > _divergence_tol * _old_gnorm we assume divergence of
+     * algorithm
+     */
+    double _divergence_tol;
+
 
     //! The KSP type
     KSPType _ksp_type;
@@ -96,6 +113,24 @@ inline
 TiberPetscNonlinearSolver::~TiberPetscNonlinearSolver(void)
 {
   this->clear();
+}
+
+
+
+inline
+double
+TiberPetscNonlinearSolver::get_divergence_tol(void) const
+{
+  return _divergence_tol;
+}
+
+
+
+inline
+double&
+TiberPetscNonlinearSolver::old_gnorm(void)
+{
+  return _old_gnorm;
 }
 
 

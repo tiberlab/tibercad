@@ -36,6 +36,9 @@ class FieldDependentMobility : public MobilityModelInterface
     //! \copydoc MobilityModelInterface::get_mobility_derivatives()
     virtual void get_mobility_derivatives(std::vector<double>& dm);
 
+    //! \copydoc MobilityModelInterface::get_derivative_grad_fermi()
+    virtual void get_derivative_grad_fermi(RealGradient& dm);
+
 
   protected:
 
@@ -144,6 +147,7 @@ FieldDependentMobility::copy_from(const PhysicalModelInterface* rhs)
   _vsat0 = mod->_vsat0;
   _vsat_b = mod->_vsat_b;
   _vsat_formula = mod->_vsat_formula;
+  _force = mod->_force;
 }
 
 

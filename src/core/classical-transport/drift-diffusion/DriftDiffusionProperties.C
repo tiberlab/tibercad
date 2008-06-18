@@ -24,8 +24,8 @@ using namespace std;
 
 
 DriftDiffusionProperties::PointData::PointData(void)
-  : electron_conductivity_derivatives(3, 0.0),
-    hole_conductivity_derivatives(3, 0.0),
+  : //electron_conductivity_derivatives(3, 0.0),
+    //hole_conductivity_derivatives(3, 0.0),
     electron_recombination_rate_derivatives(3, 0.0),
     hole_recombination_rate_derivatives(3, 0.0)
 {

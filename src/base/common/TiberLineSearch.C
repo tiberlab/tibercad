@@ -17,7 +17,8 @@ TiberLineSearch::TiberLineSearch(EquationSystems& es,
   _nonlinear_atol(1e-50),
   _nonlinear_stol(1e-3),
   _nonlinear_max_it(25),
-  _max_step(1e3)
+  _max_step(1e3),
+  _divergence_tol(4.0)
 {
   // add a vector for the solution
   add_vector("sol");

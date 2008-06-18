@@ -63,6 +63,9 @@ class TiberLineSearch : public TiberNonlinearSystem
     //! Get the line search max step
     double get_max_step(void) const;
 
+    //! Get divergence tolerance
+    double get_divergence_tol(void) const;
+
     /*! \copydoc TiberEqSystem::parse_options() */
     virtual void parse_options(void);
 
@@ -92,6 +95,13 @@ class TiberLineSearch : public TiberNonlinearSystem
 
     //! The maximum search step
     double _max_step;
+
+    //! The divergence tolerance
+    /*!
+     * If the step norm increases by a factor of \c _divergence_tol or more
+     * we assume failure.
+     */
+    double _divergence_tol;
 
 
 
@@ -158,6 +168,16 @@ TiberLineSearch::get_max_step(void) const
 {
   return _max_step;
 }
+
+
+
+inline
+double
+TiberLineSearch::get_divergence_tol(void) const
+{
+  return _divergence_tol;
+}
+
 
 
 #endif // _TIBERLINESEARCH_H_

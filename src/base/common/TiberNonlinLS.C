@@ -6,6 +6,7 @@
 #include "TiberPetscLinearSolver.h"
 #include "InitFailedException.h"
 
+#include "SolveFailedException.h"
 #include "PetscDivergedError.h"
 #include "SNESDivergedError.h"
 
@@ -92,6 +93,7 @@ TiberNonlinLS::do_solve(void)
 #ifndef DEBUG
       cout << endl;
 #endif
+      norm_du = 0.0;
       break;
     }
 
@@ -124,6 +126,9 @@ TiberNonlinLS::do_solve(void)
       old_norm = norm_res;
       norm_res = rhs->l2_norm();
       norm_du = du.linfty_norm();
+
+      if (norm_du > get_divergence_tol() * norm_du_old)
+        throw (SolveFailedException("Line search diverged"));
 
       //cerr << "       ||r(x)|| = " << norm_rhs << ", ||r(x + " << 
       //  alpha << "*dx)|| = " << norm_res << endl;

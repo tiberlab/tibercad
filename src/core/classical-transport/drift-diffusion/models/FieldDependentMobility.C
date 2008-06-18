@@ -75,7 +75,7 @@ FieldDependentMobility::do_init(void)
     _vsat_min = get_parameter("vsat_min", _vsat_min);
   }
 
-  std::string low_field_model = get_parameter("low_field_model", "constant");
+  std::string low_field_model = get_parameter("low_field_model", "doping_dependent");
   _low_field_mob = MobilityModelInterface::create(low_field_model);
   if (_low_field_mob == NULL)
   {
@@ -141,6 +141,41 @@ FieldDependentMobility::get_mobility_derivatives(std::vector<double>& dm)
   dm[0] = dm[1] = dm[2] = 0.0;
 }
 
+
+void
+FieldDependentMobility::get_derivative_grad_fermi(RealGradient& dm)
+{
+  dm.zero();
+  double T = get_driftdiffusionproperties().get_lattice_temperature();
+  double E = 0.0;
+  if (get_carrier_type() == 'e')
+    E = get_driftdiffusionproperties().get_grad_fermi_e().size();
+  else
+    E = get_driftdiffusionproperties().get_grad_fermi_h().size();
+  
+  if ((_force == GRADFERMI) && (E > 1.0))
+  {
+
+    double vsat;
+    if (_vsat_formula == 1)
+      vsat = _vsat0 * std::pow(T / T0, -_vsat_b);
+    else
+      vsat = std::max(_vsat0 - _vsat_b * (T / T0), _vsat_min);
+
+    double mu_lowfield = _low_field_mob->get_mobility();
+
+    double beta = _beta * std::pow(T / T0, _betaexp);
+    double tmp = 1.0 + std::pow(mu_lowfield * E / vsat, _beta);
+    double dmu = -mu_lowfield * std::pow(tmp, -1.0 / beta - 1);
+    dmu *= std::pow(mu_lowfield * E / vsat, _beta) / (E * E);
+
+    if (get_carrier_type() == 'e')
+      dm = dmu * get_driftdiffusionproperties().get_grad_fermi_e();
+    else
+      dm = dmu * get_driftdiffusionproperties().get_grad_fermi_h();
+
+  }
+}
 
 
 void

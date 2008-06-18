@@ -135,13 +135,13 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
         double electron_conductivity;
 
         //! The derivatives of the electron conductivity
-        std::vector<double> electron_conductivity_derivatives;
+        //std::vector<double> electron_conductivity_derivatives;
 
         //! The hole conductivity
         double hole_conductivity;
 
         //! The derivatives of the hole conductivity
-        std::vector<double> hole_conductivity_derivatives;
+        //std::vector<double> hole_conductivity_derivatives;
 
         //! The net electron recombination rate
         double electron_recombination_rate;
@@ -295,13 +295,13 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      *
      * \param E the electric field
      */
-    void set_electric_field(RealGradient E);
+    void set_electric_field(const RealGradient& E);
     
     //! Set the gradient of the electron electr-chemical potential
-    void set_grad_fermi_e(RealGradient grad_Fe);
+    void set_grad_fermi_e(const RealGradient& grad_Fe);
     
     //! Set the gradient of the hole electr-chemical potential
-    void set_grad_fermi_h(RealGradient grad_Fh);
+    void set_grad_fermi_h(const RealGradient& grad_Fh);
 
     //! Get the electric field
     const RealGradient& get_electric_field(void) const;
@@ -545,6 +545,10 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      */
     double get_electron_mobility(void) const
       { return _pd->electron_mobility; };
+
+    //! Get the electron mobility model
+    MobilityModelInterface* get_electron_mobility_model(void)
+      { return _electron_mobility; };
       
     
     //! Get the hole mobility
@@ -554,6 +558,10 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     double get_hole_mobility(void) const
       { return _pd->hole_mobility; };
 
+    //! Get the hole mobility model
+    MobilityModelInterface* get_hole_mobility_model(void)
+      { return _hole_mobility; };
+     
 
     //! Get the electron conductivity derivatives
     //const std::vector<double>& get_electron_conductivity_derivatives(void) const
@@ -1055,14 +1063,14 @@ DriftDiffusionProperties::set_potentials(double potential, double Ef_e,
 
 inline
 void
-DriftDiffusionProperties::set_electric_field(RealGradient E)
+DriftDiffusionProperties::set_electric_field(const RealGradient& E)
 {
   _electric_field = E;
 }
 
 inline
 void
-DriftDiffusionProperties::set_grad_fermi_e(RealGradient grad_Fe)
+DriftDiffusionProperties::set_grad_fermi_e(const RealGradient& grad_Fe)
 {
   _grad_fermi_e = grad_Fe;
 }
@@ -1070,7 +1078,7 @@ DriftDiffusionProperties::set_grad_fermi_e(RealGradient grad_Fe)
 
 inline
 void
-DriftDiffusionProperties::set_grad_fermi_h(RealGradient grad_Fh)
+DriftDiffusionProperties::set_grad_fermi_h(const RealGradient& grad_Fh)
 {
   _grad_fermi_h = grad_Fh;
 }

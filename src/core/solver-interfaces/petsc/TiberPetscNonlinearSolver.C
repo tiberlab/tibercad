@@ -128,7 +128,7 @@ extern "C"
   
   // this function is called by PETSc to evaluate the Jacobian at X
   PetscErrorCode
-  __tiber_petsc_snes_jacobian(SNES, Vec x, Mat *jac, Mat *pc,
+  __tiber_petsc_snes_jacobian(SNES snes, Vec x, Mat *jac, Mat *pc,
       MatStructure *msflag, void *ctx)
   {
     int ierr=0;
@@ -164,8 +164,6 @@ extern "C"
       const char* file, const char* dir, PetscErrorCode n,
       int p, const char* mess, void* ctx) throw (PetscRuntimeError)
   {
-    TiberPetscNonlinearSolver* solver =
-      static_cast<TiberPetscNonlinearSolver*>(ctx);
     throw(PetscRuntimeError(n));
   }
 
@@ -190,6 +188,18 @@ extern "C"
 #else
     std::cout << "." << std::flush;
 #endif
+
+    // this is a somewhat primitive check for divergence based on the step
+    // norm (gnorm)
+    if (it > 1)
+    {
+      TiberPetscNonlinearSolver* solver =
+        static_cast<TiberPetscNonlinearSolver*>(ctx);
+      if (gnorm > solver->get_divergence_tol() * solver->old_gnorm())
+        throw(PetscRuntimeError(0));
+
+      solver->old_gnorm() = gnorm;
+    }
 
     return SNESConverged_LS(snes, it, xnorm, gnorm, fnorm, reason, ctx);
     // TODO check gnorm
@@ -224,6 +234,8 @@ TiberPetscNonlinearSolver::TiberPetscNonlinearSolver(void)
   : _emergency_fnorm(1e-9),
     _ls_type(3),
     _ls_maxstep(1e5),
+    _old_gnorm(1e96),
+    _divergence_tol(2.0),
     _ksp_type(KSPBCGSL),
     _pc_type(PCILU)
 {
@@ -240,6 +252,7 @@ TiberPetscNonlinearSolver::parse_options(const ModelOptions& options)
   _pc_type = TiberPetscUtils::extract_PCType(options);
 
   _ls_maxstep = options.get_option("max_step", _ls_maxstep);
+  _divergence_tol = options.get_option("divergence_tol", _divergence_tol);
 }
 
 
@@ -299,16 +312,6 @@ void TiberPetscNonlinearSolver::init(void)
     ierr = SNESSetType(_snes, SNESLS);
     _checkerr(ierr);
 
-/*
-#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
-    (PETSC_VERSION_SUBMINOR >= 2))
-    ierr = SNESLineSearchSetPreCheck(_snes,
-        __tiber_snes_ls_precheck, (void*) this);
-
-    ierr = SNESLineSearchSetPostCheck(_snes,
-        __tiber_snes_ls_postcheck, (void*) this);
-#endif
-*/
 
     SNESSetConvergenceTest(_snes, __tiber_snes_convergence_test, (void*) this);
 
@@ -318,6 +321,8 @@ void TiberPetscNonlinearSolver::init(void)
 
   }
 }
+
+
 
 
 std::pair<unsigned int, Real> 
@@ -341,6 +346,9 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
 
   // for the case it was cleared before
   this->init();
+
+  // setup the old_gnorm for divergence test
+  _old_gnorm = 1e96;
 
   // set solver options
   SNESSetTolerances(_snes, get_nonlinear_atol(), get_nonlinear_rtol(),

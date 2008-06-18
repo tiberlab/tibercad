@@ -11,6 +11,8 @@
 
 #include "DriftDiffusionModelInterface.h"
 
+#include "vector_value.h"
+
 #include <vector>
 
 //! The base class for mobility models
@@ -27,6 +29,9 @@ class MobilityModelInterface : public DriftDiffusionModelInterface
 
     //! Get the derivatives of the mobility
     virtual void get_mobility_derivatives(std::vector<double>& dm) = 0;
+
+    //! Get the derivatives with respect to the fermi-level gradient
+    virtual void get_derivative_grad_fermi(RealGradient& dm);
 
     //! Creates a new named mobility model
     /*!
@@ -113,5 +118,11 @@ MobilityModelInterface::get_carrier_type(void) const
   return _carrier;
 }
 
+inline
+void
+MobilityModelInterface::get_derivative_grad_fermi(RealGradient& dm)
+{
+  dm.zero();
+}
 
 #endif // _MOBILITYMODELINTERFACE_H_
