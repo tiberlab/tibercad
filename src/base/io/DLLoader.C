@@ -13,15 +13,16 @@
 using namespace std;
 
 
-string
-DLLoader::_libpath = ".";
+list<string>
+DLLoader::_libpath;
 
 
 
 void
 DLLoader::set_library_path(const std::string& path)
 {
-  _libpath = path;
+  _libpath.clear();
+  _libpath.push_front(path);
 }
 
 
@@ -29,8 +30,17 @@ DLLoader::set_library_path(const std::string& path)
 void
 DLLoader::prepend_to_library_path(const std::string& path)
 {
-  _libpath = path + ":" + _libpath;
+  _libpath.push_front(path);
 }
+
+
+
+void
+DLLoader::append_to_library_path(const std::string& path)
+{
+  _libpath.push_back(path);
+}
+
 
 
 
@@ -46,17 +56,21 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
   // construct the library name
   string libfile = "lib" + name + ".so";
 
-  bool file_exists = true;
+  bool file_exists = false;
 
 #ifdef DEBUG_
   cerr << "Looking for library " + libfile + "... ";
 #endif
-  if (exists("./" + libfile))
-    libfile = "./" + libfile;
-  else if (exists(_libpath + "/" + libfile))
-    libfile = _libpath + "/" + libfile;
-  else
-    file_exists = false;
+
+  list<string>::iterator it(_libpath.begin());
+  const list<string>::iterator end(_libpath.end());
+  for ( ; it != end; ++it)
+    if (exists(*it + "/" + libfile))
+    {
+      libfile = *it + "/" + libfile;
+      file_exists = true;
+      break;
+    }
 
 
 #ifdef DEBUG_

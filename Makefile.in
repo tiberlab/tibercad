@@ -7,11 +7,11 @@ include Make.common
 
 
 
-ifeq ($(build_modules), yes)
- MODULE_LIBS := -leigen_solver lib/tibermodels/lib*.so
-else
+#ifeq ($(build_modules), yes)
+# MODULE_LIBS := -leigen_solver lib/tibermodels/lib*.so
+#else
  MODULE_LIBS := -leigen_solver
-endif
+#endif
 
 ifeq ($(enable_pardiso), yes)
  MODULE_LIBS += -lmkl_solver -lguide

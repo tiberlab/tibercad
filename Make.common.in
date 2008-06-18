@@ -117,8 +117,11 @@ LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
 # TODO fortran compiler libraries
 LDFLAGS += @FCLIBS@
 
-#TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.[FCfc]" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" | sed "s/\.[FCfc]/\.$(obj-suffix)/g")
-TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*")
+ifeq ($(build_modules),yes)
+  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/*/models/*")
+else
+  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*")
+endif
 
 
 #NON_TIBER_INCLUDES := $(INCLUDE) @GSL_CFLAGS@ @BOOST_CPPFLAGS@ -I@MKL_INCLUDEDIR@

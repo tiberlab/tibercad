@@ -3,6 +3,7 @@
 #ifndef _DLLOADER_H_
 #define _DLLOADER_H_
 
+#include <list>
 #include <string>
 
 //! A wrapper class which tries to load a certain library
@@ -53,6 +54,9 @@ class DLLoader
     static void prepend_to_library_path(const std::string& path);
 
 
+    //! Append to library search path
+    static void append_to_library_path(const std::string& path);
+
 
   private:
 
@@ -60,7 +64,7 @@ class DLLoader
     DLLoader(void);
 
     //! The library search path
-    static std::string _libpath;
+    static std::list<std::string> _libpath;
 
 };
 

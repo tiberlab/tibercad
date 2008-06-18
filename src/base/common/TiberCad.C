@@ -4,6 +4,7 @@
 #include "svnrevision.h"
 #include "TiberCad.h"
 #include "EigenSolver.h"
+#include "DLLoader.h"
 
 #include "libmesh.h"
 
@@ -60,6 +61,12 @@ TiberCad::init(int argc, char** argv)
   char* root = getenv("TIBERCADROOT");
   if (root != NULL)
     tiberroot = std::string(root);
+
+  // setup DLLoader paths
+  DLLoader::set_library_path(tiberroot + "/lib/tibermodels");
+  char* modelpath = getenv("TIBERMODELPATH");
+  if (modelpath != NULL)
+    DLLoader::prepend_to_library_path(modelpath);
 
   
   // prepare libMesh

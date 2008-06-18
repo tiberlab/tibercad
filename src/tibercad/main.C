@@ -87,22 +87,7 @@ int main (int argc, char** argv)
       setenv("TIBERCADROOT", exepath.c_str(), 1);
     }
 #endif
-    // the TiberCAD root
-    //char* root = getenv("TIBERCADROOT");
-    //if (root != NULL)
-    //  TiberCAD::tiberroot = string(root);
 
-
-    // Set up search path for libraries
-    //DLLoader::set_library_path(tiberroot + "/lib/tibermodels");
-
-    //char* modelpath = getenv("TIBERMODELPATH");
-    //if (modelpath != NULL)
-    //  DLLoader::prepend_to_library_path(modelpath);
-
-    //DLLoader::prepend_to_library_path(".");
-
-    // Set up search path for materials
 
 #ifdef LICENSE_CHECK
     // check the license

@@ -25,7 +25,11 @@ class DDsemiconductor;
  */
 class SemiconductorModel : public DriftDiffusionProperties
 {
+
   public:
+    
+    //! The constructor
+    SemiconductorModel(void);
     
     //! The destructor
     virtual ~SemiconductorModel(void);
@@ -45,10 +49,8 @@ class SemiconductorModel : public DriftDiffusionProperties
     void reset(void);
 
     
+
   protected:
-    
-    //! The constructor
-    SemiconductorModel(void);
 
 
     //! The data structure for element-wise cached data

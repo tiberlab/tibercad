@@ -13,8 +13,7 @@ class Database
     //! Constructor
     Database(void) : _path(""), _material("Si") {};
 
-    void set_search_path(const std::string& path)
-      { _path = path; };
+    void set_search_path(const std::string& path);
 
     void set_material(const std::string& material)
       { _material = material; };

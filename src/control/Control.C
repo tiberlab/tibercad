@@ -5,6 +5,7 @@
 #include "RegionStructure.h"
 #include "Control.h"
 #include "Database.h"
+#include "DLLoader.h"
 #include "Utils.h"
 #include "SimulationOptions.h"
 #include "Device.h"
@@ -143,6 +144,9 @@ Control::create_device(void)
 
   _database->set_search_path(opts.get_option("searchpath", ""));
   opts.delete_option("searchpath");
+
+  DLLoader::prepend_to_library_path(opts.get_option("modellibpath", "."));
+  opts.delete_option("modellibpath");
 
 #ifdef DEBUG
   cerr << " initialize global simulation options" << endl;
