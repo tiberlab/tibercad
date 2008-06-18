@@ -9,7 +9,7 @@ export FC=ifort-9.0
   --with-petsc-arch=linux-gnu-complex \
   --with-slepc-prefix=/usr/pack/slepc-2.3.3-ma \
   --with-mkl=/usr/pack/intel_mkl-8.0-ma \
-  --enable-modules \
+  --disable-modules \
   --enable-pardiso \
   --enable-dftb \
   --enable-hetero \
