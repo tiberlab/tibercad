@@ -627,7 +627,7 @@ DriftDiffusion::do_solve(void)
     }
     catch (SolverException& e)
     {
-      string msg = "DriftDiffusion: solve failed (" +
+      string msg = "solve failed (" +
         string(e.what()) + ")";
       throw SolveFailedException(msg);
     }
@@ -657,7 +657,7 @@ DriftDiffusion::do_solve(void)
   {
     if (!accept_failure)
     {
-      string msg = "DriftDiffusion: solve failed (" +
+      string msg = "solve failed (" +
         string(e.what()) + ")";
       throw SolveFailedException(msg);
     }

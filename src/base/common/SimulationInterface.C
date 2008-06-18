@@ -401,15 +401,13 @@ SimulationInterface::solve(void) throw (SolveFailedException)
   catch (runtime_error& e)
   {
     ostringstream s;
-    s << "Control: Solve of " << get_name() << " failed." << endl <<
-      "    Cause: " << e.what();
+    s << get_name() << ": " << e.what();
     throw SolveFailedException(s.str());
   }
   catch (...)
   {
     ostringstream s;
-    s << "Control: Solve of " << get_name() << " failed." << endl <<
-      "    Cause: Unknown";
+    s << get_name() << ": unknown error occurred";
     throw SolveFailedException(s.str());
   }
 

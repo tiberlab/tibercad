@@ -4,10 +4,19 @@
 
 #include <sstream>
 
+
+PetscRuntimeError::PetscRuntimeError(int reason)
+  : SolverException("Internal PETSc error."),
+    _reason(reason)
+{
+  std::ostringstream os;
+  os << "Internal PETSc error: " << get_reason();
+  _msg = os.str();
+}
+
+
 const char*
 PetscRuntimeError::what(void) const throw()
 {
-  std::ostringstream os;
-  os << "Internal PETSc error : " << get_reason();
-  return os.str().c_str();
+  return _msg.c_str();
 }

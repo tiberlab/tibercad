@@ -528,14 +528,18 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
           step *= 2.0;
         old_step = step;
       }
-      catch (...)
+      catch (SolveFailedException& e)
       {
+        std::cerr << "Solve failed due to: " << std::endl << "   "
+          << e.what() << std::endl;
         step = (value - _last) / 2.0;
         if (abs(step) < _min_step)
           throw SolveFailedException("Sweep: step size small.");
 
         if (i == 0)
           throw SolveFailedException("Sweep: Failure in first step.");
+
+        std::cerr << "Sweep: trying intermediate step" << std::endl;
 
         // set to the remembered solution
         for (int j = 0; j < num_sim; j++)

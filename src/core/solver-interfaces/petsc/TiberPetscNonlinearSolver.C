@@ -183,8 +183,8 @@ extern "C"
     int ierr = 0;
 
 #ifdef DEBUG
-    std::cerr << "iteration " << it << ": xnorm = " << xnorm <<
-      " gnorm = " << gnorm << " fnorm = " << fnorm << "\n";
+    std::cerr << "iteration " << it << "step = " << gnorm <<
+      " residual = " << fnorm << std::endl;
 #else
     std::cout << "." << std::flush;
 #endif
@@ -196,7 +196,7 @@ extern "C"
       TiberPetscNonlinearSolver* solver =
         static_cast<TiberPetscNonlinearSolver*>(ctx);
       if (gnorm > solver->get_divergence_tol() * solver->old_gnorm())
-        throw(PetscRuntimeError(0));
+        throw(SNESDivergedError(-1, it, fnorm));
 
       solver->old_gnorm() = gnorm;
     }

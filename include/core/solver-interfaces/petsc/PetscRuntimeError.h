@@ -5,14 +5,16 @@
 
 #include "SolverException.h"
 
+#include <string>
+
 class PetscRuntimeError : public SolverException
 {
 
   public:
 
-    PetscRuntimeError(int reason)
-      : SolverException("Internal PETSc error."),
-        _reason(reason) {};
+    PetscRuntimeError(int reason);
+
+    virtual ~PetscRuntimeError(void) throw() {};
 
     int get_reason(void) const { return _reason; };
 
@@ -20,6 +22,8 @@ class PetscRuntimeError : public SolverException
 
 
   private:
+
+    std::string _msg;
 
     int _reason;
 };

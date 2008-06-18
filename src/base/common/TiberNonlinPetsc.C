@@ -88,11 +88,11 @@ TiberNonlinPetsc::do_solve(void)
   }
   catch (PetscDivergedError& e)
   {
-    if (e.get_solver_type() == 1) cerr << "KSP ";
-    else cerr << "SNES ";
-    cerr << "diverged: " << e.get_reason() <<
-      " at iteration " << e.get_iteration() <<
-      " (fnorm = " << e.get_fnorm() << ")\n";
+    //if (e.get_solver_type() == 1) cerr << "KSP ";
+    //else cerr << "SNES ";
+    //cerr << "diverged: " << e.get_reason() <<
+    //  " at iteration " << e.get_iteration() <<
+    //  " (fnorm = " << e.get_fnorm() << ")\n";
 
     //if (e.get_reason() == -5) retry = false;
     //if (e.get_reason() == -8) retry = false;
@@ -104,9 +104,9 @@ TiberNonlinPetsc::do_solve(void)
   }
   catch (PetscRuntimeError& e)
   {
-    std::cerr << "Petsc runtime error: " << e.get_reason() << std::endl;
-    if (e.get_reason() == PETSC_ERR_MAT_LU_ZRPVT)
-      cerr << " (Zero pivot during ILU.)\n";
+    //std::cerr << "Petsc runtime error: " << e.get_reason() << std::endl;
+    //if (e.get_reason() == PETSC_ERR_MAT_LU_ZRPVT)
+    //  cerr << " (Zero pivot during ILU.)\n";
 
     reinit();
     throw e;
