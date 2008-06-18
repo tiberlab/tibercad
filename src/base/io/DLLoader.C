@@ -1,12 +1,16 @@
 // $Id$
 
+#include "tiber_config.h"
 #include "DLLoader.h"
 
 #include <boost/filesystem/operations.hpp>
 
 #include <dlfcn.h>
-#ifdef DEBUG
-#include <iostream>
+# ifdef DEBUG
+#  include <iostream>
+# ifdef BUILD_TIBER_MODULES
+#  define DEBUG_
+# endif
 #endif
 
 
@@ -91,8 +95,11 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
     const char* error_msg = 0;
 
-    //iface.handle = dlopen(libfile.c_str(), RTLD_NOW);
-    iface.handle = dlopen(libfile.c_str(), RTLD_LAZY);
+#ifdef DEBUG_
+    iface.handle = dlopen(libfile.c_str(), RTLD_NOW | RTLD_GLOBAL);
+#else
+    iface.handle = dlopen(libfile.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+#endif
     if ((iface.handle != NULL) && ((error_msg = dlerror()) == NULL))
     {
       iface.create_fnc = dlsym(iface.handle, "create");

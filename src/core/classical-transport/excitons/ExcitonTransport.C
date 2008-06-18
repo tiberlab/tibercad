@@ -33,6 +33,14 @@
 using namespace std;
 
 
+//
+// Module interface
+//
+
+TIBER_MODULE(ExcitonTransport,excitontransport)
+
+
+
 ExcitonTransport*
 ExcitonTransport::_this;
 

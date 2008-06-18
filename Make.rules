@@ -67,7 +67,7 @@ $(subdirs):
 
 
 %.s: %.C .%.d
-	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S $<
+	@$(CXX) $(CPPFLAGS) -S $<
 
 
 ifeq (,$(findstring clean,$(MAKECMDGOALS)))

@@ -23,7 +23,7 @@ $Models
     options
     {
      simulation_name = driftdiffusion
-     thermal_simulation = tt
+     #thermal_simulation = tt
 
      physical_regions = bulk
     }
@@ -33,11 +33,24 @@ $Models
       model = srh
     }
 
-    #physical_model electron_mobility
-    #{
-    #  model = field_dependent
-    #  low_field_model = doping_dependent
-    #}
+    physical_model electron_mobility
+    {
+      #model = field_dependent
+      low_field_model = doping_dependent
+      #model = doping_dependent
+      model = test
+      E_max = 2e4
+    }
+
+    physical_model hole_mobility
+    {
+      #model = field_dependent
+      low_field_model = doping_dependent
+      model = doping_dependent
+      #model = test
+      E_max = 2e4
+    }
+
 
     BC_Regions  
     {
@@ -45,7 +58,7 @@ $Models
       {
         BC_reg_numb = 1
         type = ohmic
-	contact_resistance = 1e-3
+	#contact_resistance = 1e-3
         voltage = @Vb[0.5]
       }
 
@@ -72,10 +85,10 @@ $Solver
     #linear_solver = pardiso
     ksp_type = bcgs
     nonlin_max_it = 30
-    nonlin_abs_tol = 1e-12
+    #nonlin_abs_tol = 1e-12
     nonlin_step_tol = 1e-9
     ls_max_step = 2
-    #pc_type = composite
+    pc_type = lu
     #current_integration_method = surfint
   }
 
@@ -111,17 +124,17 @@ $Physics
 $Simulation
 {
   searchpath = ../../materials
-  meshfile = bulk2Dtri.msh
-  dimension = 2
-  mesh_units = 1e-3
+  meshfile = bulk1D.msh
+  dimension = 1
+  mesh_units = 1e-6
   temperature = 300
   #solve = driftdiffusion
   solve = sweep
-  resultpath = output_tri
-  #output_format = grace
+  resultpath = output_1D
+  output_format = grace
   #output_format = gmv
-  output_format = vtk
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, Nd, Na, charge_density, ElPotential, EField)
+  #output_format = vtk
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, Nd, Na, charge_density, ElPotential, EField, ContactCurrents)
 }
 
 

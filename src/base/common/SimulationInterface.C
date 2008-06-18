@@ -6,8 +6,10 @@
 #include "DLLoader.h"
 #include "Material.h"
 
+#ifndef BUILD_TIBER_MODULES
 #include "DriftDiffusion.h"
 #include "ExcitonTransport.h"
+#endif
 #include "Macrostrain.h"
 #include "EnvelopFunctionApprox.h"
 #include "MacroHeatBalance.h"
@@ -89,11 +91,15 @@ SimulationInterface::create(const string& type,
     sim = create_fnc();
   else
   {
+#ifndef BUILD_TIBER_MODULES
     if (type_name == "driftdiffusion")
       sim = DriftDiffusion::create();
     else if (type_name == "excitontransport")
       sim = ExcitonTransport::create();
     else if (type_name == "macrostrain")
+#else
+    if (type_name == "macrostrain")
+#endif
       sim = Macrostrain::create();
     else if (type_name == "crackstrain")
       sim = CrackStrain::create();

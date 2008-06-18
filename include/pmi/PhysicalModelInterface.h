@@ -76,6 +76,14 @@ class PhysicalModelInterface
 {
 
   public:
+    
+    //! The creation method signature
+    typedef PhysicalModelInterface* (*create_t)(void);
+
+    
+    //! The destruction method signature
+    typedef void (*destroy_t)(PhysicalModelInterface*);
+
 
     //! Destructor
     virtual ~PhysicalModelInterface(void); 
@@ -124,6 +132,15 @@ class PhysicalModelInterface
      */
     static PhysicalModelInterface* create(const std::string& name,
         const ModelOptions& options = ModelOptions());
+
+
+    //! Creates a new model from a given creator function
+    /*!
+     * Use this method only in special cases, e.g. if you don't have single
+     * libraries for the different models.
+     */
+    static PhysicalModelInterface* create(create_t create_fnc,
+        destroy_t destroy_fnc, const ModelOptions& options = ModelOptions());
 
     
     //! Deletes a model
@@ -343,14 +360,6 @@ class PhysicalModelInterface
     
     //! An iterator for the models
     typedef std::map<const std::string, ID>::iterator model_id_iterator;
-
-    
-    //! The creation method signature
-    typedef PhysicalModelInterface* (*create_t)(void);
-
-    
-    //! The destruction method signature
-    typedef void (*destroy_t)(PhysicalModelInterface*);
 
 
     //! The type for library handles

@@ -110,13 +110,15 @@ FieldDependentMobility::get_mobility(void)
 {
   double T = get_driftdiffusionproperties().get_lattice_temperature();
   double E = 0.0;
-  if (_force == GRADFERMI)
-    if (get_carrier_type() == 'e')
-      E = get_driftdiffusionproperties().get_grad_fermi_e().size();
-    else
-      E = get_driftdiffusionproperties().get_grad_fermi_h().size();
-  else
-    E = get_driftdiffusionproperties().get_electric_field().size();
+
+  const RealGradient& grad_fermi = (get_carrier_type() == 'e') ?
+    get_driftdiffusionproperties().get_grad_fermi_e() :
+    get_driftdiffusionproperties().get_grad_fermi_h();
+
+  E = grad_fermi.size();
+
+  if ((_force == EFIELD) && (E > 1e-6))
+    E = grad_fermi * get_driftdiffusionproperties().get_electric_field() / E;
 
   double vsat;
   if (_vsat_formula == 1)

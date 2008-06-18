@@ -1,4 +1,4 @@
-// $Id: StrainInterface.h 580 2007-11-26 15:48:59Z maufder $
+// $Id$
 
 
 #ifndef _STRAININTERFACE_H_

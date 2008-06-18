@@ -118,7 +118,7 @@ LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
 LDFLAGS += @FCLIBS@
 
 ifeq ($(build_modules),yes)
-  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/*/models/*")
+  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/*/models/*"-a ! -path "*/src/core/*/drift-diffusion/*" -a ! -path "*/src/core/*/excitons/*")
 else
   TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*")
 endif
@@ -137,6 +137,7 @@ endif
 
 NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
 
+CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK
 CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
 

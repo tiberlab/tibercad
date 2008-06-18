@@ -227,8 +227,7 @@ DriftDiffusionProperties::do_init(void)
   {
     PhysicalModelInterface::destroy(_thermoelectric_power);
 
-    _thermoelectric_power = dynamic_cast<ThermoelectricPower*>(
-        PhysicalModelInterface::create("thermoelectric_power", it->second));
+    _thermoelectric_power = ThermoelectricPower::create_model("default", it->second);
 
     if (_thermoelectric_power == NULL)
       throw InitFailedException("Could not create thermoelectric power model");

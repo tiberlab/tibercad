@@ -724,7 +724,6 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     multimap<string, ModelOptions>::const_iterator sw_end(sws.end());
     for ( ; sw_it != sw_end; ++sw_it)
     {
-      cerr << sw_it->first << endl;
       const ModelOptions& solveropts = sw_it->second;
       if (!solveropts.is_empty())
       {

@@ -29,7 +29,7 @@ test:
 
 
 %.so : %.$(obj-suffix)
-	@soname=lib`$(CPP) $(CPPFLAGS) $(CXXFLAGS) -dM $(@:.so=.C) \
+	@soname=lib`$(CPP) $(CPPFLAGS) -dM $(@:.so=.C) \
 		| awk '/TIBER_MODULE_NAME/ { module = $$3; } \
 		  	END { if (module != "") printf("%s_", module) }'`; \
 				soname=$$soname`grep TIBER_MODULE $(@:.so=.C) | \
@@ -41,12 +41,9 @@ test:
 
 
 clean:
-	@rm -f *.so *~ *.d .*.d .*.d.*
+	@rm -f *.so
 
 
 
-ifneq ($(MAKECMDGOALS),clean)
--include $(patsubst %,.%,$(srcfiles:.C=.d))
-endif
 
 include $(topdir)/Make.rules

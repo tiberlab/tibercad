@@ -16,14 +16,14 @@
 #include "FieldDependentMobility.h"
 #include "TestMobility.h"
 
+#include "ThermoelectricPower.h"
+
 #include "SimpleSemiconductorModel.h"
 #include "SemiconductorModel.h"
-#endif
-
-#include "MobilityModelInterface.h"
-#include "RecombinationModelInterface.h"
 
 #include "ExcitonModel.h"
+#endif
+
 
 #include "Utils.h"
 
@@ -46,7 +46,6 @@
 #include "EFAbulkModel.h"
 
 
-#include "ThermoelectricPower.h"
 
 #include  "ZbLatticeThermalConductivity.h"
 #include  "WzLatticeThermalConductivity.h"
@@ -116,18 +115,20 @@ PhysicalModelInterface::create(const string& name,
       mod = DopingDependentMobility::create();
     else if (name == "dd_mob_field_dependent")
       mod = FieldDependentMobility::create();
+    else if (name == "dd_thpow_default") 
+      mod = ThermoelectricPower::create();
     else if (name == "dd_simple")
       mod = SimpleSemiconductorModel::create();
     else if (name == "dd_default")
       mod = SemiconductorModel::create();
     else if (name == "dd_mob_test")
       mod = TestMobility::create();
-    else if (name == "exmodel_simple")
-#else    
-    if (name == "exmodel_simple")
-#endif
+    else if (name == "ex_simple")
       mod = ExcitonModel::create();
     else if (name == "stiffness_zb")
+#else    
+    if (name == "stiffness_zb")
+#endif
       mod = ZbStiffness::create();
     else if (name == "stiffness_wz")
       mod = WzStiffness::create();
@@ -165,8 +166,6 @@ PhysicalModelInterface::create(const string& name,
       mod = WzLatticeThermalConductivity::create();
     else if (name == "thermal")
       mod = HeatModel::create();
-    else if (name == "thermoelectric_power") 
-      mod = ThermoelectricPower::create();
     else if  (name == "poisson")
       mod = PoissonModel::create();
     else if (name == "tightbinding")
@@ -218,6 +217,43 @@ PhysicalModelInterface::create(const string& name,
 
   return mod;
 }
+
+
+
+PhysicalModelInterface*
+PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
+    const ModelOptions& options)
+{
+  PhysicalModelInterface* mod = dynamic_cast<PhysicalModelInterface*>(create_fnc());
+
+  if (mod != NULL)
+  {
+    register_model(mod);
+
+    mod->_create = create_fnc;
+    mod->_destroy = destroy_fnc;
+
+
+    mod->set_options(options);
+
+    //! set the name
+    // 2007-08-17
+    //    we don't set anymore a default name
+    //string defaultname = mod->get_default_name();
+    string defaultname = "";
+    mod->_name = mod->_options.get_option("name", defaultname);
+    mod->_options.delete_option("name");
+#ifdef DEBUG
+    cerr << "Add model (ID = " << mod->get_id() <<
+      " name = " << mod->get_name() << " type_id = " <<
+       mod->get_default_name() << ")\n";
+#endif
+  }
+
+  return mod;
+}
+
+
 
 
 void
@@ -431,19 +467,6 @@ PhysicalModelInterface::get_parameter(const std::string& name,
 
 
 // explicit instantiations
-
-template ID
-PhysicalModelInterface::get_id_from_name<RecombinationModelInterface>(
-    const string& name);
-
-template ID
-PhysicalModelInterface::get_id_from_name<MobilityModelInterface>(
-    const string& name);
-
-
-
-
-
 
 
 template

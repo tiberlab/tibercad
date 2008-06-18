@@ -14,6 +14,11 @@
 
 #include "elem.h"
 
+
+TIBER_MODULE(ExcitonModel, simple)
+
+
+
 ExcitonModel::ExcitonModel(void)
 {
 }

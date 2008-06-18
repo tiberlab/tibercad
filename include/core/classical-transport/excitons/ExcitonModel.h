@@ -19,6 +19,9 @@ class ExcitonModel : public ExcitonProperties
 {
     
   public:
+  
+    //! The empty constructor.
+    ExcitonModel(void);
        
     //! A default (empty) destructor.
     virtual ~ExcitonModel(void);
@@ -59,9 +62,6 @@ class ExcitonModel : public ExcitonProperties
     virtual double get_dissociation_rate(void);
 
   private:
-  
-    //! The empty constructor.
-    ExcitonModel(void);
 
     //! Exciton radiative recombination time
     double _t_r;

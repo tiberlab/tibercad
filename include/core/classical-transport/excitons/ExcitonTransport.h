@@ -143,6 +143,8 @@ class ExcitonTransport : public SimulationInterface
 
     
 
+    //! Constructor
+    ExcitonTransport(void);
 
     //! Destructor
     ~ExcitonTransport(void);
@@ -213,9 +215,6 @@ class ExcitonTransport : public SimulationInterface
 
 
   protected:
-      
-    //! Constructor
-    ExcitonTransport(void);
     
     //! Initialize the equation system
     /*!

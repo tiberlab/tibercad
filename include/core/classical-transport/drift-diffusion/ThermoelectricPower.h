@@ -38,10 +38,10 @@ class ThermoelectricPower : public DriftDiffusionModelInterface
     ~ThermoelectricPower(void) { };
 
     //! set the electro-chemical potential for electrons and holes
-  void set_potentials(double eQfermi, double hQfermi, double ElPot);
+    void set_potentials(double eQfermi, double hQfermi, double ElPot);
 
-  ////! set the electrostatic potential 
-  // void set_electric_potential(double phi);
+    ////! set the electrostatic potential 
+    // void set_electric_potential(double phi);
 
     //! set the band edge of conduction band and valence band
     void set_band_edges(double Ec, double Ev);
@@ -55,30 +55,34 @@ class ThermoelectricPower : public DriftDiffusionModelInterface
     //!provides holes thermoelectric power [V/K]
     double get_holes_thermoelectric_power(void) const;
 
-   //!provides holes thermoelectric power [V/K]
-   RealGradient get_electron_thermoelectric_power_gradient(void) const;
+    //!provides holes thermoelectric power [V/K]
+    RealGradient get_electron_thermoelectric_power_gradient(void) const;
 
-  //!provides holes thermoelectric power [V/K]
-   RealGradient get_hole_thermoelectric_power_gradient(void) const;
-  
-  
-  //! Calculate the value of the thermoelectric power
-  void calculate(void);
+    //!provides holes thermoelectric power [V/K]
+    RealGradient get_hole_thermoelectric_power_gradient(void) const;
 
-   //! Calculate the thermoelectric power derivatives
-   void calculate_derivatives(void);
 
-   static ThermoelectricPower* create();
-   
-  //! Set the electron and hole charge density
-  //  void set_charge_densities(double n, double p);
+    //! Calculate the value of the thermoelectric power
+    void calculate(void);
 
-  //! Set the electron and hole charge density
-  void set_potential_gradients(RealGradient eFermiGrad, 
-                               RealGradient hFermiGrad, 
-                               RealGradient ElectricField);
+    //! Calculate the thermoelectric power derivatives
+    void calculate_derivatives(void);
 
-  
+    static ThermoelectricPower* create(void);
+    static void destroy(PhysicalModelInterface* mod);
+
+    static ThermoelectricPower* create_model(const std::string& model,
+        const ModelOptions& options = ModelOptions());
+
+    //! Set the electron and hole charge density
+    //  void set_charge_densities(double n, double p);
+
+    //! Set the electron and hole charge density
+    void set_potential_gradients(RealGradient eFermiGrad, 
+        RealGradient hFermiGrad, 
+        RealGradient ElectricField);
+
+
 
 
   protected:
@@ -91,10 +95,10 @@ class ThermoelectricPower : public DriftDiffusionModelInterface
 
     //virtual void read_bowing_parameters(void) {};
 
-    virtual void calculate_VCA (const PhysicalModelInterface *comp_A,
+    virtual void calculate_VCA(const PhysicalModelInterface *comp_A,
         const PhysicalModelInterface *comp_B, double xa); 
 
-    virtual PhysicalModelInterface* create_new (void) const;
+    virtual PhysicalModelInterface* create_new(void) const;
 
 
   private:
@@ -187,8 +191,8 @@ ThermoelectricPower::set_potentials(double eQfermi, double hQfermi, double ElPot
 inline
 void 
 ThermoelectricPower::set_potential_gradients(RealGradient eFermiGrad, 
-					     RealGradient hFermiGrad, 
-					     RealGradient ElectricField )
+    RealGradient hFermiGrad, 
+    RealGradient ElectricField )
 {
 
   _eFermiGrad = eFermiGrad;
@@ -206,7 +210,7 @@ ThermoelectricPower::set_band_edges(double Ec, double Ev)
   _Ec = Ec;
 
   _Ev = Ev;
- 
+
 }
 
 
@@ -216,23 +220,14 @@ ThermoelectricPower::set_temperature(double Tloc)
 {
 
   _Tloc = Tloc;
- 
-}
- 
 
-
-inline
-ThermoelectricPower*
-ThermoelectricPower::create()
-{
-  return (new ThermoelectricPower());
 }
 
 
 
 inline
 PhysicalModelInterface*
-ThermoelectricPower::create_new() const
+ThermoelectricPower::create_new(void) const
 {
   return (new ThermoelectricPower()); 
 }

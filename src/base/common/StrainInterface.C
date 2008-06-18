@@ -1,4 +1,4 @@
-// $Id: StrainInterface.C 827 2008-03-20 18:30:00Z gromano $
+// $Id$
 
 #include "StrainInterface.h"
 #include "SimulationInterface.h"

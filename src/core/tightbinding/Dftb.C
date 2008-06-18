@@ -10,7 +10,6 @@
 #include "PhysicalModel.h"
 #include "SimulationOptions.h"
 #include "TightBindingModel.h"
-#include "ElectricalContact.h"
 #include "SimulationOptions.h"
 #include "DftbpWrapper.h"
 #include "dftbp.h"

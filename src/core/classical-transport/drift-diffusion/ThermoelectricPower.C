@@ -8,18 +8,44 @@
 
 
 ThermoelectricPower::ThermoelectricPower(void)
-  : _eTEpower(0.0),
-    _hTEpower(0.0),
-    _eQfermi(0.0),
+  : _eQfermi(0.0),
     _hQfermi(0.0),
     _Ec(0.0),
     _Ev(0.0),
     _ElPot(0.0),
-    _ElectricField(0.0),
     _eFermiGrad(0.0),
     _hFermiGrad(0.0),
-    _TEmodel(CONSTANT)
+    _ElectricField(0.0),
+    _TEmodel(CONSTANT),
+    _eTEpower(0.0),
+    _hTEpower(0.0)
 {
+}
+
+
+
+ThermoelectricPower*
+ThermoelectricPower::create(void)
+{
+  return new ThermoelectricPower();
+}
+
+
+
+void
+ThermoelectricPower::destroy(PhysicalModelInterface* mod)
+{
+  delete dynamic_cast<ThermoelectricPower*>(mod);
+}
+
+
+
+ThermoelectricPower*
+ThermoelectricPower::create_model(const std::string& model,
+    const ModelOptions& options)
+{
+  return dynamic_cast<ThermoelectricPower*>(
+      PhysicalModelInterface::create((create_t) create, destroy, options));
 }
 
 

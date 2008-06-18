@@ -1,4 +1,4 @@
-// $Id: LinearSolverException.h 365 2007-06-11 16:15:32Z maufder $
+// $Id$
 
 
 #ifndef _PARDISOSOLVEREXCEPTION_H_

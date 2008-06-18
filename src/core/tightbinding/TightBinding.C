@@ -4,7 +4,6 @@
 #include "PhysicalModel.h"
 #include "SimulationOptions.h"
 #include "TightBindingModel.h"
-#include "ElectricalContact.h"
 #include "SimulationOptions.h"
 #include "SimulationEnvironment.h"
 #include "AtomisticStructure.h"
@@ -65,15 +64,18 @@ BoundaryProperties* TightBinding::create_boundary_model (const ModelOptions &opt
                      throw (ModelErrorException)
 
 {
+  BoundaryProperties* model = NULL;
  
+  // these come from other models!
+  /*
   const std::string& modelname = options.get_option("type", "Heat_reservoir");
   
-    ElectricalContact* model = ElectricalContact::create(modelname, options);
+    model = ElectricalContact::create(modelname, options);
  
     if (model == NULL)  
       throw ModelErrorException("TightBinding: No such boundary model: " + modelname);
- 
-   return model;
+  */
+  return model;
  
 }
 
