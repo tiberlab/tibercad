@@ -55,3 +55,6 @@
 
 /* Define to 1 if license check is enabled */
 #undef LICENSE_CHECK
+
+/* Define to 1 if gcc has the -fvisibility flag is enabled */
+#define GCC_HASVISIBILITY 1

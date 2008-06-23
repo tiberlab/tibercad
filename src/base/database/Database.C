@@ -56,12 +56,15 @@ Database::check_data_file(const std::string& name) const
 void
 Database::set_search_path(const std::string& path)
 {
-  boost::filesystem::path p(path);
-  if (!boost::filesystem::exists(p) || !boost::filesystem::is_directory(p))
+  if (path.size() > 0)
   {
-    std::string msg("Database: \'");
-    msg += path + "\' is not a valid directory";
-    throw InitFailedException(msg);
+    boost::filesystem::path p(path);
+    if (!boost::filesystem::exists(p) || !boost::filesystem::is_directory(p))
+    {
+      std::string msg("Database: \'");
+      msg += path + "\' is not a valid directory";
+      throw InitFailedException(msg);
+    }
   }
 
   _path = path;

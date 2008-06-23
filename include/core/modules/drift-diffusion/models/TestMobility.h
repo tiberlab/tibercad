@@ -6,13 +6,13 @@
 #include "MobilityModelInterface.h"
 
 
-class TestMobility : public MobilityModelInterface
+class TBDLEXPORT TestMobility : public MobilityModelInterface
 {
 
   public:
 
     //! constructor
-    TestMobility(void);
+    TBDLLOCAL TestMobility(void);
 
     //! Destructor
     virtual ~TestMobility(void);

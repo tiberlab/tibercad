@@ -26,13 +26,13 @@
  *         \tau_{min,n}}{1 + (N/N_{ref})^\gamma}
  * \f]
  */
-class SRHRecombination : public RecombinationModelInterface
+class TBDLEXPORT SRHRecombination : public RecombinationModelInterface
 {
 
   public:
 
     //! Constructor
-    SRHRecombination(void);
+    TBDLLOCAL SRHRecombination(void);
 
     //! Destructor
     virtual ~SRHRecombination(void) {};

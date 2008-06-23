@@ -21,44 +21,58 @@
 
 
 #ifndef TIBER_MODULE_NAME
-# define TIBER_MODULE_NAME
+#  define TIBER_MODULE_NAME
 #endif
 
+#undef TIBER_MODULE
+#undef TBDLEXPORT
+#undef TBDLLOCAL
+
 #ifdef BUILD_TIBER_MODULES
-/*!
- * \def TIBER_MODULE(classname, libname)
- *
- * \brief Creates methods to create and destroy a simulation object
- * 
- * In each implementation derived from SimulationInterface, put
- * this macro somewhere in the source file to be able to compile
- * it as TiberCad module.
- *
- * \param name the name of the class that should be 'creatable'
- * \param libname the name for this module
- *
- * \c libname will be used to create the library name, and the model
- * will have to be referred to in the input file by \c libname
- */
-# ifndef TIBER_MODULE
+#  ifdef CYGWIN
+#    define DLLEXPORT __declspec(dllexport)
+#    define DLLLOCAL
+#  else
+#    ifdef GCC_HASVISIBILITY
+#      define TBDLEXPORT __attribute__ ((visibility("default")))
+#      define TBDLLOCAL __attribute__ ((visibility("hidden")))
+#    else
+#      define TBDLEXPORT
+#      define TBDLLOCAL
+#    endif
+#  endif
+  /*!
+   * \def TIBER_MODULE(classname, libname)
+   *
+   * \brief Creates methods to create and destroy a simulation object
+   * 
+   * In each implementation derived from SimulationInterface, put
+   * this macro somewhere in the source file to be able to compile
+   * it as TiberCad module.
+   *
+   * \param name the name of the class that should be 'creatable'
+   * \param libname the name for this module
+   *
+   * \c libname will be used to create the library name, and the model
+   * will have to be referred to in the input file by \c libname
+   */
 #  define TIBER_MODULE(classname, libname) \
-  extern "C" { \
-    void destroy(PhysicalModelInterface* p) { \
-      delete p; \
-    } \
-    classname* create(void) { \
-      return new classname(); \
-    } \
-    const char* _tiber_module_ ## libname = #libname; \
-    const char* library_name(void) { \
-      return _tiber_module_ ## libname; \
-    } \
-  }
-# endif
+   extern "C" { \
+     TBDLEXPORT void destroy(PhysicalModelInterface* p) { \
+       delete p; \
+     } \
+     TBDLEXPORT classname* create(void) { \
+       return new classname(); \
+     } \
+     const char* _tiber_module_ ## libname = #libname; \
+     const char* library_name(void) { \
+       return _tiber_module_ ## libname; \
+     } \
+   }
 #else
-# ifndef TIBER_MODULE
 #  define TIBER_MODULE(classname, libname)
-# endif
+#  define TBDLEXPORT
+#  define TBDLLOCAL
 #endif
 
 

@@ -16,7 +16,7 @@
 #include <vector>
 
 //! The base class for mobility models
-class MobilityModelInterface : public DriftDiffusionModelInterface
+class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
 {
 
   public:

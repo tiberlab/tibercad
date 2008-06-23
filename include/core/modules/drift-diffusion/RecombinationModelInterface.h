@@ -18,7 +18,7 @@
  * This is the base class for recombination models. A new recombination model
  * can be implemented by deriving from this class.
  */
-class RecombinationModelInterface : public DriftDiffusionModelInterface
+class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterface
 {
 
   public:

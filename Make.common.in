@@ -118,9 +118,11 @@ LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
 LDFLAGS += @FCLIBS@
 
 ifeq ($(build_modules),yes)
-  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/*/models/*"-a ! -path "*/src/core/*/drift-diffusion/*" -a ! -path "*/src/core/*/excitons/*")
+  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/modules/*")
+  MODULE_CXXFLAGS = -fvisibility=hidden
 else
   TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*")
+  MODULE_CXXFLAGS =
 endif
 
 
