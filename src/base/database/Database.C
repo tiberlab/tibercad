@@ -4,6 +4,8 @@
 #include "TiberCad.h"
 #include "InitFailedException.h"
 
+#include "getpot.h"
+
 #include <boost/filesystem/operations.hpp>
 
 #include <fstream>
@@ -14,12 +16,9 @@
 bool
 Database::is_alloy(const std::string& name) const
 {
-  if (name == "AlGaAs")  return true;
-  if (name == "InGaAs")  return true;
-  if (name == "AlInAs")  return true;
-  if (name == "AlGaN")  return true;
-  if (name == "InGaN")  return true;
-  if (name == "AlInN")  return true;
+  GetPot data(get_data_file(name));
+  if (data.have_variable("alloy"))
+    return true;
 
   return false;
 }
@@ -30,12 +29,9 @@ void
 Database::get_alloy_components(const std::string& alloy,
     std::string& comp_A, std::string& comp_B) const
 {
-  if (alloy == "AlGaAs") { comp_A = "AlAs"; comp_B = "GaAs"; }
-  if (alloy == "InGaAs") { comp_A = "InAs"; comp_B = "GaAs"; }
-  if (alloy == "AlInAs") { comp_A = "AlAs"; comp_B = "InAs"; }
-  if (alloy == "AlGaN") { comp_A = "AlN"; comp_B = "GaN"; }
-  if (alloy == "InGaN") { comp_A = "InN"; comp_B = "GaN"; }
-  if (alloy == "AlInN") { comp_A = "AlN"; comp_B = "InN"; }
+  GetPot data(get_data_file(alloy));
+  comp_A = data("comp_A", "");
+  comp_B = data("comp_B", "");
 }
 
 
@@ -74,19 +70,19 @@ Database::set_search_path(const std::string& path)
 
 
 const std::string
-Database::get_data_file(void) const
+Database::get_data_file(const std::string& material) const
 {
   std::string s(_path);
-  s += "/" + _material + ".dat";
+  s += "/" + material + ".dat";
 
   if ((_path.size() == 0) || !check_data_file(s))
   {
-    s = TiberCad::tiberroot + "/materials/" + _material + ".dat";
+    s = TiberCad::tiberroot + "/materials/" + material + ".dat";
 
     if ((TiberCad::tiberroot.size() == 0) || (!check_data_file(s)))
     {
       std::string msg("Database: cannot find material data file ");
-      msg += _material + ".dat";
+      msg += material + ".dat";
       throw InitFailedException(msg);
     }
   }

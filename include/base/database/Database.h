@@ -18,7 +18,13 @@ class Database
     void set_material(const std::string& material)
       { _material = material; };
 
-    const std::string get_data_file(void) const;
+    const std::string& get_material(void) const
+      { return _material; };
+
+    const std::string get_data_file(void) const
+      { return get_data_file(_material); };
+
+    const std::string get_data_file(const std::string& material) const;
 
     bool is_alloy(const std::string& material) const;
 

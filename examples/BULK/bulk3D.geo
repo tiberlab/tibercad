@@ -53,6 +53,6 @@ Extrude Surface {2, {0.0, 0.0, z}}
 	{Recombine; Layers{N, 1, 1};};
 
 anode = news - 1;
-Physical Volume(1) = {1};
+Physical Volume(1) = {1,2};
 Physical Surface(1) = {anode};
 Physical Surface(2) = {1, 2};

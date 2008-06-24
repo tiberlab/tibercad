@@ -36,7 +36,7 @@ Extrude Line {l4, {0.0, y, 0.0}}
 //	{Recombine; Layers{N, 1, 1};};
 	{Layers{N, 1, 1};};
 
-Physical Surface(1) = {1};
+Physical Surface(1) = {20,16,12,8};
 Physical Line(1) = {9,13};
 Physical Line(2) = {1,2,3,4};
 Physical Line(3) = {5,17};

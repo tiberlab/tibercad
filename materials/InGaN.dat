@@ -1,6 +1,10 @@
 # InGaN
 
+alloy = 2
 structure = wz
+
+comp_A = InN
+comp_B = GaN
 
 bow_Eg_G = 1.4
 bow_Eg_X = 0.69

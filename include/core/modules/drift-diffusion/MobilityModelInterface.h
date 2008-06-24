@@ -62,6 +62,9 @@ class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
     //! \copydoc DriftDiffusionProperties::DriftDiffusionProperties()
     MobilityModelInterface(void);
 
+    //! \copydoc PhysicalModelInterfaceInterface::copy_from()
+    virtual void copy_from(const PhysicalModelInterface* rhs);
+
 
   private:
 
@@ -124,5 +127,19 @@ MobilityModelInterface::get_derivative_grad_fermi(RealGradient& dm)
 {
   dm.zero();
 }
+
+
+inline
+void
+MobilityModelInterface::copy_from(const PhysicalModelInterface* rhs)
+{
+  DriftDiffusionModelInterface::copy_from(rhs);
+
+  const MobilityModelInterface* rh =
+    static_cast<const MobilityModelInterface*>(rhs);
+
+  _carrier = rh->_carrier;
+}
+
 
 #endif // _MOBILITYMODELINTERFACE_H_

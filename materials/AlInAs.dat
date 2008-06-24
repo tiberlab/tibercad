@@ -1,6 +1,10 @@
 # AlInAs-zb
 
+alloy = 2
 structure = zb
+
+comp_A = AlAs
+comp_B = InAs
 
 bow_Eg_G = 0.7
 bow_Eg_L = 0.0

@@ -176,6 +176,7 @@ DopingDependentMobility::copy_from(const PhysicalModelInterface* rhs)
 
   const DopingDependentMobility* mod =
     dynamic_cast<const DopingDependentMobility*>(rhs);
+  formula_ = mod->formula_;
   mumin_ = mod->mumin_;
   am_ = mod->am_;
   mud_ = mod->mud_;
@@ -198,6 +199,8 @@ DopingDependentMobility::calculate_VCA(const PhysicalModelInterface* comp_A,
   const DopingDependentMobility* scB =
     dynamic_cast<const DopingDependentMobility*>(comp_B);
 
+  // formula should be the same anyway
+  formula_ = scA->formula_;
   mumin_ = alloy(scA->mumin_, scB->mumin_ , xa);
   am_ = alloy(scA->am_, scB->am_ , xa);
   mud_ = alloy(scA->mud_, scB->mud_ , xa);
@@ -209,9 +212,16 @@ DopingDependentMobility::calculate_VCA(const PhysicalModelInterface* comp_A,
   
   if (formula_ == 1)
   {
-    assert(const_mob_ != NULL);
     assert(scA->const_mob_ != NULL);
     assert(scB->const_mob_ != NULL);
+    if (const_mob_ == NULL)
+    {
+      const_mob_ = static_cast<MobilityModelInterface*>(scA->const_mob_->copy());
+      const_mob_->set_driftdiffusionproperties(&get_driftdiffusionproperties());
+      const_mob_->set_carrier_type(get_carrier_type());
+      const_mob_->set_material(get_material());
+      const_mob_->init();
+    }
     const_mob_->build_alloy(scA->const_mob_, scB->const_mob_, xa);
   }
 }

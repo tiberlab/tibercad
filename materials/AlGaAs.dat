@@ -1,3 +1,12 @@
+# AlGaAs
+
+alloy = 2
+structure = wz
+
+comp_A = AlAs
+comp_B = GaAs
+
+
 #Atomistic structure informations
 #
 n_basis_specie=2

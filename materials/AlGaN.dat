@@ -1,3 +1,12 @@
+# AlGaN
+
+alloy = 2
+structure = wz
+
+comp_A = AlN
+comp_B = GaN
+
+
 # AlGaN bowing parameters
 
 bow_Eg_G = 0.7

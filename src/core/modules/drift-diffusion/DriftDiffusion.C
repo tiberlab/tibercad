@@ -4329,11 +4329,14 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         // the factor phi_0 / x0 comes from the derivative with respect to the 
         // gradient of the potential
         RealGradient dmu_e(0);
-        sc->get_electron_mobility_model()->get_derivative_grad_fermi(dmu_e);
-        dmu_e *= J * phi0 / (mu0 * C0_e) * n / x0;
         RealGradient dmu_h(0);
-        sc->get_hole_mobility_model()->get_derivative_grad_fermi(dmu_h);
-        dmu_h *= J * phi0 / (mu0 * C0_h) * p / x0;
+        if (dim > 1)
+        {
+          sc->get_electron_mobility_model()->get_derivative_grad_fermi(dmu_e);
+          dmu_e *= J * phi0 / (mu0 * C0_e) * n / x0;
+          sc->get_hole_mobility_model()->get_derivative_grad_fermi(dmu_h);
+          dmu_h *= J * phi0 / (mu0 * C0_h) * p / x0;
+        }
 
 
         for (unsigned int i = 0; i < n_dofs; i++)
@@ -4359,7 +4362,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
               long double dmu_e_x_dphi = dmu_e * dphi[j][qp];
               long double dmu_h_x_dphi = dmu_h * dphi[j][qp];
-              //dmu_e_x_dphi = 0.0;
 
               if (coupling & ECURRENT)
               {

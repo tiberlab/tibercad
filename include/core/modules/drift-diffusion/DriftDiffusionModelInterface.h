@@ -101,7 +101,10 @@ inline
 void
 DriftDiffusionModelInterface::copy_from(const PhysicalModelInterface* rhs)
 {
-  ignore_unused_variable(rhs);
+  const DriftDiffusionModelInterface* rh =
+    static_cast<const DriftDiffusionModelInterface*>(rhs);
+
+  //_dd_prop = rh->_dd_prop;
 }
 
 

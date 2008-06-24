@@ -5,7 +5,7 @@ $Device
    Region bulk 
    {
      reg_numb = 1
-     mat = Si
+     material = Si
      #structure = wz
      doping = 1e16 doping_type = donor
    }
@@ -35,20 +35,24 @@ $Models
 
     physical_model electron_mobility
     {
-      #model = field_dependent
+      model = field_dependent
       low_field_model = doping_dependent
       #model = doping_dependent
-      model = test
-      E_max = 2e4
+      #model = constant
+      #model = test
+      E_max = 5e4
+      #driving_force = efield
     }
 
     physical_model hole_mobility
     {
-      #model = field_dependent
+      model = field_dependent
       low_field_model = doping_dependent
-      model = doping_dependent
+      #model = doping_dependent
+      #model = constant
       #model = test
-      E_max = 2e4
+      E_max = 5e4
+      #driving_force = efield
     }
 
 
@@ -56,6 +60,7 @@ $Models
     {
       BC_Region anode
       {
+        #BC_reg_numb = (1,3)
         BC_reg_numb = 1
         type = ohmic
 	#contact_resistance = 1e-3
@@ -124,18 +129,28 @@ $Physics
 $Simulation
 {
   searchpath = ../../materials
-  meshfile = bulk1D.msh
-  dimension = 1
+  #searchpath = .
+  meshfile = bulk2D.msh
+  dimension = 2
   mesh_units = 1e-6
   temperature = 300
   #solve = driftdiffusion
   solve = sweep
-  resultpath = output_1D
+  resultpath = output_2D
   output_format = grace
   #output_format = gmv
   #output_format = vtk
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, Nd, Na, charge_density, ElPotential, EField, ContactCurrents)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, Nd, Na, charge_density, ElPotential, EField, ContactCurrents, hMob, eMob)
 }
+
+
+
+
+
+
+
+
+
 
 
 
