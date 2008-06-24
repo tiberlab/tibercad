@@ -1,7 +1,7 @@
 # AlGaAs
 
 alloy = 2
-structure = wz
+structure = zb
 
 comp_A = AlAs
 comp_B = GaAs
