@@ -54,7 +54,7 @@ Database::set_search_path(const std::string& path)
 {
   if (path.size() > 0)
   {
-    boost::filesystem::path p(path);
+    boost::filesystem::path p(path, boost::filesystem::native);
     if (!boost::filesystem::exists(p) || !boost::filesystem::is_directory(p))
     {
       std::string msg("Database: \'");

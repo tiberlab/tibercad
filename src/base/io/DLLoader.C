@@ -26,7 +26,7 @@ void
 DLLoader::set_library_path(const std::string& path)
 {
   _libpath.clear();
-  _libpath.push_front(path);
+  _libpath.push_back(path);
 }
 
 
@@ -69,13 +69,15 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
   list<string>::iterator it(_libpath.begin());
   const list<string>::iterator end(_libpath.end());
   for ( ; it != end; ++it)
-    if (exists(*it + "/" + libfile))
+{
+    path p(*it + "/" + libfile, native);
+    if (exists(p))
     {
       libfile = *it + "/" + libfile;
       file_exists = true;
-      break;
+      //break;
     }
-
+}
 
 #ifdef DEBUG_
   if (file_exists)
