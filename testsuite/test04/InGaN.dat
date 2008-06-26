@@ -1,6 +1,10 @@
 # InGaN
 
+alloy = 2
 structure = wz
+
+comp_A = InN
+comp_B = GaN
 
 bow_Eg_G = 1.4
 bow_Eg_X = 0.69
@@ -13,3 +17,12 @@ bow_Pz = -0.037
 
 # doping dependent
 mobility_formula = 1
+
+
+#Atomistic structure informations
+#
+n_basis_specie=2
+
+specie_1=InGa
+specie_2=N
+
