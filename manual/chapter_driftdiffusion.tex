@@ -25,8 +25,8 @@ See tables~\ref{table:dd_nodal}, \ref{table:dd_elemental} and \ref{table:dd_scal
 \multicolumn{3}{c}{\textbf{Nodal quantities}} \\
 \hline 
 \texttt{Ec} & Conduction band edge & eV \\
-\texttt{Ec0} & Conduction band edge & eV \\
-\texttt{Ev} & Valence band edge without electric potential & eV \\
+\texttt{Ec0} & Conduction band edge without electric potential & eV \\
+\texttt{Ev} & Valence band edge & eV \\
 \texttt{Ev0} & Valence band edge without electric potential & eV \\
 \texttt{Eg} & Band gap & eV \\
 \texttt{QFermi\_e} & Electro-chemical potential of electrons & eV ($-e\phi_n$) \\
@@ -346,11 +346,11 @@ $\alpha_a$ &  \verb+aa_e+ &  \verb+aa_h+\\
 
 The field dependent mobility model describes the degradation of mobility at high driving fields.
 It is identified by the identifier \texttt{field\_dependent}.
-The electric field or the gradient of the electro-chemical potential can be chosen as driving force:
+The electric field component in directon of the current flow or the gradient of the electro-chemical potential can be chosen as driving force:
 \begin{verbatim}
 driving_force = efield | grad_fermi
 \end{verbatim}
-The default driving force is the gradient of the electro-chemical.
+The default driving force is the gradient of the electro-chemical potential.
 
 The model is based on the Caughey-Thomas model, refined by Canali~\cite{canali}:
 \begin{equation}
