@@ -513,6 +513,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Set the level of verbosity
     int& verbose(void);
     
+    
+    //! Check if \c region_id is include in this simulation
+    bool includes_region(ID region_id) const;
+
 
 
   protected:

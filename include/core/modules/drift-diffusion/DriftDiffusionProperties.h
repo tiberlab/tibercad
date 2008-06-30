@@ -16,6 +16,7 @@
 #include "TemperatureInterface.h"
 #include "StrainInterface.h"
 #include "SimulationOptions.h"
+#include "DriftDiffusion.h"
 #include "DriftDiffusionDefs.h"
 #include "TiberCad.h"
 #include "Constants.h"
@@ -79,6 +80,11 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
 
         //! The hole electro-chemical potential
         double fermi_h;
+
+
+        double old_electric_potential;
+        double old_fermi_e;
+        double old_fermi_h;
 
 
         //! The electron density
@@ -276,6 +282,9 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
      * \param Ef_h the hole electro-chemical potential
      */
     void set_potentials(double potential, double Ef_e = 0.0, double Ef_h = 0.0);
+
+    // Set the old potentials
+    void set_old_potentials(double potential, double Ef_e = 0.0, double Ef_h = 0.0);
 
     //! Set the carrier densities
     /*!
@@ -675,6 +684,18 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     double get_hole_electro_chemical_potential(void) const
       { return _pd->fermi_h; };
 
+    double get_old_phi(void) const
+      { return _pd->old_electric_potential; };
+
+    double get_old_fermie(void) const
+      { return _pd->old_fermi_e; };
+
+    double get_old_fermih(void) const
+      { return _pd->old_fermi_h; };
+
+
+    //! Set the flag for equilibrium calculation
+    void set_driftdiffusion(const DriftDiffusion* dd);
 
 
   protected:
@@ -824,6 +845,10 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     bool is_inhomogeneous(void) const;
 
 
+    //! Tells if we are doing equilibrium calculation
+    bool has_solution(void) const;
+
+
   private:
 
     //! The interface to the lattice temperature simulation
@@ -836,6 +861,10 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
 
     //! \c true if we should assume inhomogeneous band parameters
     bool _is_inhomogeneous;
+
+
+    //! If we are doing an equilibrium calculation
+    const DriftDiffusion* _driftdiffusion;
 
 
     //! The point-wise data
@@ -1060,6 +1089,18 @@ DriftDiffusionProperties::set_potentials(double potential, double Ef_e,
   _pd->fermi_e = Ef_e;
   _pd->fermi_h = Ef_h;
 }
+
+
+inline
+void
+DriftDiffusionProperties::set_old_potentials(double potential, double Ef_e,
+    double Ef_h)
+{
+  _pd->old_electric_potential = potential;
+  _pd->old_fermi_e = Ef_e;
+  _pd->old_fermi_h = Ef_h;
+}
+
 
 inline
 void
@@ -1343,6 +1384,22 @@ DriftDiffusionProperties::is_inhomogeneous(void) const
   return _is_inhomogeneous;
 }
 
+
+inline
+bool
+DriftDiffusionProperties::has_solution(void) const
+{
+  return _driftdiffusion->is_solved();
+}
+
+
+
+inline
+void
+DriftDiffusionProperties::set_driftdiffusion(const DriftDiffusion* dd)
+{
+  _driftdiffusion = dd;
+}
 
 
 #endif /* _DRIFTDIFFUSIONPROPERTIES_H_ */

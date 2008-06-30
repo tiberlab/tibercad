@@ -165,6 +165,8 @@ DriftDiffusion::create_physical_model(const ModelOptions& options,
     throw ModelErrorException(
         "DriftDiffusion: No such physical model: " + modelname);
 
+  model->set_driftdiffusion(this);
+
   return model;
 }
 
@@ -238,7 +240,6 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
       dynamic_cast<DriftDiffusionProperties*>(
           _device->get_material(elem->subdomain_id())->get_model(get_id()));
 
-    //sc->set_coupling_type(get_options().coupling);
     sc->set_coordinates(elem->centroid());
     sc->set_potentials(sc->get_equilibrium_fermi_level());
     sc->set_electric_field(RealGradient(0));
@@ -612,6 +613,15 @@ DriftDiffusion::do_solve(void)
     }
   }
 
+  static int ctr = 0;
+  ostringstream os;
+  os << ctr++ << ".m";
+  string num(os.str());
+  // set the old solution
+  EquationSystems& es = get_equation_systems();
+  TiberNonlinearSystem& system =
+    es.get_system<TiberNonlinearSystem>(get_equation_system_name());
+  system.get_vector("old_sol") = get_solution_vector();
 
   int coupling = get_options().coupling;
   
@@ -1045,25 +1055,10 @@ DriftDiffusion::rebuild_equation_system(void)
   system.add_variable("fermi_e", libMeshEnums::FIRST);
   system.add_variable("fermi_h", libMeshEnums::FIRST);
 
+  system.add_vector("old_sol");
 
   // finally initialize the newly created system
   system.init();
-
-
-
-///// TEST
-/*
-
-  MeshBase::element_iterator it = get_mesh().active_local_elements_begin();
-  Elem* elem = *it;
-  for (unsigned int n=0; n<elem->n_nodes(); n++)
-  {
-    elem->get_node(n)->set_n_comp(system.number(), system.variable_number("fermi_e"), 0);
-  }
-
-  system.get_dof_map().reinit(get_mesh());
-
-*/
 
 
   _rebuild_eq_system = false;
@@ -1373,7 +1368,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   //sc->lock();
   sc->reinit(elem);
-  //sc->set_coupling_type(get_options().coupling);
 
   fe->reinit(elem, &points);
     
@@ -1697,7 +1691,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   //sc->lock();
   sc->reinit(elem); //centroid
-  //sc->set_coupling_type(get_options().coupling);
 
   fe->reinit(elem, &points);
 
@@ -2092,7 +2085,6 @@ DriftDiffusion::calculate_currents_rstf(void)
     fe->reinit(elem);
 
     sc->reinit(elem);
-    //sc->set_coupling_type(get_options().coupling);
     
     //Get the thermoelectric power------------
     sc->compute_thermoelectric_powers();
@@ -2273,7 +2265,6 @@ DriftDiffusion::calculate_currents_surfint(void)
           continue;
         
         sc->reinit(elem);
-        //sc->set_coupling_type(get_options().coupling);
         
 	//Get the thermoelectric power------------
         sc->compute_thermoelectric_powers();
@@ -2505,7 +2496,6 @@ DriftDiffusion::build_local_scaling(void)
     assert(sc != NULL); 
 
     sc->reinit(elem);
-    //sc->set_coupling_type(get_options().coupling);
 
     fe->reinit(elem);
 
@@ -2612,6 +2602,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
         get_equation_system_name());
 
   const NumericVector<Number>& solution = get_solution_vector();
+  const NumericVector<Number>& oldsolution = system->get_vector("old_sol");
 
   // aliases for nicer code
   const Device& device = *(_device);
@@ -2684,6 +2675,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
   {
     phi = n_vars;
     legend[n_vars] = "electric_potential";
+    n_vars++;
+    legend[n_vars] = "old_electric_potential";
     n_vars++;
   }
 
@@ -2911,7 +2904,6 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
       assert(sc != NULL); 
 
       sc->reinit(elem);
-      //sc->set_coupling_type(get_options().coupling);
 
       fe->reinit(elem);
 
@@ -2936,6 +2928,9 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
         double u  = phi0 * solution(dof_indices_u[n]);
         double en = phi0 * solution(dof_indices_en[n]);
         double ep = phi0 * solution(dof_indices_ep[n]);
+        double oldu  = phi0 * oldsolution(dof_indices_u[n]);
+        double olden = phi0 * oldsolution(dof_indices_en[n]);
+        double oldep = phi0 * oldsolution(dof_indices_ep[n]);
 
 
         // prepare for calculating local properties
@@ -2943,6 +2938,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
 
 
         sc->set_potentials(u, en, ep);
+        sc->set_old_potentials(oldu, olden, oldep);
         sc->set_electric_field(field);
         sc->set_grad_fermi_e(grad_Fe);
         sc->set_grad_fermi_h(grad_Fh);
@@ -3038,7 +3034,10 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
         }
  
         if (phi != -1)
+        {
           local[id + phi] += u / conn;
+          local[id + phi + 1] += phi0 * system->get_vector("old_sol")(dof_indices_u[n]) / conn;
+        }
 
         if (Efn != -1)
           local[id + Efn] += -en / conn;
@@ -3407,7 +3406,6 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     assert(sc != NULL); 
 
     sc->reinit(elem);
-    //sc->set_coupling_type(get_options().coupling);
 
     fe->reinit(elem);
     
@@ -3427,6 +3425,9 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     double u  = 0.0;
     double en = 0.0;
     double ep = 0.0;
+    double oldu  = 0.0;
+    double olden = 0.0;
+    double oldep = 0.0;
     double T = 0.0;
     RealGradient e_field(0);
     for (unsigned int i = 0; i < n_dofs; i++)
@@ -3448,6 +3449,9 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
       u  += phi[i][0] * solution(dof_indices_u[i]);
       en += phi[i][0] * solution(dof_indices_en[i]);
       ep += phi[i][0] * solution(dof_indices_ep[i]);
+      oldu  += phi[i][0] * solution(dof_indices_u[i]);
+      olden += phi[i][0] * solution(dof_indices_en[i]);
+      oldep += phi[i][0] * solution(dof_indices_ep[i]);
 
       e_field += dphi[i][0] * solution(dof_indices_u[i]);
     }
@@ -3463,6 +3467,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     sc->set_coordinates(elem->centroid());
 
     sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+    sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldep);
 
     sc->set_electric_field(e_field);
     sc->set_grad_fermi_e(RealGradient(en_x, en_y, en_z));
@@ -3826,7 +3831,6 @@ DriftDiffusion::set_dirichlet_bc(void)
     assert(sc != NULL);
 
     sc->reinit(elem);
-    //sc->set_coupling_type(get_options().coupling);
 
     {
       // loop over all nodes and check if it is a dirichlet type node
@@ -3933,7 +3937,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
   BoundaryNodeList& dirichlet_nodes = _dirichlet_nodes;
 
-  const NumericVector<Number>& dx = *(system.solution);
+  const NumericVector<Number>& oldx = system.get_vector("old_sol");
 
   //
   // some scaling stuff...
@@ -4033,7 +4037,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   // the local solution
   DenseVector<Number> X;
   // the local old step
-  DenseVector<Number> dX;
+  DenseVector<Number> oldX;
 
   DenseSubMatrix<Number>
     Kuu(Ke), Kun(Ke), Kup(Ke),
@@ -4051,9 +4055,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     Xp(X);
 
   DenseSubVector<Number>
-    dXu(dX),
-    dXn(dX),
-    dXp(dX);
+    oldXu(oldX),
+    oldXn(oldX),
+    oldXp(oldX);
 
 
   vector<unsigned int> dof_indices;
@@ -4097,11 +4101,11 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     Ke.resize(n_dofs_tot, n_dofs_tot);
     Fe.resize(n_dofs_tot);
     X.resize(n_dofs_tot);
-    dX.resize(n_dofs_tot);
+    oldX.resize(n_dofs_tot);
 
     // extract local solution, accounting for constraints
     dof_map.extract_local_vector(x, dof_indices, X);
-    dof_map.extract_local_vector(dx, dof_indices, dX);
+    dof_map.extract_local_vector(oldx, dof_indices, oldX);
 
     // Reposition the submatrices according to this scheme:
     //
@@ -4131,9 +4135,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     Xn.reposition(n_dofs, n_dofs);
     Xp.reposition(2 * n_dofs, n_dofs);
     //
-    dXu.reposition(0, n_dofs);
-    dXn.reposition(n_dofs, n_dofs);
-    dXp.reposition(2 * n_dofs, n_dofs);
+    oldXu.reposition(0, n_dofs);
+    oldXn.reposition(n_dofs, n_dofs);
+    oldXp.reposition(2 * n_dofs, n_dofs);
 
 
 
@@ -4143,7 +4147,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
     assert(sc != NULL);
     sc->reinit(elem);
-    //sc->set_coupling_type(coupling);
     
 
     // Get the thermoelectric power
@@ -4176,6 +4179,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       Real u  = 0.0;
       Real en = 0.0;
       Real ep = 0.0;
+      Real oldu  = 0.0;
+      Real olden = 0.0;
+      Real oldep = 0.0;
       RealGradient e_field(0);
       RealGradient grad_en(0);
       RealGradient grad_ep(0);
@@ -4184,6 +4190,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         u  += phi[i][qp] * Xu(i);
         en += phi[i][qp] * Xn(i);
         ep += phi[i][qp] * Xp(i);
+        oldu  += phi[i][qp] * oldXu(i);
+        olden += phi[i][qp] * oldXn(i);
+        oldep += phi[i][qp] * oldXp(i);
         e_field += dphi[i][qp] * Xu(i);
         grad_en += dphi[i][qp] * Xn(i);
         grad_ep += dphi[i][qp] * Xp(i);
@@ -4193,6 +4202,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       sc->set_coordinates(q_point[qp]);
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+      sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldep);
 
       double grad_fac = phi0 / x0;
       sc->set_electric_field(grad_fac * e_field);

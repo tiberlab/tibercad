@@ -52,6 +52,7 @@ ParticleDensity::add_quantum_density(const std::string& name)
     }
 
     // at this point we have for sure a quantum density simulation
+
     _quantum_density.insert(qd);
     use_quantum_density();
   }

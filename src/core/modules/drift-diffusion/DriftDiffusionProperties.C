@@ -25,7 +25,6 @@ using namespace std;
 
 
 
-
 DriftDiffusionProperties::PointData::PointData(void)
   : //electron_conductivity_derivatives(3, 0.0),
     //hole_conductivity_derivatives(3, 0.0),
@@ -415,8 +414,6 @@ DriftDiffusionProperties::reinit(const Elem* elem)
 
     // get the nodal temperatures
     _lattice_temp.get_temperature(elem, _nodal_lattice_vt);
-    //for (int i = 0; i < _nodal_lattice_vt.size(); i++)
-    //  _nodal_lattice_vt[i] *= Constants::k_B;
 
     // get the mean temperature on the element
     _lattice_vt = Constants::k_B *
@@ -459,7 +456,29 @@ DriftDiffusionProperties::calculate_densities(void)
       Ec - _pd->electric_potential, -_pd->fermi_e, kTe);
   _pd->electron_density = _electrons.get_particle_density();
   _pd->electron_density_derivative = _electrons.get_particle_density_derivative();
-  
+  /*
+  if (_electrons.has_quantum_density() && has_solution())
+  {
+    //_electrons.use_quantum_density(false);
+    //double dens = _electrons.get_particle_density();
+    //_pd->electron_density_derivative = _electrons.get_particle_density_derivative();
+    //_pd->electron_density_derivative = 0.0;
+    //_electrons.set_classical_parameters(cb.effective_DOS,
+    //    Ec - _pd->old_electric_potential, -_pd->old_fermi_e, kTe);
+    //double old_dens = _electrons.get_particle_density();
+    //if (old_dens > 1e-6)
+    {
+      double arg = (_pd->electric_potential - _pd->old_electric_potential) / kTe;
+      double fac = max(0.1, min(10.0, exp(arg)));
+      //double fac = max(0.1, min(10.0, dens / old_dens));
+      //_pd->electron_density_derivative *= _pd->electron_density / old_dens;
+      _pd->electron_density *= fac;
+      _pd->electron_density_derivative = _pd->electron_density / kTe;
+    }
+    _electrons.use_quantum_density(true);
+  }
+  */
+
   _holes.set_element_and_point(_elem, _coord);
   _holes.set_classical_parameters(vb.effective_DOS,
       -Ev + _pd->electric_potential, _pd->fermi_h, kTh);
@@ -683,6 +702,11 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   int coupling_bkp = _coupling;
   _coupling = DriftDiffusionDefs::BOTH;
 
+  bool quantum_el = _electrons.has_quantum_density();
+  bool quantum_hl = _holes.has_quantum_density();
+  _electrons.use_quantum_density(false);
+  _holes.use_quantum_density(false);
+
 
   double kT = get_lattice_temperature();
 
@@ -768,6 +792,8 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   // restore original coupling
   _coupling = coupling_bkp;
 
+  _electrons.use_quantum_density(quantum_el);
+  _holes.use_quantum_density(quantum_hl);
 }
 
 

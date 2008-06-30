@@ -25,7 +25,7 @@ RelaxationMethod::do_solve(void)
 {
   parse_options();
 
-  initialize();
+  //initialize();
 
   open_xmonitor();
 

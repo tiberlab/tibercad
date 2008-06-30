@@ -76,6 +76,10 @@ class ParticleDensity
     void use_quantum_density(bool use_quantum = true);
 
 
+    // Do we have a quantum density?
+    bool has_quantum_density(void) const;
+
+
     //! Set the parameters for the classical density
     /*!
      * \param N_eff the effective density of states
@@ -261,6 +265,14 @@ void
 ParticleDensity::use_quantum_density(bool use_quantum)
 {
   _use_quantum = use_quantum;
+}
+
+
+inline
+bool
+ParticleDensity::has_quantum_density(void) const
+{
+  return _use_quantum;
 }
 
 

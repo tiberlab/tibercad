@@ -204,6 +204,13 @@ SimulationInterface::do_print_info(void)
 
 
 
+bool
+SimulationInterface::includes_region(ID region_id) const
+{
+  return get_environment().contains_region(region_id);
+}
+
+
 void
 SimulationInterface::init(void) throw (InitFailedException)
 {
