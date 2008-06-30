@@ -27,16 +27,16 @@ RelaxationMethod::do_solve(void)
 
   initialize();
 
+  open_xmonitor();
+
   AutoPtr<NumericVector<double> > x_old = NumericVector<double>::build();
   x_old->init(get_solution_vector().size());
   x_old->close();
 
   for (unsigned int it = 0; it < get_maximum_iterations(); it++)
   {
-    *x_old += get_solution_vector();
+    *x_old = get_solution_vector();
 
-    if (it > 0)
-      set_solution_vector(*x_old);
     
     double x_old_norm = x_old->l2_norm();
     {
@@ -68,23 +68,25 @@ RelaxationMethod::do_solve(void)
            << get_name() << " (Relaxation): iteration " << it << endl
            << "  correction (max norm):  " << norm << endl
            << "  relative error (l2)  :  " << rel_err << endl;
-      cout << "--------------------------------------------------------------->>>>"
+      cout << "------------------------------------------------------------->>>>"
         << endl;
     }
+
+    draw_point(it, rel_err);
 
     // check for the difference between old and new solutions
     if ((norm > get_absolute_tolerance()) && (rel_err > get_relative_tolerance()))
       converged = false;
 
-    if (converged)
-    {
-      get_solution_vector() += *x_old;
-      break;
-    }
-
     get_solution_vector().scale(_relax);
+    get_solution_vector() += *x_old;
+
+    if (converged)
+      break;
 
   }
+
+  close_xmonitor();
 }
 
 

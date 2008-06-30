@@ -6,6 +6,8 @@
 #include "SimulationInterface.h"
 
 
+class XMonitor;
+
 //! Interface for self-consistent calculations
 class SelfconsistentSolver : public SimulationInterface
 {
@@ -110,8 +112,35 @@ class SelfconsistentSolver : public SimulationInterface
     bool get_monitor(void) const;
 
 
-    //! Get xmonitor
-    bool get_xmonitor(void) const;
+    //! Get the pointer to the X monitor
+    /*!
+     * Use this with caution, especially don't forget to check for NULL pointer
+     */
+    XMonitor* get_xmonitor(void);
+
+
+    //! Opens the X monitor
+    /*!
+     * Call this in do_solve() at the beginning
+     */
+    void open_xmonitor(void);
+
+
+    //! Closes the X monitor
+    /*!
+     * Call this at the end of do_solve()
+     */
+    void close_xmonitor(void);
+
+
+    //! Add a point to the X monitor
+    /*!
+     * \param iteration the iteration number
+     * \param err the error
+     * \param logarithm if \c true, plot \c log10(error)
+     */
+    void draw_point(double iteration, double error, bool logarithm = true);
+
 
 
     //! Get an iterator for the first simulation
@@ -157,8 +186,8 @@ class SelfconsistentSolver : public SimulationInterface
     //! Screen output of the convergence process 
     bool _monitor;
     
-    //! Graphical output of the convergence process 
-    bool _xmonitor;
+    //! The X monitor
+    XMonitor* _xmonitor;
 
 };
 
@@ -171,7 +200,8 @@ inline
 SelfconsistentSolver::SelfconsistentSolver(void)
   : _max_it(5),
     _rel_tol(1e-3),
-    _abs_tol(1e-3)
+    _abs_tol(1e-3),
+    _xmonitor(NULL)
 {
 }
 
@@ -212,11 +242,12 @@ SelfconsistentSolver::get_monitor(void) const
 
 
 inline 
-bool
-SelfconsistentSolver::get_xmonitor(void) const
+XMonitor*
+SelfconsistentSolver::get_xmonitor(void)
 {
   return _xmonitor;
 }
+
 
 
 inline

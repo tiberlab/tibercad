@@ -2,6 +2,7 @@
 
 #include "SelfconsistentSolver.h"
 #include "Control.h"
+#include "XMonitor.h"
 
 using namespace std;
 
@@ -57,9 +58,9 @@ SelfconsistentSolver::parse_options(void)
   _rel_tol = opts.get_option("rel_tolerance", _rel_tol);
   _abs_tol = opts.get_option("abs_tolerance", _abs_tol);
   _monitor = opts.get_option("monitor", false);
-  _xmonitor = opts.get_option("xmonitor", false);
 
 }
+
 
 
 void
@@ -225,5 +226,40 @@ SelfconsistentSolver::build_integrated_quantities_description(
     _simulations[i]->get_integrated_quantities_description(names, leg, desc);
     legend.insert(legend.end(), leg.begin(), leg.end());
     description.insert(description.end(), desc.begin(), desc.end());
+  }
+}
+
+
+
+
+void
+SelfconsistentSolver::open_xmonitor(void)
+{
+  if (get_options().get_option("xmonitor", false))
+  {
+    _xmonitor = XMonitor::create(string(get_options().get_option("name", "?"))
+        + ": convergence monitor");
+    _xmonitor->set_axis_labels("iteration nr.", "Logarithm of relative error");
+  }
+}
+
+
+void
+SelfconsistentSolver::close_xmonitor(void)
+{
+  delete _xmonitor;
+  _xmonitor = NULL;
+}
+
+
+void
+SelfconsistentSolver::draw_point(double iteration, double error, bool logarithm)
+{
+  if (_xmonitor != NULL)
+  {
+    if (logarithm)
+      error = log10(error);
+
+    _xmonitor->draw_point(iteration, error);
   }
 }
