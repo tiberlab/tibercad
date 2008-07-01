@@ -47,6 +47,7 @@ DriftDiffusionProperties::_DOS_factor = pow(2.0 * M_PI * Constants::me /
 DriftDiffusionProperties::DriftDiffusionProperties(void)
   : equilibrium_fermi_level(0.0),
     _is_inhomogeneous(false),
+    _use_predictor(false),
     _pd(NULL),
     _elem(NULL),
     _statistics(TiberCad::BOLTZMANN),
@@ -134,6 +135,8 @@ DriftDiffusionProperties::do_init(void)
     for (int i = 0; i < qd.size(); i++)
       _holes.add_quantum_density(qd[i]);
   }
+
+  _use_predictor = get_parameter("use_density_predictor", _use_predictor);
 
 
   _is_dielectric = get_parameter("dielectric", _is_dielectric);
@@ -456,28 +459,30 @@ DriftDiffusionProperties::calculate_densities(void)
       Ec - _pd->electric_potential, -_pd->fermi_e, kTe);
   _pd->electron_density = _electrons.get_particle_density();
   _pd->electron_density_derivative = _electrons.get_particle_density_derivative();
-  /*
-  if (_electrons.has_quantum_density() && has_solution())
+  if (_electrons.is_quantum_density() && has_solution() && use_predictor())
   {
-    //_electrons.use_quantum_density(false);
-    //double dens = _electrons.get_particle_density();
-    //_pd->electron_density_derivative = _electrons.get_particle_density_derivative();
-    //_pd->electron_density_derivative = 0.0;
-    //_electrons.set_classical_parameters(cb.effective_DOS,
-    //    Ec - _pd->old_electric_potential, -_pd->old_fermi_e, kTe);
-    //double old_dens = _electrons.get_particle_density();
-    //if (old_dens > 1e-6)
+    _electrons.use_quantum_density(false);
+    double dens = _electrons.get_particle_density();
+    _pd->electron_density_derivative = _electrons.get_particle_density_derivative();
+    _electrons.set_classical_parameters(cb.effective_DOS,
+        Ec - _pd->old_electric_potential, -_pd->old_fermi_e, kTe);
+    double old_dens = _electrons.get_particle_density();
+    if (old_dens > 1e-6)
     {
-      double arg = (_pd->electric_potential - _pd->old_electric_potential) / kTe;
-      double fac = max(0.1, min(10.0, exp(arg)));
-      //double fac = max(0.1, min(10.0, dens / old_dens));
-      //_pd->electron_density_derivative *= _pd->electron_density / old_dens;
+      double fac = max(0.1, min(10.0, dens / old_dens));
+      _pd->electron_density_derivative *= _pd->electron_density / old_dens;
       _pd->electron_density *= fac;
-      _pd->electron_density_derivative = _pd->electron_density / kTe;
     }
     _electrons.use_quantum_density(true);
+    /* simpler but slower convergence
+    {
+     double arg = (_pd->electric_potential - _pd->old_electric_potential) / kTe;
+     double fac = max(0.1, min(10.0, exp(arg)));
+     _pd->electron_density *= fac;
+     _pd->electron_density_derivative = _pd->electron_density / kTe;
+    }
+    */
   }
-  */
 
   _holes.set_element_and_point(_elem, _coord);
   _holes.set_classical_parameters(vb.effective_DOS,
@@ -485,6 +490,30 @@ DriftDiffusionProperties::calculate_densities(void)
   _pd->hole_density = _holes.get_particle_density();
   // TODO where to put the sign?
   _pd->hole_density_derivative = -_holes.get_particle_density_derivative();
+  if (_holes.is_quantum_density() && has_solution() && use_predictor())
+  {
+    _holes.use_quantum_density(false);
+    double dens = _holes.get_particle_density();
+    _pd->hole_density_derivative = -_holes.get_particle_density_derivative();
+    _holes.set_classical_parameters(vb.effective_DOS,
+        -Ev + _pd->old_electric_potential, _pd->old_fermi_h, kTh);
+    double old_dens = _holes.get_particle_density();
+    if (old_dens > 1e-6)
+    {
+      double fac = max(0.1, min(10.0, dens / old_dens));
+      _pd->hole_density_derivative *= _pd->hole_density / old_dens;
+      _pd->hole_density *= fac;
+    }
+    _holes.use_quantum_density(true);
+    /* simpler but slower convergence
+    {
+     double arg = (_pd->electric_potential - _pd->old_electric_potential) / kTe;
+     double fac = max(0.1, min(10.0, exp(arg)));
+     _pd->electron_density *= fac;
+     _pd->electron_density_derivative = _pd->electron_density / kTe;
+    }
+    */
+  }
  
 }
 

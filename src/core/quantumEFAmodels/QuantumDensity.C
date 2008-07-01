@@ -180,7 +180,7 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
       MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
       const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
       
-      unsigned int    real_space_density_size = real_space_density.size();
+      unsigned int real_space_density_size = real_space_density.size();
       
 
       results.resize(real_space_density_size);
@@ -227,7 +227,8 @@ void  QuantumDensity::build_integrated_quantities (const std::set< std::string >
 {
 
  
-
+  // I think this is not implemented. Commented out due to problems
+  /*
   if (variables.find("quantum_density") != variables.end() )
   {
    
@@ -241,10 +242,8 @@ void  QuantumDensity::build_integrated_quantities (const std::set< std::string >
     
    
     values[0] *= coeff;
-   
-   
-    
   }
+  */
 }
 
 //==========================================================================================//
@@ -252,15 +251,17 @@ void QuantumDensity::build_integrated_quantities_description(const std::set<std:
 							     std::vector<std::string>& legend, 
 							     std::vector<std::string>& description)
 {
-  legend.resize(1);
-  legend[0] = "density";
- 
+  // see above
+  /*
   if (variables.find("quantum_density") != variables.end() )
   {
+    legend.resize(1);
+    legend[0] = "density";
+ 
     description.resize(1);
     description[0] = "Density 1/cm^3";
   }
-
+  */
 }
 //=======================================================================================//
 void QuantumDensity::do_init( )

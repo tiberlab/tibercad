@@ -24,6 +24,8 @@ class Elem;
  * \f]
  * where \f$N_{eff}\f$ is the effective density of states, \f$E_F\f$ the
  * electro-chemical potential and \f$E\f$ the particle energy.
+ * The function \f$f\f$ can be the exponential or the Fermi function of order 1/2,
+ * according to carrier statistics.
  *
  */
 class ParticleDensity
@@ -63,6 +65,8 @@ class ParticleDensity
      * use a quantum density calculation. There can be more than one 
      * quantum density calculation for the same particle as one could consider
      * eg. different valleys using different models.
+     *
+     * \param name the name of the quantum density calculation
      */
     void add_quantum_density(const std::string& name);
 
@@ -77,6 +81,10 @@ class ParticleDensity
 
 
     // Do we have a quantum density?
+    bool is_quantum_density(void) const;
+
+
+    // Do we want to use a quantum density?
     bool has_quantum_density(void) const;
 
 
@@ -106,15 +114,27 @@ class ParticleDensity
     //! Get particle density
     /*!
      * set_classical_parameters() and set_element_and_point() have to be
-     * called before this one
+     * called before this one.
+     *
+     * \attention {
+     *   The particle density is calculated only once for given parameters.
+     *   A call to a method that changes parameters will force a
+     *   recalculation at the next call.
+     * }
      */
     double get_particle_density(void);
 
 
-    //! Get particle density
+    //! Get particle density derivative
     /*!
      * set_classical_parameters() and set_element_and_point() have to be
      * called before this one
+     *
+     * \attention {
+     *   The particle density derivative is calculated only once for given
+     *   parameters. A call to a method that changes parameters will force a
+     *   recalculation at the next call.
+     * }
      */
     double get_particle_density_derivative(void);
 
@@ -132,6 +152,10 @@ class ParticleDensity
 
     //! Do or don't use quantum density
     bool _use_quantum;
+
+
+    //! \c true if the last calculated density is a quantum density
+    bool _is_quantum;
 
 
     //! The quantum density calculation(s)
@@ -186,6 +210,9 @@ class ParticleDensity
 
 
     //! Calculate the particle density
+    /*!
+     * Always call this after calculate_density()
+     */
     void calculate_density_derivative(void);
 
 
@@ -265,6 +292,15 @@ void
 ParticleDensity::use_quantum_density(bool use_quantum)
 {
   _use_quantum = use_quantum;
+  _density = _density_derivative = -1.0;
+}
+
+
+inline
+bool
+ParticleDensity::is_quantum_density(void) const
+{
+  return (_use_quantum & _is_quantum);
 }
 
 
@@ -274,6 +310,7 @@ ParticleDensity::has_quantum_density(void) const
 {
   return _use_quantum;
 }
+
 
 
 

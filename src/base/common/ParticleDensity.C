@@ -15,6 +15,7 @@ ParticleDensity::ParticleDensity(double particle_charge,
 : _particle_charge(particle_charge),
   _statistics(statistics),
   _use_quantum(false),
+  _is_quantum(false),
   _density_id(INVALID_ID),
   _elem(NULL),
   _density(-1.0),
@@ -171,7 +172,7 @@ ParticleDensity::calculate_density(void)
    * - either _use_quantum is false
    * - or quantum_density() returns false
    */
-  if (!_use_quantum || !quantum_density())
+  if (!_use_quantum || !(_is_quantum = quantum_density()))
   {
     switch (_statistics)
     {
@@ -191,7 +192,9 @@ ParticleDensity::calculate_density(void)
 void
 ParticleDensity::calculate_density_derivative(void)
 {
-  if (!_use_quantum || !quantum_density_derivative())
+  _density_derivative = 0.0;
+  //if (!_use_quantum || !quantum_density_derivative())
+  if (!is_quantum_density())
   {
     switch (_statistics)
     {

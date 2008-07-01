@@ -109,6 +109,8 @@ SimulationInterface::create(const string& type,
       sim = Sweep::create();
     else if (type_name == "thermal")
       sim = MacroHeatBalance::create();
+    else if (type_name == "selfconsistent")
+      sim = RelaxationMethod::create();
     else if (type_name == "selfconsistent_relaxation")
       sim = RelaxationMethod::create();
     else if (type_name == "selfconsistent_broyden")

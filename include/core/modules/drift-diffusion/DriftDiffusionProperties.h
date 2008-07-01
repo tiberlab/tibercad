@@ -849,6 +849,11 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     bool has_solution(void) const;
 
 
+    //! Tells if we should use a predictor for quantum densities
+    bool use_predictor(void) const;
+
+
+
   private:
 
     //! The interface to the lattice temperature simulation
@@ -862,6 +867,8 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     //! \c true if we should assume inhomogeneous band parameters
     bool _is_inhomogeneous;
 
+    //! \c true if we should use a predictor for quantum densities
+    bool _use_predictor;
 
     //! If we are doing an equilibrium calculation
     const DriftDiffusion* _driftdiffusion;
@@ -1392,6 +1399,12 @@ DriftDiffusionProperties::has_solution(void) const
   return _driftdiffusion->is_solved();
 }
 
+inline
+bool
+DriftDiffusionProperties::use_predictor(void) const
+{
+  return _use_predictor;
+}
 
 
 inline

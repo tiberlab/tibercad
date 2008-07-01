@@ -237,8 +237,7 @@ SelfconsistentSolver::open_xmonitor(void)
 {
   if (get_options().get_option("xmonitor", false))
   {
-    _xmonitor = XMonitor::create(string(get_options().get_option("name", "?"))
-        + ": convergence monitor");
+    _xmonitor = XMonitor::create(get_name() + ": convergence monitor");
     _xmonitor->set_axis_labels("iteration nr.", "Logarithm of relative error");
   }
 }

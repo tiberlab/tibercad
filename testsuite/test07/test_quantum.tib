@@ -14,7 +14,7 @@ $Device
 
   Region  buffer
   {
-    reg_numb = (2, 4)
+    reg_numb = (2, 3)
     mat = AlGaAs
     x = 0.3
 
@@ -29,7 +29,7 @@ $Device
 
   Region  buffer
   {
-    reg_numb = (3, 5)
+    reg_numb = (4, 5)
     mat = AlGaAs
     x = 0.3
 
@@ -201,14 +201,9 @@ $Solver
     nonlin_abs_tol = 1e-10
     nonlin_step_tol = 1e-9
     ls_max_step = 4
-    #ls_type = none
     discretization = fem
     integration_order = 2
-    #pc_type = composite
     ksp_type = bcgs
-    #quasi_equilibrium = (cathode, anode)
-
-    #current_integration_method = surfint
   }
 
 
@@ -275,21 +270,23 @@ $Solver
     mesh_order = FIRST
 
     initial_eigenstates_number = 20
-    analitic = true
+    analytic = true
   }
 
 
   selfconsistent
   {
-    flavour = broyden
-    #flavour = relaxation
-    simulations = (dd,dens_el)
-    relaxation_factor = 0.1
+    #flavour = broyden
+    flavour = relaxation
+    #simulations = (dd,dens_el)
+    simulations = (dens_el,dd)
+    #relaxation_factor = 0.1
     history_length = 5
     omega_0 = 0.5
     max_iterations = 100
     abs_tolerance = 5e-4
-    rel_tolerance = 1e-2
+    rel_tolerance = 1e-9
+    monitor = true
   }
 
 }
@@ -301,6 +298,7 @@ $Physics
   driftdiffusion
   {
     electron_quantum_density = dens_el
+    use_density_predictor = true
     statistics = FD
     strain_simulation = str
   }
@@ -335,7 +333,7 @@ $Simulation
   mesh_units = 1e-9
   dimension = 1
   temperature = 300
-  solve = (str, selfconsistent)
+  solve = (str, dd, selfconsistent)
   resultpath = output
   output_format = grace
   plot = (strain, polarization, Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, Current, EigenFunctions, EigenEnergy, EnergyLevels,quantum_density)
