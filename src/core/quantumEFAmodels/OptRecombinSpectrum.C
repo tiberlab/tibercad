@@ -292,7 +292,14 @@ void OptRecombinSpectrum::parse_options( )
     InitFailedException("Optical Spectrum: polarization vector must be defined\n");
 
 
-
+ std::string  job_name = mod_spectrum.get_option("process","recombination");
+  if (job_name == "recombination")
+    job = RECOMBINATION;
+  else if (job_name == "absorption")
+    job = ABSORPTION;
+ 
+  else
+    throw InitFailedException( "OptSpectrum: Incorrect process: " + job_name );  
 
 
 
