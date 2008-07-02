@@ -36,6 +36,13 @@ class OptRecombinSpectrum : public KspaceIntegration
 
 
  public:
+
+  enum JobKind
+  {
+     RECOMBINATION  = 0, //<! spontaneous recombination spectrum
+     ABSORPTION = 1 //<! optical absorbtion spectrum
+  };
+
   struct options 
   {
     double Emin;//<! left boundary of spectrum [eV] 
@@ -84,7 +91,9 @@ class OptRecombinSpectrum : public KspaceIntegration
   //! Mesh for spectrum [eV];
   Mesh* _energy_mesh;
 
-
+  //! spectrum type to calculate
+  JobKind job;
+  
  protected:
 
 
