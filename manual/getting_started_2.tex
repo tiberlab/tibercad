@@ -57,6 +57,13 @@ xmax = xd + Ls - d;
 These other convenient variables are used to parametrize the most relevant geometrical features, such as channel length, oxide thickness,  and  so on. 
 
 
+\begin{itemize}
+\item 
+Geometrical \textbf{Points} and \textbf{Lines} are  defined to design the device  structure; the  fourth parameter in \textbf{Point} assignement is  the   characteristic length associated to that point: this  is  an  essential feature to control the  mesh density and refine it where  necessary (usually n the channel region).   
+  \end{itemize}
+
+ \textbf{N.B.}: In a 2D simulation it is  assumed that the geometrical model is  restricted to  the  \textbf{\textit{xy}-plane (z = 0)}. Any  other geometrical orientation  could  give impredictable results. 
+
 \begin{verbatim}
 Point(1) = {0, -h, 0, lsub};
 Point(2) = {0, 0, 0, lc};
@@ -77,33 +84,39 @@ Line(13) = {7,6};
 ..........................
 \end{verbatim}
 
+
+
 \begin{itemize}
 \item 
-Geometrical \textbf{Points} and \textbf{Lines} are  defined to design the device  structure; the  fourth parameter in \textbf{Point} assignement is  the   characteristic length associated to that point: this  is  an  essential feature to control the  mesh density and refine it where  necessary (usually n the channel region).     \end{itemize}
-
- 
+Definition of a surface: first a \textbf{line loop} is composed, listing all the  lines constituting the  boundary of the surface; then this  line  loop is  assigned to a  \textbf{Plane Surface} object (this  procedure can be alternatively performed throgh the  graphical interface).                  \end{itemize}          
 
 \begin{verbatim}
 Line Loop(40) = {28,2,-34,33,8,29,-31,-30,-6,1};
 Plane Surface(41) = {40};
 ..........................
 \end{verbatim}
+
+                                                                                                                                                                                                                   
+
 \begin{itemize}
 \item 
-Definition of a surface: first a \textbf{line loop} is composed, listing all the  lines constituting the  boundary of the surface; then this  line  loop is  assigned to a  \textbf{Plane Surface} object (this  procedure can be alternatively performed throgh the  graphical interface).                       \end{itemize}                                                                                                                                                                                                                             
+Definition of  the \textbf{Physical surfaces} : each of them is composed by one or more geometrical \textbf{Plane Surface}. For example, \textbf{Physical surface} 2 comprises the two separated contact regions, while \textbf{Physical surface} 3 corresponds to the  oxide  region.
 
-
+The  \textbf{Physical surfaces} are the 2D Physical regions of  the  mesh and will  be  assigned to the related \TiberCAD{} regions through the keyword \textit{mesh\_regions}  (see   Step  )                                                                                                                   \end{itemize}    
 
 \begin{verbatim}
 Physical Surface(1) = {41}; // n-Si
 Physical Surface(2) = {44,47}; // n+-Si
 Physical Surface(3) = {46}; // SiO2
 \end{verbatim}
+
+                                                               
+
 \begin{itemize}
 \item 
-Definition of  the \textbf{Physical surfaces} : each of them is composed by one or more geometrical \textbf{Plane Surface}. For example, \textbf{Physical surface} 2 comprises the two separated contact regions, while \textbf{Physical surface} 3 corresponds to the  oxide  region.
-
-The  \textbf{Physical surfaces} are the 2D Physical regions of  the  mesh and will  be  assigned to the related \TiberCAD{} regions through the keyword \textit{mesh\_regions}  (see   Step  )                                                                                                                   \end{itemize}                                                                   
+Definition of the  \textbf{Phisical Lines}: In this 2D simulation, 1D physical regions are used to carry information about boundary condition regions. In  other word, each \textbf{Phisical Line} corresponds to a boundary condition (a contact in the case of a driftdiffusion calculation): thus Physical Line 1 refers to source contact, P.L. 2 to gate contact, P.L. 3 to drain contact.
+The numerical identifications of these \textbf{Phisical Lines} will be  asigned to \TiberCAD{} \textbf{BC regions} by means of the \textit{BC\_reg\_numb} instruction.
+\end{itemize}
 
 
 \begin{verbatim}
@@ -111,11 +124,7 @@ Physical Line(1) = {13}; // source
 Physical Line(2) = {39,38}; // gate
 Physical Line(3) = {19}; // drain
 \end{verbatim}
-\begin{itemize}
-\item 
-Definition of the  \textbf{Phisical Lines}: In this 2D simulation, 1D physical regions are used to carry information about boundary condition regions. In  other word, each \textbf{Phisical Line} corresponds to a boundary condition (a contact in the case of a driftdiffusion calculation): thus Physical Line 1 refers to source contact, P.L. 2 to gate contact, P.L. 3 to drain contact.
-The numerical identifications of these \textbf{Phisical Lines} will be  asigned to \TiberCAD{} \textbf{BC regions} by means of the \textit{BC\_reg\_numb} instruction.
-\end{itemize}
+
 
 In fig.  \ref{geo}  the  obtained  geometrical  model is  shown.
 

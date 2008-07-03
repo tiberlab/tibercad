@@ -47,6 +47,10 @@ Point(2) = {L, 0, 0, d};
 In the definition of a geometrical point, the three first expressions inside the braces on the right hand side give the three X, Y and Z coordinates of the point ; the last expression \textit{(d)} sets the \textbf{characteristic mesh length} at that point, that is the \textbf{size} of a mesh element, defined as the length of the segment for a line segment, the radius of the circumscribed circle for a triangle and the radius of the circumscribed sphere for a tetrahedron.
 
 Thus, the smaller is the value of \textit{d,} the greater is the mesh density close to that point. The size of the mesh elements will then be computed in GMSH by linearly interpolating these characteristic lengths in the whole mesh.
+\vspace{12pt}
+
+
+\textbf{N.B.}: In a 1D simulation it is  assumed that the geometrical model is  restricted to  the  \textbf{\textit{x} axis}. Any  other geometrical orientation  could  give     impredictable results.
 
 \begin{itemize}
 	\item Definition of geometrical entity \textbf{Line}:
