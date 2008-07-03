@@ -14,6 +14,7 @@ MaterialInterface::MaterialInterface(void)
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::NEUMANN);
   set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::NEUMANN);
   set_type(DriftDiffusionDefs::FERMIH, ElectricalContact::NEUMANN);
+  is_real_contact(false);
 }
 
 

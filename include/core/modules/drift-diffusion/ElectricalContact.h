@@ -111,6 +111,11 @@ class ElectricalContact : public BoundaryProperties, public Variable
     void set_zero_derivative_bc(DriftDiffusionDefs::Variable variable);
 
 
+    //! Tells if this is a real current carrying contact
+    bool is_real_contact(void) const;
+
+
+
   protected:
 
     //! This class is not intended for direct use
@@ -151,6 +156,10 @@ class ElectricalContact : public BoundaryProperties, public Variable
     double get_contact_voltage_drop() const;
 
 
+    //! Set if this is a real current carrying contact
+    void is_real_contact(bool is_real_contact);
+
+
   private:
 
     BCType _potential_type;
@@ -175,6 +184,10 @@ class ElectricalContact : public BoundaryProperties, public Variable
 
     // A pointer to the DriftDiffusionProperties object
     DriftDiffusionProperties *_properties;
+
+
+    //! \c true if this is a real contact
+    bool _real_contact;
 };
 
 
@@ -188,7 +201,8 @@ class ElectricalContact : public BoundaryProperties, public Variable
 inline
 ElectricalContact::ElectricalContact(void)
   : _boundary_value(0.0),
-    _properties(NULL)
+    _properties(NULL),
+    _real_contact(true)
 {
 }
 
@@ -358,6 +372,21 @@ ElectricalContact::get_derivatives_of_normal_derivative(
   dc = std::vector<double>(3, 0.0);
 }
 
+
+inline
+void
+ElectricalContact::is_real_contact(bool is_real_contact)
+{
+  _real_contact = is_real_contact;
+}
+
+
+inline
+bool
+ElectricalContact::is_real_contact(void) const
+{
+  return _real_contact;
+}
 
 
 #endif // _ELECTRICALCONTACT_H_

@@ -1093,8 +1093,12 @@ DriftDiffusion::do_init(void)
     BoundaryProperties* bd = it->second->get_boundary_properties(get_id());
     if (bd != NULL)
     {
-      _boundary_currents[it->second] = 0.0;
-      _voltages[it->second] = 0.0;
+      ElectricalContact* contact = dynamic_cast<ElectricalContact*>(bd);
+      if (contact->is_real_contact())
+      {
+        _boundary_currents[it->second] = 0.0;
+        _voltages[it->second] = 0.0;
+      }
     }
   }
 }
@@ -2148,7 +2152,12 @@ DriftDiffusion::calculate_currents_rstf(void)
 
         Boundary* boundary = node_ids[n];
         if (boundary != NULL)
-          _boundary_currents[boundary] += j * dphi[n][qp];
+        {
+          ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
+                boundary->get_boundary_properties(get_id()));
+          if (contact->is_real_contact())
+            _boundary_currents[boundary] += j * dphi[n][qp];
+        }
 
       }
     } // end loop over quadrature points
@@ -2390,8 +2399,14 @@ DriftDiffusion::calculate_currents_surfint(void)
           Real cond_h = Constants::e * sc->get_hole_mobility() *
             sc->get_hole_density();
 
-          _boundary_currents[boundary] = -phi0 *
-            (cond_e * (dEfn + Pn * dT) + cond_h * (dEfp + Pp * dT));
+          if (boundary != NULL)
+          {
+            ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
+                boundary->get_boundary_properties(get_id()));
+            if (contact->is_real_contact())
+              _boundary_currents[boundary] = -phi0 *
+                (cond_e * (dEfn + Pn * dT) + cond_h * (dEfp + Pp * dT));
+          }
         }
       }
     } // end loop over elem sides
@@ -2675,8 +2690,6 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
   {
     phi = n_vars;
     legend[n_vars] = "electric_potential";
-    n_vars++;
-    legend[n_vars] = "old_electric_potential";
     n_vars++;
   }
 
@@ -3036,7 +3049,6 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
         if (phi != -1)
         {
           local[id + phi] += u / conn;
-          local[id + phi + 1] += phi0 * system->get_vector("old_sol")(dof_indices_u[n]) / conn;
         }
 
         if (Efn != -1)
