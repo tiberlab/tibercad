@@ -14,7 +14,6 @@
 #include "ConstantMobility.h"
 #include "DopingDependentMobility.h"
 #include "FieldDependentMobility.h"
-#include "TestMobility.h"
 
 #include "ThermoelectricPower.h"
 
@@ -22,6 +21,8 @@
 #include "SemiconductorModel.h"
 
 #include "ExcitonModel.h"
+
+#include "DSSCModel.h"
 #endif
 
 
@@ -121,8 +122,8 @@ PhysicalModelInterface::create(const string& name,
       mod = SimpleSemiconductorModel::create();
     else if (name == "dd_default")
       mod = SemiconductorModel::create();
-    else if (name == "dd_mob_test")
-      mod = TestMobility::create();
+    else if (name == "dssc_default")
+      mod = DSSCModel::create();
     else if (name == "ex_simple")
       mod = ExcitonModel::create();
     else if (name == "stiffness_zb")

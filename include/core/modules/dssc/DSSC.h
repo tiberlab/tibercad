@@ -1,0 +1,419 @@
+// $Id$
+
+#ifndef _DSSC_H_
+#define _DSSC_H_
+
+#include "SimulationInterface.h"
+#include "SimulationOptions.h"
+#include "Device.h"
+#include "SolverException.h"
+
+// Libmesh includes
+#include "libmesh_common.h"
+#include "enum_order.h"
+
+
+// C++ includes
+#include <vector>
+#include <set>
+#include <map>
+
+
+// forward declarations
+//class Device;
+class Boundary;
+class Mesh;
+class Elem;
+class Point;
+class Node;
+class EquationSystems;
+
+
+template<typename T> class DenseMatrix;
+template<typename T> class NumericVector;
+template<typename T> class SparseMatrix;
+
+
+//! The main class to perform DSSC calculations
+class DSSC : public SimulationInterface
+{
+
+  public:
+
+
+    //! The variables that can be provided
+    enum Variables
+    {
+      UNKNOWN = 0,
+      ELPOTENTIAL,      /*!< electric potential */
+      QFERMIE           /*!< electron electro-chemical potential */
+    };
+
+
+    //! Constructor
+    DSSC(void);
+    
+    //! Destructor
+    virtual ~DSSC(void);
+
+    
+    //! Create an DSSC object
+    static DSSC* create(void);
+
+    
+    /*! \copydoc SimulationInterface::create_physical_model() */
+    virtual PhysicalModel*
+      create_physical_model(const ModelOptions& options,
+          const Material* mat) const throw (ModelErrorException);
+
+
+    /*! \copydoc SimulationInterface::create_boundary_model() */
+    virtual BoundaryProperties*
+      create_boundary_model(const ModelOptions& options) const
+      throw (ModelErrorException);
+ 
+    
+    //! Get the mesh
+    /*!
+     * \return a constant reference to the simulation mesh
+     */
+    Mesh& get_mesh(void) const;
+    
+    
+    //! Makes a first guess of the equilibrium potential
+    /**
+     * It sets every node to its equilibrium potential.
+     */
+    void guess_equilibrium(void);
+
+
+    //! Get the number of nonlinear iterations needed for the solution
+    unsigned int get_n_nonlinear_iterations(void) const;
+
+    
+    //! Get the final residual norm of the solution
+    double get_final_residual(void) const;
+
+    
+    //! Get the boundary currents indexed by boundary descriptor
+    const std::map<const Boundary*, double>&
+      get_boundary_currents(void) const;
+
+
+
+  protected:
+
+
+    //! Initialize the equation system
+    /*!
+     * This has to be called before any call to methods which access the
+     * equation system object. So do it early.
+     */
+    virtual void do_init(void);
+
+
+    /*! \copydoc SimulationInterface::do_equilibrium() */
+    virtual void do_equilibrium(void);
+
+    
+    //! Solve the drift-diffusion problem.
+    /*!
+     * If adaptive mesh refinement was enabled for this solver
+     * run, it will be deactivated afterwards and has to be re-enabled
+     * explicitly.
+     */
+    virtual void do_solve(void);
+
+
+    /*! \copydoc SimulationInterface::do_print_info() */
+    virtual void do_print_info(void);
+
+    
+    /*! \copydoc SimulationInterface::parse_options() */
+    virtual void parse_options(void);
+
+    
+    /*! \copydoc SimulationInterface::solution_vector() */
+    virtual NumericVector<double>& solution_vector(void);
+    
+
+    /*! \copydoc SimulationInterface::build_nodal_results() */
+    virtual void build_nodal_results(const std::set<std::string>& variables,
+        std::vector<double>& results, std::vector<std::string>& legend);
+
+
+    /*! \copydoc SimulationInterface::build_elemental_results() */
+    virtual void build_elemental_results(const std::set<std::string>& variables,
+        std::vector<double>& results, std::vector<std::string>& legend);
+
+
+    /*! \copydoc SimulationInterface::build_integrated_quantities() */
+    virtual void build_integrated_quantities(
+        const std::set<std::string>& names,
+        std::vector<double>& values);
+
+
+    /*! \copydoc SimulationInterface::build_integrated_quantities_description()
+     */
+    virtual void build_integrated_quantities_description(
+        const std::set<std::string>& names,
+        std::vector<std::string>& legend,
+        std::vector<std::string>& description);
+
+
+    /*! \copydoc SimulationInterface::do_get_solution_vector() */
+    virtual NumericVector<double>& do_get_solution_vector(void);
+
+    
+    /*! \copydoc SimulationInterface::do_maximum_norm_of_difference() */
+    virtual double do_maximum_norm_of_difference(ID id);
+
+
+    /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
+    //virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
+
+
+    /*!
+     * \copydoc SimulationInterface::get_solution_secure(const Elem*,
+     * const std::vector<ID>&, std::vector<std::vector<double> >&)
+     */
+    //virtual void get_solution_secure(const Elem* elem,
+    //    const std::set<ID>& ids,
+    //    std::vector<std::map<ID, double> >& values);
+
+
+    /*!
+     * \copydoc SimulationInterface::get_solution_secure(const Elem*,
+     * const std::vector<Point>&, const std::vector<ID>&,
+     * std::vector<std::vector<double> >&)
+     */
+    //virtual void get_solution_secure(const Elem* elem,
+    //    const std::vector<Point>& p,
+    //    const std::set<ID>& ids,
+    //    std::vector<std::map<ID, double> >& solution);
+
+
+  private:
+   
+
+
+    // for nicer code
+    typedef std::map<const Boundary*, double> ContactData;
+    typedef std::map<const Node*, Boundary*> BoundaryNodeList;
+
+    //! A static reference to \c this
+    /*!
+     * This is needed during matrix assembly, which is a static method.
+     */
+    static DSSC* _this;
+
+    //! An internal pointer to the device
+    Device* _device;
+
+    /*!
+     * A list of nodes with dirichlet boundary conditions
+     */
+    BoundaryNodeList _dirichlet_nodes;
+
+
+    /*!
+     * If @c true, the equation system needs to be rebuilt
+     */
+    bool _rebuild_eq_system;
+
+   
+    //! The boundary currents
+    /*!
+     * Currents are calculated after each solve step.
+     */
+    ContactData _boundary_currents;
+
+
+    //! The voltages of the former solve step
+    ContactData _voltages;
+
+
+    //! The local density scaling
+    std::map<const Node*, std::vector<double> > local_scaling_;
+
+
+    //! If true, local density scaling should be applied
+    bool do_local_scaling_;
+
+    //! Calculate the local density scaling on each node
+    void build_local_scaling(void);
+
+    /**
+     * The number of nonlinear iterations needed
+     */
+    unsigned int _n_nonlinear_iterations;
+
+    /**
+     * The final residual norm
+     */
+    double _final_residual;
+
+
+    //! disable the copy constructor
+    DSSC(const DSSC& rhs);
+    
+    //! disable the copy assignment operator
+    DSSC& operator=(const DSSC& rhs);
+    
+
+    //! Parse the options which will not change between calls to solve()
+    void parse_const_options(void);
+  
+    
+    
+    //! Rebuild the equation system if needed
+    void rebuild_equation_system(void);
+
+    
+    /*!
+     * \brief Computes the scaling parameters according to the
+     * scaling type \p type
+     */
+    void compute_scaling(Scaling::ScalingType type = Scaling::UNITS);
+
+    
+    
+    //! Fills the dirichlet nodes data structure.
+    void find_dirichlet_nodes(void);
+
+
+    
+    //! Reset solver environment.
+    /*!
+     * Deletes only the \p EquationSystems object, without
+     * touching simulation voltages and solutions.
+     */
+    void reset_solver(void);
+
+
+
+    //! Cleanup solver environment.
+    /*!
+     * Deletes the \p EquationSystems object, the simulation voltages
+     * vector and the solution and variable vectors.
+     */
+    void cleanup_solver(void);
+
+
+    //! Solve using an iterative Gummel scheme
+    //void solve_gummel(void);
+
+
+    //! Do a Newton type iteration
+    void do_newton(void);
+
+
+    //! Calculate the terminal currents
+    /*!
+     * Calls \c calculate_currents_surfint() or
+     * calculate_currents_rstf()
+     */
+    void calculate_currents(void);
+
+
+    //! Calculate terminal currents
+    /*!
+     * Uses the Ramo-Shockley test functions and integrates over the
+     * volume.
+     *
+     * Assuming electron and hole generation-recombination terms to be
+     * equal, one can write:
+     * \f[\left(-\nabla(\mathbf{j}_n + \mathbf{j}_p), hl\right) = 
+     * -\int_\Omega h_l \nabla (\mathbf{j}_n + \mathbf{j}_p)\mathrm{d}V = 0\f]
+     * where \f$h_l|_{\Gamma_j} = \delta_{lj}, h_l \in H^1\f$ is the test
+     * function for the contact \it l
+     *
+     * Using Gauss in the scalar product, one gets
+     * \f[ 0 = - \int_{\partial\Omega}h_l(\mathbf{j}_n +
+     * \mathbf{j}_p)\mathrm{\mathbf{S}}
+     * + \int_\Omega \nabla h_l (\mathbf{j}_n +
+     * \mathbf{j}_p)\mathrm{d}V\f]
+     * The first term of the left hand side is exactly the terminal current
+     * of contact \it l due to our choice of the testfunction, therefore
+     * \f[ I_l = \int_\Omega \nabla h_l (\mathbf{j}_n +
+     * \mathbf{j}_p)\mathrm{d}V\f]
+     *
+     * In this implementation we choose the test function to be (where \it i
+     * is a node index and \f$\psi_i\f$ the FEM basis function associated with
+     * node \it i):
+     * \f[h_l = \sum_{i \in \Gamma_l}\psi_i\f]
+     */
+    void calculate_currents_rstf(void);
+
+
+    //! Assemble the residual vector or the jacobian matrix
+    /*!
+     * This method gets called from the underlying nonlinear solver
+     * library. It calls the real assembly routines.
+     */
+    static void assemble_system(const NumericVector<Number>& x,
+        NumericVector<Number>* residual,
+        SparseMatrix<Number>* jacobian);
+
+
+    //! Assembles the residual vector or the jacobian matrix
+    /*!
+     * Assembles the residual vector or the jacobian matrix for
+     * the equation system with @c Coupling T.
+     *
+     * This implementation uses standard FEM.
+     */
+    void do_assembly(const NumericVector<Number>& x,
+        NumericVector<Number>* residual,
+        SparseMatrix<Number>* jacobian);
+
+
+};
+
+
+//
+// inline member functions
+// 
+
+inline
+DSSC*
+DSSC::create(void)
+{
+  return new DSSC();
+}
+
+
+
+inline
+unsigned int
+DSSC::get_n_nonlinear_iterations(void) const
+{
+  return _n_nonlinear_iterations;
+}
+
+inline
+double
+DSSC::get_final_residual(void) const
+{
+  return _final_residual;
+}
+
+inline
+const std::map<const Boundary*, double>&
+DSSC::get_boundary_currents() const
+{
+  return _boundary_currents;
+}
+
+
+inline
+Mesh& 
+DSSC::get_mesh(void) const
+{
+  return _device->get_mesh();
+}
+
+
+
+
+#endif // _DSSC_H_

@@ -152,15 +152,6 @@ class DriftDiffusion : public SimulationInterface
     };
 
     
-    //! The implemented discretization schemes
-    enum DiscretizationScheme
-    {
-      FEM, /*!< Standard Finite Elements */
-      BOX, /*!< Box integration method */
-      SG   /*!< Box integration with Scharfetter-Gummel */
-    };
-
-
     //! How to calculate currents
     enum CurrentCalculation
     {
@@ -265,8 +256,6 @@ class DriftDiffusion : public SimulationInterface
          */
         int coupling;
 
-        //! The discretization method
-        DiscretizationScheme scheme;
 
         //! How to calculate currents
         CurrentCalculation current_calculation; 

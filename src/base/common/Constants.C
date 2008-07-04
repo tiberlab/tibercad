@@ -74,3 +74,7 @@ Constants::fine_structure_constant = (elementary_charge * elementary_charge)
 
 const double
 Constants::field_gauss_unit = 1/(1e6 /(c * 1e2));
+
+
+const double
+Constants::avogadro = 6.02214179e23;

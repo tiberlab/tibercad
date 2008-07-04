@@ -1,0 +1,150 @@
+// $Id$
+
+
+#include "DSSCModel.h"
+
+
+#include "elem.h"
+
+
+using namespace std;
+
+
+DSSCModel::DSSCModel(void)
+  : _porosity(0.5),
+    _is_electrolyte(false),
+    _is_TiO2(false),
+    _ke(0.0),
+    _k3(1.0),
+    _load(0.0)
+{
+}
+
+
+
+void
+DSSCModel::do_init(void)
+{
+
+  // prepare porosity for any situation
+  _porosity = get_parameter("porosity", _porosity);
+  if (!is_TiO2())
+    _porosity = 0.0;
+  else if (!is_electrolyte())
+    _porosity = 1.0;
+
+  _eq_conc.n = _porosity * get_options().get_option("n_e", _eq_conc.n);
+  // the following are given in Mol
+  double fac = (1.0 - _porosity) * Constants::avogadro / 1e3;
+  _eq_conc.I = get_options().get_option("n_I", _eq_conc.I) * fac;
+  _eq_conc.I3 = get_options().get_option("n_I3", _eq_conc.I3) * fac;
+  _eq_conc.C = _eq_conc.I + _eq_conc.I3;
+
+  double kT = Constants::k_B * SimulationOptions::T;
+  _mobility.n = get_parameter("mu_e", _mobility.n);
+  _mobility.I = get_parameter("D_I", _mobility.I) / kT;
+  _mobility.I3 = get_parameter("D_I3", _mobility.I3) / kT;
+  _mobility.C = get_parameter("D_C", _mobility.C) / kT;
+
+  _ke = get_parameter("k_e", _ke);
+  _k3 = get_parameter("k_3", _k3);
+
+  string load(get_options().get_option("load", ""));
+  check_and_register(load, _load);
+
+  _permittivity = get_parameter("permittivity", _permittivity);
+}
+
+
+double
+DSSCModel::get_variable_value(ID id)
+{
+  return _load;
+}
+
+
+void
+DSSCModel::set_variable_value(double value, ID id)
+{
+  _load = value;
+}
+
+
+
+void
+DSSCModel::reinit(const Elem* elem)
+{
+  if (_elem != elem) 
+  {
+    _elem = elem;
+    _pd.coordinates = elem->centroid();
+    _pd.kT = Constants::k_B * _lattice_temp.get_temperature(elem, _pd.coordinates);
+
+    prepare_element_data();
+  }
+}
+
+
+void
+DSSCModel::copy_from(const PhysicalModelInterface* rhs)
+{
+}
+
+
+void
+DSSCModel::do_print_info(void)
+{
+}
+
+
+void
+DSSCModel::calculate_densities(void)
+{
+  _pd.density_n = 0.0;
+  if (is_TiO2())
+  {
+    _electrons.set_element_and_point(_elem, _pd.coordinates);
+    _electrons.set_classical_parameters(_eq_conc.n,
+        -_pd.electric_potential, -_pd.fermi_n, _pd.kT);
+    _pd.density_n = _electrons.get_particle_density();
+  }
+
+  _pd.density_I = _pd.density_I3 = _pd.density_C = 0.0;
+  if (is_electrolyte())
+  {
+    _iodide.set_element_and_point(_elem, _pd.coordinates);
+    _iodide.set_classical_parameters(_eq_conc.I, -_pd.electric_potential,
+        -_pd.fermi_I, _pd.kT);
+    _pd.density_I = _iodide.get_particle_density();
+
+    _triiodide.set_element_and_point(_elem, _pd.coordinates);
+    _triiodide.set_classical_parameters(_eq_conc.I3, -_pd.electric_potential,
+        -_pd.fermi_I3, _pd.kT);
+    _pd.density_I3 = _triiodide.get_particle_density();
+
+    _cation.set_element_and_point(_elem, _pd.coordinates);
+    _cation.set_classical_parameters(_eq_conc.C, _pd.electric_potential,
+        _pd.fermi_C, _pd.kT);
+    _pd.density_C = _cation.get_particle_density();
+  }
+
+  // generation has to be calculated here
+  _pd.generation_rate = 0.0;
+  _pd.ionized_dye = 1e16;
+}
+
+
+
+void
+DSSCModel::calculate_net_recombination_rate(void)
+{
+  // rate
+  double r = _pd.density_n * sqrt(_pd.density_I3 / _pd.density_I);
+  double n_I_p3 = _eq_conc.I *_eq_conc.I * _eq_conc.I; 
+  double g = _eq_conc.n * _pd.density_I * sqrt(_eq_conc.I3 / n_I_p3);
+  _pd.recombination_rate = _ke * (r - g);
+  _pd.recombination_rate = 0.0;
+
+  // derivative TODO
+  _pd.recombination_rate_derivatives = vector<double>(4, 0.0);
+}

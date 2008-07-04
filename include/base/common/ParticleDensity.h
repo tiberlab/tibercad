@@ -1,5 +1,7 @@
 // $Id$
 
+#ifndef _PARTICLEDENSITY_H_
+#define _PARTICLEDENSITY_H_
 
 #include "TiberCad.h"
 #include "TypeDefs.h"
@@ -364,3 +366,6 @@ ParticleDensity::get_particle_density_derivative(void)
 
   return _density_derivative;
 }
+
+
+#endif // _PARTICLEDENSITY_H_

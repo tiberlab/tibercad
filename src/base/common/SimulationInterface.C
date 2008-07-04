@@ -9,6 +9,7 @@
 #ifndef BUILD_TIBER_MODULES
 #include "DriftDiffusion.h"
 #include "ExcitonTransport.h"
+#include "DSSC.h"
 #endif
 #include "Macrostrain.h"
 #include "EnvelopFunctionApprox.h"
@@ -94,6 +95,8 @@ SimulationInterface::create(const string& type,
 #ifndef BUILD_TIBER_MODULES
     if (type_name == "driftdiffusion")
       sim = DriftDiffusion::create();
+    else if (type_name == "dssc")
+      sim = DSSC::create();
     else if (type_name == "excitontransport")
       sim = ExcitonTransport::create();
     else if (type_name == "macrostrain")
