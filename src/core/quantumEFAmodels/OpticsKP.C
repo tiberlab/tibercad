@@ -279,14 +279,18 @@ void OpticsKP::do_solve()
   parse_options();
 
 
-
-  calculate_matrix();
+  if (job == BULKMATREL)
+    calculate_matrix_bulk(); //only for bulk
+  else
+    calculate_matrix(); //normal calculation
 
  
   unsigned int n1 =  _initial_eigen_state_numbers.size();
   unsigned int n2 =  _final_eigen_state_numbers.size();
-  
-  calculate_P_matrix_elements( );
+
+
+ 
+  calculate_P_matrix_elements(); 
  
 
   if (verbose > 0)
@@ -448,6 +452,12 @@ void OpticsKP::calculate_P_matrix_elements ( )
       for (unsigned i = 0; i < 3; i++)  P_matrix[i][i1][i2] = matr_elements[i];
     }
 
+
+
+}
+
+void OpticsKP::calculate_matrix_bulk(void)
+{
 
 
 }
