@@ -194,7 +194,7 @@ void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& var
 						std::vector<double>& results, std::vector<std::string>& legend)
 {
 
-  if (opt.job != BULKEIGENSTATES || opt.job != BULKDENSITY )
+  if (! (opt.job == BULKEIGENSTATES || opt.job == BULKDENSITY ) )
   {
 
     const set<string>::const_iterator varend(variables.end());
