@@ -15,6 +15,15 @@ class OpticsKP: public SimulationInterface
 {
  public:
 
+  //!control options
+  enum JobKind
+  {
+    MATREL = 0, //!< calculate matrix elements of momentum matrix
+    BULKMATREL = 1, //!<  calculate matrix elements of momentum matrix for bulk simulation
+  };
+
+
+
 
   typedef std::complex<double> Complex;
 
@@ -57,6 +66,14 @@ class OpticsKP: public SimulationInterface
   //! calculate Px, Py and Pz matrixes 
   void calculate_matrix(void);
 
+
+
+  //! calculate Px, Py and Pz matrixes for bulk 
+  void calculate_matrix_bulk(void);
+
+
+
+ 
 
  
 
@@ -168,8 +185,11 @@ class OpticsKP: public SimulationInterface
   std::vector<unsigned int> psivar;
   
 
-//! Mesh for spectrum [eV];
+  //! Mesh for spectrum [eV];
   Mesh* _energy_mesh;
+
+  //!defines which job has to be done
+  JobKind job;
 
 
  protected:

@@ -128,6 +128,19 @@ void OpticsKP::parse_options()
 
 
 
+
+
+
+  std::string  job_name = mod_opt.get_option("job","matrix_elements");
+
+  if (job_name == "matrix_elements")
+    job = MATREL;
+  else if (job_name == "bulk_matrix_elements")
+    job = BULKMATREL;
+  else
+    throw InitFailedException( "OpticsKP: Incorrect job: " + job_name); 
+
+
 }
 
 //==============================================//
@@ -279,29 +292,7 @@ void OpticsKP::do_solve()
   if (verbose > 0)
     cout << "done\n" << flush;
 
-  //temporary_solution----------------------------------------------------
-/*
-  std::ostringstream os3;
-  os3 << "output/optics.out";
-	  
-  std::ofstream out_optics(  (os3.str()).c_str()   );
-	  
-  for (int i = 0; i < n1; i++) 
-    for (int j = 0; j < n2; j++) 
-    {
-      out_optics << i << "   " << j <<  "  " ;
-      for (int p = 0; p < 3; p++) 
-      {
-	cerr << p << "  " << i  <<"   " << j   <<  P_matrix[p][i][j] << "\n";
 
-	out_optics << P_matrix[p][i][j].real() << "   " <<  P_matrix[p][i][j].imag() <<"         " ;
-      }
-      out_optics << "\n";
-    }
-*/
-  //------------------------------------------------------------------------
-
- 
  
   if (verbose > 2)
   {
