@@ -33,6 +33,33 @@ class DSSCModel : public PhysicalModel, public Variable
 {
     
   public:
+      
+    //! The thermodynamic equilibrium concentrations
+    struct EquilibriumConcentrations
+    {
+      double n;
+      double I;
+      double I3;
+      double C;
+    };
+
+
+    //! The mobilities
+    struct Mobilities
+    {
+      //! The electron mobility
+      double n;
+
+      //! The iodide mobility
+      double I;
+
+      //! The triiodide mobility
+      double I3;
+
+      //! The cation mobility
+      double C;
+    };
+
 
        
     //! A default (empty) destructor.
@@ -202,6 +229,10 @@ class DSSCModel : public PhysicalModel, public Variable
     
     //! Get the net recombination rate
     double get_net_recombination_rate(void) const;
+       
+    
+    //! Get the recombination rate
+    double get_recombination_rate(void) const;
       
     
     //! Get the net recombination rate derivatives
@@ -249,35 +280,12 @@ class DSSCModel : public PhysicalModel, public Variable
     //std::vector<double>& get_temperature_at_nodes(void);
 
 
+    //! Get the equilibrium concentrations
+    const EquilibriumConcentrations& get_equilibrium_concentrations(void) const;
+
+
 
   protected:
-      
-    //! The thermodynamic equilibrium concentrations
-    struct EquilibriumConcentrations
-    {
-      double n;
-      double I;
-      double I3;
-      double C;
-    };
-
-
-    //! The mobilities
-    struct Mobilities
-    {
-      //! The electron mobility
-      double n;
-
-      //! The iodide mobility
-      double I;
-
-      //! The triiodide mobility
-      double I3;
-
-      //! The cation mobility
-      double C;
-    };
-
 
     struct PointData
     {
@@ -714,6 +722,15 @@ DSSCModel::get_generation_rate(void) const
 
 inline
 double
+DSSCModel::get_recombination_rate(void) const
+{
+  return _pd.recombination_rate;
+}
+
+
+
+inline
+double
 DSSCModel::get_net_recombination_rate(void) const
 {
   return (_pd.recombination_rate - _pd.generation_rate);
@@ -816,6 +833,13 @@ DSSCModel::get_load(void) const
   return _load;
 }
 
+
+inline
+const DSSCModel::EquilibriumConcentrations&
+DSSCModel::get_equilibrium_concentrations(void) const
+{
+  return _eq_conc;
+}
 
 
 #endif /* _DSSCMODEL_H_ */

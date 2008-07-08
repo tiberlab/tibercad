@@ -221,6 +221,16 @@ class DSSC : public SimulationInterface
      */
     bool _rebuild_eq_system;
 
+    //! Do only Poisson if true
+    bool _poisson_only;
+
+    //! Tells if we are doing only Poisson
+    bool poisson_only(void) const;
+
+
+    //! The type of scaling
+    Scaling::ScalingType _scaling_type;
+
    
     //! The boundary currents
     /*!
@@ -414,6 +424,12 @@ DSSC::get_mesh(void) const
 }
 
 
+inline
+bool
+DSSC::poisson_only(void) const
+{
+  return _poisson_only;
+}
 
 
 #endif // _DSSC_H_

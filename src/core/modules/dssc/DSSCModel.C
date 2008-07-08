@@ -12,8 +12,8 @@ using namespace std;
 
 DSSCModel::DSSCModel(void)
   : _porosity(0.5),
-    _is_electrolyte(false),
-    _is_TiO2(false),
+    _is_electrolyte(true),
+    _is_TiO2(true),
     _ke(0.0),
     _k3(1.0),
     _load(0.0)
@@ -25,6 +25,8 @@ DSSCModel::DSSCModel(void)
 void
 DSSCModel::do_init(void)
 {
+  _is_electrolyte = get_parameter("electrolyte", _is_electrolyte);
+  _is_TiO2 = get_parameter("TiO2", _is_TiO2);
 
   // prepare porosity for any situation
   _porosity = get_parameter("porosity", _porosity);
@@ -32,6 +34,8 @@ DSSCModel::do_init(void)
     _porosity = 0.0;
   else if (!is_electrolyte())
     _porosity = 1.0;
+
+  _cation.set_particle_charge(1.0);
 
   _eq_conc.n = _porosity * get_options().get_option("n_e", _eq_conc.n);
   // the following are given in Mol
@@ -129,8 +133,8 @@ DSSCModel::calculate_densities(void)
   }
 
   // generation has to be calculated here
-  _pd.generation_rate = 0.0;
-  _pd.ionized_dye = 1e16;
+  _pd.generation_rate = get_options().get_option("generation", 0.0);
+  _pd.ionized_dye = _pd.generation_rate / _k3;
 }
 
 
@@ -138,13 +142,18 @@ DSSCModel::calculate_densities(void)
 void
 DSSCModel::calculate_net_recombination_rate(void)
 {
-  // rate
-  double r = _pd.density_n * sqrt(_pd.density_I3 / _pd.density_I);
+  double sqrt_I3_I = sqrt(_pd.density_I3 / _pd.density_I);
   double n_I_p3 = _eq_conc.I *_eq_conc.I * _eq_conc.I; 
-  double g = _eq_conc.n * _pd.density_I * sqrt(_eq_conc.I3 / n_I_p3);
+  double sqrt_I3_I_eq = sqrt(_eq_conc.I3 / n_I_p3);
+  // rate
+  double r = _pd.density_n * sqrt_I3_I;
+  double g = _eq_conc.n * _pd.density_I * sqrt_I3_I_eq;
   _pd.recombination_rate = _ke * (r - g);
-  _pd.recombination_rate = 0.0;
 
-  // derivative TODO
+  // derivative
   _pd.recombination_rate_derivatives = vector<double>(4, 0.0);
+  _pd.recombination_rate_derivatives[0] = _ke * sqrt_I3_I;
+  _pd.recombination_rate_derivatives[1] = -_ke * (0.5 * r / _pd.density_I +
+     _eq_conc.n * sqrt_I3_I_eq);
+  _pd.recombination_rate_derivatives[2] = 0.5 * r / _pd.density_I3;
 }
