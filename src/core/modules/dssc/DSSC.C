@@ -234,7 +234,6 @@ DSSC::compute_scaling(Scaling::ScalingType type)
   get_scaling().set_length_scaling(x0 * mesh_units);
   get_scaling().set_mobility_scaling(mu0);
   get_scaling().set_density_scaling(C0);
-  cerr << "C0 = " << C0 << endl;
 }
 
 
