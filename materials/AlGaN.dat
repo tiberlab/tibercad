@@ -18,4 +18,9 @@ bow_Eg_L = 0.8
 bow_Pz = -0.021
 
 
+#Atomistic structure informations
+
+specie_1=AlGa
+specie_2=N
+n_basis_specie=2
 
