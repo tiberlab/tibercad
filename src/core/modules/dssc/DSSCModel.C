@@ -16,7 +16,7 @@ DSSCModel::DSSCModel(void)
     _is_TiO2(true),
     _ke(0.0),
     _k3(1.0),
-    _load(0.0)
+    _generation(0.0)
 {
 }
 
@@ -53,24 +53,24 @@ DSSCModel::do_init(void)
   _ke = get_parameter("k_e", _ke);
   _k3 = get_parameter("k_3", _k3);
 
-  string load(get_options().get_option("load", ""));
-  check_and_register(load, _load);
-
   _permittivity = get_parameter("permittivity", _permittivity);
+
+  string gen = get_parameter("generation", "");
+  _generation = check_and_register(gen, _generation);
 }
 
 
 double
 DSSCModel::get_variable_value(ID id)
 {
-  return _load;
+  return _generation;
 }
 
 
 void
 DSSCModel::set_variable_value(double value, ID id)
 {
-  _load = value;
+  _generation = value;
 }
 
 
@@ -98,6 +98,10 @@ DSSCModel::copy_from(const PhysicalModelInterface* rhs)
 void
 DSSCModel::do_print_info(void)
 {
+  cerr << "n_e_0 = " << _eq_conc.n << "  mu_n = " << _mobility.n << endl;
+  cerr << "n_I_0 = " << _eq_conc.I << "  mu_I = " << _mobility.I << endl;
+  cerr << "n_I3_0 = " << _eq_conc.I3 << "  mu_I3 = " << _mobility.I3 << endl;
+  cerr << "n_C_0 = " << _eq_conc.C << "  mu_C = " << _mobility.C << endl;
 }
 
 
@@ -133,7 +137,7 @@ DSSCModel::calculate_densities(void)
   }
 
   // generation has to be calculated here
-  _pd.generation_rate = get_options().get_option("generation", 0.0);
+  _pd.generation_rate = _generation;
   _pd.ionized_dye = _pd.generation_rate / _k3;
 }
 

@@ -197,6 +197,11 @@ throw (ModelErrorException)
 void
 DriftDiffusion::compute_scaling(Scaling::ScalingType type)
 {
+
+  // we calculate in cm!
+  double mesh_units = 100 * get_scaling().get_calc_mesh_units();
+  get_scaling().set_calc_mesh_units(mesh_units);
+
   if (type == Scaling::NONE)
   {
     get_scaling().set_scaling_type(type);
@@ -204,12 +209,10 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     get_scaling().set_length_scaling(1);
     get_scaling().set_mobility_scaling(1);
     get_scaling().set_density_scaling(1);
+
+    // We don't have to do anything in this case
     return;
   }
-
-  // we calculate in cm!
-  double mesh_units = 100 * get_scaling().get_calc_mesh_units();
-  get_scaling().set_calc_mesh_units(mesh_units);
 
   
   // the scaling parameters should never be zero
@@ -621,6 +624,8 @@ DriftDiffusion::do_solve(void)
   // TODO 
   same_potentials = false;
   
+  // TODO does the following make sense?
+/*
   if (equilibrium)
     get_options().coupling = POISSON;
   else if (same_potentials)
@@ -638,7 +643,7 @@ DriftDiffusion::do_solve(void)
     }
     get_options().coupling = coupling;
   }
-
+*/
 
   if (do_local_scaling_)
     build_local_scaling();
@@ -4863,7 +4868,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           // calculate densities etc.
           sc->set_coordinates(elem->point(s));
           sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-          sc->set_coordinates(elem->point(s));
           
           RealGradient e_field(0.0);
           double grad_en = 0.0;

@@ -127,8 +127,9 @@ TiberNonlinLS::do_solve(void)
       norm_res = rhs->l2_norm();
       norm_du = du.linfty_norm();
 
-      if (norm_du > get_divergence_tol() * norm_du_old)
-        throw (SolveFailedException("Line search diverged"));
+      // TODO this seems not to be a brilliant idea
+      //if (norm_du > get_divergence_tol() * norm_du_old)
+      //  throw (SolveFailedException("Line search diverged"));
 
       //cerr << "       ||r(x)|| = " << norm_rhs << ", ||r(x + " << 
       //  alpha << "*dx)|| = " << norm_res << endl;

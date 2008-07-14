@@ -115,6 +115,11 @@ throw (ModelErrorException)
 void
 DSSC::compute_scaling(Scaling::ScalingType type)
 {
+
+  // we calculate in cm!
+  double mesh_units = 100 * get_scaling().get_calc_mesh_units();
+  get_scaling().set_calc_mesh_units(mesh_units);
+
   if (type == Scaling::NONE)
   {
     get_scaling().set_scaling_type(type);
@@ -122,13 +127,11 @@ DSSC::compute_scaling(Scaling::ScalingType type)
     get_scaling().set_length_scaling(1);
     get_scaling().set_mobility_scaling(1);
     get_scaling().set_density_scaling(1);
+
+    // We don't have to do anything in this case
     return;
   }
 
-
-  // we calculate in cm!
-  double mesh_units = 100 * get_scaling().get_calc_mesh_units();
-  get_scaling().set_calc_mesh_units(mesh_units);
 
   // the scaling parameters should never be zero
   // they are in any case positive, so it will
@@ -1816,7 +1819,7 @@ DSSC::build_nodal_results(const set<string>& variables,
   // TODO if some elements were coarsened, does this still work??
   const unsigned int nn  = mesh.n_nodes();
   
-  legend.resize(variables.size());
+  legend.reserve(variables.size());
 
   // for each possible variable we set the vector index
   // -1 means, the variable should not be plotted
@@ -2091,7 +2094,7 @@ void
 DSSC::build_elemental_results(const set<string>& variables,
     vector<double>& results, vector<string>& legend)
 {
-/*
+
   // we only do something if we are on processor 0
   // TODO parallelize
   if (libMesh::processor_id() != 0)
@@ -2112,75 +2115,40 @@ DSSC::build_elemental_results(const set<string>& variables,
   const unsigned int dim = mesh.mesh_dimension();
   const unsigned int nn  = mesh.n_active_elem();
   
-  legend.resize(variables.size());
+  legend.reserve(variables.size());
 
   // for each possible variable we set the vector index
   // -1 means, the variable should not be plotted
   unsigned int n_vars = 0;
   const set<string>::const_iterator varend(variables.end());
 
-  int BandEdges = -1;
-  if (variables.find("BandEdges") != varend)
-  {
-    const Elem* elem = *mesh.active_elements_begin();
-    
-    DSSCModel* sc =
-      dynamic_cast<DSSCModel*>(
-          device.get_material(elem->subdomain_id())->get_model(get_id()));
-
-    assert(sc != NULL); 
-
-    sc->reinit(elem);
-    sc->calculate_equilibrium_properties();
-
-    const vector<double>& cb = sc->get_conduction_bands();
-    const vector<double>& vb = sc->get_valence_bands();
-    int n_bands = cb.size() + vb.size();
-    legend.resize(legend.size() + n_bands);
-    BandEdges = n_vars;
-
-    for (unsigned int i = 0; i < cb.size(); i++)
-    {
-      ostringstream os;
-      os << "CB" << i;
-      legend[n_vars] = os.str();
-      n_vars++;
-    }
-
-    for (unsigned int i = 0; i < vb.size(); i++)
-    {
-      ostringstream os;
-      os << "VB" << i;
-      legend[n_vars] = os.str();
-      n_vars++;
-    }
-  }
 
   int EField = -1;
   if (variables.find("EField") != varend)
   {
-    legend.resize(legend.size() + dim);
+    legend.reserve(legend.size() + dim);
     EField = n_vars;
     switch (dim)
     {
       case 3:
-        legend[EField + 2] = "E_z";
+        legend.insert(legend.begin(), "E_z");
         n_vars++;
       case 2:
-        legend[EField + 1] = "E_y";
+        legend.insert(legend.begin(), "E_y");
         n_vars++;
-        legend[EField + dim] = "modE";
+        legend.insert(legend.end(), "modE");
         n_vars++;
       default:
-        legend[EField] = "E_x";
+        legend.insert(legend.begin(), "E_x");
         n_vars++;
     }
   }
 
+/*
   int GradFermiE = -1;
-  if (variables.find("GradFermiE") != varend)
+  if (variables.find("GradFermi") != varend)
   {
-    legend.resize(legend.size() + dim);
+    legend.reserve(legend.size() + 4 * dim);
     GradFermiE = n_vars;
     switch (dim)
     {
@@ -2197,72 +2165,47 @@ DSSC::build_elemental_results(const set<string>& variables,
         n_vars++;
     }
   }
+*/
 
-  int GradFermiH = -1;
-  if (variables.find("GradFermiH") != varend)
-  {
-    legend.resize(legend.size() + dim);
-    GradFermiH = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[GradFermiH + 2] = "grad_fermi_h_z";
-        n_vars++;
-      case 2:
-        legend[GradFermiH + 1] = "grad_fermi_h_y";
-        n_vars++;
-        legend[GradFermiH + dim] = "mod_grad_fermi_h";
-        n_vars++;
-      default:
-        legend[GradFermiH] = "grad_fermi_h_x";
-        n_vars++;
-    }
-  }
 
   int Jn = -1;
-  if (variables.find("eCurrent") != varend)
+  if (variables.find("ParticleFlux") != varend)
   {
-    legend.resize(legend.size() + dim);
+    legend.reserve(legend.size() + 4 * (dim + 1));
+    vector<string>::iterator it(legend.end());
     Jn = n_vars;
+    int shift = (dim == 1) ? dim : dim + 1;
     switch (dim)
     {
       case 3:
-        legend[Jn + 2] = "Jn_z";
+        legend.insert(it, "Jn_z");
+        //legend.insert(it + shift, "JI_z");
+        //legend.insert(it + 2 * shift, "JI3_z");
+        //legend.insert(it + 3 * shift, "JC_z");
+        --it;
         n_vars++;
       case 2:
-        legend[Jn + 1] = "Jn_y";
+        legend.insert(it, "Jn_y");
+        //legend.insert(it + shift, "JI_y");
+        //legend.insert(it + 2 * shift, "JI3_y");
+        //legend.insert(it + 3 * shift, "JC_y");
+        --it;
         n_vars++;
-        legend[Jn + dim] = "modJn";
+        legend.insert(legend.end(), "modJn");
+        //legend.insert(it + shift, "modJI");
+        //legend.insert(it + 2 * shift, "modJI3");
+        //legend.insert(it + 3 * shift, "modJC");
         n_vars++;
       default:
-        legend[Jn] = "Jn_x";
-        n_vars++;
+        legend.insert(it, "Jn_x");
+        legend.insert(legend.end(), "JI_x");
+        legend.insert(legend.end(), "JI3_x");
+        legend.insert(legend.end(), "JC_x");
+        n_vars += 4;
     }
   }
 
-
-  int Jp = -1;
-  if (variables.find("hCurrent") != varend)
-  {
-    legend.resize(legend.size() + dim);
-    Jp = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[Jp + 2] = "Jp_z";
-        n_vars++;
-      case 2:
-        legend[Jp + 1] = "Jp_y";
-        n_vars++;
-        legend[Jp + dim] = "modJp";
-        n_vars++;
-      default:
-        legend[Jp] = "Jp_x";
-        n_vars++;
-    }
-  }
-
-
+/*
   int J = -1;
   if (variables.find("Current") != varend)
   {
@@ -2283,80 +2226,7 @@ DSSC::build_elemental_results(const set<string>& variables,
         n_vars++;
     }
   }
-
-  int dPn = -1;
-  if (variables.find("GradPn") != varend)
-  {
-    legend.resize(legend.size() + dim);
-    dPn = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[dPn + 2] = "GradTepE_z";
-        n_vars++;
-      case 2:
-        legend[dPn + 1] = "GradTepE_y";
-        n_vars++;
-        legend[dPn + dim] = "modGradTepE";
-        n_vars++;
-      default:
-        legend[dPn] = "GradTepE_x";
-        n_vars++;
-    }
-  }
-
-  int dPp = -1;
-  if (variables.find("GradPp") != varend)
-  {
-    legend.resize(legend.size() + dim);
-    dPp = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[dPp + 2] = "GradTepH_z";
-        n_vars++;
-      case 2:
-        legend[dPp + 1] = "GradTepH_y";
-        n_vars++;
-        legend[dPp + dim] = "modGradTepH";
-        n_vars++;
-      default:
-        legend[dPp] = "GradTepH_x";
-        n_vars++;
-    }
-  }
-
-  int Polariz = -1;
-  if ((variables.find("Polarization") != varend) ||
-      (variables.find("polarization") != varend))
-  {
-    legend.resize(legend.size() + dim);
-    Polariz = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[Polariz + 2] = "P_z";
-        n_vars++;
-      case 2:
-        legend[Polariz + 1] = "P_y";
-        n_vars++;
-        legend[Polariz + dim] = "modP";
-        n_vars++;
-      default:
-        legend[Polariz] = "P_x";
-        n_vars++;
-    }
-  }
-
-
-  int PDens = -1;
-  if (variables.find("PowerDensity") != varend)
-  {
-    PDens = n_vars;
-    legend[n_vars] = "power_density[W*cm^-3]";
-    n_vars++;
-  }
-
+*/
 
   legend.resize(n_vars);
 
@@ -2366,8 +2236,10 @@ DSSC::build_elemental_results(const set<string>& variables,
   double phi0 = get_scaling().get_potential_scaling();
 
   const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
+  const unsigned int en_var = system->variable_number("fermi_n");
+  const unsigned int eI_var = system->variable_number("fermi_I");
+  const unsigned int eI3_var = system->variable_number("fermi_I3");
+  const unsigned int eC_var = system->variable_number("fermi_C");
   
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
@@ -2376,7 +2248,9 @@ DSSC::build_elemental_results(const set<string>& variables,
 
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
+  vector<unsigned int> dof_indices_eI;
+  vector<unsigned int> dof_indices_eI3;
+  vector<unsigned int> dof_indices_eC;
 
   // element shape functions
   const vector<vector<Real> >& phi = fe->get_phi();
@@ -2401,7 +2275,9 @@ DSSC::build_elemental_results(const set<string>& variables,
 
     dof_map.dof_indices(elem, dof_indices_u, u_var);
     dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+    dof_map.dof_indices(elem, dof_indices_eI, eI_var);
+    dof_map.dof_indices(elem, dof_indices_eI3, eI3_var);
+    dof_map.dof_indices(elem, dof_indices_eC, eC_var);
 
     DSSCModel* sc =
       dynamic_cast<DSSCModel*>(
@@ -2415,101 +2291,62 @@ DSSC::build_elemental_results(const set<string>& variables,
     
   
     //Get the temperature given the element
-    vector<double> T_nodes = sc->get_temperature_at_nodes();
+    //vector<double> T_nodes = sc->get_temperature_at_nodes();
 
 
     unsigned int n_dofs = dof_indices_u.size();
     // get the solution values at the centroid
-    double en_x = 0.0, ep_x = 0.0;
-    double en_y = 0.0, ep_y = 0.0;
-    double en_z = 0.0, ep_z = 0.0;
-    double dT_x = 0.0;
-    double dT_y = 0.0;
-    double dT_z = 0.0;
     double u  = 0.0;
     double en = 0.0;
-    double ep = 0.0;
-    double oldu  = 0.0;
-    double olden = 0.0;
-    double oldep = 0.0;
-    double T = 0.0;
+    double eI = 0.0;
+    double eI3 = 0.0;
+    double eC = 0.0;
     RealGradient e_field(0);
+    RealGradient grad_en(0);
+    RealGradient grad_eI(0);
+    RealGradient grad_eI3(0);
+    RealGradient grad_eC(0);
     for (unsigned int i = 0; i < n_dofs; i++)
     {
-      en_x  += dphi[i][0](0) * solution(dof_indices_en[i]);
-      en_y  += dphi[i][0](1) * solution(dof_indices_en[i]);
-      en_z  += dphi[i][0](2) * solution(dof_indices_en[i]);
-      
-      ep_x  += dphi[i][0](0) * solution(dof_indices_ep[i]);
-      ep_y  += dphi[i][0](1) * solution(dof_indices_ep[i]);
-      ep_z  += dphi[i][0](2) * solution(dof_indices_ep[i]);
-      
-      dT_x  += dphi[i][0](0) * T_nodes[i];
-      dT_y  += dphi[i][0](1) * T_nodes[i];
-      dT_z  += dphi[i][0](2) * T_nodes[i];
-
-      T += phi[i][0] * T_nodes[i];
-
       u  += phi[i][0] * solution(dof_indices_u[i]);
       en += phi[i][0] * solution(dof_indices_en[i]);
-      ep += phi[i][0] * solution(dof_indices_ep[i]);
-      oldu  += phi[i][0] * solution(dof_indices_u[i]);
-      olden += phi[i][0] * solution(dof_indices_en[i]);
-      oldep += phi[i][0] * solution(dof_indices_ep[i]);
+      eI += phi[i][0] * solution(dof_indices_eI[i]);
+      eI3 += phi[i][0] * solution(dof_indices_eI3[i]);
+      eC += phi[i][0] * solution(dof_indices_eC[i]);
 
       e_field += dphi[i][0] * solution(dof_indices_u[i]);
+      grad_en += dphi[i][0] * solution(dof_indices_en[i]);
+      grad_eI += dphi[i][0] * solution(dof_indices_eI[i]);
+      grad_eI3 += dphi[i][0] * solution(dof_indices_eI3[i]);
+      grad_eC += dphi[i][0] * solution(dof_indices_eC[i]);
     }
     e_field *= -phi0;
-    en_x *= phi0;
-    en_y *= phi0;
-    en_z *= phi0;
-    ep_x *= phi0;
-    ep_y *= phi0;
-    ep_z *= phi0;
+    grad_en *= phi0;
+    grad_eI *= phi0;
+    grad_eI3 *= phi0;
+    grad_eC *= phi0;
 
     // prepare for calculating local properties
     sc->set_coordinates(elem->centroid());
 
-    sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-    sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldep);
+    sc->set_potentials(phi0 * u, phi0 * en, phi0 * eI, phi0 * eI3, phi0 * eC);
 
     sc->set_electric_field(e_field);
-    sc->set_grad_fermi_e(RealGradient(en_x, en_y, en_z));
-    sc->set_grad_fermi_h(RealGradient(ep_x, ep_y, ep_z));
+    sc->set_grad_fermi_n(grad_en);
+    sc->set_grad_fermi_I(grad_eI);
+    sc->set_grad_fermi_I3(grad_eI3);
+    sc->set_grad_fermi_C(grad_eC);
 
     sc->calculate_densities();
-
-    sc->calculate_mobilities();
-
-    sc->compute_thermoelectric_powers();
-
-    sc->compute_thermoelectric_power_gradient();
-
-    double Pn = sc->get_electron_thermoelectric_power();
-    double Pp = sc->get_hole_thermoelectric_power();
-    RealGradient GradPn = sc->get_electron_thermoelectric_power_gradient();
-    RealGradient GradPp = sc->get_hole_thermoelectric_power_gradient();
+    sc->calculate_net_recombination_rate();
 
       
-    double sigma_e = Constants::e * sc->get_electron_density() *
-      sc->get_electron_mobility();
-    double sigma_h = Constants::e * sc->get_hole_density() *
-      sc->get_hole_mobility();
+    double sigma_e = sc->get_density_n() * sc->get_mobility_n();
+    double sigma_I = sc->get_density_I() * sc->get_mobility_I();
+    double sigma_I3 = sc->get_density_I3() * sc->get_mobility_I3();
+    double sigma_C = sc->get_density_C() * sc->get_mobility_C();
 
     unsigned int id = n_vars * elem_number;
-
-    if (BandEdges != -1)
-    {
-      sc->calculate_equilibrium_properties();
-      const vector<double>& cb = sc->get_conduction_bands();
-      const vector<double>& vb = sc->get_valence_bands();
-
-      for (unsigned int i = 0; i < cb.size(); i++)
-        results[id + BandEdges + i] = cb[i];
-
-      for (unsigned int i = 0; i < vb.size(); i++)
-        results[id + BandEdges + cb.size() + i] = vb[i];
-    }
 
 
     if (EField != -1)
@@ -2526,8 +2363,8 @@ DSSC::build_elemental_results(const set<string>& variables,
       }
     }
 
-
-    if (GradFermiE != -1)
+/*
+    if (GradFermi != -1)
     {
       switch (dim)
       {
@@ -2540,148 +2377,43 @@ DSSC::build_elemental_results(const set<string>& variables,
           results[id + GradFermiE] = en_x;
       }
     }
-
-
-    if (GradFermiH != -1)
-    {
-      switch (dim)
-      {
-        case 3:
-          results[id + GradFermiH + 2] = ep_z;
-        case 2:
-          results[id + GradFermiH + 1] = ep_y;
-          results[id + GradFermiH + dim] =
-            sqrt(ep_x * ep_x + ep_y * ep_y + ep_z * ep_z);
-        default:
-          results[id + GradFermiH] = ep_x;
-      }
-    }
-
-
-    if (Polariz != -1)
-    {
-      const RealVectorValue& pol = sc->get_total_polarization();
-      switch (dim)
-      {
-        case 3:
-          results[id + Polariz + 2] = pol(2);
-        case 2:
-          results[id + Polariz + 1] = pol(1);
-          results[id + Polariz + dim] = pol.size();
-        default:
-          results[id + Polariz] = pol(0);
-      }
-    }
+*/
 
 
     if (Jn != -1)
     {
-      double jx = -sigma_e * (en_x + Pn * dT_x);
-      double jy = -sigma_e * (en_y + Pn * dT_y);
-      double jz = -sigma_e * (en_z + Pn * dT_z);
+      double jxn = sigma_e * grad_en(0);
+      double jyn = sigma_e * grad_en(1);
+      double jzn = sigma_e * grad_en(2);
+      double jxI = sigma_I * grad_eI(0);
+      //double jyI = sigma_I * grad_eI(1);
+      //double jzI = sigma_I * grad_eI(2);
+      double jxI3 = sigma_I3 * grad_eI3(0);
+      //double jyI3 = sigma_I3 * grad_eI3(1);
+      //double jzI3 = sigma_I3 * grad_eI3(2);
+      double jxC = -sigma_C * grad_eC(0);
+      //double jyC = -sigma_C * grad_eC(1);
+      //double jzC = -sigma_C * grad_eC(2);
       switch (dim)
       {
         case 3:
-          results[id + Jn + 2] = jz;
+          results[id + Jn + 2] = jzn;
         case 2:
-          results[id + Jn + 1] = jy;
-          results[id + Jn + dim] = sqrt(jx * jx + jy * jy + jz * jz);
+          results[id + Jn + 1] = jyn;
+          results[id + Jn + dim] = sqrt(jxn * jxn + jyn * jyn + jzn * jzn);
         default:
-          results[id + Jn] = jx;
+          results[id + Jn] = jxn;
+          results[id + Jn + 1] = jxI;
+          results[id + Jn + 2] = jxI3;
+          results[id + Jn + 3] = jxC;
       }
     }
-
-
-    if (Jp != -1)
-    {
-      double jx = -sigma_h * (ep_x + Pp * dT_x);
-      double jy = -sigma_h * (ep_y + Pp * dT_y);
-      double jz = -sigma_h * (ep_z + Pp * dT_z);
-      switch (dim)
-      {
-        case 3:
-          results[id + Jp + 2] = jz;
-        case 2:
-          results[id + Jp + 1] = jy;
-          results[id + Jp + dim] = sqrt(jx * jx + jy * jy + jz * jz);
-        default:
-          results[id + Jp] = jx;
-      }
-    }
-
-    if (J != -1)
-    {
-      double jx = -sigma_e * (en_x + Pn * dT_x) - sigma_h * (ep_x + Pp * dT_x);
-      double jy = -sigma_e * (en_y + Pn * dT_y) - sigma_h * (ep_y + Pp * dT_y);
-      double jz = -sigma_e * (en_z + Pn * dT_z) - sigma_h * (ep_z + Pp * dT_z);
-      switch (dim)
-      {
-        case 3:
-          results[id + J + 2] = jz;
-        case 2:
-          results[id + J + 1] = jy;
-          results[id + J + dim] = sqrt(jx * jx + jy * jy + jz * jz);
-        default:
-          results[id + J] = jx;
-      }
-    }
-
-
-    if (dPn != -1)
-    {
-      double dPn_x = GradPn(0);
-      double dPn_y = GradPn(1);
-      double dPn_z = GradPn(2);
-      switch (dim)
-      {
-        case 3:
-          results[id + dPn + 2] = dPn_z;
-        case 2:
-          results[id + dPn + 1] = dPn_y;
-          results[id + dPn + dim] = sqrt(dPn_x * dPn_x + dPn_y * dPn_y + dPn_z * dPn_z);
-        default:
-          results[id + dPn] = dPn_x;
-      }
-    }
-
-    if (dPp != -1)
-    {
-      double dPp_x = GradPp(0);
-      double dPp_y = GradPp(1);
-      double dPp_z = GradPp(2);
-      switch (dim)
-      {
-        case 3:
-          results[id + dPp + 2] = dPp_z;
-        case 2:
-          results[id + dPp + 1] = dPp_y;
-          results[id + dPp + dim] = sqrt(dPp_x * dPp_x + dPp_y * dPp_y + dPp_z * dPp_z);
-        default:
-          results[id + dPp] = dPp_x;
-      }
-    }
-
-
-    if (PDens != -1)
-    {
-      double jx = sigma_e * (en_x + Pn * dT_x) + sigma_h * (ep_x + Pp * dT_x);
-      double jy = sigma_e * (en_y + Pn * dT_y) + sigma_h * (ep_y + Pp * dT_y);
-      double jz = sigma_e * (en_z + Pn * dT_z) + sigma_h * (ep_z + Pp * dT_z);
-      double P = jx * e_field(0) + jy * e_field(1) + jz  * e_field(2);
-      results[id + PDens] = P;
-    }
-
 
     elem_number++;
   }
 
   results.resize(elem_number * n_vars);
 
-
-  
-
-
-*/
 }
 
 
@@ -3152,8 +2884,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
       {
         for (unsigned int j = 0; j < n_dofs; j++)
         {
-          long double laplace =
-            J * (dphi[i][qp] * dphi[j][qp]);
+          double laplace = J * (dphi[i][qp] * dphi[j][qp]);
           
           Kuu(i,j) += l2_eps * laplace / local_scaling[i][2];
           
@@ -3289,7 +3020,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             {
               KuI(i,j) -= phi0 * dI_dphi * phi_i_x_phi_j / local_scaling[i][2] / C0_I;
               KuI3(i,j) -= phi0 * dI3_dphi * phi_i_x_phi_j / local_scaling[i][2] / C0_I3;
-              KuC(i,j) -= phi0 * dC_dphi * phi_i_x_phi_j / local_scaling[i][2] / C0_C;
+              KuC(i,j) += phi0 * dC_dphi * phi_i_x_phi_j / local_scaling[i][2] / C0_C;
 
               if (!poisson_only())
               {
@@ -3298,17 +3029,17 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                   KnI(i,j) -= dR[2] * phi_i_x_phi_j / local_scaling[i][0] / R0_e;
                   KnI3(i,j) -= dR[3] * phi_i_x_phi_j / local_scaling[i][0] / R0_e;
 
-                  KIn(i,j) -= 1.5 * dR[1] * phi_i_x_phi_j / local_scaling[i][1] / R0_I;
-                  KI3n(i,j) += 0.5 * dR[1] * phi_i_x_phi_j / local_scaling[i][1] / R0_I3;
+                  KIn(i,j) += 1.5 * dR[1] * phi_i_x_phi_j / local_scaling[i][1] / R0_I;
+                  KI3n(i,j) -= 0.5 * dR[1] * phi_i_x_phi_j / local_scaling[i][1] / R0_I3;
                 }
 
-                KIu(i,j) -= 1.5 * dR[0] * phi_i_x_phi_j / local_scaling[i][1] / R0_I;
-                KII(i,j) -= 1.5 * dR[2] * phi_i_x_phi_j / local_scaling[i][1] / R0_I;
-                KII3(i,j) -= 1.5 * dR[3] * phi_i_x_phi_j / local_scaling[i][1] / R0_I;
+                KIu(i,j) += 1.5 * dR[0] * phi_i_x_phi_j / local_scaling[i][1] / R0_I;
+                KII(i,j) += 1.5 * dR[2] * phi_i_x_phi_j / local_scaling[i][1] / R0_I;
+                KII3(i,j) += 1.5 * dR[3] * phi_i_x_phi_j / local_scaling[i][1] / R0_I;
 
-                KI3u(i,j) += 0.5 * dR[0] * phi_i_x_phi_j / local_scaling[i][1] / R0_I3;
-                KI3I(i,j) += 0.5 * dR[2] * phi_i_x_phi_j / local_scaling[i][1] / R0_I3;
-                KI3I3(i,j) += 0.5 * dR[3] * phi_i_x_phi_j / local_scaling[i][1] / R0_I3;
+                KI3u(i,j) -= 0.5 * dR[0] * phi_i_x_phi_j / local_scaling[i][1] / R0_I3;
+                KI3I(i,j) -= 0.5 * dR[2] * phi_i_x_phi_j / local_scaling[i][1] / R0_I3;
+                KI3I3(i,j) -= 0.5 * dR[3] * phi_i_x_phi_j / local_scaling[i][1] / R0_I3;
               }
             }
           }
@@ -3339,8 +3070,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           Fn(i) -= net_recomb / R0_e;
 
           // TODO factors
-          FI(i) -= 1.5 * net_recomb / R0_I;
-          FI3(i) += 0.5 * net_recomb / R0_I3;
+          FI(i) += 1.5 * net_recomb / R0_I;
+          FI3(i) -= 0.5 * net_recomb / R0_I3;
         }
       }
 
@@ -3803,6 +3534,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               nodes_on_boundary_sides.end())
           {
             double val = contact->get_potential() / phi0;
+            //Ke.condense(i, i, -val, Fe);
             Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
           }
 /*

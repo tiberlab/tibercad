@@ -272,9 +272,6 @@ class DSSCModel : public PhysicalModel, public Variable
       { return _mobility.C; };
 
 
-    //! Get the load resistance
-    double get_load(void) const;
-
 
     //! Get all the nodal temperatures for a given element
     //std::vector<double>& get_temperature_at_nodes(void);
@@ -468,8 +465,8 @@ class DSSCModel : public PhysicalModel, public Variable
     double _k3;
 
 
-    //! The load
-    double _load;
+    //! The generation rate
+    double _generation;
 
 };
 
@@ -768,7 +765,7 @@ inline
 double
 DSSCModel::get_density_derivative_C(void) const
 {
-  return get_density_C() / _pd.kT;
+  return -get_density_C() / _pd.kT;
 }
 
 
@@ -825,13 +822,6 @@ DSSCModel::get_density_derivative_I3(void) const
   return get_density_I3() / _pd.kT;
 }
 
-
-inline
-double
-DSSCModel::get_load(void) const
-{
-  return _load;
-}
 
 
 inline

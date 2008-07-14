@@ -76,6 +76,7 @@ TiberLineSearch::parse_options(void)
   _nonlinear_atol = get_options().get_option("nonlin_abs_tol", _nonlinear_atol);
   _nonlinear_stol = get_options().get_option("nonlin_step_tol", _nonlinear_stol);
   _nonlinear_max_it = get_options().get_option("nonlin_max_it", _nonlinear_max_it);
+  _divergence_tol = get_options().get_option("divergence_tolerance", _divergence_tol);
 
   // setup the max line search step
   double sqrt_nn = std::sqrt((double) get_mesh().n_nodes() * n_vars());
