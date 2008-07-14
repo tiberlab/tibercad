@@ -3,23 +3,15 @@
 
 //--------------------------------------------------------------------------------------------
 
-#include <stdio.h>
-#include <cmath>
-#include <iostream>
-#include <vector>
-#include <fstream>
-#include <iomanip>
-#include <sstream>
-#include <map>
-#include <set>
 #include "Atom.h"
 #include "tensor.h"
 #include "ModelOptions.h"
 #include "TypeDefs.h"
 #include "Material.h"
+#include "Database.h"
 #include "Alloy.h"
 #include "mesh.h"
-#include "Database.h"
+
 
 //forward declaration
 class AtomisticStructure;
@@ -37,16 +29,16 @@ public:
 
   virtual   ~AtomisticGenerator(void);
 
-  static AtomisticGenerator* create(AtomisticStructure* const as, unsigned int dimension);
+  //! Initialize structure informations
+  void do_init();
 
-  //! Tolerance defined internally for casting and comparison
+ static AtomisticGenerator* create(AtomisticStructure* const as, unsigned int dimension);
+
+   //! Tolerance defined internally for casting and comparison
   static const double tol;
 
   //! Scaling value respect to TiberCAD units (usually Amstrong instead of micron)
   static const double scale;
-
-  //! Initialize structure informations
-  void do_init();
 
   //! Set primitive vectors, depending on lattice name
   void set_lattice_type(const std::string lattice_name);

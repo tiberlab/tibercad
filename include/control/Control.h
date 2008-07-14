@@ -10,6 +10,7 @@
 #include <map>
 #include <set>
 #include <iostream>
+#include <cassert>
 
 class Device;
 class Database;
@@ -180,6 +181,8 @@ class Control
     simulation_iterator simulations_end(void);
 
 
+  //! Get a constant reference to database
+  const Database& get_database(void) const;
 
   private:
 
@@ -362,5 +365,12 @@ Control::simulations_end(void)
 }
 
 
+inline
+const Database& 
+Control::get_database(void) const
+{
+  assert(_database != NULL);
+  return *_database;
+}
 
 #endif // _CONTROL_H_

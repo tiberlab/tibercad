@@ -5,14 +5,26 @@
 #include "AtomisticGenerator3D.h"
 #include "Macrostrain.h"
 
-const double AtomisticGenerator::tol = 1e-2;
+#include <stdio.h>
+#include <cmath>
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <map>
+#include <set>
 
-const double AtomisticGenerator::scale = 4;
 
 
 AtomisticGenerator::AtomisticGenerator(void) {};
 
 AtomisticGenerator::~AtomisticGenerator(void) {};
+
+
+const double AtomisticGenerator::tol = 1e-2;
+
+const double AtomisticGenerator::scale = 0.5;
 
 AtomisticGenerator* 
 AtomisticGenerator::create(AtomisticStructure* const as, unsigned int dimension)
@@ -33,9 +45,9 @@ void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string
 
   std::vector<Atom>::iterator basis_iterator = basis.begin();
 
-#ifdef DEBUG
-  std::cerr << "Printing structure to file...";
-#endif
+  //#ifdef DEBUG
+  //  std::cerr << "Printing structure to file...";
+  //#endif
 
   output_file.open(filename.c_str());
   output_file << basis.size() << std::endl << std::endl;
@@ -53,9 +65,9 @@ void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string
   
   output_file.close();
 
-#ifdef DEBUG
-  std::cerr << "done" << std::endl;
-#endif
+  //#ifdef DEBUG
+  //  std::cerr << "done" << std::endl;
+  //#endif
 
 };
 
@@ -85,6 +97,7 @@ AtomisticGenerator::do_init()
     
 
   std::cerr << "Calling parse_parameters() " <<std::endl;
+  std::cerr << "Region material is " << region_material->get_name() << std::endl;
   parse_parameters(region_material);
   std::cerr << "Ended parse_parameters()" << std::endl;
 
@@ -200,9 +213,9 @@ AtomisticGenerator::do_init()
   _as->set_atom_types(atom_types);
 
 
-#ifdef DEBUG	
-  std::cout << "Ending AtomisticGenerator::do_init() " << std::endl;
-#endif
+  //#ifdef DEBUG	
+  //  std::cout << "Ending AtomisticGenerator::do_init() " << std::endl;
+  //#endif
 
 };
 
@@ -211,9 +224,9 @@ AtomisticGenerator::do_init()
 void 
 AtomisticGenerator::change_specie(std::string preserve){
 
-#ifdef DEBUG 
-  std::cerr << "Cutting atoms and changing species...";
-#endif
+  //#ifdef DEBUG 
+  //  std::cerr << "Cutting atoms and changing species...";
+  //#endif
 
   std::set<ID> IDs = _as->get_IDset();
   std::map<unsigned int , std::string> assign;
@@ -224,7 +237,7 @@ AtomisticGenerator::change_specie(std::string preserve){
 
     const Material* mat = _as->get_device()->get_material( (*reg) );
 
-    GetPot data((mat->get_database()).get_data_file());
+    GetPot data = _as->getdata(mat);
   
     assign.clear();
 
@@ -396,9 +409,9 @@ AtomisticGenerator::change_specie(std::string preserve){
       
   }
 
-#ifdef DEBUG 
-  std::cerr << "done" << std::endl;
-#endif
+  //#ifdef DEBUG 
+  //  std::cerr << "done" << std::endl;
+  //#endif
 
 };
 
@@ -431,9 +444,9 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3, bool pr
   Tensor1 tmp_check, tmp_conv;
   bool check_boundary, check_boundary2;
 
-#ifdef DEBUG 
-  std::cerr << "Building a supercell sized " << l1 << " " << l2 << " " << l3 << " Amstrong" << std::endl;
-#endif
+  //#ifdef DEBUG 
+  //  std::cerr << "Building a supercell sized " << l1 << " " << l2 << " " << l3 << " Amstrong" << std::endl;
+  //#endif
  
   //Check values. l1,l2,l3 cannot be unwisely large (no more than (1um)^3)
   assert((l1*l2*l3) < 1e+12);
@@ -926,16 +939,21 @@ void AtomisticGenerator::set_prim_miller(Tensor2Gen cut_planes)
 void AtomisticGenerator::parse_parameters(const Material* mat)
 {
 
-  GetPot data((mat->get_database()).get_data_file());
   Atom tmp;
   Tensor1 T;
   int i, j;
 
+ std::cerr << "Calling getdata " << std::endl;
+
+ GetPot data = _as->getdata(mat);
+ 
+  std::cout << "Lattice type is " << data("lattice_type","none") << std::endl;
+  std::cout << "Lattice read from object is " << mat->get_structure() << std::endl;
 
   if ( !(mat->is_alloy()) )
     {
       //WORKS ONLY FOR BULK, EXTEND TO ALLOY
-      std::cerr << "Parsing parameters for bulk material" << mat->get_name() << std::endl;
+      std::cerr << "Parsing parameters for bulk material " << mat->get_name() << std::endl;
 
       _lattice_constant[0] = data("a", 0.0);
       if (_lattice_constant[0] == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
@@ -997,7 +1015,7 @@ void AtomisticGenerator::parse_parameters(const Material* mat)
       // At least one parental specie isa always defined, and it's needed 
       // for all kind of alloys 
      const Material* parent1 = Material::create(mat_alloy->get_name_A());
-     GetPot data_parent1((parent1->get_database()).get_data_file());
+     GetPot data_parent1 = _as->getdata(parent1);
 
       if (data("alloy_type", "none") == "ternary")
 	{
@@ -1008,8 +1026,9 @@ void AtomisticGenerator::parse_parameters(const Material* mat)
       // Get parent materials      
       const Material* parent2 = Material::create(mat_alloy->get_name_B());
 
-     GetPot data_alloy((mat_alloy->get_database()).get_data_file());
-     GetPot data_parent2((parent2->get_database()).get_data_file());
+     GetPot data_alloy = _as->getdata(mat_alloy);
+     GetPot data_parent2 = _as->getdata(parent2);
+
 
      ax_1 = data_parent1("a", 0.0);
       if (ax_1 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
@@ -1258,9 +1277,9 @@ unsigned int**  AtomisticGenerator::bond_map_gen(std::vector<Atom> &basis){
   unsigned int**  bond_map;
   double cutofftmp;
 
-#ifdef DEBUG
-  std::cout << "Building bond map" << std::endl;
-#endif
+  //#ifdef DEBUG
+  //  std::cout << "Building bond map" << std::endl;
+  //#endif
 
   set_cutoff();
  

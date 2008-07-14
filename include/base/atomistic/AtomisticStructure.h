@@ -6,16 +6,9 @@
 #include "TypeDefs.h"
 #include "Control.h"
 #include "Device.h"
+#include "Database.h"
+#include "getpot.h"
 #include "Atom.h"
-
-//C++ includes
-#include <vector>
-#include <set>
-#include<iostream>
-#include<fstream>
-#include<sstream>
-#include <map>
-
 
 
 //! Contains all needed data for an atomic structure
@@ -28,6 +21,7 @@ class AtomisticStructure
 {
 public:
 
+
   //! Constructor for AtomisticStructure class object
   /*!
    * A name to keep reference of structure must
@@ -39,11 +33,20 @@ public:
   //! Destructor for AtomisticStructure class object
   ~AtomisticStructure(void);
 
+ //! Create a material with name /c name
+  static AtomisticStructure* create(const std::string& name);
+
+  //! Create a material with name /c name and options /c options
+  static AtomisticStructure* create(const std::string& name, const ModelOptions& options);
+
   //! Get the structure options
   ModelOptions& get_options(void);
 
   //! Get the structure name
   const std::string& get_name(void);
+
+ //!Utility for parsing data from database (needed when Materials::init() has not been launched yet)
+  GetPot getdata(const Material* mat);
 
   //! Get set of regions covered by atomistic structure
   const std::set<std::string>& get_region(void);
@@ -51,13 +54,7 @@ public:
   //! Get set of regions covered by atomistic structure (IDs) 
   const std::set<ID>& get_IDset(void);
 
-  //! Create a material with name /c name
-  static AtomisticStructure* create(const std::string& name);
-
-  //! Create a material with name /c name and options /c options
-  static AtomisticStructure* create(const std::string& name, const ModelOptions& options);
-
-  //! Set the device we're working with
+   //! Set the device we're working with
   void set_device(Device* device);
 
   //! Get Device reference
@@ -79,9 +76,7 @@ public:
   //! Initialize the structure 
   void init(void); 
 
-  //! Get index of atom type
-  int get_type_index(const std::string&);
-  
+  //! Add a type to the atom types list
   void add_atom_type(const std::string&);
   
  //! Print structure to file (format depends on extension used)
@@ -105,22 +100,22 @@ public:
   // say if it is periodic
   bool is_periodic() const {return is_periodical;}
 
+  //! Get atom type index (types are stored in _atom_types)
+  int get_type_index   (  const std::string &   type    ) ;
+
   void set_periodicity_vectors(const Tensor2Gen& T);
 
   void clear_atom_types(){_atom_types.clear();};
 
   void set_atom_types(const std::set<std::string>& types);
 
-protected:
+private:
 
   //! Set the model options
   void set_options(const ModelOptions& options);
 
   //! Read structure from file
   void read_structure(const std::string& path);
-
-
-private:
 
   //! Number of atoms in structure
   int N_atoms; 
@@ -136,12 +131,10 @@ private:
   std::vector<Atom> _structure_atoms;
 
   //! Periodicity vectors in canonical basis
-  double _periodicity_vectors[3][3];
+  double _periodicity_vectors[9];
 
   //! Set of all atom types in structure
-  //std::vector<std::string> _atom_types;
   std::vector<std::string> _atom_types;
-
 
   //! Options for the structure (from Atomistic Region)
   ModelOptions _options;
@@ -171,16 +164,17 @@ private:
 
 
 inline
+ModelOptions& AtomisticStructure::get_options(void)
+{
+  return _options;
+}
+
+
+inline
 void AtomisticStructure::set_options(const ModelOptions& options)
 {
   _options = options;
 
-}
-
-inline
-ModelOptions& AtomisticStructure::get_options(void)
-{
-  return _options;
 }
 
 
@@ -214,7 +208,7 @@ const std::vector<std::string>& AtomisticStructure::get_atom_types(void)
 
 inline 
 double* AtomisticStructure::get_periodicity_vectors(void){
-  return &_periodicity_vectors[0][0];
+  return &_periodicity_vectors[0];
 }
 
 
