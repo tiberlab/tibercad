@@ -722,6 +722,13 @@ DriftDiffusionProperties::get_net_recombination_rate(ID id)
 void
 DriftDiffusionProperties::calculate_equilibrium_properties(void)
 {
+
+  // for a dielectric we don't need much...
+  if (is_dielectric())
+  {
+    equilibrium_fermi_level = 0.0;
+    return;
+  }
   
   // call this method to properly set conduction and valence band DOS
   // and energy
