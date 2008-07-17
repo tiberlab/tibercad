@@ -722,14 +722,6 @@ DriftDiffusionProperties::get_net_recombination_rate(ID id)
 void
 DriftDiffusionProperties::calculate_equilibrium_properties(void)
 {
-
-  // for a dielectric we don't need much...
-  if (is_dielectric())
-  {
-    equilibrium_fermi_level = 0.0;
-    return;
-  }
-  
   // call this method to properly set conduction and valence band DOS
   // and energy
   setup_band_edges();
@@ -823,7 +815,11 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 
   intrinsic_density = sqrt(_pd->electron_density) * sqrt(_pd->hole_density);
 
-  equilibrium_fermi_level =  y;
+  // for a dielectric we don't need much...
+  if (is_dielectric())
+    equilibrium_fermi_level = 0.0;
+  else
+    equilibrium_fermi_level =  y;
   
   // restore original coupling
   _coupling = coupling_bkp;
