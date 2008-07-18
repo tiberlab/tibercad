@@ -8,7 +8,7 @@
 	touching the contact
 
 2008-07-18 Auf der Maur
-	( ) change surface charge model so it can work at the interior
+	(DONE) change surface charge model so it can work at the interior
 
 2008-06-05 Auf der Maur
 	(PARTLY DONE) improve drift-diffusion for electron-only calculations

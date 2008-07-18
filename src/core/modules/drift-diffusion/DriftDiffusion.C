@@ -4591,15 +4591,17 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       // is this a boundary?
       if (environment.is_boundary(side))
       {
-        // we need to know if it is an outer boundary
-        bool true_boundary = environment.is_outer_boundary(side);
-
         Boundary* boundary = environment.get_boundary(side);
 
         ElectricalContact* contact = NULL;
         if (boundary != NULL)
           contact = dynamic_cast<ElectricalContact*>(
               boundary->get_boundary_properties(get_id()));
+
+        // we need to know if it is an outer boundary
+        bool true_boundary = environment.is_outer_boundary(side);
+        if (contact != NULL)
+          contact->is_outer_boundary(true_boundary);
 
 
         fe_face->reinit(elem, s);

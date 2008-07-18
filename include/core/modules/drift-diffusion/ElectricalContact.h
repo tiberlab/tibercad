@@ -115,6 +115,17 @@ class ElectricalContact : public BoundaryProperties, public Variable
     bool is_real_contact(void) const;
 
 
+    //! Tells if this is an outer boundary of the simulation domain
+    bool is_outer_boundary(void) const;
+
+
+    //! Tells if this is an internal boundary of the simulation domain
+    bool is_internal_boundary(void) const;
+
+
+    //! Set this contact as outer boundary
+    void is_outer_boundary(bool is_outer_boundary);
+
 
   protected:
 
@@ -186,8 +197,13 @@ class ElectricalContact : public BoundaryProperties, public Variable
     DriftDiffusionProperties *_properties;
 
 
-    //! \c true if this is a real contact
+    //! \c true if this is a real (current carrying) contact
     bool _real_contact;
+
+
+    //! \c true if this is an outer boundary
+    bool _is_outer_boundary;
+
 };
 
 
@@ -202,7 +218,8 @@ inline
 ElectricalContact::ElectricalContact(void)
   : _boundary_value(0.0),
     _properties(NULL),
-    _real_contact(true)
+    _real_contact(true),
+    _is_outer_boundary(true)
 {
 }
 
@@ -387,6 +404,32 @@ ElectricalContact::is_real_contact(void) const
 {
   return _real_contact;
 }
+
+
+inline
+bool
+ElectricalContact::is_outer_boundary(void) const
+{
+  return _is_outer_boundary;
+}
+
+
+inline
+bool
+ElectricalContact::is_internal_boundary(void) const
+{
+  return !_is_outer_boundary;
+}
+
+
+
+inline
+void
+ElectricalContact::is_outer_boundary(bool is_outer_boundary)
+{
+  _is_outer_boundary = is_outer_boundary;
+}
+
 
 
 #endif // _ELECTRICALCONTACT_H_

@@ -54,6 +54,9 @@ MaterialInterface::get_normal_derivative(DriftDiffusionDefs::Variable variable,
     }
     else
       c = _Ns;
+
+    if (is_internal_boundary())
+      c /= 2.0;
   }
 }
 
@@ -81,6 +84,8 @@ MaterialInterface::get_derivatives_of_normal_derivative(
       denom *= denom;
 
       dc[0] = -_Ns * tmp / (denom * kT);
+      if (is_internal_boundary())
+        dc[0] /= 2.0;
     }
     else
       dc[0] = 0.0;
