@@ -14,6 +14,9 @@ DSSCContact::create(const std::string& name,
   if (ct != NULL)
     ct->set_options(options);
 
+  if (name == "ohmic")
+    ct->is_cathode() = true;
+
   return ct;
 }
 

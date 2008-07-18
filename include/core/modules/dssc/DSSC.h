@@ -201,6 +201,18 @@ class DSSC : public SimulationInterface
     typedef std::map<const Boundary*, double> ContactData;
     typedef std::map<const Node*, Boundary*> BoundaryNodeList;
 
+
+    struct ConductivityScaling
+    {
+      double n;
+      double I;
+      double I3;
+      double C;
+    };
+
+    ConductivityScaling _cond_scaling;
+
+
     //! A static reference to \c this
     /*!
      * This is needed during matrix assembly, which is a static method.
@@ -215,6 +227,12 @@ class DSSC : public SimulationInterface
      */
     BoundaryNodeList _dirichlet_nodes;
 
+
+    //! The total number of cations
+    double _cation_amount;
+
+    //! The total amount of iodine
+    double _iodine_amount;
 
     /*!
      * If @c true, the equation system needs to be rebuilt

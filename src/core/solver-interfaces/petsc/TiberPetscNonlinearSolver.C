@@ -65,7 +65,8 @@ extern "C"
 
     // check for convergence
     //if ((reason < 0) && (reason != -3) && (reason != -4))
-    if ((reason < 0) && (reason != -3))
+    //if ((reason < 0) && (reason != -3))
+    if (reason < 0)
     {
 #ifndef DEBUG
       std::cout << std::endl << std::flush;

@@ -37,8 +37,10 @@ DSSCModel::do_init(void)
 
   _cation.set_particle_charge(1.0);
 
+  //_eq_conc.n = get_options().get_option("n_e", _eq_conc.n);
   _eq_conc.n = _porosity * get_options().get_option("n_e", _eq_conc.n);
   // the following are given in Mol
+  //double fac = Constants::avogadro / 1e3;
   double fac = (1.0 - _porosity) * Constants::avogadro / 1e3;
   _eq_conc.I = get_options().get_option("n_I", _eq_conc.I) * fac;
   _eq_conc.I3 = get_options().get_option("n_I3", _eq_conc.I3) * fac;
@@ -109,12 +111,16 @@ void
 DSSCModel::calculate_densities(void)
 {
   _pd.density_n = 0.0;
+  _pd.generation_rate = 0.0;
   if (is_TiO2())
   {
     _electrons.set_element_and_point(_elem, _pd.coordinates);
     _electrons.set_classical_parameters(_eq_conc.n,
         -_pd.electric_potential, -_pd.fermi_n, _pd.kT);
     _pd.density_n = _electrons.get_particle_density();
+
+    // generation has to be calculated here
+    _pd.generation_rate = _generation;
   }
 
   _pd.density_I = _pd.density_I3 = _pd.density_C = 0.0;
@@ -136,8 +142,6 @@ DSSCModel::calculate_densities(void)
     _pd.density_C = _cation.get_particle_density();
   }
 
-  // generation has to be calculated here
-  _pd.generation_rate = _generation;
   _pd.ionized_dye = _pd.generation_rate / _k3;
 }
 

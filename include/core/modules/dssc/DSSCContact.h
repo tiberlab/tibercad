@@ -31,6 +31,8 @@ class DSSCContact : public BoundaryProperties, public Variable
     void set_potential(double potential);
 
 
+    bool& is_cathode(void);
+
 
   protected:
 
@@ -52,6 +54,7 @@ class DSSCContact : public BoundaryProperties, public Variable
     //! The boundary value (eg. applied voltage)
     double _boundary_value;
   
+    bool _cathode;
     
 };
 
@@ -62,7 +65,8 @@ class DSSCContact : public BoundaryProperties, public Variable
 
 inline
 DSSCContact::DSSCContact(void)
-  : _boundary_value(0.0)
+  : _boundary_value(0.0),
+    _cathode(false)
 {
 }
 
@@ -102,5 +106,12 @@ DSSCContact::get_variable_value(ID id)
 }
 
 
+
+inline
+bool&
+DSSCContact::is_cathode(void)
+{
+  return _cathode;
+}
 
 #endif // _DSSCCONTACT_H_
