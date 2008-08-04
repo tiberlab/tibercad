@@ -20,10 +20,7 @@ class LatticeThermalConductivity : public PhysicalModelInterface
 public:
   
   //!Constructor 
-  LatticeThermalConductivity()
-  {  
-   _conductivity=Tensor2Sym(0);
-  };
+  LatticeThermalConductivity();
 
    //!Destructor
   ~LatticeThermalConductivity(){};
