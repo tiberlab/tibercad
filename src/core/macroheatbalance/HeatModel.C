@@ -79,8 +79,7 @@ void HeatModel::do_init()
 	  PhysicalModelInterface::create("lat_therm_cond_" +
 		get_material()->get_structure()));
 
-    }
-
+   }
     kappa->set_temperature(SimulationOptions::temperature);
     
     kappa->set_material(get_material());

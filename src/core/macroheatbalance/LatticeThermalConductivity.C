@@ -4,7 +4,11 @@
 #include "tensor.h"
 
 
-
+LatticeThermalConductivity::LatticeThermalConductivity() :
+  _conductivity(0)
+  {  
+  
+  }
 //-------------------------------------------------------------------------//
 
 void LatticeThermalConductivity::copy_from(const PhysicalModelInterface *rhs)

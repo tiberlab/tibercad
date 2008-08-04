@@ -345,6 +345,9 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
     heat_model->get_thermal_conductivity(kappa);
 
+    
+
+ 
     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
     { // loop over test function
       
@@ -876,6 +879,27 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
        PF = PF_temp;
       
 
+    int Kappa = -1;
+    int Kappa_xx = -1;
+    int Kappa_zz = -1;
+    if (variables.count("thermal") ||
+        variables.count("LatticeThermalCond") )
+    {
+      Kappa = 0;
+      Kappa_xx = n_vars;
+      legend.resize(legend.size() + 1);
+      legend[n_vars]="kappa_xx";
+      n_vars++;
+
+      Kappa_zz = n_vars;
+      legend.resize(legend.size() + 1);
+      legend[n_vars]="kappa_zz";
+      n_vars++; 
+     }
+   
+
+
+
   legend.resize(n_vars);
   
   results.resize(nn * n_vars,0.0);
@@ -897,7 +921,8 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
  
   std::vector<unsigned int> dof_indices;
- 
+
+  Tensor2Sym kappa; 
   
   MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
   const MeshBase::const_element_iterator end =     mesh->active_local_elements_end();
@@ -932,6 +957,8 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
     heat_model->set_side(-1);
 
     heat_model->re_init();
+
+    heat_model->get_thermal_conductivity(kappa);
 
     if (HS != -1)
     {
@@ -1062,6 +1089,17 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
       }
 
     }
+
+    if (Kappa != -1)
+    {
+      
+      results[id + Kappa_xx] = kappa(1,1);
+      results[id + Kappa_zz] = kappa(3,3); 
+
+    }
+
+
+
 
     elem_number++;
   } //over element
