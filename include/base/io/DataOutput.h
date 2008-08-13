@@ -16,6 +16,19 @@ class DataOutput
 
   public:
 
+    //! A type for the known data formats
+    enum DataFormat
+    {
+      UNKNOWN   = 0x0000,       //!< Unknown format
+      TECPLOT   = 0x0001,       //!< Tecplot format
+      GRACE     = 0x0002,       //!< Xmgrace format
+      GNUPLOT   = 0x0004,       //!< GnuPlot format
+      VTK       = 0x0008,       //!< Paraview format
+      GMSH      = 0x0010,       //!< GMSH format
+      GMV       = 0x0020        //!< GMV format
+    };
+
+
     //! The constructor
     /*!
      * The constructor needs a reference to the mesh and the type of
@@ -39,13 +52,18 @@ class DataOutput
         const std::vector<std::string>& legend);
 
 
+    //! Get data format for a given data format name
+    static DataFormat tell_data_format(const std::string& format);
+
+
+
   private:
 
     //! The mesh
     const Mesh* _mesh;
 
     //! The file format
-    std::string _format;
+    unsigned int _format;
 
 };
 

@@ -1,6 +1,7 @@
 // $Id$
 
 #include "DataOutput.h"
+#include "Utils.h"
 
 #include "GMVIO_cell.h"
 #include "tecplot_IO_cell.h"
@@ -15,10 +16,38 @@
 
 DataOutput::DataOutput(const Mesh& mesh, const std::string& format)
   : _mesh(&mesh),
-    _format(format)
+    _format(0x0000)
 {
+  std::vector<std::string> formats;
+  Utils::extract_vector(format, formats);
+
+  for (int i = 0; i < formats.size(); i++)
+    _format |= tell_data_format(formats[i]);
+
 }
 
+
+DataOutput::DataFormat
+DataOutput::tell_data_format(const std::string& format)
+{
+  DataFormat df = UNKNOWN;
+
+  if ((format == "ise") || (format == "tecplot"))
+    df = TECPLOT;
+  else if (format == "grace")
+    df = GRACE;
+  else if ((format == "vtk") || (format == "paraview"))
+    df = VTK;
+  else if (format == "gmv")
+    df = GMV;
+  else if (format == "gmsh")
+    df = GMSH;
+  else if (format == "gnuplot")
+    df = GNUPLOT;
+
+
+  return df;
+}
 
 
 
@@ -27,18 +56,17 @@ DataOutput::write_nodal_data(const std::string& filename,
     const std::vector<Number>& data,
     const std::vector<std::string>& legend)
 {
-  // default is GMV
-  if (_format == "ise")
+  if (_format & TECPLOT)
     TecplotIO(*_mesh).write_nodal_data(filename + ".plt", data, legend);
-  else if (_format == "grace")
+  if (_format & GRACE)
     GraceIO(*_mesh).write_nodal_data(filename + ".dat", data, legend);
-  else if (_format == "gnuplot")
+  if (_format & GNUPLOT)
     GnuPlotIO(*_mesh).write_nodal_data(filename + ".dat", data, legend);
-  else if (_format == "vtk")
+  if (_format & VTK)
     TiberVTKIO(*_mesh).write_nodal_data(filename + ".vtk", data, legend);
-  else if (_format == "gmsh")
+  if (_format & GMSH)
     GmshIO(*_mesh).write_nodal_data(filename + ".msh", data, legend);
-  else
+  if (_format & GMV)
     GMVIO(*_mesh).write_nodal_data(filename + ".gmv", data, legend);
 }
 
@@ -51,17 +79,15 @@ DataOutput::write_cell_data(const std::string& filename,
     const std::vector<Number>& data,
     const std::vector<std::string>& legend)
 {
-  // default is GMV
-  
-  if (_format == "ise")
+  if (_format & TECPLOT)
     TecplotIO_cell(*_mesh).write_cell_data(filename + ".plt", data, legend);
-  else if (_format == "grace")
+  if (_format & GRACE)
     GraceIO(*_mesh).write_elemental_data(filename + ".dat", data, legend);
-  else if (_format == "gnuplot")
+  if (_format & GNUPLOT)
     std::cout << "GnuPlot does not currently support cell data." << std::endl;
-  else if (_format == "vtk")
+  if (_format & VTK)
     TiberVTKIO(*_mesh).write_elemental_data(filename + ".vtk", data, legend);
-  else
+  if (_format & GMV)
     GMVIO_cell(*_mesh).write_ascii_cell_data(filename + ".gmv", data, legend);
 }
 
