@@ -83,25 +83,27 @@ e14 = -0.044
 
 # from here values for GaAs
 # mobility
-mu_max_e = 8500.0
-mu_max_h = 400.0
+mu_max_e = 22600.0
+exponent_e = 1.5
+mu_max_h = 250.0
+exponent_h = 1.5
 
-mumin_e = 2.1360e+03
-am_e = -7.4570e-01
-mud_e = 6.3310e+03
-ad_e = -2.6870e+00
-N0_e = 7.3450e+16
-an_e = 3.535
-a_e = 0.6273
-aa_e = -1.4410e-01
-mumin_h = 21.48
-am_h = -1.1240e+00
-mud_h = 3.3120e+02
-ad_h = -2.3660e+00
-N0_h = 5.1360e+17
-an_h = 3.69
-a_h = 0.8057
-aa_h = 0.0
+mumin_e = 22600
+am_e = -1.5
+mud_e = 0
+ad_e = 0
+N0_e = 1e17
+an_e = 0
+a_e = 0
+aa_e = 0
+mumin_h = 250
+am_h = -1.5
+mud_h = 0
+ad_h = 0
+N0_h = 1e+17
+an_h = 0
+a_h = 0
+aa_h = 0
 
 # SRH recombination
 Etrap    = 0.0
@@ -114,6 +116,8 @@ taumax_h = 1.0e-9
 Nref_h   = 1.0e+16
 gamma_h  = 1
 
+# direct recombination (www.ioffe.ru)
+C = 1.1e-10
 
 
 

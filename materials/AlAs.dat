@@ -62,6 +62,49 @@ e14 = -0.015
 
 
 
+# mobility
+mu_max_e = 2500.0
+exponent_e = 1
+mu_max_h = 150.0
+exponent_h = 2.1
+
+mumin_e = 2.5e+03
+am_e = -1
+mud_e = 0
+ad_e = 0
+N0_e = 1e+17
+an_e = 0
+a_e = 0
+aa_e = 0
+mumin_h = 150
+am_h = -2.1
+mud_h = 0
+ad_h = 0
+N0_h = 1e+17
+an_h = 0
+a_h = 0
+aa_h = 0.0
+
+
+
+# SRH recombination
+Etrap    = 0.0
+taumin_e = 0.0
+taumax_e = 1.0e-9
+Nref_e   = 1.0e+16
+gamma_e  = 1
+taumin_h = 0.0
+taumax_h = 1.0e-9
+Nref_h   = 1.0e+16
+gamma_h  = 1
+
+
+# direct recombination (??)
+C = 0
+
+
+
+
 
 #Atomistic structure informations
 #
