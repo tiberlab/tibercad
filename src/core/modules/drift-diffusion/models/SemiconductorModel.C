@@ -7,9 +7,6 @@
 
 #include "Alloy.h"
 
-//#include "Database.h"
-
-//#include "getpot.h"
 
 #include <iostream>
 
@@ -46,6 +43,7 @@ SemiconductorModel::reset(void)
 void
 SemiconductorModel::do_init(void)
 {
+
   Parent::do_init();
 
   const ModelOptions& opt = get_options();
@@ -64,7 +62,6 @@ SemiconductorModel::do_init(void)
   bulk_model_->set_simulator_id(get_simulator_id());
 
   bulk_model_->init();
-  
 }
 
 

@@ -117,7 +117,6 @@ class SemiconductorModel : public DriftDiffusionProperties
     //! Get the data map with the element wise cached data
     DataMap& get_data_map(void);
 
-    bool _recompute_band_parameters;
 
   private:
 
@@ -149,6 +148,7 @@ class SemiconductorModel : public DriftDiffusionProperties
     /*!
      * Use this for selfconsistent simulations
      */
+    bool _recompute_band_parameters;
 
 
 };

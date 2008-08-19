@@ -290,20 +290,6 @@ SimulationEnvironment::get_boundary(const string& name) const
 }
 
 
-ID
-SimulationEnvironment::get_boundary_id(const string& name) const
-{
-  ID id = 0;
-
-  BCMap::const_iterator it(_bc_map.begin());
-  const BCMap::const_iterator end(_bc_map.end());
-
-  for ( ; it != end; ++it)
-    if ((it->second)->get_name() == name)
-      id = it->first;
-
-  return id;
-}
 
 
 void

@@ -180,6 +180,42 @@ Device::set_material(Material* material, const vector<ID>& region_ids)
 }
 
 
+Material*
+Device::get_material(const std::string& name)
+{
+  Material* mat = NULL;
+
+  map<ID, string>::const_iterator it(_region_names.begin());
+  const map<ID, string>::const_iterator end(_region_names.end());
+  for ( ; it != end; ++it)
+    if (it->second == name)
+    {
+      mat = get_material(it->first);
+      break;
+    }
+
+  return mat;
+}
+
+
+const Material*
+Device::get_material(const std::string& name) const
+{
+  const Material* mat = NULL;
+
+  map<ID, string>::const_iterator it(_region_names.begin());
+  const map<ID, string>::const_iterator end(_region_names.end());
+  for ( ; it != end; ++it)
+    if (it->second == name)
+    {
+      mat = get_material(it->first);
+      break;
+    }
+
+  return mat;
+}
+
+
 
 void 
 Device::get_region_ids(const string& name, vector<ID>& ids) const
@@ -247,69 +283,3 @@ Device::set_cluster(const string& name, const vector<ID>& ids)
 
 
 
-
-double
-Device::find_temperature_for_elem(const Elem* elem) const
-{
-  double temp = 0.0;
-  
-  TemperatureMap::const_iterator it(_elem_temp.find(elem));
-  TemperatureMap::const_iterator end(_elem_temp.end());
-
-  const Elem* el = elem->parent();
-  while ((el != NULL) && (it != end))
-  {
-    el = el->parent();
-    it = _elem_temp.find(el);
-  }
-
-  if (el != NULL) // we found it!
-    temp = it->second;
-  else
-  {
-    // no parent, so check for children
-    // NOTE: if we find mor than one child, we build some mean value
-    vector<const Elem*> tree;
-    elem->family_tree(tree, false);
-
-    unsigned int n_children = 0;
-    
-    unsigned int len = tree.size();
-    for (unsigned int i = 0; i < len; i++)
-    {
-      const Elem* elem_i = tree[i];
-      it = _elem_temp.find(elem_i);
-      if (it != end)
-      {
-        temp += it->second;
-        n_children++;
-      }
-    }
-
-    if (n_children != 0)
-      temp /= n_children;
-    else
-      temp = SimulationOptions::temperature;
-  }
-
-  return temp;
-}
-
-
-
-void
-Device::delete_from_temperature_map(const Elem* elem)
-{
-  TemperatureMap::iterator end(_elem_temp.end());
-  // if elem is in the list, we delete it
-  while (elem != NULL)
-  {
-    TemperatureMap::iterator it(_elem_temp.find(elem));
-    if (it != end)
-    {
-      _elem_temp.erase(it);
-      break;
-    }
-    elem = elem->parent();
-  }
-}

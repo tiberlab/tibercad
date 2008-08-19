@@ -6,9 +6,11 @@
 #include "TypeDefs.h"
 
 #include <map>
+#include <set>
 #include <string>
 
 class BoundaryProperties;
+class SimulationEnvironment;
 
 
 //! The class that contains the models for a simulation boundary
@@ -26,8 +28,11 @@ class Boundary
     //! Constructor
     /*!
      * \param name a user defined name to identify this boundary
+     * \param environment the environment
+     * \param region_ids the boundary region IDs
      */
-    Boundary(const std::string& name);
+    Boundary(const std::string& name, SimulationEnvironment* environment,
+        std::set<ID> region_ids);
 
     //! Destructor
     ~Boundary(void);
@@ -51,6 +56,13 @@ class Boundary
     //! Get the area factor
     double get_area_factor(void) const;
 
+    //! Get the simulation environment
+    SimulationEnvironment* get_environment(void);
+
+    //! Get the physical region IDs
+    const std::set<ID>& get_region_ids(void) const;
+
+
 
   private:
 
@@ -65,6 +77,15 @@ class Boundary
 
     //! The area factor
     double _area_factor;
+
+    //! The environment this boundary is belonging to
+    SimulationEnvironment* _env;
+
+    //! The physical regions this boundary is touching
+    std::set<ID> _region_ids;
+
+    //! Find the physical region IDs
+    void find_region_ids(void);
 
 };
 
@@ -88,12 +109,7 @@ Boundary::get_boundary_properties(ID simulator_id) const
   
 }
 
-inline
-Boundary::Boundary(const std::string& name)
-  : _name(name),
-    _area_factor(1.0)
-{
-}
+
 
 inline
 const std::string&
@@ -116,6 +132,22 @@ double
 Boundary::get_area_factor(void) const
 {
   return _area_factor;
+}
+
+
+inline
+const std::set<ID>&
+Boundary::get_region_ids(void) const
+{
+  return _region_ids;
+}
+
+
+inline
+SimulationEnvironment*
+Boundary::get_environment(void)
+{
+  return _env;
 }
 
 

@@ -7,6 +7,7 @@
 #include "ModelOptions.h"
 #include "TypeDefs.h"
 
+class Boundary;
 
 //! Boundary properties for a certain type of simulation.
 /*!
@@ -27,6 +28,12 @@ class BoundaryProperties
 
     //! Initialize this boundary
     void init(void);
+
+    //! Set the boundary this model is associated with
+    void set_boundary(Boundary* boundary);
+
+    //! Set the simulation ID
+    void set_simulation_id(ID simulation_id);
 
 
   protected:
@@ -57,6 +64,12 @@ class BoundaryProperties
      */
     virtual void do_init(void) {};
 
+    //! Get the boundary this model is associated with
+    Boundary* get_boundary(void);
+
+    //! Get the simulation ID
+    ID get_simulation_id(void) const;
+
 
   private:
 
@@ -68,6 +81,12 @@ class BoundaryProperties
 
     //! The options for this model as read from the input file
     ModelOptions _options;
+
+    //! The boundary this model is associated with
+    Boundary* _boundary;
+
+    //! The ID of the simulation this model is associated with
+    ID _simulation_id;
 
 };
 
@@ -103,6 +122,39 @@ const ModelOptions&
 BoundaryProperties::get_options(void) const
 {
   return _options;
+}
+
+
+inline
+void
+BoundaryProperties::set_boundary(Boundary* boundary)
+{
+  _boundary = boundary;
+}
+
+
+
+inline
+Boundary*
+BoundaryProperties::get_boundary(void)
+{
+  return _boundary;
+}
+
+
+inline
+void
+BoundaryProperties::set_simulation_id(ID simulation_id)
+{
+  _simulation_id = simulation_id;
+}
+
+
+inline
+ID
+BoundaryProperties::get_simulation_id(void) const
+{
+  return _simulation_id;
 }
 
 

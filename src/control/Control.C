@@ -578,7 +578,6 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       ID id = bdit->first;
       const RegionStructure& data = bdit->second;
 
-      set<ID> region_ids;
       vector<ID> ids;
       Utils::extract_vector(data.get_region_ID(), ids);
 
@@ -596,6 +595,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         throw InitFailedException(s.str());
       }
 
+      set<ID> region_ids;
       for (unsigned int i = 0; i < ids.size(); i++)
         region_ids.insert(ids[i]);
 
@@ -609,15 +609,16 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
       const ModelOptions& bdopts = data.get_options();
 
-      Boundary* bd = new Boundary(data.get_region_name());
+      Boundary* bd = new Boundary(data.get_region_name(), env, region_ids);
       bd->set_area_factor(bdopts.get_option("area_factor", 1.0));
+
       BoundaryProperties* bdprop = sim->create_boundary_model(bdopts);
 
       // NOTE: bdprop could be NULL, but we don't care about. Who tells us that
       // every simulation necessarily needs a boundary model?
       if (bdprop != NULL)
         bd->add_boundary_properties(bdprop, sim->get_id());
-      env->add_boundary(bd, region_ids);
+
     }
 
 

@@ -39,7 +39,7 @@ class Device
      * \param options the options needed for device creation
      * \return a pointer to the newly created device
      *
-     * \c options has to contain the following options:
+     * \c options has to contain at least the following options:
      * \li "meshfile" -> filename
      * \li "dimension" -> the real space dimension (1, 2 or 3)
      * \li "mesh_units" -> the units of the mesh (cf. get_mesh_units())
@@ -99,6 +99,10 @@ class Device
     void set_control(Control* control);
 
 
+    /*! \copydoc get_material(ID) const */
+    Material* get_material(ID region_id);
+
+    
     //! Get the material for a given region ID
     /*!
      * If \c region_id is not found in the material list, the NULL
@@ -106,11 +110,20 @@ class Device
      *
      * \param region_id the region number
      */
-    Material* get_material(ID region_id);
-
-    
-    /*! \copydoc get_material() const */
     const Material* get_material(ID region_id) const;
+
+
+    /*! \copydoc get_material(const std::string&) const */
+    Material* get_material(const std::string& name);
+
+
+    //! Get the material for a region name
+    /*!
+     * \param name the user defined name of a region
+     * \return the material pointer or \c NULL if \c name does not name
+     * a valid region
+     */
+    const Material* get_material(const std::string& name) const;
     
     
     //! Get the map that contains all boundary nodes for all boundaries
@@ -185,27 +198,11 @@ class Device
     TiberCad::Symmetry get_symmetry(void) const;
     
 
-    //! Set the temperature for an element
-    void set_temperature(const Elem* elem, double temperature);
-
-
-    //! Get the temperature for an element
-    /*!
-     * For elements for which no temperature was set explicitly the 
-     * simulation temperature will be returned
-     */
-    double get_temperature(const Elem* elem) const;
-
-
-    //! Get the pointer for the atomistic structure defined 
-    //! with \c name
+    //! Get the pointer for the atomistic structure defined with \c name
     AtomisticStructure* get_atomistic_structure(const std::string&);
 
 
   private:
-
-    //! A typedef for the map of element temperatures
-    typedef std::map<const Elem*, double> TemperatureMap;
 
 
     //! A typdef for convenience
@@ -247,31 +244,15 @@ class Device
     void setup_mesh(void);
 
     
-    //! Get the temperature for an element
-    /*!
-     * This method tries to find the temperature for \c elem when
-     * \elem itself is not in the internal list.
-     */
-    double find_temperature_for_elem(const Elem* elem) const;
-
-
-    //! Delete an element or its parents from the temperature map
-    void delete_from_temperature_map(const Elem* elem);
-    
-    
     //! The map that connects region number to material
     MaterialMap _material_map;
 
 
     //! The map that connects atomistic structure names to pointers
-    //! (keep track of existing atomistic struxctures)
+    /*! (keep track of existing atomistic struxctures) */
     std::map<std::string,  AtomisticStructure* > _atomistic_structure_map;
   
 
-    //! A map with temperatures for elements
-    TemperatureMap _elem_temp;
-
-    
     //! The mesh for this device
     Mesh* _mesh;
 
@@ -496,32 +477,6 @@ Device::get_symmetry(void) const
 }
 
 
-///*
-inline
-void
-Device::set_temperature(const Elem* elem, double temperature)
-{
-  _elem_temp[elem] = temperature;
-
-  // we delete any parent element from the map
-  const Elem* el = elem->parent();
-  if (el != NULL)
-    delete_from_temperature_map(el);
-}
-//*/
-
-///*
-inline
-double
-Device::get_temperature(const Elem* elem) const
-{
-  TemperatureMap::const_iterator it(_elem_temp.find(elem));
-  if (it != _elem_temp.end())
-    return it->second;
-  else
-    return find_temperature_for_elem(elem);
-}
-//*/
 
 inline
 void 

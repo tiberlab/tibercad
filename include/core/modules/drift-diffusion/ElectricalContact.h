@@ -139,6 +139,9 @@ class ElectricalContact : public BoundaryProperties, public Variable
     //! Get a reference to the Drift-Diffusion properties
     DriftDiffusionProperties& get_material(void);
 
+    //! Get the reference Drift-Diffusion properties
+    DriftDiffusionProperties& get_reference_material(void);
+
     /*! \copydoc BoundaryProperties::do_init() */
     virtual void do_init(void);
 
@@ -171,6 +174,11 @@ class ElectricalContact : public BoundaryProperties, public Variable
     void is_real_contact(bool is_real_contact);
 
 
+    //! Determines the reference material for this contact
+    void determine_reference_material(void);
+
+
+
   private:
 
     BCType _potential_type;
@@ -193,8 +201,11 @@ class ElectricalContact : public BoundaryProperties, public Variable
     //! The contact surface resistance
     double _surfres;
 
-    // A pointer to the DriftDiffusionProperties object
+    //! A pointer to the DriftDiffusionProperties object
     DriftDiffusionProperties *_properties;
+
+    //! The reference material properties
+    DriftDiffusionProperties* _reference_prop;
 
 
     //! \c true if this is a real (current carrying) contact
@@ -292,6 +303,16 @@ ElectricalContact::get_material(void)
 {
   return *_properties;
 }
+
+
+inline
+DriftDiffusionProperties&
+ElectricalContact::get_reference_material(void)
+{
+  return *_reference_prop;
+}
+
+
 
 inline
 ElectricalContact::BCType

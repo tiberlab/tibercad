@@ -21,6 +21,7 @@ class Node;
  */
 class SimulationEnvironment
 {
+
   public:
 
     //! An iterator for the element sides lying on a boundary
@@ -158,13 +159,6 @@ class SimulationEnvironment
     void get_boundary_nodes(const Boundary* boundary,
         std::set<const Node*>& nodelist);
 
-
-    //! Get the ID of the boundary with user defined name \c name
-    /*!
-     * \param name the user defined name to look for
-     * \return the boundary ID if found, 0 otherwise
-     */
-    ID get_boundary_id(const std::string& name) const;
 
 
     //! Check if region \c id is a region of this simulation environment

@@ -243,6 +243,11 @@ DriftDiffusionProperties::do_init(void)
     _thermoelectric_power->init();  
   }
 
+  // DOES NOT WORK
+  // calculate the equilibrium
+  //set_lattice_temperature(SimulationOptions::T);
+  //calculate_equilibrium_properties();
+  //setup_band_edges();
 }
 
 

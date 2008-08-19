@@ -7,6 +7,9 @@
 
 #include "ElectricalContact.h"
 #include "DriftDiffusionProperties.h"
+#include "Boundary.h"
+#include "Material.h"
+#include "SimulationEnvironment.h"
 
 
 ElectricalContact*
@@ -45,6 +48,13 @@ ElectricalContact::do_init(void)
 
   std::string s(get_options().get_option("voltage", ""));
   set_simulation_voltage(check_and_register(s, 0.0));
+
+  determine_reference_material();
+
+  // should be done in DriftDiffusionProperties
+  get_reference_material().set_lattice_temperature(SimulationOptions::T);
+  get_reference_material().calculate_equilibrium_properties();
+  get_reference_material().setup_band_edges();
 }
 
 
@@ -56,4 +66,46 @@ ElectricalContact::get_contact_voltage_drop(void) const
 
   // a negative current means inflowing current
   return -_surfres * j;
+}
+
+
+void
+ElectricalContact::determine_reference_material(void)
+{
+  Boundary* bd = get_boundary();
+  const Device& dev = bd->get_environment()->get_device();
+  const Material* mat;
+
+  std::string ref = get_options().get_option("reference_material", "");
+  if (!ref.empty())
+  {
+    mat = dev.get_material(ref);
+    if (mat == NULL)
+    {
+      std::ostringstream os;
+      os << "ElectricalContact: \'" << ref << "\' is not a valid"
+        << " name for the reference material (region).";
+      throw InitFailedException(os.str());
+    }
+    _reference_prop = dynamic_cast<DriftDiffusionProperties*>(
+          mat->get_model(get_simulation_id()));
+  }
+  else
+  {
+    std::set<ID>::iterator it(bd->get_region_ids().begin());
+    const std::set<ID>::iterator end(bd->get_region_ids().end());
+    for ( ; it != end; ++it)
+    {
+      mat = dev.get_material(*it);
+      DriftDiffusionProperties* prop =
+        dynamic_cast<DriftDiffusionProperties*>(
+            mat->get_model(get_simulation_id()));
+      if (prop != NULL)
+        if (!prop->is_dielectric())
+        {
+          _reference_prop = prop;
+          break;
+        }
+    }
+  }
 }

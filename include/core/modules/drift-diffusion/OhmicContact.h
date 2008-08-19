@@ -50,12 +50,13 @@ OhmicContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
   switch (variable)
   {
     case DriftDiffusionDefs::POTENTIAL:
-      val = get_material().get_equilibrium_fermi_level();
+      val = get_reference_material().get_equilibrium_fermi_level();
       break;
     case DriftDiffusionDefs::FERMIE:
       break;
     case DriftDiffusionDefs::FERMIH:
       break;
+    /*
     case DriftDiffusionDefs::DENSE:
       {
         DriftDiffusionProperties& sc = get_material();
@@ -72,6 +73,7 @@ OhmicContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
         val = sc.get_hole_density();
       }
       break;
+    */
   }
   
   return val;
