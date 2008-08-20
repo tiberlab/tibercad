@@ -1,0 +1,40 @@
+#!/bin/bash
+
+## set the compiler and PATH
+
+v=4.1.1
+
+#export CC=gcc-$v
+#export CXX=g++-$v
+export F77=g95-0.91
+#export F77=gfortran-$v
+export F90=$F77
+export FC=$F77
+#export MPICH_F90=$F90
+#export MPICH_F77=$F77
+
+
+
+export PETSC_DIR=`pwd`/../petsc-2.3.3-p8
+
+export SLEPC_DIR=`pwd`
+
+
+#export PETSC_ARCH=linux-gnu-opt
+#./config/configure.py $CONFIGOPTS
+#make > ${PETSC_ARCH}.log
+
+
+export PETSC_ARCH=linux-gnu-complex-opt
+./config/configure.py $CONFIGOPTS
+make > ${PETSC_ARCH}.log
+
+#export PETSC_ARCH=linux-gnu
+#./config/configure.py $CONFIGOPTS
+#make > ${PETSC_ARCH}.log
+
+
+#export PETSC_ARCH=linux-gnu-complex
+#./config/configure.py $CONFIGOPTS
+#make > ${PETSC_ARCH}.log
+

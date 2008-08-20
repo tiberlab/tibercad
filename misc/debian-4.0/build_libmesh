@@ -1,0 +1,28 @@
+#!/bin/bash
+
+export PETSC_DIR=`pwd`/../petsc-2.3.3-p8
+export PETSC_ARCH=linux-gnu-opt
+
+
+#export CC=gcc-4.1.1
+#export CXX=g++-4.1.1
+#export FC=gfortran-4.1.1
+export FC=g95-0.91
+export F77=$FC
+export F90=$FC
+#export MPICH_F77=$F77
+#export MPICH_F90=$F90
+
+export CVS_RSH=ssh
+
+  
+./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic --disable-shared
+
+# delete the -pedantic flag because it makes problems with mpi
+cp Make.common Make.common.orig
+sed 's/-pedantic//g' Make.common.orig | sed 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' | sed 's/-D_GLIBCXX_DEBUG//g' > Make.common
+
+
+make
+#make METHOD=dbg
+

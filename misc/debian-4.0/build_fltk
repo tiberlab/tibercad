@@ -1,0 +1,11 @@
+#! /bin/sh
+
+#CC=gcc-4.1.1
+#CXX=g++-4.1.1
+F77=g95-0.91
+#F77=gfortran-4.1.1
+FC=$F77
+
+
+./configure --enable-localjpeg --enable-localzlib --enable-localpng --prefix=`pwd`
+make
