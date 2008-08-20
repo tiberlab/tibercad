@@ -13,6 +13,9 @@ VERSION="2.3.3"
 PLEVEL="p13"
 DIR="$1"
 ARCHIVE="petsc-lite-${VERSION}-${PLEVEL}.tar.gz"
+if [ -e petsc.patch ]; then
+  PATCH=${PWD}/petsc.patch
+fi
 
 echo "Compiling PETSc version $VERSION in $DIR ..."
 
@@ -23,7 +26,9 @@ if [ ! -d $DIR ]; then
 fi
 
 cd $DIR
-wget ftp://ftp.mcs.anl.gov/pub/petsc/release-snapshots/${ARCHIVE}
+if [ ! -e ${ARCHIVE} ]; then
+  wget ftp://ftp.mcs.anl.gov/pub/petsc/release-snapshots/${ARCHIVE}
+fi
 
 if [ ! -e ${ARCHIVE} ]; then
   echo "Could not download petsc."
@@ -33,6 +38,10 @@ fi
 tar zxf ${ARCHIVE}
 
 cd petsc-${VERSION}-${PLEVEL}
+
+if [ ! -z ${PATCH} ]; then
+  patch -p0 < ${PACTH}
+fi
 
 #v=4.1.1
 #export CC=gcc-$v CXX=g++-$v F77=gfortran-$v F90=$F77 FC=$F77
