@@ -1,25 +1,28 @@
-#!/bin/sh
+#!/bin/bash
  
-#export CXX=g++-4.1.1
-#export CC=gcc-4.1.1
-#export FC=gfortran-4.1.1
-export FC=g95-0.91
-export F77=$FC
 
-path=`pwd`/..
+if [ ! -e common.sh ]; then
+  echo "Need configuration file (common.sh)."
+  exit 1
+fi
+
+. common.sh
+
+
+echo "Compiling TiberCAD ..."
+
 
 ./configure \
-  --prefix=/usr \
-  --with-petsc-prefix=$path/petsc-2.3.3-p8 \
+  --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL} \
   --with-petsc-arch=linux-gnu-complex \
-  --with-slepc-prefix=$path/slepc-2.3.3 \
+  --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION} \
   --disable-modules \
   --disable-pardiso \
   --disable-dftb \
   --disable-hetero \
-  --enable-license-check \
-  --with-libmesh-prefix=$path/libmesh-0.6.1
+  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}
 
 #  --with-boost-prefix=/usr/pack/boost-1.33.1-ma \
+#  --enable-license-check \
 
 make

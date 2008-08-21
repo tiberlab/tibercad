@@ -1,31 +1,24 @@
 #!/bin/bash
 
-if [ $# -lt 1 ]; then
-  echo "Need directory name as argument"
+if [ ! -e common.sh ]; then
+  echo "Need configuration file (common.sh)."
   exit 1
 fi
 
-if [ -e common.sh ]; then
-  . common.sh
-fi
+. common.sh
 
-VERSION="2.3.3"
-PLEVEL="p13"
-DIR="$1"
-ARCHIVE="petsc-lite-${VERSION}-${PLEVEL}.tar.gz"
-if [ -e petsc.patch ]; then
-  PATCH=${PWD}/petsc.patch
-fi
+ARCHIVE="petsc-lite-${PETSCVERSION}-${PATCHLEVEL}.tar.gz"
+PATCH=${PWD}/../petsc.patch
 
-echo "Compiling PETSc version $VERSION in $DIR ..."
+echo "Compiling PETSc version $PETSCVERSION in $BUILDDIR ..."
 
-mkdir -p $DIR
-if [ ! -d $DIR ]; then
-  echo "Directory $DIR does not exist."
+mkdir -p $BUILDDIR
+if [ ! -d $BUILDDIR ]; then
+  echo "Directory $BUILDDIR does not exist."
   exit 1
 fi
 
-cd $DIR
+cd $BUILDDIR
 if [ ! -e ${ARCHIVE} ]; then
   wget ftp://ftp.mcs.anl.gov/pub/petsc/release-snapshots/${ARCHIVE}
 fi
@@ -37,20 +30,12 @@ fi
 
 tar zxf ${ARCHIVE}
 
-cd petsc-${VERSION}-${PLEVEL}
+cd petsc-${PETSCVERSION}-${PATCHLEVEL}
 
-if [ ! -z ${PATCH} ]; then
-  patch -p0 < ${PACTH}
+if [ -e ${PATCH} ]; then
+  patch -p0 < ${PATCH}
 fi
 
-#v=4.1.1
-#export CC=gcc-$v CXX=g++-$v F77=gfortran-$v F90=$F77 FC=$F77
-#export CC=gcc-$v CXX=g++-$v F77=g95-0.50 F90=g95-0.50
-#export F77=g95-0.91 F90=g95-0.91 FC=g95-0.91
-
-#export MPICH_F90=$F90
-#export MPICH_F77=$F77
-#export MPIDIR=/usr/pack/mpich-1.2.7p1-ma
 #export LAPACK=/scratch/maufder/TiberCAD/ARPACK
 #LAPACKLIBS="[${LAPACK}/libarpack.a]"
 

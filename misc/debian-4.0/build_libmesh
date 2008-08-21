@@ -1,28 +1,57 @@
 #!/bin/bash
 
-export PETSC_DIR=`pwd`/../petsc-2.3.3-p8
-export PETSC_ARCH=linux-gnu-opt
+if [ ! -e common.sh ]; then
+  echo "Need configuration file (common.sh)."
+  exit 1
+fi
+
+. common.sh
 
 
-#export CC=gcc-4.1.1
-#export CXX=g++-4.1.1
-#export FC=gfortran-4.1.1
-export FC=g95-0.91
-export F77=$FC
-export F90=$FC
-#export MPICH_F77=$F77
-#export MPICH_F90=$F90
+echo "Compiling libMesh version $LIBMESHVERSION in $BUILDDIR ..."
 
-export CVS_RSH=ssh
+mkdir -p $BUILDDIR
+if [ ! -d $BUILDDIR ]; then
+  echo "Directory $BUILDDIR does not exist."
+  exit 1
+fi
+
+ARCHIVE=libmesh-${LIBMESHVERSION}.tgz
+PATCH=${PWD}/../libmesh.patch
+
+cd $BUILDDIR
+if [ ! -e ${ARCHIVE} ]; then
+  wget http://surfnet.dl.sourceforge.net/sourceforge/libmesh/${ARCHIVE}
+fi
+
+if [ ! -e ${ARCHIVE} ]; then
+  echo "Could not download slepc."
+  exit 1
+fi
+
+tar zxf ${ARCHIVE}
+
+cd libmesh-${LIBMESHVERSION}
+
+if [ -e ${PATCH} ]; then
+  patch -p0 < ${PATCH}
+fi
+
+
+export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL}
 
   
 ./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic --disable-shared
+
 
 # delete the -pedantic flag because it makes problems with mpi
 cp Make.common Make.common.orig
 sed 's/-pedantic//g' Make.common.orig | sed 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' | sed 's/-D_GLIBCXX_DEBUG//g' > Make.common
 
 
-make
-#make METHOD=dbg
+make |tee make_opt.log
+
+if [ $DEBUG == 'y' ]; then
+  make METHOD=dbg |tee make_dbg.log
+fi
 
