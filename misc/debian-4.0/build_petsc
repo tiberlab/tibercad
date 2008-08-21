@@ -49,7 +49,7 @@ export PETSC_DIR=${PWD}
 if [ ! -e linux-gnu-opt.ok ]; then
   export PETSC_ARCH=linux-gnu-opt
   ./config/configure.py ${CONFIGOPTS} --with-debugging=0
-  make hihi |tee ${PETSC_ARCH}.log && touch linux-gnu-opt.ok
+  make |tee ${PETSC_ARCH}.log && touch linux-gnu-opt.ok
 fi
 
 if [ ! -e linux-gnu-complex-opt.ok ]; then
