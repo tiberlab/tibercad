@@ -101,11 +101,11 @@ ElectricalContact::determine_reference_material(void)
         dynamic_cast<DriftDiffusionProperties*>(
             mat->get_model(get_simulation_id()));
       if (prop != NULL)
+      {
+        _reference_prop = prop;
         if (!prop->is_dielectric())
-        {
-          _reference_prop = prop;
           break;
-        }
+      }
     }
   }
 }
