@@ -39,6 +39,7 @@ fi
 
 
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL}
+export PETSC_ARCH=linux-gnu-opt
 
   
 ./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic --disable-shared
