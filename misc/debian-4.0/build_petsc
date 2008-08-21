@@ -51,7 +51,7 @@ export PETSC_ARCH=linux-gnu-opt
 make |tee ${PETSC_ARCH}.log
 
 export PETSC_ARCH=linux-gnu-complex-opt
-./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=c++ --with-debugging=0
+./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=C++ --with-debugging=0
 make |tee ${PETSC_ARCH}.log
 
 if [ $DEBUG == 'y' ]; then
