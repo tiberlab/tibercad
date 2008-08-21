@@ -16,7 +16,7 @@ if [ ! -d $BUILDDIR ]; then
   exit 1
 fi
 
-ARCHIVE=libmesh-${LIBMESHVERSION}.tgz
+ARCHIVE=libmesh-${LIBMESHVERSION}.tar.gz
 PATCH=${PWD}/../libmesh.patch
 
 cd $BUILDDIR
