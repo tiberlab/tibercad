@@ -21,7 +21,7 @@ PATCH=${PWD}/../libmesh.patch
 
 cd $BUILDDIR
 if [ ! -e ${ARCHIVE} ]; then
-  wget http://surfnet.dl.sourceforge.net/sourceforge/libmesh/${ARCHIVE}
+  wget http://dfn.dl.sourceforge.net/sourceforge/libmesh/${ARCHIVE}
 fi
 
 if [ ! -e ${ARCHIVE} ]; then

@@ -46,22 +46,32 @@ CONFIGOPTS="--with-matlab=0 --with-shared=0 --with-dynamic=0 --with-fortran=0 --
 
 export PETSC_DIR=${PWD}
 
-export PETSC_ARCH=linux-gnu-opt
-./config/configure.py ${CONFIGOPTS} --with-debugging=0
-make |tee ${PETSC_ARCH}.log
+if [ ! -e linux-gnu-opt.ok ]; then
+  export PETSC_ARCH=linux-gnu-opt
+  ./config/configure.py ${CONFIGOPTS} --with-debugging=0
+  make hihi |tee ${PETSC_ARCH}.log && touch linux-gnu-opt.ok
+fi
 
-export PETSC_ARCH=linux-gnu-complex-opt
-./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=C++ --with-debugging=0
-make |tee ${PETSC_ARCH}.log
+if [ ! -e linux-gnu-complex-opt.ok ]; then
+  export PETSC_ARCH=linux-gnu-complex-opt
+  ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex --with-clanguage=C++ --with-debugging=0
+  make |tee ${PETSC_ARCH}.log && touch linux-gnu-complex-opt.ok
+fi
 
 if [ $DEBUG == 'y' ]; then
-  export PETSC_ARCH=linux-gnu
-  ./config/configure.py ${CONFIGOPTS} --with-debugging=1
-  make |tee ${PETSC_ARCH}.log
 
-  export PETSC_ARCH=linux-gnu-complex
-  ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=c++ --with-debugging=1
-  make |tee ${PETSC_ARCH}.log
+  if [ ! -e linux-gnu.ok ]; then
+    export PETSC_ARCH=linux-gnu
+    ./config/configure.py ${CONFIGOPTS} --with-debugging=1
+    make |tee ${PETSC_ARCH}.log && touch linux-gnu.ok
+  fi
+
+  if [ ! -e linux-gnu-complex.ok ]; then
+    export PETSC_ARCH=linux-gnu-complex
+    ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=c++ --with-debugging=1
+    make |tee ${PETSC_ARCH}.log && touch linux-gnu-complex.ok
+  fi
+
 fi
 
 
