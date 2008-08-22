@@ -292,11 +292,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   Tensor2Sym kappa; 
 
 
-  //std::vector<double> heat_source;
-
-  //std::vector<RealGradient> flux_power;
-
-
 
   ThermalContact* contact; 
   //----------------------------------------------------------LatticeThermalConductivity-------//
@@ -408,16 +403,16 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
       //Source. Must be before boundary condition  
       heat_model->get_total_power_flux(qface_point,flux_power);
 	
-      for (unsigned int qp=0; qp < qface.n_points(); qp++)
-      {
-	for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
-	{
-	  double Fe_surf = JxW_face[qp] * phi_face[p1][qp] * flux_power[qp] * normal[qp];
+        for (unsigned int qp=0; qp < qface.n_points(); qp++)
+       {
+      	for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+      	{
+      	  double Fe_surf = JxW_face[qp] * phi_face[p1][qp] * flux_power[qp] * normal[qp];
 	 
-	   Fe(p1) -= Fe_surf;
+      	   Fe(p1) -= Fe_surf;
 	  
-	}
-      }
+      	}
+       }
      
       Boundary* bd = se.get_boundary(elside);
 

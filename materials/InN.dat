@@ -13,7 +13,7 @@ Eg_G = 0.78
 
 #E_v = -2.34;
 # from Nextnano
-E_v = -0.462;
+E_v = -0.462
 
 
 varshni_alpha_G = 0.245e-3
