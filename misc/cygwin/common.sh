@@ -12,7 +12,7 @@ LIBMESHVERSION=0.6.1
 DEBUG=n
 
 # architecture
-ARCH=linux-gnu
+ARCH=cygwin
 
 #v=4.1.1
 #export CC=gcc-$v CXX=g++-$v F77=gfortran-$v F90=$F77 FC=$F77

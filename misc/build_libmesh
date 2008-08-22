@@ -17,7 +17,7 @@ if [ ! -d $BUILDDIR ]; then
 fi
 
 ARCHIVE=libmesh-${LIBMESHVERSION}.tar.gz
-PATCH=${PWD}/../libmesh.patch
+PATCH=${PWD}/libmesh.patch
 
 cd $BUILDDIR
 if [ ! -e ${ARCHIVE} ]; then
@@ -39,7 +39,7 @@ fi
 
 
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL}
-export PETSC_ARCH=linux-gnu-opt
+export PETSC_ARCH=${ARCH}-opt
 
   
 ./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic --disable-shared

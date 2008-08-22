@@ -8,7 +8,7 @@ fi
 . common.sh
 
 ARCHIVE="petsc-lite-${PETSCVERSION}-${PATCHLEVEL}.tar.gz"
-PATCH=${PWD}/../petsc.patch
+PATCH=${PWD}/petsc.patch
 
 echo "Compiling PETSc version $PETSCVERSION in $BUILDDIR ..."
 
@@ -46,30 +46,30 @@ CONFIGOPTS="--with-matlab=0 --with-shared=0 --with-dynamic=0 --with-fortran=0 --
 
 export PETSC_DIR=${PWD}
 
-if [ ! -e linux-gnu-opt.ok ]; then
-  export PETSC_ARCH=linux-gnu-opt
+if [ ! -e ${ARCH}-opt.ok ]; then
+  export PETSC_ARCH=${ARCH}-opt
   ./config/configure.py ${CONFIGOPTS} --with-debugging=0
-  make |tee ${PETSC_ARCH}.log && touch linux-gnu-opt.ok
+  make |tee ${PETSC_ARCH}.log && touch ${ARCH}-opt.ok
 fi
 
-if [ ! -e linux-gnu-complex-opt.ok ]; then
-  export PETSC_ARCH=linux-gnu-complex-opt
+if [ ! -e ${ARCH}-complex-opt.ok ]; then
+  export PETSC_ARCH=${ARCH}-complex-opt
   ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex --with-clanguage=C++ --with-debugging=0
-  make |tee ${PETSC_ARCH}.log && touch linux-gnu-complex-opt.ok
+  make |tee ${PETSC_ARCH}.log && touch ${ARCH}-complex-opt.ok
 fi
 
 if [ $DEBUG == 'y' ]; then
 
-  if [ ! -e linux-gnu.ok ]; then
-    export PETSC_ARCH=linux-gnu
+  if [ ! -e ${ARCH}.ok ]; then
+    export PETSC_ARCH=${ARCH}
     ./config/configure.py ${CONFIGOPTS} --with-debugging=1
-    make |tee ${PETSC_ARCH}.log && touch linux-gnu.ok
+    make |tee ${PETSC_ARCH}.log && touch ${ARCH}.ok
   fi
 
-  if [ ! -e linux-gnu-complex.ok ]; then
-    export PETSC_ARCH=linux-gnu-complex
+  if [ ! -e ${ARCH}-complex.ok ]; then
+    export PETSC_ARCH=${ARCH}-complex
     ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=c++ --with-debugging=1
-    make |tee ${PETSC_ARCH}.log && touch linux-gnu-complex.ok
+    make |tee ${PETSC_ARCH}.log && touch ${ARCH}-complex.ok
   fi
 
 fi

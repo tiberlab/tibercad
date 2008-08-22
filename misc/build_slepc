@@ -45,22 +45,22 @@ export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL}
 export SLEPC_DIR=${BUILDDIR}/slepc-${PETSCVERSION}
 
 
-export PETSC_ARCH=linux-gnu-opt
+export PETSC_ARCH=${ARCH}-opt
 ./config/configure.py $CONFIGOPTS
 make |tee ${PETSC_ARCH}.log
 
 
-export PETSC_ARCH=linux-gnu-complex-opt
+export PETSC_ARCH=${ARCH}-complex-opt
 ./config/configure.py $CONFIGOPTS
 make |tee ${PETSC_ARCH}.log
 
 
 if [ $DEBUG == 'y' ]; then
-  export PETSC_ARCH=linux-gnu
+  export PETSC_ARCH=${ARCH}
   ./config/configure.py $CONFIGOPTS
   make |tee ${PETSC_ARCH}.log
 
-  export PETSC_ARCH=linux-gnu-complex
+  export PETSC_ARCH=${ARCH}-complex
   ./config/configure.py $CONFIGOPTS
   make |tee ${PETSC_ARCH}.log
 fi
