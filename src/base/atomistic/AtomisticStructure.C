@@ -18,7 +18,7 @@
 
 AtomisticStructure::AtomisticStructure(const std::string& name)
   :_name(name)
-{ 
+{
   // Default initializations
   N_atoms = 0;
   is_periodical = false;
@@ -34,20 +34,20 @@ AtomisticStructure::~AtomisticStructure(void)
 }
 
 
-AtomisticStructure* 
+AtomisticStructure*
 AtomisticStructure::create(const std::string& name)
 {
   AtomisticStructure* st =  NULL;
   st = new AtomisticStructure(name);
 
   std::cout << "Created AtomisticStructure " << st->get_name() << std::endl;
- 
+
 
   return st;
 }
 
 
-AtomisticStructure* 
+AtomisticStructure*
 AtomisticStructure::create(const std::string& name, const ModelOptions& options)
 {
   AtomisticStructure* st = create(name);
@@ -59,7 +59,7 @@ AtomisticStructure::create(const std::string& name, const ModelOptions& options)
 
 
 
-GetPot 
+GetPot
 AtomisticStructure::getdata(const Material* mat)
 {
   GetPot data;
@@ -86,15 +86,15 @@ AtomisticStructure::init()
   if (_options.find_option("path") )
     std::cerr << "Reading structure from file. Any further information will be neglected" << std::endl;
 
-  if ( _options.find_option("physical_regions") ) 
+  if ( _options.find_option("physical_regions") )
     {
 
       //Put physical regions specified in input file in _regions
       //A vector is needed as temporary container
-      std::vector<std::string> region_string; 
+      std::vector<std::string> region_string;
       _options.get_option("physical_regions", region_string);
 
-      for (int i = 0; i < region_string.size(); i++)
+      for (unsigned int i = 0; i < region_string.size(); i++)
 	{std::cerr << "Assigning in set region_string " << region_string[i] << std::endl;
 	  _regionset.insert(region_string[i]);}
       region_string.clear();
@@ -105,7 +105,7 @@ AtomisticStructure::init()
 	  _regionset.clear();
 	  std::set < ID >::iterator region_ID_iterator = _device->get_region_ids().begin();
 
-	  for (int i = 0; i < _device->get_region_ids().size(); i++)
+	  for (unsigned int i = 0; i < _device->get_region_ids().size(); i++)
 	    {
 	      _regionset.insert( _device->get_region_name(*region_ID_iterator) );
 	      region_ID_iterator ++;
@@ -118,7 +118,7 @@ AtomisticStructure::init()
 	{
 	  std::vector<ID> tmp_ID;
 	  _device->get_region_ids( (*i), tmp_ID);
-	  for (int j = 0; j < tmp_ID.size(); j++) {_IDset.insert(tmp_ID[j]);}
+	  for (unsigned int j = 0; j < tmp_ID.size(); j++) {_IDset.insert(tmp_ID[j]);}
 	}
     }
 
@@ -129,7 +129,7 @@ AtomisticStructure::init()
     path = _options.get_option("path","none");
     if (path.compare("none") != 0) read_structure(path);
   }
-  else   
+  else
     {
       _structure_atoms.clear();
 
@@ -137,7 +137,7 @@ AtomisticStructure::init()
       if ( get_device()->get_mesh().mesh_dimension() == 1 ) generate = dynamic_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, 1 ) );
       if ( get_device()->get_mesh().mesh_dimension() == 2 )  generate = dynamic_cast<AtomisticGenerator2D*> ( AtomisticGenerator::create(this, 2 ) );
       if ( get_device()->get_mesh().mesh_dimension() == 3 )  generate = dynamic_cast<AtomisticGenerator3D*> ( AtomisticGenerator::create(this, 3 ) );
- 
+
       //#ifdef DEBUG
       //      std::cerr << "Calling AtomisticGenerator::do_init() in " << get_device()->get_mesh().mesh_dimension() << " dimensions " << std::endl;
       //#endif
@@ -161,16 +161,18 @@ AtomisticStructure::init()
 }
 
 
-void 
+void
 AtomisticStructure::set_device(Device* device)
 {
   _device = device;
 }
 
 
-void 
+void
 AtomisticStructure::read_structure(const std::string& path)
 {
+	//TODO: xyz and gen do not contaqin enough information (atom region, material)
+	//Should be implemented an information extension and reading UPG files
   std::ifstream file;
   std::string line, record;
   unsigned int n_specie;
@@ -187,7 +189,7 @@ AtomisticStructure::read_structure(const std::string& path)
 
   file.open(path.c_str(), std::ifstream::in);
 
-  if (!file) 
+  if (!file)
     {
       std::cerr << "Unable to open file " << path << " \n";
       exit(1);   // call system to stop
@@ -203,7 +205,7 @@ AtomisticStructure::read_structure(const std::string& path)
       getline(file, line);
       N_atoms = atoi(line.c_str());
 
-      if (N_atoms == 0) 
+      if (N_atoms == 0)
 	{
 	  std::cerr << "No atoms in structure files or non valid integer in first line \n";
 	  exit(1);
@@ -211,13 +213,13 @@ AtomisticStructure::read_structure(const std::string& path)
 
       // Skip second line
       getline(file, line);
- 
+
       // Start reading  lines
       // Note: Multiple initialization of line_string are allowed as inside a command block.
-      // It's a suggested solution as it allows inner loop on record to work well 
+      // It's a suggested solution as it allows inner loop on record to work well
       // without further line_string manipulation
       while (getline(file, line))
-	{ 
+	{
 	  std::stringstream line_string(line);
 	  // Extract atom type and check if it's a new type
 	  line_string >> record;
@@ -241,7 +243,7 @@ AtomisticStructure::read_structure(const std::string& path)
 	  tmp_atom.set_specie( record );
 
 	  for (unsigned int i = 1; i < 4; i++)
-	    { 
+	    {
 
 	      line_string >> record;
 	      pos(i) = atof(record.c_str());
@@ -267,16 +269,16 @@ AtomisticStructure::read_structure(const std::string& path)
     {
       getline(file, line);
       std::stringstream line_string(line);
-      
+
       line_string >> record;
 
       N_atoms = atoi(line.c_str());
-   
+
       //#ifdef DEBUG
       //      std::cerr << "N_atoms is " << N_atoms << std::endl;
       //#endif
 
-      if (N_atoms == 0) 
+      if (N_atoms == 0)
 	{
 	  std::cerr << "No atoms in structure files or non valid integer in first line. \n";
 	  exit(1);
@@ -284,31 +286,31 @@ AtomisticStructure::read_structure(const std::string& path)
 
       line_string >> record;
 
-   if ( (record.compare("S") == 0) || (record.compare("s") == 0)) 
+   if ( (record.compare("S") == 0) || (record.compare("s") == 0))
 	is_periodical = true;
       else  if ( (record.compare("C") == 0) && (record.compare("c") == 0))
 	is_periodical = false;
       else
 	std::cerr << "Warning (in GEN file at first line): Cluster (C) or Supercell (S) must be specified. By default a Cluster (no periodicity) is considered. \n";
-     
+
       getline(file, line);
 
-     //  //This line clean stringstream in a safe way 
-//       line_string.clear(std::stringstream::goodbit);  
+     //  //This line clean stringstream in a safe way
+//       line_string.clear(std::stringstream::goodbit);
 
 //       //Don't know why these spaces are needed!!!!!!!!!!!!!!! check it!!!!
 //       line_string << "                       ";
 
 //try in this way
       line_string.str(std::string());
-      line_string.clear(std::stringstream::goodbit);  
+      line_string.clear(std::stringstream::goodbit);
 //---------------------------------------------
 
       line_string << line;
 
       std::cout << "line is " << line << std::endl;
       std::cout << "line_string is " << line_string << std::endl;
-           
+
       while ( line_string >> record)
 	{
 	  _atom_types.push_back(record);
@@ -317,7 +319,7 @@ AtomisticStructure::read_structure(const std::string& path)
       N_types = _atom_types.size();
 
       // Cycle upon specified number of atoms (last rows are for periodicity vectors)
-      for (unsigned int i = 1; i <= N_atoms; i++)
+      for (int i = 1; i <= N_atoms; i++)
 	{
 	  getline(file, line);
 	  std::stringstream line_string(line);
@@ -329,7 +331,7 @@ AtomisticStructure::read_structure(const std::string& path)
 	  tmp_atom.set_specie ( _atom_types[n_specie -1] );
 
 	  for (unsigned int j = 1; j <= 3; j++)
-	    { 
+	    {
 	      line_string >> record;
 	      pos(j) =  atof(record.c_str());
 	    }
@@ -354,12 +356,12 @@ AtomisticStructure::read_structure(const std::string& path)
 		  line_string >> record;
 		  _periodicity_vectors[count] = atof(record.c_str());
 		  count++;
-		}  
+		}
 	    }
 	}
     }
 
-  else 
+  else
     {
       std::cerr << "Structure file extension is not recognized. \n";
       exit(1);
@@ -374,7 +376,7 @@ AtomisticStructure::read_structure(const std::string& path)
 }
 
 
-void 
+void
 AtomisticStructure::print_structure(const std::string& path)
 {
   std::ofstream file;
@@ -394,10 +396,10 @@ AtomisticStructure::print_structure(const std::string& path)
 
       for (unsigned int i = 0; i < _structure_atoms.size(); i++)
 	{
-	  file << std::setw(2) << _structure_atoms[i].get_specie() 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) << "\n"; 
+	  file << std::setw(2) << _structure_atoms[i].get_specie()
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) << "\n";
 
 	}
 
@@ -424,15 +426,15 @@ AtomisticStructure::print_structure(const std::string& path)
 	      if (_atom_types[n_specie].compare(_structure_atoms[i].get_specie()) == 0) break;
 	    }
 	  file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) << "\n"; 
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) << "\n";
 	}
 
       //A line of zeros is put here (coordinates origin)
-      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
-	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
-	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n"; 
+      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
 
       // Periodicity vectors at the bottom
       if (is_periodical)
@@ -445,7 +447,7 @@ AtomisticStructure::print_structure(const std::string& path)
 		  file << std::setw(20) << std::setprecision(10) << std::fixed <<
 		    _periodicity_vectors[count];
 		  count++;
-		}  
+		}
 	      file << "\n";
 	    }
 	}
@@ -453,7 +455,7 @@ AtomisticStructure::print_structure(const std::string& path)
     }
 
   //Gen format modified for uptight input
-  else if ( (extension.compare(".upg") == 0) || (extension.compare(".UPG") == 0) ) 
+  else if ( (extension.compare(".upg") == 0) || (extension.compare(".UPG") == 0) )
     {
 
 
@@ -462,7 +464,7 @@ AtomisticStructure::print_structure(const std::string& path)
 
       std::set<ID>::iterator ID_it;
 
-      unsigned int id = 1; 
+      unsigned int id = 1;
       Material* mat = NULL;
 
       for (ID_it = _IDset.begin(); ID_it != _IDset.end(); ID_it ++)
@@ -472,7 +474,7 @@ AtomisticStructure::print_structure(const std::string& path)
 	  id++;
 	}
       //I got the material map material_map
-     
+
       //Standard gen section (modified with material index)
      file << _structure_atoms.size();
 
@@ -492,17 +494,17 @@ AtomisticStructure::print_structure(const std::string& path)
 	    {
 	      if (_atom_types[n_specie].compare(_structure_atoms[i].get_specie()) == 0) break;
 	    }
-	  file << std::setw(10) << 
-                              material_map[ (_device->get_material(_structure_atoms[i].get_ID())) ] << std::setw(5) << n_specie + 1
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) << "\n"; 
+	  file << std::setw(10) <<
+                              material_map[ (_device->get_material(_structure_atoms[i].get_region_ID())) ] << std::setw(5) << n_specie + 1
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) << "\n";
 	}
 
       //A line of zeros is put here (coordinates origin)
-      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
-	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
-	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n"; 
+      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
 
       // Periodicity vectors at the bottom
       if (is_periodical)
@@ -515,7 +517,7 @@ AtomisticStructure::print_structure(const std::string& path)
 		  file << std::setw(20) << std::setprecision(10) << std::fixed <<
 		    _periodicity_vectors[count];
 		  count++;
-		}  
+		}
 	      file << "\n";
 	    }
 	}
@@ -537,7 +539,7 @@ AtomisticStructure::print_structure(const std::string& path)
                     const Material* mat = (*mat_it).first;
 
                    GetPot data((mat->get_database()).get_data_file());
-	   
+
                      file << std::setw(6) << (*mat_it).second <<  std::setw(12) << ((*mat_it).first)->get_name() <<  std::setw(12) << mat->get_structure();
 
 	   std::string alloy_type;
@@ -547,7 +549,7 @@ AtomisticStructure::print_structure(const std::string& path)
 	   else if (data("n_basis_specie", 0) == 1) {alloy_type = "simple";}
 	   else if (data("n_basis_specie", 0) == 2 ) {alloy_type = "binary";}
 	   else {std::cerr << "Could not define alloy_type variable in AtomisticStructure.C " << std::endl;}
-	   
+
 	   file << std::setw(12) << alloy_type;
 
 	   if (mat->is_alloy()) file << std::setw(4) << 2;
@@ -561,8 +563,6 @@ AtomisticStructure::print_structure(const std::string& path)
 	   //Parental material names
 	    if (mat->is_alloy()) file << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_A()
                         << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_B();
-//if (mat->is_alloy()) file << std::setw(10) << mat->get_name_A()
-//                        << std::setw(10) << mat->get_name_B();
 	   else file << std::setw(10) << mat->get_name();
 
 	   //Molar fractions
@@ -573,18 +573,18 @@ AtomisticStructure::print_structure(const std::string& path)
 
 	   //Mancano da inserire i file con i dati per Uptight
 	    std::string path = "./ ";
-	    
-	    if (mat->is_alloy()) file << std::setw(20) << (dynamic_cast<const Alloy*>(mat))->get_name_A() + ".data" 
+
+	    if (mat->is_alloy()) file << std::setw(20) << (dynamic_cast<const Alloy*>(mat))->get_name_A() + ".data"
 				      << std::setw(20) << (dynamic_cast<const Alloy*>(mat))->get_name_B() + ".data" ;
-	    else file << std::setw(20) << mat->get_name() + ".data" ; 
+	    else file << std::setw(20) << mat->get_name() + ".data" ;
 
 
 	   file << std::endl;
-std::cerr << "Material_map loop D" << std::endl;	   
+std::cerr << "Material_map loop D" << std::endl;
 //delete mat;
-std::cerr << "Material_map loop E" << std::endl;	   
+std::cerr << "Material_map loop E" << std::endl;
 	}
- 
+
 
     }
 
@@ -592,7 +592,7 @@ std::cerr << "Material_map loop E" << std::endl;
     {
       std::cerr << "File extension does not correspond to any internal format. File not print. \n";
     }
- 
+
   file.close();
 
   //#ifdef DEBUG
@@ -603,7 +603,7 @@ std::cerr << "Material_map loop E" << std::endl;
 
 
 
-void 
+void
 AtomisticStructure::print_structure(const std::string& path, double const* const charges)
 {
   std::ofstream file;
@@ -623,11 +623,11 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
 
       for (unsigned int i = 0; i < _structure_atoms.size(); i++)
 	{
-	  file << std::setw(2) << _structure_atoms[i].get_specie() 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(charges[i]) << "\n"; 
+	  file << std::setw(2) << _structure_atoms[i].get_specie()
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3))
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(charges[i]) << "\n";
 	}
 
     }
@@ -653,16 +653,16 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
 	      if (_atom_types[n_specie].compare(_structure_atoms[i].get_specie()) == 0) break;
 	    }
 	  file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) 
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(charges[i]) << "\n";  
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3))
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(charges[i]) << "\n";
 	}
 
       //A line of zeros is put here (coordinates origin)
-      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
-	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) 
-	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n"; 
+      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
 
       // Periodicity vectors at the bottom
       if (is_periodical)
@@ -675,7 +675,7 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
 		  file << std::setw(20) << std::setprecision(10) << std::fixed <<
 		    _periodicity_vectors[count];
 		  count++;
-		}  
+		}
 	      file << "\n";
 	    }
 	}
@@ -686,7 +686,7 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
     {
       std::cerr << "File extension does not correspond to any internal format. File not print. \n";
     }
- 
+
   file.close();
 
   //#ifdef DEBUG
@@ -725,14 +725,14 @@ AtomisticStructure::set_atom_types(const std::set<std::string>& atom_types)
 }
 
 
-int 
+int
 AtomisticStructure::get_type_index(const std::string& type)
  {
    int result = 0;
    for (int i = 0; i < N_types; i++){
      if ( (type.compare( _atom_types[i] ) == 0) ) result = i + 1;
    }
- 
+
    return result;
- 
+
  }

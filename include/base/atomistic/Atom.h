@@ -3,63 +3,204 @@
 
 #include "tensor.h"
 #include "TypeDefs.h"
- 
+
 
 //! Contains Atom definition
 /*!
- * Atom is defined mainly by atomic specie and 
- * spatial vector giving the position (from library 
+ * Atom is defined mainly by atomic specie and
+ * spatial vector giving the position (from library
  * tensor.h)
  */
  class Atom
  {
      public:
-	
+
 	 //! Atom constructor
 	 Atom();
-	 
+
 	 //! Constructor with specie and position initializations
 	 Atom(std::string& init_specie, Tensor1& init_position);
-	 
+
 	 //! Atom destructor
 	 ~Atom();
-	 	
-	 // Meber functions to obtain private data
-	 void set_specie(const std::string& sp) {specie=sp;}
-	 const std::string& get_specie() const {return specie;}
 
-	 void set_position(Tensor1 pos){position = pos;}
-	 double get_position(int i) const {return position(i);}
-	 Tensor1 get_position() const {return position;}
+	 //! Set atom specie name
+	 void set_specie(const std::string& sp);
 
-         int get_contact() const {return contact;}
-	 int get_ID() const {return id;}
-	 void set_ID(int my_id) {id=my_id;}
+	 //! Get atom specie name
+	 const std::string& get_specie() const;
 
-	 void set_flag(unsigned int fg){flag = fg;}
-	 unsigned int get_flag() const {return flag;}
+	 //!Set atom position (1X3 Tensor is used)
+	 void set_position(const Tensor1 pos);
+
+	 //! Get position coordinate i (x=1, y=2, z=3)
+	 const double get_position(int i) const;
+
+	 //! Get the whole position (1X3 Tensor)
+	 const Tensor1& get_position() const;
+
+	 //! If atom belongs to contact, return the id of contact (0 otherwise)
+     const int get_contact() const;
+
+     //! Get the ID of the region the atom belongs to
+     //! (Note: little errors may occur using basis or conventional cell
+     //! preservation in Atomistic Generator)
+	 const int get_region_ID() const;
+
+	 //! Set the ID of the region the atom belongs to
+	 void set_region_ID(const int my_id);
+
+
+	 //! Get atom identifier
+	 const ID get_atom_ID(void) const;
+
+	 //! Set atom identifier
+	 void set_atom_ID(const ID my_id);
+
+	 //! Set a general purpose integer flag, used internally. 0 is default safe value
+	 void set_flag(const unsigned int fg);
+
+	 //! Get the general purpose flag
+	 const unsigned int get_flag() const;
+
+	 //! Set atom address in conventional cells units. Useful internally in
+	 //! bond map generation
+     void set_conv_address(int c1, int c2, int c3);
+
+     //! Get atom address in conventional cells units
+     const int* get_conv_address(void) const;
 
 
 
      private:
 
 	 //! Atomic specie (short name)
-         std::string specie;
-	 
+     std::string _specie;
+
 	 //! Atom position
-	 Tensor1 position;
-	 
+	 Tensor1 _position;
+
 	 //! An integer which says if an atom belongs to device (0)
 	 //! or to contact (number of contact). Useful in electronic transport
-	 unsigned int contact;
+	 unsigned int _contact;
 
 	 //! ID of region containing the atom
-	 ID id;
-	 
+	 ID _region_id;
+
 	 //! A general purpose integer flag (for example used in passivation)
-	 unsigned int flag;
-	 
+	 unsigned int _flag;
+
+	 //!Conventional cell address: define atom position in terms of conventional cells
+	 //! multiples
+	 int _conv_address[3];
+
+	 //!An ID identifying univocally the atom
+	 ID _atom_id;
+
  };
+
+
+ //----------------------------------------------------
+ // Inline member functions
+ //----------------------------------------------------
+
+ inline
+ void Atom::set_specie(const std::string& sp)
+ {
+	 _specie=sp;
+ }
+
+
+ inline
+ const std::string& Atom::get_specie(void) const
+ {
+    return _specie;
+ }
+
+
+ inline
+ void Atom::set_position(const Tensor1 pos)
+ {
+	 _position = pos;
+ }
+
+
+ inline
+ const Tensor1& Atom::get_position(void) const
+ {
+	 return _position;
+ }
+
+
+ inline
+ const double Atom::get_position(int i) const
+ {
+	 return _position(i);
+ }
+
+
+ inline
+ const int Atom::get_contact(void) const
+ {
+	 return _contact;
+ }
+
+
+ inline
+ const int Atom::get_region_ID(void) const
+ {
+	 return _region_id;
+ }
+
+
+ inline
+ void Atom::set_region_ID(const int my_id)
+ {
+	 _region_id=my_id;
+ }
+
+
+ inline
+  const ID Atom::get_atom_ID(void) const
+  {
+ 	 return _atom_id;
+  }
+
+
+  inline
+  void Atom::set_atom_ID(const ID my_id)
+  {
+ 	 _atom_id=my_id;
+  }
+
+
+ inline
+ void Atom::set_flag(const unsigned int fg)
+ {
+	 _flag = fg;
+ }
+
+
+ inline
+ const unsigned int Atom::get_flag() const
+ {
+	 return _flag;
+ }
+
+
+ inline
+ void Atom::set_conv_address(int c1, int c2, int c3)
+ {
+	 _conv_address[0] = c1;
+	 _conv_address[1] = c2;
+	 _conv_address[2] = c3;
+ }
+
+
+ inline
+ const int* Atom::get_conv_address(void) const{
+   return &_conv_address[0];
+ }
 
 
 #endif // _ATOM_H_

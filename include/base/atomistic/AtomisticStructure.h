@@ -13,7 +13,7 @@
 
 //! Contains all needed data for an atomic structure
 /*!
- *For any Atomistic region an atomistic structure is 
+ *For any Atomistic region an atomistic structure is
  *built, containing atom positions and other informations
  *needed by any atomistic physical model.
  */
@@ -51,7 +51,7 @@ public:
   //! Get set of regions covered by atomistic structure
   const std::set<std::string>& get_region(void);
 
-  //! Get set of regions covered by atomistic structure (IDs) 
+  //! Get set of regions covered by atomistic structure (IDs)
   const std::set<ID>& get_IDset(void);
 
    //! Set the device we're working with
@@ -70,19 +70,18 @@ public:
   const std::vector<std::string>& get_atom_types (void);
 
   //! Get periodicity vectors for the structure:
-  //! Careful ! this is passing a reference. maybe dangerous
   double* get_periodicity_vectors(void);
 
-  //! Initialize the structure 
-  void init(void); 
+  //! Initialize the structure
+  void init(void);
 
   //! Add a type to the atom types list
   void add_atom_type(const std::string&);
-  
+
  //! Print structure to file (format depends on extension used)
   void print_structure(const std::string& path);
 
-  //! A tool for printing atomic charges on output 
+  //! A tool for printing atomic charges on output
   void print_structure(const std::string& path, double const* const charges);
 
   // get the number of atoms in the structure
@@ -101,7 +100,7 @@ public:
   bool is_periodic() const {return is_periodical;}
 
   //! Get atom type index (types are stored in _atom_types)
-  int get_type_index   (  const std::string &   type    ) ;
+  int get_type_index   (  const std::string &   type    );
 
   void set_periodicity_vectors(const Tensor2Gen& T);
 
@@ -118,12 +117,12 @@ private:
   void read_structure(const std::string& path);
 
   //! Number of atoms in structure
-  int N_atoms; 
+  int N_atoms;
 
   //! Number of species
   int N_types;
 
-  //! Tell if atomistic structure has to be considered a periodical 
+  //! Tell if atomistic structure has to be considered a periodical
   //! structure (true) or a cluster (false)
   bool is_periodical;
 
@@ -206,7 +205,7 @@ const std::vector<std::string>& AtomisticStructure::get_atom_types(void)
 }
 
 
-inline 
+inline
 double* AtomisticStructure::get_periodicity_vectors(void){
   return &_periodicity_vectors[0];
 }
@@ -220,16 +219,16 @@ Device* AtomisticStructure::get_device(void){
 
 
 inline
-const std::set<std::string>& 
-AtomisticStructure::get_region(void) 
+const std::set<std::string>&
+AtomisticStructure::get_region(void)
 {
   return _regionset;
 }
 
 
 inline
-const std::set<ID>& 
-AtomisticStructure::get_IDset(void) 
+const std::set<ID>&
+AtomisticStructure::get_IDset(void)
 {
   return _IDset;
 }

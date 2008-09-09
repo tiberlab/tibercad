@@ -68,7 +68,7 @@ void Dftb::parse_options(void){
 };
 
 
-void 
+void
 Dftb::do_init(void){
 
   std::cerr << "Dftb Simulation Inizialization" << std::endl;
@@ -85,25 +85,25 @@ Dftb::do_init(void){
 
   //  Initialize Dftb instance it and sets parameters
   std::cout << "Am I periodic?? " << _dftb_options.iPeriodic << std::endl;
-  inst->fill_param(_dftb_options.nAtom, _dftb_options.nType, 
-		   _dftb_options.eTemp, _dftb_options.iPeriodic, _dftb_options.speciesNames, 
+  inst->fill_param(_dftb_options.nAtom, _dftb_options.nType,
+		   _dftb_options.eTemp, _dftb_options.iPeriodic, _dftb_options.speciesNames,
 		   _dftb_options.species);
 
   std::cout << "fill parameter done" << std::endl;
 
-  inst->addskdata(_dftb_options.skNames, _dftb_options.mAngs, 
+  inst->addskdata(_dftb_options.skNames, _dftb_options.mAngs,
 		  _dftb_options.orbResolved, _dftb_options.skInterp, _dftb_options.nType);
 
   std::cout << "addskdata done" << std::endl;
 
-  if (_dftb_options.iPeriodic == 1) 
+  if (_dftb_options.iPeriodic == 1)
     {inst->addlattice(_dftb_options.latVecs);
       std::cout << "addlattice done" << std::endl;}
 
-  if (_dftb_options.iPeriodic == 1) 
-    {if (_dftb_options.supersampling = true) 
+  if (_dftb_options.iPeriodic == 1)
+    {if (_dftb_options.supersampling = true)
 	{
-	  //Parameter noinv is set to 1 (use inversion simmetry). 
+	  //Parameter noinv is set to 1 (use inversion simmetry).
 	  //To 0 will generate the complete set (both positive and negative k points)
 	  int noinv = 1;
 	  inst->addsupersampling(_dftb_options.samplingcoeffs, _dftb_options.samplingshift, noinv);
@@ -113,16 +113,16 @@ else
       std::cout << "addkPoints done" << std::endl;}
 
   std::cout << "initdftb begins" << std::endl;
- 
+
   inst->initdftb();
 
-  std::cout << "initdftb done" << std::endl; 
+  std::cout << "initdftb done" << std::endl;
 
   inst->up_coords(_dftb_options.nAtom, _dftb_options.coords);
 
-  std::cout << "up_coords" << std::endl; 
- 
- 
+  std::cout << "up_coords" << std::endl;
+
+
 }
 
 
@@ -142,7 +142,7 @@ void Dftb::do_solve(void){
    double* charges;
   charges = new double[_dftb_options.nAtom];
   inst->getchargesperatom(_dftb_options.nAtom, charges);
- 
+
   _atomistic_structure->print_structure("TB_out.xyz",charges);
 
   }
@@ -199,15 +199,15 @@ void Dftb::build_names(void){
   int counter = 0;
   for (int i = 0; i < ( _atomistic_structure->get_N_types() ); i++){
     for (int j = 0; j < (_atomistic_structure->get_N_types() ); j++){
-    
+
       sk_name.clear();
       sk_name.append(prefix);
-      sk_name.append(atom_types[i]); sk_name.append("-"); 
+      sk_name.append(atom_types[i]); sk_name.append("-");
       sk_name.append(atom_types[j]); sk_name.append(".skf");
 
       if (i == j){
 	file.open(sk_name.c_str());
-	if ( !(file.is_open()) ) {std::cerr << "ERROR IN DFTB: COULD NOT FIND SK FILE " 
+	if ( !(file.is_open()) ) {std::cerr << "ERROR IN DFTB: COULD NOT FIND SK FILE "
 					    << sk_name << std::endl;}
 	file.close();
       }
@@ -220,20 +220,20 @@ void Dftb::build_names(void){
 	  file.close();
 	  sk_name.clear();
 	  sk_name.append(prefix);
-	  sk_name.append(atom_types[j]); sk_name.append("-"); 
+	  sk_name.append(atom_types[j]); sk_name.append("-");
 	  sk_name.append(atom_types[i]); sk_name.append(".skf");
 	}
 	file.close();
 
 	file.open(sk_name.c_str());
-	if ( !(file.is_open()) ) {std::cerr << "ERROR IN DFTB: COULD NOT FIND SK FILE " 
+	if ( !(file.is_open()) ) {std::cerr << "ERROR IN DFTB: COULD NOT FIND SK FILE "
 					    << sk_name << std::endl;}
 
 	file.close();
 
       }
 
-      if ( sk_name.size() > DFTBP_LC ) {std::cerr << "ERROR IN DFTB: SK FILENAME " << sk_name 
+      if ( sk_name.size() > DFTBP_LC ) {std::cerr << "ERROR IN DFTB: SK FILENAME " << sk_name
 						  <<" IS TOO LONG " << std::endl;}
 
       for (int str_i = 0; str_i <  DFTBP_LC - 1; str_i++){
@@ -300,7 +300,6 @@ void Dftb::build_structure_options(){
 
   //If system is not periodical lattice vectors are set to 0 by default in AtomisticStructure.
   //Check if huge value is needed instead of zero value
-  double* tmp_periodicity_vectors;
   _dftb_options.latVecs = _atomistic_structure->get_periodicity_vectors();
 
   //If lattice vectors are found in input file (in order x1, y1, z1, x2...), overwrite them
@@ -343,7 +342,7 @@ void Dftb::build_input_options(){
  for (int i = 9; i < 12 ; i++) {
       _dftb_options.samplingshift[i - 9] = supersamplingdata[i];
     }
-    
+
   }
 
 
@@ -363,7 +362,7 @@ void Dftb::build_input_options(){
     _dftb_options.nkPoints = get_options().get_option("nkPoints", 4);
 
 
-  
+
 
 
     //A METHOD FOR INSERTING KPOINTS MUST STILL BE DECIDED. ONLY DEFAULT AVAILABLE
@@ -387,9 +386,9 @@ void Dftb::build_input_options(){
 	_dftb_options.kPoints[9] = -0.25;
 	_dftb_options.kPoints[10] = -0.25;
 	_dftb_options.kPoints[11] = 0.25;
- 
+
       }
-      else 
+      else
 	if ( _dftb_options.nkPoints == 8) {
 	  _dftb_options.kPoints[0] = 0.25;
 	  _dftb_options.kPoints[1] = 0.25;
@@ -417,9 +416,9 @@ void Dftb::build_input_options(){
 	  _dftb_options.kPoints[23] = 0.5;
 	}
 	else {std::cout << "Error, up to now only default 4 k points available" << std::endl;exit(0);}
-  
+
     _dftb_options.kWeights = new double[  _dftb_options.nkPoints];
-    for (int i = 0; i < _dftb_options.nkPoints; i++){ 
+    for (int i = 0; i < _dftb_options.nkPoints; i++){
       _dftb_options.kWeights[i] = 1.0;
     }
 
@@ -447,14 +446,14 @@ void Dftb::print_dftb_options(void){
  //  std::cout << "skNames are " << std::endl;
 //   for (int i = 0; i < n_files * DFTBP_LC; i++) {std::cout << "Char " << i << " is " << _dftb_options.skNames[i] << std::endl;}
 //   std::cout << "skNames string lenght is " << strlen(_dftb_options.skNames);
- 
+
 //   std::cout << "speciesNames are " << std::endl;
 //   for (int i = 0; i <  _atomistic_structure->N_types * DFTBP_MC; i++) {std::cout << "Char " << i << " is " << _dftb_options.speciesNames[i] << std::endl;}
 //   std::cout << "speciesNames string lenght is " << strlen(_dftb_options.speciesNames);
 
   std::cout << "latVecs are " << std::endl;
   for (int i = 0; i < 9; i++){
-    std::cout << "latvecs[" <<i<<"]"<< _dftb_options.latVecs[i] << std::endl; 
+    std::cout << "latvecs[" <<i<<"]"<< _dftb_options.latVecs[i] << std::endl;
   }
 
   std::cout << "iPeriodic is " << _dftb_options.iPeriodic << std::endl;

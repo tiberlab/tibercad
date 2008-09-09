@@ -102,7 +102,7 @@ protected:
 
 
 
-inline 
+inline
 Dftb* Dftb::create()
 {
   return new Dftb;
