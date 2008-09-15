@@ -68,10 +68,10 @@ SimulationInterface::~SimulationInterface(void)
   for ( ; it != end; ++it)
     delete it->second;
 
-  //EmbracingMap::iterator embit(_embracings.begin());
-  //const EmbracingMap::iterator embend(_embracings.end());
-  //for ( ; embit != embend; ++embit)
-  //  delete embit->second;
+  EmbracingMap::iterator embit(_embracings.begin());
+  const EmbracingMap::iterator embend(_embracings.end());
+  for ( ; embit != embend; ++embit)
+    delete embit->second;
 
 }
 

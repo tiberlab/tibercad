@@ -338,6 +338,17 @@ PhysicalModelInterface::get_default_name(void) const
 }
 
 
+
+
+Database&
+PhysicalModelInterface::get_database(void)
+{
+  return _material->get_database();
+}
+
+
+
+
 bool
 PhysicalModelInterface::has_parameter(const std::string& name) const
 {

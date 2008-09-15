@@ -5,6 +5,7 @@
 
 #include "tiber_config.h"
 #include "TypeDefs.h"
+#include "Database.h"
 #include "ModelOptions.h"
 #include "InitFailedException.h"
 
@@ -171,6 +172,8 @@ class PhysicalModelInterface
      */
     PhysicalModelInterface* copy(void) const;
     
+    //! Get a reference to the database
+    Database& get_database(void);
 
     //! Set a reference to the material this model belongs to
     void set_material(Material* material);
@@ -548,6 +551,7 @@ PhysicalModelInterface::set_material(Material* material)
 {
   _material = material;
 }
+
 
 
 
