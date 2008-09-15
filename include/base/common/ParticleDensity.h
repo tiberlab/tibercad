@@ -14,6 +14,7 @@
 #include <set>
 
 class SimulationInterface;
+class Embracing;
 class Elem;
 
 
@@ -26,8 +27,8 @@ class Elem;
  * \f]
  * where \f$N_{eff}\f$ is the effective density of states, \f$E_F\f$ the
  * electro-chemical potential and \f$E\f$ the particle energy.
- * The function \f$f\f$ can be the exponential or the Fermi function of order 1/2,
- * according to carrier statistics.
+ * The function \f$f\f$ can be the exponential or the Fermi function of order
+ * 1/2, according to carrier statistics.
  *
  */
 class ParticleDensity
@@ -141,6 +142,14 @@ class ParticleDensity
     double get_particle_density_derivative(void);
 
 
+    //! Set up an embracing region
+    void set_embracing(Embracing* embracing);
+
+
+    //! Get a pointer to the quantum density simulation
+    SimulationInterface* get_quantum_simulation(void);
+
+
 
   private:
 
@@ -160,8 +169,8 @@ class ParticleDensity
     bool _is_quantum;
 
 
-    //! The quantum density calculation(s)
-    std::set<SimulationInterface*> _quantum_density;
+    //! The quantum density calculation
+    SimulationInterface* _quantum_density;
 
 
     //! The ID of the density variable
@@ -205,6 +214,10 @@ class ParticleDensity
 
     //! The particle density derivative
     double _density_derivative;
+
+
+    //! The embracing of classical and quantum calculation
+    Embracing* _embracing;
 
 
     //! Calculate the particle density
@@ -366,6 +379,16 @@ ParticleDensity::get_particle_density_derivative(void)
 
   return _density_derivative;
 }
+
+
+
+inline
+SimulationInterface*
+ParticleDensity::get_quantum_simulation(void)
+{
+  return _quantum_density;
+}
+
 
 
 #endif // _PARTICLEDENSITY_H_

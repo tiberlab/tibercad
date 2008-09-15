@@ -50,6 +50,18 @@ SimulationEnvironment::~SimulationEnvironment(void)
     delete *bdit;
 }
 
+
+void
+SimulationEnvironment::prepare(void)
+{
+  assert(_device != NULL);
+  create_element_list();
+  create_bc_maps();
+  update_boundary_node_map();
+}
+
+
+
 void
 SimulationEnvironment::init(void)
 {
@@ -57,9 +69,9 @@ SimulationEnvironment::init(void)
 
   if (!_is_initialized)
   {
-    create_element_list();
-    create_bc_maps();
-    update_boundary_node_map();
+    //create_element_list();
+    //create_bc_maps();
+    //update_boundary_node_map();
 
     BCMap::iterator it = _bc_map.begin();
     const BCMap::iterator end = _bc_map.end();
@@ -116,7 +128,6 @@ void
 SimulationEnvironment::create_element_list(void)
 {
   _element_list.clear();
-
   Mesh& mesh = _device->get_mesh();
 
   MeshBase::element_iterator it = mesh.active_elements_begin();

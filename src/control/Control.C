@@ -99,9 +99,10 @@ Control::init(void) throw (InitFailedException, ModelErrorException)
     setup_clusters();
     create_atomistic_structures();
     setup_models();
-    
+
     // initialize the device
     _device->init();
+
 
     // initialize the simulation environments
     EnvironmentMap::iterator envit(_simulation_environments.begin());
@@ -621,6 +622,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
     }
 
+    // prepare some of the environments internals (lists of elements etc.)
+    env->prepare();
 
   } // end loop over simulations
 

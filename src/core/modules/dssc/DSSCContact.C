@@ -29,3 +29,9 @@ DSSCContact::do_init(void)
   set_potential(check_and_register(s, 0.0));
 }
 
+
+
+void
+DSSCContact::calculate_current(void)
+{
+}

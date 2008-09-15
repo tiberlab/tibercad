@@ -13,15 +13,18 @@
 #include <map>
 #include <stdexcept>
 
+using namespace std;
+
+
 TiberVTKIO::TiberVTKIO(const MeshBase& mesh)
   : MeshOutput<MeshBase>(mesh)
 {
 }
 
 
-void TiberVTKIO::write_nodal_data(const std::string& fname,
-    const std::vector<Number>& soln,
-    const std::vector<std::string>& names)
+void TiberVTKIO::write_nodal_data(const string& fname,
+    const vector<Number>& soln,
+    const vector<string>& names)
 {
 
   if(libMesh::processor_id() != 0)
@@ -33,7 +36,7 @@ void TiberVTKIO::write_nodal_data(const std::string& fname,
   const MeshBase& mesh = MeshOutput<MeshBase>::mesh();
 
 
-  std::set<unsigned int> node_ids;
+  set<unsigned int> node_ids;
 
   // count nodes of active part of mesh ...
   {
@@ -55,10 +58,10 @@ void TiberVTKIO::write_nodal_data(const std::string& fname,
 
 
   // Create an output stream for script file
-  std::ofstream out(fname.c_str());
+  ofstream out(fname.c_str());
 
   if (!out.good())
-    throw std::runtime_error("Could not open " + fname);
+    throw runtime_error("Could not open " + fname);
 
   // The number of variables in the equation system
   const unsigned int n_vars = names.size();
@@ -70,10 +73,10 @@ void TiberVTKIO::write_nodal_data(const std::string& fname,
   out << "DATASET UNSTRUCTURED_GRID\n";
   out << "POINTS " << n_nodes << " double\n";
 
-  std::map<unsigned int, unsigned int> vtk_node_ids;
+  map<unsigned int, unsigned int> vtk_node_ids;
   
-  std::set<unsigned int>::iterator nodeit(node_ids.begin());
-  const std::set<unsigned int>::iterator nodeend(node_ids.end());
+  set<unsigned int>::iterator nodeit(node_ids.begin());
+  const set<unsigned int>::iterator nodeend(node_ids.end());
   for (unsigned int vtk_id = 0; nodeit != nodeend; ++nodeit, vtk_id++)
   {
     const Node& node = mesh.node(*nodeit);
@@ -136,8 +139,8 @@ void TiberVTKIO::write_nodal_data(const std::string& fname,
 
       
   // get ordered nodal data using a map
-  typedef std::pair<unsigned int, Number> key_value_pair;
-  typedef std::map<unsigned int, Number> map_type;
+  typedef pair<unsigned int, Number> key_value_pair;
+  typedef map<unsigned int, Number> map_type;
   typedef map_type::iterator map_iterator;
 
   map_type node_map;
@@ -171,7 +174,7 @@ void TiberVTKIO::write_nodal_data(const std::string& fname,
       }
     }
 
-    out << std::setprecision(10);
+    out << setprecision(10);
 
     map_iterator map_it = node_map.begin();
     const map_iterator end_map_it = node_map.end();
@@ -192,9 +195,9 @@ void TiberVTKIO::write_nodal_data(const std::string& fname,
 
 
 
-void TiberVTKIO::write_elemental_data(const std::string& fname,
-    const std::vector<Number>& soln,
-    const std::vector<std::string>& names)
+void TiberVTKIO::write_elemental_data(const string& fname,
+    const vector<Number>& soln,
+    const vector<string>& names)
 {
 
   if(libMesh::processor_id() != 0)
@@ -206,7 +209,7 @@ void TiberVTKIO::write_elemental_data(const std::string& fname,
   const MeshBase& mesh = MeshOutput<MeshBase>::mesh();
 
 
-  std::set<unsigned int> node_ids;
+  set<unsigned int> node_ids;
 
   // count nodes  of active part of mesh ...
   {
@@ -228,10 +231,10 @@ void TiberVTKIO::write_elemental_data(const std::string& fname,
 
 
   // Create an output stream for script file
-  std::ofstream out(fname.c_str());
+  ofstream out(fname.c_str());
 
   if (!out.good())
-    throw std::runtime_error("Could not open " + fname);
+    throw runtime_error("Could not open " + fname);
 
   // The number of variables in the equation system
   const unsigned int n_vars = names.size();
@@ -243,10 +246,10 @@ void TiberVTKIO::write_elemental_data(const std::string& fname,
   out << "DATASET UNSTRUCTURED_GRID\n";
   out << "POINTS " << n_nodes << " double\n";
 
-  std::map<unsigned int, unsigned int> vtk_node_ids;
+  map<unsigned int, unsigned int> vtk_node_ids;
   
-  std::set<unsigned int>::iterator nodeit(node_ids.begin());
-  const std::set<unsigned int>::iterator nodeend(node_ids.end());
+  set<unsigned int>::iterator nodeit(node_ids.begin());
+  const set<unsigned int>::iterator nodeend(node_ids.end());
   for (unsigned int vtk_id = 0; nodeit != nodeend; ++nodeit, vtk_id++)
   {
     const Node& node = mesh.node(*nodeit);
@@ -309,10 +312,10 @@ void TiberVTKIO::write_elemental_data(const std::string& fname,
 
       
   // get ordered nodal data using a map
-  typedef std::pair<unsigned int, Number> key_value_pair;
-  typedef std::pair<unsigned int, std::vector<Number> > vector_key_value_pair;
-  typedef std::map<unsigned int, Number> map_type;
-  typedef std::map<unsigned int, std::vector<Number> > vector_map_type;
+  typedef pair<unsigned int, Number> key_value_pair;
+  typedef pair<unsigned int, vector<Number> > vector_key_value_pair;
+  typedef map<unsigned int, Number> map_type;
+  typedef map<unsigned int, vector<Number> > vector_map_type;
   typedef map_type::iterator map_iterator;
   typedef vector_map_type::iterator vector_map_iterator;
 
@@ -339,7 +342,7 @@ void TiberVTKIO::write_elemental_data(const std::string& fname,
     if (tokit_next != tokens.end())
     {
       // is it a vector?
-      std::string coord(*tokit_next);
+      string coord(*tokit_next);
 
       if ((coord == "x") || (coord == "y") || (coord == "z"))
         is_vec = true;
@@ -348,10 +351,10 @@ void TiberVTKIO::write_elemental_data(const std::string& fname,
     if (is_vec)
     {
       // it is a vector
-      std::string name(*tokit);
-      std::string coord(*tokit_next);
+      string name(*tokit);
+      string coord(*tokit_next);
 
-      std::vector<int> indices(3, -1);
+      vector<int> indices(3, -1);
 
       
       if (coord == "x")
@@ -372,8 +375,8 @@ void TiberVTKIO::write_elemental_data(const std::string& fname,
         if (tokit_next != tokens.end())
         {
           // it is a vector
-          std::string name2(*tokit);
-          std::string coord2(*tokit_next);
+          string name2(*tokit);
+          string coord2(*tokit_next);
 
 
           if (name2 == name)
@@ -399,8 +402,8 @@ void TiberVTKIO::write_elemental_data(const std::string& fname,
 
               if (tokit_next != tokens.end())
               {
-                std::string name3(*tokit);
-                std::string coord3(*tokit_next);
+                string name3(*tokit);
+                string coord3(*tokit_next);
 
                 if (name3 == name)
                 {
@@ -432,7 +435,7 @@ void TiberVTKIO::write_elemental_data(const std::string& fname,
 
         unsigned int global_id = elem_number * n_vars;
 
-        std::vector<double> value(3, 0.0);
+        vector<double> value(3, 0.0);
         if (indices[0] != -1)
           value[0] = soln[global_id + indices[0]];
         if (indices[1] != -1)
@@ -445,7 +448,7 @@ void TiberVTKIO::write_elemental_data(const std::string& fname,
         elem_number++;
       }
 
-      out << std::setprecision(10);
+      out << setprecision(10);
 
       vector_map_iterator map_it = vector_node_map.begin();
       const vector_map_iterator end_map_it = vector_node_map.end();
@@ -483,7 +486,7 @@ void TiberVTKIO::write_elemental_data(const std::string& fname,
         elem_number++;
       }
 
-      out << std::setprecision(10);
+      out << setprecision(10);
 
       map_iterator map_it = node_map.begin();
       const map_iterator end_map_it = node_map.end();

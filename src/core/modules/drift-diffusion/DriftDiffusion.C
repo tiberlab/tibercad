@@ -162,7 +162,8 @@ DriftDiffusion::create_physical_model(const ModelOptions& options,
     throw ModelErrorException(
         "DriftDiffusion: No such physical model: " + modelname);
 
-  model->set_driftdiffusion(this);
+  // we need non-const pointer to DriftDiffusion
+  model->set_driftdiffusion(const_cast<DriftDiffusion*>(this));
 
   return model;
 }

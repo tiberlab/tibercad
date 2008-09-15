@@ -212,6 +212,8 @@ void OptRecombinSpectrum::do_init( )
   }
 
  
+  if (!_optical_model->is_initialized())
+    _optical_model->init();
 
 
   

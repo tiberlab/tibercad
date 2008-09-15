@@ -10,6 +10,7 @@ subdirs += solver-interfaces macroheatbalance quantumEFAmodels tightbinding
 subdirs += poisson
 subdirs += eigenvalue
 subdirs += maxwell
+subdirs += embracing
 subdirs += models
 subdirs += modules
 

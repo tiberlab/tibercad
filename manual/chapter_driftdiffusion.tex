@@ -399,7 +399,7 @@ $v_{min}$ &  \verb+vsat_min_e+ &  \verb+vsat_min_h+\\
 
 \subsection{Boundary conditions}
 
-Boundary conditions are implemented for ohmic contacts, Schottky contacts and free surfaces.
+Boundary conditions are implemented for ohmic contacts, Schottky contacts, free surfaces and interfaces.
 Contacts are boundary models that allow a nonzero normal electrical current.
 For this type of boundaries one can define a contact resistance using the \texttt{contact\_resistance} option.
 The contact resistance has units $\Omega\mathrm{cm}^2$.
@@ -407,12 +407,16 @@ The applied voltage is specified with the option \texttt{voltage}.
 A variable can be assigned to this, using the \verb+@+-syntax.
 
 For a finer control of the behaviour at electrical contacts, the options \keyword{zero\_field}, \keyword{zero\_grad\_fermi\_e} and \keyword{zero\_grad\_fermi\_h} can be used, which when set to \verb+true+ will impose zero normal electric field and zero normal gradient of the electron and hole electro-chemical potential, respectively.
-
 The ohmic contact (identifier \texttt{ohmic}) has no further parameters.
 
 A Schottky contact  (identifier \texttt{schottky}) has the additional parameter \texttt{barrier}, which signifies the energy difference between the semiconductor band edge and the fermi energy in the metal.
 As default, the barrier is taken with respect to the conduction band.
 By specifying \verb+band = v+ the barrier can be imposed with respect to the valence band (p-type contact).
+Alternatively, the metal work function can be defined using the keyword \keyword{work\_function}. Note, however, that its value has to be aligned with the band energies given in the material files for the other materials.
+
+If a contact touches several different regions with different materials, it can be necessary to provide a reference material using the keyword \keyword{reference\_material} and specifying the name of a \TiberCAD{} region.
+\TiberCAD{} will prefer semiconductors over dielectrics if no reference material is specified.
+
 
 The type of boundary model is chosen by the parameter \texttt{type}, e.g. \texttt{type = schottky}.
 

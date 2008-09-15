@@ -695,7 +695,7 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
 
 
     //! Set the flag for equilibrium calculation
-    void set_driftdiffusion(const DriftDiffusion* dd);
+    void set_driftdiffusion(DriftDiffusion* dd);
 
 
   protected:
@@ -870,8 +870,8 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     //! \c true if we should use a predictor for quantum densities
     bool _use_predictor;
 
-    //! If we are doing an equilibrium calculation
-    const DriftDiffusion* _driftdiffusion;
+    //! The simulation this model is used for
+    DriftDiffusion* _driftdiffusion;
 
 
     //! The point-wise data
@@ -1409,7 +1409,7 @@ DriftDiffusionProperties::use_predictor(void) const
 
 inline
 void
-DriftDiffusionProperties::set_driftdiffusion(const DriftDiffusion* dd)
+DriftDiffusionProperties::set_driftdiffusion(DriftDiffusion* dd)
 {
   _driftdiffusion = dd;
 }

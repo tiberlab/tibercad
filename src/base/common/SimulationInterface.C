@@ -5,6 +5,7 @@
 #include "Control.h"
 #include "DLLoader.h"
 #include "Material.h"
+#include "Embracing.h"
 
 #ifndef BUILD_TIBER_MODULES
 #include "DriftDiffusion.h"
@@ -66,6 +67,12 @@ SimulationInterface::~SimulationInterface(void)
   map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
   for ( ; it != end; ++it)
     delete it->second;
+
+  //EmbracingMap::iterator embit(_embracings.begin());
+  //const EmbracingMap::iterator embend(_embracings.end());
+  //for ( ; embit != embend; ++embit)
+  //  delete embit->second;
+
 }
 
 
@@ -1144,3 +1151,23 @@ SimulationInterface::get_solver_options(void)
   return it->second;
 }
                    
+
+
+Embracing*
+SimulationInterface::create_embracing_region(
+    SimulationInterface* other_simulation, const ModelOptions& options)
+{
+  Embracing* emb = NULL;
+  if (other_simulation != NULL)
+    if (_embracings.find(other_simulation) != _embracings.end())
+      emb = _embracings[other_simulation];
+    else
+    {
+      emb = new Embracing(this, other_simulation);
+      _embracings[other_simulation] = emb;
+      emb->init(options);
+    }
+
+  return emb;
+}
+

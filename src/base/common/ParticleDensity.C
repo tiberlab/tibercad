@@ -3,6 +3,7 @@
 #include "ParticleDensity.h"
 #include "SimulationInterface.h"
 #include "TiberMath.h"
+#include "Embracing.h"
 
 
 using namespace std;
@@ -16,10 +17,12 @@ ParticleDensity::ParticleDensity(double particle_charge,
   _statistics(statistics),
   _use_quantum(false),
   _is_quantum(false),
+  _quantum_density(NULL),
   _density_id(INVALID_ID),
   _elem(NULL),
   _density(-1.0),
-  _density_derivative(-1.0)
+  _density_derivative(-1.0),
+  _embracing(NULL)
 {
 }
 
@@ -54,8 +57,9 @@ ParticleDensity::add_quantum_density(const std::string& name)
 
     // at this point we have for sure a quantum density simulation
 
-    _quantum_density.insert(qd);
+    _quantum_density = qd;
     use_quantum_density();
+
   }
 }
 
@@ -122,6 +126,13 @@ ParticleDensity::classical_density_derivative<TiberCad::FERMIDIRAC>(void)
 bool
 ParticleDensity::quantum_density(void)
 {
+  bool flag = false;
+  _density = 0.0;
+
+  if (_quantum_density->is_solved())
+    flag = _quantum_density->get_solution(_elem, _p, _density_id, _density);
+
+  /*
   set<SimulationInterface*>::iterator it(_quantum_density.begin());
   const set<SimulationInterface*>::iterator end(_quantum_density.end());
 
@@ -138,7 +149,8 @@ ParticleDensity::quantum_density(void)
         flag = true;
       }
     }
-    
+  */  
+
   return flag;
 }
 
@@ -146,6 +158,13 @@ ParticleDensity::quantum_density(void)
 bool
 ParticleDensity::quantum_density_derivative(void)
 {
+  bool flag = false;
+  _density_derivative = 0.0;
+
+  if (_quantum_density->is_solved())
+    flag = _quantum_density->get_solution(_elem, _p, _density_id, _density);
+
+  /*
   set<SimulationInterface*>::iterator it(_quantum_density.begin());
   const set<SimulationInterface*>::iterator end(_quantum_density.end());
 
@@ -159,6 +178,7 @@ ParticleDensity::quantum_density_derivative(void)
       if ((*it)->get_solution(_elem, _p, _density_id, density))
         flag = true;
     }
+  */
 
   return flag;
 }
@@ -209,3 +229,9 @@ ParticleDensity::calculate_density_derivative(void)
 }
 
 
+void
+ParticleDensity::set_embracing(Embracing* embracing)
+{
+  if (_use_quantum)
+    _embracing = embracing;
+}

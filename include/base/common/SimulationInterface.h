@@ -63,6 +63,7 @@
 
 
 class SimulationEnvironment;
+class Embracing;
 class EquationSystems;
 class PhysicalModel;
 class BoundaryProperties;
@@ -518,6 +519,11 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     bool includes_region(ID region_id) const;
 
 
+    //! Create an embracing region
+    Embracing* create_embracing_region(SimulationInterface* other_simulation,
+        const ModelOptions& options);
+
+
 
   protected:
 
@@ -803,12 +809,14 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
         std::vector<std::string>& description);
 
 
-
-
   private:
 
     //! A typedef for convenience
     typedef std::map<ID, SimulationInterface*> SimulationMap;
+
+
+    //! A typedef for the embracing region map
+    typedef std::map<SimulationInterface*, Embracing*> EmbracingMap;
     
 
     //! The creation method signature
@@ -895,6 +903,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     
     //! The map containing all simulations with their ID
     static SimulationMap _simulation_map;
+
+
+    //! A map with all embracing regions
+    EmbracingMap _embracings;
 
     
     //! create a unique name for the equation system

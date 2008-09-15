@@ -48,6 +48,7 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
   : equilibrium_fermi_level(0.0),
     _is_inhomogeneous(false),
     _use_predictor(false),
+    _driftdiffusion(NULL),
     _pd(NULL),
     _elem(NULL),
     _statistics(TiberCad::BOLTZMANN),
@@ -102,6 +103,7 @@ DriftDiffusionProperties::get_variable_value(ID id)
 void
 DriftDiffusionProperties::do_init(void)
 {
+  assert(_driftdiffusion != NULL);
 
   const string stat("B");
   if (get_options().get_option("statistics", stat) == "FD")
@@ -125,15 +127,32 @@ DriftDiffusionProperties::do_init(void)
 
   // we could have quantum density simulations for them
   {
-    vector<string> qd;
-    get_parameter("electron_quantum_density", qd);
-    for (int i = 0; i < qd.size(); i++)
-      _electrons.add_quantum_density(qd[i]);
+    //vector<string> qd;
+    string qd;
+    qd = get_parameter("electron_quantum_density", qd);
+    //for (int i = 0; i < qd.size(); i++)
+    //  _electrons.add_quantum_density(qd[i]);
+    _electrons.add_quantum_density(qd);
+    if (_electrons.get_quantum_simulation() != NULL)
+    {
+      Embracing* emb =
+        _driftdiffusion->create_embracing_region(
+            _electrons.get_quantum_simulation(), get_options());
+      _electrons.set_embracing(emb);
+    }
 
-    qd.resize(0);
-    get_parameter("hole_quantum_density", qd);
-    for (int i = 0; i < qd.size(); i++)
-      _holes.add_quantum_density(qd[i]);
+    //qd.resize(0);
+    qd = get_parameter("hole_quantum_density", qd);
+    //for (int i = 0; i < qd.size(); i++)
+    //  _holes.add_quantum_density(qd[i]);
+    _holes.add_quantum_density(qd);
+    if (_holes.get_quantum_simulation() != NULL)
+    {
+      Embracing* emb = 
+        _driftdiffusion->create_embracing_region(
+            _holes.get_quantum_simulation(), get_options());
+      _holes.set_embracing(emb);
+    }
   }
 
   _use_predictor = get_parameter("use_density_predictor", _use_predictor);
@@ -843,6 +862,7 @@ DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
 
   equilibrium_fermi_level = mod->get_equilibrium_fermi_level();
   intrinsic_density = mod->get_intrinsic_density();
+  _driftdiffusion = mod->_driftdiffusion;
   _coupling = mod->_coupling;
   _statistics = mod->_statistics;
   _strain = mod->_strain;

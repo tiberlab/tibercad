@@ -90,10 +90,16 @@ class SimulationEnvironment
     void add_boundary(Boundary* boundary, const std::set<ID>& boundary_ids);
 
 
+    //! Prepare structures that are needed for other setup
+    /*!
+     * Creates a list with all elements belonging to this simulation
+     */
+    void prepare(void);
+
+
     //! Initialize the environment
     /*!
-     * Initialization does two things:
-     * \li create a list with all elements belonging to this simulation
+     * Initialization does the following things:
      * \li create data structures to get access to the boundary properties
      */
     void init(void);
@@ -332,6 +338,7 @@ inline
 Device&
 SimulationEnvironment::get_device(void)
 {
+  assert(_device != NULL);
   return *_device;
 }
 
@@ -339,6 +346,7 @@ inline
 const Device&
 SimulationEnvironment::get_device(void) const
 {
+  assert(_device != NULL);
   return *_device;
 }
 
