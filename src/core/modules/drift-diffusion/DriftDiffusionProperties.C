@@ -129,7 +129,7 @@ DriftDiffusionProperties::do_init(void)
   {
     //vector<string> qd;
     string qd;
-    qd = get_parameter("electron_quantum_density", qd);
+    qd = get_parameter("electron_quantum_density", "");
     //for (int i = 0; i < qd.size(); i++)
     //  _electrons.add_quantum_density(qd[i]);
     _electrons.add_quantum_density(qd);
@@ -142,7 +142,7 @@ DriftDiffusionProperties::do_init(void)
     }
 
     //qd.resize(0);
-    qd = get_parameter("hole_quantum_density", qd);
+    qd = get_parameter("hole_quantum_density", "");
     //for (int i = 0; i < qd.size(); i++)
     //  _holes.add_quantum_density(qd[i]);
     _holes.add_quantum_density(qd);
