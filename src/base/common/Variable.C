@@ -84,7 +84,7 @@ Variable::check_and_register(const string& s, double defaultval, ID id)
       boost::algorithm::trim(str);
 
       // the regexp to match
-      static const boost::regex regexp("@([a-zA-Z0-9]+)(\\[([^\\]]+)\\])?");
+      static const boost::regex regexp("@([a-zA-Z0-9_]+)(\\[([^\\]]+)\\])?");
 
       boost::cmatch matches;
       if (boost::regex_match(str.c_str(), matches, regexp))
