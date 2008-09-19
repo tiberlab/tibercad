@@ -66,6 +66,8 @@ int main (int argc, char** argv)
 
   }
 
+  cout << "Input file: " << inputfile << endl << endl;
+
 
   // do some preparation
   {

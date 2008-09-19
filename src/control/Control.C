@@ -42,7 +42,7 @@ Control::Control(const std::string& inputfile)
   if (infile.fail() || !infile.good() || (infile.rdbuf()->in_avail() == 0))
   {
     infile.close();
-    throw InitFailedException("Control: input file is invalid.");
+    throw InitFailedException("Input file is invalid.");
   }
   
   infile.close();
@@ -181,7 +181,7 @@ Control::create_device(void)
     
   if (!(exists(outpath) && is_directory(outpath)))
   {
-    string msg("Control: cannot create ore use '");
+    string msg("Cannot create ore use '");
     msg += outpath.string() + "' as output directory.";
     throw InitFailedException(msg);
   }
@@ -200,7 +200,7 @@ Control::create_device(void)
   _device->set_control(this);
 
   
-  cout << "Control: simulation temperature = " <<
+  cout << "Simulation temperature = " <<
     SimulationOptions::temperature << " K" << endl << endl;
 
   
