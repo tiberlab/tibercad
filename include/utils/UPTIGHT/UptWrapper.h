@@ -60,6 +60,15 @@ public:
   inline const int* get_handler(void){ return _handler; };
 
 
+  //! Add an atom-projected potential to H
+  //! Must be called after inituptight and before compute_H
+  void add_potential(int nAtoms, double *potential);
+
+	
+  //! Add a list of k-points as a vector (3,numkp)
+  void add_kpoints(int numkp, double *k_vec);
+
+  
   //!Computes Hamiltonian (must be called after inituptight)
   void compute_H ();
 
