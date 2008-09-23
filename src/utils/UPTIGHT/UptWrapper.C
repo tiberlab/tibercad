@@ -35,7 +35,7 @@ void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath,
                              int harrison_flag, int relat_flag, int potential_flag, 
                              int optmat_flag, int poldir) {
 
-  f77_upt_fillbasicparameters(_handler, databasePath, workPath, gen_filename,
+  f77_upt_fillbasicparameters(_handler, verbose_lev, databasePath, workPath, gen_filename,
                                 gen_outname, max_n_n, harrison_flag, relat_flag,
                                 potential_flag, optmat_flag, poldir);
 
@@ -50,10 +50,22 @@ void UptWrapper::inituptight () {
   }
 
 
+void UptWrapper::add_potential(int nAtoms, double *potential)
+{
+	f77_upt_addpotential(_handler,nAtoms,potential);
+}
+
+//! add the k-points as a vector
+void UptWrapper::add_kpoints(int numkp, double *k_vec)
+{
+	f77_upt_addkpoints(_handler,numkp,k_vec);
+}
+
+
 
 //! build ETB Hamiltonian with Uptight
 void UptWrapper::compute_H () {
-  f77_upt_createhamiltoninan(_handler);
+  f77_upt_createhamiltonian(_handler);
 }
 
 
@@ -70,7 +82,7 @@ void UptWrapper::lanczos_diag (int n_vb, int n_cb, double guess_vb, double guess
 }
 
 
-}
+
 
 
 
