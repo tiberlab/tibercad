@@ -1023,10 +1023,6 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     double _relax_polariz;
 
 
-    //! Whether to use generalized Einstein relation
-    bool _generalized_einstein_relation;
-
-
     //! The stack for point data locking
     /*!
      * The second value tells whether to delete the data after use
