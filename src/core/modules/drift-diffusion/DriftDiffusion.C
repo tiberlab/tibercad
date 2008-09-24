@@ -24,6 +24,7 @@
 #include "elem.h"
 #include "fe_interface.h"
 #include "quadrature_gauss.h"
+#include "quadrature_trap.h"
 #include "equation_systems.h"
 #include "mesh_refinement.h"
 #include "sparse_matrix.h"
@@ -2010,6 +2011,7 @@ DriftDiffusion::calculate_currents_rstf(void)
 
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
   QGauss qrule(dim, get_options().integration_order);
+  //QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   
@@ -2208,6 +2210,7 @@ DriftDiffusion::calculate_currents_surfint(void)
     integration_order = _options.integration_order;
   
   QGauss qface(dim - 1, integration_order);
+  //QTrap qface(dim - 1);
   fe_face->attach_quadrature_rule(&qface);
 
   
@@ -2449,7 +2452,8 @@ DriftDiffusion::build_local_scaling(void)
 
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim, params.integration_order);
+  //QGauss qrule(dim, params.integration_order);
+  QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
 
@@ -2878,7 +2882,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
 
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::CONSTANT);
+  //QGauss qrule(dim, libMeshEnums::CONSTANT);
+  QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
@@ -3371,7 +3376,8 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::CONSTANT);
+  //QGauss qrule(dim, libMeshEnums::CONSTANT);
+  QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   vector<unsigned int> dof_indices_u;
@@ -3987,7 +3993,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
   // the finite element
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim, integration_order);
+  //QGauss qrule(dim, integration_order);
+  QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   // the finite element for boundary integration
@@ -3995,7 +4002,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
   
-  QGauss qface(dim - 1, integration_order);
+  //QGauss qface(dim - 1, integration_order);
+  QTrap qface(dim - 1);
   fe_face->attach_quadrature_rule(&qface);
 
   
@@ -4249,6 +4257,18 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       long double sigma_h = muh * p / (mu0 * C0_h);
       long double sigma_e_x_Pe_x_J = J * sigma_e * eTEpower;
       long double sigma_h_x_Ph_x_J = J * sigma_h * hTEpower;
+/*
+      if (jacobian != NULL)
+      {
+        double dsigmae = mue * phi0 * sc->get_electron_density_derivative() / (mu0 * C0_e);
+        double dsigmah = muh * phi0 * sc->get_hole_density_derivative() / (mu0 * C0_e);
+        double beta_e = 0.5 * elem->volume() * dsigmae / sigma_e;
+        double beta_h = 0.5 * elem->volume() * dsigmah / sigma_h;
+
+        sigma_e *= (1 + fabs(beta_e));
+        sigma_h *= (1 + fabs(beta_h));
+      }
+*/
 
       //
       // The residual looks like this:
@@ -4366,8 +4386,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             // (for X_l = u_l we dont get anything, i.e. the
             // contributions to Kuu, Kun, Kup are zero)
             //
-            // NOTE: we do not make a loop over l, but use precalculated
-            // gradients
 
             if (_options.exact_newton)
             {
@@ -4393,9 +4411,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                 Kpp(i,j) += dmu_h_x_dphi * lap_h - dsigma_h_x_phi;
               }
 
-
-              //if (!(coupling & HCURRENT))
-              //  Kpn(i,i) -= 1;
             }
 
 
@@ -4441,49 +4456,38 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             // The dFe_i/dX_j part
             long double phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp];
 
-            //if (_options.exact_newton || (j == i))
+            if (coupling & POISSON)
             {
-              if (coupling & POISSON)
-              {
-                Kuu(i,j) -= drho[0] * phi_i_x_phi_j / local_scaling[i][2];
-
-                if (coupling & ECURRENT)
-                {
-                  Kun(i,j) -= drho[1] * phi_i_x_phi_j / local_scaling[i][2];
-                  //if (!(coupling & HCURRENT))
-                  //  Kun(i,j) -= drho[2] * phi_i_x_phi_j / local_scaling[i][2];
-                }
-                
-
-                if (coupling & HCURRENT)
-                  Kup(i,j) -= drho[2] * phi_i_x_phi_j / local_scaling[i][2];
-              }            
+              Kuu(i,j) -= drho[0] * phi_i_x_phi_j / local_scaling[i][2];
 
               if (coupling & ECURRENT)
-              {
-                // could destroy M-Matrix property
-                if (coupling & POISSON)
-                  Knu(i,j) -= dRn[0] * phi_i_x_phi_j / local_scaling[i][0];
+                Kun(i,j) -= drho[1] * phi_i_x_phi_j / local_scaling[i][2];
 
-                Knn(i,j) -= dRn[1] * phi_i_x_phi_j / local_scaling[i][0];
-
-                if (coupling & HCURRENT)
-                  Knp(i,j) -= dRn[2] * phi_i_x_phi_j / local_scaling[i][0];
-                //else
-                //  Knn(i,j) += dRn[2] * phi_i_x_phi_j / local_scaling[i][0];
-              }
 
               if (coupling & HCURRENT)
-              {
-                // could destroy M-Matrix property
-                if (coupling & POISSON)
-                  Kpu(i,j) += dRp[0] * phi_i_x_phi_j / local_scaling[i][1];
+                Kup(i,j) -= drho[2] * phi_i_x_phi_j / local_scaling[i][2];
+            }            
 
-                if (coupling & ECURRENT)
-                  Kpn(i,j) += dRp[1] * phi_i_x_phi_j / local_scaling[i][1];
+            if (coupling & ECURRENT)
+            {
+              if (coupling & POISSON)
+                Knu(i,j) -= dRn[0] * phi_i_x_phi_j / local_scaling[i][0];
 
-                Kpp(i,j) += dRp[2] * phi_i_x_phi_j / local_scaling[i][1];
-              }
+              Knn(i,j) -= dRn[1] * phi_i_x_phi_j / local_scaling[i][0];
+
+              if (coupling & HCURRENT)
+                Knp(i,j) -= dRn[2] * phi_i_x_phi_j / local_scaling[i][0];
+            }
+
+            if (coupling & HCURRENT)
+            {
+              if (coupling & POISSON)
+                Kpu(i,j) += dRp[0] * phi_i_x_phi_j / local_scaling[i][1];
+
+              if (coupling & ECURRENT)
+                Kpn(i,j) += dRp[1] * phi_i_x_phi_j / local_scaling[i][1];
+
+              Kpp(i,j) += dRp[2] * phi_i_x_phi_j / local_scaling[i][1];
             }
 
           }
@@ -5274,7 +5278,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    //jacobian->print_matlab("J.m");
+    jacobian->print_matlab("J.m");
   }
   else
   {
