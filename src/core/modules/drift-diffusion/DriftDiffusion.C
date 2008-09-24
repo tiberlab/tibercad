@@ -60,6 +60,7 @@ DriftDiffusion::Options::Options(void)
     refine_fraction(0.7),
     coarsen_fraction(0.3),
     refinement_tolerance(1e-6),
+    quadrature_type(QTRAP),
     integration_order(libMeshEnums::FIFTH),
     solver_method(NEWTON),
     max_gummel_iterations(5),
@@ -82,6 +83,7 @@ DriftDiffusion::Options::Options(const Options& rhs)
     refine_fraction(rhs.refine_fraction),
     coarsen_fraction(rhs.coarsen_fraction),
     refinement_tolerance(rhs.refinement_tolerance),
+    quadrature_type(rhs.quadrature_type),
     integration_order(rhs.integration_order),
     solver_method(rhs.solver_method),
     max_gummel_iterations(rhs.max_gummel_iterations),
@@ -108,6 +110,7 @@ DriftDiffusion::Options::operator=(const Options& rhs)
     refine_fraction = rhs.refine_fraction;
     coarsen_fraction = rhs.coarsen_fraction;
     refinement_tolerance = rhs.refinement_tolerance;
+    quadrature_type = rhs.quadrature_type;
     integration_order = rhs.integration_order;
     solver_method = rhs.solver_method;
     max_gummel_iterations = rhs.max_gummel_iterations;
@@ -948,6 +951,15 @@ DriftDiffusion::parse_const_options(void)
     myopts.scaling_type = Scaling::UNITS;
 
   do_local_scaling_ = opts.get_option("local_scaling", true);
+
+  string qrule = get_mesh().mesh_dimension() < 3 ? "trapez" : "gauss";
+  qrule = opts.get_option("quadrature_rule", qrule);
+  if (qrule == "gauss")
+    myopts.quadrature_type = QGAUSS;
+  else if (qrule == "trapez")
+    myopts.quadrature_type = QTRAP;
+  else
+    throw InitFailedException("Unknown quadrature rule");
 
 }
 
@@ -2010,9 +2022,11 @@ DriftDiffusion::calculate_currents_rstf(void)
   FEType fe_type = system->variable_type(u_var);
 
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, get_options().integration_order);
+  AutoPtr<QBase> qrule(QBase::build(
+        get_options().quadrature_type, dim, get_options().integration_order));
+  //QGauss qrule(dim, get_options().integration_order);
   //QTrap qrule(dim);
-  fe->attach_quadrature_rule(&qrule);
+  fe->attach_quadrature_rule(qrule.get());
 
   
   // Jacobian * quadrature weight at each integration point.   
@@ -2093,7 +2107,7 @@ DriftDiffusion::calculate_currents_rstf(void)
     vector<double> T_nodes =  sc->get_temperature_at_nodes();
 
         
-    for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
+    for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
     {
 
       unsigned int n_dofs = dof_indices_u.size();
@@ -2207,11 +2221,13 @@ DriftDiffusion::calculate_currents_surfint(void)
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
   else
-    integration_order = _options.integration_order;
+    integration_order = get_options().integration_order;
   
-  QGauss qface(dim - 1, integration_order);
+  AutoPtr<QBase> qface(QBase::build(
+        get_options().quadrature_type, dim - 1, integration_order));
+  //QGauss qface(dim - 1, integration_order);
   //QTrap qface(dim - 1);
-  fe_face->attach_quadrature_rule(&qface);
+  fe_face->attach_quadrature_rule(qface.get());
 
   
   // Jacobian * quadrature weight at each integration point.   
@@ -2287,7 +2303,7 @@ DriftDiffusion::calculate_currents_surfint(void)
     
           double current = 0.0;
 
-          for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+          for (unsigned int qp = 0; qp < qface->n_points(); qp++)
           {
             // get the solution value at the quadrature point
             Real u  = 0.0;
@@ -2452,9 +2468,11 @@ DriftDiffusion::build_local_scaling(void)
 
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  AutoPtr<QBase> qrule(QBase::build(
+        params.quadrature_type, dim, params.integration_order));
   //QGauss qrule(dim, params.integration_order);
-  QTrap qrule(dim);
-  fe->attach_quadrature_rule(&qrule);
+  //QTrap qrule(dim);
+  fe->attach_quadrature_rule(qrule.get());
 
 
   // Jacobian * quadrature weight at each integration point.   
@@ -2519,7 +2537,7 @@ DriftDiffusion::build_local_scaling(void)
 
 
     // loop over the quadrature points
-    for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
+    for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
     {
       // get the solution values at the quadrature point
       Real u  = 0.0;
@@ -2882,8 +2900,9 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
 
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  //QGauss qrule(dim, libMeshEnums::CONSTANT);
-  QTrap qrule(dim);
+
+  QGauss qrule(dim, libMeshEnums::CONSTANT);
+  //QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
@@ -3376,8 +3395,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  //QGauss qrule(dim, libMeshEnums::CONSTANT);
-  QTrap qrule(dim);
+  QGauss qrule(dim, libMeshEnums::CONSTANT);
   fe->attach_quadrature_rule(&qrule);
 
   vector<unsigned int> dof_indices_u;
@@ -3993,18 +4011,23 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
   // the finite element
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  AutoPtr<QBase> qrule(QBase::build(
+        params.quadrature_type, dim, integration_order));
   //QGauss qrule(dim, integration_order);
-  QTrap qrule(dim);
-  fe->attach_quadrature_rule(&qrule);
+  //QTrap qrule(dim);
+  fe->attach_quadrature_rule(qrule.get());
 
   // the finite element for boundary integration
   AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
   
+  AutoPtr<QBase> qface(QBase::build(
+        params.quadrature_type, dim - 1, integration_order));
   //QGauss qface(dim - 1, integration_order);
-  QTrap qface(dim - 1);
-  fe_face->attach_quadrature_rule(&qface);
+  //QTrap qface(dim - 1);
+  fe_face->attach_quadrature_rule(qface.get());
 
   
   // references to cell-specific data that will be used to
@@ -4185,7 +4208,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
 
     // loop over the quadrature points
-    for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
+    for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
     {
       // get the solution values at the quadrature point
       Real u  = 0.0;
@@ -4686,7 +4709,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
           // now integrate to include von Neumann and mixed type BCs
           // and polarization
-          for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+          for (unsigned int qp = 0; qp < qface->n_points(); qp++)
           {
    
             double epsilon = sc->get_relative_permittivity();
@@ -5278,7 +5301,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    jacobian->print_matlab("J.m");
+    //jacobian->print_matlab("J.m");
   }
   else
   {

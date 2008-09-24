@@ -12,6 +12,7 @@
 // Libmesh includes
 #include "libmesh_common.h"
 #include "enum_order.h"
+#include "enum_quadrature_type.h"
 
 
 // C++ includes
@@ -224,6 +225,9 @@ class DriftDiffusion : public SimulationInterface
          * The tolerance at which mesh refinement will stop
          */
         double refinement_tolerance;
+
+        //! The quadrature rule to be used
+        libMeshEnums::QuadratureType quadrature_type;
 
         /**
          * The order of gauss integration
