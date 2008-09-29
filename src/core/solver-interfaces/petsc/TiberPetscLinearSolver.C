@@ -159,6 +159,15 @@ TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
     //PCILUReorderForNonzeroDiagonal(sub_pc, 1e-32);
 #endif
   }
+ 
+#if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
+  PCILUSetZeroPivot(_pc, 1e-54);
+  PCLUSetZeroPivot(_pc, 1e-54);
+#else
+  PCFactorSetZeroPivot(_pc, 1e-54);
+  //PCILUReorderForNonzeroDiagonal(pc, 1e-32);
+#endif
+
 
   setup_monitors();
 
