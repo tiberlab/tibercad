@@ -715,9 +715,20 @@ DriftDiffusionProperties::get_net_recombination_rate(ID id)
 void
 DriftDiffusionProperties::calculate_equilibrium_properties(void)
 {
+  
   // call this method to properly set conduction and valence band DOS
   // and energy
   setup_band_edges();
+
+  const BandProperties& cb = conduction_band;
+  const BandProperties& vb = valence_band;
+
+  // for a dielectric we don't need much...
+  if (is_dielectric())
+  {
+    equilibrium_fermi_level = 0.5 * (cb.band_edge + vb.band_edge);
+    return;
+  }
 
   // remember the coupling
   int coupling_bkp = _coupling;
@@ -731,8 +742,6 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 
   double kT = get_lattice_temperature();
 
-  const BandProperties& cb = conduction_band;
-  const BandProperties& vb = valence_band;
   double Nd = get_material()->get_total_donor_density();
   double Na = get_material()->get_total_acceptor_density();
 
