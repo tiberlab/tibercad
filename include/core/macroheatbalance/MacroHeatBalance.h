@@ -11,7 +11,7 @@
 #include "SimulationInterface.h"
 
 #include "HeatModel.h"
-
+#include "complex.h"
 
 class TiberLinearSystem;
 class Device;
@@ -53,13 +53,18 @@ class MacroHeatBalance : public SimulationInterface
       
     double max_error; //!< Max tollerance for self-consistent loop  
 
-    double work_units; //!< SI units, has to be consistent with the database parameters
+    double work_units; //!< SI units, has to be consistent with the database parameters\
 
+    std::vector<double> e0;
+    
     /**
      * The order of gauss integration
      */
     libMeshEnums::Order integration_order;
 
+    //To Canc
+    std::string mode;
+    //
   };
 
     
@@ -86,8 +91,8 @@ class MacroHeatBalance : public SimulationInterface
   //!Destructor
   virtual ~MacroHeatBalance();
   
-  virtual PhysicalModel* create_physical_model(const ModelOptions &options,
-      const Material* mat) const throw (ModelErrorException);
+   virtual PhysicalModel* create_physical_model(const ModelOptions &options,
+       const Material* mat) const throw (ModelErrorException);
   
   
   virtual BoundaryProperties* create_boundary_model(const ModelOptions &options) const 
@@ -132,7 +137,13 @@ class MacroHeatBalance : public SimulationInterface
   HeatModel* heat_model; 
 
   //void init_heat_model(const Elem* elem);
- 
+
+  //to cut
+  Tensor2Sym dynamical_matrix;
+  std::vector<std::vector< double > > D; //Matrix
+  std::vector<double> E;                          //eignvalue
+  std::vector<std::vector< double > > _eignvectors; //eignvector
+  //  
 
   std::string system_name;
   
@@ -149,6 +160,14 @@ class MacroHeatBalance : public SimulationInterface
 				       std::vector<double>& results, 
 				       std::vector<std::string>& legend);
 
+    //! Order the solution in correct mode
+  virtual void build_elemental_results_original(const std::set<std::string>& variables,
+				       std::vector<double>& results, 
+				       std::vector<std::string>& legend);
+  //! Order the solution in correct mode
+  virtual void build_elemental_results_phonon_disp(const std::set<std::string>& variables,
+				       std::vector<double>& results, 
+				       std::vector<std::string>& legend);
   //! Calculate Power Dissipated 
   /*!
    * Integrates numerically over the boundary elements.
@@ -176,6 +195,19 @@ class MacroHeatBalance : public SimulationInterface
   //!Pointer to mesh
   Mesh* mesh;
 
+  // To Cut
+    void diagonalize_complex(void);
+    void diagonalize_double(void);
+    void diagonalize_tensor(void);
+    void solve_phonon_dispersion(void);
+    std::map<const Elem*,std::vector<double> > PD_sol;
+    std::map<const Elem*,std::vector<double> > PD_full_sol;
+    std::map<const Elem*,std::vector<double> > OverAll;
+    std::map<const Elem*,std::vector<std::vector < double> > > Intensity;
+    std::map<const Elem*,std::vector< std::vector<double> > >  sol_eignvectors;
+    std::vector<double> es;
+
+  
  protected:
 
     /*! \copydoc SimulationInterface::convert_variable_name_to_id() */

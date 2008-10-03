@@ -1393,8 +1393,8 @@ void  Read_MSH::write_xda ( )
         //  elem_type = 16 ;
         // BEWARE !   PYRAMID  element  not  correctly  handled in  LIBMESH
         //
-        throw InitFailedException("ERROR: PYRAMID5 element not implemented...");
-        //   elem_type.push_back(16);
+        //throw InitFailedException("ERROR: PYRAMID5 element not implemented...");
+           elem_type.push_back(16);
         break;
 
       case 8:

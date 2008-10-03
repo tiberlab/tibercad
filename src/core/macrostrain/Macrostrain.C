@@ -23,11 +23,6 @@ using namespace std;
 Macrostrain* Macrostrain::static_this;
 
 
- 
-
-
-
-
 
 
 //-----------------------------------------------------------------//
@@ -41,54 +36,91 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
   std::vector<std::string> pol_names;
   std::vector<double> pol_data;  
 
+  std::vector<std::string> stress_names;
+  std::vector<double> stress_data;  
+
   prepare_strain_data_for_output( eps_names,  eps_data);
   prepare_polarization_data_for_output( pol_names,  pol_data);
+  prepare_stress_data_for_output(stress_names,  stress_data);  
 
 
+  unsigned int num_var = 0;
   
-  short num_var = 0;
-  const set<string>::const_iterator varend = variables.end();
-  
-  const string strain_name("strain");
-  const string pol_name("polarization");
+  int st_var = -1;
+  if (variables.count("strain"))
+  {
+    st_var = num_var;
 
-  if (variables.find(strain_name) != varend) num_var += 6;  
-  if (variables.find(pol_name) != varend) num_var +=3;
+    for (unsigned int k = 0; k<6 ; k++)
+    {
+       legend.resize(legend.size() + 1);
+       legend[num_var]=eps_names[k];
+       num_var++;
+    }
+   }
+
+    int stress_var = -1;
+   if (variables.count("stress"))
+  {
+    stress_var = num_var;
+
+    for (unsigned int k = 0; k<6 ; k++)
+    {
+       legend.resize(legend.size() + 1);
+       legend[num_var]=stress_names[k];
+       num_var++;
+    }
+   }
+
+  int pol_var = -1;
+  if (variables.count("polarization"))
+  {
+    pol_var = num_var;
+
+    for (unsigned int k = 0; k<3 ; k++)
+    {
+       legend.resize(legend.size() + 1);
+       legend[num_var]=pol_names[k];
+       num_var++;
+    }
+   }
 
   unsigned int num_elem = eps_data.size()/6;
-
-
 
   results.resize(num_var * num_elem);
   legend.resize(num_var);
 
-  
+  for (unsigned int j = 0; j < num_elem; j++)
+  {
 
-  if (variables.find(strain_name) != varend)
-  {//we do strain
-    for (short i = 0; i < 6; i++)
-    {	
-      legend[i] = eps_names[i];
-      for (unsigned int j = 0; j < num_elem; j++)
-	results[i + j * num_var ] = eps_data[i + j * 6];  
-    }
-    
-  }
-  
+   unsigned int id = num_var * j;
 
-  
-  if (variables.find(pol_name) != varend)
-  {//now we do polarization
-    for (short i1 = 0; i1 < 3; i1++)
-    {  
-      
-      legend[i1 + num_var - 3] = pol_names[i1];
-      for (unsigned int j = 0; j < num_elem; j++)
-	results[i1 + num_var - 3 + j * num_var ] = pol_data[i1 + j * 3];  
-      
-      
-    }
-  }
+   if (st_var != -1)
+      {
+         for (unsigned int i = 0; i<6 ; i++)
+             {
+               results[id + st_var + i]  =  eps_data[i + j * 6];
+             }
+      }
+
+      if (stress_var != -1)
+      {
+         for (unsigned int i = 0; i<6 ; i++)
+             {
+               results[id + stress_var + i]  =  stress_data[i + j * 6];
+             }
+      }
+   
+    if (pol_var != -1)
+      {
+         for (unsigned int i = 0; i<6 ; i++)
+             {
+               results[id + pol_var + i] = pol_data[i + j * 3];
+             }
+      }
+
+ 
+  } //Elements
 
 }
 
@@ -963,6 +995,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	{
 	  for (unsigned int i1 = 0; i1 < add_var.size()  ; i1++)
 	  {
+
 	    Ke_u_add_sub.reposition (uvar[j]*n_u_dofs, n_dofs, n_u_dofs, add_var.size());	  
 	    
 	    eps_var = crystal_el->get_var_eps0( add_var[i1].name );
@@ -2427,14 +2460,9 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
       uvar[i] = system.variable_number(uname_vec[i]);
     }
  
-  
-
   FEType fe_type = dof_map.variable_type(0);
  
-  
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
-
- 
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here 
 
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
@@ -2532,6 +2560,84 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
 
 	index++;
       }
+}
+
+//--------------------------------------------------------------------------------//
+void Macrostrain::prepare_stress_data_for_output( std::vector<std::string>& stress_names, std::vector<double>& stress_data ) 
+{
+
+
+
+       //write names
+       unsigned int index = 0;
+       char num_i[2];
+       char num_j[2];
+       string S_ij;
+       stress_names.resize(6);
+       const Mesh& mesh = equation_systems->get_mesh();
+       unsigned int Number_of_elements = mesh.n_active_elem();
+       stress_data.resize(Number_of_elements*6);
+       for (int i = 1; i <=3 ; i++)
+            {
+              for (int j = 1; j <=i; j++)
+              {
+	         sprintf( num_i, "%i",i);
+	         sprintf( num_j, "%i",j);
+
+                 S_ij = "stress_" + string(num_i) + string(num_j);
+
+	         stress_names[index] = S_ij ;
+                index++;
+             }
+      
+        }
+
+        //Write stress         
+
+
+	MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+	const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+
+       	unsigned int elem_number = 0; 
+	for ( ; el != end_el ; ++el) 
+	  {
+	    const Elem* elem = *el;
+            ID subdomain = elem->subdomain_id();
+            const Material* mat = _device->get_material(subdomain);
+            MacrostrainModel* macrostrain_model;
+            macrostrain_model = dynamic_cast<MacrostrainModel*>(   mat ->get_model(get_id())     ); 
+
+
+
+            //strain in calculation system
+	    Tensor2Sym strain_el = result_strain[elem];
+            const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
+            Tensor2Gen RotM = (crystal_el->RotMatrix);//get rotation matrix
+            strain_el = sym(RotM * (strain_el * RotM.transpose())); //calculation system
+
+            //Elasticity in the calculation system
+            Stiffness* C_tensor_el;
+            C_tensor_el = macrostrain_model->get_stiffness();
+            Tensor4DSym C_calc =  C_tensor_el->C_calc;
+   
+            Tensor2Sym stress_el = strain_el * C_calc;       
+
+            //Write stress
+             
+             index = 0;
+             for (int i = 1; i <=3 ; i++)
+             {
+              for (int j = 1; j <=i; j++)
+               {
+                  double stress_value = stress_el(i,j);       
+                  stress_data[index + elem_number * 6  ] = stress_value; //that's a correct order of variables
+               }
+                index++;
+             }
+
+                elem_number++;
+             }
+
 }
 
 //--------------------------------------------------------------------------------//
@@ -4213,3 +4319,34 @@ Macrostrain::Macrostrain(void )
   _first_run = true;
 
 }
+
+
+//Tensor2Sym
+//Macrostrain::get_stress_crystal(const Elem* el)
+//{
+
+  
+//  Stiffness* C_tensor_el;
+ 
+//  MacrostrainModel* macrostrain_model;
+
+//   ID subdomain = el->subdomain_id();
+            
+//    const Material* mat = _device->get_material(subdomain);
+
+//    const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
+      
+//    macrostrain_model = dynamic_cast<MacrostrainModel*>(   mat ->get_model(get_id())     );
+
+//    C_tensor_el = macrostrain_model->get_stiffness();
+    
+//    Tensor4DSym C_calc =  C_tensor_el->C_calc;
+
+//    Tensor2Sym strain =  get_strain_crystal(el, el->centroid());    
+
+//   Tensor2Sym stress = strain * C_calc;
+     
+
+
+//  return stress;
+//}

@@ -3413,8 +3413,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
 
   MeshBase::const_element_iterator it =
     mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end =
-    mesh.active_elements_end(); 
+  const MeshBase::const_element_iterator end = mesh.active_elements_end(); 
 
   unsigned int elem_number = 0;
   for ( ; it != end; ++it)

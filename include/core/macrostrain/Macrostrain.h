@@ -147,7 +147,10 @@ class Macrostrain : public StrainSimulation
   /*!
     \param el pointer to the element
   */
-  Tensor2Sym get_strain_crystal(const Elem* el); 
+  Tensor2Sym get_strain_crystal(const Elem* el);
+  
+ //Tensor2Sym get_stress_crystal(const Elem* el);
+ 
 
   //!get polarization (piezo)
   /*!
@@ -498,6 +501,8 @@ class Macrostrain : public StrainSimulation
   //! Preapare all 6 components of the strain tensor for output
   void prepare_strain_data_for_output( std::vector<std::string>& eps_names, std::vector<double>& eps_data );
 
+  //! Preapare all 6 components of the stress tensor for output
+  void prepare_stress_data_for_output( std::vector<std::string>& stress_names, std::vector<double>& stress_data );
 
   //! Preapare all 3 components of the polarization vector for output
   void prepare_polarization_data_for_output( std::vector<std::string>& polariz_names, std::vector<double>& polariz_data );
@@ -534,7 +539,7 @@ class Macrostrain : public StrainSimulation
    */
   virtual void build_elemental_results(const std::set<std::string>& variables,
 				       std::vector<double>& results, std::vector<std::string>& legend) ;
-
+   
  
 
 

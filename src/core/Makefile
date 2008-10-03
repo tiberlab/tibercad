@@ -13,6 +13,7 @@ subdirs += maxwell
 subdirs += embracing
 subdirs += models
 subdirs += modules
+sybdirs += phonondispersion
 
 include $(topdir)/Make.common
 

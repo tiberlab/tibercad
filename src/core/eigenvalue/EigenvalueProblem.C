@@ -407,6 +407,7 @@ void EigenvalueProblem::parse_options()
 
 
 
+
   solver_opt.number_of_eigenstates   = mod_opt.get_option("number_of_eigenstates", 6);
 
 

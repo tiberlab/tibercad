@@ -64,6 +64,10 @@
 
 #include "WzPyroPolarization.h"
 
+#include "PhononModel.h"
+#include "ZbFreeDynamicalMatrix.h"
+#include "ZbStrainDynamicalMatrix.h"
+#include "ZbRamanTensor.h"
 
 #include <typeinfo>
 #ifdef DEBUG
@@ -187,7 +191,14 @@ PhysicalModelInterface::create(const string& name,
       mod = WzPyroPolarization::create();
     else if  (name == "drift_diffusion_dissipation")
       mod = DriftDiffusionHeatSource::create();
-
+    else if  (name == "phonon")
+      mod = PhononModel::create();
+    else if  (name == "free_dynamical_matrix_zb")
+      mod = ZbFreeDynamicalMatrix::create();
+    else if  (name == "strain_dependent_zb")
+      mod = ZbStrainDynamicalMatrix::create();
+    else if  (name == "raman_tensor_zb")
+      mod = ZbRamanTensor::create();
   }
 
 
