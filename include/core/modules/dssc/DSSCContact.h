@@ -36,10 +36,11 @@ class DSSCContact : public BoundaryProperties, public Variable
 
     bool& is_cathode(void);
 
-    void set_values(double V, double I, double I3);
+    void set_values(double I, double Idark, double I3, double I3dark);
 
 
     void set_open_circuit(bool open_circuit = true);
+
 
 
   protected:
@@ -64,20 +65,24 @@ class DSSCContact : public BoundaryProperties, public Variable
   
     bool _cathode;
 
-    double _Voc;
     double _Ioc;
+    double _Idark;
+
     double _I3oc;
+    double _I3dark;
 
     double _current;
-
+   
     bool _open_circuit;
     
 
     //! Set the open circuit potential and densities
-    void set_OC_values(double Voc, double Ioc, double I3oc);
+    void set_OC_values(double Ioc, double Idark, double I3oc, double I3dark);
 
     void calculate_current(void);
 
+
+ 
 };
 
 
@@ -138,16 +143,15 @@ DSSCContact::is_cathode(void)
   return _cathode;
 }
 
-
 inline
 void
-DSSCContact::set_OC_values(double Voc, double Ioc, double I3oc)
+DSSCContact::set_OC_values(double Ioc, double Idark, double I3oc, double I3dark)
 {
-  _Voc = Voc;
   _Ioc = Ioc;
+  _Idark = Idark;
   _I3oc = I3oc;
-  std::cerr << "Voc = " << Voc << std::endl
-    << "Ioc = "  <<Ioc << std::endl
+  _I3dark = I3dark;
+  std::cerr << "Ioc = "  <<Ioc << std::endl
     << "I3oc = "  <<I3oc << std::endl;
 }
 
@@ -162,11 +166,11 @@ DSSCContact::set_open_circuit(bool open_circuit)
 
 inline
 void
-DSSCContact::set_values(double V, double I, double I3)
+DSSCContact::set_values(double I, double Idark, double I3, double I3dark)
 {
   if (_open_circuit)
   {
-    set_OC_values(V, I, I3);
+    set_OC_values(I, Idark, I3, I3dark);
     _current = 0.0;
   }
   else

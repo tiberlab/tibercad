@@ -399,120 +399,6 @@ DSSC::do_solve(void)
 }
 
 
-void
-DSSC::get_OC_values(void)
-{
-  
-  // references for nicer code
-  const Mesh& mesh = get_mesh();
-  EquationSystems& eq_sys = get_equation_systems();
-  TiberNonlinearSystem& system = static_cast<TiberNonlinearSystem&>(
-      eq_sys.get_system(get_equation_system_name()));
-
-  const Device& device = *_device;
-  const SimulationEnvironment& environment = get_environment();
-
-  const NumericVector<Number>& solution = system.get_solution_vector();
-
-  const unsigned int dim = mesh.mesh_dimension();
-
-  const Scaling& scaling = get_scaling();
-  const double x0 = scaling.get_length_scaling();
-  const double phi0 = scaling.get_potential_scaling();
- 
-  const DofMap& dof_map = system.get_dof_map();
-  
-  // numeric ids corresponding to the variables
-  const unsigned int u_var = system.variable_number("potential");
-  const unsigned int en_var = system.variable_number("fermi_n");
-  const unsigned int eI_var = system.variable_number("fermi_I");
-  const unsigned int eI3_var = system.variable_number("fermi_I3");
-  const unsigned int eC_var = system.variable_number("fermi_C");
-  
-  vector<unsigned int> dof_indices;
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_eI;
-  vector<unsigned int> dof_indices_eI3;
-  vector<unsigned int> dof_indices_eC;
-
-
-
-  MeshBase::const_element_iterator el =
-                                  mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el =
-                                  mesh.active_local_elements_end();
-
-  // loop over all active elements
-  for ( ; el != end_el ; ++el) 
-  {
-    const Elem* elem = *el;
-    const Elem* top_parent = elem->top_parent();
-
-    ID subdomain = elem->subdomain_id();
-
-    for (unsigned int s = 0; s < elem->n_sides(); s++)
-    {
-      ElementSide side(top_parent, s);
-      
-      // is this a boundary?
-      if (environment.is_boundary(side))
-      {
-        Boundary* boundary = environment.get_boundary(side);
-
-        DSSCContact* contact = NULL;
-        if (boundary != NULL)
-          contact = dynamic_cast<DSSCContact*>(
-              boundary->get_boundary_properties(get_id()));
-        
-        if ((contact != NULL) && contact->is_cathode())
-        {
-
-          dof_map.dof_indices(elem, dof_indices);
-          dof_map.dof_indices(elem, dof_indices_u, u_var);
-          dof_map.dof_indices(elem, dof_indices_en, en_var);
-          dof_map.dof_indices(elem, dof_indices_eI, eI_var);
-          dof_map.dof_indices(elem, dof_indices_eI3, eI3_var);
-          dof_map.dof_indices(elem, dof_indices_eC, eC_var);
-
-
-          DSSCModel* sc =
-            dynamic_cast<DSSCModel*>(
-                device.get_material(subdomain)->get_model(get_id()));
-
-          assert(sc != NULL);
-          sc->reinit(elem);
-
-          double u  = phi0 * solution(dof_indices_u[s]);
-          double en = phi0 * solution(dof_indices_en[s]);
-          double eI = phi0 * solution(dof_indices_eI[s]);
-          double eI3 = phi0 * solution(dof_indices_eI3[s]);
-          double eC = phi0 * solution(dof_indices_eC[s]);
-
-
-          // prepare for calculating local properties
-          sc->set_coordinates(elem->point(s));
-
-          sc->set_potentials(u, en, eI, eI3, eC);
-
-          // calculate all local properties
-          sc->calculate_densities();
-
-          double n_e = sc->get_density_n();
-          double n_I = sc->get_density_I();
-          double n_I3 = sc->get_density_I3();
-          double n_C = sc->get_density_C();
-
-          contact->set_values(u, n_I, n_I3);
-
-        }
-      }
-    }
-  }
-
-
-}
-
 
 
 void
@@ -537,51 +423,68 @@ DSSC::do_equilibrium(void)
     get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
   
+  ModelOptions& solveropts = get_solver_options();
+  int max_it = solveropts.get_option("nonlin_max_it", -1);
+  solveropts.set_option("nonlin_max_it", 150);
+
+
+  int coupling = get_options().coupling;
+  get_options().coupling = POISSON;
 
   // backup the simulation voltages and set all to zero
-  //ContactData sim_voltages(_boundary_currents);
-  ContactData::iterator it(_boundary_currents.begin());
-  const ContactData::iterator end(_boundary_currents.end());
+  ContactData sim_voltages(_boundary_currents);
+  ContactData::iterator it(sim_voltages.begin());
+  const ContactData::iterator end(sim_voltages.end());
   for ( ; it != end; ++it)
   {
     const Boundary* bd = it->first;
     // It's save to static_cast because we know there has to be an
     // ElectricalContact object
-    DSSCContact* cnt =
-      static_cast<DSSCContact*>(bd->get_boundary_properties(get_id()));
-    cnt->set_open_circuit();
-    //sim_voltages[bd] = cnt->get_simulation_voltage();
-    //cnt->set_simulation_voltage(0.0);
+    ElectricalContact* cnt =
+      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
+    sim_voltages[bd] = cnt->get_simulation_voltage();
+    cnt->set_simulation_voltage(0.0);
   }
 
   // make a rough guess
-  //guess_equilibrium();
+  guess_equilibrium();
+
+
+  //if (do_local_scaling_)
+  //  build_local_scaling();
 
 
   try
   {
-    cout << "Solving open circuit" << endl;
+    cout << "Solving equilibrium" << endl;
 
     do_newton();
-    get_OC_values();
-
-    cout << "Open circuit done" << endl;
+    
+    cout << "Equilibrium done" << endl;
   }
   catch (runtime_error& e)
   {
-    cerr << "Open circuit did not converge: " << e.what() << endl;
+    cerr << "Equilibrium did not converge: " << e.what() << endl;
     throw (e);
   }
 
   // set the contact voltages back to the desired values
-  for (it = _boundary_currents.begin(); it != end; ++it)
+  it = sim_voltages.begin();
+  for ( ; it != end; ++it)
   {
     const Boundary* bd = it->first;
-    DSSCContact* cnt =
-      static_cast<DSSCContact*>(bd->get_boundary_properties(get_id()));
-    cnt->set_open_circuit(false);
-    //cnt->set_simulation_voltage(sim_voltages[bd]);
+    ElectricalContact* cnt =
+      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
+    cnt->set_simulation_voltage(sim_voltages[bd]);
   }
+  
+  // reset the coupling
+  get_options().coupling = coupling;
+
+  if (max_it != -1)
+    solveropts.set_option("nonlin_max_it", max_it);
+  else
+    solveropts.delete_option("nonlin_max_it");
 */
 }
 
@@ -795,12 +698,12 @@ DSSC::do_init(void)
     BoundaryProperties* bd = it->second->get_boundary_properties(get_id());
     if (bd != NULL)
     {
-      DSSCContact* contact = dynamic_cast<DSSCContact*>(bd);
-      if (contact != NULL)
-      {
-        _boundary_currents[it->second] = 0.0;
-        _voltages[it->second] = 0.0;
-      }
+      //ElectricalContact* contact = dynamic_cast<ElectricalContact*>(bd);
+      //if (contact->is_real_contact())
+      //{
+      //  _boundary_currents[it->second] = 0.0;
+      //  _voltages[it->second] = 0.0;
+      //}
     }
   }
 }
@@ -3583,8 +3486,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             }
             if (residual != NULL)
             {
-              FI(s) -= 1.5 * contact->get_current() / Constants::e / C0_I;
-              FI3(s) -= -0.5 * contact->get_current() / Constants::e / C0_I3;
+              FI(s) -= 1.5 * contact->get_potential() / Constants::e / C0_I;
+              FI3(s) -= -0.5 * contact->get_potential() / Constants::e / C0_I3;
             }
 
           }
@@ -3735,21 +3638,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           Boundary* bd = node_it->second;
           DSSCContact* contact = dynamic_cast<DSSCContact*>(
               bd->get_boundary_properties(get_id()));
-
-          // s is the node of the element lying on the boundary
-          Real u  = phi0 * Xu(i);
-          Real en = phi0 * Xn(i);
-          Real eI = phi0 * XI(i);
-          Real eI3 = phi0 * XI3(i);
-          Real eC = phi0 * XC(i);
-
-          // calculate densities etc.
-          sc->set_coordinates(elem->point(i));
-          sc->set_potentials(u, en, eI, eI3, eC);
-          sc->calculate_densities();
-          contact->set_values(phi0 * u, sc->get_density_I(),
-              sc->get_density_I3());
-       
           //contact->set_material(sc);
           //contact->set_normal_fluxes(
           //    nodal_flux_n[elem->node(i)], nodal_flux_p[elem->node(i)]);
@@ -3761,7 +3649,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           {
             if (contact->is_cathode())
             {
-              double val = contact->get_current() / phi0;
+              double val = contact->get_potential() / phi0;
               Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
               //Ke.condense(i + 3*n_dofs, i + 3*n_dofs, -val, Fe);
             }
