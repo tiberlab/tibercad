@@ -94,6 +94,7 @@ inline
 DSSCContact::DSSCContact(void)
   : _boundary_value(0.0),
     _cathode(false),
+    _current(0.0),
     _open_circuit(true)
 {
 }
@@ -184,7 +185,8 @@ inline
 double
 DSSCContact::get_current(void) const
 {
-  return _current;
+  return _boundary_value;
+  //return _current;
 }
 
 

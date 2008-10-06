@@ -395,6 +395,8 @@ class DSSC : public SimulationInterface
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
 
+    //! Find the open circuit potential and densities
+    void get_OC_values(void);
 
 };
 
