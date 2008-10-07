@@ -242,6 +242,9 @@ SimulationInterface::init(void) throw (InitFailedException)
     {
       _environment->prepare_for_solve();
       _scaling.set_calc_mesh_units((_environment->get_device()).get_mesh_units());
+
+      // plot the regions
+      plot_regions();
     }
 
     
@@ -518,6 +521,44 @@ SimulationInterface::plot(void)
   
 
 
+
+
+
+void
+SimulationInterface::plot_regions(void)
+{
+
+  const Device& dev = get_environment().get_device();
+
+  string suffix = get_control().get_filename_suffix();
+  string outdir = get_control().get_output_dir();
+
+  DataOutput data_output(dev.get_mesh(), get_control().get_output_format());
+
+  // materials  output: for each simulation an output file with IDs of
+  // physical regions activated for that simulation
+  // IDs are taken from the meshdata object associated to the  device;
+  // IDs are data associated to elements
+
+  std::vector<Number> translated_data;
+  std::vector<std::string> data_names;
+
+  (dev.get_meshdata())->activate(); 
+  (dev.get_meshdata())->translate_elem_data(dev.get_mesh(),
+                                            translated_data,
+                                            data_names);
+
+  if (data_names.size() > 0)
+  {
+    string filename(outdir + "/" + get_name() + "_materials" + suffix);
+    data_output.write_cell_data(filename, translated_data, data_names);
+  }
+}
+
+
+
+
+
 void
 SimulationInterface::do_plot(void)
 {
@@ -555,29 +596,6 @@ SimulationInterface::do_plot(void)
     string filename(outdir + "/" + get_name() + "_elemental" + suffix);
     data_output.write_cell_data(filename, results, names);
   }
-
-
-
-
-  // materials  output: for each simulation an output file with IDs of
-  // physical regions activated for that simulation
-  // IDs are taken from the meshdata object associated to the  device;
-  // IDs are data associated to elements
-
-  std::vector<Number> translated_data;
-  std::vector<std::string> data_names;
-
-  (dev.get_meshdata())->activate(); 
-  (dev.get_meshdata())->translate_elem_data(dev.get_mesh(),
-                                            translated_data,
-                                            data_names);
-
-  if (data_names.size() > 0)
-  {
-    string filename(outdir + "/" + get_name() + "_materials" + suffix);
-    data_output.write_cell_data(filename, translated_data, data_names);
-  }
-
 
 
 

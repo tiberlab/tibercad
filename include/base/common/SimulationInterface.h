@@ -584,6 +584,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     virtual void do_plot(void);
 
 
+    //! Plots the regions active for this simulation
+    void plot_regions(void);
+
+
     //! Print simulation info
     virtual void do_print_info(void);
 

@@ -303,7 +303,8 @@ Sweep::prepare_plot_files(std::vector<std::ofstream*>& plotfiles)
 
       ostringstream suff;
       suff.precision(3);
-      suff << fixed << _variable;
+      //suff << fixed << _variable;
+      suff << _variable;
       string plotfilename(outdir + "/" + get_name() + "_" +
           _simulations[i]->get_name() + suffix + "_" + suff.str() + ".dat");
 
@@ -463,7 +464,8 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
         {
           ostringstream s;
           s.precision(3);
-          s << suffix << "_" << _variable << "_" << fixed << value;
+          //s << suffix << "_" << _variable << "_" << fixed << value;
+          s << suffix << "_" << _variable << "_" << value;
           get_control().set_filename_suffix(s.str());
         }
 
