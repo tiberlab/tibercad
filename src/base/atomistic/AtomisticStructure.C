@@ -148,9 +148,16 @@ AtomisticStructure::init()
       //      std::cerr << "Printing structure to file " << std::endl;
       //#endif
 
-      print_structure("structure.xyz");
-      print_structure("structure.gen");
-      print_structure("structure.upg");
+      std::string name;
+      name = _name + ".xyz" ;
+      std::cout << "Printing structure " << name << std::endl;
+      print_structure(name);
+      name = _name + ".gen" ;
+      print_structure(name);
+      //print_structure("structure.gen");
+
+      //TODO: with passivation printing upg seems to fail, check it!
+      //print_structure("structure.upg");
     }
 
 
@@ -437,9 +444,7 @@ AtomisticStructure::print_structure(const std::string& path)
 	   << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
 
       // Periodicity vectors at the bottom
-      if (is_periodical)
-	{
-	  unsigned int count = 0;
+    	  unsigned int count = 0;
 	  for (unsigned int i = 0; i < 3; i++)
 	    {
 	      for (unsigned int j = 0; j < 3; j++)
@@ -450,7 +455,6 @@ AtomisticStructure::print_structure(const std::string& path)
 		}
 	      file << "\n";
 	    }
-	}
 
     }
 

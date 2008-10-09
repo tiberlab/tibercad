@@ -13,14 +13,23 @@
 #include "mesh.h"
 
 
+//! A class for building Atomistic Structure from mesh informations
+/*!
+ *Atomistic Generator can create 1D, 2D and 3D atomistic structure
+ *(directions confinement define structure periodicity), according
+ *to mesh informations. Material parameters (kind of lattice, atomic basis, ecc.)
+ *are read from material files
+ */
+
+
 //forward declaration
 class AtomisticStructure;
+class BondMap;
 
 
 
 
-	
-class AtomisticGenerator 
+class AtomisticGenerator
 {
 
 public:
@@ -45,14 +54,19 @@ public:
 
   //Print atom_basis in xyz file (for debugging)
   void print_basis(std::vector<Atom> &basis, const std::string filename);
- 
+
 protected:
+
 
  //lattice constants
   double _lattice_constant[3];
 
   //! Change atom species according to regions
-  void change_specie(std::string preserve);
+  void cut_and_change_specie(std::string preserve);
+
+  //! Fast bond map generation, suitable for both
+   unsigned int** fast_bond_map(const std::vector<Atom> &basis,
+		   Tensor1& edge_min, Tensor1& edge_max, Tensor2Gen& period);
 
   //! Primitive vectors in real space, stored by columns in a 3x3 matrix
   Tensor2Gen _prim_vec;
@@ -79,7 +93,7 @@ protected:
 
   //! Atomic basis arrays
   std::vector<Atom> _crystal_basis;
-    
+
   //! Supercell atom basis points
   std::vector<Atom> _super_basis;
 
@@ -95,7 +109,13 @@ protected:
   //! Dimensionality of the system (1, 2 or 3)
   unsigned int _dim;
 
-  //! Missing super_conv (vector of conventional cells edges). 
+  //! Lenght of supercell in conventional cells units
+  int _conv_cells_supercell_lenght[3];
+
+  //! An internal instance of BondMap, to make passivation and final bond map
+  BondMap* _bondmapobject;
+
+  //! Missing super_conv (vector of conventional cells edges).
   //!If it will be needed remember to uncomment proper lines in make_supercell!!!!!!!!!!!!!!!!
 
 
@@ -113,22 +133,22 @@ protected:
   //! Real passivation routine (implemented in derived classes, it takes in account periodicity)
   virtual void passivate() = 0;
 
-  
+
   //!Supercell periodicity vectors
   Tensor2Gen _period;
 
   //Map for cutoff parameters
   std::map<std::string, double> _cutoff;
 
-  //! AtomisticStructure instance which invoked AtomisticGenerator 
+  //! AtomisticStructure instance which invoked AtomisticGenerator
   //Note: pointer is constant, variable pointed is not constant
   AtomisticStructure*  _as;
 
   //! List of elements covered by structure
   std::vector<Elem*> _structure_elements;
 
-  //! Set the atomic basis for the lattice
-  void set_crystal_basis(const std::string basis_name, const std::string specie1 = "not_specified", const std::string specie2 = "not_specified", double u = 0.0);
+  //! Set the atomic basis for the lattice (This function is no longer used!)
+  //void set_crystal_basis(const std::string basis_name, const std::string specie1 = "not_specified", const std::string specie2 = "not_specified", double u = 0.0);
 
   //! Build miller indexes in primitive basis (In some lattices like ZincBlende Miller indexes are not defined
   //! on Wiegner-Seitz Cell). Cut_planes are 3X1 Miller indexes arrays stored by columns
@@ -142,11 +162,11 @@ protected:
 
   //! Filling conventional growth cell with basis atoms
   void make_conv_basis();
-  
-  //! A function to build supercells
-  void make_supercell(double l1, double l2, double l3, bool preserve_basis = true, bool preserv_conv = true);
 
-  //! Virtual function for building up the structure. 
+  //! A function to build supercells
+  void make_supercell(double l1, double l2, double l3);
+
+  //! Virtual function for building up the structure.
   virtual void build() = 0;
 
   //! Parsing of atomistic infos to build lattice and basis vectors
@@ -157,10 +177,10 @@ protected:
 
 
 
-  
+
   //Calculate a reciprocal basis from a real basis
   static Tensor2Gen reciprocal(Tensor2Gen real_basis);
-  
+
   //Find greater common denominator between two integers
   static int gcd(int a, int b);
 
@@ -183,7 +203,7 @@ protected:
   static void double_to_int_value_checked(Tensor1& a);
 
   //Scale a vector with fractional parts to all integer vector
-  static void scale_to_int(Tensor1& a); 
+  static void scale_to_int(Tensor1& a);
 
   //Same work with 3 vectors composing a tensor2Gen
   static void scale_to_int(Tensor2Gen& a);

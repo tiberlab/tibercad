@@ -21,6 +21,9 @@
 	 //! Constructor with specie and position initializations
 	 Atom(std::string& init_specie, Tensor1& init_position);
 
+     //!Complete constructor: specifies all atom characteristics
+	 Atom(std::string& specie, Tensor1& position, int (&conv_address)[3], ID atom_id, ID region_id, unsigned int flag, ID contact);
+
 	 //! Atom destructor
 	 ~Atom();
 
@@ -40,7 +43,7 @@
 	 const Tensor1& get_position() const;
 
 	 //! If atom belongs to contact, return the id of contact (0 otherwise)
-     const int get_contact() const;
+     const ID get_contact() const;
 
      //! Get the ID of the region the atom belongs to
      //! (Note: little errors may occur using basis or conventional cell
@@ -49,7 +52,6 @@
 
 	 //! Set the ID of the region the atom belongs to
 	 void set_region_ID(const int my_id);
-
 
 	 //! Get atom identifier
 	 const ID get_atom_ID(void) const;
@@ -70,8 +72,6 @@
      //! Get atom address in conventional cells units
      const int* get_conv_address(void) const;
 
-
-
      private:
 
 	 //! Atomic specie (short name)
@@ -82,7 +82,7 @@
 
 	 //! An integer which says if an atom belongs to device (0)
 	 //! or to contact (number of contact). Useful in electronic transport
-	 unsigned int _contact;
+	 ID _contact;
 
 	 //! ID of region containing the atom
 	 ID _region_id;
@@ -140,7 +140,7 @@
 
 
  inline
- const int Atom::get_contact(void) const
+ const ID Atom::get_contact(void) const
  {
 	 return _contact;
  }
