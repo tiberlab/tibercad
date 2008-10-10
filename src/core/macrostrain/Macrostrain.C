@@ -113,7 +113,7 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
    
     if (pol_var != -1)
       {
-         for (unsigned int i = 0; i<6 ; i++)
+         for (unsigned int i = 0; i<3 ; i++)
              {
                results[id + pol_var + i] = pol_data[i + j * 3];
              }
