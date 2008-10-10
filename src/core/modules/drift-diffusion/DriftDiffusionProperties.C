@@ -28,6 +28,8 @@ using namespace std;
 DriftDiffusionProperties::PointData::PointData(void)
   : //electron_conductivity_derivatives(3, 0.0),
     //hole_conductivity_derivatives(3, 0.0),
+    electron_recombination_rate(0.0),
+    hole_recombination_rate(0.0),
     electron_recombination_rate_derivatives(3, 0.0),
     hole_recombination_rate_derivatives(3, 0.0)
 {
@@ -46,6 +48,7 @@ DriftDiffusionProperties::_DOS_factor = pow(2.0 * M_PI * Constants::me /
 
 DriftDiffusionProperties::DriftDiffusionProperties(void)
   : equilibrium_fermi_level(0.0),
+    intrinsic_density(1e10),
     _is_inhomogeneous(false),
     _use_predictor(false),
     _driftdiffusion(NULL),

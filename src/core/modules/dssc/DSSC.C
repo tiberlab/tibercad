@@ -263,10 +263,10 @@ DSSC::compute_scaling(Scaling::ScalingType type)
   x0 = 1;
   mesh_units = 1;
   phi0 = 1;
-  //_cond_scaling.n = 1;
-  //_cond_scaling.I = 1;
-  //_cond_scaling.I3 = 1;
-  //_cond_scaling.C = 1;
+  _cond_scaling.n = 1;
+  _cond_scaling.I = 1;
+  _cond_scaling.I3 = 1;
+  _cond_scaling.C = 1;
   get_scaling().set_scaling_type(type);
   get_scaling().set_potential_scaling(phi0);
   get_scaling().set_length_scaling(x0 * mesh_units);
@@ -347,6 +347,7 @@ DSSC::do_solve(void)
   try
   {
     do_newton();
+    get_OC_values();
   }
   catch (SolverException& e)
   {
@@ -541,31 +542,24 @@ DSSC::do_equilibrium(void)
     get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
   
-  ModelOptions& solveropts = get_solver_options();
-  int max_it = solveropts.get_option("nonlin_max_it", -1);
-  solveropts.set_option("nonlin_max_it", 150);
-
-
-  int coupling = get_options().coupling;
-  get_options().coupling = POISSON;
 
   // backup the simulation voltages and set all to zero
-  ContactData sim_voltages(_boundary_currents);
-  ContactData::iterator it(sim_voltages.begin());
-  const ContactData::iterator end(sim_voltages.end());
+  //ContactData sim_voltages(_boundary_currents);
+  ContactData::iterator it(_boundary_currents.begin());
+  const ContactData::iterator end(_boundary_currents.end());
   for ( ; it != end; ++it)
   {
     const Boundary* bd = it->first;
     // It's save to static_cast because we know there has to be an
     // ElectricalContact object
-    ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
-    sim_voltages[bd] = cnt->get_simulation_voltage();
-    cnt->set_simulation_voltage(0.0);
+    DSSCContact* cnt =
+      static_cast<DSSCContact*>(bd->get_boundary_properties(get_id()));
+    cnt->set_open_circuit();
+    //cnt->set_simulation_voltage(0.0);
   }
 
   // make a rough guess
-  guess_equilibrium();
+  //guess_equilibrium();
 
 
   //if (do_local_scaling_)
@@ -574,35 +568,28 @@ DSSC::do_equilibrium(void)
 
   try
   {
-    cout << "Solving equilibrium" << endl;
+    cout << "Solving open circuit" << endl;
 
     do_newton();
+    get_OC_values();
     
-    cout << "Equilibrium done" << endl;
+    cout << "Open circuit done" << endl;
   }
   catch (runtime_error& e)
   {
-    cerr << "Equilibrium did not converge: " << e.what() << endl;
+    cerr << "Open circuit did not converge: " << e.what() << endl;
     throw (e);
   }
 
   // set the contact voltages back to the desired values
-  it = sim_voltages.begin();
-  for ( ; it != end; ++it)
+  for (it = _boundary_currents.begin(); it != end; ++it)
   {
     const Boundary* bd = it->first;
-    ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
-    cnt->set_simulation_voltage(sim_voltages[bd]);
+    DSSCContact* cnt =
+      static_cast<DSSCContact*>(bd->get_boundary_properties(get_id()));
+    cnt->set_open_circuit(false);
   }
   
-  // reset the coupling
-  get_options().coupling = coupling;
-
-  if (max_it != -1)
-    solveropts.set_option("nonlin_max_it", max_it);
-  else
-    solveropts.delete_option("nonlin_max_it");
 */
 }
 
@@ -816,12 +803,12 @@ DSSC::do_init(void)
     BoundaryProperties* bd = it->second->get_boundary_properties(get_id());
     if (bd != NULL)
     {
-      //ElectricalContact* contact = dynamic_cast<ElectricalContact*>(bd);
-      //if (contact->is_real_contact())
-      //{
-      //  _boundary_currents[it->second] = 0.0;
-      //  _voltages[it->second] = 0.0;
-      //}
+      DSSCContact* contact = dynamic_cast<DSSCContact*>(bd);
+      if (contact != NULL)
+      {
+        _boundary_currents[it->second] = 0.0;
+        _voltages[it->second] = 0.0;
+      }
     }
   }
 }
@@ -3579,11 +3566,9 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           double sign = (x_s > x_c) ? 1 : -1;
 
           // at 'low' end it is simply 0
-          if (sign > 0)
+          //if (sign > 0)
+          if (contact->is_cathode())
           {
-            Fa(s) += _cation_amount / C0;
-            Fb(s) += _iodine_amount / C0;
-
             for (unsigned int n = 0; n < elem->n_nodes(); n++)
             {
               //KII(s,n) -= sigma_I * dphi_face[n][0](0);
@@ -3604,8 +3589,12 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             }
             if (residual != NULL)
             {
-              FI(s) -= 1.5 * contact->get_current() / Constants::e / C0_I;
-              FI3(s) -= -0.5 * contact->get_current() / Constants::e / C0_I3;
+              double curr = contact->get_current() * x0;
+              FI(s) -= sign * 1.5 * curr / Constants::e / C0_I;
+              FI3(s) -= -sign * 0.5 * curr / Constants::e / C0_I3;
+
+              Fa(s) += sign * _cation_amount / C0;
+              Fb(s) += sign * _iodine_amount / C0;
             }
 
           }
@@ -3765,10 +3754,11 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           if (nodes_on_boundary_sides.find(elem->node(i)) !=
               nodes_on_boundary_sides.end())
           {
-            if (contact->is_cathode())
+            if (!contact->is_cathode()) // anode 
             {
-              double val = contact->get_current() / phi0;
-              Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
+              double val = contact->get_potential() / phi0;
+              //Ke.condense(i, i, -val, Fe);
+              Ke.condense(i + n_dofs, i + n_dofs, 0.0, Fe);
               //Ke.condense(i + 3*n_dofs, i + 3*n_dofs, -val, Fe);
             }
             else

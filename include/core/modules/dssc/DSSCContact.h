@@ -123,7 +123,8 @@ DSSCContact::set_variable_value(double value, ID id)
 {
   ignore_unused_variable(id);
   set_potential(value);
-  set_open_circuit(false);
+  if (value != 0.0)
+    set_open_circuit(false);
 }
 
 
