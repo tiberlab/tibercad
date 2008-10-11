@@ -3,6 +3,7 @@
 #include "RotatedCrystal.h" 
 #include "tensor.h"
 
+//class DynamicalMatrix;
 
 DynamicalMatrix::DynamicalMatrix()
  :_dynamical_matrix(0)

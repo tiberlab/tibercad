@@ -23,7 +23,7 @@
 #include "Poisson.h"
 #include "TunnelingCurrent.h"
 #include "MaxwellEquations.h"
-//#include "PhononDispersion.h"
+#include "PhononDispersion.h"
 #include "CrackStrain.h"
 
 
@@ -144,8 +144,8 @@ SimulationInterface::create(const string& type,
       sim = Poisson::create();
     else if (type_name == "maxwell")
       sim = MaxwellEquations::create();
-    //else if (type_name == "phonondispersion")
-      //sim = PhononDispersion::create(); 
+    else if (type_name == "phonondispersion")
+      sim = PhononDispersion::create(); 
 
   }
 
