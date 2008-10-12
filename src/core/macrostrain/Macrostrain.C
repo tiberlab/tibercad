@@ -238,6 +238,10 @@ void Macrostrain::parse_options( )
 
  if (!grown_on_substrate)
  {
+
+   apply_antirotation = opt.get_option("apply_antirotation", true);
+
+
    vector<double> point;
    if ( ! opt.find_option("fixed_point1"))
    {
@@ -1367,37 +1371,38 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
 
    if (grown_on_substrate)
-     {
+   {
      
-       const Node* nd = elem->get_node(n);
+     const Node* nd = elem->get_node(n);
 
-       std::set <const Node*> :: iterator it = substrate_points.find( nd );
-
-       if ( it != substrate_points.end() )
-	 return(true);
-       else
-	 return (false);      
+     std::set <const Node*> :: iterator it = substrate_points.find( nd );
+     
+     if ( it != substrate_points.end() )
+       return(true);
+     else
+       return (false);      
 
         
-     }
+   }
   
 
    else
-     {
+   {
 
-       //there is always one node that is fixed. 
-       // std :: cerr << elem->node(n) << "  " << fixed_node_number << "\n";
-       //return(elem->node(n) == fixed_node_number);
+     //there is always one node that is fixed. 
+     // std :: cerr << elem->node(n) << "  " << fixed_node_number << "\n";
+     //return(elem->node(n) == fixed_node_number);
 
-       if (elem->node(n) == fixed_node1) 
-	 return(true);
-       else if ((dim > 1) && (fix_all_fixed_points && (elem->node(n) == fixed_node2)))
-	 return true;
-       else if ((dim > 2) && (fix_all_fixed_points && (elem->node(n) == fixed_node3)))
-	 return true;
-       else
-	 return(false);
-     }
+
+     if (elem->node(n) == fixed_node1 && apply_antirotation) 
+       return(true);
+     else if ((dim > 1) && (fix_all_fixed_points && (elem->node(n) == fixed_node2)))
+       return true;
+     else if ((dim > 2) && (fix_all_fixed_points && (elem->node(n) == fixed_node3)))
+       return true;
+     else
+       return(false);
+   }
 
  
    
@@ -1487,7 +1492,8 @@ void Macrostrain::do_solve()
 
     if (verbose > 2) cout << "apply_antirotation_constraints ... " << flush;
 
-    if (!fix_all_fixed_points) apply_antirotation_constraints(); 
+    if (!fix_all_fixed_points) 
+      if(apply_antirotation) apply_antirotation_constraints(); 
 
     if (verbose > 2) cout << "done \n" << flush;
 
@@ -1594,7 +1600,7 @@ void Macrostrain::do_solve()
       
       apply_periodic_bc();
 
-      apply_antirotation_constraints();
+      if (apply_antirotation) apply_antirotation_constraints();
       
       mesh.print_info();
       

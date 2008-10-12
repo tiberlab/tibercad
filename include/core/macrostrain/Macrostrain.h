@@ -514,6 +514,10 @@ class Macrostrain : public StrainSimulation
     \param normal normal vector
   */
   void adjust_derivatives(Tensor1& deriv_vectors, const Point& normal); 
+
+  //! 
+  bool apply_antirotation;
+  
  
  protected:
 

@@ -188,6 +188,7 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
 void OptRecombinSpectrum::do_init( )
 {
 
+
   Kspace::do_init();//--kspace domain--------------
 
 
