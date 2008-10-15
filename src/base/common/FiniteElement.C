@@ -29,6 +29,9 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const unsigned int side,
       J *= x0_inv;
     case 2:
       J *= x0_inv;
+      break;
+    case 0: // in 1D simulations!
+      J = 1.0;
   }
 
   switch (_symmetry)
@@ -42,11 +45,13 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const unsigned int side,
         FE<Dim, T>::JxW[i] *= J;
       break;
   }
-  
-  if (FE<Dim, T>::calculate_dphi)
-    for (unsigned int i = 0; i < n_points; i++)
-      for (unsigned int j = 0; j < elem->n_nodes(); j++)
-        FE<Dim, T>::dphi[j][i] *= x0;
+
+  // is already done because FE<Dim, T>::reinit(elem, points) gets called
+  // automatically
+  //if (FE<Dim, T>::calculate_dphi)
+  //  for (unsigned int i = 0; i < n_points; i++)
+  //    for (unsigned int j = 0; j < elem->n_nodes(); j++)
+  //      FE<Dim, T>::dphi[j][i] *= x0;
 
 }
 
@@ -70,6 +75,7 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const vector<Point>* points)
       J *= x0_inv;
     case 2:
       J *= x0_inv;
+      break;
   }
 
   switch (_symmetry)
@@ -84,7 +90,7 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const vector<Point>* points)
       break;
   }
   
- if (FE<Dim, T>::calculate_dphi)
+  if (FE<Dim, T>::calculate_dphi)
     for (unsigned int i = 0; i < n_points; i++)
       for (unsigned int j = 0; j < elem->n_nodes(); j++)
         FE<Dim, T>::dphi[j][i] *= x0;
