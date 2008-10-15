@@ -232,7 +232,7 @@ extern "C"
 
 
 TiberPetscNonlinearSolver::TiberPetscNonlinearSolver(void)
-  : _emergency_fnorm(1e-9),
+  : _emergency_fnorm(1e-3),
     _ls_type(3),
     _ls_maxstep(1e5),
     _old_gnorm(1e96),

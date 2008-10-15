@@ -10,6 +10,7 @@
 #include "Boundary.h"
 #include "Material.h"
 #include "SimulationEnvironment.h"
+#include "FowlerNordheim.h"
 
 
 ElectricalContact*
@@ -48,6 +49,13 @@ ElectricalContact::do_init(void)
 
   std::string s(get_options().get_option("voltage", ""));
   set_simulation_voltage(check_and_register(s, 0.0));
+
+  _has_field_emission =
+    get_options().get_option("calculate_field_emission", _has_field_emission);
+
+  if (_has_field_emission)
+    _field_emission =
+      new FowlerNordheim(get_options().get_option("work_function", 1.0));
 
   determine_reference_material();
 
@@ -108,4 +116,15 @@ ElectricalContact::determine_reference_material(void)
       }
     }
   }
+}
+
+
+double
+ElectricalContact::calculate_field_emission(double F)
+{
+  double J = 0.0;
+  if (_field_emission != NULL)
+    J = _field_emission->get_emission_current(F);
+
+  return J;
 }

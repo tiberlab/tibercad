@@ -13,6 +13,7 @@
 #include <string>
 
 class DriftDiffusionProperties;
+class FowlerNordheim;
 
 //! Base class for any kind of electrical contact models
 /*!
@@ -67,6 +68,22 @@ class ElectricalContact : public BoundaryProperties, public Variable
 
     //! Set the particle fluxes normal to the surface
     void set_normal_fluxes(double jn, double jp);
+
+
+    //! \c true if field emission should be caclulated
+    bool has_field_emission(void) const;
+
+
+    //! Calculate and return the field emission current density
+    double calculate_field_emission(double F);
+
+
+    //! Set the field emission current
+    void set_field_emission_current(double J);
+
+
+    //! Get the field emission current
+    double get_field_emission_current(void) const;
 
     
     //! Get the type of boundary condition for \c variable
@@ -215,6 +232,18 @@ class ElectricalContact : public BoundaryProperties, public Variable
     //! \c true if this is an outer boundary
     bool _is_outer_boundary;
 
+
+    //! \c true if field emission has to be calculated
+    bool _has_field_emission;
+
+
+    //! The field emission current
+    double _field_emission_current;
+
+
+    //! The field emission model
+    FowlerNordheim* _field_emission;
+
 };
 
 
@@ -230,7 +259,10 @@ ElectricalContact::ElectricalContact(void)
   : _boundary_value(0.0),
     _properties(NULL),
     _real_contact(true),
-    _is_outer_boundary(true)
+    _is_outer_boundary(true),
+    _has_field_emission(false),
+    _field_emission_current(0.0),
+    _field_emission(NULL)
 {
 }
 
@@ -451,6 +483,32 @@ ElectricalContact::is_outer_boundary(bool is_outer_boundary)
   _is_outer_boundary = is_outer_boundary;
 }
 
+
+
+inline
+bool
+ElectricalContact::has_field_emission(void) const
+{
+  return _has_field_emission;
+}
+
+
+
+inline
+void
+ElectricalContact::set_field_emission_current(double J)
+{
+  _field_emission_current = J;
+}
+
+
+
+inline
+double
+ElectricalContact::get_field_emission_current(void) const
+{
+  return _field_emission_current;
+}
 
 
 #endif // _ELECTRICALCONTACT_H_

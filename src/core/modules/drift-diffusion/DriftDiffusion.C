@@ -688,8 +688,21 @@ DriftDiffusion::do_solve(void)
   // calculate the currents to print them on screen
   calculate_currents();
 
+
+  bool field_emission = false;
+
   ContactData::iterator it(_boundary_currents.begin());
   const ContactData::iterator end(_boundary_currents.end());
+  for ( ; it != end; ++it)
+  {
+    ElectricalContact* cnt =
+      static_cast<ElectricalContact*>(it->first->get_boundary_properties(get_id()));
+    if (cnt->has_field_emission())
+    {
+      field_emission = true;
+      break;
+    }
+  }
 
   cout << endl;
   int width = 20;
@@ -702,10 +715,16 @@ DriftDiffusion::do_solve(void)
     os.width(2 * width - os.tellp());
     os << "";
     os << "contact current:";
+    if (field_emission)
+    {
+      os.width(3 * width - os.tellp());
+      os << "";
+      os << "field emission current:";
+    }
     cout << os.str() << endl;
   }
 
-  for ( ; it != end; ++it)
+  for (it = _boundary_currents.begin(); it != end; ++it)
   {
     ostringstream os;
     os << setprecision(6);
@@ -718,6 +737,12 @@ DriftDiffusion::do_solve(void)
     os.width(2 * width - os.tellp());
     os << "";
     os << it->second * it->first->get_area_factor();
+    if (cnt->has_field_emission())
+    {
+      os.width(3 * width - os.tellp());
+      os << "";
+      os << cnt->get_field_emission_current() * it->first->get_area_factor();
+    }
     cout << os.str() << endl;
   }
   cout << endl;
@@ -1099,11 +1124,11 @@ DriftDiffusion::do_init(void)
     if (bd != NULL)
     {
       ElectricalContact* contact = dynamic_cast<ElectricalContact*>(bd);
-      if (contact->is_real_contact())
-      {
+      //if (contact->is_real_contact())
+      //{
         _boundary_currents[it->second] = 0.0;
         _voltages[it->second] = 0.0;
-      }
+      //}
     }
   }
 }
@@ -1979,8 +2004,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
 
 
-
-
 void
 DriftDiffusion::calculate_currents_rstf(void)
 {
@@ -2138,7 +2161,6 @@ DriftDiffusion::calculate_currents_rstf(void)
 
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-
       sc->set_electric_field(phi0 * e_field);
       sc->set_grad_fermi_e(phi0 * dEfn);
       sc->set_grad_fermi_h(phi0 * dEfp);
@@ -2171,6 +2193,227 @@ DriftDiffusion::calculate_currents_rstf(void)
     } // end loop over quadrature points
   } // end loop over elements
 
+}
+
+
+
+void
+DriftDiffusion::calculate_field_emission(void)
+{  
+
+  ContactData fe_currents;
+  ContactData::iterator it = _boundary_currents.begin();
+  for ( ; it != _boundary_currents.end(); ++it)
+  {
+    ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
+        (*it).first->get_boundary_properties(get_id()));
+    if (contact->has_field_emission())
+      fe_currents[(*it).first] = 0.0;
+  }
+
+  TiberNonlinearSystem* system =
+    &get_equation_systems().get_system<TiberNonlinearSystem>(
+        get_equation_system_name());
+
+  const NumericVector<Number>& solution = system->get_solution_vector();
+
+  // aliases for nicer code
+  const Mesh& mesh = system->get_mesh();
+  const Device& device = *(_device);
+  const SimulationEnvironment& env = get_environment();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+
+  const double phi0 = get_scaling().get_potential_scaling();
+
+  
+  // numeric ids corresponding to the variables
+  const unsigned int u_var = system->variable_number("potential");
+  
+  FEType fe_type = system->variable_type(u_var);
+
+  // the finite element for boundary integration
+  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type));
+  libMeshEnums::Order integration_order;
+  if (dim == 1)
+    integration_order = libMeshEnums::CONSTANT;
+  else
+    integration_order = get_options().integration_order;
+  
+  AutoPtr<QBase> qface(QBase::build(
+        get_options().quadrature_type, dim - 1, integration_order));
+  //QGauss qface(dim - 1, integration_order);
+  //QTrap qface(dim - 1);
+  fe_face->attach_quadrature_rule(qface.get());
+
+  
+  // Jacobian * quadrature weight at each integration point.   
+  const vector<Real>& JxW = fe_face->get_JxW();
+  
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point = fe_face->get_xyz();
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe_face->get_phi();
+
+  // element shape function gradients
+  const vector<vector<RealGradient> >& dphi = fe_face->get_dphi();
+
+  // the face normals
+  const vector<Point>& face_normals = fe_face->get_normals();
+
+  vector<unsigned int> dof_indices_u;
+
+
+  MeshBase::const_element_iterator el =
+                                  mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end_el =
+                                  mesh.active_elements_end();
+
+  for ( ; el != end_el ; ++el) 
+  {
+    const Elem* elem = *el;
+    const Elem* top_parent = (*el)->top_parent();
+
+    ID subdomain = elem->subdomain_id();
+
+    // get DOF indices
+    dof_map.dof_indices(elem, dof_indices_u, u_var);
+
+    DriftDiffusionProperties* sc =
+      dynamic_cast<DriftDiffusionProperties*>(
+          device.get_material(subdomain)->get_model(get_id()));
+
+    assert(sc != NULL);
+
+    /* we calculate field emission only in dielectrics */
+    if (!sc->is_dielectric())
+      continue;
+
+    for (unsigned int s = 0; s < elem->n_sides(); s++)
+    {
+      ElementSide side(top_parent, s);
+      
+      if (env.is_boundary(side))
+      {
+
+        Boundary* boundary = env.get_boundary(side);
+        if (boundary == NULL)
+          continue;
+
+        ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
+            boundary->get_boundary_properties(get_id()));
+
+        // check if we should do something
+        if (!contact->has_field_emission())
+          break;
+        
+        sc->reinit(elem);
+        
+        // only for dim > 1 we need to integrate
+        //if (dim > 1)
+        //{
+          fe_face->reinit(elem, s);
+
+          int phi_size = phi.size();
+    
+          double current = 0.0;
+
+          for (unsigned int qp = 0; qp < qface->n_points(); qp++)
+          {
+            // get the solution value at the quadrature point
+            double e_field = 0.0;
+            for (unsigned int i = 0; i < phi_size; i++)
+            {
+              double tmp = dphi[i][qp] * face_normals[qp];
+              e_field += tmp * solution(dof_indices_u[i]);
+            }
+
+            double F = phi0 * e_field;
+            current += JxW[qp] * contact->calculate_field_emission(F);
+          } // end loop over quadrature points
+
+          fe_currents[boundary] += current;
+        //}
+/*        else
+        {
+          vector<Point> v(1, elem->point(s));
+          fe_face->reinit(elem, &v);
+
+          double current = 0.0;
+
+          // s is the node of the element lying on the boundary
+          Real u  = solution(dof_indices_u[s]);
+          Real en = solution(dof_indices_en[s]);
+          Real ep = solution(dof_indices_ep[s]);
+
+          Real dEfn = 0.0;
+          Real dEfp = 0.0;
+          RealGradient e_field(0);
+          Real dT = 0.0;
+          for (unsigned int n = 0; n < elem->n_nodes(); n++)
+          {
+            dEfn += dphi[n][0](0) * solution(dof_indices_en[n]);
+            dEfp += dphi[n][0](0) * solution(dof_indices_ep[n]);
+            e_field(0) += dphi[n][0](0) * solution(dof_indices_u[n]);
+
+            dT += dphi[n][0](0) * T_nodes[n];
+          }
+          
+          // what is the outer normal in this point??
+          // Idea: if x(s) > x(centroid), normal is +1
+          //       else it is -1
+          double x_c = elem->centroid()(0);
+          double x_s = elem->point(s)(0);
+          if (x_s < x_c)
+          {
+            dEfn = -dEfn;
+            dEfp = -dEfp;
+            dT = -dT;
+          }
+
+          // prepare for calculating local properties
+          sc->set_coordinates(elem->point(s));
+
+
+          sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+
+          sc->set_electric_field(phi0 * e_field);
+          sc->set_grad_fermi_e(phi0 * RealGradient(dEfn, 0, 0));
+          sc->set_grad_fermi_h(phi0 * RealGradient(dEfp, 0, 0));
+
+          sc->calculate_densities();
+
+          sc->calculate_mobilities();
+
+          Real cond_e = Constants::e * sc->get_electron_mobility() *
+            sc->get_electron_density();
+          Real cond_h = Constants::e * sc->get_hole_mobility() *
+            sc->get_hole_density();
+
+          if (boundary != NULL)
+          {
+            ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
+                boundary->get_boundary_properties(get_id()));
+            if (contact->is_real_contact())
+              _boundary_currents[boundary] = -phi0 *
+                (cond_e * (dEfn + Pn * dT) + cond_h * (dEfp + Pp * dT));
+          }
+        }*/
+      }
+    } // end loop over elem sides
+  } // end loop over elements
+
+
+  for (it = fe_currents.begin(); it != fe_currents.end(); ++it)
+  {
+    ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
+        (*it).first->get_boundary_properties(get_id()));
+
+    contact->set_field_emission_current((*it).second);
+  }
 }
 
 
@@ -3479,7 +3722,6 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
       oldu  += phi[i][0] * solution(dof_indices_u[i]);
       olden += phi[i][0] * solution(dof_indices_en[i]);
       oldep += phi[i][0] * solution(dof_indices_ep[i]);
-
       e_field += dphi[i][0] * solution(dof_indices_u[i]);
     }
     e_field *= -phi0;
@@ -3718,10 +3960,7 @@ DriftDiffusion::build_integrated_quantities(const set<string>& names,
   if ((names.find("ContactCurrents") != varend) ||
       (names.find("current") != varend))
   {
-    if (get_options().current_calculation == RSTF)
-      calculate_currents_rstf();
-    else
-      calculate_currents_surfint();
+    calculate_currents();
 
     values.resize(_boundary_currents.size());
 
@@ -3741,6 +3980,8 @@ DriftDiffusion::calculate_currents(void)
     calculate_currents_rstf();
   else
     calculate_currents_surfint();
+
+  calculate_field_emission();
 }
 
 

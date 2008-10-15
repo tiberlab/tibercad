@@ -41,6 +41,7 @@ class DSSCContact : public BoundaryProperties, public Variable
 
     void set_open_circuit(bool open_circuit = true);
 
+    bool is_open_circuit(void) const;
 
 
   protected:
@@ -71,15 +72,19 @@ class DSSCContact : public BoundaryProperties, public Variable
     double _I3oc;
     double _I3dark;
 
+    double _j0;
+
+    double _beta;
+
     double _current;
    
-    bool _open_circuit;
+    static bool _open_circuit;
     
 
     //! Set the open circuit potential and densities
     void set_OC_values(double Ioc, double Idark, double I3oc, double I3dark);
 
-    void calculate_current(void);
+    void calculate_current(double I, double I3);
 
 
  
@@ -94,8 +99,9 @@ inline
 DSSCContact::DSSCContact(void)
   : _boundary_value(0.0),
     _cathode(false),
-    _current(0.0),
-    _open_circuit(true)
+    _j0(0.1),
+    _beta(0.78),
+    _current(0.0)
 {
 }
 
@@ -123,8 +129,7 @@ DSSCContact::set_variable_value(double value, ID id)
 {
   ignore_unused_variable(id);
   set_potential(value);
-  if (value != 0.0)
-    set_open_circuit(false);
+  set_open_circuit(false);
 }
 
 
@@ -153,8 +158,8 @@ DSSCContact::set_OC_values(double Ioc, double Idark, double I3oc, double I3dark)
   _Idark = Idark;
   _I3oc = I3oc;
   _I3dark = I3dark;
-  std::cerr << "Ioc = "  <<Ioc << std::endl
-    << "I3oc = "  <<I3oc << std::endl;
+  //std::cerr << "Ioc = "  <<Ioc << std::endl
+  //  << "I3oc = "  <<I3oc << std::endl;
 }
 
 
@@ -176,7 +181,7 @@ DSSCContact::set_values(double I, double Idark, double I3, double I3dark)
     _current = 0.0;
   }
   else
-    calculate_current();
+    calculate_current(I, I3);
 }
 
 
@@ -186,10 +191,17 @@ inline
 double
 DSSCContact::get_current(void) const
 {
-  return _boundary_value;
-  //return _current;
+  return _current;
 }
 
+
+
+inline
+bool
+DSSCContact::is_open_circuit(void) const
+{
+  return _open_circuit;
+}
 
 
 #endif // _DSSCCONTACT_H_

@@ -344,6 +344,9 @@ class DSSC : public SimulationInterface
     void calculate_currents(void);
 
 
+    void set_electric_potential(double pot);
+
+
     //! Calculate terminal currents
     /*!
      * Uses the Ramo-Shockley test functions and integrates over the

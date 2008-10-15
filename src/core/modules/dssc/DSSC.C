@@ -311,6 +311,35 @@ DSSC::cleanup_solver(void)
 }
 
 
+void
+DSSC::set_electric_potential(double pot)
+{
+  TiberNonlinearSystem& system =
+    get_equation_systems().get_system<TiberNonlinearSystem>(
+        get_equation_system_name());
+
+  NumericVector<Number>& solution = system.get_solution_vector();
+  
+  const unsigned int var = system.variable_number("potential");
+  const double phi0 = get_scaling().get_potential_scaling();
+
+  Mesh& mesh = get_mesh();
+  Mesh::element_iterator it = mesh.active_elements_begin();
+  const Mesh::element_iterator end = mesh.active_elements_end();
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+    for (unsigned int i = 0; i < elem->n_nodes(); i++)
+    {
+      unsigned int id = 
+        elem->get_node(i)->dof_number(system.number(), var, 0);
+      solution.set(id, pot / phi0);
+    }
+  }
+}
+
+
 
 
 void
@@ -342,6 +371,23 @@ DSSC::do_solve(void)
   if (do_local_scaling_)
     build_local_scaling();
 
+  ContactData::iterator it(_boundary_currents.begin());
+  const ContactData::iterator end(_boundary_currents.end());
+  for ( ; it != end; ++it)
+  {
+    DSSCContact* contact = dynamic_cast<DSSCContact*>(
+        (*it).first->get_boundary_properties(get_id()));
+
+    if (!contact->is_cathode()) // anode 
+    {
+      if (!contact->is_open_circuit())
+      {
+        set_electric_potential(contact->get_potential());
+        return;
+        break;
+      }
+    }
+  }
 
   
   try
@@ -359,8 +405,6 @@ DSSC::do_solve(void)
   // calculate the currents to print them on screen
   calculate_currents();
 
-  ContactData::iterator it(_boundary_currents.begin());
-  const ContactData::iterator end(_boundary_currents.end());
 
   cout << endl;
   int width = 20;
@@ -376,7 +420,7 @@ DSSC::do_solve(void)
     cout << os.str() << endl;
   }
 
-  for ( ; it != end; ++it)
+  for (it = _boundary_currents.begin(); it != end; ++it)
   {
     /*
     ostringstream os;
@@ -3565,8 +3609,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           double x_s = elem->point(s)(0);
           double sign = (x_s > x_c) ? 1 : -1;
 
-          // at 'low' end it is simply 0
-          //if (sign > 0)
           if (contact->is_cathode())
           {
             for (unsigned int n = 0; n < elem->n_nodes(); n++)
@@ -3589,6 +3631,9 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             }
             if (residual != NULL)
             {
+              contact->set_values(sc->get_density_I(),
+                  sc->get_equilibrium_concentrations().I,
+                  sc->get_density_I3(), sc->get_equilibrium_concentrations().I3);
               double curr = contact->get_current() * x0;
               FI(s) -= sign * 1.5 * curr / Constants::e / C0_I;
               FI3(s) -= -sign * 0.5 * curr / Constants::e / C0_I3;
@@ -3756,8 +3801,11 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           {
             if (!contact->is_cathode()) // anode 
             {
-              double val = contact->get_potential() / phi0;
-              //Ke.condense(i, i, -val, Fe);
+              if (!contact->is_open_circuit())
+              {
+                double val = contact->get_potential() / phi0;
+                Ke.condense(i, i, -val, Fe);
+              }
               Ke.condense(i + n_dofs, i + n_dofs, 0.0, Fe);
               //Ke.condense(i + 3*n_dofs, i + 3*n_dofs, -val, Fe);
             }

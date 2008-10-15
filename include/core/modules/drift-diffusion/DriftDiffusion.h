@@ -624,6 +624,10 @@ class DriftDiffusion : public SimulationInterface
     void do_newton(void);
 
 
+    //! Calculate field emission currents
+    void calculate_field_emission(void);
+
+
     //! Calculate the terminal currents
     /*!
      * Calls \c calculate_currents_surfint() or
