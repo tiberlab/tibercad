@@ -116,7 +116,7 @@ $Solver
 
   sweep
   {
-    simulation = (dd,tt)
+    simulation = (dd)
     variable = Vb
     start = 0.0
     stop = 1.2
@@ -131,7 +131,6 @@ $Physics
 {
   driftdiffusion 
   {
-    model = unstrained
 
     statistics =  FD
   }

@@ -1044,11 +1044,12 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
                                   const set<ID>& ids,
                                   vector<map<ID, double> >& values)
 {
+  
   bool flag = true;
 
   unsigned int np = p.size();
   if ((np == 0) || (ids.size() == 0) || (elem == NULL)) return false;
-  if (!is_solved()) return false;
+  //  if (!is_solved()) return false;
 
   values.resize(np);
 
@@ -1059,7 +1060,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
   
   // check if elem is an active element of the simulation
   if (!env.contains_element(elem))
-  {
+  { 
     // do we have a parent element in the list?
     const Elem* parent = elem->parent();
 
@@ -1085,6 +1086,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
       if (env.contains_element(elem_i))
         elem_list.insert(elem_i);
     }
+ 
     for (unsigned int i = 0; i < np; i++)
     {
       set<const Elem*>::iterator el_it = elem_list.begin();
@@ -1102,7 +1104,8 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
       if (el_it == el_end)
         flag = false;
     }
-  }
+  } 
+ 
 
   return flag;
 }

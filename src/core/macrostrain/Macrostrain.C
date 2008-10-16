@@ -47,7 +47,8 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
   unsigned int num_var = 0;
   
   int st_var = -1;
-  if (variables.count("strain"))
+  if (variables.count("strain") ||
+      variables.count("StrainVariables") )
   {
     st_var = num_var;
 
@@ -60,7 +61,8 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
    }
 
     int stress_var = -1;
-   if (variables.count("stress"))
+   if (variables.count("stress") ||
+       variables.count("StrainVariables") )
   {
     stress_var = num_var;
 
@@ -73,7 +75,8 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
    }
 
   int pol_var = -1;
-  if (variables.count("polarization"))
+  if (variables.count("polarization")||
+      variables.count("StrainVariables")  )
   {
     pol_var = num_var;
 

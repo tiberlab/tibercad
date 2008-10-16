@@ -121,7 +121,7 @@ $Physics
 
 $Simulation
 {
-#  searchpath = ../../materials 
+  searchpath = . 
   meshfile = diode_1D.msh #test.msh #diode.msh
   dimension = 1
   verbose = 2

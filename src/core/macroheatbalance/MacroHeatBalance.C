@@ -41,7 +41,6 @@
 #include "ThermalSurfaceConductance.h"
 #include "FluxContact.h"
 
-
 using namespace std;
 MacroHeatBalance* MacroHeatBalance::static_this;
 Device* MacroHeatBalance::_device;
@@ -66,13 +65,11 @@ void MacroHeatBalance::parse_options( )
     myopts.max_error = sim_opt.get_option("max_error",1e-2);
   }
 
-
+   
 }
 
 void MacroHeatBalance::do_init( ) 
 {
-  
-   
   const ModelOptions& sim_opt = get_options();
 
   SimulationEnvironment& si = get_environment();   
@@ -117,7 +114,25 @@ void MacroHeatBalance::do_init( )
   JQ_var.insert(JQZ);
 
 
+   //-----------------------------------------------------------------
 
+   
+  //------init is done---------------------------------------------------------------------//
+
+}
+//-------------------------------------------------------------------------------//
+void  MacroHeatBalance::do_solve()
+{
+  
+   
+  parse_options();
+  
+  static_this = this;
+  
+  my_system->set_options(get_solver_options());
+  my_system->solve();
+  
+ 
 }
 
 
@@ -139,13 +154,12 @@ MacroHeatBalance::create_physical_model(const ModelOptions &options,
     const Material* mat) const throw (ModelErrorException)
 {
   
-  
-  //To UnComm
   HeatModel* model = dynamic_cast<HeatModel*> ( PhysicalModelInterface::create("thermal",options) );
-  if (model == NULL) 
-   throw ModelErrorException("MacroHeatBalance: Thermal physical model is not created" );
-  
 
+  if (model == NULL) 
+    throw ModelErrorException("MacroHeatBalance: Thermal physical model is not created" );
+
+  return model;      
 
 }
 //----------------------------------------------------------------------------------//
@@ -395,7 +409,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
       	{
       	  double Fe_surf = JxW_face[qp] * phi_face[p1][qp] * flux_power[qp] * normal[qp];
 	 
-	    Fe(p1) -= Fe_surf;
+      	   Fe(p1) -= Fe_surf;
 	  
       	}
        }
@@ -675,12 +689,12 @@ MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
 
 
-
-
 void
 MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables,
 					  std::vector<double>& results, std::vector<std::string>& legend)
 {
+
+
   // we only do something if we are on processor 0
   // TODO parallelize
   if (libMesh::processor_id() != 0)
@@ -701,17 +715,18 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
   legend.resize(variables.size());
 
  
-  
+  //if (variables.find("HeatSource") != varend)
+  //{
     const Device& device = *(_device);
-    
+
     //  HS = n_vars;
-    
+
     std::map<ID, std::map<ID,std::string> > heat_source_ids;
     
     MeshBase::const_element_iterator it_temp =    mesh->active_local_elements_begin();
-    
+
     MeshBase::const_element_iterator it_end =    mesh->active_local_elements_end(); 
-    
+
     //assert(it_end != mesh->active_local_elements_end());
     
     HeatModel* heat_model = NULL;
@@ -724,41 +739,41 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 					 device.get_material(subdomain)->get_model(get_id()));
     
     nm = heat_model->get_heat_source_IDs(ids);
-    
-   
+ 
     std::vector<std::set<ID> > source_index(nm); 
-    
+ 
     for (int i = 0; i < nm; i++)
     {	  
       
       std::map<ID,std::string> source_legend =  
 	heat_model->get_heat_source_model(ids[i])->get_source_legend(variables);
-      
+ 
       std::map<ID,std::string>::iterator leg(source_legend.begin());
       std::map<ID,std::string>::iterator leg_end(source_legend.end());
-      
+
       for (;leg != leg_end; leg++)
       {
-	
+
 	legend.resize(legend.size() + 1);
 	legend[n_vars]=leg->second;
 	source_index[i].insert(leg->first);
         n_vars++;
       }    
     }
-  
-  if (variables.count("TotalHeat")  ||
-      variables.count("HeatSource") ||
-      variables.count("thermal"))
-  {
-    legend.resize(legend.size() + 1);
-    legend[n_vars]="TotalHeat";
-    n_vars++;
-  }
 
-  int HS = -1;
-  if (n_vars>0)
-    HS=0;
+    if (variables.count("TotalHeat")  ||
+	variables.count("HeatSource") ||
+	variables.count("thermal"))
+    {
+      legend.resize(legend.size() + 1);
+      legend[n_vars]="TotalHeat";
+      n_vars++;
+    }
+
+    int HS = -1;
+    if (n_vars>0)
+      HS=0;
+  
 
     ID PF_temp = n_vars;
 
@@ -875,7 +890,8 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
       legend.resize(legend.size() + 1);
       legend[n_vars]="kappa_zz";
       n_vars++; 
-    }
+     }
+   
 
 
 
@@ -1079,11 +1095,15 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
 
 
+
     elem_number++;
   } //over element
 
   results.resize(elem_number * n_vars);
 }
+
+
+
 
 
 //----------------------------------------------------------------------------------//
@@ -1314,16 +1334,3 @@ MacroHeatBalance::do_print_info(void)
   //cout << space << "linear solver is: petsc" <<std::endl;
    
 }
-
-//-------------------------------------------------------------------------------//
-void  MacroHeatBalance::do_solve()
-{
-   
-    parse_options();
-    static_this = this;  
-    my_system->set_options(get_solver_options());
-    my_system->solve();
-
-  
-}
-
