@@ -12,7 +12,7 @@ double
 FowlerNordheim::get_emission_current(double F)
 {
   double J = 0.0;
-  if (fabs(F) > 1e-3)
+  if (F < -1e-3)
   {
     double t_square = 1.1164;
     double nu_0 = 0.93685;
