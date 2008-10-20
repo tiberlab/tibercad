@@ -3941,12 +3941,6 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   }
 
   results.resize(elem_number * n_vars);
-
-
-  
-
-
-
 }
 
 
@@ -3964,10 +3958,19 @@ DriftDiffusion::build_integrated_quantities(const set<string>& names,
 
     values.resize(_boundary_currents.size());
 
+    // we need alphabetic order !!
+    map<string, double> currs;
+
     ContactData::iterator it(_boundary_currents.begin());
     const ContactData::iterator end(_boundary_currents.end());
-    for (unsigned int id = 0; it != end; ++it, id++)
-      values[id] = it->second * it->first->get_area_factor();
+    for (; it != end; ++it)
+      currs[it->first->get_name()] = it->second * it->first->get_area_factor();
+
+
+    map<string, double>::iterator nameit(currs.begin());
+    map<string, double>::iterator nameend(currs.end());
+    for (unsigned int id = 0; nameit != nameend; ++nameit, id++)
+      values[id] = nameit->second;
 
   }
 }
@@ -3987,9 +3990,9 @@ DriftDiffusion::calculate_currents(void)
 
 void
 DriftDiffusion::build_integrated_quantities_description(
-    const std::set<std::string>& names,
-    std::vector<std::string>& legend,
-    std::vector<std::string>& description)
+    const set<string>& names,
+    vector<string>& legend,
+    vector<string>& description)
 {
   const set<string>::const_iterator varend(names.end());
 
@@ -3998,10 +4001,18 @@ DriftDiffusion::build_integrated_quantities_description(
   {
     legend.resize(_boundary_currents.size());
 
+    // we make first a set to order the contacts alphabetically
+    set<string> bds;
+
     ContactData::iterator it(_boundary_currents.begin());
     const ContactData::iterator end(_boundary_currents.end());
-    for (unsigned int id = 0; it != end; ++it, id++)
-      legend[id] = it->first->get_name();
+    for (; it != end; ++it)
+      bds.insert(it->first->get_name());
+
+    set<string>::iterator nameit(bds.begin());
+    set<string>::iterator nameend(bds.end());
+    for (unsigned int id = 0; nameit != nameend; ++nameit, id++)
+      legend[id] = *nameit;
 
     description.resize(1);
     unsigned int dim = get_mesh().mesh_dimension();
@@ -4013,7 +4024,9 @@ DriftDiffusion::build_integrated_quantities_description(
         s << "cm^-2";
         break;
       case 2:
-        s << "cm^-1";
+        if (get_environment().get_device().get_symmetry()
+            != TiberCad::CYLINDRICAL)
+          s << "cm^-1";
         break;
     }
     description[0] = s.str();
