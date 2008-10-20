@@ -248,6 +248,8 @@ The output variables are:
 \item 
 \textbf{strain}  strain tensor (6 components) in calculation system  
 \item 
+\textbf{stress}  stress tensor (6 components) in calculation system  
+\item
 \textbf{polarization}  piezo polarization vector (3 components) in calculation system    
 \end{itemize}
 
@@ -256,14 +258,17 @@ The output variables are:
 \begin{table}[htb]
 \center
 \begin{tabular}{l|l|l}
-\multicolumn{3}{c}{\textbf{Elemental quantities}} \\
+%\multicolumn{3}{c}{\textbf{Elemental quantities}} \\
+\textbf{Plot keyword}  & \textbf{label}    & \textbf{Units} \\
 \hline 
 \texttt{strain}  & eps                     &  \\
 \texttt{stress}      & stress                     & GPa \\
 \texttt{polarization}      & polarization               & $C/cm^{-2}$ \\
 \end{tabular}
 \caption{Elemental vector quantities}
-\label{table:tt_vector_elemental}
+\label{table:elemental quantities}
 \end{table}
 
+
+By using \texttt{StrainVariables} as a plot keyword it's possible to include all quantities of the strain simulation.
 

@@ -208,7 +208,7 @@ PhononDispersion::build_elemental_results(const std::set<std::string>& variables
         n_vars++;
     }
 
-    legend.resize(legend.size() + dim+1);
+    legend.resize(legend.size() + dim);
     EV3 = n_vars;
     switch (dim)
     {

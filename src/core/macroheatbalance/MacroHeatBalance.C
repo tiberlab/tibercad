@@ -50,20 +50,29 @@ Device* MacroHeatBalance::_device;
 void MacroHeatBalance::parse_options( )
 { 
  
-  //const ModelOptions& sim_opt = SimulationInterface::get_options();
+  const ModelOptions& opts = SimulationInterface::get_options();
 
-  const ModelOptions& sim_opt = get_options();
+  myopts.integration_order = static_cast<libMeshEnums::Order>(
+      opts.get_option("integration_order", 5));
 
-  myopts.integration_order = static_cast<libMeshEnums::Order>(sim_opt.get_option("integration_order", 5));
+  myopts.heat_scheme =  opts.get_option("heat_scheme","surface");
 
-  myopts.work_units = sim_opt.get_option("Work_length_units", 1e-2);
+  //std::cout<<"Heat Scheme:  "<< myopts.heat_scheme<<std::endl;
 
-  myopts.kappa_solve = sim_opt.get_option("kappa_temperature_sc", "false");
+  myopts.work_units = opts.get_option("Work_length_units", 1e-2);
 
-  if (myopts.kappa_solve.compare("true") == 0 )
-  {  
-    myopts.max_error = sim_opt.get_option("max_error",1e-2);
-  }
+
+  string qrule =_device->get_mesh().mesh_dimension() < 3 ? "trapez" : "gauss";
+  
+  //string qrule =mesh->mesh_dimension() < 3 ? "trapez" : "gauss";
+  
+  qrule = opts.get_option("quadrature_rule", qrule);
+  if (qrule == "gauss")
+    myopts.quadrature_type = QGAUSS;
+  else if (qrule == "trapez")
+    myopts.quadrature_type = QTRAP;
+  else
+    throw InitFailedException("Unknown quadrature rule");
 
    
 }
@@ -131,7 +140,16 @@ void  MacroHeatBalance::do_solve()
   
   my_system->set_options(get_solver_options());
   my_system->solve();
-  
+     std::cout<<"  "<<std::endl;
+    cout << "Thermal (name: " << get_name() << ")" << endl;
+   double power_emitted = calculate_power_emitted();
+   double power_dissipated_rstf = calculate_power_dissipated_rstf();
+    double power_dissipated = calculate_power_dissipated();
+     std::cout<<"  "<<std::endl;
+    std::cout<<"Power Emitted"   <<"          "<<power_emitted<<std::endl;
+    std::cout<<"Power Dissipated"<<"       "   <<power_dissipated<<std::endl;
+     std::cout<<"Power Dissipated rstf"<<"  "   <<power_dissipated_rstf<<std::endl;
+  std::cout<<"  "<<std::endl;
  
 }
 
@@ -374,11 +392,13 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	  
 	  Ke(p1,p2) += value;
 	  
-	} //loop over basis functions
-	
-	//Fe(p1) +=JxW[qp] * heat_source[qp] * phi[p1][qp];
+	} //loop over basis functions		
 
-	Fe(p1) += JxW[qp] * flux_power[qp] * dphi[p1][qp];
+	if (myopts.heat_scheme.compare("surface") == 0 )
+	  Fe(p1) +=JxW[qp] * flux_power[qp]  * dphi[p1][qp];
+	else
+	  Fe(p1) +=JxW[qp] * heat_source[qp] * phi[p1][qp]; 
+
 	
       }//end Loop over quadrature points  
     } // end loop over test function
@@ -408,8 +428,10 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
       	for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
       	{
       	  double Fe_surf = JxW_face[qp] * phi_face[p1][qp] * flux_power[qp] * normal[qp];
-	 
-      	   Fe(p1) -= Fe_surf;
+
+	  if (myopts.heat_scheme.compare("surface") == 0 )
+	    Fe(p1) -= Fe_surf;
+	  
 	  
       	}
        }
@@ -1201,9 +1223,9 @@ MacroHeatBalance::build_integrated_quantities(const set<string>& names,
   if (names.count("PowerDissipated"))
   {
     
-    calculate_power_surfint();
+ double power = calculate_power_dissipated();
 
-     values.resize(1,_power);
+     values.resize(1,power);
 
 
   }
@@ -1211,14 +1233,13 @@ MacroHeatBalance::build_integrated_quantities(const set<string>& names,
 
 
 
-
-void
-MacroHeatBalance::calculate_power_surfint(void)
+double
+MacroHeatBalance::calculate_power_dissipated(void)
 {
 
   // we only do something if we are on processor 0
   if (libMesh::processor_id() != 0)
-    return;
+    return 0;
 
   TiberLinearSystem& system = *my_system;
   
@@ -1232,18 +1253,19 @@ MacroHeatBalance::calculate_power_surfint(void)
  
   AutoPtr<FEBase> fe_face (build_finite_element(dim, fe_type)); 
  
-  libMeshEnums::Order integration_order;
-
-  //if (dim == 1)
-  //integration_order = libMeshEnums::CONSTANT;
-  //else
-  //  integration_order = _options.integration_order;
   
-  //QGauss qface(dim - 1,integration_order);
+  libMeshEnums::Order integration_order;
+  if (dim == 1)
+    integration_order = libMeshEnums::CONSTANT;
+  else
+    integration_order =  myopts.integration_order;
 
-  QGauss qface(dim - 1, FIFTH);
+  AutoPtr<QBase> qface(QBase::build(
+				    myopts.quadrature_type, dim-1, integration_order));
 
-  fe_face->attach_quadrature_rule(&qface);
+
+  fe_face->attach_quadrature_rule(qface.get());
+
 
   const vector<Real>& JxW = fe_face->get_JxW();
   
@@ -1267,7 +1289,7 @@ MacroHeatBalance::calculate_power_surfint(void)
 
   const SimulationEnvironment& env = get_environment();
 
-  _power = 0.0;     
+  double  power_dissipated = 0.0;     
 
   for ( ; el != end_el ; ++el) 
   {
@@ -1276,6 +1298,7 @@ MacroHeatBalance::calculate_power_surfint(void)
     const Elem* top_parent = (*el)->top_parent();
 
     ID subdomain = elem->subdomain_id();
+
 
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices,var);
@@ -1286,7 +1309,6 @@ MacroHeatBalance::calculate_power_surfint(void)
       
       if (env.is_outer_boundary(side))
       {
-
 	ID subdomain = elem->subdomain_id();
 	
 	const Material* mat = _device->get_material(subdomain);
@@ -1295,35 +1317,245 @@ MacroHeatBalance::calculate_power_surfint(void)
 	
 	heat_model->set_element(elem);     
 	
-	heat_model->set_side(-1);
+	heat_model->set_side(s);
 	
 	heat_model->re_init();
 
 	fe_face->reinit(elem, s);
-	
+
 	std::vector< std::map< ID, double > > jq_solution;
 	
-	get_solution(elem,q_point,JQ_var,jq_solution); 
-	
-	int phi_size = phi.size();
-	
+        get_solution(elem,q_point,JQ_var,jq_solution); 
+
 	RealGradient P;
 	
-	for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+	for (unsigned int qp = 0; qp <  qface->n_points(); qp++)
 	{
 	  
 	  P(0) = jq_solution[qp].find(JQX)->second;
 	  P(1) = jq_solution[qp].find(JQY)->second;
 	  P(2) = jq_solution[qp].find(JQZ)->second;
-
-	  _power += JxW[qp] * P * face_normals[qp]; 
+	  if (dim> 1)
+	    power_dissipated += JxW[qp] * P * face_normals[qp]; 
+	  else
+	    power_dissipated +=  P * face_normals[qp];
           
 	} 
       }
     } // end loop over elem sides
   } // end loop over elements
+
+  return power_dissipated;
 }
 
+
+
+double
+MacroHeatBalance::calculate_power_dissipated_rstf(void)
+{
+
+  // we only do something if we are on processor 0
+  if (libMesh::processor_id() != 0)
+    return 0 ;
+
+ TiberLinearSystem& system = *my_system;
+
+  const SimulationEnvironment& env = get_environment();
+
+    const DofMap& dof_map = system.get_dof_map();
+
+  const unsigned int dim = mesh->mesh_dimension();
+
+
+ // numeric ids corresponding to the variables
+ const unsigned int  var = system.variable_number("T");
+
+  std::vector<unsigned int> dof_indices;
+
+  FEType fe_type = system.variable_type(var);
+
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  AutoPtr<QBase> qrule(QBase::build(
+        myopts.quadrature_type, dim, myopts.integration_order));
+
+  fe->attach_quadrature_rule(qrule.get());
+
+  
+  // Jacobian * quadrature weight at each integration point.   
+  const vector<Real>& JxW = fe->get_JxW();
+  
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point = fe->get_xyz();
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+
+  // element shape function gradients
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+
+  // will contain the node ids if an element has boundary nodes
+  vector<Boundary*> node_ids;
+
+  MeshBase::const_element_iterator el =
+                                  mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el =
+                                  mesh->active_elements_end();
+
+
+
+  double  power_dissipated = 0.0;
+  for ( ; el != end_el ; ++el) 
+  {
+    const Elem* elem = *el;
+    const Elem* top_parent = (*el)->top_parent();
+        
+    bool has_node = false;
+    node_ids.resize(elem->n_nodes());
+    for (unsigned int n = 0; n < elem->n_nodes(); n++)
+    {
+      Boundary* bd = env.get_boundary(elem->get_node(n));
+      node_ids[n] = bd;
+      if (bd != NULL)
+        has_node = true;
+    }
+
+    // if the element has no node on a boundary,
+    // we can go to the next element
+    if (!has_node)
+      continue;
+    
+    ID subdomain = elem->subdomain_id();
+
+    // get DOF indices
+    dof_map.dof_indices(elem, dof_indices, var);
+
+    fe->reinit(elem); //centroid
+        
+
+     std::vector< std::map< ID, double > > jq_solution;
+     get_solution(elem,q_point,JQ_var,jq_solution);
+
+    for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
+    {
+
+      unsigned int n_dofs = dof_indices.size();
+      // get the solution values at the centroid
+      
+    
+      RealGradient P;
+	  
+      P(0) = jq_solution[qp].find(JQX)->second;
+      P(1) = jq_solution[qp].find(JQY)->second;
+      P(2) = jq_solution[qp].find(JQZ)->second;
+
+      P *= JxW[qp];
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
+
+        Boundary* boundary = node_ids[n];
+        if (boundary != NULL)
+        {
+          power_dissipated  += P * dphi[n][qp];
+        }
+
+      }
+    } // end loop over quadrature points
+  } // end loop over elements
+
+  return power_dissipated;
+}
+
+
+
+double
+MacroHeatBalance::calculate_power_emitted(void)
+{
+
+  // we only do something if we are on processor 0
+  if (libMesh::processor_id() != 0)
+    return 0;
+
+  TiberLinearSystem& system = *my_system;
+  
+  const unsigned int  var = system.variable_number("T");
+
+  const unsigned int dim = mesh->mesh_dimension();
+
+  DofMap& dof_map =  system.get_dof_map();
+
+  FEType fe_type = dof_map.variable_type(var);
+ 
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type)); 
+ 
+
+  libMeshEnums::Order integration_order;
+  if (dim == 1)
+    integration_order = libMeshEnums::CONSTANT;
+  else
+    integration_order =  myopts.integration_order;
+
+  AutoPtr<QBase> qface(QBase::build(
+				    myopts.quadrature_type, dim, integration_order));
+
+
+  fe->attach_quadrature_rule(qface.get());
+
+
+
+  const vector<Real>& JxW = fe->get_JxW();
+  
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point = fe->get_xyz();
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+
+  std::vector<unsigned int> dof_indices;
+
+
+  MeshBase::const_element_iterator el =    mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el =     mesh->active_local_elements_end();
+
+  const SimulationEnvironment& env = get_environment();
+
+  double PowerEmitted = 0.0;     
+
+  for ( ; el != end_el ; ++el) 
+  {
+    
+    const Elem* elem = *el;
+
+    fe->reinit(elem);
+
+    ID subdomain = elem->subdomain_id();
+
+    // get DOF indices
+    dof_map.dof_indices(elem, dof_indices,var);
+  
+    const Material* mat = _device->get_material(subdomain);
+	
+    HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
+	
+    heat_model->set_element(elem);     
+	
+    heat_model->set_side(-1);
+	
+    heat_model->re_init();
+
+    std::vector<double> heat_source;
+    heat_model->get_total_heat_source(q_point,heat_source);
+	
+    for (unsigned int qp = 0; qp <  qface->n_points(); qp++)
+      PowerEmitted  += JxW[qp] * heat_source[qp]; 
+    
+          
+	
+  } // end loop over elements
+
+  return  PowerEmitted;
+}
 
 
 void

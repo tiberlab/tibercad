@@ -12,6 +12,8 @@
 
 #include "HeatModel.h"
 
+#include "quadrature_gauss.h"
+#include "quadrature_trap.h"
 
 class TiberLinearSystem;
 class Device;
@@ -55,6 +57,9 @@ class MacroHeatBalance : public SimulationInterface
 
     double work_units; //!< SI units, has to be consistent with the database parameters
 
+    std::string heat_scheme;
+
+    libMeshEnums::QuadratureType  quadrature_type;
     /**
      * The order of gauss integration
      */
@@ -156,7 +161,12 @@ class MacroHeatBalance : public SimulationInterface
    *
    * \f[P = \int_{\Gamma} -\kappa \nabla T \cdot \mathbf{N} \mathrm{d}\Gamma \f]
    */
-  void calculate_power_surfint(void);
+    
+  double calculate_power_emitted(void);
+
+  double calculate_power_dissipated_rstf(void);
+
+  double calculate_power_dissipated(void); 
   
   static MacroHeatBalance* static_this;
 
@@ -170,8 +180,7 @@ class MacroHeatBalance : public SimulationInterface
   //!Dimension of meshmap
   short dim;  
 
-  //!Power Dissipated
-  double _power;
+  
 
   //!Pointer to mesh
   Mesh* mesh;
