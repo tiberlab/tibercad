@@ -19,7 +19,7 @@
 #include "dof_map.h"
 #include "elem.h"
 #include "fe_interface.h"
-#include "quadrature_gauss.h"
+#include "quadrature_trap.h"
 #include "equation_systems.h"
 #include "mesh_refinement.h"
 #include "sparse_matrix.h"
@@ -382,8 +382,7 @@ DSSC::do_solve(void)
     {
       if (!contact->is_open_circuit())
       {
-        set_electric_potential(contact->get_potential());
-        return;
+        //set_electric_potential(contact->get_potential());
         break;
       }
     }
@@ -1655,7 +1654,7 @@ DSSC::calculate_currents_rstf(void)
   FEType fe_type = system->variable_type(u_var);
 
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::FIFTH);
+  QTrap qrule(dim, libMeshEnums::FIFTH);
   fe->attach_quadrature_rule(&qrule);
 
   
@@ -1837,7 +1836,7 @@ DSSC::build_local_scaling(void)
 
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim, params.integration_order);
+  QTrap qrule(dim, params.integration_order);
   fe->attach_quadrature_rule(&qrule);
 
 
@@ -2138,7 +2137,7 @@ DSSC::build_nodal_results(const set<string>& variables,
 
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::CONSTANT);
+  QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
@@ -2440,7 +2439,7 @@ DSSC::build_elemental_results(const set<string>& variables,
   
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::CONSTANT);
+  QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   vector<unsigned int> dof_indices_u;
@@ -2787,7 +2786,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
   // the finite element
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim, integration_order);
+  QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   // the finite element for boundary integration
@@ -2795,7 +2794,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
   
-  QGauss qface(dim - 1, integration_order);
+  QTrap qface(dim - 1);
   fe_face->attach_quadrature_rule(&qface);
 
   
@@ -3634,9 +3633,9 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               contact->set_values(sc->get_density_I(),
                   sc->get_equilibrium_concentrations().I,
                   sc->get_density_I3(), sc->get_equilibrium_concentrations().I3);
-              double curr = contact->get_current() * x0;
-              FI(s) -= sign * 1.5 * curr / Constants::e / C0_I;
-              FI3(s) -= -sign * 0.5 * curr / Constants::e / C0_I3;
+              //double curr = contact->get_current() * x0;
+              //FI(s) -= sign * 1.5 * curr / Constants::e / C0_I;
+              //FI3(s) -= -sign * 0.5 * curr / Constants::e / C0_I3;
 
               Fa(s) += sign * _cation_amount / C0;
               Fb(s) += sign * _iodine_amount / C0;
@@ -3804,13 +3803,20 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               if (!contact->is_open_circuit())
               {
                 double val = contact->get_potential() / phi0;
-                Ke.condense(i, i, -val, Fe);
+                Ke.condense(i + n_dofs, i + n_dofs, val, Fe);
+              //  Ke.condense(i, i, -val, Fe);
               }
-              Ke.condense(i + n_dofs, i + n_dofs, 0.0, Fe);
-              //Ke.condense(i + 3*n_dofs, i + 3*n_dofs, -val, Fe);
+              //Ke.condense(i + 2*n_dofs, i + 2*n_dofs, 0.0, Fe);
+              //Ke.condense(i + 3*n_dofs, i + 3*n_dofs, 0.0, Fe);
+              //Ke.condense(i + 4*n_dofs, i + 4*n_dofs, 0.0, Fe);
             }
             else
             {
+              if (!contact->is_open_circuit())
+              {
+                Ke.condense(i + 2*n_dofs, i + 2*n_dofs, -XI(i), Fe);
+                Ke.condense(i + 3*n_dofs, i + 3*n_dofs, -XI3(i), Fe);
+              }
               //double val = contact->get_current() / phi0;
               //double val = (3 * XI(i) - Xu(i) - 2 * contact->get_current()) / phi0;
               //Ke.condense(i + 3 * n_dofs, i + 3 * n_dofs, -val, Fe);
@@ -3980,13 +3986,20 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
   if (jacobian != NULL)
   {
+    static int i = 0;
     jacobian->close();
-    //jacobian->print_matlab("J.m");
+    ostringstream os;
+    os << "J_" << i << ".m";
+    //jacobian->print_matlab(os.str());
   }
   else
   {
+    static int i = 0;
     residual->close();
-    //residual->print_matlab("F.m");
+    ostringstream os;
+    os << "F_" << i << ".m";
+    //residual->print_matlab(os.str());
+    i++;
   }
 
   

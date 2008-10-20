@@ -6,6 +6,7 @@
 
 #ifndef BUILD_TIBER_MODULES
 #include "SRHRecombination.h"
+#include "AugerRecombination.h"
 #include "DirectRecombination.h"
 #include "ExcitonGeneration.h"
 #include "ExcitonDissociation.h"
@@ -106,6 +107,8 @@ PhysicalModelInterface::create(const string& name,
 #ifndef BUILD_TIBER_MODULES
     if (name == "dd_rec_srh")
       mod = SRHRecombination::create();
+    else if (name == "dd_rec_auger")
+      mod = AugerRecombination::create();
     else if (name == "dd_rec_direct")
       mod = DirectRecombination::create();
     else if (name == "dd_rec_exciton_generation")

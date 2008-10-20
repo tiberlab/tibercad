@@ -120,5 +120,8 @@ SRHRecombination::calculate_VCA(const PhysicalModelInterface* comp_A,
 
   tau_n_ = alloy(scA->tau_n_, scB->tau_n_, xa);
   tau_p_ = alloy(scA->tau_p_, scB->tau_p_, xa);
+  E_t_ = alloy(scA->E_t_, scB->E_t_, xa);
+  Talpha_e_ = alloy(scA->Talpha_e_, scB->Talpha_e_, xa);
+  Talpha_h_ = alloy(scA->Talpha_h_, scB->Talpha_h_, xa);
 }
 

@@ -13,17 +13,28 @@ namespace
   const char* blue   = "\033[1;34m";
   const char* white  = "\033[1;37m";
   const char* normal = "\033[0m";
-
-  string _warning = string(yellow) + "Warning: " + string(white);
-  string _error   = string(red) + "ERROR: " + string(white);
-  string _reset   = normal;
-
 }
+
+
+string
+Messages::_warning = string(yellow) + "Warning: " + string(white);
+
+string
+Messages::_error   = string(red) + "ERROR: " + string(white);
+
+string
+Messages::_reset   = normal;
+
+string
+Messages::_endl    = string(normal) + "\n";
+
+
+
 
 void
 Messages::warning(const string& msg)
 {
-  cout << _warning << msg << _reset << endl;
+  cout << _warning << msg << _reset << _endl;
 }
 
 
@@ -31,7 +42,7 @@ Messages::warning(const string& msg)
 void
 Messages::error(const string& msg)
 {
-  cerr << _error << msg << _reset << endl;
+  cerr << _error << msg << _reset << _endl;
 }
 
 
@@ -39,7 +50,7 @@ Messages::error(const string& msg)
 void
 Messages::info(const string& msg)
 {
-  cerr << msg << endl;
+  cerr << msg << _endl;
 }
 
 

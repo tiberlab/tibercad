@@ -41,6 +41,22 @@ class Messages
     //! This class is for static use only!
     Messages(void);
 
+
+    //! Warning keyword
+    static std::string _warning;
+
+
+    //! Error keyword
+    static std::string _error;
+
+
+    //! To reset output format
+    static std::string _reset;
+
+
+    //! An 'extended' endl
+    static std::string _endl;
+
 };
 
 

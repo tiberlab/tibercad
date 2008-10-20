@@ -12,6 +12,7 @@ double
 FowlerNordheim::get_emission_current(double F)
 {
   double J = 0.0;
+  // the formula makes sense only for negative field (E.n)
   if (F < -1e-3)
   {
     double t_square = 1.1164;

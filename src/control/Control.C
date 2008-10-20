@@ -7,6 +7,7 @@
 #include "Database.h"
 #include "DLLoader.h"
 #include "Utils.h"
+#include "Messages.h"
 #include "SimulationOptions.h"
 #include "Device.h"
 #include "Material.h"
@@ -655,69 +656,34 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     }
   }
 
-  
-  // TODO will be deleted
-  const ModelOptions& solveropts =
-    parser.read_parameters("Solver", "selfconsistent");
-  if (!solveropts.is_empty())
+  if (scs.size() == 0)
   {
-    SimulationInterface* sim =
-      SimulationInterface::create("selfconsistent", solveropts);
-
-    if (sim == NULL)
+    const ModelOptions& solveropts =
+      parser.read_parameters("Solver", "selfconsistent");
+    if (!solveropts.is_empty())
     {
-      string msg("Control: No such simulation type: selfconsistent (flavour: ");
-      msg += solveropts.get_option("flavour", "");
-      throw ModelErrorException(msg);
+      SimulationInterface* sim =
+        SimulationInterface::create("selfconsistent", solveropts);
+
+      if (sim == NULL)
+      {
+        string msg("Control: No such simulation type: selfconsistent (flavour: ");
+        msg += solveropts.get_option("flavour", "");
+        throw ModelErrorException(msg);
+      }
+      sim->set_control(this);
+      //sim->verbose() = SimulationOptions::verbose();
+      sim->verbose() = 0;
+      _simulations[sim->get_name()] = sim;
+
+      Messages::warning("The definition of a selfconsistent simulation "
+          "outside of a \'Selfconsistent\' block is deprecated.");
     }
-    sim->set_control(this);
-    //sim->verbose() = SimulationOptions::verbose();
-    sim->verbose() = 0;
-    _simulations[sim->get_name()] = sim;
   }
 
 
   
-  // then sweep
-  //
-  // first we look for a single sweep defined directly in the sweep block
-  //
-  // TODO the following blocks are only for now, they should be deleted
-  ModelOptions sweepopts = parser.read_parameters("Solver", "sweep");
-  if (!sweepopts.is_empty())
-  {
-    if (!sweepopts.find_option("name"))
-      sweepopts["name"] = "sweep";
-    SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
-    sim->set_control(this);
-    //sim->verbose() = SimulationOptions::verbose();
-    sim->verbose() = 0;
-    _simulations[sim->get_name()] = sim;
-  }
-
-  sweepopts = parser.read_parameters("Solver", "sweep_1");
-  if (!sweepopts.is_empty())
-  {
-    if (!sweepopts.find_option("name"))
-      sweepopts["name"] = "sweep_1";
-    SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
-    sim->set_control(this);
-    //sim->verbose() = SimulationOptions::verbose();
-    sim->verbose() = 0;
-    _simulations[sim->get_name()] = sim;
-  }
-
-  sweepopts = parser.read_parameters("Solver", "sweep_2");
-  if (!sweepopts.is_empty())
-  {
-    if (!sweepopts.find_option("name"))
-      sweepopts["name"] = "sweep_2";
-    SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
-    sim->set_control(this);
-    //sim->verbose() = SimulationOptions::verbose();
-    sim->verbose() = 0;
-    _simulations[sim->get_name()] = sim;
-  }
+  // then the sweeps
 
   {
     // we might have several sweeps
@@ -743,9 +709,60 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         _simulations[sim->get_name()] = sim;
       }
     }
+
+    // if no Sweep block is found, we look for other definitions to be compatible
+    // with older TiberCAD version
+    if (sws.size() == 0)
+    {
+      bool warning = false;
+      ModelOptions sweepopts = parser.read_parameters("Solver", "sweep");
+      if (!sweepopts.is_empty())
+      {
+        warning = true;
+        if (!sweepopts.find_option("name"))
+          sweepopts["name"] = "sweep";
+        SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
+        sim->set_control(this);
+        //sim->verbose() = SimulationOptions::verbose();
+        sim->verbose() = 0;
+        _simulations[sim->get_name()] = sim;
+      }
+
+      sweepopts = parser.read_parameters("Solver", "sweep_1");
+      if (!sweepopts.is_empty())
+      {
+        warning = true;
+        if (!sweepopts.find_option("name"))
+          sweepopts["name"] = "sweep_1";
+        SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
+        sim->set_control(this);
+        //sim->verbose() = SimulationOptions::verbose();
+        sim->verbose() = 0;
+        _simulations[sim->get_name()] = sim;
+      }
+
+      sweepopts = parser.read_parameters("Solver", "sweep_2");
+      if (!sweepopts.is_empty())
+      {
+        warning = true;
+        if (!sweepopts.find_option("name"))
+          sweepopts["name"] = "sweep_2";
+        SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
+        sim->set_control(this);
+        //sim->verbose() = SimulationOptions::verbose();
+        sim->verbose() = 0;
+        _simulations[sim->get_name()] = sim;
+      }
+
+      if (warning)
+      {
+        Messages::warning("The definition of sweeps outside of a \'Sweep\' "
+            "block is deprecated.");
+      }
+    }
   }
-   
-  
+
+
 #ifdef DEBUG
   cerr << "Control::setup_models() end" << endl;
 #endif
@@ -755,7 +772,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
 
 
-void
+  void
 Control::run_simulation(void) throw (SolveFailedException)
 {
 
