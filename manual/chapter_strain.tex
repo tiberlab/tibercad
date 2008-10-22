@@ -12,6 +12,13 @@ model macrostrain
          simulation_name = strain_in_transistor
          physical_regions = (2, 3, 4)
     }
+
+ BC_Regions  
+    {
+
+        .................
+    }
+
  }
 \end{verbatim}
 There are three possible kinds of boundary conditions.
@@ -22,7 +29,7 @@ The mandatory keyword
 specifies the boundary condition type.
 
 \subsection{Substrate boundary condition}
-In this case the boundary condition region is the boundary between the device and the substrate. The substrate does not belong to the device. Therefore it is necessary to define 
+In this case the boundary condition region (see \ref{overview_boundaries}) is the boundary between the device and the substrate. The substrate does not belong to the device. Therefore it is necessary to define 
 both the boundary region number and the substrate material
 % (like it is done in sec.~\ref{Device}).
 

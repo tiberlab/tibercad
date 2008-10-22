@@ -36,32 +36,33 @@ This  association is  made possible  by  the  definition of  \TiberCAD{} \textbf
 Different   \textit{simulation  environments} can  have  physical regions  in  common.
 In this  way,  each  simulation  is  run  on  a  subset  of  the  device  and  can  be possibly  coupled  (even self-consistently)   with  a simulation  run on  a  different subset  of  the  device corresponding to a \textit{simulation  environment} with a  non-void  intersection with  the  first  one.  The  coupling  of  the  two  simulations is  performed 
 %at  the  boundary between  the  two  \textit{simulation  environments}, 
- by  means  of  appropriate  Boundary  Conditions (e.g. Current Density, Voltage, ...)
-In  principle, the  two \textit{simulation  environments}  can    refer to  two simulations at  different scale , e.g. atomistic  tight-binding  and  macroscopic drift-diffusion. This  allows an effective  \textbf{multi-scale} simulation of the  device to be  studied.
+ by  means  of  appropriate  Boundary  Conditions (e.g. Current Density, Voltage, ...).
+ In  principle, the  two \textit{simulation  environments}  can    refer to  two simulations at  different scale, e.g. atomistic  tight-binding  and  macroscopic drift-diffusion. This  allows an effective  \textbf{multi-scale} simulation of the  device to be  studied.
 
 
 
 \section{Physical and boundary regions in  TiberCAD{} }
 
+\label{overview_boundaries}
+When \TiberCAD{}  is  run,  it  reads  the  mesh  file which  contains  the finite element  grid  which meshes the  geometrical description of  the  device or  nanostructure,  and  which will be  the  basis of  PDE  discretization.
 
-When TiberCAD{}  is  run,  it  reads  the  mesh  file which  contains  the finite element  grid  which meshes the  geometrical description of  the  device or  nanostructure,  and  which will be  the  basis of  PDE  discretization.
 
-
-To  execute the  proper  simulations, TiberCAD{} needs  some  information about  the   physical and boundary regions  associated with the  mesh:
-a physical region associates all  the  elements  corresponding to  an  homogeneous  part  of  the  device (usually  related to  the  same  material or  doping).   In  TiberCAD{}, these regions  are  referred to as \textbf{mesh\_regions} .
+To  execute the  proper  simulations, \TiberCAD{} needs  some  information about  the   physical and boundary regions  associated with the  mesh:
+a physical region associates all  the  elements  corresponding to  an  homogeneous  part  of  the  device (usually  related to  the  same  material or  doping).   In  \TiberCAD{}, these regions  are  referred to as \textbf{mesh\_regions}.
 \
 Boundary regions  are  needed to  specify   boundary  conditions (b.c.)  for  the  solution of  the PDEs  of  our  simulation.
 By  default,  to all   the  external boundary  of  the  device  a  Neumann b.c. is  imposed,   meaning  null  derivative  of  electric  field  and  zero  flux  of  current  normal to  the  boundary.  These are  the  usual  b.c.  applied in  the   simulation  of  electronic  devices;  in   particular, these  conditions are  implicitly  satisfied by using  the  finite  element  formulation..
 Usually,  one  needs  to  impose   also   specifical  b.c.  to  the  device,  relative,  most  often, to  contacts of  some  kind (ohmic, schottky),  but  also   heat and  temperature b.c.  or  reference substrates  for  strain  calculations.
-These  regions,  (constituted by  surfaces , lines or  points,  respectively  for  3D  ,  2D  and  1D  simulations) are  referred to  in  TiberCAD{} with  the  keyword   \textbf{BC\_reg\_numb}.
+These  regions,  (constituted by  surfaces, lines or  points,  respectively  for  3D,  2D  and  1D  simulations) are  referred to  in  \TiberCAD{} with  the  keyword   \textbf{BC\_reg\_numb}.
 
 
-It  is  important to  know  that  the  information about  the   physical and boundary regions  must  be  present in  the  mesh  file  before it  is  read  by  TiberCAD{},  and  thus  have  to  be  produced by  making  use of  the  modeling/mesher  software.
-As  for  now,  TiberCAD{} supports  the  mesh  output  of  the  following   software tools:  \textbf{GMSH v.2} and  \textbf{ISE-TCAD  v.9.5}.
+It  is  important to  know  that  the  information about  the   physical and boundary regions  must  be  present in  the  mesh  file  before it  is  read  by  \TiberCAD{},  and  thus  have  to  be  produced by  making  use of  the  modeling/mesher  software.
+As  for  now,  \TiberCAD{} supports  the  mesh  output  of  the  following   software tools:  \textbf{GMSH v.2} and  \textbf{ISE-TCAD  v.9.5}.
 
-By  means  of  the  utility DEVISE    of  ISE-TCAD  v.9.5,  it  is  possible  to  design and  mesh  a  device;  after the  meshing  has  been    successfully performed,  an  output  file is  produced,   with  the  extension  \textit{.grd}.  This  file  contains    the  description of  the  mesh and  also  the  list  of  the  user defined  material  regions    and  contact  regions.
-By  reading  this  \textit{.grd} file  in  TiberCAD{},  one  can  refer  to  the  ISE TCAD material  regions,  simply  with  the  user-defined name,  which is  present  in  the    \textit{.grd}  file.  This  name  should  be  unique in  the  whole  device.
-In the  same way,  ISE TCAD Boundary regions (\textit{Contacts})  can  be  referred to in   TiberCAD{}  by  means  of  their  user-defined name, present in  the   \textit{.grd} output  file,  too.
+By  means  of  the  utility DEVISE    of  ISE-TCAD  v.9.5,  it  is  possible  to  design and  mesh  a  device;  after the  meshing  has  been    successfully performed,  an  output  file is  produced,   with  the  extension  \textit{.grd}.
+This  file  contains    the  description of  the  mesh and  also  the  list  of  the  user defined  material  regions    and  contact  regions.
+By  reading  this  \textit{.grd} file  in  \TiberCAD{},  one  can  refer  to  the  ISE TCAD material  regions,  simply  with  the  user-defined name,  which is  present  in  the    \textit{.grd}  file.  This  name  should  be  unique in  the  whole  device.
+In the  same way,  ISE TCAD Boundary regions (\textit{Contacts})  can  be  referred to in   \TiberCAD{}  by  means  of  their  user-defined name, present in  the   \textit{.grd} output  file,  too.
 
 If  GMSH  program  is  used  to  model and  mesh  the  device,  a  bit  more  care  has  to  be  taken. Please see the GMSH user manual (\url{http://geuz.org/gmsh}) for  further  details. 
 In  the  context of  GMSH,  it  is  possible to  define  several 1,  2  and  3D \textit{Physical Entities}.
@@ -85,17 +86,17 @@ Physical Point(2) = {1};
 
 Here,  first the   geometrical  entities  \textbf{Point}s  and  \textbf{Line}s  are  defined. 
 
-In the definition of the geometrical \textbf{Points},  the three first expressions inside the braces on the right hand side give the three X, Y and Z coordinates of the point ; the last expression (0.5 or  0.002 in  this  example) sets the \textbf{characteristic mesh length} at that point, that is the \textbf{size} of a mesh element, defined as the length of the segment for a line segment, the radius of the circumscribed circle for a triangle and the radius of the circumscribed sphere for a tetrahedron.
+In the definition of the geometrical \textbf{Points},  the three first expressions inside the braces on the right hand side give the three X, Y and Z coordinates of the point ; the last expression (0.5 or  0.002 in  this  example) sets the \textbf{characteristic mesh length} at that point, that is the \textbf{size} of a mesh element, defined as the length of the segment for a line mesh element, the radius of the circumscribed circle for a triangle mesh element and the radius of the circumscribed sphere for a tetrahedron mesh element.
 Thus, the smaller is the value of the \textbf{characteristic mesh length}, the greater is the mesh density close to that point. The size of the mesh elements will
 then be computed in GMSH by linearly interpolating these characteristic lengths in the whole mesh.
 
-In the definition of a geometrical \textbf{Line},  the two expressions inside the braces on the right hand side  give the identification numbers of the start and end \textbf{Points} of the line;
+In the definition of a geometrical \textbf{Line},  the two expressions inside the braces on the right hand side  give the identification numbers of the start and end \textbf{Points} of the line.
 
 
  Then,  two  physical  regions are  defined, each  associated to  one  of  the  two  geometrical  entities:  \textbf{Physical Line(1)}  and \textbf{ Physical Line(2)}. 
 The expression(s) inside the braces on the right hand side  give, in general, the identification numbers of all the geometrical lines that need to be grouped inside the \textbf{Physical Line}.
 
- In this  way,  these  physical  regions are made  available for  TiberCAD{},  and  will be  used  to  associate them  to  a  TiberCAD{} region through the  keyword \textbf{mesh\_regions },  as  follows:
+ In this  way,  these  physical  regions are made  available for  \TiberCAD{},  and  will be  used  to  associate them  to  a  \TiberCAD{} region through the  keyword \textbf{mesh\_regions},  as  follows:
 
 
 \begin{verbatim}

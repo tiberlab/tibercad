@@ -29,7 +29,7 @@ A valid  input file for \TiberCAD{} is a  text file with the    structure  descr
 
 Input file is composed by several \textbf{sections}:
 %
-each \textbf{section} begins with a \textbf{section-name} preceded by \textbf{\char`\"{}\$\char`\"{}} (e.g. \$Physics ).
+each \textbf{section} begins with a \textbf{section-name} preceded by \textbf{\char`\"{}\$\char`\"{}} (e.g. \$Physics).
 
 A section is enclosed between  \textbf{\char`\"{}\{\char`\"{}} and \textbf{\char`\"{}\}\char`\"{}} brackets and is possibly composed  (depending on the  section)
   by a variable number   of  \textbf{blocks}  enclosed between  \char`\"{}\{\char`\"{} and \char`\"{}\}\char`\"{} brackets.
@@ -37,7 +37,7 @@ A section is enclosed between  \textbf{\char`\"{}\{\char`\"{}} and \textbf{\char
    Each  \textbf{block} can be possibly composed by one or more blocks, each preceded by a block-name. 
  
 
-The  elementary block ( \textbf{parameters-block} ) is a block which  contain 
+The  elementary block (\textbf{parameters-block}) is a block which  contain 
 %Except the model-blocks and the BC\_\-regions-blocks (see in the following), each block can contain 
 zero or any number of   \textbf{parameter assignements} in the  form:
 
@@ -80,7 +80,8 @@ driftdiffusion
 
 The input file is composed by  the following sections:
 
- \textbf{Geometry}, \textbf{Device}  ,  \textbf{Scale},  \textbf{Models}  ,  \textbf{Physics},  \textbf{Solver},   \textbf{Simulation} 
+% \textbf{Geometry} (not yet implemented), 
+\textbf{Device},  \textbf{Scale},  \textbf{Models},  \textbf{Physics},  \textbf{Solver},   \textbf{Simulation} 
 
 which will be  described  in the following.
 
@@ -107,11 +108,12 @@ $Device
 
 
 In \char`\"{}\textbf{Device}\char`\"{} section,
-two  kinds of  block can be  present:
+two  kinds of  block can be  present: the \textbf{Region} block and the \textbf{Cluster} block.
 %the  \textbf{Region} block (at least one) and the \textbf{Atomistic} block (there can be none).
 %
-the \textbf{Region} blocks contain the  description of the device in  continuous media approach; each of 
-the \textbf{Cluster} blocks define  a group of regions (mesh\_regions) even with different physical properties, but to be  
+
+The \textbf{Region} blocks contain the  description of the device in  continuous media approach; 
+the \textbf{Cluster} blocks define each  a group of regions (mesh\_regions) even with different physical properties, but to be  
 treated together  somewhere in the simulation (e.g. quantum calculation). In this way it is  possible to refer to the 
 set of these regions simply by the \textbf{Cluster} name.
 
@@ -148,9 +150,9 @@ Here are the  description of  the available keywords for a \textbf{Region} block
 
 %In the  body of the  block:
 
-\textit{material} (mandatory) :  name  of the  material associated to the  present region; it  can be  an  alloy,  in this  case the  keyword \textit{x } must be  present.
+\textit{material} (mandatory):  name  of the  material associated to the  present region, e.g \textbf{Si}; it  may be  a ternary   alloy, e.g \textbf{AlGaAs},  in this  case keyword \textit{x } described in the  following has to be  present.
 
-\textit{x} : alloy concentration; e.g. in $Al_xGa_{1-x}As$,  x is  Al concentration
+\textit{x}: alloy concentration, expressed as the  molar fraction of the first component of the alloy; e.g. to express an alloy $Al_xGa_{1-x}As$ with molar fraction \textit{x} = 0.2,  that is $Al_{0.2}Ga_{0.8}As$,  we select \textbf{AlGaAs} for the  keyword \textit{material}, and 0.2 for the keyword \textit{x}, thus we write \textit{x} = \textbf{0.2}.
 
 % \textit{ mesh\_regions }: (a list of) region ID(s) (for GMSH) as  specified in the meshing  program , or ISE-TCAD name(s) (to be implemented).
 % If it is not  present, the  \textbf{TiberCAD} \textbf{Region} name must be a valid name of an ISE-TCAD  mesh region.
@@ -158,7 +160,7 @@ Here are the  description of  the available keywords for a \textbf{Region} block
 \textit{ mesh\_regions }: (a list of) region ID(s) or  physical name(s)  as  specified in the meshing  program.
 
 
-\textit{structure} : crystal structure ( wz = wurtzite,  zb =  zincblend)
+\textit{structure} : crystal structure (wz = wurtzite,  zb =  zincblend)
 
 \textit{x-growth-direction}, \textit{y-growth-direction}, \textit{z-growth-direction}: Bravais  vectors with Miller  indexes for  wurtzite crystal (4 element vectors) or zincblende crystal  (3 element vectors).
 
@@ -179,7 +181,7 @@ of the  \textbf{Cluster}.
  \begin{verbatim}
  Cluster  Quantum_1
    {
-     mesh_regions    = (3,4, 5)
+     mesh_regions    = (3,4,5)
    }
 \end{verbatim}
 \textit{mesh\_regions} (mandatory): list of the physical regions (region ID(s) or  physical names),  as  specified in the meshing  program,
@@ -218,7 +220,7 @@ In the  rest of  the  input  file,  the physical regions associated to \textbf{M
 \section{Scale  section }
 
 The section \char`\"{}\textbf{Scale}\char`\"{}  is  dedicated to the  optional  definition of  Non-Continuous Media regions for the  device: these
- regions wiil  be  described and  studied at  a different  scale (e.g. atomistic, circuit level lumped model, etc.)
+ regions will  be  described and  studied at  a different  scale (e.g. atomistic, circuit level lumped model, etc.)
 As for  now,  just the  atomistic  description is  implemented.
 \textbf{Atomistic} blocks, if present,  specify a possible atomistic description associated to one or to a group 
 of  physical regions described by \textbf{Region} blocks. So, for each \textbf{Atomistic} block defined in Input file,
@@ -231,7 +233,7 @@ Each  \textbf{Atomistic} block must be preceded by the keyword \char`\"{}\textbf
 \begin{verbatim}
 Atomistic  TB_1
  {
-    physical_regions = ( barrier_1, qwell, barrier_2) 
+    physical_regions = (barrier_1, qwell, barrier_2) 
 			            # physical  regions to be described 
                                     # with atomistic model.
  }
@@ -239,7 +241,7 @@ Atomistic  TB_1
 
 Here are the  description of  the available keywords for an \textbf{Atomistic} block.
 
-\textit{physical\_regions} (mandatory): list of the physical regions ( \textbf{TiberCAD} \textbf{Regions} or \textbf{Clusters} )  of 
+\textit{physical\_regions} (mandatory): list of the physical regions (\textbf{TiberCAD} \textbf{Regions} or \textbf{Clusters} )  of 
 the device associated to an atomistic description. \textit{all}  (default)  is used to specify all the physical regions.
 
 \textit{path} (optional): path for importing an atomistic structure from an external file. \textit{xyz} and \textit{gen} formats are supported, 
@@ -252,11 +254,11 @@ structures are supported)............
 Atomistic Generator options, to be put in the Atomistic section, are  described in the  following.
 
 \textit{reference\_region} (mandatory): the Atomistic Generator can only build pseudomorphical heterostructures. A reference region must be defined
-to specify from which region ( \textbf{TiberCAD} \textbf{Regions})  to get structure parameters such as lattice constants, which  
+to specify from which region (\textbf{TiberCAD} \textbf{Regions})  to get structure parameters such as lattice constants, which  
 depend  on the material defined in the reference region.
 
 \textit{passivation} (optional): \textit{no} is default option. If set to \textit{no}, no passivation is performed. If \textit{yes} is specified, a hydrogenation of the structure
-is performed, taking into account the structure periodicity. Up to now, hydrogenation is supported fo Silicon structures. .
+is performed, taking into account the structure periodicity. Up to now, hydrogenation is supported fo Silicon structures.
 
 \textit{preserve} (optional): Default is  \textit{none}.  In some cases it is requested to build a structure in which the atom basis or the conventional cell has be preserved, 
 regardless to mesh geometry. 
@@ -360,13 +362,13 @@ These optional blocks must be strictly in this order: first the \textbf{options}
 \begin{verbatim}
 options
     {
-     simulation_name = driftdiffusion
+     simulation_name = dd1
      #physical_regions = all
-     physical_regions = (channel_1 , channel_2)
+     physical_regions = (channel_1, channel_2)
     }
 \end{verbatim}
 
-\textit{simulation\_name}: user-defined name of the particular instance of  the simulation model defined for this block. More than one simulation (with different  name and properties) can be  defined,in separated model blocks, which refer to a same  \TiberCAD{}  simulation model. If simulation\_name is  not assigned,  by default the \TiberCAD{} model name is taken as current simulation\_name.
+\textit{simulation\_name}: user-defined name of the particular instance of  the simulation model defined for this block. More than one simulation (with different  name and properties) can be  defined, in separated model blocks, which refer to a same  \TiberCAD{}  simulation model. If simulation\_name is  not assigned,  by default the \TiberCAD{} model name is taken as current simulation\_name.
 
 \textit{physical\_regions}: (list of) physical region(s) to  which the  present simulation model will be  applied.
 Physical region(s) are the  \textbf{TiberCAD regions} or  \textbf{clusters} as  defined in  \textbf{Device}  section 
@@ -387,11 +389,11 @@ In a list, the names must be separated by comma  and  enclosed between '(' and '
 \end{verbatim}
 
 
-Currently available physical\_models and parameters:
+Some of the currently available physical\_models and parameters:
 
 \textbf{recombination}:
 
-\textit{model}:  SRH,direct, exciton\_generation,  exciton\_dissociation
+\textit{model}:  SRH, direct, exciton\_generation,  exciton\_dissociation
 
 \textit{exciton\_simulation}: excitons
 
@@ -404,6 +406,7 @@ Currently available physical\_models and parameters:
 
 \textit{model}: doping\_dependent
 
+For  more  details on  the  physical\_models  of a  particular simulation model,  see in the  following the chapter  referring to that model.    
 
 
 \subsection{BC\_region block }
@@ -504,7 +507,7 @@ For details on the available  parameters for each \textbf{Model} ,  see  the rel
 	
    \item \textbf{Sweep} block, preceded by the keyword \char`\"{}\textbf{Sweep}\char`\"{}. This block  may contain  one or  more subblocks, each one  defining 
 %each one preceded by   a user defined  name  for  
-  a set of  calculations applied to a boundary region (e.g. to a drain contact for the calculation of a IV characteristic), in this Guide referred to  as  \textit{sweep}  calculation.
+  a set of  calculations applied to a boundary region (e.g. a set of bias values to be assigned to a drain contact of a MOSFET for the calculation of an output drain  IV characteristic), in this Guide referred to  as  \textit{sweep}  calculation. 
 
 Each   \textit{sweep} definition must be preceded by   its  user-defined  name (e.g. \textit{sweep\_1}).
 (see Listing \ref{input:sweep})
@@ -561,17 +564,22 @@ sweep
 
 The following  keywords  are  defined  for  this  feature:
 
-\textbf{variable} : name of  the  variable to which  the  \textit{sweep} is  applied: its value is assigned to a quantity (e.g. voltage) in a BC Region section to perform the  \textit{sweep} calculation (see  \ref{section:BC}).
+\textbf{variable}: name of  the  variable to which  the  \textit{sweep} is  applied: its value is assigned to a quantity (e.g. voltage) in a BC Region section to perform the  \textit{sweep} calculation (see  \ref{section:BC}).
 
-\textbf{start} , \textbf{stop}, \textbf{steps}: sweep starts from \textit{start} value, is repeated  \textit{steps} times and stops in \textit{stop}
+\textbf{start}, \textbf{stop}, \textbf{steps}: sweep starts from \textit{start} value, is repeated  \textit{steps} times and stops in \textit{stop}
 
-\textbf{simulation} : name of  the  simulation (model) associated to the  sweep  calculation; it  may  be the  name  of  another sweep defined in the  same block.
+\textbf{simulation}: name of  the  simulation (model) associated to the  sweep  calculation; it  may  be the  name  of  another sweep defined in the  same block.
 
 \textbf{plotvariable} (obsolete): specify  the  integrated quantity to  be  calculated during the sweep and that will be shown in the output  file 
-sweep\_\textit{modelname}\_\textit{sweepvariable}.dat,  eg.  sweep\_driftdiffusion\_Vb.dat  for  a  sweep of  current calculation on the  variable \textit{Vb} (typically a contact voltage)  
+sweep\_\textit{modelname}\_\textit{sweepvariable}.dat,  eg.  sweep\_driftdiffusion\_Vb.dat  for  a  sweep of  current calculation on the  variable \textit{Vb} (typically a contact voltage).
 
-\textbf{plot\_data} : default is  \textit{false}; if  it is  set  to \textit{true}, then  output data  will be  written for  each  step of the  sweep calculation, otherwise just  the  results  for  the  final step  will  be  present  in  the  output.
+\textbf{plot\_data}: default is  \textit{false}; if  it is  set  to \textit{true}, then  output data  will be  written for  each  step of the  sweep calculation, otherwise just  the  results  for  the  final step  will  be  present  in  the  output.
 
+
+
+Once a \textit{sweep} calculation has  been  defined, it is treted as a special case of  simulation and may be  executed as an usual  \textit{simulation}:
+by adding it in the 
+\textbf{solve}  list,  e.g.  \textit{solve = sweep\_drain }  (see \ref{input:simulation}).
 
 %   \item  \textbf{selfconsistent} block , preceded by the keyword \char`\"{}\textbf{selfconsistent }\char`\"{}. In this block it is possible to define a self-consistent calculation based on two different simulation models (e.g. driftdiffusion and excitontransport).
 % \begin{verbatim}
@@ -628,14 +636,14 @@ The following  keywords  are  defined  for  this  feature:
 
 \textbf{flavour}:   specifies  \textbf{broyden} or  \textbf{relaxation} approach  
 
-Once a \textit{selfconsistent} calculation has  been  defined, it can be  executed as an usual  \textit{simulation}:
+Once a \textit{selfconsistent} calculation has  been  defined, it may be  executed as an usual  \textit{simulation}:
 %
 % execute the  specified  simulations in a self  consistent  way,  by  using the name of  the  self-consistent 
 %calculation
 %\textbf{selfconsistent} keyword 
 %like  a  simulation name, 
 %
-by adding in the 
+by adding it in the 
 \textbf{solve}  list,  e.g.  \textit{solve = dd\_excitons }  (see \ref{input:simulation}),    or  even  in  the  \textbf{sweep} section,  with, for  example,  
  \textit{simulation =converse\_piezo }.
 In  both  cases, the  specified  simulations will  be  executed in a self  consistent  way.
@@ -646,7 +654,7 @@ In the  case of  a  single  self-consistent calculation   block, for backward co
 selfconsistent
   {
     flavour = relaxation
-    simulations = (driftdiffusion,  excitons)
+    simulations = (driftdiffusion, excitons)
   }
 \end{verbatim}
 
@@ -752,17 +760,17 @@ For example in this case:
 
 In this  section one  can  specify  several general parameters and settings  for  the  actual  calculation to be  run, such as the mesh file to be  used, the dimension of  simulation, the process-flow of  simulation, etc.
 
-\textit{searchpath} :  path for  material  files \label{matfiles}
+\textit{searchpath}:  path for  material  files \label{matfiles}
 
-\textit{meshfile} : name of  mesh file. N.B.: the extension is mandatory! ( \textit{.grd} for ISE-TCAD, \textit{.msh} for GMSH mesh file v.1 and v.2.0 )
+\textit{meshfile}: name of  mesh file. N.B.: the extension is mandatory! ( \textit{.grd} for ISE-TCAD, \textit{.msh} for GMSH mesh file v.1 and v.2.0 )
 
-\textit{mesh\_units} : units of  measurements used in the  meshing (relative to meters): e.g., $10^{-6}$ for  $\mu m$
+\textit{mesh\_units}: units of  measurements used in the  meshing (relative to meters): e.g., $10^{-6}$ for  $\mu m$
 
-\textit{dimension} :  dimension of  simulation (1,2,3)
+\textit{dimension}:  dimension of  simulation (1,2,3)
 
-\textit{temperature} :  temperature  of the system
+\textit{temperature}:  temperature  of the system [K]
 
-\textit{solve} : list of  simulations to  be  executed, in the order of  execution; if the list   contains "`sweep"', a sweep is  performed as specified in \textit{sweep} block in the  \textit{Solver} section.   
+\textit{solve}: list of  simulations to  be  executed, in the order of  execution; if the list   contains "`sweep"', a sweep is  performed as specified in \textit{sweep} block in the  \textit{Solver} section.   
 
 \begin{verbatim}
   solve =  (strain,driftdiffusion, quantum_electrons, quantum_holes)
@@ -770,11 +778,11 @@ In this  section one  can  specify  several general parameters and settings  for
 
 
 
-\textit{resultpath} :  path for output  directory 
+\textit{resultpath}:  path for output  directory 
 
-\textit{output\_format} : format of  the  output data: \textit{gmv} for  \textbf{GMV} ,  \textit{ise}  for  \textbf{Tecplot} , \textit{grace} for \textbf{xmgr} (ascii data column type),  \textit{vtk} for  \textbf{Paraview}.
+\textit{output\_format}: format of  the  output data: \textit{gmv} for  \textbf{GMV},  \textit{ise}  for  \textbf{Tecplot}, \textit{grace} for \textbf{xmgr} (ascii data column type),  \textit{vtk} for  \textbf{Paraview}.
 
-\textit{plot} :  list of output variables which are calculated and available in output  files. See the  corresponding chapters for the  available output variables for each model.
+\textit{plot}:  list of output variables which are calculated and available in output  files. See the  corresponding chapters for the  available output variables for each model.
 
 \section{Output description}
 
@@ -783,9 +791,9 @@ At the end of  the  execution, the  program will  write  the  results of  the  s
 
 TiberCAD  output is  divided in  three  classes: \textbf{nodal}, \textbf{elemental} and  \textbf{integrated}  quantities.
 
-\textbf{Nodal}  quantities are all  the  quantities associated with the nodes of  the  mesh,  such as  Fermi level,  electron and  hole  density,  conduction and  valence band, etc..  The output  values for  these  quantities are reported in  the  files  \textit{modelname}\_nodal.\textit{ext} ,  where  \textit{modelname} is  the simulation model used for the  calculations and  \textit{ext} is  the  extension of  the  chosen  file  format. 
+\textbf{Nodal}  quantities are all  the  quantities associated with the nodes of  the  mesh,  such as  Fermi level,  electron and  hole  density,  conduction and  valence band, etc.  The output  values for  these  quantities are reported in  the  files  \textit{modelname}\_nodal.\textit{ext},  where  \textit{modelname} is  the simulation model used for the  calculations and  \textit{ext} is  the  extension of  the  chosen  file  format. 
 
-In the  case  a  sweep  calculation is  performed and  the  \textbf{plot\_data} keyword is  set  to  \textit{true}, the output files  are of  the  kind \textit{modelname}\_nodal\_\textit{sweepvariable}\_\textit{step}.\textit{ext}, where  \textit{sweepvariable} is  the  variable with respect to  which the  sweep is  performed (e.g. gate voltage) and  \textit{step} is  the  value of  this  variable  at that step;  e.g  \textit{driftdiffusion\_nodal\_Vb\_0.000.dat} for the  result at the step Vb = 0.0 . 
+In the  case  a  sweep  calculation is  performed and  the  \textbf{plot\_data} keyword is  set  to  \textit{true}, the output files  are of  the  kind \textit{modelname}\_nodal\_\textit{sweepvariable}\_\textit{step}.\textit{ext}, where  \textit{sweepvariable} is  the  variable with respect to  which the  sweep is  performed (e.g. gate voltage) and  \textit{step} is  the  value of  this  variable  at that step;  e.g  \textit{driftdiffusion\_nodal\_Vb\_0.000.dat} for the  result at the step Vb = 0.0.
 
 \textbf{Elemental}  quantities are all  the  quantities associated with the elements of  the  mesh,  such as  current density.
 The output  values for  these  quantities are reported in  the  files  \textit{modelname}\_elemental.\textit{ext} .
@@ -1048,7 +1056,7 @@ $Models
 
     options
     {
-     simulation_name = driftdiffusion
+     simulation_name = dd1
 
      physical_regions = all
     }
