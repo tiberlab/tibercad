@@ -1,6 +1,6 @@
 # InN
 
-structure = wz;
+structure = wz
 
 Eg_G = 0.78;
 #E_v = -2.34;

@@ -1,6 +1,6 @@
 # AlN
 
-structure = wz;
+structure = wz
 
 Eg_G = 6.25;
 #E_v = -3.44;

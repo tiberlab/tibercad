@@ -208,7 +208,7 @@ class Material
     
     //! Get an iterator to the last model
     ModelMap::iterator models_end(void);
-
+    
 
     //! True if this is an alloy
     bool _is_alloy;
@@ -233,7 +233,7 @@ class Material
     //! The RotatedCrystal object
     RotatedCrystal* _rotated_crystal;
 
-    
+
     //! The map containing all \c PhysicalModelInterface objects
     /*!
      * This map containes the physical model of any simulation type

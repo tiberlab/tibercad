@@ -9,36 +9,17 @@ inline
 Alloy::Alloy(const std::string& name)
   : Material(name),
     _molar_fraction(0.0),
-    _cryst_A(NULL),
-    _cryst_B(NULL)
+    _mat_A(NULL),
+    _mat_B(NULL)
 {
   _is_alloy = true;
-
-  get_database().get_alloy_components(name, _name_A, _name_B);
-#ifdef DEBUG
-  std::cout << name << " is an alloy with components " <<
-    _name_A << " and " << _name_B << ".\n";
-#endif
 }
 
 
 Alloy::~Alloy()
 {
-  ModelMap::const_iterator it(_models_A.begin());
-  ModelMap::const_iterator end(_models_A.end());
-  for ( ; it != end; ++it)
-    PhysicalModelInterface::destroy(it->second);
-
-  it = _models_B.begin();
-  end = _models_B.end();
-  for ( ; it != end; ++it)
-    PhysicalModelInterface::destroy(it->second);
-
-  _models_A.clear();
-  _models_B.clear();
-
-  PhysicalModelInterface::destroy(_cryst_A);
-  PhysicalModelInterface::destroy(_cryst_B);
+  delete _mat_A;
+  delete _mat_B;
 }
 
 
@@ -50,19 +31,16 @@ Alloy::do_init(void)
 
   _molar_fraction = get_options().get_option("x", 0.0);
 
-  _cryst_A = static_cast<RotatedCrystal*>(get_rotated_crystal().copy());
-  _cryst_A->set_material(this);
-  get_database().set_material(_name_A);
-  _cryst_A->init();
-
-  _cryst_B = static_cast<RotatedCrystal*>(get_rotated_crystal().copy());
-  _cryst_B->set_material(this);
-  get_database().set_material(_name_B);
-  _cryst_B->init();
-
-  get_database().set_material(get_name());
-  get_crystal().build_alloy(_cryst_A, _cryst_B, _molar_fraction);
-
+  std::string name_A, name_B;
+  get_database().get_alloy_components(get_name(), name_A, name_B);
+#ifdef DEBUG
+  std::cout << get_name() << " is an alloy with components " <<
+    name_A << " and " << name_B << ".\n";
+#endif
+  
+  _mat_A = Material::create(name_A, get_options());
+  _mat_B = Material::create(name_B, get_options());
+  
   // copy and initialize the models of the components
   ModelMap::iterator it(models_begin());
   ModelMap::const_iterator end(models_end());
@@ -70,20 +48,28 @@ Alloy::do_init(void)
   for ( ; it != end; ++it)
   {
     PhysicalModel* modA = static_cast<PhysicalModel*>((it->second)->copy());
-    modA->set_material(this);
-    get_database().set_material(_name_A);
-    modA->init();
-    _models_A[it->first] = modA;
+    _mat_A->add_model(modA, it->first);
     
     PhysicalModel* modB = static_cast<PhysicalModel*>((it->second)->copy());
-    modB->set_material(this);
-    get_database().set_material(_name_B);
-    modB->init();
-    _models_B[it->first] = modB;
+    _mat_B->add_model(modB, it->first);
+  }
 
-    // build VCA
-    get_database().set_material(get_name());
-    (it->second)->build_alloy(modA, modB, _molar_fraction);
+  _mat_A->init();
+  _mat_B->init();
+
+  // 
+  // build VCA of the models
+  // 
+
+  get_database().set_material(get_name());
+
+  get_crystal().build_alloy(&_mat_A->get_rotated_crystal(),
+      &_mat_B->get_rotated_crystal(), _molar_fraction);
+
+  for (it = models_begin(); it != end; ++it)
+  {
+    (it->second)->build_alloy(_mat_A->get_model(it->first),
+                              _mat_B->get_model(it->first), _molar_fraction);
   }
 }
 
