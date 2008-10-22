@@ -37,9 +37,13 @@ Alloy::do_init(void)
   std::cout << get_name() << " is an alloy with components " <<
     name_A << " and " << name_B << ".\n";
 #endif
-  
+
   _mat_A = Material::create(name_A, get_options());
   _mat_B = Material::create(name_B, get_options());
+
+  // to be sure w put the structure into the options
+  _mat_A->set_structure(get_structure());
+  _mat_B->set_structure(get_structure());
   
   // copy and initialize the models of the components
   ModelMap::iterator it(models_begin());
