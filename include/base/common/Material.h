@@ -108,6 +108,10 @@ class Material
     const std::string& get_name(void) const;
 
     
+    //! Set the structure
+    void set_structure(const std::string& structure);
+
+    
     //! Get the crystal structure
     const std::string& get_structure(void) const;
 
@@ -192,10 +196,6 @@ class Material
     
     //! Set the model options
     void set_options(const ModelOptions& options);
-
-    
-    //! Set the structure
-    void set_structure(const std::string& structure);
 
     
     //! Get a writable reference to the RotatedCrystal
