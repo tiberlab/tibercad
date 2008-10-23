@@ -97,8 +97,8 @@ Database::set_search_path(const std::string& path)
     boost::filesystem::path p(path, boost::filesystem::native);
     if (!boost::filesystem::exists(p) || !boost::filesystem::is_directory(p))
     {
-      std::string msg("Database: \'");
-      msg += path + "\' is not a valid directory";
+      std::string msg("\'");
+      msg += path + "\' is not a valid directory for searchpath";
       throw InitFailedException(msg);
     }
   }
@@ -121,10 +121,8 @@ Database::get_data_file(const std::string& material) const
 
     if ((TiberCad::tiberroot.size() == 0) || (!check_data_file(s)))
     {
-      std::string msg("Database: cannot find material data file ");
+      std::string msg("Cannot find material data file ");
       msg += material + ".dat";
-      int* i = NULL;
-      *i = 5;
       throw InitFailedException(msg);
     }
   }

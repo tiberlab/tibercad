@@ -29,6 +29,13 @@ class Alloy : public Material
     static Alloy* create(const std::string& name);
 
 
+    //! Return the component A
+    Material* get_component_A(void);
+
+    //! Return the component B
+    Material* get_component_B(void);
+
+
     //! Return the name of component material A
     const std::string& get_name_A(void) const;
     
@@ -86,6 +93,23 @@ Alloy::get_name_B(void) const
 {
   return _mat_B->get_name();
 }
+
+
+inline
+Material*
+Alloy::get_component_A(void) const
+{
+  return _mat_A;
+}
+
+
+inline
+Material*
+Alloy::get_component_B(void) const
+{
+  return _mat_B;
+}
+
 
 
 #endif /* _ALLOY_H_ */

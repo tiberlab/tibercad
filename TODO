@@ -1,6 +1,6 @@
 2008-10-13 Auf der Maur
 	( ) in DriftDiffusion, put calculated currents into contacts
-	( ) implement Fowler-Nordheim for contacts
+	(DONE) implement Fowler-Nordheim for contacts
 
 2008-07-18 Auf der Maur
 	( ) improve Sweep to make 'logarithmic' scale sweeps, change meaning of 

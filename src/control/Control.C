@@ -89,8 +89,8 @@ void
 Control::init(void) throw (InitFailedException, ModelErrorException)
 {
 
-  try
-  {
+  //try
+  //{
     _database = new Database();
     Material::set_database(*_database);
 
@@ -120,13 +120,13 @@ Control::init(void) throw (InitFailedException, ModelErrorException)
       if (!(*simit)->is_initialized())
         (*simit)->init();
 
-  }
-  catch (runtime_error& e)
-  {
-    string msg("Control::init failed.\n    Cause: ");
-    msg += e.what();
-    throw InitFailedException(msg);
-  }
+  //}
+  //catch (runtime_error& e)
+  //{
+    //string msg("Control::init failed.\n    Cause: ");
+    //msg += e.what();
+    //throw InitFailedException(msg);
+  //}
 }
 
 
@@ -270,7 +270,7 @@ Control::create_materials(void)
     if (region_ids.size() == 0)
     {
       ostringstream s;
-      s << "Control: physical region \'" << data.get_region_name() <<
+      s << "Physical region \'" << data.get_region_name() <<
         "\' is not consistent with mesh.";
       throw InitFailedException(s.str());
     }
@@ -450,7 +450,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
           if (regs.find(id) == id_end)
           {
             ostringstream s;
-            s << "Control: physical region " << id <<
+            s << "Physical region " << id <<
               " does not exist in mesh file.";
             throw InitFailedException(s.str());
           }
@@ -494,7 +494,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       SimulationInterface::create(modelname, solveropts);
     if (sim == NULL)
       throw ModelErrorException(
-          "Control: No such simulation type: " + modelname);
+          "Unknown simulation type: " + modelname);
 
     sim->set_control(this);
 
@@ -551,7 +551,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       if (mat == NULL)
       {
         ostringstream s;
-        s << "Control: physical region " << *it <<
+        s << "Physical region " << *it <<
           " has no material associated!";
         throw InitFailedException(s.str());
       }
@@ -592,7 +592,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       if (ids.size() == 0)
       {
         ostringstream s;
-        s << "Control: boundary region \'" << data.get_region_name() <<
+        s << "Boundary region \'" << data.get_region_name() <<
           "\' is not consistent with mesh.";
         throw InitFailedException(s.str());
       }
@@ -667,7 +667,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
       if (sim == NULL)
       {
-        string msg("Control: No such simulation type: selfconsistent (flavour: ");
+        string msg("No such simulation type: selfconsistent (flavour: ");
         msg += solveropts.get_option("flavour", "");
         throw ModelErrorException(msg);
       }
@@ -798,7 +798,7 @@ Control::run_simulation(void) throw (SolveFailedException)
     SimulationInterface* sim = find_simulation(names[i]);
 
     if (sim == NULL)
-      throw SolveFailedException("Control: Simulation not found: " + names[i]);
+      throw SolveFailedException("Simulation not found: " + names[i]);
 
     simulations[i] = sim;
   }
@@ -841,15 +841,14 @@ Control::run_simulation(void) throw (SolveFailedException)
     catch (runtime_error& e)
     {
       ostringstream s;
-      s << "Control: Solve of " << sim->get_name() << " failed." << endl <<
-        "    Cause: " << e.what();
+      s << "Solve of " << sim->get_name() << " failed." << endl <<
+           "    Cause: " << e.what();
       throw SolveFailedException(s.str());
     }
     catch (...)
     {
       ostringstream s;
-      s << "Control: Solve of " << sim->get_name() << " failed." << endl <<
-        "    Cause: Unknown";
+      s << "Solve of " << sim->get_name() << " failed for unknown reason.";
       throw SolveFailedException(s.str());
     }
 

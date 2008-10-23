@@ -8,6 +8,7 @@
 #include "TiberCad.h"
 #include "License.h"
 #include "Utils.h"
+#include "Messages.h"
 
 #include "tiber_config.h"
 
@@ -122,11 +123,11 @@ int main (int argc, char** argv)
   }
   catch (exception& e)
   {
-    cout << "ERROR: " << e.what() << endl;
+    Messages::error(e.what());
   }
   catch (...)
   {
-    cout << "ERROR: TiberCAD crashed for unknown reason." << endl;
+    Messages::error("TiberCAD crashed for unknown reason.");
   }
 #ifdef CYGWIN
   cout << "press Enter ...";
