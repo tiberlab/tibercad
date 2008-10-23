@@ -6,8 +6,6 @@
 #include "Material.h"
 #include "Database.h"
 
-#include "getpot.h"
-
 
 
 TIBER_MODULE(SRHRecombination, srh)
@@ -17,28 +15,28 @@ TIBER_MODULE(SRHRecombination, srh)
 void
 SRHRecombination::read_database(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
+  Database& db = get_database();
+  db.set_section("recombination/SRH");
 
-  E_t_ = data("Etrap", E_t_);
-  Talpha_e_ = data("Talpha_e", Talpha_e_);
-  Talpha_h_ = data("Talpha_h", Talpha_h_);
+  E_t_ = db.get("Etrap", E_t_);
+  Talpha_e_ = db.get("Talpha_e", Talpha_e_);
+  Talpha_h_ = db.get("Talpha_h", Talpha_h_);
   
-  double N = mat->get_total_doping_density();
+  double N = get_material()->get_total_doping_density();
 
   // electrons
-  double taumin = data("taumin_e", 0.0);
-  double taumax = data("taumax_e", 1.0e-9);
-  double Nref = data("Nref_e", 1e16);
-  double g = data("gamma_e", 1.0);
+  double taumin = db.get("taumin_e", 0.0);
+  double taumax = db.get("taumax_e", 1.0e-9);
+  double Nref = db.get("Nref_e", 1e16);
+  double g = db.get("gamma_e", 1.0);
   double denom = 1.0 + std::pow(N / Nref, g);
   tau_n_ = taumin + (taumax - taumin) / denom; 
 
   // holes
-  taumin = data("taumin_h", 0.0);
-  taumax = data("taumax_h", 1.0e-9);
-  Nref = data("Nref_h", 1e16);
-  g = data("gamma_h", 1.0);
+  taumin = db.get("taumin_h", 0.0);
+  taumax = db.get("taumax_h", 1.0e-9);
+  Nref = db.get("Nref_h", 1e16);
+  g = db.get("gamma_h", 1.0);
   denom = 1.0 + std::pow(N / Nref, g);
   tau_p_ = taumin + (taumax - taumin) / denom; 
 }

@@ -38,7 +38,7 @@ void MacrostrainModel::do_init()
   const ModelOptions& opt =  get_options ();
 
   stiffness = Stiffness::create( get_material() -> get_structure(), opt  );
-  
+
   stiffness->set_material(get_material());
 
   stiffness->init();

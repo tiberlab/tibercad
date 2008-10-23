@@ -13,11 +13,41 @@
 
 
 
+
+void
+Database::set_material(const std::string& material,
+    const std::string& datafile)
+{
+  std::string df(datafile);
+  if (df.size() == 0)
+    df = get_data_file(material);
+
+  if ((_material != material) || (_datafile != df))
+  {
+    _material = material;
+    _datafile = df;
+
+    _file = GetPot(_datafile);
+  }
+}
+
+
+void
+Database::set_section(const std::string& section)
+{
+  _section = section;
+  if (_section.size() != 0)
+    _file.set_prefix(_section + "/");
+  else
+    _file.set_prefix("");
+}
+
+
+
 bool
 Database::is_alloy(const std::string& name) const
 {
-  GetPot data(get_data_file(name));
-  if (data.have_variable("alloy"))
+  if (_file.have_variable("alloy"))
     return true;
 
   return false;
@@ -27,11 +57,21 @@ Database::is_alloy(const std::string& name) const
 
 void
 Database::get_alloy_components(const std::string& alloy,
-    std::string& comp_A, std::string& comp_B) const
+    std::string& comp_A, std::string& comp_B)
 {
-  GetPot data(get_data_file(alloy));
-  comp_A = data("comp_A", "");
-  comp_B = data("comp_B", "");
+  set_material(alloy);
+  comp_A = _file("comp_A", "");
+  comp_B = _file("comp_B", "");
+}
+
+
+
+void
+Database::get_alloy_components(std::string& comp_A,
+    std::string& comp_B) const
+{
+  comp_A = _file("comp_A", "");
+  comp_B = _file("comp_B", "");
 }
 
 
@@ -83,11 +123,15 @@ Database::get_data_file(const std::string& material) const
     {
       std::string msg("Database: cannot find material data file ");
       msg += material + ".dat";
+      int* i = NULL;
+      *i = 5;
       throw InitFailedException(msg);
     }
   }
 
   return s;
 }
+
+
 
 

@@ -1,7 +1,17 @@
 # Si
 
-structure = zb
 
+# lattice
+#[lattice]
+structure = zb
+a = 0.54304
+
+
+#[misc]
+permittivity = 11.7
+
+
+#[kdotp]
 Eg_G = 3.385
 Eg_L = 1.635
 # 0 K
@@ -18,41 +28,45 @@ m_L_l = 1.42
 m_X_t = 0.19
 m_X_l = 0.916
 
+gamma1 = 4.31
+gamma2 = 0.345
+gamma3 = 1.427
+
+
+
+#[deformation_potentials]
 a_c = -10.44
 a_v = 2.05
 b = -2.1
 d = -4.85
-
-gamma1 = 4.31
-gamma2 = 0.345
-gamma3 = 1.427
 
 abs_def_pot_X = 3.35
 uniax_def_pot_X = 9.16
 abs_def_pot_L = -2.07
 uniax_def_pot_L = 16.14
 
-permittivity = 11.7
 
-# lattice constant
-a = 0.54304
 
 # stiffness data
+#[stiffness]
 C11 = 165.77
 C12 = 63.93
 C44 = 79.62
 
 # piezoelectricity
+#[piezoelectricity]
 e14 = 0.0
 
 
 # mobility
+[mobility/constant]
 mu_max_e = 1417.0
 exponent_e = 2.5
 mu_max_h = 470.5
 exponent_h = 2.2
 
 # doping dependent
+[mobility/doping_dependent]
 mobility_formula = 1
 mumin1_e = 52.2
 mumin2_e = 52.2
@@ -72,6 +86,7 @@ alpha_h = 0.719
 beta_h = 2
 
 # high field dependency
+[mobility/field_dependent]
 Vsat_Formula = 1
 beta0_e = 1.109
 vsat0_e = 1.07e7
@@ -80,9 +95,12 @@ beta0_h = 1.213
 vsat0_h = 8.37e6
 vsatexp_h = 0.52
 
+[]
+
 
 
 # Lattice thermal conductivity 
+[thermal_conductivity]
 therm_lat_cond = 1.5         #[(K)/(W)]
 therm_lat_cond_a = 0.03      #[(cm k)/(W)]
 therm_lat_cond_b = 1.56e-3   #[(cm)/(W)]
@@ -91,5 +109,6 @@ therm_lat_cond_c = 1.65e-6   #[(cm)/(W K)]
 
 
 #Thermoelectric power [V/k]
+[thermoelectric]
 eTEpower = -0.001
 hTEpower = -0.001

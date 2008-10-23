@@ -6,7 +6,6 @@
 #include "Material.h"
 #include "Database.h"
 
-#include "getpot.h"
 
 
 TIBER_MODULE(DopingDependentMobility, doping_dependent)
@@ -17,10 +16,10 @@ TIBER_MODULE(DopingDependentMobility, doping_dependent)
 void
 DopingDependentMobility::read_database(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
+  Database& db = get_database();
+  db.set_section("mobility/doping_dependent");
 
-  formula_ = data("mobility_formula", formula_);
+  formula_ = db.get("mobility_formula", formula_);
   
   if (formula_ == 1)
   {
@@ -28,35 +27,35 @@ DopingDependentMobility::read_database(void)
 
     std::string s("mumin1_");
     s += get_carrier_type();
-    mumin_ = data(s.c_str(), mumin_);
+    mumin_ = db.get(s, mumin_);
 
     s = "mumin2_";
     s += get_carrier_type();
-    am_ = data(s.c_str(), am_);
+    am_ = db.get(s, am_);
 
     s = "mu1_";
     s += get_carrier_type();
-    mud_ = data(s.c_str(), mud_);
+    mud_ = db.get(s, mud_);
 
     s = "Cr_";
     s += get_carrier_type();
-    ad_ = data(s.c_str(), ad_);
+    ad_ = db.get(s, ad_);
 
     s = "Cs_";
     s += get_carrier_type();
-    N0_ = data(s.c_str(), N0_);
+    N0_ = db.get(s, N0_);
 
     s = "alpha_";
     s += get_carrier_type();
-    an_ = data(s.c_str(), an_);
+    an_ = db.get(s, an_);
 
     s = "beta_";
     s += get_carrier_type();
-    a_ = data(s.c_str(), a_);
+    a_ = db.get(s, a_);
 
     s = "Pc_";
     s += get_carrier_type();
-    aa_ = data(s.c_str(), aa_);
+    aa_ = db.get(s, aa_);
   }
   else
   {
@@ -64,35 +63,35 @@ DopingDependentMobility::read_database(void)
 
     std::string s("mumin_");
     s += get_carrier_type();
-    mumin_ = data(s.c_str(), mumin_);
+    mumin_ = db.get(s, mumin_);
 
     s = "am_";
     s += get_carrier_type();
-    am_ = data(s.c_str(), am_);
+    am_ = db.get(s, am_);
 
     s = "mud_";
     s += get_carrier_type();
-    mud_ = data(s.c_str(), mud_);
+    mud_ = db.get(s, mud_);
 
     s = "ad_";
     s += get_carrier_type();
-    ad_ = data(s.c_str(), ad_);
+    ad_ = db.get(s, ad_);
 
     s = "N0_";
     s += get_carrier_type();
-    N0_ = data(s.c_str(), N0_);
+    N0_ = db.get(s, N0_);
 
     s = "an_";
     s += get_carrier_type();
-    an_ = data(s.c_str(), an_);
+    an_ = db.get(s, an_);
 
     s = "a_";
     s += get_carrier_type();
-    a_ = data(s.c_str(), a_);
+    a_ = db.get(s, a_);
 
     s = "aa_";
     s += get_carrier_type();
-    aa_ = data(s.c_str(), aa_);
+    aa_ = db.get(s, aa_);
   }
 
 }

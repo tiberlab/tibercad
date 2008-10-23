@@ -16,7 +16,9 @@ bow_Pz = -0.037
 
 
 # doping dependent
+[mobility/doping_dependent]
 mobility_formula = 1
+[]
 
 
 #Atomistic structure informations

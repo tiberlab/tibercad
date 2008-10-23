@@ -61,12 +61,14 @@ e14 = 0.0
 
 
 # mobility
+[mobility/constant]
 mu_max_e = 1417.0
 exponent_e = 2.5
 mu_max_h = 470.5
 exponent_h = 2.2
 
 # doping dependent
+[mobility/doping_dependent]
 mobility_formula = 1
 mumin1_e = 52.2
 mumin2_e = 52.2
@@ -86,6 +88,7 @@ alpha_h = 0.719
 beta_h = 2
 
 # high field dependency
+[mobility/field_dependent]
 Vsat_Formula = 1
 beta0_e = 1.109
 betaexp_e = 0.66
@@ -97,6 +100,7 @@ vsat0_h = 8.37e6
 vsatexp_h = 0.52
 
 # SRH recombination
+[recombination/SRH]
 Etrap    = 0.0
 taumin_e = 0.0
 taumax_e = 1.0e-5
@@ -107,6 +111,9 @@ taumax_h = 3.0e-6
 Nref_h   = 1.0e+16
 gamma_h  = 1
 
+
+[recombination/auger]
+[]
 
 
 

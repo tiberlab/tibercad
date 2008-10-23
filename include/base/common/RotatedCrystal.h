@@ -1,13 +1,19 @@
+// $Id$
+
 #ifndef _ROTATED_CRYSTAL_H_
 #define _ROTATED_CRYSTAL_H_
 
 #include "tensor.h"
-#include <cmath>
 #include <vector>
 
 #include "PhysicalModelInterface.h"
-#include "PhysicalModel.h"
 
+
+//! Defines a rotation in space
+/*!
+ * The main use of this class is to describe the rotation from
+ * crystallographic orientation into the simulation system.
+ */
 class RotatedCrystal : public PhysicalModelInterface
 {
 
@@ -133,13 +139,6 @@ class RotatedCrystal : public PhysicalModelInterface
 // inline members
 //
 
-inline
-RotatedCrystal*
-RotatedCrystal::create(const std::string& name, const ModelOptions& options)
-{
-  return dynamic_cast<RotatedCrystal*>(
-      PhysicalModelInterface::create("cryst_" + name, options));
-}
 
 
 #endif

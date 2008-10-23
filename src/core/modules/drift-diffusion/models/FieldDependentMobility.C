@@ -3,10 +3,8 @@
 #include "FieldDependentMobility.h"
 #include "DriftDiffusionProperties.h"
 
-#include "Material.h"
 #include "Database.h"
 
-#include "getpot.h"
 
 
 TIBER_MODULE(FieldDependentMobility, field_dependent)
@@ -15,42 +13,42 @@ TIBER_MODULE(FieldDependentMobility, field_dependent)
 void
 FieldDependentMobility::read_database(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
+  Database& db = get_database();
+  db.set_section("mobility/field_dependent");
   
   std::string s("beta0_");
   s += get_carrier_type();
-  _beta = data(s.c_str(), _beta);
+  _beta = db.get(s, _beta);
   
   s = "betaexp_";
   s += get_carrier_type();
-  _betaexp = data(s.c_str(), _betaexp);
+  _betaexp = db.get(s, _betaexp);
 
-  _vsat_formula = data("Vsat_Formula", _vsat_formula);
+  _vsat_formula = db.get("Vsat_Formula", _vsat_formula);
 
   if (_vsat_formula == 1)
   {
     s = "vsat0_";
     s += get_carrier_type();
-    _vsat0 = data(s.c_str(), _vsat0);
+    _vsat0 = db.get(s, _vsat0);
 
     s = "vsatexp_";
     s += get_carrier_type();
-    _vsat_b = data(s.c_str(), _vsat_b);
+    _vsat_b = db.get(s, _vsat_b);
   }
   else
   {
     s = "A_vsat_";
     s += get_carrier_type();
-    _vsat0 = data(s.c_str(), _vsat0);
+    _vsat0 = db.get(s, _vsat0);
 
     s = "B_vsat_";
     s += get_carrier_type();
-    _vsat_b = data(s.c_str(), _vsat_b);
+    _vsat_b = db.get(s, _vsat_b);
 
     s = "vsat_min";
     s += get_carrier_type();
-    _vsat_min = data(s.c_str(), _vsat_min);
+    _vsat_min = db.get(s, _vsat_min);
   }
 
 }

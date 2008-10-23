@@ -12,6 +12,16 @@ Database*
 Material::_database;
 
 
+Material::Material(const std::string& name)
+  : _is_alloy(false),
+    _name(name),
+    _structure("zb"), 
+    _rotated_crystal(NULL),
+    _is_initialized(false)
+{
+}
+
+
 
 Material::~Material(void)
 {
@@ -31,8 +41,6 @@ Material::~Material(void)
 void
 Material::do_init(void)
 {
-  _database->set_material(_name);
-
   ModelOptions opts;
 
   if (get_options().find_option("a"))
@@ -131,33 +139,35 @@ Material::create(const std::string& name)
     mat = new Material(name);
 
   _database->set_material(name);
-  std::cout << "Created Material " << mat->get_name() << 
-    " (using parameter file " << _database->get_data_file() << ")" <<
-    std::endl;
 
   return mat;
 }
 
 
 
-
 Material*
 Material::create(const std::string& name, const ModelOptions& options)
 {
+  Material* mat = NULL;
 
-  Material* mat = create(name);
+  _database->set_material(name, options.get_option("datafile", ""));
+  _database->set_section("");
+
+  if (_database->is_alloy(name))
+    mat = Alloy::create(name);
+  else
+    mat = new Material(name);
 
   if (mat != NULL)
   {
     mat->set_options(options);
 
-    _database->set_material(mat->get_name());
-    GetPot data(_database->get_data_file());
-    mat->_structure = data("structure", "zb");
-
     // set the crystal structure at this point
-    //mat->_structure = mat->_options.get_option("structure", mat->_structure);
-    //mat->_options.delete_option("structure");
+    mat->_structure = mat->get_database().get("structure", "zb");
+
+    std::cout << "Created Material " << mat->get_name() << 
+      " (using parameter file " << _database->get_data_file() << ")" <<
+      std::endl;
   }
 
   return mat;
@@ -210,5 +220,25 @@ Material::clear_doping(void)
   _acceptors.clear();
 }
 
+
+
+const Database&
+Material::get_database(void) const
+{
+  assert(_database != NULL);
+  _database->set_material(get_name(),
+      get_options().get_option("datafile", ""));
+  return *_database;
+}
+
+
+Database&
+Material::get_database(void)
+{
+  assert(_database != NULL);
+  _database->set_material(get_name(),
+      get_options().get_option("datafile", ""));
+  return *_database;
+}
 
 

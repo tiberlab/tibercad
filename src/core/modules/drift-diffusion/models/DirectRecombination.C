@@ -3,8 +3,6 @@
 #include "DirectRecombination.h"
 #include "DriftDiffusionProperties.h"
 
-#include "Material.h"
-#include "Database.h"
 
 #include "getpot.h"
 
@@ -18,10 +16,10 @@ TIBER_MODULE(DirectRecombination, direct)
 void
 DirectRecombination::read_database(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
+  Database& db = get_database();
+  db.set_section("recombination/direct");
 
-  C_ = data("C", C_);
+  C_ = db.get("C", C_);
   
 }
 

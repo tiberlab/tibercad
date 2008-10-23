@@ -20,6 +20,7 @@ make_windows_package () {
   fi
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
+  find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   cp ${topdir}/materials/[^.]* ${files}/materials
 
   curdir=`pwd`
@@ -99,6 +100,7 @@ prepare_linux_package () {
   fi
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
+  find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   cp ${topdir}/materials/[^.]* ${files}/materials
 
   if [ -d ${topdir}/contrib/gmsh-2.2.0 ]
@@ -148,6 +150,7 @@ make_deb () {
   fi
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
+  find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   cp ${topdir}/materials/[^.]* ${files}/materials
 
   if [ -d ${topdir}/contrib/gmsh-2.2.0 ]

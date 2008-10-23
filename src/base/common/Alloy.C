@@ -32,11 +32,12 @@ Alloy::do_init(void)
   _molar_fraction = get_options().get_option("x", 0.0);
 
   std::string name_A, name_B;
-  get_database().get_alloy_components(get_name(), name_A, name_B);
-#ifdef DEBUG
+  get_database().set_section("");
+  get_database().get_alloy_components(name_A, name_B);
+
   std::cout << get_name() << " is an alloy with components " <<
     name_A << " and " << name_B << ".\n";
-#endif
+
 
   _mat_A = Material::create(name_A, get_options());
   _mat_B = Material::create(name_B, get_options());

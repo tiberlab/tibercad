@@ -3,10 +3,8 @@
 #include "AugerRecombination.h"
 #include "DriftDiffusionProperties.h"
 
-#include "Material.h"
 #include "Database.h"
 
-#include "getpot.h"
 
 
 
@@ -17,11 +15,11 @@ TIBER_MODULE(AugerRecombination, auger)
 void
 AugerRecombination::read_database(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
+  Database& db = get_database();
+  db.set_section("recombination/auger");
 
-  _Cn = data("Cn", _Cn);
-  _Cp = data("Cp", _Cp);
+  _Cn = db.get("Cn", _Cn);
+  _Cp = db.get("Cp", _Cp);
 }
 
 

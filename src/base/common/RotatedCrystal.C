@@ -1,9 +1,35 @@
+// $Id$
+
 #include "RotatedCrystal.h"
+#include "ModelErrorException.h"
+
 
 RotatedCrystal::RotatedCrystal() : PhysicalModelInterface()
 {
   
 }
+
+
+
+RotatedCrystal*
+RotatedCrystal::create(const std::string& name, const ModelOptions& options)
+{
+  RotatedCrystal* rc = dynamic_cast<RotatedCrystal*>(
+      PhysicalModelInterface::create("cryst_" + name, options));
+
+  if (rc == NULL)
+  {
+    std::string msg("No such crystal structure known: ");
+    msg += name;
+    throw ModelErrorException(msg);
+  }
+
+  return rc;
+}
+
+
+
+
 
 
 //===============================================================//

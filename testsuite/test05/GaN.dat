@@ -67,12 +67,14 @@ Pz = -0.034
 #
 
 # constant
+[mobility/constant]
 mu_max_e = 1500
 exponent_e = 1.0
 mu_max_h = 200
 exponent_h = 2.1
 
 # doping dependent
+[mobility/doping_dependent]
 mobility_formula = 1
 mumin1_e = 85
 mumin2_e = 75
@@ -92,6 +94,7 @@ alpha_h = 0.55
 beta_h = 0.7
 
 # high field dependency
+[mobility/field_dependent]
 Vsat_Formula = 2
 beta0_e = 1.7
 A_vsat_e = 1.9e+07 	
@@ -106,6 +109,7 @@ vsat_min_h =  1.000e+07
 #
 
 # SRH recombination
+[recombination/SRH]
 Etrap    = 0.0
 taumin_e = 0.0
 taumax_e = 1.0e-9
@@ -119,7 +123,10 @@ gamma_h  = 1
 Talpha_h = -1.5
 
 # direct
+[recombination/direct]
 C = 0.47e-10
+
+[]
 
 #Lattice thermal conductivity 
 therm_lat_cond_x = 1.3

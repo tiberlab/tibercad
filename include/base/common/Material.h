@@ -54,8 +54,8 @@ class Material
      */
     static void set_database(Database& database);
 
-    
-    //! Create a material with name \c name
+
+    //! \deprecated Create a material with name \c name
     static Material* create(const std::string& name);
 
     
@@ -273,16 +273,6 @@ class Material
 //--------------------------------------------------------------
 
 inline
-Material::Material(const std::string& name)
-  : _is_alloy(false),
-    _name(name),
-    _structure("zb"), 
-    _rotated_crystal(NULL),
-    _is_initialized(false)
-{
-}
-
-inline
 bool
 Material::is_alloy(void) const
 {
@@ -340,22 +330,6 @@ void
 Material::set_structure(const std::string& structure)
 {
   _structure = structure;
-}
-
-
-inline
-const Database&
-Material::get_database(void) const
-{
-  return *_database;
-}
-
-
-inline
-Database&
-Material::get_database(void)
-{
-  return *_database;
 }
 
 

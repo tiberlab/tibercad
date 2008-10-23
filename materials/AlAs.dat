@@ -63,11 +63,14 @@ e14 = -0.015
 
 
 # mobility
+[mobility/constant]
 mu_max_e = 2500.0
 exponent_e = 1
 mu_max_h = 150.0
 exponent_h = 2.1
 
+[mobility/doping_dependent]
+mobility_formula = 2
 mumin_e = 2.5e+03
 am_e = -1
 mud_e = 0
@@ -88,6 +91,7 @@ aa_h = 0.0
 
 
 # SRH recombination
+[recombination/SRH]
 Etrap    = 0.0
 taumin_e = 0.0
 taumax_e = 1.0e-9
@@ -100,8 +104,10 @@ gamma_h  = 1
 
 
 # direct recombination (??)
+[recombination/direct]
 C = 0
 
+[]
 
 
 

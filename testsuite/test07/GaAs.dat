@@ -68,9 +68,11 @@ e14 = -0.16
 
 
 # mobility
+[mobility/constant]
 mu_max_e = 8500.0
 mu_max_h = 400.0
 
+[mobility/doping_dependent]
 mumin_e = 2.1360e+03
 am_e = -7.4570e-01
 mud_e = 6.3310e+03
@@ -89,6 +91,7 @@ a_h = 0.8057
 aa_h = 0.0
 
 # SRH recombination
+[recombination/SRH]
 Etrap    = 0.0
 taumin_e = 0.0
 taumax_e = 1.0e-9
@@ -99,6 +102,7 @@ taumax_h = 1.0e-9
 Nref_h   = 1.0e+16
 gamma_h  = 1
 
+[]
 
 
 #Lattice thermal conductivity [W/(cm*K)]

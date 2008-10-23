@@ -3,10 +3,8 @@
 #include "ConstantMobility.h"
 #include "DriftDiffusionProperties.h"
 
-#include "Material.h"
 #include "Database.h"
 
-#include "getpot.h"
 
 
 TIBER_MODULE(ConstantMobility, constant)
@@ -15,16 +13,16 @@ TIBER_MODULE(ConstantMobility, constant)
 void
 ConstantMobility::read_database(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
+  Database& db = get_database();
+  db.set_section("mobility/constant");
   
   std::string s("mu_max_");
   s += get_carrier_type();
-  mu0_ = data(s.c_str(), mu0_);
+  mu0_ = db.get(s, mu0_);
 
   s = "exponent_";
   s += get_carrier_type();
-  exp_ = data(s.c_str(), exp_);
+  exp_ = db.get(s, exp_);
 }
 
 
