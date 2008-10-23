@@ -97,7 +97,7 @@ Alloy::get_name_B(void) const
 
 inline
 Material*
-Alloy::get_component_A(void) const
+Alloy::get_component_A(void)
 {
   return _mat_A;
 }
@@ -105,7 +105,7 @@ Alloy::get_component_A(void) const
 
 inline
 Material*
-Alloy::get_component_B(void) const
+Alloy::get_component_B(void)
 {
   return _mat_B;
 }
