@@ -105,12 +105,16 @@ Utils::extract_vector(const string& input, vector<T>& vec)
       // cut the matched string into tokens
       tokenizer tokens(match, sep);
 
-      tokenizer::iterator it = tokens.begin();
-      const tokenizer::iterator end = tokens.end();
+      tokenizer::iterator it(tokens.begin());
+      const tokenizer::iterator end(tokens.end());
 
       // we resize the vector and fill in the found values
-      vec.resize(0);
-      for ( ; it != end; ++it)
+      int ctr = 0;
+      for ( ; it != end; ++it) ctr++;
+
+      vec.clear();
+      vec.reserve(ctr);
+      for (it = tokens.begin(); it != end; ++it)
       {
         // strip spaces from both ends
         string s(*it);

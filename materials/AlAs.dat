@@ -107,6 +107,15 @@ gamma_h  = 1
 [recombination/direct]
 C = 0
 
+[recombination/auger]
+# R_Auger = ( C_n n + C_p p ) ( n p - ni_eff^2)
+# with C_n,p = (A + B (T/T0) + C (T/T0)^2) (1 + H exp(-{n,p}/N0))
+#
+A	= (1.0000e-30 ,	1.0000e-30)	# [cm^6/s]
+B	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+C	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+H	= (0.0000e+00 ,	0.0000e+00)	# [1]
+N0	= (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 []
 
 

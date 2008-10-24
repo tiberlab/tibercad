@@ -1,6 +1,7 @@
 // $Id$
 
 #include "Database.h"
+#include "Utils.h"
 #include "TiberCad.h"
 #include "InitFailedException.h"
 
@@ -129,6 +130,66 @@ Database::get_data_file(const std::string& material) const
 
   return s;
 }
+
+
+
+template <typename T>
+void
+Database::get(const std::string& variable, std::vector<T>& data)
+{
+  std::string s(get(variable, ""));
+  Utils::extract_vector(s, data);
+}
+
+
+
+template <typename T>
+void
+Database::get(const std::string& variable,
+    std::vector<std::vector<T> >& data)
+{
+  std::string s(get(variable, ""));
+  std::vector<std::string> vec;
+  Utils::extract_vector(s, vec);
+
+  int n = vec.size();
+  data.clear();
+  data.reserve(n);
+  for (int i = 0; i < n; i++)
+    Utils::extract_vector(vec[i], data[i]);
+}
+
+
+
+// explicit instantiations
+template
+void Database::get(const std::string&, std::vector<double>&);
+
+template
+void Database::get(const std::string&, std::vector<int>&);
+
+template
+void Database::get(const std::string&, std::vector<bool>&);
+
+template
+void Database::get(const std::string&, std::vector<std::string>&);
+
+
+template
+void Database::get(const std::string&,
+    std::vector<std::vector<double> >&);
+
+template
+void Database::get(const std::string&,
+    std::vector<std::vector<int> >&);
+
+template
+void Database::get(const std::string&,
+    std::vector<std::vector<bool> >&);
+
+template
+void Database::get(const std::string&,
+    std::vector<std::vector<std::string> >&);
 
 
 

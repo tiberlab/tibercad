@@ -58,6 +58,9 @@ class Database
         std::string& comp_B) const;
 
 
+    //! Checks if a given variable is present in the databas
+    bool has_variable(const std::string& variable);
+
     //! Get double data
     double get(const std::string& variable, double default_value);
 
@@ -74,6 +77,15 @@ class Database
     //! Get string data
     std::string get(const std::string& variable,
         const char* default_value);
+
+    //! Get data array/vector
+    template <typename T>
+    void get(const std::string& variable, std::vector<T>& data);
+
+    //! Get data matrix
+    template <typename T>
+    void get(const std::string& variable,
+        std::vector<std::vector<T> >& data);
 
 
 
@@ -126,6 +138,14 @@ const std::string&
 Database::get_section(void) const
 {
   return _section;
+}
+
+
+inline
+bool
+Database::has_variable(const std::string& variable)
+{
+  return _file.have_variable(variable.c_str());
 }
 
 
