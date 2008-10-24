@@ -16,7 +16,7 @@
  * \f]
  * with
  * \f[
- *  C_{n,p} = (A + B\frac{T}{T_0} + C\left(\frac{T}{T_0})^2)
+ *  C_{n,p} = (A + B\frac{T}{T_0} + C\left(\frac{T}{T_0}\right)^2)
  *      (1 + H e^{-\{n,p\}/N_0})
  * \f]
  */
