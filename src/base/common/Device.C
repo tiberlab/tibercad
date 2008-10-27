@@ -71,6 +71,15 @@ Device::setup_mesh(void)
 
   delete _mesh;
 
+  _mesh_units = _options.get_option("mesh_units", _mesh_units);
+  cout << "mesh units: " << _mesh_units << " m" << endl;
+
+  const string& sym = _options.get_option("symmetry", "");
+  if (sym == "cylindrical")
+  {
+    _symmetry = TiberCad::CYLINDRICAL;
+    cout << "Using cylinder symmetry." << endl;
+  }
   
   int dim = _options.get_option("dimension", 2);
   _mesh = new Mesh(dim);
@@ -116,15 +125,7 @@ Device::setup_mesh(void)
 void
 Device::init(void)
 {
-  _mesh_units = _options.get_option("mesh_units", _mesh_units);
-  cout << "mesh units: " << _mesh_units << " m" << endl;
 
-  const string& sym = _options.get_option("symmetry", "");
-  if (sym == "cylindrical")
-  {
-    _symmetry = TiberCad::CYLINDRICAL;
-    cout << "Using cylinder symmetry." << endl;
-  }
 
   // init all materials
   MaterialMap::iterator it(_material_map.begin());
