@@ -20,7 +20,7 @@ string
 Messages::_warning = string(yellow) + "Warning: " + string(white);
 
 string
-Messages::_error   = string(red) + "ERROR: " + string(white);
+Messages::_error   = string(red) + "ERROR  : " + string(white);
 
 string
 Messages::_reset   = normal;

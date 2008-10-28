@@ -12,6 +12,7 @@
 #include "InitFailedException.h"
 #include "RotatedCrystal.h"
 #include "PyroPolarization.h"
+#include "Embracing.h"
 
 #include "elem.h"
 #include "getpot.h"
@@ -125,11 +126,8 @@ DriftDiffusionProperties::do_init(void)
 
   // we could have quantum density simulations for them
   {
-    //vector<string> qd;
     string qd;
     qd = get_parameter("electron_quantum_density", "");
-    //for (int i = 0; i < qd.size(); i++)
-    //  _electrons.add_quantum_density(qd[i]);
     _electrons.add_quantum_density(qd);
     if (_electrons.get_quantum_simulation() != NULL)
     {
@@ -139,10 +137,7 @@ DriftDiffusionProperties::do_init(void)
       _electrons.set_embracing(emb);
     }
 
-    //qd.resize(0);
     qd = get_parameter("hole_quantum_density", "");
-    //for (int i = 0; i < qd.size(); i++)
-    //  _holes.add_quantum_density(qd[i]);
     _holes.add_quantum_density(qd);
     if (_holes.get_quantum_simulation() != NULL)
     {

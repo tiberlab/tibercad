@@ -422,13 +422,6 @@ SimulationInterface::solve(void) throw (SolveFailedException)
   {
     do_solve();
   }
-  //catch (PetscRuntimeError& e)
-  //{
-  //  ostringstream s;
-  //  s << "Control: Solve of " << get_name() << " failed." << endl <<
-  //    "    Cause: " << e.what() << " : " << e.get_reason();
-  //  throw SolveFailedException(s.str());
-  //}
   catch (runtime_error& e)
   {
     ostringstream s;
@@ -531,9 +524,9 @@ SimulationInterface::plot_regions(void)
   const Device& dev = get_environment().get_device();
 
   string suffix = get_control().get_filename_suffix();
-  string outdir = get_control().get_output_dir();
 
   DataOutput data_output(dev.get_mesh(), get_control().get_output_format());
+  data_output.set_output_directory(get_control().get_output_dir());
 
   // materials  output: for each simulation an output file with IDs of
   // physical regions activated for that simulation
@@ -550,7 +543,7 @@ SimulationInterface::plot_regions(void)
 
   if (data_names.size() > 0)
   {
-    string filename(outdir + "/" + get_name() + "_materials" + suffix);
+    string filename(get_name() + "_materials" + suffix);
     data_output.write_cell_data(filename, translated_data, data_names);
   }
 }
@@ -572,6 +565,7 @@ SimulationInterface::do_plot(void)
   vector<string> names;
 
   DataOutput data_output(dev.get_mesh(), get_control().get_output_format());
+  data_output.set_output_directory(outdir);
 
 
   
@@ -581,7 +575,7 @@ SimulationInterface::do_plot(void)
   get_nodal_results(get_control().get_plotvariables(), results, names);
   if (names.size() > 0)
   {
-    string filename(outdir + "/" + get_name() + "_nodal" + suffix);
+    string filename(get_name() + "_nodal" + suffix);
     data_output.write_nodal_data(filename, results, names);
   }
 
@@ -593,7 +587,7 @@ SimulationInterface::do_plot(void)
   get_elemental_results(get_control().get_plotvariables(), results, names);
   if (names.size() > 0)
   {
-    string filename(outdir + "/" + get_name() + "_elemental" + suffix);
+    string filename(get_name() + "_elemental" + suffix);
     data_output.write_cell_data(filename, results, names);
   }
 

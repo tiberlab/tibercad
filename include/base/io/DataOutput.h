@@ -56,6 +56,10 @@ class DataOutput
     static DataFormat tell_data_format(const std::string& format);
 
 
+    //! Set the output directory
+    void set_output_directory(const std::string& output_dir);
+
+
 
   private:
 
@@ -64,6 +68,9 @@ class DataOutput
 
     //! The file format
     unsigned int _format;
+
+    //! The output directory
+    std::string _output_dir;
 
 };
 

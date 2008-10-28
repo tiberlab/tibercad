@@ -56,18 +56,21 @@ DataOutput::write_nodal_data(const std::string& filename,
     const std::vector<Number>& data,
     const std::vector<std::string>& legend)
 {
+  std::string file(_output_dir);
+  file += "/" + filename;
+
   if (_format & TECPLOT)
-    TecplotIO(*_mesh).write_nodal_data(filename + ".plt", data, legend);
+    TecplotIO(*_mesh).write_nodal_data(file + ".plt", data, legend);
   if (_format & GRACE)
-    GraceIO(*_mesh).write_nodal_data(filename + ".dat", data, legend);
+    GraceIO(*_mesh).write_nodal_data(file + ".dat", data, legend);
   if (_format & GNUPLOT)
-    GnuPlotIO(*_mesh).write_nodal_data(filename + ".dat", data, legend);
+    GnuPlotIO(*_mesh).write_nodal_data(file + ".dat", data, legend);
   if (_format & VTK)
-    TiberVTKIO(*_mesh).write_nodal_data(filename + ".vtk", data, legend);
+    TiberVTKIO(*_mesh).write_nodal_data(file + ".vtk", data, legend);
   if (_format & GMSH)
-    GmshIO(*_mesh).write_nodal_data(filename + ".msh", data, legend);
+    GmshIO(*_mesh).write_nodal_data(file + ".msh", data, legend);
   if (_format & GMV)
-    GMVIO(*_mesh).write_nodal_data(filename + ".gmv", data, legend);
+    GMVIO(*_mesh).write_nodal_data(file + ".gmv", data, legend);
 }
 
 
@@ -79,16 +82,26 @@ DataOutput::write_cell_data(const std::string& filename,
     const std::vector<Number>& data,
     const std::vector<std::string>& legend)
 {
+  std::string file(_output_dir);
+  file += "/" + filename;
+
   if (_format & TECPLOT)
-    TecplotIO_cell(*_mesh).write_cell_data(filename + ".plt", data, legend);
+    TecplotIO_cell(*_mesh).write_cell_data(file + ".plt", data, legend);
   if (_format & GRACE)
-    GraceIO(*_mesh).write_elemental_data(filename + ".dat", data, legend);
+    GraceIO(*_mesh).write_elemental_data(file + ".dat", data, legend);
   if (_format & GNUPLOT)
     std::cout << "GnuPlot does not currently support cell data." << std::endl;
   if (_format & VTK)
-    TiberVTKIO(*_mesh).write_elemental_data(filename + ".vtk", data, legend);
+    TiberVTKIO(*_mesh).write_elemental_data(file + ".vtk", data, legend);
   if (_format & GMV)
-    GMVIO_cell(*_mesh).write_ascii_cell_data(filename + ".gmv", data, legend);
+    GMVIO_cell(*_mesh).write_ascii_cell_data(file + ".gmv", data, legend);
 }
 
 
+
+
+void
+DataOutput::set_output_directory(const std::string& output_dir)
+{
+  _output_dir = output_dir;
+}

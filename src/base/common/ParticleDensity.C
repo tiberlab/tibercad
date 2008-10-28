@@ -132,25 +132,6 @@ ParticleDensity::quantum_density(void)
   if (_quantum_density->is_solved())
     flag = _quantum_density->get_solution(_elem, _p, _density_id, _density);
 
-  /*
-  set<SimulationInterface*>::iterator it(_quantum_density.begin());
-  const set<SimulationInterface*>::iterator end(_quantum_density.end());
-
-  bool flag = false;
-  
-  _density = 0.0;
-  for ( ; it != end; ++it)
-    if ((*it)->is_solved())
-    {
-      double density;
-      if ((*it)->get_solution(_elem, _p, _density_id, density))
-      {
-        _density += density;
-        flag = true;
-      }
-    }
-  */  
-
   return flag;
 }
 
@@ -163,22 +144,6 @@ ParticleDensity::quantum_density_derivative(void)
 
   if (_quantum_density->is_solved())
     flag = _quantum_density->get_solution(_elem, _p, _density_id, _density);
-
-  /*
-  set<SimulationInterface*>::iterator it(_quantum_density.begin());
-  const set<SimulationInterface*>::iterator end(_quantum_density.end());
-
-  bool flag = false;
-  
-  _density_derivative = 0.0;
-  for ( ; it != end; ++it)
-    if ((*it)->is_solved())
-    {
-      double density;
-      if ((*it)->get_solution(_elem, _p, _density_id, density))
-        flag = true;
-    }
-  */
 
   return flag;
 }
@@ -202,6 +167,26 @@ ParticleDensity::calculate_density(void)
       default: // Boltzmann
         classical_density<TiberCad::BOLTZMANN>();
         break;
+    }
+  }
+  else if (_embracing != NULL)
+  {
+    // we need to do a mixing
+    double x = _embracing->get_mixing_coefficient(_elem, _p);
+    if (x < 1.0)
+    {
+      double dens = x * _density;
+      switch (_statistics)
+      {
+        case TiberCad::FERMIDIRAC:
+          classical_density<TiberCad::FERMIDIRAC>();
+          break;
+        default: // Boltzmann
+          classical_density<TiberCad::BOLTZMANN>();
+          break;
+      }
+      dens += (1.0 - x) * _density;
+      _density = dens;
     }
   }
 }
