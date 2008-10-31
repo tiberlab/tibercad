@@ -36,6 +36,7 @@ RelaxationMethod::do_solve(void)
   for (unsigned int it = 0; it < get_maximum_iterations(); it++)
   {
     *x_old = get_solution_vector();
+    x_old->close();
 
     
     double x_old_norm = x_old->l2_norm();
