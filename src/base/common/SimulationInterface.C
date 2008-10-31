@@ -1043,7 +1043,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 
   unsigned int np = p.size();
   if ((np == 0) || (ids.size() == 0) || (elem == NULL)) return false;
-  //  if (!is_solved()) return false;
+  if (!is_solved()) return false;
 
   values.resize(np);
 
