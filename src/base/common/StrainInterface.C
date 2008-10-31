@@ -66,7 +66,7 @@ StrainInterface::get_strain_data(const Elem* elem, Tensor2Sym& strain,
   strain = 0;
   polarization = 0;
 
-  if ((_simulation != NULL) && (_simulation->is_solved()))
+  if (_simulation != NULL)
   {
     std::map<ID, double> data;
     bool ok = _simulation->get_solution(elem, elem->centroid(),

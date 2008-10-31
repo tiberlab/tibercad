@@ -294,7 +294,6 @@ Embracing::plot(void)
   SimulationEnvironment& in = _inner->get_environment();
   const Mesh& mesh = in.get_mesh();
 
-  assert(_control != NULL);
   DataOutput data_output(mesh, (_inner->get_control()).get_output_format());
   data_output.set_output_directory((_inner->get_control()).get_output_dir());
 
