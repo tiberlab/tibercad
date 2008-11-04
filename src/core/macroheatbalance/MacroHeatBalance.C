@@ -144,11 +144,21 @@ void  MacroHeatBalance::do_solve()
     cout << "Thermal (name: " << get_name() << ")" << endl;
    double power_emitted = calculate_power_emitted();
    double power_dissipated_rstf = calculate_power_dissipated_rstf();
-    double power_dissipated = calculate_power_dissipated();
+  //double power_dissipated = calculate_power_dissipated();
+
+   double check = 100 - std::abs((power_emitted - power_dissipated_rstf)/(power_emitted));
+   if (power_emitted<1e-10)
+     check = 0;
      std::cout<<"  "<<std::endl;
-    std::cout<<"Power Emitted"   <<"          "<<power_emitted<<std::endl;
-    std::cout<<"Power Dissipated"<<"       "   <<power_dissipated<<std::endl;
-     std::cout<<"Power Dissipated rstf"<<"  "   <<power_dissipated_rstf<<std::endl;
+
+
+     //std::cout<<"Power Emitted"   <<"          "<<power_emitted<<std::endl;
+    //std::cout<<"Power Dissipated"<<"       "   <<power_dissipated<<std::endl;
+     //std::cout<<"Power Dissipated rstf"<<"  "   <<power_dissipated_rstf<<std::endl;
+  
+
+
+   std::cout<<"Energy Conservation:"<<"  "   <<check<<"  %"<<std::endl;
   std::cout<<"  "<<std::endl;
  
 }
@@ -1020,7 +1030,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
       unsigned int k = 0; 
 
       std::vector< std::map< ID, double > > jq_solution;
-      get_solution(elem,_node,JQ_var,jq_solution); 
+      get_solution_secure(elem,_node,JQ_var,jq_solution); 
  	
       double Pqx = jq_solution[0].find(JQX)->second;
       double Pqy = jq_solution[0].find(JQY)->second;
@@ -1325,7 +1335,7 @@ MacroHeatBalance::calculate_power_dissipated(void)
 
 	std::vector< std::map< ID, double > > jq_solution;
 	
-        get_solution(elem,q_point,JQ_var,jq_solution); 
+        get_solution_secure(elem,q_point,JQ_var,jq_solution); 
 
 	RealGradient P;
 	
@@ -1353,34 +1363,37 @@ MacroHeatBalance::calculate_power_dissipated(void)
 double
 MacroHeatBalance::calculate_power_dissipated_rstf(void)
 {
-
   // we only do something if we are on processor 0
   if (libMesh::processor_id() != 0)
-    return 0 ;
+    return 0;
 
- TiberLinearSystem& system = *my_system;
-
-  const SimulationEnvironment& env = get_environment();
-
-    const DofMap& dof_map = system.get_dof_map();
+  TiberLinearSystem& system = *my_system;
+  
+  const unsigned int  var = system.variable_number("T");
 
   const unsigned int dim = mesh->mesh_dimension();
 
+  DofMap& dof_map =  system.get_dof_map();
 
- // numeric ids corresponding to the variables
- const unsigned int  var = system.variable_number("T");
+  FEType fe_type = dof_map.variable_type(var);
+ 
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type)); 
+ 
+
+  libMeshEnums::Order integration_order;
+  if (dim == 1)
+    integration_order = libMeshEnums::CONSTANT;
+  else
+    integration_order =  myopts.integration_order;
+
+  AutoPtr<QBase> q_rule(QBase::build(
+				    myopts.quadrature_type, dim, integration_order));
+  SimulationEnvironment&  env= get_environment();
+
+  fe->attach_quadrature_rule(q_rule.get());
 
   std::vector<unsigned int> dof_indices;
 
-  FEType fe_type = system.variable_type(var);
-
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  AutoPtr<QBase> qrule(QBase::build(
-        myopts.quadrature_type, dim, myopts.integration_order));
-
-  fe->attach_quadrature_rule(qrule.get());
-
-  
   // Jacobian * quadrature weight at each integration point.   
   const vector<Real>& JxW = fe->get_JxW();
   
@@ -1409,7 +1422,22 @@ MacroHeatBalance::calculate_power_dissipated_rstf(void)
   {
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
-        
+
+    fe->reinit(elem); //centroid
+    ID subdomain = elem->subdomain_id();
+  
+    const Material* mat = _device->get_material(subdomain);
+	
+    HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
+    heat_model->set_element(elem);     
+    heat_model->set_side(-1);
+    heat_model->re_init();
+    std::vector<double> heat_source;
+    heat_model->get_total_heat_source(q_point,heat_source);
+
+    // get DOF indices
+    dof_map.dof_indices(elem, dof_indices,var);
+
     bool has_node = false;
     node_ids.resize(elem->n_nodes());
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
@@ -1420,23 +1448,22 @@ MacroHeatBalance::calculate_power_dissipated_rstf(void)
         has_node = true;
     }
 
+     
     // if the element has no node on a boundary,
     // we can go to the next element
     if (!has_node)
       continue;
-    
-    ID subdomain = elem->subdomain_id();
+  
 
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices, var);
 
-    fe->reinit(elem); //centroid
+   
         
-
      std::vector< std::map< ID, double > > jq_solution;
-     get_solution(elem,q_point,JQ_var,jq_solution);
+     get_solution_secure(elem,q_point,JQ_var,jq_solution);
 
-    for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
+    for (unsigned int qp = 0; qp < q_rule->n_points(); qp++)
     {
 
       unsigned int n_dofs = dof_indices.size();
@@ -1449,15 +1476,14 @@ MacroHeatBalance::calculate_power_dissipated_rstf(void)
       P(1) = jq_solution[qp].find(JQY)->second;
       P(2) = jq_solution[qp].find(JQZ)->second;
 
-      P *= JxW[qp];
-
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
 
         Boundary* boundary = node_ids[n];
         if (boundary != NULL)
         {
-          power_dissipated  += P * dphi[n][qp];
+	  power_dissipated  += JxW[qp] * (P * dphi[n][qp] + heat_source[qp] * phi[n][qp]);
+          //power_dissipated  += P * dphi[n][qp];
         }
 
       }
