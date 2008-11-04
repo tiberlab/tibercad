@@ -337,14 +337,14 @@ void Kspace::do_init()
       wedge = QUARTER;
       degeneracy_factor = 4.0;
       if (k_dim == 1)
-	throw  InitFailedException("Kspace: wedge " + wedge_type + "cannot be used with 1D k-space");
+	throw  InitFailedException("Kspace: wedge " + wedge_type + " cannot be used with 1D k-space");
     }
     else if (wedge_type == "eighth")
     {
       wedge = EIGHTH;
       degeneracy_factor = 8.0;
       if (k_dim != 3)
-	throw  InitFailedException("Kspace: wedge " + wedge_type + "cannot be used only with 3D k-space");
+	throw  InitFailedException("Kspace: wedge " + wedge_type + " cannot be used only with 3D k-space");
     }
     else 
     {

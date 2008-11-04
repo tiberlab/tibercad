@@ -11,6 +11,8 @@
 #include "mesh_data_elements.h"
 #include "equation_systems.h"
 
+#include "Messages.h"
+
 #include <iostream>
 
 using namespace std;
@@ -97,14 +99,11 @@ Device::setup_mesh(void)
 
 
   MeshInput::read_mesh(meshfile, dim, *_mesh, *_meshdata, *_boundary_nodes,
-                       _region_names, _boundary_region_names);
+                       _mesh_region_names, _boundary_region_names);
 
   MeshUtils::assign_subdomain_ids(*_mesh, *_meshdata);
 
   MeshUtils::get_subdomain_ids(*_mesh, _region_ids);
-  //for (set<ID>::iterator r = _region_ids.begin(); r != _region_ids.end(); ++r)
-  //  cerr << *r << " ";
-  //cerr << endl;
 
   /*
    * NOTE:
@@ -122,10 +121,12 @@ Device::setup_mesh(void)
 }
 
   
+
+
+
 void
 Device::init(void)
 {
-
 
   // init all materials
   MaterialMap::iterator it(_material_map.begin());
@@ -134,6 +135,9 @@ Device::init(void)
     (it->second)->init();
 
 }
+
+
+
 
 
 void
@@ -150,7 +154,7 @@ Device::set_material(Material* material, ID region_id)
     if (libMesh::n_processors() == 1)
     {
       ostringstream s;
-      s << "Device: physical region " << region_id <<
+      s << "Device: region " << region_id <<
         " does not exist in mesh file.";
       throw InitFailedException(s.str());
     }
@@ -158,27 +162,38 @@ Device::set_material(Material* material, ID region_id)
   if (_material_map.find(region_id) != _material_map.end())
   {
     ostringstream s;
-    s << "Device: trying to redefine physical region " << region_id << ".";
+    s << "Device: trying to redefine mesh region " << region_id << ".";
     throw InitFailedException(s.str());
   }
 
   _material_map[region_id] = material;
-  cout << "added material " << material->get_name()
-       << " for region number " << region_id
-       << " (" << get_region_name(region_id) << ")"
-       << endl << endl;
 }
 
 
 
 void
-Device::set_material(Material* material, const vector<ID>& region_ids)
+Device::set_material(Material* material, const vector<ID>& region_ids,
+  const string& region_name)
 {
   assert(material != NULL);
 
   for (unsigned int i = 0; i < region_ids.size(); ++i)
     set_material(material, region_ids[i]);
+
+  set_region_name(region_name, region_ids);
+
+  ostringstream os;
+  os << "Added material " << material->get_name()
+    << " for region " << region_name
+    << " (mesh regions " << region_ids[0];
+  for (unsigned int i = 1; i < region_ids.size(); ++i)
+    os << ", " << region_ids[i];
+  os << ")" << endl;
+  Messages::info(os.str());
 }
+
+
+
 
 
 Material*
@@ -233,8 +248,33 @@ Device::get_region_ids(const string& name, vector<ID>& ids) const
     for ( ; it != end; ++it)
       if (it->second == name)
         ids.push_back(it->first);
+
+    // as last resort w look in the mesh region list
+    if (ids.size() == 0)
+    {
+      map<ID, string>::const_iterator it(_mesh_region_names.begin());
+      const map<ID, string>::const_iterator end(_mesh_region_names.end());
+      for ( ; it != end; ++it)
+        if (it->second == name)
+          ids.push_back(it->first);
+    }
   }
 }
+
+
+
+void 
+Device::get_mesh_region_ids(const string& name, vector<ID>& ids) const
+{
+  ids.resize(0);
+
+  map<ID, string>::const_iterator it(_mesh_region_names.begin());
+  const map<ID, string>::const_iterator end(_mesh_region_names.end());
+  for ( ; it != end; ++it)
+    if (it->second == name)
+      ids.push_back(it->first);
+}
+
 
 
 

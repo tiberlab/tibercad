@@ -67,17 +67,6 @@ class Device
      */
     void init(void);
 
-  
-    //! Set a material for a physical region
-    /*!
-     * \c region_id is assumed to be a valid region number as given in the
-     * mesh.
-     *
-     * \param material a pointer to the material
-     * \param region_id the region number this material should belong to
-     */
-    void set_material(Material* material, ID region_id);
-  
     
     //! Set a material for a number of geometrical regions
     /*!
@@ -86,8 +75,10 @@ class Device
      *
      * \param material a pointer to the material
      * \param region_id the region numbers this material should belong to
+     * \param region_name the name to be assigned
      */
-    void set_material(Material* material, const std::vector<ID>& region_ids);
+    void set_material(Material* material, const std::vector<ID>& region_ids,
+        const std::string& region_name);
 
 
     //! Set an atomistic structure to be kept in structures map
@@ -171,18 +162,23 @@ class Device
 
     //! Get the region IDs of the region with name \c name
     /*!
-     * \c name can be the name of a region or of a cluster
+     * \c name can be the name of a physical region, of a cluster
+     * or of a mesh region
      */
     void get_region_ids(const std::string& name, std::vector<ID>& ids) const;
+
+
+    //! Get the region IDs of the mesh region with name \c name
+    /*!
+     * This looks only in the list of original mesh region names.
+     */
+    void get_mesh_region_ids(const std::string& name, std::vector<ID>& ids) const;
+
 
 
     //! Get the region IDs of the boundary region with name \c name
     void get_boundary_region_ids(const std::string& name,
         std::vector<ID>& ids) const;
-
-
-    //! Set the name for a region
-    void set_region_name(const std::string& name, const std::vector<ID>& ids);
 
 
     //! Set the name for a boundary region
@@ -221,6 +217,20 @@ class Device
      * for which a boundary condition is implied.
      */
     Device(void);
+  
+
+    //! Set a material for a physical region
+    /*!
+     * \param material a pointer to the material
+     * \param region_id the region number this material should belong to
+     * \throws {InitFailedException if \c region_id is invalid or already
+     * used.}
+     */
+    void set_material(Material* material, ID region_id);
+ 
+
+    //! Set the name for a physical region 
+    void set_region_name(const std::string& name, const std::vector<ID>& ids);
 
     
     //! Set options for this device
@@ -291,8 +301,12 @@ class Device
     std::set<ID> _region_ids;
   
 
-    //! A map that assigns region IDs to region names
+    //! A map that assigns physical region or cluster IDs to names
     std::map<ID, std::string> _region_names;
+  
+
+    //! A map containing the original mesh region names
+    std::map<ID, std::string> _mesh_region_names;
   
 
     //! A map that assigns boundary region IDs to boundary region names

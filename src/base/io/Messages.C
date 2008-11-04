@@ -17,10 +17,10 @@ namespace
 
 
 string
-Messages::_warning = string(yellow) + "Warning: " + string(white);
+Messages::_warning = string(yellow) + "Warning: " + string(normal);
 
 string
-Messages::_error   = string(red) + "ERROR  : " + string(white);
+Messages::_error   = string(red) + "ERROR  : " + string(normal);
 
 string
 Messages::_reset   = normal;

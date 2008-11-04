@@ -1,3 +1,6 @@
+2008-10-29 Auf der Maur
+	( ) implement ObjectStatus class
+
 2008-10-13 Auf der Maur
 	( ) in DriftDiffusion, put calculated currents into contacts
 	(DONE) implement Fowler-Nordheim for contacts

@@ -89,44 +89,35 @@ void
 Control::init(void) throw (InitFailedException, ModelErrorException)
 {
 
-  //try
-  //{
-    _database = new Database();
-    Material::set_database(*_database);
+  _database = new Database();
+  Material::set_database(*_database);
 
-    // create the device, simulations and models
-    create_device();
-    create_materials();
-    setup_clusters();
-    create_atomistic_structures();
-    setup_models();
+  // create the device, simulations and models
+  create_device();
+  create_materials();
+  setup_clusters();
+  create_atomistic_structures();
+  setup_models();
 
-    // initialize the device
-    _device->init();
+  // initialize the device
+  _device->init();
 
 
-    // initialize the simulation environments
-    EnvironmentMap::iterator envit(_simulation_environments.begin());
-    const EnvironmentMap::iterator envend(_simulation_environments.end());
-    for ( ; envit != envend; ++envit)
-      envit->second->init();
+  // initialize the simulation environments
+  EnvironmentMap::iterator envit(_simulation_environments.begin());
+  const EnvironmentMap::iterator envend(_simulation_environments.end());
+  for ( ; envit != envend; ++envit)
+    envit->second->init();
 
 
-    // initialize the simulations, but only if they are not initialized yet
-    // (the latter should not happen, however)
-    simulation_iterator simit(_simulations.begin());
-    const simulation_iterator simend(_simulations.end());
-    for ( ; simit != simend; ++simit)
-      if (!(*simit)->is_initialized())
-        (*simit)->init();
+  // initialize the simulations, but only if they are not initialized yet
+  // (the latter should not happen, however)
+  simulation_iterator simit(_simulations.begin());
+  const simulation_iterator simend(_simulations.end());
+  for ( ; simit != simend; ++simit)
+    if (!(*simit)->is_initialized())
+      (*simit)->init();
 
-  //}
-  //catch (runtime_error& e)
-  //{
-    //string msg("Control::init failed.\n    Cause: ");
-    //msg += e.what();
-    //throw InitFailedException(msg);
-  //}
 }
 
 
@@ -200,9 +191,10 @@ Control::create_device(void)
   // tell the device who controls it
   _device->set_control(this);
 
-  
-  cout << "Simulation temperature = " <<
-    SimulationOptions::temperature << " K" << endl << endl;
+  ostringstream os;
+  os << "Simulation temperature = " <<
+    SimulationOptions::temperature << " K" << endl;
+  Messages::info(os.str());
 
   
 #ifdef DEBUG
@@ -248,7 +240,7 @@ Control::create_materials(void)
     unsigned int n_ids = region_ids_str.size();
     // if no numbers are specified we try to get them from the region name
     if (n_ids == 0)
-      _device->get_region_ids(data.get_region_name(), region_ids);
+      _device->get_mesh_region_ids(data.get_region_name(), region_ids);
     else
     {
       vector<ID> tmp_id;
@@ -256,14 +248,12 @@ Control::create_materials(void)
       {
         // either it is a name or a number
         // try first name
-        _device->get_region_ids(region_ids_str[i], tmp_id);
+        _device->get_mesh_region_ids(region_ids_str[i], tmp_id);
         if (tmp_id.size() > 0)
           region_ids.insert(region_ids.end(), tmp_id.begin(), tmp_id.end());
         else
           region_ids.push_back(Utils::convert<unsigned int>(region_ids_str[i]));
       }
-
-      _device->set_region_name(data.get_region_name(), region_ids);
     }
     
 
@@ -277,7 +267,7 @@ Control::create_materials(void)
 
     const string& material = data.get_material_name();
     Material* mat = Material::create(material, data.get_options());
-    _device->set_material(mat, region_ids);
+    _device->set_material(mat, region_ids, data.get_region_name());
   }
   
 #ifdef DEBUG
@@ -375,7 +365,18 @@ Control::setup_clusters(void)
     }
 
     if (region_ids.size() > 0)
+    {
+      ostringstream os;
+      os << "Setting up Cluster \'" << data.get_region_name()
+        << "\' containing regions " << region_ids[0];
+      for (size_t i = 1; i < region_ids.size(); i++)
+        os << ", " << region_ids[i];
+      Messages::info(os.str());
+
       _device->set_cluster(data.get_region_name(), region_ids);
+    }
+    else
+      Messages::warning("Cluster \'" + data.get_region_name() + "\' is empty.");
   }
 }
 
@@ -783,11 +784,13 @@ Control::run_simulation(void) throw (SolveFailedException)
   vector<string> names;
   opts.get_option("solve", names);
 
-  cout << "We solve: ";
+  ostringstream os;
+  os << "We solve: ";
   unsigned int n = names.size();
   for (unsigned int i = 0; i < n; i++)
-    cout << names[i] << " ";
-  cout << endl;
+    os << names[i] << " ";
+  os << endl;
+  Messages::info(os.str());
 
   vector<SimulationInterface*> simulations(n);
   

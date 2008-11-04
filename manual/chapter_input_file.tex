@@ -126,7 +126,7 @@ set of these regions simply by the \textbf{Cluster} name.
 Each  \textbf{Region} block must be preceded by the keyword \char`\"{}\textbf{Region}\char`\"{}, followed by the  (single-word) name of the \textbf{TiberCAD} \textbf{Region}.
 %For an ISE-TCAD  mesh,
 The name  of  the \textbf{TiberCAD} \textbf{Region}   can  coincide with the   name  of a  mesh region, as  defined during the  modeling of the  device; in this case, if the  keyword  \textit{mesh\_regions} is  absent, the \textbf{TiberCAD} \textbf{Region} will be  associated to the   mesh region identified  by the name assigned to the \textbf{TiberCAD} \textbf{Region}.
-Otherwise,  the \textbf{TiberCAD} \textbf{Region} will be  associated to the   mesh region(s) specified by  the  keyword \textit{mesh\_regions}.
+Otherwise,  the \textbf{TiberCAD} \textbf{Region} will be  associated to the   mesh regions specified by  the  keyword \textit{mesh\_regions}.
 
 \begin{verbatim}
    Region QWell
@@ -184,7 +184,7 @@ of the  \textbf{Cluster}.
      mesh_regions    = (3,4,5)
    }
 \end{verbatim}
-\textit{mesh\_regions} (mandatory): list of the physical regions (region ID(s) or  physical names),  as  specified in the meshing  program,
+\textit{mesh\_regions} (mandatory): list of physical regions (region IDs or  physical names) or \TiberCAD{} region names,  as  specified in the meshing  program,
 %(for GMSH) as  specified in the meshing  program , or ISE-TCAD name(s))
 to  be  grouped in the  cluster.
 

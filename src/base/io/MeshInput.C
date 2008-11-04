@@ -3,6 +3,7 @@
 #include "MeshInput.h"
 #include "ReadISEGrid.h"
 #include "Read_MSH.h"
+#include "InitFailedException.h"
 
 #include "mesh.h"
 #include "mesh_data_elements.h"
@@ -14,9 +15,6 @@ using namespace std;
 
 
 
-// void MeshInput::read_mesh(const string& file_name,unsigned int sim_dim,
-//                           Mesh& mesh, MeshData_elements& mesh_data,
-//                           map<unsigned int, vector<unsigned int> >& BoundCond  )
 
 void MeshInput::read_mesh(const string& file_name,unsigned int sim_dim,
                           Mesh& mesh, MeshData_elements& mesh_data,
@@ -30,10 +28,9 @@ void MeshInput::read_mesh(const string& file_name,unsigned int sim_dim,
      
   if (!in.good())
   {
-    cerr << "ERROR: cannot locate specified mesh file:\n\t"
-              << file_name
-              << endl;
-    error();
+    ostringstream os;
+    os << "Cannot locate specified mesh file: " << file_name;
+    throw InitFailedException(os.str());
   }
 
   if  ( file_name.rfind(".grd") < file_name.size() )

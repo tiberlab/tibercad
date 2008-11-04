@@ -1,7 +1,6 @@
 #include "ReadISEGrid.h"
 
 
-//ReadISEGrid::ReadISEGrid(const char* file_name)
 ReadISEGrid::ReadISEGrid(const char* file_name , Mesh& mesh, MeshData_elements&  mesh_data )
 {
 	

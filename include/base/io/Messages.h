@@ -8,6 +8,9 @@
 #include <string>
 #include <iostream>
 
+#ifdef error
+# undef error
+#endif
 
 //! Print messages to standard out or standard error
 /*!
