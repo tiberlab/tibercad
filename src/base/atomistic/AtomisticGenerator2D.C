@@ -76,7 +76,7 @@ void
 
 	make_supercell( l1, l2, l3);
 
-	print_basis(_super_basis, "supercell.xyz");
+	//print_basis(_super_basis, "supercell.xyz");
  }
 
 
@@ -84,7 +84,7 @@ void
 void AtomisticGenerator2D::passivate(void){
 
   std::vector<Atom> periodic_basis, hydrogens;
-  int i;
+  unsigned int i;
   Atom tmp;
   unsigned int ** bond_map_periodic;
   Tensor1 z_period;
@@ -109,8 +109,9 @@ void AtomisticGenerator2D::passivate(void){
   }
 
   //bond_map_periodic = bond_map_gen(&(periodic_basis));
-  bond_map_periodic = bond_map_gen(periodic_basis);
-  passivate_cluster(periodic_basis, bond_map_periodic);
+  //bond_map_periodic = bond_map_gen(periodic_basis);
+  if (_bondmapobject != NULL) delete _bondmapobject;
+  passivate_cluster(periodic_basis);
 
   _structure_basis.clear();
 
@@ -122,9 +123,4 @@ void AtomisticGenerator2D::passivate(void){
 
 };
 
-//void AtomisticGenerator2D::passivate(){
-//
-//passivate_cluster(_structure_basis);
-//
-// }
 

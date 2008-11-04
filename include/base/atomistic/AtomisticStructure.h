@@ -10,6 +10,8 @@
 #include "getpot.h"
 #include "Atom.h"
 
+//forward declaration
+class BondMap;
 
 //! Contains all needed data for an atomic structure
 /*!
@@ -55,7 +57,7 @@ public:
   const std::set<ID>& get_IDset(void);
 
    //! Set the device we're working with
-  void set_device(Device* device);
+  void set_device(Device* const device);
 
   //! Get Device reference
   Device*  get_device(void);
@@ -108,7 +110,14 @@ public:
 
   void set_atom_types(const std::set<std::string>& types);
 
+  //! Set Bond Map pointer
+  void set_bondmap(BondMap* bondmap);
+
+
 private:
+
+  //! Bond Map object pointer
+  BondMap* _bondmap;
 
   //! Set the model options
   void set_options(const ModelOptions& options);
@@ -117,7 +126,7 @@ private:
   void read_structure(const std::string& path);
 
   //! Number of atoms in structure
-  int N_atoms;
+  unsigned int N_atoms;
 
   //! Number of species
   int N_types;
@@ -212,10 +221,16 @@ double* AtomisticStructure::get_periodicity_vectors(void){
 
 
 inline
-Device* AtomisticStructure::get_device(void){
+Device* AtomisticStructure::get_device(void)
+{
   return _device;
 }
 
+inline
+void AtomisticStructure::set_device(Device* const device)
+{
+ _device = &(*device);
+}
 
 
 inline
@@ -233,5 +248,10 @@ AtomisticStructure::get_IDset(void)
   return _IDset;
 }
 
+inline
+void AtomisticStructure::set_bondmap(BondMap* bondmap)
+{
+  _bondmap = bondmap;
+}
 
 #endif // _ATOMISTICSTRUCTURE_H_

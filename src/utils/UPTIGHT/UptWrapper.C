@@ -29,10 +29,10 @@ UptWrapper* UptWrapper::create()
 
 
 
-//!Assign simulation parameters to DFTB+ instance
-void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath, 
-                             char *gen_filename, char *gen_outname, int max_n_n, 
-                             int harrison_flag, int relat_flag, int potential_flag, 
+//!Assign simulation parameters to UPT instance
+void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath,
+                             char *gen_filename, char *gen_outname, int max_n_n,
+                             int harrison_flag, int relat_flag, int potential_flag,
                              int optmat_flag, int poldir) {
 
   f77_upt_fillbasicparameters(_handler, verbose_lev, databasePath, workPath, gen_filename,
@@ -40,7 +40,7 @@ void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath,
                                 potential_flag, optmat_flag, poldir);
 
 
-} 
+}
 
 
 
@@ -72,7 +72,7 @@ void UptWrapper::compute_H () {
 
 //! Lanczos diagonalization
 void UptWrapper::lanczos_diag (int n_vb, int n_cb, double guess_vb, double guess_cb,
-                                int min_iter, int long_iter, int max_iter, 
+                                int min_iter, int long_iter, int max_iter,
 				double fast_tol, double long_tol, double ort_tol) {
 
   f77_upt_lanczosdiag (_handler, n_vb, n_cb, guess_vb, guess_cb, min_iter, long_iter,

@@ -19,6 +19,7 @@
 #include "OpticsKP.h"
 #include "QuantumDispersion.h"
 #include "Dftb.h"
+#include "EmpiricalTightBinding.h"
 #include "OptRecombinSpectrum.h"
 #include "Poisson.h"
 #include "TunnelingCurrent.h"
@@ -138,6 +139,8 @@ SimulationInterface::create(const string& type,
     else if (type_name == "tightbinding")
       sim = Dftb::create();
 #endif
+    else if (type_name == "etb")
+      sim = EmpiricalTightBinding::create();
     else if (type_name == "opticalspectrum")
       sim = OptRecombinSpectrum::create();
     else if (type_name == "poisson")
@@ -145,7 +148,7 @@ SimulationInterface::create(const string& type,
     else if (type_name == "maxwell")
       sim = MaxwellEquations::create();
     else if (type_name == "phonondispersion")
-      sim = PhononDispersion::create(); 
+      sim = PhononDispersion::create();
 
   }
 
@@ -247,10 +250,10 @@ SimulationInterface::init(void) throw (InitFailedException)
       plot_regions();
     }
 
-    
+
     _verbosity = get_options().get_option("verbose", _verbosity);
     do_init();
-    
+
   }
 
   _is_initialized = true;
@@ -261,7 +264,7 @@ SimulationInterface::init(void) throw (InitFailedException)
 
   if (verbose() > 0)
   {
-    cout << endl << 
+    cout << endl <<
       ">>================================================================<<"
       << endl << "Simulation options for " << get_name() << " (" <<
       get_default_name() << ")"
@@ -271,7 +274,7 @@ SimulationInterface::init(void) throw (InitFailedException)
       << endl << endl;
     do_print_info();
     cout << endl;
-    
+
     set<string> names;
     get_environment().get_region_names(names);
     for (set<string>::const_iterator it(names.begin()); it != names.end(); ++it)
@@ -284,13 +287,13 @@ SimulationInterface::init(void) throw (InitFailedException)
         dev.get_material(ids[0])->get_model(get_id());
       if (mod != NULL)
       {
-        cout << "  ** Model details (region " << *it << ", " << 
+        cout << "  ** Model details (region " << *it << ", " <<
           dev.get_material(ids[0])->get_name() << "):" << endl;
         mod->print_info();
         cout << endl;
       }
     }
-    
+
     cout << endl <<
       ">>================================================================<<"
       << endl << endl;
@@ -376,9 +379,9 @@ SimulationInterface::get_equation_systems(void) const
 
 
 void
-SimulationInterface::solve_equilibrium(void) throw (SolveFailedException) 
+SimulationInterface::solve_equilibrium(void) throw (SolveFailedException)
 {
- 
+
   if (!_equilibrium_is_solved)
   {
 
@@ -405,9 +408,9 @@ SimulationInterface::solve_equilibrium(void) throw (SolveFailedException)
 
 
 void
-SimulationInterface::solve(void) throw (SolveFailedException) 
+SimulationInterface::solve(void) throw (SolveFailedException)
 {
- 
+
 
   PerfLog perflog(get_name() + ": solve", false);
   perflog.start_event("solve");
@@ -436,7 +439,7 @@ SimulationInterface::solve(void) throw (SolveFailedException)
   }
 
   _is_solved = true;
-  
+
   perflog.stop_event("solve");
 }
 
@@ -474,7 +477,7 @@ SimulationInterface::create_boundary_model(const ModelOptions& options) const
 }
 
 
-      
+
 PhysicalModel*
 SimulationInterface::create_physical_model(const ModelOptions& options,
     const Material* mat) const
@@ -482,7 +485,7 @@ SimulationInterface::create_physical_model(const ModelOptions& options,
 {
   ignore_unused_variable(options);
   ignore_unused_variable(mat);
-  
+
   return NULL;
 }
 
@@ -511,7 +514,7 @@ SimulationInterface::plot(void)
 
   do_plot();
 }
-  
+
 
 
 
@@ -536,7 +539,7 @@ SimulationInterface::plot_regions(void)
   std::vector<Number> translated_data;
   std::vector<std::string> data_names;
 
-  (dev.get_meshdata())->activate(); 
+  (dev.get_meshdata())->activate();
   (dev.get_meshdata())->translate_elem_data(dev.get_mesh(),
                                             translated_data,
                                             data_names);
@@ -568,8 +571,8 @@ SimulationInterface::do_plot(void)
   data_output.set_output_directory(outdir);
 
 
-  
-  // 
+
+  //
   // nodal values
   //
   get_nodal_results(get_control().get_plotvariables(), results, names);
@@ -593,7 +596,7 @@ SimulationInterface::do_plot(void)
 
 
 
-  // 
+  //
   // integrated properties
   //
   vector<string> description;
@@ -612,9 +615,9 @@ SimulationInterface::do_plot(void)
       for (unsigned int i = 0; i < description.size(); i++)
         file << "#    * " << description[i] << endl;
       file << "#" << endl;
-      
+
       build_integrated_quantities(get_control().get_plotvariables(), results);
-      
+
       unsigned int nn = names.size();
       unsigned int nr = results.size();
 
@@ -683,7 +686,7 @@ SimulationInterface::do_remember_current_solution(ID id)
 void
 SimulationInterface::do_set_to_remembered_solution(ID id)
 {
-  
+
   map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
   map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
 
@@ -696,7 +699,7 @@ SimulationInterface::do_set_to_remembered_solution(ID id)
 void
 SimulationInterface::do_delete_remembered_solution(ID id)
 {
-  
+
   map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
   map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
   if (it != end)
@@ -783,7 +786,7 @@ SimulationInterface::do_scale_solution(double factor)
   if (has_solution_vector())
     get_solution_vector().scale(factor);
 }
-  
+
 
 
 
@@ -846,7 +849,7 @@ SimulationInterface::build_finite_element(unsigned int dim, FEType type,
     fe = NULL;
   }
   assert(fe != NULL);
-  
+
   return AutoPtr<FEBase>(fe);
 }
 
@@ -865,14 +868,14 @@ SimulationInterface::get_elemental_results(
 
     unsigned int n = get_environment().get_mesh().n_active_elem();
 
-   
+
 
     if (results.size() != n * legend.size())
     {
       ostringstream s;
       s << "SimulationInterface::get_elemental_results: simulation "
         << this->get_name() << " returned broken elemental results.";
-      throw runtime_error(s.str()); 
+      throw runtime_error(s.str());
     }
   }
 }
@@ -894,7 +897,7 @@ SimulationInterface::get_nodal_results(const std::set<std::string>& variables,
       ostringstream s;
       s << "SimulationInterface::get_nodal_results: simulation "
         << this->get_name() << " returned broken nodal results.";
-      throw runtime_error(s.str()); 
+      throw runtime_error(s.str());
     }
   }
 }
@@ -924,7 +927,7 @@ SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
 
   if ((ids.size() == 0) || (elem == NULL)) return false;
   if (!is_solved()) return false;
-  
+
   SimulationEnvironment& env = get_environment();
 
   const Elem* el = elem;
@@ -949,7 +952,7 @@ SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
       vector<Point> p(nn);
       for (int i = 0; i < nn; i++)
         p[i] = elem->point(i);
-      
+
       values.resize(nn);
       get_solution_secure(elem, p, ids, values);
     }
@@ -1005,7 +1008,7 @@ SimulationInterface::get_solution(const Elem* elem, const Point& p,
   vector<map<ID, double> > vals(1);
 
   bool flag = get_solution(elem, points, ids, vals);
- 
+
   if (flag)
     values = vals[0];
 
@@ -1038,7 +1041,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
                                   const set<ID>& ids,
                                   vector<map<ID, double> >& values)
 {
-  
+
   bool flag = true;
 
   unsigned int np = p.size();
@@ -1051,10 +1054,10 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
   const Elem* el = elem;
 
   SimulationEnvironment& env = get_environment();
-  
+
   // check if elem is an active element of the simulation
   if (!env.contains_element(elem))
-  { 
+  {
     // do we have a parent element in the list?
     const Elem* parent = elem->parent();
 
@@ -1080,7 +1083,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
       if (env.contains_element(elem_i))
         elem_list.insert(elem_i);
     }
- 
+
     for (unsigned int i = 0; i < np; i++)
     {
       set<const Elem*>::iterator el_it = elem_list.begin();
@@ -1098,8 +1101,8 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
       if (el_it == el_end)
         flag = false;
     }
-  } 
- 
+  }
+
 
   return flag;
 }
@@ -1114,7 +1117,7 @@ SimulationInterface::get_solution(const Elem* elem, ID id, vector<double>& value
   values.resize(elem->n_nodes());
 
   vector<map<ID, double> > vals;
-  
+
   bool flag = get_solution(elem, ids, vals);
 
   if (flag && (vals[0].size() != 0))
@@ -1141,7 +1144,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
   values.resize(p.size());
 
   vector<map<ID, double> > vals;
-  
+
   bool flag = get_solution(elem, p, ids, vals);
 
   if (flag && (vals[0].size() != 0))
@@ -1168,7 +1171,7 @@ SimulationInterface::get_solver_options(void)
 
   return it->second;
 }
-                   
+
 
 
 Embracing*

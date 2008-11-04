@@ -41,13 +41,13 @@ public:
   //! Initialize structure informations
   void do_init();
 
- static AtomisticGenerator* create(AtomisticStructure* const as, unsigned int dimension);
+  static AtomisticGenerator* create(AtomisticStructure* const as, unsigned int dimension);
 
-   //! Tolerance defined internally for casting and comparison
+  //! Tolerance defined internally for casting and comparison
   static const double tol;
 
   //! Scaling value respect to TiberCAD units (usually Amstrong instead of micron)
-  static const double scale;
+  double scale;
 
   //! Set primitive vectors, depending on lattice name
   void set_lattice_type(const std::string lattice_name);
@@ -55,18 +55,18 @@ public:
   //Print atom_basis in xyz file (for debugging)
   void print_basis(std::vector<Atom> &basis, const std::string filename);
 
+
 protected:
 
-
- //lattice constants
+  //lattice constants
   double _lattice_constant[3];
 
   //! Change atom species according to regions
   void cut_and_change_specie(std::string preserve);
 
-  //! Fast bond map generation, suitable for both
-   unsigned int** fast_bond_map(const std::vector<Atom> &basis,
-		   Tensor1& edge_min, Tensor1& edge_max, Tensor2Gen& period);
+  //  //! Fast bond map generation, suitable for both
+  //   unsigned int** fast_bond_map(const std::vector<Atom> &basis,
+  //		   Tensor1& edge_min, Tensor1& edge_max, Tensor2Gen& period);
 
   //! Primitive vectors in real space, stored by columns in a 3x3 matrix
   Tensor2Gen _prim_vec;
@@ -115,19 +115,22 @@ protected:
   //! An internal instance of BondMap, to make passivation and final bond map
   BondMap* _bondmapobject;
 
+
   //! Missing super_conv (vector of conventional cells edges).
   //!If it will be needed remember to uncomment proper lines in make_supercell!!!!!!!!!!!!!!!!
 
 
- //Bond map generation
-  unsigned int **   bond_map_gen(std::vector<Atom> &basis);
+  //Bond map generation
+  void bond_map_gen(std::vector<Atom> &basis);
+
+
 
   // Build cutoff distancies map
   void set_cutoff();
 
 
   //Passivation routine for bulk structures (periodicization is achieved in derived classes, in hydrogenation routine)
-  void passivate_cluster(std::vector<Atom> &basis, unsigned int** bond_map = NULL);
+  void passivate_cluster(std::vector<Atom> &basis);
 
 
   //! Real passivation routine (implemented in derived classes, it takes in account periodicity)

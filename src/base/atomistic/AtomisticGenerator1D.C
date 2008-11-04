@@ -1,6 +1,7 @@
 #include "AtomisticGenerator1D.h"
 #include "AtomisticStructure.h"
 #include "mesh.h"
+#include "BondMap.h"
 
 
 
@@ -9,19 +10,23 @@ AtomisticGenerator1D*
 AtomisticGenerator1D::create(AtomisticStructure* const as)
 {
   AtomisticGenerator1D* ag =  NULL;
+  std::cout << "I crate you 1D!!" << std::endl;
   ag = new AtomisticGenerator1D(as);
+ std::cout << "done" << std::endl;
   return ag;
 }
 
 
 AtomisticGenerator1D::AtomisticGenerator1D(AtomisticStructure* const as)
 {
+std::cout << "start constructor" << std::endl;
   _dim = 1;
                    _as = as;
 	_rotation(1,1) = 1.0; _rotation(1,2) = 0.0; _rotation(1,3) = 0.0; _rotation(2,1) = 0.0; _rotation(2,2) = 1.0;
 	_rotation(2,3) = 0.0; _rotation(3,1) = 0.0; _rotation(3,2) = 0.0; _rotation(3,3) = 1.0;
 
 	_lattice_constant[0] = 0.0; _lattice_constant[1] = 0.0; _lattice_constant[2] = 0.0;
+std::cout << "end constructor" << std::endl;
 }
 
 
@@ -39,7 +44,7 @@ AtomisticGenerator1D::~AtomisticGenerator1D(void){};
 	 make_conv_cell();
 	 make_conv_basis();
 
-	 unsigned int dimension = _as->get_device()->get_mesh().mesh_dimension();
+	 //unsigned int dimension = _as->get_device()->get_mesh().mesh_dimension();
 
 	 //Check edges of segment for building structure
 	 //MeshBase::node_iterator nd = _as->get_device()->get_mesh().nodes_begin();
@@ -89,9 +94,8 @@ AtomisticGenerator1D::~AtomisticGenerator1D(void){};
 void AtomisticGenerator1D::passivate(){
 
   std::vector<Atom> periodic_basis;
-  int i,j,k;
+  unsigned int i,j,k;
   Atom tmp;
-  unsigned int ** bond_map_periodic;
   Tensor1 y_period, z_period;
 
   y_period(1) = _period(1,2); y_period(2) = _period(2,2); y_period(3) = _period(3,2);
@@ -119,8 +123,9 @@ void AtomisticGenerator1D::passivate(){
   }
 
   //print_basis(periodic_basis, "unpassivated_periodic.xyz");
-  bond_map_periodic = bond_map_gen(periodic_basis);
-  passivate_cluster(periodic_basis, bond_map_periodic);
+  //bond_map_periodic = bond_map_gen(periodic_basis);
+  if (_bondmapobject != NULL) delete _bondmapobject;
+  passivate_cluster(periodic_basis);
 
   _structure_basis.clear();
 
