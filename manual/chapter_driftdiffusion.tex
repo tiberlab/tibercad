@@ -141,8 +141,7 @@ There can be more than one recombination model.
 This section describes the currently available generation/recombination models.
 
 \subsubsection{Shockley-Read-Hall (SRH) recombination}
-The SRH recombination model can be enabled in the input file as shown in~\inputref{dd:srh}
-\begin{inputfile}
+The SRH recombination model can be enabled in the input file by
 \begin{verbatim}
 physical_model recombination
 {
@@ -150,9 +149,6 @@ physical_model recombination
   ...
 }
 \end{verbatim}
-\caption{Declaration of SRH recombination model}
-\label{dd:srh}
-\end{inputfile}
 
 SRH recombination is defined as follows:
 \begin{equation}
@@ -199,7 +195,7 @@ $E^*$ & \texttt{E\_t}
 
 
 \subsubsection{Direct (radiative) recombination}
-The direct recombination model can be enabled in the input file by specifying
+The direct recombination model can be enabled in the input file by 
 \begin{verbatim}
 physical_model recombination
 {
@@ -212,15 +208,42 @@ Direct recombination is modeled as follows:
 \begin{equation}
 R_{direct} = C(np - n_i^2)
 \end{equation}
-The material data file and the input file use the same keyword \texttt{C} for the parameter $C$.
+The material data file and the input file use the same keyword \keyword{C} for the parameter $C$.
 The database value can be overridden from the input file as described for SRH recombination.
+
+
+
+
+\subsubsection{Auger recombination}
+The Auger recombination model can be enabled in the input file by
+\begin{verbatim}
+physical_model recombination
+{
+  model = auger
+  ...
+}
+\end{verbatim}
+
+Auger recombination is modeled by the following equation
+\begin{equation}
+R_{auger} = (C_nn + C_pp)(np - n_i^2)
+\end{equation}
+with temperature dependent parameters
+\[
+C_{\{n,p\}}  =  \left(A + B\frac{T}{T_0} + C\left(\frac{T}{T_0}\right)^2\right)\left(1 + H e^{-\{n,p\}/N_0}\right)
+\]
+The parameters $A, B, C, H$ and $N_0$ are taken exclusively from the database.
+They are different for $C_n$ and $C_p$.
+The calculated values for $C_n$ and $C_p$ can be overridden from the input file by specifying values for the keywords \keyword{Cn} and \keyword{Cp}.
+
+
+
 
 \subsection{Thermoelectric power models}
 
 
 The thermoelectric power models are the same for electrons and holes.
-The keywords is \texttt{thermoelectric\_power}, i.e
-
+The keyword is \texttt{thermoelectric\_power}, i.e
 \begin{verbatim}
 physical_model thermoelectric_power
 {
@@ -442,7 +465,7 @@ Two modes are possible:
 
 
 \section{\texttt{Physics} section}
-\label{Drift:diff:physics}
+\label{Driftdiff:physics}
 Options for controlling the drift-diffusion semiconductor models can be specified in the \texttt{Physics} section.
 The corresponding paramaters are given in table~\ref{table:dd_common}.
 \begin{table}[htb]
@@ -450,22 +473,23 @@ The corresponding paramaters are given in table~\ref{table:dd_common}.
 \begin{tabular}{l||p{2.5cm}|p{6cm}}
 \textit{keyword} & \textit{possible values} & \textit{description} \\
 \hline \hline
-\texttt{model} & (see following subsections) & the model to use for the description of the conduction and valence band properties\\
-\texttt{statistics} & \texttt{B} $\vert$ \texttt{FD} & Boltzmann (default) or
+\keyword{model} & (see following subsections) & the model to use for the description of the conduction and valence band properties\\
+\keyword{statistics} & \texttt{B} $\vert$ \texttt{FD} & Boltzmann (default) or
 Fermi-Dirac statistics \\
-\texttt{strain\_simulation} & \textsl{name} & the strain simulation to be used \\
-\texttt{thermal\_simulation} & \textsl{name} & the thermal simulation to be used \\
-\texttt{electron\_quantum\_density} & \textsl{name} & the quantum density simulation to be used for the electron density \\
-\texttt{hole\_quantum\_density} & \textsl{name} & the quantum density simulation to be used for the hole density
+\keyword{strain\_simulation} & \textsl{name} & the strain simulation to be used \\
+\keyword{thermal\_simulation} & \textsl{name} & the thermal simulation to be used \\
+\keyword{electron\_quantum\_density} & \textsl{name} & the quantum density simulation to be used for the electron density \\
+\keyword{hole\_quantum\_density} & \textsl{name} & the quantum density simulation to be used for the hole density
 \end{tabular}
 \caption{Common options for the drift-diffusion semiconductor models}
 \label{table:dd_common}
 \end{table}
-When \texttt{model} is not specified, the default semiconductor model based on bulk $\mathbf{k}\cdot\mathbf{p}$ theory is used.
+When \keyword{model} is not specified, the default semiconductor model based on bulk $\mathbf{k}\cdot\mathbf{p}$ theory is used.
 
-The \texttt{electron\_quantum\_density} and \texttt{hole\_quantum\_density} will use the particle densities calculated from the corresponding \texttt{quantum\_density} simulation.
+The \keyword{electron\_quantum\_density} and \keyword{hole\_quantum\_density} will use the particle densities calculated from the corresponding \texttt{quantum\_density} simulation.
 In regions where no quantum density is available, the classical density will be used.
-The \texttt{electron\_quantum\_density} and \texttt{hole\_quantum\_quantum\_density} keywords can be used also in the \Region{} sections to be able to use different quantum density simulations in different regions.
+The \keyword{electron\_quantum\_density} and \keyword{hole\_quantum\_quantum\_density} keywords can be used also in the \Region{} sections to be able to use different quantum density simulations in different regions.
+For further options regarding selfconsistent Schr\"odinger-Poisson/Drift-Diffusion calculations see Sec.~\ref{DD:schrpoiss}.
 
 The \keyword{strain\_simulation} option is used to specify the simulation that provides strain in the case of strained systems.
 If it is omitted, an unstrained system is assumed for the drift-diffusion calculation.
@@ -484,10 +508,10 @@ The corresponding keywords are given in table~\ref{table:simple_sc}.
 \begin{tabular}{l||l}
 \textit{keyword} & \textit{description} \\
 \hline \hline
-\texttt{Ec} & conduction band edge (eV) \\
-\texttt{Ev} & valence band edge (eV) \\
-\texttt{m\_dos\_e} & conduction band effective DOS mass (m$_e$) \\
-\texttt{m\_dos\_h} & valence band effective DOS mass (m$_e$) \\
+\keyword{Ec} & conduction band edge (eV) \\
+\keyword{Ev} & valence band edge (eV) \\
+\keyword{m\_dos\_e} & conduction band effective DOS mass (m$_e$) \\
+\keyword{m\_dos\_h} & valence band effective DOS mass (m$_e$) \\
 \end{tabular}
 \caption{Parameters for the simple semiconductor model}
 \label{table:simple_sc}
@@ -500,7 +524,31 @@ The default semiconductor model uses a bulk $\mathbf{k}\cdot\mathbf{p}$ model to
 It can be chosen explicitly by \texttt{model = default}.
 The model reads all needed parameters from the material data file.
 
-The band parameters are calculated considering locally strain and lattice temperature as obtained from the corresponding simulations specified using the \texttt{strain\_simulation} and \texttt{thermal\_simulation} keywords.
+The band parameters are calculated considering locally strain and lattice temperature as obtained from the corresponding simulations specified using the \keyword{strain\_simulation} and \keyword{thermal\_simulation} keywords.
+
+
+\subsection{Special options for Schr\"odinger-Poisson calculations}
+\label{DD:schrpoiss}
+\TiberCAD{} is able to do selfconsistent Schr\"odinger-Poisson or Schr\"odinger-Drift-Diffusion calculations.
+For this purpose, \keyword{electron\_quantum\_density} or \keyword{hole\_quantum\_density} has to be specified for at least one region, and a selfconsistent simulation should be defined in the \Selfconsistent{} block.
+The following options -- to be specified in the \Physics{} section -- control the behaviour of the selfconsistent simulation.
+\begin{description}
+\item[\keyword{use\_density\_predictor =} \Unit{bool}] When set to \texttt{true}, a predictor-corrector scheme will be adopted in the selfconsistent cycle.
+The Poisson/Drift-Diffusion solver does not just take the particle densities as given by the Schr\"odinger calculation, but it will assume a dependency of the density on the potentials of the form
+\begin{equation}
+\rho(\varphi, \phi_n, \phi_p) = \frac{\rho_{\mathrm{quantum}}(\varphi^0, \phi_n^0, \phi_p^0)}{\rho_{\mathrm{classical}}(\varphi^0, \phi_n^0, \phi_p^0)}\rho_{\mathrm{classical}}(\varphi, \phi_n, \phi_p)
+\end{equation}
+where $(\varphi^0, \phi_n^0, \phi_p^0)$ are the potentials for which the quantum density was calculated.
+\keyword{use\_density\_predictor = true} is the preferred method and is therefore the default. 
+
+\item[\keyword{embracing\_length =} \Unit{double}] When the domain of the quantum simulation is smaller than the domain of the full simulation, the boundary conditions for the Schr\"odinger equation will disturb the transfer from classical to quantum density.
+By defining an embracing region of a certain extension (specified in meters), a gradual transition from classical to quantum density will be done instead of an abrupt one, using as effective density $\rho = x\cdot\rho_{\mathrm{quantum}} + (1-x)\cdot\rho_{\mathrm{classical}}$. The default is no embracing region at all (zero extension).
+
+\item[\keyword{plot\_embracing\_regions =} \Unit{bool}] Whereas the automatic creation of the embracing region in 1D is a very simple task, it is a more difficult one in higher dimensions.
+By setting this flag to \texttt{true}, the embracing region and the mixing coefficient $x$ will be plotted for a visual control of the quality of the embracing region.
+The default is \texttt{false}.
+
+\end{description}
 
 
 
