@@ -18,7 +18,7 @@ AugerRecombination::read_database(void)
   Database& db = get_database();
   db.set_section("recombination/auger");
 
-  std::vector<double> data(2);
+  std::vector<double> data;
   if (db.has_variable("A"))
   {
     db.get("A", data);

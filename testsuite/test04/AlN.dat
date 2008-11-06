@@ -60,10 +60,8 @@ Pz = -0.09
 
 # mobility
 [mobility/constant]
-mu_max_e = 300.0
-exponent_e = 1
-mu_max_h = 14.0
-exponent_h = 2.1
+mu_max = (300.0, 14.0)
+exponent = (1, 2.1)
 
 # doping dependent
 [mobility/doping_dependent]

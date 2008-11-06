@@ -79,10 +79,8 @@ e14 = -0.16
 
 # mobility
 [mobility/constant]
-mu_max_e = 8500.0
-exponent_e = 1
-mu_max_h = 400.0
-exponent_h = 2.1
+mu_max = (8500.0, 400.0)
+exponent = (1.0, 2.1)
 
 [mobility/doping_dependent]
 mobility_formula = 2

@@ -16,13 +16,24 @@ ConstantMobility::read_database(void)
   Database& db = get_database();
   db.set_section("mobility/constant");
   
-  std::string s("mu_max_");
-  s += get_carrier_type();
-  mu0_ = db.get(s, mu0_);
+  std::vector<double> data;
+  if (db.has_variable("mu_max"))
+  {
+  db.get("mu_max", data);
+  if (data.size() < 2)
+    throw InitFailedException(std::string("Constant mobility model needs two values "
+        "for \'mu_max\' in database for material ") + db.get_material());
+  mu0_ = get_carrier_type() == 'e' ? data[0] : data[1];
+  }
 
-  s = "exponent_";
-  s += get_carrier_type();
-  exp_ = db.get(s, exp_);
+  if (db.has_variable("exponent"))
+  {
+  db.get("exponent", data);
+  if (data.size() < 2)
+    throw InitFailedException(std::string("Constant mobility model needs two values "
+        "for \'exponent\' in database.") + db.get_material());
+  exp_ = get_carrier_type() == 'e' ? data[0] : data[1];
+  }
 }
 
 

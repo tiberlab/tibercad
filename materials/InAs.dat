@@ -84,10 +84,8 @@ e14 = -0.044
 # from here values for GaAs
 # mobility
 [mobility/constant]
-mu_max_e = 22600.0
-exponent_e = 1.5
-mu_max_h = 250.0
-exponent_h = 1.5
+mu_max = (22600.0, 250.0)
+exponent = (1.5, 1.5)
 
 [mobility/doping_dependent]
 mobility_formula = 2
