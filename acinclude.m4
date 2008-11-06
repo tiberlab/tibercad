@@ -160,6 +160,21 @@ AC_DEFUN([TC_DFTB],
 ])dnl
 
 
+dnl enable or disable UPTIGHT
+dnl
+AC_DEFUN([TC_UPTIGHT],
+[AC_ARG_ENABLE([uptight], AS_HELP_STRING([--enable-uptight],
+	[enable UPTIGHT for tight-binding]),
+	[if test $enableval != "no"; then
+	  AC_DEFINE([ENABLE_UPTIGHT], [1],
+	  	[Define to 1 if UPTIGHT is enabled])
+	  AC_SUBST([ENABLE_UPTIGHT], ["yes"])
+	else
+	  AC_SUBST([ENABLE_UPTIGHT], ["no"])
+	fi], [AC_SUBST([ENABLE_UPTIGHT], ["no"])])
+])dnl
+
+
 dnl enable or disable Hetero
 dnl
 AC_DEFUN([TC_HETERO],

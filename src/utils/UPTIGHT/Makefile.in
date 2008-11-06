@@ -14,15 +14,15 @@ endif
 
 
 
-all: ../../../lib/libuptightc.$(shared_libext)
+all: ../../../lib/libuptight.$(shared_libext)
 
 
-../../../lib/libuptightc.$(shared_libext):  UptWrapper.o
-	@echo "Linking libuptightc.$(shared_libext) ..."
+../../../lib/libuptight.$(shared_libext):  UptWrapper.o
+	@echo "Linking libuptight.$(shared_libext) ..."
 	@$(CXX) -shared -o $@ $< \
 		-Wl,--version-script,export.map \
 		-Wl,-Bsymbolic -Wl,-Bstatic \
-		-L. uptight.a \
+		-L. libuptight.a \
 		-Wl,-Bdynamic
 
 %.o: %.C

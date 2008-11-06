@@ -1,6 +1,7 @@
 #include "AtomisticGenerator3D.h"
 #include "AtomisticStructure.h"
 #include "mesh.h"
+#include "BondMap.h"
 
 
 AtomisticGenerator3D*

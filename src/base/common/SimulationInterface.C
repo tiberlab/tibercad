@@ -139,8 +139,10 @@ SimulationInterface::create(const string& type,
     else if (type_name == "tightbinding")
       sim = Dftb::create();
 #endif
+#ifdef ENABLE_UPTIGHT
     else if (type_name == "etb")
       sim = EmpiricalTightBinding::create();
+#endif
     else if (type_name == "opticalspectrum")
       sim = OptRecombinSpectrum::create();
     else if (type_name == "poisson")

@@ -22,6 +22,9 @@ enable_dftb = @ENABLE_DFTB@
 # do we have HETERO?
 enable_hetero = @ENABLE_HETERO@
 
+# do we have UPTIGHT?
+enable_uptight = @ENABLE_UPTIGHT@
+
 # do we have MKL?
 have_mkl = @HAVE_MKL@
 

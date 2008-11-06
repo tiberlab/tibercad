@@ -29,6 +29,9 @@
 /* Define to 1 if DFTB+ is enabled */
 #undef ENABLE_DFTB
 
+/* Define to 1 if UPTIGHT is enabled */
+#undef ENABLE_UPTIGHT
+
 /* Define to 1 if HETERO is enabled */
 #undef ENABLE_HETERO
 

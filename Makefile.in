@@ -21,6 +21,10 @@ ifeq ($(enable_dftb), yes)
  MODULE_LIBS += -ldftbpc
 endif
 
+ifeq ($(enable_uptight), yes)
+ MODULE_LIBS += -luptight
+endif
+
 ifeq ($(enable_hetero), yes)
  MODULE_LIBS += -lhetero -lmkl_p4 -lguide
 endif

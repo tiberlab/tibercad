@@ -12,5 +12,6 @@ export FC=ifort-9.0
   --disable-modules \
   --enable-pardiso \
   --enable-dftb \
+  --enable-uptight\
   --enable-hetero \
   --with-libmesh-prefix=/usr/pack/libmesh-0.6.1-ma 
