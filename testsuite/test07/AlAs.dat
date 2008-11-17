@@ -44,3 +44,52 @@ C44 = 54.2
 
 # piezoelectricity
 e14 = -0.015
+
+
+
+# mobility
+[mobility/constant]
+mu_max   = (2500.0,	150.0)
+exponent = (1.0,	2.1)
+
+
+[mobility/doping_dependent]
+mobility_formula = 2
+mumin = (2.5e+03, 	150)
+am    = (-1, 		-2.1)
+mud   = (0, 		0)
+ad    = (0, 		0)
+N0    = (1e+17, 	1e+17)
+aN    = (0, 		0)
+A     = (0, 		0)
+aA    = (0, 		0)
+
+
+
+# SRH recombination
+[recombination/SRH]
+Etrap    = 0.0
+taumin = (0.0,		0.0)
+taumax = (1.0e-9,	1.0e-9)
+Nref   = (1.0e+16, 	1.0e+16)
+gamma  = (1,		1)
+Talpha = (0,		0)
+Tcoeff = (0,		0)
+
+
+# direct recombination (??)
+[recombination/direct]
+C = 0
+
+
+[recombination/auger]
+# R_Auger = ( C_n n + C_p p ) ( n p - ni_eff^2)
+# with C_n,p = (A + B (T/T0) + C (T/T0)^2) (1 + H exp(-{n,p}/N0))
+#
+A	= (1.0000e-30 ,	1.0000e-30)	# [cm^6/s]
+B	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+C	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+H	= (0.0000e+00 ,	0.0000e+00)	# [1]
+N0	= (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
+[]
+

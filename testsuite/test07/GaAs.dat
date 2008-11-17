@@ -72,34 +72,24 @@ e14 = -0.16
 mu_max = (8500.0, 400.0)
 
 [mobility/doping_dependent]
-mumin_e = 2.1360e+03
-am_e = -7.4570e-01
-mud_e = 6.3310e+03
-ad_e = -2.6870e+00
-N0_e = 7.3450e+16
-an_e = 3.535
-a_e = 0.6273
-aa_e = -1.4410e-01
-mumin_h = 21.48
-am_h = -1.1240e+00
-mud_h = 3.3120e+02
-ad_h = -2.3660e+00
-N0_h = 5.1360e+17
-an_h = 3.69
-a_h = 0.8057
-aa_h = 0.0
+mumin = (2.1360e+03, 21.48)
+am = (-7.4570e-01, -1.1240e+00)
+mud = (6.3310e+03, 3.3120e+02)
+ad = (-2.6870e+00, -2.3660e+00)
+N0 = (7.3450e+16, 5.1360e+17)
+aN = (3.535, 3.69)
+A = (0.6273, 0.8057)
+aA = (-1.4410e-01, 0.0)
+
 
 # SRH recombination
 [recombination/SRH]
 Etrap    = 0.0
-taumin_e = 0.0
-taumax_e = 1.0e-9
-Nref_e   = 1.0e+16
-gamma_e  = 1
-taumin_h = 0.0
-taumax_h = 1.0e-9
-Nref_h   = 1.0e+16
-gamma_h  = 1
+taumin = (0.0, 0.0)
+taumax = (1.0e-9, 1.0e-9)
+Nref   = (1.0e+16, 1.0e+16)
+gamma  = (1, 1)
+
 
 []
 

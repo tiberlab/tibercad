@@ -159,23 +159,25 @@ $E^* = E_{trap} - (E_c + E_v)/2$ is the trap level with respect to the midband e
 The parameters are taken from the material database.
 The recombination times are dependent on temperature and doping density, e.g.
 \begin{eqnarray}
-\tau_n & = & \tau_n^0 \left(\frac{T}{T_0}\right)^{\alpha_n} \\
+\tau_n & = & \tau_n^0 \left(\frac{T}{T_0}\right)^{\alpha_n} e^{\beta(T/T0 - 1)} \\
 \tau_n^0 & = & \tau_{min,n} + \frac{\tau_{max,n} - 
      \tau_{min,n}}{1 + (N/N_{ref})^\gamma}
 \end{eqnarray}
 where $T_0$ is the reference temperature (300 K).
 Table~\ref{table:srh_params_db} shows the corresponding parameters for the material data files.
+The parameters for holes and electrons have to be specified in an array, e.g. \verb+taumin = (1e-5, 3e-6)+
 \begin{table}[htb]
 \center
 \begin{tabular}{l||l|l}
-\textit{parameter} & \textit{electrons} & \textit{holes} \\
+\textit{parameter} & \textit{keyword} \\
 \hline\hline
-$\tau_{min}$ & \texttt{taumin\_e} & \texttt{taumin\_h} \\
-$\tau_{max}$ & \texttt{taumax\_e} & \texttt{taumax\_h} \\
-$N_{ref}$ & \texttt{Nref\_e} & \texttt{Nref\_h} \\
-$\gamma$ & \texttt{gamma\_e} & \texttt{gamma\_h} \\
-$E^*$ & \multicolumn{2}{c}{\texttt{Etrap}} \\
-$\alpha$ & \texttt{Talpha\_e} & \texttt{Talpha\_h}
+$\tau_{min}$ & \texttt{taumin} \\
+$\tau_{max}$ & \texttt{taumax} \\
+$N_{ref}$ & \texttt{Nref} \\
+$\gamma$ & \texttt{gamma} \\
+$E^*$ & \texttt{Etrap} \\
+$\alpha$ & \texttt{Talpha} \\
+$\beta$ & \texttt{Tcoeff} \\
 \end{tabular}
 \caption{SRH material data file parameters}
 \label{table:srh_params_db}
@@ -233,7 +235,7 @@ with temperature dependent parameters
 C_{\{n,p\}}  =  \left(A + B\frac{T}{T_0} + C\left(\frac{T}{T_0}\right)^2\right)\left(1 + H e^{-\{n,p\}/N_0}\right)
 \]
 The parameters $A, B, C, H$ and $N_0$ are taken exclusively from the database.
-They are different for $C_n$ and $C_p$.
+They are different for $C_n$ and $C_p$ and have to be specified as arrays with keywords \verb+A+, \verb+B+, \verb+C+, \verb+H+, \verb+N0+, e.g. \verb+A = (1e-31, 1e-32)+.
 The calculated values for $C_n$ and $C_p$ can be overridden from the input file by specifying values for the keywords \keyword{Cn} and \keyword{Cp}.
 
 
@@ -286,6 +288,13 @@ physical_model hole_mobility
 \end{verbatim}
 
 The default model is the constant mobility model.
+The parameters for the different mobility models are needed for both electrons and holes.
+In the material files they are specified with a common keyword in arrays, e.g.
+\begin{verbatim}
+[mobility/constant]
+#          electrons    holes
+mu_max   = (1400.0  ,   250.0)
+exponent = (1.0     ,   2.1)
 
 \subsubsection{Constant mobility model}
 
@@ -293,7 +302,7 @@ The constant mobility model (identifier \texttt{constant}) assumes a mobility wh
 \begin{equation}
 \mu_{const} = \mu_0 (T/T_0)^{-\gamma}
 \end{equation}
-In the material data file $\mu_0$ and $\gamma$ have to be specified with the keywords \texttt{mu\_max\_e}, \texttt{mu\_max\_h} and \texttt{exponent\_e}, \texttt{exponent\_h}, respectively.
+In the material data file $\mu_0$ and $\gamma$ have to be specified with the keywords \texttt{mu\_max} and \texttt{exponent}.
 $\mu_0$ can be ovverridden from the \texttt{physical\_model} section using the keyword \texttt{mu} or from the \texttt{Region} sections using the keywords \texttt{mu\_e} and \texttt{mu\_h}.
 
 
@@ -314,20 +323,20 @@ It uses the following formula:
   \frac{\mu_1}{1 + (C_s/N)^\beta}
 \end{align}
 where $N$ is the total doping density and $\mu_{const}$ the mobility obtained from the constant mobility model.
-The parameters are specified as given in table~\ref{table:mobility_masetti}.
+The parameters are specified in the material file as given in table~\ref{table:mobility_masetti}.
 \begin{table}[htb]
 \center
 \begin{tabular}{l||l|l}
-\textit{parameter} & \textit{electrons} & \textit{holes} \\
+\textit{parameter} & \textit{keyword}  \\
 \hline\hline
-$\mu_{min,1}$ &  \verb+mumin1_e+ &  \verb+mumin1_h+\\
-$\mu_{min,2}$ & \verb+mumin2_e+  & \verb+mumin2_h+ \\
-$\mu_1$ & \verb+mu1_e+  & \verb+mu1_h+ \\
-$P_c$ & \verb+Pc_e+ & \verb+Pc_h+ \\
-$C_r$ & \verb+Cr_e+ & \verb+Cr_h+ \\
-$C_s$ & \verb+Cs_e+ & \verb+Cs_h+ \\
-$\alpha$ & \verb+alpha_e+ & \verb+alpha_h+ \\
-$\beta$ & \verb+beta_e+ & \verb+beta_h+ \\
+$\mu_{min,1}$ &  \verb+mumin1+ \\
+$\mu_{min,2}$ & \verb+mumin2+  \\
+$\mu_1$ & \verb+mu1+  \\
+$P_c$ & \verb+Pc+ \\
+$C_r$ & \verb+Cr+ \\
+$C_s$ & \verb+Cs+ \\
+$\alpha$ & \verb+alpha+ \\
+$\beta$ & \verb+beta+ \\
 \end{tabular}
 \caption{Data file parameters for the mobility model by Masetti et al.}
 \label{table:mobility_masetti}
@@ -350,16 +359,16 @@ The parameters are given in table~\ref{table:mobility_arora}.
 \begin{table}[htb]
 \center
 \begin{tabular}{l||l|l}
-\textit{parameter} & \textit{electrons} & \textit{holes} \\
+\textit{parameter} & \textit{keyword} \\
 \hline\hline
-$A_{min}$ &  \verb+mumin_e+ &  \verb+mumin_h+\\
-$A_d$ &  \verb+mud_e+ &  \verb+mud_h+\\
-$A_N$ &  \verb+N0_e+ &  \verb+N0_h+\\
-$A_a$ &  \verb+a_e+ &  \verb+a_h+\\
-$\alpha_m$ &  \verb+am_e+ &  \verb+am_h+\\
-$\alpha_d$ &  \verb+ad_e+ &  \verb+ad_h+\\
-$\alpha_N$ &  \verb+an_e+ &  \verb+an_h+\\
-$\alpha_a$ &  \verb+aa_e+ &  \verb+aa_h+\\
+$A_{min}$ &  \verb+mumin+ \\
+$A_d$ &  \verb+mud+ \\
+$A_N$ &  \verb+N0+ \\
+$A_a$ &  \verb+A+ \\
+$\alpha_m$ &  \verb+am+ \\
+$\alpha_d$ &  \verb+ad+ \\
+$\alpha_N$ &  \verb+aN+ \\
+$\alpha_a$ &  \verb+aA+ \\
 \end{tabular}
 \caption{Data file parameters for the mobility model by Arora.}
 \label{table:mobility_arora}
@@ -401,15 +410,15 @@ The parameters for the field dependent mobility model are summarized in table~\r
 \begin{table}[htb]
 \center
 \begin{tabular}{l||l|l}
-\textit{parameter} & \textit{electrons} & \textit{holes} \\
+\textit{parameter} & \textit{keyword} \\
 \hline\hline
-$\beta_0$ &  \verb+beta0_e+ &  \verb+beta0_h+\\
-$b$ &  \verb+betaexp_e+ &  \verb+betaexp_h+ \\
-$v_{sat,0}$ &  \verb+vsat0_e+ &  \verb+vsat0_h+\\
-$\gamma$ &  \verb+vsatexp_e+ &  \verb+vsatexp_h+\\
-$A_{vsat}$ &  \verb+A_vsat_e+ &  \verb+A_vsat_h+\\
-$B_{vsat}$ &  \verb+B_vsat_e+ &  \verb+B_vsat_h+\\
-$v_{min}$ &  \verb+vsat_min_e+ &  \verb+vsat_min_h+\\
+$\beta_0$ &  \verb+beta0+ \\
+$b$ &  \verb+betaexp+ \\
+$v_{sat,0}$ &  \verb+vsat0+ \\
+$\gamma$ &  \verb+vsatexp+ \\
+$A_{vsat}$ &  \verb+A_vsat+ \\
+$B_{vsat}$ &  \verb+B_vsat+ \\
+$v_{min}$ &  \verb+vsat_min+ \\
 \end{tabular}
 \caption{Data file parameters for the mobility model by Arora.}
 \label{table:mobility_field_dep}

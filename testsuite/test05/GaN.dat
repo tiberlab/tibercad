@@ -2,14 +2,7 @@
 
 structure = wz
 
-
-# T=300 K
-# Eg_G = 3.4376
-
-# T = 0
- Eg_G = 3.51
-
-
+Eg_G = 3.51
 #E_v = -2.64
 # from Nextnano
 E_v = -0.726
@@ -74,34 +67,24 @@ exponent = (1.0, 2.1)
 # doping dependent
 [mobility/doping_dependent]
 mobility_formula = 1
-mumin1_e = 85
-mumin2_e = 75
-mu1_e = 50
-Pc_e = 6.5e15
-Cr_e = 9.5e16
-Cs_e = 7.2e19
-alpha_e = 0.55
-beta_e = 0.75
-mumin1_h = 33
-mumin2_h = 0.0
-mu1_h = 20
-Pc_h = 5e15
-Cr_h = 8e16
-Cs_h = 8e20
-alpha_h = 0.55
-beta_h = 0.7
+mumin1 = (85, 33)
+mumin2 = (75, 0)
+mu1 = (50, 20)
+Pc = (6.5e15, 5e15)
+Cr = (9.5e16, 8e16)
+Cs = (7.2e19, 8e20)
+alpha = (0.55, 0.55)
+beta = (0.75, 0.7)
+
 
 # high field dependency
 [mobility/field_dependent]
 Vsat_Formula = 2
-beta0_e = 1.7
-A_vsat_e = 1.9e+07 	
-B_vsat_e = 0
-vsat_min_e =  1.000e+07	
-beta0_h = 1.7
-A_vsat_h = 1.5000e+07	
-B_vsat_h = 0
-vsat_min_h =  1.000e+07	
+beta0 = (1.7, 1.7)
+A_vsat = (1.9e+07, 1.5000e+07)
+B_vsat = (0, 0)
+vsat_min =  (1.000e+07, 1.000e+07)
+
 #
 # recombination
 #
@@ -109,22 +92,17 @@ vsat_min_h =  1.000e+07
 # SRH recombination
 [recombination/SRH]
 Etrap    = 0.0
-taumin_e = 0.0
-taumax_e = 1.0e-9
-Nref_e   = 1.0e+16
-gamma_e  = 1
-Talpha_e = -1.5
-taumin_h = 0.0
-taumax_h = 1.0e-9
-Nref_h   = 1.0e+16
-gamma_h  = 1
-Talpha_h = -1.5
+taumin = (0.0, 0.0)
+taumax = (1.0e-9, 1.0e-9) 
+Nref   = (1.0e+16, 1.0e+16)
+gamma  = (1, 1)
+Talpha = (-1.5, -1.5)
 
-# direct
 [recombination/direct]
 C = 0.47e-10
-
 []
+
+# direct
 
 #Lattice thermal conductivity 
 therm_lat_cond_x = 1.3

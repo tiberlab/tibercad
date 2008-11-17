@@ -66,38 +66,29 @@ exponent = (2.5, 2.2)
 # doping dependent
 [mobility/doping_dependent]
 mobility_formula = 1
-mumin1_e = 52.2
-mumin2_e = 52.2
-mu1_e = 43.4
-Pc_e = 0.0
-Cr_e = 9.68e16
-Cs_e = 3.43e20
-alpha_e = 0.68
-beta_e = 2
-mumin1_h = 44.9
-mumin2_h = 0.0
-mu1_h = 29
-Pc_h = 9.23e16
-Cr_h = 2.23e17
-Cs_h = 6.1e20
-alpha_h = 0.719
-beta_h = 2
+mumin1 = (52.2, 44.9)
+mumin2 = (52.2, 0.0)
+mu1 = (43.4, 29)
+Pc = (0.0, 9.23e16)
+Cr = (9.68e16, 2.23e17)
+Cs = (3.43e20, 6.1e20)
+alpha = (0.68, 0.719)
+beta = (2, 2)
+
 
 # high field dependency
 [mobility/field_dependent]
 Vsat_Formula = 1
-beta0_e = 1.109
-vsat0_e = 1.07e7
-vsatexp_e = 0.87
-beta0_h = 1.213
-vsat0_h = 8.37e6
-vsatexp_h = 0.52
+beta0 = (1.109, 1.213)
+vsat0 = (1.07e7, 8.37e6)
+vsatexp = (0.87, 0.52)
+
 []
 
 
 
 # Lattice thermal conductivity 
-#[thermal_conductivity]
+[thermal_conductivity]
 therm_lat_cond = 1.5         #[(K)/(W)]
 therm_lat_cond_a = 0.03      #[(cm k)/(W)]
 therm_lat_cond_b = 1.56e-3   #[(cm)/(W)]
@@ -106,6 +97,6 @@ therm_lat_cond_c = 1.65e-6   #[(cm)/(W K)]
 
 
 #Thermoelectric power [V/k]
-#[thermoelectric]
+[thermoelectric]
 eTEpower = -0.001
 hTEpower = -0.001

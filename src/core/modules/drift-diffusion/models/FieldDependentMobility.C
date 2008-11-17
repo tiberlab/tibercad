@@ -16,39 +16,41 @@ FieldDependentMobility::read_database(void)
   Database& db = get_database();
   db.set_section("mobility/field_dependent");
   
-  std::string s("beta0_");
-  s += get_carrier_type();
-  _beta = db.get(s, _beta);
+  std::vector<double> empty(2, 0);
+
+  std::vector<double> data(empty);
+  db.get("beta0", data, true);
+  _beta =  get_carrier_type() == 'e' ? data[0] : data[1];
   
-  s = "betaexp_";
-  s += get_carrier_type();
-  _betaexp = db.get(s, _betaexp);
+  data = empty;
+  db.get("betaexp", data, true);
+  _betaexp =  get_carrier_type() == 'e' ? data[0] : data[1];
 
   _vsat_formula = db.get("Vsat_Formula", _vsat_formula);
 
   if (_vsat_formula == 1)
   {
-    s = "vsat0_";
-    s += get_carrier_type();
-    _vsat0 = db.get(s, _vsat0);
+    data = empty;
+    db.get("vsat0", data, true);
+    _vsat0 =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "vsatexp_";
-    s += get_carrier_type();
-    _vsat_b = db.get(s, _vsat_b);
+    data = empty;
+    db.get("vsatexp", data, true);
+    _vsat_b =  get_carrier_type() == 'e' ? data[0] : data[1];
   }
   else
   {
-    s = "A_vsat_";
-    s += get_carrier_type();
-    _vsat0 = db.get(s, _vsat0);
+    data = empty;
+    db.get("A_vsat", data, true);
+    _vsat0 =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "B_vsat_";
-    s += get_carrier_type();
-    _vsat_b = db.get(s, _vsat_b);
+    data = empty;
+    db.get("B_vsat", data, true);
+    _vsat_b =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "vsat_min";
-    s += get_carrier_type();
-    _vsat_min = db.get(s, _vsat_min);
+    data = empty;
+    db.get("vsat_min", data, true);
+    _vsat_min =  get_carrier_type() == 'e' ? data[0] : data[1];
   }
 
 }

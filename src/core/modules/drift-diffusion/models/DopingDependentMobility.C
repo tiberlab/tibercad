@@ -20,78 +20,80 @@ DopingDependentMobility::read_database(void)
   db.set_section("mobility/doping_dependent");
 
   formula_ = db.get("mobility_formula", formula_);
+
+  std::vector<double> empty(2, 0);
   
   if (formula_ == 1)
   {
     // Model of Masetti et al.
 
-    std::string s("mumin1_");
-    s += get_carrier_type();
-    mumin_ = db.get(s, mumin_);
+    std::vector<double> data(empty);
+    db.get("mumin1", data);
+    mumin_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "mumin2_";
-    s += get_carrier_type();
-    am_ = db.get(s, am_);
+    data = empty;
+    db.get("mumin2", data);
+    am_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "mu1_";
-    s += get_carrier_type();
-    mud_ = db.get(s, mud_);
+    data = empty;
+    db.get("mu1", data);
+    mud_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "Cr_";
-    s += get_carrier_type();
-    ad_ = db.get(s, ad_);
+    data = std::vector<double>(2, 1);
+    db.get("Cr", data);
+    ad_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "Cs_";
-    s += get_carrier_type();
-    N0_ = db.get(s, N0_);
+    data = empty;
+    db.get("Cs", data);
+    N0_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "alpha_";
-    s += get_carrier_type();
-    an_ = db.get(s, an_);
+    data = empty;
+    db.get("alpha", data);
+    an_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "beta_";
-    s += get_carrier_type();
-    a_ = db.get(s, a_);
+    data = empty;
+    db.get("beta", data);
+    a_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "Pc_";
-    s += get_carrier_type();
-    aa_ = db.get(s, aa_);
+    data = empty;
+    db.get("Pc", data);
+    aa_ =  get_carrier_type() == 'e' ? data[0] : data[1];
   }
   else
   {
     // Model of Arora et al.
 
-    std::string s("mumin_");
-    s += get_carrier_type();
-    mumin_ = db.get(s, mumin_);
+    std::vector<double> data(empty);
+    db.get("mumin", data, true);
+    mumin_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "am_";
-    s += get_carrier_type();
-    am_ = db.get(s, am_);
+    data = empty;
+    db.get("am", data);
+    am_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "mud_";
-    s += get_carrier_type();
-    mud_ = db.get(s, mud_);
+    data = empty;
+    db.get("mud", data);
+    mud_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "ad_";
-    s += get_carrier_type();
-    ad_ = db.get(s, ad_);
+    data = empty;
+    db.get("ad", data);
+    ad_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "N0_";
-    s += get_carrier_type();
-    N0_ = db.get(s, N0_);
+    data = std::vector<double>(2, 1);
+    db.get("N0", data);
+    N0_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "an_";
-    s += get_carrier_type();
-    an_ = db.get(s, an_);
+    data = empty;
+    db.get("aN", data);
+    an_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "a_";
-    s += get_carrier_type();
-    a_ = db.get(s, a_);
+    data = empty;
+    db.get("A", data);
+    a_ =  get_carrier_type() == 'e' ? data[0] : data[1];
 
-    s = "aa_";
-    s += get_carrier_type();
-    aa_ = db.get(s, aa_);
+    data = empty;
+    db.get("aA", data);
+    aa_ =  get_carrier_type() == 'e' ? data[0] : data[1];
   }
 
 }

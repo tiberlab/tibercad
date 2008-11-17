@@ -65,22 +65,14 @@ exponent = (1.9, 1.9)
 [mobility/doping_dependent]
 mobility_formula = 1
 
-mumin1_e = 120
-mumin2_e = 115
-mu1_e = 130
-Pc_e = 6.5e17
-Cr_e = 9.68e16
-Cs_e = 7.2e20
-alpha_e = 1.45
-beta_e = 1.85
-mumin1_h = 44.9
-mumin2_h = 0
-mu1_h = 50
-Pc_h = 6.5e17
-Cr_h = 9.68e16
-Cs_h = 7.2e20
-alpha_h = 1.45
-beta_h = 1.85
+mumin1 = (120, 44.9)
+mumin2 = (115, 0)
+mu1 = (130, 50)
+Pc = (6.5e17, 6.5e17)
+Cr = (9.68e16, 9.68e16)
+Cs = (7.2e20, 7.2e20)
+alpha = (1.45, 1.45)
+beta = (1.85, 1.85)
 
 mumin_e = 88
 am_e = -0.67
@@ -104,29 +96,22 @@ aa_h = -0.146
 [mobility/field_dependent]
 Vsat_Formula = 2
 
-beta0_e = 2.2
-A_vsat_e = 2.6e+07 	
-B_vsat_e = 0
-vsat_min_e =  2.2e+07	
-beta0_h = 2.2
-A_vsat_h = 2.6e+07	
-B_vsat_h = 0
-vsat_min_h =  2.2e+07	
+beta0 = (2.2, 2.2)
+A_vsat = (2.6e+07 	,2.6e+07)
+B_vsat = (0, 0)
+vsat_min =  (2.2e+07, 2.2e+07)
+
 
 
 # SRH recombination
 [recombination/SRH]
-Etrap    = 0.0
-taumin_e = 0.0
-taumax_e = 1.0e-9
-Nref_e   = 1.0e+18
-gamma_e  = 1
-Talpha_e = -1.5
-taumin_h = 0.0
-taumax_h = 1.0e-9
-Nref_h   = 1.0e+18
-gamma_h  = 1
-Talpha_h = -1.5
+Etrap    = 0.0 
+taumin = (0.0, 0.0)
+taumax = (1.0e-9, 1.0e-9)
+Nref   = (1.0e+18, 1.0e+18)
+gamma  = (1, 1)
+Talpha = (-1.5, -1.5)
+
 []
 
 #Lattice thermal conductivity

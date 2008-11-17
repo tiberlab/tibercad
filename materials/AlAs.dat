@@ -64,46 +64,38 @@ e14 = -0.015
 
 # mobility
 [mobility/constant]
-mu_max   = (2500.0, 150.0)
-exponent = (1.0, 2.1)
+mu_max   = (2500.0,	150.0)
+exponent = (1.0,	2.1)
+
 
 [mobility/doping_dependent]
 mobility_formula = 2
-mumin_e = 2.5e+03
-am_e = -1
-mud_e = 0
-ad_e = 0
-N0_e = 1e+17
-an_e = 0
-a_e = 0
-aa_e = 0
-mumin_h = 150
-am_h = -2.1
-mud_h = 0
-ad_h = 0
-N0_h = 1e+17
-an_h = 0
-a_h = 0
-aa_h = 0.0
+mumin = (2.5e+03, 	150)
+am    = (-1, 		-2.1)
+mud   = (0, 		0)
+ad    = (0, 		0)
+N0    = (1e+17, 	1e+17)
+aN    = (0, 		0)
+A     = (0, 		0)
+aA    = (0, 		0)
 
 
 
 # SRH recombination
 [recombination/SRH]
 Etrap    = 0.0
-taumin_e = 0.0
-taumax_e = 1.0e-9
-Nref_e   = 1.0e+16
-gamma_e  = 1
-taumin_h = 0.0
-taumax_h = 1.0e-9
-Nref_h   = 1.0e+16
-gamma_h  = 1
+taumin = (0.0,		0.0)
+taumax = (1.0e-9,	1.0e-9)
+Nref   = (1.0e+16, 	1.0e+16)
+gamma  = (1,		1)
+Talpha = (0,		0)
+Tcoeff = (0,		0)
 
 
 # direct recombination (??)
 [recombination/direct]
 C = 0
+
 
 [recombination/auger]
 # R_Auger = ( C_n n + C_p p ) ( n p - ni_eff^2)

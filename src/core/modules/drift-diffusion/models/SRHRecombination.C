@@ -18,27 +18,41 @@ SRHRecombination::read_database(void)
   Database& db = get_database();
   db.set_section("recombination/SRH");
 
-  E_t_ = db.get("Etrap", E_t_);
-  Talpha_e_ = db.get("Talpha_e", Talpha_e_);
-  Talpha_h_ = db.get("Talpha_h", Talpha_h_);
-  
+  _E_t = db.get("Etrap", _E_t, true);
+
+  std::vector<double> data(2, 0);
+
+  db.get("Talpha", data);
+  _Talpha_e = data[0];
+  _Talpha_h = data[1];
+
+  data = std::vector<double>(2, 0);
+  db.get("Tcoeff", data);
+  _Tcoeff_e = data[0];
+  _Tcoeff_h = data[1];
+
+  db.get("taumin", data, true);
+  double taumin_e = data[0];
+  double taumin_h = data[1];
+  db.get("taumax", data, true);
+  double taumax_e = data[0];
+  double taumax_h = data[1];
+  db.get("Nref", data, true);
+  double Nref_e = data[0];
+  double Nref_h = data[1];
+  db.get("gamma", data, true);
+  double g_e = data[0];
+  double g_h = data[1];
+
   double N = get_material()->get_total_doping_density();
 
   // electrons
-  double taumin = db.get("taumin_e", 0.0);
-  double taumax = db.get("taumax_e", 1.0e-9);
-  double Nref = db.get("Nref_e", 1e16);
-  double g = db.get("gamma_e", 1.0);
-  double denom = 1.0 + std::pow(N / Nref, g);
-  tau_n_ = taumin + (taumax - taumin) / denom; 
+  double denom = 1.0 + std::pow(N / Nref_e, g_e);
+  _tau_n = taumin_e + (taumax_e - taumin_e) / denom; 
 
   // holes
-  taumin = db.get("taumin_h", 0.0);
-  taumax = db.get("taumax_h", 1.0e-9);
-  Nref = db.get("Nref_h", 1e16);
-  g = db.get("gamma_h", 1.0);
-  denom = 1.0 + std::pow(N / Nref, g);
-  tau_p_ = taumin + (taumax - taumin) / denom; 
+  denom = 1.0 + std::pow(N / Nref_h, g_h);
+  _tau_p = taumin_h + (taumax_h - taumin_h) / denom; 
 }
 
 
@@ -46,9 +60,9 @@ SRHRecombination::read_database(void)
 void
 SRHRecombination::do_init(void)
 {
-  tau_n_ = get_parameter("tau_n", tau_n_);
-  tau_p_ = get_parameter("tau_p", tau_p_);
-  E_t_   = get_parameter("E_trap", E_t_);
+  _tau_n = get_parameter("tau_n", _tau_n);
+  _tau_p = get_parameter("tau_p", _tau_p);
+  _E_t   = get_parameter("E_trap", _E_t);
 }
 
 
@@ -64,10 +78,12 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   long double ni = dd.get_intrinsic_density();
   double T = dd.get_lattice_temperature();
 
-  long double f = std::exp(E_t_ / T);
+  long double f = std::exp(_E_t / T);
 
-  long double tau_n = tau_n_ * std::pow(T / T0, Talpha_e_);
-  long double tau_p = tau_p_ * std::pow(T / T0, Talpha_h_);
+  long double tau_n = _tau_n * std::pow(T / T0, _Talpha_e)
+    * std::exp(_Tcoeff_e * (T / T0 - 1));
+  long double tau_p = _tau_p * std::pow(T / T0, _Talpha_h)
+    * std::exp(_Tcoeff_h * (T / T0 - 1));
 
   long double denom = tau_p * (n + ni * f) + tau_n * (p + ni / f);
   long double tmp = n * p / denom;
@@ -87,10 +103,12 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   long double ni = dd.get_intrinsic_density();
   double T = dd.get_lattice_temperature();
 
-  long double f = std::exp(E_t_ / T);
+  long double f = std::exp(_E_t / T);
 
-  long double tau_n = tau_n_ * std::pow(T / T0, Talpha_e_);
-  long double tau_p = tau_p_ * std::pow(T / T0, Talpha_h_);
+  long double tau_n = _tau_n * std::pow(T / T0, _Talpha_e)
+    * std::exp(_Tcoeff_e * (T / T0 - 1));
+  long double tau_p = _tau_p * std::pow(T / T0, _Talpha_h)
+    * std::exp(_Tcoeff_h * (T / T0 - 1));
 
   long double denom = tau_p * (n + ni * f) + tau_n * (p + ni / f);
   long double tmp = n * p / denom;
@@ -116,10 +134,10 @@ SRHRecombination::do_init_alloy(const PhysicalModelInterface* comp_A,
   const SRHRecombination* scB =
     dynamic_cast<const SRHRecombination*>(comp_B);
 
-  tau_n_ = alloy(scA->tau_n_, scB->tau_n_, xa);
-  tau_p_ = alloy(scA->tau_p_, scB->tau_p_, xa);
-  E_t_ = alloy(scA->E_t_, scB->E_t_, xa);
-  Talpha_e_ = alloy(scA->Talpha_e_, scB->Talpha_e_, xa);
-  Talpha_h_ = alloy(scA->Talpha_h_, scB->Talpha_h_, xa);
+  _tau_n = alloy(scA->_tau_n, scB->_tau_n, xa);
+  _tau_p = alloy(scA->_tau_p, scB->_tau_p, xa);
+  _E_t = alloy(scA->_E_t, scB->_E_t, xa);
+  _Talpha_e = alloy(scA->_Talpha_e, scB->_Talpha_e, xa);
+  _Talpha_h = alloy(scA->_Talpha_h, scB->_Talpha_h, xa);
 }
 

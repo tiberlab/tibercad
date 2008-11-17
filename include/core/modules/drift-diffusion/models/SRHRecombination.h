@@ -78,22 +78,25 @@ class TBDLEXPORT SRHRecombination : public RecombinationModelInterface
   private:
 
     //! The electron lifetime
-    double tau_n_;
+    double _tau_n;
 
     //! The hole lifetime
-    double tau_p_;
+    double _tau_p;
 
     //! The trap level (from midgap)
-    double E_t_;
+    double _E_t;
 
     //! Temperature coefficient for temperature dependence, electrons
-    double Talpha_e_;
+    double _Talpha_e;
 
     //! Temperature coefficient for temperature dependence, holes
-    double Talpha_h_;
+    double _Talpha_h;
 
-    //! Temperature coefficient for exponential temperature dependence
-    //double Tcoeff_;
+    //! Temperature coefficient for exponential temp. dependence, electrons
+    double _Tcoeff_e;
+
+    //! Temperature coefficient for exponential temp. dependence, holes
+    double _Tcoeff_h;
 
 };
 
@@ -105,12 +108,13 @@ class TBDLEXPORT SRHRecombination : public RecombinationModelInterface
 
 inline
 SRHRecombination::SRHRecombination(void)
-  : tau_n_(1e-9),
-    tau_p_(1e-9),
-    E_t_(0.0),
-    Talpha_e_(0.0),
-    Talpha_h_(0.0)
-    //_Tcoeeff(0.0)
+  : _tau_n(1e-9),
+    _tau_p(1e-9),
+    _E_t(0.0),
+    _Talpha_e(0.0),
+    _Talpha_h(0.0),
+    _Tcoeff_e(0.0),
+    _Tcoeff_h(0.0)
 {
 }
 
@@ -127,8 +131,8 @@ inline
 void
 SRHRecombination::set_SRH_parameters(double tau_n, double tau_p)
 {
-  tau_n_ = tau_n;
-  tau_p_ = tau_p;
+  _tau_n = tau_n;
+  _tau_p = tau_p;
 }
 
 
