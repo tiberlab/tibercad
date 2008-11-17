@@ -93,6 +93,19 @@ beta0_h = 1.213
 vsat0_h = 8.37e6
 vsatexp_h = 0.52
 
+
+[recombination/SRH]
+Etrap    = 0.0
+taumin_e = 0.0
+taumax_e = 1.0e-5
+Nref_e   = 1.0e+16
+gamma_e  = 1
+taumin_h = 0.0
+taumax_h = 5.0e-6
+Nref_h   = 1.0e+16
+gamma_h  = 1
+
+
 []
 
 

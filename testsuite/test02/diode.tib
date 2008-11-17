@@ -36,6 +36,18 @@ $Models
        model  =  srh
      }                
 
+     physical_model electron_mobility
+     { 
+       model  =  doping_dependent
+     }                
+
+     physical_model hole_mobility
+     { 
+       model  =  doping_dependent
+     }                
+
+
+
     BC_Regions  
     {
       BC_Region anode
@@ -77,6 +89,7 @@ $Solver
     stop = 2.0
     steps = 40
     plotvariable = current
+    plot_data = true
   }
 }
 
@@ -97,6 +110,7 @@ $Physics
 
 $Simulation
 {
+  #searchpath = ../../materials
   searchpath = .
   meshfile = diode.msh
   dimension = 1
