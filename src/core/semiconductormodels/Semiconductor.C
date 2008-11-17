@@ -1,9 +1,14 @@
+// $Id$
+
 #include "Semiconductor.h"
 #include "Database.h"
 #include "Alloy.h"
 #include "getpot.h"
 #include "SimulationOptions.h"
+
 typedef std::complex<double> Complex;
+
+
 extern "C" 
 { 
   //ZHEEV( JOBZ, UPLO,  N, A,           LDA, W, WORK, LWORK, RWORK,INFO )
@@ -84,7 +89,7 @@ KPparams   Semiconductor::calculate_kp_params (std::string kp_model )
 
 //---------------------------------------------------------------------------------------------//
 inline 
-void Semiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void Semiconductor::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 
   modelA = dynamic_cast<const Semiconductor* > (comp_A);
@@ -94,7 +99,12 @@ void Semiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const P
 
   _xa = xa;
 
-  do_calculate_VCA (comp_A, comp_B,  xa);
+
+  _consider_temperature = modelA->_consider_temperature;
+  _temperature = modelA->_temperature;
+  temp_interface = modelA->temp_interface;
+
+  do_do_init_alloy (comp_A, comp_B,  xa);
 
 
 }

@@ -48,16 +48,11 @@ class Stiffness : public PhysicalModelInterface
   Tensor4DSym     C_cr    ;    
 
 
-  virtual void read_database ( ) {};
-
 
   virtual void do_init(void)=0;
 
 
-  virtual void copy_from (const PhysicalModelInterface *rhs);
-
-
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
 
 
   virtual PhysicalModelInterface* create_new(void) const = 0;

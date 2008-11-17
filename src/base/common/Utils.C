@@ -79,51 +79,138 @@ Utils::convert_path_to_unix(std::string& path)
 }
 
 
+
+const std::string
+Utils::get_until_matching_symbol(std::istream& istr, char open, char close)
+{
+  std::string str = ""; 
+  int tmp = 0;
+  int last_letter = 0;
+  int opened = 1;
+  while (1)
+  {
+    last_letter = tmp;
+    tmp = istr.get();
+    if (tmp == EOF) return str;
+    else if (tmp == open && last_letter != '\\') opened++;
+    else if (tmp == close && last_letter != '\\')
+    {
+      opened--;
+      // un-backslashed closing symbol => it's the end of the string
+      if (opened == 0) return (str + close);
+      else if (tmp == '\\' && last_letter != '\\') 
+	continue;  // do not append an unbackslashed backslash
+    }
+    str += tmp;
+  }
+
+  return str;
+}
+
+
+
+void
+Utils::skip_whitespace(std::istream& istr)
+{
+  int tmp = istr.get();
+  while (isspace(tmp))
+  {
+    tmp = istr.get();
+    if (!istr) return;
+  }
+  istr.unget();
+}
+
+
+
 template <typename T>
 void
 Utils::extract_vector(const string& input, vector<T>& vec)
 {
-  // the regexp to match the vector
-  static const boost::regex regexp("[[:space:]]*?(?:(\\()|(\\[)|(\\{)|\\<){1}\
-(.*)(?(1)\\)|(?(2)\\]|(?(3)\\}|\\>))){1}[[:space:]]*?");
+  istringstream istr(input);
+  skip_whitespace(istr);
 
-  typedef boost::tokenizer<boost::escaped_list_separator<char> > tokenizer;
-  boost::escaped_list_separator<char> sep;
+  // if input is empty we immediately return
+  if (istr.str().size() == 0) return;
 
-  boost::cmatch matches;
+  char tmp = istr.get();
+  char opening = tmp;
 
-  if (boost::regex_match(input.c_str(), matches, regexp))
+  size_t n = input.size() - 1;
+  while (n >= 0)
   {
-    // the regular expression uses 3 subexpressions to identify
-    // the type of braces used. Subexpression 0 contains the whole
-    // string, so the vector without braces is subexpression 4
-    int n = matches.size();
-    if (n == 5)
-    {
-      string match(matches[4].first, matches[4].second);
-
-      // cut the matched string into tokens
-      tokenizer tokens(match, sep);
-
-      tokenizer::iterator it(tokens.begin());
-      const tokenizer::iterator end(tokens.end());
-
-      // we resize the vector and fill in the found values
-      int ctr = 0;
-      for ( ; it != end; ++it) ctr++;
-
-      vec.clear();
-      vec.reserve(ctr);
-      for (it = tokens.begin(); it != end; ++it)
-      {
-        // strip spaces from both ends
-        string s(*it);
-        boost::algorithm::trim(s);
-
-        vec.push_back(Utils::convert<T>(s));
-      }
-    }
+    tmp = input[n];
+    if (!isspace(tmp)) break;
+    n--;
   }
+
+  // We require the string to begin with an opening brace and
+  // to end with the corresponding closing brace
+  bool delete_closing = true;
+  switch (opening)
+  {
+    case '(':
+      if (tmp != ')') return;
+      break;
+   
+    case '{':
+      if (tmp != '}') return;
+      break;
+
+    case '[':
+      if (tmp != ']') return;
+      break;
+
+    default:
+      istr.unget();
+      delete_closing = false;
+  }
+
+  // now we are sure to have at least one component and we have for sure
+  // one symbol in the stream
+
+  vec.clear();
+
+  tmp = istr.get();
+
+  string comp;
+  while (tmp != EOF)
+  {
+    switch (tmp)
+    {
+      case '(':
+        comp += '(' + get_until_matching_symbol(istr, '(', ')');
+        break;
+
+      case '{':
+        comp += '{' + get_until_matching_symbol(istr, '{', '}');
+        break;
+
+      case '[':
+        comp += '[' + get_until_matching_symbol(istr, '[', ']');
+        break;
+
+      case ',':
+        // we found a complete vector component
+        boost::algorithm::trim(comp);
+        vec.push_back(convert<T>(comp));
+        comp.clear();
+        break;
+
+      default:
+        comp += tmp;
+    }
+    tmp = istr.get();
+  }
+
+  // we have to get rid of the closing symbol
+  boost::algorithm::trim(comp);
+  if (delete_closing)
+  {
+    comp.erase(comp.size() - 1, 1);
+    boost::algorithm::trim(comp);
+  }
+  vec.push_back(convert<T>(comp));
 }
 
 

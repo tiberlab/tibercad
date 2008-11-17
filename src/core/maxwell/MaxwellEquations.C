@@ -1,9 +1,10 @@
+// $Id$
+
 #include "MaxwellEquations.h"
 #include "MaxwellPhysicalModel.h"
 #include "EigenSolver.h"
 #include "SimulationEnvironment.h"
 #include "Material.h"
-//#include "EigenvalueBoundary.h"
 #include "TiberMath.h"
 
 using namespace std;
@@ -21,7 +22,6 @@ MaxwellEquations::MaxwellEquations()
   system = NULL;
 }
 
-//=======================================================================================================//
 //=====================================================//
 BoundaryProperties* MaxwellEquations::create_boundary_model(const ModelOptions& options) const  throw (ModelErrorException)
 {

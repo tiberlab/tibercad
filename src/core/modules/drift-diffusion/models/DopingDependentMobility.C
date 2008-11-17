@@ -168,28 +168,9 @@ DopingDependentMobility::get_mobility_derivatives(std::vector<double>& dm)
 }
 
 
-void
-DopingDependentMobility::copy_from(const PhysicalModelInterface* rhs)
-{
-  MobilityModelInterface::copy_from(rhs);
-
-  const DopingDependentMobility* mod =
-    dynamic_cast<const DopingDependentMobility*>(rhs);
-  formula_ = mod->formula_;
-  mumin_ = mod->mumin_;
-  am_ = mod->am_;
-  mud_ = mod->mud_;
-  ad_ = mod->ad_;
-  N0_ = mod->N0_;
-  an_ = mod->an_;
-  a_ = mod->a_;
-  aa_ = mod->aa_;
-}
-
-
 
 void
-DopingDependentMobility::calculate_VCA(const PhysicalModelInterface* comp_A,
+DopingDependentMobility::do_init_alloy(const PhysicalModelInterface* comp_A,
     const PhysicalModelInterface* comp_B, double xa)
 {
 
@@ -198,7 +179,10 @@ DopingDependentMobility::calculate_VCA(const PhysicalModelInterface* comp_A,
   const DopingDependentMobility* scB =
     dynamic_cast<const DopingDependentMobility*>(comp_B);
 
-  // formula should be the same anyway
+  // formula should be the same, so we make some sanity check
+  if (scA->formula_ != scB->formula_)
+    throw InitFailedException("Doping dependent mobility has to use the same "
+        "formula for both components of the alloy " + get_material()->get_name());
   formula_ = scA->formula_;
   mumin_ = alloy(scA->mumin_, scB->mumin_ , xa);
   am_ = alloy(scA->am_, scB->am_ , xa);
@@ -213,15 +197,10 @@ DopingDependentMobility::calculate_VCA(const PhysicalModelInterface* comp_A,
   {
     assert(scA->const_mob_ != NULL);
     assert(scB->const_mob_ != NULL);
-    if (const_mob_ == NULL)
-    {
-      const_mob_ = static_cast<MobilityModelInterface*>(scA->const_mob_->copy());
-      const_mob_->set_driftdiffusionproperties(&get_driftdiffusionproperties());
-      const_mob_->set_carrier_type(get_carrier_type());
-      const_mob_->set_material(get_material());
-      const_mob_->init();
-    }
-    const_mob_->build_alloy(scA->const_mob_, scB->const_mob_, xa);
+    destroy(const_mob_);
+    const_mob_ = create_submodel_copy(scA->const_mob_);
+    const_mob_->set_driftdiffusionproperties(&get_driftdiffusionproperties());
+    const_mob_->init_alloy(scA->const_mob_, scB->const_mob_, xa);
   }
 }
 

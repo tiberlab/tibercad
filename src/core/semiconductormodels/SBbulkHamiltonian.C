@@ -117,19 +117,6 @@ void SBbulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, d
 }
 
 
-//======================================================================//
-
-void SBbulkHamiltonian::copy_from (const PhysicalModelInterface *rhs)
-{
-  const SBbulkHamiltonian* mod = dynamic_cast< const SBbulkHamiltonian* > (rhs);
-  
-  edge = mod->edge;
-
-  imass = mod->imass;
-
-  single_band_ham = mod->single_band_ham;
-
-}
 
 //======================================================================//
 

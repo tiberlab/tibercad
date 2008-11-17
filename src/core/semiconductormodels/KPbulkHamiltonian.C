@@ -57,10 +57,11 @@ KPbulkHamiltonian::~KPbulkHamiltonian()
 //================================================================
 
 KPbulkHamiltonian::KPbulkHamiltonian( )
+  : model_name("6x6"),
+    semiconductor(NULL),
+    band_min(2),
+    band_max(7)
 {
-
- semiconductor = NULL;
-
 } 
 
 
@@ -132,37 +133,51 @@ void KPbulkHamiltonian::do_init()
   //nullify strain
   strainM = Tensor2Sym(0);
 
-  if (!(get_material()->is_alloy()))
-  {
-    //prepare k.p parameter
-    par = semiconductor->calculate_kp_params (model_name);
-   
-    //calculate general Hamiltonian 
-    calculate_Hamiltonian_gen();
+  //prepare k.p parameter
+  par = semiconductor->calculate_kp_params (model_name);
 
-    //apply k|| vector (even if it is zero-vector !!!)
-    calculate_Hamiltonian_k_par();
+  //calculate general Hamiltonian 
+  calculate_Hamiltonian_gen();
 
-    //-----------------------------------------------
-    //calculate optical operator
-    calculate_optical_operator();
-    calculate_optical_operator_k_par();
+  //apply k|| vector (even if it is zero-vector !!!)
+  calculate_Hamiltonian_k_par();
+
   //-----------------------------------------------
-  }
+  //calculate optical operator
+  calculate_optical_operator();
+  calculate_optical_operator_k_par();
+  //-----------------------------------------------
 
 
 }
+
+
+
 //==================================================================//
-void KPbulkHamiltonian::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void KPbulkHamiltonian::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
   const KPbulkHamiltonian* modA = dynamic_cast<const KPbulkHamiltonian*> (comp_A);
   const KPbulkHamiltonian* modB = dynamic_cast<const KPbulkHamiltonian*> (comp_B);
 
 
-  semiconductor->build_alloy(modA->semiconductor, modB->semiconductor, xa);
+  PhysicalModelInterface::destroy(semiconductor);
+  semiconductor = static_cast<Semiconductor*>(modA->semiconductor->copy());
+  assert(semiconductor != NULL);
+  semiconductor->set_material(get_material());
+  semiconductor->init_alloy(modA->semiconductor, modB->semiconductor, xa);
+
+  strainM = modA->strainM;
+  model_name = modA->model_name;
+  kpVVtermSymmetric = modA->kpVVtermSymmetric;
+  kpCVtermSymmetric = modA->kpCVtermSymmetric;
+  band_min = modA->band_min;
+  band_max = modA->band_max;
+  set_k_vector(modA->k_vector);
+
+  set_rotation_matrix();
 
   //prepare k.p parameter
-  par = semiconductor->calculate_kp_params (model_name);
+  par = semiconductor->calculate_kp_params(model_name);
 
   //calculate general Hamiltonian 
   calculate_Hamiltonian_gen();

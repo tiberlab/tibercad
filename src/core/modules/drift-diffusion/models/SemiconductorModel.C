@@ -21,12 +21,12 @@ using namespace std;
 SemiconductorModel::~SemiconductorModel(void)
 {
   reset();
-  PhysicalModelInterface::destroy(bulk_model_);
+  PhysicalModelInterface::destroy(_bulk_model);
 }
 
 SemiconductorModel::SemiconductorModel(void)
-  : bulk_model_(NULL),
-    is_prepared_(false),
+  : _bulk_model(NULL),
+    _is_prepared(false),
     _recompute_band_parameters(false)
 {
 }
@@ -51,33 +51,39 @@ SemiconductorModel::do_init(void)
   _recompute_band_parameters = get_parameter("recompute_band_parameters",
       _recompute_band_parameters);
 
-  PhysicalModelInterface::destroy(bulk_model_);
+  PhysicalModelInterface::destroy(_bulk_model);
 
-  bulk_model_ = DDsemiconductor::create(get_material()->get_structure(), opt);
+  _bulk_model = DDsemiconductor::create(get_material()->get_structure(), opt);
 
-  if (bulk_model_ == NULL)
+  if (_bulk_model == NULL)
     throw InitFailedException("Unknown structure for DDsemiconductor");
 
-  bulk_model_->set_material(get_material());
-  bulk_model_->set_simulator_id(get_simulator_id());
+  _bulk_model->set_material(get_material());
+  _bulk_model->set_simulator_id(get_simulator_id());
 
-  bulk_model_->init();
+  _bulk_model->init();
 }
 
 
 
 void
-SemiconductorModel::calculate_VCA(const PhysicalModelInterface* comp_A,
+SemiconductorModel::do_init_alloy(const PhysicalModelInterface* comp_A,
     const PhysicalModelInterface* comp_B, double xa)
 {
-  Parent::calculate_VCA(comp_A, comp_B, xa);
+  Parent::do_init_alloy(comp_A, comp_B, xa);
 
   const SemiconductorModel* scA =
     dynamic_cast<const SemiconductorModel*>(comp_A);
   const SemiconductorModel* scB =
     dynamic_cast<const SemiconductorModel*>(comp_B);
 
-  bulk_model_->build_alloy(scA->bulk_model_, scB->bulk_model_, xa);
+  _recompute_band_parameters = scA->_recompute_band_parameters;
+
+  PhysicalModelInterface::destroy(_bulk_model);
+  _bulk_model = static_cast<DDsemiconductor*>(scA->_bulk_model->copy());
+  assert(_bulk_model != NULL);
+  _bulk_model->set_material(get_material());
+  _bulk_model->init_alloy(scA->_bulk_model, scB->_bulk_model, xa);
 
 }
 
@@ -127,10 +133,10 @@ SemiconductorModel::prepare_element_data(void)
   }
   else
   {
-    if (!is_prepared_ || _recompute_band_parameters)
+    if (!_is_prepared || _recompute_band_parameters)
     {
       calculate_equilibrium_properties();
-      is_prepared_ = true;
+      _is_prepared = true;
     }
   }
 }
@@ -144,7 +150,7 @@ SemiconductorModel::extract_band_properties(void)
 {
   // treat conduction band
   const std::vector<DDsemiconductor::band_extremum>& cbs =
-    bulk_model_->get_conduction_band_energy_mass();
+    _bulk_model->get_conduction_band_energy_mass();
 
   get_conduction_band().band_edges.resize(1);
 
@@ -163,7 +169,7 @@ SemiconductorModel::extract_band_properties(void)
   
   // treat valence band
   const std::vector<DDsemiconductor::band_extremum>& vbs =
-    bulk_model_->get_valence_band_energy_mass();
+    _bulk_model->get_valence_band_energy_mass();
   
   get_valence_band().band_edges.resize(vbs.size());
 
@@ -205,17 +211,17 @@ void
 SemiconductorModel::calculate_equilibrium_properties(void)
 {
 
-  assert(bulk_model_ != NULL);
+  assert(_bulk_model != NULL);
 
   // it wants temperature in K
-  bulk_model_->set_temperature(get_lattice_temperature() / Constants::k_B);
-  bulk_model_->set_strain(get_strain());
+  _bulk_model->set_temperature(get_lattice_temperature() / Constants::k_B);
+  _bulk_model->set_strain(get_strain());
 
   // calculate conduction and valence band data
-  bulk_model_->calculate_conduction_band_extremum();
-  bulk_model_->calculate_valence_band_extremum();
+  _bulk_model->calculate_conduction_band_extremum();
+  _bulk_model->calculate_valence_band_extremum();
 
-  // get the band properties from bulk_model_
+  // get the band properties from _bulk_model
   extract_band_properties();
 
   // call the method of the parent class
@@ -244,7 +250,7 @@ SemiconductorModel::do_print_info(void)
     double deg = std::pow(2.0, 2.0 / 3.0);
 
     const std::vector<DDsemiconductor::band_extremum>& cbs =
-      bulk_model_->get_conduction_band_energy_mass();
+      _bulk_model->get_conduction_band_energy_mass();
     cout << space << " - conduction bands:\n";
     for (int i = 0 ; i < cbs.size(); i++)
     {
@@ -256,7 +262,7 @@ SemiconductorModel::do_print_info(void)
       << "  m_dos = " << get_conduction_band().effective_mass / deg << "\n";
 
     const std::vector<DDsemiconductor::band_extremum>& vbs =
-      bulk_model_->get_valence_band_energy_mass();
+      _bulk_model->get_valence_band_energy_mass();
     cout << space << " - valence bands:\n";
     for (int i = 0 ; i < vbs.size(); i++)
     {

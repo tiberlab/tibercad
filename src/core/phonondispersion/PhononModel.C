@@ -289,14 +289,14 @@ PhononModel::get_light_polarization(std::vector<Tensor1>& light_polarization)
 
 
 // //==========================================================================//
-// void PhononModel::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+// void PhononModel::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 // {
 
 //   const PhononModel* matA = dynamic_cast< const PhononModel*> (comp_A);
 
 //   const PhononModel* matB = dynamic_cast< const PhononModel*> (comp_B);
 
-//   //kappa->build_alloy(matA->kappa, matB->kappa, xa);
+//   //kappa->init_alloy(matA->kappa, matB->kappa, xa);
 
   
 

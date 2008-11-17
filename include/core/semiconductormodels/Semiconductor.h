@@ -73,18 +73,16 @@ class Semiconductor : public PhysicalModelInterface
 
   virtual PhysicalModelInterface* create_new(void) const = 0;
 
-  virtual void copy_from (const PhysicalModelInterface *rhs) = 0 ;
-
   virtual void do_init (void);
 
   virtual void read_database(void) = 0;
 
-  virtual void read_bowing_parameters(void) = 0;
+  virtual void read_database_alloy(void) = 0;
  
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
 
 
-  virtual void do_calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
+  virtual void do_do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
 
 
   //! if true band gap is temperature 

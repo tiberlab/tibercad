@@ -1,27 +1,23 @@
+// $Id$
+
 #include "LatticeThermalConductivity.h"
 #include "Material.h"
+#include "SimulationOptions.h"
 #include "RotatedCrystal.h" 
 #include "tensor.h"
 
 
 LatticeThermalConductivity::LatticeThermalConductivity() :
   _conductivity(0)
-  {  
+{  
+ _temperature =  SimulationOptions::temperature; 
   
-  }
-//-------------------------------------------------------------------------//
-
-void LatticeThermalConductivity::copy_from(const PhysicalModelInterface *rhs)
-{
-  const LatticeThermalConductivity* mod = dynamic_cast<const LatticeThermalConductivity*> (rhs);
-
-  _conductivity = mod->_conductivity;
 }
-
 //-------------------------------------------------------------------------//
 
 
-void LatticeThermalConductivity::calculate_VCA (const PhysicalModelInterface *comp_A, 
+
+void LatticeThermalConductivity::do_init_alloy (const PhysicalModelInterface *comp_A, 
                                                 const PhysicalModelInterface *comp_B, double xa) 
 { 
   const LatticeThermalConductivity* modA = dynamic_cast<const LatticeThermalConductivity*>(comp_A);

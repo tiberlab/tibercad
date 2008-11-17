@@ -101,7 +101,7 @@ void WzSemiconductor::do_init()
 }
 
 //--------------------------------------------------//
-void  WzSemiconductor::read_bowing_parameters(void)
+void  WzSemiconductor::read_database_alloy(void)
 {
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
@@ -189,28 +189,9 @@ void WzSemiconductor::read_database( )
 
 }
 
-//-----------------------------------------------------------------//
-
-void WzSemiconductor::copy_from (const PhysicalModelInterface *rhs)
-
-{
-  
- 
-  const WzSemiconductor* mod = dynamic_cast<const WzSemiconductor*> (rhs);
-  par = mod->par;
-  bow = mod->bow;
-
-  {
-    //here zero temperature and work parameters coinside
-    par_initial = par;
-  }
-
-   
-
-}
 
 //--------------------------------------------------------------------//
-void WzSemiconductor::do_calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void WzSemiconductor::do_do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
  
 

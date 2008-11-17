@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _OPTDIELECTRICCONSTANT_H_
 #define _OPTDIELECTRICCONSTANT_H_
 
@@ -51,17 +53,14 @@ class  OptDielectricConstant: public PhysicalModelInterface
   //! initialization
   virtual void do_init (void)=0;
 
-  //! necessary to  assemble  alloys  materials
-  virtual void copy_from(const PhysicalModelInterface *rhs);
-
   //! read material  data from  database
   virtual void read_database(void)=0;
 
   //!  read  bowing parameters of  material  present in  an  alloy
-  virtual void read_bowing_parameters(void){};
+  virtual void read_database_alloy(void){};
 
   //! calculates dielectric  constant for  an  alloy, given the component materials  and their molar fraction.
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa); 
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa); 
 
   //!Create a new model of the same type.
   virtual PhysicalModelInterface* create_new (void) const =0;

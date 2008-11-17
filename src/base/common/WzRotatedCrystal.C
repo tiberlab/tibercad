@@ -237,7 +237,7 @@ void WzRotatedCrystal::do_init(void)
 
 //===================================================//
 
-void WzRotatedCrystal::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void WzRotatedCrystal::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 
  

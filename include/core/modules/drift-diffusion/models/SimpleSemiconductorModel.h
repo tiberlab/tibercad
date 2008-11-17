@@ -62,9 +62,6 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
     //! \copydoc DriftDiffusionProperties::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    //! \copydoc DriftDiffusionProperties::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs);
-
 
     //! \copydoc DriftDiffusionProperties::prepare_element_data()
     /*!
@@ -136,25 +133,6 @@ PhysicalModelInterface*
 SimpleSemiconductorModel::create_new(void) const
 {
   return new SimpleSemiconductorModel();
-}
-
-
-inline
-void
-SimpleSemiconductorModel::copy_from(const PhysicalModelInterface* rhs)
-{
-  Parent::copy_from(rhs);
-
-  const SimpleSemiconductorModel* mod =
-    dynamic_cast<const SimpleSemiconductorModel*>(rhs);
-  
-  is_prepared_ = mod->is_prepared_;
-  
-  get_conduction_band().band_edge = mod->get_conduction_band().band_edge;
-  get_conduction_band().effective_mass =
-    mod->get_conduction_band().effective_mass;
-  get_valence_band().band_edge = mod->get_valence_band().band_edge;
-  get_valence_band().effective_mass = mod->get_valence_band().effective_mass;
 }
 
 

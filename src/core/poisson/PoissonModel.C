@@ -170,15 +170,15 @@ void PoissonModel::do_init()
 
 
 //==========================================================================//
-void PoissonModel::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void PoissonModel::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 
-
    const PoissonModel* matA = dynamic_cast< const PoissonModel*> (comp_A);
-  
    const PoissonModel* matB = dynamic_cast< const PoissonModel*> (comp_B);
   
-   dielectric_model->build_alloy(matA->dielectric_model, matB->dielectric_model,xa);
+   PhysicalModelInterface::destroy(dielectric_model);
+   dielectric_model = create_submodel_alloy(matA->dielectric_model,
+       matB->dielectric_model,xa);
 
    alloy( _pyropolarization(1),matA->_pyropolarization(1),matB->_pyropolarization(1),xa);
    alloy( _pyropolarization(2),matA->_pyropolarization(2),matB->_pyropolarization(2),xa);

@@ -16,24 +16,14 @@ ConstantMobility::read_database(void)
   Database& db = get_database();
   db.set_section("mobility/constant");
   
-  std::vector<double> data;
-  if (db.has_variable("mu_max"))
-  {
-  db.get("mu_max", data);
-  if (data.size() < 2)
-    throw InitFailedException(std::string("Constant mobility model needs two values "
-        "for \'mu_max\' in database for material ") + db.get_material());
+  std::vector<double> data(2, 0);
+  db.get("mu_max", data, true);
   mu0_ = get_carrier_type() == 'e' ? data[0] : data[1];
-  }
 
-  if (db.has_variable("exponent"))
-  {
+  data = std::vector<double>(2, 0);
   db.get("exponent", data);
-  if (data.size() < 2)
-    throw InitFailedException(std::string("Constant mobility model needs two values "
-        "for \'exponent\' in database.") + db.get_material());
   exp_ = get_carrier_type() == 'e' ? data[0] : data[1];
-  }
+
 }
 
 
@@ -66,7 +56,7 @@ ConstantMobility::get_mobility_derivatives(std::vector<double>& dm)
 
 
 void
-ConstantMobility::calculate_VCA(const PhysicalModelInterface* comp_A,
+ConstantMobility::do_init_alloy(const PhysicalModelInterface* comp_A,
     const PhysicalModelInterface* comp_B, double xa)
 {
 

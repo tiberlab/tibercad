@@ -146,21 +146,12 @@ ExcitonModel::do_init(void)
 
 
 void
-ExcitonModel::copy_from(const PhysicalModelInterface* rhs)
+ExcitonModel::do_init_alloy(const PhysicalModelInterface* comp_A,
+    const PhysicalModelInterface* comp_B, double xa)
 {
-  ExcitonProperties::copy_from(rhs);
+  ignore_unused_variable(comp_A);
+  ignore_unused_variable(comp_B);
+  ignore_unused_variable(xa);
 
-  const ExcitonModel* mod =
-    dynamic_cast<const ExcitonModel*>(rhs);
-
-  _t_r = mod->_t_r;
-  _t_nr = mod->_t_nr;
-  _t_diss = mod->_t_diss;
-  _R = mod->_R;
-  _m = mod->_m;
-  _mu = mod->_mu;
-  _gen_model = mod->_gen_model;
-  _dd_sim = mod->_dd_sim;
+  do_init();
 }
-
-

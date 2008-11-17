@@ -1,3 +1,5 @@
+// $Id$
+
 #include "HeatModel.h"
 #include "Material.h"
 #include "LatticeThermalConductivity.h"
@@ -80,8 +82,6 @@ void HeatModel::do_init()
 		get_material()->get_structure()));
 
    }
-    kappa->set_temperature(SimulationOptions::temperature);
-    
     kappa->set_material(get_material());
 
     kappa->init();
@@ -95,16 +95,24 @@ void HeatModel::do_init()
 
 
 //==========================================================================//
-void HeatModel::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void HeatModel::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 
   const HeatModel* matA = dynamic_cast< const HeatModel*> (comp_A);
-
   const HeatModel* matB = dynamic_cast< const HeatModel*> (comp_B);
 
-  kappa->build_alloy(matA->kappa, matB->kappa, xa);
+  destroy(kappa);
+  kappa = create_submodel_alloy(matA->kappa, matB->kappa, xa);
 
-  
+  _heat_source_models.clear();
+  std::vector<ID> source_ids;
+  int n = matA->get_heat_source_IDs(source_ids);
+  for (int i = 0; i < n; i++)
+  {
+    ID id = source_ids[i];
+    _heat_source_models[id] = create_submodel_alloy(matA->get_heat_source_model(id), 
+        matB->get_heat_source_model(id), xa);
+  }
 
 }
 
@@ -222,14 +230,14 @@ for ( ; it != end; ++it)
 
 
 int
-HeatModel::get_heat_source_IDs(std::vector<ID>& ids)
+HeatModel::get_heat_source_IDs(std::vector<ID>& ids) const
 {
   int n =  _heat_source_models.size();
 
   ids.resize(n);
 
-  outer_source_iterator it =  _heat_source_models.begin();
-  outer_source_iterator end = _heat_source_models.end();
+  const_outer_source_iterator it =  _heat_source_models.begin();
+  const_outer_source_iterator end = _heat_source_models.end();
   int ctr = 0;
   for ( ; it != end; ++it, ctr++)
     ids[ctr] = (it->first);

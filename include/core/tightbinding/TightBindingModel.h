@@ -23,8 +23,6 @@ protected:
 
   virtual PhysicalModelInterface* create_new (void) const;
 
-  virtual void copy_from(const PhysicalModelInterface *rhs){};
-
   virtual void do_init();
 
 };

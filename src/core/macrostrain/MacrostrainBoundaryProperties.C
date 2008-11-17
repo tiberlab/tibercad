@@ -1,8 +1,14 @@
+// $Id$
+
+
 #include "MacrostrainBoundaryProperties.h"
 #include "MacrostrainPressure.h"
 #include "MacrostrainSubstrate.h"
 #include "MacrostrainExtended.h" 
 #include "MacrostrainSupport.h"
+
+#include "InitFailedException.h"
+
 
 MacrostrainBoundaryProperties::MacrostrainBoundaryProperties() : BoundaryProperties()
 {

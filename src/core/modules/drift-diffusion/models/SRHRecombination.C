@@ -108,7 +108,7 @@ SRHRecombination::get_net_recombination_rate_derivatives(
 
 
 void
-SRHRecombination::calculate_VCA(const PhysicalModelInterface* comp_A,
+SRHRecombination::do_init_alloy(const PhysicalModelInterface* comp_A,
     const PhysicalModelInterface* comp_B, double xa)
 {
   const SRHRecombination* scA =

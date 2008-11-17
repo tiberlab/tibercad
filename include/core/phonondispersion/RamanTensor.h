@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _RAMANTENSOR_H_
 #define _RAMANTENSOR_H_
 
@@ -5,9 +7,9 @@
 #include "PhononModel.h"
 
 class PhononModel;
+
+
 //! Class to return the dynamical matrix of a lattice in k = Gamma
-
-
 class RamanTensor : public PhysicalModelInterface
 {
 
@@ -33,13 +35,10 @@ protected:
 
   virtual void do_init (void)=0;
 
-  virtual void copy_from(const PhysicalModelInterface *rhs);
-
   virtual void read_database(void)=0;
 
-  virtual void read_bowing_parameters(void){};
-
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa); 
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A,
+      const PhysicalModelInterface *comp_B, double xa); 
 
   virtual PhysicalModelInterface* create_new (void) const =0;
 

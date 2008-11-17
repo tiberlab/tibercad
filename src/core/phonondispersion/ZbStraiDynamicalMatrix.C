@@ -1,9 +1,13 @@
+// $Id$
+
 #include "ZbStrainDynamicalMatrix.h"
 #include "getpot.h"
 #include "Material.h"
 #include "Database.h"
 #include "RotatedCrystal.h"  
-#include "SimulationEnvironment.h" 
+#include "PhononModel.h"  
+#include "SimulationInterface.h" 
+
 //--------------------------------------------------------//
 
 ZbStrainDynamicalMatrix::ZbStrainDynamicalMatrix() :
@@ -59,9 +63,9 @@ void  ZbStrainDynamicalMatrix::do_init(void)
 
    //read strain simulation
 
-   std::string strain_sim = get_options().get_option("strain_simulation", "no_strain");
+   std::string strain_sim = get_options().get_option("strain_simulation", "");
 
-   _simul = dynamic_cast<Macrostrain*> (SimulationInterface::find_simulation(strain_sim));
+   _simul = SimulationInterface::find_simulation(strain_sim);
 
   if ( _simul == NULL)
    throw InitFailedException("Could not find " + strain_sim);

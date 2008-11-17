@@ -118,15 +118,9 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
 
   virtual PhysicalModelInterface* create_new(void) const;
 
-  virtual void copy_from (const PhysicalModelInterface *rhs){};
-
   virtual void do_init(void);
 
-  virtual void read_database(void){};
-
-  virtual void read_bowing_parameters(void){};
- 
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) ;
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) ;
  
 
  

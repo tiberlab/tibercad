@@ -3,7 +3,8 @@
 #ifndef _MATERIAL_H_
 #define _MATERIAL_H_
 
-#include "PhysicalModel.h"
+#include "ModelOptions.h"
+#include "TypeDefs.h"
 
 // LibMesh includes
 #include "point.h"
@@ -18,6 +19,7 @@
 class Dopant;
 class Database;
 class RotatedCrystal;
+class PhysicalModel;
 
 
 //! Contains all needed data for a material
@@ -193,13 +195,21 @@ class Material
      */
     virtual void do_init(void);
 
+
+    //! Setup the doping
+    void setup_doping(void);
+
     
     //! Set the model options
     void set_options(const ModelOptions& options);
 
     
-    //! Get a writable reference to the RotatedCrystal
-    RotatedCrystal& get_crystal(void);
+    //! Get a writable pointer to the RotatedCrystal
+    RotatedCrystal* get_crystal(void);
+ 
+
+    //! Set the RotatedCrystal
+    void set_crystal(RotatedCrystal* crystal);
 
     
     //! Get an iterator to the first model
@@ -318,10 +328,10 @@ Material::get_rotated_crystal(void) const
 
 
 inline
-RotatedCrystal&
+RotatedCrystal*
 Material::get_crystal(void)
 {
-  return *_rotated_crystal;
+  return _rotated_crystal;
 }
 
 

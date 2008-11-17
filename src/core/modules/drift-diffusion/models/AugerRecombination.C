@@ -18,56 +18,30 @@ AugerRecombination::read_database(void)
   Database& db = get_database();
   db.set_section("recombination/auger");
 
-  std::vector<double> data;
-  if (db.has_variable("A"))
-  {
-    db.get("A", data);
-    if (data.size() < 2)
-      throw InitFailedException("Auger recombination needs two "
-          "values for \'A\' in database.");
-    _An = data[0];
-    _Ap = data[1];
-  }
+  std::vector<double> data(2, 0);
+  db.get("A", data, true);
+  _An = data[0];
+  _Ap = data[1];
 
-  if (db.has_variable("B"))
-  {
-    db.get("B", data);
-    if (data.size() < 2)
-      throw InitFailedException("Auger recombination needs two "
-          "values for \'B\' in database.");
-    _Bn = data[0];
-    _Bp = data[1];
-  }
+  data = std::vector<double>(2, 0);
+  db.get("B", data);
+  _Bn = data[0];
+  _Bp = data[1];
 
-  if (db.has_variable("C"))
-  {
-    db.get("C", data);
-    if (data.size() < 2)
-      throw InitFailedException("Auger recombination needs two "
-          "values for \'C\' in database.");
-    _Cn = data[0];
-    _Cp = data[1];
-  }
+  data = std::vector<double>(2, 0);
+  db.get("C", data);
+  _Cn = data[0];
+  _Cp = data[1];
 
-  if (db.has_variable("H"))
-  {
-    db.get("H", data);
-    if (data.size() < 2)
-      throw InitFailedException("Auger recombination needs two "
-          "values for \'H\' in database.");
-    _Hn = data[0];
-    _Hp = data[1];
-  }
+  data = std::vector<double>(2, 0);
+  db.get("H", data);
+  _Hn = data[0];
+  _Hp = data[1];
 
-  if (db.has_variable("N0"))
-  {
-    db.get("N0", data);
-    if (data.size() < 2)
-      throw InitFailedException("Auger recombination needs two "
-          "values for \'N0\' in database.");
-    _N0n = data[0];
-    _N0p = data[1];
-  }
+  data = std::vector<double>(2, 0);
+  db.get("N0", data);
+  _N0n = data[0];
+  _N0p = data[1];
 
 }
 
@@ -169,7 +143,7 @@ AugerRecombination::get_net_recombination_rate_derivatives(
 
 
 void
-AugerRecombination::calculate_VCA(const PhysicalModelInterface* comp_A,
+AugerRecombination::do_init_alloy(const PhysicalModelInterface* comp_A,
     const PhysicalModelInterface* comp_B, double xa)
 {
   const AugerRecombination* scA =

@@ -7,6 +7,22 @@
 #include "Constants.h"
 
 
+//TIBER_MODULE(ThermoelectricPower, default)
+
+namespace
+{
+  PhysicalModelInterface* thpow_create(void)
+  {
+    return new ThermoelectricPower();
+  }
+
+  void thpow_destroy(PhysicalModelInterface* mod)
+  {
+    delete mod;
+  }
+}
+
+
 ThermoelectricPower::ThermoelectricPower(void)
   : _eQfermi(0.0),
     _hQfermi(0.0),
@@ -24,47 +40,21 @@ ThermoelectricPower::ThermoelectricPower(void)
 
 
 
-ThermoelectricPower*
-ThermoelectricPower::create(void)
-{
-  return new ThermoelectricPower();
-}
-
-
-
-void
-ThermoelectricPower::destroy(PhysicalModelInterface* mod)
-{
-  delete dynamic_cast<ThermoelectricPower*>(mod);
-}
-
-
 
 ThermoelectricPower*
 ThermoelectricPower::create_model(const std::string& model,
     const ModelOptions& options)
 {
   return dynamic_cast<ThermoelectricPower*>(
-      PhysicalModelInterface::create((create_t) create, destroy, options));
+      PhysicalModelInterface::create(thpow_create, thpow_destroy, options));
 }
 
 
 
 
-void
-ThermoelectricPower::copy_from(const PhysicalModelInterface *rhs)
-{
-  const ThermoelectricPower* mod =
-    dynamic_cast<const ThermoelectricPower*>(rhs);
-
-  _eTEpower = mod->_eTEpower;
-  _hTEpower = mod->_hTEpower;
-}
-
-
 
 void
-ThermoelectricPower::calculate_VCA (const PhysicalModelInterface *comp_A, 
+ThermoelectricPower::do_init_alloy (const PhysicalModelInterface *comp_A, 
     const PhysicalModelInterface *comp_B, double xa) 
 { 
   const  ThermoelectricPower* modA =
@@ -73,6 +63,7 @@ ThermoelectricPower::calculate_VCA (const PhysicalModelInterface *comp_A,
   const ThermoelectricPower* modB =
     dynamic_cast<const ThermoelectricPower*>(comp_B);
 
+  _TEmodel = modA->_TEmodel;
 
   alloy(_eTEpower,modA->_eTEpower, modB->_eTEpower, xa);  
 

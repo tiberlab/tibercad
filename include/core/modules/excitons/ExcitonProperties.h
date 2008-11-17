@@ -182,10 +182,6 @@ class ExcitonProperties : public PhysicalModel
      */
     virtual void do_init(void) {};
 
-    //! \copydoc PhysicalModel::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs) {};
-
-
     virtual void do_recombination(void) {};
 
     virtual void do_mobility(void) {};

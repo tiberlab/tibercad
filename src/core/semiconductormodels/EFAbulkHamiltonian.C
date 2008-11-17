@@ -48,23 +48,7 @@ void EFAbulkHamiltonian::set_k_vector (Tensor1 k_vector_in)
 
 
 }
-//---------------------------------------------------------------//
-void EFAbulkHamiltonian::copy_from (const PhysicalModelInterface *rhs)
-{
-  const EFAbulkHamiltonian* mod = dynamic_cast<const EFAbulkHamiltonian*> (rhs);
 
-  for (short i = 0; i < 3; i++)  k_vector[i] = mod->k_vector[i];
-
-  kp_bands = mod->kp_bands;
-
-  kp_bands_map = mod->kp_bands_map;
-
-  Hamiltonian = mod->Hamiltonian;
-
-  Hamiltonian_without_strain_pot = mod->Hamiltonian_without_strain_pot; 
-  
-
-}
 
 //---------------------------------------------------------------//
 

@@ -1,3 +1,5 @@
+// $Id$
+
 #include "ZbPiezoelectricity.h"
 #include "getpot.h"
 #include "Material.h"
@@ -32,24 +34,25 @@ void ZbPiezoelectricity::read_database ()
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
   e14 = data("e14", 0.0);
-  e14_bow = data("bow_e14", 0.0);
-
-  
- 
 }
+
+
+void
+ZbPiezoelectricity::read_database_alloy(void)
+{
+  const Material* mat = get_material();
+  GetPot data((mat->get_database()).get_data_file());
+  e14_bow = data("bow_e14", 0.0);
+}
+
 
 
 //---------------------------------------------------------------//
 
 void ZbPiezoelectricity::do_init(void)
 {
-   ModelOptions & options = get_options ();
-
   
-   e14 = options.get_option("e14", e14);
-
-   e14_bow = options.get_option("bow_e14", e14_bow);
-
+   e14 = get_parameter("e14", e14);
  
 }
 
@@ -59,23 +62,17 @@ PhysicalModelInterface* ZbPiezoelectricity::create_new(void) const
   return (new ZbPiezoelectricity());
 }
 
-//---------------------------------------------------------------//
-
-void  ZbPiezoelectricity::copy_from (const PhysicalModelInterface* rhs)
-{
-  const ZbPiezoelectricity* temp = dynamic_cast<const ZbPiezoelectricity*>(rhs);
-  e14 = temp->e14;
-  e14_bow = temp->e14_bow;
-}
 
 //---------------------------------------------------------------//
 
-void ZbPiezoelectricity::calculate_VCA(const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void ZbPiezoelectricity::do_init_alloy(const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 
    const ZbPiezoelectricity* A = dynamic_cast<const ZbPiezoelectricity*>(comp_A);
 
    const ZbPiezoelectricity* B = dynamic_cast<const ZbPiezoelectricity*>(comp_B);
+
+   e14_bow = get_parameter("bow_e14", e14_bow);
 
    e14 = alloy(A->e14, B->e14, xa, e14_bow);
 

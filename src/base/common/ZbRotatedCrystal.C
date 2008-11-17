@@ -160,7 +160,7 @@ void  ZbRotatedCrystal::copy_from (const PhysicalModelInterface *rhs)
 
 //-----------------------------------------------------//
 
-void  ZbRotatedCrystal::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) 
+void  ZbRotatedCrystal::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) 
 {
   
   const ZbRotatedCrystal* mod_A = dynamic_cast<const ZbRotatedCrystal*> (comp_A);

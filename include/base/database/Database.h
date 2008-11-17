@@ -36,10 +36,6 @@ class Database
     const std::string get_data_file(void) const
       { return _datafile; };
 
-    //! Get the name of the currently used data file
-    const std::string get_data_file(const std::string& material) const;
-
-
     //! Set the name of the model
     void set_section(const std::string& section);
 
@@ -61,31 +57,42 @@ class Database
     //! Checks if a given variable is present in the databas
     bool has_variable(const std::string& variable);
 
-    //! Get double data
-    double get(const std::string& variable, double default_value);
 
-    //! Get integer data
-    int get(const std::string& variable, int default_value);
+    //! Get data of some type
+    template <typename T>
+    T get(const std::string& variable, T default_value, bool required = false);
 
-    //! Get bool data
-    bool get(const std::string& variable, bool default_value);
 
     //! Get string data
     std::string get(const std::string& variable,
-        const std::string& default_value);
+        const std::string& default_value, bool required = false);
 
     //! Get string data
     std::string get(const std::string& variable,
-        const char* default_value);
+        const char* default_value, bool required = false);
+
 
     //! Get data array/vector
+    /*!
+     * If \c variable is not present in the database, the input vector
+     * will be left unchanged. If a non-empty vector is provided, it will
+     * throw an exception if it cannot find the same number of elements in the
+     * database.
+     */
     template <typename T>
-    void get(const std::string& variable, std::vector<T>& data);
+    void get(const std::string& variable, std::vector<T>& data,
+        bool required = false);
 
     //! Get data matrix
+    /*!
+     * If \c variable is not present in the database, the input matrix
+     * will be left unchanged. If a non-empty matrix is provided, it will
+     * throw an exception if the database does not provide the same data
+     * structure.
+     */
     template <typename T>
     void get(const std::string& variable,
-        std::vector<std::vector<T> >& data);
+        std::vector<std::vector<T> >& data, bool required = false);
 
 
 
@@ -108,6 +115,12 @@ class Database
 
     //! Check the data file
     bool check_data_file(const std::string& name) const;
+
+    //! Get the name of the currently used data file
+    const std::string get_data_file(const std::string& material) const;
+
+    //! Check for a variable and throw exception if it is not found
+    void require_variable(const std::string& variable);
 
 };
 
@@ -149,44 +162,37 @@ Database::has_variable(const std::string& variable)
 }
 
 
-inline
-double
-Database::get(const std::string& variable, double default_value)
-{
-  return _file(variable.c_str(), default_value);
-}
-
 
 inline
-int
-Database::get(const std::string& variable, int default_value)
+std::string
+Database::get(const std::string& variable,
+    const std::string& default_value, bool required) 
 {
-  return _file(variable.c_str(), default_value);
-}
-
-
-inline
-bool
-Database::get(const std::string& variable, bool default_value)
-{
+  if (required) require_variable(variable);
   return _file(variable.c_str(), default_value);
 }
 
 
 inline
 std::string
-Database::get(const std::string& variable, const std::string& default_value) 
+Database::get(const std::string& variable,
+    const char* default_value, bool required) 
 {
-  return _file(variable.c_str(), default_value);
-}
-
-
-inline
-std::string
-Database::get(const std::string& variable, const char* default_value) 
-{
+  if (required) require_variable(variable);
   return _file(variable.c_str(), std::string(default_value));
 }
+
+
+
+template <typename T>
+inline
+T
+Database::get(const std::string& variable, T default_value, bool required)
+{
+  if (required) require_variable(variable);
+  return _file(variable.c_str(), default_value);
+}
+
 
 
 #endif // _DATABASE_H_

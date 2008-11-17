@@ -51,11 +51,8 @@ class FieldDependentMobility : public MobilityModelInterface
     //! \copydoc MobilityModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    //! \copydoc MobilityModelInterface::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs);
-
-    /*! \copydoc MobilityModelInterface::calculate_VCA() */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+    /*! \copydoc MobilityModelInterface::do_init_alloy() */
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
   private:
@@ -132,22 +129,6 @@ PhysicalModelInterface*
 FieldDependentMobility::create_new(void) const
 {
   return new FieldDependentMobility();
-}
-
-
-inline
-void
-FieldDependentMobility::copy_from(const PhysicalModelInterface* rhs)
-{
-  MobilityModelInterface::copy_from(rhs);
-
-  const FieldDependentMobility* mod =
-    dynamic_cast<const FieldDependentMobility*>(rhs);
-  _beta = mod->_beta;
-  _vsat0 = mod->_vsat0;
-  _vsat_b = mod->_vsat_b;
-  _vsat_formula = mod->_vsat_formula;
-  _force = mod->_force;
 }
 
 

@@ -2,6 +2,7 @@
 
 #include "tiber_config.h"
 #include "PhysicalModelInterface.h"
+#include "Material.h"
 #include "DLLoader.h"
 
 #ifndef BUILD_TIBER_MODULES
@@ -15,8 +16,6 @@
 #include "ConstantMobility.h"
 #include "DopingDependentMobility.h"
 #include "FieldDependentMobility.h"
-
-#include "ThermoelectricPower.h"
 
 #include "SimpleSemiconductorModel.h"
 #include "SemiconductorModel.h"
@@ -123,8 +122,6 @@ PhysicalModelInterface::create(const string& name,
       mod = DopingDependentMobility::create();
     else if (name == "dd_mob_field_dependent")
       mod = FieldDependentMobility::create();
-    else if (name == "dd_thpow_default") 
-      mod = ThermoelectricPower::create();
     else if (name == "dd_simple")
       mod = SimpleSemiconductorModel::create();
     else if (name == "dd_default")
@@ -359,6 +356,7 @@ PhysicalModelInterface::get_database(void)
 {
   return _material->get_database();
 }
+
 
 
 

@@ -80,11 +80,8 @@ class SemiconductorModel : public DriftDiffusionProperties
     /*! \copydoc DriftDiffusionProperties::create_new() */
     virtual PhysicalModelInterface* create_new(void) const;
 
-    /*! \copydoc DriftDiffusionProperties::copy_from() */
-    virtual void copy_from(const PhysicalModelInterface* rhs);
-
-    /*! \copydoc DriftDiffusionProperties::calculate_VCA() */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+    /*! \copydoc DriftDiffusionProperties::do_init_alloy() */
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
     //! Get the physical semiconductor model
@@ -93,9 +90,9 @@ class SemiconductorModel : public DriftDiffusionProperties
      * set the strain.
      */
     DDsemiconductor* get_physical_model(void)
-      { return bulk_model_; };
+      { return _bulk_model; };
 
-    //! Extract the band properties from bulk_model_
+    //! Extract the band properties from _bulk_model
     /*!
      * This method looks for the band extrema and puts the effective
      * mass, band edges etc. into the BandProperties structure
@@ -130,14 +127,14 @@ class SemiconductorModel : public DriftDiffusionProperties
     /*!
      * \c true means that all data is prepared and ready for use
      */
-    bool is_prepared_;
+    bool _is_prepared;
 
 
     //! The physical model for this semiconductor
     /*!
      * The physical model is based on an effective mass approximation
      */
-    DDsemiconductor* bulk_model_;
+    DDsemiconductor* _bulk_model;
 
 
     //! The map with the element wise data
@@ -171,7 +168,7 @@ inline
 void
 SemiconductorModel::set_to_unprepared(void)
 {
-  is_prepared_ = false;
+  _is_prepared = false;
 }
 
 inline
@@ -181,17 +178,6 @@ SemiconductorModel::create_new(void) const
   return new SemiconductorModel();
 }
 
-
-inline
-void
-SemiconductorModel::copy_from(const PhysicalModelInterface* rhs)
-{
-  Parent::copy_from(rhs);
-
-  const SemiconductorModel* mod = dynamic_cast<const SemiconductorModel*>(rhs);
-  is_prepared_ = mod->is_prepared_;
-
-}
 
 
 inline

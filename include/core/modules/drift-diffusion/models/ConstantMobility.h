@@ -48,11 +48,8 @@ class ConstantMobility : public MobilityModelInterface
     //! \copydoc MobilityModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    //! \copydoc MobilityModelInterface::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs);
-
-    /*! \copydoc MobilityModelInterface::calculate_VCA() */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+    /*! \copydoc MobilityModelInterface::do_init_alloy() */
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
   private:
@@ -90,17 +87,6 @@ PhysicalModelInterface*
 ConstantMobility::create_new(void) const
 {
   return new ConstantMobility();
-}
-
-
-inline
-void
-ConstantMobility::copy_from(const PhysicalModelInterface* rhs)
-{
-  MobilityModelInterface::copy_from(rhs);
-
-  const ConstantMobility* mod = dynamic_cast<const ConstantMobility*>(rhs);
-  mu0_ = mod->mu0_;
 }
 
 

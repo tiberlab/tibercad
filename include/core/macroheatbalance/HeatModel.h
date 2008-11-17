@@ -53,11 +53,11 @@ class HeatModel: public PhysicalModel
 
   
   //!Get total the heat source model given an ID
-  HeatSourceInterface* get_heat_source_model(ID id);
+  HeatSourceInterface* get_heat_source_model(ID id) const;
   
   
   //! Get the ids of the heat source models 
-  int get_heat_source_IDs(std::vector<ID>& ids);
+  int get_heat_source_IDs(std::vector<ID>& ids) const;
   
 
   //!Get total heat source
@@ -105,6 +105,10 @@ class HeatModel: public PhysicalModel
    //!Iterator for heat source model
    typedef std::map<ID, HeatSourceInterface*>::iterator outer_source_iterator;
 
+   //!Iterator for heat source model
+   typedef std::map<ID, HeatSourceInterface*>::const_iterator const_outer_source_iterator;
+
+
    //!Heat sources iterator within a specific heat source model
    typedef std::map<ID,double>::iterator inner_source_iterator;
 
@@ -146,13 +150,8 @@ class HeatModel: public PhysicalModel
 
   virtual PhysicalModelInterface* create_new (void) const;
 
-  virtual void copy_from(const PhysicalModelInterface *rhs){};
 
-  virtual void read_database (void){};
- 
-  virtual void read_bowing_parameters (void) {};
-
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
 
   virtual void do_init();
 
@@ -224,11 +223,11 @@ HeatModel::get_side(void)
 
 inline
 HeatSourceInterface*
-HeatModel::get_heat_source_model(ID id)
+HeatModel::get_heat_source_model(ID id) const
 {
 
 HeatSourceInterface* heat_source_model = NULL;
-outer_source_iterator it =  _heat_source_models.find(id);
+const_outer_source_iterator it =  _heat_source_models.find(id);
 if (it !=   _heat_source_models.end())
    heat_source_model = it->second;
   

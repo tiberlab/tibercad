@@ -36,7 +36,7 @@ class SBuserHamiltonian : public SBbulkHamiltonian
   virtual void do_init(void);
 
  
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) {};
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) {};
 
   
 

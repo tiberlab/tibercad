@@ -51,11 +51,8 @@ class DirectRecombination : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    //! \copydoc RecombinationModelInterface::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs);
-
-    /*! \copydoc RecombinationModelInterface::calculate_VCA() */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+    /*! \copydoc RecombinationModelInterface::do_init_alloy() */
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
     
 
@@ -100,17 +97,6 @@ PhysicalModelInterface*
 DirectRecombination::create_new(void) const
 {
   return new DirectRecombination();
-}
-
-
-inline
-void
-DirectRecombination::copy_from(const PhysicalModelInterface* rhs)
-{
-  RecombinationModelInterface::copy_from(rhs);
-  
-  const DirectRecombination* mod = dynamic_cast<const DirectRecombination*>(rhs);
-  C_ = mod->C_;
 }
 
 

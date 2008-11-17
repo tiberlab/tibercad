@@ -24,10 +24,12 @@ DDsemiconductor::~DDsemiconductor (void)
 }
 //---------------------------------------------------------------------------------------------//
 DDsemiconductor::DDsemiconductor (void)
+  : semiconductor(NULL),
+    bulk_ham(NULL),
+    energy_cutoff(4.0),
+    strained(false),
+    k_max(1e-3)
 {
-  semiconductor = NULL;
-
-  bulk_ham = NULL;
 }
  
 
@@ -38,9 +40,9 @@ void DDsemiconductor::do_init ()
  
   const ModelOptions& opt =  get_options ();
   
-  energy_cutoff = opt.get_option("energy_cutoff", 4.0);
+  energy_cutoff = opt.get_option("energy_cutoff", energy_cutoff);
   strained      = false;
-  k_max         = opt.get_option("k_max", 1e-3);
+  k_max         = opt.get_option("k_max", k_max);
 
   PhysicalModelInterface::destroy(semiconductor);
   
@@ -48,7 +50,8 @@ void DDsemiconductor::do_init ()
 
   if (semiconductor == NULL)
   {
-    string msg("DDsemiconductor: cannot create model for material with ");
+    string msg("Cannot create semiconductor model for ");
+    msg += get_material()->get_name() + " with ";
     msg += get_material()->get_structure();
     msg += " structure.";
     throw InitFailedException(msg);
@@ -70,7 +73,8 @@ void DDsemiconductor::do_init ()
       EFAbulkHamiltonian::create(get_material()->get_structure(), kp_options));
 
   if (bulk_ham == NULL)
-    throw InitFailedException("DDsemiconductor::do_init ()     bulk_ham == NULL ");
+    throw InitFailedException(string("Cannot create bulk hamiltonian for ")
+        + get_material()->get_name());
 
   bulk_ham->set_material(get_material());
 
@@ -87,41 +91,39 @@ void DDsemiconductor::read_database(void)
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
 
-  energy_cutoff  = data("energy_cutoff", 4.0); //4eV default value
+  energy_cutoff  = data("energy_cutoff", energy_cutoff); //4eV default value
   strained       = false;
-  k_max          = data("k_max", 1e-5);
+  k_max          = data("k_max", k_max);
 
 }
-//---------------------------------------------------------------------------------------------//
-void DDsemiconductor::copy_from (const PhysicalModelInterface *rhs)
-{
-  const DDsemiconductor* mod = dynamic_cast<const DDsemiconductor*>(rhs);
-  
-  strain = mod->strain;
- 
-  energy_cutoff = mod->energy_cutoff;
-    
-  k_max = mod->k_max;
 
-}
 
 //--------------------------------------------------------------------------------------------//
-void DDsemiconductor::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void DDsemiconductor::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
  
   const DDsemiconductor* modA = dynamic_cast<const DDsemiconductor*>(comp_A);
   const DDsemiconductor* modB = dynamic_cast<const DDsemiconductor*>(comp_B);
  
- 
   
   energy_cutoff = alloy(modA->energy_cutoff,modB->energy_cutoff,xa);
-   
   k_max = alloy(modA->k_max, modB->k_max, xa);
+  strained = modA->strained;
+  strain = modA->strain;
 
-  semiconductor -> build_alloy(modA->semiconductor, modB->semiconductor, xa);
-  bulk_ham -> build_alloy(modA->bulk_ham, modB->bulk_ham, xa);
+
+  PhysicalModelInterface::destroy(semiconductor);
+  semiconductor = static_cast<Semiconductor*>(modA->semiconductor->copy());
+  assert(semiconductor != NULL);
+  semiconductor->set_material(get_material());
+  semiconductor->init_alloy(modA->semiconductor, modB->semiconductor, xa);
 
 
+  PhysicalModelInterface::destroy(bulk_ham);
+  bulk_ham = static_cast<KPbulkHamiltonian*>(modA->bulk_ham->copy());
+  assert(bulk_ham != NULL);
+  bulk_ham->set_material(get_material());
+  bulk_ham->init_alloy(modA->bulk_ham, modB->bulk_ham, xa);
   
 }
 

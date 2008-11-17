@@ -1,21 +1,13 @@
+// $Id$
+
+
 #include "Stiffness.h" 
 #include "RotatedCrystal.h"
 #include "Material.h"
-//----------------------------------------------------------------------//
-void Stiffness::copy_from (const PhysicalModelInterface *rhs)
-{
-
-  const Stiffness* mod = dynamic_cast<const Stiffness*>(rhs);
-
-  C_cr = mod->C_cr;
-
-  
-
-} 
  
 
 //----------------------------------------------------------------------//
-void Stiffness:: calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void Stiffness:: do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
   const Stiffness* modA = dynamic_cast<const Stiffness*>(comp_A);
 

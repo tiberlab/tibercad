@@ -1,3 +1,5 @@
+// $Id$
+
 #include "ChargeDensityModel.h"
 #include "SimulationEnvironment.h"
 #include "Material.h"
@@ -11,19 +13,10 @@ ChargeDensityModel::ChargeDensityModel() :
 {
 }
 
-
-void ChargeDensityModel::copy_from(const PhysicalModelInterface *rhs)
-{
-  const ChargeDensityModel* mod = dynamic_cast<const  ChargeDensityModel*> (rhs);
-
-  _charge_density = mod-> _charge_density;
- 
-}
-
 //-------------------------------------------------------------------------//
 
 
-void ChargeDensityModel::calculate_VCA (const PhysicalModelInterface *comp_A, 
+void ChargeDensityModel::do_init_alloy (const PhysicalModelInterface *comp_A, 
                                                 const PhysicalModelInterface *comp_B, double xa) 
 { 
   const ChargeDensityModel* modA = dynamic_cast<const ChargeDensityModel*>(comp_A);
@@ -38,14 +31,6 @@ void ChargeDensityModel::calculate_VCA (const PhysicalModelInterface *comp_A,
 
 //-------------------------------------------------------------------------//
 
-//--------------------------------------------------------//
-void  ChargeDensityModel::read_database(void)
-{
-
-  
-}
-
-//---------------------------------------------------------//
 
 void ChargeDensityModel::do_init(void)
 {

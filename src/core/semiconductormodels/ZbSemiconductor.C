@@ -172,24 +172,10 @@ void ZbSemiconductor::read_database( )
 
   
 }
-//----------------------------------------------//
-void ZbSemiconductor::copy_from (const PhysicalModelInterface *rhs)
-{
- 
-
-  const ZbSemiconductor* mod = dynamic_cast<const ZbSemiconductor*> (rhs);
-  
-  par = mod->par;
-
-  bow = mod->bow;
-
-  par_initial = par;
-
-}
 
 
 //--------------------------------------------//
-void ZbSemiconductor::read_bowing_parameters()
+void ZbSemiconductor::read_database_alloy()
 {
  
   const Material* mat = get_material();
@@ -228,7 +214,7 @@ void ZbSemiconductor::read_bowing_parameters()
 
 
 //---------------------------------------------//
-void ZbSemiconductor::do_calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void ZbSemiconductor::do_do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 
   const ZbSemiconductor* modA = dynamic_cast<const ZbSemiconductor*> (comp_A);

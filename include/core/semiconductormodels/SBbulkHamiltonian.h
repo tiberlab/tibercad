@@ -60,11 +60,9 @@ class SBbulkHamiltonian : public EFAbulkHamiltonian
 
   virtual PhysicalModelInterface* create_new(void) const = 0;
 
-  virtual void copy_from (const PhysicalModelInterface *rhs) ;
-
   virtual void do_init(void) = 0;
  
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
 
   
 

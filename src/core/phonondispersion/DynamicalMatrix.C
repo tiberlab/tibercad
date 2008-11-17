@@ -1,28 +1,23 @@
+// $Id$
+
 #include "DynamicalMatrix.h"
 #include "Material.h"
 #include "RotatedCrystal.h" 
 #include "tensor.h"
 
-//class DynamicalMatrix;
 
 DynamicalMatrix::DynamicalMatrix()
  :_dynamical_matrix(0)
 {  
   
 }
-//-------------------------------------------------------------------------//
 
-void DynamicalMatrix::copy_from(const PhysicalModelInterface *rhs)
-{
-  const DynamicalMatrix* mod = dynamic_cast<const DynamicalMatrix*> (rhs);
 
-  _dynamical_matrix = mod->_dynamical_matrix;
-}
 
 //-------------------------------------------------------------------------//
 
 
-void DynamicalMatrix::calculate_VCA (const PhysicalModelInterface *comp_A, 
+void DynamicalMatrix::do_init_alloy (const PhysicalModelInterface *comp_A, 
                                                 const PhysicalModelInterface *comp_B, double xa) 
 { 
   const DynamicalMatrix* modA = dynamic_cast<const DynamicalMatrix*>(comp_A);

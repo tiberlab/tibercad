@@ -1,7 +1,7 @@
 #include "QuantumDensity.h"
 #include "SimulationEnvironment.h"
 #include "Control.h"
-#include "gnuplot_io.h"
+
 using namespace std;
 
 

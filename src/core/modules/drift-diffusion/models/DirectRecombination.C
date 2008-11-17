@@ -64,7 +64,7 @@ DirectRecombination::get_net_recombination_rate_derivatives(
 
 
 void
-DirectRecombination::calculate_VCA(const PhysicalModelInterface* comp_A,
+DirectRecombination::do_init_alloy(const PhysicalModelInterface* comp_A,
     const PhysicalModelInterface* comp_B, double xa)
 {
   const DirectRecombination* scA =

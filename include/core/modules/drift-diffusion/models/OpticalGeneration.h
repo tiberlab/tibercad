@@ -49,11 +49,8 @@ class OpticalGeneration : public RecombinationModelInterface, public Variable
     //! \copydoc RecombinationModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    //! \copydoc RecombinationModelInterface::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs);
-
-    /*! \copydoc RecombinationModelInterface::calculate_VCA() */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+    /*! \copydoc RecombinationModelInterface::do_init_alloy() */
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
 
@@ -99,17 +96,6 @@ PhysicalModelInterface*
 OpticalGeneration::create_new(void) const
 {
   return new OpticalGeneration();
-}
-
-
-inline
-void
-OpticalGeneration::copy_from(const PhysicalModelInterface* rhs)
-{
-  RecombinationModelInterface::copy_from(rhs);
-  
-  const OpticalGeneration* mod = dynamic_cast<const OpticalGeneration*>(rhs);
-  G_ = mod->G_;
 }
 
 

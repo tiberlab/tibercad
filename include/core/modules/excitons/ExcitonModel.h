@@ -38,8 +38,9 @@ class ExcitonModel : public ExcitonProperties
     /*! \copydoc PhysicalModel::create_new() */
     virtual PhysicalModelInterface* create_new(void) const;
 
-    /*! \copydoc PhysicalModel::copy_from() */
-    virtual void copy_from(const PhysicalModelInterface* rhs);
+    /*! \copydoc PhysicalModel::do_init_alloy() */
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
+        const PhysicalModelInterface* comp_B, double xa);
 
     /*! \copydoc ExcitonProperties::read_database() */
     virtual void read_database(void);

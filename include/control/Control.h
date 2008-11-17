@@ -5,6 +5,7 @@
 
 #include "ModelErrorException.h"
 #include "InitFailedException.h"
+#include "DatabaseException.h"
 #include "SolveFailedException.h"
 
 #include <map>
@@ -89,7 +90,8 @@ class Control
      * This method calls create_device(), create_materials() and
      * setup_models()
      */
-    void init(void) throw (InitFailedException, ModelErrorException);
+    void init(void) throw (InitFailedException,
+        ModelErrorException, DatabaseException);
 
     
     //! Runs the simulation

@@ -1,3 +1,5 @@
+// $Id$
+
 #include "OptDielectricConstant.h"
 #include "Material.h"
 #include "RotatedCrystal.h" 
@@ -5,21 +7,7 @@
 
 
 
-//-------------------------------------------------------------------------//
-
-void OptDielectricConstant::copy_from(const PhysicalModelInterface *rhs)
-{
-  const OptDielectricConstant* mod = dynamic_cast<const OptDielectricConstant*> (rhs);
-
-  _dielectric_constant_real  = mod->_dielectric_constant_real ;
-
-  _dielectric_constant_imag  = mod->_dielectric_constant_imag ;
-}
-
-//-------------------------------------------------------------------------//
-
-
-void OptDielectricConstant::calculate_VCA (const PhysicalModelInterface *comp_A,
+void OptDielectricConstant::do_init_alloy (const PhysicalModelInterface *comp_A,
                                            const PhysicalModelInterface *comp_B, double xa)
 
 { 

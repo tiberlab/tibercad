@@ -14,18 +14,6 @@ Variable::VariableMap
 Variable::_variables;
 
 
-//Variable*
-//Variable::get_variable(const string& var)
-//{
-//  Variable* sw = NULL;
-//  VariableMap::iterator it(_variables.find(var));
-//  if (it != _variables.end())
-//    sw = (it->second).first;
-
-//  return sw;
-//}
-
-
 
 bool
 Variable::is_variable(const std::string& var)

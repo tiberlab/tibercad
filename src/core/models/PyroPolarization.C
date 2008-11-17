@@ -19,15 +19,6 @@ PyroPolarization::create(void)
 
 
 
-void
-PyroPolarization::copy_from(const PhysicalModelInterface *rhs)
-{
-  const PyroPolarization* temp = dynamic_cast<const PyroPolarization*>(rhs);
-
-  _polarization = temp->_polarization;
-}
-
-
 PyroPolarization*
 PyroPolarization::create(const Material* mat)
 {

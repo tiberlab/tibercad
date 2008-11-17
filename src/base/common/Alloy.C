@@ -3,6 +3,7 @@
 #include "Alloy.h"
 #include "Database.h"
 #include "RotatedCrystal.h"
+#include "PhysicalModel.h"
 
 
 inline
@@ -27,7 +28,9 @@ void
 Alloy::do_init(void)
 {
   // initialize the parent material
-  Material::do_init();
+  //Material::do_init();
+
+  setup_doping();
 
   _molar_fraction = get_options().get_option("x", 0.0);
 
@@ -42,7 +45,7 @@ Alloy::do_init(void)
   _mat_A = Material::create(name_A, get_options());
   _mat_B = Material::create(name_B, get_options());
 
-  // to be sure w put the structure into the options
+  // to be sure we put the structure into the options
   _mat_A->set_structure(get_structure());
   _mat_B->set_structure(get_structure());
   
@@ -68,15 +71,23 @@ Alloy::do_init(void)
 
   get_database().set_material(get_name());
 
-  get_crystal().build_alloy(&_mat_A->get_rotated_crystal(),
+  RotatedCrystal* crystal = static_cast<RotatedCrystal*>(
+      _mat_A->get_rotated_crystal().copy());
+  crystal->set_material(this);
+  crystal->init_alloy(&_mat_A->get_rotated_crystal(),
       &_mat_B->get_rotated_crystal(), _molar_fraction);
+  set_crystal(crystal);
+
 
   for (it = models_begin(); it != end; ++it)
   {
-    (it->second)->build_alloy(_mat_A->get_model(it->first),
+    (it->second)->init_alloy(_mat_A->get_model(it->first),
                               _mat_B->get_model(it->first), _molar_fraction);
   }
 }
+
+
+
 
 
 Alloy*

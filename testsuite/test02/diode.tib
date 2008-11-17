@@ -101,10 +101,11 @@ $Simulation
   meshfile = diode.msh
   dimension = 1
   temperature = 300
+  verbose = 2
   solve = sweep
   resultpath = output
   output_format = grace
-  #plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob, current)
+  plot = (Ec, Ev, Eg, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob, current)
 }
 
 

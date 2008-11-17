@@ -1,11 +1,9 @@
+// $Id$
+
 #include "ZbDDsemiconductor.h"
 #include "ZbSemiconductor.h"
-#include "DDsemiconductor.h"
 #include "Semiconductor.h"
 #include "Constants.h"
-#include "getpot.h"
-#include "Alloy.h"
-#include "Database.h"
 #include "SolverException.h"
  
 using namespace std;
@@ -248,7 +246,7 @@ using namespace Constants;
        imass(3,2) =(eigenvalue[0][ind*2] - eigenvalue[6][ind*2] + (eigenvalue[2][ind*2] - eigenvalue[0][ind*2] )
                     + (eigenvalue[3][ind*2] - eigenvalue[0][ind*2])) / Hartree /(k_max * k_max);
           
-       double imass_DOS;
+       double imass_DOS = 0.0;
        double temp1, temp2;
        
  

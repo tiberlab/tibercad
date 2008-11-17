@@ -179,7 +179,7 @@ FieldDependentMobility::get_derivative_grad_fermi(RealGradient& dm)
 
 
 void
-FieldDependentMobility::calculate_VCA(const PhysicalModelInterface* comp_A,
+FieldDependentMobility::do_init_alloy(const PhysicalModelInterface* comp_A,
     const PhysicalModelInterface* comp_B, double xa)
 {
 
@@ -194,6 +194,9 @@ FieldDependentMobility::calculate_VCA(const PhysicalModelInterface* comp_A,
   _vsat_b = alloy(scA->_vsat_b, scB->_vsat_b, xa);
   _vsat_min = alloy(scA->_vsat_min, scB->_vsat_min, xa);
 
-  _low_field_mob->build_alloy(scA->_low_field_mob, scB->_low_field_mob, xa);
+  destroy(_low_field_mob);
+  _low_field_mob = create_submodel_copy(scA->_low_field_mob);
+  _low_field_mob->set_driftdiffusionproperties(&get_driftdiffusionproperties());
+  _low_field_mob->init_alloy(scA->_low_field_mob, scB->_low_field_mob, xa);
 }
 

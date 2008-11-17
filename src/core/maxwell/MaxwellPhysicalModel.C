@@ -1,3 +1,5 @@
+// $Id$
+
 #include "MaxwellPhysicalModel.h"
 #include "Material.h"
 
@@ -42,12 +44,11 @@ void MaxwellPhysicalModel::do_init()
 
 //=======================================================//
 
-void MaxwellPhysicalModel::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void MaxwellPhysicalModel::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
   const MaxwellPhysicalModel* matA = dynamic_cast< const  MaxwellPhysicalModel*> (comp_A);
   const MaxwellPhysicalModel* matB = dynamic_cast< const  MaxwellPhysicalModel*> (comp_B);
  
-  
- 
-  _epsilon_model->build_alloy(matA->_epsilon_model, matB->_epsilon_model, xa);
+  PhysicalModelInterface::destroy(_epsilon_model);
+  _epsilon_model = create_submodel_alloy(matA->_epsilon_model, matB->_epsilon_model, xa);
 }

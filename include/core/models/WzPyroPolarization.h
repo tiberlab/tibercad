@@ -31,14 +31,14 @@ class WzPyroPolarization : public PyroPolarization
     //! Read from database
     virtual void read_database(void);
 
+    //! Read from alloy parameters database
+    virtual void read_database_alloy(void);
+
     //! Initialize
     virtual void do_init(void);
   
-    //! Copy from another PyroPolarization object
-    virtual void copy_from(const PhysicalModelInterface *rhs);
-
     //! Calculate VCA for alloy
-    virtual void calculate_VCA(const PhysicalModelInterface *comp_A,
+    virtual void do_init_alloy(const PhysicalModelInterface *comp_A,
         const PhysicalModelInterface *comp_B, double xa);
 
 

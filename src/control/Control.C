@@ -86,7 +86,8 @@ Control::invalidate_environments(void)
 
 
 void
-Control::init(void) throw (InitFailedException, ModelErrorException)
+Control::init(void) throw (InitFailedException,
+    ModelErrorException, DatabaseException)
 {
 
   _database = new Database();

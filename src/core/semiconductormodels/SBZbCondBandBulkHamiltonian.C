@@ -17,7 +17,7 @@ void SBZbCondBandBulkHamiltonian::do_init()
   
   
 
-  if (!(get_material()->is_alloy()))  calculate_for_init();
+  calculate_for_init();
 
  
 

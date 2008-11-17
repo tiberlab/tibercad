@@ -165,14 +165,39 @@ class PhysicalModelInterface
     static void destroy(PhysicalModelInterface* p);
 
     
-    //! Create a new model as an exact copy of this
+    //! Create a new model as a copy of this
     /*!
      * \return a pointer to the newly created model, \c NULL if
      * creation failed
+     *
+     * \note copy will usually \em not copy any members that can be set up
+     * during do_init()
      */
     PhysicalModelInterface* copy(void) const;
+
+
+    //! Create a new submodel model as a copy of another one
+    /*!
+     *\return a pointer to the newly created model, \c NULL if
+     * creation failed
+     * \param other the model to be copied
+     *
+     * The new model will be associated to the same material as this
+     */
+    template <typename T>
+    T* create_submodel_copy(const T* other) const;
+
+
+    //! Create a new submodel as an alloy model
+    template <typename T>
+    T* create_submodel_alloy(const T* comp_A, const T* comp_B, double xa);
+
     
     //! Get a reference to the database
+    /*!
+     * the database will already be setup for the material this model is
+     * associated to
+     */
     Database& get_database(void);
 
     //! Set a reference to the material this model belongs to
@@ -199,13 +224,16 @@ class PhysicalModelInterface
     /*!
      * It calls read_database() and then do_init()
      */
-    void init(void) throw (InitFailedException);
+    void init(void);
 
     
-    //! Build parameters for an alloy
-    void build_alloy(const PhysicalModelInterface* comp_A,
+    //! Initialize this model as an alloy with two components
+    /*!
+     * It calls read_database_alloy() and then do_init_alloy()
+     */
+    void init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
-
+   
 
     //! Print some info
     void print_info(void);
@@ -289,7 +317,9 @@ class PhysicalModelInterface
     //! Initialize the model
     /*!
      * This method should set all model options and call
-     * \c init() of any associated model
+     * \c init() of any associated model.
+     *
+     * It will be called \em only for non-alloy models!
      *
      * This method should be implemented in derived classes.
      */
@@ -300,18 +330,23 @@ class PhysicalModelInterface
     virtual PhysicalModelInterface* create_new(void) const = 0;
 
     
-    //! Copy all data from another model to this one
+    //! Copy data from another model to this one
     /*!
+     * This method should copy \em class members and data structures from
+     * rhs which cannot be setup at initialization from scratch,
+     * such as members that were set up at creation time.
+     *
      * If you reimplement this in a derived class, call the method
      * of the base class, too. If not, you may not copy important
      * things.
      */
-    virtual void copy_from(const PhysicalModelInterface* rhs) = 0;
+    virtual void copy_from(const PhysicalModelInterface* rhs) {};
 
     
     //! Read the properties from the database
     /*!
-     * Reads all needed physical properties from the database.
+     * Reads all needed physical properties from the database for \em non alloy
+     * models.
      * (The default behaviour is to do nothing at all.)
      * If you reimplement this in a derived class, call the method
      * of the base class, too.
@@ -319,22 +354,24 @@ class PhysicalModelInterface
     virtual void read_database(void) {};
 
     
-    //! Read the bowing parameters from the database
+    //! Read alloy parameters from the database
     /*!
-     * Read the bowing parameters for an alloy material from the database.
+     * Read all parameters for an alloy model from the database.
      * (The default behaviour is to do nothing at all.)
      * If you reimplement this in a derived class, call the method
      * of the base class, too.
      */
-    virtual void read_bowing_parameters(void) {};
+    virtual void read_database_alloy(void) {};
 
     
-    //! Calculate parameters for an alloy
+    //! Initialize an alloy
     /*!
-     * Calculates all parameters of an alloy \f$A_xB_{x-1}C\f$ in
-     * virtual crystal approximation
+     * Calculates all parameters of an alloy \f$A_xB_{x-1}C\f$.
+     *
+     * You have to do everything that in a normal material would be done in
+     * do_init()
      */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
     
@@ -580,6 +617,8 @@ PhysicalModelInterface::set_options(const ModelOptions& options)
   _options = options;
 }
 
+
+
 inline
 ModelOptions&
 PhysicalModelInterface::get_options(void)
@@ -588,28 +627,60 @@ PhysicalModelInterface::get_options(void)
 }
 
 
+
 inline
 void
-PhysicalModelInterface::init(void) throw (InitFailedException)
+PhysicalModelInterface::init(void)
 {
   read_database();
   do_init();
 }
 
 
-inline
-void
-PhysicalModelInterface::build_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
+
+template <typename T>
+T*
+PhysicalModelInterface::create_submodel_copy(const T* other) const
 {
-  read_bowing_parameters();
-  calculate_VCA(comp_A, comp_B, xa);
+  assert(other != NULL);
+  T* newmod = static_cast<T*>(other->copy());
+  assert(newmod != NULL);
+  newmod->set_material(_material);
+  return newmod;
 }
 
 
+
+template <typename T>
+T*
+PhysicalModelInterface::create_submodel_alloy(const T* comp_A,
+    const T* comp_B, double xa)
+{
+  assert((comp_A != NULL) && (comp_B != NULL));
+  T* newmod = create_submodel_copy(comp_A);
+  newmod->init_alloy(comp_A, comp_B, xa);
+  return newmod;
+}
+
+
+
+
 inline
 void
-PhysicalModelInterface::calculate_VCA(const PhysicalModelInterface* comp_A,
+PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
+    const PhysicalModelInterface* comp_B, double xa)
+{
+  assert(typeid(*comp_A) == typeid(*comp_B));
+  read_database_alloy();
+  do_init_alloy(comp_A, comp_B, xa);
+}
+
+
+
+
+inline
+void
+PhysicalModelInterface::do_init_alloy(const PhysicalModelInterface* comp_A,
     const PhysicalModelInterface* comp_B, double xa)
 {
   ignore_unused_variable(comp_A);

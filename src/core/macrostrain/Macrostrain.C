@@ -4319,14 +4319,13 @@ void Macrostrain::reallocate_matrix(void)
 //-------------------------------------------------------------------------------------------//
 Macrostrain::Macrostrain(void )
   : _is_reallocated(false),
-    _preallocate(false)
+    _preallocate(false),
+    _first_run(true),
+    poisson_equation(NULL),
+    my_system(NULL),
+    apply_antirotation(true)
+
 {
-  poisson_equation = NULL;
-
-  my_system = NULL;
-
-  _first_run = true;
-
 }
 
 

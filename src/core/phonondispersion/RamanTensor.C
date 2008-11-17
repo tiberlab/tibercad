@@ -1,3 +1,5 @@
+// $Id$
+
 #include "RamanTensor.h"
 #include "Material.h"
 #include "RotatedCrystal.h" 
@@ -7,19 +9,12 @@
 RamanTensor::RamanTensor()
 {  
 }
-//-------------------------------------------------------------------------//
 
-void RamanTensor::copy_from(const PhysicalModelInterface *rhs)
-{
-  const RamanTensor* mod = dynamic_cast<const RamanTensor*> (rhs);
-
-  _raman_tensor = mod->_raman_tensor;
-}
 
 //-------------------------------------------------------------------------//
 
 
-void RamanTensor::calculate_VCA (const PhysicalModelInterface *comp_A, 
+void RamanTensor::do_init_alloy (const PhysicalModelInterface *comp_A, 
                                                 const PhysicalModelInterface *comp_B, double xa) 
 { 
   const RamanTensor* modA = dynamic_cast<const RamanTensor*>(comp_A);

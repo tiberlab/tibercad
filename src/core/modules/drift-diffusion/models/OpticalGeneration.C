@@ -41,7 +41,7 @@ OpticalGeneration::get_net_recombination_rate_derivatives(
 
 
 void
-OpticalGeneration::calculate_VCA(const PhysicalModelInterface* comp_A,
+OpticalGeneration::do_init_alloy(const PhysicalModelInterface* comp_A,
     const PhysicalModelInterface* comp_B, double xa)
 {
   const OpticalGeneration* scA =

@@ -1,3 +1,6 @@
+// $Id$
+
+
 #include "DielectricModel.h"
 #include "Material.h"
 #include "Database.h"
@@ -5,23 +8,15 @@
 //-------------------------------------------------------------------------//
 
 DielectricModel::DielectricModel() :
-  _dielectric_constant(0)
+  _dielectric_constant(1.0)
 {
 }
 
-
-void DielectricModel::copy_from(const PhysicalModelInterface *rhs)
-{
-  const DielectricModel* mod = dynamic_cast<const DielectricModel*> (rhs);
-
-   _dielectric_constant = mod-> _dielectric_constant;
- 
-}
 
 //-------------------------------------------------------------------------//
 
 
-void  DielectricModel::calculate_VCA (const PhysicalModelInterface *comp_A, 
+void  DielectricModel::do_init_alloy (const PhysicalModelInterface *comp_A, 
                                                 const PhysicalModelInterface *comp_B, double xa) 
 { 
   const DielectricModel* modA = dynamic_cast<const DielectricModel*>(comp_A);
@@ -41,7 +36,7 @@ void   DielectricModel::read_database(void)
    
   const Material* mat = get_material();
   GetPot data((mat->get_database()).get_data_file());
-  _ep_x = data("permittivity",1.0);  
+  _ep_x = data("permittivity", _ep_x);  
      
 
 }

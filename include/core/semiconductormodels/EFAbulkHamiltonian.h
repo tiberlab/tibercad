@@ -84,15 +84,9 @@ class EFAbulkHamiltonian: public PhysicalModelInterface
 
   virtual PhysicalModelInterface* create_new(void) const = 0;
 
-  virtual void copy_from (const PhysicalModelInterface *rhs) ;
-
   virtual void do_init (void);
 
-  virtual void read_database(void) {};
-
-  virtual void read_bowing_parameters(void) {};
- 
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
   
 
   //!result Hamiltonian in k representation 
@@ -129,12 +123,11 @@ class EFAbulkHamiltonian: public PhysicalModelInterface
 
   //!map between band numbers  
   std::map <short, short> kp_bands_map;
-
- private:
   
-
    void set_rotation_matrix(void);
  
+
+ private:
 };
 
 

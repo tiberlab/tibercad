@@ -50,11 +50,8 @@ class ExcitonGeneration : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    //! \copydoc RecombinationModelInterface::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs);
-
-    /*! \copydoc RecombinationModelInterface::calculate_VCA() */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+    /*! \copydoc RecombinationModelInterface::do_init_alloy() */
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
     
@@ -99,17 +96,6 @@ PhysicalModelInterface*
 ExcitonGeneration::create_new(void) const
 {
   return new ExcitonGeneration();
-}
-
-
-inline
-void
-ExcitonGeneration::copy_from(const PhysicalModelInterface* rhs)
-{
-  RecombinationModelInterface::copy_from(rhs);
-  
-  const ExcitonGeneration* mod = dynamic_cast<const ExcitonGeneration*>(rhs);
-  C_ = mod->C_;
 }
 
 

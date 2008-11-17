@@ -55,11 +55,8 @@ class TBDLEXPORT AugerRecombination : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    //! \copydoc RecombinationModelInterface::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs);
-
-    /*! \copydoc RecombinationModelInterface::calculate_VCA() */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+    /*! \copydoc RecombinationModelInterface::do_init_alloy() */
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
     
@@ -150,25 +147,6 @@ AugerRecombination::create_new(void) const
   return new AugerRecombination();
 }
 
-
-inline
-void
-AugerRecombination::copy_from(const PhysicalModelInterface* rhs)
-{
-  RecombinationModelInterface::copy_from(rhs);
-  
-  const AugerRecombination* mod = dynamic_cast<const AugerRecombination*>(rhs);
-  _An = mod->_An;
-  _Ap = mod->_Ap;
-  _Bn = mod->_Bn;
-  _Bp = mod->_Bp;
-  _Cn = mod->_Cn;
-  _Cp = mod->_Cp;
-  _Hn = mod->_Hn;
-  _Hp = mod->_Hp;
-  _N0n = mod->_N0n;
-  _N0p = mod->_N0p;
-}
 
 
 #endif // _AUGERRECOMBINATION_H_

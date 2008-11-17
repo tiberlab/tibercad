@@ -4,6 +4,7 @@
 #define _DOPANT_H_
 
 #include "ModelOptions.h"
+#include "TypeDefs.h"
 
 #include <string>
 
@@ -76,15 +77,6 @@ class Dopant
     DopingType get_type(void) const;
 
     
-    //void set_doping_density(double N);
-
-    //void set_ionisation_energy(double E_i);
-
-    //void set_g_factor(int g);
-
-    //void set_type(DopingType type);
-
-
     //! Calculate the coordinate-dependent doping density
     /*! 
      * Sets the local doping density
@@ -226,40 +218,13 @@ inline
 double
 Dopant::do_calculate_doping_density(const Elem* elem, const Point& p)
 {
+  ignore_unused_variable(elem);
+  ignore_unused_variable(&p);
   return 0.0;
 }
 
 
 
-/*
-inline
-void
-Dopant::set_doping_density(double N)
-{
-  _density = N;
-}
-
-inline
-void
-Dopant::set_ionisation_energy(double E_i)
-{
-  _ionisation_energy = E_i;
-}
-
-inline
-void
-Dopant::set_g_factor(int g)
-{
-  _g_factor = g;
-}
-
-inline
-void
-Dopant::set_type(Dopant::DopingType type)
-{
-  _type = type;
-}
-*/
 
 
 #endif //_DOPANT_H_

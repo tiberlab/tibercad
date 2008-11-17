@@ -1,9 +1,12 @@
+// $Id$
+
 #include "DriftDiffusionHeatSource.h"
 #include "getpot.h"
 #include "Material.h"
 #include "Database.h"
 #include "Constants.h"
 #include "SimulationEnvironment.h"
+#include "SimulationOptions.h"
 #include "HeatModel.h"
 #include "BoundaryProperties.h"
 #include "Boundary.h"
@@ -16,27 +19,25 @@
  //! This class handles the heat source
  DriftDiffusionHeatSource::HeatSourceParameters::HeatSourceParameters(void):
     model_name("DriftDiffusion dissipation"),
-    dd_simul_name("dd")
+    dd_simul_name("")
   {
     // TODO read default values from some text file
   }
 
 
-void  DriftDiffusionHeatSource::copy_from(const PhysicalModelInterface *rhs)
-{
-  const DriftDiffusionHeatSource* mod = dynamic_cast<const DriftDiffusionHeatSource*> (rhs);
-}
 
 //-------------------------------------------------------------------------//
 
 
-void   DriftDiffusionHeatSource::calculate_VCA (const PhysicalModelInterface *comp_A, 
+void   DriftDiffusionHeatSource::do_init_alloy (const PhysicalModelInterface *comp_A, 
                                                 const PhysicalModelInterface *comp_B, double xa) 
 { 
   const DriftDiffusionHeatSource* modA = dynamic_cast<const  DriftDiffusionHeatSource*>(comp_A);
 
   const DriftDiffusionHeatSource* modB = dynamic_cast<const  DriftDiffusionHeatSource*>(comp_B);
 
+  // this is ok here
+  do_init();
 
   //alloy(_kappa_e,modA->_kappa_e, modB->_kappa_e, xa);  
 
@@ -53,7 +54,7 @@ void  DriftDiffusionHeatSource::do_init(void)
 
   heat_source_opt.model_name = "Drift diffusion dissipation";
   
-  heat_source_opt.dd_simul_name = get_options().get_option("drift_diffusion_simulation", "no_current");
+  heat_source_opt.dd_simul_name = get_options().get_option("drift_diffusion_simulation", "");
 
   _simul = SimulationInterface::find_simulation(heat_source_opt.dd_simul_name);
 

@@ -94,15 +94,7 @@ class PhononModel: public PhysicalModel
    
  protected:
 
-  virtual PhysicalModelInterface* create_new (void) const{};
-
-  virtual void copy_from(const PhysicalModelInterface *rhs){};
-
-  virtual void read_database (void){};
- 
-  virtual void read_bowing_parameters (void) {};
-
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa){};
+  virtual PhysicalModelInterface* create_new (void) const;
 
   virtual void do_init();
 
@@ -116,6 +108,12 @@ PhononModel* PhononModel::create()
 }
 
 
+inline
+PhysicalModelInterface*
+PhononModel::create_new(void) const
+{
+  return new  PhononModel();
+}
 
 
 

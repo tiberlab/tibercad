@@ -46,9 +46,6 @@ class DriftDiffusionModelInterface : public PhysicalModelInterface
     //! Empty constructor
     DriftDiffusionModelInterface(void);
 
-    //! \copydoc PhysicalModelInterfaceInterface::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs);
-
     //! The standard reference temperature in eV
     /*!
      * We give this value here because we get the lattice temperature
@@ -95,16 +92,6 @@ DriftDiffusionModelInterface::get_driftdiffusionproperties(void)
 {
   assert(_dd_prop != 0);
   return *_dd_prop;
-}
-
-inline
-void
-DriftDiffusionModelInterface::copy_from(const PhysicalModelInterface* rhs)
-{
-  const DriftDiffusionModelInterface* rh =
-    static_cast<const DriftDiffusionModelInterface*>(rhs);
-
-  //_dd_prop = rh->_dd_prop;
 }
 
 

@@ -46,11 +46,8 @@ class ExcitonDissociation : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    //! \copydoc RecombinationModelInterface::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs);
-
-    /*! \copydoc RecombinationModelInterface::calculate_VCA() */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+    /*! \copydoc RecombinationModelInterface::do_init_alloy() */
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
 
@@ -94,18 +91,6 @@ PhysicalModelInterface*
 ExcitonDissociation::create_new(void) const
 {
   return new ExcitonDissociation();
-}
-
-
-inline
-void
-ExcitonDissociation::copy_from(const PhysicalModelInterface* rhs)
-{
-  RecombinationModelInterface::copy_from(rhs);
-  
-  const ExcitonDissociation* mod = dynamic_cast<const ExcitonDissociation*>(rhs);
-  _exciton_sim = mod->_exciton_sim;
-  d_ = mod->d_;
 }
 
 

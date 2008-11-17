@@ -747,8 +747,8 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     virtual void do_init(void);
 
     
-    /*! \copydoc PhysicalModel::calculate_VCA() */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+    /*! \copydoc PhysicalModel::do_init_alloy() */
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
 
@@ -853,6 +853,14 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     bool use_predictor(void) const;
 
 
+    //! Get the electrons
+    ParticleDensity& get_electrons(void);
+
+
+    //! Get the holes
+    ParticleDensity& get_holes(void);
+
+
 
   private:
 
@@ -922,6 +930,14 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     
     //! The assignment operator is disabled
     DriftDiffusionProperties& operator=(const DriftDiffusionProperties& rhs);
+
+
+    //! Parse the model options
+    void parse_options(void);
+
+
+    //! Setup the electron and hole ParticleDensity structures
+    void setup_electrons_and_holes(void);
 
     
     //! Add a recombination model
@@ -1409,6 +1425,24 @@ DriftDiffusionProperties::set_driftdiffusion(DriftDiffusion* dd)
 {
   _driftdiffusion = dd;
 }
+
+
+inline
+ParticleDensity&
+DriftDiffusionProperties::get_electrons(void)
+{
+  return _electrons;
+}
+
+
+inline
+ParticleDensity& 
+DriftDiffusionProperties::get_holes(void)
+{
+  return _holes;
+}
+
+
 
 
 #endif /* _DRIFTDIFFUSIONPROPERTIES_H_ */

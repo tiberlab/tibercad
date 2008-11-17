@@ -1,6 +1,11 @@
+// $Id$
+
 #include "MacrostrainModel.h"
 #include "Material.h"
 #include <iostream>
+
+
+
 MacrostrainModel::MacrostrainModel() : MacrostrainModelInterface() 
 {
   stiffness = NULL;
@@ -38,16 +43,12 @@ void MacrostrainModel::do_init()
   const ModelOptions& opt =  get_options ();
 
   stiffness = Stiffness::create( get_material() -> get_structure(), opt  );
-
   stiffness->set_material(get_material());
-
   stiffness->init();
 
  
   piezo = Piezoelectricity::create( get_material() -> get_structure(), opt  ); 
-
   piezo->set_material(get_material());
-
   piezo->init();
 
 
@@ -81,43 +82,27 @@ void MacrostrainModel::do_init()
 }
 
 
-//================================================================//
-void MacrostrainModel::copy_from(const PhysicalModelInterface *rhs)
-{
- 
-  // copy is not necessary as everything is created in do_init()
-  
- 
-}
 
 //==========================================================================//
-
-void MacrostrainModel::read_database (void)
-{
- 
-}
-
-//==========================================================================//
-void MacrostrainModel::calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void MacrostrainModel::do_init_alloy (const PhysicalModelInterface *comp_A,
+    const PhysicalModelInterface *comp_B, double xa)
 {
 
-  const MacrostrainModel* matA = dynamic_cast< const MacrostrainModel*> (comp_A);
+  const MacrostrainModel* modA = dynamic_cast< const MacrostrainModel*> (comp_A);
+  const MacrostrainModel* modB = dynamic_cast< const MacrostrainModel*> (comp_B);
 
-  const MacrostrainModel* matB = dynamic_cast< const MacrostrainModel*> (comp_B);
-
+  poisson = modA->poisson;
+  id_Ex = modA->id_Ex;
+  id_Ey = modA->id_Ey;
+  id_Ez = modA->id_Ez;
+  Poisson_variables_ID = modA->Poisson_variables_ID;
  
-
-  stiffness->build_alloy(matA->stiffness, matB->stiffness, xa);
-  
+  PhysicalModelInterface::destroy(stiffness);
+  stiffness = create_submodel_alloy(modA->stiffness, modB->stiffness, xa);
  
-
-  piezo->build_alloy(matA->piezo, matB->piezo, xa);
-
+  PhysicalModelInterface::destroy(piezo);
+  piezo = create_submodel_alloy(modA->piezo, modB->piezo, xa);
   
-
-  
-
-
 }
 
 //==========================================================================//

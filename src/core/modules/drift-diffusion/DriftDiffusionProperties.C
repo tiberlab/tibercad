@@ -30,8 +30,8 @@ DriftDiffusionProperties::PointData::PointData(void)
   : //electron_conductivity_derivatives(3, 0.0),
     //hole_conductivity_derivatives(3, 0.0),
     electron_recombination_rate(0.0),
-    hole_recombination_rate(0.0),
     electron_recombination_rate_derivatives(3, 0.0),
+    hole_recombination_rate(0.0),
     hole_recombination_rate_derivatives(3, 0.0)
 {
 }
@@ -90,6 +90,7 @@ DriftDiffusionProperties::read_database(void)
 void
 DriftDiffusionProperties::set_variable_value(double value, ID id)
 {
+  ignore_unused_variable(id);
   //if (id == RELAXPOLARIZ)
     _relax_polariz = value;
 }
@@ -98,15 +99,16 @@ DriftDiffusionProperties::set_variable_value(double value, ID id)
 double
 DriftDiffusionProperties::get_variable_value(ID id)
 {
+  ignore_unused_variable(id);
   return _relax_polariz;
 }
 
 
 
+
 void
-DriftDiffusionProperties::do_init(void)
+DriftDiffusionProperties::parse_options(void)
 {
-  assert(_driftdiffusion != NULL);
 
   const string stat("B");
   if (get_options().get_option("statistics", stat) == "FD")
@@ -116,10 +118,28 @@ DriftDiffusionProperties::do_init(void)
   std::string s(get_parameter("relax_polarization", ""));
   _relax_polariz = check_and_register(s, _relax_polariz);
 
+  _use_predictor = get_parameter("use_density_predictor", _use_predictor);
 
-  //
-  // setup holes and electrons
-  //
+  _is_dielectric = get_parameter("dielectric", _is_dielectric);
+  permittivity = get_parameter("permittivity", permittivity);
+
+
+  // the temperature simulation
+  string temp_simul = get_options().get_option("thermal_simulation", "");
+  _is_inhomogeneous |= _lattice_temp.set_simulation(temp_simul);
+
+
+  // the strain simulation
+  string strain_simul = get_options().get_option("strain_simulation", "");
+  _is_inhomogeneous |= _strain_if.set_simulation(strain_simul);
+
+}
+
+
+
+void
+DriftDiffusionProperties::setup_electrons_and_holes(void)
+{
   _holes.set_particle_charge(1.0);
   _holes.set_statistics(_statistics);
   _electrons.set_statistics(_statistics);
@@ -147,12 +167,19 @@ DriftDiffusionProperties::do_init(void)
       _holes.set_embracing(emb);
     }
   }
+}
 
-  _use_predictor = get_parameter("use_density_predictor", _use_predictor);
 
 
-  _is_dielectric = get_parameter("dielectric", _is_dielectric);
-  permittivity = get_parameter("permittivity", permittivity);
+void
+DriftDiffusionProperties::do_init(void)
+{
+  assert(_driftdiffusion != NULL);
+
+  parse_options();
+
+  setup_electrons_and_holes();
+
 
   PhysicalModelInterface::destroy(_pyropolarization);
   _pyropolarization = PyroPolarization::create(get_material());
@@ -164,17 +191,6 @@ DriftDiffusionProperties::do_init(void)
   //pyro_polarization(0) = get_parameter("Px", pyro_polarization(0));
   //pyro_polarization(1) = get_parameter("Py", pyro_polarization(1));
   //pyro_polarization(2) = get_parameter("Pz", pyro_polarization(2));
-
-
-  // the temperature simulation
-  string temp_simul = get_options().get_option("thermal_simulation", "");
-  _is_inhomogeneous |= _lattice_temp.set_simulation(temp_simul);
-
-
-  // the strain simulation
-  string strain_simul = get_options().get_option("strain_simulation", "");
-  _is_inhomogeneous |= _strain_if.set_simulation(strain_simul);
-  
 
 
   //
@@ -278,13 +294,20 @@ DriftDiffusionProperties::~DriftDiffusionProperties(void)
 
 
 void
-DriftDiffusionProperties::calculate_VCA(const PhysicalModelInterface* comp_A,
+DriftDiffusionProperties::do_init_alloy(const PhysicalModelInterface* comp_A,
     const PhysicalModelInterface* comp_B, double xa)
 {
   const DriftDiffusionProperties* scA =
     dynamic_cast<const DriftDiffusionProperties*>(comp_A);
   const DriftDiffusionProperties* scB =
     dynamic_cast<const DriftDiffusionProperties*>(comp_B);
+
+
+  assert((comp_A != NULL) && (comp_B != NULL));
+
+  parse_options();
+
+  setup_electrons_and_holes();
 
 
   permittivity = alloy(scA->permittivity, scB->permittivity, xa);
@@ -310,21 +333,37 @@ DriftDiffusionProperties::calculate_VCA(const PhysicalModelInterface* comp_A,
     alloy(scA->valence_band.band_edge,
         scB->valence_band.band_edge, xa);
 
-  _electron_mobility->build_alloy(scA->_electron_mobility,
-      scB->_electron_mobility, xa);
-  _hole_mobility->build_alloy(scA->_hole_mobility,
-      scB->_hole_mobility, xa);
 
-  recomb_iterator it = _recombination_models.begin();
-  recomb_iterator end = _recombination_models.end();
+  PhysicalModelInterface::destroy(_electron_mobility);
+  _electron_mobility = create_submodel_copy(scA->_electron_mobility);
+  _electron_mobility->set_driftdiffusionproperties(this);
+  _electron_mobility->init_alloy(scA->_electron_mobility,
+      scB->_electron_mobility, xa);
+
+
+  PhysicalModelInterface::destroy(_hole_mobility);
+  _hole_mobility = create_submodel_copy(scA->_hole_mobility);
+  _hole_mobility->set_driftdiffusionproperties(this);
+  _hole_mobility->init_alloy(scA->_hole_mobility, scB->_hole_mobility, xa);
+
+
+  clear_recombination();
+  const_recomb_iterator it = scA->_recombination_models.begin();
+  const_recomb_iterator end = scA->_recombination_models.end();
   for ( ; it != end; ++it)
   {
     ID id = it->first;
-    (it->second)->build_alloy(scA->get_recombination_model(id),
-                              scB->get_recombination_model(id), xa);
+    RecombinationModelInterface* newrec =
+      create_submodel_copy(scA->get_recombination_model(id));
+    newrec->set_driftdiffusionproperties(this);
+    newrec->init_alloy(scA->get_recombination_model(id),
+            scB->get_recombination_model(id), xa);
+    _recombination_models[id] = newrec;
   }
 
-  _pyropolarization->build_alloy(scA->_pyropolarization,
+
+  PhysicalModelInterface::destroy(_pyropolarization);
+  _pyropolarization = create_submodel_alloy(scA->_pyropolarization,
       scB->_pyropolarization, xa);
 
 
@@ -836,14 +875,14 @@ DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
   const DriftDiffusionProperties* mod =
     dynamic_cast<const DriftDiffusionProperties*>(rhs);
 
-  equilibrium_fermi_level = mod->get_equilibrium_fermi_level();
-  intrinsic_density = mod->get_intrinsic_density();
+  //equilibrium_fermi_level = mod->get_equilibrium_fermi_level();
+  //intrinsic_density = mod->get_intrinsic_density();
   _driftdiffusion = mod->_driftdiffusion;
-  _coupling = mod->_coupling;
-  _statistics = mod->_statistics;
-  _strain = mod->_strain;
-  conduction_band = mod->conduction_band;
-  valence_band = mod->valence_band;
+  //_coupling = mod->_coupling;
+  //_statistics = mod->_statistics;
+  //_strain = mod->_strain;
+  //conduction_band = mod->conduction_band;
+  //valence_band = mod->valence_band;
   
 }
 

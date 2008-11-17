@@ -37,6 +37,8 @@ class Utils
      * contain the type of braces used to define the vector. When a component
      * should contain a comma, it has to be quoted with \c ", when it should
      * contain a quote, the quote has to be escaped as \verbatim \" \endverbatim
+     *
+     * vec.size() = 0 if input does not contain a vector.
      */
     template <typename T>
     static void extract_vector(const std::string& input, std::vector<T>& vec);
@@ -113,6 +115,20 @@ class Utils
 
     //! Convert a windows style path to something more UNIX like
     static void convert_path_to_unix(std::string& path);
+
+
+    //! Read a stream until the matching (closing) symbol of a grouping pair is found
+    /*!
+     * \param istr the stream to parse
+     * \param open the opening symbol
+     * \param close the closing symbol
+     */
+    static const std::string get_until_matching_symbol(std::istream& istr,
+        char open = '(', char close = ')');
+
+
+    //! Skip whitespace in a stream
+    static void skip_whitespace(std::istream& istr);
 
 
 

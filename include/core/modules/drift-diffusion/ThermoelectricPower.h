@@ -6,6 +6,11 @@
 #define _THERMOELECTRICPOWER_H_
 
 
+//#ifndef TIBER_MODULE_NAME
+//# define TIBER_MODULE_NAME dd_thelpow
+//#endif
+
+
 
 #include "DriftDiffusionModelInterface.h"
 #include "vector_value.h"
@@ -68,8 +73,6 @@ class ThermoelectricPower : public DriftDiffusionModelInterface
     //! Calculate the thermoelectric power derivatives
     void calculate_derivatives(void);
 
-    static ThermoelectricPower* create(void);
-    static void destroy(PhysicalModelInterface* mod);
 
     static ThermoelectricPower* create_model(const std::string& model,
         const ModelOptions& options = ModelOptions());
@@ -89,13 +92,9 @@ class ThermoelectricPower : public DriftDiffusionModelInterface
 
     virtual void do_init (void);
 
-    virtual void copy_from(const PhysicalModelInterface *rhs);
-
     virtual void read_database(void);
 
-    //virtual void read_bowing_parameters(void) {};
-
-    virtual void calculate_VCA(const PhysicalModelInterface *comp_A,
+    virtual void do_init_alloy(const PhysicalModelInterface *comp_A,
         const PhysicalModelInterface *comp_B, double xa); 
 
     virtual PhysicalModelInterface* create_new(void) const;

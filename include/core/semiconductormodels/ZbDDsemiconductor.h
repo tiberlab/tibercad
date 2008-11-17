@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _ZBDDSEMICONDUCTOR_H_
 #define _ZBDDSEMICONDUCTOR_H_
  

@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _PIEZOELECTRICITY_H_
 #define _PIEZOELECTRICITY_H_
 
@@ -6,12 +8,11 @@
 #include <cmath>
 #include "PhysicalModel.h"
 #include "PhysicalModelInterface.h"
+
+
 class Piezoelectricity : public PhysicalModelInterface
 {
  public:
-
-  //!Empty constructor
-  Piezoelectricity();
 
   //! returns polarization (only piezo) in crystal system
   virtual Tensor1  get_polariz_cryst(Tensor2Sym& strain_cryst) = 0;
@@ -32,7 +33,11 @@ class Piezoelectricity : public PhysicalModelInterface
   
   static Piezoelectricity* create(const std::string& name,  const ModelOptions& options);
 
+
  protected:
+
+  //!Empty constructor
+  Piezoelectricity();
 
 
   virtual void read_database ( ) = 0;
@@ -41,10 +46,8 @@ class Piezoelectricity : public PhysicalModelInterface
   virtual void do_init(void) = 0;
 
 
-  virtual void copy_from (const PhysicalModelInterface *rhs) = 0;
 
-
-  virtual void calculate_VCA (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
 
   
   virtual PhysicalModelInterface* create_new(void) const = 0;

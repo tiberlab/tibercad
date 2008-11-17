@@ -5,6 +5,7 @@
 
 #include "PhysicalModelInterface.h"
 #include "SimulationOptions.h"
+#include "TypeDefs.h"
 #include "tensor.h"
 
 class Elem;
@@ -64,9 +65,6 @@ class PyroPolarization : public PhysicalModelInterface
     //! Create new PyroPolarization
     virtual PhysicalModelInterface* create_new(void) const;
   
-    //! Copy from another PyroPolarization object
-    virtual void copy_from(const PhysicalModelInterface *rhs);
-
 
   private:
 
@@ -122,9 +120,9 @@ void
 PyroPolarization::do_calculate_polarization(const Elem* elem, const Point& p,
         double temperature)
 {
-  static_cast<const void*>(elem);
-  static_cast<const void*>(&p);
-  static_cast<void*>(&temperature);
+  ignore_unused_variable(elem);
+  ignore_unused_variable(&p);
+  ignore_unused_variable(temperature);
 }
 
 #endif // _PYROPOLARIZATION_H_

@@ -1,6 +1,7 @@
 // $Id$
 
 #include "Material.h"
+#include "PhysicalModel.h"
 #include "Alloy.h"
 #include "Database.h"
 #include "RotatedCrystal.h"
@@ -38,6 +39,30 @@ Material::~Material(void)
 }
 
 
+
+void
+Material::setup_doping(void)
+{
+  // now the doping
+  double doping = get_options().get_option("doping", 0.0);
+  if (doping > 0.0)
+  {
+    double level = get_options().get_option("doping_level", 0.025);
+    int g = get_options().get_option("doping_degen", 2);
+    // allow simplified name
+    g = get_options().get_option("g", g);
+    Dopant::DopingType type = Dopant::N_TYPE;
+    const std::string& doptype = get_options().get_option("doping_type", "");
+    if (doptype == "acceptor")
+      type = Dopant::P_TYPE;
+    
+    add_dopant(new Dopant(doping, level, g, type));
+  }
+}
+
+
+
+
 void
 Material::do_init(void)
 {
@@ -54,39 +79,28 @@ Material::do_init(void)
   if (get_options().find_option("z-growth-direction"))
     opts["z-growth-direction"] = get_options()["z-growth-direction"];
 
+
   // first we set up RotatedCrystal because it will be
   // needed by others
   _rotated_crystal = RotatedCrystal::create(get_structure(), opts);
   _rotated_crystal->set_material(this);
   _rotated_crystal->init();
 
-
-  // now the doping
-  double doping = get_options().get_option("doping", 0.0);
-  if (doping > 0.0)
-  {
-    double level = get_options().get_option("doping_level", 0.025);
-    int g = get_options().get_option("doping_degen", 2);
-    // allow simplified name
-    g = get_options().get_option("g", g);
-    Dopant::DopingType type = Dopant::N_TYPE;
-    const std::string& doptype = get_options().get_option("doping_type", "");
-    if (doptype == "acceptor")
-      type = Dopant::P_TYPE;
-    
-    add_dopant(new Dopant(doping, level, g, type));
-  }
-
+  setup_doping();
 
   ModelMap::iterator it = _models.begin();
   const ModelMap::const_iterator end = _models.end();
 
   for ( ; it != end; ++it)
-  {
-    (it->second)->set_material(this);
-
     (it->second)->init();
-  }
+}
+
+
+void
+Material::set_crystal(RotatedCrystal* crystal)
+{
+  PhysicalModelInterface::destroy(_rotated_crystal);
+  _rotated_crystal = crystal;
 }
 
 
@@ -106,6 +120,7 @@ Material::add_model(PhysicalModel* model, ID simulator_id)
   else
     _models[simulator_id] = model;
 
+  model->set_material(this);
   model->set_simulator_id(simulator_id);
 }
 

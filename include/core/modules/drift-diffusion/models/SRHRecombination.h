@@ -70,11 +70,8 @@ class TBDLEXPORT SRHRecombination : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    //! \copydoc RecombinationModelInterface::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs);
-
-    /*! \copydoc RecombinationModelInterface::calculate_VCA() */
-    virtual void calculate_VCA(const PhysicalModelInterface* comp_A,
+    /*! \copydoc RecombinationModelInterface::do_init_alloy() */
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
     
@@ -140,21 +137,6 @@ PhysicalModelInterface*
 SRHRecombination::create_new(void) const
 {
   return new SRHRecombination();
-}
-
-
-inline
-void
-SRHRecombination::copy_from(const PhysicalModelInterface* rhs)
-{
-  RecombinationModelInterface::copy_from(rhs);
-  
-  const SRHRecombination* mod = dynamic_cast<const SRHRecombination*>(rhs);
-  tau_n_ = mod->tau_n_;
-  tau_p_ = mod->tau_p_;
-  E_t_ = mod->E_t_;
-  Talpha_e_ = mod->Talpha_e_;
-  Talpha_h_ = mod->Talpha_h_;
 }
 
 

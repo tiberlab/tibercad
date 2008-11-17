@@ -74,11 +74,13 @@ ExcitonDissociation::get_net_recombination_rate_derivatives(
 
 
 void
-ExcitonDissociation::calculate_VCA(const PhysicalModelInterface* comp_A,
+ExcitonDissociation::do_init_alloy(const PhysicalModelInterface* comp_A,
     const PhysicalModelInterface* comp_B, double xa)
 {
   ignore_unused_variable(comp_A);
   ignore_unused_variable(comp_B);
   ignore_unused_variable(xa);
+
+  do_init();
 }
 

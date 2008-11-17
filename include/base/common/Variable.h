@@ -51,14 +51,6 @@ class Variable
     virtual ~Variable(void) { };
 
 
-    //! Get the variable object that has the variable \c var
-    /*!
-     * \param var the variable name
-     * \return a pointer to the variable object or NULL, if \c var doesn't exist
-     */
-    //static Variable* get_variable(const std::string& var);
-
-
     //! Check if \c var is a valid variable variable
     /*!
      * \param var the name of the variable

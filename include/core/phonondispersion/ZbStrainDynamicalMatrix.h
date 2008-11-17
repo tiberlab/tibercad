@@ -1,10 +1,13 @@
+// $Id$
+
 #ifndef _ZB_FREESTRAINDYNAMICALMATRIX_H_
 #define _ZB_FREESTRAINDYNAMICALMATRIX_H_
 
 
-#include "PhononModel.h"
 #include "DynamicalMatrix.h"
-#include "Macrostrain.h"
+
+class PhononModel;
+class SimulationInterface;
 
 
 class ZbStrainDynamicalMatrix: public DynamicalMatrix
@@ -17,10 +20,10 @@ class ZbStrainDynamicalMatrix: public DynamicalMatrix
   ~ZbStrainDynamicalMatrix() {};
 
   //! Create a ZbLatticeThermalConductivity object
- static  ZbStrainDynamicalMatrix* create();
+  static  ZbStrainDynamicalMatrix* create();
 
 
-//! Update the lattice thermal conductivity given the Temperature
+  //! Update the lattice thermal conductivity given the Temperature
   virtual void re_init(); 
 
 
@@ -28,14 +31,14 @@ class ZbStrainDynamicalMatrix: public DynamicalMatrix
  
  private:
 
- PhononModel* _phonon_model;
- double p_norm;
- double q_norm;
- double r_norm;
- double w0;
- Tensor4DSym deformation_potential;
- Macrostrain* _simul;
- 
+  PhononModel* _phonon_model;
+  double p_norm;
+  double q_norm;
+  double r_norm;
+  double w0;
+  Tensor4DSym deformation_potential;
+  SimulationInterface* _simul;
+
 
  protected:
 
@@ -43,7 +46,7 @@ class ZbStrainDynamicalMatrix: public DynamicalMatrix
 
   virtual void do_init(void);
 
-  inline  virtual PhysicalModelInterface*  create_new (void) const;
+  virtual PhysicalModelInterface*  create_new (void) const;
 
  private:
 
