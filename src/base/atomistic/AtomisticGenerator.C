@@ -193,7 +193,7 @@ std::cout << "scale is " << scale << std::endl << std::endl << std::endl;
   delete _bondmapobject;
 
   _bondmapobject = NULL;
-  bond_map_gen(_structure_basis);
+  //bond_map_gen(_structure_basis);
 
   //----------------------------------------------------------------------------------------------
 

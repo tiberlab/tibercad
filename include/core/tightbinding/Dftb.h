@@ -17,7 +17,8 @@ class Dftb : public TightBinding{
 
 public:
 
-class DftbOptions
+//! A class for Dftb options
+  class DftbOptions
   {
   public:
 

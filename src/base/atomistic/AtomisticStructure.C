@@ -19,11 +19,11 @@
 
 AtomisticStructure::AtomisticStructure(const std::string& name)
 :_name(name),
-_bondmap(NULL)
+_bondmap(NULL),
+_atomistic_structure_options()
 {
   // Default initializations
   N_atoms = 0;
-  is_periodical = false;
   for (unsigned int i = 0; i < 9; i++)
     {
       _periodicity_vectors[i] = 0.0;
@@ -61,6 +61,19 @@ AtomisticStructure::create(const std::string& name, const ModelOptions& options)
   return st;
 }
 
+
+AtomisticStructure::AtomisticStructureOptions::AtomisticStructureOptions(void)
+{
+is_passivated = false;
+contains_bond_map = false;
+is_periodical = false;
+}
+
+
+AtomisticStructure::AtomisticStructureOptions::~AtomisticStructureOptions(void)
+{
+
+}
 
 
 GetPot
@@ -151,10 +164,10 @@ AtomisticStructure::init()
       print_structure(name);
       name = _name + ".gen" ;
       std::cout << "Printing structure " << name << std::endl;
-      print_structure(name);
-      name = _name + ".upg" ;
+      //print_structure(name);
+      //name = _name + ".upg" ;
       std::cout << "Printing structure " << name << std::endl;
-      print_structure(name);
+      //print_structure(name);
 
       //TODO: with passivation printing upg seems to fail, check it!
       //print_structure("structure.upg");
@@ -283,9 +296,9 @@ AtomisticStructure::read_structure(const std::string& path)
       line_string >> record;
 
       if ( (record.compare("S") == 0) || (record.compare("s") == 0))
-        is_periodical = true;
+        _atomistic_structure_options.is_periodical = true;
       else  if ( (record.compare("C") == 0) && (record.compare("c") == 0))
-        is_periodical = false;
+        _atomistic_structure_options.is_periodical = false;
       else
         std::cerr << "Warning (in GEN file at first line): Cluster (C) or Supercell (S) must be specified. By default a Cluster (no periodicity) is considered. \n";
 

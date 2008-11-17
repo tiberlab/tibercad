@@ -23,6 +23,26 @@ class AtomisticStructure
 {
 public:
 
+//! A class for Dftb options
+  class AtomisticStructureOptions
+  {
+  public:
+
+    //!Options inizialization
+    AtomisticStructureOptions(void);
+    //!Options destructor
+    ~AtomisticStructureOptions(void);
+
+    //! Tells if structure has been passivated
+    bool is_passivated;
+
+    //!Tells if structure contains bond map informations
+    bool contains_bond_map;
+
+    //!Tells if structure has to be considered periodical;
+    bool is_periodical;
+  };
+
 
   //! Constructor for AtomisticStructure class object
   /*!
@@ -115,6 +135,9 @@ public:
 
 
 private:
+
+  //! AtomisticStructureOptions object pointer
+  AtomisticStructureOptions _atomistic_structure_options;
 
   //! Bond Map object pointer
   BondMap* _bondmap;
