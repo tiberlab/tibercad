@@ -4,6 +4,7 @@
 #include "DriftDiffusionProperties.h"
 
 #include "Database.h"
+#include "Material.h"
 
 
 
@@ -189,6 +190,13 @@ FieldDependentMobility::do_init_alloy(const PhysicalModelInterface* comp_A,
     dynamic_cast<const FieldDependentMobility*>(comp_A);
   const FieldDependentMobility* scB =
     dynamic_cast<const FieldDependentMobility*>(comp_B);
+
+  if (scA->_vsat_formula != scB->_vsat_formula)
+    throw InitFailedException("Field dependent mobility has to use the same "
+        "formula for both components of the alloy " + get_material()->get_name());
+
+  _vsat_formula = scA->_vsat_formula;
+  _force = scA->_force;
 
   _beta = alloy(scA->_beta, scB->_beta, xa);
   _betaexp = alloy(scA->_betaexp, scB->_betaexp, xa);
