@@ -93,6 +93,7 @@ beta0    = (2,         2)
 A_vsat   = (1.5e+07,   1.5e+07)
 B_vsat   = (0,         0)
 vsat_min = (5.000e+06, 5.000e+06)
+betaexp  = (0,         0)
 
 
 # SRH recombination
