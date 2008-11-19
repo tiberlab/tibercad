@@ -19,7 +19,7 @@ DopingDependentMobility::read_database(void)
   Database& db = get_database();
   db.set_section("mobility/doping_dependent");
 
-  formula_ = db.get("mobility_formula", formula_);
+  formula_ = db.get("mobility_formula", formula_, true);
 
   std::vector<double> empty(2, 0);
   
