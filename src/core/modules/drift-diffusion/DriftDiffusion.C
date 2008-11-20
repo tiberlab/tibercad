@@ -4642,9 +4642,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         RealGradient dmu_h(0);
         if (dim > 1)
         {
-          sc->get_electron_mobility_model()->get_derivative_grad_fermi(dmu_e);
+          sc->get_electron_mobility_derivatives(dmu_e);
           dmu_e *= J * phi0 / (mu0 * C0_e) * n / x0;
-          sc->get_hole_mobility_model()->get_derivative_grad_fermi(dmu_h);
+          sc->get_hole_mobility_derivatives(dmu_h);
           dmu_h *= J * phi0 / (mu0 * C0_h) * p / x0;
         }
 

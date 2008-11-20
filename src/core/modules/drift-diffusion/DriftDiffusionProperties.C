@@ -193,82 +193,85 @@ DriftDiffusionProperties::do_init(void)
   //pyro_polarization(2) = get_parameter("Pz", pyro_polarization(2));
 
 
-  //
-  // mobilities
-  // 
-
-  // create electron mobility model
-  PhysicalModelInterface::destroy(_electron_mobility);
-
-  ModelOptions::const_submodel_iterator
-    it(get_options().submodels_begin("electron_mobility"));
-  ModelOptions::const_submodel_iterator
-    end(get_options().submodels_end("electron_mobility"));
-
-  if (it != end)
-    _electron_mobility = create_mobility_model(it->second);
-  else
+  if (!is_dielectric())
   {
-    ModelOptions opts;
-    opts.set_option("name", string("electron_mobility"));
-    _electron_mobility = create_mobility_model(opts);
-  }
-  _electron_mobility->set_carrier_type('e');
-  _electron_mobility->init();
+    //
+    // mobilities
+    // 
+
+    // create electron mobility model
+    PhysicalModelInterface::destroy(_electron_mobility);
+
+    ModelOptions::const_submodel_iterator
+      it(get_options().submodels_begin("electron_mobility"));
+    ModelOptions::const_submodel_iterator
+      end(get_options().submodels_end("electron_mobility"));
+
+    if (it != end)
+      _electron_mobility = create_mobility_model(it->second);
+    else
+    {
+      ModelOptions opts;
+      opts.set_option("name", string("electron_mobility"));
+      _electron_mobility = create_mobility_model(opts);
+    }
+    _electron_mobility->set_carrier_type('e');
+    _electron_mobility->init();
 
 
-  // create hole mobility model
-  PhysicalModelInterface::destroy(_hole_mobility);
+    // create hole mobility model
+    PhysicalModelInterface::destroy(_hole_mobility);
 
-  it = get_options().submodels_begin("hole_mobility");
-  end = get_options().submodels_end("hole_mobility");
+    it = get_options().submodels_begin("hole_mobility");
+    end = get_options().submodels_end("hole_mobility");
 
-  if (it != end)
-    _hole_mobility = create_mobility_model(it->second);
-  else
-  {
-    ModelOptions opts;
-    opts.set_option("name", string("hole_mobility"));
-    _hole_mobility = create_mobility_model(opts);
-  }
-  _hole_mobility->set_carrier_type('h');
-  _hole_mobility->init();
+    if (it != end)
+      _hole_mobility = create_mobility_model(it->second);
+    else
+    {
+      ModelOptions opts;
+      opts.set_option("name", string("hole_mobility"));
+      _hole_mobility = create_mobility_model(opts);
+    }
+    _hole_mobility->set_carrier_type('h');
+    _hole_mobility->init();
 
 
-  
-  //
-  // Recombinations (we can have several models!)
-  //
 
-  // create recombination models
-  it = get_options().submodels_begin("recombination");
-  end = get_options().submodels_end("recombination");
-  for ( ; it != end; ++it)
-  {
-    const std::string& name = (it->second).get_option("model", "");
-    add_recombination_model(name, it->second);
-  }
- 
-   
-  //
-  // Thermoelectric power
-  // 
+    //
+    // Recombinations (we can have several models!)
+    //
 
-  it = get_options().submodels_begin("thermoelectric_power");
-  end = get_options().submodels_end("thermoelectric_power");
-  if (it != end)
-  {
-    PhysicalModelInterface::destroy(_thermoelectric_power);
+    // create recombination models
+    it = get_options().submodels_begin("recombination");
+    end = get_options().submodels_end("recombination");
+    for ( ; it != end; ++it)
+    {
+      const std::string& name = (it->second).get_option("model", "");
+      add_recombination_model(name, it->second);
+    }
 
-    _thermoelectric_power = ThermoelectricPower::create_model("default", it->second);
 
-    if (_thermoelectric_power == NULL)
-      throw InitFailedException("Could not create thermoelectric power model");
+    //
+    // Thermoelectric power
+    // 
 
-    _thermoelectric_power->set_material(get_material());
-    _thermoelectric_power->set_driftdiffusionproperties(this);
-    _thermoelectric_power->set_simulator_id(get_simulator_id());
-    _thermoelectric_power->init();  
+    it = get_options().submodels_begin("thermoelectric_power");
+    end = get_options().submodels_end("thermoelectric_power");
+    if (it != end)
+    {
+      PhysicalModelInterface::destroy(_thermoelectric_power);
+
+      _thermoelectric_power = ThermoelectricPower::create_model("default", it->second);
+
+      if (_thermoelectric_power == NULL)
+        throw InitFailedException("Could not create thermoelectric power model");
+
+      _thermoelectric_power->set_material(get_material());
+      _thermoelectric_power->set_driftdiffusionproperties(this);
+      _thermoelectric_power->set_simulator_id(get_simulator_id());
+      _thermoelectric_power->init();  
+    }
   }
 
   // DOES NOT WORK
@@ -312,6 +315,7 @@ DriftDiffusionProperties::do_init_alloy(const PhysicalModelInterface* comp_A,
 
   permittivity = alloy(scA->permittivity, scB->permittivity, xa);
 
+  _is_dielectric = scA->_is_dielectric;
 
   conduction_band.effective_mass =
     alloy(scA->conduction_band.effective_mass,
@@ -334,17 +338,20 @@ DriftDiffusionProperties::do_init_alloy(const PhysicalModelInterface* comp_A,
         scB->valence_band.band_edge, xa);
 
 
-  PhysicalModelInterface::destroy(_electron_mobility);
-  _electron_mobility = create_submodel_copy(scA->_electron_mobility);
-  _electron_mobility->set_driftdiffusionproperties(this);
-  _electron_mobility->init_alloy(scA->_electron_mobility,
-      scB->_electron_mobility, xa);
+  if (!is_dielectric())
+  {
+    PhysicalModelInterface::destroy(_electron_mobility);
+    _electron_mobility = create_submodel_copy(scA->_electron_mobility);
+    _electron_mobility->set_driftdiffusionproperties(this);
+    _electron_mobility->init_alloy(scA->_electron_mobility,
+        scB->_electron_mobility, xa);
 
 
-  PhysicalModelInterface::destroy(_hole_mobility);
-  _hole_mobility = create_submodel_copy(scA->_hole_mobility);
-  _hole_mobility->set_driftdiffusionproperties(this);
-  _hole_mobility->init_alloy(scA->_hole_mobility, scB->_hole_mobility, xa);
+    PhysicalModelInterface::destroy(_hole_mobility);
+    _hole_mobility = create_submodel_copy(scA->_hole_mobility);
+    _hole_mobility->set_driftdiffusionproperties(this);
+    _hole_mobility->init_alloy(scA->_hole_mobility, scB->_hole_mobility, xa);
+  }
 
 
   clear_recombination();
@@ -652,13 +659,35 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
 void
 DriftDiffusionProperties::calculate_mobilities(void)
 {
-  // electrons
-  _pd->electron_mobility = _electron_mobility->get_mobility();
-    
-  // holes
-  _pd->hole_mobility = _hole_mobility->get_mobility();
+  if (is_dielectric())
+  {
+    _pd->electron_mobility = 0.0;
+    _pd->hole_mobility = 0.0;
+  }
+  else
+  {
+    _pd->electron_mobility = _electron_mobility->get_mobility();
+    _pd->hole_mobility = _hole_mobility->get_mobility();
+  }
 }
 
+
+
+void
+DriftDiffusionProperties::get_electron_mobility_derivatives(RealGradient& dmu) const
+{
+  if (!is_dielectric())
+    _electron_mobility->get_derivative_grad_fermi(dmu);
+}
+
+
+
+void
+DriftDiffusionProperties::get_hole_mobility_derivatives(RealGradient& dmu) const
+{
+  if (!is_dielectric())
+    _hole_mobility->get_derivative_grad_fermi(dmu);
+}
 
 
 

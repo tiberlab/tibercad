@@ -572,16 +572,14 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
       { return _hole_mobility; };
      
 
-    //! Get the electron conductivity derivatives
-    //const std::vector<double>& get_electron_conductivity_derivatives(void) const
-    //  { return electron_conductivity_derivatives; };
+    //! Get the electron mobility derivatives
+    void get_electron_mobility_derivatives(RealGradient& dmu) const;
+     
+
+    //! Get the hole mobility derivatives
+    void get_hole_mobility_derivatives(RealGradient& dmu) const;
       
     
-    //! Get the hole conductivity derivatives
-    //const std::vector<double>& get_hole_conductivity_derivatives(void) const
-    //  { return hole_conductivity_derivatives; };
-
-
     //! Get the square of the intrinsic density
     double get_intrinsic_density_squared(void) const
       { return intrinsic_density * intrinsic_density; };

@@ -32,6 +32,9 @@ class SchottkyContact : public ElectricalContact
     //! The work function
     double _workfunction;
 
+    //! The reference band
+    char _band;
+
 };
 
 
@@ -52,30 +55,11 @@ SchottkyContact::create(void)
 
 inline
 SchottkyContact::SchottkyContact(void)
+  : _band('c')
 {
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::DIRICHLET);
   set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::DIRICHLET);
   set_type(DriftDiffusionDefs::FERMIH, ElectricalContact::DIRICHLET);
-}
-
-
-
-inline
-double
-SchottkyContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
-{
-  double val = 0.0;
-  switch (variable)
-  {
-    case DriftDiffusionDefs::POTENTIAL:
-      val = _workfunction;
-    case DriftDiffusionDefs::FERMIE:
-      break;
-    case DriftDiffusionDefs::FERMIH:
-      break;
-  }
-  
-  return val;
 }
 
 
