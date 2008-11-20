@@ -54,8 +54,11 @@ ElectricalContact::do_init(void)
     get_options().get_option("calculate_field_emission", _has_field_emission);
 
   if (_has_field_emission)
+  {
     _field_emission =
       new FowlerNordheim(get_options().get_option("work_function", 1.0));
+    _real_contact = true;
+  }
 
   determine_reference_material();
 
