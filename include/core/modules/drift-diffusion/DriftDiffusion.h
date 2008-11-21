@@ -475,7 +475,7 @@ class DriftDiffusion : public SimulationInterface
 
     // for nicer code
     typedef std::map<const Boundary*, double> ContactData;
-    typedef std::map<const Node*, Boundary*> BoundaryNodeList;
+    typedef std::set<unsigned int> DofList;
 
     //! A static reference to \c this
     /*!
@@ -497,7 +497,7 @@ class DriftDiffusion : public SimulationInterface
     /*!
      * A list of nodes with dirichlet boundary conditions
      */
-    BoundaryNodeList _dirichlet_nodes;
+    DofList _dirichlet_dofs;
 
 
     /*!
@@ -594,6 +594,10 @@ class DriftDiffusion : public SimulationInterface
 
     //! Tells if node lies on an inner dielectric/semiconductor boundary
     bool is_dielectric_boundary_node(const Node* node) const;
+
+
+    //! Find elements that touch a real contact
+    void find_contact_elements(void);
 
     
     //! Reset solver environment.

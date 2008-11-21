@@ -31,6 +31,9 @@ class Device
 
   public:
 
+    typedef std::map<ID, std::vector<ID> > BCNodeMap;
+
+
     //! Destructor
     ~Device();
 
@@ -118,7 +121,7 @@ class Device
     
     
     //! Get the map that contains all boundary nodes for all boundaries
-    BoundaryNodeMap& get_boundary_node_map(void) const;
+    BCNodeMap& get_boundary_node_map(void) const;
 
     
     //! Get the mesh units
@@ -260,7 +263,7 @@ class Device
 
     //! The map that connects atomistic structure names to pointers
     /*! (keep track of existing atomistic struxctures) */
-    std::map<std::string,  AtomisticStructure* > _atomistic_structure_map;
+    std::map<std::string,  AtomisticStructure*> _atomistic_structure_map;
   
 
     //! The mesh for this device
@@ -290,7 +293,7 @@ class Device
 
     
     //! A map that contains all nodes for boundary conditions
-    BoundaryNodeMap* _boundary_nodes;
+    BCNodeMap* _boundary_nodes;
 
 
     //! User defined options for this device
@@ -425,7 +428,7 @@ Device::get_equation_systems(void) const
 
 
 inline
-BoundaryNodeMap&
+Device::BCNodeMap&
 Device::get_boundary_node_map(void) const
 {
   return *_boundary_nodes;

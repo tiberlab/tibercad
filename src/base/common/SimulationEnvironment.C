@@ -69,10 +69,6 @@ SimulationEnvironment::init(void)
 
   if (!_is_initialized)
   {
-    //create_element_list();
-    //create_bc_maps();
-    //update_boundary_node_map();
-
     BCMap::iterator it = _bc_map.begin();
     const BCMap::iterator end = _bc_map.end();
 
@@ -153,9 +149,9 @@ SimulationEnvironment::create_bc_maps(void)
   PerfLog perf_log("create_bc_maps", false);
   perf_log.start_event("create_bc_maps");
 
-  const BoundaryNodeMap& bd_nodes = _device->get_boundary_node_map();
-  BoundaryNodeMap::const_iterator bd_it;
-  const BoundaryNodeMap::const_iterator bd_end(bd_nodes.end());
+  const Device::BCNodeMap& bd_nodes = _device->get_boundary_node_map();
+  Device::BCNodeMap::const_iterator bd_it;
+  const Device::BCNodeMap::const_iterator bd_end(bd_nodes.end());
 
   BCMap::const_iterator bc_it;
   const BCMap::const_iterator bc_end(_bc_map.end());
@@ -248,7 +244,9 @@ SimulationEnvironment::update_boundary_node_map(void)
     for ( ; it != end; ++it)
     {
       const ElementSide& elem_side = it->first;
-      _node_map[(elem_side.first)->get_node(elem_side.second)] = it->second;
+      //_node_map[(elem_side.first)->get_node(elem_side.second)] = it->second;
+      _node_map.add_node(it->second,
+          (elem_side.first)->get_node(elem_side.second));
     }
   }
   else
@@ -277,12 +275,51 @@ SimulationEnvironment::update_boundary_node_map(void)
         {
           AutoPtr<Elem> side = child->build_side(side_num);
           for (unsigned int i = 0; i < side->n_nodes(); i++)
-            _node_map[side->get_node(i)] = it->second;
+            //_node_map[side->get_node(i)] = it->second;
+            _node_map.add_node(it->second, side->get_node(i));
         }
       }
     }
   }
 }
+
+
+
+
+void
+SimulationEnvironment::update_boundary_element_map(
+    set<const Boundary*> boundaries)
+{
+  if (boundaries.size() == 0)
+  {
+    BCMap::iterator it(_bc_map.begin());
+    const BCMap::iterator end(_bc_map.end());
+    for ( ; it != end; ++it)
+      boundaries.insert(it->second);
+  }
+
+  set<const Boundary*>::iterator ctit;
+  const set<const Boundary*>::iterator ctend(boundaries.end());
+
+  Mesh& mesh = get_mesh();
+  Mesh::element_iterator it(mesh.active_elements_begin());
+  const Mesh::element_iterator end(mesh.active_elements_end());
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    vector<ID> bd_set;
+    for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      for (ctit = boundaries.begin(); ctit != ctend; ++ctit)
+        if (is_node_on_boundary(elem->get_node(n), *ctit))
+          _bd_elem_map.add(*ctit, elem);
+  }
+
+}
+
+
+
 
 
 Boundary*
@@ -336,21 +373,48 @@ SimulationEnvironment::prepare_for_solve(void)
 }
 
 
+
+
+bool
+SimulationEnvironment::is_node_on_boundary(const Node* node,
+    const Boundary* boundary) const
+{
+  bool found = false;
+
+  BoundaryIterator it(boundaries_begin());
+  const BoundaryIterator end(boundaries_end());
+
+  for ( ; it != end; ++it)
+    if (it->second == boundary)
+    {
+      const BoundaryNodeMap::NodeSet& nodes = _node_map.get_nodes(it->first);
+      if (nodes.count(node))
+      {
+        found = true;
+        break;
+      }
+    }
+
+  return found;
+}
+
+
+
 void
 SimulationEnvironment::get_boundary_nodes(const Boundary* boundary,
     set<const Node*>& nodelist)
 {
   nodelist.clear();
 
-  BoundaryNodeIterator it(boundary_nodes_begin());
-  const BoundaryNodeIterator end(boundary_nodes_end());
+  BoundaryIterator it(boundaries_begin());
+  const BoundaryIterator end(boundaries_end());
 
   for ( ; it != end; ++it)
-  {
-    // we can assume that any ID we get here is also in the BCMap
-    if (_bc_map[it->second] == boundary)
-      nodelist.insert(it->first);
-  }
+    if (it->second == boundary)
+    {
+      nodelist = _node_map.get_nodes(it->first);
+      break;
+    }
 }
 
 

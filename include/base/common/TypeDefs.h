@@ -5,7 +5,7 @@
 
 #include <utility>
 #include <map>
-#include <vector>
+//#include <vector>
 
 class Elem;
 
@@ -20,10 +20,6 @@ typedef unsigned int ID;
 #ifndef INVALID_ID
 # define INVALID_ID UINT_MAX
 #endif
-
-
-//! A map which contains all nodes belonging to boundary conditions
-typedef std::map<ID, std::vector<ID> > BoundaryNodeMap;
 
 
 //! To ignore unused variables

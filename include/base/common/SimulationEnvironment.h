@@ -5,6 +5,8 @@
 
 #include "TypeDefs.h"
 #include "Device.h"
+#include "BoundaryNodeMap.h"
+#include "BoundaryElementMap.h"
 
 #include "elem.h"
 
@@ -111,6 +113,10 @@ class SimulationEnvironment
      * to inactive.
      */
     void prepare_for_solve(void);
+
+
+    //! Check if a node is part of a given boundary
+    bool is_node_on_boundary(const Node* node, const Boundary* boundary) const;
 
     
     //! Get the boundary for a given boundary number
@@ -227,6 +233,24 @@ class SimulationEnvironment
     //! Get the end iterator for the boundaries
     const BoundaryIterator boundaries_end(void) const;
 
+
+    //! Get the iterator for the first boundary element
+    /*!
+     * \param bd a certain boundary if you want only elements
+     * touching this boundary
+     */
+    const BoundaryElementMap::iterator
+      boundary_elements_begin(const Boundary* bd = NULL) const;
+
+
+    //! Get the end iterator for the boundary elements
+    /*!
+     * \param bd a certain boundary if you want only elements
+     * touching this boundary
+     */
+    const BoundaryElementMap::iterator
+      boundary_elements_end(const Boundary* bd = NULL) const;
+
     
     //! Update the boundary node map
     /*!
@@ -234,6 +258,15 @@ class SimulationEnvironment
      * in the mesh. It should be called after a mesh refinement step.
      */
     void update_boundary_node_map(void);
+
+
+    //! Create or update the boundary element map
+    /*!
+     * \param boundaries the boundaries for which the elements should
+     * be found
+     */
+    void update_boundary_element_map(std::set<const Boundary*>
+        boundaries = std::set<const Boundary*>());
 
     
     //! Update the list of all elements of this simulation
@@ -267,9 +300,6 @@ class SimulationEnvironment
 
     //! A typedef for convenience
     typedef std::map<ElementSide, ID> ElemSideMap;
-
-    //! A typedef for convenience
-    typedef std::map<const Node*, ID> NodeMap;
 
 
     //! Disable copy constructor
@@ -315,7 +345,15 @@ class SimulationEnvironment
     /*!
      * Connects Node pointers to Boundary pointers
      */
-    NodeMap _node_map;
+    BoundaryNodeMap _node_map;
+
+
+    //! A map that contains elements touching each boundary
+    /*!
+     * This map will be created only when calling
+     * update_boundary_element_map()
+     */
+    BoundaryElementMap _bd_elem_map;
 
 
     //! Tells if this environment is already initialized
@@ -491,10 +529,11 @@ inline
 Boundary*
 SimulationEnvironment::get_boundary(const Node* node) const
 {
-  NodeMap::const_iterator it(_node_map.find(node));
+  std::set<ID> ids;
+  _node_map.find_node(node, ids);
 
-  if (it != _node_map.end())
-    return get_boundary(it->second);
+  if (!ids.empty())
+    return get_boundary(*(ids.begin()));
   else
     return NULL;
 }
@@ -543,7 +582,7 @@ SimulationEnvironment::boundary_sides_end(void) const
   return _element_side_map.end();
 }
 
-
+/*
 inline
 const SimulationEnvironment::BoundaryNodeIterator
 SimulationEnvironment::boundary_nodes_begin(void) const
@@ -558,6 +597,26 @@ SimulationEnvironment::boundary_nodes_end(void) const
 {
   return _node_map.end();
 }
+*/
+
+
+inline
+const BoundaryElementMap::iterator
+SimulationEnvironment::boundary_elements_begin(const Boundary* bd) const
+{
+  return _bd_elem_map.elements_begin(bd);
+}
+
+
+
+inline
+const BoundaryElementMap::iterator
+SimulationEnvironment::boundary_elements_end(const Boundary* bd) const
+{
+  return _bd_elem_map.elements_end(bd);
+}
+
+
 
 
 inline

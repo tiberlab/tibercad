@@ -7,6 +7,7 @@
 #include "Atom.h"
 #include "tensor.h"
 
+#include <vector>
 
 
 //! A class for managing bond maps

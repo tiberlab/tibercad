@@ -444,6 +444,88 @@ DriftDiffusion::find_dirichlet_nodes(void)
 
   SimulationEnvironment& env = get_environment();
 
+  TiberNonlinearSystem* system;
+  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
+      get_equation_system_name());
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_e");
+  const unsigned int ep_var = system->variable_number("fermi_h");
+
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+
+  Mesh& mesh = get_mesh();
+  unsigned int dim = mesh.mesh_dimension();
+  Mesh::element_iterator it = mesh.active_elements_begin();
+  const Mesh::element_iterator end = mesh.active_elements_end();
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    for (size_t s = 0; s < elem->n_sides(); s++)
+    {
+      ElementSide side(elem->top_parent(), s);
+
+      if (env.is_boundary(side))
+      {
+        Boundary* boundary = env.get_boundary(side);
+        if (boundary == NULL)
+          continue;
+
+        ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
+            boundary->get_boundary_properties(get_id()));
+
+        if (contact != NULL)
+        {
+          if ((contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
+              || (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
+              || (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET))
+          {
+            AutoPtr<Elem> side_el(elem->build_side(s));
+            if (dim == 1)
+            {
+              dof_indices_u = vector<unsigned int>(1,
+                  elem->get_node(s)->dof_number(system->number(), u_var, 0));
+
+              dof_indices_en = vector<unsigned int>(1,
+                  elem->get_node(s)->dof_number(system->number(), en_var, 0));
+              
+              dof_indices_ep = vector<unsigned int>(1,
+                  elem->get_node(s)->dof_number(system->number(), ep_var, 0));
+            }
+            else
+            {
+              dof_map.dof_indices(side_el.get(), dof_indices_u, u_var);
+              dof_map.dof_indices(side_el.get(), dof_indices_en, en_var);
+              dof_map.dof_indices(side_el.get(), dof_indices_ep, ep_var);
+            }
+
+            for (unsigned int i = 0; i < side_el->n_nodes(); i++)
+            {
+              if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
+                _dirichlet_dofs.insert(dof_indices_u[i]);
+
+              if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
+                _dirichlet_dofs.insert(dof_indices_en[i]);
+
+              if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
+                _dirichlet_dofs.insert(dof_indices_ep[i]);
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+
+  /*{
   SimulationEnvironment::BoundaryNodeIterator it(env.boundary_nodes_begin());
   SimulationEnvironment::BoundaryNodeIterator end(env.boundary_nodes_end());
   
@@ -468,6 +550,7 @@ DriftDiffusion::find_dirichlet_nodes(void)
       }
     }
   }
+  }*/
 }
 
 
@@ -515,6 +598,9 @@ DriftDiffusion::find_dielectric_boundary_nodes(void)
 
 
 
+
+
+
 void
 DriftDiffusion::reset_solver(void)
 {
@@ -535,10 +621,6 @@ DriftDiffusion::cleanup_solver(void)
   // erase boundary current data structure
   _boundary_currents.erase(_boundary_currents.begin(),
       _boundary_currents.end());
-
-  // erase dirichlet nodes data structure
-  _dirichlet_nodes.erase(_dirichlet_nodes.begin(),
-      _dirichlet_nodes.end());
 
   reset_solver();
 }
@@ -1104,13 +1186,14 @@ DriftDiffusion::do_init(void)
 
   _device = &get_environment().get_device();
 
-  find_dirichlet_nodes();
-  find_dielectric_boundary_nodes();
-
   parse_const_options();
   
   rebuild_equation_system();
 
+  find_dirichlet_nodes();
+  find_dielectric_boundary_nodes();
+
+  set<const Boundary*> real_contacts;
   // prepare the _boundary_currents
   // we will rely on the fact that it contains an entry for every boundary
   // later on !!!
@@ -1124,13 +1207,16 @@ DriftDiffusion::do_init(void)
     if (bd != NULL)
     {
       ElectricalContact* contact = dynamic_cast<ElectricalContact*>(bd);
-      //if (contact->is_real_contact())
-      //{
+      if (contact->is_real_contact())
+      {
         _boundary_currents[it->second] = 0.0;
         _voltages[it->second] = 0.0;
-      //}
+        real_contacts.insert(it->second);
+      }
     }
   }
+
+  get_environment().update_boundary_element_map(real_contacts);
 }
 
 
@@ -2013,10 +2099,12 @@ DriftDiffusion::calculate_currents_rstf(void)
     return;
   
   // reset currents
-  ContactData::iterator it =
-    _boundary_currents.begin();
-  for ( ; it != _boundary_currents.end(); ++it)
-    (*it).second = 0.0;
+  {
+    ContactData::iterator it =
+      _boundary_currents.begin();
+    for ( ; it != _boundary_currents.end(); ++it)
+      (*it).second = 0.0;
+  }
 
   TiberNonlinearSystem* system =
     &get_equation_systems().get_system<TiberNonlinearSystem>(
@@ -2027,7 +2115,7 @@ DriftDiffusion::calculate_currents_rstf(void)
   // aliases for nicer code
   const Mesh& mesh = system->get_mesh();
   const Device& device = *(_device);
-  const SimulationEnvironment& env = get_environment();
+  SimulationEnvironment& env = get_environment();
 
   const DofMap& dof_map = system->get_dof_map();
 
@@ -2047,8 +2135,6 @@ DriftDiffusion::calculate_currents_rstf(void)
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
   AutoPtr<QBase> qrule(QBase::build(
         get_options().quadrature_type, dim, get_options().integration_order));
-  //QGauss qrule(dim, get_options().integration_order);
-  //QTrap qrule(dim);
   fe->attach_quadrature_rule(qrule.get());
 
   
@@ -2070,34 +2156,16 @@ DriftDiffusion::calculate_currents_rstf(void)
   vector<unsigned int> dof_indices_ep;
 
 
-  // will contain the node ids if an element has boundary nodes
-  vector<Boundary*> node_ids;
-
-  MeshBase::const_element_iterator el =
-                                  mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el =
-                                  mesh.active_elements_end();
+  BoundaryElementMap::iterator el(env.boundary_elements_begin());
+  BoundaryElementMap::iterator end_el(env.boundary_elements_end());
 
   for ( ; el != end_el ; ++el) 
   {
     const Elem* elem = *el;
-    const Elem* top_parent = (*el)->top_parent();
-        
-    bool has_node = false;
-    node_ids.resize(elem->n_nodes());
-    for (unsigned int n = 0; n < elem->n_nodes(); n++)
-    {
-      Boundary* bd = env.get_boundary(elem->get_node(n));
-      node_ids[n] = bd;
-      if (bd != NULL)
-        has_node = true;
-    }
+    const Elem* top_parent = elem->top_parent();
 
-    // if the element has no node on a boundary,
-    // we can go to the next element
-    if (!has_node)
-      continue;
-    
+    const Boundary* boundary = el.get_boundary();
+
     ID subdomain = elem->subdomain_id();
 
     // get DOF indices
@@ -2111,7 +2179,7 @@ DriftDiffusion::calculate_currents_rstf(void)
 
     assert(sc != NULL);
 
-    
+
     // in a dielectric we have no current
     if (sc->is_dielectric())
       continue;
@@ -2120,7 +2188,7 @@ DriftDiffusion::calculate_currents_rstf(void)
     fe->reinit(elem);
 
     sc->reinit(elem);
-    
+
     //Get the thermoelectric power------------
     sc->compute_thermoelectric_powers();
     double Pn =  sc->get_electron_thermoelectric_power() / phi0;
@@ -2129,7 +2197,13 @@ DriftDiffusion::calculate_currents_rstf(void)
     //Get the temperature given the element
     vector<double> T_nodes =  sc->get_temperature_at_nodes();
 
-        
+    // find the weight for each element node
+    vector<double> weight(elem->n_nodes(), 0.0);
+    for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      if (env.is_node_on_boundary(elem->get_node(n), boundary))
+        weight[n] = 1.0;
+
+
     for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
     {
 
@@ -2178,21 +2252,10 @@ DriftDiffusion::calculate_currents_rstf(void)
           (sigma_e * (dEfn + Pn * dT) + sigma_h * (dEfp + Pp * dT))); 
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      {
+        _boundary_currents[boundary] += j * dphi[n][qp] * weight[n];
 
-        Boundary* boundary = node_ids[n];
-        if (boundary != NULL)
-        {
-          ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
-                boundary->get_boundary_properties(get_id()));
-          if (contact->is_real_contact())
-            _boundary_currents[boundary] += j * dphi[n][qp];
-        }
-
-      }
     } // end loop over quadrature points
   } // end loop over elements
-
 }
 
 
@@ -2244,8 +2307,6 @@ DriftDiffusion::calculate_field_emission(void)
   
   AutoPtr<QBase> qface(QBase::build(
         get_options().quadrature_type, dim - 1, integration_order));
-  //QGauss qface(dim - 1, integration_order);
-  //QTrap qface(dim - 1);
   fe_face->attach_quadrature_rule(qface.get());
 
   
@@ -2468,8 +2529,6 @@ DriftDiffusion::calculate_currents_surfint(void)
   
   AutoPtr<QBase> qface(QBase::build(
         get_options().quadrature_type, dim - 1, integration_order));
-  //QGauss qface(dim - 1, integration_order);
-  //QTrap qface(dim - 1);
   fe_face->attach_quadrature_rule(qface.get());
 
   
@@ -2713,8 +2772,6 @@ DriftDiffusion::build_local_scaling(void)
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
   AutoPtr<QBase> qrule(QBase::build(
         params.quadrature_type, dim, params.integration_order));
-  //QGauss qrule(dim, params.integration_order);
-  //QTrap qrule(dim);
   fe->attach_quadrature_rule(qrule.get());
 
 
@@ -2830,15 +2887,25 @@ DriftDiffusion::build_local_scaling(void)
         drho = 0.0;
 
 
+      const double penalty_value = 1e56;
 
       for (unsigned int i = 0; i < n_dofs; i++)
       {
-        //local_scaling_[elem->get_node(i)][0] += sigma_e * phi[i][qp];
-        //local_scaling_[elem->get_node(i)][1] += sigma_h * phi[i][qp];
-        local_scaling_[elem->get_node(i)][0] +=
-          sigma_e * (dphi[i][qp] * dphi[i][qp]);
+        if (_dirichlet_dofs.count(dof_indices_en[i]))
+          local_scaling_[elem->get_node(i)][0] += penalty_value;
+        else
+          local_scaling_[elem->get_node(i)][0] +=
+            sigma_e * (dphi[i][qp] * dphi[i][qp]);
+
+        if (_dirichlet_dofs.count(dof_indices_ep[i]))
+          local_scaling_[elem->get_node(i)][1] += penalty_value;
+        else
         local_scaling_[elem->get_node(i)][1] +=
           sigma_h * (dphi[i][qp] * dphi[i][qp]);
+
+        if (_dirichlet_dofs.count(dof_indices_u[i]))
+          local_scaling_[elem->get_node(i)][2] += penalty_value;
+        else
         local_scaling_[elem->get_node(i)][2] +=
           l2_eps * (dphi[i][qp] * dphi[i][qp]) -
           drho * phi[i][qp] * phi[i][qp];
@@ -3145,7 +3212,6 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
 
   QGauss qrule(dim, libMeshEnums::CONSTANT);
-  //QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
@@ -4049,7 +4115,7 @@ DriftDiffusion::do_maximum_norm_of_difference(ID id)
 void
 DriftDiffusion::set_dirichlet_bc(void)
 {
-  
+/*  
   const Device& device = *_device;
 
   EquationSystems& es = get_equation_systems();
@@ -4149,6 +4215,7 @@ DriftDiffusion::set_dirichlet_bc(void)
       }
     }
   }
+*/
 }
 
 
@@ -4216,7 +4283,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   const Options& params = get_options();
   Options& options = get_options();
 
-  BoundaryNodeList& dirichlet_nodes = _dirichlet_nodes;
+  //BoundaryNodeList& dirichlet_nodes = _dirichlet_nodes;
 
   const NumericVector<Number>& oldx = system.get_vector("old_sol");
 
@@ -4266,8 +4333,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
   AutoPtr<QBase> qrule(QBase::build(
         params.quadrature_type, dim, integration_order));
-  //QGauss qrule(dim, integration_order);
-  //QTrap qrule(dim);
   fe->attach_quadrature_rule(qrule.get());
 
   // the finite element for boundary integration
@@ -4278,8 +4343,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   
   AutoPtr<QBase> qface(QBase::build(
         params.quadrature_type, dim - 1, integration_order));
-  //QGauss qface(dim - 1, integration_order);
-  //QTrap qface(dim - 1);
   fe_face->attach_quadrature_rule(qface.get());
 
   
@@ -4849,7 +4912,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       nodal_flux_n[elem->node(i)] = 0.0;
     map<unsigned int, double> nodal_flux_p(nodal_flux_n);
 
-    set<unsigned int> nodes_on_boundary_sides;
+    //set<unsigned int> nodes_on_boundary_sides;
 
     
     // now loop over the element sides to find boundary elements
@@ -4895,7 +4958,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           vector<Point> p(side->n_nodes());
           for (unsigned int i = 0; i < side->n_nodes(); i++)
           {
-            nodes_on_boundary_sides.insert(side->node(i));
+            //nodes_on_boundary_sides.insert(side->node(i));
             p[i] = side->point(i);
           }
 
@@ -5059,13 +5122,14 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                   J * phi_face[i][qp] * phi_face[j][qp];
 
                 if (coupling & POISSON)
-                  Kuu(i,j) += l2_eps * coeff[0] * phi_i_x_phi_j;
+                  Kuu(i,j) += l2_eps * coeff[0] * phi_i_x_phi_j
+                    / local_scaling[i][2];
 
                 if (coupling & ECURRENT)
-                  Knn(i,j) += coeff[1] * phi_i_x_phi_j;
+                  Knn(i,j) += coeff[1] * phi_i_x_phi_j / local_scaling[i][0];
 
                 if (coupling & HCURRENT)
-                  Kpp(i,j) += coeff[2] * phi_i_x_phi_j;
+                  Kpp(i,j) += coeff[2] * phi_i_x_phi_j / local_scaling[i][1];
               }
             }
 
@@ -5141,7 +5205,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         }
         else // i.e. dim == 1
         {
-          nodes_on_boundary_sides.insert(elem->node(s));
+          //nodes_on_boundary_sides.insert(elem->node(s));
 
           // s is the node of the element lying on the boundary
           Real u  = Xu(s);
@@ -5298,6 +5362,46 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               Fp(s) -= value_p / local_scaling[s][1];
           }
         }
+/// NEW
+
+        if (contact != NULL)
+        {
+          if ((contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
+              || (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
+              || (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET))
+          {
+            double valu = (contact->get_boundary_value(POTENTIAL)
+                + contact->get_inner_voltage()) / phi0;
+
+            double valn = (contact->get_boundary_value(FERMIE)
+                + contact->get_inner_voltage()) / phi0;
+
+            double valp = (contact->get_boundary_value(FERMIH)
+                + contact->get_inner_voltage()) / phi0;
+
+            for (size_t n = 0; n < elem->n_nodes(); n++)
+              if (elem->is_node_on_side(n, s))
+              {
+                if ((coupling & POISSON) &&
+                    (contact->get_type(POTENTIAL) == 
+                     ElectricalContact::DIRICHLET))
+                  Ke.condense(n, n, -valu, Fe);
+
+                if ((coupling & ECURRENT) &&
+                    (contact->get_type(FERMIE) ==
+                     ElectricalContact::DIRICHLET))
+                  Ke.condense(n + n_dofs, n + n_dofs, -valn, Fe);
+
+                if ((coupling & HCURRENT) &&
+                    (contact->get_type(FERMIH) ==
+                     ElectricalContact::DIRICHLET))
+                  Ke.condense(n + 2 * n_dofs, n + 2 * n_dofs, -valp, Fe);
+              }
+          }
+        }
+
+
+/// END NEW
       }
     } // end loop over element sides
 
@@ -5334,6 +5438,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
 
+/*
     //
     // now as last thing we apply Dirichlet type Bcs
     //
@@ -5531,7 +5636,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         } // end loop over the nodes of the parent element
       }
     }
-
+*/
 
 
     perf_log.start_event("add");

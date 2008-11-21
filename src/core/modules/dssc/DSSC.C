@@ -894,30 +894,40 @@ DSSC::do_newton(void)
 void
 DSSC::find_dirichlet_nodes(void)
 {
+
   SimulationEnvironment& env = get_environment();
 
-  SimulationEnvironment::BoundaryNodeIterator it(env.boundary_nodes_begin());
-  SimulationEnvironment::BoundaryNodeIterator end(env.boundary_nodes_end());
-  
+  Mesh& mesh = get_mesh();
+  unsigned int dim = mesh.mesh_dimension();
+  Mesh::element_iterator it = mesh.active_elements_begin();
+  const Mesh::element_iterator end = mesh.active_elements_end();
+
   for ( ; it != end; ++it)
   {
-    ID id = it->second;
+    const Elem* elem = *it;
 
-    Boundary* bd = env.get_boundary(id);
-
-    DSSCContact* contact = NULL;
-    if (bd != NULL)
-      contact = dynamic_cast<DSSCContact*>(
-          bd->get_boundary_properties(get_id()));
-
-    if (contact != NULL)
+    for (size_t s = 0; s < elem->n_sides(); s++)
     {
-      //if ((contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
-      //    || (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
-      //    || (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET))
-      //{
-        _dirichlet_nodes[it->first] = bd;
-      //}
+      ElementSide side(elem->top_parent(), s);
+
+      if (env.is_boundary(side))
+      {
+        Boundary* bd = env.get_boundary(side);
+        if (bd == NULL)
+          continue;
+
+
+        DSSCContact* contact = NULL;
+        contact = dynamic_cast<DSSCContact*>(
+            bd->get_boundary_properties(get_id()));
+
+        if (contact != NULL)
+        {
+          AutoPtr<Elem> side_el(elem->build_side(s));
+          for (unsigned int i = 0; i < side_el->n_nodes(); i++)
+            _dirichlet_nodes[side_el->get_node(i)] = bd;
+        }
+      }
     }
   }
 }

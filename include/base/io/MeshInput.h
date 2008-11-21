@@ -5,9 +5,9 @@
 
 /* #include <string> */
 /* #include <map> */
-/* #include <vector> */
 #include "TypeDefs.h"
 
+#include <vector>
 
 class MeshData_elements;
 class Mesh;

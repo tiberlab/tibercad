@@ -5,9 +5,9 @@ $Device
    Region bulk 
    {
      reg_numb = 1
-     material = SiO2
+     material = Si
      #structure = wz
-     #doping = 1e16 doping_type = donor
+     doping = 1e16 doping_type = donor
    }
 
 }
@@ -86,7 +86,7 @@ $Solver
 {
   driftdiffusion
   {
-    coupling = poisson
+    #coupling = poisson
     #nonlinear_solver = tiber
     #linear_solver = pardiso
     ksp_type = bcgs
@@ -131,14 +131,14 @@ $Simulation
 {
   searchpath = ../../materials
   #searchpath = .
-  meshfile = bulk1D.msh
-  dimension = 1
+  meshfile = bulk2D.msh
+  dimension = 2
   verbose = 2
   mesh_units = 1e-6
   temperature = 300
-  solve = driftdiffusion
-  #solve = sweep
-  resultpath = output_1D
+  #solve = driftdiffusion
+  solve = sweep
+  resultpath = output_2D
   output_format = grace
   #output_format = gmv
   #output_format = vtk

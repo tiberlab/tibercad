@@ -893,7 +893,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	  //
 	  for (unsigned int side=0; side<num_sides; side++)
 	  {//side loop
-	    Boundary* bd = si.get_boundary(std::pair<const Elem*,  unsigned int> (elem,side));
+	    Boundary* bd = si.get_boundary(ElementSide(elem,side));
 	    
 	    
 	    if (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  )
@@ -1079,7 +1079,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 	//if there are extended boundary condition we need surface integration!
 	for (unsigned int side=0; side<num_sides; side++)
 	{//side loop
-	  Boundary* bd = si.get_boundary(std::pair<const Elem*,  unsigned int> (elem,side));
+	  Boundary* bd = si.get_boundary(ElementSide(elem,side));
 	  if (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  )
 	    if (dynamic_cast<MacrostrainBoundaryProperties*>( bd->get_boundary_properties( get_id() ))->get_type() == "extended")
 	    {
