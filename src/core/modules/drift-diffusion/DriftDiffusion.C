@@ -884,8 +884,8 @@ DriftDiffusion::do_equilibrium(void)
   guess_equilibrium();
 
 
-  //if (do_local_scaling_)
-  //  build_local_scaling();
+  if (do_local_scaling_)
+    build_local_scaling();
 
 
   try
@@ -4283,7 +4283,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   const Options& params = get_options();
   Options& options = get_options();
 
-  //BoundaryNodeList& dirichlet_nodes = _dirichlet_nodes;
 
   const NumericVector<Number>& oldx = system.get_vector("old_sol");
 
@@ -4912,7 +4911,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       nodal_flux_n[elem->node(i)] = 0.0;
     map<unsigned int, double> nodal_flux_p(nodal_flux_n);
 
-    //set<unsigned int> nodes_on_boundary_sides;
 
     
     // now loop over the element sides to find boundary elements
@@ -4957,10 +4955,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           
           vector<Point> p(side->n_nodes());
           for (unsigned int i = 0; i < side->n_nodes(); i++)
-          {
-            //nodes_on_boundary_sides.insert(side->node(i));
             p[i] = side->point(i);
-          }
 
 /*
           fe->reinit(elem, &p);
@@ -5205,7 +5200,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         }
         else // i.e. dim == 1
         {
-          //nodes_on_boundary_sides.insert(elem->node(s));
 
           // s is the node of the element lying on the boundary
           Real u  = Xu(s);
@@ -5362,7 +5356,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               Fp(s) -= value_p / local_scaling[s][1];
           }
         }
-/// NEW
 
         if (contact != NULL)
         {
@@ -5399,9 +5392,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               }
           }
         }
-
-
-/// END NEW
       }
     } // end loop over element sides
 
@@ -5436,207 +5426,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     // NOTE: this changes dof_indices that's why the application of
     //       Dirichlet type BCs needs special care
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
-
-
-/*
-    //
-    // now as last thing we apply Dirichlet type Bcs
-    //
-    BoundaryNodeList::const_iterator node_it;
-    const BoundaryNodeList::const_iterator end =
-      dirichlet_nodes.end();
-    if (Ke.m() == n_dofs_tot)
-    {
-      // no constrained nodes, so everything is easy
-
-      // loop over all nodes and check if it is a dirichlet type node
-      for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        node_it = dirichlet_nodes.find(elem->get_node(i));
-        if (node_it != end)
-        {
-          Boundary* bd = node_it->second;
-          ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
-              bd->get_boundary_properties(get_id()));
-          contact->set_material(sc);
-          contact->set_normal_fluxes(
-              nodal_flux_n[elem->node(i)], nodal_flux_p[elem->node(i)]);
-
-          // we only impose Dirichlet type BCs if the node has an associated
-          // boundary side
-          if (nodes_on_boundary_sides.find(elem->node(i)) !=
-              nodes_on_boundary_sides.end())
-          {
-
-            if (coupling & POISSON)
-            {
-              if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
-              {
-                double val = (contact->get_boundary_value(POTENTIAL)
-                    + contact->get_inner_voltage()) / phi0;
-                Ke.condense(i, i, -val, Fe);
-              }
-            }
-
-            if (coupling & ECURRENT)
-            {
-              if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
-              {
-                double val = (contact->get_boundary_value(FERMIE)
-                    + contact->get_inner_voltage()) / phi0;
-                Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
-              }
-            }
-
-            if (coupling & HCURRENT)
-            {
-              if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
-              {
-                double val = (contact->get_boundary_value(FERMIH)
-                    + contact->get_inner_voltage()) / phi0;
-                Ke.condense(i + 2 * n_dofs, i + 2 * n_dofs, -val, Fe);
-              }
-            }
-          }
-          else
-          {
-            // in this case we do not change the matrix and rhs
-
-            if (coupling & POISSON)
-            {
-              if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
-              {
-                for (int j = 0; j < n_dofs_tot; j++)
-                  Ke(i, j) = 0.0;
-                Fe(i) = 0;
-              }
-            }
-
-            if (coupling & ECURRENT)
-            {
-              if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
-              {
-                for (int j = 0; j < n_dofs_tot; j++)
-                  Ke(i + n_dofs, j) = 0.0;
-                Fe(i + n_dofs) = 0;
-              }
-            }
-
-            if (coupling & HCURRENT)
-            {
-              if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
-              {
-                for (int j = 0; j < n_dofs_tot; j++)
-                  Ke(i + 2 * n_dofs, j) = 0.0;
-                Fe(i + 2 * n_dofs) = 0;
-              }
-            }
-
-          }
-        }
-      }
-    }
-    else
-    {
-      // TODO this needs to be checked!!!
-      // TODO Is now probably broken
-
-      // Some nodes are constrained, so we have messed up our
-      // matrix and vector. In particular, we could have included
-      // nodes on Dirichlet boundaries.
-      // We will look for them on the parent element(s) to apply
-      // proper boundary conditions
-
-      n_dofs_tot = dof_indices.size();
-
-      // it's possible, that a node of the parent element is
-      // also a hanging node. In this case we have to look at the
-      // grand parent
-      bool is_done = false;
-      const Elem* parent;
-      while (!is_done)
-      {
-        is_done = true;
-        parent = elem->parent();
-        elem = parent;
-
-        assert(parent != NULL);
-
-        dof_map.dof_indices(parent, dof_indices_u, u_var);
-        dof_map.dof_indices(parent, dof_indices_en, en_var);
-        dof_map.dof_indices(parent, dof_indices_ep, ep_var);
-
-        // loop over the nodes of the parent element
-        unsigned int n_nodes = parent->n_nodes();
-        for (unsigned int i = 0; i < n_nodes; i++)
-        {
-          if (dof_map.is_constrained_dof(dof_indices_u[i]))
-            is_done = false;
-
-          node_it = dirichlet_nodes.find(parent->get_node(i));
-          if (node_it != end)
-          {
-            Boundary* bd = node_it->second;
-            ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
-                bd->get_boundary_properties(get_id()));
-            contact->set_material(sc);
-            contact->set_normal_fluxes(0.0, 0.0);
-
-            // loop over all DOFs occurring in the constrained matrix
-            for (unsigned int id = 0; id < n_dofs_tot; id++)
-            {
-
-              if (coupling & POISSON)
-              {
-                if (contact->get_type(POTENTIAL) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_u[i])
-                  {
-                    double val = (contact->get_boundary_value(POTENTIAL)
-                        + contact->get_inner_voltage()) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-              }
-
-              if (coupling & ECURRENT)
-              {
-                if (contact->get_type(FERMIE) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_en[i])
-                  {
-                    double val = (contact->get_boundary_value(FERMIE)
-                        + contact->get_inner_voltage()) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-              }
-
-              if (coupling & HCURRENT)
-              {
-                if (contact->get_type(FERMIH) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_ep[i])
-                  {
-                    double val = (contact->get_boundary_value(FERMIE)
-                        + contact->get_inner_voltage()) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-              }
-
-            } // end loop over all DOFs 
-          }
-        } // end loop over the nodes of the parent element
-      }
-    }
-*/
 
 
     perf_log.start_event("add");
