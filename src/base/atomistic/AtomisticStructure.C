@@ -198,7 +198,7 @@ AtomisticStructure::read_structure(const std::string& path)
 
   if (!file)
     {
-      std::cerr << "Unable to open file " << path << " \n";
+      std::cerr << "Unable to open file " << path << ". Cannot read Atomistic Structure. \n";
       exit(1);   // call system to stop
     }
 

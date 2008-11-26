@@ -95,6 +95,21 @@ inline void f77_dftbp_addskdatafromfile (f77_int const* handler, f77_int const&
 }
 
 
+extern "C" void dftbp_gethubbards_ (f77_int const*, f77_int const&, f77_int 
+    const&, f77_double*);
+
+// Corresponding F77 arguments for f77_dftbp_gethubbards:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: nAtom
+// integer, intent(in) :: mShell
+// real(dp), intent(out) :: hubbU(mShell, nAtom)
+inline void f77_dftbp_gethubbards (f77_int const* handler, f77_int const& 
+    nAtom, f77_int const& mShell, f77_double* hubbU)
+{
+  dftbp_gethubbards_ (handler, nAtom, mShell, hubbU);
+}
+
+
 extern "C" void dftbp_addlattice_ (f77_int const*, f77_double const*);
 
 // Corresponding F77 arguments for f77_dftbp_addlattice:
@@ -168,6 +183,20 @@ inline void f77_dftbp_updatecoords (f77_int const* handler, f77_int const&
     nAtom, f77_double const* newCoords)
 {
   dftbp_updatecoords_ (handler, nAtom, newCoords);
+}
+
+
+extern "C" void dftbp_setexternalshift_ (f77_int const*, f77_int const&, 
+    f77_double const*);
+
+// Corresponding F77 arguments for f77_dftbp_setexternalshift:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: nAtom
+// real(dp), intent(in) :: shift(nAtom)
+inline void f77_dftbp_setexternalshift (f77_int const* handler, f77_int const& 
+    nAtom, f77_double const* shift)
+{
+  dftbp_setexternalshift_ (handler, nAtom, shift);
 }
 
 

@@ -7,6 +7,8 @@
 #include "AtomisticStructure.h"
 #include "SimulationEnvironment.h"
 
+#include <map>
+
 
 //! A class for Tight Binding simulations with DFTB+ code
 /*!
@@ -17,7 +19,7 @@ class Dftb : public TightBinding{
 
 public:
 
-//! A class for Dftb options
+  //! A class for Dftb options
   class DftbOptions
   {
   public:
@@ -26,7 +28,8 @@ public:
     ~DftbOptions(void);
 
     char* skNames;
-    char* speciesNames;
+    char* specieNames;
+    std::vector <std::string> specieNameStrings ;
     int nAtom;
     int nType;
     double* coords;
@@ -53,7 +56,7 @@ public:
   };
 
 
- //! Constructor
+  //! Constructor
   Dftb(void);
 
   //! Destructor
@@ -63,8 +66,13 @@ public:
   static Dftb* create();
 
 
-  private:
+private:
 
+  //! A map containing which kind of shell parametrization is used for any specie (maximum angular momentum + 1)
+  std::map <std::string, int> _shell;
+
+  //! Maximum angular momentum in parametrization of all species
+  int _max_shell;
 
   //! Get options suited for DFTB+ tight binding builder and solver
   void get_dftbp_options();
@@ -78,10 +86,10 @@ public:
   //! Function for building options from input
   void build_input_options(void);
 
- //! Structure containing options for DFTB+ tight binding builder
+  //! Structure containing options for DFTB+ tight binding builder
   DftbOptions _dftb_options;
 
- //! Structure containing options for DFTB+ tight binding solver
+  //! Structure containing options for DFTB+ tight binding solver
   DftbSolverOptions _dftb_solver_options;
 
 
@@ -98,6 +106,15 @@ protected:
   virtual void do_solve (void);
 
   virtual void  parse_options(void);
+
+  //! Gives Hubbard parameters and put them in TightBinding member
+  /*!
+   * do_init() and parse_parameter() must have been done, note that if updatecoords runs
+   * this function must be refreshed
+   */
+  void obtain_hubbard_parameters(void);
+
+  void read_kpoints(void);
 
 };
 

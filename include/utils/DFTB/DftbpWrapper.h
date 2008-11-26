@@ -8,14 +8,12 @@
 
 //-----------------------------------------------------------------------
 
+
+//!Wrapper class for callings to DFTB+ library (libdftbp.so)
 class DftbpWrapper
 {
 
 public:
-
-  //!Wrapper class for callings to DFTB+ library (libdftbp.so)
-
-
 
   //!Constructor
   /*!Assign an handler to DFTB+ instance, transparent to programmer
@@ -24,12 +22,12 @@ public:
   DftbpWrapper();
 
 
-  //! Destructor  
+  //! Destructor
   ~DftbpWrapper();
 
 
   //!Static method to create a Dftb wrapper instance
-  static DftbpWrapper* create(); 
+  static DftbpWrapper* create();
 
 
   //!Function to fill Dftb parameters:
@@ -78,7 +76,7 @@ public:
   void get_energy (double &energy);
 
 
-  //!Add periodicity vectors 
+  //!Add periodicity vectors
   /*!
    * \param latVecs[9] (in) periodicity vectors (x1, y1, z1, x2, y2, x3, y3)
    */
@@ -89,7 +87,7 @@ public:
   /*!
    * \param nKpoint (in) total number of k points
    * \param kPoints[nKpoint * 3] (in) array containing k points (k1x, k1y, k1z, k2x, k2y,...)
-   * \param kWeights[nKpoint] (in) array containing k points weights 
+   * \param kWeights[nKpoint] (in) array containing k points weights
    */
   void addkpoints (int nKPoint, double *kPoints, double *kWeights);
 
@@ -97,13 +95,28 @@ public:
   //!Specify a supercell sampling for k points calculations (please refer to Dftb+ documentation)
   void addsupersampling (double *coeffs, double *shifts, int noinv);
 
-  
+
   //!Get electronic charge for each atom
   /*!
    * \param nAtom (in) total number of atoms
    * \param charges[nAtom] (out) charges per atom
    */
   void getchargesperatom (int nAtom, double* charges);
+
+
+//!Allow to set an external potential on Atoms
+/*!
+* \param nAtom (out) number of atoms
+* \param pot (in) array containing potential shifts over atoms
+*/
+  void setexternalshift(int nAtom, double* pot);
+
+
+  //!Obtain Hubbard parameters from Dftb instance
+  /*!
+   *  \param
+   */
+  void gethubbards(int nAtom, int max_shell, double *u_hub);
 
 
   //!Get DFTB instance handler
@@ -124,14 +137,17 @@ public:
    * \param rowpnt[nrow] (out) pointer to rows
    * \param val[nzval if real, 2*nzval if complex] (out) non zero values (if complex, (re1, im1, re2, im2,...))
    * \param matrix (in) choose which matrix is needed (H or S)
-   * \param kPoint[3] (in) if not specified, a real matrix in Gamma point is expected. If specified, H or S for that K point is given  
+   * \param kPoint[3] (in) if not specified, a real matrix in Gamma point is expected. If specified, H or S for that K point is given
    * WARNING: colind, rowpnt and val are internally allocated
    */
   void getmatrix(int &nrow, int &ncol, int &nzval, int &isreal, int* &colind, int* &rowpnt, double* &val, std::string matrix, double *kPoint = NULL);
 
-  
+
 private:
+
+//! Keep track of Dftbp instance
   int _handler[DFTBP_HSIZE];
+
 
 };
 
