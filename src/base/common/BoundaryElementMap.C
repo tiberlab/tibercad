@@ -6,6 +6,10 @@
 using namespace std;
 
 
+const BoundaryElementMap::SetType
+BoundaryElementMap::_empty_set;
+
+
 BoundaryElementMap::BoundaryElementMap(void)
 {
 }
