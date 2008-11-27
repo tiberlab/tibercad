@@ -253,6 +253,7 @@ AC_CONFIG_FILES([Make.common
                  doc/Makefile
                  src/tibercad/Makefile
                  src/utils/DFTB/Makefile
+                 src/utils/UPTIGHT/Makefile
                  src/utils/SLEPC/Makefile
                  installer/Makefile
 		 installer/windows/tibercad.bim

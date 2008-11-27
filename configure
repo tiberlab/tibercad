@@ -6614,7 +6614,7 @@ fi
 
 ac_config_files="$ac_config_files stamp-h"
 
-ac_config_files="$ac_config_files Make.common doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/DFTB/Makefile src/utils/SLEPC/Makefile installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install"
+ac_config_files="$ac_config_files Make.common doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/DFTB/Makefile src/utils/UPTIGHT/Makefile src/utils/SLEPC/Makefile installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install"
 
 ac_config_files="$ac_config_files installer/prepare_files.sh"
 
@@ -7180,6 +7180,7 @@ do
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "src/tibercad/Makefile") CONFIG_FILES="$CONFIG_FILES src/tibercad/Makefile" ;;
     "src/utils/DFTB/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/DFTB/Makefile" ;;
+    "src/utils/UPTIGHT/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/UPTIGHT/Makefile" ;;
     "src/utils/SLEPC/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/SLEPC/Makefile" ;;
     "installer/Makefile") CONFIG_FILES="$CONFIG_FILES installer/Makefile" ;;
     "installer/windows/tibercad.bim") CONFIG_FILES="$CONFIG_FILES installer/windows/tibercad.bim" ;;
