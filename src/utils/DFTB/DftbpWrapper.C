@@ -107,6 +107,13 @@ DftbpWrapper::getchargesperatom(int nAtom, double* charges)
 }
 
 
+void
+DftbpWrapper::getnetchargesperatom(int nAtom, double* charges)
+{
+  f77_dftbp_getnetchargesperatom (_handler, nAtom, charges);
+}
+
+
 void DftbpWrapper::getmatrix(int &nrow, int &ncol, int &nzval, int &isreal, int* &colind, int* &rowpnt, double* &val, std::string matrix, double *kPoint)
 {
   f77_dftbp_recreatecsrbuffer(_handler, nrow, ncol, nzval, isreal);

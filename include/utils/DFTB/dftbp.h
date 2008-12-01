@@ -100,13 +100,13 @@ extern "C" void dftbp_gethubbards_ (f77_int const*, f77_int const&, f77_int
 
 // Corresponding F77 arguments for f77_dftbp_gethubbards:
 // integer, intent(in) :: handler(DAC_handlerSize)
-// integer, intent(in) :: nAtom
+// integer, intent(in) :: nType
 // integer, intent(in) :: mShell
-// real(dp), intent(out) :: hubbU(mShell, nAtom)
+// real(dp), intent(out) :: hubbU(mShell, nType)
 inline void f77_dftbp_gethubbards (f77_int const* handler, f77_int const& 
-    nAtom, f77_int const& mShell, f77_double* hubbU)
+    nType, f77_int const& mShell, f77_double* hubbU)
 {
-  dftbp_gethubbards_ (handler, nAtom, mShell, hubbU);
+  dftbp_gethubbards_ (handler, nType, mShell, hubbU);
 }
 
 
@@ -223,6 +223,20 @@ inline void f77_dftbp_getchargesperatom (f77_int const* handler, f77_int const&
     nAtom, f77_double* charges)
 {
   dftbp_getchargesperatom_ (handler, nAtom, charges);
+}
+
+
+extern "C" void dftbp_getnetchargesperatom_ (f77_int const*, f77_int const&, 
+    f77_double*);
+
+// Corresponding F77 arguments for f77_dftbp_getnetchargesperatom:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: nAtom
+// real(dp), intent(out) :: charges(nAtom)
+inline void f77_dftbp_getnetchargesperatom (f77_int const* handler, f77_int 
+    const& nAtom, f77_double* charges)
+{
+  dftbp_getnetchargesperatom_ (handler, nAtom, charges);
 }
 
 

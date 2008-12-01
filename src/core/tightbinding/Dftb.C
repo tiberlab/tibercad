@@ -192,18 +192,24 @@ void Dftb::do_solve(void){
   std::cout << "Calling Dftb->do_solve() " << std::endl;
 #endif
 
-  //get_energy is anyway needed for the correct assembling of Hamiltonian
+    // N.B. get_energy is anyway needed for the correct assembling of Hamiltonian,
+  // so it would run anyway
   double energy = 0;
   inst->get_energy(energy);
+
+  std::cout << "DFTB library computed a total system energy of: " << energy << std::endl;
+
+  //TODO: non so come funziona il settaggio delle grandezze da calcolare quando
+  //queste siano richieste da altri e non siano prettamente dati di output
 
   _dftb_solver_options.solver="internal";
   if (_dftb_solver_options.solver.compare("internal") == 0) {
 
     double* charges;
     charges = new double[_dftb_options.nAtom];
-    inst->getchargesperatom(_dftb_options.nAtom, charges);
+    inst->getnetchargesperatom(_dftb_options.nAtom, charges);
 
-    for (unsigned int i = 0; i <_dftb_options.nAtom; i++ ) {_mulliken_charges.push_back(charges[i]);}
+    for (unsigned int i = 0; i <_dftb_options.nAtom; i++ ) {_mulliken_netcharges.push_back(charges[i]);}
 
     _atomistic_structure->print_structure("TB_out.xyz",charges);
 

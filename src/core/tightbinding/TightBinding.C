@@ -16,7 +16,7 @@
 
 TightBinding::TightBinding()
 :_atomistic_structure(NULL),
-_mulliken_charges()
+_mulliken_netcharges()
 {
 }
 
@@ -112,7 +112,7 @@ TightBinding::build_rho(const double x, const double y, const double z)
   double x1, y1, z1;
 
 
-  if (_mulliken_charges.size() == 0)
+  if (_mulliken_netcharges.size() == 0)
     {
       std::cerr << "ERROR IN TIGHTBINDING: trying to build charge density "
       "but no mulliken charges are available" << std::endl;
@@ -121,8 +121,8 @@ TightBinding::build_rho(const double x, const double y, const double z)
 
   for (unsigned int iatm = 0; iatm  < _atomistic_structure->get_N_atoms(); iatm++)
     {
-      std::cout << "Atom " << iatm << std::endl;
-std::cout << "rho before loop is " << rho << std::endl;
+
+      std::cout << "rho before loop is " << rho << std::endl;
       //Getting Hubbard parameter
       //Up to now densities are mapped on orbital S
       uhatom = _u_hub[_atomistic_structure->get_structure_atoms()[iatm].get_specie()][S];
@@ -139,7 +139,7 @@ std::cout << "rho before loop is " << rho << std::endl;
       else
         {
           std::cout << "uhatom is " << uhatom <<std::endl;
-          rho = rho + 16.384 * _mulliken_charges[iatm] * uhatom * uhatom * uhatom * exp(-3.20*uhatom*deltar);
+          rho = rho + 16.384 * _mulliken_netcharges[iatm] * uhatom * uhatom * uhatom * exp(-3.20*uhatom*deltar);
         }
       std::cout << "rho after loop is " << rho << std::endl;
     }

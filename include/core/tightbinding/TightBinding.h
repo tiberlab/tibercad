@@ -73,7 +73,7 @@ std::map<std::string, std::map<Shell, double> > _u_hub;
 double build_rho(const double x, const double y, const double z);
 
 //! Charge variation (Mulliken Analisys) on each atom
-std::vector<double> _mulliken_charges;
+std::vector<double> _mulliken_netcharges;
 
 };
 

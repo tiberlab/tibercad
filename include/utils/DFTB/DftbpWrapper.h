@@ -96,12 +96,20 @@ public:
   void addsupersampling (double *coeffs, double *shifts, int noinv);
 
 
-  //!Get electronic charge for each atom
+  //!Get total free charge for each atom
   /*!
    * \param nAtom (in) total number of atoms
    * \param charges[nAtom] (out) charges per atom
    */
   void getchargesperatom (int nAtom, double* charges);
+
+
+//! get charge displacement for each atom
+  /*
+   * \param nAtom (in) total number of atoms
+   * \param charges[nAtom] (out) charges per atom
+   */
+  void getnetchargesperatom (int nAtom, double* charges);
 
 
 //!Allow to set an external potential on Atoms
