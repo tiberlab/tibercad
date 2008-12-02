@@ -38,6 +38,7 @@ permittivity = 8.67;
 
 
 # lattice constants
+[lattice]
 a = 0.3112
 c = 0.4982
 

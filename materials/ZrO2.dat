@@ -36,6 +36,7 @@ uniax_def_pot_L = 16.14
 permittivity = 25
 
 # lattice constant
+[lattice]
 a = 0.540
 
 #Atomistic structure informations

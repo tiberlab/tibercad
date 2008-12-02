@@ -1,7 +1,6 @@
 // $Id$
 
 #include "ZbPiezoelectricity.h"
-#include "getpot.h"
 #include "Material.h"
 #include "Database.h"
 

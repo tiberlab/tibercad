@@ -37,6 +37,7 @@ permittivity = 10.01
 
 
 # lattice constants
+[lattice]
 a = 0.3189
 c = 0.5185
 

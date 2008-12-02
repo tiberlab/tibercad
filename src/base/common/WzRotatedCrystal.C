@@ -1,6 +1,6 @@
+// $Id$
+
 #include "WzRotatedCrystal.h"
-#include "getpot.h"
-#include "Material.h"
 #include "Database.h"
 
 WzRotatedCrystal::WzRotatedCrystal() : RotatedCrystal()
@@ -163,15 +163,12 @@ void WzRotatedCrystal::set_xyz_mil_direction(std::string dir, int h, int k, int 
 void WzRotatedCrystal::read_database ( )
 {
 
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
+  Database& db = get_database();
+  db.set_section("lattice");
   
-  a_lat = data("a",0.31);
-  c_lat = data("c",0.5185);
+  a_lat = db.get("a", 0.31, true);
+  c_lat = db.get("c", 0.5185, true);
 
-  // just to have something for now
-  // a_lat = 0.3189;
-  // c_lat = 0.5185;
 
 }
 

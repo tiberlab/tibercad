@@ -2,9 +2,11 @@
 
 
 # lattice
-#[lattice]
 structure = zb
+
+[lattice]
 a = 0.54304
+[]
 
 
 #[misc]

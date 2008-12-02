@@ -66,6 +66,7 @@ permittivity = 12.93
 
 
 # lattice constant
+[lattice]
 a = 0.565325
 
 # stiffness data

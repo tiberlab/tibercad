@@ -49,6 +49,7 @@ uniax_def_pot_L = 16.14
 permittivity = 11.7
 
 # lattice constant
+[lattice]
 a = 0.54304
 
 # stiffness data
