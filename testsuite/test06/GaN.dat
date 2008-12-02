@@ -38,6 +38,7 @@ a = 0.3189
 c = 0.5185
 
 # stiffness data
+[elasticity]
 C11 = 390.0
 C12 = 145.0
 C13 = 106.0
@@ -45,9 +46,11 @@ C33 = 398.0
 C44 = 105.0
 
 # piezoelectricity data
+[piezoelectricity]
 e33 = 1.27
 e31 = -0.35
 e15 = -0.3
+[pyroelectricity]
 Pz = -0.034
 
 

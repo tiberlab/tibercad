@@ -2,7 +2,6 @@
 
 
 #include "WzPyroPolarization.h"
-#include "getpot.h"
 #include "Material.h"
 #include "Database.h"
 #include "RotatedCrystal.h"
@@ -20,18 +19,20 @@ WzPyroPolarization::create(void)
 void
 WzPyroPolarization::read_database(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
-  _Pz = data("Pz", _Pz);
+  Database& db = get_database();
+  db.set_section("pyroelectricity");
+
+  _Pz = db.get("Pz", _Pz, true);
 }
 
 
 void
 WzPyroPolarization::read_database_alloy(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
-  _Pz_bow = data("bow_Pz", _Pz_bow);
+  Database& db = get_database();
+  db.set_section("pyroelectricity");
+
+  _Pz_bow = db.get("bow_Pz", _Pz_bow);
 }
 
 

@@ -1,8 +1,10 @@
+// $Id$
+
 #include "WzStiffness.h"
-#include "getpot.h"
 #include "Material.h"
 #include "Database.h"
 #include "RotatedCrystal.h"
+
 //---------------------------------------------------//
 
 WzStiffness::WzStiffness() :Stiffness()
@@ -39,13 +41,14 @@ void WzStiffness::set_moduli(double c11, double c12, double c13, double c33, dou
 void WzStiffness::read_database ( )
 {
 
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
-  double c11 = data ("C11", 0.0);
-  double c12 = data ("C12", 0.0);
-  double c13 = data ("C13", 0.0);
-  double c33 = data ("C33", 0.0);
-  double c44 = data ("C44", 0.0);
+  Database& db = get_database();
+  db.set_section("elasticity");
+
+  double c11 = db.get("C11", 0.0, true);
+  double c12 = db.get("C12", 0.0, true);
+  double c13 = db.get("C13", 0.0, true);
+  double c33 = db.get("C33", 0.0, true);
+  double c44 = db.get("C44", 0.0, true);
 
 
 

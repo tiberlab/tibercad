@@ -74,11 +74,13 @@ permittivity = 15.15
 a = 0.605830
 
 # stiffness data
+[elasticity]
 C11 = 83.290
 C12 = 45.260
 C44 = 39.590
 
 # piezoelectricity
+[piezoelectricity]
 e14 = -0.044
 
 # from here values for GaAs

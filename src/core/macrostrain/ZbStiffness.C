@@ -1,8 +1,11 @@
+// $Id$
+
 #include "ZbStiffness.h"
-#include "getpot.h"
 #include "Material.h"
 #include "Database.h"
 #include "RotatedCrystal.h"
+
+
 //---------------------------------------------------//
 
 ZbStiffness::ZbStiffness() :Stiffness()
@@ -40,14 +43,15 @@ void ZbStiffness::set_moduli(double c11, double c12, double c44)
 //----------------------------------------------//
 void ZbStiffness::read_database ( )
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
+ 
+  Database& db = get_database();
+  db.set_section("elasticity");
 
-  double c11 = data("C11", 0.0);
-  double c12 = data("C12", 0.0);
-  double c44 = data("C44", 0.0);
+  double c11 = db.get("C11", 0.0, true);
+  double c12 = db.get("C12", 0.0, true);
+  double c44 = db.get("C44", 0.0, true);
 
-  set_moduli( c11, c12, c44);
+  set_moduli(c11, c12, c44);
 
   
   

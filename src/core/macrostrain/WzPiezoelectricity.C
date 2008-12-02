@@ -1,30 +1,28 @@
+// $Id$
+
 #include "WzPiezoelectricity.h"
-#include "getpot.h"
-#include "Material.h"
 #include "Database.h"
 
 WzPiezoelectricity::WzPiezoelectricity() : Piezoelectricity()
 {
-  set_moduli(0,  0,  0,  0);
+  set_moduli(0,  0,  0);
 
   e33_bow = 0;
   e31_bow = 0;
   e15_bow = 0;
-  Pz_bow = 0;
 }
 
 //------------------------------------------------------------//
 
-WzPiezoelectricity::WzPiezoelectricity(double  e33, double e31, double e15, double Pz) : Piezoelectricity()
+WzPiezoelectricity::WzPiezoelectricity(double  e33, double e31, double e15) : Piezoelectricity()
 {
 
-  set_moduli(e33,  e31,  e15,  Pz);
+  set_moduli(e33,  e31,  e15);
 
 
   e33_bow = 0;
   e31_bow = 0;
   e15_bow = 0;
-  Pz_bow = 0;
 
 }
 
@@ -34,16 +32,14 @@ WzPiezoelectricity::WzPiezoelectricity(double  e33, double e31, double e15, doub
 void WzPiezoelectricity::read_database(void)
 {
 
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
+  Database& db = get_database();
+  db.set_section("piezoelectricity");
 
-  e33 = data("e33", 0.0);
+  e33 = db.get("e33", 0.0);
   
-  e31 = data("e31", 0.0);
+  e31 = db.get("e31", 0.0);
 
-  e15 = data("e15", 0.0);
-
-  Pz = data("Pz", 0.0);
+  e15 = db.get("e15", 0.0);
 
 }
 
@@ -52,16 +48,14 @@ void
 WzPiezoelectricity::read_database_alloy(void)
 {
 
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
+  Database& db = get_database();
+  db.set_section("piezoelectricity");
 
-  e33_bow = data("bow_e33", 0.0);
+  e33_bow = db.get("bow_e33", 0.0);
   
-  e31_bow = data("bow_e31", 0.0);
+  e31_bow = db.get("bow_e31", 0.0);
 
-  e15_bow = data("bow_e15", 0.0);
-
-  Pz_bow = data("bow_Pz", 0.0);
+  e15_bow = db.get("bow_e15", 0.0);
 
 }
 
@@ -76,18 +70,16 @@ void WzPiezoelectricity::do_init(void)
 
    e15 = get_parameter("e15",e15);
 
-   Pz = get_parameter("Pz", Pz);
 }
 
 
 //-----------------------------------------------------------//
-void WzPiezoelectricity:: set_moduli(double  e33_i, double e31_i, double e15_i, double Pz_i)
+void WzPiezoelectricity:: set_moduli(double  e33_i, double e31_i, double e15_i)
 {
 
   e33 = e33_i;
   e31 = e31_i;
   e15 = e15_i;
-  Pz  = Pz_i;
 
 }
 
@@ -110,13 +102,11 @@ void WzPiezoelectricity:: do_init_alloy (const PhysicalModelInterface *comp_A, c
    e33_bow = get_parameter("bow_e33",e33);
    e31_bow = get_parameter("bow_e31",e31);
    e15_bow = get_parameter("bow_e15",e15);
-   Pz_bow = get_parameter("bow_Pz", Pz);
 
 
    e33 = alloy(tempA->e33, tempB->e33, xa, e33_bow );
    e31 = alloy(tempA->e31, tempB->e31, xa, e31_bow );
    e15 = alloy(tempA->e15, tempB->e15, xa, e15_bow );
-   Pz  = alloy(tempA->Pz , tempB->Pz , xa, Pz_bow  );
 
 }
 

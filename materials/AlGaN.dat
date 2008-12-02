@@ -15,6 +15,7 @@ bow_Eg_L = 0.8
 
 
 # spontaneous polariz.
+[pyroelectricity]
 bow_Pz = -0.021
 
 

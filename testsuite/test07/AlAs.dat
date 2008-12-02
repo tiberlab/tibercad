@@ -38,11 +38,13 @@ permittivity = 10.064
 a = 0.56611
 
 # stiffness data
+[elasticity]
 C11 = 125.0
 C12 = 53.4
 C44 = 54.2
 
 # piezoelectricity
+[piezoelectricity]
 e14 = -0.015
 
 

@@ -5,8 +5,6 @@
 
 #include "tensor.h"
 #include "xtensor.h"
-#include <cmath>
-#include "PhysicalModel.h"
 #include "PhysicalModelInterface.h"
 
 

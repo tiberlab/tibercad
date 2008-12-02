@@ -1,7 +1,10 @@
+// $Id$
+
 #ifndef _WZPIEZOELECRICITY_H_
 #define _WZPIEZOELECRICITY_H_
 
 #include "Piezoelectricity.h"
+
 //! Piezoelectric properties of wurtzite crystal
 class WzPiezoelectricity : public Piezoelectricity
 {
@@ -9,9 +12,9 @@ class WzPiezoelectricity : public Piezoelectricity
 
   WzPiezoelectricity();
 
-  WzPiezoelectricity(double  e33, double e31, double e15, double Pz);
+  WzPiezoelectricity(double  e33, double e31, double e15);
 
-  void set_moduli(double  e33, double e31, double e15, double Pz);
+  void set_moduli(double  e33, double e31, double e15);
   
   //!calculates piezopolarization in crystal system
   /*!
@@ -36,13 +39,11 @@ class WzPiezoelectricity : public Piezoelectricity
   double e33;
   double e31;
   double e15;
-  double Pz;
 
 
   double e33_bow;
   double e31_bow;
   double e15_bow;
-  double Pz_bow;
     
 
  protected:

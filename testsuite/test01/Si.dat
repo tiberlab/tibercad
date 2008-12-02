@@ -48,13 +48,13 @@ uniax_def_pot_L = 16.14
 
 
 # stiffness data
-#[stiffness]
+[elasticity]
 C11 = 165.77
 C12 = 63.93
 C44 = 79.62
 
 # piezoelectricity
-#[piezoelectricity]
+[piezoelectricity]
 e14 = 0.0
 
 

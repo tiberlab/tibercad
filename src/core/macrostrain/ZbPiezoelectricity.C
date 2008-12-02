@@ -31,18 +31,22 @@ void ZbPiezoelectricity::set_piezo_module(double e)
 
 void ZbPiezoelectricity::read_database ()
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
-  e14 = data("e14", 0.0);
+
+  Database& db = get_database();
+  db.set_section("piezoelectricity");
+
+  e14 = db.get("e14", 0.0);
 }
 
 
 void
 ZbPiezoelectricity::read_database_alloy(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
-  e14_bow = data("bow_e14", 0.0);
+
+  Database& db = get_database();
+  db.set_section("piezoelectricity");
+
+  e14_bow = db.get("bow_e14", 0.0);
 }
 
 
