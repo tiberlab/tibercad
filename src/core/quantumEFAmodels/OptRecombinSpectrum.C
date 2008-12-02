@@ -1,9 +1,11 @@
+// $Id$
+
 #include "OptRecombinSpectrum.h"
 #include "OpticsKP.h"
 #include "SimulationEnvironment.h"
 #include "Control.h"
-#include "gnuplot_io.h"
-#include "GraceIO.h"
+#include "DataOutput.h"
+
 using namespace std;
 
 
@@ -11,25 +13,18 @@ void OptRecombinSpectrum::do_plot()
 {
  
   KspaceIntegration::do_plot();
-
-  string suffix = get_control().get_filename_suffix();
-  string outdir = get_control().get_output_dir();
-  string format = get_control().get_output_format();
-
-  string suff;
-  if (format == "gmv")
-    suff = ".gmv";
-  else if (format == "ise")
-    suff = ".plt";
-  else if (format == "grace")
-    suff = ".dat";
-
   const std::set< std::string >& plotvariables = get_control().get_plotvariables();
   
   if (plotvariables.find("optical_spectrum") != plotvariables.end())
   {
-     string filename(outdir + "/" + get_name() +
-        "_spectrum" + suffix + suff);
+     string filename(get_name() + "_spectrum" +
+         get_control().get_filename_suffix());
+
+     string format = get_options().get_option("output_format", "grace");
+
+     DataOutput data_output(*_energy_mesh, format);
+     data_output.set_output_directory(get_control().get_output_dir());
+
 
      string dimension;
      double area_dim_factor = 1;
@@ -71,10 +66,10 @@ void OptRecombinSpectrum::do_plot()
 
 
        }
+#ifdef DEBUG
        else
-       {
          cerr << "WARNING!!!!";
-       }
+#endif
        
 
 
@@ -84,7 +79,7 @@ void OptRecombinSpectrum::do_plot()
 
      
     
-     GraceIO(*_energy_mesh).write_elemental_data(filename, results, names);
+     data_output.write_cell_data(filename, results, names);
     
 
 

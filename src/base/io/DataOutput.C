@@ -14,7 +14,7 @@
 #include "gmsh_io.h"
 
 
-DataOutput::DataOutput(const Mesh& mesh, const std::string& format)
+DataOutput::DataOutput(const MeshBase& mesh, const std::string& format)
   : _mesh(&mesh),
     _format(0x0000)
 {
@@ -104,4 +104,12 @@ void
 DataOutput::set_output_directory(const std::string& output_dir)
 {
   _output_dir = output_dir;
+}
+
+
+
+void
+DataOutput::set_mesh(const MeshBase& mesh)
+{
+  _mesh = &mesh;
 }

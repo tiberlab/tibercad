@@ -1,8 +1,11 @@
+// $Id$
+
 #include "QuantumDispersion.h"
 #include "SimulationEnvironment.h"
 #include "Control.h"
-#include "gnuplot_io.h"
-#include "GraceIO.h"
+#include "DataOutput.h"
+
+
 using namespace std;
 
 //---------------------------------------------------------------//
@@ -69,7 +72,7 @@ void 	QuantumDispersion::parse_options (void)
 }
 //---------------------------------------------------------------//
   
-void 	QuantumDispersion::do_plot (void)
+void QuantumDispersion::do_plot (void)
 {
 
   //---------------------------------------------------------------------------
@@ -79,51 +82,44 @@ void 	QuantumDispersion::do_plot (void)
   //k-space output
   const Device& dev = get_environment().get_device();
 
-  string suffix = get_control().get_filename_suffix();
-  string outdir = get_control().get_output_dir();
   string format = get_control().get_output_format();
+  format = get_options().get_option("output_format", format);
 
-
-  unsigned int kdim =  get_k_mesh().mesh_dimension();
-    
-  if (kdim > 1)
-    if (format == "grace")  
-      format = "ise"; //because grace can output ONLY 1D data
-
-
-  string suff;
-  if (format == "gmv")
-    suff = ".gmv";
-  else if (format == "ise")
-    suff = ".plt";
-   else if (format == "grace")
-    suff = ".dat";
 
   const std::set< std::string >& plotvariables = get_control().get_plotvariables();
 
- if (plotvariables.find("k-space_dispersion") != plotvariables.end())
+  if (plotvariables.find("k-space_dispersion") != plotvariables.end())
   {
-    string filename(outdir + "/" + get_name() +
-		    "_k_space" + suffix + suff);
 
+    unsigned int kdim =  get_k_mesh().mesh_dimension();
+
+    if ((format == "grace") && (kdim > 1))
+      format = "gmv"; //because grace can output ONLY 1D data
+
+
+    string filename(get_name() +
+		    "_k_space" + get_control().get_filename_suffix());
+
+    DataOutput data_output(get_k_mesh(), format);
+    data_output.set_output_directory(get_control().get_output_dir());
     
    
     std::vector<double> results;
     std::vector<std::string> names;
 
-    unsigned int number_of_eigs_to_store = opt.max_eigenvalue_number - opt.min_eigenvalue_number + 1;
+    unsigned int number_of_eigs_to_store =
+      opt.max_eigenvalue_number - opt.min_eigenvalue_number + 1;
     names.resize(number_of_eigs_to_store);
 
     unsigned int number_of_k_points = kmesh->n_nodes();
     results.resize( number_of_eigs_to_store * number_of_k_points );
 
-   
-   
 
     for (unsigned int i = 0; i < number_of_eigs_to_store ; i++)
     {
       std::ostringstream i_str;
-      i_str << "state_number_" << i + opt.min_eigenvalue_number ; //The states are numbered starting from 0 
+      //The states are numbered starting from 0 
+      i_str << "state_number_" << i + opt.min_eigenvalue_number ;
       names[i] = i_str.str();
 
       for (unsigned int j = 0; j < number_of_k_points ; j++)
@@ -131,33 +127,20 @@ void 	QuantumDispersion::do_plot (void)
     }
     
 
-
-    
-
-
-    if (format == "gmv")
-      GMVIO(get_k_mesh()).write_nodal_data(filename, results, names);
-    else if (format == "gnuplot")
-      GnuPlotIO(get_k_mesh()).write_nodal_data(filename, results, names);
-    else if (format == "ise")
-      TecplotIO(get_k_mesh()).write_nodal_data(filename, results, names);
-    else if (format == "grace")
+    Mesh* kmesh1D = NULL;
+    if (format == "grace")
     {
       //1D only
-      Mesh* kmesh1D = new Mesh(get_k_mesh());
+      kmesh1D = new Mesh(get_k_mesh());
       Tensor2Gen inv_transform_matrix = transform_matrix.transpose();
-      rotate_mesh (kmesh1D, inv_transform_matrix);
-
-      GraceIO(*kmesh1D).write_nodal_data(filename, results, names);
-
-      delete kmesh1D;
+      rotate_mesh(kmesh1D, inv_transform_matrix);
+      data_output.set_mesh(*kmesh1D);
     }
-    else
-    {
-      cout << "Output format not supported. Falling back to GMV." << endl;
-      GMVIO(get_k_mesh()).write_nodal_data(filename, results, names);
-    } 
 
+    data_output.write_nodal_data(filename, results, names);
+
+    // Or it is valid pointer or it is NULL
+    delete kmesh1D;
   }
 }
 

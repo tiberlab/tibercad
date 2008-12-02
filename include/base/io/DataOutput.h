@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-class Mesh;
+class MeshBase;
 
 
 //! A wrapper class for data output
@@ -37,7 +37,7 @@ class DataOutput
      * \param mesh the mesh
      * \param format the output file format in string representation
      */
-    DataOutput(const Mesh& mesh, const std::string& format);
+    DataOutput(const MeshBase& mesh, const std::string& format);
 
 
     //! Write nodal data
@@ -60,11 +60,15 @@ class DataOutput
     void set_output_directory(const std::string& output_dir);
 
 
+    //! Set the mesh
+    void set_mesh(const MeshBase& mesh);
+
+
 
   private:
 
     //! The mesh
-    const Mesh* _mesh;
+    const MeshBase* _mesh;
 
     //! The file format
     unsigned int _format;

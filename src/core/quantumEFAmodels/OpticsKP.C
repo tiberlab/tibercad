@@ -1,7 +1,6 @@
+// $Id$
 
 #include "OpticsKP.h"
-#include <stdlib.h>
-
 #include "SimulationInterface.h"
 #include "KPbulkHamiltonian.h"
 #include "EnvelopFunctionApprox.h"
@@ -9,8 +8,11 @@
 #include "SimulationEnvironment.h"
 #include "Material.h"
 #include "Control.h"
-#include "GraceIO.h"
+#include "DataOutput.h"
 #include "SimulationOptions.h"
+
+#include <stdlib.h>
+
 using namespace std; 
 using namespace Constants;
 
@@ -18,32 +20,35 @@ Device*   OpticsKP:: _device;
 
 OpticsKP::~OpticsKP()
 {
- 
- delete(_energy_mesh);
+
+  delete(_energy_mesh);
 
 }
+
+
+
 //===============================================//
 PhysicalModel* OpticsKP::create_physical_model(const ModelOptions& options,
     const Material* mat) const throw (ModelErrorException)
 {
   ModelOptions kp8x8options = options;
 
- kp8x8options["model"] = "kp";
+  kp8x8options["model"] = "kp";
   kp8x8options["kp_model"] = "8x8";
 
   EFAbulkModel* model = dynamic_cast<EFAbulkModel*> ( PhysicalModelInterface::create("EFAmodel", kp8x8options ) );
 
   if (model == NULL)
     throw ModelErrorException("OpticsKP: cannot create EFAbulkModel");
- 
+
   return(model);
-  
+
 }
 
 //===============================================//
 BoundaryProperties* OpticsKP::create_boundary_model(const ModelOptions& options) const  throw (ModelErrorException)
 {
-  
+
   return NULL;
 }
 
@@ -62,7 +67,7 @@ OpticsKP::OpticsKP()
 void OpticsKP::parse_options()
 {
   const ModelOptions& mod_opt = get_options();
-  
+
   _initial_eigen_state_numbers.clear();
   const std::vector<EnvelopFunctionApprox::eigen_propblem_solution>& in_solution = initial_state_model->get_solution();
 
@@ -71,17 +76,17 @@ void OpticsKP::parse_options()
     mod_opt.get_option("initial_eigenstates", temp);
     if (temp.size() == 2)
       if (temp[0] <= temp[1])
-	if (temp[0] >= 0 && temp.size() <=in_solution.size())
-	{
-	  _initial_eigen_state_numbers.resize(temp[1] - temp[0] + 1 ); 
-	  unsigned int j = 0;
-	  for (unsigned i = temp[0]; i <= temp[1]; i++)
-	  {
-	    _initial_eigen_state_numbers[j] = i;
-	    j++;
-	  }
-	}
-	
+        if (temp[0] >= 0 && temp.size() <=in_solution.size())
+        {
+          _initial_eigen_state_numbers.resize(temp[1] - temp[0] + 1 ); 
+          unsigned int j = 0;
+          for (unsigned i = temp[0]; i <= temp[1]; i++)
+          {
+            _initial_eigen_state_numbers[j] = i;
+            j++;
+          }
+        }
+
     if (_initial_eigen_state_numbers.size() == 0)
       throw InitFailedException("OpticsKP: initial states are not acceptable\n");
   }
@@ -94,33 +99,33 @@ void OpticsKP::parse_options()
     mod_opt.get_option("final_eigenstates", temp);
     if (temp.size() == 2)
       if (temp[0] <= temp[1])
-	if (temp[0] >= 0 && temp.size() <=fin_solution.size())
-	{
-	  _final_eigen_state_numbers.resize(temp[1] - temp[0] + 1 ); 
-	  unsigned int j = 0;
-	  for (unsigned i = temp[0]; i <= temp[1]; i++)
-	  {
-	    _final_eigen_state_numbers[j] = i;
-	    j++;
-	  }
-	}
-	
+        if (temp[0] >= 0 && temp.size() <=fin_solution.size())
+        {
+          _final_eigen_state_numbers.resize(temp[1] - temp[0] + 1 ); 
+          unsigned int j = 0;
+          for (unsigned i = temp[0]; i <= temp[1]; i++)
+          {
+            _final_eigen_state_numbers[j] = i;
+            j++;
+          }
+        }
+
     if (_final_eigen_state_numbers.size() == 0)
       throw InitFailedException("OpticsKP: final states are not acceptable\n");
   }
 
 
 
-  
+
   //k-vector
   std::vector<double> k_vec(3, 0.0);
   mod_opt.get_option("k_vector",k_vec);
   if (k_vec.size() == 3)
   {
-   
+
     for (short i = 0; i < 3; i++) k_vector[i] = k_vec[i]; 
-    
-   
+
+
   }
   else
     throw InitFailedException( "OpticsKP: k_vector size must be equal to 3 instead of " + k_vec.size()); 
@@ -151,7 +156,7 @@ void OpticsKP::do_init()
 
   _device = &( si.get_device() );
 
-  
+
 
   //initial state----------------
   const ModelOptions& mod_opt = get_options();
@@ -186,7 +191,7 @@ void OpticsKP::do_init()
   //---------------------------------------------------------------------------------------------------------//
   //My Jacobian 
   double mesh_units = get_environment().get_device().get_mesh_units();
- 
+
   Scaling& scaling = get_scaling();
 
   scaling.set_length_scaling(Constants::bohr_radius);
@@ -195,13 +200,13 @@ void OpticsKP::do_init()
 
   unsigned int dim = (es->get_mesh()).mesh_dimension();
 
-  
+
 
   //--------------------------------------------------------------------------------------------------------//
   const Mesh* mesh = &(es->get_mesh());
 
 
- 
+
 
   es->add_system<LinearImplicitSystem> (system_name);
 
@@ -229,7 +234,7 @@ void OpticsKP::do_init()
 
 
 
- 
+
   for (unsigned int i = 0; i < 8; i++)
   {
     psivar[i] = system->variable_number(psi_name[i]);
@@ -255,7 +260,7 @@ void OpticsKP::do_init()
 
   system->add_matrix("Pz_imag"); 
   Pz_matr_imag = & (system->get_matrix("Pz_imag"));
- 
+
   system->init();
 
 }
@@ -275,7 +280,7 @@ void OpticsKP::do_solve()
 
   if (verbose > 0)
     cout << "calculation of  matrix elelements for dipole optical transition..." << flush;
- 
+
   parse_options();
 
 
@@ -284,34 +289,34 @@ void OpticsKP::do_solve()
   else
     calculate_matrix(); //normal calculation
 
- 
+
   unsigned int n1 =  _initial_eigen_state_numbers.size();
   unsigned int n2 =  _final_eigen_state_numbers.size();
 
 
- 
+
   calculate_P_matrix_elements(); 
- 
+
 
   if (verbose > 0)
     cout << "done\n" << flush;
 
 
- 
+
   if (verbose > 2)
   {
     for (int i = 0; i < n1; i++) 
       for (int j = 0; j < n2; j++) 
       {
-     
-	for (int p = 0; p < 3; p++) 
-	{
-	  cout << "polarization = " <<  p << "  " << "state i = " << i  <<"   " << "state j =   " 
-	       << j <<"      "  << P_matrix[p][i][j] << "\n" << flush; 
+
+        for (int p = 0; p < 3; p++) 
+        {
+          cout << "polarization = " <<  p << "  " << "state i = " << i  <<"   " << "state j =   " 
+            << j <<"      "  << P_matrix[p][i][j] << "\n" << flush; 
 
 
-	}
-	
+        }
+
       }
   }
 
@@ -323,14 +328,14 @@ void OpticsKP::do_solve()
 
 
 void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz, 
-                          std::map<const Elem*, double>& spectrum ) 
+    std::map<const Elem*, double>& spectrum ) 
 {
 
 
   spectrum.clear();
 
- 
- 
+
+
 
   std::vector<double> fs_eigen_values;
   std::vector<double> is_eigen_values;
@@ -338,19 +343,19 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
   std::vector<double> fs_occupations;
   std::vector<double> is_occupations;
 
-  
+
 
 
   double     trans_energy, f1, f2;
- 
+
 
   unsigned int n1 =  _initial_eigen_state_numbers.size();
   unsigned int n2 =  _final_eigen_state_numbers.size();
- 
+
 
   initial_state_model->get_eigenenergies(is_eigen_values);  // initial =  electrons (?)
 
-   
+
   final_state_model->get_eigenenergies(fs_eigen_values);
 
 
@@ -360,14 +365,14 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
 
 
- 
+
 
 
   // loop on  eigenstates
 
   for (unsigned i = 0; i < n1; i++)  // "upper" states
   {
-     
+
     for (unsigned j = 0; j < n2; j++)  // "lower" states
     {
 
@@ -375,35 +380,35 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
 
       f1 = is_occupations[_initial_eigen_state_numbers[i]];   // occupation for  electron
-     
+
       f2 = fs_occupations[_final_eigen_state_numbers[j]]; // occupation for  holes
 
-    
 
-    
+
+
 
       Complex Me = P_matrix[0][i][j] * polariz(1) + P_matrix[1][i][j] * polariz(2) +  P_matrix[2][i][j] * polariz(3);
 
 
-      
-     
-      
+
+
+
       MeshBase::const_element_iterator       el     = Energy.active_elements_begin();
       const MeshBase::const_element_iterator end_el = Energy.active_elements_end();
 
       for ( ; el!= end_el ; ++el)
       {
-       
+
         const Elem* elem = *el;
 
         double En = elem->centroid()(0);
 
         double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)  + (0.5*Gamma)*(0.5*Gamma)) / Hartree;
 
-	double c = 1.0/Constants::fine_structure_constant;
+        double c = 1.0/Constants::fine_structure_constant;
 
-	double omega = trans_energy/Hartree;
- 
+        double omega = trans_energy/Hartree;
+
         spectrum[elem] += 1 / (2 * M_PI * M_PI) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * (1 - f2);
 
 
@@ -465,16 +470,16 @@ void OpticsKP::calculate_matrix_bulk(void)
 //=========================================================================//
 void OpticsKP::calculate_matrix(void)
 {
-  
+
   unsigned int dim = (es->get_mesh()).mesh_dimension();
 
- 
+
   //--------------------------------------------------------------------------------------------------------//
   const Mesh* mesh = &(es->get_mesh());
- 
 
- 
-  
+
+
+
 
 
   DofMap& dof_map = system->get_dof_map();
@@ -483,22 +488,22 @@ void OpticsKP::calculate_matrix(void)
 
 
 
- 
+
   Px_matr_real->zero();
 
-  
+
   Py_matr_real->zero();
 
-  
+
   Pz_matr_real->zero();
 
-   
+
   Px_matr_imag->zero(); 
 
-  
+
   Py_matr_imag->zero(); 
 
-  
+
   Pz_matr_imag-> zero();
 
   system->reinit();
@@ -508,10 +513,10 @@ void OpticsKP::calculate_matrix(void)
 
   FEType fe_type = dof_map.variable_type(psivar[0]); //all the variable have the same FE representation
 
- 
+
 
   AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
-  
+
   // A 5th order Gauss quadrature rule for numerical integration.
   QGauss qrule (dim, FIFTH);
 
@@ -526,7 +531,7 @@ void OpticsKP::calculate_matrix(void)
 
   // The element shape functions evaluated at the quadrature points.
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
-  
+
 
   // The element shape function gradients evaluated at the quadrature points.
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
@@ -534,7 +539,7 @@ void OpticsKP::calculate_matrix(void)
 
   //------------------------------------------------------------
   std::vector<unsigned int> dof_indices_component;
- 
+
   std::vector<unsigned int> dof_indices;
 
   //-------------------------------------------------------------
@@ -547,7 +552,7 @@ void OpticsKP::calculate_matrix(void)
 
   DenseMatrix<Number> Pz_real; 
   DenseMatrix<Number> Pz_imag;
- 
+
 
   DenseSubMatrix<Number> Px_real_sub(Px_real);
   DenseSubMatrix<Number> Px_imag_sub(Px_imag);
@@ -584,10 +589,10 @@ void OpticsKP::calculate_matrix(void)
     element_hamiltonian = (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model(); 
 
     element_kp_hamiltonian = dynamic_cast<KPbulkHamiltonian*>  (element_hamiltonian);
-   
+
     // ******************************************************* for k integration **********     
-     element_kp_hamiltonian->set_k_vector(k_vector);
-   
+    element_kp_hamiltonian->set_k_vector(k_vector);
+
     // *********************************************************************************
 
 
@@ -604,19 +609,19 @@ void OpticsKP::calculate_matrix(void)
     Pz_real.resize(n_dofs, n_dofs );
     Pz_imag.resize(n_dofs, n_dofs );
 
- 
+
 
     for (unsigned int qp=0; qp<qrule.n_points(); qp++)
     {//qp
       const vector < vector <vector <EFAbulkHamiltonian::MatrixElement> > >&  
         P = element_kp_hamiltonian->get_optical_operator() ;
-	  
+
 
 
       for (unsigned int band1 = 0; band1 < 8; band1++)
       {//band1
         dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
-	      
+
         const unsigned int n_psi_dofs = dof_indices_component.size();
         for (unsigned int band2 = 0; band2 < 8; band2++)
         {//band2
@@ -634,8 +639,8 @@ void OpticsKP::calculate_matrix(void)
           {//p1
             for (unsigned int p2=0; p2<n_psi_dofs; p2++)
             {//p2
-			  
-			  
+
+
               vector<Complex> value(3, Complex(0.0,0.0));
 
               //----constant part-----------------------------------
@@ -644,10 +649,10 @@ void OpticsKP::calculate_matrix(void)
               for (short pol = 0; pol < 3; pol++)
                 value[pol] += temp * P[pol][band1][band2].constant ;
 
-			 
+
 
               //----            ------------------------------------
-			  
+
               //--------linear left-----------------------------------------
               for (short i = 0; i < dim; i++)
               {
@@ -666,7 +671,7 @@ void OpticsKP::calculate_matrix(void)
                   value[pol] += temp * P[pol][band1][band2].linear_right[i] * Complex(0.0, -1.0) ;
               }
               //-----------------------------------------------------------
-			     
+
               // for (short pol = 0; pol < 3; pol++) value[pol] *= my_Jacobian;
 
               Px_real_sub(p1,p2) += value[0].real();
@@ -676,32 +681,32 @@ void OpticsKP::calculate_matrix(void)
               Px_imag_sub(p1,p2) += value[0].imag();
               Py_imag_sub(p1,p2) += value[1].imag();
               Pz_imag_sub(p1,p2) += value[2].imag();
-			   
+
 
             }
-		  
+
 
           }
 
 
         }
-	      
+
       }
 
     }
     Px_matr_real->add_matrix(Px_real,dof_indices );
     Py_matr_real->add_matrix(Py_real,dof_indices );
     Pz_matr_real->add_matrix(Pz_real,dof_indices );
-      
+
     Px_matr_imag->add_matrix(Px_imag,dof_indices );
     Py_matr_imag->add_matrix(Py_imag,dof_indices );
     Pz_matr_imag->add_matrix(Pz_imag,dof_indices );
-	  
-      
+
+
     el_number++;
-    
+
   }
-  
+
 }
 
 
@@ -713,18 +718,18 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 
   vector<  PetscMatrix<Number>* > P_real_p(3);
   vector<  PetscMatrix<Number>* > P_imag_p(3);
-  
+
   const Mesh& mesh = system->get_mesh();
 
-  
- 
-  
-  
+
+
+
+
   DofMap& dof_map = system->get_dof_map();
-  
+
   unsigned int number_of_nodes  = dof_map.n_dofs()/dof_map.n_variables(); //only nodes that belong to active elements
 
- 
+
 
   P_real_p[0]  = static_cast< PetscMatrix<Number>* > (Px_matr_real); P_real_p[0]->close();  
   P_real_p[1]  = static_cast< PetscMatrix<Number>* > (Py_matr_real); P_real_p[1]->close();
@@ -737,7 +742,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   const vector< Complex >   eigen_vector_f =  (final_state_model->get_solution())[j].eigen_vector;
 
 
- 
+
   int size_matrix = Px_matr_real->n();
 
 
@@ -755,23 +760,23 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   assert( kp_bands_map_fi.size() > 0);
 
   map<short, short>::const_iterator  band_it;
-  
- 
+
+
 
   for (short pol = 0; pol < 3; pol++)
   {//polarization
     for (int row = 0 ; row < size_matrix; row++)
     {//rows of P matrix
-	  
+
       // short band_number1 = row%8;
       short band_number1 = row/number_of_nodes;
-	 
+
       band_it = kp_bands_map_in.find( band_number1 );
-	  
+
 
       if (band_it != kp_bands_map_in.end())
       {//band exists in kp model of the initial state
-	     
+
         unsigned int dof_in_initial_eigenvector = band_it->second * number_of_nodes + row%number_of_nodes;
         int ierr = 0;
         const  PetscScalar *petsc_row_vals_real;
@@ -781,50 +786,50 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
         const  PetscScalar *petsc_row_vals_imag;
         const  PetscInt *petsc_cols_imag;
         int n_cols_imag = 0;
-	    
+
 
         map<int,double> real_values, imag_values;
         map<int, double>::iterator  position;
-	 
+
 
         set<int> real_column, imag_column, complex_column;
         set<int>::iterator com_col_it;
 
         insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
-	      
-	      
+
+
         ierr = MatGetRow(P_real_p[pol]->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
         CHKERRABORT(libMesh::COMM_WORLD,ierr);
         real_column.clear();
-	    
+
         for (int i = 0; i < n_cols_real; i++) 
           if (petsc_row_vals_real[i] != 0.0)  
           {
             real_column.insert(petsc_cols_real[i]);
-		 
+
             real_values.insert(make_pair(petsc_cols_real[i],petsc_row_vals_real[i] ));
           }
-	    
-	      
+
+
         ierr = MatGetRow(P_imag_p[pol]->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
         CHKERRABORT(libMesh::COMM_WORLD,ierr);
         imag_column.clear();
 
-	     
+
         for (int i = 0; i < n_cols_real; i++) 
           if (petsc_row_vals_imag[i] != 0.0)   
           {	    
             imag_column.insert(petsc_cols_imag[i]);
             imag_values.insert(make_pair(petsc_cols_imag[i],petsc_row_vals_imag[i] ));
           }
-	    
+
 
         set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
-	      
+
         for (com_col_it = complex_column.begin(); com_col_it != complex_column.end(); com_col_it++)
         {
           int n1 = *com_col_it;
-		
+
           short band_number2  = n1/number_of_nodes;
 
           band_it = kp_bands_map_fi.find(band_number2 );
@@ -833,27 +838,27 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
           {//band exists in kp model of the final state
             double value_real;
             double value_imag;
-	    
+
             //real part------	  
             position = real_values.find(n1);
             if (position != real_values.end()) 
               value_real = position->second;
             else 
               value_real = 0.0;
-		        
+
             //imag part 
             position = imag_values.find(n1);
             if (position != imag_values.end()) 
               value_imag = position->second;
             else 
               value_imag = 0.0;
-		
+
             Complex value_complex = Complex(value_real, value_imag);
-		      
-		     
+
+
             unsigned int dof_in_final_eigenvector = band_it->second * number_of_nodes + n1%number_of_nodes;
 
-		      
+
             result[pol] += value_complex * conj(eigen_vector_i[dof_in_initial_eigenvector]) * eigen_vector_f[dof_in_final_eigenvector];
 
 
@@ -863,13 +868,13 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 
         ierr = MatRestoreRow(P_real_p[pol]->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
         CHKERRABORT(libMesh::COMM_WORLD,ierr);
-	    
+
         ierr = MatRestoreRow(P_imag_p[pol]->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
         CHKERRABORT(libMesh::COMM_WORLD,ierr);
       }
     }
   }
-  
+
   return(result);
 }
 
@@ -881,61 +886,58 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 
 
 
- void OpticsKP::do_plot()
+void OpticsKP::do_plot()
+{
+  // get  spectrum calculation  options from  opticsKP model  section 
+  // for  calculation of  spectrum for a single k-point
+
+  const ModelOptions& mod_spectrum = get_options();
+
+  double  Gamma = mod_spectrum.get_option("broadening", 0.007);
+
+  double   Emin,  Emax,dE;
 
 
-{ // do_plot
-
-// get  spectrum calculation  options from  opticsKP model  section 
-// for  calculation of  spectrum for a single k-point
-
- const ModelOptions& mod_spectrum = get_options();
-
- double  Gamma = mod_spectrum.get_option("broadening", 0.007);
-
- double   Emin,  Emax,dE;
 
 
- 
-
- if (mod_spectrum.find_option("Emin"))
+  if (mod_spectrum.find_option("Emin"))
     Emin = mod_spectrum.get_option("Emin", 0.0);
-  else
-     throw InitFailedException("OpticsKP: Emin must be defined\n");
-
-
-  
-  if (mod_spectrum.find_option("Emax"))
-     Emax = mod_spectrum.get_option("Emax", 0.0);
   else
     throw InitFailedException("OpticsKP: Emin must be defined\n");
 
 
 
- if (Emax < Emin)  throw InitFailedException("OpticsKP: Emax < Emin");
+  if (mod_spectrum.find_option("Emax"))
+    Emax = mod_spectrum.get_option("Emax", 0.0);
+  else
+    throw InitFailedException("OpticsKP: Emin must be defined\n");
+
+
+
+  if (Emax < Emin)  throw InitFailedException("OpticsKP: Emax < Emin");
 
   if (mod_spectrum.find_option("dE"))
-   dE = mod_spectrum.get_option("dE", 0.0);
+    dE = mod_spectrum.get_option("dE", 0.0);
   else
     throw InitFailedException("OpticsKP: dE must be defined\n");
 
 
   if (dE <= 0)  throw InitFailedException("OpticsKP: dE <= 0");
-   
- unsigned int num_nodes = (int)((Emax - Emin)/dE) + 1; 
+
+  unsigned int num_nodes = (int)((Emax - Emin)/dE) + 1; 
 
 
- // do  energy_mesh
+  // do  energy_mesh
   _energy_mesh = new Mesh(1);
 
 
-  
+
   MeshTools::Generation::build_cube (*_energy_mesh, 
-				     num_nodes, 0, 0, 
-				     Emin, Emax, 
-				     0, 0, 
-				     0, 0,
-				     EDGE2);
+      num_nodes, 0, 0, 
+      Emin, Emax, 
+      0, 0, 
+      0, 0,
+      EDGE2);
 
 
   //  calculate_spectrum             ************  only  for case  k_0
@@ -953,7 +955,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   Tensor1 polariz_z(0); polariz_z(3) = 1.0;
 
 
-  
+
 
 
 
@@ -963,7 +965,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   calculate_spectrum( *_energy_mesh, Gamma, polariz_y, spectrum_y ) ;
   calculate_spectrum( *_energy_mesh, Gamma, polariz_z, spectrum_z ) ;
 
-  
+
 
 
 
@@ -972,14 +974,14 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   string dimension;
   double area_dim_factor = 1;
 
- 
+
 
   vector<string> names(3);
 
   names[0] = "power_density_k0_Px[W/eV]";
   names[1] = "power_density_k0_Py[W/eV]";
   names[2] = "power_density_k0_Pz[W/eV]";
- 
+
 
   vector<double> results;
 
@@ -989,7 +991,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
     int n = 0;
     for(;elem_it != elem_end; ++elem_it)
       n++;
-    
+
     results.resize(n*3);
   }
 
@@ -1002,7 +1004,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   {
     const Elem* el = *elem_it;
     double value;
-   
+
 
     //--x - polarization
     value = spectrum_x[el];
@@ -1025,53 +1027,23 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
     value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
     results[3*point + 2] = value;
 
-   
+
 
     point++;
   } 
 
 
-
-
-
-  string suffix = get_control().get_filename_suffix();
-  string outdir = get_control().get_output_dir();
-  //string format = get_control().get_output_format();
-
-
-  string format = "grace";
-
-  string suff;
-  if (format == "gmv")
-    suff = ".gmv";
-  else if (format == "ise")
-    suff = ".plt";
-  else if (format == "grace")
-    suff = ".dat";
-
   const std::set< std::string >& plotvariables = get_control().get_plotvariables();
   if (plotvariables.find("optical_spectrum_k_0") != plotvariables.end())
   {
-    string filename(outdir + "/" + get_name() +
-                    "_spectrum_k_0" + suffix + suff);
+    string filename(get_name() +
+        "_spectrum_k_0" + get_control().get_filename_suffix());
 
+    string format = get_options().get_option("output_format", "grace");
 
-    // ..............................................
+    DataOutput data_output(*_energy_mesh, format);
+    data_output.set_output_directory(get_control().get_output_dir());
 
-    if (format == "gmv")
-      GMVIO_cell(*_energy_mesh).write_ascii_cell_data(filename, results, names);
-    else if (format == "ise")
-      TecplotIO_cell(*_energy_mesh).write_cell_data(filename, results, names);
-    else if (format == "grace")
-      GraceIO(*_energy_mesh).write_elemental_data(filename, results, names);
-    else
-    {
-      cout << "Output format not supported. Falling back to GMV." << endl;
-      GMVIO_cell(*_energy_mesh).write_ascii_cell_data(filename, results, names);
-    }
-
-
+    data_output.write_cell_data(filename, results, names);
   }
-
-
 }

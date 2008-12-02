@@ -294,12 +294,15 @@ The rest of the parameters (wedge, k\_space\_dimension, etc...) define the k-spa
     k_space_dimension = 1
     k1 = (0, 0.1, 0)
     number_of_nodes = (10)
+
+    output_format = grace
     
   }
 \end{verbatim}
 
 \section{Output}
 The output variable name is \textbf{k-space\_dispersion}.
+The output format for the dispersion can be controlled independently of the general specification in the \Simulation{} section by redefining the \keyword{output\_format} keyword.
 
 \chapter{Quantum Density}
 \begin{verbatim}

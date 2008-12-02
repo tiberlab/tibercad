@@ -295,7 +295,8 @@ $Solver
     k2 = (0,  0, 0.1)
     number_of_nodes = (8,8)
     min_eigenvalue_number = 0
-    max_eigenvalue_number = 1
+    max_eigenvalue_number = 3
+    output_format = gmv
   }
 
 
