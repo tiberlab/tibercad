@@ -166,8 +166,10 @@ void WzRotatedCrystal::read_database ( )
   Database& db = get_database();
   db.set_section("lattice");
   
-  a_lat = db.get("a", 0.31, true);
-  c_lat = db.get("c", 0.5185, true);
+  //a_lat = db.get("a", 0.31, true);
+  //c_lat = db.get("c", 0.5185, true);
+  a_lat = db.get("a", 0.31);
+  c_lat = db.get("c", 0.5185);
 
 
 }

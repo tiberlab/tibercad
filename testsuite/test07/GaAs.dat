@@ -75,6 +75,7 @@ e14 = -0.16
 mu_max = (8500.0, 400.0)
 
 [mobility/doping_dependent]
+mobility_formula = 2
 mumin = (2.1360e+03, 21.48)
 am = (-7.4570e-01, -1.1240e+00)
 mud = (6.3310e+03, 3.3120e+02)

@@ -117,7 +117,8 @@ void ZbRotatedCrystal::read_database ( )
   Database& db = get_database();
   db.set_section("lattice");
 
-  a_lat = db.get("a", 0.543095, true);
+  //a_lat = db.get("a", 0.543095, true);
+  a_lat = db.get("a", 0.543095);
   
    
 }
