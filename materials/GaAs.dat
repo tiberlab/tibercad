@@ -124,7 +124,7 @@ H	= (0.0000e+00 ,	0.0000e+00)	# [1]
 N0	= (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 []
 
-#Lattice thermal conductivity [W/(cm*K)]
+[thermal_conductivity/constant]
 therm_lat_cond = 0.55
 
 

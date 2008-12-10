@@ -126,7 +126,8 @@ PhononDispersion::build_elemental_results(const std::set<std::string>& variables
   std::vector<unsigned int> W;
 
   const unsigned int nn  = mesh->n_active_elem();
-  const unsigned int dim = mesh->mesh_dimension();
+  // const unsigned int dim = mesh->mesh_dimension();
+ const unsigned int dim = 3;
   legend.resize(variables.size());
   const Device& device = *(_device);
 
@@ -184,7 +185,7 @@ PhononDispersion::build_elemental_results(const std::set<std::string>& variables
       case 2:
         legend[EV1 + 1] = "E1_y";
         n_vars++;
-        legend[EV1 + dim] = "modE1";
+	legend[EV1 + dim] = "modE1";
         n_vars++;
       default:
         legend[EV1] = "E1_x";
@@ -240,7 +241,7 @@ PhononDispersion::build_elemental_results(const std::set<std::string>& variables
     legend[n_vars]="CrossOverAll";
     n_vars++;
     legend.resize(legend.size() + 1);
-    legend[n_vars]="NoPolOverAll";
+    legend[n_vars]="UnPolOverAll";
     n_vars++;
     
   }
@@ -279,15 +280,15 @@ PhononDispersion::build_elemental_results(const std::set<std::string>& variables
     n_vars++;
   
     legend.resize(legend.size() + 1);
-    legend[n_vars]="NoPolRamanIntensity_1";
+    legend[n_vars]="UnPolRamanIntensity_1";
     n_vars++;
 
     legend.resize(legend.size() + 1);
-    legend[n_vars]="NoPolRamanIntensity_2";
+    legend[n_vars]="UnPolRamanIntensity_2";
     n_vars++;
     
     legend.resize(legend.size() + 1);
-    legend[n_vars]="NoPolRamanIntensity_3";
+    legend[n_vars]="UnPolRamanIntensity_3";
     n_vars++;
 
   }
@@ -298,7 +299,8 @@ PhononDispersion::build_elemental_results(const std::set<std::string>& variables
     
     results.resize(nn * n_vars,0.0);
  
-  
+   
+
   MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
   const MeshBase::const_element_iterator end =     mesh->active_local_elements_end();
   

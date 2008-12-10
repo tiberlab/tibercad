@@ -104,7 +104,7 @@ $Physics
  
   driftdiffusion 
   {
-    thermal_simulation = tt
+  #  thermal_simulation = tt
   }
 
 }
@@ -120,7 +120,7 @@ $Simulation
   dimension = 1
   mesh_units = 1e-9
   temperature = 200
-  solve = (tt, dd)
+  solve = (dd)
   resultpath = output
   output_format = grace
   plot = (Ec, Ev, Eg, LatticeTemp)

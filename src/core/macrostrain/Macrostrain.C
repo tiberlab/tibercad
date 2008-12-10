@@ -416,8 +416,7 @@ void Macrostrain::do_init( )
 	  if (elem->contains_point(p))
 	  {
 	    elem1 = elem;
-	    
-	    break;
+	   	    break;
 	  }
 	}
       }
@@ -1370,9 +1369,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
  bool Macrostrain::belongs_to_substrate(unsigned int n, const Elem* elem )
  {
 
-  
-
-
+   // return(false);
    if (grown_on_substrate)
    {
      

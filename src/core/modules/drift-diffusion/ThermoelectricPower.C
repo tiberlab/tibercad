@@ -77,11 +77,13 @@ ThermoelectricPower::do_init_alloy (const PhysicalModelInterface *comp_A,
 void
 ThermoelectricPower::read_database(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
 
-  _eTEpower = data("eTEpower", 0.0);
-  _hTEpower = data("hTEpower", 0.0); 
+
+  Database& db = get_database();
+  db.set_section("thermoelectric_power/constant");
+
+  _eTEpower = db.get("eTEpower", 0.0);
+  _hTEpower = db.get("hTEpower", 0.0); 
 
 }
 

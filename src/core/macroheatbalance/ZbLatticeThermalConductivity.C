@@ -1,24 +1,18 @@
 #include "ZbLatticeThermalConductivity.h"
-#include "getpot.h"
-#include "Material.h"
 #include "Database.h"
 #include "RotatedCrystal.h"  
 //--------------------------------------------------------//
 void  ZbLatticeThermalConductivity::read_database(void)
 {
  
-    
-  const Material* mat = get_material();
 
-  GetPot data((mat->get_database()).get_data_file());
+  Database& db = get_database();
+  db.set_section("thermal_conductivity/constant");
 
-  _kappa = data("therm_lat_cond", 0.0);
-  
- 
-}
+  _kappa = db.get("therm_lat_cond", 0.0);
 
 //---------------------------------------------------------//
-
+}
 
 
 void ZbLatticeThermalConductivity::do_init(void)

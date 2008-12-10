@@ -189,7 +189,11 @@ DriftDiffusionHeatSource::get_power_fluxes(std::vector<Point> h_point, const std
     do_calc =false; 
     
     if (_simul->get_environment().is_outer_boundary(elside))
-      do_calc = true;
+       do_calc = true;
+
+    
+    // if (_simul->get_environment().is_boundary(elside))
+    //  do_calc = true;
 
   }
       
@@ -221,7 +225,7 @@ DriftDiffusionHeatSource::get_power_fluxes(std::vector<Point> h_point, const std
 	    power_fluxes[n][IDN](1) = Wn_y; 
 	    power_fluxes[n][IDN](2) = Wn_z; 
 	  }
-
+ 
 	  if (ids.count(IDP))
 	  {
 	   

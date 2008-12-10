@@ -11,11 +11,22 @@
 //--------------------------------------------------------//
 void  WzLatticeThermalConductivity::read_database(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
+  //  const Material* mat = get_material();
+  //  GetPot data((mat->get_database()).get_data_file());
 
- _kappa_x = data("therm_lat_cond_x", 0.0);
- _kappa_z = data("therm_lat_cond_z", 0.0);
+
+  Database& db = get_database();
+  db.set_section("thermal_conductivity/constant");
+
+
+ _kappa_x = db.get("therm_lat_cond_x", 0.0);
+ _kappa_z = db.get("therm_lat_cond_z", 0.0);
+
+
+
+
+
+
   
 }
 

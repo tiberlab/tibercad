@@ -481,6 +481,9 @@ DriftDiffusionProperties::reinit(const Elem* elem)
     // get the nodal temperatures
     _lattice_temp.get_temperature(elem, _nodal_lattice_vt);
 
+    if (_nodal_lattice_vt[0] != 300.0)
+      throw InitFailedException("Could not create thermoelectric power model");
+
     // get the mean temperature on the element
     _lattice_vt = Constants::k_B *
       _lattice_temp.get_temperature(elem, elem->centroid());

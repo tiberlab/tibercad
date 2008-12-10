@@ -116,8 +116,11 @@ N0 = (1.0000e+18,	1.0000e+18)
 
 
 
-# Lattice thermal conductivity 
-therm_lat_cond = 1.5         #[(K)/(W)]
+# Lattice thermal conductivity
+[thermal_conductivity/constant]
+therm_lat_cond = 1.5         
+
+
 therm_lat_cond_a = 0.03      #[(cm k)/(W)]
 therm_lat_cond_b = 1.56e-3   #[(cm)/(W)]
 therm_lat_cond_c = 1.65e-6   #[(cm)/(W K)]
@@ -125,6 +128,7 @@ therm_lat_cond_c = 1.65e-6   #[(cm)/(W K)]
 
 
 #Thermoelectric power [V/k]
+[thermoelectric_power/constant]
 eTEpower = -0.001
 hTEpower =  0.001
 
