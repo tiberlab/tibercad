@@ -108,9 +108,11 @@ gamma  = (1, 1)
 
 
 #Lattice thermal conductivity [W/(cm*K)]
+[thermal_conductivity/constant]
 therm_lat_cond = 0.55
 
 
 #Thermoelectric power [mV/K]
+[thermoelectric_power/constant]
 eTEpower = -200
 hTEpower = 200

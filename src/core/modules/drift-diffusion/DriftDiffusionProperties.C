@@ -41,8 +41,9 @@ DriftDiffusionProperties::PointData::PointData(void)
 // we calculate in cm, therefore the factor 1e6
 // the electron charge enters because we take k*T in electron volts
 const double
-DriftDiffusionProperties::_DOS_factor = pow(2.0 * M_PI * Constants::me /
-      (Constants::h * Constants::h) * Constants::e, 1.5) / 1e6;
+DriftDiffusionProperties::_DOS_factor = pow(2.0 * M_PI * 
+    Constants::me / (Constants::h * Constants::h) * 
+    Constants::e, 1.5) / 1e6;
 
 
 
@@ -262,7 +263,8 @@ DriftDiffusionProperties::do_init(void)
     {
       PhysicalModelInterface::destroy(_thermoelectric_power);
 
-      _thermoelectric_power = ThermoelectricPower::create_model("default", it->second);
+      _thermoelectric_power =
+        ThermoelectricPower::create_model("default", it->second);
 
       if (_thermoelectric_power == NULL)
         throw InitFailedException("Could not create thermoelectric power model");
@@ -480,9 +482,6 @@ DriftDiffusionProperties::reinit(const Elem* elem)
 
     // get the nodal temperatures
     _lattice_temp.get_temperature(elem, _nodal_lattice_vt);
-
-    if (_nodal_lattice_vt[0] != 300.0)
-      throw InitFailedException("Could not create thermoelectric power model");
 
     // get the mean temperature on the element
     _lattice_vt = Constants::k_B *
