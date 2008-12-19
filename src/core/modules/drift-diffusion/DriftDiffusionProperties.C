@@ -376,6 +376,12 @@ DriftDiffusionProperties::do_init_alloy(const PhysicalModelInterface* comp_A,
       scB->_pyropolarization, xa);
 
 
+  PhysicalModelInterface::destroy(_thermoelectric_power);
+  _thermoelectric_power = create_submodel_copy(scA->_thermoelectric_power);
+  _thermoelectric_power->set_driftdiffusionproperties(this);
+  _thermoelectric_power->init_alloy(scA->_thermoelectric_power,
+      scB->_thermoelectric_power, xa);
+
 }
 
 
