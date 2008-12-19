@@ -19,7 +19,7 @@
 #include "dof_map.h"
 #include "elem.h"
 #include "fe_interface.h"
-#include "quadrature_trap.h"
+#include "quadrature_gauss.h"
 #include "equation_systems.h"
 #include "mesh_refinement.h"
 #include "sparse_matrix.h"
@@ -263,10 +263,10 @@ DSSC::compute_scaling(Scaling::ScalingType type)
   x0 = 1;
   mesh_units = 1;
   phi0 = 1;
-  _cond_scaling.n = 1;
-  _cond_scaling.I = 1;
-  _cond_scaling.I3 = 1;
-  _cond_scaling.C = 1;
+  //_cond_scaling.n = 1;
+  //_cond_scaling.I = 1;
+  //_cond_scaling.I3 = 1;
+  //_cond_scaling.C = 1;
   get_scaling().set_scaling_type(type);
   get_scaling().set_potential_scaling(phi0);
   get_scaling().set_length_scaling(x0 * mesh_units);
@@ -276,173 +276,6 @@ DSSC::compute_scaling(Scaling::ScalingType type)
   cout << "total amount cation: " << _cation_amount << endl;
   cout << "total amount iodine: " << _iodine_amount << endl;
 }
-
-
-
-
-
-
-void
-DSSC::reset_solver(void)
-{
-  if (!_rebuild_eq_system)
-  {
-    //get_equation_systems().delete_system(get_equation_system_name());
-    _rebuild_eq_system = true;
-  }
-}
-
-
-
-
-void
-DSSC::cleanup_solver(void)
-{
-
-  // erase boundary current data structure
-  _boundary_currents.erase(_boundary_currents.begin(),
-      _boundary_currents.end());
-
-  // erase dirichlet nodes data structure
-  _dirichlet_nodes.erase(_dirichlet_nodes.begin(),
-      _dirichlet_nodes.end());
-
-  reset_solver();
-}
-
-
-void
-DSSC::set_electric_potential(double pot)
-{
-  TiberNonlinearSystem& system =
-    get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
-
-  NumericVector<Number>& solution = system.get_solution_vector();
-  
-  const unsigned int var = system.variable_number("potential");
-  const double phi0 = get_scaling().get_potential_scaling();
-
-  Mesh& mesh = get_mesh();
-  Mesh::element_iterator it = mesh.active_elements_begin();
-  const Mesh::element_iterator end = mesh.active_elements_end();
-
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-    for (unsigned int i = 0; i < elem->n_nodes(); i++)
-    {
-      unsigned int id = 
-        elem->get_node(i)->dof_number(system.number(), var, 0);
-      solution.set(id, pot / phi0);
-    }
-  }
-}
-
-
-
-
-void
-DSSC::do_solve(void)
-{
-  
-  cout << endl;
-  cout << "<<-------------------------------------------------------------------"
-    << endl;
-  cout << "DSSC (name: " << get_name() << ")" << endl;
-
-  // rebuild the system if needed
-  //rebuild_equation_system();
-
-  // set a static pointer to ourselves
-  // this is needed in the static assembly routine
-  _this = this;
-  
-  parse_options();
-
-
-  if (!equilibrium_done())
-  {
-    solve_equilibrium();
-  }
-
-
-
-  if (do_local_scaling_)
-    build_local_scaling();
-
-  ContactData::iterator it(_boundary_currents.begin());
-  const ContactData::iterator end(_boundary_currents.end());
-  for ( ; it != end; ++it)
-  {
-    DSSCContact* contact = dynamic_cast<DSSCContact*>(
-        (*it).first->get_boundary_properties(get_id()));
-
-    if (!contact->is_cathode()) // anode 
-    {
-      if (!contact->is_open_circuit())
-      {
-        //set_electric_potential(contact->get_potential());
-        break;
-      }
-    }
-  }
-
-  
-  try
-  {
-    do_newton();
-    get_OC_values();
-  }
-  catch (SolverException& e)
-  {
-    string msg = "solve failed (" +
-      string(e.what()) + ")";
-    throw SolveFailedException(msg);
-  }
-
-  // calculate the currents to print them on screen
-  calculate_currents();
-
-
-  cout << endl;
-  int width = 20;
-  {
-    ostringstream os;
-    os << "contact name:";
-    os.width(width - os.tellp());
-    os << "";
-    os << "contact voltage:";
-    os.width(2 * width - os.tellp());
-    os << "";
-    os << "contact current:";
-    cout << os.str() << endl;
-  }
-
-  for (it = _boundary_currents.begin(); it != end; ++it)
-  {
-    /*
-    ostringstream os;
-    os << setprecision(6);
-    ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(it->first->get_boundary_properties(get_id()));
-    os << it->first->get_name();
-    os.width(width - os.tellp());
-    os << "";
-    os << cnt->get_simulation_voltage();
-    os.width(2 * width - os.tellp());
-    os << "";
-    os << it->second * it->first->get_area_factor();
-    cout << os.str() << endl;
-    */
-  }
-  cout << endl;
-  cout << "------------------------------------------------------------------->>"
-    << endl;
-
-}
-
-
 
 
 
@@ -563,6 +396,130 @@ DSSC::get_OC_values(void)
 }
 
 
+
+
+
+
+void
+DSSC::reset_solver(void)
+{
+  if (!_rebuild_eq_system)
+  {
+    //get_equation_systems().delete_system(get_equation_system_name());
+    _rebuild_eq_system = true;
+  }
+}
+
+
+
+
+void
+DSSC::cleanup_solver(void)
+{
+
+  // erase boundary current data structure
+  _boundary_currents.erase(_boundary_currents.begin(),
+      _boundary_currents.end());
+
+  // erase dirichlet nodes data structure
+  _dirichlet_nodes.erase(_dirichlet_nodes.begin(),
+      _dirichlet_nodes.end());
+
+  reset_solver();
+}
+
+
+
+
+void
+DSSC::do_solve(void)
+{
+  
+  cout << endl;
+  cout << "<<-------------------------------------------------------------------"
+    << endl;
+  cout << "DSSC (name: " << get_name() << ")" << endl;
+
+  // rebuild the system if needed
+  //rebuild_equation_system();
+
+  // set a static pointer to ourselves
+  // this is needed in the static assembly routine
+  _this = this;
+  
+  parse_options();
+
+
+  if (!equilibrium_done())
+  {
+    solve_equilibrium();
+  }
+
+
+
+  if (do_local_scaling_)
+    build_local_scaling();
+
+
+  
+  try
+  {
+    do_newton();
+    get_OC_values();
+  }
+  catch (SolverException& e)
+  {
+    string msg = "solve failed (" +
+      string(e.what()) + ")";
+    throw SolveFailedException(msg);
+  }
+
+  // calculate the currents to print them on screen
+  calculate_currents();
+
+  ContactData::iterator it(_boundary_currents.begin());
+  const ContactData::iterator end(_boundary_currents.end());
+
+  cout << endl;
+  int width = 20;
+  {
+    ostringstream os;
+    os << "contact name:";
+    os.width(width - os.tellp());
+    os << "";
+    os << "contact voltage:";
+    os.width(2 * width - os.tellp());
+    os << "";
+    os << "contact current:";
+    cout << os.str() << endl;
+  }
+
+  for ( ; it != end; ++it)
+  {
+    /*
+    ostringstream os;
+    os << setprecision(6);
+    ElectricalContact* cnt =
+      static_cast<ElectricalContact*>(it->first->get_boundary_properties(get_id()));
+    os << it->first->get_name();
+    os.width(width - os.tellp());
+    os << "";
+    os << cnt->get_simulation_voltage();
+    os.width(2 * width - os.tellp());
+    os << "";
+    os << it->second * it->first->get_area_factor();
+    cout << os.str() << endl;
+    */
+  }
+  cout << endl;
+  cout << "------------------------------------------------------------------->>"
+    << endl;
+
+}
+
+
+
+
 void
 DSSC::do_equilibrium(void)
 {
@@ -585,24 +542,31 @@ DSSC::do_equilibrium(void)
     get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
   
+  ModelOptions& solveropts = get_solver_options();
+  int max_it = solveropts.get_option("nonlin_max_it", -1);
+  solveropts.set_option("nonlin_max_it", 150);
+
+
+  int coupling = get_options().coupling;
+  get_options().coupling = POISSON;
 
   // backup the simulation voltages and set all to zero
-  //ContactData sim_voltages(_boundary_currents);
-  ContactData::iterator it(_boundary_currents.begin());
-  const ContactData::iterator end(_boundary_currents.end());
+  ContactData sim_voltages(_boundary_currents);
+  ContactData::iterator it(sim_voltages.begin());
+  const ContactData::iterator end(sim_voltages.end());
   for ( ; it != end; ++it)
   {
     const Boundary* bd = it->first;
     // It's save to static_cast because we know there has to be an
     // ElectricalContact object
-    DSSCContact* cnt =
-      static_cast<DSSCContact*>(bd->get_boundary_properties(get_id()));
-    cnt->set_open_circuit();
-    //cnt->set_simulation_voltage(0.0);
+    ElectricalContact* cnt =
+      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
+    sim_voltages[bd] = cnt->get_simulation_voltage();
+    cnt->set_simulation_voltage(0.0);
   }
 
   // make a rough guess
-  //guess_equilibrium();
+  guess_equilibrium();
 
 
   //if (do_local_scaling_)
@@ -611,28 +575,35 @@ DSSC::do_equilibrium(void)
 
   try
   {
-    cout << "Solving open circuit" << endl;
+    cout << "Solving equilibrium" << endl;
 
     do_newton();
-    get_OC_values();
     
-    cout << "Open circuit done" << endl;
+    cout << "Equilibrium done" << endl;
   }
   catch (runtime_error& e)
   {
-    cerr << "Open circuit did not converge: " << e.what() << endl;
+    cerr << "Equilibrium did not converge: " << e.what() << endl;
     throw (e);
   }
 
   // set the contact voltages back to the desired values
-  for (it = _boundary_currents.begin(); it != end; ++it)
+  it = sim_voltages.begin();
+  for ( ; it != end; ++it)
   {
     const Boundary* bd = it->first;
-    DSSCContact* cnt =
-      static_cast<DSSCContact*>(bd->get_boundary_properties(get_id()));
-    cnt->set_open_circuit(false);
+    ElectricalContact* cnt =
+      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
+    cnt->set_simulation_voltage(sim_voltages[bd]);
   }
   
+  // reset the coupling
+  get_options().coupling = coupling;
+
+  if (max_it != -1)
+    solveropts.set_option("nonlin_max_it", max_it);
+  else
+    solveropts.delete_option("nonlin_max_it");
 */
 }
 
@@ -894,7 +865,6 @@ DSSC::do_newton(void)
 void
 DSSC::find_dirichlet_nodes(void)
 {
-
   SimulationEnvironment& env = get_environment();
 
   Mesh& mesh = get_mesh();
@@ -930,6 +900,7 @@ DSSC::find_dirichlet_nodes(void)
       }
     }
   }
+
 }
 
 
@@ -1664,7 +1635,7 @@ DSSC::calculate_currents_rstf(void)
   FEType fe_type = system->variable_type(u_var);
 
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QTrap qrule(dim, libMeshEnums::FIFTH);
+  QGauss qrule(dim, libMeshEnums::FIFTH);
   fe->attach_quadrature_rule(&qrule);
 
   
@@ -1846,7 +1817,7 @@ DSSC::build_local_scaling(void)
 
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QTrap qrule(dim, params.integration_order);
+  QGauss qrule(dim, params.integration_order);
   fe->attach_quadrature_rule(&qrule);
 
 
@@ -2147,7 +2118,7 @@ DSSC::build_nodal_results(const set<string>& variables,
 
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QTrap qrule(dim);
+  QGauss qrule(dim, libMeshEnums::CONSTANT);
   fe->attach_quadrature_rule(&qrule);
 
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
@@ -2449,7 +2420,7 @@ DSSC::build_elemental_results(const set<string>& variables,
   
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QTrap qrule(dim);
+  QGauss qrule(dim, libMeshEnums::CONSTANT);
   fe->attach_quadrature_rule(&qrule);
 
   vector<unsigned int> dof_indices_u;
@@ -2547,10 +2518,10 @@ DSSC::build_elemental_results(const set<string>& variables,
     sc->calculate_net_recombination_rate();
 
       
-    double sigma_e = sc->get_density_n() * sc->get_mobility_n();
-    double sigma_I = sc->get_density_I() * sc->get_mobility_I();
-    double sigma_I3 = sc->get_density_I3() * sc->get_mobility_I3();
-    double sigma_C = sc->get_density_C() * sc->get_mobility_C();
+    double sigma_e = -Constants::e * sc->get_density_n() * sc->get_mobility_n();
+    double sigma_I = -Constants::e * sc->get_density_I() * sc->get_mobility_I();
+    double sigma_I3 = -Constants::e * sc->get_density_I3() * sc->get_mobility_I3();
+    double sigma_C = Constants::e * sc->get_density_C() * sc->get_mobility_C();
 
     unsigned int id = n_vars * elem_number;
 
@@ -2796,7 +2767,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
   // the finite element
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QTrap qrule(dim);
+  QGauss qrule(dim, integration_order);
   fe->attach_quadrature_rule(&qrule);
 
   // the finite element for boundary integration
@@ -2804,7 +2775,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
   
-  QTrap qface(dim - 1);
+  QGauss qface(dim - 1, integration_order);
   fe_face->attach_quadrature_rule(&qface);
 
   
@@ -3620,6 +3591,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
           if (contact->is_cathode())
           {
+
             for (unsigned int n = 0; n < elem->n_nodes(); n++)
             {
               //KII(s,n) -= sigma_I * dphi_face[n][0](0);
@@ -3643,12 +3615,12 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               contact->set_values(sc->get_density_I(),
                   sc->get_equilibrium_concentrations().I,
                   sc->get_density_I3(), sc->get_equilibrium_concentrations().I3);
-              //double curr = contact->get_current() * x0;
-              //FI(s) -= sign * 1.5 * curr / Constants::e / C0_I;
-              //FI3(s) -= -sign * 0.5 * curr / Constants::e / C0_I3;
+              double curr = contact->get_current() * x0;
+              FI(s) -= 1.5 * curr / Constants::e / C0_I;
+              FI3(s) -= -0.5 * curr / Constants::e / C0_I3;
 
-              Fa(s) += sign * _cation_amount / C0;
-              Fb(s) += sign * _iodine_amount / C0;
+              Fa(s) += _cation_amount / C0;
+              Fb(s) += _iodine_amount / C0;
             }
 
           }
@@ -3777,7 +3749,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     // DOFs
     // NOTE: this changes dof_indices that's why the application of
     //       Dirichlet type BCs needs special care
-    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
+    //dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
 ///*
     //
@@ -3800,181 +3772,30 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           DSSCContact* contact = dynamic_cast<DSSCContact*>(
               bd->get_boundary_properties(get_id()));
           //contact->set_material(sc);
-          //contact->set_normal_fluxes(
-          //    nodal_flux_n[elem->node(i)], nodal_flux_p[elem->node(i)]);
 
           // we only impose Dirichlet type BCs if the node has an associated
           // boundary side
           if (nodes_on_boundary_sides.find(elem->node(i)) !=
               nodes_on_boundary_sides.end())
           {
-            if (!contact->is_cathode()) // anode 
+            if (!contact->is_cathode())
             {
-              if (!contact->is_open_circuit())
-              {
-                double val = contact->get_potential() / phi0;
-                Ke.condense(i + n_dofs, i + n_dofs, val, Fe);
-              //  Ke.condense(i, i, -val, Fe);
-              }
-              //Ke.condense(i + 2*n_dofs, i + 2*n_dofs, 0.0, Fe);
-              //Ke.condense(i + 3*n_dofs, i + 3*n_dofs, 0.0, Fe);
-              //Ke.condense(i + 4*n_dofs, i + 4*n_dofs, 0.0, Fe);
+              double val = contact->get_potential() / phi0;
+              Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
+              //Ke.condense(i + 3*n_dofs, i + 3*n_dofs, -val, Fe);
             }
             else
             {
-              if (!contact->is_open_circuit())
-              {
-                Ke.condense(i + 2*n_dofs, i + 2*n_dofs, -XI(i), Fe);
-                Ke.condense(i + 3*n_dofs, i + 3*n_dofs, -XI3(i), Fe);
-              }
-              //double val = contact->get_current() / phi0;
-              //double val = (3 * XI(i) - Xu(i) - 2 * contact->get_current()) / phi0;
+              //double val = contact->get_potential() / phi0;
+              //double val = (3 * XI(i) - Xu(i) - 2 * contact->get_potential()) / phi0;
               //Ke.condense(i + 3 * n_dofs, i + 3 * n_dofs, -val, Fe);
               //Ke.condense(i + n_dofs, i + n_dofs, -val, Fe);
             }
           }
-/*
-          else
-          {
-            // in this case we do not change the matrix and rhs
-
-            if (coupling & POISSON)
-            {
-              if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
-              {
-                for (int j = 0; j < n_dofs_tot; j++)
-                  Ke(i, j) = 0.0;
-                Fe(i) = 0;
-              }
-            }
-
-            if (coupling & ECURRENT)
-            {
-              if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
-              {
-                for (int j = 0; j < n_dofs_tot; j++)
-                  Ke(i + n_dofs, j) = 0.0;
-                Fe(i + n_dofs) = 0;
-              }
-            }
-
-            if (coupling & HCURRENT)
-            {
-              if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
-              {
-                for (int j = 0; j < n_dofs_tot; j++)
-                  Ke(i + 2 * n_dofs, j) = 0.0;
-                Fe(i + 2 * n_dofs) = 0;
-              }
-            }
-
-          }
-*/
         }
       }
     }
-/*
-    else
-    {
-      // TODO this needs to be checked!!!
-      // TODO Is now probably broken
 
-      // Some nodes are constrained, so we have messed up our
-      // matrix and vector. In particular, we could have included
-      // nodes on Dirichlet boundaries.
-      // We will look for them on the parent element(s) to apply
-      // proper boundary conditions
-
-      n_dofs_tot = dof_indices.size();
-
-      // it's possible, that a node of the parent element is
-      // also a hanging node. In this case we have to look at the
-      // grand parent
-      bool is_done = false;
-      const Elem* parent;
-      while (!is_done)
-      {
-        is_done = true;
-        parent = elem->parent();
-        elem = parent;
-
-        assert(parent != NULL);
-
-        dof_map.dof_indices(parent, dof_indices_u, u_var);
-        dof_map.dof_indices(parent, dof_indices_en, en_var);
-        dof_map.dof_indices(parent, dof_indices_ep, ep_var);
-
-        // loop over the nodes of the parent element
-        unsigned int n_nodes = parent->n_nodes();
-        for (unsigned int i = 0; i < n_nodes; i++)
-        {
-          if (dof_map.is_constrained_dof(dof_indices_u[i]))
-            is_done = false;
-
-          node_it = dirichlet_nodes.find(parent->get_node(i));
-          if (node_it != end)
-          {
-            Boundary* bd = node_it->second;
-            ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
-                bd->get_boundary_properties(get_id()));
-            contact->set_material(sc);
-            contact->set_normal_fluxes(0.0, 0.0);
-
-            // loop over all DOFs occurring in the constrained matrix
-            for (unsigned int id = 0; id < n_dofs_tot; id++)
-            {
-
-              if (coupling & POISSON)
-              {
-                if (contact->get_type(POTENTIAL) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_u[i])
-                  {
-                    double val = (contact->get_boundary_value(POTENTIAL)
-                        + contact->get_inner_voltage()) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-              }
-
-              if (coupling & ECURRENT)
-              {
-                if (contact->get_type(FERMIE) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_en[i])
-                  {
-                    double val = (contact->get_boundary_value(FERMIE)
-                        + contact->get_inner_voltage()) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-              }
-
-              if (coupling & HCURRENT)
-              {
-                if (contact->get_type(FERMIH) ==
-                    ElectricalContact::DIRICHLET)
-                {
-                  // is it a boundary DOF?
-                  if (dof_indices[id] == dof_indices_ep[i])
-                  {
-                    double val = (contact->get_boundary_value(FERMIE)
-                        + contact->get_inner_voltage()) / phi0;
-                    Ke.condense(id, id, -val, Fe);
-                  }
-                }
-              }
-
-            } // end loop over all DOFs 
-          }
-        } // end loop over the nodes of the parent element
-      }
-    }
-*/
 
 
     perf_log.start_event("add");
@@ -3996,20 +3817,13 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
   if (jacobian != NULL)
   {
-    static int i = 0;
     jacobian->close();
-    ostringstream os;
-    os << "J_" << i << ".m";
-    //jacobian->print_matlab(os.str());
+    //jacobian->print_matlab("J.m");
   }
   else
   {
-    static int i = 0;
     residual->close();
-    ostringstream os;
-    os << "F_" << i << ".m";
-    //residual->print_matlab(os.str());
-    i++;
+    //residual->print_matlab("F.m");
   }
 
   

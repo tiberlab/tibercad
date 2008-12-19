@@ -344,9 +344,6 @@ class DSSC : public SimulationInterface
     void calculate_currents(void);
 
 
-    void set_electric_potential(double pot);
-
-
     //! Calculate terminal currents
     /*!
      * Uses the Ramo-Shockley test functions and integrates over the
@@ -397,6 +394,7 @@ class DSSC : public SimulationInterface
     void do_assembly(const NumericVector<Number>& x,
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
+
 
     //! Find the open circuit potential and densities
     void get_OC_values(void);

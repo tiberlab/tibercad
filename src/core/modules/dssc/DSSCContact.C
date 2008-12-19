@@ -4,7 +4,7 @@
 #include "SimulationOptions.h"
 #include "Constants.h"
 
-
+using namespace std;
 
 bool
 DSSCContact::_open_circuit = true;
@@ -21,6 +21,7 @@ DSSCContact::create(const std::string& name,
 
   if (ct != NULL)
     ct->set_options(options);
+
 
   if (name == "Pt")
     ct->is_cathode() = true;
@@ -51,4 +52,5 @@ DSSCContact::calculate_current(double I, double I3)
   double B = I / _Ioc * exp(-_beta * upt / kT);
 
   _current = _j0 * (A - B);
+  _current = get_potential();
 }
