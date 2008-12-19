@@ -267,7 +267,7 @@ DSSC::compute_scaling(Scaling::ScalingType type)
   //_cond_scaling.I = 1;
   //_cond_scaling.I3 = 1;
   //_cond_scaling.C = 1;
-  get_scaling().set_scaling_type(type);
+  //get_scaling().set_scaling_type(type);
   get_scaling().set_potential_scaling(phi0);
   get_scaling().set_length_scaling(x0 * mesh_units);
   get_scaling().set_mobility_scaling(mu0);
@@ -3219,8 +3219,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               KuI3(i,j) -= phi0 * dI3_dphi * phi_i_x_phi_j / local_scaling[i][2] / C0;
               KuC(i,j) += phi0 * dC_dphi * phi_i_x_phi_j / local_scaling[i][2] / C0;
 
-              Kau(i,j) -= phi0 * dC_dphi * phi_i_x_phi_j / C0;
-              KaC(i,j) += phi0 * dC_dphi * phi_i_x_phi_j / C0;
+              Kau(i,j) -= phi0 * dC_dphi * phi_i_x_phi_j / C0_C;
+              KaC(i,j) += phi0 * dC_dphi * phi_i_x_phi_j / C0_C;
 
               Kbu(i,j) -= phi0 * (dI3_dphi + dI_dphi / 3.0) * phi_i_x_phi_j / C0;
               KbI(i,j) += phi0 * dI_dphi / 3.0 * phi_i_x_phi_j / C0;
@@ -3277,7 +3277,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           FI(i) += 1.5 * net_recomb / R0_I;
           FI3(i) -= 0.5 * net_recomb / R0_I3;
 
-          Fa(i) -= J * phi[i][qp] * n_C / C0;
+          Fa(i) -= J * phi[i][qp] * n_C / C0_C;
           Fb(i) -= J * phi[i][qp] * (n_I3 + n_I / 3.0) / C0;
         }
       }
@@ -3619,7 +3619,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               FI(s) -= 1.5 * curr / Constants::e / C0_I;
               FI3(s) -= -0.5 * curr / Constants::e / C0_I3;
 
-              Fa(s) += _cation_amount / C0;
+              Fa(s) += _cation_amount / C0_C;
               Fb(s) += _iodine_amount / C0;
             }
 
