@@ -50,6 +50,13 @@ SBCondBandBulkHamiltonian::do_init_alloy(const PhysicalModelInterface *comp_A,
   semiconductor = static_cast<Semiconductor*>(matA->semiconductor->copy());
   assert(semiconductor != NULL);
   semiconductor->set_material(get_material());
+
+  //Added by G.Penazzi
+ kp_bands.resize(1,0);
+
+  kp_bands_map.insert(std::make_pair(0,0));
+  //--------------------
+
   semiconductor->init_alloy(matA->semiconductor, matB->semiconductor, xa);
 
   calculate_for_init();

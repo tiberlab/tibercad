@@ -18,7 +18,7 @@ void KPbulkHamiltonian::nullify_parameters(void)
   par.M2 = 0.0;
   par.M3 = 0.0;
   par.N1 = 0.0;
-  par.N2 = 0.0;    
+  par.N2 = 0.0;
   par.P1 = 0.0;
   par.P2 = 0.0;
   par.s1 = 0.0;
@@ -29,12 +29,12 @@ void KPbulkHamiltonian::nullify_parameters(void)
   par.d2 = 0.0;
   par.d3 = 0.0;
   par.N1_xy = 0.0;
-  par.N1_yx = 0.0; 
-  par.N2_xy = 0.0; 
+  par.N1_yx = 0.0;
+  par.N2_xy = 0.0;
   par.N2_yx = 0.0;
   par.l1s = 0.0;
   par.l2s = 0.0;
-  par.n1s = 0.0;  
+  par.n1s = 0.0;
   par.n2s = 0.0;
   par.m1s = 0.0;
   par.m2s = 0.0;
@@ -62,47 +62,47 @@ KPbulkHamiltonian::KPbulkHamiltonian( )
     band_min(2),
     band_max(7)
 {
-} 
+}
 
 
 
 //=================================================================
 
-void KPbulkHamiltonian::do_init() 
+void KPbulkHamiltonian::do_init()
 {
 
   EFAbulkHamiltonian::do_init();
-  
+
   const ModelOptions& opt =  get_options ();
 
   PhysicalModelInterface::destroy(semiconductor);
 
 
- 
+
   semiconductor = Semiconductor::create( get_material() -> get_structure(), opt  );
 
   semiconductor->set_material(get_material());
 
   semiconductor->init();
-  
+
 
   model_name = opt.get_option("kp_model","6x6");
 
   kpVVtermSymmetric = opt.get_option("kpVVtermSymmetric", false);
 
   kpCVtermSymmetric = opt.get_option("kpCVtermSymmetric", true);
-  
- 
+
+
   nullify_parameters();
 
   if (model_name == "6x6")
     {
       band_min = 2;
       band_max = 7;
-     
+
     }
   else
-    { 
+    {
       if (model_name == "8x8")
 	{
 	  band_min = 0;
@@ -118,12 +118,12 @@ void KPbulkHamiltonian::do_init()
 
 
 
- 
+
 
 
   short i1 = 0;
 
-  for (short i = band_min; i <= band_max; i++) 
+  for (short i = band_min; i <= band_max; i++)
     {
       kp_bands.push_back(i);
       kp_bands_map.insert(make_pair (i,i1) );
@@ -136,7 +136,7 @@ void KPbulkHamiltonian::do_init()
   //prepare k.p parameter
   par = semiconductor->calculate_kp_params (model_name);
 
-  //calculate general Hamiltonian 
+  //calculate general Hamiltonian
   calculate_Hamiltonian_gen();
 
   //apply k|| vector (even if it is zero-vector !!!)
@@ -176,15 +176,28 @@ void KPbulkHamiltonian::do_init_alloy (const PhysicalModelInterface *comp_A, con
 
   set_rotation_matrix();
 
+
+  //Added by G.Penazzi
+  short i1 = 0;
+
+  for (short i = band_min; i <= band_max; i++)
+    {
+      kp_bands.push_back(i);
+      kp_bands_map.insert(make_pair (i,i1) );
+      i1++;
+    }
+  //--------------------------------------
+
+
   //prepare k.p parameter
   par = semiconductor->calculate_kp_params(model_name);
 
-  //calculate general Hamiltonian 
+  //calculate general Hamiltonian
   calculate_Hamiltonian_gen();
 
   //apply k|| vector (even if it is zero-vector !!!)
   calculate_Hamiltonian_k_par();
-  
+
 
   //-----------------------------------------------
   //calculate optical operator
@@ -196,19 +209,19 @@ void KPbulkHamiltonian::do_init_alloy (const PhysicalModelInterface *comp_A, con
 }
 
 //==================================================================//
- 
+
 void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
 {
   //=================================================================
 
-  
- 
+
+
   //Initialization
   //--------------------------------------------------
   //create matrix 8x8
   const vector<KPbulkHamiltonian::MatrixElement>  temp(8);
 
- 
+
   Ham.resize(8,temp);
   //--------------------------------------------------
 
@@ -219,7 +232,7 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
 	Ham[i][j].constant =  Complex(0.0,0.0);
 
 	//--------linear
-	for (short i1 = 0; i1 < 3; i1++)  
+	for (short i1 = 0; i1 < 3; i1++)
 	  {
 	    Ham[i][j].linear_left[i1] =  Complex(0.0, 0.0);
 	    Ham[i][j].linear_right[i1] =  Complex(0.0, 0.0);
@@ -231,7 +244,7 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
 
       }
 
- 
+
   //=================================================================
   //-------H_vv + h^2/2m(kx^2+ky^2+kz^2) in crystal system-----------//
   Ham[2][2].quad[0][0]  = par.L1  + 0.5;
@@ -245,7 +258,7 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
   Ham[4][4].quad[0][0] = par.M3 + 0.5;
   Ham[4][4].quad[1][1] = par.M3 + 0.5;
   Ham[4][4].quad[2][2] = par.L2 + 0.5;
-  
+
   if (kpVVtermSymmetric)
     {
       Ham[2][3].quad[0][1] = par.N1/2.0;  Ham[2][3].quad[1][0]= par.N1/2.0;
@@ -257,7 +270,7 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
       Ham[2][3].quad[0][1] = par.N1_xy;  Ham[2][3].quad[1][0]= par.N1_yx;
       Ham[2][4].quad[0][2] = par.N2_xy;  Ham[2][4].quad[2][0]= par.N2_yx;
       Ham[3][4].quad[1][2] = par.N2_xy;  Ham[3][4].quad[2][1]= par.N2_yx;
-     
+
     }
 
   /*
@@ -266,7 +279,7 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
     Ham_quad(5,4,:,:) = TRANSPOSE(CONJG(Ham_quad(4,5,:,:)))
     Ham_quad(5,3,:,:) = TRANSPOSE(CONJG(Ham_quad(3,5,:,:)))
   */
-  
+
   for (short i = 0; i< 3; i++)
      for (short j = 0; j< 3; j++)
        {
@@ -277,38 +290,38 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
   //=====================================================================!
   //--------Valence band strain ------------------------------------
 
- 
+
 
   Ham[2][2].constant = par.l1s*strainM(1,1)+par.m1s*strainM(2,2)+par.m2s*strainM(3,3);
-  Ham[3][3].constant = par.m1s*strainM(1,1)+par.l1s*strainM(2,2)+par.m2s*strainM(3,3); 
-  Ham[4][4].constant = par.m3s*strainM(1,1)+par.m3s*strainM(2,2)+par.l2s*strainM(3,3); 
-  Ham[2][3].constant = par.n1s*strainM(2,1) ; 
+  Ham[3][3].constant = par.m1s*strainM(1,1)+par.l1s*strainM(2,2)+par.m2s*strainM(3,3);
+  Ham[4][4].constant = par.m3s*strainM(1,1)+par.m3s*strainM(2,2)+par.l2s*strainM(3,3);
+  Ham[2][3].constant = par.n1s*strainM(2,1) ;
   Ham[3][2].constant = par.n1s*strainM(2,1) ;
-  Ham[2][4].constant = par.n2s*strainM(3,1) ;  
+  Ham[2][4].constant = par.n2s*strainM(3,1) ;
   Ham[4][2].constant = par.n2s*strainM(3,1) ;
-  Ham[3][4].constant = par.n2s*strainM(3,2) ;  
+  Ham[3][4].constant = par.n2s*strainM(3,2) ;
   Ham[4][3].constant = par.n2s*strainM(3,2) ;
 
 
- 
+
 
   //=================================================================
   // Crystal field splitting
-  Ham[2][2].constant +=  par.d1 ; 
-  Ham[3][3].constant +=  par.d1 ; 
+  Ham[2][2].constant +=  par.d1 ;
+  Ham[3][3].constant +=  par.d1 ;
   //=================================================================
-  
+
   //  !---------Valence part without spin-orbit-------------------------!
 
   /*
     Ham_quad(6:8,6:8,:,:)=Ham_quad(3:5,3:5,:,:)
     Ham_const(6:8,6:8)=Ham_const(3:5,3:5)
   */
-  
+
   for (short i = 5 ; i <= 7; i++)
     for (short j = 5 ; j <= 7; j++)
       {
-       
+
 	Ham[i][j].constant = Ham[i-3][j-3].constant;
 
 	for (short i1 = 0; i1 < 3; i1++)
@@ -318,23 +331,23 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
 
   //=======================================================================//
   //-------------H_cc------------------------------------------------------//
-  Ham[0][0].quad[0][0]= 0.5*par.s2;       
-  Ham[0][0].quad[1][1]= 0.5*par.s2;     
+  Ham[0][0].quad[0][0]= 0.5*par.s2;
+  Ham[0][0].quad[1][1]= 0.5*par.s2;
   Ham[0][0].quad[2][2]= 0.5*par.s1;
 
-  Ham[1][1].quad[0][0]= 0.5*par.s2;       
-  Ham[1][1].quad[1][1]= 0.5*par.s2;     
+  Ham[1][1].quad[0][0]= 0.5*par.s2;
+  Ham[1][1].quad[1][1]= 0.5*par.s2;
   Ham[1][1].quad[2][2]= 0.5*par.s1;
 
 
- 
+
   //-----------------------------------------------------------------------//
 
- 
+
   //cv part
   if (kpCVtermSymmetric)
     {
-   
+
 
       Ham[0][2].linear_left[0] = par.P2 * 0.5 *  Complex(0.0, 1.0);
       Ham[0][3].linear_left[1] = par.P2 * 0.5 *  Complex(0.0, 1.0);
@@ -356,7 +369,7 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
 
 
 
-     
+
 
       for (short i = 0; i < 2; i++)
 	for (short j = 2; j < 8; j++)
@@ -365,24 +378,24 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
 	        Ham[j][i].linear_left[i1] =  conj(Ham[i][j].linear_left[i1]);
 	        Ham[j][i].linear_right[i1] = conj(Ham[i][j].linear_right[i1]);
 
-	     
-	      
+
+
 	    }
 
 
 
-      
-     
-      
+
+
+
 
 
     }
   else
     {
-      Ham[0][2].linear_left[0]= par.P2 *  Complex(0, 1.0);  Ham[1][5].linear_left[0]= par.P2 *  Complex(0, 1.0); 
+      Ham[0][2].linear_left[0]= par.P2 *  Complex(0, 1.0);  Ham[1][5].linear_left[0]= par.P2 *  Complex(0, 1.0);
       Ham[0][3].linear_left[1]= par.P2 *  Complex(0, 1.0);  Ham[1][6].linear_left[1]= par.P2 *  Complex(0, 1.0);
       Ham[0][4].linear_left[2]= par.P1 *  Complex(0, 1.0);  Ham[1][7].linear_left[1]= par.P1 *  Complex(0, 1.0);
-     
+
       for (short i = 0; i< 2; i++)
 	for (short j = 2; j< 8; j++)
 	  for (short  i1 = 0; i1<=2; i1++)
@@ -390,26 +403,26 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
 
     }
   //-----------------------------------------------------------------------//
-  // absolute band edges 
+  // absolute band edges
   //
 
   //conduction band with strain
   Ham[0][0].constant +=  par.E_c;   Ham[1][1].constant +=  par.E_c;
 
   //valence band without strain
- 
+
 
   for (short i = 2; i < 8; i++)
-    { 
-     
+    {
+
       Ham[i][i].constant += par.E_v; //E_v is averaged
-     
+
     }
   //-----------------------------------------------------------------------//
-  
+
   //------------------spin-orbit interaction------------------------//
 
-  /*Ham_const(3,4) = Ham_const(3,4)  + (0d0,-1d0)*d2*/  Ham[2][3].constant   +=  Complex(0.0,-1.0)*par.d2; 
+  /*Ham_const(3,4) = Ham_const(3,4)  + (0d0,-1d0)*d2*/  Ham[2][3].constant   +=  Complex(0.0,-1.0)*par.d2;
   /*Ham_const(4,3) = Ham_const(4,3)  + (0d0, 1d0)*d2*/  Ham[3][2].constant   +=  Complex(0.0, 1.0)*par.d2;
 
   /*Ham_const(3,8) = Ham_const(3,8)  +  d3*/     Ham[2][7].constant += par.d3;
@@ -432,17 +445,17 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
 
 
   for (short i = 0; i < 8; i++)
-  {  
+  {
     for (short j = 0; j < 8; j++)
     {
       rotate_linear( Ham[i][j].linear_left);
       rotate_linear( Ham[i][j].linear_right);
       rotate_quad(Ham[i][j].quad);
-	
+
     }
   }
 
- 
+
   //-----------------------------------------------------------------!
 
 }
@@ -451,7 +464,7 @@ void KPbulkHamiltonian::calculate_optical_operator(void)
 {
   //nullify P matrix
   P.resize(3);
-  for (short i = 0 ; i < 3; i++)  
+  for (short i = 0 ; i < 3; i++)
     {
       P[i].resize(8);
       for (short j = 0 ; j < 8; j++)	P[i][j].resize(8);
@@ -463,19 +476,19 @@ void KPbulkHamiltonian::calculate_optical_operator(void)
 	{
 	  //--------constant
 	  P[pol][i][j].constant =  Complex(0.0,0.0);
-	  
+
 	  //--------linear
-	  for (short i1 = 0; i1 < 3; i1++)  
+	  for (short i1 = 0; i1 < 3; i1++)
 	    {
 	      P[pol][i][j].linear_left[i1] =  Complex(0.0, 0.0);
 	      P[pol][i][j].linear_right[i1] =  Complex(0.0, 0.0);
 	    }
-	  
-	  
+
+
 	}
 
-  
- 
+
+
 
 
   //obtain P matrix
@@ -483,15 +496,15 @@ void KPbulkHamiltonian::calculate_optical_operator(void)
   for (short band1 = 0; band1 < 8; band1++)
     for (short band2 = 0; band2 < 8; band2++)
       {
-	//derivative of the linear term 
+	//derivative of the linear term
 	for (short polariz = 0; polariz < 3;  polariz++)
 	  P[polariz][band1][band2].constant += Ham[band1][band2].linear_left[polariz] + Ham[band1][band2].linear_right[polariz];
-	
+
 
 	//derivative of the quadratic term
 	for (short polariz = 0; polariz < 3;  polariz++)
 	  for (short i1= 0; i1 < 3;  i1++)
-	    {   
+	    {
 	      P[polariz][band1][band2].linear_left[i1]   += Ham[band1][band2].quad[polariz][i1];
 	      P[polariz][band1][band2].linear_right[i1]  += Ham[band1][band2].quad[i1][polariz];
 	    }
@@ -502,7 +515,7 @@ void KPbulkHamiltonian::calculate_optical_operator(void)
   P_gen = P; //k|| = 0
 
 }
-  
+
 
 
 
@@ -524,7 +537,7 @@ void KPbulkHamiltonian:: calculate_Hamiltonian_k_par (void)
   for (short i = band_min; i <= band_max; i++)
     for (short j = band_min; j <= band_max; j++)
     {
-	 
+
       //------we have to change constant term
       for (short i1 = 0; i1 < 3; i1++)
       {
@@ -532,12 +545,12 @@ void KPbulkHamiltonian:: calculate_Hamiltonian_k_par (void)
 	result[i][j].constant += Ham[i][j].linear_right[i1] * k_vector[i1];
 	for (short j1 = 0; j1 < 3; j1++)
 	{
-	  result[i][j].constant += Ham[i][j].quad[i1][j1] * k_vector[i1] * k_vector[j1]; 
+	  result[i][j].constant += Ham[i][j].quad[i1][j1] * k_vector[i1] * k_vector[j1];
 	}
       }
 
       //------we have to change linear term
-      
+
       for (short i1 = 0; i1 < 3; i1++)
 	for (short j1 = 0; j1 < 3; j1++)
 	{
@@ -546,7 +559,7 @@ void KPbulkHamiltonian:: calculate_Hamiltonian_k_par (void)
 	}
 
     }
-  
+
 
   //-------------------------------------------------//
 
@@ -557,10 +570,10 @@ void KPbulkHamiltonian:: calculate_Hamiltonian_k_par (void)
   for (short i = 0; i <= band_max - band_min; i++)
      for (short j = 0; j <= band_max - band_min; j++)
        Hamiltonian[i][j] = result[i + band_min][j + band_min];
-  
+
   //-----------------------------------------------//
   Hamiltonian_without_strain_pot = Hamiltonian;
-  
+
 
 }
 
@@ -568,61 +581,61 @@ void KPbulkHamiltonian:: calculate_Hamiltonian_k_par (void)
 void KPbulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential)
 {
 
-  
+
 
   const vector<Complex>  strain_Ham_Bir_Pikus1(8,Complex(0.0,0.0));
-  
+
   vector< vector<Complex > > strain_Ham_Bir_Pikus;
   strain_Ham_Bir_Pikus.resize(8,strain_Ham_Bir_Pikus1);
 
 
- 
- 
-  
+
+
+
 
   //---------------------------------------------------------------
-  //  strain 
+  //  strain
   //---------------------------------------------------------------
   //valence band
-  
+
 
   strain_Ham_Bir_Pikus[2][2]  = par.l1s*strain_crystal(1,1)+par.m1s*strain_crystal(2,2)+par.m2s*strain_crystal(3,3);
-  strain_Ham_Bir_Pikus[3][3]  = par.m1s*strain_crystal(1,1)+par.l1s*strain_crystal(2,2)+par.m2s*strain_crystal(3,3); 
-  strain_Ham_Bir_Pikus[4][4]  = par.m3s*strain_crystal(1,1)+par.m3s*strain_crystal(2,2)+par.l2s*strain_crystal(3,3); 
+  strain_Ham_Bir_Pikus[3][3]  = par.m1s*strain_crystal(1,1)+par.l1s*strain_crystal(2,2)+par.m2s*strain_crystal(3,3);
+  strain_Ham_Bir_Pikus[4][4]  = par.m3s*strain_crystal(1,1)+par.m3s*strain_crystal(2,2)+par.l2s*strain_crystal(3,3);
 
-  strain_Ham_Bir_Pikus[2][3]  = par.n1s*strain_crystal(2,1) ; 
+  strain_Ham_Bir_Pikus[2][3]  = par.n1s*strain_crystal(2,1) ;
   strain_Ham_Bir_Pikus[3][2]  = par.n1s*strain_crystal(2,1) ;
-  strain_Ham_Bir_Pikus[2][4]  = par.n2s*strain_crystal(3,1) ;  
+  strain_Ham_Bir_Pikus[2][4]  = par.n2s*strain_crystal(3,1) ;
   strain_Ham_Bir_Pikus[4][2]  = par.n2s*strain_crystal(3,1) ;
-  strain_Ham_Bir_Pikus[3][4]  = par.n2s*strain_crystal(3,2) ;  
+  strain_Ham_Bir_Pikus[3][4]  = par.n2s*strain_crystal(3,2) ;
   strain_Ham_Bir_Pikus[4][3]  = par.n2s*strain_crystal(3,2) ;
 
   strain_Ham_Bir_Pikus[5][5]  = par.l1s*strain_crystal(1,1)+par.m1s*strain_crystal(2,2)+par.m2s*strain_crystal(3,3);
-  strain_Ham_Bir_Pikus[6][6]  = par.m1s*strain_crystal(1,1)+par.l1s*strain_crystal(2,2)+par.m2s*strain_crystal(3,3); 
-  strain_Ham_Bir_Pikus[7][7]  = par.m3s*strain_crystal(1,1)+par.m3s*strain_crystal(2,2)+par.l2s*strain_crystal(3,3); 
+  strain_Ham_Bir_Pikus[6][6]  = par.m1s*strain_crystal(1,1)+par.l1s*strain_crystal(2,2)+par.m2s*strain_crystal(3,3);
+  strain_Ham_Bir_Pikus[7][7]  = par.m3s*strain_crystal(1,1)+par.m3s*strain_crystal(2,2)+par.l2s*strain_crystal(3,3);
 
-  strain_Ham_Bir_Pikus[5][6]  = par.n1s*strain_crystal(2,1) ; 
+  strain_Ham_Bir_Pikus[5][6]  = par.n1s*strain_crystal(2,1) ;
   strain_Ham_Bir_Pikus[6][5]  = par.n1s*strain_crystal(2,1) ;
-  strain_Ham_Bir_Pikus[5][7]  = par.n2s*strain_crystal(3,1) ;  
+  strain_Ham_Bir_Pikus[5][7]  = par.n2s*strain_crystal(3,1) ;
   strain_Ham_Bir_Pikus[7][5]  = par.n2s*strain_crystal(3,1) ;
-  strain_Ham_Bir_Pikus[6][7]  = par.n2s*strain_crystal(3,2) ;  
+  strain_Ham_Bir_Pikus[6][7]  = par.n2s*strain_crystal(3,2) ;
   strain_Ham_Bir_Pikus[7][6]  = par.n2s*strain_crystal(3,2) ;
-  
+
   //conduction band
   strain_Ham_Bir_Pikus[0][0]  = par.axs * ( strain_crystal(1,1) + strain_crystal(2,2) ) + par.azs * strain_crystal(3,3);
   strain_Ham_Bir_Pikus[1][1]  = par.axs * ( strain_crystal(1,1) + strain_crystal(2,2) ) + par.azs * strain_crystal(3,3);
-  
+
 
   //------------------------------------------------
   //potential
   //------------------------------------------------
 
-  
+
   for (short i = 0; i < 8 ; i++)
   {
     strain_Ham_Bir_Pikus[i][i] -= el_potential/Hartree;
   }
-  
+
 
   //--------------------------------------------------
   //correction of the final Hamiltonian
@@ -631,9 +644,9 @@ void KPbulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, d
   for (short i = 0; i <= band_max - band_min; i++)
     for (short j = 0; j <= band_max - band_min; j++)
       Hamiltonian[i][j].constant = Hamiltonian_without_strain_pot[i][j].constant + strain_Ham_Bir_Pikus[i + band_min][j + band_min];
-      
 
- 
+
+
 
 }
 //======================================================//
@@ -648,12 +661,12 @@ void KPbulkHamiltonian::calculate_optical_operator_k_par(void)
      for (short j = 0; j < 8; j++)
        {
 	 //------we have to change constant term
-	 for (short p = 0; p < 3; p++) 
+	 for (short p = 0; p < 3; p++)
 	   for (short i1 = 0; i1 < 3; i1++)
 	     {
 	       P[p][i][j].constant += P_gen[p][i][j].linear_left[i1]  * k_vector[i1];
 	       P[p][i][j].constant += P_gen[p][i][j].linear_right[i1] * k_vector[i1];
-	       
+
 	     }
 
        }
@@ -661,7 +674,7 @@ void KPbulkHamiltonian::calculate_optical_operator_k_par(void)
 }
 
 
- 
+
 
 
 

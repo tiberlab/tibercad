@@ -783,6 +783,7 @@ void EnvelopFunctionApprox::do_init( )
 	(  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model();
 
       opt.kp_bands = element_hamiltonian->get_kp_bands_map();
+
    } 
    //------------------------------------------------------------------------------------------------------//
 

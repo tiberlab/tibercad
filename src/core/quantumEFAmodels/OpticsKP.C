@@ -13,7 +13,7 @@
 
 #include <stdlib.h>
 
-using namespace std; 
+using namespace std;
 using namespace Constants;
 
 Device*   OpticsKP:: _device;
@@ -78,7 +78,7 @@ void OpticsKP::parse_options()
       if (temp[0] <= temp[1])
         if (temp[0] >= 0 && temp.size() <=in_solution.size())
         {
-          _initial_eigen_state_numbers.resize(temp[1] - temp[0] + 1 ); 
+          _initial_eigen_state_numbers.resize(temp[1] - temp[0] + 1 );
           unsigned int j = 0;
           for (unsigned i = temp[0]; i <= temp[1]; i++)
           {
@@ -101,7 +101,7 @@ void OpticsKP::parse_options()
       if (temp[0] <= temp[1])
         if (temp[0] >= 0 && temp.size() <=fin_solution.size())
         {
-          _final_eigen_state_numbers.resize(temp[1] - temp[0] + 1 ); 
+          _final_eigen_state_numbers.resize(temp[1] - temp[0] + 1 );
           unsigned int j = 0;
           for (unsigned i = temp[0]; i <= temp[1]; i++)
           {
@@ -123,12 +123,12 @@ void OpticsKP::parse_options()
   if (k_vec.size() == 3)
   {
 
-    for (short i = 0; i < 3; i++) k_vector[i] = k_vec[i]; 
+    for (short i = 0; i < 3; i++) k_vector[i] = k_vec[i];
 
 
   }
   else
-    throw InitFailedException( "OpticsKP: k_vector size must be equal to 3 instead of " + k_vec.size()); 
+    throw InitFailedException( "OpticsKP: k_vector size must be equal to 3 instead of " + k_vec.size());
 
 
 
@@ -143,7 +143,7 @@ void OpticsKP::parse_options()
   else if (job_name == "bulk_matrix_elements")
     job = BULKMATREL;
   else
-    throw InitFailedException( "OpticsKP: Incorrect job: " + job_name); 
+    throw InitFailedException( "OpticsKP: Incorrect job: " + job_name);
 
 
 }
@@ -152,7 +152,7 @@ void OpticsKP::parse_options()
 void OpticsKP::do_init()
 {
 
-  SimulationEnvironment& si = get_environment();   
+  SimulationEnvironment& si = get_environment();
 
   _device = &( si.get_device() );
 
@@ -189,7 +189,7 @@ void OpticsKP::do_init()
 
   //-------------------------------
   //---------------------------------------------------------------------------------------------------------//
-  //My Jacobian 
+  //My Jacobian
   double mesh_units = get_environment().get_device().get_mesh_units();
 
   Scaling& scaling = get_scaling();
@@ -243,22 +243,22 @@ void OpticsKP::do_init()
   //-----------------------------------------------------------------------------------------------------------//
   //add matrixes
 
-  system->add_matrix("Px_real"); 
+  system->add_matrix("Px_real");
   Px_matr_real = & (system->get_matrix("Px_real"));
 
-  system->add_matrix("Py_real"); 
+  system->add_matrix("Py_real");
   Py_matr_real = & (system->get_matrix("Py_real"));
 
-  system->add_matrix("Pz_real"); 
+  system->add_matrix("Pz_real");
   Pz_matr_real = & (system->get_matrix("Pz_real"));
 
-  system->add_matrix("Px_imag"); 
+  system->add_matrix("Px_imag");
   Px_matr_imag = & (system->get_matrix("Px_imag"));
 
-  system->add_matrix("Py_imag"); 
+  system->add_matrix("Py_imag");
   Py_matr_imag = & (system->get_matrix("Py_imag"));
 
-  system->add_matrix("Pz_imag"); 
+  system->add_matrix("Pz_imag");
   Pz_matr_imag = & (system->get_matrix("Pz_imag"));
 
   system->init();
@@ -295,7 +295,7 @@ void OpticsKP::do_solve()
 
 
 
-  calculate_P_matrix_elements(); 
+  calculate_P_matrix_elements();
 
 
   if (verbose > 0)
@@ -305,14 +305,14 @@ void OpticsKP::do_solve()
 
   if (verbose > 2)
   {
-    for (int i = 0; i < n1; i++) 
-      for (int j = 0; j < n2; j++) 
+    for (int i = 0; i < n1; i++)
+      for (int j = 0; j < n2; j++)
       {
 
-        for (int p = 0; p < 3; p++) 
+        for (int p = 0; p < 3; p++)
         {
-          cout << "polarization = " <<  p << "  " << "state i = " << i  <<"   " << "state j =   " 
-            << j <<"      "  << P_matrix[p][i][j] << "\n" << flush; 
+          cout << "polarization = " <<  p << "  " << "state i = " << i  <<"   " << "state j =   "
+            << j <<"      "  << P_matrix[p][i][j] << "\n" << flush;
 
 
         }
@@ -327,8 +327,8 @@ void OpticsKP::do_solve()
 //=====================================================================================================
 
 
-void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz, 
-    std::map<const Elem*, double>& spectrum ) 
+void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz,
+    std::map<const Elem*, double>& spectrum )
 {
 
 
@@ -391,8 +391,6 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
 
 
-
-
       MeshBase::const_element_iterator       el     = Energy.active_elements_begin();
       const MeshBase::const_element_iterator end_el = Energy.active_elements_end();
 
@@ -412,7 +410,7 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
         spectrum[elem] += 1 / (2 * M_PI * M_PI) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * (1 - f2);
 
 
-      }   
+      }
 
 
     }
@@ -436,7 +434,7 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
 
 //=====================================================================================================
-void OpticsKP::calculate_P_matrix_elements ( ) 
+void OpticsKP::calculate_P_matrix_elements ( )
 {
   unsigned int n_i =  _initial_eigen_state_numbers.size();
   unsigned int n_f =  _final_eigen_state_numbers.size();
@@ -448,7 +446,7 @@ void OpticsKP::calculate_P_matrix_elements ( )
   {
     P_matrix[i].resize(n_i);
     for (unsigned j = 0; j < n_i; j++)   P_matrix[i][j].resize(n_f);
-  } 
+  }
 
   for (unsigned int i1 = 0; i1 < n_i; i1++)
     for (unsigned int i2 = 0; i2 < n_f; i2++)
@@ -498,10 +496,10 @@ void OpticsKP::calculate_matrix(void)
   Pz_matr_real->zero();
 
 
-  Px_matr_imag->zero(); 
+  Px_matr_imag->zero();
 
 
-  Py_matr_imag->zero(); 
+  Py_matr_imag->zero();
 
 
   Pz_matr_imag-> zero();
@@ -523,7 +521,7 @@ void OpticsKP::calculate_matrix(void)
   // Tell the finite element object to use our quadrature rule.
   fe -> attach_quadrature_rule (&qrule);
 
-  // The element Jacobian * quadrature weight at each integration point.   
+  // The element Jacobian * quadrature weight at each integration point.
   const std::vector<Real>& JxW = fe->get_JxW();
 
   // properties at the quadrature points.
@@ -544,13 +542,13 @@ void OpticsKP::calculate_matrix(void)
 
   //-------------------------------------------------------------
 
-  DenseMatrix<Number> Px_real; 
+  DenseMatrix<Number> Px_real;
   DenseMatrix<Number> Px_imag;
 
-  DenseMatrix<Number> Py_real; 
+  DenseMatrix<Number> Py_real;
   DenseMatrix<Number> Py_imag;
 
-  DenseMatrix<Number> Pz_real; 
+  DenseMatrix<Number> Pz_real;
   DenseMatrix<Number> Pz_imag;
 
 
@@ -577,7 +575,7 @@ void OpticsKP::calculate_matrix(void)
   unsigned int el_number = 0;
 
   double temp;
-  for ( ; el != end_el ; ++el) 
+  for ( ; el != end_el ; ++el)
   {//el
     // Store a pointer to the element we are currently
     // working on.  This allows for nicer syntax later.
@@ -586,17 +584,17 @@ void OpticsKP::calculate_matrix(void)
     const ID subdomain = elem->subdomain_id();
     const Material* mat = _device->get_material(subdomain);
 
-    element_hamiltonian = (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model(); 
+    element_hamiltonian = (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model();
 
     element_kp_hamiltonian = dynamic_cast<KPbulkHamiltonian*>  (element_hamiltonian);
 
-    // ******************************************************* for k integration **********     
+    // ******************************************************* for k integration **********
     element_kp_hamiltonian->set_k_vector(k_vector);
 
     // *********************************************************************************
 
 
-    dof_map.dof_indices (elem, dof_indices); 
+    dof_map.dof_indices (elem, dof_indices);
     const unsigned int n_dofs   = dof_indices.size();
     fe->reinit (elem);
 
@@ -613,7 +611,7 @@ void OpticsKP::calculate_matrix(void)
 
     for (unsigned int qp=0; qp<qrule.n_points(); qp++)
     {//qp
-      const vector < vector <vector <EFAbulkHamiltonian::MatrixElement> > >&  
+      const vector < vector <vector <EFAbulkHamiltonian::MatrixElement> > >&
         P = element_kp_hamiltonian->get_optical_operator() ;
 
 
@@ -658,8 +656,8 @@ void OpticsKP::calculate_matrix(void)
               {
                 temp = JxW[qp]* dphi[p1][qp](i) * phi[p2][qp];
                 for (short pol = 0; pol < 3; pol++)
-                  value[pol] -= temp * P[pol][band1][band2].linear_left[i]*Complex(0.0, -1.0) ; 
-              } 
+                  value[pol] -= temp * P[pol][band1][band2].linear_left[i]*Complex(0.0, -1.0) ;
+              }
               //--------           ----------------------------------------
 
 
@@ -731,7 +729,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 
 
 
-  P_real_p[0]  = static_cast< PetscMatrix<Number>* > (Px_matr_real); P_real_p[0]->close();  
+  P_real_p[0]  = static_cast< PetscMatrix<Number>* > (Px_matr_real); P_real_p[0]->close();
   P_real_p[1]  = static_cast< PetscMatrix<Number>* > (Py_matr_real); P_real_p[1]->close();
   P_real_p[2]  = static_cast< PetscMatrix<Number>* > (Pz_matr_real); P_real_p[2]->close();
   P_imag_p[0]  = static_cast< PetscMatrix<Number>* > (Px_matr_imag); P_imag_p[0]->close();
@@ -802,8 +800,8 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
         CHKERRABORT(libMesh::COMM_WORLD,ierr);
         real_column.clear();
 
-        for (int i = 0; i < n_cols_real; i++) 
-          if (petsc_row_vals_real[i] != 0.0)  
+        for (int i = 0; i < n_cols_real; i++)
+          if (petsc_row_vals_real[i] != 0.0)
           {
             real_column.insert(petsc_cols_real[i]);
 
@@ -816,9 +814,9 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
         imag_column.clear();
 
 
-        for (int i = 0; i < n_cols_real; i++) 
-          if (petsc_row_vals_imag[i] != 0.0)   
-          {	    
+        for (int i = 0; i < n_cols_real; i++)
+          if (petsc_row_vals_imag[i] != 0.0)
+          {
             imag_column.insert(petsc_cols_imag[i]);
             imag_values.insert(make_pair(petsc_cols_imag[i],petsc_row_vals_imag[i] ));
           }
@@ -839,18 +837,18 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
             double value_real;
             double value_imag;
 
-            //real part------	  
+            //real part------
             position = real_values.find(n1);
-            if (position != real_values.end()) 
+            if (position != real_values.end())
               value_real = position->second;
-            else 
+            else
               value_real = 0.0;
 
-            //imag part 
+            //imag part
             position = imag_values.find(n1);
-            if (position != imag_values.end()) 
+            if (position != imag_values.end())
               value_imag = position->second;
-            else 
+            else
               value_imag = 0.0;
 
             Complex value_complex = Complex(value_real, value_imag);
@@ -888,7 +886,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 
 void OpticsKP::do_plot()
 {
-  // get  spectrum calculation  options from  opticsKP model  section 
+  // get  spectrum calculation  options from  opticsKP model  section
   // for  calculation of  spectrum for a single k-point
 
   const ModelOptions& mod_spectrum = get_options();
@@ -924,7 +922,7 @@ void OpticsKP::do_plot()
 
   if (dE <= 0)  throw InitFailedException("OpticsKP: dE <= 0");
 
-  unsigned int num_nodes = (int)((Emax - Emin)/dE) + 1; 
+  unsigned int num_nodes = (int)((Emax - Emin)/dE) + 1;
 
 
   // do  energy_mesh
@@ -932,17 +930,17 @@ void OpticsKP::do_plot()
 
 
 
-  MeshTools::Generation::build_cube (*_energy_mesh, 
-      num_nodes, 0, 0, 
-      Emin, Emax, 
-      0, 0, 
+  MeshTools::Generation::build_cube (*_energy_mesh,
+      num_nodes, 0, 0,
+      Emin, Emax,
+      0, 0,
       0, 0,
       EDGE2);
 
 
   //  calculate_spectrum             ************  only  for case  k_0
-  //calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz, 
-  //                         std::map<const Elem*, double>& spectrum ) 
+  //calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz,
+  //                         std::map<const Elem*, double>& spectrum )
 
   //std::map<const Elem*, double> spectrum;
 
@@ -1030,7 +1028,7 @@ void OpticsKP::do_plot()
 
 
     point++;
-  } 
+  }
 
 
   const std::set< std::string >& plotvariables = get_control().get_plotvariables();
