@@ -13,6 +13,7 @@
 #include "SimulationOptions.h"
 #include "DftbpWrapper.h"
 #include "dftbp.h"
+#include "mesh.h"
 
 #include <fstream>
 #include <sstream>
@@ -130,6 +131,7 @@ Dftb::do_init(void){
 
   std::cerr << "Dftb Simulation Initialisation" << std::endl;
 
+  _mesh = & ( get_environment().get_device().get_mesh());
 
   // Getting reference to atomistic structure for calculation
   get_atomistic_structure();
@@ -167,8 +169,8 @@ Dftb::do_init(void){
         }
       else
         {
-           inst->addkpoints(_dftb_options.nkPoints, _dftb_options.kPoints, _dftb_options.kWeights);
-         }
+          inst->addkpoints(_dftb_options.nkPoints, _dftb_options.kPoints, _dftb_options.kWeights);
+        }
     }
 
   std::cout << "initdftb begins" << std::endl;
@@ -181,6 +183,12 @@ Dftb::do_init(void){
 
   std::cout << "up_coords" << std::endl;
 
+  // N.B. get_energy is anyway needed for the correct assembling of Hamiltonian,
+  // so it would run anyway
+  double energy = 0;
+  inst->get_energy(energy);
+
+  std::cout << "DFTB library computed a total system energy of: " << energy << std::endl;
 
 }
 
@@ -192,12 +200,9 @@ void Dftb::do_solve(void){
   std::cout << "Calling Dftb->do_solve() " << std::endl;
 #endif
 
-    // N.B. get_energy is anyway needed for the correct assembling of Hamiltonian,
-  // so it would run anyway
-  double energy = 0;
-  inst->get_energy(energy);
 
-  std::cout << "DFTB library computed a total system energy of: " << energy << std::endl;
+
+
 
   //TODO: non so come funziona il settaggio delle grandezze da calcolare quando
   //queste siano richieste da altri e non siano prettamente dati di output
@@ -215,8 +220,8 @@ void Dftb::do_solve(void){
 
   }
 
-std::cout << "charge in middle point is " << build_rho(1.3, 1.3, 1.3) << std::endl;
-std::cout << "charge in 0 is " << build_rho(0.0, 0.0, 0.0) << std::endl;
+  //std::cout << "charge in middle point is " << build_rho(1.3, 1.3, 1.3) << std::endl;
+  //std::cout << "charge in 0 is " << build_rho(0.0, 0.0, 0.0) << std::endl;
   //  int nrow,ncol,nzval,isreal;
   //  //inst->getrealhamiltonian(nrow,ncol,nzval,isreal);
   //
@@ -422,11 +427,11 @@ Dftb::build_input_options()
   _dftb_options.mAngs = new int[_dftb_options.nType];
   for (unsigned int i = 0; i < _dftb_options.nType; i++)   _dftb_options.mAngs[i] = _shell[_dftb_options.specieNameStrings[i]];
 
-  std::cout << "check Periodic! " <<std::endl;
+
   if (_dftb_options.iPeriodic == 1){
-    std::cout << "I found Periodic! " <<std::endl;
+
     if (get_options().find_option("supercellfolding")) {
-std::cout << "I found supercellfolding! " <<std::endl;
+
       _dftb_options.supersampling = true;
       std::vector<double> supersamplingdata;
 
@@ -484,7 +489,7 @@ std::cout << "I found supercellfolding! " <<std::endl;
           {
             std::stringstream linestream(line);
 
-           linestream >> _dftb_options.kPoints[0 +  counter * 3];
+            linestream >> _dftb_options.kPoints[0 +  counter * 3];
 
             linestream >> _dftb_options.kPoints[1 +  counter * 3];
 

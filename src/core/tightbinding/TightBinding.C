@@ -23,7 +23,7 @@ _mulliken_netcharges()
 
 TightBinding::~TightBinding()
 {
- }
+}
 
 
 void
@@ -104,13 +104,15 @@ TightBinding::get_atomistic_structure(void){
 }
 
 double
-TightBinding::build_rho(const double x, const double y, const double z)
+TightBinding::build_rho(const Point& r)
 {
   const double deltar_max = 7.5; //Maximum cutoff distance in Amstrong
   double deltar, uhatom;
   double rho = 0.0;
   double x1, y1, z1;
+  double x ,y, z;
 
+  x = r(0); y = r(1); z = r(2);
 
   if (_mulliken_netcharges.size() == 0)
     {
@@ -152,4 +154,112 @@ TightBinding::build_rho(const double x, const double y, const double z)
 }
 
 
+ID
+TightBinding::convert_variable_name_to_id(const std:: string& variable_name) const
+{
 
+  ID id = INVALID_ID;
+
+
+  if (variable_name == "charge_density" )
+    id  = CHARGE;
+
+
+  return id;
+}
+
+
+void
+TightBinding::get_solution_secure(const Elem* elem,
+    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
+{
+
+  std::vector<Point> points(elem->n_nodes());
+
+  for (unsigned n = 0 ; n< elem->n_nodes(); ++n)
+    {
+      points[n] = elem->point(n);
+    }
+
+  get_solution_secure(elem,points,ids,values);
+
+}
+
+
+void
+TightBinding::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
+    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
+{
+
+  if (ids.count(CHARGE))
+    {
+      for (unsigned int n = 0; n < p.size(); n++)
+        values[n][CHARGE] = build_rho(p[n]);
+    }
+
+}
+
+
+
+
+void
+TightBinding::build_elemental_results(const std::set<std::string>& variables,
+    std::vector<double>& results, std::vector<std::string>& legend)
+{
+
+
+  // we only do something if we are on processor 0
+  // TODO parallelize
+  if (libMesh::processor_id() != 0)
+    return;
+
+  unsigned int n_vars = 0;
+  const unsigned int nn  = _mesh->n_active_elem();
+  int ch = -1;
+
+  if (variables.count("QuantumCharge"))
+    {
+      legend.resize( 1 );
+      legend[0] = "qDensity";
+      ch = n_vars;
+      n_vars++;
+    }
+
+
+  legend.resize(n_vars);
+
+  results.resize(nn * n_vars,0.0);
+
+  MeshBase::const_element_iterator it =  _mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end =     _mesh->active_local_elements_end();
+
+
+  unsigned int elem_number = 0;
+  for ( ; it != end; ++it)
+    {
+
+      const Elem* elem = *it;
+
+      unsigned int id = n_vars * elem_number;
+
+      std::vector<std::map<ID, double> > values;
+      std::set<ID> ids;
+      ids.insert(id);
+
+      get_solution_secure(elem, ids, values);
+
+      double charge = values[0][CHARGE];
+
+
+      if (ch != -1)
+        {
+          results[id + ch] = charge;
+        }
+
+
+      elem_number++;
+    } //over element
+
+  results.resize(elem_number * n_vars);
+
+}
