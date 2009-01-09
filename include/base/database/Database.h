@@ -55,21 +55,22 @@ class Database
 
 
     //! Checks if a given variable is present in the databas
-    bool has_variable(const std::string& variable);
+    bool has_variable(const std::string& variable) const;
 
 
     //! Get data of some type
     template <typename T>
-    T get(const std::string& variable, T default_value, bool required = false);
+    T get(const std::string& variable, T default_value,
+        bool required = false) const;
 
 
     //! Get string data
     std::string get(const std::string& variable,
-        const std::string& default_value, bool required = false);
+        const std::string& default_value, bool required = false) const;
 
     //! Get string data
     std::string get(const std::string& variable,
-        const char* default_value, bool required = false);
+        const char* default_value, bool required = false) const;
 
 
     //! Get data array/vector
@@ -81,7 +82,7 @@ class Database
      */
     template <typename T>
     void get(const std::string& variable, std::vector<T>& data,
-        bool required = false);
+        bool required = false) const;
 
     //! Get data matrix
     /*!
@@ -92,7 +93,7 @@ class Database
      */
     template <typename T>
     void get(const std::string& variable,
-        std::vector<std::vector<T> >& data, bool required = false);
+        std::vector<std::vector<T> >& data, bool required = false) const;
 
 
 
@@ -120,7 +121,7 @@ class Database
     const std::string get_data_file(const std::string& material) const;
 
     //! Check for a variable and throw exception if it is not found
-    void require_variable(const std::string& variable);
+    void require_variable(const std::string& variable) const;
 
 };
 
@@ -156,7 +157,7 @@ Database::get_section(void) const
 
 inline
 bool
-Database::has_variable(const std::string& variable)
+Database::has_variable(const std::string& variable) const
 {
   return _file.have_variable(variable.c_str());
 }
@@ -166,7 +167,7 @@ Database::has_variable(const std::string& variable)
 inline
 std::string
 Database::get(const std::string& variable,
-    const std::string& default_value, bool required) 
+    const std::string& default_value, bool required) const
 {
   if (required) require_variable(variable);
   return _file(variable.c_str(), default_value);
@@ -176,7 +177,7 @@ Database::get(const std::string& variable,
 inline
 std::string
 Database::get(const std::string& variable,
-    const char* default_value, bool required) 
+    const char* default_value, bool required) const
 {
   if (required) require_variable(variable);
   return _file(variable.c_str(), std::string(default_value));
@@ -187,7 +188,8 @@ Database::get(const std::string& variable,
 template <typename T>
 inline
 T
-Database::get(const std::string& variable, T default_value, bool required)
+Database::get(const std::string& variable, T default_value,
+    bool required) const
 {
   if (required) require_variable(variable);
   return _file(variable.c_str(), default_value);

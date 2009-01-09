@@ -136,7 +136,7 @@ Database::get_data_file(const std::string& material) const
 
 
 void
-Database::require_variable(const std::string& variable)
+Database::require_variable(const std::string& variable) const
 {
   if (!has_variable(variable))
   {
@@ -152,7 +152,7 @@ Database::require_variable(const std::string& variable)
 
 template <typename T>
 void
-Database::get(const std::string& variable, std::vector<T>& data, bool required)
+Database::get(const std::string& variable, std::vector<T>& data, bool required) const
 {
   if (required) require_variable(variable);
   else if (!has_variable(variable)) return;
@@ -176,7 +176,7 @@ Database::get(const std::string& variable, std::vector<T>& data, bool required)
 template <typename T>
 void
 Database::get(const std::string& variable,
-    std::vector<std::vector<T> >& data, bool required)
+    std::vector<std::vector<T> >& data, bool required) const
 {
   if (required) require_variable(variable);
   else if (!has_variable(variable)) return;
@@ -218,33 +218,33 @@ Database::get(const std::string& variable,
 
 // explicit instantiations
 template
-void Database::get(const std::string&, std::vector<double>&, bool);
+void Database::get(const std::string&, std::vector<double>&, bool) const;
 
 template
-void Database::get(const std::string&, std::vector<int>&, bool);
+void Database::get(const std::string&, std::vector<int>&, bool) const;
 
 template
-void Database::get(const std::string&, std::vector<bool>&, bool);
+void Database::get(const std::string&, std::vector<bool>&, bool) const;
 
 template
-void Database::get(const std::string&, std::vector<std::string>&, bool);
+void Database::get(const std::string&, std::vector<std::string>&, bool) const;
 
-
-template
-void Database::get(const std::string&,
-    std::vector<std::vector<double> >&, bool);
 
 template
 void Database::get(const std::string&,
-    std::vector<std::vector<int> >&, bool);
+    std::vector<std::vector<double> >&, bool) const;
 
 template
 void Database::get(const std::string&,
-    std::vector<std::vector<bool> >&, bool);
+    std::vector<std::vector<int> >&, bool) const;
 
 template
 void Database::get(const std::string&,
-    std::vector<std::vector<std::string> >&, bool);
+    std::vector<std::vector<bool> >&, bool) const;
+
+template
+void Database::get(const std::string&,
+    std::vector<std::vector<std::string> >&, bool) const;
 
 
 
