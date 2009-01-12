@@ -19,6 +19,7 @@ bow_Pz = -0.037
 
 #Atomistic structure informations
 #
+[atomistic_structure]
 n_basis_specie=2
 
 specie_1=InGa

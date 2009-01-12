@@ -10,6 +10,7 @@ comp_B = GaAs
 
 #Atomistic structure informations
 #
+[atomistic_structure]
 n_basis_specie=2
 
 specie_1=AlGa

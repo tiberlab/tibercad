@@ -41,6 +41,7 @@ a = 0.540
 
 #Atomistic structure informations
 #
+[atomistic_structure]
 lattice_type = fcc
 
 #Basis

@@ -137,6 +137,7 @@ hTEpower = 200
 
 #Atomistic structure informations
 #
+[atomistic_structure]
 lattice_type = fcc
 
 #Basis 

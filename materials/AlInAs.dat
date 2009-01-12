@@ -31,6 +31,7 @@ bow_delta = 0.15
 
 #Atomistic structure informations
 #
+[atomistic_structure]
 n_basis_specie=2
 
 specie_1=AlIn

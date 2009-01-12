@@ -133,6 +133,7 @@ N0	= (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 
 #Atomistic structure informations
 #
+[atomistic_structure]
 lattice_type = fcc
 
 #Basis 
