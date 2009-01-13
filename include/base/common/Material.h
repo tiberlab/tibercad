@@ -69,6 +69,10 @@ class Material
     //! Tells if this material is an alloy
     bool is_alloy(void) const;
 
+
+    //! Do some preparatory work at creation time
+    void preinit(void);
+
     
     //! Initialize the material
     /*!
@@ -187,6 +191,10 @@ class Material
      * \param name the name of the Material
      */
     Material(const std::string& name);
+
+
+    //! The real preinit function
+    virtual void do_preinit(void) {};
 
     
     //! The real init function
@@ -340,6 +348,14 @@ void
 Material::set_structure(const std::string& structure)
 {
   _structure = structure;
+}
+
+
+inline
+void
+Material::preinit(void)
+{
+  do_preinit();
 }
 
 

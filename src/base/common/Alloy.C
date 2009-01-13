@@ -24,16 +24,10 @@ Alloy::~Alloy()
 }
 
 
+
 void
-Alloy::do_init(void)
+Alloy::do_preinit(void)
 {
-  // initialize the parent material
-  //Material::do_init();
-
-  setup_doping();
-
-  _molar_fraction = get_options().get_option("x", 0.0);
-
   std::string name_A, name_B;
   get_database().set_section("");
   get_database().get_alloy_components(name_A, name_B);
@@ -48,7 +42,21 @@ Alloy::do_init(void)
   // to be sure we put the structure into the options
   _mat_A->set_structure(get_structure());
   _mat_B->set_structure(get_structure());
-  
+}
+ 
+
+void
+Alloy::do_init(void)
+{
+  // initialize the parent material
+  //Material::do_init();
+
+  setup_doping();
+
+  _molar_fraction = get_options().get_option("x", 0.0);
+
+  assert((_mat_A != NULL) && (_mat_B != NULL));
+
   // copy and initialize the models of the components
   ModelMap::iterator it(models_begin());
   ModelMap::const_iterator end(models_end());

@@ -183,6 +183,8 @@ Material::create(const std::string& name, const ModelOptions& options)
     std::cout << "Created Material " << mat->get_name() << 
       " (using parameter file " << _database->get_data_file() << ")" <<
       std::endl;
+
+    mat->preinit();
   }
 
   return mat;

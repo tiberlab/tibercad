@@ -49,6 +49,10 @@ class Alloy : public Material
     Alloy(const std::string& name);
 
 
+    //! \copydoc Material::do_preinit()
+    virtual void do_preinit(void);
+
+
     //! \copydoc Material::do_init()
     virtual void do_init(void);
 
