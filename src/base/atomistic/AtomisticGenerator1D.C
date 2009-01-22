@@ -10,9 +10,9 @@ AtomisticGenerator1D*
 AtomisticGenerator1D::create(AtomisticStructure* const as)
 {
   AtomisticGenerator1D* ag =  NULL;
-  std::cout << "I crate you 1D!!" << std::endl;
+  std::cout << "creating 1D atomistic structure... ";
   ag = new AtomisticGenerator1D(as);
- std::cout << "done" << std::endl;
+  std::cout << "done" << std::endl;
   return ag;
 }
 

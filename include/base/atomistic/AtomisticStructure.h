@@ -85,6 +85,9 @@ public:
   //! Return a reference to structure atoms
   const std::vector<Atom>& get_structure_atoms(void);
 
+  //! Get scale factor (from mesh_units to amstrong mesh_units/1e-10)
+  const double& get_scale(void);
+
   //! Assign structure atoms vector
   void set_structure_atoms(const std::vector<Atom>& atoms);
 
@@ -135,6 +138,10 @@ public:
 
 
 private:
+
+
+  //! Scale factor (from mesh_units to amstrong mesh_units/1e-10)
+  double _scale;
 
   //! AtomisticStructureOptions object pointer
   AtomisticStructureOptions _atomistic_structure_options;
@@ -187,6 +194,12 @@ private:
   //! Contains reference to device we're working with
   Device* _device;
 
+  //! Reference material
+  Material* _reference_material;
+
+  //! Database of reference material
+  Database _reference_material_db;
+
 };
 
 //----------------------------------------------------
@@ -213,6 +226,13 @@ inline
 const std::string& AtomisticStructure::get_name(void)
 {
   return _name;
+}
+
+
+inline
+const double& AtomisticStructure::get_scale(void)
+{
+  return _scale;
 }
 
 

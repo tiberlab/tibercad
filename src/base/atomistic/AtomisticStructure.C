@@ -20,7 +20,8 @@
 AtomisticStructure::AtomisticStructure(const std::string& name)
 :_name(name),
 _bondmap(NULL),
-_atomistic_structure_options()
+_atomistic_structure_options(),
+_scale(1.0)
 {
   // Default initializations
   N_atoms = 0;
@@ -64,9 +65,9 @@ AtomisticStructure::create(const std::string& name, const ModelOptions& options)
 
 AtomisticStructure::AtomisticStructureOptions::AtomisticStructureOptions(void)
 {
-is_passivated = false;
-contains_bond_map = false;
-is_periodical = false;
+  is_passivated = false;
+  contains_bond_map = false;
+  is_periodical = false;
 }
 
 
@@ -95,6 +96,9 @@ AtomisticStructure::init()
 
   // Read structure from file
   std::string path;
+
+  //Setting scale factor
+  _scale = ( ( _device->get_mesh_units() ) / 1e-10 );
 
   if (_options.find_option("path") )
     std::cerr << "Reading structure from file " << path <<
@@ -148,9 +152,8 @@ AtomisticStructure::init()
       _structure_atoms.clear();
 
       AtomisticGenerator* generate;
-      AtomisticGenerator* prova = AtomisticGenerator::create(this, 1 );
 
-      generate = dynamic_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, 1 ) );
+      std::cout << "device dimensions " << _device->get_mesh().mesh_dimension() << std::endl;
 
       if ( _device->get_mesh().mesh_dimension() == 1 ) generate = dynamic_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, 1 ) );
       if ( _device->get_mesh().mesh_dimension() == 2 )  generate = dynamic_cast<AtomisticGenerator2D*> ( AtomisticGenerator::create(this, 2 ) );
@@ -165,9 +168,9 @@ AtomisticStructure::init()
       name = _name + ".gen" ;
       std::cout << "Printing structure " << name << std::endl;
       //print_structure(name);
-      //name = _name + ".upg" ;
+      name = _name + ".upg" ;
       std::cout << "Printing structure " << name << std::endl;
-      //print_structure(name);
+      print_structure(name);
 
       //TODO: with passivation printing upg seems to fail, check it!
       //print_structure("structure.upg");
@@ -511,10 +514,12 @@ AtomisticStructure::print_structure(const std::string& path)
 
               file << std::setw(5) << _bondmap->get_bond_map()[i][8];
 
+              // N.B. Indexing is in Fortran notation (first atom is labelled as 1)  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
               for (unsigned int j = 0; j < _bondmap->get_bond_map()[i][8]; j++)
                 {
-                  file << std::setw(10) << _bondmap->get_bond_map()[i][j];
+                  file << std::setw(10) << _bondmap->get_bond_map()[i][j] + 1;
                 }
+              ///////////////////////////////////////////
 
             }
 
@@ -558,8 +563,9 @@ AtomisticStructure::print_structure(const std::string& path)
         {
 
           const Material* mat = (*mat_it).first;
-
-          GetPot data((mat->get_database()).get_data_file());
+          Database db = mat->get_database();
+          db.set_section("atomistic_structure");
+          //GetPot data((mat->get_database()).get_data_file());
 
           file << std::setw(6) << (*mat_it).second <<  std::setw(12) << ((*mat_it).first)->get_name() <<  std::setw(12) << mat->get_structure();
 
@@ -567,8 +573,8 @@ AtomisticStructure::print_structure(const std::string& path)
 
           //TODO: IT NEEDS TO BE EXTENDED WORKING WITH OTHER ALLOYS (QUATERNARY...)
           if (mat->is_alloy())  {alloy_type = "ternary";}
-          else if (data("n_basis_specie", 0) == 1) {alloy_type = "simple";}
-          else if (data("n_basis_specie", 0) == 2 ) {alloy_type = "binary";}
+          else if (db.get("n_basis_specie", 0) == 1) {alloy_type = "simple";}
+          else if (db.get("n_basis_specie", 0) == 2 ) {alloy_type = "binary";}
           else {std::cerr << "Could not define alloy_type variable in AtomisticStructure.C " << std::endl;}
 
           file << std::setw(12) << alloy_type;

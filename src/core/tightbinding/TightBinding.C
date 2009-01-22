@@ -7,6 +7,7 @@
 #include "SimulationOptions.h"
 #include "SimulationEnvironment.h"
 #include "AtomisticStructure.h"
+#include "Constants.h"
 
 
 //libmesh includes
@@ -106,7 +107,7 @@ TightBinding::get_atomistic_structure(void){
 double
 TightBinding::build_rho(const Point& r)
 {
-  const double deltar_max = 7.5; //Maximum cutoff distance in Amstrong
+  const double deltar_max = 7.5 / _atomistic_structure->get_scale(); //Maximum cutoff distance in Amstrong
   double deltar, uhatom;
   double rho = 0.0;
   double x1, y1, z1;
@@ -124,30 +125,44 @@ TightBinding::build_rho(const Point& r)
   for (unsigned int iatm = 0; iatm  < _atomistic_structure->get_N_atoms(); iatm++)
     {
 
-      std::cout << "rho before loop is " << rho << std::endl;
+      //std::cout << "rho before loop is " << rho << std::endl;
       //Getting Hubbard parameter
       //Up to now densities are mapped on orbital S
       uhatom = _u_hub[_atomistic_structure->get_structure_atoms()[iatm].get_specie()][S];
 
-      x1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(1);
-      y1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(2);
-      z1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(3);
+      //Bring back atom position to mesh units
+      x1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
+      y1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(2) / _atomistic_structure->get_scale();
+      z1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(3) / _atomistic_structure->get_scale();
 
+      //delta_r is already in mesh units in this way
       deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
 
-      std::cout << "deltar is " << deltar <<std::endl;
+      //Also hubbard parameters must be scaled in mesh units
+      // (uhatom is in (atomic units)^(-1))
+      //uhatom = ( uhatom / (Constants::bohr_radius) * (get_control().get_device().get_mesh_units());
+      double tau = ( ( uhatom * ( 16.0 / 5.0 ) ) / (Constants::bohr_radius ) ) * get_control().get_device().get_mesh_units();
 
       if (deltar > deltar_max) continue;
       else
         {
-          std::cout << "uhatom is " << uhatom <<std::endl;
-          rho = rho + 16.384 * _mulliken_netcharges[iatm] * uhatom * uhatom * uhatom * exp(-3.20*uhatom*deltar);
-        }
-      std::cout << "rho after loop is " << rho << std::endl;
-    }
-  rho = -rho / 4.0 / 3.141592653589793;
+          //std::cout << "uhatom is " << uhatom <<std::endl;
+          //rho = rho + 16.384 * _mulliken_netcharges[iatm] * uhatom * uhatom * uhatom * exp(-3.20*uhatom*deltar);
+	  rho = rho + (Constants::e * _mulliken_netcharges[iatm] * tau * tau * tau * exp(-1.0 * tau * deltar)) / (8 * 3.141592653589793); 
+	  //std::cout << "atom " << iatm << "is contributing with " <<  (Constants::e * _mulliken_netcharges[iatm] * tau * tau * tau * exp(-1.0 * tau * deltar)) / (8 * 3.141592653589793); 
+	  //std::cout << "mulliken charge is " << _mulliken_netcharges[iatm] << std::endl;
+	  //std::cout << "deltar is " << deltar << std::endl;
+	  //std::cout << "uhatom is " << uhatom << std::endl;
+ 	  //std::cout << "tau is " << tau << std::endl;
+	  //std::cout << "exponential is " <<  exp(-1.0 * tau * deltar) / (8 * 3.141592653589793) << std::endl;
 
-  std::cout << "rho finally is " << rho << std::endl;
+        }
+      //std::cout << "rho after loop is " << rho << std::endl;
+    }
+
+  //rho = -rho / 4.0 / 3.141592653589793;
+
+  //std::cout << "rho finally is " << rho << std::endl;
 
   return rho;
 
@@ -190,11 +205,22 @@ void
 TightBinding::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
     const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
 {
+//std::cout << "looking for " << p.size() << " points" << std::endl;
+//std::cout << "ids.count(CHARGE) is " << ids.count(CHARGE) << std::endl;
+//std::cout << "ids size is " << ids.size() << std::endl;
+  unsigned int np = p.size();
+  values.resize(np);
 
   if (ids.count(CHARGE))
     {
+      //std::cout << "p_size is " << p.size() << std::endl;
       for (unsigned int n = 0; n < p.size(); n++)
+        {
+          //std::cout << " n is " << n << std::endl;
+          //std::cout << " p[n] is " << p[n] << std::endl;
+          //std::cout << " build_rho is " << build_rho(p[n]) << std::endl;
         values[n][CHARGE] = build_rho(p[n]);
+        }
     }
 
 }
@@ -243,8 +269,9 @@ TightBinding::build_elemental_results(const std::set<std::string>& variables,
       unsigned int id = n_vars * elem_number;
 
       std::vector<std::map<ID, double> > values;
+
       std::set<ID> ids;
-      ids.insert(id);
+      ids.insert(CHARGE);
 
       get_solution_secure(elem, ids, values);
 

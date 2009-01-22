@@ -19,7 +19,8 @@
 
 
 AtomisticGenerator::AtomisticGenerator(void)
-:_bondmapobject(NULL)
+:_bondmapobject(NULL),
+_reference_material(NULL)
 {
 
 }
@@ -83,33 +84,33 @@ AtomisticGenerator::do_init()
 
   std::cout << "Building Atomistic Structure " << _as->get_name() << std::endl;
 
-//Set dimensional scale
-  scale = ( ( _as->get_device()->get_mesh_units() ) / 1e-10 );
+  //Set dimensional scale
+  scale = _as->get_scale();
   std::cout << "mesh dimensions is " << _as->get_device()->get_mesh_units() << std::endl;
-std::cout << "scale is " << scale << std::endl << std::endl << std::endl;
+  std::cout << "scale is " << scale << std::endl << std::endl << std::endl;
 
   // Set material informations
   //-----------------------------------------------------------------------------------------
   std::string structure;
   structure = "none";
 
-  Material* region_material = NULL;
-
   if (!(_as->get_options().find_option("reference_region"))){
-    std::cerr << "No material could be set " << std::endl;}
+    std::cerr << "No material could be set: reference_region is mandatory in Atomistic section"
+    "when no structure path is specified " << std::endl;}
   std::vector<ID> ids;
   std::string ref_region;
+  std::cout << "1" ;
   ref_region = _as->get_options().get_option("reference_region", "None");
+  std::cout << "1" ;
   _as->get_device()->get_region_ids(ref_region, ids);
-  region_material = _as->get_device()->get_material(ids[0]);
-  structure =  region_material->get_structure();
+  std::cout << "ids has size " << ids.size() << std::endl;
+  std::cout << "1" ;
+  _reference_material = _as->get_device()->get_material(ids[0]);
+  std::cout << "1" ;
 
-
-  std::cerr << "Calling parse_parameters() " <<std::endl;
-  std::cerr << "Region material is " << region_material->get_name() << std::endl;
-  parse_parameters(region_material);
-  std::cerr << "Ended parse_parameters()" << std::endl;
-
+  structure =  _reference_material->get_structure();
+  std::cout << "parsing parameters... " << std::endl;
+  parse_parameters(_reference_material);
 
 
   //Set Growth direction informations
@@ -119,22 +120,22 @@ std::cout << "scale is " << scale << std::endl << std::endl << std::endl;
 
   std::vector<int> growth_direction;
 
-  if (! ( (region_material->get_options().find_option("x-growth-direction")) || (_as->get_options().find_option("x-growth-direction")) ) )
+  if (! ( (_reference_material->get_options().find_option("x-growth-direction")) || (_as->get_options().find_option("x-growth-direction")) ) )
     std::cerr << "Warning, no x-growth-direction is set for atomistic structure " << _as->get_name() << " Setting (1,0,0) as default " << std::endl;
 
-  if (region_material != NULL){
-    if (region_material->get_options().find_option("x-growth-direction")){
-      region_material->get_options().get_option("x-growth-direction", growth_direction);
+  if (_reference_material != NULL){
+    if (_reference_material->get_options().find_option("x-growth-direction")){
+      _reference_material->get_options().get_option("x-growth-direction", growth_direction);
       miller(1,1) = growth_direction[0]; miller(2,1) = growth_direction[1]; miller(3,1) = growth_direction[2];
       if (growth_direction.size() == 4) miller(3,1) = growth_direction[3];
     }
-    if (region_material->get_options().find_option("y-growth-direction")){
-      region_material->get_options().get_option("y-growth-direction", growth_direction);
+    if (_reference_material->get_options().find_option("y-growth-direction")){
+      _reference_material->get_options().get_option("y-growth-direction", growth_direction);
       miller(1,2) = growth_direction[0]; miller(2,2) = growth_direction[1]; miller(3,2) = growth_direction[2];
       if (growth_direction.size() == 4) miller(3,2) = growth_direction[3];
     }
-    if (region_material->get_options().find_option("z-growth-direction")){
-      region_material->get_options().get_option("z-growth-direction", growth_direction);
+    if (_reference_material->get_options().find_option("z-growth-direction")){
+      _reference_material->get_options().get_option("z-growth-direction", growth_direction);
       miller(1,3) = growth_direction[0]; miller(2,3) = growth_direction[1]; miller(3,3) = growth_direction[2];
       if (growth_direction.size() == 4) miller(3,3) = growth_direction[3];
     }
@@ -142,17 +143,17 @@ std::cout << "scale is " << scale << std::endl << std::endl << std::endl;
 
   //If Miller indexes specified in Atomistic options, take them
   if (_as->get_options().find_option("x-growth-direction")){
-    region_material->get_options().get_option("x-growth-direction", growth_direction);
+    _reference_material->get_options().get_option("x-growth-direction", growth_direction);
     miller(1,1) = growth_direction[0]; miller(2,1) = growth_direction[1]; miller(3,1) = growth_direction[2];
     if (growth_direction.size() == 4) miller(3,1) = growth_direction[3];
   }
   if (_as->get_options().find_option("y-growth-direction")){
-    region_material->get_options().get_option("y-growth-direction", growth_direction);
+    _reference_material->get_options().get_option("y-growth-direction", growth_direction);
     miller(1,2) = growth_direction[0]; miller(2,2) = growth_direction[1]; miller(3,2) = growth_direction[2];
     if (growth_direction.size() == 4) miller(3,2) = growth_direction[3];
   }
   if (_as->get_options().find_option("z-growth-direction")){
-    region_material->get_options().get_option("z-growth-direction", growth_direction);
+    _reference_material->get_options().get_option("z-growth-direction", growth_direction);
     miller(1,3) = growth_direction[0]; miller(2,3) = growth_direction[1]; miller(3,3) = growth_direction[2];
     if (growth_direction.size() == 4) miller(3,3) = growth_direction[3];
   }
@@ -193,7 +194,7 @@ std::cout << "scale is " << scale << std::endl << std::endl << std::endl;
   delete _bondmapobject;
 
   _bondmapobject = NULL;
-  //bond_map_gen(_structure_basis);
+  bond_map_gen(_structure_basis);
 
   //----------------------------------------------------------------------------------------------
 
@@ -260,12 +261,12 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
     const Material* mat = _as->get_device()->get_material( (*reg) );
 
-    GetPot data = _as->getdata(mat);
-
     assign.clear();
+    Database db = mat->get_database();
+    db.set_section("atomistic_structure");
 
     //Build up conversion map from file
-    for (int i = 1; i <= data("n_basis_specie", 0); i++)
+    for (int i = 1; i <= db.get("n_basis_specie", 0); i++)
       {
         std::string record;
         std::string s;
@@ -275,11 +276,12 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
         s = out.str();
 
         record = "specie_" + s;
-        assign[i] = data(record.c_str(),"none");
+        assign[i] = db.get(record.c_str(),"none");
 
       }
 
-
+    //No more reading from section atomistic_structure in database are needed
+    db.set_section("");
 
     //If some doping is present, a strategy must be studied and implemented here,
     // as we can choose arbitrarily species name (e.g. calling one doping Silicon Si1 and another one Si2)
@@ -314,12 +316,18 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
               if (Macrostrain::may_belong_to_element(elem, p)){
 
                 if ( (elem->contains_point(p) ) ) {
-                  if ( assign.find( (*atom).get_flag() ) != assign_last ){
-                    std::string tmp =  assign[(*atom).get_flag()];
-                    (*atom).set_specie(tmp);
-                    (*atom).set_flag(0);
-                    (*atom).set_region_ID( *reg );
-                    _structure_basis.push_back(*atom); }
+                  if ( assign.find( (*atom).get_flag() ) != assign_last )
+                    {
+                      std::string tmp =  assign[(*atom).get_flag()];
+                      (*atom).set_specie(tmp);
+                      (*atom).set_flag(0);
+                      (*atom).set_region_ID( *reg );
+                      _structure_basis.push_back(*atom);
+                    }
+                  else
+                    {
+                      std::cout << "Warning, atom is included but no assignament map member could be built " << std::endl;
+                    }
                   break;
                 }
 
@@ -827,12 +835,9 @@ void AtomisticGenerator::parse_parameters(const Material* mat)
   Tensor1 T;
   int i, j, n;
 
-  std::cerr << "Calling getdata " << std::endl;
-
-  GetPot data = _as->getdata(mat);
-
-  std::cout << "Lattice type is " << data("lattice_type","none") << std::endl;
-  std::cout << "Lattice read from object is " << mat->get_structure() << std::endl;
+  std::cerr << "starting parse_parameters " << std::endl;
+std::cout <<"mat->is_alloy " << mat->is_alloy() << std::endl;
+  //GetPot data = _as->getdata(mat);
 
   if ( !(mat->is_alloy()) )
     {
@@ -840,24 +845,26 @@ void AtomisticGenerator::parse_parameters(const Material* mat)
       std::cerr << "Parsing parameters for bulk material " << mat->get_name() << std::endl;
 
       //lattice constant are expressed in Amstrong
-      _lattice_constant[0] = data("a", 0.0) * 10.0;
+      //_lattice_constant[0] = data("a", 0.0) * 10.0;
+
+      Database db = mat->get_database();
+      db.set_section("lattice");
+      _lattice_constant[0] = db.get("a", 0.0) * 10.0;
       if (_lattice_constant[0] == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
 
-      //TODO: b is not read because there's still some mess in the definition of material files,
-      //and b is associated to another parameter. Up to now it's not a problem as there's no
-      //crystal with a "b" lattice constant
-      /*_lattice_constant[1] = data("b", 0.0) * 10.0;*/  _lattice_constant[1] = 0.0;
+      /*_lattice_constant[1] = data("b", 0.0) * 10.0;*/
+      _lattice_constant[1] = db.get("b", 0.0) * 10.0;
       if (_lattice_constant[1] == 0.0) _lattice_constant[1] = _lattice_constant[0];
-
-      _lattice_constant[2] = data("c", 0.0) * 10.0;
+      ////////////////////////////////////////
+      _lattice_constant[2] = db.get("c", 0.0) * 10.0;
       if (_lattice_constant[2] == 0.0) _lattice_constant[2] = _lattice_constant[0];
 
       std::cerr << "lattice constants read are" << _lattice_constant[0] << _lattice_constant[1]
                                                                                              << _lattice_constant[2] << std::endl;
+      db.set_section("atomistic_structure");
+      set_lattice_type(db.get("lattice_type", "none"));
 
-      set_lattice_type(data("lattice_type", "none"));
-
-      for (i = 1; i <= data("n_basis_specie", 0); i++)
+      for (i = 1; i <= db.get("n_basis_specie", 0); i++)
         {
           std::string record, s, n_s;
           std::stringstream out;
@@ -867,9 +874,9 @@ void AtomisticGenerator::parse_parameters(const Material* mat)
 
           record = "n_" + s;
 
-          std::cerr << record << " is read as " <<  data(record.c_str(), 0) << std::endl;
+          std::cerr << record << " is read as " <<  db.get(record.c_str(), 0) << std::endl;
 
-          n = data(record.c_str(), 0);
+          n = db.get(record.c_str(), 0);
 
           for (j = 1; j <= n; j++)
             {
@@ -887,11 +894,11 @@ void AtomisticGenerator::parse_parameters(const Material* mat)
 
               record = n_s + "_x";
               std::cerr << "Record is " << record << std::endl;
-              T(1) = data(record.c_str(), 0.0);
+              T(1) = db.get(record.c_str(), 0.0);
               record = n_s + "_y";
-              T(2) = data(record.c_str(), 0.0);
+              T(2) = db.get(record.c_str(), 0.0);
               record = n_s + "_z";
-              T(3) = data(record.c_str(), 0.0);
+              T(3) = db.get(record.c_str(), 0.0);
 
               std::cerr << "Parsed position is " << T << std::endl;
 
@@ -909,82 +916,107 @@ void AtomisticGenerator::parse_parameters(const Material* mat)
       //Cannot act dynamic cast on mat itself because constant
       const Alloy* mat_alloy = dynamic_cast<const Alloy*>(mat);
 
-      // At least one parental specie isa always defined, and it's needed
-      // for all kind of alloys
-      const Material* parent1 = Material::create(mat_alloy->get_name_A());
-      GetPot data_parent1 = _as->getdata(parent1);
+      //Get database for alloy (db) and for parental materials
+      //NOTE: IMPLEMENTATION IS GOOD ONLY FOR BINARY COMPOUNDS
+      Database db = mat_alloy->get_database();
 
-      if (data("alloy_type", "none") == "ternary")
+      std::cout << "component A is  " << mat_alloy->get_component_A() << std::endl;
+      std::cout << "component A is  " << mat_alloy->get_component_A()->get_name() << std::endl;
+      std::cout << "component B is  " << mat_alloy->get_component_B()->get_name() << std::endl;
+      Database db1 = mat_alloy->get_component_A()->get_database();
+      Database db2 = mat_alloy->get_component_B()->get_database();
+
+      if (db.get("alloy_type", 2) == 2)
         {
-
+std::cout << "B " << std::endl;
           double ax_1, ay_1, az_1, ax_2, ay_2, az_2;
-          std::cerr << "Parsing parameters for binary alloy" << mat_alloy->get_name() << std::endl;
+          std::cerr << "Parsing parameters for binary alloy" << mat->get_name() << std::endl;
+          std::cout << "C " << std::endl;
+          db1.set_section("lattice");
+          db2.set_section("lattice");
 
-          // Get parent materials
-          const Material* parent2 = Material::create(mat_alloy->get_name_B());
-
-          GetPot data_alloy = _as->getdata(mat_alloy);
-          GetPot data_parent2 = _as->getdata(parent2);
-
-
-          ax_1 = data_parent1("a", 0.0);
+          //We express lattice constant in Amstrong
+          ax_1 = db1.get("a", 0.0) * 10.0;
           if (ax_1 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
 
-          ay_1 = data_parent1("b", 0.0);
+          ay_1 = db1.get("b", 0.0) * 10.0;
           if (ay_1 == 0.0) ay_1 = ax_1;
 
-          az_1 = data_parent1("c", 0.0);
+          az_1 = db1.get("c", 0.0) * 10.0;
           if (az_1 == 0.0) az_1 = ax_1;
 
-          ax_2 = data_parent2("a", 0.0);
+          ax_2 = db2.get("a", 0.0) * 10.0;
           if (ax_2 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
 
-          ay_2 = data_parent2("b", 0.0);
+          ay_2 = db2.get("b", 0.0) * 10.0;
           if (ay_2 == 0.0) ay_2 = ax_2;
 
-          az_2 = data_parent2("c", 0.0);
+          az_2 = db2.get("c", 0.0) * 10.0;
           if (az_2 == 0.0) az_2 = ax_2;
 
+//Setting lattice parameters for the alloy
+          double molar_fraction = mat->get_options().get_option("x", 1.0);
+          _lattice_constant[0] = ax_1 * molar_fraction + ax_2 * (1.0 - molar_fraction);
+std::cout << "ax_1, ax_2 " << ax_1 << ax_2 << std::endl;
+          _lattice_constant[1] = ay_1 * molar_fraction + ay_2 * (1.0 - molar_fraction);
+          _lattice_constant[2] = az_1 * molar_fraction + az_2 * (1.0 - molar_fraction);
+std::cout << "lattice constant are " << _lattice_constant[0] << _lattice_constant[1] << _lattice_constant[2] << std::endl;
+          db1.set_section("");
+          std::cout << "D " << std::endl;
         }
 
-      set_lattice_type(data_parent1("lattice_type", "none"));
+      db1.set_section("atomistic_structure");
+      set_lattice_type(db1.get("lattice_type", "none"));
+      db.set_section("atomistic_structure");
+      std::cout << db.get("n_basis_specie", 0) << std::endl;
 
-      for (i = 1; i <= data("n_basis_specie", 0); i++)
+      for (i = 1; i <= db.get("n_basis_specie", 0); i++)
         {
-          std::string record;
-          std::string s;
+          std::cout << "i is " << i << "and cycling to " <<  db.get("n_basis_specie", 0) << std::endl;
+          std::string record("");
+          std::string s("");
           std::stringstream out;
-
+          std::cout << "F " << std::endl;
           out << i;
           s = out.str();
 
           record = "n_" + s;
-
-          for (j = 1; j <= (data(record.c_str(), 0)); j++)
+          std::cout << "record is " << record << std::endl;
+          std::cout << (db1.get(record, 0)) << std::endl;
+          std::cout << (db1.get("n_1", 0)) << std::endl;
+          unsigned int n_x = (db1.get(record, 0));
+          for (j = 1; j <= n_x; j++)
             {
+              std::string s2;
+              std::cout << "j is " << j << "and cycling to " <<  db1.get(record, 0) << std::endl;
               record = "T_" + s + "_";
+              std::cout << "A record is " << record << std::endl;
               out.str(std::string());
               out.clear(std::stringstream::goodbit);
               out << j;
-              s = out.str();
-              std::cerr << "s is " << s << std::endl;
-              s = record + s;
+              s2 = out.str();
+              std::cerr << "s2 is " << s2 << std::endl;
+              s2 = record + s2;
 
               //Putting specie (defined by an integer) temporary in flag data
+              // ???????????? CHECK IT , WHY i IS SET AS FLAG???????????
               tmp.set_flag(i);
 
-              record = s + "_x";
+              std::cout << "H " << std::endl;
+              record = s2 + "_x";
               std::cerr << "Record is " << record << std::endl;
-              T(1) = data(record.c_str(), 0.0);
-              record = s + "_y";
-              T(2) = data(record.c_str(), 0.0);
-              record = s + "_z";
-              T(3) = data(record.c_str(), 0.0);
-
+              T(1) = db1.get(record, 0.0);
+              record = s2 + "_y";
+              T(2) = db1.get(record, 0.0);
+              record = s2 + "_z";
+              T(3) = db1.get(record, 0.0);
+              std::cout << "I " << std::endl;
               tmp.set_position(T);
 
               //Insert tmp in basis
+              std::cout << tmp.get_position()  << std::endl;
               _crystal_basis.push_back(tmp);
+              std::cout << "putted and j is " << j << std::endl;
 
             }
         }
@@ -1421,6 +1453,7 @@ void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis){
       tmp.set_region_ID(basis[i].get_region_ID());
 
       tmp.set_position ( O + u1 );
+std::cout << "position with 3 bond is " <<    O + u1 << std::endl;
       hydrogens.push_back(tmp);
     }
 
@@ -1442,7 +1475,7 @@ void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis){
 
       // Up to now hydrogen is considered part of the same material of bonded atom
       tmp.set_region_ID(basis[i].get_region_ID());
-
+      std::cout << "position with 2 bond is (1) " <<    O + u << std::endl;
       tmp.set_position ( O + u );
       hydrogens.push_back(tmp);
 
@@ -1456,6 +1489,7 @@ void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis){
       tmp.set_region_ID(basis[i].get_region_ID());
 
       tmp.set_position ( O + u );
+      std::cout << "position with 2 bond is (2)" <<    O + u1 << std::endl;
       hydrogens.push_back(tmp);
     }
 
@@ -1475,7 +1509,15 @@ void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis){
       u = d * (u / norm(u));
 
       tmp.set_specie("H");
+
+      // TEMPORARY SOLUTION FOR WURTZITE
+      u = (-r1)/norm(r1); u(1) = u(1) + 0.1;
+      //////////////////////////////
+
+
+
       tmp.set_position ( O + u );
+      std::cout << "position with 1 bond is (1)" <<    O + u << std::endl;
       tmp.set_flag ( basis[i].get_flag() );
 
       // Up to now hydrogen is considered part of the same material of bonded atom
@@ -1491,7 +1533,13 @@ void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis){
       u = d * (u / 2.0);
 
       tmp.set_specie("H");
+
+      // TEMPORARY SOLUTION FOR WURTZITE
+            u = (-r1)/norm(r1); u(2) = u(2) + 0.1;
+            //////////////////////////////
+
       tmp.set_position ( O + u );
+      std::cout << "position with 1 bond is (2)" <<    O + u << std::endl;
       tmp.set_flag( basis[i].get_flag() );
 
       // Up to now hydrogen is considered part of the same material of bonded atom
@@ -1508,7 +1556,12 @@ void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis){
       // Up to now hydrogen is considered part of the same material of bonded atom
       tmp.set_region_ID(basis[i].get_region_ID());
 
+      // TEMPORARY SOLUTION FOR WURTZITE
+                 u = (-r1)/norm(r1); u(2) = u(2) - 0.1; u(1)=u(1) - 0.1;
+                 //////////////////////////////
+
       tmp.set_position ( O + u );
+      std::cout << "position with 1 bond is (3)" <<    O + u << std::endl;
       hydrogens.push_back(tmp);
     }
 
@@ -1529,6 +1582,7 @@ void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis){
 Tensor2Gen
 AtomisticGenerator::reciprocal(Tensor2Gen real_basis)
 {
+
   //Build the reciprocal basis related to input 2-rank tensor
   Tensor1 a1,a2,a3;
   Tensor1 b1,b2,b3;

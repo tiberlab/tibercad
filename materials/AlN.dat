@@ -143,6 +143,7 @@ optical_epsilon_z = 1.0
 
 #Atomistic structure informations
 #
+[atomistic_structure]
 lattice_type = hexagonal
 
 #Basis 
@@ -155,7 +156,7 @@ n_2 = 2
 #Basis vectors T_"specie"_"#of atom"_"direction"
 T_1_1_x = 0.333333
 T_1_1_y = 0.666666
-T_1_1_z = 0.5
+T_1_1_z = 0.0
 T_1_2_x = 0.666666
 T_1_2_y = 0.333333
 T_1_2_z = 0.5

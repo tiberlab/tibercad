@@ -45,7 +45,7 @@ Control::Control(const std::string& inputfile)
     infile.close();
     throw InitFailedException("Input file is invalid.");
   }
-  
+
   infile.close();
 }
 
@@ -127,7 +127,7 @@ void
 Control::create_device(void)
 {
   using namespace boost::filesystem;
-  
+
 #ifdef DEBUG
   cerr << "Control::create_device() begin" << endl;
 #endif
@@ -137,6 +137,7 @@ Control::create_device(void)
   ModelOptions opts = parser.read_parameters("Simulation");
 
   _database->set_search_path(opts.get_option("searchpath", ""));
+std::cout << "I set searchpath " <<    opts.get_option("searchpath", "") << std::endl;
   opts.delete_option("searchpath");
 
   DLLoader::prepend_to_library_path(opts.get_option("modellibpath", "."));
@@ -171,7 +172,7 @@ Control::create_device(void)
     }
     catch (...) {}
   }
-    
+
   if (!(exists(outpath) && is_directory(outpath)))
   {
     string msg("Cannot create ore use '");
@@ -197,7 +198,7 @@ Control::create_device(void)
     SimulationOptions::temperature << " K" << endl;
   Messages::info(os.str());
 
-  
+
 #ifdef DEBUG
   cerr << "Control::create_device() end" << endl;
 #endif
@@ -208,7 +209,7 @@ Control::create_device(void)
 void
 Control::create_materials(void)
 {
-  
+
 #ifdef DEBUG
   cerr << "Control::create_materials() begin" << endl;
 #endif
@@ -221,7 +222,7 @@ Control::create_materials(void)
 
   //
   // first we process the physical regions
-  // 
+  //
   const map<ID, RegionStructure>& device_map = parser.get_device_map();
 
   // iterate the map and create the materials
@@ -256,7 +257,7 @@ Control::create_materials(void)
           region_ids.push_back(Utils::convert<unsigned int>(region_ids_str[i]));
       }
     }
-    
+
 
     if (region_ids.size() == 0)
     {
@@ -270,7 +271,7 @@ Control::create_materials(void)
     Material* mat = Material::create(material, data.get_options());
     _device->set_material(mat, region_ids, data.get_region_name());
   }
-  
+
 #ifdef DEBUG
   cerr << "Control::create_materials() end" << endl;
 #endif
@@ -281,7 +282,7 @@ Control::create_materials(void)
 void
 Control::create_atomistic_structures(void)
 {
-  
+
 #ifdef DEBUG
   cerr << "Control::create_atomistic_structures() begin" << endl;
 #endif
@@ -305,7 +306,7 @@ Control::create_atomistic_structures(void)
   for ( ; mapit != mapend; ++mapit)
   {
     const RegionStructure& data = mapit->second;
-    
+
     ModelOptions atomistic_options = data.get_options();
 
     const string& st_name = data.get_region_name();
@@ -313,14 +314,14 @@ Control::create_atomistic_structures(void)
 
     //Set a reference to device. It's needed for keeping track of region informations
     st->set_device( _device );
-    
+
     //WARNING: For debugging purposes, initialization of
     //atomistic structures is here, but it's not the right place! (maybe it is...)
     st->init();
 
     // Defined atomistic structure is put in the atomistic_structure_map
     _device->set_atomistic_structure(st_name, st);
-    
+
   }
 
 #ifdef DEBUG
@@ -388,7 +389,7 @@ Control::setup_clusters(void)
 void
 Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 {
-  
+
 #ifdef DEBUG
   cerr << "Control::setup_models() begin" << endl;
 #endif
@@ -397,7 +398,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
   // a reference to the device
   Device& device = *_device;
-  
+
   InputParser parser(_inputfile);
 
   // parse the models section
@@ -417,7 +418,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
     //
     // extract the physical regions
-    // 
+    //
 
     set<ID> phys_regions;
     const string& physreg = simopts.get_option("physical_regions", "all");
@@ -448,7 +449,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         {
           // it has to be a region number
           ID id = Utils::convert<ID>(preg[i]);
-          
+
           if (regs.find(id) == id_end)
           {
             ostringstream s;
@@ -468,7 +469,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
     // read options for this simulation (from Solver section)
     ModelOptions solveropts(parser.read_parameters("Solver", modelname));
-    
+
     // get the user defined name (if defined...)
     const string& simulation_name = simopts.get_option("simulation_name", "");
 
@@ -491,7 +492,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     solveropts += simopts;
     solveropts.delete_option("simulation_name");
     solveropts.delete_option("physical_regions");
-    
+
     SimulationInterface* sim =
       SimulationInterface::create(modelname, solveropts);
     if (sim == NULL)
@@ -501,7 +502,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     sim->set_control(this);
 
     _simulations[sim->get_name()] = sim;
-    
+
     // create the environment
     SimulationEnvironment* env = new SimulationEnvironment(device, phys_regions);
     _simulation_environments[sim] = env;
@@ -537,7 +538,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         // given by user
         if (!(it->second).find_option("name"))
           (it->second)["name"] = it->first;
-        
+
         physopts.add_submodel(it->first, it->second);
       }
     }
@@ -632,7 +633,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
   //
   // check for some special simulations (sweep, selfconsistency)
-  // 
+  //
 
   // first selfconsistency
   const multimap<string, ModelOptions>& scs =
@@ -684,7 +685,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   }
 
 
-  
+
   // then the sweeps
 
   {
@@ -794,7 +795,7 @@ Control::run_simulation(void) throw (SolveFailedException)
   Messages::info(os.str());
 
   vector<SimulationInterface*> simulations(n);
-  
+
   // first check if we can find all simulations
   // We also let them solve the equilibrium
   for (unsigned int i = 0; i < n; i++)
@@ -857,7 +858,7 @@ Control::run_simulation(void) throw (SolveFailedException)
     }
 
   }
- 
+
 }
 
 
@@ -874,7 +875,7 @@ Control::find_simulation(const string& name) const
     if (it == _simulations.end())
       sim = NULL;
   }
-    
+
   return sim;
 }
 
