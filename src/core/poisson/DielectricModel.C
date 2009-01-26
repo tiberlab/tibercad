@@ -8,7 +8,7 @@
 //-------------------------------------------------------------------------//
 
 DielectricModel::DielectricModel() :
-  _dielectric_constant(1.0)
+  _dielectric_constant(0)
 {
 }
 

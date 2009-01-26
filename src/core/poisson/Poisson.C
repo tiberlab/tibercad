@@ -43,7 +43,6 @@
 using namespace std;
 
 
-
 Poisson* Poisson::static_this;
 Device* Poisson::_device;
 //-----------------------------------------------------------------//
@@ -70,13 +69,10 @@ void  Poisson::do_init( )
 
    dim = mesh->mesh_dimension();
 
+  double mesh_units = get_scaling().get_calc_mesh_units() / sim_opt.get_option("Work_length_units", 1e-2);
 
-  double mesh_units = _device->get_mesh_units();
-
-  opt.work_units = sim_opt.get_option("Work_length_units", 1e-2);
-
-  opt.length_scale = mesh_units/opt.work_units;
-
+  get_scaling().set_calc_mesh_units(mesh_units);
+ 
 
   my_system = TiberLinearSystem::create(get_equation_systems(),
       get_equation_system_name(), get_solver_options());
@@ -302,8 +298,8 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   // Declare a special finite element object for
   // volume integration.
 
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
 
+ AutoPtr<FEBase> fe (build_finite_element(dim, fe_type,true));
   //AutoPtr<FEBase> fe (build_finite_element(dim, fe_type));
   QGauss qrule (dim, FIFTH); //may be could be decreased (CHECK!!!)
   
@@ -326,14 +322,10 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
 
 
-
-
   // Declare a special finite element object for
   // boundary integration.
 
-  AutoPtr<FEBase>  fe_face(FEBase::build(dim, fe_type));
-
-
+  AutoPtr<FEBase> fe_face (FEBase::build(dim, fe_type));
   // AutoPtr<FEBase>  fe_face(build_finite_element(dim, fe_type));
   
   // Boundary integration requires one quadraure rule,
@@ -380,14 +372,6 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
   Tensor1 bi_pol(0);
 
-  //-----------------------------------------------------------------//
-  //My Jacobian. It is to pass to our work units
-  
-  double my_Jacobian = 1.0;
-  for (short i = 1; i <= dim; i++)  my_Jacobian *= opt.length_scale;
-  //----------------------------------------------------------------//
-
-
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
@@ -420,6 +404,7 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
     // charge_density = poisson_model->get_charge_density();
 
     poisson_model->get_charge_density(q_point,charge_density);
+  
 
     epsilon = poisson_model->get_dielectric_constant();
 
@@ -456,6 +441,7 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
  	  Ke(p1,p1) = 1.0;
 	  
 	  Fe(p1) = ( dynamic_cast<Dirichlet*> (contact) )->get_potential();
+	  //std::cout<< Fe(p1)<<std::endl;
 
           is_dirichlet = false;
       } 
@@ -490,15 +476,13 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 		else
 		  epsilon_value = epsilon(i+1, j+1);
 		
-	   	  value += JxW[qp] * epsilon_value * dphi[p1][qp](i) * dphi[p2][ qp](j) /(opt.length_scale * opt.length_scale);
+	   	  value += JxW[qp] * epsilon_value * dphi[p1][qp](i) * dphi[p2][qp](j);
                  
 		
 	      }//end loop over direction (2)
 
 	       
 	    }//end loop over direction (1)												
-	    
-	   value *= my_Jacobian;
 	    
 
            Ke(p1,p2) += value;
@@ -508,12 +492,12 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 	   
 	   //Fe construction----	
 	
-	   Fe(p1) += JxW[qp] * charge_density[qp] * phi[p1][qp] *  my_Jacobian  * Constants::e / Constants::epsilon;
+	   Fe(p1) += JxW[qp] * charge_density[qp] * phi[p1][qp]; 
 
            //Add the polarization 
 
 	      for (short i = 0; i < dim; i++) 
-		Fe(p1) -= JxW[qp] * dphi[p1][qp](i) * bi_pol(i+1) * my_Jacobian * Constants::e / Constants::epsilon;
+		Fe(p1) -= JxW[qp] * dphi[p1][qp](i) * bi_pol(i+1);
 	  
 
 	   //--------------------
@@ -547,7 +531,7 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++) 
  	      { 
 			      
-		//Fe(p1) =  JxW_face[qp] *  D_condition  * phi_face[p1][qp] *  my_Jacobian; 
+		//Fe(p1) =  JxW_face[qp] *  D_condition  * phi_face[p1][qp]; 
  
 		
  	      }  // for (unsigned int qp = 0; qp < qface.n_points(); qp++)    
@@ -575,7 +559,7 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 	      {
 		for (short i = 0; i < dim; i++) 
 		{
-		  Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(i+1) * my_Jacobian * normal[qp](i) *  Constants::e/Constants::epsilon ; 
+		  Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(i+1) * normal[qp](i) *  Constants::e/Constants::epsilon ; 
 		}
 	      }
 	    }    
@@ -591,7 +575,7 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 	      }  
 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
 	      {
-		Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(0) * my_Jacobian * Constants::e * n_1d * Constants::e/Constants::epsilon; 
+		Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(0) * Constants::e * n_1d * Constants::e/Constants::epsilon; 
 	      }
 	      
 	    }//i dim >1   

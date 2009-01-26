@@ -3,6 +3,7 @@
 
 #include "PhysicalModelInterface.h"
 
+#include "Constants.h"
 
 //! This class read the dielectric constant from database
 /*!
@@ -60,7 +61,7 @@ inline
 Tensor2Sym
 DielectricModel::get_dielectric_constant(void) const
 {
-  return _dielectric_constant;
+  return _dielectric_constant * Constants::epsilon;
 }
 
 

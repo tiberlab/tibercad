@@ -77,22 +77,20 @@ void PoissonModel::do_init()
 
     model_opt.chd_sim = get_options().get_option("Charge_density_simulation", true); 
 
-    if (model_opt.chd_sim)
-    {
+    //if (model_opt.chd_sim)
+    //{
       std::string chd_sim_name = get_options().get_option("charge_density_simulation", "no_sim");
       _chd_sim =  SimulationInterface::find_simulation(chd_sim_name);
       
       if (_chd_sim == NULL) 
-	throw InitFailedException("Unknown charge_density simulation: " +  chd_sim_name );
+      	throw InitFailedException("Unknown charge_density simulation: " +  chd_sim_name );
       else
         charge_id = _chd_sim->get_variable_id("charge_density"); 
+      std::cout<<charge_id<<std::endl;
+      
+      ModelOptions::const_submodel_iterator it,end; 
 
-    }
-    
-
-    ModelOptions::const_submodel_iterator it,end; 
-
- /*   PhysicalModelInterface::destroy(chd_model); */
+    //    PhysicalModelInterface::destroy(chd_model); */
 
 
 
@@ -159,8 +157,6 @@ void PoissonModel::do_init()
    dielectric_model->init();
    
    _epsilon = dielectric_model->get_dielectric_constant();
-
-
 
 
 
@@ -269,39 +265,25 @@ void
 PoissonModel::get_charge_density(const std::vector<Point> q_point, std::vector<double>& charge_density)
 {
 
-  if (model_opt.chd_sim)
-  { 
-    SimulationEnvironment& se = _chd_sim->get_environment();
-    
-    if  (se.contains_element(_elem))
-    {
+  
       
-       _chd_sim->get_solution(_elem,q_point,charge_id, charge_density);
-       
+  if (_chd_sim->get_solution(_elem,q_point,charge_id, charge_density))
+  {  
       
-    }
-    else
-    {
-      // charge_density.resize(_elem->n_nodes());
-
-      charge_density.resize(q_point.size() );
-      charge_density.clear();
-    }
   }
   else
   {
-    const Material* mat = get_material();
-    charge_density.resize(_elem->n_nodes());
+     charge_density.resize(_elem->n_nodes());
+     charge_density.resize(q_point.size() );
+     charge_density.clear();
+   }
+  
+      //  const Material* mat = get_material();
+      //charge_density.resize(_elem->n_nodes());
    
-    //for (unsigned int n = 0; n < _elem->n_nodes(); n++)
-    // {
-    //   charge_density[n] = mat->get_net_doping_density();
-    // }
-
-        charge_density.clear();
-
-
-
-  }
+      //for (unsigned int n = 0; n < _elem->n_nodes(); n++)
+      // {
+      // charge_density[n] = mat->get_net_doping_density()*Constants::e;
+      // }    
   
 }
