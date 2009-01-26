@@ -54,9 +54,9 @@ supersampling(false)
 Dftb::DftbOptions::~DftbOptions(void)
 {
   //TODO: perche' crasha con questa roba nel codice scommentata???
-  delete[] samplingcoeffs;
-  //delete samplingshift;
-  //delete latVecs;
+  //delete[] samplingcoeffs;
+  //delete[] samplingshift;
+  //delete[] latVecs;
 };
 
 

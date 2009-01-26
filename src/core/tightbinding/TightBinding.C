@@ -130,7 +130,7 @@ TightBinding::build_rho(const Point& r)
       //Up to now densities are mapped on orbital S
       uhatom = _u_hub[_atomistic_structure->get_structure_atoms()[iatm].get_specie()][S];
 
-      //Bring back atom position to mesh units
+      //Convert atom position to mesh units
       x1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
       y1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(2) / _atomistic_structure->get_scale();
       z1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(3) / _atomistic_structure->get_scale();
@@ -138,7 +138,7 @@ TightBinding::build_rho(const Point& r)
       //delta_r is already in mesh units in this way
       deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
 
-      //Also hubbard parameters must be scaled in mesh units
+      //Also hubbard parameters (and tau) must be scaled in mesh units
       // (uhatom is in (atomic units)^(-1))
       //uhatom = ( uhatom / (Constants::bohr_radius) * (get_control().get_device().get_mesh_units());
       double tau = ( ( uhatom * ( 16.0 / 5.0 ) ) / (Constants::bohr_radius ) ) * get_control().get_device().get_mesh_units();
@@ -148,8 +148,8 @@ TightBinding::build_rho(const Point& r)
         {
           //std::cout << "uhatom is " << uhatom <<std::endl;
           //rho = rho + 16.384 * _mulliken_netcharges[iatm] * uhatom * uhatom * uhatom * exp(-3.20*uhatom*deltar);
-	  rho = rho + (Constants::e * _mulliken_netcharges[iatm] * tau * tau * tau * exp(-1.0 * tau * deltar)) / (8 * 3.141592653589793); 
-	  //std::cout << "atom " << iatm << "is contributing with " <<  (Constants::e * _mulliken_netcharges[iatm] * tau * tau * tau * exp(-1.0 * tau * deltar)) / (8 * 3.141592653589793); 
+	  rho = rho + (Constants::e * _mulliken_netcharges[iatm] * tau * tau * tau * exp(-1.0 * tau * deltar));
+	  //std::cout << "atom " << iatm << "is contributing with " <<  (Constants::e * _mulliken_netcharges[iatm] * tau * tau * tau * exp(-1.0 * tau * deltar)) / (8 * 3.141592653589793);
 	  //std::cout << "mulliken charge is " << _mulliken_netcharges[iatm] << std::endl;
 	  //std::cout << "deltar is " << deltar << std::endl;
 	  //std::cout << "uhatom is " << uhatom << std::endl;
@@ -160,7 +160,12 @@ TightBinding::build_rho(const Point& r)
       //std::cout << "rho after loop is " << rho << std::endl;
     }
 
-  //rho = -rho / 4.0 / 3.141592653589793;
+  rho = -rho / (8.0 * 3.141592653589793);
+
+  //scale rho to C/cm^3
+  rho =  rho / (( get_control().get_device().get_mesh_units() * 100.0 ) *
+        ( get_control().get_device().get_mesh_units() * 100.0 ) *
+        ( get_control().get_device().get_mesh_units() * 100.0 ));
 
   //std::cout << "rho finally is " << rho << std::endl;
 
