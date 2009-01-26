@@ -137,7 +137,6 @@ Control::create_device(void)
   ModelOptions opts = parser.read_parameters("Simulation");
 
   _database->set_search_path(opts.get_option("searchpath", ""));
-std::cout << "I set searchpath " <<    opts.get_option("searchpath", "") << std::endl;
   opts.delete_option("searchpath");
 
   DLLoader::prepend_to_library_path(opts.get_option("modellibpath", "."));
