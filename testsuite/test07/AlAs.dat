@@ -2,6 +2,7 @@
 
 structure = zb
 
+[bandgap]
 # 0 K data
 #Eg_G = 3.099
 #Eg_L = 2.4597
@@ -9,6 +10,9 @@ structure = zb
 Eg_G = 3.003
 Eg_L = 2.352
 Eg_X = 2.164
+
+
+[kdotp]
 E_v = 0.857
 
 m_G = 0.15
@@ -17,6 +21,12 @@ m_L_t = 0.15
 m_X_l = 0.97
 m_X_t = 0.22
 
+delta = 0.28
+gamma1 = 3.76
+gamma2 = 0.82
+gamma3 = 1.42
+
+[deformation_potentials]
 a_c = -7.4
 abs_def_pot_L = -3.07
 abs_def_pot_X = 2.54
@@ -27,11 +37,7 @@ a_v = 1.53
 b = -2.3
 d = -3.4
 
-delta = 0.28
-gamma1 = 3.76
-gamma2 = 0.82
-gamma3 = 1.42
-
+[permittivity]
 permittivity = 10.064
 
 # lattice constant

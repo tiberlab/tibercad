@@ -34,10 +34,10 @@ void  DielectricModel::do_init_alloy (const PhysicalModelInterface *comp_A,
 void   DielectricModel::read_database(void)
 {
    
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
-  _ep_x = data("permittivity", _ep_x);  
-     
+  Database& db = get_database();
+  db.set_section("permittivity");
+  _ep_x = db.get("permittivity", _ep_x);  
+
 
 }
 

@@ -1,9 +1,12 @@
+// $Id$
+
 #include "DDsemiconductor.h"
 #include "EFAbulkHamiltonian.h"
 #include "Constants.h"
 #include "Database.h"
 #include "Alloy.h"
-#include "getpot.h"
+
+
 typedef std::complex<double> Complex;
 extern "C" 
 { 
@@ -88,12 +91,12 @@ void DDsemiconductor::do_init ()
 void DDsemiconductor::read_database(void)
 {
 
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
-
-  energy_cutoff  = data("energy_cutoff", energy_cutoff); //4eV default value
+  Database& db = get_database();
+  db.set_section("kdotp");
+ 
+  energy_cutoff  = db.get("energy_cutoff", energy_cutoff); //4eV default value
   strained       = false;
-  k_max          = data("k_max", k_max);
+  k_max          = db.get("k_max", k_max);
 
 }
 

@@ -79,11 +79,12 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
 void
 DriftDiffusionProperties::read_database(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
+  Database& db = get_database();
+  db.set_section("");
+  _is_dielectric = db.get("dielectric", _is_dielectric);
 
-  _is_dielectric = data("dielectric", _is_dielectric);
-  permittivity = data("permittivity", 1.0);
+  db.set_section("permittivity");
+  permittivity = db.get("permittivity", 1.0);
 
 }
 

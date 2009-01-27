@@ -1,7 +1,8 @@
+// $Id$
+
 #include "WzSemiconductor.h"
 #include "Database.h"
-#include "Alloy.h"
-#include "getpot.h"
+#include "Material.h"
 
 using namespace std;
  
@@ -103,37 +104,43 @@ void WzSemiconductor::do_init()
 //--------------------------------------------------//
 void  WzSemiconductor::read_database_alloy(void)
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
 
-  bow.EgGamma = data("bow_Eg_G", 0.0);
-  bow.Ev = data("bow_E_v", 0.0);
+  Database& db = get_database();
 
-  bow.m_c_zz = data("bow_m_c_zz", 0.0);
-  bow.m_c_xx = data("bow_m_c_xx", 0.0);
-  
-  bow.A1 = data("bow_A1", 0.0);
-  bow.A2 = data("bow_A2", 0.0);
-  bow.A3 = data("bow_A3", 0.0);
-  bow.A4 = data("bow_A4", 0.0);
-  bow.A5 = data("bow_A5", 0.0);
-  bow.A6 = data("bow_A6", 0.0); 
-  
-  bow.a_x = data("bow_a_x", 0.0);
-  bow.a_z = data("bow_a_z", 0.0);
-  
-  bow.D1 = data("bow_D1", 0.0);
-  bow.D2 = data("bow_D2", 0.0);
-  bow.D3 = data("bow_D3", 0.0);
-  bow.D4 = data("bow_D4", 0.0);
-  bow.D5 = data("bow_D5", 0.0);
-  bow.D6 = data("bow_D6", 0.0);
-  bow.delta_s = data("bow_delta_s", 0.0);
-  bow.delta_cr = data("bow_delta_cr", 0.0);
+  db.set_section("bandgap");
+  bow.EgGamma = db.get("bow_Eg_G", 0.0);
 
+
+  db.set_section("kdotp");
+  bow.Ev = db.get("bow_E_v", 0.0);
+
+  bow.m_c_zz = db.get("bow_m_c_zz", 0.0);
+  bow.m_c_xx = db.get("bow_m_c_xx", 0.0);
   
-  bow.Ep_1 = data("bow_Ep_1", 0.0);
-  bow.Ep_2 = data("bow_Ep_2", 0.0);
+  bow.A1 = db.get("bow_A1", 0.0);
+  bow.A2 = db.get("bow_A2", 0.0);
+  bow.A3 = db.get("bow_A3", 0.0);
+  bow.A4 = db.get("bow_A4", 0.0);
+  bow.A5 = db.get("bow_A5", 0.0);
+  bow.A6 = db.get("bow_A6", 0.0); 
+
+  bow.delta_s = db.get("bow_delta_s", 0.0);
+  bow.delta_cr = db.get("bow_delta_cr", 0.0);
+  
+  bow.Ep_1 = db.get("bow_Ep_1", 0.0);
+  bow.Ep_2 = db.get("bow_Ep_2", 0.0);
+  
+  db.set_section("deformation_potentials");
+  bow.a_x = db.get("bow_a_x", 0.0);
+  bow.a_z = db.get("bow_a_z", 0.0);
+  
+  bow.D1 = db.get("bow_D1", 0.0);
+  bow.D2 = db.get("bow_D2", 0.0);
+  bow.D3 = db.get("bow_D3", 0.0);
+  bow.D4 = db.get("bow_D4", 0.0);
+  bow.D5 = db.get("bow_D5", 0.0);
+  bow.D6 = db.get("bow_D6", 0.0);
+
 }
 
 
@@ -141,43 +148,46 @@ void  WzSemiconductor::read_database_alloy(void)
 
 void WzSemiconductor::read_database( )
 {
+  Database& db = get_database();
 
+  db.set_section("bandgap");
+  par.EgGamma = db.get("Eg_G", 3.51);
+
+  par.varshni_alpha_G = db.get("varshni_alpha_G", 0.0);
+  par.varshni_beta_G  = db.get("varshni_beta_G", 0.0);
+
+
+  db.set_section("kdotp");
+  par.Ev = db.get("E_v", -0.726);
+
+  par.m_c_zz = db.get("m_c_zz", 0.20);
+  par.m_c_xx = db.get("m_c_xx", 0.20);
   
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
+  par.A1 = db.get("A1", -7.21);
+  par.A2 = db.get("A2", -0.44);
+  par.A3 = db.get("A3", 6.68);
+  par.A4 = db.get("A4", -3.46);
+  par.A5 = db.get("A5", -3.40);
+  par.A6 = db.get("A6", -4.90); 
 
-
-  par.EgGamma = data("Eg_G", 3.51);
-  par.Ev = data("E_v", -0.726);
-
-  par.m_c_zz = data("m_c_zz", 0.20);
-  par.m_c_xx = data("m_c_xx", 0.20);
+  par.delta_s = db.get("delta_s", 0.017);
+  par.delta_cr = db.get("delta_cr", 0.010);
   
-  par.A1 = data("A1", -7.21);
-  par.A2 = data("A2", -0.44);
-  par.A3 = data("A3", 6.68);
-  par.A4 = data("A4", -3.46);
-  par.A5 = data("A5", -3.40);
-  par.A6 = data("A6", -4.90); 
+  par.Ep_1 = db.get("Ep_1", 14.0);
+  par.Ep_2 = db.get("Ep_2", 14.0);
   
-  par.a_x = data("a_x", -4.9);
-  par.a_z = data("a_z", -11.3);
-  
-  par.D1 = data("D1", -3.7);
-  par.D2 = data("D2", 4.5);
-  par.D3 = data("D3", 8.2);
-  par.D4 = data("D4", -4.1);
-  par.D5 = data("D5", -4.0);
-  par.D6 = data("D6", -5.5);
-  par.delta_s = data("delta_s", 0.017);
-  par.delta_cr = data("delta_cr", 0.010);
 
+  db.set_section("deformation_potentials");
+  par.a_x = db.get("a_x", -4.9);
+  par.a_z = db.get("a_z", -11.3);
   
-  par.Ep_1 = data("Ep_1", 14.0);
-  par.Ep_2 = data("Ep_2", 14.0);
+  par.D1 = db.get("D1", -3.7);
+  par.D2 = db.get("D2", 4.5);
+  par.D3 = db.get("D3", 8.2);
+  par.D4 = db.get("D4", -4.1);
+  par.D5 = db.get("D5", -4.0);
+  par.D6 = db.get("D6", -5.5);
 
-  par.varshni_alpha_G = data("varshni_alpha_G", 0.0);
-  par.varshni_beta_G  = data("varshni_beta_G", 0.0);
 
 
   {

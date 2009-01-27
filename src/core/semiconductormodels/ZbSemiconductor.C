@@ -1,7 +1,8 @@
+// $Id$
+
 #include "ZbSemiconductor.h"
-#include "getpot.h"
-#include "Alloy.h"
 #include "Database.h"
+#include "Material.h"
  
 using namespace std;
 
@@ -117,50 +118,55 @@ void ZbSemiconductor::do_init()
 //-------------------------------------------//
 void ZbSemiconductor::read_database( )
 {
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
 
-
- 
+  Database& db = get_database();
 
   // defaults for GaAs
-  par.EgGamma = data("Eg_G", 1.519);
-  par.EgL = data("Eg_L", 1.815);
-  par.EgX = data("Eg_X", 1.981);
-  par.Ev = data("E_v", 1.346);
+
+  db.set_section("bandgap");
+  par.EgGamma = db.get("Eg_G", 1.519);
+  par.EgL = db.get("Eg_L", 1.815);
+  par.EgX = db.get("Eg_X", 1.981);
+
+  par.varshni_alpha_G = db.get("varshni_alpha_G", 0.0);
+  par.varshni_alpha_L = db.get("varshni_alpha_L", 0.0);
+  par.varshni_alpha_X = db.get("varshni_alpha_X", 0.0);
+
+  par.varshni_beta_G = db.get("varshni_beta_G", 0.0);
+  par.varshni_beta_L = db.get("varshni_beta_L", 0.0);
+  par.varshni_beta_X = db.get("varshni_beta_X", 0.0);
+
+
+
+  db.set_section("kdotp");
+  par.Ev = db.get("E_v", 1.346);
   
-  par.m_G = data("m_G", 0.067);
-  par.m_l_L = data("m_L_l", 1.9);
-  par.m_t_L = data("m_L_t", 0.0754);
-  par.m_l_X = data("m_X_l", 1.3);
-  par.m_t_X = data("m_X_t", 0.23);
+  par.m_G = db.get("m_G", 0.067);
+  par.m_l_L = db.get("m_L_l", 1.9);
+  par.m_t_L = db.get("m_L_t", 0.0754);
+  par.m_l_X = db.get("m_X_l", 1.3);
+  par.m_t_X = db.get("m_X_t", 0.23);
   
-  par.a_c = data("a_c", -9.36);
-  par.a_v = data("a_v", -1.21);
-  par.b = data("b", -2.0);
-  par.d = data("d", -4.8);
+  par.delta = db.get("delta", 0.341);
+  par.gamma1 = db.get("gamma1", 6.98);
+  par.gamma2 = db.get("gamma2", 2.06);
+  par.gamma3 = db.get("gamma3", 2.93);
+
+  par.Ep = db.get("Ep", 25.0);
+
+
+
+  db.set_section("deformation_potentials");
+  par.a_c = db.get("a_c", -9.36);
+  par.a_v = db.get("a_v", -1.21);
+  par.b = db.get("b", -2.0);
+  par.d = db.get("d", -4.8);
   
-  par.delta = data("delta", 0.341);
-  par.gamma1 = data("gamma1", 6.98);
-  par.gamma2 = data("gamma2", 2.06);
-  par.gamma3 = data("gamma3", 2.93);
-  
-  par.def_vol_X = data("abs_def_pot_X", -0.16);
-  par.def_uniax_X = data("uniax_def_pot_X", 14.26);
-  par.def_vol_L = data("abs_def_pot_L", -4.91);
-  par.def_uniax_L = data("uniax_def_pot_L", 6.5);
+  par.def_vol_X = db.get("abs_def_pot_X", -0.16);
+  par.def_uniax_X = db.get("uniax_def_pot_X", 14.26);
+  par.def_vol_L = db.get("abs_def_pot_L", -4.91);
+  par.def_uniax_L = db.get("uniax_def_pot_L", 6.5);
 
-  par.Ep = data("Ep", 25.0);
-
-
-  par.varshni_alpha_G = data("varshni_alpha_G", 0.0);
-  par.varshni_alpha_L = data("varshni_alpha_L", 0.0);
-  par.varshni_alpha_X = data("varshni_alpha_X", 0.0);
-
-
-  par.varshni_beta_G = data("varshni_beta_G", 0.0);
-  par.varshni_beta_L = data("varshni_beta_L", 0.0);
-  par.varshni_beta_X = data("varshni_beta_X", 0.0);
 
 
  
@@ -178,38 +184,45 @@ void ZbSemiconductor::read_database( )
 void ZbSemiconductor::read_database_alloy()
 {
  
-  const Material* mat = get_material();
-  GetPot data((mat->get_database()).get_data_file());
-
+  Database& db = get_database();
 
  
-  bow.EgGamma = data("bow_Eg_G",0.0);
-  bow.EgL = data("bow_Eg_L", 0.0);
-  bow.EgX = data("bow_Eg_X", 0.0);
-  bow.Ev = data("bow_E_v", 0.0);
-  
-  bow.m_G = data("bow_m_G", 0.0);
-  bow.m_l_L = data("bow_m_L_l", 0.0);
-  bow.m_t_L = data("bow_m_L_t", 0.0);
-  bow.m_l_X = data("bow_m_X_l", 0.0);
-  bow.m_t_X = data("bow_m_X_t", 0.0);
-  
-  bow.a_c = data("bow_a_c", 0.0);
-  bow.a_v = data("bow_a_v", 0.0);
-  bow.b = data("bow_b", 0.0);
-  bow.d = data("bow_d", 0.0);
-  
-  bow.delta = data("bow_delta", 0.0);
-  bow.gamma1 = data("bow_gamma1", 0.0);
-  bow.gamma2 = data("bow_gamma2", 0.0);
-  bow.gamma3 = data("bow_gamma3", 0.0);
-  
-  bow.def_vol_X = data("bow_abs_def_pot_X", 0.0);
-  bow.def_uniax_X = data("bow_uniax_def_pot_X", 0.0);
-  bow.def_vol_L = data("bow_abs_def_pot_L", 0.0);
-  bow.def_uniax_L = data("bow_uniax_def_pot_L", 0.0);
+  db.set_section("bandgap");
+  bow.EgGamma = db.get("bow_Eg_G",0.0);
+  bow.EgL = db.get("bow_Eg_L", 0.0);
+  bow.EgX = db.get("bow_Eg_X", 0.0);
 
-  bow.Ep = data("bow_Ep", 0.0);
+
+
+  db.set_section("kdotp");
+  bow.Ev = db.get("bow_E_v", 0.0);
+  
+  bow.m_G = db.get("bow_m_G", 0.0);
+  bow.m_l_L = db.get("bow_m_L_l", 0.0);
+  bow.m_t_L = db.get("bow_m_L_t", 0.0);
+  bow.m_l_X = db.get("bow_m_X_l", 0.0);
+  bow.m_t_X = db.get("bow_m_X_t", 0.0);
+  
+  bow.delta = db.get("bow_delta", 0.0);
+  bow.gamma1 = db.get("bow_gamma1", 0.0);
+  bow.gamma2 = db.get("bow_gamma2", 0.0);
+  bow.gamma3 = db.get("bow_gamma3", 0.0);
+
+  bow.Ep = db.get("bow_Ep", 0.0);
+
+
+
+  db.set_section("deformation_potentials");
+  bow.a_c = db.get("bow_a_c", 0.0);
+  bow.a_v = db.get("bow_a_v", 0.0);
+  bow.b = db.get("bow_b", 0.0);
+  bow.d = db.get("bow_d", 0.0);
+  
+  bow.def_vol_X = db.get("bow_abs_def_pot_X", 0.0);
+  bow.def_uniax_X = db.get("bow_uniax_def_pot_X", 0.0);
+  bow.def_vol_L = db.get("bow_abs_def_pot_L", 0.0);
+  bow.def_uniax_L = db.get("bow_uniax_def_pot_L", 0.0);
+
 }
 
 

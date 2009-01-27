@@ -2,38 +2,18 @@
 
 structure = zb
 
-E_v = 1.39
 
-# 300 K values
-#Eg_G = 0.354
-#Eg_L = 1.07
-#Eg_X = 1.37
+# lattice constant
+[lattice]
+a = 0.605830
 
-# 200 K values
-#Eg_G = 0.379
-#Eg_L = 1.07
-#Eg_X = 1.37
 
-# 150 K values
-#Eg_G = 0.3914
-#Eg_L = 1.1
-#Eg_X = 1.4
 
-# 100 K values
-#Eg_G = 0.4027
-#Eg_L = 1.12
-#Eg_X = 1.41
-
-# 70 K values
-#Eg_G = 0.406
-#Eg_L = 1.133
-#Eg_X = 1.433
-
+[bandgap]
 # 0 K values
 Eg_G = 0.417
 Eg_L = 1.133
 Eg_X = 1.433
-
 
 varshni_alpha_G = 0.276e-3
 varshni_beta_G = 93
@@ -45,12 +25,24 @@ varshni_alpha_L = 0.276e-3
 varshni_beta_L = 93
 
 
+
+[kdotp]
+E_v = 1.39
+
 m_G = 0.026
 m_L_t = 0.05
 m_L_l = 0.64
 m_X_l = 1.13
 m_X_t = 0.16
 
+delta = 0.39
+gamma1 = 20
+gamma2 = 8.5
+gamma3 = 9.2
+
+
+
+[deformation_potentials]
 a_c = -6.66
 abs_def_pot_L = -3.89
 abs_def_pot_X = -0.08
@@ -62,17 +54,10 @@ b = -1.8
 d = -3.6
 
 
-delta = 0.39
-gamma1 = 20
-gamma2 = 8.5
-gamma3 = 9.2
-
+[permittivity]
+# static dielectric constant
 permittivity = 15.15
 
-
-# lattice constant
-[lattice]
-a = 0.605830
 
 # stiffness data
 [elasticity]
@@ -128,7 +113,6 @@ B	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
 C	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
 H	= (0.0000e+00 ,	0.0000e+00)	# [1]
 N0	= (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
-[]
 
 
 #Atomistic structure informations

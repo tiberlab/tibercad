@@ -2,13 +2,17 @@
 
 structure = wz
 
+[bandgap]
 Eg_G = 6.25;
-#E_v = -3.44;
-# from Nextnano
-E_v = -1.526;
 
 varshni_alpha_G = 1.799e-3
 varshni_beta_G =  1462
+
+
+[kdotp]
+#E_v = -3.44;
+# from Nextnano
+E_v = -1.526;
 
 m_c_xx = 0.3;
 m_c_zz = 0.32;
@@ -23,6 +27,7 @@ A6 = -1.64;
 delta_cr = -0.169;
 delta_s = 0.019;
 
+[deformation_potentials]
 a_z = -3.4;
 a_x = -11.8;
 
@@ -33,6 +38,7 @@ D4 = -3.9;
 D5 = -3.4;
 D6 = -3.4;
 
+[permittivity]
 permittivity = 8.67;
 
 

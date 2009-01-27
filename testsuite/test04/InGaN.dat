@@ -6,6 +6,7 @@ structure = wz
 comp_A = InN
 comp_B = GaN
 
+[bandgap]
 bow_Eg_G = 1.4
 bow_Eg_X = 0.69
 bow_Eg_L = 1.84

@@ -6,20 +6,21 @@ structure = zb
 
 [lattice]
 a = 0.54304
-[]
 
 
-#[misc]
+
+[permittivity]
 permittivity = 11.7
 
-
-#[kdotp]
+[bandgap]
 Eg_G = 3.385
 Eg_L = 1.635
 # 0 K
 #Eg_X = 1.165
 # 300 K
 Eg_X = 1.12
+
+[kdotp]
 E_v = 1.09
 
 delta = 0.044
@@ -36,7 +37,7 @@ gamma3 = 1.427
 
 
 
-#[deformation_potentials]
+[deformation_potentials]
 a_c = -10.44
 a_v = 2.05
 b = -2.1
@@ -95,8 +96,6 @@ gamma  = (1,		1)
 Talpha = (-1.5,		-1.5)
 Tcoeff = (2.55,		2.55)
 
-
-[]
 
 
 

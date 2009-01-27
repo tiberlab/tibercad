@@ -2,16 +2,12 @@
 
 structure = zb
 
+[bandgap]
 Eg_G = 3.385
 Eg_L = 1.635
 
 # T=0 K
 Eg_X = 1.165
-
-
-# T=300 K
-#Eg_X = 1.12
-E_v = 1.09
 
 varshni_alpha_G = 0.5367e-3
 varshni_beta_G =  745.8
@@ -24,6 +20,12 @@ varshni_beta_L = 745.8
 
 
 
+[kdotp]
+# T=300 K
+#Eg_X = 1.12
+E_v = 1.09
+
+
 delta = 0.044
 
 m_G = 0.156
@@ -32,20 +34,22 @@ m_L_l = 1.42
 m_X_t = 0.19
 m_X_l = 0.916
 
+gamma1 = 4.31
+gamma2 = 0.345
+gamma3 = 1.427
+
+[deformation_potentials]
 a_c = -10.44
 a_v = 2.05
 b = -2.1
 d = -4.85
-
-gamma1 = 4.31
-gamma2 = 0.345
-gamma3 = 1.427
 
 abs_def_pot_X = 3.35
 uniax_def_pot_X = 9.16
 abs_def_pot_L = -2.07
 uniax_def_pot_L = 16.14
 
+[permittivity]
 permittivity = 11.7
 
 # lattice constant
