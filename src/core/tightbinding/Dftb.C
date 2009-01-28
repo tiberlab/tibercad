@@ -42,7 +42,8 @@ Dftb::DftbOptions::DftbOptions(void)
 :iPeriodic(0),
 nAtom(0),
 nType(0),
-supersampling(false)
+supersampling(false),
+external_potential(false)
 {
   latVecs = new double[9];
   for (int i = 0; i < 9; i++) {latVecs[i] = 0.0;}
@@ -185,13 +186,18 @@ Dftb::do_init(void){
 
   std::cout << "up_coords" << std::endl;
 
-  // N.B. get_energy is anyway needed for the correct assembling of Hamiltonian,
-  // so it would run anyway
-  double energy = 0;
-  inst->get_energy(energy);
+  //Check for external potential
 
-  std::cout << "DFTB library computed a total system energy of: " << energy << std::endl;
+  if (get_options().get_option("potential_simulation", false))
+    {
+      std::string potential_sim_name = get_options().get_option("potential_simulation", "no_sim");
+      _potential_sim =  SimulationInterface::find_simulation(potential_sim_name);
 
+      if (_potential_sim == NULL)
+        throw InitFailedException("Unknown charge_density simulation: " +  potential_sim_name );
+      else
+        _potential_id = _potential_sim->get_variable_id("potential");
+    }
 }
 
 
@@ -204,7 +210,12 @@ void Dftb::do_solve(void){
 
 
 
+  // N.B. get_energy is anyway needed for the correct assembling of Hamiltonian,
+  // but for the SCC module it has to be in do_solve
+  double energy = 0;
+  inst->get_energy(energy);
 
+  std::cout << "DFTB library computed a total system energy of: " << energy << std::endl;
 
   //TODO: non so come funziona il settaggio delle grandezze da calcolare quando
   //queste siano richieste da altri e non siano prettamente dati di output
@@ -289,6 +300,9 @@ void Dftb::build_names(void){
       sk_name.append( _dftb_options.specieNameStrings[i]); sk_name.append("-");
       sk_name.append( _dftb_options.specieNameStrings[j]); sk_name.append(".skf");
 
+      //TODO:default local directory is used: to change
+      //sk_name = "SK/" + sk_name;
+
       if (i == j){
         file.open(sk_name.c_str());
         if ( !(file.is_open()) ) {std::cerr << "ERROR IN DFTB: COULD NOT FIND SK FILE "
@@ -317,10 +331,10 @@ void Dftb::build_names(void){
 
       }
 
-      if ( sk_name.size() > DFTBP_LC ) {std::cerr << "ERROR IN DFTB: SK FILENAME " << sk_name
+      if ( sk_name.size() > DFTBP_LC - 2) {std::cerr << "ERROR IN DFTB: SK FILENAME " << sk_name
         <<" IS TOO LONG " << std::endl;}
 
-      for (int str_i = 0; str_i <  DFTBP_LC - 1; str_i++){
+      for (int str_i = 0; str_i <  DFTBP_LC; str_i++){
         if (str_i < sk_name.size()) _dftb_options.skNames[str_i + counter * DFTBP_LC] = sk_name[str_i];
         else _dftb_options.skNames[str_i +  counter * DFTBP_LC] = DFTBP_PADCHAR;
       }
@@ -328,7 +342,6 @@ void Dftb::build_names(void){
     }
   }
   _dftb_options.skNames[n_files * DFTBP_LC - 1] = '\0';
-
 
   // SPECIES NAMES
   _dftb_options.specieNames = (char *) malloc( _atomistic_structure->get_N_types() * DFTBP_MC * sizeof(char));
@@ -604,5 +617,19 @@ Dftb::print_dftb_options(void)
 
 };
 
+
+double
+Dftb::get_v_shift(unsigned int n)
+{
+  double shift = 0.0;
+         if (_potential_sim == NULL)
+           {
+         throw InitFailedException("No potential simulation available but potential shift is invoked, return 0.0 shift" );
+       return 0.0;
+           }
+
+         return shift;
+
+}
 
 #endif // ENABLE_DFTB

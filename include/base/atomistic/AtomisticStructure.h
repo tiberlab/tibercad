@@ -33,6 +33,9 @@ public:
     //!Options destructor
     ~AtomisticStructureOptions(void);
 
+    //!Assignment operator
+    //AtomisticStructure& operator=(const AtomisticStructure &start);
+
     //! Tells if structure has been passivated
     bool is_passivated;
 

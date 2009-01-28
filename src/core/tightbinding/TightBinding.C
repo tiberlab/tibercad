@@ -210,9 +210,6 @@ void
 TightBinding::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
     const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
 {
-//std::cout << "looking for " << p.size() << " points" << std::endl;
-//std::cout << "ids.count(CHARGE) is " << ids.count(CHARGE) << std::endl;
-//std::cout << "ids size is " << ids.size() << std::endl;
   unsigned int np = p.size();
   values.resize(np);
 
@@ -221,9 +218,6 @@ TightBinding::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
       //std::cout << "p_size is " << p.size() << std::endl;
       for (unsigned int n = 0; n < p.size(); n++)
         {
-          //std::cout << " n is " << n << std::endl;
-          //std::cout << " p[n] is " << p[n] << std::endl;
-          //std::cout << " build_rho is " << build_rho(p[n]) << std::endl;
         values[n][CHARGE] = build_rho(p[n]);
         }
     }

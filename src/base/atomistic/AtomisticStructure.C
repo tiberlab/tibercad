@@ -77,6 +77,15 @@ AtomisticStructure::AtomisticStructureOptions::~AtomisticStructureOptions(void)
 }
 
 
+//Assignment operator
+//AtomisticStructure&
+//AtomisticStructure::operator=(const AtomisticStructure &start)
+//{
+//TODO: STILL TO BE IMPLEMENTED
+//  return *this;
+//}
+
+
 GetPot
 AtomisticStructure::getdata(const Material* mat)
 {

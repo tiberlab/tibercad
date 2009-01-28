@@ -46,6 +46,7 @@ public:
     bool supersampling;
     double* samplingcoeffs;
     double* samplingshift;
+    bool external_potential;
 
   };
 
@@ -98,6 +99,19 @@ private:
 
   //! Dftb instance associated to the simulation
   DftbpWrapper* inst;
+
+  //! Potential variable ID for external potential inclusion
+  ID _potential_id;
+
+  //! Simulation which provides external potential
+  SimulationInterface* _potential_sim;
+
+  //! Get potential shift on atom n
+  double get_v_shift(unsigned int n);
+
+  //! Build all potential shifts and put them into dftb
+  void build_v_shifts();
+
 
 protected:
 
