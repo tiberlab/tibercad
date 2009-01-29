@@ -421,45 +421,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
     set<ID> phys_regions;
     const string& physreg = simopts.get_option("physical_regions", "all");
-    if (physreg == "all")
-      phys_regions = _device->get_region_ids();
-    else
-    {
-      // we have to get it as vector (for the moment at least)
-      // we read them as strings as they could be region names
-      vector<string> preg;
-      simopts.get_option("physical_regions", preg);
-
-      vector<ID> preg_ids;
-
-      const set<ID>& regs = _device->get_region_ids();
-      const set<ID>::const_iterator id_end(regs.end());
-      unsigned int n = preg.size();
-      for (unsigned int i = 0; i < n; i++)
-      {
-        // first check if it is a region name
-        _device->get_region_ids(preg[i], preg_ids);
-        if (preg_ids.size() != 0)
-        {
-          for (unsigned int j = 0; j < preg_ids.size(); j++)
-            phys_regions.insert(preg_ids[j]);
-        }
-        else
-        {
-          // it has to be a region number
-          ID id = Utils::convert<ID>(preg[i]);
-
-          if (regs.find(id) == id_end)
-          {
-            ostringstream s;
-            s << "Physical region " << id <<
-              " does not exist in mesh file.";
-            throw InitFailedException(s.str());
-          }
-          phys_regions.insert(id);
-        }
-      }
-    }
+    extract_physical_regions(physreg, phys_regions);
 
 
     //
@@ -521,27 +483,6 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     if (!simulation_name.empty() && (simulation_name != modelname))
       physopts += parser.read_parameters("Physics", simulation_name);
 
-    // parse the submodels
-    // NOTE: different submodels could have the same identifier
-    {
-      multimap<const string, ModelOptions>& physmodels =
-        model_str->get_physical_model_map();
-
-      multimap<const string,
-        ModelOptions>::iterator it(physmodels.begin());
-      multimap<const string,
-        ModelOptions>::iterator end(physmodels.end());
-      for ( ; it != end; ++it)
-      {
-        // we set the name to the model type if not explicitly
-        // given by user
-        if (!(it->second).find_option("name"))
-          (it->second)["name"] = it->first;
-
-        physopts.add_submodel(it->first, it->second);
-      }
-    }
-
 
     // we have to do this for each material!
     set<ID>::iterator it(phys_regions.begin());
@@ -559,8 +500,49 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       }
 
 
+      ModelOptions opts(physopts);
+      //
+      // we parse the submodels for each region as they could be associated
+      // one-by-one
+      // NOTE: different submodels could have the same identifier
+      //
+      {
+        multimap<const string, ModelOptions>& physmodels =
+          model_str->get_physical_model_map();
+
+        multimap<const string,
+          ModelOptions>::iterator mapit(physmodels.begin());
+        multimap<const string,
+          ModelOptions>::iterator mapend(physmodels.end());
+        for ( ; mapit != mapend; ++mapit)
+        {
+          bool add = true;
+          // we have to check if it should be built for the current region
+          if ((mapit->second).find_option("restrict_to_region"))
+          {
+            set<ID> regs;
+            const string& physreg =
+              (mapit->second).get_option("restrict_to_region", "all");
+            extract_physical_regions(physreg, regs);
+            if (regs.count(*it) == 0) add = false;
+          }
+
+
+          if (add)
+          {
+            // we set the name to the model type if not explicitly
+            // given by user
+            if (!(mapit->second).find_option("name"))
+              (mapit->second)["name"] = mapit->first;
+
+            opts.add_submodel(mapit->first, mapit->second);
+          }
+        }
+      }
+
+
       // here we actually create the model
-      PhysicalModel* model = sim->create_physical_model(physopts, mat);
+      PhysicalModel* model = sim->create_physical_model(opts, mat);
 
       // NOTE: model could be NULL, but we don't care about. Who tells us that
       // every simulation necessarily needs a model?
@@ -579,7 +561,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
     for ( ; bdit != bdend; ++bdit)
     {
-      ID id = bdit->first;
+      //ID id = bdit->first;
       const RegionStructure& data = bdit->second;
 
       vector<ID> ids;
@@ -774,7 +756,55 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
 
 
-  void
+void
+Control::extract_physical_regions(const std::string& str, std::set<ID>& ids)
+{
+
+  if (str == "all")
+    ids = _device->get_region_ids();
+  else
+  {
+    // we have to get it as vector (for the moment at least)
+    // we read them as strings as they could be region names
+    vector<string> preg;
+    Utils::extract_vector(str, preg);
+
+    vector<ID> preg_ids;
+
+    const set<ID>& regs = _device->get_region_ids();
+    const set<ID>::const_iterator id_end(regs.end());
+    unsigned int n = preg.size();
+    for (unsigned int i = 0; i < n; i++)
+    {
+      // first check if it is a region name
+      _device->get_region_ids(preg[i], preg_ids);
+      if (preg_ids.size() != 0)
+      {
+        for (unsigned int j = 0; j < preg_ids.size(); j++)
+          ids.insert(preg_ids[j]);
+      }
+      else
+      {
+        // it has to be a region number
+        ID id = Utils::convert<ID>(preg[i]);
+
+        if (regs.find(id) == id_end)
+        {
+          ostringstream s;
+          s << "Physical region " << id <<
+            " does not exist in mesh file.";
+          throw InitFailedException(s.str());
+        }
+        ids.insert(id);
+      }
+    }
+  }
+}
+
+
+
+
+void
 Control::run_simulation(void) throw (SolveFailedException)
 {
 

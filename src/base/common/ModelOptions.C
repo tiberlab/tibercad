@@ -15,6 +15,12 @@ ModelOptions::ModelOptions(map<const string, string> options)
 }
 
 
+ModelOptions::ModelOptions(const ModelOptions& other)
+{
+  operator+=(other);
+}
+
+
 template <typename T>
 void
 ModelOptions::set_option(const string& name, const T& value)

@@ -39,6 +39,10 @@ class ModelOptions
     //! The default constructor
     ModelOptions(void) {};
 
+
+    //! The copy constructor
+    ModelOptions(const ModelOptions& other);
+
     
     //! Constructor which takes a map as argument
     ModelOptions(std::map<const std::string, std::string> options);

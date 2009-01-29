@@ -341,7 +341,8 @@ Each model-block can  contain some  optional blocks, to be written in the  follo
 	
    \item one    "`options"' block, preceded by the keyword \char`\"{}\textbf{options}\char`\"{}. This block can contain    general  options for the present  model.
 	\item  one or more  \textbf{physical\_model} blocks: each physical\_model block must be preceded by the keyword \char`\"{}\textbf{physical\_\-model}\char`\"{}, followed by the (single-word) name of the physical model.
-	Each physical\_model block can contain parameters  relevant to a specifical model of a physical property or quantity related to the present model.
+	Each physical\_model block can contain parameters  relevant to a specific model of a physical property or quantity related to the present model.
+
 \item    one or more  Boundary Condition regions blocks (\textbf{BC\_\-regions}-block).
    The BC\_\-regions-block must be preceded by the keyword \char`\"{}\textbf{BC\_\-Regions}\char`\"{} and it is composed by one or more parameters-blocks, each preceded by the keyword \char`\"{}\textbf{BC\_\-Region}\char`\"{} followed by the (single-word)  name of the boundary condition region. This parameters-block can contain the possible description of the boundary region.
 \end{itemize}
@@ -377,31 +378,18 @@ In a list, the names must be separated by comma  and  enclosed between '(' and '
 \subsection{physical\_model block }
 
 \begin{verbatim}
-    physical_model recombination
-    {
-      model = SRH
-    }
+physical_model recombination
+{
+  model = SRH
+}
 \end{verbatim}
 
 
-Some of the currently available physical\_models and parameters:
-
-\textbf{recombination}:
-
-\textit{model}:  SRH, direct, exciton\_generation,  exciton\_dissociation
-
-\textit{exciton\_simulation}: excitons
-
-
-\textbf{electron\_mobility}
-
-\textit{model}: doping\_dependent
-
-\textbf{hole\_mobility}
-
-\textit{model}: doping\_dependent
-
-For  more  details on  the  physical\_models  of a  particular simulation model,  see in the  following the chapter  referring to that model.    
+The following options can be applied to any physical\_model:
+\begin{description}
+  \item[name] a user defined name for the model for unique identification
+  \item[restrict\_to\_region] a single region name or a list of regions where the model should be used. This allows to use different implementation of the same type of model in different regions.
+\end{description}
 
 
 \subsection{BC\_region block }
@@ -477,8 +465,8 @@ driftdiffusion
 In this section one may  choose and define the  setting parameters for  the numerical solvers to be applied to the  specified  simulations: the section is organized in blocks, each one preceded by a block-name.
 This block-name may be 
 \begin{enumerate}
- \item the  name  of one of the  user-defined \textit{simulations}: in this case, the solver parameters defined in each block will refer only to that particular simulation.
-\item the  name  of   a \TiberCAD   \textbf{Model}: only in  this  case, the settings  will  be  applied  to  ALL the \textit{simulations} belonging to  that \textbf{Model}
+ \item the  name  of one of the  user-defined simulations: in this case, the solver parameters defined in each block will refer only to that particular simulation.
+\item the  name  of   a \TiberCAD   \textbf{Model}: only in  this  case, the settings  will  be  applied  to  \emph{all} the simulations belonging to  that \textbf{Model}
 \end{enumerate}
 For details on the available  parameters for each \textbf{Model} ,  see  the relevant  chapter in  this  Guide.
 
