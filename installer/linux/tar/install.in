@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 TIBERVER=@TIBERVERSION@
 
@@ -8,10 +8,11 @@ GMSH_VER=2.2.0
 
 
 
-function install_gmsh {
+install_gmsh ()
+{
 
   echo "Installing GMSH to ${instpath}/contrib/gmsh-$GMSH_VER"
-  cp -r contrib ${instpath}
+  install_files contrib ${instpath}
 
   here=`pwd`
 
@@ -19,7 +20,10 @@ function install_gmsh {
   mkdir -p ${instpath}/man/man.1
   cd ${instpath}/man/man.1 && ln -s ${instpath}/contrib/gmsh-$GMSH_VER/gmsh.1 gmsh.1
 
-  find ${instpath}/contrib -type f >> ${instpath}/files.lst
+  echo "- ${instpath}/bin/gmsh" >> ${instpath}/files.lst
+  echo "- ${instpath}/man/man.1/gmsh.1" >> ${instpath}/files.lst
+  echo "- ${instpath}/man/man.1" >> ${instpath}/files.lst
+
 
   echo ""
   echo "Create a link to gmsh in "
@@ -60,6 +64,52 @@ function install_gmsh {
 }
 
 
+backup_files ()
+{
+  src=$1
+  dst=$2
+
+  for file in `find $src -type f`
+  do
+    [ -e ${dst}/$file ] || continue
+
+    md5=`md5sum ${dst}/$file | awk '{print $1}'`
+    md5orig=`grep "${dst}/$file" ${dst}/files.lst | awk '{print $1}'`
+    if [ $md5 != $md5orig ]
+    then
+      cp ${dst}/$file ${dst}/${file}.old
+    fi
+  done
+}
+
+
+install_files ()
+{
+  src=$1
+  dst=$2
+
+  empty=1
+
+  for file in `find $src -type f`
+  do
+    mode=0644
+    [ -x $file ] && mode=0755
+    install -p -D --mode=$mode $file ${dst}/$file
+
+    md5sum ${dst}/$file >> ${dst}/files.lst
+    empty=0
+  done
+
+  for d in `find $src -type d`
+  do
+    echo "- $d" >> ${dst}/files.lst
+  done
+
+  [ $empty -eq 1 ] && mkdir -p ${dst}
+
+}
+
+
 
 #################################################################################
 #
@@ -78,6 +128,16 @@ read instpath
 echo ""
 
 [ -z $instpath ] && instpath=/usr/local/tibercad-$TIBERVER
+
+echo -n "I will install to $instpath. Is this what you want? [Y/n]"
+read -e answer
+
+[ -z $answer ] && answer='y'
+case $answer in
+  n|no|N|No|NO) exit 0 ;;
+  *) ;;
+esac
+
 
 # try to create directory
 if [ -f $instpath ]
@@ -108,28 +168,54 @@ rmdir  $instpath/tibertestdir
 
 
 echo "Starting installation to $instpath"
+echo ""
 
 # check if dir is empty
 content=`ls -A $instpath`
 if [ ! -z "$content" ]
 then
-  echo -n "Installation directory is not empty. Do you really want to proceed [n]? "
+  if [ -x $instpath/bin/tibercad ]
+  then
+    echo "You seem to have TiberCAD already installed in this directory."
+    echo "A backup copy will be made of each file you modified."
+  else
+    echo "Installation directory is not empty. It is strongly recommended to"
+    echo "install TiberCAD into its own directory."
+  fi
+  echo -n "Do you really want to proceed [y/N]? "
   read -e answer
 
   [ -z $answer ] && answer='n'
   case $answer in
-    n|no) exit 0 ;;
+    n|no|N|No|NO) exit 0 ;;
     *) ;;
   esac
 fi
 
 
 
-cp -r bin materials examples license $ARCH doc share $instpath
+if [ -e ${instpath}/files.lst ]
+then
+  backup_files bin $instpath
+  backup_files materials $instpath
+  backup_files examples $instpath
+  backup_files license $instpath
+  backup_files $ARCH $instpath
+  backup_files doc $instpath
+  backup_files share $instpath
+  mv ${instpath}/files.lst ${instpath}/files.lst.old
+fi
 
-#pathstring=`echo "$instpath" | sed -e 's/\//\\\\\//g'`
-#sed -e "s/<INSTALLDIR>/$pathstring/g" ${instpath}/bin/tibercad.sh > ${instpath}/bin/tibercad.sh.tmp
-#mv -f ${instpath}/bin/tibercad.sh.tmp ${instpath}/bin/tibercad.sh
+install_files bin $instpath
+install_files materials $instpath
+install_files examples $instpath
+install_files license $instpath
+install_files $ARCH $instpath
+install_files doc $instpath
+install_files share $instpath
+
+
+[ -d ${instpath}/bin ] || mkdir -p ${instpath}/bin
 
 cat > ${instpath}/bin/TiberCAD.sh <<EOF
 #!/bin/sh
@@ -196,23 +282,55 @@ here=`pwd`
 cd ${instpath}/bin && ln -s TiberCAD.sh tibercad
 cd $here
 
+echo "- ${instpath}/bin/tibercad" >> ${instpath}/files.lst
+echo "- ${instpath}/bin/TiberCAD.sh" >> ${instpath}/files.lst
 
-touch ${instpath}/files.lst
-find ${instpath} -type f > ${instpath}/files.lst
 
 cat > ${instpath}/bin/uninstall <<EOF
 #!/bin/sh
 
 instpath=${instpath}
 
-echo -n "Do you really want to uninstall TiberCAD ver. $TIBERVER and all of its components [n]? "
+echo -n "Do you really want to uninstall TiberCAD ver. $TIBERVER and all of its components [y/N]? "
 read answer
 [ -z \$answer ] && answer='n'
 case \$answer in
-  y|yes)
-    rm -f \`cat \${instpath}/files.lst\`
+  y|yes|Y|YES|Yes)
+    cd \${instpath}
+    exec<\${instpath}/files.lst
+    while read line
+    do
+      md5=\`echo \$line | awk '{print \$1}'\`
+      file=\`echo \$line | awk '{print \$2}'\`
+      if [[ -f \$file ]]
+      then
+        md5new=\`md5sum \$file | awk '{print \$1}'\`
+        if [[ \$md5 == \$md5new || \$md5 == "-" ]]
+        then
+          rm -f \$file
+        fi
+      elif [[ -L \$file ]]
+      then
+        rm -f \$file
+      else
+        directory=\`echo \$file | sed 's/\${instpath}\///'\`
+        rmdir -p \$directory >& /dev/null
+      fi
+    done
     rm -f \${instpath}/bin/uninstall
-    rm -r \${instpath}
+    rm -f \${instpath}/files.lst
+    cd ..
+    rmdir -p \${instpath}/bin >& /dev/null
+
+    if [[ -d \${instpath} ]]
+    then
+      echo ""
+      echo "I could not delete all directories due to presence of modified or added files."
+      echo "You have to manually clean up \${instpath}."
+      echo ""
+    fi
+
+    echo "TiberCAD version ${TIBERVER} has been removed from your system."
     ;;
 
   *) ;;
@@ -246,11 +364,10 @@ then
     target=`ls -l tibercad | awk -F '>' '{print $2}' | grep "${instpath}"`
     if [ -z $target ]
     then
-      echo "You have already a link to another TiberCAD installation. I will skip and not create the link."
+      echo "You have already a link to another TiberCAD installation. I will delete the other link!"
       echo ""
-    else
-      rm -f tibercad
     fi
+    rm -f tibercad
   fi
     
   if [ ! -e tibercad ]
@@ -287,11 +404,11 @@ fi
 
 
 echo ""
-echo -n "Do you want to install GMSH version $GMSH_VER [y]? "
+echo -n "Do you want to install GMSH version $GMSH_VER [Y/n]? "
 read answer
 [ -z $answer ] && answer='y'
 case $answer in
-  y|yes) install_gmsh ;;
+  y|yes|Y|Yes|YES) install_gmsh ;;
   *) ;;
 esac
 
