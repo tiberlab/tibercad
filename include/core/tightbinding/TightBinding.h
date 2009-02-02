@@ -11,6 +11,7 @@
 class Device;
 class Mesh;
 class DftbpWrapper;
+class UptWrapper;
 
 //!Main class for Atomistic Tight Binding simulation at equilibrium
 //! DFTB code is used for simulations

@@ -40,20 +40,20 @@ public:
    * char(UPT_MC) gen_filename : gen filename to read structure
    * char(UPT_MC) gen_outname  : output name 
    * int max_n_n               : max n.n. order (only 1 works now)
-   * int harrison_flag         : harrison scaling       (1 = true)
-   * int relat_flag            : relativistic spin orbit
-   * int potential_flag        : add external potential (1 = true)
-   * int optmat_flag           : compute optical matrix (1 = true) 
+   * bool harrison_flag        : harrison scaling      
+   * bool relat_flag           : relativistic spin orbit
+   * bool potential_flag       : add external potential
+   * bool optmat_flag          : compute optical matrix
    * int poldir                : polarized light x = 1, y = 2, z = 3 
    */
   void fill_param (int verbose_lev, char *databasePath, char *workPath, 
                    char *gen_filename, char *gen_outname, int max_n_n, 
-                   int harrison_flag, int relat_flag, int potential_flag, 
-		   int optmat_flag, int poldir);
+                   bool harrison_flag, bool relat_flag, bool potential_flag, 
+		   bool optmat_flag, int poldir, double *c_axis);
 
 
   //!Initialize the Upt instance
-  void inituptight ();
+  void inituptight();
 
 
   //!Get UPTIGHT instance handler

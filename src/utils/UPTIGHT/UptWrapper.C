@@ -32,13 +32,24 @@ UptWrapper* UptWrapper::create()
 //!Assign simulation parameters to UPT instance
 void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath,
                              char *gen_filename, char *gen_outname, int max_n_n,
-                             int harrison_flag, int relat_flag, int potential_flag,
-                             int optmat_flag, int poldir) {
+                             bool harrison, bool relat, bool potential,
+                             bool optmat, int poldir, double *c_axis) {
+
+  int harrison_flag, relat_flag, potential_flag, optmat_flag;
+  
+  harrison_flag=0;
+  if(harrison){harrison_flag=1;}
+  relat_flag=0;
+  if(relat){relat_flag=1;}
+  potential_flag=0;
+  if(potential){potential_flag=1;}
+  optmat_flag=0;
+  if(optmat){optmat_flag=1;}
 
   f77_upt_fillbasicparameters(_handler, verbose_lev, databasePath, workPath, gen_filename,
                                 gen_outname, max_n_n, harrison_flag, relat_flag,
-                                potential_flag, optmat_flag, poldir);
-
+                                potential_flag, optmat_flag, poldir, c_axis[0], c_axis[1],
+			        c_axis[2]);
 
 }
 

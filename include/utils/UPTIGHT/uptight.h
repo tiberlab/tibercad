@@ -58,7 +58,7 @@ inline void f77_upt_destructsession (f77_int* handler)
 extern "C" void upt_fillbasicparameters_ (f77_int const*, f77_int const&, 
     f77_char const*, f77_char const*, f77_char const*, f77_char const*, f77_int 
     const&, f77_int const&, f77_int const&, f77_int const&, f77_int const&, 
-    f77_int const&);
+    f77_int const&, f77_double const&, f77_double const&, f77_double const&);
 
 // Corresponding F77 arguments for f77_upt_fillbasicparameters:
 // integer, intent(in) :: handler(DAC_handlerSize)
@@ -73,15 +73,20 @@ extern "C" void upt_fillbasicparameters_ (f77_int const*, f77_int const&,
 // integer, intent(in) :: potential_flag
 // integer, intent(in) :: optmat_flag
 // integer, intent(in) :: poldir
+// real(dp), intent(in) :: c_axis_x
+// real(dp), intent(in) :: c_axis_y
+// real(dp), intent(in) :: c_axis_z
 inline void f77_upt_fillbasicparameters (f77_int const* handler, f77_int const& 
     verbose_lev, f77_char const* databasePath, f77_char const* workPath, 
     f77_char const* gen_filename, f77_char const* gen_outname, f77_int const& 
     max_n_n, f77_int const& harrison_flag, f77_int const& relat_flag, f77_int 
-    const& potential_flag, f77_int const& optmat_flag, f77_int const& poldir)
+    const& potential_flag, f77_int const& optmat_flag, f77_int const& poldir, 
+    f77_double const& c_axis_x, f77_double const& c_axis_y, f77_double const& 
+    c_axis_z)
 {
   upt_fillbasicparameters_ (handler, verbose_lev, databasePath, workPath, 
       gen_filename, gen_outname, max_n_n, harrison_flag, relat_flag, 
-      potential_flag, optmat_flag, poldir);
+      potential_flag, optmat_flag, poldir, c_axis_x, c_axis_y, c_axis_z);
 }
 
 

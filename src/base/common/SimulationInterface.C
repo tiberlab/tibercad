@@ -141,7 +141,7 @@ SimulationInterface::create(const string& type,
 #endif
 #ifdef ENABLE_UPTIGHT
     else if (type_name == "etb")
-      sim = EmpiricalTightBinding::create();
+      sim = ETB::create();
 #endif
     else if (type_name == "opticalspectrum")
       sim = OptRecombinSpectrum::create();
