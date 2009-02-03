@@ -6,6 +6,11 @@
 BINSTALLMAKER = @BINSTALLMAKER@
 
 
+.PHONY: linux
+linuxinstaller:
+	@echo "Preparing self extractable installer package ..."
+	@./prepare_files.sh linux
+
 .PHONY: wininstaller
 wininstaller: 
 	@echo "Preparing Windows installer package ..."
@@ -19,10 +24,10 @@ deb:
 	@echo "Preparing debian package ..."
 	@./prepare_files.sh linux deb
 
-.PHONY: tgz
-tgz:
-	@echo "Preparing .tar.gz package ..."
-	@./prepare_files.sh linux tgz
+#.PHONY: tgz
+#tgz:
+#	@echo "Preparing .tar.gz package ..."
+#	@./prepare_files.sh linux tgz
 
 .PHONY: tbz
 tbz:

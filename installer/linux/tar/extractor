@@ -1,0 +1,29 @@
+#!/bin/bash
+
+echo ""
+echo "Self Extracting Installer for TiberCAD"
+echo ""
+
+AWK=`which awk`
+[[ $? == 0 ]] || { echo "awk is needed but does not seem to be installed."; exit 1; }
+
+TAR=`which tar`
+[[ $? == 0 ]] || { echo "tar is needed but does not seem to be installed."; exit 1; }
+
+
+export TMPDIR=`mktemp -d /tmp/tibercad.XXXXXX`
+
+ARCHIVE=`$AWK '/^__ARCHIVE_BEGIN__/ {print NR + 1; exit 0; }' $0`
+
+tail -n+$ARCHIVE $0 | $TAR xz -C $TMPDIR
+
+CDIR=`pwd`
+cd $TMPDIR
+./install
+
+cd $CDIR
+rm -rf $TMPDIR
+
+exit 0
+
+__ARCHIVE_BEGIN__

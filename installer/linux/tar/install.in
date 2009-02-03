@@ -56,7 +56,7 @@ install_gmsh ()
     else
       rm -f gmsh
       ln -s ${instpath}/bin/gmsh gmsh
-      echo "$bindir/gmsh" >> ${instpath}/files.lst
+      echo "- $bindir/gmsh" >> ${instpath}/files.lst
     fi
   fi
 
@@ -373,7 +373,7 @@ then
   if [ ! -e tibercad ]
   then
     ln -s ${instpath}/bin/tibercad tibercad
-    echo "$bindir/tibercad" >> ${instpath}/files.lst
+    echo "- $bindir/tibercad" >> ${instpath}/files.lst
   else
     echo -n "You have already an executable named tibercad. I will skip and not create the link."
     echo ""

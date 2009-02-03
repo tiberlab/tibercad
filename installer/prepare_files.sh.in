@@ -117,7 +117,10 @@ prepare_linux_package () {
   chmod -R a+r ${files}
   find ${files} -type d -exec chmod a+x {} \;
 
-  su -c "chown -R 0:0 ${files} && tar $MODE $ARCHIVE $files && chmod a+w $ARCHIVE && rm -rf $files"
+  CWDIR=`pwd`
+  cd ${files}
+  tar --group 0 --owner 0 $MODE $ARCHIVE * && rm -rf $files
+  cd $CWDIR
 
   return
 }
@@ -261,6 +264,7 @@ EOF
 
 topdir=@abs_top_builddir@
 version=`cat $topdir/VERSION`
+installerdir=$topdir/installer
 
 test $# -ge 1 || exit 1
 
@@ -288,18 +292,27 @@ case $1 in
       tgz )
         files=$name
         echo "Creating linux/${name}.tar.gz ..."
-        ARCHIVE=linux/${name}.tar.gz
-        MODE=zcf
+        ARCHIVE=$installerdir/linux/${name}.tar.gz
+        MODE=-zcf
+        prepare_linux_package
+        ;;
+
+      tbz )
+        files=$name
+        echo "Creating linux/${name}.tar.bz2 ..."
+        ARCHIVE=$installerdir/linux/${name}.tar.bz2
+        MODE=-jcf
         prepare_linux_package
         ;;
 
       * )
         files=$name
-        echo "Creating linux/${name}.tar.bz2 ..."
-        ARCHIVE=linux/${name}.tar.bz2
-        MODE=jcf
+        echo "Creating linux/${name}.tar.gz ..."
+        ARCHIVE=$installerdir/linux/${name}.tar.gz
+        MODE=-zcf
         prepare_linux_package
-        ;;
+        cat linux/tar/extractor linux/${name}.tar.gz > linux/${name}_installer.bin
+        chmod 0755 linux/${name}_installer.bin
     esac
 
   } ;;
