@@ -17,6 +17,12 @@ class Database
     //! Set the search path for the material files
     void set_search_path(const std::string& path);
 
+    //! Get the search path for material files
+    const std::string& get_search_path(void) const;
+
+    //! Set the system wide default search path
+    static void set_default_search_path(const std::string& path);
+
     //! Set the material
     /*!
      * \param material the name of the material
@@ -101,6 +107,9 @@ class Database
 
     //! The search path for the material files
     std::string _path;
+
+    //! The default search path
+    static std::string _default_path;
 
     //! The name of the material currently processed
     std::string _material;

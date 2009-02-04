@@ -2,7 +2,6 @@
 
 #include "Database.h"
 #include "Utils.h"
-#include "TiberCad.h"
 #include "DatabaseException.h"
 
 #include "getpot.h"
@@ -14,6 +13,8 @@
 #include <sstream>
 
 
+std::string
+Database::_default_path = "";
 
 
 void
@@ -109,6 +110,31 @@ Database::set_search_path(const std::string& path)
 }
 
 
+const std::string&
+Database::get_search_path(void) const
+{
+  if (_path.size() != 0) return _path;
+
+  return _default_path;
+}
+
+
+void
+Database::set_default_search_path(const std::string& path)
+{
+  if (path.size() > 0)
+  {
+    boost::filesystem::path p(path, boost::filesystem::native);
+    if (!boost::filesystem::exists(p) || !boost::filesystem::is_directory(p))
+    {
+      std::string msg("\'");
+      msg += path + "\' is not a valid directory for default searchpath";
+      throw DatabaseException(msg);
+    }
+  }
+
+  _default_path = path;
+}
 
 
 const std::string
@@ -119,9 +145,9 @@ Database::get_data_file(const std::string& material) const
 
   if ((_path.size() == 0) || !check_data_file(s))
   {
-    s = TiberCad::tiberroot + "/materials/" + material + ".dat";
+    s = _default_path + "/" + material + ".dat";
 
-    if ((TiberCad::tiberroot.size() == 0) || (!check_data_file(s)))
+    if ((_default_path.size() == 0) || (!check_data_file(s)))
     {
       std::string msg("Cannot find material data file ");
       msg += material + ".dat";
