@@ -3,13 +3,15 @@
 #include "MaterialInterface.h"
 #include "Constants.h"
 #include "DriftDiffusionProperties.h"
+#include "RecombinationModelInterface.h"
 
 
 
 MaterialInterface::MaterialInterface(void)
   : _Ns(0.0),
     _Es(-1.0),
-    _g_factor(2.0)
+    _g_factor(2.0),
+    _srec(NULL)
 {
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::NEUMANN);
   set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::NEUMANN);

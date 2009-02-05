@@ -67,6 +67,7 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     _hTEpowerGrad(0.0),
     _pyropolarization(NULL),
     _polarization(3, 0.0),
+    _user_defined_polarization(NULL),
     _thermoelectric_power(NULL),
     _is_dielectric(false),
     _relax_polariz(1.0)
@@ -189,10 +190,23 @@ DriftDiffusionProperties::do_init(void)
   _pyropolarization->set_simulator_id(get_simulator_id());
   _pyropolarization->init();  
 
-  // TODO read pyropolarization from input
-  //pyro_polarization(0) = get_parameter("Px", pyro_polarization(0));
-  //pyro_polarization(1) = get_parameter("Py", pyro_polarization(1));
-  //pyro_polarization(2) = get_parameter("Pz", pyro_polarization(2));
+  // read polarization from input
+  if (has_parameter("polarization"))
+  {
+    _user_defined_polarization = new RealGradient(0);
+    vector<double> pol(3, 0.0);
+    get_parameter("polarization", pol);
+    switch (pol.size())
+    {
+      case 3:
+        (*_user_defined_polarization)(2) = pol[2];
+      case 2:
+        (*_user_defined_polarization)(1) = pol[1];
+      default:
+        (*_user_defined_polarization)(0) = pol[0];
+        break;
+    }
+  }
 
 
   if (!is_dielectric())
@@ -377,6 +391,26 @@ DriftDiffusionProperties::do_init_alloy(const PhysicalModelInterface* comp_A,
       scB->_pyropolarization, xa);
 
 
+  // read polarization from input
+  if (has_parameter("polarization"))
+  {
+    _user_defined_polarization = new RealGradient(0);
+    vector<double> pol(3, 0.0);
+    get_parameter("polarization", pol);
+    switch (pol.size())
+    {
+      case 3:
+        (*_user_defined_polarization)(2) = pol[2];
+      case 2:
+        (*_user_defined_polarization)(1) = pol[1];
+      default:
+        (*_user_defined_polarization)(0) = pol[0];
+        break;
+    }
+  }
+
+
+
   if (scA->_thermoelectric_power != NULL)
   {
     assert(scB->_thermoelectric_power != NULL);
@@ -499,13 +533,20 @@ DriftDiffusionProperties::reinit(const Elem* elem)
       _lattice_temp.get_temperature(elem, elem->centroid());
 
     _strain_if.get_strain_data(elem, _strain, _polarization);
-    
-    // pyropolarization is Tensor1
-    _pyropolarization->calculate_polarization(_elem, _coord, _lattice_vt);
-    _polarization(0) += _pyropolarization->get_polarization()(1);
-    _polarization(1) += _pyropolarization->get_polarization()(2);
-    _polarization(2) += _pyropolarization->get_polarization()(3);
-    _polarization *= _relax_polariz;
+
+
+    if (_user_defined_polarization != NULL)
+      set_polarization(*_user_defined_polarization);
+    else
+    {
+      // pyropolarization is Tensor1
+      _pyropolarization->calculate_polarization(_elem, _coord, _lattice_vt);
+      _polarization(0) += _pyropolarization->get_polarization()(1);
+      _polarization(1) += _pyropolarization->get_polarization()(2);
+      _polarization(2) += _pyropolarization->get_polarization()(3);
+      set_polarization(_polarization);
+    }
+
     this->prepare_element_data();
   }
 

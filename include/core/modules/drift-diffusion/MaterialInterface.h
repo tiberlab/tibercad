@@ -6,6 +6,7 @@
 
 #include "ElectricalContact.h"
 
+class RecombinationModelInterface;
 
 //! A simple class to impose a charge density on a surface
 /*!
@@ -51,6 +52,9 @@ class MaterialInterface : public ElectricalContact
 
     //! Multiplicity
     double _g_factor;
+
+    //! Surface recombination
+    RecombinationModelInterface* _srec;
 
 };
 

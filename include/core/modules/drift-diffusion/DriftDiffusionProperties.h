@@ -913,6 +913,10 @@ class DriftDiffusionProperties : public PhysicalModel, public Variable
     RealVectorValue _polarization;
 
 
+    //! A user defined polarization
+    RealVectorValue* _user_defined_polarization;
+
+
     //! An iterator for the recombination models
     typedef std::map<ID, RecombinationModelInterface*>::iterator
       recomb_iterator;
