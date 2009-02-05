@@ -838,6 +838,14 @@
    /**
 --- include/base/getpot.h.orig	2008-10-24 07:42:26.175053289 +0200
 +++ include/base/getpot.h	2008-10-24 07:55:29.663296624 +0200
+@@ -259,6 +259,7 @@
+   inline void               __skip_whitespace(std::istream& istr);
+   inline const std::string  __get_next_token(std::istream& istr);
+   inline const std::string  __get_string(std::istream& istr);
++  inline const std::string  __get_until_closing_brace(std::istream& istr);
+   inline const std::string  __get_until_closing_bracket(std::istream& istr);
+ 
+   inline std::vector<std::string> __read_in_stream(std::istream& istr);
 @@ -543,10 +543,17 @@
      // found a non whitespace 
      if( tmp == '#' ) {
@@ -866,14 +874,6 @@
        return token;
      }
      else if( tmp == '\'' && last_letter != '\\' ) {
-@@ -259,6 +259,7 @@
-   inline void               __skip_whitespace(std::istream& istr);
-   inline const std::string  __get_next_token(std::istream& istr);
-   inline const std::string  __get_string(std::istream& istr);
-+  inline const std::string  __get_until_closing_brace(std::istream& istr);
-   inline const std::string  __get_until_closing_bracket(std::istream& istr);
- 
-   inline std::vector<std::string> __read_in_stream(std::istream& istr);
 @@ -577,6 +578,11 @@
        token += __get_string(istr);
        continue;

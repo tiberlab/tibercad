@@ -14,11 +14,4 @@ DEBUG=n
 # architecture
 ARCH=cygwin
 
-#v=4.1.1
-#export CC=gcc-$v CXX=g++-$v F77=gfortran-$v F90=$F77 FC=$F77
-#export CC=gcc-$v CXX=g++-$v F77=g95-0.50 F90=g95-0.50
-#export F77=g95-0.91 F90=g95-0.91 FC=g95-0.91
-
-#export MPICH_F90=$F90
-#export MPICH_F77=$F77
-#export MPIDIR=/usr/pack/mpich-1.2.7p1-ma
+OTHEROPTS=--with-boost-regex-lib=/usr/lib/libboost_regex-gcc-mt.a --with-boost-filesystem-lib=/usr/lib/libboost_filesystem-gcc-mt.a 

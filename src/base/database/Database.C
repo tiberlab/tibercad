@@ -13,8 +13,15 @@
 #include <sstream>
 
 
+
 std::string
 Database::_default_path = "";
+
+
+Database::~Database(void)
+{
+  delete _file;
+}
 
 
 void
@@ -29,8 +36,9 @@ Database::set_material(const std::string& material,
   {
     _material = material;
     _datafile = df;
-
-    _file = GetPot(_datafile);
+ 
+    delete _file;
+    _file = new GetPot(_datafile);
   }
 }
 
@@ -40,9 +48,9 @@ Database::set_section(const std::string& section)
 {
   _section = section;
   if (_section.size() != 0)
-    _file.set_prefix(_section + "/");
+    _file->set_prefix(_section + "/");
   else
-    _file.set_prefix("");
+    _file->set_prefix("");
 }
 
 
@@ -50,7 +58,7 @@ Database::set_section(const std::string& section)
 bool
 Database::is_alloy(const std::string& name) const
 {
-  if (_file.have_variable("alloy"))
+  if (_file->have_variable("alloy"))
     return true;
 
   return false;
@@ -63,8 +71,8 @@ Database::get_alloy_components(const std::string& alloy,
     std::string& comp_A, std::string& comp_B)
 {
   set_material(alloy);
-  comp_A = _file("comp_A", "");
-  comp_B = _file("comp_B", "");
+  comp_A = (*_file)("comp_A", "");
+  comp_B = (*_file)("comp_B", "");
 }
 
 
@@ -73,8 +81,8 @@ void
 Database::get_alloy_components(std::string& comp_A,
     std::string& comp_B) const
 {
-  comp_A = _file("comp_A", "");
-  comp_B = _file("comp_B", "");
+  comp_A = (*_file)("comp_A", "");
+  comp_B = (*_file)("comp_B", "");
 }
 
 
@@ -240,9 +248,61 @@ Database::get(const std::string& variable,
 
 
 
+bool
+Database::has_variable(const std::string& variable) const
+{
+  return _file->have_variable(variable.c_str());
+}
+
+
+
+std::string
+Database::get(const std::string& variable,
+    const std::string& default_value, bool required) const
+{
+  if (required) require_variable(variable);
+  return (*_file)(variable.c_str(), default_value);
+}
+
+
+std::string
+Database::get(const std::string& variable,
+    const char* default_value, bool required) const
+{
+  if (required) require_variable(variable);
+  return (*_file)(variable.c_str(), std::string(default_value));
+}
+
+
+
+template <typename T>
+T
+Database::get(const std::string& variable, T default_value,
+    bool required) const
+{
+  if (required) require_variable(variable);
+  return (*_file)(variable.c_str(), default_value);
+}
+
+
+
 
 
 // explicit instantiations
+
+template
+double Database::get(const std::string&, double, bool) const;
+
+template
+int Database::get(const std::string&, int, bool) const;
+
+template
+bool Database::get(const std::string&, bool, bool) const;
+
+template
+const char* Database::get(const std::string&, const char*, bool) const;
+
+
 template
 void Database::get(const std::string&, std::vector<double>&, bool) const;
 

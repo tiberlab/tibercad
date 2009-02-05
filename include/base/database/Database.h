@@ -3,8 +3,10 @@
 #ifndef _DATABASE_H_
 #define _DATABASE_H_
 
-#include "getpot.h"
 #include <string>
+#include <vector>
+
+class GetPot;
 
 class Database
 {
@@ -13,6 +15,9 @@ class Database
 
     //! Constructor
     Database(void);
+
+    //! Destructor
+    ~Database(void);
 
     //! Set the search path for the material files
     void set_search_path(const std::string& path);
@@ -121,7 +126,7 @@ class Database
     std::string _datafile;
 
     //! The file parser
-    GetPot _file;
+    GetPot* _file;
 
     //! Check the data file
     bool check_data_file(const std::string& name) const;
@@ -144,9 +149,11 @@ Database::Database(void)
   : _path(""),
     _material(""),
     _section(""),
-    _datafile("")
+    _datafile(""),
+    _file(NULL)
 {
 }
+
 
 inline
 const std::string&
@@ -162,48 +169,6 @@ Database::get_section(void) const
 {
   return _section;
 }
-
-
-inline
-bool
-Database::has_variable(const std::string& variable) const
-{
-  return _file.have_variable(variable.c_str());
-}
-
-
-
-inline
-std::string
-Database::get(const std::string& variable,
-    const std::string& default_value, bool required) const
-{
-  if (required) require_variable(variable);
-  return _file(variable.c_str(), default_value);
-}
-
-
-inline
-std::string
-Database::get(const std::string& variable,
-    const char* default_value, bool required) const
-{
-  if (required) require_variable(variable);
-  return _file(variable.c_str(), std::string(default_value));
-}
-
-
-
-template <typename T>
-inline
-T
-Database::get(const std::string& variable, T default_value,
-    bool required) const
-{
-  if (required) require_variable(variable);
-  return _file(variable.c_str(), default_value);
-}
-
 
 
 #endif // _DATABASE_H_

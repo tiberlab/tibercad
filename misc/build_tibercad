@@ -15,12 +15,13 @@ cd ../
 
 ./configure \
   --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL} \
-  --with-petsc-arch=linux-gnu-complex \
+  --with-petsc-arch=${ARCH}-complex \
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION} \
   --disable-modules \
   --disable-pardiso \
   --disable-dftb \
   --disable-hetero \
+  $OTHEROPTS \
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}
 
 #  --with-boost-prefix=/usr/pack/boost-1.33.1-ma \
