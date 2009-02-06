@@ -1319,7 +1319,7 @@ inline
 void
 DriftDiffusionProperties::set_polarization(const RealVectorValue& polarization)
 {
-  _polarization += _relax_polariz * polarization;
+  _polarization = _relax_polariz * polarization;
 }
 
 

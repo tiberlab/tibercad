@@ -117,8 +117,6 @@ SemiconductorModel::prepare_element_data(void)
     {
       const ElementData& elem_data = it->second;
 
-      //set_polarization(elem_data.polarization);
-
       get_conduction_band().band_edge = elem_data.Ec; 
       get_conduction_band().effective_mass = elem_data.mc; 
       get_valence_band().band_edge = elem_data.Ev; 
