@@ -31,7 +31,7 @@ void WzStiffness::set_moduli(double c11, double c12, double c13, double c33, dou
   C_cr(3,3,2,2) = c13;
   C_cr(2,1,2,1) = c44;
   C_cr(3,1,3,1) = c44;
-  C_cr(3,2,3,2) = c44;
+  C_cr(3,2,3,2) = 0.5*(c11-c12);
 
   C_calc = C_cr;
 
