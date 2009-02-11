@@ -2,7 +2,6 @@
 #define _DFTB_H_
 
 //---------------------------------------------------------------------
-
 #include "TightBinding.h"
 #include "AtomisticStructure.h"
 #include "SimulationEnvironment.h"
@@ -66,6 +65,8 @@ public:
   //! Create object
   static Dftb* create();
 
+  virtual PhysicalModel* create_physical_model(const ModelOptions &options,
+      const Material* mat) const throw (ModelErrorException);
 
 private:
 

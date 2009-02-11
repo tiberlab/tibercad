@@ -8,7 +8,7 @@
 #include "BoundaryProperties.h"
 #include "PhysicalModel.h"
 #include "SimulationOptions.h"
-#include "TightBindingModel.h"
+#include "EtbModel.h"
 #include "SimulationOptions.h"
 #include "UptWrapper.h"
 #include "uptight.h"
@@ -79,6 +79,22 @@ ETB::UptSolverOptions::~UptSolverOptions(void)
 {
    
 };
+
+//-------------------------------------------------------------------------
+PhysicalModel*
+ETB::create_physical_model (const ModelOptions &options,
+			     const Material* mat) const throw (ModelErrorException)
+{
+  
+      ETBModel* model = dynamic_cast<ETBModel*> ( PhysicalModelInterface::create("etb",options) );
+      
+      if (model == NULL)
+        throw ModelErrorException("TightBinding: ETB physical model is not created" );
+      
+      return model;
+      
+}
+
 	
 //-------------------------------------------------------------------------
 void

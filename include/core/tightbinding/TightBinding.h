@@ -43,9 +43,6 @@ public:
   //! Create TightBinding object
   static TightBinding* create();
 
-  virtual PhysicalModel* create_physical_model(const ModelOptions &options,
-      const Material* mat) const throw (ModelErrorException);
-
   virtual BoundaryProperties* create_boundary_model(const ModelOptions &options) const
   throw (ModelErrorException);
 
@@ -59,8 +56,7 @@ public:
 
   //! Order the solution in correct mode
   virtual void build_elemental_results(const std::set<std::string>& variables,
-      std::vector<double>& results,
-      std::vector<std::string>& legend);
+      std::vector<double>& results, std::vector<std::string>& legend);
 
 private:
 

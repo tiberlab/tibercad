@@ -61,6 +61,11 @@ public:
   //! Create object
   static ETB* create();
 
+  virtual PhysicalModel* create_physical_model(const ModelOptions &options,
+      const Material* mat) const throw (ModelErrorException);
+
+
+
 private:
 
   //! Get options suited for DFTB+ tight binding builder and solver

@@ -9,7 +9,7 @@
 #include "BoundaryProperties.h"
 #include "PhysicalModel.h"
 #include "SimulationOptions.h"
-#include "TightBindingModel.h"
+#include "DftbModel.h"
 #include "SimulationOptions.h"
 #include "DftbpWrapper.h"
 #include "dftbp.h"
@@ -127,6 +127,21 @@ void Dftb::parse_options(void){
 #endif
 
 };
+
+
+PhysicalModel*
+Dftb::create_physical_model (const ModelOptions &options,
+			     const Material* mat) const throw (ModelErrorException)
+{
+  
+      DftbModel* model = dynamic_cast<DftbModel*> ( PhysicalModelInterface::create("dftb",options) );
+      
+      if (model == NULL)
+        throw ModelErrorException("TightBinding: DFTB physical model is not created" );
+      
+      return model;
+      
+}
 
 
 void

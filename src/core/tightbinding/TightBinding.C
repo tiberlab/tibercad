@@ -3,7 +3,7 @@
 #include "BoundaryProperties.h"
 #include "PhysicalModel.h"
 #include "SimulationOptions.h"
-#include "TightBindingModel.h"
+#include "TightBindingModelInterface.h"
 #include "SimulationOptions.h"
 #include "SimulationEnvironment.h"
 #include "AtomisticStructure.h"
@@ -44,21 +44,6 @@ TightBinding::parse_options(){}
 
 void
 TightBinding::obtain_hubbard_parameters(){}
-
-
-PhysicalModel*
-TightBinding::create_physical_model (const ModelOptions &options,
-    const Material* mat) const throw (ModelErrorException)
-    {
-
-      TightBindingModel* model = dynamic_cast<TightBindingModel*> ( PhysicalModelInterface::create("tightbinding",options) );
-
-      if (model == NULL)
-        throw ModelErrorException("TightBinding: Tight Binding physical model is not created" );
-
-      return model;
-
-    }
 
 
 

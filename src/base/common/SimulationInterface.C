@@ -136,11 +136,11 @@ SimulationInterface::create(const string& type,
     else if (type_name == "tunnelingcurrent")
       sim = TunnelingCurrent::create();
 #ifdef ENABLE_DFTB
-    else if (type_name == "tightbinding")
+    else if (type_name == "dftb")
       sim = Dftb::create();
 #endif
 #ifdef ENABLE_UPTIGHT
-    else if (type_name == "etb")
+    else if (type_name == "empiricaltightbinding")
       sim = ETB::create();
 #endif
     else if (type_name == "opticalspectrum")
