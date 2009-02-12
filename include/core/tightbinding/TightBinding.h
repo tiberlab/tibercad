@@ -68,6 +68,10 @@ protected:
 
   virtual void  parse_options(void);
 
+  //! Get hubbard parameters for species composing atomistic structure
+  /*!
+   *  (it fills a class member map _u_hub)
+   */
   virtual void obtain_hubbard_parameters(void);
 
   /*! \copydoc SimulationInterface::convert_variable_name_to_id() */

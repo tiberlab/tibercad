@@ -259,10 +259,12 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
   for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); reg++){
 
-    const Material* mat = _as->get_device()->get_material( (*reg) );
+    Material* mat = _as->get_device()->get_material( (*reg) );
 
     assign.clear();
-    Database db = mat->get_database();
+
+    Database& db = mat->get_database();
+
     db.set_section("atomistic_structure");
 
     //Build up conversion map from file
@@ -828,7 +830,7 @@ void AtomisticGenerator::set_prim_miller(Tensor2Gen cut_planes)
 
 
 
-void AtomisticGenerator::parse_parameters(const Material* mat)
+void AtomisticGenerator::parse_parameters(Material* mat)
 {
 
   Atom tmp;
@@ -847,7 +849,7 @@ std::cout <<"mat->is_alloy " << mat->is_alloy() << std::endl;
       //lattice constant are expressed in Amstrong
       //_lattice_constant[0] = data("a", 0.0) * 10.0;
 
-      Database db = mat->get_database();
+      Database& db = mat->get_database();
       db.set_section("lattice");
       _lattice_constant[0] = db.get("a", 0.0) * 10.0;
       if (_lattice_constant[0] == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
@@ -864,7 +866,9 @@ std::cout <<"mat->is_alloy " << mat->is_alloy() << std::endl;
       db.set_section("atomistic_structure");
       set_lattice_type(db.get("lattice_type", "none"));
 
-      for (i = 1; i <= db.get("n_basis_specie", 0); i++)
+      unsigned int n_basis_specie = db.get("n_basis_specie", 0);
+
+      for (i = 1; i <= n_basis_specie; i++)
         {
           std::string record, s, n_s;
           std::stringstream out;
@@ -873,8 +877,6 @@ std::cout <<"mat->is_alloy " << mat->is_alloy() << std::endl;
           s = out.str();
 
           record = "n_" + s;
-
-          std::cerr << record << " is read as " <<  db.get(record.c_str(), 0) << std::endl;
 
           n = db.get(record.c_str(), 0);
 
@@ -886,7 +888,6 @@ std::cout <<"mat->is_alloy " << mat->is_alloy() << std::endl;
               out.clear(std::stringstream::goodbit);
               out << j;
               n_s = out.str();
-              std::cerr << "n_s is " << n_s << std::endl;
               n_s = record + n_s;
 
               //Putting specie (defined by an integer) temporary in flag data
@@ -894,19 +895,18 @@ std::cout <<"mat->is_alloy " << mat->is_alloy() << std::endl;
 
               record = n_s + "_x";
               std::cerr << "Record is " << record << std::endl;
-              T(1) = db.get(record.c_str(), 0.0);
+              T(1) = db.get(record, 0.0);
               record = n_s + "_y";
-              T(2) = db.get(record.c_str(), 0.0);
+              T(2) = db.get(record, 0.0);
               record = n_s + "_z";
-              T(3) = db.get(record.c_str(), 0.0);
-
-              std::cerr << "Parsed position is " << T << std::endl;
+              T(3) = db.get(record, 0.0);
 
               tmp.set_position(T);
 
               //Insert tmp in basis
               _crystal_basis.push_back(tmp);
-
+std::cout << "crystal_basis size is " << _crystal_basis.size() << std::endl;
+std::cout << "position is " << tmp.get_position() << std::endl;
             }
         }
     }
@@ -914,24 +914,21 @@ std::cout <<"mat->is_alloy " << mat->is_alloy() << std::endl;
   if (mat->is_alloy())
     {
       //Cannot act dynamic cast on mat itself because constant
-      const Alloy* mat_alloy = dynamic_cast<const Alloy*>(mat);
+      Alloy* mat_alloy = dynamic_cast<Alloy*>(mat);
 
       //Get database for alloy (db) and for parental materials
       //NOTE: IMPLEMENTATION IS GOOD ONLY FOR BINARY COMPOUNDS
-      Database db = mat_alloy->get_database();
+      Database& db = mat_alloy->get_database();
 
       std::cout << "component A is  " << mat_alloy->get_component_A() << std::endl;
       std::cout << "component A is  " << mat_alloy->get_component_A()->get_name() << std::endl;
       std::cout << "component B is  " << mat_alloy->get_component_B()->get_name() << std::endl;
-      Database db1 = mat_alloy->get_component_A()->get_database();
-      Database db2 = mat_alloy->get_component_B()->get_database();
+      Database& db1 = mat_alloy->get_component_A()->get_database();
+      Database& db2 = mat_alloy->get_component_B()->get_database();
 
       if (db.get("alloy_type", 2) == 2)
         {
-std::cout << "B " << std::endl;
           double ax_1, ay_1, az_1, ax_2, ay_2, az_2;
-          std::cerr << "Parsing parameters for binary alloy" << mat->get_name() << std::endl;
-          std::cout << "C " << std::endl;
           db1.set_section("lattice");
           db2.set_section("lattice");
 
@@ -954,70 +951,56 @@ std::cout << "B " << std::endl;
           az_2 = db2.get("c", 0.0) * 10.0;
           if (az_2 == 0.0) az_2 = ax_2;
 
-//Setting lattice parameters for the alloy
+          //Setting lattice parameters for the alloy
           double molar_fraction = mat->get_options().get_option("x", 1.0);
           _lattice_constant[0] = ax_1 * molar_fraction + ax_2 * (1.0 - molar_fraction);
-std::cout << "ax_1, ax_2 " << ax_1 << ax_2 << std::endl;
           _lattice_constant[1] = ay_1 * molar_fraction + ay_2 * (1.0 - molar_fraction);
           _lattice_constant[2] = az_1 * molar_fraction + az_2 * (1.0 - molar_fraction);
-std::cout << "lattice constant are " << _lattice_constant[0] << _lattice_constant[1] << _lattice_constant[2] << std::endl;
+
           db1.set_section("");
-          std::cout << "D " << std::endl;
+
         }
 
       db1.set_section("atomistic_structure");
       set_lattice_type(db1.get("lattice_type", "none"));
       db.set_section("atomistic_structure");
-      std::cout << db.get("n_basis_specie", 0) << std::endl;
 
-      for (i = 1; i <= db.get("n_basis_specie", 0); i++)
+      unsigned int n_basis_specie = db.get("n_basis_specie", 0);
+
+      for (i = 1; i <= n_basis_specie; i++)
         {
-          std::cout << "i is " << i << "and cycling to " <<  db.get("n_basis_specie", 0) << std::endl;
           std::string record("");
           std::string s("");
           std::stringstream out;
-          std::cout << "F " << std::endl;
           out << i;
           s = out.str();
 
-          record = "n_" + s;
-          std::cout << "record is " << record << std::endl;
-          std::cout << (db1.get(record, 0)) << std::endl;
-          std::cout << (db1.get("n_1", 0)) << std::endl;
           unsigned int n_x = (db1.get(record, 0));
           for (j = 1; j <= n_x; j++)
             {
               std::string s2;
-              std::cout << "j is " << j << "and cycling to " <<  db1.get(record, 0) << std::endl;
               record = "T_" + s + "_";
-              std::cout << "A record is " << record << std::endl;
               out.str(std::string());
               out.clear(std::stringstream::goodbit);
               out << j;
               s2 = out.str();
-              std::cerr << "s2 is " << s2 << std::endl;
               s2 = record + s2;
 
               //Putting specie (defined by an integer) temporary in flag data
               // ???????????? CHECK IT , WHY i IS SET AS FLAG???????????
               tmp.set_flag(i);
 
-              std::cout << "H " << std::endl;
               record = s2 + "_x";
-              std::cerr << "Record is " << record << std::endl;
               T(1) = db1.get(record, 0.0);
               record = s2 + "_y";
               T(2) = db1.get(record, 0.0);
               record = s2 + "_z";
               T(3) = db1.get(record, 0.0);
-              std::cout << "I " << std::endl;
               tmp.set_position(T);
 
               //Insert tmp in basis
               std::cout << tmp.get_position()  << std::endl;
               _crystal_basis.push_back(tmp);
-              std::cout << "putted and j is " << j << std::endl;
-
             }
         }
 
@@ -1453,7 +1436,6 @@ void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis){
       tmp.set_region_ID(basis[i].get_region_ID());
 
       tmp.set_position ( O + u1 );
-std::cout << "position with 3 bond is " <<    O + u1 << std::endl;
       hydrogens.push_back(tmp);
     }
 
@@ -1475,7 +1457,6 @@ std::cout << "position with 3 bond is " <<    O + u1 << std::endl;
 
       // Up to now hydrogen is considered part of the same material of bonded atom
       tmp.set_region_ID(basis[i].get_region_ID());
-      std::cout << "position with 2 bond is (1) " <<    O + u << std::endl;
       tmp.set_position ( O + u );
       hydrogens.push_back(tmp);
 
@@ -1489,7 +1470,6 @@ std::cout << "position with 3 bond is " <<    O + u1 << std::endl;
       tmp.set_region_ID(basis[i].get_region_ID());
 
       tmp.set_position ( O + u );
-      std::cout << "position with 2 bond is (2)" <<    O + u1 << std::endl;
       hydrogens.push_back(tmp);
     }
 
@@ -1511,13 +1491,12 @@ std::cout << "position with 3 bond is " <<    O + u1 << std::endl;
       tmp.set_specie("H");
 
       // TEMPORARY SOLUTION FOR WURTZITE
-      u = (-r1)/norm(r1); u(1) = u(1) + 0.1;
+      //u = (-r1)/norm(r1); u(1) = u(1) + 0.1;
       //////////////////////////////
 
 
 
       tmp.set_position ( O + u );
-      std::cout << "position with 1 bond is (1)" <<    O + u << std::endl;
       tmp.set_flag ( basis[i].get_flag() );
 
       // Up to now hydrogen is considered part of the same material of bonded atom
@@ -1535,11 +1514,10 @@ std::cout << "position with 3 bond is " <<    O + u1 << std::endl;
       tmp.set_specie("H");
 
       // TEMPORARY SOLUTION FOR WURTZITE
-            u = (-r1)/norm(r1); u(2) = u(2) + 0.1;
+           // u = (-r1)/norm(r1); u(2) = u(2) + 0.1;
             //////////////////////////////
 
       tmp.set_position ( O + u );
-      std::cout << "position with 1 bond is (2)" <<    O + u << std::endl;
       tmp.set_flag( basis[i].get_flag() );
 
       // Up to now hydrogen is considered part of the same material of bonded atom
@@ -1557,11 +1535,10 @@ std::cout << "position with 3 bond is " <<    O + u1 << std::endl;
       tmp.set_region_ID(basis[i].get_region_ID());
 
       // TEMPORARY SOLUTION FOR WURTZITE
-                 u = (-r1)/norm(r1); u(2) = u(2) - 0.1; u(1)=u(1) - 0.1;
+                // u = (-r1)/norm(r1); u(2) = u(2) - 0.1; u(1)=u(1) - 0.1;
                  //////////////////////////////
 
       tmp.set_position ( O + u );
-      std::cout << "position with 1 bond is (3)" <<    O + u << std::endl;
       hydrogens.push_back(tmp);
     }
 

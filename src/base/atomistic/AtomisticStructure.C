@@ -77,11 +77,10 @@ AtomisticStructure::AtomisticStructureOptions::~AtomisticStructureOptions(void)
 }
 
 
-//Assignment operator
-//AtomisticStructure&
-//AtomisticStructure::operator=(const AtomisticStructure &start)
+//Copy operator
+//AtomisticStructure::AtomisticStructure(const AtomisticStructure& start)
 //{
-//TODO: STILL TO BE IMPLEMENTED
+//TODO: USING DEFAULT ONE, CHECK IF IT MAKES SOME MESS
 //  return *this;
 //}
 
@@ -176,13 +175,11 @@ AtomisticStructure::init()
       print_structure(name);
       name = _name + ".gen" ;
       std::cout << "Printing structure " << name << std::endl;
-      //print_structure(name);
+      print_structure(name);
       name = _name + ".upg" ;
       std::cout << "Printing structure " << name << std::endl;
       print_structure(name);
 
-      //TODO: with passivation printing upg seems to fail, check it!
-      //print_structure("structure.upg");
     }
 
 }
@@ -365,7 +362,7 @@ AtomisticStructure::read_structure(const std::string& path)
       getline(file, line);
 
       // If GEN refers to periodical structure I expect periodicity vectors
-      if (is_periodical)
+      if (_atomistic_structure_options.is_periodical)
         {
           unsigned int count = 0;
           for (unsigned int i = 0; i < 3; i++)
@@ -430,7 +427,7 @@ AtomisticStructure::print_structure(const std::string& path)
     {
       file << _structure_atoms.size();
 
-      if (is_periodical) file << std::setw(10) << "S \n";
+      if (_atomistic_structure_options.is_periodical) file << std::setw(10) << "S \n";
       else file << std::setw(10) << "C \n";
 
       for (unsigned int i = 0; i < _atom_types.size(); i++)
@@ -496,7 +493,7 @@ AtomisticStructure::print_structure(const std::string& path)
       //Standard gen section (modified with material index)
       file << _structure_atoms.size();
 
-      if (is_periodical) file << std::setw(10) << "S \n";
+      if (_atomistic_structure_options.is_periodical) file << std::setw(10) << "S \n";
       else file << std::setw(10) << "C \n";
 
       for (unsigned int i = 0; i < _atom_types.size(); i++)
@@ -542,7 +539,7 @@ AtomisticStructure::print_structure(const std::string& path)
       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
 
       // Periodicity vectors at the bottom
-      if (is_periodical)
+      if (_atomistic_structure_options.is_periodical)
         {
           unsigned int count = 0;
           for (unsigned int i = 0; i < 3; i++)
@@ -571,8 +568,8 @@ AtomisticStructure::print_structure(const std::string& path)
       for (mat_it = material_map.begin(); mat_it != material_map.end(); mat_it++)
         {
 
-          const Material* mat = (*mat_it).first;
-          Database db = mat->get_database();
+          Material* mat = (*mat_it).first;
+          Database& db = mat->get_database();
           db.set_section("atomistic_structure");
           //GetPot data((mat->get_database()).get_data_file());
 
@@ -609,6 +606,8 @@ AtomisticStructure::print_structure(const std::string& path)
 
           //Mancano da inserire i file con i dati per Uptight
           std::string path = "./ ";
+          std::string structure = "unknown";
+
 
           if (mat->is_alloy()) file << std::setw(20) << (dynamic_cast<const Alloy*>(mat))->get_name_A() + ".data"
           << std::setw(20) << (dynamic_cast<const Alloy*>(mat))->get_name_B() + ".data" ;

@@ -178,7 +178,7 @@ protected:
   virtual void build() = 0;
 
   //! Parsing of atomistic infos to build lattice and basis vectors
-  void parse_parameters(const Material* mat);
+  void parse_parameters(Material* mat);
 
 
   //Some data manipulation function useful only in this class

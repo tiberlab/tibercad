@@ -40,6 +40,9 @@ AtomisticGenerator3D::build()
   std::cerr << "Calling AtomisticGenerator3D::build() " << std::endl;
 #endif
 
+  //Only 1D and 2D structures are intended to be periodical
+     _as->_atomistic_structure_options.is_periodical = false;
+
   //Common building operations
   make_conv_cell();
   make_conv_basis();

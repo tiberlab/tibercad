@@ -37,6 +37,9 @@ void
    Elem* elem = NULL;
    Node* nd = NULL;
 
+   //Only 1D and 2D structures are intended to be periodical
+      _as->_atomistic_structure_options.is_periodical = true;
+
 //Common building operations
 	 make_conv_cell();
 	 make_conv_basis();

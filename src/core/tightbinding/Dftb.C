@@ -223,7 +223,7 @@ void Dftb::do_solve(void){
   std::cout << "Calling Dftb->do_solve() " << std::endl;
 #endif
 
-
+  print_dftb_options();
 
   // N.B. get_energy is anyway needed for the correct assembling of Hamiltonian,
   // but for the SCC module it has to be in do_solve
@@ -242,6 +242,7 @@ void Dftb::do_solve(void){
     charges = new double[_dftb_options.nAtom];
     inst->getnetchargesperatom(_dftb_options.nAtom, charges);
 
+    _mulliken_netcharges.resize(_dftb_options.nAtom);
     for (unsigned int i = 0; i <_dftb_options.nAtom; i++ ) {_mulliken_netcharges.push_back(charges[i]);}
 
     _atomistic_structure->print_structure("TB_out.xyz",charges);
@@ -250,17 +251,16 @@ void Dftb::do_solve(void){
 
   //std::cout << "charge in middle point is " << build_rho(1.3, 1.3, 1.3) << std::endl;
   //std::cout << "charge in 0 is " << build_rho(0.0, 0.0, 0.0) << std::endl;
-  //  int nrow,ncol,nzval,isreal;
-  //  //inst->getrealhamiltonian(nrow,ncol,nzval,isreal);
-  //
-  //  int *colind, *rowpnt;
-  //  double* val;
-  //  std::string matrix;
-  //  matrix = "H";
-  //  double* kPoint;
-  //  kPoint = new double[3];
-  //  kPoint[0] = 0.0; kPoint[1] = 0.0; kPoint[2] = 0.0;
-  //  inst->getmatrix(nrow, ncol, nzval, isreal, colind, rowpnt, val, matrix);
+    //int nrow,ncol,nzval,isreal;
+    //inst->getrealhamiltonian(nrow,ncol,nzval,isreal);
+
+    //int *colind, *rowpnt;
+    //double* val;
+    //std::string matrix;
+    //matrix = "H";
+    //double* kPoint;
+    //inst->getmatrix(nrow, ncol, nzval, isreal, colind, rowpnt, val, matrix);
+
 
 #ifdef DEBUG
   std::cout << "Dfbt->solve() done" << std::endl;
@@ -599,15 +599,19 @@ Dftb::print_dftb_options(void)
 
   std::cout << "DFTB_OPTIONS: " << std::endl;
 
-  // std::cout << "coords are " << std::endl;
-  //   for (int i = 0; i < _dftb_options.nAtom * 3; i++){
-  //     std::cout << "coords["<<i<<"] is " <<  _dftb_options.coords[ i ] << std::endl;
-  //   }
+   std::cout << "coords are " << std::endl;
+     for (int i = 0; i < _dftb_options.nAtom * 3; i++){
+       std::cout << "coords["<<i<<"] is " <<  _dftb_options.coords[ i ] << std::endl;
+     }
 
-  //   std::cout << "species are " << std::endl;
-  //   for (int i = 0; i < _dftb_options.nAtom; i++){
-  //     std::cout << "species["<<i<<"] is " <<  _dftb_options.species[ i ] << std::endl;
-  //   }
+     std::cout << "species are " << std::endl;
+     for (int i = 0; i < _dftb_options.nAtom; i++){
+       std::cout << "species["<<i<<"] is " <<  _dftb_options.species[ i ] << std::endl;
+     }
+     std::cout << "mAngs are " << std::endl;
+          for (int i = 0; i < _dftb_options.nType; i++){
+            std::cout << "mAngs["<<i<<"] is " <<  _dftb_options.mAngs[ i ] << std::endl;
+          }
 
   int n_files = 0;
   // n_files = _atomistic_structure->N_types * _atomistic_structure->N_types;
@@ -629,6 +633,7 @@ Dftb::print_dftb_options(void)
   std::cout << "nAtom is " << _dftb_options.nAtom << std::endl;
   std::cout << "nType is " << _dftb_options.nType << std::endl;
   std::cout << "skInterp is " << _dftb_options.skInterp << std::endl;
+  std::cout << "_max_shell is " << _max_shell << std::endl;
 
 };
 

@@ -30,13 +30,14 @@ public:
 
     //!Options inizialization
     AtomisticStructureOptions(void);
+
+    //! Copy constructor
+    //AtomisticStructure(const AtomisticStructure &start);
+
     //!Options destructor
     ~AtomisticStructureOptions(void);
 
-    //!Assignment operator
-    //AtomisticStructure& operator=(const AtomisticStructure &start);
-
-    //! Tells if structure has been passivated
+        //! Tells if structure has been passivated
     bool is_passivated;
 
     //!Tells if structure contains bond map informations
@@ -139,15 +140,14 @@ public:
   //! Set Bond Map pointer
   void set_bondmap(BondMap* bondmap);
 
+  //! AtomisticStructureOptions object pointer
+    AtomisticStructureOptions _atomistic_structure_options;
 
 private:
 
 
   //! Scale factor (from mesh_units to amstrong mesh_units/1e-10)
   double _scale;
-
-  //! AtomisticStructureOptions object pointer
-  AtomisticStructureOptions _atomistic_structure_options;
 
   //! Bond Map object pointer
   BondMap* _bondmap;

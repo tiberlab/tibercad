@@ -29,9 +29,6 @@ TightBinding::~TightBinding()
 
 void
 TightBinding::do_init(){
-
-  std::cerr << "Tight Binding Simulation Initialisation..." << std::endl;
-
 }
 
 
@@ -41,6 +38,7 @@ TightBinding::do_solve(){}
 
 void
 TightBinding::parse_options(){}
+
 
 void
 TightBinding::obtain_hubbard_parameters(){}
@@ -71,6 +69,8 @@ throw (ModelErrorException)
 void
 TightBinding::get_atomistic_structure(void){
 
+  //Make a local copy of atomistic structure, in order to perform operations as
+  //strain dependent atom displacement
   AtomisticStructure* atomistic_structure = NULL;
 
   if (get_options().find_option("atomistic_structure") )
@@ -78,7 +78,8 @@ TightBinding::get_atomistic_structure(void){
       std::string name;
       name = get_options().get_option("atomistic_structure", "none");
       if (name.compare("none") != 0){
-        _atomistic_structure = get_environment().get_device().get_atomistic_structure(name);
+       // _atomistic_structure = new AtomisticStructure( *(get_environment().get_device().get_atomistic_structure(name)) );
+        _atomistic_structure = (get_environment().get_device().get_atomistic_structure(name));
       }
     }
   else
@@ -88,6 +89,7 @@ TightBinding::get_atomistic_structure(void){
       exit(0);
     }
 }
+
 
 double
 TightBinding::build_rho(const Point& r)
