@@ -81,7 +81,6 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
   } 
 
 
-
  
   cut_off_comment(label, in_stream); //  erase comment in  case label#my_comment....
   //  cerr <<  " cut_off_comment(label)  "  <<  label <<  endl;
@@ -107,32 +106,20 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
 
         in_stream.get(ch); // get next char
       do{
-      
-        if  ( (ch == ' ') || (ch == '\n'))
-        {
-          in_stream.get(ch);
-        }
-
-        // *******************************  FOR DOS termination files (CR/LF)
-        if  ( int(ch) == 13 )
-        {
-          in_stream.get(ch);
-        }
-
 
         //*******************************
 
 
-            if (ch == '#' )  //  skip  comments 
-          { 
-            in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
-            //      and   read  the  next keyword !!!
-            in_stream.get(ch);
-             
-          }
+        if (ch == '#' )  //  skip  comments 
+        { 
+          in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
+          //      and   read  the  next keyword !!!
+        }
+        in_stream.get(ch);
 
 
-      } while ( (ch == '\n') || (ch == ' ') || (ch == '#') );
+      } while ((ch == '\n') || (ch == '\r') || (ch == ' ')
+          || (ch == '#') || (ch == '\t'));
 
 
       // then  check  if  first char (not  blank) is  "{"
@@ -491,7 +478,6 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
   cut_off_CR(label, in_stream);
 
   cut_off_comment(label, in_stream); //  case  Region#commmm
-
   
   while (  ( found == false) && (!in_stream.eof()) ) //   
   { //while
@@ -886,7 +872,7 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 
             }
           }
-	     
+     
 
           v_label_string.clear();
           vect_label.clear();
@@ -2311,32 +2297,21 @@ bool InputParser::skip_to_bracket(ifstream& in_stream)
   //*************************
 
 
-      in_stream.get(ch); // get next char
+  in_stream.get(ch); // get next char
   do{
       
-    if  ( (ch == ' ') || (ch == '\n'))
-    {
-      in_stream.get(ch);
-    }
-
-    // *******************************   FOR DOS termination files (CR/LF)
-    if  ( int(ch) == 13 )
-    {
-      in_stream.get(ch);
-    }
-
 
     //********************************
-        if (ch == '#' )  //  skip  comments 
-      { 
-        in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
-        //      and   read  the  next keyword !!!
-        in_stream.get(ch);
-             
-      }
+    if (ch == '#' )  //  skip  comments 
+    { 
+      in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
+      //      and   read  the  next keyword !!!
+    }
+    in_stream.get(ch);
 
 
-  } while ( (ch == '\n') || (ch == ' ') || (ch == '#') );
+  } while ( (ch == '\n') || (ch == '\r')
+      || (ch == ' ') || (ch == '\t') || (ch == '#') );
 
 
   // then  check  if  first char (not  blank) is  "{"
