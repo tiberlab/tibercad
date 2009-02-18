@@ -133,14 +133,14 @@ PhysicalModel*
 Dftb::create_physical_model (const ModelOptions &options,
 			     const Material* mat) const throw (ModelErrorException)
 {
-  
+
       DftbModel* model = dynamic_cast<DftbModel*> ( PhysicalModelInterface::create("dftb",options) );
-      
+
       if (model == NULL)
         throw ModelErrorException("TightBinding: DFTB physical model is not created" );
-      
+
       return model;
-      
+
 }
 
 
@@ -440,8 +440,12 @@ Dftb::build_input_options()
   std::ifstream file;
   std::string line, record;
   int counter = 0;
+  double tmp;
 
-  _dftb_options.eTemp = get_options().get_option("eTemp", 1e-8);
+  // Temperature is internally expressed in atomic units (Eh/Kb)
+  // In input file it should be expressed in Kelvin
+  tmp = get_options().get_option("eTemp", 300);
+  _dftb_options.eTemp = tmp * (Constants::kb / Constants::Hartree );
 
   _dftb_options.orbResolved = get_options().get_option("orbResolved", 0);
 
@@ -515,8 +519,10 @@ Dftb::build_input_options()
         _dftb_options.kPoints = new double [   _dftb_options.nkPoints * 3 ];
         _dftb_options.kWeights = new double[  _dftb_options.nkPoints];
 
-        while (getline(file,line))
+        for (unsigned int i = 0; i < _dftb_options.nkPoints; i++)
           {
+            getline(file,line);
+
             std::stringstream linestream(line);
 
             linestream >> _dftb_options.kPoints[0 +  counter * 3];
