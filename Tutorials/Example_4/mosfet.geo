@@ -69,10 +69,9 @@ Plane Surface(44) = {43};
 Line Loop(45) = {8,29,36,10,-39,-38,-37,11};
 Plane Surface(46) = {45};
 
-Physical Surface(1) = {41}; // n-Si
-Physical Surface(2) = {44,47}; // n+-Si
-Physical Surface(3) = {46}; // SiO2
-Physical Line(1) = {13}; // source
-Physical Line(2) = {39,38}; // gate
-Physical Line(3) = {19}; // drain
-Physical Line(4) = {10,29,8,11}; // channel
+Physical Surface("substrate") = {41}; // n-Si
+Physical Surface("contact") = {44,47}; // n+-Si
+Physical Surface("oxide") = {46}; // SiO2
+Physical Line("source") = {13}; // source
+Physical Line("gate") = {39,38}; // gate
+Physical Line("drain") = {19}; // drain

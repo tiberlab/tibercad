@@ -4,14 +4,12 @@ $Device
 {
    Region n_side 
    {
-     mesh_regions = 2
      material = Si
      doping = 1e18 doping_type = donor
    }
 
    Region p_side 
    {
-     mesh_regions = 1
      material  = Si
      doping = 1e18 doping_type = acceptor
    }
@@ -27,7 +25,7 @@ $Models
               
     options
     {
-     simulation_name = driftdiffusion_1
+     simulation_name = dd
      physical_regions = all
     }
 
@@ -63,14 +61,12 @@ $Models
     {
       BC_Region anode
       {
-        BC_reg_numb = 1
         type = ohmic
         voltage = @Vb[0.0]
       }
 
       BC_Region cathode
       {
-        BC_reg_numb = 2
         type = ohmic
         voltage = 0.0
       }
@@ -86,21 +82,17 @@ $Solver
 {
   driftdiffusion
   {
-    nonlin_rel_tol = 1e-12
-    nonlin_step_tol = 1e-6
-    nonlin_max_it = 30
-    ls_max_step = 1
+    #nonlin_step_tol = 1e-6
   }
 
   sweep
   {
     variable = Vb
     start = 0.0
-    stop = 1.2  #2.0
-    steps = 120 #40
-    plotvariable = current
+    stop = 1.2  
+    steps = 120
     plot_data = true  #  to  write  data  for  each  step
-    simulation = driftdiffusion_1
+    simulation = dd
   }
 }
 
@@ -111,6 +103,7 @@ $Physics
 {
   driftdiffusion 
   {
+    # use Fermi-Dirac statistics
     statistics =  FD
   }
 }
@@ -122,7 +115,7 @@ $Physics
 $Simulation
 {
 #  searchpath = ../../materials
-  meshfile = diode_1D.msh #test.msh #diode.msh
+  meshfile = diode_1D.msh 
   dimension = 1
   verbose = 2
   temperature = 300
@@ -130,7 +123,7 @@ $Simulation
   resultpath = out_diode_1D
   output_format = grace
 
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, CurrentDensity, ContactCurrents, eMob, hMob)
 }
 
 

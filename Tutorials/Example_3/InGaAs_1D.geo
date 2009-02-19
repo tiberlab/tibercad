@@ -51,14 +51,14 @@ Line(5) = {5,6};
 Line(6) = {6,7};
 
 
-Physical Point(1) = {1};
-Physical Point(2) = {7};
+Physical Point("cathode") = {1};
+Physical Point("anode") = {7};
 
-Physical Line(1) = {1};
-Physical Line(2) = {2};
-Physical Line(3) = {3};
-Physical Line(4) = {4};
-Physical Line(5) = {5};
-Physical Line(6) = {6};
+Physical Line("buffer") = {1};
+Physical Line("barrier1_cl") = {2};
+Physical Line("barrier1_q") = {3};
+Physical Line("QWell") = {4};
+Physical Line("barrier2_q") = {5};
+Physical Line("barrier2_cl") = {6};
 
 

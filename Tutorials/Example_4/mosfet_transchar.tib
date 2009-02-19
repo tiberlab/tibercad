@@ -4,21 +4,18 @@ $Device
 {
    Region substrate 
    {
-     mesh_regions = 1
      material = Si
      doping = 1e18 doping_type = acceptor
    }
    
    Region contact
    {
-     mesh_regions = 2
      material = Si
      doping = 5e19 doping_type = donor
    }
 
    Region oxide
    {
-     mesh_regions = 3
      material = SiO2
   
    }
@@ -62,7 +59,6 @@ $Models
     {
       BC_Region gate
       {
-        BC_reg_numb = 2
         type = schottky
 	barrier_height = 3.0
 
@@ -71,7 +67,6 @@ $Models
 
       BC_Region source
       {
-        BC_reg_numb = 1
         type = ohmic
 
         voltage = 0.0
@@ -79,7 +74,6 @@ $Models
  
       BC_Region drain
       {
-        BC_reg_numb = 3
         type = ohmic
 
         voltage = @Vd[0.5]
@@ -102,40 +96,30 @@ $Solver
     coupling = electrons
     ksp_type = bcgsl
     nonlin_max_it = 10
-    #nonlin_rel_tol = 1e-12
-    #nonlin_abs_tol = 1e-15
     nonlin_step_tol = 1e-3
-    #lin_rel_tol = 1e-6
-    #lin_abs_tol = 1e-50
     ls_max_step = 2
-    #pc_type = composite
-    #local_density_scaling = true
-    #current_integration_method = surfint
-    #relaxation_factor = 0.5
   }
 
 
-  sweep_1
+  Sweep
   {
-  #  simulation = driftdiffusion
-    simulation = sweep_2
-    variable = Vd
-    start = 0.0
-    stop = 1.0 # 2.0 #0.1
-    steps = 5 #200  #200 #1
-    plotvariable = current
- #   plot_data = true
-  }
+    sweep_drain
+    {
+      simulation = sweep_gate
+      variable = Vd
+      start = 0.2
+      stop = 1.0 
+      steps = 4 
+    }
 
-  sweep_2
-  {
-    variable = Vg
-    start = -1.0  # -0.1
-    stop = 0.5
-    steps = 150 # 
-    #simulation = sweep_1
-    simulation = driftdiffusion
-    plotvariable = current
+    sweep_gate
+    {
+      variable = Vg
+      start = -1.0
+      stop = 0.5
+      steps = 150 # 
+      simulation = driftdiffusion
+    }
   }
 }
 
@@ -162,12 +146,11 @@ $Simulation
   meshfile = mosfet.msh
   dimension = 2
   temperature = 300
-  solve = sweep_1
-  #solve = (driftdiffusion, sweep)
-  resultpath = output_transf_char  # output_IV_char  #output_test2  #output_IV_char  #output_test
+  solve = sweep_drain
+  resultpath = output_transf_char
   #output_format = gmv
   output_format = vtk
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, EField, ElPotential)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, EField, ElPotential, ContactCurrents)
 }
 
 

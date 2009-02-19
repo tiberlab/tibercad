@@ -5,7 +5,6 @@ $Device
    
  Region buffer
    {
-     mesh_regions = 1
       
      material = GaAs
 
@@ -16,7 +15,7 @@ $Device
 
  Region barrier_1
    {
-     mesh_regions = (2,3)
+     mesh_regions = (barrier1_cl, barrier1_q)
      
      material =  GaAs
      
@@ -27,26 +26,26 @@ $Device
 
    Region QWell
    {
-     mesh_regions = 4
     
      material = InGaAs 
-     x=0.40 
+     x = 0.40 
 
    }
 
 
    Region barrier_2
    {
-     mesh_regions = (5,6)
+     mesh_regions = (barrier2_q, barrier2_cl)
     
      material = GaAs
     
    }
 
 
+   # group together the regions for the quantum simulation
    Cluster Quantum_1
    {
-     mesh_regions = (3,4, 5)
+     mesh_regions = (barrier1_q, QWell, barrier2_q)
    }
 
 
@@ -87,7 +86,6 @@ $Models
     {
       BC_Region cathode
       {
-        BC_reg_numb = 1
         type = ohmic
       
         voltage = 0.0
@@ -96,7 +94,6 @@ $Models
       
       BC_Region anode 
       {
-        BC_reg_numb = 2
         type = ohmic
 
 	voltage = 0.0
@@ -117,9 +114,8 @@ $Models
 
     BC_Regions  
     {
-      BC_Region substr
+      BC_Region cathode
       {
-        BC_reg_numb = 1
 	type = substrate
         material = GaAs
 	structure = zb  
@@ -136,7 +132,7 @@ $Models
     options
     {
       simulation_name = quantum_electrons
-      physical_regions = Quantum_1  #(3,4,5  )
+      physical_regions = Quantum_1  
     }
 
   
@@ -150,7 +146,7 @@ $Models
     options
     {
      simulation_name = quantum_holes
-     physical_regions = Quantum_1  # (3,4,5  )
+     physical_regions = Quantum_1 
     }
 
   
@@ -166,32 +162,23 @@ $Solver
   
 
  
-driftdiffusion
+  driftdiffusion
   {
     coupling = poisson
     nonlinear_solver = tiber
  
-    nonlin_abs_tol = 1e-13 # 
-    nonlin_step_tol = 1e-5 # 
- 
-    lin_rel_tol = 1e-6
-    nonlin_max_it = 30
-   
-    discretization = fem
-    ls_max_step = 1
     pc_type = lu
   
-    integration_order = 2
-    
   }
 
 
 
  macrostrain
   {
-    substrate = substr
+    substrate = cathode
 
   }
+
 
   efaschroedinger
   {
@@ -264,16 +251,17 @@ $Simulation
 {
 
 #  searchpath = ../../materials   
-  meshfile = InGaAs_1D.msh #
+  meshfile = InGaAs_1D.msh 
     
-  mesh_units = 1e-9       #nm !!
+  # mesh is drawn in nm
+  mesh_units = 1e-9 
   dimension = 1
   temperature = 300
   solve =  (strain, driftdiffusion, quantum_electrons,quantum_holes )
 
-  resultpath =  output # 
+  resultpath =  output  
 
-  plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, CurrentDensity, ContactCurrents, NetRecombination, strain, polarization, EigenFunctions, EigenEnergy,EnergyLevels)
  
   output_format = grace
 

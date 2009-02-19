@@ -6,14 +6,12 @@ $Device
 
    Region p_side 
    {
-     mesh_regions = 1
      material = Si
      doping = 1e18 doping_type = acceptor
    }
 
    Region n_side 
    {
-     mesh_regions = 2
      material = Si
      doping = 1e18 doping_type = donor
    }
@@ -42,14 +40,12 @@ $Models
     {
       BC_Region anode
       {
-        BC_reg_numb = 1
         type = ohmic
         voltage = @Vb[0.0]
       }
 
       BC_Region cathode
       {
-        BC_reg_numb = 2
         type = ohmic
         voltage = 0.0
       }
@@ -78,17 +74,15 @@ $Models
 
     BC_Regions
     {
-        BC_Region reservoir_1
+        BC_Region anode
    	{
          type = heat_reservoir
-         BC_reg_numb = 1
          temperature = 300
    	}
        
-        BC_Region reservoir_2
+        BC_Region cathode
    	{
 	 type = heat_reservoir
-         BC_reg_numb = 2
          temperature = 300
 	}
      }
@@ -108,15 +102,12 @@ $Solver
 
   driftdiffusion
   {
-    nonlin_rel_tol = 1e-12
-    nonlin_step_tol = 1e-6
-    nonlin_max_it = 30
-    ls_max_step = 1
+    #nonlin_step_tol = 1e-6
   }
 
   sweep
   {
-    simulation = (dd)
+    simulation = (dd, tt)
     variable = Vb
     start = 0.0
     stop = 1.2
@@ -151,7 +142,7 @@ $Simulation
   solve = sweep
   resultpath = output_tut2
   output_format = grace
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob, current,ContactCurrents,NetRecombination,thermal)
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, CurrentDensity, eMob, hMob, ContactCurrents,NetRecombination,thermal)
 
 }
 

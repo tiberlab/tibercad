@@ -4,7 +4,6 @@ $Device
 {
    Region bulk 
    {
-     mesh_regions = 1
      material = Si
      doping = 1e16 doping_type = donor
    }
@@ -31,14 +30,12 @@ $Models
     {
       BC_Region anode
       {
-        BC_reg_numb = 1
         type = ohmic
         voltage = @Vb
       }
 
       BC_Region cathode
       {
-        BC_reg_numb = 2
         type = ohmic
         voltage = 0.0
       }
@@ -92,7 +89,7 @@ $Simulation
   dimension = 1
   temperature = 300
   solve = sweep
-  resultpath = output_3
+  resultpath = output
   output_format = grace
   plot = (Ec, Ev,QFermi_e, ContactCurrents)
 }
