@@ -2326,8 +2326,9 @@ bool InputParser::skip_to_bracket(ifstream& in_stream)
 
   else  
   {
-    check_error =true;
+    in_stream.unget();
 
+    check_error =true;
     return  check_error ;
 
   }

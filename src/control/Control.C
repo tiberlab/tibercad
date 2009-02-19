@@ -685,7 +685,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
           SimulationInterface::create("sweep", solveropts);
 
         if (sim == NULL)
-          throw ModelErrorException("Could not create Selfconsistent simulation");
+          throw ModelErrorException("Could not create sweep simulation");
 
         sim->set_control(this);
         sim->verbose() = 0;
@@ -694,15 +694,16 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       }
     }
 
-    // if no Sweep block is found, we look for other definitions to be compatible
-    // with older TiberCAD version
+    // if no Sweep block is found, we look for other definitions to
+    // be compatible with older TiberCAD version
     if (sws.size() == 0)
     {
       bool warning = false;
+
+      // the following is allowed for ease of use
       ModelOptions sweepopts = parser.read_parameters("Solver", "sweep");
       if (!sweepopts.is_empty())
       {
-        warning = true;
         if (!sweepopts.find_option("name"))
           sweepopts["name"] = "sweep";
         SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
