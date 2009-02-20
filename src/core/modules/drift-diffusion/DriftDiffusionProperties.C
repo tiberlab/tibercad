@@ -52,7 +52,7 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
   : equilibrium_fermi_level(0.0),
     intrinsic_density(1e10),
     _is_inhomogeneous(false),
-    _use_predictor(false),
+    _use_predictor(true),
     _driftdiffusion(NULL),
     _pd(NULL),
     _elem(NULL),
