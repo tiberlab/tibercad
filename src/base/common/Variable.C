@@ -116,6 +116,8 @@ Variable::check_and_register(const string& s, double defaultval, ID id)
     else
       defaultval = Utils::convert<double>(s);
   }
+  else
+    defaultval = Utils::convert<double>(s);
 
   return defaultval;
 }
