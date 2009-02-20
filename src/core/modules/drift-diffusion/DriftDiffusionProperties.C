@@ -888,7 +888,6 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   if (isinf(guess) || isnan(guess))
     guess = 0.5 * (cb.band_edge + vb.band_edge);
 
-
   /*
    * We use standard Newton. This should work always, as the density
    * is a strictly monotone function of the electric potential with
@@ -910,19 +909,24 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 
     double f  = _pd->hole_density - _pd->electron_density +
       _pd->ionized_donor_density - _pd->ionized_acceptor_density;
-    double df = _pd->hole_density_derivative - _pd->electron_density_derivative +
+    double df = _pd->hole_density_derivative -
+      _pd->electron_density_derivative +
       _pd->ionized_donor_density_derivative - 
       _pd->ionized_acceptor_density_derivative;
 
-    // At low temperatures everything is very sensitive on dx, so we don't
-    // allow it to be bigger than k*T. At high temperatures this should not
-    // have any impact
-    double dx = - f / df;
-    if (fabs(dx) > kT)
-      if (dx > 0)
-        dx = kT;
-      else
-        dx = -kT;
+    double dx = 0.0;
+    if (f > 0.0)
+    {
+      // At low temperatures everything is very sensitive on dx, so we don't
+      // allow it to be bigger than k*T. At high temperatures this should not
+      // have any impact
+      dx = - f / df;
+      if (fabs(dx) > kT)
+        if (dx > 0)
+          dx = kT;
+        else
+          dx = -kT;
+    }
 
     y = x + dx;
 
