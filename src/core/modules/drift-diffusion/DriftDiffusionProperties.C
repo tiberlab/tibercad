@@ -915,7 +915,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
       _pd->ionized_acceptor_density_derivative;
 
     double dx = 0.0;
-    if (f > 0.0)
+    if (fabs(f) > 0.0)
     {
       // At low temperatures everything is very sensitive on dx, so we don't
       // allow it to be bigger than k*T. At high temperatures this should not
