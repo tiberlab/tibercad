@@ -86,46 +86,46 @@ void
 
 
 
-void AtomisticGenerator2D::passivate(void){
-
-  std::vector<Atom> periodic_basis, hydrogens;
-  unsigned int i;
-  Atom tmp;
-  unsigned int ** bond_map_periodic;
-  Tensor1 z_period;
-
- z_period(1) = _period(1,3); z_period(2) = _period(2,3); z_period(3) = _period(3,3);
-
-  for (i = 0; i < _structure_basis.size(); i++){
-
-    tmp = _structure_basis[i];
-    tmp.set_flag(1);
-    periodic_basis.push_back(tmp);
-
-    tmp=_structure_basis[i];
-     tmp.set_position(tmp.get_position() - z_period);
-     //tmp.position = tmp.position + z_period;
-    periodic_basis.push_back(tmp);
-
-    tmp=_structure_basis[i];
-    tmp.set_position(tmp.get_position() - z_period);
-    periodic_basis.push_back(tmp);
-
-  }
-
-  //bond_map_periodic = bond_map_gen(&(periodic_basis));
-  //bond_map_periodic = bond_map_gen(periodic_basis);
-  if (_bondmapobject != NULL) delete _bondmapobject;
-  passivate_cluster(periodic_basis);
-
-  _structure_basis.clear();
-
-  for (i = 0; i < periodic_basis.size(); i++){
-    if (periodic_basis[i].get_flag() == 1) _structure_basis.push_back(periodic_basis[i]);
-
-
-}
-
-};
+//void AtomisticGenerator2D::passivate(void){
+//
+//  std::vector<Atom> periodic_basis, hydrogens;
+//  unsigned int i;
+//  Atom tmp;
+//  unsigned int ** bond_map_periodic;
+//  Tensor1 z_period;
+//
+// z_period(1) = _period(1,3); z_period(2) = _period(2,3); z_period(3) = _period(3,3);
+//
+//  for (i = 0; i < _structure_basis.size(); i++){
+//
+//    tmp = _structure_basis[i];
+//    tmp.set_flag(1);
+//    periodic_basis.push_back(tmp);
+//
+//    tmp=_structure_basis[i];
+//     tmp.set_position(tmp.get_position() - z_period);
+//     //tmp.position = tmp.position + z_period;
+//    periodic_basis.push_back(tmp);
+//
+//    tmp=_structure_basis[i];
+//    tmp.set_position(tmp.get_position() - z_period);
+//    periodic_basis.push_back(tmp);
+//
+//  }
+//
+//  //bond_map_periodic = bond_map_gen(&(periodic_basis));
+//  //bond_map_periodic = bond_map_gen(periodic_basis);
+//  if (_bondmapobject != NULL) delete _bondmapobject;
+//  passivate_cluster(periodic_basis);
+//
+//  _structure_basis.clear();
+//
+//  for (i = 0; i < periodic_basis.size(); i++){
+//    if (periodic_basis[i].get_flag() == 1) _structure_basis.push_back(periodic_basis[i]);
+//
+//
+//}
+//
+//};
 
 

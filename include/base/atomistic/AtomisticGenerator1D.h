@@ -6,7 +6,7 @@
 #include "AtomisticGenerator.h"
 
 
-class AtomisticGenerator1D : public AtomisticGenerator 
+class AtomisticGenerator1D : public AtomisticGenerator
 {
 
 
@@ -22,7 +22,7 @@ protected:
 
   virtual void build();
 
-  virtual void passivate();
+  //virtual void passivate();
 
 private:
 

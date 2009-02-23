@@ -120,6 +120,7 @@ BondMap::do_solve(const std::vector<Atom>& basis)
 
   std::cout << "done" << std::endl;
 
+
 }
 
 
@@ -336,5 +337,6 @@ BondMap::define_grid(const double minimum_spacing, const Tensor1& edge_min, cons
   _n_x = static_cast<unsigned int>((floor(lenght_x / minimum_spacing)) + 1); _x_spacing = lenght_x / _n_x;
   _n_y = static_cast<unsigned int>((floor(lenght_y / minimum_spacing)) + 1); _y_spacing = lenght_y / _n_y;
   _n_z = static_cast<unsigned int>((floor(lenght_z / minimum_spacing)) + 1); _z_spacing = lenght_z / _n_z;
+
 
 }

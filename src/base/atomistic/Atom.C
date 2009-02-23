@@ -2,7 +2,8 @@
 
 
 Atom::Atom()
-:_specie("none")
+:_specie("none"),
+belong_to_structure(false)
 {
   _region_id = 0;
   _flag = 0;
@@ -13,6 +14,7 @@ Atom::Atom()
 }
 
 Atom::Atom(std::string& specie, Tensor1& position)
+:belong_to_structure(false)
 {
   _position = position;
   _specie = specie;
@@ -24,6 +26,7 @@ Atom::Atom(std::string& specie, Tensor1& position)
 }
 
 Atom::Atom(std::string& specie, Tensor1& position, int (&conv_address)[3], ID atom_id, ID region_id, ID contact, unsigned int flag)
+:belong_to_structure(false)
 {
   _position = position;
   _specie = specie;

@@ -135,11 +135,11 @@ protected:
 
 
   //Passivation routine for bulk structures (periodicization is achieved in derived classes, in hydrogenation routine)
-  void passivate_cluster(std::vector<Atom> &basis);
+  //void passivate_cluster(std::vector<Atom> &basis);
 
 
   //! Real passivation routine (implemented in derived classes, it takes in account periodicity)
-  virtual void passivate() = 0;
+  void passivate();
 
 
   //!Supercell periodicity vectors
