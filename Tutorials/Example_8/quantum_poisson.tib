@@ -3,7 +3,6 @@ $Device
 
   Region well
   {
- #   mesh_regions = 1
     material = GaAs
 
     doping = 1e15
@@ -14,11 +13,11 @@ $Device
 
   Region  buffer1
   {
-    mesh_regions  = ( barrier1_a,barrier1_q)  #  (2, 4)
+    mesh_regions  = ( barrier1_a,barrier1_q)
     material = AlGaAs
     x = 0.3
 
-     doping = 1e17
+    doping = 1e17
     doping_type = donor
     doping_level = 0.025
     
@@ -29,7 +28,7 @@ $Device
 
   Region  buffer2
   {
-    mesh_regions  = (barrier2_a, barrier2_q  )  #  (3, 5)
+    mesh_regions  = (barrier2_a, barrier2_q  )
     material = AlGaAs
     x = 0.3
 
@@ -42,7 +41,7 @@ $Device
 
   Cluster Quantum_1
   {
-    mesh_regions = (well ,barrier1_q, barrier2_q   )  #   (1, 4, 5)
+    mesh_regions = (well ,barrier1_q, barrier2_q   )
   }
 
 
@@ -68,7 +67,6 @@ $Models
     {
       BC_Region substrate
       {
-#	BC_reg_numb = 1
 	type = substrate
 	material = GaAs
       }
@@ -103,7 +101,7 @@ $Models
     options
     {
      simulation_name = quantum_el
-     physical_regions = Quantum_1 # (1, 4, 5)
+     physical_regions = Quantum_1
     }
 
 
@@ -120,7 +118,7 @@ $Models
     options 
     {
       simulation_name = dens_el
-      physical_regions =  Quantum_1 # (1,4,5)
+      physical_regions =  Quantum_1
     }
 
 
@@ -145,17 +143,6 @@ $Solver
   driftdiffusion
   {
     coupling = poisson
-    nonlin_max_it = 70
-    nonlin_rel_tol = 1e-10
-    nonlin_abs_tol = 1e-10
-    nonlin_step_tol = 1e-9
-    ls_max_step = 4
-  
-    discretization = fem
-    integration_order = 2
-   
-    ksp_type = bcgs
- 
   }
 
 
@@ -200,17 +187,15 @@ $Solver
   }
 
 
-  selfconsistent
+  Selfconsistent
   {
-    flavour = broyden
-    #flavour = relaxation
-    simulations = (dd,dens_el)
-    relaxation_factor = 0.1
-    history_length = 5
-    omega_0 = 0.5
-    max_iterations = 100
-    abs_tolerance = 5e-4
-    rel_tolerance = 1e-2
+    poisson_schroedinger
+    {
+      simulations = (dens_el, dd)
+      max_iterations = 10
+      abs_tolerance = 1e-4
+      rel_tolerance = 1e-6
+    }
   }
 
 }
@@ -223,6 +208,7 @@ $Physics
   {
     electron_quantum_density = dens_el
     statistics = FD
+    use_density_predictor = true
   }
 
   quantum_el 
@@ -235,15 +221,13 @@ $Physics
 
 $Simulation
 {
-  searchpath = ../../materials       
-  meshfile = quantum_poisson.msh #
+  #searchpath = ../../materials       
+  meshfile = quantum_poisson.msh
   mesh_units = 1e-9
   dimension = 1
   temperature = 300
-  solve = (str, selfconsistent)
-#  solve = (str, dd)
-#  solve = (str,dd,dens_el)
-  resultpath = out_test #toutput_self_cons_INT #
+  solve = (str, dd, poisson_schroedinger)
+  resultpath = output
   output_format = grace
-  plot = (strain, polarization, Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, Current, EigenFunctions, EigenEnergy, EnergyLevels,quantum_density)
+  plot = (strain, polarization, Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, EigenFunctions, EigenEnergy, EnergyLevels,quantum_density)
 }
