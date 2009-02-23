@@ -8,9 +8,9 @@ $Device
 
 
 
- Region n-AlGaN
+ Region n-algan  #n-AlGaN
    {
-     mesh_regions = 1
+  #   mesh_regions = 1
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
@@ -22,9 +22,9 @@ $Device
      doping_level = 0.025
    }
 
- Region AlInN
+ Region alinn  # AlInN
    {
-     mesh_regions = 2
+  #   mesh_regions = 2
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
@@ -40,9 +40,9 @@ $Device
 
 
 
- Region AlGaN_barrier1_no_quantum
+ Region algan_barr1   # AlGaN_barrier1_no_quantum
    {
-     mesh_regions = 3
+ #    mesh_regions = 3
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
@@ -56,7 +56,8 @@ $Device
 
    Region AlGaN_barrier_quantum
    {
-     mesh_regions = (4,6,8)
+  #   mesh_regions = (4,6,8)
+     mesh_regions = (algan_barr_quantum1, algan_barr_quantum2, algan_barr_quantum3)
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
@@ -72,7 +73,9 @@ $Device
 
  Region GaN_QWell
    {
-     mesh_regions = (5,7,9)
+ #    mesh_regions = (5,7,9)
+     mesh_regions = (GaN_QW1, GaN_QW2, GaN_QW3)
+
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
@@ -89,7 +92,7 @@ $Device
 
    Region i_AlGaN1_quantum
    {
-     mesh_regions = 10
+ #    mesh_regions = 10
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
@@ -108,7 +111,7 @@ $Device
 
    Region i_AlGaN2_noquantum
    {
-     mesh_regions = 11
+  #   mesh_regions = 11
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
@@ -128,7 +131,7 @@ $Device
 
  Region p_AlGaN
    {
-     mesh_regions = 12
+  #   mesh_regions = 12
      structure = wz
      y-growth-direction = (1,0,-1,0)
      z-growth-direction = (-1,2,-1,0)
@@ -144,17 +147,17 @@ $Device
 
    Cluster Quantum_1
    {
-     mesh_regions = (4, 5)
+     mesh_regions = (algan_barr_quantum1,GaN_QW1)  #     (4, 5)
    }
 
    Cluster Quantum_2
    {
-     mesh_regions = (6,7)
+     mesh_regions = (algan_barr_quantum2, GaN_QW2 ) #   (6,7)
    }
 
    Cluster Quantum_3
    {
-     mesh_regions = (8,9,10)
+     mesh_regions = (algan_barr_quantum3,GaN_QW3, i_AlGaN1_quantum)   #  (8,9,10)
    }
 
 
@@ -193,18 +196,18 @@ $Models
     {
       BC_Region n_contact
       {
-        BC_reg_numb = 1
+     #   BC_reg_numb = 1
         type = ohmic
-      	zero_grad_fermi_h = true
+      
         voltage = 0.0
       }
       
       
       BC_Region p_contact
       {
-        BC_reg_numb = 2
+     #   BC_reg_numb = 2
         type = ohmic
-	zero_grad_fermi_e = true
+
   
 	voltage = @Vb[0.0]  
       }
@@ -229,9 +232,9 @@ $Models
 
     BC_Regions  
     {
-      BC_Region substr
+      BC_Region n_contact   # substr
       {
-        BC_reg_numb = 1
+      #  BC_reg_numb = 1
 	type = substrate
         material = AlGaN
         x=0.2
@@ -397,7 +400,7 @@ $Solver
 
  macrostrain
   {
-    substrate = substr
+    substrate = n_contact  #substr
   }
 
   efaschroedinger
@@ -587,14 +590,14 @@ $Simulation
 {
 
 
-#  searchpath =  ../../materials       
-  meshfile = led_spectrum.msh # LED_UV_3QW_test_for_DD_well2nm.msh  
+  searchpath =  ../../materials       
+  meshfile = led_spectrum.msh #  
   verbose = 3    
   mesh_units = 1e-9       #nm 
   dimension = 1
   temperature = 300 
 
- solve = (strain, sweep, QW3_electrons,QW3_holes, spectrum    )
+  solve = (strain, sweep, QW3_electrons,QW3_holes, spectrum    )
 
 
   resultpath =   output_V4_QW3

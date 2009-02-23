@@ -8,9 +8,9 @@
 $Device
 {
 
-  Region well
+  Region GaN_qdisc  # well
   {
-    mesh_regions = 1
+  #  mesh_regions = 1
     material = GaN
   
     structure = wz
@@ -23,9 +23,9 @@ $Device
    }
   
 
-   Region  layer1
+   Region  n_algan    # layer1
    {
-     mesh_regions = 2
+#     mesh_regions = 2
      material = AlGaN
      x = 0.2
      structure = wz
@@ -41,9 +41,9 @@ $Device
 
   
 
-   Region barrier1
+   Region algan_barrier1  #barrier1
    {
-     mesh_regions = 3
+  #   mesh_regions = 3
      material = AlGaN
      x = 0.2
      structure = wz
@@ -60,9 +60,9 @@ $Device
 
   
 
-   Region barrier2
+   Region algan_barrier2   # barrier2
    {
-     mesh_regions = 4
+ #    mesh_regions = 4
      material = AlGaN
      x = 0.2
      structure = wz
@@ -75,9 +75,9 @@ $Device
 
    }
    
-   Region layer2
+   Region p_algan  #layer2
    {
-     mesh_regions = 5
+  #   mesh_regions = 5
      material = AlGaN
      x = 0.2
      structure = wz
@@ -115,9 +115,9 @@ $Models
     
     BC_Regions  
     {
-      BC_Region substrate
+      BC_Region ncontact   #subs # n_contact   #substrate
       {
-        BC_reg_numb = 2
+   #     BC_reg_numb = ncontact  # 2
 	type = substrate
 	material = AlGaN
 	x = 0.2
@@ -129,6 +129,7 @@ $Models
 
       }
     }
+
   }
 
 
@@ -177,9 +178,9 @@ $Models
    BC_Regions  
     {
 
-      BC_Region cathode
+      BC_Region ncontact  # cathode
       {
-        BC_reg_numb = 2
+     #   BC_reg_numb = 2
 
 
         type = ohmic
@@ -187,9 +188,9 @@ $Models
       }
 
 
-      BC_Region anode
+      BC_Region p_contact  # anode
       {
-	BC_reg_numb = 1
+#	BC_reg_numb = 1
 
 	type = ohmic
 
@@ -214,9 +215,11 @@ $Solver
 
   macrostrain
   {
-    substrate = substrate
-    tolerance = 1e-6
-    #xmonitor = true
+    substrate = ncontact #substrate
+
+    lin_rel_tol = 1e-5
+ #   tolerance = 1e-6
+    xmonitor = true
     
   }
 
@@ -268,7 +271,7 @@ $Physics
 
   driftdiffusion 
   {
-    strain_simulation = strain
+#    strain_simulation = strain
     statistics = FD
   }
   
@@ -279,13 +282,15 @@ $Physics
 # Definition of  model-indipendent parameters of the Simulation
 $Simulation
 {
-#  searchpath = ../../materials  #../materials    
+  searchpath = ../../materials  #../materials    
   meshfile = nanocolumn.msh # 
   mesh_units = 1e-9
   dimension = 3
   temperature = 300
 
   solve = (strain, sweep)
+ #solve = (sweep)
+
   resultpath = output_nanocol_tecplot_tut_IV #   output_nanocol_tecplot
   output_format = ise # vtk
   plot = (strain, polarization,Ec, Ev, QFermi_e, QFermi_h, eMob, hMob, EigenFunctions, EigenEnergy, EnergyLevels, eDensity, hDensity, Current, eCurrent, hCurrent, ContactCurrents)

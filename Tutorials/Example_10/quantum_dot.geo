@@ -162,7 +162,11 @@ vol_pyr3[] = {t1[1],t2[1], t3[1] };
 
 volume_pyramid[] = {vol_pyr1[], vol_pyr2[], vol_pyr3[]}; 
 
-Physical Volume(1) = {volume_pyramid[]};
+//Physical Volume(1) = {volume_pyramid[]};
+
+Physical Volume("qdot") = {volume_pyramid[]};
+
+
 
 t1[] = Extrude {{0,0,1}, {0,0,0}, 2*Pi/3} {  Surface{s3_0};  Layers{N}; Recombine; };
 t2[] = Extrude {{0,0,1}, {0,0,0}, 2*Pi/3} { Surface{t1[0]}; Layers{N}; Recombine; };
@@ -205,7 +209,10 @@ t2[] = Extrude {{0,0,1}, {0,0,0}, 2*Pi/3} { Surface{t1[0]}; Layers{N}; Recombine
 t3[] = Extrude {{0,0,1}, {0,0,0}, 2*Pi/3} { Surface{t2[0]}; Layers{N}; Recombine; };
 vol_c4[] = {t1[1],t2[1],t3[1]};
 
-Physical Volume(2) = {vol_c1[],vol_c2[],vol_c3[], vol_c4[]};
+// Physical Volume(2) = {vol_c1[],vol_c2[],vol_c3[], vol_c4[]};
+
+Physical Volume("barrier") = {vol_c1[],vol_c2[],vol_c3[], vol_c4[]};
+
 
 
 t1[] = Extrude {{0,0,1}, {0,0,0}, 2*Pi/3} {  Surface{s4};  Layers{N}; Recombine; };
@@ -219,7 +226,11 @@ t2[] = Extrude {{0,0,1}, {0,0,0}, 2*Pi/3} { Surface{t1[0]}; Layers{N}; Recombine
 t3[] = Extrude {{0,0,1}, {0,0,0}, 2*Pi/3} { Surface{t2[0]}; Layers{N}; Recombine; };
 vol_c4[] = {t1[1],t2[1],t3[1]};
 
-Physical Volume(3) = {vol_c3[], vol_c4[]};
+// Physical Volume(3) = {vol_c3[], vol_c4[]};
+
+Physical Volume("buffer1") = {vol_c3[], vol_c4[]};
+
+
 
 
 p[] = Extrude {0,0,h3} {Line{l9}; Layers{N1}; Recombine; };
@@ -241,17 +252,31 @@ t2[] = Extrude {{0,0,1}, {0,0,0}, 2*Pi/3} { Surface{t1[0]}; Layers{N}; Recombine
 t3[] = Extrude {{0,0,1}, {0,0,0}, 2*Pi/3} { Surface{t2[0]}; Layers{N}; Recombine; };
 vol_c4[] = {t1[1],t2[1],t3[1]};
 
-Physical Volume(4) = {vol_c3[], vol_c4[]};
+// Physical Volume(4) = {vol_c3[], vol_c4[]};
 
-Physical Surface(1) = {513, 535, 557, 610, 593, 576};
+Physical Volume("buffer2") = {vol_c3[], vol_c4[]};
+
+
+// Physical Surface(1) = {513, 535, 557, 610, 593, 576};
+
+
+Physical Surface("substrate") = {513, 535, 557, 610, 593, 576};
+
+
 
 side_surface_GaN[] = {54, 128, 91};
 
-Physical Surface(2) = {side_surface_GaN[]} ;
+// Physical Surface(2) = {side_surface_GaN[]} ;
+
+Physical Surface("surface_states1") = {side_surface_GaN[]} ;
+
 
 side_surface_AlGaN[] = {447, 425, 403, 561, 517, 539, 671, 649, 627};
 
 side_surface_AlGaN_quantum[] = {302, 366, 334};
 
-Physical Surface(3) = {side_surface_AlGaN[], side_surface_AlGaN_quantum[] } ;
+// Physical Surface(3) = {side_surface_AlGaN[], side_surface_AlGaN_quantum[] } ;
+
+Physical Surface("surface_states2") = {side_surface_AlGaN[], side_surface_AlGaN_quantum[] } ;
+
 

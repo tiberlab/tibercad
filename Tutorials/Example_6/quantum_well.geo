@@ -8,10 +8,10 @@ Line (2) = {2, 3};
 Line (3) = {3, 4};
 
 
-Physical Line  (1) = {2};
-Physical Line  (2) = {1};
-Physical Line  (3) = {3};
+Physical Line  ("well") = {2};
+Physical Line  ("buffer1") = {1};
+Physical Line  ("buffer2") = {3};
 
 
-Physical Point (1) = {1};
-Physical Point (2) = {4};
+Physical Point ("substrate") = {1};
+Physical Point ("top") = {4};

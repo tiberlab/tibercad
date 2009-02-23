@@ -134,25 +134,29 @@ Line(14) = {14,15};
 
 
 
-Physical Point(1) = {1};   // n-contact
-Physical Point(2) = {15}; // p-contact
+Physical Point("n_contact") = {1};   // n-contact
+Physical Point("p_contact") = {15}; // p-contact
 
 
-Physical Line(1) = {1};  // n-algan
-Physical Line(2) = {2}; // alinn
-Physical Line(3) = {3}; //  Algan barr1
+Physical Line("n-algan") = {1};  // n-algan
+Physical Line("alinn") = {2}; // alinn
+Physical Line("algan_barr1") = {3}; //  Algan barr1
 
 
-Physical Line(4) = {4,6}; //  Algan  barr  quantum1
-Physical Line(5) = {5};   //  GaN QW1
+Physical Line("algan_barr_quantum1") = {4,6}; //  Algan  barr  quantum1
+Physical Line("GaN_QW1") = {5};   //  GaN QW1
 
-Physical Line(6) = {7,9}; //  Algan  barr quantum2
-Physical Line(7) = {8};   //  GaN QW2
-Physical Line(8) = {10}; //  Algan  barr quantum3
-Physical Line(9) = {11};   //  GaN QW3
-Physical Line(10) = {12}; //  i-Algan  barr quantum3
-Physical Line(11) = {13}; //  i-Algan  barr no quantum
-Physical Line(12) = {14};   //  p-AlGaN  
+Physical Line("algan_barr_quantum2") = {7,9}; //  Algan  barr quantum2
+Physical Line("GaN_QW2") = {8};   //  GaN QW2
+
+Physical Line("algan_barr_quantum3") = {10}; //  Algan  barr quantum3
+
+Physical Line("GaN_QW3") = {11};   //  GaN QW3
+
+Physical Line("i_AlGaN1_quantum") = {12}; //  i-Algan  barr quantum3
+Physical Line("i_AlGaN2_noquantum") = {13}; //  i-Algan  barr no quantum
+
+Physical Line("p_AlGaN") = {14};   //  p-AlGaN  
 
 
 

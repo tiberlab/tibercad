@@ -3,7 +3,7 @@ $Device
 
   Region well
   {
-    mesh_regions = 1
+#    mesh_regions = 1
     material = GaN
     
     structure = wz
@@ -17,9 +17,9 @@ $Device
 
   }
 
-  Region  buffer
+  Region  buffer1
   {
-    mesh_regions  = 2
+#    mesh_regions  = 2
     material = AlGaN
     x = 0.3
 
@@ -38,9 +38,9 @@ $Device
   
   
 
-  Region  buffer
+  Region  buffer2
   {
-    mesh_regions = 3
+#    mesh_regions = 3
     material = AlGaN
     x = 0.3
     structure = wz
@@ -73,9 +73,9 @@ $Models
    
     BC_Regions  
     {
-      BC_Region ALGANsubstrate
+      BC_Region substrate  #ALGANsubstrate
       {
-	BC_reg_numb = 1
+#	BC_reg_numb = 1
 	type = substrate
 	material = AlGaN
 	x = 0.3
@@ -191,7 +191,7 @@ $Solver
 
  macrostrain
   {
-    substrate = ALGANsubstrate
+    substrate = substrate # ALGANsubstrate
 
   }
 
@@ -335,14 +335,14 @@ $Physics
 
 $Simulation
 {  
-
+  searchpath =    ../../materials 
   meshfile = quantum_well.msh
   mesh_units = 1e-9
  
   dimension = 1
   temperature = 300
   solve = (str, dd, quantum_el, quantum_hl,  dispersion1D_el, dispersion1D_hl, dispersion2D_el, dispersion2D_hl )   
-  resultpath = output
+  resultpath = output_new
   output_format = grace
   plot = (strain, polarization, Ec, Ev, EField , EigenEnergy, EnergyLevels, EigenFunctions, k-space_dispersion)
 }

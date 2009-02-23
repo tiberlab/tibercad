@@ -3,7 +3,7 @@ $Device
 
   Region well
   {
-    mesh_regions = 1
+ #   mesh_regions = 1
     material = GaAs
 
     doping = 1e15
@@ -12,9 +12,9 @@ $Device
 
   }
 
-  Region  buffer
+  Region  buffer1
   {
-    mesh_regions  = (2, 4)
+    mesh_regions  = ( barrier1_a,barrier1_q)  #  (2, 4)
     material = AlGaAs
     x = 0.3
 
@@ -27,9 +27,9 @@ $Device
   
   
 
-  Region  buffer
+  Region  buffer2
   {
-    mesh_regions  = (3, 5)
+    mesh_regions  = (barrier2_a, barrier2_q  )  #  (3, 5)
     material = AlGaAs
     x = 0.3
 
@@ -42,7 +42,7 @@ $Device
 
   Cluster Quantum_1
   {
-    mesh_regions = (1, 4, 5)
+    mesh_regions = (well ,barrier1_q, barrier2_q   )  #   (1, 4, 5)
   }
 
 
@@ -68,7 +68,7 @@ $Models
     {
       BC_Region substrate
       {
-	BC_reg_numb = 1
+#	BC_reg_numb = 1
 	type = substrate
 	material = GaAs
       }
@@ -235,7 +235,7 @@ $Physics
 
 $Simulation
 {
-#  searchpath = ../../materials       
+  searchpath = ../../materials       
   meshfile = quantum_poisson.msh #
   mesh_units = 1e-9
   dimension = 1

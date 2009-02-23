@@ -250,7 +250,7 @@ $Physics
 $Simulation
 {
 
-#  searchpath = ../../materials   
+  searchpath = ../../materials   
   meshfile = InGaAs_1D.msh 
     
   # mesh is drawn in nm

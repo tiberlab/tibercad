@@ -116,11 +116,11 @@ volume++;
 //----------------------------------------------------------------------------------------
 //Physical volumes------------------------------------------------------------------------
 
-Physical Volume(1) =GaN_volumes[0] ;
-Physical Volume(2) =AlGaN_volumes[0];
-Physical Volume(3) =AlGaN_volumes[1];
-Physical Volume(4) =AlGaN_volumes[2];
-Physical Volume(5) =AlGaN_volumes[3];
+Physical Volume("GaN_qdisc") =GaN_volumes[0] ;
+Physical Volume("n_algan") =AlGaN_volumes[0];
+Physical Volume("algan_barrier1") =AlGaN_volumes[1];
+Physical Volume("algan_barrier2") =AlGaN_volumes[2];
+Physical Volume("p_algan") =AlGaN_volumes[3];
 
 
 
@@ -133,10 +133,10 @@ Physical Volume(5) =AlGaN_volumes[3];
 //-----------------------------------------------------------------------------------------
 //Physical surfaces------------------------------------------------------------------------
 
-Physical Surface(1) =  {news - 1}; //p_contact
-Physical Surface(2) = {1}; //n_contact
-Physical Surface(3) =  GaN_side_surface[];    //GaN side surfaces
-Physical Surface(4) =  AlGaN_side_surface[];  //AlGaN side surfaces
+Physical Surface("p_contact") =  {news - 1}; //p_contact
+Physical Surface("ncontact") = {1}; //n_contact
+Physical Surface("GaN_side_surf") =  GaN_side_surface[];    //GaN side surfaces
+Physical Surface("AlGaN_side_surf") =  AlGaN_side_surface[];  //AlGaN side surfaces
 
 
 

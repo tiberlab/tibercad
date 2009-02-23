@@ -19,12 +19,15 @@ Line (2) = {2, 3};
 Line (3) = {3, 4};
 Line (4) = {4, 5};
 Line (5) = {5, 6};
-Physical Point (1) = {1};
 
-Physical Line (1) = {3};
-Physical Line (2) = {1};
-Physical Line (3) = {5};
-Physical Line (4) = {2};
-Physical Line (5) = {4};
 
-Physical Point (2) = {6};
+Physical Line ("well") = {3};
+Physical Line ("barrier1_a") = {1};
+Physical Line ("barrier2_a") = {5};
+Physical Line ("barrier1_q") = {2};
+Physical Line ("barrier2_q") = {4};
+
+
+
+Physical Point ("substrate") = {1};
+Physical Point ("top") = {6};

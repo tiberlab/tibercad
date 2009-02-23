@@ -1,9 +1,9 @@
 $Device
 {
 
-  Region dot
+  Region qdot
   {
-    mesh_regions  = 1
+  #  mesh_regions  = 1
     material = GaN
     x = 0.0
 
@@ -21,9 +21,9 @@ $Device
 
   }
 
-  Region  buffer
+  Region  barrier #buffer
   {
-    mesh_regions = 2
+   # mesh_regions = 2
     material = AlGaN
     x = 0.3
     structure = wz
@@ -41,9 +41,9 @@ $Device
    
   }
 
-  Region  buffer1
+  Region buffer1
   {
-    mesh_regions = 3
+  #  mesh_regions = 3
     material = AlGaN
     x = 0.3
     structure = wz
@@ -61,7 +61,7 @@ $Device
   
   Region  buffer2
   {
-    mesh_regions = 4
+  #  mesh_regions = 4
     material = AlGaN
     x = 0.3
     structure = wz
@@ -82,7 +82,7 @@ $Device
 
   Cluster Quantum_dot
   {
-    mesh_regions =(1,2)
+    mesh_regions = (qdot ,barrier )  #      (1,2)
   }
   
   
@@ -109,7 +109,7 @@ $Models
     {
       BC_Region substrate
       {
-	BC_reg_numb = 1
+#	BC_reg_numb = 1
 	type = substrate
 	material = AlGaN
 	x = 0.3
@@ -167,7 +167,7 @@ $Models
 
       BC_Region surface_states1
       {
-        BC_reg_numb = 2
+      #  BC_reg_numb = 2
     	type = interface
     	Ns = -1e10
  
@@ -177,7 +177,7 @@ $Models
 
       BC_Region surface_states2
       {
-        BC_reg_numb = 3
+     #   BC_reg_numb = 3
     	type = interface
     	Ns = -1e10
    
@@ -239,8 +239,11 @@ $Solver
  macrostrain
   {
    substrate = substrate
+   lin_rel_tol = 1e-6
+   xmonitor =  true
 
-    tolerance = 1e-6
+
+  #  tolerance = 1e-6
 
   }
 
@@ -341,7 +344,7 @@ $Physics
 
 $Simulation
 {
-#  searchpath = ../../materials     
+  searchpath = ../../materials     
   meshfile = quantum_dot.msh #
   mesh_units = 1e-9
   dimension = 3
