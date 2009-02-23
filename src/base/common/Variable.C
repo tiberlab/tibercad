@@ -5,6 +5,7 @@
 
 #include "Variable.h"
 #include "Utils.h"
+#include "InitFailedException.h"
 
 
 using namespace std;
@@ -64,7 +65,7 @@ Variable::get_variable_value(const string& var)
 double
 Variable::check_and_register(const string& s, double defaultval, ID id)
 {
-  if (s.size() > 1)
+  if (s.size() >= 1)
   {
     if (s[0] == '@')
     {
@@ -111,13 +112,13 @@ Variable::check_and_register(const string& s, double defaultval, ID id)
                 pair<Variable*, ID>(this, id)));
         }
       }
+      else
+        throw InitFailedException(s + " is not a valid variable declaration.");
 
     }
     else
       defaultval = Utils::convert<double>(s);
   }
-  else
-    defaultval = Utils::convert<double>(s);
 
   return defaultval;
 }
