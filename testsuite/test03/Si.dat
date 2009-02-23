@@ -2,11 +2,16 @@
 
 structure = zb
 
+
+# lattice constant
+[lattice]
+a = 0.54304
+
+
 [bandgap]
+# T=0 K
 Eg_G = 3.385
 Eg_L = 1.635
-
-# T=0 K
 Eg_X = 1.165
 
 varshni_alpha_G = 0.5367e-3
@@ -21,10 +26,7 @@ varshni_beta_L = 745.8
 
 
 [kdotp]
-# T=300 K
-#Eg_X = 1.12
 E_v = 1.09
-
 
 delta = 0.044
 
@@ -38,6 +40,7 @@ gamma1 = 4.31
 gamma2 = 0.345
 gamma3 = 1.427
 
+
 [deformation_potentials]
 a_c = -10.44
 a_v = 2.05
@@ -49,12 +52,11 @@ uniax_def_pot_X = 9.16
 abs_def_pot_L = -2.07
 uniax_def_pot_L = 16.14
 
+
 [permittivity]
+# static dielectric constant
 permittivity = 11.7
 
-# lattice constant
-[lattice]
-a = 0.54304
 
 # stiffness data
 [elasticity]
@@ -116,7 +118,6 @@ B =  (2.4500e-31,	4.5000e-33)
 C =  (-2.2000e-32,	2.6300e-32)
 H =  (3.46667,		8.25688)
 N0 = (1.0000e+18,	1.0000e+18)
-[]
 
 
 
@@ -141,6 +142,7 @@ hTEpower =  0.001
 
 #Atomistic structure informations
 #
+[atomistic_structure]
 lattice_type = fcc
 
 #Basis 
