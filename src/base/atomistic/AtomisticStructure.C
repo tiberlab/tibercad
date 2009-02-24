@@ -45,9 +45,6 @@ AtomisticStructure::create(const std::string& name)
   AtomisticStructure* st =  NULL;
   st = new AtomisticStructure(name);
 
-  std::cout << "Created AtomisticStructure " << st->get_name() << std::endl;
-
-
   return st;
 }
 
@@ -161,8 +158,6 @@ AtomisticStructure::init()
 
       AtomisticGenerator* generate;
 
-      std::cout << "device dimensions " << _device->get_mesh().mesh_dimension() << std::endl;
-
       if ( _device->get_mesh().mesh_dimension() == 1 ) generate = dynamic_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, 1 ) );
       if ( _device->get_mesh().mesh_dimension() == 2 )  generate = dynamic_cast<AtomisticGenerator2D*> ( AtomisticGenerator::create(this, 2 ) );
       if ( _device->get_mesh().mesh_dimension() == 3 )  generate = dynamic_cast<AtomisticGenerator3D*> ( AtomisticGenerator::create(this, 3 ) );
@@ -171,13 +166,10 @@ AtomisticStructure::init()
 
       std::string name;
       name = _name + ".xyz" ;
-      std::cout << "Printing structure " << name << std::endl;
       print_structure(name);
       name = _name + ".gen" ;
-      std::cout << "Printing structure " << name << std::endl;
       print_structure(name);
       name = _name + ".upg" ;
-      std::cout << "Printing structure " << name << std::endl;
       print_structure(name);
 
     }
@@ -326,9 +318,6 @@ AtomisticStructure::read_structure(const std::string& path)
 
       line_string << line;
 
-      std::cout << "line is " << line << std::endl;
-      std::cout << "line_string is " << line_string << std::endl;
-
       while ( line_string >> record)
         {
           _atom_types.push_back(record);
@@ -402,7 +391,6 @@ AtomisticStructure::print_structure(const std::string& path)
   //#ifdef DEBUG
   //  std::cerr << "AtomisticStructure::print_structure(path) begin. \n";
   //#endif
-  std::cout << "Printing file " << path << std::endl;
   file.open(path.c_str());
 
   // Recognize type of input file and print it properly
@@ -473,7 +461,6 @@ AtomisticStructure::print_structure(const std::string& path)
   else if ( (extension.compare(".upg") == 0) || (extension.compare(".UPG") == 0) )
     {
 
-      std::cout << "Printing upg file " << std::endl;
       //I must build a materials map
       std::map<Material*, unsigned int> material_map;
 
@@ -591,7 +578,6 @@ AtomisticStructure::print_structure(const std::string& path)
           if (mat->is_alloy()) file << std::setw(8) << "  VCA  ";
           else file << std::setw(8) << "CRY" ;
 
-          //std::cout << (dynamic_cast<const Alloy*>(mat))->get_name_A();
 
           //Parental material names
           if (mat->is_alloy()) file << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_A()
@@ -615,9 +601,6 @@ AtomisticStructure::print_structure(const std::string& path)
 
 
           file << std::endl;
-          std::cerr << "Material_map loop D" << std::endl;
-          //delete mat;
-          std::cerr << "Material_map loop E" << std::endl;
         }
 
 

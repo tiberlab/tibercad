@@ -19,14 +19,12 @@ AtomisticGenerator1D::create(AtomisticStructure* const as)
 
 AtomisticGenerator1D::AtomisticGenerator1D(AtomisticStructure* const as)
 {
-std::cout << "start constructor" << std::endl;
   _dim = 1;
                    _as = as;
 	_rotation(1,1) = 1.0; _rotation(1,2) = 0.0; _rotation(1,3) = 0.0; _rotation(2,1) = 0.0; _rotation(2,2) = 1.0;
 	_rotation(2,3) = 0.0; _rotation(3,1) = 0.0; _rotation(3,2) = 0.0; _rotation(3,3) = 1.0;
 
 	_lattice_constant[0] = 0.0; _lattice_constant[1] = 0.0; _lattice_constant[2] = 0.0;
-std::cout << "end constructor" << std::endl;
 }
 
 
@@ -73,8 +71,6 @@ AtomisticGenerator1D::~AtomisticGenerator1D(void){};
         };
 
 	_local_origin(1) = edge_min; _local_origin(2) = 0.0; _local_origin(3) = 0.0;
-
-	std::cout << "local origin " << _local_origin << std::endl;
 
 	double l1 = (fabs(edge_max - edge_min)) * scale;
 

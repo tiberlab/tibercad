@@ -86,8 +86,6 @@ AtomisticGenerator::do_init()
 
   //Set dimensional scale
   scale = _as->get_scale();
-  std::cout << "mesh dimensions is " << _as->get_device()->get_mesh_units() << std::endl;
-  std::cout << "scale is " << scale << std::endl << std::endl << std::endl;
 
   // Set material informations
   //-----------------------------------------------------------------------------------------
@@ -99,17 +97,12 @@ AtomisticGenerator::do_init()
     "when no structure path is specified " << std::endl;}
   std::vector<ID> ids;
   std::string ref_region;
-  std::cout << "1" ;
   ref_region = _as->get_options().get_option("reference_region", "None");
-  std::cout << "1" ;
   _as->get_device()->get_region_ids(ref_region, ids);
-  std::cout << "ids has size " << ids.size() << std::endl;
-  std::cout << "1" ;
   _reference_material = _as->get_device()->get_material(ids[0]);
-  std::cout << "1" ;
 
   structure =  _reference_material->get_structure();
-  std::cout << "parsing parameters... " << std::endl;
+  std::cout << "Parsing atomistic structure parameters... " << std::endl;
   parse_parameters(_reference_material);
 
 
@@ -182,9 +175,6 @@ AtomisticGenerator::do_init()
   preserve = _as->get_options().get_option("preserve", "none");
   cut_and_change_specie(preserve);
 
-
-  std::cout << "Testing new bond map generator " << std::endl;
-
   std::string passivation;
   passivation = _as->get_options().get_option("passivation", "no");
 
@@ -198,21 +188,21 @@ AtomisticGenerator::do_init()
   //Eliminate not included atoms from structure
   //Check structure to eliminate unincluded atoms (using swap in another vector)
   //-----------------------------------------------------------
-   std::vector<Atom> tmp_structure;
-   tmp_structure.reserve(_structure_basis.size());
+  std::vector<Atom> tmp_structure;
+  tmp_structure.reserve(_structure_basis.size());
 
-   for (unsigned int i = 0; i < _structure_basis.size(); i++)
-     {
-       if ((_structure_basis[i].belong_to_structure))
-         {
-           tmp_structure.push_back(_structure_basis[i]);
-         }
-     }
+  for (unsigned int i = 0; i < _structure_basis.size(); i++)
+    {
+      if ((_structure_basis[i].belong_to_structure))
+        {
+          tmp_structure.push_back(_structure_basis[i]);
+        }
+    }
 
-   _structure_basis.clear();
-   _structure_basis.reserve(tmp_structure.size());
-   _structure_basis.swap(tmp_structure);
-//-------------------------------------------------------------
+  _structure_basis.clear();
+  _structure_basis.reserve(tmp_structure.size());
+  _structure_basis.swap(tmp_structure);
+  //-------------------------------------------------------------
 
   bond_map_gen(_structure_basis);
 
@@ -380,7 +370,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                 }
               else
                 {
-                  std::cout << "2Warning, atom is included but no assignment map member could be built " << std::endl;
+                  std::cout << "Warning, atom is included but no assignment map member could be built " << std::endl;
                 }
             }
 
@@ -558,22 +548,6 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
     }
 
 };
-
-
-
-
-
-
-
-
-void AtomisticGenerator::set_cutoff()
-{
-  _cutoff["Si"] = 1.81;
-  _cutoff["Ga"] = 1.2;
-  _cutoff["N"] = 1.2;
-  _cutoff["Al"] = 1.2;
-};
-
 
 
 //Note:: make_supercell is called only with preserve_basis and preserve_conv
@@ -779,7 +753,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   supercell_vect(1,3) = _conv_vect(1,3) * (l3 / conv_l3); supercell_vect(2,3) = _conv_vect(2,3) * (l3 / conv_l3); supercell_vect(3,3) = _conv_vect(3,3) * (l3 / conv_l3);
   inv_supercell_vect = inv(supercell_vect);
 
-  std::cout << "I'm bulding a supercell with " << n1 << n2 << n3 << "conventional cells" << std::endl;
+  //std::cout << "I'm bulding a supercell with " << n1 << n2 << n3 << "conventional cells" << std::endl;
 
   if (_dim == 1) {start_i = -1; start_j = 0; start_l = 0; n1 = n1 + 1;}
   if (_dim == 2) {start_i = -1; start_j =-1; start_l = 0; n1 = n1 + 1; n2 = n2 + 1;}
@@ -810,7 +784,6 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
           //Put lattice point into supercell lattice points array
           _super_lattice.push_back(lattice_point + _local_origin);
 
-          std::cout << _crystal_basis.size() << std::endl;
           basis_iterator=_crystal_basis.begin();
 
           do{
@@ -968,7 +941,6 @@ void AtomisticGenerator::parse_parameters(Material* mat)
   if ( !(mat->is_alloy()) )
     {
       //WORKS ONLY FOR BULK, EXTEND TO ALLOY
-      std::cerr << "Parsing parameters for bulk material " << mat->get_name() << std::endl;
 
       //lattice constant are expressed in Amstrong
       //_lattice_constant[0] = data("a", 0.0) * 10.0;
@@ -984,9 +956,6 @@ void AtomisticGenerator::parse_parameters(Material* mat)
       ////////////////////////////////////////
       _lattice_constant[2] = db.get("c", 0.0) * 10.0;
       if (_lattice_constant[2] == 0.0) _lattice_constant[2] = _lattice_constant[0];
-
-      std::cerr << "lattice constants read are" << _lattice_constant[0] << _lattice_constant[1]
-                                                                                             << _lattice_constant[2] << std::endl;
       db.set_section("atomistic_structure");
       set_lattice_type(db.get("lattice_type", "none"));
 
@@ -1018,7 +987,6 @@ void AtomisticGenerator::parse_parameters(Material* mat)
               tmp.set_flag(i);
 
               record = n_s + "_x";
-              std::cerr << "Record is " << record << std::endl;
               T(1) = db.get(record, 0.0);
               record = n_s + "_y";
               T(2) = db.get(record, 0.0);
@@ -1029,7 +997,7 @@ void AtomisticGenerator::parse_parameters(Material* mat)
 
               //Insert tmp in basis
               _crystal_basis.push_back(tmp);
-              }
+            }
         }
     }
 
@@ -1134,7 +1102,6 @@ void AtomisticGenerator::parse_parameters(Material* mat)
               tmp.set_position(T);
 
               //Insert tmp in basis
-              std::cout << tmp.get_position()  << std::endl;
               _crystal_basis.push_back(tmp);
             }
         }
@@ -1210,9 +1177,6 @@ void AtomisticGenerator::make_conv_cell()
   _conv_prim = inv(_prim_vec) * _conv_vect;
   scale_to_int(_conv_prim);
   _conv_vect = _prim_vec * _conv_prim;
-
-  std::cout << "Conventional vectors are " << _conv_vect << std::endl;
-  std::cout << "Conventional vectors in primitive vectors units are " << _conv_prim << std::endl;
 
   // Calculate distance between equivalent planes for every cut plane
   //prim_miller = inv(prim_miller_basis) * prim_vec * conv_prim;
@@ -1394,7 +1358,7 @@ void AtomisticGenerator::passivate()
 
     }
 
- std::cout << "Passivate done " << std::endl;
+  std::cout << "Passivate done " << std::endl;
 
 
 }

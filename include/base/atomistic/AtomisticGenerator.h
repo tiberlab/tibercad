@@ -131,7 +131,7 @@ protected:
 
 
   // Build cutoff distancies map
-  void set_cutoff();
+  //void set_cutoff();
 
 
   //Passivation routine for bulk structures (periodicization is achieved in derived classes, in hydrogenation routine)

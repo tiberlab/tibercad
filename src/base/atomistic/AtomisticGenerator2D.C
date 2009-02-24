@@ -9,9 +9,7 @@ AtomisticGenerator2D*
 AtomisticGenerator2D::create(AtomisticStructure* const as)
 {
   AtomisticGenerator2D* ag =  NULL;
-  std::cout << "creating 2D atomistic structure... ";
   ag = new AtomisticGenerator2D(as);
-  std::cout << "done" << std::endl;
   return ag;
 }
 

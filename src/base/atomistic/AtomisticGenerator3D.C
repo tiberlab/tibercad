@@ -8,9 +8,7 @@ AtomisticGenerator3D*
 AtomisticGenerator3D::create(AtomisticStructure* const as)
 {
   AtomisticGenerator3D* ag =  NULL;
-  std::cout << "creating 3D atomistic structure... ";
   ag = new AtomisticGenerator3D(as);
-  std::cout << "done" << std::endl;
   return ag;
 }
 
@@ -78,16 +76,8 @@ AtomisticGenerator3D::build()
   }
 
 
-  std::cerr << "min_x = " << min_x << std::endl;
-  std::cerr << "max_x = " << max_x << std::endl;
-  std::cerr << "min_y = " << min_y << std::endl;
-  std::cerr << "max_y = " << max_y << std::endl;
-  std::cerr << "min_z = " << min_z << std::endl;
-  std::cerr << "max_z = " << max_z << std::endl;
-
   _local_origin(1) = min_x * scale; _local_origin(2) = min_y * scale; _local_origin(3) = min_z * scale;
 
-  std::cerr << "_local_origin is " << _local_origin << std::endl;
 
   double l1 = (fabs(max_x - min_x)) * scale;
   double l2 = (fabs(max_y - min_y)) * scale;
