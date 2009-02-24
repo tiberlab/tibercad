@@ -57,9 +57,7 @@ void Poisson::parse_options( )
 
 void  Poisson::do_init( ) 
 {
-  
-
-  const ModelOptions& sim_opt = get_options();
+    const ModelOptions& sim_opt = get_options();
 
   SimulationEnvironment& si = get_environment();   
 
@@ -67,24 +65,17 @@ void  Poisson::do_init( )
 
   mesh = & (_device->get_mesh());
 
-   dim = mesh->mesh_dimension();
+  dim = mesh->mesh_dimension();
 
   double mesh_units = get_scaling().get_calc_mesh_units() / sim_opt.get_option("Work_length_units", 1e-2);
 
   get_scaling().set_calc_mesh_units(mesh_units);
- 
+  
+
 
   my_system = TiberLinearSystem::create(get_equation_systems(),
       get_equation_system_name(), get_solver_options());
 
-
-  //equation_systems = &(get_equation_systems());
-
-  //system_name = get_equation_system_name();
-
-  //equation_systems->add_system<LinearImplicitSystem> (system_name);
-
-  //my_system = &( equation_systems->get_system<LinearImplicitSystem>(system_name));
 
   my_system->add_variable("V", FIRST);
 
@@ -107,6 +98,8 @@ void  Poisson::do_solve()
   
   my_system->set_options(get_solver_options());
   my_system->solve();
+ 
+  check_gauss();
 
 }
 
@@ -177,14 +170,10 @@ void Poisson::build_nodal_results (const std::set< std::string > &variables,
 				     std::vector< std::string > &legend)
 {
 
- 
-
   if (variables.find("V") != variables.end())
   {
     legend.resize(1);
     legend[0] = "Potential[V]";
-
-
 
     MeshBase::const_node_iterator       nd     = mesh->active_nodes_begin();
     const MeshBase::const_node_iterator nd_el  = mesh->active_nodes_end();
@@ -220,6 +209,88 @@ void Poisson::build_nodal_results (const std::set< std::string > &variables,
   }
 }
 
+
+
+
+void
+Poisson::build_elemental_results(const std::set<std::string>& variables,
+					  std::vector<double>& results, std::vector<std::string>& legend)
+{
+
+  // we only do something if we are on processor 0
+  // TODO parallelize
+  if (libMesh::processor_id() != 0)
+    return;
+
+  const set<string>::const_iterator varend(variables.end());
+  
+  vector<ID> ids;
+ 
+  unsigned int n_vars = 0;  
+  
+  const unsigned int nn  = mesh->n_active_elem();
+  const unsigned int dim = mesh->mesh_dimension();
+
+  legend.resize(0);
+  int PC = -1; 
+  if (variables.find("PoissonCharge") != varend)
+  {
+    PC = n_vars;
+    legend.resize(1);
+    legend[0] = "PoissonCharge[Q/cm3]";
+    n_vars +=1;
+  }
+
+  //  int DC = -1; 
+  //if (variables.find("DielectricConstant") != varend)
+  // {
+  //  DC = n_vars;
+  //  legend.resize(legend.size()+2);
+  //  legend[n_vars] = "DielectricConstant[F/cm]";
+  //  n_vars +=1;
+  // }
+    
+  results.resize(nn * n_vars,0.0);
+  
+  MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end =     mesh->active_local_elements_end();
+
+   std::vector<double> charge_density;
+  Tensor2Sym epsilon(0);
+
+
+  unsigned int elem_number = 0;
+  for ( ; it != end; ++it)
+  { 
+    const Elem* elem = *it;
+
+    unsigned int id = n_vars * elem_number;
+   
+    std::vector<Point> _node(1);
+
+    _node[0]=(elem->centroid());
+
+    init_poisson_model(elem);
+    
+
+    if (PC != -1)
+    {
+         poisson_model->get_charge_density(_node,charge_density); 
+         results[id + PC] = charge_density[0];
+    }
+
+    // if (DC != -1)
+    // {
+    // epsilon = poisson_model->get_dielectric_constant();   
+    //  results[id + DC] = epsilon(1,1);
+  
+    // }
+
+    elem_number++;
+  } //over element
+
+  results.resize(elem_number * n_vars);
+}
 
 
 
@@ -284,80 +355,39 @@ void Poisson::assemble_poisson_matrix(EquationSystems& es,
 //----------------------------------------------------------------------------------//
 void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 {
-  
-  SimulationEnvironment& se = get_environment(); 
 
+
+   //Fem Initialization-------------------------------
+  SimulationEnvironment& se = get_environment();
+  //Commons
   LinearImplicitSystem& system = *my_system;
-  
+  DofMap& dof_map =  system.get_dof_map();
   const unsigned int uvar = system.variable_number("V");
-  
-  DofMap& dof_map = system.get_dof_map();
-  
   FEType fe_type = dof_map.variable_type(uvar);
-  
-  // Declare a special finite element object for
-  // volume integration.
-
-
- AutoPtr<FEBase> fe (build_finite_element(dim, fe_type,true));
-  //AutoPtr<FEBase> fe (build_finite_element(dim, fe_type));
-  QGauss qrule (dim, FIFTH); //may be could be decreased (CHECK!!!)
-  
-  // quadrature rule  
-  fe->attach_quadrature_rule (&qrule);
-  
- // The element Jacobian * quadrature weight at each integration point.   
+  std::vector<unsigned int> dof_indices;
+  //Volume function 
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type,true));
+  QGauss qrule (dim, FIFTH); 
+  fe -> attach_quadrature_rule (&qrule);
   const std::vector<Real>& JxW = fe->get_JxW();
-
- // The physical XY locations of the quadrature points on the element.
-  // These might be useful for evaluating spatially varying material
-  // properties at the quadrature points.
   const std::vector<Point>& q_point = fe->get_xyz();
- 
-  // The element shape functions evaluated at the quadrature points.
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
-
-  // The element shape function gradients evaluated at the quadrature
-  // points.
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
 
 
-  // Declare a special finite element object for
-  // boundary integration.
+  //Surface function
+  AutoPtr<FEBase>  fe_face(build_finite_element(dim,fe_type,true));
+  QGauss qface(dim-1, SIXTH);
+  fe_face->attach_quadrature_rule(&qface);
+  const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
+  const std::vector<Real>& JxW_face = fe_face->get_JxW();
+  const std::vector<Point>& qface_point = fe_face->get_xyz();
+  const std::vector<Point>& normal = fe_face->get_normals();
+  const std::vector<std::vector<RealGradient> >& dphi_face = fe->get_dphi();
+  //--------------------------  
 
-  AutoPtr<FEBase> fe_face (FEBase::build(dim, fe_type));
-  // AutoPtr<FEBase>  fe_face(build_finite_element(dim, fe_type));
-  
-  // Boundary integration requires one quadraure rule,
-  // with dimensionality one less than the dimensionality
-  // o cout<<"Start loop over lattice thermal conductivity"<<endl;f the element.map
-  QGauss qface(dim-1, THIRD);
-  
-  // Tell the finite element object to use our
-  // quadrature rule.
-   fe_face -> attach_quadrature_rule (&qface);
-
- // The element Jacobian * quadrature weight at each integration point.   
-   const std::vector<Real>& JxW_face = fe_face->get_JxW(); 
-
-
-   //The physical XY locations of the quadrature points on the element.
-  // These might be useful for evaluating spatially varying material
-  // properties at the quadrature points.
-   const std::vector<Point>& qface_point = fe_face->get_xyz();  
-
-
-  // The element shape functions evaluated at the quadrature point
-   const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi(); 
-		 
-    // The normal to side
-   const std::vector<Point>& normal = fe_face->get_normals(); 
-
- 
-  std::vector<unsigned int> dof_indices;
   
   DenseMatrix<Number>  Ke;
-
   DenseVector<Number>  Fe;
 
   bool node_on_boundary = false;
@@ -368,9 +398,10 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   //Model Variables
   std::vector<double> charge_density;
 
+  double total_charge = 0.0;
   Tensor2Sym epsilon(0);
 
-  Tensor1 bi_pol(0);
+  RealVectorValue _tot_pol(3,0.0);
 
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
@@ -396,25 +427,18 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
      
     Ke.zero();
 
-
     //Init e read from heat model---------------------
 
     init_poisson_model(elem);
-  
-    // charge_density = poisson_model->get_charge_density();
 
-    poisson_model->get_charge_density(q_point,charge_density);
-  
+    poisson_model->get_charge_density(q_point,charge_density); 
 
     epsilon = poisson_model->get_dielectric_constant();
 
-    bi_pol = poisson_model->get_built_in_polarization();
-
+    _tot_pol = poisson_model->get_total_polarization();
     
-
     //-------------------------------------------------
 
-      
     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
     { // loop over test function
 
@@ -494,99 +518,120 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 	
 	   Fe(p1) += JxW[qp] * charge_density[qp] * phi[p1][qp]; 
 
+           total_charge +=  JxW[qp] * charge_density[qp];
+	  
            //Add the polarization 
 
-	      for (short i = 0; i < dim; i++) 
-		Fe(p1) -= JxW[qp] * dphi[p1][qp](i) * bi_pol(i+1);
-	  
+	   for (short i = 0; i < dim; i++) 
+	     Fe(p1) += JxW[qp] * dphi[p1][qp](i) * _tot_pol(i) ;
 
 	   //--------------------
 	   
 	}//end Loop over quadrature points  
 	
- 	const unsigned int num_sides = elem->n_sides();  
-	
- 	for (unsigned int side = 0; side<num_sides; side++) 
- 	{
-	  
- 	  const ElementSide elside(elem->top_parent(), side); 
-	  
- 	  Boundary* bd =   se.get_boundary(elside);
-	  
-          side_on_boundary =  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL ) );  
-	  
- 	  if (side_on_boundary)  
-	  { 
-  	    contact =  dynamic_cast<PoissonContact*>( bd->get_boundary_properties (get_id()) ); 
-	    
-  	    if ( (contact->get_type() == PoissonContact::Neumann)) 
- 	    { 
-	      
- 	      double  D_condition  = ( dynamic_cast<Neumann*> (contact) )->get_polarization();  
+      } //is dirichlet
 
-	       D_condition /=epsilon(1,1);
- 
- 	      fe_face->reinit(elem, side);  
+    }   //test function
+    
+    
+    const unsigned int num_sides = elem->n_sides();  
+    
+    for (unsigned int side = 0; side<num_sides; side++) 
+    {
+      
+      const ElementSide elside(elem->top_parent(), side); 
+      
+      if (se.is_on_boundary(elside))
+      {
+	
+	fe_face->reinit(elem,side);  
+        
+	for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
+	  for (unsigned int qp = 0; qp < qface.n_points(); qp++) 
+	    for (short i = 0; i < dim; i++) 
+	      Fe(p1) -=   JxW_face[qp] * _tot_pol(i) * normal[qp](i) * phi_face[p1][qp]; 
+	
+      }
+      
+    }
+   
+
+ 	//   Boundary* bd =   se.get_boundary(elside);
+	  
+//           side_on_boundary =  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL ) );  
+	  
+//  	  if (side_on_boundary)  
+// 	  { 
+//   	    contact =  dynamic_cast<PoissonContact*>( bd->get_boundary_properties (get_id()) ); 
+	    
+//   	    if ( (contact->get_type() == PoissonContact::Neumann)) 
+//  	    { 
 	      
-	      for (unsigned int qp = 0; qp < qface.n_points(); qp++) 
- 	      { 
+//  	      double  D_condition  = ( dynamic_cast<Neumann*> (contact) )->get_polarization();  
+
+// 	       D_condition /=epsilon(1,1);
+ 
+//  	      fe_face->reinit(elem, side);  
+	      
+// 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++) 
+//  	      { 
 			      
-		//Fe(p1) =  JxW_face[qp] *  D_condition  * phi_face[p1][qp]; 
+// 		//Fe(p1) =  JxW_face[qp] *  D_condition  * phi_face[p1][qp]; 
  
 		
- 	      }  // for (unsigned int qp = 0; qp < qface.n_points(); qp++)    
+//  	      }  // for (unsigned int qp = 0; qp < qface.n_points(); qp++)    
 	      
+	       	      
 	      
-	      
- 	    }//if Neumann 
+//  	    }//if Neumann 
 	    
-	  }//if it is boundary with associated model 
+// 	  }//if it is boundary with associated model 
 	  
 
 
 	  
 	   //Add piezopolarization surface 
           
-           bd =   poisson_model->get_piezo_environment().get_boundary(elside); 
+           //bd =   poisson_model->get_piezo_environment().get_boundary(elside); 
 	  
-           if (bd != NULL) 
-           { 
-	    fe_face->reinit(elem, side);
-	    if (dim>1)
-            {
+           //if (bd != NULL) 
+         //   { 
+// 	    fe_face->reinit(elem, side);
+// 	    if (dim>1)
+//             {
 	      
-	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
-	      {
-		for (short i = 0; i < dim; i++) 
-		{
-		  Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(i+1) * normal[qp](i) *  Constants::e/Constants::epsilon ; 
-		}
-	      }
-	    }    
-	    else
-	    {
-	      double x_c = elem->centroid()(0);
-	      double x_s = elem->point(p1)(0);
-	      double n_1d = 1.0;
+// 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+// 	      {
+// 		for (short i = 0; i < dim; i++) 
+// 		{
+// 		  //	  Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(i+1) * normal[qp](i) *  Constants::e/Constants::epsilon ; 
+// 		}
+// 	      }
+// 	    }    
+// 	    else
+// 	    {
+// 	      double x_c = elem->centroid()(0);
+// 	      double x_s = elem->point(p1)(0);
+// 	      double n_1d = 1.0;
 	      
-	      if (x_s < x_c)
-	      { 
-		n_1d = -1.0;
-	      }  
-	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
-	      {
-		Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(0) * Constants::e * n_1d * Constants::e/Constants::epsilon; 
-	      }
+// 	      if (x_s < x_c)
+// 	      { 
+// 		n_1d = -1.0;
+// 	      }  
+// 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+// 	      {
+// 		//	Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(0) * Constants::e * n_1d * Constants::e/Constants::epsilon; 
+// 	      }
 	      
-	    }//i dim >1   
-	   }// if (bd != NULL) 
- 	}//side 
+// 	    }//i dim >1   
+// 	   }// if (bd != NULL) 
+	//	}//side 
 	
 	//----------------------------------------
 	
-      } //end if it is not a dirichlet boundary
+	//   } //end if it is not a dirichlet boundary
       
-    } // end loop over test functions
+	//   } // end loop over test functions
     
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
     system.matrix->add_matrix (Ke, dof_indices);
@@ -594,7 +639,7 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
     
   } //End Loop over elements
-  
+  //std::cout<<total_charge<<std::endl;
   
 } //do assembly
 
@@ -677,8 +722,13 @@ Poisson::convert_variable_name_to_id(const string& variable_name) const
    ID id = INVALID_ID;
 
     if (variable_name == "potential" )
-       id  = POTENTIAL;
-     
+      id  = POTENTIAL;
+    if (variable_name == "e_field_x" )
+      id  = EX; 
+    if (variable_name == "e_field_y" )
+      id  = EY; 
+    if (variable_name == "e_field_z" )
+      id  = EZ; 
 
   return id;
 }
@@ -702,7 +752,7 @@ Poisson::get_solution_secure(const Elem* elem,
   for (unsigned int n = 0; n < elem->n_nodes(); n++)
   {
     
-     if (ids.count(POTENTIAL))
+    if (ids.count(POTENTIAL))
       values[n][POTENTIAL] = (*(system.solution))(dof_indices[n]);
 
   }
@@ -723,14 +773,16 @@ Poisson::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   DofMap& dof_map =  system.get_dof_map();
 
-  const unsigned int uvar = system.variable_number("T");
+  const unsigned int uvar = system.variable_number("V");
 
   FEType fe_type = dof_map.variable_type(uvar);
-  
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+   AutoPtr<FEBase>  fe(build_finite_element(dim,fe_type,true));
+
 
   // element shape functions
    const vector<vector<Real> >& phi = fe->get_phi();
+   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+  
 
   vector<Point> points(np);
 
@@ -744,19 +796,164 @@ Poisson::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   const unsigned int n_dofs   = dof_indices.size();
 
+  std::vector<double> E(3);
+  E.clear();
+  double V = 0.0;
+  init_poisson_model(elem); 
+
+
   for (unsigned int n = 0; n < np; n++)
   {
-     double V = 0;
+    V = 0.0;
+    E.clear();
 
     //do interpolation
     for (unsigned int i = 0; i < n_dofs; i++)
     {
-   
       V  += phi[i][n] * (*(system.solution))(dof_indices[i]);
+      
+      for (unsigned j = 0; j<dim; ++j)
+      {
+	E[j] -=  dphi[i][n](j) * (*(system.solution))(dof_indices[i]);
+      }
+  
     }
-    
-     if (ids.count(POTENTIAL))
+    if (ids.count(POTENTIAL))
       values[n][POTENTIAL] = V;
+    
+    if (ids.count(EX))
+      values[n][EX] = E[0];
+    
+    if (ids.count(EY))
+      values[n][EY] = E[1];
+    
+    if (ids.count(EZ))
+      values[n][EZ] = E[2];
+    
   }
+  
+}
+
+double
+Poisson::check_gauss()
+{
+  //Fem Initialization-------------------------------
+  SimulationEnvironment& se = get_environment();
+  //Commons
+  LinearImplicitSystem& system = *my_system;
+  DofMap& dof_map =  system.get_dof_map();
+  const unsigned int uvar = system.variable_number("V");
+  FEType fe_type = dof_map.variable_type(uvar);
+  std::vector<unsigned int> dof_indices;
+  //Volume function 
+  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type,true));
+  QGauss qrule (dim, FIFTH); 
+  fe -> attach_quadrature_rule (&qrule);
+  const std::vector<Real>& JxW = fe->get_JxW();
+  const std::vector<Point>& q_point = fe->get_xyz();
+  const std::vector<std::vector<Real> >& phi = fe->get_phi();
+  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+
+
+  //Surface function
+  AutoPtr<FEBase>  fe_face(build_finite_element(dim,fe_type,true));
+  QGauss qface(dim-1, SIXTH);
+  fe_face->attach_quadrature_rule(&qface);
+  const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
+  const std::vector<Real>& JxW_face = fe_face->get_JxW();
+  const std::vector<Point>& qface_point = fe_face->get_xyz();
+  const std::vector<Point>& normal = fe_face->get_normals();
+  const std::vector<std::vector<RealGradient> >& dphi_face = fe->get_dphi();
+
+  //Start calculation
+
+  double total_charge = 0.0;
+  double total_flux = 0.0;
+  std::vector<double> charge_density;
+  Tensor2Sym epsilon(0);
+  Tensor1 normals;
+
+ 
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+
+  for ( ; el != end_el ; ++el)   //loop over elements
+  {  
+    //Initialize for a given element
+    const Elem* elem = *el;
+    dof_map.dof_indices (elem, dof_indices);  
+    const unsigned int n_dofs = dof_indices.size();
+    fe->reinit(elem);
+    init_poisson_model(elem); 
    
+
+    //Charge Density
+    poisson_model->get_charge_density(q_point,charge_density); 
+    for (unsigned int qp=0; qp<qrule.n_points(); qp++)  
+      total_charge +=  JxW[qp] * charge_density[qp];
+   
+   
+
+    //Flux
+    epsilon = poisson_model->get_dielectric_constant();
+    const unsigned int num_sides = elem->n_sides();
+    for (unsigned int side = 0; side<num_sides; side++)
+    {
+      ElementSide elside(elem->top_parent(),side);
+      if (se.is_on_boundary(elside))
+      {
+        fe_face->reinit(elem,side);
+
+        
+	std::vector< std::map< ID, double > > electric_field;
+
+	std::set<ID> IDFIELD;
+        IDFIELD.insert(EX);
+        IDFIELD.insert(EY);
+        IDFIELD.insert(EZ);
+       
+
+        get_solution_secure(elem,qface_point,IDFIELD,electric_field); 
+
+       
+
+ 	for (unsigned int qp = 0; qp <  qface.n_points(); qp++)	
+ 	{
+
+	   Tensor1 E(0);
+           Tensor1 D(0);
+	   double flux = 0.0;
+
+ 	   E(1) = electric_field[qp].find(EX)->second;
+ 	   E(2) = electric_field[qp].find(EY)->second;
+ 	   E(3) = electric_field[qp].find(EZ)->second;
+	 
+          
+           D = epsilon * E;
+
+	   for( unsigned int kt =0;kt<3;kt++)   
+	     normals(kt+1)=normal[qp](kt);
+
+	 
+           flux = D*normals;
+	  
+	
+	  total_flux =  total_flux + flux;
+	  
+	   if (dim> 1)
+ 	    total_flux *= JxW[qp]; 
+ 
+	  
+ 	 }
+
+      }
+
+    }
+
+ 
+  }
+
+
+  std::cout<< "Total Charge:"<< total_charge<<std::endl;
+  std::cout<<"Total flux:"<< total_flux<<std::endl;
 }

@@ -73,15 +73,15 @@ l26=newl;Line Loop(l26) = {l14,l15,l16,l17,l2,l3,l4,l7,l8,l9,l10};
 s4=news;Plane Surface(s4) = {l26};
 
 
-Physical Surface(1) = {s1}; // nside
-Physical Surface(2) = {s2,s3}; // pside
-Physical Surface(3) = {s4}; // thermal
+Physical Surface("n_side") = {s1}; // nside
+Physical Surface("p_side") = {s2,s3}; // pside
+Physical Surface("air") = {s4}; // thermal
 
 
 
-lp1=newl;Physical Line(1) = {l10}; // anode
-lp2=newl;Physical Line(2) = {l3}; // cathode
-Physical Line(3) = {l15,l16,l17}; // thermal
-Physical Line(4) = {l1}; // thermal
+lp1=newl;Physical Line("anode") = {l10}; // anode
+lp2=newl;Physical Line("cathode") = {l3}; // cathode
+Physical Line("reservoir") = {l15,l16,l17}; // thermal
+Physical Line("dissipator") = {l1}; // thermal
 
 

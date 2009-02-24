@@ -157,9 +157,11 @@ void  MacroHeatBalance::do_solve()
      //std::cout<<"Power Dissipated rstf"<<"  "   <<power_dissipated_rstf<<std::endl;
   
 
-
-   std::cout<<"Energy Conservation:"<<"  "   <<check<<"  %"<<std::endl;
-  std::cout<<"  "<<std::endl;
+     if (SimulationOptions::verbose() > 1)
+     {
+       std::cout<<"Energy Conservation:"<<"  "   <<check<<"  %"<<std::endl;
+       std::cout<<"  "<<std::endl;
+     }
  
 }
 
@@ -262,6 +264,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   //
   // The element Jacobian * quadrature weight at each integration point.   
   const std::vector<Real>& JxW = fe->get_JxW();
+
   
   // The physical XY locations of the quadrature points on the element.
   // These might be useful for evaluating spatially varying material

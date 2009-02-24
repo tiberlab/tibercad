@@ -65,7 +65,6 @@ class  OptDielectricConstant: public PhysicalModelInterface
   //!Create a new model of the same type.
   virtual PhysicalModelInterface* create_new (void) const =0;
 
-
   //! real dielectric  tensor in simulation system. 
   Tensor2Sym _dielectric_constant_real;
 

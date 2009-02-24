@@ -6,9 +6,14 @@
 #include "elem.h"
 #include "SimulationInterface.h"
 #include "ChargeDensityModel.h"
-#include "DielectricModel.h"
+//#include "DielectricModel.h"
 #include "Macrostrain.h"
 #include "SimulationEnvironment.h"
+#include "StrainInterface.h"
+#include "OptDielectricConstant.h"
+
+
+class PyroPolarization;
 
 //!Class that contains all the physical quantities necessary for the POISSON solver
 class PoissonModel: public PhysicalModel
@@ -26,9 +31,6 @@ class PoissonModel: public PhysicalModel
   
   void 	re_init(void);
   
-  //!Get the piezo simulation environment
-  SimulationEnvironment& get_piezo_environment();
-  
   //!Set the current element
   void set_element(const Elem* elem);
   
@@ -41,19 +43,54 @@ class PoissonModel: public PhysicalModel
   //!Return the charge density for the current element
   Tensor2Sym get_dielectric_constant(); 
 
-  //!Return the piezopolarization a the given element
-  Tensor1 get_built_in_polarization(); 
-
+  //Tensor1 get_built_in_polarization(const std::vector<Point> q_point, std::vector<Tensor1>& built_in_polarization);
   //!charge density (electron/cm^3)
   void get_charge_density(const std::vector<Point> q_point, std::vector<double>& charge_density);
 
+  
+  //! The pyropolarization
+  PyroPolarization* _pyropolarization;
+  
+  //! The total electric polarization
+  RealVectorValue _polarization;
+
+  const RealVectorValue& get_total_polarization(void) ;
+
+   //! Get the strain
+    const Tensor2Sym& get_strain(void) const;
+
  private:
+
+  Point _coord;
+  
+  OptDielectricConstant* _epsilon_model;
+  
+  Tensor2Sym _strain;
+
+    //! The interface to a strain simulation
+    StrainInterface _strain_if;
+
+  //  enum strain_variables
+  //{
+  //   E_XX = 0,
+  //   E_XY,  
+  //   E_XZ,
+  //   E_YY,
+  //   E_YZ,
+  //   E_ZZ
+  // };
+
+   //!Strain variables 
+   //std::set<ID> pol_ID;
+
+   //!Variable map
+   //std::map<ID,ID> var_map;
 
    //!A pointer to cherge density simulation
   SimulationInterface* _chd_sim;
 
   //!A pointer to cherge piezoelectricity simulation
-  Macrostrain* _piezo_sim;
+  Macrostrain* _strain_sim;
   
   //! ID for charge density simulation
   ID charge_id;
@@ -65,7 +102,10 @@ class PoissonModel: public PhysicalModel
 
      bool piezo_pol;
 
-    bool  chd_sim;
+     std::string  chd_sim_name;
+
+    bool add_doping;
+
    };
     
   //!Options for Poisson model
@@ -84,7 +124,7 @@ class PoissonModel: public PhysicalModel
    PoissonModel (const PoissonModel&  t) {};
 
    //!relative dielectric constant
-   Tensor2Sym _epsilon;
+  Tensor2Sym _epsilon;
 
   // //!charge density (electron/cm^3)
    //std::vector<double> _charge_density;
@@ -94,13 +134,13 @@ class PoissonModel: public PhysicalModel
   // ChargeDensityModel* chd_model;
 
    //!A pointer to dielectric constant model
-   DielectricModel* dielectric_model;
+  //   DielectricModel* dielectric_model;
 
   //!Pyropolarization
-  Tensor1  _pyropolarization;
+  //  Tensor1  _pyropolarization;
  
   //!Piezopolarization
-  Tensor1  _piezopolarization;
+  //Tensor1  _piezopolarization;
   
  protected:
 
@@ -154,17 +194,7 @@ PoissonModel::get_dielectric_constant()
 {
 
  
-  return _epsilon;
-
-}
-
-inline
-Tensor1
-PoissonModel::get_built_in_polarization()
-{
-
-  return  (_pyropolarization + _piezopolarization);
-
+  return _epsilon * Constants::epsilon * 1e-2;
 
 }
 

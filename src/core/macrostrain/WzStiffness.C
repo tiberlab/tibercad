@@ -51,7 +51,6 @@ void WzStiffness::read_database ( )
   double c44 = db.get("C44", 0.0, true);
 
 
-
   set_moduli(c11,  c12,  c13,  c33,  c44);
 
 

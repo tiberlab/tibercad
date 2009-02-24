@@ -534,7 +534,6 @@ DriftDiffusionProperties::reinit(const Elem* elem)
 
     _strain_if.get_strain_data(elem, _strain, _polarization);
 
-
     if (_user_defined_polarization != NULL)
       set_polarization(*_user_defined_polarization);
     else

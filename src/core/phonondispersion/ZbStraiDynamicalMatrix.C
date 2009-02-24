@@ -99,25 +99,25 @@ void  ZbStrainDynamicalMatrix::re_init(void)
   if  (_simul->get_solution(elem,h_point,ID_set,solution))
   {
     
-        Tensor2Sym strain;
-
-        strain(1,1) = solution[0].find(var_map[E_XX])->second;
-        strain(2,1) = solution[0].find(var_map[E_XY])->second;
-        strain(3,1) = solution[0].find(var_map[E_XZ])->second;
-        strain(2,2) = solution[0].find(var_map[E_YY])->second;
-        strain(3,2) = solution[0].find(var_map[E_YZ])->second;
-        strain(3,3) = solution[0].find(var_map[E_ZZ])->second;
-
-      _dynamical_matrix =  deformation_potential * strain;
-     
-       Material* mat = get_material();
-
-       const RotatedCrystal&   cr = mat->get_rotated_crystal ();
-
-       rotate_to_calculation_system(cr.RotMatrix);
-
-
-    }
+    Tensor2Sym strain;
+    
+    strain(1,1) = solution[0].find(var_map[E_XX])->second;
+    strain(2,1) = solution[0].find(var_map[E_XY])->second;
+    strain(3,1) = solution[0].find(var_map[E_XZ])->second;
+    strain(2,2) = solution[0].find(var_map[E_YY])->second;
+    strain(3,2) = solution[0].find(var_map[E_YZ])->second;
+    strain(3,3) = solution[0].find(var_map[E_ZZ])->second;
+    
+    _dynamical_matrix =  deformation_potential * strain;
+    
+    Material* mat = get_material();
+    
+    const RotatedCrystal&   cr = mat->get_rotated_crystal ();
+    
+    rotate_to_calculation_system(cr.RotMatrix);
+    
+    
+  }
    
     
 

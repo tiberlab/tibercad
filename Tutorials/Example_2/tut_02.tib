@@ -99,12 +99,6 @@ $Models
 $Solver
 
 {
-
-  driftdiffusion
-  {
-    #nonlin_step_tol = 1e-6
-  }
-
   sweep
   {
     simulation = (dd, tt)
@@ -122,7 +116,6 @@ $Physics
 {
   driftdiffusion 
   {
-
     statistics =  FD
   }
 
@@ -135,7 +128,6 @@ $Physics
 
 $Simulation
 {
-#  searchpath = ../../materials
   meshfile = tut_02.msh
   dimension = 1
   temperature = 300

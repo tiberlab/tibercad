@@ -32,7 +32,10 @@ class Poisson : public SimulationInterface
   enum Variables
     {
       UNKNOW,
-      POTENTIAL
+      POTENTIAL,
+      EX,
+      EY,
+      EZ 
     };
   
   /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
@@ -96,12 +99,15 @@ class Poisson : public SimulationInterface
   virtual void get_solution_secure(const Elem* elem,
 				   const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
 
+  virtual void build_elemental_results(const std::set<std::string>& variables,
+				       std::vector<double>& results, std::vector<std::string>& legend);
 
   
  private:
   
   PoissonModel* poisson_model; 
     
+  double check_gauss(void);
 
    //! Quadrature point along the face of the element 
   const std::vector<Point> qface_point;
