@@ -87,6 +87,7 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep blas | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep stdc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep gcc_s | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep g2c | awk '{print $3}'`"
   cp $libs ${files}/${ARCH}/lib
   cp ${topdir}/bin/tibercad ${files}/${ARCH}/bin
   chmod a+x ${files}/${ARCH}/bin/tibercad
