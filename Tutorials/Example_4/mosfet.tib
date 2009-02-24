@@ -146,7 +146,7 @@ $Physics
 
 $Simulation
 {
-  searchpath =  ../../materials 
+  #searchpath =  ../../materials 
   meshfile = mosfet.msh
   dimension = 2
   temperature = 300

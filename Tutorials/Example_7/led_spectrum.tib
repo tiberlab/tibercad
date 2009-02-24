@@ -590,7 +590,7 @@ $Simulation
 {
 
 
-  searchpath =  ../../materials       
+  #searchpath =  ../../materials       
   meshfile = led_spectrum.msh #  
   verbose = 3    
   mesh_units = 1e-9       #nm 
