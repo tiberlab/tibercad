@@ -1,3 +1,8 @@
+2009-02-25 Auf der Maur
+	( ) improve/document tunneling current (analytical model)
+	( ) implement inspect output
+	( ) implement doping profile/external doping
+
 2008-10-29 Auf der Maur
 	( ) implement ObjectStatus class
 
