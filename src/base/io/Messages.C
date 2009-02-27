@@ -34,7 +34,7 @@ Messages::_endl    = string(normal) + "\n";
 void
 Messages::warning(const string& msg)
 {
-  cout << _warning << msg << _reset << _endl;
+  cout << _warning << msg << _reset << _endl << flush;
 }
 
 
@@ -42,7 +42,7 @@ Messages::warning(const string& msg)
 void
 Messages::error(const string& msg)
 {
-  cerr << _error << msg << _reset << _endl;
+  cerr << _error << msg << _reset << _endl << flush;
 }
 
 
@@ -50,7 +50,7 @@ Messages::error(const string& msg)
 void
 Messages::info(const string& msg)
 {
-  cerr << msg << _endl;
+  cerr << msg << _endl << flush;
 }
 
 

@@ -226,6 +226,7 @@ $Solver
     nonlin_max_it = 15
     nonlin_rel_tol = 1e-12
     nonlin_step_tol = 1e-6
+    ls_max_step = 4
   
   }
 
