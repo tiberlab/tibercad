@@ -1,3 +1,5 @@
+// $Id$
+
 #include "AtomisticStructure.h"
 #include "AtomisticGenerator.h"
 #include "AtomisticGenerator1D.h"
@@ -81,16 +83,6 @@ AtomisticStructure::AtomisticStructureOptions::~AtomisticStructureOptions(void)
 //  return *this;
 //}
 
-
-GetPot
-AtomisticStructure::getdata(const Material* mat)
-{
-  GetPot data;
-  Database database = (_device->get_control()).get_database();
-  database.set_material(mat->get_name());
-  data.parse_input_file(database.get_data_file());
-  return data;
-}
 
 
 void

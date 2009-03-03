@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _ATOMISTICSTRUCTURE_H_
 #define _ATOMISTICSTRUCTURE_H_
 
@@ -7,7 +9,6 @@
 #include "Control.h"
 #include "Device.h"
 #include "Database.h"
-#include "getpot.h"
 #include "Atom.h"
 
 //forward declaration
@@ -71,8 +72,6 @@ public:
   //! Get the structure name
   const std::string& get_name(void);
 
- //!Utility for parsing data from database (needed when Materials::init() has not been launched yet)
-  GetPot getdata(const Material* mat);
 
   //! Get set of regions covered by atomistic structure
   const std::set<std::string>& get_region(void);

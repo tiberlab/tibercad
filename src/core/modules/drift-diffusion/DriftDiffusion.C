@@ -3590,7 +3590,8 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
 
 
   int J = -1;
-  if (variables.find("Current") != varend)
+  if ((variables.find("CurrentDensity") != varend) ||
+      (variables.find("Current") != varend))
   {
     legend.resize(legend.size() + dim);
     J = n_vars;

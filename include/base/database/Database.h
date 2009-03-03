@@ -110,6 +110,12 @@ class Database
 
   private:
 
+    //! It is forbidden to copy the database
+    Database(const Database&);
+
+    //! It is forbidden to copy the database
+    Database& operator=(const Database&);
+
     //! The search path for the material files
     std::string _path;
 
