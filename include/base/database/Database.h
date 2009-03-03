@@ -28,6 +28,9 @@ class Database
     //! Set the system wide default search path
     static void set_default_search_path(const std::string& path);
 
+    //! Get the system wide default search path
+    static std::string& get_default_search_path(void);
+
     //! Set the material
     /*!
      * \param material the name of the material
@@ -174,6 +177,14 @@ const std::string&
 Database::get_section(void) const
 {
   return _section;
+}
+
+
+inline
+std::string&
+Database::get_default_search_path(void)
+{
+  return _default_path;
 }
 
 
