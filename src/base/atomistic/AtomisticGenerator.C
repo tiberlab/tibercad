@@ -270,6 +270,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
   _structure_basis.clear();
   assign.clear();
+  _structure_basis.reserve(_super_basis.size());
 
   for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); reg++)
     {
@@ -759,6 +760,12 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   if (_dim == 2) {start_i = -1; start_j =-1; start_l = 0; n1 = n1 + 1; n2 = n2 + 1;}
   if (_dim == 3) {start_i = -1; start_j =-1; start_l = -1; n1 = n1 + 1; n2 = n2 + 1; n3 = n3 + 1;}
 
+  //Definition of unmber of conventional cells, useful for reserving arrays
+  unsigned int max_number_of_cells = n1 + n2 + n3 + 6;
+  _super_conv.reserve(max_number_of_cells);
+  _super_lattice.reserve(max_number_of_cells * _conv_lattice_basis.size());
+  _super_basis.reserve(max_number_of_cells * _conv_lattice_basis.size() * _crystal_basis.size());
+
   //Need to construct a redundant supercell (for passivation purposes)
   //Note that it must be redundant only in non periodic directions
   for (i = start_i; i <= n1; i++){
@@ -866,7 +873,7 @@ AtomisticGenerator::set_lattice_type(const std::string lattice_name)
     _prim_vec(1,3) = 0.0; _prim_vec(2,3) = 0.0; _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
 
   }
-
+//TODO:generalize to anatase
   else if (_lattice_type.compare("anatase") == 0) {
 
     assert(_lattice_constant[0] == _lattice_constant[1]);
