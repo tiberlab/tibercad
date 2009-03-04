@@ -429,6 +429,8 @@ EnvelopFunctionApprox::EnvelopFunctionApprox()
   temperature_simulation = NULL;
 
   strain = NULL;
+
+  _bulk_mat_element = NULL;
 }
 //===================================================//
 void EnvelopFunctionApprox::parse_options()

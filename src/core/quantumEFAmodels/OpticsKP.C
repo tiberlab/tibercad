@@ -74,9 +74,10 @@ void OpticsKP::parse_options()
   {
     std::vector<unsigned int> temp;
     mod_opt.get_option("initial_eigenstates", temp);
+   
     if (temp.size() == 2)
       if (temp[0] <= temp[1])
-        if (temp[0] >= 0 && temp.size() <=in_solution.size())
+        if (temp[0] >= 0 && temp[1]-temp[0] <=in_solution.size())
         {
           _initial_eigen_state_numbers.resize(temp[1] - temp[0] + 1 );
           unsigned int j = 0;
@@ -99,7 +100,7 @@ void OpticsKP::parse_options()
     mod_opt.get_option("final_eigenstates", temp);
     if (temp.size() == 2)
       if (temp[0] <= temp[1])
-        if (temp[0] >= 0 && temp.size() <=fin_solution.size())
+        if (temp[0] >= 0 && temp[1]-temp[0] <=fin_solution.size())
         {
           _final_eigen_state_numbers.resize(temp[1] - temp[0] + 1 );
           unsigned int j = 0;
@@ -461,7 +462,22 @@ void OpticsKP::calculate_P_matrix_elements ( )
 
 void OpticsKP::calculate_matrix_bulk(void)
 {
+   
+  const Elem* mat_elem = initial_state_model->return_bulk_element();
+ 
+  Point qp = mat_elem->centroid();
 
+
+  EFAbulkHamiltonian* element_hamiltonian;
+
+  const ID subdomain = mat_elem->subdomain_id();
+
+  const Material* mat = _device->get_material(subdomain);
+
+  element_hamiltonian = 
+    (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) ))->get_Hamiltonian_model();
+
+  element_hamiltonian->set_k_vector(k_vector);
 
 }
 

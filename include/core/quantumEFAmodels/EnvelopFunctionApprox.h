@@ -258,10 +258,13 @@ class EnvelopFunctionApprox  : public EigenvalueProblem
   std::map<const Elem*, double> estimate_density2D(unsigned int state_number, double parallel_mass);
 
 
-  inline double get_particle_charge(void) const; 
-  
+  inline double get_particle_charge(void) const;
+ 
+  //! element used for bulk calculations
+  const Elem* _bulk_mat_element;
 
-  
+  //! returns element used for bulk calculation 
+  inline const Elem*  return_bulk_element(void) const;
 
  private:
 
@@ -601,6 +604,9 @@ inline double EnvelopFunctionApprox::get_particle_charge(void) const
     return +1.0;
 } 
 
-
+inline const Elem*  EnvelopFunctionApprox::return_bulk_element(void) const
+{
+  return _bulk_mat_element;
+}
 
 #endif
