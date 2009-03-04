@@ -3,8 +3,6 @@
 #ifndef _MESSAGES_H_
 #define _MESSAGES_H_
 
-#include "TypeDefs.h"
-
 #include <string>
 #include <iostream>
 
@@ -22,6 +20,23 @@ class Messages
 
   public:
 
+    //! Constructor
+    Messages(void);
+
+    //! Destructor
+    /*!
+     * Resets indentation to former value
+     */
+    ~Messages(void);
+
+
+    //! Add a level of indentation
+    void indent(void);
+
+    //! Decrease level of indentation
+    void unindent(void);
+
+
     //! Print a warning
     static void warning(const std::string& msg);
 
@@ -38,11 +53,11 @@ class Messages
     static void info(const std::string& msg);
 
 
+    //! Add empty line
+    static void newline(void);
+
     
   private:
-
-    //! This class is for static use only!
-    Messages(void);
 
 
     //! Warning keyword
@@ -60,6 +75,13 @@ class Messages
     //! An 'extended' endl
     static std::string _endl;
 
+
+    //! The global indentation level
+    static int _indent;
+
+    //! The local indentation
+    int _indent_loc;
+
 };
 
 
@@ -68,18 +90,34 @@ class Messages
 // inline methods
 // 
 
+inline
+Messages::Messages(void) : _indent_loc(0) { };
+
+
+inline
+Messages::~Messages(void)
+{
+  newline();
+  _indent -= _indent_loc;
+}
+
 
 inline
 void
-Messages::debug(const std::string& msg)
+Messages::indent(void)
 {
-#ifdef DEBUG
-  error(msg);
-#else
-  ignore_unused_variable(msg);
-#endif
+  _indent_loc++;
+  _indent++;
 }
 
+
+inline
+void
+Messages::unindent(void)
+{
+  if (_indent_loc > 0) _indent_loc--;
+  if (_indent > 0) _indent--;
+}
 
 
 

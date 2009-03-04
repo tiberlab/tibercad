@@ -73,20 +73,34 @@ Device::setup_mesh(void)
 
   delete _mesh;
 
+  Messages m;
+  m.info("Setup mesh");
+  m.indent();
+
   _mesh_units = _options.get_option("mesh_units", _mesh_units);
-  cout << "mesh units: " << _mesh_units << " m" << endl;
+
+
+  int dim = _options.get_option("dimension", 2);
+  _mesh = new Mesh(dim);
+
+  const string& meshfile = _options["meshfile"];
+
+  {
+    ostringstream os;
+    os << "mesh file     : " << meshfile << endl
+       << "mesh units    : " << _mesh_units << " m" << endl
+       << "mesh dimension: " << dim;
+    m.info(os.str());
+    m.newline();
+  }
 
   const string& sym = _options.get_option("symmetry", "");
   if (sym == "cylindrical")
   {
     _symmetry = TiberCad::CYLINDRICAL;
-    cout << "Using cylinder symmetry." << endl;
+    m.info("Using cylinder symmetry (=> 3D simulation)");
   }
   
-  int dim = _options.get_option("dimension", 2);
-  _mesh = new Mesh(dim);
-
-  const string& meshfile = _options["meshfile"];
 
   _meshdata = new MeshData_elements(*_mesh);
   
@@ -97,6 +111,7 @@ Device::setup_mesh(void)
   delete _boundary_nodes;
   _boundary_nodes = new map<unsigned int, vector<ID> >();
 
+  m.info("Reading mesh file ...");
 
   MeshInput::read_mesh(meshfile, dim, *_mesh, *_meshdata, *_boundary_nodes,
                        _mesh_region_names, _boundary_region_names);
@@ -104,6 +119,9 @@ Device::setup_mesh(void)
   MeshUtils::assign_subdomain_ids(*_mesh, *_meshdata);
 
   MeshUtils::get_subdomain_ids(*_mesh, _region_ids);
+
+  m.info("done.");
+  m.newline();
 
   /*
    * NOTE:
@@ -113,7 +131,6 @@ Device::setup_mesh(void)
 
 #ifdef DEBUG
   cout << endl << "Device::setup_mesh(): ";
-  cout << "   meshfile : " << meshfile << " (" << dim << "D)" << endl;
   _mesh->print_info();
 #endif
 
@@ -184,8 +201,8 @@ Device::set_material(Material* material, const vector<ID>& region_ids,
 
   ostringstream os;
   os << "Added material " << material->get_name()
-    << " for region " << region_name
-    << " (mesh regions " << region_ids[0];
+    << " for region \'" << region_name
+    << "\' (mesh regions " << region_ids[0];
   for (unsigned int i = 1; i < region_ids.size(); ++i)
     os << ", " << region_ids[i];
   os << ")" << endl;

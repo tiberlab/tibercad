@@ -128,9 +128,7 @@ Control::create_device(void)
 {
   using namespace boost::filesystem;
 
-#ifdef DEBUG
-  cerr << "Control::create_device() begin" << endl;
-#endif
+  Messages::debug("Control::create_device() begin");
 
   InputParser parser(_inputfile);
 
@@ -142,11 +140,32 @@ Control::create_device(void)
   DLLoader::prepend_to_library_path(opts.get_option("modellibpath", "."));
   opts.delete_option("modellibpath");
 
-#ifdef DEBUG
-  cerr << " initialize global simulation options" << endl;
-#endif
-  // initialize global simulation options
-  SimulationOptions::initialize(opts);
+  _outputdir = opts.get_option("resultpath", _outputdir);
+  opts.delete_option("resultpath");
+
+  _output_format = opts.get_option("output_format", "gmv");
+
+  {
+    Messages m;
+    m.info("Initialize global simulation options");
+    m.indent();
+
+    // initialize global simulation options
+    SimulationOptions::initialize(opts);
+
+    ostringstream os;
+    os << "Simulation temperature: "
+      << SimulationOptions::temperature << " K" << endl
+      << "Database search path  : "
+      << _database->get_search_path() << endl
+      << "Output directory      : "
+      << _outputdir << endl
+      << "Output file format    : "
+      << _output_format << endl << endl;
+    m.info(os.str());
+    m.newline();
+  }
+
 
 
   //! read the variables we want to plot
@@ -156,12 +175,8 @@ Control::create_device(void)
   for (unsigned int i = 0; i < vars.size(); i++)
     _plotvariables.insert(vars[i]);
 
-#ifdef DEBUG
-  cerr << " create output directory" << endl;
-#endif
+
   // create output directory
-  _outputdir = opts.get_option("resultpath", _outputdir);
-  opts.delete_option("resultpath");
   path outpath(_outputdir, native);
   if (!exists(outpath))
   {
@@ -180,27 +195,13 @@ Control::create_device(void)
   }
 
 
-  _output_format = opts.get_option("output_format", "gmv");
-
-
-#ifdef DEBUG
-  cerr << " create device" << endl;
-#endif
   _device = Device::create(opts);
 
 
   // tell the device who controls it
   _device->set_control(this);
 
-  ostringstream os;
-  os << "Simulation temperature = " <<
-    SimulationOptions::temperature << " K" << endl;
-  Messages::info(os.str());
-
-
-#ifdef DEBUG
-  cerr << "Control::create_device() end" << endl;
-#endif
+  Messages::debug("Control::create_device() end");
 }
 
 
@@ -218,6 +219,10 @@ Control::create_materials(void)
   InputParser parser(_inputfile);
 
   parser.read_device();
+
+  Messages m;
+  m.info("Create materials ...");
+  m.indent();
 
   //
   // first we process the physical regions
@@ -270,6 +275,9 @@ Control::create_materials(void)
     Material* mat = Material::create(material, data.get_options());
     _device->set_material(mat, region_ids, data.get_region_name());
   }
+
+  m.unindent();
+  m.info("Creation of materials done.");
 
 #ifdef DEBUG
   cerr << "Control::create_materials() end" << endl;
@@ -423,10 +431,15 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     const string& physreg = simopts.get_option("physical_regions", "all");
     extract_physical_regions(physreg, phys_regions);
 
+    Messages m;
 
     //
     // now create the simulation
     //
+    m.newline();
+    m.info("Setting up simulation of type \'"
+        + modelname + "\' ...");
+    m.indent();
 
     // read options for this simulation (from Solver section)
     ModelOptions solveropts(parser.read_parameters("Solver", modelname));
@@ -465,7 +478,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     _simulations[sim->get_name()] = sim;
 
     // create the environment
-    SimulationEnvironment* env = new SimulationEnvironment(device, phys_regions);
+    SimulationEnvironment* env =
+      new SimulationEnvironment(device, phys_regions);
     _simulation_environments[sim] = env;
     sim->set_environment(env);
 
@@ -475,6 +489,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     //
     // now we have to create the models
     //
+    m.info("Creating physical models");
 
     // what main model should be used?
     ModelOptions physopts(parser.read_parameters("Physics", modelname));
@@ -550,10 +565,13 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         mat->add_model(model, sim->get_id());
     }
 
+    m.info("Creation of physical models completed.");
+
 
     //
     // and now... the boundary conditions
     //
+    m.info("Setup of boundary models ...");
 
     map<ID, RegionStructure>& bc_map = model_str->get_model_BC_map();
     map<ID, RegionStructure>::iterator bdit(bc_map.begin());
@@ -606,6 +624,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         bd->add_boundary_properties(bdprop, sim->get_id());
 
     }
+    m.info("Setup of boundary models done.");
 
     // prepare some of the environments internals (lists of elements etc.)
     env->prepare();
@@ -748,10 +767,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   }
 
 
-#ifdef DEBUG
-  cerr << "Control::setup_models() end" << endl;
-#endif
-
+  Messages::debug("Control::setup_models() end");
 }
 
 

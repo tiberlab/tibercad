@@ -4,6 +4,7 @@
 #include "Database.h"
 #include "RotatedCrystal.h"
 #include "PhysicalModel.h"
+#include "Messages.h"
 
 
 inline
@@ -32,8 +33,8 @@ Alloy::do_preinit(void)
   get_database().set_section("");
   get_database().get_alloy_components(name_A, name_B);
 
-  std::cout << get_name() << " is an alloy with components " <<
-    name_A << " and " << name_B << ".\n";
+  Messages::debug(get_name() + " is an alloy with components " +
+    name_A + " and " + name_B + ".");
 
 
   _mat_A = Material::create(name_A, get_options());

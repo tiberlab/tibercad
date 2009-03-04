@@ -6,8 +6,8 @@
 #include "Database.h"
 #include "RotatedCrystal.h"
 #include "Dopant.h"
+#include "Messages.h"
 
-#include "getpot.h"
 
 Database*
 Material::_database;
@@ -180,9 +180,9 @@ Material::create(const std::string& name, const ModelOptions& options)
     // set the crystal structure at this point
     mat->_structure = mat->get_database().get("structure", "zb");
 
-    std::cout << "Created Material " << mat->get_name() << 
-      " (using parameter file " << _database->get_data_file() << ")" <<
-      std::endl;
+    
+    Messages::debug("Created Material " + mat->get_name() +
+      " (using parameter file " + _database->get_data_file() + ")");
 
     mat->preinit();
   }

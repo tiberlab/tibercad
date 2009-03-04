@@ -35,9 +35,9 @@ using namespace std;
 int main (int argc, char** argv)
 {
 
-  cout << endl 
-    << "TiberCAD version " << TiberCad::TiberCadVersion() 
-    << endl << endl;
+  Messages::newline();
+  Messages::info("TiberCAD version " + TiberCad::TiberCadVersion());
+  Messages::newline();
 
   // take input file from command line or ask for it
   string inputfile;
@@ -67,8 +67,8 @@ int main (int argc, char** argv)
 
   }
 
-  cout << "Input file: " << inputfile << endl << endl;
-
+  Messages::info("Input file: " + inputfile);
+  Messages::newline();
 
   // do some preparation
   {
@@ -83,7 +83,7 @@ int main (int argc, char** argv)
       const size_t bufsize = 1024;
       char buffer[bufsize];
       if (!GetModuleFileName(NULL, buffer, bufsize))
-        cout << "Problems detecting installation path." << endl;
+        Messages::warning("Problems detecting installation path.");
       string program(buffer);
       Utils::convert_path_to_unix(program);
       string exepath(Utils::dirname(program));
@@ -96,8 +96,8 @@ int main (int argc, char** argv)
     // check the license
     if (!License::check_license())
     {
-      cerr << "Sorry, cannot start TiberCAD as I could not find a valid "
-        << "license." << endl;
+      Messages::info("Sorry, cannot start TiberCAD as I could not find "
+          "a valid license.");
 # ifdef CYGWIN
       cout << endl << "press Enter ...";
       cin.get();
@@ -118,7 +118,9 @@ int main (int argc, char** argv)
     
     control.init();
     control.run_simulation();
-    cout << "Simulation finished..." << endl << "Goodbye" << endl;
+
+    Messages::info("Simulation finished...");
+    Messages::info("Goodbye");
 
   }
   catch (exception& e)

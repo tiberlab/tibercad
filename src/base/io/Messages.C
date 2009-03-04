@@ -1,7 +1,10 @@
 // $Id$
 
 #include "Messages.h"
+#include "TypeDefs.h"
+#include "Utils.h"
 
+#include <vector>
 
 using namespace std;
 
@@ -16,11 +19,15 @@ namespace
 }
 
 
+int
+Messages::_indent = 0;
+
+
 string
 Messages::_warning = string(yellow) + "Warning: " + string(normal);
 
 string
-Messages::_error   = string(red) + "ERROR  : " + string(normal);
+Messages::_error   = string(red) + "ERROR: " + string(normal);
 
 string
 Messages::_reset   = normal;
@@ -50,7 +57,31 @@ Messages::error(const string& msg)
 void
 Messages::info(const string& msg)
 {
-  cerr << msg << _endl << flush;
+  vector<string> lines;
+  Utils::tokenize(msg, lines, "\n");
+
+  for (int l = 0; l < lines.size(); l++)
+  {
+    for (int i = 0; i < _indent; i++)
+      cout << "  ";
+    cout << lines[l] << _endl << flush;
+  }
 }
 
 
+void
+Messages::debug(const std::string& msg)
+{
+#ifdef DEBUG
+  cerr << "DEBUG: " << msg <<  endl << flush;
+#else
+  ignore_unused_variable(msg);
+#endif
+}
+
+
+void
+Messages::newline(void)
+{
+  cout << endl << flush;
+}
