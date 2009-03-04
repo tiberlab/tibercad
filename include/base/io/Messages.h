@@ -115,8 +115,11 @@ inline
 void
 Messages::unindent(void)
 {
-  if (_indent_loc > 0) _indent_loc--;
-  if (_indent > 0) _indent--;
+  if (_indent_loc > 0)
+  {
+    _indent_loc--;
+    _indent--;
+  }
 }
 
 
