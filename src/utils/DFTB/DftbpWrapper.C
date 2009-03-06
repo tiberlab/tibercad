@@ -7,7 +7,8 @@ DftbpWrapper::DftbpWrapper()
 {
   std::cout << "Constructing DFTB instance... ";
   f77_dftbp_init(_handler);
-
+  std::cout << "done." << std::endl;
+  std::cout << "Received handler: ";
   for  (int ii = 0; ii < DFTBP_HSIZE; ++ii) {
     std::cout << _handler[ii] << " ";
   }

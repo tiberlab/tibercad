@@ -7,6 +7,7 @@ UptWrapper::UptWrapper(){
   std::cout << "Constructing UPTIGHT instance... ";
     f77_upt_initsession(_handler);
     std::cout << "done." << std::endl;
+
     std::cout << "Received handler: ";
     for  (int ii = 0; ii < UPT_HSIZE; ++ii) {
       std::cout << _handler[ii] << " ";
