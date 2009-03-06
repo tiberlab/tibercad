@@ -31,7 +31,7 @@ class BoundaryElementMap
 
     //! An iterator that iterates over all elements
     /*!
-     * This iterator will iterate over teh elements of one or
+     * This iterator will iterate over the elements of one or
      * all boundaries. It is possible that an element is returned
      * more than once. This happens if different contacts touch in a
      * set of nodes.

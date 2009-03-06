@@ -24,10 +24,56 @@ class Embracing
 
   public:
 
+    //! An iterator to iterate over the elements
+    class elem_iterator
+    {
+      public:
+
+        //! Default constructor
+        elem_iterator(void) { };
+
+        //! Copy constructor
+        explicit elem_iterator(const elem_iterator& other)
+          : _it(other._it) { };
+
+        //! Prefix increment
+        elem_iterator& operator++(void)
+        {
+        }
+
+        //! Assignement
+        elem_iterator& operator=(const elem_iterator& rhs)
+        {
+        }
+
+        //! Comparison
+        bool operator==(const elem_iterator& rhs)
+        {
+        }
+
+        //! Comparison
+        bool operator!=(const elem_iterator& rhs)
+        {
+        }
+
+        //! Dereference
+        const Elem* operator*(void)
+        {
+        }
+
+      private:
+
+        //! The internal iterator
+        std::map<const Elem*, double>::const_iterator _it;
+    };
+
+
     //! The constructor
     /*!
-     * \param outer the higher level simulation, typically classical
-     * \param inner the lower level simulation, typically quantum
+     * \param outer the "outer" simulation,
+     *  \f$\Omega_{emb}\cap\Omega_{outer} = \emptyset \f$
+     * \param inner the "inner" simulation containing the embracing region,
+     *  \f$\Omega_{emb}\cap\Omega_{inner} = \Omega_{emb}\f$
      */
     Embracing(SimulationInterface* outer, SimulationInterface* inner);
 
@@ -52,6 +98,10 @@ class Embracing
      * 1.0 is returned
      */
     double get_mixing_coefficient(const Elem* elem, const Point& p);
+
+
+    //! Check if an element is in the embracing region
+    bool is_in_embracing_region(const Elem* elem);
 
 
 
@@ -99,7 +149,8 @@ class Embracing
 
     //! A list of all elements that make part of this embracing region
     /*! 
-     * The double corresponds to a weight indicating the distance to the boundary
+     * The double corresponds to a weight indicating the distance to
+     * the boundary.
      */
     std::map<const Elem*, double> _elem_list;
 

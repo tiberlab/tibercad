@@ -186,6 +186,19 @@ Embracing::find_boundary(void)
 }
 
 
+
+bool
+Embracing::is_in_embracing_region(const Elem* elem)
+{
+  bool ans = false;
+  if (_elem_list.find(elem) != _elem_list.end())
+    ans = true;
+
+  return ans;
+}
+ 
+
+
 void
 Embracing::find_inner_boundary(void)
 {

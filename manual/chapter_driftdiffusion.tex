@@ -549,7 +549,7 @@ The Poisson/Drift-Diffusion solver does not just take the particle densities as 
 \rho(\varphi, \phi_n, \phi_p) = \frac{\rho_{\mathrm{quantum}}(\varphi^0, \phi_n^0, \phi_p^0)}{\rho_{\mathrm{classical}}(\varphi^0, \phi_n^0, \phi_p^0)}\rho_{\mathrm{classical}}(\varphi, \phi_n, \phi_p)
 \end{equation}
 where $(\varphi^0, \phi_n^0, \phi_p^0)$ are the potentials for which the quantum density was calculated.
-\keyword{use\_density\_predictor = true} is the preferred method and is therefore the default. 
+\keyword{use\_density\_predictor = true} is the preferred method for selfconsistent Schr\"odinger-Poisson/Drift-Diffusion calculations, however it is not enabled by default. 
 
 \item[\keyword{embracing\_length =} \Unit{double}] When the domain of the quantum simulation is smaller than the domain of the full simulation, the boundary conditions for the Schr\"odinger equation will disturb the transfer from classical to quantum density.
 By defining an embracing region of a certain extension (specified in meters), a gradual transition from classical to quantum density will be done instead of an abrupt one, using as effective density $\rho = x\cdot\rho_{\mathrm{quantum}} + (1-x)\cdot\rho_{\mathrm{classical}}$. The default is no embracing region at all (zero extension).
