@@ -488,18 +488,19 @@ AtomisticStructure::print_structure(const std::string& path)
             {
               if (_atom_types[n_specie].compare(_structure_atoms[i].get_specie()) == 0) break;
             }
-          file << std::setw(10) <<
-          material_map[ (_device->get_material(_structure_atoms[i].get_region_ID())) ] << std::setw(5) << n_specie + 1
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3));
+          file << std::setw(10) 
+	       << material_map[ (_device->get_material(_structure_atoms[i].get_region_ID())) ] 
+	       << std::setw(5) << n_specie + 1
+	  << std::setw(20) << std::setprecision(10) << std::fixed  << double(_structure_atoms[i].get_position(1))
+          << std::setw(20) << std::setprecision(10) << std::fixed  << double(_structure_atoms[i].get_position(2))
+          << std::setw(20) << std::setprecision(10) << std::fixed  << double(_structure_atoms[i].get_position(3));
 
           if (_bondmap->get_bond_map() != NULL)
             {
 
               file << std::setw(5) << _bondmap->get_bond_map()[i][8];
 
-              // N.B. Indexing is in Fortran notation (first atom is labelled as 1)  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+              // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!!!!!!!!!!!!!!!!!!
               for (unsigned int j = 0; j < _bondmap->get_bond_map()[i][8]; j++)
                 {
                   file << std::setw(10) << _bondmap->get_bond_map()[i][j] + 1;
@@ -512,15 +513,16 @@ AtomisticStructure::print_structure(const std::string& path)
 
         }
 
-      //A line of zeros is put here (coordinates origin)
-      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
-      << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
-      << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
-
       // Periodicity vectors at the bottom
       if (_atomistic_structure_options.is_periodical)
         {
-          unsigned int count = 0;
+
+	  //A line of zeros is put here (coordinates origin)
+	  file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";   
+
+	  unsigned int count = 0;
           for (unsigned int i = 0; i < 3; i++)
             {
               for (unsigned int j = 0; j < 3; j++)
@@ -529,11 +531,11 @@ AtomisticStructure::print_structure(const std::string& path)
                   _periodicity_vectors[count];
                   count++;
                 }
-              file << "\n";
+              file << std::endl;
             }
         }
 
-      file << std::endl;
+      //file << std::endl;
 
       //Information about materials
 
@@ -552,7 +554,9 @@ AtomisticStructure::print_structure(const std::string& path)
           db.set_section("atomistic_structure");
           //GetPot data((mat->get_database()).get_data_file());
 
-          file << std::setw(6) << (*mat_it).second <<  std::setw(12) << ((*mat_it).first)->get_name() <<  std::setw(12) << mat->get_structure();
+          file << std::setw(3)  << (*mat_it).second 
+	       << std::setw(12) << ((*mat_it).first)->get_name() 
+	       << std::setw(6)  <<  mat->get_structure();
 
           std::string alloy_type;
 
@@ -567,30 +571,32 @@ AtomisticStructure::print_structure(const std::string& path)
           if (mat->is_alloy()) file << std::setw(4) << 2;
           else file << std::setw(4) << 1;
 
-          if (mat->is_alloy()) file << std::setw(8) << "  VCA  ";
-          else file << std::setw(8) << "CRY" ;
+          if (mat->is_alloy()) file << std::setw(5) << "VCA";
+          else file << std::setw(5) << "CRY" ;
 
 
           //Parental material names
-          if (mat->is_alloy()) file << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_A()
-          << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_B();
-          else file << std::setw(10) << mat->get_name();
+          if (mat->is_alloy()) file << std::setw(8) << (dynamic_cast<const Alloy*>(mat))->get_name_A()
+				    << std::setw(8) << (dynamic_cast<const Alloy*>(mat))->get_name_B();
+          else file << std::setw(8) << mat->get_name();
 
           //Molar fractions
           //HELP MOLAR FRACTION STILL NOT DEFINED AT THIS POINT (Initialized in Material::do_init)
-          if (mat->is_alloy()) file << std::setw(10) <<  std::setprecision(4)<< mat->get_options().get_option("x",1.0)
-          << std::setw(10) << std::setprecision(4) <<  ( 1.0 - mat->get_options().get_option("x",1.0) );
-          else  file << std::setw(10) <<  std::setprecision(4)<< 1.0 ;
+          if (mat->is_alloy()) file << std::setw(10) <<  std::setprecision(3) 
+				    << mat->get_options().get_option("x",1.0)
+				    << std::setw(10) << std::setprecision(3) 
+				    <<  ( 1.0 - mat->get_options().get_option("x",1.0) );
+          else  file << std::setw(10) <<  std::setprecision(3) << 1.0 ;
 
           //Mancano da inserire i file con i dati per Uptight
           std::string path = "./ ";
           std::string structure = "unknown";
 
 
-          if (mat->is_alloy()) file << std::setw(20) << (dynamic_cast<const Alloy*>(mat))->get_name_A() + ".data"
-          << std::setw(20) << (dynamic_cast<const Alloy*>(mat))->get_name_B() + ".data" ;
-          else file << std::setw(20) << mat->get_name() + ".data" ;
-
+          if (mat->is_alloy()) file << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_A() + ".tb"
+				    << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_B() + ".tb" 
+                                    << "  0.0  0.0";
+          else file << std::setw(10) << mat->get_name() + ".tb" ;
 
           file << std::endl;
         }
