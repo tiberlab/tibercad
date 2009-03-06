@@ -16,6 +16,7 @@
 
 #include <vector>
 #include <string>
+#include <cstring>
 
 #include "InputParser.h"
 
@@ -87,7 +88,7 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
 
   
   //       while (  ( found == false) && (  label != dollar_symbol ) && (!in_stream.eof()) ) //  
-  while (  ( found == false) && (  strncmp ((label.c_str()),dollar_symbol.c_str(),1) != 0  )
+  while (  ( found == false) && (  std::strncmp ((label.c_str()),dollar_symbol.c_str(),1) != 0  )
            && (!in_stream.eof()) )   
  
   { //while
@@ -1511,7 +1512,7 @@ bool InputParser::skip_comments(ifstream& in_stream, const std::string& item)
 
   bool  skip  = false;
 
-  if (item == "#" | (strncmp ((item.c_str()), "#",1) == 0) )
+  if (item == "#" | (std::strncmp ((item.c_str()), "#",1) == 0) )
   {
     in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
     //   in_stream >> item;  //      and   read  the  next keyword !!! 
@@ -1959,7 +1960,7 @@ InputParser::parse_model(ifstream& in_stream)
       
 
       //    if  (strncmp ((end_symbol.c_str()),"}",1) != 0)
-      if  (strncmp ((end_symbol.c_str()),end_symb.c_str(),1) != 0)
+      if  (std::strncmp ((end_symbol.c_str()),end_symb.c_str(),1) != 0)
 
       {
         throw InitFailedException("SYNTAX ERROR in input file (BC regions block)  ");
@@ -1992,7 +1993,7 @@ InputParser::parse_model(ifstream& in_stream)
     // if label   == }  then   NEXT  MODEL  !!!
     // ******************************************************
   
-    if  (strncmp ((label.c_str()),end_symb.c_str(),1) == 0)  // read  a  closing  bracket !!
+    if  (std::strncmp ((label.c_str()),end_symb.c_str(),1) == 0)  // read  a  closing  bracket !!
 
     {
 

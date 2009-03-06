@@ -7,6 +7,7 @@
 
 #include "libmesh_common.h"
 
+#include <cstring>
 
 
 TiberPetscLinearSolver::TiberPetscLinearSolver(void)

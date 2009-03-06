@@ -1,6 +1,9 @@
 // $Id$
 
 
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/convenience.hpp>
+
 #include "InputParser.h"
 #include "RegionStructure.h"
 #include "Control.h"
@@ -16,9 +19,6 @@
 #include "SimulationInterface.h"
 #include "PetscRuntimeError.h"
 #include "AtomisticStructure.h"
-
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/convenience.hpp>
 
 #include <iostream>
 #include <vector>

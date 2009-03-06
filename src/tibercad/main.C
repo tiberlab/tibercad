@@ -2,7 +2,6 @@
 
 #include "boost/algorithm/string/trim.hpp"
 
-
 #include "Control.h"
 #include "DLLoader.h"
 #include "TiberCad.h"
@@ -35,10 +34,6 @@ using namespace std;
 int main (int argc, char** argv)
 {
 
-  Messages::newline();
-  Messages::info("TiberCAD version " + TiberCad::TiberCadVersion());
-  Messages::newline();
-
   // take input file from command line or ask for it
   string inputfile;
   if (argc > 1)
@@ -54,18 +49,24 @@ int main (int argc, char** argv)
     cout << endl;
 #else
 # ifdef CYGWIN
-    cout << "Usage:" << endl
+    cout << endl << "Usage:" << endl
       << "  from command line: tibercad <inputfile>" << endl
       << "  or double click on inputfile" << endl << endl;
     cout << "press Enter ...";
     cin.get();
 # else
-    cout << "Usage: tibercad <inputfile>" << endl << endl;
+    cout << endl << "Usage: tibercad <inputfile>" << endl << endl;
 # endif
     return 1;
 #endif
 
   }
+
+  Messages::set_log_file(Utils::basename(inputfile) + ".log");
+
+  Messages::newline();
+  Messages::info("TiberCAD version " + TiberCad::TiberCadVersion());
+  Messages::newline();
 
   Messages::info("Input file: " + inputfile);
   Messages::newline();

@@ -5,6 +5,7 @@
 
 #include <string>
 #include <iostream>
+#include <fstream>
 
 #ifdef error
 # undef error
@@ -56,25 +57,20 @@ class Messages
     //! Add empty line
     static void newline(void);
 
+
+    //! Set the log file
+    static void set_log_file(const std::string& logfile);
+
+    //! Close the log file
+    static void close_log_file(void);
+
     
+
   private:
 
 
-    //! Warning keyword
-    static std::string _warning;
-
-
-    //! Error keyword
-    static std::string _error;
-
-
-    //! To reset output format
-    static std::string _reset;
-
-
-    //! An 'extended' endl
-    static std::string _endl;
-
+    //! The log file
+    static std::ofstream _log;
 
     //! The global indentation level
     static int _indent;

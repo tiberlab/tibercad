@@ -8,6 +8,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <cstdlib>
 
 //! This class contains useful methods for different tasks
 class Utils
@@ -113,6 +114,10 @@ class Utils
     static std::string dirname(const std::string& file);
 
 
+    //! Return the file basename
+    static std::string basename(const std::string& file);
+
+
     //! Convert a windows style path to something more UNIX like
     static void convert_path_to_unix(std::string& path);
 
@@ -149,7 +154,7 @@ inline
 double
 Utils::convert<double>(const std::string& val)
 {
-  return atof(val.c_str());
+  return std::atof(val.c_str());
 }
 
 

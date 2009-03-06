@@ -5,6 +5,7 @@
 #include "boost/tokenizer.hpp"
 #include "boost/algorithm/string/trim.hpp"
 #include "boost/filesystem/operations.hpp"
+#include "boost/filesystem/convenience.hpp"
 
 #include "Utils.h"
 
@@ -61,6 +62,15 @@ Utils::dirname(const std::string& file)
 
   return p.branch_path().string();
 }
+
+
+
+std::string
+Utils::basename(const std::string& file)
+{
+  return boost::filesystem::basename(file);
+}
+
 
 
 void 

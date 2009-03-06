@@ -19,7 +19,7 @@
 
 extern "C" 
 { 
-   void zheev_(char& jobs, char& UPLO, int& N, Complex* ham6x6matrix, int& N, 
+   void zheev_(char& jobs, char& UPLO, int& N, Complex* ham6x6matrix, int& LDA, 
 	       double* eigvals,  Complex* WORK, int& LWORK, double* RWORK, int& info); 
 };
 

@@ -11,6 +11,8 @@
 #include "petsc_vector.h"
 #include "petsc_matrix.h"
 
+#include <cstring>
+
 // C++ includes
 
 #define DEBUG

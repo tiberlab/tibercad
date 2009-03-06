@@ -25,7 +25,7 @@ Device::Device(void)
     _boundary_nodes(NULL),
     _symmetry(TiberCad::NONE)
 {
-  _material_map.clear();	
+  _material_map.clear();
 }
 
 
