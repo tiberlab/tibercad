@@ -156,7 +156,7 @@ DriftDiffusionProperties::setup_electrons_and_holes(void)
     {
       Embracing* emb =
         _driftdiffusion->create_embracing_region(
-            _electrons.get_quantum_simulation(), get_options());
+            _electrons.get_quantum_simulation(), get_options(), true);
       _electrons.set_embracing(emb);
     }
 
@@ -166,7 +166,7 @@ DriftDiffusionProperties::setup_electrons_and_holes(void)
     {
       Embracing* emb = 
         _driftdiffusion->create_embracing_region(
-            _holes.get_quantum_simulation(), get_options());
+            _holes.get_quantum_simulation(), get_options(), true);
       _holes.set_embracing(emb);
     }
   }

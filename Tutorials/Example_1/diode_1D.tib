@@ -53,9 +53,9 @@ $Models
 
 
      physical_model recombination
-     { 
+     {
        model  =  srh
-     }                
+     }
 
     BC_Regions  
     {
@@ -114,7 +114,7 @@ $Physics
 
 $Simulation
 {
-  #searchpath = ../../materials
+  searchpath = ../../materials
   meshfile = diode_1D.msh 
   dimension = 1
   verbose = 2

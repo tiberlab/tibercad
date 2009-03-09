@@ -520,8 +520,16 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
 
     //! Create an embracing region
+    /*!
+     * \param other_simulation the other simulation, the embracin region will
+     * lie in that one.
+     * \param options the options
+     * \param need_mixing_coeff if \c true, the mixing coefficients
+     * will be calculated, too
+     */
     Embracing* create_embracing_region(SimulationInterface* other_simulation,
-        const ModelOptions& options);
+        const ModelOptions& options,
+        bool need_mixing_coeff = false);
 
 
 
@@ -622,7 +630,8 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * No checks will be done on the vector size!
      * \param new_solution the new solution to set
      */
-    virtual void do_set_solution_vector(const NumericVector<double>& new_solution);
+    virtual void do_set_solution_vector(
+        const NumericVector<double>& new_solution);
     
 
     //! Set to the remembered solution number \c id
@@ -635,7 +644,8 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! Build the maximum norm of the solution difference
     /*!
-     * This method returns the maximum norm \f$\Vert x - x_i\Vert_\infty\f$
+     * This method returns the maximum norm
+     * \f$\Vert x - x_i\Vert_\infty\f$
      * of the difference between the current solution \f$x\f$ and some
      * remembered solution \f$x_i\f$
      *
@@ -643,8 +653,9 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      *
      * If the remembered solution doesn't exist, return value is zero.
      *
-     * The default action should be ok in most cases. But it could be useful
-     * to reimplement this method when a simulation uses some scaling
+     * The default action should be ok in most cases. But it could
+     * be useful to reimplement this method when a simulation
+     * uses some scaling
      */
     virtual double do_maximum_norm_of_difference(ID id);
     
@@ -659,8 +670,9 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      *
      * If the remembered solution doesn't exist, return value is zero.
      *
-     * The default action should be ok in most cases. But it could be useful
-     * to reimplement this method when a simulation uses some scaling
+     * The default action should be ok in most cases. But it could
+     * be useful to reimplement this method when a simulation
+     * uses some scaling
      */
     virtual double do_l2_norm_of_difference(ID id);
 

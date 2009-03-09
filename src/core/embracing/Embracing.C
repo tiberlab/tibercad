@@ -31,7 +31,9 @@ Embracing::Embracing(SimulationInterface* outer,
     _inner(inner),
     _lambda(0.0),
     _is_empty(true),
-    _do_plot(false)
+    _do_plot(false),
+    _need_mixing(false),
+    _laplace(NULL) 
 {
   if ((outer == NULL) || (inner == NULL))
     throw InitFailedException("Embracing needs valid SimulationInterfaces");
@@ -50,7 +52,8 @@ Embracing::~Embracing(void)
 void
 Embracing::init(const ModelOptions& options)
 {
-  _do_plot = options.get_option("plot_embracing_regions", false);
+  _do_plot = options.get_option("plot_embracing_regions", _do_plot);
+  _need_mixing = options.get_option("calculate_mixing", _need_mixing);
 
   SimulationEnvironment& in = _inner->get_environment();
   double x0 = (in.get_device()).get_mesh_units();
@@ -58,10 +61,13 @@ Embracing::init(const ModelOptions& options)
   if (_lambda > 0.0)
   {
     generate_embracing_region();
-    prepare_for_solve();
-    calculate_mixing();
-    plot();
-    reactivate_all_elements();
+    if (_do_plot || _need_mixing)
+    {
+      prepare_for_solve();
+      calculate_mixing();
+      plot();
+      reactivate_all_elements();
+    }
     _is_empty = false;
   }
 }
@@ -84,7 +90,7 @@ Embracing::generate_embracing_region(void)
   set<const Elem*>* new_ptr = &elems1;
   set<const Elem*>* old_ptr = &elems2;
 
-  const map<const Elem*, double>::iterator list_end(_elem_list.end());
+  elem_iterator list_end(_elem_list.end());
 
   // first the boundary elements, they get weight 0
   {
@@ -103,7 +109,7 @@ Embracing::generate_embracing_region(void)
       {
         if ((s != it->second) && ((neighbour = elem->neighbor(s)) != NULL))
         {
-          if ((_elem_list.find(neighbour) == list_end) && 
+          if ((find_elem(neighbour) == list_end) && 
               (in.contains_element(neighbour)))
           {
             double w = (neighbour->centroid() - elem->centroid()).size();
@@ -135,7 +141,7 @@ Embracing::generate_embracing_region(void)
       for (unsigned int s = 0; s < elem->n_sides(); s++)
       {
         if (((neighbour = elem->neighbor(s)) != NULL) &&
-            (_elem_list.find(neighbour) == list_end) &&
+            (find_elem(neighbour) == list_end) &&
             (in.contains_element(neighbour)))
         {
           double w = (neighbour->centroid() - elem->centroid()).size();
@@ -187,18 +193,6 @@ Embracing::find_boundary(void)
 
 
 
-bool
-Embracing::is_in_embracing_region(const Elem* elem)
-{
-  bool ans = false;
-  if (_elem_list.find(elem) != _elem_list.end())
-    ans = true;
-
-  return ans;
-}
- 
-
-
 void
 Embracing::find_inner_boundary(void)
 {
@@ -238,7 +232,7 @@ Embracing::prepare_for_solve(void)
   SimulationEnvironment& in = _inner->get_environment();
   Mesh& mesh = in.get_mesh();
 
-  const map<const Elem*, double>::iterator list_end(_elem_list.end());
+  elem_iterator list_end(elem_end());
 
   MeshBase::element_iterator el(mesh.elements_begin());
   const MeshBase::element_iterator end(mesh.elements_end());
@@ -246,35 +240,13 @@ Embracing::prepare_for_solve(void)
   {
     Elem* elem = *el;
 
-    if (_elem_list.find(elem) != list_end)
+    if (find_elem(elem) != list_end)
     {
       elem->set_refinement_flag(Elem::DO_NOTHING);
     }
     else
       elem->set_refinement_flag(Elem::INACTIVE);
   }
-
-  // find the inner bopundary for boundary conditions
-  find_inner_boundary();
-
-  // create a probably unique name
-  ostringstream os;
-  os << "Embracing" << _counter;
-  EquationSystems& eq = in.get_device().get_equation_systems();
-  _laplace = &eq.add_system<LaplaceEq>(os.str());
-  if (_laplace == NULL)
-  {
-    string msg("Could not create solver for Embracing.\n"
-        "Did you perhaps name a model \'");
-    msg += os.str() + "\'?";
-    throw InitFailedException(msg);
-  }
-
-  _laplace->_emb = this;
-
-  // our variable
-  _laplace->add_variable("u");
-  _laplace->init();
 }
 
 
@@ -327,7 +299,10 @@ Embracing::plot(void)
 
   vector<double> sol;
   vector<string> solname;
-  _laplace->build_nodal_results(sol, solname);
+  if (_laplace != NULL)
+    _laplace->build_nodal_results(sol, solname);
+  //else
+  // TODO
 
   ostringstream os;
   os << "Embracing" << _counter;
@@ -339,6 +314,35 @@ Embracing::plot(void)
 void
 Embracing::calculate_mixing(void)
 {
+  // we return immediately if mixing coeffs are not required
+  if (!_need_mixing) return;
+
+  if (_laplace == NULL)
+  {
+    // find the inner bopundary for boundary conditions
+    find_inner_boundary();
+
+    // create a probably unique name
+    ostringstream os;
+    os << "Embracing" << _counter;
+    SimulationEnvironment& in = _inner->get_environment();
+    EquationSystems& eq = in.get_device().get_equation_systems();
+    _laplace = &eq.add_system<LaplaceEq>(os.str());
+    if (_laplace == NULL)
+    {
+      string msg("Could not create solver for Embracing.\n"
+          "Did you perhaps name a model \'");
+      msg += os.str() + "\'?";
+      throw InitFailedException(msg);
+    }
+
+    _laplace->_emb = this;
+
+    // our variable
+    _laplace->add_variable("u");
+    _laplace->init();
+  }
+
   _laplace->solve();
 }
 
@@ -475,6 +479,8 @@ double
 Embracing::get_mixing_coefficient(const Elem* elem, const Point& p)
 {
   double mixing = 1.0;
+
+  assert(_need_mixing == true);
 
   if (!_is_empty)
   {

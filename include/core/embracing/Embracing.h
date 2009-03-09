@@ -19,10 +19,20 @@ class Point;
 
 
 //! The embracing region of two different models
+/*!
+ * The default behaviour is to not calculate the mixing coefficient
+ * on the embracing region. If it is needed it has to be requested
+ * explicitly using the options or calling need_mixing_coeff()
+ * \em before init().
+ */
 class Embracing
 {
 
   public:
+
+    //! The type of the element Map
+    typedef std::map<const Elem*, double> MapType;
+
 
     //! An iterator to iterate over the elements
     class elem_iterator
@@ -33,38 +43,53 @@ class Embracing
         elem_iterator(void) { };
 
         //! Copy constructor
-        explicit elem_iterator(const elem_iterator& other)
+        elem_iterator(const elem_iterator& other)
           : _it(other._it) { };
+
+        //! A more useful constructor
+        elem_iterator(const MapType::const_iterator& it) : _it(it) { }; 
 
         //! Prefix increment
         elem_iterator& operator++(void)
         {
+          ++_it;
+        }
+
+        //! Prefix increment
+        elem_iterator& operator--(void)
+        {
+          --_it;
         }
 
         //! Assignement
         elem_iterator& operator=(const elem_iterator& rhs)
         {
+          _it = rhs._it;
         }
 
         //! Comparison
         bool operator==(const elem_iterator& rhs)
         {
+          return (_it == rhs._it);
         }
 
         //! Comparison
         bool operator!=(const elem_iterator& rhs)
         {
+          return ! (*this == rhs);
         }
 
         //! Dereference
         const Elem* operator*(void)
         {
+          return _it->first;
         }
 
       private:
 
         //! The internal iterator
-        std::map<const Elem*, double>::const_iterator _it;
+        MapType::const_iterator _it;
+
     };
 
 
@@ -72,7 +97,8 @@ class Embracing
     /*!
      * \param outer the "outer" simulation,
      *  \f$\Omega_{emb}\cap\Omega_{outer} = \emptyset \f$
-     * \param inner the "inner" simulation containing the embracing region,
+     * \param inner the "inner" simulation containing the
+     * embracing region,
      *  \f$\Omega_{emb}\cap\Omega_{inner} = \Omega_{emb}\f$
      */
     Embracing(SimulationInterface* outer, SimulationInterface* inner);
@@ -84,6 +110,10 @@ class Embracing
 
     //! Initialize
     void init(const ModelOptions& options);
+
+
+    //! If we should calculate the mixing coefficients
+    void need_mixing_coeff(bool need_mixing = true);
 
 
     //! Calculate the mixing coefficient on the embracing region
@@ -101,8 +131,17 @@ class Embracing
 
 
     //! Check if an element is in the embracing region
-    bool is_in_embracing_region(const Elem* elem);
+    bool is_in_embracing_region(const Elem* elem) const;
 
+
+    //! Get an iterator to first element
+    elem_iterator elem_begin(void) const;
+
+    //! Get the past the end iterator
+    elem_iterator elem_end(void) const;
+
+    //! Find an element and return its iterator
+    elem_iterator find_elem(const Elem* elem) const;
 
 
   private:
@@ -147,12 +186,16 @@ class Embracing
     bool _do_plot;
 
 
+    //! \c true if mixing coefficients are needed
+    bool _need_mixing;
+
+
     //! A list of all elements that make part of this embracing region
     /*! 
      * The double corresponds to a weight indicating the distance to
      * the boundary.
      */
-    std::map<const Elem*, double> _elem_list;
+    MapType _elem_list;
 
 
     //! A list of all outer boundary planes
@@ -187,11 +230,11 @@ class Embracing
     
     //! Find the inner boundary
     /*! 
-     * With \em inner boundary we intend the automatically created boundary
-     * of the embracing region that does not touch the 'outer' simulation
-     *
-     * \note {This method assumes that the elements of the embracing region
-     * are activated.}
+     * With \em inner boundary we intend the automatically created
+     * boundary of the embracing region that does not touch the
+     * 'outer' simulation
+     * \note {This method assumes that the elements of the embracing
+     * region are activated.}
      */
     void find_inner_boundary(void);
 
@@ -221,6 +264,49 @@ class Embracing
 //
 // inline members
 //
+
+inline
+Embracing::elem_iterator
+Embracing::elem_begin(void) const
+{
+  return elem_iterator(_elem_list.begin());
+}
+
+
+inline
+Embracing::elem_iterator
+Embracing::elem_end(void) const
+{
+  return elem_iterator(_elem_list.end());
+}
+
+
+inline
+Embracing::elem_iterator
+Embracing::find_elem(const Elem* elem) const
+{
+  return elem_iterator(_elem_list.find(elem));
+}
+
+
+inline
+bool
+Embracing::is_in_embracing_region(const Elem* elem) const
+{
+  bool ans = false;
+  if (find_elem(elem) != elem_end())
+    ans = true;
+
+  return ans;
+}
+ 
+
+inline
+void
+Embracing::need_mixing_coeff(bool need_mixing)
+{
+  _need_mixing = need_mixing;
+}
 
 
 #endif // _EMBRACING_H_

@@ -1178,7 +1178,8 @@ SimulationInterface::get_solver_options(void)
 
 Embracing*
 SimulationInterface::create_embracing_region(
-    SimulationInterface* other_simulation, const ModelOptions& options)
+    SimulationInterface* other_simulation,
+    const ModelOptions& options, bool need_mixing_coeff)
 {
   Embracing* emb = NULL;
   if (other_simulation != NULL)
@@ -1188,6 +1189,7 @@ SimulationInterface::create_embracing_region(
     {
       emb = new Embracing(this, other_simulation);
       _embracings[other_simulation] = emb;
+      emb->need_mixing_coeff(need_mixing_coeff);
       emb->init(options);
     }
 
