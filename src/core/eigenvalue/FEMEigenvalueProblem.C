@@ -1,13 +1,15 @@
 // $Id$
 
-#include "EigenvalueProblem.h"
+#include "FEMEigenvalueProblem.h"
 #include "Boundary.h"
 #include "SimulationEnvironment.h"
 #include "EigenSolver.h"
 
+#include "equation_systems.h"
+
 using namespace std;
 
-EigenvalueProblem::EigenvalueProblem(void)
+FEMEigenvalueProblem::FEMEigenvalueProblem(void)
 {
 
   es = NULL;
@@ -21,7 +23,7 @@ EigenvalueProblem::EigenvalueProblem(void)
 }
 
 //===============================================================//
-void EigenvalueProblem::make_new_dofs( )
+void FEMEigenvalueProblem::make_new_dofs( )
 {
   new_dofs.clear();
 
@@ -60,7 +62,7 @@ void EigenvalueProblem::make_new_dofs( )
 
 }
 //=====================================================================//
-void EigenvalueProblem::make_constraints(void)
+void FEMEigenvalueProblem::make_constraints(void)
 {
  
   DofMap& dof_map = system->get_dof_map();
@@ -93,7 +95,7 @@ void EigenvalueProblem::make_constraints(void)
 
 //=========================================================================//
 //======================================================================//
-void  EigenvalueProblem::create_dirichlet_dofs( )
+void  FEMEigenvalueProblem::create_dirichlet_dofs( )
 {
   
   
@@ -146,7 +148,7 @@ void  EigenvalueProblem::create_dirichlet_dofs( )
 }
 
 //=======================================================================//
-void EigenvalueProblem::apply_diriclet_bc_at_all_boundaries()
+void FEMEigenvalueProblem::apply_diriclet_bc_at_all_boundaries()
 {
   MeshBase::const_element_iterator it = mesh->active_local_elements_begin();
   const MeshBase::const_element_iterator end =  mesh->active_local_elements_end();
@@ -262,7 +264,7 @@ void EigenvalueProblem::apply_diriclet_bc_at_all_boundaries()
 
 
 //=======================================================================//
-void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double st_shift_value)
+void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double st_shift_value)
 {
 
  
@@ -274,7 +276,7 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
  
 
   if (ev_number > _hamiltonian_size)
-    throw SolveFailedException("EigenvalueProblem: number of requested eigenvalues is bigger than the  Hamiltonian size");
+    throw SolveFailedException("FEMEigenvalueProblem: number of requested eigenvalues is bigger than the  Hamiltonian size");
   
 
   EigenSolver::prepare_slepc();
@@ -395,7 +397,7 @@ void EigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double
 
 
 //=====================================================//
-void EigenvalueProblem::parse_options()
+void FEMEigenvalueProblem::parse_options()
 {
   const ModelOptions& mod_opt = get_options();
 
@@ -431,7 +433,7 @@ void EigenvalueProblem::parse_options()
     else if (method_name == "BIM")
       solver_opt.discretization_method = BIM;
     else
-      throw InitFailedException( "EigenvalueProblem: Incorrect method " + method_name );  
+      throw InitFailedException( "FEMEigenvalueProblem: Incorrect method " + method_name );  
 
    
   }
@@ -478,7 +480,7 @@ void EigenvalueProblem::parse_options()
     {
       if (!(prec == "cholesky" || prec == "jacobi" || prec == "ilu" || prec == "composite"))
       {
-	throw InitFailedException( "EigenvalueProblem: Incorrect preconditioner name" + prec);  
+	throw InitFailedException( "FEMEigenvalueProblem: Incorrect preconditioner name" + prec);  
       }
       else
       {
@@ -496,7 +498,7 @@ void EigenvalueProblem::parse_options()
     {
       if (!( ksp == "bcgsl" || ksp == "gmres" || ksp == "bcgs" || ksp == "cg" || ksp == "richardson" || ksp == "preonly"))
       {
-	throw InitFailedException( "EigenvalueProblem: Incorrect ksp" + ksp);  		
+	throw InitFailedException( "FEMEigenvalueProblem: Incorrect ksp" + ksp);  		
       }
     
       else
@@ -516,7 +518,7 @@ void EigenvalueProblem::parse_options()
 
 
 //========================================================================================//
-void EigenvalueProblem::copy_H_matrix_to_solver( )
+void FEMEigenvalueProblem::copy_H_matrix_to_solver( )
 {
 
  
@@ -732,7 +734,7 @@ void EigenvalueProblem::copy_H_matrix_to_solver( )
 }
 
 //=======================================================================================/
-void EigenvalueProblem::apply_periodic_bc()
+void FEMEigenvalueProblem::apply_periodic_bc()
 {
 
   
@@ -908,7 +910,7 @@ void EigenvalueProblem::apply_periodic_bc()
 }
 //---------------------------------------------------------------------------------------------
 
-void EigenvalueProblem::make_nodes_periodic()
+void FEMEigenvalueProblem::make_nodes_periodic()
 {
   const double pos_tol = 1e-10;
  
@@ -938,7 +940,7 @@ void EigenvalueProblem::make_nodes_periodic()
 }
 
 //--------------------------------------------------------------------------------------//
-void EigenvalueProblem::do_init()
+void FEMEigenvalueProblem::do_init()
 {
 
    //peiodicity can not be changed between runs because that will require cleaning of the DOF constraint table

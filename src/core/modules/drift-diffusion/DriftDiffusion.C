@@ -15,7 +15,7 @@
 #include "SolveFailedException.h"
 
 //////// QUIRK
-#include "Macrostrain.h"
+//#include "Macrostrain.h"
 
 // libmesh includes
 #include "node.h"
@@ -687,8 +687,8 @@ DriftDiffusion::do_solve(void)
     solve_equilibrium();
 
     /////////////////// QUIRK >>
-    if (get_options().write_atomic_potentials != NULL)
-      get_options().write_atomic_potentials->write_atom_potential();
+    //if (get_options().write_atomic_potentials != NULL)
+    //  get_options().write_atomic_potentials->write_atom_potential();
     /////////////////// << QUIRK
  
     // if we would repeat the equilibrium simulation, we can stop now
@@ -761,8 +761,8 @@ DriftDiffusion::do_solve(void)
   }
 
   /////////////////// QUIRK >>
-  if (get_options().write_atomic_potentials != NULL)
-    get_options().write_atomic_potentials->write_atom_potential();
+  //if (get_options().write_atomic_potentials != NULL)
+  //  get_options().write_atomic_potentials->write_atom_potential();
   /////////////////// << QUIRK
       
   get_options().coupling = coupling;
@@ -1109,14 +1109,14 @@ DriftDiffusion::parse_options(void)
 
 
   /////////// QUIRK
-  if (opts.find_option("write_atomic_potentials"))
-  {
-    string str = opts.get_option("write_atomic_potentials", "macrostrain");
-    myopts.write_atomic_potentials =
-      dynamic_cast<Macrostrain*>(SimulationInterface::find_simulation(str));
-    if (myopts.write_atomic_potentials == NULL)
-      throw InitFailedException("Problem with write_atomic_potentials");
-  }
+  //if (opts.find_option("write_atomic_potentials"))
+  //{
+  //  string str = opts.get_option("write_atomic_potentials", "macrostrain");
+  //  myopts.write_atomic_potentials =
+  //    dynamic_cast<Macrostrain*>(SimulationInterface::find_simulation(str));
+  //  if (myopts.write_atomic_potentials == NULL)
+  //    throw InitFailedException("Problem with write_atomic_potentials");
+  //}
           
           
 

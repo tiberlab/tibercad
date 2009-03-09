@@ -1,14 +1,17 @@
+// $Id$
+
 #ifndef _ENVELOPFUNCTIONAPPROX_H_ 
 #define _ENVELOPFUNCTIONAPPROX_H_
-//! A class that constructs Hamiltonian and S-matrix 
 
 
 #include "Macrostrain.h"
 #include "SimulationInterface.h"
-#include "EigenvalueProblem.h"
+#include "FEMEigenvalueProblem.h"
 #include "TemperatureInterface.h"
 
-class EnvelopFunctionApprox  : public EigenvalueProblem
+
+//! A class that constructs EFA Hamiltonian and S-matrix 
+class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 {
  public:
   //!control options

@@ -7,6 +7,9 @@
 #include "Material.h"
 #include "TiberMath.h"
 
+#include "equation_systems.h"
+#include "dense_submatrix.h"
+
 using namespace std;
 using namespace Constants;
 
@@ -237,7 +240,7 @@ void MaxwellEquations::do_init()
 {
 
 
-  EigenvalueProblem::do_init();
+  FEMEigenvalueProblem::do_init();
 
 
   SimulationEnvironment& si = get_environment();   
@@ -321,7 +324,7 @@ void MaxwellEquations::do_init()
 void MaxwellEquations::parse_options()
 {
 
-  EigenvalueProblem::parse_options();
+  FEMEigenvalueProblem::parse_options();
 
   const ModelOptions& mod_opt = get_options();
 

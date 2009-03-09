@@ -1,3 +1,5 @@
+// $Id$
+
 #include "SimulationEnvironment.h"
 #include "EnvelopFunctionApprox.h"
 #include "ModelOptions.h"
@@ -436,7 +438,7 @@ EnvelopFunctionApprox::EnvelopFunctionApprox()
 void EnvelopFunctionApprox::parse_options()
 {
  
-  EigenvalueProblem::parse_options();
+  FEMEigenvalueProblem::parse_options();
 
   const ModelOptions& mod_opt = get_options();
 
@@ -652,7 +654,7 @@ void EnvelopFunctionApprox::parse_options()
 void EnvelopFunctionApprox::do_init( )
 {
 
-  EigenvalueProblem::do_init(); 
+  FEMEigenvalueProblem::do_init(); 
 
 
   SimulationEnvironment& si = get_environment();   

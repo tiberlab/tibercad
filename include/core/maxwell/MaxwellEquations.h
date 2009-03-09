@@ -5,13 +5,13 @@
 
 
 #include "Device.h"
-#include "EigenvalueProblem.h"
+#include "FEMEigenvalueProblem.h"
 
 
 
 
-//!Class to solve Maxwell equations
-class MaxwellEquations : public EigenvalueProblem
+//! Class to solve Maxwell equations
+class MaxwellEquations : public FEMEigenvalueProblem
 {
  public:
 
