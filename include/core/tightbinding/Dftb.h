@@ -53,6 +53,7 @@ public:
   class DftbSolverOptions{
   public:
     std::string solver;
+    std::string poisson_solver;
   };
 
 

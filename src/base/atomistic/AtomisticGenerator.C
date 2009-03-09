@@ -191,6 +191,7 @@ AtomisticGenerator::do_init()
   std::vector<Atom> tmp_structure;
   tmp_structure.reserve(_structure_basis.size());
 
+  std::cout << "Deleting uncontained atoms " << std::endl;
   for (unsigned int i = 0; i < _structure_basis.size(); i++)
     {
       if ((_structure_basis[i].belong_to_structure))
@@ -268,6 +269,8 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   bool done;
   ID el_reg;
 
+
+  std::cout << "Running cut_and_change_specie " << std::endl;
   _structure_basis.clear();
   assign.clear();
   _structure_basis.reserve(_super_basis.size());
@@ -717,6 +720,8 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   //#ifdef DEBUG
   //  std::cerr << "Building a supercell sized " << l1 << " " << l2 << " " << l3 << " Amstrong" << std::endl;
   //#endif
+
+  std::cout << "Running make_supercell " << std::endl;
 
   //Check values. l1,l2,l3 cannot be unwisely large (no more than (1um)^3)
   assert((l1*l2*l3) < 1e+12);
