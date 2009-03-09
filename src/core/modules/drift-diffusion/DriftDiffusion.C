@@ -861,6 +861,8 @@ DriftDiffusion::do_equilibrium(void)
   int max_it = solveropts.get_option("nonlin_max_it", -1);
   solveropts.set_option("nonlin_max_it", 150);
 
+  bool elonly = _electronsonly;
+  _electronsonly = false;
 
   int coupling = get_options().coupling;
   get_options().coupling = POISSON;
@@ -912,6 +914,8 @@ DriftDiffusion::do_equilibrium(void)
     cnt->set_simulation_voltage(sim_voltages[bd]);
   }
   
+  _electronsonly = elonly;
+
   // reset the coupling
   get_options().coupling = coupling;
 

@@ -82,8 +82,16 @@ TiberNonlinBR::do_solve(void)
     norm_rhs = rhs->l2_norm();
 
     u_old = u;
-
     norm_du = du.linfty_norm();
+
+    /*
+    if (norm_du > get_max_abs_step())
+    {
+      double fac = get_max_abs_step() / norm_du;
+      du.scale(fac);
+      norm_du *= fac;
+    }
+    */
 
     /*
     double norm_du2 = du.l2_norm();

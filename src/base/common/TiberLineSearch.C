@@ -17,6 +17,7 @@ TiberLineSearch::TiberLineSearch(EquationSystems& es,
   _nonlinear_atol(1e-50),
   _nonlinear_stol(1e-3),
   _nonlinear_max_it(25),
+  _max_abs_step(1e3),
   _max_step(1e3),
   _divergence_tol(4.0)
 {
@@ -80,6 +81,6 @@ TiberLineSearch::parse_options(void)
 
   // setup the max line search step
   double sqrt_nn = std::sqrt((double) get_mesh().n_nodes() * n_vars());
-  double ls_max_step = get_options().get_option("ls_max_step", 10.0);
-  _max_step = ls_max_step * sqrt_nn;
+  _max_abs_step = get_options().get_option("ls_max_step", 10.0);
+  _max_step = _max_abs_step * sqrt_nn;
 }

@@ -60,8 +60,11 @@ class TiberLineSearch : public TiberNonlinearSystem
     //! Get the maximum number of nonlinear iterations
     int get_nonlinear_max_it(void) const;
 
-    //! Get the line search max step
+    //! Get the line search max step (for l2 norm)
     double get_max_step(void) const;
+
+    //! Get the line search max absolute step
+    double get_max_abs_step(void) const;
 
     //! Get divergence tolerance
     double get_divergence_tol(void) const;
@@ -92,6 +95,9 @@ class TiberLineSearch : public TiberNonlinearSystem
       
     //! The maximum number of nonlinear iterations
     int _nonlinear_max_it;
+
+    //! The absolute maximum search step
+    double _max_abs_step;
 
     //! The maximum search step
     double _max_step;
@@ -160,6 +166,16 @@ TiberLineSearch::get_nonlinear_max_it(void) const
 {
   return _nonlinear_max_it;
 }
+
+
+inline
+double
+TiberLineSearch::get_max_abs_step(void) const
+{
+  return _max_abs_step;
+}
+
+
 
 
 inline

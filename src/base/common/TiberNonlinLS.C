@@ -118,6 +118,15 @@ TiberNonlinLS::do_solve(void)
     for ( ; ls_step < max_ls_step; ls_step++)
     {
       // apply step and look at the new residual
+
+      //norm_du = du.linfty_norm();
+      //if (norm_du > get_max_abs_step())
+      //{
+      //  double fac = get_max_abs_step() / norm_du;
+      //  du.scale(fac);
+      //  norm_du *= fac;
+      //}
+
       u.add(-alpha, du);
 
       // evaluate the residual
@@ -133,6 +142,7 @@ TiberNonlinLS::do_solve(void)
 
       //cerr << "       ||r(x)|| = " << norm_rhs << ", ||r(x + " << 
       //  alpha << "*dx)|| = " << norm_res << endl;
+
 
       if ((norm_res < norm_rhs) || (norm_du < eps) || (norm_res < eps_res))
         break;
