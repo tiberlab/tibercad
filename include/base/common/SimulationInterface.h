@@ -519,6 +519,13 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     bool includes_region(ID region_id) const;
 
 
+    //! Get the physical model for a certain region ID
+    /*!
+     * \return \c NULL if no model is present for region \c region_id
+     */
+    PhysicalModel* get_physical_model(ID region_id) const;
+
+
     //! Create an embracing region
     /*!
      * \param other_simulation the other simulation, the embracin region will

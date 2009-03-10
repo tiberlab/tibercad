@@ -40,6 +40,9 @@ class SimulationEnvironment
 
     //! An iterator for the elements
     //typedef std::set<const Elem*>::iterator ElemIterator
+    
+    //! An iterator for the region IDs
+    typedef std::set<ID>::const_iterator RegionIDIterator;
 
 
     //! The constructor
@@ -264,6 +267,15 @@ class SimulationEnvironment
 
     //! Get the end iterator for the elements
     const ConstElemIterator elements_end(void) const;
+
+
+    //! Get the iterator to the first region ID
+    const RegionIDIterator region_ids_begin(void) const;
+
+
+    //! Get the end iterator for the region IDs
+    const RegionIDIterator region_ids_end(void) const;
+
     
     //! Update the boundary node map
     /*!
@@ -627,6 +639,22 @@ const BoundaryElementMap::iterator
 SimulationEnvironment::boundary_elements_end(const Boundary* bd) const
 {
   return _bd_elem_map.elements_end(bd);
+}
+
+
+inline
+const SimulationEnvironment::RegionIDIterator
+SimulationEnvironment::region_ids_begin(void) const
+{
+  return _region_numbers.begin();
+}
+
+
+inline
+const SimulationEnvironment::RegionIDIterator
+SimulationEnvironment::region_ids_end(void) const
+{
+  return _region_numbers.end();
 }
 
 

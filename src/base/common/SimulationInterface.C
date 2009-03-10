@@ -231,6 +231,20 @@ SimulationInterface::includes_region(ID region_id) const
 }
 
 
+
+PhysicalModel*
+SimulationInterface::get_physical_model(ID region_id) const
+{
+  PhysicalModel* mod = NULL;
+  Material* mat = get_environment().get_device().get_material(region_id);
+  if (mat != NULL)
+    mod = mat->get_model(get_id());
+
+  return mod;
+}
+
+
+
 void
 SimulationInterface::init(void) throw (InitFailedException)
 {

@@ -171,8 +171,8 @@ Embracing::find_boundary(void)
   unsigned int dim = mesh.mesh_dimension();
 
   // loop over the elements of the 'inner' simulation
-  MeshBase::const_element_iterator el(mesh.elements_begin());
-  const MeshBase::const_element_iterator end(mesh.elements_end());
+  SimulationEnvironment::ConstElemIterator el(in.elements_begin());
+  const SimulationEnvironment::ConstElemIterator end(in.elements_end());
   for ( ; el != end; ++el)
   {
     const Elem* elem = *el;
