@@ -69,15 +69,15 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
   list<string>::iterator it(_libpath.begin());
   const list<string>::iterator end(_libpath.end());
   for ( ; it != end; ++it)
-{
+  {
     path p(*it + "/" + libfile, native);
     if (exists(p))
     {
       libfile = *it + "/" + libfile;
       file_exists = true;
-      //break;
+      //break; -> we can override
     }
-}
+  }
 
 #ifdef DEBUG_
   if (file_exists)

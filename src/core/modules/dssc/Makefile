@@ -26,7 +26,7 @@ all: $(target)
 
 
 shared: $(objects)
-	@soname=lib`grep TIBER_MODULE DriftDiffusion.C | \
+	@soname=lib`grep TIBER_MODULE DSSC.C | \
 		sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`.so ; \
 		echo "Linking module $$soname ..."; \
 		$(CXX) -shared $(CXXFLAGS) -Wl,-soname,$$soname \

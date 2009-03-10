@@ -41,16 +41,16 @@ class PotentialInterface
     bool set_simulation(const std::string& name);
 
     
-    //! Get the nodal potentials
+    //! Get the nodal electrostatic potentials
     void get_potential(const Elem* elem, std::vector<double>& potentials);
 
 
-    //! Get the potential in specified points
+    //! Get the electrostatic potential in specified points
     void get_potential(const Elem* elem, const std::vector<Point>& p,
         std::vector<double>& potentials);
 
 
-    //! Get the potential in one point
+    //! Get the electrostatic potential in one point
     double get_potential(const Elem* elem, const Point& p);
 
 

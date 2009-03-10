@@ -183,8 +183,9 @@ Embracing::find_boundary(void)
       {
         const Elem* neighbour =  elem->neighbor(s);
         if (neighbour != NULL)
-          if ((!in.contains_element(neighbour)) &&
-              out.contains_element(neighbour))
+          if (out.contains_element(neighbour) &&
+              (!in.contains_element(neighbour) ||
+               !out.contains_element(elem)))
             _sides.insert(ElementSide(elem, s));
       }
     }
@@ -282,31 +283,37 @@ Embracing::plot(void)
   DataOutput data_output(mesh, (_inner->get_control()).get_output_format());
   data_output.set_output_directory((_inner->get_control()).get_output_dir());
 
-  vector<double> results(mesh.n_active_elem());
-  vector<string> names(1, "weight");
-
-  MeshBase::const_element_iterator it =
-    mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end =
-    mesh.active_elements_end();
-
-  unsigned int elem_number = 0;
-  for ( ; it != end; ++it, elem_number++)
-  {
-    const Elem* elem = *it;
-    results[elem_number] = _elem_list[elem];
-  }
 
   vector<double> sol;
   vector<string> solname;
-  if (_laplace != NULL)
-    _laplace->build_nodal_results(sol, solname);
-  //else
-  // TODO
-
   ostringstream os;
   os << "Embracing" << _counter;
-  data_output.write_nodal_data(os.str(), sol, solname);
+
+  if (_laplace != NULL)
+  {
+    _laplace->build_nodal_results(sol, solname);
+    data_output.write_nodal_data(os.str(), sol, solname);
+  }
+  else
+  {
+    sol.resize(mesh.n_active_elem());
+    solname.resize(1);
+    solname[0] = "region_ID";
+
+    MeshBase::const_element_iterator it =
+      mesh.active_elements_begin();
+    const MeshBase::const_element_iterator end =
+      mesh.active_elements_end();
+
+    unsigned int elem_number = 0;
+    for ( ; it != end; ++it, elem_number++)
+    {
+      const Elem* elem = *it;
+      sol[elem_number] = elem->subdomain_id();
+    }
+    data_output.write_cell_data(os.str(), sol, solname);
+  }  
+
 }
 
 
@@ -484,7 +491,12 @@ Embracing::get_mixing_coefficient(const Elem* elem, const Point& p)
 
   if (!_is_empty)
   {
-    if (_elem_list.count(elem))
+    while ((elem != NULL) && (!_elem_list.count(elem)))
+      elem = elem->parent(); // perhaps the parent is in region?
+
+    // elem is now NULL if no parent
+    // if non NULL, it is for sure in the embracing region
+    if (elem != NULL)
     {
       mixing = 0.0;
 
@@ -512,20 +524,6 @@ Embracing::get_mixing_coefficient(const Elem* elem, const Point& p)
         mixing += (*(system.solution))(dof_indices[n]) * phi[n][0];
 
     }
-
-    /*
-    if (!_elem_list.count(elem))
-    {
-      // perhaps the parent is?
-      const Elem* parent = elem->parent();
-
-      while ((parent != NULL) && (!env.contains_element(parent)))
-        parent = parent->parent();
-
-      el = parent; // is NULL if no parent
-
-    }
-    */
   }
 
   return mixing;

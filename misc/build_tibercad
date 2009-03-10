@@ -17,14 +17,14 @@ cd ../
   --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL} \
   --with-petsc-arch=${ARCH}-complex \
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION} \
-  --disable-modules \
   --disable-pardiso \
+  --disable-modules \
   --disable-dftb \
   --disable-hetero \
+  --enable-license-check \
   $OTHEROPTS \
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}
 
 #  --with-boost-prefix=/usr/pack/boost-1.33.1-ma \
-#  --enable-license-check \
 
 make

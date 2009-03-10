@@ -35,6 +35,12 @@ class SimulationEnvironment
     //! An iterator for the boundaries
     typedef std::map<ID, Boundary*>::const_iterator BoundaryIterator;
 
+    //! An iterator for the elements
+    typedef std::set<const Elem*>::const_iterator ConstElemIterator;
+
+    //! An iterator for the elements
+    //typedef std::set<const Elem*>::iterator ElemIterator
+
 
     //! The constructor
     /*!
@@ -251,6 +257,13 @@ class SimulationEnvironment
     const BoundaryElementMap::iterator
       boundary_elements_end(const Boundary* bd = NULL) const;
 
+
+    //! Get the iterator for the first element
+    const ConstElemIterator elements_begin(void) const;
+
+
+    //! Get the end iterator for the elements
+    const ConstElemIterator elements_end(void) const;
     
     //! Update the boundary node map
     /*!
@@ -633,6 +646,23 @@ SimulationEnvironment::boundaries_end(void) const
 {
   return _bc_map.end();
 }
+
+
+inline
+const SimulationEnvironment::ConstElemIterator
+SimulationEnvironment::elements_begin(void) const
+{
+  return _element_list.begin();
+}
+
+
+inline
+const SimulationEnvironment::ConstElemIterator
+SimulationEnvironment::elements_end(void) const
+{
+  return _element_list.end();
+}
+    
 
 
 inline
