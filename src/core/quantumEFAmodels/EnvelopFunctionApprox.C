@@ -2515,12 +2515,6 @@ void EnvelopFunctionApprox::calculate_density( )
   _density.clear();
 
 
-
-  MeshBase::const_element_iterator       nd     = mesh1.active_elements_begin();
-  const MeshBase::const_element_iterator nd_el  = mesh1.active_elements_end();
-
- 
-
   vector<double> density_of_state;
 
   unsigned int number_of_eigenfunctions = solution.size();
