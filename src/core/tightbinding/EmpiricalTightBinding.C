@@ -44,20 +44,13 @@ ETB::UptOptions::UptOptions(void)
  opt_flag(0),
  poldir(1)
 {
-  database_path = new char[UPT_LC];
-  work_path = new char[UPT_LC];
-  upt_filename = new char[UPT_MC];
-  gen_outfile = new char[UPT_MC];
-  c_axis = new double[3];
+  c_axis = new double[3];           
+  c_axis[0]=0.0; c_axis[1]=0.0; c_axis[2]=1.0; 
 } 
 
 ETB::UptOptions::~UptOptions(void)
 {
   delete[] c_axis;
-  delete[] database_path;
-  delete[] work_path;
-  delete[] upt_filename;
-  delete[] gen_outfile;
 };
 
 ETB::UptSolverOptions::UptSolverOptions(void)
@@ -69,7 +62,7 @@ ETB::UptSolverOptions::UptSolverOptions(void)
    max_iter(100000),
    guess_vb(0.0),
    guess_cb(0.0),
-   fast_tol(1e-7),
+   fast_tol(1e-1),
    long_tol(1e-10),
    ort_tol(1e-4)
 {
@@ -82,7 +75,7 @@ ETB::UptSolverOptions::~UptSolverOptions(void)
 
 //-------------------------------------------------------------------------
 PhysicalModel*
-ETB::create_physical_model (const ModelOptions &options,
+ETB::create_physical_model(const ModelOptions &options,
 			     const Material* mat) const throw (ModelErrorException)
 {
   
@@ -100,46 +93,81 @@ ETB::create_physical_model (const ModelOptions &options,
 void
 ETB::do_init(void){
 
-  std::cerr << "Empirical TB Initialisation" << std::endl;
+  char *database_path, *work_path, *upt_filename, *gen_outfile;
 
-  //_mesh = & ( get_environment().get_device().get_mesh());
+  std::cerr << "(TC) Empirical TB Initialisation..." << std::endl;
+
+  std::cout << "(TC) parse options..."; 
+  build_input_options();
+  std::cout << "done" << std::endl;
+
+#ifdef DEBUG
+  print_upt_options();
+#endif  
 
   // Getting reference to atomistic structure for calculation
   get_atomistic_structure();
 
-  // Setting options for DFTB+ calls
-  parse_options();
+  // Get mesh informations
+  //_mesh = & ( get_environment().get_device().get_mesh());
+
+  // Get database path from Database class
+  _upt_options.database_path = Database::get_default_search_path();
+  _upt_options.upt_filename = _atomistic_structure->get_name() + ".upg";
+  _upt_options.work_path = ".";
+  _upt_options.gen_outfile = "out.gen";
+
+  if (_upt_options.database_path.size() > UPT_LC) 
+           throw InitFailedException("ETB: database search path too long");
+
+  // Create temporary C-strings to pass to the fortran library
+  // String are filled with blank characters
+  database_path = new char[UPT_LC]; memset(database_path, ' ', UPT_LC);
+  work_path = new char[UPT_LC];     memset(work_path, ' ', UPT_LC);
+  upt_filename = new char[UPT_MC];  memset(upt_filename, ' ', UPT_MC);
+  gen_outfile = new char[UPT_MC];   memset(gen_outfile, ' ', UPT_MC);
+
+  _upt_options.database_path.copy(database_path, _upt_options.database_path.size() ); 
+  _upt_options.upt_filename.copy(upt_filename, _upt_options.upt_filename.size() );
+  _upt_options.work_path.copy(work_path, _upt_options.work_path.size() );  
+  _upt_options.gen_outfile.copy(gen_outfile, _upt_options.gen_outfile.size() ); 
 
   //  Initialize Dftb instance it and sets parameters
-  inst->fill_param(_upt_options.verbose, _upt_options.database_path,
-		   _upt_options.work_path, _upt_options.upt_filename, 
-		   _upt_options.gen_outfile, _upt_options.max_TB_order,
+  inst->fill_param(_upt_options.verbose, database_path, work_path, 
+                   upt_filename, gen_outfile, _upt_options.max_TB_order,
 		   _upt_options.harrison_flag, _upt_options.relat_flag, 
 		   _upt_options.potential_flag, _upt_options.opt_flag,
 		   _upt_options.poldir, _upt_options.c_axis);
 
-  std::cout << "fill parameter done" << std::endl;
+  std::cout << "(TC) fill parameter done" << std::endl;
 
   //inst->addskdata(_dftb_options.skNames, _dftb_options.mAngs,
   //    _dftb_options.orbResolved, _dftb_options.skInterp, _dftb_options.nType);
 
   //std::cout << "addskdata done" << std::endl;
 
-  std::cout << "init uptight begins" << std::endl;
+  std::cout << "(TC) init uptight begins" << std::endl;
 
   inst->inituptight();
 
-  std::cout << "init uptight done" << std::endl;
+  std::cout << "(TC) init uptight done" << std::endl;
+
+  delete[] database_path;
+  delete[] work_path;
+  delete[] upt_filename;
+  delete[] gen_outfile;
 
 };
 
 //-------------------------------------------------------------------------
 void ETB::do_solve(void){
 
-#ifdef DEBUG
-  std::cout << "Calling ETB->do_solve() " << std::endl;
-#endif
+  inst->compute_H();
 
+
+#ifdef DEBUG
+  std::cout << "(TC) Calling ETB->do_solve() " << std::endl;
+#endif
 
   //TODO: non so come funziona il settaggio delle grandezze da calcolare quando
   //queste siano richieste da altri e non siano prettamente dati di output
@@ -155,7 +183,7 @@ void ETB::do_solve(void){
   }
 
 #ifdef DEBUG
-  std::cout << "ETB->do_solve() done" << std::endl;
+  std::cout << "(TC) ETB->do_solve() done" << std::endl;
 #endif
 
 };
@@ -164,14 +192,7 @@ void ETB::do_solve(void){
 
 void ETB::parse_options(void)
 {
-  
-  build_input_options();
-  
-
-#ifdef DEBUG
-  print_upt_options();
-#endif
-  
+    
 };
 
 //-------------------------------------------------------------------------
@@ -179,14 +200,14 @@ void
 ETB::build_input_options()
 {
   
-  std::cout << "build_input_options() begin " <<std::endl;
+  std::cout << "(TC) build_input_options() begin...";
 
   _upt_options.verbose = get_options().get_option("verbose", 10);
   _upt_options.max_TB_order = get_options().get_option("max_TB_order", 2);  
   _upt_options.harrison_flag = get_options().get_option("Harrison_scaling", true);
   _upt_options.relat_flag = get_options().get_option("relativistic", false); 
   _upt_options.opt_flag = get_options().get_option("optical transitions", false);   
-  _upt_options.poldir = get_options().get_option("", false);   
+  _upt_options.poldir = get_options().get_option("polarization direction", 1);   
 
 
   _upt_solver_options.n_vb =  get_solver_options().get_option("num_valence_eigenvalues", 0);
@@ -196,11 +217,11 @@ ETB::build_input_options()
   _upt_solver_options.max_iter =  get_solver_options().get_option("max_iter", 100000);
   _upt_solver_options.guess_vb =  get_solver_options().get_option("guess_valence", 0.0);
   _upt_solver_options.guess_cb =  get_solver_options().get_option("guess_conduction", 0.0);
-  _upt_solver_options.fast_tol =  get_solver_options().get_option("fast_tolerance", 1e-7);
+  _upt_solver_options.fast_tol =  get_solver_options().get_option("fast_tolerance", 1e-1);
   _upt_solver_options.long_tol =  get_solver_options().get_option("long_tolerance", 1e-10);
-  _upt_solver_options.ort_tol =  get_solver_options().get_option("orthogonality_tolerance", 1e-4);
+  _upt_solver_options.ort_tol =  get_solver_options().get_option("orthogonality_tolerance", 1e-5);
 
-  std::cout << "build_input_options() done " <<std::endl;
+  std::cout << "done" << std::endl;
 
 };
 
@@ -210,36 +231,36 @@ void
 ETB::print_upt_options(void)
 {
 
-  std::cout << "UPTIGHT_OPTIONS: " << std::endl;
+  std::cout << "(TC) UPTIGHT_OPTIONS: " << std::endl;
 
   int n_files = 0;
 
-  std::cout << "verbose is " << _upt_options.verbose << std::endl;
-  std::cout << "max TB order is " << _upt_options.max_TB_order << std::endl;
-  std::cout << "harrison scaling is " << _upt_options.harrison_flag << std::endl;
-  std::cout << "relativistic is " << _upt_options.relat_flag << std::endl;
-  std::cout << "external potential is " << _upt_options.potential_flag << std::endl;
-  std::cout << "optical transitions is " << _upt_options.opt_flag << std::endl;
-  std::cout << "polarization is along " << _upt_options.poldir << std::endl;
-  std::cout << "database path is " << _upt_options.database_path << std::endl;
-  std::cout << "work path is " << _upt_options.work_path << std::endl;
-  std::cout << "upt filename is " << _upt_options.upt_filename << std::endl;
-  std::cout << "gen output is " << _upt_options.gen_outfile << std::endl;
-  std::cout << "c-axis is " << _upt_options.c_axis[1] << " " 
-                 	    << _upt_options.c_axis[2] << " "
-	                    << _upt_options.c_axis[3] << std::endl; 
+  std::cout << "verbose: " << _upt_options.verbose << std::endl;
+  std::cout << "max TB order: " << _upt_options.max_TB_order << std::endl;
+  std::cout << "harrison scaling: " << _upt_options.harrison_flag << std::endl;
+  std::cout << "relativistic: " << _upt_options.relat_flag << std::endl;
+  std::cout << "external potential: " << _upt_options.potential_flag << std::endl;
+  std::cout << "optical transitions: " << _upt_options.opt_flag << std::endl;
+  std::cout << "polarization is along: " << _upt_options.poldir << std::endl;
+  //std::cout << "database path is " << _upt_options.database_path << std::endl;
+  //std::cout << "work path is " << _upt_options.work_path << std::endl;
+  //std::cout << "upt filename is " << _upt_options.upt_filename << std::endl;
+  //std::cout << "gen output is " << _upt_options.gen_outfile << std::endl;
+  std::cout << "c-axis: " << _upt_options.c_axis[0] << " " 
+                 	    << _upt_options.c_axis[1] << " "
+	                    << _upt_options.c_axis[2] << std::endl; 
 
 
-   std::cout << "n valence " << _upt_solver_options.n_vb << std::endl;
-   std::cout << "n conduction " <<  _upt_solver_options.n_cb << std::endl;
-    std::cout << "min inter " << _upt_solver_options.min_iter << std::endl;
-   std::cout << "long iter " <<  _upt_solver_options.long_iter << std::endl;
-   std::cout << "max iter " <<  _upt_solver_options.max_iter << std::endl;
-   std::cout << "guess valence " <<  _upt_solver_options.guess_vb << std::endl;
-   std::cout << "guess conduction " <<  _upt_solver_options.guess_cb << std::endl;
-   std::cout << "fast tol " <<  _upt_solver_options.fast_tol << std::endl;
-   std::cout << "long tol " <<  _upt_solver_options.long_tol << std::endl;
-   std::cout << "orth tol " <<  _upt_solver_options.ort_tol << std::endl;
+   std::cout << "n valence: " << _upt_solver_options.n_vb << std::endl;
+   std::cout << "n conduction: " <<  _upt_solver_options.n_cb << std::endl;
+    std::cout << "min inter: " << _upt_solver_options.min_iter << std::endl;
+   std::cout << "long iter: " <<  _upt_solver_options.long_iter << std::endl;
+   std::cout << "max iter: " <<  _upt_solver_options.max_iter << std::endl;
+   std::cout << "guess valence: " <<  _upt_solver_options.guess_vb << std::endl;
+   std::cout << "guess conduction: " <<  _upt_solver_options.guess_cb << std::endl;
+   std::cout << "fast tol: " <<  _upt_solver_options.fast_tol << std::endl;
+   std::cout << "long tol: " <<  _upt_solver_options.long_tol << std::endl;
+   std::cout << "orth tol: " <<  _upt_solver_options.ort_tol << std::endl;
 
 };
 
