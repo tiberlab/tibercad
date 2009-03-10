@@ -46,3 +46,8 @@ uniax_def_pot_L = 16.14
 [permittivity]
 # static dielectric constant
 permittivity = 3.9
+
+[densityfunctional_tb]
+
+dataset = pbc
+

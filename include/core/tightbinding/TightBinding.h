@@ -6,6 +6,7 @@
 #include "EigenvalueProblem.h"
 #include "AtomisticStructure.h"
 #include "SimulationEnvironment.h"
+#include "Database.h"
 
 
 //forward declaration

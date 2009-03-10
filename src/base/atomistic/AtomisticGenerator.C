@@ -1317,7 +1317,7 @@ void AtomisticGenerator::passivate()
 {
   unsigned int ** bond_map;
   Tensor1 position;
-  double hydrogen_distance = 1.0;
+  double hydrogen_distance = 1.5;
   Atom* bonded_atom;
 
   std::cout << "Starting passivate " << std::endl;

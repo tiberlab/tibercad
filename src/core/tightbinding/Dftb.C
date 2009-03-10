@@ -284,18 +284,58 @@ void Dftb::build_names(void){
   _dftb_options.specieNameStrings.resize( _atomistic_structure->get_atom_types().size() );
 
   for (unsigned int i = 0; i < _atomistic_structure->get_atom_types().size(); i++)
-    {
-      _dftb_options.specieNameStrings[i] = (_atomistic_structure->get_atom_types()[i]);
-      std::cout << "specie name is " << _dftb_options.specieNameStrings[i] << std::endl;
-    }
+  {
+    _dftb_options.specieNameStrings[i] = (_atomistic_structure->get_atom_types()[i]);
+    std::cout << "specie name is " << _dftb_options.specieNameStrings[i] << std::endl;
+  }
 
 
   // SK FILES NAMES
 
-  //! This is the SK files path
+  //! This is the SK files path (database root + SK + dataset from materials data)
   const std::string database_path = Database::get_default_search_path();
-  const std::string prefix = database_path + "/SK/";
 
+  SimulationEnvironment::RegionIDIterator mat_it( get_environment().region_ids_begin() ); 
+    
+  const SimulationEnvironment::RegionIDIterator mat_end( get_environment().region_ids_end() );
+
+  if (mat_it == mat_end){InitFailedException("Something wrong with atomistic materials"); }
+
+  PhysicalModel* mod = get_physical_model( *mat_it );
+
+  if (mod == NULL){InitFailedException("Something wrong with associated model");}
+
+  Database& db = mod->get_database();  
+  db.set_section("densityfunctional_tb");
+  std::string dataset = db.get("dataset","",true);
+
+  //if ( dataset ==  std::string.c_str("none") ){
+  //  std::cout<<dataset<<std::endl;
+  //  InitFailedException("No dftb dataset defined for a material");
+  // }
+
+  ++mat_it;
+  
+  // Checks that all SK-files datasets of materials are compatible 
+  for( ;mat_it != mat_end; ++mat_it)
+  {
+    mod = get_physical_model( *mat_it );
+
+    //if (db.get("dataset","") == ""){
+    //  InitFailedException("No dftb dataset defined for a material");
+    //}    
+
+    if( dataset != db.get("dataset","",true) ){
+      InitFailedException("Conflicting sk datasets: please set manually in the input file");
+    } 
+  
+   
+  
+  }
+  
+  const std::string prefix = database_path + "/SK/" + dataset + "/" ;  
+
+  // ----------------------------------------------------------
   int n_files = 0;
   n_files = _atomistic_structure->get_N_types() * _atomistic_structure->get_N_types();
 

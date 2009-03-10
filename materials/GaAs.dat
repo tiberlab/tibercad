@@ -146,3 +146,8 @@ T_2_1_z = 0.25
 #Name of species
 specie_1 = Ga
 specie_2 = As
+
+[densityfunctional_tb]
+
+dataset = hyb
+

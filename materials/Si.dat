@@ -162,4 +162,7 @@ T_1_2_z = 0.25
 #Name of species
 specie_1 = Si
 
+[densityfunctional_tb]
+
+dataset = pbc
 

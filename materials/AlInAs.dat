@@ -43,3 +43,6 @@ n_basis_specie=2
 specie_1=AlIn
 specie_2=As
 
+[densityfunctional_tb]
+
+
