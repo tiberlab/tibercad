@@ -243,7 +243,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     assert(_device->get_material(elem->subdomain_id()) != NULL);
     DriftDiffusionProperties* sc =
       dynamic_cast<DriftDiffusionProperties*>(
-          _device->get_material(elem->subdomain_id())->get_model(get_id()));
+          get_physical_model(elem->subdomain_id()));
 
     sc->set_coordinates(elem->centroid());
     sc->set_potentials(sc->get_equilibrium_fermi_level());
@@ -568,7 +568,7 @@ DriftDiffusion::find_dielectric_boundary_nodes(void)
 
     DriftDiffusionProperties* sc =
       dynamic_cast<DriftDiffusionProperties*>(
-          _device->get_material(el->subdomain_id())->get_model(get_id()));
+          get_physical_model(el->subdomain_id()));
     
     // we are only interested in boundaries between semiconductor/dielectric
     if (sc->is_dielectric())
@@ -580,8 +580,8 @@ DriftDiffusion::find_dielectric_boundary_nodes(void)
           // get the model of the neighbor element
           DriftDiffusionProperties* scn =
             dynamic_cast<DriftDiffusionProperties*>(
-                _device->get_material(
-                  el->neighbor(s)->subdomain_id())->get_model(get_id()));
+                get_physical_model(el->neighbor(s)->subdomain_id()));
+
 
           // if neighbor is not dielectric we record it
           if (!scn->is_dielectric())
@@ -993,7 +993,7 @@ DriftDiffusion::guess_equilibrium(void)
     const Elem* top_parent = (*el)->top_parent();
     DriftDiffusionProperties* sc =
       dynamic_cast<DriftDiffusionProperties*>(
-          _device->get_material(elem->subdomain_id())->get_model(get_id()));
+          get_physical_model(elem->subdomain_id()));
 
     dof_map_u.dof_indices(elem, dof_indices_u, u_var);
     for (int i = 0; i < elem->n_nodes(); i++)
@@ -1484,7 +1484,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   DriftDiffusionProperties* sc =
     dynamic_cast<DriftDiffusionProperties*>(
-        device.get_material(subdomain)->get_model(get_id()));
+        get_physical_model(subdomain));
 
   assert(sc != NULL); 
 
@@ -1801,8 +1801,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
   ID subdomain = elem->subdomain_id();
 
   DriftDiffusionProperties* sc =
-    dynamic_cast<DriftDiffusionProperties*>(
-        device.get_material(subdomain)->get_model(get_id()));
+    dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
   assert(sc != NULL); 
 
 
@@ -2166,8 +2165,7 @@ DriftDiffusion::calculate_currents_rstf(void)
     dof_map.dof_indices(elem, dof_indices_ep, ep_var);
 
     DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(
-          device.get_material(subdomain)->get_model(get_id()));
+      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
 
     assert(sc != NULL);
 
@@ -2336,8 +2334,7 @@ DriftDiffusion::calculate_field_emission(void)
     dof_map.dof_indices(elem, dof_indices_u, u_var);
 
     DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(
-          device.get_material(subdomain)->get_model(get_id()));
+      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
 
     assert(sc != NULL);
 
@@ -2562,8 +2559,7 @@ DriftDiffusion::calculate_currents_surfint(void)
     dof_map.dof_indices(elem, dof_indices_ep, ep_var);
 
     DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(
-          device.get_material(subdomain)->get_model(get_id()));
+      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
 
     assert(sc != NULL);
 
@@ -2817,8 +2813,7 @@ DriftDiffusion::build_local_scaling(void)
     unsigned int n_dofs     = dof_indices_u.size();
 
     DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(
-          device.get_material(subdomain)->get_model(get_id()));
+      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
     assert(sc != NULL); 
 
     sc->reinit(elem);
@@ -3099,7 +3094,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
       ID subdomain = elem->subdomain_id();
 
       sc = dynamic_cast<DriftDiffusionProperties*>(
-          device.get_material(subdomain)->get_model(get_id()));
+          get_physical_model(subdomain));
 
       int n = sc->get_net_recombination_rate_IDs(ids);
 
@@ -3234,8 +3229,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
       dof_map.dof_indices(elem, dof_indices_ep, ep_var);
 
       DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(
-          device.get_material(subdomain)->get_model(get_id()));
+      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
       assert(sc != NULL); 
 
       sc->reinit(elem);
@@ -3456,7 +3450,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     
     DriftDiffusionProperties* sc =
       dynamic_cast<DriftDiffusionProperties*>(
-          device.get_material(elem->subdomain_id())->get_model(get_id()));
+          get_physical_model(elem->subdomain_id()));
 
     assert(sc != NULL); 
 
@@ -3734,8 +3728,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
     dof_map.dof_indices(elem, dof_indices_ep, ep_var);
 
     DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(
-          device.get_material(subdomain)->get_model(get_id()));
+      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
 
     assert(sc != NULL); 
 
@@ -4490,8 +4483,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
 
     DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(
-          device.get_material(subdomain)->get_model(get_id()));
+      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
 
     assert(sc != NULL);
     sc->reinit(elem);
