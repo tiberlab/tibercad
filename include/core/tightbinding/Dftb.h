@@ -3,8 +3,6 @@
 
 //---------------------------------------------------------------------
 #include "TightBinding.h"
-#include "AtomisticStructure.h"
-#include "SimulationEnvironment.h"
 
 #include <map>
 

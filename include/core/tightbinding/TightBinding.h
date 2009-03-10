@@ -3,8 +3,9 @@
 
 //-----------------------------------------------------------------------------------------
 
-#include "SimulationInterface.h"
+#include "EigenvalueProblem.h"
 #include "AtomisticStructure.h"
+#include "SimulationEnvironment.h"
 
 
 //forward declaration
@@ -15,7 +16,7 @@ class UptWrapper;
 
 //!Main class for Atomistic Tight Binding simulation at equilibrium
 //! DFTB code is used for simulations
-class TightBinding : public SimulationInterface{
+class TightBinding : public EigenvalueProblem{
 
 
 public:

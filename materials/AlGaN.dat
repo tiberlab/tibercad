@@ -23,7 +23,7 @@ bow_Pz = -0.021
 #
 [atomistic_structure]
 
-specie_1=AlGa
+specie_1=Al
 specie_2=N
 n_basis_specie=2
 

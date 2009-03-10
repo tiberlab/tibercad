@@ -70,10 +70,11 @@ void Dftb::parse_options(void){
 
   //====================================
   //Specifies where to search for Sk files
-  //TODO: the right set should be provided as a physical model! Now it's given as input parameter
+  //TODO: the right set should be provided as a physical model! 
 
+  const std::string database_path = Database::get_default_search_path();
 
-  const std::string sk_path = "./SK/infos.dat";
+  const std::string sk_path = database_path + "/SK/infos.dat";
 
   //Informations about parametrization are expected to be inside a file called infos.dat
   //with the following style:
@@ -292,7 +293,8 @@ void Dftb::build_names(void){
   // SK FILES NAMES
 
   //! This is the SK files path
-  const std::string prefix = "";
+  const std::string database_path = Database::get_default_search_path();
+  const std::string prefix = database_path + "/SK/";
 
   int n_files = 0;
   n_files = _atomistic_structure->get_N_types() * _atomistic_structure->get_N_types();

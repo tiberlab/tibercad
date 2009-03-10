@@ -1,9 +1,7 @@
 #ifndef _EMPIRICALTIGHTBINDING_H_
 #define _EMPIRICALTIGHTBINIDNG_H_
 
-
 #include "TightBinding.h"
-
 
 class ETB : public TightBinding
 {
@@ -24,10 +22,10 @@ public:
     bool potential_flag;
     bool opt_flag;
     int poldir;
-    char *database_path;
-    char *work_path;
-    char *upt_filename;
-    char *gen_outfile;
+    std::string database_path;
+    std::string work_path;
+    std::string upt_filename;
+    std::string gen_outfile;
     double *c_axis;
       
   };
