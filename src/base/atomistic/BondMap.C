@@ -158,7 +158,10 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
       position1 = basis[i].get_position();
       position2 = basis[j].get_position() + period;
 
-      if ( cutofftmp == 0.0 ) std::cout << "WARNING, A CUTOFF DISTANCE IS NOT DEFINED " << std::endl;
+      if ( cutofftmp == 0.0 ) std::cout << "WARNING, CUTOFF DISTANCE BETWEEN " 
+					<< basis[i].get_specie().c_str()
+					<< " AND " << basis[j].get_specie().c_str()
+					<< " IS NOT DEFINED " << std::endl;
 
       if ( norm( position1 - position2) < cutofftmp ){
 
