@@ -2,7 +2,7 @@
 #define _OpticsKP_H_
 
 
-#include "SimulationInterface.h"
+#include "Optics.h"
 
 #include "EnvelopFunctionApprox.h"
 class  KPbulkHamiltonian;
@@ -11,7 +11,7 @@ class  KPbulkHamiltonian;
 
 
 //!Class that calculates optical matrix elements in k.p formalism
-class OpticsKP: public SimulationInterface
+class OpticsKP: public Optics
 {
  public:
 
