@@ -593,10 +593,10 @@ AtomisticStructure::print_structure(const std::string& path)
           std::string structure = "unknown";
 
 
-          if (mat->is_alloy()) file << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_A() + ".tb"
-				    << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_B() + ".tb" 
+          if (mat->is_alloy()) file << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_A() + ".etb"
+				    << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_B() + ".etb" 
                                     << "  0.0  0.0";
-          else file << std::setw(10) << mat->get_name() + ".tb" ;
+          else file << std::setw(10) << mat->get_name() + ".etb" ;
 
           file << std::endl;
         }
