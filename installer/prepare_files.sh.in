@@ -120,8 +120,9 @@ prepare_linux_package () {
 
   CWDIR=`pwd`
   cd ${files}
-  tar --group 0 --owner 0 $MODE $ARCHIVE * && rm -rf $files
+  tar --group 0 --owner 0 $MODE $ARCHIVE * 
   cd $CWDIR
+  rm -rf $files
 
   return
 }
