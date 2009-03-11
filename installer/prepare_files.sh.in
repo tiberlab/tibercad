@@ -1,5 +1,6 @@
 #!/bin/sh
 
+GMSHVER=2.3.0
 
 
 make_windows_package () {
@@ -31,11 +32,11 @@ make_windows_package () {
   unix2dos Readme.txt
 
   cd ${topdir}/contrib
-  if [ ! -d gmsh-2.2.0 ]
+  if [ ! -d gmsh-${GMSHVER} ]
   then
-    mkdir gmsh-2.2.0
-    cd gmsh-2.2.0
-    wget http://www.geuz.org/gmsh/bin/Windows/gmsh-2.2.0-Windows.zip
+    mkdir gmsh-${GMSHVER}
+    cd gmsh-${GMSHVER}
+    wget http://www.geuz.org/gmsh/bin/Windows/gmsh-${GMSHVER}-Windows.zip
   fi
   if [ ! -f gmsh.pdf ]
   then
@@ -43,10 +44,10 @@ make_windows_package () {
   fi
   cd ${curdir}
   cd ${files}
-  mkdir -p contrib/gmsh-2.2.0
-  cd contrib/gmsh-2.2.0
-  unzip ${topdir}/contrib/gmsh-2.2.0/gmsh-2.2.0-Windows.zip
-  cp ${topdir}/contrib/gmsh-2.2.0/gmsh.pdf .
+  mkdir -p contrib/gmsh-${GMSHVER}
+  cd contrib/gmsh-${GMSHVER}
+  unzip ${topdir}/contrib/gmsh-${GMSHVER}/gmsh-${GMSHVER}-Windows.zip
+  cp ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf .
 
   cd $curdir
 
@@ -104,15 +105,15 @@ prepare_linux_package () {
   find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   cp ${topdir}/materials/[^.]* ${files}/materials
 
-  if [ -d ${topdir}/contrib/gmsh-2.2.0 ]
+  if [ -d ${topdir}/contrib/gmsh-${GMSHVER} ]
   then
-    if [ ! -f ${topdir}/contrib/gmsh-2.2.0/gmsh.pdf ]
+    if [ ! -f ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf ]
     then
       wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
-      mv gmsh.pdf ${topdir}/contrib/gmsh-2.2.0
+      mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}
     fi
-    cp -r  ${topdir}/contrib/gmsh-2.2.0 ${files}/contrib
-    chmod a+x ${files}/contrib/gmsh-2.2.0/gmsh
+    cp -r  ${topdir}/contrib/gmsh-${GMSHVER} ${files}/contrib
+    chmod a+x ${files}/contrib/gmsh-${GMSHVER}/gmsh
   fi
 
   chmod -R a+r ${files}
@@ -158,15 +159,15 @@ make_deb () {
   find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   cp ${topdir}/materials/[^.]* ${files}/materials
 
-  if [ -d ${topdir}/contrib/gmsh-2.2.0 ]
+  if [ -d ${topdir}/contrib/gmsh-${GMSHVER} ]
   then
-    if [ ! -f ${topdir}/contrib/gmsh-2.2.0/gmsh.pdf ]
+    if [ ! -f ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf ]
     then
       wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
-      mv gmsh.pdf ${topdir}/contrib/gmsh-2.2.0
+      mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}
     fi
-    cp -r  ${topdir}/contrib/gmsh-2.2.0 ${files}/contrib
-    chmod a+x ${files}/contrib/gmsh-2.2.0/gmsh
+    cp -r  ${topdir}/contrib/gmsh-${GMSHVER} ${files}/contrib
+    chmod a+x ${files}/contrib/gmsh-${GMSHVER}/gmsh
   fi
 
 
@@ -199,7 +200,7 @@ case \$prog in
 
   gmsh*)
     progname="gmsh"
-    executable="\${TIBERCADROOT}/contrib/gmsh-2.2.0/\$progname"
+    executable="\${TIBERCADROOT}/contrib/gmsh-${GMSHVER}/\$progname"
     ;;
 
   *)

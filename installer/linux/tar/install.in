@@ -4,21 +4,21 @@ TIBERVER=@TIBERVERSION@
 
 ARCH=i386-linux
 
-GMSH_VER=2.2.0
+GMSHVER=2.3.0
 
 
 
 install_gmsh ()
 {
 
-  echo "Installing GMSH to ${instpath}/contrib/gmsh-$GMSH_VER"
+  echo "Installing GMSH to ${instpath}/contrib/gmsh-$GMSHVER"
   install_files contrib ${instpath}
 
   here=`pwd`
 
   cd ${instpath}/bin && ln -s TiberCAD.sh gmsh
   mkdir -p ${instpath}/man/man.1
-  cd ${instpath}/man/man.1 && ln -s ${instpath}/contrib/gmsh-$GMSH_VER/gmsh.1 gmsh.1
+  cd ${instpath}/man/man.1 && ln -s ${instpath}/contrib/gmsh-$GMSHVER/gmsh.1 gmsh.1
 
   echo "- ${instpath}/bin/gmsh" >> ${instpath}/files.lst
   echo "- ${instpath}/man/man.1/gmsh.1" >> ${instpath}/files.lst
@@ -221,6 +221,7 @@ cat > ${instpath}/bin/TiberCAD.sh <<EOF
 #!/bin/sh
 
 VER=$TIBERVER
+GMSHVER=${GMSHVER}
 ARCH=${ARCH}
 
 # put your installation directory here (this is done automatically by the
@@ -246,7 +247,7 @@ case \$prog in
 
   gmsh*)
     progname="gmsh"
-    executable="\${TIBERCADROOT}/contrib/gmsh-2.2.0/\$progname"
+    executable="\${TIBERCADROOT}/contrib/gmsh-\${GMSHVER}/\$progname"
     ;;
 
   *)
@@ -405,7 +406,7 @@ fi
 
 
 echo ""
-echo -n "Do you want to install GMSH version $GMSH_VER [Y/n]? "
+echo -n "Do you want to install GMSH version $GMSHVER [Y/n]? "
 read answer
 [ -z $answer ] && answer='y'
 case $answer in
