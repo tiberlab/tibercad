@@ -21,6 +21,7 @@ cd ../
   --disable-modules \
   --disable-dftb \
   --disable-hetero \
+  --disable-uptight \
   --enable-license-check \
   $OTHEROPTS \
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}

@@ -123,14 +123,14 @@ echo "###################################################"
 
 echo ""
 echo -n "Provide installation directory [/usr/local/tibercad-$TIBERVER]: "
-read instpath
+read -e instpath
 
 echo ""
 
 [ -z $instpath ] && instpath=/usr/local/tibercad-$TIBERVER
 
 echo -n "I will install to $instpath. Is this what you want? [Y/n]"
-read -e answer
+read answer
 
 [ -z $answer ] && answer='y'
 case $answer in
@@ -183,7 +183,7 @@ then
     echo "install TiberCAD into its own directory."
   fi
   echo -n "Do you really want to proceed [y/N]? "
-  read -e answer
+  read answer
 
   [ -z $answer ] && answer='n'
   case $answer in
@@ -387,7 +387,7 @@ fi
 echo ""
 echo "You can provide the path to a license file, if you already have one."
 echo -n "license file []: "
-read answer
+read -e answer
 if [ ! -f $answer ]
 then
   echo "The path you provided cannot be used."
@@ -398,6 +398,7 @@ else
     echo "Don't forget to copy your license file to $instpath/license/tibercad.lic after installation."
   else
     echo "Copying $answer to $instpath/license/tibercad.lic"
+    mkdir -p $instpath/license
     cp $answer $instpath/license/tibercad.lic
   fi
 fi

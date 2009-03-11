@@ -8,6 +8,9 @@ PATCHLEVEL="p13"
 # libMesh version
 LIBMESHVERSION=0.6.1
 
+# GMSH version
+GMSHVERSION=2.3.0
+
 # whether to compile debug mode or not (y/n)
 DEBUG=n
 
