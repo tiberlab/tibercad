@@ -43,8 +43,6 @@ public:
     bool supersampling;
     double* samplingcoeffs;
     double* samplingshift;
-    bool external_potential;
-
   };
 
 
@@ -52,6 +50,7 @@ public:
   public:
     std::string solver;
     std::string poisson_solver;
+    bool external_optential;
   };
 
 

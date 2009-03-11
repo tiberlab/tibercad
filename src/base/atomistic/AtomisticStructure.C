@@ -63,17 +63,14 @@ AtomisticStructure::create(const std::string& name, const ModelOptions& options)
 
 
 AtomisticStructure::AtomisticStructureOptions::AtomisticStructureOptions(void)
-{
-  is_passivated = false;
-  contains_bond_map = false;
-  is_periodical = false;
-}
+:is_passivated(false),
+contains_bond_map(false),
+is_periodical(false)
+{}
 
 
 AtomisticStructure::AtomisticStructureOptions::~AtomisticStructureOptions(void)
-{
-
-}
+{}
 
 
 //Copy operator
@@ -290,7 +287,7 @@ AtomisticStructure::read_structure(const std::string& path)
 
       if ( (record.compare("S") == 0) || (record.compare("s") == 0))
         _atomistic_structure_options.is_periodical = true;
-      else  if ( (record.compare("C") == 0) && (record.compare("c") == 0))
+      else  if ( (record.compare("C") == 0) || (record.compare("c") == 0))
         _atomistic_structure_options.is_periodical = false;
       else
         std::cerr << "Warning (in GEN file at first line): Cluster (C) or Supercell (S) must be specified. By default a Cluster (no periodicity) is considered. \n";
@@ -488,8 +485,8 @@ AtomisticStructure::print_structure(const std::string& path)
             {
               if (_atom_types[n_specie].compare(_structure_atoms[i].get_specie()) == 0) break;
             }
-          file << std::setw(10) 
-	       << material_map[ (_device->get_material(_structure_atoms[i].get_region_ID())) ] 
+          file << std::setw(10)
+	       << material_map[ (_device->get_material(_structure_atoms[i].get_region_ID())) ]
 	       << std::setw(5) << n_specie + 1
 	  << std::setw(20) << std::setprecision(10) << std::fixed  << double(_structure_atoms[i].get_position(1))
           << std::setw(20) << std::setprecision(10) << std::fixed  << double(_structure_atoms[i].get_position(2))
@@ -520,7 +517,7 @@ AtomisticStructure::print_structure(const std::string& path)
 	  //A line of zeros is put here (coordinates origin)
 	  file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
 	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
-	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";   
+	       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
 
 	  unsigned int count = 0;
           for (unsigned int i = 0; i < 3; i++)
@@ -554,8 +551,8 @@ AtomisticStructure::print_structure(const std::string& path)
           db.set_section("atomistic_structure");
           //GetPot data((mat->get_database()).get_data_file());
 
-          file << std::setw(3)  << (*mat_it).second 
-	       << std::setw(12) << ((*mat_it).first)->get_name() 
+          file << std::setw(3)  << (*mat_it).second
+	       << std::setw(12) << ((*mat_it).first)->get_name()
 	       << std::setw(6)  <<  mat->get_structure();
 
           std::string alloy_type;
@@ -582,9 +579,9 @@ AtomisticStructure::print_structure(const std::string& path)
 
           //Molar fractions
           //HELP MOLAR FRACTION STILL NOT DEFINED AT THIS POINT (Initialized in Material::do_init)
-          if (mat->is_alloy()) file << std::setw(10) <<  std::setprecision(3) 
+          if (mat->is_alloy()) file << std::setw(10) <<  std::setprecision(3)
 				    << mat->get_options().get_option("x",1.0)
-				    << std::setw(10) << std::setprecision(3) 
+				    << std::setw(10) << std::setprecision(3)
 				    <<  ( 1.0 - mat->get_options().get_option("x",1.0) );
           else  file << std::setw(10) <<  std::setprecision(3) << 1.0 ;
 
@@ -594,7 +591,7 @@ AtomisticStructure::print_structure(const std::string& path)
 
 
           if (mat->is_alloy()) file << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_A() + ".etb"
-				    << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_B() + ".etb" 
+				    << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_B() + ".etb"
                                     << "  0.0  0.0";
           else file << std::setw(10) << mat->get_name() + ".etb" ;
 
@@ -652,7 +649,7 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
     {
       file << _structure_atoms.size();
 
-      if (is_periodical) file << std::setw(10) << "S \n";
+      if (_atomistic_structure_options.is_periodical) file << std::setw(10) << "S \n";
       else file << std::setw(10) << "C \n";
 
       for (unsigned int i = 0; i < _atom_types.size(); i++)
@@ -681,7 +678,7 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
 
       // Periodicity vectors at the bottom
-      if (is_periodical)
+      if (_atomistic_structure_options.is_periodical)
         {
           unsigned int count = 0;
           for (unsigned int i = 0; i < 3; i++)

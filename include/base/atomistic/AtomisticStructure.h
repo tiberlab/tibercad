@@ -125,7 +125,7 @@ public:
   void set_N_types(int N) {N_types=N;}
 
   // say if it is periodic
-  bool is_periodic() const {return is_periodical;}
+  bool is_periodic() const {return _atomistic_structure_options.is_periodical;}
 
   //! Get atom type index (types are stored in _atom_types)
   int get_type_index   (  const std::string &   type    );
@@ -162,10 +162,6 @@ private:
 
   //! Number of species
   int N_types;
-
-  //! Tell if atomistic structure has to be considered a periodical
-  //! structure (true) or a cluster (false)
-  bool is_periodical;
 
   //! Vector containing structure atoms
   std::vector<Atom> _structure_atoms;
