@@ -105,6 +105,12 @@ prepare_linux_package () {
   find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   cp ${topdir}/materials/[^.]* ${files}/materials
 
+  if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER} ]
+  then
+    wget http://www.geuz.org/gmsh/bin/Linux/gmsh-${GMSHVER}-Linux.tgz
+    tar -C ${topdir}/contrib/ -zxf gmsh-${GMSHVER}-Linux.tgz
+    rm -f gmsh-${GMSHVER}-Linux.tgz
+  fi
   if [ -d ${topdir}/contrib/gmsh-${GMSHVER} ]
   then
     if [ ! -f ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf ]
@@ -115,6 +121,7 @@ prepare_linux_package () {
     cp -r  ${topdir}/contrib/gmsh-${GMSHVER} ${files}/contrib
     chmod a+x ${files}/contrib/gmsh-${GMSHVER}/gmsh
   fi
+
 
   chmod -R a+r ${files}
   find ${files} -type d -exec chmod a+x {} \;
