@@ -224,6 +224,40 @@ Utils::extract_vector(const string& input, vector<T>& vec)
 }
 
 
+template <>
+void
+Utils::extract_vector(const string& input, vector<int>& vec)
+{
+  // We first read it as strings. This is to allow for ranges:
+  // (1, 3, 5-7, 9)
+  vector<string> vs;
+  extract_vector(input, vs);
+
+  if (vs.size() > 0)
+  {
+    vec.resize(0);
+    vec.reserve(vs.size());
+
+    vector<string> tok;
+    for (size_t i = 0; i < vs.size(); i++)
+    {
+      tokenize(vs[i], tok, "-");
+      if ((tok.size() == 2) &&
+          (tok[0].find_first_of("eE") == string::npos))
+      {
+        int a = convert<int>(tok[0]);
+        int b = convert<int>(tok[1]);
+        int step = (b > a) ? 1 : -1;
+        for (int x = a; x <= b; x += step)
+          vec.push_back(x);
+      }
+      else
+        vec.push_back(convert<int>(vs[i]));
+    }
+  }
+}
+
+
 template
 void
 Utils::extract_vector<double>(const string& input, vector<double>& vec);
@@ -232,9 +266,6 @@ template
 void
 Utils::extract_vector<bool>(const string& input, vector<bool>& vec);
 
-template
-void
-Utils::extract_vector<int>(const string& input, vector<int>& vec);
 
 template
 void
