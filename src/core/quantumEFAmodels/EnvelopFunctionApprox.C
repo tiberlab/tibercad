@@ -3082,7 +3082,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
     {
       found = true;
       mat_elem = elem;
-
+      _bulk_mat_element = mat_elem;
     }
 
   }
@@ -3145,7 +3145,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
   solution.resize(opt.number_of_bands);
 
   {
-     char jobs = 'N';
+     char jobs = 'V';
      char UPLO = 'U'; 
      int  N = opt.number_of_bands;
      double eigvals[opt.number_of_bands];
@@ -3162,7 +3162,11 @@ void EnvelopFunctionApprox::solve_bulk(void)
      {
        
        solution[i].eigen_energy = eigvals[i]*Hartree;
-       
+       solution[i].eigen_vector.resize(opt.number_of_bands);
+       for (short j = 0; j < opt.number_of_bands ; j++)
+       {
+	 solution[i].eigen_vector[j] = ham_matrix[i * opt.number_of_bands + j];
+       }
      }
   }
 

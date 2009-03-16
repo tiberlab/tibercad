@@ -288,16 +288,18 @@ void OpticsKP::do_solve()
   if (job == BULKMATREL)
     calculate_matrix_bulk(); //only for bulk
   else
+  {
     calculate_matrix(); //normal calculation
-
+    calculate_P_matrix_elements();
+  }
 
   unsigned int n1 =  _initial_eigen_state_numbers.size();
   unsigned int n2 =  _final_eigen_state_numbers.size();
 
 
 
-  calculate_P_matrix_elements();
-
+  // calculate_P_matrix_elements();
+ 
 
   if (verbose > 0)
     cout << "done\n" << flush;
@@ -478,6 +480,104 @@ void OpticsKP::calculate_matrix_bulk(void)
     (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) ))->get_Hamiltonian_model();
 
   element_hamiltonian->set_k_vector(k_vector);
+
+  
+ 
+
+
+  KPbulkHamiltonian* element_kp_hamiltonian;
+  element_kp_hamiltonian = dynamic_cast<KPbulkHamiltonian*>  (element_hamiltonian);
+
+  const vector < vector <vector <EFAbulkHamiltonian::MatrixElement> > >&
+    P = element_kp_hamiltonian->get_optical_operator() ;
+
+
+
+
+
+
+
+  unsigned int n_i =  _initial_eigen_state_numbers.size();
+  unsigned int n_f =  _final_eigen_state_numbers.size();
+
+  
+
+
+  P_matrix.clear();
+  P_matrix.resize(3);
+  for (unsigned i = 0; i < 3; i++)
+  {
+    P_matrix[i].resize(n_i);
+    for (unsigned j = 0; j < n_i; j++)   P_matrix[i][j].resize(n_f);
+  }
+
+
+
+  //!number of bands in initial state
+  short    num_bands_initial = initial_state_model->get_number_of_bands();
+  const map<short, short>&  kp_bands_map_in = initial_state_model->get_kp_bands();
+  
+  assert( kp_bands_map_in.size() > 0);
+  
+  //number of bands in final state
+  short    num_bands_final   = final_state_model->get_number_of_bands();
+  const map<short, short>&  kp_bands_map_fi = final_state_model->get_kp_bands();
+  
+  assert( kp_bands_map_fi.size() > 0);
+
+  map<short, short>::const_iterator  band_it;
+
+
+
+
+  for (unsigned int band1 = 0; band1 < 8; band1++)
+    for (unsigned int band2 = 0; band2 < 8; band2++)
+    {
+
+      band_it = kp_bands_map_in.find( band1);
+
+      if (band_it != kp_bands_map_in.end())
+      {
+
+	short number1 = band_it->second;
+
+
+
+	band_it = kp_bands_map_fi.find( band2);
+
+	if (band_it != kp_bands_map_fi.end())
+	{
+
+	  short number2 = band_it->second;
+
+	  for (unsigned int i1 = 0; i1 < n_i; i1++)
+	    for (unsigned int i2 = 0; i2 < n_f; i2++)
+	    {
+  
+	      for (short pol = 0; pol < 3; pol++)
+	      {
+		P_matrix[pol][i1][i2] +=  P[pol][band1][band2].constant *
+		  conj( (initial_state_model->get_solution())[i1].eigen_vector[number1] )*
+		  ( (final_state_model->get_solution())[i2].eigen_vector[number2] );
+		
+		
+	      
+	      }
+	    }
+	}
+      }
+
+    }
+
+  
+
+  
+  
+  
+  
+  
+ 
+
 
 }
 

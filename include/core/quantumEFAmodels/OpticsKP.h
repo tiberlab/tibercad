@@ -153,6 +153,10 @@ class OpticsKP: public Optics
   //!pointer to the imaginary part of  Pz matrix
   SparseMatrix<Number>* Pz_matr_imag;
 
+
+
+
+
   
   //!name of the system
   std::string system_name;
