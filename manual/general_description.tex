@@ -34,14 +34,15 @@ The core of  the input file comprises three sections, called \textbf{Device}, \t
 \begin{verbatim}
 $Device
 {
-	Region name1
+	Region Si_channel
 	{
-		physical_region= (1, 2, ...) 
-		materiala= Si	
+		
+		material= Si	
+		doping = 1e16
 	}
-	Region name2
+	Region gate_oxide
 	{
-		physical_region= (oxide)
+		
 		material= SiO2
 	}
 	...
