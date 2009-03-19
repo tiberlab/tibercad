@@ -66,12 +66,9 @@ void  Poisson::do_init( )
   mesh = & (_device->get_mesh());
 
   dim = mesh->mesh_dimension();
-
-  double mesh_units = get_scaling().get_calc_mesh_units() / sim_opt.get_option("Work_length_units", 1e-2);
-
-  get_scaling().set_calc_mesh_units(mesh_units);
   
-
+  double mesh_units = 100 * get_scaling().get_calc_mesh_units();
+  get_scaling().set_calc_mesh_units(mesh_units);
 
   my_system = TiberLinearSystem::create(get_equation_systems(),
       get_equation_system_name(), get_solver_options());
@@ -170,7 +167,7 @@ void Poisson::build_nodal_results (const std::set< std::string > &variables,
 				     std::vector< std::string > &legend)
 {
 
-  if (variables.find("V") != variables.end())
+  if (variables.find("ElPotential") != variables.end())
   {
     legend.resize(1);
     legend[0] = "Potential[V]";
@@ -227,19 +224,43 @@ Poisson::build_elemental_results(const std::set<std::string>& variables,
   vector<ID> ids;
  
   unsigned int n_vars = 0;  
-  
+
+  legend.resize(variables.size());
   const unsigned int nn  = mesh->n_active_elem();
   const unsigned int dim = mesh->mesh_dimension();
-
-  legend.resize(0);
+ 
   int PC = -1; 
   if (variables.find("PoissonCharge") != varend)
   {
     PC = n_vars;
-    legend.resize(1);
-    legend[0] = "PoissonCharge[Q/cm3]";
+    legend.resize(legend.size()+1);
+    legend[n_vars] = "PoissonCharge[Q/cm3]";
     n_vars +=1;
   }
+
+  int TP = -1; 
+                     
+  if (variables.find("Polarization") != varend)
+  {
+    TP = n_vars;
+  
+    legend.resize(legend.size() + dim);
+    switch (dim)
+    {
+    case 3:
+      legend[TP + 2] = "P_z";
+      n_vars++;
+    case 2:
+      legend[TP + 1] =  "P_y";
+      n_vars++;
+      legend[TP + dim] = "modP";
+      n_vars++;
+    default:
+      legend[TP] = "P_x";
+      n_vars++;
+    }
+  }
+  
 
   //  int DC = -1; 
   //if (variables.find("DielectricConstant") != varend)
@@ -249,15 +270,16 @@ Poisson::build_elemental_results(const std::set<std::string>& variables,
   //  legend[n_vars] = "DielectricConstant[F/cm]";
   //  n_vars +=1;
   // }
-    
+  legend.resize(n_vars);
   results.resize(nn * n_vars,0.0);
   
+
   MeshBase::const_element_iterator it =    mesh->active_local_elements_begin();
   const MeshBase::const_element_iterator end =     mesh->active_local_elements_end();
 
    std::vector<double> charge_density;
-  Tensor2Sym epsilon(0);
-
+   Tensor2Sym epsilon(0);
+   RealVectorValue _tot_pol(3,0.0);
 
   unsigned int elem_number = 0;
   for ( ; it != end; ++it)
@@ -278,6 +300,25 @@ Poisson::build_elemental_results(const std::set<std::string>& variables,
          poisson_model->get_charge_density(_node,charge_density); 
          results[id + PC] = charge_density[0];
     }
+
+    
+    if (TP != -1)
+    {
+      _tot_pol = poisson_model->get_total_polarization();
+      
+      switch (dim)
+      {
+      case 3:
+	results[id + TP + 2] = _tot_pol(2);
+      case 2:
+	results[id + TP + 1] =  _tot_pol(1);
+	results[id + TP + dim] = sqrt(_tot_pol(0)*_tot_pol(0)+_tot_pol(1)*_tot_pol(1)+_tot_pol(2)*_tot_pol(2));
+      default:
+	results[id + TP ] = _tot_pol(0);
+      }
+     
+    }
+
 
     // if (DC != -1)
     // {
@@ -408,7 +449,6 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
   for ( ; el != end_el ; ++el)   //loop over elements
   {  
-
   
     //Inizialize the element environment
     const Elem* elem = *el;
@@ -436,210 +476,115 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
     epsilon = poisson_model->get_dielectric_constant();
 
     _tot_pol = poisson_model->get_total_polarization();
-    
-    //-------------------------------------------------
 
     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
     { // loop over test function
-
-      //!let us check if it belongs to a reservoir boundary
-      const Node* nd = elem->get_node(p1);
+      //-------------------------------------------------
+      for (unsigned int qp=0; qp<qrule.n_points(); qp++)  
+      {//Loop over quadrature points 
 	
-      Boundary* bd = se.get_boundary(nd); 
-       
-      node_on_boundary =  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL )  );	
-      
-      if ( node_on_boundary )
-      { 
-          contact = dynamic_cast<PoissonContact*>( bd->get_boundary_properties (get_id()) );
-          is_dirichlet = (contact->get_type() == PoissonContact::Dirichlet);
-
-	  //          cout<<(contact->get_type() == PoissonContact::Dirichlet)<<endl;
-	  //  cout<<(contact->get_type() == PoissonContact::Dirichlet)<<endl;
- 
-      }
-       
-      if ( is_dirichlet )
-      { 
+	for (unsigned int p2=0; p2<n_dofs; p2++) 
+	{//loop over basis functions
 	  
- 	  Ke(p1,p1) = 1.0;
+	  double value = 0.0;    
 	  
-	  Fe(p1) = ( dynamic_cast<Dirichlet*> (contact) )->get_potential();
-	  //std::cout<< Fe(p1)<<std::endl;
-
-          is_dirichlet = false;
-      } 
-      else 
-      {
-       
-	for (unsigned int qp=0; qp<qrule.n_points(); qp++)  
-	{//Loop over quadrature points 
-
-	  //------------------------
-	  //volume integration for matrix
-	  // \int_V  \frac{\patial \phi_{\alpha}{\partial x_i} \epsilon_{ij} \frac{\partial \phi_{\beta}{\partial x_j} dx
-	  	  
-	   for (unsigned int p2=0; p2<n_dofs; p2++) 
-
-	  {//loop over basis functions
-            
-
-	    double value = 0.0;
+	  for (short i = 0; i < dim; i++) 
+	  {//loop over direction (1); test function derivative
 	    
-	   
-	    for (short i = 0; i < dim; i++) 
-	    {//loop over direction (1); test function derivative
-
-	      for (short j = 0; j < dim; j++)
-	      {//loop over direction (2); basis function derivative
-
-		double epsilon_value;
-
-		if (i < j) 
-		  epsilon_value = epsilon(j+1, i+1);
-		else
-		  epsilon_value = epsilon(i+1, j+1);
-		
-	   	  value += JxW[qp] * epsilon_value * dphi[p1][qp](i) * dphi[p2][qp](j);
-                 
-		
-	      }//end loop over direction (2)
-
-	       
-	    }//end loop over direction (1)												
-	    
-
-           Ke(p1,p2) += value;
-
-	    
-	  } //loop over basis functions
-	   
-	   //Fe construction----	
+	    for (short j = 0; j < dim; j++)
+	    {//loop over direction (2); basis function derivative
+	      
+             // double value =  JxW[qp] * dphi[p1][qp] * (epsilon * dphi[p2][qp]);
+	      double epsilon_value;
+	      if (i < j) 
+		epsilon_value = epsilon(j+1, i+1);
+	      else
+		epsilon_value = epsilon(i+1, j+1);
+	      
+	      value += JxW[qp] * epsilon_value * dphi[p1][qp](i) * dphi[p2][qp](j);
+	    }//end loop over direction (2)       
+	  }//end loop over direction (1)												
+	  
+	  Ke(p1,p2) += value;
+	  
+	} //loop over basis functions
 	
-	   Fe(p1) += JxW[qp] * charge_density[qp] * phi[p1][qp]; 
-
-           total_charge +=  JxW[qp] * charge_density[qp];
-	  
-           //Add the polarization 
-
-	   for (short i = 0; i < dim; i++) 
-	     Fe(p1) += JxW[qp] * dphi[p1][qp](i) * _tot_pol(i) ;
-
-	   //--------------------
-	   
-	}//end Loop over quadrature points  
+	//Fe construction----	
 	
-      } //is dirichlet
-
+	Fe(p1) += JxW[qp] * charge_density[qp] * phi[p1][qp]; 
+	
+	total_charge +=  JxW[qp] * charge_density[qp];
+	
+	//Add the polarization 
+	
+	// for (short i = 0; i < dim; i++) 
+	Fe(p1) += JxW[qp] * (dphi[p1][qp] * _tot_pol) ;
+	//--------------------
+      }//end Loop over quadrature points  
     }   //test function
     
     
     const unsigned int num_sides = elem->n_sides();  
     
+    //Surface Heat Source
+    
     for (unsigned int side = 0; side<num_sides; side++) 
-    {
-      
+    {   
       const ElementSide elside(elem->top_parent(), side); 
       
       if (se.is_on_boundary(elside))
       {
-	
 	fe_face->reinit(elem,side);  
-        
 	for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
 	  for (unsigned int qp = 0; qp < qface.n_points(); qp++) 
-	    for (short i = 0; i < dim; i++) 
-	      Fe(p1) -=   JxW_face[qp] * _tot_pol(i) * normal[qp](i) * phi_face[p1][qp]; 
+	    Fe(p1) -=   JxW_face[qp] * (_tot_pol * normal[qp]) * phi_face[p1][qp];
 	
       }
       
     }
-   
-
- 	//   Boundary* bd =   se.get_boundary(elside);
-	  
-//           side_on_boundary =  (bd != NULL && (bd->get_boundary_properties( get_id() ) != NULL ) );  
-	  
-//  	  if (side_on_boundary)  
-// 	  { 
-//   	    contact =  dynamic_cast<PoissonContact*>( bd->get_boundary_properties (get_id()) ); 
-	    
-//   	    if ( (contact->get_type() == PoissonContact::Neumann)) 
-//  	    { 
-	      
-//  	      double  D_condition  = ( dynamic_cast<Neumann*> (contact) )->get_polarization();  
-
-// 	       D_condition /=epsilon(1,1);
- 
-//  	      fe_face->reinit(elem, side);  
-	      
-// 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++) 
-//  	      { 
-			      
-// 		//Fe(p1) =  JxW_face[qp] *  D_condition  * phi_face[p1][qp]; 
- 
-		
-//  	      }  // for (unsigned int qp = 0; qp < qface.n_points(); qp++)    
-	      
-	       	      
-	      
-//  	    }//if Neumann 
-	    
-// 	  }//if it is boundary with associated model 
-	  
-
-
-	  
-	   //Add piezopolarization surface 
-          
-           //bd =   poisson_model->get_piezo_environment().get_boundary(elside); 
-	  
-           //if (bd != NULL) 
-         //   { 
-// 	    fe_face->reinit(elem, side);
-// 	    if (dim>1)
-//             {
-	      
-// 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
-// 	      {
-// 		for (short i = 0; i < dim; i++) 
-// 		{
-// 		  //	  Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(i+1) * normal[qp](i) *  Constants::e/Constants::epsilon ; 
-// 		}
-// 	      }
-// 	    }    
-// 	    else
-// 	    {
-// 	      double x_c = elem->centroid()(0);
-// 	      double x_s = elem->point(p1)(0);
-// 	      double n_1d = 1.0;
-	      
-// 	      if (x_s < x_c)
-// 	      { 
-// 		n_1d = -1.0;
-// 	      }  
-// 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
-// 	      {
-// 		//	Fe(p1) += JxW[qp] * phi[p1][qp] * bi_pol(0) * Constants::e * n_1d * Constants::e/Constants::epsilon; 
-// 	      }
-	      
-// 	    }//i dim >1   
-// 	   }// if (bd != NULL) 
-	//	}//side 
-	
-	//----------------------------------------
-	
-	//   } //end if it is not a dirichlet boundary
-      
-	//   } // end loop over test functions
     
+    //Boundary condition
+    
+    for (unsigned int side = 0; side<num_sides; side++)   
+    {
+      const ElementSide elside(elem->top_parent(), side); 
+      
+      Boundary* bd = se.get_boundary(elside);
+      
+      if (bd != NULL)
+      { 
+	if (bd->get_boundary_properties( get_id() ) != NULL ) 
+	{
+	  contact = dynamic_cast<PoissonContact*>( bd->get_boundary_properties (get_id()) );    
+	  switch (contact->get_type())
+	  { 
+	  case  PoissonContact::Dirichlet:
+	    
+	    for(unsigned int n = 0; n< n_dofs; ++n)             
+	    {
+	      
+	      if (elem->is_node_on_side(n,side))
+	      {
+		for (unsigned int nc = 0; nc < n_dofs; nc++)    
+		  Ke(n,nc) = 0.0;
+		
+		Ke(n,n) = 1.0;
+		Fe(n) = (dynamic_cast<Dirichlet*> (contact) )->get_potential();
+		
+	      }
+	    }
+	    break;
+	  }//case
+	}//if (bd->get_boundary_properties( get_id() ) != NULL ) 
+      }//if (bd != NULL)
+    }//side
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
     system.matrix->add_matrix (Ke, dof_indices);
     system.rhs->add_vector    (Fe, dof_indices); 
-
+    
     
   } //End Loop over elements
-  //std::cout<<total_charge<<std::endl;
+    //std::cout<<total_charge<<std::endl;
   
 } //do assembly
 
