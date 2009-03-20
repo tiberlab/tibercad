@@ -1,6 +1,7 @@
 // $Id$
 
 #include "DriftDiffusionProperties.h"
+#include "DriftDiffusion.h"
 #include "RecombinationModelInterface.h"
 #include "MobilityModelInterface.h"
 #include "ThermoelectricPower.h"
@@ -308,6 +309,14 @@ DriftDiffusionProperties::~DriftDiffusionProperties(void)
   PhysicalModelInterface::destroy(_electron_mobility);
   PhysicalModelInterface::destroy(_hole_mobility);
   PhysicalModelInterface::destroy(_thermoelectric_power);
+}
+
+
+
+bool
+DriftDiffusionProperties::has_solution(void) const
+{
+  return _driftdiffusion->is_solved();
 }
 
 

@@ -7,7 +7,7 @@
 
 
 
-TIBER_MODULE(ConstantMobility, constant)
+TIBER_SUBMODEL(ConstantMobility, constant)
 
 
 void

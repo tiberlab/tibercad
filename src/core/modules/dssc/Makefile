@@ -8,29 +8,18 @@ subdirs		:=
 
 include $(topdir)/Make.common
 
-# source files
-srcfiles 	:= $(wildcard *.C)
-
-# object files
-objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
-
 ifeq ($(build_modules), yes)
  target := shared
-else
- target := $(objects)
 endif
 
-
-.PHONY: all
-all: $(target)
 
 
 shared: $(objects)
 	@soname=lib`grep TIBER_MODULE DSSC.C | \
-		sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`.so ; \
+		sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`$(shared_libext) ; \
 		echo "Linking module $$soname ..."; \
 		$(CXX) -shared $(CXXFLAGS) -Wl,-soname,$$soname \
-			-o $(topdir)/lib/tibermodels/$$soname $(objects)
+			-o $(libdir)/tibermodels/$$soname $(objects)
 
 
 	

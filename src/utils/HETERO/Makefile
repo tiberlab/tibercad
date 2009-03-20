@@ -1,15 +1,11 @@
 # $Id$
 #
 
-topdir := ../../..
+include ../../../Make.defs
 
 
 all:
-	@cp libhetero.so $(topdir)/lib
+	@cp libhetero.so $(libdir)
 
 
-clean:
-
-
-distclean:
 

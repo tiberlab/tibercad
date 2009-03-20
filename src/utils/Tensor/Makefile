@@ -11,20 +11,18 @@ srcfiles 	:= $(wildcard *.cpp)
 
 #
 # object files
-objects		:= $(patsubst %.cpp, %.$(obj-suffix), $(srcfiles))
+objects		:= $(patsubst %.cpp, %$(obj-suffix), $(srcfiles))
+
+target := $(libdir)/libtensor.a
 
 
 
-.PHONY: all
-all:  $(topdir)/lib/libtensor.a
+$(libdir)/libtensor.a: $(objects)
+	@ar cru $@ $(objects)
+	@ranlib $@
 
-
-$(topdir)/lib/libtensor.a: $(objects)
-	@ar cru $(topdir)/lib/libtensor.a $(objects)
-	@ranlib $(topdir)/lib/libtensor.a
-
-$(topdir)/lib/libtensor.$(shared_libext): $(objects)
-	@$(CXX) -fPIC -shared -o $(topdir)/lib/libtensor.$(shared_libext) $(objects)
+$(libdir)/libtensor$(shared_libext): $(objects)
+	@$(CXX) -fPIC -shared -o $@ $(objects)
 
 
 

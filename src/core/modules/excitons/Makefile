@@ -12,43 +12,39 @@ modelsrcfiles	:= ExcitonModel.C
 
 #
 # object files
-mainobjects	:= $(patsubst %.C, %.$(obj-suffix), $(mainsrcfiles))
-modelobjects	:= $(patsubst %.C, %.$(obj-suffix), $(modelsrcfiles))
+mainobjects	:= $(patsubst %.C, %$(obj-suffix), $(mainsrcfiles))
+modelobjects	:= $(patsubst %.C, %$(obj-suffix), $(modelsrcfiles))
 
 ifeq ($(build_modules), yes)
- target := shared $(patsubst %.C, %.so, $(modelsrcfiles))
+ target := shared $(patsubst %.C, %$(shared_libext), $(modelsrcfiles))
 else
  target := $(mainobjects) $(modelobjects)
 endif
 
 
 
-.PHONY: all
-all: $(target)
-
-
 shared: $(mainobjects)
 	@soname=lib`grep TIBER_MODULE ExcitonTransport.C | \
-		sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`.so ; \
+		sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`$(shared_libext) ; \
 		echo "Linking module $$soname ..."; \
 		$(CXX) -shared $(CXXFLAGS) -Wl,-soname,$$soname \
-			-o $(topdir)/lib/tibermodels/$$soname $(mainobjects)
+			-o $(libdir)/tibermodels/$$soname $(mainobjects)
 
 
-%.so : %.C
-	@soname=lib`$(CPP) $(CPPFLAGS) -dM $(@:.so=.C) \
+%$(shared_libext) : %.C
+	@soname=lib`$(CPP) $(CPPFLAGS) -dM $(@:$(shared_libext)=.C) \
 		| awk '/TIBER_MODULE_NAME/ { module = $$3; } \
 		  	END { if (module != "") printf("%s_", module) }'`; \
-				soname=$$soname`grep TIBER_MODULE $(@:.so=.C) | \
-					sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`.so ; \
+				soname=$$soname`grep TIBER_MODULE $(@:$(shared_libext)=.C) | \
+					sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`$(shared_libext) ; \
 		echo "Linking module $$soname ..."; \
 		$(CXX) -shared $(CPPFLAGS) $(CXXFLAGS) -Wl,-soname,$$soname -o $@ $<; \
-		cp $@ $(topdir)/lib/tibermodels/$$soname
+		cp $@ $(libdir)/tibermodels/$$soname
 
 
 
 clean:
-	@rm -f *.so
+	@rm -f *$(shared_libext)
 
 
 

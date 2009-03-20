@@ -40,6 +40,11 @@
 #include "PoissonModel.h"
 #include "Neumann.h"
 
+
+// Module interface
+//TIBER_MODULE(Poisson,poisson)
+
+
 using namespace std;
 
 

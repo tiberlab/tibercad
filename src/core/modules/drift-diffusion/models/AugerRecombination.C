@@ -8,7 +8,7 @@
 
 
 
-TIBER_MODULE(AugerRecombination, auger)
+TIBER_SUBMODEL(AugerRecombination, auger)
 
 
 

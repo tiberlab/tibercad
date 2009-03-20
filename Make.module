@@ -1,0 +1,56 @@
+# $Id$
+
+# the definitions and rules needed to compile modules
+
+# include common Makefile
+include $(topdir)/Make.common
+
+ifeq ($(build_modules), yes)
+
+# reset the target
+target :=
+
+
+MODULE_CXXFLAGS = -fvisibility=hidden
+
+
+modulelib = $(shell echo lib`grep TIBER_MODULE $(1) \
+		| sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`$(shared_libext))
+
+
+submodellib = $(shell echo lib`$(CPP) $(CPPFLAGS) -dM $(1) \
+		| awk '/TIBER_MODULE_NAME/ { module = $$3; } \
+		  	END { if (module != "") printf("%s_", module) }'``grep TIBER_SUBMODEL $(1) | sed 's/[[:space:]]*TIBER_SUBMODEL([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`$(shared_libext))
+
+
+
+
+define MODULE
+target += $(libdir)/tibermodels/$$(call modulelib, $(1))
+$(libdir)/tibermodels/$$(call modulelib, $(1)) : $$(patsubst %.C,%$$(obj-suffix),$(1)) $$(patsubst %.C,%$$(obj-suffix),$(2))
+	@echo "Linking module $$(notdir $$@) ..."
+	$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) \
+			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
+#	$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) \
+#			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
+endef
+
+
+
+define SUBMODEL
+target += $(libdir)/tibermodels/$$(call submodellib, $(1))
+$(libdir)/tibermodels/$$(call submodellib, $(1)) : $$(patsubst %.C,%$$(obj-suffix),$(1)) $$(patsubst %.C,%$$(obj-suffix),$(2))
+	@echo "Linking module $$(notdir $$@) ..."
+	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) \
+			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
+endef
+
+
+else
+
+define MODULE
+endef
+define SUBMODEL
+endef
+
+endif # ($(build_modules), yes)

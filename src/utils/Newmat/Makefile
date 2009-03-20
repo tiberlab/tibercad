@@ -11,20 +11,18 @@ srcfiles 	:= $(wildcard *.cpp)
 
 #
 # object files
-objects		:= $(patsubst %.cpp, %.$(obj-suffix), $(srcfiles))
+objects		:= $(patsubst %.cpp, %$(obj-suffix), $(srcfiles))
 
 
-
-.PHONY: all
-all: $(topdir)/lib/libnewmat.a
+target := $(libdir)/libnewmat.a
 
 
-$(topdir)/lib/libnewmat.a: $(objects)
-	@$(AR) cru $(topdir)/lib/libnewmat.a $(objects)
-	@ranlib $(topdir)/lib/libnewmat.a
+$(libdir)/libnewmat.a: $(objects)
+	@$(AR) cru $@ $(objects)
+	@ranlib $@
 
-$(topdir)/lib/libnewmat.$(shared_libext): $(objects)
-	@$(CXX) -fPIC -shared -o $(topdir)/lib/libnewmat.$(shared_libext) $(objects)
+$(libdir)/libnewmat$(shared_libext): $(objects)
+	@$(CXX) -fPIC -shared -o $@ $(objects)
 
 
 

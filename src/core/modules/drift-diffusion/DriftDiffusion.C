@@ -35,9 +35,6 @@
 
 // C++ includes
 
-using namespace std;
-using namespace DriftDiffusionDefs;
-
 
 //
 // Module interface
@@ -46,6 +43,9 @@ using namespace DriftDiffusionDefs;
 TIBER_MODULE(DriftDiffusion,driftdiffusion)
 
 
+
+using namespace std;
+using namespace DriftDiffusionDefs;
 
 
 DriftDiffusion*
@@ -67,8 +67,8 @@ DriftDiffusion::Options::Options(void)
     scaling_type(Scaling::UNITS),
     coupling(FULLYCOUPLED),
     current_calculation(RSTF),
-    exact_newton(true),
-    write_atomic_potentials(NULL)
+    exact_newton(true)/*,
+    write_atomic_potentials(NULL)*/
 {
 }
 
@@ -90,8 +90,8 @@ DriftDiffusion::Options::Options(const Options& rhs)
     scaling_type(rhs.scaling_type),
     coupling(rhs.coupling),
     current_calculation(rhs.current_calculation),
-    exact_newton(rhs.exact_newton),
-    write_atomic_potentials(write_atomic_potentials)
+    exact_newton(rhs.exact_newton)/*,
+    write_atomic_potentials(write_atomic_potentials)*/
 {
 }
 
@@ -118,7 +118,7 @@ DriftDiffusion::Options::operator=(const Options& rhs)
     coupling = rhs.coupling;
     current_calculation = rhs.current_calculation;
     exact_newton = rhs.exact_newton;
-    write_atomic_potentials = rhs.write_atomic_potentials;
+    //write_atomic_potentials = rhs.write_atomic_potentials;
   }
   return *this;
 }

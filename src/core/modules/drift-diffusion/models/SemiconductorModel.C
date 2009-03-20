@@ -11,7 +11,7 @@
 #include <iostream>
 
 
-TIBER_MODULE(SemiconductorModel, default)
+TIBER_SUBMODEL(SemiconductorModel, default)
 
 
 using namespace DriftDiffusionDefs;

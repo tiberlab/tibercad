@@ -12,18 +12,5 @@ ifeq ($(enable_pardiso), yes)
 endif
 
 
-# source files
-srcfiles 	:= $(wildcard *.C)
-
-# object files
-objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
-
-.PHONY: all
-all: $(objects)
-
-echo:
-	@echo $(subdirs)
-
-
 include $(topdir)/Make.rules
 

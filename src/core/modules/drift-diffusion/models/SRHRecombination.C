@@ -8,7 +8,7 @@
 
 
 
-TIBER_MODULE(SRHRecombination, srh)
+TIBER_SUBMODEL(SRHRecombination, srh)
 
 
 

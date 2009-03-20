@@ -1,5 +1,11 @@
+// $Id$
+
 #ifndef _DRIFTDIFFUSIONDEFS_H_
 #define _DRIFTDIFFUSIONDEFS_H_
+
+
+#include "TiberModule.h"
+
 
 //! A namespace for drift-diffusion specific definitions
 /*!

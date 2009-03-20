@@ -1,13 +1,10 @@
 # $Id$
 
-# Common definitions for all Makefiles
 topdir := @abs_top_builddir@
-prefix := @prefix@
-exec_prefix := @exec_prefix@
-libdir := @libdir@
 
-# The OS
-hostos := @host_os@
+# include common definitions
+include $(topdir)/Make.defs
+
 
 # libmesh can be found here
 #libmesh := @LIBMESH_PREFIX@
@@ -29,58 +26,19 @@ enable_uptight = @ENABLE_UPTIGHT@
 have_mkl = @HAVE_MKL@
 
 
-# the compilers
-CXX = @CXX@
-CC = @CC@
-FC = @FC@
-
-
-# the subversion revision number
-SVNREVISION = $(shell svn info $(topdir) | awk '/^Last Changed Rev/ {print $$4}')
-
-# the full TiberCAD version number
-TIBERVERSION = $(shell echo "`cat $(topdir)/VERSION`.$(SVNREVISION)")
-
 
 # gmsh
 GMSH := @GMSH@
-
-##
-##
-## definitions
-##
-##
-
-# the default method is optimised
-ifeq (x$(METHOD),x)
-  METHOD := opt
-endif
-
-ifeq ($(METHOD),opt)
-  mode := "optimized"
-endif
-ifeq ($(METHOD),dbg)
-  mode := "debug"
-endif
-
 
 # some handy defaults
 #DIM := 2
 #ORDER := 1
 
-# build modules or not
-build_modules := @BUILD_TIBER_MODULES@
 
-# The file extension for object files.
-# foo.C is compiled to foo.$(obj-suffix)
-obj-suffix := $(METHOD).o
+# the main TiberCAD library
+TIBERLIBNAME := tibercad
+export TIBERLIBNAME
 
-
-# shared library extension
-shared_libext := so
-ifeq ($(findstring cygwin,$(hostos)),cygwin)
-  shared_libext := dll
-endif
 
 
 
@@ -97,19 +55,11 @@ FCFLAGS   :=
 # define subversion revision for C++
 #CXXFLAGS += "-DSVNREVISION="$(SVNREVISION)
 
-ifdef PROFILE
-  CXXFLAGS += -pg
-endif
-ifeq ($(METHOD),dbg)
-  FCFLAGS += -g
-  CXXFLAGS += -Woverloaded-virtual
-endif
 
-#LDFLAGS += -Wl,-rpath,$(libdir)/lib -Wl,-rpath,$(topdir)/lib -L$(topdir)/lib
-LDFLAGS += -Wl,-rpath,$(libdir)/lib -L$(topdir)/lib
+LDFLAGS += -Wl,-rpath,$(libdir) -L$(libdir)
 ifeq ($(build_modules), yes)
  #LDFLAGS += -Wl,-rpath,$(libdir)/lib/tibermodels -Wl,-rpath,$(topdir)/lib/tibermodels -L$(topdir)/lib/tibermodels
- LDFLAGS += -Wl,-rpath,$(libdir)/lib/tibermodels -L$(topdir)/lib/tibermodels
+ LDFLAGS += -Wl,-rpath,$(libdir)/tibermodels -L$(libdir)/tibermodels
 endif
 LDFLAGS += -ltensor -lnewmat
 
@@ -121,11 +71,9 @@ LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
 LDFLAGS += @FCLIBS@
 
 ifeq ($(build_modules),yes)
-  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/modules/*")
-  MODULE_CXXFLAGS = -fvisibility=hidden
+  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/modules/*")
 else
-  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*.$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*")
-  MODULE_CXXFLAGS =
+  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*")
 endif
 
 
@@ -149,15 +97,21 @@ CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
 vpath %.h $(include_dirs)
 
 
+#
+# source files
+srcfiles := $(wildcard *.C)
+
+#
+# object files
+objects	:= $(patsubst %.C, %$(obj-suffix), $(srcfiles))
+target := $(objects)
+
+
 # for the following targets we set the target variable and go down
 # into subdirectories (if defined)
 .PHONY: all clean distclean
 
+
 # default target
 all: all-recursive
-
-clean: clean-recursive src-clean
-
-distclean: distclean-recursive src-distclean
-
 

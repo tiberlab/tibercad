@@ -16,7 +16,6 @@
 #include "TemperatureInterface.h"
 #include "StrainInterface.h"
 #include "SimulationOptions.h"
-#include "DriftDiffusion.h"
 #include "DriftDiffusionDefs.h"
 #include "TiberCad.h"
 #include "Constants.h"
@@ -39,6 +38,7 @@
 // forward declarations
 class Elem;
 class Dopant;
+class DriftDiffusion;
 class RecombinationModelInterface;
 class MobilityModelInterface;
 class ThermoelectricPower;
@@ -52,7 +52,7 @@ class PyroPolarization;
  * Trying to add to identical models will result in a memory leak. This will
  * be corrected in future. }
  */
-class DriftDiffusionProperties : public PhysicalModel, public Variable
+class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variable
 {
     
   public:
@@ -1405,13 +1405,6 @@ DriftDiffusionProperties::is_inhomogeneous(void) const
   return _is_inhomogeneous;
 }
 
-
-inline
-bool
-DriftDiffusionProperties::has_solution(void) const
-{
-  return _driftdiffusion->is_solved();
-}
 
 inline
 bool

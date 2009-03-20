@@ -18,7 +18,7 @@ class DriftDiffusionProperties;
  * recombination models etc. which will be used in conjunction with
  * a semiconductor model derived from DriftDiffusionProperties
  */
-class DriftDiffusionModelInterface : public PhysicalModelInterface
+class TBDLEXPORT DriftDiffusionModelInterface : public PhysicalModelInterface
 {
 
   public:

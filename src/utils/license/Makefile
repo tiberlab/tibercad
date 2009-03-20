@@ -6,18 +6,8 @@ include $(topdir)/Make.common
 
 CPPFLAGS += -I$(topdir)/contrib/crypto++
 
-#
-# source files
-srcfiles 	:= License.$(obj-suffix)
+target := liblicense.a $(topdir)/bin/create_license
 
-#
-# object files
-objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
-
-
-
-.PHONY: all
-all:  liblicense.a $(topdir)/bin/create_license
 
 # we take the library of crypto++ and add our stuff...
 liblicense.a: $(topdir)/contrib/crypto++/libcryptopp.a $(objects)
@@ -26,7 +16,7 @@ liblicense.a: $(topdir)/contrib/crypto++/libcryptopp.a $(objects)
 	@ranlib $@
 
 
-$(topdir)/bin/create_license: create_license.$(obj-suffix) liblicense.a
+$(topdir)/bin/create_license: create_license$(obj-suffix) liblicense.a
 	$(CXX) -o $@ $< liblicense.a -lpthread
 
 
@@ -39,7 +29,7 @@ $(topdir)/contrib/crypto++/stamp-h: $(topdir)/contrib/crypto++/cryptopp552.zip
 
 
 distclean:
-	@rm -f liblicense.a create_license
+	@rm -f liblicense.a $(topdir)/bin/create_license
 	@$(MAKE) -C $(topdir)/contrib/crypto++ clean
 
 include $(topdir)/Make.rules

@@ -6,33 +6,14 @@ topdir := ../../../..
 subdirs		:= models
 
 
-include $(topdir)/Make.common
-
-# source files
-srcfiles 	:= $(wildcard *.C)
-
-# object files
-objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
-
-ifeq ($(build_modules), yes)
- target := shared
-else
- target := $(objects)
-endif
+include $(topdir)/Make.module
 
 
-.PHONY: all
-all: $(target)
+mainsrc := DriftDiffusion.C
+srcfiles := $(filter-out $(mainsrc), $(srcfiles))
 
 
-shared: $(objects)
-	@soname=lib`grep TIBER_MODULE DriftDiffusion.C | \
-		sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`.so ; \
-		echo "Linking module $$soname ..."; \
-		$(CXX) -shared $(CXXFLAGS) -Wl,-soname,$$soname \
-			-o $(topdir)/lib/tibermodels/$$soname $(objects)
+$(eval $(call MODULE, $(mainsrc), $(srcfiles)))
 
-
-	
 
 include $(topdir)/Make.rules

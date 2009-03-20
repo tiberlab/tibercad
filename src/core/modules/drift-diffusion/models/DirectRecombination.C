@@ -8,7 +8,7 @@
 
 
 
-TIBER_MODULE(DirectRecombination, direct)
+TIBER_SUBMODEL(DirectRecombination, direct)
 
 
 

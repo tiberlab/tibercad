@@ -248,6 +248,7 @@ fi
 
 AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
 AC_CONFIG_FILES([Make.common
+                 Make.defs
                  doc/Doxyfile
                  Makefile
                  doc/Makefile
@@ -260,5 +261,6 @@ AC_CONFIG_FILES([Make.common
                  installer/linux/deb/control
                  installer/linux/tar/install])
 AC_CONFIG_FILES([installer/prepare_files.sh], [chmod +x installer/prepare_files.sh])
+AC_CONFIG_FILES([bin/tibercad], [chmod +x bin/tibercad])
 
 AC_OUTPUT

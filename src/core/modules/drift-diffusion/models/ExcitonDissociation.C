@@ -8,7 +8,7 @@
 #include "Material.h"
 
 
-TIBER_MODULE(ExcitonDissociation, exciton_dissociation)
+TIBER_SUBMODEL(ExcitonDissociation, exciton_dissociation)
 
 
 

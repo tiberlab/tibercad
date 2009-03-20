@@ -1,17 +1,12 @@
 // $Id$
 
-#include "tiber_config.h"
+//#include "tiber_config.h"
 #include "DLLoader.h"
+#include "Messages.h"
 
 #include <boost/filesystem/operations.hpp>
 
 #include <dlfcn.h>
-# ifdef DEBUG
-#  include <iostream>
-# ifdef BUILD_TIBER_MODULES
-#  define DEBUG_
-# endif
-#endif
 
 
 using namespace std;
@@ -62,10 +57,10 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
   bool file_exists = false;
 
-#ifdef DEBUG_
-  cerr << "Looking for library " + libfile + "... ";
-#endif
+  Messages::debug("Looking for library " + libfile + "... ");
 
+  // we search for the library, as soon as we find it, we return
+  // so it has the same behaviour as e.g. LD_LIBRARY_PATH
   list<string>::iterator it(_libpath.begin());
   const list<string>::iterator end(_libpath.end());
   for ( ; it != end; ++it)
@@ -75,29 +70,26 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
     {
       libfile = *it + "/" + libfile;
       file_exists = true;
-      //break; -> we can override
+      break;
     }
   }
 
-#ifdef DEBUG_
   if (file_exists)
-    cerr << "found." << endl;
+    Messages::debug("found.");
   else
-    cerr << "not found." << endl;
-#endif
+    Messages::debug("not found.");
+
 
   if (file_exists)
   {
-#ifdef DEBUG_
-    cerr << "Trying to open " + libfile + "... ";
-#endif
+    Messages::debug("Trying to open " + libfile + "... ");
 
     // we will set it to false if something bad happens
     success = true;
 
     const char* error_msg = 0;
 
-#ifdef DEBUG_
+#ifdef DEBUG
     iface.handle = dlopen(libfile.c_str(), RTLD_NOW | RTLD_GLOBAL);
 #else
     iface.handle = dlopen(libfile.c_str(), RTLD_LAZY | RTLD_GLOBAL);
@@ -115,15 +107,13 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
     else
       success = false;
 
-#ifdef DEBUG_
     if (success)
-      cerr << "OK" << endl;
+      Messages::debug("OK");
     else
       if (error_msg != 0)
-        cerr << "failed: " << error_msg << endl;
+        Messages::debug("failed: " + string(error_msg));
       else
-        cerr << "failed" << endl;
-#endif
+        Messages::debug("failed");
   }
 
   return success;

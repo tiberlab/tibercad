@@ -23,43 +23,7 @@
 #include <set>
 #include <string>
 
-
-#ifdef BUILD_TIBER_MODULES
-/*!
- * \def TIBER_MODULE(classname, libname)
- *
- * \brief Creates methods to create and destroy a simulation object
- * 
- * In each implementation derived from SimulationInterface, put
- * this macro somewhere in the source file to be able to compile
- * it as TiberCad module.
- *
- * \param name the name of the class that should be 'creatable'
- * \param libname the name for this module
- *
- * \c libname will be used to create the library name, and the model
- * will have to be referred to in the input file by \c libname
- */
-# ifndef TIBER_MODULE
-#  define TIBER_MODULE(classname, libname) \
-  extern "C" { \
-    void destroy(SimulationInterface* p) { \
-      delete p; \
-    } \
-    classname* create(void) { \
-      return new classname(); \
-    } \
-    const char* _tiber_module_ ## libname = #libname; \
-    const char* library_name(void) { \
-      return _tiber_module_ ## libname; \
-    } \
-  }
-# endif
-#else
-# ifndef TIBER_MODULE
-#  define TIBER_MODULE(classname, libname)
-# endif
-#endif
+#include "TiberModule.h"
 
 
 class SimulationEnvironment;

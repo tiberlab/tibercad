@@ -4,7 +4,7 @@
 #include "Material.h"
 
 
-TIBER_MODULE(SimpleSemiconductorModel, simple)
+TIBER_SUBMODEL(SimpleSemiconductorModel, simple)
 
 
 

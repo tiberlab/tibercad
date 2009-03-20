@@ -2,6 +2,17 @@
 
 # Useful rules
 
+all: $(target)
+
+
+.PHONY: clean distclean
+
+clean: clean-recursive src-clean
+
+distclean: distclean-recursive src-distclean
+
+
+
 .PHONY: all-recursive clean-recursive distclean-recursive
 all-recursive: $(subdirs)
 
@@ -29,37 +40,37 @@ $(subdirs):
 
 
 
-%.$(obj-suffix) : %.C
+%$(obj-suffix) : %.C
 	@echo "Compiling C++ (in "$(mode)" mode) "$<" ..."
 	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 
 
-%.$(obj-suffix) : %.cpp
+%$(obj-suffix) : %.cpp
 	@echo "Compiling C++ (in "$(mode)" mode) "$<" ..."
 	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 
 
-%.$(obj-suffix): %.c
+%$(obj-suffix): %.c
 	@echo "Compiling C (in "$(mode)" mode) "$<" ..."
 	@$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 	
 
-%.$(obj-suffix): %.f
+%$(obj-suffix): %.f
 	@echo "Compiling F77 (in "$(mode)" mode) "$<" ..."
 	@$(FC) $(FCFLAGS) $(CPPFLAGS) -c $< -o $@
 	
 
 
 .%.d: %.C
-	@$(CC) -MT $(basename $<).$(obj-suffix) -MM $(CPPFLAGS) $(CXXFLAGS) $< > $@.$$$$; \
-	sed 's,\($*\)\.$(obj-suffix)[ :]*,\1.\*\.o : $@ ,g' < $@.$$$$ > $@; \
+	@$(CC) -MT $(basename $<)$(obj-suffix) -MM $(CPPFLAGS) $(CXXFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\$(obj-suffix)[ :]*,\1.\*\.o : $@ ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
 
 %.msh: %.geo
-	@$(GMSH) -format msh -order $(ORDER) -$(DIM) -o $@ $<
+	@$(GMSH) -order $(ORDER) -$(DIM) -o $@ $<
 
 
 

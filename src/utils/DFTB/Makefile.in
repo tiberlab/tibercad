@@ -1,40 +1,23 @@
+# $Id$
 
-hostos     = @host_os@
-
-CXX      = @CXX@
-
-
-CXXFLAGS = -fPIC -I ../../../include/utils/DFTB
-
-# shared library extension
-shared_libext := so
-ifeq ($(findstring cygwin,$(hostos)),cygwin)
-  shared_libext := dll
-endif
+topdir = @abs_top_builddir@
+include $(topdir)/Make.defs
 
 
+CXXFLAGS = -fPIC -I $(topdir)/include/utils/DFTB
 
-all: ../../../lib/libdftbpc.$(shared_libext)
+
+target := $(topdir)/libdftbpc$(shared_libext)
 
 
-../../../lib/libdftbpc.$(shared_libext):  DftbpWrapper.o
-	@echo "Linking libdftbpc.$(shared_libext) ..."
+$(libdir)/libdftbpc$(shared_libext) :  DftbpWrapper$(obj-suffix)
+	@echo "Linking libdftbpc$(shared_libext) ..."
 	@$(CXX) -shared -o $@ $< \
 		-Wl,--version-script,export.map \
 		-Wl,-Bsymbolic -Wl,-Bstatic \
 		-L. libdftbp.a \
 		-Wl,-Bdynamic
 
-%.o: %.C
-	@echo "Compiling $< ..."
-	@$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 
-clean:
-	@echo "cleaning up ./src/utils/DFTB"
-	@rm -f *.o
-
-distclean: clean
-
-
-
+include $(topdir)/Make.rules

@@ -1,26 +1,22 @@
+# $Id$
+
+topdir := @abs_top_builddir@
+include $(topdir)/Make.defs
+
+# reset all flags
 CFLAGS	   = 
 CXXLAGS	   = 
 FFLAGS     =
 CPPFLAGS   = 
 FPPFLAGS   =
 
-hostos     = @host_os@
-
 PETSC_DIR  = @COMPLEX_PETSC_DIR@
 PETSC_ARCH = @COMPLEX_PETSC_ARCH@
 
 SLEPC_DIR  = @SLEPC_DIR@
 
-CXX        = @CXX@
+CXXFLAGS += $(SLEPC_HAVE_ARPACK) -fPIC $(CC_INCLUDES) -I $(topdir)/include/utils/SLEPC
 
-
-CXXFLAGS += -fPIC $(CC_INCLUDES) -I ../../../include/utils/SLEPC
-
-
-# the default method is optimised
-ifeq (x$(METHOD),x)
-  METHOD := opt
-endif
 
 ifneq ($(METHOD), dbg)
 PETSC_ARCH := $(PETSC_ARCH)-opt
@@ -28,20 +24,12 @@ else
 CXXFLAGS += -g -DDEBUG -O0
 endif
 
-
-# shared library extension
-shared_libext := so
-ifeq ($(findstring cygwin,$(hostos)),cygwin)
-  shared_libext := dll
-endif
+target := $(libdir)/libeigen_solver$(shared_libext)
 
 
-
-all: ../../../lib/libeigen_solver.$(shared_libext)
-
-
-../../../lib/libeigen_solver.$(shared_libext):  EigenSolver.$(METHOD).o
-	@echo "Linking libeigen_solver.$(shared_libext) ..."
+$(libdir)/libeigen_solver$(shared_libext):  EigenSolver$(obj-suffix)
+	@echo "Linking libeigen_solver$(shared_libext) ..."
+	@mkdir -p $(libdir)
 	@$(CXX) -shared -o $@ $<  \
 		-Wl,--version-script,export.map \
 		-Wl,-Bsymbolic -Wl,-Bstatic \
@@ -53,17 +41,6 @@ all: ../../../lib/libeigen_solver.$(shared_libext)
 
 
 
-%.$(METHOD).o: %.C
-	@echo "Compiling $< ..."
-	@$(CXX) $(SLEPC_HAVE_ARPACK) $(CXXFLAGS) -c -o $@ $<
-
-
-clean:
-	@echo "Cleaning up ./src/utils/SLEPC"
-	@rm -f *.o
-
-distclean: clean
-
-
 
 include $(SLEPC_DIR)/bmake/slepc_common_variables
+include $(topdir)/Make.rules

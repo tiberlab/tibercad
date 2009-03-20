@@ -1,0 +1,45 @@
+#!/bin/bash
+
+export TIBERCADROOT=@abs_top_builddir@
+
+usage () {
+  echo ""
+  echo "Usage: tibercad [-d] <inputfile>"
+  echo ""
+}
+
+executable=tibercad.bin
+usegdb=0
+
+opts="dg"
+while getopts $opts flag
+do
+  case "$flag" in
+    d) executable=tibercad_dbg.bin ;;
+    g) usegdb=1 ;;
+    *) usage
+       exit 1 ;;
+  esac
+done
+
+shift $(( $OPTIND - 1 ))
+
+if [ $# -eq 0 ]
+then
+  usage
+  exit 1
+fi
+
+if [ ! -x ${TIBERCADROOT}/bin/${executable} ]
+then
+  echo "${executable} does not exist"
+  exit 1
+fi
+
+
+if [ $usegdb -eq 1 ]
+then
+  gdb -nx -ex run --args ${TIBERCADROOT}/bin/${executable} $@
+else
+  exec ${TIBERCADROOT}/bin/${executable} $@
+fi

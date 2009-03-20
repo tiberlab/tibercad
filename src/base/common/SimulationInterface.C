@@ -34,6 +34,7 @@
 #include "Utils.h"
 
 #include "DataOutput.h"
+#include "Messages.h"
 
 
 // LibMesh includes
@@ -92,7 +93,12 @@ SimulationInterface::create(const string& type,
   // First we attempt to open a shared library
   //
   DLLoader::LibraryInterface iface;
-  bool success = DLLoader::open_library(type_name, iface);
+  bool success = 
+#ifdef BUILD_TIBER_MODULES
+    DLLoader::open_library(type_name, iface);
+#else
+    false;
+#endif
 
   create_t create_fnc = (create_t) iface.create_fnc;
   destroy_t destroy_fnc = (destroy_t) iface.destroy_fnc;

@@ -32,14 +32,14 @@ endif
 export MODULE_LIBS
 
 
-all: lib/libtibercad.$(shared_libext)
+all: $(libdir)/lib$(TIBERLIBNAME)$(shared_libext)
 	@$(MAKE) --no-print-directory -C src/tibercad tibercad
 
 
-lib/libtibercad.$(shared_libext): src
-	@echo "Linking libtibercad.$(shared_libext) ..."
+$(libdir)/lib$(TIBERLIBNAME)$(shared_libext): src
+	@echo "Linking lib$(TIBERLIBNAME)$(shared_libext) ..."
 	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
-		-o lib/libtibercad.$(shared_libext) \
+		-o $(libdir)/lib$(TIBERLIBNAME)$(shared_libext) \
 		$(MODULE_LIBS) $(LDFLAGS)
 
 #	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
@@ -48,11 +48,11 @@ lib/libtibercad.$(shared_libext): src
 #	@cd lib && ln -f -s libtibercad.so.0.0 libtibercad.so.0 \
 		&& ln -f -s libtibercad.so.0 libtibercad.so && cd ..
 
-static: lib/libtibercad.a
+static: $(libdir)/libtibercad.a
 	@$(MAKE) --no-print-directory -C src/tibercad tibercad_static
 
-.PHONY: lib/libtibercad.a
-lib/libtibercad.a:
+.PHONY: $(libdir)/libtibercad.a
+$(libdir)/libtibercad.a:
 	@$(MAKE) --no-print-directory -C src all
 	@echo "Linking libtibercad.a ..."
 	@$(AR) rcs $@ $(TIBER_OBJECTS)
@@ -70,13 +70,13 @@ distclean: src doc
 	@$(MAKE) --no-print-directory -C examples distclean
 	@$(MAKE) --no-print-directory -C src/tibercad distclean
 	@rm -rf lib/*
-	@rm -f bin/tibercad bin/tibercad.exe
+	@rm -f bin/tibercad*.bin bin/tibercad*.exe
 
 
 
 .PHONY: src
 src:
-	@mkdir -p lib/tibermodels
+	@mkdir -p $(libdir)/tibermodels
 	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
 
 

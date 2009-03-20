@@ -1,40 +1,23 @@
+# $Id$
 
-hostos     = @host_os@
-
-CXX      = @CXX@
-
-
-CXXFLAGS = -fPIC -I ../../../include/utils/UPTIGHT
-
-# shared library extension
-shared_libext := so
-ifeq ($(findstring cygwin,$(hostos)),cygwin)
-  shared_libext := dll
-endif
+topdir = @abs_top_builddir@
+include $(topdir)/Make.defs
 
 
+CXXFLAGS = -fPIC -I $(topdir)/include/utils/UPTIGHT
 
-all: ../../../lib/libuptight.$(shared_libext)
+
+target := $(libdir)/libuptight$(shared_libext)
 
 
-../../../lib/libuptight.$(shared_libext):  UptWrapper.o
-	@echo "Linking libuptight.$(shared_libext) ..."
+$(libdir)/libuptight$(shared_libext) :  UptWrapper$(obj-suffix)
+	@echo "Linking libuptight$(shared_libext) ..."
 	@$(CXX) -shared -o $@ $< \
 		-Wl,--version-script,export.map \
 		-Wl,-Bsymbolic -Wl,-Bstatic \
 		-L. libuptight.a \
 		-Wl,-Bdynamic
 
-%.o: %.C
-	@echo "Compiling $< ..."
-	@$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 
-clean:
-	@echo "cleaning up ./src/utils/UPTIGHT"
-	@rm -f *.o
-
-distclean: clean
-
-
-
+include $(topdir)/Make.rules

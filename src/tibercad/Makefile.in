@@ -5,15 +5,13 @@ topdir := ../..
 include $(topdir)/Make.common
 
 ADDITIONAL_LIBS = @LIBREADLINE@ $(topdir)/src/utils/license/liblicense.a
-PACKAGEFLAGS = -Wl,-rpath,$(topdir)/lib
+PACKAGEFLAGS = -Wl,-rpath,$(libdir)
 
-#
-# source files
-srcfiles 	:= $(wildcard *.C)
+SUFF := ".bin"
+ifeq ($(METHOD),dbg)
+  SUFF := "_dbg$(SUFF)"
+endif
 
-#
-# object files
-objects		:= $(patsubst %.C, %.$(obj-suffix), $(srcfiles))
 
 ifeq ($(findstring cygwin,$(hostos)),cygwin)
   objects += tibercad_res.o
@@ -24,15 +22,15 @@ all: tibercad
 
 tibercad: $(objects) 
 	@echo "Compiling tibercad executable ..."
-	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad \
-		-Wl,-export-dynamic -L$(topdir)/lib \
-		-ltibercad $(ADDITIONAL_LIBS) $(PACKAGEFLAGS)
+	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad$(SUFF) \
+		-Wl,-export-dynamic -L$(libdir) \
+		-l$(TIBERLIBNAME) $(ADDITIONAL_LIBS) $(PACKAGEFLAGS)
 
 
 tibercad_static: $(objects)
 	@echo "Compiling statically linked tibercad executable ..."
-	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad_static \
-		-Wl,-export-dynamic -L$(topdir)/lib \
+	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad_static$(SUFF) \
+		-Wl,-export-dynamic -L$(libdir) \
 		-Wl,-rpath,$(libdir) -Wl,-Bstatic -ltibercad -Wl,-Bdynamic \
 		$(ADDITIONAL_LIBS) \
 		$(MODULE_LIBS) $(LDFLAGS) $(PACKAGEFLAGS)
