@@ -165,6 +165,15 @@ AtomisticStructure::init()
 
 }
 
+
+void
+AtomisticStructure::associate_elements()
+{
+
+
+}
+
+
 void
 AtomisticStructure::read_structure(const std::string& path)
 {

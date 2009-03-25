@@ -8,6 +8,7 @@
 #include "SimulationEnvironment.h"
 #include "AtomisticStructure.h"
 #include "Constants.h"
+#include "PotentialInterface.h"
 
 
 //libmesh includes
@@ -154,8 +155,6 @@ TightBinding::build_rho(const Point& r)
         ( get_control().get_device().get_mesh_units() * 100.0 ) *
         ( get_control().get_device().get_mesh_units() * 100.0 ));
 
-  //std::cout << "rho finally is " << rho << std::endl;
-
   return rho;
 
 }
@@ -276,3 +275,32 @@ TightBinding::build_elemental_results(const std::set<std::string>& variables,
   results.resize(elem_number * n_vars);
 
 }
+
+
+  std::vector<double>&
+  TightBinding::project_potential(const std::string model_name, const std::string mode)
+  {
+
+    std::vector <double> pot;
+
+    //Use PotentialInterface to get the right simulation
+    PotentialInterface model;
+
+    std::cout << "setting simulation " << std::endl;
+    model.set_simulation(model_name);
+
+    if (mode == "point")
+      {//In point mode potential on atom is just kept as value on atom position
+        //vector returned is sized number of atoms
+
+        pot.clear();
+        pot.resize(_atomistic_structure->get_N_atoms(), 0.0);
+
+        for (unsigned int i = 0; i < pot.size(); i++)
+          {
+
+          }
+
+      }
+
+  }

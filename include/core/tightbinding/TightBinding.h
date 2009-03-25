@@ -102,7 +102,7 @@ protected:
   Mesh* _mesh;
 
   //! Build a vector of potential projection over atom orbitals
-  std::vector<double> project_potential(const SimulationInterface* poisson_simulation);
+  std::vector<double>& project_potential(const std::string providing_model, const std::string mode);
 
 };
 

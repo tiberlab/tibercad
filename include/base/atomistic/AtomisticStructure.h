@@ -144,6 +144,8 @@ public:
 
 private:
 
+  //!Associate elements: any atom keep tracks of the elements he belongs to
+  void associate_elements();
 
   //! Scale factor (from mesh_units to amstrong mesh_units/1e-10)
   double _scale;

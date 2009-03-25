@@ -4,6 +4,8 @@
 #include "tensor.h"
 #include "TypeDefs.h"
 
+class elem;
+
 
 //! Contains Atom definition
 /*!
@@ -65,17 +67,19 @@ public:
   //! Get the general purpose flag
   const unsigned int get_flag() const;
 
-  //! Set atom address in conventional cells units. Useful internally in
-  //! bond map generation
-  void set_conv_address(int c1, int c2, int c3);
-
-  //! Get atom address in conventional cells units
-  const int* get_conv_address(void) const;
-
   //! True if atom belong to structure. Useful during structure construction
   bool belong_to_structure;
 
+  //!Set element
+  void set_elem(Elem* const el);
+
+  //!Get element
+  const Elem* get_elem() const;
+
 private:
+
+  //!Element atom belongs to
+  Elem* _el;
 
   //! Atomic specie (short name)
   std::string _specie;
@@ -92,10 +96,6 @@ private:
 
   //! A general purpose integer flag (for example used in passivation)
   unsigned int _flag;
-
-  //!Conventional cell address: define atom position in terms of conventional cells
-  //! multiples
-  int _conv_address[3];
 
   //!An ID identifying univocally the atom
   ID _atom_id;
@@ -192,19 +192,17 @@ const unsigned int Atom::get_flag() const
 
 
 inline
-void Atom::set_conv_address(int c1, int c2, int c3)
+void Atom::set_elem(Elem* const el)
 {
-  _conv_address[0] = c1;
-  _conv_address[1] = c2;
-  _conv_address[2] = c3;
+  _el = el;
 }
 
 
 inline
-const int* Atom::get_conv_address(void) const{
-  return &_conv_address[0];
+const Elem* Atom::get_elem() const
+{
+  return _el;
 }
-
 
 #endif // _ATOM_H_
 

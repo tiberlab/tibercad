@@ -5,6 +5,7 @@
 #include "AtomisticGenerator3D.h"
 #include "Macrostrain.h"
 #include "BondMap.h"
+#include "Messages.h"
 
 #include <stdio.h>
 #include <cmath>
@@ -86,12 +87,10 @@ AtomisticGenerator::do_init()
 
   //Set dimensional scale
   scale = _as->get_scale();
-
   // Set material informations
   //-----------------------------------------------------------------------------------------
   std::string structure;
   structure = "none";
-
   if (!(_as->get_options().find_option("reference_region"))){
     std::cerr << "No material could be set: reference_region is mandatory in Atomistic section"
     "when no structure path is specified " << std::endl;}
@@ -99,8 +98,9 @@ AtomisticGenerator::do_init()
   std::string ref_region;
   ref_region = _as->get_options().get_option("reference_region", "None");
   _as->get_device()->get_region_ids(ref_region, ids);
+  if (ids.size() == 0)
+              throw InitFailedException("Reference region badly defined for structure " +  _as->get_name() );
   _reference_material = _as->get_device()->get_material(ids[0]);
-
   structure =  _reference_material->get_structure();
   std::cout << "Parsing atomistic structure parameters... " << std::endl;
   parse_parameters(_reference_material);
@@ -259,18 +259,13 @@ AtomisticGenerator::do_init()
 void
 AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
-  //#ifdef DEBUG
-  //  std::cerr << "Cutting atoms and changing species...";
-  //#endif
-
   std::set<ID> IDs = _as->get_IDset();
-  //std::map<unsigned int , std::string> assign;
   std::map<ID, std::map<unsigned int, std::string> > assign;
   bool done;
   ID el_reg;
 
+  Messages::debug("Running cut_and_change_specie");
 
-  std::cout << "Running cut_and_change_specie " << std::endl;
   _structure_basis.clear();
   assign.clear();
   _structure_basis.reserve(_super_basis.size());
@@ -345,6 +340,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                       (*atom).set_flag(0);
                       (*atom).set_region_ID(el_reg);
                       (*atom).belong_to_structure = true;
+                      (*atom).set_elem(elem);
                       _structure_basis.push_back(*atom);
                       done = true;
                     }
@@ -369,6 +365,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                   (*atom).set_specie(tmp);
                   (*atom).set_flag(0);
                   (*atom).set_region_ID(el_reg);
+                  //(*atom).set_elem(elem);
                   (*atom).belong_to_structure = false;
                   _structure_basis.push_back(*atom);
                 }
@@ -422,6 +419,16 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                               std::string tmp =  assign[el_reg][(*atom).get_flag()];
                               tmp_atom.set_specie(tmp);
                               tmp_atom.belong_to_structure = true;
+
+
+//                              p(0) = tmp_atom.get_position()(1) / scale;
+//                              if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position()(2) / scale;
+//                              if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
+//                              if (Macrostrain::may_belong_to_elem(elem,p))
+//                                {
+//
+//                                }
+
                               _structure_basis.push_back(tmp_atom);
                             }
                           else
@@ -1006,7 +1013,7 @@ void AtomisticGenerator::parse_parameters(Material* mat)
               T(3) = db.get(record, 0.0);
 
               tmp.set_position(T);
-
+std::cout << "pushing " << T << std::endl;
               //Insert tmp in basis
               _crystal_basis.push_back(tmp);
             }
@@ -1542,10 +1549,10 @@ AtomisticGenerator::reciprocal(Tensor2Gen real_basis)
 {
 
   //Build the reciprocal basis related to input 2-rank tensor
-  Tensor1 a1,a2,a3;
-  Tensor1 b1,b2,b3;
+  Tensor1 a1(0),a2(0),a3(0);
+  Tensor1 b1(0),b2(0),b3(0);
   Tensor1 select_vect(0);
-  Tensor2Gen reciprocal;
+  Tensor2Gen reciprocal(0);
 
   //Select vector a1
   select_vect(1) = 1.0; a1 = real_basis * select_vect;

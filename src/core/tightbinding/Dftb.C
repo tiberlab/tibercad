@@ -239,8 +239,9 @@ Dftb::do_init(void){
       inst->getnetchargesperatom(_dftb_options.nAtom, charges);
 
       _mulliken_netcharges.resize(_dftb_options.nAtom);
-      for (unsigned int i = 0; i <_dftb_options.nAtom; i++ ) {_mulliken_netcharges.push_back(charges[i]);}
-
+      for (unsigned int i = 0; i <_dftb_options.nAtom; i++ ) _mulliken_netcharges[i] = charges[i];
+std::cout <<" i have " << _mulliken_netcharges.size() << " charges" << std::endl;
+for (unsigned int i=0; i<_mulliken_netcharges.size(); i++) std::cout << _mulliken_netcharges[i];
       _atomistic_structure->print_structure("TB_out.xyz",charges);
 
     }
@@ -500,11 +501,23 @@ Dftb::do_init(void){
 
           if ( !(file.is_open()) )
             {
-              std::cerr << "ERROR IN DFTB: COULD NOT FIND K POINTS FILE "
-              << kpoints_path << std::endl;
+              std::cerr << "COULD NOT FIND K POINTS FILE, PERFORMING GAMMA POINT"
+                  "CALCULATION " << kpoints_path << std::endl;
               file.close();
-              exit(1);
+
+              _dftb_options.nkPoints = 1;
+              _dftb_options.kPoints = new double [   _dftb_options.nkPoints * 3 ];
+              _dftb_options.kWeights = new double[  _dftb_options.nkPoints];
+
+              _dftb_options.kPoints[0] = 0.0;
+              _dftb_options.kPoints[1] = 0.0;
+              _dftb_options.kPoints[2] = 0.0;
+              _dftb_options.kWeights[0] = 1.0;
+
             }
+
+          else
+            {
 
           getline(file, line);
 
@@ -546,6 +559,7 @@ Dftb::do_init(void){
             }
 
           //TODO: implementa KLines similmente a quanto avviene in DFTB+
+            }
 
         }
 

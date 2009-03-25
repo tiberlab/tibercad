@@ -39,7 +39,7 @@ BondMap::set_cutoff()
 void
 BondMap::do_init(const std::vector<Atom> &basis, const Tensor2Gen& period)
 {
-  unsigned int x, y;
+  unsigned int x, y, z;
 
   //set cutoff distancies
   set_cutoff();
@@ -84,6 +84,24 @@ BondMap::do_init(const std::vector<Atom> &basis, const Tensor2Gen& period)
 
         }
     }
+
+  //A guess of atom density for cell is used for a first guess memory reservation
+  //It could waste some memory but make calculation faster
+  double density = basis.size() / (_n_x + _n_y + _n_z);
+  int int_density = static_cast<int>(floor(density));
+
+  for (x = 0; x < _n_x; x++)
+    {
+      for (y = 0; y < _n_y; y++)
+        {
+         for (z = 0; z < _n_z; z++)
+           {
+             //Reserve is redundant as density is not an accurate evaluation
+             _grid_cell[x][y][z].reserve(3 * int_density);
+           }
+        }
+    }
+
 
   //! Allocate bond map
   _bond_map = new unsigned int* [basis.size()];
@@ -158,7 +176,7 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
       position1 = basis[i].get_position();
       position2 = basis[j].get_position() + period;
 
-      if ( cutofftmp == 0.0 ) std::cout << "WARNING, CUTOFF DISTANCE BETWEEN " 
+      if ( cutofftmp == 0.0 ) std::cout << "WARNING, CUTOFF DISTANCE BETWEEN "
 					<< basis[i].get_specie().c_str()
 					<< " AND " << basis[j].get_specie().c_str()
 					<< " IS NOT DEFINED " << std::endl;
