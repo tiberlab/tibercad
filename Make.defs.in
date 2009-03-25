@@ -47,10 +47,12 @@ build_modules := @BUILD_TIBER_MODULES@
 obj-suffix := .$(METHOD).o
 
 # shared library directory
-libdir := $(topdir)/lib
+relative_libdir := lib
 ifeq ($(METHOD),dbg)
-  libdir := $(libdir)/debug
+  libdir := $(relative_libdir)/debug
 endif
+libdir := $(topdir)/$(relative_libdir)
+
 
 # shared library extension
 shared_libext := .so

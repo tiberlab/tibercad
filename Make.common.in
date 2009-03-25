@@ -56,11 +56,10 @@ FCFLAGS   :=
 #CXXFLAGS += "-DSVNREVISION="$(SVNREVISION)
 
 
-LDFLAGS += -Wl,-rpath,$(libdir) -L$(libdir)
-ifeq ($(build_modules), yes)
- #LDFLAGS += -Wl,-rpath,$(libdir)/lib/tibermodels -Wl,-rpath,$(topdir)/lib/tibermodels -L$(topdir)/lib/tibermodels
- LDFLAGS += -Wl,-rpath,$(libdir)/tibermodels -L$(libdir)/tibermodels
-endif
+LDFLAGS += -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir) -L$(libdir)
+#ifeq ($(build_modules), yes)
+# LDFLAGS += -Wl,-rpath,$(libdir)/tibermodels -L$(libdir)/tibermodels
+#endif
 LDFLAGS += -ltensor -lnewmat
 
 #LDFLAGS += @GSL_LIBS@

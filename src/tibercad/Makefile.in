@@ -5,11 +5,11 @@ topdir := ../..
 include $(topdir)/Make.common
 
 ADDITIONAL_LIBS = @LIBREADLINE@ $(topdir)/src/utils/license/liblicense.a
-PACKAGEFLAGS = -Wl,-rpath,$(libdir)
+PACKAGEFLAGS = -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir)
 
-SUFF := ".bin"
+SUFF := .bin
 ifeq ($(METHOD),dbg)
-  SUFF := "_dbg$(SUFF)"
+  SUFF := _dbg$(SUFF)
 endif
 
 
@@ -22,7 +22,7 @@ all: tibercad
 
 tibercad: $(objects) 
 	@echo "Compiling tibercad executable ..."
-	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad$(SUFF) \
+	@$(CXX) $(CXXFLAGS) $(objects) $(PACKAGEFLAGS) -o $(topdir)/bin/tibercad$(SUFF) \
 		-Wl,-export-dynamic -L$(libdir) \
 		-l$(TIBERLIBNAME) $(ADDITIONAL_LIBS) $(PACKAGEFLAGS)
 
