@@ -22,7 +22,7 @@ all: tibercad
 
 tibercad: $(objects) 
 	@echo "Compiling tibercad executable ..."
-	@$(CXX) $(CXXFLAGS) $(objects) $(PACKAGEFLAGS) -o $(topdir)/bin/tibercad$(SUFF) \
+	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/bin/tibercad$(SUFF) \
 		-Wl,-export-dynamic -L$(libdir) \
 		-l$(TIBERLIBNAME) $(ADDITIONAL_LIBS) $(PACKAGEFLAGS)
 
