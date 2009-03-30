@@ -1,0 +1,99 @@
+# Tight binding parameters (c) Jean Marc Jancu
+
+# compound
+
+material type = 'binary'
+
+# lattice
+
+lattice type = 'hexagonal'
+
+lattice parameters =   3.112d0   3.112d0  4.982d0
+u_parameter = 0.3819D0
+
+internal strain parameter = 0.0D0
+
+# basis
+
+basis type = 'wurtzite'
+
+number of ions = 2
+ions = 'Al' 'N'
+
+Al valence = 4
+N valence = 4
+
+# states
+
+number of spin-orbit parameters per ion = 2 2
+
+Al spin orbit
+'p' 0.0070D0
+'d' 0.0000D0
+
+N spin orbit
+'p' 0.0035D0
+'d' 0.0000D0
+
+number of orbitals per ion = 5 5
+
+Al onsite
+'s'     6.0728D0   1
+'p'    11.5368D0   3
+'s*'   35.0041D0   1
+'d15'  29.9039D0   3
+'d12'  28.6862D0   2
+
+N onsite
+'s'    -8.9717D0   1
+'p'     2.1679D0   3
+'s*'   28.8253D0   1
+'d15'  29.5599D0   3
+'d12'  30.4332D0   2
+#Valence band ofset to GaN is 0.8 eV the rest is to align the valence badn with 0.0 eV before offset
+Al offset =  -0.947385D0
+N offset =   -0.947385D0
+
+# strain coefficient for the d orbitals
+Al b_d parameter = 0.0D0
+N b_d parameter = 0.0D0
+
+#TB_couplings
+
+number of pairs = 1
+
+pair 1 = 'N' 'Al' 21 1
+
+N Al coupling 1
+'sss'     -2.6261D0    3.55D0 
+'sps'      3.7546D0    4.71D0
+'ss*s'    -1.8773D0    1.05D0
+'sds'     -3.8483D0    1.12D0
+'pss'      3.9269D0    4.71D0
+'pps'      4.3117D0    3.56D0
+'ps*s'     1.8328D0    1.36D0
+'pds'     -2.1306D0    2.02D0
+'s*ss'    -2.9127D0    1.05D0
+'s*ps'     4.0680D0    1.36D0 
+'s*s*s'   -4.4940D0    0.00D0
+'s*ds'    -2.1897D0    4.70D0 
+'dss'     -1.0331D0    1.12D0 
+'dps'     -1.2470D0    2.02D0 
+'ds*s'    -1.5559D0    4.70D0 
+'dds'     -1.0791D0    2.00D0
+'ppp'     -1.2842D0    2.25D0
+'pdp'      2.5342D0    1.05D0 
+'dpp'      3.1629D0    1.05D0
+'ddp'      6.4201D0    2.00D0
+'ddd'     -4.5012D0    2.00D0    
+
+N Al pair reference distance 1 = 1.903D0
+
+
+
+
+
+
+
+
+

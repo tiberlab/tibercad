@@ -1,0 +1,39 @@
+
+states number = 10 
+
+ 1 's'
+ 2 'px'
+ 3 'py'
+ 4 'pz'
+ 5 's*'
+ 6 'dxy'
+ 7 'dyz'
+ 8 'dzx'
+ 9 'dx2y2'
+10 'dz2r2'
+
+couplings number = 21
+
+ 1 'sss'
+ 2 'sps'
+ 3 'pss'
+ 4 'pps'
+ 5 'ppp'
+ 6 's*s*s'
+ 7 's*ss'
+ 8 'ss*s'
+ 9 's*ps'
+10 'ps*s'
+11 'sds'
+12 'dss'
+13 'pds'
+14 'dps'
+15 'pdp'
+16 'dpp'
+17 's*ds'
+18 'ds*s' 
+19 'dds'
+20 'ddp' 
+21 'ddd'
+
+ 
