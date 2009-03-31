@@ -4,7 +4,10 @@ export TIBERCADROOT=@abs_top_builddir@
 
 usage () {
   echo ""
-  echo "Usage: tibercad [-d] <inputfile>"
+  echo "Usage: tibercad [-d] [-g] <inputfile>"
+  echo ""
+  echo "   -d : run debug version"
+  echo "   -g : run in debugger"
   echo ""
 }
 
