@@ -19,6 +19,8 @@ endif
 
 
 all: tibercad
+	@echo $(libdir)
+	@echo $(relative_libdir)
 
 tibercad: $(objects) 
 	@echo "Compiling tibercad executable ..."

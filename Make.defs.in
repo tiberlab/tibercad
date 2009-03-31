@@ -49,7 +49,7 @@ obj-suffix := .$(METHOD).o
 # shared library directory
 relative_libdir := lib
 ifeq ($(METHOD),dbg)
-  libdir := $(relative_libdir)/debug
+  relative_libdir := $(relative_libdir)/debug
 endif
 libdir := $(topdir)/$(relative_libdir)
 
