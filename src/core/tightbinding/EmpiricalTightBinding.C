@@ -106,14 +106,21 @@ ETB::do_init(void){
 #endif  
 
   // Getting reference to atomistic structure for calculation
-  get_atomistic_structure();
+  if (_upg_filename.compare("none") != 0)
+  {
+    _upt_options.upt_filename = _upg_filename;
+  }
+  else
+  {
+    get_atomistic_structure();
+    _upt_options.upt_filename = _atomistic_structure->get_name() + ".upg";
+  }
 
   // Get mesh informations
   //_mesh = & ( get_environment().get_device().get_mesh());
 
   // Get database path from Database class
   _upt_options.database_path = Database::get_default_search_path();
-  _upt_options.upt_filename = _atomistic_structure->get_name() + ".upg";
   _upt_options.work_path = ".";
   _upt_options.gen_outfile = "out.gen";
 
@@ -201,6 +208,8 @@ ETB::build_input_options()
 {
   
   std::cout << "(TC) build_input_options() begin...";
+
+  _upg_filename = get_options().get_option("upg_filename", "none"); 
 
   _upt_options.verbose = get_options().get_option("verbose", 10);
   _upt_options.max_TB_order = get_options().get_option("max_TB_order", 2);  

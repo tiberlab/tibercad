@@ -176,5 +176,42 @@ inline void f77_upt_lanczosdiag (f77_int const* handler, f77_int const& n_vb,
 }
 
 
+extern "C" void upt_write_states_ (f77_int const*);
+
+// Corresponding F77 arguments for f77_upt_write_states:
+// integer, intent(in) :: handler(DAC_handlerSize)
+inline void f77_upt_write_states (f77_int const* handler)
+{
+  upt_write_states_ (handler);
+}
+
+
+extern "C" void upt_get_hamildim_ (f77_int const*, f77_int&);
+
+// Corresponding F77 arguments for f77_upt_get_hamildim:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(out) :: hdim
+inline void f77_upt_get_hamildim (f77_int const* handler, f77_int& hdim)
+{
+  upt_get_hamildim_ (handler, hdim);
+}
+
+
+extern "C" void upt_get_states_ (f77_int const*, f77_int const&, f77_int 
+    const&, f77_double*, f77_double*);
+
+// Corresponding F77 arguments for f77_upt_get_states:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: num_ev
+// integer, intent(in) :: hdim
+// real(dp), intent(out) :: eigenvals(num_ev)
+// complex(dp), intent(out) :: eigenstates(hdim, num_ev)
+inline void f77_upt_get_states (f77_int const* handler, f77_int const& num_ev, 
+    f77_int const& hdim, f77_double* eigenvals, f77_double* eigenstates)
+{
+  upt_get_states_ (handler, num_ev, hdim, eigenvals, eigenstates);
+}
+
+
 #endif
 

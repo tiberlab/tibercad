@@ -94,6 +94,30 @@ void UptWrapper::lanczos_diag (int n_vb, int n_cb, double guess_vb, double guess
 }
 
 
+//! get ETB Hamiltonian size
+int UptWrapper::get_H_dim(void) {
+  int hdim;	
+  f77_upt_get_hamildim(_handler,hdim);
+  return hdim;
+}
+
+//! write eigenstates on file
+void UptWrapper::write_states(void) {	
+  f77_upt_write_states(_handler);
+}
+
+
+//! get computed states 
+void UptWrapper::get_states (int num_ev, int hdim,
+		         double* eigenvals, double *eigenstates) {
+
+  f77_upt_get_states (_handler, num_ev, hdim, eigenvals, eigenstates);
+
+
+}
+
+
+
 
 
 

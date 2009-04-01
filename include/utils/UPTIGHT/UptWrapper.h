@@ -90,6 +90,14 @@ public:
                      int min_iter, int long_iter, int max_iter, 
                      double fast_tol, double long_tol, double ort_tol);
 
+
+  int get_H_dim(void);
+
+  void write_states(void);
+
+  void get_states(int num_ev, int hdim, double* eigenvals, double* states);
+
+
 private:
   int _handler[UPT_HSIZE];
 

@@ -84,6 +84,9 @@ private:
   //! Uptight instance associated to the simulation
   UptWrapper* inst;
 
+  //! flag to decide whether to read a structure from file
+  std::string _upg_filename;
+
 protected:
 
   virtual void do_init(void);
