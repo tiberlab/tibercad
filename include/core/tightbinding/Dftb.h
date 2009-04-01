@@ -49,10 +49,15 @@ public:
   class DftbSolverOptions{
   public:
     std::string solver;
-    std::string poisson_solver;
-    bool external_optential;
   };
 
+
+  class DftbpCouplingOptions
+  {
+  public:
+    //! Simulation which provides external potential
+    std::string potential_sim;
+  };
 
   //! Constructor
   Dftb(void);
@@ -92,25 +97,17 @@ private:
   //! Structure containing options for DFTB+ tight binding solver
   DftbSolverOptions _dftb_solver_options;
 
-
   //! Print all _dftb_options for debugging purposes
   void print_dftb_options(void);
 
   //! Dftb instance associated to the simulation
   DftbpWrapper* inst;
 
-  //! Potential variable ID for external potential inclusion
-  ID _potential_id;
+  //! Structure containing options for coupling DFTB with other calculations
+  DftbpCouplingOptions _dftbp_coupling_options;
 
-  //! Simulation which provides external potential
-  SimulationInterface* _potential_sim;
-
-  //! Get potential shift on atom n
-  double get_v_shift(unsigned int n);
-
-  //! Build all potential shifts and put them into dftb
-  void build_v_shifts();
-
+  //! Set external potential provided by other simulations using TightBinding method
+  void add_shifts();
 
 protected:
 

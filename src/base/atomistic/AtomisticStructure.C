@@ -6,6 +6,8 @@
 #include "AtomisticGenerator2D.h"
 #include "AtomisticGenerator3D.h"
 #include "BondMap.h"
+#include "Macrostrain.h"
+#include"Messages.h"
 
 //C++ includes
 //--------------------
@@ -163,13 +165,57 @@ AtomisticStructure::init()
 
     }
 
+  //TODO: is it the right place for associate_elements????
+  associate_elements();
+
 }
 
 
 void
 AtomisticStructure::associate_elements()
 {
+  //Associate atoms with NULL element pointer to right mesh elements
+  //TODO: it's almost a O(n^2) algorithm, but with no smarter solution
+  //to manage mesh and atoms together it's the only way!!!
 
+  Messages::debug("Starting associate_elements");
+
+  bool set = false;
+  Point p;
+  unsigned int dim = get_device()->get_mesh().mesh_dimension();
+
+  //Get iterators to all elements
+  MeshBase::element_iterator  el_start = get_device()->get_mesh().elements_begin();
+  MeshBase::element_iterator  el_end = get_device()->get_mesh().elements_end();
+  MeshBase::element_iterator  it = el_start;
+
+  for (unsigned int i = 0; i < get_structure_atoms().size(); i++)
+    {
+      if (get_structure_atoms()[i].get_elem() == NULL)
+        {
+          set = false;
+          p(0) = 0.0; p(1) = 0.0; p(2) = 0.0;
+          p(0) = get_structure_atoms()[i].get_position()(1) / get_scale();
+          if ( (dim == 2) || (dim == 3) )   p(1) = get_structure_atoms()[i].get_position()(2) / get_scale();
+          if ( (dim == 3) )  p(2) = get_structure_atoms()[i].get_position()(3) / get_scale();
+
+          for (it = el_start; it != el_end; it++)
+            {
+              Elem* elem = *it;
+              if (Macrostrain::may_belong_to_element(elem,p))
+                {
+                  if ( (elem->contains_point(p) ) ) _structure_atoms[i].set_elem(elem);
+                  set = true;
+                }
+            }
+
+          //TODO: UNCOMMENT THIS LINE, COMMENTED ONLY FOR DIRTY WORKS PURPOSE
+//if (!set) Messages::warning("An atom has NULL element pointer: it stands outside mesh! ");
+
+        }
+    }
+
+  Messages::debug("Finished associate_elements");
 
 }
 

@@ -128,24 +128,15 @@ TightBinding::build_rho(const Point& r)
 
       //Also hubbard parameters (and tau) must be scaled in mesh units
       // (uhatom is in (atomic units)^(-1))
-      //uhatom = ( uhatom / (Constants::bohr_radius) * (get_control().get_device().get_mesh_units());
       double tau = ( ( uhatom * ( 16.0 / 5.0 ) ) / (Constants::bohr_radius ) ) * get_control().get_device().get_mesh_units();
 
       if (deltar > deltar_max) continue;
       else
         {
           //std::cout << "uhatom is " << uhatom <<std::endl;
-          //rho = rho + 16.384 * _mulliken_netcharges[iatm] * uhatom * uhatom * uhatom * exp(-3.20*uhatom*deltar);
 	  rho = rho + (Constants::e * _mulliken_netcharges[iatm] * tau * tau * tau * exp(-1.0 * tau * deltar));
-	  //std::cout << "atom " << iatm << "is contributing with " <<  (Constants::e * _mulliken_netcharges[iatm] * tau * tau * tau * exp(-1.0 * tau * deltar)) / (8 * 3.141592653589793);
-	  //std::cout << "mulliken charge is " << _mulliken_netcharges[iatm] << std::endl;
-	  //std::cout << "deltar is " << deltar << std::endl;
-	  //std::cout << "uhatom is " << uhatom << std::endl;
- 	  //std::cout << "tau is " << tau << std::endl;
-	  //std::cout << "exponential is " <<  exp(-1.0 * tau * deltar) / (8 * 3.141592653589793) << std::endl;
 
         }
-      //std::cout << "rho after loop is " << rho << std::endl;
     }
 
   rho = -rho / (8.0 * 3.141592653589793);
@@ -282,6 +273,7 @@ TightBinding::build_elemental_results(const std::set<std::string>& variables,
   {
 
     std::vector <double> pot;
+    Point p;
 
     //Use PotentialInterface to get the right simulation
     PotentialInterface model;
@@ -298,9 +290,30 @@ TightBinding::build_elemental_results(const std::set<std::string>& variables,
 
         for (unsigned int i = 0; i < pot.size(); i++)
           {
-
-          }
+           if (_atomistic_structure->get_structure_atoms()[i].get_elem() != NULL)
+             {
+           p(0) = _atomistic_structure->get_structure_atoms()[i].get_position()(1);
+           p(1) = _atomistic_structure->get_structure_atoms()[i].get_position()(2);
+           p(2) = _atomistic_structure->get_structure_atoms()[i].get_position()(3);
+           pot[i] = model.get_potential(_atomistic_structure->get_structure_atoms()[i].get_elem(), p);
+             }
+           else
+             {
+               pot[i] = 0.0;
+             }
+             }
 
       }
+
+  }
+
+
+
+  void
+  TightBinding::displace(const std::string providing_model)
+  {
+//TODO: this is a temporary version using a modified version of old Misha routines
+    //Displacement must be treated better in StrainSimulation before modifying it
+
 
   }

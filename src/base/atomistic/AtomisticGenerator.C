@@ -21,7 +21,12 @@
 
 AtomisticGenerator::AtomisticGenerator(void)
 :_bondmapobject(NULL),
-_reference_material(NULL)
+_reference_material(NULL),
+_prim_vec(0),
+_conv_vect(0),
+_conv_prim(0),
+_rotation(0),
+_local_origin(0)
 {
 
 }
@@ -52,10 +57,6 @@ void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string
 
   std::vector<Atom>::iterator basis_iterator = basis.begin();
 
-  //#ifdef DEBUG
-  //  std::cerr << "Printing structure to file...";
-  //#endif
-
   output_file.open(filename.c_str());
   output_file << basis.size() << std::endl << std::endl;
 
@@ -71,10 +72,6 @@ void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string
   }while(basis_iterator != basis.end());
 
   output_file.close();
-
-  //#ifdef DEBUG
-  //  std::cerr << "done" << std::endl;
-  //#endif
 
 };
 
@@ -99,7 +96,7 @@ AtomisticGenerator::do_init()
   ref_region = _as->get_options().get_option("reference_region", "None");
   _as->get_device()->get_region_ids(ref_region, ids);
   if (ids.size() == 0)
-              throw InitFailedException("Reference region badly defined for structure " +  _as->get_name() );
+    throw InitFailedException("Reference region badly defined for structure " +  _as->get_name() );
   _reference_material = _as->get_device()->get_material(ids[0]);
   structure =  _reference_material->get_structure();
   std::cout << "Parsing atomistic structure parameters... " << std::endl;
@@ -365,13 +362,12 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                   (*atom).set_specie(tmp);
                   (*atom).set_flag(0);
                   (*atom).set_region_ID(el_reg);
-                  //(*atom).set_elem(elem);
                   (*atom).belong_to_structure = false;
                   _structure_basis.push_back(*atom);
                 }
               else
                 {
-                  std::cout << "Warning, atom is included but no assignment map member could be built " << std::endl;
+                  Messages::warning("Warning, atom is included but no assignment map member could be built");
                 }
             }
 
@@ -421,19 +417,20 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                               tmp_atom.belong_to_structure = true;
 
 
-//                              p(0) = tmp_atom.get_position()(1) / scale;
-//                              if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position()(2) / scale;
-//                              if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
-//                              if (Macrostrain::may_belong_to_elem(elem,p))
-//                                {
-//
-//                                }
+                              p(0) = tmp_atom.get_position()(1) / scale;
+                              if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position()(2) / scale;
+                              if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
+                              if (Macrostrain::may_belong_to_element(elem,p))
+                                {
+                                  if ( (elem->contains_point(p) ) ) (*atom).set_elem(elem);
+                                }
+
 
                               _structure_basis.push_back(tmp_atom);
                             }
                           else
                             {
-                              std::cout << "Warning, atom is included but no assignment map member could be built " << std::endl;
+                              Messages::warning("Warning, atom is included but no assignment map member could be built");
                             }
                         }
                       break;
@@ -461,7 +458,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                     }
                   else
                     {
-                      std::cout << "Warning, atom is included but no assignment map member could be built " << std::endl;
+                      Messages::warning("Warning, atom is included but no assignment map member could be built");
                     }
                 }
             }
@@ -511,11 +508,20 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                                   std::string tmp =  assign[el_reg][(*atom).get_flag()];
                                   tmp_atom.set_specie(tmp);
                                   tmp_atom.belong_to_structure = true;
+
+                                  p(0) = tmp_atom.get_position()(1) / scale;
+                                  if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position()(2) / scale;
+                                  if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
+                                  if (Macrostrain::may_belong_to_element(elem,p))
+                                    {
+                                      if ( (elem->contains_point(p) ) ) (*atom).set_elem(elem);
+                                    }
+
                                   _structure_basis.push_back(tmp_atom);
                                 }
                               else
                                 {
-                                  std::cout << "Warning, atom is included but no assignment map member could be built " << std::endl;
+                                  Messages::warning("Warning, atom is included but no assignment map member could be built");
                                 }
                             }
                         }
@@ -548,7 +554,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                         }
                       else
                         {
-                          std::cout << "Warning, atom is included but no assignment map member could be built " << std::endl;
+                          Messages::warning("Warning, atom is included but no assignment map member could be built");
                         }
                     }
                 }
@@ -557,6 +563,8 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
         }
     }
+
+  Messages::debug("Finished cut_and_change_specie");
 
 };
 
@@ -831,7 +839,7 @@ void
 AtomisticGenerator::set_lattice_type(const std::string lattice_name)
 {
 
-  Tensor2Gen prim_vec_dir;
+  Tensor2Gen prim_vec_dir(0);
 
   //Set the lattice type. It defines the primitive vectors
   _lattice_type=lattice_name;
@@ -885,7 +893,7 @@ AtomisticGenerator::set_lattice_type(const std::string lattice_name)
     _prim_vec(1,3) = 0.0; _prim_vec(2,3) = 0.0; _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
 
   }
-//TODO:generalize to anatase
+  //TODO:generalize to anatase
   else if (_lattice_type.compare("anatase") == 0) {
 
     assert(_lattice_constant[0] == _lattice_constant[1]);
@@ -1013,7 +1021,7 @@ void AtomisticGenerator::parse_parameters(Material* mat)
               T(3) = db.get(record, 0.0);
 
               tmp.set_position(T);
-std::cout << "pushing " << T << std::endl;
+              std::cout << "pushing " << T << std::endl;
               //Insert tmp in basis
               _crystal_basis.push_back(tmp);
             }
@@ -1140,7 +1148,7 @@ void AtomisticGenerator::make_conv_cell()
   Tensor1 m1,m2,m3,select_vect(0);
   Tensor1 conv1, conv2, conv3;
   int i;
-  Tensor2Gen prim_miller_basis;
+  Tensor2Gen prim_miller_basis(0);
 
   prim_miller_basis = reciprocal(_prim_vec);
   _conv_prim = inv(_prim_vec) * prim_miller_basis * _prim_miller;
@@ -1213,7 +1221,7 @@ void AtomisticGenerator::make_conv_basis()
   int lower_1, lower_2, lower_3, upper_1, upper_2, upper_3, i;
   Tensor1 prim_position, tmp_check;
   Tensor1 tmp_position;
-  Tensor1 vec_x,vec_y,vec_z;
+  Tensor1 vec_x(0),vec_y(0),vec_z(0);
   std::vector<Atom>::iterator basis_iterator;
   Tensor2Gen rot_tmp;
 
@@ -1229,6 +1237,7 @@ void AtomisticGenerator::make_conv_basis()
 
     if ( (vec_y * vec_x) < 1e-10 ) {vec_z = vectorProduct(vec_x, vec_y);}
     else if  ( (vec_z * vec_x) < 1e-10)  {vec_y = vectorProduct(vec_x, vec_z);}
+
     else {std::cout << "Warning: at least x or y growth direction should be orthogonal to z growth direction" << std::endl;}
 
   }
@@ -1747,4 +1756,3 @@ AtomisticGenerator::reduce_vector(Tensor2Gen a)
   return b;
 
 };
-
