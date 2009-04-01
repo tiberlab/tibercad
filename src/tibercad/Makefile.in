@@ -8,6 +8,10 @@ ADDITIONAL_LIBS = @LIBREADLINE@ $(topdir)/src/utils/license/liblicense.a
 PACKAGEFLAGS = -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir)
 
 SUFF := .bin
+ifeq ($(findstring cygwin,$(hostos)),cygwin)
+  SUFF := ".exe"
+endif
+
 ifeq ($(METHOD),dbg)
   SUFF := _dbg$(SUFF)
 endif

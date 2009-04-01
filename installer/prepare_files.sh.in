@@ -11,7 +11,7 @@ make_windows_package () {
   mkdir -p ${files}/materials
 
   # copy all files
-  cp ${topdir}/bin/tibercad ${files}
+  cp ${topdir}/bin/tibercad.exe ${files}
   cp ${topdir}/lib/*.dll ${files}
   cp ${topdir}/share/tibercad.ico ${files}
   cp ${topdir}/share/Copyright.txt ${files}
@@ -90,7 +90,7 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep gcc_s | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep g2c | awk '{print $3}'`"
   cp $libs ${files}/${ARCH}/lib
-  cp ${topdir}/bin/tibercad ${files}/${ARCH}/bin
+  cp ${topdir}/bin/tibercad.bin ${files}/${ARCH}/bin/tibercad
   chmod a+x ${files}/${ARCH}/bin/tibercad
   cp ${topdir}/lib/lib*.so* ${files}/${ARCH}/lib
   find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/${ARCH}/lib/tibermodels \;
