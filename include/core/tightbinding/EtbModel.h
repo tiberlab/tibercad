@@ -23,7 +23,7 @@ public:
 
 protected:
 
-  virtual PhysicalModelInterface* create_new (void) const {};
+  virtual PhysicalModelInterface* create_new(void) const;
 
   virtual void do_init();
 
@@ -38,11 +38,11 @@ ETBModel* ETBModel::create()
 }
 
 
-//inline
-//PhysicalModelInterface* ETBModel::create_new (void) const
-//{
-//  return new ETBModel();
-//}
+inline
+PhysicalModelInterface* ETBModel::create_new (void) const
+{
+  return new ETBModel();
+}
 
 
 

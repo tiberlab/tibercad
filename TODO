@@ -1,6 +1,10 @@
+2009-03-25 Auf der Maur
+	( ) review approach for variables
+
 2009-03-20 Auf der Maur
 	( ) implement surface recombination
 	( ) implement more trap types
+	( ) cutoff in embracing region
 
 2009-02-25 Auf der Maur
 	( ) improve/document tunneling current (analytical model)

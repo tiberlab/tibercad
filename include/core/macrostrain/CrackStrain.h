@@ -60,6 +60,9 @@ class CrackStrain : public StrainSimulation
   //! Preapare all 3 components of the polarization vector for output
   void prepare_polarization_data_for_output( std::vector<std::string>& polariz_names, std::vector<double>& polariz_data );
 
+  //! Prepare stress tensor for output
+  void prepare_stress_data_for_output(std::vector<std::string>& stress_names, std::vector<double>& stress_data);
+
 
 };
 

@@ -18,12 +18,12 @@ public:
   ~DftbModel();
 
   //!Create a new object
-  static DftbModel* create();
+  static DftbModel* create(void);
 
 
 protected:
 
-  virtual PhysicalModelInterface* create_new (void) const {};
+  virtual PhysicalModelInterface* create_new (void) const;
 
   virtual void do_init();
 
@@ -32,7 +32,14 @@ protected:
 
 
 inline 
-DftbModel* DftbModel::create()
+DftbModel* DftbModel::create(void)
+{
+  return new  DftbModel();
+}
+
+
+inline 
+PhysicalModelInterface* DftbModel::create_new(void) const
 {
   return new  DftbModel();
 }
