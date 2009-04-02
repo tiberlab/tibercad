@@ -1,3 +1,6 @@
+// $Id$
+
+
 //modules includes
 #include "TightBinding.h"
 #include "BoundaryProperties.h"
@@ -17,8 +20,9 @@
 //-----------------------------------------------------------------------
 
 TightBinding::TightBinding()
-:_atomistic_structure(NULL),
-_mulliken_netcharges()
+ : _atomistic_structure(NULL),
+   _mulliken_netcharges(),
+   _mesh(NULL)
 {
 }
 
@@ -214,6 +218,13 @@ TightBinding::build_elemental_results(const std::set<std::string>& variables,
   // TODO parallelize
   if (libMesh::processor_id() != 0)
     return;
+
+
+  // if there is no mesh we can return immediately
+  if (_mesh == NULL)
+    return;
+
+
 
   unsigned int n_vars = 0;
   const unsigned int nn  = _mesh->n_active_elem();
