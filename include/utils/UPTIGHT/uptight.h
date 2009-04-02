@@ -56,9 +56,10 @@ inline void f77_upt_destructsession (f77_int* handler)
 
 
 extern "C" void upt_fillbasicparameters_ (f77_int const*, f77_int const&, 
-    f77_char const*, f77_char const*, f77_char const*, f77_char const*, f77_int 
-    const&, f77_int const&, f77_int const&, f77_int const&, f77_int const&, 
-    f77_int const&, f77_double const&, f77_double const&, f77_double const&);
+    f77_char const*, f77_char const*, f77_char const*, f77_char const*, 
+    f77_char const*, f77_int const&, f77_int const&, f77_int const&, f77_int 
+    const&, f77_int const&, f77_int const&, f77_double const&, f77_double 
+    const&, f77_double const&, f77_int const&);
 
 // Corresponding F77 arguments for f77_upt_fillbasicparameters:
 // integer, intent(in) :: handler(DAC_handlerSize)
@@ -67,6 +68,7 @@ extern "C" void upt_fillbasicparameters_ (f77_int const*, f77_int const&,
 // character(LST), intent(in) :: workPath(1)
 // character(MST), intent(in) :: gen_filename(1)
 // character(MST), intent(in) :: gen_outname(1)
+// character(MST), intent(in) :: sparse_fmt(1)
 // integer, intent(in) :: max_n_n
 // integer, intent(in) :: harrison_flag
 // integer, intent(in) :: relat_flag
@@ -76,17 +78,19 @@ extern "C" void upt_fillbasicparameters_ (f77_int const*, f77_int const&,
 // real(dp), intent(in) :: c_axis_x
 // real(dp), intent(in) :: c_axis_y
 // real(dp), intent(in) :: c_axis_z
+// integer, intent(in) :: check_bondmap
 inline void f77_upt_fillbasicparameters (f77_int const* handler, f77_int const& 
     verbose_lev, f77_char const* databasePath, f77_char const* workPath, 
-    f77_char const* gen_filename, f77_char const* gen_outname, f77_int const& 
-    max_n_n, f77_int const& harrison_flag, f77_int const& relat_flag, f77_int 
-    const& potential_flag, f77_int const& optmat_flag, f77_int const& poldir, 
-    f77_double const& c_axis_x, f77_double const& c_axis_y, f77_double const& 
-    c_axis_z)
+    f77_char const* gen_filename, f77_char const* gen_outname, f77_char const* 
+    sparse_fmt, f77_int const& max_n_n, f77_int const& harrison_flag, f77_int 
+    const& relat_flag, f77_int const& potential_flag, f77_int const& 
+    optmat_flag, f77_int const& poldir, f77_double const& c_axis_x, f77_double 
+    const& c_axis_y, f77_double const& c_axis_z, f77_int const& check_bondmap)
 {
   upt_fillbasicparameters_ (handler, verbose_lev, databasePath, workPath, 
-      gen_filename, gen_outname, max_n_n, harrison_flag, relat_flag, 
-      potential_flag, optmat_flag, poldir, c_axis_x, c_axis_y, c_axis_z);
+      gen_filename, gen_outname, sparse_fmt, max_n_n, harrison_flag, 
+      relat_flag, potential_flag, optmat_flag, poldir, c_axis_x, c_axis_y, 
+      c_axis_z, check_bondmap);
 }
 
 

@@ -21,11 +21,13 @@ public:
     bool relat_flag;
     bool potential_flag;
     bool opt_flag;
+    bool check_bondmap;
     int poldir;
     std::string database_path;
     std::string work_path;
     std::string upt_filename;
     std::string gen_outfile;
+    std::string sparse_fmt;
     double *c_axis;
       
   };
@@ -92,6 +94,8 @@ protected:
   virtual void do_init(void);
 
   virtual void do_solve (void);
+
+  virtual void do_plot (void);
 
   virtual void parse_options(void);
 

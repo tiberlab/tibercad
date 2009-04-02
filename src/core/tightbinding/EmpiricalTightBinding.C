@@ -7,7 +7,6 @@
 #include "EmpiricalTightBinding.h"
 #include "BoundaryProperties.h"
 #include "PhysicalModel.h"
-#include "SimulationOptions.h"
 #include "EtbModel.h"
 #include "SimulationOptions.h"
 #include "UptWrapper.h"
@@ -54,7 +53,7 @@ ETB::UptOptions::~UptOptions(void)
 };
 
 ETB::UptSolverOptions::UptSolverOptions(void)
-  :solver("upt lanczos"),
+  :solver("upt_lanczos"),
    n_vb(0),
    n_cb(0),
    min_iter(2),
@@ -94,6 +93,7 @@ void
 ETB::do_init(void){
 
   char *database_path, *work_path, *upt_filename, *gen_outfile;
+  char *sparse_format;
 
   std::cerr << "(TC) Empirical TB Initialisation..." << std::endl;
 
@@ -133,18 +133,20 @@ ETB::do_init(void){
   work_path = new char[UPT_LC];     memset(work_path, ' ', UPT_LC);
   upt_filename = new char[UPT_MC];  memset(upt_filename, ' ', UPT_MC);
   gen_outfile = new char[UPT_MC];   memset(gen_outfile, ' ', UPT_MC);
-
+  sparse_format = new char[UPT_MC]; memset(sparse_format, ' ', UPT_MC);
+  
   _upt_options.database_path.copy(database_path, _upt_options.database_path.size() ); 
   _upt_options.upt_filename.copy(upt_filename, _upt_options.upt_filename.size() );
   _upt_options.work_path.copy(work_path, _upt_options.work_path.size() );  
   _upt_options.gen_outfile.copy(gen_outfile, _upt_options.gen_outfile.size() ); 
+  _upt_options.sparse_fmt.copy(sparse_format, _upt_options.sparse_fmt.size() ); 
 
   //  Initialize Dftb instance it and sets parameters
   inst->fill_param(_upt_options.verbose, database_path, work_path, 
-                   upt_filename, gen_outfile, _upt_options.max_TB_order,
+                   upt_filename, gen_outfile, sparse_format, _upt_options.max_TB_order,
 		   _upt_options.harrison_flag, _upt_options.relat_flag, 
 		   _upt_options.potential_flag, _upt_options.opt_flag,
-		   _upt_options.poldir, _upt_options.c_axis);
+		   _upt_options.poldir, _upt_options.c_axis, _upt_options.check_bondmap);
 
   std::cout << "(TC) fill parameter done" << std::endl;
 
@@ -179,7 +181,7 @@ void ETB::do_solve(void){
   //TODO: non so come funziona il settaggio delle grandezze da calcolare quando
   //queste siano richieste da altri e non siano prettamente dati di output
 
-  if (_upt_solver_options.solver.compare("upt lanczos") == 0) {
+  if (_upt_solver_options.solver.compare("upt_lanczos") == 0) {
 
     inst->lanczos_diag(_upt_solver_options.n_vb, _upt_solver_options.n_cb, 
 		 _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
@@ -194,6 +196,22 @@ void ETB::do_solve(void){
 #endif
 
 };
+
+//-------------------------------------------------------------------------
+void ETB::do_plot(void){
+
+#ifdef DEBUG
+  std::cout << "(TC) Calling ETB->do_plot() " << std::endl;
+#endif
+
+  const std::set<string>& plots = get_control().get_plotvariables();
+  std::set<string>::iterator it = plots.find("tbstates");
+
+  if (it != plots.end())
+  {
+    inst->write_states();
+  }
+}
 
 //-------------------------------------------------------------------------
 
@@ -212,11 +230,13 @@ ETB::build_input_options()
   _upg_filename = get_options().get_option("upg_filename", "none"); 
 
   _upt_options.verbose = get_options().get_option("verbose", 10);
-  _upt_options.max_TB_order = get_options().get_option("max_TB_order", 2);  
+  _upt_options.max_TB_order = get_options().get_option("max_TB_order", 2); 
+  _upt_options.sparse_fmt = get_options().get_option("sparse_format", "upper");
+  _upt_options.check_bondmap = get_options().get_option("check_bondmap", false);
   _upt_options.harrison_flag = get_options().get_option("Harrison_scaling", true);
   _upt_options.relat_flag = get_options().get_option("relativistic", false); 
-  _upt_options.opt_flag = get_options().get_option("optical transitions", false);   
-  _upt_options.poldir = get_options().get_option("polarization direction", 1);   
+  _upt_options.opt_flag = get_options().get_option("optical_transitions", false);   
+  _upt_options.poldir = get_options().get_option("polarization_direction", 1);   
 
 
   _upt_solver_options.n_vb =  get_solver_options().get_option("num_valence_eigenvalues", 0);
