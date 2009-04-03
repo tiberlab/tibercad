@@ -137,6 +137,8 @@ int main (int argc, char** argv)
   cin.get();
 #endif
 
+  Messages::close_log_file();
+
   return TiberCad::cleanup();
 }
 

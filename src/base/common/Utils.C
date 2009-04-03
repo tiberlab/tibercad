@@ -68,7 +68,9 @@ Utils::dirname(const std::string& file)
 std::string
 Utils::basename(const std::string& file)
 {
-  return boost::filesystem::basename(file);
+  boost::filesystem::path p(file, boost::filesystem::native);
+
+  return boost::filesystem::basename(p);
 }
 
 

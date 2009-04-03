@@ -25,13 +25,12 @@ Messages::_indent = 0;
 
 
 ofstream
-Messages::_log("");
+Messages::_log;
 
 
 void
 Messages::set_log_file(const string& logfile)
 {
-  _log.close();
   _log.open(logfile.c_str());
 }
 
