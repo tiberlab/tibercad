@@ -2947,6 +2947,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
   
   legend.resize(variables.size());
 
+  bool found_variable = false;
+
   // for each possible variable we set the vector index
   // -1 means, the variable should not be plotted
   unsigned int n_vars = 0;
@@ -2958,6 +2960,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     Ec = n_vars;
     legend[n_vars] = "Ec";
     n_vars++;
+
+    found_variable = true;
   }
 
   int Ev = -1;
@@ -2966,6 +2970,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     Ev = n_vars;
     legend[n_vars] = "Ev";
     n_vars++;
+
+    found_variable = true;
   }
 
   int Ec0 = -1;
@@ -2974,6 +2980,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     Ec0 = n_vars;
     legend[n_vars] = "Ec0";
     n_vars++;
+
+    found_variable = true;
   }
 
   int Ev0 = -1;
@@ -2982,6 +2990,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     Ev0 = n_vars;
     legend[n_vars] = "Ev0";
     n_vars++;
+
+    found_variable = true;
   }
 
 
@@ -2991,6 +3001,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     Efn = n_vars;
     legend[n_vars] = "QFermi_e";
     n_vars++;
+
+    found_variable = true;
   }
 
   int Efp = -1;
@@ -2999,6 +3011,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     Efp = n_vars;
     legend[n_vars] = "QFermi_h";
     n_vars++;
+
+    found_variable = true;
   }
 
   int phi = -1;
@@ -3007,6 +3021,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     phi = n_vars;
     legend[n_vars] = "electric_potential";
     n_vars++;
+
+    found_variable = true;
   }
 
   int Eg = -1;
@@ -3015,6 +3031,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     Eg = n_vars;
     legend[n_vars] = "Eg";
     n_vars++;
+
+    found_variable = true;
   }
 
   int edens = -1;
@@ -3023,6 +3041,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     edens = n_vars;
     legend[n_vars] = "electron_density";
     n_vars++;
+
+    found_variable = true;
   }
 
   int hdens = -1;
@@ -3031,6 +3051,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     hdens = n_vars;
     legend[n_vars] = "hole_density";
     n_vars++;
+
+    found_variable = true;
   }
 
   int Nd = -1;
@@ -3039,6 +3061,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     Nd = n_vars;
     legend[n_vars] = "ionized_donors";
     n_vars++;
+
+    found_variable = true;
   }
 
   int Na = -1;
@@ -3047,6 +3071,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     Na = n_vars;
     legend[n_vars] = "ionized_acceptors";
     n_vars++;
+
+    found_variable = true;
   }
 
   int Pn = -1;
@@ -3055,6 +3081,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     Pn = n_vars;
     legend[n_vars] = "Pn";
     n_vars++;
+
+    found_variable = true;
   }
 
   int Pp = -1;
@@ -3063,6 +3091,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     Pp = n_vars;
     legend[n_vars] = "Pp";
     n_vars++;
+
+    found_variable = true;
   }
 
   int rho = -1;
@@ -3071,6 +3101,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     rho = n_vars;
     legend[n_vars] = "total_charge_densitity";
     n_vars++;
+
+    found_variable = true;
   }
 
   int rec = -1;
@@ -3123,6 +3155,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
         n_vars++;
       }
     }
+
+    found_variable = true;
   }
 
 
@@ -3132,6 +3166,8 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     mun = n_vars;
     legend[n_vars] = "electron_mobility";
     n_vars++;
+
+    found_variable = true;
   }
 
   int mup = -1;
@@ -3140,12 +3176,18 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
     mup = n_vars;
     legend[n_vars] = "hole_mobility";
     n_vars++;
+
+    found_variable = true;
   }
 
 
   legend.resize(n_vars);
     
   results.resize(nn * n_vars);
+
+  // We return immediately if there is nothing to plot
+  if (!found_variable)
+    return;
 
   vector<double> local(results.size());
   vector<unsigned short int> node_conn(nn);
@@ -3443,6 +3485,8 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   unsigned int n_vars = 0;
   const set<string>::const_iterator varend(variables.end());
 
+  bool found_variable = false;
+
   int BandEdges = -1;
   if (variables.find("BandEdges") != varend)
   {
@@ -3478,6 +3522,8 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
       legend[n_vars] = os.str();
       n_vars++;
     }
+
+    found_variable = true;
   }
 
   int EField = -1;
@@ -3499,6 +3545,8 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
         legend[EField] = "E_x";
         n_vars++;
     }
+
+    found_variable = true;
   }
 
   int GradFermiE = -1;
@@ -3520,6 +3568,8 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
         legend[GradFermiE] = "grad_fermi_e_x";
         n_vars++;
     }
+
+    found_variable = true;
   }
 
   int GradFermiH = -1;
@@ -3541,6 +3591,8 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
         legend[GradFermiH] = "grad_fermi_h_x";
         n_vars++;
     }
+
+    found_variable = true;
   }
 
   int Jn = -1;
@@ -3562,6 +3614,8 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
         legend[Jn] = "Jn_x";
         n_vars++;
     }
+
+    found_variable = true;
   }
 
 
@@ -3584,6 +3638,8 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
         legend[Jp] = "Jp_x";
         n_vars++;
     }
+
+    found_variable = true;
   }
 
 
@@ -3607,6 +3663,8 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
         legend[J] = "J_x";
         n_vars++;
     }
+
+    found_variable = true;
   }
 
   int dPn = -1;
@@ -3628,6 +3686,8 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
         legend[dPn] = "GradTepE_x";
         n_vars++;
     }
+
+    found_variable = true;
   }
 
   int dPp = -1;
@@ -3649,6 +3709,8 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
         legend[dPp] = "GradTepH_x";
         n_vars++;
     }
+
+    found_variable = true;
   }
 
   int Polariz = -1;
@@ -3671,21 +3733,28 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
         legend[Polariz] = "P_x";
         n_vars++;
     }
+
+    found_variable = true;
   }
 
 
   int PDens = -1;
-  if (variables.find("PowerDensity") != varend)
-  {
-    PDens = n_vars;
-    legend[n_vars] = "power_density[W*cm^-3]";
-    n_vars++;
-  }
+  //if (variables.find("PowerDensity") != varend)
+  //{
+  //  PDens = n_vars;
+  //  legend[n_vars] = "power_density[W*cm^-3]";
+  //  n_vars++;
+  //}
 
 
   legend.resize(n_vars);
 
   results.resize(nn * n_vars);
+
+  // We return immediately if there are no variables to be plotted
+  if (!found_variable)
+    return;
+
 
   // the scaling parameters to scale back the result
   double phi0 = get_scaling().get_potential_scaling();
