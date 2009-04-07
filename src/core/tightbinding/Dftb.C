@@ -646,16 +646,20 @@ Dftb::print_dftb_options(void)
 void
 Dftb::add_shifts(void)
 {
-  std::vector<double> shifts_vec;
-  double* shifts_pnt = NULL;
+  double* shift_pnt = NULL;
 
-  shifts_vec = project_potential(_dftbp_coupling_options.potential_sim, "point");
+  project_potential(_dftbp_coupling_options.potential_sim, "point");
 
-  shifts_pnt = new double[shifts_vec.size()];
+  shift_pnt = new double[_pot_shift.size()];
 
-  inst->setexternalshift(_dftb_options.nAtom, shifts_pnt);
+  for (unsigned int i = 0; i < _pot_shift.size(); i++)
+    {
+      shift_pnt[i] = _pot_shift[i];
+    }
 
-  delete[] shifts_pnt;
+  inst->setexternalshift(_dftb_options.nAtom, shift_pnt);
+
+  delete[] shift_pnt;
 
 }
 

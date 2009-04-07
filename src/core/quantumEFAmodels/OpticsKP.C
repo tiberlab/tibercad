@@ -74,7 +74,7 @@ void OpticsKP::parse_options()
   {
     std::vector<unsigned int> temp;
     mod_opt.get_option("initial_eigenstates", temp);
-   
+
     if (temp.size() == 2)
       if (temp[0] <= temp[1])
         if (temp[0] >= 0 && temp[1]-temp[0] <=in_solution.size())
@@ -299,7 +299,7 @@ void OpticsKP::do_solve()
 
 
   // calculate_P_matrix_elements();
- 
+
 
   if (verbose > 0)
     cout << "done\n" << flush;
@@ -410,7 +410,10 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
         double omega = trans_energy/Hartree;
 
-        spectrum[elem] += 1 / (2 * M_PI * M_PI) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * (1 - f2);
+        //This is the right formula, as f1 is electron occupation probability and f2 is hole occupation probability.
+        //Note that it differs from usual literature where usually f1 and f2 states initial state and final state occupation
+        //probability, so it's related to electrons and it becomes f1*(1-f2)
+        spectrum[elem] += 1 / (2 * M_PI * M_PI) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
 
 
       }
@@ -464,9 +467,9 @@ void OpticsKP::calculate_P_matrix_elements ( )
 
 void OpticsKP::calculate_matrix_bulk(void)
 {
-   
+
   const Elem* mat_elem = initial_state_model->return_bulk_element();
- 
+
   Point qp = mat_elem->centroid();
 
 
@@ -476,13 +479,13 @@ void OpticsKP::calculate_matrix_bulk(void)
 
   const Material* mat = _device->get_material(subdomain);
 
-  element_hamiltonian = 
+  element_hamiltonian =
     (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) ))->get_Hamiltonian_model();
 
   element_hamiltonian->set_k_vector(k_vector);
 
-  
- 
+
+
 
 
   KPbulkHamiltonian* element_kp_hamiltonian;
@@ -500,7 +503,7 @@ void OpticsKP::calculate_matrix_bulk(void)
   unsigned int n_i =  _initial_eigen_state_numbers.size();
   unsigned int n_f =  _final_eigen_state_numbers.size();
 
-  
+
 
 
   P_matrix.clear();
@@ -516,13 +519,13 @@ void OpticsKP::calculate_matrix_bulk(void)
   //!number of bands in initial state
   short    num_bands_initial = initial_state_model->get_number_of_bands();
   const map<short, short>&  kp_bands_map_in = initial_state_model->get_kp_bands();
-  
+
   assert( kp_bands_map_in.size() > 0);
-  
+
   //number of bands in final state
   short    num_bands_final   = final_state_model->get_number_of_bands();
   const map<short, short>&  kp_bands_map_fi = final_state_model->get_kp_bands();
-  
+
   assert( kp_bands_map_fi.size() > 0);
 
   map<short, short>::const_iterator  band_it;
@@ -553,15 +556,15 @@ void OpticsKP::calculate_matrix_bulk(void)
 	  for (unsigned int i1 = 0; i1 < n_i; i1++)
 	    for (unsigned int i2 = 0; i2 < n_f; i2++)
 	    {
-  
+
 	      for (short pol = 0; pol < 3; pol++)
 	      {
 		P_matrix[pol][i1][i2] +=  P[pol][band1][band2].constant *
 		  conj( (initial_state_model->get_solution())[i1].eigen_vector[number1] )*
 		  ( (final_state_model->get_solution())[i2].eigen_vector[number2] );
-		
-		
-	      
+
+
+
 	      }
 	    }
 	}
@@ -569,14 +572,14 @@ void OpticsKP::calculate_matrix_bulk(void)
 
     }
 
-  
 
-  
-  
-  
-  
-  
- 
+
+
+
+
+
+
+
 
 
 }
@@ -1092,10 +1095,9 @@ void OpticsKP::do_plot()
 
   vector<string> names(3);
 
-  names[0] = "power_density_k0_Px[W/eV]";
-  names[1] = "power_density_k0_Py[W/eV]";
-  names[2] = "power_density_k0_Pz[W/eV]";
-
+  names[0] = "power_density_k0_Px[W/eV]";  //As it's a power density (W) per photon (eV)
+  names[1] = "power_density_k0_Py[W/eV]";  //Depending on simulation dimension it will be
+  names[2] = "power_density_k0_Pz[W/eV]";  // W/(eV) (3D), W/(eV*cm) (2D), W/(eV*cm^2) (1D)
 
   vector<double> results;
 

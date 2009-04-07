@@ -57,7 +57,6 @@ AtomisticGenerator3D::build()
   max_y = (*nd)(1);
   max_z = (*nd)(2);
 
-
   for (std::vector<Elem*>::iterator it = _structure_elements.begin(); it != _structure_elements.end(); it++){
 
     elem = *it;

@@ -279,11 +279,10 @@ TightBinding::build_elemental_results(const std::set<std::string>& variables,
 }
 
 
-  std::vector<double>&
+  void
   TightBinding::project_potential(const std::string model_name, const std::string mode)
   {
 
-    std::vector <double> pot;
     Point p;
 
     //Use PotentialInterface to get the right simulation
@@ -296,21 +295,21 @@ TightBinding::build_elemental_results(const std::set<std::string>& variables,
       {//In point mode potential on atom is just kept as value on atom position
         //vector returned is sized number of atoms
 
-        pot.clear();
-        pot.resize(_atomistic_structure->get_N_atoms(), 0.0);
+        _pot_shift.clear();
+        _pot_shift.resize(_atomistic_structure->get_N_atoms(), 0.0);
 
-        for (unsigned int i = 0; i < pot.size(); i++)
+        for (unsigned int i = 0; i < _pot_shift.size(); i++)
           {
            if (_atomistic_structure->get_structure_atoms()[i].get_elem() != NULL)
              {
            p(0) = _atomistic_structure->get_structure_atoms()[i].get_position()(1);
            p(1) = _atomistic_structure->get_structure_atoms()[i].get_position()(2);
            p(2) = _atomistic_structure->get_structure_atoms()[i].get_position()(3);
-           pot[i] = model.get_potential(_atomistic_structure->get_structure_atoms()[i].get_elem(), p);
+           _pot_shift[i] = model.get_potential(_atomistic_structure->get_structure_atoms()[i].get_elem(), p);
              }
            else
              {
-               pot[i] = 0.0;
+               _pot_shift[i] = 0.0;
              }
              }
 
@@ -320,11 +319,4 @@ TightBinding::build_elemental_results(const std::set<std::string>& variables,
 
 
 
-  void
-  TightBinding::displace(const std::string providing_model)
-  {
-//TODO: this is a temporary version using a modified version of old Misha routines
-    //Displacement must be treated better in StrainSimulation before modifying it
 
-
-  }

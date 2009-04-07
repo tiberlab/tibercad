@@ -80,7 +80,7 @@ void
 AtomisticGenerator::do_init()
 {
 
-  std::cout << "Building Atomistic Structure " << _as->get_name() << std::endl;
+  Messages::info("Building Atomistic Structure " + _as->get_name());
 
   //Set dimensional scale
   scale = _as->get_scale();
@@ -89,8 +89,8 @@ AtomisticGenerator::do_init()
   std::string structure;
   structure = "none";
   if (!(_as->get_options().find_option("reference_region"))){
-    std::cerr << "No material could be set: reference_region is mandatory in Atomistic section"
-    "when no structure path is specified " << std::endl;}
+    Messages::warning("No material could be set: reference_region is mandatory in Atomistic section"
+    "when no structure path is specified ");}
   std::vector<ID> ids;
   std::string ref_region;
   ref_region = _as->get_options().get_option("reference_region", "None");
@@ -99,7 +99,8 @@ AtomisticGenerator::do_init()
     throw InitFailedException("Reference region badly defined for structure " +  _as->get_name() );
   _reference_material = _as->get_device()->get_material(ids[0]);
   structure =  _reference_material->get_structure();
-  std::cout << "Parsing atomistic structure parameters... " << std::endl;
+
+  Messages::debug("Parsing atomistic structure parameters");
   parse_parameters(_reference_material);
 
 
@@ -200,6 +201,7 @@ AtomisticGenerator::do_init()
   _structure_basis.clear();
   _structure_basis.reserve(tmp_structure.size());
   _structure_basis.swap(tmp_structure);
+  std::cout << "at the end structure basis is sized " << _structure_basis.size() << std::endl;
   //-------------------------------------------------------------
 
   bond_map_gen(_structure_basis);
@@ -736,7 +738,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   //  std::cerr << "Building a supercell sized " << l1 << " " << l2 << " " << l3 << " Amstrong" << std::endl;
   //#endif
 
-  std::cout << "Running make_supercell " << std::endl;
+  Messages::debug("Running make_supercell");
 
   //Check values. l1,l2,l3 cannot be unwisely large (no more than (1um)^3)
   assert((l1*l2*l3) < 1e+12);
@@ -831,6 +833,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
       };
     };
   };
+
 };
 
 
@@ -975,12 +978,10 @@ void AtomisticGenerator::parse_parameters(Material* mat)
       Database& db = mat->get_database();
       db.set_section("lattice");
       _lattice_constant[0] = db.get("a", 0.0) * 10.0;
-      if (_lattice_constant[0] == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
-
-      /*_lattice_constant[1] = data("b", 0.0) * 10.0;*/
+      if (_lattice_constant[0] == 0.0) Messages::error("At least "
+          "lattice constant a must be defined !!!!");
       _lattice_constant[1] = db.get("b", 0.0) * 10.0;
       if (_lattice_constant[1] == 0.0) _lattice_constant[1] = _lattice_constant[0];
-      ////////////////////////////////////////
       _lattice_constant[2] = db.get("c", 0.0) * 10.0;
       if (_lattice_constant[2] == 0.0) _lattice_constant[2] = _lattice_constant[0];
       db.set_section("atomistic_structure");
@@ -1021,7 +1022,6 @@ void AtomisticGenerator::parse_parameters(Material* mat)
               T(3) = db.get(record, 0.0);
 
               tmp.set_position(T);
-              std::cout << "pushing " << T << std::endl;
               //Insert tmp in basis
               _crystal_basis.push_back(tmp);
             }
@@ -1336,7 +1336,7 @@ void AtomisticGenerator::passivate()
   double hydrogen_distance = 1.2;
   Atom* bonded_atom;
 
-  std::cout << "Starting passivate " << std::endl;
+  Messages::debug("Starting passivate");
 
   if (_bondmapobject == NULL)
     {
@@ -1386,7 +1386,7 @@ void AtomisticGenerator::passivate()
 
     }
 
-  std::cout << "Passivate done " << std::endl;
+  Messages::debug("Passivate done");
 
 
 }

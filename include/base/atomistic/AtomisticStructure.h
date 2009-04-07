@@ -85,8 +85,11 @@ public:
   //! Get Device reference
   Device*  get_device(void);
 
-  //! Return a reference to structure atoms
-  const std::vector<Atom>& get_structure_atoms(void);
+  //! Return a const reference to structure atoms
+  const std::vector<Atom>& get_structure_atoms(void) const;
+
+  //! Return a writable reference to structure atoms
+  std::vector<Atom>& get_structure_atoms(void);
 
   //! Get scale factor (from mesh_units to amstrong mesh_units/1e-10)
   const double& get_scale(void);
@@ -237,7 +240,14 @@ const double& AtomisticStructure::get_scale(void)
 
 
 inline
-const std::vector<Atom>& AtomisticStructure::get_structure_atoms(void)
+const std::vector<Atom>& AtomisticStructure::get_structure_atoms(void) const
+{
+  return _structure_atoms;
+}
+
+
+inline
+std::vector<Atom>& AtomisticStructure::get_structure_atoms(void)
 {
   return _structure_atoms;
 }

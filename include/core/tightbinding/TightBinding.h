@@ -102,10 +102,10 @@ protected:
   Mesh* _mesh;
 
   //! Build a vector of potential projection over atom orbitals
-  std::vector<double>& project_potential(const std::string providing_model, const std::string mode);
+  void project_potential(const std::string providing_model, const std::string mode);
 
-  //! Displace atoms according to displacement vector field
-  void displace(const std::string providing_model);
+  //!Vector for atom potential shifts
+  std::vector<double> _pot_shift;
 
 };
 

@@ -25,7 +25,7 @@
 #include "fe.h"
 #include "elem.h"
 // Define Gauss quadrature rules.
-#include "quadrature_gauss.h" 
+#include "quadrature_gauss.h"
 
 // Define useful datatypes for finite element
 // matrix and vector components.
@@ -101,7 +101,7 @@ class Macrostrain : public StrainSimulation
 
 
 
-  struct  add_variable 
+  struct  add_variable
   {
     std::string name ;
     Elem * element;
@@ -109,48 +109,48 @@ class Macrostrain : public StrainSimulation
     bool lat_cons;
     unsigned int index1;
     unsigned int index2;
-    
+
   } ;
-  
+
   //!structure that contains both crystalographic information of a material and Elasticity tensor of a material
   struct strain_param
   {
     Stiffness* C_tensor;
     RotatedCrystal* crystal;
   };
- 
-  
+
+
   //!Constructor
    Macrostrain(void );
 
 
-  
+
 
   //---------------------------------------------------------------------
   /*
     Static function that assembles the linear system matrix for Libmesh
-  
+
    */
   static void assemble_strain_matrix(EquationSystems& es,
 				     const std::string& system_name);
   //--------------------------------------------------------------------
-  
+
 
   //!get in crystal strain system
   /*!
     \param el pointer to the element
     \param quadratur_point quadratur point that belongs to the element
   */
-  Tensor2Sym get_strain_crystal(const Elem* el, const Point& quadratur_point ); 
-  
+  Tensor2Sym get_strain_crystal(const Elem* el, const Point& quadratur_point );
+
   //!get in crystal strain system
   /*!
     \param el pointer to the element
   */
   Tensor2Sym get_strain_crystal(const Elem* el);
-  
+
  //Tensor2Sym get_stress_crystal(const Elem* el);
- 
+
 
   //!get polarization (piezo)
   /*!
@@ -159,58 +159,58 @@ class Macrostrain : public StrainSimulation
   Tensor1 get_piezopolarization(const Elem* el);
 
 
-  //!get built-in polarization (piezo)  
- 
+  //!get built-in polarization (piezo)
+
   /*!
     \param el pointer to the element
     \param quadratur_point quadratur point that belongs to the element
   */
-  Tensor1 get_built_in_polarization(const Elem* el, const Point& quadratur_point ); 
+  Tensor1 get_built_in_polarization(const Elem* el, const Point& quadratur_point );
 
- 
- 
+
+
   //!output piezo for gmv
-  void output_piezo(std :: string filename); 
+  void output_piezo(std :: string filename);
 
   //! output lattice matching parameters
-  void output_add_strain_variables(std::string filename); 
+  void output_add_strain_variables(std::string filename);
   //---------------------------------------------------------------------
 
 
 
   //----------------------------------------------------------
- 
+
   Mesh* get_mesh(); //get pointer to the mesh
-  
 
 
-  
-  
+
+
+
 
 
   virtual ~Macrostrain();
 
 
-   
-  static Macrostrain* create(void);
-      
 
- 
+  static Macrostrain* create(void);
+
+
+
 
 
   /*! \copydoc SimulationInterface::create_boundary_model() */
   virtual BoundaryProperties*
     create_boundary_model(const ModelOptions& options) const
     throw (ModelErrorException);
-  
 
 
- 
-     
-     
 
- 
- 
+
+
+
+
+
+
 
   //!will be removed in future
   void write_atom_potential();
@@ -234,73 +234,73 @@ class Macrostrain : public StrainSimulation
   //!true the constrains have to be applied
   bool _first_run;
 
-  //!pointer to a drift-diffusion object that is used to get electric-field  data 
+  //!pointer to a drift-diffusion object that is used to get electric-field  data
   SimulationInterface* poisson_equation;
 
-  //!pointer to the equation systems 
-  EquationSystems*   equation_systems; 
+  //!pointer to the equation systems
+  EquationSystems*   equation_systems;
 
-  
 
-  //!pointer to the  system used in the simulation 
+
+  //!pointer to the  system used in the simulation
   TiberLinearSystem* my_system;
-  
- 
+
+
 
   //!name of my system
   std::string system_name;
 
-  
+
 
 
   //!pointer to the mesh
   Mesh*  mesh;
 
   //!calculate strain
-  Tensor2Sym get_strain(const Elem* el, bool crystal_system = false); 
- 
+  Tensor2Sym get_strain(const Elem* el, bool crystal_system = false);
+
   //! calculate the result_strain map
   void calculate_result_elem_strain_map();
 
-  
-  
+
+
   //---------------------------------------------------------------------
- 
+
   //! static pointer to this object
-  static Macrostrain* static_this; 
+  static Macrostrain* static_this;
 
 
 
   //! Substrate material crystal
   const RotatedCrystal* substrate_crystal;
 
- 
+
   //! strain tensor of an element from previous iteration (calculation system)
-  std::vector<Tensor2Sym>       eps0_of_elem;    
+  std::vector<Tensor2Sym>       eps0_of_elem;
 
 
- 
- 
+
+
   //!displacements of nodes with respect to the non-deformed mesh
-  std::map< const Node*, std:: vector <double> > u_node; 
+  std::map< const Node*, std:: vector <double> > u_node;
 
   //!initializes list of node displacements u = 0.0
-  void init_u_node(); 
+  void init_u_node();
 
   //!updates list of node displacements
   void update_u_node(); //updates list of node displacements
 
-  
- 
+
+
   //!map between element pointers and their numbers
-  std :: map <const Elem*, unsigned int > elem_numbers; 
-  
- 
+  std :: map <const Elem*, unsigned int > elem_numbers;
+
+
   //!dim node list's: each contains list of nodes that periodic b.c. must be applied to
-  std :: vector< std :: vector <const Node*> >  nodes_periodic; 
+  std :: vector< std :: vector <const Node*> >  nodes_periodic;
 
   //! {"ux", "uy", uz"}
-  std::string uname_vec[3];  
+  std::string uname_vec[3];
 
 
   //!if vertex n of elem belongs to substrate
@@ -313,7 +313,7 @@ class Macrostrain : public StrainSimulation
   unsigned int dim; //problem dimension
 
   //!if there is a substrate
-  bool grown_on_substrate; 
+  bool grown_on_substrate;
 
   //!  name of the substrate boundary condition;
   std::string substrate_name;
@@ -323,43 +323,43 @@ class Macrostrain : public StrainSimulation
 
 
 
-  //! update eps0_of_elem 
+  //! update eps0_of_elem
   void update_eps0_list();  // update eps0_of_elem // !check!!!!
 
-  //!initialize eps0_of_elem 
-  void initialize_eps0_list(); 
+  //!initialize eps0_of_elem
+  void initialize_eps0_list();
 
   //!initialize   elem_numbers;
-  void initialize_el_number_map(); 
+  void initialize_el_number_map();
 
   //!create nodes_periodic
-  void make_nodes_periodic(); 
+  void make_nodes_periodic();
 
 
   //!create DOF constraints for periodic b.c.
-  void apply_periodic_bc(); 
+  void apply_periodic_bc();
 
   //!create DOF constraints that do not allow to a freestanding system to rotate.
-  void apply_antirotation_constraints(); 
+  void apply_antirotation_constraints();
 
   //!calculate latiice matching tensor considering latice constants and strain
-  Tensor2Sym calculate_eps_lat_matching(const Elem* elem); 
-  
+  Tensor2Sym calculate_eps_lat_matching(const Elem* elem);
+
 
   //!create new mesh by moving nodes slightly
   void move_nodes();
 
- 
+
   //!writes in a file all strain components (only for debug purposes)
   /*!
     \filename name of the file for output
   */
   void output_strain(std::string filename );
-  
-  bool periodicity[3]; 
+
+  bool periodicity[3];
 
 
-  
+
 
   //----device boundaries---------------
   double min_coord[3];
@@ -367,18 +367,18 @@ class Macrostrain : public StrainSimulation
   //------------------------------------
 
   //----------------- numerical options -------------------------------------
-  unsigned int          max_r_steps;       
-  int                   uniform_refinement; 
-     
-  double                refine_fraction ; 
-  double                coarsen_fraction ;  
-  unsigned int          max_ref_level  ;   
-  double                tolerance     ;    
-  
-  unsigned int          max_shape_steps;   
+  unsigned int          max_r_steps;
+  int                   uniform_refinement;
+
+  double                refine_fraction ;
+  double                coarsen_fraction ;
+  unsigned int          max_ref_level  ;
+  double                tolerance     ;
+
+  unsigned int          max_shape_steps;
   //------------------------------------------------------------------------
   // mesh reading
-  
+
 
   std::string mesh_input_file;
 
@@ -386,8 +386,8 @@ class Macrostrain : public StrainSimulation
   //------------------------------------------------------------------------
   //Additional variables----------------------------------------------------
   unsigned int             number_of_add_var;
-  
- 
+
+
 
   std::vector<add_variable>  add_var;
 
@@ -397,10 +397,10 @@ class Macrostrain : public StrainSimulation
 
   std::vector<unsigned int> add_dofs_vector;
 
-  
-   Tensor2Sym  eps0_var_log;  
+
+   Tensor2Sym  eps0_var_log;
   /*
-    = 0, this is a fixed entry 
+    = 0, this is a fixed entry
     = 1, this is variable entry
   */
   //-------------------------------------------------------------------
@@ -408,13 +408,13 @@ class Macrostrain : public StrainSimulation
   unsigned int fixed_node1;
   unsigned int fixed_node2;
   unsigned int fixed_node3;
- 
- 
+
+
 
   Point fixed_point1 ; //x,y,z
   Point fixed_point2 ;
   Point fixed_point3 ;
- 
+
 
   //------------------------------------------------------------------
   //!number of boundary condition that defines substrate
@@ -430,31 +430,35 @@ class Macrostrain : public StrainSimulation
   //!sets substrate_lattice[3] as a reference material
   void init_substrate();
 
-  //!returns node number, closest to point 
-  unsigned int get_number_of_the_fixed_node(Point point); 
+  //!returns node number, closest to point
+  unsigned int get_number_of_the_fixed_node(Point point);
 
 
- 
+
   //------------atomic description------------------
 
-  std::vector<atom> atom_structure;  
+  std::vector<atom> atom_structure;
 
   void read_atom_structure(const std::string filename);
-  
+
 
 
   void write_atom_displacements(const std::string filename);
 
- 
+  void apply_atom_displacements(const std::string structure_name);
 
   bool calculate_atom_displacements;
- 
+
+  std::string structure_to_be_strained;
+
   std::string atom_structure_filename;
- 
+
   std::string atom_displacements_filename;
 
   std::string atom_potential_filename;
-  
+
+  std::vector<Point> _atom_relative_points;
+
 
   std::string atom_output_type;
 
@@ -464,7 +468,7 @@ class Macrostrain : public StrainSimulation
 
 
 
- 
+
 
   unsigned int find_nearest_node(Point& point);
 
@@ -481,16 +485,16 @@ class Macrostrain : public StrainSimulation
   //!node id's that belong to substrate
   std::set <const Node*> substrate_points;
 
- 
+
 
   //!"GMV" or "tecplot"
-  std::string output_type; 
+  std::string output_type;
 
   //!
   bool element_on_boundary(const Elem* element);
- 
 
-  //! non-static method that actually does matrix assembling 
+
+  //! non-static method that actually does matrix assembling
   void do_assemble(EquationSystems& es,  const std::string& system_name);
 
 
@@ -513,42 +517,42 @@ class Macrostrain : public StrainSimulation
     \param deriv_vectors input: initial derivatives; output: recalculated derivatives
     \param normal normal vector
   */
-  void adjust_derivatives(Tensor1& deriv_vectors, const Point& normal); 
+  void adjust_derivatives(Tensor1& deriv_vectors, const Point& normal);
 
-  //! 
+  //!
   bool apply_antirotation;
-  
- 
+
+
  protected:
 
- 
+
 
   virtual void do_init(void);
 
   virtual void do_solve(void);
-  
+
   virtual void parse_options(void);
 
 
-  
 
-  
-  /*! 
+
+
+  /*!
     \copydoc SimulationInterface::build_elemental_results()
     The variables are: "strain", "polarization"
     This means strain tensor components:
     \f$ \varepsilon_{xx}, \varepsilon_{yy},\varepsilon_{zz}, \varepsilon_{xy}, \varepsilon_{xz}, \varepsilon_{yz}\f$,
-    and polarization vector \f$ \bf P \f$ components. 
+    and polarization vector \f$ \bf P \f$ components.
     \f$ x, y,  z\f$ refer to calculation coordinate system.
    */
   virtual void build_elemental_results(const std::set<std::string>& variables,
 				       std::vector<double>& results, std::vector<std::string>& legend) ;
-   
- 
 
 
-  
- 
+
+
+
+
 
 
 
@@ -561,11 +565,11 @@ inline bool Macrostrain::element_on_boundary(const Elem* element)
   bool result = false;
 
   const Mesh& mesh = equation_systems->get_mesh();
-  
-    
-  unsigned int n_sides ; 
 
-  if ( dim > 1 ) 
+
+  unsigned int n_sides ;
+
+  if ( dim > 1 )
     n_sides = element->n_sides();
   else
     n_sides = element->n_nodes();
@@ -574,20 +578,20 @@ inline bool Macrostrain::element_on_boundary(const Elem* element)
   for (short i = 0; i < n_sides; i++)
     {
       Elem* el1 = element->neighbor(i);
-      if ( (el1 == NULL)  ) 
+      if ( (el1 == NULL)  )
 	  result = true;
       else
 	if (!( el1 -> active() ))
 	  result = true;
-	  
+
       if (result) break;
-	
-      
+
+
     }
 
- 
+
   return(result);
-  
+
 }
 
 
@@ -599,7 +603,7 @@ Macrostrain::get_strain_crystal(const Elem* el)
 }
 
 inline
-Macrostrain* Macrostrain::create(void) 
+Macrostrain* Macrostrain::create(void)
 {
   return new Macrostrain();
 }
