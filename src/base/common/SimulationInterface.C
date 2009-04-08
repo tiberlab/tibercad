@@ -20,6 +20,7 @@
 #include "QuantumDispersion.h"
 #include "Dftb.h"
 #include "EmpiricalTightBinding.h"
+#include "OpticsTB.h"
 #include "OptRecombinSpectrum.h"
 #include "Poisson.h"
 #include "TunnelingCurrent.h"
@@ -148,6 +149,8 @@ SimulationInterface::create(const string& type,
 #ifdef ENABLE_UPTIGHT
     else if (type_name == "empirical_tb")
       sim = ETB::create();
+    else if (type_name == "opticstb")
+      sim = OpticsTB::create();
 #endif
     else if (type_name == "opticalspectrum")
       sim = OptRecombinSpectrum::create();

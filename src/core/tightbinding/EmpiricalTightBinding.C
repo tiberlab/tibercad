@@ -286,13 +286,17 @@ void ETB::assemble(const ModelOptions& options)
 
   if( options.get_option("P_matrix",false) )
   {
+    std::cerr<< "ETB: computing P matrix" <<std::endl;
     int poldir = options.get_option("poldir",0); 
     inst->compute_P_matrix(poldir);  
   }
   else
   {
-    if(_upt_options.potential_flag) add_shifts();
-
+    if(_upt_options.potential_flag)
+    {
+      std::cerr<< "ETB: passing potential" <<std::endl;
+      add_shifts();
+    }
     inst->compute_H();
   }
 

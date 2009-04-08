@@ -43,10 +43,10 @@ void OpticsTB::parse_options()
     if (_initial_state_model == NULL)
       throw InitFailedException("OpticsTB: initial_state_model is not defined\n");
     
-    _i_states = _initial_state_model->get_eigen_solution();
+
     
-    if(_i_states.size() == 0) 
-      throw InitFailedException("OpticsTB: empty initial states\n"); 
+    //if(_i_states.size() == 0) 
+    //  throw InitFailedException("OpticsTB: empty initial states\n"); 
     
     _initial_state_particle = mod_opt.get_option("initial_state_particle","el");
     
@@ -59,6 +59,8 @@ void OpticsTB::parse_options()
     if (temp.size() == 0)
       throw InitFailedException("OpticsTB: initial states are not acceptable\n");
     
+    _initial_eigen_state_numbers.resize(temp.size());
+
     for (unsigned i = 1; i <= temp.size(); i++)
     {
       _initial_eigen_state_numbers[i] = temp[i];
@@ -77,10 +79,10 @@ void OpticsTB::parse_options()
     if (_final_state_model == NULL)
       throw InitFailedException("OpticsTB: final_state_model is not defined\n");
     
-    _f_states = _final_state_model->get_eigen_solution();
 
-    if(_f_states.size() == 0) 
-      throw InitFailedException("OpticsTB: empty final states\n"); 
+
+    //if(_f_states.size() == 0) 
+    //  throw InitFailedException("OpticsTB: empty final states\n"); 
     
     _final_state_particle = mod_opt.get_option("final_state_particle","hl");
     
@@ -92,6 +94,7 @@ void OpticsTB::parse_options()
     if (temp.size() == 0)
       throw InitFailedException("OpticsTB: initial states are not acceptable\n");
     
+    _final_eigen_state_numbers.resize(temp.size());
     for (unsigned i = 1; i <= temp.size(); i++)
     {
       _final_eigen_state_numbers[i] = temp[i];
@@ -110,40 +113,40 @@ void OpticsTB::do_init()
   this->parse_options();
 
   //check that the states are really available
-  unsigned int max_i_state_num = 0; 
-  unsigned int i; 
-  unsigned int n1 =_initial_eigen_state_numbers.size();
-  for(i=0; i<n1; i++)
-  {
-    if(_initial_eigen_state_numbers[i] > max_i_state_num) 
-      max_i_state_num = _initial_eigen_state_numbers[i]; 
-  }
+  //unsigned int max_i_state_num = 0; 
+  //unsigned int i; 
+  //unsigned int n1 =_initial_eigen_state_numbers.size();
+  //for(i=0; i<n1; i++)
+  //{
+  //  if(_initial_eigen_state_numbers[i] > max_i_state_num) 
+  //    max_i_state_num = _initial_eigen_state_numbers[i]; 
+  // }
 
-  unsigned int num_i_states = 0;
-  for(i=0; i<_i_states.size(); i++)
-  {
-    if(_i_states[i].particle == _initial_state_particle) num_i_states++;  
-  }
+  //unsigned int num_i_states = 0;
+  //for(i=0; i<_i_states.size(); i++)
+  //{
+  //  if(_i_states[i].particle == _initial_state_particle) num_i_states++;  
+  // }
 
-  if(num_i_states < max_i_state_num)
-      throw InitFailedException("OpticsTB: invalid initial states (not computed)\n");    
+  //if(num_i_states < max_i_state_num)
+  //    throw InitFailedException("OpticsTB: invalid initial states (not computed)\n");    
 
-  unsigned int max_f_state_num = 0; 
-  n1 = _final_eigen_state_numbers.size();
-  for(i=0; i<n1; i++)
-  {
-    if(_final_eigen_state_numbers[i] > max_f_state_num) 
-      max_f_state_num = _final_eigen_state_numbers[i]; 
-  }
+  //unsigned int max_f_state_num = 0; 
+  //n1 = _final_eigen_state_numbers.size();
+  //for(i=0; i<n1; i++)
+  //{
+  //  if(_final_eigen_state_numbers[i] > max_f_state_num) 
+  //    max_f_state_num = _final_eigen_state_numbers[i]; 
+  // }
   
-  unsigned int num_f_states = 0;
-  for(i=0; i<_f_states.size(); i++)
-  {
-    if(_f_states[i].particle == _final_state_particle) num_f_states++;  
-  }
+  //unsigned int num_f_states = 0;
+  //for(i=0; i<_f_states.size(); i++)
+  //{
+  //  if(_f_states[i].particle == _final_state_particle) num_f_states++;  
+  //}
 
-  if(num_f_states < max_f_state_num)
-      throw InitFailedException("OpticsTB: invalid final states (not computed)\n");    
+  //if(num_f_states < max_f_state_num)
+  //    throw InitFailedException("OpticsTB: invalid final states (not computed)\n");    
   
 
 }
@@ -152,6 +155,10 @@ void OpticsTB::do_init()
 
 void OpticsTB::do_solve()
 {
+
+  _i_states = _initial_state_model->get_eigen_solution();
+    
+  _f_states = _final_state_model->get_eigen_solution();
 
   int verbose = SimulationOptions::verbose();
 
