@@ -63,6 +63,12 @@ void UptWrapper::inituptight () {
     f77_upt_inituptight(_handler);
   }
 
+//!destroy container variables (allocations)
+void UptWrapper::cleanuptight() 
+{
+        f77_upt_destructuptight(_handler);
+}
+
 
 void UptWrapper::add_potential(int nAtoms, double *potential)
 {
@@ -78,18 +84,29 @@ void UptWrapper::add_kpoints(int numkp, double *k_vec)
 
 
 //! build ETB Hamiltonian with Uptight
-void UptWrapper::compute_H () {
+void UptWrapper::compute_H(){
   f77_upt_createhamiltonian(_handler);
+}
+
+//! build ETB Hamiltonian with Uptight
+void UptWrapper::compute_P_matrix(int poldir){
+
+  f77_upt_setpmatrix(_handler, 1, poldir);
+  
+  f77_upt_createhamiltonian(_handler);
+
+  f77_upt_setpmatrix(_handler, 0, poldir);
+
 }
 
 
 
 //! Lanczos diagonalization
-void UptWrapper::lanczos_diag (int n_vb, int n_cb, double guess_vb, double guess_cb,
+void UptWrapper::lanczos_diag(int n_vb, int n_cb, double guess_vb, double guess_cb,
                                 int min_iter, int long_iter, int max_iter,
 				double fast_tol, double long_tol, double ort_tol) {
 
-  f77_upt_lanczosdiag (_handler, n_vb, n_cb, guess_vb, guess_cb, min_iter, long_iter,
+  f77_upt_lanczosdiag(_handler, n_vb, n_cb, guess_vb, guess_cb, min_iter, long_iter,
 		       max_iter, fast_tol, long_tol, ort_tol);
 
 
@@ -110,16 +127,21 @@ void UptWrapper::write_states(void) {
 
 
 //! get computed states 
-void UptWrapper::get_states (int num_ev, int hdim,
-		         double* eigenvals, double *eigenstates) {
+void UptWrapper::get_states(int num_ev, int hdim,
+			     double* eigenvals, double *eigenvec_re, double *eigenvec_im) {
 
-  f77_upt_get_states (_handler, num_ev, hdim, eigenvals, eigenstates);
+  f77_upt_get_states (_handler, num_ev, hdim, eigenvals, eigenvec_re, eigenvec_im);
 
 
 }
 
 
+void UptWrapper::get_matel(int i, int j, double matel_re, double matel_im)
+{
 
+  f77_upt_get_matel(_handler,i,j,matel_re,matel_im);
+
+}
 
 
 

@@ -94,6 +94,20 @@ inline void f77_upt_fillbasicparameters (f77_int const* handler, f77_int const&
 }
 
 
+extern "C" void upt_setpmatrix_ (f77_int const*, f77_int const&, f77_int 
+    const&);
+
+// Corresponding F77 arguments for f77_upt_setpmatrix:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: optmat_flag
+// integer, intent(in) :: poldir
+inline void f77_upt_setpmatrix (f77_int const* handler, f77_int const& 
+    optmat_flag, f77_int const& poldir)
+{
+  upt_setpmatrix_ (handler, optmat_flag, poldir);
+}
+
+
 extern "C" void upt_inituptight_ (f77_int const*);
 
 // Corresponding F77 arguments for f77_upt_inituptight:
@@ -202,18 +216,37 @@ inline void f77_upt_get_hamildim (f77_int const* handler, f77_int& hdim)
 
 
 extern "C" void upt_get_states_ (f77_int const*, f77_int const&, f77_int 
-    const&, f77_double*, f77_double*);
+    const&, f77_double*, f77_double*, f77_double*);
 
 // Corresponding F77 arguments for f77_upt_get_states:
 // integer, intent(in) :: handler(DAC_handlerSize)
 // integer, intent(in) :: num_ev
 // integer, intent(in) :: hdim
 // real(dp), intent(out) :: eigenvals(num_ev)
-// complex(dp), intent(out) :: eigenstates(hdim, num_ev)
+// real(dp), intent(out) :: eigenstates_re(hdim, num_ev)
+// real(dp), intent(out) :: eigenstates_im(hdim, num_ev)
 inline void f77_upt_get_states (f77_int const* handler, f77_int const& num_ev, 
-    f77_int const& hdim, f77_double* eigenvals, f77_double* eigenstates)
+    f77_int const& hdim, f77_double* eigenvals, f77_double* eigenstates_re, 
+    f77_double* eigenstates_im)
 {
-  upt_get_states_ (handler, num_ev, hdim, eigenvals, eigenstates);
+  upt_get_states_ (handler, num_ev, hdim, eigenvals, eigenstates_re, 
+      eigenstates_im);
+}
+
+
+extern "C" void upt_get_matel_ (f77_int const*, f77_int const&, f77_int const&, 
+    f77_double&, f77_double&);
+
+// Corresponding F77 arguments for f77_upt_get_matel:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: i
+// integer, intent(in) :: j
+// real(dp), intent(out) :: matel_re
+// real(dp), intent(out) :: matel_im
+inline void f77_upt_get_matel (f77_int const* handler, f77_int const& i, 
+    f77_int const& j, f77_double& matel_re, f77_double& matel_im)
+{
+  upt_get_matel_ (handler, i, j, matel_re, matel_im);
 }
 
 

@@ -6,7 +6,7 @@
 class ETB : public TightBinding
 {
 
-public:
+ public:
   //! A class for Dftb options
   class UptOptions
   {
@@ -23,12 +23,13 @@ public:
     bool opt_flag;
     bool check_bondmap;
     int poldir;
-    std::string database_path;
-    std::string work_path;
-    std::string upt_filename;
-    std::string gen_outfile;
-    std::string sparse_fmt;
-    double *c_axis;
+    std::string potential_sim;
+    char* database_path;
+    char* work_path;
+    char* upt_filename;
+    char* gen_outfile;
+    char* sparse_fmt;
+    double* c_axis;
       
   };
 
@@ -64,9 +65,16 @@ public:
   virtual PhysicalModel* create_physical_model(const ModelOptions &options,
       const Material* mat) const throw (ModelErrorException);
 
+  void reinit(void);
 
+  void reassemble(void);
 
-private:
+  void set_num_states(int num_vb, int num_cb);
+ 
+  void solve_for_particle(const std::string& particle);
+
+  
+ private:
 
   //! Get options suited for DFTB+ tight binding builder and solver
   void get_upt_options();
@@ -77,6 +85,11 @@ private:
   //! Print all _dftb_options for debugging purposes
   void print_upt_options(void);
 
+  void read_kpoints(void);
+
+  //! Add potential shifts
+  void add_shifts(void);
+
   //! Structure containing options for DFTB+ tight binding builder
   UptOptions _upt_options;
 
@@ -86,10 +99,17 @@ private:
   //! Uptight instance associated to the simulation
   UptWrapper* inst;
 
+  //! flag to decide whether init the structure (e.g. if strained)
+  int _init;
+
+  //! flag to decide whether assemble the matrix again on not
+  int _assemble;
+
   //! flag to decide whether to read a structure from file
   std::string _upg_filename;
 
-protected:
+
+ protected:
 
   virtual void do_init(void);
 
@@ -99,7 +119,12 @@ protected:
 
   virtual void parse_options(void);
 
-  void read_kpoints(void);
+  virtual void assemble(const ModelOptions& options);
+
+  virtual std::complex<double> calculate_matrix_element(const std::string& i_particle,
+							unsigned int i, 
+							const std::string& j_particle,
+							unsigned int j);  
 
 };
 
@@ -112,6 +137,18 @@ ETB* ETB::create()
   return new ETB;
 }
 
+inline
+void ETB::reassemble()
+{
+  _assemble = 1;
+}
+
+inline
+void ETB::set_num_states(int num_vb, int num_cb)
+{
+  _upt_solver_options.n_vb = num_vb;
+  _upt_solver_options.n_cb = num_cb;
+}
 
 
 

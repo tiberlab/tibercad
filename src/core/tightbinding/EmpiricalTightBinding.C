@@ -5,17 +5,18 @@
 #ifdef ENABLE_UPTIGHT
 
 #include "EmpiricalTightBinding.h"
-#include "BoundaryProperties.h"
+//#include "BoundaryProperties.h"
 #include "PhysicalModel.h"
 #include "EtbModel.h"
 #include "SimulationOptions.h"
 #include "UptWrapper.h"
 #include "uptight.h"
-#include "mesh.h"
+//#include "mesh.h"
 
 #include <fstream>
 #include <sstream>
 #include <utility>
+//#include <complex>
 using namespace std;
 
 
@@ -25,14 +26,14 @@ ETB::ETB(void)
 : _upt_options()
 {
   inst = new UptWrapper;
-};
+}
 
 
 ETB::~ETB(void)
 {
   delete inst;
   inst = NULL;
-};
+}
 
 ETB::UptOptions::UptOptions(void)
 :verbose(10),
@@ -45,12 +46,23 @@ ETB::UptOptions::UptOptions(void)
 {
   c_axis = new double[3];           
   c_axis[0]=0.0; c_axis[1]=0.0; c_axis[2]=1.0; 
+  database_path = new char[UPT_LC]; memset(database_path, ' ', UPT_LC);
+  work_path = new char[UPT_LC];     memset(work_path, ' ', UPT_LC);
+  upt_filename = new char[UPT_MC];  memset(upt_filename, ' ', UPT_MC);
+  gen_outfile = new char[UPT_MC];   memset(gen_outfile, ' ', UPT_MC);
+  sparse_fmt = new char[UPT_MC];    memset(sparse_fmt, ' ', UPT_MC);
+  
 } 
 
 ETB::UptOptions::~UptOptions(void)
 {
   delete[] c_axis;
-};
+  delete[] database_path;
+  delete[] work_path;
+  delete[] upt_filename;
+  delete[] gen_outfile;
+  delete[] sparse_fmt;
+}
 
 ETB::UptSolverOptions::UptSolverOptions(void)
   :solver("upt_lanczos"),
@@ -65,12 +77,12 @@ ETB::UptSolverOptions::UptSolverOptions(void)
    long_tol(1e-10),
    ort_tol(1e-4)
 {
-};
+}
 
 ETB::UptSolverOptions::~UptSolverOptions(void)
 {
    
-};
+}
 
 //-------------------------------------------------------------------------
 PhysicalModel*
@@ -92,61 +104,53 @@ ETB::create_physical_model(const ModelOptions &options,
 void
 ETB::do_init(void){
 
-  char *database_path, *work_path, *upt_filename, *gen_outfile;
-  char *sparse_format;
-
   std::cerr << "(TC) Empirical TB Initialisation..." << std::endl;
 
   std::cout << "(TC) parse options..."; 
-  build_input_options();
+  parse_options();
   std::cout << "done" << std::endl;
 
 #ifdef DEBUG
   print_upt_options();
 #endif  
 
+  std::string upt_filename;
   // Getting reference to atomistic structure for calculation
   if (_upg_filename.compare("none") != 0)
   {
-    _upt_options.upt_filename = _upg_filename;
+    upt_filename = _upg_filename;
   }
   else
   {
     get_atomistic_structure();
-    _upt_options.upt_filename = _atomistic_structure->get_name() + ".upg";
+    upt_filename = _atomistic_structure->get_name() + ".upg";
   }
 
   // Get mesh informations
   //_mesh = & ( get_environment().get_device().get_mesh());
 
   // Get database path from Database class
-  _upt_options.database_path = Database::get_default_search_path();
-  _upt_options.work_path = ".";
-  _upt_options.gen_outfile = "out.gen";
+  std::string database_path = Database::get_default_search_path();
+  std::string work_path = ".";
+  std::string gen_outfile = "out.gen";
 
-  if (_upt_options.database_path.size() > UPT_LC) 
+  if (database_path.size() > UPT_LC) 
            throw InitFailedException("ETB: database search path too long");
 
-  // Create temporary C-strings to pass to the fortran library
-  // String are filled with blank characters
-  database_path = new char[UPT_LC]; memset(database_path, ' ', UPT_LC);
-  work_path = new char[UPT_LC];     memset(work_path, ' ', UPT_LC);
-  upt_filename = new char[UPT_MC];  memset(upt_filename, ' ', UPT_MC);
-  gen_outfile = new char[UPT_MC];   memset(gen_outfile, ' ', UPT_MC);
-  sparse_format = new char[UPT_MC]; memset(sparse_format, ' ', UPT_MC);
   
-  _upt_options.database_path.copy(database_path, _upt_options.database_path.size() ); 
-  _upt_options.upt_filename.copy(upt_filename, _upt_options.upt_filename.size() );
-  _upt_options.work_path.copy(work_path, _upt_options.work_path.size() );  
-  _upt_options.gen_outfile.copy(gen_outfile, _upt_options.gen_outfile.size() ); 
-  _upt_options.sparse_fmt.copy(sparse_format, _upt_options.sparse_fmt.size() ); 
+  database_path.copy(_upt_options.database_path, database_path.size() ); 
+  work_path.copy(_upt_options.work_path, work_path.size() );  
+  gen_outfile.copy(_upt_options.gen_outfile, gen_outfile.size() ); 
+  upt_filename.copy(_upt_options.upt_filename, upt_filename.size() );
 
-  //  Initialize Dftb instance it and sets parameters
-  inst->fill_param(_upt_options.verbose, database_path, work_path, 
-                   upt_filename, gen_outfile, sparse_format, _upt_options.max_TB_order,
-		   _upt_options.harrison_flag, _upt_options.relat_flag, 
-		   _upt_options.potential_flag, _upt_options.opt_flag,
-		   _upt_options.poldir, _upt_options.c_axis, _upt_options.check_bondmap);
+  //  Set parameters for Uptight instance
+  inst->fill_param(_upt_options.verbose, _upt_options.database_path, 
+		   _upt_options.work_path, _upt_options.upt_filename, 
+		   _upt_options.gen_outfile, _upt_options.sparse_fmt, 
+		   _upt_options.max_TB_order, _upt_options.harrison_flag, 
+		   _upt_options.relat_flag, _upt_options.potential_flag, 
+		   _upt_options.opt_flag, _upt_options.poldir, 
+		   _upt_options.c_axis, _upt_options.check_bondmap);
 
   std::cout << "(TC) fill parameter done" << std::endl;
 
@@ -161,18 +165,29 @@ ETB::do_init(void){
 
   std::cout << "(TC) init uptight done" << std::endl;
 
-  delete[] database_path;
-  delete[] work_path;
-  delete[] upt_filename;
-  delete[] gen_outfile;
+  _init = 0;
+  _assemble = 1;
+  
+}
 
-};
+//-------------------------------------------------------------------------
+void ETB::reinit(void){
+  
+  inst->cleanuptight(); 
+  inst->inituptight();
+
+}
+
 
 //-------------------------------------------------------------------------
 void ETB::do_solve(void){
 
-  inst->compute_H();
+  ModelOptions options;
 
+  if (_assemble) assemble(options);
+
+  _assemble = 0;
+ 
 
 #ifdef DEBUG
   std::cout << "(TC) Calling ETB->do_solve() " << std::endl;
@@ -193,9 +208,116 @@ void ETB::do_solve(void){
 
 #ifdef DEBUG
   std::cout << "(TC) ETB->do_solve() done" << std::endl;
+  std::cout << "(TC) Copy solutions into _solutions" << std::endl;
 #endif
 
-};
+  int hdim = inst->get_H_dim();
+  int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
+  double *eigvals = new double[num_ev];
+  double *eigvects_re = new double[hdim*num_ev];
+  double *eigvects_im = new double[hdim*num_ev];
+  
+  inst->get_states(num_ev,hdim,eigvals,eigvects_re,eigvects_im);
+
+  //_solution.reserve(num_ev);
+
+  for(int i=0; i< _upt_solver_options.n_vb; i++)
+  {  
+    _solution[i].particle = "hl";
+    _solution[i].statistics = "Fermi";
+    _solution[i].eigen_energy = eigvals[i];
+    _solution[i].eigen_vector.reserve(hdim);
+    for(int j=0; j<hdim;j++)
+    {
+      _solution[i].eigen_vector[j] = complex<double>(eigvects_re[j],eigvects_im[j]);  
+    }
+  }
+
+  for(int i=0; i< _upt_solver_options.n_cb; i++)
+  {  
+    _solution[i].particle = "el";
+    _solution[i].statistics = "Fermi";
+    _solution[i].eigen_energy = eigvals[i];
+    _solution[i].eigen_vector.reserve(hdim);
+    for(int j=0; j<hdim;j++)
+    {
+      _solution[i].eigen_vector[j] = complex<double>(eigvects_re[j],eigvects_im[j]);
+    
+    }
+  }
+  delete eigvals;
+  delete eigvects_re;
+  delete eigvects_im;
+
+}
+
+//-------------------------------------------------------------------------
+void ETB::assemble(const ModelOptions& options)
+{
+
+  if( options.get_option("P_matrix",false) )
+  {
+    int poldir = options.get_option("poldir",0); 
+    inst->compute_P_matrix(poldir);  
+  }
+  else
+  {
+    if(_upt_options.potential_flag) add_shifts();
+
+    inst->compute_H();
+  }
+
+}
+//-------------------------------------------------------------------------
+std::complex<double> ETB::calculate_matrix_element(const std::string& i_particle,
+						   unsigned int i, 
+						   const std::string& j_particle,
+						   unsigned int j)
+{
+  double re,im;
+  std::complex<double> matel;
+
+  if (i_particle == "el" || i_particle == "electron")
+  {
+    i = i + _upt_solver_options.n_vb;
+  }
+  if (j_particle == "el" || j_particle == "electron")
+  {
+    j = j + _upt_solver_options.n_vb;
+  }  
+
+  inst->get_matel(i,j,re,im);
+    
+  matel = complex<double>(re,im);
+  
+}
+//-------------------------------------------------------------------------
+void ETB::solve_for_particle(const std::string& particle)
+{
+
+  if (particle == "el" || particle == "electron")
+  {
+    int temp_n_vb = _upt_solver_options.n_vb;
+    _upt_solver_options.n_vb = 0;
+
+    this->do_solve();
+
+    _upt_solver_options.n_vb = temp_n_vb;
+
+  }
+  if (particle == "hl" || particle == "hole")
+  {
+    int temp_n_cb = _upt_solver_options.n_cb;    
+    _upt_solver_options.n_cb = 0;
+
+    this->do_solve();    
+
+    _upt_solver_options.n_cb = temp_n_cb;    
+  }
+
+
+
+}
 
 //-------------------------------------------------------------------------
 void ETB::do_plot(void){
@@ -205,9 +327,8 @@ void ETB::do_plot(void){
 #endif
 
   const std::set<string>& plots = get_control().get_plotvariables();
-  std::set<string>::iterator it = plots.find("tbstates");
 
-  if (it != plots.end())
+  if (plots.find("tbstates") != plots.end())
   {
     inst->write_states();
   }
@@ -217,30 +338,37 @@ void ETB::do_plot(void){
 
 void ETB::parse_options(void)
 {
-    
-};
-
-//-------------------------------------------------------------------------
-void
-ETB::build_input_options()
-{
-  
-  std::cout << "(TC) build_input_options() begin...";
+     std::cout << "(TC) parse_options() begin...";
 
   _upg_filename = get_options().get_option("upg_filename", "none"); 
 
   _upt_options.verbose = get_options().get_option("verbose", 10);
   _upt_options.max_TB_order = get_options().get_option("max_TB_order", 2); 
-  _upt_options.sparse_fmt = get_options().get_option("sparse_format", "upper");
+  std::string sparse_fmt = get_options().get_option("sparse_format", "upper");
+  sparse_fmt.copy(_upt_options.sparse_fmt, sparse_fmt.size() ); 
+
   _upt_options.check_bondmap = get_options().get_option("check_bondmap", false);
   _upt_options.harrison_flag = get_options().get_option("Harrison_scaling", true);
   _upt_options.relat_flag = get_options().get_option("relativistic", false); 
-  _upt_options.opt_flag = get_options().get_option("optical_transitions", false);   
-  _upt_options.poldir = get_options().get_option("polarization_direction", 1);   
+  //_upt_options.opt_flag = get_options().get_option("optical_transitions", false);   
+  //_upt_options.poldir = get_options().get_option("polarization_direction", 1);   
+  _upt_options.opt_flag = false; // these are set via OpticsTB
+  _upt_options.poldir = 1;       //   "    "   "   "    "
 
+  if (get_options().get_option("potential_simulation", false))
+  {
+    _upt_options.potential_sim = get_options().get_option("potential_simulation","no_sim");
+    _upt_options.potential_flag = true;
+  }
 
   _upt_solver_options.n_vb =  get_solver_options().get_option("num_valence_eigenvalues", 0);
+  if( _upt_solver_options.n_vb == 0) {
+    _upt_solver_options.n_vb =  get_solver_options().get_option("num_hole_states", 0);
+  }
   _upt_solver_options.n_cb =  get_solver_options().get_option("num_conduction_eigenvalues", 0);
+  if( _upt_solver_options.n_cb == 0) {
+    _upt_solver_options.n_cb =  get_solver_options().get_option("num_electron_states", 0);
+  }
   _upt_solver_options.min_iter =  get_solver_options().get_option("min_iter", 2);
   _upt_solver_options.long_iter =  get_solver_options().get_option("long_iter", 30); 
   _upt_solver_options.max_iter =  get_solver_options().get_option("max_iter", 100000);
@@ -251,8 +379,8 @@ ETB::build_input_options()
   _upt_solver_options.ort_tol =  get_solver_options().get_option("orthogonality_tolerance", 1e-5);
 
   std::cout << "done" << std::endl;
-
-};
+ 
+}
 
 //-------------------------------------------------------------------------
 
@@ -291,13 +419,37 @@ ETB::print_upt_options(void)
    std::cout << "long tol: " <<  _upt_solver_options.long_tol << std::endl;
    std::cout << "orth tol: " <<  _upt_solver_options.ort_tol << std::endl;
 
-};
+}
 
 //-------------------------------------------------------------------------
+
+void
+ETB::add_shifts(void)
+{
+  double* shift_pnt = NULL;
+
+  project_potential(_upt_options.potential_sim, "point");
+
+  shift_pnt = new double[_pot_shift.size()];
+
+  for (unsigned int i = 0; i < _pot_shift.size(); i++)
+    {
+      shift_pnt[i] = _pot_shift[i];
+    }
+
+  inst->add_potential(_pot_shift.size(), shift_pnt);
+
+  delete[] shift_pnt;
+
+}
+
+
 void
 ETB::read_kpoints(void)
 {
 
 }
+
+
 
 #endif

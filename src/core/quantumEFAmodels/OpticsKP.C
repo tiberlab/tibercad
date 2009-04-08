@@ -93,7 +93,8 @@ void OpticsKP::parse_options()
   }
 
   _final_eigen_state_numbers.clear();
-  const std::vector<EnvelopFunctionApprox::eigen_propblem_solution>& fin_solution = final_state_model->get_solution();
+  const std::vector<EnvelopFunctionApprox::eigen_propblem_solution>& fin_solution = 
+    final_state_model->get_solution();
 
   {
     std::vector<unsigned int> temp;
@@ -189,7 +190,7 @@ void OpticsKP::do_init()
   es = &(get_equation_systems());
 
   //-------------------------------
-  //---------------------------------------------------------------------------------------------------------//
+  //-------------------------------------------------------------------------------------------------
   //My Jacobian
   double mesh_units = get_environment().get_device().get_mesh_units();
 
@@ -203,10 +204,8 @@ void OpticsKP::do_init()
 
 
 
-  //--------------------------------------------------------------------------------------------------------//
+  //--------------------------------------------------------------------------------------------------
   const Mesh* mesh = &(es->get_mesh());
-
-
 
 
   es->add_system<LinearImplicitSystem> (system_name);
@@ -214,7 +213,7 @@ void OpticsKP::do_init()
   system = &( es->get_system<LinearImplicitSystem>(system_name));
 
 
-  //--------------------------------------------------------------------------------------------------------//
+  //-------------------------------------------------------------------------------------------------
   //add variables
 
   psivar.resize(8);
@@ -241,7 +240,7 @@ void OpticsKP::do_init()
     psivar[i] = system->variable_number(psi_name[i]);
   }
 
-  //-----------------------------------------------------------------------------------------------------------//
+  //-----------------------------------------------------------------------------------------------
   //add matrixes
 
   system->add_matrix("Px_real");

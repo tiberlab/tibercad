@@ -57,6 +57,10 @@ public:
   void inituptight();
 
 
+  //!Clean the Upt instance variable space
+  void cleanuptight();
+
+
   //!Get UPTIGHT instance handler
   inline const int* get_handler(void){ return _handler; };
 
@@ -71,7 +75,7 @@ public:
 
   
   //!Computes Hamiltonian (must be called after inituptight)
-  void compute_H ();
+  void compute_H();
 
 
   //!Function to perform Parravicini 2-step Lanczos
@@ -96,8 +100,11 @@ public:
 
   void write_states(void);
 
-  void get_states(int num_ev, int hdim, double* eigenvals, double* states);
+  void get_states(int num_ev, int hdim, double* eigenvals, double* stat_re, double *stat_im);
 
+  void compute_P_matrix(int poldir);
+
+  void get_matel(int i, int j, double matel_re, double matel_im);
 
 private:
   int _handler[UPT_HSIZE];
