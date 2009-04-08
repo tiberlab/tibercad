@@ -212,7 +212,7 @@ void OpticsTB::do_plot()
     if (mod_spectrum.find_option("Emin"))
       Emin = mod_spectrum.get_option("Emin", 0.0);
     else
-      throw InitFailedException("OpticsKP: Emin must be defined\n");
+      throw InitFailedException("OpticsTB: Emin must be defined\n");
     
 
     if (mod_spectrum.find_option("Emax"))
@@ -221,13 +221,13 @@ void OpticsTB::do_plot()
       throw InitFailedException("OpticsKP: Emax must be defined\n");
     
      
-    if (Emax < Emin)  throw InitFailedException("OpticsKP: Emax < Emin");
+    if (Emax < Emin)  throw InitFailedException("OpticsTB: Emax < Emin");
 
     
     if (mod_spectrum.find_option("dE"))
       dE = mod_spectrum.get_option("dE", 0.0);
     else
-      throw InitFailedException("OpticsKP: dE must be defined\n");
+      throw InitFailedException("OpticsTB: dE must be defined\n");
     
     
     if (dE <= 0)  throw InitFailedException("OpticsKP: dE <= 0");

@@ -212,39 +212,68 @@ void ETB::do_solve(void){
 #endif
 
   int hdim = inst->get_H_dim();
+  int num_vb = _upt_solver_options.n_vb;
   int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
   double *eigvals = new double[num_ev];
   double *eigvects_re = new double[hdim*num_ev];
   double *eigvects_im = new double[hdim*num_ev];
+  double *eigtmp_re = eigvects_re;
+  double *eigtmp_im = eigvects_im;
   
   inst->get_states(num_ev,hdim,eigvals,eigvects_re,eigvects_im);
-
-  //_solution.reserve(num_ev);
-
+  
+  _solution.resize(num_ev);
+  
   for(int i=0; i< _upt_solver_options.n_vb; i++)
-  {  
+  {
     _solution[i].particle = "hl";
     _solution[i].statistics = "Fermi";
     _solution[i].eigen_energy = eigvals[i];
     _solution[i].eigen_vector.reserve(hdim);
+    eigtmp_re += hdim*i;
+    eigtmp_im += hdim*i;
     for(int j=0; j<hdim;j++)
     {
-      _solution[i].eigen_vector[j] = complex<double>(eigvects_re[j],eigvects_im[j]);  
+      _solution[i].eigen_vector[j] = complex<double>(*(eigtmp_re+j),*(eigtmp_im+j));  
     }
+
+    if(_upt_options.potential_flag)
+    {
+      _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
+    }
+    else
+    {
+      _solution[i].electro_chem_pot = 0.0;
+    }
+
   }
 
-  for(int i=0; i< _upt_solver_options.n_cb; i++)
+  
+  for(int i=num_vb; i< num_vb+_upt_solver_options.n_cb; i++)
   {  
     _solution[i].particle = "el";
     _solution[i].statistics = "Fermi";
     _solution[i].eigen_energy = eigvals[i];
     _solution[i].eigen_vector.reserve(hdim);
+    eigtmp_re += hdim*i;
+    eigtmp_im += hdim*i;
     for(int j=0; j<hdim;j++)
     {
-      _solution[i].eigen_vector[j] = complex<double>(eigvects_re[j],eigvects_im[j]);
-    
+      _solution[i].eigen_vector[j] = complex<double>(*(eigtmp_re+j),*(eigtmp_im+j));
+	
     }
+    
+    if(_upt_options.potential_flag)
+    {
+      _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
+    }
+    else
+    {
+      _solution[i].electro_chem_pot = 0.0;
+    }
+
   }
+
   delete eigvals;
   delete eigvects_re;
   delete eigvects_im;
@@ -355,7 +384,7 @@ void ETB::parse_options(void)
   _upt_options.opt_flag = false; // these are set via OpticsTB
   _upt_options.poldir = 1;       //   "    "   "   "    "
 
-  if (get_options().get_option("potential_simulation", false))
+  if (get_options().find_option("potential_simulation"))
   {
     _upt_options.potential_sim = get_options().get_option("potential_simulation","no_sim");
     _upt_options.potential_flag = true;
@@ -443,6 +472,34 @@ ETB::add_shifts(void)
 
 }
 
+double
+ETB::calculate_fermi_averaged(unsigned int i)
+{
+  
+  int num_st = _solution.size();
+  double av,sum;
+
+  if(_solution[i].particle == "el" || _solution[i].particle == "electron")
+  {
+    sum = 0.0;
+    for (unsigned int j = 0; j < num_st; j++)
+    {
+      av = std::abs(_solution[i].eigen_vector[j]);
+      sum +=  _el_chem_pot[j]*av*av;
+    }
+  }
+
+  if(_solution[i].particle == "hl" || _solution[i].particle == "hole")
+  {
+    sum = 0.0;
+    for (unsigned int j = 0; j < num_st; j++)
+    {
+      av = std::abs(_solution[i].eigen_vector[j]);
+      sum += _hl_chem_pot[j]*av*av;
+    }
+  }
+
+}
 
 void
 ETB::read_kpoints(void)

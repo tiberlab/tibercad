@@ -73,6 +73,7 @@ class ETB : public TightBinding
  
   void solve_for_particle(const std::string& particle);
 
+  double calculate_fermi_averaged(unsigned int i);
   
  private:
 

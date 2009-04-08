@@ -199,7 +199,7 @@ Dftb::do_init(void){
 
   //Check for external potential
 
-  if (get_options().get_option("potential_simulation", false))
+  if (get_options().find_option("potential_simulation"))
     {
       _dftbp_coupling_options.potential_sim = get_options().get_option("potential_simulation", "no_sim");
       add_shifts();
