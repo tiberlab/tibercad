@@ -30,6 +30,7 @@ class ETB : public TightBinding
     char* gen_outfile;
     char* sparse_fmt;
     double* c_axis;
+    double vb_shift;
       
   };
 

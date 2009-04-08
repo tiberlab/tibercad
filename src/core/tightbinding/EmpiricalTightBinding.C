@@ -228,7 +228,7 @@ void ETB::do_solve(void){
   {
     _solution[i].particle = "hl";
     _solution[i].statistics = "Fermi";
-    _solution[i].eigen_energy = eigvals[i];
+    _solution[i].eigen_energy = eigvals[i] + _upt_options.vb_shift;
     _solution[i].eigen_vector.reserve(hdim);
     eigtmp_re += hdim*i;
     eigtmp_im += hdim*i;
@@ -253,7 +253,7 @@ void ETB::do_solve(void){
   {  
     _solution[i].particle = "el";
     _solution[i].statistics = "Fermi";
-    _solution[i].eigen_energy = eigvals[i];
+    _solution[i].eigen_energy = eigvals[i] + _upt_options.vb_shift;
     _solution[i].eigen_vector.reserve(hdim);
     eigtmp_re += hdim*i;
     eigtmp_im += hdim*i;
@@ -378,7 +378,9 @@ void ETB::parse_options(void)
 
   _upt_options.check_bondmap = get_options().get_option("check_bondmap", false);
   _upt_options.harrison_flag = get_options().get_option("Harrison_scaling", true);
-  _upt_options.relat_flag = get_options().get_option("relativistic", false); 
+  _upt_options.relat_flag = get_options().get_option("relativistic", false);
+  // da togliere e leggere dal database: shift della banda di valenza (che e` 0)
+  _upt_options.vb_shift = get_options().get_option("vb_shift", 0.0);
   //_upt_options.opt_flag = get_options().get_option("optical_transitions", false);   
   //_upt_options.poldir = get_options().get_option("polarization_direction", 1);   
   _upt_options.opt_flag = false; // these are set via OpticsTB
