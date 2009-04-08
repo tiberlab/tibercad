@@ -107,6 +107,12 @@ protected:
   //!Vector for atom potential shifts
   std::vector<double> _pot_shift;
 
+  //!Vector for electron chemical potential
+  std::vector<double> _el_chem_pot;
+
+  //!Vector for hole chemical potential
+    std::vector<double> _hl_chem_pot;
+
 };
 
 

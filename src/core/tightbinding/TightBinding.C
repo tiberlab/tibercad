@@ -282,22 +282,26 @@ TightBinding::build_elemental_results(const std::set<std::string>& variables,
 void
 TightBinding::project_potential(const std::string model_name, const std::string mode)
 {
-  
+
   Point p;
-  
+
   //Use PotentialInterface to get the right simulation
   PotentialInterface model;
-  
+
   std::cout << "setting simulation " << std::endl;
   model.set_simulation(model_name);
-  
+
   if (mode == "point")
     {//In point mode potential on atom is just kept as value on atom position
       //vector returned is sized number of atoms
-      
+
       _pot_shift.clear();
       _pot_shift.resize(_atomistic_structure->get_N_atoms(), 0.0);
-      
+      _el_chem_pot.clear();
+      _el_chem_pot.resize(_atomistic_structure->get_N_atoms(), 0.0);
+      _hl_chem_pot.clear();
+      _hl_chem_pot.resize(_atomistic_structure->get_N_atoms(), 0.0);
+
       for (unsigned int i = 0; i < _pot_shift.size(); i++)
 	{
 	  if (_atomistic_structure->get_structure_atoms()[i].get_elem() != NULL)
@@ -307,15 +311,21 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 	      p(2) = _atomistic_structure->get_structure_atoms()[i].get_position()(3);
 	      _pot_shift[i] = model.get_potential(_atomistic_structure->
 						  get_structure_atoms()[i].get_elem(), p);
+	      _el_chem_pot[i] = model.get_el_chem_potential(_atomistic_structure->
+	                                          get_structure_atoms()[i].get_elem(), p);
+	      _hl_chem_pot[i] = model.get_hl_chem_potential(_atomistic_structure->
+	                                          get_structure_atoms()[i].get_elem(), p);
 	    }
 	  else
 	    {
 	      _pot_shift[i] = 0.0;
+	      _el_chem_pot[i] = 0.0;
+	      _hl_chem_pot[i] = 0.0;
 	    }
 	}
-      
+
     }
-  
+
 }
 
 
