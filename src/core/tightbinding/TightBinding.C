@@ -306,9 +306,12 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 	{
 	  if (_atomistic_structure->get_structure_atoms()[i].get_elem() != NULL)
 	    {
-	      p(0) = _atomistic_structure->get_structure_atoms()[i].get_position()(1);
-	      p(1) = _atomistic_structure->get_structure_atoms()[i].get_position()(2);
-	      p(2) = _atomistic_structure->get_structure_atoms()[i].get_position()(3);
+	      p(0) = _atomistic_structure->get_structure_atoms()[i].get_position()(1)
+                / _atomistic_structure->get_scale();
+	      p(1) = _atomistic_structure->get_structure_atoms()[i].get_position()(2)
+		/ _atomistic_structure->get_scale();
+	      p(2) = _atomistic_structure->get_structure_atoms()[i].get_position()(3)
+		/ _atomistic_structure->get_scale();
 	      _pot_shift[i] = model.get_potential(_atomistic_structure->
 						  get_structure_atoms()[i].get_elem(), p);
 	      _el_chem_pot[i] = model.get_el_chem_potential(_atomistic_structure->
