@@ -20,6 +20,12 @@ MaterialInterface::MaterialInterface(void)
 }
 
 
+MaterialInterface::~MaterialInterface(void)
+{
+  PhysicalModelInterface::destroy(_srec);
+}
+
+
 
 
 void
@@ -30,6 +36,18 @@ MaterialInterface::do_init(void)
   _Ns = get_options().get_option("Ns", _Ns);
   _Es = get_options().get_option("Es", _Es);
   _g_factor = get_options().get_option("g", _g_factor);
+
+  if (get_options().get_option("surface_rec", false))
+  {
+    _srec = RecombinationModelInterface::create("srh", get_options());
+    if (_srec != NULL)
+    {
+      _srec->set_driftdiffusionproperties(&get_reference_material());
+      _srec->set_material(get_reference_material().get_material());
+      _srec->set_simulator_id(get_reference_material().get_simulator_id());
+      _srec->init();
+    }
+  }
 }
 
 
@@ -57,9 +75,24 @@ MaterialInterface::get_normal_derivative(DriftDiffusionDefs::Variable variable,
     else
       c = _Ns;
 
-    if (is_internal_boundary())
-      c /= 2.0;
   }
+
+
+  if (_srec != NULL)
+  {
+    double Re, Rh;
+    _srec->set_driftdiffusionproperties(&get_material());
+    _srec->get_net_recombination_rates(Re, Rh);
+
+    if (variable == DriftDiffusionDefs::FERMIE)
+      c = Re;
+
+    if (variable == DriftDiffusionDefs::FERMIH)
+      c = Rh;
+  }
+
+  if (is_internal_boundary())
+    c /= 2.0;
 }
 
 
@@ -86,14 +119,42 @@ MaterialInterface::get_derivatives_of_normal_derivative(
       denom *= denom;
 
       dc[0] = -_Ns * tmp / (denom * kT);
-      if (is_internal_boundary())
-        dc[0] /= 2.0;
     }
     else
       dc[0] = 0.0;
 
     dc[1] = -dc[0];
   }
+
+
+  if (_srec != NULL)
+  {
+    std::vector<double> dRe(3), dRh(3);
+    _srec->set_driftdiffusionproperties(&get_material());
+    _srec->get_net_recombination_rate_derivatives(dRe, dRh);
+
+    if (variable == DriftDiffusionDefs::FERMIE)
+    {
+      dc[1] = -dRe[0] * get_material().get_electron_density_derivative();
+      dc[2] = -dRe[1] * get_material().get_hole_density_derivative();
+      dc[0] = -(dRe[0] + dRe[1]);
+    }
+
+    if (variable == DriftDiffusionDefs::FERMIH)
+    {
+      dc[1] = -dRh[0] * get_material().get_electron_density_derivative();
+      dc[2] = -dRh[1] * get_material().get_hole_density_derivative();
+      dc[0] = -(dRh[0] + dRh[1]);
+    }
+  }
+
+  if (is_internal_boundary())
+  {
+    dc[0] /= 2.0;
+    dc[1] /= 2.0;
+    dc[2] /= 2.0;
+  }
+
 }
 
 

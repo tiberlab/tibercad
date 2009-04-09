@@ -21,7 +21,7 @@ class MaterialInterface : public ElectricalContact
     MaterialInterface(void);
     
     //! The destructor
-    ~MaterialInterface(void) {};
+    ~MaterialInterface(void);
 
     //! Create an object
     static MaterialInterface* create(void);

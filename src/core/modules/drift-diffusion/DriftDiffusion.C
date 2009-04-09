@@ -1211,7 +1211,9 @@ DriftDiffusion::do_init(void)
     if (bd != NULL)
     {
       ElectricalContact* contact = dynamic_cast<ElectricalContact*>(bd);
+#ifndef DEBUG
       if (contact->is_real_contact())
+#endif
       {
         _boundary_currents[it->second] = 0.0;
         _voltages[it->second] = 0.0;
@@ -2361,97 +2363,28 @@ DriftDiffusion::calculate_field_emission(void)
           break;
         
         sc->reinit(elem);
-        
-        // only for dim > 1 we need to integrate
-        //if (dim > 1)
-        //{
-          fe_face->reinit(elem, s);
 
-          int phi_size = phi.size();
-    
-          double current = 0.0;
+        fe_face->reinit(elem, s);
 
-          for (unsigned int qp = 0; qp < qface->n_points(); qp++)
-          {
-            // get the solution value at the quadrature point
-            double e_field = 0.0;
-            for (unsigned int i = 0; i < phi_size; i++)
-            {
-              double tmp = dphi[i][qp] * face_normals[qp];
-              e_field += tmp * solution(dof_indices_u[i]);
-            }
+        int phi_size = phi.size();
 
-            double F = phi0 * e_field;
-            current += JxW[qp] * contact->calculate_field_emission(F);
-          } // end loop over quadrature points
+        double current = 0.0;
 
-          fe_currents[boundary] += current;
-        //}
-/*        else
+        for (unsigned int qp = 0; qp < qface->n_points(); qp++)
         {
-          vector<Point> v(1, elem->point(s));
-          fe_face->reinit(elem, &v);
-
-          double current = 0.0;
-
-          // s is the node of the element lying on the boundary
-          Real u  = solution(dof_indices_u[s]);
-          Real en = solution(dof_indices_en[s]);
-          Real ep = solution(dof_indices_ep[s]);
-
-          Real dEfn = 0.0;
-          Real dEfp = 0.0;
-          RealGradient e_field(0);
-          Real dT = 0.0;
-          for (unsigned int n = 0; n < elem->n_nodes(); n++)
+          // get the solution value at the quadrature point
+          double e_field = 0.0;
+          for (unsigned int i = 0; i < phi_size; i++)
           {
-            dEfn += dphi[n][0](0) * solution(dof_indices_en[n]);
-            dEfp += dphi[n][0](0) * solution(dof_indices_ep[n]);
-            e_field(0) += dphi[n][0](0) * solution(dof_indices_u[n]);
-
-            dT += dphi[n][0](0) * T_nodes[n];
-          }
-          
-          // what is the outer normal in this point??
-          // Idea: if x(s) > x(centroid), normal is +1
-          //       else it is -1
-          double x_c = elem->centroid()(0);
-          double x_s = elem->point(s)(0);
-          if (x_s < x_c)
-          {
-            dEfn = -dEfn;
-            dEfp = -dEfp;
-            dT = -dT;
+            double tmp = dphi[i][qp] * face_normals[qp];
+            e_field += tmp * solution(dof_indices_u[i]);
           }
 
-          // prepare for calculating local properties
-          sc->set_coordinates(elem->point(s));
+          double F = phi0 * e_field;
+          current += JxW[qp] * contact->calculate_field_emission(F);
+        } // end loop over quadrature points
 
-
-          sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-
-          sc->set_electric_field(phi0 * e_field);
-          sc->set_grad_fermi_e(phi0 * RealGradient(dEfn, 0, 0));
-          sc->set_grad_fermi_h(phi0 * RealGradient(dEfp, 0, 0));
-
-          sc->calculate_densities();
-
-          sc->calculate_mobilities();
-
-          Real cond_e = Constants::e * sc->get_electron_mobility() *
-            sc->get_electron_density();
-          Real cond_h = Constants::e * sc->get_hole_mobility() *
-            sc->get_hole_density();
-
-          if (boundary != NULL)
-          {
-            ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
-                boundary->get_boundary_properties(get_id()));
-            if (contact->is_real_contact())
-              _boundary_currents[boundary] = -phi0 *
-                (cond_e * (dEfn + Pn * dT) + cond_h * (dEfp + Pp * dT));
-          }
-        }*/
+        fe_currents[boundary] += current;
       }
     } // end loop over elem sides
   } // end loop over elements
@@ -2541,10 +2474,8 @@ DriftDiffusion::calculate_currents_surfint(void)
   vector<unsigned int> dof_indices_ep;
 
 
-  MeshBase::const_element_iterator el =
-                                  mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el =
-                                  mesh.active_elements_end();
+  BoundaryElementMap::iterator el(env.boundary_elements_begin());
+  BoundaryElementMap::iterator end_el(env.boundary_elements_end());
 
   for ( ; el != end_el ; ++el) 
   {
@@ -2709,9 +2640,8 @@ DriftDiffusion::calculate_currents_surfint(void)
           {
             ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
                 boundary->get_boundary_properties(get_id()));
-            if (contact->is_real_contact())
-              _boundary_currents[boundary] = -phi0 *
-                (cond_e * (dEfn + Pn * dT) + cond_h * (dEfp + Pp * dT));
+            _boundary_currents[boundary] = -phi0 *
+              (cond_e * (dEfn + Pn * dT) + cond_h * (dEfp + Pp * dT));
           }
         }
       }
@@ -5142,20 +5072,23 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                     dcoeff[0], dvalue[0]);
                 //coeff[0] = a * x0;
                 coeff[0] = 0.0;
-                //value[0] = c * x0 / phi0;
                 value[0] = c / (x0 * C0);
               }
               if (coupling & ECURRENT)
               {
                 contact->get_normal_derivative(FERMIE, a, c);
-                coeff[1] = a * x0;
-                value[1] = c * x0 / phi0;
+                contact->get_derivatives_of_normal_derivative(FERMIE,
+                    dcoeff[1], dvalue[1]);
+                coeff[1] = a; // ???
+                value[1] = c / (x0 * R0_e);
               }
               if (coupling & HCURRENT)
               {
                 contact->get_normal_derivative(FERMIH, a, c);
-                coeff[2] = a * x0;
-                value[2] = c * x0 / phi0;
+                contact->get_derivatives_of_normal_derivative(FERMIH,
+                    dcoeff[2], dvalue[2]);
+                coeff[2] = a; // ???
+                value[2] = c / (x0 * R0_h);
               }
             }
 
@@ -5163,7 +5096,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
             // the jacobian x weight x scaling
             double J = JxW_face[qp];
-
+/*
             // first the contributions to Ke_ij
             for (unsigned int i = 0; i < n_dofs; i++)
             {
@@ -5177,23 +5110,27 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                   Kuu(i,j) += l2_eps * coeff[0] * phi_i_x_phi_j
                     / local_scaling[i][2];
 
-                if (coupling & ECURRENT)
-                  Knn(i,j) += coeff[1] * phi_i_x_phi_j / local_scaling[i][0];
+                //if (coupling & ECURRENT)
+                //  Knn(i,j) += coeff[1] * phi_i_x_phi_j / local_scaling[i][0];
 
-                if (coupling & HCURRENT)
-                  Kpp(i,j) += coeff[2] * phi_i_x_phi_j / local_scaling[i][1];
+                //if (coupling & HCURRENT)
+                //  Kpp(i,j) += coeff[2] * phi_i_x_phi_j / local_scaling[i][1];
               }
             }
+*/
 
             // contribution to the jacobian
             if (jacobian != NULL)
             {
               double scale_u = J * phi0 / x0 / C0;
-              double scale_n = J * phi0 / x0 / mu0;
+              double scale_n = J * phi0 / (x0 * R0_e);
+              double scale_p = J * phi0 / (x0 * R0_h);
 
               for (unsigned int i = 0; i < n_dofs; i++)
               {
                 double fac_u = scale_u / local_scaling[i][2];
+                double fac_n = scale_n / local_scaling[i][0];
+                double fac_p = scale_p / local_scaling[i][1];
 
                 for (unsigned int j = 0; j < n_dofs; j++)
                 {
@@ -5205,18 +5142,42 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                   {
                     Kuu(i,j) -= fac_u * dvalue[0][0] * phi_i_x_phi_j;
 
-                    //if (coupling & ECURRENT)
-                    //  Kun(i,j) -= fac_u * dvalue[0][1] * phi_i_x_phi_j;
+                    if (coupling & ECURRENT)
+                      Kun(i,j) -= fac_u * dvalue[0][1] * phi_i_x_phi_j;
 
-                    //if (coupling & HCURRENT)
-                    //  Kup(i,j) -= fac_u * dvalue[0][2] * phi_i_x_phi_j;
+                    if (coupling & HCURRENT)
+                      Kup(i,j) -= fac_u * dvalue[0][2] * phi_i_x_phi_j;
                   }
 
-                  //if (coupling & ECURRENT)
-                  //  Knn(i,j) += coeff[1] * phi_i_x_phi_j;
 
-                  //if (coupling & HCURRENT)
-                  //  Kpp(i,j) += coeff[2] * phi_i_x_phi_j;
+                  ////
+                  // NOTE:
+                  //   the signs are inverted here because outflow means recombination
+                  //   and the normal point outwards, giving a positiv current for
+                  //   outflow
+                  if (coupling & ECURRENT)
+                  {
+                    if (coupling & POISSON)
+                      Knu(i,j) -= fac_n * dvalue[1][0] * phi_i_x_phi_j;
+
+                    Knn(i,j) -= fac_n * dvalue[1][1] * phi_i_x_phi_j;
+
+                    if (coupling & HCURRENT)
+                      Knp(i,j) -= fac_n * dvalue[1][2] * phi_i_x_phi_j;
+                  }
+
+
+                  if (coupling & HCURRENT)
+                  {
+                    if (coupling & POISSON)
+                      Kpu(i,j) += fac_p * dvalue[2][0] * phi_i_x_phi_j;
+
+                    if (coupling & ECURRENT)
+                      Kpn(i,j) += fac_p * dvalue[2][1] * phi_i_x_phi_j;
+
+                    Kpp(i,j) += fac_p * dvalue[2][2] * phi_i_x_phi_j;
+                  }
+
                 }
               }
             }
@@ -5238,8 +5199,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               }
               //double value_u = J * (l2_eps * value[0] - Pn);
               double value_u = J * (value[0] - Pn);
-              double value_n = J * value[1] / (mu0 * C0_e);
-              double value_p = J * value[2] / (mu0 * C0_h);
+              double value_n = J * value[1];
+              double value_p = J * value[2];
 
               for (unsigned int i = 0; i < n_dofs; i++)
               {
@@ -5250,7 +5211,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                   Fn(i) -= value_n * phi_face[i][qp] / local_scaling[i][0];
 
                 if (coupling & HCURRENT)
-                  Fp(i) -= value_p * phi_face[i][qp] / local_scaling[i][1];
+                  Fp(i) += value_p * phi_face[i][qp] / local_scaling[i][1];
               }
             } 
           }
