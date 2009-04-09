@@ -30,6 +30,7 @@ Embracing::Embracing(SimulationInterface* outer,
   : _outer(outer),
     _inner(inner),
     _lambda(0.0),
+    _cutoff(0.0),
     _is_empty(true),
     _do_plot(false),
     _need_mixing(false),
@@ -58,6 +59,9 @@ Embracing::init(const ModelOptions& options)
   SimulationEnvironment& in = _inner->get_environment();
   double x0 = (in.get_device()).get_mesh_units();
   _lambda = options.get_option("embracing_length", _lambda) / x0;
+  // cutoff is read as percentage of embracing region
+  _cutoff = options.get_option("cutoff", _cutoff) * _lambda;
+
   if (_lambda > 0.0)
   {
     generate_embracing_region();
@@ -380,6 +384,8 @@ Embracing::assembly(LaplaceEq& system)
   DenseMatrix<Number> Ke;
   DenseVector<Number> Fe;
 
+  const double penalty = 1e6;
+
   MeshBase::const_element_iterator el(mesh.active_elements_begin());
   const MeshBase::const_element_iterator end_el(mesh.active_elements_end());
 
@@ -400,6 +406,10 @@ Embracing::assembly(LaplaceEq& system)
         for (int j = 0; j < n_dofs; j++)
           Ke(i, j) += JxW[qp] * dphi[i][qp] * dphi[j][qp];
     
+
+    if ((_cutoff > 0.0) && (_elem_list[elem] < _cutoff))
+      for (size_t n = 0; n < elem->n_nodes(); n++)
+        Ke(n, n) += penalty;
 
     // loop over the sides for boundary conditions
     // NOTE we use penalty-method here
@@ -423,8 +433,8 @@ Embracing::assembly(LaplaceEq& system)
           if (elem->is_node_on_side(i, s))
           {
             //Ke.condense(i, i, 1e6 * val, Fe);
-            Ke(i, i) += 1e6;
-            Fe(i) += 1e6 * val;
+            Ke(i, i) += penalty;
+            Fe(i) += penalty * val;
           }
         }
 

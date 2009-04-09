@@ -178,6 +178,10 @@ class Embracing
     double _lambda;
 
 
+    //! The cutoff length
+    double _cutoff;
+
+
     //! \c true if the region is empty
     bool _is_empty;
 

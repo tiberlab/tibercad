@@ -554,6 +554,8 @@ where $(\varphi^0, \phi_n^0, \phi_p^0)$ are the potentials for which the quantum
 \item[\keyword{embracing\_length =} \Unit{double}] When the domain of the quantum simulation is smaller than the domain of the full simulation, the boundary conditions for the Schr\"odinger equation will disturb the transfer from classical to quantum density.
 By defining an embracing region of a certain extension (specified in meters), a gradual transition from classical to quantum density will be done instead of an abrupt one, using as effective density $\rho = x\cdot\rho_{\mathrm{quantum}} + (1-x)\cdot\rho_{\mathrm{classical}}$. The default is no embracing region at all (zero extension).
 
+\item[\keyword{cutoff =} \Unit{double}] if an embracing region is used, a part of this region near the boundary of the quantum region can be cut off so that only the classical density is considered in that part. \keyword{cutoff} is specified as a percentage of the embracing length and should therefore be between 0.0 and 1.0.
+
 \item[\keyword{plot\_embracing\_regions =} \Unit{bool}] Whereas the automatic creation of the embracing region in 1D is a very simple task, it is a more difficult one in higher dimensions.
 By setting this flag to \texttt{true}, the embracing region and the mixing coefficient $x$ will be plotted for a visual control of the quality of the embracing region.
 The default is \texttt{false}.
