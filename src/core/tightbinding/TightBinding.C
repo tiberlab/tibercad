@@ -318,6 +318,7 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 	                                          get_structure_atoms()[i].get_elem(), p);
 	      _hl_chem_pot[i] = model.get_hl_chem_potential(_atomistic_structure->
 	                                          get_structure_atoms()[i].get_elem(), p);
+	      //std::cout << " shifting " << _pot_shift[i] << std::endl;
 	    }
 	  else
 	    {
@@ -326,6 +327,22 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 	      _hl_chem_pot[i] = 0.0;
 	    }
 	}
+      //If atom has no element assigned, assigned the potential of the nearest neighbour
+      //with non NULL element assigned
+
+    for (unsigned int i = 0; i < _pot_shift.size(); i++)
+      {
+        //TODO: it works only for no-preserve and hydrogenation
+        //we need to extend exploring neighbours until we don't reach one with non NULL
+        //(it's not assured it will be the first one)
+        if (_atomistic_structure->get_structure_atoms()[i].get_elem() == NULL)
+          {
+            int neighbour = _atomistic_structure->get_bond_map()[i][0];
+            _pot_shift[i] = _pot_shift[neighbour];
+            _el_chem_pot[i] = _pot_shift[neighbour];
+            _hl_chem_pot[i] = _pot_shift[neighbour];
+          }
+      }
 
     }
 
@@ -340,6 +357,12 @@ TightBinding::project_potential(const std::string model_name, const std::string 
       {tmp = _pot_shift[i] - min;
        _pot_shift[i] = tmp;
       }
+
+  double* pot = new double[_pot_shift.size()];
+      for (unsigned int i = 0; i < _pot_shift.size(); i++)
+        pot[i] = _pot_shift[i];
+      _atomistic_structure->print_structure("pot_on_atom.xyz", pot);
+
   std::cout << "project_potential done " << std::endl;
 }
 
