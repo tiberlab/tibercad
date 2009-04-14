@@ -10,9 +10,7 @@
 #include "Device.h"
 #include "Database.h"
 #include "Atom.h"
-
-//forward declaration
-class BondMap;
+#include "BondMap.h"
 
 //! Contains all needed data for an atomic structure
 /*!
@@ -141,6 +139,9 @@ public:
 
   //! Set Bond Map pointer
   void set_bondmap(BondMap* bondmap);
+
+  //! Get bond map
+  unsigned int** const get_bond_map(void);
 
   //! AtomisticStructureOptions object pointer
     AtomisticStructureOptions _atomistic_structure_options;
@@ -302,9 +303,17 @@ AtomisticStructure::get_IDset(void)
 }
 
 inline
-void AtomisticStructure::set_bondmap(BondMap* bondmap)
+void
+AtomisticStructure::set_bondmap(BondMap* bondmap)
 {
   _bondmap = bondmap;
+}
+
+inline
+unsigned int** const
+AtomisticStructure::get_bond_map()
+{
+  return _bondmap->get_bond_map();
 }
 
 #endif // _ATOMISTICSTRUCTURE_H_
