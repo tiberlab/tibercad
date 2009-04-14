@@ -329,6 +329,18 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 
     }
 
+  //Process potential values to shift the smallest value to 0
+  double min = 0.0;
+  double tmp;
+  for (unsigned int i = 0; i == _pot_shift.size(); i++)
+    {
+  if (_pot_shift[i] < min) min = _pot_shift[i];
+    }
+  for (unsigned int i = 0; i == _pot_shift.size(); i++)
+      {tmp = _pot_shift[i] - min;
+       _pot_shift[i] = tmp;
+      }
+  std::cout << "project_potential done " << std::endl;
 }
 
 
