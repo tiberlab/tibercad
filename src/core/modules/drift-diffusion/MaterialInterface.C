@@ -39,7 +39,13 @@ MaterialInterface::do_init(void)
 
   if (get_options().get_option("surface_rec", false))
   {
-    _srec = RecombinationModelInterface::create("srh", get_options());
+    double vrec_e = get_options().get_option("rec_vel_e", 1e3);
+    double vrec_h = get_options().get_option("rec_vel_h", 1e3);
+
+    ModelOptions srh_opts;
+    srh_opts.set_option("tau_n", 1.0 / vrec_e);
+    srh_opts.set_option("tau_p", 1.0 / vrec_h);
+    _srec = RecombinationModelInterface::create("srh", srh_opts);
     if (_srec != NULL)
     {
       _srec->set_driftdiffusionproperties(&get_reference_material());

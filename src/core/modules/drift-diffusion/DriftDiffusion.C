@@ -2240,14 +2240,15 @@ DriftDiffusion::calculate_currents_rstf(void)
       double sigma_h = -Constants::e * sc->get_hole_density() *
         sc->get_hole_mobility();
 
-      RealGradient j(JxW[qp] * phi0 *
-          (sigma_e * (dEfn + Pn * dT) + sigma_h * (dEfp + Pp * dT))); 
+      RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT))); 
+      RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT))); 
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
-        _boundary_currents[boundary] += j * dphi[n][qp] * weight[n];
+        _boundary_currents[boundary] += (je + jh) * dphi[n][qp] * weight[n];
 
     } // end loop over quadrature points
   } // end loop over elements
+
 }
 
 
