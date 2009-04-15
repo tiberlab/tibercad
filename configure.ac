@@ -96,6 +96,7 @@ AC_PATH_PROG([GMSH], [gmsh])
 AC_SUBST([GMSH])
 
 
+
 # on cygwin we check for Bytessence InstallMaker
 [BINSTALLMAKER="no"]
 case $host_os in
@@ -113,6 +114,8 @@ case $host_os in
   * )  ;;
 esac
 AC_SUBST([BINSTALLMAKER])
+
+TC_SUBVERSION
 
 #
 # Checks for libraries.

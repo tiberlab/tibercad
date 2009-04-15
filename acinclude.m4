@@ -302,3 +302,12 @@ dnl 			        [tc_cv_have_slepc="yes"])
  fi
 ])dnl
 
+
+dnl which SVN version to use
+dnl
+AC_DEFUN([TC_SUBVERSION],
+[tc_subversion="svn"
+ AC_ARG_WITH([subversion], AS_HELP_STRING([--with-subversion=PROG],
+ 	[specify the subversion executable]),
+	[tc_subversion=$with_subversion])
+ AC_PATH_PROG([SVN], [$tc_subversion])])dnl

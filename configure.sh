@@ -9,6 +9,7 @@ export FC=ifort-9.0
   --with-petsc-arch=linux-gnu-complex \
   --with-slepc-prefix=/usr/pack/slepc-2.3.3-ma \
   --with-mkl=/usr/pack/intel_mkl-8.0-ma \
+  --with-subversion=svn-1.5.6 \
   --disable-modules \
   --enable-pardiso \
   --enable-dftb \

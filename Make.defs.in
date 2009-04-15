@@ -15,13 +15,14 @@ hostos := @host_os@
 
 
 # the compilers
-CXX = @CXX@
-CC = @CC@
-FC = @FC@
+CXX := @CXX@
+CC := @CC@
+FC := @FC@
 
+SVN := @SVN@
 
 # the subversion revision number
-SVNREVISION = $(shell svn info $(topdir) | awk '/^Last Changed Rev/ {print $$4}')
+SVNREVISION = $(shell $(SVN) info $(topdir) | awk '/^Last Changed Rev/ {print $$4}')
 
 # the full TiberCAD version number
 TIBERVERSION = $(shell echo "`cat $(topdir)/VERSION`.$(SVNREVISION)")
