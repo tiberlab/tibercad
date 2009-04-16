@@ -954,6 +954,7 @@ DriftDiffusion::guess_equilibrium(void)
   vector<unsigned int> dof_indices_u;
   
   NumericVector<Number>& solution_u = poisson.get_solution_vector();
+  solution_u.zero();
 
   MeshBase::const_element_iterator el =
                                   get_mesh().active_elements_begin();
@@ -975,14 +976,8 @@ DriftDiffusion::guess_equilibrium(void)
       get_mesh().active_local_elements_end(); 
 
     for ( ; it != end; ++it)
-    {
-      dof_map_u.dof_indices(*it, dof_indices_u, u_var);
       for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
-      {
 	node_conn_local[(*it)->node(n)]++;
-        solution_u.set(dof_indices_u[n], 0.0);
-      }
-    }
 
 #ifdef HAVE_MPI
     // Gather the distributed node_conn arrays in the case of
