@@ -578,11 +578,13 @@ Table~\ref{tab:dd_solver} lists the options that are independent on the type of 
 \begin{tabular}{l||p{8cm}}
 \textit{keyword} & \textit{description}\footnote{the default is given in brackets} \\
 \hline \hline
-\texttt{coupling} & defines which equations to couple together. \texttt{poisson}: solve only poisson eq., \texttt{electrons}: electrons and poisson, \texttt{holes}: holes and poisson, \texttt{current}: only electron and hole currents, \texttt{<full>}: the fully coupled system \\
-\texttt{integration\_order} & order of the numerical gauss integration. Default is \texttt{2} \\
-\texttt{current\_integration\_method} & method for the calculation of the contact cutrrents. \texttt{surfint}: integrate the local current density over the contact surface, \texttt{<rstf>}: use the Ramo-Shockley test functions, gives better results \\
-\texttt{local\_scaling} & apply a local scaling scheme which leads to better scaled matrices. \texttt{<true>} or \texttt{false} \\
-\texttt{exact\_newton} & use exact or approximate (without some parts in the jacobian) Newton. \texttt{<true>} or \texttt{false}
+\keyword{coupling} & defines which equations to couple together. \texttt{poisson}: solve only poisson eq., \texttt{electrons}: electrons and poisson, \texttt{holes}: holes and poisson, \texttt{current}: only electron and hole currents, \texttt{<full>}: the fully coupled system \\
+\keyword{el\_qfermi\_level} & the spatially constant electrochemical potential for the electrons (for quasi-equilibrium calculations) \\
+\keyword{hl\_qfermi\_level} & the spatially constant electrochemical potential for the holes (for quasi-equilibrium calculations) \\
+\keyword{integration\_order} & order of the numerical gauss integration. Default is \texttt{2} \\
+\keyword{current\_integration\_method} & method for the calculation of the contact cutrrents. \texttt{surfint}: integrate the local current density over the contact surface, \texttt{<rstf>}: use the Ramo-Shockley test functions, gives better results \\
+\keyword{local\_scaling} & apply a local scaling scheme which leads to better scaled matrices. \texttt{<true>} or \texttt{false} \\
+\keyword{exact\_newton} & use exact or approximate (without some parts in the jacobian) Newton. \texttt{<true>} or \texttt{false}
 \end{tabular}
 \end{minipage}
 \caption{Parameters for the PETSc nonlinear solver}

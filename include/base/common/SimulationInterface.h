@@ -292,8 +292,8 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      *
      * \param elem a pointer to the element
      * \param id identifier for the variable to be returned
-     * \param values a vector to store the values. The vector index corresponds to
-     * the node.
+     * \param values a vector to store the values. The vector index
+     * corresponds to the node.
      *
      * \return false if no data can be found for \c elem
      */

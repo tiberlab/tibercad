@@ -3075,7 +3075,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
   bool found = false; 
   const Elem* mat_elem;
 
-  for ( ; (el != end_el) || (!found) ; ++el)
+  for ( ; (el != end_el) && (!found) ; ++el)
   {
     const Elem* elem = *el;
     if (elem->contains_point(_bulk_point))
@@ -3087,9 +3087,9 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   }
 
-  Point qp = mat_elem->centroid(); 
-
   if (!found) throw SolveFailedException("Bad material point\n");
+
+  Point qp = mat_elem->centroid(); 
 
   EFAbulkHamiltonian* element_hamiltonian;
 
@@ -3186,9 +3186,6 @@ void EnvelopFunctionApprox::solve_bulk(void)
     if (poisson_equation != NULL)
     	solution[i].Fermi_energy = -get_electro_chem_potential(mat_elem);
       
-     
- 
-  
 
    
     //Temperature calculation

@@ -352,7 +352,7 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
   
   const unsigned int var = system.variable_number("fermi_e");
   const double phi0 = get_scaling().get_potential_scaling();
-  double level = Ef_n / phi0;
+  double level = -Ef_n / phi0;
 
   Mesh& mesh = get_mesh();
   Mesh::element_iterator it = mesh.active_elements_begin();
@@ -385,7 +385,7 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
 
   const unsigned int var = system.variable_number("fermi_h");
   const double phi0 = get_scaling().get_potential_scaling();
-  double level = Ef_p / phi0;
+  double level = -Ef_p / phi0;
 
   Mesh& mesh = get_mesh();
   Mesh::element_iterator it = mesh.active_elements_begin();
@@ -646,6 +646,7 @@ DriftDiffusion::do_solve(void)
   
   parse_options();
 
+
   /* This is really stupid! How do you want to make selfconsistent loops ???
     // we do not solve anything if the simulation voltages are the
     // same as before
@@ -692,12 +693,12 @@ DriftDiffusion::do_solve(void)
     /////////////////// << QUIRK
  
     // if we would repeat the equilibrium simulation, we can stop now
-    if (equilibrium)
-    {
-      cout << "----------------------------------"
-        << "--------------------------------->>" << endl;
-      return;
-    }
+    //if (equilibrium)
+    //{
+    //  cout << "----------------------------------"
+    //    << "--------------------------------->>" << endl;
+    //  return;
+    //}
   }
 
   // set the old solution
@@ -708,6 +709,7 @@ DriftDiffusion::do_solve(void)
 
   int coupling = get_options().coupling;
   
+
   // TODO 
   same_potentials = false;
   
@@ -853,6 +855,7 @@ DriftDiffusion::do_equilibrium(void)
   // first we have to compute the scaling
   compute_scaling(get_options().scaling_type);
 
+
   TiberNonlinearSystem& system =
     get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
@@ -888,6 +891,14 @@ DriftDiffusion::do_equilibrium(void)
 
   if (do_local_scaling_)
     build_local_scaling();
+
+  const ModelOptions& opts = SimulationInterface::get_options();
+  if (opts.find_option("el_qfermi_level"))
+    set_electron_fermi_level(opts.get_option("el_qfermi_level", 0.0));
+
+  if (opts.find_option("hl_qfermi_level"))
+    set_hole_fermi_level(opts.get_option("hl_qfermi_level", 0.0));
+
 
 
   try
@@ -943,7 +954,6 @@ DriftDiffusion::guess_equilibrium(void)
   vector<unsigned int> dof_indices_u;
   
   NumericVector<Number>& solution_u = poisson.get_solution_vector();
-  solution_u.zero();
 
   MeshBase::const_element_iterator el =
                                   get_mesh().active_elements_begin();
@@ -965,8 +975,14 @@ DriftDiffusion::guess_equilibrium(void)
       get_mesh().active_local_elements_end(); 
 
     for ( ; it != end; ++it)
+    {
+      dof_map_u.dof_indices(*it, dof_indices_u, u_var);
       for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
+      {
 	node_conn_local[(*it)->node(n)]++;
+        solution_u.set(dof_indices_u[n], 0.0);
+      }
+    }
 
 #ifdef HAVE_MPI
     // Gather the distributed node_conn arrays in the case of
@@ -1106,7 +1122,6 @@ DriftDiffusion::parse_options(void)
   //_electronsonly = (myopts.coupling & HCURRENT) ? false : true;
   if (opts.get_option("ignore_holes", false))
     _electronsonly = true;
-
 
   /////////// QUIRK
   //if (opts.find_option("write_atomic_potentials"))
@@ -3827,10 +3842,10 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
       const vector<double>& vb = sc->get_valence_bands();
 
       for (unsigned int i = 0; i < cb.size(); i++)
-        results[id + BandEdges + i] = cb[i];
+        results[id + BandEdges + i] = cb[i] - phi0 * u;
 
       for (unsigned int i = 0; i < vb.size(); i++)
-        results[id + BandEdges + cb.size() + i] = vb[i];
+        results[id + BandEdges + cb.size() + i] = vb[i] - phi0 * u;
     }
 
 

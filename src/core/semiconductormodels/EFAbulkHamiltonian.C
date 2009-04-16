@@ -1,9 +1,10 @@
 #include "EFAbulkHamiltonian.h"
 #include "RotatedCrystal.h"
 #include "Material.h" 
+#include "Constants.h"
 using namespace std; 
 
-const double EFAbulkHamiltonian::Hartree = 27.2113961;
+const double EFAbulkHamiltonian::Hartree = Constants::Hartree;
 //------------------------------------------------------------//
 void EFAbulkHamiltonian::do_init()
 {
