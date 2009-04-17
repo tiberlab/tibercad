@@ -14,6 +14,17 @@ void EigenvalueProblem::get_eigenvalues(std::vector<double>& values) const
 
 }
 
+unsigned int EigenvalueProblem::get_num_states(const std::string& particle)
+{
+  unsigned int num_i_states = 0;
+  for(unsigned int i=0; i<_solution.size(); i++)
+  {
+    if(_solution[i].particle == particle) num_i_states++;  
+  }
+  
+  return num_i_states;
+}
+
 void EigenvalueProblem::get_populations(std::vector<double>& values) const
 {
  

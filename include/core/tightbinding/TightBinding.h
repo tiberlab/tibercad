@@ -111,7 +111,7 @@ protected:
   std::vector<double> _el_chem_pot;
 
   //!Vector for hole chemical potential
-    std::vector<double> _hl_chem_pot;
+  std::vector<double> _hl_chem_pot;
 
 };
 

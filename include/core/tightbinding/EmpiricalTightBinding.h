@@ -26,6 +26,7 @@ class ETB : public TightBinding
     std::string potential_sim;
     char* database_path;
     char* work_path;
+    char* out_path;
     char* upt_filename;
     char* gen_outfile;
     char* sparse_fmt;
@@ -127,6 +128,12 @@ class ETB : public TightBinding
 							unsigned int i, 
 							const std::string& j_particle,
 							unsigned int j);  
+
+  /*! Note: for the moment calculate_matrix_element relays on the fact that the first
+     *  n_vb states are valence states, then there are all the electron states.
+     *  This should change if we want to put a self-consistent density calculation
+     *  that will dynamically append new states to the _solution vector.
+     */
 
 };
 

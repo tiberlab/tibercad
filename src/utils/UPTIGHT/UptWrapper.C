@@ -31,7 +31,8 @@ UptWrapper* UptWrapper::create()
 
 
 //!Assign simulation parameters to UPT instance
-void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath,
+void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath, 
+			    char *outPath,
 			    char *gen_filename, char *gen_outname, char *sparse_fmt, 
 			    int max_n_n, bool harrison, bool relat, bool potential,
 			    bool optmat, int poldir, double *c_axis, bool check_bondmap) {
@@ -49,10 +50,10 @@ void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath,
   check_nn=0;
   if(check_bondmap){check_nn=1;}
 
-  f77_upt_fillbasicparameters(_handler, verbose_lev, databasePath, workPath, gen_filename,
-			      gen_outname, sparse_fmt, max_n_n, harrison_flag, relat_flag, 
-                                potential_flag, optmat_flag, poldir, c_axis[0], c_axis[1],
-			      c_axis[2], check_nn);
+  f77_upt_fillbasicparameters(_handler, verbose_lev, databasePath, workPath, outPath,
+			      gen_filename, gen_outname, sparse_fmt, max_n_n, 
+			      harrison_flag, relat_flag, potential_flag, optmat_flag, 
+			      poldir, c_axis[0], c_axis[1], c_axis[2], check_nn);
 
 }
 
@@ -112,6 +113,11 @@ void UptWrapper::lanczos_diag(int n_vb, int n_cb, double guess_vb, double guess_
 
 }
 
+void UptWrapper::set_num_states(int n_vb, int n_cb)
+{
+  f77_upt_set_num_states(_handler,n_vb,n_cb);
+}
+
 
 //! get ETB Hamiltonian size
 int UptWrapper::get_H_dim(void) {
@@ -121,8 +127,13 @@ int UptWrapper::get_H_dim(void) {
 }
 
 //! write eigenstates on file
-void UptWrapper::write_states(void) {	
+void UptWrapper::write_states() {	
   f77_upt_write_states(_handler);
+}
+
+//! read eigenstates from file
+void UptWrapper::read_old_states(void) {	
+  f77_upt_read_states(_handler);
 }
 
 
@@ -136,11 +147,19 @@ void UptWrapper::get_states(int num_ev, int hdim,
 }
 
 
-void UptWrapper::get_matel(int i, int j, double matel_re, double matel_im)
+std::complex<double> UptWrapper::get_matel(int i, int j)
 {
+
+  std::complex<double> matel;
+  double matel_re, matel_im;
 
   f77_upt_get_matel(_handler,i,j,matel_re,matel_im);
 
+  matel = std::complex<double>(matel_re,matel_im);
+
+  //std::cerr<<matel<<std::endl;
+
+  return matel;
 }
 
 

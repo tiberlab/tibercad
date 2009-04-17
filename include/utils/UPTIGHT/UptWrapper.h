@@ -46,7 +46,7 @@ public:
    * bool optmat_flag          : compute optical matrix
    * int poldir                : polarized light x = 1, y = 2, z = 3 
    */
-  void fill_param (int verbose_lev, char *databasePath, char *workPath, 
+  void fill_param (int verbose_lev, char *databasePath, char *workPath, char *outPath, 
                    char *gen_filename, char *gen_outname, char *sparse_fmt, 
 		   int max_n_n, bool harrison_flag, bool relat_flag, 
 		   bool potential_flag, bool optmat_flag, int poldir, 
@@ -95,16 +95,20 @@ public:
                      int min_iter, int long_iter, int max_iter, 
                      double fast_tol, double long_tol, double ort_tol);
 
+  void set_num_states(int n_vb, int n_cb);
 
   int get_H_dim(void);
 
   void write_states(void);
 
-  void get_states(int num_ev, int hdim, double* eigenvals, double* stat_re, double *stat_im);
+  void read_old_states(void);
+
+  void get_states(int num_ev, int hdim, double* eigenvals, double* stat_re, 
+                  double *stat_im);
 
   void compute_P_matrix(int poldir);
 
-  void get_matel(int i, int j, double matel_re, double matel_im);
+  std::complex<double> get_matel(int i, int j);
 
 private:
   int _handler[UPT_HSIZE];

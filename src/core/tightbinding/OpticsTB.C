@@ -42,18 +42,13 @@ void OpticsTB::parse_options()
 
     if (_initial_state_model == NULL)
       throw InitFailedException("OpticsTB: initial_state_model is not defined\n");
-    
-
-    
-    //if(_i_states.size() == 0) 
-    //  throw InitFailedException("OpticsTB: empty initial states\n"); 
-    
+        
     _initial_state_particle = mod_opt.get_option("initial_state_particle","el");
     
     _initial_eigen_state_numbers.clear();
     
     
-    std::vector<unsigned int> temp;
+    std::vector<int> temp;
     mod_opt.get_option("initial_eigenstates", temp);
     
     if (temp.size() == 0)
@@ -61,7 +56,7 @@ void OpticsTB::parse_options()
     
     _initial_eigen_state_numbers.resize(temp.size());
 
-    for (unsigned i = 1; i <= temp.size(); i++)
+    for (unsigned int i = 1; i <= temp.size(); i++)
     {
       _initial_eigen_state_numbers[i] = temp[i];
     }  
@@ -78,24 +73,19 @@ void OpticsTB::parse_options()
     
     if (_final_state_model == NULL)
       throw InitFailedException("OpticsTB: final_state_model is not defined\n");
-    
-
-
-    //if(_f_states.size() == 0) 
-    //  throw InitFailedException("OpticsTB: empty final states\n"); 
-    
+        
     _final_state_particle = mod_opt.get_option("final_state_particle","hl");
     
     _final_eigen_state_numbers.clear();
       
-    std::vector<unsigned int> temp;
+    std::vector<int> temp;
     mod_opt.get_option("final_eigenstates", temp);
     
     if (temp.size() == 0)
       throw InitFailedException("OpticsTB: initial states are not acceptable\n");
     
     _final_eigen_state_numbers.resize(temp.size());
-    for (unsigned i = 1; i <= temp.size(); i++)
+    for (unsigned int i = 1; i <= temp.size(); i++)
     {
       _final_eigen_state_numbers[i] = temp[i];
     }
@@ -112,59 +102,22 @@ void OpticsTB::do_init()
   
   this->parse_options();
 
-  //check that the states are really available
-  //unsigned int max_i_state_num = 0; 
-  //unsigned int i; 
-  //unsigned int n1 =_initial_eigen_state_numbers.size();
-  //for(i=0; i<n1; i++)
-  //{
-  //  if(_initial_eigen_state_numbers[i] > max_i_state_num) 
-  //    max_i_state_num = _initial_eigen_state_numbers[i]; 
-  // }
-
-  //unsigned int num_i_states = 0;
-  //for(i=0; i<_i_states.size(); i++)
-  //{
-  //  if(_i_states[i].particle == _initial_state_particle) num_i_states++;  
-  // }
-
-  //if(num_i_states < max_i_state_num)
-  //    throw InitFailedException("OpticsTB: invalid initial states (not computed)\n");    
-
-  //unsigned int max_f_state_num = 0; 
-  //n1 = _final_eigen_state_numbers.size();
-  //for(i=0; i<n1; i++)
-  //{
-  //  if(_final_eigen_state_numbers[i] > max_f_state_num) 
-  //    max_f_state_num = _final_eigen_state_numbers[i]; 
-  // }
-  
-  //unsigned int num_f_states = 0;
-  //for(i=0; i<_f_states.size(); i++)
-  //{
-  //  if(_f_states[i].particle == _final_state_particle) num_f_states++;  
-  //}
-
-  //if(num_f_states < max_f_state_num)
-  //    throw InitFailedException("OpticsTB: invalid final states (not computed)\n");    
-  
-
 }
 
 //===============================================//
 
 void OpticsTB::do_solve()
 {
+  //check that the states are really available
+   
+  
 
-  _i_states = _initial_state_model->get_eigen_solution();
-    
-  _f_states = _final_state_model->get_eigen_solution();
 
   int verbose = SimulationOptions::verbose();
 
   
   if (verbose > 0)
-    std::cout << "calculation of the optical matrix elements..." << std::flush;
+    std::cout << "calculation of the optical matrix elements..." << std::endl;
 
 
   this->calculate_P_matrix_elements();   
@@ -199,7 +152,43 @@ void OpticsTB::do_solve()
 
 
 }
+//========================================================================================
+void OpticsTB::get_states()
+{
+  //get states from TB model
 
+  _i_states = _initial_state_model->get_eigen_solution();
+    
+  _f_states = _final_state_model->get_eigen_solution();
+
+  // Find maximum state index of initial states
+  unsigned int max_i_state_num = 0; 
+  unsigned int i; 
+  unsigned int n1 =_initial_eigen_state_numbers.size();
+  for(i=0; i<n1; i++)
+  {
+    if(_initial_eigen_state_numbers[i] > max_i_state_num) 
+      max_i_state_num = _initial_eigen_state_numbers[i]; 
+  }
+
+  // check that the state is available
+  if(_initial_state_model->get_num_states(_initial_state_particle) < max_i_state_num)
+      throw InitFailedException("OpticsTB: invalid initial states (not computed)\n");    
+
+  // Find maximum state index of final states
+  unsigned int max_f_state_num = 0; 
+  n1 = _final_eigen_state_numbers.size();
+  for(i=0; i<n1; i++)
+  {
+    if(_final_eigen_state_numbers[i] > max_f_state_num) 
+      max_f_state_num = _final_eigen_state_numbers[i]; 
+  }
+  
+  // check that the state is really there
+  if(_final_state_model->get_num_states(_final_state_particle) < max_f_state_num)
+      throw InitFailedException("OpticsTB: invalid final states (not computed)\n"); 
+
+}
 //========================================================================================
 void OpticsTB::do_plot()
 {
@@ -212,6 +201,8 @@ void OpticsTB::do_plot()
   const std::set< std::string >& plotvariables = get_control().get_plotvariables();
   if (plotvariables.find("optical_spectrum_k_0") != plotvariables.end())
   {
+
+    std::cerr << "Computing spectrum in gamma point" << std::endl;
 
     double Gamma = mod_spectrum.get_option("broadening", 0.007);
     double Emin, Emax, dE;
@@ -385,10 +376,10 @@ void OpticsTB::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
   
   // loop on  eigenstates
 
-  for (unsigned i = 0; i < n1; i++)  // "upper" states
+  for (unsigned int i = 0; i < n1; i++)  // "upper" states
   {
       
-    for (unsigned j = 0; j < n2; j++)  // "lower" states
+    for (unsigned int j = 0; j < n2; j++)  // "lower" states
     {
 
       trans_energy =  is_eigen_values[_initial_eigen_state_numbers[i]] 
@@ -400,9 +391,10 @@ void OpticsTB::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
       f2 = fs_populations[_final_eigen_state_numbers[j]]; // occupation for  holes
 
 
-      Complex Me = Px_matrix[i][j] * polariz(1) + Py_matrix[i][j] * polariz(2) 
-	           + Pz_matrix[i][j] * polariz(3);
-
+      std::complex<double> Me = Px_matrix[i][j] * polariz(1) 
+	+ Py_matrix[i][j] * polariz(2) 
+	+ Pz_matrix[i][j] * polariz(3);
+      
 
       MeshBase::const_element_iterator       el     = Energy.active_elements_begin();
       const MeshBase::const_element_iterator end_el = Energy.active_elements_end();
@@ -422,7 +414,7 @@ void OpticsTB::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
         double omega = trans_energy/Hartree;
 
         spectrum[elem] += 1 / (2 * M_PI * M_PI) * (omega * omega) /(c*c*c) 
-	                  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
+	                  * Lorenzian * std::norm(Me) * f1 * f2;
 
 
       }
@@ -444,7 +436,7 @@ void OpticsTB::calculate_P_matrix_elements( )
   
   // TO DO:
   // 1. Fill eigenstate container from ETB side...  done
-  // 2. Set ETB computation of P matrix from here
+  // 2. Set ETB computation of P matrix from here   done
   // 3. Fill P_matrix[][]
   // 
   ModelOptions options;
@@ -455,12 +447,16 @@ void OpticsTB::calculate_P_matrix_elements( )
   options.set_option("P_matrix", true);
   options.set_option("poldir", 1);
   
+  std::cout << "Assemble Px" << std::endl;
+
   _initial_state_model->assemble(options);
 
+  std::cout << "Compute matrix elements" << std::endl;
+  
   // compute matrix elements
   Px_matrix.clear();
-  Px_matrix.reserve(n_i);
-  for (unsigned int j = 0; j < n_i; j++)  Px_matrix[j].reserve(n_f);
+  Px_matrix.resize(n_i);
+  for (unsigned int j = 0; j < n_i; j++)  Px_matrix[j].resize(n_f);
 
   for (unsigned int i1 = 0; i1 < n_i; i1++)
   {
@@ -470,14 +466,19 @@ void OpticsTB::calculate_P_matrix_elements( )
       unsigned int is = _initial_eigen_state_numbers[i1];
       unsigned int fs = _final_eigen_state_numbers[i2];
 
+      std::cerr << i1 << "-" << i2 << ": " << std::flush;
+
       Px_matrix[i1][i2] = _initial_state_model->
 	calculate_matrix_element(_initial_state_particle, is, 
 				 _final_state_particle, fs);
+
+      std::cerr << Px_matrix[i1][i2] << std::endl;
 
 
     }
   }
 
+  std::cout << "Assemble Py" << std::endl;
   // assemble matrix for polarization y
   options.set_option("P_matrix", true);
   options.set_option("poldir", 2);
@@ -485,9 +486,11 @@ void OpticsTB::calculate_P_matrix_elements( )
   _initial_state_model->assemble(options);
 
   // compute matrix elements
+  std::cout << "Compute matrix elements" << std::endl;
+
   Py_matrix.clear();
-  Py_matrix.reserve(n_i);
-  for (unsigned int j = 0; j < n_i; j++)  Py_matrix[j].reserve(n_f);  
+  Py_matrix.resize(n_i);
+  for (unsigned int j = 0; j < n_i; j++)  Py_matrix[j].resize(n_f);  
 
   for (unsigned int i1 = 0; i1 < n_i; i1++)
   {
@@ -497,12 +500,18 @@ void OpticsTB::calculate_P_matrix_elements( )
       unsigned int is = _initial_eigen_state_numbers[i1];
       unsigned int fs = _final_eigen_state_numbers[i2];
 
+      std::cerr << i1 << "-" << i2 << ": " << std::flush;
+
       Py_matrix[i1][i2] = _initial_state_model->
 	calculate_matrix_element(_initial_state_particle, is, 
 				 _final_state_particle, fs);
 
+      std::cerr << Py_matrix[i1][i2] << std::endl;
+
     }
   }
+
+  std::cout << "Assemble Pz" << std::endl;
 
   // assemble matrix for polarization z
   options.set_option("P_matrix", true);
@@ -510,10 +519,12 @@ void OpticsTB::calculate_P_matrix_elements( )
   
   _initial_state_model->assemble(options);
 
+  std::cout << "Compute matrix elements" << std::endl;
+
   // compute matrix elements
   Pz_matrix.clear();
-  Pz_matrix.reserve(n_i);
-  for (unsigned int j = 0; j < n_i; j++)  Pz_matrix[j].reserve(n_f);
+  Pz_matrix.resize(n_i);
+  for (unsigned int j = 0; j < n_i; j++)  Pz_matrix[j].resize(n_f);
 
   for (unsigned int i1 = 0; i1 < n_i; i1++)
   {
@@ -523,9 +534,13 @@ void OpticsTB::calculate_P_matrix_elements( )
       unsigned int is = _initial_eigen_state_numbers[i1];
       unsigned int fs = _final_eigen_state_numbers[i2];
 
+      std::cerr << i1 << "-" << i2 << ": " << std::flush;
+
       Pz_matrix[i1][i2] = _initial_state_model->
 	calculate_matrix_element(_initial_state_particle, is, 
 				 _final_state_particle, fs);
+      
+      std::cerr << Pz_matrix[i1][i2] << std::endl;    
 
     }
   }

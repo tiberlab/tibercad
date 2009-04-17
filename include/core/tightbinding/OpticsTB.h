@@ -49,9 +49,9 @@ class OpticsTB : public Optics
     /*!
       Px_matrix[j][k]:  j - initial state; k - final state
     */    
-    std::vector <std::vector <Complex> >    Px_matrix;
-    std::vector <std::vector <Complex> >    Py_matrix;
-    std::vector <std::vector <Complex> >    Pz_matrix;
+    std::vector <std::vector <std::complex<double> > >  Px_matrix;
+    std::vector <std::vector <std::complex<double> > >  Py_matrix;
+    std::vector <std::vector <std::complex<double> > >  Pz_matrix;
 
     //!numbers of eigensates that are considered as intial states for optical transition
     std::vector<unsigned int> _initial_eigen_state_numbers;
@@ -83,7 +83,11 @@ class OpticsTB : public Optics
     //! final states
     std::vector<EigenvalueProblem::eigen_problem_solution> _f_states;       
 
-    void calculate_P_matrix_elements( );
+    //! Assemble the P-matrix and compute its matrix elements.
+    void calculate_P_matrix_elements(void);
+
+    //! get states from the associated (tb) model and do some checks
+    void get_states(void);
 
 };
 

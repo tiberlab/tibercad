@@ -34,6 +34,7 @@ class EigenvalueProblem : public SimulationInterface
       double Temperature; 
     };
 
+    //! get the eigensolution vector
     const std::vector<eigen_problem_solution>& get_eigen_solution() const
                                                            { return _solution;};
 
@@ -43,11 +44,18 @@ class EigenvalueProblem : public SimulationInterface
 
     virtual void assemble(const ModelOptions& options){};
     
+    //! computes matrix elements between state i of particle_i and state j of particle_j
     virtual std::complex<double> calculate_matrix_element(const std::string& i_particle,
 							  unsigned int i, 
 							  const std::string& j_particle,
 							  unsigned int j){}; 
-   
+    //! get number of states of a given particle type
+    unsigned int get_num_states(const std::string& particle);
+
+    /*! Note: for the moment calculate_matrix_element relays on the fact that the first
+     *  n_vb states are for valence, then there are all the electron states.
+    */
+
   protected:
 
     std::vector<eigen_problem_solution> _solution;

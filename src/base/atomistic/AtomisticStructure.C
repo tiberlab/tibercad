@@ -160,8 +160,8 @@ AtomisticStructure::init()
       print_structure(name);
       name = _name + ".gen" ;
       print_structure(name);
-      name = _name + ".upg" ;
-      print_structure(name);
+      //name = _name + ".upg" ;
+      //print_structure(name);
 
     }
 
