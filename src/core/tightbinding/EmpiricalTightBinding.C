@@ -107,9 +107,7 @@ ETB::do_init(void){
 
   std::cerr << "(TC) Empirical TB Initialisation..." << std::endl;
 
-  std::cerr << "(TC) parse options...";
   parse_options();
-  std::cerr << "done" << std::endl;
 
 #ifdef DEBUG
   print_upt_options();
@@ -124,12 +122,13 @@ ETB::do_init(void){
   else
   {
     get_atomistic_structure();
-    upt_filename = _atomistic_structure->get_name() + ".upg";
-    _atomistic_structure->print_structure(upt_filename);
-  }
 
-  // Get mesh informations
-  //_mesh = & ( get_environment().get_device().get_mesh());
+    if(_atomistic_structure==NULL)
+      throw InitFailedException("ETB: atomistic structure not created");
+
+    upt_filename = _atomistic_structure->get_name() + ".upg";
+    //_atomistic_structure->print_structure(upt_filename);
+  }
 
   // Get database path from Database class
   std::string database_path = Database::get_default_search_path();
@@ -164,22 +163,36 @@ ETB::do_init(void){
 
   //std::cout << "addskdata done" << std::endl;
 
-  std::cout << "(TC) init uptight begins" << std::endl;
+  //std::cout << "(TC) init uptight begins" << std::endl;
 
-  inst->inituptight();
+  //inst->inituptight();
 
-  std::cout << "(TC) init uptight done" << std::endl;
+  //std::cout << "(TC) init uptight done" << std::endl;
 
-  _init = 0;
+  _init = 1;
   _assemble = 1;
 
 }
 
 //-------------------------------------------------------------------------
 void ETB::reinit(void){
+  
+  std::string upt_filename = _atomistic_structure->get_name() + ".upg";
+
+  std::cout << "printing structure " << upt_filename << std::endl;
+
+  _atomistic_structure->print_structure(upt_filename);
+
+  std::cout << "(TC) clean uptight data container" << std::endl;
 
   inst->cleanuptight();
+
+  std::cout << "(TC) init uptight begins" << std::endl;
+
   inst->inituptight();
+
+  std::cout << "(TC) init uptight done" << std::endl;
+
 
 }
 
@@ -190,6 +203,10 @@ void ETB::do_solve(void){
   ModelOptions options;
 
   std::cout << "Tight-Binding calculations" << std::endl;
+
+  if (_init) reinit();
+
+  _init = 0;
 
   if (_assemble) assemble(options);
 
@@ -392,7 +409,7 @@ void ETB::do_plot(void){
 
 void ETB::parse_options(void)
 {
-     std::cout << "(TC) parse_options() begin...";
+  std::cout << "(TC) parse_options() begin...";
 
   _upg_filename = get_options().get_option("upg_filename", "none");
 

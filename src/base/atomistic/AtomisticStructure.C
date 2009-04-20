@@ -223,8 +223,7 @@ AtomisticStructure::associate_elements()
 void
 AtomisticStructure::read_structure(const std::string& path)
 {
-  //TODO: xyz and gen do not contain enough information (atom region, material)
-  //Should be implemented an information extension and reading UPG files
+
   std::ifstream file;
   std::string line, record;
   unsigned int n_specie;

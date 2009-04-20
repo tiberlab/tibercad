@@ -67,14 +67,17 @@ class ETB : public TightBinding
   virtual PhysicalModel* create_physical_model(const ModelOptions &options,
       const Material* mat) const throw (ModelErrorException);
 
+  //! initialize or reinitialize the library container's with structure data 
   void reinit(void);
 
   void reassemble(void);
 
   void set_num_states(int num_vb, int num_cb);
  
+  //! computes the solution 
   void solve_for_particle(const std::string& particle);
 
+  //! Computes the Fermi level averaged according to the state density
   double calculate_fermi_averaged(unsigned int i);
   
  private:
@@ -93,6 +96,7 @@ class ETB : public TightBinding
   //! Add potential shifts
   void add_shifts(void);
 
+  
   //! Structure containing options for DFTB+ tight binding builder
   UptOptions _upt_options;
 
@@ -124,6 +128,9 @@ class ETB : public TightBinding
 
   virtual void assemble(const ModelOptions& options);
 
+
+  //! computes the matrix element for the optical matrix 
+  //! the P matrix comes out in   eV * Ang  (setting m=1,hbar=1)
   virtual std::complex<double> calculate_matrix_element(const std::string& i_particle,
 							unsigned int i, 
 							const std::string& j_particle,
