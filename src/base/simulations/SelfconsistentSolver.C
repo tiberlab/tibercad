@@ -183,10 +183,14 @@ SelfconsistentSolver::do_delete_remembered_solution(ID id)
 void
 SelfconsistentSolver::do_plot(void)
 {
+  get_control().set_filename_suffix(get_name());
+
   int num_sim = _simulations.size();
 
   for (int i = 0; i < num_sim; i++)
     _simulations[i]->plot();
+
+  get_control().clear_filename_suffix();
 }
 
 
