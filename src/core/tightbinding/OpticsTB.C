@@ -407,13 +407,14 @@ void OpticsTB::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
         double En = elem->centroid()(0);
 
         double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)  
-					+ (0.5*Gamma)*(0.5*Gamma)) / Hartree;
+					+ (0.5*Gamma)*(0.5*Gamma)) * Hartree;
 
         double c = 1.0/fine_structure_constant;
 
         double omega = trans_energy/Hartree;
 
-        spectrum[elem] += 1 / (2 * M_PI * M_PI) * (omega * omega) /(c*c*c) 
+        //spectrum[elem] += 1 / (2 * M_PI * M_PI) * (omega * omega) /(c*c*c) 
+        spectrum[elem] += 4 * (omega * omega) /(c*c*c) 
 	                  * Lorenzian * std::norm(Me) * f1 * f2;
 
 

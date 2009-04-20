@@ -404,6 +404,8 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
         double En = elem->centroid()(0);
 
         double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)  + (0.5*Gamma)*(0.5*Gamma)) / Hartree;
+	// Note(alex): the division by Hartree seems wrong. Lorenzian is in 1/eV, so transformation
+	// should be "Lorenzian * Hartree"
 
         double c = 1.0/Constants::fine_structure_constant;
 
@@ -412,8 +414,29 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
         //This is the right formula, as f1 is electron occupation probability and f2 is hole occupation probability.
         //Note that it differs from usual literature where usually f1 and f2 states initial state and final state occupation
         //probability, so it's related to electrons and it becomes f1*(1-f2)
+
         spectrum[elem] += 1 / (2 * M_PI * M_PI) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
 
+	//Note(alex): This factor 1/(2*PI*PI) seems wrong
+	//According to Chuang's book the recombination rate should contain a pre-factor 
+	//(including 2 for spin sum and 2 for polarization and 4 Pi for angle integration)
+	//
+	//    nr^2 w^2           pi e^2      2       8 nr w e^2 c
+	// ---------------- --------------- --- = ----------------------
+	// pi^2 hbar c^2     nr c m^2 e0 w   V    4 pi e0 hbar (m^2 c^4)
+	//
+	// Extracting the prefactor m/hbar from the P-matrix, and multipling by a factor (hbar w) to get power emitted
+	// we get the following prefactor (in which V has been removed to get total power emitted):
+	//
+	//     8 nr (hbar w)^2 e^2/(4 pi e0)
+	//  = ------------------------------   
+	//             (hbar c)^3  hbar
+	//
+	//  Expressed in atomic units (hbar=1, e=1, 4 pi e0=1, c=1/fine_struct, I almost get the formula implemented,
+	//  but the pre-factor should be 8 nr.
+	//
+	//  From the latest formula derived by Michail it is not clear to me at which stage the angle integration is performed.
+	//  What to do with the factor 4 PI ? What about electron Spin and photon polarizations ? 
 
       }
 
