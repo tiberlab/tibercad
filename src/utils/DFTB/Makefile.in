@@ -10,7 +10,7 @@ CXXFLAGS = -fPIC -I $(topdir)/include/utils/DFTB
 target := $(topdir)/libdftbpc$(shared_libext)
 
 
-$(libdir)/libdftbpc$(shared_libext) :  DftbpWrapper$(obj-suffix)
+$(libdir)/libdftbpc$(shared_libext) :  DftbpWrapper$(obj-suffix) libdftbp.a
 	@echo "Linking libdftbpc$(shared_libext) ..."
 	@$(CXX) -shared -o $@ $< \
 		-Wl,--version-script,export.map \
