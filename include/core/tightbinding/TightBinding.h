@@ -107,6 +107,9 @@ protected:
   //!Vector for atom potential shifts
   std::vector<double> _pot_shift;
 
+  //! minimum potential 
+  double _pot_min;
+
   //!Vector for electron chemical potential
   std::vector<double> _el_chem_pot;
 

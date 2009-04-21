@@ -263,7 +263,7 @@ void ETB::do_solve(void){
   {
     _solution[i].particle = "hl";
     _solution[i].statistics = "Fermi";
-    _solution[i].eigen_energy = eigvals[i] + _upt_options.vb_shift;
+    _solution[i].eigen_energy = eigvals[i] + _upt_options.vb_shift - _pot_min;
     _solution[i].eigen_vector.resize(hdim);
 
     if (i!= 0)
@@ -293,7 +293,7 @@ void ETB::do_solve(void){
   {
     _solution[i].particle = "el";
     _solution[i].statistics = "Fermi";
-    _solution[i].eigen_energy = eigvals[i] + _upt_options.vb_shift;
+    _solution[i].eigen_energy = eigvals[i] + _upt_options.vb_shift - _pot_min;
     _solution[i].eigen_vector.resize(hdim);
 
     eigtmp_re += hdim;

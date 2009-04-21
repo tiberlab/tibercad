@@ -24,6 +24,7 @@ TightBinding::TightBinding()
    _mulliken_netcharges(),
    _mesh(NULL)
 {
+  _pot_min = 0.0;
 }
 
 
@@ -291,6 +292,9 @@ TightBinding::project_potential(const std::string model_name, const std::string 
   std::cout << "setting simulation " << std::endl;
   model.set_simulation(model_name);
 
+  if( !model.get_simulation()->is_solved() )
+    throw InitFailedException("Potential model has not been solved");
+
   if (mode == "point")
     {//In point mode potential on atom is just kept as value on atom position
       //vector returned is sized number of atoms
@@ -347,16 +351,17 @@ TightBinding::project_potential(const std::string model_name, const std::string 
     }
 
   //Process potential values to shift the smallest value to 0
-  double min = _pot_shift[0];
+  _pot_min = _pot_shift[0];
   double tmp;
   for (unsigned int i = 1; i < _pot_shift.size(); i++)
-    {
-  if (_pot_shift[i] < min) min = _pot_shift[i];
-    }
+  {
+      if (_pot_shift[i] < _pot_min) _pot_min = _pot_shift[i];
+  }
   for (unsigned int i = 0; i < _pot_shift.size(); i++)
-      {tmp = _pot_shift[i] - min;
-       _pot_shift[i] = tmp;
-      }
+  { 
+      tmp = _pot_shift[i] - _pot_min;
+      _pot_shift[i] = tmp;
+  }
 
   double* pot = new double[_pot_shift.size()];
       for (unsigned int i = 0; i < _pot_shift.size(); i++)
