@@ -36,10 +36,10 @@ void MeshInput::read_mesh(const string& file_name,unsigned int sim_dim,
   if  ( file_name.rfind(".grd") < file_name.size() )
   {
 
-    ReadISEGrid ISE_mesh( file_name.c_str() , mesh, mesh_data );
-    ISE_mesh.get_BC_data (BoundCond );
-    ISE_mesh.get_region_names_map (region_names_map );
-    ISE_mesh.get_BC_region_names_map (BC_region_names_map );
+    ReadISEGrid ISE_mesh(file_name.c_str(), mesh, mesh_data);
+    ISE_mesh.get_BC_data(BoundCond);
+    ISE_mesh.get_region_names_map(region_names_map);
+    ISE_mesh.get_BC_region_names_map(BC_region_names_map);
 
   }
   else if ( file_name.rfind(".msh") < file_name.size() )
@@ -62,7 +62,5 @@ void MeshInput::read_mesh(const string& file_name,unsigned int sim_dim,
           region_names_map[it->first] = it->second;
       }
     }
-
   }
-
 }

@@ -693,12 +693,12 @@ DriftDiffusion::do_solve(void)
     /////////////////// << QUIRK
  
     // if we would repeat the equilibrium simulation, we can stop now
-    //if (equilibrium)
-    //{
-    //  cout << "----------------------------------"
-    //    << "--------------------------------->>" << endl;
-    //  return;
-    //}
+    if (equilibrium)
+    {
+      cout << "----------------------------------"
+        << "--------------------------------->>" << endl;
+      return;
+    }
   }
 
   // set the old solution
