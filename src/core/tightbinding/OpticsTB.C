@@ -443,6 +443,7 @@ void OpticsTB::calculate_P_matrix_elements( )
   ModelOptions options;
   unsigned int n_i =  _initial_eigen_state_numbers.size();
   unsigned int n_f =  _final_eigen_state_numbers.size();
+  std::vector<double> is_pop, fs_pop;
 
   // assemble matrix for polarization x
   options.set_option("P_matrix", true);
@@ -451,6 +452,9 @@ void OpticsTB::calculate_P_matrix_elements( )
   std::cout << "Assemble Px" << std::endl;
 
   _initial_state_model->assemble(options);
+
+  _initial_state_model->get_populations(is_pop);
+  _final_state_model->get_populations(fs_pop);
 
   std::cout << "Compute matrix elements" << std::endl;
   
@@ -476,7 +480,8 @@ void OpticsTB::calculate_P_matrix_elements( )
       // convert matrix element from eV*Ang to atomic units
       Px_matrix[i1][i2] *= Hartree/(bohr_radius*1e10);
 
-      std::cerr << Px_matrix[i1][i2] << std::endl;
+      std::cerr << Px_matrix[i1][i2] << "   ";
+      std::cerr << is_pop[i1] << ", " << fs_pop[i2] << std::endl;
 
 
     }
@@ -513,8 +518,8 @@ void OpticsTB::calculate_P_matrix_elements( )
       // convert matrix element from eV*Ang to atomic units
       Py_matrix[i1][i2] *= Hartree/(bohr_radius*1e10);
 
-      std::cerr << Py_matrix[i1][i2] << std::endl;
-
+      std::cerr << Py_matrix[i1][i2] << "   ";
+      std::cerr << is_pop[i1] << ", " << fs_pop[i2] << std::endl;
     }
   }
 
@@ -550,8 +555,8 @@ void OpticsTB::calculate_P_matrix_elements( )
       // convert matrix element from eV*Ang to atomic units
       Pz_matrix[i1][i2] *= Hartree/(bohr_radius*1e10);
       
-      std::cerr << Pz_matrix[i1][i2] << std::endl;    
-
+      std::cerr << Pz_matrix[i1][i2] << "   ";    
+      std::cerr << is_pop[i1] << ", " << fs_pop[i2] << std::endl;
     }
   }
 
