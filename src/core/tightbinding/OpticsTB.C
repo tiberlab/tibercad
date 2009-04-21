@@ -414,7 +414,7 @@ void OpticsTB::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
         double omega = trans_energy/Hartree;
 
         //spectrum[elem] += 1 / (2 * M_PI * M_PI) * (omega * omega) /(c*c*c) 
-        spectrum[elem] += 4 * (omega * omega) /(c*c*c) 
+        spectrum[elem] += 1/(2 * M_PI) * (omega * omega) /(c*c*c) 
 	                  * Lorenzian * std::norm(Me) * f1 * f2;
 
 
@@ -473,6 +473,9 @@ void OpticsTB::calculate_P_matrix_elements( )
 	calculate_matrix_element(_initial_state_particle, is, 
 				 _final_state_particle, fs);
 
+      // convert matrix element from eV*Ang to atomic units
+      Px_matrix[i1][i2] *= Hartree/(bohr_radius*1e10);
+
       std::cerr << Px_matrix[i1][i2] << std::endl;
 
 
@@ -507,6 +510,9 @@ void OpticsTB::calculate_P_matrix_elements( )
 	calculate_matrix_element(_initial_state_particle, is, 
 				 _final_state_particle, fs);
 
+      // convert matrix element from eV*Ang to atomic units
+      Py_matrix[i1][i2] *= Hartree/(bohr_radius*1e10);
+
       std::cerr << Py_matrix[i1][i2] << std::endl;
 
     }
@@ -540,6 +546,9 @@ void OpticsTB::calculate_P_matrix_elements( )
       Pz_matrix[i1][i2] = _initial_state_model->
 	calculate_matrix_element(_initial_state_particle, is, 
 				 _final_state_particle, fs);
+
+      // convert matrix element from eV*Ang to atomic units
+      Pz_matrix[i1][i2] *= Hartree/(bohr_radius*1e10);
       
       std::cerr << Pz_matrix[i1][i2] << std::endl;    
 

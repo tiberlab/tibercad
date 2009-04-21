@@ -416,8 +416,9 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
         //probability, so it's related to electrons and it becomes f1*(1-f2)
 
         spectrum[elem] += 1 / (2 * M_PI * M_PI) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
-
-	//Note(alex): This factor 1/(2*PI*PI) seems wrong
+	
+	//Note(alex): This factor 1/(2*PI*PI) should be probably changed into nr/(2*PI).
+        //
 	//According to Chuang's book the recombination rate should contain a pre-factor 
 	//(including 2 for spin sum and 2 for polarization and 4 Pi for angle integration)
 	//
@@ -432,11 +433,11 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 	//  = ------------------------------   
 	//             (hbar c)^3  hbar
 	//
-	//  Expressed in atomic units (hbar=1, e=1, 4 pi e0=1, c=1/fine_struct, I almost get the formula implemented,
-	//  but the pre-factor should be 8 nr.
-	//
-	//  From the latest formula derived by Michail it is not clear to me at which stage the angle integration is performed.
-	//  What to do with the factor 4 PI ? What about electron Spin and photon polarizations ? 
+	//  Expressed in atomic units, hbar=1, e=1, 4 pi e0=1, c=1/fine_struct. 
+	//  
+	//  So the formula above, multiplied by 4*Pi for angle integration, and a factor of 4 for spin/pol deg
+	//  agrees to Chuang's only if the factor is nr/(2*PI) rather than 1/(2*PI*PI).
+	//  
 
       }
 
