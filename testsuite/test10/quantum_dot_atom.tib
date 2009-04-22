@@ -1,0 +1,304 @@
+$Device
+{
+
+  Region ball
+  {
+    material = GaN  
+  
+
+    y-growth-direction = (-1,0,1,0)
+    x-growth-direction = (-1,2,-1,0)   
+    z-growth-direction = (0,0,0,1)
+
+    doping = 1e15
+    doping_type = donor
+    doping_level = 0.025
+
+  }
+
+  Region  qbox
+  {
+    material = AlN  
+ 
+
+    y-growth-direction = (-1,0,1,0)
+    x-growth-direction = (-1,2,-1,0)   
+    z-growth-direction = (0,0,0,1)
+   
+    doping = 1e15
+    doping_type = donor
+    doping_level = 0.025
+    
+  }
+
+
+  Region  intrinsic
+  {
+    material =  AlN  
+
+
+    y-growth-direction = (-1,0,1,0)
+    x-growth-direction = (-1,2,-1,0)   
+    z-growth-direction = (0,0,0,1)
+   
+    doping = 1e16
+    doping_type =  donor
+    doping_level = 0.025
+    
+  }
+
+  Region  nside
+  {
+
+    material =  AlN 
+ 
+
+    y-growth-direction = (-1,0,1,0)
+    x-growth-direction = (-1,2,-1,0)   
+    z-growth-direction = (0,0,0,1)
+   
+    doping = 1e18
+    doping_type =  donor
+    doping_level = 0.025
+    
+  }
+
+
+  Region  pside
+  {
+
+    material =  AlN  
+ 
+
+    y-growth-direction = (-1,0,1,0)
+    x-growth-direction = (-1,2,-1,0)   
+    z-growth-direction = (0,0,0,1)
+   
+    doping = 1e18
+    doping_type =  donor
+    doping_level = 0.025
+    
+  }
+
+
+  Cluster quantumregion
+  {
+    mesh_regions = (ball, qbox)
+  }
+
+
+  Cluster atomistic
+  {
+    mesh_regions=(ball, qbox)
+  }
+
+}
+
+
+$Scale
+{
+
+    Atomistic tb1
+    {
+       physical_regions = atomistic 
+       reference_region = nside  # barrier1 
+       #path = tb1.gen
+       passivation = yes
+       #preserve = conventional
+    }   
+
+}
+
+
+
+$Models
+{
+
+  model empirical_tb
+  {
+    options
+     {
+       physical_regions = atomistic 
+       simulation_name = tb
+       atomistic_structure = tb1
+
+
+     }
+  }
+
+
+
+
+  model macrostrain
+  {
+
+    options
+    {          
+      simulation_name = str
+    }
+
+  
+  
+    
+    BC_Regions  
+    {
+      BC_Region cathode
+      {
+	type = substrate
+	material = AlN  # GaN
+
+	y-growth-direction = (-1,0,1,0)
+	x-growth-direction = (-1,2,-1,0)   
+	z-growth-direction = (0,0,0,1)
+
+      }
+    }
+
+  } 
+
+
+  model  driftdiffusion
+  { 
+
+    options
+    {          
+      simulation_name = dd
+    }
+
+    physical_model recombination
+    { 
+      model = srh
+    }                
+
+     physical_model recombination
+    { 
+     model = direct
+     C = 1.1e-8
+   
+    }  
+  
+     
+    physical_model electron_mobility
+    { 
+      model = doping_dependent
+    }                
+
+
+    physical_model hole_mobility
+    { 
+      model = doping_dependent
+    }                
+
+
+    BC_Regions
+    {
+      BC_Region anode
+      {
+        type = ohmic
+	voltage = @Vb[0.0]
+      }
+
+      BC_Region cathode
+      {
+        type = ohmic
+	voltage = 0.0
+      }
+    }
+   
+
+  }
+
+
+}
+
+
+
+
+$Solver
+{
+
+
+  tb
+  {
+
+ #   relativistic =  true
+
+    num_valence_eigenvalues = 2 #4 #2  #1
+    guess_valence = 0.0
+    num_conduction_eigenvalues = 2 # 0  # 1
+    guess_conduction = 2.5
+    potential_simulation = dd
+
+  }
+
+
+
+  macrostrain
+  {
+   substrate = cathode
+   lin_rel_tol = 1e-6
+
+   number_shape_steps = 1  #  for  atom displacement  calculation
+
+   strain_atomistic_structure = tb1  # tb1 = atomistic_structure
+
+   #xmonitor =  true
+
+  }
+
+ 
+  driftdiffusion
+  {
+    #coupling = poisson
+
+    #nonlinear_solver = tiber
+    #linear_solver = pardiso
+   
+    nonlin_max_it = 25
+    nonlin_rel_tol = 1e-12
+ 
+    nonlin_step_tol = 1e-5
+  
+    #ls_max_step = 4
+
+  }
+ 
+}
+
+
+
+$Physics
+{
+
+  driftdiffusion
+  {
+    strain_simulation = str
+    statistics = FD
+    
+  #  electron_quantum_density = dens_el
+  #  use_density_predictor = true
+  #  embracing_length = 3e-9
+  #  plot_embracing_regions = true
+  }  
+
+}
+
+
+
+$Simulation
+{
+#  searchpath = ../../materials     
+  meshfile = box_in_cube.msh 
+  mesh_units = 1e-9
+  dimension = 3
+  temperature = 300
+
+  solve = (str, dd, tb)
+
+  resultpath = output 
+
+  output_format = (ise) 
+
+  plot = (tbstates, strain, polarization, Ec, Ev, QFermi_e, QFermi_h, EField, eDensity, hDensity, ElPotential,  EigenFunctions, EigenEnergy, EnergyLevels, quantum_density)
+
+}
