@@ -481,7 +481,7 @@ sub extract_data_from_characteristic($$) {
 
   while (not eof)  {
     my @l = (split(/\s+/, <SF>));
-    push @data, ($l[$index]);
+    if ($#l > 0) { push @data, ($l[$index]) }; 
   }
 
   return @data;
