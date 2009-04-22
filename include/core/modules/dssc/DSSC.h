@@ -245,6 +245,11 @@ class DSSC : public SimulationInterface
     //! Tells if we are doing only Poisson
     bool poisson_only(void) const;
 
+    //! from where the light comes from
+    std::string _light_from;
+
+    //! coordinates of the contact from where the light comes from (from from)
+    Point _x0;
 
     //! The type of scaling
     Scaling::ScalingType _scaling_type;
@@ -304,6 +309,7 @@ class DSSC : public SimulationInterface
      */
     void compute_scaling(Scaling::ScalingType type = Scaling::UNITS);
 
+    void compute_scaling_only(Scaling::ScalingType type = Scaling::UNITS);
     
     
     //! Fills the dirichlet nodes data structure.

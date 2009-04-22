@@ -123,6 +123,8 @@ class DSSCModel : public PhysicalModel, public Variable
     void set_potentials(double electric_potential, double Ef_n = 0.0,
         double Ef_I = 0.0, double Ef_I3 = 0.0, double Ef_C = 0.0);
 
+    //! Set coordinates of the contact under illumination
+    void set_x0(double x0);
 
     //! Set the electric field
     void set_electric_field(const RealGradient& E);
@@ -139,6 +141,9 @@ class DSSCModel : public PhysicalModel, public Variable
     //! Set the gradient of the cation electro-chemical potential
     void set_grad_fermi_C(const RealGradient& grad_F);
 
+   
+    //! Get coordinates of the contact under illumination
+    const double get_x0() const;
 
     //! Get the electric field
     const RealGradient& get_electric_field(void) const;
@@ -419,7 +424,7 @@ class DSSCModel : public PhysicalModel, public Variable
 
     //! True if we are in TiO2
     bool _is_TiO2;
-    
+
 
     //! The relative permittivity tensor
     double _permittivity;
@@ -468,6 +473,21 @@ class DSSCModel : public PhysicalModel, public Variable
     //! The generation rate
     double _generation;
 
+
+    //! coordinate of the contact under illumination
+    double _x0;
+
+
+    //! absorption coefficient
+    double _alpha;
+
+    
+    //! absorption coefficient
+    double _alpha2;
+    
+    
+    //! absorption coefficient
+    double _deltaG;
 };
 
 
@@ -552,6 +572,15 @@ DSSCModel::set_potentials(double electric_potential, double Ef_n,
 
 inline
 void
+DSSCModel::set_x0(double x0)
+{
+  _x0 = x0;
+}
+
+
+
+inline
+void
 DSSCModel::set_electric_field(const RealGradient& E)
 {
   _pd.electric_field = E;
@@ -591,6 +620,15 @@ DSSCModel::set_grad_fermi_C(const RealGradient& grad_F)
   _pd.grad_fermi_C = grad_F;
 }
 
+
+
+
+inline
+const double 
+DSSCModel::get_x0(void) const
+{
+  return _x0;
+}
 
 
 inline
@@ -749,6 +787,7 @@ DSSCModel::get_ionized_dye_density(void) const
 {
   return _pd.ionized_dye;
 }
+
 
 
 

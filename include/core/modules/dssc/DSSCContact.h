@@ -97,7 +97,8 @@ class DSSCContact : public BoundaryProperties, public Variable
 
 inline
 DSSCContact::DSSCContact(void)
-  : _boundary_value(0.0),
+  // open circuit value
+  : _boundary_value(1e10),
     _cathode(false),
     _j0(0.1),
     _beta(0.78),
