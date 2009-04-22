@@ -363,14 +363,14 @@ void OpticsTB::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
   unsigned int n2 =  _final_eigen_state_numbers.size();
 
 
-  _initial_state_model->get_eigenvalues(is_eigen_values);  
+  _initial_state_model->get_eigenvalues(_initial_state_particle, is_eigen_values);  
 
-  _final_state_model->get_eigenvalues(fs_eigen_values);
+  _final_state_model->get_eigenvalues(_final_state_particle, fs_eigen_values);
 
 
-  _initial_state_model->get_populations(is_populations);
+  _initial_state_model->get_populations(_initial_state_particle, is_populations);
 
-  _final_state_model->get_populations(fs_populations);
+  _final_state_model->get_populations(_final_state_particle, fs_populations);
 
 
   
@@ -444,6 +444,7 @@ void OpticsTB::calculate_P_matrix_elements( )
   unsigned int n_i =  _initial_eigen_state_numbers.size();
   unsigned int n_f =  _final_eigen_state_numbers.size();
   std::vector<double> is_pop, fs_pop;
+  std::vector<double> is_ene, fs_ene;
 
   // assemble matrix for polarization x
   options.set_option("P_matrix", true);
@@ -453,8 +454,11 @@ void OpticsTB::calculate_P_matrix_elements( )
 
   _initial_state_model->assemble(options);
 
-  _initial_state_model->get_populations(is_pop);
-  _final_state_model->get_populations(fs_pop);
+  _initial_state_model->get_populations(_initial_state_particle, is_pop);
+  _final_state_model->get_populations(_final_state_particle, fs_pop);
+  _initial_state_model->get_eigenvalues(_initial_state_particle, is_ene);
+  _final_state_model->get_eigenvalues(_final_state_particle, fs_ene);
+
 
   std::cout << "Compute matrix elements" << std::endl;
   
@@ -471,7 +475,8 @@ void OpticsTB::calculate_P_matrix_elements( )
       unsigned int is = _initial_eigen_state_numbers[i1];
       unsigned int fs = _final_eigen_state_numbers[i2];
 
-      std::cerr << i1 << "-" << i2 << ": " << std::flush;
+      std::cerr << is << "-" << fs << ": " << std::flush;
+      std::cerr << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;      
 
       Px_matrix[i1][i2] = _initial_state_model->
 	calculate_matrix_element(_initial_state_particle, is, 
@@ -481,7 +486,7 @@ void OpticsTB::calculate_P_matrix_elements( )
       Px_matrix[i1][i2] *= Hartree/(bohr_radius*1e10);
 
       std::cerr << Px_matrix[i1][i2] << "   ";
-      std::cerr << is_pop[i1] << ", " << fs_pop[i2] << std::endl;
+      std::cerr << is_pop[is] << ", " << fs_pop[fs] << std::endl;
 
 
     }
@@ -509,7 +514,8 @@ void OpticsTB::calculate_P_matrix_elements( )
       unsigned int is = _initial_eigen_state_numbers[i1];
       unsigned int fs = _final_eigen_state_numbers[i2];
 
-      std::cerr << i1 << "-" << i2 << ": " << std::flush;
+      std::cerr << is << "-" << fs << ": " << std::flush;
+      std::cerr << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;
 
       Py_matrix[i1][i2] = _initial_state_model->
 	calculate_matrix_element(_initial_state_particle, is, 
@@ -519,7 +525,7 @@ void OpticsTB::calculate_P_matrix_elements( )
       Py_matrix[i1][i2] *= Hartree/(bohr_radius*1e10);
 
       std::cerr << Py_matrix[i1][i2] << "   ";
-      std::cerr << is_pop[i1] << ", " << fs_pop[i2] << std::endl;
+      std::cerr << is_pop[is] << ", " << fs_pop[fs] << std::endl;
     }
   }
 
@@ -546,7 +552,8 @@ void OpticsTB::calculate_P_matrix_elements( )
       unsigned int is = _initial_eigen_state_numbers[i1];
       unsigned int fs = _final_eigen_state_numbers[i2];
 
-      std::cerr << i1 << "-" << i2 << ": " << std::flush;
+      std::cerr << is << "-" << fs << ": " << std::flush;
+      std::cerr << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;
 
       Pz_matrix[i1][i2] = _initial_state_model->
 	calculate_matrix_element(_initial_state_particle, is, 
@@ -556,7 +563,7 @@ void OpticsTB::calculate_P_matrix_elements( )
       Pz_matrix[i1][i2] *= Hartree/(bohr_radius*1e10);
       
       std::cerr << Pz_matrix[i1][i2] << "   ";    
-      std::cerr << is_pop[i1] << ", " << fs_pop[i2] << std::endl;
+      std::cerr << is_pop[is] << ", " << fs_pop[fs] << std::endl;
     }
   }
 

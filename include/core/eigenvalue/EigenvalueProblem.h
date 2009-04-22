@@ -31,16 +31,16 @@ class EigenvalueProblem : public SimulationInterface
       //! electro-chemical potential [eV] \f$ \langle \psi |\mu({\bf r} | \psi \rangle \f$
       double electro_chem_pot;
       //! Level temperature
-      double Temperature; 
+      double temperature; 
     };
 
     //! get the eigensolution vector
     const std::vector<eigen_problem_solution>& get_eigen_solution() const
                                                            { return _solution;};
 
-    void get_eigenvalues(std::vector<double>& values) const;
+    void get_eigenvalues(const std::string& particle, std::vector<double>& values) const;
 
-    void get_populations(std::vector<double>& values) const;
+    void get_populations(const std::string& particle, std::vector<double>& values) const;
 
     virtual void assemble(const ModelOptions& options){};
     
@@ -55,6 +55,8 @@ class EigenvalueProblem : public SimulationInterface
     /*! Note: for the moment calculate_matrix_element relays on the fact that the first
      *  n_vb states are for valence, then there are all the electron states.
     */
+
+    void write_states(void);
 
   protected:
 

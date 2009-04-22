@@ -1,16 +1,25 @@
 #include "EigenvalueProblem.h"
 #include "Constants.h"
 
-void EigenvalueProblem::get_eigenvalues(std::vector<double>& values) const
+void EigenvalueProblem::get_eigenvalues(const std::string& particle, 
+					std::vector<double>& values) const
 {
 
   unsigned int n = _solution.size();
-  values.resize(n);
+  unsigned int num_st = 0;
+  values.reserve(n);
 
   for (unsigned int i = 0; i < n; i++)
   {
-    values[i] = _solution[i].eigen_energy;  
+    if(_solution[i].particle == particle)
+    {  
+      num_st++;
+
+      values.push_back( _solution[i].eigen_energy ); 
+    }
   }  
+
+  values.resize(num_st);
 
 }
 
@@ -25,32 +34,50 @@ unsigned int EigenvalueProblem::get_num_states(const std::string& particle)
   return num_i_states;
 }
 
-void EigenvalueProblem::get_populations(std::vector<double>& values) const
+void EigenvalueProblem::get_populations(const std::string& particle, 
+					std::vector<double>& values) const
 {
  
   unsigned int n = _solution.size();
-  values.resize(n);
+  unsigned int num_st = 0;
+  values.reserve(n);
  
   for (unsigned int i = 0; i < n; i++)
   {
-    if(_solution[i].statistics == "Fermi")
-    {
-      values[i] = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
-		       _solution[i].Temperature);
+    if(_solution[i].particle == particle)
+    {  
+      num_st++;
 
-      if(_solution[i].particle == "hl" || _solution[i].particle == "hole")
-      {
-	values[i] = 1 - values[i];
+      if(_solution[i].statistics == "Fermi")
+      {      
+	double val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
+		       _solution[i].temperature);
+
+	if(particle == "el" || particle == "electron")
+	{
+	  values.push_back(val);	  
+	}	
+	
+	if(particle == "hl" || particle == "hole")
+	{
+	  values.push_back(1-val);	  
+	}
+
       }
-  
+      else
+      {
+	double val = Bose(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
+		       _solution[i].temperature);
+
+	values.push_back(val);	
+	
+      }
+
     }
-    else
-    {
-      values[i] = Bose(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
-		       _solution[i].Temperature);
-      
-    }
+     
   }
+
+  values.resize(num_st);
  
 } 
 
@@ -84,5 +111,21 @@ double  EigenvalueProblem::Bose(double Energy, double electro_chem_pot, double T
     bose = 1.0/(std::exp(exp_arg) - 1.0);
   
   return bose;
+
+}
+
+
+void EigenvalueProblem::write_states(void)
+{
+
+  int num_st=_solution.size();
+
+  for(int i=0; i< num_st; i++)
+  {
+    std::cerr<<_solution[i].particle<<" "<<_solution[i].eigen_energy<<" "
+	     <<_solution[i].statistics<<" "<<_solution[i].electro_chem_pot
+	     <<std::endl;
+  }
+
 
 }

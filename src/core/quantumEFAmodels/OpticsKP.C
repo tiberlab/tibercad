@@ -36,7 +36,8 @@ PhysicalModel* OpticsKP::create_physical_model(const ModelOptions& options,
   kp8x8options["model"] = "kp";
   kp8x8options["kp_model"] = "8x8";
 
-  EFAbulkModel* model = dynamic_cast<EFAbulkModel*> ( PhysicalModelInterface::create("EFAmodel", kp8x8options ) );
+  EFAbulkModel* model = dynamic_cast<EFAbulkModel*> 
+    ( PhysicalModelInterface::create("EFAmodel", kp8x8options ) );
 
   if (model == NULL)
     throw ModelErrorException("OpticsKP: cannot create EFAbulkModel");
@@ -46,7 +47,8 @@ PhysicalModel* OpticsKP::create_physical_model(const ModelOptions& options,
 }
 
 //===============================================//
-BoundaryProperties* OpticsKP::create_boundary_model(const ModelOptions& options) const  throw (ModelErrorException)
+BoundaryProperties* OpticsKP::create_boundary_model(const ModelOptions& options) const 
+ throw (ModelErrorException)
 {
 
   return NULL;
@@ -69,7 +71,8 @@ void OpticsKP::parse_options()
   const ModelOptions& mod_opt = get_options();
 
   _initial_eigen_state_numbers.clear();
-  const std::vector<EnvelopFunctionApprox::eigen_propblem_solution>& in_solution = initial_state_model->get_solution();
+  const std::vector<EnvelopFunctionApprox::eigen_propblem_solution>& in_solution =
+    initial_state_model->get_solution();
 
   {
     std::vector<unsigned int> temp;
@@ -378,7 +381,8 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
     for (unsigned j = 0; j < n2; j++)  // "lower" states
     {
 
-      trans_energy =  is_eigen_values[_initial_eigen_state_numbers[i]] - fs_eigen_values[ _final_eigen_state_numbers[j]];
+      trans_energy =  is_eigen_values[_initial_eigen_state_numbers[i]] 
+	             - fs_eigen_values[ _final_eigen_state_numbers[j]];
 
 
       f1 = is_occupations[_initial_eigen_state_numbers[i]];   // occupation for  electron
@@ -389,7 +393,9 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
 
 
-      Complex Me = P_matrix[0][i][j] * polariz(1) + P_matrix[1][i][j] * polariz(2) +  P_matrix[2][i][j] * polariz(3);
+      Complex Me = P_matrix[0][i][j] * polariz(1) + 
+	           P_matrix[1][i][j] * polariz(2) +  
+	           P_matrix[2][i][j] * polariz(3);
 
 
 
@@ -403,7 +409,8 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
         double En = elem->centroid()(0);
 
-        double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)  + (0.5*Gamma)*(0.5*Gamma)) / Hartree;
+        double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)  
+                            + (0.5*Gamma)*(0.5*Gamma)) * Hartree;
 	// Note(alex): the division by Hartree seems wrong. Lorenzian is in 1/eV, so transformation
 	// should be "Lorenzian * Hartree"
 
@@ -412,12 +419,12 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
         double omega = trans_energy/Hartree;
 
         //This is the right formula, as f1 is electron occupation probability and f2 is hole occupation probability.
-        //Note that it differs from usual literature where usually f1 and f2 states initial state and final state occupation
-        //probability, so it's related to electrons and it becomes f1*(1-f2)
+        //Note that it differs from usual literature where usually f1 and f2 states initial state and final state 
+	//occupation probability, so it's related to electrons and it becomes f1*(1-f2)
 
-        spectrum[elem] += 1 / (2 * M_PI * M_PI) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
+        spectrum[elem] += 1 / (2 * M_PI ) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
 	
-	//Note(alex): This factor 1/(2*PI*PI) should be probably changed into nr/(2*PI).
+	//Note(alex): This factor 1/(2*PI*PI) was changed to 1/(2*PI). nr still missing
         //
 	//According to Chuang's book the recombination rate should contain a pre-factor 
 	//(including 2 for spin sum and 2 for polarization and 4 Pi for angle integration)

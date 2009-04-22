@@ -113,22 +113,6 @@ ETB::do_init(void){
   print_upt_options();
 #endif
 
-  std::string upt_filename;
-  // Getting reference to atomistic structure for calculation
-  if (_upg_filename.compare("none") != 0)
-  {
-    upt_filename = _upg_filename;
-  }
-  else
-  {
-    get_atomistic_structure();
-
-    if(_atomistic_structure==NULL)
-      throw InitFailedException("ETB: atomistic structure not created");
-
-    upt_filename = _atomistic_structure->get_name() + ".upg";
-    //_atomistic_structure->print_structure(upt_filename);
-  }
 
   // Get database path from Database class
   std::string database_path = Database::get_default_search_path();
@@ -143,8 +127,53 @@ ETB::do_init(void){
   database_path.copy(_upt_options.database_path, database_path.size() );
   work_path.copy(_upt_options.work_path, work_path.size() );
   gen_outfile.copy(_upt_options.gen_outfile, gen_outfile.size() );
-  upt_filename.copy(_upt_options.upt_filename, upt_filename.size() );
   out_path.copy(_upt_options.out_path, out_path.size() );
+
+
+
+  //inst->addskdata(_dftb_options.skNames, _dftb_options.mAngs,
+  //    _dftb_options.orbResolved, _dftb_options.skInterp, _dftb_options.nType);
+
+  //std::cout << "addskdata done" << std::endl;
+
+  //std::cout << "(TC) init uptight begins" << std::endl;
+
+  _init = 1;
+  _assemble = 1;
+
+}
+
+//-------------------------------------------------------------------------
+void ETB::reinit(void){
+   
+
+  std::cout << "(TC) clean uptight data container" << std::endl;
+
+  inst->cleanuptight();
+
+  std::string upt_filename;
+  // Getting reference to atomistic structure for calculation
+  if (_upg_filename.compare("none") != 0)
+  {
+    upt_filename = _upg_filename;
+  }
+  else
+  {
+    get_atomistic_structure();
+
+    if(_atomistic_structure==NULL)
+      throw InitFailedException("ETB: atomistic structure not created");
+
+    upt_filename = _atomistic_structure->get_name() + ".upg";
+
+    std::cerr << "printing structure " << upt_filename << std::endl;
+
+    _atomistic_structure->print_structure(upt_filename);
+  }
+
+  upt_filename.copy(_upt_options.upt_filename, upt_filename.size() );
+
+  std::cout << "(TC) init uptight begins" << std::endl;
 
   //  Set parameters for Uptight instance
   inst->fill_param(_upt_options.verbose, _upt_options.database_path,
@@ -157,37 +186,6 @@ ETB::do_init(void){
 		   _upt_options.c_axis, _upt_options.check_bondmap);
 
   std::cout << "(TC) fill parameter done" << std::endl;
-
-  //inst->addskdata(_dftb_options.skNames, _dftb_options.mAngs,
-  //    _dftb_options.orbResolved, _dftb_options.skInterp, _dftb_options.nType);
-
-  //std::cout << "addskdata done" << std::endl;
-
-  //std::cout << "(TC) init uptight begins" << std::endl;
-
-  //inst->inituptight();
-
-  //std::cout << "(TC) init uptight done" << std::endl;
-
-  _init = 1;
-  _assemble = 1;
-
-}
-
-//-------------------------------------------------------------------------
-void ETB::reinit(void){
-  
-  std::string upt_filename = _atomistic_structure->get_name() + ".upg";
-
-  std::cout << "printing structure " << upt_filename << std::endl;
-
-  _atomistic_structure->print_structure(upt_filename);
-
-  std::cout << "(TC) clean uptight data container" << std::endl;
-
-  inst->cleanuptight();
-
-  std::cout << "(TC) init uptight begins" << std::endl;
 
   inst->inituptight();
 
@@ -265,6 +263,7 @@ void ETB::do_solve(void){
     _solution[i].statistics = "Fermi";
     _solution[i].eigen_energy = eigvals[i] + _upt_options.vb_shift - _pot_min;
     _solution[i].eigen_vector.resize(hdim);
+    _solution[i].temperature = _upt_options.temperature;
 
     if (i!= 0)
     {
@@ -283,8 +282,10 @@ void ETB::do_solve(void){
     }
     else
     {
-      _solution[i].electro_chem_pot = 0.0;
+      _solution[i].electro_chem_pot = _upt_options.hl_chem_pot;
     }
+
+    
 
   }
 
@@ -295,6 +296,7 @@ void ETB::do_solve(void){
     _solution[i].statistics = "Fermi";
     _solution[i].eigen_energy = eigvals[i] + _upt_options.vb_shift - _pot_min;
     _solution[i].eigen_vector.resize(hdim);
+    _solution[i].temperature = _upt_options.temperature;
 
     eigtmp_re += hdim;
     eigtmp_im += hdim;
@@ -312,10 +314,12 @@ void ETB::do_solve(void){
     }
     else
     {
-      _solution[i].electro_chem_pot = 0.0;
+      _solution[i].electro_chem_pot =  _upt_options.el_chem_pot;
     }
 
   }
+
+  write_states();
 
   delete eigvals;
   delete eigvects_re;
@@ -349,8 +353,10 @@ std::complex<double> ETB::calculate_matrix_element(const std::string& i_particle
 						   const std::string& j_particle,
 						   unsigned int j)
 {
-  i++; j++;
+  i++; j++; //this is done to set base vector to 1 (fortran mode)
 
+  // the following operation is done to offset the electron states.
+  // in the ETB solver-lib the hole states are stored first, then the electron states
   if (i_particle == "el" || i_particle == "electron")
   {
     i = i + _upt_solver_options.n_vb;
@@ -423,6 +429,12 @@ void ETB::parse_options(void)
   _upt_options.relat_flag = get_options().get_option("relativistic", false);
   // da togliere e leggere dal database: shift della banda di valenza (che e` 0)
   _upt_options.vb_shift = get_options().get_option("vb_shift", 0.0);
+  _upt_options.hl_chem_pot = get_options().get_option("hole_chemical_pot", 0.0);
+  _upt_options.el_chem_pot = get_options().get_option("electron_chemical_pot", 0.0);
+  
+  _upt_options.temperature = get_options().get_option("temperature",
+						      SimulationOptions::temperature );
+  
   //_upt_options.opt_flag = get_options().get_option("optical_transitions", false);
   //_upt_options.poldir = get_options().get_option("polarization_direction", 1);
   _upt_options.opt_flag = false; // these are set via OpticsTB

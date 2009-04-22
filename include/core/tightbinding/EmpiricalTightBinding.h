@@ -32,7 +32,9 @@ class ETB : public TightBinding
     char* sparse_fmt;
     double* c_axis;
     double vb_shift;
-      
+    double hl_chem_pot;
+    double el_chem_pot;
+    double temperature;
   };
 
   class UptSolverOptions
