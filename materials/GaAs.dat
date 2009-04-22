@@ -84,6 +84,17 @@ A     = (0.6273, 	0.8057)
 aA    = (-1.4410e-01, 	0.0)
 
 
+# high field dependency
+[mobility/field_dependent]
+Vsat_Formula = 2
+beta0    = (2.0, 	2.0)
+betaexp  = (0,		0)
+A_vsat   = (1.13e+07, 	1.13e+07)
+B_vsat   = (3.6e6,		3.6e6)
+vsat_min = (5.0e+05, 	5.0e+05)
+
+
+
 # SRH recombination
 [recombination/SRH]
 Etrap    = 0.0
