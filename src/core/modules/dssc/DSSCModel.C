@@ -16,7 +16,11 @@ DSSCModel::DSSCModel(void)
     _is_TiO2(true),
     _ke(0.0),
     _k3(1.0),
-    _generation(0.0)
+    _generation(0.0),
+    _alpha(0.0),
+    _x0(0.0),
+    _alpha2(0.0),
+    _deltaG(0.0)
 {
 }
 
@@ -49,7 +53,7 @@ DSSCModel::do_init(void)
   _mobility.I = get_parameter("D_I", _mobility.I) / kT;
   _mobility.I3 = get_parameter("D_I3", _mobility.I3) / kT;
   _mobility.C = get_parameter("D_C", _mobility.C) / kT;
-
+  
   _ke = get_parameter("k_e", _ke);
   _k3 = get_parameter("k_3", _k3);
 
@@ -57,6 +61,11 @@ DSSCModel::do_init(void)
 
   string gen = get_parameter("generation", "");
   _generation = check_and_register(gen, _generation);
+
+  _alpha = get_parameter("alpha", _alpha);
+
+  _alpha2 = get_parameter("alpha2", _alpha2);
+  _deltaG = get_parameter("deltaG", _deltaG);
 }
 
 
@@ -119,7 +128,18 @@ DSSCModel::calculate_densities(void)
     _pd.density_n = _electrons.get_particle_density();
 
     // generation has to be calculated here
-    _pd.generation_rate = _generation;
+    double exponential = exp( -_alpha * abs(_pd.coordinates(0) - _x0) );
+    double gen1 =  _generation * exponential;
+    if (_generation > _deltaG)
+    {
+       double exponential2 = _alpha2 * exp( -_alpha2 * abs(_pd.coordinates(0) - _x0) );
+       _pd.generation_rate =  gen1 + _deltaG * exponential2;
+    }
+    else
+    {
+       _pd.generation_rate =  gen1;
+    }
+
   }
 
   _pd.density_I = _pd.density_I3 = _pd.density_C = 0.0;
@@ -132,7 +152,7 @@ DSSCModel::calculate_densities(void)
 
     _triiodide.set_element_and_point(_elem, _pd.coordinates);
     _triiodide.set_classical_parameters(_eq_conc.I3, -_pd.electric_potential,
-        -_pd.fermi_I3, _pd.kT);
+       -_pd.fermi_I3, _pd.kT);
     _pd.density_I3 = _triiodide.get_particle_density();
 
     _cation.set_element_and_point(_elem, _pd.coordinates);
@@ -162,5 +182,5 @@ DSSCModel::calculate_net_recombination_rate(void)
   _pd.recombination_rate_derivatives[0] = _ke * sqrt_I3_I;
   _pd.recombination_rate_derivatives[1] = -_ke * (0.5 * r / _pd.density_I +
      _eq_conc.n * sqrt_I3_I_eq);
-  _pd.recombination_rate_derivatives[2] = 0.5 * r / _pd.density_I3;
+  _pd.recombination_rate_derivatives[2] = _ke * 0.5 * r / _pd.density_I3;
 }
