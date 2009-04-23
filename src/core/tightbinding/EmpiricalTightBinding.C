@@ -157,6 +157,11 @@ void ETB::reinit(void){
 
   inst->cleanuptight();
 
+  // checks that the strain simulation, if specified has been done
+  if( ! get_control().find_simulation(_upt_options.strain_sim)->is_solved() )
+    throw InitFailedException("Strain model has not been solved");  
+
+
   std::string upt_filename;
   // Getting reference to atomistic structure for calculation
   if (_upg_filename.compare("none") != 0)
@@ -436,8 +441,6 @@ void ETB::parse_options(void)
   _upt_options.relat_flag = get_options().get_option("relativistic", false);
   // da togliere e leggere dal database: shift della banda di valenza (che e` 0)
   _upt_options.vb_shift = get_options().get_option("vb_shift", 0.0);
-  _upt_options.hl_chem_pot = get_options().get_option("hole_chemical_pot", 0.0);
-  _upt_options.el_chem_pot = get_options().get_option("electron_chemical_pot", 0.0);
   
   _upt_options.temperature = get_options().get_option("temperature",
 						      SimulationOptions::temperature );
@@ -452,6 +455,11 @@ void ETB::parse_options(void)
     _upt_options.potential_sim = get_options().get_option("potential_simulation","no_sim");
     _upt_options.potential_flag = true;
   }
+
+  _upt_options.hl_chem_pot = get_options().get_option("hl_qfermi_level", 0.0);
+  _upt_options.el_chem_pot = get_options().get_option("el_qfermi_level", 0.0);
+
+  _upt_options.strain_sim = get_options().get_option("strain_model_name", "no_sim");
 
   // Solver options: "upt_lanczos", "read_old"  
   _upt_solver_options.solver = get_solver_options().get_option("solver", "upt_lanczos");

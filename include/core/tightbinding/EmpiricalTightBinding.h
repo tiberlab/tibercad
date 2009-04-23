@@ -24,6 +24,7 @@ class ETB : public TightBinding
     bool check_bondmap;
     int poldir;
     std::string potential_sim;
+    std::string strain_sim;
     char* database_path;
     char* work_path;
     char* out_path;

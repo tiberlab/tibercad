@@ -292,8 +292,8 @@ TightBinding::project_potential(const std::string model_name, const std::string 
   std::cout << "setting simulation " << std::endl;
   model.set_simulation(model_name);
 
-  //if( !model.get_simulation()->is_solved() )
-  //  throw InitFailedException("Potential model has not been solved");
+  if( !model.get_simulation()->is_solved() )
+    throw InitFailedException("Potential model has not been solved");
 
   if (mode == "point")
     {//In point mode potential on atom is just kept as value on atom position
