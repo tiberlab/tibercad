@@ -278,7 +278,7 @@ PotentialInterface::get_hl_chem_potential(const Elem* elem, const Point& p)
   std::vector<Point> ps(1, p);
   std::vector<double> temp(1);
 
-  get_el_chem_potential(elem, ps, temp);
+  get_hl_chem_potential(elem, ps, temp);
 
   return temp[0];
 }

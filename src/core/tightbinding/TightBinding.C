@@ -292,8 +292,8 @@ TightBinding::project_potential(const std::string model_name, const std::string 
   std::cout << "setting simulation " << std::endl;
   model.set_simulation(model_name);
 
-  if( !model.get_simulation()->is_solved() )
-    throw InitFailedException("Potential model has not been solved");
+  //if( !model.get_simulation()->is_solved() )
+  //  throw InitFailedException("Potential model has not been solved");
 
   if (mode == "point")
     {//In point mode potential on atom is just kept as value on atom position
@@ -316,11 +316,14 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 		/ _atomistic_structure->get_scale();
 	      p(2) = _atomistic_structure->get_structure_atoms()[i].get_position()(3)
 		/ _atomistic_structure->get_scale();
+	      
+	      // pot_shift is without "-" because the minus-sign is explicitly set in the 
+	      // TB-codes. For Ef,n and Ef,p we need to change sign. 
 	      _pot_shift[i] = model.get_potential(_atomistic_structure->
 						  get_structure_atoms()[i].get_elem(), p);
-	      _el_chem_pot[i] = model.get_el_chem_potential(_atomistic_structure->
+	      _el_chem_pot[i] = -model.get_el_chem_potential(_atomistic_structure->
 	                                          get_structure_atoms()[i].get_elem(), p);
-	      _hl_chem_pot[i] = model.get_hl_chem_potential(_atomistic_structure->
+	      _hl_chem_pot[i] = -model.get_hl_chem_potential(_atomistic_structure->
 	                                          get_structure_atoms()[i].get_elem(), p);
 	      //std::cout << " shifting " << _pot_shift[i] << std::endl;
 	    }
@@ -343,8 +346,8 @@ TightBinding::project_potential(const std::string model_name, const std::string 
           {
             int neighbour = _atomistic_structure->get_bond_map()[i][0];
             _pot_shift[i] = _pot_shift[neighbour];
-            _el_chem_pot[i] = _pot_shift[neighbour];
-            _hl_chem_pot[i] = _pot_shift[neighbour];
+            _el_chem_pot[i] = _el_chem_pot[neighbour];
+            _hl_chem_pot[i] = _hl_chem_pot[neighbour];
           }
       }
 

@@ -107,6 +107,12 @@ ETB::do_init(void){
 
   std::cerr << "(TC) Empirical TB Initialisation..." << std::endl;
 
+  // make sure an atomistic structure do exist
+  get_atomistic_structure();
+
+  if(_atomistic_structure==NULL)
+    throw InitFailedException("ETB: atomistic structure not created");
+
   parse_options();
 
 #ifdef DEBUG
@@ -159,10 +165,6 @@ void ETB::reinit(void){
   }
   else
   {
-    get_atomistic_structure();
-
-    if(_atomistic_structure==NULL)
-      throw InitFailedException("ETB: atomistic structure not created");
 
     upt_filename = _atomistic_structure->get_name() + ".upg";
 
@@ -191,6 +193,9 @@ void ETB::reinit(void){
 
   std::cout << "(TC) init uptight done" << std::endl;
 
+  _ion_num_orbitals.resize(_atomistic_structure->get_N_atoms(), 0);
+
+  inst->get_ion_numorbitals(_ion_num_orbitals);
 
 }
 
@@ -344,6 +349,8 @@ void ETB::assemble(const ModelOptions& options)
       add_shifts();
     }
     inst->compute_H();
+
+
   }
 
 }
@@ -535,28 +542,49 @@ double
 ETB::calculate_fermi_averaged(unsigned int i)
 {
 
-  int num_st = _solution.size();
-  double av,sum;
+  double av, sum, atom_sum;
+  unsigned int k, j, k_at;
+
+  sum = 0.0; k = 0; k_at = 0;
 
   if(_solution[i].particle == "el" || _solution[i].particle == "electron")
   {
-    sum = 0.0;
-    for (unsigned int j = 0; j < num_st; j++)
+   
+    for (j = 0; j < _el_chem_pot.size(); j++)
     {
-      av = std::abs(_solution[i].eigen_vector[j]);
-      sum +=  _el_chem_pot[j]*av*av;
+      atom_sum = 0.0; 
+      for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
+      {
+	atom_sum += std::norm(_solution[i].eigen_vector[k]);
+      }
+
+      k_at = k;
+      sum +=  _el_chem_pot[j]*atom_sum;
     }
+
   }
 
   if(_solution[i].particle == "hl" || _solution[i].particle == "hole")
   {
-    sum = 0.0;
-    for (unsigned int j = 0; j < num_st; j++)
+
+    for (j = 0; j < _hl_chem_pot.size(); j++)
     {
-      av = std::abs(_solution[i].eigen_vector[j]);
-      sum += _hl_chem_pot[j]*av*av;
+      atom_sum = 0.0;
+      for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
+      {
+	atom_sum += std::norm(_solution[i].eigen_vector[k]);
+      }
+
+      k_at = k;
+      sum +=  _hl_chem_pot[j]*atom_sum;
+
     }
+
   }
+
+  std::cerr<<endl;
+
+  return sum;
 
 }
 

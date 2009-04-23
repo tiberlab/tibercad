@@ -5,6 +5,7 @@
 #include <iostream>
 #include <assert.h>
 #include <complex>
+#include <vector>
 
 //-----------------------------------------------------------------------
 
@@ -109,6 +110,8 @@ public:
   void compute_P_matrix(int poldir);
 
   std::complex<double> get_matel(int i, int j);
+
+  void get_ion_numorbitals(std::vector<int>& ion_block_vector);
 
 private:
   int _handler[UPT_HSIZE];

@@ -276,5 +276,32 @@ inline void f77_upt_get_matel (f77_int const* handler, f77_int const& i,
 }
 
 
+extern "C" void upt_project_pot_ (f77_int const*, f77_int const&, f77_double 
+    const*, f77_double&);
+
+// Corresponding F77 arguments for f77_upt_project_pot:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: i
+// real(dp), intent(in) :: potential(1)
+// real(dp), intent(out) :: average
+inline void f77_upt_project_pot (f77_int const* handler, f77_int const& i, 
+    f77_double const* potential, f77_double& average)
+{
+  upt_project_pot_ (handler, i, potential, average);
+}
+
+
+extern "C" void upt_get_ion_numorbitals_ (f77_int const*, f77_int*);
+
+// Corresponding F77 arguments for f77_upt_get_ion_numorbitals:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(inout) :: ion_block_vector(*)
+inline void f77_upt_get_ion_numorbitals (f77_int const* handler, f77_int* 
+    ion_block_vector)
+{
+  upt_get_ion_numorbitals_ (handler, ion_block_vector);
+}
+
+
 #endif
 

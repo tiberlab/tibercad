@@ -117,6 +117,8 @@ class ETB : public TightBinding
   //! flag to decide whether to read a structure from file
   std::string _upg_filename;
 
+  //! vector to hold number of orbital per ion
+  std::vector<int> _ion_num_orbitals;
 
  protected:
 
