@@ -158,9 +158,11 @@ void ETB::reinit(void){
   inst->cleanuptight();
 
   // checks that the strain simulation, if specified has been done
-  if( ! get_control().find_simulation(_upt_options.strain_sim)->is_solved() )
+  if(_upt_options.strain_sim != "no_sim")
+  {
+    if( ! get_control().find_simulation(_upt_options.strain_sim)->is_solved() )
     throw InitFailedException("Strain model has not been solved");  
-
+  }
 
   std::string upt_filename;
   // Getting reference to atomistic structure for calculation
