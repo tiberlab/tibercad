@@ -525,16 +525,18 @@ ETB::add_shifts(void)
 
   project_potential(_upt_options.potential_sim, "point");
 
-  shift_pnt = new double[_pot_shift.size()];
+  inst->add_potential(_pot_shift);
 
-  for (unsigned int i = 0; i < _pot_shift.size(); i++)
-    {
-      shift_pnt[i] = _pot_shift[i];
-    }
+  //shift_pnt = new double[_pot_shift.size()];
 
-  inst->add_potential(_pot_shift.size(), shift_pnt);
+  //for (unsigned int i = 0; i < _pot_shift.size(); i++)
+  //  {
+  //    shift_pnt[i] = _pot_shift[i];
+  // }
 
-  delete[] shift_pnt;
+  //inst->add_potential(_pot_shift.size(), shift_pnt);
+
+  //delete[] shift_pnt;
 
 }
 
@@ -581,8 +583,6 @@ ETB::calculate_fermi_averaged(unsigned int i)
     }
 
   }
-
-  std::cerr<<endl;
 
   return sum;
 

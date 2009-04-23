@@ -68,7 +68,7 @@ public:
 
   //! Add an atom-projected potential to H
   //! Must be called after inituptight and before compute_H
-  void add_potential(int nAtoms, double *potential);
+  void add_potential(std::vector<double>& potential);
 
 	
   //! Add a list of k-points as a vector (3,numkp)

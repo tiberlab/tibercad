@@ -71,9 +71,10 @@ void UptWrapper::cleanuptight()
 }
 
 
-void UptWrapper::add_potential(int nAtoms, double *potential)
+void UptWrapper::add_potential(std::vector<double>& potential)
 {
-	f77_upt_addpotential(_handler,nAtoms,potential);
+  
+  f77_upt_addpotential(_handler,potential.size(),&potential.front());
 }
 
 //! add the k-points as a vector
@@ -164,15 +165,15 @@ std::complex<double> UptWrapper::get_matel(int i, int j)
 
 void UptWrapper::get_ion_numorbitals(std::vector<int>& ion_block_vector)
 {
-  int nAtoms = ion_block_vector.size(); 
-  int* p_ion_block_vec = new int[nAtoms];
+  //int nAtoms = ion_block_vector.size(); 
+  //int* p_ion_block_vec = new int[nAtoms];
 
-  f77_upt_get_ion_numorbitals(_handler,p_ion_block_vec);
+  f77_upt_get_ion_numorbitals(_handler,&ion_block_vector.front());
 
-  for (int j = 0; j < nAtoms; j++) 
-    ion_block_vector[j] = p_ion_block_vec[j];
+  //for (int j = 0; j < nAtoms; j++) 
+  //  ion_block_vector[j] = p_ion_block_vec[j];
 
-  delete [] p_ion_block_vec;
+  //delete [] p_ion_block_vec;
 
 }
 
