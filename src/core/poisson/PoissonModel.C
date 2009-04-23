@@ -90,8 +90,7 @@ void PoissonModel::do_init()
       
       _epsilon_model->get_dielectric_real(_epsilon);
      
-   
-
+  
 
 
       //  ModelOptions::const_submodel_iterator it,end; 

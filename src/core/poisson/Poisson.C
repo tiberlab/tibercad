@@ -40,11 +40,6 @@
 #include "PoissonModel.h"
 #include "Neumann.h"
 
-
-// Module interface
-//TIBER_MODULE(Poisson,poisson)
-
-
 using namespace std;
 
 
@@ -172,7 +167,8 @@ void Poisson::build_nodal_results (const std::set< std::string > &variables,
 				     std::vector< std::string > &legend)
 {
 
-  if (variables.find("ElPotential") != variables.end())
+  if (variables.count("ElPotential") || 
+      variables.count("PoissonVariables") )
   {
     legend.resize(1);
     legend[0] = "Potential[V]";
@@ -223,8 +219,6 @@ Poisson::build_elemental_results(const std::set<std::string>& variables,
   // TODO parallelize
   if (libMesh::processor_id() != 0)
     return;
-
-  const set<string>::const_iterator varend(variables.end());
   
   vector<ID> ids;
  
@@ -235,7 +229,8 @@ Poisson::build_elemental_results(const std::set<std::string>& variables,
   const unsigned int dim = mesh->mesh_dimension();
  
   int PC = -1; 
-  if (variables.find("PoissonCharge") != varend)
+  if (variables.count("PoissonCharge") ||
+      variables.count("PoissonVariables"))
   {
     PC = n_vars;
     legend.resize(legend.size()+1);
@@ -245,7 +240,8 @@ Poisson::build_elemental_results(const std::set<std::string>& variables,
 
   int TP = -1; 
                      
-  if (variables.find("Polarization") != varend)
+  if (variables.count("Polarization") ||
+      variables.count("PoissonVariables"))
   {
     TP = n_vars;
   
@@ -481,6 +477,7 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
     epsilon = poisson_model->get_dielectric_constant();
 
     _tot_pol = poisson_model->get_total_polarization();
+    // std::cout<<  _tot_pol(2)<<std::endl;
 
     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
     { // loop over test function
@@ -541,9 +538,12 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
       {
 	fe_face->reinit(elem,side);  
 	for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
-	  for (unsigned int qp = 0; qp < qface.n_points(); qp++) 
+	  for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+	  {
 	    Fe(p1) -=   JxW_face[qp] * (_tot_pol * normal[qp]) * phi_face[p1][qp];
+	  }
 	
+
       }
       
     }
