@@ -14,8 +14,6 @@
 #include "TiberNonlinearSystem.h"
 #include "SolveFailedException.h"
 
-//////// QUIRK
-//#include "Macrostrain.h"
 
 // libmesh includes
 #include "node.h"
@@ -687,11 +685,6 @@ DriftDiffusion::do_solve(void)
   {
     solve_equilibrium();
 
-    /////////////////// QUIRK >>
-    //if (get_options().write_atomic_potentials != NULL)
-    //  get_options().write_atomic_potentials->write_atom_potential();
-    /////////////////// << QUIRK
- 
     // if we would repeat the equilibrium simulation, we can stop now
     if (equilibrium)
     {
@@ -762,11 +755,6 @@ DriftDiffusion::do_solve(void)
     }
   }
 
-  /////////////////// QUIRK >>
-  //if (get_options().write_atomic_potentials != NULL)
-  //  get_options().write_atomic_potentials->write_atom_potential();
-  /////////////////// << QUIRK
-      
   get_options().coupling = coupling;
 
   // calculate the currents to print them on screen
@@ -1118,16 +1106,6 @@ DriftDiffusion::parse_options(void)
   if (opts.get_option("ignore_holes", false))
     _electronsonly = true;
 
-  /////////// QUIRK
-  //if (opts.find_option("write_atomic_potentials"))
-  //{
-  //  string str = opts.get_option("write_atomic_potentials", "macrostrain");
-  //  myopts.write_atomic_potentials =
-  //    dynamic_cast<Macrostrain*>(SimulationInterface::find_simulation(str));
-  //  if (myopts.write_atomic_potentials == NULL)
-  //    throw InitFailedException("Problem with write_atomic_potentials");
-  //}
-          
           
 
   myopts.mesh_refinement = opts.get_option("mesh_refinement",
