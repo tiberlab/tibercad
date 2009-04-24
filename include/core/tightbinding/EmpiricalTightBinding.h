@@ -82,6 +82,9 @@ class ETB : public TightBinding
 
   //! Computes the Fermi level averaged according to the state density
   double calculate_fermi_averaged(unsigned int i);
+
+  //! tells if the ETB calculation contains SO coupling
+  bool is_relativistic(void);
   
  private:
 
@@ -171,6 +174,12 @@ void ETB::set_num_states(int num_vb, int num_cb)
   _upt_solver_options.n_cb = num_cb;
 }
 
+inline
+bool ETB::is_relativistic(void)
+{
+  return _upt_options.relat_flag;
+
+}
 
 
 

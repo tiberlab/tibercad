@@ -68,9 +68,11 @@ void OpticsTB::parse_options()
     
     _final_state_model=dynamic_cast<EigenvalueProblem*>(find_simulation(quantum_model));
 
+    // checks that initial and final state model are the same
     if(_final_state_model!=_initial_state_model)
       throw InitFailedException("OpticsTB: initial and final models differ\n"); 
     
+    //check that the final state model has been defined
     if (_final_state_model == NULL)
       throw InitFailedException("OpticsTB: final_state_model is not defined\n");
         
@@ -203,10 +205,8 @@ void OpticsTB::do_solve()
 //========================================================================================
 void OpticsTB::get_states()
 {
-  //get states from TB model
-
+  //get states from TB model (but these states are not currently used)
   _i_states = _initial_state_model->get_eigen_solution();
-    
   _f_states = _final_state_model->get_eigen_solution();
 
   // Find maximum state index of initial states
@@ -255,6 +255,7 @@ void OpticsTB::do_plot()
     double Gamma = mod_spectrum.get_option("broadening", 0.007);
     double Emin, Emax, dE;
 
+
     if (mod_spectrum.find_option("Emin"))
       Emin = mod_spectrum.get_option("Emin", 0.0);
     else
@@ -278,6 +279,9 @@ void OpticsTB::do_plot()
     
     if (dE <= 0)  throw InitFailedException("OpticsKP: dE <= 0");
     
+    double spin_deg = 2.0;
+    //if(_initial_state_model->is_relativistic()) spin_deg = 1.0;
+
     unsigned int num_nodes = (int)((Emax - Emin)/dE) + 1;
     
     
@@ -350,21 +354,21 @@ void OpticsTB::do_plot()
       
       
       //--x - polarization
-      value = spectrum_x[el];
+      value = spin_deg * spectrum_x[el];
       value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
       value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
       value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
       results[3*point + 0] = value;
       
       //--y - polarization
-      value = spectrum_y[el];
+      value =  spin_deg * spectrum_y[el];
       value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
       value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
       value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
       results[3*point + 1] = value;
       
       //--z - polarization
-      value = spectrum_z[el];
+      value =  spin_deg * spectrum_z[el];
       value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
       value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
       value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
@@ -419,7 +423,6 @@ void OpticsTB::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
   _initial_state_model->get_populations(_initial_state_particle, is_populations);
 
   _final_state_model->get_populations(_final_state_particle, fs_populations);
-
 
   
   // loop on  eigenstates
