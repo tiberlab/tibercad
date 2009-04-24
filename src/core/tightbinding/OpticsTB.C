@@ -111,8 +111,6 @@ void OpticsTB::do_solve()
   //check that the states are really available
    
   
-
-
   int verbose = SimulationOptions::verbose();
 
   
@@ -125,29 +123,79 @@ void OpticsTB::do_solve()
 
   if (verbose > 0)  std::cout << "done\n" << std::flush;
 
+  std::vector<double> is_pop, fs_pop;
+  std::vector<double> is_ene, fs_ene;
+
+  _initial_state_model->get_populations(_initial_state_particle, is_pop);
+  _final_state_model->get_populations(_final_state_particle, fs_pop);
+  _initial_state_model->get_eigenvalues(_initial_state_particle, is_ene);
+  _final_state_model->get_eigenvalues(_final_state_particle, fs_ene);
+
   unsigned int n1 =  _initial_eigen_state_numbers.size();
   unsigned int n2 =  _final_eigen_state_numbers.size();
 
   // write down matrix elements for debugging
-  if (verbose > 2)
+  if (verbose > 0)
   {
+ 
+    std::cout<<"i-f     Ei       Ef             Px            fi   ff"
+	     <<std::endl;
     for (int i = 0; i < n1; i++)
     {
       for (int j = 0; j < n2; j++)
       {
-	std::cout << "polarization = x "  
-		    << "state i = " << i  <<"   " << "state j =   "
-		    << j <<"      "  << Px_matrix[i][j] << "\n" << std::flush;
 
-	std::cout << "polarization = y "  
-		    << "state i = " << i  <<"   " << "state j =   "
-		    << j <<"      "  << Py_matrix[i][j] << "\n" << std::flush;
+	unsigned int is = _initial_eigen_state_numbers[i];
+	unsigned int fs = _final_eigen_state_numbers[j];
 
-	std::cout << "polarization = z "  
-		    << "state i = " << i  <<"   " << "state j =   "
-		    << j <<"      "  << Pz_matrix[i][j] << "\n" << std::flush;
+	std::cout << is << "-" << fs << ": " << std::flush;
+	std::cout << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;      
+
+	std::cout << Px_matrix[i][j] << "   ";
+	std::cout << is_pop[is] << ", " << fs_pop[fs] << std::endl;
+
       }
     }
+
+    std::cout<<"i-f     Ei       Ef             Py            fi   ff"
+	     <<std::endl;
+    for (int i = 0; i < n1; i++)
+    {
+      for (int j = 0; j < n2; j++)
+      {
+
+	unsigned int is = _initial_eigen_state_numbers[i];
+	unsigned int fs = _final_eigen_state_numbers[j];
+
+	std::cout << is << "-" << fs << ": " << std::flush;
+	std::cout << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;      
+
+	std::cout << Py_matrix[i][j] << "   ";
+	std::cout << is_pop[is] << ", " << fs_pop[fs] << std::endl;
+
+      }
+    }
+
+    std::cout<<"i-f     Ei       Ef             Pz            fi   ff"
+	     <<std::endl;
+    for (int i = 0; i < n1; i++)
+    {
+      for (int j = 0; j < n2; j++)
+      {
+
+	unsigned int is = _initial_eigen_state_numbers[i];
+	unsigned int fs = _final_eigen_state_numbers[j];
+
+	std::cout << is << "-" << fs << ": " << std::flush;
+	std::cout << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;      
+
+	std::cout << Pz_matrix[i][j] << "   ";
+	std::cout << is_pop[is] << ", " << fs_pop[fs] << std::endl;
+
+      }
+    }
+
+
   }
 
 
@@ -443,8 +491,6 @@ void OpticsTB::calculate_P_matrix_elements( )
   ModelOptions options;
   unsigned int n_i =  _initial_eigen_state_numbers.size();
   unsigned int n_f =  _final_eigen_state_numbers.size();
-  std::vector<double> is_pop, fs_pop;
-  std::vector<double> is_ene, fs_ene;
 
   // assemble matrix for polarization x
   options.set_option("P_matrix", true);
@@ -453,12 +499,6 @@ void OpticsTB::calculate_P_matrix_elements( )
   std::cout << "Assemble Px" << std::endl;
 
   _initial_state_model->assemble(options);
-
-  _initial_state_model->get_populations(_initial_state_particle, is_pop);
-  _final_state_model->get_populations(_final_state_particle, fs_pop);
-  _initial_state_model->get_eigenvalues(_initial_state_particle, is_ene);
-  _final_state_model->get_eigenvalues(_final_state_particle, fs_ene);
-
 
   std::cout << "Compute matrix elements" << std::endl;
   
@@ -475,19 +515,12 @@ void OpticsTB::calculate_P_matrix_elements( )
       unsigned int is = _initial_eigen_state_numbers[i1];
       unsigned int fs = _final_eigen_state_numbers[i2];
 
-      std::cerr << is << "-" << fs << ": " << std::flush;
-      std::cerr << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;      
-
       Px_matrix[i1][i2] = _initial_state_model->
 	calculate_matrix_element(_initial_state_particle, is, 
 				 _final_state_particle, fs);
 
       // convert matrix element from eV*Ang to atomic units
       Px_matrix[i1][i2] *= Hartree/(bohr_radius*1e10);
-
-      std::cerr << Px_matrix[i1][i2] << "   ";
-      std::cerr << is_pop[is] << ", " << fs_pop[fs] << std::endl;
-
 
     }
   }
@@ -514,9 +547,6 @@ void OpticsTB::calculate_P_matrix_elements( )
       unsigned int is = _initial_eigen_state_numbers[i1];
       unsigned int fs = _final_eigen_state_numbers[i2];
 
-      std::cerr << is << "-" << fs << ": " << std::flush;
-      std::cerr << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;
-
       Py_matrix[i1][i2] = _initial_state_model->
 	calculate_matrix_element(_initial_state_particle, is, 
 				 _final_state_particle, fs);
@@ -524,8 +554,6 @@ void OpticsTB::calculate_P_matrix_elements( )
       // convert matrix element from eV*Ang to atomic units
       Py_matrix[i1][i2] *= Hartree/(bohr_radius*1e10);
 
-      std::cerr << Py_matrix[i1][i2] << "   ";
-      std::cerr << is_pop[is] << ", " << fs_pop[fs] << std::endl;
     }
   }
 
@@ -552,9 +580,6 @@ void OpticsTB::calculate_P_matrix_elements( )
       unsigned int is = _initial_eigen_state_numbers[i1];
       unsigned int fs = _final_eigen_state_numbers[i2];
 
-      std::cerr << is << "-" << fs << ": " << std::flush;
-      std::cerr << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;
-
       Pz_matrix[i1][i2] = _initial_state_model->
 	calculate_matrix_element(_initial_state_particle, is, 
 				 _final_state_particle, fs);
@@ -562,8 +587,6 @@ void OpticsTB::calculate_P_matrix_elements( )
       // convert matrix element from eV*Ang to atomic units
       Pz_matrix[i1][i2] *= Hartree/(bohr_radius*1e10);
       
-      std::cerr << Pz_matrix[i1][i2] << "   ";    
-      std::cerr << is_pop[is] << ", " << fs_pop[fs] << std::endl;
     }
   }
 

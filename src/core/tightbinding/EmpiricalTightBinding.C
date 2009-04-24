@@ -346,7 +346,9 @@ void ETB::assemble(const ModelOptions& options)
   if( options.get_option("P_matrix",false) )
   {
     int poldir = options.get_option("poldir",0);
+    inst->set_verbose(0);
     inst->compute_P_matrix(poldir);
+    inst->set_verbose(_upt_options.verbose);
   }
   else
   {
@@ -537,17 +539,6 @@ ETB::add_shifts(void)
 
   inst->add_potential(_pot_shift);
 
-  //shift_pnt = new double[_pot_shift.size()];
-
-  //for (unsigned int i = 0; i < _pot_shift.size(); i++)
-  //  {
-  //    shift_pnt[i] = _pot_shift[i];
-  // }
-
-  //inst->add_potential(_pot_shift.size(), shift_pnt);
-
-  //delete[] shift_pnt;
-
 }
 
 double
@@ -558,6 +549,7 @@ ETB::calculate_fermi_averaged(unsigned int i)
   unsigned int k, j, k_at;
 
   sum = 0.0; k = 0; k_at = 0;
+  
 
   if(_solution[i].particle == "el" || _solution[i].particle == "electron")
   {
@@ -593,6 +585,10 @@ ETB::calculate_fermi_averaged(unsigned int i)
     }
 
   }
+
+  // debug cross check on vector size
+  //std::cerr<<"(TC-debug) N. orbitals = "<< k_at <<endl;
+  //std::cerr<<"(TC-debug) Matrix dim. = "<<inst->get_H_dim()<<endl;
 
   return sum;
 

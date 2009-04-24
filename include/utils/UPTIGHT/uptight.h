@@ -303,5 +303,17 @@ inline void f77_upt_get_ion_numorbitals (f77_int const* handler, f77_int*
 }
 
 
+extern "C" void upt_set_verbosity_ (f77_int const*, f77_int const&);
+
+// Corresponding F77 arguments for f77_upt_set_verbosity:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: verbose_lev
+inline void f77_upt_set_verbosity (f77_int const* handler, f77_int const& 
+    verbose_lev)
+{
+  upt_set_verbosity_ (handler, verbose_lev);
+}
+
+
 #endif
 

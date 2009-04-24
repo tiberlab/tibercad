@@ -178,5 +178,12 @@ void UptWrapper::get_ion_numorbitals(std::vector<int>& ion_block_vector)
 }
 
 
+void UptWrapper::set_verbose(int verbose_lev)
+{
+
+  f77_upt_set_verbosity(_handler,verbose_lev);
+
+}
+
 
 

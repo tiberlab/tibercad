@@ -53,6 +53,8 @@ public:
 		   bool potential_flag, bool optmat_flag, int poldir, 
 		   double *c_axis, bool check_bondmap);
 
+  //! Set verbosity level for the library screen output
+  void set_verbose(int verbose_lev);
 
   //!Initialize the Upt instance
   void inituptight();
