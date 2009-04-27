@@ -455,6 +455,17 @@ SimulationInterface::solve(void) throw (SolveFailedException)
 
   assert(is_initialized());
 
+  Messages m;
+  m.newline();
+  {
+    ostringstream os;
+    os << ">>>>------------------------------------"
+      << "-----------------------------" << endl;
+    os << get_default_name() << " (name: " << get_name() << ")" << endl;
+    m.info(os.str());
+  }
+  m.indent();
+
   if (_environment != NULL)
     _environment->prepare_for_solve();
 
@@ -477,6 +488,10 @@ SimulationInterface::solve(void) throw (SolveFailedException)
   }
 
   _is_solved = true;
+
+  m.unindent();
+  m.info("<<<<---------------------------"
+      "--------------------------------------");
 
   perflog.stop_event("solve");
 }

@@ -629,14 +629,6 @@ DriftDiffusion::cleanup_solver(void)
 void
 DriftDiffusion::do_solve(void)
 {
-  {
-    ostringstream os;
-    Messages::newline();
-    os << ">>>>------------------------------------"
-      << "-----------------------------" << endl;
-    os << "DriftDiffusion (name: " << get_name() << ")" << endl;
-    Messages::info(os.str());
-  }
 
   // rebuild the system if needed
   //rebuild_equation_system();
@@ -690,11 +682,7 @@ DriftDiffusion::do_solve(void)
 
     // if we would repeat the equilibrium simulation, we can stop now
     if (equilibrium)
-    {
-      Messages::info("<<<<------------------------------"
-          "-----------------------------------");
       return;
-    }
   }
 
   // set the old solution
@@ -834,9 +822,6 @@ DriftDiffusion::do_solve(void)
     }
     Messages::info(os.str());
   }
-  Messages::info("<<<<---------------------------"
-      "--------------------------------------");
-
 }
 
 

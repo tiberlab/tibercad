@@ -11,11 +11,12 @@
 #include "petsc_vector.h"
 #include "petsc_matrix.h"
 
+#include "Messages.h"
+
 #include <cstring>
+#include <sstream>
 
 // C++ includes
-
-#define DEBUG
 
 
 /*
@@ -49,19 +50,19 @@ extern "C"
     KSPConvergedReason reason;
     KSPGetConvergedReason(ksp, &reason);
 
-#ifdef DEBUG
-# if (((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
+#if (((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
       && (PETSC_VERSION_SUBMINOR < 3))) 
     if (its == 0)
-      std::cerr << "it " << its << ", fnorm = " << fnorm << "\n";
-# endif
+    {
+      std::ostringstream os;
+      os << "it " << its << ", fnorm = " << fnorm;
+      Messages::info(os.str());
+    }
 #endif
 
     if (fnorm != fnorm)
     {
-#ifndef DEBUG
-      std::cout << std::endl << std::flush;
-#endif
+      Messages::newline();
       throw(KSPDivergedError(-8, its, fnorm));
     }
 
@@ -70,18 +71,18 @@ extern "C"
     //if (reason < 0)
     if ((reason < 0) && (reason != -3))
     {
-#ifndef DEBUG
-      std::cout << std::endl << std::flush;
-#endif
+      Messages::newline();
       throw(KSPDivergedError(reason, its, fnorm));
     }
 
-#ifdef DEBUG
-# if (((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
+#if (((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
       && (PETSC_VERSION_SUBMINOR < 3))) 
     if (its == 0)
-      std::cerr << "it " << its << ", fnorm = " << fnorm << "\n";
-# endif
+    {
+      std::ostringstream os;
+      os << "it " << its << ", fnorm = " << fnorm;
+      Messages::info(os.str());
+    }
 #endif
 
     TiberPetscNonlinearSolver* solver =
@@ -185,12 +186,12 @@ extern "C"
   {
     int ierr = 0;
 
-#ifdef DEBUG
-    std::cerr << "iteration " << it << ": step = " << gnorm <<
-      " residual = " << fnorm << std::endl;
-#else
-    std::cout << "." << std::flush;
-#endif
+    {
+      std::ostringstream os;
+      os << "iteration " << it << ": step = " << gnorm <<
+        " residual = " << fnorm;
+      Messages::info(os.str());
+    }
 
     // this is a somewhat primitive check for divergence based on the step
     // norm (gnorm)
@@ -519,8 +520,6 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
         throw (SNESDivergedError(reason, n_iterations, fnorm));
 #endif
   }
-
-  std::cout << std::endl;
 
   // return the # of its. and the final residual norm.  Note that
   // n_iterations may be zero for PETSc versions 2.2.x and greater.

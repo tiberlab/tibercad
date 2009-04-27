@@ -11,6 +11,8 @@
 #include "equation_systems.h"
 #include "mesh.h"
 
+#include "Messages.h"
+
 
 using namespace std;
 
@@ -116,8 +118,11 @@ TiberNonlinPetsc::do_solve(void)
   _n_nonlin_iterations = result.first;
   _final_residual_norm = result.second;
 
-  cout << "iterations: " << _n_nonlin_iterations <<
-    ", residual = " << _final_residual_norm << endl;
+  ostringstream os;
+  os << "iterations: " << _n_nonlin_iterations <<
+    ", final residual = " << _final_residual_norm;
+  Messages::newline();
+  Messages::info(os.str());
 
   update();
 }

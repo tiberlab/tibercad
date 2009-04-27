@@ -16,7 +16,6 @@
 
 #include "Messages.h"
 
-#define DEBUG
 
 using namespace std;
 
@@ -57,8 +56,6 @@ TiberNonlinLS::do_solve(void)
 
   int max_ls_step = 5;
 
-  bool cauchy = false;
-
   // the (final) residual norm
   double norm_res, norm_rhs = 0;
 
@@ -82,9 +79,9 @@ TiberNonlinLS::do_solve(void)
     
     // solve the linear system
     get_linear_solver()->solve(*matrix, *solution, *rhs);
-#ifndef DEBUG
-    cout << "." << flush;
-#endif
+
+    //cout << "." << flush;
+
 
     // the l2 norm of the current residual
     norm_rhs = rhs->l2_norm();
@@ -92,9 +89,7 @@ TiberNonlinLS::do_solve(void)
     
     if (norm_res < eps_res)
     {
-#ifndef DEBUG
-      cout << endl;
-#endif
+      //cout << endl;
       norm_du = 0.0;
       break;
     }
@@ -152,8 +147,6 @@ TiberNonlinLS::do_solve(void)
       {
         if (ls_step == max_ls_step - 1)
         {
-          //cauchy = true;
-
           //u.add(-1.0, du);
           break;
         }
@@ -171,9 +164,7 @@ TiberNonlinLS::do_solve(void)
     // check for convergence
     if ((norm_du < eps) || (norm_res < eps_res))
     {
-#ifndef DEBUG
-      cout << endl;
-#endif
+      //cout << endl;
       break;
     }
       
@@ -182,34 +173,11 @@ TiberNonlinLS::do_solve(void)
     //if ((norm_res > norm_rhs) || isnan(norm_res))
     if (isnan(norm_res))
     {
-#ifndef DEBUG
-      cout << endl;
-#endif
+      //cout << endl;
       throw (SNESDivergedError(-4, i, norm_rhs));
     }
 
   
-
-    if (cauchy)
-    //if ((ls_step >= max_ls_step) && (norm_res >= norm_rhs))
-    {
-      cerr << "  trying Cauchy step:" << endl;
-      cauchy = false;
-      
-      //u = u_old;
-      //u.add(-1.0, du);
-      //continue;
-      
-      //u.add(-0.5, du);
-      u.add(-0.1 / rhs->l2_norm(), *rhs);
-
-      // evaluate the residual
-      _assemble(u, rhs, NULL);
-
-      norm_res = rhs->l2_norm();
-      norm_du = du.linfty_norm();
-    }
-    else
     {
       // check for one more smaller step
       u = u_old;
@@ -242,9 +210,12 @@ TiberNonlinLS::do_solve(void)
     //  norm_du = _max_step_size;
     //}
 
-#ifdef DEBUG
-    cout << "  it " << i << ", |du| = " << norm_du << ", |r| = " << norm_res << endl;
-#endif
+    {
+      ostringstream os;
+      os << "it " << i << ", |du| = " << norm_du
+        << ", |r| = " << norm_res;
+      Messages::info(os.str());
+    }
 
     draw_point(i, norm_res);
 
@@ -254,16 +225,12 @@ TiberNonlinLS::do_solve(void)
     //if (norm_du < eps)
     if ((norm_du < eps) || (norm_res < eps_res))
     {
-#ifndef DEBUG
-      cout << endl;
-#endif
+      //cout << endl;
       break;
     }
     else if (i == get_nonlinear_max_it())
     {
-#ifndef DEBUG
-      cout << endl << flush;
-#endif
+      //cout << endl << flush;
       throw (PetscDivergedError(-3, i, norm_rhs));
     }
 
@@ -276,6 +243,7 @@ TiberNonlinLS::do_solve(void)
   ostringstream os;
   os << "iterations: " << i << ", |du| = " << norm_du
     << ", |r| = " << norm_res << Messages::endl;
+  Messages::newline();
   Messages::info(os.str());
 
   
