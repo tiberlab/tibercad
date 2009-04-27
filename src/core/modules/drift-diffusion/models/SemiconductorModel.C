@@ -5,10 +5,11 @@
 #include "ZbDDsemiconductor.h"
 #include "WzDDsemiconductor.h"
 
-#include "Alloy.h"
+#include "Material.h"
+#include "Messages.h"
 
 
-#include <iostream>
+#include <sstream>
 
 
 TIBER_SUBMODEL(SemiconductorModel, default)
@@ -232,14 +233,13 @@ SemiconductorModel::calculate_equilibrium_properties(void)
 void
 SemiconductorModel::do_print_info(void)
 {
-  string space("    ");
 
-  cout << space << "default semiconductor model (using k.p)" << endl;
+  Messages::info("default semiconductor model (using k.p)");
   Parent::do_print_info();
 
   if (SimulationOptions::verbose() > 1)
   {
-    cout << endl;
+    Messages::newline();
     set_lattice_temperature(SimulationOptions::T);
 
     calculate_equilibrium_properties();
@@ -249,32 +249,40 @@ SemiconductorModel::do_print_info(void)
 
     const std::vector<DDsemiconductor::band_extremum>& cbs =
       _bulk_model->get_conduction_band_energy_mass();
-    cout << space << " - conduction bands:\n";
-    for (int i = 0 ; i < cbs.size(); i++)
-    {
-      cout << space << "   Ec = " << cbs[i].energy
-        << ", m = " << cbs[i].mass_DOS
-        << ", d = " << cbs[i].degeneracy << endl;
-    }
-    cout << space << "   Nc = " << get_conduction_band().effective_DOS << " cm^-3"
-      << "  m_dos = " << get_conduction_band().effective_mass / deg << "\n";
 
     const std::vector<DDsemiconductor::band_extremum>& vbs =
       _bulk_model->get_valence_band_energy_mass();
-    cout << space << " - valence bands:\n";
-    for (int i = 0 ; i < vbs.size(); i++)
-    {
-      cout << space << "   Ev = " << vbs[i].energy
-        << ", m = " << vbs[i].mass_DOS
-        << ", d = " << vbs[i].degeneracy << endl;
-    }
-    cout << space << "   Nv = " << get_valence_band().effective_DOS << " cm^-3"
-      << "  m_dos = " << get_valence_band().effective_mass / deg << "\n";
 
-    cout << space << " - Eg = " <<
+    ostringstream os;
+
+    os << " - Eg = " <<
       get_conduction_band().band_edge - get_valence_band().band_edge <<
       ", Ef0 = " << get_equilibrium_fermi_level()
-      << ", ni = " << std::sqrt(get_intrinsic_density_squared());
-    cout << endl;
+      << ", ni = " << std::sqrt(get_intrinsic_density_squared())
+      << Messages::endl;
+
+    os << " - conduction bands:" << Messages::endl;
+    for (int i = 0 ; i < cbs.size(); i++)
+    {
+      os << "   Ec = " << cbs[i].energy
+        << ", m = " << cbs[i].mass_DOS
+        << ", d = " << cbs[i].degeneracy << Messages::endl;
+    }
+    os << "   Nc = " << get_conduction_band().effective_DOS << " cm^-3"
+      << "  m_dos = " << get_conduction_band().effective_mass / deg
+      << Messages::endl;
+
+    os << " - valence bands:" << Messages::endl;
+    for (int i = 0 ; i < vbs.size(); i++)
+    {
+      os << "   Ev = " << vbs[i].energy
+        << ", m = " << vbs[i].mass_DOS
+        << ", d = " << vbs[i].degeneracy << Messages::endl;
+    }
+    os << "   Nv = " << get_valence_band().effective_DOS << " cm^-3"
+      << "  m_dos = " << get_valence_band().effective_mass / deg;
+
+    Messages::info(os.str());
+    Messages::newline();
   }
 }

@@ -5,6 +5,7 @@
 #include "Control.h"
 #include "DLLoader.h"
 #include "Material.h"
+#include "Alloy.h"
 #include "Embracing.h"
 
 #ifndef BUILD_TIBER_MODULES
@@ -41,7 +42,7 @@
 // LibMesh includes
 #include "system.h"
 
-#include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -183,12 +184,14 @@ SimulationInterface::create(const string& type,
 
 
 #ifdef DEBUG
-    cout << "Added simulator" << endl;
-    cout << "        ID   = " << sim->get_id() << endl;
-    cout << "        type = " << sim->get_type() << endl;
-    cout << "        name = " << sim->get_name() <<
-      " / default name = " << sim->get_default_name() << endl;
-    cout << "        address = " << sim << endl;
+    ostringstream os;
+    os << "Added simulator" << Messages::endl;
+    os << "        ID   = " << sim->get_id() << Messages::endl;
+    os << "        type = " << sim->get_type() << Messages::endl;
+    os << "        name = " << sim->get_name() <<
+      " / default name = " << sim->get_default_name() << Messages::endl;
+    os << "        address = " << sim << Messages::endl;
+    Messages::debug(os.str());
 #endif
   }
 
@@ -207,7 +210,7 @@ SimulationInterface::destroy(SimulationInterface* p)
     cerr << "Deleted simulator (ID = " << p->get_id() <<
       " name = " << p->get_name() << " / type_id = " <<
       p->get_default_name() << ")";
-    cerr << " address = " << p << endl;
+    cerr << " address = " << p << Messages::endl;
 #endif
 
     libhandle_t libhandle = p->_libhandle;
@@ -228,7 +231,6 @@ SimulationInterface::destroy(SimulationInterface* p)
 void
 SimulationInterface::do_print_info(void)
 {
-  cout << "  no information available";
 }
 
 
@@ -259,9 +261,7 @@ SimulationInterface::init(void) throw (InitFailedException)
 {
   if (!_is_initialized)
   {
-#ifdef DEBUG
-    cerr << "Initialize " << get_name() << "... " << endl;
-#endif
+    Messages::debug("Initialize " + get_name() + "... ");
 
     // build name for equation systems
     create_equation_system_name();
@@ -283,22 +283,27 @@ SimulationInterface::init(void) throw (InitFailedException)
 
   _is_initialized = true;
 
-#ifdef DEBUG
-  cerr << "init of " << get_name() << " done" << endl;
-#endif
+  Messages::debug("init of " + get_name() + " done");
 
   if (verbose() > 0)
   {
-    cout << endl <<
-      ">>================================================================<<"
-      << endl << "Simulation options for " << get_name() << " (" <<
-      get_default_name() << ")"
+    ostringstream os;
+    os << ">>>>============================"
+      "==================================" << Messages::endl
+      << "Simulation options for " << get_name() << " (" <<
+      get_default_name() << ")";
 #ifdef DEBUG
-      << " ptr = " << this
+      os << " ptr = " << this;
 #endif
-      << endl << endl;
+
+    Messages m;
+    m.newline();
+    m.info(os.str());
+    m.indent();
+
     do_print_info();
-    cout << endl;
+
+    m.newline();
 
     set<string> names;
     get_environment().get_region_names(names);
@@ -308,20 +313,28 @@ SimulationInterface::init(void) throw (InitFailedException)
       vector<ID> ids;
       dev.get_region_ids(*it, ids);
       assert(ids.size() != 0);
+      const Material* mat = dev.get_material(ids[0]);
       PhysicalModel* mod =
-        dev.get_material(ids[0])->get_model(get_id());
+        mat->get_model(get_id());
       if (mod != NULL)
       {
-        cout << "  ** Model details (region " << *it << ", " <<
-          dev.get_material(ids[0])->get_name() << "):" << endl;
+        ostringstream os;
+        os << "Region " << *it << ", " << mat->get_name();
+        if (mat->is_alloy())
+          os << " (x = " << 
+            static_cast<const Alloy*>(mat)->get_molar_fraction() << ")";
+        m.info(os.str());
+        m.indent();
         mod->print_info();
-        cout << endl;
+        m.unindent();
       }
     }
 
-    cout << endl <<
-      ">>================================================================<<"
-      << endl << endl;
+    m.unindent();
+    m.newline();
+    m.info("<<<<============================="
+        "=================================");
+    m.newline();
   }
 }
 

@@ -29,6 +29,10 @@ class Alloy : public Material
     static Alloy* create(const std::string& name);
 
 
+    //! Get the molar fraction of the component A
+    double get_molar_fraction(void) const;
+
+
     //! Return the component A
     Material* get_component_A(void) const;
 
@@ -96,6 +100,14 @@ const std::string&
 Alloy::get_name_B(void) const
 {
   return _mat_B->get_name();
+}
+
+
+inline
+double
+Alloy::get_molar_fraction(void) const
+{
+  return _molar_fraction;
 }
 
 

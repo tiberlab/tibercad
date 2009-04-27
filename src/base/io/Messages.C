@@ -7,8 +7,6 @@
 
 #include <vector>
 
-using namespace std;
-
 
 namespace
 {
@@ -20,16 +18,20 @@ namespace
 }
 
 
+std::string
+Messages::endl = "\n";
+
+
 int
 Messages::_indent = 0;
 
 
-ofstream
+std::ofstream
 Messages::_log;
 
 
 void
-Messages::set_log_file(const string& logfile)
+Messages::set_log_file(const std::string& logfile)
 {
   _log.open(logfile.c_str());
 }
@@ -44,44 +46,44 @@ Messages::close_log_file(void)
 
 
 void
-Messages::warning(const string& msg)
+Messages::warning(const std::string& msg)
 {
-  TeeStream ts(cout, _log);
-  cout << yellow;
+  TeeStream ts(std::cout, _log);
+  std::cout << yellow;
   _log << "*** ";
   ts << "Warning: ";
-  cout << normal;
-  ts << msg << endl << flush;
+  std::cout << normal;
+  ts << msg << endl << std::flush;
 }
 
 
 
 void
-Messages::error(const string& msg)
+Messages::error(const std::string& msg)
 {
-  TeeStream ts(cerr, _log);
-  cerr << red;
+  TeeStream ts(std::cerr, _log);
+  std::cerr << red;
   _log << "*** ";
   ts << "ERROR: ";
-  cerr << normal;
-  ts << msg << endl << flush;
+  std::cerr << normal;
+  ts << msg << endl << std::flush;
 }
 
 
 
 void
-Messages::info(const string& msg)
+Messages::info(const std::string& msg)
 {
-  vector<string> lines;
+  std::vector<std::string> lines;
   Utils::tokenize(msg, lines, "\n");
 
-  TeeStream ts(cout, _log);
+  TeeStream ts(std::cout, _log);
 
-  for (int l = 0; l < lines.size(); l++)
+  for (size_t l = 0; l < lines.size(); l++)
   {
     for (int i = 0; i < _indent; i++)
       ts << "  ";
-    ts << lines[l] << endl << flush;
+    ts << lines[l] << endl << std::flush;
   }
 }
 
@@ -90,8 +92,8 @@ void
 Messages::debug(const std::string& msg)
 {
 #ifdef DEBUG
-  TeeStream ts(cerr, _log);
-  ts << "DEBUG: " << msg <<  endl << flush;
+  TeeStream ts(std::cerr, _log);
+  ts << "DEBUG: " << msg <<  endl << std::flush;
 #else
   ignore_unused_variable(msg);
 #endif
@@ -101,6 +103,6 @@ Messages::debug(const std::string& msg)
 void
 Messages::newline(void)
 {
-  TeeStream ts(cout, _log);
-  ts << endl << flush;
+  TeeStream ts(std::cout, _log);
+  ts << endl << std::flush;
 }

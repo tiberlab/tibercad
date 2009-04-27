@@ -14,6 +14,7 @@
 #include "RotatedCrystal.h"
 #include "PyroPolarization.h"
 #include "Embracing.h"
+#include "Messages.h"
 
 #include "elem.h"
 #include "getpot.h"
@@ -1037,18 +1038,17 @@ DriftDiffusionProperties::get_temperature_at_nodes()
 void
 DriftDiffusionProperties::do_print_info(void)
 {
-  string space("    ");
   if (_strain_if.has_simulation())
-    cout << space << "using strain simulation: " <<
-      _strain_if.get_simulation()->get_name() << endl;
+    Messages::info("using strain simulation: " +
+      _strain_if.get_simulation()->get_name());
   else if (trace(_strain) == 0.0)
-    cout << space << "unstrained" << endl;
+    Messages::info("unstrained model");
   else
-    cout << space << "using strain from input file";
+    Messages::info("using strain from input file");
 
   if (_lattice_temp.has_simulation())
-    cout << space << "using temperature simulation: " <<
-      _lattice_temp.get_simulation()->get_name() << endl;
+    Messages::info("using lattice temperature from: " +
+      _lattice_temp.get_simulation()->get_name());
 
 }
 

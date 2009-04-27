@@ -64,6 +64,9 @@ class Messages
     //! Close the log file
     static void close_log_file(void);
 
+
+    //! Our own endline
+    static std::string endl;
     
 
   private:

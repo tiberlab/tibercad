@@ -14,6 +14,8 @@
 #include "linear_solver.h"
 #include "equation_systems.h"
 
+#include "Messages.h"
+
 #define DEBUG
 
 using namespace std;
@@ -271,8 +273,10 @@ TiberNonlinLS::do_solve(void)
   _final_residual_norm = norm_res;
   _last_step_size = norm_du;
 
-  cout << "iterations: " << i << ", |du| = " << norm_du
-    << ", |r| = " << norm_res << endl;
+  ostringstream os;
+  os << "iterations: " << i << ", |du| = " << norm_du
+    << ", |r| = " << norm_res << Messages::endl;
+  Messages::info(os.str());
 
   
   update();

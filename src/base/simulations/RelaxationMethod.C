@@ -2,6 +2,8 @@
 
 #include "RelaxationMethod.h"
 #include "Control.h"
+#include "Messages.h"
+
 
 using namespace std;
 
@@ -63,20 +65,26 @@ RelaxationMethod::do_solve(void)
 
     if (get_monitor())
     {
-      cout.flush();
-      cout << "<<<<------------------------------------------------------------"
-           << endl
-           << get_name() << " (Relaxation): iteration " << it << endl
-           << "  correction (max norm):  " << norm << endl
-           << "  relative error (l2)  :  " << rel_err << endl;
-      cout << "------------------------------------------------------------->>>>"
+      Messages m;
+      ostringstream os;
+      os << "<<<<-----------------------------"
+        << "-------------------------------"
+        << endl
+        << get_name() << " (Relaxation): iteration "
+        << it << endl
+        << "  correction (max norm):  " << norm << endl
+        << "  relative error (l2)  :  " << rel_err << endl
+        << "-------------------------------------"
+        << "------------------------>>>>"
         << endl;
+      m.info(os.str());
     }
 
     draw_point(it, rel_err);
 
     // check for the difference between old and new solutions
-    if ((norm > get_absolute_tolerance()) && (rel_err > get_relative_tolerance()))
+    if ((norm > get_absolute_tolerance()) &&
+        (rel_err > get_relative_tolerance()))
       converged = false;
 
     get_solution_vector().scale(_relax);

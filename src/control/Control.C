@@ -20,7 +20,7 @@
 #include "PetscRuntimeError.h"
 #include "AtomisticStructure.h"
 
-#include <iostream>
+#include <sstream>
 #include <vector>
 #include <set>
 
@@ -210,9 +210,7 @@ void
 Control::create_materials(void)
 {
 
-#ifdef DEBUG
-  cerr << "Control::create_materials() begin" << endl;
-#endif
+  Messages::debug("Control::create_materials() begin");
 
   assert(_device != NULL);
 
@@ -279,9 +277,7 @@ Control::create_materials(void)
   m.unindent();
   m.info("Creation of materials done.");
 
-#ifdef DEBUG
-  cerr << "Control::create_materials() end" << endl;
-#endif
+  Messages::debug("Control::create_materials() end");
 }
 
 
@@ -290,9 +286,7 @@ void
 Control::create_atomistic_structures(void)
 {
 
-#ifdef DEBUG
-  cerr << "Control::create_atomistic_structures() begin" << endl;
-#endif
+  Messages::debug("Control::create_atomistic_structures() begin");
 
   assert(_device != NULL);
 
@@ -331,9 +325,7 @@ Control::create_atomistic_structures(void)
 
   }
 
-#ifdef DEBUG
-  cerr << "Control::create_atomistic_structures() end" << endl;
-#endif
+  Messages::debug("Control::create_atomistic_structures() end");
 }
 
 
@@ -397,9 +389,7 @@ void
 Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 {
 
-#ifdef DEBUG
-  cerr << "Control::setup_models() begin" << endl;
-#endif
+  Messages::debug("Control::setup_models() begin");
 
   assert(_device != NULL);
 
@@ -603,13 +593,15 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       for (unsigned int i = 0; i < ids.size(); i++)
         region_ids.insert(ids[i]);
 
-#ifdef DEBUG
-      cerr << "Add boundary \'" << data.get_region_name()
-        << "\' (region nr.";
-      for (unsigned int i = 0; i < ids.size(); i++)
-        cerr << " " << ids[i];
-      cerr << ")\n";
-#endif
+      {
+        ostringstream os;
+        os << "Add boundary \'" << data.get_region_name()
+          << "\' (region nr.";
+        for (unsigned int i = 0; i < ids.size(); i++)
+          os << " " << ids[i];
+        os << ")";
+        Messages::debug(os.str());
+      }
 
       const ModelOptions& bdopts = data.get_options();
 

@@ -30,6 +30,7 @@
 #include "dense_submatrix.h"
 #include "dense_subvector.h"
 
+#include "Messages.h"
 
 // C++ includes
 
@@ -65,8 +66,7 @@ DriftDiffusion::Options::Options(void)
     scaling_type(Scaling::UNITS),
     coupling(FULLYCOUPLED),
     current_calculation(RSTF),
-    exact_newton(true)/*,
-    write_atomic_potentials(NULL)*/
+    exact_newton(true)
 {
 }
 
@@ -88,8 +88,7 @@ DriftDiffusion::Options::Options(const Options& rhs)
     scaling_type(rhs.scaling_type),
     coupling(rhs.coupling),
     current_calculation(rhs.current_calculation),
-    exact_newton(rhs.exact_newton)/*,
-    write_atomic_potentials(write_atomic_potentials)*/
+    exact_newton(rhs.exact_newton)
 {
 }
 
@@ -116,7 +115,6 @@ DriftDiffusion::Options::operator=(const Options& rhs)
     coupling = rhs.coupling;
     current_calculation = rhs.current_calculation;
     exact_newton = rhs.exact_newton;
-    //write_atomic_potentials = rhs.write_atomic_potentials;
   }
   return *this;
 }
@@ -151,9 +149,11 @@ DriftDiffusion::create_physical_model(const ModelOptions& options,
   
   if ((modelname == "unstrained") || (modelname == "strained"))
   {
-    cout << "*** drift-diffusion model '" << modelname << "' is deprecated."
-      << endl << "*** Use 'model = default' instead or don't specify model."
+    ostringstream os;
+    os << "drift-diffusion model '" << modelname << "' is deprecated."
+      << endl << "Use 'model = default' instead or don't specify explicitly."
       << endl;
+    Messages::warning(os.str());
     modelname = "default";
   }
 
@@ -629,11 +629,14 @@ DriftDiffusion::cleanup_solver(void)
 void
 DriftDiffusion::do_solve(void)
 {
-  
-  cout << endl;
-  cout << "<<-------------------------------------------------------------------"
-    << endl;
-  cout << "DriftDiffusion (name: " << get_name() << ")" << endl;
+  {
+    ostringstream os;
+    Messages::newline();
+    os << ">>>>------------------------------------"
+      << "-----------------------------" << endl;
+    os << "DriftDiffusion (name: " << get_name() << ")" << endl;
+    Messages::info(os.str());
+  }
 
   // rebuild the system if needed
   //rebuild_equation_system();
@@ -688,8 +691,8 @@ DriftDiffusion::do_solve(void)
     // if we would repeat the equilibrium simulation, we can stop now
     if (equilibrium)
     {
-      cout << "----------------------------------"
-        << "--------------------------------->>" << endl;
+      Messages::info("<<<<------------------------------"
+          "-----------------------------------");
       return;
     }
   }
@@ -768,7 +771,8 @@ DriftDiffusion::do_solve(void)
   for ( ; it != end; ++it)
   {
     ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(it->first->get_boundary_properties(get_id()));
+      static_cast<ElectricalContact*>(
+          it->first->get_boundary_properties(get_id()));
     if (cnt->has_field_emission())
     {
       field_emission = true;
@@ -776,9 +780,9 @@ DriftDiffusion::do_solve(void)
     }
   }
 
-  cout << endl;
   int width = 20;
   {
+    Messages::newline();
     ostringstream os;
     os << "contact name:";
     os.width(width - os.tellp());
@@ -793,7 +797,8 @@ DriftDiffusion::do_solve(void)
       os << "";
       os << "field emission current:";
     }
-    cout << os.str() << endl;
+    os << endl;
+    Messages::info(os.str());
   }
 
   for (it = _boundary_currents.begin(); it != end; ++it)
@@ -803,23 +808,34 @@ DriftDiffusion::do_solve(void)
     ElectricalContact* cnt =
       static_cast<ElectricalContact*>(it->first->get_boundary_properties(get_id()));
     os << it->first->get_name();
-    os.width(width - os.tellp());
+    if (cnt->get_simulation_voltage() < 0)
+      os.width(width - os.tellp() - 1);
+    else
+      os.width(width - os.tellp());
     os << "";
     os << cnt->get_simulation_voltage();
-    os.width(2 * width - os.tellp());
+
+    if (it->second < 0)
+      os.width(2 * width - os.tellp() - 1);
+    else
+      os.width(2 * width - os.tellp());
     os << "";
     os << it->second * it->first->get_area_factor();
+
     if (cnt->has_field_emission())
     {
-      os.width(3 * width - os.tellp());
+      double iem = cnt->get_field_emission_current();
+      if (iem < 0)
+        os.width(3 * width - os.tellp() - 1);
+      else
+        os.width(3 * width - os.tellp());
       os << "";
-      os << cnt->get_field_emission_current() * it->first->get_area_factor();
+      os << iem * it->first->get_area_factor();
     }
-    cout << os.str() << endl;
+    Messages::info(os.str());
   }
-  cout << endl;
-  cout << "------------------------------------------------------------------->>"
-    << endl;
+  Messages::info("<<<<---------------------------"
+      "--------------------------------------");
 
 }
 
@@ -891,15 +907,17 @@ DriftDiffusion::do_equilibrium(void)
 
   try
   {
-    cout << "Solving equilibrium" << endl;
+    Messages::info("Solving equilibrium");
 
     do_newton();
     
-    cout << "Equilibrium done" << endl;
+    Messages::info("Equilibrium done");
   }
   catch (runtime_error& e)
   {
-    cerr << "Equilibrium did not converge: " << e.what() << endl;
+    ostringstream os;
+    os << "Equilibrium did not converge: " << e.what() << endl;
+    Messages::error(os.str());
     throw (e);
   }
 
@@ -1014,25 +1032,24 @@ DriftDiffusion::do_print_info(void)
 
   Options& myopts = get_options();
 
-  string space("  ");
+  Messages::newline();
 
-  cout << space << "solving for : ";
+  ostringstream os;
+  os << "solving for : ";
   if (myopts.coupling & POISSON)
-    cout << "poisson ";
+    os << "poisson ";
   if (myopts.coupling & ELECTRONS)
-    cout << "electrons ";
+    os << "electrons ";
   if (myopts.coupling & HOLES)
-    cout << "holes ";
-  cout << endl;
+    os << "holes ";
+
+  os << endl;
 
   if (do_local_scaling_)
-    cout << space << "using local scaling" << endl;
-/*
-  cout << space << "nonlinear solver is: " <<
-    solver_params.nonlinear_solver << endl;
-  cout << space << "linear solver is: " <<
-    solver_params.linear_solver << endl;
-*/
+    os << "using local scaling";
+
+  Messages::info(os.str());
+
 }
 
 
