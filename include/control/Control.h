@@ -103,6 +103,10 @@ class Control
     void run_simulation(void) throw (SolveFailedException);
     
 
+    //! Plots the results of all simulation models
+    void plot_all(void);
+
+
     //! Get a reference to the device
     Device& get_device(void);
 
@@ -188,6 +192,31 @@ class Control
   const Database& get_database(void) const;
 
   private:
+
+    //! A signal handler
+    class SignalHandler
+    {
+
+      public:
+
+        typedef struct sigaction SigAction;
+
+        static void set_control(Control* ctrl);
+
+        static void activate_sigint(void);
+        static void deactivate_sigint(void);
+
+      private:
+
+        SignalHandler(void);
+
+        static Control* _ctrl;
+
+        static SigAction _old_int_action;
+
+        static void sigint(int sig);
+    };
+
 
     //! The inputfile
     std::string _inputfile;

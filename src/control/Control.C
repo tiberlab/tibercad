@@ -3,6 +3,8 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/convenience.hpp>
+#include "boost/algorithm/string/trim.hpp"
+#include "boost/algorithm/string/case_conv.hpp"
 
 #include "InputParser.h"
 #include "RegionStructure.h"
@@ -24,9 +26,83 @@
 #include <vector>
 #include <set>
 
+#include <csignal>
+
 
 using namespace std;
 
+
+
+
+Control*
+Control::SignalHandler::_ctrl = NULL;
+
+Control::SignalHandler::SigAction
+Control::SignalHandler::_old_int_action;
+
+
+void
+Control::SignalHandler::set_control(Control* ctrl)
+{
+  _ctrl = ctrl;
+}
+
+
+void
+Control::SignalHandler::activate_sigint(void)
+{
+  sigaction(SIGINT, NULL, &_old_int_action);
+
+  SigAction new_action;
+  new_action.sa_flags = SA_RESTART;
+  sigemptyset(&new_action.sa_mask);
+  new_action.sa_handler = sigint;
+
+  if (_old_int_action.sa_handler != SIG_IGN)
+    sigaction(SIGINT, &new_action, NULL);
+}
+
+
+
+void
+Control::SignalHandler::deactivate_sigint(void)
+{
+  sigaction(SIGINT, &_old_int_action, NULL);
+}
+
+
+
+void
+Control::SignalHandler::sigint(int sig)
+{
+  // A second Ctrl-C should silently quit
+  deactivate_sigint();
+  sigset_t block_int;
+  sigemptyset(&block_int);
+  sigaddset(&block_int, SIGINT);
+  sigprocmask(SIG_UNBLOCK, &block_int, NULL);
+
+  cerr << "\nDo you really want to quit TiberCAD [n]? ";
+  char buffer[16];
+  cin.get(buffer, 16, '\n');
+  string ans(buffer);
+  cin.clear();
+  cin.ignore(256, '\n');
+
+  boost::algorithm::trim(ans);
+  boost::algorithm::to_lower(ans);
+
+  if ((ans == "y") || (ans == "yes"))
+  {
+    raise(sig);
+  }
+
+  // re-block the signal
+  sigprocmask(SIG_BLOCK, &block_int, NULL);
+
+  // reactivate the handler
+  activate_sigint();
+}
 
 
 
@@ -47,6 +123,9 @@ Control::Control(const std::string& inputfile)
   }
 
   infile.close();
+
+  // setup the signal handler
+  SignalHandler::set_control(this);
 }
 
 
@@ -89,6 +168,9 @@ void
 Control::init(void) throw (InitFailedException,
     ModelErrorException, DatabaseException)
 {
+
+  // we want to intercept SIGINT (Ctrl-C)
+  SignalHandler::activate_sigint();
 
   _database = new Database();
   Material::set_database(*_database);
@@ -851,31 +933,6 @@ Control::run_simulation(void) throw (SolveFailedException)
   {
     SimulationInterface* sim = simulations[i];
 
-    // Let's do this in the models
-    /*
-    // we try first to solve the equilibrium solution, which
-    // could be useful for most simulations
-    try
-    {
-      sim->solve_equilibrium();
-    }
-    catch (runtime_error& e)
-    {
-      ostringstream s;
-      s << "Control: Problem in solving equilibrium." << endl <<
-        "    Cause: " << e.what();
-      throw SolveFailedException(s.str());
-    }
-    catch (...)
-    {
-      ostringstream s;
-      s << "Control: Solve of " << sim->get_name() << " failed." << endl <<
-        "    Cause: Unknown";
-      throw SolveFailedException(s.str());
-    }
-    */
-
-    // now the actual solve
     try
     {
       sim->solve();
@@ -896,9 +953,19 @@ Control::run_simulation(void) throw (SolveFailedException)
     }
 
   }
-
 }
 
+
+
+void
+Control::plot_all(void)
+{
+  simulation_iterator simit(_simulations.begin());
+  const simulation_iterator simend(_simulations.end());
+
+  for ( ; simit != simend; ++simit)
+    (*simit)->plot();
+}
 
 
 

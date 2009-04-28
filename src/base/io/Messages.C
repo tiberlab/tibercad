@@ -10,11 +10,13 @@
 
 namespace
 {
-  const char* red    = "\033[1;31m";
-  const char* yellow = "\033[1;33m";
-  const char* blue   = "\033[1;34m";
-  const char* white  = "\033[1;37m";
-  const char* normal = "\033[0m";
+  const char* red     = "\033[1;31m";
+  const char* yellow  = "\033[1;33m";
+  const char* redb    = "\033[1;41m";
+  const char* yellowb = "\033[1;43m";
+  const char* blue    = "\033[1;34m";
+  const char* white   = "\033[1;37m";
+  const char* normal  = "\033[0m";
 }
 
 
@@ -49,10 +51,11 @@ void
 Messages::warning(const std::string& msg)
 {
   TeeStream ts(std::cout, _log);
-  std::cout << yellow;
+  ts << Messages::endl;
+  std::cout << yellowb;
   _log << "*** ";
-  ts << "Warning: ";
-  std::cout << normal;
+  ts << "Warning:";
+  std::cout << normal << " ";
   ts << msg << endl << std::flush;
 }
 
@@ -62,10 +65,11 @@ void
 Messages::error(const std::string& msg)
 {
   TeeStream ts(std::cerr, _log);
-  std::cerr << red;
+  ts << Messages::endl;
+  std::cerr << redb;
   _log << "*** ";
-  ts << "ERROR: ";
-  std::cerr << normal;
+  ts << "ERROR:";
+  std::cerr << normal << " ";
   ts << msg << endl << std::flush;
 }
 
