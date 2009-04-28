@@ -1163,7 +1163,7 @@ void AtomisticGenerator::make_conv_cell()
   // If no other indexes are specified, set y growth direction by default (orthogonal to x index)
   if ((norm(conv2) < tol)&&(norm(conv3) < tol)) {
 
-    std::cerr << "Warning: only x growht direction is defined. Building other direction orthogonal " << std::endl;
+    std::cerr << "Warning: only x growth direction is defined. Building other direction orthogonal " << std::endl;
 
     conv2(1) = - conv1(3); conv2(2) = 0.0; conv2(3) = conv1(1);
     conv3 =  vectorProduct(conv1, conv2);
@@ -1173,7 +1173,7 @@ void AtomisticGenerator::make_conv_cell()
   //If only one index is not specified, build it by default (orthogonal)
   else if (norm(conv2) < tol){
 
-    std::cerr << "Warning: only x and z growht direction is defined. Building y direction orthogonal " << std::endl;
+    std::cerr << "Warning: only x and z growth direction is defined. Building y direction orthogonal " << std::endl;
 
     conv2 =  vectorProduct(conv1, conv3);
     conv2 = conv2 / norm(conv2);
@@ -1181,7 +1181,7 @@ void AtomisticGenerator::make_conv_cell()
 
   else if (norm(conv3) < tol){
 
-    std::cerr << "Warning: only x and y growht direction is defined. Building z direction orthogonal " << std::endl;
+    std::cerr << "Warning: only x and y growth direction is defined. Building z direction orthogonal " << std::endl;
 
     conv3 =  vectorProduct(conv1, conv2);
     conv3 = conv3 / norm(conv3);
