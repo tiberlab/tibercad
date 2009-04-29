@@ -408,7 +408,6 @@ $Physics
 $Simulation
 {
 
-  searchpath = .
   meshfile =  mesh_led_tri_msh.grd # led_quantum_msh.grd   # mesa_msh.grd
   mesh_units = 1e-6      
   dimension = 2

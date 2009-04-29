@@ -110,8 +110,6 @@ $Physics
 
 $Simulation
 {
-  #searchpath = ../../materials
-  searchpath = .
   meshfile = diode.msh
   dimension = 1
   temperature = 300

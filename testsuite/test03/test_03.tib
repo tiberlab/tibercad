@@ -166,7 +166,6 @@ $Physics
 $Simulation
 {
   
-  searchpath = .
   meshfile = test_03.msh
   dimension = 1
   temperature = 300

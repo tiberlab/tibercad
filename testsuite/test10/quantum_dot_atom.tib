@@ -287,7 +287,6 @@ $Physics
 
 $Simulation
 {
-#  searchpath = ../../materials     
   meshfile = box_in_cube.msh 
   mesh_units = 1e-9
   dimension = 3
