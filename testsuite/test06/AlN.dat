@@ -9,7 +9,7 @@ Eg_G = 6.25;
 [kdotp]
 #E_v = -3.44;
 # from Nextnano
-E_v = -1.526;
+E_v = -1.52554364659435
 
 m_c_xx = 0.3;
 m_c_zz = 0.32;

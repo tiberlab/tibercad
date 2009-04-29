@@ -14,7 +14,7 @@ varshni_beta_G = 624
 [kdotp]
 #E_v = -2.34;
 # from Nextnano
-E_v = -0.462
+E_v = -0.420333333333333
 
 m_c_xx = 0.07
 m_c_zz = 0.07

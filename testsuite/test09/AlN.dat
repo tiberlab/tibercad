@@ -11,7 +11,7 @@ varshni_alpha_G = 1.799e-3
 varshni_beta_G =  1462
 
 [kdotp]
-E_v = -1.526;
+E_v = -1.52554364659435
 m_c_xx = 0.3;
 m_c_zz = 0.32;
 

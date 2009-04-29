@@ -10,13 +10,13 @@ void SBWzCondBandBulkHamiltonian::do_init()
   SBCondBandBulkHamiltonian::do_init();
 
   if (!(get_material()->is_alloy())) calculate_for_init( );
-  
+
 }
 
 //===========================================================================//
-void SBWzCondBandBulkHamiltonian:: calculate_for_init( )
+void SBWzCondBandBulkHamiltonian::calculate_for_init( )
 {
- 
+
   const WzSemiconductor::WzDDparameters& par = (dynamic_cast<WzSemiconductor*> (semiconductor)) -> get_parameters();
 
   wz_par = &par;
@@ -28,25 +28,9 @@ void SBWzCondBandBulkHamiltonian:: calculate_for_init( )
   imass(2,2) = 1.0/par.m_c_xx;
   imass(3,3) = 1.0/par.m_c_zz;
 
-  //--------------------------------
-  double d1 =  par.delta_cr;
-  double d2 =  par.delta_s / 3.0;
-  double d3 =  d2;
-  
-  double E1 = d1 + d2;
-
-  double E2 = (d1 - d2)/2.0 + sqrt( (d1 -  d2)*( d1 - d2) / 4.0 + 2.0 * d3 * d3 );
-
-  double Ev_top;
-
-  if (E1 > E2)
-    Ev_top = par.Ev + E1;
-  else
-    Ev_top = par.Ev + E2;
-  
   //--------------------------------------------------------------------------------/
 
-  edge = (Ev_top + par.EgGamma)/Hartree;
+  edge = (par.Ev + par.EgGamma) / Hartree;
 
   //--------------------------------------------------------------------------------//
 
@@ -60,12 +44,12 @@ void SBWzCondBandBulkHamiltonian:: calculate_for_init( )
 //===========================================================================//
 void SBWzCondBandBulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential)
 {
- 
+
   //now strain and potential
 
   Hamiltonian[0][0].constant = Hamiltonian_without_strain_pot[0][0].constant - el_potential/Hartree
     + ((strain_crystal(1,1) + strain_crystal(2,2))* (wz_par->a_x) + (wz_par->a_z) *  strain_crystal(3,3))/Hartree;
-    
+
 }
 
 //============================================================================//

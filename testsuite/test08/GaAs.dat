@@ -20,7 +20,7 @@ varshni_alpha_L = 0.605e-3
 varshni_beta_L =  204
 
 [kdotp]
-E_v = 1.346
+E_v = 1.45966666666667
 
 m_G = 0.067
 m_L_l = 1.9

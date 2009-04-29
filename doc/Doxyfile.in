@@ -89,7 +89,10 @@ FILE_PATTERNS          = *.c \
                          *.C \
                          *.H
 RECURSIVE              = YES
-EXCLUDE                = 
+EXCLUDE                = ../include/utils/Newmat/* \
+						 ../src/utils/Newmat/* \
+						 ../include/utils/Tensor/* \
+						 ../src/utils/Tensor/* \
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = 
 EXAMPLE_PATH           = 
