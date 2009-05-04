@@ -454,6 +454,37 @@ AtomisticStructure::print_structure(const std::string& path)
 
     }
 
+  else if ( (extension.compare(".xyzb") == 0) || (extension.compare(".XYZB") == 0) )
+    {
+      file << _structure_atoms.size() << std::endl << std::endl;
+
+            for (unsigned int i = 0; i < _structure_atoms.size(); i++)
+              {
+                file << std::setw(2) << _structure_atoms[i].get_specie()
+                << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
+                << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
+                << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3));
+
+                if (_bondmap->get_bond_map() != NULL)
+                           {
+
+                             file << std::setw(5) << _bondmap->get_bond_map()[i][8];
+
+                             // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                             for (unsigned int j = 0; j < _bondmap->get_bond_map()[i][8]; j++)
+                               {
+                                 file << std::setw(10) << _bondmap->get_bond_map()[i][j] + 1;
+                               }
+                             ///////////////////////////////////////////
+
+                           }
+
+                         file << std::endl;
+              }
+
+
+    }
+
   else if ( (extension.compare(".gen") == 0) || (extension.compare(".GEN") == 0) )
     {
       file << _structure_atoms.size();
