@@ -9,7 +9,6 @@ comp_B = GaAs
 
 [valenceband]
 bow_E_v = -0.38 # Vurgaftman
-#bow_E_v = -0.0511 # Nextnano
 
 
 [conductionband]

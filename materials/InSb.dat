@@ -1,0 +1,143 @@
+# InSb-zb
+#
+# All parameters from [1] if not specified
+
+structure = zb
+
+
+# lattice constant
+[lattice] # [1]
+a = 0.64794
+
+
+[valenceband] # [1]
+E_v = 0.0
+
+
+[conductionband] # [1]
+m_G = 0.0135
+# m_DOS(L) = 0.25 according to [1]
+m_L_l = 0.25
+m_L_t = 0.25
+# the following are not specified in [1]
+m_X_l = 0.25
+m_X_t = 0.25
+
+
+
+[bandgap] # [1]
+# 0 K values
+Eg_G = 0.235
+Eg_L = 0.93
+Eg_X = 0.63
+
+varshni_alpha_G = 0.32e-3
+varshni_beta_G =  170
+
+
+# the following are not specified in [1]
+varshni_alpha_X = 0.32e-3
+varshni_beta_X =  170
+varshni_alpha_L = 0.32e-3
+varshni_beta_L =  170
+
+
+[kdotp] # [1]
+delta = 0.81
+
+gamma1 = 34.8
+gamma2 = 15.5
+gamma3 = 16.5
+
+
+[deformation_potentials] # [1]
+a_c = -6.94
+abs_def_pot_L = -2.2  # [3]
+abs_def_pot_X = 1.41  # [3]
+uniax_def_pot_L = 11.35  # [3]
+uniax_def_pot_X = 4.53  # [3]
+
+a_v = -0.36
+b = -2.0
+d = -4.7
+
+
+[permittivity]
+# static dielectric constant
+permittivity = 17.5  # [3]
+
+
+# stiffness data
+[elasticity] # [1]
+C11 = 684.7
+C12 = 373.5
+C44 = 311.1
+
+# piezoelectricity
+[piezoelectricity]
+e14 = -0.076  # [3]
+
+
+# mobility
+[mobility/constant]
+mu_max = (7400.0, 500.0)
+exponent = (1.5, 1.5) # dummy values
+
+[mobility/doping_dependent] # [5]
+mobility_formula = 2
+mumin = (3.0e+03,	200.0)
+am    = (0.0,	 	0.0)
+mud   = (7.4e4,	 	500)
+ad    = (-1.538,	-2.108)
+N0    = (2.7e+17, 	7.0e+17)
+aN    = (5.0,	 	3.45)
+A     = (0.9187,	0.521)
+aA    = (1.1061,	0.1077)
+
+
+# high field dependency
+[mobility/field_dependent] # dummy values
+Vsat_Formula = 2
+beta0    = (2.0, 	2.0)
+betaexp  = (0,		0)
+A_vsat   = (1.0e+07, 	1.0e+07)
+B_vsat   = (0,		0)
+vsat_min = (5.0e+05, 	5.0e+05)
+
+
+
+# SRH recombination
+[recombination/SRH] # dummy values
+Etrap    = 0.0
+taumin = (0.0, 		0.0)
+taumax = (1.0e-9, 	1.0e-9)
+Nref   = (1.0e+16, 	1.0e+16)
+gamma  = (1, 		1)
+Talpha = (0,		0)
+Tcoeff = (0,		0)
+
+
+# direct recombination
+[recombination/direct] # [4]
+C = 5e-11 # [cm^3/s]
+
+
+[recombination/auger] # [4]
+# R_Auger = ( C_n n + C_p p ) ( n p - ni_eff^2)
+# with C_n,p = (A + B (T/T0) + C (T/T0)^2) (1 + H exp(-{n,p}/N0))
+#
+A	= (5.0000e-26 ,	5.0000e-26)	# [cm^6/s]
+B	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+C	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+H	= (0.0000e+00 ,	0.0000e+00)	# 
+N0	= (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
+
+
+
+[thermal_conductivity/constant] # [4]
+therm_lat_cond = 0.18
+
+
+
+
+

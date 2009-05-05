@@ -9,7 +9,8 @@ a = 0.565325
 
 
 [valenceband]
-E_v = 1.45967
+#E_v = 1.45967
+E_v = -0.8
 
 
 [conductionband]

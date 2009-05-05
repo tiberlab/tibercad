@@ -1,0 +1,16 @@
+References for material parameters
+----------------------------------
+
+[1] I. Vurgaftman, J. R. Meyer and L. R. Ram-Mohan: "Band parameters for III-V
+    compound semiconductors and their alloys", J. Appl. Phys., Vol. 89, No. 11,
+    June 2001, pp. 5815-5875
+
+[2] ISE TCAD Release 9.5
+
+[3] Nextnano database
+
+[4] http://www.ioffe.ru/SVA/NSM/Semicond
+
+[5] E. Sijercic and B. Pejcinovic: "Investigation of scaling of InSb MOSFETs through
+    drift-diffusion simulation", Solid-State Electronics, Vol. 50, Nr. 9-10,
+    2006, pp. 1634-1639

@@ -29,7 +29,7 @@ bow_delta = 0.15
 
 
 [deformation_potentials]
-bow_a_c = 0.0
+bow_a_c = -1.4
 bow_abs_def_pot_L = 0.0
 bow_abs_def_pot_X = 0.0
 bow_uniax_def_pot_L = 0.0
