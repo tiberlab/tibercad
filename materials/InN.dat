@@ -3,6 +3,17 @@
 structure = wz
 
 
+[valenceband]
+#E_v = -2.34;
+# from Nextnano
+E_v = -0.4203
+
+
+[conductionband]
+m_c_xx = 0.07
+m_c_zz = 0.07
+
+
 [bandgap]
 # T = 0
 Eg_G = 0.78
@@ -12,13 +23,6 @@ varshni_beta_G = 624
 
 
 [kdotp]
-#E_v = -2.34;
-# from Nextnano
-E_v = -0.420333333333333
-
-m_c_xx = 0.07
-m_c_zz = 0.07
-
 A1 = -8.21
 A2 = -0.68
 A3 = 7.57

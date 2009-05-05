@@ -9,6 +9,20 @@ a = 0.605830
 
 
 
+[valenceband]
+E_v = 1.52
+
+
+
+[conductionband]
+m_G = 0.026
+m_L_t = 0.05
+m_L_l = 0.64
+m_X_l = 1.13
+m_X_t = 0.16
+
+
+
 [bandgap]
 # 0 K values
 Eg_G = 0.417
@@ -27,14 +41,6 @@ varshni_beta_L = 93
 
 
 [kdotp]
-E_v = 1.52
-
-m_G = 0.026
-m_L_t = 0.05
-m_L_l = 0.64
-m_X_l = 1.13
-m_X_t = 0.16
-
 delta = 0.39
 gamma1 = 20
 gamma2 = 8.5

@@ -7,17 +7,23 @@ comp_A = InAs
 comp_B = GaAs
 
 
+[valenceband]
+bow_E_v = -0.38 # Vurgaftman
+#bow_E_v = -0.0511 # Nextnano
+
+
+[conductionband]
+bow_m_G = 0.0091
+
+
 [bandgap]
 bow_Eg_G = 0.477
 bow_Eg_L = 0.33
 bow_Eg_X = 1.4
 
+
+
 [kdotp]
-bow_E_v = -0.38 # Vurgaftman
-#bow_E_v = -0.0511 # Nextnano
-
-bow_m_G = 0.0091
-
 bow_delta = 0.15
 #bow_gamma1 = -11.52
 #bow_gamma2 = -10.38

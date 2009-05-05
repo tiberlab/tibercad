@@ -9,6 +9,20 @@ structure = zb
 a = 0.56611
 
 
+[valenceband]
+E_v = 0.9503
+
+
+[conductionband]
+m_G = 0.15
+m_L_l = 1.32
+m_L_t = 0.15
+m_X_l = 0.97
+m_X_t = 0.22
+
+
+
+
 [bandgap]
 # 0 K data
 Eg_G = 3.099
@@ -31,14 +45,6 @@ varshni_beta_L = 530
 
 
 [kdotp]
-E_v = 0.950333333333333
-
-m_G = 0.15
-m_L_l = 1.32
-m_L_t = 0.15
-m_X_l = 0.97
-m_X_t = 0.22
-
 delta = 0.28
 gamma1 = 3.76
 gamma2 = 0.82

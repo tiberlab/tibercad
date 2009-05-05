@@ -111,12 +111,14 @@ void  WzSemiconductor::read_database_alloy(void)
   bow.EgGamma = db.get("bow_Eg_G", 0.0);
 
 
-  db.set_section("kdotp");
+  db.set_section("valenceband");
   bow.Ev = db.get("bow_E_v", 0.0);
 
+  db.set_section("conductionband");
   bow.m_c_zz = db.get("bow_m_c_zz", 0.0);
   bow.m_c_xx = db.get("bow_m_c_xx", 0.0);
 
+  db.set_section("kdotp");
   bow.A1 = db.get("bow_A1", 0.0);
   bow.A2 = db.get("bow_A2", 0.0);
   bow.A3 = db.get("bow_A3", 0.0);
@@ -157,12 +159,14 @@ void WzSemiconductor::read_database( )
   par.varshni_beta_G  = db.get("varshni_beta_G", 0.0);
 
 
-  db.set_section("kdotp");
+  db.set_section("valenceband");
   par.Ev = db.get("E_v", -0.726);
 
+  db.set_section("conductionband");
   par.m_c_zz = db.get("m_c_zz", 0.20);
   par.m_c_xx = db.get("m_c_xx", 0.20);
 
+  db.set_section("kdotp");
   par.A1 = db.get("A1", -7.21);
   par.A2 = db.get("A2", -0.44);
   par.A3 = db.get("A3", 6.68);

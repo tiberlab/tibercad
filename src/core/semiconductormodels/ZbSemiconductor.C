@@ -138,15 +138,19 @@ void ZbSemiconductor::read_database( )
 
 
 
-  db.set_section("kdotp");
+  db.set_section("valenceband");
   par.Ev = db.get("E_v", 1.346);
 
+
+  db.set_section("conductionband");
   par.m_G = db.get("m_G", 0.067);
   par.m_l_L = db.get("m_L_l", 1.9);
   par.m_t_L = db.get("m_L_t", 0.0754);
   par.m_l_X = db.get("m_X_l", 1.3);
   par.m_t_X = db.get("m_X_t", 0.23);
 
+
+  db.set_section("kdotp");
   par.delta = db.get("delta", 0.341);
   par.gamma1 = db.get("gamma1", 6.98);
   par.gamma2 = db.get("gamma2", 2.06);
@@ -194,15 +198,17 @@ void ZbSemiconductor::read_database_alloy()
 
 
 
-  db.set_section("kdotp");
+  db.set_section("valenceband");
   bow.Ev = db.get("bow_E_v", 0.0);
 
+  db.set_section("conductionband");
   bow.m_G = db.get("bow_m_G", 0.0);
   bow.m_l_L = db.get("bow_m_L_l", 0.0);
   bow.m_t_L = db.get("bow_m_L_t", 0.0);
   bow.m_l_X = db.get("bow_m_X_l", 0.0);
   bow.m_t_X = db.get("bow_m_X_t", 0.0);
 
+  db.set_section("kdotp");
   bow.delta = db.get("bow_delta", 0.0);
   bow.gamma1 = db.get("bow_gamma1", 0.0);
   bow.gamma2 = db.get("bow_gamma2", 0.0);

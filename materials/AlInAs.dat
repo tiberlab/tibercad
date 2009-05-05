@@ -7,16 +7,21 @@ comp_A = AlAs
 comp_B = InAs
 
 
+[valenceband]
+bow_E_v = -0.64 # Vurgaftman
+
+
+[conductionband]
+bow_m_G = 0.049
+
+
 [bandgap]
 bow_Eg_G = 0.7
 bow_Eg_L = 0.0
 bow_Eg_X = 0.0
 
+
 [kdotp]
-bow_E_v = -0.64 # Vurgaftman
-
-bow_m_G = 0.049
-
 bow_delta = 0.15
 #bow_gamma1 = -11.52
 #bow_gamma2 = -10.38

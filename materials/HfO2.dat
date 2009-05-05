@@ -5,6 +5,22 @@ dielectric = true
 structure = zb
 
 
+
+[valenceband]
+E_v = -1.95
+
+
+
+[conductionband]
+# values of Si !!
+m_G = 0.156
+m_L_t = 0.13
+m_L_l = 1.42
+m_X_t = 0.5
+m_X_l = 0.5
+
+
+
 [bandgap]
 # to be checked
 Eg_G = 5.7
@@ -13,16 +29,8 @@ Eg_X = 9.0
 
 
 [kdotp]
-E_v = -1.95
-
 # values of Si !!
 delta = 0.044
-
-m_G = 0.156
-m_L_t = 0.13
-m_L_l = 1.42
-m_X_t = 0.5
-m_X_l = 0.5
 
 gamma1 = 4.31
 gamma2 = 0.345
