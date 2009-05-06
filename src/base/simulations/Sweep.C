@@ -218,11 +218,12 @@ Sweep::do_solve(void)
       do_sweep(pos_values, plotfiles, sweep_data);
     else
     {
-      if (neg_values[0] < neg_values[neg_values.size() - 1])
-        reverse(neg_values.begin(), neg_values.end());
-
       if (pos_values.size() > 1)
       {
+        // in this case we will do: 0 -> max, 0 -> min
+        if (neg_values[0] < neg_values[neg_values.size() - 1])
+          reverse(neg_values.begin(), neg_values.end());
+
         vector<double> first_val(1, pos_values[0]);
         pos_values.erase(pos_values.begin());
 
