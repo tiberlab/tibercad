@@ -118,6 +118,17 @@ ModelOptions::operator+=(const map<const string, string>& rhs)
 }
 
 
+
+void
+ModelOptions::clear(void)
+{
+  _options.clear();
+  _submodels.clear();
+}
+
+
+
+
 void
 ModelOptions::print_all(void) const
 {

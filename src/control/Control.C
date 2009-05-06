@@ -751,6 +751,12 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       const ModelOptions& solveropts = sc_it->second;
       if (!solveropts.is_empty())
       {
+        Messages m;
+        m.newline();
+        m.info("Setting up a selfconsistent simulation ("
+            + sc_it->first + ") ...");
+        m.indent();
+
         SimulationInterface* sim =
           SimulationInterface::create("selfconsistent", solveropts);
 
@@ -761,6 +767,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         sim->verbose() = 0;
         sim->set_name(sc_it->first);
         _simulations[sim->get_name()] = sim;
+        m.unindent();
       }
     }
   }
@@ -769,6 +776,15 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   if (map_it != solver_opts.end())
   {
     const ModelOptions& solveropts = map_it->second;
+
+    Messages::warning("The definition of a selfconsistent simulation "
+        "outside of a \'Selfconsistent\' block is deprecated.");
+
+    Messages m;
+    m.newline();
+    m.info("Setting up a selfconsistent simulation ("
+        + map_it->first + ") ...");
+    m.indent();
 
     SimulationInterface* sim =
       SimulationInterface::create("selfconsistent", solveropts);
@@ -784,8 +800,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     sim->verbose() = 0;
     _simulations[sim->get_name()] = sim;
 
-    Messages::warning("The definition of a selfconsistent simulation "
-        "outside of a \'Selfconsistent\' block is deprecated.");
+    m.unindent();
   }
 
 
@@ -807,6 +822,12 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         const ModelOptions& solveropts = sw_it->second;
         if (!solveropts.is_empty())
         {
+          Messages m;
+          m.newline();
+          m.info("Setting up a parameter sweep ("
+              + sw_it->first + ") ...");
+          m.indent();
+
           SimulationInterface* sim =
             SimulationInterface::create("sweep", solveropts);
 
@@ -817,6 +838,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
           sim->verbose() = 0;
           sim->set_name(sw_it->first);
           _simulations[sim->get_name()] = sim;
+          m.unindent();
         }
       }
     }
@@ -829,6 +851,12 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     map_it = solver_opts.find("sweep");
     if (map_it != solver_opts.end())
     {
+      Messages m;
+      m.newline();
+      m.info("Setting up a parameter sweep ("
+          + map_it->first + ") ...");
+      m.indent();
+
       ModelOptions sweepopts(map_it->second);
 
       if (!sweepopts.find_option("name"))
@@ -838,11 +866,18 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       //sim->verbose() = SimulationOptions::verbose();
       sim->verbose() = 0;
       _simulations[sim->get_name()] = sim;
+      m.unindent();
     }
 
     map_it = solver_opts.find("sweep_1");
     if (map_it != solver_opts.end())
     {
+      Messages m;
+      m.newline();
+      m.info("Setting up a parameter sweep ("
+          + map_it->first + ") ...");
+      m.indent();
+
       ModelOptions sweepopts(map_it->second);
 
       warning = true;
@@ -853,11 +888,18 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       //sim->verbose() = SimulationOptions::verbose();
       sim->verbose() = 0;
       _simulations[sim->get_name()] = sim;
+      m.unindent();
     }
 
     map_it = solver_opts.find("sweep_2");
     if (map_it != solver_opts.end())
     {
+      Messages m;
+      m.newline();
+      m.info("Setting up a parameter sweep ("
+          + map_it->first + ") ...");
+      m.indent();
+
       ModelOptions sweepopts(map_it->second);
 
       warning = true;
@@ -868,6 +910,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       //sim->verbose() = SimulationOptions::verbose();
       sim->verbose() = 0;
       _simulations[sim->get_name()] = sim;
+      m.unindent();
     }
 
     if (warning)

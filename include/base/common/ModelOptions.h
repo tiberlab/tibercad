@@ -268,15 +268,6 @@ ModelOptions::find_option(const std::string& name) const
 
 
 
-inline
-void
-ModelOptions::clear(void)
-{
-  _options.clear();
-}
-
-
-
 template <typename T>
 inline
 T
