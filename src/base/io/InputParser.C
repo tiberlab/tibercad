@@ -1,11 +1,4 @@
-/*=============================================================================
-  Copyright (c) 2002-2003 Joel de Guzman
-  http://spirit.sourceforge.net/
-
-  Use, modification and distribution is subject to the Boost Software
-  License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
-  http://www.boost.org/LICENSE_1_0.txt)
-  =============================================================================*/
+// $Id$
 
 #include <boost/spirit/core.hpp>
 #include <boost/spirit/actor/push_back_actor.hpp>
@@ -13,6 +6,7 @@
 #include <boost/spirit/utility/confix.hpp>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #include <vector>
 #include <string>
@@ -39,9 +33,10 @@ InputParser::InputParser(const std::string& input_file_name)
 
  
   filename = input_file_name;
+  ifstream in_stream(filename.c_str());
+  if (!in_stream.good())
+    throw InitFailedException("Bad input file.");
 
-  //  initialize_vectors(); // 
-  
   reset_all_maps();
   
 }
@@ -63,16 +58,8 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
   dollar_symbol = "$";
   char ch ;
 
-  if ( !in_stream.good() )
-  {
-
-    throw InitFailedException("ERROR: Input file not good");
-    //  std::cerr << "ERROR: Input file not good." 
-    //               << std::endl;
-    //   error();
-  }
+  assert(in_stream.good());
   in_stream >>  label;
-
 
   //  it can be a comment  ! 
   //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
@@ -111,7 +98,7 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
         //*******************************
 
 
-        if (ch == '#' )  //  skip  comments 
+          if (ch == '#' )  //  skip  comments 
         { 
           in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
           //      and   read  the  next keyword !!!
@@ -120,7 +107,7 @@ bool InputParser::find_keyword_in_section(ifstream& in_stream, const std::string
 
 
       } while ((ch == '\n') || (ch == '\r') || (ch == ' ')
-          || (ch == '#') || (ch == '\t'));
+               || (ch == '#') || (ch == '\t'));
 
 
       // then  check  if  first char (not  blank) is  "{"
@@ -193,14 +180,7 @@ const  ModelOptions& InputParser::read_parameters(std::string section_name, cons
 
   reset_all_maps();
 
-  if ( !in_stream.good() )
-  {
-    throw InitFailedException("ERROR: Input file not good."); 
-
-    //   std::cerr << "ERROR: Input file not good." 
-    //               << std::endl;
-    //     //   error();
-  }
+  assert(in_stream.good());
 
   section_name = "$"+section_name;
 
@@ -283,16 +263,22 @@ const  ModelOptions& InputParser::read_parameters(std::string section_name, cons
 
   //       else cerr <<  "ERROR  hereee"  << endl; 
 
-  //*************************
 
 
-      // ++++++++++++++  put   function skip_to_bracket !!!
-      // bool InputParser::skip_to_bracket(ifstream& in_stream)
+  // ++++++++++++++  put   function skip_to_bracket !!!
+  // bool InputParser::skip_to_bracket(ifstream& in_stream)
 
-      check_error = skip_to_bracket(in_stream);  // go on reading until the  char  '{' is  read  
+  check_error = skip_to_bracket(in_stream);  // go on reading until the  char  '{' is  read  
+
   if (check_error == true)
-    throw InitFailedException("ERROR: missing  block."); 
-  //   cerr <<  "ERROR "  << endl; 
+
+  {
+    std::ostringstream stm;
+
+    stm << "In input file: missing  block at the beginning of section " << section_name << endl;
+    throw InitFailedException(stm.str());
+  }
+
 
 
   // -----------------------------------------------------
@@ -363,10 +349,11 @@ const  ModelOptions& InputParser::read_parameters(std::string section_name, cons
 
 
 
-  //  parse_options (in_stream); // !!!!!  ->   get_parameters_map();  !!!!!!
-  parse_options (in_stream,temp_options );  
+ 
 
-  //  return temp_options;
+  parse_options(in_stream,temp_options,  model_name, section_name );
+
+ 
 
   return  get_options();
 
@@ -382,35 +369,26 @@ const  ModelOptions&  InputParser::read_parameters(std::string section_name)
 {
 
   std::string  label ;
-  std::ifstream in_stream (filename.c_str()) ;
+  std::ifstream in_stream(filename.c_str()) ;
 
   reset_all_maps();
 
-  if ( !in_stream.good() )
-  {
-    throw InitFailedException("ERROR: Input file not good."); 
-    //  std::cerr << "ERROR: Input file not good." 
-    //               << std::endl;
-    //   error();
-  }
+  assert(in_stream.good());
 
   section_name = "$"+section_name;
 
   find_keyword( in_stream,section_name  );
  
  
-                     
-  //*********************************
-     
-      // ModelOptions temp_options;   private  member 
-      // *********************************
+ 
 
-      temp_options.clear();
+  temp_options.clear();
 
-  //  parse_options (in_stream); // !!!!!  ->   get_parameters_map();  !!!!!!
-  parse_options (in_stream,temp_options );
+ 
 
-  // return temp_options;
+  parse_options (in_stream,temp_options, section_name,section_name);
+
+ 
 
   return  get_options();
  
@@ -432,7 +410,7 @@ void InputParser::reset_all_maps()
 
   model_BC_map.clear();
   physical_model_map.clear();
-  blocks_map.clear();
+  //blocks_map.clear();
 
 
   // prop_labels_map.clear();
@@ -459,14 +437,7 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
   std::string str,  label;
 
 
-  if ( !in_stream.good() )
-  {
-
-    throw InitFailedException("ERROR: Input file not good.");
-    // std::cerr << "ERROR: Input file not good." 
-    //               << std::endl;
-    //   error();
-  }
+  assert(in_stream.good());
   in_stream >>  label;
 
   while (skip_comments(in_stream,label ) == true )
@@ -512,9 +483,9 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
 
 
 
-    cerr << " Error: keyword "<< keyword <<  "  not  found !  " << endl ;
-    throw InitFailedException("ERROR "); 
-    //  exit(1);
+    ostringstream os;
+    os << "keyword "<< keyword <<  "  not  found in input file!";
+    throw InitFailedException(os.str()); 
 
   }
 
@@ -532,14 +503,7 @@ bool InputParser::find_optional_keyword(ifstream& in_stream, const std::string& 
   std::string str,  label;
 
 
-  if ( !in_stream.good() )
-  {
-
-    throw InitFailedException("ERROR: Input file not good.");
-    // std::cerr << "ERROR: Input file not good." 
-    //               << std::endl;
-    //   error();
-  }
+  assert(in_stream.good());
   in_stream >>  label;
 
   while (skip_comments(in_stream,label ) == true )
@@ -599,7 +563,7 @@ bool InputParser::find_optional_keyword(ifstream& in_stream, const std::string& 
 
 
 
-  //void InputParser::read_models()
+ 
 const multimap <const string, ModelStructure*>& InputParser::read_models()
 
 {
@@ -609,15 +573,7 @@ const multimap <const string, ModelStructure*>& InputParser::read_models()
 
   std::ifstream in_stream (filename.c_str()) ;
 
-  if ( !in_stream.good() )
-  {
-
-    throw InitFailedException("ERROR: Input file not good." );
-    // std::cerr << "ERROR: Input file not good." 
-    //               << std::endl;
-    //   error();
-  }
-
+  assert(in_stream.good());
 
   find_keyword(in_stream,section_name );  //  looks  for "$Models$"; 
 
@@ -641,7 +597,10 @@ const multimap <const string, ModelStructure*>& InputParser::read_models()
 //   *************************************************************
 
 
-void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_options )
+// void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_options )
+void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_options ,
+                                const std::string& block, const std::string& section  )
+
 {
 
   // *******************************************************************************************************
@@ -649,7 +608,6 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
   // 
   //  
   // *******************************************************************************************************
-
 
 
  
@@ -676,15 +634,15 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
   //  vect.clear();
   v.clear();
   v_int.clear();
-  //******************
+  // ******************
 
 
-      //------------------------
-      //  labels of  properties
-      //------------------------
+  //------------------------
+  //  labels of  properties
+  //------------------------
 
 
-      vector<string> v_label;
+  vector<string> v_label;
   vector<string>vect_label;
   vector<string> v_label_string;  //  label  for  string  value
   vector<string>list_label; //  label  for  list_string  value
@@ -711,9 +669,9 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
  
 
 
-  //*******  special  characters for  the  label
-      rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',') 
-                             | ch_p('%')   | ch_p('@') | ch_p('[') | ch_p(']') );
+  // *******  special  characters for  the  label
+  rule<>special_char =  (ch_p('_') | ch_p('-') |  ch_p('.') |  ch_p('/')   |  ch_p('+') | ch_p(',') 
+                         | ch_p('%')   | ch_p('@') | ch_p('[') | ch_p(']') );
 
   rule<>dot = ch_p('.');
 
@@ -752,10 +710,10 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
   // rule<>tag_value = if_p('(')[(list_string) ].else_p[label];
   // **********  property value  can  be  a  single string (label) or  a  list ( x , y, z )
 
-//  
-//  rule<>tag_value =  list_string | label;
+  //  
+  //  rule<>tag_value =  list_string | label;
 
-// for  the  case "searchpath =  ."  (path = local dir)
+  // for  the  case "searchpath =  ."  (path = local dir)
   rule<>extended_label = label | dot;
 
   rule<>tag_value =  list_string | extended_label;
@@ -838,13 +796,17 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
   // 
   //
 
+  int line_counter ;
+  line_counter = 1;
+
+
   while ( getline(in_stream, str) )
-  { //while
+  { //while getline
     if   (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
-    {// if !  comment_p("#") 
+    {// if !comment_p("#") 
 
       if (!(parse(str.c_str(), r_empty_line ).full) )
-      { // if !  empty line
+      { // if !empty line
    
         if  ((parse(str.c_str(), r_start_symbol  ).full) ) 
         { // if parse   {
@@ -928,157 +890,161 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
           break;
         }
 
-
+  
 
         else  
+
         {
 
+          std::ostringstream stm;
+
+          stm <<  "Syntax error in input file on line " << line_counter;
+          if (block.size() > 0)
+            stm << " of block " << block;
+          stm << " in section " << section  << endl;
+
        
-          throw InitFailedException("SYNTAX ERROR in input file (block) ");
+          throw InitFailedException(stm.str());
+
         }
 
-        // {
-        //           cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
-          
-        //           exit(1); 
-        //         }
-
-
-
+       
       }
 
     }
 
+    line_counter++ ; 
+
   }
 
 
-  //*******************************************************************
-      //  IF  THERE ARE OTHER LINES IN  THE  BLOCK (BLOCK NOT ENDED)
-      //*******************************************************************
+  // *******************************************************************
+  //  IF  THERE ARE OTHER LINES IN  THE  BLOCK (BLOCK NOT ENDED)
+  //  *******************************************************************
 
 
 
-          if (! (block_ended) )
+  if (! (block_ended) )
 
-        { // ! (block_ended)
+  { // ! (block_ended)
 
-          while ( getline(in_stream, str) )
-          {
+    while ( getline(in_stream, str) )
+    {  // while getline 2
 
    
-            if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
+      if  (!(parse(str.c_str(), comment_p("#")   , space_p).full) ) 
 
-            { // if !  comment_p("#")  
+      { // if !  comment_p("#")  
 
 	 
 
-              if (  parse(str.c_str(),
+        if (  parse(str.c_str(),
 
-                          //  Begin  grammar
+                    //  Begin  grammar
 		      
-                          r_command 
+                    r_command 
 
-                          )
+                    )
 
-                    //  ,
-                    //  End grammar
+              //  ,
+              //  End grammar
 
-                    //  space_p).full )
-                    .full )           //  not skipping spaces
+              //  space_p).full )
+              .full )           //  not skipping spaces
 
 
-              { // if parse
+        { // if parse
 
 	     
 
      
 
 
-                if ( !(v_string.empty()) )
-                {
+          if ( !(v_string.empty()) )
+          {
 
-                  for (int i =0; i< v_label_string.size();++i)
-                  {
-                    string_prop_labels.push_back(v_label_string[i]);
-                    //    cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+            for (int i =0; i< v_label_string.size();++i)
+            {
+              string_prop_labels.push_back(v_label_string[i]);
+              //    cout <<  "v_label_string[i] ****  " <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
 
-                    string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
+              string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
 
-                    //region_options.set_option(v_label_string[i],v_string[i])) ;
-                    region_options.set_option(v_label_string[i],v_string[i]) ;
+              //region_options.set_option(v_label_string[i],v_string[i])) ;
+              region_options.set_option(v_label_string[i],v_string[i]) ;
 
 
                    
 
-                  }
-                }
+            }
+          }
 	     
 
        
 
 	      
 
-                v_label_string.clear();
-                vect_label.clear();
-                v_label.clear();
-                v_string.clear();
-                v.clear();
-                v_int.clear();
+          v_label_string.clear();
+          vect_label.clear();
+          v_label.clear();
+          v_string.clear();
+          v.clear();
+          v_int.clear();
 
   
 	    
 
-              }
+        }
 
      
 
-              //  *******************************************************
+        //  *******************************************************
 
-              //   termination condition  !!!
-              else if  (parse(str.c_str(), ( *(space_p)>>ch_p("}")  >> *(anychar_p) >>*(space_p) )  , space_p).full) 
-              {  
-                //  cout << endl ;
-                //         cout <<  "Fine  !" << endl ;
-                //   if (name == "a")
-                break;
-              }
+        //   termination condition  !!!
+        else if  (parse(str.c_str(), ( *(space_p)>>ch_p("}")  >> *(anychar_p) >>*(space_p) )  , space_p).full) 
+        {  
+          //  cout << endl ;
+          //         cout <<  "Fine  !" << endl ;
+          //   if (name == "a")
+          break;
+        }
 
 
          
 
 
 
-              //   termination condition  with  } on  the  line  !!!
-              else if (  parse(str.c_str(), r_command_terminated ).full )           //  not skipping spaces
+        //   termination condition  with  } on  the  line  !!!
+        else if (  parse(str.c_str(), r_command_terminated ).full )           //  not skipping spaces
 
 
-              { // if parse
+        { // if parse
 
 
-                if ( !(v_string.empty()) )
-                {
+          if ( !(v_string.empty()) )
+          {
 
-                  for (int i =0; i< v_label_string.size();++i)
-                  {
-                    string_prop_labels.push_back(v_label_string[i]);
-                    //  cout <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
+            for (int i =0; i< v_label_string.size();++i)
+            {
+              string_prop_labels.push_back(v_label_string[i]);
+              //  cout <<  v_label_string[i]<<  "    " <<  v_string[i] <<  endl ;
 
-                    string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
+              string_prop_labels_map.insert(make_pair(v_label_string[i], v_string[i]) );
 
-                    //  put option pair in ModelOptions  object
-                    region_options.set_option(v_label_string[i],v_string[i]) ;
+              //  put option pair in ModelOptions  object
+              region_options.set_option(v_label_string[i],v_string[i]) ;
 
-                  }
-                }
+            }
+          }
 	     
 
-                // cout << endl ;
-                //         cout <<  "Fine device !!! !" << endl ;
-                break;
+          // cout << endl ;
+          //         cout <<  "Fine device !!! !" << endl ;
+          break;
 
     
 
-              }
+        }
 
 
 
@@ -1088,48 +1054,53 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
 
 
 
-              //     skip   all  the  other  kinds  of  lines  !!!!
-              else  if (parse(str.c_str(), if_p("{")[(+alpha_p) 
-                                                     ] , space_p ).full)
-              {  
-                //   cout << "SKIP" << endl ;
-                //   if (name == "a")
-                //   break;
-              }
+        //     skip   all  the  other  kinds  of  lines  !!!!
+        else  if (parse(str.c_str(), if_p("{")[(+alpha_p) 
+                                               ] , space_p ).full)
+        {  
+          //   cout << "SKIP" << endl ;
+          //   if (name == "a")
+          //   break;
+        }
 
 
-              else  
+        else  
 
-                //  throw InitFailedException("....................");
-
-
-              {
-                cerr <<  "  SYNTAX ERROR in input  file   " <<  endl;
-                cerr << " Correct syntax is : 'label' = 'value' 'label' = 'value' .......# 'comment' " 
-                     << endl;
-                cerr << " A comment line  must be preceded by '#' "<< endl;
-                //     cerr << " BEWARE: numerical and string values cannot  be  mixed  in  the  same line !"
-                //        << endl;
-                throw InitFailedException("ERROR "); 
-          
-              }
+          //  throw InitFailedException("....................");
 
 
-            }
+        {
 
+          std::ostringstream stm;
 
-            v_label_string.clear();
-            vect_label.clear();
-            v_label.clear();
-            v_string.clear();
-            v.clear();
-            v_int.clear();
-     
-
-  
-          }  //  end  while
+          stm << "Syntax error in input file on line " << line_counter;
+          if (block.size() > 0)
+            stm << " of block " << block;
+          stm << " (section " << section  << ")" << endl;
+          stm <<  "Correct syntax is : 'label' = 'value' "
+            "'label' = 'value' .......# 'comment' " <<
+            endl << "A comment line  must be preceded by '#' "<< endl;
+         
+          throw InitFailedException(stm.str());
 
         }
+
+      }
+
+
+      v_label_string.clear();
+      vect_label.clear();
+      v_label.clear();
+      v_string.clear();
+      v.clear();
+      v_int.clear();
+     
+ 
+      line_counter++ ; 
+
+    }  //  end  while
+
+  }
 
 }
 
@@ -1144,27 +1115,21 @@ void InputParser::read_device(void)
 {
 
   std::string  label, keyword,region_name, atomistic_region_name, section_name   ;
-  std::string cluster_name;
+  std::string cluster_name,device_block_name   ;
 
   std::ifstream in_stream (filename.c_str()) ;
   ID current_region_ID; //  to be  deleted
   bool  check_error;
-  ID region_counter,atomistic_region_counter, cluster_counter ;
+  ID region_counter,atomistic_region_counter, cluster_counter ,interface_counter ;
   region_counter = 0;
   cluster_counter = 0;
+  interface_counter = 0;
 
   atomistic_region_counter = 0;
 
   reset_all_maps();
 
-  if ( !in_stream.good() )
-  {
-
-    throw InitFailedException("ERROR: Input file not good." );
-    // std::cerr << "ERROR: Input file not good." 
-    //               << std::endl;
-    //   error();
-  }
+  assert(in_stream.good());
 
   section_name =  "Device";
 
@@ -1180,7 +1145,7 @@ void InputParser::read_device(void)
  
   check_error = skip_to_bracket(in_stream);  // go on reading until the  char  '{' is  read  
   if (check_error == true)
-    throw InitFailedException("ERROR: Device  block  missing."); 
+    throw InitFailedException("\'Device\' block missing in input file."); 
 
 
   //  in_stream >>  label; //  read   start_symb
@@ -1227,7 +1192,10 @@ void InputParser::read_device(void)
       //cerr << " ************** ATOMISTIC ************ " <<  atomistic_region_name << endl;
 
       temp_options.clear();
-      parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
+      //   parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
+
+
+      parse_options(in_stream,temp_options, keyword, section_name);
 
       //....................
 
@@ -1291,8 +1259,13 @@ void InputParser::read_device(void)
       //  
 
       temp_options.clear();
-      parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
+      //    parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
 
+      // region_name
+      string block_name ;
+      block_name = keyword + " " + region_name;
+
+      parse_options(in_stream,temp_options,block_name, section_name   ); 
       // extract and delete name, ID and  mat   from  temp_region_options
       // ................
       string material, region_numb , def;
@@ -1414,7 +1387,8 @@ void InputParser::read_device(void)
       cut_off_comment(cluster_name, in_stream );  //  in  case  layer#commmm
 
       temp_options.clear();
-      parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
+      //   parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
+      parse_options(in_stream,temp_options,keyword, section_name    ); 
 
       // get mesh_region(s)
       region_numb = temp_options.get_option( "mesh_regions" ,def);
@@ -1437,18 +1411,56 @@ void InputParser::read_device(void)
       // insert in  map cluster_map  
       cluster_map.insert(make_pair (cluster_counter, current_region_structure ));
 
-
-
-
     }// end read cluster
 
 
+    // *******************  Interface *************************
 
+
+    else if (keyword == "Interface")
+    {  //  read  Interface  (generic for boundary  conditions, interface  models,  ecc.)
+      //  interfaces  will be  put  in  a  separated map  interface_map 
+
+      //     read cluster_name
+      in_stream >>device_block_name;
+      //   region_counter++;
+      //  cluster_counter++;
+      interface_counter++;
+
+      //  if  the   read keyword is # or  begins with #: ignore  all  the  line !!
+      while (skip_comments(in_stream,device_block_name) == true )
+      {
+        in_stream >> device_block_name ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+      } 
+
+      cut_off_comment(device_block_name , in_stream );  //  in  case  layer#commmm
+
+      temp_options.clear();
+      //    parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
+      parse_options(in_stream,temp_options,keyword, section_name   ); 
+
+ 
+      // create new RegionStructure  with  empty fields (material, region_ID, material_name)
+      RegionStructure current_region_structure;
+
+      // put options of interface
+      current_region_structure.set_model_options(temp_options);
+
+      // put name of the interface 
+      current_region_structure.set_region_name(device_block_name);
+
+      // insert in  map cluster_map  
+      interface_map.insert(make_pair (interface_counter, current_region_structure ));
+
+
+
+    }// end read Interface
 
 
     else 
     {
-      throw InitFailedException("SYNTAX ERROR in input  file (device section): keyword Region or Atomistic  is  missing! ");
+      throw InitFailedException("In input file (\'Device\' section): "
+          "keyword \'Region\' or \'Atomistic\'  is  missing! ");
     
     }
 
@@ -1493,6 +1505,17 @@ map <ID, RegionStructure>& InputParser::get_cluster_map(void)
   return cluster_map ;
 
 } 
+
+
+map <ID, RegionStructure>& InputParser::get_interface_map(void) 
+
+{
+
+  return interface_map ;
+
+} 
+
+
 
 
 
@@ -1588,7 +1611,7 @@ InputParser::parse_model(ifstream& in_stream)
  
   check_error = skip_to_bracket(in_stream);  // go on reading until the  char  '{' is  read  
   if (check_error == true)
-    throw InitFailedException("ERROR: Models section  missing."); 
+    throw InitFailedException("In input file: \'Models\' section  missing."); 
   //   cerr <<  "ERROR "  << endl; 
 
 
@@ -1608,13 +1631,10 @@ InputParser::parse_model(ifstream& in_stream)
 
   if  ( model_keyword != model_keyword_string)
   {
-    throw InitFailedException("SYNTAX ERROR in input  file: keyword model missing in models section  ");  
+    throw InitFailedException("In input file: model keyword missing "
+        "in \'Models\' section");  
 
-    //  cerr <<  "  SYNTAX ERROR in input  file (models)  " <<  endl;
-    //     cerr << " keyword model is  missing " 
-    //          << endl;
-       
-    //     exit(1); 
+   
   }
 
 
@@ -1627,7 +1647,8 @@ InputParser::parse_model(ifstream& in_stream)
     if  (model_keyword != model_keyword_string)
     {
 
-      throw InitFailedException("SYNTAX ERROR in input  file: keyword model missing in models section  ");  
+      throw InitFailedException("In input file: model keyword missing "
+          "in \'Models\' section");  
    
     }
 
@@ -1660,27 +1681,33 @@ InputParser::parse_model(ifstream& in_stream)
 
     check_error = skip_to_bracket(in_stream);  // go on reading until the  char  '{' is  read  
     if (check_error == true)
-      throw InitFailedException("ERROR: model block  missing.");
+    {
+
+      std::ostringstream stm;
+      stm << "In input file: block missing for model " << model_name <<  endl;
+      throw InitFailedException(stm.str());
 
 
-    //***********************************************************************
+    }
 
-        //  NEW :  
-        //  read  optional label  
+    //  ***********************************************************************
 
-        //**************************************************************************************
-            //  Read  the  next item: it  can  be :
-            //  1) a  closing  bracket ->  go  to  next  model !
-            //  2) one  of  the  keywords  in  the  set  for  model section (model_section_keywords)
-            //  ->  read related section
-            //  3)  an  unknown   label  ->  throw  exception !
-            //
-            //*************************************************************************************
+    //  NEW :  
+    //  read  optional label  
+
+    // **************************************************************************************
+    //  Read  the  next item: it  can  be :
+    //  1) a  closing  bracket ->  go  to  next  model !
+    //  2) one  of  the  keywords  in  the  set  for  model section (model_section_keywords)
+    //  ->  read related section
+    //  3)  an  unknown   label  ->  throw  exception !
+    //
+    // *************************************************************************************
 
 
 
 
-                in_stream >>  label ;
+    in_stream >>  label ;
     while (skip_comments(in_stream,  label ) == true )
     {
       in_stream >> label  ; // if  the  whole  line has
@@ -1692,7 +1719,16 @@ InputParser::parse_model(ifstream& in_stream)
     // bool InputParser::check_label(set<string>& section_keywords, const string& label )
 
     if (!check_label(model_section_keywords, label))
-      throw InitFailedException("SYNTAX ERROR in input  file: unknown keyword in models section! ");
+
+    {
+
+      std::ostringstream stm;
+      stm << "In input file: unknown keyword \'"
+        << label << "\' in models section, model "
+        << model_name <<  endl;
+      throw InitFailedException(stm.str());
+
+    }
 
     // label is one  of  the  keywords  in  the  set  for  model section!!
   
@@ -1701,7 +1737,9 @@ InputParser::parse_model(ifstream& in_stream)
     {
                
       temp_options.clear();
-      parse_options(in_stream,temp_options);
+      //    parse_options(in_stream,temp_options);
+      parse_options(in_stream,temp_options, label, model_name   );
+
       current_model_point->set_model_options(temp_options );
 
       // after "options"  block,   read  the  next  label
@@ -1714,7 +1752,17 @@ InputParser::parse_model(ifstream& in_stream)
       } 
 
       if (!check_label(model_section_keywords, label))
-        throw InitFailedException("SYNTAX ERROR in input  file: unknown keyword in models section! ");
+      {
+
+        std::ostringstream stm;
+        stm << "In input file: unknown keyword \'"
+          << label << "\' in models section, model "
+          << model_name <<  endl;
+        throw InitFailedException(stm.str());
+
+      }
+
+
 
 
     }
@@ -1727,87 +1775,92 @@ InputParser::parse_model(ifstream& in_stream)
 
 
 
-    //*********************************************************************
-
-        //***********************************************************************
+  
 
 
 
-            //  READ  OPTIONAL PHYSICAL_MODEL SECTION(S)
+    //  READ  OPTIONAL PHYSICAL_MODEL SECTION(S)
 
-            while (  (label == phys_model_label  ) && (!in_stream.eof()) ) 
+    while (  (label == phys_model_label  ) && (!in_stream.eof()) ) 
     
-          {  //  while loop  physical models
+    {  //  while loop  physical models
 
-            // phisical Model n
+      // phisical Model n
                
 
-            in_stream >>  physical_model_name ;
+      in_stream >>  physical_model_name ;
 
-            while (skip_comments(in_stream, physical_model_name ) == true )
-            {
-              in_stream >>  physical_model_name ; // if  the  whole  line has  ben  skipped: 
-              //read  the  next keyword !!! 
-            } 
+      while (skip_comments(in_stream, physical_model_name ) == true )
+      {
+        in_stream >>  physical_model_name ; // if  the  whole  line has  ben  skipped: 
+        //read  the  next keyword !!! 
+      } 
 
-            cut_off_comment(physical_model_name, in_stream); //  case  recombination#commmm
+      cut_off_comment(physical_model_name, in_stream); //  case  recombination#commmm
 
-            //     reset_all_maps();  //  clear  the  IP  maps !!!!
-
-
+      //     reset_all_maps();  //  clear  the  IP  maps !!!!
 
 
-            //*********************************
-                // ModelOptions temp_options; private  member 
-                // *********************************
 
-                temp_options.clear();
 
-            string_prop_labels_map.clear();  //  obsolete !!!!
+           
+
+      temp_options.clear();
+
+      string_prop_labels_map.clear();  //  obsolete !!!!
    
-            //    parse_options(in_stream);   //    read  the  block  between  { and  }
-            parse_options(in_stream,temp_options  );
+      //    parse_options(in_stream);   //    read  the  block  between  { and  }
+      //    parse_options(in_stream,temp_options  );
 
+      parse_options(in_stream,temp_options,physical_model_name, model_name  );
 
-            //parse_options(in_stream);   //    read  the  block  between  { and  }
-            // 
-            // 
-            //   current_model_point->set_phys_model_map( string_prop_labels_map);
+      //parse_options(in_stream);   //    read  the  block  between  { and  }
+      // 
+      // 
+      //   current_model_point->set_phys_model_map( string_prop_labels_map);
 
-            physical_model_map.insert(make_pair (physical_model_name,temp_options));
-            //    physical_model_map[physical_model_name]=temp_options;
-
-
-
-            //  current_model_point->set_phys_model_options(  temp_options );// old
-
-            current_model_point->set_physical_model_map(physical_model_map);
-
-
-            // void set_phys_model_options(  ModelOptions& physical_model_options  );
+      physical_model_map.insert(make_pair (physical_model_name,temp_options));
+      //    physical_model_map[physical_model_name]=temp_options;
 
 
 
-            string_prop_labels_map.clear();   //  obsolete !!!!  
+      //  current_model_point->set_phys_model_options(  temp_options );// old
+
+      current_model_point->set_physical_model_map(physical_model_map);
+
+
+      // void set_phys_model_options(  ModelOptions& physical_model_options  );
+
+
+
+      string_prop_labels_map.clear();   //  obsolete !!!!  
  
 
-            in_stream >>  label; 
+      in_stream >>  label; 
    
-            while (skip_comments(in_stream, label ) == true )
-            {
-              in_stream >> label ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
-            } 
+      while (skip_comments(in_stream, label ) == true )
+      {
+        in_stream >> label ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+      } 
   
-            cut_off_comment(label, in_stream); //  case  Recomb#commmm
+      cut_off_comment(label, in_stream); //  case  Recomb#commmm
 
 
-            if (!check_label(model_section_keywords, label))
-              throw InitFailedException("SYNTAX ERROR in input  file: unknown keyword in models section! ");
+      if (!check_label(model_section_keywords, label))
+      {
+
+        std::ostringstream stm;
+        stm << "In input file: unknown keyword \'"
+          << label << "\' in models section, model "
+          << model_name <<  endl;
+        throw InitFailedException(stm.str());
+
+      }
 
 
 
 
-          }// end while loop  physical models
+    }// end while loop  physical models
 
 
     //     //   ----------------------------------------------------------------
@@ -1823,9 +1876,13 @@ InputParser::parse_model(ifstream& in_stream)
 
       check_error = skip_to_bracket(in_stream);  // go on reading until the  char  '{' is  read  
       if (check_error == true)
-        throw InitFailedException("ERROR: BC regions  block  missing."); 
-
-
+      {
+        std::ostringstream stm;
+        stm << "In input file: BC regions block missing for model "
+          << model_name <<  endl;
+        throw InitFailedException(stm.str());   
+        
+      }
 
       BC_region_counter = 0 ;//  reset  counter for  boundary regions for this model
       //  one single   BC region can refer to more than one BC_reg_ID !!!!
@@ -1846,8 +1903,14 @@ InputParser::parse_model(ifstream& in_stream)
 
         if  (keyword != keyword_BC_Region_string)
         {
+          std::ostringstream stm;
+          stm << "In input file: missing keyword BC_Region in model "
+            << model_name <<  endl;
+          throw InitFailedException(stm.str());   
+        
 
-          throw InitFailedException("SYNTAX ERROR in input file:keyword BC_Region is  missing !");
+          //    cerr << " SYNTAX ERROR in input file: missing keyword BC_Region in model  " << model_name <<  endl;
+          //    throw InitFailedException("SYNTAX ERROR ");
 
         }
 
@@ -1871,7 +1934,8 @@ InputParser::parse_model(ifstream& in_stream)
                 temp_options.clear();
      
         //    parse_options(in_stream);   //    read  the  block  between  { and  }
-        parse_options(in_stream,temp_options);
+        //   parse_options(in_stream,temp_options);
+        parse_options(in_stream,temp_options, keyword , model_name );
 
         string  BC_region_numb , def;
         BC_region_numb = temp_options.get_option( "BC_reg_numb" ,def);
@@ -1963,7 +2027,11 @@ InputParser::parse_model(ifstream& in_stream)
       if  (std::strncmp ((end_symbol.c_str()),end_symb.c_str(),1) != 0)
 
       {
-        throw InitFailedException("SYNTAX ERROR in input file (BC regions block)  ");
+
+        std::ostringstream stm;
+        stm << "In input file: bad BC regions block in model " << model_name <<  endl;
+        throw InitFailedException(stm.str());  
+
       
       }
 
@@ -1981,8 +2049,16 @@ InputParser::parse_model(ifstream& in_stream)
       cut_off_comment(label, in_stream); //  case  model#commmm
 
       if (!check_label(model_section_keywords, label)) 
-        throw InitFailedException("SYNTAX ERROR in input  file: unknown keyword in models section! ");
+      {
+        std::ostringstream stm;
+        stm << "In input file: unknown keyword \'" << label
+          << "\' in BC regions block of model "
+          << model_name <<  endl;
+        throw InitFailedException(stm.str());  
 
+        //   cerr << " SYNTAX ERROR in input  file: unknown keyword in $Models section, in   " <<  endl;
+        //   throw InitFailedException(" BC_Regions block ");
+      }
 
     } //  end  of  if  BC_Regions_keyword
 
@@ -2013,7 +2089,14 @@ InputParser::parse_model(ifstream& in_stream)
       cut_off_comment(model_keyword, in_stream); //  case  model#commmm
 
       if (!check_label(model_section_keywords, model_keyword))
-        throw InitFailedException("SYNTAX ERROR in input file: unknown keyword in model section! ");
+      {
+        std::ostringstream stm;
+        stm << "In input file: unknown keyword \'" << model_keyword <<
+          "\' in \'Models\' section (close to model " << 
+          model_name << ")" <<  endl;
+        throw InitFailedException(stm.str());  
+
+      }
 
     }
 
@@ -2029,6 +2112,287 @@ InputParser::parse_model(ifstream& in_stream)
  
 
 } //  end  method   parse_model
+
+
+
+
+  
+//   ************************************************************
+//  Model  section  with  "boundary model"   scheme  only  blocks and  subblocks
+//
+
+void
+InputParser::NEW_parse_model(ifstream& in_stream)
+{// method  for   parsing  of   model section
+
+  bool  check_error;
+  string model_name, model_keyword, label ,  model_keyword_string ,options_label, model_block_name   ;
+
+  set<string>  model_section_keywords;
+  // set<string>::iterator   s_it;
+
+  //  model_section_keywords.insert("BC_Regions");
+  model_section_keywords.insert("model");
+  model_section_keywords.insert("physical_model");
+  model_section_keywords.insert("options");
+  model_section_keywords.insert("}");
+
+
+  options_label   = "options";
+  model_keyword_string  =  "model";
+
+  check_error = skip_to_bracket(in_stream);  // go on reading until the  char  '{' is  read  
+  if (check_error == true)
+    throw InitFailedException("In input file: \'Models\' section  missing."); 
+  
+
+  in_stream >> model_keyword;
+
+  while (skip_comments(in_stream,model_keyword ) == true )
+  {
+    in_stream >> model_keyword; // if  the  whole  line has  ben  skipped:
+    // read  the  next keyword !!! 
+  } 
+
+  if  ( model_keyword != model_keyword_string)
+  {
+    throw InitFailedException("In input file: model keyword missing in models section");  
+
+    
+  }
+
+
+  while (  (model_keyword != end_symb ) && (!in_stream.eof()) ) 
+  { //  while loop  models
+
+    // Model n
+    if  (model_keyword != model_keyword_string)
+    {
+
+      throw InitFailedException("In input file: model keyword missing in models section");  
+   
+    }
+
+
+    in_stream >>  model_name ;
+
+    while (skip_comments(in_stream, model_name ) == true )
+    {
+      in_stream >>  model_name ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+    } 
+   
+    //   erase  possible comments attached to model_name
+    cut_off_comment(model_name, in_stream);
+
+    reset_all_maps();  //  clear  the  IP  maps !!!!
+
+
+    //   new   ModelStructure  object  !!!!
+    current_model_point = new ModelStructure(model_name);
+
+    check_error = skip_to_bracket(in_stream);  // go on reading until the  char  '{' is  read  
+    if (check_error == true)
+      throw InitFailedException("In input file: model block missing.");
+
+
+    // ***********************************************************************
+
+    //  NEW :  
+    //  read  optional block-label  
+
+    //  **************************************************************************************
+    //  Read  the  next item: it  can  be :
+    //  1) a  closing  bracket ->  go  to  next  model !
+    //  2) one  of  the  keywords  in  the  set  for  model section (model_section_keywords)
+    //  ->  parse the  block
+    //  3)  an  unknown   label  ->  throw  exception !
+    //
+    //  *************************************************************************************
+
+
+
+
+
+
+    in_stream >>  label ;
+    while (skip_comments(in_stream,  label ) == true )
+    {
+      in_stream >> label  ; // if  the  whole  line has
+      //                       been  skipped: read  the next keyword !!! 
+    } 
+
+    cut_off_comment(label, in_stream); //  case  options#commmm vv
+
+
+    if (!check_label(model_section_keywords, label))
+    {
+      ostringstream os;
+      os << "In input file: unknown keyword \'" << label
+        << "\' in models section!";
+      throw InitFailedException(os.str());
+    }
+
+    // label is one  of  the  keywords  in  the  set  for  model section!!
+
+
+
+    // ********  loop  on  all  the  blocks of  this  model ************
+
+    while (!(std::strncmp ((label.c_str()),end_symb.c_str(),1) == 0))  // dont read  a  closing  bracket !!
+    {  //  loop while there  are  blocks in  model
+
+      //  read  optional label  "options"
+      if  ( label  == "options") // options_label )
+      {
+
+        temp_options.clear();
+        //   parse_options(in_stream,temp_options);
+        parse_options(in_stream,temp_options,label, model_name  );
+
+        current_model_point->set_model_options(temp_options );
+
+      }
+
+      else if   ( label  == "physical_model") //
+      {
+
+        model_block_name = "";
+
+        in_stream >>   model_block_name ;
+
+        while (skip_comments(in_stream,  model_block_name ) == true )
+        {
+          in_stream >>   model_block_name ; // if  the  whole  line has  ben  skipped: 
+          //read  the  next keyword !!! 
+        } 
+
+        cut_off_comment( model_block_name , in_stream); //  case  recombination#commmm
+
+        temp_options.clear();
+
+        //     parse_options(in_stream,temp_options  );
+        parse_options(in_stream,temp_options,label,model_name);
+
+        physical_model_map.insert(make_pair ( model_block_name,temp_options));
+
+
+        //  solo  alla  fine  ???
+        current_model_point->set_physical_model_map(physical_model_map);
+
+
+      }
+
+
+      else if   ( label  == "boundary_model") //
+      {
+        model_block_name = "";
+
+        in_stream >>  model_block_name ;
+
+        while (skip_comments(in_stream,  model_block_name) == true )
+        {
+          in_stream >>   model_block_name ; // if  the  whole  line has  ben  skipped: 
+          //read  the  next keyword !!! 
+        } 
+
+        cut_off_comment( model_block_name, in_stream); //  case  recombination#commmm
+
+        temp_options.clear();
+
+        //  parse_options(in_stream,temp_options  );
+        parse_options(in_stream,temp_options,label,label  );
+
+
+        boundary_model_map.insert(make_pair ( model_block_name ,temp_options));
+
+        current_model_point->set_boundary_model_map( boundary_model_map);
+
+      }
+
+      else if   ( label  == "simulation") //
+      {
+
+        // ??????????
+      }
+
+
+
+      // after block,   read  the  next  label
+
+      in_stream >>  label ;
+      while (skip_comments(in_stream,  label ) == true )
+      {
+        in_stream >> label  ; // if  the  whole  line has
+        //  been  skipped: read  the next keyword !!! 
+      } 
+
+      if (!check_label(model_section_keywords, label))
+      {
+        ostringstream os;
+        os << "In input file: unknown keyword \'" << label
+          << "\' in models section!";
+        throw InitFailedException(os.str());
+      }
+
+
+
+    }
+
+    // *****************************************************
+    // if label   == }  then   NEXT  MODEL  !!!
+    // ******************************************************
+
+    if (std::strncmp ((label.c_str()),end_symb.c_str(),1) == 0)  // read  a  closing  bracket !!
+
+    {
+
+      //END  OF  MODEL
+      //  end  of  the  current model  !!
+      //  put ModelStructure in  map  <model_name, *ModelStructure>
+      model_structure_map.insert(make_pair (model_name, current_model_point )); 
+
+      in_stream >>  model_keyword;  //  read  next model model_keyword OR closing  bracket
+
+      // read  next item
+      while (skip_comments(in_stream, model_keyword ) == true )
+      {
+        in_stream >>  model_keyword ; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+      } 
+
+      cut_off_comment(model_keyword, in_stream); //  case  model#commmm
+
+      if (!check_label(model_section_keywords, model_keyword))
+      {
+        ostringstream os;
+        os << "In input file: unknown keyword \'" << label
+          << "\' in models section!";
+        throw InitFailedException(os.str());
+      }
+
+    }
+
+
+
+    
+    //  NEXT  MODEL; if  model_keyword =  closing  bracket } ->  END  !!!
+
+  }  // end  while  models
+
+
+
+
+
+
+
+
+
+
+} //  END   NEW_parse_model
+
+
+//  **********************************************************
+
+
 
 
 
@@ -2298,12 +2662,12 @@ bool InputParser::skip_to_bracket(ifstream& in_stream)
   //*************************
 
 
-  in_stream.get(ch); // get next char
+      in_stream.get(ch); // get next char
   do{
       
 
     //********************************
-    if (ch == '#' )  //  skip  comments 
+      if (ch == '#' )  //  skip  comments 
     { 
       in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
       //      and   read  the  next keyword !!!
@@ -2312,7 +2676,7 @@ bool InputParser::skip_to_bracket(ifstream& in_stream)
 
 
   } while ( (ch == '\n') || (ch == '\r')
-      || (ch == ' ') || (ch == '\t') || (ch == '#') );
+            || (ch == ' ') || (ch == '\t') || (ch == '#') );
 
 
   // then  check  if  first char (not  blank) is  "{"
@@ -2355,12 +2719,7 @@ void InputParser::read_scale(void)
   atomistic_region_counter = 0;
 
 
-  if ( !in_stream.good() )
-  {
-
-    throw InitFailedException("ERROR: Input file not good." );
-    
-  }
+  assert(in_stream.good());
 
   section_name =  "Scale";
 
@@ -2375,7 +2734,7 @@ void InputParser::read_scale(void)
 
   check_error = skip_to_bracket(in_stream);  // go on reading until the  char  '{' is  read  
   if (check_error == true)
-    throw InitFailedException("ERROR: Scale  block  missing."); 
+    throw InitFailedException("In input file: \'Scale\'  block  missing."); 
 
   //  read keyword Atomistic 
   in_stream >> keyword;
@@ -2414,7 +2773,8 @@ void InputParser::read_scale(void)
       //    cerr << " ************** ATOMISTIC ************ " <<  atomistic_region_name << endl;
 
       temp_options.clear();
-      parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
+      //    parse_options(in_stream,temp_options  ); //    read  the  block  between  { and  }
+      parse_options(in_stream,temp_options, keyword,  section_name);
 
       //....................
 
@@ -2442,7 +2802,8 @@ void InputParser::read_scale(void)
     {
    
 
-      throw InitFailedException("SYNTAX ERROR in input  file (Scale section): keyword Lumped not implemented! ");
+      throw InitFailedException("In input file (Scale section): keyword "
+          "\'Lumped\' not implemented! ");
 
       // TO  BE  IMPLEMENTED 
 
@@ -2450,7 +2811,8 @@ void InputParser::read_scale(void)
 
     else 
     {
-      throw InitFailedException("SYNTAX ERROR in input  file (Scale section): keyword Atomistic  is  missing! ");
+      throw InitFailedException("In input file (Scale section): keyword "
+          "\'Atomistic\' is missing! ");
     
     }
 
@@ -2488,75 +2850,11 @@ void InputParser::read_scale(void)
 //  { .........
 //  }
 //  and  put the contents in a map<block_name,ModelOption>
-
 void
-//InputParser::parse_n_subblocks(ifstream& in_stream,  string& keyword)
-InputParser::parse_n_subblocks(ifstream& in_stream)
+InputParser::parse_n_subblocks(ifstream& in_stream, ModelOptions& block_options)
 {
 
   string  label, block_name ;
-
-
-
-// //  check  if  there  is just  one  sweep  block
-// // if we find  a  { ,  then  it  is  a  simple  sweep  block
-
-//    in_stream.get(ch); // get next char
-//       do{
-      
-//         if  ( (ch == ' ') || (ch == '\n'))
-//         {
-//           in_stream.get(ch);
-//         }
-
-//         // *******************************  FOR DOS termination files (CR/LF)
-//         if  ( int(ch) == 13 )
-//         {
-//           in_stream.get(ch);
-//         }
-
-
-//         //*******************************
-//      if (ch == '#' )  //  skip  comments 
-//           { 
-//             in_stream.ignore(256,'\n');  //  if  the   read keyword is # or  begins with #: ignore  all  the  line 
-//             //      and   read  the  next keyword !!!
-//             in_stream.get(ch);
-             
-//           }
-//    } while ( (ch == '\n') || (ch == ' ') || (ch == '#') );
-
-
-//       // then  check  if  first char (not  blank) is  "{"
-//       if (ch == '{')
-//       {
-//         //   cout  <<  "  ch { :   "<< ch <<  endl << endl;
-//         in_stream.putback(ch );
-
-
-
-// // *************  parse_options !!!!!!!!!
-
-//   temp_options.clear();
-
-//     //    read  the  block  between  { and  }
-//     parse_options(in_stream,temp_options  );
-//   blocks_map.insert(make_pair (block_name,temp_options));
-
-
-//  //        found = true;
-//          break;
-
-      
-
-//       }
-
-//       else in_stream.putback(ch );  //  first  not  blank char is  != { ,  
-//       // get  back pointer and  go to read sweep label 
-
-
-
-//  !! there  are  more than  1  sweep  blocks !!
 
   // read  the  next  label
 
@@ -2565,15 +2863,10 @@ InputParser::parse_n_subblocks(ifstream& in_stream)
   while (skip_comments(in_stream, label ) == true )
   {
     in_stream >> label  ; // if  the  whole  line has
-    //  been  skipped: read  the next keyword !!! 
+    //                       been  skipped: read  the next keyword !!! 
   } 
 
-  cut_off_comment( label  , in_stream); //  case  Recomb#commmm
-
-  //       if (!check_label(model_section_keywords, label))
-  //         throw InitFailedException("SYNTAX ERROR in input  file: unknown keyword in models section! ");
-
-// cerr << label << endl; 
+  cut_off_comment( label, in_stream); //  case  Recomb#commmm
  
   //  READ the block-keyword
 
@@ -2583,18 +2876,21 @@ InputParser::parse_n_subblocks(ifstream& in_stream)
 
     // block n
                
-
-
-
     block_name = label;
 
     cut_off_comment(block_name, in_stream); //
 
     temp_options.clear();
 
-    //    read  the  block  between  { and  }
-    parse_options(in_stream,temp_options  );
+    //    ****** read  the  subblock  between  { and  } *************
+    //   parse_options(in_stream,temp_options  );
+    parse_options(in_stream,temp_options, label,label );
 
+    // ****  crea  ModelOptions figlio
+    block_options.add_submodel(block_name, temp_options);
+
+
+    //  blocks_map.insert(make_pair (block_name,temp_options));
 
 
     // read  the  next  label
@@ -2606,69 +2902,163 @@ InputParser::parse_n_subblocks(ifstream& in_stream)
     } 
     cut_off_comment(label, in_stream); //  case  Recomb#commmm
 
-
-    blocks_map.insert(make_pair (block_name,temp_options));
-
-
   }
 
 
 }
 
 
-//  read a  std::multimap <const std::string,ModelOptions> blocks_map  corresponding to a 
-// block "block_type", inside the  section  section_name;  block "block_type"  has  n 
-//  subblocks, 
-
-const multimap <string,ModelOptions>& InputParser::read_subblocks(string section_name,string block_type)   {
-
-  std::string  label ;
-  std::ifstream in_stream (filename.c_str()) ;
-
-  bool found_block = false;
+//   ---------------------------------------------------
 
 
-  reset_all_maps();
+
+void InputParser::read_subblocks(string section_name,
+    map<string, ModelOptions>& options_map)
+
+{
+
+  string  keyword ;
+  ifstream in_stream (filename.c_str()) ;
+
+  ModelOptions   block_options;  //  local  object ModelOptions
+
+  block_options.clear();
+
+  assert(in_stream.good());
+
+  section_name = "$"+section_name;
+ 
+ 
+  //find section name
+  find_keyword( in_stream,section_name  );
+
+  // -----------------------------
+
+
+  // // ModelOptions   temp_options
+
+  //   if  (section_name == "$Simulation")
+  //   {
+
+  //     temp_options.clear();
+  //     parse_options(in_stream,temp_options, keyword, section_name);  
+  //     //  add  to  map <string,ModelOptions>  keyword, temp_options
+  //     options_map.insert(make_pair (keyword,temp_options  ));
+
+  //     return;
+
+  //   }
+
+
+  // -----------------------------
+
+  // go to the  first '{'
+  skip_to_bracket(in_stream);
+
+  in_stream >> keyword;
+
+
+  while (skip_comments(in_stream,keyword ) == true )
+  {
+    in_stream >> keyword; // if  the  whole  line has  ben  skipped: read  the  next keyword !!! 
+
+
+  } 
+
+  cut_off_comment(keyword, in_stream); //  case  Region#commmm
 
  
 
-  if ( !in_stream.good() )
-  {
-    throw InitFailedException("ERROR: Input file not good."); 
-    //  std::cerr << "ERROR: Input file not good." 
-    //               << std::endl;
-    //   error();
-  }
+  while (  (keyword  !=  end_symb    ) && (!in_stream.eof()) ) 
+    
+  {  //  while loop  blocks
 
-  section_name = "$"+section_name;
+    // block n
+
+    if  ( (keyword == "Sweep")  || (keyword == "Selfconsistent" )  )
+      // reserved label ->  parse_n_subblocks
+    {
+
+      skip_to_bracket(in_stream);
+
+      block_options.clear();
+      //read all the  subblocks of  type "block_type" in the section
+      //  (included header)
+      parse_n_subblocks(in_stream,block_options);
+      // 
+
+   
+      //  add  to  map <string,ModelOptions>  keyword, temp_options
+      options_map.insert(make_pair (keyword,block_options  ));
+
+    }
+
+    else 
+
+      // simulation/model  name  -> parse_options
+    {
+
+     
+
+      block_options.clear();
+      parse_options(in_stream,block_options, keyword, section_name);  
+      //  add  to  map <string,ModelOptions>  keyword, temp_options
+      options_map.insert(make_pair (keyword,block_options));
+ 
+    }
+
+    // read  the  next keyword  
+    in_stream >> keyword ;
+    while (skip_comments(in_stream,keyword  ) == true )
+    {
+      in_stream >> keyword   ; // if  the  whole  line has
+      //  been  skipped: read  the next keyword !!! 
+    } 
+    cut_off_comment(keyword, in_stream); //  case  Recomb#commmm
+
+    //  next  block
+  } 
+
+}
+
+
+
+void InputParser::get_solver_options_map(
+    map<string, ModelOptions>& options_map)
+{
+  read_subblocks("Solver", options_map);
+}
+
+
+void InputParser::get_physics_options_map(
+    map<string, ModelOptions>& options_map )
+{
+  read_subblocks("Physics", options_map);
+}
+
+
+void InputParser::get_simulation_options( ModelOptions& options )
+{
+
+
+  string  keyword, section_name ;
+  ifstream in_stream (filename.c_str()) ;
+
+ 
+  assert(in_stream.good());
+
+  section_name = "$Simulation";
  
 
   //find section name
   find_keyword( in_stream,section_name  );
 
-  // go to the  first '{'
-  skip_to_bracket(in_stream);
+  keyword = section_name;
+  parse_options(in_stream, options, keyword, section_name); 
 
+  
 
-  found_block  =  find_keyword_in_section( in_stream,  block_type );  //   read   block name  string (e.g. "Sweep") 
-
-  if (found_block)
-  {
-    skip_to_bracket(in_stream);
-
-
-    //read all the  subblocks of  type "block_type" in the section
-    //  (included header)
-    parse_n_subblocks(in_stream);
-  }
-
-  // returns the map of ModelOptions with the contents of the  block
-  return blocks_map;
 }
-
-
-
-// ****************************************
 
 
 

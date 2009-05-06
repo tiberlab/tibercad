@@ -1,11 +1,4 @@
-/*=============================================================================
-  Copyright (c) 2002-2003 Joel de Guzman
-  http://spirit.sourceforge.net/
-
-  Use, modification and distribution is subject to the Boost Software
-  License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
-  http://www.boost.org/LICENSE_1_0.txt)
-  =============================================================================*/
+// $Id$
 
 
 #ifndef _INPUTPARSER_H_
@@ -123,6 +116,16 @@ class InputParser{
   std::map <ID, RegionStructure>& get_cluster_map(void);
 
 
+  //!   Gets the map of   the Interfaces  of the device  (continuous media description) 
+  /*!
+   * Returns   a  map which associates an incremental interface ID
+   * with the associated RegionStructure object.
+   */
+  std::map <ID, RegionStructure>& get_interface_map(void);
+
+
+
+
   //!   Gets the map of  atomistic regions. 
   /*!
    * Returns   a  map which associates an incremental atomistic  region ID 
@@ -163,16 +166,29 @@ class InputParser{
   const  ModelOptions& read_parameters(std::string section_name);
 
 
-
- //!  Gets the contents of the blocks of  a  section. 
+  //!  Get parameters data from the  input file. 
   /*!
-   * Method to  get the contents of all the blocks of  type \c block_type  in the 
-   * section \c section_name.
-   * Returns a map between block name and the ModelOptions with data. 
-   * 
+   * Method to  get the options from the Solver section  of the  input file.
+   *  Returns a map between block name and a  ModelOption (possibly with submodels). 
    */
-const std::multimap <std::string,ModelOptions>& 
-  read_subblocks(std::string section_name, std::string block_type ) ;
+  void get_solver_options_map( std::map<std::string, ModelOptions>& options_map );
+
+
+  //!  Get parameters data from the  input file. 
+  /*!
+   * Method to  get the options from the Physics section  of the  input file.
+   *  Returns a map between block name and a  ModelOption (possibly with submodels). 
+   */
+  void get_physics_options_map( std::map<std::string, ModelOptions>& options_map );
+
+
+  //!  Get parameters data from Simulation section of  the  input  file. 
+  /*!
+   * Method to  get the options from the Simulation section  of the  input file.
+   * Returns a  ModelOption object. 
+   */
+  void get_simulation_options( ModelOptions& options );
+
 
  
 
@@ -246,6 +262,13 @@ const std::multimap <std::string,ModelOptions>&
 
 
   /*!
+   *   Map between Interface incremental ID  and  the Region Structure associated to it.
+   */
+  std::map <ID, RegionStructure> interface_map;
+
+
+
+  /*!
    *   Map between atomistic region  incremental ID   and  the Region Structure associated to it.
    */
   std::map <ID, RegionStructure> atomistic_regions_map;
@@ -270,6 +293,13 @@ const std::multimap <std::string,ModelOptions>&
 
 
   /*!
+   *   Map between   boundary  model name and its options (stored in ModelOptions).
+   */
+  std::multimap <const std::string,ModelOptions> boundary_model_map;
+
+
+
+  /*!
    *   Pointer to \c ModelStructure  object.
    */
   ModelStructure* current_model_point;
@@ -278,13 +308,6 @@ const std::multimap <std::string,ModelOptions>&
    *   ModelOptions  object for  the  options read in  each  section.
    */
   ModelOptions temp_options;
-
-
- /*!
-   *   Map between   a block name and the options of the block (stored in ModelOptions).
-   */
-  std::multimap <std::string,ModelOptions> blocks_map;
-
 
 
   //  private  methods
@@ -324,8 +347,9 @@ const std::multimap <std::string,ModelOptions>&
    *    
    */
   //  void parse_options(ifstream& in_stream );
-  void parse_options(std::ifstream& in_stream, ModelOptions& options );
-
+  //  void parse_options(std::ifstream& in_stream, ModelOptions& options );
+  void parse_options(std::ifstream& in_stream, ModelOptions& region_options ,
+                     const std::string& block, const std::string& section  );
 
 
   /*!
@@ -333,6 +357,9 @@ const std::multimap <std::string,ModelOptions>&
    *    
    */
   void parse_model(std::ifstream& in_stream);
+
+
+  void NEW_parse_model(std::ifstream& in_stream);
 
 
 
@@ -411,19 +438,30 @@ const std::multimap <std::string,ModelOptions>&
 
   //!
   /*!
-   *   Method   to  parse a series of n blocks with of  "keyword" type (e.g. physical model). 
-   *    the contents are put in a map<block_name,ModelOption>  (blocks_map)
+   *   Method   to  parse a series of n subblocks  of  "keyword" type (e.g. physical model). 
+   *    the contents are put in a ModelOption object  (block_options) with possible submodels
    */
-//  void parse_n_subblocks(std::ifstream& in_stream,  std::string& keyword);
- void parse_n_subblocks(std::ifstream& in_stream);
+  void parse_n_subblocks(std::ifstream& in_stream, ModelOptions& block_options);
 
- //!   Utility  to skip a whole block and move  to the next  block. 
+ 
+  //  void  parse_n_subblocks(std::ifstream& in_stream);
+
+
+  //!   Utility  to skip a whole block and move  to the next  block. 
   /*!
    * 
    */
- void skip_block(std::ifstream& in_stream);
+  void skip_block(std::ifstream& in_stream);
 
 
+  //!  Gets the contents of the blocks of  a  section. 
+  /*!
+   * Method to  read  the contents of all the blocks  in the 
+   * section \c section_name.
+   * Fills a map between block name and the ModelOptions with data. 
+   * 
+   */
+  void read_subblocks(std::string section_name, std::map<std::string, ModelOptions>& options_map);
 
 };
 

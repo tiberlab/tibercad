@@ -60,6 +60,14 @@ class ModelStructure{
   std::multimap<const std::string,ModelOptions>& get_physical_model_map();
 
 
+ //!  Gets a map  with boundary model info 
+  /*!
+   * Returns a map which associates boundary model name  with properties contained in a 
+   * ModelOptions object
+   */
+  std::multimap<const std::string,ModelOptions>& get_boundary_model_map();
+
+
 
   //!  Sets an internal map with Boundary Conditions definitions associated to each BC ID. 
   /*!
@@ -76,6 +84,13 @@ class ModelStructure{
    */
   void set_physical_model_map(  std::multimap <const std::string,ModelOptions>& phys_model_map );
 
+
+  //!  Sets an internal map with boundary  model info 
+  /*!
+   * Creates  a map which associates a boundary  model name  with a ModelOptions 
+   * object containing its  properties. 
+   */
+  void set_boundary_model_map(  std::multimap <const std::string,ModelOptions>& bound_model_map );
 
 
   //!  Gets a  vector with the physical regions IDs of this model. 
@@ -146,6 +161,13 @@ class ModelStructure{
    *  physical model name is  associated with a ModelOptions object.
    */
   std::multimap <const std::string,ModelOptions>  physical_model_map ; 
+
+
+  /*! Map of  the  boundary models associated with the  current simulation model:
+   *  boundary model name is  associated with a ModelOptions object.
+   */
+  std::multimap <const std::string,ModelOptions>  boundary_model_map; 
+
 
 
   //!  Sets  the name of the model.

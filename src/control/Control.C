@@ -214,13 +214,15 @@ Control::create_device(void)
 
   InputParser parser(_inputfile);
 
-  ModelOptions opts = parser.read_parameters("Simulation");
+  ModelOptions opts;
+  parser.get_simulation_options(opts);
 
   _database->set_search_path(opts.get_option("searchpath", ""));
   opts.delete_option("searchpath");
 
   DLLoader::prepend_to_library_path(opts.get_option("modellibpath", "."));
   opts.delete_option("modellibpath");
+
 
   _outputdir = opts.get_option("resultpath", _outputdir);
   opts.delete_option("resultpath");
@@ -249,8 +251,10 @@ Control::create_device(void)
   }
 
 
+  // what we want solve
+  opts.get_option("solve", _solve_list);
 
-  //! read the variables we want to plot
+  // read the variables we want to plot
   vector<string> vars;
   opts.get_option("plot", vars);
   opts.delete_option("plot");
@@ -277,6 +281,7 @@ Control::create_device(void)
   }
 
 
+  // we pass the remaining options to the device
   _device = Device::create(opts);
 
 
@@ -480,13 +485,24 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
   InputParser parser(_inputfile);
 
+  typedef multimap<const string, ModelStructure*> ModelsMap;
+  typedef map<string, ModelOptions> OptionsMap;
+
   // parse the models section
-  const multimap<const string, ModelStructure*>& models = parser.read_models();
+  const ModelsMap& models = parser.read_models();
+
+  // get the blocks of the Physics section
+  OptionsMap physics_opts;
+  parser.get_physics_options_map(physics_opts);
+
+  // get the blocks of the Solver section
+  OptionsMap solver_opts;
+  parser.get_solver_options_map(solver_opts);
+
 
   // we loop over all simulations to setup the models
-  multimap<const string, ModelStructure*>::const_iterator modit(models.begin());
-  const multimap<const string,
-        ModelStructure*>::const_iterator modend(models.end());
+  ModelsMap::const_iterator modit(models.begin());
+  const ModelsMap::const_iterator modend(models.end());
 
   for ( ; modit != modend; ++modit)
   {
@@ -514,7 +530,11 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     m.indent();
 
     // read options for this simulation (from Solver section)
-    ModelOptions solveropts(parser.read_parameters("Solver", modelname));
+    ModelOptions solveropts;
+      
+    OptionsMap::iterator map_it(solver_opts.find(modelname));
+    if (map_it != solver_opts.end())
+      solveropts += map_it->second;
 
     // get the user defined name (if defined...)
     const string& simulation_name = simopts.get_option("simulation_name", "");
@@ -524,8 +544,9 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     {
       solveropts["name"] = simulation_name;
 
-      if (simulation_name != modelname)
-        solveropts += parser.read_parameters("Solver", simulation_name);
+      map_it = solver_opts.find(simulation_name);
+      if ((simulation_name != modelname) && (map_it != solver_opts.end()))
+        solveropts += map_it->second;
     }
 
     // we put the parameters in the $Solver section as submodel parameters
@@ -564,11 +585,18 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     m.info("Creating physical models");
 
     // what main model should be used?
-    ModelOptions physopts(parser.read_parameters("Physics", modelname));
+    ModelOptions physopts;
+
+    map_it = physics_opts.find(modelname);
+
+    if (map_it != physics_opts.end())
+      physopts += map_it->second;
 
     // read also section with user defined name as label
-    if (!simulation_name.empty() && (simulation_name != modelname))
-      physopts += parser.read_parameters("Physics", simulation_name);
+    map_it = physics_opts.find(simulation_name);
+    if (!simulation_name.empty() && (simulation_name != modelname) &&
+        (map_it != physics_opts.end()))
+      physopts += map_it->second;
 
 
     // we have to do this for each material!
@@ -710,52 +738,54 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   //
 
   // first selfconsistency
-  const multimap<string, ModelOptions>& scs =
-    parser.read_subblocks("Solver", "Selfconsistent");
-
-  multimap<string, ModelOptions>::const_iterator sc_it(scs.begin());
-  multimap<string, ModelOptions>::const_iterator sc_end(scs.end());
-  for ( ; sc_it != sc_end; ++sc_it)
+  OptionsMap::iterator map_it(solver_opts.find("Selfconsistent"));
+  if (map_it != solver_opts.end())
   {
-    const ModelOptions& solveropts = sc_it->second;
-    if (!solveropts.is_empty())
+    ModelOptions& sc_opts = map_it->second;
+
+    ModelOptions::const_submodel_iterator sc_it(sc_opts.submodels_begin());
+    const ModelOptions::const_submodel_iterator sc_end(sc_opts.submodels_end());
+
+    for ( ; sc_it != sc_end; ++sc_it)
     {
-      SimulationInterface* sim =
-        SimulationInterface::create("selfconsistent", solveropts);
+      const ModelOptions& solveropts = sc_it->second;
+      if (!solveropts.is_empty())
+      {
+        SimulationInterface* sim =
+          SimulationInterface::create("selfconsistent", solveropts);
 
-      if (sim == NULL)
-        throw ModelErrorException("Could not create Selfconsistent simulation");
+        if (sim == NULL)
+          throw ModelErrorException("Could not create Selfconsistent simulation");
 
-      sim->set_control(this);
-      sim->verbose() = 0;
-      sim->set_name(sc_it->first);
-      _simulations[sim->get_name()] = sim;
+        sim->set_control(this);
+        sim->verbose() = 0;
+        sim->set_name(sc_it->first);
+        _simulations[sim->get_name()] = sim;
+      }
     }
   }
 
-  if (scs.size() == 0)
+  map_it = solver_opts.find("selfconsistent");
+  if (map_it != solver_opts.end())
   {
-    const ModelOptions& solveropts =
-      parser.read_parameters("Solver", "selfconsistent");
-    if (!solveropts.is_empty())
+    const ModelOptions& solveropts = map_it->second;
+
+    SimulationInterface* sim =
+      SimulationInterface::create("selfconsistent", solveropts);
+
+    if (sim == NULL)
     {
-      SimulationInterface* sim =
-        SimulationInterface::create("selfconsistent", solveropts);
-
-      if (sim == NULL)
-      {
-        string msg("No such simulation type: selfconsistent (flavour: ");
-        msg += solveropts.get_option("flavour", "");
-        throw ModelErrorException(msg);
-      }
-      sim->set_control(this);
-      //sim->verbose() = SimulationOptions::verbose();
-      sim->verbose() = 0;
-      _simulations[sim->get_name()] = sim;
-
-      Messages::warning("The definition of a selfconsistent simulation "
-          "outside of a \'Selfconsistent\' block is deprecated.");
+      string msg("No such simulation type: selfconsistent (flavour: ");
+      msg += solveropts.get_option("flavour", "");
+      throw ModelErrorException(msg);
     }
+    sim->set_control(this);
+    //sim->verbose() = SimulationOptions::verbose();
+    sim->verbose() = 0;
+    _simulations[sim->get_name()] = sim;
+
+    Messages::warning("The definition of a selfconsistent simulation "
+        "outside of a \'Selfconsistent\' block is deprecated.");
   }
 
 
@@ -763,83 +793,89 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   // then the sweeps
 
   {
-    // we might have several sweeps
-    const multimap<string, ModelOptions>& sws =
-      parser.read_subblocks("Solver", "Sweep");
-
-    multimap<string, ModelOptions>::const_iterator sw_it(sws.begin());
-    multimap<string, ModelOptions>::const_iterator sw_end(sws.end());
-    for ( ; sw_it != sw_end; ++sw_it)
+    OptionsMap::iterator map_it(solver_opts.find("Sweep"));
+    if (map_it != solver_opts.end())
     {
-      const ModelOptions& solveropts = sw_it->second;
-      if (!solveropts.is_empty())
+      ModelOptions& sw_opts = map_it->second;
+
+      ModelOptions::const_submodel_iterator sw_it(sw_opts.submodels_begin());
+      const ModelOptions::const_submodel_iterator sw_end(sw_opts.submodels_end());
+
+
+      for ( ; sw_it != sw_end; ++sw_it)
       {
-        SimulationInterface* sim =
-          SimulationInterface::create("sweep", solveropts);
+        const ModelOptions& solveropts = sw_it->second;
+        if (!solveropts.is_empty())
+        {
+          SimulationInterface* sim =
+            SimulationInterface::create("sweep", solveropts);
 
-        if (sim == NULL)
-          throw ModelErrorException("Could not create sweep simulation");
+          if (sim == NULL)
+            throw ModelErrorException("Could not create sweep simulation");
 
-        sim->set_control(this);
-        sim->verbose() = 0;
-        sim->set_name(sw_it->first);
-        _simulations[sim->get_name()] = sim;
+          sim->set_control(this);
+          sim->verbose() = 0;
+          sim->set_name(sw_it->first);
+          _simulations[sim->get_name()] = sim;
+        }
       }
     }
 
-    // if no Sweep block is found, we look for other definitions to
+    // we look for other definitions to
     // be compatible with older TiberCAD version
-    if (sws.size() == 0)
+    bool warning = false;
+
+    // the following is allowed for ease of use
+    map_it = solver_opts.find("sweep");
+    if (map_it != solver_opts.end())
     {
-      bool warning = false;
+      ModelOptions sweepopts(map_it->second);
 
-      // the following is allowed for ease of use
-      ModelOptions sweepopts = parser.read_parameters("Solver", "sweep");
-      if (!sweepopts.is_empty())
-      {
-        if (!sweepopts.find_option("name"))
-          sweepopts["name"] = "sweep";
-        SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
-        sim->set_control(this);
-        //sim->verbose() = SimulationOptions::verbose();
-        sim->verbose() = 0;
-        _simulations[sim->get_name()] = sim;
-      }
+      if (!sweepopts.find_option("name"))
+        sweepopts["name"] = "sweep";
+      SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
+      sim->set_control(this);
+      //sim->verbose() = SimulationOptions::verbose();
+      sim->verbose() = 0;
+      _simulations[sim->get_name()] = sim;
+    }
 
-      sweepopts = parser.read_parameters("Solver", "sweep_1");
-      if (!sweepopts.is_empty())
-      {
-        warning = true;
-        if (!sweepopts.find_option("name"))
-          sweepopts["name"] = "sweep_1";
-        SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
-        sim->set_control(this);
-        //sim->verbose() = SimulationOptions::verbose();
-        sim->verbose() = 0;
-        _simulations[sim->get_name()] = sim;
-      }
+    map_it = solver_opts.find("sweep_1");
+    if (map_it != solver_opts.end())
+    {
+      ModelOptions sweepopts(map_it->second);
 
-      sweepopts = parser.read_parameters("Solver", "sweep_2");
-      if (!sweepopts.is_empty())
-      {
-        warning = true;
-        if (!sweepopts.find_option("name"))
-          sweepopts["name"] = "sweep_2";
-        SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
-        sim->set_control(this);
-        //sim->verbose() = SimulationOptions::verbose();
-        sim->verbose() = 0;
-        _simulations[sim->get_name()] = sim;
-      }
+      warning = true;
+      if (!sweepopts.find_option("name"))
+        sweepopts["name"] = "sweep_1";
+      SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
+      sim->set_control(this);
+      //sim->verbose() = SimulationOptions::verbose();
+      sim->verbose() = 0;
+      _simulations[sim->get_name()] = sim;
+    }
 
-      if (warning)
-      {
-        Messages::warning("The definition of sweeps outside of a \'Sweep\' "
-            "block is deprecated.");
-      }
+    map_it = solver_opts.find("sweep_2");
+    if (map_it != solver_opts.end())
+    {
+      ModelOptions sweepopts(map_it->second);
+
+      warning = true;
+      if (!sweepopts.find_option("name"))
+        sweepopts["name"] = "sweep_2";
+      SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
+      sim->set_control(this);
+      //sim->verbose() = SimulationOptions::verbose();
+      sim->verbose() = 0;
+      _simulations[sim->get_name()] = sim;
+    }
+
+    if (warning)
+    {
+      Messages::warning("The definition of sweeps outside of a \'Sweep\' "
+          "block is deprecated.");
     }
   }
-
 
   Messages::debug("Control::setup_models() end");
 }
@@ -899,18 +935,11 @@ void
 Control::run_simulation(void) throw (SolveFailedException)
 {
 
-  InputParser parser(_inputfile);
-
-  const ModelOptions& opts = parser.read_parameters("Simulation");
-
-  vector<string> names;
-  opts.get_option("solve", names);
-
   ostringstream os;
   os << "We solve: ";
-  unsigned int n = names.size();
+  unsigned int n = _solve_list.size();
   for (unsigned int i = 0; i < n; i++)
-    os << names[i] << " ";
+    os << _solve_list[i] << " ";
   os << endl;
   Messages::info(os.str());
 
@@ -920,10 +949,10 @@ Control::run_simulation(void) throw (SolveFailedException)
   // We also let them solve the equilibrium
   for (unsigned int i = 0; i < n; i++)
   {
-    SimulationInterface* sim = find_simulation(names[i]);
+    SimulationInterface* sim = find_simulation(_solve_list[i]);
 
     if (sim == NULL)
-      throw SolveFailedException("Simulation not found: " + names[i]);
+      throw SolveFailedException("Simulation not found: " + _solve_list[i]);
 
     simulations[i] = sim;
   }

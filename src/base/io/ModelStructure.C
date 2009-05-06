@@ -58,6 +58,15 @@ multimap<const string,ModelOptions>& ModelStructure::get_physical_model_map()
 }
 
 
+multimap<const string,ModelOptions>& ModelStructure::get_boundary_model_map()
+{
+ 
+  return   boundary_model_map;
+
+}
+
+
+
 
 // vector<string> ModelStructure::get_physical_regions()
 // {
@@ -136,6 +145,13 @@ void ModelStructure::set_physical_model_map( multimap <const string,ModelOptions
  
 }
 
+
+void ModelStructure::set_boundary_model_map( multimap <const string,ModelOptions>& bound_model_map)
+{
+ 
+  boundary_model_map = bound_model_map;
+ 
+}
 
 
 

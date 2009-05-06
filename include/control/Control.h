@@ -10,6 +10,7 @@
 #include "TypeDefs.h"
 
 #include <map>
+#include <vector>
 #include <set>
 #include <iostream>
 #include <cassert>
@@ -240,6 +241,10 @@ class Control
      * environment! }
      */
     EnvironmentMap _simulation_environments;
+
+
+    //! The list of simulations to be solved
+    std::vector<std::string> _solve_list;
 
 
     //! The directory where to put output
