@@ -41,15 +41,15 @@ class Messages
     //! Print a warning
     static void warning(const std::string& msg);
 
-    
+
     //! Print a debug message
     static void debug(const std::string& msg);
 
-    
+
     //! Print an error
     static void error(const std::string& msg);
 
-    
+
     //! Print an info
     static void info(const std::string& msg);
 
@@ -66,8 +66,11 @@ class Messages
 
 
     //! Our own endline
-    static std::string endl;
-    
+    static const std::string endl;
+
+
+    //! The available text width
+    static int available_width(void);
 
   private:
 
@@ -75,19 +78,21 @@ class Messages
     //! The log file
     static std::ofstream _log;
 
+    //! The maximum line width
+    static const int _max_width;
+
     //! The global indentation level
     static int _indent;
 
     //! The local indentation
     int _indent_loc;
-
 };
 
 
 
 //
 // inline methods
-// 
+//
 
 inline
 Messages::Messages(void) : _indent_loc(0) { };
@@ -121,6 +126,13 @@ Messages::unindent(void)
   }
 }
 
+
+inline
+int
+Messages::available_width(void)
+{
+  return _max_width - _indent;
+}
 
 
 #endif // _MESSAGES_H_

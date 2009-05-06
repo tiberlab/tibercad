@@ -20,9 +20,11 @@ namespace
 }
 
 
-std::string
+const std::string
 Messages::endl = "\n";
 
+const int
+Messages::_max_width = 80;
 
 int
 Messages::_indent = 0;

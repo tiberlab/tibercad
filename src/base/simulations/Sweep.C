@@ -7,8 +7,9 @@
 #include "BoundaryProperties.h"
 #include "SimulationEnvironment.h"
 #include "Control.h"
+#include "Messages.h"
 
-#include "fstream"
+#include <fstream>
 
 
 
@@ -47,7 +48,7 @@ Sweep::do_init(void)
   opts.get_option("simulation", sims);
   int num_of_sims = sims.size();
 
-  
+
   _simulations.resize(num_of_sims);
   for (int i = 0; i < num_of_sims; i++)
   {
@@ -75,7 +76,7 @@ Sweep::do_init(void)
 
   // we set our environment to that of the first simulation
   set_environment(&_simulations[0]->get_environment());
-  
+
 
   // Now we have to find the model to the variable
   _variable = opts.get_option("variable", "");
@@ -150,7 +151,7 @@ void
 Sweep::do_equilibrium(void)
 {
   int num_sim = _simulations.size();
-  
+
   for (int i = 0; i < num_sim; i++)
   {
     // some sanity check
@@ -168,7 +169,7 @@ void
 Sweep::do_plot(void)
 {
   int num_sim = _simulations.size();
-  
+
   for (int i = 0; i < num_sim; i++)
     _simulations[i]->plot();
 }
@@ -185,7 +186,7 @@ Sweep::do_solve(void)
   // the current filename suffix
   string suffix = get_control().get_filename_suffix();
   string outdir = get_control().get_output_dir();
-  
+
   int num_sim = _simulations.size();
 
   assert(num_sim > 0);
@@ -196,7 +197,7 @@ Sweep::do_solve(void)
   vector<ofstream*> plotfiles(num_sim);
 
   bool do_plotting = prepare_plot_files(plotfiles);
-   
+
   // if there are negative and positive values, we split them apart
   vector<double> pos_values;
   vector<double> neg_values;
@@ -266,7 +267,7 @@ Sweep::do_solve(void)
 
 
 bool
-Sweep::prepare_plot_files(std::vector<std::ofstream*>& plotfiles)
+Sweep::prepare_plot_files(vector<ofstream*>& plotfiles)
 {
   int num_sim = _simulations.size();
 
@@ -320,7 +321,7 @@ Sweep::prepare_plot_files(std::vector<std::ofstream*>& plotfiles)
 
       //
       // print some header
-      // 
+      //
       ostringstream s;
       s << "# Parameter sweep " << "(" << get_name() << ")" << endl;
       s << "# Simulation: " << _simulations[i]->get_name() << endl;
@@ -331,7 +332,7 @@ Sweep::prepare_plot_files(std::vector<std::ofstream*>& plotfiles)
       for (unsigned int j = 0; j < description.size(); j++)
         file << "#    * " << description[j] << endl;
 
-      
+
       ostringstream l;
       l << "#" << endl << "# " << _variable << "   ";
       unsigned int n = legend.size();
@@ -401,10 +402,10 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     vector<map<double, vector<double> > >& sweep_data)
 {
   unsigned int n = values.size();
-  
+
   // if there are no values, we return immediately
   if (n == 0) return;
-  
+
   int num_sim = _simulations.size();
 
   // the current filename suffix
@@ -453,13 +454,17 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
       double diff = step_sign * (goal - value);
       if (diff < 0.0)
         value = goal;
-      
+
       Variable::set_variable_value(_variable, value);
-      cout  << "Sweep value " << _variable << " = " << value << endl;
-      
+      {
+        ostringstream os;
+        os << "Sweep value " << _variable << " = " << value;
+        Messages::info(os.str());
+      }
+
       try
       {
-        
+
         // prepare filename suffix
         {
           ostringstream s;
@@ -532,16 +537,20 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
       }
       catch (SolveFailedException& e)
       {
-        std::cerr << "Solve failed due to: " << std::endl << "   "
-          << e.what() << std::endl;
+        {
+          ostringstream os;
+          os << "Solve failed due to: " << Messages::endl
+            << "   " << e.what();
+          Messages::warning(os.str());
+        }
         step = (value - _last) / 2.0;
         if (abs(step) < _min_step)
-          throw SolveFailedException("Sweep: step size small.");
+          throw SolveFailedException("Step size too small in sweep.");
 
         if (i == 0)
-          throw SolveFailedException("Sweep: Failure in first step.");
+          throw SolveFailedException("Failure in first sweep step.");
 
-        std::cerr << "Sweep: trying intermediate step" << std::endl;
+        Messages::warning("Trying intermediate step");
 
         // set to the remembered solution
         for (int j = 0; j < num_sim; j++)
@@ -577,7 +586,7 @@ Sweep::do_remember_current_solution(ID id)
   // we only remember the first solution!
   //return remember_solution();
   ignore_unused_variable(id);
-  
+
   return 1;
 }
 
@@ -646,7 +655,7 @@ Sweep::do_delete_remembered_solution(ID id)
 
 void
 Sweep::build_integrated_quantities(
-    const set<std::string>& variables,
+    const set<string>& variables,
     vector<double>& values)
 {
   vector<double> vals;

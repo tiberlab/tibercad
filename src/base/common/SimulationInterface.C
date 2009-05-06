@@ -95,7 +95,7 @@ SimulationInterface::create(const string& type,
   // First we attempt to open a shared library
   //
   DLLoader::LibraryInterface iface;
-  bool success = 
+  bool success =
 #ifdef BUILD_TIBER_MODULES
     DLLoader::open_library(type_name, iface);
 #else
@@ -321,7 +321,7 @@ SimulationInterface::init(void) throw (InitFailedException)
         ostringstream os;
         os << "Region " << *it << ", " << mat->get_name();
         if (mat->is_alloy())
-          os << " (x = " << 
+          os << " (x = " <<
             static_cast<const Alloy*>(mat)->get_molar_fraction() << ")";
         m.info(os.str());
         m.indent();
@@ -458,11 +458,15 @@ SimulationInterface::solve(void) throw (SolveFailedException)
   Messages m;
   m.newline();
   {
+    string s(">>>>");
+    s.reserve(Messages::available_width());
+    for (int i = 0; i < Messages::available_width() - 4; i++)
+      s += "-";
+    m.info(s);
     ostringstream os;
-    os << ">>>>------------------------------------"
-      << "-----------------------------" << endl;
     os << get_default_name() << " (name: " << get_name() << ")" << endl;
     m.info(os.str());
+    m.newline();
   }
   m.indent();
 
@@ -490,8 +494,18 @@ SimulationInterface::solve(void) throw (SolveFailedException)
   _is_solved = true;
 
   m.unindent();
-  m.info("<<<<---------------------------"
-      "--------------------------------------");
+  int w = Messages::available_width();
+  string s("<<<<");
+  s.reserve(w);
+  w -= 8 + get_name().size();
+  for (int i = 0; i < w / 2; i++)
+    s += "-";
+  s += " (";
+  s += get_name();
+  s += ") ";
+  for (int i = 0; i < (w / 2 + w % 2); i++)
+    s += "-";
+  m.info(s);
 
   perflog.stop_event("solve");
 }
