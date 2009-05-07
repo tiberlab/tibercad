@@ -84,6 +84,9 @@ class Messages
     //! The global indentation level
     static int _indent;
 
+    //! The indentation width
+    static const int _indent_width;
+
     //! The local indentation
     int _indent_loc;
 };
@@ -131,7 +134,7 @@ inline
 int
 Messages::available_width(void)
 {
-  return _max_width - _indent;
+  return _max_width - _indent * _indent_width;
 }
 
 

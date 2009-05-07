@@ -29,6 +29,9 @@ Messages::_max_width = 80;
 int
 Messages::_indent = 0;
 
+const int
+Messages::_indent_width = 2;
+
 
 std::ofstream
 Messages::_log;
@@ -87,8 +90,8 @@ Messages::info(const std::string& msg)
 
   for (size_t l = 0; l < lines.size(); l++)
   {
-    for (int i = 0; i < _indent; i++)
-      ts << "  ";
+    for (int i = 0; i < _indent * _indent_width; i++)
+      ts << " ";
     ts << lines[l] << endl << std::flush;
   }
 }
