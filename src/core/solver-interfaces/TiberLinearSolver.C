@@ -14,7 +14,7 @@ namespace
 {
   const double default_linear_rtol = 1e-6;
   const double default_linear_atol = 1e-50;
-  const int default_linear_max_it = 500;
+  const int default_linear_max_it = 1500;
 }
 
 

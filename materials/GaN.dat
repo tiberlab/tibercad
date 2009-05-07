@@ -10,7 +10,7 @@ c = 0.5185
 [valenceband]
 #E_v = -2.64
 # from Nextnano
-E_v = -0.710333333333333
+E_v = -0.71033
 
 
 [conductionband]
