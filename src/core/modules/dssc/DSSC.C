@@ -3933,8 +3933,15 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                 
                 KIn(s,s) += 1.5 * Normal_I / res;
                 KIu(s,s) += 1.5 * Normal_I / res;
+                //KIu(s,s) += 1.5 * 2 * Normal_I / res;
+                //KII(s,s) += 1.5 * -1.5 * Normal_I / res;
+                //KII3(s,s) += 1.5 * 0.5 * Normal_I / res;
+
                 KI3n(s,s) += -0.5 * Normal_I3 / res;
                 KI3u(s,s) += -0.5 * Normal_I3 / res;
+                //KI3u(s,s) += -0.5 * 2 * Normal_I3 / res;
+                //KI3I(s,s) += -0.5 * -1.5 * Normal_I3 / res;
+                //KI3I3(s,s) += -0.5 * 0.5 * Normal_I3 / res;
               
                 //KIu(s,s) += 1.5 * sign * ( C * dI_dphi * sc->get_density_I3() + C * dI3_dphi * sc->get_density_I() ) / (R0_I*R0_I3);
                 //KII(s,s) -= 1.5 * sign * ( C * dI_dphi * sc->get_density_I3() ) / (R0_I * R0_I3);
@@ -3969,7 +3976,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 		//FI(s) -= 1.5 * res / C0_I / Constants::e;
 		//FI3(s) -= -0.5 * res / C0_I3 / Constants::e;
 		
-                pot = -Xu(s);
+                //pot = -Xu(s);
+                pot = -2*Xu(s) + 1.5 * XI(s) - 0.5 * XI3(s);
                 //cout << "pot cathode " << pot << endl;
                 FI(s) += -1.5 * pot * Normal_I / res;
                 FI3(s) += 0.5 * pot * Normal_I3 / res;

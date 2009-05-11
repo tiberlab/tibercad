@@ -355,10 +355,10 @@ class DSSCModel : public PhysicalModel, public Variable
 
 
     //! Set the value of a variable
-    virtual void set_variable_value(double value, ID id = 0);
+    virtual void set_variable_value(double value, ID id = 0 );
 
     //! Get the value of a variable
-    virtual double get_variable_value(ID id = 0);
+    virtual double get_variable_value(ID id = 0 );
     
 
     //! This method gets called from reinit()

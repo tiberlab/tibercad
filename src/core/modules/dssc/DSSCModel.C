@@ -34,10 +34,10 @@ DSSCModel::do_init(void)
 
   // prepare porosity for any situation
   _porosity = get_parameter("porosity", _porosity);
-  if (!is_TiO2())
-    _porosity = 0.0;
-  else if (!is_electrolyte())
-    _porosity = 1.0;
+  //if (!is_TiO2())
+  //  _porosity = 0.0;
+  //else if (!is_electrolyte())
+  //  _porosity = 1.0;
 
   _cation.set_particle_charge(1.0);
 
@@ -60,11 +60,13 @@ DSSCModel::do_init(void)
   _permittivity = get_parameter("permittivity", _permittivity);
 
   string gen = get_parameter("generation", "");
-  _generation = check_and_register(gen, _generation);
+  _generation = check_and_register(gen, _generation, 1);
 
   _alpha = get_parameter("alpha", _alpha);
 
-  _alpha2 = get_parameter("alpha2", _alpha2);
+  string alpha2 = get_parameter("alpha2", "");
+  _alpha2 = check_and_register(alpha2, _alpha2, 2);
+  //_alpha2 = get_parameter("alpha2", _alpha2);
   _deltaG = get_parameter("deltaG", _deltaG);
 }
 
@@ -72,14 +74,32 @@ DSSCModel::do_init(void)
 double
 DSSCModel::get_variable_value(ID id)
 {
-  return _generation;
+  if (id == 1)
+  {
+    //cout << "generation = " << _generation << endl;
+    return _generation;
+  }
+  if (id == 2)
+  { 
+    //cout << "alpha2 = " << _alpha2 << endl;
+    return _alpha2;
+  }
 }
 
 
 void
 DSSCModel::set_variable_value(double value, ID id)
 {
-  _generation = value;
+  if (id == 1)
+  {
+    _generation = value;
+    //cout << "generation = " << _generation << endl;
+  }
+  if (id == 2)
+  { 
+    _alpha2 = value;
+    //cout << "alpha2 = " << _alpha2 << endl;
+  }
 }
 
 
@@ -130,15 +150,15 @@ DSSCModel::calculate_densities(void)
     // generation has to be calculated here
     double exponential = exp( -_alpha * abs(_pd.coordinates(0) - _x0) );
     double gen1 =  _generation * exponential;
-    if (_generation > _deltaG)
-    {
+    //if (_generation > _deltaG)
+    //{
        double exponential2 = _alpha2 * exp( -_alpha2 * abs(_pd.coordinates(0) - _x0) );
        _pd.generation_rate =  gen1 + _deltaG * exponential2;
-    }
-    else
-    {
-       _pd.generation_rate =  gen1;
-    }
+    //}
+    //else
+    //{
+    //   _pd.generation_rate =  gen1;
+    //}
 
   }
 
