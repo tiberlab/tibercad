@@ -1,7 +1,7 @@
 \chapter*{Installation instructions}
 \addcontentsline{toc}{chapter}{Installation instructions}
 
-\newcommand{\GMSHver}{2.2.0}
+\newcommand{\GMSHver}{2.3.0}
 \newcommand{\instpath}{\texttt{INSTALLPATH}}
 \newcommand{\version}{\texttt{VERSION}}
 
@@ -21,9 +21,9 @@ the installation directory of \TiberCAD.
 \begin{tabular}{l|p{8cm}}
 \emph{installer package name} & \emph{Target architecture} \\
 \hline  \\
-\verb+tibercad_installer.exe+ & Windows 32-bit \\
-\verb+tibercad_+\textsl{version}\verb+_i386.deb+ & Debian GNU/Linux 4.0 ``etch'', Intel x86 \\
-\verb+tibercad-+\textsl{version}\verb+.tar.gz+ & Generic Linux package
+\verb+tibercad-+\textsl{version}\verb+_setup.exe+ & Windows 32-bit \\
+%\verb+tibercad_+\textsl{version}\verb+_i386.deb+ & Debian GNU/Linux 4.0 ``etch'', Intel x86 \\
+\verb+tibercad-+\textsl{version}\verb+_installer.bin+ & Linux 32-bit self-extracting installer
 \end{tabular}
 \caption{Installer packages}
 \label{install:table:packages}
@@ -37,7 +37,7 @@ available if an X Window server is installed and running.
 
 \section*{Windows installation procedure}
 
-To install \TiberCAD{} in Windows, run the setup program \verb+tibercad_setup.exe+.
+To install \TiberCAD{} in Windows, run the setup program \verb+tibercad-+\textsl{version}\verb+_setup.exe+.
 During the installation you can choose the installation directory. After finishing
 installation, copy your license file (tibercad.lic) into the \verb+license+ subdirectory
 of the \TiberCAD{} installation directory (\instpath\verb+/license+), without changing
@@ -46,49 +46,52 @@ its filename.
 
 \section*{Linux installation procedure}
 
-The installation procedure for the Linux version of \TiberCAD{} depends on your
-distribution. Download the installer package that best fits your setup.
+%The installation procedure for the Linux version of \TiberCAD{} depends on your
+%distribution. Download the installer package that best fits your setup.
+To install \TiberCAD{} in Linux, download and run the self-extracting installer \verb+tibercad-+\textsl{version}\verb+_installer.bin+ and follow the installation instructions.
+
+After installation, copy your license file (tibercad.lic) into the `license'
+subdirectory of the \TiberCAD{} installation directory (\instpath/license) without
+changing the filename.
+You can also provide the license file during installation.
 
  The standard method to launch \TiberCAD{} is by means of a shell script that is
 installed alongside the TiberCAD executable. It takes care of setting all
 necessary environment variables. If for some reason you have to run the executable
 directly, remember to set \verb+TIBERCADROOT+ to the TiberCAD installation directory
-(\instpath) and \verb+LD_LIBRARY_PATH+ to \instpath\verb+/lib+.
+(\instpath).% and \verb+LD_LIBRARY_PATH+ to \instpath\verb+/lib+.
 
-\subsection*{Debian}
+%\subsection*{Debian}
 
-If you are running Debian GNU/Linux 4.0 ``etch'' on a i386 architecture, you can use the
-Debian package \verb+tibercad_+\textsl{version}\verb+_i386.deb+.
-Install it as root using dpkg or similar:
-\begin{verbatim}
-# dpkg --install tibercad_VERSION_i386.deb
-\end{verbatim}
+%If you are running Debian GNU/Linux 4.0 ``etch'' on a i386 architecture, you can use the
+%Debian package \verb+tibercad_+\textsl{version}\verb+_i386.deb+.
+%Install it as root using dpkg or similar:
+%\begin{verbatim}
+%# dpkg --install tibercad_VERSION_i386.deb
+%\end{verbatim}
 
-  The package will be installed in /usr/share/tibercad. Next, copy your
-license file (tibercad.lic) into /usr/share/tibercad/license/ without
-changing the filename.
+%  The package will be installed in /usr/share/tibercad. Next, copy your
+%license file (tibercad.lic) into /usr/share/tibercad/license/ without
+%changing the filename.
 
 
-\begin{description}
-\item[NOTE:] The debian version of TiberCAD depends on the following Debian packages:
- \begin{itemize}
-   \item libboost-regex1.33.1
-   \item libboost-filesystem1.33.1
-   \item libblas.so.3 (provided e.g. by atlas3-base)
-   \item liblapack.so.3 (provided e.g. by atlas3-base)
- \end{itemize}
-\end{description}
+%\begin{description}
+%\item[NOTE:] The debian version of TiberCAD depends on the following Debian packages:
+% \begin{itemize}
+%   \item libboost-regex1.33.1
+%   \item libboost-filesystem1.33.1
+%   \item libblas.so.3 (provided e.g. by atlas3-base)
+%   \item liblapack.so.3 (provided e.g. by atlas3-base)
+% \end{itemize}
+%\end{description}
 
-\subsection*{Other Linux distributions}
+%\subsection*{Other Linux distributions}
 
-If you have a distribution other than Debian 4.0 ``etch'' or you want to install \TiberCAD{}
-into a different directory, then use the .tgz or .tbz installation packages.
-Unpack the archive, cd to the unpacked directory tibercad-\version{} and run the
-install script.
+%If you have a distribution other than Debian 4.0 ``etch'' or you want to install \TiberCAD{}
+%into a different directory, then use the .tgz or .tbz installation packages.
+%Unpack the archive, cd to the unpacked directory tibercad-\version{} and run the
+%install script.
 
-  After installation, copy your license file (tibercad.lic) into the `license'
-subdirectory of the \TiberCAD{} installation directory (\instpath/license) without
-changing the filename.
 
 
   

@@ -229,9 +229,6 @@ ARCH=${ARCH}
 TIBERCADROOT=${instpath}
 
 
-# we will need some of our libraries in LD_LIBRARY_PATH
-TIBER_LD_LIBRARY_PATH=\${TIBERCADROOT}/\${ARCH}/lib
-
 
 # the program to call
 prog=\`basename \$0\`
@@ -240,7 +237,6 @@ progname=""
 case \$prog in
 
   tibercad*)
-    TIBER_LD_LIBRARY_PATH=\${TIBER_LD_LIBRARY_PATH}:\${TIBERCADROOT}/\${ARCH}/lib/tibermodels
     progname="tibercad"
     executable="\${TIBERCADROOT}/\${ARCH}/bin/\$progname"
     ;;
@@ -258,15 +254,17 @@ case \$prog in
 esac
 
 
-# prepend out LD_LIBRARY_PATH stuff
-if [ -z \$LD_LIBRARY_PATH ]
-then
-  LD_LIBRARY_PATH=\$TIBER_LD_LIBRARY_PATH
-else
-  LD_LIBRARY_PATH=\${TIBER_LD_LIBRARY_PATH}:\$LD_LIBRARY_PATH
-fi
+# prepend our LD_LIBRARY_PATH stuff
+#TIBER_LD_LIBRARY_PATH=\${TIBERCADROOT}/\${ARCH}/lib
+#if [ -z \$LD_LIBRARY_PATH ]
+#then
+#  LD_LIBRARY_PATH=\$TIBER_LD_LIBRARY_PATH
+#else
+#  LD_LIBRARY_PATH=\${TIBER_LD_LIBRARY_PATH}:\$LD_LIBRARY_PATH
+#fi
+#export LD_LIBRARY_PATH
 
-export TIBERCADROOT LD_LIBRARY_PATH
+export TIBERCADROOT
 
 
 if [ -x \$executable ]
