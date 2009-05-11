@@ -182,6 +182,15 @@ void ETB::reinit(void){
 
   upt_filename.copy(_upt_options.upt_filename, upt_filename.size() );
 
+  // temporary hack to consider c-axis orientations 
+  // By default wurtzites c-axis is along z. If 1-d then it is along x:
+  if (get_environmnemt().get_mesh().mesh_dimension() == 1) 
+    { _upt_options.c_axis[0]= 1.0; 
+      _upt_options.c_axis[1]= 0.0;
+      _upt_options.c_axis[2]= 0.0;
+    }
+
+
   std::cout << "(TC) init uptight begins" << std::endl;
 
   //  Set parameters for Uptight instance
