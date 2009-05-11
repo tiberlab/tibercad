@@ -11,7 +11,7 @@
 #include "SimulationOptions.h"
 #include "UptWrapper.h"
 #include "uptight.h"
-//#include "mesh.h"
+#include "mesh.h"
 
 #include <fstream>
 #include <sstream>
@@ -151,7 +151,7 @@ ETB::do_init(void){
 
 //-------------------------------------------------------------------------
 void ETB::reinit(void){
-   
+
 
   std::cout << "(TC) clean uptight data container" << std::endl;
 
@@ -161,7 +161,7 @@ void ETB::reinit(void){
   if(_upt_options.strain_sim != "no_sim")
   {
     if( ! get_control().find_simulation(_upt_options.strain_sim)->is_solved() )
-    throw InitFailedException("Strain model has not been solved");  
+    throw InitFailedException("Strain model has not been solved");
   }
 
   std::string upt_filename;
@@ -182,10 +182,10 @@ void ETB::reinit(void){
 
   upt_filename.copy(_upt_options.upt_filename, upt_filename.size() );
 
-  // temporary hack to consider c-axis orientations 
+  // temporary hack to consider c-axis orientations
   // By default wurtzites c-axis is along z. If 1-d then it is along x:
-  if (get_environmnemt().get_mesh().mesh_dimension() == 1) 
-    { _upt_options.c_axis[0]= 1.0; 
+  if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
+    { _upt_options.c_axis[0]= 1.0;
       _upt_options.c_axis[1]= 0.0;
       _upt_options.c_axis[2]= 0.0;
     }
@@ -195,8 +195,8 @@ void ETB::reinit(void){
 
   //  Set parameters for Uptight instance
   inst->fill_param(_upt_options.verbose, _upt_options.database_path,
-		   _upt_options.work_path, _upt_options.out_path,  
-		   _upt_options.upt_filename, 
+		   _upt_options.work_path, _upt_options.out_path,
+		   _upt_options.upt_filename,
 		   _upt_options.gen_outfile, _upt_options.sparse_fmt,
 		   _upt_options.max_TB_order, _upt_options.harrison_flag,
 		   _upt_options.relat_flag, _upt_options.potential_flag,
@@ -306,7 +306,7 @@ void ETB::do_solve(void){
       _solution[i].electro_chem_pot = _upt_options.hl_chem_pot;
     }
 
-    
+
 
   }
 
@@ -429,7 +429,7 @@ void ETB::do_plot(void){
 #ifdef DEBUG
   std::cout << "(TC) Calling ETB->do_plot() " << std::endl;
 #endif
-  
+
   const std::set<string>& plots = get_control().get_plotvariables();
 
   inst->write_states();
@@ -454,10 +454,10 @@ void ETB::parse_options(void)
   _upt_options.relat_flag = get_options().get_option("relativistic", false);
   // da togliere e leggere dal database: shift della banda di valenza (che e` 0)
   _upt_options.vb_shift = get_options().get_option("vb_shift", 0.0);
-  
+
   _upt_options.temperature = get_options().get_option("temperature",
 						      SimulationOptions::temperature );
-  
+
   //_upt_options.opt_flag = get_options().get_option("optical_transitions", false);
   //_upt_options.poldir = get_options().get_option("polarization_direction", 1);
   _upt_options.opt_flag = false; // these are set via OpticsTB
@@ -474,7 +474,7 @@ void ETB::parse_options(void)
 
   _upt_options.strain_sim = get_options().get_option("strain_model_name", "no_sim");
 
-  // Solver options: "upt_lanczos", "read_old"  
+  // Solver options: "upt_lanczos", "read_old"
   _upt_solver_options.solver = get_solver_options().get_option("solver", "upt_lanczos");
 
   _upt_solver_options.n_vb =  get_solver_options().get_option("num_valence_eigenvalues", 0);
@@ -558,14 +558,14 @@ ETB::calculate_fermi_averaged(unsigned int i)
   unsigned int k, j, k_at;
 
   sum = 0.0; k = 0; k_at = 0;
-  
+
 
   if(_solution[i].particle == "el" || _solution[i].particle == "electron")
   {
-   
+
     for (j = 0; j < _el_chem_pot.size(); j++)
     {
-      atom_sum = 0.0; 
+      atom_sum = 0.0;
       for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
       {
 	atom_sum += std::norm(_solution[i].eigen_vector[k]);
