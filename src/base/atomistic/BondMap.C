@@ -229,7 +229,7 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
         if (not_already_signed)
           {
             _bond_map[j][put_here] = i;
-            _translation[j][put_here] = period;
+            _translation[j][put_here] = -period;
             _bond_map[j][8]++;
           }
 
