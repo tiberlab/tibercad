@@ -95,6 +95,9 @@ AtomisticStructure::init()
 
   //Setting scale factor
   _scale = ( ( _device->get_mesh_units() ) / 1e-10 );
+std::cout << "mesh_units is " << _device->get_mesh_units() << std::endl;
+std::cout << "scale factor is " << _scale << std::endl;
+
 
   if (_options.find_option("path") )
     std::cerr << "Reading structure from file " << path <<
@@ -102,7 +105,6 @@ AtomisticStructure::init()
 
   if ( _options.find_option("physical_regions") )
     {
-
       //Put physical regions specified in input file in _regions
       //A vector is needed as temporary container
       std::vector<std::string> region_string;
@@ -110,7 +112,8 @@ AtomisticStructure::init()
 
       for (unsigned int i = 0; i < region_string.size(); i++)
         {
-          _regionset.insert(region_string[i]);}
+          _regionset.insert(region_string[i]);
+        }
       region_string.clear();
 
       //If all regions are specified (value = "all", must fill with real names of all regions)
@@ -160,8 +163,8 @@ AtomisticStructure::init()
       print_structure(name);
       name = _name + ".gen" ;
       print_structure(name);
-      //name = _name + ".upg" ;
-      //print_structure(name);
+      name = _name + ".upg" ;
+      print_structure(name);
 
     }
 

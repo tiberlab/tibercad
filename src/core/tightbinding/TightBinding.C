@@ -306,6 +306,8 @@ TightBinding::project_potential(const std::string model_name, const std::string 
       _hl_chem_pot.clear();
       _hl_chem_pot.resize(_atomistic_structure->get_N_atoms(), 0.0);
 
+      unsigned int dim = get_environment().get_device().get_mesh().mesh_dimension();
+
       for (unsigned int i = 0; i < _pot_shift.size(); i++)
 	{
 	  if (_atomistic_structure->get_structure_atoms()[i].get_elem() != NULL)
@@ -316,9 +318,13 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 		/ _atomistic_structure->get_scale();
 	      p(2) = _atomistic_structure->get_structure_atoms()[i].get_position()(3)
 		/ _atomistic_structure->get_scale();
-	      
-	      // pot_shift is without "-" because the minus-sign is explicitly set in the 
-	      // TB-codes. For Ef,n and Ef,p we need to change sign. 
+
+	      if (dim == 1) {p(1) = 0.0; p(2) = 0.0;}
+	      if (dim == 2) {p(2) = 0.0;}
+
+
+	      // pot_shift is without "-" because the minus-sign is explicitly set in the
+	      // TB-codes. For Ef,n and Ef,p we need to change sign.
 	      _pot_shift[i] = model.get_potential(_atomistic_structure->
 						  get_structure_atoms()[i].get_elem(), p);
 	      _el_chem_pot[i] = -model.get_el_chem_potential(_atomistic_structure->
@@ -361,7 +367,7 @@ TightBinding::project_potential(const std::string model_name, const std::string 
       if (_pot_shift[i] < _pot_min) _pot_min = _pot_shift[i];
   }
   for (unsigned int i = 0; i < _pot_shift.size(); i++)
-  { 
+  {
       tmp = _pot_shift[i] - _pot_min;
       _pot_shift[i] = tmp;
   }

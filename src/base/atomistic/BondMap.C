@@ -109,7 +109,10 @@ BondMap::do_init(const std::vector<Atom> &basis, const Tensor2Gen& period)
     _bond_map[i] = new unsigned int [9];
     for (unsigned int j = 0; j < 9; j++) _bond_map[i][j] = 0;
   }
-
+  _translation.resize(basis.size());
+    for (unsigned int i = 0; i < basis.size(); i++)  {
+      _translation[i].resize(8);
+    }
   std::cout << "done" << std::endl;
 
 }
@@ -202,6 +205,7 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
         if (not_already_signed)
           {
             _bond_map[i][put_here] = j;
+            _translation[i][put_here] = period;
             _bond_map[i][8]++;
           }
 
@@ -225,6 +229,7 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
         if (not_already_signed)
           {
             _bond_map[j][put_here] = i;
+            _translation[j][put_here] = period;
             _bond_map[j][8]++;
           }
 

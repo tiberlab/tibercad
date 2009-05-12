@@ -209,9 +209,13 @@ void ETB::reinit(void){
 
   std::cout << "(TC) init uptight done" << std::endl;
 
-  _ion_num_orbitals.resize(_atomistic_structure->get_N_atoms(), 0);
+  _ion_num_orbitals.resize(_atomistic_structure->get_structure_atoms().size(), 0);
+
+  std::cout << _atomistic_structure->get_structure_atoms().size() << std::endl;
 
   inst->get_ion_numorbitals(_ion_num_orbitals);
+
+  std::cout << "(TC) set orbitals per atom" << std::endl;
 
 }
 

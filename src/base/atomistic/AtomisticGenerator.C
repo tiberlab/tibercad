@@ -157,13 +157,15 @@ AtomisticGenerator::do_init()
   // Set the vector of elements covered by structure regions, useful for change specie and cut
   MeshBase::element_iterator el = _as->get_device()->get_mesh().elements_begin();
   const MeshBase::element_iterator el_end = _as->get_device()->get_mesh().elements_end();
-
+  //TODO: find a way to reserve this vector, if you can get information about
+  //number of elements in atomistic regions
   for ( ; el != el_end; el++)
     {           Elem* elem = *el;
     if (_as->get_IDset().find( elem->subdomain_id() ) != _as->get_IDset().end() ) _structure_elements.push_back(elem);
     }
 
-
+std::cout << "Atomistic region contains " << _structure_elements.size() << " elements"
+<< std::endl;
   //Build up supercell structure with proper options
   //----------------------------------------------------------------------------------------------
   build();
@@ -321,17 +323,17 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
           if ( (_dim == 2) || (_dim == 3) )   p(1) = (*atom).get_position(2) / scale;
 
           if ( (_dim == 3) )  p(2) = (*atom).get_position(3) / scale;
-
+//std::cout << "point is " << p << std::endl;
           for (std::vector<Elem*>::iterator it = _structure_elements.begin();
           it != _structure_elements.end(); it++)
             {
-
               Elem* elem = *it;
               el_reg = elem->subdomain_id();
 
               if (Macrostrain::may_belong_to_element(elem, p)){
 
-                if ( (elem->contains_point(p) ) ) {
+                if ( ( elem->contains_point(p) ) ) {
+//std::cout << "CONTAINS ";
                   if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
                     {
                       std::string tmp =  assign[el_reg][(*atom).get_flag()];
@@ -345,7 +347,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                     }
                   else
                     {
-                      std::cout << "Warning, atom is included but no assignament map member could be built " << std::endl;
+                      std::cout << "Warning, atom is included but no assignment map member could be built " << std::endl;
                     }
                   break;
                 }
@@ -782,7 +784,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   if (_dim == 2) {start_i = -1; start_j =-1; start_l = 0; n1 = n1 + 1; n2 = n2 + 1;}
   if (_dim == 3) {start_i = -1; start_j =-1; start_l = -1; n1 = n1 + 1; n2 = n2 + 1; n3 = n3 + 1;}
 
-  //Definition of unmber of conventional cells, useful for reserving arrays
+  //Definition of number of conventional cells, useful for reserving arrays
   unsigned int max_number_of_cells = n1 + n2 + n3 + 6;
   _super_conv.reserve(max_number_of_cells);
   _super_lattice.reserve(max_number_of_cells * _conv_lattice_basis.size());
@@ -1370,11 +1372,13 @@ void AtomisticGenerator::passivate()
                   Atom tmp(*bonded_atom);
                   tmp.set_specie("H");
                   tmp.belong_to_structure = true;
+                  Tensor1 bonded_rel_position = bonded_atom->get_position() +
+                  _bondmapobject->get_translation()[i][j] - _structure_basis[i].get_position();
 
                   position = _structure_basis[i].get_position() +
-                  ( ( bonded_atom->get_position() - _structure_basis[i].get_position()) /
-                      (norm(bonded_atom->get_position() - _structure_basis[i].get_position() ) ) ) *
-                      hydrogen_distance;
+                  ( ( bonded_rel_position) /
+                      norm(bonded_rel_position ) *
+                      hydrogen_distance);
                   tmp.set_position(position);
 
                   _structure_basis.push_back(tmp);

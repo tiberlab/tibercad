@@ -48,6 +48,9 @@ public:
   //!Gives pointer to bond map
   unsigned int** get_bond_map();
 
+  //! Gives translation vector for periodical images
+  std::vector < std::vector < Tensor1 > >& get_translation(void);
+
 private:
 
   //! Internally defined parallepipedal grid
@@ -90,8 +93,15 @@ private:
   //! Map for cutoff parameters
   std::map<std::string, double> _cutoff;
 
+  //------------------------------------------------------------------
+  //TODO: translation vector and double pointer must be substituted
+  //with a vector of structures, or something similar
   //! Bond map
   unsigned int ** _bond_map;
+
+  //! Translation vector for periodic images
+  std::vector<std::vector<Tensor1> > _translation;
+  //--------------------------------------------------------------------
 
   //! Spacing of the grid along x axis
   double _x_spacing;
@@ -125,11 +135,18 @@ private:
 //----------------------------------------------------
 
 inline
-unsigned int** BondMap::get_bond_map()
+unsigned int**
+BondMap::get_bond_map(void)
 {
   return _bond_map;
 }
 
+inline
+std::vector < std::vector < Tensor1 > >&
+BondMap::get_translation(void)
+{
+  return _translation;
+}
 
 
 
