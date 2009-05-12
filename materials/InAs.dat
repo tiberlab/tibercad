@@ -4,18 +4,18 @@ structure = zb
 
 
 # lattice constant
-[lattice]
+[lattice] # [1]
 a = 0.605830
 
 
 
-[valenceband]
+[valenceband] # [1]
 #E_v = 1.52
 E_v = -0.59
 
 
 
-[conductionband]
+[conductionband] # [1]
 m_G = 0.026
 m_L_t = 0.05
 m_L_l = 0.64
@@ -24,7 +24,7 @@ m_X_t = 0.16
 
 
 
-[bandgap]
+[bandgap] # [1]
 # 0 K values
 Eg_G = 0.417
 Eg_L = 1.133
@@ -41,7 +41,7 @@ varshni_beta_L = 93
 
 
 
-[kdotp]
+[kdotp] # [1]
 delta = 0.39
 gamma1 = 20
 gamma2 = 8.5
@@ -49,7 +49,7 @@ gamma3 = 9.2
 
 
 
-[deformation_potentials]
+[deformation_potentials] # [3]
 a_c = -6.66
 abs_def_pot_L = -3.89
 abs_def_pot_X = -0.08
@@ -61,13 +61,13 @@ b = -1.8
 d = -3.6
 
 
-[permittivity]
+[permittivity] # [3]
 # static dielectric constant
 permittivity = 15.15
 
 
 # stiffness data
-[elasticity]
+[elasticity] # [1]
 C11 = 83.290
 C12 = 45.260
 C44 = 39.590
@@ -78,12 +78,12 @@ e14 = -0.044
 
 # from here values for GaAs
 # mobility
-[mobility/constant]
+[mobility/constant] # [2]
 mu_max   = (22600.0, 250.0)
 exponent = (1.5,     1.5)
 
 
-[mobility/doping_dependent]
+[mobility/doping_dependent] # [2]
 mobility_formula = 2
 mumin = (22600,	250)
 am    = (-1.5,	-1.5)
@@ -96,7 +96,7 @@ aA    = (0,	0)
 
 
 # high field dependency
-[mobility/field_dependent]
+[mobility/field_dependent] # [2]
 Vsat_Formula = 2
 beta0    = (2.0, 	2.0)
 betaexp  = (0,		0)
@@ -107,7 +107,7 @@ vsat_min = (5.0e+05, 	5.0e+05)
 
 
 # SRH recombination
-[recombination/SRH]
+[recombination/SRH] # [2]
 Etrap  = 0.0
 taumin = (0.0,		0.0)
 taumax = (1.0e-9,	1.0e-9)
@@ -117,12 +117,12 @@ Talpha = (0.0,		0.0)
 Tcoeff = (0.0,		0.0)
 
 
-# direct recombination (www.ioffe.ru)
-[recombination/direct]
+# direct recombination
+[recombination/direct] # [4]
 C = 1.1e-10
 
 
-[recombination/auger]
+[recombination/auger] # [2]
 # R_Auger = ( C_n n + C_p p ) ( n p - ni_eff^2)
 # with C_n,p = (A + B (T/T0) + C (T/T0)^2) (1 + H exp(-{n,p}/N0))
 #
