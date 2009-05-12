@@ -11,14 +11,14 @@ GMSHVER=2.3.0
 install_gmsh ()
 {
 
-  echo "Installing GMSH to ${instpath}/contrib/gmsh-$GMSHVER"
-  install_files contrib ${instpath}
+  echo "Installing GMSH to ${instpath}/tools/gmsh-$GMSHVER"
+  install_files tools ${instpath}
 
   here=`pwd`
 
   cd ${instpath}/bin && ln -s TiberCAD.sh gmsh
   mkdir -p ${instpath}/man/man.1
-  cd ${instpath}/man/man.1 && ln -s ${instpath}/contrib/gmsh-$GMSHVER/gmsh.1 gmsh.1
+  cd ${instpath}/man/man.1 && ln -s ${instpath}/tools/gmsh-$GMSHVER/gmsh.1 gmsh.1
 
   echo "- ${instpath}/bin/gmsh" >> ${instpath}/files.lst
   echo "- ${instpath}/man/man.1/gmsh.1" >> ${instpath}/files.lst
@@ -47,7 +47,7 @@ install_gmsh ()
     target=gmsh
     if [ -L gmsh ]
     then
-      target=`ls -l gmsh | awk -F '>' '{print $2}' | grep "${instpath}/contrib"`
+      target=`ls -l gmsh | awk -F '>' '{print $2}' | grep "${instpath}/tools"`
     fi
 
     if [ -z $target ] || [ -f gmsh ]
@@ -243,7 +243,7 @@ case \$prog in
 
   gmsh*)
     progname="gmsh"
-    executable="\${TIBERCADROOT}/contrib/gmsh-\${GMSHVER}/\$progname"
+    executable="\${TIBERCADROOT}/tools/gmsh-\${GMSHVER}/\$progname"
     ;;
 
   *)

@@ -44,8 +44,8 @@ make_windows_package () {
   fi
   cd ${curdir}
   cd ${files}
-  mkdir -p contrib/gmsh-${GMSHVER}
-  cd contrib/gmsh-${GMSHVER}
+  mkdir -p tools/gmsh-${GMSHVER}
+  cd tools/gmsh-${GMSHVER}
   unzip ${topdir}/contrib/gmsh-${GMSHVER}/gmsh-${GMSHVER}-Windows.zip
   cp ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf .
 
@@ -75,7 +75,7 @@ prepare_linux_package () {
   mkdir -p ${files}/share
   mkdir -p ${files}/license
   mkdir -p ${files}/materials
-  mkdir -p ${files}/contrib
+  mkdir -p ${files}/tools
 
   cp ${topdir}/installer/linux/tar/install ${files}
   chmod a+x ${files}/install
@@ -118,8 +118,8 @@ prepare_linux_package () {
       wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
       mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}
     fi
-    cp -r  ${topdir}/contrib/gmsh-${GMSHVER} ${files}/contrib
-    chmod a+x ${files}/contrib/gmsh-${GMSHVER}/gmsh
+    cp -r  ${topdir}/contrib/gmsh-${GMSHVER} ${files}/tools
+    chmod a+x ${files}/tools/gmsh-${GMSHVER}/gmsh
   fi
 
 
@@ -149,7 +149,7 @@ make_deb () {
   mkdir -p ${files}/examples
   mkdir -p ${files}/license
   mkdir -p ${files}/materials
-  mkdir -p ${files}/contrib
+  mkdir -p ${files}/tools
 
   cp ${topdir}/bin/tibercad ${files}/bin
   chmod a+x ${files}/bin/tibercad
@@ -173,8 +173,8 @@ make_deb () {
       wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
       mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}
     fi
-    cp -r  ${topdir}/contrib/gmsh-${GMSHVER} ${files}/contrib
-    chmod a+x ${files}/contrib/gmsh-${GMSHVER}/gmsh
+    cp -r  ${topdir}/contrib/gmsh-${GMSHVER} ${files}/tools
+    chmod a+x ${files}/tools/gmsh-${GMSHVER}/gmsh
   fi
 
 
@@ -207,7 +207,7 @@ case \$prog in
 
   gmsh*)
     progname="gmsh"
-    executable="\${TIBERCADROOT}/contrib/gmsh-${GMSHVER}/\$progname"
+    executable="\${TIBERCADROOT}/tools/gmsh-${GMSHVER}/\$progname"
     ;;
 
   *)
