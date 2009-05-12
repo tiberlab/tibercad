@@ -1,0 +1,24 @@
+
+
+Version 1.2.1
+-------------
+
+Bug fixes:
+
+	- fixed missing error messages in Windows version
+	- fixed bug in field dependent mobility model
+	- fixed deformation potentials for nitride semiconductors
+
+
+New features:
+
+	- Auger recombination
+	- Surface recombination for interface boundary model
+	- self consistency Schroedinger-Poisson/Drift Diffusion,
+	  based on predictor-corrector scheme with embracing region
+
+	- physical models can be restricted to a subset of the simulation domain
+	- string labels can be used in GMSH as physical region identifiers
+	  instead of numbers
+
+	- more meaningful error messages from input parser
