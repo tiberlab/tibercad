@@ -1,6 +1,9 @@
+// $Id$
+
 #include "QuantumDensity.h"
 #include "SimulationEnvironment.h"
 #include "Control.h"
+#include "Messages.h"
 
 using namespace std;
 
@@ -196,7 +199,7 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
 	if (it != real_space_density.end())
 	  results[el_number] = it->second;
 	else
-	  cerr << "WARNING: not all elements have a calculated density\n";
+	  Messages::warning("not all elements have a calculated density");
 
 	el_number++;
       }
@@ -450,7 +453,12 @@ void QuantumDensity::calculate_for_k_point(const Point& k_point,
 
   ModelOptions quantum_model_opts;
 	  
-  if (opt.log_output) cout << "QuantumDensity:  k-vector =  " << k_point << "\n" << flush;
+  if (opt.log_output)
+  {
+    ostringstream os;
+    os << "k-vector =  " << k_point;
+    Messages::info(os.str());
+  }
 
   quantum_model_opts.set_option("k_vector",  k_vector);
 
@@ -485,7 +493,9 @@ void QuantumDensity::calculate_for_k_point(const Point& k_point,
 
   if (opt.log_output) 
   {
-    cout << "QuantumDensity: total_density = " << integrated_quantity <<"\n" << flush;
+    ostringstream os;
+    os << "Total density = " << integrated_quantity;
+    Messages::info(os.str());
   }
   	 
  
@@ -507,7 +517,8 @@ void QuantumDensity::estimate_analitic_density(void)
 
 
 
-  quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number ); 
+  quantum_model_opts.set_option("initial_eigenstates_number",
+      opt.intial_eigenstates_number ); 
   quantum_model_opts["job"] = "density";
   quantum_model->set_options(quantum_model_opts);
  
@@ -524,7 +535,11 @@ void QuantumDensity::estimate_analitic_density(void)
 
   vector<double> effective_mass(number_of_eigenstates);
 
-  cerr << "number of eigenstates k = 0 " <<  number_of_eigenstates << "\n";
+  {
+    ostringstream os;
+    os << "number of eigenstates in k = 0 : " <<  number_of_eigenstates;
+    Messages::info(os.str());
+  }
 
   const Mesh& mesh = get_equation_systems().get_mesh();
 
@@ -556,7 +571,11 @@ void QuantumDensity::estimate_analitic_density(void)
 
     quantum_model->get_eigenenergies (energy_k_1);
 
-    cerr << "number of eigenstates k = k1 " << energy_k_1.size()  << "\n";
+    {
+      ostringstream os;
+      os << "number of eigenstates in k = k1 :" <<  energy_k_1.size();
+      Messages::info(os.str());
+    }
     
     quantum_model_opts.set_option("k_vector2",  k_vector2);
     quantum_model->set_options(quantum_model_opts);
@@ -565,7 +584,11 @@ void QuantumDensity::estimate_analitic_density(void)
 
     quantum_model->get_eigenenergies (energy_k_2);
      
-    cerr << "number of eigenstates k = k2 " << energy_k_2.size()  << "\n";
+    {
+      ostringstream os;
+      os << "number of eigenstates in k = k2 :" <<  energy_k_2.size();
+      Messages::info(os.str());
+    }
 
     number_of_eigenstates = (quantum_model->get_solution()).size();
 
@@ -595,20 +618,17 @@ void QuantumDensity::estimate_analitic_density(void)
    
     for (unsigned int i = 0; i < number_of_eigenstates; i++) 
     {
-      map<const Elem*, double> state_density = quantum_model->estimate_density1D(i, effective_mass[i]);
+      map<const Elem*, double> state_density =
+        quantum_model->estimate_density1D(i, effective_mass[i]);
        
        
       MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-      
       const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-      
       
       for (; el != end_el ; ++el)
       {
 	const Elem* elem = *el;
-	 
 	real_space_density[elem] += state_density[elem] * opt.degeneracy;
-
       }
 	 
     }
@@ -616,79 +636,80 @@ void QuantumDensity::estimate_analitic_density(void)
   }
   else if (k_dim == 1)
   {
-     
+
     ModelOptions quantum_model_opts;
-    
+
     vector<double> energy_k_1;
-    
-     quantum_model_opts.set_option("k_vector",  k_vector1);
 
-     quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number ); 
+    quantum_model_opts.set_option("k_vector",  k_vector1);
 
-     quantum_model_opts["job"] = "eigenstates";
+    quantum_model_opts.set_option("initial_eigenstates_number",
+        opt.intial_eigenstates_number ); 
 
-     quantum_model_opts.set_option("number_of_eigenstates",number_of_eigenstates);
+    quantum_model_opts["job"] = "eigenstates";
 
-     quantum_model->set_options(quantum_model_opts);
-    
-     quantum_model->solve();
+    quantum_model_opts.set_option("number_of_eigenstates",
+        number_of_eigenstates);
 
-     quantum_model->get_eigenenergies (energy_k_1);
-     
-     double k_max = sqrt( k_vector1[0]*k_vector1[0] + k_vector1[1]*k_vector1[1] + k_vector1[2]*k_vector1[2]  );
+    quantum_model->set_options(quantum_model_opts);
 
-    
-     number_of_eigenstates = (quantum_model->get_solution()).size();
+    quantum_model->solve();
+
+    quantum_model->get_eigenenergies (energy_k_1);
+
+    double k_max = sqrt( k_vector1[0]*k_vector1[0] + 
+        k_vector1[1]*k_vector1[1] + k_vector1[2]*k_vector1[2]  );
 
 
-     for (unsigned int i = 0; i < number_of_eigenstates; i++)
-     {
-       
-       double imass  = (2.0 * abs(energy_k_0[i] - energy_k_1[i] ) ) / Constants::Hartree /(k_max * k_max);
-       
-       effective_mass[i] = 1.0/imass;
+    number_of_eigenstates = (quantum_model->get_solution()).size();
+    {
+      ostringstream os;
+      os << "number of eigenstates in k = k1 : " <<  number_of_eigenstates;
+      Messages::info(os.str());
+    }
 
-       quantum_model_opts.set_option("k_vector",  vector<double> (3, 0.0) );
-       quantum_model->set_options(quantum_model_opts);
-      
-       quantum_model->solve();
 
-    
+    for (unsigned int i = 0; i < number_of_eigenstates; i++)
+    {
 
-       for (unsigned int i = 0; i < number_of_eigenstates; i++)
-       {
-	 map<const Elem*, double> state_density = quantum_model->estimate_density2D(i, effective_mass[i]);
+      double imass  = 2.0 * abs(energy_k_0[i] - energy_k_1[i])
+        / (Constants::Hartree * k_max * k_max);
 
-       
-	 MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-	 const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+      effective_mass[i] = 1.0 / imass;
+    }
 
-       
+    quantum_model_opts.set_option("k_vector",  vector<double> (3, 0.0) );
+    quantum_model->set_options(quantum_model_opts);
 
-	 for (; el != end_el ; ++el)
-	 {
-	   const Elem* elem = *el;
-	    
-	   real_space_density[elem] += state_density[elem] * opt.degeneracy;
-	  
-	    
-	 }
+    quantum_model->solve();
 
-       }
 
-       
 
-     }
+    for (unsigned int i = 0; i < number_of_eigenstates; i++)
+    {
+      map<const Elem*, double> state_density =
+        quantum_model->estimate_density2D(i, effective_mass[i]);
 
-     
 
-   }
+      MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+      const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+
+      for (; el != end_el ; ++el)
+      {
+        const Elem* elem = *el;
+        real_space_density[elem] += state_density[elem] * opt.degeneracy;
+      }
+
+    }
+
+
+  }
   else if (k_dim == 0)
   {
+    const std::map< const Elem*,double > & state_density =  quantum_model->get_density(); 
+
     MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
     const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-
-    const std::map< const Elem*,double > & state_density =  quantum_model->get_density(); 
 
     for (; el != end_el ; ++el)
     {
@@ -697,13 +718,10 @@ void QuantumDensity::estimate_analitic_density(void)
       const std::map< const Elem*,double >::const_iterator it =  state_density.find(elem);
       if (it != state_density.end())
 	real_space_density[elem] += it->second * opt.degeneracy;
-	  
 	    
     }
 
   }
-
-
 }
 
 

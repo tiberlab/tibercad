@@ -110,8 +110,7 @@ Control::Control(const std::string& inputfile)
   : _inputfile(inputfile),
     _device(0),
     _database(0),
-    _outputdir("."),
-    _filename_suffix("")
+    _outputdir(".")
 {
   // we check here if the input file exists
   ifstream infile;
@@ -1056,5 +1055,18 @@ Control::find_simulation(const string& name) const
   return sim;
 }
 
+
+
+const std::string&
+Control::get_filename_suffix(void) const
+{
+  _filename_suffix_str = "";
+  list<string>::const_iterator it(_filename_suffix.begin());
+  const list<string>::const_iterator end(_filename_suffix.end());
+  for ( ; it != end; ++it)
+    _filename_suffix_str += "_" + *it;
+
+  return _filename_suffix_str;
+}
 
 

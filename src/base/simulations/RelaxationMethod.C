@@ -67,16 +67,10 @@ RelaxationMethod::do_solve(void)
     {
       Messages m;
       ostringstream os;
-      os << "<<<<-----------------------------"
-        << "-------------------------------"
-        << endl
-        << get_name() << " (Relaxation): iteration "
-        << it << endl
-        << "  correction (max norm):  " << norm << endl
-        << "  relative error (l2)  :  " << rel_err << endl
-        << "-------------------------------------"
-        << "------------------------>>>>"
-        << endl;
+      os << get_name() << " (Relaxation): iteration "
+        << it << Messages::endl
+        << "  correction (max norm):  " << norm << Messages::endl
+        << "  relative error (l2)  :  " << rel_err;
       m.info(os.str());
     }
 

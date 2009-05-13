@@ -10,6 +10,7 @@
 #include "TypeDefs.h"
 
 #include <map>
+#include <list>
 #include <vector>
 #include <set>
 #include <iostream>
@@ -138,7 +139,7 @@ class Control
     const std::string& get_output_dir(void) const;
 
 
-    //! Get the suffix for the output filenames
+    //! Get the complete suffix for the output filenames
     const std::string& get_filename_suffix(void) const;
 
 
@@ -152,7 +153,7 @@ class Control
      * contain plot data.
      * The suffix itself will be prepended by a '_'
      */
-    void set_filename_suffix(const std::string& suffix);
+    //void set_filename_suffix(const std::string& suffix);
 
 
     //! Append something to the suffix for the output filenames
@@ -162,6 +163,24 @@ class Control
      * The suffix itself will be prepended by a '_'
      */
     void append_to_filename_suffix(const std::string& suffix);
+
+
+    //! Prepend something to the suffix for the output filenames
+    /*!
+     * The filename suffix will be appended to all output files which
+     * contain plot data.
+     * The suffix itself will be prepended by a '_'
+     */
+    void prepend_to_filename_suffix(const std::string& suffix);
+
+
+    //! Delete the first output filename suffix part
+    void drop_first_filename_suffix(void);
+
+
+    //! Delete the last output filename suffix part
+    void drop_last_filename_suffix(void);
+
 
 
     //! Get the output format
@@ -255,8 +274,15 @@ class Control
     std::set<std::string> _plotvariables;
 
 
-    //! The filename suffix
-    std::string _filename_suffix;
+    //! The list frfom which the filename suffix gets constructed
+    std::list<std::string> _filename_suffix;
+
+
+    //! The filename suffix string
+    /*!
+     * This is only a helper variable
+     */
+    mutable std::string _filename_suffix_str;
 
 
     //! The output format
@@ -338,22 +364,14 @@ Control::get_output_dir(void) const
 
 
 inline
-const std::string&
-Control::get_filename_suffix(void) const
-{
-  return _filename_suffix;
-}
-
-
-inline
 void
 Control::clear_filename_suffix(void)
 {
-  _filename_suffix = "";
+  _filename_suffix.clear();
 }
 
 
-
+/*
 inline
 void
 Control::set_filename_suffix(const std::string& suffix)
@@ -366,18 +384,44 @@ Control::set_filename_suffix(const std::string& suffix)
     else if (suffix.size() > 1)
       _filename_suffix = suffix;
 }
-
+*/
 
 
 inline
 void
 Control::append_to_filename_suffix(const std::string& suffix)
 {
-  if (suffix[0] != '_')
-    _filename_suffix += "_" + suffix;
-  else
-    _filename_suffix += suffix;
+  if (suffix.size() != 0)
+    _filename_suffix.push_back(suffix);
 }
+
+
+inline
+void
+Control::prepend_to_filename_suffix(const std::string& suffix)
+{
+  if (suffix.size() != 0)
+    _filename_suffix.push_front(suffix);
+}
+
+
+inline
+void
+Control::drop_last_filename_suffix(void)
+{
+  if (_filename_suffix.size() != 0)
+    _filename_suffix.pop_back();
+}
+
+
+inline
+void
+Control::drop_first_filename_suffix(void)
+{
+  if (_filename_suffix.size() != 0)
+    _filename_suffix.pop_front();
+}
+
 
 
 inline

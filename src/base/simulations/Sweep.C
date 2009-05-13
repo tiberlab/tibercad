@@ -183,10 +183,6 @@ Sweep::do_solve(void)
 
   parse_options();
 
-  // the current filename suffix
-  string suffix = get_control().get_filename_suffix();
-  string outdir = get_control().get_output_dir();
-
   int num_sim = _simulations.size();
 
   assert(num_sim > 0);
@@ -253,7 +249,6 @@ Sweep::do_solve(void)
   }
   catch (SolveFailedException& e)
   {
-    get_control().set_filename_suffix(suffix);
     if (prepare_plot_files(plotfiles))
       plot_data(plotfiles, sweep_data);
 
@@ -276,8 +271,8 @@ Sweep::prepare_plot_files(vector<ofstream*>& plotfiles)
 
   bool do_plotting = false;
 
-  // the current filename suffix
-  string suffix = get_control().get_filename_suffix();
+  // the filename suffix
+  const string& suffix = get_control().get_filename_suffix();
   // the output directory
   string outdir = get_control().get_output_dir();
 
@@ -308,7 +303,7 @@ Sweep::prepare_plot_files(vector<ofstream*>& plotfiles)
       //suff << fixed << _variable;
       suff << _variable;
       string plotfilename(outdir + "/" + get_name() + "_" +
-          _simulations[i]->get_name() + suffix + "_" + suff.str() + ".dat");
+          _simulations[i]->get_name() + suffix + ".dat");
 
       plotfiles[i] = new ofstream(plotfilename.c_str(), ios_base::trunc);
       ofstream& file = *plotfiles[i];
@@ -409,10 +404,6 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
 
   int num_sim = _simulations.size();
 
-  // the current filename suffix
-  string suffix = get_control().get_filename_suffix();
-
-
   // we make a copy of the current solutions
   // we need this in the case of a solver failure to go back
   // to an old successful solution
@@ -463,17 +454,12 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
         Messages::info(os.str());
       }
 
+      // filename suffix
+      ostringstream suffix;
+      suffix << _variable << "_" << value;
+
       try
       {
-
-        // prepare filename suffix
-        {
-          ostringstream s;
-          //s.precision(3);
-          //s << suffix << "_" << _variable << "_" << fixed << value;
-          s << suffix << "_" << _variable << "_" << value;
-          get_control().set_filename_suffix(s.str());
-        }
 
         bool plot_data = false;
         // write results, but only at desired sweep steps
@@ -513,7 +499,11 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
           }
 
           if (plot_data)
+          {
+            get_control().prepend_to_filename_suffix(suffix.str());
             _simulations[j]->plot();
+            get_control().drop_first_filename_suffix();
+          }
 
 
           // remember the current solution
@@ -570,8 +560,6 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
       remember_solution();
 
   }
-
-  get_control().set_filename_suffix(suffix);
 
   // clean up
   for (int j = 0; j < num_sim; j++)
