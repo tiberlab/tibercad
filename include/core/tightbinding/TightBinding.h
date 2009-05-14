@@ -104,16 +104,16 @@ protected:
   //! Build a vector of potential projection over atom orbitals
   void project_potential(const std::string providing_model, const std::string mode);
 
-  //!Vector for atom potential shifts
+  //!Vector for atom-projected potential shifts
   std::vector<double> _pot_shift;
 
   //! minimum potential 
   double _pot_min;
 
-  //!Vector for electron chemical potential
+  //!Vector for atom-projected electron chemical potential
   std::vector<double> _el_chem_pot;
 
-  //!Vector for hole chemical potential
+  //!Vector for atom-projected hole chemical potential
   std::vector<double> _hl_chem_pot;
 
 };

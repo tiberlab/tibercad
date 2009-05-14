@@ -85,6 +85,9 @@ class ETB : public TightBinding
 
   //! tells if the ETB calculation contains SO coupling
   bool is_relativistic(void);
+
+  //! compute atomic charges
+  void compute_atomic_charges(const std::string& particle, std::vector<double>& qmat); 
   
  private:
 

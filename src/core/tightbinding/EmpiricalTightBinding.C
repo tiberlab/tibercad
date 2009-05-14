@@ -178,6 +178,11 @@ void ETB::reinit(void){
     std::cerr << "printing structure " << upt_filename << std::endl;
 
     _atomistic_structure->print_structure(upt_filename);
+
+    std::cout << "Number of atoms: " <<_atomistic_structure->get_N_atoms() << std::endl;
+
+    std::cout << "Numb. without H: " <<_atomistic_structure->get_N_without_H() 
+	      << std::endl;
   }
 
   upt_filename.copy(_upt_options.upt_filename, upt_filename.size() );
@@ -209,9 +214,7 @@ void ETB::reinit(void){
 
   std::cout << "(TC) init uptight done" << std::endl;
 
-  _ion_num_orbitals.resize(_atomistic_structure->get_structure_atoms().size(), 0);
-
-  std::cout << _atomistic_structure->get_structure_atoms().size() << std::endl;
+  _ion_num_orbitals.resize(_atomistic_structure->get_N_atoms(), 0);
 
   inst->get_ion_numorbitals(_ion_num_orbitals);
 
@@ -559,15 +562,16 @@ ETB::calculate_fermi_averaged(unsigned int i)
 {
 
   double av, sum, atom_sum;
-  unsigned int k, j, k_at;
+  unsigned int k, j, k_at, N_atoms_wo_H;
 
   sum = 0.0; k = 0; k_at = 0;
 
+  N_atoms_wo_H = _atomistic_structure->get_N_without_H();
 
   if(_solution[i].particle == "el" || _solution[i].particle == "electron")
   {
 
-    for (j = 0; j < _el_chem_pot.size(); j++)
+    for (j = 0; j < N_atoms_wo_H; j++)
     {
       atom_sum = 0.0;
       for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
@@ -584,7 +588,7 @@ ETB::calculate_fermi_averaged(unsigned int i)
   if(_solution[i].particle == "hl" || _solution[i].particle == "hole")
   {
 
-    for (j = 0; j < _hl_chem_pot.size(); j++)
+    for (j = 0; j < N_atoms_wo_H; j++)
     {
       atom_sum = 0.0;
       for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
@@ -613,6 +617,47 @@ ETB::read_kpoints(void)
 
 }
 
+void
+ETB::compute_atomic_charges(const std::string& particle, std::vector<double>& qmat)
+{
+  double atom_sum;
+  unsigned int i, k, j, k_at, N_atoms_wo_H;
+  unsigned int n = _solution.size();
+  
+  k = 0; k_at = 0;
+
+  N_atoms_wo_H = _atomistic_structure->get_N_without_H();
+
+  if(qmat.size() < N_atoms_wo_H) 
+    throw InitFailedException("(INT. ERROR) array mismatch in compute_atomic_charges");
+  
+  for(j=0; j<N_atoms_wo_H; j++){ qmat[j] = 0.0; }
+
+  for(i = 0; i < n; i++)
+  {  
+
+    if(_solution[i].particle == particle)
+    {
+
+      for (j = 0; j < N_atoms_wo_H; j++)
+      {
+	atom_sum = 0.0;
+	for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
+	{
+	    atom_sum += std::norm(_solution[i].eigen_vector[k]);
+	}
+
+	k_at = k;
+	double pop = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
+		       _solution[i].temperature);
+
+	qmat[j] += pop * atom_sum;
+      }
+
+    }
+  }
+
+}
 
 
 #endif

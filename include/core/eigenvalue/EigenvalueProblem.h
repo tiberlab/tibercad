@@ -61,13 +61,13 @@ class EigenvalueProblem : public SimulationInterface
   protected:
 
     std::vector<eigen_problem_solution> _solution;
-   
-
-  private:
 
     double Fermi(double Energy, double Fermi_energy, double Temperature) const;
 
     double Bose(double Energy, double elec_chem, double Temperature) const;
+
+  private:
+
 };
 
 
