@@ -26,7 +26,8 @@ _prim_vec(0),
 _conv_vect(0),
 _conv_prim(0),
 _rotation(0),
-_local_origin(0)
+_local_origin(0),
+_period(0)
 {
 
 }
@@ -771,6 +772,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   if (_dim == 3) {lmat(1,1) = (n1 + 1) * 10; lmat(2,2) = (n2 + 1) * 10; lmat(3,3) = (n3 +1) * 10;}
 
   _period = _conv_vect * lmat;
+  std::cout << "in make_conv_cell period is " << _period << std::endl;
 
   //Define vectors with same direction of conventional cell vectors, but with size specifed by l1,l2,l3
   supercell_vect(1,1) = _conv_vect(1,1) * (l1 / conv_l1); supercell_vect(2,1) = _conv_vect(2,1) * (l1 / conv_l1); supercell_vect(3,1) = _conv_vect(3,1) * (l1 / conv_l1);
@@ -1321,7 +1323,7 @@ void  AtomisticGenerator::bond_map_gen(std::vector<Atom> &basis){
       delete _bondmapobject;
       _bondmapobject = new BondMap;
     }
-
+std::cout << "calling bond map with period " << _period << std::endl;
   _bondmapobject->do_init(basis, _period);
   std::cout << "Solving bond map " << std::endl;
   _bondmapobject->do_solve(basis);

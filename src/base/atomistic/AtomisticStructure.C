@@ -168,9 +168,15 @@ std::cout << "scale factor is " << _scale << std::endl;
 
     }
 
-  //TODO: is it the right place for associate_elements????
-  associate_elements();
+  //Refresh some information after structure building
+  N_atoms = _structure_atoms.size();
 
+
+  //TODO: is it the right place for associate_elements???
+  Messages::debug("Building atom - element associations");
+    associate_elements();
+  build_elem_to_atoms();
+  Messages::debug("done");
 }
 
 
@@ -835,5 +841,38 @@ AtomisticStructure::get_type_index(const std::string& type)
   }
 
   return result;
+
+}
+
+//TODO: not allocating arrays could be too slow, find a way to
+//implement some memory reservation
+void
+AtomisticStructure::build_elem_to_atoms(void)
+{
+  //Get information from Atom objects
+  for (unsigned int i = 0; i < _structure_atoms.size(); i++)
+    {
+     if (_structure_atoms[i].get_elem() != NULL)
+       {
+         _elem_to_atoms[_structure_atoms[i].get_elem()].push_back(i);
+       }
+    }
+}
+
+
+unsigned int
+AtomisticStructure::get_N_without_H(void)
+{
+  unsigned int N = 0;
+
+  for (unsigned int i = 0; i < _structure_atoms.size(); i++)
+    {
+      if (_structure_atoms[i].get_specie() != "H")
+        {
+         N++;
+        }
+    }
+
+  return N;
 
 }
