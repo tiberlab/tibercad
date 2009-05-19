@@ -107,8 +107,7 @@ ETB::do_init(void){
 
   std::cerr << "(TC) Empirical TB Initialisation..." << std::endl;
 
-  // make sure an atomistic structure do exist
-  get_atomistic_structure();
+  TightBinding::do_init();
 
   if(_atomistic_structure==NULL)
     throw InitFailedException("ETB: atomistic structure not created");
@@ -181,7 +180,7 @@ void ETB::reinit(void){
 
     std::cout << "Number of atoms: " <<_atomistic_structure->get_N_atoms() << std::endl;
 
-    std::cout << "Numb. without H: " <<_atomistic_structure->get_N_without_H() 
+    std::cout << "Numb. without H: " <<_atomistic_structure->get_N_without_H()
 	      << std::endl;
   }
 
@@ -349,6 +348,20 @@ void ETB::do_solve(void){
 
   write_states();
 
+  //Calculate electron and holes charge density on atoms (hydrogen not included)
+  std::cerr << "Calculating quantum charge " << std::endl;
+  unsigned int N_without_H = _atomistic_structure->get_N_without_H();
+  std::cerr << "N_without_H " << N_without_H << std::endl;
+
+  _el_atomic_charges.resize(N_without_H);
+  std::cerr << "1 " << std::endl;
+  _hl_atomic_charges.resize(N_without_H);
+  std::cerr << "2 " << std::endl;
+
+  compute_atomic_charges("el", _el_atomic_charges);
+  compute_atomic_charges("hl", _hl_atomic_charges);
+  std::cerr << "done " << std::endl;
+
   delete eigvals;
   delete eigvects_re;
   delete eigvects_im;
@@ -432,6 +445,10 @@ void ETB::solve_for_particle(const std::string& particle)
 
 //-------------------------------------------------------------------------
 void ETB::do_plot(void){
+
+  std::cout << "tightbinding do_plot()" << std::endl;
+  TightBinding::do_plot();
+  std::cout << "tightbinding do_plot()" << std::endl;
 
 #ifdef DEBUG
   std::cout << "(TC) Calling ETB->do_plot() " << std::endl;
@@ -623,22 +640,20 @@ ETB::compute_atomic_charges(const std::string& particle, std::vector<double>& qm
   double atom_sum;
   unsigned int i, k, j, k_at, N_atoms_wo_H;
   unsigned int n = _solution.size();
-  
+
   k = 0; k_at = 0;
 
   N_atoms_wo_H = _atomistic_structure->get_N_without_H();
 
-  if(qmat.size() < N_atoms_wo_H) 
+  if(qmat.size() < N_atoms_wo_H)
     throw InitFailedException("(INT. ERROR) array mismatch in compute_atomic_charges");
-  
-  for(j=0; j<N_atoms_wo_H; j++){ qmat[j] = 0.0; }
 
+  for(j=0; j<N_atoms_wo_H; j++){qmat[j] = 0.0; }
   for(i = 0; i < n; i++)
-  {  
-
+  {
     if(_solution[i].particle == particle)
     {
-
+      k = 0; k_at = 0;
       for (j = 0; j < N_atoms_wo_H; j++)
       {
 	atom_sum = 0.0;
@@ -648,14 +663,188 @@ ETB::compute_atomic_charges(const std::string& particle, std::vector<double>& qm
 	}
 
 	k_at = k;
-	double pop = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
+
+	double pop = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot,
 		       _solution[i].temperature);
+
+	if ( (_solution[i].particle == "hl") || (_solution[i].particle == "hole") )
+	  {
+	    pop = 1 - pop;
+	  }
 
 	qmat[j] += pop * atom_sum;
       }
 
     }
   }
+
+}
+
+
+ID
+ETB::convert_variable_name_to_id(const std:: string& variable_name) const
+{
+
+  ID id = INVALID_ID;
+
+
+  if (variable_name == "ElQuantumDensity" )
+    id  = EL_CH;
+  if (variable_name == "HlQuantumDensity")
+    id = HL_CH;
+
+
+  return id;
+}
+
+
+void
+ETB::get_solution_secure(const Elem* elem,
+    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
+{
+
+  std::vector<Point> points(elem->n_nodes());
+
+  for (unsigned n = 0 ; n< elem->n_nodes(); ++n)
+    {
+      points[n] = elem->point(n);
+    }
+
+  get_solution_secure(elem,points,ids,values);
+
+}
+
+
+void
+ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
+    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
+{
+  unsigned int np = p.size();
+  values.resize(np);
+
+  if (ids.count(EL_CH))
+    {
+      double ch = 0.0;
+      for (unsigned int i = 0; i < _atomistic_structure->get_elem_to_atoms()[elem].size(); i++)
+        {
+          ch = ch + _el_atomic_charges[_atomistic_structure->get_elem_to_atoms()[elem][i]];
+        }
+      for (unsigned int n = 0; n < p.size(); n++)
+        {
+          if (_atomistic_structure->get_elem_to_atoms()[elem].size() == 0) {values[n][EL_CH] = 0.0;}
+          else
+            {
+          values[n][EL_CH] = -(ch / _atomistic_structure->get_elem_to_atoms()[elem].size());
+            }
+            }
+    }
+
+  if (ids.count(HL_CH))
+    {
+      double ch = 0.0;
+      for (unsigned int i = 0; i < _atomistic_structure->get_elem_to_atoms()[elem].size(); i++)
+        {
+          ch = ch + _hl_atomic_charges[_atomistic_structure->get_elem_to_atoms()[elem][i]];
+        }
+      for (unsigned int n = 0; n < p.size(); n++)
+        {
+          if (_atomistic_structure->get_elem_to_atoms()[elem].size() == 0) {values[n][EL_CH] = 0.0;}
+                   else
+                     {
+          values[n][HL_CH] = ch / _atomistic_structure->get_elem_to_atoms()[elem].size();
+                     }
+        }
+    }
+}
+
+
+
+
+void
+ETB::build_elemental_results(const std::set<std::string>& variables,
+    std::vector<double>& results, std::vector<std::string>& legend)
+{
+
+std::cerr << "building elemental results " << std::endl;
+std::set<std::string>::iterator mit;
+for (mit=variables.begin() ; mit != variables.end(); mit++)
+  {
+    std::cout << "variable is " << *mit << std::endl;
+  }
+  // we only do something if we are on processor 0
+  // TODO parallelize
+  if (libMesh::processor_id() != 0)
+    return;
+
+
+  // if there is no mesh we can return immediately
+  if (_mesh == NULL)
+    return;
+
+
+
+  unsigned int n_vars = 0;
+  const unsigned int nn  = _mesh->n_active_elem();
+  int el_ch = -1;
+  int hl_ch = -1;
+
+  if (variables.count("ElQuantumDensity"))
+    {
+      legend.resize( n_vars + 1 );
+      legend[n_vars] = "ElQuantumDensity";
+      el_ch = n_vars;
+      n_vars++;
+    }
+
+  if (variables.count("HlQuantumDensity"))
+      {
+        legend.resize( n_vars + 1 );
+        legend[n_vars] = "HlQuantumDensity";
+        hl_ch = n_vars;
+        n_vars++;
+      }
+
+  results.resize(nn * n_vars,0.0);
+
+  MeshBase::const_element_iterator it =  _mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end =     _mesh->active_local_elements_end();
+
+
+  unsigned int elem_number = 0;
+  for ( ; it != end; ++it)
+    {
+
+      const Elem* elem = *it;
+
+      unsigned int id = n_vars * elem_number;
+
+      std::vector<std::map<ID, double> > values;
+
+      std::set<ID> ids;
+      ids.insert(EL_CH);
+      ids.insert(HL_CH);
+
+      get_solution_secure(elem, ids, values);
+
+      //double charge = values[0][CHARGE];
+
+
+      if (el_ch != -1)
+        {
+          get_solution_secure(elem, ids, values);
+          results[id + el_ch] = values[0][EL_CH];
+        }
+
+      if (hl_ch != -1)
+             {
+               get_solution_secure(elem, ids, values);
+               results[id + hl_ch] = values[0][HL_CH];
+             }
+
+      elem_number++;
+    } //over element
+
+  results.resize(elem_number * n_vars);
 
 }
 

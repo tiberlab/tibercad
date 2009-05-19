@@ -148,10 +148,7 @@ Dftb::do_init(void){
 
   std::cerr << "Dftb Simulation Initialisation" << std::endl;
 
-  _mesh = & ( get_environment().get_device().get_mesh());
-
-  // Getting reference to atomistic structure for calculation
-  get_atomistic_structure();
+  TightBinding::do_init();
 
   // Setting options for DFTB+ calls
   parse_options();

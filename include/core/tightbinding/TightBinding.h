@@ -25,7 +25,9 @@ public:
   enum Variables
   {
     UNKNOWN = 0,
-    CHARGE
+    CHARGE,
+    EL_CH,
+    HL_CH
   };
 
   enum Shell
@@ -107,7 +109,7 @@ protected:
   //!Vector for atom-projected potential shifts
   std::vector<double> _pot_shift;
 
-  //! minimum potential 
+  //! minimum potential
   double _pot_min;
 
   //!Vector for atom-projected electron chemical potential

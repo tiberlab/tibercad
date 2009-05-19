@@ -34,7 +34,13 @@ TightBinding::~TightBinding()
 
 
 void
-TightBinding::do_init(){
+TightBinding::do_init()
+{
+  //Get mesh reference
+  _mesh = & ( get_environment().get_device().get_mesh());
+
+  // Getting reference to atomistic structure for calculation
+    get_atomistic_structure();
 }
 
 
@@ -197,12 +203,12 @@ TightBinding::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
 
   if (ids.count(CHARGE))
     {
-      //std::cout << "p_size is " << p.size() << std::endl;
       for (unsigned int n = 0; n < p.size(); n++)
         {
         values[n][CHARGE] = build_rho(p[n]);
         }
     }
+
 
 }
 
