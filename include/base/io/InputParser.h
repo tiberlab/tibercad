@@ -124,6 +124,12 @@ class InputParser{
   std::map <ID, RegionStructure>& get_interface_map(void);
 
 
+  //!   Gets the general Options of  the  section Device 
+  /*!
+   * Gets a ModelOptions object containing the general Options of  the  section Device.
+   */
+  void get_device_options(ModelOptions& device_opt);
+
 
 
   //!   Gets the map of  atomistic regions. 
@@ -307,7 +313,12 @@ class InputParser{
   /*!
    *   ModelOptions  object for  the  options read in  each  section.
    */
-  ModelOptions temp_options;
+  ModelOptions temp_options;  
+
+  /*!
+   *   ModelOptions  object for  the  options of  Device   section.
+   */
+  ModelOptions _device_options;  
 
 
   //  private  methods
@@ -462,6 +473,13 @@ class InputParser{
    * 
    */
   void read_subblocks(std::string section_name, std::map<std::string, ModelOptions>& options_map);
+
+
+
+  //!  Puts  the contents of the block Options in  Device in  a ModelOptions  object.
+  void set_device_options(ModelOptions& device_opt);
+
+
 
 };
 

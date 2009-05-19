@@ -1421,7 +1421,7 @@ void InputParser::read_device(void)
     {  //  read  Interface  (generic for boundary  conditions, interface  models,  ecc.)
       //  interfaces  will be  put  in  a  separated map  interface_map 
 
-      //     read cluster_name
+      //     read interface_name
       in_stream >>device_block_name;
       //   region_counter++;
       //  cluster_counter++;
@@ -1457,10 +1457,25 @@ void InputParser::read_device(void)
     }// end read Interface
 
 
+    else if (keyword == "Options")
+    {
+
+      // read Options block  for  General Options common  to  ALL  the  device  regions
+      // 
+      temp_options.clear();
+      parse_options(in_stream,temp_options, keyword ,  section_name   );
+
+      set_device_options(temp_options);
+
+
+    }// end read General Options
+
+
+
     else 
     {
       throw InitFailedException("In input file (\'Device\' section): "
-          "keyword \'Region\' or \'Atomistic\'  is  missing! ");
+                                "keyword \'Region\' or \'Atomistic\'  is  missing! ");
     
     }
 
@@ -1632,7 +1647,7 @@ InputParser::parse_model(ifstream& in_stream)
   if  ( model_keyword != model_keyword_string)
   {
     throw InitFailedException("In input file: model keyword missing "
-        "in \'Models\' section");  
+                              "in \'Models\' section");  
 
    
   }
@@ -1648,7 +1663,7 @@ InputParser::parse_model(ifstream& in_stream)
     {
 
       throw InitFailedException("In input file: model keyword missing "
-          "in \'Models\' section");  
+                                "in \'Models\' section");  
    
     }
 
@@ -1724,8 +1739,8 @@ InputParser::parse_model(ifstream& in_stream)
 
       std::ostringstream stm;
       stm << "In input file: unknown keyword \'"
-        << label << "\' in models section, model "
-        << model_name <<  endl;
+          << label << "\' in models section, model "
+          << model_name <<  endl;
       throw InitFailedException(stm.str());
 
     }
@@ -1756,8 +1771,8 @@ InputParser::parse_model(ifstream& in_stream)
 
         std::ostringstream stm;
         stm << "In input file: unknown keyword \'"
-          << label << "\' in models section, model "
-          << model_name <<  endl;
+            << label << "\' in models section, model "
+            << model_name <<  endl;
         throw InitFailedException(stm.str());
 
       }
@@ -1851,8 +1866,8 @@ InputParser::parse_model(ifstream& in_stream)
 
         std::ostringstream stm;
         stm << "In input file: unknown keyword \'"
-          << label << "\' in models section, model "
-          << model_name <<  endl;
+            << label << "\' in models section, model "
+            << model_name <<  endl;
         throw InitFailedException(stm.str());
 
       }
@@ -1879,7 +1894,7 @@ InputParser::parse_model(ifstream& in_stream)
       {
         std::ostringstream stm;
         stm << "In input file: BC regions block missing for model "
-          << model_name <<  endl;
+            << model_name <<  endl;
         throw InitFailedException(stm.str());   
         
       }
@@ -1905,7 +1920,7 @@ InputParser::parse_model(ifstream& in_stream)
         {
           std::ostringstream stm;
           stm << "In input file: missing keyword BC_Region in model "
-            << model_name <<  endl;
+              << model_name <<  endl;
           throw InitFailedException(stm.str());   
         
 
@@ -2052,8 +2067,8 @@ InputParser::parse_model(ifstream& in_stream)
       {
         std::ostringstream stm;
         stm << "In input file: unknown keyword \'" << label
-          << "\' in BC regions block of model "
-          << model_name <<  endl;
+            << "\' in BC regions block of model "
+            << model_name <<  endl;
         throw InitFailedException(stm.str());  
 
         //   cerr << " SYNTAX ERROR in input  file: unknown keyword in $Models section, in   " <<  endl;
@@ -2228,7 +2243,7 @@ InputParser::NEW_parse_model(ifstream& in_stream)
     {
       ostringstream os;
       os << "In input file: unknown keyword \'" << label
-        << "\' in models section!";
+         << "\' in models section!";
       throw InitFailedException(os.str());
     }
 
@@ -2330,7 +2345,7 @@ InputParser::NEW_parse_model(ifstream& in_stream)
       {
         ostringstream os;
         os << "In input file: unknown keyword \'" << label
-          << "\' in models section!";
+           << "\' in models section!";
         throw InitFailedException(os.str());
       }
 
@@ -2365,7 +2380,7 @@ InputParser::NEW_parse_model(ifstream& in_stream)
       {
         ostringstream os;
         os << "In input file: unknown keyword \'" << label
-          << "\' in models section!";
+           << "\' in models section!";
         throw InitFailedException(os.str());
       }
 
@@ -2803,7 +2818,7 @@ void InputParser::read_scale(void)
    
 
       throw InitFailedException("In input file (Scale section): keyword "
-          "\'Lumped\' not implemented! ");
+                                "\'Lumped\' not implemented! ");
 
       // TO  BE  IMPLEMENTED 
 
@@ -2812,7 +2827,7 @@ void InputParser::read_scale(void)
     else 
     {
       throw InitFailedException("In input file (Scale section): keyword "
-          "\'Atomistic\' is missing! ");
+                                "\'Atomistic\' is missing! ");
     
     }
 
@@ -2913,7 +2928,7 @@ InputParser::parse_n_subblocks(ifstream& in_stream, ModelOptions& block_options)
 
 
 void InputParser::read_subblocks(string section_name,
-    map<string, ModelOptions>& options_map)
+                                 map<string, ModelOptions>& options_map)
 
 {
 
@@ -3024,14 +3039,14 @@ void InputParser::read_subblocks(string section_name,
 
 
 void InputParser::get_solver_options_map(
-    map<string, ModelOptions>& options_map)
+                                         map<string, ModelOptions>& options_map)
 {
   read_subblocks("Solver", options_map);
 }
 
 
 void InputParser::get_physics_options_map(
-    map<string, ModelOptions>& options_map )
+                                          map<string, ModelOptions>& options_map )
 {
   read_subblocks("Physics", options_map);
 }
@@ -3082,3 +3097,22 @@ void InputParser::skip_block(ifstream& in_stream)
 
 } //  end  method
 
+
+
+void InputParser:: get_device_options(ModelOptions& device_opt)
+
+{
+
+  device_opt = _device_options;
+
+
+} //  end  method
+
+void InputParser:: set_device_options(ModelOptions& device_opt)
+
+{
+
+  _device_options = device_opt;
+
+
+} //  end  method
