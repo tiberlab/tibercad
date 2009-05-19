@@ -440,16 +440,34 @@ AtomisticStructure::print_structure(const std::string& path)
 {
   std::ofstream file;
 
+
+  // -------------------------------------------
+
+  std::string outdir =get_device()->get_control().get_output_dir();
+  std::string xyz_file_name = path;
+
+  
+  xyz_file_name = outdir + "/" + xyz_file_name;
+
+ 
+  // --------------------------------------------
+
+
+
   //#ifdef DEBUG
   //  std::cerr << "AtomisticStructure::print_structure(path) begin. \n";
   //#endif
-  file.open(path.c_str());
+
 
   // Recognize type of input file and print it properly
   std::string extension = path.substr(path.size()-4);
 
+
   if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
     {
+
+      file.open(xyz_file_name.c_str());
+
       file << _structure_atoms.size() << std::endl << std::endl;
 
       for (unsigned int i = 0; i < _structure_atoms.size(); i++)
@@ -465,6 +483,9 @@ AtomisticStructure::print_structure(const std::string& path)
 
   else if ( (extension.compare(".xyzb") == 0) || (extension.compare(".XYZB") == 0) )
     {
+
+      file.open(path.c_str());
+
       file << _structure_atoms.size() << std::endl << std::endl;
 
             for (unsigned int i = 0; i < _structure_atoms.size(); i++)
@@ -496,6 +517,9 @@ AtomisticStructure::print_structure(const std::string& path)
 
   else if ( (extension.compare(".gen") == 0) || (extension.compare(".GEN") == 0) )
     {
+
+      file.open(path.c_str());
+
       file << _structure_atoms.size();
 
       if (_atomistic_structure_options.is_periodical) file << std::setw(10) << "S \n";
@@ -543,6 +567,8 @@ AtomisticStructure::print_structure(const std::string& path)
   //Gen format modified for uptight input
   else if ( (extension.compare(".upg") == 0) || (extension.compare(".UPG") == 0) )
     {
+
+      file.open(path.c_str());
 
       //I must build a materials map
       std::map<Material*, unsigned int> material_map;
