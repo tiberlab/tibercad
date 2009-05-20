@@ -36,7 +36,7 @@ class EigenvalueProblem : public SimulationInterface
 
     //! get the eigensolution vector
     const std::vector<eigen_problem_solution>& get_eigen_solution() const
-                                                           { return _solution;};
+      {return _solution;};
 
     void get_eigenvalues(const std::string& particle, std::vector<double>& values) const;
 
@@ -50,13 +50,13 @@ class EigenvalueProblem : public SimulationInterface
 							  const std::string& j_particle,
 							  unsigned int j){}; 
     //! get number of states of a given particle type
-    unsigned int get_num_states(const std::string& particle);
+    unsigned int get_num_states(const std::string& particle) const;
 
     /*! Note: for the moment calculate_matrix_element relays on the fact that the first
      *  n_vb states are for valence, then there are all the electron states.
     */
 
-    void write_states(void);
+    void write_states(void) const;
 
   protected:
 
@@ -70,5 +70,10 @@ class EigenvalueProblem : public SimulationInterface
 
 };
 
+//inline 
+//const std::vector<eigen_problem_solution>& EigenvalueProblem::get_eigen_solution() const
+//{ 
+//   return _solution;
+//}
 
 #endif // _EIGENVALUEPROBLEM_H_

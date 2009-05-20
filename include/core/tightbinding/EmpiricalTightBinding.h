@@ -33,6 +33,7 @@ class ETB : public TightBinding
     int poldir;
     std::string potential_sim;
     std::string strain_sim;
+    std::string etb_dataset;
     char* database_path;
     char* work_path;
     char* out_path;
@@ -125,7 +126,9 @@ class ETB : public TightBinding
   //! Add potential shifts
   void add_shifts(void);
 
-
+  //! subroutine used to read band-edges from database
+  void find_band_edges(void);
+  
   //! Structure containing options for DFTB+ tight binding builder
   UptOptions _upt_options;
 

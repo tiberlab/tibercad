@@ -887,6 +887,21 @@ AtomisticGenerator::set_lattice_type(const std::string lattice_name)
 
   }
 
+  else if (_lattice_type.compare("fcc-strained") == 0) {
+
+    prim_vec_dir(1,1) = 0.0; prim_vec_dir(2,1) = 0.5; prim_vec_dir(3,1) = 0.5;
+    prim_vec_dir(1,2) = 0.5; prim_vec_dir(2,2) = 0.0; prim_vec_dir(3,2) = 0.5;
+    prim_vec_dir(1,3) = 0.5; prim_vec_dir(2,3) = 0.5; prim_vec_dir(3,3) = 0.0;
+
+    _prim_vec(2,1) = prim_vec_dir(2,1) * _lattice_constant[1];
+    _prim_vec(3,1) = prim_vec_dir(3,1) * _lattice_constant[2];
+    _prim_vec(1,2) = prim_vec_dir(1,2) * _lattice_constant[0];
+    _prim_vec(3,2) = prim_vec_dir(3,2) * _lattice_constant[2];
+    _prim_vec(1,3) = prim_vec_dir(1,3) * _lattice_constant[0];
+    _prim_vec(2,3) = prim_vec_dir(2,3) * _lattice_constant[1];
+
+  }
+
   else if (_lattice_type.compare("hexagonal") == 0) {
 
     assert(_lattice_constant[0] == _lattice_constant[1]);
@@ -941,6 +956,11 @@ void AtomisticGenerator::set_prim_miller(Tensor2Gen cut_planes)
   }
 
   else if (_lattice_type.compare("fcc") == 0){
+    _prim_miller=inv(prim_miller_basis) * cut_planes / (_lattice_constant[0]);
+    scale_to_int(_prim_miller);
+  }
+
+  else if (_lattice_type.compare("fcc-strained") == 0){
     _prim_miller=inv(prim_miller_basis) * cut_planes / (_lattice_constant[0]);
     scale_to_int(_prim_miller);
   }

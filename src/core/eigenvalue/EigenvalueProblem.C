@@ -23,7 +23,7 @@ void EigenvalueProblem::get_eigenvalues(const std::string& particle,
 
 }
 
-unsigned int EigenvalueProblem::get_num_states(const std::string& particle)
+unsigned int EigenvalueProblem::get_num_states(const std::string& particle) const
 {
   unsigned int num_i_states = 0;
   for(unsigned int i=0; i<_solution.size(); i++)
@@ -115,7 +115,7 @@ double  EigenvalueProblem::Bose(double Energy, double electro_chem_pot, double T
 }
 
 
-void EigenvalueProblem::write_states(void)
+void EigenvalueProblem::write_states(void) const
 {
 
   int num_st=_solution.size();

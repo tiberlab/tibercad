@@ -107,11 +107,14 @@ public:
   //! Add a type to the atom types list
   void add_atom_type(const std::string&);
 
- //! Print structure to file (format depends on extension used)
+  //! Print structure to file (format depends on extension used)
   void print_structure(const std::string& path);
 
   //! A tool for printing atomic charges on output
   void print_structure(const std::string& path, double const* const charges);
+
+  //! Print upg file (etb_dataset may be changed into type options)
+  void print_upg(const std::string& path, const std::string& etb_dataset);
 
   // get the number of atoms in the structure
   int get_N_atoms() const {return N_atoms;}
@@ -144,13 +147,13 @@ public:
   unsigned int** const get_bond_map(void);
 
   //! AtomisticStructureOptions object pointer
-    AtomisticStructureOptions _atomistic_structure_options;
+  AtomisticStructureOptions _atomistic_structure_options;
 
-    //! Get element->atoms map
-    std::map<const Elem*, std::vector<unsigned int> >& get_elem_to_atoms(void);
-
-    //! Get number of non hydrogen atoms
-    unsigned int get_N_without_H(void);
+  //! Get element->atoms map
+  std::map<const Elem*, std::vector<unsigned int> >& get_elem_to_atoms(void);
+  
+  //! Get number of non hydrogen atoms
+  unsigned int get_N_without_H(void);
 
 private:
 

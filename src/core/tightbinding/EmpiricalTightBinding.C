@@ -176,7 +176,7 @@ void ETB::reinit(void){
 
     std::cerr << "printing structure " << upt_filename << std::endl;
 
-    _atomistic_structure->print_structure(upt_filename);
+    _atomistic_structure->print_upg(upt_filename, _upt_options.etb_dataset);
 
     std::cout << "Number of atoms: " <<_atomistic_structure->get_N_atoms() << std::endl;
 
@@ -469,6 +469,8 @@ void ETB::parse_options(void)
   _upg_filename = get_options().get_option("upg_filename", "none");
 
   _upt_options.verbose = get_options().get_option("verbose", 1);
+
+  _upt_options.etb_dataset = get_options().get_option("dataset","");
   _upt_options.max_TB_order = get_options().get_option("max_TB_order", 2);
   std::string sparse_fmt = get_options().get_option("sparse_format", "upper");
   sparse_fmt.copy(_upt_options.sparse_fmt, sparse_fmt.size() );
@@ -680,6 +682,28 @@ ETB::compute_atomic_charges(const std::string& particle, std::vector<double>& qm
 
 }
 
+void ETB::find_band_edges(void)
+{
+  /* 
+  AtomisticStructure* as = _atomistic_structure;
+  std::set<ID> IDs = as->get_IDset();
+  std::map<ID*, std::vector<double> > map_ID_edges;
+
+  for(std::set<ID>::iterator reg = IDs.begin(); reg != IDs.end(); reg++)
+  {
+      Material* mat = as->get_device()->get_material( (*reg) );
+      Database& db = mat->get_database();
+      db.set_section("valenceband");
+      double vb = db.get("E_v","none");
+      db.set_section("bandgap"); 
+      map_ID_edges[reg][0] = vb;
+      map_ID_edges[reg][1] = vb + dg.get("Eg_G","none");
+      db.set_section("");
+      
+      // Must be carefull with alloys!
+  }
+  */
+}
 
 ID
 ETB::convert_variable_name_to_id(const std:: string& variable_name) const

@@ -140,7 +140,7 @@ void OpticsTB::do_solve()
   if (verbose > 0)
   {
  
-    std::cout<<"i-f     Ei       Ef             Px            fi   ff"
+    std::cout<<"i-f      Ei       Ef       |Px|^2       fi    ff"
 	     <<std::endl;
     for (int i = 0; i < n1; i++)
     {
@@ -153,14 +153,14 @@ void OpticsTB::do_solve()
 	std::cout << is << "-" << fs << ": " << std::flush;
 	std::cout << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;      
 
-	std::cout << Px_matrix[i][j] << "   ";
+	std::cout << std::norm(Px_matrix[i][j]) << "   ";
 	std::cout << is_pop[is] << ", " << fs_pop[fs] << std::endl;
 
       }
     }
 
-    std::cout<<"i-f     Ei       Ef             Py            fi   ff"
-	     <<std::endl;
+    std::cout<<"i-f      Ei       Ef       |Py|^2       fi    ff"
+	     <<std::endl; 
     for (int i = 0; i < n1; i++)
     {
       for (int j = 0; j < n2; j++)
@@ -172,13 +172,13 @@ void OpticsTB::do_solve()
 	std::cout << is << "-" << fs << ": " << std::flush;
 	std::cout << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;      
 
-	std::cout << Py_matrix[i][j] << "   ";
+	std::cout << std::norm(Py_matrix[i][j]) << "   ";
 	std::cout << is_pop[is] << ", " << fs_pop[fs] << std::endl;
 
       }
     }
 
-    std::cout<<"i-f     Ei       Ef             Pz            fi   ff"
+    std::cout<<"i-f      Ei       Ef       |Pz|^2       fi    ff"
 	     <<std::endl;
     for (int i = 0; i < n1; i++)
     {
@@ -191,7 +191,7 @@ void OpticsTB::do_solve()
 	std::cout << is << "-" << fs << ": " << std::flush;
 	std::cout << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;      
 
-	std::cout << Pz_matrix[i][j] << "   ";
+	std::cout << std::norm(Pz_matrix[i][j]) << "   ";
 	std::cout << is_pop[is] << ", " << fs_pop[fs] << std::endl;
 
       }
@@ -486,11 +486,6 @@ void OpticsTB::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 void OpticsTB::calculate_P_matrix_elements( )
 {
   
-  // TO DO:
-  // 1. Fill eigenstate container from ETB side...  done
-  // 2. Set ETB computation of P matrix from here   done
-  // 3. Fill P_matrix[][]
-  // 
   ModelOptions options;
   unsigned int n_i =  _initial_eigen_state_numbers.size();
   unsigned int n_f =  _final_eigen_state_numbers.size();

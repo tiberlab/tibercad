@@ -500,7 +500,7 @@ AtomisticStructure::print_structure(const std::string& path)
 
                              file << std::setw(5) << _bondmap->get_bond_map()[i][8];
 
-                             // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                             // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!!!!!!
                              for (unsigned int j = 0; j < _bondmap->get_bond_map()[i][8]; j++)
                                {
                                  file << std::setw(10) << _bondmap->get_bond_map()[i][j] + 1;
@@ -564,8 +564,32 @@ AtomisticStructure::print_structure(const std::string& path)
 
     }
 
+
+
+  else
+    {
+      std::cerr << "File extension does not correspond to any internal format. File not print. \n";
+    }
+
+  file.close();
+
+  //#ifdef DEBUG
+  //  std::cerr << "AtomisticStructure::print_structure(path) end. \n";
+  //#endif
+
+}
+
+void
+AtomisticStructure::print_upg(const std::string& path, const std::string& etb_dataset)
+{
+
+  std::ofstream file;
+
+  // Recognize type of input file and print it properly
+  std::string extension = path.substr(path.size()-4);
+
   //Gen format modified for uptight input
-  else if ( (extension.compare(".upg") == 0) || (extension.compare(".UPG") == 0) )
+  if ( (extension.compare(".upg") == 0) || (extension.compare(".UPG") == 0) )
     {
 
       file.open(path.c_str());
@@ -703,6 +727,7 @@ AtomisticStructure::print_structure(const std::string& path)
 				    << mat->get_options().get_option("x",1.0)
 				    << std::setw(10) << std::setprecision(3)
 				    <<  ( 1.0 - mat->get_options().get_option("x",1.0) );
+
           else  file << std::setw(10) <<  std::setprecision(3) << 1.0 ;
 
           //Mancano da inserire i file con i dati per Uptight
@@ -710,31 +735,27 @@ AtomisticStructure::print_structure(const std::string& path)
           std::string structure = "unknown";
 
 
-          if (mat->is_alloy()) file << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_A() + ".etb"
-				    << std::setw(10) << (dynamic_cast<const Alloy*>(mat))->get_name_B() + ".etb"
+          if (mat->is_alloy()) file << std::setw(10) 
+				    << (dynamic_cast<const Alloy*>(mat))->get_name_A()
+				    << etb_dataset + ".etb"
+				    << std::setw(10) 
+				    << (dynamic_cast<const Alloy*>(mat))->get_name_B()
+	                            << etb_dataset + ".etb"
                                     << "  0.0  0.0";
-          else file << std::setw(10) << mat->get_name() + ".etb" ;
+
+          else file << std::setw(10) << mat->get_name() << etb_dataset + ".etb" ;
 
           file << std::endl;
         }
 
-
+      file.close();
     }
-
   else
     {
       std::cerr << "File extension does not correspond to any internal format. File not print. \n";
     }
 
-  file.close();
-
-  //#ifdef DEBUG
-  //  std::cerr << "AtomisticStructure::print_structure(path) end. \n";
-  //#endif
-
 }
-
-
 
 void
 AtomisticStructure::print_structure(const std::string& path, double const* const charges)
