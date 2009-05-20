@@ -2,6 +2,7 @@
 
 #include "DriftDiffusionProperties.h"
 #include "DriftDiffusion.h"
+#include "ParticleDensity.h"
 #include "RecombinationModelInterface.h"
 #include "MobilityModelInterface.h"
 #include "ThermoelectricPower.h"
@@ -72,6 +73,8 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     _user_defined_polarization(NULL),
     _thermoelectric_power(NULL),
     _is_dielectric(false),
+    _electrons("electron"),
+    _holes("hole"),
     _relax_polariz(1.0)
 {
   _pd = new PointData();
@@ -145,7 +148,6 @@ DriftDiffusionProperties::parse_options(void)
 void
 DriftDiffusionProperties::setup_electrons_and_holes(void)
 {
-  _holes.set_particle_charge(1.0);
   _holes.set_statistics(_statistics);
   _electrons.set_statistics(_statistics);
 

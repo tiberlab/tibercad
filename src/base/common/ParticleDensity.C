@@ -4,6 +4,7 @@
 #include "SimulationInterface.h"
 #include "TiberMath.h"
 #include "Embracing.h"
+#include "Messages.h"
 
 
 using namespace std;
@@ -11,9 +12,9 @@ using namespace std;
 
 
 
-ParticleDensity::ParticleDensity(double particle_charge,
+ParticleDensity::ParticleDensity(const string& name,
     TiberCad::Statistics statistics)
-: _particle_charge(particle_charge),
+: _name(name),
   _statistics(statistics),
   _use_quantum(false),
   _is_quantum(false),
@@ -24,6 +25,12 @@ ParticleDensity::ParticleDensity(double particle_charge,
   _density_derivative(-1.0),
   _embracing(NULL)
 {
+  if (name == "electron")
+    _charge = -1;
+  else if (name == "hole")
+    _charge = 1;
+  //else
+  //  Messages::warning("The particle \'" + name + "\' is not known.");
 }
 
 
@@ -46,6 +53,17 @@ ParticleDensity::add_quantum_density(const std::string& name)
     string density_name("density");
     
     _density_id = qd->get_variable_id(density_name);
+
+    // We let it override with a more specific name
+    if (_name == "electron")
+      density_name = "elDensity";
+    else if (name == "hole")
+      density_name = "hlDensity";
+
+    ID spec_id = qd->get_variable_id(density_name);
+    if (spec_id != INVALID_ID)
+      _density_id = spec_id;
+
 
     if (_density_id == INVALID_ID)
     {

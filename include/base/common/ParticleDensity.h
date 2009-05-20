@@ -38,11 +38,10 @@ class ParticleDensity
 
     //! Constructor
     /*!
-     * \param particle_charge the charge per particle, in units of the
-     * electron charge \it e
+     * \param name the particle name (electron, hole etc.)
      * \param statistics the statistics to be used for classical densities
      */
-    ParticleDensity(double particle_charge = -1.0,
+    ParticleDensity(const std::string& name,
         TiberCad::Statistics statistics = TiberCad::BOLTZMANN);
 
 
@@ -153,8 +152,11 @@ class ParticleDensity
 
   private:
 
+    //! The name of the particle
+    std::string _name;
+
     //! The charge per particle in units of the electron charge
-    double _particle_charge;
+    double _charge;
 
     
     //! The statistics
@@ -270,7 +272,7 @@ inline
 void
 ParticleDensity::set_particle_charge(double particle_charge)
 {
-  _particle_charge = particle_charge;
+  _charge = particle_charge;
 }
 
 
@@ -288,7 +290,7 @@ inline
 double
 ParticleDensity::get_particle_charge(void) const
 {
-  return _particle_charge;
+  return _charge;
 }
 
 
