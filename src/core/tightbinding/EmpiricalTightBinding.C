@@ -688,9 +688,9 @@ ETB::convert_variable_name_to_id(const std:: string& variable_name) const
   ID id = INVALID_ID;
 
 
-  if (variable_name == "ElQuantumDensity" )
+  if (variable_name == "elDensity" )
     id  = EL_CH;
-  if (variable_name == "HlQuantumDensity")
+  if (variable_name == "hlDensity")
     id = HL_CH;
 
 
