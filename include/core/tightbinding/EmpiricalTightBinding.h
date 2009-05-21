@@ -45,6 +45,7 @@ class ETB : public TightBinding
     double hl_chem_pot;
     double el_chem_pot;
     double temperature;
+    double projection_lenght;
   };
 
   class UptSolverOptions
@@ -160,6 +161,8 @@ class ETB : public TightBinding
     std::vector<double> _hl_atomic_charges;
 
  protected:
+
+   double build_rho(std::string particle, const Point& r);
 
   virtual void do_init(void);
 

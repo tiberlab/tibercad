@@ -353,14 +353,25 @@ void ETB::do_solve(void){
   unsigned int N_without_H = _atomistic_structure->get_N_without_H();
   std::cerr << "N_without_H " << N_without_H << std::endl;
 
-  _el_atomic_charges.resize(N_without_H);
+  _el_atomic_charges.resize(N_without_H, 0.0);
   std::cerr << "1 " << std::endl;
-  _hl_atomic_charges.resize(N_without_H);
+  _hl_atomic_charges.resize(N_without_H, 0.0);
   std::cerr << "2 " << std::endl;
 
   compute_atomic_charges("el", _el_atomic_charges);
   compute_atomic_charges("hl", _hl_atomic_charges);
   std::cerr << "done " << std::endl;
+
+  //Print for debug charges on atoms
+  double* charges;
+  charges = new double[_atomistic_structure->get_N_atoms()];
+  for (unsigned int i = 0; i < N_without_H; i++) charges[i] = _el_atomic_charges[i] * 1000;
+  for (unsigned int i = N_without_H + 1; i < _atomistic_structure->get_N_atoms(); i++) charges[i] = 0.0;
+
+  _atomistic_structure->print_structure("charges_el.xyz", charges);
+  for (unsigned int i = 0; i < N_without_H; i++) charges[i] = _hl_atomic_charges[i] * 1000;
+  for (unsigned int i = N_without_H + 1; i < _atomistic_structure->get_N_atoms(); i++) charges[i] = 0.0;
+  _atomistic_structure->print_structure("charges_hl.xyz", charges);
 
   delete eigvals;
   delete eigvects_re;
@@ -519,6 +530,9 @@ void ETB::parse_options(void)
   _upt_solver_options.fast_tol =  get_solver_options().get_option("fast_tolerance", 1e-1);
   _upt_solver_options.long_tol =  get_solver_options().get_option("long_tolerance", 1e-10);
   _upt_solver_options.ort_tol =  get_solver_options().get_option("orthogonality_tolerance", 1e-5);
+
+  //Get projection_lenght for quantum charge projection (nm)
+  _upt_options.projection_lenght = ("projection_lenght", 5.0);
 
   std::cout << "done" << std::endl;
 
@@ -727,12 +741,9 @@ ETB::get_solution_secure(const Elem* elem,
     const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
 {
 
-  std::vector<Point> points(elem->n_nodes());
-
-  for (unsigned n = 0 ; n< elem->n_nodes(); ++n)
-    {
-      points[n] = elem->point(n);
-    }
+  Point p = elem->centroid();
+  std::vector<Point> points(1);
+  points[0] = p;
 
   get_solution_secure(elem,points,ids,values);
 
@@ -748,36 +759,18 @@ ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
 
   if (ids.count(EL_CH))
     {
-      double ch = 0.0;
-      for (unsigned int i = 0; i < _atomistic_structure->get_elem_to_atoms()[elem].size(); i++)
-        {
-          ch = ch + _el_atomic_charges[_atomistic_structure->get_elem_to_atoms()[elem][i]];
-        }
       for (unsigned int n = 0; n < p.size(); n++)
-        {
-          if (_atomistic_structure->get_elem_to_atoms()[elem].size() == 0) {values[n][EL_CH] = 0.0;}
-          else
-            {
-          values[n][EL_CH] = -(ch / _atomistic_structure->get_elem_to_atoms()[elem].size());
-            }
-            }
+              {
+      values[n][EL_CH] = build_rho("el",p[n]);
+              }
     }
 
   if (ids.count(HL_CH))
     {
-      double ch = 0.0;
-      for (unsigned int i = 0; i < _atomistic_structure->get_elem_to_atoms()[elem].size(); i++)
-        {
-          ch = ch + _hl_atomic_charges[_atomistic_structure->get_elem_to_atoms()[elem][i]];
-        }
       for (unsigned int n = 0; n < p.size(); n++)
-        {
-          if (_atomistic_structure->get_elem_to_atoms()[elem].size() == 0) {values[n][EL_CH] = 0.0;}
-                   else
-                     {
-          values[n][HL_CH] = ch / _atomistic_structure->get_elem_to_atoms()[elem].size();
-                     }
-        }
+                    {
+            values[n][HL_CH] = build_rho("hl",p[n]);
+                    }
     }
 }
 
@@ -855,13 +848,13 @@ for (mit=variables.begin() ; mit != variables.end(); mit++)
 
       if (el_ch != -1)
         {
-          get_solution_secure(elem, ids, values);
+          //get_solution_secure(elem, ids, values);
           results[id + el_ch] = values[0][EL_CH];
         }
 
       if (hl_ch != -1)
              {
-               get_solution_secure(elem, ids, values);
+               //get_solution_secure(elem, ids, values);
                results[id + hl_ch] = values[0][HL_CH];
              }
 
@@ -869,6 +862,71 @@ for (mit=variables.begin() ; mit != variables.end(); mit++)
     } //over element
 
   results.resize(elem_number * n_vars);
+
+}
+
+
+double
+ETB::build_rho(std::string particle, const Point& r)
+{
+  double tau = _upt_options.projection_lenght;
+  const double deltar_max = tau * 10; //Maximum cutoff distance in Amstrong
+  double deltar, uhatom;
+  double rho = 0.0;
+  double x1, y1, z1;
+  double x ,y, z;
+  std::vector<double>* charges = NULL;
+
+  if (particle == "el") charges = &(_el_atomic_charges);
+  if (particle == "hl") charges = &(_hl_atomic_charges);
+
+  x = r(0); y = r(1); z = r(2);
+
+  if ((*charges).size() == 0)
+    {
+      std::cerr << "ERROR IN TIGHTBINDING: trying to build charge density "
+      "but no mulliken charges are available" << std::endl;
+      exit(1);
+    }
+  unsigned int N_without_H = _atomistic_structure->get_N_without_H();
+  for (unsigned int iatm = 0; iatm  < N_without_H; iatm++)
+    {
+
+      //std::cout << "rho before loop is " << rho << std::endl;
+      //Getting Hubbard parameter
+      //Up to now densities are mapped on orbital S
+      //uhatom = _u_hub[_atomistic_structure->get_structure_atoms()[iatm].get_specie()][S];
+
+
+      //Convert atom position to mesh units
+      x1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
+      y1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(2) / _atomistic_structure->get_scale();
+      z1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(3) / _atomistic_structure->get_scale();
+
+      //delta_r is already in mesh units in this way
+      deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
+
+      //Also hubbard parameters (and tau) must be scaled in mesh units
+      // (uhatom is in (atomic units)^(-1))
+//      double tau = ( ( uhatom * ( 16.0 / 5.0 ) ) / (Constants::bohr_radius ) ) * get_control().get_device().get_mesh_units();
+
+      if (deltar > deltar_max) continue;
+      else
+        {
+          //std::cout << "uhatom is " << uhatom <<std::endl;
+          rho = rho + ((*charges)[iatm] * tau * tau * tau * exp(-1.0 * tau * deltar));
+
+        }
+    }
+
+  rho = -rho / (8.0 * 3.141592653589793);
+
+  //scale rho to q/cm^3 (carrier density)
+  rho =  rho / (( get_control().get_device().get_mesh_units() * 100.0 ) *
+        ( get_control().get_device().get_mesh_units() * 100.0 ) *
+        ( get_control().get_device().get_mesh_units() * 100.0 ));
+
+  return rho;
 
 }
 
