@@ -52,8 +52,9 @@ Al onsite
 's'    -0.09600D0  1
 'p'     9.41900D0  3
 
-N  offset = -0.22735631D0
-Al offset = -0.22735631D0
+# -0.8 with respect to GaN - 0.227..
+N  offset = -1.02735631D0
+Al offset = -1.02735631D0
 
 
 # strain coefficient for the d orbitals

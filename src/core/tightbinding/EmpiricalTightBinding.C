@@ -756,22 +756,59 @@ ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
 {
   unsigned int np = p.size();
   values.resize(np);
-
+  
+  const std::vector< unsigned int > & elem_to_atom = 
+    _atomistic_structure->get_elem_to_atoms()[elem];
+  
+  // get volume of element and transfom from m to cm
+  double scale = get_environment().get_device().get_mesh_units()*1e2; 
+  double volume = elem->volume()*scale*scale*scale;
+  
   if (ids.count(EL_CH))
+  {
+    double ch = 0.0;
+    for (unsigned int i = 0; i < elem_to_atom.size(); i++)
     {
       for (unsigned int n = 0; n < p.size(); n++)
-              {
-      values[n][EL_CH] = build_rho("el",p[n]);
-              }
+      {
+          values[n][EL_CH] = build_rho("el",p[n]);
+      }
     }
+    for (unsigned int n = 0; n < p.size(); n++)
+    {
+      if (elem_to_atom.size() == 0) 
+      {
+	values[n][EL_CH] = 0.0;
+      }
+      else
+      {
+	values[n][EL_CH] = ch / volume;  
+      }
+    }
+  }
 
   if (ids.count(HL_CH))
+  {
+    double ch = 0.0;
+    for (unsigned int i = 0; i < elem_to_atom.size(); i++)
     {
       for (unsigned int n = 0; n < p.size(); n++)
-                    {
-            values[n][HL_CH] = build_rho("hl",p[n]);
-                    }
+      {
+         values[n][HL_CH] = build_rho("hl",p[n]);
+      }
     }
+    for (unsigned int n = 0; n < p.size(); n++)
+    {
+      if (elem_to_atom.size() == 0) 
+      {
+	values[n][HL_CH] = 0.0;
+      }
+      else
+      {
+	values[n][HL_CH] = ch / volume;
+      }
+    }
+  }
 }
 
 
@@ -806,25 +843,25 @@ for (mit=variables.begin() ; mit != variables.end(); mit++)
   int hl_ch = -1;
 
   if (variables.count("ElQuantumDensity"))
-    {
-      legend.resize( n_vars + 1 );
-      legend[n_vars] = "ElQuantumDensity";
-      el_ch = n_vars;
-      n_vars++;
-    }
+  {
+    legend.resize( n_vars + 1 );
+    legend[n_vars] = "ElQuantumDensity";
+    el_ch = n_vars;
+    n_vars++;
+  }
 
   if (variables.count("HlQuantumDensity"))
-      {
-        legend.resize( n_vars + 1 );
-        legend[n_vars] = "HlQuantumDensity";
-        hl_ch = n_vars;
-        n_vars++;
-      }
+  {
+    legend.resize( n_vars + 1 );
+    legend[n_vars] = "HlQuantumDensity";
+    hl_ch = n_vars;
+    n_vars++;
+  }
 
   results.resize(nn * n_vars,0.0);
 
   MeshBase::const_element_iterator it =  _mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end =     _mesh->active_local_elements_end();
+  const MeshBase::const_element_iterator end =  _mesh->active_local_elements_end();
 
 
   unsigned int elem_number = 0;
@@ -847,16 +884,16 @@ for (mit=variables.begin() ; mit != variables.end(); mit++)
 
 
       if (el_ch != -1)
-        {
+      {
           //get_solution_secure(elem, ids, values);
           results[id + el_ch] = values[0][EL_CH];
-        }
+      }
 
       if (hl_ch != -1)
-             {
-               //get_solution_secure(elem, ids, values);
-               results[id + hl_ch] = values[0][HL_CH];
-             }
+      {
+          //get_solution_secure(elem, ids, values);
+          results[id + hl_ch] = values[0][HL_CH];
+      }
 
       elem_number++;
     } //over element
