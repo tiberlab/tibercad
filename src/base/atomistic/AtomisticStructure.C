@@ -445,7 +445,7 @@ AtomisticStructure::print_structure(const std::string& path)
 
   std::string outdir =get_device()->get_control().get_output_dir();
   std::string file_name = outdir + "/" + path;
- 
+
   // --------------------------------------------
 
 
@@ -731,10 +731,10 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
           std::string structure = "unknown";
 
 
-          if (mat->is_alloy()) file << std::setw(10) 
+          if (mat->is_alloy()) file << std::setw(10)
 				    << (dynamic_cast<const Alloy*>(mat))->get_name_A()
 				    << etb_dataset + ".etb"
-				    << std::setw(10) 
+				    << std::setw(10)
 				    << (dynamic_cast<const Alloy*>(mat))->get_name_B()
 	                            << etb_dataset + ".etb"
                                     << "  0.0  0.0";

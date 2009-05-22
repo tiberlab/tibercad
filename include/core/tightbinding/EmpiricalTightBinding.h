@@ -129,7 +129,7 @@ class ETB : public TightBinding
 
   //! subroutine used to read band-edges from database
   void find_band_edges(void);
-  
+
   //! Structure containing options for DFTB+ tight binding builder
   UptOptions _upt_options;
 
@@ -160,9 +160,12 @@ class ETB : public TightBinding
     //!Hole charge density on atoms
     std::vector<double> _hl_atomic_charges;
 
+    //!Number of atoms (without including hydrogens)
+    unsigned int _N_without_H;
+
  protected:
 
-   double build_rho(std::string particle, const Point& r);
+   double build_rho(const std::string& particle, const Point& r);
 
   virtual void do_init(void);
 

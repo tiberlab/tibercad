@@ -219,6 +219,8 @@ void ETB::reinit(void){
 
   std::cout << "(TC) set orbitals per atom" << std::endl;
 
+  _N_without_H = _atomistic_structure->get_N_without_H();
+
 }
 
 
@@ -303,7 +305,7 @@ void ETB::do_solve(void){
       _solution[i].eigen_vector[j] = complex<double>(*(eigtmp_re+j),*(eigtmp_im+j));
     }
 
-    if(_upt_options.potential_flag)
+    if( (_upt_options.potential_flag) && !(get_options().find_option("hl_qfermi_level")))
     {
       _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
     }
@@ -335,7 +337,7 @@ void ETB::do_solve(void){
 
     }
 
-    if(_upt_options.potential_flag)
+    if( (_upt_options.potential_flag) && !(get_options().find_option("el_qfermi_level")))
     {
       _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
     }
@@ -350,13 +352,9 @@ void ETB::do_solve(void){
 
   //Calculate electron and holes charge density on atoms (hydrogen not included)
   std::cerr << "Calculating quantum charge " << std::endl;
-  unsigned int N_without_H = _atomistic_structure->get_N_without_H();
-  std::cerr << "N_without_H " << N_without_H << std::endl;
 
-  _el_atomic_charges.resize(N_without_H, 0.0);
-  std::cerr << "1 " << std::endl;
-  _hl_atomic_charges.resize(N_without_H, 0.0);
-  std::cerr << "2 " << std::endl;
+  _el_atomic_charges.resize(_N_without_H, 0.0);
+  _hl_atomic_charges.resize(_N_without_H, 0.0);
 
   compute_atomic_charges("el", _el_atomic_charges);
   compute_atomic_charges("hl", _hl_atomic_charges);
@@ -365,12 +363,12 @@ void ETB::do_solve(void){
   //Print for debug charges on atoms
   double* charges;
   charges = new double[_atomistic_structure->get_N_atoms()];
-  for (unsigned int i = 0; i < N_without_H; i++) charges[i] = _el_atomic_charges[i] * 1000;
-  for (unsigned int i = N_without_H + 1; i < _atomistic_structure->get_N_atoms(); i++) charges[i] = 0.0;
+  for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _el_atomic_charges[i] * 1000;
+  for (unsigned int i = _N_without_H + 1; i < _atomistic_structure->get_N_atoms(); i++) charges[i] = 0.0;
 
   _atomistic_structure->print_structure("charges_el.xyz", charges);
-  for (unsigned int i = 0; i < N_without_H; i++) charges[i] = _hl_atomic_charges[i] * 1000;
-  for (unsigned int i = N_without_H + 1; i < _atomistic_structure->get_N_atoms(); i++) charges[i] = 0.0;
+  for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _hl_atomic_charges[i] * 1000;
+  for (unsigned int i = _N_without_H + 1; i < _atomistic_structure->get_N_atoms(); i++) charges[i] = 0.0;
   _atomistic_structure->print_structure("charges_hl.xyz", charges);
 
   delete eigvals;
@@ -707,7 +705,7 @@ ETB::compute_atomic_charges(const std::string& particle, std::vector<double>& qm
 
 void ETB::find_band_edges(void)
 {
-  /* 
+  /*
   AtomisticStructure* as = _atomistic_structure;
   std::set<ID> IDs = as->get_IDset();
   std::map<ID*, std::vector<double> > map_ID_edges;
@@ -718,11 +716,11 @@ void ETB::find_band_edges(void)
       Database& db = mat->get_database();
       db.set_section("valenceband");
       double vb = db.get("E_v","none");
-      db.set_section("bandgap"); 
+      db.set_section("bandgap");
       map_ID_edges[reg][0] = vb;
       map_ID_edges[reg][1] = vb + dg.get("Eg_G","none");
       db.set_section("");
-      
+
       // Must be carefull with alloys!
   }
   */
@@ -765,6 +763,8 @@ ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
 {
   unsigned int np = p.size();
   values.resize(np);
+
+  std::cerr << "call get_sol ";
 
   if (ids.count(EL_CH))
     {
@@ -876,9 +876,9 @@ for (mit=variables.begin() ; mit != variables.end(); mit++)
 
 
 double
-ETB::build_rho(std::string particle, const Point& r)
+ETB::build_rho(const std::string& particle, const Point& r)
 {
-  double tau = _upt_options.projection_lenght;
+  double tau = _upt_options.projection_lenght / _atomistic_structure->get_scale();
   const double deltar_max = tau * 10; //Maximum cutoff distance in Amstrong
   double deltar, uhatom;
   double rho = 0.0;
@@ -897,8 +897,8 @@ ETB::build_rho(std::string particle, const Point& r)
       "but no mulliken charges are available" << std::endl;
       exit(1);
     }
-  unsigned int N_without_H = _atomistic_structure->get_N_without_H();
-  for (unsigned int iatm = 0; iatm  < N_without_H; iatm++)
+
+  for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
     {
 
       //std::cout << "rho before loop is " << rho << std::endl;
@@ -912,8 +912,30 @@ ETB::build_rho(std::string particle, const Point& r)
       y1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(2) / _atomistic_structure->get_scale();
       z1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(3) / _atomistic_structure->get_scale();
 
+      if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
+        {
+          y1 = 0.0; z1 = 0.0;
+        }
+      if (get_environment().get_device().get_mesh().mesh_dimension() == 2)
+              {
+               z1 = 0.0;
+              }
       //delta_r is already in mesh units in this way
       deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
+
+      //Normalize to linear or superficial periodicity
+      double normalize = 1.0;
+      double* period = _atomistic_structure->get_periodicity_vectors();
+      if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
+        {
+          normalize = period[4]*period[8] - period[7]*period[5]
+                    / _atomistic_structure->get_scale() / _atomistic_structure->get_scale();
+        }
+      if (get_environment().get_device().get_mesh().mesh_dimension() == 2)
+              {
+                normalize = period[8] / _atomistic_structure->get_scale();
+              }
+
 
       //Also hubbard parameters (and tau) must be scaled in mesh units
       // (uhatom is in (atomic units)^(-1))
@@ -928,7 +950,7 @@ ETB::build_rho(std::string particle, const Point& r)
         }
     }
 
-  rho = -rho / (8.0 * 3.141592653589793);
+  rho = rho / (8.0 * 3.141592653589793);
 
   //scale rho to q/cm^3 (carrier density)
   rho =  rho / (( get_control().get_device().get_mesh_units() * 100.0 ) *
