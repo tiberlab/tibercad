@@ -42,6 +42,8 @@ class EigenvalueProblem : public SimulationInterface
 
     void get_populations(const std::string& particle, std::vector<double>& values) const;
 
+    double get_population(int i) const;
+
     virtual void assemble(const ModelOptions& options){};
     
     //! computes matrix elements between state i of particle_i and state j of particle_j
@@ -57,6 +59,8 @@ class EigenvalueProblem : public SimulationInterface
     */
 
     void write_states(void) const;
+
+    void write_states(const std::string& filename) const;
 
   protected:
 

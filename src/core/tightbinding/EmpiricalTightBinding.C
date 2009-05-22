@@ -467,6 +467,15 @@ void ETB::do_plot(void){
 
   const std::set<string>& plots = get_control().get_plotvariables();
 
+  std::string outdir =get_environment().get_device()
+                                       .get_control().get_output_dir();
+  
+  std::string file_name = outdir + "/states.dat";
+  //write eigenvalues and population infos 
+  
+  this->write_states(file_name);
+
+  // write states in upg and cub formats 
   inst->write_states();
 
 }
@@ -760,17 +769,17 @@ ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
   if (ids.count(EL_CH))
     {
       for (unsigned int n = 0; n < p.size(); n++)
-              {
-      values[n][EL_CH] = build_rho("el",p[n]);
-              }
+	{
+	  values[n][EL_CH] = build_rho("el",p[n]);
+	}
     }
 
   if (ids.count(HL_CH))
     {
       for (unsigned int n = 0; n < p.size(); n++)
-                    {
-            values[n][HL_CH] = build_rho("hl",p[n]);
-                    }
+	{
+	  values[n][HL_CH] = build_rho("hl",p[n]);
+	}
     }
 }
 

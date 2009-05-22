@@ -1,5 +1,6 @@
 #include "EigenvalueProblem.h"
 #include "Constants.h"
+#include<fstream>
 
 void EigenvalueProblem::get_eigenvalues(const std::string& particle, 
 					std::vector<double>& values) const
@@ -79,8 +80,37 @@ void EigenvalueProblem::get_populations(const std::string& particle,
 
   values.resize(num_st);
  
-} 
+}
+ 
+double  EigenvalueProblem::get_population(int i) const
+{
+  
+  if(_solution[i].statistics == "Fermi")
+  {        
+    double val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
+			 _solution[i].temperature);
+    
+      if(_solution[i].particle == "el" || _solution[i].particle == "electron")
+      {
+	  return val;	  
+      }	
+      
+      if(_solution[i].particle == "hl" || _solution[i].particle == "hole")
+      {	
+	  return 1-val;	  
+      }
+      
+  }
+  else
+  {
+    double val = Bose(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
+		      _solution[i].temperature);
+    
+    return val;	
+      
+  }
 
+}
 
 double  EigenvalueProblem::Fermi(double Energy, double Fermi_energy, double Temperature) const
 {
@@ -120,12 +150,29 @@ void EigenvalueProblem::write_states(void) const
 
   int num_st=_solution.size();
 
+
   for(int i=0; i< num_st; i++)
   {
-    std::cerr<<_solution[i].particle<<" "<<_solution[i].eigen_energy<<" "
+    std::cerr<<i<<" "<<_solution[i].particle<<" "<<_solution[i].eigen_energy<<" "
 	     <<_solution[i].statistics<<" "<<_solution[i].electro_chem_pot
-	     <<std::endl;
+	     <<" "<<get_population(i)<<std::endl;
   }
 
+}
 
+void EigenvalueProblem::write_states(const std::string& filename) const
+{
+
+  int num_st=_solution.size();
+  std::ofstream file;
+  file.open(filename.c_str());
+
+  for(int i=0; i< num_st; i++)
+  {
+    file <<i<<" "<<_solution[i].particle<<" "<<_solution[i].eigen_energy<<" "
+	 <<_solution[i].statistics<<" "<<_solution[i].electro_chem_pot
+	 <<" "<<get_population(i)<<std::endl;
+  }
+
+  file.close();
 }

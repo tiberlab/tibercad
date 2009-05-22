@@ -444,11 +444,7 @@ AtomisticStructure::print_structure(const std::string& path)
   // -------------------------------------------
 
   std::string outdir =get_device()->get_control().get_output_dir();
-  std::string xyz_file_name = path;
-
-  
-  xyz_file_name = outdir + "/" + xyz_file_name;
-
+  std::string file_name = outdir + "/" + path;
  
   // --------------------------------------------
 
@@ -466,7 +462,7 @@ AtomisticStructure::print_structure(const std::string& path)
   if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
     {
 
-      file.open(xyz_file_name.c_str());
+      file.open(file_name.c_str());
 
       file << _structure_atoms.size() << std::endl << std::endl;
 
@@ -484,7 +480,7 @@ AtomisticStructure::print_structure(const std::string& path)
   else if ( (extension.compare(".xyzb") == 0) || (extension.compare(".XYZB") == 0) )
     {
 
-      file.open(path.c_str());
+      file.open(file_name.c_str());
 
       file << _structure_atoms.size() << std::endl << std::endl;
 
@@ -518,7 +514,7 @@ AtomisticStructure::print_structure(const std::string& path)
   else if ( (extension.compare(".gen") == 0) || (extension.compare(".GEN") == 0) )
     {
 
-      file.open(path.c_str());
+      file.open(file_name.c_str());
 
       file << _structure_atoms.size();
 
