@@ -764,8 +764,6 @@ ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
   unsigned int np = p.size();
   values.resize(np);
 
- // std::cerr << "call get_sol ";
-
   if (ids.count(EL_CH))
     {
       for (unsigned int n = 0; n < p.size(); n++)
@@ -850,7 +848,8 @@ for (mit=variables.begin() ; mit != variables.end(); mit++)
       ids.insert(EL_CH);
       ids.insert(HL_CH);
 
-      get_solution_secure(elem, ids, values);
+      //get_solution_secure(elem, ids, values);
+      get_solution(elem, ids, values);
 
       //double charge = values[0][CHARGE];
 
@@ -879,7 +878,7 @@ double
 ETB::build_rho(const std::string& particle, const Point& r)
 {
   double tau = _upt_options.projection_lenght / _atomistic_structure->get_scale();
-  const double deltar_max = tau * 10; //Maximum cutoff distance in Amstrong
+  const double deltar_max = tau * 10; //Maximum cutoff distance
   double deltar, uhatom;
   double rho = 0.0;
   double x1, y1, z1;
@@ -888,6 +887,9 @@ ETB::build_rho(const std::string& particle, const Point& r)
 
   if (particle == "el") charges = &(_el_atomic_charges);
   if (particle == "hl") charges = &(_hl_atomic_charges);
+
+
+  std::cerr << " tau is " << tau << " " ;
 
   x = r(0); y = r(1); z = r(2);
 

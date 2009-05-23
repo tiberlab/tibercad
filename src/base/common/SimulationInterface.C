@@ -1063,6 +1063,8 @@ SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
     values.resize(elem->n_nodes());
     get_solution_secure(elem, ids, values);
   }
+
+  return flag;
 }
 
 

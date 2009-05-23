@@ -51,7 +51,7 @@ ParticleDensity::add_quantum_density(const std::string& name)
 
     // we assume that the density variable has this name:
     string density_name("density");
-    
+
     _density_id = qd->get_variable_id(density_name);
 
     // We let it override with a more specific name
@@ -148,8 +148,12 @@ ParticleDensity::quantum_density(void)
   _density = 0.0;
 
   if (_quantum_density->is_solved())
-    flag = _quantum_density->get_solution(_elem, _p, _density_id, _density);
-
+    {
+      std::vector<double> m(1,0.0);
+    //flag = _quantum_density->get_solution(_elem, _p, _density_id, _density);
+    flag = _quantum_density->get_solution(_elem, _density_id, m);
+    if (flag) _density = m[0];
+    }
   return flag;
 }
 
@@ -160,8 +164,8 @@ ParticleDensity::quantum_density_derivative(void)
   bool flag = false;
   _density_derivative = 0.0;
 
-  if (_quantum_density->is_solved())
-    flag = _quantum_density->get_solution(_elem, _p, _density_id, _density);
+  //if (_quantum_density->is_solved())
+  //  flag = _quantum_density->get_solution(_elem, _p, _density_id, _density);
 
   return flag;
 }
