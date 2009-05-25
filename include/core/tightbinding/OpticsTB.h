@@ -89,6 +89,9 @@ class OpticsTB : public Optics
     //! get states from the associated (tb) model and do some checks
     void get_states(void);
 
+    //! checks that states for optics are really there
+    void check_states(void);
+
 };
 
 

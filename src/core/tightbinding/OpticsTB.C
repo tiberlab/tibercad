@@ -56,7 +56,7 @@ void OpticsTB::parse_options()
     
     _initial_eigen_state_numbers.resize(temp.size());
 
-    for (unsigned int i = 1; i <= temp.size(); i++)
+    for (unsigned int i = 0; i < temp.size(); i++)
     {
       _initial_eigen_state_numbers[i] = temp[i];
     }  
@@ -87,22 +87,25 @@ void OpticsTB::parse_options()
       throw InitFailedException("OpticsTB: initial states are not acceptable\n");
     
     _final_eigen_state_numbers.resize(temp.size());
-    for (unsigned int i = 1; i <= temp.size(); i++)
+    for (unsigned int i = 0; i < temp.size(); i++)
     {
       _final_eigen_state_numbers[i] = temp[i];
     }
     
   }
  
-
 }
 
 
 //===============================================//
 void OpticsTB::do_init()
 {
+
+  std::cout<<"tb optics init"<<std::endl;
   
   this->parse_options();
+
+  std::cout<<"tb optics initialized"<<std::endl;
 
 }
 
@@ -119,6 +122,7 @@ void OpticsTB::do_solve()
   if (verbose > 0)
     std::cout << "calculation of the optical matrix elements..." << std::endl;
 
+  check_states();
 
   this->calculate_P_matrix_elements();   
 
@@ -140,7 +144,7 @@ void OpticsTB::do_solve()
   if (verbose > 0)
   {
  
-    std::cout<<"i-f      Ei       Ef       |Px|^2       fi    ff"
+    std::cout<<"i-f      Ei       Ef    |Px|^2       fi    ff"
 	     <<std::endl;
     for (int i = 0; i < n1; i++)
     {
@@ -159,7 +163,7 @@ void OpticsTB::do_solve()
       }
     }
 
-    std::cout<<"i-f      Ei       Ef       |Py|^2       fi    ff"
+    std::cout<<"i-f      Ei       Ef    |Py|^2       fi    ff"
 	     <<std::endl; 
     for (int i = 0; i < n1; i++)
     {
@@ -178,7 +182,7 @@ void OpticsTB::do_solve()
       }
     }
 
-    std::cout<<"i-f      Ei       Ef       |Pz|^2       fi    ff"
+    std::cout<<"i-f      Ei       Ef    |Pz|^2       fi    ff"
 	     <<std::endl;
     for (int i = 0; i < n1; i++)
     {
@@ -208,34 +212,66 @@ void OpticsTB::get_states()
   //get states from TB model (but these states are not currently used)
   _i_states = _initial_state_model->get_eigen_solution();
   _f_states = _final_state_model->get_eigen_solution();
+}
+
+//========================================================================================
+void OpticsTB::check_states()
+{
+  
+  //get_states();
 
   // Find maximum state index of initial states
-  unsigned int max_i_state_num = 0; 
   unsigned int i; 
-  unsigned int n1 =_initial_eigen_state_numbers.size();
-  for(i=0; i<n1; i++)
+  unsigned int n_i =_initial_eigen_state_numbers.size();
+  unsigned int n_i_st =_initial_state_model->get_num_states(_initial_state_particle); 
+  bool resized = false;
+
+  for(i=0; i<n_i; i++)
   {
-    if(_initial_eigen_state_numbers[i] > max_i_state_num) 
-      max_i_state_num = _initial_eigen_state_numbers[i]; 
+    if(_initial_eigen_state_numbers[i] > n_i_st-1)
+    {
+      _initial_eigen_state_numbers.erase(_initial_eigen_state_numbers.begin()+i);
+      resized = true;
+
+    }
   }
 
-  // check that the state is available
-  if(_initial_state_model->get_num_states(_initial_state_particle) < max_i_state_num)
-      throw InitFailedException("OpticsTB: invalid initial states (not computed)\n");    
+  if(resized)
+  {
+    std::cout<< "initial states redefined: ";
+    for(i=0; i<_initial_eigen_state_numbers.size(); i++)
+    {
+      std::cout<<_initial_eigen_state_numbers[i];
+    }
+    std::cout<<std::endl;
+  }
 
   // Find maximum state index of final states
-  unsigned int max_f_state_num = 0; 
-  n1 = _final_eigen_state_numbers.size();
-  for(i=0; i<n1; i++)
-  {
-    if(_final_eigen_state_numbers[i] > max_f_state_num) 
-      max_f_state_num = _final_eigen_state_numbers[i]; 
-  }
-  
-  // check that the state is really there
-  if(_final_state_model->get_num_states(_final_state_particle) < max_f_state_num)
-      throw InitFailedException("OpticsTB: invalid final states (not computed)\n"); 
+  unsigned int n_f = _final_eigen_state_numbers.size();
+  unsigned int n_f_st =_final_state_model->get_num_states(_final_state_particle); 
+  resized = false;
 
+  for(i=0; i<n_f; i++)
+  {
+    if(_final_eigen_state_numbers[i] > n_f_st-1)
+    {
+      _final_eigen_state_numbers.erase(_final_eigen_state_numbers.begin()+i);
+      resized = true;
+    }
+  }
+
+  if(resized)
+  {
+    std::cout<< "fianal states redefined: ";
+    for(i=0; i<_final_eigen_state_numbers.size(); i++)
+    {
+      std::cout<<_final_eigen_state_numbers[i];
+    }
+    std::cout<<std::endl;
+  }
+
+
+  
 }
 //========================================================================================
 void OpticsTB::do_plot()
