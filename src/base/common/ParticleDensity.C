@@ -57,7 +57,7 @@ ParticleDensity::add_quantum_density(const std::string& name)
     // We let it override with a more specific name
     if (_name == "electron")
       density_name = "elDensity";
-    else if (name == "hole")
+    else if (_name == "hole")
       density_name = "hlDensity";
 
     ID spec_id = qd->get_variable_id(density_name);
