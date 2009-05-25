@@ -118,11 +118,13 @@ class ParticleDensity
      * set_classical_parameters() and set_element_and_point() have to be
      * called before this one.
      *
-     * \attention {
+     * \return teh particle density in cm^-3
+     *
+     * \attention 
      *   The particle density is calculated only once for given parameters.
      *   A call to a method that changes parameters will force a
      *   recalculation at the next call.
-     * }
+     * 
      */
     double get_particle_density(void);
 
@@ -132,11 +134,11 @@ class ParticleDensity
      * set_classical_parameters() and set_element_and_point() have to be
      * called before this one
      *
-     * \attention {
+     * \attention 
      *   The particle density derivative is calculated only once for given
      *   parameters. A call to a method that changes parameters will force a
      *   recalculation at the next call.
-     * }
+     * 
      */
     double get_particle_density_derivative(void);
 
