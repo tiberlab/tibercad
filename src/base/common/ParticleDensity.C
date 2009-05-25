@@ -148,12 +148,8 @@ ParticleDensity::quantum_density(void)
   _density = 0.0;
 
   if (_quantum_density->is_solved())
-    {
-      std::vector<double> m(1,0.0);
-    //flag = _quantum_density->get_solution(_elem, _p, _density_id, _density);
-    flag = _quantum_density->get_solution(_elem, _density_id, m);
-    if (flag) _density = m[0];
-    }
+    flag = _quantum_density->get_solution(_elem, _p, _density_id, _density);
+
   return flag;
 }
 
