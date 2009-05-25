@@ -889,7 +889,7 @@ ETB::build_rho(const std::string& particle, const Point& r)
   if (particle == "hl") charges = &(_hl_atomic_charges);
 
 
-  std::cerr << " tau is " << tau << " " ;
+  //std::cerr << " tau is " << tau << " " ;
 
   x = r(0); y = r(1); z = r(2);
 
