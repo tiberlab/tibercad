@@ -392,6 +392,7 @@ sub compare_results_with_reference {
     print(pad_to_textwidth("    $file", " ")) if verbose();
 
     if (not -e $datafile) {
+      $result = 1;
       print_result(1) if verbose();
       next;
     }

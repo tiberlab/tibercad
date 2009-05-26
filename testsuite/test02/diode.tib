@@ -113,7 +113,7 @@ $Simulation
   meshfile = diode.msh
   dimension = 1
   temperature = 300
-  verbose = 2
+  verbose = 3
   solve = sweep
   resultpath = output
   output_format = grace
