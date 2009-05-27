@@ -1,0 +1,6 @@
+#!/bin/bash
+
+./build_petsc_devel
+./build_slepc
+./build_libmesh_devel
+./build_tibercad

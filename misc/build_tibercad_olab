@@ -17,9 +17,16 @@ cd ../
   --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL} \
   --with-petsc-arch=${ARCH}-complex \
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION} \
+  --disable-pardiso \
   --disable-modules \
+  --enable-dftb \
+  --enable-hetero \
+  --enable-uptight \
   $OTHEROPTS \
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}
+
+
+#  --enable-license-check \
 
 
 make

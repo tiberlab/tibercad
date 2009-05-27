@@ -14,4 +14,5 @@ DEBUG=n
 # architecture
 ARCH=cygwin
 
-OTHEROPTS=--with-boost-regex-lib=/usr/lib/libboost_regex-gcc-mt.a --with-boost-filesystem-lib=/usr/lib/libboost_filesystem-gcc-mt.a 
+OTHEROPTS="--with-boost-regex-lib=/usr/lib/libboost_regex-gcc-mt.a --with-boost-filesystem-lib=/usr/lib/libboost_filesystem-gcc-mt.a"
+OTHEROPTS="${OTHEROPTS} --enable-license-check"
