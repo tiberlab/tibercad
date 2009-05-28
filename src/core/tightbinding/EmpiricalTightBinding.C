@@ -486,7 +486,7 @@ void ETB::parse_options(void)
 
   _upg_filename = get_options().get_option("upg_filename", "none");
 
-  _upt_options.verbose = get_options().get_option("verbose", 1);
+  _upt_options.verbose = get_options().get_option("verbose", verbose());
 
   _upt_options.etb_dataset = get_options().get_option("dataset","");
   _upt_options.max_TB_order = get_options().get_option("max_TB_order", 2);

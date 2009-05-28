@@ -31,16 +31,18 @@ As valence = 4
 
 number of spin-orbit parameters per ion = 1 1
 
-Ga spin orbit
+As spin orbit
 'p' 0.10901D0
 
-As spin orbit
+Ga spin orbit
 'p' 0.04000D0
 
 # onsite ETB
 
 number of orbitals per ion = 3 3 
-	
+
+# Ga = c; As = a
+
 As onsite
 's'    -3.53248D0  1
 'p'     0.27772D0  3

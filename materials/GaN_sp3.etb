@@ -64,7 +64,7 @@ N b_d parameter = 0.000D0
 
 number of pairs = 1
 
-pair 1 = 'N 'Ga' 5 1
+pair 1 = 'N' 'Ga' 5 1
 
 N Ga coupling 1
 'sss'    -2.34275D0   3.65D0 

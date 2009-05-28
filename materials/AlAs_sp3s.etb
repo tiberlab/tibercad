@@ -31,16 +31,18 @@ As valence = 4
 
 number of spin-orbit parameters per ion = 1 1 
 
-Al spin orbit
+As spin orbit
 'p' 0.09715D0
 
-As spin orbit
+Al spin orbit
 'p' 0.01051D0
 
 # onsite ETB
 
 number of orbitals per ion = 3 3  
-	
+
+# Al = c; As = a
+
 As onsite
 's'    -3.21537D0  1
 'p'    -0.09711D0  3
