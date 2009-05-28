@@ -144,6 +144,16 @@ inline void f77_upt_addpotential (f77_int const* handler, f77_int const&
 }
 
 
+extern "C" void upt_erasepotential_ (f77_int const*);
+
+// Corresponding F77 arguments for f77_upt_erasepotential:
+// integer, intent(in) :: handler(DAC_handlerSize)
+inline void f77_upt_erasepotential (f77_int const* handler)
+{
+  upt_erasepotential_ (handler);
+}
+
+
 extern "C" void upt_createhamiltonian_ (f77_int const*);
 
 // Corresponding F77 arguments for f77_upt_createhamiltonian:

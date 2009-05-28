@@ -28,6 +28,7 @@ class ETB : public TightBinding
     bool harrison_flag;
     bool relat_flag;
     bool potential_flag;
+    bool band_shift_flag;
     bool opt_flag;
     bool check_bondmap;
     int poldir;
@@ -41,7 +42,7 @@ class ETB : public TightBinding
     char* gen_outfile;
     char* sparse_fmt;
     double* c_axis;
-    double vb_shift;
+    //double vb_shift;
     double hl_chem_pot;
     double el_chem_pot;
     double temperature;
@@ -125,10 +126,13 @@ class ETB : public TightBinding
   void read_kpoints(void);
 
   //! Add potential shifts
-  void add_shifts(void);
+  void add_pot_shifts(void);
+
+  //! Add band shifts
+  void add_band_shifts(void);
 
   //! subroutine used to read band-edges from database
-  void find_band_edges(void);
+  void get_band_edges(void);
 
   //! Structure containing options for DFTB+ tight binding builder
   UptOptions _upt_options;
@@ -152,20 +156,28 @@ class ETB : public TightBinding
   std::vector<int> _ion_num_orbitals;
 
   /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
-    virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
-
+  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
+  
   //! Electron charge density on atoms
-    std::vector<double> _el_atomic_charges;
+  std::vector<double> _el_atomic_charges;
+  
+  //!Hole charge density on atoms
+  std::vector<double> _hl_atomic_charges;
+  
+  //!Number of atoms (without including hydrogens)
+  unsigned int _N_without_H;
+  
+  std::map<ID, double > _map_ID_Evb;
+  std::map<ID, double > _map_ID_Ecb;  
 
-    //!Hole charge density on atoms
-    std::vector<double> _hl_atomic_charges;
-
-    //!Number of atoms (without including hydrogens)
-    unsigned int _N_without_H;
-
+  //!Vector for atom-projected band shifts
+  std::vector<double> _band_shift;
+  
+  double _vb_shift;
+    
  protected:
 
-   double build_rho(const std::string& particle, const Point& r);
+  double build_rho(const std::string& particle, const Point& r);
 
   virtual void do_init(void);
 

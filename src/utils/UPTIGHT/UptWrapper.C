@@ -77,6 +77,15 @@ void UptWrapper::add_potential(std::vector<double>& potential)
   f77_upt_addpotential(_handler,potential.size(),&potential.front());
 }
 
+
+void UptWrapper::clear_potential(void)
+{
+  
+  f77_upt_erasepotential(_handler);
+}
+
+
+
 //! add the k-points as a vector
 void UptWrapper::add_kpoints(int numkp, double *k_vec)
 {

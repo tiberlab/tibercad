@@ -16,6 +16,10 @@
 #include <fstream>
 #include <sstream>
 #include <utility>
+#include <map>
+#include <algorithm>
+#include "Material.h"
+#include "Alloy.h"
 //#include <complex>
 using namespace std;
 
@@ -33,6 +37,12 @@ ETB::~ETB(void)
 {
   delete inst;
   inst = NULL;
+  _el_atomic_charges.clear();
+  _hl_atomic_charges.clear();
+  _band_shift.clear();
+  _map_ID_Evb.clear();
+  _map_ID_Ecb.clear();
+  _ion_num_orbitals.clear();
 }
 
 ETB::UptOptions::UptOptions(void)
@@ -107,12 +117,14 @@ ETB::do_init(void){
 
   std::cerr << "(TC) Empirical TB Initialisation..." << std::endl;
 
-  TightBinding::do_init();
+  TightBinding::do_init(); //gets mesh and _atomistic_structure
 
   if(_atomistic_structure==NULL)
     throw InitFailedException("ETB: atomistic structure not created");
 
-  parse_options();
+  get_band_edges();  //reads band edges from database
+
+  parse_options();   
 
 #ifdef DEBUG
   print_upt_options();
@@ -215,9 +227,11 @@ void ETB::reinit(void){
 
   _ion_num_orbitals.resize(_atomistic_structure->get_N_atoms(), 0);
 
-  inst->get_ion_numorbitals(_ion_num_orbitals);
 
   std::cout << "(TC) set orbitals per atom" << std::endl;
+
+  inst->get_ion_numorbitals(_ion_num_orbitals);
+
 
   _N_without_H = _atomistic_structure->get_N_without_H();
 
@@ -230,6 +244,19 @@ void ETB::do_solve(void){
   ModelOptions options;
 
   std::cout << "Tight-Binding calculations" << std::endl;
+
+  std::set<ID> IDs = _atomistic_structure->get_IDset();
+  std::set<ID>::iterator reg;
+
+  for (reg = IDs.begin(); reg != IDs.end(); reg++)
+  {
+    std::cerr<< "Valence= "<<_map_ID_Evb[*reg] << std::endl;
+    std::cerr<< "Conduct= "<<_map_ID_Ecb[*reg] << std::endl;   
+  }
+
+  std::cerr << "Vb Max= " << _vb_shift << std::endl;  
+
+  print_upt_options();
 
   if (_init) reinit();
 
@@ -273,6 +300,8 @@ void ETB::do_solve(void){
   std::cout << "(TC) Copy solutions into _solutions" << std::endl;
 #endif
 
+  std::cerr<<"Pot min= "<<_pot_min<<std::endl;
+
   int hdim = inst->get_H_dim();
   int num_vb = _upt_solver_options.n_vb;
   int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
@@ -290,7 +319,7 @@ void ETB::do_solve(void){
   {
     _solution[i].particle = "hl";
     _solution[i].statistics = "Fermi";
-    _solution[i].eigen_energy = eigvals[i] + _upt_options.vb_shift - _pot_min;
+    _solution[i].eigen_energy = eigvals[i] + _vb_shift - _pot_min;
     _solution[i].eigen_vector.resize(hdim);
     _solution[i].temperature = _upt_options.temperature;
 
@@ -323,7 +352,7 @@ void ETB::do_solve(void){
   {
     _solution[i].particle = "el";
     _solution[i].statistics = "Fermi";
-    _solution[i].eigen_energy = eigvals[i] + _upt_options.vb_shift - _pot_min;
+    _solution[i].eigen_energy = eigvals[i] + _vb_shift - _pot_min;
     _solution[i].eigen_vector.resize(hdim);
     _solution[i].temperature = _upt_options.temperature;
 
@@ -348,6 +377,7 @@ void ETB::do_solve(void){
 
   }
 
+  // write state infos on screen.
   write_states();
 
   //Calculate electron and holes charge density on atoms (hydrogen not included)
@@ -390,13 +420,20 @@ void ETB::assemble(const ModelOptions& options)
   }
   else
   {
+    inst->clear_potential();
+
+    if(_upt_options.band_shift_flag)
+    {
+      std::cerr<< "ETB: including band shifts" <<std::endl;
+      add_band_shifts();
+    }
+
     if(_upt_options.potential_flag)
     {
       std::cerr<< "ETB: passing potential" <<std::endl;
-      add_shifts();
+      add_pot_shifts();
     }
     inst->compute_H();
-
 
   }
 
@@ -496,8 +533,6 @@ void ETB::parse_options(void)
   _upt_options.check_bondmap = get_options().get_option("check_bondmap", false);
   _upt_options.harrison_flag = get_options().get_option("Harrison_scaling", true);
   _upt_options.relat_flag = get_options().get_option("relativistic", false);
-  // da togliere e leggere dal database: shift della banda di valenza (che e` 0)
-  _upt_options.vb_shift = get_options().get_option("vb_shift", 0.0);
 
   _upt_options.temperature = get_options().get_option("temperature",
 						      SimulationOptions::temperature );
@@ -532,8 +567,44 @@ void ETB::parse_options(void)
   _upt_solver_options.min_iter =  get_solver_options().get_option("min_iter", 2);
   _upt_solver_options.long_iter =  get_solver_options().get_option("long_iter", 30);
   _upt_solver_options.max_iter =  get_solver_options().get_option("max_iter", 100000);
-  _upt_solver_options.guess_vb =  get_solver_options().get_option("guess_valence", 0.0);
-  _upt_solver_options.guess_cb =  get_solver_options().get_option("guess_conduction", 0.0);
+
+  //---------------------------------------------------------------------------------------
+  //computes educated guesses for valence and conduction bands edges
+  std::set<ID> IDs = _atomistic_structure->get_IDset();
+  std::set<ID>::iterator reg;
+
+  double vb_max = -1000.0;
+  for (reg = IDs.begin(); reg != IDs.end(); reg++)
+  {
+    if(_map_ID_Evb[*reg] > vb_max) vb_max = _map_ID_Evb[*reg];
+  }
+  double cb_min = 1000.0;
+  for (reg = IDs.begin(); reg != IDs.end(); reg++)
+  {
+    if(_map_ID_Ecb[*reg] < cb_min) cb_min = _map_ID_Ecb[*reg];
+  }
+  
+  // now vb_shift corresponds to maximum valence band edge
+  _vb_shift = vb_max;
+  
+  if(cb_min<vb_max)
+  {
+    std::cerr<<"WARNING: bands overlap; cannot find good guess"<<std::endl;
+  }
+  else
+  {
+    vb_max = 1.0*(cb_min - vb_max)/5.0;
+    cb_min = 4.0*vb_max;    
+  }
+  //---------------------------------------------------------------------------------------
+
+  _upt_options.band_shift_flag = get_options().get_option("add_band_shifts", true);
+  _upt_solver_options.guess_vb = get_solver_options().get_option("guess_valence", vb_max);
+  _upt_solver_options.guess_cb = get_solver_options().get_option("guess_conduction", cb_min);
+
+  // da togliere e leggere dal database: shift della banda di valenza (che e` 0)
+  //_upt_options.vb_shift = get_options().get_option("vb_shift", 0.0);
+
   _upt_solver_options.fast_tol =  get_solver_options().get_option("fast_tolerance", 1e-1);
   _upt_solver_options.long_tol =  get_solver_options().get_option("long_tolerance", 1e-10);
   _upt_solver_options.ort_tol =  get_solver_options().get_option("orthogonality_tolerance", 1e-5);
@@ -560,8 +631,8 @@ ETB::print_upt_options(void)
   std::cout << "harrison scaling: " << _upt_options.harrison_flag << std::endl;
   std::cout << "relativistic: " << _upt_options.relat_flag << std::endl;
   std::cout << "external potential: " << _upt_options.potential_flag << std::endl;
-  std::cout << "optical transitions: " << _upt_options.opt_flag << std::endl;
-  std::cout << "polarization is along: " << _upt_options.poldir << std::endl;
+  //std::cout << "optical transitions: " << _upt_options.opt_flag << std::endl;
+  //std::cout << "polarization is along: " << _upt_options.poldir << std::endl;
   //std::cout << "database path is " << _upt_options.database_path << std::endl;
   //std::cout << "work path is " << _upt_options.work_path << std::endl;
   //std::cout << "upt filename is " << _upt_options.upt_filename << std::endl;
@@ -587,15 +658,34 @@ ETB::print_upt_options(void)
 //-------------------------------------------------------------------------
 
 void
-ETB::add_shifts(void)
+ETB::add_pot_shifts(void)
 {
-  double* shift_pnt = NULL;
-
   project_potential(_upt_options.potential_sim, "point");
 
   inst->add_potential(_pot_shift);
-
 }
+//-------------------------------------------------------------------------
+void
+ETB::add_band_shifts(void)
+{
+  _band_shift.clear();
+  unsigned int N = _atomistic_structure->get_N_atoms();
+  _band_shift.resize(N, 0.0);
+
+  const std::vector< Atom >& atom = _atomistic_structure->get_structure_atoms();
+
+  for (unsigned int i = 0; i < N; i++)
+  {
+    // the sign is inverted because in upt the potential is subtracted
+    _band_shift[i]= - _map_ID_Evb[atom[i].get_region_ID()] + _vb_shift;
+
+    //std::cerr << _band_shift[i] << std::endl;
+  }
+
+  inst->add_potential(_band_shift);
+}
+
+//-------------------------------------------------------------------------
 
 double
 ETB::calculate_fermi_averaged(unsigned int i)
@@ -703,27 +793,79 @@ ETB::compute_atomic_charges(const std::string& particle, std::vector<double>& qm
 
 }
 
-void ETB::find_band_edges(void)
+void ETB::get_band_edges(void)
 {
-  /*
+  
   AtomisticStructure* as = _atomistic_structure;
   std::set<ID> IDs = as->get_IDset();
-  std::map<ID*, std::vector<double> > map_ID_edges;
 
   for(std::set<ID>::iterator reg = IDs.begin(); reg != IDs.end(); reg++)
   {
       Material* mat = as->get_device()->get_material( (*reg) );
-      Database& db = mat->get_database();
-      db.set_section("valenceband");
-      double vb = db.get("E_v","none");
-      db.set_section("bandgap");
-      map_ID_edges[reg][0] = vb;
-      map_ID_edges[reg][1] = vb + dg.get("Eg_G","none");
-      db.set_section("");
 
-      // Must be carefull with alloys!
+      if (mat->is_alloy())
+      {
+	Alloy* alloy = static_cast<const Alloy*>(mat);
+
+	Material* matA = alloy->get_component_A();
+        Material* matB = alloy->get_component_B();
+	double x = alloy->get_molar_fraction();
+
+	std::cerr << "Fraction: " << x<< std::endl; 
+
+	Database& dbA = matA->get_database();
+	dbA.set_section("valenceband");
+	double vbA = dbA.get("E_v",0.0);
+	dbA.set_section("bandgap");
+	double Eg = min( dbA.get("Eg_G",0.0), dbA.get("Eg_X",0.0) );
+	Eg = min( dbA.get("Eg_L",0.0), Eg );
+	double cbA = vbA + Eg;
+
+	std::cerr << "Eg_a: " << Eg << std::endl;
+
+	Database& dbB = matB->get_database();
+	dbB.set_section("valenceband");
+	double vbB = dbB.get("E_v",0.0);
+	dbB.set_section("bandgap");
+	Eg = min( dbB.get("Eg_G",0.0), dbB.get("Eg_X",0.0) );
+	Eg = min( dbB.get("Eg_L",0.0), Eg );	
+	double cbB = vbB + Eg;
+
+	std::cerr << "Eg_b: " << Eg << std::endl;
+
+	std::cerr << "Vb_a: " << vbA << std::endl; 
+	std::cerr << "Vb_b: " << vbB << std::endl; 
+	std::cerr << "Cb_a: " << cbA << std::endl; 
+	std::cerr << "Cb_b: " << cbB << std::endl; 
+
+	_map_ID_Evb[*reg] = x*vbA + (1-x)*vbB;
+	_map_ID_Ecb[*reg] = x*cbA + (1-x)*cbB;
+	
+	dbA.set_section(""); dbB.set_section("");
+      }
+      else
+      {
+	Database& db = mat->get_database();
+	db.set_section("valenceband");
+	double vb = db.get("E_v",0.0);
+
+	_map_ID_Evb[*reg] = vb;
+
+	db.set_section("bandgap");
+	double Eg = min( db.get("Eg_G",0.0), db.get("Eg_X",0.0) );
+	Eg = min( db.get("Eg_L",0.0), Eg );
+
+	std::cerr << "Eg: " << Eg << std::endl;
+	std::cerr << "Vb: " << vb << std::endl; 
+	std::cerr << "Cb: " << vb+Eg << std::endl;
+
+	_map_ID_Ecb[*reg] = vb + Eg; // Gap at 0 K.
+	
+	db.set_section("");
+      }
+
   }
-  */
+  
 }
 
 ID

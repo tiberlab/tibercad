@@ -223,14 +223,17 @@ void OpticsTB::check_states()
   // Find maximum state index of initial states
   unsigned int i; 
   unsigned int n_i =_initial_eigen_state_numbers.size();
+  std::cerr<<"num initial states: "<< n_i<< std::endl;
   unsigned int n_i_st =_initial_state_model->get_num_states(_initial_state_particle); 
+  std::cerr<<"num computed:  "<< n_i_st<< std::endl;
+
   bool resized = false;
 
-  for(i=0; i<n_i; i++)
+  for(i=n_i; i>0; --i)
   {
-    if(_initial_eigen_state_numbers[i] > n_i_st-1)
+    if(_initial_eigen_state_numbers[i-1] > n_i_st-1)
     {
-      _initial_eigen_state_numbers.erase(_initial_eigen_state_numbers.begin()+i);
+      _initial_eigen_state_numbers.pop_back();
       resized = true;
 
     }
@@ -238,36 +241,38 @@ void OpticsTB::check_states()
 
   if(resized)
   {
-    std::cout<< "initial states redefined: ";
     for(i=0; i<_initial_eigen_state_numbers.size(); i++)
     {
-      std::cout<<_initial_eigen_state_numbers[i];
+      std::cerr<<_initial_eigen_state_numbers[i]<<" ";
     }
-    std::cout<<std::endl;
+    std::cerr<<std::endl;
   }
 
   // Find maximum state index of final states
   unsigned int n_f = _final_eigen_state_numbers.size();
+  std::cerr<<"num final states: "<< n_f<< std::endl;
   unsigned int n_f_st =_final_state_model->get_num_states(_final_state_particle); 
+  std::cerr<<"num computed:  "<< n_f_st<< std::endl;
+
   resized = false;
 
-  for(i=0; i<n_f; i++)
+  for(i=n_f; i>0; --i)
   {
-    if(_final_eigen_state_numbers[i] > n_f_st-1)
+    if(_final_eigen_state_numbers[i-1] > n_f_st-1)
     {
-      _final_eigen_state_numbers.erase(_final_eigen_state_numbers.begin()+i);
+      _final_eigen_state_numbers.pop_back();
       resized = true;
     }
   }
 
   if(resized)
   {
-    std::cout<< "fianal states redefined: ";
+    std::cerr<< "final states redefined: ";
     for(i=0; i<_final_eigen_state_numbers.size(); i++)
     {
-      std::cout<<_final_eigen_state_numbers[i];
+      std::cerr<<_final_eigen_state_numbers[i]<<" ";
     }
-    std::cout<<std::endl;
+    std::cerr<<std::endl;
   }
 
 

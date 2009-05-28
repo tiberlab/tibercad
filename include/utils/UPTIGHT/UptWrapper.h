@@ -72,6 +72,7 @@ public:
   //! Must be called after inituptight and before compute_H
   void add_potential(std::vector<double>& potential);
 
+  void clear_potential(void);
 	
   //! Add a list of k-points as a vector (3,numkp)
   void add_kpoints(int numkp, double *k_vec);

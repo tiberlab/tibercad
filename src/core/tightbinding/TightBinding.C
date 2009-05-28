@@ -30,6 +30,11 @@ TightBinding::TightBinding()
 
 TightBinding::~TightBinding()
 {
+  _pot_shift.clear();
+  _el_chem_pot.clear();
+  _hl_chem_pot.clear();
+  _mulliken_netcharges.clear();
+  _u_hub.clear();
 }
 
 
@@ -40,7 +45,7 @@ TightBinding::do_init()
   _mesh = & ( get_environment().get_device().get_mesh());
 
   // Getting reference to atomistic structure for calculation
-    get_atomistic_structure();
+  get_atomistic_structure();
 }
 
 

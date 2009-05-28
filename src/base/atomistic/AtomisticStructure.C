@@ -152,9 +152,9 @@ std::cout << "scale factor is " << _scale << std::endl;
 
       AtomisticGenerator* generate;
 
-      if ( _device->get_mesh().mesh_dimension() == 1 ) generate = dynamic_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, 1 ) );
-      if ( _device->get_mesh().mesh_dimension() == 2 )  generate = dynamic_cast<AtomisticGenerator2D*> ( AtomisticGenerator::create(this, 2 ) );
-      if ( _device->get_mesh().mesh_dimension() == 3 )  generate = dynamic_cast<AtomisticGenerator3D*> ( AtomisticGenerator::create(this, 3 ) );
+      if ( _device->get_mesh().mesh_dimension() == 1 ) generate = static_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, 1 ) );
+      if ( _device->get_mesh().mesh_dimension() == 2 )  generate = static_cast<AtomisticGenerator2D*> ( AtomisticGenerator::create(this, 2 ) );
+      if ( _device->get_mesh().mesh_dimension() == 3 )  generate = static_cast<AtomisticGenerator3D*> ( AtomisticGenerator::create(this, 3 ) );
 
       generate->do_init();
 
@@ -628,16 +628,19 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
           file << std::setw(10)
 	       << material_map[ (_device->get_material(_structure_atoms[i].get_region_ID())) ]
 	       << std::setw(5) << n_specie + 1
-	  << std::setw(20) << std::setprecision(10) << std::fixed  << double(_structure_atoms[i].get_position(1))
-          << std::setw(20) << std::setprecision(10) << std::fixed  << double(_structure_atoms[i].get_position(2))
-          << std::setw(20) << std::setprecision(10) << std::fixed  << double(_structure_atoms[i].get_position(3));
+	       << std::setw(20) << std::setprecision(10)
+	       << std::fixed << double(_structure_atoms[i].get_position(1))
+	       << std::setw(20) << std::setprecision(10)
+	       << std::fixed  << double(_structure_atoms[i].get_position(2))
+	       << std::setw(20) << std::setprecision(10) 
+	       << std::fixed  << double(_structure_atoms[i].get_position(3));
 
           if (_bondmap->get_bond_map() != NULL)
             {
 
               file << std::setw(5) << _bondmap->get_bond_map()[i][8];
 
-              // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+              // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!
               for (unsigned int j = 0; j < _bondmap->get_bond_map()[i][8]; j++)
                 {
                   file << std::setw(10) << _bondmap->get_bond_map()[i][j] + 1;
@@ -713,8 +716,8 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
 
           //Parental material names
-          if (mat->is_alloy()) file << std::setw(8) << (dynamic_cast<const Alloy*>(mat))->get_name_A()
-				    << std::setw(8) << (dynamic_cast<const Alloy*>(mat))->get_name_B();
+          if (mat->is_alloy()) file << std::setw(8) << (static_cast<const Alloy*>(mat))->get_name_A()
+				    << std::setw(8) << (static_cast<const Alloy*>(mat))->get_name_B();
           else file << std::setw(8) << mat->get_name();
 
           //Molar fractions
@@ -732,10 +735,10 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
 
           if (mat->is_alloy()) file << std::setw(10)
-				    << (dynamic_cast<const Alloy*>(mat))->get_name_A()
+				    << (static_cast<const Alloy*>(mat))->get_name_A()
 				    << etb_dataset + ".etb"
 				    << std::setw(10)
-				    << (dynamic_cast<const Alloy*>(mat))->get_name_B()
+				    << (static_cast<const Alloy*>(mat))->get_name_B()
 	                            << etb_dataset + ".etb"
                                     << "  0.0  0.0";
 
