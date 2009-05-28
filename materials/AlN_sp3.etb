@@ -36,7 +36,7 @@ Al spin orbit
 'p' 0.0070D0
 
 N spin orbit
-'p' 0.0000D0
+'p' 0.0035D0
 
 # onsite ETB
 
@@ -52,9 +52,9 @@ Al onsite
 's'    -0.09600D0  1
 'p'     9.41900D0  3
 
-# -0.8 with respect to GaN - 0.227..
-N  offset = -1.02735631D0
-Al offset = -1.02735631D0
+#  used to align vb at 0.0 
+N  offset = -0.22735631D0
+Al offset = -0.22735631D0
 
 
 # strain coefficient for the d orbitals

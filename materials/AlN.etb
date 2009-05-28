@@ -50,9 +50,10 @@ N onsite
 's*'   28.8253D0   1
 'd15'  29.5599D0   3
 'd12'  30.4332D0   2
-#Valence band ofset to GaN is 0.8 eV the rest is to align the valence badn with 0.0 eV before offset
-Al offset =  -0.947385D0
-N offset =   -0.947385D0
+
+#Valence band offset is used to align the valence band at 0.0 eV 
+Al offset =  -0.147385D0
+N offset =   -0.147385D0
 
 # strain coefficient for the d orbitals
 Al b_d parameter = 0.0D0

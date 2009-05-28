@@ -53,8 +53,9 @@ Al onsite
 'p'     4.97139D0  3
 's*'    3.99445D0  1
 
-Al offset = -0.50D0
-As offset = -0.50D0
+# offset is used only to align the valence band-edge at 0.0 
+Al offset = 0.D0
+As offset = 0.D0
 
 
 # strain coefficient for the d orbitals

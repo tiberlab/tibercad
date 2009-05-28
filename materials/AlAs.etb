@@ -48,8 +48,8 @@ As onsite
 's*'   19.5133D0   1
 'd'    13.0570D0   5
 
-Al offset = -0.5D0
-As offset = -0.5D0
+Al offset = 0.D0
+As offset = 0.D0
 
 
 # strain coefficient for the d orbitals
