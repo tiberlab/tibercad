@@ -1,4 +1,4 @@
-// $Id: PotentialInterface.h 875 2008-04-16 15:36:31Z maufder $
+// $Id$
 
 
 #ifndef _POTENTIALINTERFACE_H_

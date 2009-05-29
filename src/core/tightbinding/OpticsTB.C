@@ -1,4 +1,4 @@
-// $Id: OpticsTB.C 1313 2009-03-04 05:11:04Z alex $
+// $Id$
 
 #include "OpticsTB.h"
 #include "EigenvalueProblem.h"

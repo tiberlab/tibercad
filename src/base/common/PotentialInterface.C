@@ -1,4 +1,4 @@
-// $Id: PotentialInterface.C 875 2008-04-16 15:36:31Z maufder $
+// $Id$
 
 #include "PotentialInterface.h"
 #include "SimulationInterface.h"
