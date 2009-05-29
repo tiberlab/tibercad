@@ -49,7 +49,7 @@ SemiconductorModel::do_init(void)
 
   const ModelOptions& opt = get_options();
 
-  _recompute_band_parameters = get_parameter("recompute_band_parameters",
+  _recompute_band_parameters = get_option("recompute_band_parameters",
       _recompute_band_parameters);
 
   PhysicalModelInterface::destroy(_bulk_model);
@@ -118,10 +118,10 @@ SemiconductorModel::prepare_element_data(void)
     {
       const ElementData& elem_data = it->second;
 
-      get_conduction_band().band_edge = elem_data.Ec; 
-      get_conduction_band().effective_mass = elem_data.mc; 
-      get_valence_band().band_edge = elem_data.Ev; 
-      get_valence_band().effective_mass = elem_data.mv; 
+      get_conduction_band().band_edge = elem_data.Ec;
+      get_conduction_band().effective_mass = elem_data.mc;
+      get_valence_band().band_edge = elem_data.Ev;
+      get_valence_band().effective_mass = elem_data.mv;
 
       equilibrium_fermi_level = elem_data.Ef0;
       intrinsic_density = elem_data.ni;
@@ -143,7 +143,7 @@ SemiconductorModel::prepare_element_data(void)
 
 //
 // Very crude implementation at the moment
-// 
+//
 void
 SemiconductorModel::extract_band_properties(void)
 {
@@ -165,17 +165,17 @@ SemiconductorModel::extract_band_properties(void)
   get_conduction_band().band_edge = cbs[id].energy;
   get_conduction_band().effective_mass = cbs[id].mass_DOS
     * std::pow(cbs[id].degeneracy, 2.0 / 3.0);
-  
+
   // treat valence band
   const std::vector<DDsemiconductor::band_extremum>& vbs =
     _bulk_model->get_valence_band_energy_mass();
-  
+
   get_valence_band().band_edges.resize(vbs.size());
 
   // get maximum
   id = 0;
   get_valence_band().band_edges[0] = vbs[0].energy;
-  
+
   //double kT = SimulationOptions::T * Constants::k_B;
   double kT = get_lattice_temperature();
   double delta_max = 4.0 * kT;
@@ -186,7 +186,7 @@ SemiconductorModel::extract_band_properties(void)
       id = i;
   }
   get_valence_band().band_edge = vbs[id].energy;
-  
+
   double tmp = 0;
   // include other bands
   for (int i = 0; i < vbs.size(); i++)
@@ -201,7 +201,7 @@ SemiconductorModel::extract_band_properties(void)
   get_valence_band().effective_mass = std::pow(tmp, 2.0 / 3.0);
   //cerr << "DOS mass = " << get_valence_band().effective_mass  << "\n***\n";
 
-  
+
 }
 
 

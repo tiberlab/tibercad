@@ -9,7 +9,7 @@ ZbPiezoelectricity::ZbPiezoelectricity() : Piezoelectricity()
   e14 = 0;
 
   e14_bow = 0;
-} 
+}
 
 //---------------------------------------------------------------//
 
@@ -54,9 +54,9 @@ ZbPiezoelectricity::read_database_alloy(void)
 
 void ZbPiezoelectricity::do_init(void)
 {
-  
-   e14 = get_parameter("e14", e14);
- 
+
+   get_parameter("e14", e14);
+
 }
 
 //---------------------------------------------------------------//
@@ -75,7 +75,7 @@ void ZbPiezoelectricity::do_init_alloy(const PhysicalModelInterface *comp_A, con
 
    const ZbPiezoelectricity* B = dynamic_cast<const ZbPiezoelectricity*>(comp_B);
 
-   e14_bow = get_parameter("bow_e14", e14_bow);
+   get_parameter("bow_e14", e14_bow);
 
    e14 = alloy(A->e14, B->e14, xa, e14_bow);
 
@@ -101,6 +101,6 @@ void  ZbPiezoelectricity::calculate_product_by_vector(const Tensor1& f, Tensor2S
   r = 0;
   r(3,2) = f(1) * e14;
   r(3,1) = f(2) * e14;
-  r(2,1) = f(3) * e14; 
+  r(2,1) = f(3) * e14;
 }
 

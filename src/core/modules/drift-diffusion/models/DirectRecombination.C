@@ -20,7 +20,7 @@ DirectRecombination::read_database(void)
   db.set_section("recombination/direct");
 
   C_ = db.get("C", C_);
-  
+
 }
 
 
@@ -28,7 +28,7 @@ DirectRecombination::read_database(void)
 void
 DirectRecombination::do_init(void)
 {
-  C_ = get_parameter("C", C_);
+  get_parameter("C", C_);
 }
 
 
@@ -38,7 +38,7 @@ DirectRecombination::get_net_recombination_rates(double& recomb_e,
     double& recomb_h)
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  
+
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
   double ni = dd.get_intrinsic_density();
@@ -53,7 +53,7 @@ DirectRecombination::get_net_recombination_rate_derivatives(
     std::vector<double>& recomb_e, std::vector<double>& recomb_h)
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  
+
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
 

@@ -2,6 +2,7 @@
 
 
 #include "LeakageCurrent.h"
+#include "Variable.h"
 
 #include "TunnelingCurrent.h"
 
@@ -13,11 +14,11 @@ LeakageCurrent::do_init(void)
 {
   ElectricalContact::do_init();
 
-  _A = get_options().get_option("A", _A);
-  _c = get_options().get_option("c", _c);
-  _outer_voltage = get_options().get_option("outer_voltage", _outer_voltage);
+  get_parameter("A", _A);
+  get_parameter("c", _c);
+  _outer_voltage = get_option("outer_voltage", _outer_voltage);
 
-  std::string tc_name = get_options().get_option("tunneling_simulation", "");
+  std::string tc_name = get_option("tunneling_simulation", "");
   _tc = dynamic_cast<TunnelingCurrent*>(
       SimulationInterface::find_simulation(tc_name));
 }
@@ -31,7 +32,7 @@ LeakageCurrent::get_normal_derivative(DriftDiffusionDefs::Variable variable,
   a = 0.0;
   c = 0.0;
 
-  double Vg = Variable::get_variable_value(_outer_voltage);
+  double Vg = Variable::get_variable_value<double>(_outer_voltage);
   //double Ef = get_material().get_electron_electro_chemical_potential();
   double Ec = get_material().get_conduction_band_edge() -
     get_material().get_electric_potential();

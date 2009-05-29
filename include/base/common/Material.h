@@ -3,7 +3,7 @@
 #ifndef _MATERIAL_H_
 #define _MATERIAL_H_
 
-#include "ModelOptions.h"
+#include "TiberModelObject.h"
 #include "TypeDefs.h"
 
 // LibMesh includes
@@ -31,7 +31,7 @@ class PhysicalModel;
  * contains also the list of donors and acceptors (see Dopant) and a
  * RotatedCrystal object.
  */
-class Material
+class Material : public TiberModelObject
 {
 
   public:
@@ -49,7 +49,7 @@ class Material
      */
     virtual ~Material(void);
 
-    
+
     //! Set the database to be used
     /*!
      * The database could in principle be overriden from the options
@@ -60,7 +60,7 @@ class Material
     //! \deprecated Create a material with name \c name
     static Material* create(const std::string& name);
 
-    
+
     //! Create a material with name \c name and options
     static Material* create(const std::string& name,
         const ModelOptions& options);
@@ -73,7 +73,7 @@ class Material
     //! Do some preparatory work at creation time
     void preinit(void);
 
-    
+
     //! Initialize the material
     /*!
      * Read all needed material data from the database
@@ -92,11 +92,11 @@ class Material
      */
     void add_model(PhysicalModel* model, ID simulator_id);
 
-    
+
     //! Add a dopant
     void add_dopant(Dopant* dopant);
 
-    
+
     //! Get physical model for simulator with ID id
     /*!
      *
@@ -109,43 +109,43 @@ class Material
      */
     PhysicalModel* get_model(ID id) const;
 
-    
+
     //! Get the material name
     const std::string& get_name(void) const;
 
-    
+
     //! Set the structure
     void set_structure(const std::string& structure);
 
-    
+
     //! Get the crystal structure
     const std::string& get_structure(void) const;
 
-    
+
     //! Get a reference to the RotatedCrystal
     const RotatedCrystal& get_rotated_crystal(void) const;
 
-    
+
     //! Get a reference to the database
     const Database& get_database(void) const;
-    
-    
+
+
     //! Get a writable reference to the database
     Database& get_database(void);
 
-    
-    //! Get the options
-    ModelOptions& get_options(void);
 
-    
     //! Get the options
-    const ModelOptions& get_options(void) const;
+    //ModelOptions& get_options(void);
 
-    
+
+    //! Get the options
+    //const ModelOptions& get_options(void) const;
+
+
     //! Get the total n-doping
     double get_total_donor_density(void) const;
 
-    
+
     //! Get the total p-doping
     double get_total_acceptor_density(void) const;
 
@@ -177,13 +177,13 @@ class Material
     //! Get the past-the-end iterator for the acceptors
     dopant_iterator acceptors_end(void) const;
 
-    
+
   protected:
 
     //! a typedef for convenience
     typedef std::map<ID, PhysicalModel*> ModelMap;
 
-    
+
     //! Construct a material with a given structure
     /*!
      * At construction one has to specify the material name
@@ -196,7 +196,7 @@ class Material
     //! The real preinit function
     virtual void do_preinit(void) {};
 
-    
+
     //! The real init function
     /*!
      * This one gets called from init(const Database& db)
@@ -207,31 +207,31 @@ class Material
     //! Setup the doping
     void setup_doping(void);
 
-    
-    //! Set the model options
-    void set_options(const ModelOptions& options);
 
-    
+    //! Set the model options
+    //void set_options(const ModelOptions& options);
+
+
     //! Get a writable pointer to the RotatedCrystal
     RotatedCrystal* get_crystal(void);
- 
+
 
     //! Set the RotatedCrystal
     void set_crystal(RotatedCrystal* crystal);
 
-    
+
     //! Get an iterator to the first model
     ModelMap::iterator models_begin(void);
 
-    
+
     //! Get an iterator to the last model
     ModelMap::iterator models_end(void);
-    
+
 
     //! True if this is an alloy
     bool _is_alloy;
 
-    
+
   private:
 
     //! The material name
@@ -240,14 +240,14 @@ class Material
      */
     const std::string _name;
 
-    
+
     //! The crystal structure
     /*!
      * The crystal structure as wz, zb etc
      */
     std::string _structure;
 
-    
+
     //! The RotatedCrystal object
     RotatedCrystal* _rotated_crystal;
 
@@ -266,13 +266,9 @@ class Material
     //! The list acceptors
     std::set<Dopant*> _acceptors;
 
-    
+
     //! The default database to be used
     static Database* _database;
-
-    
-    //! Options for this material
-    ModelOptions _options;
 
 
     //! Clear all doping
@@ -364,7 +360,7 @@ void
 Material::init(void)
 {
   assert(_database != NULL);
-  
+
   if (!_is_initialized)
   {
     do_init();
@@ -378,30 +374,6 @@ void
 Material::set_database(Database& database)
 {
   _database = &database;
-}
-
-
-inline
-void
-Material::set_options(const ModelOptions& options)
-{
-  _options = options;
-}
-
-
-inline
-ModelOptions&
-Material::get_options(void)
-{
-  return _options;
-}
-
-
-inline
-const ModelOptions&
-Material::get_options(void) const
-{
-  return _options;
 }
 
 

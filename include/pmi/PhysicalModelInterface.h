@@ -4,13 +4,11 @@
 #define _PHYSICALMODELINTERFACE_H_
 
 #include "tiber_config.h"
+#include "TiberModelObject.h"
 #include "TypeDefs.h"
 #include "Database.h"
 #include "ModelOptions.h"
 #include "InitFailedException.h"
-
-// For debugging
-#include "reference_counted_object.h"
 
 #include <map>
 #include <string>
@@ -31,42 +29,41 @@ class Material;
  * This is the base class for all implementations of any kind of models
  * used in simulations.
  */
-class PhysicalModelInterface
-  : public ReferenceCountedObject<PhysicalModelInterface>
+class PhysicalModelInterface : public TiberModelObject
 {
 
   public:
-    
+
     //! The creation method signature
     typedef PhysicalModelInterface* (*create_t)(void);
 
-    
+
     //! The destruction method signature
     typedef void (*destroy_t)(PhysicalModelInterface*);
 
 
     //! Destructor
-    virtual ~PhysicalModelInterface(void); 
+    virtual ~PhysicalModelInterface(void);
 
 
     //! Get the unique ID of this model
     ID get_id(void) const;
 
-    
+
     //! Get the ID of the simulator this model is used with
     /*!
      * This ID is needed by the simulator to get the right models
      */
     ID get_simulator_id(void) const;
 
-    
+
     //! Set the ID of the simulator this model is used with
     /*!
      * This ID is needed by the simulator to get the right models
      */
     void set_simulator_id(ID id);
 
-    
+
     //! Get the ID of the model with name \c model_name
     /*!
      * If the model was not already registered, it gets inserted in the
@@ -80,12 +77,12 @@ class PhysicalModelInterface
      */
     template <typename T>
     static ID get_id_from_name(const std::string& model_name);
-  
+
     //! Creates a new named model
     /*!
      * The model is created according to the given model name.
      * If it is not known, the NULL pointer is returned.
-     * 
+     *
      * \param name the model name
      * \param options the options as given in the input file
      * \return a pointer to the newly created object
@@ -102,14 +99,14 @@ class PhysicalModelInterface
     static PhysicalModelInterface* create(create_t create_fnc,
         destroy_t destroy_fnc, const ModelOptions& options = ModelOptions());
 
-    
+
     //! Deletes a model
     /*!
      * \param p the pointer to the model to be destroyed
      */
     static void destroy(PhysicalModelInterface* p);
 
-    
+
     //! Create a new model as a copy of this
     /*!
      * \return a pointer to the newly created model, \c NULL if
@@ -137,7 +134,7 @@ class PhysicalModelInterface
     template <typename T>
     T* create_submodel_alloy(const T* comp_A, const T* comp_B, double xa);
 
-    
+
     //! Get a reference to the database
     /*!
      * the database will already be setup for the material this model is
@@ -152,7 +149,7 @@ class PhysicalModelInterface
     //! Get a reference to the material this model belongs to
     const Material* get_material(void) const;
 
-    
+
     //! Get a writeable reference to the material this model belongs to
     Material* get_material(void);
 
@@ -164,45 +161,32 @@ class PhysicalModelInterface
     //! Get the default name for this model
     std::string get_default_name(void) const;
 
-    
+
     //! Initialize this model
     /*!
      * It calls read_database() and then do_init()
      */
     void init(void);
 
-    
+
     //! Initialize this model as an alloy with two components
     /*!
      * It calls read_database_alloy() and then do_init_alloy()
      */
     void init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
-   
+
 
     //! Print some info
     void print_info(void);
-    
+
 
 
   protected:
 
     //! Empty constructor
     PhysicalModelInterface(void);
- 
-    
-    //! Set options for this model
-    /*!
-     * The options are stored internally and are accessible through
-     * special methods.
-     * Options have to be specified at creation time.
-     */
-    void set_options(const ModelOptions& options);
 
-    
-    //! Get a reference to the model options
-    ModelOptions& get_options(void);
-   
 
     //! Set the name of a model
     /*!
@@ -213,52 +197,12 @@ class PhysicalModelInterface
 
     //! Print some info
     /*!
-     * The implementation should add 4 spaces at the beginning of 
+     * The implementation should add 4 spaces at the beginning of
      * each line.
      */
     virtual void do_print_info(void){};
 
 
-    //! Tells if a parameter has been specified in the input file
-    bool has_parameter(const std::string& name) const;
-
-
-    //! Get the value of a parameter from the input file
-    /*!
-     *
-     * This method looks first in the ModelOptions object, and then in the
-     * ModelOptions of the material. It will try in this order:
-     * \li \c name
-     * \li \c modelname.name
-     * \li \c simulationname.modelname.name
-     *
-     * \param name the name of the option
-     * \param default_value the default value, which also defines
-     * the type of the option
-     * \return the value
-     */
-    template <typename T>
-    T get_parameter(const std::string& name, T default_value) const;
-
-
-    //! Get a parameter which is a vector of values (of the same type)
-    /*!
-     *
-     * This method looks first in the ModelOptions object, and then in the
-     * ModelOptions of the material. It will try in this order:
-     * \li \c name
-     * \li \c modelname.name
-     * \li \c simulationname.modelname.name
-     *
-     * \param name the name of the option
-     * \param vec the vector, where the values will be stored. \c vec can
-     * contain default values, but it's size will be changed according to
-     * the vector found in the options.
-     */
-    template <typename T>
-    void get_parameter(const std::string& name, std::vector<T>& vec) const;
-    
-    
     //! Initialize the model
     /*!
      * This method should set all model options and call
@@ -270,11 +214,11 @@ class PhysicalModelInterface
      */
     virtual void do_init(void) {};
 
-    
+
     //! Create a new model of the same type
     virtual PhysicalModelInterface* create_new(void) const = 0;
 
-    
+
     //! Copy data from another model to this one
     /*!
      * This method should copy \em class members and data structures from
@@ -287,7 +231,7 @@ class PhysicalModelInterface
      */
     virtual void copy_from(const PhysicalModelInterface* rhs) {};
 
-    
+
     //! Read the properties from the database
     /*!
      * Reads all needed physical properties from the database for \em non alloy
@@ -298,7 +242,7 @@ class PhysicalModelInterface
      */
     virtual void read_database(void) {};
 
-    
+
     //! Read alloy parameters from the database
     /*!
      * Read all parameters for an alloy model from the database.
@@ -308,7 +252,7 @@ class PhysicalModelInterface
      */
     virtual void read_database_alloy(void) {};
 
-    
+
     //! Initialize an alloy
     /*!
      * Calculates all parameters of an alloy \f$A_xB_{x-1}C\f$.
@@ -319,7 +263,19 @@ class PhysicalModelInterface
     virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
-    
+
+    /*! \copydoc TiberModelObject::override_parameter_string()
+     *
+     * This method looks first in the ModelOptions object, and then in the
+     * ModelOptions of the material. It will try in this order:
+     * \li \c name
+     * \li \c modelname.name
+     * \li \c simulationname.modelname.name
+     */
+    virtual void override_parameter_string(const std::string& name,
+        std::string& s) const;
+
+
     //! calculate an alloy parameter in VCA approximation
     /*!
      * In a ternary compound semiconductor
@@ -351,12 +307,12 @@ class PhysicalModelInterface
     /*! \copydoc alloy(double, double, double, double) */
     void alloy(Tensor2Sym& result, const Tensor2Sym& val_a,
         const Tensor2Sym& val_b, double xa,
-        const Tensor2Sym& bowing = Tensor2Sym(0)); 
+        const Tensor2Sym& bowing = Tensor2Sym(0));
 
 
 
   private:
-    
+
     //! An iterator for the models
     typedef std::map<const std::string, ID>::iterator model_id_iterator;
 
@@ -364,56 +320,52 @@ class PhysicalModelInterface
     //! The type for library handles
     typedef void* libhandle_t;
 
-    
+
     //! Disable copy constructor
     PhysicalModelInterface(const PhysicalModelInterface&);
 
-    
-    //! Disable assignement operator
+
+    //! Disable assignment operator
     PhysicalModelInterface& operator=(const PhysicalModelInterface&);
 
 
     //! The library handle for this model
     libhandle_t _libhandle;
 
-    
+
     //! The creation method for this model
     create_t _create;
 
-    
+
     //! The destruction method for this model
     destroy_t _destroy;
 
-    
+
     //! The unique ID of this model
     ID _id;
 
-    
+
     //! The ID of the simulator this model is used for
     /*!
      * This ID is needed by the simulator to get the right models
      */
     ID _simulator_id;
 
-    
+
     //! A user defined name for this model
     /*!
      * The name is assigned from the ModelOptions.
      */
     std::string _name;
 
-    
+
     //! The material this properties belong to
     /*!
      * This pointer can be used by this or associated models
      */
     Material* _material;
 
-    
-    //! The options for this model as read from the input file
-    ModelOptions _options;
 
-    
     //! A map with ID/model name pairs
     /*!
      * Models are counted starting from 1. 0 means undefined model.
@@ -432,7 +384,7 @@ class PhysicalModelInterface
 
 //
 // inline methods
-// 
+//
 
 inline
 PhysicalModelInterface::PhysicalModelInterface(void)
@@ -555,23 +507,6 @@ PhysicalModelInterface::get_material(void) const
 
 
 
-inline
-void
-PhysicalModelInterface::set_options(const ModelOptions& options)
-{
-  _options = options;
-}
-
-
-
-inline
-ModelOptions&
-PhysicalModelInterface::get_options(void)
-{
-  return _options;
-}
-
-
 
 inline
 void
@@ -655,7 +590,7 @@ PhysicalModelInterface::get_id_from_name(const std::string& name)
 
   // rec is either valid or NULL
   destroy(rec);
-  
+
 
   return id;
 }

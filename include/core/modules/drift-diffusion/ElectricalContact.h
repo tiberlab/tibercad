@@ -7,7 +7,6 @@
 #include "DriftDiffusionDefs.h"
 #include "BoundaryProperties.h"
 #include "ModelOptions.h"
-#include "Variable.h"
 
 // C++ includes
 #include <string>
@@ -23,7 +22,7 @@ class FowlerNordheim;
  * This class is derived also from Variable to be able to make
  * a voltage sweep.
  */
-class ElectricalContact : public BoundaryProperties, public Variable
+class ElectricalContact : public BoundaryProperties
 {
   public:
 
@@ -34,16 +33,16 @@ class ElectricalContact : public BoundaryProperties, public Variable
     static ElectricalContact* create(const std::string& name,
         const ModelOptions& options = ModelOptions());
 
-    
+
     //! The type of boundary condition
     enum BCType
     {
       DIRICHLET, /*!< Dirichlet type BC */
       NEUMANN,   /*!< von Neumann type BC */
       MIXED,     /*!< mixed type BC */
-      //! pinning of electro-chemical potential with respect to 
+      //! pinning of electro-chemical potential with respect to
       //! the conduction band edge
-      PINNING    
+      PINNING
     };
 
     //! Set the simulation voltage for this contact
@@ -57,7 +56,7 @@ class ElectricalContact : public BoundaryProperties, public Variable
      * This takes surface resistance into account
      */
     double get_inner_voltage(void) const;
-    
+
     //! Set the material
     /*!
      * The material reference is needed to compute parameters of the boundary
@@ -85,7 +84,7 @@ class ElectricalContact : public BoundaryProperties, public Variable
     //! Get the field emission current
     double get_field_emission_current(void) const;
 
-    
+
     //! Get the type of boundary condition for \c variable
     BCType get_type(DriftDiffusionDefs::Variable variable) const;
 
@@ -112,7 +111,7 @@ class ElectricalContact : public BoundaryProperties, public Variable
     virtual void get_derivatives_of_normal_derivative(
         DriftDiffusionDefs::Variable variable,
         std::vector<double>& da, std::vector<double>& dc);
-        
+
 
     //! Get the boundary value for \c variable
     virtual double get_boundary_value(DriftDiffusionDefs::Variable variable);
@@ -163,14 +162,6 @@ class ElectricalContact : public BoundaryProperties, public Variable
     virtual void do_init(void);
 
 
-    /*! \copydoc Variable::set_variable_value() */
-    virtual void set_variable_value(double value, ID id = 0);
-
-
-    /*! \copydoc Variable::get_variable_value() */
-    virtual double get_variable_value(ID id = 0);
-
-
     //! Get the normal electron flux
     double get_normal_electron_flux(void) const;
 
@@ -204,12 +195,12 @@ class ElectricalContact : public BoundaryProperties, public Variable
 
 
     //! The boundary value (eg. applied voltage)
-    double _boundary_value;
-    
+    double _voltage;
+
 
     //! The normal electron flux
     double _jn;
-    
+
 
     //! The normal hole flux
     double _jp;
@@ -256,7 +247,8 @@ class ElectricalContact : public BoundaryProperties, public Variable
 
 inline
 ElectricalContact::ElectricalContact(void)
-  : _boundary_value(0.0),
+  : _voltage(0.0),
+    _surfres(0.0),
     _properties(NULL),
     _real_contact(true),
     _is_outer_boundary(true),
@@ -270,7 +262,7 @@ inline
 void
 ElectricalContact::set_simulation_voltage(double voltage)
 {
-  _boundary_value = voltage;
+  _voltage = voltage;
 }
 
 
@@ -278,7 +270,7 @@ inline
 double
 ElectricalContact::get_simulation_voltage(void) const
 {
-  return _boundary_value;
+  return _voltage;
 }
 
 
@@ -289,7 +281,7 @@ ElectricalContact::get_inner_voltage(void) const
   double v = get_simulation_voltage();
   if (_surfres > 1e-12)
     v -= get_contact_voltage_drop();
-  
+
   return v;
 }
 
@@ -364,7 +356,7 @@ ElectricalContact::get_type(DriftDiffusionDefs::Variable variable) const
       type = _fermih_type;
       break;
   }
-  
+
   return type;
 }
 
@@ -413,23 +405,6 @@ ElectricalContact::set_zero_derivative_bc(DriftDiffusionDefs::Variable variable)
 }
 
 
-
-inline
-void
-ElectricalContact::set_variable_value(double value, ID id)
-{
-  ignore_unused_variable(id);
-  set_simulation_voltage(value);
-}
-
-
-inline
-double
-ElectricalContact::get_variable_value(ID id)
-{
-  ignore_unused_variable(id);
-  return get_simulation_voltage();
-}
 
 
 inline

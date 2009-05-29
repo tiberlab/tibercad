@@ -24,81 +24,79 @@ void ZbSemiconductor::do_init()
 {
   Semiconductor::do_init();
 
-  ModelOptions & options = get_options ();
-
   //-----------------------------------------------------------------------------
   //parameters
   {
-    par.EgGamma = get_parameter("Eg_G",  par.EgGamma );
-    par.EgL     = get_parameter("Eg_L",  par.EgL);
-    par.EgX     = get_parameter("Eg_X",  par.EgX);
-    par.Ev      = get_parameter("E_v",   par.Ev);
+    get_parameter("Eg_G",  par.EgGamma );
+    get_parameter("Eg_L",  par.EgL);
+    get_parameter("Eg_X",  par.EgX);
+    get_parameter("E_v",   par.Ev);
 
-    par.m_G     = get_parameter("m_G",    par.m_G);
-    par.m_l_L   = get_parameter("m_L_l",  par.m_l_L);
-    par.m_t_L   = get_parameter("m_L_t",  par.m_t_L);
-    par.m_l_X   = get_parameter("m_X_l",  par.m_l_X);
-    par.m_t_X   = get_parameter("m_X_t",  par.m_t_X);
+    par.m_G     = get_option("m_G",    par.m_G);
+    par.m_l_L   = get_option("m_L_l",  par.m_l_L);
+    par.m_t_L   = get_option("m_L_t",  par.m_t_L);
+    par.m_l_X   = get_option("m_X_l",  par.m_l_X);
+    par.m_t_X   = get_option("m_X_t",  par.m_t_X);
 
-    par.a_c     = get_parameter("a_c", par.a_c);
-    par.a_v     = get_parameter("a_v", par.a_v );
-    par.b       = get_parameter("b",   par.b);
-    par.d       = get_parameter("d",   par.d);
+    par.a_c     = get_option("a_c", par.a_c);
+    par.a_v     = get_option("a_v", par.a_v );
+    par.b       = get_option("b",   par.b);
+    par.d       = get_option("d",   par.d);
 
-    par.delta  = get_parameter("delta",   par.delta);
-    par.gamma1 = get_parameter("gamma1", par.gamma1);
-    par.gamma2 = get_parameter("gamma2", par.gamma2);
-    par.gamma3 = get_parameter("gamma3", par.gamma3);
+    par.delta  = get_option("delta",   par.delta);
+    par.gamma1 = get_option("gamma1", par.gamma1);
+    par.gamma2 = get_option("gamma2", par.gamma2);
+    par.gamma3 = get_option("gamma3", par.gamma3);
 
-    par.def_vol_X   = get_parameter("abs_def_pot_X",      par.def_vol_X );
-    par.def_uniax_X = get_parameter("uniax_def_pot_X",  par.def_uniax_X);
-    par.def_vol_L   = get_parameter("abs_def_pot_L",      par.def_vol_L);
-    par.def_uniax_L = get_parameter("uniax_def_pot_L",  par.def_uniax_L);
+    par.def_vol_X   = get_option("abs_def_pot_X",      par.def_vol_X );
+    par.def_uniax_X = get_option("uniax_def_pot_X",  par.def_uniax_X);
+    par.def_vol_L   = get_option("abs_def_pot_L",      par.def_vol_L);
+    par.def_uniax_L = get_option("uniax_def_pot_L",  par.def_uniax_L);
 
-    par.Ep = options.get_option("Ep", par.Ep);
-
-
-
-    par.varshni_alpha_G = options.get_option("varshni_alpha_G", par.varshni_alpha_G);
-    par.varshni_alpha_L = options.get_option("varshni_alpha_L", par.varshni_alpha_L);
-    par.varshni_alpha_X = options.get_option("varshni_alpha_X", par.varshni_alpha_X);
+    par.Ep = get_option("Ep", par.Ep);
 
 
-    par.varshni_beta_G = options.get_option("varshni_beta_G",  par.varshni_beta_G);
-    par.varshni_beta_L = options.get_option("varshni_beta_L",  par.varshni_beta_L);
-    par.varshni_beta_X = options.get_option("varshni_beta_X",  par.varshni_beta_X);
+
+    par.varshni_alpha_G = get_option("varshni_alpha_G", par.varshni_alpha_G);
+    par.varshni_alpha_L = get_option("varshni_alpha_L", par.varshni_alpha_L);
+    par.varshni_alpha_X = get_option("varshni_alpha_X", par.varshni_alpha_X);
+
+
+    par.varshni_beta_G = get_option("varshni_beta_G",  par.varshni_beta_G);
+    par.varshni_beta_L = get_option("varshni_beta_L",  par.varshni_beta_L);
+    par.varshni_beta_X = get_option("varshni_beta_X",  par.varshni_beta_X);
 
   }
   //------------------------------------------------------------------------------
   //bowing
   {
-    bow.EgGamma = get_parameter("bow_Eg_G",  bow.EgGamma );
-    bow.EgL     = options.get_option("bow_Eg_L",  bow.EgL);
-    bow.EgX     = options.get_option("bow_Eg_X",  bow.EgX);
-    bow.Ev      = get_parameter("bow_E_v",   bow.Ev);
+    get_parameter("bow_Eg_G",  bow.EgGamma );
+    bow.EgL     = get_option("bow_Eg_L",  bow.EgL);
+    bow.EgX     = get_option("bow_Eg_X",  bow.EgX);
+    get_parameter("bow_E_v",   bow.Ev);
 
-    bow.m_G     = options.get_option("bow_m_G",    bow.m_G);
-    bow.m_l_L   = options.get_option("bow_m_L_l",  bow.m_l_L);
-    bow.m_t_L   = options.get_option("bow_m_L_t",  bow.m_t_L);
-    bow.m_l_X   = options.get_option("bow_m_X_l",  bow.m_l_X);
-    bow.m_t_X   = options.get_option("bow_m_X_t",  bow.m_t_X);
+    bow.m_G     = get_option("bow_m_G",    bow.m_G);
+    bow.m_l_L   = get_option("bow_m_L_l",  bow.m_l_L);
+    bow.m_t_L   = get_option("bow_m_L_t",  bow.m_t_L);
+    bow.m_l_X   = get_option("bow_m_X_l",  bow.m_l_X);
+    bow.m_t_X   = get_option("bow_m_X_t",  bow.m_t_X);
 
-    bow.a_c     = options.get_option("bow_a_c", bow.a_c);
-    bow.a_v     = options.get_option("bow_a_v", bow.a_v );
-    bow.b       = options.get_option("bow_b",   bow.b);
-    bow.d       = options.get_option("bow_d",   bow.d);
+    bow.a_c     = get_option("bow_a_c", bow.a_c);
+    bow.a_v     = get_option("bow_a_v", bow.a_v );
+    bow.b       = get_option("bow_b",   bow.b);
+    bow.d       = get_option("bow_d",   bow.d);
 
-    bow.delta  = options.get_option("bow_delta",   bow.delta);
-    bow.gamma1 = options.get_option("bow_gamma1", bow.gamma1);
-    bow.gamma2 = options.get_option("bow_gamma2", bow.gamma2);
-    bow.gamma3 = options.get_option("bow_gamma3", bow.gamma3);
+    bow.delta  = get_option("bow_delta",   bow.delta);
+    bow.gamma1 = get_option("bow_gamma1", bow.gamma1);
+    bow.gamma2 = get_option("bow_gamma2", bow.gamma2);
+    bow.gamma3 = get_option("bow_gamma3", bow.gamma3);
 
-    bow.def_vol_X   = options.get_option("abs_def_pot_X",      bow.def_vol_X );
-    bow.def_uniax_X = options.get_option("uniax_def_pot_X",  bow.def_uniax_X);
-    bow.def_vol_L   = options.get_option("abs_def_pot_L",      bow.def_vol_L);
-    bow.def_uniax_L = options.get_option("uniax_def_pot_L",  bow.def_uniax_L);
+    bow.def_vol_X   = get_option("abs_def_pot_X",      bow.def_vol_X );
+    bow.def_uniax_X = get_option("uniax_def_pot_X",  bow.def_uniax_X);
+    bow.def_vol_L   = get_option("abs_def_pot_L",      bow.def_vol_L);
+    bow.def_uniax_L = get_option("uniax_def_pot_L",  bow.def_uniax_L);
 
-    bow.Ep = options.get_option("bow_Ep_1", bow.Ep);
+    bow.Ep = get_option("bow_Ep_1", bow.Ep);
 
 
 

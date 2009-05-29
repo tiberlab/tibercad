@@ -4,7 +4,6 @@
 #define _OPTICALGENERATION_H_
 
 #include "RecombinationModelInterface.h"
-#include "Variable.h"
 #include "TypeDefs.h"
 
 
@@ -13,10 +12,8 @@
  * This class implements optical generation processes that can be
  * modeled by \f[G_{x}= G]
  *
- * It is derived from Variable to be able to make a sweep over the 
- * generation rate.
  */
-class OpticalGeneration : public RecombinationModelInterface, public Variable
+class OpticalGeneration : public RecombinationModelInterface
 {
 
   public:
@@ -54,13 +51,6 @@ class OpticalGeneration : public RecombinationModelInterface, public Variable
         const PhysicalModelInterface* comp_B, double xa);
 
 
-    /*! \copydoc Variable::set_variable_value() */
-    virtual void set_variable_value(double value, ID id = 0);
-
-
-    /*! \copydoc Variable::set_variable_value() */
-    virtual double get_variable_value(ID id = 0);
-
 
   private:
 
@@ -73,7 +63,7 @@ class OpticalGeneration : public RecombinationModelInterface, public Variable
 
 //
 // inline methods
-// 
+//
 
 inline
 OpticalGeneration::OpticalGeneration(void)
@@ -99,22 +89,6 @@ OpticalGeneration::create_new(void) const
 }
 
 
-inline
-void
-OpticalGeneration::set_variable_value(double value, ID id)
-{
-  ignore_unused_variable(id);
-  G_ = value;
-}
-
-
-inline
-double
-OpticalGeneration::get_variable_value(ID id)
-{
-  ignore_unused_variable(id);
-  return G_;
-}
 
 
 #endif // _OPTICALGENERATION_H_

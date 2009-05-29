@@ -34,17 +34,17 @@ SimpleSemiconductorModel::do_init(void)
 {
   DriftDiffusionProperties::do_init();
 
-  get_conduction_band().band_edge = get_parameter("Ec", 2.2288);
+  get_conduction_band().band_edge = get_option("Ec", 2.2288);
   get_conduction_band().band_edges.resize(1);
   get_conduction_band().band_edges[0] = get_conduction_band().band_edge;
-  get_valence_band().band_edge = get_parameter("Ev", 1.1047);
+  get_valence_band().band_edge = get_option("Ev", 1.1047);
   get_valence_band().band_edges.resize(1);
   get_valence_band().band_edges[0] = get_valence_band().band_edge;
 
   double deg = std::pow(2.0, 2.0 / 3.0);
-  get_conduction_band().effective_mass = deg * get_parameter("m_dos_e", 1.082);
-  get_valence_band().effective_mass = deg * get_parameter("m_dos_h", 1.1432);
-  
+  get_conduction_band().effective_mass = deg * get_option("m_dos_e", 1.082);
+  get_valence_band().effective_mass = deg * get_option("m_dos_h", 1.1432);
+
 }
 
 void
@@ -52,7 +52,7 @@ SimpleSemiconductorModel::do_print_info(void)
 {
 
   string space("    ");
-  
+
   set_lattice_temperature(SimulationOptions::T);
   setup_band_edges();
   calculate_equilibrium_properties();

@@ -48,11 +48,11 @@ SRHRecombination::read_database(void)
 
   // electrons
   double denom = 1.0 + std::pow(N / Nref_e, g_e);
-  _tau_n = taumin_e + (taumax_e - taumin_e) / denom; 
+  _tau_n = taumin_e + (taumax_e - taumin_e) / denom;
 
   // holes
   denom = 1.0 + std::pow(N / Nref_h, g_h);
-  _tau_p = taumin_h + (taumax_h - taumin_h) / denom; 
+  _tau_p = taumin_h + (taumax_h - taumin_h) / denom;
 }
 
 
@@ -60,9 +60,9 @@ SRHRecombination::read_database(void)
 void
 SRHRecombination::do_init(void)
 {
-  _tau_n = get_parameter("tau_n", _tau_n);
-  _tau_p = get_parameter("tau_p", _tau_p);
-  _E_t   = get_parameter("E_trap", _E_t);
+  get_parameter("tau_n", _tau_n);
+  get_parameter("tau_p", _tau_p);
+  get_parameter("E_trap", _E_t);
 }
 
 
@@ -72,7 +72,7 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
     double& recomb_h)
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  
+
   long double n  = dd.get_electron_density();
   long double p  = dd.get_hole_density();
   long double ni = dd.get_intrinsic_density();
@@ -97,7 +97,7 @@ SRHRecombination::get_net_recombination_rate_derivatives(
     std::vector<double>& recomb_e, std::vector<double>& recomb_h)
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  
+
   long double n  = dd.get_electron_density();
   long double p  = dd.get_hole_density();
   long double ni = dd.get_intrinsic_density();
@@ -116,8 +116,8 @@ SRHRecombination::get_net_recombination_rate_derivatives(
 
   long double a = p / denom;
   a = a - tau_p * SRH / denom;
-  long double b = n / denom; 
-  b = b - tau_n * SRH / denom; 
+  long double b = n / denom;
+  b = b - tau_n * SRH / denom;
 
   recomb_e[0] = recomb_h[0] = a;
   recomb_e[1] = recomb_h[1] = b;

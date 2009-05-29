@@ -42,7 +42,7 @@ WzPyroPolarization::do_init(void)
 {
   if (has_parameter("Pz"))
   {
-    _Pz = get_parameter("Pz", _Pz);
+    _Pz = get_option("Pz", _Pz);
     _Pz_bow = 0.0;
   }
 
@@ -63,7 +63,7 @@ WzPyroPolarization::do_init_alloy(const PhysicalModelInterface *comp_A,
   const WzPyroPolarization* tempA = dynamic_cast<const WzPyroPolarization*>(comp_A);
   const WzPyroPolarization* tempB = dynamic_cast<const WzPyroPolarization*>(comp_B);
 
-  _Pz_bow = get_parameter("Pz_bow", _Pz_bow);
+  _Pz_bow = get_option("Pz_bow", _Pz_bow);
 
   _Pz = alloy(tempA->_Pz, tempB->_Pz, xa, _Pz_bow);
 

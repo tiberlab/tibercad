@@ -4,6 +4,7 @@
 #define _BOUNDARYPROPERTIES_H_
 
 
+#include "TiberModelObject.h"
 #include "ModelOptions.h"
 #include "TypeDefs.h"
 
@@ -15,7 +16,7 @@ class Boundary;
  *  module should implement its own class derived from this one to hold
  *  the properties needed for calculations.
  */
-class BoundaryProperties
+class BoundaryProperties : public TiberModelObject
 {
 
   public:
@@ -37,24 +38,14 @@ class BoundaryProperties
 
 
   protected:
-    
+
     //! The empty constructor
     /*!
      * \c BoundaryType should not be instantiated directly
      */
     BoundaryProperties(void);
- 
-    //! Set options for this model
-    /*!
-     * The options are stored internally and are accessible through
-     * special methods.
-     * Options have to be specified at creation time.
-     */
-    void set_options(const ModelOptions& options);
 
-    //! Get the options for this contact model
-    const ModelOptions& get_options(void) const;
-   
+
     //! Initialize the model
     /*!
      * This method should set all model options and call
@@ -77,10 +68,7 @@ class BoundaryProperties
     BoundaryProperties(const BoundaryProperties&);
 
     //! Disable assignement operator
-    BoundaryProperties& operator=(const BoundaryProperties&); 
-
-    //! The options for this model as read from the input file
-    ModelOptions _options;
+    BoundaryProperties& operator=(const BoundaryProperties&);
 
     //! The boundary this model is associated with
     Boundary* _boundary;
@@ -109,20 +97,6 @@ BoundaryProperties::init(void)
   do_init();
 }
 
-inline
-void
-BoundaryProperties::set_options(const ModelOptions& options)
-{
-  _options += options;
-}
-
-
-inline
-const ModelOptions&
-BoundaryProperties::get_options(void) const
-{
-  return _options;
-}
 
 
 inline

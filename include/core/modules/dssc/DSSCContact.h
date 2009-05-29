@@ -4,10 +4,9 @@
 #define _DSSCCONTACT_H_
 
 #include "BoundaryProperties.h"
-#include "Variable.h"
 
 
-class DSSCContact : public BoundaryProperties, public Variable
+class DSSCContact : public BoundaryProperties
 {
 
   public:
@@ -50,20 +49,12 @@ class DSSCContact : public BoundaryProperties, public Variable
     virtual void do_init(void);
 
 
-    /*! \copydoc Variable::set_variable_value() */
-    virtual void set_variable_value(double value, ID id = 0);
-
-
-    /*! \copydoc Variable::get_variable_value() */
-    virtual double get_variable_value(ID id = 0);
-
-
 
   private:
-    
+
     //! The boundary value (eg. applied voltage)
     double _boundary_value;
-  
+
     bool _cathode;
 
     double _Ioc;
@@ -77,9 +68,9 @@ class DSSCContact : public BoundaryProperties, public Variable
     double _beta;
 
     double _current;
-   
+
     static bool _open_circuit;
-    
+
 
     //! Set the open circuit potential and densities
     void set_OC_values(double Ioc, double Idark, double I3oc, double I3dark);
@@ -87,13 +78,13 @@ class DSSCContact : public BoundaryProperties, public Variable
     void calculate_current(double I, double I3);
 
 
- 
+
 };
 
 
 //
 // inline members
-// 
+//
 
 inline
 DSSCContact::DSSCContact(void)
@@ -120,26 +111,6 @@ double
 DSSCContact::get_potential(void) const
 {
   return _boundary_value;
-}
-
-
-
-inline
-void
-DSSCContact::set_variable_value(double value, ID id)
-{
-  ignore_unused_variable(id);
-  set_potential(value);
-  set_open_circuit(false);
-}
-
-
-inline
-double
-DSSCContact::get_variable_value(ID id)
-{
-  ignore_unused_variable(id);
-  return get_potential();
 }
 
 

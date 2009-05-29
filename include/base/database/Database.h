@@ -51,6 +51,9 @@ class Database
       { return _datafile; };
 
     //! Set the name of the model
+    /*!
+     * Call this method always before reading data.
+     */
     void set_section(const std::string& section);
 
     //! Get the name of the model
@@ -129,7 +132,7 @@ class Database
     std::string _material;
 
     //! The name of the model currently processed
-    std::string _section;
+    mutable std::string _section;
 
     //! The currently used data file
     std::string _datafile;

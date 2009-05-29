@@ -9,16 +9,16 @@
 typedef std::complex<double> Complex;
 
 
-extern "C" 
-{ 
+extern "C"
+{
   //ZHEEV( JOBZ, UPLO,  N, A,           LDA, W, WORK, LWORK, RWORK,INFO )
-  void zheev_(char& jobs, char& UPLO, int& N, Complex* ham6x6matrix, int& LDA, double* eigvals,  Complex* WORK, int& LWORK, double* RWORK, int& info); 
+  void zheev_(char& jobs, char& UPLO, int& N, Complex* ham6x6matrix, int& LDA, double* eigvals,  Complex* WORK, int& LWORK, double* RWORK, int& info);
 };
 
 const double Semiconductor::Hartree = 27.2113961;
 
 
-using namespace std; 
+using namespace std;
 
 Semiconductor::Semiconductor()
 {
@@ -26,23 +26,22 @@ Semiconductor::Semiconductor()
 
   modelB = NULL;
 
-} 
+}
 
 //--------------------------------------------------------------------------------------------//
 void Semiconductor::do_init ()
 {
-  
+
   int verbose = SimulationOptions::verbose ();
 
 
-  ModelOptions & options = get_options ();
 
-  _consider_temperature = get_parameter("consider_temperature",  true );
+  _consider_temperature = get_option("consider_temperature",  true );
 
 
 /*
 
-  if  (verbose > 0) 
+  if  (verbose > 0)
     if (_consider_temperature)
       std::cout << "Semiconductor: band gap depends on temperature\n";
     else
@@ -52,26 +51,26 @@ void Semiconductor::do_init ()
 
 
 
-  _temperature = get_parameter("temperature", SimulationOptions::T);
+  _temperature = get_option("temperature", SimulationOptions::T);
 
 
 
 
 
   // the temperature simulation
-  string temp_simul = get_options().get_option("thermal_simulation", "");
+  string temp_simul = get_option("thermal_simulation", "");
 
-  
+
   temp_interface.set_simulation(temp_simul);
 
 /*
 
-  if  (verbose > 0) 
+  if  (verbose > 0)
     if (temp_simul != "")
       std::cout << "Semiconductor: temparature is taken from the simulation " << temp_simul << "\n";
 
 
- */ 
+ */
 }
 
 
@@ -88,7 +87,7 @@ KPparams   Semiconductor::calculate_kp_params (std::string kp_model )
 
 
 //---------------------------------------------------------------------------------------------//
-inline 
+inline
 void Semiconductor::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 

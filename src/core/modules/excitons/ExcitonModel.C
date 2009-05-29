@@ -20,6 +20,12 @@ TIBER_MODULE(ExcitonModel, simple)
 
 
 ExcitonModel::ExcitonModel(void)
+  : _t_r(1e45),
+    _t_nr(1e45),
+    _t_diss(1e45),
+    _R(0.025),
+    _m(1),
+    _mu(1500)
 {
 }
 
@@ -108,16 +114,16 @@ ExcitonModel::read_database(void)
 void
 ExcitonModel::do_init(void)
 {
-  _t_r = get_parameter("tau_rad", 1.0e45);
-  _t_nr = get_parameter("tau_nonrad", 1.0e45);
-  _t_diss = get_parameter("tau_diss", 1.0e45);
+  get_parameter("tau_rad", _t_r);
+  get_parameter("tau_nonrad", _t_nr);
+  get_parameter("tau_diss", _t_diss);
 
-  _R = get_parameter("R", 0.025);
-  _m = get_parameter("eff_mass", 1.0);
-  _mu = get_parameter("mobility", 1500.0);
+  get_parameter("R", _R);
+  get_parameter("eff_mass", _m);
+  get_parameter("mobility", _mu);
 
 
-  std::string dd = get_options().get_option("DD_simulation", "driftdiffusion");
+  std::string dd = get_option("DD_simulation", "driftdiffusion");
 
   // find the drift-diffusion simulation to use
   _dd_sim = SimulationInterface::find_simulation(dd);
@@ -130,7 +136,7 @@ ExcitonModel::do_init(void)
   }
 
   std::string varname("recombination.");
-  varname += get_options().get_option("generation_model", "");
+  varname += get_option("generation_model", "");
   _gen_model = _dd_sim->get_variable_id(varname);
 
   _Eg_id = _dd_sim->get_variable_id("Eg");

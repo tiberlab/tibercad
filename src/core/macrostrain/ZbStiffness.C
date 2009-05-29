@@ -15,12 +15,12 @@ set_moduli(0, 0,  0);
 //---------------------------------------------------//
 
 ZbStiffness::ZbStiffness(double c11, double c12, double c44) : Stiffness()
-{   
+{
 
   set_moduli(c11,  c12,  c44);
 
-} 
- 
+}
+
 //----------------------------------------------------//
 
 void ZbStiffness::set_moduli(double c11, double c12, double c44)
@@ -43,7 +43,7 @@ void ZbStiffness::set_moduli(double c11, double c12, double c44)
 //----------------------------------------------//
 void ZbStiffness::read_database ( )
 {
- 
+
   Database& db = get_database();
   db.set_section("elasticity");
 
@@ -53,18 +53,18 @@ void ZbStiffness::read_database ( )
 
   set_moduli(c11, c12, c44);
 
-  
-  
+
+
 }
 
 //-----------------------------------------------//
 void ZbStiffness::do_init ( )
 {
-  
 
-  double c12 = get_parameter("C12", C_cr(2,2,1,1)); 
-  double c11 = get_parameter("C11", C_cr(1,1,1,1));
-  double c44 = get_parameter("C44", C_cr(3,2,3,2));
+
+  double c12 = get_option("C12", C_cr(2,2,1,1));
+  double c11 = get_option("C11", C_cr(1,1,1,1));
+  double c44 = get_option("C44", C_cr(3,2,3,2));
 
   set_moduli( c11, c12,  c44);
 

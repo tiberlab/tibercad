@@ -34,11 +34,10 @@ DSSCContact::create(const std::string& name,
 void
 DSSCContact::do_init(void)
 {
-  std::string s(get_options().get_option("voltage", ""));
-  set_potential(check_and_register(s, 0.0));
+  get_parameter("voltage", _boundary_value);
 
-  _j0 = get_options().get_option("j0", _j0);
-  _beta = get_options().get_option("beta", _beta);
+  get_parameter("j0", _j0);
+  get_parameter("beta", _beta);
 }
 
 

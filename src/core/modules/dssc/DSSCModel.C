@@ -33,11 +33,11 @@ DSSCModel::DSSCModel(void)
 void
 DSSCModel::do_init(void)
 {
-  _is_electrolyte = get_parameter("electrolyte", _is_electrolyte);
-  _is_TiO2 = get_parameter("TiO2", _is_TiO2);
+  _is_electrolyte = get_option("electrolyte", _is_electrolyte);
+  _is_TiO2 = get_option("TiO2", _is_TiO2);
 
   // prepare porosity for any situation
-  _porosity = get_parameter("porosity", _porosity);
+  get_parameter("porosity", _porosity);
   //if (!is_TiO2())
   //  _porosity = 0.0;
   //else if (!is_electrolyte())
@@ -53,57 +53,22 @@ DSSCModel::do_init(void)
   _eq_conc.C = _eq_conc.I + _eq_conc.I3;
 
   double kT = Constants::k_B * SimulationOptions::T;
-  _mobility.n = get_parameter("mu_e", _mobility.n);
-  _mobility.I = get_parameter("D_I", _mobility.I) / kT;
-  _mobility.I3 = get_parameter("D_I3", _mobility.I3) / kT;
-  _mobility.C = get_parameter("D_C", _mobility.C) / kT;
-  
-  _ke = get_parameter("k_e", _ke);
-  _k3 = get_parameter("k_3", _k3);
+  get_parameter("mu_e", _mobility.n);
+  _mobility.I = get_option("D_I", _mobility.I) / kT;
+  _mobility.I3 = get_option("D_I3", _mobility.I3) / kT;
+  _mobility.C = get_option("D_C", _mobility.C) / kT;
 
-  _permittivity = get_parameter("permittivity", _permittivity);
+  get_parameter("k_e", _ke);
+  get_parameter("k_3", _k3);
 
-  string gen = get_parameter("generation", "");
-  _generation = check_and_register(gen, _generation, 1);
+  get_parameter("permittivity", _permittivity);
 
-  _alpha = get_parameter("alpha", _alpha);
+  get_parameter("generation", _generation);
 
-  string alpha2 = get_parameter("alpha2", "");
-  _alpha2 = check_and_register(alpha2, _alpha2, 2);
-  //_alpha2 = get_parameter("alpha2", _alpha2);
-  _deltaG = get_parameter("deltaG", _deltaG);
-}
+  get_parameter("alpha", _alpha);
 
-
-double
-DSSCModel::get_variable_value(ID id)
-{
-  if (id == 1)
-  {
-    //cout << "generation = " << _generation << endl;
-    return _generation;
-  }
-  if (id == 2)
-  { 
-    //cout << "alpha2 = " << _alpha2 << endl;
-    return _alpha2;
-  }
-}
-
-
-void
-DSSCModel::set_variable_value(double value, ID id)
-{
-  if (id == 1)
-  {
-    _generation = value;
-    //cout << "generation = " << _generation << endl;
-  }
-  if (id == 2)
-  { 
-    _alpha2 = value;
-    //cout << "alpha2 = " << _alpha2 << endl;
-  }
+  get_parameter("alpha2", _alpha2);
+  get_parameter("deltaG", _deltaG);
 }
 
 
@@ -111,7 +76,7 @@ DSSCModel::set_variable_value(double value, ID id)
 void
 DSSCModel::reinit(const Elem* elem)
 {
-  if (_elem != elem) 
+  if (_elem != elem)
   {
     _elem = elem;
     _pd.coordinates = elem->centroid();
@@ -194,7 +159,7 @@ void
 DSSCModel::calculate_net_recombination_rate(void)
 {
   double sqrt_I3_I = sqrt(_pd.density_I3 / _pd.density_I);
-  double n_I_p3 = _eq_conc.I *_eq_conc.I * _eq_conc.I; 
+  double n_I_p3 = _eq_conc.I *_eq_conc.I * _eq_conc.I;
   double sqrt_I3_I_eq = sqrt(_eq_conc.I3 / n_I_p3);
   // rate
   double r = _pd.density_n * sqrt_I3_I;

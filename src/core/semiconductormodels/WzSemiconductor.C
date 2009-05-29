@@ -24,71 +24,71 @@ void WzSemiconductor::do_init()
 
   ModelOptions & options = get_options ();
   {
-    par.EgGamma      = get_parameter("Eg_G", par.EgGamma );
-    par.Ev           = get_parameter("E_v", par.Ev );
+    get_parameter("Eg_G", par.EgGamma );
+    get_parameter("E_v", par.Ev );
 
-    par.m_c_zz       = options.get_option("m_c_zz", par.m_c_zz);
-    par.m_c_xx       = options.get_option("m_c_xx", par.m_c_xx);
+    par.m_c_zz       = get_option("m_c_zz", par.m_c_zz);
+    par.m_c_xx       = get_option("m_c_xx", par.m_c_xx);
 
-    par.A1           = options.get_option("A1", par.A1);
-    par.A2           = options.get_option("A2", par.A2);
-    par.A3           = options.get_option("A3", par.A3);
-    par.A4           = options.get_option("A4", par.A4);
-    par.A5           = options.get_option("A5", par.A5);
-    par.A6           = options.get_option("A6", par.A6);
+    par.A1           = get_option("A1", par.A1);
+    par.A2           = get_option("A2", par.A2);
+    par.A3           = get_option("A3", par.A3);
+    par.A4           = get_option("A4", par.A4);
+    par.A5           = get_option("A5", par.A5);
+    par.A6           = get_option("A6", par.A6);
 
-    par.a_x          = options.get_option("a_x", par.a_x);
-    par.a_z          = options.get_option("a_z", par.a_z);
+    par.a_x          = get_option("a_x", par.a_x);
+    par.a_z          = get_option("a_z", par.a_z);
 
-    par.D1           = options.get_option("D1", par.D1 );
-    par.D2           = options.get_option("D2",par.D2 );
-    par.D3           = options.get_option("D3", par.D3 );
-    par.D4           = options.get_option("D4",  par.D4);
-    par.D5           = options.get_option("D5", par.D5);
-    par.D6           = options.get_option("D6", par.D6 );
-    par.delta_s      = options.get_option("delta_s",  par.delta_s);
-    par.delta_cr     = options.get_option("delta_cr",  par.delta_cr);
+    par.D1           = get_option("D1", par.D1 );
+    par.D2           = get_option("D2",par.D2 );
+    par.D3           = get_option("D3", par.D3 );
+    par.D4           = get_option("D4",  par.D4);
+    par.D5           = get_option("D5", par.D5);
+    par.D6           = get_option("D6", par.D6 );
+    par.delta_s      = get_option("delta_s",  par.delta_s);
+    par.delta_cr     = get_option("delta_cr",  par.delta_cr);
 
 
-    par.Ep_1 = options.get_option("Ep_1", par.Ep_1);
-    par.Ep_2 = options.get_option("Ep_2", par.Ep_2);
+    par.Ep_1 = get_option("Ep_1", par.Ep_1);
+    par.Ep_2 = get_option("Ep_2", par.Ep_2);
 
-    par.varshni_alpha_G = options.get_option("varshni_alpha_G", par.varshni_alpha_G );
-    par.varshni_beta_G = options.get_option("varshni_beta_G",  par.varshni_beta_G);
+    par.varshni_alpha_G = get_option("varshni_alpha_G", par.varshni_alpha_G );
+    par.varshni_beta_G = get_option("varshni_beta_G",  par.varshni_beta_G);
 
 
 
   }
 
   {
-    bow.EgGamma      = get_parameter("bow_Eg_G",bow.EgGamma );
-    bow.Ev           = options.get_option("bow_E_v", bow.Ev );
+    get_parameter("bow_Eg_G", bow.EgGamma );
+    get_parameter("bow_E_v", bow.Ev );
 
-    bow.m_c_zz       = options.get_option("bow_m_c_zz", bow.m_c_zz);
-    bow.m_c_xx       = options.get_option("bow_m_c_xx", bow.m_c_xx);
+    bow.m_c_zz       = get_option("bow_m_c_zz", bow.m_c_zz);
+    bow.m_c_xx       = get_option("bow_m_c_xx", bow.m_c_xx);
 
-    bow.A1           = options.get_option("bow_A1", bow.A1);
-    bow.A2           = options.get_option("bow_A2", bow.A2);
-    bow.A3           = options.get_option("bow_A3", bow.A3);
-    bow.A4           = options.get_option("bow_A4", bow.A4);
-    bow.A5           = options.get_option("bow_A5", bow.A5);
-    bow.A6           = options.get_option("bow_A6", bow.A6);
+    bow.A1           = get_option("bow_A1", bow.A1);
+    bow.A2           = get_option("bow_A2", bow.A2);
+    bow.A3           = get_option("bow_A3", bow.A3);
+    bow.A4           = get_option("bow_A4", bow.A4);
+    bow.A5           = get_option("bow_A5", bow.A5);
+    bow.A6           = get_option("bow_A6", bow.A6);
 
-    bow.a_x          = options.get_option("bow_a_x", bow.a_x);
-    bow.a_z          = options.get_option("bow_a_z", bow.a_z);
+    bow.a_x          = get_option("bow_a_x", bow.a_x);
+    bow.a_z          = get_option("bow_a_z", bow.a_z);
 
-    bow.D1           = options.get_option("bow_D1", bow.D1 );
-    bow.D2           = options.get_option("bow_D2",bow.D2 );
-    bow.D3           = options.get_option("bow_D3", bow.D3 );
-    bow.D4           = options.get_option("bow_D4",  bow.D4);
-    bow.D5           = options.get_option("bow_D5", bow.D5);
-    bow.D6           = options.get_option("bow_D6", bow.D6 );
-    bow.delta_s      = options.get_option("bow_delta_s",  bow.delta_s);
-    bow.delta_cr     = options.get_option("bow_delta_cr",  bow.delta_cr);
+    bow.D1           = get_option("bow_D1", bow.D1 );
+    bow.D2           = get_option("bow_D2",bow.D2 );
+    bow.D3           = get_option("bow_D3", bow.D3 );
+    bow.D4           = get_option("bow_D4",  bow.D4);
+    bow.D5           = get_option("bow_D5", bow.D5);
+    bow.D6           = get_option("bow_D6", bow.D6 );
+    bow.delta_s      = get_option("bow_delta_s",  bow.delta_s);
+    bow.delta_cr     = get_option("bow_delta_cr",  bow.delta_cr);
 
 
-    bow.Ep_1 = options.get_option("bow_Ep_1", bow.Ep_1);
-    bow.Ep_2 = options.get_option("bow_Ep_2", bow.Ep_2);
+    bow.Ep_1 = get_option("bow_Ep_1", bow.Ep_1);
+    bow.Ep_2 = get_option("bow_Ep_2", bow.Ep_2);
   }
 
 

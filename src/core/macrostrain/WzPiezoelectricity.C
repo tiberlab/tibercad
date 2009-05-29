@@ -36,7 +36,7 @@ void WzPiezoelectricity::read_database(void)
   db.set_section("piezoelectricity");
 
   e33 = db.get("e33", 0.0);
-  
+
   e31 = db.get("e31", 0.0);
 
   e15 = db.get("e15", 0.0);
@@ -52,7 +52,7 @@ WzPiezoelectricity::read_database_alloy(void)
   db.set_section("piezoelectricity");
 
   e33_bow = db.get("bow_e33", 0.0);
-  
+
   e31_bow = db.get("bow_e31", 0.0);
 
   e15_bow = db.get("bow_e15", 0.0);
@@ -64,11 +64,11 @@ WzPiezoelectricity::read_database_alloy(void)
 void WzPiezoelectricity::do_init(void)
 {
 
-   e33 = get_parameter("e33",e33);
-  
-   e31 = get_parameter("e31",e31);
+   get_parameter("e33", e33);
 
-   e15 = get_parameter("e15",e15);
+   get_parameter("e31", e31);
+
+   get_parameter("e15", e15);
 
 }
 
@@ -99,9 +99,9 @@ void WzPiezoelectricity:: do_init_alloy (const PhysicalModelInterface *comp_A, c
    const WzPiezoelectricity* tempB = dynamic_cast<const WzPiezoelectricity*> (comp_B);
 
 
-   e33_bow = get_parameter("bow_e33",e33);
-   e31_bow = get_parameter("bow_e31",e31);
-   e15_bow = get_parameter("bow_e15",e15);
+   get_parameter("bow_e33", e33_bow);
+   get_parameter("bow_e31", e31_bow);
+   get_parameter("bow_e15", e15_bow);
 
 
    e33 = alloy(tempA->e33, tempB->e33, xa, e33_bow );
@@ -116,7 +116,7 @@ void WzPiezoelectricity:: do_init_alloy (const PhysicalModelInterface *comp_A, c
 Tensor1 WzPiezoelectricity::get_polariz_cryst(Tensor2Sym& strain_cryst)
 {
 
- 
+
 
   Tensor1 polariz;
 

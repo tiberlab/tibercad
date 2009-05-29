@@ -1,5 +1,5 @@
 2009-03-25 Auf der Maur
-	( ) review approach for variables
+	(DONE) review approach for variables
 
 2009-03-20 Auf der Maur
 	(DONE) implement surface recombination
@@ -10,9 +10,6 @@
 	( ) improve/document tunneling current (analytical model)
 	( ) implement inspect output
 	( ) implement doping profile/external doping
-
-2008-10-29 Auf der Maur
-	( ) implement ObjectStatus class
 
 2008-10-13 Auf der Maur
 	( ) in DriftDiffusion, put calculated currents into contacts

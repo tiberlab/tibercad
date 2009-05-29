@@ -3,13 +3,14 @@
 #ifndef _VARIABLE_H_
 #define _VARIABLE_H_
 
-#include "TypeDefs.h"
 
 #include <map>
 #include <string>
 
+class TiberModelObject;
+class InitializerBase;
 
-//! Interface for classes which contain variables
+//! Interface for variables
 /*!
  * A variable is meant to be a parameter that can be changed at runtime,
  * eg. for doing a parameter sweep.
@@ -27,25 +28,12 @@
  * When the variable is used, it has to be referred to using the user defined
  * name \c variablename.
  *
- * A class derived from this interface can contain more than one variable
- * parameter. In this case, each such parameter is identified by an additional
- * id.
  */
 class Variable
 {
 
-  private:
-
-    //! The type for the list of variables
-    typedef std::multimap<const std::string,
-            std::pair<Variable*, ID> > VariableMap;
-
 
   public:
-
-    //! Empty constructor
-    Variable(void) { };
-
 
     //! Destructor
     virtual ~Variable(void) { };
@@ -59,14 +47,19 @@ class Variable
     static bool is_variable(const std::string& var);
 
 
+    //! Get the name of this variable
+    const std::string& get_name(void) const;
+
+
     //! Set the value of variable \c var
     /*!
      * \param var the variable name
      * \param value the value to set
      */
-    static void set_variable_value(const std::string& var, double value);
+    template <typename T>
+    static void set_variable_value(const std::string& var, const T& value);
 
-    
+
     //! Get the value of variable \c var
     /*!
      * \param var the variable name
@@ -75,39 +68,56 @@ class Variable
      * \note Makes no check about existence of the variable. Do this
      * first using \c is_variable()
      */
-    static double get_variable_value(const std::string& var);
+    template <typename T>
+    static T get_variable_value(const std::string& var);
 
-    
+
+    //! Create a variable
+    /*!
+     * A variable is defined in the input file using the notation
+     * \c @name(defaultvalue)
+     *
+     * If the variable already exists and has the same data type, the
+     * given C++ variable is additionally assigned to it.
+     *
+     * \param s a string as read from the input file
+     * \param variable the C++ variable
+     * \param ct the container (class) holding \c variable
+     *
+     * \return a pointer to the
+     * \c variable will contain the value read from the input file
+     * if provided, else it will not change its value.
+     */
+    template <typename T>
+    static void check_and_register(const std::string& s,
+        T& variable, const TiberModelObject* ct = NULL,
+        InitializerBase* initfunc = NULL);
+
+
+    //! Unregister a model
+    static void unregister(const TiberModelObject* ct);
+
+
 
   protected:
 
-    //! Parse the string from the input file and register if needed
-    /*!
-     * A variable variable is defined in the input file using the notation
-     * \c \#name(defaultvalue)
-     *
-     * If a string of this type is found, the variable object is registered
-     * in the list and the default value is returned.
-     *
-     * \param s the string from the input file
-     * \param defaultval the default value if not given in input file
-     * \param id the class internal ID of the variable. This makes possible to have
-     * more than one variable in a class
-     * \return the default value as given in the inputfile
-     */
-    double check_and_register(const std::string& s, double defaultval, ID id = 0);
+    //! Default constructor
+    explicit Variable(const std::string& name);
 
 
-    //! Set the value of variable with ID \c id
-    virtual void set_variable_value(double value, ID id = 0) = 0;
-
-
-    //! Get the value of variable with ID \c id
-    virtual double get_variable_value(ID id = 0) = 0;
+    //! Do the unregistering of a model
+    virtual void do_unregister(const TiberModelObject* ct) = 0;
 
 
 
   private:
+
+    //! The type for the list of variables
+    typedef std::map<const std::string, Variable*> VariableMap;
+
+
+    //! The variable name
+    const std::string _name;
 
 
     //! A list with all models that define a variable variable
@@ -121,6 +131,13 @@ class Variable
 };
 
 
+
+inline
+const std::string&
+Variable::get_name(void) const
+{
+  return _name;
+}
 
 
 #endif // _VARIABLE_H_

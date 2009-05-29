@@ -53,12 +53,12 @@ AugerRecombination::do_init(void)
 
   if (has_parameter("Cn"))
   {
-    _Cn = get_parameter("Cn", _Cn);
+    get_parameter("Cn", _Cn);
     _fixed_Cn = true;
   }
   if (has_parameter("Cp"))
   {
-    _Cp = get_parameter("Cp", _Cp);
+    get_parameter("Cp", _Cp);
     _fixed_Cp = true;
   }
 }
@@ -101,7 +101,7 @@ AugerRecombination::get_net_recombination_rates(double& recomb_e,
     double& recomb_h)
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  
+
   long double n  = dd.get_electron_density();
   long double p  = dd.get_hole_density();
   long double ni = dd.get_intrinsic_density();
@@ -123,7 +123,7 @@ AugerRecombination::get_net_recombination_rate_derivatives(
     std::vector<double>& recomb_e, std::vector<double>& recomb_h)
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  
+
   long double n  = dd.get_electron_density();
   long double p  = dd.get_hole_density();
   long double ni = dd.get_intrinsic_density();

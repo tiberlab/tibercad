@@ -15,9 +15,9 @@ TIBER_SUBMODEL(ExcitonDissociation, exciton_dissociation)
 void
 ExcitonDissociation::do_init(void)
 {
-  d_ = get_options().get_option("damping", 1.0);
+  d_ = get_option("damping", 1.0);
 
-  std::string ex = get_options().get_option("exciton_simulation", "");
+  std::string ex = get_option("exciton_simulation", "");
 
   // find the exciton simulation to use
   _exciton_sim = SimulationInterface::find_simulation(ex);
@@ -41,7 +41,7 @@ ExcitonDissociation::get_net_recombination_rates(double& recomb_e,
 {
 
   DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  
+
   const Elem* el = dd.get_element();
 
   recomb_e = 0.0;

@@ -16,13 +16,13 @@ FieldDependentMobility::read_database(void)
 {
   Database& db = get_database();
   db.set_section("mobility/field_dependent");
-  
+
   std::vector<double> empty(2, 0);
 
   std::vector<double> data(empty);
   db.get("beta0", data, true);
   _beta =  get_carrier_type() == 'e' ? data[0] : data[1];
-  
+
   data = empty;
   db.get("betaexp", data, true);
   _betaexp =  get_carrier_type() == 'e' ? data[0] : data[1];
@@ -61,22 +61,22 @@ FieldDependentMobility::read_database(void)
 void
 FieldDependentMobility::do_init(void)
 {
-  _beta = get_parameter("beta0", _beta);
-  _betaexp = get_parameter("betaexp", _betaexp);
-  _vsat_formula = get_parameter("Vsat_Formula", _vsat_formula);
+  _beta = get_option("beta0", _beta);
+  _betaexp = get_option("betaexp", _betaexp);
+  _vsat_formula = get_option("Vsat_Formula", _vsat_formula);
   if (_vsat_formula == 1)
   {
-    _vsat0 = get_parameter("vsat0", _vsat0);
-    _vsat_b = get_parameter("vsatexp", _vsat_b);
+    _vsat0 = get_option("vsat0", _vsat0);
+    _vsat_b = get_option("vsatexp", _vsat_b);
   }
   else
   {
-    _vsat0 = get_parameter("A_vsat", _vsat0);
-    _vsat_b = get_parameter("B_vsat", _vsat_b);
-    _vsat_min = get_parameter("vsat_min", _vsat_min);
+    _vsat0 = get_option("A_vsat", _vsat0);
+    _vsat_b = get_option("B_vsat", _vsat_b);
+    _vsat_min = get_option("vsat_min", _vsat_min);
   }
 
-  std::string low_field_model = get_parameter("low_field_model", "doping_dependent");
+  std::string low_field_model = get_option("low_field_model", "doping_dependent");
   _low_field_mob = MobilityModelInterface::create(low_field_model);
   if (_low_field_mob == NULL)
   {
@@ -90,7 +90,7 @@ FieldDependentMobility::do_init(void)
   _low_field_mob->set_material(get_material());
   _low_field_mob->init();
 
-  std::string force = get_parameter("driving_force", "grad_fermi");
+  std::string force = get_option("driving_force", "grad_fermi");
   if (force == "efield")
     _force = EFIELD;
   else if (force == "grad_fermi")
@@ -101,7 +101,7 @@ FieldDependentMobility::do_init(void)
     msg += force + "'.";
     throw InitFailedException(msg);
   }
-    
+
 }
 
 
@@ -155,7 +155,7 @@ FieldDependentMobility::get_derivative_grad_fermi(RealGradient& dm)
     E = get_driftdiffusionproperties().get_grad_fermi_e().size();
   else
     E = get_driftdiffusionproperties().get_grad_fermi_h().size();
-  
+
   if ((_force == GRADFERMI) && (E > 1.0))
   {
 

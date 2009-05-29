@@ -10,7 +10,6 @@
 
 
 #include "PhysicalModel.h"
-#include "Variable.h"
 
 #include "ParticleDensity.h"
 #include "TemperatureInterface.h"
@@ -29,11 +28,11 @@ class Elem;
 
 
 //! The base class for DSSC models
-class DSSCModel : public PhysicalModel, public Variable
+class DSSCModel : public PhysicalModel
 {
-    
+
   public:
-      
+
     //! The thermodynamic equilibrium concentrations
     struct EquilibriumConcentrations
     {
@@ -61,7 +60,7 @@ class DSSCModel : public PhysicalModel, public Variable
     };
 
 
-       
+
     //! A default (empty) destructor.
     virtual ~DSSCModel(void) { };
 
@@ -70,7 +69,7 @@ class DSSCModel : public PhysicalModel, public Variable
     /*!
      * The model is created according to the given model name.
      * If it is not known, the NULL pointer is returned.
-     * 
+     *
      * \param name the model name
      * \param options the options as given in the input file
      * \return a pointer to the newly created object
@@ -81,7 +80,7 @@ class DSSCModel : public PhysicalModel, public Variable
     //! Create an instance of this class
     static DSSCModel* create(void);
 
-    
+
     //! (Re-)Initialize for the given element
     /*!
      * \c reinit() calls \c prepare_element_data() which needs to be
@@ -89,7 +88,7 @@ class DSSCModel : public PhysicalModel, public Variable
      */
     void reinit(const Elem* elem);
 
-    
+
     //! Tells if this model is for electrolyte
     bool is_electrolyte(void) const;
 
@@ -103,7 +102,7 @@ class DSSCModel : public PhysicalModel, public Variable
      */
     double porosity(void) const;
 
-    
+
     //! Set the coordinates
     void set_coordinates(const Point& p);
 
@@ -131,17 +130,17 @@ class DSSCModel : public PhysicalModel, public Variable
 
     //! Set the gradient of the electron electro-chemical potential
     void set_grad_fermi_n(const RealGradient& grad_F);
-    
+
     //! Set the gradient of the iodide electro-chemical potential
     void set_grad_fermi_I(const RealGradient& grad_F);
-    
+
     //! Set the gradient of the triiodide electro-chemical potential
     void set_grad_fermi_I3(const RealGradient& grad_F);
-    
+
     //! Set the gradient of the cation electro-chemical potential
     void set_grad_fermi_C(const RealGradient& grad_F);
 
-   
+
     //! Get coordinates of the contact under illumination
     const double get_x0() const;
 
@@ -150,13 +149,13 @@ class DSSCModel : public PhysicalModel, public Variable
 
     //! Get the gradient of the electron electro-chemical potential
     const RealGradient& get_grad_fermi_n(void) const;
-    
+
     //! Get the gradient of the iodide electro-chemical potential
     const RealGradient& get_grad_fermi_I(void) const;
-    
+
     //! Get the gradient of the triiodide electro-chemical potential
     const RealGradient& get_grad_fermi_I3(void) const;
-    
+
     //! Get the gradient of the cation electro-chemical potential
     const RealGradient& get_grad_fermi_C(void) const;
 
@@ -174,7 +173,7 @@ class DSSCModel : public PhysicalModel, public Variable
 
     //! Set the lattice temperature (in K)
     void set_lattice_temperature(double T);
-    
+
     //! Get the lattice temperature (in units of eV)
     double get_lattice_temperature(void) const;
 
@@ -186,92 +185,92 @@ class DSSCModel : public PhysicalModel, public Variable
      */
     void calculate_densities(void);
 
-    
+
     //! Calculate net recombination rate and derivative
     void calculate_net_recombination_rate(void);
 
 
     //! Get the electron density
     double get_density_n(void) const;
-    
+
 
     //! Get the electron density derivative
     double get_density_derivative_n(void) const;
-    
+
 
     //! Get the iodide density
     double get_density_I(void) const;
-     
+
 
     //! Get the iodide density derivative
     double get_density_derivative_I(void) const;
-    
-      
+
+
     //! Get the triiodide density
     double get_density_I3(void) const;
-     
+
 
     //! Get the triiodide density derivative
     double get_density_derivative_I3(void) const;
-    
+
 
     //! Get the cation density
     double get_density_C(void) const;
-    
+
 
     //! Get the cation density derivative
     double get_density_derivative_C(void) const;
-    
+
 
     //! Get the ionized dye density
     double get_ionized_dye_density(void) const;
-     
-    
-    
+
+
+
     //! Get the total charge density
     double get_charge_density(void) const;
-  
-    
+
+
     //! Get the net recombination rate
     double get_net_recombination_rate(void) const;
-       
-    
+
+
     //! Get the recombination rate
     double get_recombination_rate(void) const;
-      
-    
+
+
     //! Get the net recombination rate derivatives
     const std::vector<double>&
       get_net_recombination_rate_derivatives(void) const;
-    
+
 
     //! Get generation rate
     double get_generation_rate(void) const;
 
-    
+
     //! Get the relative permittivity
     /*!
      * \note what should this be in porous materials?
      */
     double get_relative_permittivity(void) const
       { return _permittivity; };
-      
-    
+
+
     //! Get the electron mobility
     double get_mobility_n(void) const
       { return _mobility.n; };
 
-      
+
     //! Get the iodide mobility
     double get_mobility_I(void) const
       { return _mobility.I; };
 
-      
+
     //! Get the triiodide mobility
     double get_mobility_I3(void) const
       { return _mobility.I3; };
 
-      
+
     //! Get the cation mobility
     double get_mobility_C(void) const
       { return _mobility.C; };
@@ -344,22 +343,15 @@ class DSSCModel : public PhysicalModel, public Variable
     /*! \copydoc PhysicalModel::read_database() */
     virtual void read_database(void) { };
 
-    
+
     //! Initialize this model
     /*!
      * This reads the database and calls init for all submodels
-     * A derived class which reimplements this method has to call 
+     * A derived class which reimplements this method has to call
      * explicitly the one of this class!
      */
     virtual void do_init(void);
 
-
-    //! Set the value of a variable
-    virtual void set_variable_value(double value, ID id = 0 );
-
-    //! Get the value of a variable
-    virtual double get_variable_value(ID id = 0 );
-    
 
     //! This method gets called from reinit()
     /*!
@@ -369,11 +361,11 @@ class DSSCModel : public PhysicalModel, public Variable
      */
     virtual void prepare_element_data(void) {};
 
-    
+
     //! \copydoc PhysicalModel::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    
+
     //! \copydoc PhysicalModel::copy_from()
     virtual void copy_from(const PhysicalModelInterface* rhs);
 
@@ -401,15 +393,15 @@ class DSSCModel : public PhysicalModel, public Variable
     //! The interface to the lattice temperature simulation
     TemperatureInterface _lattice_temp;
 
-    
+
     //! The copy constructor is disabled
     DSSCModel(const DSSCModel& rhs);
 
-    
+
     //! The assignment operator is disabled
     DSSCModel& operator=(const DSSCModel& rhs);
 
- 
+
     //! The element we are currently working on
     const Elem* _elem;
 
@@ -434,7 +426,7 @@ class DSSCModel : public PhysicalModel, public Variable
     //std::vector<double> _nodal_lattice_vt;
 
 
-    //! The electrons 
+    //! The electrons
     ParticleDensity _electrons;
 
 
@@ -481,11 +473,11 @@ class DSSCModel : public PhysicalModel, public Variable
     //! absorption coefficient
     double _alpha;
 
-    
+
     //! absorption coefficient
     double _alpha2;
-    
-    
+
+
     //! absorption coefficient
     double _deltaG;
 };
@@ -537,7 +529,7 @@ DSSCModel::porosity(void) const
   return _porosity;
 }
 
- 
+
 inline
 void
 DSSCModel::set_coordinates(const Point& p)
@@ -624,7 +616,7 @@ DSSCModel::set_grad_fermi_C(const RealGradient& grad_F)
 
 
 inline
-const double 
+const double
 DSSCModel::get_x0(void) const
 {
   return _x0;
@@ -701,7 +693,7 @@ DSSCModel::get_element(void) const
 {
   return _elem;
 }
-    
+
 
 inline
 const Point&
@@ -709,7 +701,7 @@ DSSCModel::get_coordinates(void) const
 {
   return _pd.coordinates;
 }
- 
+
 
 inline
 double
@@ -720,7 +712,7 @@ DSSCModel::get_charge_density(void) const
 }
 
 
-  
+
 
 inline
 PhysicalModelInterface*

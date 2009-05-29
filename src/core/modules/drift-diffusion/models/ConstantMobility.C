@@ -15,7 +15,7 @@ ConstantMobility::read_database(void)
 {
   Database& db = get_database();
   db.set_section("mobility/constant");
-  
+
   std::vector<double> data(2, 0);
   db.get("mu_max", data, true);
   mu0_ = get_carrier_type() == 'e' ? data[0] : data[1];
@@ -31,9 +31,9 @@ ConstantMobility::read_database(void)
 void
 ConstantMobility::do_init(void)
 {
-  mu0_ = get_parameter("mu", mu0_);
+  get_parameter("mu", mu0_);
   // we allow also mu_e and mu_h
-  mu0_ = get_parameter(std::string("mu_") + get_carrier_type(), mu0_);
+  get_parameter(std::string("mu_") + get_carrier_type(), mu0_);
 }
 
 

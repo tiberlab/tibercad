@@ -4,8 +4,8 @@
 #define _SIMULATIONINTERFACE_H_
 
 #include "tiber_config.h"
+#include "TiberModelObject.h"
 #include "TypeDefs.h"
-#include "ModelOptions.h"
 #include "InitFailedException.h"
 #include "SolveFailedException.h"
 #include "ModelErrorException.h"
@@ -14,8 +14,6 @@
 #include "mesh_data_elements.h"
 
 // LibMesh includes
-// For debugging
-#include "reference_counted_object.h"
 #include "numeric_vector.h"
 
 #include <cassert>
@@ -37,11 +35,11 @@ class Mesh;
 class Point;
 
 //! The base class for any simulation
-class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
+class SimulationInterface : public TiberModelObject
 {
 
   public:
-    
+
     //! Destructor
     virtual ~SimulationInterface(void);
 
@@ -49,11 +47,11 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Set the simulation environment for this simulation
     void set_environment(SimulationEnvironment* environment);
 
-    
+
     //! Get the simulation environment for this simulation
     SimulationEnvironment& get_environment(void) const;
 
-    
+
     //! Get the ID of this simulation
     ID get_id(void) const;
 
@@ -61,7 +59,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Set a name for this simulation
     void set_name(const std::string& name);
 
-    
+
     //! Get the user defined name of this simulation
     const std::string& get_name(void) const;
 
@@ -78,14 +76,14 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     /*!
      * \param type the simulation type to create
      * \param options the options for the simulation
-     * 
+     *
      * \return a pointer to the newly created simulation object or \c NULL
      * if the \c typr does not exist.
      */
     static SimulationInterface* create(const std::string& type,
         const ModelOptions& options = ModelOptions());
 
-    
+
     //! Destroy a simulation
     /*!
      * \param p the pointer to the simulation to destroy
@@ -106,7 +104,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
                             const Material* mat) const
       throw (ModelErrorException);
 
-    
+
     //! Create a boundary model that can be used by this type of simulation
     /*!
      * The default behaviour defined in the base class is to return the
@@ -127,16 +125,6 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     void init(void) throw (InitFailedException);
 
-    
-    //! Set options for this model
-    /*!
-     * \param options the options to be changed
-     *
-     * This method will take all options given in \c options and update
-     * the options of the solver accordingly. It does not touch options
-     * which are not present in the argument of this method
-     */
-    void set_options(const ModelOptions& options);
 
 
     //! Solve the system for equilibrium
@@ -145,7 +133,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      *
      */
     void solve_equilibrium(void) throw (SolveFailedException);
-    
+
 
     //! Solve the system
     /*!
@@ -167,7 +155,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     /*!
      * If \c id is invalid or not specified, a new ID will be generated and
-     * the solution stored with this new ID. Otherwise a solution stored at 
+     * the solution stored with this new ID. Otherwise a solution stored at
      * \c id will be overwritten.
      */
     ID remember_current_solution(ID id = 0);
@@ -214,7 +202,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Return true if the system has a solution vector
     bool has_solution_vector(void);
 
-    
+
     //! Get a pointer to the solution vector
     /*!
      * Calls do_get_solution_vector()
@@ -255,7 +243,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      *
      * In the second case, the first simulation of this type will be
      * returned. In the third case, the first simulation will be returned.
-     * 
+     *
      */
     static SimulationInterface* find_simulation(const std::string& name);
 
@@ -263,11 +251,11 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Get a pointer to the simulation with ID \c id
     static SimulationInterface* get_simulation(ID id);
 
-    
+
     //! Check if this simulation is initialized
     bool is_initialized(void) const;
 
-    
+
     //! Check if this simulation has already been solved
     /*!
      * This could be useful for models which use results of another
@@ -278,7 +266,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! Check if the equilibrium for this simulation has been calculated
     bool equilibrium_done(void) const;
-    
+
 
     /*!
      * \copydoc convert_variable_name_to_id()
@@ -328,7 +316,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     bool get_solution(const Elem* elem, const Point& p,
         const std::set<ID>& ids, std::map<ID, double>& values);
-  
+
 
     //! Get solution values on one inner point of a specified element
     /*!
@@ -341,7 +329,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \return false if no data can be found for \c elem
      */
     bool get_solution(const Elem* elem, const Point& p, ID id, double& value);
-  
+
 
     //! Get solution values on inner points of a specified element
     /*!
@@ -357,7 +345,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     bool get_solution(const Elem* elem, const std::vector<Point>& p,
         ID id, std::vector<double>& values);
-  
+
 
     //! Get solution values on inner points of a specified element
     /*!
@@ -373,7 +361,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     bool get_solution(const Elem* elem, const std::vector<Point>& p,
         const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
-    
+
 
 
 
@@ -407,7 +395,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     void get_integrated_quantities(const std::set<std::string>& variables,
         std::vector<double>& values);
-    
+
 
     //! Get the description for some integrated quantities
     /*!
@@ -474,11 +462,11 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Tell the level of verbosity
     int verbose(void) const;
 
-    
+
     //! Set the level of verbosity
     int& verbose(void);
-    
-    
+
+
     //! Check if \c region_id is include in this simulation
     bool includes_region(ID region_id) const;
 
@@ -509,13 +497,9 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Empty constructor
     SimulationInterface(void);
 
-    
+
     //! Get a reference to the equation system object
     EquationSystems& get_equation_systems(void) const;
-
-    
-    //! Get the options for this simulator
-    ModelOptions& get_options(void);
 
 
     //! Get the solver options
@@ -543,7 +527,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     virtual void do_equilibrium(void) {};
 
-    
+
     //! Do the solve
     /*!
      * Has to be implemented by derived classes.
@@ -570,10 +554,10 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Print simulation info
     virtual void do_print_info(void);
 
-    
+
     //! Remember the current solution
     /*!
-     * The default action is to clone the solution vector of the 
+     * The default action is to clone the solution vector of the
      * equations system. If \c id is invalid, a new ID will be generated
      * and returned, if not, the remembered solution \c id will be overwritten.
      * If this method is reimplemented in a derived class, it should behave in
@@ -588,7 +572,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     void has_solution_vector(bool flag);
 
-    
+
     //! Get a pointer to the solution vector
     virtual NumericVector<double>& do_get_solution_vector(void);
 
@@ -597,13 +581,13 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     /*!
      * The default implementation just makes
      * \c solution_vector() = \c new_solution
-     * 
+     *
      * No checks will be done on the vector size!
      * \param new_solution the new solution to set
      */
     virtual void do_set_solution_vector(
         const NumericVector<double>& new_solution);
-    
+
 
     //! Set to the remembered solution number \c id
     virtual void do_set_to_remembered_solution(ID id);
@@ -611,7 +595,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! Delete a remembered solution
     virtual void do_delete_remembered_solution(ID id);
-    
+
 
     //! Build the maximum norm of the solution difference
     /*!
@@ -629,7 +613,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * uses some scaling
      */
     virtual double do_maximum_norm_of_difference(ID id);
-    
+
 
     //! Build the l2 norm of the solution difference
     /*!
@@ -654,7 +638,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param factor the scaling factor
      */
     virtual void do_scale_solution(double factor);
-    
+
 
     //! Add a scaled remembered solution
     /*!
@@ -667,7 +651,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! Parse the options
     /*!
      * This method has to be called \em explicitly somewhere in the derived
-     * class. It is not called from \c SimulationInterface::init(), because 
+     * class. It is not called from \c SimulationInterface::init(), because
      * in some situations options could change between different calls
      * to \c solve(). It is \em not called in \c SimulationInterface::solve(),
      * because in other situations this is not necessary. So: call it in
@@ -675,11 +659,11 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     virtual void parse_options(void) = 0;
 
-    
+
     //! Get the unique name for the equation system
     const std::string& get_equation_system_name(void) const;
 
-    
+
     //! Get the ID for a given variable name
     /*!
      * An ID of \c INVALID_ID represents an unknown variable.
@@ -688,8 +672,8 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \return the ID of the variable as a numerical value
      */
     virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
-    
-    
+
+
     //! Get solution values on the nodes of a specified element
     /*!
      *
@@ -698,7 +682,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param values a vector to store the values. The first index
      * corresponds to the node.
      *
-     * \pre 
+     * \pre
      * \li \c elem is an active element of this simulation
      * \li values is already resized to the number of nodes
      */
@@ -715,8 +699,8 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      * \param ids identifiers for the variables to be returned
      * \param values a vector to store the values. The first index
      * corresponds to the point.
-     * 
-     * \pre 
+     *
+     * \pre
      * \li \c elem is an active element of this simulation
      * \li \c elem contains all points of \c p
      * \li values is already resized to the number of points
@@ -725,15 +709,15 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
         const std::vector<Point>& p, const std::set<ID>& ids,
         std::vector<std::map<ID, double> >& values);
 
-    
+
     //! Get the solution values on one point of an element
     /*!
      *
      * \param elem a pointer to the element
      * \param p the point (assumed to lie in \c elem)
      * \param values a vector to store the values.
-     * 
-     * \pre 
+     *
+     * \pre
      * \li \c elem is an active element of this simulation
      * \li \c elem contains all points of \c p
      * \li values is already resized to the number of points
@@ -804,12 +788,12 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
     //! A typedef for the embracing region map
     typedef std::map<SimulationInterface*, Embracing*> EmbracingMap;
-    
+
 
     //! The creation method signature
     typedef SimulationInterface* (*create_t)(void);
 
-    
+
     //! The destruction method signature
     typedef void (*destroy_t)(SimulationInterface*);
 
@@ -818,7 +802,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     typedef void* libhandle_t;
 
 
-    
+
     //! The environment for this simulation
     SimulationEnvironment* _environment;
 
@@ -826,15 +810,15 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! The Control object which controls this simulation
     Control* _control;
 
-    
+
     //! A flag indicating if the simulator is initialized
     bool _is_initialized;
 
-    
+
     //! A flag indicating that a simulation has been done
     bool _is_solved;
 
-    
+
     //! A flag indicating that equilibrium has been done
     bool _equilibrium_is_solved;
 
@@ -847,16 +831,16 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! The library handle for this simulation type
     libhandle_t _libhandle;
 
-    
+
     //! The creation method for this simulation type
     create_t _create;
 
-    
+
     //! The destruction method for this simulation type
     destroy_t _destroy;
 
 
-    
+
     //! The ID of this simulation
     /*!
      * The ID is unique for every simulator and is assigned automatically
@@ -864,14 +848,8 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
      */
     ID _id;
 
-    
-    //! Options associated with this model
-    /*!
-     * These are the options as read from the input file.
-     */
-    ModelOptions _options;
 
-    
+
     //! A user definable name to identify this simulation
     std::string _name;
 
@@ -879,7 +857,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! The identifying string for the type of this simulation
     std::string _type;
 
-    
+
     //! The unique name for the equation system
     std::string _eq_system_name;
 
@@ -887,7 +865,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! The scaling parameters
     Scaling _scaling;
 
-    
+
     //! The map containing all simulations with their ID
     static SimulationMap _simulation_map;
 
@@ -895,7 +873,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
     //! A map with all embracing regions
     EmbracingMap _embracings;
 
-    
+
     //! create a unique name for the equation system
     void create_equation_system_name(void);
 
@@ -921,7 +899,7 @@ class SimulationInterface : public ReferenceCountedObject<SimulationInterface>
 
 //
 // inline members
-// 
+//
 
 
 inline
@@ -956,7 +934,7 @@ SimulationInterface*
 SimulationInterface::get_simulation(ID id)
 {
   SimulationInterface* sim = NULL;
-  
+
   SimulationMap::iterator it(_simulation_map.find(id));
   if (it != _simulation_map.end())
     sim = it->second;
@@ -1022,30 +1000,6 @@ SimulationInterface::get_equation_system_name(void) const
 }
 
 
-
-inline
-void
-SimulationInterface::set_options(const ModelOptions& options)
-{
-  _options += options;
-}
-
-
-
-inline
-ModelOptions&
-SimulationInterface::get_options(void)
-{
-  return _options;
-}
-
-
-/* inline */
-/* const ModelOptions& */
-/* SimulationInterface::see_options(void) */
-/* { */
-/*   return _options; */
-/* } */
 
 
 inline
@@ -1234,7 +1188,7 @@ SimulationInterface::get_solution_secure(const Elem* elem,
 {
   std::vector<Point> pvec(1, p);
   std::vector<std::map<ID, double> > valvec(1);
-  
+
   get_solution_secure(elem, pvec, ids, valvec);
 
   values = valvec[0];

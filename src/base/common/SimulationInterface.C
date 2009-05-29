@@ -180,7 +180,7 @@ SimulationInterface::create(const string& type,
     //string defaultname = Utils::extract_typename(typeid(*sim));
     string defaultname(type);
     sim->_name = sim->get_options().get_option("name", defaultname);
-    sim->_options.delete_option("name");
+    sim->get_options().delete_option("name");
 
 
 #ifdef DEBUG
@@ -276,7 +276,7 @@ SimulationInterface::init(void) throw (InitFailedException)
     }
 
 
-    _verbosity = get_options().get_option("verbose", _verbosity);
+    _verbosity = get_option("verbose", _verbosity);
     do_init();
 
   }
@@ -1233,10 +1233,10 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 ModelOptions&
 SimulationInterface::get_solver_options(void)
 {
-  if (!_options.has_submodel("$Solver"))
-    _options.add_submodel("$Solver", ModelOptions());
+  if (!get_options().has_submodel("$Solver"))
+    get_options().add_submodel("$Solver", ModelOptions());
 
-  ModelOptions::submodel_iterator it(_options.submodels_begin("$Solver"));
+  ModelOptions::submodel_iterator it(get_options().submodels_begin("$Solver"));
 
   return it->second;
 }

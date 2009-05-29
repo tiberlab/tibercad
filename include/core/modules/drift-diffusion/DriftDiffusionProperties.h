@@ -10,7 +10,6 @@
 
 
 #include "PhysicalModel.h"
-#include "Variable.h"
 
 #include "ParticleDensity.h"
 #include "TemperatureInterface.h"
@@ -52,9 +51,9 @@ class PyroPolarization;
  * Trying to add to identical models will result in a memory leak. This will
  * be corrected in future. }
  */
-class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variable
+class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
 {
-    
+
   public:
 
     //! A nested class that holds all point data
@@ -170,7 +169,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     };
 
 
-       
+
     //! A default (empty) destructor.
     virtual ~DriftDiffusionProperties(void);
 
@@ -179,7 +178,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     /*!
      * The model is created according to the given model name.
      * If it is not known, the NULL pointer is returned.
-     * 
+     *
      * \param name the model name
      * \param options the options as given in the input file
      * \return a pointer to the newly created object
@@ -217,8 +216,8 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      * Call this after all calculations on the element hav been done
      */
     void unlock(void);
-    
-    
+
+
     //! (Re-)Initialize for the given element
     /*!
      * \c reinit() calls \c prepare_element_data() which needs to be
@@ -226,16 +225,16 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      */
     void reinit(const Elem* elem);
 
-    
+
     //! Set the coupling type
     void set_coupling_type(DriftDiffusionDefs::Coupling coupling)
       { _coupling = (int) coupling; };
- 
-    
+
+
     //! Set the coupling type
     void set_coupling_type(int coupling)
       { _coupling = coupling; };
-    
+
     //! Get the coupling type
     DriftDiffusionDefs::Coupling get_coupling_type(void) const
       { return (DriftDiffusionDefs::Coupling) _coupling; };
@@ -244,7 +243,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     //! Tells if this model is for a dielectric
     bool is_dielectric(void) const;
 
-    
+
     //! Setup the band edge data
     /*!
      * This implementation calculates the effective density of states
@@ -305,10 +304,10 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      * \param E the electric field
      */
     void set_electric_field(const RealGradient& E);
-    
+
     //! Set the gradient of the electron electr-chemical potential
     void set_grad_fermi_e(const RealGradient& grad_Fe);
-    
+
     //! Set the gradient of the hole electr-chemical potential
     void set_grad_fermi_h(const RealGradient& grad_Fh);
 
@@ -337,15 +336,15 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
 
     //! Set the lattice temperature (in K)
     void set_lattice_temperature(double T);
-    
+
     //! Get the lattice temperature (in units of eV)
     double get_lattice_temperature(void) const;
 
 
     //! Calculate the electro-chemical potentials for given densities
     void calculate_electro_chemical_potentials(void);
-    
-    
+
+
     //! Calculate electron and hole densities and derivatives
     /*!
      * This method calculates electron and hole densities and their
@@ -354,7 +353,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      */
     void calculate_densities(void);
 
-    
+
     //! Calculate the ionized dopant densities and derivatives
     /*!
      * The total density of ionized donors and acceptors is calculated,
@@ -364,7 +363,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      */
     void calculate_ionized_dopants(void);
 
-    
+
     //! Calculate net recombination rates and derivatives
     /*!
      * The recombination models calculate the derivatives with respect to
@@ -372,11 +371,11 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      */
     void calculate_net_recombination_rates(void);
 
-    
+
     //! Calculate the mobilities
     void calculate_mobilities(void);
 
-    
+
     //! Calculates the equilibrium properties.
     /*!
      *
@@ -388,18 +387,18 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      *  explicitly calling \c calculate_all() }
      */
     virtual void calculate_equilibrium_properties(void);
-    
+
 
     //! Get the electron density
     /*!
      * Get the electron density as calculated by \c calculate_all(...)
-     * 
+     *
      * \return the electron density
      */
     double get_electron_density(void) const
       { return _pd->electron_density; };
-     
-    
+
+
 
     //! Get the electron density derivative
     /*!
@@ -408,18 +407,18 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      */
     double get_electron_density_derivative(void) const
       { return _pd->electron_density_derivative; };
-    
-    
+
+
     //! Get the hole density
     /*!
      * Get the hole density as calculated by \c calculate_all(...)
-     * 
+     *
      * \return the hole density
      */
     double get_hole_density(void) const
       { return _pd->hole_density; };
-     
-    
+
+
     //! Get the ehole density derivative
     /*!
      * \return the hole density derivative with respect to the
@@ -427,7 +426,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      */
     double get_hole_density_derivative(void) const
       { return _pd->hole_density_derivative; };
-    
+
 
     //! Get the ionized donor density
     /*!
@@ -435,8 +434,8 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      */
     double get_ionized_donor_density(void) const
       { return _pd->ionized_donor_density; };
-     
-    
+
+
     //! Get the ionized donor density derivative
     /*!
      * \return the ionized donor density derivative with respect to the
@@ -444,16 +443,16 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      */
     double get_ionized_donor_density_derivative(void) const
       { return _pd->ionized_donor_density_derivative; };
-        
-    
+
+
     //! Get the ionized acceptor density
     /*!
      * \return the ionized acceptor density
      */
     double get_ionized_acceptor_density(void) const
       { return _pd->ionized_acceptor_density; };
-     
-    
+
+
     //! Get the ionized acceptor density derivative
     /*!
      * \return the ionized acceptor density derivative with respect to the
@@ -461,13 +460,13 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      */
     double get_ionized_acceptor_density_derivative(void) const
       { return _pd->ionized_acceptor_density_derivative; };
-    
-    
+
+
     //! Get the total charge density
     /*!
      *
      * \f$ \rho = p - n + N_D^+ - N_A^- \f$
-     * 
+     *
      * \return the total charge density \f$\rho\f$
      *
      * \note
@@ -475,16 +474,16 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      * \f$e\f$, \em not in Coulomb (= As)!
      */
     double get_charge_density(void) const;
-  
-    
+
+
     //! Get the net electron recombination rate
     /*!
      * Get \f$R_{net} = R - G\f$ as
      */
     double get_net_electron_recombination_rate(void) const
       { return _pd->electron_recombination_rate; };
-      
-    
+
+
     //! Get the net electron recombination rate derivatives
     /*!
      * Get \f$\frac{\partial R_{net}}{\partial\varphi}\f$
@@ -494,8 +493,8 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     const std::vector<double>&
       get_net_electron_recombination_rate_derivatives(void) const
         { return _pd->electron_recombination_rate_derivatives; };
-    
-    
+
+
     //! Get the net hole recombination rate
     /*!
      * Get \f$R_{net} = R - G\f$ as
@@ -504,8 +503,8 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      */
     double get_net_hole_recombination_rate(void) const
       { return _pd->hole_recombination_rate; };
-      
-    
+
+
     //! Get the net hole recombination rate derivatives
     /*!
      * Get \f$\frac{\partial R_{net}}{\partial\varphi}\f$
@@ -516,7 +515,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
       get_net_hole_recombination_rate_derivatives(void) const
         { return _pd->hole_recombination_rate_derivatives; };
 
-    
+
     //! Get the total electric polarization
     /*!
      * The total electric polarization \b P is the sum of the
@@ -525,29 +524,29 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     const RealVectorValue& get_total_polarization(void) const
       { return _polarization; };
 
-    
+
     //! Get the relative permittivity tensor
     //const RealTensorValue& get_relative_permittivity(void) const
     double get_relative_permittivity(void) const
       { return permittivity; };
-      
-    
+
+
     //! Get the electron conductivity
     /*!
      * \return the electron conductivity \f$\sigma_n = \mu_n n\f$
      */
     //double get_electron_conductivity(void) const
     //  { return electron_conductivity; };
-      
-    
+
+
     //! Get the hole conductivity
     /*!
      * \return the hole conductivity \f$\sigma_p = \mu_p p\f$
      */
     //double get_hole_conductivity(void) const
     //  { return hole_conductivity; };
-      
-    
+
+
     //! Get the electron mobility
     /*!
      * \return the electron mobility
@@ -558,8 +557,8 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     //! Get the electron mobility model
     MobilityModelInterface* get_electron_mobility_model(void)
       { return _electron_mobility; };
-      
-    
+
+
     //! Get the hole mobility
     /*!
      * \return the hole mobility
@@ -570,31 +569,31 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     //! Get the hole mobility model
     MobilityModelInterface* get_hole_mobility_model(void)
       { return _hole_mobility; };
-     
+
 
     //! Get the electron mobility derivatives
     void get_electron_mobility_derivatives(RealGradient& dmu) const;
-     
+
 
     //! Get the hole mobility derivatives
     void get_hole_mobility_derivatives(RealGradient& dmu) const;
-      
-    
+
+
     //! Get the square of the intrinsic density
     double get_intrinsic_density_squared(void) const
       { return intrinsic_density * intrinsic_density; };
 
-    
+
     //! Get the intrinsic density
     double get_intrinsic_density(void) const
       { return intrinsic_density; };
 
-    
+
     //! Get equilibrium fermi level
     double get_equilibrium_fermi_level(void) const
       { return equilibrium_fermi_level; };
 
-    
+
     //! Get the lowest conduction band edge
     double get_conduction_band_edge(void) const
       { return conduction_band.band_edge; };
@@ -603,7 +602,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     const std::vector<double>& get_conduction_bands(void)
       { return conduction_band.band_edges; };
 
-    
+
     //! Get the highest valence band edge
     double get_valence_band_edge(void) const
       { return valence_band.band_edge; };
@@ -612,38 +611,38 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     const std::vector<double>& get_valence_bands(void)
       { return valence_band.band_edges; };
 
-    
+
     //! Get the band gap
     double get_band_gap(void) const
       { return conduction_band.band_edge - valence_band.band_edge; };
 
 
     void get_net_recombination_rates(std::vector<double>& rates);
-    
-    
+
+
     //! Get the IDs of the registered recombination models
     /*!
      * \return number of registered models
      */
     int get_net_recombination_rate_IDs(std::vector<ID>& ids);
 
-    
+
     //! Get the recombination model with ID \c id
     RecombinationModelInterface* get_recombination_model(ID id);
 
-    
+
     //! Get the recombination model with ID \c id
     const RecombinationModelInterface* get_recombination_model(ID id) const;
 
-    
+
     //! get the net recombination rate of model \c id
     double get_net_recombination_rate(ID id);
 
-    
+
     //! Clear all recombination rates
     void clear_recombination(void);
 
-    
+
     //! Returns the number of recombination models
     int get_number_of_recombination_models(void) const;
 
@@ -651,7 +650,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     //! Returns the thermoelectric power for electrons
     double get_electron_thermoelectric_power() const;
 
-    //! Returns the thermoelectric power for holes 
+    //! Returns the thermoelectric power for holes
     double get_hole_thermoelectric_power() const;
 
     //! Computes the electron and hole thermoelectric powers
@@ -665,7 +664,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
 
     //!provides holes thermoelectric power [V/K]
     RealGradient get_hole_thermoelectric_power_gradient(void) const;
-  
+
     //! Get the all nodal temperatures for a given element
     std::vector<double>& get_temperature_at_nodes(void);
 
@@ -697,7 +696,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
 
 
   protected:
-      
+
     /*!
      * This structure holds the basic properties of a band for given
      * conditions (temp etc.)
@@ -709,7 +708,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
        * It includes any degeneration, i.e. also spin
        */
       double effective_mass;
-      
+
       //! The effective density of states
       double effective_DOS;
 
@@ -735,27 +734,21 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     /*! \copydoc PhysicalModel::read_database() */
     virtual void read_database(void);
 
-    
+
     //! Initialize this model
     /*!
      * This reads the database and calls init for all submodels
-     * A derived class which reimplements this method has to call 
+     * A derived class which reimplements this method has to call
      * explicitly the one of this class!
      */
     virtual void do_init(void);
 
-    
+
     /*! \copydoc PhysicalModel::do_init_alloy() */
     virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
 
-    //! Set the value of a variable
-    virtual void set_variable_value(double value, ID id = 0);
-
-    //! Get the value of a variable
-    virtual double get_variable_value(ID id = 0);
-    
 
     //! This method gets called from reinit()
     /*!
@@ -765,18 +758,18 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      */
     virtual void prepare_element_data(void) {};
 
-    
+
     //! \copydoc PhysicalModel::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    
+
     //! \copydoc PhysicalModel::copy_from()
     virtual void copy_from(const PhysicalModelInterface* rhs);
 
 
     //! \copydoc PhysicalModel::do_print_info(void)
     virtual void do_print_info(void);
-    
+
 
     //! Get the point data structure
     PointData& get_pd(void);
@@ -784,8 +777,8 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
 
     //! Get the strain as writable reference
     Tensor2Sym& get_strain(void);
-    
-    
+
+
     //! The relative permittivity tensor
     //RealTensorValue permittivity;
     double permittivity;
@@ -800,28 +793,28 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
 
     //! The intrinsic density
     double intrinsic_density;
-        
-    
+
+
     //! Get the conduction band properties
     const BandProperties& get_conduction_band(void) const
       { return conduction_band; };
 
-    
+
     //! Get the valence band properties
     const BandProperties& get_valence_band(void) const
       { return valence_band; };
 
-    
+
     //! Get the conduction band properties
     BandProperties& get_conduction_band(void)
       { return conduction_band; };
 
-    
+
     //! Get the valence band properties
     BandProperties& get_valence_band(void)
       { return valence_band; };
 
-    
+
     //! Get the constant factor to calculate the effective density of states
     /*!
      * \return the factor pow(2 * PI / h^2)^1.5
@@ -883,12 +876,12 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     //! The point-wise data
     PointData* _pd;
 
-       
+
     //! Electron thermoelectric power gradient
     RealGradient _eTEpowerGrad;
 
     //! Hole thermoelectric power gradient
-    RealGradient _hTEpowerGrad; 
+    RealGradient _hTEpowerGrad;
 
     //! Electron thermoelectric power
     double _eTEpower;
@@ -908,7 +901,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
 
     //! The pyropolarization
     PyroPolarization* _pyropolarization;
-    
+
     //! The total electric polarization
     RealVectorValue _polarization;
 
@@ -920,16 +913,16 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     //! An iterator for the recombination models
     typedef std::map<ID, RecombinationModelInterface*>::iterator
       recomb_iterator;
-    
+
     //! A const iterator for the recombination models
     typedef std::map<ID, RecombinationModelInterface*>::const_iterator
       const_recomb_iterator;
 
-    
+
     //! The copy constructor is disabled
     DriftDiffusionProperties(const DriftDiffusionProperties& rhs);
 
-    
+
     //! The assignment operator is disabled
     DriftDiffusionProperties& operator=(const DriftDiffusionProperties& rhs);
 
@@ -941,7 +934,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     //! Setup the electron and hole ParticleDensity structures
     void setup_electrons_and_holes(void);
 
-    
+
     //! Add a recombination model
     /*!
      * Creates and adds a new recombination model from the given name and
@@ -953,8 +946,8 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      void add_recombination_model(const std::string& model_name,
         const ModelOptions& options = ModelOptions());
 
-    
-    
+
+
     //! Create a mobility model
     /*!
      * Creates a mobility model from the given model name
@@ -971,7 +964,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     //! The coordinates of the point we are working on
     Point _coord;
 
-    //! The statistics used 
+    //! The statistics used
     TiberCad::Statistics _statistics;
 
     //! Type of coupling (particles) we want to study
@@ -979,7 +972,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      * This can be one of \c ELECTRONS, \c HOLES or \c BOTH
      */
     int _coupling;
-    
+
     //! The strain
     Tensor2Sym _strain;
 
@@ -995,7 +988,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
      */
     BandProperties valence_band;
 
-    
+
     //! The recombination models
     std::map<ID, RecombinationModelInterface*> _recombination_models;
 
@@ -1029,7 +1022,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel, public Variabl
     bool _is_dielectric;
 
 
-    //! The electrons 
+    //! The electrons
     ParticleDensity _electrons;
 
 
@@ -1074,7 +1067,7 @@ DriftDiffusionProperties::is_dielectric(void) const
 }
 
 
- 
+
 inline
 void
 DriftDiffusionProperties::set_coordinates(const Point& p)
@@ -1211,14 +1204,14 @@ DriftDiffusionProperties::get_element(void) const
 {
   return _elem;
 }
-    
+
 inline
 const Point&
 DriftDiffusionProperties::get_coordinates(void) const
 {
   return _coord;
 }
- 
+
 
 inline
 double
@@ -1273,7 +1266,7 @@ DriftDiffusionProperties::get_strain(void) const
 
 inline
 Tensor2Sym&
-DriftDiffusionProperties::get_strain(void) 
+DriftDiffusionProperties::get_strain(void)
 {
   return _strain;
 }
@@ -1304,7 +1297,7 @@ DriftDiffusionProperties::setup_band_edges(void)
 {
   double kT = _lattice_vt;
   _pd->electron_vt = _pd->hole_vt = kT;
-  
+
   BandProperties& cb = conduction_band;
   BandProperties& vb = valence_band;
 
@@ -1347,24 +1340,24 @@ DriftDiffusionProperties::get_hole_thermoelectric_power(void) const
 }
 
 inline
-RealGradient 
+RealGradient
 DriftDiffusionProperties::get_electron_thermoelectric_power_gradient(void) const
 {
 
   return  _eTEpowerGrad;
 
-} 
+}
 
 inline
-RealGradient 
+RealGradient
 DriftDiffusionProperties::get_hole_thermoelectric_power_gradient(void) const
 {
 
   return  _hTEpowerGrad;
 
 }
-  
-  
+
+
 
 inline
 PhysicalModelInterface*
@@ -1431,7 +1424,7 @@ DriftDiffusionProperties::get_electrons(void)
 
 
 inline
-ParticleDensity& 
+ParticleDensity&
 DriftDiffusionProperties::get_holes(void)
 {
   return _holes;

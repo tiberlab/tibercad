@@ -13,7 +13,7 @@ TIBER_SUBMODEL(ExcitonGeneration, exciton_generation)
 void
 ExcitonGeneration::do_init(void)
 {
-  C_ = get_parameter("C", 1e-10);
+  C_ = get_option("C", 1e-10);
 }
 
 void
@@ -21,7 +21,7 @@ ExcitonGeneration::get_net_recombination_rates(double& recomb_e,
     double& recomb_h)
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  
+
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
 
@@ -33,7 +33,7 @@ ExcitonGeneration::get_net_recombination_rate_derivatives(
     std::vector<double>& recomb_e, std::vector<double>& recomb_h)
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
-  
+
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
 

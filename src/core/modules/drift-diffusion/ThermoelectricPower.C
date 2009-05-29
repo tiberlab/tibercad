@@ -54,9 +54,9 @@ ThermoelectricPower::create_model(const std::string& model,
 
 
 void
-ThermoelectricPower::do_init_alloy (const PhysicalModelInterface *comp_A, 
-    const PhysicalModelInterface *comp_B, double xa) 
-{ 
+ThermoelectricPower::do_init_alloy (const PhysicalModelInterface *comp_A,
+    const PhysicalModelInterface *comp_B, double xa)
+{
   const  ThermoelectricPower* modA =
     dynamic_cast<const ThermoelectricPower*>(comp_A);
 
@@ -65,9 +65,9 @@ ThermoelectricPower::do_init_alloy (const PhysicalModelInterface *comp_A,
 
   _TEmodel = modA->_TEmodel;
 
-  alloy(_eTEpower,modA->_eTEpower, modB->_eTEpower, xa);  
+  alloy(_eTEpower,modA->_eTEpower, modB->_eTEpower, xa);
 
-  alloy(_hTEpower,modA->_hTEpower, modB->_hTEpower, xa); 
+  alloy(_hTEpower,modA->_hTEpower, modB->_hTEpower, xa);
 
 }
 
@@ -83,7 +83,7 @@ ThermoelectricPower::read_database(void)
   db.set_section("thermoelectric_power/constant");
 
   _eTEpower = db.get("eTEpower", 0.0);
-  _hTEpower = db.get("hTEpower", 0.0); 
+  _hTEpower = db.get("hTEpower", 0.0);
 
 }
 
@@ -93,19 +93,19 @@ void
 ThermoelectricPower::do_init(void)
 {
 
-  std::string TEmodel = get_parameter("model", "diffusivity_model");
+  const std::string& TEmodel = get_option("model", "diffusivity_model");
 
   if (TEmodel == "constant")
   {
- 
+
     _TEmodel = CONSTANT;
 
-    _eTEpower = get_parameter("eTEpower", _eTEpower);
-    _hTEpower = get_parameter("hTEpower", _hTEpower);
+    get_parameter("eTEpower", _eTEpower);
+    get_parameter("hTEpower", _hTEpower);
   }
   else if (TEmodel == "diffusivity_model")
     _TEmodel = DIFFUSIVITY;
-  else 
+  else
     throw InitFailedException("Unknown thermoelectric power model: " + _TEmodel);
 
 }
@@ -136,8 +136,8 @@ ThermoelectricPower::calculate_derivatives(void)
     _eTEpowerGrad = - Constants::k_B / _Tloc * (_eFermiGrad +  _ElectricField);
 
     _hTEpowerGrad = - Constants::k_B / _Tloc * (_hFermiGrad +  _ElectricField);
-   
-   
+
+
   }
 
 }

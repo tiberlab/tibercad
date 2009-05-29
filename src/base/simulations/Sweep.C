@@ -424,7 +424,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
   {
     double goal = values[i];
 
-    _last = Variable::get_variable_value(_variable);
+    _last = Variable::get_variable_value<double>(_variable);
     double step = goal - _last;
     double step_sign = (step < 0.0) ? -1 : 1;
     double old_step = 0.0;

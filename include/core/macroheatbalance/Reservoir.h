@@ -5,7 +5,7 @@
 #include "Variable.h"
 
 
-class Reservoir : public ThermalContact, public Variable
+class Reservoir : public ThermalContact
 {
  public:
   //!Constructor	 

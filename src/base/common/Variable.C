@@ -4,8 +4,10 @@
 #include "boost/algorithm/string/trim.hpp"
 
 #include "Variable.h"
+#include "TypedVariable.h"
 #include "Utils.h"
 #include "InitFailedException.h"
+#include "RuntimeException.h"
 
 
 using namespace std;
@@ -13,6 +15,14 @@ using namespace std;
 
 Variable::VariableMap
 Variable::_variables;
+
+
+Variable::Variable(const std::string& name)
+  : _name(name)
+{
+  // register the object
+  _variables[name] = this;
+}
 
 
 
@@ -29,41 +39,51 @@ Variable::is_variable(const std::string& var)
 
 
 
+template <typename T>
 void
-Variable::set_variable_value(const string& var, double value)
+Variable::set_variable_value(const string& var, const T& value)
 {
   // we have to set the value in all objects
-  VariableMap::iterator it(_variables.lower_bound(var));
-  const VariableMap::iterator end(_variables.upper_bound(var));
-  for (; it != end; ++it)
+  VariableMap::iterator it(_variables.find(var));
+  if (it != _variables.end())
   {
-    Variable* sw = (it->second).first;
-    sw->set_variable_value(value, (it->second).second);
+    TypedVariable<T>* sw =
+      dynamic_cast<TypedVariable<T>*>(it->second);
+    if (sw == NULL)
+      throw RuntimeException("Type mismatch for variable\'"
+          + var + "\'");
+    sw->set_value(value);
   }
 }
 
 
 
-double
+template <typename T>
+T
 Variable::get_variable_value(const string& var)
 {
-  double val = 0.0;
+  T val;
 
-  // we can get the value just from the first object as it is
-  // the same in all of them
   VariableMap::iterator it(_variables.find(var));
   if (it != _variables.end())
   {
-    Variable* sw = (it->second).first;
-    val = sw->get_variable_value((it->second).second);
+    const TypedVariable<T>* sw =
+      dynamic_cast<const TypedVariable<T>*>(it->second);
+    if (sw == NULL)
+      throw RuntimeException("Type mismatch for variable\'"
+          + var + "\'");
+    val = sw->get_value();
   }
 
   return val;
 }
 
 
-double
-Variable::check_and_register(const string& s, double defaultval, ID id)
+
+template <typename T>
+void
+Variable::check_and_register(const string& s, T& variable,
+    const TiberModelObject* ct, InitializerBase* initfunc)
 {
   if (s.size() >= 1)
   {
@@ -84,32 +104,47 @@ Variable::check_and_register(const string& s, double defaultval, ID id)
           // get the variable name and register
           string name(matches[1].first, matches[1].second);
 
+
+
           if (n > 3)
           {
             // get the default value
             string val(matches[3].first, matches[3].second);
-            
+
             if (val.size() > 0)
             {
-              defaultval = Utils::convert<double>(val);
+              variable = Utils::convert<T>(val);
 
               // push the new default value to all other objects using
               // the same variable
-              set_variable_value(name, defaultval);
+              set_variable_value(name, variable);
             }
             else
             {
               // we try to get the default value from an already registered
               // object, if present
               if (is_variable(name))
-                defaultval = get_variable_value(name);
+                variable = get_variable_value<T>(name);
             }
           }
 
+          // does it already exist?
+          TypedVariable<T>* var;
+          VariableMap::iterator it(_variables.find(name));
+          if (it != _variables.end())
+          {
+            Variable* v = it->second;
+            var = dynamic_cast<TypedVariable<T>*>(v);
+          }
+          else
+            var = new TypedVariable<T>(name);
 
-          // finally register the object
-          _variables.insert(VariableMap::value_type(name,
-                pair<Variable*, ID>(this, id)));
+          if (var == NULL)
+            throw InitFailedException("Could not create variable \'"
+                + name +"\'");
+
+          var->register_variable(variable, ct, initfunc);
+
         }
       }
       else
@@ -117,8 +152,110 @@ Variable::check_and_register(const string& s, double defaultval, ID id)
 
     }
     else
-      defaultval = Utils::convert<double>(s);
+      variable = Utils::convert<T>(s);
   }
-
-  return defaultval;
 }
+
+
+void
+Variable::unregister(const TiberModelObject* ct)
+{
+  VariableMap::iterator it(_variables.begin());
+  for ( ; it != _variables.end(); ++it)
+    (it->second)->do_unregister(ct);
+}
+
+
+
+//
+// explicit instantiations
+//
+
+template
+void
+Variable::check_and_register<double>(const string&, double&,
+    const TiberModelObject*, InitializerBase* initfunc);
+
+
+template
+void
+Variable::check_and_register<int>(const string&, int&,
+    const TiberModelObject*, InitializerBase* initfunc);
+
+
+template
+void
+Variable::check_and_register<string>(const string&, string&,
+    const TiberModelObject*, InitializerBase* initfunc);
+
+
+template
+void
+Variable::check_and_register<unsigned int>(const string&, unsigned int&,
+    const TiberModelObject*, InitializerBase* initfunc);
+
+
+template
+void
+Variable::check_and_register<char>(const string&, char&,
+    const TiberModelObject*, InitializerBase* initfunc);
+
+
+template
+void
+Variable::check_and_register<bool>(const string&, bool&,
+    const TiberModelObject*, InitializerBase* initfunc);
+
+
+
+
+template
+void
+Variable::set_variable_value<double>(const string&, const double&);
+
+template
+void
+Variable::set_variable_value<int>(const string&, const int&);
+
+template
+void
+Variable::set_variable_value<string>(const string&, const string&);
+
+template
+void
+Variable::set_variable_value<char>(const string&, const char&);
+
+template
+void
+Variable::set_variable_value<unsigned int>(const string&, const unsigned int&);
+
+template
+void
+Variable::set_variable_value<bool>(const string&, const bool&);
+
+
+
+
+template
+double
+Variable::get_variable_value<double>(const string&);
+
+template
+int
+Variable::get_variable_value<int>(const string&);
+
+template
+string
+Variable::get_variable_value<string>(const string&);
+
+template
+char
+Variable::get_variable_value<char>(const string&);
+
+template
+unsigned int
+Variable::get_variable_value<unsigned int>(const string&);
+
+template
+bool
+Variable::get_variable_value<bool>(const string&);

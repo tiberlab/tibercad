@@ -27,7 +27,7 @@ ElectricalContact::create(const std::string& name,
     ct = LeakageCurrent::create();
   else if (name == "interface")
     ct = MaterialInterface::create();
-  
+
   if (ct != NULL)
     ct->set_options(options);
 
@@ -38,25 +38,24 @@ ElectricalContact::create(const std::string& name,
 void
 ElectricalContact::do_init(void)
 {
-  if (get_options().get_option("zero_field", false))
+  if (get_option("zero_field", false))
     set_zero_derivative_bc(DriftDiffusionDefs::POTENTIAL);
-  if (get_options().get_option("zero_grad_fermi_e", false))
+  if (get_option("zero_grad_fermi_e", false))
     set_zero_derivative_bc(DriftDiffusionDefs::FERMIE);
-  if (get_options().get_option("zero_grad_fermi_h", false))
+  if (get_option("zero_grad_fermi_h", false))
     set_zero_derivative_bc(DriftDiffusionDefs::FERMIH);
 
-  _surfres = get_options().get_option("contact_resistance", 0.0);
+  get_parameter("contact_resistance", _surfres);
 
-  std::string s(get_options().get_option("voltage", ""));
-  set_simulation_voltage(check_and_register(s, 0.0));
+  get_parameter("voltage", _voltage);
 
   _has_field_emission =
-    get_options().get_option("calculate_field_emission", _has_field_emission);
+    get_option("calculate_field_emission", _has_field_emission);
 
   if (_has_field_emission)
   {
     _field_emission =
-      new FowlerNordheim(get_options().get_option("work_function", 1.0));
+      new FowlerNordheim(get_option("work_function", 1.0));
     _real_contact = true;
   }
 
@@ -72,7 +71,7 @@ ElectricalContact::do_init(void)
 double
 ElectricalContact::get_contact_voltage_drop(void) const
 {
-  double j = Constants::e * (get_normal_hole_flux() - 
+  double j = Constants::e * (get_normal_hole_flux() -
       get_normal_electron_flux());
 
   // a negative current means inflowing current
@@ -87,7 +86,7 @@ ElectricalContact::determine_reference_material(void)
   const Device& dev = bd->get_environment()->get_device();
   const Material* mat;
 
-  std::string ref = get_options().get_option("reference_material", "");
+  std::string ref = get_option("reference_material", "");
   if (!ref.empty())
   {
     mat = dev.get_material(ref);
