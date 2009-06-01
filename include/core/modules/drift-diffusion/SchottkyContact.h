@@ -35,6 +35,9 @@ class SchottkyContact : public ElectricalContact
     //! The reference band
     char _band;
 
+    //! Is this a fixed barrier or not?
+    bool _fixed_barrier;
+
 };
 
 
@@ -55,7 +58,7 @@ SchottkyContact::create(void)
 
 inline
 SchottkyContact::SchottkyContact(void)
-  : _band('c')
+  : _band('c'), _fixed_barrier(true)
 {
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::DIRICHLET);
   set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::DIRICHLET);

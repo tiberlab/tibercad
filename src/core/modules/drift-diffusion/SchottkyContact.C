@@ -12,8 +12,9 @@ SchottkyContact::do_init(void)
 {
   ElectricalContact::do_init();
 
-  double barrier = get_options().get_option("barrier_height", 0.8);
-  barrier = get_options().get_option("barrier", barrier);
+  double barrier = get_option("barrier_height", 0.8);
+  barrier = get_option("barrier", barrier);
+
 
   std::string band = get_options().get_option("band", "c");
   if (band == "c")
@@ -26,13 +27,24 @@ SchottkyContact::do_init(void)
   _band = band[0];
 
   // we override when work function is given explicitly
-  _workfunction = get_options().get_option("work_function", _workfunction);
+  if (has_option("work_function"))
+  {
+    // if the workfunction is set then we assume that this one should
+    // be fixed and not the resulting barrier
+    _fixed_barrier = false;
+    _workfunction = get_option("work_function", _workfunction);
+  }
 
-  // TODO this is dirty, but assures the barrier in strained case
-  if (_band == 'c')
-    _workfunction -= get_reference_material().get_conduction_band_edge();
-  else if (_band == 'v')
-    _workfunction -= get_reference_material().get_valence_band_edge();
+  _fixed_barrier = get_option("fixed_barrier", _fixed_barrier);
+
+  if (_fixed_barrier)
+  {
+    // this is a dirty trick, but assures the barrier in strained case
+    if (_band == 'c')
+      _workfunction -= get_reference_material().get_conduction_band_edge();
+    else if (_band == 'v')
+      _workfunction -= get_reference_material().get_valence_band_edge();
+  }
 
 }
 
@@ -46,10 +58,13 @@ SchottkyContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
   {
     case DriftDiffusionDefs::POTENTIAL:
       val = _workfunction;
-      if (_band == 'c')
-        val += get_reference_material().get_conduction_band_edge();
-      else if (_band == 'v')
-        val += get_reference_material().get_valence_band_edge();
+      if (_fixed_barrier)
+      {
+        if (_band == 'c')
+          val += get_reference_material().get_conduction_band_edge();
+        else if (_band == 'v')
+          val += get_reference_material().get_valence_band_edge();
+      }
     case DriftDiffusionDefs::FERMIE:
       break;
     case DriftDiffusionDefs::FERMIH:

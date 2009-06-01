@@ -66,6 +66,16 @@ class TiberModelObject
         bool override = true) const;
 
 
+    //! Tells if an option has been specified in the input file
+    /*!
+     * \param name the option name
+     * \param override do or do not override from other places (if
+     *   implemented)
+     */
+    bool has_option(const std::string& name,
+        bool override = true) const;
+
+
     //! Get a parameter
     /*!
      * Parameters are basically the same as options (cf. get_option())
@@ -178,6 +188,15 @@ TiberModelObject::set_options(const ModelOptions& options)
 {
   _options += options;
 }
+
+
+inline
+bool
+TiberModelObject::has_option(const std::string& name, bool override) const
+{
+  return has_parameter(name, override);
+}
+
 
 
 inline

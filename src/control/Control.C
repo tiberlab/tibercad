@@ -274,7 +274,7 @@ Control::create_device(void)
 
   if (!(exists(outpath) && is_directory(outpath)))
   {
-    string msg("Cannot create ore use '");
+    string msg("Cannot create or use '");
     msg += outpath.string() + "' as output directory.";
     throw InitFailedException(msg);
   }
