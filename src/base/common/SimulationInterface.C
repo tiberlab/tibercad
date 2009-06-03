@@ -183,7 +183,6 @@ SimulationInterface::create(const string& type,
     sim->get_options().delete_option("name");
 
 
-#ifdef DEBUG
     ostringstream os;
     os << "Added simulator" << Messages::endl;
     os << "        ID   = " << sim->get_id() << Messages::endl;
@@ -192,7 +191,6 @@ SimulationInterface::create(const string& type,
       " / default name = " << sim->get_default_name() << Messages::endl;
     os << "        address = " << sim << Messages::endl;
     Messages::debug(os.str());
-#endif
   }
 
   return sim;
@@ -206,12 +204,11 @@ SimulationInterface::destroy(SimulationInterface* p)
 {
   if (p != NULL)
   {
-#ifdef DEBUG
-    cerr << "Deleted simulator (ID = " << p->get_id() <<
+    ostringstream os;
+    os << "Deleted simulator (ID = " << p->get_id() <<
       " name = " << p->get_name() << " / type_id = " <<
-      p->get_default_name() << ")";
-    cerr << " address = " << p << Messages::endl;
-#endif
+      p->get_default_name() << ")" << " address = " << p;
+    Messages::debug(os.str());
 
     libhandle_t libhandle = p->_libhandle;
     destroy_t destroy_fnc = p->_destroy;

@@ -71,10 +71,9 @@
 #include "ZbStrainDynamicalMatrix.h"
 #include "ZbRamanTensor.h"
 
+#include "Messages.h"
+
 #include <typeinfo>
-#ifdef DEBUG
-#include <iostream>
-#endif
 #include <string>
 
 
@@ -222,11 +221,12 @@ PhysicalModelInterface::create(const string& name,
     string defaultname = "";
     mod->_name = mod->get_options().get_option("name", defaultname);
     mod->get_options().delete_option("name");
-#ifdef DEBUG
-    cerr << "Add model (ID = " << mod->get_id() <<
+
+    ostringstream os;
+    os << "Added model (ID = " << mod->get_id() <<
       " name = " << mod->get_name() << " type_id = " <<
-       mod->get_default_name() << ")\n";
-#endif
+       mod->get_default_name() << ")";
+    Messages::debug(os.str());
   }
 
   return mod;
@@ -276,11 +276,11 @@ PhysicalModelInterface::destroy(PhysicalModelInterface* p)
 
   if (p != NULL)
   {
-#ifdef DEBUG
     string id = Utils::extract_typename(typeid(*p));
-    cerr << "Delete model (ID = " << p->get_id() <<
-      " name = " << p->get_name() << " type_id = " << id << ")\n";
-#endif
+    ostringstream os;
+    os << "Delete model (ID = " << p->get_id() <<
+      " name = " << p->get_name() << " type_id = " << id << ")";
+    Messages::debug(os.str());
 
     libhandle_t libhandle = p->_libhandle;
     destroy_t destroy_fnc = p->_destroy;

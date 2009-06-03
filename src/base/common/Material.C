@@ -16,7 +16,7 @@ Material::_database;
 Material::Material(const std::string& name)
   : _is_alloy(false),
     _name(name),
-    _structure("zb"), 
+    _structure("zb"),
     _rotated_crystal(NULL),
     _is_initialized(false)
 {
@@ -36,6 +36,8 @@ Material::~Material(void)
   clear_doping();
 
   PhysicalModelInterface::destroy(_rotated_crystal);
+
+  Messages::debug("Destroyed Material " + get_name());
 }
 
 
@@ -55,7 +57,7 @@ Material::setup_doping(void)
     const std::string& doptype = get_options().get_option("doping_type", "");
     if (doptype == "acceptor")
       type = Dopant::P_TYPE;
-    
+
     add_dopant(new Dopant(doping, level, g, type));
   }
 }
@@ -110,7 +112,7 @@ Material::add_model(PhysicalModel* model, ID simulator_id)
 {
   assert(model != NULL);
   assert(simulator_id != 0);
-  
+
   ModelMap::iterator it = _models.find(simulator_id);
   if (it != _models.end())
   {
@@ -136,7 +138,7 @@ Material::add_dopant(Dopant* dopant)
     else
       _acceptors.insert(dopant);
   }
-    
+
 }
 
 
@@ -180,7 +182,7 @@ Material::create(const std::string& name, const ModelOptions& options)
     // set the crystal structure at this point
     mat->_structure = mat->get_database().get("structure", "zb");
 
-    
+
     Messages::debug("Created Material " + mat->get_name() +
       " (using parameter file " + _database->get_data_file() + ")");
 

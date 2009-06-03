@@ -25,7 +25,7 @@ class BoundaryProperties : public TiberModelObject
     /*!
      * should be implemented in the derived classes if needed
      */
-    virtual ~BoundaryProperties(void) {};
+    virtual ~BoundaryProperties(void);
 
     //! Initialize this boundary
     void init(void);

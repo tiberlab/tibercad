@@ -161,7 +161,7 @@ class TiberModelObject
   private:
 
     //! Don't allow assignment operator
-    TiberModelObject& operator=(const TiberModelObject& rhs) {};
+    TiberModelObject& operator=(const TiberModelObject& rhs);
 
 
     //! The options for this model as read from the input file
