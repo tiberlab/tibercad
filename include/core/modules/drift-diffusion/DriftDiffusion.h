@@ -31,8 +31,6 @@ class Node;
 class EquationSystems;
 class TiberLinearSolver;
 
-/////// QUIRK
-//class Macrostrain;
 
 template<typename T> class DenseMatrix;
 template<typename T> class NumericVector;
@@ -87,7 +85,7 @@ template<typename T> class SparseMatrix;
  * \li \c recombination.some_name the net recombination rate
  *   (\f$s^{-1} \cdot cm^{-3}\f$) of model \c some_name
  * \li \c recombination.total the total net recombination rate
- * 
+ *
  */
 class DriftDiffusion : public SimulationInterface
 {
@@ -130,21 +128,21 @@ class DriftDiffusion : public SimulationInterface
       RECOMB,           /*!< total recombination rate */
       EJOULE,           /*!< electrons Joule's effect */
       HJOULE,           /*!< holes Joule's effect */
-      POWERNX,          /*!< electron power flux, x direction */     
-      POWERNY,          /*!< electron power flux, y direction */     
-      POWERNZ,          /*!< electron power flux, z direction */      
-      POWERPX,          /*!< hole power flux, x direction */     
-      POWERPY,          /*!< hole power flux, y direction */     
-      POWERPZ,          /*!< hole power flux, z direction */ 
+      POWERNX,          /*!< electron power flux, x direction */
+      POWERNY,          /*!< electron power flux, y direction */
+      POWERNZ,          /*!< electron power flux, z direction */
+      POWERPX,          /*!< hole power flux, x direction */
+      POWERPY,          /*!< hole power flux, y direction */
+      POWERPZ,          /*!< hole power flux, z direction */
       EPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
       HPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
       HRECOMB,          /*!< Recombination heat  */
       MODELS = 100,     /*!< base number for models */
       HEATMODELS = 1000 /*!< base number for heat models */
-     
+
     };
-      
- 
+
+
     //! The solver methods that can be used
     enum SolverMethod
     {
@@ -152,7 +150,7 @@ class DriftDiffusion : public SimulationInterface
       GUMMEL
     };
 
-    
+
     //! How to calculate currents
     enum CurrentCalculation
     {
@@ -169,9 +167,9 @@ class DriftDiffusion : public SimulationInterface
       SURFINT
     };
 
-    
 
-    
+
+
     /**
      * This class defines various parameters that control a
      * drift-diffusion calculation
@@ -181,7 +179,7 @@ class DriftDiffusion : public SimulationInterface
       public:
 
         Options(void);
-        
+
         Options(const Options& rhs);
 
         Options& operator=(const Options& rhs);
@@ -262,33 +260,31 @@ class DriftDiffusion : public SimulationInterface
 
 
         //! How to calculate currents
-        CurrentCalculation current_calculation; 
+        CurrentCalculation current_calculation;
 
         //! Use exact jacobian or not
         bool exact_newton;
 
-        /////// QUIRK
-        //Macrostrain* write_atomic_potentials;
 
       private:
-        
+
 
         friend class DriftDiffusion;
     };
-      
+
 
 
     //! Constructor
     DriftDiffusion(void);
-    
+
     //! Destructor
     virtual ~DriftDiffusion(void);
 
-    
+
     //! Create an DriftDiffusion object
     static DriftDiffusion* create(void);
 
-    
+
     /*! \copydoc SimulationInterface::create_physical_model() */
     virtual PhysicalModel*
       create_physical_model(const ModelOptions& options,
@@ -299,39 +295,39 @@ class DriftDiffusion : public SimulationInterface
     virtual BoundaryProperties*
       create_boundary_model(const ModelOptions& options) const
       throw (ModelErrorException);
- 
-    
+
+
     /**
      * @returns a reference to the simulation options
      */
     Options& get_options(void);
 
-    
+
     /**
      * Enables adaptive mesh refinement.
      */
     void enable_mesh_refinement(void);
 
-    
+
     /**
      * Disables adaptive mesh refinement.
      */
     void disable_mesh_refinement(void);
 
-    
+
     /**
      * Set new simulation options.
      */
     void set_options(const Options& options);
 
-    
+
     //! Get the mesh
     /*!
      * \return a constant reference to the simulation mesh
      */
     Mesh& get_mesh(void) const;
-    
-    
+
+
 
     //! Set the electron quasi Fermi level to \c Ef_n
     /*!
@@ -341,7 +337,7 @@ class DriftDiffusion : public SimulationInterface
      */
     void set_electron_fermi_level(double Ef_n);
 
-    
+
     //! Set the hole quasi Fermi level to \c Ef_p
     /*!
      * \c Ef_p has to be given as electron energy in units of eV
@@ -350,11 +346,11 @@ class DriftDiffusion : public SimulationInterface
      */
     void set_hole_fermi_level(double Ef_p);
 
-    
+
     //! Set the electric potential everywhere to \c pot
     void set_electric_potential(double pot);
 
-    
+
     //! Makes a first guess of the equilibrium potential
     /**
      * It sets every node to its equilibrium potential.
@@ -365,11 +361,11 @@ class DriftDiffusion : public SimulationInterface
     //! Get the number of nonlinear iterations needed for the solution
     unsigned int get_n_nonlinear_iterations(void) const;
 
-    
+
     //! Get the final residual norm of the solution
     double get_final_residual(void) const;
 
-    
+
     //! Get the boundary currents indexed by boundary descriptor
     const std::map<const Boundary*, double>&
       get_boundary_currents(void) const;
@@ -391,7 +387,7 @@ class DriftDiffusion : public SimulationInterface
     /*! \copydoc SimulationInterface::do_equilibrium() */
     virtual void do_equilibrium(void);
 
-    
+
     //! Solve the drift-diffusion problem.
     /*!
      * If adaptive mesh refinement was enabled for this solver
@@ -404,14 +400,14 @@ class DriftDiffusion : public SimulationInterface
     /*! \copydoc SimulationInterface::do_print_info() */
     virtual void do_print_info(void);
 
-    
+
     /*! \copydoc SimulationInterface::parse_options() */
     virtual void parse_options(void);
 
-    
+
     /*! \copydoc SimulationInterface::solution_vector() */
     virtual NumericVector<double>& solution_vector(void);
-    
+
 
     /*! \copydoc SimulationInterface::build_nodal_results() */
     virtual void build_nodal_results(const std::set<std::string>& variables,
@@ -440,7 +436,7 @@ class DriftDiffusion : public SimulationInterface
     /*! \copydoc SimulationInterface::do_get_solution_vector() */
     virtual NumericVector<double>& do_get_solution_vector(void);
 
-    
+
     /*! \copydoc SimulationInterface::do_maximum_norm_of_difference() */
     virtual double do_maximum_norm_of_difference(ID id);
 
@@ -470,7 +466,7 @@ class DriftDiffusion : public SimulationInterface
 
 
   private:
-   
+
 
 
     // for nicer code
@@ -517,7 +513,7 @@ class DriftDiffusion : public SimulationInterface
      * The @c Options to be used
      */
     Options _options;
-    
+
     bool _electronsonly;
 
     //! The boundary currents
@@ -554,10 +550,10 @@ class DriftDiffusion : public SimulationInterface
 
     //! disable the copy constructor
     DriftDiffusion(const DriftDiffusion& rhs);
-    
+
     //! disable the copy assignment operator
     DriftDiffusion& operator=(const DriftDiffusion& rhs);
-    
+
 
     //! Do a number of Gummel iterations
     /*!
@@ -569,28 +565,28 @@ class DriftDiffusion : public SimulationInterface
 
     //! Parse the options which will not change between calls to solve()
     void parse_const_options(void);
-  
-    
-    
+
+
+
     //! Rebuild the equation system if needed
     void rebuild_equation_system(void);
 
-    
+
     /*!
      * \brief Computes the scaling parameters according to the
      * scaling type \p type
      */
     void compute_scaling(Scaling::ScalingType type = Scaling::UNITS);
 
-    
-    
+
+
     //! Fills the dirichlet nodes data structure.
     void find_dirichlet_nodes(void);
 
 
     //! Find nodes on boundary between dielectric/semiconductor
     void find_dielectric_boundary_nodes(void);
-    
+
 
     //! Tells if node lies on an inner dielectric/semiconductor boundary
     bool is_dielectric_boundary_node(const Node* node) const;
@@ -599,7 +595,7 @@ class DriftDiffusion : public SimulationInterface
     //! Find elements that touch a real contact
     void find_contact_elements(void);
 
-    
+
     //! Reset solver environment.
     /*!
      * Deletes only the \p EquationSystems object, without
@@ -610,7 +606,7 @@ class DriftDiffusion : public SimulationInterface
 
     //! Sets the Dirichlet type boundary conditions
     void set_dirichlet_bc(void);
-    
+
 
     //! Cleanup solver environment.
     /*!
@@ -639,7 +635,7 @@ class DriftDiffusion : public SimulationInterface
      */
     void calculate_currents(void);
 
-    
+
     //! Calculate terminal currents
     /*!
      * Integrates numerically over the boundary elements.
@@ -658,7 +654,7 @@ class DriftDiffusion : public SimulationInterface
      *
      * Assuming electron and hole generation-recombination terms to be
      * equal, one can write:
-     * \f[\left(-\nabla(\mathbf{j}_n + \mathbf{j}_p), hl\right) = 
+     * \f[\left(-\nabla(\mathbf{j}_n + \mathbf{j}_p), hl\right) =
      * -\int_\Omega h_l \nabla (\mathbf{j}_n + \mathbf{j}_p)\mathrm{d}V = 0\f]
      * where \f$h_l|_{\Gamma_j} = \delta_{lj}, h_l \in H^1\f$ is the test
      * function for the contact \it l
@@ -709,7 +705,7 @@ class DriftDiffusion : public SimulationInterface
 
 //
 // inline member functions
-// 
+//
 
 inline
 DriftDiffusion*
@@ -772,7 +768,7 @@ DriftDiffusion::get_boundary_currents() const
 
 
 inline
-Mesh& 
+Mesh&
 DriftDiffusion::get_mesh(void) const
 {
   return _device->get_mesh();

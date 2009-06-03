@@ -4,8 +4,8 @@
 #define _RECOMBINATIONMODELINTERFACE_H_
 
 
-#ifndef TIBER_MODULE_NAME
-# define TIBER_MODULE_NAME dd_rec
+#ifndef TIBER_MODULE_PREFIX
+# define TIBER_MODULE_PREFIX dd_rec
 #endif
 
 
@@ -47,7 +47,7 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
     /*!
      * The model is created according to the given model name.
      * If it is not known, the NULL pointer is returned.
-     * 
+     *
      * \param name the model name
      * \param options the options as given in the input file
      * \return a pointer to the newly created object

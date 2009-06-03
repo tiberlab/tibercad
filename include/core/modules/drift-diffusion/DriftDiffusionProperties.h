@@ -4,8 +4,8 @@
 #define _DRIFTDIFFUSIONPROPERTIES_H_
 
 
-#ifndef TIBER_MODULE_NAME
-# define TIBER_MODULE_NAME dd
+#ifndef TIBER_MODULE_PREFIX
+# define TIBER_MODULE_PREFIX dd
 #endif
 
 

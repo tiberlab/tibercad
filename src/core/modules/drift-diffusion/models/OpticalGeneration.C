@@ -8,7 +8,7 @@
 
 
 
-TIBER_SUBMODEL(OpticalGeneration, optical)
+TIBER_MODULE(OpticalGeneration, optical)
 
 
 

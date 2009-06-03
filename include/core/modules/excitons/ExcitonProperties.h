@@ -4,8 +4,8 @@
 #define _EXCITONPROPERTIES_H_
 
 
-#ifndef TIBER_MODULE_NAME
-# define TIBER_MODULE_NAME ex
+#ifndef TIBER_MODULE_PREFIX
+# define TIBER_MODULE_PREFIX ex
 #endif
 
 
@@ -24,9 +24,9 @@ class Elem;
 
 class ExcitonProperties : public PhysicalModel
 {
-    
+
   public:
-       
+
     //! A default (empty) destructor.
     virtual ~ExcitonProperties(void);
 
@@ -35,7 +35,7 @@ class ExcitonProperties : public PhysicalModel
     /*!
      * The model is created according to the given model name.
      * If it is not known, the NULL pointer is returned.
-     * 
+     *
      * \param name the model name
      * \param options the options as given in the input file
      * \return a pointer to the newly created object
@@ -45,7 +45,7 @@ class ExcitonProperties : public PhysicalModel
 
      //! Returns the exciton energy \f$ Eg - R \f$
      double get_exciton_energy(void);
-      
+
     //! Set the statistics to be used
     /*!
      * \param statistics the statistics
@@ -80,7 +80,7 @@ class ExcitonProperties : public PhysicalModel
 
     //! Set the coordinates
     void set_coordinates(const Point& p);
-    
+
     //! Set the carrier temperature
     void set_carrier_temperature(double T_x);
 
@@ -93,13 +93,13 @@ class ExcitonProperties : public PhysicalModel
      * the Exciton binding energy, respectively.
      */
     void set_energy(double energy);
-    
+
     //! Set the exciton DOS
     void set_density_of_states(double DOS);
-    
+
     //! Set the carrier density
     void set_density(double x);
-    
+
 
     //! Get the element we are currently working on
     const Elem* get_element(void) const;
@@ -127,12 +127,12 @@ class ExcitonProperties : public PhysicalModel
     //! Get the exciton density
     /*!
      * Get the exciton density as calculated by \c calculate_all(...)
-     * 
+     *
      * \return the exciton density
      */
     double get_density(void) const
       { return density; };
-     
+
     //! Get the exciton density derivative
     /*!
      * \return the exciton density derivative with respect to the
@@ -140,24 +140,24 @@ class ExcitonProperties : public PhysicalModel
      */
     double get_density_derivative(void) const
       { return density_derivative; };
-    
+
 
     //! Get the exciton recombination rate
     double get_net_recombination_rate(void) const;
-      
+
     //! Get the exciton recombination rate derivative
     /*!
      * Get \f$\frac{\partial R}{\partial\phi_x}\f$
      */
     double get_net_recombination_rate_derivative(void) const
         { return recombination_rate_derivative; };
-    
+
     //! Get the nonradiative recombination rate
     virtual double get_nonradiative_recombination_rate(void);
 
     //! Get the radiative recombination rate
     virtual double get_radiative_recombination_rate(void);
-    
+
     //! Get the dissociation rate
     virtual double get_dissociation_rate(void);
 
@@ -167,9 +167,9 @@ class ExcitonProperties : public PhysicalModel
      */
     double get_mobility(void) const
       { return mobility; };
-      
+
   protected:
-  
+
     //! The empty constructor.
     ExcitonProperties(void);
 
@@ -177,7 +177,7 @@ class ExcitonProperties : public PhysicalModel
     //! Initialize this model
     /*!
      * This reads the database and calls init for all submodels
-     * A derived class which reimplements this method has to call 
+     * A derived class which reimplements this method has to call
      * explicitly the one of this class!
      */
     virtual void do_init(void) {};
@@ -186,7 +186,7 @@ class ExcitonProperties : public PhysicalModel
 
     virtual void do_mobility(void) {};
 
-  
+
     //! This method gets called from reinit()
     /*!
      * It can be used to setup data that is constant in an element, e.g.
@@ -224,10 +224,10 @@ class ExcitonProperties : public PhysicalModel
 
     //! The net recombination rate
     double net_recomb_rate;
-    
+
     //! The derivative of the net recombination rate
     double recombination_rate_derivative;
-    
+
 
   private:
 
@@ -258,7 +258,7 @@ class ExcitonProperties : public PhysicalModel
     //! Calculate the density and its derivative
     void calculate_density_and_derivative(double arg, double& density,
         double& derivative) const;
-    
+
     //! Calculate the density for a given argument
     double calculate_density(double arg) const;
 
@@ -311,7 +311,7 @@ ExcitonProperties::get_radiative_recombination_rate(void)
 {
   return 0;
 }
- 
+
 
 inline
 double
@@ -325,7 +325,7 @@ inline
 double
 ExcitonProperties::calculate_density(double arg) const
 {
-  
+
   const double arg_max = 150;
   const double arg_min = -100;
 
@@ -371,15 +371,15 @@ ExcitonProperties::set_coordinates(const Point& p)
 {
   _coord = &p;
 }
- 
-    
+
+
 inline
 void
 ExcitonProperties::set_carrier_temperature(double T_x)
 {
   exciton_vt = T_x;
 }
-    
+
 inline
 double
 ExcitonProperties::get_lattice_temperature(void)
@@ -393,7 +393,7 @@ ExcitonProperties::get_exciton_energy(void)
 {
   return _energy;
 }
-    
+
 inline
 double
 ExcitonProperties::get_carrier_temperature(void)
@@ -402,14 +402,14 @@ ExcitonProperties::get_carrier_temperature(void)
 }
 
 
-    
+
 inline
 void
 ExcitonProperties::set_effective_potential(double eff_potential)
 {
   eff_pot = eff_potential;
 }
-    
+
 
 inline
 void

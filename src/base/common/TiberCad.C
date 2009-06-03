@@ -1,5 +1,6 @@
 // $Id$
 
+#include "tiber_config.h"
 #include "tiber_version.h"
 #include "svnrevision.h"
 #include "TiberCad.h"
@@ -71,7 +72,7 @@ TiberCad::init(int argc, char** argv)
     // setup DLLoader paths
     DLLoader::set_library_path(tiberroot + "/lib/tibermodels");
 #ifdef DEBUG
-    DLLoader::prepend_to_library_path(tiberroot + "lib/debug/tibermodels");
+    DLLoader::prepend_to_library_path(tiberroot + "/lib/debug/tibermodels");
 #endif
     char* modelpath = getenv("TIBERMODELPATH");
     if (modelpath != NULL)

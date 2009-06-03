@@ -4,11 +4,9 @@
 #include "DriftDiffusionProperties.h"
 
 
-#include "getpot.h"
 
 
-
-TIBER_SUBMODEL(DirectRecombination, direct)
+TIBER_MODULE(DirectRecombination, direct)
 
 
 

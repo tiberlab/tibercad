@@ -4,8 +4,8 @@
 #define _MOBILITYMODELINTERFACE_H_
 
 
-#ifndef TIBER_MODULE_NAME
-# define TIBER_MODULE_NAME dd_mob
+#ifndef TIBER_MODULE_PREFIX
+# define TIBER_MODULE_PREFIX dd_mob
 #endif
 
 
@@ -37,7 +37,7 @@ class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
     /*!
      * The model is created according to the given model name.
      * If it is not known, the NULL pointer is returned.
-     * 
+     *
      * \param name the model name
      * \param options the options as given in the input file
      * \return a pointer to the newly created object
@@ -51,12 +51,12 @@ class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
      * \param type the carrier type, can be \c e or \c h
      */
     void set_carrier_type(char type);
-    
+
 
     //! Get the carrier type
     char get_carrier_type(void) const;
 
-    
+
   protected:
 
     //! \copydoc DriftDiffusionProperties::DriftDiffusionProperties()

@@ -8,7 +8,7 @@
 
 
 
-TIBER_SUBMODEL(DopingDependentMobility, doping_dependent)
+TIBER_MODULE(DopingDependentMobility, doping_dependent)
 
 
 
@@ -22,7 +22,7 @@ DopingDependentMobility::read_database(void)
   formula_ = db.get("mobility_formula", formula_, true);
 
   std::vector<double> empty(2, 0);
-  
+
   if (formula_ == 1)
   {
     // Model of Masetti et al.
@@ -194,7 +194,7 @@ DopingDependentMobility::do_init_alloy(const PhysicalModelInterface* comp_A,
   an_ = alloy(scA->an_, scB->an_ , xa);
   a_ = alloy(scA->a_, scB->a_ , xa);
   aa_ = alloy(scA->aa_, scB->aa_ , xa);
-  
+
   if (formula_ == 1)
   {
     assert(scA->const_mob_ != NULL);

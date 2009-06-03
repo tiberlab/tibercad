@@ -12,7 +12,7 @@
 #include <sstream>
 
 
-TIBER_SUBMODEL(SemiconductorModel, default)
+TIBER_MODULE(SemiconductorModel, default)
 
 
 using namespace DriftDiffusionDefs;

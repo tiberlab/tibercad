@@ -4,8 +4,8 @@
 #define _DSSCMODEL_H_
 
 
-#ifndef TIBER_MODULE_NAME
-# define TIBER_MODULE_NAME dssc
+#ifndef TIBER_MODULE_PREFIX
+# define TIBER_MODULE_PREFIX dssc
 #endif
 
 
@@ -59,6 +59,9 @@ class DSSCModel : public PhysicalModel
       double C;
     };
 
+
+    //! The empty constructor.
+    DSSCModel(void);
 
 
     //! A default (empty) destructor.
@@ -334,10 +337,6 @@ class DSSCModel : public PhysicalModel
       double generation_rate;
     };
 
-
-
-    //! The empty constructor.
-    DSSCModel(void);
 
 
     /*! \copydoc PhysicalModel::read_database() */
