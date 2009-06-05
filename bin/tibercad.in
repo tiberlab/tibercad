@@ -39,6 +39,9 @@ then
   exit 1
 fi
 
+# stack size limit / VM may be too small ?
+ulimit -v unlimited -s unlimited -c 0
+
 
 if [ $usegdb -eq 1 ]
 then

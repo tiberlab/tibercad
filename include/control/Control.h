@@ -34,7 +34,7 @@ class Control
     //! Type for the list of simulations
     typedef std::map<const std::string, SimulationInterface*> SimulationMap;
 
-    
+
     //! Type for the list of simulation environments
     typedef std::map<SimulationInterface*,
             SimulationEnvironment*> EnvironmentMap;
@@ -55,18 +55,18 @@ class Control
           _it = other._it;
           return *this;
         };
-        
+
         simulation_iterator& operator++(void) { ++_it; return *this; };
-        
+
         simulation_iterator& operator--(void) { --_it; return *this; };
-        
+
         SimulationInterface* operator*(void) { return _it->second; };
-        
+
         bool operator==(const simulation_iterator& other)
         {
           return (_it == other._it);
         };
-        
+
         bool operator!=(const simulation_iterator& other)
         {
           return (_it != other._it);
@@ -75,19 +75,23 @@ class Control
       private:
         SimulationMap::iterator _it;
     };
-        
+
 
     //! The constructor
     /*!
      * \param inputfile the input file to be used
      */
-    Control(const std::string& inputfile);
+    Control(void);
 
-    
+
     //! The destructor
     ~Control(void);
 
-    
+
+    //! Set the input file
+    void set_inputfile(const std::string& inputfile);
+
+
     //! Initialize the device and the simulations
     /*!
      * This method calls create_device(), create_materials() and
@@ -96,14 +100,14 @@ class Control
     void init(void) throw (InitFailedException,
         ModelErrorException, DatabaseException);
 
-    
+
     //! Runs the simulation
     /*!
      * Calls solve() of the simulations according to the rules given
      * in the input file
      */
     void run_simulation(void) throw (SolveFailedException);
-    
+
 
     //! Plots the results of all simulation models
     void plot_all(void);
@@ -126,7 +130,7 @@ class Control
      * In the second case, the first simulation of this type will be
      * returned. In the third case, the first of all simulations will
      * be returned.
-     * 
+     *
      */
     SimulationInterface* find_simulation(const std::string& name) const;
 
@@ -189,7 +193,7 @@ class Control
      * to generate
      *
      * Currently the following formats are supported:
-     * \li \c gmv for GMV 
+     * \li \c gmv for GMV
      * \li \c ise for Tecplot
      * \li \c gnu for GnuPlot
      */
@@ -203,7 +207,7 @@ class Control
     //! Get the iterator to the first simulation
     simulation_iterator simulations_begin(void);
 
-    
+
     //! Get the past-the-end iterator for the simulations
     simulation_iterator simulations_end(void);
 
@@ -241,19 +245,19 @@ class Control
     //! The inputfile
     std::string _inputfile;
 
-    
+
     //! The device we control
     Device* _device;
 
-    
+
     //! The database we use
     Database* _database;
 
-    
+
     //! A list of all simulations we control
     SimulationMap _simulations;
 
-    
+
     //! A list of all simulation environments we control
     /*!
      * \note {Not every simulation necessarily has an associated
@@ -291,7 +295,7 @@ class Control
      */
     std::string _output_format;
 
-    
+
     //! Create the device
     /*!
      * The creation of a device involves the following function calls
@@ -306,11 +310,11 @@ class Control
      */
     void create_device(void);
 
-    
+
     //! Create all the materials
     void create_materials(void);
 
-    
+
     //! Create all atomistic structures
     void create_atomistic_structures(void);
 
@@ -337,6 +341,14 @@ class Control
 //
 // inline members
 //
+
+
+inline
+void
+Control::set_inputfile(const std::string& inputfile)
+{
+  _inputfile = inputfile;
+}
 
 
 inline
@@ -451,7 +463,7 @@ Control::simulations_end(void)
 
 
 inline
-const Database& 
+const Database&
 Control::get_database(void) const
 {
   assert(_database != NULL);

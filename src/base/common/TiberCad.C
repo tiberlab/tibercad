@@ -4,12 +4,17 @@
 #include "tiber_version.h"
 #include "svnrevision.h"
 #include "TiberCad.h"
+#include "Control.h"
 #include "EigenSolver.h"
 #include "Database.h"
 #include "DLLoader.h"
 
 #include "libmesh.h"
 
+namespace
+{
+  Control* _control = NULL;
+}
 
 char**
 TiberCad::cmdline_argv = 0;
@@ -79,22 +84,35 @@ TiberCad::init(int argc, char** argv)
       DLLoader::prepend_to_library_path(modelpath);
   }
 
-  
+
   // prepare libMesh
   libMesh::init(cmdline_argc, cmdline_argv);
-  
+
   // prepare EigenSolver
   EigenSolver::slepc_init(cmdline_argc, cmdline_argv);
+
+
+  // now create a TiberCAD Control object
+  _control = new Control();
 }
 
 
 int
 TiberCad::cleanup(void)
 {
+  delete _control;
 
   // close EigenSolver
   EigenSolver::slepc_done();
 
   // close libMesh and return
   return libMesh::close();
+}
+
+
+Control&
+TiberCad::get_control(void)
+{
+  assert(_control != NULL);
+  return *_control;
 }

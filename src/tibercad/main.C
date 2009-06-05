@@ -115,8 +115,8 @@ int main (int argc, char** argv)
   TiberCad::init(argc, argv);
   try {
 
-    Control control(inputfile);
-    
+    Control& control = TiberCad::get_control();
+    control.set_inputfile(inputfile);
     control.init();
     control.run_simulation();
 

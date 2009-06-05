@@ -106,25 +106,13 @@ Control::SignalHandler::sigint(int sig)
 
 
 
-Control::Control(const std::string& inputfile)
-  : _inputfile(inputfile),
+Control::Control(void)
+  : _inputfile(""),
     _device(0),
     _database(0),
     _outputdir(".")
 {
-  // we check here if the input file exists
-  ifstream infile;
-  infile.open(_inputfile.c_str());
-  if (infile.fail() || !infile.good() || (infile.rdbuf()->in_avail() == 0))
-  {
-    infile.close();
-    throw InitFailedException("Input file is invalid.");
-  }
 
-  infile.close();
-
-  // setup the signal handler
-  SignalHandler::set_control(this);
 }
 
 
@@ -168,8 +156,23 @@ Control::init(void) throw (InitFailedException,
     ModelErrorException, DatabaseException)
 {
 
+  // setup the signal handler
+  SignalHandler::set_control(this);
+
   // we want to intercept SIGINT (Ctrl-C)
   SignalHandler::activate_sigint();
+
+
+  // we check here if the input file exists
+  ifstream infile;
+  infile.open(_inputfile.c_str());
+  if (infile.fail() || !infile.good() || (infile.rdbuf()->in_avail() == 0))
+  {
+    infile.close();
+    throw InitFailedException("Input file is invalid.");
+  }
+  infile.close();
+
 
   _database = new Database();
   Material::set_database(*_database);
@@ -530,7 +533,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
     // read options for this simulation (from Solver section)
     ModelOptions solveropts;
-      
+
     OptionsMap::iterator map_it(solver_opts.find(modelname));
     if (map_it != solver_opts.end())
       solveropts += map_it->second;

@@ -5,6 +5,8 @@
 
 #include <string>
 
+class Control;
+
 
 //! Some useful common definitions for TiberCAD
 namespace TiberCad
@@ -73,6 +75,10 @@ namespace TiberCad
 
   //! The full TiberCAD version string
   std::string TiberCadVersion(bool include_svn_release = true);
+
+
+  //! Get access to the control module
+  Control& get_control(void);
 
 }
 
