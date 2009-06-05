@@ -7,7 +7,7 @@ include $(topdir)/Make.defs
 CXXFLAGS = -fPIC -I $(topdir)/include/utils/DFTB
 
 
-target := $(topdir)/libdftbpc$(shared_libext)
+target := $(libdir)/libdftbpc$(shared_libext)
 
 
 $(libdir)/libdftbpc$(shared_libext) :  DftbpWrapper$(obj-suffix) libdftbp.a
