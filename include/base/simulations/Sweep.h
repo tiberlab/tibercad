@@ -14,10 +14,11 @@
 /*!
  * This class takes a variable (cf. Variable class)
  * and performs a sweep with it (e.g. contact voltage). For each
- * sweep step it solves the given simulation(s) according to the following
- * flow chart:
+ * sweep step it solves the given simulation(s) according to
+ * the following flow chart:
  * \image html Sweep_flowchart.jpg
- * \image latex Sweep_flowchart.eps "Flow chart for a parameter sweep" width=10cm
+ * \image latex Sweep_flowchart.eps
+ *    "Flow chart for a parameter sweep" width=10cm
  */
 class Sweep : public SimulationInterface
 {
@@ -29,6 +30,12 @@ class Sweep : public SimulationInterface
 
     //! Create a Sweep object
     static Sweep* create(void);
+
+
+    //! Get the list of inner simulations
+    const std::vector<SimulationInterface*>
+      get_simulations(void) const;
+
 
 
   protected:
@@ -100,6 +107,14 @@ class Sweep : public SimulationInterface
     const std::set<std::string>& get_plotvariables(void) const;
 
 
+    //! Get the innermost simulations
+    /*!
+     * Expands all sweeps, not including the simulations following
+     * after a nested sweep.
+     */
+    void get_inner_simulations(
+        std::vector<SimulationInterface*>& sims) const;
+
 
   private:
 
@@ -132,6 +147,9 @@ class Sweep : public SimulationInterface
 
     //! The ids of the remembered solutions
     std::map<ID, std::vector<ID> > _remembered_sol_ids;
+
+    //! The remembered sweep value
+    double _remembered_sweep_value;
 
 
     //! Remember the current solution
@@ -181,6 +199,14 @@ Sweep*
 Sweep::create(void)
 {
   return new Sweep();
+}
+
+
+inline
+const std::vector<SimulationInterface*>
+Sweep::get_simulations(void) const
+{
+  return _simulations;
 }
 
 

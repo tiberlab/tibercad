@@ -5,7 +5,6 @@
 
 #include "TypeDefs.h"
 
-#include <set>
 #include <vector>
 #include <string>
 
@@ -20,13 +19,20 @@ class Ramp
   public:
 
     //! Constructor
-    explicit Ramp(const ModelOptions& options);
+    explicit Ramp(const ModelOptions& options,
+        const std::vector<SimulationInterface*>& simulations =
+        std::vector<SimulationInterface*>());
+
 
     //! Destructor
     ~Ramp(void);
 
     //! Do the ramp
     void ramp(void);
+
+    //! Ramp to a given goal
+    void ramp(double goal);
+
 
 
   private:
@@ -52,9 +58,12 @@ class Ramp
     //! The maximum step size 0 < _max_step < 1
     double _max_step;
 
+    //! Whether to plot results or not
+    bool _plot_data;
+
 
     //! The ids of the remembered solutions
-    std::map<ID, std::vector<ID> > _remembered_sol_ids;
+    std::vector<ID> _old_sol_ids;
 
 };
 
@@ -62,6 +71,14 @@ class Ramp
 //
 // inline methods
 //
+
+inline
+void
+Ramp::ramp(double goal)
+{
+  _goal = goal;
+  ramp();
+}
 
 
 

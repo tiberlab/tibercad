@@ -1,6 +1,7 @@
 // $Id$
 
 #include "Sweep.h"
+#include "Ramp.h"
 #include "Utils.h"
 #include "Variable.h"
 #include "Boundary.h"
@@ -195,13 +196,15 @@ Sweep::do_solve(void)
   bool do_plotting = prepare_plot_files(plotfiles);
 
   // if there are negative and positive values, we split them apart
-  vector<double> pos_values;
-  vector<double> neg_values;
+  //vector<double> pos_values;
+  //vector<double> neg_values;
 
-  unsigned int n = _values.size();
+  //unsigned int n = _values.size();
 
   try
   {
+    do_sweep(_values, plotfiles, sweep_data);
+    /*
     for (unsigned int i = 0; i < n; i++)
     {
       if (_values[i] >= 0.0)
@@ -246,6 +249,7 @@ Sweep::do_solve(void)
 
       do_sweep(neg_values, plotfiles, sweep_data);
     }
+    */
   }
   catch (SolveFailedException& e)
   {
@@ -393,6 +397,32 @@ Sweep::plot_data(vector<ofstream*>& plotfiles,
 
 
 
+
+void
+Sweep::get_inner_simulations(
+    std::vector<SimulationInterface*>& sims) const
+{
+  int num_sim = _simulations.size();
+  sims.resize(0);
+
+  for (unsigned int i = 0; i < num_sim; i++)
+  {
+    if (_simulations[i]->get_type() != "sweep")
+      sims.push_back(_simulations[i]);
+    else
+    {
+      vector<SimulationInterface*> inner;
+      Sweep* sw = static_cast<Sweep*>(_simulations[i]);
+      sw->get_inner_simulations(inner);
+      sims.insert(sims.end(), inner.begin(), inner.end());
+      break;
+    }
+  }
+}
+
+
+
+
 void
 Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     vector<map<double, vector<double> > >& sweep_data)
@@ -404,12 +434,17 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
 
   int num_sim = _simulations.size();
 
-  // we make a copy of the current solutions
-  // we need this in the case of a solver failure to go back
-  // to an old successful solution
-  vector<ID> old_sol(num_sim);
-  for (int i = 0; i < num_sim; i++)
-    old_sol[i] = _simulations[i]->remember_current_solution();
+  // our ramp will solve directly the innermost simulations,
+  // including only the first nested sweep
+  int first_nested = num_sim;
+  for (int j = 0; j < num_sim; j++)
+  {
+    if (_simulations[j]->get_type() == "sweep")
+    {
+      first_nested = j;
+      break;
+    }
+  }
 
   // for plotting
   vector<double> plotvalues;
@@ -417,154 +452,96 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
   vector<double>::iterator values_begin(values.begin());
   vector<double>::iterator values_end(values.end());
 
-  // we look at voltages +/- 1e-9 V
-  double eps = 1e-9;
+  vector<SimulationInterface*> inner_sims;
+  get_inner_simulations(inner_sims);
+
+  // for backup of data in case of nested sweeps
+  map<int, ID> old_sol;
+
+  // for the variable ramp
+  Ramp ramp(get_options(), inner_sims);
+
+  // remember the current solution
+  remember_solution();
 
   for (unsigned int i = 0; i < n; i++)
   {
     double goal = values[i];
 
-    _last = Variable::get_variable_value<double>(_variable);
-    double step = goal - _last;
-    double step_sign = (step < 0.0) ? -1 : 1;
-    double old_step = 0.0;
-
-
-    for (int j = 0; j < num_sim; j++)
-      _simulations[j]->set_to_remembered_solution(old_sol[j]);
-
-
-    // we iterate until we arrive at the goal
-    double value;
-    do
     {
-      // check for step > max_step
-      double absstep = abs(step);
-      step = (absstep > _max_step) ? _max_step * step_sign : step;
+      ostringstream os;
+      os << "Ramping to sweep value " << _variable << " = " << goal;
+      Messages::info(os.str());
+    }
 
-      value = _last + step;
-      double diff = step_sign * (goal - value);
-      if (diff < 0.0)
-        value = goal;
-
-      Variable::set_variable_value(_variable, value);
+    // reset nested sweep data
+    // NOTE: Sweep automatically remembers the starting solution
+    // when entering do_solve()
+    if (i > 0)
+    {
+      for (int j = 0; j < num_sim; j++)
       {
-        ostringstream os;
-        os << "Sweep value " << _variable << " = " << value;
-        Messages::info(os.str());
-      }
-
-      // filename suffix
-      ostringstream suffix;
-      suffix << _variable << "_" << value;
-
-      try
-      {
-
-        bool plot_data = false;
-        // write results, but only at desired sweep steps
-        if (_plot_data)
-          if (find_if(values_begin, values_end,
-                bind2nd(Utils::almost_equal(), value)) != values_end)
-          {
-            plot_data = true;
-          }
-
-
-        // the loop over the simulations
-        for (int j = 0; j < num_sim; j++)
-        {
-          _simulations[j]->solve();
-
-          // update "something-vs.-sweepvariable" files
-          // Here we do it also for intermediate steps
-          if (plotfiles[j] != NULL)
-          {
-            // it means we have something to plot
-            _simulations[j]->get_integrated_quantities(get_plotvariables(),
-                plotvalues);
-
-            sweep_data[j][value] = plotvalues;
-
-            ostringstream l;
-            l << setprecision(12) << value;
-            unsigned int n_data = plotvalues.size();
-            for (unsigned int k = 0; k < n_data; k++)
-              l << "   " << plotvalues[k];
-            l << endl;
-
-            ofstream& file = *plotfiles[j];
-            file << l.str();
-            file.flush();
-          }
-
-          if (plot_data)
-          {
-            get_control().prepend_to_filename_suffix(suffix.str());
-            _simulations[j]->plot();
-            get_control().drop_first_filename_suffix();
-          }
-
-
-          // remember the current solution
-          // for sweeps we return to the former solution!
-          if (_simulations[j]->get_type() != "sweep")
-            _simulations[j]->remember_current_solution(old_sol[j]);
-          else
-            _simulations[j]->set_to_remembered_solution(old_sol[j]);
-        }
-
-
-
-        _last = value;
-
-
-
-        // try to increase step, but only if it worked twice
-        // with the old one
-        if (step == old_step)
-          step *= 2.0;
-        old_step = step;
-      }
-      catch (SolveFailedException& e)
-      {
-        {
-          ostringstream os;
-          os << "Solve failed due to: " << Messages::endl
-            << "   " << e.what();
-          Messages::warning(os.str());
-        }
-        step = (value - _last) / 2.0;
-        if (abs(step) < _min_step)
-          throw SolveFailedException("Step size too small in sweep.");
-
-        if (i == 0)
-          throw SolveFailedException("Failure in first sweep step.");
-
-        Messages::warning("Trying intermediate step");
-
-        // set to the remembered solution
-        for (int j = 0; j < num_sim; j++)
+        if (_simulations[j]->get_type() == "sweep")
           _simulations[j]->set_to_remembered_solution(old_sol[j]);
-
-        // it failed, so we go back to the old value
-        // (In principle this is unnecessary, but we need it to not
-        // get out of the do...while loop
-        value = _last;
       }
     }
-    while (step_sign * (value - goal) < -eps);
 
+    // filename suffix
+    ostringstream suffix;
+    suffix << _variable << "_" << goal;
+    get_control().prepend_to_filename_suffix(suffix.str());
+    
+    bool failed = false;
+    try
+    {
+      ramp.ramp(goal);
 
-    if (i == 0)
-      remember_solution();
+      // the loop over the simulations
+      for (int j = 0; j < num_sim; j++)
+      {
+        // now solve everything after and including the 
+        // first nested sweep
+        if (j >= first_nested)
+          _simulations[j]->solve();
 
+        // update "something-vs.-sweepvariable" files
+        if (plotfiles[j] != NULL)
+        {
+          // it means we have something to plot
+          _simulations[j]->get_integrated_quantities(get_plotvariables(),
+              plotvalues);
+
+          sweep_data[j][goal] = plotvalues;
+
+          ostringstream l;
+          l << setprecision(12) << goal;
+          unsigned int n_data = plotvalues.size();
+          for (unsigned int k = 0; k < n_data; k++)
+            l << "   " << plotvalues[k];
+          l << endl;
+
+          ofstream& file = *plotfiles[j];
+          file << l.str();
+          file.flush();
+        }
+
+      }
+    }
+    catch (SolveFailedException& e)
+    {
+      failed = true;
+      Messages::error(e.what());
+    }
+
+    get_control().drop_first_filename_suffix();
+
+    if (failed)
+    {
+      ostringstream os;
+      os << "Sweep failed at " << _variable << " = " << goal;
+      throw SolveFailedException(os.str());
+    }
   }
-
-  // clean up
-  for (int j = 0; j < num_sim; j++)
-    _simulations[j]->delete_remembered_solution(old_sol[j]);
-
 }
 
 
@@ -593,7 +570,8 @@ Sweep::remember_solution(void)
   {
     assert((it->second).size() == num_sim);
     for (int i = 0; i < num_sim; i++)
-      (it->second)[i] = _simulations[i]->remember_current_solution((it->second)[i]);
+      (it->second)[i] =
+        _simulations[i]->remember_current_solution((it->second)[i]);
   }
   else
   {
@@ -608,6 +586,10 @@ Sweep::remember_solution(void)
 
     _remembered_sol_ids[id] = ids;
   }
+
+  // the current variable value
+  _remembered_sweep_value =
+    Variable::get_variable_value<double>(_variable);
 
   return id;
 }
@@ -624,6 +606,8 @@ Sweep::do_set_to_remembered_solution(ID id)
   if (it != end)
     for (int i = 0; i < num_sim; i++)
       _simulations[i]->set_to_remembered_solution((it->second)[i]);
+
+  Variable::set_variable_value(_variable, _remembered_sweep_value);
 }
 
 
