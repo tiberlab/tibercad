@@ -817,8 +817,8 @@ void ETB::get_band_edges(void)
 	dbA.set_section("valenceband");
 	double vbA = dbA.get("E_v",0.0);
 	dbA.set_section("bandgap");
-	double Eg = min( dbA.get("Eg_G",0.0), dbA.get("Eg_X",0.0) );
-	Eg = min( dbA.get("Eg_L",0.0), Eg );
+	double Eg = min( dbA.get("Eg_G", 1e6), dbA.get("Eg_X", 1e6));
+	Eg = min( dbA.get("Eg_L", 1e6), Eg);
 	double cbA = vbA + Eg;
 
 	std::cerr << "Eg_a: " << Eg << std::endl;
@@ -827,8 +827,8 @@ void ETB::get_band_edges(void)
 	dbB.set_section("valenceband");
 	double vbB = dbB.get("E_v",0.0);
 	dbB.set_section("bandgap");
-	Eg = min( dbB.get("Eg_G",0.0), dbB.get("Eg_X",0.0) );
-	Eg = min( dbB.get("Eg_L",0.0), Eg );	
+	Eg = min( dbB.get("Eg_G", 1e6), dbB.get("Eg_X", 1e6));
+	Eg = min( dbB.get("Eg_L", 1e6), Eg);	
 	double cbB = vbB + Eg;
 
 	std::cerr << "Eg_b: " << Eg << std::endl;
@@ -852,8 +852,8 @@ void ETB::get_band_edges(void)
 	_map_ID_Evb[*reg] = vb;
 
 	db.set_section("bandgap");
-	double Eg = min( db.get("Eg_G",0.0), db.get("Eg_X",0.0) );
-	Eg = min( db.get("Eg_L",0.0), Eg );
+	double Eg = min( db.get("Eg_G", 1e6), db.get("Eg_X", 1e6));
+	Eg = min( db.get("Eg_L", 1e6), Eg);
 
 	std::cerr << "Eg: " << Eg << std::endl;
 	std::cerr << "Vb: " << vb << std::endl; 
