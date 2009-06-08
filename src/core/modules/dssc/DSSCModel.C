@@ -27,7 +27,8 @@ DSSCModel::DSSCModel(void)
     _alpha(0.0),
     _x0(0.0),
     _alpha2(0.0),
-    _deltaG(0.0)
+    _deltaG(0.0),
+    _Vext(0.0)
 {
 }
 
@@ -69,11 +70,10 @@ DSSCModel::do_init(void)
   get_parameter("generation", _generation);
 
   get_parameter("alpha", _alpha);
-
   get_parameter("alpha2", _alpha2);
   get_parameter("deltaG", _deltaG);
+  get_parameter("Vext", _Vext);
 }
-
 
 
 void

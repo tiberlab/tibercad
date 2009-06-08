@@ -147,6 +147,11 @@ class DSSCModel : public PhysicalModel
     //! Get coordinates of the contact under illumination
     const double get_x0() const;
 
+
+    //! Get external potential
+    const double get_Vext() const;
+    
+    
     //! Get the electric field
     const RealGradient& get_electric_field(void) const;
 
@@ -479,6 +484,10 @@ class DSSCModel : public PhysicalModel
 
     //! absorption coefficient
     double _deltaG;
+
+
+    //! absorption coefficient
+    double _Vext;
 };
 
 
@@ -616,6 +625,15 @@ DSSCModel::set_grad_fermi_C(const RealGradient& grad_F)
 
 inline
 const double
+DSSCModel::get_Vext(void) const
+{
+  return _Vext;
+}
+
+
+
+inline
+const double 
 DSSCModel::get_x0(void) const
 {
   return _x0;
