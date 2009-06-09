@@ -1,0 +1,34 @@
+# InAsSb-zb
+
+alloy = 2
+structure = zb
+
+comp_A = InAs
+comp_B = InSb
+
+
+[conductionband] # [1]
+bow_m_G = 0.035
+
+
+[bandgap] # [1]
+bow_Eg_G = 0.67
+bow_Eg_L = 0.6
+bow_Eg_X = 0.6
+
+[kdotp]
+delta = 1.2
+
+
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+n_basis_specie=2
+
+specie_1=In
+specie_2=AsSb
+
+[densityfunctional_tb]
+
+

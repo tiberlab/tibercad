@@ -1,4 +1,4 @@
-# InSb-zb
+# AlSb-zb
 #
 
 structure = zb
@@ -6,82 +6,77 @@ structure = zb
 
 # lattice constant
 [lattice] # [1]
-a = 0.64794
+a = 0.61355
 
 
 [valenceband] # [1]
-E_v = 0.0
+E_v = -0.41
 
 
 [conductionband] # [1]
-m_G = 0.0135
-# m_DOS(L) = 0.25 according to [1]
-m_L_l = 0.25
-m_L_t = 0.25
-# the following are not specified in [1]
-m_X_l = 0.25
-m_X_t = 0.25
+m_G = 0.14
+m_L_l = 1.64
+m_L_t = 0.23
+m_X_l = 1.357
+m_X_t = 0.123
 
 
 
 [bandgap] # [1]
 # 0 K values
-Eg_G = 0.235
-Eg_L = 0.93
-Eg_X = 0.63
+Eg_G = 2.386
+Eg_L = 2.329
+Eg_X = 1.696
 
-varshni_alpha_G = 0.32e-3
-varshni_beta_G =  170
-
-
-# the following are not specified in [1]
-varshni_alpha_X = 0.32e-3
-varshni_beta_X =  170
-varshni_alpha_L = 0.32e-3
-varshni_beta_L =  170
+varshni_alpha_G = 0.42e-3
+varshni_beta_G =  140
+varshni_alpha_X = 0.39e-3
+varshni_beta_X =  140
+varshni_alpha_L = 0.58e-3
+varshni_beta_L =  140
 
 
 [kdotp] # [1]
-delta = 0.81
+delta = 0.676
 
-gamma1 = 34.8
-gamma2 = 15.5
-gamma3 = 16.5
+gamma1 = 5.18
+gamma2 = 1.19
+gamma3 = 1.97
 
 
 [deformation_potentials] # [1]
-a_c = -6.94
-abs_def_pot_L = -2.2  # [3]
-abs_def_pot_X = 1.41  # [3]
-uniax_def_pot_L = 11.35  # [3]
-uniax_def_pot_X = 4.53  # [3]
+a_c = -8.12 # [3],  -4.5 given in [1]
+abs_def_pot_L = -2.91  # [3]
+abs_def_pot_X = 1.91  # [3]
+uniax_def_pot_L = 15  # [3]
+uniax_def_pot_X = 6  # [3]
 
-a_v = -0.36
-b = -2.0
-d = -4.7
+a_v = -0.73 # [3] -1.4 from [1]
+b = -1.35
+d = -4.3
 
 
 [permittivity] # [3]
 # static dielectric constant
-permittivity = 17.5 
+permittivity = 12.04
 
-optical_epsilon = 15.68
+optical_epsilon = 10.24
 
 
 # stiffness data
 [elasticity] # [1]
-C11 = 68.47
-C12 = 37.35
-C44 = 31.11
+C11 = 87.69
+C12 = 43.41
+C44 = 40.76
 
 # piezoelectricity
 [piezoelectricity]
-e14 = -0.076  # [3]
+e14 = -0.055  # [3]
 
 
 # mobility
 [mobility/constant]
-mu_max = (7400.0, 500.0)
+mu_max = (200.0, 375.0) 
 exponent = (1.5, 1.5) # dummy values
 
 [mobility/doping_dependent] # [5]
@@ -119,15 +114,15 @@ Tcoeff = (0,		0)
 
 
 # direct recombination
-[recombination/direct] # [4]
-C = 5e-11 # [cm^3/s]
+[recombination/direct] 
+C = 1e-13 # [cm^3/s]
 
 
-[recombination/auger] # [4]
+[recombination/auger] 
 # R_Auger = ( C_n n + C_p p ) ( n p - ni_eff^2)
 # with C_n,p = (A + B (T/T0) + C (T/T0)^2) (1 + H exp(-{n,p}/N0))
 #
-A	= (5.0000e-26 ,	5.0000e-26)	# [cm^6/s]
+A	= (5.0000e-30 ,	5.0000e-30)	# [cm^6/s]
 B	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
 C	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
 H	= (0.0000e+00 ,	0.0000e+00)	# 
@@ -135,8 +130,8 @@ N0	= (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 
 
 
-[thermal_conductivity/constant] # [4]
-therm_lat_cond = 0.18
+[thermal_conductivity/constant] 
+therm_lat_cond = 0.7
 
 
 

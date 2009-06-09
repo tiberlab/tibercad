@@ -1,0 +1,30 @@
+# InPSb-zb
+
+alloy = 2
+structure = zb
+
+comp_A = InP
+comp_B = InSb
+
+
+
+[bandgap] # [1]
+bow_Eg_G = 1.9
+bow_Eg_L = 1.9
+bow_Eg_X = 1.9
+
+[kdotp] # [1]
+delta = 0.75
+
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+n_basis_specie=2
+
+specie_1=In
+specie_2=PSb
+
+[densityfunctional_tb]
+
+

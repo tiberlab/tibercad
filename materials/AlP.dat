@@ -1,88 +1,88 @@
-# InP-zb
+# AlP-zb
 
 structure = zb
 
 
 # lattice constant
 [lattice] # [1]
-a = 0.58697
+a = 0.54672
 
 
 [valenceband] # [1]
-E_v = -0.94
+E_v = -1.74
 
 
 [conductionband] # [1]
-m_G = 0.0795
-m_L_l = 0.47
-m_L_t = 0.47
-m_X_l = 0.88
-m_X_t = 0.88
+m_G = 0.22
+m_L_l = 2.68 # not given in [1]
+m_L_t = 0.155 # not given in [1]
+m_X_l = 2.68
+m_X_t = 0.155
 
 
 
 [bandgap] # [1]
 # 0 K values
-Eg_G = 1.424
-Eg_L = 2.014
-Eg_X = 2.384
+Eg_G = 3.63
+Eg_L = 3.57
+Eg_X = 2.52
 
-varshni_alpha_G = 0.363e-3
-varshni_beta_G =  162
+varshni_alpha_G = 0.5771e-3 
+varshni_beta_G =  372       
 
-varshni_alpha_X = 0.363e-3
-varshni_beta_X =  162
+varshni_alpha_X = 0.318e-3
+varshni_beta_X =  588
 
-varshni_alpha_L = 0.363e-3
-varshni_beta_L =  162
+varshni_alpha_L = 0.318e-3
+varshni_beta_L =  588
 
 
 [kdotp] # [1]
-delta = 0.108
+delta = 0.07
 
-gamma1 = 5.08
-gamma2 = 1.60
-gamma3 = 2.10
+gamma1 = 3.35
+gamma2 = 0.71
+gamma3 = 1.23 
 
 
-[deformation_potentials] # [1]
-a_c = -6.34
-abs_def_pot_L = -3.41 # [3]
-abs_def_pot_X = 0.59  # [3] 
-uniax_def_pot_L = 11.35  # [3] 
-uniax_def_pot_X = 3.3  # [3] 
+[deformation_potentials]
+a_c = -6.88 # [3] -5.7 given in [1]
+abs_def_pot_L = -1.74   # [3]
+abs_def_pot_X = 3.98    # [3]
+uniax_def_pot_L = 11.35 # [3]
+uniax_def_pot_X = 6.75  # [3]
 
-a_v = -0.41
-b = -2.0
-d = -5.0
+a_v = -2.64 # [3] -3 given in [1]
+b = -1.5   # [1]
+d = -4.6   # [1]
 
 
 [permittivity] # [3]
 # static dielectric constant
-permittivity = 12.61
+permittivity = 9.8
 
-optical_epsilon = 9.61
+optical_epsilon = 7.5385
 
 
 # stiffness data
 [elasticity] # [1]
-C11 = 101.1
-C12 = 56.1
-C44 = 45.6
+C11 = 133
+C12 = 63
+C44 = 61.5
 
 # piezoelectricity
 [piezoelectricity] # [3]
-e14 = 0.056
+e14 = 0.059
 
 
 # mobility
-[mobility/constant] # [2]
-mu_max = (4500.0, 150.0)
+[mobility/constant] # copied from GaP
+mu_max = (110.0, 75.0)
 exponent = (1.5, 1.5)
 
-[mobility/doping_dependent] # [2]
+[mobility/doping_dependent] # copied from GaP
 mobility_formula = 2
-mumin = (4.5e+03,	150.0)
+mumin = (110,		75.0)
 am    = (-1.5,	 	-1.5)
 mud   = (0.0,	 	0.0)
 ad    = (0.0, 		0.0)
@@ -93,7 +93,7 @@ aA    = (0.0,	 	0.0)
 
 
 # high field dependency
-[mobility/field_dependent] # [2]
+[mobility/field_dependent] # copied from GaP
 Vsat_Formula = 2
 beta0    = (2.0, 	2.0)
 betaexp  = (0,		0)
@@ -104,7 +104,7 @@ vsat_min = (5.0e+05, 	5.0e+05)
 
 
 # SRH recombination
-[recombination/SRH] # [2]
+[recombination/SRH] # copied from GaP
 Etrap    = 0.0
 taumin = (0.0, 		0.0)
 taumax = (1.0e-9, 	1.0e-9)
@@ -115,11 +115,11 @@ Tcoeff = (0,		0)
 
 
 # direct recombination
-[recombination/direct] # [2]
-C = 1.2e-10
+[recombination/direct] # copied from GaP
+C = 0.5e-13
 
 
-[recombination/auger] # [2]
+[recombination/auger] # copied from GaP
 # R_Auger = ( C_n n + C_p p ) ( n p - ni_eff^2)
 # with C_n,p = (A + B (T/T0) + C (T/T0)^2) (1 + H exp(-{n,p}/N0))
 #
@@ -131,8 +131,8 @@ N0	= (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 
 
 
-[thermal_conductivity/constant]
-therm_lat_cond = 0.68
+[thermal_conductivity/constant] # copied from GaP
+therm_lat_cond = 1.1
 
 
 

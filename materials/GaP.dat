@@ -1,88 +1,88 @@
-# InP-zb
+# GaP-zb
 
 structure = zb
 
 
 # lattice constant
 [lattice] # [1]
-a = 0.58697
+a = 0.54505
 
 
 [valenceband] # [1]
-E_v = -0.94
+E_v = -1.27
 
 
 [conductionband] # [1]
-m_G = 0.0795
-m_L_l = 0.47
-m_L_t = 0.47
-m_X_l = 0.88
-m_X_t = 0.88
+m_G = 0.13
+m_L_l = 1.2
+m_L_t = 0.15
+m_X_l = 2.0
+m_X_t = 0.253
 
 
 
 [bandgap] # [1]
 # 0 K values
-Eg_G = 1.424
-Eg_L = 2.014
-Eg_X = 2.384
+Eg_G = 2.886
+Eg_L = 2.72
+Eg_X = 2.35
 
-varshni_alpha_G = 0.363e-3
-varshni_beta_G =  162
+varshni_alpha_G = 0.5771e-3 # true dependence should be the analytic model
+varshni_beta_G =  372       # given in [1]
 
-varshni_alpha_X = 0.363e-3
-varshni_beta_X =  162
+varshni_alpha_X = 0.5771e-3
+varshni_beta_X =  372
 
-varshni_alpha_L = 0.363e-3
-varshni_beta_L =  162
+varshni_alpha_L = 0.5771e-3
+varshni_beta_L =  372
 
 
 [kdotp] # [1]
-delta = 0.108
+delta = 0.08
 
-gamma1 = 5.08
-gamma2 = 1.60
-gamma3 = 2.10
+gamma1 = 4.05
+gamma2 = 0.49
+gamma3 = 1.25 # [3] 
 
 
-[deformation_potentials] # [1]
-a_c = -6.34
-abs_def_pot_L = -3.41 # [3]
-abs_def_pot_X = 0.59  # [3] 
-uniax_def_pot_L = 11.35  # [3] 
-uniax_def_pot_X = 3.3  # [3] 
+[deformation_potentials]
+a_c = -9.41 # [3], -8.2 given in [1]
+abs_def_pot_L = -4.41   # [3]
+abs_def_pot_X = 0.69    # [3]
+uniax_def_pot_L = 11.35 # [3]
+uniax_def_pot_X = 5.65  # [3]
 
-a_v = -0.41
-b = -2.0
-d = -5.0
+a_v = -1.7 # [1]
+b = -1.6   # [1]
+d = -4.6   # [1]
 
 
 [permittivity] # [3]
 # static dielectric constant
-permittivity = 12.61
+permittivity = 11.1
 
-optical_epsilon = 9.61
+optical_epsilon = 9.075
 
 
 # stiffness data
 [elasticity] # [1]
-C11 = 101.1
-C12 = 56.1
-C44 = 45.6
+C11 = 140.5
+C12 = 62.03
+C44 = 70.33
 
 # piezoelectricity
 [piezoelectricity] # [3]
-e14 = 0.056
+e14 = -0.097
 
 
 # mobility
 [mobility/constant] # [2]
-mu_max = (4500.0, 150.0)
+mu_max = (110.0, 75.0)
 exponent = (1.5, 1.5)
 
 [mobility/doping_dependent] # [2]
 mobility_formula = 2
-mumin = (4.5e+03,	150.0)
+mumin = (110,		75.0)
 am    = (-1.5,	 	-1.5)
 mud   = (0.0,	 	0.0)
 ad    = (0.0, 		0.0)
@@ -115,8 +115,8 @@ Tcoeff = (0,		0)
 
 
 # direct recombination
-[recombination/direct] # [2]
-C = 1.2e-10
+[recombination/direct] # [4]
+C = 0.5e-13
 
 
 [recombination/auger] # [2]
@@ -131,8 +131,8 @@ N0	= (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 
 
 
-[thermal_conductivity/constant]
-therm_lat_cond = 0.68
+[thermal_conductivity/constant] # [3]
+therm_lat_cond = 1.1
 
 
 

@@ -68,6 +68,8 @@ d = -3.4
 # static dielectric constant
 permittivity = 10.064
 
+optical_epsilon = 8.162
+
 
 # stiffness data
 [elasticity]
