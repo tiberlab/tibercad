@@ -20,7 +20,7 @@ Ramp::Ramp(const ModelOptions& options,
     _initial_step(1.0),
     _min_step(1e-3),
     _max_step(1.0),
-    _plot_data(true)
+    _plot_data(false)
 {
 
   if (simulations.size() == 0)
@@ -78,6 +78,7 @@ Ramp::Ramp(const ModelOptions& options,
   _initial_step = options.get_option("initial_step", _initial_step);
   _initial_step = min(max(_initial_step, 0.0), 1.0);
   _plot_data = options.get_option("plot_data", _plot_data);
+
 }
 
 
@@ -163,7 +164,7 @@ Ramp::ramp(void)
       ostringstream os;
       os << "Ramping to " << _variable << " = " << value
         << " failed while solving \'" << _simulations[j]->get_name()
-        << "\'. Trying " << _variable << " = " << (oldvalue + sign * currstep); 
+        << "\'. Trying " << _variable << " = " << (oldvalue + sign * currstep);
       Messages::warning(os.str());
 
       value = oldvalue;
