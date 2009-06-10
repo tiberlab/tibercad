@@ -885,6 +885,45 @@ ETB::convert_variable_name_to_id(const std:: string& variable_name) const
 }
 
 
+//void
+//ETB::get_solution_secure(const Elem* elem,
+//    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
+//{
+//
+//  Point p = elem->centroid();
+//  std::vector<Point> points(1);
+//  points[0] = p;
+//
+//  get_solution_secure(elem,points,ids,values);
+//
+//}
+//
+//
+//void
+//ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
+//    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
+//{
+//  unsigned int np = p.size();
+//  values.resize(np);
+//
+//  if (ids.count(EL_CH))
+//    {
+//      for (unsigned int n = 0; n < p.size(); n++)
+//	{
+//	  values[n][EL_CH] = build_rho("el",p[n]);
+//	}
+//    }
+//
+//  if (ids.count(HL_CH))
+//    {
+//      for (unsigned int n = 0; n < p.size(); n++)
+//	{
+//	  values[n][HL_CH] = build_rho("hl",p[n]);
+//	}
+//    }
+//}
+
+
 void
 ETB::get_solution_secure(const Elem* elem,
     const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
@@ -906,24 +945,40 @@ ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
   unsigned int np = p.size();
   values.resize(np);
 
+
   if (ids.count(EL_CH))
     {
       for (unsigned int n = 0; n < p.size(); n++)
-	{
-	  values[n][EL_CH] = build_rho("el",p[n]);
-	}
+        {
+          if (_elemental_result_el.find(elem) != _elemental_result_el.end())
+            {
+              values[n][EL_CH] = _elemental_result_el[elem];
+            }
+          else
+            {
+              _elemental_result_el[elem] = build_rho("el", elem->centroid());
+              values[n][EL_CH] = _elemental_result_el[elem];
+            }
+        }
     }
 
   if (ids.count(HL_CH))
     {
       for (unsigned int n = 0; n < p.size(); n++)
-	{
-	  values[n][HL_CH] = build_rho("hl",p[n]);
-	}
+        {
+          if (_elemental_result_hl.find(elem) != _elemental_result_hl.end())
+            {
+              values[n][HL_CH] = _elemental_result_hl[elem];
+            }
+          else
+            {
+              _elemental_result_hl[elem] = build_rho("hl", elem->centroid());
+              values[n][HL_CH] = _elemental_result_hl[elem];
+            }
+
+        }
     }
 }
-
-
 
 
 void

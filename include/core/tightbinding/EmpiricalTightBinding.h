@@ -175,6 +175,11 @@ class ETB : public TightBinding
   
   double _vb_shift;
     
+    //! Charge density on elements (for faster scc calculation)
+    std::map<const Elem*, double> _elemental_result_el;
+    std::map<const Elem*, double> _elemental_result_hl;
+
+
  protected:
 
   double build_rho(const std::string& particle, const Point& r);
