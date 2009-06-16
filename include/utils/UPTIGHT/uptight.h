@@ -164,17 +164,14 @@ inline void f77_upt_createhamiltonian (f77_int const* handler)
 }
 
 
-extern "C" void upt_addkpoints_ (f77_int const*, f77_int const&, f77_double 
-    const*);
+extern "C" void upt_setkpoint_ (f77_int const*, f77_double const*);
 
-// Corresponding F77 arguments for f77_upt_addkpoints:
+// Corresponding F77 arguments for f77_upt_setkpoint:
 // integer, intent(in) :: handler(DAC_handlerSize)
-// integer, intent(in) :: num_k
-// real(dp), intent(in) :: k_vec(3, num_k)
-inline void f77_upt_addkpoints (f77_int const* handler, f77_int const& num_k, 
-    f77_double const* k_vec)
+// real(dp), intent(in) :: k_vec(3)
+inline void f77_upt_setkpoint (f77_int const* handler, f77_double const* k_vec)
 {
-  upt_addkpoints_ (handler, num_k, k_vec);
+  upt_setkpoint_ (handler, k_vec);
 }
 
 

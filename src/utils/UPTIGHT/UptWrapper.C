@@ -87,9 +87,9 @@ void UptWrapper::clear_potential(void)
 
 
 //! add the k-points as a vector
-void UptWrapper::add_kpoints(int numkp, double *k_vec)
+void UptWrapper::set_kpoint(double *k_vec)
 {
-	f77_upt_addkpoints(_handler,numkp,k_vec);
+	f77_upt_setkpoint(_handler, k_vec);
 }
 
 

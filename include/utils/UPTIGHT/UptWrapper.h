@@ -74,8 +74,8 @@ public:
 
   void clear_potential(void);
 	
-  //! Add a list of k-points as a vector (3,numkp)
-  void add_kpoints(int numkp, double *k_vec);
+  //! Set a k-point, k_vec(3)
+  void set_kpoint(double *k_vec);
 
   
   //!Computes Hamiltonian (must be called after inituptight)
