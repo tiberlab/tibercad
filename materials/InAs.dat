@@ -10,7 +10,6 @@ a = 0.605830
 
 
 [valenceband] # [1]
-#E_v = 1.52
 E_v = -0.59
 
 
@@ -50,13 +49,13 @@ gamma3 = 9.2
 
 
 [deformation_potentials] # [3]
-a_c = -6.66
+a_c = -5.08
 abs_def_pot_L = -3.89
 abs_def_pot_X = -0.08
 uniax_def_pot_L = 11.35
 uniax_def_pot_X = 3.7
 
-a_v = -1.0
+a_v = 1.0
 b = -1.8
 d = -3.6
 

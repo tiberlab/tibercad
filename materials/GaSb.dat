@@ -45,13 +45,13 @@ gamma3 = 6.0
 
 
 [deformation_potentials] # [1]
-a_c = -9.33 # [3],  -7.5 given in [1]
+a_c = -7.5 # [1]
 abs_def_pot_L = -4.38  # [3]
 abs_def_pot_X = -0.2  # [3]
 uniax_def_pot_L = 15  # [3]
 uniax_def_pot_X = 6.46  # [3]
 
-a_v = -0.8 # 1.32 from [3]
+a_v = 0.8 # [1]
 b = -2.0
 d = -4.7
 

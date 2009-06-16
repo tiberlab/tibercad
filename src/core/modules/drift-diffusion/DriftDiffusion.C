@@ -3817,10 +3817,10 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
       const vector<double>& vb = sc->get_valence_bands();
 
       for (unsigned int i = 0; i < cb.size(); i++)
-        results[id + BandEdges + i] = cb[i] - phi0 * u;
+        results[id + BandEdges + i] = cb[i];
 
       for (unsigned int i = 0; i < vb.size(); i++)
-        results[id + BandEdges + cb.size() + i] = vb[i] - phi0 * u;
+        results[id + BandEdges + cb.size() + i] = vb[i];
     }
 
 
