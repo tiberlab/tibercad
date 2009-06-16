@@ -348,6 +348,8 @@ void ETB::do_solve(void){
   }
 
 
+  
+
   for(int i=num_vb; i< num_vb + _upt_solver_options.n_cb; i++)
   {
     _solution[i].particle = "el";
@@ -356,9 +358,11 @@ void ETB::do_solve(void){
     _solution[i].eigen_vector.resize(hdim);
     _solution[i].temperature = _upt_options.temperature;
 
-    eigtmp_re += hdim;
-    eigtmp_im += hdim;
-
+    if (i!= 0)
+    {
+      eigtmp_re += hdim;
+      eigtmp_im += hdim;
+    }
 
     for(int j=0; j<hdim;j++)
     {
