@@ -744,7 +744,8 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
           else file << std::setw(10) << mat->get_name() << etb_dataset + ".etb" ;
 
-          file << std::endl;
+	  // these two numbers can be used for band-gap fine tuning (dE_s, dV_sps)
+          file << " 0.0  0.0" << std::endl;
         }
 
       file.close();
