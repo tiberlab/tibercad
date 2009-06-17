@@ -7,9 +7,15 @@ comp_A = AlAs
 comp_B = GaAs
 
 
+
 #Atomistic structure informations
 #
+[atomistic_structure]
 n_basis_specie=2
 
-specie_1=AlGa
+specie_1=Al
 specie_2=As
+
+[densityfunctional_tb]
+
+

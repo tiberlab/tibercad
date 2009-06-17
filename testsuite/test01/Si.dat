@@ -1,36 +1,44 @@
 # Si
 
-
-# lattice
 structure = zb
 
-[lattice]
+
+# lattice constant
+[lattice] # [3]
 a = 0.54304
 
 
-[permittivity]
-permittivity = 11.7
+[valenceband]
+E_v = 1.10467
 
 
-[bandgap]
-Eg_G = 3.385
-Eg_L = 1.635
-# 0 K
-#Eg_X = 1.165
-# 300 K
-Eg_X = 1.12
-
-
-[kdotp]
-E_v = 1.10466666666667
-
-delta = 0.044
-
+[conductionband] # [3]
 m_G = 0.156
 m_L_t = 0.13
 m_L_l = 1.42
 m_X_t = 0.19
 m_X_l = 0.916
+
+
+[bandgap] # [3]
+# T=0 K
+Eg_G = 3.385
+Eg_L = 1.635
+Eg_X = 1.165
+
+varshni_alpha_G = 0.5367e-3
+varshni_beta_G =  745.8
+
+varshni_alpha_X = 0.5367e-3
+varshni_beta_X =  745.8
+
+varshni_alpha_L = 0.5367e-3
+varshni_beta_L = 745.8
+
+
+
+[kdotp] # [3]
+delta = 0.044
 
 gamma1 = 4.31
 gamma2 = 0.345
@@ -38,7 +46,7 @@ gamma3 = 1.427
 
 
 
-[deformation_potentials]
+[deformation_potentials] # [3]
 a_c = -10.44
 a_v = 2.05
 b = -2.1
@@ -50,49 +58,81 @@ abs_def_pot_L = -2.07
 uniax_def_pot_L = 16.14
 
 
+[permittivity] # [3]
+# static dielectric constant
+permittivity = 11.7
+
+optical_epsilon = 11.85
+
 
 # stiffness data
-[elasticity]
+[elasticity] # [3]
 C11 = 165.77
 C12 = 63.93
 C44 = 79.62
 
 # piezoelectricity
-[piezoelectricity]
+[piezoelectricity] # [3]
 e14 = 0.0
 
 
 # mobility
 [mobility/constant]
-mu_max = (1417.0, 470.5)
-exponent = (2.5, 2.2)
+mu_max   = (1417.0, 470.5)
+exponent = (   2.5,   2.2)
+
 
 # doping dependent
 [mobility/doping_dependent]
 mobility_formula = 1
-mumin1 = (52.2, 44.9)
-mumin2 = (52.2, 0.0)
-mu1 = (43.4, 29)
-Pc = (0.0, 9.23e16)
-Cr = (9.68e16, 2.23e17)
-Cs = (3.43e20, 6.1e20)
-alpha = (0.68, 0.719)
-beta = (2, 2)
+mumin1 = (52.2,		44.9)
+mumin2 = (52.2,		0.0)
+mu1    = (43.4,		29)
+Pc     = (0.0,		9.23e16)
+Cr     = (9.68e16,	2.23e17)
+Cs     = (3.43e20,	6.1e20)
+alpha  = (0.68,		0.719)
+beta   = (2,		2)
 
 
 # high field dependency
 [mobility/field_dependent]
 Vsat_Formula = 1
-beta0 = (1.109, 1.213)
-vsat0 = (1.07e7, 8.37e6)
-vsatexp = (0.87, 0.52)
+beta0   = (1.109,	1.213)
+betaexp = (0.66,	0.17)
+vsat0   = (1.07e7,	8.37e6)
+vsatexp = (0.87,	0.52)
+
+
+# SRH recombination
+[recombination/SRH]
+Etrap  = 0.0
+taumin = (0.0,		0.0)
+taumax = (1.0e-5,	3.0e-6)
+Nref   = (1.0e+16,	1.0e+16)
+gamma  = (1,		1)
+Talpha = (-1.5,		-1.5)
+Tcoeff = (2.55,		2.55)
+
+
+[recombination/auger]
+# R_Auger = ( C_n n + C_p p ) ( n p - ni_eff^2)
+# with C_n,p = (A + B (T/T0) + C (T/T0)^2) (1 + H exp(-{n,p}/N0))
+# 
+#         n		    p
+A =  (6.7000e-32,	7.2000e-32)
+B =  (2.4500e-31,	4.5000e-33)
+C =  (-2.2000e-32,	2.6300e-32)
+H =  (3.46667,		8.25688)
+N0 = (1.0000e+18,	1.0000e+18)
 
 
 
+# Lattice thermal conductivity
+[thermal_conductivity/constant]
+therm_lat_cond = 1.5         
 
-# Lattice thermal conductivity 
-[thermal_conductivity]
-therm_lat_cond = 1.5         #[(K)/(W)]
+
 therm_lat_cond_a = 0.03      #[(cm k)/(W)]
 therm_lat_cond_b = 1.56e-3   #[(cm)/(W)]
 therm_lat_cond_c = 1.65e-6   #[(cm)/(W K)]
@@ -100,6 +140,36 @@ therm_lat_cond_c = 1.65e-6   #[(cm)/(W K)]
 
 
 #Thermoelectric power [V/k]
-[thermoelectric]
+[thermoelectric_power/constant]
 eTEpower = -0.001
-hTEpower = -0.001
+hTEpower =  0.001
+
+
+
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+lattice_type = fcc
+
+#Basis 
+
+#Number of basis specie
+n_basis_specie = 1
+#Number of basis atoms for any specie
+n_1 = 2
+#Basis vectors T_"specie"_"#of atom"_"direction"
+T_1_1_x = 0.0
+T_1_1_y = 0.0
+T_1_1_z = 0.0
+T_1_2_x = 0.25
+T_1_2_y = 0.25
+T_1_2_z = 0.25
+
+#Name of species
+specie_1 = Si
+
+[densityfunctional_tb]
+
+dataset = pbc
+

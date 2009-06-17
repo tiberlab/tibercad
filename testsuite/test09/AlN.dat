@@ -2,52 +2,66 @@
 
 structure = wz
 
-[bandgap]
-Eg_G = 6.25;
-#E_v = -3.44;
-# from Nextnano
-
-varshni_alpha_G = 1.799e-3
-varshni_beta_G =  1462
-
-[kdotp]
-E_v = -1.52554364659435
-m_c_xx = 0.3;
-m_c_zz = 0.32;
-
-A1 = -3.86;
-A2 = -0.25;
-A3 = 3.58;
-A4 = -1.32;
-A5 = -1.47;
-A6 = -1.64;
-
-delta_cr = -0.169;
-delta_s = 0.019;
-
-[deformation_potentials]
-a_z = -3.4;
-a_x = -11.8;
-
-D1 = -17.1;
-D2 = 7.9;
-D3 = 8.8;
-D4 = -3.9;
-D5 = -3.4;
-D6 = -3.4;
-
-[permittivity]
-permittivity = 8.67;
-
-#Optical dielectric @ 3.5 eV
-optical_epsilon_x = 7.3
-optical_epsilon_z = 7.3 
-
 
 # lattice constants
 [lattice]
 a = 0.3112
 c = 0.4982
+
+
+[valenceband]
+#E_v = -3.44;
+# from Nextnano
+E_v = -1.52554
+
+
+[conductionband]
+m_c_xx = 0.3
+m_c_zz = 0.32
+
+
+[bandgap]
+# T = 0
+Eg_G = 6.25
+
+varshni_alpha_G = 1.799e-3
+varshni_beta_G =  1462
+
+
+[kdotp]
+A1 = -3.86
+A2 = -0.25
+A3 = 3.58
+A4 = -1.32
+A5 = -1.47
+A6 = -1.64
+
+delta_cr = -0.169
+delta_s = 0.019
+
+[deformation_potentials]
+
+
+a_x = -3.90
+a_z = -20.5
+
+D1 = -17.1
+D2 = 7.9
+D3 = 8.8
+D4 = -3.9
+D5 = -3.4
+D6 = -3.4
+
+
+[permittivity]
+# static dielectric constant
+permittivity = 8.67
+
+# Optical dielectric constant
+optical_epsilon_x = 1.0 # ?
+optical_epsilon_z = 1.0 # ?
+
+
 
 # stiffness data
 [elasticity]
@@ -59,12 +73,12 @@ C44 = 116.0
 
 # piezoelectricity data
 [piezoelectricity]
-e33 = 1.79
-e31 = -0.5
-e15 = -0.48
+e33 = 1.50
+e31 = -0.65
+e15 = -0.24
+
 [pyroelectricity]
 Pz = -0.09
-
 
 
 
@@ -74,47 +88,99 @@ Pz = -0.09
 
 # mobility
 [mobility/constant]
-mu_max = (300.0, 14.0)
-exponent = (1, 2.1)
+mu_max   = (300.0, 14.0)
+exponent = (1,     2.1)
 
 # doping dependent
 [mobility/doping_dependent]
 mobility_formula = 1
-mumin1 = (20, 11)
-mumin2 = (65, 0)
-mu1 = (20, 10)
-Pc = (8e17, 5e18)
-Cr = (7e16, 8e17)
-Cs = (5.2e17,8e18 )
-alpha = (0.88, 1.05)
-beta = (0.75, 0.75)
-
+mumin1 = (20,      11)
+mumin2 = (65,      0)
+mu1    = (20,      10)
+Pc     = (8e17,    5e18)
+Cr     = (7e16,    8e17)
+Cs     = (5.2e17,  8e18)
+alpha  = (0.88,    1.05)
+beta   = (0.75,    0.75)
 
 
 # high field dependency
 [mobility/field_dependent]
 Vsat_Formula = 2
-beta0 = (2, 2)
-A_vsat = (1.5e+07 	,1.5e+07)
-B_vsat = (0,0)
-vsat_min =  (5.000e+06	,5.000e+06)
-#
+beta0    = (2,         2)
+A_vsat   = (1.5e+07,   1.5e+07)
+B_vsat   = (0,         0)
+vsat_min = (5.000e+06, 5.000e+06)
+betaexp  = (0,         0)
+
 
 # SRH recombination
 [recombination/SRH]
-Etrap    = 0.0
-taumin = (0.0,0.0)
-taumax = (1.0e-9,1.0e-9)
-Nref   = (1.0e+16,1.0e+16)
-gamma  = (1,1)
-Talpha = (-1.5,-1.5)
+Etrap  = 0.0
+taumin = (0.0,     0.0)
+taumax = (1.0e-9,  1.0e-9)
+Nref   = (1.0e+16, 1.0e+16)
+gamma  = (1,       1)
+Talpha = (-1.5,   -1.5)
+Tcoeff = (2.55,    2.55)
 
+
+# direct recombination
 [recombination/direct]
 C = 0.18e-10
+
+
+[recombination/auger]
+# R_Auger = ( C_n n + C_p p ) ( n p - ni_eff^2)
+# with C_n,p = (A + B (T/T0) + C (T/T0)^2) (1 + H exp(-{n,p}/N0))
+# The values below should be checked
+A  = (1.0000e-34 ,	1.0000e-34)	# [cm^6/s]
+B  = (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+C  = (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+H  = (0.0000e+00 ,	0.0000e+00)	# [1]
+N0 = (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 []
 
+
 #Lattice thermal conductivity
+[thermal_conductivity/constant]
 therm_lat_cond_x = 2.85
 therm_lat_cond_z = 2.85
+
+
+
+
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+lattice_type = hexagonal
+
+#Basis 
+
+#Number of basis specie
+n_basis_specie = 2
+#Number of basis atoms for any specie
+n_1 = 2
+n_2 = 2
+#Basis vectors T_"specie"_"#of atom"_"direction"
+T_1_1_x = 0.333333
+T_1_1_y = 0.666666
+T_1_1_z = 0.0
+T_1_2_x = 0.666666
+T_1_2_y = 0.333333
+T_1_2_z = 0.5
+T_2_1_x = 0.333333
+T_2_1_y = 0.666666
+T_2_1_z = 0.375000
+T_2_2_x = 0.666666
+T_2_2_y = 0.333333
+T_2_2_z = 0.875000
+
+#Name of species
+specie_1 = Al
+specie_2 = N
+
+[densityfunctional_tb]
 
 

@@ -1,48 +1,74 @@
 # AlAs-zb
 
+
 structure = zb
 
-[bandgap]
-# 0 K data
-#Eg_G = 3.099
-#Eg_L = 2.4597
-#Eg_X = 2.2397
-Eg_G = 3.003
-Eg_L = 2.352
-Eg_X = 2.164
+
+[lattice] # [1]
+# lattice constant
+a = 0.56611
 
 
-[kdotp]
-E_v = 0.950333333333333
+[valenceband] # [1]
+E_v = -1.33
 
+
+[conductionband] # [1]
 m_G = 0.15
 m_L_l = 1.32
 m_L_t = 0.15
 m_X_l = 0.97
 m_X_t = 0.22
 
+
+
+
+[bandgap] # [1]
+# 0 K data
+Eg_G = 3.099
+Eg_L = 2.4597
+Eg_X = 2.2397
+
+# T = 300K
+#Eg_G = 3.003
+#Eg_L = 2.352
+#Eg_X = 2.164
+
+varshni_alpha_G = 0.885e-3
+varshni_beta_G = 530
+
+varshni_alpha_X = 0.70e-3
+varshni_beta_X = 530
+
+varshni_alpha_L = 0.605e-3
+varshni_beta_L = 530
+
+
+[kdotp] # [1]
 delta = 0.28
 gamma1 = 3.76
 gamma2 = 0.82
 gamma3 = 1.42
 
-[deformation_potentials]
-a_c = -7.4
-abs_def_pot_L = -3.07
-abs_def_pot_X = 2.54
-uniax_def_pot_L = 11.35
-uniax_def_pot_X = 6.11
 
-a_v = 1.53
+[deformation_potentials] # [1]
+a_c = -5.64
+abs_def_pot_L = -3.07 # [3]
+abs_def_pot_X = 2.54 # [3]
+uniax_def_pot_L = 11.35 # [3]
+uniax_def_pot_X = 6.11 # [3]
+
+a_v = 2.47
 b = -2.3
 d = -3.4
 
+
 [permittivity]
+# static dielectric constant
 permittivity = 10.064
 
-# lattice constant
-[lattice]
-a = 0.56611
+optical_epsilon = 8.162
+
 
 # stiffness data
 [elasticity]
@@ -75,6 +101,17 @@ aA    = (0, 		0)
 
 
 
+# high field dependency
+[mobility/field_dependent]
+Vsat_Formula = 2
+beta0    = (2.0, 	2.0)
+betaexp  = (0,		0)
+A_vsat   = (1.13e+07, 	1.13e+07)
+B_vsat   = (3.6e6,	3.6e6)
+vsat_min = (5.0e+05, 	5.0e+05)
+
+
+
 # SRH recombination
 [recombination/SRH]
 Etrap    = 0.0
@@ -100,5 +137,34 @@ B	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
 C	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
 H	= (0.0000e+00 ,	0.0000e+00)	# [1]
 N0	= (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
-[]
+
+
+
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+lattice_type = fcc
+
+#Basis 
+
+#Number of basis specie
+n_basis_specie = 2
+#Number of basis atoms for any specie
+n_1 = 1
+n_2 = 1
+#Basis vectors T_"specie"_"#of atom"_"direction"
+T_1_1_x = 0.0
+T_1_1_y = 0.0
+T_1_1_z = 0.0
+T_2_1_x = 0.25
+T_2_1_y = 0.25
+T_2_1_z = 0.25
+
+#Name of species
+specie_1 = Al
+specie_2 = As
+
+[densityfunctional_tb]
+
 

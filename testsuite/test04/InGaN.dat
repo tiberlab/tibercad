@@ -6,6 +6,7 @@ structure = wz
 comp_A = InN
 comp_B = GaN
 
+
 [bandgap]
 bow_Eg_G = 1.4
 bow_Eg_X = 0.69
@@ -17,16 +18,14 @@ bow_Eg_L = 1.84
 bow_Pz = -0.037
 
 
-# doping dependent
-[mobility/doping_dependent]
-mobility_formula = 1
-[]
-
-
 #Atomistic structure informations
 #
+[atomistic_structure]
 n_basis_specie=2
 
 specie_1=InGa
 specie_2=N
+
+[densityfunctional_tb]
+
 

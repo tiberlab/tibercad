@@ -7,9 +7,8 @@ comp_A = AlN
 comp_B = GaN
 
 
-# AlGaN bowing parameters
-
 [bandgap]
+# bowing parameters
 bow_Eg_G = 0.7
 bow_Eg_X = 0.61
 bow_Eg_L = 0.8
@@ -19,5 +18,15 @@ bow_Eg_L = 0.8
 [pyroelectricity]
 bow_Pz = -0.021
 
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+
+specie_1=Al
+specie_2=N
+n_basis_specie=2
+
+[densityfunctional_tb]
 
 

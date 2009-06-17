@@ -3,6 +3,7 @@ dielectric = true
 structure = zb
 
 #Lattice thermal conductivity [W/(cm*K)]
+[thermal_conductivity/constant]
 therm_lat_cond = 0.00026
 
 

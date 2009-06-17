@@ -4,11 +4,23 @@ structure = zb
 
 
 # lattice constant
-[lattice]
+[lattice] # [3]
 a = 0.54304
 
 
-[bandgap]
+[valenceband]
+E_v = 1.10467
+
+
+[conductionband] # [3]
+m_G = 0.156
+m_L_t = 0.13
+m_L_l = 1.42
+m_X_t = 0.19
+m_X_l = 0.916
+
+
+[bandgap] # [3]
 # T=0 K
 Eg_G = 3.385
 Eg_L = 1.635
@@ -25,23 +37,16 @@ varshni_beta_L = 745.8
 
 
 
-[kdotp]
-E_v = 1.10466666666667
-
+[kdotp] # [3]
 delta = 0.044
-
-m_G = 0.156
-m_L_t = 0.13
-m_L_l = 1.42
-m_X_t = 0.19
-m_X_l = 0.916
 
 gamma1 = 4.31
 gamma2 = 0.345
 gamma3 = 1.427
 
 
-[deformation_potentials]
+
+[deformation_potentials] # [3]
 a_c = -10.44
 a_v = 2.05
 b = -2.1
@@ -53,19 +58,21 @@ abs_def_pot_L = -2.07
 uniax_def_pot_L = 16.14
 
 
-[permittivity]
+[permittivity] # [3]
 # static dielectric constant
 permittivity = 11.7
 
+optical_epsilon = 11.85
+
 
 # stiffness data
-[elasticity]
+[elasticity] # [3]
 C11 = 165.77
 C12 = 63.93
 C44 = 79.62
 
 # piezoelectricity
-[piezoelectricity]
+[piezoelectricity] # [3]
 e14 = 0.0
 
 
@@ -162,4 +169,7 @@ T_1_2_z = 0.25
 #Name of species
 specie_1 = Si
 
+[densityfunctional_tb]
+
+dataset = pbc
 
