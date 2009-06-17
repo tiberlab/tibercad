@@ -614,8 +614,9 @@ void ETB::parse_options(void)
   _upt_solver_options.ort_tol =  get_solver_options().get_option("orthogonality_tolerance", 1e-5);
 
   //Get projection_length for quantum charge projection (nm)
-  _upt_options.projection_length = ("projection_length", 5.0);
+  _upt_options.projection_length = get_options().get_option("projection_length", 5.0);
 
+std::cout << "Projection lenght set to " <<  _upt_options.projection_length << std::endl;
   std::cout << "done" << std::endl;
 
 }
@@ -1078,7 +1079,7 @@ for (mit=variables.begin() ; mit != variables.end(); mit++)
 double
 ETB::build_rho(const std::string& particle, const Point& r)
 {
-  double tau = _upt_options.projection_length / _atomistic_structure->get_scale();
+  double tau = 1.0 / (_upt_options.projection_length / _atomistic_structure->get_scale());
   const double deltar_max = tau * 10; //Maximum cutoff distance
   double deltar, uhatom;
   double rho = 0.0;
@@ -1148,7 +1149,7 @@ ETB::build_rho(const std::string& particle, const Point& r)
       else
         {
           //std::cout << "uhatom is " << uhatom <<std::endl;
-          rho = rho + ((*charges)[iatm] * tau * tau * tau * exp(-1.0 * tau * deltar));
+          rho = rho + ((*charges)[iatm] * tau * tau * tau * exp(-1.0 * deltar * tau));
 
         }
     }
