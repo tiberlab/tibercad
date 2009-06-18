@@ -131,7 +131,7 @@ Tcoeff = (2.55,		2.55)
 
 
 # direct recombination
-[recombination/SRH]
+[recombination/direct]
 C = 0.52e-10
 
 
