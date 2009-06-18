@@ -1,3 +1,8 @@
+// $Id$
+
+#ifndef _TEESTREAM_H_
+#define _TEESTREAM_H_
+
 #include <iostream>
 #include <fstream>
 
@@ -5,8 +10,8 @@ template<typename Elem, typename Traits = std::char_traits<Elem> >
 struct basic_TeeStream : std::basic_ostream<Elem,Traits>
 {
    typedef std::basic_ostream<Elem,Traits> SuperType;
-   
-   basic_TeeStream(std::ostream& o1, std::ostream& o2) 
+
+   basic_TeeStream(std::ostream& o1, std::ostream& o2)
       :  SuperType(o1.rdbuf()), o1_(o1), o2_(o2) { }
 
    basic_TeeStream& operator<<(SuperType& (*manip)(SuperType& ))
@@ -15,7 +20,7 @@ struct basic_TeeStream : std::basic_ostream<Elem,Traits>
       o2_ << manip;
       return *this;
    }
-   
+
    template<typename T>
    basic_TeeStream& operator<<(const T& t)
    {
@@ -23,7 +28,7 @@ struct basic_TeeStream : std::basic_ostream<Elem,Traits>
       o2_ << t;
       return *this;
    }
-   
+
 private:
    std::ostream& o1_;
    std::ostream& o2_;
@@ -31,3 +36,5 @@ private:
 
 
 typedef basic_TeeStream<char> TeeStream;
+
+#endif // _TEESTREAM_H_
