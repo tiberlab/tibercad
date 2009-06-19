@@ -44,6 +44,7 @@ LAPACKLIBS="[${LAPACK}/libmkl_def.so,${LAPACK}/libguide.so,${LAPACK}/libmkl_lapa
 #CONFIGOPTS="--with-matlab=0 --with-shared=0 --with-dynamic=0 --with-cc=$CC --with-cxx=$CXX  --with-fc=$F90 --with-fortran=1 --CFLAGS=-fexceptions --with-mpi=0 --download-f-blas-lapack"
 
 CONFIGOPTS="--with-matlab=0 --with-shared --with-fortran=0 --CFLAGS=-fexceptions --with-mpi-dir=${MPIDIR} --with-cc=$CC --with-cxx=$CXX --with-fc=$F90 --with-blas-lapack-lib=${LAPACKLIBS}"
+#CONFIGOPTS="--with-matlab=0 --with-shared --with-fortran=0 --CFLAGS=-fexceptions --with-mpi-dir=${MPIDIR} --with-cc=$CC --with-cxx=$CXX --with-fc=$F90"
 
 
 export PETSC_DIR=${PWD}
@@ -75,5 +76,6 @@ if [ $DEBUG == 'y' ]; then
   fi
 
 fi
+
 
 

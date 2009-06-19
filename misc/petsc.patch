@@ -33,3 +33,13 @@
        if (*gnorm != *gnorm) SETERRQ(PETSC_ERR_FP,"User provided compute function generated a Not-a-Number");
      }
    }
+--- python/BuildSystem/config/packages/MPI.py.orig	2009-05-27 09:25:47.000000000 +0200
++++ python/BuildSystem/config/packages/MPI.py	2009-05-27 09:26:12.000000000 +0200
+@@ -17,6 +17,7 @@
+     self.functions        = ['MPI_Init', 'MPI_Comm_create']
+     self.includes         = ['mpi.h']
+     liblist_mpich         = [['fmpich2.lib','mpich2.lib'],['fmpich2.lib','mpi.lib'],
++		             ['libmpich.a', 'libpthread.a', 'librt.a'],
+                              ['libfmpich.a','libmpich.a', 'libpmpich.a'],
+                              ['libmpich.a', 'libpmpich.a'],
+                              ['libfmpich.a','libmpich.a', 'libpmpich.a', 'libmpich.a', 'libpmpich.a', 'libpmpich.a'],

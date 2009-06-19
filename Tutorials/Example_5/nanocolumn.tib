@@ -239,7 +239,6 @@ $Solver
    start = 0.0
    stop = 4.5 #5.0
    steps = 200 #20
-   max_step = 0.5
  #  plot_data = true
  }
 

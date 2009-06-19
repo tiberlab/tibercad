@@ -921,3 +921,13 @@
  GetPot::__get_until_closing_bracket(std::istream& istr)
    // parse input until next matching }
  {
+--- Make.common.in.orig	2009-05-27 10:36:16.000000000 +0200
++++ Make.common.in	2009-05-27 10:36:23.000000000 +0200
+@@ -154,6 +154,7 @@
+ endif
+ ###############################################################################
+ 
++libmesh_CXXFLAGS += -DMPICH_IGNORE_CXX_SEEK
+ 
+ ###############################################################################
+ # Compiler flags, different for optimized, debug, and profiler modes.
