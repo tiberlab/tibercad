@@ -53,18 +53,21 @@ class Embracing
         elem_iterator& operator++(void)
         {
           ++_it;
+          return *this;
         }
 
         //! Prefix increment
         elem_iterator& operator--(void)
         {
           --_it;
+          return *this;
         }
 
         //! Assignement
         elem_iterator& operator=(const elem_iterator& rhs)
         {
           _it = rhs._it;
+          return *this;
         }
 
         //! Comparison

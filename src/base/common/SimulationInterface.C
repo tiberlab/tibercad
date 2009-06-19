@@ -78,6 +78,12 @@ SimulationInterface::~SimulationInterface(void)
   for ( ; embit != embend; ++embit)
     delete embit->second;
 
+  ostringstream os;
+  os << "Deleted simulator (ID = " << get_id() <<
+    " name = " << get_name() << " / type = " <<
+    get_type() << ")" << " address = " << this;
+  Messages::debug(os.str());
+
 }
 
 
@@ -173,11 +179,10 @@ SimulationInterface::create(const string& type,
     sim->set_options(options);
 
     // we let it know what's its identifier
-    sim->set_type(type_name);
+    sim->set_type(type);
 
     // set the name
     // we use the type name as found in the input file as default name
-    //string defaultname = Utils::extract_typename(typeid(*sim));
     string defaultname(type);
     sim->_name = sim->get_options().get_option("name", defaultname);
     sim->get_options().delete_option("name");
@@ -188,7 +193,7 @@ SimulationInterface::create(const string& type,
     os << "        ID   = " << sim->get_id() << Messages::endl;
     os << "        type = " << sim->get_type() << Messages::endl;
     os << "        name = " << sim->get_name() <<
-      " / default name = " << sim->get_default_name() << Messages::endl;
+      " / default name = " << type << Messages::endl;
     os << "        address = " << sim << Messages::endl;
     Messages::debug(os.str());
   }
@@ -204,11 +209,6 @@ SimulationInterface::destroy(SimulationInterface* p)
 {
   if (p != NULL)
   {
-    ostringstream os;
-    os << "Deleted simulator (ID = " << p->get_id() <<
-      " name = " << p->get_name() << " / type_id = " <<
-      p->get_default_name() << ")" << " address = " << p;
-    Messages::debug(os.str());
 
     libhandle_t libhandle = p->_libhandle;
     destroy_t destroy_fnc = p->_destroy;
@@ -236,6 +236,29 @@ bool
 SimulationInterface::includes_region(ID region_id) const
 {
   return get_environment().contains_region(region_id);
+}
+
+
+
+PhysicalModel*
+SimulationInterface::new_physical_model(const ModelOptions& options,
+    const Material* material)
+{
+  PhysicalModel* pm = create_physical_model(options, material);
+
+  if (pm != NULL)
+    _physical_models.insert(pm);
+
+  return pm;
+}
+
+
+BoundaryProperties*
+SimulationInterface::new_boundary_model(const ModelOptions& options)
+{
+  BoundaryProperties* bp = create_boundary_model(options);
+
+  return bp;
 }
 
 
@@ -288,7 +311,7 @@ SimulationInterface::init(void) throw (InitFailedException)
     os << ">>>>============================"
       "==================================" << Messages::endl
       << "Simulation options for " << get_name() << " (" <<
-      get_default_name() << ")";
+      get_type() << ")";
 #ifdef DEBUG
       os << " ptr = " << this;
 #endif
@@ -384,17 +407,6 @@ SimulationInterface::find_simulation(const string& name)
         if (it != end)
           sim = it->second;
       }
-
-      if (it == end)
-      {
-        // we even look for the default name
-        it = _simulation_map.begin();
-        for ( ; (it != end) && ((it->second)->get_default_name() != name); ++it);
-
-        if (it != end)
-          sim = it->second;
-      }
-
     }
   }
 
@@ -461,7 +473,7 @@ SimulationInterface::solve(void) throw (SolveFailedException)
       s += "-";
     m.info(s);
     ostringstream os;
-    os << get_default_name() << " (name: " << get_name() << ")" << endl;
+    os << get_type() << " (name: " << get_name() << ")" << endl;
     m.info(os.str());
     m.newline();
   }

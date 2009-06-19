@@ -84,6 +84,18 @@ map<const string, ID>
 PhysicalModelInterface::_model_ids;
 
 
+
+PhysicalModelInterface::~PhysicalModelInterface(void)
+{
+  string id = Utils::extract_typename(typeid(*this));
+  ostringstream os;
+  os << "Delete model (ID = " << get_id() <<
+    " name = " << get_name() << " type = " << get_type() << ")";
+  Messages::debug(os.str());
+}
+
+
+
 PhysicalModelInterface*
 PhysicalModelInterface::create(const string& name,
     const ModelOptions& options)
@@ -211,6 +223,8 @@ PhysicalModelInterface::create(const string& name,
     mod->_create = create_fnc;
     mod->_destroy = destroy_fnc;
 
+    // we let it know what's its identifier
+    mod->set_type(name);
 
     mod->set_options(options);
 
@@ -224,8 +238,8 @@ PhysicalModelInterface::create(const string& name,
 
     ostringstream os;
     os << "Added model (ID = " << mod->get_id() <<
-      " name = " << mod->get_name() << " type_id = " <<
-       mod->get_default_name() << ")";
+      " name = " << mod->get_name() << " type = " <<
+       mod->get_type() << ")";
     Messages::debug(os.str());
   }
 
@@ -260,7 +274,7 @@ PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
 #ifdef DEBUG
     cerr << "Add model (ID = " << mod->get_id() <<
       " name = " << mod->get_name() << " type_id = " <<
-       mod->get_default_name() << ")\n";
+       mod->get_type() << ")\n";
 #endif
   }
 
@@ -276,12 +290,6 @@ PhysicalModelInterface::destroy(PhysicalModelInterface* p)
 
   if (p != NULL)
   {
-    string id = Utils::extract_typename(typeid(*p));
-    ostringstream os;
-    os << "Delete model (ID = " << p->get_id() <<
-      " name = " << p->get_name() << " type_id = " << id << ")";
-    Messages::debug(os.str());
-
     libhandle_t libhandle = p->_libhandle;
     destroy_t destroy_fnc = p->_destroy;
 

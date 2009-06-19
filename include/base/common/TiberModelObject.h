@@ -177,7 +177,8 @@ class TiberModelObject
 
 inline
 TiberModelObject::TiberModelObject(const TiberModelObject& other)
-  : _options(other._options)
+  : ReferenceCountedObject<TiberModelObject>(),
+    _options(other._options)
 {
 }
 

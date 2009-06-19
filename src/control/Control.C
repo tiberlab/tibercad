@@ -659,7 +659,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
 
       // here we actually create the model
-      PhysicalModel* model = sim->create_physical_model(opts, mat);
+      PhysicalModel* model = sim->new_physical_model(opts, mat);
 
       // NOTE: model could be NULL, but we don't care about. Who tells us that
       // every simulation necessarily needs a model?
@@ -720,7 +720,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       Boundary* bd = new Boundary(data.get_region_name(), env, region_ids);
       bd->set_area_factor(bdopts.get_option("area_factor", 1.0));
 
-      BoundaryProperties* bdprop = sim->create_boundary_model(bdopts);
+      BoundaryProperties* bdprop = sim->new_boundary_model(bdopts);
 
       // NOTE: bdprop could be NULL, but we don't care about. Who tells us that
       // every simulation necessarily needs a boundary model?

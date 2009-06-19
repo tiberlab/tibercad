@@ -91,33 +91,6 @@ class SimulationInterface : public TiberModelObject
     static void destroy(SimulationInterface* p);
 
 
-    //! Create a physical model that can be used by this type of simulation
-    /*!
-     * The default behaviour defined in the base class is to return the
-     * NULL pointer, because there could be simulations that don't need
-     * a physical model. If a derived class reimplements this method (which
-     * will normally be the case) it should notify about errors by throwing
-     * a ModelErrorException.
-     */
-    virtual PhysicalModel*
-      create_physical_model(const ModelOptions& options,
-                            const Material* mat) const
-      throw (ModelErrorException);
-
-
-    //! Create a boundary model that can be used by this type of simulation
-    /*!
-     * The default behaviour defined in the base class is to return the
-     * NULL pointer, because there could be simulations that don't need
-     * a boundary model. If a derived class reimplements this method (which
-     * will normally be the case) it should notify about errors by throwing
-     * a ModelErrorException.
-     */
-    virtual BoundaryProperties*
-      create_boundary_model(const ModelOptions& options) const
-      throw (ModelErrorException);
-
-
     //! Initialize the system
     /*!
      * This method calls do_init() after some health checks
@@ -471,11 +444,24 @@ class SimulationInterface : public TiberModelObject
     bool includes_region(ID region_id) const;
 
 
+    //! Create a physical model to be used with this simulation
+    PhysicalModel* new_physical_model(const ModelOptions& options,
+        const Material* material);
+
+
+    //! Create a boundary model to be used with this simulation
+    BoundaryProperties* new_boundary_model(const ModelOptions& options);
+
+
     //! Get the physical model for a certain region ID
     /*!
      * \return \c NULL if no model is present for region \c region_id
      */
     PhysicalModel* get_physical_model(ID region_id) const;
+
+
+    //! Get a reference to th eset of all physical models
+    const std::set<PhysicalModel*>& get_physical_models(void) const;
 
 
     //! Create an embracing region
@@ -569,6 +555,9 @@ class SimulationInterface : public TiberModelObject
     //! Tells the base class if the model has a solution vector
     /*!
      * \param flag = true: the model has a solution vector
+     *
+     * Call this method in the constructor if your model does \em not
+     * have a solution vector.
      */
     void has_solution_vector(bool flag);
 
@@ -780,6 +769,34 @@ class SimulationInterface : public TiberModelObject
         std::vector<std::string>& description);
 
 
+    //! Create a physical model that can be used by this type of simulation
+    /*!
+     * The default behaviour defined in the base class is to return the
+     * NULL pointer, because there could be simulations that don't need
+     * a physical model. If a derived class reimplements this method (which
+     * will normally be the case) it should notify about errors by throwing
+     * a ModelErrorException.
+     */
+    virtual PhysicalModel*
+      create_physical_model(const ModelOptions& options,
+                            const Material* mat) const
+      throw (ModelErrorException);
+
+
+    //! Create a boundary model that can be used by this type of simulation
+    /*!
+     * The default behaviour defined in the base class is to return the
+     * NULL pointer, because there could be simulations that don't need
+     * a boundary model. If a derived class reimplements this method (which
+     * will normally be the case) it should notify about errors by throwing
+     * a ModelErrorException.
+     */
+    virtual BoundaryProperties*
+      create_boundary_model(const ModelOptions& options) const
+      throw (ModelErrorException);
+
+
+
   private:
 
     //! A typedef for convenience
@@ -866,12 +883,26 @@ class SimulationInterface : public TiberModelObject
     Scaling _scaling;
 
 
+    //! A map with all embracing regions
+    EmbracingMap _embracings;
+
+
+    //! A map with remembered solutions
+    std::map<ID, NumericVector<double>*> _remembered_solutions;
+
+
+    //! A set with all physical models of this simulation
+    std::set<PhysicalModel*> _physical_models;
+
+
+    //! The level of verbosity
+    int _verbosity;
+
+
     //! The map containing all simulations with their ID
     static SimulationMap _simulation_map;
 
 
-    //! A map with all embracing regions
-    EmbracingMap _embracings;
 
 
     //! create a unique name for the equation system
@@ -884,14 +915,6 @@ class SimulationInterface : public TiberModelObject
      * simulation to create.
      */
     void set_type(const std::string& type);
-
-
-    //! A map with remembered solutions
-    std::map<ID, NumericVector<double>*> _remembered_solutions;
-
-
-    //! The level of verbosity
-    int _verbosity;
 
 
 };
@@ -966,6 +989,15 @@ SimulationInterface::get_environment(void) const
 
 
 inline
+const std::set<PhysicalModel*>&
+SimulationInterface::get_physical_models(void) const
+{
+  return _physical_models;
+}
+
+
+
+inline
 ID
 SimulationInterface::get_id(void) const
 {
@@ -1028,23 +1060,6 @@ SimulationInterface::equilibrium_done(void) const
 }
 
 
-/*
-inline
-void
-SimulationInterface::set_relaxation_factor(double relax)
-{
-  _relaxation_factor = relax;
-}
-
-
-
-inline
-double
-SimulationInterface::get_relaxation_factor(void) const
-{
-  return _relaxation_factor;
-}
-*/
 
 
 inline

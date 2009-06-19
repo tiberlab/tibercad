@@ -158,6 +158,15 @@ class PhysicalModelInterface : public TiberModelObject
     const std::string& get_name(void) const;
 
 
+    //! Get the type of this model
+    /*!
+     * The type is the identifying string which defines at creation time
+     * which simulation to create. It's the same string one writes in the
+     * input file.
+     */
+    const std::string& get_type(void) const;
+
+
     //! Get the default name for this model
     std::string get_default_name(void) const;
 
@@ -359,6 +368,10 @@ class PhysicalModelInterface : public TiberModelObject
     std::string _name;
 
 
+    //! The identifying string for the type of this model
+    std::string _type;
+
+
     //! The material this properties belong to
     /*!
      * This pointer can be used by this or associated models
@@ -379,6 +392,16 @@ class PhysicalModelInterface : public TiberModelObject
      * it a unique model ID.
      */
     static void register_model(PhysicalModelInterface* model);
+
+
+    //! Set the model type (= identifier)
+    /*!
+     * The identifier is used at creation time to know which type of
+     * model to create.
+     */
+    void set_type(const std::string& type);
+
+
 };
 
 
@@ -400,9 +423,21 @@ PhysicalModelInterface::PhysicalModelInterface(void)
 
 
 inline
-PhysicalModelInterface::~PhysicalModelInterface(void)
+void
+PhysicalModelInterface::set_type(const std::string& type)
 {
+  _type = type;
 }
+
+
+
+inline
+const std::string&
+PhysicalModelInterface::get_type(void) const
+{
+  return _type;
+}
+
 
 
 inline
