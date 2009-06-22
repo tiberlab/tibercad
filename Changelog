@@ -1,3 +1,12 @@
+Version 1.X.X
+-------------
+
+Bug fixes:
+
+	- fixed error in database for GaN, InN direct recombination
+
+
+New features:
 
 
 Version 1.2.2

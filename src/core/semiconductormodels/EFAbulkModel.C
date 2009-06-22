@@ -11,18 +11,18 @@ EFAbulkModel::EFAbulkModel()
 
 EFAbulkModel::~EFAbulkModel()
 {
-  PhysicalModelInterface::destroy(_bulkHamiltonian);
+  destroy(_bulkHamiltonian);
 }
 
 //===================================//
 
 void EFAbulkModel::do_init()
 {
-  PhysicalModelInterface::destroy(_bulkHamiltonian);
+  destroy(_bulkHamiltonian);
 
   const ModelOptions& opt =  get_options ();
 
- 
+
 
   _bulkHamiltonian = EFAbulkHamiltonian::create(get_material() -> get_structure(), opt);
 
@@ -30,9 +30,9 @@ void EFAbulkModel::do_init()
 
   _bulkHamiltonian->init();
 
-  
-  
-  
+
+
+
 }
 
 //====================================//
@@ -43,7 +43,7 @@ void EFAbulkModel::do_init_alloy (const PhysicalModelInterface *comp_A, const Ph
 
   const EFAbulkModel* matB = dynamic_cast<const EFAbulkModel* > (comp_B);
 
-  PhysicalModelInterface::destroy(_bulkHamiltonian);
+  destroy(_bulkHamiltonian);
   _bulkHamiltonian = static_cast<EFAbulkHamiltonian*>(matA->_bulkHamiltonian->copy());
   assert(_bulkHamiltonian != NULL);
   _bulkHamiltonian->set_material(get_material());

@@ -29,13 +29,13 @@ Material::~Material(void)
   ModelMap::const_iterator it(_models.begin());
   const ModelMap::const_iterator end(_models.end());
   for ( ; it != end; ++it)
-    PhysicalModelInterface::destroy(it->second);
+    TiberModelObject::destroy(it->second);
 
   _models.clear();
 
   clear_doping();
 
-  PhysicalModelInterface::destroy(_rotated_crystal);
+  destroy(_rotated_crystal);
 
   Messages::debug("Destroyed Material " + get_name());
 }
@@ -101,7 +101,7 @@ Material::do_init(void)
 void
 Material::set_crystal(RotatedCrystal* crystal)
 {
-  PhysicalModelInterface::destroy(_rotated_crystal);
+  destroy(_rotated_crystal);
   _rotated_crystal = crystal;
 }
 
@@ -116,7 +116,7 @@ Material::add_model(PhysicalModel* model, ID simulator_id)
   ModelMap::iterator it = _models.find(simulator_id);
   if (it != _models.end())
   {
-    PhysicalModelInterface::destroy(it->second);
+    TiberModelObject::destroy(it->second);
     it->second = model;
   }
   else

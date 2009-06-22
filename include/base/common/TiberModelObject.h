@@ -46,14 +46,53 @@ class TiberModelObject
     ModelOptions& get_options(void);
 
 
+    //! Destroy an object
+    /*!
+     * \param p the pointer to the object to destroy
+     */
+    static void destroy(TiberModelObject* p);
+
 
   protected:
 
+
+    //! The creation method signature
+    typedef TiberModelObject* (*create_t)(void);
+
+
+    //! The destruction method signature
+    typedef void (*destroy_t)(TiberModelObject*);
+
+
     //! Default constructor
-    TiberModelObject(void) {};
+    TiberModelObject(void);
 
     //! Copy constructor
     TiberModelObject(const TiberModelObject& other);
+
+
+    //! Try to create an object from a dynamic link library
+    /*!
+     * \param name the name of the library <c>lib</c><it>name</it><c>.so</c>
+     * \param target where to put the pointer to the new object
+     *
+     * \target will be \c NULL if it could not find the library
+     *
+     */
+    template <typename T>
+    static void create_from_library(const std::string& name, T*& target);
+
+
+    //! Try to create an object from a dynamic link library
+    /*!
+     * \param name the name of the library <c>lib</c><it>name</it><c>.so</c>
+     * \return \c NULL if library cannot be opened
+     */
+    static TiberModelObject* create_from_library(const std::string& name);
+
+
+    //! Create an object from a given creator function
+    static TiberModelObject* create_from_function(create_t create, destroy_t destroy);
 
 
     //! Tells if a parameter has been specified in the input file
@@ -160,12 +199,29 @@ class TiberModelObject
 
   private:
 
+
+    //! The type for library handles
+    typedef void* libhandle_t;
+
+
     //! Don't allow assignment operator
     TiberModelObject& operator=(const TiberModelObject& rhs);
 
 
     //! The options for this model as read from the input file
     ModelOptions _options;
+
+
+    //! The library handle for this object
+    libhandle_t _libhandle;
+
+
+    //! The creation method for this object
+    create_t _create;
+
+
+    //! The destruction method for this object
+    destroy_t _destroy;
 
 };
 
@@ -176,9 +232,21 @@ class TiberModelObject
 //
 
 inline
+TiberModelObject::TiberModelObject(void)
+  : ReferenceCountedObject<TiberModelObject>(),
+    _libhandle(NULL),
+    _create(NULL),
+    _destroy(NULL)
+{
+}
+
+inline
 TiberModelObject::TiberModelObject(const TiberModelObject& other)
   : ReferenceCountedObject<TiberModelObject>(),
-    _options(other._options)
+    _options(other._options),
+    _libhandle(other._libhandle),
+    _create(other._create),
+    _destroy(other._destroy)
 {
 }
 
@@ -236,5 +304,17 @@ TiberModelObject::initializer(void (T::*func)(void))
   return new Initializer<T>(*static_cast<T*>(this), func);
 }
 
+
+template <typename T>
+inline
+void
+TiberModelObject::create_from_library(const std::string& name, T*& target)
+{
+#ifdef BUILD_TIBER_MODULES
+  target = dynamic_cast<T*>(create_from_library(name));
+#else
+  target = NULL;
+#endif
+}
 
 #endif /* _TIBERMODELOBJECT_H_ */

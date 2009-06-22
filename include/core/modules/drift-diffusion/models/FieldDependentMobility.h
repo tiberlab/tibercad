@@ -9,7 +9,7 @@
 //! FieldDependent mobility model
 /*!
  * The constant mobility model assumes no mobility dependence on
- * doping density or electric field. Only temperature dependence is 
+ * doping density or electric field. Only temperature dependence is
  * included.
  * The mobility is calculated from
  * \f[
@@ -94,13 +94,13 @@ class FieldDependentMobility : public MobilityModelInterface
 
     //! The driving force to be used
     DrivingForce _force;
-      
+
 
 };
 
 //
 // inline methods
-// 
+//
 
 inline
 FieldDependentMobility::FieldDependentMobility(void)
@@ -135,7 +135,7 @@ FieldDependentMobility::create_new(void) const
 inline
 FieldDependentMobility::~FieldDependentMobility(void)
 {
-  PhysicalModelInterface::destroy(_low_field_mob);
+  destroy(_low_field_mob);
 }
 
 #endif // _FIELDDEPENDENTMOBILITY_H_

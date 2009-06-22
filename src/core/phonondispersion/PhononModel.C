@@ -15,8 +15,8 @@ PhononModel::~PhononModel()
 {
    clear_dynamical_matrix_models();
 
-   PhysicalModelInterface::destroy(raman_tensor_model);
-   
+   destroy(raman_tensor_model);
+
 }
 
 void PhononModel::get_full_dynamical_matrix(Tensor2Sym& dynamical_matrix)
@@ -24,8 +24,8 @@ void PhononModel::get_full_dynamical_matrix(Tensor2Sym& dynamical_matrix)
 
   dyn_mat_iterator it  =  _dynamical_matrix_models.begin();
   dyn_mat_iterator it_end =  _dynamical_matrix_models.end();
-  
-  
+
+
   Tensor2Sym total(0);
   for ( ; it != it_end; ++it)
   {
@@ -34,14 +34,14 @@ void PhononModel::get_full_dynamical_matrix(Tensor2Sym& dynamical_matrix)
     (it->second)->get_dynamical_matrix(partial);
 
     total = total + partial;
-    
+
   }
 
   dynamical_matrix = total;
 
 }
 
-	
+
 //void PhononModel::get_free_dynamical_matrix(std::vector<std::vector< double > >& D)
 void PhononModel::get_free_dynamical_matrix(Tensor2Sym& dynamical_matrix)
 {
@@ -69,7 +69,7 @@ void PhononModel::do_init(void)
 
   ModelOptions::const_submodel_iterator it;
   ModelOptions::const_submodel_iterator end;
-  
+
   //Heat source models
   it = get_options().submodels_begin("dynamical_matrix");
   end = get_options().submodels_end("dynamical_matrix");
@@ -77,19 +77,19 @@ void PhononModel::do_init(void)
   for ( ; it != end; ++it)
   {
     const std::string& name = (it->second).get_option("model", "");
-  
+
     ID id = add_dynamical_matrix_model(name + "_" +
 			       get_material()->get_structure(),it->second);
   }
 
 
-  std::string model_name =  "raman_tensor_" +get_material()->get_structure();      
+  std::string model_name =  "raman_tensor_" +get_material()->get_structure();
 
-  raman_tensor_model = dynamic_cast<RamanTensor*>(PhysicalModelInterface::create(model_name)); 
-  
+  raman_tensor_model = dynamic_cast<RamanTensor*>(PhysicalModelInterface::create(model_name));
+
   if (raman_tensor_model == NULL)
     throw InitFailedException("No such raman tensor model" + model_name);
-  
+
   raman_tensor_model->set_phonon_model(this);
   raman_tensor_model->set_material(get_material());
   raman_tensor_model->set_simulator_id(get_simulator_id());
@@ -109,55 +109,55 @@ void PhononModel::do_init(void)
   LD[1] = 0.0;
   LD[2] =-1.0;
   opt.get_option("LightDirection",LD);
-  
+
 
 
     //vectorProduct()
     _light_polarization.resize(4);
 
-    _light_polarization[0](1) = LP[0] ;   
+    _light_polarization[0](1) = LP[0] ;
     _light_polarization[0](2) = LP[1] ;
     _light_polarization[0](3) = LP[2] ;
 
-    _light_polarization[1](1) = LP[0] ;   
+    _light_polarization[1](1) = LP[0] ;
     _light_polarization[1](2) = LP[1] ;
     _light_polarization[1](3) = LP[2] ;
 
-     Tensor1  dten;   
+     Tensor1  dten;
      dten(1) = LD[0];
      dten(2) = LD[1];
      dten(3) = LD[2];
 
     _light_polarization[2] = vectorProduct(_light_polarization[0],dten);
- 
-    _light_polarization[3] =  _light_polarization[2] +   _light_polarization[1];   
+
+    _light_polarization[3] =  _light_polarization[2] +   _light_polarization[1];
 
 
-  
+
 }
 
 
 ID
-PhononModel::add_dynamical_matrix_model(const std::string& model_name, 
+PhononModel::add_dynamical_matrix_model(const std::string& model_name,
                                 const ModelOptions& options)
 {
-  
+
   DynamicalMatrix* model = dynamic_cast<DynamicalMatrix*>(
-							  PhysicalModelInterface::create(model_name,options)); 
-  
+							  PhysicalModelInterface::create(model_name,options));
+
   if (model == NULL)
     throw InitFailedException("No such dynamical matrix model" + model_name);
-  
+
   model->set_phonon_model(this);
   model->set_material(get_material());
   model->set_simulator_id(get_simulator_id());
   model->init();
-  
+
   ID id = model->get_id();
   _dynamical_matrix_models[id] = model;
 
-  
-  return id;   
+
+  return id;
 
 }
 void
@@ -169,11 +169,11 @@ dyn_mat_iterator end =  _dynamical_matrix_models.end();
 
 for ( ; it != end; ++it)
  {
-     PhysicalModelInterface::destroy(it->second);
+     destroy(it->second);
  }
 
  _dynamical_matrix_models.clear();
-    
+
 
 }
 
@@ -197,7 +197,7 @@ PhononModel::get_light_polarization(std::vector<Tensor1>& light_polarization)
 
   //  std::cerr<<DM<<std::endl;
 
-  //unsigned int n = 3;   
+  //unsigned int n = 3;
   //D.resize(n);
   //for (unsigned int i = 0; i<n; i++)
   //{
@@ -205,19 +205,19 @@ PhononModel::get_light_polarization(std::vector<Tensor1>& light_polarization)
   // for (unsigned int j = 0; j<n; j++)
   // {
   //   double value;
-  //   if (i < j) 
+  //   if (i < j)
   //	value = DM(j+1, i+1);
   //    else
-  //	value = DM(i+1, j+1);	   
-      
+  //	value = DM(i+1, j+1);
+
   //    D[i][j] = value;
   //  }
-  //} 
-  
+  //}
+
   //D[0][0] = 1.0;
   // D[0][1] = 3.0;
   // D[1][0] = 3.0;
-  // D[1][1] = 1.0; 
+  // D[1][1] = 1.0;
 
 //      D = _dynamical_matrix;
 
@@ -240,7 +240,7 @@ PhononModel::get_light_polarization(std::vector<Tensor1>& light_polarization)
 
 //   ModelOptions::const_submodel_iterator it;
 //   ModelOptions::const_submodel_iterator end;
-  
+
 //   //Heat source models
 //   it = get_options().submodels_begin("dynamical_tensor");
 //   end = get_options().submodels_end("dynamical_tensor");
@@ -248,24 +248,24 @@ PhononModel::get_light_polarization(std::vector<Tensor1>& light_polarization)
 //   for ( ; it != end; ++it)
 //   {
 //     //const std::string& name = (it->second).get_option("model", "");
-    
+
 //   }
 
 
 
 //   if (it != end)
 //   {
-    
-    
+
+
 //     //kappa =dynamic_cast<LatticeThermalConductivity*>(
 //     //	      PhysicalModelInterface::create("lat_therm_cond_" +
-//     //	      get_material()->get_structure(), it->second)); 
-    
-  
+//     //	      get_material()->get_structure(), it->second));
+
+
 //     //if (kappa == NULL)
 //     // throw InitFailedException("Could not create lattice thermal conductivity model");
 
- 
+
 //     }
 //     else
 //     {
@@ -275,7 +275,7 @@ PhononModel::get_light_polarization(std::vector<Tensor1>& light_polarization)
 
 //      }
 //     //kappa->set_temperature(SimulationOptions::temperature);
-    
+
 //     //kappa->set_material(get_material());
 
 //     //kappa->init();
@@ -283,7 +283,7 @@ PhononModel::get_light_polarization(std::vector<Tensor1>& light_polarization)
 
 
 
-   
+
 // }
 
 
@@ -298,6 +298,6 @@ PhononModel::get_light_polarization(std::vector<Tensor1>& light_polarization)
 
 //   //kappa->init_alloy(matA->kappa, matB->kappa, xa);
 
-  
+
 
 // }

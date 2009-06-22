@@ -9,6 +9,9 @@
 // Provides macros needed to create a shared TiberCAD module
 //
 
+#define TBCREATEFUNC __create
+#define TBDESTRYFUNC __destroy
+
 #ifdef BUILD_TIBER_MODULES
 # ifdef CYGWIN
 #  define DLLEXPORT __declspec(dllexport)
@@ -40,10 +43,10 @@
  */
 #define TIBER_MODULE(classname, simname) \
   extern "C" { \
-    TBDLEXPORT void destroy(TiberModelObject* p) { \
+    TBDLEXPORT void TBDESTROYFUNC(TiberModelObject* p) { \
       delete p; \
     } \
-    TBDLEXPORT classname* create(void) { \
+    TBDLEXPORT classname* TBCREATEFUNC(void) { \
       return new classname(); \
     } \
   } \

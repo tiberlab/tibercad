@@ -7,7 +7,7 @@
 
 SBCondBandBulkHamiltonian::~SBCondBandBulkHamiltonian()
 {
-  PhysicalModelInterface::destroy(semiconductor);
+  destroy(semiconductor);
 }
 
 
@@ -26,7 +26,7 @@ SBCondBandBulkHamiltonian::do_init(void)
 
   const ModelOptions& opt =  get_options ();
 
-  PhysicalModelInterface::destroy(semiconductor);
+  destroy(semiconductor);
   semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
   semiconductor->set_material(get_material());
   semiconductor->init();
@@ -46,7 +46,7 @@ SBCondBandBulkHamiltonian::do_init_alloy(const PhysicalModelInterface *comp_A,
   const SBCondBandBulkHamiltonian* matB =
     dynamic_cast< const SBCondBandBulkHamiltonian*> (comp_B);
 
-  PhysicalModelInterface::destroy(semiconductor);
+  destroy(semiconductor);
   semiconductor = static_cast<Semiconductor*>(matA->semiconductor->copy());
   assert(semiconductor != NULL);
   semiconductor->set_material(get_material());

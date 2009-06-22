@@ -50,7 +50,7 @@ void KPbulkHamiltonian::nullify_parameters(void)
 //================================================================
 KPbulkHamiltonian::~KPbulkHamiltonian()
 {
-  PhysicalModelInterface::destroy(semiconductor);
+  destroy(semiconductor);
 }
 
 
@@ -75,7 +75,7 @@ void KPbulkHamiltonian::do_init()
 
   const ModelOptions& opt =  get_options ();
 
-  PhysicalModelInterface::destroy(semiconductor);
+  destroy(semiconductor);
 
 
 
@@ -160,7 +160,7 @@ void KPbulkHamiltonian::do_init_alloy (const PhysicalModelInterface *comp_A, con
   const KPbulkHamiltonian* modB = dynamic_cast<const KPbulkHamiltonian*> (comp_B);
 
 
-  PhysicalModelInterface::destroy(semiconductor);
+  destroy(semiconductor);
   semiconductor = static_cast<Semiconductor*>(modA->semiconductor->copy());
   assert(semiconductor != NULL);
   semiconductor->set_material(get_material());

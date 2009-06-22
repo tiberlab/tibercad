@@ -18,13 +18,13 @@
  *  \frac{\mu_1}{1 + (C_s/N)^\beta}
  * \f]
  * with \f$\mu_{const}\f$ from the ConstantMobility model.
- * 
+ *
  * \li Formula of Arora (formula 2):
  * \f{eqnarray*}
  * \mu & = & {\mu_{min}}^\ast +
  * \frac{{\mu_d}^\ast}{1+\left(N/{N_0}^\ast\right)^{\alpha^\ast}} \\
  * \mu_{min}^\ast & = & \mu_{min}\left(\frac{T}{T_0}\right)^{\alpha_m} \\
- * {\mu_d}^\ast & = & \mu_d\left(\frac{T}{T_0}\right)^{\alpha_d} \\ 
+ * {\mu_d}^\ast & = & \mu_d\left(\frac{T}{T_0}\right)^{\alpha_d} \\
  * {N_0}^\ast & = & N_0\left(\frac{T}{T_0}\right)^{\alpha_N} \\
  * \alpha^\ast & = & \alpha\left(\frac{T}{T_0}\right)^{\alpha_a}
  * \f}
@@ -133,7 +133,7 @@ class DopingDependentMobility : public MobilityModelInterface
 
 //
 // inline methods
-// 
+//
 
 inline
 DopingDependentMobility::DopingDependentMobility(void)
@@ -170,7 +170,7 @@ DopingDependentMobility::create_new(void) const
 inline
 DopingDependentMobility::~DopingDependentMobility(void)
 {
-  PhysicalModelInterface::destroy(const_mob_);
+  destroy(const_mob_);
 }
 
 #endif // _DOPINGDEPENDENTMOBILITY_H_

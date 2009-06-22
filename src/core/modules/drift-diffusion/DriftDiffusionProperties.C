@@ -171,7 +171,7 @@ DriftDiffusionProperties::do_init(void)
   setup_electrons_and_holes();
 
 
-  PhysicalModelInterface::destroy(_pyropolarization);
+  destroy(_pyropolarization);
   _pyropolarization = PyroPolarization::create(get_material());
   _pyropolarization->set_material(get_material());
   _pyropolarization->set_simulator_id(get_simulator_id());
@@ -203,7 +203,7 @@ DriftDiffusionProperties::do_init(void)
     //
 
     // create electron mobility model
-    PhysicalModelInterface::destroy(_electron_mobility);
+    destroy(_electron_mobility);
 
     ModelOptions::const_submodel_iterator
       it(get_options().submodels_begin("electron_mobility"));
@@ -223,7 +223,7 @@ DriftDiffusionProperties::do_init(void)
 
 
     // create hole mobility model
-    PhysicalModelInterface::destroy(_hole_mobility);
+    destroy(_hole_mobility);
 
     it = get_options().submodels_begin("hole_mobility");
     end = get_options().submodels_end("hole_mobility");
@@ -263,7 +263,7 @@ DriftDiffusionProperties::do_init(void)
     end = get_options().submodels_end("thermoelectric_power");
     if (it != end)
     {
-      PhysicalModelInterface::destroy(_thermoelectric_power);
+      destroy(_thermoelectric_power);
 
       _thermoelectric_power =
         ThermoelectricPower::create_model("default", it->second);
@@ -291,10 +291,10 @@ DriftDiffusionProperties::do_init(void)
 DriftDiffusionProperties::~DriftDiffusionProperties(void)
 {
   clear_recombination();
-  PhysicalModelInterface::destroy(_pyropolarization);
-  PhysicalModelInterface::destroy(_electron_mobility);
-  PhysicalModelInterface::destroy(_hole_mobility);
-  PhysicalModelInterface::destroy(_thermoelectric_power);
+  destroy(_pyropolarization);
+  destroy(_electron_mobility);
+  destroy(_hole_mobility);
+  destroy(_thermoelectric_power);
 }
 
 
@@ -352,14 +352,14 @@ DriftDiffusionProperties::do_init_alloy(const PhysicalModelInterface* comp_A,
 
   if (!is_dielectric())
   {
-    PhysicalModelInterface::destroy(_electron_mobility);
+    destroy(_electron_mobility);
     _electron_mobility = create_submodel_copy(scA->_electron_mobility);
     _electron_mobility->set_driftdiffusionproperties(this);
     _electron_mobility->init_alloy(scA->_electron_mobility,
         scB->_electron_mobility, xa);
 
 
-    PhysicalModelInterface::destroy(_hole_mobility);
+    destroy(_hole_mobility);
     _hole_mobility = create_submodel_copy(scA->_hole_mobility);
     _hole_mobility->set_driftdiffusionproperties(this);
     _hole_mobility->init_alloy(scA->_hole_mobility, scB->_hole_mobility, xa);
@@ -381,7 +381,7 @@ DriftDiffusionProperties::do_init_alloy(const PhysicalModelInterface* comp_A,
   }
 
 
-  PhysicalModelInterface::destroy(_pyropolarization);
+  destroy(_pyropolarization);
   _pyropolarization = create_submodel_alloy(scA->_pyropolarization,
       scB->_pyropolarization, xa);
 
@@ -409,7 +409,7 @@ DriftDiffusionProperties::do_init_alloy(const PhysicalModelInterface* comp_A,
   if (scA->_thermoelectric_power != NULL)
   {
     assert(scB->_thermoelectric_power != NULL);
-    PhysicalModelInterface::destroy(_thermoelectric_power);
+    destroy(_thermoelectric_power);
     _thermoelectric_power = create_submodel_copy(scA->_thermoelectric_power);
     _thermoelectric_power->set_driftdiffusionproperties(this);
     _thermoelectric_power->init_alloy(scA->_thermoelectric_power,
@@ -470,7 +470,7 @@ DriftDiffusionProperties::clear_recombination(void)
   recomb_iterator it = _recombination_models.begin();
   recomb_iterator end = _recombination_models.end();
   for ( ; it != end; ++it)
-    PhysicalModelInterface::destroy(it->second);
+    destroy(it->second);
 
   _recombination_models.clear();
 }

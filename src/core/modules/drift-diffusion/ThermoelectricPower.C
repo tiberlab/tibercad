@@ -11,12 +11,12 @@
 
 namespace
 {
-  PhysicalModelInterface* thpow_create(void)
+  TiberModelObject* thpow_create(void)
   {
     return new ThermoelectricPower();
   }
 
-  void thpow_destroy(PhysicalModelInterface* mod)
+  void thpow_destroy(TiberModelObject* mod)
   {
     delete mod;
   }
@@ -45,7 +45,7 @@ ThermoelectricPower*
 ThermoelectricPower::create_model(const std::string& model,
     const ModelOptions& options)
 {
-  return dynamic_cast<ThermoelectricPower*>(
+  return static_cast<ThermoelectricPower*>(
       PhysicalModelInterface::create(thpow_create, thpow_destroy, options));
 }
 

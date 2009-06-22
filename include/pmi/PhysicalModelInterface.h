@@ -34,14 +34,6 @@ class PhysicalModelInterface : public TiberModelObject
 
   public:
 
-    //! The creation method signature
-    typedef PhysicalModelInterface* (*create_t)(void);
-
-
-    //! The destruction method signature
-    typedef void (*destroy_t)(PhysicalModelInterface*);
-
-
     //! Destructor
     virtual ~PhysicalModelInterface(void);
 
@@ -98,13 +90,6 @@ class PhysicalModelInterface : public TiberModelObject
      */
     static PhysicalModelInterface* create(create_t create_fnc,
         destroy_t destroy_fnc, const ModelOptions& options = ModelOptions());
-
-
-    //! Deletes a model
-    /*!
-     * \param p the pointer to the model to be destroyed
-     */
-    static void destroy(PhysicalModelInterface* p);
 
 
     //! Create a new model as a copy of this
@@ -326,28 +311,12 @@ class PhysicalModelInterface : public TiberModelObject
     typedef std::map<const std::string, ID>::iterator model_id_iterator;
 
 
-    //! The type for library handles
-    typedef void* libhandle_t;
-
-
     //! Disable copy constructor
     PhysicalModelInterface(const PhysicalModelInterface&);
 
 
     //! Disable assignment operator
     PhysicalModelInterface& operator=(const PhysicalModelInterface&);
-
-
-    //! The library handle for this model
-    libhandle_t _libhandle;
-
-
-    //! The creation method for this model
-    create_t _create;
-
-
-    //! The destruction method for this model
-    destroy_t _destroy;
 
 
     //! The unique ID of this model
@@ -411,10 +380,7 @@ class PhysicalModelInterface : public TiberModelObject
 
 inline
 PhysicalModelInterface::PhysicalModelInterface(void)
-  : _libhandle(NULL),
-    _create(NULL),
-    _destroy(NULL),
-    _id(INVALID_ID),
+  : _id(INVALID_ID),
     _simulator_id(INVALID_ID),
     _name(""),
     _material(NULL)

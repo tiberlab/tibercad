@@ -22,7 +22,7 @@ using namespace std;
 SemiconductorModel::~SemiconductorModel(void)
 {
   reset();
-  PhysicalModelInterface::destroy(_bulk_model);
+  destroy(_bulk_model);
 }
 
 SemiconductorModel::SemiconductorModel(void)
@@ -52,7 +52,7 @@ SemiconductorModel::do_init(void)
   _recompute_band_parameters = get_option("recompute_band_parameters",
       _recompute_band_parameters);
 
-  PhysicalModelInterface::destroy(_bulk_model);
+  destroy(_bulk_model);
 
   _bulk_model = DDsemiconductor::create(get_material()->get_structure(), opt);
 
@@ -80,7 +80,7 @@ SemiconductorModel::do_init_alloy(const PhysicalModelInterface* comp_A,
 
   _recompute_band_parameters = scA->_recompute_band_parameters;
 
-  PhysicalModelInterface::destroy(_bulk_model);
+  destroy(_bulk_model);
   _bulk_model = static_cast<DDsemiconductor*>(scA->_bulk_model->copy());
   assert(_bulk_model != NULL);
   _bulk_model->set_material(get_material());

@@ -2,6 +2,9 @@
 
 #include "TiberModelObject.h"
 #include "Variable.h"
+#include "DLLoader.h"
+
+#include <cassert>
 
 
 using namespace std;
@@ -70,6 +73,75 @@ TiberModelObject::get_parameter(const std::string& name,
   Utils::extract_vector(s, vec);
 }
 
+
+
+TiberModelObject*
+TiberModelObject::create_from_library(const std::string& name)
+{
+  TiberModelObject* obj = NULL;
+
+  DLLoader::LibraryInterface iface;
+
+  bool success = DLLoader::open_library(name, iface);
+
+  if (success)
+  {
+    create_t create = (create_t) iface.create_fnc;
+
+    assert(create != NULL);
+    obj = create();
+
+    if (obj != NULL)
+    {
+      assert(iface.destroy_fnc != NULL);
+      assert(iface.handle != NULL);
+
+      obj->_create = create;
+      obj->_destroy = (destroy_t) iface.destroy_fnc;
+      obj->_libhandle = iface.handle;
+    }
+  }
+
+  return obj;
+}
+
+
+TiberModelObject*
+TiberModelObject::create_from_function(create_t create, destroy_t destroy)
+{
+  assert(create != NULL);
+  assert(destroy != NULL);
+
+  TiberModelObject* obj = create();
+
+  if (obj != NULL)
+  {
+    obj->_create = create;
+    obj->_destroy = destroy;
+  }
+
+  return obj;
+}
+
+
+void
+TiberModelObject::destroy(TiberModelObject* p)
+{
+  if (p != NULL)
+  {
+
+    libhandle_t libhandle = p->_libhandle;
+    destroy_t destroy_fnc = p->_destroy;
+
+    if (destroy_fnc != NULL)
+      destroy_fnc(p);
+    else
+      delete p;
+
+    if (libhandle != NULL)
+      DLLoader::close_library(libhandle);
+  }
+}
 
 
 //

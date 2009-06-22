@@ -51,7 +51,7 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
   // we are not very optimistic
   bool success = false;
-  
+
   // construct the library name
   string libfile = "lib" + name + ".so";
 
@@ -96,8 +96,8 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 #endif
     if ((iface.handle != NULL) && ((error_msg = dlerror()) == NULL))
     {
-      iface.create_fnc = dlsym(iface.handle, "create");
-      iface.destroy_fnc = dlsym(iface.handle, "destroy");
+      iface.create_fnc = dlsym(iface.handle, "TBCREATEFUNC");
+      iface.destroy_fnc = dlsym(iface.handle, "TBDESTROYFUNC");
 
       if ((iface.create_fnc == NULL)
           || (iface.destroy_fnc == NULL)

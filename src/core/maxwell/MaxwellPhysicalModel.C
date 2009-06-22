@@ -16,7 +16,7 @@ MaxwellPhysicalModel::MaxwellPhysicalModel()
 MaxwellPhysicalModel::~MaxwellPhysicalModel()
 {
 
-  PhysicalModelInterface::destroy(_epsilon_model);
+  destroy(_epsilon_model);
 
 }
 
@@ -30,7 +30,7 @@ PhysicalModelInterface* MaxwellPhysicalModel::create_new (void) const
 
 void MaxwellPhysicalModel::do_init()
 {
-  PhysicalModelInterface::destroy(_epsilon_model);
+  destroy(_epsilon_model);
 
   const ModelOptions& opt =  get_options ();
 
@@ -48,7 +48,7 @@ void MaxwellPhysicalModel::do_init_alloy (const PhysicalModelInterface *comp_A, 
 {
   const MaxwellPhysicalModel* matA = dynamic_cast< const  MaxwellPhysicalModel*> (comp_A);
   const MaxwellPhysicalModel* matB = dynamic_cast< const  MaxwellPhysicalModel*> (comp_B);
- 
-  PhysicalModelInterface::destroy(_epsilon_model);
+
+  destroy(_epsilon_model);
   _epsilon_model = create_submodel_alloy(matA->_epsilon_model, matB->_epsilon_model, xa);
 }

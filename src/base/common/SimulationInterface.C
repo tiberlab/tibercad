@@ -3,7 +3,6 @@
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
 #include "Control.h"
-#include "DLLoader.h"
 #include "Material.h"
 #include "Alloy.h"
 #include "Embracing.h"
@@ -98,84 +97,64 @@ SimulationInterface::create(const string& type,
   if (flavour.size() != 0)
     type_name += "_" + flavour;
 
-  // First we attempt to open a shared library
-  //
-  DLLoader::LibraryInterface iface;
-  bool success =
-#ifdef BUILD_TIBER_MODULES
-    DLLoader::open_library(type_name, iface);
-#else
-    false;
-#endif
-
-  create_t create_fnc = (create_t) iface.create_fnc;
-  destroy_t destroy_fnc = (destroy_t) iface.destroy_fnc;
-
-  if(success)
-    sim = create_fnc();
-  else
-  {
 #ifndef BUILD_TIBER_MODULES
-    if (type_name == "driftdiffusion")
-      sim = DriftDiffusion::create();
-    else if (type_name == "dssc")
-      sim = DSSC::create();
-    else if (type_name == "excitontransport")
-      sim = ExcitonTransport::create();
-    else if (type_name == "macrostrain")
+  if (type_name == "driftdiffusion")
+    sim = DriftDiffusion::create();
+  else if (type_name == "dssc")
+    sim = DSSC::create();
+  else if (type_name == "excitontransport")
+    sim = ExcitonTransport::create();
+  else if (type_name == "macrostrain")
 #else
-    if (type_name == "macrostrain")
+  if (type_name == "macrostrain")
 #endif
-      sim = Macrostrain::create();
-    else if (type_name == "crackstrain")
-      sim = CrackStrain::create();
-    else if (type_name == "efaschroedinger")
-      sim = EnvelopFunctionApprox::create();
-    else if (type_name == "sweep")
-      sim = Sweep::create();
-    else if (type_name == "thermal")
-      sim = MacroHeatBalance::create();
-    else if (type_name == "selfconsistent")
-      sim = RelaxationMethod::create();
-    else if (type_name == "selfconsistent_relaxation")
-      sim = RelaxationMethod::create();
-    else if (type_name == "selfconsistent_broyden")
-      sim = ModifiedBroyden::create();
-    else if (type_name == "quantumdensity")
-      sim = QuantumDensity::create();
-    else if (type_name == "opticskp")
-      sim = OpticsKP::create();
-    else if (type_name == "quantumdispersion")
-      sim = QuantumDispersion::create();
-    else if (type_name == "tunnelingcurrent")
-      sim = TunnelingCurrent::create();
+    sim = Macrostrain::create();
+  else if (type_name == "crackstrain")
+    sim = CrackStrain::create();
+  else if (type_name == "efaschroedinger")
+    sim = EnvelopFunctionApprox::create();
+  else if (type_name == "sweep")
+    sim = Sweep::create();
+  else if (type_name == "thermal")
+    sim = MacroHeatBalance::create();
+  else if (type_name == "selfconsistent")
+    sim = RelaxationMethod::create();
+  else if (type_name == "selfconsistent_relaxation")
+    sim = RelaxationMethod::create();
+  else if (type_name == "selfconsistent_broyden")
+    sim = ModifiedBroyden::create();
+  else if (type_name == "quantumdensity")
+    sim = QuantumDensity::create();
+  else if (type_name == "opticskp")
+    sim = OpticsKP::create();
+  else if (type_name == "quantumdispersion")
+    sim = QuantumDispersion::create();
+  else if (type_name == "tunnelingcurrent")
+    sim = TunnelingCurrent::create();
 #ifdef ENABLE_DFTB
-    else if (type_name == "densityfunctional_tb")
-      sim = Dftb::create();
+  else if (type_name == "densityfunctional_tb")
+    sim = Dftb::create();
 #endif
 #ifdef ENABLE_UPTIGHT
-    else if (type_name == "empirical_tb")
-      sim = ETB::create();
-    else if (type_name == "opticstb")
-      sim = OpticsTB::create();
+  else if (type_name == "empirical_tb")
+    sim = ETB::create();
+  else if (type_name == "opticstb")
+    sim = OpticsTB::create();
 #endif
-    else if (type_name == "opticalspectrum")
-      sim = OptRecombinSpectrum::create();
-    else if (type_name == "poisson")
-      sim = Poisson::create();
-    else if (type_name == "maxwell")
-      sim = MaxwellEquations::create();
-    else if (type_name == "phonondispersion")
-      sim = PhononDispersion::create();
+  else if (type_name == "opticalspectrum")
+    sim = OptRecombinSpectrum::create();
+  else if (type_name == "poisson")
+    sim = Poisson::create();
+  else if (type_name == "maxwell")
+    sim = MaxwellEquations::create();
+  else if (type_name == "phonondispersion")
+    sim = PhononDispersion::create();
 
-  }
+  if (sim == NULL)
+    create_from_library(type_name, sim);
 
   if (sim != NULL)
   {
-    sim->_libhandle = iface.handle;
-    sim->_create = create_fnc;
-    sim->_destroy = destroy_fnc;
-
     sim->set_options(options);
 
     // we let it know what's its identifier
@@ -202,26 +181,6 @@ SimulationInterface::create(const string& type,
 }
 
 
-
-
-void
-SimulationInterface::destroy(SimulationInterface* p)
-{
-  if (p != NULL)
-  {
-
-    libhandle_t libhandle = p->_libhandle;
-    destroy_t destroy_fnc = p->_destroy;
-
-    if (destroy_fnc != NULL)
-      destroy_fnc(p);
-    else
-      delete p;
-
-    if (libhandle != NULL)
-      DLLoader::close_library(libhandle);
-  }
-}
 
 
 

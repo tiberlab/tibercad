@@ -22,7 +22,7 @@ MaterialInterface::MaterialInterface(void)
 
 MaterialInterface::~MaterialInterface(void)
 {
-  PhysicalModelInterface::destroy(_srec);
+  destroy(_srec);
 }
 
 

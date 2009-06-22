@@ -3,7 +3,6 @@
 #include "tiber_config.h"
 #include "PhysicalModelInterface.h"
 #include "Material.h"
-#include "DLLoader.h"
 #include "Variable.h"
 
 #ifndef BUILD_TIBER_MODULES
@@ -202,26 +201,12 @@ PhysicalModelInterface::create(const string& name,
   else if  (name == "raman_tensor_zb")
     mod = ZbRamanTensor::create();
 
-  // attempt to open a shared library
-  //
-  DLLoader::LibraryInterface iface;
-  bool success = DLLoader::open_library(name, iface);
-
-  create_t create_fnc = (create_t) iface.create_fnc;
-  destroy_t destroy_fnc = (destroy_t) iface.destroy_fnc;
-
-  // Try to create the object
-  if(success)
-    mod = create_fnc();
-
+  if (mod == NULL)
+    create_from_library(name, mod);
 
   if (mod != NULL)
   {
     register_model(mod);
-
-    mod->_libhandle = iface.handle;
-    mod->_create = create_fnc;
-    mod->_destroy = destroy_fnc;
 
     // we let it know what's its identifier
     mod->set_type(name);
@@ -252,15 +237,12 @@ PhysicalModelInterface*
 PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
     const ModelOptions& options)
 {
-  PhysicalModelInterface* mod = dynamic_cast<PhysicalModelInterface*>(create_fnc());
+  PhysicalModelInterface* mod = dynamic_cast<PhysicalModelInterface*>(
+      create_from_function(create_fnc, destroy_fnc));
 
   if (mod != NULL)
   {
     register_model(mod);
-
-    mod->_create = create_fnc;
-    mod->_destroy = destroy_fnc;
-
 
     mod->set_options(options);
 
@@ -282,26 +264,6 @@ PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
 }
 
 
-
-
-void
-PhysicalModelInterface::destroy(PhysicalModelInterface* p)
-{
-
-  if (p != NULL)
-  {
-    libhandle_t libhandle = p->_libhandle;
-    destroy_t destroy_fnc = p->_destroy;
-
-    if (destroy_fnc != NULL)
-      destroy_fnc(p);
-    else
-      delete p;
-
-    if (libhandle != NULL)
-      DLLoader::close_library(libhandle);
-  }
-}
 
 
 
