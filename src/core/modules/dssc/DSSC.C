@@ -3632,8 +3632,9 @@ DSSC::do_assembly(const NumericVector<Number>& x,
       // is this a boundary?
       if (environment.is_boundary(side))
       {
-        // we need to know if it is an outer boundary
+        // we need to know if it is an outer or inner boundary
         bool true_boundary = environment.is_outer_boundary(side);
+        bool inner_boundary = environment.is_inner_boundary(side);
 
         Boundary* boundary = environment.get_boundary(side);
 
@@ -3669,6 +3670,40 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         // the derivatives
         vector<vector<double> > dcoeff(3, vector<double>(3, 0.0));
         vector<vector<double> > dvalue(3, vector<double>(3, 0.0));
+        
+	// check if it is an electrolyte/TiO2 interface
+
+        if (inner_boundary)
+        {
+          if (!is_TiO2)
+          {
+          
+            ID subdomain_n = neighbour->subdomain_id();
+
+            DSSCModel* sc_n =
+              dynamic_cast<DSSCModel*>(
+                device.get_material(subdomain_n)->get_model(get_id()));
+
+            bool is_TiO2_n = sc_n->is_TiO2();
+
+            if (is_TiO2_n)
+            {
+          
+	       
+              for (unsigned int i = 0; i < elem->n_nodes(); i++)
+              {
+                if(elem->is_node_on_side(i,s))
+                {
+                  Knn(i,i) = 0.0;
+                  Fn(i) = 0.0;
+                }
+              }
+
+            }
+          }
+        }
+
+        //
 
         //
         // NOTE: we have to integrate over the boundary also if there are
@@ -3677,6 +3712,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         if (dim > 1)
         {
 
+         if (true_boundary)
+	 {
           int phi_size = phi_face.size();
 
           // now integrate to include von Neumann and mixed type BCs
@@ -3810,7 +3847,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             //  double value_u = J * (value[0] - Pn);
             //  double value_n = J * value[1] / (mu0 * C0_e);
             //  double value_p = J * value[2] / (mu0 * C0_h);
-        
+        } // true_boundary
         } // dimension
         else // i.e. dim == 1
         {
@@ -3949,8 +3986,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 	        double Normal_I = x0 / (phi0 * C0_I * Constants::e );
 	        double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e );
 		
-                //pot = -Xu(s);
-                pot = -2*Xu(s) + 1.5 * XI(s) - 0.5 * XI3(s);
+                pot = -Xu(s);
+                //pot = -2*Xu(s) + 1.5 * XI(s) - 0.5 * XI3(s);
                 //pot = -Xu(s) - res;
                 //pot = -2*Xu(s) + 1.5 * XI(s) - 0.5 * XI3(s);
                 FI(s) += -1.5 * pot * Normal_I / res ;
@@ -4109,7 +4146,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
     // constrain the jacobian and the rhs to account for constrained
     // DOFs
-    // NOTE: this changes dof_indices that's why the application of
+    // NOTE: this changes dof_indices that's why th application of
     //       Dirichlet type BCs needs special care
     //dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
@@ -4145,10 +4182,10 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               
                double res = contact->get_potential() * x0;
               
-              if (res < 1e10)
-              {
+             // if (dim == 1 && res < 1e10)
+             // {
                 Ke.condense(i + n_dofs, i + n_dofs, 0.0, Fe);
-              }
+              //}
 
             }
           }
