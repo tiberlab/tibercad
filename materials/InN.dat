@@ -6,7 +6,11 @@ structure = wz
 [valenceband]
 #E_v = -2.34;
 # from Nextnano
-E_v = -0.4203
+#E_v = -0.4203
+
+# Vurgauftman
+E_v = -0.21033
+
 
 
 [conductionband]
