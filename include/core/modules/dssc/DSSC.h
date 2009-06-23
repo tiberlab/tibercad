@@ -52,15 +52,15 @@ class DSSC : public SimulationInterface
 
     //! Constructor
     DSSC(void);
-    
+
     //! Destructor
     virtual ~DSSC(void);
 
-    
+
     //! Create an DSSC object
     static DSSC* create(void);
 
-    
+
     /*! \copydoc SimulationInterface::create_physical_model() */
     virtual PhysicalModel*
       create_physical_model(const ModelOptions& options,
@@ -71,15 +71,15 @@ class DSSC : public SimulationInterface
     virtual BoundaryProperties*
       create_boundary_model(const ModelOptions& options) const
       throw (ModelErrorException);
- 
-    
+
+
     //! Get the mesh
     /*!
      * \return a constant reference to the simulation mesh
      */
     Mesh& get_mesh(void) const;
-    
-    
+
+
     //! Makes a first guess of the equilibrium potential
     /**
      * It sets every node to its equilibrium potential.
@@ -90,11 +90,11 @@ class DSSC : public SimulationInterface
     //! Get the number of nonlinear iterations needed for the solution
     unsigned int get_n_nonlinear_iterations(void) const;
 
-    
+
     //! Get the final residual norm of the solution
     double get_final_residual(void) const;
 
-    
+
     //! Get the boundary currents indexed by boundary descriptor
     const std::map<const Boundary*, double>&
       get_boundary_currents(void) const;
@@ -115,7 +115,7 @@ class DSSC : public SimulationInterface
     /*! \copydoc SimulationInterface::do_equilibrium() */
     virtual void do_equilibrium(void);
 
-    
+
     //! Solve the drift-diffusion problem.
     /*!
      * If adaptive mesh refinement was enabled for this solver
@@ -128,14 +128,14 @@ class DSSC : public SimulationInterface
     /*! \copydoc SimulationInterface::do_print_info() */
     virtual void do_print_info(void);
 
-    
+
     /*! \copydoc SimulationInterface::parse_options() */
     virtual void parse_options(void);
 
-    
+
     /*! \copydoc SimulationInterface::solution_vector() */
     virtual NumericVector<double>& solution_vector(void);
-    
+
 
     /*! \copydoc SimulationInterface::build_nodal_results() */
     virtual void build_nodal_results(const std::set<std::string>& variables,
@@ -164,7 +164,7 @@ class DSSC : public SimulationInterface
     /*! \copydoc SimulationInterface::do_get_solution_vector() */
     virtual NumericVector<double>& do_get_solution_vector(void);
 
-    
+
     /*! \copydoc SimulationInterface::do_maximum_norm_of_difference() */
     virtual double do_maximum_norm_of_difference(ID id);
 
@@ -194,7 +194,7 @@ class DSSC : public SimulationInterface
 
 
   private:
-   
+
 
 
     // for nicer code
@@ -254,7 +254,7 @@ class DSSC : public SimulationInterface
     //! The type of scaling
     Scaling::ScalingType _scaling_type;
 
-   
+
     //! The boundary currents
     /*!
      * Currents are calculated after each solve step.
@@ -273,6 +273,14 @@ class DSSC : public SimulationInterface
     //! If true, local density scaling should be applied
     bool do_local_scaling_;
 
+
+    /*!
+     * \brief A list of nodes which lie on an inner boundary between
+     * TiO2 and electrolyte
+     */
+    std::set<const Node*> _internal_boundary_nodes;
+
+
     //! Calculate the local density scaling on each node
     void build_local_scaling(void);
 
@@ -289,20 +297,20 @@ class DSSC : public SimulationInterface
 
     //! disable the copy constructor
     DSSC(const DSSC& rhs);
-    
+
     //! disable the copy assignment operator
     DSSC& operator=(const DSSC& rhs);
-    
+
 
     //! Parse the options which will not change between calls to solve()
     void parse_const_options(void);
-  
-    
-    
+
+
+
     //! Rebuild the equation system if needed
     void rebuild_equation_system(void);
 
-    
+
     /*!
      * \brief Computes the scaling parameters according to the
      * scaling type \p type
@@ -310,13 +318,19 @@ class DSSC : public SimulationInterface
     void compute_scaling(Scaling::ScalingType type = Scaling::UNITS);
 
     void compute_scaling_only(Scaling::ScalingType type = Scaling::UNITS);
-    
-    
+
+
     //! Fills the dirichlet nodes data structure.
     void find_dirichlet_nodes(void);
 
 
-    
+    //! Find nods on boundary TiO2/electrolyte
+    void find_internal_boundary_nodes(void);
+
+    //! Tells if node lies on an inner TiO2/electrolyte boundary
+    bool is_internal_boundary_node(const Node* node) const;
+
+
     //! Reset solver environment.
     /*!
      * Deletes only the \p EquationSystems object, without
@@ -357,7 +371,7 @@ class DSSC : public SimulationInterface
      *
      * Assuming electron and hole generation-recombination terms to be
      * equal, one can write:
-     * \f[\left(-\nabla(\mathbf{j}_n + \mathbf{j}_p), hl\right) = 
+     * \f[\left(-\nabla(\mathbf{j}_n + \mathbf{j}_p), hl\right) =
      * -\int_\Omega h_l \nabla (\mathbf{j}_n + \mathbf{j}_p)\mathrm{d}V = 0\f]
      * where \f$h_l|_{\Gamma_j} = \delta_{lj}, h_l \in H^1\f$ is the test
      * function for the contact \it l
@@ -410,7 +424,7 @@ class DSSC : public SimulationInterface
 
 //
 // inline member functions
-// 
+//
 
 inline
 DSSC*
@@ -444,7 +458,7 @@ DSSC::get_boundary_currents() const
 
 
 inline
-Mesh& 
+Mesh&
 DSSC::get_mesh(void) const
 {
   return _device->get_mesh();
@@ -457,6 +471,19 @@ DSSC::poisson_only(void) const
 {
   return _poisson_only;
 }
+
+
+inline
+bool
+DSSC::is_internal_boundary_node(const Node* node) const
+{
+  bool result = false;
+  if (_internal_boundary_nodes.find(node) != _internal_boundary_nodes.end())
+    result = true;
+
+  return result;
+}
+
 
 
 #endif // _DSSC_H_

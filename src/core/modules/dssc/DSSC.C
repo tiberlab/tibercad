@@ -63,7 +63,7 @@ DSSC::~DSSC(void)
 {
   cleanup_solver();
 }
- 
+
 
 
 
@@ -72,9 +72,9 @@ DSSC::create_physical_model(const ModelOptions& options,
     const Material* mat) const throw (ModelErrorException)
 {
   string modelname;
-  
+
   modelname = options.get_option("model", "default");
-  
+
   DSSCModel* model =
     DSSCModel::create(modelname, options);
 
@@ -152,13 +152,13 @@ DSSC::compute_scaling(Scaling::ScalingType type)
 
   _cation_amount = 0.0;
   _iodine_amount = 0.0;
-  
+
   // find minimum or maximum by looping over all elements
   MeshBase::const_element_iterator el =
                                   get_mesh().active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
                                   get_mesh().active_local_elements_end();
-  for ( ; el != end_el ; ++el) 
+  for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
@@ -240,17 +240,17 @@ DSSC::compute_scaling(Scaling::ScalingType type)
       while (it != end)
       {
         const Node& n = **it;
-        
+
         if (n(0) < xmin)
           xmin = n(0);
         else if (n(0) > xmax)
           xmax = n(0);
-        
+
         if (n(1) < ymin)
           ymin = n(1);
         else if (n(1) > ymax)
           ymax = n(1);
-        
+
         if (n(2) < zmin)
           zmin = n(2);
         else if (n(2) > zmax)
@@ -261,7 +261,7 @@ DSSC::compute_scaling(Scaling::ScalingType type)
       double x = xmax - xmin;
       double y = ymax - ymin;
       double z = zmax - zmin;
-      
+
       x0 = (x > y) ? x : y;
       x0 = (x0 > z) ? x0 : z;
 
@@ -298,7 +298,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
   // we calculate in cm!
   //double mesh_units = 100 * get_scaling().get_calc_mesh_units();
   //get_scaling().set_calc_mesh_units(mesh_units);
-  
+
   const Mesh& mesh = get_mesh();
 
   _cond_scaling.n = 1;
@@ -320,16 +320,16 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
                                   get_mesh().active_local_elements_begin();
     const MeshBase::const_element_iterator end_el =
                                   get_mesh().active_local_elements_end();
-  
+
   TiberNonlinearSystem* system =
     &get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
 
   const NumericVector<Number>& solution = get_solution_vector();
 
-  
+
   const DofMap& dof_map = system->get_dof_map();
-  
+
     // the scaling parameters to scale back the result
     phi0 = get_scaling().get_potential_scaling();
     C0 = get_scaling().get_density_scaling();
@@ -340,7 +340,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
     const unsigned int eI3_var = system->variable_number("fermi_I3");
     const unsigned int eC_var = system->variable_number("fermi_C");
     //const unsigned int aC_var = system->variable_number("aux_cat");
-    
+
     vector<unsigned int> dof_indices_u;
     vector<unsigned int> dof_indices_en;
     vector<unsigned int> dof_indices_eI;
@@ -354,15 +354,15 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
     QGauss qrule(dim, libMeshEnums::CONSTANT);
     fe->attach_quadrature_rule(&qrule);
       // sc->reinit(elem);
-    
-  
-  
-  for ( ; el != end_el ; ++el) 
+
+
+
+  for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
-    
-      
+
+
     fe->reinit(elem);
     const vector<vector<Real> >& phi = fe->get_phi();
     const vector<vector<RealGradient> >& dphi = fe->get_dphi();
@@ -373,7 +373,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
       dof_map.dof_indices(elem, dof_indices_eI3, eI3_var);
       dof_map.dof_indices(elem, dof_indices_eC, eC_var);
       //dof_map.dof_indices(elem, dof_indices_aC, aC_var);
-    
+
       assert(_device->get_material(elem->subdomain_id()) != NULL);
       DSSCModel* sc =
         dynamic_cast<DSSCModel*>(
@@ -476,17 +476,17 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
       while (it != end)
       {
         const Node& n = **it;
-        
+
         if (n(0) < xmin)
           xmin = n(0);
         else if (n(0) > xmax)
           xmax = n(0);
-        
+
         if (n(1) < ymin)
           ymin = n(1);
         else if (n(1) > ymax)
           ymax = n(1);
-        
+
         if (n(2) < zmin)
           zmin = n(2);
         else if (n(2) > zmax)
@@ -497,7 +497,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
       double x = xmax - xmin;
       double y = ymax - ymin;
       double z = zmax - zmin;
-      
+
       x0 = (x > y) ? x : y;
       x0 = (x0 > z) ? x0 : z;
 
@@ -521,7 +521,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
   get_scaling().set_length_scaling(x0 * mesh_units);
   get_scaling().set_mobility_scaling(mu0);
   get_scaling().set_density_scaling(C0);
- 
+
 }
 
 
@@ -529,7 +529,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
 void
 DSSC::get_OC_values(void)
 {
-  
+
   // references for nicer code
   const Mesh& mesh = get_mesh();
   EquationSystems& eq_sys = get_equation_systems();
@@ -546,16 +546,16 @@ DSSC::get_OC_values(void)
   const Scaling& scaling = get_scaling();
   const double x0 = scaling.get_length_scaling();
   const double phi0 = scaling.get_potential_scaling();
- 
+
   const DofMap& dof_map = system.get_dof_map();
-  
+
   // numeric ids corresponding to the variables
   const unsigned int u_var = system.variable_number("potential");
   const unsigned int en_var = system.variable_number("fermi_n");
   const unsigned int eI_var = system.variable_number("fermi_I");
   const unsigned int eI3_var = system.variable_number("fermi_I3");
   const unsigned int eC_var = system.variable_number("fermi_C");
-  
+
   vector<unsigned int> dof_indices;
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
@@ -571,7 +571,7 @@ DSSC::get_OC_values(void)
                                   mesh.active_local_elements_end();
 
   // loop over all active elements
-  for ( ; el != end_el ; ++el) 
+  for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
     const Elem* top_parent = elem->top_parent();
@@ -581,7 +581,7 @@ DSSC::get_OC_values(void)
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
       ElementSide side(top_parent, s);
-      
+
       // is this a boundary?
       if (environment.is_boundary(side))
       {
@@ -591,7 +591,7 @@ DSSC::get_OC_values(void)
         if (boundary != NULL)
           contact = dynamic_cast<DSSCContact*>(
               boundary->get_boundary_properties(get_id()));
-        
+
         if ((contact != NULL) && contact->is_cathode())
         {
 
@@ -681,11 +681,6 @@ DSSC::cleanup_solver(void)
 void
 DSSC::do_solve(void)
 {
-  
-  cout << endl;
-  cout << "<<-------------------------------------------------------------------"
-    << endl;
-  cout << "DSSC (name: " << get_name() << ")" << endl;
 
   // rebuild the system if needed
   //rebuild_equation_system();
@@ -693,7 +688,7 @@ DSSC::do_solve(void)
   // set a static pointer to ourselves
   // this is needed in the static assembly routine
   _this = this;
-  
+
   parse_options();
 
 
@@ -708,7 +703,7 @@ DSSC::do_solve(void)
     build_local_scaling();
 
 
-  
+
   try
   {
     do_newton();
@@ -759,9 +754,6 @@ DSSC::do_solve(void)
     cout << os.str() << endl;
     */
   }
-  cout << endl;
-  cout << "------------------------------------------------------------------->>"
-    << endl;
 
 }
 
@@ -778,7 +770,7 @@ DSSC::do_equilibrium(void)
   // set a static pointer to ourselves
   // this is needed in the static assembly routine
   _this = this;
-  
+
   //parse_options();
 
 
@@ -789,7 +781,7 @@ DSSC::do_equilibrium(void)
   TiberNonlinearSystem& system =
     get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
-  
+
   ModelOptions& solveropts = get_solver_options();
   int max_it = solveropts.get_option("nonlin_max_it", -1);
   solveropts.set_option("nonlin_max_it", 150);
@@ -826,7 +818,7 @@ DSSC::do_equilibrium(void)
     cout << "Solving equilibrium" << endl;
 
     do_newton();
-    
+
     cout << "Equilibrium done" << endl;
   }
   catch (runtime_error& e)
@@ -844,7 +836,7 @@ DSSC::do_equilibrium(void)
       static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
     cnt->set_simulation_voltage(sim_voltages[bd]);
   }
-  
+
   // reset the coupling
   get_options().coupling = coupling;
 
@@ -863,7 +855,7 @@ DSSC::guess_equilibrium(void)
 /*
   // equation system needs to be active
   rebuild_equation_system();
-  
+
   TiberNonlinearSystem& poisson =
     get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
@@ -871,7 +863,7 @@ DSSC::guess_equilibrium(void)
   const unsigned int u_var = poisson.variable_number("potential");
   const DofMap& dof_map_u = poisson.get_dof_map();
   vector<unsigned int> dof_indices_u;
-  
+
   NumericVector<Number>& solution_u = poisson.get_solution_vector();
   solution_u.zero();
 
@@ -881,18 +873,18 @@ DSSC::guess_equilibrium(void)
                                   get_mesh().active_elements_end();
 
   const double phi0 = get_scaling().get_potential_scaling();
-  
+
   const unsigned int nn  = get_mesh().n_nodes();
   vector<unsigned short int> node_conn(nn);
   // Get the number of elements that share each node.  We will
   // compute the average value at each node.
   {
     vector<unsigned short int> node_conn_local(node_conn.size());
-    
+
     MeshBase::const_element_iterator it =
       get_mesh().active_local_elements_begin();
     const MeshBase::const_element_iterator end =
-      get_mesh().active_local_elements_end(); 
+      get_mesh().active_local_elements_end();
 
     for ( ; it != end; ++it)
       for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
@@ -905,19 +897,19 @@ DSSC::guess_equilibrium(void)
     // (Note that we use an unsigned short int here even though an
     // unsigned char would be more that sufficient.  The MPI 1.1
     // standard does not require that MPI_SUM, MPI_PROD etc... be
-    // implemented for char data types. 12/23/2003 - BSK)  
+    // implemented for char data types. 12/23/2003 - BSK)
     MPI_Allreduce (&node_conn_local[0], &node_conn[0], node_conn.size(),
 		   MPI_UNSIGNED_SHORT, MPI_SUM, libMesh::COMM_WORLD);
-    
+
 #else
     // Without MPI the node_conn_local and the node_conn arrays
     // are necessarily identical
     node_conn = node_conn_local;
-    
+
 #endif
   }
 
-  for ( ; el != end_el ; ++el) 
+  for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
@@ -1019,7 +1011,7 @@ DSSC::rebuild_equation_system(void)
   TiberNonlinearSystem& system =
     *TiberNonlinearSystem::create(equation_systems,
       get_equation_system_name(), get_solver_options());
-  
+
   system.attach_assembly_routine(assemble_system);
 
 
@@ -1050,9 +1042,10 @@ DSSC::do_init(void)
   _device = &get_environment().get_device();
 
   find_dirichlet_nodes();
+  find_internal_boundary_nodes();
 
   parse_const_options();
-  
+
   rebuild_equation_system();
 
   // prepare the _boundary_currents
@@ -1066,7 +1059,7 @@ DSSC::do_init(void)
   {
       //Boundary* bd1 = it->get_boundary(get_id());
 
-      
+
       BoundaryProperties* bd = it->second->get_boundary_properties(get_id());
       if (bd != NULL)
       {
@@ -1103,7 +1096,7 @@ DSSC::solution_vector(void)
 
   TiberNonlinearSystem& system =
     es.get_system<TiberNonlinearSystem>(get_equation_system_name());
-  
+
   return system.get_solution_vector();
 }
 
@@ -1176,17 +1169,17 @@ ID
 DSSC::convert_variable_name_to_id(const string& variable_name) const
 {
   ID id = INVALID_ID;
-  
+
   // for an empty string we return immediately
   if (variable_name == "") return id;
-  
+
   switch (variable_name[0])
   {
   case 'E':
       if (variable_name == "ElPotential")
         id = ELPOTENTIAL;
       break;
-      
+
     case 'Q':
       if (variable_name == "QFermi_e")
         id = QFERMIE;
@@ -1199,7 +1192,7 @@ DSSC::convert_variable_name_to_id(const string& variable_name) const
   return id;
 }
 
-        
+
 
 
 void
@@ -1250,7 +1243,7 @@ DSSC::get_solution_secure(const Elem* elem,
     dynamic_cast<DSSCModel*>(
         device.get_material(subdomain)->get_model(get_id()));
 
-  assert(sc != NULL); 
+  assert(sc != NULL);
 
 
 
@@ -1258,12 +1251,12 @@ DSSC::get_solution_secure(const Elem* elem,
   sc->reinit(elem);
 
   fe->reinit(elem, &points);
-    
+
   // Get the thermoelectric power
-  sc->compute_thermoelectric_powers(); 
+  sc->compute_thermoelectric_powers();
   double Pn_el =  sc->get_electron_thermoelectric_power();
   double Pp_el =  sc->get_hole_thermoelectric_power();
- 
+
   vector<double> T_nodes = sc->get_temperature_at_nodes();
 
   dof_map.dof_indices(elem, dof_indices_u, u_var);
@@ -1296,17 +1289,17 @@ DSSC::get_solution_secure(const Elem* elem,
       en_x  += dphi[i][n](0) * solution(dof_indices_en[i]);
       en_y  += dphi[i][n](1) * solution(dof_indices_en[i]);
       en_z  += dphi[i][n](2) * solution(dof_indices_en[i]);
-      
+
       ep_x  += dphi[i][n](0) * solution(dof_indices_ep[i]);
       ep_y  += dphi[i][n](1) * solution(dof_indices_ep[i]);
       ep_z  += dphi[i][n](2) * solution(dof_indices_ep[i]);
-      
+
       dT_x  += dphi[i][n](0) * T_nodes[i];
       dT_y  += dphi[i][n](1) * T_nodes[i];
       dT_z  += dphi[i][n](2) * T_nodes[i];
 
-      T +=  phi[i][n] * T_nodes[i];    
- 
+      T +=  phi[i][n] * T_nodes[i];
+
       e_field += dphi[i][n] * solution(dof_indices_u[i]);
 
     }
@@ -1332,12 +1325,12 @@ DSSC::get_solution_secure(const Elem* elem,
     sc->calculate_densities();
 
     sc->calculate_mobilities();
- 
-    sc->compute_thermoelectric_powers(); 
+
+    sc->compute_thermoelectric_powers();
 
     double Pn =  sc->get_electron_thermoelectric_power();
     double Pp =  sc->get_hole_thermoelectric_power();
-    
+
     double sigma_e = Constants::e * sc->get_electron_density() *
       sc->get_electron_mobility();
     double sigma_h = Constants::e * sc->get_hole_density() *
@@ -1350,7 +1343,7 @@ DSSC::get_solution_secure(const Elem* elem,
     double jpy = -sigma_h * (ep_y + Pp_el * dT_y);
     double jpz = -sigma_h * (ep_z + Pp_el * dT_z);
 
-    
+
 
     if (ids.count(ELPOTENTIAL))
       values[n][ELPOTENTIAL] = u;
@@ -1438,16 +1431,16 @@ DSSC::get_solution_secure(const Elem* elem,
 
     if (ids.count(JPZ))
       values[n][JPZ] = jpz;
-    
+
     if (ids.count(EJOULE))
       values[n][EJOULE] = ( jnx * jnx + jny * jny + jnz * jnz ) / sigma_e;
 
     if (ids.count(HJOULE))
       values[n][HJOULE] =  (jpx * jpx + jpy * jpy + jpz * jpz )/ sigma_h;
-    
+
     if (ids.count(POWERNX))
       values[n][POWERNX] = (Pn * T + en) * jnx;
-    
+
     if (ids.count(POWERNY))
       values[n][POWERNY] = (Pn * T + en) * jny;
 
@@ -1456,48 +1449,48 @@ DSSC::get_solution_secure(const Elem* elem,
 
     if (ids.count(POWERPX))
       values[n][POWERPX] = (Pp * T + ep) * jpx;
-    
+
     if (ids.count(POWERPY))
       values[n][POWERPY] = (Pp * T + ep) * jpy;
 
     if (ids.count(POWERPZ))
       values[n][POWERPZ] = (Pp * T + ep) * jpz;
- 
+
     if (ids.count(PN))
       values[n][PN] = Pn;
-    
+
     if (ids.count(PP))
       values[n][PP] = Pp;
 
     if (ids.count(EPTSOURCE))
     {
-      sc->compute_thermoelectric_power_gradient(); 
-      RealGradient PnGrad =  sc->get_electron_thermoelectric_power_gradient();     
+      sc->compute_thermoelectric_power_gradient();
+      RealGradient PnGrad =  sc->get_electron_thermoelectric_power_gradient();
       values[n][EPTSOURCE] =  -T * ( PnGrad(0) * jnx + PnGrad(1) * jny + PnGrad(2) * jnz );
     }
-    
+
     if (ids.count(HPTSOURCE))
     {
-      sc->compute_thermoelectric_power_gradient(); 
+      sc->compute_thermoelectric_power_gradient();
       RealGradient PpGrad =  sc->get_hole_thermoelectric_power_gradient();
       values[n][HPTSOURCE] =  -T * ( PpGrad(0) * jpx + PpGrad(1) * jpy + PpGrad(2) * jpz );
     }
 
     if (ids.count(HRECOMB))
-    { 
+    {
       vector<ID> rec_model_ids;
       int n_rec = sc->get_net_recombination_rate_IDs(rec_model_ids);
       double rec = 0.0;
       for (int i = 0; i < n_rec; i++)
 	rec += sc->get_net_recombination_rate(rec_model_ids[i]);
-      
+
       values[n][HRECOMB] = Constants::e * rec * (ep-en + T * (Pp-Pn));
     }
-    
+
 
     set<ID>::iterator first(ids.begin());
     set<ID>::iterator it(ids.end());
-    --it; 
+    --it;
 
     hile (*it > MODELS )
     {
@@ -1508,14 +1501,14 @@ DSSC::get_solution_secure(const Elem* elem,
       }
       else
 	values[n][*it] = sc->get_net_recombination_rate(*it - MODELS);
-      
+
       if (it == first)
         break;
       --it;
 
     }
 
-   
+
 
 
 
@@ -1526,7 +1519,7 @@ DSSC::get_solution_secure(const Elem* elem,
   //sc->unlock();
 }
 
-      
+
 
 
 void
@@ -1573,7 +1566,7 @@ DSSC::get_solution_secure(const Elem* elem, const vector<Point>& p,
   DSSCModel* sc =
     dynamic_cast<DSSCModel*>(
         device.get_material(subdomain)->get_model(get_id()));
-  assert(sc != NULL); 
+  assert(sc != NULL);
 
 
 
@@ -1582,12 +1575,12 @@ DSSC::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   fe->reinit(elem, &points);
 
-    
+
   //Get the thermoelectric power
   sc->compute_thermoelectric_powers();
   double Pn_el =  sc->get_electron_thermoelectric_power();
   double Pp_el =  sc->get_hole_thermoelectric_power();
- 
+
   vector<double> T_nodes = sc->get_temperature_at_nodes();
 
   dof_map.dof_indices(elem, dof_indices_u, u_var);
@@ -1625,11 +1618,11 @@ DSSC::get_solution_secure(const Elem* elem, const vector<Point>& p,
       en_x  += dphi[i][n](0) * solution(dof_indices_en[i]);
       en_y  += dphi[i][n](1) * solution(dof_indices_en[i]);
       en_z  += dphi[i][n](2) * solution(dof_indices_en[i]);
-      
+
       ep_x  += dphi[i][n](0) * solution(dof_indices_ep[i]);
       ep_y  += dphi[i][n](1) * solution(dof_indices_ep[i]);
       ep_z  += dphi[i][n](2) * solution(dof_indices_ep[i]);
-      
+
       dT_x  += dphi[i][n](0) * T_nodes[i];
       dT_y  += dphi[i][n](1) * T_nodes[i];
       dT_z  += dphi[i][n](2) * T_nodes[i];
@@ -1637,10 +1630,10 @@ DSSC::get_solution_secure(const Elem* elem, const vector<Point>& p,
       T += phi[i][n] * T_nodes[i];
 
       e_field += dphi[i][n] * solution(dof_indices_u[i]);
-     
- 
+
+
     }
-   
+
     // scale the potential back
     u  *= phi0;
     en  *= phi0;
@@ -1652,9 +1645,9 @@ DSSC::get_solution_secure(const Elem* elem, const vector<Point>& p,
     ep_x *= phi0;
     ep_y *= phi0;
     ep_z *= phi0;
- 
 
-   
+
+
     sc->set_coordinates(p[n]);
 
     sc->set_potentials(u, en, ep);
@@ -1667,7 +1660,7 @@ DSSC::get_solution_secure(const Elem* elem, const vector<Point>& p,
     sc->calculate_densities();
 
     sc->calculate_mobilities();
-  
+
     sc->compute_thermoelectric_powers();
 
     double Pn =  sc->get_electron_thermoelectric_power();
@@ -1774,13 +1767,13 @@ DSSC::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     if (ids.count(EJOULE))
       values[n][EJOULE] = ( jnx * jnx + jny * jny + jnz * jnz ) / sigma_e;
-    
+
     if (ids.count(HJOULE))
       values[n][HJOULE] =  (jpx * jpx + jpy * jpy + jpz * jpz )/ sigma_h;
-    
+
     if (ids.count(POWERNX))
       values[n][POWERNX] = (Pn * T + en) * jnx;
-    
+
     if (ids.count(POWERNY))
       values[n][POWERNY] = (Pn * T + en) * jny;
 
@@ -1789,7 +1782,7 @@ DSSC::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     if (ids.count(POWERPX))
       values[n][POWERPX] = (Pp * T + ep) * jpx;
-    
+
     if (ids.count(POWERPY))
       values[n][POWERPY] = (Pp * T + ep) * jpy;
 
@@ -1798,39 +1791,39 @@ DSSC::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
     if (ids.count(EPTSOURCE))
     {
-      sc->compute_thermoelectric_power_gradient(); 
-      RealGradient PnGrad =  sc->get_electron_thermoelectric_power_gradient();     
+      sc->compute_thermoelectric_power_gradient();
+      RealGradient PnGrad =  sc->get_electron_thermoelectric_power_gradient();
       values[n][EPTSOURCE] =  -T * ( PnGrad(0) * jnx + PnGrad(1) * jny + PnGrad(2) * jnz );
     }
-    
+
     if (ids.count(HPTSOURCE))
     {
-      sc->compute_thermoelectric_power_gradient(); 
+      sc->compute_thermoelectric_power_gradient();
       RealGradient PpGrad =  sc->get_hole_thermoelectric_power_gradient();
       values[n][HPTSOURCE] =  -T * ( PpGrad(0) * jpx + PpGrad(1) * jpy + PpGrad(2) * jpz );
     }
 
     if (ids.count(PN))
       values[n][PN] = Pn;
-    
+
     if (ids.count(PP))
       values[n][PP] = Pp;
 
     if (ids.count(HRECOMB))
-    { 
+    {
       vector<ID> rec_model_ids;
       int n_rec = sc->get_net_recombination_rate_IDs(rec_model_ids);
       double rec = 0.0;
       for (int i = 0; i < n_rec; i++)
 	rec += sc->get_net_recombination_rate(rec_model_ids[i]);
-          
+
       values[n][HRECOMB] = Constants::e * rec * (ep-en + T * (Pp-Pn));
     }
-   
+
 
     set<ID>::iterator first(ids.begin());
     set<ID>::iterator it(ids.end());
-    --it; 
+    --it;
 
 
     while (*it > MODELS )
@@ -1842,13 +1835,13 @@ DSSC::get_solution_secure(const Elem* elem, const vector<Point>& p,
       }
       else
 	values[n][*it] = sc->get_net_recombination_rate(*it - MODELS);
-      
+
       if (it == first)
         break;
       --it;
 
     }
-   
+
 
 
   }
@@ -1867,7 +1860,7 @@ DSSC::calculate_currents_rstf(void)
   // we only do something if we are on processor 0
   if (libMesh::processor_id() != 0)
     return;
-  
+
   // reset currents
   ContactData::iterator it =
     _boundary_currents.begin();
@@ -1892,22 +1885,22 @@ DSSC::calculate_currents_rstf(void)
 
   const double phi0 = get_scaling().get_potential_scaling();
 
-  
+
   // numeric ids corresponding to the variables
   const unsigned int u_var = system->variable_number("potential");
   const unsigned int en_var = system->variable_number("fermi_e");
   const unsigned int ep_var = system->variable_number("fermi_h");
-  
+
   FEType fe_type = system->variable_type(u_var);
 
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
   QGauss qrule(dim, libMeshEnums::FIFTH);
   fe->attach_quadrature_rule(&qrule);
 
-  
-  // Jacobian * quadrature weight at each integration point.   
+
+  // Jacobian * quadrature weight at each integration point.
   const vector<Real>& JxW = fe->get_JxW();
-  
+
   // physical coordinates of the quadrature points
   const vector<Point>& q_point = fe->get_xyz();
 
@@ -1931,11 +1924,11 @@ DSSC::calculate_currents_rstf(void)
   const MeshBase::const_element_iterator end_el =
                                   mesh.active_elements_end();
 
-  for ( ; el != end_el ; ++el) 
+  for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
-        
+
     bool has_node = false;
     node_ids.resize(elem->n_nodes());
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
@@ -1950,7 +1943,7 @@ DSSC::calculate_currents_rstf(void)
     // we can go to the next element
     if (!has_node)
       continue;
-    
+
     ID subdomain = elem->subdomain_id();
 
     // get DOF indices
@@ -1964,15 +1957,15 @@ DSSC::calculate_currents_rstf(void)
 
     assert(sc != NULL);
 
-    
+
     fe->reinit(elem);
 
     sc->reinit(elem);
-    
+
     //Get the temperature given the element
     //vector<double> T_nodes =  sc->get_temperature_at_nodes();
 
-        
+
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
 
@@ -2019,7 +2012,7 @@ DSSC::calculate_currents_rstf(void)
         sc->get_hole_mobility();
 
       RealGradient j(JxW[qp] * phi0 *
-          (sigma_e * (dEfn + Pn * dT) + sigma_h * (dEfp + Pp * dT))); 
+          (sigma_e * (dEfn + Pn * dT) + sigma_h * (dEfp + Pp * dT)));
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
@@ -2047,11 +2040,11 @@ DSSC::calculate_currents_rstf(void)
 void
 DSSC::build_local_scaling(void)
 {
-/* 
+/*
   TiberNonlinearSystem* system =
     &get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
-  
+
   const NumericVector<Number>& solution = system->get_solution_vector();
 
   // aliases for nicer code
@@ -2076,7 +2069,7 @@ DSSC::build_local_scaling(void)
   const unsigned int u_var = system->variable_number("potential");
   const unsigned int en_var = system->variable_number("fermi_e");
   const unsigned int ep_var = system->variable_number("fermi_h");
-  
+
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
   vector<unsigned int> dof_indices_ep;
@@ -2087,7 +2080,7 @@ DSSC::build_local_scaling(void)
   fe->attach_quadrature_rule(&qrule);
 
 
-  // Jacobian * quadrature weight at each integration point.   
+  // Jacobian * quadrature weight at each integration point.
   const vector<Real>& JxW = fe->get_JxW();
   //
   // physical coordinates of the quadrature points
@@ -2106,7 +2099,7 @@ DSSC::build_local_scaling(void)
     MeshBase::const_element_iterator it =
       mesh.active_elements_begin();
     const MeshBase::const_element_iterator end =
-      mesh.active_elements_end(); 
+      mesh.active_elements_end();
 
     for ( ; it != end; ++it)
       for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
@@ -2117,7 +2110,7 @@ DSSC::build_local_scaling(void)
   MeshBase::const_element_iterator it =
     mesh.active_elements_begin();
   const MeshBase::const_element_iterator end =
-    mesh.active_elements_end(); 
+    mesh.active_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -2134,7 +2127,7 @@ DSSC::build_local_scaling(void)
     DSSCModel* sc =
       dynamic_cast<DSSCModel*>(
           device.get_material(subdomain)->get_model(get_id()));
-    assert(sc != NULL); 
+    assert(sc != NULL);
 
     sc->reinit(elem);
 
@@ -2238,7 +2231,7 @@ void
 DSSC::build_nodal_results(const set<string>& variables,
     vector<double>& results, vector<string>& legend)
 {
- 
+
   TiberNonlinearSystem* system =
     &get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
@@ -2254,7 +2247,7 @@ DSSC::build_nodal_results(const set<string>& variables,
   const unsigned int dim = mesh.mesh_dimension();
   // TODO if some elements were coarsened, does this still work??
   const unsigned int nn  = mesh.n_nodes();
-  
+
   legend.reserve(variables.size());
 
   // for each possible variable we set the vector index
@@ -2319,7 +2312,7 @@ DSSC::build_nodal_results(const set<string>& variables,
 
 
   legend.resize(n_vars);
-    
+
   results.resize(nn * n_vars);
 
   vector<double> local(results.size());
@@ -2339,11 +2332,11 @@ DSSC::build_nodal_results(const set<string>& variables,
   // compute the average value at each node.
   {
     vector<unsigned short int> node_conn_local(node_conn.size());
-    
+
     MeshBase::const_element_iterator it =
       mesh.active_local_elements_begin();
     const MeshBase::const_element_iterator end =
-      mesh.active_local_elements_end(); 
+      mesh.active_local_elements_end();
 
     for ( ; it != end; ++it)
       for (unsigned int n=0; n<(*it)->n_nodes(); n++)
@@ -2356,15 +2349,15 @@ DSSC::build_nodal_results(const set<string>& variables,
     // (Note that we use an unsigned short int here even though an
     // unsigned char would be more that sufficient.  The MPI 1.1
     // standard does not require that MPI_SUM, MPI_PROD etc... be
-    // implemented for char data types. 12/23/2003 - BSK)  
+    // implemented for char data types. 12/23/2003 - BSK)
     MPI_Allreduce (&node_conn_local[0], &node_conn[0], node_conn.size(),
 		   MPI_UNSIGNED_SHORT, MPI_SUM, libMesh::COMM_WORLD);
-    
+
 #else
     // Without MPI the node_conn_local and the node_conn arrays
     // are necessarily identical
     node_conn = node_conn_local;
-    
+
 #endif
   }
 
@@ -2374,7 +2367,7 @@ DSSC::build_nodal_results(const set<string>& variables,
   const unsigned int eI3_var = system->variable_number("fermi_I3");
   const unsigned int eC_var = system->variable_number("fermi_C");
   //const unsigned int aC_var = system->variable_number("aux_cat");
-  
+
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
   vector<unsigned int> dof_indices_eI;
@@ -2392,7 +2385,7 @@ DSSC::build_nodal_results(const set<string>& variables,
   MeshBase::const_element_iterator it =
     mesh.active_local_elements_begin();
   const MeshBase::const_element_iterator end =
-    mesh.active_local_elements_end(); 
+    mesh.active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -2415,7 +2408,7 @@ DSSC::build_nodal_results(const set<string>& variables,
       DSSCModel* sc =
       dynamic_cast<DSSCModel*>(
           device.get_material(subdomain)->get_model(get_id()));
-      assert(sc != NULL); 
+      assert(sc != NULL);
 
       sc->reinit(elem);
 
@@ -2543,11 +2536,11 @@ DSSC::build_elemental_results(const set<string>& variables,
   // TODO parallelize
   if (libMesh::processor_id() != 0)
     return;
-  
+
   TiberNonlinearSystem* system =
     &get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
-  
+
   const NumericVector<Number>& solution = system->get_solution_vector();
 
   // aliases for nicer code
@@ -2558,7 +2551,7 @@ DSSC::build_elemental_results(const set<string>& variables,
 
   const unsigned int dim = mesh.mesh_dimension();
   const unsigned int nn  = mesh.n_active_elem();
-  
+
   legend.reserve(variables.size());
 
   // for each possible variable we set the vector index
@@ -2622,45 +2615,45 @@ DSSC::build_elemental_results(const set<string>& variables,
     switch (dim)
     {
       case 3:
-        tmp.push_back("Jn_x"); 
-        tmp.push_back("Jn_y"); 
-        tmp.push_back("Jn_z"); 
-        tmp.push_back("modJn"); 
-        tmp.push_back("JI_x"); 
-        tmp.push_back("JI_y"); 
-        tmp.push_back("JI_z"); 
-        tmp.push_back("modJI"); 
-        tmp.push_back("JI3_x"); 
-        tmp.push_back("JI3_y"); 
-        tmp.push_back("JI3_z"); 
-        tmp.push_back("modJI3"); 
-        tmp.push_back("JC_x"); 
-        tmp.push_back("JC_y"); 
-        tmp.push_back("JC_z"); 
-        tmp.push_back("modJC"); 
+        tmp.push_back("Jn_x");
+        tmp.push_back("Jn_y");
+        tmp.push_back("Jn_z");
+        tmp.push_back("modJn");
+        tmp.push_back("JI_x");
+        tmp.push_back("JI_y");
+        tmp.push_back("JI_z");
+        tmp.push_back("modJI");
+        tmp.push_back("JI3_x");
+        tmp.push_back("JI3_y");
+        tmp.push_back("JI3_z");
+        tmp.push_back("modJI3");
+        tmp.push_back("JC_x");
+        tmp.push_back("JC_y");
+        tmp.push_back("JC_z");
+        tmp.push_back("modJC");
         n_vars += 4 * 4;
         break;
       case 2:
-        tmp.push_back("Jn_x"); 
-        tmp.push_back("Jn_y"); 
-        //tmp.push_back("modJn"); 
-        tmp.push_back("JI_x"); 
-        tmp.push_back("JI_y"); 
-        //tmp.push_back("modJI"); 
-        tmp.push_back("JI3_x"); 
-        tmp.push_back("JI3_y"); 
-        //tmp.push_back("modJI3"); 
-        tmp.push_back("JC_x"); 
-        tmp.push_back("JC_y"); 
-        //tmp.push_back("modJC"); 
+        tmp.push_back("Jn_x");
+        tmp.push_back("Jn_y");
+        //tmp.push_back("modJn");
+        tmp.push_back("JI_x");
+        tmp.push_back("JI_y");
+        //tmp.push_back("modJI");
+        tmp.push_back("JI3_x");
+        tmp.push_back("JI3_y");
+        //tmp.push_back("modJI3");
+        tmp.push_back("JC_x");
+        tmp.push_back("JC_y");
+        //tmp.push_back("modJC");
         //n_vars += 3 * 4;
         n_vars += 2 * 4;
         break;
       default:
-        tmp.push_back("Jn_x"); 
-        tmp.push_back("JI_x"); 
-        tmp.push_back("JI3_x"); 
-        tmp.push_back("JC_x"); 
+        tmp.push_back("Jn_x");
+        tmp.push_back("JI_x");
+        tmp.push_back("JI3_x");
+        tmp.push_back("JC_x");
         n_vars += 4;
     }
     legend.insert(legend.end(), tmp.begin(), tmp.end());
@@ -2701,7 +2694,7 @@ DSSC::build_elemental_results(const set<string>& variables,
   const unsigned int eI_var = system->variable_number("fermi_I");
   const unsigned int eI3_var = system->variable_number("fermi_I3");
   const unsigned int eC_var = system->variable_number("fermi_C");
-  
+
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
   QGauss qrule(dim, libMeshEnums::CONSTANT);
@@ -2725,7 +2718,7 @@ DSSC::build_elemental_results(const set<string>& variables,
   MeshBase::const_element_iterator it =
     mesh.active_elements_begin();
   const MeshBase::const_element_iterator end =
-    mesh.active_elements_end(); 
+    mesh.active_elements_end();
 
   unsigned int elem_number = 0;
   for ( ; it != end; ++it)
@@ -2744,13 +2737,13 @@ DSSC::build_elemental_results(const set<string>& variables,
       dynamic_cast<DSSCModel*>(
           device.get_material(subdomain)->get_model(get_id()));
 
-    assert(sc != NULL); 
+    assert(sc != NULL);
 
     sc->reinit(elem);
 
     fe->reinit(elem);
-    
-  
+
+
     //Get the temperature given the element
     //vector<double> T_nodes = sc->get_temperature_at_nodes();
 
@@ -2801,7 +2794,7 @@ DSSC::build_elemental_results(const set<string>& variables,
     sc->calculate_densities();
     sc->calculate_net_recombination_rate();
 
-      
+
     double sigma_e = -Constants::e * sc->get_density_n() * sc->get_mobility_n();
     double sigma_I = -Constants::e * sc->get_density_I() * sc->get_mobility_I();
     double sigma_I3 = -Constants::e * sc->get_density_I3() * sc->get_mobility_I3();
@@ -2972,6 +2965,48 @@ DSSC::do_maximum_norm_of_difference(ID id)
 
 
 
+void
+DSSC::find_internal_boundary_nodes(void)
+{
+  Mesh& mesh = get_mesh();
+  Mesh::element_iterator it = mesh.active_elements_begin();
+  const Mesh::element_iterator end = mesh.active_elements_end();
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* el = *it;
+
+    DSSCModel* sc =
+      dynamic_cast<DSSCModel*>(
+          get_physical_model(el->subdomain_id()));
+
+    // we are only interested in boundaries between semiconductor/dielectric
+    if (sc->is_TiO2())
+    {
+      for (unsigned s = 0; s < el->n_sides(); s++)
+      {
+        if (get_environment().is_inner_boundary(ElementSide(el, s)))
+        {
+          // get the model of the neighbor element
+          DSSCModel* scn =
+            dynamic_cast<DSSCModel*>(
+                get_physical_model(el->neighbor(s)->subdomain_id()));
+
+
+          // if neighbor is not dielectric we record it
+          if (!scn->is_TiO2())
+          {
+            AutoPtr<Elem> side(el->build_side(s));
+            for (unsigned int i = 0; i < side->n_nodes(); i++)
+              _internal_boundary_nodes.insert(side->get_node(i));
+          }
+        }
+      }
+    }
+  }
+}
+
+
 
 
 
@@ -2996,7 +3031,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
   PerfLog perf_log("Matrix assembly", false);
   perf_log.start_event("assembly");
-  
+
   // references for nicer code
   const Mesh& mesh = get_mesh();
   EquationSystems& eq_sys = get_equation_systems();
@@ -3004,7 +3039,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
       eq_sys.get_system(get_equation_system_name()));
 
   const unsigned int dim = mesh.mesh_dimension();
-  
+
   const Device& device = *_device;
   const SimulationEnvironment& environment = get_environment();
 
@@ -3015,10 +3050,10 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
   //
   // some scaling stuff...
-  // 
+  //
   // NOTE: the mesh and all paramters were not explicitly scaled, so
   //       we have to treat scaling by explicit division/multiplication
-  //       
+  //
   // the scaling parameters
   const Scaling& scaling = get_scaling();
   // the scaling parameter for the poisson eq.
@@ -3050,14 +3085,14 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
 
   const DofMap& dof_map = system.get_dof_map();
-  
+
   // numeric ids corresponding to the variables
   const unsigned int u_var = system.variable_number("potential");
   const unsigned int en_var = system.variable_number("fermi_n");
   const unsigned int eI_var = system.variable_number("fermi_I");
   const unsigned int eI3_var = system.variable_number("fermi_I3");
   const unsigned int eC_var = system.variable_number("fermi_C");
-  
+
   FEType fe_type = system.variable_type(u_var);
 
   libMeshEnums::Order integration_order = libMeshEnums::FIFTH;
@@ -3071,16 +3106,16 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
-  
+
   QGauss qface(dim - 1, integration_order);
   fe_face->attach_quadrature_rule(&qface);
 
-  
+
   // references to cell-specific data that will be used to
   // assemble the system.
   // Data will be given for each quadrature point.
-  // 
-  // Jacobian * quadrature weight at each integration point.   
+  //
+  // Jacobian * quadrature weight at each integration point.
   const vector<Real>& JxW = fe->get_JxW();
   //
   // physical coordinates of the quadrature points
@@ -3097,7 +3132,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   // references to boundary-specific data that will be used to
   // assemble the system.
   // Data will be given for each quadrature point.
-  // 
+  //
   const vector<vector<Real> >&  phi_face = fe_face->get_phi();
   //
   const vector<vector<RealGradient> >&  dphi_face = fe_face->get_dphi();
@@ -3107,7 +3142,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   //
   const vector<Point>& face_normals = fe_face->get_normals();
   //
-  // Jacobian * quadrature weight at each integration point.   
+  // Jacobian * quadrature weight at each integration point.
   const vector<Real>& JxW_face = fe_face->get_JxW();
 
 
@@ -3162,12 +3197,13 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   double tot_cat = 0;
   AutoPtr<NumericVector<Number> > cons_cat = x.clone();
   cons_cat->zero();
-  
+
   const Node* n_iodine = NULL;
   double tot_iodine = 0;
   AutoPtr<NumericVector<Number> > cons_iodine = x.clone();
   cons_iodine->zero();
 
+  set<unsigned int> inner_boundary_nodes;
 
   MeshBase::const_element_iterator el =
                                   mesh.active_local_elements_begin();
@@ -3175,7 +3211,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                                   mesh.active_local_elements_end();
 
   // loop over all active elements
-  for ( ; el != end_el ; ++el) 
+  for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
@@ -3272,7 +3308,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
     // Get the temperature given the element
     //vector<double> T_nodes = sc->get_temperature_at_nodes();
-   
+
 
     vector<vector<double> > local_scaling(elem->n_nodes(), vector<double>(3, 1));
     if (do_local_scaling_)
@@ -3337,16 +3373,16 @@ DSSC::do_assembly(const NumericVector<Number>& x,
       double n_I = sc->get_density_I();
       double n_I3 = sc->get_density_I3();
       double n_C = sc->get_density_C();
-  
 
-    
+
+
       double epsilon = sc->get_relative_permittivity();
       double l2_eps = l2 * epsilon;
 
       double R = 0.0;
       if ((is_TiO2 && is_electrolyte) && !poisson_only())
         R = sc->get_net_recombination_rate();
-      
+
 
       double mu_n = sc->get_mobility_n();
       double mu_I = sc->get_mobility_I();
@@ -3372,11 +3408,11 @@ DSSC::do_assembly(const NumericVector<Number>& x,
       // The jacobian looks like this:
       //
       //      J_ij = dr_i/dX_j
-      //      
+      //
       //           = Ke_ij + dKe_il/dX_j * X_l - dFe_i/dX_j
-      //   
+      //
 
-      // 
+      //
       // First we will build the system matrix Ke_ij
       //
       for (unsigned int i = 0; i < n_dofs; i++)
@@ -3384,9 +3420,9 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         for (unsigned int j = 0; j < n_dofs; j++)
         {
           double laplace = J * (dphi[i][qp] * dphi[j][qp]);
-          
+
           Kuu(i,j) += l2_eps * laplace / local_scaling[i][2];
-          
+
           if (!poisson_only())
           {
             if (is_TiO2)
@@ -3410,7 +3446,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
         if (!is_TiO2 || poisson_only())
           Knn(i,i) += 1;
-        
+
         if (!is_electrolyte || poisson_only())
         {
           KII(i,i) += 1;
@@ -3420,10 +3456,10 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           //Kbb(i,i) += 1;
         }
       }
-      
-      // 
+
+      //
       // for jacobian compute the other contributions
-      // 
+      //
       if (jacobian != NULL)
       {
         double dn_dphi = sc->get_density_derivative_n();
@@ -3471,7 +3507,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           double dsigma_I3_x_lap = dsigma_I3 * lap_I3;
           double dsigma_C_x_lap = dsigma_C * lap_C;
 
-          double volume = elem->volume(); 
+          double volume = elem->volume();
 
           cons_cat->add(dof_indices_eC[i], -phi0 * J * dC_dphi * phi[i][qp] / C0_C);
           cons_cat->add(dof_indices_u[i], phi0 * J * dC_dphi * phi[i][qp]  / C0_C);
@@ -3479,7 +3515,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           cons_iodine->add(dof_indices_eI[i], -phi0 * J * dI_dphi * phi[i][qp] / (3.0*C0) );
           cons_iodine->add(dof_indices_eI3[i], -phi0 * J * dI3_dphi * phi[i][qp] / C0 );
           cons_iodine->add(dof_indices_u[i], phi0 * J * phi[i][qp] * ( ((1/3.0) * dI_dphi + dI3_dphi ) / C0) );
-          
+
           for (unsigned int j = 0; j < n_dofs; j++)
           {
             // first the dKe_il/dX_j * X_l part
@@ -3586,15 +3622,15 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         for (unsigned int i = 0; i < n_dofs; i++)
         {
           double net_recomb = J_x_R * phi[i][qp] / local_scaling[i][0];
-          
+
           Fu(i) -= J_x_rho * phi[i][qp] / local_scaling[i][2];
-          
+
           Fn(i) -= net_recomb / R0_e;
 
           // TODO factors
           FI(i) += 1.5 * net_recomb / R0_I;
           FI3(i) -= 0.5 * net_recomb / R0_I3;
-       
+
           double volume = elem->volume();
 
           tot_cat += J * phi[i][qp] * n_C / C0_C;
@@ -3605,16 +3641,16 @@ DSSC::do_assembly(const NumericVector<Number>& x,
       }
 
     } // end loop over quadrature points
-   
+
 
 
     set<unsigned int> nodes_on_boundary_sides;
- 
-    
+
+
 ///*
     // now loop over the element sides to find boundary elements
     // and to include von Neumann and mixed type boundary conditions
-    // 
+    //
     // NOTE 1:
     // we dont apply BC for nabla(Ef) but for the particle
     // flux mu * n * nabla(Ef)
@@ -3622,11 +3658,11 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     // NOTE 2:
     // 1D case needs special treatment as 0D boundary elements do not
     // exist in libmesh...
-    // 
+    //
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
       ElementSide side(top_parent, s);
-      
+
       const Elem* neighbour = elem->neighbor(s);
 
       // is this a boundary?
@@ -3670,40 +3706,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         // the derivatives
         vector<vector<double> > dcoeff(3, vector<double>(3, 0.0));
         vector<vector<double> > dvalue(3, vector<double>(3, 0.0));
-        
-	// check if it is an electrolyte/TiO2 interface
 
-        if (inner_boundary)
-        {
-          if (!is_TiO2)
-          {
-          
-            ID subdomain_n = neighbour->subdomain_id();
-
-            DSSCModel* sc_n =
-              dynamic_cast<DSSCModel*>(
-                device.get_material(subdomain_n)->get_model(get_id()));
-
-            bool is_TiO2_n = sc_n->is_TiO2();
-
-            if (is_TiO2_n)
-            {
-          
-	       
-              for (unsigned int i = 0; i < elem->n_nodes(); i++)
-              {
-                if(elem->is_node_on_side(i,s))
-                {
-                  Knn(i,i) = 0.0;
-                  Fn(i) = 0.0;
-                }
-              }
-
-            }
-          }
-        }
-
-        //
 
         //
         // NOTE: we have to integrate over the boundary also if there are
@@ -3811,8 +3814,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                     //KI3u(s,s) += -0.5 * 2 * Normal_I3 / res;
                     //KI3I(s,s) += -0.5 * -1.5 * Normal_I3 / res;
                     //KI3I3(s,s) += -0.5 * 0.5 * Normal_I3 / res;
-                
-	       
+
+
                   }
                 }
                 if (residual != NULL)
@@ -3838,9 +3841,9 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               if (n_cat == NULL)
                 n_cat = side->get_node(0);
             }
-               
-         } //contact  
-        
+
+         } //contact
+
         } // qp
 
             //double value_u = J * (l2_eps * value[0] - Pn);
@@ -3867,7 +3870,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           // calculate densities etc.
           sc->set_coordinates(elem->point(s));
           sc->set_potentials(phi0 * u, phi0 * en, phi0 * eI, phi0 * eI3, phi0 * eC);
-          
+
           RealGradient e_field(0.0);
           double grad_en = 0.0;
           double grad_eI = 0.0;
@@ -3883,7 +3886,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             e_field(0) += dphi_face[n][0](0) * Xu(n);
 
           }
-          
+
           sc->set_electric_field(phi0 / x0 * e_field);
           sc->set_grad_fermi_n(phi0 / x0 * RealGradient(grad_en, 0.0, 0.0));
           sc->set_grad_fermi_I(phi0 / x0 * RealGradient(grad_eI, 0.0, 0.0));
@@ -3908,7 +3911,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           double x_c = elem->centroid()(0);
           double x_s = elem->point(s)(0);
           double sign = (x_s > x_c) ? 1 : -1;
-    
+
 
           if (contact->is_cathode())
           {
@@ -3921,18 +3924,18 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             if (jacobian != NULL)
             {
 
-	      	
+
 
                 double res = contact->get_potential() * x0;
 
 	        double Normal_I = x0 / (phi0 * C0_I * Constants::e );
 	        double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e );
-                
+
 		double R = 0.0;
                 if ((is_TiO2 && is_electrolyte) && !poisson_only())
                   R = sc->get_net_recombination_rate();
                   double net_recomb = R / local_scaling[s][0];
-        	
+
 		double dR[4];
         	double dn_dphi = sc->get_density_derivative_n();
         	double dI_dphi = sc->get_density_derivative_I();
@@ -3947,7 +3950,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
        		dR[3] = -dR_dI3 * dI3_dphi * phi0;
        		dR[0] = -(dR[1] + dR[2] + dR[3]);
 
-               
+
 		for (unsigned int n = 0; n < elem->n_nodes(); n++)
 		{
                    //Knn(s,n) += sign * sigma_n * dphi_face[n][0](0) / local_scaling[s][0];
@@ -3958,10 +3961,10 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
 	        //KIn(s,s) += (1.5 * Normal_I) / (res * local_scaling[s][1]);
 	        //KIu(s,s) += -(1.5 * Normal_I) / (res * local_scaling[s][1]);
-	        
+
 	        //KI3n(s,s) += (-0.5 * Normal_I3) / (res * local_scaling[s][1]);
 	        //KI3u(s,s) += -(-0.5 * Normal_I3) / (res * local_scaling[s][1]);
-                
+
                 KIn(s,s) += 1.5 * Normal_I / res;
                 KIu(s,s) += 1.5 * Normal_I / res;
                 //KIu(s,s) += 1.5 * 2 * Normal_I / res;
@@ -3973,8 +3976,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                 //KI3u(s,s) += -0.5 * 2 * Normal_I3 / res;
                 //KI3I(s,s) += -0.5 * -1.5 * Normal_I3 / res;
                 //KI3I3(s,s) += -0.5 * 0.5 * Normal_I3 / res;
-                
-	       
+
+
             }
             if (residual != NULL)
             {
@@ -3985,15 +3988,15 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                 double res = contact->get_potential() * x0;
 	        double Normal_I = x0 / (phi0 * C0_I * Constants::e );
 	        double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e );
-		
+
                 pot = -Xu(s);
                 //pot = -2*Xu(s) + 1.5 * XI(s) - 0.5 * XI3(s);
                 //pot = -Xu(s) - res;
                 //pot = -2*Xu(s) + 1.5 * XI(s) - 0.5 * XI3(s);
                 FI(s) += -1.5 * pot * Normal_I / res ;
                 FI3(s) += 0.5 * pot * Normal_I3 / res ;
-          
-                
+
+
                 //Fa(s) += _cation_amount / C0_C;
                 //Fb(s) += _iodine_amount / C0;
              }
@@ -4003,145 +4006,50 @@ DSSC::do_assembly(const NumericVector<Number>& x,
              if (n_cat == NULL)
                n_cat = side->get_node(0);
 
-	   
+
 	       double Normal_I = x0 / (phi0 * C0_I * Constants::e );
                double res = contact->get_potential() * x0;
 
 	       if (jacobian != NULL)
    	       {
-	        
+
 		 for (unsigned int n = 0; n < elem->n_nodes(); n++)
 		 {
                     //Knn(s,n) += sign * sigma_n * dphi_face[n][0](0) / local_scaling[s][1];
 		 }
 	       }
-	       if (residual != NULL) 
+	       if (residual != NULL)
 	       {
-	        
+
 
 	       }
-	 
+
            }
 	}
-       }
-/*
-          double jn = sign * (sigma_e * grad_en + Pn * grad_T) / x0;
-          double jp = -sign * (sigma_h * grad_ep + Pp * grad_T) / x0;
-          
-          double epsilon = sc->get_relative_permittivity();
-          double l2_eps = l2 * epsilon;
-
-          if (coupling & ECURRENT)
-            nodal_flux_n[elem->node(s)] = jn;
-          if (coupling & HCURRENT)
-            nodal_flux_p[elem->node(s)] = jp;
-
-          // get the boundary condition coefficients
-          if (contact != NULL)
-          {
-            contact->set_material(sc);
-            contact->set_normal_fluxes(jn, jp);
-
-            double a, c;
-
-            if (coupling & POISSON)
-            {
-              contact->get_normal_derivative(POTENTIAL, a, c);
-              contact->get_derivatives_of_normal_derivative(POTENTIAL,
-                  dcoeff[0], dvalue[0]);
-              //coeff[0] = a * x0;
-              coeff[0] = 0.0;
-              value[0] = c / (x0 * C0);
-            }
-            if (coupling & ECURRENT)
-            {
-              contact->get_normal_derivative(FERMIE, a, c);
-              contact->get_derivatives_of_normal_derivative(FERMIE,
-                  dcoeff[1], dvalue[1]);
-              coeff[1] = a * x0;
-              value[1] = c * x0 / phi0;
-            }
-            if (coupling & HCURRENT)
-            {
-              contact->get_normal_derivative(FERMIH, a, c);
-              contact->get_derivatives_of_normal_derivative(FERMIH,
-                  dcoeff[2], dvalue[2]);
-              coeff[2] = a * x0;
-              value[2] = c * x0 / phi0;
-            }
-          }
-
-
-          // first the contributions to Ke_ij
-          if (coupling & POISSON)
-            Kuu(s,s) += l2_eps * coeff[0] / local_scaling[s][2];
-
-          if (coupling & ECURRENT)
-            Knn(s,s) += coeff[1] / local_scaling[s][0];
-
-          if (coupling & HCURRENT)
-            Kpp(s,s) += coeff[2] / local_scaling[s][1];
-
-
-          // contribution to the jacobian
-          if (jacobian != NULL)
-          {
-            double val_uu = dvalue[0][0] / x0 / C0 * phi0;
-            double val_nn = dvalue[1][1] / mu0 / C0 * phi0;
-            double val_pp = dvalue[2][2] / mu0 / C0 * phi0;
-
-            if (coupling & POISSON)
-              Kuu(s,s) -= val_uu / local_scaling[s][2];
-
-            if (coupling & ECURRENT)
-              Knn(s,s) -= val_nn / local_scaling[s][0];
-
-            if (coupling & HCURRENT)
-              Kpp(s,s) -= val_pp / local_scaling[s][1];
-          }
-
-          
-          // contribution to -Fe_i
-          if (residual != NULL)
-          {
-            double Pn =  0.0;
-            if (true_boundary && (contact == NULL))
-            {
-              // If we are on an outer boundary, we have to include
-              // the polarization
-              //
-              // NOTE:
-              // we only include the polarization when no boundary
-              // is defined
-              Pn = sc->get_total_polarization()(0) / P0;
-
-              // what is the outer normal in this point??
-              // Idea: if x(s) > x(centroid), normal is +1
-              //       else it is -1
-              double x_c = elem->centroid()(0);
-              double x_s = elem->point(s)(0);
-              Pn = (x_s > x_c) ? Pn : -Pn;
-            }
-            //double value_u = l2_eps * value[0] - Pn;
-            double value_u = value[0] - Pn;
-            double value_n = value[1] / (mu0 * C0_e);
-            double value_p = value[2] / (mu0 * C0_h);
-
-
-            if (coupling & POISSON)
-              Fu(s) -= value_u / local_scaling[s][2];
-
-            if (coupling & ECURRENT)
-              Fn(s) -= value_n / local_scaling[s][0];
-
-            if (coupling & HCURRENT)
-              Fp(s) -= value_p / local_scaling[s][1];
-          }
-        }
-*/
+       } // if (dim ...)
       }
     } // end loop over element sides
-//*/
+
+
+    // check if it is a dielectric
+    if (!sc->is_TiO2())
+    {
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        for (unsigned int j = 0; j < n_dofs; j++)
+        {
+          Kun(i, j) = 0.0;
+          Knu(i, j) = Knn(i, j) = KnI(i, j) = KnI3(i, j) = 0.0;
+          KIn(i, j) = KI3n(i, j) = 0.0;
+        }
+
+        if (!is_internal_boundary_node(elem->get_node(i)))
+          Knn(i, i) = 1.0;
+
+        // we simply set the electrochemical potential to zero
+        Fn(i) = 0.0;
+      }
+    }
 
 
     // constrain the jacobian and the rhs to account for constrained
@@ -4179,9 +4087,9 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           {
             if (!contact->is_cathode())
             {
-              
+
                double res = contact->get_potential() * x0;
-              
+
              // if (dim == 1 && res < 1e10)
              // {
                 Ke.condense(i + n_dofs, i + n_dofs, 0.0, Fe);
@@ -4192,7 +4100,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         }
       }
     }
-    
+
 
 
     perf_log.start_event("add");
@@ -4219,7 +4127,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    
+
     assert(n_cat != NULL);
     for (unsigned int j = 0; j < cons_cat->size(); j++)
       jacobian->set(dof_cat, j, (*cons_cat)(j));
@@ -4239,10 +4147,10 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     residual->print_matlab("F.m");
   }
 
-  
+
   perf_log.stop_event("assembly");
 
-} 
+}
 
 
 
