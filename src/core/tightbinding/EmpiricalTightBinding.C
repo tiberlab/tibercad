@@ -323,12 +323,6 @@ void ETB::do_solve(void){
     _solution[i].eigen_vector.resize(hdim);
     _solution[i].temperature = _upt_options.temperature;
 
-    if (i!= 0)
-    {
-      eigtmp_re += hdim;
-      eigtmp_im += hdim;
-    }
-
     for(int j=0; j<hdim;j++)
     {
       _solution[i].eigen_vector[j] = complex<double>(*(eigtmp_re+j),*(eigtmp_im+j));
@@ -343,7 +337,8 @@ void ETB::do_solve(void){
       _solution[i].electro_chem_pot = _upt_options.hl_chem_pot;
     }
 
-
+    eigtmp_re += hdim;
+    eigtmp_im += hdim;
 
   }
 
@@ -357,12 +352,6 @@ void ETB::do_solve(void){
     _solution[i].eigen_energy = eigvals[i] + _vb_shift - _pot_min;
     _solution[i].eigen_vector.resize(hdim);
     _solution[i].temperature = _upt_options.temperature;
-
-    if (i!= 0)
-    {
-      eigtmp_re += hdim;
-      eigtmp_im += hdim;
-    }
 
     for(int j=0; j<hdim;j++)
     {
@@ -378,6 +367,9 @@ void ETB::do_solve(void){
     {
       _solution[i].electro_chem_pot =  _upt_options.el_chem_pot;
     }
+
+    eigtmp_re += hdim;
+    eigtmp_im += hdim;
 
   }
 

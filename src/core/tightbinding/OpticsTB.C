@@ -320,7 +320,10 @@ void OpticsTB::do_plot()
     
     if (dE <= 0)  throw InitFailedException("OpticsKP: dE <= 0");
     
-    double spin_deg = 2.0;
+    // spin degeneracy: for relativistic calculations should be fine.
+    // we need to check because there is already an implicit factor in
+    // spectrum. For k.p is fine because the conduction band has just 1 state.
+    double spin_deg = 1.0;
     //if(_initial_state_model->is_relativistic()) spin_deg = 1.0;
 
     unsigned int num_nodes = (int)((Emax - Emin)/dE) + 1;
