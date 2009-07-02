@@ -252,6 +252,14 @@ DriftDiffusionProperties::do_init(void)
         add_recombination_model(name, it->second);
       }
 
+      // this is only a logical division
+      it = get_options().submodels_begin("generation");
+      end = get_options().submodels_end("generation");
+      for ( ; it != end; ++it)
+      {
+        const std::string& name = (it->second).get_option("model", "");
+        add_recombination_model(name, it->second);
+      }
 
       //
       // Thermoelectric power

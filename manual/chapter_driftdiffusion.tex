@@ -45,7 +45,7 @@ See tables~\ref{table:dd_nodal}, \ref{table:dd_elemental} and \ref{table:dd_scal
 %
 %The net recombination rate for each recombination model and the total rate
 %\end{minipage}& cm$^{-3}$s$^{-1}$
- The net recombination rate for each recombination model and the total rate &
+ The net recombination rate for each recombination/generation model and the total rate &
  cm$^{-3}$s$^{-1}$
 \end{tabular}
 \caption{Nodal quantities}
@@ -107,6 +107,13 @@ model driftdiffusion
       ...
     }
 
+    physical_model generation
+    {
+      model = model_to_be_used
+      ...
+    }
+
+
     physical_model electron_mobility
     {
       model = model_to_be_used
@@ -134,7 +141,7 @@ In this case default models are used, namely no recombination/generation for the
 There can be more than one recombination model.
 
 
-\subsection{Recombination models}
+\subsection{Recombination/generation models}
 
 \label{dd:recomb_models}
 
@@ -238,6 +245,18 @@ The parameters $A, B, C, H$ and $N_0$ are taken exclusively from the database.
 They are different for $C_n$ and $C_p$ and have to be specified as arrays with keywords \verb+A+, \verb+B+, \verb+C+, \verb+H+, \verb+N0+, e.g. \verb+A = (1e-31, 1e-32)+.
 The calculated values for $C_n$ and $C_p$ can be overridden from the input file by specifying values for the keywords \keyword{Cn} and \keyword{Cp}.
 
+
+\subsubsection{Optical generation}
+A very simple model for photoelectric generation of electron-hole pairs is implemented in \TiberCAD{}.
+It is enabled by specifying
+\begin{verbatim}
+physical_model generation
+{
+  model = optical
+  G = ...
+}
+\end{verbatim}
+The model imnposes a constant generation rate which has to be provided by the keyword \verb+G+ in units of (cm$\cdot$s)$^{-1}$.
 
 
 
