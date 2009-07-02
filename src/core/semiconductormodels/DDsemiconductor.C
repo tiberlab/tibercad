@@ -47,44 +47,44 @@ void DDsemiconductor::do_init ()
   strained      = false;
   k_max         = opt.get_option("k_max", k_max);
 
-  destroy(semiconductor);
-
-  semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
-
   if (semiconductor == NULL)
   {
-    string msg("Cannot create semiconductor model for ");
-    msg += get_material()->get_name() + " with ";
-    msg += get_material()->get_structure();
-    msg += " structure.";
-    throw InitFailedException(msg);
+    semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
+
+    if (semiconductor == NULL)
+    {
+      string msg("Cannot create semiconductor model for ");
+      msg += get_material()->get_name() + " with ";
+      msg += get_material()->get_structure();
+      msg += " structure.";
+      throw InitFailedException(msg);
+    }
+
+    semiconductor->set_material(get_material());
+
+    semiconductor->init();
   }
 
-  semiconductor->set_material(get_material());
-
-  semiconductor->init();
-
-  destroy(bulk_ham);
-
-  ModelOptions  kp_options;
-  kp_options["model"] = "kp";
-  kp_options["kp_model"] = "6x6";
-
-
-
-  bulk_ham = dynamic_cast<KPbulkHamiltonian*>(
-      EFAbulkHamiltonian::create(get_material()->get_structure(), kp_options));
-
   if (bulk_ham == NULL)
-    throw InitFailedException(string("Cannot create bulk hamiltonian for ")
-        + get_material()->get_name());
+  {
 
-  bulk_ham->set_material(get_material());
+    ModelOptions  kp_options;
+    kp_options["model"] = "kp";
+    kp_options["kp_model"] = "6x6";
 
 
 
-  bulk_ham->init();
+    bulk_ham = dynamic_cast<KPbulkHamiltonian*>(
+        EFAbulkHamiltonian::create(get_material()->get_structure(), kp_options));
 
+    if (bulk_ham == NULL)
+      throw InitFailedException(string("Cannot create bulk hamiltonian for ")
+          + get_material()->get_name());
+
+    bulk_ham->set_material(get_material());
+
+    bulk_ham->init();
+  }
 
 }
 //---------------------------------------------------------------------------------------------//

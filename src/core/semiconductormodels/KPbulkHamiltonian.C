@@ -75,15 +75,14 @@ void KPbulkHamiltonian::do_init()
 
   const ModelOptions& opt =  get_options ();
 
-  destroy(semiconductor);
+  if (semiconductor == NULL)
+  {
+    semiconductor = Semiconductor::create( get_material() -> get_structure(), opt  );
 
+    semiconductor->set_material(get_material());
 
-
-  semiconductor = Semiconductor::create( get_material() -> get_structure(), opt  );
-
-  semiconductor->set_material(get_material());
-
-  semiconductor->init();
+    semiconductor->init();
+  }
 
 
   model_name = opt.get_option("kp_model","6x6");
@@ -176,36 +175,6 @@ void KPbulkHamiltonian::do_init_alloy (const PhysicalModelInterface *comp_A, con
 
   set_rotation_matrix();
 
-
-  //Added by G.Penazzi
-  short i1 = 0;
-
-  for (short i = band_min; i <= band_max; i++)
-    {
-      kp_bands.push_back(i);
-      kp_bands_map.insert(make_pair (i,i1) );
-      i1++;
-    }
-  //--------------------------------------
-
-
-  //prepare k.p parameter
-  par = semiconductor->calculate_kp_params(model_name);
-
-  //calculate general Hamiltonian
-  calculate_Hamiltonian_gen();
-
-  //apply k|| vector (even if it is zero-vector !!!)
-  calculate_Hamiltonian_k_par();
-
-
-  //-----------------------------------------------
-  //calculate optical operator
-
-  calculate_optical_operator();
-
-  calculate_optical_operator_k_par();
-  //-----------------------------------------------
 }
 
 //==================================================================//

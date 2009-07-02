@@ -37,7 +37,7 @@ PhysicalModelInterface* HeatModel::create_new (void) const
 }
 
 //==========================================================================//
-void HeatModel::do_init()
+void HeatModel::create_submodels()
 {
 
   ModelOptions::const_submodel_iterator it;

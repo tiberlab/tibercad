@@ -40,22 +40,6 @@ void PoissonModel::do_init()
 
   //Pyropolarization
 
-  model_opt.piezo_pol = get_options().get_option("piezoelectric_field", false);
-  if (model_opt.pyro_pol)
-  {
-    std::string strain_simul = get_options().get_option("strain_simulation", "");
-    _strain_if.set_simulation(strain_simul);
-  }
-
-  model_opt.pyro_pol = get_options().get_option("piroelecric_field", false);
-  if (model_opt.pyro_pol)
-  {
-    destroy(_pyropolarization);
-    _pyropolarization = PyroPolarization::create(get_material());
-    _pyropolarization->set_material(get_material());
-    _pyropolarization->set_simulator_id(get_simulator_id());
-    _pyropolarization->init();
-  }
 
 
    //Density Charge Model
@@ -76,19 +60,6 @@ void PoissonModel::do_init()
       model_opt.add_doping = get_options().get_option("add_doping",false);
       //---------------
 
-
-      //Dielectric constant
-      destroy(_epsilon_model);
-
-      const ModelOptions& opt =  get_options ();
-
-      _epsilon_model = OptDielectricConstant::create(get_material()->get_structure(), opt);
-
-      _epsilon_model->set_material(get_material());
-
-      _epsilon_model->init();
-
-      _epsilon_model->get_dielectric_real(_epsilon);
 
 
 
@@ -168,6 +139,41 @@ void PoissonModel::do_init()
 
 }
 
+
+void
+PoissonModel::create_submodels(void)
+{
+  model_opt.piezo_pol = get_options().get_option("piezoelectric_field", false);
+  if (model_opt.pyro_pol)
+  {
+    std::string strain_simul = get_options().get_option("strain_simulation", "");
+    _strain_if.set_simulation(strain_simul);
+  }
+
+  model_opt.pyro_pol = get_options().get_option("piroelecric_field", false);
+  if (model_opt.pyro_pol)
+  {
+    destroy(_pyropolarization);
+    _pyropolarization = PyroPolarization::create(get_material());
+    _pyropolarization->set_material(get_material());
+    _pyropolarization->set_simulator_id(get_simulator_id());
+    _pyropolarization->init();
+  }
+
+
+  //Dielectric constant
+  destroy(_epsilon_model);
+
+  const ModelOptions& opt =  get_options ();
+
+  _epsilon_model = OptDielectricConstant::create(get_material()->get_structure(), opt);
+
+  _epsilon_model->set_material(get_material());
+
+  _epsilon_model->init();
+
+  _epsilon_model->get_dielectric_real(_epsilon);
+}
 
 
 

@@ -218,6 +218,7 @@ PhysicalModelInterface::create(const string& name,
     //    we don't set anymore a default name
     //string defaultname = mod->get_default_name();
     string defaultname = "";
+    //cerr << "*** " << mod->get_default_name() << endl;
     mod->_name = mod->get_options().get_option("name", defaultname);
     mod->get_options().delete_option("name");
 

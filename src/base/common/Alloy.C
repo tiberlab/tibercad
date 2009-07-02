@@ -44,7 +44,7 @@ Alloy::do_preinit(void)
   _mat_A->set_structure(get_structure());
   _mat_B->set_structure(get_structure());
 }
- 
+
 
 void
 Alloy::do_init(void)
@@ -66,7 +66,7 @@ Alloy::do_init(void)
   {
     PhysicalModel* modA = static_cast<PhysicalModel*>((it->second)->copy());
     _mat_A->add_model(modA, it->first);
-    
+
     PhysicalModel* modB = static_cast<PhysicalModel*>((it->second)->copy());
     _mat_B->add_model(modB, it->first);
   }
@@ -74,9 +74,9 @@ Alloy::do_init(void)
   _mat_A->init();
   _mat_B->init();
 
-  // 
+  //
   // build VCA of the models
-  // 
+  //
 
   get_database().set_material(get_name());
 

@@ -26,10 +26,12 @@ SBCondBandBulkHamiltonian::do_init(void)
 
   const ModelOptions& opt =  get_options ();
 
-  destroy(semiconductor);
-  semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
-  semiconductor->set_material(get_material());
-  semiconductor->init();
+  if (semiconductor == NULL)
+  {
+    semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
+    semiconductor->set_material(get_material());
+    semiconductor->init();
+  }
 
 }
 

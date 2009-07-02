@@ -101,7 +101,7 @@ DopingDependentMobility::read_database(void)
 
 
 void
-DopingDependentMobility::do_init(void)
+DopingDependentMobility::create_submodels(void)
 {
   if (formula_ == 1)
   {

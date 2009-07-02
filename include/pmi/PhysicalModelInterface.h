@@ -158,14 +158,17 @@ class PhysicalModelInterface : public TiberModelObject
 
     //! Initialize this model
     /*!
-     * It calls read_database() and then do_init()
+     * It calls read_database(), do_init() and create_submodels()
+     *
+     * Note that do_init() will also be called for alloys to allow for
+     * correct parameter override and to assure complete initialization.
      */
     void init(void);
 
 
     //! Initialize this model as an alloy with two components
     /*!
-     * It calls read_database_alloy() and then do_init_alloy()
+     * It calls read_database_alloy(), do_init_alloy() and do_init()
      */
     void init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
@@ -253,6 +256,8 @@ class PhysicalModelInterface : public TiberModelObject
      *
      * You have to do everything that in a normal material would be done in
      * do_init()
+     *
+     * \note do_init() will \em not be called for an alloy
      */
     virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
@@ -268,6 +273,15 @@ class PhysicalModelInterface : public TiberModelObject
      */
     virtual void override_parameter_string(const std::string& name,
         std::string& s) const;
+
+
+    //! Create submodels
+    /*!
+     * This method is only called for non-alloy materials and should create
+     * all necessary submodels. For alloys, all submodels should be created as alloy
+     * models by using create_submodel_alloy()
+     */
+    virtual void create_submodels(void) {};
 
 
     //! calculate an alloy parameter in VCA approximation
@@ -515,6 +529,7 @@ PhysicalModelInterface::init(void)
 {
   read_database();
   do_init();
+  create_submodels();
 }
 
 
@@ -554,6 +569,7 @@ PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
   assert(typeid(*comp_A) == typeid(*comp_B));
   read_database_alloy();
   do_init_alloy(comp_A, comp_B, xa);
+  do_init();
 }
 
 

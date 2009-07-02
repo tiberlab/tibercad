@@ -16,7 +16,7 @@ class WzLatticeThermalConductivity: public LatticeThermalConductivity
 
 
  //! Update the lattice thermal conductivity given the Temperature
-  virtual void re_init(){}; 
+  virtual void re_init(){};
 
 
  private:
@@ -25,12 +25,15 @@ class WzLatticeThermalConductivity: public LatticeThermalConductivity
   double _kappa_z;
 
  protected:
- 
+
   virtual void read_database(void);
 
 
   virtual void do_init(void);
 
+
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A,
+      const PhysicalModelInterface *comp_B, double xa);
 
   inline  virtual PhysicalModelInterface*  create_new (void) const;
 
@@ -44,7 +47,7 @@ WzLatticeThermalConductivity* WzLatticeThermalConductivity::create()
 
 PhysicalModelInterface* WzLatticeThermalConductivity::create_new (void) const
 {
-  return (new WzLatticeThermalConductivity() ); 
+  return (new WzLatticeThermalConductivity() );
 }
 
 #endif

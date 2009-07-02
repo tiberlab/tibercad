@@ -19,8 +19,8 @@ class LatticeThermalConductivity : public PhysicalModelInterface
 {
 
 public:
-  
-  //!Constructor 
+
+  //!Constructor
   LatticeThermalConductivity();
 
    //!Destructor
@@ -28,19 +28,19 @@ public:
 
 
   //!provides conductivity in simulation system W/(cm K)
-   void get_conductivity(Tensor2Sym& conductivity) const; 
+   void get_conductivity(Tensor2Sym& conductivity) const;
 
   //Temperature
 
   void set_temperature(double temperature);
-     
+
   virtual void re_init(void)=0;
 
 
 private:
 
 
- 
+
 
 protected:
 
@@ -50,8 +50,6 @@ protected:
   virtual void do_init (void)=0;
 
   virtual void read_database(void)=0;
-
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa); 
 
   virtual PhysicalModelInterface* create_new (void) const =0;
 
@@ -73,7 +71,7 @@ LatticeThermalConductivity::get_conductivity(Tensor2Sym& conductivity) const
 }
 
 inline
-void 
+void
 LatticeThermalConductivity::rotate_to_calculation_system(const Tensor2Gen& RotMatrix)
 {
 

@@ -2,7 +2,7 @@
 #include "getpot.h"
 #include "Material.h"
 #include "Database.h"
-#include "RotatedCrystal.h"  
+#include "RotatedCrystal.h"
 
 
 
@@ -27,14 +27,14 @@ void  WzLatticeThermalConductivity::read_database(void)
 
 
 
-  
+
 }
 
 //---------------------------------------------------------//
 
 void WzLatticeThermalConductivity::do_init(void)
 {
- 
+
   ModelOptions & options = get_options ();
 
   double k_x;
@@ -56,4 +56,16 @@ void WzLatticeThermalConductivity::do_init(void)
 
 }
 
-  
+
+
+void WzLatticeThermalConductivity::do_init_alloy (const PhysicalModelInterface *comp_A,
+                                                const PhysicalModelInterface *comp_B, double xa)
+{
+  const WzLatticeThermalConductivity* modA = dynamic_cast<const WzLatticeThermalConductivity*>(comp_A);
+
+  const WzLatticeThermalConductivity* modB = dynamic_cast<const WzLatticeThermalConductivity*>(comp_B);
+
+  _kappa_x = alloy(modA->_kappa_x, modB->_kappa_x, xa);
+  _kappa_z = alloy(modA->_kappa_z, modB->_kappa_z, xa);
+
+}

@@ -55,8 +55,8 @@ class DopingDependentMobility : public MobilityModelInterface
     //! \copydoc MobilityModelInterface::read_database()
     virtual void read_database(void);
 
-    //! \copydoc MobilityModelInterface::do_init()
-    virtual void do_init(void);
+    //! \copydoc MobilityModelInterface::create_submodels()
+    virtual void create_submodels(void);
 
     //! \copydoc MobilityModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;

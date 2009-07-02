@@ -22,13 +22,13 @@ class HeatModel: public PhysicalModel
 
   //!Destructor
   ~HeatModel();
-   
+
    //! creates a new object
   static HeatModel* create();
 
   //!Get the thermal lattice conductivity
   void get_thermal_conductivity(Tensor2Sym& thermal_conductivity);
- 
+
      //! Init all fields
    void re_init(void);
 
@@ -37,7 +37,7 @@ class HeatModel: public PhysicalModel
 
    //!Set the current elemement side index
    void set_side(int side);
-   
+
    //!Set the current elemement side index
     int get_side(void);
 
@@ -48,17 +48,17 @@ class HeatModel: public PhysicalModel
    //! \copydoc PhysicalModel::do_print_info(void)
     void do_print_info(void);
 
-   //! Get the temperature 
-   void set_temperature(double temperature); 
+   //! Get the temperature
+   void set_temperature(double temperature);
 
-  
+
   //!Get total the heat source model given an ID
   HeatSourceInterface* get_heat_source_model(ID id) const;
-  
-  
-  //! Get the ids of the heat source models 
+
+
+  //! Get the ids of the heat source models
   int get_heat_source_IDs(std::vector<ID>& ids) const;
-  
+
 
   //!Get total heat source
   void get_total_heat_source(std::vector<Point> h_point,
@@ -71,7 +71,7 @@ class HeatModel: public PhysicalModel
 
 
  private:
- 
+
 
 
     enum dd_var_kpart
@@ -83,15 +83,15 @@ class HeatModel: public PhysicalModel
 
     struct model_options
    {
-  
+
      bool particle_thermal_conductivity;
 
    };
-    
-   //! Current element 
-   const Elem* _elem; 
-  
-   //! Current side  
+
+   //! Current element
+   const Elem* _elem;
+
+   //! Current side
    int _side;
 
    //!For particle solution
@@ -117,16 +117,16 @@ class HeatModel: public PhysicalModel
 
    //!Heat flux source within a specific heat source model
    typedef std::map<ID,RealGradient>::iterator inner_flux_source_iterator;
- 
+
    //!Update lattice thermal conductivity
-   void  update_lattice_thermal_conductivity(void); 
-  
-   //! Temperature 
+   void  update_lattice_thermal_conductivity(void);
+
+   //! Temperature
    double _temperature;
 
    //! Lattice thermal conductivity
-   Tensor2Sym _lattice_thermal_conductivity;  
- 
+   Tensor2Sym _lattice_thermal_conductivity;
+
    //! Lattice thermal conductivity model
    LatticeThermalConductivity* kappa;
 
@@ -135,8 +135,8 @@ class HeatModel: public PhysicalModel
 
    //!Heat Source model map
    std::map<ID, HeatSourceInterface*> _heat_source_models;
- 
-   //! Add a heat source model 
+
+   //! Add a heat source model
    void add_heat_source_model(const std::string& model_name,
        			const ModelOptions& options = ModelOptions());
 
@@ -145,7 +145,7 @@ class HeatModel: public PhysicalModel
 
    //!copy constructor should not be used
     HeatModel (const HeatModel &  t) {};
-  
+
  protected:
 
   virtual PhysicalModelInterface* create_new (void) const;
@@ -153,13 +153,13 @@ class HeatModel: public PhysicalModel
 
   virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
 
-  virtual void do_init();
+  virtual void create_submodels();
 
 };
 
 
 
-inline 
+inline
 HeatModel* HeatModel::create()
 {
   return new  HeatModel();
@@ -167,18 +167,18 @@ HeatModel* HeatModel::create()
 
 
 
-inline 
+inline
 void
 HeatModel::get_thermal_conductivity(Tensor2Sym& thermal_conductivity)
 {
   thermal_conductivity = _lattice_thermal_conductivity;
-   
+
 }
 
 
 
 inline
-void 
+void
 HeatModel::set_temperature(double temperature)
 {
   _temperature = temperature;
@@ -186,7 +186,7 @@ HeatModel::set_temperature(double temperature)
 
 
 inline
-void 
+void
 HeatModel::set_element(const Elem* elem)
 {
 
@@ -197,7 +197,7 @@ HeatModel::set_element(const Elem* elem)
 
 
 inline
-void 
+void
 HeatModel::set_side(int side)
 {
 
@@ -207,14 +207,14 @@ HeatModel::set_side(int side)
 
 
 inline
-const Elem* 
+const Elem*
 HeatModel::get_element(void)
 {
   return _elem;
 }
 
 inline
-int 
+int
 HeatModel::get_side(void)
 {
  return _side;
@@ -230,10 +230,10 @@ HeatSourceInterface* heat_source_model = NULL;
 const_outer_source_iterator it =  _heat_source_models.find(id);
 if (it !=   _heat_source_models.end())
    heat_source_model = it->second;
-  
+
    return heat_source_model;
 
-   
+
  }
 
 

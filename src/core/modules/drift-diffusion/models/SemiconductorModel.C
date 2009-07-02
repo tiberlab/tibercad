@@ -52,17 +52,18 @@ SemiconductorModel::do_init(void)
   _recompute_band_parameters = get_option("recompute_band_parameters",
       _recompute_band_parameters);
 
-  destroy(_bulk_model);
-
-  _bulk_model = DDsemiconductor::create(get_material()->get_structure(), opt);
-
   if (_bulk_model == NULL)
-    throw InitFailedException("Unknown structure for DDsemiconductor");
+  {
+    _bulk_model = DDsemiconductor::create(get_material()->get_structure(), opt);
 
-  _bulk_model->set_material(get_material());
-  _bulk_model->set_simulator_id(get_simulator_id());
+    if (_bulk_model == NULL)
+      throw InitFailedException("Unknown structure for DDsemiconductor");
 
-  _bulk_model->init();
+    _bulk_model->set_material(get_material());
+    _bulk_model->set_simulator_id(get_simulator_id());
+
+    _bulk_model->init();
+  }
 }
 
 

@@ -18,19 +18,17 @@ EFAbulkModel::~EFAbulkModel()
 
 void EFAbulkModel::do_init()
 {
-  destroy(_bulkHamiltonian);
 
-  const ModelOptions& opt =  get_options ();
+  if (_bulkHamiltonian == NULL)
+  {
+    const ModelOptions& opt =  get_options ();
 
+    _bulkHamiltonian = EFAbulkHamiltonian::create(get_material() -> get_structure(), opt);
 
+    _bulkHamiltonian->set_material(get_material());
 
-  _bulkHamiltonian = EFAbulkHamiltonian::create(get_material() -> get_structure(), opt);
-
-  _bulkHamiltonian->set_material(get_material());
-
-  _bulkHamiltonian->init();
-
-
+    _bulkHamiltonian->init();
+  }
 
 
 }

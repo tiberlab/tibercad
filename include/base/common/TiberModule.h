@@ -10,7 +10,9 @@
 //
 
 #define TBCREATEFUNC __create
-#define TBDESTRYFUNC __destroy
+#define TBDESTROYFUNC __destroy
+#define TBCREATEFUNCSYM "__create"
+#define TBDESTROYFUNCSYM "__destroy"
 
 #ifdef BUILD_TIBER_MODULES
 # ifdef CYGWIN

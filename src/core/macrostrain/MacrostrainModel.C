@@ -36,32 +36,31 @@ PhysicalModelInterface* MacrostrainModel::create_new (void) const
 void MacrostrainModel::do_init()
 {
 
-
-  destroy(stiffness);
-  destroy(piezo);
-
   const ModelOptions& opt =  get_options ();
 
-  stiffness = Stiffness::create( get_material() -> get_structure(), opt  );
-  stiffness->set_material(get_material());
-  stiffness->init();
+  if (stiffness == NULL)
+  {
+    stiffness = Stiffness::create( get_material() -> get_structure(), opt  );
+    stiffness->set_material(get_material());
+    stiffness->init();
+  }
 
 
-  piezo = Piezoelectricity::create( get_material() -> get_structure(), opt  );
-  piezo->set_material(get_material());
-  piezo->init();
+  if (piezo == NULL)
+  {
+    piezo = Piezoelectricity::create( get_material() -> get_structure(), opt  );
+    piezo->set_material(get_material());
+    piezo->init();
+  }
 
 
   std::string poisson_name = opt.get_option("poisson_equation" , "no_poisson" );
-
 
   if (poisson_name != "no_poisson")
   {
     poisson =  SimulationInterface::find_simulation( poisson_name ) ;
     if (poisson == NULL)
       throw InitFailedException("MacrostrainModel: Unknown poisson model" + poisson_name);
-
-
 
     id_Ex = poisson->get_variable_id("Ex");
     Poisson_variables_ID.insert(id_Ex);
@@ -72,12 +71,7 @@ void MacrostrainModel::do_init()
     id_Ez = poisson->get_variable_id("Ez");
     Poisson_variables_ID.insert(id_Ez);
 
-
-
-
   }
-
-
 
 }
 
@@ -90,12 +84,6 @@ void MacrostrainModel::do_init_alloy (const PhysicalModelInterface *comp_A,
 
   const MacrostrainModel* modA = dynamic_cast< const MacrostrainModel*> (comp_A);
   const MacrostrainModel* modB = dynamic_cast< const MacrostrainModel*> (comp_B);
-
-  poisson = modA->poisson;
-  id_Ex = modA->id_Ex;
-  id_Ey = modA->id_Ey;
-  id_Ez = modA->id_Ez;
-  Poisson_variables_ID = modA->Poisson_variables_ID;
 
   destroy(stiffness);
   stiffness = create_submodel_alloy(modA->stiffness, modB->stiffness, xa);

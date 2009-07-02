@@ -3,6 +3,7 @@
 //#include "tiber_config.h"
 #include "DLLoader.h"
 #include "Messages.h"
+#include "TiberModule.h"
 
 #include <boost/filesystem/operations.hpp>
 
@@ -96,8 +97,8 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 #endif
     if ((iface.handle != NULL) && ((error_msg = dlerror()) == NULL))
     {
-      iface.create_fnc = dlsym(iface.handle, "TBCREATEFUNC");
-      iface.destroy_fnc = dlsym(iface.handle, "TBDESTROYFUNC");
+      iface.create_fnc = dlsym(iface.handle, TBCREATEFUNCSYM);
+      iface.destroy_fnc = dlsym(iface.handle, TBDESTROYFUNCSYM);
 
       if ((iface.create_fnc == NULL)
           || (iface.destroy_fnc == NULL)

@@ -606,65 +606,72 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     const set<ID>::iterator end(phys_regions.end());
     for ( ; it != end; ++it)
     {
-      Material* mat = device.get_material(*it);
+      ID reg_id = *it;
+      Material* mat = device.get_material(reg_id);
 
       if (mat == NULL)
       {
         ostringstream s;
-        s << "Physical region " << *it <<
+        s << "Physical region " << reg_id <<
           " has no material associated!";
         throw InitFailedException(s.str());
       }
 
-
-      ModelOptions opts(physopts);
-      //
-      // we parse the submodels for each region as they could be associated
-      // one-by-one
-      // NOTE: different submodels could have the same identifier
-      //
+      // we only continue if the model has not already been added
+      // this is important as a material can be assigned to different
+      // regions
+      if (mat->get_model(sim->get_id()) == NULL)
       {
-        multimap<const string, ModelOptions>& physmodels =
-          model_str->get_physical_model_map();
 
-        multimap<const string,
-          ModelOptions>::iterator mapit(physmodels.begin());
-        multimap<const string,
-          ModelOptions>::iterator mapend(physmodels.end());
-        for ( ; mapit != mapend; ++mapit)
+        ModelOptions opts(physopts);
+        //
+        // we parse the submodels for each region as they could be associated
+        // one-by-one
+        // NOTE: different submodels could have the same identifier
+        //
         {
-          bool add = true;
-          // we have to check if it should be built for the current region
-          if ((mapit->second).find_option("restrict_to_region"))
+          multimap<const string, ModelOptions>& physmodels =
+            model_str->get_physical_model_map();
+
+          multimap<const string,
+            ModelOptions>::iterator mapit(physmodels.begin());
+          multimap<const string,
+            ModelOptions>::iterator mapend(physmodels.end());
+          for ( ; mapit != mapend; ++mapit)
           {
-            set<ID> regs;
-            const string& physreg =
-              (mapit->second).get_option("restrict_to_region", "all");
-            extract_physical_regions(physreg, regs);
-            if (regs.count(*it) == 0) add = false;
-          }
+            bool add = true;
+            // we have to check if it should be built for the current region
+            if ((mapit->second).find_option("restrict_to_region"))
+            {
+              set<ID> regs;
+              const string& physreg =
+                (mapit->second).get_option("restrict_to_region", "all");
+              extract_physical_regions(physreg, regs);
+              if (regs.count(reg_id) == 0) add = false;
+            }
 
 
-          if (add)
-          {
-            // we set the name to the model type if not explicitly
-            // given by user
-            if (!(mapit->second).find_option("name"))
-              (mapit->second)["name"] = mapit->first;
+            if (add)
+            {
+              // we set the name to the model type if not explicitly
+              // given by user
+              if (!(mapit->second).find_option("name"))
+                (mapit->second)["name"] = mapit->first;
 
-            opts.add_submodel(mapit->first, mapit->second);
+              opts.add_submodel(mapit->first, mapit->second);
+            }
           }
         }
+
+
+        // here we actually create the model
+        PhysicalModel* model = sim->new_physical_model(opts, mat);
+
+        // NOTE: model could be NULL, but we don't care about. Who tells us that
+        // every simulation necessarily needs a model?
+        if (model != NULL)
+          mat->add_model(model, sim->get_id());
       }
-
-
-      // here we actually create the model
-      PhysicalModel* model = sim->new_physical_model(opts, mat);
-
-      // NOTE: model could be NULL, but we don't care about. Who tells us that
-      // every simulation necessarily needs a model?
-      if (model != NULL)
-        mat->add_model(model, sim->get_id());
     }
 
     m.info("Creation of physical models completed.");

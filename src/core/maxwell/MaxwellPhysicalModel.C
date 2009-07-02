@@ -30,15 +30,16 @@ PhysicalModelInterface* MaxwellPhysicalModel::create_new (void) const
 
 void MaxwellPhysicalModel::do_init()
 {
-  destroy(_epsilon_model);
+  if (_epsilon_model == NULL)
+  {
+    const ModelOptions& opt =  get_options ();
 
-  const ModelOptions& opt =  get_options ();
+    _epsilon_model = OptDielectricConstant::create(get_material()->get_structure(), opt);
 
-  _epsilon_model = OptDielectricConstant::create(get_material()->get_structure(), opt);
+    _epsilon_model->set_material(get_material());
 
-  _epsilon_model->set_material(get_material());
-
-  _epsilon_model->init();
+    _epsilon_model->init();
+  }
 
 }
 

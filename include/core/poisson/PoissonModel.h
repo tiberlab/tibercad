@@ -22,35 +22,35 @@ class PoissonModel: public PhysicalModel
 
   //!Constructor
   PoissonModel(void);
-  
+
   //!Destructor
   ~PoissonModel(void);
-  
+
   //! creates a new object
   static  PoissonModel* create(void);
-  
+
   void 	re_init(void);
-  
+
   //!Set the current element
   void set_element(const Elem* elem);
-  
+
   // //!Return the charge density for the current element
-  // double get_charge_density(); 
-  
+  // double get_charge_density();
+
    //!Return the charge density for the current element
-  std::vector<double> get_charge_density(); 
+  std::vector<double> get_charge_density();
 
   //!Return the charge density for the current element
-  Tensor2Sym get_dielectric_constant(); 
+  Tensor2Sym get_dielectric_constant();
 
   //Tensor1 get_built_in_polarization(const std::vector<Point> q_point, std::vector<Tensor1>& built_in_polarization);
   //!charge density (electron/cm^3)
   void get_charge_density(const std::vector<Point> q_point, std::vector<double>& charge_density);
 
-  
+
   //! The pyropolarization
   PyroPolarization* _pyropolarization;
-  
+
   //! The total electric polarization
   RealVectorValue _polarization;
 
@@ -62,9 +62,9 @@ class PoissonModel: public PhysicalModel
  private:
 
   Point _coord;
-  
+
   OptDielectricConstant* _epsilon_model;
-  
+
   Tensor2Sym _strain;
 
     //! The interface to a strain simulation
@@ -73,14 +73,14 @@ class PoissonModel: public PhysicalModel
   //  enum strain_variables
   //{
   //   E_XX = 0,
-  //   E_XY,  
+  //   E_XY,
   //   E_XZ,
   //   E_YY,
   //   E_YZ,
   //   E_ZZ
   // };
 
-   //!Strain variables 
+   //!Strain variables
    //std::set<ID> pol_ID;
 
    //!Variable map
@@ -91,14 +91,14 @@ class PoissonModel: public PhysicalModel
 
   //!A pointer to cherge piezoelectricity simulation
   Macrostrain* _strain_sim;
-  
+
   //! ID for charge density simulation
   ID charge_id;
 
   //Model options structure
   struct model_options
   {
-     bool pyro_pol;  
+     bool pyro_pol;
 
      bool piezo_pol;
 
@@ -107,18 +107,18 @@ class PoissonModel: public PhysicalModel
     bool add_doping;
 
    };
-    
+
   //!Options for Poisson model
   model_options model_opt;
 
    //! update the charge density
-   void  update_charge_density(void);  
-  
+   void  update_charge_density(void);
+
   //! Update the built in polarization
-  void  update_built_in_polarization(void); 
-  
-   //! Current element 
-   const Elem* _elem; 
+  void  update_built_in_polarization(void);
+
+   //! Current element
+   const Elem* _elem;
 
    //!copy constructor should not be used
    PoissonModel (const PoissonModel&  t) {};
@@ -129,7 +129,7 @@ class PoissonModel: public PhysicalModel
   // //!charge density (electron/cm^3)
    //std::vector<double> _charge_density;
 
-    
+
   // //!A pointer to cherge density object
   // ChargeDensityModel* chd_model;
 
@@ -138,17 +138,17 @@ class PoissonModel: public PhysicalModel
 
   //!Pyropolarization
   //  Tensor1  _pyropolarization;
- 
+
   //!Piezopolarization
   //Tensor1  _piezopolarization;
-  
+
  protected:
 
-  virtual PhysicalModelInterface* create_new (void) const; 
+  virtual PhysicalModelInterface* create_new (void) const;
 
 
   virtual void read_database (void){};
- 
+
 
   virtual void read_database_alloy (void) {};
 
@@ -157,18 +157,20 @@ class PoissonModel: public PhysicalModel
 
   virtual void do_init();
 
+  virtual void create_submodels(void);
+
 };
 
 
-inline 
-PoissonModel* 
+inline
+PoissonModel*
 PoissonModel::create(void)
 {
   return new PoissonModel;
 }
 
 inline
-void 
+void
 PoissonModel::set_element(const Elem* elem)
 {
 
@@ -177,7 +179,7 @@ PoissonModel::set_element(const Elem* elem)
 }
 
 
-// inline   
+// inline
 // double
 // PoissonModel::get_charge_density()
 // {
@@ -188,12 +190,12 @@ PoissonModel::set_element(const Elem* elem)
 
 
 
-inline   
+inline
 Tensor2Sym
 PoissonModel::get_dielectric_constant()
 {
 
- 
+
   return _epsilon * Constants::epsilon * 1e-2;
 
 }
