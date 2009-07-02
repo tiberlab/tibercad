@@ -4,9 +4,13 @@ Version 1.X.X
 Bug fixes:
 
 	- fixed error in database for GaN, InN direct recombination
+	- fixed bug regarding variables in alloys
+	- fixed sign issue for zincblende deformation potentials
 
 
 New features:
+
+	- added new materials
 
 
 Version 1.2.2
