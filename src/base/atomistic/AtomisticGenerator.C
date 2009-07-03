@@ -1396,6 +1396,7 @@ void AtomisticGenerator::passivate()
                   //so in some cases we cannot keep crystal positions
                   Atom tmp(*bonded_atom);
                   tmp.set_specie("H");
+	tmp.set_region_ID(bonded_atom->get_region_ID());
                   tmp.belong_to_structure = true;
                   Tensor1 bonded_rel_position = bonded_atom->get_position() +
                   _bondmapobject->get_translation()[i][j] - _structure_basis[i].get_position();
