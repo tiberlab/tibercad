@@ -523,7 +523,7 @@ AtomisticStructure::print_structure(const std::string& path)
 
       for (unsigned int i = 0; i < _atom_types.size(); i++)
         {
-          file << std::setw(4) << _atom_types[i];
+          file << std::setw(6) << _atom_types[i];
         }
       file << std::endl;
 
@@ -614,7 +614,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
       for (unsigned int i = 0; i < _atom_types.size(); i++)
         {
-          file << std::setw(4) << _atom_types[i];
+          file << std::setw(6) << _atom_types[i];
         }
       file << std::endl;
 
