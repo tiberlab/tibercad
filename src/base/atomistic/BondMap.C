@@ -34,6 +34,9 @@ BondMap::set_cutoff()
   _cutoff["N"] = 1.2;
   _cutoff["Al"] = 1.2;
   _cutoff["H"] = 0.05;
+  _cutoff["InGa"] = 1.4;
+  _cutoff["In"] = 1.2;
+  _cutoff["AlGa"] = 1.4;
 }
 
 void
