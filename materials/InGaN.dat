@@ -23,7 +23,7 @@ bow_Pz = -0.037
 [atomistic_structure]
 n_basis_specie=2
 
-specie_1=InGa
+specie_1=In
 specie_2=N
 
 [densityfunctional_tb]
