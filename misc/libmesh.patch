@@ -921,8 +921,18 @@
  GetPot::__get_until_closing_bracket(std::istream& istr)
    // parse input until next matching }
  {
---- Make.common.in.orig	2009-05-27 10:36:16.000000000 +0200
-+++ Make.common.in	2009-05-27 10:36:23.000000000 +0200
+--- Make.common.in.orig	2009-04-21 11:01:14.000000000 +0200
++++ Make.common.in	2009-04-21 11:00:58.000000000 +0200
+@@ -26,7 +26,9 @@
+ hostos                = @host_os@
+ 
+ libmesh_CXX           = @CXX@
++libmesh_CXXFLAGS      = @CXXFLAGS@
+ libmesh_CC            = @CC@
++libmesh_CFLAGS        = @CFLAGS@
+ libmesh_LDFLAGS       = @LDFLAGS@
+ libmesh_DLFLAGS       =
+ libmesh_LIBS          = @LIBS@
 @@ -154,6 +154,7 @@
  endif
  ###############################################################################

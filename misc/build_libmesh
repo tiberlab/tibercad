@@ -40,9 +40,12 @@ fi
 
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL}
 export PETSC_ARCH=${ARCH}-opt
+export CXXFLAGS=-fPIC
+export CFLAGS=-fPIC
+export FCFLAGS=-fPIC
 
   
-./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic --disable-shared
+./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic --disable-shared --disable-second --disable-pfem
 
 
 # delete the -pedantic flag because it makes problems with mpi
