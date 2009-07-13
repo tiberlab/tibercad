@@ -16,6 +16,8 @@
 #include "SolveFailedException.h"
 #include "Variable.h"
 
+// TODO should be replaced by boost methods
+#include "gzstream.h"
 
 // libmesh includes
 #include "node.h"
@@ -36,6 +38,8 @@
 
 // C++ includes
 #include <fstream>
+//#include <boost/iostreams/filtering_streambuf.hpp>
+//#include <boost/iostreams/filter/gzip.hpp>
 
 //
 // Module interface
@@ -5489,6 +5493,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 void
 DriftDiffusion::save_data(const string& file)
 {
+  //using namespace boost::iostreams;
+  //using namespace boost::iostreams::gzip;
+
   const Mesh& mesh = get_mesh();
   EquationSystems& eq_sys = get_equation_systems();
   TiberNonlinearSystem& system = static_cast<TiberNonlinearSystem&>(
@@ -5498,7 +5505,11 @@ DriftDiffusion::save_data(const string& file)
 
   const NumericVector<Number>& solution = get_solution_vector();
 
-  ofstream of(file.c_str());
+  gz::ogzstream of(file.c_str());
+  //ofstream of(file.c_str(), ios_base::out | ios_base::binary);
+  //filtering_streambuf<output> out;
+  //out.push(gzip_compressor());
+  //out.push(of);
 
   // write contact voltages
   of << "<contacts>" << endl;
@@ -5568,7 +5579,8 @@ DriftDiffusion::load_data(const string& file)
 
   NumericVector<Number>& solution = get_solution_vector();
 
-  ifstream is(file.c_str());
+  //ifstream is(file.c_str());
+  gz::igzstream is(file.c_str());
   if (!is.good()) throw InitFailedException("Bad datafile");
 
   string keyword("<contacts>");

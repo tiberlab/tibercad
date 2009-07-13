@@ -194,6 +194,9 @@ void Macrostrain::parse_options( )
 
  calculate_atom_displacements = opt.find_option("strain_atomistic_structure");
  structure_to_be_strained = opt.get_option("strain_atomistic_structure", "none");
+ AtomisticStructure* as =
+   get_environment().get_device().get_atomistic_structure(structure_to_be_strained);
+ if (as == NULL) calculate_atom_displacements = false;
 
  //atom_structure_filename = opt.get_option("atom_structure_filename", "");
  //atom_displacements_filename = opt.get_option("atom_displacements_filename","");
@@ -1673,36 +1676,36 @@ void Macrostrain::do_solve()
       //
       //
       //
-std::cout << "call 1" << std::endl;
-//Initialise relative points
-AtomisticStructure* as = NULL;
-as = get_environment().get_device().get_atomistic_structure(structure_to_be_strained);
+    std::cout << "call 1" << std::endl;
+    //Initialise relative points
+    AtomisticStructure* as = NULL;
+    as = get_environment().get_device().get_atomistic_structure(structure_to_be_strained);
 
-  LinearImplicitSystem& system = *my_system;
+    LinearImplicitSystem& system = *my_system;
 
-  DofMap& dof_map = system.get_dof_map();
+    DofMap& dof_map = system.get_dof_map();
 
-  FEType fe_type = dof_map.variable_type(0);
+    FEType fe_type = dof_map.variable_type(0);
 
 
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
+    AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
 
-_atom_relative_points.resize(as->get_structure_atoms().size());
-for (unsigned int i = 0; i < as->get_structure_atoms().size(); i++)
-  {
-    if (as->get_structure_atoms()[i].get_elem() != NULL)
+    _atom_relative_points.resize(as->get_structure_atoms().size());
+    for (unsigned int i = 0; i < as->get_structure_atoms().size(); i++)
+    {
+      if (as->get_structure_atoms()[i].get_elem() != NULL)
       {
-    Point tmp_point;
-  tmp_point(0) = as->get_structure_atoms()[i].get_position()(1) / as->get_scale();
-  tmp_point(1) = as->get_structure_atoms()[i].get_position()(2) / as->get_scale();
-  tmp_point(2) = as->get_structure_atoms()[i].get_position()(3) / as->get_scale();
+        Point tmp_point;
+        tmp_point(0) = as->get_structure_atoms()[i].get_position()(1) / as->get_scale();
+        tmp_point(1) = as->get_structure_atoms()[i].get_position()(2) / as->get_scale();
+        tmp_point(2) = as->get_structure_atoms()[i].get_position()(3) / as->get_scale();
 
-  //get atom relative point
-  _atom_relative_points[i] =  FEInterface::inverse_map(dim, fe_type, as->get_structure_atoms()[i].get_elem(), tmp_point);
+        //get atom relative point
+        _atom_relative_points[i] =  FEInterface::inverse_map(dim, fe_type, as->get_structure_atoms()[i].get_elem(), tmp_point);
       }
-      }
+    }
 
-      apply_atom_displacements(structure_to_be_strained);
+    apply_atom_displacements(structure_to_be_strained);
     }
   //------------------------------------------------------------------------------------
   //geometry relaxation
