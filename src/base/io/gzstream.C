@@ -18,8 +18,8 @@
 // ============================================================================
 //
 // File          : gzstream.C
-// Revision      : $Revision: 1.2 $
-// Revision_date : $Date: 2002/05/14 14:51:08 $
+// Revision      : $Revision: 1.7 $
+// Revision_date : $Date: 2003/01/08 14:41:27 $
 // Author(s)     : Deepak Bandyopadhyay, Lutz Kettner
 // 
 // Standard streambuf implementation following Nicolai Josuttis, "The 
@@ -28,7 +28,7 @@
 
 #include <gzstream.h>
 #include <iostream>
-#include <cstring>  // for memcpy
+#include <string.h>  // for memcpy
 
 #ifdef GZSTREAM_NAMESPACE
 namespace GZSTREAM_NAMESPACE {
@@ -104,11 +104,10 @@ int gzstreambuf::flush_buffer() {
     // Separate the writing of the buffer from overflow() and
     // sync() operation.
     int w = pptr() - pbase();
-    if ( gzwrite( file, pbase(), w)) {
-        setp( pbase(), epptr() - 1);
-        return w;
-    }
-    return EOF;
+    if ( gzwrite( file, pbase(), w) != w)
+        return EOF;
+    pbump( -w);
+    return w;
 }
 
 int gzstreambuf::overflow( int c) { // used for output buffer only
@@ -149,13 +148,13 @@ gzstreambase::~gzstreambase() {
 
 void gzstreambase::open( const char* name, int open_mode) {
     if ( ! buf.open( name, open_mode))
-        clear( rdstate() & std::ios::badbit);
+        clear( rdstate() | std::ios::badbit);
 }
 
 void gzstreambase::close() {
     if ( buf.is_open())
         if ( ! buf.close())
-            clear( rdstate() & std::ios::badbit);
+            clear( rdstate() | std::ios::badbit);
 }
 
 #ifdef GZSTREAM_NAMESPACE

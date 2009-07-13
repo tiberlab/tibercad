@@ -686,6 +686,14 @@ DriftDiffusion::do_solve(void)
   {
     solve_equilibrium();
 
+    bool save = get_option("save_state", false);
+    if (save)
+    {
+      string file = get_control().get_output_dir() + "/" +
+      get_name() + "_equilibrium.tsv";
+      save_data(file);
+    }
+
     // if we would repeat the equilibrium simulation, we can stop now
     if (equilibrium)
       return;
@@ -1233,6 +1241,7 @@ DriftDiffusion::do_init(void)
   if (filename != "")
   {
     compute_scaling(get_options().scaling_type);
+    Messages::info("Loading state from " + filename);
     load_data(filename);
     equilibrium_done() = true;
   }
@@ -5505,7 +5514,7 @@ DriftDiffusion::save_data(const string& file)
 
   const NumericVector<Number>& solution = get_solution_vector();
 
-  gz::ogzstream of(file.c_str());
+  ogzstream of(file.c_str());
   //ofstream of(file.c_str(), ios_base::out | ios_base::binary);
   //filtering_streambuf<output> out;
   //out.push(gzip_compressor());
@@ -5559,7 +5568,7 @@ DriftDiffusion::save_data(const string& file)
     unsigned int dof_ep = node.dof_number(sys_num, ep_var, 0);
 
     of << solution(dof_u) << " " << solution(dof_en) << " "
-      << solution(dof_ep) << endl;
+      << solution(dof_ep) << endl << flush;
   }
 
   of << "</data>" << endl;
@@ -5580,7 +5589,7 @@ DriftDiffusion::load_data(const string& file)
   NumericVector<Number>& solution = get_solution_vector();
 
   //ifstream is(file.c_str());
-  gz::igzstream is(file.c_str());
+  igzstream is(file.c_str());
   if (!is.good()) throw InitFailedException("Bad datafile");
 
   string keyword("<contacts>");
