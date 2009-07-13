@@ -86,7 +86,7 @@ class ElectricalContact : public BoundaryProperties
 
 
     //! Get the type of boundary condition for \c variable
-    BCType get_type(DriftDiffusionDefs::Variable variable) const;
+    BCType get_type(DriftDiffusionDefs::DDVariable variable) const;
 
     //! Get the normal derivative for \c variable
     /*!
@@ -103,18 +103,18 @@ class ElectricalContact : public BoundaryProperties
      * \param[out] a the coefficient a
      * \param[out] c the coefficient c
      */
-    virtual void get_normal_derivative(DriftDiffusionDefs::Variable variable,
+    virtual void get_normal_derivative(DriftDiffusionDefs::DDVariable variable,
         double& a, double& c);
 
 
     //! Get the derivatives of the parameters for the normal derivative
     virtual void get_derivatives_of_normal_derivative(
-        DriftDiffusionDefs::Variable variable,
+        DriftDiffusionDefs::DDVariable variable,
         std::vector<double>& da, std::vector<double>& dc);
 
 
     //! Get the boundary value for \c variable
-    virtual double get_boundary_value(DriftDiffusionDefs::Variable variable);
+    virtual double get_boundary_value(DriftDiffusionDefs::DDVariable variable);
 
     //! Set a BC to homogeneous von Neumann type
     /*!
@@ -124,7 +124,7 @@ class ElectricalContact : public BoundaryProperties
      * electro-chemical potentials in small devices, or to change to zero
      * electric field BC
      */
-    void set_zero_derivative_bc(DriftDiffusionDefs::Variable variable);
+    void set_zero_derivative_bc(DriftDiffusionDefs::DDVariable variable);
 
 
     //! Tells if this is a real current carrying contact
@@ -149,7 +149,7 @@ class ElectricalContact : public BoundaryProperties
     ElectricalContact(void);
 
     //! Set the boundary condition type for \c variable
-    void set_type(DriftDiffusionDefs::Variable variable,
+    void set_type(DriftDiffusionDefs::DDVariable variable,
         BCType type);
 
     //! Get a reference to the Drift-Diffusion properties
@@ -340,7 +340,7 @@ ElectricalContact::get_reference_material(void)
 
 inline
 ElectricalContact::BCType
-ElectricalContact::get_type(DriftDiffusionDefs::Variable variable) const
+ElectricalContact::get_type(DriftDiffusionDefs::DDVariable variable) const
 {
   BCType type;
 
@@ -363,7 +363,7 @@ ElectricalContact::get_type(DriftDiffusionDefs::Variable variable) const
 
 inline
 void
-ElectricalContact::set_type(DriftDiffusionDefs::Variable variable, BCType type)
+ElectricalContact::set_type(DriftDiffusionDefs::DDVariable variable, BCType type)
 {
   switch (variable)
   {
@@ -381,7 +381,7 @@ ElectricalContact::set_type(DriftDiffusionDefs::Variable variable, BCType type)
 
 inline
 void
-ElectricalContact::get_normal_derivative(DriftDiffusionDefs::Variable variable,
+ElectricalContact::get_normal_derivative(DriftDiffusionDefs::DDVariable variable,
         double& a, double& c)
 {
   ignore_unused_variable(variable);
@@ -391,7 +391,7 @@ ElectricalContact::get_normal_derivative(DriftDiffusionDefs::Variable variable,
 
 inline
 double
-ElectricalContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
+ElectricalContact::get_boundary_value(DriftDiffusionDefs::DDVariable variable)
 {
   ignore_unused_variable(variable);
   return 0.0;
@@ -399,7 +399,7 @@ ElectricalContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
 
 inline
 void
-ElectricalContact::set_zero_derivative_bc(DriftDiffusionDefs::Variable variable)
+ElectricalContact::set_zero_derivative_bc(DriftDiffusionDefs::DDVariable variable)
 {
   set_type(variable, ElectricalContact::NEUMANN);
 }
@@ -410,7 +410,7 @@ ElectricalContact::set_zero_derivative_bc(DriftDiffusionDefs::Variable variable)
 inline
 void
 ElectricalContact::get_derivatives_of_normal_derivative(
-    DriftDiffusionDefs::Variable variable,
+    DriftDiffusionDefs::DDVariable variable,
     std::vector<double>& da, std::vector<double>& dc)
 {
   da = std::vector<double>(3, 0.0);

@@ -16,9 +16,9 @@ class SchottkyContact : public ElectricalContact
 
     //! Create a schottky contact
     static SchottkyContact* create(void);
-    
+
     //! \copydoc ElectricalContact::get_boundary_value()
-    virtual double get_boundary_value(DriftDiffusionDefs::Variable variable);
+    virtual double get_boundary_value(DriftDiffusionDefs::DDVariable variable);
 
 
   protected:
@@ -44,7 +44,7 @@ class SchottkyContact : public ElectricalContact
 
 //
 // inline
-// 
+//
 
 
 inline

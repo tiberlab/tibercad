@@ -51,7 +51,7 @@ SchottkyContact::do_init(void)
 
 
 double
-SchottkyContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
+SchottkyContact::get_boundary_value(DriftDiffusionDefs::DDVariable variable)
 {
   double val = 0.0;
   switch (variable)
@@ -70,7 +70,7 @@ SchottkyContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
     case DriftDiffusionDefs::FERMIH:
       break;
   }
-  
+
   return val;
 }
 

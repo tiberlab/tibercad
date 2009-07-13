@@ -789,6 +789,10 @@ class SimulationInterface : public TiberModelObject
       throw (ModelErrorException);
 
 
+    //! \c true if the equilibrium for this simulation has been calculated
+    bool& equilibrium_done(void);
+
+
 
   private:
 
@@ -1022,6 +1026,15 @@ SimulationInterface::is_solved(void) const
 inline
 bool
 SimulationInterface::equilibrium_done(void) const
+{
+  return _equilibrium_is_solved;
+}
+
+
+
+inline
+bool&
+SimulationInterface::equilibrium_done(void)
 {
   return _equilibrium_is_solved;
 }

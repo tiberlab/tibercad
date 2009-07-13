@@ -26,7 +26,7 @@ LeakageCurrent::do_init(void)
 
 
 void
-LeakageCurrent::get_normal_derivative(DriftDiffusionDefs::Variable variable,
+LeakageCurrent::get_normal_derivative(DriftDiffusionDefs::DDVariable variable,
         double& a, double& c)
 {
   a = 0.0;

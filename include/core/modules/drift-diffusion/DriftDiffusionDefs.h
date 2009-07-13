@@ -40,7 +40,7 @@ namespace DriftDiffusionDefs
   };
 
   //! The variables used in Drift-Diffusion
-  enum Variable
+  enum DDVariable
   {
     POTENTIAL = 0, //< electrical potential
     FERMIE    = 1, //< electron electro-chemical potential

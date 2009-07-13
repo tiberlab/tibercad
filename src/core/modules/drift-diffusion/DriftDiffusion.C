@@ -3,6 +3,7 @@
 // module includes
 #include "DriftDiffusion.h"
 #include "SimulationEnvironment.h"
+#include "Control.h"
 #include "Scaling.h"
 #include "Material.h"
 #include "Boundary.h"
@@ -13,6 +14,7 @@
 #include "MobilityModelInterface.h"
 #include "TiberNonlinearSystem.h"
 #include "SolveFailedException.h"
+#include "Variable.h"
 
 
 // libmesh includes
@@ -33,7 +35,7 @@
 #include "Messages.h"
 
 // C++ includes
-
+#include <fstream>
 
 //
 // Module interface
@@ -721,6 +723,7 @@ DriftDiffusion::do_solve(void)
   if (do_local_scaling_)
     build_local_scaling();
 
+    save_data("test.tsv");
 
   //set_dirichlet_bc();
 
@@ -821,6 +824,14 @@ DriftDiffusion::do_solve(void)
       os << iem * it->first->get_area_factor();
     }
     Messages::info(os.str());
+  }
+
+  bool save = get_option("save_state", false);
+  if (save)
+  {
+    string file = get_control().get_output_dir() + "/" +
+      get_name() + get_control().get_filename_suffix() + ".tsv";
+    save_data(file);
   }
 }
 
@@ -1213,6 +1224,14 @@ DriftDiffusion::do_init(void)
   }
 
   get_environment().update_boundary_element_map(real_contacts);
+
+  string filename = get_option("load_state", "");
+  if (filename != "")
+  {
+    compute_scaling(get_options().scaling_type);
+    load_data(filename);
+    equilibrium_done() = true;
+  }
 }
 
 
@@ -5466,4 +5485,204 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 }
 
 
+
+void
+DriftDiffusion::save_data(const string& file)
+{
+  const Mesh& mesh = get_mesh();
+  EquationSystems& eq_sys = get_equation_systems();
+  TiberNonlinearSystem& system = static_cast<TiberNonlinearSystem&>(
+      eq_sys.get_system(get_equation_system_name()));
+
+  unsigned int sys_num = system.number();
+
+  const NumericVector<Number>& solution = get_solution_vector();
+
+  ofstream of(file.c_str());
+
+  // write contact voltages
+  of << "<contacts>" << endl;
+
+  ContactData sim_voltages(_boundary_currents);
+  ContactData::iterator ctit(sim_voltages.begin());
+  const ContactData::iterator ctend(sim_voltages.end());
+  for ( ; ctit != ctend; ++ctit)
+  {
+    const Boundary* bd = ctit->first;
+    // It's save to static_cast because we know there has to be an
+    // ElectricalContact object
+    ElectricalContact* cnt =
+      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
+    of << bd->get_name() << " " << cnt->get_simulation_voltage() << endl;
+  }
+
+  of << "</contacts>" << endl;
+
+
+  // write all variables
+  of << "<variables>" << endl;
+  Variable::iterator vit(Variable::begin());
+  const Variable::iterator vend(Variable::end());
+  for ( ; vit != vend; ++vit)
+  {
+    of << (*vit)->get_name() << " " << (*vit)->get_value_string() << endl;
+  }
+  of << "</variables>" << endl;
+
+  const DofMap& dof_map = system.get_dof_map();
+
+  // numeric ids corresponding to the variables
+  const unsigned int u_var = system.variable_number("potential");
+  const unsigned int en_var = system.variable_number("fermi_e");
+  const unsigned int ep_var = system.variable_number("fermi_h");
+
+  of << "<data>" << endl;
+
+  Mesh::const_node_iterator it(mesh.active_nodes_begin());
+  const Mesh::const_node_iterator end(mesh.active_nodes_end());
+  for ( ; it != end; ++it)
+  {
+    const Node& node = *(*it);
+    unsigned int dof_u  = node.dof_number(sys_num, u_var, 0);
+    unsigned int dof_en = node.dof_number(sys_num, en_var, 0);
+    unsigned int dof_ep = node.dof_number(sys_num, ep_var, 0);
+
+    of << solution(dof_u) << " " << solution(dof_en) << " "
+      << solution(dof_ep) << endl;
+  }
+
+  of << "</data>" << endl;
+}
+
+
+
+void
+DriftDiffusion::load_data(const string& file)
+{
+  const Mesh& mesh = get_mesh();
+  EquationSystems& eq_sys = get_equation_systems();
+  TiberNonlinearSystem& system = static_cast<TiberNonlinearSystem&>(
+      eq_sys.get_system(get_equation_system_name()));
+
+  unsigned int sys_num = system.number();
+
+  NumericVector<Number>& solution = get_solution_vector();
+
+  ifstream is(file.c_str());
+  if (!is.good()) throw InitFailedException("Bad datafile");
+
+  string keyword("<contacts>");
+  const streamsize bufsize = 256;
+  char buf[bufsize];
+
+  is.getline(buf, bufsize);
+  while (is.good() && (keyword.compare(buf) != 0))
+  {
+    is.getline(buf, bufsize);
+  }
+
+  if (!is.good()) throw InitFailedException("Bad datafile");
+
+  map<string, double> values;
+
+  keyword = "</contacts>";
+  is.getline(buf, bufsize);
+  while (is.good() && (keyword.compare(buf) != 0))
+  {
+    is.getline(buf, bufsize);
+    istringstream ss(buf);
+    string name;
+    double value;
+    ss >> name >> value;
+    values[name] = value;
+  }
+
+
+  ContactData sim_voltages(_boundary_currents);
+  ContactData::iterator ctit(sim_voltages.begin());
+  const ContactData::iterator ctend(sim_voltages.end());
+  for ( ; ctit != ctend; ++ctit)
+  {
+    const Boundary* bd = ctit->first;
+    // It's save to static_cast because we know there has to be an
+    // ElectricalContact object
+    ElectricalContact* cnt =
+      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
+
+    cnt->set_simulation_voltage(values[bd->get_name()]);
+    sim_voltages[bd] = cnt->get_simulation_voltage();
+  }
+
+  if (!is.good()) throw InitFailedException("Bad datafile");
+
+  keyword = "<variables>";
+  is.getline(buf, bufsize);
+  while (is.good() && (keyword.compare(buf) != 0))
+  {
+    is.getline(buf, bufsize);
+  }
+
+  if (!is.good()) throw InitFailedException("Bad datafile");
+
+  values.clear();
+
+  keyword = "</variables>";
+  is.getline(buf, bufsize);
+  while (is.good() && (keyword.compare(buf) != 0))
+  {
+    is.getline(buf, bufsize);
+    istringstream ss(buf);
+    string name;
+    double value;
+    ss >> name >> value;
+    values[name] = value;
+  }
+
+  map<string, double>::iterator vit(values.begin());
+  const map<string, double>::iterator vend(values.end());
+  for ( ; vit != vend; ++vit)
+  {
+    Variable::set_variable_value(vit->first, vit->second);
+  }
+
+  if (!is.good()) throw InitFailedException("Bad datafile");
+  values.clear();
+
+  keyword = "<data>";
+  is.getline(buf, bufsize);
+  while (is.good() && (keyword.compare(buf) != 0))
+  {
+    is.getline(buf, bufsize);
+  }
+
+  const DofMap& dof_map = system.get_dof_map();
+
+  // numeric ids corresponding to the variables
+  const unsigned int u_var = system.variable_number("potential");
+  const unsigned int en_var = system.variable_number("fermi_e");
+  const unsigned int ep_var = system.variable_number("fermi_h");
+
+  Mesh::const_node_iterator it(mesh.active_nodes_begin());
+  const Mesh::const_node_iterator end(mesh.active_nodes_end());
+  for ( ; it != end; ++it)
+  {
+    const Node& node = *(*it);
+    unsigned int dof_u  = node.dof_number(sys_num, u_var, 0);
+    unsigned int dof_en = node.dof_number(sys_num, en_var, 0);
+    unsigned int dof_ep = node.dof_number(sys_num, ep_var, 0);
+
+    if (!is.good()) throw InitFailedException("Bad datafile6");
+
+    is.getline(buf, bufsize);
+    istringstream ss(buf);
+
+    double u, en, ep;
+    ss >> u >> en >> ep;
+
+    solution.set(dof_u, u);
+    solution.set(dof_en, en);
+    solution.set(dof_ep, ep);
+  }
+
+}
 

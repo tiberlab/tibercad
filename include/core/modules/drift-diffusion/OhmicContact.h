@@ -16,15 +16,15 @@ class OhmicContact : public ElectricalContact
 
     //! Create an ohmic contact
     static OhmicContact* create(void);
-    
+
     //! \copydoc ElectricalContact::get_boundary_value()
-    virtual double get_boundary_value(DriftDiffusionDefs::Variable variable);
+    virtual double get_boundary_value(DriftDiffusionDefs::DDVariable variable);
 };
 
 
 //
 // inline
-// 
+//
 
 inline
 OhmicContact*
@@ -44,7 +44,7 @@ OhmicContact::OhmicContact(void)
 
 inline
 double
-OhmicContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
+OhmicContact::get_boundary_value(DriftDiffusionDefs::DDVariable variable)
 {
   double val = 0.0;
   switch (variable)
@@ -75,7 +75,7 @@ OhmicContact::get_boundary_value(DriftDiffusionDefs::Variable variable)
       break;
     */
   }
-  
+
   return val;
 }
 

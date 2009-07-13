@@ -6,6 +6,7 @@
 
 #include <map>
 #include <string>
+#include <iostream>
 
 class TiberModelObject;
 class InitializerBase;
@@ -33,7 +34,35 @@ class Variable
 {
 
 
+  private:
+
+    //! The type for the list of variables
+    typedef std::map<const std::string, Variable*> VariableMap;
+
+
   public:
+
+    //! An iterator type
+    class iterator
+    {
+      public:
+
+        iterator(const iterator& other) : _iter(other._iter) {};
+        iterator(const VariableMap::iterator& it) : _iter(it) {};
+
+        iterator& operator++(void) { ++_iter; };
+        iterator& operator--(void) { --_iter; };
+        iterator& operator=(const iterator& rhs) { _iter = rhs._iter; };
+        bool operator==(const iterator& rhs) { return _iter == rhs._iter; };
+        bool operator!=(const iterator& rhs) { return _iter != rhs._iter; };
+        Variable* operator*(void) { return _iter->second; };
+        Variable& operator->(void) { return *(_iter->second); };
+
+
+      private:
+
+        VariableMap::iterator _iter;
+    };
 
     //! Destructor
     virtual ~Variable(void) { };
@@ -49,6 +78,10 @@ class Variable
 
     //! Get the name of this variable
     const std::string& get_name(void) const;
+
+
+    //! Get the variable value as string
+    virtual std::string get_value_string(void) const = 0;
 
 
     //! Set the value of variable \c var
@@ -98,6 +131,13 @@ class Variable
     static void unregister(const TiberModelObject* ct);
 
 
+    //! Get an iterator to the first variable
+    static iterator begin(void);
+
+
+    //! Get the past the end iterator
+    static iterator end(void);
+
 
   protected:
 
@@ -111,9 +151,6 @@ class Variable
 
 
   private:
-
-    //! The type for the list of variables
-    typedef std::map<const std::string, Variable*> VariableMap;
 
 
     //! The variable name
@@ -137,6 +174,22 @@ const std::string&
 Variable::get_name(void) const
 {
   return _name;
+}
+
+
+inline
+Variable::iterator
+Variable::begin(void)
+{
+  return iterator(_variables.begin());
+}
+
+
+inline
+Variable::iterator
+Variable::end(void)
+{
+  return iterator(_variables.end());
 }
 
 

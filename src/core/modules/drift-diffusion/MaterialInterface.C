@@ -59,7 +59,7 @@ MaterialInterface::do_init(void)
 
 
 void
-MaterialInterface::get_normal_derivative(DriftDiffusionDefs::Variable variable,
+MaterialInterface::get_normal_derivative(DriftDiffusionDefs::DDVariable variable,
         double& a, double& c)
 {
   a = 0.0;
@@ -104,7 +104,7 @@ MaterialInterface::get_normal_derivative(DriftDiffusionDefs::Variable variable,
 
 void
 MaterialInterface::get_derivatives_of_normal_derivative(
-        DriftDiffusionDefs::Variable variable,
+        DriftDiffusionDefs::DDVariable variable,
         std::vector<double>& da, std::vector<double>& dc)
 {
   da = std::vector<double>(3, 0.0);

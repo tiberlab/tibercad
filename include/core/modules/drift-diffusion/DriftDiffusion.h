@@ -699,7 +699,8 @@ class DriftDiffusion : public SimulationInterface
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
 
-
+    void save_data(const std::string& file);
+    void load_data(const std::string& file);
 };
 
 

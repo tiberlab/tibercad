@@ -6,6 +6,8 @@
 #include "Variable.h"
 #include "InitializerBase.h"
 
+#include <sstream>
+
 
 //! The real variable class which is aware of the variable type
 /*!
@@ -39,6 +41,8 @@ class TypedVariable : public Variable
     void register_variable(T& variable, const TiberModelObject* ct,
         InitializerBase* initfun);
 
+    //! Get the value in string representation
+    virtual std::string get_value_string(void) const;
 
 
   protected:
@@ -110,5 +114,19 @@ TypedVariable<T>::do_unregister(const TiberModelObject* ct)
     }
   }
 }
+
+
+
+template <typename T>
+std::string
+TypedVariable<T>::get_value_string(void) const
+{
+  std::ostringstream os;
+  os << _value;
+
+  return os.str();
+}
+
+
 
 #endif /* _TYPEDVARIABLE_H_ */

@@ -19,7 +19,7 @@ class MaterialInterface : public ElectricalContact
 
     //! The constructor
     MaterialInterface(void);
-    
+
     //! The destructor
     ~MaterialInterface(void);
 
@@ -27,12 +27,12 @@ class MaterialInterface : public ElectricalContact
     static MaterialInterface* create(void);
 
     //! Get normal derivative
-    virtual void get_normal_derivative(DriftDiffusionDefs::Variable variable,
+    virtual void get_normal_derivative(DriftDiffusionDefs::DDVariable variable,
         double& a, double& c);
 
     //! Get derivatives of the normal derivative
     virtual void get_derivatives_of_normal_derivative(
-        DriftDiffusionDefs::Variable variable,
+        DriftDiffusionDefs::DDVariable variable,
         std::vector<double>& da, std::vector<double>& dc);
 
 
@@ -61,7 +61,7 @@ class MaterialInterface : public ElectricalContact
 
 //
 // inline members
-// 
+//
 
 inline
 MaterialInterface*

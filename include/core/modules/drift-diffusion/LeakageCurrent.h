@@ -22,7 +22,7 @@ class LeakageCurrent : public ElectricalContact
 
     //! The constructor
     LeakageCurrent(void);
-    
+
     //! The destructor
     ~LeakageCurrent(void) {};
 
@@ -30,7 +30,7 @@ class LeakageCurrent : public ElectricalContact
     static LeakageCurrent* create(void);
 
     //! Get normal derivative
-    virtual void get_normal_derivative(DriftDiffusionDefs::Variable variable,
+    virtual void get_normal_derivative(DriftDiffusionDefs::DDVariable variable,
         double& a, double& c);
 
 
@@ -53,7 +53,7 @@ class LeakageCurrent : public ElectricalContact
 
 //
 // inline members
-// 
+//
 
 inline
 LeakageCurrent*
