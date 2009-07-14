@@ -16,6 +16,7 @@
 #include <edge_edge2.h>
 
 
+#include "Messages.h"
 
 
 
@@ -1531,7 +1532,13 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
  
   number_of_converged_solutions = EigenSolver::number_of_converged_eigenvalues();
 
-  if (opt.log_output)  cerr << " Number of converged solutions  " << number_of_converged_solutions << "\n";
+  if (opt.log_output)
+  {
+    ostringstream os;
+    os << "Number of converged solutions: "
+      << number_of_converged_solutions;
+    Messages::info(os.str());
+  }
 
 
 
@@ -1549,7 +1556,12 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
     ev[ind].global_number = ind;
       
     if (opt.log_output) 
-      cerr << ev[ind].global_number  << "    " << ev[ind].energy << "\n";
+    {
+      ostringstream os;
+      os << ev[ind].global_number  << "    " << ev[ind].energy;
+      Messages::info(os.str());
+    }
+
      
     
   }

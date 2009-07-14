@@ -81,19 +81,24 @@ Messages::error(const std::string& msg)
 
 
 void
-Messages::info(const std::string& msg)
+Messages::info(const std::string& msg, bool newline)
 {
   std::vector<std::string> lines;
   Utils::tokenize(msg, lines, "\n");
 
   TeeStream ts(std::cout, _log);
 
-  for (size_t l = 0; l < lines.size(); l++)
+  size_t nl = lines.size();
+
+  for (size_t l = 0; l < nl; l++)
   {
     for (int i = 0; i < _indent * _indent_width; i++)
       ts << " ";
-    ts << lines[l] << endl << std::flush;
+    ts << lines[l];
+    if (newline || (l < nl - 1)) ts << endl;
+    ts << std::flush;
   }
+
 }
 
 

@@ -51,7 +51,7 @@ class Messages
 
 
     //! Print an info
-    static void info(const std::string& msg);
+    static void info(const std::string& msg, bool newline = true);
 
 
     //! Add empty line

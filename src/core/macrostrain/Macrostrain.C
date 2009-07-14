@@ -17,6 +17,7 @@
 //Needed for straining atomistic structure
 #include "AtomisticStructure.h"
 
+#include "Messages.h"
 
 
 
@@ -576,7 +577,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
   if (verbose > 0)
   {
-    cout << "Simulation " << get_name() << " is starting the matrix assembly \n" << flush ;
+    Messages::info("Starting the matrix assembly");
   }
 
 
@@ -1356,8 +1357,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
    if (verbose > 0)
    {
-     cout << "Simulation " << get_name() << " has finished the matrix assembly << \n" << flush;
-
+     Messages::info("Matrix assembly done");
    }
 
 /*
@@ -3649,7 +3649,6 @@ void Macrostrain::read_atom_structure(const std::string filename)
   if (!atoms_file.good())
     {
       cerr << "Error: file with atom coordinates  "<< filename << "   can not be opened";
-      error();
     }
 
   //-----------------------------------------------------------
@@ -3826,7 +3825,6 @@ void  Macrostrain::write_atom_potential()
     {
       cerr << "Error: file with atom potentials can not be opened\n";
       cerr <<  atom_potential_filename.c_str() << "\n";
-      error();
     }
 
 
@@ -3896,7 +3894,6 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
   {
     cerr << "Error: file with atom displacements can not be opened\n";
     cerr << filename.c_str() << "\n";
-    error();
   }
 
 
@@ -3914,7 +3911,6 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
        {
 	 cerr << "Error: file with atom positions can not be opened\n";
 	 cerr << atom_structure_filename.c_str() << "\n";
-	 error();
        }
 
    }
