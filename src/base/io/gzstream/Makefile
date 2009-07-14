@@ -1,8 +1,7 @@
 # $Id$
 
-topdir := ../../..
+topdir := ../../../..
 
-subdirs := Read_ISE_grid gzstream
 
 include $(topdir)/Make.common
 
