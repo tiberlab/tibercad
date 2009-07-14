@@ -50,10 +50,8 @@ TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 CXXFLAGS := $(shell export METHOD=$(METHOD) && $(libmesh_config) --cxxflags)
 INCLUDE  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --include)
 LDFLAGS  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --ldflags)
-FCFLAGS   :=
-
-# define subversion revision for C++
-#CXXFLAGS += "-DSVNREVISION="$(SVNREVISION)
+# always use -fPIC, also if libmesh was compiled without
+FCFLAGS  := -fPIC
 
 
 LDFLAGS += -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir) -L$(libdir)
