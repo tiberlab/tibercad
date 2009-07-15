@@ -735,7 +735,6 @@ DriftDiffusion::do_solve(void)
   if (do_local_scaling_)
     build_local_scaling();
 
-    save_data("test.tsv");
 
   //set_dirichlet_bc();
 
@@ -1241,9 +1240,8 @@ DriftDiffusion::do_init(void)
   if (filename != "")
   {
     compute_scaling(get_options().scaling_type);
-    Messages::info("Loading state from " + filename);
+    Messages::info(get_name() + ": Loading state from " + filename);
     load_data(filename);
-    equilibrium_done() = true;
   }
 }
 
@@ -5705,5 +5703,7 @@ DriftDiffusion::load_data(const string& file)
     solution.set(dof_ep, ep);
   }
 
+  equilibrium_done(true);
+  is_solved(true);
 }
 

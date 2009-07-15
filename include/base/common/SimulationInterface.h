@@ -516,6 +516,14 @@ class SimulationInterface : public TiberModelObject
     virtual void do_solve(void) = 0;
 
 
+    //! Set the state of the simulation
+    /*!
+     * Can be used to set the state to \c solved after loading a result
+     * from file.
+     */
+    void is_solved(bool flag);
+
+
     //! Do a plot
     /*!
      * This method creates files with the results of the simulation.
@@ -789,8 +797,8 @@ class SimulationInterface : public TiberModelObject
       throw (ModelErrorException);
 
 
-    //! \c true if the equilibrium for this simulation has been calculated
-    bool& equilibrium_done(void);
+    //! Set or unset the \c equilibrium_done flag
+    void equilibrium_done(bool flag);
 
 
 
@@ -1024,6 +1032,15 @@ SimulationInterface::is_solved(void) const
 
 
 inline
+void
+SimulationInterface::is_solved(bool flag)
+{
+  _is_solved = flag;
+}
+
+
+
+inline
 bool
 SimulationInterface::equilibrium_done(void) const
 {
@@ -1033,10 +1050,10 @@ SimulationInterface::equilibrium_done(void) const
 
 
 inline
-bool&
-SimulationInterface::equilibrium_done(void)
+void
+SimulationInterface::equilibrium_done(bool flag)
 {
-  return _equilibrium_is_solved;
+  _equilibrium_is_solved = flag;
 }
 
 

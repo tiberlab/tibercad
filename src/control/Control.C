@@ -584,7 +584,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     //
     // now we have to create the models
     //
-    m.info("Creating physical models");
+    m.info("Creating physical models... ", false);
 
     // what main model should be used?
     ModelOptions physopts;
@@ -674,13 +674,13 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       }
     }
 
-    m.info("Creation of physical models completed.");
+    m.info("done");
 
 
     //
     // and now... the boundary conditions
     //
-    m.info("Setup of boundary models ...");
+    m.info("Setup of boundary models...", false);
 
     map<ID, RegionStructure>& bc_map = model_str->get_model_BC_map();
     map<ID, RegionStructure>::iterator bdit(bc_map.begin());
@@ -735,7 +735,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         bd->add_boundary_properties(bdprop, sim->get_id());
 
     }
-    m.info("Setup of boundary models done.");
+    m.info("done");
 
     // prepare some of the environments internals (lists of elements etc.)
     env->prepare();
