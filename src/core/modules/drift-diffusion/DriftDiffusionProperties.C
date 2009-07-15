@@ -590,6 +590,9 @@ DriftDiffusionProperties::calculate_densities(void)
       double fac = max(0.1, min(10.0, dens / old_dens));
       _pd->electron_density_derivative *= _pd->electron_density / old_dens;
       _pd->electron_density *= fac;
+      //double qdens = 0.0 * _pd->electron_density + 1.0 * old_dens;
+      //_pd->electron_density_derivative *= qdens / old_dens;
+      //_pd->electron_density = qdens / old_dens * dens;
     }
     _electrons.use_quantum_density(true);
     /* simpler but slower convergence

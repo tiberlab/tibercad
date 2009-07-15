@@ -636,6 +636,15 @@ void
 DriftDiffusion::do_solve(void)
 {
 
+  string filename = get_option("load_state", "");
+  if (filename != "")
+  {
+    compute_scaling(get_my_options().scaling_type);
+    Messages::info(get_name() + ": Loading state from " + filename);
+    load_data(filename);
+    get_options().set_option("load_state", "");
+  }
+
   // rebuild the system if needed
   //rebuild_equation_system();
 
@@ -705,7 +714,7 @@ DriftDiffusion::do_solve(void)
     es.get_system<TiberNonlinearSystem>(get_equation_system_name());
   system.get_vector("old_sol") = get_solution_vector();
 
-  int coupling = get_options().coupling;
+  int coupling = get_my_options().coupling;
 
 
   // TODO
@@ -714,10 +723,10 @@ DriftDiffusion::do_solve(void)
   // TODO does the following make sense?
 /*
   if (equilibrium)
-    get_options().coupling = POISSON;
+    get_my_options().coupling = POISSON;
   else if (same_potentials)
   {
-    get_options().coupling = POISSON;
+    get_my_options().coupling = POISSON;
     try
     {
       do_newton();
@@ -728,7 +737,7 @@ DriftDiffusion::do_solve(void)
         string(e.what()) + ")";
       throw SolveFailedException(msg);
     }
-    get_options().coupling = coupling;
+    get_my_options().coupling = coupling;
   }
 */
 
@@ -760,7 +769,7 @@ DriftDiffusion::do_solve(void)
     }
   }
 
-  get_options().coupling = coupling;
+  get_my_options().coupling = coupling;
 
   // calculate the currents to print them on screen
   calculate_currents();
@@ -864,7 +873,7 @@ DriftDiffusion::do_equilibrium(void)
 
 
   // first we have to compute the scaling
-  compute_scaling(get_options().scaling_type);
+  compute_scaling(get_my_options().scaling_type);
 
 
   TiberNonlinearSystem& system =
@@ -878,8 +887,8 @@ DriftDiffusion::do_equilibrium(void)
   bool elonly = _electronsonly;
   _electronsonly = false;
 
-  int coupling = get_options().coupling;
-  get_options().coupling = POISSON;
+  int coupling = get_my_options().coupling;
+  get_my_options().coupling = POISSON;
 
   // backup the simulation voltages and set all to zero
   ContactData sim_voltages(_boundary_currents);
@@ -903,7 +912,7 @@ DriftDiffusion::do_equilibrium(void)
   if (do_local_scaling_)
     build_local_scaling();
 
-  const ModelOptions& opts = SimulationInterface::get_options();
+  const ModelOptions& opts = get_options();
   if (opts.find_option("el_qfermi_level"))
     set_electron_fermi_level(opts.get_option("el_qfermi_level", 0.0));
 
@@ -941,7 +950,7 @@ DriftDiffusion::do_equilibrium(void)
   _electronsonly = elonly;
 
   // reset the coupling
-  get_options().coupling = coupling;
+  get_my_options().coupling = coupling;
 
   if (max_it != -1)
     solveropts.set_option("nonlin_max_it", max_it);
@@ -1037,7 +1046,7 @@ DriftDiffusion::do_print_info(void)
   parse_const_options();
   parse_options();
 
-  Options& myopts = get_options();
+  Options& myopts = get_my_options();
 
   Messages::newline();
 
@@ -1067,8 +1076,8 @@ void
 DriftDiffusion::parse_const_options(void)
 {
 
-  const ModelOptions& opts = SimulationInterface::get_options();
-  Options& myopts = get_options();
+  const ModelOptions& opts = get_options();
+  Options& myopts = get_my_options();
 
   string method =  opts.get_option("current_integration_method", "");
   if (method == "surfint")
@@ -1106,8 +1115,8 @@ DriftDiffusion::parse_options(void)
   perf_log.start_event("parse");
 
 
-  const ModelOptions& opts = SimulationInterface::get_options();
-  Options& myopts = get_options();
+  const ModelOptions& opts = get_options();
+  Options& myopts = get_my_options();
 
   myopts.integration_order = static_cast<libMeshEnums::Order>(
       opts.get_option("integration_order", 5));
@@ -1236,13 +1245,7 @@ DriftDiffusion::do_init(void)
 
   get_environment().update_boundary_element_map(real_contacts);
 
-  string filename = get_option("load_state", "");
-  if (filename != "")
-  {
-    compute_scaling(get_options().scaling_type);
-    Messages::info(get_name() + ": Loading state from " + filename);
-    load_data(filename);
-  }
+
 }
 
 
@@ -2147,7 +2150,7 @@ DriftDiffusion::calculate_currents_rstf(void)
 
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
   AutoPtr<QBase> qrule(QBase::build(
-        get_options().quadrature_type, dim, get_options().integration_order));
+        get_my_options().quadrature_type, dim, get_my_options().integration_order));
   fe->attach_quadrature_rule(qrule.get());
 
 
@@ -2316,10 +2319,10 @@ DriftDiffusion::calculate_field_emission(void)
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
   else
-    integration_order = get_options().integration_order;
+    integration_order = get_my_options().integration_order;
 
   AutoPtr<QBase> qface(QBase::build(
-        get_options().quadrature_type, dim - 1, integration_order));
+        get_my_options().quadrature_type, dim - 1, integration_order));
   fe_face->attach_quadrature_rule(qface.get());
 
 
@@ -2468,10 +2471,10 @@ DriftDiffusion::calculate_currents_surfint(void)
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
   else
-    integration_order = get_options().integration_order;
+    integration_order = get_my_options().integration_order;
 
   AutoPtr<QBase> qface(QBase::build(
-        get_options().quadrature_type, dim - 1, integration_order));
+        get_my_options().quadrature_type, dim - 1, integration_order));
   fe_face->attach_quadrature_rule(qface.get());
 
 
@@ -2693,7 +2696,7 @@ DriftDiffusion::build_local_scaling(void)
 
   const unsigned int dim = mesh.mesh_dimension();
 
-  const Options& params = get_options();
+  const Options& params = get_my_options();
 
   // the scaling parameters to scale back the result
   const Scaling& scaling = get_scaling();
@@ -4052,7 +4055,7 @@ DriftDiffusion::build_integrated_quantities(const set<string>& names,
 void
 DriftDiffusion::calculate_currents(void)
 {
-  if (get_options().current_calculation == RSTF)
+  if (get_my_options().current_calculation == RSTF)
     calculate_currents_rstf();
   else
     calculate_currents_surfint();
@@ -4287,8 +4290,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   const Device& device = *_device;
   const SimulationEnvironment& environment = get_environment();
 
-  const Options& params = get_options();
-  Options& options = get_options();
+  const Options& params = get_my_options();
+  Options& options = get_my_options();
 
 
   const NumericVector<Number>& oldx = system.get_vector("old_sol");
@@ -5690,7 +5693,7 @@ DriftDiffusion::load_data(const string& file)
     unsigned int dof_en = node.dof_number(sys_num, en_var, 0);
     unsigned int dof_ep = node.dof_number(sys_num, ep_var, 0);
 
-    if (!is.good()) throw InitFailedException("Bad datafile6");
+    if (!is.good()) throw InitFailedException("Bad datafile");
 
     is.getline(buf, bufsize);
     istringstream ss(buf);

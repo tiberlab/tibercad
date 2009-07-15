@@ -300,7 +300,7 @@ class DriftDiffusion : public SimulationInterface
     /**
      * @returns a reference to the simulation options
      */
-    Options& get_options(void);
+    Options& get_my_options(void);
 
 
     /**
@@ -318,7 +318,7 @@ class DriftDiffusion : public SimulationInterface
     /**
      * Set new simulation options.
      */
-    void set_options(const Options& options);
+    void set_my_options(const Options& options);
 
 
     //! Get the mesh
@@ -718,14 +718,14 @@ DriftDiffusion::create(void)
 
 inline
 DriftDiffusion::Options&
-DriftDiffusion::get_options(void)
+DriftDiffusion::get_my_options(void)
 {
   return _options;
 }
 
 inline
 void
-DriftDiffusion::set_options(const DriftDiffusion::Options& options)
+DriftDiffusion::set_my_options(const DriftDiffusion::Options& options)
 {
   _options = options;
 }

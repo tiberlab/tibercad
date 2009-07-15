@@ -25,7 +25,7 @@ class ModelOptions
 
     //! typedef for options iterator
     typedef OptionsMap::const_iterator const_option_iterator;
-    
+
     //! typedef for the map of submodels
     typedef std::multimap<const std::string, ModelOptions> SubmodelMap;
 
@@ -43,19 +43,19 @@ class ModelOptions
     //! The copy constructor
     ModelOptions(const ModelOptions& other);
 
-    
+
     //! Constructor which takes a map as argument
     ModelOptions(std::map<const std::string, std::string> options);
 
-    
+
     //! The destructor
     ~ModelOptions(void) {};
 
-    
+
     //! Check if it is empty
     bool is_empty(void) const;
 
-    
+
     //! Get the value of an option
     /*!
      * \param name the name of the option
@@ -66,7 +66,7 @@ class ModelOptions
     template <typename T>
     T get_option(const std::string& name, T default_value) const;
 
-    
+
     //! Get an option which is a vector of values (of the same type)
     /*!
      * \param name the name of the option
@@ -77,7 +77,7 @@ class ModelOptions
     template <typename T>
     void get_option(const std::string& name, std::vector<T>& vec) const;
 
-    
+
     //! Get an option which is a vector of vectors (with the same type)
     /*!
      * \param name the name of the option
@@ -93,11 +93,11 @@ class ModelOptions
     void get_option(const std::string& name,
         std::vector<std::vector<T> >& vec) const;
 
-    
+
     //! Check if an option is present
     bool find_option(const std::string& name) const;
 
-    
+
     //! Set an option
     /*!
      * \param name the name of the option
@@ -107,6 +107,10 @@ class ModelOptions
     void set_option(const std::string& name, const T& value);
 
 
+    //! Set an option providing a const char*
+    void set_option(const std::string& name, const char* value);
+
+
     //! Set an vector option
     /*!
      * \param name the name of the option
@@ -114,8 +118,8 @@ class ModelOptions
      */
     template <typename T>
     void set_option(const std::string& name, const std::vector<T>& value);
-    
-    
+
+
     //! Set or get an option in string representation
     std::string& operator[](const std::string& name);
 
@@ -123,20 +127,20 @@ class ModelOptions
     //! Delete an option
     void delete_option(const std::string& name);
 
-    
+
     //! Clear all options
     void clear(void);
 
-    
+
     //! operator to add options
     ModelOptions& operator+=(const ModelOptions& rhs);
 
-    
+
     //! operator to add options
     ModelOptions& operator+=(const std::map<const std::string,
         std::string>& rhs);
 
-    
+
     //! Print all options for debugging
     void print_all(void) const;
 
@@ -195,15 +199,15 @@ class ModelOptions
     //! Get the iterator for the first submodel
     submodel_iterator submodels_begin(void);
 
-    
+
     //! Get the past-the-end iterator for the submodels
     submodel_iterator submodels_end(void);
 
-    
+
     //! Get the const iterator for the first submodel
     const_submodel_iterator submodels_begin(void) const;
 
-    
+
     //! Get the past-the-end iterator for the submodels
     const_submodel_iterator submodels_end(void) const;
 
@@ -217,7 +221,7 @@ class ModelOptions
 
 
   private:
-    
+
     //! The map holding all options
     OptionsMap _options;
 
@@ -259,11 +263,19 @@ ModelOptions::find_option(const std::string& name) const
   bool res = true;
 
   OptionsMap::const_iterator it(_options.find(name));
-  
+
   if (it == _options.end())
     res = false;
 
   return res;
+}
+
+
+inline
+void
+ModelOptions::set_option(const std::string& name, const char* value)
+{
+  _options[name] = value;
 }
 
 
@@ -399,11 +411,11 @@ ModelOptions::options_begin(void) const
 
 
 inline
-ModelOptions::const_option_iterator 
+ModelOptions::const_option_iterator
 ModelOptions::options_end(void) const
 {
   return _options.end();
 }
 
-    
+
 #endif // _MODELOPTIONS_H_
