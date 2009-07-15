@@ -1343,22 +1343,17 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
    // system.rhs->print();
 
+   if (verbose > 0) Messages::info("Matrix assembly done");
 
    if (verbose > 4)
    {
-     std:: cout<< "matrix is done \n";
-
-     std:: cout << "Active dofs number   " << system.n_active_dofs()   	<< "\n";
-
-     std:: cout << "Total dofs number   " << system.n_dofs()   	<< "\n";
-
-     std:: cout << "Constraint dofs number " <<  system.n_constrained_dofs()   	<< "\n";
+     ostringstream os;
+     os << "Active DOFs      " << system.n_active_dofs() << Messages::endl;
+     os << "Total DOFs       " << system.n_dofs() << Messages::endl;
+     os << "Constrained DOFs " <<  system.n_constrained_dofs();
+     Messages::info(os.str());
    }
 
-   if (verbose > 0)
-   {
-     Messages::info("Matrix assembly done");
-   }
 
 /*
    {
@@ -1612,7 +1607,7 @@ void Macrostrain::do_solve()
 
       if (apply_antirotation) apply_antirotation_constraints();
 
-      mesh.print_info();
+      //mesh.print_info();
 
       my_system->solution->zero();
 
@@ -1652,13 +1647,13 @@ void Macrostrain::do_solve()
       if (verbose > 1)
         {
 
-          std::cout << "\n" ;
-          std::cout << "Final Mesh after  " <<  max_r_steps <<" refinements  steps   " <<  "\n" ;
-          mesh.print_info();
-          std::cout << flush;
+          //std::cout << "\n" ;
+          //std::cout << "Final Mesh after  " <<  max_r_steps <<" refinements  steps   " <<  "\n" ;
+          //mesh.print_info();
+          //std::cout << flush;
         }
 
-      if (verbose > 0) std::cerr << "Grid refinement is done \n" << flush;
+      if (verbose > 0) Messages::info("Grid refinement finished");
 
     }
 
@@ -1719,14 +1714,14 @@ void Macrostrain::do_solve()
       if (verbose > 1)  cout << "\n Geometry relaxation of the mesh... (Step" << geom_it << ")\n" << flush;
 
 
-      if (verbose > 2) cout << "Update nodes..." << flush ;
+      if (verbose > 2) Messages::info("Update nodes... ", false);
 
       update_u_node();
 
-      if (verbose > 2) cout << "done\n" << flush ;
+      if (verbose > 2) Messages::info("done");
 
 
-      equation_systems->print_info();
+      //equation_systems->print_info();
       //------move nodes------------------------------------------
 
       update_eps0_list();
@@ -1746,7 +1741,7 @@ void Macrostrain::do_solve()
 
       //apply_periodic_bc();
 
-      equation_systems->print_info();
+      //equation_systems->print_info();
 
 
       if (verbose > 2) cout << "Will solve...   " << flush;
@@ -2871,7 +2866,7 @@ void Macrostrain::move_nodes()
 
   //--------------------------------------------------------------------
 
-  std :: cout << "Nodes are moved. \n";
+  //std :: cout << "Nodes are moved. \n";
 
 }
 //-------------------------------------------------------------------------------------//
