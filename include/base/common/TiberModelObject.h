@@ -178,6 +178,12 @@ class TiberModelObject
         bool override = true) const;
 
 
+    //! Get a string option with default given as const char
+    std::string get_option(const std::string& name,
+        const char* default_value,
+        bool override = true) const;
+
+
     //! To override a parameter string from a strange location
     /*!
      * Normally parameters/options are read only from the local

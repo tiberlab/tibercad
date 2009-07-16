@@ -63,6 +63,18 @@ TiberModelObject::get_option(const std::string& name,
 }
 
 
+string
+TiberModelObject::get_option(const std::string& name,
+    const char* default_value, bool override) const
+{
+  string val(_options.get_option(name, default_value));
+  if (override) override_parameter_string(name, val);
+
+  return val;
+}
+
+
+
 template <typename T>
 void
 TiberModelObject::get_parameter(const std::string& name,
