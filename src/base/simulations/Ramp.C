@@ -140,8 +140,8 @@ Ramp::ramp(void)
     try
     {
       ostringstream os;
-      os << "Ramp: trying " << _variable << " = " << value;
-      Messages::debug(os.str());
+      os << "Trying " << _variable << " = " << value;
+      Messages::info(os.str());
 
       for (j = 0; j < num_sim; j++)
         _simulations[j]->solve();
@@ -151,8 +151,9 @@ Ramp::ramp(void)
         _simulations[i]->remember_current_solution(_old_sol_ids[i]);
 
       oldvalue = value;
+      double factor = (currstep == oldstep) ? 2.0 : 1.0;
       oldstep = currstep;
-      currstep = min(2.0 * currstep, max_step);
+      currstep = min(factor * currstep, max_step);
     }
     catch (SolveFailedException& e)
     {
@@ -163,8 +164,7 @@ Ramp::ramp(void)
 
       ostringstream os;
       os << "Ramping to " << _variable << " = " << value
-        << " failed while solving \'" << _simulations[j]->get_name()
-        << "\'. Trying " << _variable << " = " << (oldvalue + sign * currstep);
+        << " failed while solving \'" << _simulations[j]->get_name() << "\'.";
       Messages::warning(os.str());
 
       value = oldvalue;
