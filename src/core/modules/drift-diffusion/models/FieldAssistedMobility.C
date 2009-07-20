@@ -34,7 +34,6 @@ FieldAssistedMobility::do_init(void)
 {
   get_parameter("mu0", _mu0);
   get_parameter("E0", _E0);
-  std::cerr << _mu0 << "  " << _E0 << std::endl;
 
 //  std::string force = get_option("driving_force", "efield");
 //  if (force == "efield")
