@@ -47,7 +47,7 @@ include_dirs := $(shell find $(topdir)/include -type d -a ! -path "*.svn*")
 TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 
 
-CXXFLAGS := $(shell export METHOD=$(METHOD) && $(libmesh_config) --cxxflags)
+CXXFLAGS := $(shell export METHOD=$(METHOD) && $(libmesh_config) --cxxflags) -pthread
 INCLUDE  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --include)
 LDFLAGS  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --ldflags)
 # always use -fPIC, also if libmesh was compiled without
