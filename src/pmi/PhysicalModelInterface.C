@@ -16,6 +16,7 @@
 #include "ConstantMobility.h"
 #include "DopingDependentMobility.h"
 #include "FieldDependentMobility.h"
+#include "FieldAssistedMobility.h"
 
 #include "SimpleSemiconductorModel.h"
 #include "SemiconductorModel.h"
@@ -121,6 +122,8 @@ PhysicalModelInterface::create(const string& name,
     mod = DopingDependentMobility::create();
   else if (name == "dd_mob_field_dependent")
     mod = FieldDependentMobility::create();
+  else if (name == "dd_mob_field_assisted")
+    mod = FieldAssistedMobility::create();
   else if (name == "dd_simple")
     mod = SimpleSemiconductorModel::create();
   else if (name == "dd_default")
