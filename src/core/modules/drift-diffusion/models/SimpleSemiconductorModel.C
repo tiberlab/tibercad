@@ -2,6 +2,7 @@
 
 #include "SimpleSemiconductorModel.h"
 #include "Material.h"
+#include "Messages.h"
 
 
 TIBER_MODULE(SimpleSemiconductorModel, simple)
@@ -45,32 +46,51 @@ SimpleSemiconductorModel::do_init(void)
   get_conduction_band().effective_mass = deg * get_option("m_dos_e", 1.082);
   get_valence_band().effective_mass = deg * get_option("m_dos_h", 1.1432);
 
+  if (has_option("Nc"))
+  {
+    double Nc = get_option("Nc", 1e20);
+    double kT = Constants::k_B * SimulationOptions::T;
+    get_conduction_band().effective_mass =
+      std::pow(Nc / get_DOS_factor(), 2.0/3.0) / kT;
+  }
+
+  if (has_option("Nv"))
+  {
+    double Nv = get_option("Nv", 1e20);
+    double kT = Constants::k_B * SimulationOptions::T;
+    get_valence_band().effective_mass =
+      std::pow(Nv / get_DOS_factor(), 2.0/3.0) / kT;
+  }
 }
 
 void
 SimpleSemiconductorModel::do_print_info(void)
 {
 
-  string space("    ");
-
   set_lattice_temperature(SimulationOptions::T);
   setup_band_edges();
   calculate_equilibrium_properties();
 
   double deg = std::pow(2.0, 2.0 / 3.0);
-  cout << space << "simple semiconductor model " <<
-    "(with constant band parameters)" << endl;
+  Messages::info("simple semiconductor model " 
+    "(with constant band parameters)");
   DriftDiffusionProperties::do_print_info();
 
-  cout << space << "Ec = " << get_conduction_band().band_edge <<
-    ", m_DOS = " << get_conduction_band().effective_mass / deg <<
-    ", Nc = " << get_conduction_band().effective_DOS << endl;
-  cout << space << "Ev = " << get_valence_band().band_edge <<
-    ", m_DOS = " << get_valence_band().effective_mass / deg <<
-    ", Nv = " << get_valence_band().effective_DOS << endl;
-  cout << space << "Eg = " <<
-    get_conduction_band().band_edge - get_valence_band().band_edge <<
-    ", Ef0 = " << get_equilibrium_fermi_level()
+  if (SimulationOptions::verbose() > 1)
+  {
+    ostringstream os;
+    os << "Ec = " << get_conduction_band().band_edge <<
+      ", m_DOS = " << get_conduction_band().effective_mass / deg <<
+      ", Nc = " << get_conduction_band().effective_DOS << Messages::endl;
+    os << "Ev = " << get_valence_band().band_edge <<
+      ", m_DOS = " << get_valence_band().effective_mass / deg <<
+      ", Nv = " << get_valence_band().effective_DOS << Messages::endl;
+    os << "Eg = " <<
+      get_conduction_band().band_edge - get_valence_band().band_edge <<
+      ", Ef0 = " << get_equilibrium_fermi_level()
       << ", ni = " << std::sqrt(get_intrinsic_density_squared());
-  cout << endl;
+
+    Messages::info(os.str());
+    Messages::newline();
+  }
 }
