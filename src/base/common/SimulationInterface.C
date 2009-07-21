@@ -62,6 +62,7 @@ SimulationInterface::SimulationInterface(void)
   _id = new_id;
 
   _simulation_map[new_id] = this;
+  _relaxation = 1.0;
 }
 
 

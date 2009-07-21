@@ -572,6 +572,8 @@ DriftDiffusionProperties::calculate_densities(void)
   double Ec = get_conduction_band_edge();
   double Ev = get_valence_band_edge();
 
+  double relax = _driftdiffusion->_relaxation;
+
   _electrons.set_element_and_point(_elem, _coord);
   _electrons.set_classical_parameters(cb.effective_DOS,
       Ec - _pd->electric_potential, -_pd->fermi_e, kTe);
@@ -587,12 +589,12 @@ DriftDiffusionProperties::calculate_densities(void)
     double old_dens = _electrons.get_particle_density();
     if (old_dens > 1e-6)
     {
-      double fac = max(0.1, min(10.0, dens / old_dens));
-      _pd->electron_density_derivative *= _pd->electron_density / old_dens;
-      _pd->electron_density *= fac;
-      //double qdens = 0.0 * _pd->electron_density + 1.0 * old_dens;
-      //_pd->electron_density_derivative *= qdens / old_dens;
-      //_pd->electron_density = qdens / old_dens * dens;
+      //double fac = max(0.1, min(10.0, dens / old_dens));
+      //_pd->electron_density_derivative *= _pd->electron_density / old_dens;
+      //_pd->electron_density *= fac;
+      double qdens = relax * _pd->electron_density + (1.0 - relax) * old_dens;
+      _pd->electron_density_derivative *= qdens / old_dens;
+      _pd->electron_density = qdens / old_dens * dens;
     }
     _electrons.use_quantum_density(true);
     /* simpler but slower convergence
@@ -621,9 +623,12 @@ DriftDiffusionProperties::calculate_densities(void)
     double old_dens = _holes.get_particle_density();
     if (old_dens > 1e-6)
     {
-      double fac = max(0.1, min(10.0, dens / old_dens));
-      _pd->hole_density_derivative *= _pd->hole_density / old_dens;
-      _pd->hole_density *= fac;
+      //double fac = max(0.1, min(10.0, dens / old_dens));
+      //_pd->hole_density_derivative *= _pd->hole_density / old_dens;
+      //_pd->hole_density *= fac;
+      double qdens = relax * _pd->hole_density + (1.0 - relax) * old_dens;
+      _pd->hole_density_derivative *= qdens / old_dens;
+      _pd->hole_density = qdens / old_dens * dens;
     }
     _holes.use_quantum_density(true);
     /* simpler but slower convergence

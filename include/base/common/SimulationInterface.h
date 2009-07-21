@@ -39,6 +39,8 @@ class SimulationInterface : public TiberModelObject
 {
 
   public:
+    // QUIRK
+    double _relaxation;
 
     //! Destructor
     virtual ~SimulationInterface(void);
