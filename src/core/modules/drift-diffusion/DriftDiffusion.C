@@ -5611,12 +5611,12 @@ DriftDiffusion::load_data(const string& file)
   is.getline(buf, bufsize);
   while (is.good() && (keyword.compare(buf) != 0))
   {
-    is.getline(buf, bufsize);
     istringstream ss(buf);
     string name;
     double value;
     ss >> name >> value;
     values[name] = value;
+    is.getline(buf, bufsize);
   }
 
 
@@ -5652,12 +5652,12 @@ DriftDiffusion::load_data(const string& file)
   is.getline(buf, bufsize);
   while (is.good() && (keyword.compare(buf) != 0))
   {
-    is.getline(buf, bufsize);
     istringstream ss(buf);
     string name;
     double value;
     ss >> name >> value;
     values[name] = value;
+    is.getline(buf, bufsize);
   }
 
   map<string, double>::iterator vit(values.begin());
