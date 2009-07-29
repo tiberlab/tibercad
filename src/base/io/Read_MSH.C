@@ -55,23 +55,31 @@ Read_MSH::Read_MSH(string filename, unsigned int sim_dim,
 
   //  get_BC_info(BC_reg_ID); //  ->  after   write_xda(); 
 
+//  cerr <<  " finished scan_input        "  <<  endl;
 
   // put  nodes and  elements in data structures
   get_nodes_coord();
+
+//  cerr <<  " finished  get_nodes_coord();       "  <<  endl;
+
+
   get_elem_nodes();
+//  cerr <<  " finished  get_elem_nodes      "  <<  endl;
 
 
   // write .xda file of mesh (elements and  nodes :  
   // only elements with correct dim are considered)
   write_xda();
+//  cerr <<  " finished   write_xda      "  <<  endl;
 
 
-  // extract nodes which  belong to  bound cond reg. (DIM-1 phys.reg.) and 
+  // extract nodes which  belong to  boundary regions (dim < simulation dim) and 
   // associate them with 
   // user defined BC regions
-  //  get_BC_info(BC_reg_ID);
-
+ 
   get_BC_info();
+
+
 
   // associate elements to corrispondent physical region (as defined in user's 
   // phys region settings)
@@ -81,6 +89,7 @@ Read_MSH::Read_MSH(string filename, unsigned int sim_dim,
 
   // write  .xta file with  meshdata info for  Libmesh (here ID of  phys regions)  
   write_xta();
+//  cerr <<  " finished   write_xta      "  <<  endl;
 
   // read .xta and  .xda files  in  Libmesh  data structures
   read_mesh_and_data(mesh,mesh_data );
@@ -480,14 +489,7 @@ void Read_MSH::scan_input(string file_name)
 
 
 
-
-
-
-//**********************************************
-
-
-
-  // utility method  to  read  element  lines ...
+// utility method  to  read  element  lines ...
 void  Read_MSH::get_data ( vector< vector<unsigned int> >& glob_elem_values )
 {
   glob_elem_values = elem_values;
@@ -495,336 +497,284 @@ void  Read_MSH::get_data ( vector< vector<unsigned int> >& glob_elem_values )
 
 
 
-//   processes    elements lines :  extracts   (dim-1)D elements and associates 
-//  nodes of  each (dim-1)D element 
+
+// --------------------------------------
+//   get_BC_info 
+//   processes    elements lines :  extracts   (dim < simulation dim) elements and associates 
+//  nodes of  each  element 
 // to its own physical region number 
 
-// void Read_MSH::get_BC_info( vector<unsigned int>& BC_reg_ID )
+// ------------------------------
+
 void Read_MSH::get_BC_info()
 
 { // begin
 
-  //  works  only  for  .msh file  format  v.1  !!!
-  //  elem_id , el_type, phys_reg, geom_reg, number of  nodes, list of  nodes
-
-  //  dim = n -> extract (n-1)D elements
-  //  ( 1D elements for  2D problem,  2D  elements for 3D  problem)
-
-  // put (n-1)D elements in  separate  vector
-  //  dim_BC = dim - 1
-
-  vector< vector<unsigned int> > BC_elem_line;  // 
-
-  //  for (int i =0; i< elem_values.size();++i)
-  //     {
-
-  //       //  cout <<  global_elem_values[i][1] << "   " ; 
-  //       if (elem_values[i][1] == 1) 
-  // 	{
-  // 	  BC_elem_line.push_back(elem_values[i]);
-  // 	}
-
-  //     }
-
-
+  //  vector< vector<unsigned int> > BC_elem_line;  // 
   unsigned int el_type;
+  bool is_boundary_elem ;
  
-  //
-  //
+
+  unsigned int   BC_id;
+   
+  vector<unsigned int> BC_id_vec;
+  vector<unsigned int> :: iterator p1;
+
+  unsigned int   BC_dim;
+
+  //  map  !!!!!!!!!  BoundCond_dimension
+
+  vector< vector<unsigned int> > BC_nodes;
+  //      vector< vector<unsigned int> > :: iterator p ;
+  vector<unsigned int> null_vector;
+    
+  unsigned int  pos, number_of_nodes ;
+  unsigned int new_node_id;
+
+  //  double old_node_id = 0.0;
+
+  unsigned int old_node_id;
+
+  unsigned int number_of_tags;  // for  version 2
+
+  unsigned int el_id;
+  vector< vector<unsigned int> > BC_elements;
+
+
+
   //  makes vector with lines of BC elements   
   for (unsigned int i =0; i< elem_values.size();++i)
-  {
+  {  //elements
 
 
+    is_boundary_elem =  false;
 
-    el_type = elem_values[i][1];   //  OK  VERSION 2
+    BC_id = 0;
+    BC_dim = 0;
+
+    number_of_tags = 0;
+
+    el_type = elem_values[i][1];
 
     switch(dim) {
     case 1:
       // 1D  sim ................
-      if  (elem_values[i][1] == 15)   //   BC = 0D  point (1 node)
+      if  ( el_type == 15)   //   BC = 0D  point (1 node)
       {
-        BC_elem_line.push_back(elem_values[i]);
+        //    BC_elem_line.push_back(elem_values[i]);
+        BC_dim = 0;
+        is_boundary_elem = true;
+
       }
 
       break;
     case 2:
-      if ( (elem_values[i][1] == 1) || (elem_values[i][1] == 8) )
+      if ( (el_type  == 1) || ( el_type == 8)   )  //  BC = 1D
+
+
       {
-        BC_elem_line.push_back(elem_values[i]);
+        //   BC_elem_line.push_back(elem_values[i]);
+        BC_dim = 1;
+        is_boundary_elem = true;
+
+      }
+
+      else if  ( el_type == 15)  //  BC = 0D 
+      {
+        BC_dim = 0;
+        is_boundary_elem = true;
       }
 
       break;
+
     case 3:
-      if ( (elem_values[i][1] == 2) || (elem_values[i][1] == 3) || 
-           (elem_values[i][1] == 9) || (elem_values[i][1] == 10) )
+      if ( (el_type  == 2) || (el_type  == 3) ||        //  BC 2D
+           (el_type == 9) || (el_type  == 10) )    //  BC 2D
+         
       {
-        BC_elem_line.push_back(elem_values[i]);
+        //  BC_elem_line.push_back(elem_values[i]);
+        is_boundary_elem = true;
+        BC_dim = 2;
+
       }
+
+      else if ((el_type ==  1) || ( el_type == 8))   //  BC  1D
+      {
+        is_boundary_elem = true;
+        BC_dim =  1;
+
+      }
+      else if  (el_type  == 15)    //  BC  0D
+      {
+        is_boundary_elem = true;
+        BC_dim =  0;
+      }
+
 
       break;
     default:
-      cout <<  "Error : wrong  value  of  dim"; 
+      cerr <<  "Error : wrong  value  of  dim"; 
 
     }
-
-  }
-
-
-  unsigned int   BC_id;
-  BC_id = 0;
-  vector<unsigned int> BC_id_vec;
-  vector<unsigned int> :: iterator p1;
-
-  // makes  a  vector  of  all different BC  id  from  gmsh  file,  
-  // to  compare with user's BC_reg_ID  ->  THIS  CHECK  WILL  BE  DONE  SOMEWHERE ELSE !
-
-  for (unsigned int i =0; i< BC_elem_line.size(); ++i)
-  {
+  
 
 
-    if (version == 1)
-    {
-      BC_id = BC_elem_line[i][2]  ;
-    }
-
-    else if (version == 2)
-    {
-      BC_id =  BC_elem_line[i][3]  ;
-    }
    
 
-    // **** VERSION 2 ***
-    //  BC_id =  BC_elem_line[i][3]  ; !!!!!!!!!!!!!
-    //
 
-    p1 = find(BC_id_vec.begin(), BC_id_vec.end(), BC_id );  
-    // find if physic_id has  been already taken
+    if  (is_boundary_elem)
+    {  //  is  BC  elem
 
-    if (p1 ==  BC_id_vec.end())   //  not  found
-    {
-      BC_id_vec.push_back(BC_id);
-      //   cout << " BC_id_vec " << BC_id << endl ;
-    }
-
-  }
-
-  // cout << " BC_id_vec " << BC_id_vec[0]<< "   " << BC_id_vec[1]<< "   " 
-  // <<BC_id_vec[2]<<endl;
-
- 
-  // ************************************************************
-  //  cross check between BC_id_vec and BC_reg_ID ->  THIS  CHECK  WILL  BE  DONE  SOMEWHERE ELSE !
-  //  cross_check_regions( BC_reg_ID,BC_id_vec, "BC");
-  //  ***********************************************************
-
-  //  p_2 = BC_reg_ID.begin();
-
-  //  cout<< endl  << " BC  regions ....   "  << endl ;
-
-
-  //  while (p_2 != BC_reg_ID.end())  //display 
-  //    cout<<*p_2++ << endl ;
-
-
-  // **********************************
-  //creates vector of BC_nodes vectors (one for each  BC  region)
-  // **********************************
-
-  vector< vector<unsigned int> > BC_nodes;
-  vector< vector<unsigned int> > :: iterator p ;
-
-
-  // initialization of BC_nodes vector
-  vector<unsigned int> null_vector;
-  //  for (unsigned int i =0; i< BC_reg_ID.size(); ++i)  
-  for (unsigned int i =0; i< BC_id_vec.size(); ++i)
-  {
-    BC_nodes.push_back(null_vector);
-  }
+      // makes  a  vector  of  all different BC  id  from  gmsh  file,  
+      // to  compare with user's BC_reg_ID 
 
 
 
-  //  int  node1,  node2,  pos, id;
-  unsigned int  pos, id, number_of_nodes ;
-  unsigned int new_node_id;
-  double old_node_id = 0.0;
+      //  BC_id is   physical region id
 
-  unsigned int number_of_tags;  // for  version 2
-  number_of_tags = 0;
+      if (version == 1)
+      {
+        BC_id = elem_values[i][2]  ;
+      }
 
-  vector<unsigned int> node_id;
+      else if (version == 2)
+      {
+        BC_id =  elem_values[i][3]  ;
+      }
 
-  id = 0;
-  //  node1 = 0;
-  //  node2 =0;
+      p1 = find(BC_id_vec.begin(), BC_id_vec.end(), BC_id );  
+      // find if physic_id has  been already taken
 
-  //  vector<int> node_id;
+      if (p1 ==  BC_id_vec.end())   //  not  found
+      {
 
-  //  null_vector.push_back(0);
-
- 
- 
-  // (BC_nodes[0]).push_back(node1);
-
-
-  for (unsigned int i =0; i< BC_elem_line.size(); ++i)
-  {
-
-    if (version == 1)
-    {
-      id = BC_elem_line[i][2]  ;
-    }
-    else if (version == 2)
-    {
-      id = BC_elem_line[i][3]  ;
-    }
-
-    // **** VERSION 2 ***
-    // id = BC_elem_line[i][3]  ;
-    //
+    //    cerr << "BC_id =    "  <<  BC_id <<  endl;
+    //    cerr << "BC_dim =    "  <<  BC_dim <<  endl;
+    //    cerr <<  endl;
 
 
-    if (version == 1)
-    {
-      number_of_nodes = BC_elem_line[i][4];  //  number  of  nodes  
-      // belonging  to current  element
-    }
-    else if (version == 2)
-    {
 
-      number_of_tags = BC_elem_line[i][2];
-      number_of_nodes = (BC_elem_line[i].size() ) - (3 + number_of_tags);
+        BC_id_vec.push_back(BC_id);
+        BC_nodes.push_back(null_vector);  // add  an  empty  vector  to  to  BC_nodes vector<vector>>
 
-    }
+        BC_elements.push_back(null_vector); // add  an  empty  vector  to  to BC_elements vector<vector>>
 
-    //**************  VERSION 2
-        // number_of_nodes = BC_elem_line[i].size() - (3 + BC_elem_line[i][2])   (see  get_elem_nodes() )
+        // insert  map BC_id, BC_dim ****************
+          BoundCond_dimension.insert(make_pair(BC_id, BC_dim ) );
+      
+      }
+
+      //  ************************************
+      pos = find_pos(BC_id,BC_id_vec);
+
+      //  ************************************
 
 
-        //   cout<< " number_of_nodes  = " << number_of_nodes<< endl;
+      if (version == 1)
+      {
+        number_of_nodes = elem_values[i][4];  //  number  of  nodes  
+        // belonging  to current  element
+      }
+      else if (version == 2)
+      {
 
-        for (unsigned int j =0; j<  number_of_nodes; ++j)
+        number_of_tags = elem_values[i][2];
+        number_of_nodes = (elem_values[i].size() ) - (3 + number_of_tags);
+
+      }
+
+     
+      // --------- extraction of  nodes  of  boundary  region  -------------
+
+
+      for (unsigned int j =0; j<  number_of_nodes; ++j)
+      { // for  nodes
+
+        if (version == 1)
         {
+          //     old_node_id = (double)(BC_elem_line[i][5+j]);
+          //    old_node_id = (double)(elem_values[i][5+j]);
+          old_node_id = (elem_values[i][5+j]);
 
-          //  cout<< " (BC_elem_line[i][5+j]  = " << BC_elem_line[i][5+j]<< endl ;
-
-
-          // ************************************
-          // NEW  CHANGE :  13.12.05
-          //  convert  to  new  node  numeration :
-          // ************************************
-
-          //  num_of_nodes = total  number  of  nodes in the  mesh
-
-
-
-          if (version == 1)
-          {
-            old_node_id = (double)(BC_elem_line[i][5+j]);
-          }
-          else if (version == 2)
-          {
-            old_node_id = (double)(BC_elem_line[i][3 + number_of_tags+j]);
-          }
-          // **************  VERSION 2
-          // number_of_tags = BC_elem_line[i][2]
-          //  BC_elem_line[i][3 + number_of_tags+j])
-
-
-          for (unsigned int k =0; k<num_of_nodes ; ++k)
-          { 
-	     
-            if  (node_label[k] ==  old_node_id)
-            { new_node_id = k; }
-
-            //  	{ new_node_id = k+1; }
-            // +1  -1  -> +0 ,  to  get  nodes  starting  from  zero [ see write_xda ( )]
-          }
-
-
-          //	  node_id.push_back(BC_elem_line[i][5+j]) ;
-          node_id.push_back( new_node_id);
-
-          old_node_id = 0;
-          new_node_id =0;
-
-
-
-          //  node1 = BC_elem_line[i][5]  ;
-          // cout<<  node1  << endl ;
-
-          //   node2 = BC_elem_line[i][6]  ;
-          // cout<<  node2  << endl ;
 
         }
-   
-    //  pos = find_pos(id,BC_reg_ID);
-    pos = find_pos(id,BC_id_vec);
-
-    //   if (BC_nodes[pos].size() == 1)
-    //        	{
-    //        	  BC_nodes[pos].pop_back();  //  remove  initialization null
-    //        	}
-
-    //   cout<< " node_id.size()  = " << node_id.size() << endl ;
-    for (unsigned int i =0; i< node_id.size(); ++i)
-    { 
-
-      //  BC_nodes[pos].push_back(node1);
-      //  BC_nodes[pos].push_back(node2);
-
-      //	  cout<< " node_id[i]  = " << node_id[i] << endl ;
-
-      BC_nodes[pos].push_back(node_id[i]);
-    }
+        else if (version == 2)
+        {
+          //    old_node_id = (double)(BC_elem_line[i][3 + number_of_tags+j]);
+          //  old_node_id = (double)(elem_values[i][3 + number_of_tags+j]);
+          old_node_id = (elem_values[i][3 + number_of_tags+j]);
 
 
 
-    //   p = BC_nodes.begin();
-    //   p += pos+1;
-
-    //   BC_nodes.insert(p,1,node_id);
+        }
 
 
+        //  num_of_nodes = total  number  of  nodes in the  mesh
+
+        //  ------------------------------------
+        //  convert  to  new  node  numeration :  TO  CHECK  !!!
+        // -----------------------------------
+        //   for (unsigned int k =0; k<num_of_nodes ; ++k)
+        //         { 
+	     
+        //           if  (node_label[k] ==  old_node_id)
+        //           { new_node_id = k; }
+
+        //           //  	{ new_node_id = k+1; }
+        //           // +1  -1  -> +0 ,  to  get  nodes  starting  from  zero [ see write_xda ( )]
+        //         }
+
+        // -----------  new_node_id = old_node_id -1   //  ???????
+
+        new_node_id = old_node_id -1;
+
+        //  CHECK  !!!!  28/7/09  OK 
 
 
-    //   BC_nodes[pos].push_back(node_id);
-    node_id.clear();
-
-    //  node1 = 0;
-    //  node2 =0;
+        BC_nodes[pos].push_back( new_node_id);
 
 
+        //    node_id_vector.push_back( new_node_id);
+
+        old_node_id = 0;
+        new_node_id =0;
+
+        // pos = find_pos(id,BC_id_vec);  -_>  out  of  nodes cycle !
+
+      }
+
+      
+
+
+      //  IF   DIM = 3  !!!!!!!!
+      // creates also  vector of BC_elements 
+
+      // ---------------------------------------------------
+
+      if  (dim == 3) 
+      {  //if
+
+        //     el_id = BC_elem_line[i][0]  ;
+        el_id =  elem_values[i][0]  ;
+
+        // pos = find_pos(id,BC_id_vec);
+        BC_elements[pos].push_back(el_id);
+        el_id = 0;
+      }
+
+      //  --------------------------------------------------
+  
+    }  
+
+
+    //  next  element
   }
 
-  //  cout<< " BC_nodes.size()  = " << BC_nodes.size()  << endl ;
-  //  cout<< " BC_nodes[0].size()  = " << BC_nodes[0].size()  << endl ;
+  //  end  element  list
 
-
-
-
-  //   for (int i =0; i< BC_nodes.size(); ++i)
-  //     { 
-  //       for (int j =0; j< BC_nodes[i].size(); ++j)
-  // 	{
-
-  // 	  cout<< " BC_nodes[i][j]  = " <<BC_nodes[i][j] << endl;
-  // 	}
-  //     }
-
-
-
+  // -----------------------------------------------------
   //  unique  eliminates  repetitions !!!
-
   vector<unsigned int>::iterator new_end_BC;
-
-  // = unique(test.begin(), test.end());
-
-  // test.erase(new_end, test.end());
-
-
-
   for (unsigned int i =0; i< BC_nodes.size();++i)
   {
     new_end_BC = unique(BC_nodes[i].begin(), BC_nodes[i].end());
@@ -834,113 +784,38 @@ void Read_MSH::get_BC_info()
   }
 
 
-  //   END creates vector of BC_nodes vectors (one for each  BC  region) 
 
 
-
-  //  
-
-  // ****************************************
-  //  ONLY  IF   DIM = 3  !!!!!!!!
-  // creates also  vector of BC_elements
-  // ****************************************
-
-
-  if  (dim == 3) 
-  {  //if
-
-    unsigned int el_id=0;
-    id = 0;
-
-    vector< vector<unsigned int> > BC_elements;
-
-    // initialization of BC_nodes vector
-    //  vector<int> null_vector;
-    //   for (unsigned int i =0; i< BC_reg_ID.size(); ++i)
-    for (unsigned int i =0; i<BC_id_vec.size(); ++i)
-    {
-      BC_elements.push_back(null_vector);
-    }
-
-
-    for (unsigned int i =0; i< BC_elem_line.size(); ++i)
-    {
-
-
-      if (version == 1)
-      {
-        id = BC_elem_line[i][2]  ;
-      }
-      else if (version == 2)
-      {
-        id = BC_elem_line[i][3]  ;
-      }
-      // **** VERSION 2 ***
-      //  id = BC_elem_line[i][3]  ;
-      //
-
-      el_id = BC_elem_line[i][0]  ;
-
-      //   pos = find_pos(id,BC_reg_ID);
-      pos = find_pos(id,BC_id_vec);
-
-      BC_elements[pos].push_back(el_id);
-      el_id = 0;
-
-    }
-
-
-
-
-    //  creates  map  <BC_region, BC_elements >      //   for   dim = 3
-
-    //  map<int, vector<int> >  // BoundCond_elem   in  .h  !!!
-
-    for (unsigned int i =0; i< BC_elements.size();++i)
-    {
-      //     BoundCond_elements.insert(make_pair(BC_reg_ID[i], BC_elements[i]) );
-      BoundCond_elements.insert(make_pair(BC_id_vec[i], BC_elements[i]) );
-      //   cout << BC_reg_ID[i]<< endl ;
-      // cout << BC_nodes[i][0]<< endl ;
-
-    }
-
-  }
-
-  //   END  BC_elements (only if   dim=3 )
-
-  // ****************************************
-
-
-
-  // ++++++++++++++++++++++++++++++++++++++++
-  // FOR  2D  !!!!!!!!!!
-  //+++++++++++++++++++++++++++++++++
   //  creates  map  <BC_region, BC_nodes>
 
   //  map<int, vector<int> >  BoundCond   in  .h  !!!
 
   for (unsigned int i =0; i< BC_nodes.size();++i)
   {
-    //  BoundCond.insert(make_pair(BC_reg_ID[i], BC_nodes[i]) );
+  
     BoundCond.insert(make_pair(BC_id_vec[i], BC_nodes[i]) );
-    //    cout << BC_reg_ID[i]<< endl ;
-    //   cout << "BC_id_vec[i]" << BC_id_vec[i]<<  endl ;
-
-    //    for (unsigned int j =0; j< BC_nodes[i].size();++j)
-    //     {
-    //       cout << "BC_nodes[i][j]" << BC_nodes[i][j]<<  endl ;
-    //     }
-
 
   }
 
+
+  //  creates  map  <BC_region, BC_elements >      //   for   dim = 3
+  //  map<int, vector<int> >  // BoundCond_elem   in  .h  !!!
+
+  for (unsigned int i =0; i< BC_elements.size();++i)
+  {
+    //     BoundCond_elements.insert(make_pair(BC_reg_ID[i], BC_elements[i]) );
+    BoundCond_elements.insert(make_pair(BC_id_vec[i], BC_elements[i]) );
+    //   cout << BC_reg_ID[i]<< endl ;
+    // cout << BC_nodes[i][0]<< endl ;
+
+  }
+
+
 }
 
-//  END  get_BC_info() !!!
+// END    get_BC_info 
 
-
-
+// ---------------------------------------------------------
 
 
 //  utility  function 
@@ -987,6 +862,14 @@ unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,
 }
 
 
+void  Read_MSH::get_BC_dimension (map<unsigned int, unsigned int>& BoundCond_dim)
+{
+
+  BoundCond_dim  =  BoundCond_dimension;
+
+}                              
+
+
 
 
 
@@ -994,18 +877,18 @@ unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,
 void  Read_MSH::get_BC_data (map<unsigned int, vector<unsigned int> >& BoundCond_map )
 {
 
-  std::map< unsigned int,std::vector<unsigned int> >::iterator it(BoundCond.begin());
-  const std::map< unsigned int,std::vector<unsigned int> >::iterator end(BoundCond.end());
-  for ( ; it != end; ++it)
-  {
+  //  std::map< unsigned int,std::vector<unsigned int> >::iterator it(BoundCond.begin());
+  //   const std::map< unsigned int,std::vector<unsigned int> >::iterator end(BoundCond.end());
+  //   for ( ; it != end; ++it)
+  //   {
 
-    //   cerr << "BC_map ID  =  " << (it->first) <<  endl;
-    for ( int i =0; i < ((it->second).size()); ++i)
-    {
-      //    cerr <<  " node " << i << "  " << (it->second)[i] << endl;
-    }
+  //     //   cerr << "BC_map ID  =  " << (it->first) <<  endl;
+  //     for ( int i =0; i < ((it->second).size()); ++i)
+  //     {
+  //       //    cerr <<  " node " << i << "  " << (it->second)[i] << endl;
+  //     }
 
-  }
+  //   }
 
 
   BoundCond_map = BoundCond;
@@ -1146,53 +1029,53 @@ void Read_MSH::get_physical_elem()
 
 
   // *******************************************************
-  //***************************************************
-      //  with  vector<Element>  list_elements;
+ 
+  //  with  vector<Element>  list_elements;
 
  
 
-      for (unsigned int i =0; i< list_elements.size(); ++i)
-    {
-      physic_id = list_elements[i].phys_id;
+  for (unsigned int i =0; i< list_elements.size(); ++i)
+  {
+    physic_id = list_elements[i].phys_id;
 
 
-      //    pos = find_pos(physic_id,phys_reg_ID);
-      pos = find_pos(physic_id,physic_id_vec);
+    //    pos = find_pos(physic_id,phys_reg_ID);
+    pos = find_pos(physic_id,physic_id_vec);
 
-      // if  not  found ->  error  inconsistency
+    // if  not  found ->  error  inconsistency
 
-      el_id = (i +1);
-      phys_elements[pos].push_back(el_id);
-      //	    
-      el_id = 0;
-    }
+    el_id = (i +1);
+    phys_elements[pos].push_back(el_id);
+    //	    
+    el_id = 0;
+  }
 
 
   // **************************************************************
 
 
   // *******************************************************
-  //************************************************
+ 
 
 
 
 
-      //  ??????????????????????????
-      //  creates  map  <phys_region, phys_elements >      //  
+  //  ??????????????????????????
+  //  creates  map  <phys_region, phys_elements >      //  
 
-      //  map<int, vector<int> >  // PhysReg_elem   in  .h  !!!
+  //  map<int, vector<int> >  // PhysReg_elem   in  .h  !!!
 
-      for (unsigned int i =0; i< phys_elements.size();++i)
-    {
-      //    PhysReg_elements.insert(make_pair(phys_reg_ID[i], phys_elements[i]) );
+  for (unsigned int i =0; i< phys_elements.size();++i)
+  {
+    //    PhysReg_elements.insert(make_pair(phys_reg_ID[i], phys_elements[i]) );
 
-      PhysReg_elements.insert(make_pair(physic_id_vec[i], phys_elements[i]) );
+    PhysReg_elements.insert(make_pair(physic_id_vec[i], phys_elements[i]) );
 
 
-      //   cout << BC_reg_ID[i]<< endl ;
-      // cout << BC_nodes[i][0]<< endl ;
+    //   cout << BC_reg_ID[i]<< endl ;
+    // cout << BC_nodes[i][0]<< endl ;
 
-    }
+  }
 	
   //  ??????????????????????????
 
@@ -1298,54 +1181,54 @@ void  Read_MSH::write_xda ( )
     //
     // ************************************************************
 
-    //**************************************************************************
-      // GMSH  ELEM TYPES
-      //**************************************************************************
+    // ----------------------------------------------------------------------------
+    // GMSH  ELEM TYPES
+    // ---------------------------------------------------------------------------- 
 
 
-      // 1 Line (2 nodes).  [ -> EDGE2 = 0] 
-      // 2 Triangle (3 nodes).
-      // 3 Quadrangle (4 nodes). 
-      // 4 Tetrahedron (4 nodes). 
-      // 5 Hexahedron (8 nodes). 
-      // 6 Prism (6 nodes). 
-      // 7 Pyramid (5 nodes).
-      //  8 Second order line (3 nodes: 2 associated with 
-      // the vertices and 1 with the edge).  [ -> EDGE3 = 1]
-      //  
-      // 9 Second order triangle (6 nodes: 3 associated with 
-      // the vertices and 3 with the edges). 
-      //
-      // 10 Second order quadrangle (9 nodes: 4 associated with 
-      // the vertices, 4 with the edges and 1 with the face).
-      //
-      //  11 Second order tetrahedron (10 nodes: 4 associated with 
-      // the vertices and 6 with the edges). 
-      //
-      // 12 Second order hexahedron (27 nodes: 8 associated with 
-      // the vertices, 12 with the edges, 6 with the faces and 1 with the volume). 
-      //
-      // 13 Second order prism (18 nodes: 6 associated with the vertices, 
-      // 9 with the edges and 3 with the quadrangular faces).
-      //
-      //  14 Second order pyramid (14 nodes: 5 associated with the vertices, 
-      // 8 with the edges and 1 with the quadrangular face). 
-      //
-      // 15 Point (1 node).  [no  correspondance in  Libmesh !]
+    // 1 Line (2 nodes).  [ -> EDGE2 = 0] 
+    // 2 Triangle (3 nodes).
+    // 3 Quadrangle (4 nodes). 
+    // 4 Tetrahedron (4 nodes). 
+    // 5 Hexahedron (8 nodes). 
+    // 6 Prism (6 nodes). 
+    // 7 Pyramid (5 nodes).
+    //  8 Second order line (3 nodes: 2 associated with 
+    // the vertices and 1 with the edge).  [ -> EDGE3 = 1]
+    //  
+    // 9 Second order triangle (6 nodes: 3 associated with 
+    // the vertices and 3 with the edges). 
+    //
+    // 10 Second order quadrangle (9 nodes: 4 associated with 
+    // the vertices, 4 with the edges and 1 with the face).
+    //
+    //  11 Second order tetrahedron (10 nodes: 4 associated with 
+    // the vertices and 6 with the edges). 
+    //
+    // 12 Second order hexahedron (27 nodes: 8 associated with 
+    // the vertices, 12 with the edges, 6 with the faces and 1 with the volume). 
+    //
+    // 13 Second order prism (18 nodes: 6 associated with the vertices, 
+    // 9 with the edges and 3 with the quadrangular faces).
+    //
+    //  14 Second order pyramid (14 nodes: 5 associated with the vertices, 
+    // 8 with the edges and 1 with the quadrangular face). 
+    //
+    // 15 Point (1 node).  [no  correspondance in  Libmesh !]
 
 
 
 
 	
-      // elem_type_conversion from GMSH_type to  xda (libmesh) type 
-      //  ??
-      //  gmsh_elem_type  is  a  vector
-      // 	for (int i =0; i< gmsh_elem_type.size();++i)
-      // 	  { switch(gmsh_elem_type[i]) {
-      // case 
-      //  elem_type.push_back[...] 
+    // elem_type_conversion from GMSH_type to  xda (libmesh) type 
+    //  ??
+    //  gmsh_elem_type  is  a  vector
+    // 	for (int i =0; i< gmsh_elem_type.size();++i)
+    // 	  { switch(gmsh_elem_type[i]) {
+    // case 
+    //  elem_type.push_back[...] 
 
-      elem_type.clear();
+    elem_type.clear();
 
     for (unsigned int i =0; i< gmsh_elem_type.size();++i)
     { //for
@@ -1394,7 +1277,7 @@ void  Read_MSH::write_xda ( )
         // BEWARE !   PYRAMID  element  not  correctly  handled in  LIBMESH
         //
         throw InitFailedException("ERROR: PYRAMID5 element not implemented...");
-           //elem_type.push_back(16);
+        //elem_type.push_back(16);
         break;
 
       case 8:
@@ -1710,7 +1593,7 @@ void  Read_MSH::write_xda ( )
 // simulation dimension (dim):
 // e.g. if  dim = 2 ->  here we take  only  2D elements,  
 // which correspond to  phys. regions;
-//   1D elements,  if  present, are processed  separately to  get bound. cond. reg.
+//   1D and 0D elements,  if  present, are processed  separately to  get boundary cond. reg.
 //
 
 void Read_MSH::get_elem_nodes()
@@ -1735,31 +1618,6 @@ void Read_MSH::get_elem_nodes()
     
     //    gmsh_elem_type = el_type;
 
-
-
-    // 
-
-    //   vector<int> BC_reg_ID ;
-    //  vector<int> :: iterator p;
-    // if (! find (el_type) in  gmsh_elem_type_vector
-    //      gmsh_elem_type_vector.push_back(el_type)
-
-
-    //  ******  put in  switch *****************
-
-    //    p = find(gmsh_elem_type.begin(), gmsh_elem_type.end(),el_type  );  // 
-
-    //       if (p == gmsh_elem_type.end())   //  not  found
-    //  	{
-    //  	  gmsh_elem_type.push_back(el_type);
-    // 	  // 	  //  cout<< BC_reg_ID[0]  << endl ;
-
-    // 	}
-
-
-    //.......................
-
-
     switch(dim) {
     case 1:
       // 1D  sim ................elem_values[i][1] == 1) || (elem_values[i][1] == 8)
@@ -1776,12 +1634,7 @@ void Read_MSH::get_elem_nodes()
 
         }
 
-
       }
-
-
-
-
 
       break;
 	
@@ -1819,14 +1672,12 @@ void Read_MSH::get_elem_nodes()
 
         }
 
-
-
       }
 
       break;
 	
     default:
-      cout <<  "Error :    wrong  value  of  dim"; 
+      cerr <<  "Error :    wrong  value  of  dim"; 
 
     }
 
@@ -1842,6 +1693,9 @@ void Read_MSH::get_elem_nodes()
 
   }
 
+
+//  cerr <<  "get_elem_nodes :  fine primo  ciclo  for    "  <<  endl;
+
   //
   //NOW IN elem_line THERE ARE ONLY THE ELEMENT ENTRIES CONSISTENT WITH DIM OF PROBLEM !!!
   //
@@ -1856,23 +1710,24 @@ void Read_MSH::get_elem_nodes()
   unsigned int number_of_tags;
   number_of_tags = 0;
 
-  //  int count_ok = 0;
-  //   int count_swap= 0;
-  //  count_ok = 0;
-  //  count_swap= 0;
-
-  //  unsigned int temp,type ;
   unsigned int type;
 
    
+  int line_size;
+  int elem_line_size;
 
+  elem_line_size = elem_line.size();
+
+//  cerr <<  " elem_line.size() =     " << elem_line_size << endl;
   
 
-  for (unsigned int i =0; i< elem_line.size(); ++i)
+  //  for (unsigned int i =0; i< elem_line.size(); ++i)
+  for (unsigned int i =0; i< elem_line_size; ++i)
+
   {  // list of lines
 
 
-   
+    line_size = elem_line[i].size();
 
     if (version == 1)
     {
@@ -1881,49 +1736,44 @@ void Read_MSH::get_elem_nodes()
     else if (version == 2)
     {
       number_of_tags = elem_line[i][2];
-      number_of_nodes_in_elem = ( elem_line[i].size() ) - (3 + number_of_tags);
+      //  number_of_nodes_in_elem = ( elem_line[i].size() ) - (3 + number_of_tags);
+      number_of_nodes_in_elem = ( line_size ) - (3 + number_of_tags);
+
 
     }
 
-    //**************  VERSION 2
-        //elem_line[i].size() -  (1 + 1+ + 1 + number_of_tags),  that is
-        //    number_of_nodes_in_elem = elem_line[i].size() - (3 + elem_line[i][2])
+    //       **************  VERSION 2
+    //      elem_line[i].size() -  (1 + 1+ + 1 + number_of_tags),  that is
+    //    number_of_nodes_in_elem = elem_line[i].size() - (3 + elem_line[i][2])
 
                   
-        type =  elem_line[i][1];   //  ok VERSION 2 
+    type =  elem_line[i][1];   //  ok VERSION 2 
 
 
 
 
     for (unsigned int j =0; j<  number_of_nodes_in_elem; ++j)
-    {
+    { // nodes
 
 
 
       if (version == 1)
       {
-        node_id  = (double)(elem_line[i][5+j]);// ?????? TO DO: change  node_label 
-        //                                      and  node_entry to  int !!!
+        
+        new_node_id  = (elem_line[i][5+j]);
+
       }
       else if (version == 2)
       {      
-        node_id  = (double)(elem_line[i][3 + number_of_tags+j]);
+        //    node_id  = (double)(elem_line[i][3 + number_of_tags+j]);
+        new_node_id  = (elem_line[i][3 + number_of_tags+j]);
+
       }
 
-      // **************  VERSION 2
-      //  elem_line[i][3 + number_of_tags+j])
-      //
-
-      for (unsigned int k =0; k<num_of_nodes ; ++k)
-      { 
-        //  cout << " node_label[k]" <<  node_label[k]<< endl;
-        if  (node_label[k] ==  node_id)
-        { new_node_id = k+1; }  //   +1  ->  starts from  1
-      }
+    
       node_id_list.push_back( new_node_id) ;
-      //	 cout << "new_node_id " << new_node_id<< endl ;
 
-      //	 node_id_list.push_back(elem_line[i][5+j]) ;
+     
 
       count ++;
       new_node_id = 0;
@@ -1931,80 +1781,85 @@ void Read_MSH::get_elem_nodes()
 
     }
 
-    //*********************
-        //  NEW   10.1.06
 
-        //  HERE CHECK  ORIENTATION OF  ELEMENT :
 
-        // for each element: calculate determinant delta on node = (node_id_list[i]-1)
-        // coord are given  by node_coord[node][j]
-        // if  delta > 0 -> ok,   else swap nodes in  node_id_list
+    //        *********************
+    //    10.1.06
 
-        //	  cout << "**********"<< endl;
-        //   cout << node_id_list[0]-1 << "  " << node_id_list[1]-1 << 
-        // "  " << node_id_list[2]-1 << endl ;
-        //   cout <<   node_coord[1][0]<< endl ;
+    //  HERE CHECK  ORIENTATION OF  ELEMENT :
 
-        // **********************************************
-        check_orientation(node_id_list,type);
+    // for each element: calculate determinant delta on node = (node_id_list[i]-1)
+    // coord are given  by node_coord[node][j]
+    // if  delta > 0 -> ok,   else swap nodes in  node_id_list
+
+    //	  cout << "**********"<< endl;
+    //   cout << node_id_list[0]-1 << "  " << node_id_list[1]-1 << 
+    // "  " << node_id_list[2]-1 << endl ;
+    //   cout <<   node_coord[1][0]<< endl ;
+
+    // **********************************************
+
+
+    check_orientation(node_id_list,type);
+
+
+
         
     //  TEST !!!!!!!!!!!
     //  cout <<  " Second  time  det  should  be  > 0 !!!   "  << endl;
     //         check_orientation(node_id_list,type);
         
-    //*****************************************************
+    //      *****************************************************
 
-        //    cout << "+++++++++++++++++++    CHECK orient +++++++++++++" << endl;
-
-
-        //    if ( check_orientation(node_id_list) ) 
-        // 	{
-        // 	  cout << " check_orientation OK  !!!  " << endl;
-        // 	  count_ok++;
-
-        // 	}
-        //       else 
-        // 	{
-        // 	  cout  << " SWAP NODES  !!!  " << endl;
-        // 	  count_swap++;
-
-        // 	  if (dim == 2)
-        // 	    {
-
-        // 	      // swap node_id_list[0] and  node_id_list[2]
-        // 	      temp = node_id_list[0];
-        // 	      node_id_list[0] = node_id_list[2];
-        // 	      node_id_list[2] = temp;
-        // 	    }
-        // 	  else if (dim == 3)
-        // 	    {
-
-        // 	      if (type == 6)   // gmsh  PRISM6
-
-        // 		{
-        // 		  // swap
-        // 		}
-        // 	  //  
+    //    cout << "+++++++++++++++++++    CHECK orient +++++++++++++" << endl;
 
 
+    //    if ( check_orientation(node_id_list) ) 
+    // 	{
+    // 	  cout << " check_orientation OK  !!!  " << endl;
+    // 	  count_ok++;
 
+    // 	}
+    //       else 
+    // 	{
+    // 	  cout  << " SWAP NODES  !!!  " << endl;
+    // 	  count_swap++;
 
-        // 	    }
+    // 	  if (dim == 2)
+    // 	    {
 
+    // 	      // swap node_id_list[0] and  node_id_list[2]
+    // 	      temp = node_id_list[0];
+    // 	      node_id_list[0] = node_id_list[2];
+    // 	      node_id_list[2] = temp;
+    // 	    }
+    // 	  else if (dim == 3)
+    // 	    {
 
+    // 	      if (type == 6)   // gmsh  PRISM6
 
-        // 	}
-
-
-  
+    // 		{
+    // 		  // swap
+    // 		}
+    // 	  //  
 
 
 
 
-        // *******************************************************
+    // 	    }
 
 
-        current_element.nodes = node_id_list;
+
+    // 	}
+
+
+
+    // *******************************************************
+
+    //  cerr <<  "get_elem_nodes : prima  update  struct    "  <<  endl;
+
+
+    current_element.nodes = node_id_list;
     current_element.type =  elem_line[i][1]; //  ok VERSION 2 
 
     if (version == 1)
@@ -2021,22 +1876,27 @@ void Read_MSH::get_elem_nodes()
 
 
     All_elements.push_back(current_element);
-    // cout << "******************" << current_element.type<< endl ;
+    // cout << " ******************" << current_element.type<< endl ;
     current_element.nodes.clear();
     current_element.type = 0;
 
 
-    //****************
+    //    ****************
 
 
 
-        elem_nodes.push_back(node_id_list);
+    elem_nodes.push_back(node_id_list);
 
     node_id_list.clear();
+
+    //  cerr <<  "get_elem_nodes : dopo  update  struct    "  <<  endl;
+
+
 
   }
 
   // end list of  (elem)lines
+//  cerr <<  "get_elem_nodes :  fine secondo  ciclo  for    "  <<  endl;
 
 
 
@@ -2209,7 +2069,7 @@ void Read_MSH::get_nodes_coord()
 
 //     }
 
-//     //*********************
+
 
 
 
@@ -2262,7 +2122,7 @@ void Read_MSH::parse_physicalnames_section(ifstream&  in_stream)
 
     assert(physical_name.size() >= 2);
     physical_names_map.insert(
-        make_pair(physical_number,physical_name.substr(1, physical_name.size() - 2)));
+                              make_pair(physical_number,physical_name.substr(1, physical_name.size() - 2)));
 
   }
 
