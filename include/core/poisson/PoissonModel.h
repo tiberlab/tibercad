@@ -11,8 +11,10 @@
 #include "SimulationEnvironment.h"
 #include "StrainInterface.h"
 #include "OptDielectricConstant.h"
+#include "PiezoelectricModel.h"
+#include "tensor_value.h"
 
-
+//class PiezoelectricModel;
 class PyroPolarization;
 
 //!Class that contains all the physical quantities necessary for the POISSON solver
@@ -41,7 +43,8 @@ class PoissonModel: public PhysicalModel
   std::vector<double> get_charge_density();
 
   //!Return the charge density for the current element
-  Tensor2Sym get_dielectric_constant();
+  void get_dielectric_constant(RealTensor& epsilon);
+
 
   //Tensor1 get_built_in_polarization(const std::vector<Point> q_point, std::vector<Tensor1>& built_in_polarization);
   //!charge density (electron/cm^3)
@@ -51,15 +54,29 @@ class PoissonModel: public PhysicalModel
   //! The pyropolarization
   PyroPolarization* _pyropolarization;
 
-  //! The total electric polarization
-  RealVectorValue _polarization;
 
-  const RealVectorValue& get_total_polarization(void) ;
+
+
+
+  //! The total electric polarization
+  void  get_total_polarization(RealGradient& p);
+
+
+
 
    //! Get the strain
     const Tensor2Sym& get_strain(void) const;
 
+ PiezoelectricModel* _piezo_model;
+
+
  private:
+
+ //----------------
+
+
+  //!Pointer to drift diffusion simulation
+  SimulationInterface* _simul;
 
   Point _coord;
 
@@ -188,16 +205,5 @@ PoissonModel::set_element(const Elem* elem)
 
 // }
 
-
-
-inline
-Tensor2Sym
-PoissonModel::get_dielectric_constant()
-{
-
-
-  return _epsilon * Constants::epsilon * 1e-2;
-
-}
 
 #endif

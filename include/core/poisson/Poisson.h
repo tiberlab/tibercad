@@ -79,9 +79,9 @@ class Poisson : public SimulationInterface
   //!Create an Poisson object 
   static  Poisson*  create(void);
 
-  //!Get a solution given the element and the point
-  void get_solution(const Elem* elem, const std::vector<Point>& p,
-		    std::vector<double>& solution);
+ //  //!Get a solution given the element and the point
+//   void get_solution(const Elem* elem, const std::vector<Point>& p,
+// 		    std::vector<double>& solution);
   
   /*!
    * \copydoc SimulationInterface::get_solution_secure(const Elem*,
@@ -100,7 +100,7 @@ class Poisson : public SimulationInterface
 				   const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
 
   virtual void build_elemental_results(const std::set<std::string>& variables,
-				       std::vector<double>& results, std::vector<std::string>& legend);
+				       std::vector<double>& results, std::vector<std::string>& legend){};
 
   
  private:
