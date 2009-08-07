@@ -73,9 +73,6 @@
 
 #include <ZbPiezoelectricModel.h>
 #include <WzPiezoelectricModel.h>
-//#include <ZbStiffnessModel.h>
-//#include <WzStiffnessModel.h>
-//#include <MechanicalModel.h>
 
 
 #include "Messages.h"
@@ -214,12 +211,6 @@ PhysicalModelInterface::create(const string& name,
     mod = ZbPiezoelectricModel::create();
   else if  (name == "piezoelectric_model_wz")
     mod = WzPiezoelectricModel::create();
- //else if  (name == "stiffness_model_zb")
-  //  mod = ZbStiffnessModel::create();
-  //else if  (name == "stiffness_model_wz")
-  //  mod = WzStiffnessModel::create();
-  //else if  (name == "mechanical_model")
-  //  mod = MechanicalModel::create();
 
 
 
