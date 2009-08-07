@@ -71,6 +71,13 @@
 #include "ZbStrainDynamicalMatrix.h"
 #include "ZbRamanTensor.h"
 
+#include <ZbPiezoelectricModel.h>
+#include <WzPiezoelectricModel.h>
+//#include <ZbStiffnessModel.h>
+//#include <WzStiffnessModel.h>
+//#include <MechanicalModel.h>
+
+
 #include "Messages.h"
 
 #include <typeinfo>
@@ -203,6 +210,18 @@ PhysicalModelInterface::create(const string& name,
     mod = ZbStrainDynamicalMatrix::create();
   else if  (name == "raman_tensor_zb")
     mod = ZbRamanTensor::create();
+  else if  (name == "piezoelectric_model_zb")
+    mod = ZbPiezoelectricModel::create();
+  else if  (name == "piezoelectric_model_wz")
+    mod = WzPiezoelectricModel::create();
+ //else if  (name == "stiffness_model_zb")
+  //  mod = ZbStiffnessModel::create();
+  //else if  (name == "stiffness_model_wz")
+  //  mod = WzStiffnessModel::create();
+  //else if  (name == "mechanical_model")
+  //  mod = MechanicalModel::create();
+
+
 
   if (mod == NULL)
     create_from_library(name, mod);
