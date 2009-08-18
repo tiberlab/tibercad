@@ -358,8 +358,12 @@ Control::create_materials(void)
       throw InitFailedException(s.str());
     }
 
+    // get the common device options
+    ModelOptions opts(parser.get_device_options());
+    opts += data.get_options();
+
     const string& material = data.get_material_name();
-    Material* mat = Material::create(material, data.get_options());
+    Material* mat = Material::create(material, opts);
     _device->set_material(mat, region_ids, data.get_region_name());
   }
 

@@ -3099,11 +3099,12 @@ void InputParser::skip_block(ifstream& in_stream)
 
 
 
-void InputParser:: get_device_options(ModelOptions& device_opt)
+const ModelOptions&
+InputParser:: get_device_options(void)
 
 {
 
-  device_opt = _device_options;
+  return _device_options;
 
 
 } //  end  method

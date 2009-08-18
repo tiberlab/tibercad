@@ -109,6 +109,9 @@ class Utils
     static double bernoulli_inv(double x);
 
 
+    //! Format a time in seconds as string
+    static std::string time_to_string(double seconds);
+
 
     //! Return the directory part of a filename
     static std::string dirname(const std::string& file);

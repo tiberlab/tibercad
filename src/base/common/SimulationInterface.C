@@ -41,6 +41,7 @@
 // LibMesh includes
 #include "system.h"
 
+#include <boost/timer.hpp>
 #include <sstream>
 
 using namespace std;
@@ -408,6 +409,7 @@ SimulationInterface::solve_equilibrium(void) throw (SolveFailedException)
     perflog.stop_event("solve_equilibrium");
 
     _equilibrium_is_solved = true;
+
   }
 }
 
@@ -423,6 +425,8 @@ SimulationInterface::solve(void) throw (SolveFailedException)
   perflog.start_event("solve");
 
   assert(is_initialized());
+
+  boost::timer t;
 
   Messages m;
   m.newline();
@@ -463,6 +467,12 @@ SimulationInterface::solve(void) throw (SolveFailedException)
   _is_solved = true;
 
   m.unindent();
+
+  ostringstream os;
+  os << "Solve time: " << Utils::time_to_string(t.elapsed());
+  Messages::newline();
+  Messages::info(os.str());
+
   int w = Messages::available_width();
   string s("<<<<");
   s.reserve(w);

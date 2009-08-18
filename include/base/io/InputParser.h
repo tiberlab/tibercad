@@ -128,7 +128,7 @@ class InputParser{
   /*!
    * Gets a ModelOptions object containing the general Options of  the  section Device.
    */
-  void get_device_options(ModelOptions& device_opt);
+  const ModelOptions& get_device_options(void);
 
 
 

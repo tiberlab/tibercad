@@ -74,6 +74,41 @@ Utils::basename(const std::string& file)
 }
 
 
+std::string
+Utils::time_to_string(double seconds)
+{
+  int h = 0;
+  int m = 0;
+  double s = seconds;
+
+  if (s >= 60.0)
+  {
+    m = int(floor(s/60.0));
+    s -= m * 60.0;
+  }
+
+  if (m >= 60)
+  {
+    h = int(floor(m/60.0));
+    m -= h * 60;
+  }
+
+  ostringstream os;
+  if (h > 0)
+    os << h << " h ";
+
+  if (m > 0)
+    os << m << " min ";
+
+  os.setf(ios::fixed);
+  os.width(2);
+  os.precision(2);
+  os << s << " sec";
+
+  return os.str();
+}
+
+
 
 void 
 Utils::convert_path_to_unix(std::string& path)

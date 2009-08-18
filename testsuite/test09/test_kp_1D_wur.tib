@@ -1,19 +1,19 @@
 $Device
 {
 
-  Region well
+  Options
   {
-    reg_numb = 1
-    mat = GaN
-    x = 0.4
-
     structure = wz
     y-growth-direction = (1,0,-1,0)
     z-growth-direction = (-1,2,-1,0)
     x-growth-direction = (0,0,0,1)
+  }
 
-   
-    
+
+  Region well
+  {
+    reg_numb = 1
+    mat = GaN
 
     doping = 1e18
     doping_type = acceptor
@@ -26,14 +26,6 @@ $Device
     reg_numb = 2
     mat = AlGaN
     x = 0.3
-    structure = wz
-    y-growth-direction = (1,0,-1,0)
-    z-growth-direction = (-1,2,-1,0)
-    x-growth-direction = (0,0,0,1)
-
-
-   
-   
 
     doping = 5e16
     doping_type = acceptor
@@ -49,14 +41,6 @@ $Device
     reg_numb = 3
     mat = AlGaN
     x = 0.3
-    structure = wz
-    y-growth-direction = (1,0,-1,0)
-    z-growth-direction = (-1,2,-1,0)
-    x-growth-direction = (0,0,0,1)
-   
-   
-
-
     doping = 5e16
     doping_type = acceptor
     doping_level = 0.025
