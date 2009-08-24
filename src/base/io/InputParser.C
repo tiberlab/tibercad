@@ -1268,24 +1268,10 @@ void InputParser::read_device(void)
       parse_options(in_stream,temp_options,block_name, section_name   ); 
       // extract and delete name, ID and  mat   from  temp_region_options
       // ................
-      string material, region_numb , def;
+      string region_numb , def;
 
       def = "";
 
-      //  temp for  back-compatibility
-      //
-      material  = temp_options.get_option( "mat" ,def);
-      temp_options.delete_option ( "mat" );
-      //      cerr << "****************** mat =  " << material << " ******************"<<  endl;
-
-
-      if (material == "")
-      {
-        material  = temp_options.get_option( "material" ,def);
-        temp_options.delete_option ( "material" );
-        //        cerr << "****************** material !! =  " << material << " ******************"<<  endl;
-
-      }
 
       region_numb = temp_options.get_option( "reg_numb" ,def);
       temp_options.delete_option ( "reg_numb" );
@@ -1316,7 +1302,6 @@ void InputParser::read_device(void)
       current_region_structure.set_region_name(region_name);
       current_region_structure.set_region_ID(region_numb);
 
-      current_region_structure.set_material_name(material);
       current_region_structure.set_model_options(temp_options);
 
       //   current_region_structure.set_model_options(temp_region_options);
@@ -1961,7 +1946,6 @@ InputParser::parse_model(ifstream& in_stream)
         current_BC_region_structure.set_region_name(BC_region_name);
         current_BC_region_structure.set_region_ID(BC_region_numb);
 
-        current_BC_region_structure.set_material_name("");
         current_BC_region_structure.set_model_options(temp_options);
 
         current_BC_region_ID   = atoi(BC_region_numb.c_str());

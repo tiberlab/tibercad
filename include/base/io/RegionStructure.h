@@ -49,11 +49,6 @@ class RegionStructure{
    */
   const std::string&  get_region_ID() const;
 
-  //!  Returns the name of the material associated to the region (if  physical) . 
-  /*!
-   * 
-   */
-  const std::string&  get_material_name() const;
 
   //!  Returns the options associated to the region. 
   /*!
@@ -78,13 +73,6 @@ class RegionStructure{
   void set_region_ID(const std::string& region_numb);
 
 
-  //!  Set the material name  to "material". 
-  /*!
-   * 
-   */
-  void set_material_name(const std::string& material);
-
-
   //!  Set  the options for the present  region. 
   /*!
    * 
@@ -100,7 +88,7 @@ class RegionStructure{
   /*!
    * 
    */
-  std::string region_name, region_ID, material_name;
+  std::string region_name, region_ID;
 
   //!  Contains a ModelOptions description of  region options
   /*!
@@ -140,14 +128,6 @@ std::string&  RegionStructure::get_region_ID() const
 }
 
 
-inline const
-std::string&  RegionStructure::get_material_name() const
-{
-   
-  return material_name;
-
-}
-
 
 inline
 void
@@ -175,16 +155,6 @@ RegionStructure::set_region_ID(const std::string& region_numb)
 {
    
   region_ID = region_numb;  
-
-}
-
-
-inline
-void
-RegionStructure::set_material_name(const std::string& material)
-{
-   
-  material_name =  material;  
 
 }
 
