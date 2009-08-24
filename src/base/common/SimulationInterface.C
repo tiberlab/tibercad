@@ -41,7 +41,6 @@
 // LibMesh includes
 #include "system.h"
 
-#include <boost/timer.hpp>
 #include <sstream>
 
 using namespace std;
@@ -426,7 +425,7 @@ SimulationInterface::solve(void) throw (SolveFailedException)
 
   assert(is_initialized());
 
-  boost::timer t;
+  Utils::Timer tt;
 
   Messages m;
   m.newline();
@@ -469,7 +468,7 @@ SimulationInterface::solve(void) throw (SolveFailedException)
   m.unindent();
 
   ostringstream os;
-  os << "Solve time: " << Utils::time_to_string(t.elapsed());
+  os << "Solve time: " << tt.elapsed_string();
   Messages::newline();
   Messages::info(os.str());
 

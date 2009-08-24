@@ -27,7 +27,7 @@ class Utils
     /*!
      * \param input the string to parse
      * \param vec the extracted vector
-     * 
+     *
      * The input string has to be of one of the following forms:
      * \li \verbatim ( val1, val2, ..., valN ) \endverbatim
      * \li \verbatim [ val1, val2, ..., valN ] \endverbatim
@@ -76,7 +76,7 @@ class Utils
         typedef double first_argument_type;
         typedef double second_argument_type;
         typedef bool result_type;
-        
+
         //! compare \c a with \c b
         bool operator()(double a, double b) const;
 
@@ -137,6 +137,31 @@ class Utils
 
     //! Skip whitespace in a stream
     static void skip_whitespace(std::istream& istr);
+
+
+    //! A timer class, based on the times() system call
+    class Timer
+    {
+      public:
+
+        //! Constructor
+        /*!
+         * Postcondition: the timer is reset
+         */
+        Timer(void);
+        ~Timer(void) {};
+
+        //! Reset the timer
+        void reset(void);
+
+        //! Get the elapsed time as a formatted string
+        std::string elapsed_string(void);
+
+      private:
+
+        clock_t _user;
+        clock_t _system;
+    };
 
 
 
@@ -248,7 +273,7 @@ Utils::almost_equal::operator()(double a, double b) const
   bool result = std::isless(diff, _eps * (1.0 + std::fabs(a)));
   return result;
 }
-  
+
 
 inline
 bool
@@ -258,7 +283,7 @@ Utils::almost_equal::operator()(double a, double b, double eps) const
   bool result = std::isless(diff, eps * (1.0 + std::fabs(a)));
   return result;
 }
-  
+
 
 inline
 bool
@@ -268,7 +293,7 @@ Utils::almost_equal::compare(double a, double b, double eps)
   bool result = std::isless(diff, eps * (1.0 + std::fabs(a)));
   return result;
 }
-  
+
 
 
 inline

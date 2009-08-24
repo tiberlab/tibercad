@@ -13,9 +13,45 @@
 #include <cctype>
 #include <iostream>
 #include <sstream>
+#include <sys/times.h>
 
 
 using namespace std;
+
+
+Utils::Timer::Timer(void)
+{
+  reset();
+}
+
+
+void
+Utils::Timer::reset(void)
+{
+  struct tms now;
+  times(&now);
+  _user = now.tms_utime;
+  _system = now.tms_stime;
+}
+
+
+string
+Utils::Timer::elapsed_string(void)
+{
+  struct tms now;
+  times(&now);
+
+  double tps = sysconf(_SC_CLK_TCK);
+  double user_sec = (now.tms_utime - _user) / tps;
+  double sys_sec = (now.tms_stime - _system) / tps;
+
+  string s(time_to_string(user_sec));
+  s += " (system: " + time_to_string(sys_sec) + ")";
+
+  return s;
+}
+
+
 
 
 string
@@ -41,7 +77,7 @@ Utils::tokenize(const std::string& input, std::vector<std::string>& tokens,
 {
   typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
   boost::char_separator<char> sep(delimiter);
-  
+
   tokenizer tok(input, sep);
 
   tokens.resize(0);
@@ -110,7 +146,7 @@ Utils::time_to_string(double seconds)
 
 
 
-void 
+void
 Utils::convert_path_to_unix(std::string& path)
 {
   size_t n = path.size();
@@ -130,7 +166,7 @@ Utils::convert_path_to_unix(std::string& path)
 const std::string
 Utils::get_until_matching_symbol(std::istream& istr, char open, char close)
 {
-  std::string str = ""; 
+  std::string str = "";
   int tmp = 0;
   int last_letter = 0;
   int opened = 1;
@@ -145,7 +181,7 @@ Utils::get_until_matching_symbol(std::istream& istr, char open, char close)
       opened--;
       // un-backslashed closing symbol => it's the end of the string
       if (opened == 0) return (str + close);
-      else if (tmp == '\\' && last_letter != '\\') 
+      else if (tmp == '\\' && last_letter != '\\')
 	continue;  // do not append an unbackslashed backslash
     }
     str += tmp;
@@ -199,7 +235,7 @@ Utils::extract_vector(const string& input, vector<T>& vec)
     case '(':
       if (tmp != ')') return;
       break;
-   
+
     case '{':
       if (tmp != '}') return;
       break;
