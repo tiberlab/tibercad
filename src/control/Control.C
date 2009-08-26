@@ -360,12 +360,19 @@ Control::create_materials(void)
 
     // get the common device options
     ModelOptions opts(parser.get_device_options());
-    opts += data.get_options();
-
     // The default material is Si
     // backwards compatibility
     string material = opts.get_option("mat", "Si");
     material = opts.get_option("material", material);
+
+    opts += data.get_options();
+
+    // backwards compatibility
+    material = data.get_options().get_option("mat", material);
+    material = data.get_options().get_option("material", material);
+    opts.delete_option("mat");
+    opts["material"] = material;
+
     Material* mat = Material::create(material, opts);
     _device->set_material(mat, region_ids, data.get_region_name());
   }
