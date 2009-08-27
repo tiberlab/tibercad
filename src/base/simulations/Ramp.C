@@ -167,6 +167,9 @@ Ramp::ramp(void)
         << " failed while solving \'" << _simulations[j]->get_name() << "\'.";
       Messages::warning(os.str());
 
+      // this is a special case
+      if (step == 0) throw SolveFailedException("Cannot decrease step size, is already 0");
+
       value = oldvalue;
     }
   }

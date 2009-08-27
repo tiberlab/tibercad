@@ -531,6 +531,8 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     {
       failed = true;
       Messages::error(e.what());
+      if (i == 0)
+        throw SolveFailedException("Already first sweep step could not be solved.");
     }
 
     get_control().drop_first_filename_suffix();
