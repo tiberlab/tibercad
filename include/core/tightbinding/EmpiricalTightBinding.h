@@ -184,6 +184,10 @@ class ETB : public TightBinding
 
   double build_rho(const std::string& particle, const Point& r);
 
+  double build_rho3d(const std::string& particle, const Point& r);
+
+  double build_average_rho1d(const std::string& particle, const Elem* elem);
+
   virtual void do_init(void);
 
   virtual void do_solve (void);

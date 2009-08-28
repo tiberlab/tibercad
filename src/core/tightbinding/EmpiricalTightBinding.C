@@ -1071,6 +1071,26 @@ for (mit=variables.begin() ; mit != variables.end(); mit++)
 double
 ETB::build_rho(const std::string& particle, const Point& r)
 {
+  if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
+          {
+    std::cerr << "Error: a 1d point charge projection is not available" << std::endl;
+            exit(1);
+          }
+  else if (get_environment().get_device().get_mesh().mesh_dimension() == 2)
+  {
+    std::cerr << "Error: a 2d point charge projection is not available" << std::endl;
+    exit(1);
+  }
+  else if (get_environment().get_device().get_mesh().mesh_dimension() == 3)
+    {
+    return build_rho3d(particle, r);
+    }
+}
+
+
+double
+ETB::build_rho3d(const std::string& particle, const Point& r)
+{
   double tau = 1.0 / (_upt_options.projection_length / _atomistic_structure->get_scale());
   const double deltar_max = tau * 10; //Maximum cutoff distance
   double deltar, uhatom;
@@ -1108,14 +1128,14 @@ ETB::build_rho(const std::string& particle, const Point& r)
       y1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(2) / _atomistic_structure->get_scale();
       z1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(3) / _atomistic_structure->get_scale();
 
-      if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
-        {
-          y1 = 0.0; z1 = 0.0;
-        }
-      if (get_environment().get_device().get_mesh().mesh_dimension() == 2)
-              {
-               z1 = 0.0;
-              }
+//      if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
+//        {
+//          y1 = 0.0; z1 = 0.0;
+//        }
+//      if (get_environment().get_device().get_mesh().mesh_dimension() == 2)
+//              {
+//               z1 = 0.0;
+//              }
       //delta_r is already in mesh units in this way
       deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
 
@@ -1152,6 +1172,93 @@ ETB::build_rho(const std::string& particle, const Point& r)
   rho =  rho / (( get_control().get_device().get_mesh_units() * 100.0 ) *
         ( get_control().get_device().get_mesh_units() * 100.0 ) *
         ( get_control().get_device().get_mesh_units() * 100.0 ));
+
+  return rho;
+
+}
+
+
+double
+ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
+{
+  double tau = 1.0 / (_upt_options.projection_length / _atomistic_structure->get_scale());
+  const double deltar_max = tau * 10; //Maximum cutoff distance
+  double deltar, uhatom;
+  double rho = 0.0;
+  double x_atm, x1, x2;
+
+  assert(elem->n_nodes() == 2);
+
+  x1 = elem->point(0)(0); x2 = elem->point(1)(0);
+
+  //just order nodes in ascending order, using "x_atm" temporary
+  x_atm = x1;
+  if (x1 > x2) {x1 = x2; x2 = x_atm;}
+
+  std::vector<double>* charges = NULL;
+
+  if (particle == "el") charges = &(_el_atomic_charges);
+  if (particle == "hl") charges = &(_hl_atomic_charges);
+
+
+  if ((*charges).size() == 0)
+    {
+      std::cerr << "ERROR IN TIGHTBINDING: trying to build charge density "
+      "but no mulliken charges are available" << std::endl;
+      exit(1);
+    }
+
+  for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
+    {
+
+      //std::cout << "rho before loop is " << rho << std::endl;
+      //Getting Hubbard parameter
+      //Up to now densities are mapped on orbital S
+      //uhatom = _u_hub[_atomistic_structure->get_structure_atoms()[iatm].get_specie()][S];
+
+
+      //Convert atom position to mesh units
+      x_atm = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
+
+//      if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
+//        {
+//          y1 = 0.0; z1 = 0.0;
+//        }
+//      if (get_environment().get_device().get_mesh().mesh_dimension() == 2)
+//              {
+//               z1 = 0.0;
+//              }
+      //delta_r is already in mesh units in this way
+      deltar = abs( (x_atm - x1) );
+
+      //Also hubbard parameters (and tau) must be scaled in mesh units
+      // (uhatom is in (atomic units)^(-1))
+//      double tau = ( ( uhatom * ( 16.0 / 5.0 ) ) / (Constants::bohr_radius ) ) * get_control().get_device().get_mesh_units();
+
+      if (deltar > deltar_max) continue;
+      else
+      {
+        //Calculate charge
+        //1D formulation is the solution of (DQ*tau/2)*int_{x1}^{x2}{exp(-tau*|x-x_atm|)dx}
+
+        if (x_atm >= x2)
+        {
+          rho = rho + 0.5 * ((*charges)[iatm]) * ( exp(tau * (x2 - x_atm)) - exp(tau * (x1 - x_atm)) );
+        }
+        else if (x_atm <= x1)
+        {
+          rho = rho + 0.5 * ((*charges)[iatm]) * ( - exp(-tau * (x2 - x_atm)) - exp(-tau * (x1 - x_atm)) );
+        }
+        else
+        //x_atm between x1 and x2
+        {
+          rho = rho + 0.5 * ((*charges)[iatm]) * (2 + exp(-tau * (x2 - x_atm)) - exp(-tau * (x1 - x_atm)) );
+        }
+      }
+    }
+
+  //scale rho to q/cm (carrier density)
+  rho =  rho / ( get_control().get_device().get_mesh_units() * 100.0 );
 
   return rho;
 
