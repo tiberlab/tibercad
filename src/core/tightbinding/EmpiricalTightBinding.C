@@ -952,8 +952,13 @@ ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
               values[n][EL_CH] = _elemental_result_el[elem];
             }
           else
-            {
-              _elemental_result_el[elem] = build_rho("el", elem->centroid());
+            { 
+	      if (get_environment().get_device().get_mesh().mesh_dimension() == 3)
+              _elemental_result_el[elem] = build_rho3d("el", elem->centroid());
+	      else if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
+	      _elemental_result_el[elem] = build_average_rho1d("el", elem);
+              else std::cerr << "No rules to build 2D results" << std::endl;
+
               values[n][EL_CH] = _elemental_result_el[elem];
             }
         }
@@ -968,8 +973,12 @@ ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
               values[n][HL_CH] = _elemental_result_hl[elem];
             }
           else
-            {
-              _elemental_result_hl[elem] = build_rho("hl", elem->centroid());
+            {  if (get_environment().get_device().get_mesh().mesh_dimension() == 3)
+              _elemental_result_hl[elem] = build_rho3d("hl", elem->centroid());
+               else if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
+	       _elemental_result_hl[elem] = build_average_rho1d("hl", elem);
+	       else std::cerr << "No rules to build 2D results" << std::endl;
+
               values[n][HL_CH] = _elemental_result_hl[elem];
             }
 
