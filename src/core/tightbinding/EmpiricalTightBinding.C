@@ -146,7 +146,7 @@ ETB::do_init(void){
   gen_outfile.copy(_upt_options.gen_outfile, gen_outfile.size() );
   out_path.copy(_upt_options.out_path, out_path.size() );
 
-
+  _dim = get_environment().get_device().get_mesh().mesh_dimension();
 
   //inst->addskdata(_dftb_options.skNames, _dftb_options.mAngs,
   //    _dftb_options.orbResolved, _dftb_options.skInterp, _dftb_options.nType);
@@ -200,7 +200,7 @@ void ETB::reinit(void){
 
   // temporary hack to consider c-axis orientations
   // By default wurtzites c-axis is along z. If 1-d then it is along x:
-  if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
+  if (_dim == 1)
     { _upt_options.c_axis[0]= 1.0;
       _upt_options.c_axis[1]= 0.0;
       _upt_options.c_axis[2]= 0.0;
@@ -953,9 +953,9 @@ ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
             }
           else
             { 
-	      if (get_environment().get_device().get_mesh().mesh_dimension() == 3)
+	      if (_dim == 3)
               _elemental_result_el[elem] = build_rho3d("el", elem->centroid());
-	      else if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
+	      else if (_dim == 1)
 	      _elemental_result_el[elem] = build_average_rho1d("el", elem);
               else std::cerr << "No rules to build 2D results" << std::endl;
 
@@ -973,9 +973,9 @@ ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
               values[n][HL_CH] = _elemental_result_hl[elem];
             }
           else
-            {  if (get_environment().get_device().get_mesh().mesh_dimension() == 3)
+            {  if (_dim == 3)
               _elemental_result_hl[elem] = build_rho3d("hl", elem->centroid());
-               else if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
+               else if (_dim == 1)
 	       _elemental_result_hl[elem] = build_average_rho1d("hl", elem);
 	       else std::cerr << "No rules to build 2D results" << std::endl;
 
@@ -1190,9 +1190,11 @@ ETB::build_rho3d(const std::string& particle, const Point& r)
 double
 ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
 {
-  double tau = 1.0 / (_upt_options.projection_length / _atomistic_structure->get_scale());
-  const double deltar_max = tau * 10; //Maximum cutoff distance
-  double deltar, uhatom;
+  //Projection length in mesh units
+  double proj_length = (_upt_options.projection_length / _atomistic_structure->get_scale());
+  double tau = 1.0 / proj_length;
+  const double deltar_max = proj_length * 10; //Maximum cutoff distance
+  double deltar, uhatom, l;
   double rho = 0.0;
   double x_atm, x1, x2;
 
@@ -1203,6 +1205,8 @@ ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
   //just order nodes in ascending order, using "x_atm" temporary
   x_atm = x1;
   if (x1 > x2) {x1 = x2; x2 = x_atm;}
+  l = x2 - x1;
+
 
   std::vector<double>* charges = NULL;
 
@@ -1229,6 +1233,7 @@ ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
       //Convert atom position to mesh units
       x_atm = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
 
+
 //      if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
 //        {
 //          y1 = 0.0; z1 = 0.0;
@@ -1238,7 +1243,7 @@ ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
 //               z1 = 0.0;
 //              }
       //delta_r is already in mesh units in this way
-      deltar = abs( (x_atm - x1) );
+      deltar = min( abs( (x_atm - x1) ), abs( (x_atm - x2) ) );
 
       //Also hubbard parameters (and tau) must be scaled in mesh units
       // (uhatom is in (atomic units)^(-1))
@@ -1252,16 +1257,16 @@ ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
 
         if (x_atm >= x2)
         {
-          rho = rho + 0.5 * ((*charges)[iatm]) * ( exp(tau * (x2 - x_atm)) - exp(tau * (x1 - x_atm)) );
+          rho = rho + (0.5 / l) * ((*charges)[iatm]) * ( exp(tau * (x2 - x_atm)) - exp(tau * (x1 - x_atm)) );
         }
         else if (x_atm <= x1)
         {
-          rho = rho + 0.5 * ((*charges)[iatm]) * ( - exp(-tau * (x2 - x_atm)) - exp(-tau * (x1 - x_atm)) );
+          rho = rho - (0.5 / l) * ((*charges)[iatm]) * ( - exp(-tau * (x2 - x_atm)) - exp(-tau * (x1 - x_atm)) );
         }
         else
         //x_atm between x1 and x2
         {
-          rho = rho + 0.5 * ((*charges)[iatm]) * (2 + exp(-tau * (x2 - x_atm)) - exp(-tau * (x1 - x_atm)) );
+          rho = rho + (0.5 / l) * ((*charges)[iatm]) * (2.0 - exp(-tau * (x2 - x_atm)) - exp(tau * (x1 - x_atm)) );
         }
       }
     }

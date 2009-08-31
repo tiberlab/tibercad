@@ -198,6 +198,8 @@ class ETB : public TightBinding
 
   virtual void assemble(const ModelOptions& options);
 
+  //Mesh dimension (used many times by charge projection function)
+  int _dim;
 
   //! computes the matrix element for the optical matrix
   //! the P matrix comes out in   eV * Ang  (setting m=1,hbar=1)

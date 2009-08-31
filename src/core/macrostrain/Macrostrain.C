@@ -10,6 +10,7 @@
 #include "MacrostrainSubstrate.h"
 #include "SimulationOptions.h"
 #include "TiberLinearSystem.h"
+#include "MeshUtils.h"
 
 #include "TiberLinearSolver.h"
 #include "TiberPetscLinearSolver.h"
@@ -420,7 +421,7 @@ void Macrostrain::do_init( )
     for ( ; ( el != end_el ) ; ++el)
     {
       Elem* elem = *el;
-      if (   may_belong_to_element(elem,  p) )
+      if (   MeshUtils::may_belong_to_element(elem,  p) )
       {
 	if (elem->contains_point(p))
 	{
@@ -3744,7 +3745,7 @@ void Macrostrain::read_atom_structure(const std::string filename)
 	{
 	  Elem* elem = *el3;
 
-	  if  (may_belong_to_element(elem,  point2))
+	  if  (MeshUtils::may_belong_to_element(elem,  point2))
 	    {
 	      if (elem->contains_point(point2))
 		{
@@ -3774,7 +3775,7 @@ void Macrostrain::read_atom_structure(const std::string filename)
 	      for (unsigned int i=0 ; i < elem1->n_children() ; i++)
 		{
 		  Elem* 	child = elem1->child(i);
-		  if  (may_belong_to_element(elem1,  point2))
+		  if  (MeshUtils::may_belong_to_element(elem1,  point2))
 		    {
 		      if (child->contains_point(point2))
 			{
@@ -4402,51 +4403,7 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
   as->print_structure("strained.xyz");
 
 }
-//-------------------------------------------------------------------------------------
 
-
-
-//-------------------------------------------------------------------------------------------/
-bool Macrostrain::may_belong_to_element(const Elem* element, Point& point)
-{
-  const unsigned int n = element->n_nodes();
-  double  min_x;double  min_y; double  min_z;
-  double  max_x;double  max_y; double  max_z;
-
-  Point vertex = element->point(0);
-  min_x = vertex(0); min_y = vertex(1); min_z = vertex(2);
-  max_x = min_x;  max_y = min_y; max_z = min_z;
-
-  for (unsigned int i = 1 ; i < n ; i++)
-    {
-      vertex = element->point(i);
-      double x = vertex(0);
-      double y = vertex(1);
-      double z = vertex(2);
-
-      if (min_x > x) min_x = x; if (min_y > y) min_y = y; if (min_z > z) min_z = z;
-
-      if (max_x < x) max_x = x; if (max_y < y) max_y = y; if (max_z < z) max_z = z;
-
-
-
-    }
-
-  if ( (point(0) > max_x) ||  (point(0) < min_x) ||
-       (point(1) > max_y) ||  (point(1) < min_y) ||
-       (point(2) > max_z) ||  (point(2) < min_z) )
-
-    {    return(false);}
-
-  else
-    {    return(true) ; }
-
-
-
-}
-
-
-//-------------------------------------------------------------------------------------------/
 
 //-------------------------------------------------------------------------------------------/
 unsigned int Macrostrain::find_nearest_node(Point& point)

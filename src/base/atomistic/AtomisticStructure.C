@@ -6,8 +6,8 @@
 #include "AtomisticGenerator2D.h"
 #include "AtomisticGenerator3D.h"
 #include "BondMap.h"
-#include "Macrostrain.h"
 #include"Messages.h"
+#include "MeshUtils.h"
 
 //C++ includes
 //--------------------
@@ -211,7 +211,7 @@ AtomisticStructure::associate_elements()
           for (it = el_start; it != el_end; it++)
             {
               Elem* elem = *it;
-              if (Macrostrain::may_belong_to_element(elem,p))
+              if (MeshUtils::may_belong_to_element(elem,p))
                 {
                   if ( (elem->contains_point(p) ) ) _structure_atoms[i].set_elem(elem);
                   set = true;

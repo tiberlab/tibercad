@@ -3,9 +3,9 @@
 #include "AtomisticGenerator1D.h"
 #include "AtomisticGenerator2D.h"
 #include "AtomisticGenerator3D.h"
-#include "Macrostrain.h"
 #include "BondMap.h"
 #include "Messages.h"
+#include "MeshUtils.h"
 
 #include <stdio.h>
 #include <cmath>
@@ -331,7 +331,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
               Elem* elem = *it;
               el_reg = elem->subdomain_id();
 
-              if (Macrostrain::may_belong_to_element(elem, p)){
+              if (MeshUtils::may_belong_to_element(elem, p)){
 
                 if ( ( elem->contains_point(p) ) ) {
 //std::cout << "CONTAINS ";
@@ -402,7 +402,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
               Elem* elem = *it;
               el_reg = elem->subdomain_id();
 
-              if (Macrostrain::may_belong_to_element(elem,p))
+              if (MeshUtils::may_belong_to_element(elem,p))
                 {
 
                   if ( (elem->contains_point(p) ) )
@@ -425,7 +425,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                               p(0) = tmp_atom.get_position()(1) / scale;
                               if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position()(2) / scale;
                               if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
-                              if (Macrostrain::may_belong_to_element(elem,p))
+                              if (MeshUtils::may_belong_to_element(elem,p))
                                 {
                                   if ( (elem->contains_point(p) ) ) (*atom).set_elem(elem);
                                 }
@@ -492,7 +492,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
               el_reg = elem->subdomain_id();
 
 
-              if (Macrostrain::may_belong_to_element(elem,p))
+              if (MeshUtils::may_belong_to_element(elem,p))
                 {
 
                   if ( (elem->contains_point(p) ) )
@@ -517,7 +517,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                                   p(0) = tmp_atom.get_position()(1) / scale;
                                   if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position()(2) / scale;
                                   if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
-                                  if (Macrostrain::may_belong_to_element(elem,p))
+                                  if (MeshUtils::may_belong_to_element(elem,p))
                                     {
                                       if ( (elem->contains_point(p) ) ) (*atom).set_elem(elem);
                                     }
