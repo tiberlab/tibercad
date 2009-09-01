@@ -1125,26 +1125,11 @@ ETB::build_rho3d(const std::string& particle, const Point& r)
 
   for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
     {
-
-      //std::cout << "rho before loop is " << rho << std::endl;
-      //Getting Hubbard parameter
-      //Up to now densities are mapped on orbital S
-      //uhatom = _u_hub[_atomistic_structure->get_structure_atoms()[iatm].get_specie()][S];
-
-
       //Convert atom position to mesh units
       x1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
       y1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(2) / _atomistic_structure->get_scale();
       z1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(3) / _atomistic_structure->get_scale();
 
-//      if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
-//        {
-//          y1 = 0.0; z1 = 0.0;
-//        }
-//      if (get_environment().get_device().get_mesh().mesh_dimension() == 2)
-//              {
-//               z1 = 0.0;
-//              }
       //delta_r is already in mesh units in this way
       deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
 
@@ -1161,10 +1146,8 @@ ETB::build_rho3d(const std::string& particle, const Point& r)
                 normalize = period[8] / _atomistic_structure->get_scale();
               }
 
-
       //Also hubbard parameters (and tau) must be scaled in mesh units
       // (uhatom is in (atomic units)^(-1))
-//      double tau = ( ( uhatom * ( 16.0 / 5.0 ) ) / (Constants::bohr_radius ) ) * get_control().get_device().get_mesh_units();
 
       if (deltar > deltar_max) continue;
       else
@@ -1221,6 +1204,9 @@ ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
       exit(1);
     }
 
+  //TODO: performing this operation anytime is slow. Make a function in AtomisticStructure
+  double* period = _atomistic_structure->get_periodicity_vectors();
+
   for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
     {
 
@@ -1233,21 +1219,8 @@ ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
       //Convert atom position to mesh units
       x_atm = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
 
-
-//      if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
-//        {
-//          y1 = 0.0; z1 = 0.0;
-//        }
-//      if (get_environment().get_device().get_mesh().mesh_dimension() == 2)
-//              {
-//               z1 = 0.0;
-//              }
       //delta_r is already in mesh units in this way
       deltar = min( abs( (x_atm - x1) ), abs( (x_atm - x2) ) );
-
-      //Also hubbard parameters (and tau) must be scaled in mesh units
-      // (uhatom is in (atomic units)^(-1))
-//      double tau = ( ( uhatom * ( 16.0 / 5.0 ) ) / (Constants::bohr_radius ) ) * get_control().get_device().get_mesh_units();
 
       if (deltar > deltar_max) continue;
       else
@@ -1271,8 +1244,15 @@ ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
       }
     }
 
-  //scale rho to q/cm (carrier density)
-  rho =  rho / ( get_control().get_device().get_mesh_units() * 100.0 );
+  //scale rho to q/cm^(-3) (carrier density)
+
+  double normalize = 1.0;
+  normalize = period[4]*period[8] - period[7]*period[5]
+                      / _atomistic_structure->get_scale() / _atomistic_structure->get_scale();
+  rho = rho / normalize;
+
+  rho =  rho / ( get_control().get_device().get_mesh_units() * 100.0 ) / ( get_control().get_device().get_mesh_units() * 100.0 )
+      / ( get_control().get_device().get_mesh_units() * 100.0 );
 
   return rho;
 
