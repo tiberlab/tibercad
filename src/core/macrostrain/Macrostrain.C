@@ -4138,47 +4138,7 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
   std::cout << "APPLYING STRAIN TO ATOMS " << std::endl;
 
-  //file opening
-  // string  string_from_file;
-
-  //  std::ifstream atom_in_file;
-  // std::ofstream displacement_file;
-
-
-
-
-
-  //displacement_file.open(filename.c_str());
-
-  //if (!displacement_file.good())
-  //{
-  //  cerr << "Error: file with atom displacements can not be opened\n";
-  //  cerr << filename.c_str() << "\n";
-  //  error();
-  //}
-
-
-
-
-  //--------------------------------------------------------------------
-  //if (atom_output_type=="uptight")
-  //{
-  //for uptight we have output displacements.
-  //therefore we need also the initial positions
-
-  //atom_in_file.open(atom_structure_filename.c_str());
-
-  //if ( ! atom_in_file.good () )
-  // {
-  //   cerr << "Error: file with atom positions can not be opened\n";
-  //   cerr << atom_structure_filename.c_str() << "\n";
-  //   error();
-  // }
-
-  //   }
-  //-------------------------------------------------------------------
   const Mesh& mesh =  equation_systems->get_mesh();
-
 
   LinearImplicitSystem& system = *my_system;
 
@@ -4195,12 +4155,9 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
     }
 
 
-
   FEType fe_type = dof_map.variable_type(0);
 
-
   AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
-
 
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
@@ -4224,7 +4181,7 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
   for (unsigned int i = 0; i < Number_of_atom ; i++)
     {//atoms loop
-      if (as->get_structure_atoms()[i].get_elem() != NULL)
+      if ((as->get_structure_atoms()[i].get_elem() != NULL)&&(as->get_structure_atoms()[i].get_specie() != "H"))
         {//atom belongs to the simulation domain
 
           vector <double> new_pos_of_atom(3,0.0);
@@ -4241,7 +4198,6 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
 
           fe->reinit(as->get_structure_atoms()[i].get_elem(), &point_vec);
-//std::cout << q_point[0] << std::endl;
 
           /*----------------------------------------------
             first we move atom because the grid moves
