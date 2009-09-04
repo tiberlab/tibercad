@@ -43,10 +43,10 @@ Utils::Timer::elapsed_string(void)
 
   double tps = sysconf(_SC_CLK_TCK);
   double user_sec = (now.tms_utime - _user) / tps;
-  double sys_sec = (now.tms_stime - _system) / tps;
+  //double sys_sec = (now.tms_stime - _system) / tps;
 
   string s(time_to_string(user_sec));
-  s += " (system: " + time_to_string(sys_sec) + ")";
+  //s += " (system: " + time_to_string(sys_sec) + ")";
 
   return s;
 }
