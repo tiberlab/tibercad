@@ -4179,9 +4179,13 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
   unsigned int Number_of_atom = as->get_structure_atoms().size();
 
+  //We need to keep track of displacements to move hydrogen atoms in NULL element
+  //(apply the same displacement as their neighbour)
+  std::vector<Tensor1> u_atm(Number_of_atom);
+
   for (unsigned int i = 0; i < Number_of_atom ; i++)
     {//atoms loop
-      if ((as->get_structure_atoms()[i].get_elem() != NULL)&&(as->get_structure_atoms()[i].get_specie() != "H"))
+      if (as->get_structure_atoms()[i].get_elem() != NULL)
         {//atom belongs to the simulation domain
 
           vector <double> new_pos_of_atom(3,0.0);
@@ -4193,9 +4197,6 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
           //get atom relative point
           point_vec[0] =  _atom_relative_points[i];
-
-
-
 
           fe->reinit(as->get_structure_atoms()[i].get_elem(), &point_vec);
 
@@ -4260,94 +4261,20 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
                 }
 
-
-
-
             }
 
           //-------------------------------------------------------
 
 
 
-
-          //-------------------------------------------------------------------
-          //output of new coordinates
-
-          //          if (atom_output_type=="povray")
-          //            {
-          //              displacement_file <<  setw(20) <<  atom_structure[i].mat_number << ",";
-          //              displacement_file <<  setw(20) <<  atom_structure[i].type << ",";
-          //
-          //
-          //              displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[0]<< ","  ;
-          //              displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[1]<< ","  ;
-          //              displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[2]<< ","  ;
-          //
-          //              if (output_strain_on_atoms)
-          //                {
-          //                  Tensor2Sym epsilon = get_strain(atom_structure[i].element);
-          //                  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(1,1) << "," ;
-          //                  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,2) << "," ;
-          //                  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,3) << "," ;
-          //                  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,1) << "," ;
-          //                  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,1) << "," ;
-          //                  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,2) << "," ;
-          //                }
-          //            }
-
-
-          //          if (atom_output_type=="uptight")
-          //            {
-          //
-          //
-          //              getline(atom_in_file, string_from_file );
-          //
-          //
-          //              istringstream input_string(string_from_file);
-          //
-          //
-          //              int t ;
-          //              int mat;
-          //              double x;
-          //              double y;
-          //              double z;
-          //
-          //
-          //
-          //              input_string >>mat >> t >> x >> y >> z ;
-          //
-          //
-          //
-          //              displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[0] - x << ","  ;
-          //              displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[1] - y << ","  ;
-          //              displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[2] - z << ","  ;
-          //
-          //              if (output_strain_on_atoms)
-          //                {
-          //                  Tensor2Sym epsilon = get_strain(atom_structure[i].element);
-          //                  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(1,1)  ;
-          //                  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,2)  ;
-          //                  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,3)  ;
-          //                  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,1)  ;
-          //                  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,1)  ;
-          //                  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,2)  ;
-          //                }
-          //
-          //
-          //
-          //
-          //            }
-          //
-          //          displacement_file <<  '\n';
-          //
-          //
-
           Tensor1 tmp(0);
           //std::cout << "setting position from " << as->get_structure_atoms()[i].get_position();
           tmp(1) = new_pos_of_atom[0] * as->get_scale();
           tmp(2) = new_pos_of_atom[1] * as->get_scale();
           tmp(3) = new_pos_of_atom[2] * as->get_scale();
-          //std::cout << " to " << tmp << std::endl;
+
+          u_atm[i] = tmp - as->get_structure_atoms()[i].get_position();
+
           as->get_structure_atoms()[i].set_position(tmp);
 
         }//end of non NULL element atoms loop
@@ -4355,6 +4282,17 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
     }//end of atoms loop
 
 
+  unsigned int** bond_map = as->get_bond_map();
+  for (unsigned int i = 0; i < Number_of_atom ; i++)
+      {//atoms loop
+        if (as->get_structure_atoms()[i].get_elem() == NULL)
+          {
+          Tensor1 tmp(0);
+          tmp = as->get_structure_atoms()[i].get_position();
+          //Use first neighbour displacement
+          as->get_structure_atoms()[i].set_position(tmp + u_atm[bond_map[i][0]]);
+          }
+      }
   //For debugging
   as->print_structure("strained.xyz");
 
