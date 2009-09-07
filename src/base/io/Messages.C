@@ -83,6 +83,8 @@ Messages::error(const std::string& msg)
 void
 Messages::info(const std::string& msg, bool newline)
 {
+  static bool contd = false;
+
   std::vector<std::string> lines;
   Utils::tokenize(msg, lines, "\n");
 
@@ -92,12 +94,17 @@ Messages::info(const std::string& msg, bool newline)
 
   for (size_t l = 0; l < nl; l++)
   {
-    for (int i = 0; i < _indent * _indent_width; i++)
-      ts << " ";
+    if (!contd)
+      for (int i = 0; i < _indent * _indent_width; i++)
+        ts << " ";
     ts << lines[l];
     if (newline || (l < nl - 1)) ts << endl;
+
     ts << std::flush;
   }
+
+  if (newline) contd = false;
+  else contd = true;
 
 }
 

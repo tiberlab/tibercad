@@ -1,3 +1,7 @@
+2009-09-4 Auf der Maur
+	( ) set crystal directions in Material in create() and add method
+	    to get them
+
 2009-03-25 Auf der Maur
 	(DONE) review approach for variables
 
@@ -16,7 +20,7 @@
 	(DONE) implement Fowler-Nordheim for contacts
 
 2008-07-18 Auf der Maur
-	( ) improve Sweep to make 'logarithmic' scale sweeps, change meaning of 
+	(PARTLY DONE) improve Sweep to make 'logarithmic' scale sweeps, change meaning of 
 	min/max steps
 
 2008-07-18 Auf der Maur

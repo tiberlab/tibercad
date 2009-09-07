@@ -111,7 +111,7 @@ Device::setup_mesh(void)
   delete _boundary_nodes;
   _boundary_nodes = new map<unsigned int, vector<ID> >();
 
-  m.info("Reading mesh file ...");
+  m.info("Reading mesh file...", false);
 
   MeshInput::read_mesh(meshfile, dim, *_mesh, *_meshdata, *_boundary_nodes,
                        _mesh_region_names, _boundary_region_names);
@@ -120,7 +120,14 @@ Device::setup_mesh(void)
 
   MeshUtils::get_subdomain_ids(*_mesh, _region_ids);
 
-  m.info("done.");
+  m.info(" done.");
+  {
+    ostringstream os;
+    os << "number of nodes     : " << setw(7) << setfill(' ') << _mesh->n_nodes() << endl
+       << "number of elements  : " << setw(7) << setfill(' ') << _mesh->n_elem() << endl
+       << "number of subdomains: " << setw(7) << setfill(' ') << _mesh->n_subdomains();
+    m.info(os.str());
+  }
   m.newline();
 
   /*
