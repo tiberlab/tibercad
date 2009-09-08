@@ -51,7 +51,8 @@ public:
                    char *gen_filename, char *gen_outname, char *sparse_fmt, 
 		   int max_n_n, bool harrison_flag, bool relat_flag, 
 		   bool potential_flag, bool optmat_flag, int poldir, 
-		   double *c_axis, bool check_bondmap);
+		   double *c_axis, bool check_bondmap, 
+                   double dg_scale, double dg_onsite);
 
   //! Set verbosity level for the library screen output
   void set_verbose(int verbose_lev);

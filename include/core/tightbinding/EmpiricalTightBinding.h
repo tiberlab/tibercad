@@ -47,6 +47,8 @@ class ETB : public TightBinding
     double el_chem_pot;
     double temperature;
     double projection_length;
+    double dg_scale;
+    double dg_onsite;
   };
 
   class UptSolverOptions

@@ -62,7 +62,8 @@ ETB::UptOptions::UptOptions(void)
   upt_filename = new char[UPT_MC];  memset(upt_filename, ' ', UPT_MC);
   gen_outfile = new char[UPT_MC];   memset(gen_outfile, ' ', UPT_MC);
   sparse_fmt = new char[UPT_MC];    memset(sparse_fmt, ' ', UPT_MC);
-
+  dg_scale = 0.10;
+  dg_onsite = -200.0;
 }
 
 ETB::UptOptions::~UptOptions(void)
@@ -217,7 +218,8 @@ void ETB::reinit(void){
 		   _upt_options.max_TB_order, _upt_options.harrison_flag,
 		   _upt_options.relat_flag, _upt_options.potential_flag,
 		   _upt_options.opt_flag, _upt_options.poldir,
-		   _upt_options.c_axis, _upt_options.check_bondmap);
+		   _upt_options.c_axis, _upt_options.check_bondmap,
+                   _upt_options.dg_scale, _upt_options.dg_onsite );
 
   std::cout << "(TC) fill parameter done" << std::endl;
 
@@ -548,6 +550,11 @@ void ETB::parse_options(void)
   _upt_options.el_chem_pot = get_options().get_option("el_qfermi_level", 0.0);
 
   _upt_options.strain_sim = get_options().get_option("strain_model_name", "no_sim");
+
+  // Dangling bond scaling
+  _upt_options.dg_scale = get_options().get_option("dangling_bond_scaling",0.10);
+  _upt_options.dg_onsite = get_options().get_option("dangling_bond_onsite",-200.0);    
+
 
   // Solver options: "upt_lanczos", "read_old"
   _upt_solver_options.solver = get_solver_options().get_option("solver", "upt_lanczos");
