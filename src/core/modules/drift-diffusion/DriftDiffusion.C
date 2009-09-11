@@ -643,6 +643,7 @@ DriftDiffusion::do_solve(void)
     Messages::info(get_name() + ": Loading state from " + filename);
     load_data(filename);
     get_options().set_option("load_state", "");
+    if (!get_option("solve_after_load", false)) return;
   }
 
   // rebuild the system if needed
