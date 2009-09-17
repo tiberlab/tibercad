@@ -179,6 +179,9 @@ private:
   //! Read structure from file
   void read_structure(const std::string& path);
 
+  //! Read gnb structure
+  void read_gnb(std::string& path);
+
   //! Number of atoms in structure
   unsigned int N_atoms;
 

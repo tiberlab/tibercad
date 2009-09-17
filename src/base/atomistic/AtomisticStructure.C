@@ -441,6 +441,13 @@ AtomisticStructure::read_structure(const std::string& path)
 
 
 void
+AtomisticStructure::read_gnb(std::string& path)
+{
+
+}
+
+
+void
 AtomisticStructure::print_structure(const std::string& path)
 {
   std::ofstream file;
@@ -645,6 +652,8 @@ AtomisticStructure::print_structure(const std::string& path)
   //#endif
 
 }
+
+
 
 void
 AtomisticStructure::print_upg(const std::string& path, const std::string& etb_dataset)
