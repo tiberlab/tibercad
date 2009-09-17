@@ -340,7 +340,6 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                       std::string tmp =  assign[el_reg][(*atom).get_flag()];
                       (*atom).set_specie(tmp);
                       (*atom).set_flag(0);
-                      (*atom).set_region_ID(el_reg);
                       (*atom).belong_to_structure = true;
                       (*atom).set_elem(elem);
                       _structure_basis.push_back(*atom);
@@ -366,7 +365,6 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                   std::string tmp =  assign[el_reg][(*atom).get_flag()];
                   (*atom).set_specie(tmp);
                   (*atom).set_flag(0);
-                  (*atom).set_region_ID(el_reg);
                   (*atom).belong_to_structure = false;
                   _structure_basis.push_back(*atom);
                 }
@@ -413,7 +411,6 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                         {
 
                           tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_position() );
-                          tmp_atom.set_region_ID( el_reg );
 
                           if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
                             {
@@ -452,7 +449,6 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                 {
 
                   tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_position() );
-                  tmp_atom.set_region_ID( el_reg );
 
                   if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
                     {
@@ -507,7 +503,6 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                             {
                               tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
                                   _rotation*_prim_vec*(*atom).get_position());
-                              tmp_atom.set_region_ID( el_reg );
                               if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
                                 {
                                   std::string tmp =  assign[el_reg][(*atom).get_flag()];
@@ -549,7 +544,6 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                     {
                       tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
                           _rotation*_prim_vec*(*atom).get_position());
-                      tmp_atom.set_region_ID( el_reg );
                       if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
                         {
                           std::string tmp =  assign[el_reg][(*atom).get_flag()];
@@ -1396,7 +1390,6 @@ void AtomisticGenerator::passivate()
                   //so in some cases we cannot keep crystal positions
                   Atom tmp(*bonded_atom);
                   tmp.set_specie("H");
-	tmp.set_region_ID(_structure_basis[i].get_region_ID());
                   tmp.belong_to_structure = true;
                   Tensor1 bonded_rel_position = bonded_atom->get_position() +
                   _bondmapobject->get_translation()[i][j] - _structure_basis[i].get_position();
@@ -1460,7 +1453,6 @@ void AtomisticGenerator::passivate()
 //      tmp.set_flag( basis[i].get_flag() );
 //
 //      // Up to now hydrogen is considered part of the same material of bonded atom
-//      tmp.set_region_ID(basis[i].get_region_ID());
 //
 //      tmp.set_position ( O + u1 );
 //      hydrogens.push_back(tmp);

@@ -149,8 +149,8 @@ public:
   //! AtomisticStructureOptions object pointer
   AtomisticStructureOptions _atomistic_structure_options;
 
-  //! Get element->atoms map
-  std::map<const Elem*, std::vector<unsigned int> >& get_elem_to_atoms(void);
+  // Get element->atoms map
+  //std::map<const Elem*, std::vector<unsigned int> >& get_elem_to_atoms(void);
   
   //! Get number of non hydrogen atoms
   unsigned int get_N_without_H(void);
@@ -332,11 +332,11 @@ AtomisticStructure::get_bond_map()
   return _bondmap->get_bond_map();
 }
 
-inline
-std::map<const Elem*, std::vector<unsigned int> >&
-AtomisticStructure::get_elem_to_atoms(void)
-{
-return _elem_to_atoms;
-}
+//inline
+//std::map<const Elem*, std::vector<unsigned int> >&
+//AtomisticStructure::get_elem_to_atoms(void)
+//{
+//return _elem_to_atoms;
+//}
 
 #endif // _ATOMISTICSTRUCTURE_H_

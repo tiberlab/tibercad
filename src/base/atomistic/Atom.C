@@ -1,5 +1,6 @@
 #include "Atom.h"
 #include "elem.h"
+#include"elem.h"
 
 
 Atom::Atom()
@@ -7,7 +8,6 @@ Atom::Atom()
 belong_to_structure(false),
 _el(NULL)
 {
-  _region_id = 0;
   _flag = 0;
   _atom_id = 0;
   _position(1) = 0.0; _position(2) = 0.0; _position(3) = 0.0;
@@ -20,7 +20,6 @@ _el(NULL)
 {
   _position = position;
   _specie = specie;
-  _region_id = 0;
   _flag = 0;
   _atom_id = 0;
   _contact = 0;
@@ -32,7 +31,6 @@ _el(NULL)
 {
   _position = position;
   _specie = specie;
-  _region_id = region_id;
   _flag = flag;
   _atom_id = atom_id;
   _contact = contact;
@@ -43,5 +41,14 @@ Atom::~Atom()
 }
 
 
+void Atom::set_elem(Elem* const el)
+{
+  _el = el;
+}
 
 
+const int Atom::get_region_ID(void) const
+{
+  if (_el == NULL) return INVALID_ID;
+  else return _el->subdomain_id();
+}

@@ -52,9 +52,6 @@ public:
   //! preservation in Atomistic Generator)
   const int get_region_ID() const;
 
-  //! Set the ID of the region the atom belongs to
-  void set_region_ID(const int my_id);
-
   //! Get atom identifier
   const ID get_atom_ID(void) const;
 
@@ -90,9 +87,6 @@ private:
   //! An integer which says if an atom belongs to device (0)
   //! or to contact (number of contact). Useful in electronic transport
   ID _contact;
-
-  //! ID of region containing the atom
-  ID _region_id;
 
   //! A general purpose integer flag (for example used in passivation)
   unsigned int _flag;
@@ -150,20 +144,6 @@ const ID Atom::get_contact(void) const
 
 
 inline
-const int Atom::get_region_ID(void) const
-{
-  return _region_id;
-}
-
-
-inline
-void Atom::set_region_ID(const int my_id)
-{
-  _region_id=my_id;
-}
-
-
-inline
 const ID Atom::get_atom_ID(void) const
 {
   return _atom_id;
@@ -188,13 +168,6 @@ inline
 const unsigned int Atom::get_flag() const
 {
   return _flag;
-}
-
-
-inline
-void Atom::set_elem(Elem* const el)
-{
-  _el = el;
 }
 
 
