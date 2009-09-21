@@ -28,6 +28,7 @@
 // C++ includes
 #include <map>
 #include <vector>
+#include <cassert>
 
 // Local Includes
 #include "libmesh.h"

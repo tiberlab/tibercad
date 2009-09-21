@@ -94,14 +94,14 @@ Plane Surface(33) = {32};
 Line Loop(34) = {13,14,-16,11,12};
 Plane Surface(35) = {34};
 
-Physical Surface(1) = {27,43}; // AlN
-Physical Surface(2) = {25,41}; // GaN
-Physical Surface(3) = {33,35}; // AlN doped
-Physical Surface(4) = {29,31}; // GaN doped
+Physical Surface("barrier") = {27,43}; // AlN
+Physical Surface("channel") = {25,41}; // GaN
+Physical Surface("barrier_doped") = {33,35}; // AlN doped
+Physical Surface("channel_doped") = {29,31}; // GaN doped
 
-Physical Line(1) = {8,29}; // gate
+Physical Line("gate") = {8,29}; // gate
 //Physical Line(2) = {13,14,15,24}; // source
-Physical Line(2) = {13}; // source
+Physical Line("source") = {13}; // source
 //Physical Line(3) = {19,18,26,27}; // drain
-Physical Line(3) = {19}; // drain
-Physical Line(4) = {1,28}; // substrate
+Physical Line("drain") = {19}; // drain
+Physical Line("substrate") = {1,28}; // substrate

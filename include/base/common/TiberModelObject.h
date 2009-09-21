@@ -38,11 +38,11 @@ class TiberModelObject
      */
     void set_options(const ModelOptions& options);
 
-    //! Get the options for this contact model
+    //! Get the options for this model
     const ModelOptions& get_options(void) const;
 
 
-    //! Get the options for this contact model
+    //! Get the options for this model
     ModelOptions& get_options(void);
 
 
@@ -145,7 +145,7 @@ class TiberModelObject
      *  {
      *    get_parameter("myParameter", _var, true, initializer(&Pippo::init));
      *  }
-     *  /endcode
+     *  \endcode
      */
     template <typename T>
     void get_parameter(const std::string& name, T& variable,
