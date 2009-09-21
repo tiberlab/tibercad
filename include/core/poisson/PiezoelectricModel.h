@@ -26,7 +26,7 @@ class PiezoelectricModel : public PhysicalModelInterface
 
  protected:
 
-  Tensor1 _P; 
+  Tensor1 _pol; 
 
   void rotate_to_calc_system(const Tensor2Gen& RotMatrix);
 
@@ -52,7 +52,7 @@ void
 PiezoelectricModel::get_piezopolarization(Tensor1& P)
 {
 
-  P = _P;
+  P = _pol;
 
 }
 

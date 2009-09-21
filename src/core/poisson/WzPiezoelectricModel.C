@@ -88,9 +88,9 @@ void  WzPiezoelectricModel::calculate_piezopolarization(const Elem* elem)
     eps = sym(cr.RotMatrix.transpose() * ( eps * (cr.RotMatrix)));
 
 
-    _P(1) = 2.0 * e15 * eps(3,1);
-    _P(2) = 2.0 * e15 * eps(3,2);
-    _P(3) = e31 * eps(1,1) + e31*eps(2,2) + e33 * eps(3,3);
+    _pol(1) = 2.0 * e15 * eps(3,1);
+    _pol(2) = 2.0 * e15 * eps(3,2);
+    _pol(3) = e31 * eps(1,1) + e31*eps(2,2) + e33 * eps(3,3);
 
     //calculation system -> crystal system
     rotate_to_calc_system(cr.RotMatrix);
