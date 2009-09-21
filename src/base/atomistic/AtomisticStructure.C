@@ -171,7 +171,7 @@ AtomisticStructure::init()
     print_structure(name);
     name = _name + ".gen" ;
     print_structure(name);
-    name = _name + ".gnb" ;
+    name = _name + ".tgn" ;
     print_structure(name);
 
   }
@@ -431,9 +431,9 @@ AtomisticStructure::read_structure(const std::string& path)
 //    }
   }
 
-  else if ( (extension.compare(".gnb") == 0) || (extension.compare(".GNB") == 0) )
+  else if ( (extension.compare(".tgn") == 0) || (extension.compare(".TGN") == 0) )
   {
-    read_gnb(path);
+    read_tgn(path);
   }
 
   else
@@ -452,7 +452,7 @@ AtomisticStructure::read_structure(const std::string& path)
 
 
 void
-AtomisticStructure::read_gnb(const std::string& path)
+AtomisticStructure::read_tgn(const std::string& path)
 {
 
     std::ifstream file;
@@ -461,7 +461,7 @@ AtomisticStructure::read_gnb(const std::string& path)
     Atom tmp_atom;
     Tensor1 pos;
 
-    std::cerr << " Reading gnb file. Loading atom coords and bond map " << std::endl;
+    std::cerr << " Reading tgn file. Loading atom coords and bond map " << std::endl;
 
     file.open(path.c_str(), std::ifstream::in);
 
@@ -666,7 +666,7 @@ AtomisticStructure::print_structure(const std::string& path)
 
   }
 
-  else if ( (extension.compare(".gnb") == 0) || (extension.compare(".GNB") == 0) )
+  else if ( (extension.compare(".tgn") == 0) || (extension.compare(".TGN") == 0) )
   {
 
     file.open(path.c_str());
