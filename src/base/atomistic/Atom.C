@@ -41,7 +41,7 @@ Atom::~Atom()
 }
 
 
-void Atom::set_elem(Elem* const el)
+void Atom::set_elem(Elem* el)
 {
   _el = el;
 }

@@ -36,10 +36,10 @@ public:
   ~BondMap();
 
   //!Initialize internal grid and allocate arrays
-  void do_init(const std::vector<Atom> &basis, const Tensor2Gen& period);
+  void do_init(const unsigned int structure_size);
 
   //!Calculates bond map
-  void do_solve(const std::vector<Atom>& basis);
+  void do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period);
 
   //! Define edges of atomic basis
   static

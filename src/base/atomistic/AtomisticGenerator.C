@@ -910,7 +910,6 @@ AtomisticGenerator::set_lattice_type(const std::string lattice_name)
     _prim_vec(1,3) = 0.0; _prim_vec(2,3) = 0.0; _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
 
   }
-  //TODO:generalize to anatase
   else if (_lattice_type.compare("anatase") == 0) {
 
     assert(_lattice_constant[0] == _lattice_constant[1]);
@@ -1341,9 +1340,9 @@ void  AtomisticGenerator::bond_map_gen(std::vector<Atom> &basis){
 std::cout << "calling bond map with period " 
 	  << _period(1,1)<<" "<<_period(2,2)<<" "<< _period(3,3) << std::endl;
 
-  _bondmapobject->do_init(basis, _period);
+  _bondmapobject->do_init(basis.size());
   std::cout << "Solving bond map " << std::endl;
-  _bondmapobject->do_solve(basis);
+  _bondmapobject->do_solve(basis, _period);
   //std::cout << "Getting and returning ";
   //return _bondmapobject->get_bond_map();
 

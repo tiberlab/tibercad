@@ -180,7 +180,7 @@ private:
   void read_structure(const std::string& path);
 
   //! Read gnb structure
-  void read_gnb(std::string& path);
+  void read_gnb(const std::string& path);
 
   //! Number of atoms in structure
   unsigned int N_atoms;

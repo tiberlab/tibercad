@@ -40,29 +40,53 @@ BondMap::set_cutoff()
 }
 
 void
-BondMap::do_init(const std::vector<Atom> &basis, const Tensor2Gen& period)
+BondMap::do_init(const unsigned int structure_size)
 {
+
+  // Allocate bond map
+    _bond_map = new unsigned int* [structure_size];
+  for (unsigned int i = 0; i < structure_size; i++)
+  {
+    _bond_map[i] = new unsigned int [9];
+    for (unsigned int j = 0; j < 9; j++) _bond_map[i][j] = 0;
+  }
+  _translation.resize(structure_size);
+    for (unsigned int i = 0; i < structure_size; i++)
+    {
+      _translation[i].resize(8);
+    }
+  std::cout << "done" << std::endl;
+
+}
+
+
+void
+BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
+{
+
+  std::cout << "Calculating bond map...";
+
   unsigned int x, y, z;
+  Tensor1 edge_min, edge_max;
 
   //set cutoff distancies
   set_cutoff();
 
-  std::cout << "Initializing bond map...";
+  std::cout << "initializing bond map...";
 
   _period = period;
 
-  //Define the minimum spacing of the grid. The smaller it is, the faster is bonds calculations
-  //Cannot be smaller than the higher bond lenght. (In Amstrong)
+  //define the minimum spacing of the grid. the smaller it is, the faster is bonds calculations
+  //cannot be smaller than the higher bond lenght. (in amstrong)
   const double minimum_spacing = 7.0;
 
-  // Define the addressing grid
+  // define the addressing grid
   //------------------------------------------------
-  Tensor1 edge_min, edge_max;
   define_edges(basis, edge_min, edge_max);
 
   _origin = edge_min;
 
-  // Maximum edges must be slightly enlarged to avoid strict inclusion errors
+  // maximum edges must be slightly enlarged to avoid strict inclusion errors
   edge_max(1) = edge_max(1) + 0.01;
   edge_max(2) = edge_max(2) + 0.01;
   edge_max(3) = edge_max(3) + 0.01;
@@ -72,7 +96,7 @@ BondMap::do_init(const std::vector<Atom> &basis, const Tensor2Gen& period)
 
   //------------------------------------------------
 
-  //Resize grid_cell according to grid dimensions
+  //resize grid_cell according to grid dimensions
   _grid_cell.resize(_n_x);
 
 
@@ -88,8 +112,8 @@ BondMap::do_init(const std::vector<Atom> &basis, const Tensor2Gen& period)
         }
     }
 
-  //A guess of atom density for cell is used for a first guess memory reservation
-  //It could waste some memory but make calculation faster
+  //a guess of atom density for cell is used for a first guess memory reservation
+  //it could waste some memory but make calculation faster
   double density = basis.size() / (_n_x + _n_y + _n_z);
   int int_density = static_cast<int>(floor(density));
 
@@ -99,33 +123,12 @@ BondMap::do_init(const std::vector<Atom> &basis, const Tensor2Gen& period)
         {
          for (z = 0; z < _n_z; z++)
            {
-             //Reserve is redundant as density is not an accurate evaluation
+             //reserve is redundant as density is not an accurate evaluation
              _grid_cell[x][y][z].reserve(3 * int_density);
            }
         }
     }
 
-
-  //! Allocate bond map
-  _bond_map = new unsigned int* [basis.size()];
-  for (unsigned int i = 0; i < basis.size(); i++)  {
-    _bond_map[i] = new unsigned int [9];
-    for (unsigned int j = 0; j < 9; j++) _bond_map[i][j] = 0;
-  }
-  _translation.resize(basis.size());
-    for (unsigned int i = 0; i < basis.size(); i++)  {
-      _translation[i].resize(8);
-    }
-  std::cout << "done" << std::endl;
-
-}
-
-
-void
-BondMap::do_solve(const std::vector<Atom>& basis)
-{
-
-  std::cout << "Calculating bond map...";
 
   // Include atoms in grid cells
   include_atoms(basis);

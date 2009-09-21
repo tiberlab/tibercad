@@ -68,7 +68,7 @@ public:
   bool belong_to_structure;
 
   //!Set element
-  void set_elem(Elem* const el);
+  void set_elem(Elem* el);
 
   //!Get element
   const Elem* get_elem() const;

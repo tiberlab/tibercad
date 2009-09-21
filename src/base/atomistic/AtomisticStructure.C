@@ -158,24 +158,28 @@ AtomisticStructure::init()
 
     generate->do_init();
 
+    //TODO: is it the right place for associate_elements???
+    //Check if alla toms are associated to elements and if not fix 'em if they're inside
+     Messages::debug("Building atom - element associations");
+     associate_elements();
+     //build_elem_to_atoms();
+     Messages::debug("done");
+
+
     std::string name;
     name = _name + ".xyz" ;
     print_structure(name);
     name = _name + ".gen" ;
     print_structure(name);
-
+    name = _name + ".gnb" ;
+    print_structure(name);
 
   }
 
   //Refresh some information after structure building
   N_atoms = _structure_atoms.size();
 
-
-  //TODO: is it the right place for associate_elements???
-  Messages::debug("Building atom - element associations");
-  associate_elements();
-  //build_elem_to_atoms();
-  Messages::debug("done");
+  std::cout << "Element is " << _structure_atoms[0].get_elem() << std::endl;
 
 }
 
@@ -200,6 +204,8 @@ AtomisticStructure::associate_elements()
 
   for (unsigned int i = 0; i < get_structure_atoms().size(); i++)
   {
+    //Up to now avoid association for hydrogens (as they're always (UP TO NOW) passivation atoms
+    // and their associated element is not important)
     if (get_structure_atoms()[i].get_elem() == NULL)
     {
       set = false;
@@ -407,9 +413,9 @@ AtomisticStructure::read_structure(const std::string& path)
     // not needed
     getline(file, line);
 
-    // If GEN refers to periodical structure I expect periodicity vectors
-    if (_atomistic_structure_options.is_periodical)
-    {
+    // Read periodicity vectors anyway, if system is not periodical they will be ignored
+//    if (_atomistic_structure_options.is_periodical)
+//    {
       unsigned int count = 0;
       for (unsigned int i = 0; i < 3; i++)
       {
@@ -422,7 +428,12 @@ AtomisticStructure::read_structure(const std::string& path)
           count++;
         }
       }
-    }
+//    }
+  }
+
+  else if ( (extension.compare(".gnb") == 0) || (extension.compare(".GNB") == 0) )
+  {
+    read_gnb(path);
   }
 
   else
@@ -441,9 +452,141 @@ AtomisticStructure::read_structure(const std::string& path)
 
 
 void
-AtomisticStructure::read_gnb(std::string& path)
+AtomisticStructure::read_gnb(const std::string& path)
 {
 
+    std::ifstream file;
+    std::string line, record;
+    unsigned int n_specie;
+    Atom tmp_atom;
+    Tensor1 pos;
+
+    std::cerr << " Reading gnb file. Loading atom coords and bond map " << std::endl;
+
+    file.open(path.c_str(), std::ifstream::in);
+
+      if (!file)
+      {
+        std::cerr << "Unable to open file " << path << ". Cannot read Atomistic Structure. \n";
+        exit(1);   // call system to stop
+      }
+
+    getline(file, line);
+        std::stringstream line_string(line);
+
+        line_string >> record;
+
+
+        N_atoms = atoi(line.c_str());
+        _structure_atoms.reserve(N_atoms);
+
+        //Prepare bond map object
+            if (_bondmap == NULL) _bondmap = new BondMap;
+            else
+                {
+                  delete _bondmap;
+                  _bondmap = new BondMap;
+                }
+                         _bondmap->do_init(N_atoms);
+
+       if (N_atoms == 0)
+        {
+          std::cerr << "No atoms in structure files or non valid integer in first line. \n";
+          exit(1);
+        }
+       _structure_atoms.resize(N_atoms);
+
+        line_string >> record;
+
+        if ( (record.compare("S") == 0) || (record.compare("s") == 0))
+          _atomistic_structure_options.is_periodical = true;
+        else  if ( (record.compare("C") == 0) || (record.compare("c") == 0))
+          _atomistic_structure_options.is_periodical = false;
+        else
+          std::cerr << "Warning (in GEN file at first line): Cluster (C) or Supercell (S) must be specified. By default a Cluster (no periodicity) is considered. \n";
+
+        getline(file, line);
+
+        //  //This line clean stringstream in a safe way
+        //       line_string.clear(std::stringstream::goodbit);
+
+        //       //Don't know why these spaces are needed!!!!!!!!!!!!!!! check it!!!!
+        //       line_string << "                       ";
+
+        //try in this way
+        line_string.str(std::string());
+        line_string.clear(std::stringstream::goodbit);
+        //---------------------------------------------
+
+        line_string << line;
+
+        while ( line_string >> record)
+        {
+          _atom_types.push_back(record);
+        }
+
+        N_types = _atom_types.size();
+
+
+        // Cycle upon specified number of atoms (last rows are for periodicity vectors)
+        for (unsigned int i = 1; i <= N_atoms; i++)
+        {
+          getline(file, line);
+          std::stringstream line_string(line);
+
+          // First value is ignored (just atoms enumeration)
+          line_string >> record;
+          line_string >> record;
+          n_specie = atoi(record.c_str());
+
+          for (unsigned int j = 1; j <= 3; j++)
+          {
+            line_string >> record;
+            pos(j) =  atof(record.c_str());
+          }
+          _structure_atoms[i - 1].set_specie(_atom_types[n_specie -1]);
+          _structure_atoms[i - 1].set_position(pos);
+
+        //Get bond map
+        line_string >> record;
+        //TODO: write a set_bond_map function. Change pointers in vectors to manage constness more easily
+        _bondmap->get_bond_map()[i - 1][8] = atoi(record.c_str());
+
+        for (unsigned int j = 0; j < _bondmap->get_bond_map()[i - 1][8]; j++)
+        {
+          line_string >> record;
+          _bondmap->get_bond_map()[i - 1][j] = atoi(record.c_str()) - 1;
+        }
+
+        line_string >> record;
+        int tmp_id = atoi(record.c_str());
+
+        if (tmp_id == -1) _structure_atoms[i].set_elem(NULL);
+        else
+          {
+          _structure_atoms[i - 1].set_elem(_device->get_mesh().elem(tmp_id));
+          }
+        }
+
+        // An additional line is present in GEN files. It's the coordinates origin and it's
+        // not needed
+        getline(file, line);
+
+        // Read periodicity vectors anyway, if system is not periodical they will be ignored
+    //    if (_atomistic_structure_options.is_periodical)
+    //    {
+          unsigned int count = 0;
+          for (unsigned int i = 0; i < 3; i++)
+          {
+            getline(file, line);
+            std::stringstream line_string(line);
+            for (unsigned int j = 0; j < 3; j++)
+            {
+              line_string >> record;
+              _periodicity_vectors[count] = atof(record.c_str());
+              count++;
+            }
+          }
 }
 
 
@@ -526,7 +669,7 @@ AtomisticStructure::print_structure(const std::string& path)
   else if ( (extension.compare(".gnb") == 0) || (extension.compare(".GNB") == 0) )
   {
 
-    file.open(file_name.c_str());
+    file.open(path.c_str());
 
     file << _structure_atoms.size();
 
@@ -565,7 +708,13 @@ AtomisticStructure::print_structure(const std::string& path)
 
       }
 
+      //ID of element is saved (note: no modifications to mesh are allowed to preserve compatibility)
+file << std::setw(14);
+      if (_structure_atoms[i].get_elem() == NULL) file << -1;
+else file << _structure_atoms[i].get_elem()->id();
+
       file << std::endl;
+
     }
 
 
@@ -665,7 +814,6 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
   // Recognize type of input file and print it properly
   std::string extension = path.substr(path.size()-4);
-
   //Gen format modified for uptight input
   if ( (extension.compare(".upg") == 0) || (extension.compare(".UPG") == 0) )
   {
@@ -683,7 +831,6 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     for (ID_it = _IDset.begin(); ID_it != _IDset.end(); ID_it ++)
     {
       mat = _device->get_material(*ID_it);
-      std::cout << "Material is in region " << *ID_it << " and it's " << mat->get_name() << std::endl;
       material_map[mat] = id;
       id++;
     }
@@ -709,11 +856,13 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
         if (_atom_types[n_specie].compare(_structure_atoms[i].get_specie()) == 0) break;
       }
       file << std::setw(10);
-
       if (_structure_atoms[i].get_specie() ==  "H")
         file << material_map[_device->get_material(_structure_atoms[get_bond_map()[i][0]].get_region_ID()) ];
       else file << material_map[ (_device->get_material(_structure_atoms[i].get_region_ID())) ];
 
+      if ( (_structure_atoms[i].get_region_ID() != 1) || (_structure_atoms[i].get_region_ID() != 3)
+          || (_structure_atoms[i].get_region_ID() != 4) ) std::cout << "ATOM N " << i << " HAS REGION"
+          << _structure_atoms[i].get_region_ID() << std::endl;
       file << std::setw(5) << n_specie + 1
       << std::setw(20) << std::setprecision(10)
       << std::fixed << double(_structure_atoms[i].get_position(1))
@@ -722,9 +871,9 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       << std::setw(20) << std::setprecision(10)
       << std::fixed  << double(_structure_atoms[i].get_position(3));
 
+
       if (_bondmap->get_bond_map() != NULL)
       {
-
         file << std::setw(5) << _bondmap->get_bond_map()[i][8];
 
         // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!
@@ -735,7 +884,6 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
         ///////////////////////////////////////////
 
       }
-
       file << std::endl;
 
     }
@@ -784,7 +932,6 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       //  {
       //    if ((*mat_it).second == i) break;
       //  }
-
       Material* mat = (*mat_it).first;
       Database& db = mat->get_database();
       db.set_section("atomistic_structure");
@@ -958,7 +1105,7 @@ AtomisticStructure::set_periodicity_vectors(const Tensor2Gen& T)
   {
     for (int j = 0; j < 3 ; j++)
     {
-      _periodicity_vectors[count] = T(i+1,j+1);
+      _periodicity_vectors[count] = T(j+1,i+1);
       count++;
     }
   }
