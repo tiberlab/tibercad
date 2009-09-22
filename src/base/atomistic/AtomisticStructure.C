@@ -67,7 +67,8 @@ AtomisticStructure::create(const std::string& name, const ModelOptions& options)
 AtomisticStructure::AtomisticStructureOptions::AtomisticStructureOptions(void)
 :is_passivated(false),
 contains_bond_map(false),
-is_periodical(false)
+is_periodical(false),
+is_associated(false)
 {}
 
 
@@ -87,7 +88,7 @@ AtomisticStructure::AtomisticStructureOptions::~AtomisticStructureOptions(void)
 void
 AtomisticStructure::init()
 {
-
+  std::ostringstream os;
   assert(_device != NULL);
 
   // Read structure from file
@@ -95,13 +96,14 @@ AtomisticStructure::init()
 
   //Setting scale factor
   _scale = ( ( _device->get_mesh_units() ) / 1e-10 );
-  std::cout << "mesh_units is " << _device->get_mesh_units() << std::endl;
-  std::cout << "scale factor is " << _scale << std::endl;
 
+  //---------------------------------------------------------------
+  os << "Mesh_units is " << _device->get_mesh_units() << std::endl
+  << "Scale factor is " << _scale << std::endl;
+  Messages::debug(os.str());
+  os.str(std::string());
+  //--------------------------------------------------------------
 
-  if (_options.find_option("path") )
-    std::cerr << "Reading structure from file " << path <<
-    ". Any further information will be neglected" << std::endl;
 
   if ( _options.find_option("physical_regions") )
   {
@@ -142,12 +144,28 @@ AtomisticStructure::init()
   else std::cerr << "Error in AtomisticStructure: at least a physical region must be defined in input" << std::endl;
 
 
-  if (_options.find_option("path")){
-    path = _options.get_option("path","none");
-    if (path.compare("none") != 0) read_structure(path);
+  if (_options.find_option("load_structure")){
+
+    //------------------------------------------------------------
+    os << "Reading structure from file " << path <<
+        ". Any further information will be neglected" << std::endl;
+    Messages::info(os.str(), true);
+    os.str(std::string());
+//---------------------------------------------------------------
+
+    path = _options.get_option("load_structure","none");
+    read_structure(path);
   }
+
   else
   {
+
+    //--------------------------------------------------------------
+    os << "Atomistic structure builder started " << path << std::endl;
+       Messages::info(os.str(), true);
+       os.str(std::string());
+       //-----------------------------------------------------------
+
     _structure_atoms.clear();
 
     AtomisticGenerator* generate;
@@ -158,14 +176,6 @@ AtomisticStructure::init()
 
     generate->do_init();
 
-    //TODO: is it the right place for associate_elements???
-    //Check if alla toms are associated to elements and if not fix 'em if they're inside
-     Messages::debug("Building atom - element associations");
-     associate_elements();
-     //build_elem_to_atoms();
-     Messages::debug("done");
-
-
     std::string name;
     name = _name + ".xyz" ;
     print_structure(name);
@@ -175,6 +185,8 @@ AtomisticStructure::init()
     print_structure(name);
 
   }
+
+  if (_atomistic_structure_options.is_associated == false) associate_elements();
 
   //Refresh some information after structure building
   N_atoms = _structure_atoms.size();
@@ -460,14 +472,19 @@ AtomisticStructure::read_tgn(const std::string& path)
     unsigned int n_specie;
     Atom tmp_atom;
     Tensor1 pos;
+    std::ostringstream os;
 
-    std::cerr << " Reading tgn file. Loading atom coords and bond map " << std::endl;
+     Messages::debug("Reading tgn file. Loading atom coords and bond map ");
 
     file.open(path.c_str(), std::ifstream::in);
 
       if (!file)
       {
-        std::cerr << "Unable to open file " << path << ". Cannot read Atomistic Structure. \n";
+        //-------------------------------------------------------------------------------
+        os << "Unable to open file " << path << ". Cannot read Atomistic Structure. \n";
+Messages::error(os.str());
+//--------------------------------------------------------------------------------
+
         exit(1);   // call system to stop
       }
 
@@ -587,6 +604,9 @@ AtomisticStructure::read_tgn(const std::string& path)
               count++;
             }
           }
+
+          _atomistic_structure_options.is_associated = true;
+
 }
 
 
@@ -808,9 +828,9 @@ void
 AtomisticStructure::print_upg(const std::string& path, const std::string& etb_dataset)
 {
 
+  std::ofstream file, os;
 
-  std::cout << "Printing upg file " << std::endl;
-  std::ofstream file;
+  Messages::debug("Printing upg file for Uptight");
 
   // Recognize type of input file and print it properly
   std::string extension = path.substr(path.size()-4);
@@ -860,9 +880,6 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
         file << material_map[_device->get_material(_structure_atoms[get_bond_map()[i][0]].get_region_ID()) ];
       else file << material_map[ (_device->get_material(_structure_atoms[i].get_region_ID())) ];
 
-      if ( (_structure_atoms[i].get_region_ID() != 1) || (_structure_atoms[i].get_region_ID() != 3)
-          || (_structure_atoms[i].get_region_ID() != 4) ) std::cout << "ATOM N " << i << " HAS REGION"
-          << _structure_atoms[i].get_region_ID() << std::endl;
       file << std::setw(5) << n_specie + 1
       << std::setw(20) << std::setprecision(10)
       << std::fixed << double(_structure_atoms[i].get_position(1))
@@ -946,7 +963,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       if (mat->is_alloy())  {alloy_type = "ternary";}
       else if (db.get("n_basis_specie", 0) == 1) {alloy_type = "simple";}
       else if (db.get("n_basis_specie", 0) == 2 ) {alloy_type = "binary";}
-      else {std::cerr << "Could not define alloy_type variable in AtomisticStructure.C " << std::endl;}
+      else Messages::error("Could not define alloy_type variable in AtomisticStructure.C");
 
       file << std::setw(12) << alloy_type;
 
@@ -994,10 +1011,10 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
   }
   else
   {
-    std::cerr << "File extension does not correspond to any internal format. File not print. \n";
+    Messages::warning("File extension does not correspond to any internal format. File not print.");
   }
 
-  std::cout << "upg file printed" << std::endl;
+  Messages::debug("upg file printed");
 
 }
 

@@ -44,6 +44,9 @@ public:
 
     //!Tells if structure has to be considered periodical;
     bool is_periodical;
+
+    //!Tells if association has been already done
+    bool is_associated;
   };
 
 
