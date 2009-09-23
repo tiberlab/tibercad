@@ -852,10 +852,16 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   const BandProperties& cb = conduction_band;
   const BandProperties& vb = valence_band;
 
+  double kT = get_lattice_temperature();
+
   // for a dielectric we don't need much...
   if (is_dielectric())
   {
     equilibrium_fermi_level = 0.5 * (cb.band_edge + vb.band_edge);
+    double ni2 = cb.effective_DOS * vb.effective_DOS
+        * exp(-get_band_gap() / kT);
+    double ni = sqrt(ni2);
+    intrinsic_density = ni;
     return;
   }
 
@@ -869,7 +875,6 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   _holes.use_quantum_density(false);
 
 
-  double kT = get_lattice_temperature();
 
   double Nd = get_material()->get_total_donor_density();
   double Na = get_material()->get_total_acceptor_density();
