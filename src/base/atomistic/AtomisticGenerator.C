@@ -80,6 +80,7 @@ void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string
 void
 AtomisticGenerator::do_init()
 {
+  std::ostringstream os;
 
   Messages::info("Building Atomistic Structure " + _as->get_name());
 
@@ -91,7 +92,7 @@ AtomisticGenerator::do_init()
   structure = "none";
   if (!(_as->get_options().find_option("reference_region"))){
     Messages::warning("No material could be set: reference_region is mandatory in Atomistic section"
-    "when no structure path is specified ");}
+        "when no structure path is specified ");}
   std::vector<ID> ids;
   std::string ref_region;
   ref_region = _as->get_options().get_option("reference_region", "None");
@@ -113,7 +114,13 @@ AtomisticGenerator::do_init()
   std::vector<int> growth_direction;
 
   if (! ( (_reference_material->get_options().find_option("x-growth-direction")) || (_as->get_options().find_option("x-growth-direction")) ) )
-    std::cerr << "Warning, no x-growth-direction is set for atomistic structure " << _as->get_name() << " Setting (1,0,0) as default " << std::endl;
+  {
+    //---------------------------------------------------------
+    os << "Warning, no x-growth-direction is set for atomistic structure " << _as->get_name() << " Setting (1,0,0) as default " << std::endl;
+    Messages::warning(os.str());
+    os.str(std::string());
+    //-----------------------------------------------------------
+  }
 
   if (_reference_material != NULL){
     if (_reference_material->get_options().find_option("x-growth-direction")){
@@ -161,14 +168,18 @@ AtomisticGenerator::do_init()
   //TODO: find a way to reserve this vector, if you can get information about
   //number of elements in atomistic regions
   for ( ; el != el_end; el++)
-    {           Elem* elem = *el;
-    if (_as->get_IDset().find( elem->subdomain_id() ) != _as->get_IDset().end() ) _structure_elements.push_back(elem);
-    }
+  {           Elem* elem = *el;
+  if (_as->get_IDset().find( elem->subdomain_id() ) != _as->get_IDset().end() ) _structure_elements.push_back(elem);
+  }
 
-std::cout << "Atomistic region contains " << _structure_elements.size() << " elements"
-<< std::endl;
+  //--------------------------------------------
+  os << "Atomistic region contains " << _structure_elements.size() << " elements"
+  << std::endl;
+  Messages::debug(os.str());
+  os.str(std::string());
+  //----------------------------------------------
+
   //Build up supercell structure with proper options
-  //----------------------------------------------------------------------------------------------
   build();
 
 
@@ -194,12 +205,12 @@ std::cout << "Atomistic region contains " << _structure_elements.size() << " ele
 
   std::cout << "Deleting uncontained atoms " << std::endl;
   for (unsigned int i = 0; i < _structure_basis.size(); i++)
+  {
+    if ((_structure_basis[i].belong_to_structure))
     {
-      if ((_structure_basis[i].belong_to_structure))
-        {
-          tmp_structure.push_back(_structure_basis[i]);
-        }
+      tmp_structure.push_back(_structure_basis[i]);
     }
+  }
 
   _structure_basis.clear();
   _structure_basis.reserve(tmp_structure.size());
@@ -232,9 +243,9 @@ std::cout << "Atomistic region contains " << _structure_elements.size() << " ele
   std::set<std::string> atom_types;
 
   for (unsigned int i = 0; i < _structure_basis.size(); i++)
-    {
-      atom_types.insert(_structure_basis[i].get_specie());
-    }
+  {
+    atom_types.insert(_structure_basis[i].get_specie());
+  }
   _as->set_N_types ( atom_types.size() );
 
   _as->clear_atom_types();
@@ -248,11 +259,6 @@ std::cout << "Atomistic region contains " << _structure_elements.size() << " ele
   //Passing bondmap object (deallocation will be managed by AtomisticStructure, setting local pointer NULL)
   _as->set_bondmap(_bondmapobject);
   _bondmapobject = NULL;
-
-
-  //#ifdef DEBUG
-  //  std::cout << "Ending AtomisticGenerator::do_init() " << std::endl;
-  //#endif
 
 };
 
@@ -273,295 +279,293 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   _structure_basis.reserve(_super_basis.size());
 
   for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); reg++)
+  {
+
+    Material* mat = _as->get_device()->get_material( (*reg) );
+
+    Database& db = mat->get_database();
+
+    db.set_section("atomistic_structure");
+
+    //Build up conversion map from file
+    for (int i = 1; i <= db.get("n_basis_specie", 0); i++)
     {
+      std::string record;
+      std::string s;
+      std::stringstream out;
 
-      Material* mat = _as->get_device()->get_material( (*reg) );
+      out << i;
+      s = out.str();
 
-      Database& db = mat->get_database();
-
-      db.set_section("atomistic_structure");
-
-      //Build up conversion map from file
-      for (int i = 1; i <= db.get("n_basis_specie", 0); i++)
-        {
-          std::string record;
-          std::string s;
-          std::stringstream out;
-
-          out << i;
-          s = out.str();
-
-          record = "specie_" + s;
-          assign[*reg][i] = db.get(record.c_str(),"none");
-
-        }
-
-      //No more reading from section atomistic_structure in database are needed
-      db.set_section("");
-
-      //If some doping is present, a strategy must be studied and implemented here,
-      // as we can choose arbitrarily species name (e.g. calling one doping Silicon Si1 and another one Si2)
+      record = "specie_" + s;
+      assign[*reg][i] = db.get(record.c_str(),"none");
 
     }
+
+    //No more reading from section atomistic_structure in database are needed
+    db.set_section("");
+
+    //If some doping is present, a strategy must be studied and implemented here,
+    // as we can choose arbitrarily species name (e.g. calling one doping Silicon Si1 and another one Si2)
+
+  }
 
   //Cycle upon all atoms and change specie according to assign map
   Point p(0.0, 0.0, 0.0);
 
   //Different strategies if preserving conventional cell or preserving basis are needed
   if (preserve.compare("none") == 0)
+  {
+
+    //bool not_already_included is needed because a point can be contained by more than one element
+    //if it falls exactly on the boundary
+
+    for ( std::vector<Atom>::iterator atom = _super_basis.begin();
+        atom != _super_basis.end(); atom++)
     {
+      done = false;
 
-      //bool not_already_included is needed because a point can be contained by more than one element
-      //if it falls exactly on the boundary
+      p(0) = (*atom).get_position(1) / scale;
 
-      for ( std::vector<Atom>::iterator atom = _super_basis.begin();
-      atom != _super_basis.end(); atom++)
-        {
-          done = false;
+      if ( (_dim == 2) || (_dim == 3) )   p(1) = (*atom).get_position(2) / scale;
 
-          p(0) = (*atom).get_position(1) / scale;
-
-          if ( (_dim == 2) || (_dim == 3) )   p(1) = (*atom).get_position(2) / scale;
-
-          if ( (_dim == 3) )  p(2) = (*atom).get_position(3) / scale;
-//std::cout << "point is " << p << std::endl;
-          for (std::vector<Elem*>::iterator it = _structure_elements.begin();
+      if ( (_dim == 3) )  p(2) = (*atom).get_position(3) / scale;
+      for (std::vector<Elem*>::iterator it = _structure_elements.begin();
           it != _structure_elements.end(); it++)
+      {
+        Elem* elem = *it;
+        el_reg = elem->subdomain_id();
+
+        if (MeshUtils::may_belong_to_element(elem, p)){
+
+          if ( ( elem->contains_point(p) ) ) {
+            if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
             {
-              Elem* elem = *it;
-              el_reg = elem->subdomain_id();
-
-              if (MeshUtils::may_belong_to_element(elem, p)){
-
-                if ( ( elem->contains_point(p) ) ) {
-//std::cout << "CONTAINS ";
-                  if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
-                    {
-                      std::string tmp =  assign[el_reg][(*atom).get_flag()];
-                      (*atom).set_specie(tmp);
-                      (*atom).set_flag(0);
-                      (*atom).belong_to_structure = true;
-                      (*atom).set_elem(elem);
-                      _structure_basis.push_back(*atom);
-                      done = true;
-                    }
-                  else
-                    {
-                      std::cout << "Warning, atom is included but no assignment map member could be built " << std::endl;
-                    }
-                  break;
-                }
-
-              }
-
-
+              std::string tmp =  assign[el_reg][(*atom).get_flag()];
+              (*atom).set_specie(tmp);
+              (*atom).set_flag(0);
+              (*atom).belong_to_structure = true;
+              (*atom).set_elem(elem);
+              _structure_basis.push_back(*atom);
+              done = true;
             }
-
-          //If atom does not belong to element, push it and flag it as non internal
-          if (done == false)
+            else
             {
-              if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
-                {
-                  std::string tmp =  assign[el_reg][(*atom).get_flag()];
-                  (*atom).set_specie(tmp);
-                  (*atom).set_flag(0);
-                  (*atom).belong_to_structure = false;
-                  _structure_basis.push_back(*atom);
-                }
-              else
-                {
-                  Messages::warning("Warning, atom is included but no assignment map member could be built");
-                }
+              std::cout << "Warning, atom is included but no assignment map member could be built " << std::endl;
             }
+            break;
+          }
 
         }
+
+
+      }
+
+      //If atom does not belong to element, push it and flag it as non internal
+      if (done == false)
+      {
+        if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
+        {
+          std::string tmp =  assign[el_reg][(*atom).get_flag()];
+          (*atom).set_specie(tmp);
+          (*atom).set_flag(0);
+          (*atom).belong_to_structure = false;
+          _structure_basis.push_back(*atom);
+        }
+        else
+        {
+          Messages::warning("Warning, atom is included but no assignment map member could be built");
+        }
+      }
+
     }
+  }
 
 
   if (preserve.compare("lattice") == 0)
+  {
+
+    Atom tmp_atom;
+    for ( std::vector<Tensor1>::iterator lattice = _super_lattice.begin();
+        lattice != _super_lattice.end(); lattice++)
     {
+      done = false;
 
-      Atom tmp_atom;
-      for ( std::vector<Tensor1>::iterator lattice = _super_lattice.begin();
-      lattice != _super_lattice.end(); lattice++)
-        {
-          done = false;
+      p(0) = (*lattice)(1) / scale;
 
-          p(0) = (*lattice)(1) / scale;
+      if ( (_dim == 2) || (_dim == 3) )   p(1) = (*lattice)(2) / scale;
 
-          if ( (_dim == 2) || (_dim == 3) )   p(1) = (*lattice)(2) / scale;
+      if ( (_dim == 3) )  p(2) = (*lattice)(3) / scale;
 
-          if ( (_dim == 3) )  p(2) = (*lattice)(3) / scale;
-
-          for (std::vector<Elem*>::iterator it = _structure_elements.begin();
+      for (std::vector<Elem*>::iterator it = _structure_elements.begin();
           it != _structure_elements.end(); it++)
+      {
+
+        Elem* elem = *it;
+        el_reg = elem->subdomain_id();
+
+        if (MeshUtils::may_belong_to_element(elem,p))
+        {
+
+          if ( (elem->contains_point(p) ) )
+          {
+            done = true;
+            for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
+                atom != _crystal_basis.end(); atom++)
             {
 
-              Elem* elem = *it;
-              el_reg = elem->subdomain_id();
+              tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_position() );
 
-              if (MeshUtils::may_belong_to_element(elem,p))
+              if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
+              {
+                std::string tmp =  assign[el_reg][(*atom).get_flag()];
+                tmp_atom.set_specie(tmp);
+                tmp_atom.belong_to_structure = true;
+
+
+                p(0) = tmp_atom.get_position()(1) / scale;
+                if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position()(2) / scale;
+                if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
+                if (MeshUtils::may_belong_to_element(elem,p))
                 {
-
-                  if ( (elem->contains_point(p) ) )
-                    {
-                      done = true;
-                      for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
-                      atom != _crystal_basis.end(); atom++)
-                        {
-
-                          tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_position() );
-
-                          if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
-                            {
-                              std::string tmp =  assign[el_reg][(*atom).get_flag()];
-                              tmp_atom.set_specie(tmp);
-                              tmp_atom.belong_to_structure = true;
-
-
-                              p(0) = tmp_atom.get_position()(1) / scale;
-                              if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position()(2) / scale;
-                              if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
-                              if (MeshUtils::may_belong_to_element(elem,p))
-                                {
-                                  if ( (elem->contains_point(p) ) ) (*atom).set_elem(elem);
-                                }
-
-
-                              _structure_basis.push_back(tmp_atom);
-                            }
-                          else
-                            {
-                              Messages::warning("Warning, atom is included but no assignment map member could be built");
-                            }
-                        }
-                      break;
-                    }
-
+                  if ( (elem->contains_point(p) ) ) (*atom).set_elem(elem);
                 }
 
 
+                _structure_basis.push_back(tmp_atom);
+              }
+              else
+              {
+                Messages::warning("Warning, atom is included but no assignment map member could be built");
+              }
             }
-          if (done == false)
-            {
-              for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
-              atom != _crystal_basis.end(); atom++)
-                {
+            break;
+          }
 
-                  tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_position() );
-
-                  if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
-                    {
-                      std::string tmp =  assign[el_reg][(*atom).get_flag()];
-                      tmp_atom.set_specie(tmp);
-                      tmp_atom.belong_to_structure = false;
-                      _structure_basis.push_back(tmp_atom);
-                    }
-                  else
-                    {
-                      Messages::warning("Warning, atom is included but no assignment map member could be built");
-                    }
-                }
-            }
         }
+
+
+      }
+      if (done == false)
+      {
+        for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
+            atom != _crystal_basis.end(); atom++)
+        {
+
+          tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_position() );
+
+          if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
+          {
+            std::string tmp =  assign[el_reg][(*atom).get_flag()];
+            tmp_atom.set_specie(tmp);
+            tmp_atom.belong_to_structure = false;
+            _structure_basis.push_back(tmp_atom);
+          }
+          else
+          {
+            Messages::warning("Warning, atom is included but no assignment map member could be built");
+          }
+        }
+      }
     }
+  }
 
   if (preserve.compare("conventional") == 0)
+  {
+
+    Atom tmp_atom;
+    for ( std::vector<Tensor1>::iterator conv = _super_conv.begin(); conv != _super_conv.end(); conv++)
     {
 
-      Atom tmp_atom;
-      for ( std::vector<Tensor1>::iterator conv = _super_conv.begin(); conv != _super_conv.end(); conv++)
+      done = false;
+
+      for (std::vector<Elem*>::iterator it = _structure_elements.begin(); it != _structure_elements.end(); it++)
+      {
+
+        p(0) = (*conv)(1) / scale;
+
+        if ( (_dim == 2) || (_dim == 3) )   p(1) = (*conv)(2) / scale;
+
+        if ( (_dim == 3) )  p(2) = (*conv)(3) / scale;
+
+        Elem* elem = *it;
+        el_reg = elem->subdomain_id();
+
+
+        if (MeshUtils::may_belong_to_element(elem,p))
         {
 
-          done = false;
+          if ( (elem->contains_point(p) ) )
+          {
+            done = true;
 
-          for (std::vector<Elem*>::iterator it = _structure_elements.begin(); it != _structure_elements.end(); it++)
+            for ( std::vector<Tensor1>::iterator conv_lattice_basis_it = _conv_lattice_basis.begin();
+                conv_lattice_basis_it != _conv_lattice_basis.end(); conv_lattice_basis_it++)
             {
-
-              p(0) = (*conv)(1) / scale;
-
-              if ( (_dim == 2) || (_dim == 3) )   p(1) = (*conv)(2) / scale;
-
-              if ( (_dim == 3) )  p(2) = (*conv)(3) / scale;
-
-              Elem* elem = *it;
-              el_reg = elem->subdomain_id();
-
-
-              if (MeshUtils::may_belong_to_element(elem,p))
-                {
-
-                  if ( (elem->contains_point(p) ) )
-                    {
-                      done = true;
-
-                      for ( std::vector<Tensor1>::iterator conv_lattice_basis_it = _conv_lattice_basis.begin();
-                      conv_lattice_basis_it != _conv_lattice_basis.end(); conv_lattice_basis_it++)
-                        {
-                          for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
-                          atom != _crystal_basis.end(); atom++)
-                            {
-                              tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
-                                  _rotation*_prim_vec*(*atom).get_position());
-                              if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
-                                {
-                                  std::string tmp =  assign[el_reg][(*atom).get_flag()];
-                                  tmp_atom.set_specie(tmp);
-                                  tmp_atom.belong_to_structure = true;
-
-                                  p(0) = tmp_atom.get_position()(1) / scale;
-                                  if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position()(2) / scale;
-                                  if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
-                                  if (MeshUtils::may_belong_to_element(elem,p))
-                                    {
-                                      if ( (elem->contains_point(p) ) ) (*atom).set_elem(elem);
-                                    }
-
-                                  _structure_basis.push_back(tmp_atom);
-                                }
-                              else
-                                {
-                                  Messages::warning("Warning, atom is included but no assignment map member could be built");
-                                }
-                            }
-                        }
-                      break;
-                    }
-
-                }
-
-
-
-            }
-
-          if (done == false)
-            {
-              for ( std::vector<Tensor1>::iterator conv_lattice_basis_it = _conv_lattice_basis.begin();
-              conv_lattice_basis_it != _conv_lattice_basis.end(); conv_lattice_basis_it++)
-                {
-                  for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
+              for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
                   atom != _crystal_basis.end(); atom++)
-                    {
-                      tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
-                          _rotation*_prim_vec*(*atom).get_position());
-                      if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
-                        {
-                          std::string tmp =  assign[el_reg][(*atom).get_flag()];
-                          tmp_atom.set_specie(tmp);
-                          tmp_atom.belong_to_structure = false;
-                          _structure_basis.push_back(tmp_atom);
-                        }
-                      else
-                        {
-                          Messages::warning("Warning, atom is included but no assignment map member could be built");
-                        }
-                    }
-                }
-            }
+              {
+                tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
+                    _rotation*_prim_vec*(*atom).get_position());
+                if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
+                {
+                  std::string tmp =  assign[el_reg][(*atom).get_flag()];
+                  tmp_atom.set_specie(tmp);
+                  tmp_atom.belong_to_structure = true;
 
+                  p(0) = tmp_atom.get_position()(1) / scale;
+                  if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position()(2) / scale;
+                  if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
+                  if (MeshUtils::may_belong_to_element(elem,p))
+                  {
+                    if ( (elem->contains_point(p) ) ) (*atom).set_elem(elem);
+                  }
+
+                  _structure_basis.push_back(tmp_atom);
+                }
+                else
+                {
+                  Messages::warning("Warning, atom is included but no assignment map member could be built");
+                }
+              }
+            }
+            break;
+          }
 
         }
+
+
+
+      }
+
+      if (done == false)
+      {
+        for ( std::vector<Tensor1>::iterator conv_lattice_basis_it = _conv_lattice_basis.begin();
+            conv_lattice_basis_it != _conv_lattice_basis.end(); conv_lattice_basis_it++)
+        {
+          for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
+              atom != _crystal_basis.end(); atom++)
+          {
+            tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
+                _rotation*_prim_vec*(*atom).get_position());
+            if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
+            {
+              std::string tmp =  assign[el_reg][(*atom).get_flag()];
+              tmp_atom.set_specie(tmp);
+              tmp_atom.belong_to_structure = false;
+              _structure_basis.push_back(tmp_atom);
+            }
+            else
+            {
+              Messages::warning("Warning, atom is included but no assignment map member could be built");
+            }
+          }
+        }
+      }
+
+
     }
+  }
 
   Messages::debug("Finished cut_and_change_specie");
 
@@ -729,6 +733,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   Tensor1 lattice_point;
   Tensor2Gen supercell_vect,inv_supercell_vect;
   Tensor1 tmp_check, tmp_conv;
+  std::ostringstream os;
 
 
   //#ifdef DEBUG
@@ -766,8 +771,13 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   if (_dim == 3) {lmat(1,1) = (n1 + 1) * 10; lmat(2,2) = (n2 + 1) * 10; lmat(3,3) = (n3 +1) * 10;}
 
   _period = _conv_vect * lmat;
-  std::cout << "in make_conv_cell period is " 
-	    << _period(1,1)<<" "<< _period(2,2)<<" "<< _period(3,3) << std::endl;
+
+  //----------------------------------------------------
+  os << "in make_conv_cell period is "
+  << _period(1,1)<<" "<< _period(2,2)<<" "<< _period(3,3) << std::endl;
+  Messages::debug(os.str());
+  os.str(std::string());
+  //----------------------------------------------------
 
   //Define vectors with same direction of conventional cell vectors, but with size specifed by l1,l2,l3
   supercell_vect(1,1) = _conv_vect(1,1) * (l1 / conv_l1); supercell_vect(2,1) = _conv_vect(2,1) * (l1 / conv_l1); supercell_vect(3,1) = _conv_vect(3,1) * (l1 / conv_l1);
@@ -842,6 +852,7 @@ AtomisticGenerator::set_lattice_type(const std::string lattice_name)
 {
 
   Tensor2Gen prim_vec_dir(0);
+  std::ostringstream os;
 
   //Set the lattice type. It defines the primitive vectors
   _lattice_type=lattice_name;
@@ -924,7 +935,12 @@ AtomisticGenerator::set_lattice_type(const std::string lattice_name)
 
   }
 
-  else std::cout << "Lattice type " << _lattice_type << " doesn't exist" << std::endl;
+  else
+  {
+    os << "Lattice type " << _lattice_type << " doesn't exist" << std::endl;
+    Messages::error(os.str());
+    os.str(std::string());
+  }
 
 };
 
@@ -984,175 +1000,175 @@ void AtomisticGenerator::parse_parameters(Material* mat)
 
   Atom tmp;
   Tensor1 T;
-  int i, j, n;
+  unsigned int i, j, n;
 
   if ( !(mat->is_alloy()) )
+  {
+    //WORKS ONLY FOR BULK, EXTEND TO ALLOY
+
+    //lattice constant are expressed in Amstrong
+    //_lattice_constant[0] = data("a", 0.0) * 10.0;
+
+    Database& db = mat->get_database();
+    db.set_section("lattice");
+    _lattice_constant[0] = db.get("a", 0.0) * 10.0;
+    if (_lattice_constant[0] == 0.0) Messages::error("At least "
+        "lattice constant a must be defined !!!!");
+    _lattice_constant[1] = db.get("b", 0.0) * 10.0;
+    if (_lattice_constant[1] == 0.0) _lattice_constant[1] = _lattice_constant[0];
+    _lattice_constant[2] = db.get("c", 0.0) * 10.0;
+    if (_lattice_constant[2] == 0.0) _lattice_constant[2] = _lattice_constant[0];
+    db.set_section("atomistic_structure");
+    set_lattice_type(db.get("lattice_type", "none"));
+
+    unsigned int n_basis_specie = db.get("n_basis_specie", 0);
+
+    for (i = 1; i <= n_basis_specie; i++)
     {
-      //WORKS ONLY FOR BULK, EXTEND TO ALLOY
+      std::string record, s, n_s;
+      std::stringstream out;
 
-      //lattice constant are expressed in Amstrong
-      //_lattice_constant[0] = data("a", 0.0) * 10.0;
+      out << i;
+      s = out.str();
 
-      Database& db = mat->get_database();
-      db.set_section("lattice");
-      _lattice_constant[0] = db.get("a", 0.0) * 10.0;
-      if (_lattice_constant[0] == 0.0) Messages::error("At least "
-          "lattice constant a must be defined !!!!");
-      _lattice_constant[1] = db.get("b", 0.0) * 10.0;
-      if (_lattice_constant[1] == 0.0) _lattice_constant[1] = _lattice_constant[0];
-      _lattice_constant[2] = db.get("c", 0.0) * 10.0;
-      if (_lattice_constant[2] == 0.0) _lattice_constant[2] = _lattice_constant[0];
-      db.set_section("atomistic_structure");
-      set_lattice_type(db.get("lattice_type", "none"));
+      record = "n_" + s;
 
-      unsigned int n_basis_specie = db.get("n_basis_specie", 0);
+      n = db.get(record.c_str(), 0);
 
-      for (i = 1; i <= n_basis_specie; i++)
-        {
-          std::string record, s, n_s;
-          std::stringstream out;
+      for (j = 1; j <= n; j++)
+      {
+        record.clear(); n_s.clear();
+        record = "T_" + s + "_";
+        out.str(std::string());
+        out.clear(std::stringstream::goodbit);
+        out << j;
+        n_s = out.str();
+        n_s = record + n_s;
 
-          out << i;
-          s = out.str();
+        //Putting specie (defined by an integer) temporary in flag data
+        tmp.set_flag(i);
 
-          record = "n_" + s;
+        record = n_s + "_x";
+        T(1) = db.get(record, 0.0);
+        record = n_s + "_y";
+        T(2) = db.get(record, 0.0);
+        record = n_s + "_z";
+        T(3) = db.get(record, 0.0);
 
-          n = db.get(record.c_str(), 0);
-
-          for (j = 1; j <= n; j++)
-            {
-              record.clear(); n_s.clear();
-              record = "T_" + s + "_";
-              out.str(std::string());
-              out.clear(std::stringstream::goodbit);
-              out << j;
-              n_s = out.str();
-              n_s = record + n_s;
-
-              //Putting specie (defined by an integer) temporary in flag data
-              tmp.set_flag(i);
-
-              record = n_s + "_x";
-              T(1) = db.get(record, 0.0);
-              record = n_s + "_y";
-              T(2) = db.get(record, 0.0);
-              record = n_s + "_z";
-              T(3) = db.get(record, 0.0);
-
-              tmp.set_position(T);
-              //Insert tmp in basis
-              _crystal_basis.push_back(tmp);
-            }
-        }
+        tmp.set_position(T);
+        //Insert tmp in basis
+        _crystal_basis.push_back(tmp);
+      }
     }
+  }
 
   if (mat->is_alloy())
+  {
+    //Cannot act dynamic cast on mat itself because constant
+    Alloy* mat_alloy = dynamic_cast<Alloy*>(mat);
+
+    //Get database for alloy (db) and for parental materials
+    //NOTE: IMPLEMENTATION IS GOOD ONLY FOR BINARY COMPOUNDS
+    //Nota: usiamo solo un pointer perche' per tutti i materiali viene istanziato solo un oggetto
+    //database, a cui di volta in volta (ogni volta che chiamiamo un get) viene associato un data file.
+    //Quindi non possiamo inizializzare 3 oggetti database e portarceli appresso, perche' saranno tutti
+    //collegati al datafile settato dall'ultima assegnazione. Questa cosa va cambiata nella classe Database
+    // (TODO)
+    Database* db = &(mat_alloy->get_database());
+
+    //std::cout << "component A is  " << mat_alloy->get_component_A()->get_name() << std::endl;
+    //std::cout << "component B is  " << mat_alloy->get_component_B()->get_name() << std::endl;
+    //Database& db1 = mat_alloy->get_component_A()->get_database();
+    //Database& db2 = mat_alloy->get_component_B()->get_database();
+
+    if (db->get("alloy_type", 2) == 2)
     {
-      //Cannot act dynamic cast on mat itself because constant
-      Alloy* mat_alloy = dynamic_cast<Alloy*>(mat);
-
-      //Get database for alloy (db) and for parental materials
-      //NOTE: IMPLEMENTATION IS GOOD ONLY FOR BINARY COMPOUNDS
-      //Nota: usiamo solo un pointer perche' per tutti i materiali viene istanziato solo un oggetto
-      //database, a cui di volta in volta (ogni volta che chiamiamo un get) viene associato un data file.
-      //Quindi non possiamo inizializzare 3 oggetti database e portarceli appresso, perche' saranno tutti
-      //collegati al datafile settato dall'ultima assegnazione. Questa cosa va cambiata nella classe Database
-      // (TODO)
-      Database* db = &(mat_alloy->get_database());
-
-      //std::cout << "component A is  " << mat_alloy->get_component_A()->get_name() << std::endl;
-      //std::cout << "component B is  " << mat_alloy->get_component_B()->get_name() << std::endl;
-      //Database& db1 = mat_alloy->get_component_A()->get_database();
-      //Database& db2 = mat_alloy->get_component_B()->get_database();
-
-      if (db->get("alloy_type", 2) == 2)
-        {
-          double ax_1, ay_1, az_1, ax_2, ay_2, az_2;
-          db = &(mat_alloy->get_component_A()->get_database());
-          db->set_section("lattice");
-
-          //We express lattice constant in Amstrong
-          ax_1 = db->get("a", 0.0) * 10.0;
-          if (ax_1 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
-
-          ay_1 = db->get("b", 0.0) * 10.0;
-          if (ay_1 == 0.0) ay_1 = ax_1;
-
-          az_1 = db->get("c", 0.0) * 10.0;
-          if (az_1 == 0.0) az_1 = ax_1;
-
-          db = &(mat_alloy->get_component_B()->get_database());
-          db->set_section("lattice");
-
-          ax_2 = db->get("a", 0.0) * 10.0;
-          if (ax_2 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
-
-          ay_2 = db->get("b", 0.0) * 10.0;
-          if (ay_2 == 0.0) ay_2 = ax_2;
-
-          az_2 = db->get("c", 0.0) * 10.0;
-          if (az_2 == 0.0) az_2 = ax_2;
-
-          //Setting lattice parameters for the alloy
-          double molar_fraction = mat->get_options().get_option("x", 1.0);
-          _lattice_constant[0] = ax_1 * molar_fraction + ax_2 * (1.0 - molar_fraction);
-          _lattice_constant[1] = ay_1 * molar_fraction + ay_2 * (1.0 - molar_fraction);
-          _lattice_constant[2] = az_1 * molar_fraction + az_2 * (1.0 - molar_fraction);
-
-        }
-
+      double ax_1, ay_1, az_1, ax_2, ay_2, az_2;
       db = &(mat_alloy->get_component_A()->get_database());
-      db->set_section("");
-      db->set_section("atomistic_structure");
-      set_lattice_type(db->get("lattice_type", "none"));
+      db->set_section("lattice");
 
-      db = &(mat_alloy->get_database());
-      db->set_section("atomistic_structure");
+      //We express lattice constant in Amstrong
+      ax_1 = db->get("a", 0.0) * 10.0;
+      if (ax_1 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
 
-      unsigned int n_basis_specie = db->get("n_basis_specie", 0);
+      ay_1 = db->get("b", 0.0) * 10.0;
+      if (ay_1 == 0.0) ay_1 = ax_1;
 
-      db = &(mat_alloy->get_component_A()->get_database());
-      db->set_section("atomistic_structure");
+      az_1 = db->get("c", 0.0) * 10.0;
+      if (az_1 == 0.0) az_1 = ax_1;
 
-      for (i = 1; i <= n_basis_specie; i++)
-        {
-          std::string record("");
-          std::string s("");
-          std::stringstream out;
-          out << i;
-          s = out.str();
-          record = "n_" + s;
+      db = &(mat_alloy->get_component_B()->get_database());
+      db->set_section("lattice");
 
-          unsigned int n_x = (db->get(record, 0));
-          for (j = 1; j <= n_x; j++)
-            {
-              std::string s2;
-              record = "T_" + s + "_";
-              out.str(std::string());
-              out.clear(std::stringstream::goodbit);
-              out << j;
-              s2 = out.str();
-              s2 = record + s2;
+      ax_2 = db->get("a", 0.0) * 10.0;
+      if (ax_2 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
 
-              //Putting specie (defined by an integer) temporary in flag data
-              // ???????????? CHECK IT , WHY i IS SET AS FLAG???????????
-              tmp.set_flag(i);
+      ay_2 = db->get("b", 0.0) * 10.0;
+      if (ay_2 == 0.0) ay_2 = ax_2;
 
-              record = s2 + "_x";
-              T(1) = db->get(record, 0.0);
-              record = s2 + "_y";
-              T(2) = db->get(record, 0.0);
-              record = s2 + "_z";
-              T(3) = db->get(record, 0.0);
-              tmp.set_position(T);
+      az_2 = db->get("c", 0.0) * 10.0;
+      if (az_2 == 0.0) az_2 = ax_2;
 
-              //Insert tmp in basis
-              _crystal_basis.push_back(tmp);
-            }
-        }
-
+      //Setting lattice parameters for the alloy
+      double molar_fraction = mat->get_options().get_option("x", 1.0);
+      _lattice_constant[0] = ax_1 * molar_fraction + ax_2 * (1.0 - molar_fraction);
+      _lattice_constant[1] = ay_1 * molar_fraction + ay_2 * (1.0 - molar_fraction);
+      _lattice_constant[2] = az_1 * molar_fraction + az_2 * (1.0 - molar_fraction);
 
     }
+
+    db = &(mat_alloy->get_component_A()->get_database());
+    db->set_section("");
+    db->set_section("atomistic_structure");
+    set_lattice_type(db->get("lattice_type", "none"));
+
+    db = &(mat_alloy->get_database());
+    db->set_section("atomistic_structure");
+
+    unsigned int n_basis_specie = db->get("n_basis_specie", 0);
+
+    db = &(mat_alloy->get_component_A()->get_database());
+    db->set_section("atomistic_structure");
+
+    for (i = 1; i <= n_basis_specie; i++)
+    {
+      std::string record("");
+      std::string s("");
+      std::stringstream out;
+      out << i;
+      s = out.str();
+      record = "n_" + s;
+
+      unsigned int n_x = (db->get(record, 0));
+      for (j = 1; j <= n_x; j++)
+      {
+        std::string s2;
+        record = "T_" + s + "_";
+        out.str(std::string());
+        out.clear(std::stringstream::goodbit);
+        out << j;
+        s2 = out.str();
+        s2 = record + s2;
+
+        //Putting specie (defined by an integer) temporary in flag data
+        // ???????????? CHECK IT , WHY i IS SET AS FLAG???????????
+        tmp.set_flag(i);
+
+        record = s2 + "_x";
+        T(1) = db->get(record, 0.0);
+        record = s2 + "_y";
+        T(2) = db->get(record, 0.0);
+        record = s2 + "_z";
+        T(3) = db->get(record, 0.0);
+        tmp.set_position(T);
+
+        //Insert tmp in basis
+        _crystal_basis.push_back(tmp);
+      }
+    }
+
+
+  }
 
 
 };
@@ -1175,60 +1191,60 @@ void AtomisticGenerator::make_conv_cell()
 
   for (i = 1; i <= 3; i++) {conv1(i) = _conv_vect(i, 1); conv2(i) = _conv_vect(i, 2); conv3(i) = _conv_vect(i, 3);};
 
-  //At least x growth index must be specified (growth direction in 1D structure)
-  assert (norm(conv1) > tol);
+      //At least x growth index must be specified (growth direction in 1D structure)
+      assert (norm(conv1) > tol);
 
-  // If no other indexes are specified, set y growth direction by default (orthogonal to x index)
-  if ((norm(conv2) < tol)&&(norm(conv3) < tol)) {
+      // If no other indexes are specified, set y growth direction by default (orthogonal to x index)
+      if ((norm(conv2) < tol)&&(norm(conv3) < tol)) {
 
-    std::cerr << "Warning: only x growth direction is defined. Building other direction orthogonal " << std::endl;
+        std::cerr << "Warning: only x growth direction is defined. Building other direction orthogonal " << std::endl;
 
-    conv2(1) = - conv1(3); conv2(2) = 0.0; conv2(3) = conv1(1);
-    conv3 =  vectorProduct(conv1, conv2);
-    conv3 = conv3 / norm(conv3);
-  }
+        conv2(1) = - conv1(3); conv2(2) = 0.0; conv2(3) = conv1(1);
+        conv3 =  vectorProduct(conv1, conv2);
+        conv3 = conv3 / norm(conv3);
+      }
 
-  //If only one index is not specified, build it by default (orthogonal)
-  else if (norm(conv2) < tol){
+      //If only one index is not specified, build it by default (orthogonal)
+      else if (norm(conv2) < tol){
 
-    std::cerr << "Warning: only x and z growth direction is defined. Building y direction orthogonal " << std::endl;
+        std::cerr << "Warning: only x and z growth direction is defined. Building y direction orthogonal " << std::endl;
 
-    conv2 =  vectorProduct(conv1, conv3);
-    conv2 = conv2 / norm(conv2);
-  }
+        conv2 =  vectorProduct(conv1, conv3);
+        conv2 = conv2 / norm(conv2);
+      }
 
-  else if (norm(conv3) < tol){
+      else if (norm(conv3) < tol){
 
-    std::cerr << "Warning: only x and y growth direction is defined. Building z direction orthogonal " << std::endl;
+        std::cerr << "Warning: only x and y growth direction is defined. Building z direction orthogonal " << std::endl;
 
-    conv3 =  vectorProduct(conv1, conv2);
-    conv3 = conv3 / norm(conv3);
-  };
-
-
-  //   //If not all miller indexes are specified, build others as a default
-  //   if (norm(conv1) < tol) {conv1(1) = - conv3(3); conv1(2) = 0.0; conv1(3) = conv3(1);}
-
-  //   //If only z and x miller indexes are specifed, get y miller index
-  //   if (norm(conv2) < tol) {
-  //     conv2 =  vectorProduct(conv1, conv3);
-  //     conv2 = conv2 / norm(conv2);
-  //   };
+        conv3 =  vectorProduct(conv1, conv2);
+        conv3 = conv3 / norm(conv3);
+      };
 
 
-  for (i = 1; i <= 3; i++) {_conv_vect(i, 1) = conv1(i); _conv_vect(i, 2) = conv2(i); _conv_vect(i, 3) = conv3(i);};
+      //   //If not all miller indexes are specified, build others as a default
+      //   if (norm(conv1) < tol) {conv1(1) = - conv3(3); conv1(2) = 0.0; conv1(3) = conv3(1);}
+
+      //   //If only z and x miller indexes are specifed, get y miller index
+      //   if (norm(conv2) < tol) {
+      //     conv2 =  vectorProduct(conv1, conv3);
+      //     conv2 = conv2 / norm(conv2);
+      //   };
 
 
-  _conv_prim = inv(_prim_vec) * _conv_vect;
-  scale_to_int(_conv_prim);
-  _conv_vect = _prim_vec * _conv_prim;
+      for (i = 1; i <= 3; i++) {_conv_vect(i, 1) = conv1(i); _conv_vect(i, 2) = conv2(i); _conv_vect(i, 3) = conv3(i);};
 
-  // Calculate distance between equivalent planes for every cut plane
-  //prim_miller = inv(prim_miller_basis) * prim_vec * conv_prim;
-  //for (i = 1; i <= 3; i++) {m1(i) = prim_miller(i, 1); m2(i) = prim_miller(i, 2); m3(i) = prim_miller(i, 3);};
-  //planar_distance[0] = 1 / norm(prim_miller_basis * m1);
-  //planar_distance[1] =1 / norm(prim_miller_basis * m2);
-  //planar_distance[2] = 1 / norm(prim_miller_basis * m3);
+
+          _conv_prim = inv(_prim_vec) * _conv_vect;
+          scale_to_int(_conv_prim);
+          _conv_vect = _prim_vec * _conv_prim;
+
+          // Calculate distance between equivalent planes for every cut plane
+          //prim_miller = inv(prim_miller_basis) * prim_vec * conv_prim;
+          //for (i = 1; i <= 3; i++) {m1(i) = prim_miller(i, 1); m2(i) = prim_miller(i, 2); m3(i) = prim_miller(i, 3);};
+          //planar_distance[0] = 1 / norm(prim_miller_basis * m1);
+          //planar_distance[1] =1 / norm(prim_miller_basis * m2);
+          //planar_distance[2] = 1 / norm(prim_miller_basis * m3);
 
 };
 
@@ -1308,8 +1324,8 @@ void AtomisticGenerator::make_conv_basis()
         tmp_check = inv(_conv_prim) * tmp_position;
 
         check_boundary= ((tmp_check(1) >= -tol) && (tmp_check(1) < (1.0 - tol)))&&
-        ((tmp_check(2) >= -tol) && (tmp_check(2) < (1.0 - tol))) &&
-        ((tmp_check(3) >= -tol) && (tmp_check(3) < (1.0 - tol)));
+            ((tmp_check(2) >= -tol) && (tmp_check(2) < (1.0 - tol))) &&
+            ((tmp_check(3) >= -tol) && (tmp_check(3) < (1.0 - tol)));
 
         if (check_boundary){
           tmp_position = _rotation * _prim_vec * prim_position;
@@ -1330,18 +1346,24 @@ void AtomisticGenerator::make_conv_basis()
 //Bond map generation (cluster)
 void  AtomisticGenerator::bond_map_gen(std::vector<Atom> &basis){
 
+  std::ostringstream os;
+
   //use internal member, if already used delete it
   if (_bondmapobject == NULL) _bondmapobject = new BondMap;
   else
-    {
-      delete _bondmapobject;
-      _bondmapobject = new BondMap;
-    }
-std::cout << "calling bond map with period " 
-	  << _period(1,1)<<" "<<_period(2,2)<<" "<< _period(3,3) << std::endl;
+  {
+    delete _bondmapobject;
+    _bondmapobject = new BondMap;
+  }
+
+  //--------------------------------------------------------------------------
+  os << "calling bond map with period "
+  << _period(1,1)<<" "<<_period(2,2)<<" "<< _period(3,3) << std::endl;
+  Messages::debug(os.str());
+  os.str(std::string());
+  //---------------------------------------------------------------------------
 
   _bondmapobject->do_init(basis.size());
-  std::cout << "Solving bond map " << std::endl;
   _bondmapobject->do_solve(basis, _period);
   //std::cout << "Getting and returning ";
   //return _bondmapobject->get_bond_map();
@@ -1359,9 +1381,9 @@ void AtomisticGenerator::passivate()
   Messages::debug("Starting passivate");
 
   if (_bondmapobject == NULL)
-    {
-      bond_map_gen(_structure_basis);
-    }
+  {
+    bond_map_gen(_structure_basis);
+  }
 
   bond_map = _bondmapobject->get_bond_map();
 
@@ -1371,42 +1393,42 @@ void AtomisticGenerator::passivate()
   unsigned int size_before_passivating = _structure_basis.size();
 
   for (unsigned int i = 0; i < size_before_passivating; i++)
+  {
+    if (_structure_basis[i].belong_to_structure)
     {
-      if (_structure_basis[i].belong_to_structure)
+
+      for (unsigned int j = 0; j < bond_map[i][8]; j++)
+      {
+        if (bond_map[i][8] != 4) std::cout << "Warning, atom has not 4 neighbours " << std::endl;
+
+        bonded_atom = &(_structure_basis[bond_map[i][j]]);
+        if (!((*bonded_atom).belong_to_structure))
         {
+          //TODO: using default copy constructor, with further modifications to
+          //Atom class it could not work anymore!
+          //Position must be modified in order to put Hydrogen atom near,
+          //and also as we cannot have hydrogen bonded to more than one atom,
+          //so in some cases we cannot keep crystal positions
+          Atom tmp(*bonded_atom);
+          tmp.set_specie("H");
+          tmp.belong_to_structure = true;
+          Tensor1 bonded_rel_position = bonded_atom->get_position() +
+              _bondmapobject->get_translation()[i][j] - _structure_basis[i].get_position();
 
-          for (unsigned int j = 0; j < bond_map[i][8]; j++)
-            {
-              if (bond_map[i][8] != 4) std::cout << "Warning, atom has not 4 neighbours " << std::endl;
+          position = _structure_basis[i].get_position() +
+              ( ( bonded_rel_position) /
+                  norm(bonded_rel_position ) *
+                  hydrogen_distance);
+          tmp.set_position(position);
 
-              bonded_atom = &(_structure_basis[bond_map[i][j]]);
-              if (!((*bonded_atom).belong_to_structure))
-                {
-                  //TODO: using default copy constructor, with further modifications to
-                  //Atom class it could not work anymore!
-                  //Position must be modified in order to put Hydrogen atom near,
-                  //and also as we cannot have hydrogen bonded to more than one atom,
-                  //so in some cases we cannot keep crystal positions
-                  Atom tmp(*bonded_atom);
-                  tmp.set_specie("H");
-                  tmp.belong_to_structure = true;
-                  Tensor1 bonded_rel_position = bonded_atom->get_position() +
-                  _bondmapobject->get_translation()[i][j] - _structure_basis[i].get_position();
+          _structure_basis.push_back(tmp);
 
-                  position = _structure_basis[i].get_position() +
-                  ( ( bonded_rel_position) /
-                      norm(bonded_rel_position ) *
-                      hydrogen_distance);
-                  tmp.set_position(position);
-
-                  _structure_basis.push_back(tmp);
-
-                }
-
-            }
         }
 
+      }
     }
+
+  }
 
   Messages::debug("Passivate done");
 
@@ -1667,10 +1689,10 @@ AtomisticGenerator::gcd(int a, int b)
   do{
     reminder = a % b;
     if (reminder != 0)
-      {
-        a = b;
-        b = reminder;
-      }
+    {
+      a = b;
+      b = reminder;
+    }
   } while (reminder);
   return b;
 };
@@ -1703,27 +1725,27 @@ void AtomisticGenerator::scale_to_int(Tensor1& a)
 
   //Check if a is already integer
   if ( (fabs(a(1) - round(a(1))) < tol) && (fabs(a(2) - round(a(2))) < tol) && (fabs(a(3) - round(a(3))) < tol) )
-    {
-      a(1) = double_to_int_value_checked(a(1));
-      a(2) = double_to_int_value_checked(a(2));
-      a(3) = double_to_int_value_checked(a(3));
-    }
+  {
+    a(1) = double_to_int_value_checked(a(1));
+    a(2) = double_to_int_value_checked(a(2));
+    a(3) = double_to_int_value_checked(a(3));
+  }
 
   else
 
-    {
+  {
 
-      int i = 0;
-      Tensor1 a_tmp;
+    int i = 0;
+    Tensor1 a_tmp;
 
-      do{
-        i = i + 1;
-        a_tmp = a * i;
-      }while (  ( fabs (a_tmp(1) - round(a_tmp(1))) >= tol)  ||  (fabs(a_tmp(2) - round(a_tmp(2))) >= tol)  || (fabs(a_tmp(3) - round(a_tmp(3))) >= tol) );
+    do{
+      i = i + 1;
+      a_tmp = a * i;
+    }while (  ( fabs (a_tmp(1) - round(a_tmp(1))) >= tol)  ||  (fabs(a_tmp(2) - round(a_tmp(2))) >= tol)  || (fabs(a_tmp(3) - round(a_tmp(3))) >= tol) );
 
-      a(1) = a_tmp(1); a(2) = a_tmp(2); a(3) = a_tmp(3);
+    a(1) = a_tmp(1); a(2) = a_tmp(2); a(3) = a_tmp(3);
 
-    }
+  }
 
   a = reduce_vector(a);
 
