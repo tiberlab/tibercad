@@ -46,7 +46,7 @@ public:
   void define_edges(const std::vector<Atom>& basis, Tensor1& edge_min, Tensor1& edge_max);
 
   //!Gives pointer to bond map
-  unsigned int** get_bond_map();
+  std::vector < std::vector < unsigned int > >& get_bond_map();
 
   //! Gives translation vector for periodical images
   std::vector < std::vector < Tensor1 > >& get_translation(void);
@@ -97,9 +97,10 @@ private:
   //TODO: translation vector and double pointer must be substituted
   //with a vector of structures, or something similar
   //! Bond map
-  unsigned int ** _bond_map;
+  std::vector<std::vector<unsigned int> > _bond_map;
 
-  //! Translation vector for periodic images
+  //! Translation vector for periodic images (tells for each neighbour the translation
+  //! vector for which it's a neighbour)
   std::vector<std::vector<Tensor1> > _translation;
   //--------------------------------------------------------------------
 
@@ -135,7 +136,7 @@ private:
 //----------------------------------------------------
 
 inline
-unsigned int**
+std::vector < std::vector < unsigned int > >&
 BondMap::get_bond_map(void)
 {
   return _bond_map;

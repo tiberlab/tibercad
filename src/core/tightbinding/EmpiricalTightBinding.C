@@ -552,7 +552,7 @@ void ETB::parse_options(void)
   _upt_options.strain_sim = get_options().get_option("strain_model_name", "no_sim");
 
   // Dangling bond scaling
-  _upt_options.dg_scale = get_options().get_option("dangling_bond_scaling",0.10);
+  _upt_options.dg_scale = get_options().get_option("dangling_bond_scaling",100);
   _upt_options.dg_onsite = get_options().get_option("dangling_bond_onsite",-200.0);    
 
 

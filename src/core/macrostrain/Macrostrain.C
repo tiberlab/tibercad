@@ -4282,7 +4282,7 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
     }//end of atoms loop
 
 
-  unsigned int** bond_map = as->get_bond_map();
+  std::vector< std::vector< unsigned int > > bond_map = as->get_bond_map();
   for (unsigned int i = 0; i < Number_of_atom ; i++)
       {//atoms loop
         if (as->get_structure_atoms()[i].get_elem() == NULL)
@@ -4290,6 +4290,7 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
           Tensor1 tmp(0);
           tmp = as->get_structure_atoms()[i].get_position();
           //Use first neighbour displacement
+          if (bond_map[i].size() == 0) Messages::error("One atom has no neighbours!");
           as->get_structure_atoms()[i].set_position(tmp + u_atm[bond_map[i][0]]);
           }
       }

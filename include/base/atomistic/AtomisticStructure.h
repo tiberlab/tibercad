@@ -147,7 +147,7 @@ public:
   void set_bondmap(BondMap* bondmap);
 
   //! Get bond map
-  unsigned int** const get_bond_map(void);
+  std::vector<std::vector<unsigned int> > const get_bond_map(void);
 
   //! AtomisticStructureOptions object pointer
   AtomisticStructureOptions _atomistic_structure_options;
@@ -332,7 +332,7 @@ AtomisticStructure::set_bondmap(BondMap* bondmap)
 }
 
 inline
-unsigned int** const
+std::vector<std::vector<unsigned int> > const
 AtomisticStructure::get_bond_map()
 {
   return _bondmap->get_bond_map();

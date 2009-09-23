@@ -1,27 +1,16 @@
 #include "BondMap.h"
-
+#include "Messages.h"
 
 
 
 BondMap::BondMap(void)
 {
-  _bond_map = NULL;
 };
 
 
 BondMap::~BondMap(void)
 {
   _grid_cell.clear();
-
-  //TODO: sould this deallocation be explicit?
-  //if (_bond_map != NULL)
-  //{
-  //	for (unsigned int i = 0; i < _size; i++)  {
-  //		delete _bond_map[i];
-  //	}
-  //delete _bond_map;
-  //}
-
 };
 
 
@@ -43,17 +32,18 @@ void
 BondMap::do_init(const unsigned int structure_size)
 {
 
+  Messages::info("Calculating Bond Map");
+
   // Allocate bond map
-    _bond_map = new unsigned int* [structure_size];
+    _bond_map.resize(structure_size);
   for (unsigned int i = 0; i < structure_size; i++)
   {
-    _bond_map[i] = new unsigned int [9];
-    for (unsigned int j = 0; j < 9; j++) _bond_map[i][j] = 0;
+    _bond_map[i].reserve(4);
   }
   _translation.resize(structure_size);
     for (unsigned int i = 0; i < structure_size; i++)
     {
-      _translation[i].resize(8);
+      _translation[i].reserve(4);
     }
   std::cout << "done" << std::endl;
 
@@ -64,15 +54,13 @@ void
 BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
 {
 
-  std::cout << "Calculating bond map...";
+  Messages::debug("BondMap::do_solve");
 
   unsigned int x, y, z;
   Tensor1 edge_min, edge_max;
 
   //set cutoff distancies
   set_cutoff();
-
-  std::cout << "initializing bond map...";
 
   _period = period;
 
@@ -145,7 +133,7 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
         }
     }
 
-  std::cout << "done" << std::endl;
+  Messages::info("Bond Map completed");
 
 
 }
@@ -193,7 +181,7 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
       if ( norm( position1 - position2) < cutofftmp ){
 
         not_already_signed = true;
-        put_here = _bond_map[i][8];
+        put_here = _bond_map[i].size();
 
         if (put_here != 0)
           {
@@ -210,13 +198,12 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
           not_already_signed = true;
         if (not_already_signed)
           {
-            _bond_map[i][put_here] = j;
-            _translation[i][put_here] = period;
-            _bond_map[i][8]++;
+            _bond_map[i].push_back(j);
+            _translation[i].push_back(period);
           }
 
         not_already_signed = true;
-        put_here = _bond_map[j][8];
+        put_here = _bond_map[j].size();
 
         if (put_here != 0)
           {
@@ -234,9 +221,8 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
           not_already_signed = true;
         if (not_already_signed)
           {
-            _bond_map[j][put_here] = i;
-            _translation[j][put_here] = -period;
-            _bond_map[j][8]++;
+            _bond_map[j].push_back(i);
+            _translation[j].push_back(-1.0 * period);
           }
 
       }

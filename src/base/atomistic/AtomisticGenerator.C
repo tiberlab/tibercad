@@ -1373,12 +1373,12 @@ void  AtomisticGenerator::bond_map_gen(std::vector<Atom> &basis){
 
 void AtomisticGenerator::passivate()
 {
-  unsigned int ** bond_map;
+  std::vector< std::vector<unsigned int> > bond_map;
   Tensor1 position;
   double hydrogen_distance = 1.2;
   Atom* bonded_atom;
 
-  Messages::debug("Starting passivate");
+  Messages::info("Starting passivation...");
 
   if (_bondmapobject == NULL)
   {
@@ -1397,9 +1397,9 @@ void AtomisticGenerator::passivate()
     if (_structure_basis[i].belong_to_structure)
     {
 
-      for (unsigned int j = 0; j < bond_map[i][8]; j++)
+      for (unsigned int j = 0; j < bond_map[i].size(); j++)
       {
-        if (bond_map[i][8] != 4) std::cout << "Warning, atom has not 4 neighbours " << std::endl;
+        if (bond_map[i].size() != 4) Messages::debug("Warning, atom has not 4 neighbours");
 
         bonded_atom = &(_structure_basis[bond_map[i][j]]);
         if (!((*bonded_atom).belong_to_structure))
@@ -1430,7 +1430,7 @@ void AtomisticGenerator::passivate()
 
   }
 
-  Messages::debug("Passivate done");
+  Messages::info("Passivation done");
 
 
 }
