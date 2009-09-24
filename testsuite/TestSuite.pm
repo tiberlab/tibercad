@@ -537,7 +537,7 @@ sub compare_data_vectors($$$) {
   if ($n != $#data2) { return 1 };
 
   my $difference = 0;
-  for (my $i = 0; $i < $n; $i++) {
+  for (my $i = 0; $i <= $n; $i++) {
     my $diff = $data1[$i] - $data2[$i];
     if (abs($diff) > $prec * (1.0 + abs($data1[$i]))) {
       $difference = 1;
