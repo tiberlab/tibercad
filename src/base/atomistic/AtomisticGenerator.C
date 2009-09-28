@@ -811,6 +811,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
         tmp_conv(2) = (i * _conv_vect(2,1)) + (j * _conv_vect(2,2)) + (l * _conv_vect(2,3));
         tmp_conv(3) = (i * _conv_vect(3,1)) + (j * _conv_vect(3,2)) + (l * _conv_vect(3,3));
         _super_conv.push_back(tmp_conv + _local_origin);
+
         //        }
 
         do{
@@ -828,7 +829,6 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
             basis_atom = (*basis_iterator);
             basis_atom.set_position ( _local_origin + lattice_point+
                 _rotation*_prim_vec*(*basis_iterator).get_position() );
-
             _super_basis.push_back(basis_atom);
             basis_iterator++;
 

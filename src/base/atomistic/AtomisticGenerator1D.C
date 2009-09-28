@@ -70,8 +70,7 @@ AtomisticGenerator1D::~AtomisticGenerator1D(void){};
 		 }
         };
 
-	_local_origin(1) = edge_min; _local_origin(2) = 0.0; _local_origin(3) = 0.0;
-
+	_local_origin(1) = edge_min * scale; _local_origin(2) = 0.0; _local_origin(3) = 0.0;
 	double l1 = (fabs(edge_max - edge_min)) * scale;
 
 	//Minimum periodic direction is considered along y and z axis, but eventually other lenghts can be
