@@ -105,11 +105,11 @@ $Solver
   {
     sweep_drain
     {
-      simulation = sweep_gate
+      simulation = driftdiffusion  # sweep_gate
       variable = Vd
-      start = 0.2
+      start = 0.0 # 0.2
       stop = 1.0 
-      steps = 4 
+      steps = 5 # 4 
     }
 
     sweep_gate
@@ -146,8 +146,8 @@ $Simulation
   meshfile = mosfet.msh
   dimension = 2
   temperature = 300
-  solve = sweep_drain
-  resultpath = output_transf_char
+  solve = (sweep_drain, sweep_gate)
+  resultpath = output_transf_char_simple_way 
   #output_format = gmv
   output_format = vtk
   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, EField, ElPotential, ContactCurrents)
