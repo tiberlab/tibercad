@@ -1,0 +1,173 @@
+
+# Description of  the  device physical regions
+$Device
+{
+   
+   Region source_region
+   {
+     material = Si
+     doping = 5e19 doping_type = donor
+   }
+
+   Region drain_region
+   {
+     material = Si
+     doping = 5e19 doping_type = donor
+   }
+
+   Region oxide
+   {
+     material = SiO2
+  
+   }
+   Region channel  #
+   {
+     material = Si
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+
+  model driftdiffusion
+  { 
+              
+    options
+    {
+     simulation_name = driftdiffusion
+
+     physical_regions = all
+    }
+
+    physical_model recombination
+    {
+      model = srh
+    }
+
+    physical_model electron_mobility
+    {
+
+      model = field_dependent
+
+
+      low_field_model = doping_dependent   #Masetti  model for Si !!!
+
+    }
+
+
+
+
+    BC_Regions  
+    {
+      BC_Region gate
+      {
+        type = schottky
+	barrier_height = 3.0
+
+        voltage = @Vg[0.0]
+      }
+
+      BC_Region source
+      {
+        type = ohmic
+
+        voltage = 0.0
+      }
+ 
+      BC_Region drain
+      {
+        type = ohmic
+
+        voltage = @Vd[0.0]
+      }
+   
+
+    }   
+
+  }  
+
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+  driftdiffusion
+  {
+    nonlinear_solver = tiber
+    coupling = electrons
+    ksp_type = bcgsl
+    nonlin_max_it = 10
+    nonlin_step_tol = 1e-3
+    ls_max_step = 2
+  }
+
+
+  Sweep
+  {
+    sweep_drain
+    {
+      simulation = driftdiffusion
+      variable = Vd
+      start = 0.0
+      stop = 3.5
+      steps = 70 #35 
+    }
+
+    sweep_gate
+    {
+      variable = Vg
+      start = -0.5  # -1.0
+      stop = 2.0
+      steps =  7 # 200 # 
+      simulation = sweep_drain # 
+    }
+  }
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+ 
+  driftdiffusion 
+  {
+    statistics = FD
+  }
+
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+
+
+$Simulation
+{
+  meshfile =  Si_NWFET.msh  
+  dimension = 3
+  mesh_units = 1e-9
+  temperature = 300
+  solve = sweep_drain  
+  resultpath = output_IV  
+  output_format = vtk
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, EField, ElPotential, ContactCurrents)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
