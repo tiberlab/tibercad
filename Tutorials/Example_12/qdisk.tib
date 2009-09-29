@@ -1,0 +1,493 @@
+# diode example
+
+# Description of  the  device physical regions
+
+#  n   n    i   p   p
+
+#  2 - 3  - 1 - 4 - 5
+$Device
+{
+
+
+
+  Region well
+  {
+    reg_numb = 1
+    mat = GaN
+    structure = wz
+    x-growth-direction = (1,0,-1,0)
+    y-growth-direction = (-1,2,-1,0)
+    z-growth-direction = (0,0,0,1)
+   	
+  }
+  
+
+   Region  layer1
+   {
+     reg_numb = 2
+     mat = AlGaN
+     x = 0.28 #  0.2
+     structure = wz
+     x-growth-direction = (1,0,-1,0)
+     y-growth-direction = (-1,2,-1,0)
+     z-growth-direction = (0,0,0,1)
+     
+
+     doping = 1e19 doping_type = donor doping_level = 0.025 g = 2
+    
+   
+   }
+
+  
+
+   Region barrier1
+   {
+     reg_numb = 3
+     mat = AlGaN
+     x = 0.28 # 0.2
+     structure = wz
+     x-growth-direction = (1,0,-1,0)
+     y-growth-direction = (-1,2,-1,0)
+     z-growth-direction = (0,0,0,1)
+    
+
+
+     doping = 1e15 doping_type = donor doping_level = 0.025 g = 2
+
+   
+   }
+
+
+  
+
+   Region barrier2
+   {
+     reg_numb = 4
+     mat = AlGaN
+     x = 0.28 # 0.2
+     structure = wz
+     x-growth-direction = (1,0,-1,0)
+     y-growth-direction = (-1,2,-1,0)
+     z-growth-direction = (0,0,0,1)
+       
+     doping = 1e15 doping_type = donor doping_level = 0.025 g = 2
+
+   }
+   
+   Region layer2
+   {
+     reg_numb = 5
+     mat = AlGaN
+     x = 0.28 # 0.2
+     structure = wz
+     x-growth-direction = (1,0,-1,0)
+     y-growth-direction = (-1,2,-1,0)
+     z-growth-direction = (0,0,0,1)
+
+     doping = 1e19 doping_type = acceptor doping_level = 0.17 g = 4 
+
+   }
+
+
+   Cluster quantum
+
+   {
+     mesh_regions=(1,3,4)
+     
+   }
+   
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models 
+{#models 
+
+  
+
+  model macrostrain
+  {
+
+    options
+    {          
+      simulation_name = strain
+
+      physical_regions = all
+    }
+
+    
+    BC_Regions  
+    {
+      BC_Region substrate
+      {
+        BC_reg_numb = 2
+	type = substrate
+	material = AlGaN
+	x = 0.28 # 0.2
+
+	structure = wz
+
+	x-growth-direction = (1,0,-1,0)
+	y-growth-direction = (-1,2,-1,0)
+	z-growth-direction = (0,0,0,1)
+
+      }
+    }
+  }
+
+
+  model  driftdiffusion
+  { 
+
+    options
+    {          
+      simulation_name = dd
+      
+      physical_regions = all
+
+    }
+
+    physical_model recombination
+    { 
+      model = srh    
+    }                
+
+    
+    physical_model recombination
+    { 
+     model = direct
+     C = 1.1e-8
+   
+    }          
+           
+     
+
+    physical_model electron_mobility
+    { 
+      model = field_dependent
+      low_field_model = doping_dependent
+     
+    }                
+
+
+    physical_model hole_mobility
+    { 
+      model = field_dependent
+      low_field_model = doping_dependent
+     
+    }                
+
+
+   BC_Regions  
+    {
+
+      BC_Region cathode
+      {
+        BC_reg_numb = 2
+
+        type = ohmic
+
+	voltage = 0.0
+      }
+
+
+      BC_Region anode
+      {
+	BC_reg_numb = 1
+
+	
+	type = ohmic
+	
+	voltage = @bias[0.0]
+      }
+
+    }   
+
+  }
+
+
+  model efaschroedinger
+
+  {
+
+   
+    options
+    {
+     simulation_name = quantum_el
+     physical_regions = quantum  # (1,3,4)
+    }
+
+
+  }
+
+
+  model efaschroedinger
+
+  {
+
+   
+    options
+    {
+     simulation_name = quantum_hl
+     physical_regions =  quantum  # (1,3,4)
+    }
+
+  
+  }
+
+  model quantumdensity
+  {
+
+  
+    options 
+    {
+      simulation_name = dens_el
+      physical_regions =  quantum 
+    }
+
+
+  }
+
+   model quantumdensity
+  {
+
+  
+    options 
+    {
+      simulation_name = dens_holes
+      physical_regions =  quantum  
+    }
+
+
+  }
+
+  model opticskp
+  {
+    options
+    {
+      simulation_name = optics
+      physical_regions =  quantum  # (1,3,4)
+    }
+  }
+
+
+
+}  
+
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+ 
+
+ 
+
+  macrostrain
+  {
+    substrate = substrate
+    tolerance = 1e-5 # 1e-6
+
+    
+  }
+
+ 
+  driftdiffusion
+  {
+
+    nonlinear_solver = tiber
+  
+   # coupling = full
+    nonlin_max_it = 40 # 20 #15
+    nonlin_rel_tol = 1e-12
+    #nonlin_abs_tol = 1e-15
+
+    nonlin_step_tol = 1e-3  # 1e-5
+  
+    ls_max_step = 4
+      
+  }
+
+
+
+  quantum_el
+  {
+    Dirichlet_bc_everywhere = true
+    particle = el
+    number_of_eigenstates = 30
+    poisson_model_name = dd
+    strain_model_name = macrostrain
+    convergent_density = false #true
+    method = FEM
+    log_output = true
+  }
+
+  quantum_hl
+  {
+    x-periodicity = false
+    Dirichlet_bc_everywhere = true
+    particle = hl
+    number_of_eigenstates = 30 #80
+    poisson_model_name = dd
+    strain_model_name = macrostrain
+    convergent_density = false #true
+    method = FEM
+    solve_ev_problem_twice = false
+    solver = arnoldi
+    log_output = true
+  }
+
+
+ dens_el
+  {
+    k_space_dimension = 0
+    k-space_basis = true
+    k1 = (0, 0, 0.1)
+    k2 = (0, 0.1, 0)
+    
+
+    number_of_nodes = (4,4)
+    wedge = quarter
+
+    quantum_simulation = quantum_el
+
+    degeneracy = 2
+    refine_fraction = 0.20
+    relative_accuracy = 0.01
+    refine_k_space = true
+    output_density_in_k_space = true
+    uniform_refinement = false
+    mesh_order = FIRST
+  #  log_output = true
+    initial_eigenstates_number = 10 #20
+    analytic = true  # --------   analitical formula for 1D 
+  }
+
+
+  dens_holes
+  {
+    k_space_dimension = 0
+    k-space_basis = true
+    k1 = (0, 0, 0.1)
+    k2 = (0, 0.1, 0)
+    
+
+    number_of_nodes = (4,4)
+    wedge = quarter
+
+    quantum_simulation = quantum_hl
+
+    degeneracy = 2
+    analytic  = true  #  analitical formula for 1D 
+
+
+    refine_fraction = 0.20
+    relative_accuracy = 0.01
+    refine_k_space = true
+    output_density_in_k_space = true
+    uniform_refinement = false
+    mesh_order = FIRST
+  #  log_output = true
+    initial_eigenstates_number = 80 # 10 #20
+  }
+
+
+
+  optics
+  {
+    initial_state_model = quantum_el 
+    final_state_model =   quantum_hl
+
+
+    initial_eigenstates = (0, 9)
+    final_eigenstates   = (0, 9)
+
+
+    polarization =  (0, 0, 1)
+
+    Emin = 3.0
+    Emax  = 5.0
+    dE = 0.001
+
+  }
+ 
+
+
+
+
+  sweep
+ {
+   simulation = dd
+   variable = bias
+   start = 0.0
+   stop = 4.5 #5.0
+   steps = 200 #200 #20
+   max_step = 0.5
+   plotvariable = current
+ #  plot_data = true
+ }
+
+
+  
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+  
+  driftdiffusion 
+  {
+   
+    strain_simulation = strain
+    statistics = FD
+
+    # where to get the quantum densities from
+    electron_quantum_density = dens_el
+    hole_quantum_density = dens_holes  
+
+  }
+  
+
+  quantum_el 
+  {
+    model = conduction_band    
+  }
+
+
+  quantum_hl
+  {
+    particle = hl
+    model = kp   #  k.p  for  valence  band
+    kp_model = 6x6
+  }
+  
+}
+
+#
+# Definition of  model-indipendent parameters of the Simulation
+$Simulation
+{
+ 
+  meshfile = qdisk.msh  # #  qdisk_2nm.msh  
+  mesh_units = 1e-9
+  dimension = 3
+  temperature = 300
+
+  solve = (strain,sweep ,quantum_el,  quantum_hl, dens_el, dens_holes, optics)
+
+
+  resultpath = output_tut12  # 
+
+  output_format = vtk
+
+  plot = (strain, polarization,Ec, Ev, Eg, ElPotential, QFermi_e, QFermi_h, eMob, hMob, Occupation, EigenFunctions, EigenEnergy, EnergyLevels, quantum_density , eDensity, hDensity, Current, eCurrent, hCurrent, ContactCurrents, optical_spectrum_k_0 , k-space  )
+
+}
+
+
+
+
+
