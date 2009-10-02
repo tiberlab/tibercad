@@ -962,6 +962,8 @@ ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
             { 
 	      if (_dim == 3)
               _elemental_result_el[elem] = build_rho3d("el", elem->centroid());
+	      if (_dim == 2)
+	      _elemental_result_el[elem] = build_rho2d("el", elem->centroid());
 	      else if (_dim == 1)
 	      _elemental_result_el[elem] = build_average_rho1d("el", elem);
               else std::cerr << "No rules to build 2D results" << std::endl;
@@ -982,6 +984,8 @@ ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
           else
             {  if (_dim == 3)
               _elemental_result_hl[elem] = build_rho3d("hl", elem->centroid());
+               if (_dim == 2)
+               _elemental_result_hl[elem] = build_rho2d("hl", elem->centroid());
                else if (_dim == 1)
 	       _elemental_result_hl[elem] = build_average_rho1d("hl", elem);
 	       else std::cerr << "No rules to build 2D results" << std::endl;
@@ -1140,19 +1144,6 @@ ETB::build_rho3d(const std::string& particle, const Point& r)
       //delta_r is already in mesh units in this way
       deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
 
-      //Normalize to linear or superficial periodicity
-      double normalize = 1.0;
-      double* period = _atomistic_structure->get_periodicity_vectors();
-      if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
-        {
-          normalize = period[4]*period[8] - period[7]*period[5]
-                    / _atomistic_structure->get_scale() / _atomistic_structure->get_scale();
-        }
-      if (get_environment().get_device().get_mesh().mesh_dimension() == 2)
-              {
-                normalize = period[8] / _atomistic_structure->get_scale();
-              }
-
       //Also hubbard parameters (and tau) must be scaled in mesh units
       // (uhatom is in (atomic units)^(-1))
 
@@ -1166,6 +1157,64 @@ ETB::build_rho3d(const std::string& particle, const Point& r)
     }
 
   rho = rho / (8.0 * 3.141592653589793);
+
+  //scale rho to q/cm^3 (carrier density)
+  rho =  rho / (( get_control().get_device().get_mesh_units() * 100.0 ) *
+        ( get_control().get_device().get_mesh_units() * 100.0 ) *
+        ( get_control().get_device().get_mesh_units() * 100.0 ));
+
+  return rho;
+
+}
+
+
+double
+ETB::build_rho2d(const std::string& particle, const Point& r)
+{
+  double tau = 1.0 / (_upt_options.projection_length / _atomistic_structure->get_scale());
+  const double deltar_max = tau * 10; //Maximum cutoff distance
+  double deltar, uhatom;
+  double rho = 0.0;
+  double x1, y1, z1;
+  double x ,y, z;
+  std::vector<double>* charges = NULL;
+
+  if (particle == "el") charges = &(_el_atomic_charges);
+  if (particle == "hl") charges = &(_hl_atomic_charges);
+
+
+  //std::cerr << " tau is " << tau << " " ;
+
+  x = r(0); y = r(1); z = 0.0;
+
+  if ((*charges).size() == 0)
+    {
+      std::cerr << "ERROR IN TIGHTBINDING: trying to build charge density "
+      "but no mulliken charges are available" << std::endl;
+      exit(1);
+    }
+
+  for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
+    {
+      //Convert atom position to mesh units
+      x1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
+      y1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(2) / _atomistic_structure->get_scale();
+      z1 = 0.0;
+
+      //delta_r is already in mesh units in this way
+      deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) );
+
+
+      if (deltar > deltar_max) continue;
+      else
+        {
+          //std::cout << "uhatom is " << uhatom <<std::endl;
+          rho = rho + ((*charges)[iatm] * tau * tau * exp(-1.0 * deltar * tau));
+
+        }
+    }
+
+  rho = rho / (2.0 * 3.141592653589793);
 
   //scale rho to q/cm^3 (carrier density)
   rho =  rho / (( get_control().get_device().get_mesh_units() * 100.0 ) *
