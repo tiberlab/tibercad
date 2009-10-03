@@ -521,7 +521,7 @@ int EigenSolver::clear_slepc()
     if ( generalized)  ierr = MatDestroy(B);CHKERRQ(ierr);
   }
 
-  ierr = EPSDestroy(eps);CHKERRQ(ierr);
+  //ierr = EPSDestroy(eps);CHKERRQ(ierr);
  
 
   
