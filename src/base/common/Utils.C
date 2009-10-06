@@ -25,6 +25,11 @@ Utils::Timer::Timer(void)
 }
 
 
+Utils::Timer::~Timer(void)
+{
+}
+
+
 void
 Utils::Timer::reset(void)
 {

@@ -446,18 +446,29 @@ SimulationInterface::solve(void) throw (SolveFailedException)
     _environment->prepare_for_solve();
 
 
+
   try
   {
     do_solve();
   }
   catch (runtime_error& e)
   {
+    ostringstream os;
+    os << "Solve time: " << tt.elapsed_string();
+    Messages::newline();
+    Messages::info(os.str());
+
     ostringstream s;
     s << get_name() << ": " << e.what();
     throw SolveFailedException(s.str());
   }
   catch (...)
   {
+    ostringstream os;
+    os << "Solve time: " << tt.elapsed_string();
+    Messages::newline();
+    Messages::info(os.str());
+
     ostringstream s;
     s << get_name() << ": unknown error occurred";
     throw SolveFailedException(s.str());

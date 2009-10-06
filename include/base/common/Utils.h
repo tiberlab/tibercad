@@ -149,7 +149,7 @@ class Utils
          * Postcondition: the timer is reset
          */
         Timer(void);
-        ~Timer(void) {};
+        ~Timer(void);
 
         //! Reset the timer
         void reset(void);

@@ -18,7 +18,7 @@ class Embracing;
 class Elem;
 
 
-//! An abstract class for a particle density
+//! An abstract class for a classical particle density
 /*!
  *
  * The classical density is calculated as

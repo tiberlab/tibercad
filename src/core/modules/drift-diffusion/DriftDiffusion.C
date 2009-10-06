@@ -34,6 +34,7 @@
 #include "dense_submatrix.h"
 #include "dense_subvector.h"
 
+#include "DataOutput.h"
 #include "Messages.h"
 
 // C++ includes
@@ -4126,7 +4127,7 @@ DriftDiffusion::do_maximum_norm_of_difference(ID id)
 void
 DriftDiffusion::set_dirichlet_bc(void)
 {
-/*
+
   const Device& device = *_device;
 
   EquationSystems& es = get_equation_systems();
@@ -4141,11 +4142,11 @@ DriftDiffusion::set_dirichlet_bc(void)
   // the current solutions
   NumericVector<Number>& solution = system.get_solution_vector();
 
-  BoundaryNodeList& dirichlet_nodes = _dirichlet_nodes;
+  DofList& dirichlet_dofs = _dirichlet_dofs;
 
-  BoundaryNodeList::const_iterator node_it;
-  const BoundaryNodeList::const_iterator end =
-    dirichlet_nodes.end();
+  DofList::const_iterator dof_it;
+  const DofList::const_iterator dof_end =
+    dirichlet_dofs.end();
 
 
   const Scaling& scaling = get_scaling();
@@ -4161,6 +4162,8 @@ DriftDiffusion::set_dirichlet_bc(void)
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_n;
   vector<unsigned int> dof_indices_p;
+
+
 
   MeshBase::const_element_iterator el =
                                   mesh.active_local_elements_begin();
@@ -4194,10 +4197,13 @@ DriftDiffusion::set_dirichlet_bc(void)
       // loop over all nodes and check if it is a dirichlet type node
       for (unsigned int i = 0; i < n_dofs; i++)
       {
-        node_it = dirichlet_nodes.find(elem->get_node(i));
-        if (node_it != end)
+        bool is_dirichlet_node =
+            (dirichlet_dofs.find(dof_indices_u[i]) != dof_end) ? true : false;
+        is_dirichlet_node |= (dirichlet_dofs.find(dof_indices_n[i]) != dof_end) ? true : false;
+        is_dirichlet_node |= (dirichlet_dofs.find(dof_indices_p[i]) != dof_end) ? true : false;
+        if (is_dirichlet_node)
         {
-          Boundary* bd = node_it->second;
+          Boundary* bd = get_environment().get_boundary(elem->get_node(i));
           ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
               bd->get_boundary_properties(get_id()));
           contact->set_material(sc);
@@ -4226,7 +4232,6 @@ DriftDiffusion::set_dirichlet_bc(void)
       }
     }
   }
-*/
 }
 
 
@@ -5493,6 +5498,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   {
     residual->close();
     //residual->print_matlab("F.m");
+    //write_nodal_vector("residual", *residual);
   }
 
 
@@ -5515,6 +5521,8 @@ DriftDiffusion::save_data(const string& file)
   unsigned int sys_num = system.number();
 
   const NumericVector<Number>& solution = get_solution_vector();
+
+  double phi0 = get_scaling().get_potential_scaling();
 
   ogzstream of(file.c_str());
   //ofstream of(file.c_str(), ios_base::out | ios_base::binary);
@@ -5569,8 +5577,8 @@ DriftDiffusion::save_data(const string& file)
     unsigned int dof_en = node.dof_number(sys_num, en_var, 0);
     unsigned int dof_ep = node.dof_number(sys_num, ep_var, 0);
 
-    of << solution(dof_u) << " " << solution(dof_en) << " "
-      << solution(dof_ep) << endl << flush;
+    of << phi0 * solution(dof_u) << " " << phi0 * solution(dof_en) << " "
+      << phi0 * solution(dof_ep) << endl << flush;
   }
 
   of << "</data>" << endl;
@@ -5589,6 +5597,8 @@ DriftDiffusion::load_data(const string& file)
   unsigned int sys_num = system.number();
 
   NumericVector<Number>& solution = get_solution_vector();
+
+  double phi0 = get_scaling().get_potential_scaling();
 
   //ifstream is(file.c_str());
   igzstream is(file.c_str());
@@ -5702,12 +5712,76 @@ DriftDiffusion::load_data(const string& file)
     double u, en, ep;
     ss >> u >> en >> ep;
 
-    solution.set(dof_u, u);
-    solution.set(dof_en, en);
-    solution.set(dof_ep, ep);
+    solution.set(dof_u, u / phi0);
+    solution.set(dof_en, en / phi0);
+    solution.set(dof_ep, ep / phi0);
   }
 
   equilibrium_done(true);
   is_solved(true);
+}
+
+
+
+void
+DriftDiffusion::write_nodal_vector(const string& filename, const NumericVector<double>& vec)
+{
+
+  TiberNonlinearSystem* system =
+    &get_equation_systems().get_system<TiberNonlinearSystem>(
+        get_equation_system_name());
+
+  // aliases for nicer code
+  const Device& device = *(_device);
+  const Mesh& mesh = get_mesh();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int nn  = mesh.n_nodes();
+
+  vector<double> results(3 * nn);
+
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_e");
+  const unsigned int ep_var = system->variable_number("fermi_h");
+
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+
+  MeshBase::const_element_iterator it =
+    mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end =
+    mesh.active_local_elements_end();
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    ID subdomain = elem->subdomain_id();
+
+    dof_map.dof_indices(elem, dof_indices_u, u_var);
+    dof_map.dof_indices(elem, dof_indices_en, en_var);
+    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+    for (unsigned int n = 0; n < elem->n_nodes(); n++)
+    {
+      unsigned int id = 3 * elem->node(n);
+      results[id] = vec(dof_indices_u[n]);
+      results[id + 1] = vec(dof_indices_en[n]);
+      results[id + 2] = vec(dof_indices_ep[n]);
+    }
+
+  }
+
+  DataOutput data_output(get_mesh(), get_control().get_output_format());
+  data_output.set_output_directory(get_control().get_output_dir());
+  vector<string> names(3);
+  names[0] = "u";
+  names[1] = "v";
+  names[2] = "w";
+  data_output.write_nodal_data(filename, results, names);
+
 }
 

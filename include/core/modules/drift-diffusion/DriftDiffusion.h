@@ -699,8 +699,16 @@ class DriftDiffusion : public SimulationInterface
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
 
+    //! Save the current state
     void save_data(const std::string& file);
+
+    //! Reload the current state
     void load_data(const std::string& file);
+
+
+    //! Write out a vector (e.g. residual)
+    void write_nodal_vector(const std::string& filename,
+        const NumericVector<double>& vec);
 };
 
 
