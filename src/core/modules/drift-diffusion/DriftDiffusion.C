@@ -5599,6 +5599,8 @@ DriftDiffusion::load_data(const string& file)
   NumericVector<Number>& solution = get_solution_vector();
 
   double phi0 = get_scaling().get_potential_scaling();
+  if (!get_option("scale_after_load", true))
+    phi0 = 1.0;
 
   //ifstream is(file.c_str());
   igzstream is(file.c_str());
