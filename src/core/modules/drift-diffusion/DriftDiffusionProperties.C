@@ -136,9 +136,11 @@ DriftDiffusionProperties::setup_electrons_and_holes(void)
 
   // we could have quantum density simulations for them
   {
-    string qd;
-    qd = get_option("electron_quantum_density", "");
-    _electrons.add_quantum_density(qd);
+    vector<string> qd;
+    get_option("electron_quantum_density", qd);
+    for (int i = 0; i < qd.size(); i++)
+      _electrons.add_quantum_density(qd[i]);
+
     if (_electrons.get_quantum_simulation() != NULL)
     {
       Embracing* emb =
@@ -147,8 +149,10 @@ DriftDiffusionProperties::setup_electrons_and_holes(void)
       _electrons.set_embracing(emb);
     }
 
-    qd = get_option("hole_quantum_density", "");
-    _holes.add_quantum_density(qd);
+    qd.resize(0);
+    get_option("hole_quantum_density", qd);
+    for (int i = 0; i < qd.size(); i++)
+      _holes.add_quantum_density(qd[i]);
     if (_holes.get_quantum_simulation() != NULL)
     {
       Embracing* emb =

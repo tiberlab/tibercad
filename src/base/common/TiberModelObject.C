@@ -87,6 +87,18 @@ TiberModelObject::get_parameter(const std::string& name,
 
 
 
+template <typename T>
+void
+TiberModelObject::get_option(const std::string& name,
+    std::vector<T>& vec, bool override) const
+{
+  string s(_options.get_option(name, ""));
+  if (override) override_parameter_string(name, s);
+  Utils::extract_vector(s, vec);
+}
+
+
+
 TiberModelObject*
 TiberModelObject::create_from_library(const std::string& name)
 {
@@ -239,6 +251,44 @@ TiberModelObject::get_option<const char*>(const string& name,
 
 template
 void
+TiberModelObject::get_option<double>(const string& name,
+    vector<double>& vec, bool override) const;
+
+template
+void
+TiberModelObject::get_option<int>(const string& name,
+    vector<int>& vec, bool override) const;
+
+template
+void
+TiberModelObject::get_option<unsigned int>(const string& name,
+    vector<unsigned int>& vec, bool override) const;
+
+template
+void
+TiberModelObject::get_option<short>(const string& name,
+    vector<short>& vec, bool override) const;
+
+template
+void
+TiberModelObject::get_option<bool>(const string& name,
+    vector<bool>& vec, bool override) const;
+
+template
+void
+TiberModelObject::get_option<char>(const string& name,
+    vector<char>& vec, bool override) const;
+
+template
+void
+TiberModelObject::get_option<string>(const string& name,
+    vector<string>& vec, bool override) const;
+
+
+
+
+template
+void
 TiberModelObject::get_parameter<double>(const string& name,
     vector<double>& vec, bool override);
 
@@ -271,4 +321,3 @@ template
 void
 TiberModelObject::get_parameter<string>(const string& name,
     vector<string>& vec, bool override);
-

@@ -184,6 +184,13 @@ class TiberModelObject
         bool override = true) const;
 
 
+    //! Get an option which is a vector of values
+    template <typename T>
+    void get_option(const std::string& name, std::vector<T>& vec,
+        bool override = true) const;
+
+
+
     //! To override a parameter string from a strange location
     /*!
      * Normally parameters/options are read only from the local

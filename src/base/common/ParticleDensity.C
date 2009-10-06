@@ -18,7 +18,6 @@ ParticleDensity::ParticleDensity(const string& name,
   _statistics(statistics),
   _use_quantum(false),
   _is_quantum(false),
-  _quantum_density(NULL),
   _density_id(INVALID_ID),
   _elem(NULL),
   _density(-1.0),
@@ -75,7 +74,7 @@ ParticleDensity::add_quantum_density(const std::string& name)
 
     // at this point we have for sure a quantum density simulation
 
-    _quantum_density = qd;
+    _quantum_density.push_back(qd);
     use_quantum_density();
 
   }
@@ -147,8 +146,15 @@ ParticleDensity::quantum_density(void)
   bool flag = false;
   _density = 0.0;
 
-  if (_quantum_density->is_solved())
-    flag = _quantum_density->get_solution(_elem, _p, _density_id, _density);
+  for (int i = 0; i < _quantum_density.size(); i++)
+  {
+    double density = 0.0;
+    if (_quantum_density[i]->is_solved())
+      flag |= _quantum_density[i]->get_solution(_elem, _p, _density_id, density);
+
+    _density += density;
+  }
+
 
   return flag;
 }

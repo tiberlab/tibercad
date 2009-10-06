@@ -12,6 +12,7 @@
 
 #include <string>
 #include <set>
+#include <vector>
 
 class SimulationInterface;
 class Embracing;
@@ -174,7 +175,7 @@ class ParticleDensity
 
 
     //! The quantum density calculation
-    SimulationInterface* _quantum_density;
+    std::vector<SimulationInterface*> _quantum_density;
 
 
     //! The ID of the density variable
@@ -390,7 +391,10 @@ inline
 SimulationInterface*
 ParticleDensity::get_quantum_simulation(void)
 {
-  return _quantum_density;
+  if (_quantum_density.size() > 0)
+    return _quantum_density[0];
+
+  return NULL;
 }
 
 
