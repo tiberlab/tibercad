@@ -203,11 +203,13 @@ DriftDiffusionProperties::do_init(void)
 
   if (!is_dielectric())
   {
-    //
-    // mobilities
-    //
     if (!get_material()->is_alloy())
     {
+      // all this stuff has already been done in do_init_alloy()
+
+      //
+      // mobilities
+      //
       ModelOptions::const_submodel_iterator
         it(get_options().submodels_begin("electron_mobility"));
       ModelOptions::const_submodel_iterator
@@ -333,7 +335,8 @@ DriftDiffusionProperties::do_init_alloy(const PhysicalModelInterface* comp_A,
 
   parse_options();
 
-  setup_electrons_and_holes();
+  // this is done in do_init()!!
+  //setup_electrons_and_holes();
 
 
   permittivity = alloy(scA->permittivity, scB->permittivity, xa);
