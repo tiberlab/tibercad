@@ -295,6 +295,8 @@ class Control
      */
     std::string _output_format;
 
+    //! Setup global simulation options
+    void setup_globals(void);
 
     //! Create the device
     /*!

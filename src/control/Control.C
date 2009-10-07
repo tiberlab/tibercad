@@ -166,18 +166,18 @@ Control::init(void) throw (InitFailedException,
   // we check here if the input file exists
   ifstream infile;
   infile.open(_inputfile.c_str());
-  if (infile.fail() || !infile.good() || (infile.rdbuf()->in_avail() == 0))
+  if (infile.fail() || !infile.good())
   {
     infile.close();
     throw InitFailedException("Input file is invalid.");
   }
   infile.close();
 
-
   _database = new Database();
   Material::set_database(*_database);
 
   // create the device, simulations and models
+  setup_globals();
   create_device();
   create_materials();
   setup_clusters();
@@ -208,16 +208,23 @@ Control::init(void) throw (InitFailedException,
 
 
 void
-Control::create_device(void)
+Control::setup_globals(void)
 {
   using namespace boost::filesystem;
-
-  Messages::debug("Control::create_device() begin");
 
   InputParser parser(_inputfile);
 
   ModelOptions opts;
   parser.get_simulation_options(opts);
+
+  // setup the logfile
+  string logfile(Utils::basename(_inputfile) + ".log");
+  logfile = opts.get_option("logfile", logfile);
+  opts.delete_option("logfile");
+  Messages::set_log_file(logfile);
+
+  Messages::info("Input file: " + _inputfile);
+  Messages::newline();
 
   _database->set_search_path(opts.get_option("searchpath", ""));
   opts.delete_option("searchpath");
@@ -246,6 +253,8 @@ Control::create_device(void)
       << _database->get_search_path() << endl
       << "Output directory      : "
       << _outputdir << endl
+      << "Log file              : "
+      << logfile << endl
       << "Output file format    : "
       << _output_format << endl << endl;
     m.info(os.str());
@@ -281,7 +290,17 @@ Control::create_device(void)
     msg += outpath.string() + "' as output directory.";
     throw InitFailedException(msg);
   }
+}
 
+
+void
+Control::create_device(void)
+{
+  Messages::debug("Control::create_device() begin");
+
+  ModelOptions opts;
+  InputParser parser(_inputfile);
+  parser.get_simulation_options(opts);
 
   // we pass the remaining options to the device
   _device = Device::create(opts);

@@ -3,6 +3,8 @@
 #include "Messages.h"
 #include "TeeStream.h"
 #include "TypeDefs.h"
+#include "InitFailedException.h"
+#include "TiberCad.h"
 #include "Utils.h"
 
 #include <vector>
@@ -41,6 +43,16 @@ void
 Messages::set_log_file(const std::string& logfile)
 {
   _log.open(logfile.c_str());
+  if (_log.fail() || !_log.good())
+    throw InitFailedException("cannot open logfile for writing.");
+
+  _log << Messages::endl;
+  _log << "TiberCAD version " << TiberCad::TiberCadVersion() << Messages::endl;
+  time_t now;
+  time(&now);
+  _log << Messages::endl;
+  _log << "Log start: " << ctime(&now) << Messages::endl;
+  _log << Messages::endl;
 }
 
 

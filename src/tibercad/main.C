@@ -33,6 +33,9 @@ using namespace std;
 // and so on
 int main (int argc, char** argv)
 {
+  cout << endl;
+  cout << "TiberCAD version " << TiberCad::TiberCadVersion() << endl;
+  cout << endl;
 
   // take input file from command line or ask for it
   string inputfile;
@@ -62,14 +65,19 @@ int main (int argc, char** argv)
 
   }
 
-  Messages::set_log_file(Utils::basename(inputfile) + ".log");
+  {
+    // we check here if the input file exists
+    ifstream infile;
+    infile.open(inputfile.c_str());
+    if (infile.fail() || !infile.good())
+    {
+      infile.close();
+      cerr << "TiberCAD: Cannot open file " << inputfile <<  " for reading." << endl;
+      return 1;
+    }
+    infile.close();
+  }
 
-  Messages::newline();
-  Messages::info("TiberCAD version " + TiberCad::TiberCadVersion());
-  Messages::newline();
-
-  Messages::info("Input file: " + inputfile);
-  Messages::newline();
 
   // do some preparation
   {
@@ -84,7 +92,7 @@ int main (int argc, char** argv)
       const size_t bufsize = 1024;
       char buffer[bufsize];
       if (!GetModuleFileName(NULL, buffer, bufsize))
-        Messages::warning("Problems detecting installation path.");
+        cerr << "Problems detecting installation path." << endl;
       string program(buffer);
       Utils::convert_path_to_unix(program);
       string exepath(Utils::dirname(program));
@@ -97,8 +105,8 @@ int main (int argc, char** argv)
     // check the license
     if (!License::check_license())
     {
-      Messages::info("Sorry, cannot start TiberCAD as I could not find "
-          "a valid license.");
+      cerr << "Sorry, cannot start TiberCAD as I could not find "
+          "a valid license." << endl;
 # ifdef CYGWIN
       cout << endl << "press Enter ...";
       cin.get();
