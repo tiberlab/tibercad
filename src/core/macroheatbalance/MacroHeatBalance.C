@@ -408,9 +408,9 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 	} //loop over basis functions
 
-	if (myopts.heat_scheme.compare("surface") == 0 )
-	  Fe(p1) +=JxW[qp] * flux_power[qp]  * dphi[p1][qp];
-	else
+	//if (myopts.heat_scheme.compare("surface") == 0 )
+	//  Fe(p1) +=JxW[qp] * flux_power[qp]  * dphi[p1][qp];
+	//else
 	  Fe(p1) +=JxW[qp] * heat_source[qp] * phi[p1][qp];
 
 
@@ -435,20 +435,20 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
       fe_face->reinit(elem,side);
 
       //Source. Must be before boundary condition
-      heat_model->get_total_power_flux(qface_point,flux_power);
+      //heat_model->get_total_power_flux(qface_point,flux_power);
 
-        for (unsigned int qp=0; qp < qface.n_points(); qp++)
-       {
-      	for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
-      	{
-      	  double Fe_surf = JxW_face[qp] * phi_face[p1][qp] * flux_power[qp] * normal[qp];
+      //for (unsigned int qp=0; qp < qface.n_points(); qp++)
+      // {
+      // 	for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+      //	{
+      //	  double Fe_surf = JxW_face[qp] * phi_face[p1][qp] * flux_power[qp] * normal[qp];
 
-	  if (myopts.heat_scheme.compare("surface") == 0 )
-	    Fe(p1) -= Fe_surf;
+      //  if (myopts.heat_scheme.compare("surface") == 0 )
+      //    Fe(p1) -= Fe_surf;
 
 
-      	}
-       }
+      //}
+      //}
 
       Boundary* bd = se.get_boundary(elside);
 
