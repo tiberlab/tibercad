@@ -33,13 +33,6 @@ void WzPiezoelectricModel::do_init ( )
   if ( _simul == NULL)
     throw InitFailedException("Could not find " + _simul_name);
 
-
-
-  // e33 = get_parameter("e33", e33);
-//   e31 = get_parameter("e31", e31);
-//   e15 = get_parameter("e15", e15);
-
-
   var_map.clear();
   var_map[EXX]=_simul->get_variable_id("eps_xx");
   var_map[EXY]=_simul->get_variable_id("eps_xy");
@@ -53,14 +46,14 @@ void WzPiezoelectricModel::do_init ( )
   for(; it!=end; ++it)
     ID_set.insert(it->second);
 
-
-
+  def_pot = get_options().get_option("def_pot",true);
+  give_pol = get_options().get_option("give_pol",true);
 
 }
 
 
 
-void  WzPiezoelectricModel::calculate_piezopolarization(const Elem* elem)
+void  WzPiezoelectricModel::calculate_piezopolarization(const Elem* elem,const Point& point)
 {
 
 
@@ -70,33 +63,37 @@ void  WzPiezoelectricModel::calculate_piezopolarization(const Elem* elem)
 
   std::vector< std::map< ID, double > > solution;
 
-  std::vector<Point> p(1);
+   std::vector<Point> p(1);
 
-  p[0] = elem->centroid();
+  //p[0] = elem->centroid();
+  p[0] = point;
 
-   Tensor2Sym eps(0);
+
   if  (_simul->get_solution(elem,p,ID_set,solution))
   {
+    Tensor2Sym eps(0);
     eps(1,1) = solution[0].find(var_map[EXX])->second;
     eps(2,1) = solution[0].find(var_map[EXY])->second;
     eps(3,1) = solution[0].find(var_map[EXZ])->second;
     eps(2,2) = solution[0].find(var_map[EYY])->second;
     eps(3,2) = solution[0].find(var_map[EYZ])->second;
-    eps(3,3) = solution[0].find(var_map[EZZ])->second;
+    eps(3,3) = solution[0].find(var_map[EZZ])->second;	
 
+ 
     //calculation system -> crystal system
-    eps = sym(cr.RotMatrix.transpose() * ( eps * (cr.RotMatrix)));
 
+      _strain = sym(cr.RotMatrix.transpose() * ( eps * (cr.RotMatrix)));
 
-    _pol(1) = 2.0 * e15 * eps(3,1);
-    _pol(2) = 2.0 * e15 * eps(3,2);
-    _pol(3) = e31 * eps(1,1) + e31*eps(2,2) + e33 * eps(3,3);
+     
 
-    //calculation system -> crystal system
-    rotate_to_calc_system(cr.RotMatrix);
+      _P(1) = 2.0 * e15 * _strain(3,1);
+      _P(2) = 2.0 * e15 * _strain(3,2);
+      _P(3) = e31 * _strain(1,1) + e31*_strain(2,2) + e33 * _strain(3,3);
+      
+      //calculation system -> crystal system
+      rotate_to_calc_system(cr.RotMatrix);
 
-
-  }
+    }
 
 
 

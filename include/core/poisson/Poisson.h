@@ -35,7 +35,13 @@ class Poisson : public SimulationInterface
       POTENTIAL,
       EX,
       EY,
-      EZ 
+      EZ,
+      PIEZO_X,
+      PIEZO_Y,
+      PIEZO_Z,
+      PYRO_X,
+      PYRO_Y,
+      PYRO_Z 
     };
   
   /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
@@ -108,6 +114,8 @@ class Poisson : public SimulationInterface
   PoissonModel* poisson_model; 
     
   double check_gauss(void);
+
+  bool do_int;
 
    //! Quadrature point along the face of the element 
   const std::vector<Point> qface_point;

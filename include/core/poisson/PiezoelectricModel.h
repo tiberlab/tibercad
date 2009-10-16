@@ -20,13 +20,19 @@ class PiezoelectricModel : public PhysicalModelInterface
  
   void get_piezopolarization(Tensor1& P);
 
-  virtual void calculate_piezopolarization(const Elem* elem) = 0;
+  void get_strain_calc(Tensor2Sym& strain);
+  virtual void calculate_piezopolarization(const Elem* elem,const Point& point) = 0;
 
   SimulationInterface* _simul;
 
  protected:
 
-  Tensor1 _pol; 
+  bool def_pot;
+  bool give_pol;
+
+  Tensor1 _P; 
+
+  Tensor2Sym _strain;
 
   void rotate_to_calc_system(const Tensor2Gen& RotMatrix);
 
@@ -52,8 +58,22 @@ void
 PiezoelectricModel::get_piezopolarization(Tensor1& P)
 {
 
-  P = _pol;
+  if (give_pol)
+    P = _P;
+  else
+    P = Tensor1(0);
 
 }
 
+inline
+void 
+PiezoelectricModel::get_strain_calc(Tensor2Sym& strain)
+{
+
+  
+  if (def_pot)
+    strain = _strain;
+  else
+    strain = Tensor2Sym(0);
+}
 #endif

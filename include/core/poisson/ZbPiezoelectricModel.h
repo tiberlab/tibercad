@@ -15,7 +15,7 @@ class ZbPiezoelectricModel : public PiezoelectricModel
 
  inline static ZbPiezoelectricModel* create(void);
 
-  void calculate_piezopolarization(const Elem* elem);
+ void calculate_piezopolarization(const Elem* elem,const Point& point);
 
  protected:
 

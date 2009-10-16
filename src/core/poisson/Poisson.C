@@ -68,8 +68,12 @@ void  Poisson::do_init( )
 
   dim = mesh->mesh_dimension();
 
-  double mesh_units = 100 * get_scaling().get_calc_mesh_units();
+  //Set in cm
+  double mesh_units = 100.0 * get_scaling().get_calc_mesh_units();
   get_scaling().set_calc_mesh_units(mesh_units);
+
+  do_int = sim_opt.get_option("do_integration",false);
+
 
   my_system = TiberLinearSystem::create(get_equation_systems(),
       get_equation_system_name(), get_solver_options());
@@ -186,26 +190,50 @@ void Poisson::build_nodal_results (const std::set< std::string > &variables,
   }
 
 
-  int POL = -1;
-  if (variables.count("Polarization") ||
+  int PIEZO = -1;
+  if (variables.count("PiezoPolarization") ||
       variables.count("PoissonVariables") )
   {
 
-    POL = n_vars;
+    PIEZO= n_vars;
     legend.resize(legend.size() + dim + 1);
 
     switch (dim)
     {
     case 3:
-      legend[POL + 2] = "P_z";
+      legend[PIEZO + 2] = "Piezo_z";
       n_vars++;
     case 2:
-      legend[POL + 1] = "P_y";
+      legend[PIEZO + 1] = "Piezo_y";
       n_vars++;
-      legend[POL + dim] = "modP";
+      legend[PIEZO + dim] = "modP";
       n_vars++;
     default:
-      legend[POL] = "P_x";
+      legend[PIEZO] = "Piezo_x";
+      n_vars++;
+    }
+  }
+
+  int PYRO = -1;
+  if (variables.count("PyroPolarization") ||
+      variables.count("PoissonVariables") )
+  {
+
+    PYRO = n_vars;
+    legend.resize(legend.size() + dim + 1);
+
+    switch (dim)
+    {
+    case 3:
+      legend[PYRO + 2] = "Pyro_z";
+      n_vars++;
+    case 2:
+      legend[PYRO + 1] = "Pyro_y";
+      n_vars++;
+      legend[PYRO + dim] = "modP";
+      n_vars++;
+    default:
+      legend[PYRO] = "Pyro_x";
       n_vars++;
     }
   }
@@ -267,51 +295,87 @@ void Poisson::build_nodal_results (const std::set< std::string > &variables,
   E_ID.insert(EY);
   E_ID.insert(EZ);
 
-  std::vector<std::map<ID, double> > solution;
+  set<ID> POL_ID;
+  POL_ID.insert(PIEZO_X);
+  POL_ID.insert(PIEZO_Y);
+  POL_ID.insert(PIEZO_Z);
+  POL_ID.insert(PYRO_X);
+  POL_ID.insert(PYRO_Y);
+  POL_ID.insert(PYRO_Z);
+
+  std::vector<std::map<ID, double> > E_solution;
+  std::vector<std::map<ID, double> > POL_solution;
   //----
 
   Tensor1 E(0);
-  RealGradient _tot_pol(0);
+
   for ( ; it != end; ++it)
     {
       const Elem* elem = *it;
       dof_map.dof_indices (elem, dof_indices);
 
-      init_poisson_model(elem);
-      poisson_model->get_total_polarization(_tot_pol);
+      //init_poisson_model(elem);
 
+      //Get Electric Field
       std::vector<Point> p(1);
       p[0] = elem->centroid();
-      get_solution_secure(elem,p,E_ID,solution);
-      E(1) = solution[0].find(EX)->second;
-      E(2) = solution[0].find(EY)->second;
-      E(3) = solution[0].find(EZ)->second;
+      get_solution_secure(elem,p,E_ID,E_solution);
+      E(1) = E_solution[0].find(EX)->second;
+      E(2) = E_solution[0].find(EY)->second;
+      E(3) = E_solution[0].find(EZ)->second;
+
+      //Get piezo and pyropolarization
+      get_solution_secure(elem,POL_ID,POL_solution);
 
       for (ID n = 0; n < elem->n_nodes(); n++)
       {
+
+        
 	assert (node_conn[elem->node(n)] != 0);
 	double conn = static_cast<double>(node_conn[elem->node(n)]);
-
+	
 	unsigned int id =  (elem->node(n) * n_vars);
 
 	if (POT != -1)
 	  results[POT + id]  =  (*(my_system->solution))(dof_indices[n]);
 
-
-	if (POL != -1)
-	{
+ 	if (PIEZO != -1)
+ 	{    
+	  Tensor1 piezo_pol(0);
+          piezo_pol(1) = POL_solution[n].find(PIEZO_X)->second;
+	  piezo_pol(2) = POL_solution[n].find(PIEZO_Y)->second;
+	  piezo_pol(3) = POL_solution[n].find(PIEZO_Z)->second;
+          piezo_pol *= 1e4; 
 	  switch (dim)
 	  {
 	  case 3:
-	    results[id + POL + 2] += _tot_pol(2) * 1e4/conn;
+	    results[id + PIEZO + 2] = piezo_pol(3);
 	  case 2:
-	    results[id + POL + 1] += _tot_pol(1) * 1e4/conn ;
-	    results[id + POL + dim] = 0.0;
+	    results[id + PIEZO + 1] = piezo_pol(2);
+	    results[id + PIEZO + dim] = norm(piezo_pol);
 	  default:
-	    results[id + POL ] += _tot_pol(0) * 1e4/conn;
+	    results[id + PIEZO ] = piezo_pol(1);
 	  }
 	}
 
+	if (PYRO != -1)
+ 	{    
+	  Tensor1 pyro_pol(0);
+          pyro_pol(1) = POL_solution[n].find(PYRO_X)->second;
+	  pyro_pol(2) = POL_solution[n].find(PYRO_Y)->second;
+	  pyro_pol(3) = POL_solution[n].find(PYRO_Z)->second;
+          pyro_pol *= 1e4;
+	  switch (dim)
+	  {
+	  case 3:
+	    results[id + PYRO + 2] = pyro_pol(3);
+	  case 2:
+	    results[id + PYRO + 1] = pyro_pol(2);
+	    results[id + PYRO + dim] = norm(pyro_pol);
+	  default:
+	    results[id + PYRO ] = pyro_pol(1);
+	  }
+	}
 
        	if (EF != -1)
 	{
@@ -335,8 +399,6 @@ void Poisson::build_nodal_results (const std::set< std::string > &variables,
     }
 
 }
-
-
 
 
 
@@ -446,7 +508,7 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   double total_charge = 0.0;
 
   RealTensor epsilon(0);
-  RealGradient _tot_pol(0);
+ 
 
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
@@ -466,12 +528,14 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
     init_poisson_model(elem);
 
+    std::vector< RealGradient> _tot_pol(q_point.size());
     poisson_model->get_charge_density(q_point,charge_density);
     poisson_model->get_dielectric_constant(epsilon);
-    poisson_model->get_total_polarization(_tot_pol);
+    
+    poisson_model->get_total_polarization(_tot_pol,q_point);
 
-    //    std::cout<<_tot_pol<<std::endl;
 
+    //    std::cout<<_tot_pol[0]<<std::endl;
     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
       for (unsigned int qp=0; qp<qrule.n_points(); qp++)  //loop over quadrature points
 	for (unsigned int p2=0; p2<n_dofs; p2++) //loop over basis functions
@@ -484,13 +548,15 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
       {
 	//	Fe(p1) += JxW[qp] * charge_density[qp] * phi[p1][qp];
 	total_charge +=  JxW[qp] * charge_density[qp];
-	Fe(p1) += JxW[qp] * (dphi[p1][qp] * _tot_pol);
-
+	Fe(p1) += JxW[qp] * (dphi[p1][qp] * _tot_pol[qp]);
+	//	std::cout<< _tot_pol[qp]<<std::endl;
       }
-
 
     const unsigned int num_sides = elem->n_sides();
 
+    if (do_int)
+    {
+ 
     //Surface///
     for (unsigned int side = 0; side<num_sides; side++)
     {
@@ -498,22 +564,30 @@ void Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
       if (se.is_on_boundary(elside))
       {
-	fe_face->reinit(elem,side);
-	for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
-	  for (unsigned int qp = 0; qp < qface.n_points(); qp++){}
-	    // {Fe(p1) +=   JxW_face[qp] * (_tot_pol * normal[qp]) * phi_face[p1][qp];}
 
-	for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
-	  for (unsigned int qp=0; qp<qrule.n_points(); qp++)  //loop over quadrature points
-	    for (unsigned int p2=0; p2<n_dofs; p2++){} //loop over basis functions
-	      //Ke(p1,p2) -= JxW_face[qp] * (epsilon * dphi_face[p2][qp]) * normal[qp] * phi_face[p1][qp];
+	Boundary* bd = se.get_boundary(elside);
 
-
-
+	if (bd == NULL)
+	{
+	    fe_face->reinit(elem,side);
+	    
+	    std::vector< RealGradient> _tot_pol_face(qface.n_points());
+	    poisson_model->get_total_polarization(_tot_pol_face,qface_point);
+	    for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
+	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+		 {Fe(p1) -=   JxW_face[qp] * (_tot_pol_face[qp] * normal[qp]) * phi_face[p1][qp];}
+	    	    
+	    for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
+	      for (unsigned int qp=0; qp<qrule.n_points(); qp++)  //loop over quadrature points
+		for (unsigned int p2=0; p2<n_dofs; p2++){} //loop over basis functions
+	    //{Ke(p1,p2) -= JxW_face[qp] * (epsilon * dphi_face[p2][qp]) * normal[qp] * phi_face[p1][qp];}
+	  }
+	
+	
       }
 
     }
-
+    }// End if_do int
     //Boundary condition
 
     for (unsigned int side = 0; side<num_sides; side++)
@@ -584,19 +658,20 @@ void  Poisson:: init_poisson_model(const Elem* elem)
 ID
 Poisson::convert_variable_name_to_id(const string& variable_name) const
 {
+  
 
    ID id = INVALID_ID;
 
     if (variable_name == "potential" )
       id  = POTENTIAL;
-    if (variable_name == "e_field_x" )
+    if (variable_name == "Ex" )
       id  = EX;
-    if (variable_name == "e_field_y" )
+    if (variable_name == "Ey" )
       id  = EY;
-    if (variable_name == "e_field_z" )
+    if (variable_name == "Ez" )
       id  = EZ;
 
-  return id;
+    return id;
 }
 
 
@@ -639,11 +714,9 @@ Poisson::get_solution_secure(const Elem* elem, const vector<Point>& p,
   FEType fe_type = dof_map.variable_type(uvar);
    AutoPtr<FEBase>  fe(build_finite_element(dim,fe_type,true));
 
-
   // element shape functions
    const vector<vector<Real> >& phi = fe->get_phi();
    const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
-
 
   vector<Point> points(np);
 
@@ -662,6 +735,12 @@ Poisson::get_solution_secure(const Elem* elem, const vector<Point>& p,
   double V = 0.0;
   init_poisson_model(elem);
 
+  //we need point in the global system (p)
+  std::vector<RealGradient> piezo_pol(np);
+  std::vector<RealGradient> pyro_pol(np);
+  poisson_model->get_piezo_polarization(piezo_pol,p);
+  poisson_model->get_pyro_polarization(pyro_pol,p);
+
   for (unsigned int n = 0; n < np; n++)
   {
     V = 0.0;
@@ -678,18 +757,44 @@ Poisson::get_solution_secure(const Elem* elem, const vector<Point>& p,
       }
 
     }
+
+    //Electric field is given in V/cm
+    //  E[0] *=  100.0;
+    //E[1] *=  100.0;
+    //E[2] *=  100.0;
+
+
     if (ids.count(POTENTIAL))
       values[n][POTENTIAL] = V;
 
     if (ids.count(EX))
       values[n][EX] = E[0];
-
+    
     if (ids.count(EY))
       values[n][EY] = E[1];
 
     if (ids.count(EZ))
       values[n][EZ] = E[2];
 
+    if (ids.count(PIEZO_X))
+      values[n][PIEZO_X] = piezo_pol[n](0);
+
+    if (ids.count(PIEZO_Y))
+      values[n][PIEZO_Y] = piezo_pol[n](1);
+
+    if (ids.count(PIEZO_Z))
+      values[n][PIEZO_Z] = piezo_pol[n](2);
+
+    if (ids.count(PYRO_X))
+      values[n][PYRO_X] = pyro_pol[n](0);
+
+    if (ids.count(PYRO_Y))
+      values[n][PYRO_Y] = pyro_pol[n](1);
+
+    if (ids.count(PYRO_Z))
+      values[n][PYRO_Z] = pyro_pol[n](2);
+
+   
   }
 
 }

@@ -16,7 +16,7 @@ void ZbPiezoelectricModel::read_database ( )
   Database& db = get_database();
   db.set_section("piezoelectricity");
 
-  e14 = db.get("e14", 0.0, true);
+  e14 = db.get("e14", 0.0);
   
   
 }
@@ -51,7 +51,7 @@ void ZbPiezoelectricModel::do_init ( )
 
 
 
-void  ZbPiezoelectricModel::calculate_piezopolarization(const Elem* elem)
+void  ZbPiezoelectricModel::calculate_piezopolarization(const Elem* elem, const Point& point)
 {
 
 
@@ -61,13 +61,14 @@ void  ZbPiezoelectricModel::calculate_piezopolarization(const Elem* elem)
 
   std::vector< std::map< ID, double > > solution;
 
-  std::vector<Point> p(1);
+   std::vector<Point> p(1);
 
-  p[0] = elem->centroid();
+   p[0] = point;;
 
-   Tensor2Sym eps(0);
+ 
   if  (_simul->get_solution(elem,p,ID_set,solution))
   {
+    Tensor2Sym eps(0);
     eps(1,1) = solution[0].find(var_map[EXX])->second; 
     eps(2,1) = solution[0].find(var_map[EXY])->second;
     eps(3,1) = solution[0].find(var_map[EXZ])->second;
@@ -76,20 +77,18 @@ void  ZbPiezoelectricModel::calculate_piezopolarization(const Elem* elem)
     eps(3,3) = solution[0].find(var_map[EZZ])->second;
 
 
-    eps = sym(cr.RotMatrix.transpose() * ( eps * (cr.RotMatrix)));
+    _strain = sym(cr.RotMatrix.transpose() * ( eps * (cr.RotMatrix)));
 
-    _pol(1) = 2*e14*eps(3,2);
-    _pol(2) = 2*e14*eps(3,1);
-    _pol(3) = 2*e14*eps(2,1);
-
-
+    _P(1) = 2*e14*_strain(3,2);
+    _P(2) = 2*e14*_strain(3,1);
+    _P(3) = 2*e14*_strain(2,1);
 
     rotate_to_calc_system(cr.RotMatrix);
    
 
   }
 
-  
+    def_pot = get_options().get_option("def_pot",true);
 
 }
 

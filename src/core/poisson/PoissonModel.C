@@ -94,24 +94,44 @@ void PoissonModel::create_submodels()
 
   //Piezopolarization-----
   destroy(_piezo_model);
-  it = get_options().submodels_begin("polarization");
-  end = get_options().submodels_end("polarization");
+  it = get_options().submodels_begin("piezo_polarization");
+  end = get_options().submodels_end("piezo_polarization");
 
   if (it != end)
   {
 
-
-   _piezo_model =dynamic_cast<PiezoelectricModel*>(
-                      PhysicalModelInterface::create("piezoelectric_model_" +
-                      get_material()->get_structure(), it->second));
+    _piezo_model = dynamic_cast<PiezoelectricModel*>(
+                     PhysicalModelInterface::create("piezoelectric_model_" +
+                    get_material()->get_structure(), it->second));
 
    if (_piezo_model == NULL)
       throw InitFailedException("Could not create piezoelectric model");
 
-  _piezo_model->set_material(get_material());
-  _piezo_model->init();
+   _piezo_model->set_material(get_material());
+   _piezo_model->init();
 
   }
+
+  //Pyropolarization-----
+  destroy(_pyropolarization);
+  it = get_options().submodels_begin("pyro_polarization");
+  end = get_options().submodels_end("pyro_polarization");
+
+  if (it != end)
+  {
+
+    _pyropolarization = dynamic_cast<PyroPolarization*>(
+                     PhysicalModelInterface::create("pyroelectric_model_" +
+                     get_material()->get_structure(), it->second));
+
+   if (_pyropolarization == NULL)
+      throw InitFailedException("Could not create pyroelectric model");
+
+   _pyropolarization ->set_material(get_material());
+   _pyropolarization ->init();
+
+  }
+
 
    //Dielectric constant
    destroy(_epsilon_model);
@@ -121,6 +141,7 @@ void PoissonModel::create_submodels()
    _epsilon_model->set_material(get_material());
    _epsilon_model->init();
    _epsilon_model->get_dielectric_real(_epsilon);
+
 
  }
 
@@ -227,91 +248,94 @@ PoissonModel::get_dielectric_constant(RealTensor& epsilon)
       epsilon(j,i) = epsilon(i,j);
     }
 
+
+   
   epsilon *=  Constants::epsilon * 1e-2;
 
 }
 
 
-
 void
-PoissonModel::get_total_polarization(RealGradient& p)
+PoissonModel::get_total_polarization(std::vector<RealGradient>& p,const std::vector< Point >& points)
 {
 
-  RealGradient  _polarization(0);
+  std::vector<RealGradient> piezo_pol(points.size());
+  get_piezo_polarization(piezo_pol,points);
+
+  std::vector<RealGradient> pyro_pol(points.size());
+  get_pyro_polarization(pyro_pol,points);
+
+  for (ID n = 0; n < points.size();n ++)
+    p[n] = piezo_pol[n] + pyro_pol[n];
+
+}
+
+void
+PoissonModel::get_piezo_polarization(std::vector<RealGradient>& p,const std::vector< Point >& points)
+{
+ std::vector<RealGradient> _polarization(points.size());
 
   if (_piezo_model != NULL)
-  {
-    _piezo_model->calculate_piezopolarization(_elem);
+  {  
 
-    Tensor1 piezo(0);
-    _piezo_model->get_piezopolarization(piezo);
+    for (ID n = 0; n< points.size(); n++)
+      {
+	const Point p = points[n]; 
+	_piezo_model->calculate_piezopolarization(_elem,p);
+	
+	Tensor1 piezo(0);
+	_piezo_model->get_piezopolarization(piezo);
 
-    piezo *=1e-4;
-
-    _polarization(0) = piezo(1);
-    _polarization(1) = piezo(2);
-    _polarization(2) = piezo(3);
-
+        _polarization[n](0);
+	_polarization[n](0) = piezo(1);
+	_polarization[n](1) = piezo(2);
+	_polarization[n](2) = piezo(3);
+      }
+    
   }
 
+  for (ID n = 0; n< points.size();n++)
+    {
+      //Scaling from Q/m2 tp Q/cm2
+      _polarization[n](0) *=1e-4;
+      _polarization[n](1) *=1e-4;
+      _polarization[n](2) *=1e-4;
+    }
 
+  p = _polarization;
+ 
 
- //  if (model_opt.piezo_pol)
-//   {
-//     _polarization = 0.0;
-//     _strain_if.get_strain_data(_elem, _strain, _polarization);
-//   }
+}
 
-//   if (model_opt.pyro_pol)
-//   {
-//      _coord = _elem->centroid();
+void
+PoissonModel::get_pyro_polarization(std::vector<RealGradient>& p,const std::vector< Point >& points)
+{
+ 
+ std::vector<RealGradient> _polarization(points.size());
 
-//      double temp = SimulationOptions::temperature;
+  if (_pyropolarization != NULL)
+    { 
+      
+    for (ID n = 0; n< points.size();n++)
+      {
+	const Point _coord = points[n]; 
+	double temp = SimulationOptions::temperature;
+	
+	_pyropolarization->calculate_polarization(_elem,_coord,temp);
+	_polarization[n](0) += _pyropolarization->get_polarization()(1);
+	_polarization[n](1) += _pyropolarization->get_polarization()(2);
+	_polarization[n](2) += _pyropolarization->get_polarization()(3);
+      }
+  }
 
-//     _pyropolarization->calculate_polarization(_elem,_coord,temp);
-//     _polarization(0) += _pyropolarization->get_polarization()(1);
-//     _polarization(1) += _pyropolarization->get_polarization()(2);
-//     _polarization(2) += _pyropolarization->get_polarization()(3);
-//   }
-
-  //Scaling from Q/m2 tp Q/cm2
- // _polarization(0) *=1e-4;
-  //_polarization(1) *=1e-4;
-  //_polarization(2) *=1e-4;
+  for (ID n = 0; n< points.size();n++)
+    {
+      //Scaling from Q/m2 tp Q/cm2
+      _polarization[n](0) *=1e-4;
+      _polarization[n](1) *=1e-4;
+      _polarization[n](2) *=1e-4;
+    }
 
   p = _polarization;
 
 }
-
-
-
-
-
-
-//  std::vector< std::map< ID, double > > solution;
-
-//  if  (_strain_sim->get_solution(_elem,q_point,pol_ID,solution))
-//   {
-
-//     Tensor2Sym strain;
-
-//     strain(1,1) = solution[0].find(var_map[E_XX])->second;
-//     strain(2,1) = solution[0].find(var_map[E_XY])->second;
-//     strain(3,1) = solution[0].find(var_map[E_XZ])->second;
-//     strain(2,2) = solution[0].find(var_map[E_YY])->second;
-//     strain(3,2) = solution[0].find(var_map[E_YZ])->second;
-//     strain(3,3) = solution[0].find(var_map[E_ZZ])->second;
-
-//     // _dynamical_matrix =  deformation_potential * strain;
-
-//     //Material* mat = get_material();
-//     //const RotatedCrystal&   cr = mat->get_rotated_crystal ();
-//     //rotate_to_calculation_system(cr.RotMatrix);
-
-
-//   }
-
-//  //return  (_pyropolarization + _piezopolarization);
-
-
-//}

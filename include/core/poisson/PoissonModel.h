@@ -56,15 +56,11 @@ class PoissonModel: public PhysicalModel
 
 
 
+  void  get_total_polarization(std::vector<RealGradient>& pol,const std::vector< Point >& points);
+  void  get_pyro_polarization(std::vector<RealGradient>& pol,const std::vector< Point >& points);
+  void  get_piezo_polarization(std::vector<RealGradient>& pol,const std::vector< Point >& points);
 
-
-  //! The total electric polarization
-  void  get_total_polarization(RealGradient& p);
-
-
-
-
-   //! Get the strain
+  //! Get the strain
     const Tensor2Sym& get_strain(void) const;
 
  PiezoelectricModel* _piezo_model;
