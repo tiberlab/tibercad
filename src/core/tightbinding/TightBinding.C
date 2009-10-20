@@ -375,12 +375,19 @@ TightBinding::project_potential(const std::string model_name, const std::string 
   double tmp;
   for (unsigned int i = 1; i < _pot_shift.size(); i++)
   {
-      if (_pot_shift[i] < _pot_min) _pot_min = _pot_shift[i];
+  //TODO: change in a cycle without passivation atoms (and move to empirical tight binding module!),
+  //comparison with "H" in any cycle is not a good idea
+      if ( (_pot_shift[i] < _pot_min) && 
+      (_atomistic_structure->get_structure_atoms()[i].get_specie() != "H")) _pot_min = _pot_shift[i];
   }
+  std::cout << "pot_min is " << _pot_min << std::endl;
   for (unsigned int i = 0; i < _pot_shift.size(); i++)
   {
       tmp = _pot_shift[i] - _pot_min;
       _pot_shift[i] = tmp;
+      //Switch off potential projection for passivation atoms!!!!!! Potential shift is set at 0.0
+      if (_atomistic_structure->get_structure_atoms()[i].get_specie() == "H")
+      _pot_shift[i] = 0.0;
   }
 
   double* pot = new double[_pot_shift.size()];
