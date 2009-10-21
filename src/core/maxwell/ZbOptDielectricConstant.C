@@ -13,11 +13,8 @@ void  ZbOptDielectricConstant::read_database(void)
   db.set_section("permittivity");
 
 
-  if (_eps_model == "constant")
-  {
-    _eps = db.get("optical_epsilon", 1.0);
+  _eps = db.get("optical_epsilon_x", 1.0);
 
-  }
 
   _dielectric_constant_real(1,1) = _eps;
   _dielectric_constant_real(2,2) = _eps;
@@ -30,20 +27,9 @@ void  ZbOptDielectricConstant::read_database(void)
 void  ZbOptDielectricConstant::do_init(void)
 {
 
-  _eps_model = get_option("model", "constant");
-
-  if (_eps_model == "constant")
-
-  {
-    get_parameter("optical_epsilon", _eps);
 
 
-  }
-  else
-  {
-    InitFailedException("ZbOptDielectricConstant::do_init ()  incorrect model " + _eps_model);
-
-  }
+get_parameter("optical_epsilon_x", _eps);
 
 
 }
