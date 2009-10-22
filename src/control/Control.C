@@ -480,7 +480,7 @@ Control::setup_clusters(void)
     {
       // either it is a name or a number
       // try first name
-      _device->get_region_ids(region_ids_str[i], tmp_id);
+      _device->get_active_region_ids(region_ids_str[i], tmp_id);
       if (tmp_id.size() > 0)
         region_ids.insert(region_ids.end(), tmp_id.begin(), tmp_id.end());
       else
@@ -647,7 +647,9 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         ostringstream s;
         s << "Physical region " << reg_id <<
           " has no material associated!";
-        throw InitFailedException(s.str());
+        Messages::warning(s.str());
+        continue;
+        //throw InitFailedException(s.str());
       }
 
       // we only continue if the model has not already been added
@@ -973,7 +975,7 @@ Control::extract_physical_regions(const std::string& str, std::set<ID>& ids)
 {
 
   if (str == "all")
-    ids = _device->get_region_ids();
+    ids = _device->get_active_region_ids();
   else
   {
     // we have to get it as vector (for the moment at least)
@@ -983,13 +985,13 @@ Control::extract_physical_regions(const std::string& str, std::set<ID>& ids)
 
     vector<ID> preg_ids;
 
-    const set<ID>& regs = _device->get_region_ids();
+    const set<ID>& regs = _device->get_active_region_ids();
     const set<ID>::const_iterator id_end(regs.end());
     unsigned int n = preg.size();
     for (unsigned int i = 0; i < n; i++)
     {
       // first check if it is a region name
-      _device->get_region_ids(preg[i], preg_ids);
+      _device->get_active_region_ids(preg[i], preg_ids);
       if (preg_ids.size() != 0)
       {
         for (unsigned int j = 0; j < preg_ids.size(); j++)

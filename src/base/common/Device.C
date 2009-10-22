@@ -191,6 +191,7 @@ Device::set_material(Material* material, ID region_id)
   }
 
   _material_map[region_id] = material;
+  _active_region_ids.insert(region_id);
 }
 
 
@@ -258,7 +259,7 @@ Device::get_material(const std::string& name) const
 
 
 void 
-Device::get_region_ids(const string& name, vector<ID>& ids) const
+Device::get_active_region_ids(const string& name, vector<ID>& ids) const
 {
   ids.resize(0);
 
@@ -273,13 +274,13 @@ Device::get_region_ids(const string& name, vector<ID>& ids) const
       if (it->second == name)
         ids.push_back(it->first);
 
-    // as last resort w look in the mesh region list
+    // as last resort we look in the mesh region list
     if (ids.size() == 0)
     {
       map<ID, string>::const_iterator it(_mesh_region_names.begin());
       const map<ID, string>::const_iterator end(_mesh_region_names.end());
       for ( ; it != end; ++it)
-        if (it->second == name)
+        if ((it->second == name) && (_active_region_ids.count(it->first) == 1))
           ids.push_back(it->first);
     }
   }

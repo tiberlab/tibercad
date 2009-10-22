@@ -291,7 +291,7 @@ SimulationInterface::init(void) throw (InitFailedException)
     {
       Device& dev = get_environment().get_device();
       vector<ID> ids;
-      dev.get_region_ids(*it, ids);
+      dev.get_active_region_ids(*it, ids);
       assert(ids.size() != 0);
       const Material* mat = dev.get_material(ids[0]);
       PhysicalModel* mod =

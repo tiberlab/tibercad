@@ -122,9 +122,9 @@ AtomisticStructure::init()
     if ( _regionset.count("all") == 1)
     {
       _regionset.clear();
-      std::set < ID >::iterator region_ID_iterator = _device->get_region_ids().begin();
+      std::set < ID >::iterator region_ID_iterator = _device->get_active_region_ids().begin();
 
-      for (unsigned int i = 0; i < _device->get_region_ids().size(); i++)
+      for (unsigned int i = 0; i < _device->get_active_region_ids().size(); i++)
       {
         _regionset.insert( _device->get_region_name(*region_ID_iterator) );
         region_ID_iterator ++;
@@ -136,7 +136,7 @@ AtomisticStructure::init()
     for (std::set<std::string>::iterator i = _regionset.begin(); i != _regionset.end(); i++)
     {
       std::vector<ID> tmp_ID;
-      _device->get_region_ids( (*i), tmp_ID);
+      _device->get_active_region_ids( (*i), tmp_ID);
       for (unsigned int j = 0; j < tmp_ID.size(); j++) {_IDset.insert(tmp_ID[j]);}
     }
   }

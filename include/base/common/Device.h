@@ -140,7 +140,11 @@ class Device
 
 
     //! Get the set with all region IDs
-    const std::set<ID>& get_region_ids(void) const;
+    /*!
+     * Only active regions are returned (that is regions that have a material
+     * associated).
+     */
+    const std::set<ID>& get_active_region_ids(void) const;
 
 
     //! Get the name of a region
@@ -167,8 +171,10 @@ class Device
     /*!
      * \c name can be the name of a physical region, of a cluster
      * or of a mesh region
+     * Only active regions are returned (that is regions that have a material
+     * associated).
      */
-    void get_region_ids(const std::string& name, std::vector<ID>& ids) const;
+    void get_active_region_ids(const std::string& name, std::vector<ID>& ids) const;
 
 
     //! Get the region IDs of the mesh region with name \c name
@@ -302,6 +308,13 @@ class Device
 
     //! A set with all region IDs
     std::set<ID> _region_ids;
+
+
+    //! A set with all active region IDs
+    /*!
+     * An active region is a region with an associated material.
+     */
+    std::set<ID> _active_region_ids;
   
 
     //! A map that assigns physical region or cluster IDs to names
@@ -444,9 +457,9 @@ Device::get_mesh_units(void) const
 
 inline
 const std::set<ID>&
-Device::get_region_ids(void) const
+Device::get_active_region_ids(void) const
 {
-  return _region_ids;
+  return _active_region_ids;
 }
 
 

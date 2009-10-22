@@ -4608,18 +4608,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       long double sigma_h = muh * p / (mu0 * C0_h);
       long double sigma_e_x_Pe_x_J = J * sigma_e * eTEpower;
       long double sigma_h_x_Ph_x_J = J * sigma_h * hTEpower;
-/*
-      if (jacobian != NULL)
-      {
-        double dsigmae = mue * phi0 * sc->get_electron_density_derivative() / (mu0 * C0_e);
-        double dsigmah = muh * phi0 * sc->get_hole_density_derivative() / (mu0 * C0_e);
-        double beta_e = 0.5 * elem->volume() * dsigmae / sigma_e;
-        double beta_h = 0.5 * elem->volume() * dsigmah / sigma_h;
 
-        sigma_e *= (1 + fabs(beta_e));
-        sigma_h *= (1 + fabs(beta_h));
-      }
-*/
 
       //
       // The residual looks like this:
