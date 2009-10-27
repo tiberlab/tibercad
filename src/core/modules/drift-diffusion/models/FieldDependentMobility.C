@@ -104,7 +104,6 @@ FieldDependentMobility::do_init(void)
     msg += force + "'.";
     throw InitFailedException(msg);
   }
-
 }
 
 
@@ -121,7 +120,7 @@ FieldDependentMobility::get_mobility(void)
 
   E = grad_fermi.size();
 
-  if ((_force == EFIELD) && (E > 1e-6))
+  if ((_force == EFIELD) && (E > 1))
     E = grad_fermi * get_driftdiffusionproperties().get_electric_field() / E;
 
   double vsat;
@@ -159,7 +158,7 @@ FieldDependentMobility::get_derivative_grad_fermi(RealGradient& dm)
   else
     E = get_driftdiffusionproperties().get_grad_fermi_h().size();
 
-  if ((_force == GRADFERMI) && (E > 1.0))
+  if ((_force == GRADFERMI) && (E > 1e3))
   {
 
     double vsat;
@@ -173,7 +172,7 @@ FieldDependentMobility::get_derivative_grad_fermi(RealGradient& dm)
     double beta = _beta * std::pow(T / T0, _betaexp);
     double tmp = 1.0 + std::pow(mu_lowfield * E / vsat, _beta);
     double dmu = -mu_lowfield * std::pow(tmp, -1.0 / beta - 1);
-    dmu *= std::pow(mu_lowfield * E / vsat, _beta) / (E * E);
+    dmu *= std::pow(mu_lowfield * E / vsat, beta) / (E * E);
 
     if (get_carrier_type() == 'e')
       dm = dmu * get_driftdiffusionproperties().get_grad_fermi_e();

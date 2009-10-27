@@ -94,7 +94,16 @@ Ramp::ramp(void)
     // to an old successful solution
     _old_sol_ids.resize(num_sim);
     for (int i = 0; i < num_sim; i++)
+    {
+      if (!_simulations[i]->is_solved())
+      {
+         ostringstream os;
+         os << "Will presolve a currently unsolved system ("
+            << _simulations[i]->get_name() << ")";
+         Messages::warning(os.str());
+      }
       _old_sol_ids[i] = _simulations[i]->remember_current_solution();
+    }
   }
   else
     for (int i = 0; i < num_sim; i++)

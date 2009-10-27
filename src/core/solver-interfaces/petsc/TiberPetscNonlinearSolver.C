@@ -322,7 +322,7 @@ void TiberPetscNonlinearSolver::init(void)
     KSP ksp;
     SNESGetKSP(_snes, &ksp);
     KSPSetInitialGuessKnoll(ksp, PETSC_TRUE);
-
+    //KSPSetInitialGuessNonzero(ksp, PETSC_FALSE);
   }
 }
 

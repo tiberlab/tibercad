@@ -1056,6 +1056,7 @@ Control::run_simulation(void) throw (SolveFailedException)
     }
     catch (runtime_error& e)
     {
+      sim->plot();
       ostringstream s;
       s << "Solve of " << sim->get_name() << " failed." << endl <<
            "    Cause: " << e.what();

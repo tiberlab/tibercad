@@ -657,16 +657,7 @@ DriftDiffusion::do_solve(void)
   parse_options();
 
 
-  /* This is really stupid! How do you want to make selfconsistent loops ???
-    // we do not solve anything if the simulation voltages are the
-    // same as before
-  */
-
   bool equilibrium = true;
-  // this does not what we think in some cases!
-  //bool accept_failure = true;
-  bool same_potentials = true;
-  bool accept_failure = false;
   {
     ContactData::iterator it(_voltages.begin());
     const ContactData::iterator end(_voltages.end());
@@ -677,20 +668,12 @@ DriftDiffusion::do_solve(void)
 
       double voltage = bd->get_simulation_voltage();
 
-      if (_voltages[it->first] != voltage)
-        same_potentials = false;
-        //accept_failure = false;
-
       _voltages[it->first] = voltage;
 
       if (voltage != 0.0)
         equilibrium = false;
     }
   }
-
-  /* The same here: what about selfconsistency at 0 V ?? */
-    //if (do_nothing)
-    //  return;
 
 
   if (!equilibrium_done())
@@ -719,29 +702,6 @@ DriftDiffusion::do_solve(void)
   int coupling = get_my_options().coupling;
 
 
-  // TODO
-  same_potentials = false;
-
-  // TODO does the following make sense?
-/*
-  if (equilibrium)
-    get_my_options().coupling = POISSON;
-  else if (same_potentials)
-  {
-    get_my_options().coupling = POISSON;
-    try
-    {
-      do_newton();
-    }
-    catch (SolverException& e)
-    {
-      string msg = "solve failed (" +
-        string(e.what()) + ")";
-      throw SolveFailedException(msg);
-    }
-    get_my_options().coupling = coupling;
-  }
-*/
 
   if (do_local_scaling_)
     build_local_scaling();
@@ -763,12 +723,9 @@ DriftDiffusion::do_solve(void)
   }
   catch (SolverException& e)
   {
-    if (!accept_failure)
-    {
-      string msg = "solve failed (" +
+    string msg = "solve failed (" +
         string(e.what()) + ")";
-      throw SolveFailedException(msg);
-    }
+    throw SolveFailedException(msg);
   }
 
   get_my_options().coupling = coupling;
@@ -883,7 +840,7 @@ DriftDiffusion::do_equilibrium(void)
         get_equation_system_name());
 
   ModelOptions& solveropts = get_solver_options();
-  int max_it = solveropts.get_option("nonlin_max_it", -1);
+  int max_it = solveropts.get_option("nonlin_max_it", 15);
   solveropts.set_option("nonlin_max_it", 150);
 
   bool elonly = _electronsonly;
@@ -954,10 +911,7 @@ DriftDiffusion::do_equilibrium(void)
   // reset the coupling
   get_my_options().coupling = coupling;
 
-  if (max_it != -1)
-    solveropts.set_option("nonlin_max_it", max_it);
-  else
-    solveropts.delete_option("nonlin_max_it");
+  solveropts.set_option("nonlin_max_it", max_it);
 }
 
 
@@ -4552,7 +4506,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         oldu  += phi[i][qp] * oldXu(i);
         olden += phi[i][qp] * oldXn(i);
         oldep += phi[i][qp] * oldXp(i);
-        e_field += dphi[i][qp] * Xu(i);
+        e_field -= dphi[i][qp] * Xu(i);
         grad_en += dphi[i][qp] * Xn(i);
         grad_ep += dphi[i][qp] * Xp(i);
       }
@@ -4589,9 +4543,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       long double l2_eps = l2 * epsilon;
 
       long double Rn = sc->get_net_electron_recombination_rate();
-      //Rn = (fabs(Rn) < 1.0e-19) ? 0.0 : Rn;
+      //Rn = (fabs(Rn) < 1.0e-3) ? 0.0 : Rn;
       long double Rp = sc->get_net_hole_recombination_rate();
-      //Rp = (fabs(Rp) < 1.0e-19) ? 0.0 : Rp;
+      //Rp = (fabs(Rp) < 1.0e-3) ? 0.0 : Rp;
 
 
       //double ni = sc->get_intrinsic_density();
@@ -5045,7 +4999,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                 u  += phi_face[i][qp] * Xu(i);
                 en += phi_face[i][qp] * Xn(i);
                 ep += phi_face[i][qp] * Xp(i);
-                e_field += dphi_face[i][qp] * Xu(i);
+                e_field -= dphi_face[i][qp] * Xu(i);
                 grad_en += dphi_face[i][qp] * Xn(i);
                 grad_ep += dphi_face[i][qp] * Xp(i);
               }
@@ -5488,6 +5442,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     residual->close();
     //residual->print_matlab("F.m");
     //write_nodal_vector("residual", *residual);
+    //write_nodal_vector("x", x);
   }
 
 
