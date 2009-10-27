@@ -1,4 +1,4 @@
-Example 14: Si bipolar transistor
+Example 15: Si bipolar transistor
 ---------------------------------
 
 a) bjt.geo bjt.tib

@@ -14,6 +14,7 @@ New features:
 	- simple optical generation model
 	- New 'Options' block in $Device section of input file for
 	  specification of common options for device regions
+	- save and load of solutions in drift-diffusion
 
 
 Version 1.2.2
