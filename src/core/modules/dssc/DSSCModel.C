@@ -42,10 +42,10 @@ DSSCModel::do_init(void)
 
   // prepare porosity for any situation
   get_parameter("porosity", _porosity);
-  //if (!is_TiO2())
-  //  _porosity = 0.0;
-  //else if (!is_electrolyte())
-  //  _porosity = 1.0;
+  if (!is_TiO2())
+    _porosity = 0.0;
+  else if (!is_electrolyte())
+    _porosity = 1.0;
 
   _cation.set_particle_charge(1.0);
 
@@ -73,6 +73,7 @@ DSSCModel::do_init(void)
   get_parameter("alpha2", _alpha2);
   get_parameter("deltaG", _deltaG);
   get_parameter("Vext", _Vext);
+  get_parameter("Light", _x0);
 }
 
 

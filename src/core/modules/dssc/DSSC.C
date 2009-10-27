@@ -739,20 +739,20 @@ DSSC::do_solve(void)
 
   for ( ; it != end; ++it)
   {
-    /*
+    
     ostringstream os;
     os << setprecision(6);
-    ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(it->first->get_boundary_properties(get_id()));
+    DSSCContact* cnt =
+      static_cast<DSSCContact*>(it->first->get_boundary_properties(get_id()));
     os << it->first->get_name();
     os.width(width - os.tellp());
     os << "";
-    os << cnt->get_simulation_voltage();
+    os << (cnt->get_potential()/it->first->get_area_factor()) * it->second;
     os.width(2 * width - os.tellp());
     os << "";
-    os << it->second * it->first->get_area_factor();
+    os << it->second;
     cout << os.str() << endl;
-    */
+    
   }
 
 }
@@ -1069,16 +1069,16 @@ DSSC::do_init(void)
           _boundary_currents[it->second] = 0.0;
           _voltages[it->second] = 0.0;
 
-          if (_light_from == "anode" )
-          {
+          //if (_light_from == "anode" )
+          //{
             //_x0 = contact->get_coordinates();
             //cout << "light " << _light_from << endl;
-            _x0 = 0.0;
-          }
-	  else
-	  {
-	    _x0 = 10.0;
-	  }
+            //_x0 = 0.0;
+          //}
+	  //else
+	  //{
+	  //  _x0 = 10.0;
+	  //}
         }
       }
     }
@@ -1856,7 +1856,7 @@ DSSC::get_solution_secure(const Elem* elem, const vector<Point>& p,
 void
 DSSC::calculate_currents_rstf(void)
 {
-/*
+
   // we only do something if we are on processor 0
   if (libMesh::processor_id() != 0)
     return;
@@ -1888,8 +1888,10 @@ DSSC::calculate_currents_rstf(void)
 
   // numeric ids corresponding to the variables
   const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
+  const unsigned int en_var = system->variable_number("fermi_n");
+  const unsigned int eI_var = system->variable_number("fermi_I");
+  const unsigned int eI3_var = system->variable_number("fermi_I3");
+  const unsigned int eC_var = system->variable_number("fermi_C");
 
   FEType fe_type = system->variable_type(u_var);
 
@@ -1913,7 +1915,9 @@ DSSC::calculate_currents_rstf(void)
 
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
+  vector<unsigned int> dof_indices_eI;
+  vector<unsigned int> dof_indices_eI3;
+  vector<unsigned int> dof_indices_eC;
 
 
   // will contain the node ids if an element has boundary nodes
@@ -1949,7 +1953,9 @@ DSSC::calculate_currents_rstf(void)
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices_u, u_var);
     dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+    dof_map.dof_indices(elem, dof_indices_eI, eI_var);
+    dof_map.dof_indices(elem, dof_indices_eI3, eI3_var);
+    dof_map.dof_indices(elem, dof_indices_eC, eC_var);
 
     DSSCModel* sc =
       dynamic_cast<DSSCModel*>(
@@ -1973,21 +1979,29 @@ DSSC::calculate_currents_rstf(void)
       // get the solution values at the centroid
       Real u  = 0.0;
       Real en = 0.0;
-      Real ep = 0.0;
+      Real eI = 0.0;
+      Real eI3 = 0.0;
+      Real eC = 0.0;
       RealGradient dEfn(0);
-      RealGradient dEfp(0);
+      RealGradient dEfI(0);
+      RealGradient dEfI3(0);
+      RealGradient dEfC(0);
       RealGradient e_field(0);
       RealGradient dT(0);
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         u  += phi[i][qp] * solution(dof_indices_u[i]);
         en += phi[i][qp] * solution(dof_indices_en[i]);
-        ep += phi[i][qp] * solution(dof_indices_ep[i]);
+        eI += phi[i][qp] * solution(dof_indices_eI[i]);
+        eI3 += phi[i][qp] * solution(dof_indices_eI3[i]);
+        eC += phi[i][qp] * solution(dof_indices_eC[i]);
 
         dEfn += dphi[i][qp] * solution(dof_indices_en[i]);
-        dEfp += dphi[i][qp] * solution(dof_indices_ep[i]);
+        dEfI += dphi[i][qp] * solution(dof_indices_eI[i]);
+        dEfI3 += dphi[i][qp] * solution(dof_indices_eI3[i]);
+        dEfC += dphi[i][qp] * solution(dof_indices_eC[i]);
 
-        dT += dphi[i][qp] * T_nodes[i];
+        //dT += dphi[i][qp] * T_nodes[i];
 
         e_field += dphi[i][qp] * solution(dof_indices_u[i]);
       }
@@ -1996,23 +2010,26 @@ DSSC::calculate_currents_rstf(void)
       sc->set_coordinates(elem->centroid());
 
 
-      sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+      sc->set_potentials(phi0 * u, phi0 * en, phi0 * eI, phi0 * eI3, phi0 * eC);
 
-      sc->set_electric_field(phi0 * e_field);
-      sc->set_grad_fermi_e(phi0 * dEfn);
-      sc->set_grad_fermi_h(phi0 * dEfp);
+      sc->set_electric_field(e_field);
+      sc->set_grad_fermi_n(dEfn);
+      sc->set_grad_fermi_I(dEfI);
+      sc->set_grad_fermi_I3(dEfI3);
+      sc->set_grad_fermi_C(dEfC);
 
       sc->calculate_densities();
-      sc->calculate_mobilities();
+      sc->calculate_net_recombination_rate();
 
       // we put the minus here for convenience
-      double sigma_e = -Constants::e * sc->get_electron_density() *
-        sc->get_electron_mobility();
-      double sigma_h = -Constants::e * sc->get_hole_density() *
-        sc->get_hole_mobility();
+      double sigma_I = -Constants::e * sc->get_mobility_I() * sc->get_density_I() ;
+      double sigma_I3 = -Constants::e * sc->get_mobility_I3() * sc->get_density_I3() ;
+      double sigma_n = -Constants::e * sc->get_mobility_n() * sc->get_density_n() ;
 
+      //RealGradient j(JxW[qp] * phi0 *
+      //    (sigma_n * (dEfn + Pn * dT) + sigma_h * (dEfp + Pp * dT)));
       RealGradient j(JxW[qp] * phi0 *
-          (sigma_e * (dEfn + Pn * dT) + sigma_h * (dEfp + Pp * dT)));
+          (sigma_n * dEfn + sigma_I * dEfI + sigma_I3 * dEfI3));
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
@@ -2020,16 +2037,16 @@ DSSC::calculate_currents_rstf(void)
         Boundary* boundary = node_ids[n];
         if (boundary != NULL)
         {
-          ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
+          DSSCContact* contact = dynamic_cast<DSSCContact*>(
                 boundary->get_boundary_properties(get_id()));
-          if (contact->is_real_contact())
+          //if (contact->is_real_contact())
             _boundary_currents[boundary] += j * dphi[n][qp];
         }
 
       }
     } // end loop over quadrature points
   } // end loop over elements
-*/
+
 }
 
 
@@ -2887,16 +2904,16 @@ void
 DSSC::build_integrated_quantities(const set<string>& names,
     vector<double>& values)
 {
-/*
+
   const set<string>::const_iterator varend(names.end());
 
   if ((names.find("ContactCurrents") != varend) ||
       (names.find("current") != varend))
   {
-    if (get_options().current_calculation == RSTF)
+    //if (get_options().current_calculation == RSTF)
       calculate_currents_rstf();
-    else
-      calculate_currents_surfint();
+    //else
+    //  calculate_currents_surfint();
 
     values.resize(_boundary_currents.size());
 
@@ -2906,7 +2923,6 @@ DSSC::build_integrated_quantities(const set<string>& names,
       values[id] = it->second * it->first->get_area_factor();
 
   }
-*/
 }
 
 
@@ -3304,7 +3320,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     assert(sc != NULL);
     sc->reinit(elem);
 
-    sc->set_x0(_x0(0));
+    sc->get_x0();
 
     // Get the temperature given the element
     //vector<double> T_nodes = sc->get_temperature_at_nodes();

@@ -34,7 +34,7 @@ DSSCContact::create(const std::string& name,
 void
 DSSCContact::do_init(void)
 {
-  get_parameter("voltage", _boundary_value);
+  get_parameter("load", _boundary_value);
 
   get_parameter("j0", _j0);
   get_parameter("beta", _beta);
