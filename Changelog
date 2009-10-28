@@ -6,6 +6,7 @@ Bug fixes:
 	- fixed error in database for GaN, InN direct recombination
 	- fixed bug regarding variables in alloys
 	- fixed sign issue for zincblende deformation potentials
+        - fixed bug in mesh reading (now  it's fast)
 
 
 New features:
@@ -14,7 +15,10 @@ New features:
 	- simple optical generation model
 	- New 'Options' block in $Device section of input file for
 	  specification of common options for device regions
+        - Now one can  specify  boundary condition regions of  
+                whatever  dimension (< simulation dimension)
 	- save and load of solutions in drift-diffusion
+
 
 
 Version 1.2.2
