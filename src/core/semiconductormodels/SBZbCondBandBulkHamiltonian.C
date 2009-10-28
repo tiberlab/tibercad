@@ -98,12 +98,52 @@ void SBZbCondBandBulkHamiltonian::calculate_for_init(void)
 void SBZbCondBandBulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential)
 {
 
+  //TODO: Redundance with methods in ZbDDSemiconductor::do_calculate_conduction_band_extremum.
+  //Put anything in only one method
+  const ZbSemiconductor::ZbDDparameters& par = (dynamic_cast<ZbSemiconductor*> (semiconductor)) -> get_parameters();
+
+  zb_par = &par;
+
   //now strain and potential
-  //if (min_name == "Gamma")
+  if (min_name == "Gamma")
     {
        Hamiltonian[0][0].constant =  Hamiltonian_without_strain_pot[0][0].constant - el_potential/Hartree
 	 + (zb_par->a_c) * trace(strain_crystal )/Hartree;
 
-
     }
+
+  else if (min_name == "X")
+  {
+    //Hydrostatic strain
+    double hydro_def_pot = 0.0;
+    double uniaxial_def_pot = 0.0;
+    double def_pot = 0.0;
+
+    hydro_def_pot = (par.def_vol_X - (1.0/3.0)*par.def_uniax_X) * trace(strain_crystal);
+
+    //Uniaxial strain part----------------------------------
+          Tensor1 k;
+          vector<double> dE_uniax(3);
+
+          k(1) = 1 ; k(2) =  0; k(3) =  0;
+          dE_uniax[0] = par.def_uniax_X * (k * (strain_crystal * k));
+
+          k(1) = 0 ; k(2) =  1; k(3) =  0;
+          dE_uniax[1] = par.def_uniax_X * (k * (strain_crystal * k));
+
+          k(1) = 0 ; k(2) =  0; k(3) =  1;
+          dE_uniax[2] = par.def_uniax_X * (k * (strain_crystal * k));
+
+          for (short i = 0; i <3; i++)
+          {
+            uniaxial_def_pot += dE_uniax[i];
+          }
+
+          def_pot = uniaxial_def_pot + hydro_def_pot;
+
+          Hamiltonian[0][0].constant =  Hamiltonian_without_strain_pot[0][0].constant - el_potential/Hartree
+                   + def_pot/Hartree;
+
+  }
+
 }
