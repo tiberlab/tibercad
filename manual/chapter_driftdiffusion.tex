@@ -135,6 +135,19 @@ model driftdiffusion
 \label{dd:models}
 \end{inputfile}
 
+The \keyword{options} block supports three special keywords:
+\begin{description}
+\item[\keyword{save\_state = }\Value{boolean}] If set to \texttt{true} the current solution will be written to a compressed file after each solve. The file name follows the same rules as the result files, having file extension \texttt{.tsv}.
+
+\item[\keyword{load\_state = }\Value{file}] Reload a formerly saved solution. \Value{filename} can be a filename (to reside in the current working directory), a relative or an absolute path to a file. The file needs to have been created with \keyword{save\_state = true}.
+
+\item[\keyword{solve\_after\_load = }\Value{boolean}] If set to \texttt{true}, the system will be solved after having reloaded a saved state. Otherwise it will not be solved, which is the default behaviour.
+\end{description}
+
+It is important that currently the reload of saved solutions {\em only works correctly when using the identical mesh}.
+Otherwise there will be undefined behaviour or failure.
+Future releases will relax this restriction.
+
 
 The \physicalmodel{} sections can be omitted.
 In this case default models are used, namely no recombination/generation for the recombination model and constant mobility for the mobility models.
