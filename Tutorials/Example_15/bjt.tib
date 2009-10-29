@@ -1,0 +1,166 @@
+# bjt example
+
+$Device
+{
+   Options
+   {
+     material = Si
+   }
+
+   Region coll_doped  # the buried doping
+   {
+     doping = 1e19 doping_type = donor
+   }
+
+   Region coll # the collector region
+   {
+     doping = 5e15 doping_type = donor
+   }
+
+
+   Region b_reg # the base region
+   {
+     doping = 1e17 doping_type = acceptor
+   }
+
+   Region e_reg # the emitter region
+   {
+     doping = 1e19 doping_type = donor
+   }
+
+
+}
+
+
+$Models
+{ 
+  model driftdiffusion
+  { 
+              
+    options
+    {
+     simulation_name = dd
+    }
+
+
+           
+    physical_model electron_mobility
+    {
+      model = doping_dependent 
+    }
+
+    physical_model hole_mobility
+    {      
+      model = doping_dependent
+    }
+
+
+     physical_model recombination
+     { 
+       model  =  srh
+     }               
+
+
+     physical_model recombination
+     { 
+       model  =  auger
+     }               
+
+
+
+    BC_Regions  
+    {
+      BC_Region base
+      {
+        type = ohmic
+        voltage = @Vb
+      }
+
+      BC_Region collector
+      {
+        type = ohmic
+        voltage = @Vc
+      }
+ 
+      BC_Region emitter
+      {
+        type = ohmic
+        voltage = 0.0
+      }
+ 
+
+    }   
+  }  
+}
+
+
+$Solver
+
+{
+  driftdiffusion
+  {
+    # we use a different quadrature rule to avoid density peaks
+    # where the mesh is not so dense
+    quadrature_rule = trapez
+
+    # we use the "tiber" nonlinear solver (a linesearch)
+    nonlinear_solver = tiber
+  }
+
+  Sweep
+  {
+    sweep_base
+    {
+      variable = Vb
+      start = 0.5
+      stop = 0.7  
+      steps = 10
+      # we calculate the output characteristics
+      simulation = sweep_coll
+      # plot only for the last collector bias
+      plot_data = true
+    }
+    sweep_coll
+    {
+      variable = Vc
+      start = 0.0
+      stop = 3
+      steps = 60
+      simulation = dd
+      #plot_data = true
+    }
+
+  }
+}
+
+
+
+$Physics
+{
+  driftdiffusion 
+  {
+    # use Fermi-Dirac statistics
+    statistics =  FD
+  }
+}
+
+
+
+
+$Simulation
+{
+  meshfile = bjt.msh 
+  dimension = 2
+  verbose = 3
+  #temperature = 300 # this is the default
+  solve = sweep_base
+  resultpath = output
+  output_format = vtk
+
+  plot = (Ec, Ev, ElPotential, EField, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, CurrentDensity, ContactCurrents, NetRecombination, eMob, hMob)
+}
+
+
+
+
+

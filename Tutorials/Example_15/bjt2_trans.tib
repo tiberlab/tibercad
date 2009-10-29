@@ -1,0 +1,170 @@
+# bjt2 example (transcharacteristic)
+
+$Device
+{
+   Options
+   {
+     material = Si
+   }
+
+   Region coll_doped 
+   {
+     doping = 1e19 doping_type = donor
+   }
+
+   Region coll
+   {
+     doping = 5e15 doping_type = donor
+   }
+
+
+   Region b_reg 
+   {
+     doping = 1e17 doping_type = acceptor
+   }
+
+   Region e_reg
+   {
+     doping = 1e19 doping_type = donor
+   }
+
+   Region oxide
+   {
+     material = SiO2
+   }
+
+
+}
+
+
+$Models
+{ 
+  model driftdiffusion
+  { 
+              
+    options
+    {
+     simulation_name = dd
+    }
+
+
+           
+    physical_model electron_mobility
+    {
+      model = doping_dependent 
+    }
+
+    physical_model hole_mobility
+    {      
+      model = doping_dependent
+    }
+
+
+     physical_model recombination
+     { 
+       model  =  srh
+     }
+
+   
+     physical_model recombination
+     { 
+       model  =  auger
+     }
+
+                
+
+    BC_Regions  
+    {
+      BC_Region base
+      {
+        type = ohmic
+        voltage = @Vb
+      }
+
+      BC_Region collector
+      {
+        type = ohmic
+        voltage = @Vc
+      }
+ 
+      BC_Region emitter
+      {
+        type = ohmic
+        voltage = 0.0
+      }
+ 
+
+    }   
+  }  
+}
+
+
+$Solver
+
+{
+  driftdiffusion
+  {
+    # we use a different quadrature rule to avoid density peaks
+    # where the mesh is not so dense
+    quadrature_rule = trapez
+
+    # we use the "tiber" nonlinear solver (a linesearch)
+    nonlinear_solver = tiber
+  }
+
+  Sweep
+  {
+    sweep_base
+    {
+      variable = Vb
+      start = 0.0
+      stop = 0.8  
+      steps = 80
+      simulation = dd
+      #plot_data = true
+    }
+
+    sweep_coll
+    {
+      variable = Vc
+      start = 0.0
+      stop = 3
+      max_step = 0.1
+      simulation = dd
+      #plot_data = true
+    }
+
+  }
+}
+
+
+
+$Physics
+{
+  driftdiffusion 
+  {
+    # use Fermi-Dirac statistics
+    statistics =  FD
+  }
+}
+
+
+
+
+$Simulation
+{
+  meshfile = bjt2.msh 
+  dimension = 2
+  verbose = 3
+  #temperature = 300
+  solve = (sweep_coll, sweep_base)
+  resultpath = output2_trans
+  output_format = vtk
+
+  plot = (Ec, Ev, ElPotential, EField, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, CurrentDensity, ContactCurrents, eMob, hMob, NetRecombination)
+}
+
+
+
+
+

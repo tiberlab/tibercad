@@ -195,61 +195,9 @@ Sweep::do_solve(void)
 
   bool do_plotting = prepare_plot_files(plotfiles);
 
-  // if there are negative and positive values, we split them apart
-  //vector<double> pos_values;
-  //vector<double> neg_values;
-
-  //unsigned int n = _values.size();
-
   try
   {
     do_sweep(_values, plotfiles, sweep_data);
-    /*
-    for (unsigned int i = 0; i < n; i++)
-    {
-      if (_values[i] >= 0.0)
-        pos_values.push_back(_values[i]);
-      else
-        neg_values.push_back(_values[i]);
-    }
-
-    if (neg_values.size() == 0)
-      do_sweep(pos_values, plotfiles, sweep_data);
-    else
-    {
-      if (pos_values.size() > 1)
-      {
-        // in this case we will do: 0 -> max, 0 -> min
-        if (neg_values[0] < neg_values[neg_values.size() - 1])
-          reverse(neg_values.begin(), neg_values.end());
-
-        vector<double> first_val(1, pos_values[0]);
-        pos_values.erase(pos_values.begin());
-
-        do_sweep(first_val, plotfiles, sweep_data);
-        // to remember the first solution
-        vector<ID> old_sol(num_sim);
-        for (int i = 0; i < num_sim; i++)
-          old_sol[i] = _simulations[i]->remember_current_solution();
-
-        do_sweep(pos_values, plotfiles, sweep_data);
-
-        // reset to the first solution
-        for (int i = 0; i < num_sim; i++)
-        {
-          _simulations[i]->set_to_remembered_solution(old_sol[i]);
-          _simulations[i]->delete_remembered_solution(old_sol[i]);
-        }
-
-        Variable::set_variable_value(_variable, first_val[0]);
-      }
-      else
-        do_sweep(pos_values, plotfiles, sweep_data);
-
-
-      do_sweep(neg_values, plotfiles, sweep_data);
-    }
-    */
   }
   catch (SolveFailedException& e)
   {
@@ -503,6 +451,10 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
         // first nested sweep
         if (j >= first_nested)
           _simulations[j]->solve();
+
+        // plot results if required
+        if (_plot_data)
+          _simulations[j]->plot();
 
         // update "something-vs.-sweepvariable" files
         if (plotfiles[j] != NULL)

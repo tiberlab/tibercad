@@ -77,7 +77,7 @@ Ramp::Ramp(const ModelOptions& options,
   _max_step = min(max(_max_step, 0.0), 1.0);
   _initial_step = options.get_option("initial_step", _initial_step);
   _initial_step = min(max(_initial_step, 0.0), 1.0);
-  _plot_data = options.get_option("plot_data", _plot_data);
+  //_plot_data = options.get_option("plot_data", _plot_data);
 
 }
 
