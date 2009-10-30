@@ -86,9 +86,9 @@ void  WzPiezoelectricModel::calculate_piezopolarization(const Elem* elem,const P
 
      
 
-      _P(1) = 2.0 * e15 * _strain(3,1);
-      _P(2) = 2.0 * e15 * _strain(3,2);
-      _P(3) = e31 * _strain(1,1) + e31*_strain(2,2) + e33 * _strain(3,3);
+      _pol(1) = 2.0 * e15 * _strain(3,1);
+      _pol(2) = 2.0 * e15 * _strain(3,2);
+      _pol(3) = e31 * _strain(1,1) + e31*_strain(2,2) + e33 * _strain(3,3);
       
       //calculation system -> crystal system
       rotate_to_calc_system(cr.RotMatrix);

@@ -79,9 +79,9 @@ void  ZbPiezoelectricModel::calculate_piezopolarization(const Elem* elem, const 
 
     _strain = sym(cr.RotMatrix.transpose() * ( eps * (cr.RotMatrix)));
 
-    _P(1) = 2*e14*_strain(3,2);
-    _P(2) = 2*e14*_strain(3,1);
-    _P(3) = 2*e14*_strain(2,1);
+    _pol(1) = 2*e14*_strain(3,2);
+    _pol(2) = 2*e14*_strain(3,1);
+    _pol(3) = 2*e14*_strain(2,1);
 
     rotate_to_calc_system(cr.RotMatrix);
    

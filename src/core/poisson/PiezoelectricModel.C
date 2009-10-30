@@ -30,7 +30,7 @@ void PiezoelectricModel:: do_init_alloy (const PhysicalModelInterface *comp_A, c
 //--------------------------------------------------------------------//
 PiezoelectricModel::PiezoelectricModel() : PhysicalModelInterface( )
 {
-  _P = 0;
+  _pol = 0;
   _strain = 0;
 }
  
@@ -39,6 +39,6 @@ PiezoelectricModel::PiezoelectricModel() : PhysicalModelInterface( )
 void PiezoelectricModel::rotate_to_calc_system(const Tensor2Gen& RotMatrix)
 {
  
-  _P = RotMatrix * _P;
+  _pol = RotMatrix * _pol;
 
 }

@@ -30,7 +30,7 @@ class PiezoelectricModel : public PhysicalModelInterface
   bool def_pot;
   bool give_pol;
 
-  Tensor1 _P; 
+  Tensor1 _pol; 
 
   Tensor2Sym _strain;
 
@@ -59,7 +59,7 @@ PiezoelectricModel::get_piezopolarization(Tensor1& P)
 {
 
   if (give_pol)
-    P = _P;
+    P = _pol;
   else
     P = Tensor1(0);
 
