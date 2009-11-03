@@ -134,8 +134,10 @@ $Models
     options
     {          
       simulation_name = dd
-      
       physical_regions = all
+
+      coupling = poisson
+      integration_order = 2
     }
 
     physical_model recombination
@@ -218,15 +220,12 @@ $Solver
  
   driftdiffusion
   {
-    coupling = poisson
     nonlin_max_it = 70
     nonlin_rel_tol = 1e-10
     nonlin_abs_tol = 1e-10
     nonlin_step_tol = 1e-9
     ls_max_step = 2
    
-    discretization = fem
-    integration_order = 2
    
     ksp_type = bcgs
   

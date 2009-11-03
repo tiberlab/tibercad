@@ -514,7 +514,15 @@ class DriftDiffusion : public SimulationInterface
      */
     Options _options;
 
-    bool _electronsonly;
+
+    //! The particles to be solved for
+    /*!
+     * 'e' -> electrons
+     * 'h' -> holes
+     * 'b' -> both
+     */
+    char _useparticle;
+
 
     //! The boundary currents
     /*!

@@ -543,7 +543,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   {
     ModelStructure* model_str = modit->second;
 
-    const ModelOptions& simopts = model_str->get_model_options();
+    ModelOptions simopts(model_str->get_model_options());
     const string& modelname = model_str->get_model_name();
 
     //
@@ -553,6 +553,16 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     set<ID> phys_regions;
     const string& physreg = simopts.get_option("physical_regions", "all");
     extract_physical_regions(physreg, phys_regions);
+
+    // get the user defined name (if defined...)
+    string simulation_name = simopts.get_option("simulation_name", "");
+    simulation_name = simopts.get_option("name", simulation_name);
+
+    // some cleanup
+    if (!simulation_name.empty())
+      simopts["name"] = simulation_name;
+    simopts.delete_option("simulation_name");
+    simopts.delete_option("physical_regions");
 
     Messages m;
 
@@ -564,39 +574,35 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         + modelname + "\' ...");
     m.indent();
 
-    // read options for this simulation (from Solver section)
+    // read solver options for this simulation (from Solver section)
     ModelOptions solveropts;
 
     OptionsMap::iterator map_it(solver_opts.find(modelname));
     if (map_it != solver_opts.end())
       solveropts += map_it->second;
 
-    // get the user defined name (if defined...)
-    const string& simulation_name = simopts.get_option("simulation_name", "");
-
     // read also section with user defined name as label
     if (!simulation_name.empty())
     {
-      solveropts["name"] = simulation_name;
-
       map_it = solver_opts.find(simulation_name);
       if ((simulation_name != modelname) && (map_it != solver_opts.end()))
         solveropts += map_it->second;
     }
 
+    // the main physical model -> PhysicalModel
+    // we need this below
+    ModelOptions physopts(simopts);
+
+
     // we put the parameters in the $Solver section as submodel parameters
     // so we can hand them over in a cleaner way
-    solveropts.add_submodel("$Solver", solveropts);
+    simopts.add_submodel("$Solver", solveropts);
+    // for compatibility we add also the solver options
+    simopts += solveropts;
 
-
-    // TODO we should change the handling of options, for now we just put the
-    // two sections together
-    solveropts += simopts;
-    solveropts.delete_option("simulation_name");
-    solveropts.delete_option("physical_regions");
 
     SimulationInterface* sim =
-      SimulationInterface::create(modelname, solveropts);
+      SimulationInterface::create(modelname, simopts);
     if (sim == NULL)
       throw ModelErrorException(
           "Unknown simulation type: " + modelname);
@@ -619,19 +625,24 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     //
     m.info("Creating physical models... ", false);
 
-    // what main model should be used?
-    ModelOptions physopts;
-
+    // TODO only for backwards compatibility
     map_it = physics_opts.find(modelname);
-
     if (map_it != physics_opts.end())
+    {
       physopts += map_it->second;
+      Messages::warning("The $Physics section is deprecated. \nOptions should be put"
+          " into the \'options\' block of the model instead.");
+    }
 
     // read also section with user defined name as label
     map_it = physics_opts.find(simulation_name);
     if (!simulation_name.empty() && (simulation_name != modelname) &&
         (map_it != physics_opts.end()))
+    {
       physopts += map_it->second;
+      Messages::warning("The $Physics section is deprecated. Options should be put"
+          " into the \'options\' block of the model instead.");
+    }
 
 
     // we have to do this for each material!

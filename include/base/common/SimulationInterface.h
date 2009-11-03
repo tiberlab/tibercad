@@ -455,7 +455,7 @@ class SimulationInterface : public TiberModelObject
     PhysicalModel* get_physical_model(ID region_id) const;
 
 
-    //! Get a reference to th eset of all physical models
+    //! Get a reference to the set of all physical models
     const std::set<PhysicalModel*>& get_physical_models(void) const;
 
 

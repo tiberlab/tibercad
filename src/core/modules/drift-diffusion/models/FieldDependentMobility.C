@@ -158,7 +158,7 @@ FieldDependentMobility::get_derivative_grad_fermi(RealGradient& dm)
   else
     E = get_driftdiffusionproperties().get_grad_fermi_h().size();
 
-  if ((_force == GRADFERMI) && (E > 1e3))
+  if ((_force == GRADFERMI) && (E > 1))
   {
 
     double vsat;

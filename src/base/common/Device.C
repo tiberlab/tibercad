@@ -124,8 +124,8 @@ Device::setup_mesh(void)
   {
     ostringstream os;
     os << "number of nodes     : " << setw(7) << setfill(' ') << _mesh->n_nodes() << endl
-       << "number of elements  : " << setw(7) << setfill(' ') << _mesh->n_elem() << endl
-       << "number of subdomains: " << setw(7) << setfill(' ') << _mesh->n_subdomains();
+       << "number of elements  : " << setw(7) << setfill(' ') << _mesh->n_elem() << endl;
+       //<< "number of subdomains: " << setw(7) << setfill(' ') << _mesh->n_subdomains();
     m.info(os.str());
   }
   m.newline();

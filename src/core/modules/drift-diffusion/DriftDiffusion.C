@@ -48,6 +48,10 @@
 
 TIBER_MODULE(DriftDiffusion,driftdiffusion)
 
+namespace
+{
+  int __private_counter;
+}
 
 
 using namespace std;
@@ -131,7 +135,8 @@ DriftDiffusion::Options::operator=(const Options& rhs)
 
 
 DriftDiffusion::DriftDiffusion(void)
-  : _rebuild_eq_system(true)
+  : _rebuild_eq_system(true),
+    _useparticle('b')
 {
 }
 
@@ -636,6 +641,7 @@ DriftDiffusion::cleanup_solver(void)
 void
 DriftDiffusion::do_solve(void)
 {
+  __private_counter = 0;
 
   string filename = get_option("load_state", "");
   if (filename != "")
@@ -843,9 +849,6 @@ DriftDiffusion::do_equilibrium(void)
   int max_it = solveropts.get_option("nonlin_max_it", 15);
   solveropts.set_option("nonlin_max_it", 150);
 
-  bool elonly = _electronsonly;
-  _electronsonly = false;
-
   int coupling = get_my_options().coupling;
   get_my_options().coupling = POISSON;
 
@@ -905,8 +908,6 @@ DriftDiffusion::do_equilibrium(void)
       static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
     cnt->set_simulation_voltage(sim_voltages[bd]);
   }
-
-  _electronsonly = elonly;
 
   // reset the coupling
   get_my_options().coupling = coupling;
@@ -1083,18 +1084,17 @@ DriftDiffusion::parse_options(void)
   else if (coupling == "poisson")
     myopts.coupling = POISSON;
   else if (coupling == "electrons")
+  {
     myopts.coupling = ECURRENT | POISSON;
+    _useparticle = 'e';
+  }
   else if (coupling == "holes")
+  {
     myopts.coupling = HCURRENT | POISSON;
+    _useparticle = 'h';
+  }
   else if (coupling == "current")
     myopts.coupling = CURRENTS;
-
-  _electronsonly = false;
-  //if ((myopts.coupling & ECURRENT) && !(myopts.coupling & HCURRENT))
-  //_electronsonly = (myopts.coupling & HCURRENT) ? false : true;
-  if (opts.get_option("ignore_holes", false))
-    _electronsonly = true;
-
 
 
   myopts.mesh_refinement = opts.get_option("mesh_refinement",
@@ -4452,8 +4452,14 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     Fp.reposition(2 * n_dofs, n_dofs);
     //
     Xu.reposition(0, n_dofs);
-    Xn.reposition(n_dofs, n_dofs);
-    Xp.reposition(2 * n_dofs, n_dofs);
+    if (_useparticle == 'h')
+      Xn.reposition(2 * n_dofs, n_dofs);
+    else
+      Xn.reposition(n_dofs, n_dofs);
+    if (_useparticle == 'e')
+      Xp.reposition(n_dofs, n_dofs);
+    else
+      Xp.reposition(2 * n_dofs, n_dofs);
     //
     oldXu.reposition(0, n_dofs);
     oldXn.reposition(n_dofs, n_dofs);
@@ -4498,6 +4504,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       RealGradient e_field(0);
       RealGradient grad_en(0);
       RealGradient grad_ep(0);
+      //RealGradient olde_field(0);
+      //RealGradient oldgrad_en(0);
+      //RealGradient oldgrad_ep(0);
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         u  += phi[i][qp] * Xu(i);
@@ -4509,6 +4518,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         e_field -= dphi[i][qp] * Xu(i);
         grad_en += dphi[i][qp] * Xn(i);
         grad_ep += dphi[i][qp] * Xp(i);
+        //olde_field -= dphi[i][qp] * oldXu(i);
+        //oldgrad_en += dphi[i][qp] * oldXn(i);
+        //oldgrad_ep += dphi[i][qp] * oldXp(i);
       }
 
       // prepare for calculating local properties
@@ -4546,6 +4558,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       //Rn = (fabs(Rn) < 1.0e-3) ? 0.0 : Rn;
       long double Rp = sc->get_net_hole_recombination_rate();
       //Rp = (fabs(Rp) < 1.0e-3) ? 0.0 : Rp;
+      if (_useparticle != 'b')
+        Rn = Rp = 0.0;
 
 
       //double ni = sc->get_intrinsic_density();
@@ -4618,11 +4632,14 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
         long double drho[3];
         drho[1] = (dn_dphi - dNd_dphi) * phi0 / C0;
-        if (_electronsonly)
-          drho[2] = 0.0;
-        else
-          drho[2] = -(dp_dphi - dNa_dphi) * phi0 / C0;
+        drho[2] = -(dp_dphi - dNa_dphi) * phi0 / C0;
+        if (_useparticle == 'e')
+          drho[1] += drho[2];
+        else if (_useparticle == 'h')
+          drho[2] += drho[1];
+
         drho[0] = -(drho[1] + drho[2]);
+
         if (sc->is_dielectric())
           drho[2] = drho[1] = drho[0] = 0.0;
 
@@ -4795,10 +4812,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       {
         // charge density
         long double J_x_rho;
-        if (_electronsonly)
-          J_x_rho = J * (sc->get_charge_density() - p)/ C0;
-        else
-          J_x_rho = J * sc->get_charge_density() / C0;
+        J_x_rho = J * sc->get_charge_density() / C0;
+
         if (sc->is_dielectric())
           J_x_rho = 0.0;
 
@@ -4825,13 +4840,12 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           if (coupling & ECURRENT)
             Fn(i) -= net_recomb_e;
           else
-            Fn(i) -= Xn(i);
+            Fn(i) -= 0;
 
           if (coupling & HCURRENT)
             Fp(i) += net_recomb_h;
           else
-          //  Fp(i) -= Xn(i);
-            Fp(i) -= Xp(i);
+            Fp(i) -= 0;
         }
 
 
@@ -5441,8 +5455,11 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   {
     residual->close();
     //residual->print_matlab("F.m");
-    //write_nodal_vector("residual", *residual);
-    //write_nodal_vector("x", x);
+    //ostringstream os;
+    //os << "_" << __private_counter;
+    //write_nodal_vector("residual" + os.str(), *residual);
+    //write_nodal_vector("x" + os.str(), x);
+    //__private_counter++;
   }
 
 
