@@ -184,7 +184,7 @@ const  ModelOptions& InputParser::read_parameters(std::string section_name, cons
 
   section_name = "$"+section_name;
 
-  find_keyword( in_stream,section_name  );
+  find_keyword( in_stream,section_name);
  
   //  // { 
  
@@ -377,7 +377,7 @@ const  ModelOptions&  InputParser::read_parameters(std::string section_name)
 
   section_name = "$"+section_name;
 
-  find_keyword( in_stream,section_name  );
+  find_keyword( in_stream,section_name);
  
  
  
@@ -431,6 +431,8 @@ void InputParser::reset_all_maps()
 // private  method: utility  to  find a  keyword 
 void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
 
+//void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword, bool optional_not_found)
+
 {
 
   bool found = false;
@@ -478,15 +480,9 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
   if (found == false)
 
   {
-
-
-
-
-
     ostringstream os;
     os << "keyword "<< keyword <<  "  not  found in input file!";
     throw InitFailedException(os.str()); 
-
   }
 
 }
@@ -494,7 +490,9 @@ void InputParser::find_keyword(ifstream& in_stream, const std::string& keyword)
 //**************************************************
 
 
-  // private  method: utility  to  find an optional  keyword 
+  // private  method: utility  to  find an optional  keyword
+  // e.g.  $Scale,  $Physics 
+  // returns true  if  keyword is  found,   false  if  the  optional keyword is  not  present
 bool InputParser::find_optional_keyword(ifstream& in_stream, const std::string& keyword)
 
 {
@@ -568,6 +566,8 @@ const multimap <const string, ModelStructure*>& InputParser::read_models()
 
 {
 
+  bool optional_not_found;
+  optional_not_found = false;
   string section_name;
   section_name = "$Models";
 
@@ -575,7 +575,7 @@ const multimap <const string, ModelStructure*>& InputParser::read_models()
 
   assert(in_stream.good());
 
-  find_keyword(in_stream,section_name );  //  looks  for "$Models$"; 
+  find_keyword(in_stream,section_name);  //  looks  for "$Models$"; 
 
   parse_model(in_stream);
  
@@ -1135,7 +1135,7 @@ void InputParser::read_device(void)
 
   section_name = "$"+section_name;
 
-  find_keyword( in_stream,section_name  );
+  find_keyword( in_stream,section_name);
  
   // { 
  
@@ -2916,6 +2916,8 @@ void InputParser::read_subblocks(string section_name,
 
 {
 
+
+  bool found_optional = false;
   string  keyword ;
   ifstream in_stream (filename.c_str()) ;
 
@@ -2929,7 +2931,30 @@ void InputParser::read_subblocks(string section_name,
  
  
   //find section name
-  find_keyword( in_stream,section_name  );
+  //  find_keyword( in_stream,section_name  );
+
+  // *************************************
+
+  //  check if  it  is  an optional/obsolete section (e.g.  $Physics)
+  if  ( section_name == "$Physics"  ) //  OR ...... 
+
+  {
+    found_optional = find_optional_keyword( in_stream,section_name  );
+    // optional/obsolete section  not  found (e.g.  $Physics)
+    //  ************************
+    if  (found_optional == false) return; //  optional/obsolete section not  found;  
+    // options_map is  returned  empty 
+
+    //  ************************
+
+  }
+  else
+    //find  mandatory  section name
+    find_keyword( in_stream,section_name);
+
+
+
+
 
   // -----------------------------
 
@@ -3050,7 +3075,7 @@ void InputParser::get_simulation_options( ModelOptions& options )
  
 
   //find section name
-  find_keyword( in_stream,section_name  );
+  find_keyword( in_stream,section_name);
 
   keyword = section_name;
   parse_options(in_stream, options, keyword, section_name); 
