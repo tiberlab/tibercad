@@ -252,38 +252,62 @@ inline void f77_upt_get_hamildim (f77_int const* handler, f77_int& hdim)
 }
 
 
+extern "C" void upt_get_hamilnnz_ (f77_int const*, f77_int&);
+
+// Corresponding F77 arguments for f77_upt_get_hamilnnz:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(out) :: nnz
+inline void f77_upt_get_hamilnnz (f77_int const* handler, f77_int& nnz)
+{
+  upt_get_hamilnnz_ (handler, nnz);
+}
+
+
+extern "C" void upt_get_csr_hamiltonian_ (f77_int const*, f77_int&, f77_char&, 
+    f77_complex*, f77_int*, f77_int*);
+
+// Corresponding F77 arguments for f77_upt_get_csr_hamiltonian:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(out) :: nrow
+// character(1), intent(out) :: fmt
+// complex(dp), intent(out) :: A(1)
+// integer, intent(out) :: JA(1)
+// integer, intent(out) :: IA(1)
+inline void f77_upt_get_csr_hamiltonian (f77_int const* handler, f77_int& nrow, 
+    f77_char& fmt, f77_complex* A, f77_int* JA, f77_int* IA)
+{
+  upt_get_csr_hamiltonian_ (handler, nrow, fmt, A, JA, IA);
+}
+
+
 extern "C" void upt_get_states_ (f77_int const*, f77_int const&, f77_int 
-    const&, f77_double*, f77_double*, f77_double*);
+    const&, f77_double*, f77_complex*);
 
 // Corresponding F77 arguments for f77_upt_get_states:
 // integer, intent(in) :: handler(DAC_handlerSize)
 // integer, intent(in) :: num_ev
 // integer, intent(in) :: hdim
 // real(dp), intent(out) :: eigenvals(num_ev)
-// real(dp), intent(out) :: eigenstates_re(hdim, num_ev)
-// real(dp), intent(out) :: eigenstates_im(hdim, num_ev)
+// complex(dp), intent(out) :: eigenstates(hdim, num_ev)
 inline void f77_upt_get_states (f77_int const* handler, f77_int const& num_ev, 
-    f77_int const& hdim, f77_double* eigenvals, f77_double* eigenstates_re, 
-    f77_double* eigenstates_im)
+    f77_int const& hdim, f77_double* eigenvals, f77_complex* eigenstates)
 {
-  upt_get_states_ (handler, num_ev, hdim, eigenvals, eigenstates_re, 
-      eigenstates_im);
+  upt_get_states_ (handler, num_ev, hdim, eigenvals, eigenstates);
 }
 
 
 extern "C" void upt_get_matel_ (f77_int const*, f77_int const&, f77_int const&, 
-    f77_double&, f77_double&);
+    f77_complex&);
 
 // Corresponding F77 arguments for f77_upt_get_matel:
 // integer, intent(in) :: handler(DAC_handlerSize)
 // integer, intent(in) :: i
 // integer, intent(in) :: j
-// real(dp), intent(out) :: matel_re
-// real(dp), intent(out) :: matel_im
+// complex(dp), intent(out) :: matel
 inline void f77_upt_get_matel (f77_int const* handler, f77_int const& i, 
-    f77_int const& j, f77_double& matel_re, f77_double& matel_im)
+    f77_int const& j, f77_complex& matel)
 {
-  upt_get_matel_ (handler, i, j, matel_re, matel_im);
+  upt_get_matel_ (handler, i, j, matel);
 }
 
 
@@ -323,6 +347,28 @@ inline void f77_upt_set_verbosity (f77_int const* handler, f77_int const&
     verbose_lev)
 {
   upt_set_verbosity_ (handler, verbose_lev);
+}
+
+
+extern "C" void real_test_ (f77_double&);
+
+// Corresponding F77 arguments for f77_real_test:
+// real(dp), intent(out) :: re
+inline void f77_real_test (f77_double& re)
+{
+  real_test_ (re);
+}
+
+
+extern "C" void complex_test_ (f77_double&, f77_double&, f77_complex&);
+
+// Corresponding F77 arguments for f77_complex_test:
+// real(dp), intent(out) :: re
+// real(dp), intent(out) :: im
+// complex(dp), intent(out) :: zz
+inline void f77_complex_test (f77_double& re, f77_double& im, f77_complex& zz)
+{
+  complex_test_ (re, im, zz);
 }
 
 

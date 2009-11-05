@@ -104,18 +104,26 @@ public:
 
   int get_H_dim(void);
 
+  int get_H_nnz(void);
+
   void write_states(void);
 
   void read_old_states(void);
 
-  void get_states(int num_ev, int hdim, double* eigenvals, double* stat_re, 
-                  double *stat_im);
+  void get_states(int num_ev, int hdim, double* eigenvals,std::complex<double>* states); 
 
   void compute_P_matrix(int poldir);
 
   std::complex<double> get_matel(int i, int j);
 
   void get_ion_numorbitals(std::vector<int>& ion_block_vector);
+
+  void get_H_csr(int nrow, char fmt, std::vector<std::complex<double> >& A, std::vector<int>& JA,
+                                                     std::vector<int>& IA );
+
+  void complex_test(double& re, double& im, std::complex<double>& zz);
+
+  double real_test();
 
 private:
   int _handler[UPT_HSIZE];

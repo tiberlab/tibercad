@@ -9,6 +9,12 @@ UptWrapper::UptWrapper(){
     std::cout << "done." << std::endl;
 
     std::cout << "Received handler: ";
+    int hsize;
+    f77_upt_gethandlersize(hsize);
+    if(hsize!=UPT_HSIZE){
+      std::cerr<<"ERROR: internal handlers do not match"<<std::endl;
+    }
+
     for  (int ii = 0; ii < UPT_HSIZE; ++ii) {
       std::cout << _handler[ii] << " ";
     }
@@ -132,12 +138,20 @@ void UptWrapper::set_num_states(int n_vb, int n_cb)
 }
 
 
-//! get ETB Hamiltonian size
+//! get ETB Hamiltonian size (number of rows)
 int UptWrapper::get_H_dim(void) {
   int hdim;	
   f77_upt_get_hamildim(_handler,hdim);
   return hdim;
 }
+
+//! get ETB Hamiltonian number of non-zero elements
+int UptWrapper::get_H_nnz(void) {
+  int hdim;	
+  f77_upt_get_hamilnnz(_handler,hdim);
+  return hdim;
+}
+
 
 //! write eigenstates on file
 void UptWrapper::write_states() {	
@@ -152,9 +166,9 @@ void UptWrapper::read_old_states(void) {
 
 //! get computed states 
 void UptWrapper::get_states(int num_ev, int hdim,
-			     double* eigenvals, double *eigenvec_re, double *eigenvec_im) {
+			     double* eigenvals, std::complex<double>* eigenvec) {
 
-  f77_upt_get_states (_handler, num_ev, hdim, eigenvals, eigenvec_re, eigenvec_im);
+  f77_upt_get_states (_handler, num_ev, hdim, eigenvals, eigenvec);
 
 
 }
@@ -164,11 +178,11 @@ std::complex<double> UptWrapper::get_matel(int i, int j)
 {
 
   std::complex<double> matel;
-  double matel_re, matel_im;
+  //double matel_re, matel_im;
 
-  f77_upt_get_matel(_handler,i,j,matel_re,matel_im);
+  f77_upt_get_matel(_handler,i,j,matel);
 
-  matel = std::complex<double>(matel_re,matel_im);
+  //matel = std::complex<double>(matel_re,matel_im);
 
   //std::cerr<<matel<<std::endl;
 
@@ -198,4 +212,23 @@ void UptWrapper::set_verbose(int verbose_lev)
 }
 
 
+void UptWrapper::get_H_csr(int nrow, char fmt, std::vector<std::complex<double> >& A, 
+                           std::vector<int>& JA, std::vector<int>& IA)
+{
 
+
+  f77_upt_get_csr_hamiltonian(_handler,nrow,fmt,&A.front(),&JA.front(),&IA.front());
+
+}
+
+void UptWrapper::complex_test(double& re, double& im, std::complex<double>& zz)
+{
+  f77_complex_test(re,im,zz);
+}
+
+double UptWrapper::real_test()
+{
+  double re;
+  f77_real_test(re);
+  return re;
+}

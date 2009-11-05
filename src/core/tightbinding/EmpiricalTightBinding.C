@@ -20,6 +20,9 @@
 #include <algorithm>
 #include "Material.h"
 #include "Alloy.h"
+
+#define complex_dp  std::complex<double>
+ 
 //#include <complex>
 using namespace std;
 
@@ -117,6 +120,18 @@ void
 ETB::do_init(void){
 
   std::cerr << "(TC) Empirical TB Initialisation..." << std::endl;
+
+  //sanity check of complex number passing (this should be checked elsewere perhaps)
+  complex_dp zz;
+  double re,im;
+
+  inst -> complex_test(re,im,zz);
+  if (zz != complex_dp(re,im))
+  {
+    cerr<< zz <<  re << ", " << im << endl;
+    throw InitFailedException("ETB: complex-passing test failed");
+  }
+
 
   TightBinding::do_init(); //gets mesh and _atomistic_structure
 
@@ -288,7 +303,7 @@ void ETB::do_solve(void){
     inst->read_old_states();
 
     int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
-    std::complex<double> matel;
+    complex_dp matel;
 
     for(int i=1; i<= num_ev; i++)
     {
@@ -301,19 +316,18 @@ void ETB::do_solve(void){
   std::cout << "(TC) ETB->do_solve() done" << std::endl;
   std::cout << "(TC) Copy solutions into _solutions" << std::endl;
 #endif
-
-  std::cerr<<"Pot min= "<<_pot_min<<std::endl;
+  
+  //std::cerr<<"Pot min= "<<_pot_min<<std::endl;
 
   int hdim = inst->get_H_dim();
   int num_vb = _upt_solver_options.n_vb;
   int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
   double *eigvals = new double[num_ev];
-  double *eigvects_re = new double[hdim*num_ev];
-  double *eigvects_im = new double[hdim*num_ev];
-  double *eigtmp_re = eigvects_re;
-  double *eigtmp_im = eigvects_im;
+  complex_dp *eigvects = new complex_dp[hdim*num_ev];
+  complex_dp *eigtmp = eigvects;  // walking pointer on eigenvectors array
 
-  inst->get_states(num_ev,hdim,eigvals,eigvects_re,eigvects_im);
+ 
+  inst->get_states(num_ev,hdim,eigvals,eigvects);
 
   _solution.resize(num_ev);
 
@@ -327,7 +341,7 @@ void ETB::do_solve(void){
 
     for(int j=0; j<hdim;j++)
     {
-      _solution[i].eigen_vector[j] = complex<double>(*(eigtmp_re+j),*(eigtmp_im+j));
+      _solution[i].eigen_vector[j] = *(eigtmp+j);
     }
 
     if( (_upt_options.potential_flag) && !(get_options().find_option("hl_qfermi_level")))
@@ -339,8 +353,7 @@ void ETB::do_solve(void){
       _solution[i].electro_chem_pot = _upt_options.hl_chem_pot;
     }
 
-    eigtmp_re += hdim;
-    eigtmp_im += hdim;
+    eigtmp += hdim;
 
   }
 
@@ -357,8 +370,7 @@ void ETB::do_solve(void){
 
     for(int j=0; j<hdim;j++)
     {
-      _solution[i].eigen_vector[j] = complex<double>(*(eigtmp_re+j),*(eigtmp_im+j));
-
+      _solution[i].eigen_vector[j] = *(eigtmp+j); 
     }
 
     if( (_upt_options.potential_flag) && !(get_options().find_option("el_qfermi_level")))
@@ -370,8 +382,7 @@ void ETB::do_solve(void){
       _solution[i].electro_chem_pot =  _upt_options.el_chem_pot;
     }
 
-    eigtmp_re += hdim;
-    eigtmp_im += hdim;
+    eigtmp += hdim;
 
   }
 
@@ -400,8 +411,7 @@ void ETB::do_solve(void){
   _atomistic_structure->print_structure("charges_hl.xyz", charges);
 
   delete eigvals;
-  delete eigvects_re;
-  delete eigvects_im;
+  delete eigvects;
 
 }
 
@@ -437,7 +447,7 @@ void ETB::assemble(const ModelOptions& options)
 
 }
 //-------------------------------------------------------------------------
-std::complex<double> ETB::calculate_matrix_element(const std::string& i_particle,
+complex_dp ETB::calculate_matrix_element(const std::string& i_particle,
 						   unsigned int i,
 						   const std::string& j_particle,
 						   unsigned int j)

@@ -380,7 +380,7 @@ TightBinding::project_potential(const std::string model_name, const std::string 
       if ( (_pot_shift[i] < _pot_min) && 
       (_atomistic_structure->get_structure_atoms()[i].get_specie() != "H")) _pot_min = _pot_shift[i];
   }
-  std::cout << "pot_min is " << _pot_min << std::endl;
+  //std::cout << "pot_min is " << _pot_min << std::endl;
   for (unsigned int i = 0; i < _pot_shift.size(); i++)
   {
       tmp = _pot_shift[i] - _pot_min;
