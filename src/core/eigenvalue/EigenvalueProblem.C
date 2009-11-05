@@ -150,13 +150,16 @@ void EigenvalueProblem::write_states(void) const
 
   int num_st=_solution.size();
 
-  
+  std::cout<<std::endl;
+  std::cout<<  "# T   level    stat.     pot.       pop."<<std::endl;
+
 
   for(int i=0; i< num_st; i++)
   {
-    std::cerr<<i<<" "<<_solution[i].particle<<" "<<_solution[i].eigen_energy<<" "
-	     <<_solution[i].statistics<<" "<<_solution[i].electro_chem_pot
-	     <<" "<<get_population(i)<<std::endl;
+    std::cout<<i<<" "<<_solution[i].particle<<" "<< std::setprecision(6)
+	     <<_solution[i].eigen_energy<<" "<<_solution[i].statistics
+	     <<" "<<std::setw(10)<<_solution[i].electro_chem_pot
+	     <<" "<<std::setw(10)<<get_population(i)<<std::endl;
   }
 
 }
@@ -168,7 +171,7 @@ void EigenvalueProblem::write_states(const std::string& filename) const
   std::ofstream file;
   file.open(filename.c_str());
   
-  file << "# " << "T " << "level " << "stat. " << "ch. pot " << "pop."<<std::endl;
+  file << "# T   level    stat.     pot.       pop."<<std::endl;
 
   for(int i=0; i< num_st; i++)
   {

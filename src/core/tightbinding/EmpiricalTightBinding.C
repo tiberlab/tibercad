@@ -390,14 +390,14 @@ void ETB::do_solve(void){
   write_states();
 
   //Calculate electron and holes charge density on atoms (hydrogen not included)
-  std::cerr << "Calculating quantum charge " << std::endl;
+  //std::cerr << "Calculating quantum charge " << std::endl;
 
   _el_atomic_charges.resize(_N_without_H, 0.0);
   _hl_atomic_charges.resize(_N_without_H, 0.0);
 
   compute_atomic_charges("el", _el_atomic_charges);
   compute_atomic_charges("hl", _hl_atomic_charges);
-  std::cerr << "done " << std::endl;
+  //std::cerr << "done " << std::endl;
 
   //Print for debug charges on atoms
   double* charges;
