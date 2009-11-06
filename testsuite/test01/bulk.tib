@@ -22,7 +22,6 @@ $Models
     {
      simulation_name = driftdiffusion
 
-     physical_regions = all
     }
 
 
@@ -79,12 +78,6 @@ $Solver
 # Definition of  Model dependent physical parameters
 $Physics
 {
- 
-  driftdiffusion 
-  {
-    model = unstrained
-  }
-
 }
 
 

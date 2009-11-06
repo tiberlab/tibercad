@@ -134,7 +134,9 @@ $Models
     options
     {          
       simulation_name = dd
-      physical_regions = all
+
+      strain_simulation = str
+      statistics = FD
 
       coupling = poisson
       integration_order = 2
@@ -302,15 +304,6 @@ $Physics
     model = kp   #  k.p  for  valence  band
     kp_model = 6x6
   }
-
-  driftdiffusion
-  {
-
-    strain_simulation = str
-    statistics = FD
-    model = strained 
-    
-  }  
 
 } 
 

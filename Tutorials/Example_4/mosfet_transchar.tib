@@ -34,7 +34,11 @@ $Models
     {
      simulation_name = driftdiffusion
 
-     physical_regions = all
+     # use Fermi-Dirac statistics
+     statistics = FD
+
+     # we only solve for electrons
+     coupling = electrons
     }
 
     physical_model recombination
@@ -47,8 +51,7 @@ $Models
 
       model = field_dependent
 
-
-      low_field_model = doping_dependent   #Masetti  model for Si !!!
+      low_field_model = doping_dependent 
 
     }
 
@@ -93,7 +96,6 @@ $Solver
   driftdiffusion
   {
     nonlinear_solver = tiber
-    coupling = electrons
     ksp_type = bcgsl
     nonlin_max_it = 10
     nonlin_step_tol = 1e-3
@@ -125,24 +127,9 @@ $Solver
 
 
 
-# Definition of  Model dependent physical parameters
-$Physics
-{
- 
-  driftdiffusion 
-  {
-    statistics = FD
-  }
-
-}
-
-
 # Definition of  model-indipendent parameters of the Simulation
-
-
 $Simulation
 {
-#  searchpath =    ../../materials   
   meshfile = mosfet.msh
   dimension = 2
   temperature = 300

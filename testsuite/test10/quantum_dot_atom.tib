@@ -163,6 +163,15 @@ $Models
     options
     {          
       simulation_name = dd
+
+      strain_simulation = str
+      statistics = FD
+    
+      #electron_quantum_density = dens_el
+      #use_density_predictor = true
+      #embracing_length = 3e-9
+      #plot_embracing_regions = true
+
     }
 
     physical_model recombination
@@ -249,8 +258,6 @@ $Solver
  
   driftdiffusion
   {
-    #coupling = poisson
-
     #nonlinear_solver = tiber
     #linear_solver = pardiso
    
@@ -270,16 +277,6 @@ $Solver
 $Physics
 {
 
-  driftdiffusion
-  {
-    strain_simulation = str
-    statistics = FD
-    
-  #  electron_quantum_density = dens_el
-  #  use_density_predictor = true
-  #  embracing_length = 3e-9
-  #  plot_embracing_regions = true
-  }  
 
 }
 

@@ -78,7 +78,8 @@ $Models
     options
     {
      simulation_name = dd
-     physical_regions = all
+     
+     thermal_simulation = tt
     }
 
      physical_model recombination
@@ -153,10 +154,6 @@ $Solver
 # Definition of  Model dependent physical parameters
 $Physics
 {
-  driftdiffusion 
-  {
-    thermal_simulation = tt
-  }
 }
 
 

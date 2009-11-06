@@ -80,7 +80,13 @@ $Models
     {          
       simulation_name = dd
       
-      physical_regions = all
+      electron_quantum_density = dens_el
+      use_density_predictor = true
+      statistics = FD
+      strain_simulation = str
+
+      coupling = poisson
+      integration_order = 2
     }
 
     physical_model recombination
@@ -195,14 +201,11 @@ $Solver
  
   driftdiffusion
   {
-    coupling = poisson
     nonlin_max_it = 70
     nonlin_rel_tol = 1e-10
     nonlin_abs_tol = 1e-10
     nonlin_step_tol = 1e-9
     ls_max_step = 4
-    discretization = fem
-    integration_order = 2
     ksp_type = bcgs
   }
 
@@ -295,13 +298,6 @@ $Solver
 $Physics
 {
 
-  driftdiffusion
-  {
-    electron_quantum_density = dens_el
-    use_density_predictor = true
-    statistics = FD
-    strain_simulation = str
-  }
 
   quantum_el 
   {

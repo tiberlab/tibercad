@@ -28,7 +28,6 @@ $Models
     options
     {
      simulation_name = driftdiffusion
-     physical_regions = all
     }
 
      physical_model recombination
@@ -98,10 +97,6 @@ $Solver
 # Definition of  Model dependent physical parameters
 $Physics
 {
-  driftdiffusion 
-  {
-    model = unstrained
-  }
 }
 
 

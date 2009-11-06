@@ -203,6 +203,11 @@ $Models
  
      simulation_name = driftdiffusion
 
+     strain_simulation = strain
+     relax_polarization = @polariz[0.0]
+
+     statistics = FD
+
      physical_regions = (1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)
 
     }
@@ -390,14 +395,6 @@ $Physics
     current_simulation = driftdiffusion 
   }
 
-  driftdiffusion 
-  {
-    relax_polarization = @polariz[0.0]
-
-    strain_simulation = strain
-    statistics = FD
-    model = strained 
-  }
    
 }
 

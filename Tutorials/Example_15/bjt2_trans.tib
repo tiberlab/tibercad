@@ -44,7 +44,15 @@ $Models
               
     options
     {
-     simulation_name = dd
+      simulation_name = dd
+
+      # use Fermi-Dirac statistics
+      statistics =  FD
+
+      # we use a different quadrature rule to avoid density peaks
+      # where the mesh is not so dense
+      quadrature_rule = trapez
+
     }
 
 
@@ -104,9 +112,6 @@ $Solver
 {
   driftdiffusion
   {
-    # we use a different quadrature rule to avoid density peaks
-    # where the mesh is not so dense
-    quadrature_rule = trapez
 
     # we use the "tiber" nonlinear solver (a linesearch)
     nonlinear_solver = tiber
@@ -137,16 +142,6 @@ $Solver
   }
 }
 
-
-
-$Physics
-{
-  driftdiffusion 
-  {
-    # use Fermi-Dirac statistics
-    statistics =  FD
-  }
-}
 
 
 

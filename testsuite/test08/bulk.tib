@@ -22,8 +22,10 @@ $Models
     options
     {
      simulation_name = dd
+     
+     thermal_simulation = tt
 
-     physical_regions = all
+     coupling = poisson
     }
 
 
@@ -86,7 +88,6 @@ $Solver
 {
   driftdiffusion
   {
-    coupling = poisson
     nonlinear_solver = tiber
     ksp_type = bcgs
     nonlin_max_it = 20
@@ -102,11 +103,6 @@ $Solver
 $Physics
 {
  
-  driftdiffusion 
-  {
-    thermal_simulation = tt
-  }
-
 }
 
 

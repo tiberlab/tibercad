@@ -176,6 +176,9 @@ $Models
      simulation_name = driftdiffusion
 
      physical_regions = all
+
+     statistics = FD
+     strain_simulation = strain
     }
 
     physical_model recombination
@@ -368,14 +371,12 @@ $Solver
 ## full   DD calculation
   {
     nonlinear_solver = tiber
-    coupling = full
     nonlin_rel_tol = 1e-14  
     nonlin_abs_tol =  1e-50  
     nonlin_step_tol = 1e-3
 
     lin_rel_tol = 1e-6
     nonlin_max_it = 30
-    discretization = fem
     ls_max_step = 1.0 
     pc_type = lu 
 
@@ -514,12 +515,6 @@ $Solver
 $Physics
 {
   
-  driftdiffusion 
-  {
-    statistics = FD
-    strain_simulation = strain
-  
-  }
    
 
 # quantum_electrons 

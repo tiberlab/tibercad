@@ -145,6 +145,13 @@ $Models
       simulation_name = dd
       
       physical_regions = all
+   
+      strain_simulation = strain
+      statistics = FD
+
+      # where to get the quantum densities from
+      electron_quantum_density = dens_el
+      hole_quantum_density = dens_holes  
 
     }
 
@@ -298,7 +305,6 @@ $Solver
 
     nonlinear_solver = tiber
   
-   # coupling = full
     nonlin_max_it = 40 # 20 #15
     nonlin_rel_tol = 1e-12
     #nonlin_abs_tol = 1e-15
@@ -437,19 +443,6 @@ $Solver
 # Definition of  Model dependent physical parameters
 $Physics
 {
-  
-  driftdiffusion 
-  {
-   
-    strain_simulation = strain
-    statistics = FD
-
-    # where to get the quantum densities from
-    electron_quantum_density = dens_el
-    hole_quantum_density = dens_holes  
-
-  }
-  
 
   quantum_el 
   {

@@ -98,8 +98,6 @@ $Models
     options
     {          
       simulation_name = str
-
-      physical_regions = all
     }
 
   
@@ -109,7 +107,6 @@ $Models
     {
       BC_Region substrate
       {
-#	BC_reg_numb = 1
 	type = substrate
 	material = AlGaN
 	x = 0.3
@@ -132,8 +129,11 @@ $Models
     options
     {          
       simulation_name = dd
-      
-      physical_regions = all
+
+      strain_simulation = str
+      statistics = FD
+
+      coupling = poisson
     }
 
     physical_model recombination
@@ -250,11 +250,7 @@ $Solver
  
   driftdiffusion
   {
-    coupling = poisson
-
     #nonlinear_solver = tiber
-    #linear_solver = pardiso
-   
     nonlin_max_it = 15
     nonlin_rel_tol = 1e-12
  
@@ -331,14 +327,6 @@ $Physics
     model = kp   #  k.p  for  valence  band
     kp_model = 6x6
   }
-
-  driftdiffusion
-  {
- 
-    strain_simulation = str
-    statistics = FD
-    
-  }  
 
 }
 
