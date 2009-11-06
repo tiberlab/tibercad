@@ -1,9 +1,9 @@
-using namespace std;
+// $Id$
+
 #include "SBZbCondBandBulkHamiltonian.h"
-#include "getpot.h"
-#include "Alloy.h"
 #include "ZbSemiconductor.h"
 
+using namespace std;
 
 
 

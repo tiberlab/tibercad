@@ -1,7 +1,9 @@
-using namespace std;
+// $Id$
+
 #include "SBWzCondBandBulkHamiltonian.h"
-#include "getpot.h"
-#include "Alloy.h"
+#include "Material.h"
+
+using namespace std;
 
 //=======================================================================//
 void SBWzCondBandBulkHamiltonian::do_init()

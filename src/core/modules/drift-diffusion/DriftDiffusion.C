@@ -1086,12 +1086,14 @@ DriftDiffusion::parse_options(void)
   else if (coupling == "electrons")
   {
     myopts.coupling = ECURRENT | POISSON;
-    _useparticle = 'e';
+    if (opts.get_option("local_equilibrium", false))
+      _useparticle = 'e';
   }
   else if (coupling == "holes")
   {
     myopts.coupling = HCURRENT | POISSON;
-    _useparticle = 'h';
+    if (opts.get_option("local_equilibrium", false))
+      _useparticle = 'h';
   }
   else if (coupling == "current")
     myopts.coupling = CURRENTS;
@@ -4633,12 +4635,13 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         long double drho[3];
         drho[1] = (dn_dphi - dNd_dphi) * phi0 / C0;
         drho[2] = -(dp_dphi - dNa_dphi) * phi0 / C0;
-        if (_useparticle == 'e')
-          drho[1] += drho[2];
-        else if (_useparticle == 'h')
-          drho[2] += drho[1];
-
         drho[0] = -(drho[1] + drho[2]);
+
+        if (_useparticle == 'e')
+          drho[1] = -drho[0];
+        else if (_useparticle == 'h')
+          drho[2] = -drho[0];
+
 
         if (sc->is_dielectric())
           drho[2] = drho[1] = drho[0] = 0.0;
@@ -4840,12 +4843,18 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           if (coupling & ECURRENT)
             Fn(i) -= net_recomb_e;
           else
-            Fn(i) -= 0;
+            if (_useparticle == 'h')
+              Fn(i) -= 0;
+            else
+              Fn(i) -= Xn(i);
 
           if (coupling & HCURRENT)
             Fp(i) += net_recomb_h;
           else
-            Fp(i) -= 0;
+            if (_useparticle == 'e')
+              Fp(i) -= 0;
+            else
+              Fp(i) -= Xp(i);
         }
 
 
