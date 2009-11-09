@@ -26,9 +26,7 @@ $Models
     options
     {
      simulation_name = dd
-
-     # use Fermi-Dirac statistics
-     statistics =  FD
+     physical_regions = all
     }
 
 
@@ -82,6 +80,10 @@ $Models
 $Solver
 
 {
+  driftdiffusion
+  {
+    #nonlin_step_tol = 1e-6
+  }
 
   sweep
   {
@@ -96,7 +98,20 @@ $Solver
 
 
 
+# Definition of  Model dependent physical parameters
+$Physics
+{
+  driftdiffusion 
+  {
+    # use Fermi-Dirac statistics
+    statistics =  FD
+  }
+}
+
+
 # Definition of  model-indipendent parameters of the Simulation
+
+
 $Simulation
 {
   #searchpath = ../../materials

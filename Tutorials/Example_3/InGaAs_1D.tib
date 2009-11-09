@@ -68,11 +68,6 @@ $Models
      simulation_name = driftdiffusion
 
      physical_regions = all
-  
-      coupling = poisson
-      statistics = FD
-
-      strain_simulation = strain
     }
 
     physical_model recombination
@@ -169,6 +164,7 @@ $Solver
  
   driftdiffusion
   {
+    coupling = poisson
     nonlinear_solver = tiber
  
     pc_type = lu
@@ -218,7 +214,16 @@ $Solver
 # Definition of  Model dependent physical parameters
 $Physics
 {
+  
+  driftdiffusion 
+  {
+
  
+    statistics = FD
+    strain_simulation = strain
+ 
+  }
+   
  quantum_electrons 
   {
     particle = el

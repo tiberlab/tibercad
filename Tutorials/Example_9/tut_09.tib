@@ -36,9 +36,6 @@ $Models
     {
      simulation_name = dd
      physical_regions = (n_side,p_side)
-
-     statistics = FD
-     thermal_simulation = tt
     }
 
      physical_model recombination
@@ -150,7 +147,21 @@ $Solver
 
 
 
+# Definition of  Model dependent physical parameters
+$Physics
+{
+  driftdiffusion 
+  {
+     statistics = FD
+     thermal_simulation = tt
+
+  }
+}
+
+
 # Definition of  model-indipendent parameters of the Simulation
+
+
 $Simulation
 {
   #searchpath = ../../materials

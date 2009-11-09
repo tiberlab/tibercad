@@ -3,6 +3,7 @@ $Device
 
   Region well
   {
+#    mesh_regions = 1
     material = GaN
     
     structure = wz
@@ -18,6 +19,7 @@ $Device
 
   Region  buffer1
   {
+#    mesh_regions  = 2
     material = AlGaN
     x = 0.3
 
@@ -38,6 +40,7 @@ $Device
 
   Region  buffer2
   {
+#    mesh_regions = 3
     material = AlGaN
     x = 0.3
     structure = wz
@@ -72,6 +75,7 @@ $Models
     {
       BC_Region substrate  #ALGANsubstrate
       {
+#	BC_reg_numb = 1
 	type = substrate
 	material = AlGaN
 	x = 0.3
@@ -93,11 +97,7 @@ $Models
     {          
       simulation_name = dd
       
-      strain_simulation = str
-
-      # we solve only Poisson equation
-      coupling = poisson
-      integration_order = 2
+      physical_regions = all
     }
   }
 
@@ -198,12 +198,15 @@ $Solver
  
   driftdiffusion
   {
+    coupling = poisson
     nonlin_max_it = 70
     nonlin_rel_tol = 1e-10
     nonlin_abs_tol = 1e-10
     nonlin_step_tol = 1e-9
     ls_max_step = 4
     
+    discretization = fem
+    integration_order = 2
     ksp_type = bcgs
    
   }
@@ -304,6 +307,13 @@ $Solver
 
 $Physics
 {
+  driftdiffusion
+  {
+
+    strain_simulation = str
+  }
+
+ 
   quantum_el 
   {
   

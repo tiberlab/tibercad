@@ -70,7 +70,17 @@ $Solver
 
 
 
+# Definition of  Model dependent physical parameters
+$Physics
+{
+ 
+
+}
+
+
 # Definition of  model-indipendent parameters of the Simulation
+
+
 $Simulation
 {
 #  searchpath = ../../materials

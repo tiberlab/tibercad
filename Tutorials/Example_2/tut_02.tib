@@ -29,8 +29,6 @@ $Models
     {
       simulation_name = dd
       physical_regions = all
-      
-      statistics =  FD
     } 
 
      physical_model recombination
@@ -113,7 +111,21 @@ $Solver
 
 
 
+# Definition of  Model dependent physical parameters
+$Physics
+{
+  driftdiffusion 
+  {
+    statistics =  FD
+  }
+
+
+}
+
+
 # Definition of  model-indipendent parameters of the Simulation
+
+
 $Simulation
 {
   meshfile = tut_02.msh

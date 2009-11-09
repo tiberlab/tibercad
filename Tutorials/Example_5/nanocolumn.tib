@@ -108,6 +108,8 @@ $Models
     options
     {          
       simulation_name = strain
+
+      physical_regions = all
     }
 
     
@@ -137,9 +139,8 @@ $Models
     options
     {          
       simulation_name = dd
-
-      strain_simulation = strain
-      statistics = FD
+      
+      physical_regions = all
     }
 
     physical_model recombination
@@ -246,6 +247,25 @@ $Solver
   
 }
 
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+  
+  macrostrain
+  {
+  
+  }
+
+  driftdiffusion 
+  {
+    strain_simulation = strain
+    statistics = FD
+  }
+  
+
+}
 
 
 # Definition of  model-indipendent parameters of the Simulation
