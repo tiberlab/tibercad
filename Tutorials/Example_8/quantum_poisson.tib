@@ -81,8 +81,14 @@ $Models
     options
     {          
       simulation_name = dd
-      
       physical_regions = all
+
+      coupling = poisson
+
+      electron_quantum_density = dens_el
+      statistics = FD
+      use_density_predictor = true
+
     }
 
     
@@ -140,10 +146,6 @@ $Solver
   }
 
  
-  driftdiffusion
-  {
-    coupling = poisson
-  }
 
 
 
@@ -203,13 +205,6 @@ $Solver
 
 $Physics
 {
-
-  driftdiffusion
-  {
-    electron_quantum_density = dens_el
-    statistics = FD
-    use_density_predictor = true
-  }
 
   quantum_el 
   {

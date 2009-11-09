@@ -91,6 +91,23 @@ $Models
     options
     {          
       simulation_name = dd
+
+      statistics = FD
+      strain_simulation = str
+
+      # where to get the quantum densities from
+      electron_quantum_density = dens_el
+      hole_quantum_density = dens_hl
+
+      # we us a predictor corrector scheme for the selfconsistent loop
+      use_density_predictor = true
+
+      # we use an embracing region to get a continuous transition from 
+      # classical to quantum density
+      embracing_length = 8e-9
+      plot_embracing_regions = true
+
+
     }
 
     physical_model recombination
@@ -200,7 +217,6 @@ $Solver
  
   driftdiffusion
   {
-    #coupling = poisson
     nonlin_step_tol = 1e-9
   }
 
@@ -314,25 +330,6 @@ $Solver
 
 $Physics
 {
-
-  driftdiffusion
-  {
-    statistics = FD
-    strain_simulation = str
-
-    # where to get the quantum densities from
-    electron_quantum_density = dens_el
-    hole_quantum_density = dens_hl
-
-    # we us a predictor corrector scheme for the selfconsistent loop
-    use_density_predictor = true
-
-    # we use an embracing region to get a continuous transition from 
-    # classical to quantum density
-    embracing_length = 8e-9
-    plot_embracing_regions = true
-  }
-
   quantum_el 
   {
     model = conduction_band    
