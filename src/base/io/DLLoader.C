@@ -1,6 +1,6 @@
 // $Id$
 
-//#include "tiber_config.h"
+#include "tiber_config.h"
 #include "DLLoader.h"
 #include "Messages.h"
 #include "TiberModule.h"
@@ -54,7 +54,11 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
   bool success = false;
 
   // construct the library name
-  string libfile = "lib" + name + ".so";
+#ifdef CYGWIN
+  string libfile = name + ".dll";
+#else
+  string libfile = name + ".so";
+#endif
 
   bool file_exists = false;
 
@@ -83,7 +87,7 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
   if (file_exists)
   {
-    Messages::debug("Trying to open " + libfile + "... ");
+    Messages::info("Trying to open " + libfile + "... ", false);
 
     // we will set it to false if something bad happens
     success = true;
@@ -109,12 +113,12 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
       success = false;
 
     if (success)
-      Messages::debug("OK");
+      Messages::info("OK");
     else
       if (error_msg != 0)
-        Messages::debug("failed: " + string(error_msg));
+        Messages::info("failed: " + string(error_msg));
       else
-        Messages::debug("failed");
+        Messages::info("failed");
   }
 
   return success;

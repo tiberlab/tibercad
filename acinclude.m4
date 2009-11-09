@@ -201,7 +201,7 @@ AC_DEFUN([TC_LICENSE],
 	  AC_SUBST([LICENSE_CHECK], ["yes"])
 	else
 	  AC_SUBST([LICENSE_CHECK], ["no"])
-	fi], [AC_SUBST([LICENSE_CHECK], ["no"])])
+	fi], [AC_SUBST([LICENSE_CHECK], ["yes"])])
 ])dnl
 
 

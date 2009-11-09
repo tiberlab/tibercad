@@ -3,8 +3,8 @@
 topdir := ../../../..
 
 # subdirectories
-subdirs		:= models
-
+subdirs	:= models
+MODULE_LDFLAGS := -L$(topdir)/lib -ltibercad
 
 include $(topdir)/Make.module
 

@@ -14,11 +14,11 @@ target :=
 MODULE_CXXFLAGS = -fvisibility=hidden
 
 
-modulelib = $(shell echo lib`grep TIBER_MODULE $(1) \
+modulelib = $(shell echo `grep TIBER_MODULE $(1) \
 		| sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`$(shared_libext))
 
 
-submodellib = $(shell echo lib`$(CPP) $(CPPFLAGS) -dM $(1) \
+submodellib = $(shell echo `$(CPP) $(CPPFLAGS) -dM $(1) \
 		| awk '/TIBER_MODULE_PREFIX/ { module = $$3; } \
 		  	END { if (module != "") printf("%s_", module) }'``grep TIBER_MODULE $(1) | sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`$(shared_libext))
 
@@ -29,7 +29,7 @@ define MODULE
 target += $(libdir)/tibermodels/$$(call modulelib, $(1))
 $(libdir)/tibermodels/$$(call modulelib, $(1)) : $$(patsubst %.C,%$$(obj-suffix),$(1)) $$(patsubst %.C,%$$(obj-suffix),$(2))
 	@echo "Linking module $$(notdir $$@) ..."
-	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) \
+	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_LDFLAGS) \
 			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
 #	$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) \
 #			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
@@ -41,7 +41,7 @@ define SUBMODEL
 target += $(libdir)/tibermodels/$$(call submodellib, $(1))
 $(libdir)/tibermodels/$$(call submodellib, $(1)) : $$(patsubst %.C,%$$(obj-suffix),$(1)) $$(patsubst %.C,%$$(obj-suffix),$(2))
 	@echo "Linking module $$(notdir $$@) ..."
-	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) \
+	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) $$(MODULE_LDFLAGS) \
 			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
 endef
 

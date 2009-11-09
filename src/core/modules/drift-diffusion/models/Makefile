@@ -2,6 +2,7 @@
 
 topdir := ../../../../..
 
+MODULE_LDFLAGS = -L$(topdir)/lib/tibermodels -ldriftdiffusion -L$(topdir)/lib -ltibercad
 include $(topdir)/Make.module
 
 

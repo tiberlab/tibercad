@@ -16,8 +16,8 @@
 
 #ifdef BUILD_TIBER_MODULES
 # ifdef CYGWIN
-#  define DLLEXPORT __declspec(dllexport)
-#  define DLLLOCAL
+#  define TBDLEXPORT __declspec(dllexport)
+#  define TBDLLOCAL
 # else
 #  ifdef GCC_HASVISIBILITY
 #    define TBDLEXPORT __attribute__ ((visibility("default")))
