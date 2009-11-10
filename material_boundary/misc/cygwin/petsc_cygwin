@@ -1,0 +1,21 @@
+export PETSC_DIR=`pwd`
+
+#CONFIGOPTS="--with-mpi=0 --CFLAGS=-fexceptions --with-fortran=0 --with-blas-lapack-lib=[/opt/liblapack.a,/opt/libblas.a,libg2c.a]"
+
+CONFIGOPTS="--with-mpi=0 --CFLAGS=-fexceptions --with-fortran=0"
+
+export PETSC_ARCH=cygwin-c-opt
+./config/configure.py  --with-debugging=0 $CONFIGOPTS
+make
+
+#export PETSC_ARCH=cygwin-c
+#./config/configure.py  --with-debugging=1 $CONFIGOPTS 
+#make
+
+export PETSC_ARCH=cygwin-c-complex-opt
+./config/configure.py --with-clanguage=C++ --with-scalar-type=complex --with-debugging=0  $CONFIGOPTS
+make
+
+#export PETSC_ARCH=cygwin-c-complex
+#./config/configure.py --with-clanguage=C++ --with-scalar-type=complex --with-debugging=1  $CONFIGOPTS
+#make

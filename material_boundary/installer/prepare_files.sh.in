@@ -1,0 +1,334 @@
+#!/bin/sh
+
+GMSHVER=2.3.0
+
+
+make_windows_package () {
+
+  mkdir -m 0755 ${files}
+  mkdir -p ${files}/doc
+  mkdir -p ${files}/examples
+  mkdir -p ${files}/materials
+
+  # copy all files
+  cp ${topdir}/bin/tibercad.exe ${files}
+  cp ${topdir}/lib/*.dll ${files}
+  cp ${topdir}/share/tibercad.ico ${files}
+  cp ${topdir}/share/Copyright.txt ${files}
+  sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/Readme.txt
+  if test -e ${topdir}/manual/tiber_manual.pdf ; then
+    cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
+  fi
+  cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
+  find ${files} -type d -name ".svn*" -exec rm -rf {} \;
+  find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
+  cp ${topdir}/materials/[^.]* ${files}/materials
+
+  curdir=`pwd`
+  cd ${files}
+  find ./materials -type f -exec unix2dos {} \;
+  find ./examples -type f -exec unix2dos {} \;
+  unix2dos Copyright.txt
+  unix2dos Readme.txt
+
+  cd ${topdir}/contrib
+  if [ ! -d gmsh-${GMSHVER} ]
+  then
+    mkdir gmsh-${GMSHVER}
+    cd gmsh-${GMSHVER}
+    wget http://www.geuz.org/gmsh/bin/Windows/gmsh-${GMSHVER}-Windows.zip
+  fi
+  if [ ! -f gmsh.pdf ]
+  then
+    wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
+  fi
+  cd ${curdir}
+  cd ${files}
+  mkdir -p tools/gmsh-${GMSHVER}
+  cd tools/gmsh-${GMSHVER}
+  unzip ${topdir}/contrib/gmsh-${GMSHVER}/gmsh-${GMSHVER}-Windows.zip
+  cp ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf .
+
+  cd $curdir
+
+  # copy cygwin system libraries
+  test ! -x /usr/bin/cygcheck.exe && exit 1
+
+  for lib in `cygcheck windows/files/tibercad.exe | awk '/cyg/'` ; do
+    cp `cygpath -u -a $lib` ${files}
+  done
+
+  return
+}
+
+
+prepare_linux_package () {
+
+  ARCH=i386-linux
+
+  mkdir -m 0755 ${files}
+  mkdir -p ${files}/bin
+  mkdir -p ${files}/${ARCH}/bin
+  mkdir -p ${files}/${ARCH}/lib/tibermodels
+  mkdir -p ${files}/doc
+  mkdir -p ${files}/examples
+  mkdir -p ${files}/share
+  mkdir -p ${files}/license
+  mkdir -p ${files}/materials
+  mkdir -p ${files}/tools
+
+  cp ${topdir}/installer/linux/tar/install ${files}
+  chmod a+x ${files}/install
+  #cp ${topdir}/installer/linux/tar/tibercad.sh ${files}/bin
+  #chmod a+x ${files}/bin/tibercad.sh
+
+  # get some of the libraries
+  libs=`ldd ${topdir}/lib/libtibercad.so | grep boost | awk '{print $3}'`
+  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep lapack | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep blas | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep stdc | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep gcc_s | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep g2c | awk '{print $3}'`"
+  cp $libs ${files}/${ARCH}/lib
+  cp ${topdir}/bin/tibercad.bin ${files}/${ARCH}/bin/tibercad
+  chmod a+x ${files}/${ARCH}/bin/tibercad
+  cp ${topdir}/lib/lib*.so* ${files}/${ARCH}/lib
+  find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/${ARCH}/lib/tibermodels \;
+  cp ${topdir}/share/tibercad.ico ${files}/share
+  cp ${topdir}/share/Copyright.txt ${files}/share
+  sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/doc/Readme.txt
+  if test -e ${topdir}/manual/tiber_manual.pdf ; then
+    cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
+  fi
+  cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
+  find ${files} -type d -name ".svn*" -exec rm -rf {} \;
+  find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
+  cp ${topdir}/materials/[^.]* ${files}/materials
+
+  if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER} ]
+  then
+    wget http://www.geuz.org/gmsh/bin/Linux/gmsh-${GMSHVER}-Linux.tgz
+    tar -C ${topdir}/contrib/ -zxf gmsh-${GMSHVER}-Linux.tgz
+    rm -f gmsh-${GMSHVER}-Linux.tgz
+  fi
+  if [ -d ${topdir}/contrib/gmsh-${GMSHVER} ]
+  then
+    if [ ! -f ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf ]
+    then
+      wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
+      mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}
+    fi
+    cp -r  ${topdir}/contrib/gmsh-${GMSHVER} ${files}/tools
+    chmod a+x ${files}/tools/gmsh-${GMSHVER}/gmsh
+  fi
+
+
+  chmod -R a+r ${files}
+  find ${files} -type d -exec chmod a+x {} \;
+
+  CWDIR=`pwd`
+  cd ${files}
+  tar --group 0 --owner 0 $MODE $ARCHIVE * 
+  cd $CWDIR
+  rm -rf $files
+
+  return
+}
+
+
+make_deb () {
+
+  bindir=debfiles/usr/bin
+  #files=debfiles/usr/share/tibercad-$version
+  files=debfiles/usr/share/tibercad
+  mkdir -m 0755 debfiles
+  mkdir -p ${bindir}
+  mkdir -p ${files}/lib/tibermodels
+  mkdir -p ${files}/bin
+  mkdir -p ${files}/doc
+  mkdir -p ${files}/examples
+  mkdir -p ${files}/license
+  mkdir -p ${files}/materials
+  mkdir -p ${files}/tools
+
+  cp ${topdir}/bin/tibercad ${files}/bin
+  chmod a+x ${files}/bin/tibercad
+  cp ${topdir}/lib/lib*.so* ${files}/lib
+  find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/lib/tibermodels \;
+  cp ${topdir}/share/tibercad.ico ${files}
+  cp ${topdir}/share/Copyright.txt ${files}
+  sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/doc/Readme.txt
+  if test -e ${topdir}/manual/tiber_manual.pdf ; then
+    cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
+  fi
+  cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
+  find ${files} -type d -name ".svn*" -exec rm -rf {} \;
+  find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
+  cp ${topdir}/materials/[^.]* ${files}/materials
+
+  if [ -d ${topdir}/contrib/gmsh-${GMSHVER} ]
+  then
+    if [ ! -f ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf ]
+    then
+      wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
+      mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}
+    fi
+    cp -r  ${topdir}/contrib/gmsh-${GMSHVER} ${files}/tools
+    chmod a+x ${files}/tools/gmsh-${GMSHVER}/gmsh
+  fi
+
+
+  #sed -e "s/<INSTALLDIR>/\/usr\/share\/tibercad/g" ${topdir}/installer/linux/tar/tibercad.sh > ${files}/bin/tibercad.sh
+  cat > ${files}/bin/TiberCAD.sh <<EOF
+#!/bin/sh
+
+VER=$version
+
+# put your installation directory here (this is done automatically by the
+# installation script)
+TIBERCADROOT=/usr/share/tibercad
+
+
+# we will need some of our libraries in LD_LIBRARY_PATH
+TIBER_LD_LIBRARY_PATH=\${TIBERCADROOT}/lib
+
+
+# the program to call
+prog=\`basename \$0\`
+progname=""
+
+case \$prog in
+
+  tibercad*)
+    TIBER_LD_LIBRARY_PATH=\${TIBER_LD_LIBRARY_PATH}:\${TIBERCADROOT}/lib/tibermodels
+    progname="tibercad"
+    executable="\${TIBERCADROOT}/bin/\$progname"
+    ;;
+
+  gmsh*)
+    progname="gmsh"
+    executable="\${TIBERCADROOT}/tools/gmsh-${GMSHVER}/\$progname"
+    ;;
+
+  *)
+    echo "\${prog}: Unknown TiberCAD tool"
+    echo "Known programs are: tibercad, gmsh"
+    ;;
+
+esac
+
+
+# prepend out LD_LIBRARY_PATH stuff
+if [ -z \$LD_LIBRARY_PATH ]
+then
+  LD_LIBRARY_PATH=\$TIBER_LD_LIBRARY_PATH
+else
+  LD_LIBRARY_PATH=\${TIBER_LD_LIBRARY_PATH}:\$LD_LIBRARY_PATH
+fi
+
+export TIBERCADROOT LD_LIBRARY_PATH
+
+
+if [ -x \$executable ]
+then
+  exec \$executable \$@
+else
+  echo "Cannot execute \$progname. Perhaps broken installation?"
+fi
+
+EOF
+
+
+  chmod a+x ${files}/bin/TiberCAD.sh
+  cd ${bindir}
+  ln -s ../share/tibercad/bin/TiberCAD.sh tibercad
+  cd ../../..
+
+  size=`du -s debfiles | awk '{print $1}'` 
+  rm -rf debfiles/DEBIAN
+  mkdir -m 0755 debfiles/DEBIAN
+  sed "s/%computed_size%/$size/" linux/deb/control > debfiles/DEBIAN/control
+  cp linux/deb/postinst debfiles/DEBIAN
+  cp linux/deb/prerm debfiles/DEBIAN
+  chmod a+x debfiles/DEBIAN/postinst
+  chmod a+x debfiles/DEBIAN/prerm
+
+  find ${files}/materials -type f | sed 's/debfiles//g' > debfiles/DEBIAN/conffiles
+
+  chmod -R a+r debfiles
+  find debfiles -type d -exec chmod a+x {} \;
+
+  cd debfiles
+  find usr/ -type f -exec md5sum {} >> DEBIAN/md5sums \;
+  cd ..
+  su -c "chown -R 0:0 debfiles && dpkg-deb --build debfiles linux && chmod a+w linux/*.deb && rm -rf debfiles"
+
+  return
+}
+
+
+
+
+
+################### main ####################################
+
+topdir=@abs_top_builddir@
+version=`cat $topdir/VERSION`
+installerdir=$topdir/installer
+
+test $# -ge 1 || exit 1
+
+files=$1/files
+
+# delete everything
+rm -rf ${files}
+
+umask 022
+
+case $1 in
+
+  windows )
+    make_windows_package ;;
+
+  linux ) {
+    name=tibercad-$version
+
+    case $2 in
+
+      deb )
+        make_deb
+        ;;
+
+      tgz )
+        files=$name
+        echo "Creating linux/${name}.tar.gz ..."
+        ARCHIVE=$installerdir/linux/${name}.tar.gz
+        MODE=-zcf
+        prepare_linux_package
+        ;;
+
+      tbz )
+        files=$name
+        echo "Creating linux/${name}.tar.bz2 ..."
+        ARCHIVE=$installerdir/linux/${name}.tar.bz2
+        MODE=-jcf
+        prepare_linux_package
+        ;;
+
+      * )
+        files=$name
+        echo "Creating linux/${name}.tar.gz ..."
+        ARCHIVE=$installerdir/linux/${name}.tar.gz
+        MODE=-zcf
+        prepare_linux_package
+        cat linux/tar/extractor linux/${name}.tar.gz > linux/${name}_installer.bin
+        chmod 0755 linux/${name}_installer.bin
+    esac
+
+  } ;;
+
+  * ) ;;
+
+esac
+
+

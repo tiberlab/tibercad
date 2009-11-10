@@ -1,0 +1,12 @@
+export PETSC_DIR=`pwd`/../petsc-2.3.3-p8
+
+rm .depend
+
+export PETSC_ARCH=cygwin-c-opt
+./configure --enable-petsc --disable-parmetis --disable-shared --enable-static --disable-vtk
+make METHOD=opt
+
+#export PETSC_ARCH=cygwin-c
+#make METHOD=dbg
+
+

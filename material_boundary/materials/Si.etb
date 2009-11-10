@@ -1,0 +1,83 @@
+# Tight binding parameters PRB v69 p115201
+
+# material type : 'simple' / 'binary' / 'ternary' / 'quaternary'
+material type = 'simple'
+
+# lattice type : 'face centered cubic' / 'hexagonal'
+lattice type = 'face centered cubic'
+
+# lattice parameters ( in Angtroms )
+lattice parameters =   5.430D0   5.430D0   5.430D0
+
+# 0 = no internal strain / 1 = maximal internal strain
+#internal strain parameter = 0.60D0
+internal strain parameter = 0.00D0
+
+# basis type : 'zinc-blende' / 'diamond' / 'wurtzite'
+basis type = 'diamond'
+
+number of ions = 1
+ions = 'Si'
+
+Si valence = 4
+# spin orbit
+
+number of spin-orbit parameters per ion = 2
+
+Si spin orbit
+'p' 0.01989D0
+'d' 0.0000D0
+
+# onsite ETB
+
+number of orbitals per ion = 4
+	
+Si onsite
+'s'    -2.15168D0   1
+'p'     4.22925D0   3
+'s*'   19.11650D0   1
+'d'    13.78950D0   5
+
+Si offset = 0.0D0
+
+
+
+# strain coefficient for the d orbitals
+Si b_d parameter = 0.443D0
+
+# ETB couplings  integrals ##
+
+number of pairs = 1
+
+# pair <number> = 'ion1' 'ion2' <number of ETB data> 
+# <order of nearest neighbours>
+
+pair 1 = 'Si' 'Si' 21 1
+
+Si Si coupling 1
+'sss'     -1.95933D0    4.69D0 
+'sps'      3.02562D0    4.42D0
+'ss*s'    -1.52230D0    0.00D0
+'sds'     -2.28485D0    1.26D0
+'pss'      3.02562D0    4.42D0
+'pps'      4.10364D0    1.04D0
+'ps*s'     3.15565D0    1.39D0
+'pds'     -1.35554D0    1.20D0
+'s*ss'    -1.52230D0    0.00D0
+'s*ps'     3.15565D0    1.39D0 
+'s*s*s'   -4.24135D0    0.00D0
+'s*ds'    -0.80993D0    1.45D0 
+'dss'     -2.28485D0    1.26D0 
+'dps'     -1.35554D0    1.20D0 
+'ds*s'    -0.80993D0    1.45D0 
+'dds'     -1.68136D0    0.00D0
+'ppp'     -1.51801D0    4.67D0
+'pdp'      2.38479D0    1.15D0 
+'dpp'      2.38479D0    1.15D0
+'ddp'      2.58880D0    0.00D0
+'ddd'     -1.81400D0    0.00D0    
+
+Si Si pair reference distance 1 = 2.351259D0
+
+Si min cutoff = 0.D0
+Si max cutoff = 1.5D0

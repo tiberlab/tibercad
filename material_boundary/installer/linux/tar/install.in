@@ -1,0 +1,418 @@
+#!/bin/bash
+
+TIBERVER=@TIBERVERSION@
+
+ARCH=i386-linux
+
+GMSHVER=2.3.0
+
+
+
+install_gmsh ()
+{
+
+  echo "Installing GMSH to ${instpath}/tools/gmsh-$GMSHVER"
+  install_files tools ${instpath}
+
+  here=`pwd`
+
+  cd ${instpath}/bin && ln -s TiberCAD.sh gmsh
+  mkdir -p ${instpath}/man/man.1
+  cd ${instpath}/man/man.1 && ln -s ${instpath}/tools/gmsh-$GMSHVER/gmsh.1 gmsh.1
+
+  echo "- ${instpath}/bin/gmsh" >> ${instpath}/files.lst
+  echo "- ${instpath}/man/man.1/gmsh.1" >> ${instpath}/files.lst
+  echo "- ${instpath}/man/man.1" >> ${instpath}/files.lst
+
+
+  echo ""
+  echo "Create a link to gmsh in "
+  echo " 1. /usr/local/bin"
+  echo " 2. /usr/bin"
+  echo " 3. none"
+  echo -n "Your choice [1]: "
+
+  read answer
+
+  bindir=/usr/local/bin
+  case $answer in
+    2) bindir=/usr/bin ;;
+    3) bindir= ;;
+    *) ;;
+  esac
+
+  if [ ! -z $bindir ]
+  then
+    cd $bindir
+    target=gmsh
+    if [ -L gmsh ]
+    then
+      target=`ls -l gmsh | awk -F '>' '{print $2}' | grep "${instpath}/tools"`
+    fi
+
+    if [ -z $target ] || [ -f gmsh ]
+    then
+      echo "GMSH seems already installed. I will not create the link."
+    else
+      rm -f gmsh
+      ln -s ${instpath}/bin/gmsh gmsh
+      echo "- $bindir/gmsh" >> ${instpath}/files.lst
+    fi
+  fi
+
+  cd $here
+}
+
+
+backup_files ()
+{
+  src=$1
+  dst=$2
+
+  for file in `find $src -type f`
+  do
+    [ -e ${dst}/$file ] || continue
+
+    md5=`md5sum ${dst}/$file | awk '{print $1}'`
+    md5orig=`grep "${dst}/$file" ${dst}/files.lst | awk '{print $1}'`
+    if [ $md5 != $md5orig ]
+    then
+      cp ${dst}/$file ${dst}/${file}.old
+    fi
+  done
+}
+
+
+install_files ()
+{
+  src=$1
+  dst=$2
+
+  empty=1
+
+  for file in `find $src -type f`
+  do
+    mode=0644
+    [ -x $file ] && mode=0755
+    install -p -D --mode=$mode $file ${dst}/$file
+
+    md5sum ${dst}/$file >> ${dst}/files.lst
+    empty=0
+  done
+
+  for d in `find $src -type d`
+  do
+    echo "- $d" >> ${dst}/files.lst
+  done
+
+  [ $empty -eq 1 ] && mkdir -p ${dst}
+
+}
+
+
+
+#################################################################################
+#
+#    MAIN
+#
+#
+
+echo "###################################################"
+echo "#      TiberCAD ver. $TIBERVER  installation      "
+echo "###################################################"
+
+echo ""
+echo -n "Provide installation directory [/usr/local/tibercad-$TIBERVER]: "
+read -e instpath
+
+echo ""
+
+[ -z $instpath ] && instpath=/usr/local/tibercad-$TIBERVER
+
+echo -n "I will install to $instpath. Is this what you want? [Y/n]"
+read answer
+
+[ -z $answer ] && answer='y'
+case $answer in
+  n|no|N|No|NO) exit 0 ;;
+  *) ;;
+esac
+
+
+# try to create directory
+if [ -f $instpath ]
+then
+  echo "$instpath is an existing file and not a directory!"
+  exit 1
+fi
+
+if [ ! -d $instpath ]
+then
+  mkdir -p $instpath 2> /dev/null
+fi
+
+if [ $? -ne 0 ]
+then
+  echo "Could not create directory $instpath! Perhaps you don't have permissions?"
+  exit 1
+fi
+
+# check if we can write to $instpath
+mkdir $instpath/tibertestdir 2> /dev/null
+if [ $? -ne 0 ]
+then
+  echo "I cannot write to $instpath!"
+  exit 1
+fi
+rmdir  $instpath/tibertestdir
+
+
+echo "Starting installation to $instpath"
+echo ""
+
+# check if dir is empty
+content=`ls -A $instpath`
+if [ ! -z "$content" ]
+then
+  if [ -x $instpath/bin/tibercad ]
+  then
+    echo "You seem to have TiberCAD already installed in this directory."
+    echo "A backup copy will be made of each file you modified."
+  else
+    echo "Installation directory is not empty. It is strongly recommended to"
+    echo "install TiberCAD into its own directory."
+  fi
+  echo -n "Do you really want to proceed [y/N]? "
+  read answer
+
+  [ -z $answer ] && answer='n'
+  case $answer in
+    n|no|N|No|NO) exit 0 ;;
+    *) ;;
+  esac
+fi
+
+
+
+if [ -e ${instpath}/files.lst ]
+then
+  backup_files bin $instpath
+  backup_files materials $instpath
+  backup_files examples $instpath
+  backup_files license $instpath
+  backup_files $ARCH $instpath
+  backup_files doc $instpath
+  backup_files share $instpath
+  mv ${instpath}/files.lst ${instpath}/files.lst.old
+fi
+
+install_files bin $instpath
+install_files materials $instpath
+install_files examples $instpath
+install_files license $instpath
+install_files $ARCH $instpath
+install_files doc $instpath
+install_files share $instpath
+
+
+[ -d ${instpath}/bin ] || mkdir -p ${instpath}/bin
+
+cat > ${instpath}/bin/TiberCAD.sh <<EOF
+#!/bin/sh
+
+VER=$TIBERVER
+GMSHVER=${GMSHVER}
+ARCH=${ARCH}
+
+# put your installation directory here (this is done automatically by the
+# installation script)
+TIBERCADROOT=${instpath}
+
+
+
+# the program to call
+prog=\`basename \$0\`
+progname=""
+
+case \$prog in
+
+  tibercad*)
+    progname="tibercad"
+    executable="\${TIBERCADROOT}/\${ARCH}/bin/\$progname"
+    ;;
+
+  gmsh*)
+    progname="gmsh"
+    executable="\${TIBERCADROOT}/tools/gmsh-\${GMSHVER}/\$progname"
+    ;;
+
+  *)
+    echo "\${prog}: Unknown TiberCAD tool"
+    echo "Known programs are: tibercad, gmsh"
+    ;;
+
+esac
+
+
+# prepend our LD_LIBRARY_PATH stuff
+#TIBER_LD_LIBRARY_PATH=\${TIBERCADROOT}/\${ARCH}/lib
+#if [ -z \$LD_LIBRARY_PATH ]
+#then
+#  LD_LIBRARY_PATH=\$TIBER_LD_LIBRARY_PATH
+#else
+#  LD_LIBRARY_PATH=\${TIBER_LD_LIBRARY_PATH}:\$LD_LIBRARY_PATH
+#fi
+#export LD_LIBRARY_PATH
+
+export TIBERCADROOT
+
+
+if [ -x \$executable ]
+then
+  exec \$executable \$@
+else
+  echo "Cannot execute \$progname. Perhaps broken installation?"
+fi
+
+EOF
+chmod a+x ${instpath}/bin/TiberCAD.sh
+
+here=`pwd`
+cd ${instpath}/bin && ln -s TiberCAD.sh tibercad
+cd $here
+
+echo "- ${instpath}/bin/tibercad" >> ${instpath}/files.lst
+echo "- ${instpath}/bin/TiberCAD.sh" >> ${instpath}/files.lst
+
+
+cat > ${instpath}/bin/uninstall <<EOF
+#!/bin/sh
+
+instpath=${instpath}
+
+echo -n "Do you really want to uninstall TiberCAD ver. $TIBERVER and all of its components [y/N]? "
+read answer
+[ -z \$answer ] && answer='n'
+case \$answer in
+  y|yes|Y|YES|Yes)
+    cd \${instpath}
+    exec<\${instpath}/files.lst
+    while read line
+    do
+      md5=\`echo \$line | awk '{print \$1}'\`
+      file=\`echo \$line | awk '{print \$2}'\`
+      if [[ -f \$file ]]
+      then
+        md5new=\`md5sum \$file | awk '{print \$1}'\`
+        if [[ \$md5 == \$md5new || \$md5 == "-" ]]
+        then
+          rm -f \$file
+        fi
+      elif [[ -L \$file ]]
+      then
+        rm -f \$file
+      else
+        directory=\`echo \$file | sed 's/\${instpath}\///'\`
+        rmdir -p \$directory >& /dev/null
+      fi
+    done
+    rm -f \${instpath}/bin/uninstall
+    rm -f \${instpath}/files.lst
+    cd ..
+    rmdir -p \${instpath}/bin >& /dev/null
+
+    if [[ -d \${instpath} ]]
+    then
+      echo ""
+      echo "I could not delete all directories due to presence of modified or added files."
+      echo "You have to manually clean up \${instpath}."
+      echo ""
+    fi
+
+    echo "TiberCAD version ${TIBERVER} has been removed from your system."
+    ;;
+
+  *) ;;
+esac
+EOF
+chmod a+x ${instpath}/bin/uninstall
+
+echo ""
+echo "Create a link to tibercad in "
+echo " 1. /usr/local/bin"
+echo " 2. /usr/bin"
+echo " 3. none"
+echo -n "Your choice [1]: "
+
+read answer
+
+bindir=/usr/local/bin
+case $answer in
+  2) bindir=/usr/bin ;;
+  3) bindir= ;;
+  *) ;;
+esac
+
+if [ ! -z $bindir ]
+then
+  here=`pwd`
+  cd $bindir
+
+  if [ -L tibercad ]
+  then
+    target=`ls -l tibercad | awk -F '>' '{print $2}' | grep "${instpath}"`
+    if [ -z $target ]
+    then
+      echo "You have already a link to another TiberCAD installation. I will delete the other link!"
+      echo ""
+    fi
+    rm -f tibercad
+  fi
+    
+  if [ ! -e tibercad ]
+  then
+    ln -s ${instpath}/bin/tibercad tibercad
+    echo "- $bindir/tibercad" >> ${instpath}/files.lst
+  else
+    echo -n "You have already an executable named tibercad. I will skip and not create the link."
+    echo ""
+  fi
+
+  cd $here
+fi
+
+
+# install license file
+echo ""
+echo "You can provide the path to a license file, if you already have one."
+echo -n "license file []: "
+read -e answer
+if [ ! -f $answer ]
+then
+  echo "The path you provided cannot be used."
+  echo "Don't forget to copy your license file to $instpath/license/tibercad.lic after installation."
+else
+  if [ -z $answer ]
+  then
+    echo "Don't forget to copy your license file to $instpath/license/tibercad.lic after installation."
+  else
+    echo "Copying $answer to $instpath/license/tibercad.lic"
+    mkdir -p $instpath/license
+    cp $answer $instpath/license/tibercad.lic
+  fi
+fi
+
+
+echo ""
+echo -n "Do you want to install GMSH version $GMSHVER [Y/n]? "
+read answer
+[ -z $answer ] && answer='y'
+case $answer in
+  y|yes|Y|Yes|YES) install_gmsh ;;
+  *) ;;
+esac
+
+echo ""
+echo "Thank you for having installed TiberCAD."
+echo "Please report bugs to support@tibercad.org"
+echo ""

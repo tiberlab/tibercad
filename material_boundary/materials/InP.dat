@@ -1,0 +1,141 @@
+# InP-zb
+
+structure = zb
+
+
+# lattice constant
+[lattice] # [1]
+a = 0.58697
+
+
+[valenceband] # [1]
+E_v = -0.94
+
+
+[conductionband] # [1]
+m_G = 0.0795
+m_L_l = 0.47
+m_L_t = 0.47
+m_X_l = 0.88
+m_X_t = 0.88
+
+
+
+[bandgap] # [1]
+# 0 K values
+Eg_G = 1.424
+Eg_L = 2.014
+Eg_X = 2.384
+
+varshni_alpha_G = 0.363e-3
+varshni_beta_G =  162
+
+varshni_alpha_X = 0.363e-3
+varshni_beta_X =  162
+
+varshni_alpha_L = 0.363e-3
+varshni_beta_L =  162
+
+
+[kdotp] # [1]
+delta = 0.108
+
+gamma1 = 5.08
+gamma2 = 1.60
+gamma3 = 2.10
+
+
+[deformation_potentials] # [1]
+a_c = -6.0
+abs_def_pot_L = -3.41 # [3]
+abs_def_pot_X = 0.59  # [3] 
+uniax_def_pot_L = 11.35  # [3] 
+uniax_def_pot_X = 3.3  # [3] 
+
+a_v = 0.6 # [1]
+b = -2.0
+d = -5.0
+
+
+[permittivity] # [3]
+# static dielectric constant
+permittivity = 12.61
+
+optical_epsilon = 9.61
+
+
+# stiffness data
+[elasticity] # [1]
+C11 = 101.1
+C12 = 56.1
+C44 = 45.6
+
+# piezoelectricity
+[piezoelectricity] # [3]
+e14 = 0.056
+
+
+# mobility
+[mobility/constant] # [2]
+mu_max = (4500.0, 150.0)
+exponent = (1.5, 1.5)
+
+[mobility/doping_dependent] # [2]
+mobility_formula = 2
+mumin = (4.5e+03,	150.0)
+am    = (-1.5,	 	-1.5)
+mud   = (0.0,	 	0.0)
+ad    = (0.0, 		0.0)
+N0    = (1.0e+17, 	1.0e+17)
+aN    = (0.0,	 	0.0)
+A     = (0.0,	 	0.0)
+aA    = (0.0,	 	0.0)
+
+
+# high field dependency
+[mobility/field_dependent] # [2]
+Vsat_Formula = 2
+beta0    = (2.0, 	2.0)
+betaexp  = (0,		0)
+A_vsat   = (1.0e+07, 	1.0e+07)
+B_vsat   = (0,		0)
+vsat_min = (5.0e+05, 	5.0e+05)
+
+
+
+# SRH recombination
+[recombination/SRH] # [2]
+Etrap    = 0.0
+taumin = (0.0, 		0.0)
+taumax = (1.0e-9, 	1.0e-9)
+Nref   = (1.0e+16, 	1.0e+16)
+gamma  = (1, 		1)
+Talpha = (0,		0)
+Tcoeff = (0,		0)
+
+
+# direct recombination
+[recombination/direct] # [2]
+C = 1.2e-10
+
+
+[recombination/auger] # [2]
+# R_Auger = ( C_n n + C_p p ) ( n p - ni_eff^2)
+# with C_n,p = (A + B (T/T0) + C (T/T0)^2) (1 + H exp(-{n,p}/N0))
+#
+A	= (1.0000e-30 ,	1.0000e-30)	# [cm^6/s]
+B	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+C	= (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+H	= (0.0000e+00 ,	0.0000e+00)	# [1]
+N0	= (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
+
+
+
+[thermal_conductivity/constant]
+therm_lat_cond = 0.68
+
+
+
+
+
+

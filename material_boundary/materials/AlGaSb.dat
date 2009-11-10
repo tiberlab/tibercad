@@ -1,0 +1,33 @@
+# AlGaSb-zb
+
+alloy = 2
+structure = zb
+
+comp_A = AlSb
+comp_B = GaSb
+
+
+
+[bandgap] # [1]
+# bowing for Eg_G should be cubic with bowing parameter
+#   bow_Eg_G = -0.044 + 1.22 * x
+bow_Eg_G = 0.47 # for about 0.4
+bow_Eg_L = 0
+bow_Eg_X = 0
+
+[kdotp]
+delta = 0.3
+
+
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+n_basis_specie=2
+
+specie_1=AlGa
+specie_2=Sb
+
+[densityfunctional_tb]
+
+

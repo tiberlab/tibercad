@@ -1,0 +1,10 @@
+
+/* TiberCAD version major */
+#undef TIBERMAJORVERSION
+
+/* TiberCAD version minor */
+#undef TIBERMINORVERSION
+
+/* TiberCAD version subminor */
+#undef TIBERSUBMINORVERSION
+

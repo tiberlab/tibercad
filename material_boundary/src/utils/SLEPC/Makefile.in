@@ -1,0 +1,46 @@
+# $Id$
+
+topdir := @abs_top_builddir@
+include $(topdir)/Make.defs
+
+# reset all flags
+CFLAGS	   = 
+CXXLAGS	   = 
+FFLAGS     =
+CPPFLAGS   = 
+FPPFLAGS   =
+
+PETSC_DIR  = @COMPLEX_PETSC_DIR@
+PETSC_ARCH = @COMPLEX_PETSC_ARCH@
+
+SLEPC_DIR  = @SLEPC_DIR@
+
+CXXFLAGS += $(SLEPC_HAVE_ARPACK) -fPIC $(CC_INCLUDES) -I $(topdir)/include/utils/SLEPC
+
+
+ifneq ($(METHOD), dbg)
+PETSC_ARCH := $(PETSC_ARCH)-opt
+else
+CXXFLAGS += -g -DDEBUG -O0
+endif
+
+target := $(libdir)/libeigen_solver$(shared_libext)
+
+
+$(libdir)/libeigen_solver$(shared_libext):  EigenSolver$(obj-suffix)
+	@echo "Linking libeigen_solver$(shared_libext) ..."
+	@mkdir -p $(libdir)
+	@$(CXX) -shared -o $@ $<  \
+		-Wl,--version-script,export.map \
+		-Wl,-Bsymbolic -Wl,-Bstatic \
+		-L$(SLEPC_LIB_DIR) -lslepc \
+		$(SLEPC_EXTERNAL_LIB) \
+		-L$(PETSC_LIB_DIR) -lpetscts \
+		  -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc \
+		-Wl,-Bdynamic $(PETSC_EXTERNAL_LIB_BASIC)
+
+
+
+
+include $(SLEPC_DIR)/bmake/slepc_common_variables
+include $(topdir)/Make.rules

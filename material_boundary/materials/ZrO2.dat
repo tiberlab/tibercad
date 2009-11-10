@@ -1,0 +1,87 @@
+# ZrO2
+
+dielectric = true
+
+structure = zb
+
+# lattice constant
+[lattice]
+a = 0.540
+
+
+[valenceband]
+E_v = -2.47
+
+
+[conductionband]
+# values of Si !!
+m_G = 0.156
+m_L_t = 0.13
+m_L_l = 1.42
+m_X_t = 0.5
+m_X_l = 0.5
+
+
+
+[bandgap]
+Eg_G = 5.7
+Eg_L = 9.5
+Eg_X = 9.0
+
+
+[kdotp]
+# values of Si !!
+delta = 0.044
+
+gamma1 = 4.31
+gamma2 = 0.345
+gamma3 = 1.427
+
+
+[deformation_potentials]
+a_c = -10.44
+a_v = 2.05
+b = -2.1
+d = -4.85
+
+abs_def_pot_X = 3.35
+uniax_def_pot_X = 9.16
+abs_def_pot_L = -2.07
+uniax_def_pot_L = 16.14
+
+
+[permittivity]
+# static dielectric constant
+permittivity = 25
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+lattice_type = fcc
+
+#Basis
+
+#Number of basis specie
+n_basis_specie = 2
+#Number of basis atoms for any specie
+n_1 = 1
+n_2 = 2
+#Basis vectors T_"specie"_"#of atom"_"direction" in primitive vectors basis
+T_1_1_x = 0.0
+T_1_1_y = 0.0
+T_1_1_z = 0.0
+T_2_1_x = 0.25
+T_2_1_y = 0.25
+T_2_1_z = 0.25
+T_2_2_x = -0.25
+T_2_2_y = -0.25
+T_2_2_z = -0.25
+
+
+#Name of species
+specie_1 = Zr
+specie_2 = O
+
+[densityfunctional_tb]
+
+

@@ -1,0 +1,100 @@
+# Tight binding parameters (c) Jean Marc Jancu
+
+# compound
+
+material type = 'binary'
+
+# lattice
+
+lattice type = 'hexagonal'
+
+lattice parameters =   3.189d0   3.189d0  5.185d0
+u_parameter = 0.3768D0
+
+internal strain parameter = 0.0D0
+
+# basis
+
+basis type = 'wurtzite'
+
+number of ions = 2
+ions = 'Ga' 'N'
+
+Ga valence = 4
+N valence = 4
+
+# states
+
+number of spin-orbit parameters per ion = 2 2
+
+Ga spin orbit
+'p' 0.0410D0
+'d' 0.0000D0
+
+N spin orbit
+'p' 0.0035D0
+'d' 0.0000D0
+
+number of orbitals per ion = 5 5
+
+Ga onsite
+'s'     4.7501D0   1
+'p'    11.4501D0   3
+'s*'   35.0507D0   1
+'d15'  28.4088D0   3
+'d12'  26.9898D0   2
+
+N onsite
+'s'    -8.9379D0   1
+'p'     2.0626D0   3
+'s*'   28.1824D0   1
+'d15'  27.9433D0   3
+'d12'  29.4098D0   2
+
+Ga offset = -0.065177D0
+N offset =  -0.065177D0
+
+# strain coefficient for the d orbitals
+Ga b_d parameter = 0.0D0
+N b_d parameter = 0.0D0
+
+
+#TB_couplings
+
+number of pairs = 1
+
+pair 1 = 'N' 'Ga' 21 1
+
+N Ga coupling 1
+'sss'     -2.5495D0    3.65D0 
+'sps'      3.9210D0    4.91D0
+'ss*s'    -2.0860D0    1.98D0
+'sds'     -3.9072D0    1.02D0
+'pss'      4.0489D0    4.91D0
+'pps'      4.7429D0    4.09D0
+'ps*s'     2.0861D0    1.05D0
+'pds'     -1.9007D0    1.24D0
+'s*ss'    -3.7569D0    1.98D0
+'s*ps'     4.2911D0    1.05D0 
+'s*s*s'   -3.9997D0    0.00D0
+'s*ds'    -2.0963D0    4.32D0 
+'dss'     -1.2252D0    1.02D0 
+'dps'     -1.3286D0    1.24D0 
+'ds*s'    -1.7553D0    4.32D0 
+'dds'     -1.2016D0    2.00D0
+'ppp'     -1.4302D0    3.35D0
+'pdp'      2.2761D0    1.02D0 
+'dpp'      3.2195D0    1.02D0
+'ddp'      6.0757D0    2.00D0
+'ddd'     -4.4436D0    2.00D0    
+
+N Ga pair reference distance 1 = 1.954D0
+
+
+
+
+
+
+
+
+

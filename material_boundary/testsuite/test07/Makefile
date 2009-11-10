@@ -1,0 +1,21 @@
+# $Id$
+
+topdir := ../..
+
+inputfile = test_quantum.tib
+
+
+.PHONY: run clean distclean
+
+
+run: 
+	@echo "Running test in $(notdir $(PWD)) ..."
+	@echo ""
+	@ln -f -s $(topdir)/bin/tibercad
+	@./tibercad $(inputfile)
+
+
+clean:
+	@rm -rf *~ *.xda *.xta *.ucd tibercad output
+
+

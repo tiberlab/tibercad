@@ -1,0 +1,37 @@
+# $Id$
+#
+
+
+
+BINSTALLMAKER = @BINSTALLMAKER@
+
+
+.PHONY: linux
+linuxinstaller:
+	@echo "Preparing self extractable installer package ..."
+	@./prepare_files.sh linux
+
+.PHONY: wininstaller
+wininstaller: 
+	@echo "Preparing Windows installer package ..."
+	@./prepare_files.sh windows
+	@exec "$(BINSTALLMAKER)" windows/tibercad.bim
+	@rm -rf windows/files
+
+
+.PHONY: deb
+deb:
+	@echo "Preparing debian package ..."
+	@./prepare_files.sh linux deb
+
+#.PHONY: tgz
+#tgz:
+#	@echo "Preparing .tar.gz package ..."
+#	@./prepare_files.sh linux tgz
+
+.PHONY: tbz
+tbz:
+	@echo "Preparing .tar.bz2 package ..."
+	@./prepare_files.sh linux tbz
+
+

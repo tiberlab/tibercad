@@ -1,0 +1,99 @@
+
+# Description of  the  device physical regions
+$Device
+{
+   Region bulk 
+   {
+     material = Si
+     doping = 1e16 doping_type = donor
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+
+  model driftdiffusion
+  { 
+              
+    options
+    {
+     simulation_name = driftdiffusion
+
+     physical_regions = all
+    }
+
+
+    BC_Regions  
+    {
+      BC_Region anode
+      {
+        type = ohmic
+        voltage = @Vb
+      }
+
+      BC_Region cathode
+      {
+        type = ohmic
+        voltage = 0.0
+      }
+ 
+    }   
+
+  }  
+
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+  driftdiffusion
+  {
+    nonlinear_solver = tiber 
+ 
+  }
+
+
+  sweep
+  {
+    simulation = driftdiffusion
+    variable = Vb
+    start = 0.0
+    stop = 1
+    steps = 10
+  }
+
+}
+
+
+
+# Definition of  model-indipendent parameters of the Simulation
+$Simulation
+{
+#  searchpath = ../../materials
+  meshfile = bulk.msh
+  verbose = 2
+  dimension = 1
+  temperature = 300
+  solve = sweep
+  resultpath = output
+  output_format = grace
+  plot = (Ec, Ev,QFermi_e, ContactCurrents)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,145 @@
+\chapter*{Installation instructions}
+\addcontentsline{toc}{chapter}{Installation instructions}
+
+\newcommand{\GMSHver}{2.3.0}
+\newcommand{\instpath}{\texttt{INSTALLPATH}}
+\newcommand{\version}{\texttt{VERSION}}
+
+In the following, \version{} denotes the version number of the \TiberCAD{} release
+you downloaded and \instpath{} denotes the directory where \TiberCAD{} gets installed.
+Version \GMSHver{} of GMSH (\url{http://www.geuz.org/gmsh}) will be installed together with
+\TiberCAD. For the Linux version of GMSH you need OpenGL libraries installed on your system.
+
+\section*{Prerequisites}
+
+Get the installer package for your OS/architecture from \url{http://www.tibercad.org}
+or by contacting \mailto{support@tibercad.org}.
+Table~\ref{install:table:packages} lists the packages available for download.
+To run \TiberCAD{} you will also need a license file that you will have to copy into
+the installation directory of \TiberCAD.
+\begin{table}
+\begin{tabular}{l|p{8cm}}
+\emph{installer package name} & \emph{Target architecture} \\
+\hline  \\
+\verb+tibercad-+\textsl{version}\verb+_setup.exe+ & Windows 32-bit \\
+%\verb+tibercad_+\textsl{version}\verb+_i386.deb+ & Debian GNU/Linux 4.0 ``etch'', Intel x86 \\
+\verb+tibercad-+\textsl{version}\verb+_installer.bin+ & Linux 32-bit self-extracting installer
+\end{tabular}
+\caption{Installer packages}
+\label{install:table:packages}
+\end{table}
+
+In the Windows version, some graphical features such as graphical convergence monitors are only
+available if an X Window server is installed and running.
+
+
+
+
+\section*{Windows installation procedure}
+
+To install \TiberCAD{} in Windows, run the setup program \verb+tibercad-+\textsl{version}\verb+_setup.exe+.
+During the installation you can choose the installation directory. After finishing
+installation, copy your license file (tibercad.lic) into the \verb+license+ subdirectory
+of the \TiberCAD{} installation directory (\instpath\verb+/license+), without changing
+its filename.
+
+
+\section*{Linux installation procedure}
+
+%The installation procedure for the Linux version of \TiberCAD{} depends on your
+%distribution. Download the installer package that best fits your setup.
+To install \TiberCAD{} in Linux, download and run the self-extracting installer \verb+tibercad-+\textsl{version}\verb+_installer.bin+ and follow the installation instructions.
+
+After installation, copy your license file (tibercad.lic) into the `license'
+subdirectory of the \TiberCAD{} installation directory (\instpath/license) without
+changing the filename.
+You can also provide the license file during installation.
+
+ The standard method to launch \TiberCAD{} is by means of a shell script that is
+installed alongside the TiberCAD executable. It takes care of setting all
+necessary environment variables. If for some reason you have to run the executable
+directly, remember to set \verb+TIBERCADROOT+ to the TiberCAD installation directory
+(\instpath).% and \verb+LD_LIBRARY_PATH+ to \instpath\verb+/lib+.
+
+%\subsection*{Debian}
+
+%If you are running Debian GNU/Linux 4.0 ``etch'' on a i386 architecture, you can use the
+%Debian package \verb+tibercad_+\textsl{version}\verb+_i386.deb+.
+%Install it as root using dpkg or similar:
+%\begin{verbatim}
+%# dpkg --install tibercad_VERSION_i386.deb
+%\end{verbatim}
+
+%  The package will be installed in /usr/share/tibercad. Next, copy your
+%license file (tibercad.lic) into /usr/share/tibercad/license/ without
+%changing the filename.
+
+
+%\begin{description}
+%\item[NOTE:] The debian version of TiberCAD depends on the following Debian packages:
+% \begin{itemize}
+%   \item libboost-regex1.33.1
+%   \item libboost-filesystem1.33.1
+%   \item libblas.so.3 (provided e.g. by atlas3-base)
+%   \item liblapack.so.3 (provided e.g. by atlas3-base)
+% \end{itemize}
+%\end{description}
+
+%\subsection*{Other Linux distributions}
+
+%If you have a distribution other than Debian 4.0 ``etch'' or you want to install \TiberCAD{}
+%into a different directory, then use the .tgz or .tbz installation packages.
+%Unpack the archive, cd to the unpacked directory tibercad-\version{} and run the
+%install script.
+
+
+
+  
+
+\section*{Quick start guide}
+
+In the `examples' subdirectory you can find several examples ready to run.
+They are the same as
+the tutorials on \url{http://www.tibercad.org/documentation/tutorial/list}.
+
+\subsection*{Windows}
+
+Open Windows Explorer and go to the \TiberCAD{} installation directory. 
+If you have write permission in the installation directory, you can browse to
+an examples directory and start the simulation by double clicking the input file, e.g. bulk.tib in Example\_0.
+If not, copy the whole directory to a location in your personal area and run the
+examples from there.
+
+  If you cannot run \TiberCAD{} by double clicking an input file (*.tib), then the
+input files are probably not correctly associated with the \TiberCAD{} executable.
+In this case, try to establish the association by right-clicking the input file,
+choosing \verb+open with...+ $\rightarrow$ \verb+Choose Program...+ $\rightarrow$ \verb+Browse...+, browsing to the \TiberCAD{} installation directory and choosing the \TiberCAD{} executable, \verb+tibercad.exe+.
+A directory containing the simulation results will be created with the name provided in the input file.
+
+
+\subsection*{Linux}
+
+After the correct installation of \TiberCAD{} you should be able to run \TiberCAD{} from the command line using the command \verb+tibercad+.
+If not, you probably have to add the \verb+bin+ subdirectory of the \TiberCAD{} installation directory to your \verb+PATH+ environment variable or start the \TiberCAD{} executable using the absolute path (\instpath\verb+/bin/tibercad+).
+Copy the directory of the example you want to run, e.g. bulk\_Si, to your home
+directory or any place you have write permissions for. Change to the newly
+created directory and run \TiberCAD{} by (assuming Example\_0)
+\begin{verbatim}
+$ tibercad bulk.tib
+\end{verbatim}
+A directory containing the simulation results will be created with the name provided in the input file.
+
+
+\section*{Bug reports / Feedback}
+
+Please send bug reports, feedback or suggestions to \mailto{support@tibercad.org}.
+When submitting bug reports, please always include the full version number of \TiberCAD{} you are running.
+The full version number appears in the first line of output when running the program:
+\begin{verbatim}
+$ tibercad
+
+TiberCAD version 1.0.0-961
+
+Usage: tibercad <inputfile>
+
+\end{verbatim}

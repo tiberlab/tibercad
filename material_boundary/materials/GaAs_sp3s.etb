@@ -1,0 +1,91 @@
+# Tight binding parameters sp3s*
+# Klimeck-Boykin, Superlatt&Microstr 27 (2000), 749
+
+# material type : 'simple' / 'binary' / 'ternary' / 'quaternary'
+
+material type = 'binary'
+
+# lattice type : 'face centered cubic' / 'hexagonal'
+
+lattice type = 'face centered cubic'
+
+# lattice parameters ( in Angtroms )
+
+lattice parameters =   5.6532D0   5.6532D0   5.6532D0
+
+# 0 = no internal strain / 1 = maximal internal strain
+
+internal strain parameter = 0.00D0
+
+
+# basis type : 'zinc-blende' / 'wurtzite'
+
+basis type = 'zinc-blende'
+
+number of ions = 2
+ions = 'Ga' 'As'
+Ga valence = 4 
+As valence = 4
+
+# spin orbit
+
+number of spin-orbit parameters per ion = 1 1
+
+As spin orbit
+'p' 0.10901D0
+
+Ga spin orbit
+'p' 0.04000D0
+
+# onsite ETB
+
+number of orbitals per ion = 3 3 
+
+# Ga = c; As = a
+
+As onsite
+'s'    -3.53248D0  1
+'p'     0.27772D0  3
+'s*'   12.33930D0  1
+
+Ga onsite
+'s'    -8.11499D0  1
+'p'     4.57341D0  3
+'s*'    4.31241D0  1
+
+Ga offset = 0.0D0
+As offset = 0.0D0
+
+
+# strain coefficient for the d orbitals
+Ga b_d parameter = 0.000D0
+As b_d parameter = 0.000D0
+
+# ETB couplings
+
+number of pairs = 1
+
+pair 1 = 'As' 'Ga' 10 1
+
+As Ga coupling 1
+'sss'     -1.71913D0   3.76D0 
+'sps'      1.23811D0   2.00D0
+'pss'      4.80546D0   2.00D0
+'s*ps'     2.73499D0   2.00D0 
+'ps*s'     2.17517D0   2.00D0
+'pps'      2.87191D0   1.98D0
+'ppp'     -0.93506D0   2.16D0
+'ss*s'     0.00000D0   0.00D0
+'s*ss'     0.00000D0   0.00D0
+'s*s*s'    0.00000D0   0.00D0
+
+As Ga pair reference distance 1 = 2.447907D0
+
+# sss = ss/4 
+# sps = sp/4*sqrt(3)
+# pss = ps/4*sqrt(3) 
+# ppp = (xx - xy)/4
+# pps = (xx + 2*xy)/4
+# xx 3.008
+# xy 6.535
+# so = Delta/3

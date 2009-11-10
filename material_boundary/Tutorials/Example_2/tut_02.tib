@@ -1,0 +1,132 @@
+# diode example
+
+$Device
+{
+   
+
+   Region p_side 
+   {
+     material = Si
+     doping = 1e18 doping_type = acceptor
+   }
+
+   Region n_side 
+   {
+     material = Si
+     doping = 1e18 doping_type = donor
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+  model driftdiffusion
+  { 
+              
+    options
+    {
+      simulation_name = dd
+      physical_regions = all
+      
+      statistics =  FD
+    } 
+
+     physical_model recombination
+     { 
+       model  =  srh
+     }               
+ 
+    BC_Regions  
+    {
+      BC_Region anode
+      {
+        type = ohmic
+        voltage = @Vb[0.0]
+      }
+
+      BC_Region cathode
+      {
+        type = ohmic
+        voltage = 0.0
+      }
+ 
+    }   
+  } 
+
+
+  model thermal
+  {
+
+     options
+    { 
+      simulation_name = tt
+      physical_regions = all
+    }
+
+    physical_model heat_source
+    {
+
+      model =  drift_diffusion_dissipation
+
+      drift_diffusion_simulation = dd
+
+    }
+
+    BC_Regions
+    {
+        BC_Region anode
+   	{
+         type = heat_reservoir
+         temperature = 300
+   	}
+       
+        BC_Region cathode
+   	{
+	 type = heat_reservoir
+         temperature = 300
+	}
+     }
+  
+    
+ 
+
+   }
+
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+
+{
+  sweep
+  {
+    simulation = (dd, tt)
+    variable = Vb
+    start = 0.0
+    stop = 1.2
+    steps = 12
+  }
+}
+
+
+
+# Definition of  model-indipendent parameters of the Simulation
+$Simulation
+{
+  meshfile = tut_02.msh
+  dimension = 1
+  temperature = 300
+  solve = sweep
+  resultpath = output_tut2
+  output_format = grace
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, CurrentDensity, eMob, hMob, ContactCurrents,NetRecombination,thermal)
+
+}
+
+
+
+
+

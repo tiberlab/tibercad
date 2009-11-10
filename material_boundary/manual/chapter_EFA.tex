@@ -1,0 +1,357 @@
+\chapter{Envelope Function Approximation}
+The envelope function appriximation (EFA) simulation tool of \tibercad{} is developed in order to solve a single-particle Schr\"odinger equation for electrons and holes in a semiconductor crystal.
+This problem is an eigenvalue problem that is treated as a generalized complex eigenvalue problem 
+\begin{equation}
+	H\psi  = E S \psi,
+\end{equation}
+where $H$ and $S$ are the Hamiltonian and $S$-matrix, respectively.
+
+
+\section{Models section parameters}
+The {\bf Models} section looks like follows:
+\begin{verbatim}
+model efaschroedinger
+{
+    options
+    {
+     simulation_name = quantum_well1
+     physical_regions = (1,2)
+    }
+
+}
+\end{verbatim}
+
+The default boundary conditions of the simulation domain  are open (that is  zero flux for single-band calculation).
+It is possible to specify Dirichlet boundary conditions:
+ \begin{verbatim}
+BC_Region infinite_barrier1
+{
+     BC_reg_numb = 12
+     type = Dirichlet
+}
+\end{verbatim}
+
+There is a way to impose automatically the Dirichlet boundary conditions over all the boundary of the simulation region. This is done by the parameter
+
+\textit{Dirichlet\_bc\_everywhere} = \{true $\vert$ false\} in \textbf{Solver} section. The default value for EFA problem is true.
+
+\section{Solver parameters}
+
+There are two groups of parameters. The first  group is related to the general eigensolver problem, the second one is related to the Schr\"odinger equation.
+\subsection{Eigenvalue problem parameters}
+These parameters are common for all eigenvalue problems. Their default values may be different for different eigenvalue problems, for example for the Schroedinger equation and for the electromagnetic eigenvalue problem.
+ 
+The eigenvalue problem can be solved  by the solvers that are implemented into the SLEPc library.
+The relative parameter is
+
+\textit{solver} = \{ arnoldi $\vert$ lapack $\vert$ krylovshur \}. The default value is \texttt{krylovshur}.
+
+In the case of the lapack solver all the eigenvalues are computed. In the case of arnoldi or krylovshur solver it is necessary to specify which and how many eigenvalues have to be computed. The idea is that the iterative solver calculates several eigenvalues that a close to a specific number, reffered to as the {\textit{spectral\_shift}}. 
+The relative parameters are:
+\begin{table}[htbp]
+	\begin{tabular}{l|l}
+	\hline
+	max\_iteration\_number & maximum number of iteration, used as a stop condition   \\
+	\hline
+	eigen\_solver\_tolerance & numerical eigensolver tolerance used as a convergence criteria \\
+	\hline
+	spectral\_shift &  the closest eigenvalues to this value (eV) are found. \\
+	\hline 
+	spectrum\_inversion\_tolerance & tolerance used for linear solver  \\
+	\hline
+	\end{tabular}	
+	\caption{Iterative eigensolver parameters}
+	\label{tab:EigenParam}
+\end{table}
+
+If the spectral\_shift is not defined then it will be calculated internally from the band edges.
+
+For the iterative solvers the important parameters, that may significantly change the performance, are the \textit{Krylov subspace method} type and the \textit{preconditioner} type. 
+
+The Krylov method is defined as follows:\\
+\textit{ksp\_type} = \{  bcgsl $\vert$ gmres  $\vert$ bcgs  $\vert$ cg  
+$\vert$ richardson $\vert$ preonly  \}
+
+The \textbf{preconditioner} type is defined as follows:\\
+\textit{pc\_type} = \{  cholesky $\vert$  jacobi $\vert$  ilu  $\vert$ composite \}
+
+
+Other options:
+\begin{itemize}
+\item 
+\textit{x-periodicity} = \{ true $\vert$ \textbf{false}\} 
+\item 
+\textit{y-periodicity} = \{ true $\vert$ \textbf{false}\} 
+\item 
+\textit{z-periodicity} = \{ true $\vert$ \textbf{false}\}
+\item 
+\textit{number\_of\_eigenstates} =  number of eigenstates to be computed
+\end{itemize}
+
+ 
+ 
+
+ 
+\subsection{Schr\"odinger equation parameters}
+
+\begin{itemize}
+\item 
+\textit{particle}  = \{ el $\vert$ hl \}; specifies a particle type, according to each the eigenvalues are sorted
+\item
+\textit{strain\_model\_name} = name of the simulation that can provide elastic strain
+\item
+\textit{poisson\_model\_name} = name of the simulation that can provide electric and electrochemical potential
+\item
+\textit{heat\_model} = name of the simulation that can provide
+\item
+\textit{relative\_density\_tolerance} = relative tolerance for charge density calculation 
+\item
+\textit{initial\_eigenstates\_number} = initial eigenstates number for charge density calculation 
+\item
+\textit{convergent\_density} = \{ true $\vert$ \textbf{false} \} if true than number of eigenstates will be increased in oder to reach convergent density.
+\item 
+\textit{eigen\_number\_increase\_factor} = factor to increase eigenvalues number for the next charge density calculation 
+
+\end{itemize}
+
+
+\section{Physical Models parameters}
+
+\begin{itemize}
+\item
+\textit{particle} = \{el $\vert$ hl \}  
+\item
+\textit{model} = \{ conduction\_band $\vert$ kp \} single conduction band ($\Gamma$ point) or ${\bf k \cdot p}$.
+\item
+\textit{kp\_model} = \{ 6$\times$6 $\vert$ 8$\times$8 \}
+\end{itemize}
+
+Here,  the \textit{particle} name is  the name  of  a particle type (\textit{electron} or  \textit{hole}).
+%  quantum (efaschrodinger) model. 
+
+% If the model is \textit{kp}, \textit{kp\_model} has to be present.
+
+
+\textit{model} = \textbf{kp} $\vert$ \textbf{conduction\_band} :  ${\bf k\cdot p}$  or  single  conduction band model.
+
+If ${\bf k\cdot p}$ model is  applied, specify:
+
+\textit{kp\_model} = \textbf{6x6} $\vert$   \textbf{8x8}.
+
+\section{Output}
+\begin{itemize}
+ \item {\textbf{EigenEnergy}} Eigen energy in eV
+ \item {\textbf{EigenFunctions}} $|\psi({\bf r})|^2$ function of the eigenstate
+ \item {\textbf{Occupation}} probability to find the state occupied. It is calculated 
+assuming Fermi distribution and mean electrochemical potential and temperature: 
+\begin{gather}
+\bar \mu = \langle \psi|\mu({\bf r})|\psi \rangle \\
+\bar T = \langle \psi|T({\bf r})|\psi \rangle 
+\end{gather}
+ \item {\textbf{EnergyLevels}} graphical output used for showing the energy 
+level over the band diagram 
+\end{itemize}
+
+
+
+\chapter{Simulation opticskp}
+
+By defining  the  \textbf{opticskp}  model,  calculation of  optical  properties  is  enabled; in particular, the  optical kp matrix elements are calculated from the  quantum models specified in \textbf{Solver} section:
+\begin{verbatim}
+opticskp
+{
+    initial_state_model = QW1_electrons # quantum_el
+    final_state_model =   QW1_holes # quantum_hl
+    initial_eigenstates = (0, 19)
+    final_eigenstates   = (0, 19)
+}
+\end{verbatim}
+
+
+Here, \textit{initial\_state\_model}  and \textit{final\_state\_model} are, respectively, the quantum models (\textbf{efaschroedinger} model) associated respectively  to the initial state of optical transition (e.g. electron), and  to the final state of optical transition (e.g. hole).
+\textit{initial\_eigenstates} and \textit{final\_eigenstates}  refer to the range of  eigenstates to be taken in account for  optical calculations. 
+By specifying, in \textbf{Solver} section, a  range of energy values in this  way:
+\begin{verbatim}
+    Emin = 3.0
+    Emax  = 5.0
+    dE = 0.001
+\end{verbatim}
+the  emission optical  spectrum for  \textbf{k}=0 is  calculated.
+The spectrum is calculated in the following way:
+
+\begin{equation}
+P(\hbar \omega) = \sum_{i,j} \frac{1}{2\pi^2}  \frac{\omega^2_{ij} e^2 }{m^2 c^3}  
+|{\bf M_{i,j} e}|^2 f_i(E_i)(1 - f_j(E_j)) 
+\frac{\Gamma/2} {(\hbar \omega_{ij} - \hbar \omega)^2 + (\Gamma/2)^2} d\Omega,
+\end{equation}
+where $f_i$ and $f_j$ are the Fermi distributions.
+
+\section{Output}
+
+The output  variables for  optics  calculations are:
+\begin{itemize}
+\item \textbf{optical\_spectrum\_k\_0} : optical emission spectrum for\textbf{k}=0, calculated  through \textbf{opticskp} model
+%\item  \textbf{k-space}: output in k-space of the integrated quantity
+\end{itemize}
+
+\chapter{Simulation opticalspectrum}
+By defining the  model  \textbf{opticalspectrum},  optical matrix elements are used to calculate the  associated (emission) spectrum with a  k-space integration.
+In \textbf{Solver} section:
+\begin{verbatim}
+opticalspectrum
+{
+    k_space_dimension = 2 
+    k-space_basis = true
+    k1 = (0, 0, 0.1)
+    k2 = (0, 0.1, 0)
+
+    refine_fraction =  0.30  
+    relative_accuracy =  0.01  
+    refine_k_space = true
+
+    number_of_nodes = (2, 2) 
+    wedge = quarter
+ 
+    optical_matr_elem_model = opticskp
+
+    polarization =  (0, 0, 1)
+
+    Emin = 3.0
+    Emax  = 5.0
+    dE = 0.001
+}
+\end{verbatim}
+The parameters:
+
+\textit{k\_space\_dimension}  = \textbf{1} for 2D simulations,  
+\textbf{2}  for  1D  simulations.
+k-\textit{space\_basis} is \textbf{true} if  the k-space is  defined by means of k-vectors; if  \textbf{false}, vectors are expressed in real space  
+
+If \textit{refine\_k\_space} = \textbf{true}, that is  adaptive  k-mesh  refinement is  enabled,  all the  elements whose error is  greater than the  value (1-\textit{refine\_fraction})* (maximum error)  are going  to  be  refined.
+In this case, 'Error'  is  just the  integrated quantity.
+The  refinement will end when the \textit{relative\_accuracy} is obtained.
+
+\textit{number\_of\_nodes} = numb. of  elememts in k mesh, along each direction
+
+\textit{wedge} = half $\vert$  quarter,  to  reduce  calculation time,  by  exploiting  symmetry.
+
+\textit{optical\_matr\_elem\_model} = name of  the  \textit{opticskp} model associated 
+
+\textit{polarization} =  light polarization (vector)
+
+\textit{Emin}, \textit{Emax}, \textit{dE} :  energy range  and step of  spectrum calculation.
+
+
+
+
+
+
+\section{Output}
+
+The output  variables for  optics  calculations are:
+\begin{itemize}
+\item  \textbf{optical\_spectrum}: k-space integrated optical emission spectrum, calculated by \textbf{opticalspectrum} model
+\end{itemize}
+
+
+
+\chapter{Quantum dispersion}
+There is a possibility to calculate the dependence of quantum eigenstates on ${\bf k}$-vector.
+Such dependence is called \textit{dispersion}. The simulation name is \textbf{quantumdispersion}. Example:
+\begin{verbatim}
+ model quantumdispersion
+  {
+    options
+    {
+      simulation_name = dispersion1D_el
+      physical_regions = all
+    }
+    
+  }
+\end{verbatim}
+
+\section{Solver options}
+The dispersion of quantum states is calculate at k-points that are nodes of the mesh in k-space. 
+\begin{itemize}
+ \item \textbf{quantum\_simulation} name of the Schr\"odinger equation simulation
+ \item \textbf{min\_eigenvalue\_number}, \textbf{max\_eigenvalue\_number}: the dispersion is 
+calculated for the states number $i$ , where
+
+ ${\rm max\_eigenvalue\_number} \ge i \ge 
+{\rm min\_eigenvalue\_number} $ 
+\end{itemize}
+The rest of the parameters (wedge, k\_space\_dimension, etc...) define the k-space
+
+
+\begin{verbatim}
+ dispersion1D_el
+  {
+    quantum_simulation = quantum_el
+    min_eigenvalue_number = 0
+    max_eigenvalue_number = 5
+
+    wedge = half
+    k_space_dimension = 1
+    k1 = (0, 0.1, 0)
+    number_of_nodes = (10)
+
+    output_format = grace
+    
+  }
+\end{verbatim}
+
+\section{Output}
+The output variable name is \textbf{k-space\_dispersion}.
+The output format for the dispersion can be controlled independently of the general specification in the \Simulation{} section by redefining the \keyword{output\_format} keyword.
+
+\chapter{Quantum Density}
+\begin{verbatim}
+dens_el
+{
+    k_space_dimension = 2
+    k-space_basis = true
+    k1 = (0, 0, 0.1)
+    k2 = (0, 0.1, 0)
+    number_of_nodes = (4,4)
+    wedge = quarter
+    refine_fraction = 0.20
+    relative_accuracy = 0.01
+    refine_k_space = true
+    uniform_refinement = false
+    mesh_order = FIRST
+    
+    quantum_simulation = quantum_el
+    degeneracy = 2
+    initial_eigenstates_number = 10
+    analitic = false
+}
+\end{verbatim}
+\begin{itemize}
+ \item \textbf{quantum\_simulation} name of the Schr\"odinger simulation
+ \item \textbf{degeneracy} degeneracy of the quantum state
+ \item \textbf{initial\_eigenstates\_number} initial number of eigenstates for  the
+ Schr\"odinger equation
+ \item \textbf{analytic} = \{ true $\vert$ false \} If true then the density is calculated 
+analytically or numerically
+
+Analitcal calculation of density is done in the following way. For each eigenstate we calculate the effective mass assuming quadratic dispersion. Then the charge density is calculate as follows:
+\begin{gather}
+   \rho_{1D}({\bf r}) = g\frac{mkT}{2 \pi \hbar^2}  |\psi({\bf r})|^2 \ln \left(1 + 
+\exp \left( \pm \frac{\mu - E}{kT} \right) \right) \\      
+\rho_{2D}({\bf r}) = g|\psi({\bf r})|^2 \frac{1}{2} \sqrt{\left( \frac{mkT}{2\pi\hbar^2} \right)}  F_{-1/2}\left( \pm \frac{\mu - E}{kT}         \right),       
+\end{gather}
+where $\rho_{1D}$ and $\rho_{2D}$ are the 1D and 2D charge densities; $m$ is the averaged mass (the mass is different for each quantized state and is position independent); $g$ is the degeneracy of the states.  The $+$ sign is for electrons, the $-$ sign is for holes.
+
+Numerical calculation is done by the following formula:
+\begin{equation}
+ \rho({\bf r}) = \sum_n \frac {1}{(2\pi)^d} \int_{BZ} |\psi_{\bf k_{\|}}|({\bf r})|^2 \frac{1}{1+\exp 
+\left(\pm \frac{E-\mu}{kT} \right)} d{\bf k_{\|}}
+\end{equation}
+
+The integration is performed on a mesh in the k-space. 
+
+\end{itemize}
+
+\section{Output}
+The output parameter is \textbf{quantum\_density}.
+

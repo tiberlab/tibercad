@@ -1,0 +1,86 @@
+# $Id$
+
+# Useful rules
+
+all: $(target)
+
+
+.PHONY: clean distclean
+
+clean: clean-recursive src-clean
+
+distclean: distclean-recursive src-distclean
+
+
+
+.PHONY: all-recursive clean-recursive distclean-recursive
+all-recursive: $(subdirs)
+
+clean-recursive: $(subdirs)
+
+distclean-recursive: $(subdirs)
+
+
+.PHONY: src-clean
+src-clean:
+	@echo -n "Cleaning up ."
+	@echo `expr "$$PWD" : "$(topdir)\(.*\)"`
+	-@rm -f *.o *~ .*.d* *~
+
+.PHONY: src-distclean
+src-distclean:
+	@echo -n "Cleaning up ."
+	@echo `expr "$$PWD" : "$(topdir)\(.*\)"`
+	-@rm -f *.so *.dll *.a *.o .*.d* *~
+
+
+.PHONY: $(subdirs)
+$(subdirs):
+	@$(MAKE) --no-print-directory -C $@ $(MAKECMDGOALS)
+
+
+
+%$(obj-suffix) : %.C
+	@echo "Compiling C++ (in "$(mode)" mode) "$<" ..."
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+
+
+
+%$(obj-suffix) : %.cpp
+	@echo "Compiling C++ (in "$(mode)" mode) "$<" ..."
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+
+
+
+%$(obj-suffix): %.c
+	@echo "Compiling C (in "$(mode)" mode) "$<" ..."
+	@$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+	
+
+%$(obj-suffix): %.f
+	@echo "Compiling F77 (in "$(mode)" mode) "$<" ..."
+	@$(FC) $(FCFLAGS) $(CPPFLAGS) -c $< -o $@
+	
+
+
+.%.d: %.C %.h
+	@$(CC) -MT $(basename $<)$(obj-suffix) -MM $(CPPFLAGS) $(CXXFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\$(obj-suffix)[ :]*,\1.\*\.o : $@ ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+
+%.msh: %.geo
+	@$(GMSH) -order $(ORDER) -$(DIM) -o $@ $<
+
+
+
+%.s: %.C .%.d
+	@$(CXX) $(CPPFLAGS) -S $<
+
+
+ifeq (,$(findstring clean,$(MAKECMDGOALS)))
+ifneq (x$(srcfiles),x)
+-include $(patsubst %,.%,$(srcfiles:.C=.d))
+endif
+endif
+

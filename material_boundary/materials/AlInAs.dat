@@ -1,0 +1,53 @@
+# AlInAs-zb
+
+alloy = 2
+structure = zb
+
+comp_A = AlAs
+comp_B = InAs
+
+
+[valenceband]
+bow_E_v = -0.64 # Vurgaftman
+
+
+[conductionband]
+bow_m_G = 0.049
+
+
+[bandgap]
+bow_Eg_G = 0.7
+bow_Eg_L = 0.0
+bow_Eg_X = 0.0
+
+
+[kdotp]
+bow_delta = 0.15
+#bow_gamma1 = -11.52
+#bow_gamma2 = -10.38
+#bow_gamma3 = -11.34
+
+
+[deformation_potentials]
+bow_a_c = -1.4
+bow_abs_def_pot_L = 0.0
+bow_abs_def_pot_X = 0.0
+bow_uniax_def_pot_L = 0.0
+bow_uniax_def_pot_X = 0.0
+
+bow_a_v = 0.0
+bow_b = 0.0
+bow_d = 0.0
+
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+n_basis_specie=2
+
+specie_1=AlIn
+specie_2=As
+
+[densityfunctional_tb]
+
+

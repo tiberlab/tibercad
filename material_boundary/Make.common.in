@@ -1,0 +1,114 @@
+# $Id$
+
+topdir := @abs_top_builddir@
+
+# include common definitions
+include $(topdir)/Make.defs
+
+
+# libmesh can be found here
+#libmesh := @LIBMESH_PREFIX@
+libmesh_config := @LIBMESH_CONFIG@
+
+# use or not PARDISO
+enable_pardiso = @ENABLE_PARDISO@
+
+# do we have DFTB?
+enable_dftb = @ENABLE_DFTB@
+
+# do we have HETERO?
+enable_hetero = @ENABLE_HETERO@
+
+# do we have UPTIGHT?
+enable_uptight = @ENABLE_UPTIGHT@
+
+# do we have MKL?
+have_mkl = @HAVE_MKL@
+
+
+
+# gmsh
+GMSH := @GMSH@
+
+# some handy defaults
+#DIM := 2
+#ORDER := 1
+
+
+# the main TiberCAD library
+TIBERLIBNAME := tibercad
+export TIBERLIBNAME
+
+
+
+
+# TIBERCAD includes
+include_dirs := $(shell find $(topdir)/include -type d -a ! -path "*.svn*")
+TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
+
+
+CXXFLAGS := $(shell export METHOD=$(METHOD) && $(libmesh_config) --cxxflags) -pthread
+INCLUDE  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --include)
+LDFLAGS  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --ldflags)
+# always use -fPIC, also if libmesh was compiled without
+FCFLAGS  := -fPIC
+
+
+LDFLAGS += -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir) -L$(libdir)
+#ifeq ($(build_modules), yes)
+# LDFLAGS += -Wl,-rpath,$(libdir)/tibermodels -L$(libdir)/tibermodels
+#endif
+LDFLAGS += -ltensor -lnewmat
+
+#LDFLAGS += @GSL_LIBS@
+
+LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
+
+# TODO fortran compiler libraries
+LDFLAGS += @FCLIBS@
+
+ifeq ($(build_modules),yes)
+  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/modules/*")
+else
+  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*")
+endif
+
+
+#NON_TIBER_INCLUDES := $(INCLUDE) @GSL_CFLAGS@ @BOOST_CPPFLAGS@ -I@MKL_INCLUDEDIR@
+
+NON_TIBER_INCLUDES := $(INCLUDE) @BOOST_CPPFLAGS@ 
+
+ifeq ($(have_mkl),yes)
+ LDFLAGS += -L@MKL_LIBDIR@ -Wl,-rpath,@MKL_LIBDIR@
+ NON_TIBER_INCLUDES +=  -I@MKL_INCLUDEDIR@
+endif
+
+
+
+NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
+
+CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK
+CPPFLAGS += $(TIBER_INCLUDES)
+CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
+
+vpath %.h $(include_dirs)
+
+
+#
+# source files
+srcfiles := $(wildcard *.C)
+
+#
+# object files
+objects	:= $(patsubst %.C, %$(obj-suffix), $(srcfiles))
+target := $(objects)
+
+
+# for the following targets we set the target variable and go down
+# into subdirectories (if defined)
+.PHONY: all clean distclean
+
+
+# default target
+all: all-recursive
+

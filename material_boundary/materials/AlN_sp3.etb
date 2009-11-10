@@ -1,0 +1,87 @@
+# Tight binding parameters sp3 
+# from Jenkins-Dow PRB 39, 3317
+
+# material type : 
+
+material type = 'binary'
+
+# lattice type :
+
+lattice type = 'hexagonal'
+
+# lattice parameters ( in Angtroms )
+
+lattice parameters =   3.112d0   3.112d0  4.982d0
+u_parameter = 0.3819D0
+
+# 0 = no internal strain / 1 = maximal internal strain
+
+internal strain parameter = 0.00D0
+
+
+# basis type : 
+
+basis type = 'wurtzite'
+
+number of ions = 2
+ions = 'Al' 'N'
+Al valence = 4 
+N valence = 4
+
+# spin orbit
+
+number of spin-orbit parameters per ion = 1 1 
+
+Al spin orbit
+'p' 0.0070D0
+
+N spin orbit
+'p' 0.0035D0
+
+# onsite ETB
+
+number of orbitals per ion = 2 2    
+
+# Al = c; N = a	
+
+N onsite
+'s'    -12.1040D0  1
+'p'      3.5810D0  3
+
+Al onsite
+'s'    -0.09600D0  1
+'p'     9.41900D0  3
+
+#  used to align vb at 0.0 
+N  offset = -0.22735631D0
+Al offset = -0.22735631D0
+
+
+# strain coefficient for the d orbitals
+Al b_d parameter = 0.000D0
+N b_d parameter = 0.000D0
+
+# ETB couplings
+
+number of pairs = 1
+
+pair 1 = 'N' 'Al' 5 1
+
+N Al coupling 1
+'sss'     -2.68375D0   3.55D0 
+'sps'      3.50394D0   4.71D0
+'pss'      4.22404D0   4.71D0
+'pps'      5.69500D0   3.56D0
+'ppp'     -0.66950D0   2.25D0
+
+
+N Al pair reference distance 1 = 1.903D0
+
+# sss = ss/4 
+# sps = sp/4*sqrt(3)
+# pss = ps/4*sqrt(3) 
+# pps = (xx + 2*xy)/4
+# ppp = (xx - xy)/4
+# xx 5.808
+# xy 8.486
+

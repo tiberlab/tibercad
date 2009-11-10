@@ -1,0 +1,60 @@
+# pn-junction definition
+
+n_side_doping = 1e18
+p_side_doping = 5e17
+temperature = 300
+
+statistics = FD
+
+meshfile=diode.msh
+mesh_units = 1e-4
+scaling = 1
+linearize = false
+
+material = GaN
+in_content = 0.14
+material_dir = ../material
+electron_mobility = 200
+hole_mobility = 20
+
+recombination_time_n = 1e-11
+recombination_time_p = 2e-11
+direct_recombination = 1.1e-8
+exciton_generation = 2e-7
+
+recombination_time_x_radiative = 1e-11
+recombination_time_x_nonradiative = 1e-9
+trapping_probability = 0.8
+
+damping = 1e-20
+
+start_voltage = 0.0
+stop_voltage = 0.0
+voltage_steps = 1
+#start_voltage = 0.0
+#stop_voltage = 3.2
+#voltage_steps = 32
+
+#simulation_method = GUMMEL
+
+nonlinear_tolerance = 1e-9
+nonlinear_abs_tolerance = 1e-12
+nonlinear_ls_maxstep = 0.025
+linear_tolerance = 1e-7
+linear_abs_tolerance = 1e-15
+nonlinear_max_it = 10
+min_voltage_step = 1e-5
+linear_max_it = 1000
+integration_order = 1
+
+
+#refinement_stop_criterion=1e-4
+max_refinement_steps=0
+
+uniform_refinement=0
+
+refine_fraction=0.8
+coarsen_fraction=0.5
+max_ref_level=4
+
+

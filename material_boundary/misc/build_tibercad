@@ -1,0 +1,25 @@
+#!/bin/bash
+ 
+
+if [ ! -e common.sh ]; then
+  echo "Need configuration file (common.sh)."
+  exit 1
+fi
+
+. common.sh
+
+
+echo "Compiling TiberCAD ..."
+
+cd ../
+
+./configure \
+  --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL} \
+  --with-petsc-arch=${ARCH}-complex \
+  --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION} \
+  --disable-modules \
+  $OTHEROPTS \
+  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}
+
+
+make

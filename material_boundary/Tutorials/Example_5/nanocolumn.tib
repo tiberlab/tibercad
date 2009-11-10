@@ -1,0 +1,269 @@
+# diode example
+
+# Description of  the  device physical regions
+
+#  n   n    i   p   p
+
+#  2 - 3  - 1 - 4 - 5
+$Device
+{
+
+  Region well
+  {
+ #   mesh_regions = 1
+    material = GaN
+  
+    structure = wz
+    x-growth-direction = (1,0,-1,0)
+    y-growth-direction = (-1,2,-1,0)
+    z-growth-direction = (0,0,0,1)	
+
+
+
+   }
+  
+
+   Region  layer1
+   {
+  #   mesh_regions = 2
+     material = AlGaN
+     x = 0.2
+     structure = wz
+     x-growth-direction = (1,0,-1,0)
+     y-growth-direction = (-1,2,-1,0)
+     z-growth-direction = (0,0,0,1)
+     
+
+     doping = 1e19 doping_type = donor doping_level = 0.025 g = 2
+    
+   
+   }
+
+  
+
+   Region barrier1
+   {
+  #   mesh_regions = 3
+     material = AlGaN
+     x = 0.2
+     structure = wz
+     x-growth-direction = (1,0,-1,0)
+     y-growth-direction = (-1,2,-1,0)
+     z-growth-direction = (0,0,0,1)
+
+
+     doping = 1e15 doping_type = donor doping_level = 0.025 g = 2
+
+   
+   }
+
+
+  
+
+   Region barrier2
+   {
+ #    mesh_regions = 4
+     material = AlGaN
+     x = 0.2
+     structure = wz
+     x-growth-direction = (1,0,-1,0)
+     y-growth-direction = (-1,2,-1,0)
+     z-growth-direction = (0,0,0,1)
+
+   
+     doping = 1e15 doping_type = donor doping_level = 0.025 g = 2
+
+   }
+   
+   Region layer2
+   {
+  #   mesh_regions = 5
+     material = AlGaN
+     x = 0.2
+     structure = wz
+
+     x-growth-direction = (1,0,-1,0)
+     y-growth-direction = (-1,2,-1,0)
+     z-growth-direction = (0,0,0,1)
+
+    
+     doping = 1e19 doping_type = acceptor doping_level = 0.17 g = 4 
+
+   }
+   
+   
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models 
+{ 
+
+  
+
+  model macrostrain
+  {
+
+    options
+    {          
+      simulation_name = strain
+    }
+
+    
+    BC_Regions  
+    {
+      BC_Region substrate
+      {
+     #   BC_reg_numb = 2
+	type = substrate
+	material = AlGaN
+	x = 0.2
+	structure = wz
+
+	x-growth-direction = (1,0,-1,0)
+	y-growth-direction = (-1,2,-1,0)
+	z-growth-direction = (0,0,0,1)
+
+      }
+    }
+  }
+
+
+
+  model  driftdiffusion
+  { 
+
+    options
+    {          
+      simulation_name = dd
+
+      strain_simulation = strain
+      statistics = FD
+    }
+
+    physical_model recombination
+    { 
+      model = srh
+     
+    }                
+
+    
+    physical_model recombination
+    { 
+     model = direct
+   
+   
+    }          
+           
+     
+
+    physical_model electron_mobility
+    { 
+      model = field_dependent
+      low_field_model = doping_dependent
+     
+    }                
+
+
+    physical_model hole_mobility
+    { 
+      model = field_dependent
+      low_field_model = doping_dependent
+     
+    }                
+
+
+   BC_Regions  
+    {
+
+      BC_Region substrate  #cathode
+      {
+      #  BC_reg_numb = 2
+
+
+        type = ohmic
+
+      }
+
+
+      BC_Region anode
+      {
+#	BC_reg_numb = 1
+
+	type = ohmic
+
+	voltage = @bias
+      }
+ 
+    }   
+
+  }
+
+
+}  
+
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+ 
+
+ 
+
+  macrostrain
+  {
+    substrate = substrate
+    lin_rel_tol = 1e-6  #   1e-5
+ #   xmonitor = true
+    
+  }
+
+ 
+  driftdiffusion
+  {
+    nonlin_max_it = 15
+    nonlin_rel_tol = 1e-12
+    nonlin_step_tol = 1e-6
+    ls_max_step = 4
+  
+  }
+
+
+ sweep
+ {
+   simulation = dd
+   variable = bias
+   start = 0.0
+   stop = 4.5 #5.0
+   steps = 200 #20
+ #  plot_data = true
+ }
+
+
+
+  
+}
+
+
+
+# Definition of  model-indipendent parameters of the Simulation
+$Simulation
+{
+  #searchpath = ../../materials    
+  meshfile = nanocolumn.msh  # nanocolumn_v2.0.7_names_test1.msh  # nanocolumn_v2.0.7.msh  #nanocolumn_names_2.3.msh # nanocolumn_names.msh #nanocolumn.msh  
+  mesh_units = 1e-9
+  dimension = 3
+  temperature = 300
+
+  solve = (strain, sweep)
+  resultpath = output_nanocol_tecplot_tut_IV 
+  output_format = vtk
+  plot = (strain, polarization,Ec, Ev, QFermi_e, QFermi_h, eMob, hMob, EigenFunctions, EigenEnergy, EnergyLevels, eDensity, hDensity, CurrentDensity, eCurrent, hCurrent, ContactCurrents)
+}
+
+
+
+
+

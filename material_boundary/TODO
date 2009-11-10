@@ -1,0 +1,46 @@
+2009-09-4 Auf der Maur
+	( ) set crystal directions in Material in create() and add method
+	    to get them
+
+2009-03-25 Auf der Maur
+	(DONE) review approach for variables
+
+2009-03-20 Auf der Maur
+	(DONE) implement surface recombination
+	( ) implement more trap types
+	(DONE) cutoff in embracing region
+
+2009-02-25 Auf der Maur
+	( ) improve/document tunneling current (analytical model)
+	( ) implement inspect output
+	( ) implement doping profile/external doping
+
+2008-10-13 Auf der Maur
+	( ) in DriftDiffusion, put calculated currents into contacts
+	(DONE) implement Fowler-Nordheim for contacts
+
+2008-07-18 Auf der Maur
+	(PARTLY DONE) improve Sweep to make 'logarithmic' scale sweeps, change meaning of 
+	min/max steps
+
+2008-07-18 Auf der Maur
+	(DONE) change electrical contact for the case of two or more materials
+	touching the contact
+
+2008-07-18 Auf der Maur
+	(DONE) change surface charge model so it can work at the interior
+
+2008-06-05 Auf der Maur
+	(PARTLY DONE) improve drift-diffusion for electron-only calculations
+
+2008-06-03 Povolotskyi
+        ( ) immplement quantum Hamiltonian model for X and L valleys
+
+2008-05-30 Auf der Maur
+	(PARTLY DONE) put field dependent mobility into jacobian
+
+2008-05-28 Povolotskyi
+	( ) implement model for Zb valence band mass at small strain
+
+2008-05-28 Auf der Maur
+	(DONE) throw exception when vb DOS mass negative

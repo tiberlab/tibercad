@@ -1,0 +1,985 @@
+1000 0 125 0           
+6 DEVISE 12 ACIS 10.0 NT 24 Mon Oct 29 13:40:48 2007 
+1 9.9999999999999995e-007 1e-010 
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $125 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $126 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $127 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $128 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $129 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $130 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $131 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $132 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $133 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $134 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $135 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $136 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $137 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $138 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $139 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $140 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $141 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $142 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $143 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $144 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $145 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $146 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $147 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $148 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $149 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $150 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $151 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $152 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $153 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $154 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $155 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $156 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $157 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $158 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $159 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $160 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $161 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $162 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $163 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $164 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $165 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $166 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $167 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $168 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $169 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $170 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $171 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $172 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $173 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $174 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $175 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $176 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $177 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $178 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $179 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $180 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $181 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $182 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $183 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $184 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $185 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $186 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $187 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $188 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $189 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $190 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $191 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $192 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $193 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $194 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $195 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $196 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $197 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $198 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $199 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $200 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $201 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $202 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+eye_refinement $-1 -1 @5 grid  1 @3 tri 1 @4 surf 0 @3 adj 0 @4 grad 0 @9 postcheck 0 @4 stol -1 @4 ntol 15 @4 dsil 0 @8 flatness 0 @7 pixarea 0 @4 hmax 0 @6 gridar 0 @5 mgrid 512 @5 ugrid 0 @5 vgrid 0 @10 end_fields #
+wcs $203 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+wcs $204 -1 0 1 0 0 0 1 1 0 0 0 0 0 1 rotate no_reflect no_shear #
+wcs $205 -1 1 0 0 0 0 1 0 -1 0 0 0 0 1 rotate no_reflect no_shear #
+body $206 -1 $-1 $207 $-1 $208 T 0 0 0 10 0.17000000000000001 0 #
+body $209 -1 $-1 $210 $-1 $211 T 0 0.17000000000000001 0 10 0.19 0 #
+body $212 -1 $-1 $213 $-1 $214 T 0 0.19 0 10 0.19500000000000001 0 #
+body $215 -1 $-1 $216 $-1 $217 T 0 0.20000000000000001 0 10 0.20300000000000001 0 #
+body $218 -1 $-1 $219 $-1 $220 T 0 0.20300000000000001 0 10 0.20799999999999999 0 #
+body $221 -1 $-1 $222 $-1 $223 T 0 0.21299999999999999 0 10 0.216 0 #
+body $224 -1 $-1 $225 $-1 $226 T 0 0.22600000000000001 0 10 0.22900000000000001 0 #
+body $227 -1 $-1 $228 $-1 $229 T 0 0.216 0 10 0.221 0 #
+body $230 -1 $-1 $231 $-1 $232 T 0 0.23399999999999999 0 10 0.23899999999999999 0 #
+body $233 -1 $-1 $234 $-1 $235 T 2.5 0.23899999999999999 0 10 0.26400000000000001 0 #
+body $236 -1 $-1 $237 $-1 $238 T 0 0.26400000000000001 0 30 2.2639999999999998 0 #
+body $239 -1 $-1 $240 $-1 $241 T 0 0.23899999999999999 0 2.5 0.26400000000000001 0 #
+body $242 -1 $-1 $243 $-1 $244 T 0 -2 0 50 2.2639999999999998 0 #
+body $245 -1 $-1 $246 $-1 $247 T 0 0.19500000000000001 0 10 0.20000000000000001 0 #
+body $248 -1 $-1 $249 $-1 $250 T 0 0.20799999999999999 0 10 0.21299999999999999 0 #
+body $251 -1 $-1 $252 $-1 $253 T 0 0.221 0 10 0.22600000000000001 0 #
+body $254 -1 $-1 $255 $-1 $256 T 0 0.22900000000000001 0 10 0.23400000000000001 0 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $1 keep keep_kept ignore copy @4 base $1 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $2 keep keep_kept ignore copy @5 wp_yz $1 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $3 keep keep_kept ignore copy @5 wp_xz $1 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $5 keep keep_kept ignore copy @4 base $5 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $6 keep keep_kept ignore copy @5 wp_yz $5 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $7 keep keep_kept ignore copy @5 wp_xz $5 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $9 keep keep_kept ignore copy @4 base $9 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $10 keep keep_kept ignore copy @5 wp_yz $9 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $11 keep keep_kept ignore copy @5 wp_xz $9 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $13 keep keep_kept ignore copy @4 base $13 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $14 keep keep_kept ignore copy @5 wp_yz $13 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $15 keep keep_kept ignore copy @5 wp_xz $13 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $17 keep keep_kept ignore copy @4 base $17 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $18 keep keep_kept ignore copy @5 wp_yz $17 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $19 keep keep_kept ignore copy @5 wp_xz $17 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $21 keep keep_kept ignore copy @4 base $21 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $22 keep keep_kept ignore copy @5 wp_yz $21 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $23 keep keep_kept ignore copy @5 wp_xz $21 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $25 keep keep_kept ignore copy @4 base $25 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $26 keep keep_kept ignore copy @5 wp_yz $25 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $27 keep keep_kept ignore copy @5 wp_xz $25 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $29 keep keep_kept ignore copy @4 base $29 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $30 keep keep_kept ignore copy @5 wp_yz $29 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $31 keep keep_kept ignore copy @5 wp_xz $29 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $33 keep keep_kept ignore copy @4 base $33 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $34 keep keep_kept ignore copy @5 wp_yz $33 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $35 keep keep_kept ignore copy @5 wp_xz $33 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $37 keep keep_kept ignore copy @4 base $37 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $38 keep keep_kept ignore copy @5 wp_yz $37 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $39 keep keep_kept ignore copy @5 wp_xz $37 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $41 keep keep_kept ignore copy @4 base $41 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $42 keep keep_kept ignore copy @5 wp_yz $41 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $43 keep keep_kept ignore copy @5 wp_xz $41 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $45 keep keep_kept ignore copy @4 base $45 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $46 keep keep_kept ignore copy @5 wp_yz $45 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $47 keep keep_kept ignore copy @5 wp_xz $45 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $49 keep keep_kept ignore copy @4 base $49 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $50 keep keep_kept ignore copy @5 wp_yz $49 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $51 keep keep_kept ignore copy @5 wp_xz $49 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $53 keep keep_kept ignore copy @4 base $53 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $54 keep keep_kept ignore copy @5 wp_yz $53 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $55 keep keep_kept ignore copy @5 wp_xz $53 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $57 keep keep_kept ignore copy @4 base $57 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $58 keep keep_kept ignore copy @5 wp_yz $57 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $59 keep keep_kept ignore copy @5 wp_xz $57 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $61 keep keep_kept ignore copy @4 base $61 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $62 keep keep_kept ignore copy @5 wp_yz $61 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $63 keep keep_kept ignore copy @5 wp_xz $61 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $65 keep keep_kept ignore copy @4 base $65 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $66 keep keep_kept ignore copy @5 wp_yz $65 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $67 keep keep_kept ignore copy @5 wp_xz $65 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $69 keep keep_kept ignore copy @4 base $69 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $70 keep keep_kept ignore copy @5 wp_yz $69 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $71 keep keep_kept ignore copy @5 wp_xz $69 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $73 keep keep_kept ignore copy @4 base $73 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $74 keep keep_kept ignore copy @5 wp_yz $73 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $75 keep keep_kept ignore copy @5 wp_xz $73 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $77 keep keep_kept ignore copy @4 base $77 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $78 keep keep_kept ignore copy @5 wp_yz $77 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $79 keep keep_kept ignore copy @5 wp_xz $77 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $81 keep keep_kept ignore copy @4 base $81 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $82 keep keep_kept ignore copy @5 wp_yz $81 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $83 keep keep_kept ignore copy @5 wp_xz $81 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $85 keep keep_kept ignore copy @4 base $85 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $86 keep keep_kept ignore copy @5 wp_yz $85 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $87 keep keep_kept ignore copy @5 wp_xz $85 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $89 keep keep_kept ignore copy @4 base $89 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $90 keep keep_kept ignore copy @5 wp_yz $89 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $91 keep keep_kept ignore copy @5 wp_xz $89 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $93 keep keep_kept ignore copy @4 base $93 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $94 keep keep_kept ignore copy @5 wp_yz $93 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $95 keep keep_kept ignore copy @5 wp_xz $93 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $97 keep keep_kept ignore copy @4 base $97 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $98 keep keep_kept ignore copy @5 wp_yz $97 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $99 keep keep_kept ignore copy @5 wp_xz $97 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $101 keep keep_kept ignore copy @4 base $101 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $102 keep keep_kept ignore copy @5 wp_yz $101 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $103 keep keep_kept ignore copy @5 wp_xz $101 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $105 keep keep_kept ignore copy @4 base $105 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $106 keep keep_kept ignore copy @5 wp_yz $105 #
+entity_attrib-name_attrib-gen-attrib $-1 -1 $-1 $-1 $107 keep keep_kept ignore copy @5 wp_xz $105 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $257 $-1 $108 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $258 $108 T 0 0 0 10 0.17000000000000001 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $259 $-1 $109 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $260 $109 T 0 0.17000000000000001 0 10 0.19 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $261 $-1 $110 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $262 $110 T 0 0.19 0 10 0.19500000000000001 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $263 $-1 $111 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $264 $111 T 0 0.20000000000000001 0 10 0.20300000000000001 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $265 $-1 $112 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $266 $112 T 0 0.20300000000000001 0 10 0.20799999999999999 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $267 $-1 $113 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $268 $113 T 0 0.21299999999999999 0 10 0.216 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $269 $-1 $114 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $270 $114 T 0 0.22600000000000001 0 10 0.22900000000000001 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $271 $-1 $115 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $272 $115 T 0 0.216 0 10 0.221 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $273 $-1 $116 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $274 $116 T 0 0.23399999999999999 0 10 0.23899999999999999 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $275 $-1 $117 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $276 $117 T 2.5 0.23899999999999999 0 10 0.26400000000000001 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $277 $-1 $118 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $278 $118 T 0 0.26400000000000001 0 30 2.2639999999999998 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $279 $-1 $119 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $280 $119 T 0 0.23899999999999999 0 2.5 0.26400000000000001 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $281 $-1 $120 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $282 $120 T 0 -2 0 50 2.2639999999999998 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $283 $-1 $121 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $284 $121 T 0 0.19500000000000001 0 10 0.20000000000000001 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $285 $-1 $122 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $286 $122 T 0 0.20799999999999999 0 10 0.21299999999999999 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $287 $-1 $123 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $288 $123 T 0 0.221 0 10 0.22600000000000001 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $289 $-1 $124 keep keep_kept ignore copy @12 transmission @5 black #
+lump $-1 -1 $-1 $-1 $290 $124 T 0 0.22900000000000001 0 10 0.23400000000000001 0 #
+transform $-1 -1 1 0 0 0 1 0 0 0 1 0 0 0 1 no_rotate no_reflect no_shear #
+string_attrib-name_attrib-gen-attrib $-1 -1 $291 $206 $108 keep keep_kept ignore copy @6 region @8 region_1 #
+shell $-1 -1 $-1 $-1 $-1 $292 $-1 $207 T 0 0 0 10 0.17000000000000001 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $293 $209 $109 keep keep_kept ignore copy @6 region @8 region_2 #
+shell $-1 -1 $-1 $-1 $-1 $294 $-1 $210 T 0 0.17000000000000001 0 10 0.19 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $295 $212 $110 keep keep_kept ignore copy @6 region @8 region_3 #
+shell $-1 -1 $-1 $-1 $-1 $296 $-1 $213 T 0 0.19 0 10 0.19500000000000001 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $297 $215 $111 keep keep_kept ignore copy @6 region @8 region_4 #
+shell $-1 -1 $-1 $-1 $-1 $298 $-1 $216 T 0 0.20000000000000001 0 10 0.20300000000000001 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $299 $218 $112 keep keep_kept ignore copy @6 region @15 qwbarrier_down1 #
+shell $-1 -1 $-1 $-1 $-1 $300 $-1 $219 T 0 0.20300000000000001 0 10 0.20799999999999999 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $301 $221 $113 keep keep_kept ignore copy @6 region @8 region_6 #
+shell $-1 -1 $-1 $-1 $-1 $302 $-1 $222 T 0 0.21299999999999999 0 10 0.216 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $303 $224 $114 keep keep_kept ignore copy @6 region @8 region_8 #
+shell $-1 -1 $-1 $-1 $-1 $304 $-1 $225 T 0 0.22600000000000001 0 10 0.22900000000000001 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $305 $227 $115 keep keep_kept ignore copy @6 region @15 qwbarrier_down2 #
+shell $-1 -1 $-1 $-1 $-1 $306 $-1 $228 T 0 0.216 0 10 0.221 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $307 $230 $116 keep keep_kept ignore copy @6 region @16 region_10_lump_1 #
+shell $-1 -1 $-1 $-1 $-1 $308 $-1 $231 T 0 0.23399999999999999 0 10 0.23899999999999999 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $309 $233 $117 keep keep_kept ignore copy @6 region @8 AlInN_OX #
+shell $-1 -1 $-1 $-1 $-1 $310 $-1 $234 T 2.5 0.23899999999999999 0 10 0.26400000000000001 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $311 $236 $118 keep keep_kept ignore copy @6 region @16 region_10_lump_2 #
+shell $-1 -1 $-1 $-1 $-1 $312 $-1 $237 T 0 0.26400000000000001 0 30 2.2639999999999998 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $313 $239 $119 keep keep_kept ignore copy @6 region @5 AlInN #
+shell $-1 -1 $-1 $-1 $-1 $314 $-1 $240 T 0 0.23899999999999999 0 2.5 0.26400000000000001 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $315 $242 $120 keep keep_kept ignore copy @6 region @8 region_0 #
+shell $-1 -1 $-1 $-1 $-1 $316 $-1 $243 T 0 -2 0 50 2.2639999999999998 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $317 $245 $121 keep keep_kept ignore copy @6 region @13 qwbarrier1_up #
+shell $-1 -1 $-1 $-1 $-1 $318 $-1 $246 T 0 0.19500000000000001 0 10 0.20000000000000001 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $319 $248 $122 keep keep_kept ignore copy @6 region @13 qwbarrier_up2 #
+shell $-1 -1 $-1 $-1 $-1 $320 $-1 $249 T 0 0.20799999999999999 0 10 0.21299999999999999 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $321 $251 $123 keep keep_kept ignore copy @6 region @13 qwbarrier_up3 #
+shell $-1 -1 $-1 $-1 $-1 $322 $-1 $252 T 0 0.221 0 10 0.22600000000000001 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $323 $254 $124 keep keep_kept ignore copy @6 region @15 qwbarrier_down3 #
+shell $-1 -1 $-1 $-1 $-1 $324 $-1 $255 T 0 0.22900000000000001 0 10 0.23400000000000001 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $325 $257 $108 keep keep_kept ignore copy @8 material @3 GaN #
+face $326 -1 $-1 $-1 $327 $258 $-1 $328 forward double out T 0 0 0 10 0.17000000000000001 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $329 $259 $109 keep keep_kept ignore copy @8 material @5 AlGaN #
+face $330 -1 $-1 $-1 $331 $260 $-1 $332 forward double out T 0 0.17000000000000001 0 10 0.19 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $333 $261 $110 keep keep_kept ignore copy @8 material @3 GaN #
+face $334 -1 $-1 $-1 $335 $262 $-1 $336 forward double out T 0 0.19 0 10 0.19500000000000001 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $337 $263 $111 keep keep_kept ignore copy @8 material @5 InGaN #
+face $338 -1 $-1 $-1 $339 $264 $-1 $340 forward double out T 0 0.20000000000000001 0 10 0.20300000000000001 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $341 $265 $112 keep keep_kept ignore copy @8 material @3 GaN #
+face $342 -1 $-1 $-1 $343 $266 $-1 $344 forward double out T 0 0.20300000000000001 0 10 0.20799999999999999 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $345 $267 $113 keep keep_kept ignore copy @8 material @5 InGaN #
+face $346 -1 $-1 $-1 $347 $268 $-1 $348 forward double out T 0 0.21299999999999999 0 10 0.216 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $349 $269 $114 keep keep_kept ignore copy @8 material @5 InGaN #
+face $350 -1 $-1 $-1 $351 $270 $-1 $352 forward double out T 0 0.22600000000000001 0 10 0.22900000000000001 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $353 $271 $115 keep keep_kept ignore copy @8 material @3 GaN #
+face $354 -1 $-1 $-1 $355 $272 $-1 $356 forward double out T 0 0.216 0 10 0.221 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $357 $273 $116 keep keep_kept ignore copy @8 material @3 GaN #
+face $358 -1 $-1 $-1 $359 $274 $-1 $360 forward double out T 0 0.23399999999999999 0 10 0.23899999999999999 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $361 $275 $117 keep keep_kept ignore copy @8 material @5 Oxide #
+face $362 -1 $-1 $-1 $363 $276 $-1 $364 forward double out T 2.5 0.23899999999999999 0 10 0.26400000000000001 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $365 $277 $118 keep keep_kept ignore copy @8 material @3 GaN #
+face $366 -1 $-1 $-1 $367 $278 $-1 $368 forward double out T 0 0.26400000000000001 0 30 2.2639999999999998 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $369 $279 $119 keep keep_kept ignore copy @8 material @5 AlInN #
+face $370 -1 $-1 $-1 $371 $280 $-1 $372 forward double out T 0 0.23899999999999999 0 2.5 0.26400000000000001 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $373 $281 $120 keep keep_kept ignore copy @8 material @7 Ambient #
+face $374 -1 $-1 $-1 $375 $282 $-1 $376 forward double out T 0 -2 0 50 2.2639999999999998 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $377 $283 $121 keep keep_kept ignore copy @8 material @3 GaN #
+face $378 -1 $-1 $-1 $379 $284 $-1 $380 forward double out T 0 0.19500000000000001 0 10 0.20000000000000001 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $381 $285 $122 keep keep_kept ignore copy @8 material @3 GaN #
+face $382 -1 $-1 $-1 $383 $286 $-1 $384 forward double out T 0 0.20799999999999999 0 10 0.21299999999999999 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $385 $287 $123 keep keep_kept ignore copy @8 material @3 GaN #
+face $386 -1 $-1 $-1 $387 $288 $-1 $388 forward double out T 0 0.221 0 10 0.22600000000000001 0 F #
+string_attrib-name_attrib-gen-attrib $-1 -1 $389 $289 $124 keep keep_kept ignore copy @8 material @3 GaN #
+face $390 -1 $-1 $-1 $391 $290 $-1 $392 forward double out T 0 0.22900000000000001 0 10 0.23400000000000001 0 F #
+rgb_color-st-attrib $-1 -1 $-1 $291 $108 0.54509803921568623 0.53333333333333333 0.47058823529411764 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $292 #
+loop $-1 -1 $-1 $-1 $393 $292 T 0 0 0 10 0.17000000000000001 0 unknown #
+plane-surface $-1 -1 $-1 47.499999999999993 0.059999999999999998 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $293 $109 0.44313725490196076 0.46274509803921571 0.59999999999999998 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $294 #
+loop $-1 -1 $-1 $-1 $394 $294 T 0 0.17000000000000001 0 10 0.19 0 unknown #
+plane-surface $-1 -1 $-1 47.5 0.13000000000000003 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $295 $110 0.54509803921568623 0.53333333333333333 0.47058823529411764 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $296 #
+loop $-1 -1 $-1 $-1 $395 $296 T 0 0.19 0 10 0.19500000000000001 0 unknown #
+plane-surface $-1 -1 $-1 47.5 0.14599999999999999 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $297 $111 0.65098039215686276 0.83921568627450982 0.65098039215686276 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $298 #
+loop $-1 -1 $-1 $-1 $396 $298 T 0 0.20000000000000001 0 10 0.20300000000000001 0 unknown #
+plane-surface $-1 -1 $-1 47.5 0.15275 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $299 $112 0.54509803921568623 0.53333333333333333 0.47058823529411764 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $300 #
+loop $-1 -1 $-1 $-1 $397 $300 T 0 0.20300000000000001 0 10 0.20799999999999999 0 unknown #
+plane-surface $-1 -1 $-1 47.5 0.15950000000000003 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $301 $113 0.65098039215686276 0.83921568627450982 0.65098039215686276 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $302 #
+loop $-1 -1 $-1 $-1 $398 $302 T 0 0.21299999999999999 0 10 0.216 0 unknown #
+plane-surface $-1 -1 $-1 47.5 0.16625000000000004 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $303 $114 0.65098039215686276 0.83921568627450982 0.65098039215686276 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $304 #
+loop $-1 -1 $-1 $-1 $399 $304 T 0 0.22600000000000001 0 10 0.22900000000000001 0 unknown #
+plane-surface $-1 -1 $-1 47.5 0.17975000000000002 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $305 $115 0.54509803921568623 0.53333333333333333 0.47058823529411764 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $306 #
+loop $-1 -1 $-1 $-1 $400 $306 T 0 0.216 0 10 0.221 0 unknown #
+plane-surface $-1 -1 $-1 47.5 0.17299999999999999 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $307 $116 0.54509803921568623 0.53333333333333333 0.47058823529411764 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $308 #
+loop $-1 -1 $-1 $-1 $401 $308 T 0 0.23399999999999999 0 10 0.23899999999999999 0 unknown #
+plane-surface $-1 -1 $-1 47.499999999999993 0.31550000000000006 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $309 $117 0.49019607843137253 0.019607843137254902 0.019607843137254902 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $310 #
+loop $-1 -1 $-1 $-1 $402 $310 T 2.5 0.23899999999999999 0 10 0.26400000000000001 0 unknown #
+plane-surface $-1 -1 $-1 5.0000000000000018 0.25150000000000006 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $311 $118 0.54509803921568623 0.53333333333333333 0.47058823529411764 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $312 #
+loop $-1 -1 $-1 $-1 $403 $312 T 0 0.26400000000000001 0 30 2.2639999999999998 0 unknown #
+plane-surface $-1 -1 $-1 47.499999999999993 0.31550000000000006 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $313 $119 0.73333333333333328 0.73333333333333328 0 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $314 #
+loop $-1 -1 $-1 $-1 $404 $314 T 0 0.23899999999999999 0 2.5 0.26400000000000001 0 unknown #
+plane-surface $-1 -1 $-1 2.5 0.25149999999999995 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $315 $120 0.69019607843137254 0.88627450980392153 1 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $316 #
+loop $-1 -1 $-1 $-1 $405 $316 T 0 -2 0 50 2.2639999999999998 0 unknown #
+plane-surface $-1 -1 $-1 25 0.13199999999999995 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $317 $121 0.54509803921568623 0.53333333333333333 0.47058823529411764 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $318 #
+loop $-1 -1 $-1 $-1 $406 $318 T 0 0.19500000000000001 0 10 0.20000000000000001 0 unknown #
+plane-surface $-1 -1 $-1 5 0.19749999999999998 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $319 $122 0.54509803921568623 0.53333333333333333 0.47058823529411764 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $320 #
+loop $-1 -1 $-1 $-1 $407 $320 T 0 0.20799999999999999 0 10 0.21299999999999999 0 unknown #
+plane-surface $-1 -1 $-1 5 0.21049999999999999 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $321 $123 0.54509803921568623 0.53333333333333333 0.47058823529411764 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $322 #
+loop $-1 -1 $-1 $-1 $408 $322 T 0 0.221 0 10 0.22600000000000001 0 unknown #
+plane-surface $-1 -1 $-1 5 0.22350000000000003 0 0 0 1 1 0 0 forward_v I I I I #
+rgb_color-st-attrib $-1 -1 $-1 $323 $124 0.54509803921568623 0.53333333333333333 0.47058823529411764 #
+fmesh-eye-attrib $-1 -1 $-1 $-1 $324 #
+loop $-1 -1 $-1 $-1 $409 $324 T 0 0.22900000000000001 0 10 0.23400000000000001 0 unknown #
+plane-surface $-1 -1 $-1 5 0.23150000000000001 0 0 0 1 1 0 0 forward_v I I I I #
+coedge $-1 -1 $-1 $410 $411 $-1 $412 forward $327 $-1 #
+coedge $-1 -1 $-1 $413 $414 $-1 $415 forward $331 $-1 #
+coedge $-1 -1 $-1 $416 $417 $-1 $418 forward $335 $-1 #
+coedge $-1 -1 $-1 $419 $420 $-1 $421 forward $339 $-1 #
+coedge $-1 -1 $-1 $422 $423 $-1 $424 forward $343 $-1 #
+coedge $-1 -1 $-1 $425 $426 $-1 $427 forward $347 $-1 #
+coedge $-1 -1 $-1 $428 $429 $-1 $430 forward $351 $-1 #
+coedge $-1 -1 $-1 $431 $432 $-1 $433 forward $355 $-1 #
+coedge $-1 -1 $-1 $434 $435 $-1 $436 forward $359 $-1 #
+coedge $-1 -1 $-1 $437 $438 $-1 $439 forward $363 $-1 #
+coedge $-1 -1 $-1 $440 $441 $-1 $442 forward $367 $-1 #
+coedge $-1 -1 $-1 $443 $444 $-1 $445 forward $371 $-1 #
+coedge $-1 -1 $-1 $446 $447 $-1 $448 forward $375 $-1 #
+coedge $-1 -1 $-1 $449 $450 $-1 $451 forward $379 $-1 #
+coedge $-1 -1 $-1 $452 $453 $-1 $454 forward $383 $-1 #
+coedge $-1 -1 $-1 $455 $456 $-1 $457 forward $387 $-1 #
+coedge $-1 -1 $-1 $458 $459 $-1 $460 forward $391 $-1 #
+coedge $-1 -1 $-1 $461 $393 $-1 $462 forward $327 $-1 #
+coedge $-1 -1 $-1 $393 $463 $-1 $464 forward $327 $-1 #
+edge $465 -1 $-1 $466 0 $467 5.25 $393 $468 forward @7 unknown T 0 0 0 5.25 0 0 #
+coedge $-1 -1 $-1 $469 $394 $-1 $470 forward $331 $-1 #
+coedge $-1 -1 $-1 $394 $469 $-1 $471 forward $331 $-1 #
+edge $472 -1 $-1 $473 0 $474 10 $394 $475 forward @7 unknown T 0 0.17000000000000001 0 10 0.17000000000000001 0 #
+coedge $-1 -1 $-1 $476 $395 $-1 $477 forward $335 $-1 #
+coedge $-1 -1 $-1 $395 $476 $-1 $478 forward $335 $-1 #
+edge $479 -1 $-1 $480 -10 $481 0 $395 $482 forward @7 unknown T 0 0.19500000000000001 0 10 0.19500000000000001 0 #
+coedge $-1 -1 $-1 $483 $396 $-1 $484 forward $339 $-1 #
+coedge $-1 -1 $-1 $396 $483 $-1 $485 forward $339 $-1 #
+edge $486 -1 $-1 $487 0 $488 10 $396 $489 forward @7 unknown T 0 0.20000000000000001 0 10 0.20000000000000001 0 #
+coedge $-1 -1 $-1 $490 $397 $-1 $491 forward $343 $-1 #
+coedge $-1 -1 $-1 $397 $490 $-1 $492 forward $343 $-1 #
+edge $493 -1 $-1 $494 -10 $495 0 $397 $496 forward @7 unknown T 0 0.20799999999999999 0 10 0.20799999999999999 0 #
+coedge $-1 -1 $-1 $497 $398 $-1 $498 forward $347 $-1 #
+coedge $-1 -1 $-1 $398 $497 $-1 $499 forward $347 $-1 #
+edge $500 -1 $-1 $501 0 $502 10 $398 $503 forward @7 unknown T 0 0.21299999999999999 0 10 0.21299999999999999 0 #
+coedge $-1 -1 $-1 $504 $399 $-1 $505 forward $351 $-1 #
+coedge $-1 -1 $-1 $399 $504 $-1 $506 forward $351 $-1 #
+edge $507 -1 $-1 $508 0 $509 10 $399 $510 forward @7 unknown T 0 0.22600000000000001 0 10 0.22600000000000001 0 #
+coedge $-1 -1 $-1 $511 $400 $-1 $512 forward $355 $-1 #
+coedge $-1 -1 $-1 $400 $511 $-1 $513 forward $355 $-1 #
+edge $514 -1 $-1 $515 -10 $516 0 $400 $517 forward @7 unknown T 0 0.221 0 10 0.221 0 #
+coedge $-1 -1 $-1 $518 $401 $-1 $519 forward $359 $-1 #
+coedge $-1 -1 $-1 $401 $520 $-1 $521 forward $359 $-1 #
+edge $522 -1 $-1 $523 -10 $524 0 $401 $525 forward @7 unknown T 0 0.23400000000000001 0 10 0.23400000000000001 0 #
+coedge $-1 -1 $-1 $526 $402 $-1 $527 forward $363 $-1 #
+coedge $-1 -1 $-1 $402 $526 $-1 $528 forward $363 $-1 #
+edge $529 -1 $-1 $530 0 $531 0.025000000000000022 $402 $532 forward @7 unknown T 2.5 0.23899999999999999 0 2.5 0.26400000000000001 0 #
+coedge $-1 -1 $-1 $533 $403 $-1 $534 forward $367 $-1 #
+coedge $-1 -1 $-1 $403 $535 $-1 $536 forward $367 $-1 #
+edge $537 -1 $-1 $538 0 $539 2.5 $403 $540 forward @7 unknown T 0 0.26400000000000001 0 2.5 0.26400000000000001 0 #
+coedge $-1 -1 $-1 $541 $404 $-1 $542 forward $371 $-1 #
+coedge $-1 -1 $-1 $404 $541 $-1 $543 forward $371 $-1 #
+edge $544 -1 $-1 $545 0 $546 2.5 $404 $547 forward @7 unknown T 0 0.23899999999999999 0 2.5 0.23899999999999999 0 #
+coedge $-1 -1 $-1 $548 $405 $-1 $549 forward $375 $-1 #
+coedge $-1 -1 $-1 $405 $550 $-1 $551 forward $375 $-1 #
+edge $552 -1 $-1 $553 -1.7639999999999998 $554 0 $405 $555 forward @7 unknown T 30 0.5 0 30 2.2639999999999998 0 #
+coedge $-1 -1 $-1 $556 $406 $-1 $557 forward $379 $-1 #
+coedge $-1 -1 $-1 $406 $556 $-1 $558 forward $379 $-1 #
+edge $559 -1 $-1 $560 0 $561 10 $406 $562 forward @7 unknown T 0 0.19500000000000001 0 10 0.19500000000000001 0 #
+coedge $-1 -1 $-1 $563 $407 $-1 $564 forward $383 $-1 #
+coedge $-1 -1 $-1 $407 $563 $-1 $565 forward $383 $-1 #
+edge $566 -1 $-1 $567 0 $568 10 $407 $569 forward @7 unknown T 0 0.20799999999999999 0 10 0.20799999999999999 0 #
+coedge $-1 -1 $-1 $570 $408 $-1 $571 forward $387 $-1 #
+coedge $-1 -1 $-1 $408 $570 $-1 $572 forward $387 $-1 #
+edge $573 -1 $-1 $574 0 $575 10 $408 $576 forward @7 unknown T 0 0.221 0 10 0.221 0 #
+coedge $-1 -1 $-1 $577 $409 $-1 $578 forward $391 $-1 #
+coedge $-1 -1 $-1 $409 $577 $-1 $579 forward $391 $-1 #
+edge $580 -1 $-1 $581 0 $582 10 $409 $583 forward @7 unknown T 0 0.22900000000000001 0 10 0.22900000000000001 0 #
+coedge $-1 -1 $-1 $584 $410 $-1 $585 forward $327 $-1 #
+edge $586 -1 $-1 $467 0 $587 3.75 $410 $588 forward @7 unknown T 5.25 0 0 9 0 0 #
+coedge $-1 -1 $-1 $411 $584 $-1 $589 forward $327 $-1 #
+edge $590 -1 $-1 $591 0 $466 0.17000000000000001 $411 $592 forward @7 unknown T 0 0 0 0 0.17000000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $412 #
+vertex $-1 -1 $-1 $412 $593 #
+vertex $-1 -1 $-1 $462 $594 #
+straight-curve $-1 -1 $-1 0 0 0 1 0 0 I I #
+coedge $-1 -1 $-1 $414 $413 $-1 $595 forward $331 $-1 #
+edge $596 -1 $-1 $474 0 $597 0.01999999999999999 $413 $598 forward @7 unknown T 10 0.17000000000000001 0 10 0.19 0 #
+edge $599 -1 $-1 $600 0 $473 0.01999999999999999 $414 $601 forward @7 unknown T 0 0.17000000000000001 0 0 0.19 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $415 #
+vertex $-1 -1 $-1 $415 $602 #
+vertex $-1 -1 $-1 $415 $603 #
+straight-curve $-1 -1 $-1 0 0.17000000000000001 0 1 0 0 I I #
+coedge $-1 -1 $-1 $417 $416 $-1 $604 forward $335 $-1 #
+edge $605 -1 $-1 $481 0.0050000000000000044 $606 0.010000000000000009 $416 $607 forward @7 unknown T 0 0.19 0 0 0.19500000000000001 0 #
+edge $608 -1 $-1 $609 0 $480 0.0050000000000000044 $417 $610 forward @7 unknown T 10 0.19 0 10 0.19500000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $418 #
+vertex $-1 -1 $-1 $418 $611 #
+vertex $-1 -1 $-1 $477 $612 #
+straight-curve $-1 -1 $-1 0 0.19500000000000001 0 -1 0 0 F -10 F 0 #
+coedge $-1 -1 $-1 $420 $419 $-1 $613 forward $339 $-1 #
+edge $614 -1 $-1 $488 0 $615 0.0030000000000000027 $419 $616 forward @7 unknown T 10 0.20000000000000001 0 10 0.20300000000000001 0 #
+edge $617 -1 $-1 $618 0 $487 0.0030000000000000027 $420 $619 forward @7 unknown T 0 0.20000000000000001 0 0 0.20300000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $421 #
+vertex $-1 -1 $-1 $421 $620 #
+vertex $-1 -1 $-1 $421 $621 #
+straight-curve $-1 -1 $-1 0 0.20000000000000001 0 1 0 0 I I #
+coedge $-1 -1 $-1 $423 $422 $-1 $622 forward $343 $-1 #
+edge $623 -1 $-1 $495 0.0050000000000000044 $624 0.0099999999999999811 $422 $625 forward @7 unknown T 0 0.20300000000000001 0 0 0.20799999999999999 0 #
+edge $626 -1 $-1 $627 0 $494 0.0049999999999999767 $423 $628 forward @7 unknown T 10 0.20300000000000001 0 10 0.20799999999999999 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $424 #
+vertex $-1 -1 $-1 $424 $629 #
+vertex $-1 -1 $-1 $491 $630 #
+straight-curve $-1 -1 $-1 0 0.20799999999999999 0 -1 0 0 F -10 F 0 #
+coedge $-1 -1 $-1 $426 $425 $-1 $631 forward $347 $-1 #
+edge $632 -1 $-1 $502 0 $633 0.0030000000000000027 $425 $634 forward @7 unknown T 10 0.21299999999999999 0 10 0.216 0 #
+edge $635 -1 $-1 $636 0 $501 0.0030000000000000027 $426 $637 forward @7 unknown T 0 0.21299999999999999 0 0 0.216 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $427 #
+vertex $-1 -1 $-1 $427 $638 #
+vertex $-1 -1 $-1 $427 $639 #
+straight-curve $-1 -1 $-1 0 0.21299999999999999 0 1 0 0 I I #
+coedge $-1 -1 $-1 $429 $428 $-1 $640 forward $351 $-1 #
+edge $641 -1 $-1 $509 0 $642 0.0030000000000000027 $428 $643 forward @7 unknown T 10 0.22600000000000001 0 10 0.22900000000000001 0 #
+edge $644 -1 $-1 $645 0 $508 0.0030000000000000027 $429 $646 forward @7 unknown T 0 0.22600000000000001 0 0 0.22900000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $430 #
+vertex $-1 -1 $-1 $430 $647 #
+vertex $-1 -1 $-1 $430 $648 #
+straight-curve $-1 -1 $-1 0 0.22600000000000001 0 1 0 0 I I #
+coedge $-1 -1 $-1 $432 $431 $-1 $649 forward $355 $-1 #
+edge $650 -1 $-1 $516 0.0050000000000000044 $651 0.010000000000000009 $431 $652 forward @7 unknown T 0 0.216 0 0 0.221 0 #
+edge $653 -1 $-1 $654 0 $515 0.0050000000000000044 $432 $655 forward @7 unknown T 10 0.216 0 10 0.221 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $433 #
+vertex $-1 -1 $-1 $433 $656 #
+vertex $-1 -1 $-1 $512 $657 #
+straight-curve $-1 -1 $-1 0 0.221 0 -1 0 0 F -10 F 0 #
+coedge $-1 -1 $-1 $520 $434 $-1 $658 forward $359 $-1 #
+edge $659 -1 $-1 $524 0.0050000000000000044 $660 0.0099999999999999811 $434 $661 forward @7 unknown T 10 0.23400000000000001 0 10 0.23899999999999999 0 #
+coedge $-1 -1 $-1 $435 $518 $-1 $662 forward $359 $-1 #
+edge $663 -1 $-1 $664 2.0249999999999999 $523 2.0299999999999998 $435 $665 forward @7 unknown T 0 0.23399999999999999 0 0 0.23899999999999988 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $436 #
+vertex $-1 -1 $-1 $436 $666 #
+vertex $-1 -1 $-1 $519 $667 #
+straight-curve $-1 -1 $-1 10 0.23400000000000001 0 1 0 0 F -10 F 0 #
+coedge $-1 -1 $-1 $438 $437 $-1 $668 forward $363 $-1 #
+edge $669 -1 $-1 $531 0 $670 7.5 $437 $671 forward @7 unknown T 2.5 0.23899999999999999 0 10 0.23899999999999999 0 #
+edge $672 -1 $-1 $673 0 $530 7.5 $438 $674 forward @7 unknown T 2.5 0.26400000000000001 0 10 0.26400000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $439 #
+vertex $-1 -1 $-1 $439 $675 #
+vertex $-1 -1 $-1 $527 $676 #
+straight-curve $-1 -1 $-1 2.5 0.26400000000000001 0 0 -1 0 I I #
+coedge $-1 -1 $-1 $677 $440 $-1 $678 forward $367 $-1 #
+edge $679 -1 $-1 $539 0 $680 7.5 $440 $681 forward @7 unknown T 2.5 0.26400000000000001 0 10 0.26400000000000001 0 #
+coedge $-1 -1 $-1 $441 $682 $-1 $683 forward $367 $-1 #
+edge $684 -1 $-1 $685 0 $538 1.9999999999999998 $441 $686 forward @7 unknown T 0 0.26400000000000001 0 0 2.2639999999999998 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $442 #
+vertex $-1 -1 $-1 $442 $687 #
+vertex $-1 -1 $-1 $534 $688 #
+straight-curve $-1 -1 $-1 0 0.26400000000000001 0 1 0 0 I I #
+coedge $-1 -1 $-1 $444 $443 $-1 $689 forward $371 $-1 #
+edge $690 -1 $-1 $546 0 $691 0.025000000000000022 $443 $692 forward @7 unknown T 2.5 0.23899999999999999 0 2.5 0.26400000000000001 0 #
+edge $693 -1 $-1 $694 0 $545 0.025000000000000022 $444 $695 forward @7 unknown T 0 0.23899999999999999 0 0 0.26400000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $445 #
+vertex $-1 -1 $-1 $445 $696 #
+vertex $-1 -1 $-1 $445 $697 #
+straight-curve $-1 -1 $-1 0 0.23899999999999999 0 1 0 0 I I #
+coedge $-1 -1 $-1 $698 $446 $-1 $699 forward $375 $-1 #
+edge $700 -1 $-1 $554 -20 $701 -16.125 $446 $702 forward @7 unknown T 26.125 0.5 0 30 0.5 0 #
+coedge $-1 -1 $-1 $447 $703 $-1 $704 forward $375 $-1 #
+edge $705 -1 $-1 $706 0 $553 20 $447 $707 forward @7 unknown T 30 2.2639999999999998 0 50 2.2639999999999998 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $448 #
+vertex $-1 -1 $-1 $448 $708 #
+vertex $-1 -1 $-1 $549 $709 #
+straight-curve $-1 -1 $-1 30 0.5 0 0 -1 0 F -1.7639999999999998 F 0 #
+coedge $-1 -1 $-1 $450 $449 $-1 $710 forward $379 $-1 #
+edge $711 -1 $-1 $561 0 $712 0.0050000000000000044 $449 $713 forward @7 unknown T 10 0.19500000000000001 0 10 0.20000000000000001 0 #
+edge $714 -1 $-1 $715 0 $560 0.0050000000000000044 $450 $716 forward @7 unknown T 0 0.19500000000000001 0 0 0.20000000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $451 #
+vertex $-1 -1 $-1 $451 $717 #
+vertex $-1 -1 $-1 $451 $718 #
+straight-curve $-1 -1 $-1 0 0.19500000000000001 0 1 0 0 I I #
+coedge $-1 -1 $-1 $453 $452 $-1 $719 forward $383 $-1 #
+edge $720 -1 $-1 $568 0 $721 0.0050000000000000044 $452 $722 forward @7 unknown T 10 0.20799999999999999 0 10 0.21299999999999999 0 #
+edge $723 -1 $-1 $724 0 $567 0.0050000000000000044 $453 $725 forward @7 unknown T 0 0.20799999999999999 0 0 0.21299999999999999 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $454 #
+vertex $-1 -1 $-1 $454 $726 #
+vertex $-1 -1 $-1 $454 $727 #
+straight-curve $-1 -1 $-1 0 0.20799999999999999 0 1 0 0 I I #
+coedge $-1 -1 $-1 $456 $455 $-1 $728 forward $387 $-1 #
+edge $729 -1 $-1 $575 0 $730 0.0050000000000000044 $455 $731 forward @7 unknown T 10 0.221 0 10 0.22600000000000001 0 #
+edge $732 -1 $-1 $733 0 $574 0.0050000000000000044 $456 $734 forward @7 unknown T 0 0.221 0 0 0.22600000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $457 #
+vertex $-1 -1 $-1 $457 $735 #
+vertex $-1 -1 $-1 $457 $736 #
+straight-curve $-1 -1 $-1 0 0.221 0 1 0 0 I I #
+coedge $-1 -1 $-1 $459 $458 $-1 $737 forward $391 $-1 #
+edge $738 -1 $-1 $582 0 $739 0.0050000000000000044 $458 $740 forward @7 unknown T 10 0.22900000000000001 0 10 0.23400000000000001 0 #
+edge $741 -1 $-1 $742 0 $581 0.0050000000000000044 $459 $743 forward @7 unknown T 0 0.22900000000000001 0 0 0.23400000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $460 #
+vertex $-1 -1 $-1 $460 $744 #
+vertex $-1 -1 $-1 $460 $745 #
+straight-curve $-1 -1 $-1 0 0.22900000000000001 0 1 0 0 I I #
+coedge $-1 -1 $-1 $463 $461 $-1 $746 forward $327 $-1 #
+edge $747 -1 $-1 $587 0 $748 1 $461 $749 forward @7 unknown T 9 0 0 10 0 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $750 $-1 $462 keep keep_kept ignore copy @10 2d-contact @8 pcontact #
+vertex $-1 -1 $-1 $585 $751 #
+straight-curve $-1 -1 $-1 5.25 0 0 1 0 0 I I #
+edge $752 -1 $-1 $753 0 $591 10 $463 $754 forward @7 unknown T 0 0.17000000000000001 0 10 0.17000000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $464 #
+vertex $-1 -1 $-1 $589 $755 #
+straight-curve $-1 -1 $-1 0 0.17000000000000001 0 0 -1 0 I I #
+point $-1 -1 $-1 0 0 0 #
+point $-1 -1 $-1 5.25 0 0 #
+edge $756 -1 $-1 $597 0 $600 10 $469 $757 forward @7 unknown T 0 0.19 0 10 0.19 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $470 #
+vertex $-1 -1 $-1 $470 $758 #
+straight-curve $-1 -1 $-1 10 0.17000000000000001 0 0 1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $471 #
+vertex $-1 -1 $-1 $595 $759 #
+straight-curve $-1 -1 $-1 0 0.19 0 0 -1 0 I I #
+point $-1 -1 $-1 0 0.17000000000000001 0 #
+point $-1 -1 $-1 10 0.17000000000000001 0 #
+edge $760 -1 $-1 $606 0 $609 10 $476 $761 forward @7 unknown T 0 0.19 0 10 0.19 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $477 #
+vertex $-1 -1 $-1 $604 $762 #
+straight-curve $-1 -1 $-1 0 0.20000000000000001 0 0 -1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $478 #
+vertex $-1 -1 $-1 $604 $763 #
+straight-curve $-1 -1 $-1 10 0.19 0 0 1 0 I I #
+point $-1 -1 $-1 10 0.19500000000000001 0 #
+point $-1 -1 $-1 0 0.19500000000000001 0 #
+edge $764 -1 $-1 $615 0 $618 10 $483 $765 forward @7 unknown T 0 0.20300000000000001 0 10 0.20300000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $484 #
+vertex $-1 -1 $-1 $484 $766 #
+straight-curve $-1 -1 $-1 10 0.20000000000000001 0 0 1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $485 #
+vertex $-1 -1 $-1 $613 $767 #
+straight-curve $-1 -1 $-1 0 0.20300000000000001 0 0 -1 0 I I #
+point $-1 -1 $-1 0 0.20000000000000001 0 #
+point $-1 -1 $-1 10 0.20000000000000001 0 #
+edge $768 -1 $-1 $624 0 $627 10 $490 $769 forward @7 unknown T 0 0.20300000000000001 0 10 0.20300000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $491 #
+vertex $-1 -1 $-1 $622 $770 #
+straight-curve $-1 -1 $-1 0 0.21299999999999999 0 0 -1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $492 #
+vertex $-1 -1 $-1 $622 $771 #
+straight-curve $-1 -1 $-1 10 0.20300000000000001 0 0 1 0 I I #
+point $-1 -1 $-1 10 0.20799999999999999 0 #
+point $-1 -1 $-1 0 0.20799999999999999 0 #
+edge $772 -1 $-1 $633 0 $636 10 $497 $773 forward @7 unknown T 0 0.216 0 10 0.216 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $498 #
+vertex $-1 -1 $-1 $498 $774 #
+straight-curve $-1 -1 $-1 10 0.21299999999999999 0 0 1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $499 #
+vertex $-1 -1 $-1 $631 $775 #
+straight-curve $-1 -1 $-1 0 0.216 0 0 -1 0 I I #
+point $-1 -1 $-1 0 0.21299999999999999 0 #
+point $-1 -1 $-1 10 0.21299999999999999 0 #
+edge $776 -1 $-1 $642 0 $645 10 $504 $777 forward @7 unknown T 0 0.22900000000000001 0 10 0.22900000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $505 #
+vertex $-1 -1 $-1 $505 $778 #
+straight-curve $-1 -1 $-1 10 0.22600000000000001 0 0 1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $506 #
+vertex $-1 -1 $-1 $640 $779 #
+straight-curve $-1 -1 $-1 0 0.22900000000000001 0 0 -1 0 I I #
+point $-1 -1 $-1 0 0.22600000000000001 0 #
+point $-1 -1 $-1 10 0.22600000000000001 0 #
+edge $780 -1 $-1 $651 0 $654 10 $511 $781 forward @7 unknown T 0 0.216 0 10 0.216 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $512 #
+vertex $-1 -1 $-1 $649 $782 #
+straight-curve $-1 -1 $-1 0 0.22600000000000001 0 0 -1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $513 #
+vertex $-1 -1 $-1 $649 $783 #
+straight-curve $-1 -1 $-1 10 0.216 0 0 1 0 I I #
+point $-1 -1 $-1 10 0.221 0 #
+point $-1 -1 $-1 0 0.221 0 #
+edge $784 -1 $-1 $660 0 $785 7.5 $518 $786 forward @7 unknown T 2.5 0.23899999999999999 0 10 0.23899999999999999 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $519 #
+vertex $-1 -1 $-1 $658 $787 #
+straight-curve $-1 -1 $-1 10 0.22900000000000001 0 0 1 0 I I #
+edge $788 -1 $-1 $785 0 $664 2.5 $520 $789 forward @7 unknown T 0 0.23899999999999999 0 2.5 0.23899999999999999 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $521 #
+vertex $-1 -1 $-1 $521 $790 #
+straight-curve $-1 -1 $-1 0 2.2639999999999998 0 0 -1 0 I I #
+point $-1 -1 $-1 0 0.23400000000000001 0 #
+point $-1 -1 $-1 10 0.23400000000000001 0 #
+edge $791 -1 $-1 $670 0 $673 0.025000000000000022 $526 $792 forward @7 unknown T 10 0.23899999999999999 0 10 0.26400000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $527 #
+vertex $-1 -1 $-1 $527 $793 #
+straight-curve $-1 -1 $-1 2.5 0.23899999999999999 0 1 0 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $528 #
+vertex $-1 -1 $-1 $668 $794 #
+straight-curve $-1 -1 $-1 10 0.26400000000000001 0 -1 0 0 I I #
+point $-1 -1 $-1 2.5 0.26400000000000001 0 #
+point $-1 -1 $-1 2.5 0.23899999999999999 0 #
+coedge $-1 -1 $-1 $795 $533 $-1 $796 forward $367 $-1 #
+edge $797 -1 $-1 $680 0.035000000000000003 $798 0.27100000000000002 $533 $799 forward @7 unknown T 10 0.26400000000000001 0 10 0.5 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $534 #
+vertex $-1 -1 $-1 $678 $800 #
+straight-curve $-1 -1 $-1 2.5 0.26400000000000001 0 1 0 0 I I #
+coedge $-1 -1 $-1 $535 $801 $-1 $802 forward $367 $-1 #
+edge $803 -1 $-1 $804 0 $685 30 $535 $805 forward @7 unknown T 0 2.2639999999999998 0 30 2.2639999999999998 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $536 #
+vertex $-1 -1 $-1 $683 $806 #
+straight-curve $-1 -1 $-1 0 2.2639999999999998 0 0 -1 0 I I #
+point $-1 -1 $-1 0 0.26400000000000001 0 #
+point $-1 -1 $-1 2.5 0.26400000000000001 0 #
+edge $807 -1 $-1 $691 0 $694 2.5 $541 $808 forward @7 unknown T 0 0.26400000000000001 0 2.5 0.26400000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $542 #
+vertex $-1 -1 $-1 $542 $809 #
+straight-curve $-1 -1 $-1 2.5 0.23899999999999999 0 0 1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $543 #
+vertex $-1 -1 $-1 $689 $810 #
+straight-curve $-1 -1 $-1 0 0.26400000000000001 0 0 -1 0 I I #
+point $-1 -1 $-1 0 0.23899999999999999 0 #
+point $-1 -1 $-1 2.5 0.23899999999999999 0 #
+coedge $-1 -1 $-1 $811 $548 $-1 $812 forward $375 $-1 #
+edge $813 -1 $-1 $701 -16.125 $814 -6.625 $548 $815 forward @7 unknown T 16.625 0.5 0 26.125 0.5 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $549 #
+vertex $-1 -1 $-1 $699 $816 #
+straight-curve $-1 -1 $-1 10 0.5 0 -1 0 0 F -20 F -16.125 #
+coedge $-1 -1 $-1 $550 $817 $-1 $818 forward $375 $-1 #
+edge $819 -1 $-1 $820 0 $706 4.2639999999999993 $550 $821 forward @7 unknown T 50 -2 0 50 2.2639999999999993 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $822 $-1 $551 keep keep_kept ignore copy @10 2d-contact @8 thermode #
+vertex $-1 -1 $-1 $704 $823 #
+straight-curve $-1 -1 $-1 50 2.2639999999999998 0 -1 0 0 I I #
+point $-1 -1 $-1 30 2.2639999999999998 0 #
+point $-1 -1 $-1 30 0.5 0 #
+edge $824 -1 $-1 $712 0 $715 10 $556 $825 forward @7 unknown T 0 0.20000000000000001 0 10 0.20000000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $557 #
+vertex $-1 -1 $-1 $557 $826 #
+straight-curve $-1 -1 $-1 10 0.19500000000000001 0 0 1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $558 #
+vertex $-1 -1 $-1 $710 $827 #
+straight-curve $-1 -1 $-1 0 0.20000000000000001 0 0 -1 0 I I #
+point $-1 -1 $-1 0 0.19500000000000001 0 #
+point $-1 -1 $-1 10 0.19500000000000001 0 #
+edge $828 -1 $-1 $721 0 $724 10 $563 $829 forward @7 unknown T 0 0.21299999999999999 0 10 0.21299999999999999 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $564 #
+vertex $-1 -1 $-1 $564 $830 #
+straight-curve $-1 -1 $-1 10 0.20799999999999999 0 0 1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $565 #
+vertex $-1 -1 $-1 $719 $831 #
+straight-curve $-1 -1 $-1 0 0.21299999999999999 0 0 -1 0 I I #
+point $-1 -1 $-1 0 0.20799999999999999 0 #
+point $-1 -1 $-1 10 0.20799999999999999 0 #
+edge $832 -1 $-1 $730 0 $733 10 $570 $833 forward @7 unknown T 0 0.22600000000000001 0 10 0.22600000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $571 #
+vertex $-1 -1 $-1 $571 $834 #
+straight-curve $-1 -1 $-1 10 0.221 0 0 1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $572 #
+vertex $-1 -1 $-1 $728 $835 #
+straight-curve $-1 -1 $-1 0 0.22600000000000001 0 0 -1 0 I I #
+point $-1 -1 $-1 0 0.221 0 #
+point $-1 -1 $-1 10 0.221 0 #
+edge $836 -1 $-1 $739 0 $742 10 $577 $837 forward @7 unknown T 0 0.23400000000000001 0 10 0.23400000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $578 #
+vertex $-1 -1 $-1 $578 $838 #
+straight-curve $-1 -1 $-1 10 0.22900000000000001 0 0 1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $579 #
+vertex $-1 -1 $-1 $737 $839 #
+straight-curve $-1 -1 $-1 0 0.23400000000000001 0 0 -1 0 I I #
+point $-1 -1 $-1 0 0.22900000000000001 0 #
+point $-1 -1 $-1 10 0.22900000000000001 0 #
+edge $840 -1 $-1 $748 0 $753 0.17000000000000001 $584 $841 forward @7 unknown T 10 0 0 10 0.17000000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $585 #
+vertex $-1 -1 $-1 $585 $842 #
+straight-curve $-1 -1 $-1 9 0 0 1 0 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $586 $462 #
+point $-1 -1 $-1 9 0 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $589 #
+vertex $-1 -1 $-1 $746 $843 #
+straight-curve $-1 -1 $-1 10 0.17000000000000001 0 -1 0 0 I I #
+point $-1 -1 $-1 0 0.17000000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $595 #
+straight-curve $-1 -1 $-1 10 0.19 0 -1 0 0 I I #
+point $-1 -1 $-1 10 0.19 0 #
+point $-1 -1 $-1 0 0.19 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $604 #
+straight-curve $-1 -1 $-1 0 0.19 0 1 0 0 I I #
+point $-1 -1 $-1 0 0.19 0 #
+point $-1 -1 $-1 10 0.19 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $613 #
+straight-curve $-1 -1 $-1 10 0.20300000000000001 0 -1 0 0 I I #
+point $-1 -1 $-1 10 0.20300000000000001 0 #
+point $-1 -1 $-1 0 0.20300000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $622 #
+straight-curve $-1 -1 $-1 0 0.20300000000000001 0 1 0 0 I I #
+point $-1 -1 $-1 0 0.20300000000000001 0 #
+point $-1 -1 $-1 10 0.20300000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $631 #
+straight-curve $-1 -1 $-1 10 0.216 0 -1 0 0 I I #
+point $-1 -1 $-1 10 0.216 0 #
+point $-1 -1 $-1 0 0.216 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $640 #
+straight-curve $-1 -1 $-1 10 0.22900000000000001 0 -1 0 0 I I #
+point $-1 -1 $-1 10 0.22900000000000001 0 #
+point $-1 -1 $-1 0 0.22900000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $649 #
+straight-curve $-1 -1 $-1 0 0.216 0 1 0 0 I I #
+point $-1 -1 $-1 0 0.216 0 #
+point $-1 -1 $-1 10 0.216 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $658 #
+vertex $-1 -1 $-1 $662 $844 #
+straight-curve $-1 -1 $-1 10 0.23899999999999999 0 -1 0 0 I I #
+point $-1 -1 $-1 10 0.23899999999999999 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $662 #
+straight-curve $-1 -1 $-1 2.5 0.23899999999999999 0 -1 0 0 I I #
+point $-1 -1 $-1 0 0.23899999999999999 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $668 #
+straight-curve $-1 -1 $-1 10 0.23899999999999999 0 0 1 0 I I #
+point $-1 -1 $-1 10 0.23899999999999999 0 #
+point $-1 -1 $-1 10 0.26400000000000001 0 #
+coedge $-1 -1 $-1 $801 $677 $-1 $845 forward $367 $-1 #
+edge $846 -1 $-1 $798 0 $847 6.625 $677 $848 forward @7 unknown T 10 0.5 0 16.625 0.5 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $678 #
+vertex $-1 -1 $-1 $678 $849 #
+straight-curve $-1 -1 $-1 10 0.22900000000000001 0 0 1 0 I I #
+point $-1 -1 $-1 10 0.26400000000000001 0 #
+coedge $-1 -1 $-1 $682 $795 $-1 $850 forward $367 $-1 #
+edge $851 -1 $-1 $852 0 $804 1.7639999999999998 $682 $853 forward @7 unknown T 30 0.5 0 30 2.2639999999999998 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $854 $-1 $683 keep keep_kept ignore copy @10 2d-contact @6 strain #
+vertex $-1 -1 $-1 $802 $855 #
+straight-curve $-1 -1 $-1 30 2.2639999999999998 0 -1 0 0 I I #
+point $-1 -1 $-1 0 2.2639999999999998 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $689 #
+straight-curve $-1 -1 $-1 2.5 0.26400000000000001 0 -1 0 0 I I #
+point $-1 -1 $-1 2.5 0.26400000000000001 0 #
+point $-1 -1 $-1 0 0.26400000000000001 0 #
+coedge $-1 -1 $-1 $856 $698 $-1 $857 forward $375 $-1 #
+edge $858 -1 $-1 $814 -6.625 $859 0 $698 $860 forward @7 unknown T 10 0.5 0 16.625 0.5 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $699 #
+vertex $-1 -1 $-1 $812 $861 #
+straight-curve $-1 -1 $-1 10 0.5 0 -1 0 0 F -16.125 F -6.625 #
+point $-1 -1 $-1 26.125 0.5 0 #
+coedge $-1 -1 $-1 $703 $862 $-1 $863 forward $375 $-1 #
+edge $864 -1 $-1 $865 0 $820 50 $703 $866 forward @7 unknown T 0 -2 0 50 -2 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $867 $-1 $704 keep keep_kept ignore copy @10 2d-contact @8 thermode #
+vertex $-1 -1 $-1 $818 $868 #
+straight-curve $-1 -1 $-1 50 -2 0 0 1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $705 $551 #
+point $-1 -1 $-1 50 2.2639999999999998 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $710 #
+straight-curve $-1 -1 $-1 10 0.20000000000000001 0 -1 0 0 I I #
+point $-1 -1 $-1 10 0.20000000000000001 0 #
+point $-1 -1 $-1 0 0.20000000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $719 #
+straight-curve $-1 -1 $-1 10 0.21299999999999999 0 -1 0 0 I I #
+point $-1 -1 $-1 10 0.21299999999999999 0 #
+point $-1 -1 $-1 0 0.21299999999999999 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $728 #
+straight-curve $-1 -1 $-1 10 0.22600000000000001 0 -1 0 0 I I #
+point $-1 -1 $-1 10 0.22600000000000001 0 #
+point $-1 -1 $-1 0 0.22600000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $737 #
+straight-curve $-1 -1 $-1 10 0.23400000000000001 0 -1 0 0 I I #
+point $-1 -1 $-1 10 0.23400000000000001 0 #
+point $-1 -1 $-1 0 0.23400000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $746 #
+straight-curve $-1 -1 $-1 10 0 0 0 1 0 I I #
+point $-1 -1 $-1 10 0 0 #
+point $-1 -1 $-1 10 0.17000000000000001 0 #
+point $-1 -1 $-1 2.5 0.23899999999999999 0 #
+edge $869 -1 $-1 $847 6.625 $870 16.125 $795 $848 forward @7 unknown T 16.625 0.5 0 26.125 0.5 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $796 #
+vertex $-1 -1 $-1 $845 $871 #
+straight-curve $-1 -1 $-1 10 0.5 0 1 0 0 I I #
+point $-1 -1 $-1 10 0.5 0 #
+edge $872 -1 $-1 $870 16.125 $852 20 $801 $848 forward @7 unknown T 26.125 0.5 0 30 0.5 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $802 #
+vertex $-1 -1 $-1 $850 $873 #
+straight-curve $-1 -1 $-1 30 0.5 0 0 1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $803 $683 #
+point $-1 -1 $-1 30 2.2639999999999998 0 #
+coedge $-1 -1 $-1 $874 $811 $-1 $875 forward $375 $-1 #
+edge $876 -1 $-1 $859 -0.27100000000000002 $877 -0.035000000000000003 $811 $878 forward @7 unknown T 10 0.26400000000000001 0 10 0.5 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $812 #
+vertex $-1 -1 $-1 $857 $879 #
+straight-curve $-1 -1 $-1 10 0.5 0 -1 0 0 F -6.625 F 0 #
+point $-1 -1 $-1 16.625 0.5 0 #
+coedge $-1 -1 $-1 $817 $880 $-1 $881 forward $375 $-1 #
+edge $882 -1 $-1 $883 2.2639999999999998 $865 4.2639999999999993 $817 $884 forward @7 unknown T 0 -1.9999999999999996 0 0 0 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $885 $-1 $818 keep keep_kept ignore copy @10 2d-contact @8 thermode #
+vertex $-1 -1 $-1 $818 $886 #
+straight-curve $-1 -1 $-1 0 -2 0 1 0 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $819 $704 #
+point $-1 -1 $-1 50 -2 0 #
+string_attrib-name_attrib-gen-attrib $-1 -1 $887 $-1 $845 keep keep_kept ignore copy @10 2d-contact @8 ncontact #
+vertex $-1 -1 $-1 $850 $888 #
+point $-1 -1 $-1 16.625 0.5 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $850 #
+point $-1 -1 $-1 30 0.5 0 #
+coedge $-1 -1 $-1 $889 $856 $-1 $890 forward $375 $-1 #
+edge $891 -1 $-1 $877 -0.025000000000000022 $892 0 $856 $893 forward @7 unknown T 10 0.23899999999999999 0 10 0.26400000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $857 #
+vertex $-1 -1 $-1 $875 $894 #
+straight-curve $-1 -1 $-1 10 0.22900000000000001 0 0 -1 0 F -0.27100000000000002 F -0.035000000000000003 #
+point $-1 -1 $-1 10 0.5 0 #
+coedge $-1 -1 $-1 $862 $895 $-1 $896 forward $375 $-1 #
+edge $897 -1 $-1 $898 -5.25 $883 0 $862 $899 forward @7 unknown T 0 0 0 5.25 0 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $863 #
+vertex $-1 -1 $-1 $863 $900 #
+straight-curve $-1 -1 $-1 0 2.2639999999999998 0 0 -1 0 I I #
+ptlist-eye-attrib $-1 -1 $-1 $864 $818 #
+point $-1 -1 $-1 0 -2 0 #
+ptlist-eye-attrib $-1 -1 $-1 $869 $845 #
+point $-1 -1 $-1 26.125 0.5 0 #
+coedge $-1 -1 $-1 $901 $874 $-1 $902 forward $375 $-1 #
+edge $903 -1 $-1 $892 -0.0099999999999999811 $904 -0.0050000000000000044 $874 $905 forward @7 unknown T 10 0.23400000000000001 0 10 0.23899999999999999 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $875 #
+vertex $-1 -1 $-1 $875 $906 #
+straight-curve $-1 -1 $-1 10 0.23899999999999999 0 0 -1 0 F -0.025000000000000022 F 0 #
+point $-1 -1 $-1 10 0.26400000000000001 0 #
+coedge $-1 -1 $-1 $880 $907 $-1 $908 forward $375 $-1 #
+edge $909 -1 $-1 $910 -3.75 $898 0 $880 $911 forward @7 unknown T 5.25 0 0 9 0 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $881 #
+vertex $-1 -1 $-1 $881 $912 #
+straight-curve $-1 -1 $-1 0 0 0 -1 0 0 F -5.25 F 0 #
+point $-1 -1 $-1 0 0 0 #
+coedge $-1 -1 $-1 $913 $889 $-1 $914 forward $375 $-1 #
+edge $915 -1 $-1 $904 -0.0050000000000000044 $916 0 $889 $905 forward @7 unknown T 10 0.22900000000000001 0 10 0.23400000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $890 #
+vertex $-1 -1 $-1 $902 $917 #
+straight-curve $-1 -1 $-1 10 0.22900000000000001 0 0 -1 0 F -0.0099999999999999811 F 0 #
+point $-1 -1 $-1 10 0.23899999999999999 0 #
+coedge $-1 -1 $-1 $895 $918 $-1 $919 forward $375 $-1 #
+edge $920 -1 $-1 $921 -1 $910 0 $895 $922 forward @7 unknown T 9 0 0 10 0 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $896 #
+vertex $-1 -1 $-1 $896 $923 #
+straight-curve $-1 -1 $-1 5.25 0 0 -1 0 0 F -3.75 F 0 #
+point $-1 -1 $-1 5.25 0 0 #
+coedge $-1 -1 $-1 $924 $901 $-1 $925 forward $375 $-1 #
+edge $926 -1 $-1 $916 -0.0030000000000000027 $927 0 $901 $928 forward @7 unknown T 10 0.22600000000000001 0 10 0.22900000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $902 #
+vertex $-1 -1 $-1 $914 $929 #
+point $-1 -1 $-1 10 0.23400000000000001 0 #
+coedge $-1 -1 $-1 $907 $930 $-1 $931 forward $375 $-1 #
+edge $932 -1 $-1 $933 -0.17000000000000001 $921 0 $907 $934 forward @7 unknown T 10 0 0 10 0.17000000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $908 #
+vertex $-1 -1 $-1 $908 $935 #
+straight-curve $-1 -1 $-1 9 0 0 -1 0 0 F -1 F 0 #
+point $-1 -1 $-1 9 0 0 #
+coedge $-1 -1 $-1 $936 $913 $-1 $937 forward $375 $-1 #
+edge $938 -1 $-1 $927 -0.010000000000000009 $939 -0.0050000000000000044 $913 $940 forward @7 unknown T 10 0.221 0 10 0.22600000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $914 #
+vertex $-1 -1 $-1 $925 $941 #
+straight-curve $-1 -1 $-1 10 0.22600000000000001 0 0 -1 0 F -0.0030000000000000027 F 0 #
+point $-1 -1 $-1 10 0.22900000000000001 0 #
+coedge $-1 -1 $-1 $918 $942 $-1 $943 forward $375 $-1 #
+edge $944 -1 $-1 $945 -0.01999999999999999 $933 0 $918 $946 forward @7 unknown T 10 0.17000000000000001 0 10 0.19 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $919 #
+vertex $-1 -1 $-1 $919 $947 #
+straight-curve $-1 -1 $-1 10 0 0 0 -1 0 F -0.17000000000000001 F 0 #
+point $-1 -1 $-1 10 0 0 #
+coedge $-1 -1 $-1 $948 $924 $-1 $949 forward $375 $-1 #
+edge $950 -1 $-1 $939 -0.0050000000000000044 $951 0 $924 $940 forward @7 unknown T 10 0.216 0 10 0.221 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $925 #
+vertex $-1 -1 $-1 $937 $952 #
+straight-curve $-1 -1 $-1 10 0.216 0 0 -1 0 F -0.010000000000000009 F 0 #
+point $-1 -1 $-1 10 0.22600000000000001 0 #
+coedge $-1 -1 $-1 $930 $953 $-1 $954 forward $375 $-1 #
+edge $955 -1 $-1 $956 -0.0050000000000000044 $945 0 $930 $957 forward @7 unknown T 10 0.19 0 10 0.19500000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $931 #
+vertex $-1 -1 $-1 $931 $958 #
+straight-curve $-1 -1 $-1 10 0.17000000000000001 0 0 -1 0 F -0.01999999999999999 F 0 #
+point $-1 -1 $-1 10 0.17000000000000001 0 #
+coedge $-1 -1 $-1 $959 $936 $-1 $960 forward $375 $-1 #
+edge $961 -1 $-1 $951 -0.0030000000000000027 $962 0 $936 $963 forward @7 unknown T 10 0.21299999999999999 0 10 0.216 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $937 #
+vertex $-1 -1 $-1 $949 $964 #
+point $-1 -1 $-1 10 0.221 0 #
+coedge $-1 -1 $-1 $942 $959 $-1 $965 forward $375 $-1 #
+edge $966 -1 $-1 $967 -0.010000000000000009 $956 -0.0050000000000000044 $942 $957 forward @7 unknown T 10 0.19500000000000001 0 10 0.20000000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $943 #
+vertex $-1 -1 $-1 $943 $968 #
+straight-curve $-1 -1 $-1 10 0.19 0 0 -1 0 F -0.010000000000000009 F 0 #
+point $-1 -1 $-1 10 0.19 0 #
+coedge $-1 -1 $-1 $953 $948 $-1 $969 forward $375 $-1 #
+edge $970 -1 $-1 $962 -0.0099999999999999811 $971 -0.0049999999999999767 $948 $972 forward @7 unknown T 10 0.20799999999999999 0 10 0.21299999999999999 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $949 #
+vertex $-1 -1 $-1 $960 $973 #
+straight-curve $-1 -1 $-1 10 0.21299999999999999 0 0 -1 0 F -0.0030000000000000027 F 0 #
+point $-1 -1 $-1 10 0.216 0 #
+edge $974 -1 $-1 $975 -0.0030000000000000027 $967 0 $953 $976 forward @7 unknown T 10 0.20000000000000001 0 10 0.20300000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $954 #
+vertex $-1 -1 $-1 $954 $977 #
+point $-1 -1 $-1 10 0.19500000000000001 0 #
+edge $978 -1 $-1 $971 -0.0049999999999999767 $975 0 $959 $972 forward @7 unknown T 10 0.20300000000000001 0 10 0.20799999999999999 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $960 #
+vertex $-1 -1 $-1 $969 $979 #
+straight-curve $-1 -1 $-1 10 0.20300000000000001 0 0 -1 0 F -0.0099999999999999811 F 0 #
+point $-1 -1 $-1 10 0.21299999999999999 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $965 #
+vertex $-1 -1 $-1 $965 $980 #
+straight-curve $-1 -1 $-1 10 0.20000000000000001 0 0 -1 0 F -0.0030000000000000027 F 0 #
+point $-1 -1 $-1 10 0.20000000000000001 0 #
+ptlist-eye-attrib $-1 -1 $-1 $-1 $969 #
+point $-1 -1 $-1 10 0.20799999999999999 0 #
+point $-1 -1 $-1 10 0.20300000000000001 0 #
+End-of-ACIS-data 

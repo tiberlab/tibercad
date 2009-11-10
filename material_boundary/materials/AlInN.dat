@@ -1,0 +1,25 @@
+# AlInN
+
+alloy = 2
+structure = wz
+
+comp_A = AlN
+comp_B = InN
+
+
+
+[bandgap]
+bow_Eg_G = 2.5
+bow_Eg_X = 0.61
+bow_Eg_L = 0.8
+
+
+# spontaneous polariz.
+[pyroelectricity]
+bow_Pz = -0.070
+
+
+[densityfunctional_tb]
+
+dataset = ""
+

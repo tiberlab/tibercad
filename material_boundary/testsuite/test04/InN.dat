@@ -1,0 +1,156 @@
+# InN
+
+structure = wz
+
+
+[valenceband]
+#E_v = -2.34;
+# from Nextnano
+E_v = -0.4203
+
+
+[conductionband]
+m_c_xx = 0.07
+m_c_zz = 0.07
+
+
+[bandgap]
+# T = 0
+Eg_G = 0.78
+
+varshni_alpha_G = 0.245e-3
+varshni_beta_G = 624
+
+
+[kdotp]
+A1 = -8.21
+A2 = -0.68
+A3 = 7.57
+A4 = -5.23
+A5 = -5.11
+A6 = -5.96
+
+delta_cr = 0.04
+delta_s = 0.005
+
+[deformation_potentials]
+a_x = 1
+a_z = -7.2
+
+D1 = -3.7
+D2 = 4.5
+D3 = 8.2
+D4 = -4.1
+D5 = -4.0
+D6 = -5.5
+
+
+[permittivity]
+# static dielectric constant
+permittivity = 14.4
+
+
+# lattice constants
+[lattice]
+a = 0.3545
+c = 0.5703
+
+# stiffness data
+[elasticity]
+C11 = 223
+C12 =  115
+C13 = 92
+C33 = 224
+C44 = 48
+
+# piezoelectricity data
+[piezoelectricity]
+e33 =  0.81
+e31 = -0.49
+e15 = -0.11
+
+[pyroelectricity]
+Pz = -0.042
+
+
+
+#
+# mobility
+#
+
+# mobility
+[mobility/constant]
+mu_max   = (2400.0, 2400.0)
+exponent = (1.9,    1.9)
+
+# doping dependent
+[mobility/doping_dependent]
+mobility_formula = 1
+
+#for formula 1 (Masetti):
+mumin1 = (120,		44.9)
+mumin2 = (115,		0)
+mu1    = (130,		50)
+Pc     = (6.5e17,	6.5e17)
+Cr     = (9.68e16,	9.68e16)
+Cs     = (7.2e20,	7.2e20)
+alpha  = (1.45,		1.45)
+beta   = (1.85,		1.85)
+
+
+# for formula 2 (Arora):
+mumin = (88,		54.3)
+am    = (-0.67,		-0.57)
+mud   = (2.2e+03,	4.07e+02)
+ad    = (-4,		-2.23)
+N0    = (1.25+17,	2.35e+17)
+aN    = (1.9,		2.4)	
+A     = (0.98,		0.88)
+aA    = (-0.15,		-0.146)
+
+
+# high field dependency
+[mobility/field_dependent]
+Vsat_Formula = 2
+beta0    = (2.2,	2.2)
+A_vsat   = (2.6e+07, 	2.6e+07)
+B_vsat   = (0,		0)
+vsat_min = (2.2e+07,	2.2e+07)
+betaexp  = (0,          0)
+
+
+# SRH recombination
+[recombination/SRH]
+Etrap  = 0.0
+taumin = (0.0,		0.0)
+taumax = (1.0e-9,	1.0e-9)
+Nref   = (1.0e+18,	1.0e+18)
+gamma  = (1,		1)
+Talpha = (-1.5,		-1.5)
+Tcoeff = (2.55,		2.55)
+
+
+# direct recombination
+[recombination/SRH]
+C = 0.52e-10
+
+
+[recombination/auger]
+# R_Auger = ( C_n n + C_p p ) ( n p - ni_eff^2)
+# with C_n,p = (A + B (T/T0) + C (T/T0)^2) (1 + H exp(-{n,p}/N0))
+# The values below should be checked
+A  = (1.0000e-34 ,	1.0000e-34)	# [cm^6/s]
+B  = (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+C  = (0.0000e+00 ,	0.0000e+00)	# [cm^6/s]
+H  = (0.0000e+00 ,	0.0000e+00)	# [1]
+N0 = (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
+
+
+[thermal_conductivity/constant]
+#Lattice thermal conductivity
+therm_lat_cond_x = 0.45
+therm_lat_cond_z = 0.45
+
+[densityfunctional_tb]
+
+

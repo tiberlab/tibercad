@@ -1,0 +1,48 @@
+#include "tiber_version.h"
+
+#include <winver.h>
+#include <windows.h>
+
+#define DOQUOTE(x) #x 
+#define QUOTE(x) DOQUOTE(x)
+#define DOCONCAT3(a, b, c) a ## . ## b ## . ## c  
+#define CONCAT3(a, b, c) DOCONCAT3(a, b, c)
+#define DOCONCAT4(a, b, c, d) a ## . ## b ## . ## c ## . ## d 
+#define CONCAT4(a, b, c, d) DOCONCAT4(a, b, c, d)
+#define VER_FULL CONCAT4(TIBERMAJORVERSION, TIBERMINORVERSION, \
+			TIBERSUBMINORVERSION, SVNREVISION)
+#define VER_SHORT CONCAT3(TIBERMAJORVERSION, TIBERMINORVERSION, \
+			TIBERSUBMINORVERSION)
+#define VER_STRING QUOTE(VER_FULL)
+#define VER_STRING_SHORT QUOTE(VER_SHORT)
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+APP	ICON	tibercad.ico
+TIB	ICON	tib.ico
+
+1 VERSIONINFO
+FILEVERSION TIBERMAJORVERSION,TIBERMINORVERSION,TIBERSUBMINORVERSION,SVNREVISION
+PRODUCTVERSION TIBERMAJORVERSION,TIBERMINORVERSION,TIBERSUBMINORVERSION,SVNREVISION
+FILEFLAGS VS_FF_PRERELEASE
+FILETYPE VFT_APP
+FILEOS VOS__WINDOWS32
+{
+ BLOCK "StringFileInfo" {
+  BLOCK "040904E4" {
+   VALUE "FileVersion", VER_STRING
+   VALUE "ProductVersion", VER_STRING_SHORT
+   VALUE "FileDescription", "TiberCAD simulator executable\0"
+   VALUE "CompanyName", "TiberLAB\0"
+   VALUE "LegalCopyright", "Copyright (C) TiberLAB, 2008\0"
+   VALUE "ProductName", "TiberCAD\0"
+   VALUE "InternalName", "tibercad\0"
+   VALUE "OriginalFileName", "tibercad.exe\0"
+   VALUE "Website", "http://www.tibercad.org\0"
+  }
+ }
+
+ BLOCK "VarFileInfo" {
+  VALUE "Translation", 0x409, 1252
+ }
+}

@@ -1,0 +1,77 @@
+#!/bin/bash
+
+if [ ! -e common.sh ]; then
+  echo "Need configuration file (common.sh)."
+  exit 1
+fi
+
+. common.sh
+
+ARCHIVE="petsc-lite-${PETSCVERSION}-${PATCHLEVEL}.tar.gz"
+PATCH=${PWD}/petsc.patch
+
+echo "Compiling PETSc version $PETSCVERSION in $BUILDDIR ..."
+
+mkdir -p $BUILDDIR
+if [ ! -d $BUILDDIR ]; then
+  echo "Directory $BUILDDIR does not exist."
+  exit 1
+fi
+
+cd $BUILDDIR
+if [ ! -e ${ARCHIVE} ]; then
+  wget ftp://ftp.mcs.anl.gov/pub/petsc/release-snapshots/${ARCHIVE}
+fi
+
+if [ ! -e ${ARCHIVE} ]; then
+  echo "Could not download petsc."
+  exit 1
+fi
+
+tar zxf ${ARCHIVE}
+
+cd petsc-${PETSCVERSION}-${PATCHLEVEL}
+
+if [ -e ${PATCH} ]; then
+  patch -p0 < ${PATCH}
+fi
+
+#export LAPACK=/scratch/maufder/TiberCAD/ARPACK
+#LAPACKLIBS="[${LAPACK}/libarpack.a]"
+
+#CONFIGOPTS="--with-matlab=0 --with-shared=0 --with-dynamic=0 --with-cc=$CC --with-cxx=$CXX  --with-fc=$F90 --with-fortran=1 --CFLAGS=-fexceptions --with-mpi=0 --download-f-blas-lapack"
+
+CONFIGOPTS="--with-matlab=0 --with-shared=0 --with-dynamic=0 --with-fortran=0 --CFLAGS=-fexceptions --with-mpi=0 "
+
+
+export PETSC_DIR=${PWD}
+
+if [ ! -e ${ARCH}-opt.ok ]; then
+  export PETSC_ARCH=${ARCH}-opt
+  ./config/configure.py ${CONFIGOPTS} --with-debugging=0
+  make |tee ${PETSC_ARCH}.log && touch ${ARCH}-opt.ok
+fi
+
+if [ ! -e ${ARCH}-complex-opt.ok ]; then
+  export PETSC_ARCH=${ARCH}-complex-opt
+  ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex --with-clanguage=C++ --with-debugging=0
+  make |tee ${PETSC_ARCH}.log && touch ${ARCH}-complex-opt.ok
+fi
+
+if [ $DEBUG == 'y' ]; then
+
+  if [ ! -e ${ARCH}.ok ]; then
+    export PETSC_ARCH=${ARCH}
+    ./config/configure.py ${CONFIGOPTS} --with-debugging=1
+    make |tee ${PETSC_ARCH}.log && touch ${ARCH}.ok
+  fi
+
+  if [ ! -e ${ARCH}-complex.ok ]; then
+    export PETSC_ARCH=${ARCH}-complex
+    ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=c++ --with-debugging=1
+    make |tee ${PETSC_ARCH}.log && touch ${ARCH}-complex.ok
+  fi
+
+fi
+
+

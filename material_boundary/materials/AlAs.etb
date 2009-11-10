@@ -1,0 +1,97 @@
+# Tight binding parameters (c) Jean Marc Jancu
+
+
+material type = 'binary'
+
+# lattice
+
+lattice type = 'face centered cubic'
+
+lattice parameters =   5.660D0   5.660D0   5.660D0
+
+#internal strain parameter = 1.00D0
+internal strain parameter = 0.60D0
+
+# basis
+
+basis type = zinc-blende
+
+number of ions = 2
+ions = 'Al' 'As'
+
+Al valence = 4
+As valence = 4
+
+# states
+
+number of spin-orbit parameters per ion = 2 2
+
+Al spin orbit
+p  0.0072D0
+d  0.0000D0
+
+As spin orbit
+p  0.1721D0
+d  0.0000D0
+
+number of orbitals per ion = 4 4 
+	
+Al onsite
+'s'     0.9574D0   1
+'p'     6.3386D0   3
+'s*'   19.5133D0   1
+'d'    13.0570D0   5
+
+As onsite
+'s'    -5.9819D0   1
+'p'     3.5826D0   3
+'s*'   19.5133D0   1
+'d'    13.0570D0   5
+
+Al offset = 0.D0
+As offset = 0.D0
+
+
+# strain coefficient for the d orbitals
+Al b_d parameter = 0.536D0
+As b_d parameter = 0.536D0
+
+# TB couplings
+
+number of pairs = 1
+
+pair 1 = 'As' 'Al' 21 1
+
+As Al coupling 1
+'sss'     -1.7292D0    3.120D0 
+'sps'      2.5175D0    3.564D0
+'ss*s'    -1.2688D0    0.000D0
+'sds'     -2.5535D0    1.871D0
+'pss'      2.7435D0    3.564D0
+'pps'      4.2460D0    2.051D0
+'ps*s'     2.1989D0    1.799D0
+'pds'     -1.7240D0    1.858D0
+'s*ss'    -1.6167D0    0.000D0
+'s*ps'     2.1190D0    1.799D0 
+'s*s*s'   -3.6094D0    0.000D0
+'s*ds'    -0.8064D0    2.000D0 
+'dss'     -2.3869D0    1.871D0 
+'dps'     -1.7601D0    1.858D0 
+'ds*s'    -0.7442D0    2.000D0 
+'dds'     -1.2175D0    2.000D0
+'ppp'     -1.3398D0    3.869D0
+'pdp'      1.7776D0    1.874D0 
+'dpp'      2.0928D0    1.874D0
+'ddp'      2.1693D0    2.000D0
+'ddd'     -1.7540D0    2.000D0       
+
+As Al pair reference distance 1 = 2.450852D0
+
+
+# dangling bonds saturation
+
+saturated bond length
+0.1D0
+
+onsite H energy
+-200.0D0

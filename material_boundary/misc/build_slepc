@@ -1,0 +1,67 @@
+#!/bin/bash
+
+
+if [ ! -e common.sh ]; then
+  echo "Need configuration file (common.sh)."
+  exit 1
+fi
+
+. common.sh
+
+
+echo "Compiling SLEPc version $PETSCVERSION in $BUILDDIR ..."
+
+mkdir -p $BUILDDIR
+if [ ! -d $BUILDDIR ]; then
+  echo "Directory $BUILDDIR does not exist."
+  exit 1
+fi
+
+ARCHIVE=slepc-${PETSCVERSION}.tgz
+PATCH=slepc_patch_all-${VERSION}
+
+cd $BUILDDIR
+if [ ! -e ${ARCHIVE} ]; then
+  wget http://www.grycap.upv.es/slepc/download/distrib/${ARCHIVE}
+fi
+
+if [ ! -e ${ARCHIVE} ]; then
+  echo "Could not download slepc."
+  exit 1
+fi
+
+tar zxf ${ARCHIVE}
+
+cd slepc-${PETSCVERSION}
+
+wget http://www.grycap.upv.es/slepc/download/patches/${PATCH}
+if [ -e ${PATCH} ]; then
+  patch -p0 < ${PATCH}
+fi
+
+
+
+export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL}
+export SLEPC_DIR=${BUILDDIR}/slepc-${PETSCVERSION}
+
+
+export PETSC_ARCH=${ARCH}-opt
+./config/configure.py $CONFIGOPTS
+make |tee ${PETSC_ARCH}.log
+
+
+export PETSC_ARCH=${ARCH}-complex-opt
+./config/configure.py $CONFIGOPTS
+make |tee ${PETSC_ARCH}.log
+
+
+if [ $DEBUG == 'y' ]; then
+  export PETSC_ARCH=${ARCH}
+  ./config/configure.py $CONFIGOPTS
+  make |tee ${PETSC_ARCH}.log
+
+  export PETSC_ARCH=${ARCH}-complex
+  ./config/configure.py $CONFIGOPTS
+  make |tee ${PETSC_ARCH}.log
+fi
+

@@ -1,0 +1,100 @@
+# Tight binding parameters (c) Jean Marc Jancu
+
+# compound
+
+material type = 'binary'
+
+# lattice
+
+lattice type = 'hexagonal'
+
+lattice parameters =   3.544d0   3.544d0  5.718d0
+u_parameter = 0.3790D0
+
+internal strain parameter = 0.0D0
+
+# basis
+
+basis type = 'wurtzite'
+
+number of ions = 2
+ions = 'In' 'N'
+
+# states
+
+number of spin-orbit parameters per ion = 2 2
+
+In spin orbit
+'p' 0.1100D0
+'d' 0.0000D0
+
+N spin orbit
+'p' 0.0035D0
+'d' 0.0000D0
+
+number of orbitals per ion = 5 5
+
+In onsite
+'s'     3.4070D0   1
+'p'    10.9070D0   3
+'s*'   34.7081D0   1
+'d15'  25.4028D0   3
+'d12'  26.3769D0   2
+
+N onsite
+'s'    -10.2945D0   1
+'p'     2.1774D0   3
+'s*'   26.9022D0   1
+'d15'  27.9171D0   3
+'d12'  31.5704D0   2
+
+In offset = 0.0D0
+N offset =  0.0D0
+
+# strain coefficient for the d orbitals
+In b_d parameter = 0.0D0
+N b_d parameter = 0.0D0
+
+In valence = 4
+N valence  = 4
+
+
+#TB_couplings
+
+number of pairs = 1
+
+pair 1 = 'N' 'In' 21 1
+
+N In coupling 1
+'sss'     -1.9364D0    2.57D0 
+'sps'      3.4189D0    4.93D0
+'ss*s'    -2.8450D0    1.46D0
+'sds'     -3.7643D0    1.12D0
+'pss'      3.4442D0    4.93D0
+'pps'      4.6297D0    3.80D0
+'ps*s'     2.1143D0    1.00D0
+'pds'     -1.7717D0    1.33D0
+'s*ss'    -3.5061D0    1.46D0
+'s*ps'     4.3204D0    1.00D0 
+'s*s*s'   -5.0745D0    0.00D0
+'s*ds'    -2.1591D0    4.77D0 
+'dss'     -1.2612D0    1.12D0 
+'dps'     -1.3664D0    1.33D0 
+'ds*s'    -1.7240D0    4.77D0 
+'dds'     -1.5251D0    2.00D0
+'ppp'     -1.4290D0    3.68D0
+'pdp'      2.3333D0    1.08D0 
+'dpp'      3.0764D0    1.08D0
+'ddp'      5.9975D0    2.00D0
+'ddd'     -4.5685D0    2.00D0    
+
+N In pair reference distance 1 = 2.167D0
+
+
+
+
+
+
+
+
+

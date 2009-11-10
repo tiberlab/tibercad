@@ -1,0 +1,86 @@
+# Tight binding parameters sp3 
+# from Jenkins-Dow PRB 39, 3317
+
+# material type : 'simple' / 'binary' / 'ternary' / 'quaternary'
+
+material type = 'binary'
+
+# lattice type 
+
+lattice type = 'hexagonal'
+
+# lattice parameters ( in Angtroms )
+
+lattice parameters =   3.189d0   3.189d0  5.185d0
+u_parameter = 0.3768D0
+
+# 0 = no internal strain / 1 = maximal internal strain
+
+internal strain parameter = 0.00D0
+
+
+# basis type 
+
+basis type = 'wurtzite'
+
+number of ions = 2
+ions = 'Ga' 'N'
+Ga valence = 4 
+N valence = 4
+
+# spin orbit
+
+number of spin-orbit parameters per ion = 1 1
+
+Ga spin orbit
+'p' 0.0410D0
+
+N spin orbit
+'p' 0.0035D0
+
+# onsite ETB
+
+number of orbitals per ion = 2 2
+	
+# Ga = c; N = a
+
+N onsite
+'s'   -13.11400D0  1
+'p'     1.26900D0  3
+
+Ga onsite
+'s'    -1.78600D0  1
+'p'     7.13100D0  3
+
+N offset = -0.04331462D0
+Ga offset = -0.04331462D0
+
+
+# strain coefficient for the d orbitals
+Ga b_d parameter = 0.000D0
+N b_d parameter = 0.000D0
+
+# ETB couplings
+
+number of pairs = 1
+
+pair 1 = 'N' 'Ga' 5 1
+
+N Ga coupling 1
+'sss'    -2.34275D0   3.65D0 
+'sps'     2.11700D0   4.91D0
+'pss'     4.70555D0   4.91D0
+'pps'     4.01950D0   4.09D0
+'ppp'    -0.88175D0   3.35D0
+
+# sss = ss/4 
+# sps = sp/4*sqrt(3)
+# pss = ps/4*sqrt(3)
+# pps = (xx + 2*xy)/4
+# ppp = (xx - xy)/4
+# xx 3.008
+# xy 6.535
+
+
+N Ga pair reference distance 1 = 1.954D0
+

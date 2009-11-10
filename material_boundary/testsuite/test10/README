@@ -1,0 +1,7 @@
+test 10
+
+spherical qdot  GaN/AlN
+run macrostrain, drift-diffusion equilibrium solution and  ETB with potential from polarization and  electric  fields and  atom displacement from macrostrain.
+check 2 CB and  2 VB eigenvalues.  relativistic is  false.
+ 
+

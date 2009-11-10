@@ -1,0 +1,63 @@
+
+/* define if boost is available. */
+#undef HAVE_BOOST
+
+/* define if Boost::regex is available */
+#undef HAVE_BOOST_REGEX
+
+/* Define to 1 if you have the <cassert> header file. */
+#undef HAVE_CASSERT
+
+/* Define to 1 if you have the GSL library. */
+#undef HAVE_GSL
+
+/* Define the TiberCAD install prefix */
+#undef TIBERCAD_INSTALL_PREFIX
+
+/* Define to 1 if models should be built as modules */
+#undef BUILD_TIBER_MODULES
+
+/* Define to 1 if you have the isnan function */
+#undef HAVE_ISNAN
+
+/* Define to 1 if you have the isinf function */
+#undef HAVE_ISINF
+
+/* Define to 1 if pardiso is enabled */
+#undef ENABLE_PARDISO
+
+/* Define to 1 if DFTB+ is enabled */
+#undef ENABLE_DFTB
+
+/* Define to 1 if UPTIGHT is enabled */
+#undef ENABLE_UPTIGHT
+
+/* Define to 1 if HETERO is enabled */
+#undef ENABLE_HETERO
+
+/* Define to 1 if complex SLEPc is available */
+#undef HAVE_COMPLEX_SLEPC
+
+/* Define if you have a readline compatible library */
+#undef HAVE_LIBREADLINE
+
+/* Define to 1 if you have the <readline.h> header file. */
+#undef HAVE_READLINE_H
+
+/* Define to 1 if you have the <readline/readline.h> header file. */
+#undef HAVE_READLINE_READLINE_H
+
+/* Define if your readline library has \`add_history' */
+#undef HAVE_READLINE_HISTORY
+
+/* Define to 1 if you have the <history.h> header file. */
+#undef HAVE_HISTORY_H
+
+/* define if we are in cygwin */
+#undef CYGWIN
+
+/* Define to 1 if license check is enabled */
+#undef LICENSE_CHECK
+
+/* Define to 1 if gcc has the -fvisibility flag is enabled */
+#define GCC_HASVISIBILITY 1

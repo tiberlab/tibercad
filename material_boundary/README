@@ -1,0 +1,9 @@
+
+License file creation
+---------------------
+
+1) compile in src/utils/license
+2) run bin/create_license [-f filename] holder expiry
+   e.g.:
+     create_license "University of Rome" 2008-08-31
+

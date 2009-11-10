@@ -1,0 +1,174 @@
+\RequirePackage{ifpdf}
+\ifpdf
+\documentclass[12pt,            % 11pt Font
+               a4paper,         % a4-Paperformat
+               twoside,         % twoside 
+%%             fleqn,           % Equations appear flush left
+%%             draft,
+               pdftex
+               ]{book}
+\else
+\documentclass[12pt,            % 11pt Font
+               a4paper,         % a4-Paperformat
+               twoside,         % twoside 
+%%             fleqn,           % Equations appear flush left
+%%             draft,
+%%               openright        % Chapters begin on odd (right) page
+              ]{book}
+\fi
+
+\textwidth  450pt  
+\oddsidemargin 3mm
+\evensidemargin 8mm
+%\evensidemargin 5mm
+
+%\baselineskip 10mm
+\textheight 580pt
+%\parindent 5mm
+
+%\renewcommand{\baselinestretch}{1.55} %spaziatura 
+
+
+\ifpdf
+ \usepackage[pdftex]{graphicx}
+ \usepackage{pdflscape}
+\else
+ \usepackage[dvips]{graphicx}
+ \usepackage{lscape}
+\fi
+
+\usepackage{url} 
+
+\usepackage{ae} 
+\usepackage{color}
+\ifpdf
+ \usepackage{pdfpages}
+ \usepackage[colorlinks,plainpages=false]{hyperref}% generates colored links
+ \newcommand{\mailto}[1]{\href{mailto:#1}{#1}}
+ \hypersetup{
+   pdfauthor = {TiberLAB s.r.l},
+   pdftitle = {TiberCAD Manual},
+   pdfsubject = {TiberCAD user manual},
+   pdfkeywords = {TiberCAD, device simulator, manual},
+   pdfcreator = {LaTeX with hyperref package},
+  }
+\else
+ \newcommand{\mailto}[1]{\url{#1}}
+\fi
+
+\usepackage[small,bf]{caption}    
+
+\newcommand{\TiberCAD}{{{T{\scriptsize IBER}CAD}}}
+\newcommand{\tibercad}{\TiberCAD}
+\newcommand{\Models}{\texttt{Models}}
+\newcommand{\Device}{\texttt{Device}}
+\newcommand{\Region}{\texttt{Region}}
+\newcommand{\Physics}{\texttt{Physics}}
+\newcommand{\Simulation}{\texttt{Simulation}}
+\newcommand{\Sweep}{\texttt{Sweep}}
+\newcommand{\Selfconsistent}{\texttt{Selfconsistent}}
+\newcommand{\physicalmodel}{\texttt{physical\_model}}
+\newcommand{\keyword}[1]{\texttt{#1}}
+\newcommand{\Unit}[1]{\textsl{#1}}
+\newcommand{\Value}[1]{\textsl{#1}}
+\newcommand{\rvec}{{\bf r}}
+\newcommand{\eps}{{\varepsilon}}
+
+\ifpdf
+\newcommand{\clear}{\newpage}
+\else
+\newcommand{\clear}{\newpage{\pagestyle{empty}\cleardoublepage}}
+\fi
+
+
+\usepackage{amsthm,amsmath}
+\theoremstyle{plain}
+
+\usepackage{float}
+
+%\floatstyle{boxed}
+\newfloat{code}{htp}{lop}
+\floatname{code}{Listing}
+\newenvironment{inputfile}{\begin{code}\begin{center}\begin{minipage}{0.8\textwidth}\rule{\textwidth}{0.1pt}}{\rule{\textwidth}{0.1pt}\end{minipage}\end{center}\end{code}}
+\newcommand{\inputref}[1]{Listing~\ref{#1}}
+
+
+\begin{document}
+
+\ifpdf
+ \DeclareGraphicsExtensions{.jpg, .png, .pdf}
+\else
+ \DeclareGraphicsExtensions{.eps}
+\fi
+
+
+
+\title{T{\large IBER}CAD User Manual}
+\author{Fabio Sacconi, Matthias Auf~der~Maur, \\ Michael Povolotskyi, Giuseppe Romano, \\ Alessandro Pecchia, Gabriele Penazzi, \\
+Stefano  Bellocchio,  Aldo Di Carlo} 
+\maketitle
+
+
+\thispagestyle{empty}
+\vspace*{\textheight}
+\vspace{-3cm}
+\noindent\TiberCAD{} User Manual \smallskip \smallskip \\
+\begin{tabular}{@{}l@{ }l}
+\copyright & TiberCAD authors (F. Sacconi, M. Auf~der~Maur, M. Povolotskyi, \\
+ & G. Romano, A. Pecchia, G. Penazzi, S. Bellocchio, A. Di Carlo), 2008
+\end{tabular} \smallskip \smallskip \\
+Document revision \input{version}
+
+
+\clear
+\setcounter{page}{1}
+\pagenumbering{Roman}
+
+\ifpdf\phantomsection\fi
+\addcontentsline{toc}{chapter}{Contents}
+\tableofcontents
+%\listoffigures
+
+\clear
+%\pagestyle{fancy}
+%\headsep 50pt
+
+\include{installation}
+
+                               
+
+
+
+\clear
+\pagenumbering{arabic}
+\include{general_description}
+\clear
+\include{getting_started_1}
+\clear
+\include{getting_started_2}
+\clear
+\include{chapter_input_file}
+\clear
+\include{chapter_strain}
+\clear
+\include{chapter_driftdiffusion}
+\clear
+\include{chapter_thermal}
+\clear
+\include{chapter_EFA}
+\clear
+
+
+
+
+
+\ifpdf\phantomsection\fi
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliographystyle{IEEE}
+\bibliography{references}
+
+
+\end{document}
+
+
+

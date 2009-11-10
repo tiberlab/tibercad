@@ -1,0 +1,146 @@
+# $Id: Makefile 126 2006-11-24 08:10:44Z maufder $
+#
+
+srcdir = @srcdir@
+
+include Make.common
+
+
+
+#ifeq ($(build_modules), yes)
+# MODULE_LIBS := -leigen_solver lib/tibermodels/lib*.so
+#else
+ MODULE_LIBS := -leigen_solver
+#endif
+
+ifeq ($(enable_pardiso), yes)
+ MODULE_LIBS += -lmkl_solver -lguide
+endif
+
+ifeq ($(enable_dftb), yes)
+ MODULE_LIBS += -ldftbpc -lsvml
+endif
+
+ifeq ($(enable_uptight), yes)
+ MODULE_LIBS += -luptight
+endif
+
+ifeq ($(enable_hetero), yes)
+ MODULE_LIBS += -lhetero -lmkl_p4 -lguide
+endif
+
+export MODULE_LIBS
+
+
+all: $(libdir)/lib$(TIBERLIBNAME)$(shared_libext)
+	@$(MAKE) --no-print-directory -C src/tibercad tibercad
+
+
+$(libdir)/lib$(TIBERLIBNAME)$(shared_libext): src
+	@echo "Linking lib$(TIBERLIBNAME)$(shared_libext) ..."
+	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
+		-o $(libdir)/lib$(TIBERLIBNAME)$(shared_libext) \
+		$(MODULE_LIBS) $(LDFLAGS)
+
+#	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
+		-Wl,-soname,libtibercad.so.0 -o lib/libtibercad.so.0.0 \
+		$(MODULE_LIBS) -lmkl_lapack $(LDFLAGS)
+#	@cd lib && ln -f -s libtibercad.so.0.0 libtibercad.so.0 \
+		&& ln -f -s libtibercad.so.0 libtibercad.so && cd ..
+
+static: $(libdir)/libtibercad.a
+	@$(MAKE) --no-print-directory -C src/tibercad tibercad_static
+
+.PHONY: $(libdir)/libtibercad.a
+$(libdir)/libtibercad.a:
+	@$(MAKE) --no-print-directory -C src all
+	@echo "Linking libtibercad.a ..."
+	@$(AR) rcs $@ $(TIBER_OBJECTS)
+
+
+
+clean: src
+	@$(MAKE) --no-print-directory -C examples clean
+	@$(MAKE) --no-print-directory -C src/tibercad clean
+
+
+
+distclean: src doc
+	@$(MAKE) --no-print-directory -C manual distclean
+	@$(MAKE) --no-print-directory -C examples distclean
+	@$(MAKE) --no-print-directory -C src/tibercad distclean
+	@rm -rf lib/*
+	@rm -f bin/tibercad*.bin bin/tibercad*.exe
+
+
+
+.PHONY: src
+src:
+	@mkdir -p $(libdir)/tibermodels
+	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
+
+
+
+.PHONY: doc
+doc:
+	@$(MAKE) --no-print-directory -C doc $(MAKECMDGOALS)
+
+
+
+
+.PHONY: examples
+examples: all
+	@$(MAKE) --no-print-directory -C examples
+
+
+run_tests:
+	@cd testsuite && ./run_tests -t all -v -i
+
+
+.PHONY: manual
+manual:
+	@$(MAKE) --no-print-directory -C manual pdf
+
+
+wininstaller linuxinstaller deb tgz tbz: manual
+	@$(MAKE) --no-print-directory -C installer $(MAKECMDGOALS)
+
+
+clean-dep:
+	@find . -name ".*.d*" -exec rm -f {} \;
+
+
+tags:
+	@echo $(tibermodules)
+	@rm h.tags C.tags
+	@touch h.tags C.tags
+	@for i in $(tibermodules); \
+	do \
+	  etags -a --members src/$$i/*.C -o C.tags ; \
+	  etags -a --members include/$$i/*.h -o h.tags ; \
+	done 
+
+
+$(srcdir)/configure: configure.ac aclocal.m4
+	cd '$(srcdir)' && autoconf
+
+
+# autoheader might not change config.h.in, so touch a stamp file.
+#$(srcdir)/config.h.in: stamp-h.in
+$(srcdir)/stamp-h.in: configure.ac aclocal.m4
+	echo timestamp > '$(srcdir)/stamp-h.in'
+#	cd '$(srcdir)' && autoheader
+
+
+config.h: stamp-h
+stamp-h: config.h.in config.status
+	./config.status
+
+Makefile: Makefile.in Make.common.in config.status
+	./config.status
+
+config.status: configure VERSION
+	./config.status --recheck
+
+
+include Make.rules

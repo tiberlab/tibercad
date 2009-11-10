@@ -1,0 +1,246 @@
+// $Id$
+
+#include "ParticleDensity.h"
+#include "SimulationInterface.h"
+#include "TiberMath.h"
+#include "Embracing.h"
+#include "Messages.h"
+
+
+using namespace std;
+
+
+
+
+ParticleDensity::ParticleDensity(const string& name,
+    TiberCad::Statistics statistics)
+: _name(name),
+  _statistics(statistics),
+  _use_quantum(false),
+  _is_quantum(false),
+  _density_id(INVALID_ID),
+  _elem(NULL),
+  _density(-1.0),
+  _density_derivative(-1.0),
+  _embracing(NULL)
+{
+  if (name == "electron")
+    _charge = -1;
+  else if (name == "hole")
+    _charge = 1;
+  //else
+  //  Messages::warning("The particle \'" + name + "\' is not known.");
+}
+
+
+
+
+void
+ParticleDensity::add_quantum_density(const std::string& name)
+{
+  if (name != "")
+  {
+    SimulationInterface* qd = SimulationInterface::find_simulation(name);
+    if (qd == NULL)
+    {
+      string msg("ParticleDensity: ");
+      msg += "no quantum density simulation '" + name + "' found.";
+      throw InitFailedException(msg);
+    }
+
+    // we assume that the density variable has this name:
+    string density_name("density");
+
+    _density_id = qd->get_variable_id(density_name);
+
+    // We let it override with a more specific name
+    if (_name == "electron")
+      density_name = "elDensity";
+    else if (_name == "hole")
+      density_name = "hlDensity";
+
+    ID spec_id = qd->get_variable_id(density_name);
+    if (spec_id != INVALID_ID)
+      _density_id = spec_id;
+
+
+    if (_density_id == INVALID_ID)
+    {
+      string msg("ParticleDensity: ");
+      msg += "quantum density simulation '" + name +
+        "' has no variable '" + density_name + "'";
+      throw InitFailedException(msg);
+    }
+
+    // at this point we have for sure a quantum density simulation
+
+    _quantum_density.push_back(qd);
+    use_quantum_density();
+
+  }
+}
+
+
+
+
+template <>
+inline
+void
+ParticleDensity::classical_density<TiberCad::BOLTZMANN>(void)
+{
+  _density = _N_eff * exp(_argument);
+}
+
+
+
+template <>
+inline
+void
+ParticleDensity::classical_density_derivative<TiberCad::BOLTZMANN>(void)
+{
+  classical_density<TiberCad::BOLTZMANN>();
+  _density_derivative = _density / _kT;
+}
+
+
+
+template <>
+inline
+void
+ParticleDensity::classical_density<TiberCad::FERMIDIRAC>(void)
+{
+  const double arg_max = 150;
+  const double arg_min = -50;
+
+  if (_argument < arg_min)
+    classical_density<TiberCad::BOLTZMANN>();
+  else if (_argument < arg_max)
+    _density = _N_eff * TiberCad::fermidirac_half(_argument);
+  else
+    _density = 2.0 * M_2_SQRTPI / 3.0 * _N_eff * std::pow(_argument, 1.5);
+}
+
+
+
+template <>
+inline
+void
+ParticleDensity::classical_density_derivative<TiberCad::FERMIDIRAC>(void)
+{
+  const double arg_max = 150;
+  const double arg_min = -50;
+
+  if (_argument < arg_min)
+    classical_density_derivative<TiberCad::BOLTZMANN>();
+  else if (_argument < arg_max)
+    _density_derivative = _N_eff * TiberCad::fermidirac_mhalf(_argument) / _kT;
+  else
+    _density_derivative = M_2_SQRTPI * _N_eff * std::sqrt(_argument) / _kT;
+}
+
+
+
+bool
+ParticleDensity::quantum_density(void)
+{
+  bool flag = false;
+  _density = 0.0;
+
+  for (int i = 0; i < _quantum_density.size(); i++)
+  {
+    double density = 0.0;
+    if (_quantum_density[i]->is_solved())
+      flag |= _quantum_density[i]->get_solution(_elem, _p, _density_id, density);
+
+    _density += density;
+  }
+
+
+  return flag;
+}
+
+
+bool
+ParticleDensity::quantum_density_derivative(void)
+{
+  bool flag = false;
+  _density_derivative = 0.0;
+
+  //if (_quantum_density->is_solved())
+  //  flag = _quantum_density->get_solution(_elem, _p, _density_id, _density);
+
+  return flag;
+}
+
+
+
+void
+ParticleDensity::calculate_density(void)
+{
+  /* classical density is calculated when
+   * - either _use_quantum is false
+   * - or quantum_density() returns false
+   */
+  if (!_use_quantum || !(_is_quantum = quantum_density()))
+  {
+    switch (_statistics)
+    {
+      case TiberCad::FERMIDIRAC:
+        classical_density<TiberCad::FERMIDIRAC>();
+        break;
+      default: // Boltzmann
+        classical_density<TiberCad::BOLTZMANN>();
+        break;
+    }
+  }
+  else if (_embracing != NULL)
+  {
+    // we need to do a mixing
+    double x = _embracing->get_mixing_coefficient(_elem, _p);
+    if (x < 1.0)
+    {
+      double dens = x * _density;
+      switch (_statistics)
+      {
+        case TiberCad::FERMIDIRAC:
+          classical_density<TiberCad::FERMIDIRAC>();
+          break;
+        default: // Boltzmann
+          classical_density<TiberCad::BOLTZMANN>();
+          break;
+      }
+      dens += (1.0 - x) * _density;
+      _density = dens;
+    }
+  }
+}
+
+
+
+
+void
+ParticleDensity::calculate_density_derivative(void)
+{
+  _density_derivative = 0.0;
+  //if (!_use_quantum || !quantum_density_derivative())
+  if (!is_quantum_density())
+  {
+    switch (_statistics)
+    {
+      case TiberCad::FERMIDIRAC:
+        classical_density_derivative<TiberCad::FERMIDIRAC>();
+        break;
+      default: // Boltzmann
+        classical_density_derivative<TiberCad::BOLTZMANN>();
+        break;
+    }
+  }
+}
+
+
+void
+ParticleDensity::set_embracing(Embracing* embracing)
+{
+  if (_use_quantum)
+    _embracing = embracing;
+}

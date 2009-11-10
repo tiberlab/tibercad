@@ -1,0 +1,55 @@
+# InGaAs-zb
+
+alloy = 2
+structure = zb
+
+comp_A = InAs
+comp_B = GaAs
+
+
+[valenceband] # [1]
+bow_E_v = -0.38
+
+
+[conductionband]
+bow_m_G = 0.0091
+
+
+[bandgap] # [1]
+bow_Eg_G = 0.477
+bow_Eg_L = 0.33
+bow_Eg_X = 1.4
+
+
+
+[kdotp] # [1]
+bow_delta = 0.15
+#bow_gamma1 = -11.52
+#bow_gamma2 = -10.38
+#bow_gamma3 = -11.34
+
+
+[deformation_potentials] # [1]
+bow_a_c = 2.61
+bow_abs_def_pot_L = 2.61
+bow_abs_def_pot_X = 2.61
+bow_uniax_def_pot_L = 0.0
+bow_uniax_def_pot_X = 0.0
+
+bow_a_v = 0.0
+bow_b = 0.0
+bow_d = 0.0
+
+
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+n_basis_specie=2
+
+specie_1=InGa
+specie_2=As
+
+[densityfunctional_tb]
+
+
