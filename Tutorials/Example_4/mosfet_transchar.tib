@@ -33,8 +33,6 @@ $Models
     options
     {
      simulation_name = driftdiffusion
-
-     physical_regions = all
     }
 
     physical_model recombination
@@ -48,7 +46,7 @@ $Models
       model = field_dependent
 
 
-      low_field_model = doping_dependent   #Masetti  model for Si !!!
+      low_field_model = doping_dependent
 
     }
 
@@ -76,7 +74,7 @@ $Models
       {
         type = ohmic
 
-        voltage = @Vd[0.5]
+        voltage = @Vd
       }
    
 
@@ -112,12 +110,21 @@ $Solver
       steps = 5 # 4 
     }
 
+    gate_start
+    {
+      variable = Vg
+      start = 0.0
+      stop = 0.5
+      steps = 10
+      simulation = driftdiffusion
+    }
+
     sweep_gate
     {
       variable = Vg
-      start = -1.0
-      stop = 0.5
-      steps = 150 # 
+      start = 0.5
+      stop = -1
+      steps = 75 
       simulation = driftdiffusion
     }
   }
@@ -146,7 +153,7 @@ $Simulation
   meshfile = mosfet.msh
   dimension = 2
   temperature = 300
-  solve = (sweep_drain, sweep_gate)
+  solve = (sweep_drain, gate_start, sweep_gate)
   resultpath = output_transf_char_simple_way 
   #output_format = gmv
   output_format = vtk

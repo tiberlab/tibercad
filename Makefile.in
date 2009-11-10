@@ -40,7 +40,7 @@ $(libdir)/lib$(TIBERLIBNAME)$(shared_libext): src
 	@echo "Linking lib$(TIBERLIBNAME)$(shared_libext) ..."
 	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
 		-o $(libdir)/lib$(TIBERLIBNAME)$(shared_libext) \
-		$(MODULE_LIBS) $(LDFLAGS)
+		$(MODULE_LIBS) $(LDFLAGS) -lz
 
 #	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
 		-Wl,-soname,libtibercad.so.0 -o lib/libtibercad.so.0.0 \

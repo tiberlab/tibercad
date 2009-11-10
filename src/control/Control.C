@@ -630,8 +630,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     if (map_it != physics_opts.end())
     {
       physopts += map_it->second;
-      Messages::warning("The $Physics section is deprecated. \nOptions should be put"
-          " into the \'options\' block of the model instead.");
+      //Messages::warning("The $Physics section is deprecated. \nOptions should be put"
+      //    " into the \'options\' block of the model instead.");
     }
 
     // read also section with user defined name as label
@@ -640,8 +640,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         (map_it != physics_opts.end()))
     {
       physopts += map_it->second;
-      Messages::warning("The $Physics section is deprecated. Options should be put"
-          " into the \'options\' block of the model instead.");
+      //Messages::warning("The $Physics section is deprecated. Options should be put"
+      //    " into the \'options\' block of the model instead.");
     }
 
 
