@@ -58,7 +58,7 @@ public:
   void set_verbose(int verbose_lev);
 
   //!Initialize the Upt instance
-  void inituptight();
+  int inituptight();
 
 
   //!Clean the Upt instance variable space

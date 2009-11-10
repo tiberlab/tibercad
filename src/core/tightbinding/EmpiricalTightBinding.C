@@ -238,7 +238,9 @@ void ETB::reinit(void){
 
   std::cout << "(TC) fill parameter done" << std::endl;
 
-  inst->inituptight();
+  if(inst->inituptight() != 0){ 
+    throw InitFailedException("internal handlers do not match"); }
+
 
   std::cout << "(TC) init uptight done" << std::endl;
 

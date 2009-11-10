@@ -9,12 +9,6 @@ UptWrapper::UptWrapper(){
     std::cout << "done." << std::endl;
 
     std::cout << "Received handler: ";
-    int hsize;
-    f77_upt_gethandlersize(hsize);
-    if(hsize!=UPT_HSIZE){
-      std::cerr<<"ERROR: internal handlers do not match"<<std::endl;
-    }
-
     for  (int ii = 0; ii < UPT_HSIZE; ++ii) {
       std::cout << _handler[ii] << " ";
     }
@@ -24,6 +18,7 @@ UptWrapper::UptWrapper(){
 
 UptWrapper::~UptWrapper(){
   std::cout << "Destructing UPTIGHT instance... ";
+    f77_upt_destructuptight(_handler);
     f77_upt_destructsession(_handler);
     std::cout << "done." << std::endl;
 }
@@ -69,14 +64,25 @@ void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath,
 
 
 //!Initialize UPT instance (allocations)
-void UptWrapper::inituptight () {
-    f77_upt_inituptight(_handler);
-  }
+int UptWrapper::inituptight() 
+{
+    int hsize;
+    f77_upt_gethandlersize(hsize);
+
+    if(hsize!=UPT_HSIZE){
+      return 1;      
+    }
+    else
+    {
+      f77_upt_inituptight(_handler);
+      return 0;
+    }
+}
 
 //!destroy container variables (allocations)
 void UptWrapper::cleanuptight() 
 {
-        f77_upt_destructuptight(_handler);
+    f77_upt_destructuptight(_handler);
 }
 
 
@@ -98,7 +104,7 @@ void UptWrapper::clear_potential(void)
 //! add the k-points as a vector
 void UptWrapper::set_kpoint(double *k_vec)
 {
-	f77_upt_setkpoint(_handler, k_vec);
+  f77_upt_setkpoint(_handler, k_vec);
 }
 
 
