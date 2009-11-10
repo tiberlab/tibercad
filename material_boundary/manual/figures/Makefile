@@ -1,7 +1,0 @@
-SUBDIRS=
-
-
-
-include Make.rules
-
-

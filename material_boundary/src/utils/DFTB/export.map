@@ -1,8 +1,0 @@
-{
-  global: 
-   extern "C++"
-   {
-        DftbpWrapper::*
-   };
-  local: *;
-};
