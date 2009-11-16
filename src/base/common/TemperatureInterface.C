@@ -116,3 +116,8 @@ TemperatureInterface::get_temperature(const Elem* elem, const Point& p)
   
   return temp[0];
 }
+bool
+TemperatureInterface::is_solved(void) const
+{
+  return (_simulation->is_solved());
+}

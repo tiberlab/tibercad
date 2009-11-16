@@ -55,6 +55,8 @@ class TemperatureInterface
     //! Tells if this interface has a simulation associated
     bool has_simulation(void) const;
 
+   //! Tells if the  simulation is solved
+    bool is_solved(void) const;
 
     //! Get the associated simulation
     SimulationInterface* get_simulation(void);
