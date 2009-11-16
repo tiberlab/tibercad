@@ -10,18 +10,19 @@ AWK=`which awk`
 TAR=`which tar`
 [[ $? == 0 ]] || { echo "tar is needed but does not seem to be installed."; exit 1; }
 
+# create a temporary directory
+TMPDIR=`mktemp -d /tmp/tibercad.XXXXXX`
 
-export TMPDIR=`mktemp -d /tmp/tibercad.XXXXXX`
-
+# the archive begins here
 ARCHIVE=`$AWK '/^__ARCHIVE_BEGIN__/ {print NR + 1; exit 0; }' $0`
 
+# extract the archive
 tail -n+$ARCHIVE $0 | $TAR xz -C $TMPDIR
 
-CDIR=`pwd`
-cd $TMPDIR
-./install
+# call the install script
+${TMPDIR}/install
 
-cd $CDIR
+# remove temporary directory
 rm -rf $TMPDIR
 
 exit 0

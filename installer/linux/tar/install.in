@@ -127,6 +127,9 @@ read -e instpath
 
 echo ""
 
+# the sources are unpacked here:
+srcpath=`dirname $0`
+
 [ -z $instpath ] && instpath=/usr/local/tibercad-$TIBERVER
 
 echo -n "I will install to $instpath. Is this what you want? [Y/n]"
@@ -196,23 +199,23 @@ fi
 
 if [ -e ${instpath}/files.lst ]
 then
-  backup_files bin $instpath
-  backup_files materials $instpath
-  backup_files examples $instpath
-  backup_files license $instpath
-  backup_files $ARCH $instpath
-  backup_files doc $instpath
-  backup_files share $instpath
+  backup_files ${srcpath}/bin $instpath
+  backup_files ${srcpath}/materials $instpath
+  backup_files ${srcpath}/examples $instpath
+  backup_files ${srcpath}/license $instpath
+  backup_files ${srcpath}/$ARCH $instpath
+  backup_files ${srcpath}/doc $instpath
+  backup_files ${srcpath}/share $instpath
   mv ${instpath}/files.lst ${instpath}/files.lst.old
 fi
 
-install_files bin $instpath
-install_files materials $instpath
-install_files examples $instpath
-install_files license $instpath
-install_files $ARCH $instpath
-install_files doc $instpath
-install_files share $instpath
+install_files ${srcpath}/bin $instpath
+install_files ${srcpath}/materials $instpath
+install_files ${srcpath}/examples $instpath
+install_files ${srcpath}/license $instpath
+install_files ${srcpath}/$ARCH $instpath
+install_files ${srcpath}/doc $instpath
+install_files ${srcpath}/share $instpath
 
 
 [ -d ${instpath}/bin ] || mkdir -p ${instpath}/bin
