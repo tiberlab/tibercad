@@ -12,7 +12,7 @@ install_gmsh ()
 {
 
   echo "Installing GMSH to ${instpath}/tools/gmsh-$GMSHVER"
-  install_files tools ${instpath}
+  install_files ${srcpath}/tools ${instpath}
 
   here=`pwd`
 
@@ -71,13 +71,14 @@ backup_files ()
 
   for file in `find $src -type f`
   do
-    [ -e ${dst}/$file ] || continue
+    f=${file/${srcpath}/${dst}}
+    [ -e $f ] || continue
 
-    md5=`md5sum ${dst}/$file | awk '{print $1}'`
-    md5orig=`grep "${dst}/$file" ${dst}/files.lst | awk '{print $1}'`
+    md5=`md5sum $f | awk '{print $1}'`
+    md5orig=`grep "$f" ${dst}/files.lst | awk '{print $1}'`
     if [ $md5 != $md5orig ]
     then
-      cp ${dst}/$file ${dst}/${file}.old
+      cp $f ${f}.old
     fi
   done
 }
@@ -92,17 +93,18 @@ install_files ()
 
   for file in `find $src -type f`
   do
+    f=${file/${srcpath}/${dst}}
     mode=0644
     [ -x $file ] && mode=0755
-    install -p -D --mode=$mode $file ${dst}/$file
+    install -p -D --mode=$mode $file $f
 
-    md5sum ${dst}/$file >> ${dst}/files.lst
+    md5sum $f >> ${dst}/files.lst
     empty=0
   done
 
   for d in `find $src -type d`
   do
-    echo "- $d" >> ${dst}/files.lst
+    echo "- ${d/${srcpath}/${dst}}" >> ${dst}/files.lst
   done
 
   [ $empty -eq 1 ] && mkdir -p ${dst}
@@ -131,6 +133,7 @@ echo ""
 srcpath=`dirname $0`
 
 [ -z $instpath ] && instpath=/usr/local/tibercad-$TIBERVER
+
 
 echo -n "I will install to $instpath. Is this what you want? [Y/n]"
 read answer
@@ -168,6 +171,11 @@ then
   exit 1
 fi
 rmdir  $instpath/tibertestdir
+
+
+# get the absolute installation path
+# (I did not figure out a more elegant way)
+instpath=`cd $instpath && pwd`
 
 
 echo "Starting installation to $instpath"
