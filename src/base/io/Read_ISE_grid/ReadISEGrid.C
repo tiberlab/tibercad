@@ -1,7 +1,8 @@
 #include "ReadISEGrid.h"
 
 
-ReadISEGrid::ReadISEGrid(const char* file_name , Mesh& mesh, MeshData_elements&  mesh_data )
+//ReadISEGrid::ReadISEGrid(const char* file_name , Mesh& mesh, MeshData_elements&  mesh_data )
+ReadISEGrid::ReadISEGrid(const char* file_name)
 {
 	
   ISE_file_name = file_name;
@@ -10,7 +11,8 @@ ReadISEGrid::ReadISEGrid(const char* file_name , Mesh& mesh, MeshData_elements& 
   write_xta();
   set_BC_data();
   // read .xta and  .xda files  in  Libmesh  data structures
-  read_mesh_and_data(mesh,mesh_data );
+  //  read_mesh_and_data(mesh,mesh_data );  //  MOVED  to  MeshInput::read_mesh !!!!!!!!
+
 }
 
 ReadISEGrid::~ReadISEGrid()
@@ -1001,233 +1003,53 @@ void ReadISEGrid::scan_grid_file()
 
 
     
-        do
+          do
         {
           ISE_INPUT >> dummy;  //  read  "material =..." and "Elements" keyword
         }
-        while (dummy != "(");  
-        //  find  numb  elements of  regions
-        ISE_INPUT >> numb_region_elements;
+      while (dummy != "(");  
+      //  find  numb  elements of  regions
+      ISE_INPUT >> numb_region_elements;
 
-        //cout << "Region Elements Number: " << numb_region_elements << endl;
-        do
-        {
-          ISE_INPUT >> dummy;
-        }
-        while (dummy != "{"); 
+      //cout << "Region Elements Number: " << numb_region_elements << endl;
+      do
+      {
+        ISE_INPUT >> dummy;
+      }
+      while (dummy != "{"); 
 
 
 
-        //list of  elements id
+      //list of  elements id
 
-        //cout << "Elements id: " << endl;
+      //cout << "Elements id: " << endl;
     
-        for  (unsigned int j = 0; j < numb_region_elements; j++)
-        {
-          ISE_INPUT >> id;  //  id  is  element id ,  that  is  its  position in the  array elements_list
+      for  (unsigned int j = 0; j < numb_region_elements; j++)
+      {
+        ISE_INPUT >> id;  //  id  is  element id ,  that  is  its  position in the  array elements_list
     	
-          //cout <<  id <<  "   ";
+        //cout <<  id <<  "   ";
     	  	
-          // ******************************************
-          // associate current physical  region (phys_reg_id)  to  element elements_list[id]
-          //	elements_list[id]->set_physical_region(phys_reg_id); 
-          //!!see below, only  for elem_dim = sim_dim
+        // ******************************************
+        // associate current physical  region (phys_reg_id)  to  element elements_list[id]
+        //	elements_list[id]->set_physical_region(phys_reg_id); 
+        //!!see below, only  for elem_dim = sim_dim
     	
-          // makes a vector of all elements nD in the  ISE phys. reg.
+        // makes a vector of all elements nD in the  ISE phys. reg.
 
-
-          switch ( (elements_list[id]->get_dimension()) )
-          {
-
-          case 0:  //  element_dimension = 0!
-            {
-              region_elements_0D.push_back(elements_list[id]);
-
-              //  regions_0D.push_back(phys_reg_id) ;
-
-              //             // makes map <phys reg, elements>
-    		     		 
-              //             map_0D_region_elements.insert(make_pair(phys_reg_id, region_elements_0D) );
-
-
-    		 
-              //cout << "0D Element inserted into appropriate map" << endl;
-    		 
-    	 	
-            };
-
-            break;
-
-
-          case 1: //  element_dimension = 1!
-            {
-              region_elements_1D.push_back(elements_list[id]);
-
-
-
-              if ( (dimension ==2) ||  (dimension ==3) )
-              {
-
-                if  (tib_BC_reg_incremented ==  false)
-                {
-                  tib_BC_reg_incremented =  true;
-                  tiber_BC_reg_id++;
-                }
-              }
-
-
-              //  regions_1D.push_back(phys_reg_id) ;
-              //             cerr << "regions_1D = " << phys_reg_id <<  endl;
-
-              //             // makes map <phys reg, elements>
-    		     		 
-              //             map_1D_region_elements.insert(make_pair(phys_reg_id, region_elements_1D) );
-
-              //             //cout << "1D Element inserted into appropriate map" << endl;
-    		 
-    	 	
-            };
-
-            break;
-
-
-          case 2://  element_dimension = 2!
-            {
-
-              // element_dimension = simulation dimension ->  to tiber_phys_region !!
-              if  (dimension == 2)
-              {// 
-
-                if  (tib_reg_incremented ==  false)
-                {
-                  tib_reg_incremented =  true;
-                  tiber_phys_reg_id++;
-                }
-              
-                elements_list[id]->set_physical_region(tiber_phys_reg_id);
-              }
-
-              if  (dimension ==3) 
-              {
-
-                if  (tib_BC_reg_incremented ==  false)
-                {
-                  tib_BC_reg_incremented =  true;
-                  tiber_BC_reg_id++;
-                }
-              }
-
-
-
-
-              region_elements_2D.push_back(elements_list[id]);
-
- 
-
-
-
-
-              //  regions_2D.push_back(phys_reg_id) ;
-
-              //             cerr << "regions_2D = " << phys_reg_id <<  endl;
-
-              //             // makes map <phys reg, elements>
-    		     		 
-              //             map_2D_region_elements.insert(make_pair(phys_reg_id, region_elements_2D) );
-
-
-              //             //cout << "2D Element inserted into appropriate map" << endl;
-    		 
-    	 	
-            };
-
-            break;
-
-
-          case 3://  element_dimension = 3!
-            {
-        
-
-              // element_dimension = simulation dimension ->  to tiber_phys_region !!
-              if  (dimension == 3)
-              {
-                if  (tib_reg_incremented ==  false)
-                {
-                  tib_reg_incremented =  true;
-                  tiber_phys_reg_id++;
-                }
-              
-                elements_list[id]->set_physical_region(tiber_phys_reg_id);
-
-              }
-
-              region_elements_3D.push_back(elements_list[id]);
-
-
-              //  regions_3D.push_back(phys_reg_id) ;
-
-              //             // makes map <phys reg, elements>
-    		     		 
-              //             map_3D_region_elements.insert(make_pair(phys_reg_id, region_elements_3D) );
-
-
-              //             //cout << "3D Element inserted into appropriate map" << endl;
-    		 
-    	 	
-            };
-
-            break;
-
-          default:
-            {
-
-
-              cerr << " ERROR: Could not insert element " << id 
-                   << " into appropriate region/element vector" << endl;
-              throw InitFailedException(""); 
-
-            };
-          } //switch end
-     	    	
-        	
-
-        } // end of  present region elements
-
-     
-        //  if  tib_reg_incremented =  true ->   it's a  physical region -> put it  in the  map
-        // put region name in  map with  tiber_phys_reg_id
-        if   (tib_reg_incremented == true)
-        {
-          //   cerr<< " put in map physical region :  " <<tiber_phys_reg_id<< "  "<<  region_name<< endl;
-          region_names_ID_map.insert(make_pair(tiber_phys_reg_id, region_name)  ); 
-        }
-        //  else put  in  BC_region_names_ID_map
-        //     else BC_region_names_ID_map.insert(make_pair(tiber_phys_reg_id, region_name)  );
-        if   (tib_BC_reg_incremented == true)
-        {
-          //    cerr<< " put in map BC region :  " << tiber_BC_reg_id << "  "<<region_name<< endl;
-          BC_region_names_ID_map.insert(make_pair(tiber_BC_reg_id, region_name)  ); 
-        }  
-
-
-        tib_reg_incremented =  false; // reset flag  for  next region
-        tib_BC_reg_incremented =  false; // reset flag  for  next region
-
-        //  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        //  here   regions_nD.push_back  and  map_nD_region_elements.insert
 
         switch ( (elements_list[id]->get_dimension()) )
         {
 
-        case 0:
+        case 0:  //  element_dimension = 0!
           {
-            
+            region_elements_0D.push_back(elements_list[id]);
 
-            regions_0D.push_back(phys_reg_id) ;
+            //  regions_0D.push_back(phys_reg_id) ;
 
-            // makes map <phys reg, elements>
+            //             // makes map <phys reg, elements>
     		     		 
-            map_0D_region_elements.insert(make_pair(phys_reg_id, region_elements_0D) );
+            //             map_0D_region_elements.insert(make_pair(phys_reg_id, region_elements_0D) );
 
 
     		 
@@ -1239,18 +1061,31 @@ void ReadISEGrid::scan_grid_file()
           break;
 
 
-        case 1:
+        case 1: //  element_dimension = 1!
           {
-           
+            region_elements_1D.push_back(elements_list[id]);
 
-            regions_1D.push_back(phys_reg_id) ;
-            //    cerr << "regions_1D = " << phys_reg_id <<  endl;
 
-            // makes map <phys reg, elements>
+
+            if ( (dimension ==2) ||  (dimension ==3) )
+            {
+
+              if  (tib_BC_reg_incremented ==  false)
+              {
+                tib_BC_reg_incremented =  true;
+                tiber_BC_reg_id++;
+              }
+            }
+
+
+            //  regions_1D.push_back(phys_reg_id) ;
+            //             cerr << "regions_1D = " << phys_reg_id <<  endl;
+
+            //             // makes map <phys reg, elements>
     		     		 
-            map_1D_region_elements.insert(make_pair(phys_reg_id, region_elements_1D) );
+            //             map_1D_region_elements.insert(make_pair(phys_reg_id, region_elements_1D) );
 
-            //cout << "1D Element inserted into appropriate map" << endl;
+            //             //cout << "1D Element inserted into appropriate map" << endl;
     		 
     	 	
           };
@@ -1258,20 +1093,52 @@ void ReadISEGrid::scan_grid_file()
           break;
 
 
-        case 2:
+        case 2://  element_dimension = 2!
           {
-           
 
-            regions_2D.push_back(phys_reg_id) ;
+            // element_dimension = simulation dimension ->  to tiber_phys_region !!
+            if  (dimension == 2)
+            {// 
 
-            //   cerr << "regions_2D = " << phys_reg_id <<  endl;
+              if  (tib_reg_incremented ==  false)
+              {
+                tib_reg_incremented =  true;
+                tiber_phys_reg_id++;
+              }
+              
+              elements_list[id]->set_physical_region(tiber_phys_reg_id);
+            }
 
-            // makes map <phys reg, elements>
+            if  (dimension ==3) 
+            {
+
+              if  (tib_BC_reg_incremented ==  false)
+              {
+                tib_BC_reg_incremented =  true;
+                tiber_BC_reg_id++;
+              }
+            }
+
+
+
+
+            region_elements_2D.push_back(elements_list[id]);
+
+ 
+
+
+
+
+            //  regions_2D.push_back(phys_reg_id) ;
+
+            //             cerr << "regions_2D = " << phys_reg_id <<  endl;
+
+            //             // makes map <phys reg, elements>
     		     		 
-            map_2D_region_elements.insert(make_pair(phys_reg_id, region_elements_2D) );
+            //             map_2D_region_elements.insert(make_pair(phys_reg_id, region_elements_2D) );
 
 
-            //cout << "2D Element inserted into appropriate map" << endl;
+            //             //cout << "2D Element inserted into appropriate map" << endl;
     		 
     	 	
           };
@@ -1279,18 +1146,34 @@ void ReadISEGrid::scan_grid_file()
           break;
 
 
-        case 3:
+        case 3://  element_dimension = 3!
           {
-            
+        
 
-            regions_3D.push_back(phys_reg_id) ;
+            // element_dimension = simulation dimension ->  to tiber_phys_region !!
+            if  (dimension == 3)
+            {
+              if  (tib_reg_incremented ==  false)
+              {
+                tib_reg_incremented =  true;
+                tiber_phys_reg_id++;
+              }
+              
+              elements_list[id]->set_physical_region(tiber_phys_reg_id);
 
-            // makes map <phys reg, elements>
+            }
+
+            region_elements_3D.push_back(elements_list[id]);
+
+
+            //  regions_3D.push_back(phys_reg_id) ;
+
+            //             // makes map <phys reg, elements>
     		     		 
-            map_3D_region_elements.insert(make_pair(phys_reg_id, region_elements_3D) );
+            //             map_3D_region_elements.insert(make_pair(phys_reg_id, region_elements_3D) );
 
 
-            //cout << "3D Element inserted into appropriate map" << endl;
+            //             //cout << "3D Element inserted into appropriate map" << endl;
     		 
     	 	
           };
@@ -1299,11 +1182,130 @@ void ReadISEGrid::scan_grid_file()
 
         default:
           {
+
+
             cerr << " ERROR: Could not insert element " << id 
                  << " into appropriate region/element vector" << endl;
-            exit (1);
+            throw InitFailedException(""); 
+
           };
         } //switch end
+     	    	
+        	
+
+      } // end of  present region elements
+
+     
+        //  if  tib_reg_incremented =  true ->   it's a  physical region -> put it  in the  map
+        // put region name in  map with  tiber_phys_reg_id
+      if   (tib_reg_incremented == true)
+      {
+        //   cerr<< " put in map physical region :  " <<tiber_phys_reg_id<< "  "<<  region_name<< endl;
+        region_names_ID_map.insert(make_pair(tiber_phys_reg_id, region_name)  ); 
+      }
+      //  else put  in  BC_region_names_ID_map
+      //     else BC_region_names_ID_map.insert(make_pair(tiber_phys_reg_id, region_name)  );
+      if   (tib_BC_reg_incremented == true)
+      {
+        //    cerr<< " put in map BC region :  " << tiber_BC_reg_id << "  "<<region_name<< endl;
+        BC_region_names_ID_map.insert(make_pair(tiber_BC_reg_id, region_name)  ); 
+      }  
+
+
+      tib_reg_incremented =  false; // reset flag  for  next region
+      tib_BC_reg_incremented =  false; // reset flag  for  next region
+
+      //  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      //  here   regions_nD.push_back  and  map_nD_region_elements.insert
+
+      switch ( (elements_list[id]->get_dimension()) )
+      {
+
+      case 0:
+        {
+            
+
+          regions_0D.push_back(phys_reg_id) ;
+
+          // makes map <phys reg, elements>
+    		     		 
+          map_0D_region_elements.insert(make_pair(phys_reg_id, region_elements_0D) );
+
+
+    		 
+          //cout << "0D Element inserted into appropriate map" << endl;
+    		 
+    	 	
+        };
+
+        break;
+
+
+      case 1:
+        {
+           
+
+          regions_1D.push_back(phys_reg_id) ;
+          //    cerr << "regions_1D = " << phys_reg_id <<  endl;
+
+          // makes map <phys reg, elements>
+    		     		 
+          map_1D_region_elements.insert(make_pair(phys_reg_id, region_elements_1D) );
+
+          //cout << "1D Element inserted into appropriate map" << endl;
+    		 
+    	 	
+        };
+
+        break;
+
+
+      case 2:
+        {
+           
+
+          regions_2D.push_back(phys_reg_id) ;
+
+          //   cerr << "regions_2D = " << phys_reg_id <<  endl;
+
+          // makes map <phys reg, elements>
+    		     		 
+          map_2D_region_elements.insert(make_pair(phys_reg_id, region_elements_2D) );
+
+
+          //cout << "2D Element inserted into appropriate map" << endl;
+    		 
+    	 	
+        };
+
+        break;
+
+
+      case 3:
+        {
+            
+
+          regions_3D.push_back(phys_reg_id) ;
+
+          // makes map <phys reg, elements>
+    		     		 
+          map_3D_region_elements.insert(make_pair(phys_reg_id, region_elements_3D) );
+
+
+          //cout << "3D Element inserted into appropriate map" << endl;
+    		 
+    	 	
+        };
+
+        break;
+
+      default:
+        {
+          cerr << " ERROR: Could not insert element " << id 
+               << " into appropriate region/element vector" << endl;
+          exit (1);
+        };
+      } //switch end
 
 
 
@@ -1312,11 +1314,11 @@ void ReadISEGrid::scan_grid_file()
     
         //cout << endl;
     
-        phys_reg_id = 0;
+      phys_reg_id = 0;
 
  
-        ISE_INPUT >> dummy; //  read first closing  bracket } of  physical region section
-        ISE_INPUT >> dummy; //  read second closing  bracket } of  physical region section
+      ISE_INPUT >> dummy; //  read first closing  bracket } of  physical region section
+      ISE_INPUT >> dummy; //  read second closing  bracket } of  physical region section
 
 
     }  //  next  phys. region

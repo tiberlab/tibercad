@@ -80,8 +80,9 @@ Device::setup_mesh(void)
   _mesh_units = _options.get_option("mesh_units", _mesh_units);
 
 
-  int dim = _options.get_option("dimension", 2);
-  _mesh = new Mesh(dim);
+  int dim = _options.get_option("dimension", -1);
+
+  //  _mesh = new Mesh(dim);   //  moved to  MeshInput
 
   const string& meshfile = _options["meshfile"];
 
@@ -102,10 +103,10 @@ Device::setup_mesh(void)
   }
   
 
-  _meshdata = new MeshData_elements(*_mesh);
+  //  _meshdata = new MeshData_elements(*_mesh); //  moved to  MeshInput
   
 
-  (*_meshdata).enable_compatibility_mode();
+  //  (*_meshdata).enable_compatibility_mode();
 
 
   delete _boundary_nodes;
@@ -113,8 +114,14 @@ Device::setup_mesh(void)
 
   m.info("Reading mesh file...", false);
 
-  MeshInput::read_mesh(meshfile, dim, *_mesh, *_meshdata, *_boundary_nodes,
+  //  MeshInput::read_mesh(meshfile, dim, *_mesh, *_meshdata, *_boundary_nodes,
+  //                       _mesh_region_names, _boundary_region_names);
+
+  MeshInput::read_mesh(meshfile, dim, _mesh, _meshdata, *_boundary_nodes,
                        _mesh_region_names, _boundary_region_names);
+
+  //  (*_meshdata).enable_compatibility_mode();  //   moved  to  MeshInput
+
 
   MeshUtils::assign_subdomain_ids(*_mesh, *_meshdata);
 
@@ -125,7 +132,7 @@ Device::setup_mesh(void)
     ostringstream os;
     os << "number of nodes     : " << setw(7) << setfill(' ') << _mesh->n_nodes() << endl
        << "number of elements  : " << setw(7) << setfill(' ') << _mesh->n_elem() << endl;
-       //<< "number of subdomains: " << setw(7) << setfill(' ') << _mesh->n_subdomains();
+    //<< "number of subdomains: " << setw(7) << setfill(' ') << _mesh->n_subdomains();
     m.info(os.str());
   }
   m.newline();
@@ -198,7 +205,7 @@ Device::set_material(Material* material, ID region_id)
 
 void
 Device::set_material(Material* material, const vector<ID>& region_ids,
-  const string& region_name)
+                     const string& region_name)
 {
   assert(material != NULL);
 
@@ -209,8 +216,8 @@ Device::set_material(Material* material, const vector<ID>& region_ids,
 
   ostringstream os;
   os << "Added material " << material->get_name()
-    << " for region \'" << region_name
-    << "\' (mesh regions " << region_ids[0];
+     << " for region \'" << region_name
+     << "\' (mesh regions " << region_ids[0];
   for (unsigned int i = 1; i < region_ids.size(); ++i)
     os << ", " << region_ids[i];
   os << ")" << endl;

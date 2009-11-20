@@ -21,18 +21,18 @@
 #include "ISE_Element_0D.h"
 #include "TypeDefs.h"
 
- //  LibMesh  include files
+//  LibMesh  include files
 #include "mesh_data_elements.h"
 #include "mesh_data.h"
 #include "libmesh.h"
 #include "mesh.h"
 #include "mesh_generation.h"
 
- //!ISE Reading and Libmesh Writing Class.
- /*!
-  *  Reads a '*.grd' (ISE T-Cad) file and converts it into
-  * libmesh type ('*.xda'; '*.xta'). Extracts also boundary conditions.
-  */
+//!ISE Reading and Libmesh Writing Class.
+/*!
+ *  Reads a '*.grd' (ISE T-Cad) file and converts it into
+ * libmesh type ('*.xda'; '*.xta'). Extracts also boundary conditions.
+ */
 class ReadISEGrid 
 {
 		
@@ -43,7 +43,8 @@ class ReadISEGrid
    * 
    */
  
-  ReadISEGrid(const char* file_name , Mesh& mesh, MeshData_elements&  mesh_data );
+  //  ReadISEGrid(const char* file_name , Mesh& mesh, MeshData_elements&  mesh_data );
+  ReadISEGrid(const char* file_name);
 
 
   //! Virtual Destructor.
@@ -77,10 +78,11 @@ class ReadISEGrid
   void  get_BC_region_names_map (std::map<ID, std::string >& region_names_map );
 
 
+
+
+
  private:
   
-
-
 
   //!  Writes  mesh file for  Libmesh in  DEAL  format  (.xda)
   /*!

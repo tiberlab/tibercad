@@ -32,18 +32,25 @@ using namespace std;
 
 //  constructor:  scan  .msh  file,  parse it, get info on BC,  writes .xda and  
 // .xta  file for  Libmesh
-//  needs physical region ID,  bound. conditions region  ID (2D or 1D), dim. of  
-// simulation 
-//Read_MSH::Read_MSH(string filename, vector<unsigned int>& phys_reg_ID, 
-//                   vector<unsigned int>& BC_reg_ID, unsigned int sim_dim, 
-//                   Mesh& mesh, MeshData_elements&  mesh_data)
+//  needs .msh file name, dim. of simulation is  by  default  the one  defined  in  input  file
+//  but  is  taken  from  mesh  file  beginning  with    GMSH 2.4 !!
 
-Read_MSH::Read_MSH(string filename, unsigned int sim_dim, 
-                   Mesh& mesh, MeshData_elements&  mesh_data)
 
+Read_MSH::Read_MSH(string filename, int sim_dim )           
 {
 
-  dim =  sim_dim; 
+  //  dim =  sim_dim; 
+
+  simulation_dimension =  sim_dim;  //   dimension  is  set  by  input  file
+
+ 
+ 
+  //  set  simulation_dimension  to  the  value  read from input  file
+  // (for  compatibility  with  GMSH  vers. older  than  2.4.2)
+  // this  value  is  overridden  with  the  one  taken  from  mesh  file  of  version 2.4.2 abd  above
+  // (if  present)
+
+
   version = 1;  //  by default it's version 1 of .msh file  format
   // in scan_input it is override if there is a MeshFormat section
 
@@ -55,22 +62,22 @@ Read_MSH::Read_MSH(string filename, unsigned int sim_dim,
 
   //  get_BC_info(BC_reg_ID); //  ->  after   write_xda(); 
 
-//  cerr <<  " finished scan_input        "  <<  endl;
+  //  cerr <<  " finished scan_input        "  <<  endl;
 
   // put  nodes and  elements in data structures
   get_nodes_coord();
 
-//  cerr <<  " finished  get_nodes_coord();       "  <<  endl;
+  //  cerr <<  " finished  get_nodes_coord();       "  <<  endl;
 
 
   get_elem_nodes();
-//  cerr <<  " finished  get_elem_nodes      "  <<  endl;
+  //  cerr <<  " finished  get_elem_nodes      "  <<  endl;
 
 
   // write .xda file of mesh (elements and  nodes :  
   // only elements with correct dim are considered)
   write_xda();
-//  cerr <<  " finished   write_xda      "  <<  endl;
+  //  cerr <<  " finished   write_xda      "  <<  endl;
 
 
   // extract nodes which  belong to  boundary regions (dim < simulation dim) and 
@@ -89,11 +96,12 @@ Read_MSH::Read_MSH(string filename, unsigned int sim_dim,
 
   // write  .xta file with  meshdata info for  Libmesh (here ID of  phys regions)  
   write_xta();
-//  cerr <<  " finished   write_xta      "  <<  endl;
+  //  cerr <<  " finished   write_xta      "  <<  endl;
 
   // read .xta and  .xda files  in  Libmesh  data structures
-  read_mesh_and_data(mesh,mesh_data );
+  //  read_mesh_and_data(mesh,mesh_data );  ->   MOVED  to    MeshInput::read_mesh !!!!
 
+  //  sim_dim = get_simulation_dim();
 
 }
 
@@ -475,6 +483,10 @@ void Read_MSH::scan_input(string file_name)
 
   }
 
+  // if dimension not set in  input  file  AND dimension not extracted from mesh file (old GMSH version)
+  if  (simulation_dimension < 0)
+    throw InitFailedException("Simulation dimension not defined");
+
 
   //  in_stream >> Nodes_label;
   parse_node_section(in_stream);
@@ -556,7 +568,13 @@ void Read_MSH::get_BC_info()
 
     el_type = elem_values[i][1];
 
-    switch(dim) {
+    //  switch(dim) {
+
+
+    //  cerr <<  "  simulation_dimension = "   << simulation_dimension <<   endl;
+
+
+    switch(simulation_dimension) {
     case 1:
       // 1D  sim ................
       if  ( el_type == 15)   //   BC = 0D  point (1 node)
@@ -613,7 +631,7 @@ void Read_MSH::get_BC_info()
 
       break;
     default:
-      cerr <<  "Error : wrong  value  of  dim"; 
+      cerr <<  "Error: wrong value of simulation_dimension"; 
 
     }
   
@@ -648,9 +666,9 @@ void Read_MSH::get_BC_info()
       if (p1 ==  BC_id_vec.end())   //  not  found
       {
 
-    //    cerr << "BC_id =    "  <<  BC_id <<  endl;
-    //    cerr << "BC_dim =    "  <<  BC_dim <<  endl;
-    //    cerr <<  endl;
+        //    cerr << "BC_id =    "  <<  BC_id <<  endl;
+        //    cerr << "BC_dim =    "  <<  BC_dim <<  endl;
+        //    cerr <<  endl;
 
 
 
@@ -660,7 +678,7 @@ void Read_MSH::get_BC_info()
         BC_elements.push_back(null_vector); // add  an  empty  vector  to  to BC_elements vector<vector>>
 
         // insert  map BC_id, BC_dim ****************
-          BoundCond_dimension.insert(make_pair(BC_id, BC_dim ) );
+        BoundCond_dimension.insert(make_pair(BC_id, BC_dim ) );
       
       }
 
@@ -751,7 +769,8 @@ void Read_MSH::get_BC_info()
 
       // ---------------------------------------------------
 
-      if  (dim == 3) 
+      //    if  (dim == 3) 
+      if  (simulation_dimension== 3)
       {  //if
 
         //     el_id = BC_elem_line[i][0]  ;
@@ -854,7 +873,7 @@ unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,
 
   }
 
-  else  cerr  <<  "Error :  inconsistent  Physical or  BC  region definition !! " 
+  else  cerr  <<  "Error: inconsistent Physical or BC region definition !! " 
               << endl ;
   // physic ID  not  found in  user's  list 
 
@@ -1590,7 +1609,7 @@ void  Read_MSH::write_xda ( )
 
 // get  element data  for  each  element
 // BEWARE ! we  select ONLY  the  elements relevant to the  
-// simulation dimension (dim):
+// simulation dimension :
 // e.g. if  dim = 2 ->  here we take  only  2D elements,  
 // which correspond to  phys. regions;
 //   1D and 0D elements,  if  present, are processed  separately to  get boundary cond. reg.
@@ -1618,7 +1637,8 @@ void Read_MSH::get_elem_nodes()
     
     //    gmsh_elem_type = el_type;
 
-    switch(dim) {
+    //    switch(dim) {
+    switch(simulation_dimension) {
     case 1:
       // 1D  sim ................elem_values[i][1] == 1) || (elem_values[i][1] == 8)
       if ( (el_type == 1) || (el_type == 8)  )
@@ -1677,7 +1697,8 @@ void Read_MSH::get_elem_nodes()
       break;
 	
     default:
-      cerr <<  "Error :    wrong  value  of  dim"; 
+      cerr <<  "Error: wrong value of simulation_dimension"; 
+      //   exit(1);
 
     }
 
@@ -1694,7 +1715,7 @@ void Read_MSH::get_elem_nodes()
   }
 
 
-//  cerr <<  "get_elem_nodes :  fine primo  ciclo  for    "  <<  endl;
+  //  cerr <<  "get_elem_nodes :  fine primo  ciclo  for    "  <<  endl;
 
   //
   //NOW IN elem_line THERE ARE ONLY THE ELEMENT ENTRIES CONSISTENT WITH DIM OF PROBLEM !!!
@@ -1718,7 +1739,7 @@ void Read_MSH::get_elem_nodes()
 
   elem_line_size = elem_line.size();
 
-//  cerr <<  " elem_line.size() =     " << elem_line_size << endl;
+  //  cerr <<  " elem_line.size() =     " << elem_line_size << endl;
   
 
   //  for (unsigned int i =0; i< elem_line.size(); ++i)
@@ -1896,7 +1917,7 @@ void Read_MSH::get_elem_nodes()
   }
 
   // end list of  (elem)lines
-//  cerr <<  "get_elem_nodes :  fine secondo  ciclo  for    "  <<  endl;
+  //  cerr <<  "get_elem_nodes :  fine secondo  ciclo  for    "  <<  endl;
 
 
 
@@ -2111,37 +2132,117 @@ void Read_MSH::parse_physicalnames_section(ifstream&  in_stream)
   std::string end_label,  physical_name;
   int  physical_number, number_physical_names ;
 
+  int physical_dimension;  //  for  mesh  format version  2.1 !!!! 
+  physical_dimension  = 0;
+
+  double   mesh_subversion;  //  ->  version ??
+  mesh_subversion = 0.0;
+
 
   in_stream >> number_physical_names;
 
-  for (unsigned int i=0; i<number_physical_names; i++)
-  {
 
-    in_stream >>  physical_number;
+
+  //     -------------------
+  //  first,  guess  mesh  format version !!!
+  //
+  //  ******** NOTE !!!! ************
+  // if  mesh  format version is 2.1 (GMSH  2.4.2  or  later),
+  // the  simulation_dimension  is  overridden  with  the  value  extracted  from  mesh  file  !!!
+  // otherwise the  dimension  is  left  as  read  from  input  file 
+  //  (if  not  present an  exception  is  thrown !)
+
+  in_stream >>  physical_number;
+
+  in_stream >>  physical_name;
+
+  //   if   physical_name is  not number  then  it's  an  older  GMSH version
+
+  if  (physical_name[0] == '\"' ) 
+
+  {
+    mesh_subversion =    2.0;
+  }
+
+  else  // "physical_name" is  a number,  that  is  the  physical  dimension,  then
+  {
+    mesh_subversion =    2.1;
+
+    //  FORMAT  2.1 (from GMSH 2.4.0):  physical  dimension  of  phys. region (1,2,3)
+    //                physical number
+    //                "physical-name" 
+
+    physical_dimension = physical_number;
+    physical_number =   atoi (physical_name.c_str())  ;
+
     in_stream >>  physical_name;
 
-    assert(physical_name.size() >= 2);
-    physical_names_map.insert(
-                              make_pair(physical_number,physical_name.substr(1, physical_name.size() - 2)));
+    simulation_dimension = physical_dimension;
+
+  }
+ 
+  assert(physical_name.size() >= 2);
+  physical_names_map.insert(
+                            make_pair(physical_number,physical_name.substr(1, physical_name.size() - 2)));
+
+
+
+
+
+  for (unsigned int i=0; i< (number_physical_names-1); i++)
+  {
+
+  
+    //  older  mesh  format
+    if (mesh_subversion == 2.0)
+    {
+
+      in_stream >>  physical_number;
+      in_stream >>  physical_name;
+      assert(physical_name.size() >= 2);
+      physical_names_map.insert(
+                                make_pair(physical_number,physical_name.substr(1, physical_name.size() - 2)));
+
+
+    }
+    // new mesh format
+    else if (mesh_subversion == 2.1) 
+    {
+
+      in_stream >> physical_dimension ;
+      in_stream >>  physical_number;
+      in_stream >>  physical_name;
+      assert(physical_name.size() >= 2);
+      physical_names_map.insert(
+                                make_pair(physical_number,physical_name.substr(1, physical_name.size() - 2)));
+
+      if  (physical_dimension > simulation_dimension)
+        simulation_dimension = physical_dimension;
+
+    }
 
   }
 
+  // ----------------------------------------------------------------
+
   in_stream >> end_label;  //  read  "$EndPhysicalNames"
-
-
-  
-
 
 }
 
 
 void Read_MSH::get_physical_names_map( std::map< unsigned int, std::string>& phys_names_map  )
 {
-
-  phys_names_map = physical_names_map;
-
- 
+  phys_names_map = physical_names_map; 
 }
+
+
+
+//
+int Read_MSH::get_simulation_dim()
+{
+  return simulation_dimension; 
+}
+
 
 
 // ************************************************************************
@@ -2305,7 +2406,8 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
 
 
  
-  if  (dim == 2)
+  //  if  (dim == 2)
+  if  (simulation_dimension == 2)
     //  ok for  TRI4  AND  QUAD4 
 
   {
@@ -2369,7 +2471,8 @@ void   Read_MSH::check_orientation( vector<unsigned int>&  node_id_list , unsign
   }
 
 
-  if (dim == 3)
+  //  if (dim == 3)
+  if (simulation_dimension == 3)
 
   { // dim=3
 

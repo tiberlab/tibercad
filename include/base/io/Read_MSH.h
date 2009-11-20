@@ -39,36 +39,23 @@ class Read_MSH
 
  public:
 
-  //  MSH_parser(std::string filename , std::vector<int>& BC_reg_ID, int sim_dim );
-  
-  //  Read_MSH(std::string filename, std::vector<int>& phys_reg_ID, std::vector<int>& BC_reg_ID, int sim_dim  );
-
-
+ 
   //! Constructor. 
   /*!
    * Scans  GMSH .msh  file (v. 1.0 and 2.0),  parses it, gets nodes 
    * belonging to Boundary  regions,
    *  writes .xda and  .xta  file for  Libmesh.
    *  needs :
-   * \param filename name of  the  GMSH  .msh file 
-   * \param  sim_dim dimension  of the   simulation
-   * \param  mesh  reference to  \c Mesh
-   * \param  mesh_data   reference to  \c MeshData_elements
-   * 
+   * \param filename name of the GMSH  .msh file 
+   * \param sim_dim dimension of the simulation 
    */
-  //  Read_MSH(std::string filename, std::vector<unsigned int>& phys_reg_ID,
-  //           std::vector<unsigned int>& BC_reg_ID, unsigned int sim_dim, 
-  //           Mesh& mesh, MeshData_elements&  mesh_data);
+  Read_MSH(std::string filename, int sim_dim ); 
+  
 
-  Read_MSH(std::string filename, unsigned int sim_dim, 
-           Mesh& mesh, MeshData_elements&  mesh_data);
 
   //! Destructor
   ~Read_MSH();
 
-
-  // void  MSH_parser::get_data ( std::vector< std::vector<double> >& glob_reg_values,
-  // std::vector<int>& glob_reg_id,  std::vector<std::string>& glob_mat);
 
   void  get_data ( std::vector< std::vector<unsigned int> >& glob_elem_values);
 
@@ -111,18 +98,32 @@ class Read_MSH
   void get_physical_names_map(std::map<unsigned int, std::string >& phys_names_map);
 
 
+  /*!   returns  simulation  dimension;  
+   * if  it's an   old  GMSH  version, dim is  set  by  input file
+   *  otherwise, it  is  set  by  the  value  extracted  in  /parse_physicalnames_section
+   */
+  int  get_simulation_dim();
+
 
  private:
 
  
   // Private member data
 
+
+
+  /*!
+   *  Physical dimension  of  the  simulation as  guessed  from  the  largest elem  dimension.
+   */
+  int  simulation_dimension; 
+
+
   /*!
    *  Version of  GMSH .msh file (1 or 2).
    */
   int version;
 
-  unsigned int dim;
+  //  unsigned int dim;
 
 
   /*!
@@ -190,6 +191,7 @@ class Read_MSH
 
 
   // --------------------- Private methods
+
 
   //! Vector initialization. 
   void initialize_vectors();
