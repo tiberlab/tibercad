@@ -79,48 +79,23 @@ Device::setup_mesh(void)
 
   _mesh_units = _options.get_option("mesh_units", _mesh_units);
 
-
+  // this is backup solution if dim cannot be guessed from the mesh file
   int dim = _options.get_option("dimension", -1);
-
-  //  _mesh = new Mesh(dim);   //  moved to  MeshInput
 
   const string& meshfile = _options["meshfile"];
 
   {
     ostringstream os;
-    os << "mesh file     : " << meshfile << endl
-       << "mesh units    : " << _mesh_units << " m" << endl
-       << "mesh dimension: " << dim;
-    m.info(os.str());
-    m.newline();
+    os << "Reading mesh file " << meshfile << " ...";
+    m.info(os.str(), false);
   }
-
-  const string& sym = _options.get_option("symmetry", "");
-  if (sym == "cylindrical")
-  {
-    _symmetry = TiberCad::CYLINDRICAL;
-    m.info("Using cylinder symmetry (=> 3D simulation)");
-  }
-  
-
-  //  _meshdata = new MeshData_elements(*_mesh); //  moved to  MeshInput
-  
-
-  //  (*_meshdata).enable_compatibility_mode();
 
 
   delete _boundary_nodes;
   _boundary_nodes = new map<unsigned int, vector<ID> >();
 
-  m.info("Reading mesh file...", false);
-
-  //  MeshInput::read_mesh(meshfile, dim, *_mesh, *_meshdata, *_boundary_nodes,
-  //                       _mesh_region_names, _boundary_region_names);
-
   MeshInput::read_mesh(meshfile, dim, _mesh, _meshdata, *_boundary_nodes,
                        _mesh_region_names, _boundary_region_names);
-
-  //  (*_meshdata).enable_compatibility_mode();  //   moved  to  MeshInput
 
 
   MeshUtils::assign_subdomain_ids(*_mesh, *_meshdata);
@@ -130,12 +105,23 @@ Device::setup_mesh(void)
   m.info(" done.");
   {
     ostringstream os;
-    os << "number of nodes     : " << setw(7) << setfill(' ') << _mesh->n_nodes() << endl
+
+    os << "mesh units          : " << _mesh_units << " m" << endl
+       << "mesh dimension      : " << setw(7) << setfill(' ') << dim << endl
+       << "number of nodes     : " << setw(7) << setfill(' ') << _mesh->n_nodes() << endl
        << "number of elements  : " << setw(7) << setfill(' ') << _mesh->n_elem() << endl;
     //<< "number of subdomains: " << setw(7) << setfill(' ') << _mesh->n_subdomains();
     m.info(os.str());
   }
   m.newline();
+
+  const string& sym = _options.get_option("symmetry", "");
+  if (sym == "cylindrical")
+  {
+    _symmetry = TiberCad::CYLINDRICAL;
+    m.info("Using cylinder symmetry (=> 3D simulation)");
+  }
+  
 
   /*
    * NOTE:
