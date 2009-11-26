@@ -49,6 +49,7 @@ class ETB : public TightBinding
     double projection_length;
     double dg_scale;
     double dg_onsite;
+    bool hybrid_passivation;
   };
 
   class UptSolverOptions

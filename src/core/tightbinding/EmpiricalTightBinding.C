@@ -55,7 +55,8 @@ ETB::UptOptions::UptOptions(void)
  relat_flag(0),
  potential_flag(0),
  opt_flag(0),
- poldir(1)
+ poldir(1),
+ hybrid_passivation(false)
 {
   c_axis = new double[3];
   c_axis[0]=0.0; c_axis[1]=0.0; c_axis[2]=1.0;
@@ -234,7 +235,8 @@ void ETB::reinit(void){
 		   _upt_options.relat_flag, _upt_options.potential_flag,
 		   _upt_options.opt_flag, _upt_options.poldir,
 		   _upt_options.c_axis, _upt_options.check_bondmap,
-                   _upt_options.dg_scale, _upt_options.dg_onsite );
+                   _upt_options.dg_scale, _upt_options.dg_onsite,
+                   _upt_options.hybrid_passivation);
 
   std::cout << "(TC) fill parameter done" << std::endl;
 
@@ -567,6 +569,10 @@ void ETB::parse_options(void)
   _upt_options.dg_scale = get_options().get_option("dangling_bond_scaling",100);
   _upt_options.dg_onsite = get_options().get_option("dangling_bond_onsite",-200.0);    
 
+  //Choose passivation model
+  std::string passivation_model = get_options().get_option("passivation_model","hydrogen");
+  if ( passivation_model == "hybrid" )
+      {_upt_options.hybrid_passivation = true;}
 
   // Solver options: "upt_lanczos", "read_old"
   _upt_solver_options.solver = get_solver_options().get_option("solver", "upt_lanczos");

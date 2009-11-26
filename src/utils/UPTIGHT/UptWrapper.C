@@ -37,10 +37,10 @@ void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath,
 			    char *gen_filename, char *gen_outname, char *sparse_fmt, 
 			    int max_n_n, bool harrison, bool relat, bool potential,
 			    bool optmat, int poldir, double *c_axis, bool check_bondmap,
-			    double dg_scale, double dg_onsite) 
+			    double dg_scale, double dg_onsite, bool hybrid_passivation)
 {
 
-  int harrison_flag, relat_flag, potential_flag, optmat_flag, check_nn;
+  int harrison_flag, relat_flag, potential_flag, optmat_flag, check_nn, hybrid;
   
   harrison_flag=0;
   if(harrison){harrison_flag=1;}
@@ -52,12 +52,14 @@ void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath,
   if(optmat){optmat_flag=1;}
   check_nn=0;
   if(check_bondmap){check_nn=1;}
+  hybrid=0;
+  if (hybrid_passivation){hybrid=1;}
 
   f77_upt_fillbasicparameters(_handler, verbose_lev, databasePath, workPath, outPath,
 			      gen_filename, gen_outname, sparse_fmt, max_n_n, 
 			      harrison_flag, relat_flag, potential_flag, optmat_flag, 
 			      poldir, c_axis[0], c_axis[1], c_axis[2], check_nn, 
-			      dg_scale, dg_onsite );
+			      dg_scale, dg_onsite, hybrid );
 
 }
 
