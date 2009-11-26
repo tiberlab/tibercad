@@ -102,6 +102,9 @@ Device::setup_mesh(void)
 
   MeshUtils::get_subdomain_ids(*_mesh, _region_ids);
 
+  // update mesh dimension
+  dim = _mesh->mesh_dimension();
+
   m.info(" done.");
   {
     ostringstream os;
