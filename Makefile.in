@@ -22,11 +22,11 @@ ifeq ($(enable_dftb), yes)
 endif
 
 ifeq ($(enable_uptight), yes)
- MODULE_LIBS += -luptight
+ MODULE_LIBS += -luptight -lguide
 endif
 
 ifeq ($(enable_hetero), yes)
- MODULE_LIBS += -lhetero -lmkl_p4 -lguide
+ MODULE_LIBS += -lhetero -lmkl -lguide
 endif
 
 export MODULE_LIBS
