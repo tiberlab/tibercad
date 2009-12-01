@@ -130,7 +130,7 @@ $Solver
   selfconsistent
   {
      flavour = relaxation
-     relaxation_factor = 0.5
+     relaxation_factor = 1
      simulations = (dd,tt)
      abs_tolerance = 1e-5
      rel_tolerance = 1e-5

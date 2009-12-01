@@ -19,12 +19,10 @@ public:
 
   
   //!Get total heat source 
-  virtual void get_heat_sources(std::vector<Point> h_point, const std::set<ID>& ids,
-				std::vector<std::map<ID, double> >& heat_sources){};
+  virtual void get_heat_sources( const Elem*  elem, std::vector<Point> h_point, std::vector<std::map<ID, double> >& heat_sources){};
 
   //!Get total heat flux  
-  virtual void get_power_fluxes(std::vector<Point> h_point, const std::set<ID>& ids,
-				std::vector<std::map<ID,RealGradient> >& heat_source){};
+  virtual void get_power_fluxes(const Elem*  elem, std::vector<Point> h_point, std::vector<std::map<ID,RealGradient> >& heat_source){};
                      
   
   static HeatSourceInterface* create(const std::string& name,

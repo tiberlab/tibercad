@@ -352,27 +352,21 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 
     ID subdomain = elem->subdomain_id();
-
     const Material* mat = _device->get_material(subdomain);
-
     HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
 
-    heat_model->set_element(elem);
-
-    heat_model->set_side(-1);
+    //heat_model->set_element(elem);
+    //heat_model->set_side(-1);
 
     heat_model->re_init();
 
-
     std::vector<double> heat_source;
-    heat_model->get_total_heat_source(q_point,heat_source);
+    heat_model->get_total_heat_source(elem,q_point,heat_source);
 
-    std::vector<RealGradient> flux_power;
-    heat_model->get_total_power_flux(q_point,flux_power);
+    //std::vector<RealGradient> flux_power;
+    //    heat_model->get_total_power_flux(q_point,flux_power);
 
     heat_model->get_thermal_conductivity(kappa);
-
-
 
 
     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
@@ -408,11 +402,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 	} //loop over basis functions
 
-	//if (myopts.heat_scheme.compare("surface") == 0 )
-	//  Fe(p1) +=JxW[qp] * flux_power[qp]  * dphi[p1][qp];
-	//else
 	  Fe(p1) +=JxW[qp] * heat_source[qp] * phi[p1][qp];
-
 
       }//end Loop over quadrature points
     } // end loop over test function
@@ -428,27 +418,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
       const ElementSide elside(elem->top_parent(), side);
 
-      heat_model->set_side(side);
-
-      heat_model->re_init();
-
-      fe_face->reinit(elem,side);
-
-      //Source. Must be before boundary condition
-      //heat_model->get_total_power_flux(qface_point,flux_power);
-
-      //for (unsigned int qp=0; qp < qface.n_points(); qp++)
-      // {
-      // 	for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
-      //	{
-      //	  double Fe_surf = JxW_face[qp] * phi_face[p1][qp] * flux_power[qp] * normal[qp];
-
-      //  if (myopts.heat_scheme.compare("surface") == 0 )
-      //    Fe(p1) -= Fe_surf;
-
-
-      //}
-      //}
+      //  heat_model->set_side(side);
 
       Boundary* bd = se.get_boundary(elside);
 
@@ -457,6 +427,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	if (bd->get_boundary_properties( get_id() ) != NULL )
 	{
 
+	  // heat_model->re_init();
+	  fe_face->reinit(elem,side);
 
 	  ThermalContact* contact = dynamic_cast<ThermalContact*>( bd->get_boundary_properties (get_id()) );
 
@@ -667,8 +639,8 @@ MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
   ID subdomain = elem->subdomain_id();
   const Material* mat = _device->get_material(subdomain);
   HeatModel* heat_model = (dynamic_cast<HeatModel*>(mat->get_model(get_id())));
-  heat_model->set_element(elem);
-  heat_model->set_side(-1);
+  // heat_model->set_element(elem);
+  //heat_model->set_side(-1);
   heat_model->re_init();
   heat_model->get_thermal_conductivity(kappa);
 
@@ -776,7 +748,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
     nm = heat_model->get_heat_source_IDs(ids);
 
-    std::vector<std::set<ID> > source_index(nm);
+    // std::vector<std::set<ID> > source_index(nm);
 
     for (int i = 0; i < nm; i++)
     {
@@ -792,7 +764,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
 	legend.resize(legend.size() + 1);
 	legend[n_vars]=leg->second;
-	source_index[i].insert(leg->first);
+	//	source_index[i].insert(leg->first);
         n_vars++;
       }
     }
@@ -978,17 +950,13 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
     _node[0]=(elem->centroid());
 
     ID subdomain = elem->subdomain_id();
-
     const Material* mat = _device->get_material(subdomain);
-
     HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
 
-    heat_model->set_element(elem);
-
-    heat_model->set_side(-1);
+    //heat_model->set_element(elem);
+    //heat_model->set_side(-1);
 
     heat_model->re_init();
-
     heat_model->get_thermal_conductivity(kappa);
 
     if (HS != -1)
@@ -1000,7 +968,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
       {
         std::vector<std::map<ID, double> > heat_sources;
 
-        heat_model->get_heat_source_model(ids[i])->get_heat_sources(_node,source_index[i],heat_sources);
+        heat_model->get_heat_source_model(ids[i])->get_heat_sources(elem,_node,heat_sources);
 
 	std::map<ID,double>::iterator  it_s(heat_sources[0].begin());
 	std::map<ID,double>::iterator  it_end(heat_sources[0].end());
@@ -1021,7 +989,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
       {
         std::vector< double > total_heat_source;
 
-	heat_model->get_total_heat_source(_node,total_heat_source);
+	heat_model->get_total_heat_source(elem,_node,total_heat_source);
 	results[id + HS + k] =  total_heat_source[0];
 
       }
@@ -1064,7 +1032,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
       for (int i = 0; i < nm; i++)
       {
-	heat_model->get_heat_source_model(ids[i])->get_power_fluxes(_node,flux_index[i],power_flux);
+	heat_model->get_heat_source_model(ids[i])->get_power_fluxes(elem,_node,power_flux);
 
 
        	std::map<ID,RealGradient>::iterator  it_s(power_flux[0].begin());
@@ -1093,31 +1061,31 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
       }//loop over models
 
-      if (variables.count("TotalFlux")  ||
-	  variables.count("thermal")    ||
-	  variables.count("PowerFlux") )
-      {
+     //  if (variables.count("TotalFlux")  ||
+// 	  variables.count("thermal")    ||
+// 	  variables.count("PowerFlux") )
+//       {
 
-	std::vector<RealGradient > total_power_flux;
+// 	std::vector<RealGradient > total_power_flux;
 
-	heat_model->get_total_power_flux(_node,total_power_flux);
+// 	heat_model->get_total_power_flux(_node,total_power_flux);
 
-	double Px_tot = total_power_flux[0](0) + Pqx;
-	double Py_tot = total_power_flux[0](1) + Pqy;
-	double Pz_tot = total_power_flux[0](2) + Pqz;
+// 	double Px_tot = total_power_flux[0](0) + Pqx;
+// 	double Py_tot = total_power_flux[0](1) + Pqy;
+// 	double Pz_tot = total_power_flux[0](2) + Pqz;
 
- 	switch (dim)
- 	{
- 	case 3:
- 	  results[id + W[k] + 2] = Pz_tot;
-	case 2:
-	  results[id + W[k] + 1] = Py_tot;
-	  results[id + W[k] + dim] = sqrt(Px_tot * Px_tot + Py_tot * Py_tot + Pz_tot * Pz_tot);
-	default:
-	  results[id + W[k] ] = Px_tot;
-	}
+//  	switch (dim)
+//  	{
+//  	case 3:
+//  	  results[id + W[k] + 2] = Pz_tot;
+// 	case 2:
+// 	  results[id + W[k] + 1] = Py_tot;
+// 	  results[id + W[k] + dim] = sqrt(Px_tot * Px_tot + Py_tot * Py_tot + Pz_tot * Pz_tot);
+// 	default:
+// 	  results[id + W[k] ] = Px_tot;
+// 	}
 
-      }
+//       }
 
     }
 
@@ -1324,14 +1292,11 @@ MacroHeatBalance::calculate_power_dissipated(void)
       if (env.is_outer_boundary(side))
       {
 	ID subdomain = elem->subdomain_id();
-
 	const Material* mat = _device->get_material(subdomain);
-
 	HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
 
-	heat_model->set_element(elem);
-
-	heat_model->set_side(s);
+	//heat_model->set_element(elem);
+	//heat_model->set_side(s);
 
 	heat_model->re_init();
 
@@ -1433,11 +1398,11 @@ MacroHeatBalance::calculate_power_dissipated_rstf(void)
     const Material* mat = _device->get_material(subdomain);
 
     HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
-    heat_model->set_element(elem);
-    heat_model->set_side(-1);
+    //heat_model->set_element(elem);
+    //heat_model->set_side(-1);
     heat_model->re_init();
     std::vector<double> heat_source;
-    heat_model->get_total_heat_source(q_point,heat_source);
+    heat_model->get_total_heat_source(elem,q_point,heat_source);
 
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices,var);
@@ -1568,14 +1533,14 @@ MacroHeatBalance::calculate_power_emitted(void)
 
     HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
 
-    heat_model->set_element(elem);
+    //heat_model->set_element(elem);
 
-    heat_model->set_side(-1);
+    //heat_model->set_side(-1);
 
     heat_model->re_init();
 
     std::vector<double> heat_source;
-    heat_model->get_total_heat_source(q_point,heat_source);
+    heat_model->get_total_heat_source(elem,q_point,heat_source);
 
     for (unsigned int qp = 0; qp <  qface->n_points(); qp++)
       PowerEmitted  += JxW[qp] * heat_source[qp];

@@ -23,7 +23,6 @@ HeatModel::~HeatModel()
 {
 
   destroy(kappa);
-
   clear_heat_sources();
 
 
@@ -85,9 +84,10 @@ void HeatModel::create_submodels()
     kappa->set_material(get_material());
 
     kappa->init();
+    
+    kappa->get_conductivity(_lattice_thermal_conductivity);
 
-
-
+    //std::cout<< _lattice_thermal_conductivity<<std::endl;
 
 
 }
@@ -143,7 +143,7 @@ HeatModel::add_heat_source_model(const std::string& model_name,
 
 
 void
-HeatModel::get_total_heat_source(std::vector<Point> h_point,
+HeatModel::get_total_heat_source(const Elem*  elem, std::vector<Point> h_point,
 		  std::vector<double>& total_heat_source)
 {
 
@@ -154,58 +154,22 @@ HeatModel::get_total_heat_source(std::vector<Point> h_point,
 
   outer_source_iterator it_outer = _heat_source_models.begin();
   outer_source_iterator end_outer = _heat_source_models.end();
-
-  ID IDtot = 100;
-  std::set<ID> TotalSet;
-  TotalSet.insert(IDtot);
-
+  inner_source_iterator it_inner, end_inner;
+ 
   for ( ; it_outer != end_outer; ++it_outer)
   {
-
-    std::vector<std::map<ID,double> >  partial_heat_source;
-
-    (it_outer->second)->get_heat_sources(h_point,TotalSet,partial_heat_source);
+    std::vector<std::map<ID,double> > heat_source;
+    (it_outer->second)->get_heat_sources(elem,h_point,heat_source);
 
     for (ID n = 0;  n < np; ++n)
-      total_heat_source[n] += partial_heat_source[n][IDtot];
-
+    {
+      it_inner =  heat_source[n].begin();
+      end_inner = heat_source[n].end();
+    
+      for ( ; it_inner != end_inner; ++it_inner)
+	total_heat_source[n] += it_inner->second;
+    }
   }
-}
-
-
-
-void
-HeatModel::get_total_power_flux(std::vector<Point> h_point,
-				std::vector<RealGradient>& total_power_flux)
-{
-
-  unsigned int np = h_point.size();
-
-  total_power_flux.clear();
-  total_power_flux.resize(np);
-
-  outer_source_iterator it_outer = _heat_source_models.begin();
-  outer_source_iterator end_outer = _heat_source_models.end();
-
-
-  ID IDtot = 100;
-  std::set<ID> TotalSet;
-  TotalSet.insert(IDtot);
-
-
-  for ( ; it_outer != end_outer; it_outer++)
-  {
-
-    std::vector<std::map<ID,RealGradient> >  partial_power_fluxes;
-
-    (it_outer->second)->get_power_fluxes(h_point,TotalSet,partial_power_fluxes);
-
-    for (ID n = 0;  n < np; ++n)
-      total_power_flux[n] += partial_power_fluxes[n][IDtot];
-
-
-
-   }
 
 }
 
@@ -217,14 +181,10 @@ HeatModel::clear_heat_sources(void)
 outer_source_iterator it =   _heat_source_models.begin();
 outer_source_iterator end =  _heat_source_models.end();
 
-for ( ; it != end; ++it)
- {
+ for ( ; it != end; ++it)
+   destroy(it->second);
 
-     destroy(it->second);
-
- }
-
-     _heat_source_models.clear();
+ _heat_source_models.clear();
 
 }
 
@@ -250,22 +210,23 @@ HeatModel::get_heat_source_IDs(std::vector<ID>& ids) const
 void
 HeatModel::do_print_info(void)
 {
-  std::string space = "        ";
-
-  std::cout<<space<<"Heat sources:"<<std::endl;
+ 
   outer_source_iterator it =  _heat_source_models.begin();
   outer_source_iterator end = _heat_source_models.end();
   for ( ; it != end; ++it)
+  {
+    std::cout<<"Heat sources:"<<std::endl;
     (it->second)->print_info();
-
-
+  }
+   
+  
 }
 
 void
 HeatModel::re_init(void)
 {
 
-  update_lattice_thermal_conductivity();
+   update_lattice_thermal_conductivity();
 
 }
 
@@ -276,3 +237,41 @@ HeatModel::update_lattice_thermal_conductivity(void)
  kappa->get_conductivity(_lattice_thermal_conductivity);
 
 }
+
+
+
+// void
+// HeatModel::get_total_power_flux(std::vector<Point> h_point,
+// 				std::vector<RealGradient>& total_power_flux)
+// {
+
+//   unsigned int np = h_point.size();
+
+//   total_power_flux.clear();
+//   total_power_flux.resize(np);
+
+//   outer_source_iterator it_outer = _heat_source_models.begin();
+//   outer_source_iterator end_outer = _heat_source_models.end();
+
+
+//   ID IDtot = 100;
+//   std::set<ID> TotalSet;
+//   TotalSet.insert(IDtot);
+
+
+//   for ( ; it_outer != end_outer; it_outer++)
+//   {
+
+//     std::vector<std::map<ID,RealGradient> >  partial_power_fluxes;
+
+//     (it_outer->second)->get_power_fluxes(h_point,TotalSet,partial_power_fluxes);
+
+//     for (ID n = 0;  n < np; ++n)
+//       total_power_flux[n] += partial_power_fluxes[n][IDtot];
+
+
+
+//    }
+
+// }
+

@@ -95,21 +95,16 @@ void  DriftDiffusionHeatSource::do_init(void)
 
 
 void
-DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point, const std::set<ID>& ids,
-					   std::vector<std::map<ID, double> >& heat_sources)
+DriftDiffusionHeatSource::get_heat_sources(const Elem*  elem, std::vector<Point> h_point, std::vector<std::map<ID, double> >& heat_sources)
 
 {
 
 
   heat_sources.clear();
   heat_sources.resize(h_point.size());
-  // for(unsigned int n =0 ; n<h_point.size();n++)
-  // {
-    // heat_sources[n].clear();
-    //  heat_sources[n].resize(ids.size(),0.0);
-  // }
 
-  const Elem*  elem = _heat_model->get_element();
+
+  //const Elem*  elem = _heat_model->get_element();
 
   std::vector< std::map< ID, double > > solution;
 
@@ -120,8 +115,6 @@ DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point, const std
     for(unsigned n =0; n<h_point.size();++n)
     {
 
-
-
       double eJoule = solution[n].find(var_map[EJOULE])->second;
       double hJoule = solution[n].find(var_map[HJOULE])->second;
       double RecHeat = solution[n].find(var_map[RECHEAT])->second;
@@ -129,25 +122,25 @@ DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point, const std
       double hPelTh = solution[n].find(var_map[HPELTH])->second;
 
 
-      if  (ids.count(EJOULE))
-      { //  heat_sources[n].resize(heat_sources[n])
+      //  std::cout<<eJoule<<std::endl;
 
-	heat_sources[n][EJOULE]=eJoule;
-      }
-      if  (ids.count(HJOULE))
-	heat_sources[n][HJOULE]=hJoule;
-
-      if  (ids.count(RECHEAT))
-	heat_sources[n][RECHEAT]=RecHeat;
-
-      if  (ids.count(EPELTH))
-	heat_sources[n][EPELTH]=ePelTh;
-
-      if  (ids.count(HPELTH))
-	heat_sources[n][HPELTH]=hPelTh;
-
-      if  (ids.count(100))
-	heat_sources[n][100]=eJoule + hJoule + RecHeat + ePelTh + hPelTh;
+      //if  (ids.count(EJOULE))
+      heat_sources[n][EJOULE]=eJoule;
+      
+      //if  (ids.count(HJOULE))
+      heat_sources[n][HJOULE]=hJoule;
+      
+      //    if  (ids.count(RECHEAT))
+      heat_sources[n][RECHEAT]=RecHeat;
+      
+      //  (ids.count(EPELTH))
+      heat_sources[n][EPELTH]=ePelTh;
+      
+      //  (ids.count(HPELTH))
+      heat_sources[n][HPELTH]=hPelTh;
+      
+      // if  (ids.count(100))
+      //	heat_sources[n][100]=eJoule + hJoule + RecHeat + ePelTh + hPelTh;
 
 
     }
@@ -161,8 +154,7 @@ DriftDiffusionHeatSource::get_heat_sources(std::vector<Point> h_point, const std
 
 
 void
-DriftDiffusionHeatSource::get_power_fluxes(std::vector<Point> h_point, const std::set<ID>& ids,
-                                           std::vector<std::map<ID,RealGradient> >& power_fluxes)
+DriftDiffusionHeatSource::get_power_fluxes(const Elem*  elem,std::vector<Point> h_point, std::vector<std::map<ID,RealGradient> >& power_fluxes)
 {
 
   power_fluxes.clear();
@@ -173,39 +165,39 @@ DriftDiffusionHeatSource::get_power_fluxes(std::vector<Point> h_point, const std
 
 
 
-  const Elem*  elem = _heat_model->get_element();
+  //const Elem*  elem = _heat_model->get_element();
 
-  int side = _heat_model->get_side();
+  //  int side = _heat_model->get_side();
    //if side = -1 the check has not be done
 
 
   //if  no_check = true the check boundary is off
-  bool do_calc = true;
+  //bool do_calc = true;
 
-  if (side >= 0 )
-  {
+  // if (side >= 0 )
+  //{
 
-    const ElementSide elside(elem->top_parent(), side);
+  //const ElementSide elside(elem->top_parent(), side);
 
-    do_calc =false;
+    //do_calc =false;
 
-    if (_simul->get_environment().is_outer_boundary(elside))
-       do_calc = true;
+    //if (_simul->get_environment().is_outer_boundary(elside))
+    // do_calc = true;
 
 
     // if (_simul->get_environment().is_boundary(elside))
     //  do_calc = true;
 
-  }
+  //}
 
 
-  ID IDN = 0;
-  ID IDP = 1;
-  ID IDTOT = 100;
+    ID IDN = 0;
+    ID IDP = 1;
+  //ID IDTOT = 100;
 
   std::vector< std::map< ID, double > > solution;
 
-  if  (_simul->get_solution(elem,h_point,ID_set,solution) && do_calc)
+  if  (_simul->get_solution(elem,h_point,ID_set,solution))
   {
 
     for(unsigned int n =0 ; n<h_point.size();n++)
@@ -220,31 +212,29 @@ DriftDiffusionHeatSource::get_power_fluxes(std::vector<Point> h_point, const std
 	  double Wp_y = solution[n].find(var_map[WPY])->second;
 	  double Wp_z = solution[n].find(var_map[WPZ])->second;
 
-	  if (ids.count(IDN))
-	  {
+	  //  if (ids.count(IDN))
+	  // {
 	    power_fluxes[n][IDN](0) = Wn_x;
 	    power_fluxes[n][IDN](1) = Wn_y;
 	    power_fluxes[n][IDN](2) = Wn_z;
-	  }
+	    //  }
 
-	  if (ids.count(IDP))
-	  {
+	    //if (ids.count(IDP))
+	    // {
 
 	    power_fluxes[n][IDP](0) = Wp_x;
 	    power_fluxes[n][IDP](1) = Wp_y;
 	    power_fluxes[n][IDP](2) = Wp_z;
-	  }
+	    //}
 
-	  if (ids.count(IDTOT))
-	  {
+	  //	  if (ids.count(IDTOT))
+	  // {
 
-	    power_fluxes[n][IDTOT](0) = Wn_x + Wp_x;
-	    power_fluxes[n][IDTOT](1) = Wn_y + Wp_y;
-	    power_fluxes[n][IDTOT](2) = Wn_z + Wp_z;
+	  //  power_fluxes[n][IDTOT](0) = Wn_x + Wp_x;
+	  //  power_fluxes[n][IDTOT](1) = Wn_y + Wp_y;
+	  //  power_fluxes[n][IDTOT](2) = Wn_z + Wp_z;
 
-
-
-	  }
+	  //}
 
     }
 

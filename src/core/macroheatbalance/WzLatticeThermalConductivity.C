@@ -11,9 +11,6 @@
 //--------------------------------------------------------//
 void  WzLatticeThermalConductivity::read_database(void)
 {
-  //  const Material* mat = get_material();
-  //  GetPot data((mat->get_database()).get_data_file());
-
 
   Database& db = get_database();
   db.set_section("thermal_conductivity/constant");
@@ -21,10 +18,6 @@ void  WzLatticeThermalConductivity::read_database(void)
 
  _kappa_x = db.get("therm_lat_cond_x", 0.0);
  _kappa_z = db.get("therm_lat_cond_z", 0.0);
-
-
-
-
 
 
 
@@ -37,15 +30,14 @@ void WzLatticeThermalConductivity::do_init(void)
 
   ModelOptions & options = get_options ();
 
-  double k_x;
-  double k_z;
+  
+  _kappa_x = options.get_option("therm_lat_cond_x",_kappa_x);
+  _kappa_z = options.get_option("therm_lat_cond_z",_kappa_z);
 
-  k_x = options.get_option("therm_lat_cond_x",_kappa_x);
-  k_z = options.get_option("therm_lat_cond_z",_kappa_z);
 
-  _conductivity(1,1) = k_x;
-  _conductivity(2,2) = k_x;
-  _conductivity(3,3) = k_z;
+  _conductivity(1,1) = _kappa_x;
+  _conductivity(2,2) = _kappa_x;
+  _conductivity(3,3) = _kappa_z;
 
   Material* mat = get_material();
 
@@ -67,5 +59,6 @@ void WzLatticeThermalConductivity::do_init_alloy (const PhysicalModelInterface *
 
   _kappa_x = alloy(modA->_kappa_x, modB->_kappa_x, xa);
   _kappa_z = alloy(modA->_kappa_z, modB->_kappa_z, xa);
+
 
 }

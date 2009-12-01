@@ -26,12 +26,10 @@ public:
  
   
   
-  virtual void get_power_fluxes(std::vector<Point> h_point, const std::set<ID>& ids,
-				std::vector<std::map<ID,RealGradient> >& power_fluxes);
+  virtual void get_power_fluxes(const Elem*  elem, std::vector<Point> h_point, std::vector<std::map<ID,RealGradient> >& power_fluxes);
 
 
-  virtual void get_heat_sources(std::vector<Point> h_point, const std::set<ID>& ids,	
-				std::vector<std::map<ID, double> >& heat_sources);     
+  virtual void get_heat_sources( const Elem*  elem, std::vector<Point> h_point, std::vector<std::map<ID, double> >& heat_sources);     
 
 
   //! \copydoc HeatSourceInterface::get_source_legend(const std::set<std::string>& variables);

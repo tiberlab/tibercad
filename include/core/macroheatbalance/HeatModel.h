@@ -32,14 +32,14 @@ class HeatModel: public PhysicalModel
      //! Init all fields
    void re_init(void);
 
-   //!Set the current element
+  ///!Set the current element
    void set_element(const Elem* elem);
 
    //!Set the current elemement side index
-   void set_side(int side);
+  //   void set_side(int side);
 
    //!Set the current elemement side index
-    int get_side(void);
+  //  int get_side(void);
 
 
    //!Get the current element
@@ -61,17 +61,16 @@ class HeatModel: public PhysicalModel
 
 
   //!Get total heat source
-  void get_total_heat_source(std::vector<Point> h_point,
+  void get_total_heat_source(const Elem*  elem,std::vector<Point> h_point,
 			     std::vector<double>& total_heat_source);
 
   //!Get total power flux
-  void get_total_power_flux(std::vector<Point> h_point,
-			    std::vector<RealGradient>& total_power_flux);
+  //  void get_total_power_flux(std::vector<Point> h_point,
+  //		    std::vector<RealGradient>& total_power_flux);
 
 
 
  private:
-
 
 
     enum dd_var_kpart
@@ -100,7 +99,6 @@ class HeatModel: public PhysicalModel
    std::vector<ID> ID_kpart;
 
    model_options model_opt;
-
 
    //!Iterator for heat source model
    typedef std::map<ID, HeatSourceInterface*>::iterator outer_source_iterator;
@@ -189,21 +187,21 @@ inline
 void
 HeatModel::set_element(const Elem* elem)
 {
-
-  _elem = elem;
-
-}
-
-
-
-inline
-void
-HeatModel::set_side(int side)
-{
-
-  _side = side;
+  // std::cout<<elem<<std::endl;
+ _elem = elem;
 
 }
+
+
+
+//inline
+//void
+//HeatModel::set_side(int side)
+//{
+
+//  _side = side;
+
+//}
 
 
 inline
@@ -213,12 +211,12 @@ HeatModel::get_element(void)
   return _elem;
 }
 
-inline
-int
-HeatModel::get_side(void)
-{
- return _side;
-}
+//inline
+//int
+//HeatModel::get_side(void)
+//{
+// return _side;
+//
 
 
 inline

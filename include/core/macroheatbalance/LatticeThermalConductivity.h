@@ -68,6 +68,7 @@ void
 LatticeThermalConductivity::get_conductivity(Tensor2Sym& conductivity) const
 {
    conductivity = _conductivity;
+ 
 }
 
 inline
