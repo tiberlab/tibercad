@@ -95,6 +95,16 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
     }
    }
 
+  int vonmises_var = -1;
+  if (variables.count("vonMises")||
+      variables.count("StrainVariables")  )
+  {
+    vonmises_var = num_var;
+    legend.resize(legend.size() + 1);
+    legend[num_var] = "vonMises";
+    num_var++;
+  }
+
   unsigned int num_elem = eps_data.size()/6;
 
   results.resize(num_var * num_elem);
@@ -128,6 +138,21 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
                results[id + pol_var + i] = pol_data[i + j * 3];
              }
       }
+
+    if (vonmises_var != -1)
+    {
+      double e11 = stress_data[0 + j * 6];
+      double e22 = stress_data[2 + j * 6];
+      double e33 = stress_data[5 + j * 6];
+      double e21 = stress_data[1 + j * 6];
+      double e31 = stress_data[3 + j * 6];
+      double e32 = stress_data[4 + j * 6];
+      double I1 = e11 + e22 + e33;
+      double I2 = e11*e22 + e22*e33 + e11*e33 - e21*e21 - e31*e31 - e32*e32;
+      double J2 = I1*I1 / 3.0 - I2;
+      double vm = sqrt(3 * J2);
+      results[id + vonmises_var] = vm;
+    }
 
 
   } //Elements

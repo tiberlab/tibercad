@@ -1444,8 +1444,12 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
   const DofMap& dof_map = system->get_dof_map();
 
   const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
+  unsigned int en_var = system->variable_number("fermi_e");
+  unsigned int ep_var = system->variable_number("fermi_h");
+  if (_useparticle == 'e')
+    ep_var = en_var;
+  else if (_useparticle == 'h')
+    en_var = ep_var;
 
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
@@ -1761,8 +1765,12 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
   const DofMap& dof_map = system->get_dof_map();
 
   const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
+  unsigned int en_var = system->variable_number("fermi_e");
+  unsigned int ep_var = system->variable_number("fermi_h");
+  if (_useparticle == 'e')
+    ep_var = en_var;
+  else if (_useparticle == 'h')
+    en_var = ep_var;
 
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
@@ -2101,8 +2109,12 @@ DriftDiffusion::calculate_currents_rstf(void)
 
   // numeric ids corresponding to the variables
   const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
+  unsigned int en_var = system->variable_number("fermi_e");
+  unsigned int ep_var = system->variable_number("fermi_h");
+  if (_useparticle == 'e')
+    ep_var = en_var;
+  else if (_useparticle == 'h')
+    en_var = ep_var;
 
   FEType fe_type = system->variable_type(u_var);
 
@@ -2418,8 +2430,12 @@ DriftDiffusion::calculate_currents_surfint(void)
 
   // numeric ids corresponding to the variables
   const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
+  unsigned int en_var = system->variable_number("fermi_e");
+  unsigned int ep_var = system->variable_number("fermi_h");
+  if (_useparticle == 'e')
+    ep_var = en_var;
+  else if (_useparticle == 'h')
+    en_var = ep_var;
 
   FEType fe_type = system->variable_type(u_var);
 
@@ -2666,8 +2682,12 @@ DriftDiffusion::build_local_scaling(void)
 
 
   const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
+  unsigned int en_var = system->variable_number("fermi_e");
+  unsigned int ep_var = system->variable_number("fermi_h");
+  if (_useparticle == 'e')
+    ep_var = en_var;
+  else if (_useparticle == 'h')
+    en_var = ep_var;
 
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
@@ -3143,8 +3163,12 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
   }
 
   const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
+  unsigned int en_var = system->variable_number("fermi_e");
+  unsigned int ep_var = system->variable_number("fermi_h");
+  if (_useparticle == 'e')
+    ep_var = en_var;
+  else if (_useparticle == 'h')
+    en_var = ep_var;
 
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
@@ -3668,8 +3692,12 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
   double phi0 = get_scaling().get_potential_scaling();
 
   const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
+  unsigned int en_var = system->variable_number("fermi_e");
+  unsigned int ep_var = system->variable_number("fermi_h");
+  if (_useparticle == 'e')
+    ep_var = en_var;
+  else if (_useparticle == 'h')
+    en_var = ep_var;
 
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
@@ -5533,8 +5561,12 @@ DriftDiffusion::save_data(const string& file)
 
   // numeric ids corresponding to the variables
   const unsigned int u_var = system.variable_number("potential");
-  const unsigned int en_var = system.variable_number("fermi_e");
-  const unsigned int ep_var = system.variable_number("fermi_h");
+  unsigned int en_var = system.variable_number("fermi_e");
+  unsigned int ep_var = system.variable_number("fermi_h");
+  if (_useparticle == 'e')
+    ep_var = en_var;
+  else if (_useparticle == 'h')
+    en_var = ep_var;
 
   of << "<data>" << endl;
 
@@ -5714,8 +5746,12 @@ DriftDiffusion::write_nodal_vector(const string& filename, const NumericVector<d
   vector<double> results(3 * nn);
 
   const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
+  unsigned int en_var = system->variable_number("fermi_e");
+  unsigned int ep_var = system->variable_number("fermi_h");
+  if (_useparticle == 'e')
+    ep_var = en_var;
+  else if (_useparticle == 'h')
+    en_var = ep_var;
 
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
