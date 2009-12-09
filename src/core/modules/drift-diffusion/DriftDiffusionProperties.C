@@ -1019,6 +1019,11 @@ DriftDiffusionProperties::compute_thermoelectric_powers(void)
     _hTEpower = _thermoelectric_power->get_holes_thermoelectric_power();
 
   }
+  else
+  {
+    _eTEpower = 0;
+    _hTEpower = 0;
+  }
 }
 
 void
@@ -1037,6 +1042,11 @@ DriftDiffusionProperties::compute_thermoelectric_power_gradient(void)
      _hTEpowerGrad =  _thermoelectric_power->get_hole_thermoelectric_power_gradient();
 
     }
+   else
+   {
+     _eTEpowerGrad = 0;
+     _hTEpowerGrad = 0;
+   }
 }
 
 std::vector<double>&

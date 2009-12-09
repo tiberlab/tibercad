@@ -1560,12 +1560,18 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     double sigma_h = Constants::e * sc->get_hole_density() *
       sc->get_hole_mobility();
 
-    double jnx = -sigma_e * (en_x + Pn * dT_x);
-    double jny = -sigma_e * (en_y + Pn * dT_y);
-    double jnz = -sigma_e * (en_z + Pn * dT_z);
-    double jpx = -sigma_h * (ep_x + Pp * dT_x);
-    double jpy = -sigma_h * (ep_y + Pp * dT_y);
-    double jpz = -sigma_h * (ep_z + Pp * dT_z);
+    double dfnx = (en_x + Pn * dT_x);
+    double dfny = (en_y + Pn * dT_y);
+    double dfnz = (en_z + Pn * dT_z);
+    double dfpx = (ep_x + Pp * dT_x);
+    double dfpy = (ep_y + Pp * dT_y);
+    double dfpz = (ep_z + Pp * dT_z);
+    double jnx = -sigma_e * dfnx;
+    double jny = -sigma_e * dfny;
+    double jnz = -sigma_e * dfnz;
+    double jpx = -sigma_h * dfpx;
+    double jpy = -sigma_h * dfpy;
+    double jpz = -sigma_h * dfpz;
 
 
 
@@ -1657,10 +1663,10 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       values[n][JPZ] = jpz;
 
     if (ids.count(EJOULE))
-      values[n][EJOULE] = ( jnx * jnx + jny * jny + jnz * jnz ) / sigma_e;
+      values[n][EJOULE] = -(jnx * dfnx + jny * dfny + jnz * dfnz);
 
     if (ids.count(HJOULE))
-      values[n][HJOULE] =  (jpx * jpx + jpy * jpy + jpz * jpz )/ sigma_h;
+      values[n][HJOULE] = -(jpx * dfpx + jpy * dfpy + jpz * dfpz);
 
     if (ids.count(POWERNX))
       values[n][POWERNX] = (Pn * T + en) * jnx;
@@ -1893,12 +1899,18 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
       sc->get_hole_mobility();
 
 
-    double jnx = -sigma_e * (en_x + Pn * dT_x);
-    double jny = -sigma_e * (en_y + Pn * dT_y);
-    double jnz = -sigma_e * (en_z + Pn * dT_z);
-    double jpx = -sigma_h * (ep_x + Pp * dT_x);
-    double jpy = -sigma_h * (ep_y + Pp * dT_y);
-    double jpz = -sigma_h * (ep_z + Pp * dT_z);
+    double dfnx = (en_x + Pn * dT_x);
+    double dfny = (en_y + Pn * dT_y);
+    double dfnz = (en_z + Pn * dT_z);
+    double dfpx = (ep_x + Pp * dT_x);
+    double dfpy = (ep_y + Pp * dT_y);
+    double dfpz = (ep_z + Pp * dT_z);
+    double jnx = -sigma_e * dfnx;
+    double jny = -sigma_e * dfny;
+    double jnz = -sigma_e * dfnz;
+    double jpx = -sigma_h * dfpx;
+    double jpy = -sigma_h * dfpy;
+    double jpz = -sigma_h * dfpz;
 
     if (ids.count(ELPOTENTIAL))
       values[n][ELPOTENTIAL] = u;
@@ -1987,10 +1999,10 @@ DriftDiffusion::get_solution_secure(const Elem* elem, const vector<Point>& p,
       values[n][JPZ] = jpz;
 
     if (ids.count(EJOULE))
-      values[n][EJOULE] = ( jnx * jnx + jny * jny + jnz * jnz ) / sigma_e;
+      values[n][EJOULE] = -(jnx * dfnx + jny * dfny + jnz * dfnz);
 
     if (ids.count(HJOULE))
-      values[n][HJOULE] =  (jpx * jpx + jpy * jpy + jpz * jpz )/ sigma_h;
+      values[n][HJOULE] = -(jpx * dfpx + jpy * dfpy + jpz * dfpz);
 
     if (ids.count(POWERNX))
       values[n][POWERNX] = (Pn * T + en) * jnx;

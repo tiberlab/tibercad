@@ -47,6 +47,13 @@ abs_def_pot_L = -2.07
 uniax_def_pot_L = 16.14
 
 
+# Lattice thermal conductivity
+[thermal_conductivity/constant]
+therm_lat_cond = 0.014        
+
+
+
+
 [permittivity]
 # static dielectric constant
 permittivity = 3.9
