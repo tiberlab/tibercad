@@ -619,7 +619,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
 
   // Get a constant reference to the mesh object.
-  const Mesh& mesh = es.get_mesh();
+  const MeshBase& mesh = es.get_mesh();
 
   unsigned int dim = mesh.mesh_dimension();
 
@@ -1455,7 +1455,7 @@ void Macrostrain::refer_objects()
 
 }
 //-----------------------------------------------------------------//
-Mesh* Macrostrain::get_mesh()
+MeshBase* Macrostrain::get_mesh()
 {
   return( &(equation_systems->get_mesh()) );
 }
@@ -1488,7 +1488,7 @@ void Macrostrain::do_solve()
   //------------------------------------------------------
 
 
-  Mesh& mesh = equation_systems->get_mesh();
+  MeshBase& mesh = equation_systems->get_mesh();
 
 
 
@@ -1876,7 +1876,7 @@ void Macrostrain::update_eps0_list()
 {
   //calculate eps_new = eps_old + 1/2(du/dx + du/dx)
 
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
 
   LinearImplicitSystem& system = *my_system;
 
@@ -1958,7 +1958,7 @@ void Macrostrain::initialize_eps0_list()
 
   //initialize vector with lattice matching strain
 
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
 
   const unsigned int N_elem = mesh.n_active_elem();
 
@@ -1971,7 +1971,7 @@ void Macrostrain::initialize_eps0_list()
 //------------------------------------------------------------------------
 void Macrostrain::initialize_el_number_map()
 {
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
   const unsigned int N_elem = mesh.n_active_elem();
 
   elem_numbers.clear();
@@ -2000,7 +2000,7 @@ void Macrostrain::initialize_el_number_map()
 void Macrostrain::make_nodes_periodic()
 {
   const double pos_tol = 1e-10;
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
   nodes_periodic.clear();
 
   const Node* node_fix = &mesh.node(fixed_node1);
@@ -2061,7 +2061,7 @@ void  Macrostrain::apply_periodic_bc()
 
 
   // Get a constant reference to the mesh object.
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
 
   // The dimension that we are running
   //const unsigned int dim = mesh.mesh_dimension();
@@ -2258,7 +2258,7 @@ The constrants are the following:
   */
 
 
- const Mesh& mesh = equation_systems->get_mesh();
+ const MeshBase& mesh = equation_systems->get_mesh();
  // Get a reference to the LinearImplicitSystem we are solving
  LinearImplicitSystem& system = *my_system;
 
@@ -2501,7 +2501,7 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
 
   unsigned int index = 0;
 
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
 
   //const unsigned int dim = mesh.mesh_dimension();
 
@@ -2631,7 +2631,7 @@ void Macrostrain::prepare_stress_data_for_output( std::vector<std::string>& stre
        char num_j[2];
        string S_ij;
        stress_names.resize(6);
-       const Mesh& mesh = equation_systems->get_mesh();
+       const MeshBase& mesh = equation_systems->get_mesh();
        unsigned int Number_of_elements = mesh.n_active_elem();
        stress_data.resize(Number_of_elements*6);
        for (int i = 1; i <=3 ; i++)
@@ -2708,7 +2708,7 @@ void Macrostrain::output_strain(std::string filename )
 
   prepare_strain_data_for_output(  eps_names,  eps_data );
 
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
 
   if (output_type == "GMV")     GMVIO_cell(mesh).write_ascii_cell_data(filename, eps_data, eps_names);
 
@@ -2721,7 +2721,7 @@ void Macrostrain::prepare_polarization_data_for_output( std::vector<std::string>
 {
 
   char num_i[2];
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
 
   unsigned int Number_of_elements = mesh.n_active_elem();
 
@@ -2767,7 +2767,7 @@ void Macrostrain::prepare_polarization_data_for_output( std::vector<std::string>
 void Macrostrain::output_piezo(std :: string filename)
 {
 
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
 
 
 
@@ -2788,7 +2788,7 @@ void Macrostrain::output_piezo(std :: string filename)
 
 void Macrostrain::move_nodes()
 {
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
 
   //const unsigned int dim = mesh.mesh_dimension();
 
@@ -2900,7 +2900,7 @@ void Macrostrain::move_nodes()
 void Macrostrain::calculate_result_elem_strain_map()
 {
   result_strain.clear();
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
 
@@ -3101,7 +3101,7 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 
       eps  = sym(eps1); //result has to be symmetric
 
-      assert (norm(eps - eps1) < 1e-6); //is it really symmetric
+      assert (::norm(eps - eps1) < 1e-6); //is it really symmetric
 
       return(eps); //return strain tensor in crystal system
     }
@@ -3333,7 +3333,7 @@ void  Macrostrain::set_up_additional_dofs()
 {
 
 
-  const Mesh& mesh =  equation_systems->get_mesh();
+  const MeshBase& mesh =  equation_systems->get_mesh();
 
   LinearImplicitSystem& system = *my_system;
 
@@ -3453,7 +3453,7 @@ void Macrostrain::init_u_node()
 
   u_node.clear();
 
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
   MeshBase::const_element_iterator el  = mesh.active_elements_begin();
   MeshBase::const_element_iterator end_el = mesh.active_elements_end();
 
@@ -3478,7 +3478,7 @@ void Macrostrain::init_u_node()
 //-------------------------------------------------------------------------------------------/
 void Macrostrain::update_u_node()
 {
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
 
   LinearImplicitSystem& system = *my_system;
 
@@ -3579,7 +3579,7 @@ void Macrostrain::output_add_strain_variables(string filename)
 //-------------------------------------------------------------------------------------------/
 unsigned int Macrostrain::get_number_of_the_fixed_node(Point point)
 {
-  const Mesh& mesh =  equation_systems->get_mesh();
+  const MeshBase& mesh =  equation_systems->get_mesh();
 
   Elem*  elem1;
   bool  found;
@@ -3701,7 +3701,7 @@ void Macrostrain::read_atom_structure(const std::string filename)
 
 
   //--------mesh related objects----------------------------------------
-  const Mesh& mesh =  equation_systems->get_mesh();
+  const MeshBase& mesh =  equation_systems->get_mesh();
 
   LinearImplicitSystem& system = *my_system;
 
@@ -3936,7 +3936,7 @@ void  Macrostrain::write_atom_displacements(const std::string filename)
 
    }
   //-------------------------------------------------------------------
-  const Mesh& mesh =  equation_systems->get_mesh();
+  const MeshBase& mesh =  equation_systems->get_mesh();
 
 
   LinearImplicitSystem& system = *my_system;
@@ -4163,7 +4163,7 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
   std::cout << "APPLYING STRAIN TO ATOMS " << std::endl;
 
-  const Mesh& mesh =  equation_systems->get_mesh();
+  const MeshBase& mesh =  equation_systems->get_mesh();
 
   LinearImplicitSystem& system = *my_system;
 
@@ -4329,7 +4329,7 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 unsigned int Macrostrain::find_nearest_node(Point& point)
 {
   //finds a node number nearest to the point
-  const Mesh& mesh =  equation_systems->get_mesh();
+  const MeshBase& mesh =  equation_systems->get_mesh();
   unsigned int num_nodes = mesh.n_nodes();
   double distance;
 

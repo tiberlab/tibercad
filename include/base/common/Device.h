@@ -17,7 +17,7 @@
 
 class Material;
 class Control;
-class Mesh;
+class MeshBase;
 class EquationSystems;
 class AtomisticStructure;
 
@@ -55,7 +55,7 @@ class Device
 
 
   //! Get a reference to the mesh
-  Mesh& get_mesh(void) const;
+  MeshBase& get_mesh(void) const;
 
   //! Get a pointer to the meshdata
   MeshData_elements* get_meshdata(void) const;
@@ -273,7 +273,7 @@ class Device
   
 
   //! The mesh for this device
-  Mesh* _mesh;
+  MeshBase* _mesh;
 
   //! The meshdata for this device
   MeshData_elements* _meshdata;
@@ -400,7 +400,7 @@ Device::get_material(ID region_id) const
 
 
 inline
-Mesh&
+MeshBase&
 Device::get_mesh(void) const
 {
   return *_mesh;

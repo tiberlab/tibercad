@@ -16,6 +16,9 @@
 
 #include "Messages.h"
 
+#include <cassert>
+
+
 
 using namespace std;
 

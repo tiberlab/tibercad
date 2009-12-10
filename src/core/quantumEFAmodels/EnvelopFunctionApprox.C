@@ -202,7 +202,7 @@ void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& var
 
     const set<string>::const_iterator varend(variables.end());
 
-    const Mesh& mesh1 = system->get_mesh();
+    const MeshBase& mesh1 = system->get_mesh();
 
 
     const bool output_psi = variables.find("EigenFunctions") != varend ;
@@ -1787,7 +1787,7 @@ void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  co
 
   DofMap& dof_map = system->get_dof_map();
 
-  const Mesh& mesh1 = system->get_mesh();
+  const MeshBase& mesh1 = system->get_mesh();
  
  
   MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
@@ -1880,7 +1880,7 @@ void  EnvelopFunctionApprox::prepare_probability_function(const unsigned int sta
 
   DofMap& dof_map = system->get_dof_map();
 
-  const Mesh& mesh1 = system->get_mesh();
+  const MeshBase& mesh1 = system->get_mesh();
 
 
   MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
@@ -1959,7 +1959,7 @@ void EnvelopFunctionApprox::output_probability_function(unsigned int state_numbe
 
   DofMap& dof_map = system->get_dof_map();
 
-  const Mesh& mesh1 = system->get_mesh();
+  const MeshBase& mesh1 = system->get_mesh();
 
   MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
   const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
@@ -2242,7 +2242,7 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
   //----------------------------------------------------//
 
   
-  const Mesh* mesh = &(es->get_mesh());
+  const MeshBase* mesh = &(es->get_mesh());
 
 
   unsigned int dim = mesh->mesh_dimension();
@@ -2385,7 +2385,7 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
   //----------------------------------------------------//
 
   
-  const Mesh* mesh = &(es->get_mesh());
+  const MeshBase* mesh = &(es->get_mesh());
 
 
   unsigned int dim = mesh->mesh_dimension();
@@ -2521,7 +2521,7 @@ void EnvelopFunctionApprox::calculate_density( )
 {
   DofMap& dof_map = system->get_dof_map();
 
-  const Mesh& mesh1 = system->get_mesh();
+  const MeshBase& mesh1 = system->get_mesh();
 
   
   _density.clear();
@@ -2607,7 +2607,7 @@ vector<double>  EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int
 
   DofMap& dof_map = system->get_dof_map();
 
-  const Mesh& mesh = system->get_mesh();
+  const MeshBase& mesh = system->get_mesh();
 
   FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
 
@@ -2732,7 +2732,7 @@ vector<double> EnvelopFunctionApprox::calculate_prob_function(unsigned int state
 
   DofMap& dof_map = system->get_dof_map();
 
-  const Mesh& mesh1 = system->get_mesh();
+  const MeshBase& mesh1 = system->get_mesh();
 
   
   unsigned int number_of_points = number_of_nodes;

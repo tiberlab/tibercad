@@ -8,6 +8,8 @@
 #include "equation_systems.h"
 #include "linear_solver.h"
 
+#include <cassert>
+
 using namespace std;
 
 TiberLinearSystem::TiberLinearSystem(EquationSystems& es,

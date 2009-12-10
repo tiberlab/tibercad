@@ -171,7 +171,7 @@ Embracing::find_boundary(void)
   SimulationEnvironment& out = _outer->get_environment();
   SimulationEnvironment& in = _inner->get_environment();
 
-  const Mesh& mesh = in.get_mesh();
+  const MeshBase& mesh = in.get_mesh();
   unsigned int dim = mesh.mesh_dimension();
 
   // loop over the elements of the 'inner' simulation
@@ -204,7 +204,7 @@ Embracing::find_inner_boundary(void)
 
   SimulationEnvironment& in = _inner->get_environment();
 
-  const Mesh& mesh = in.get_mesh();
+  const MeshBase& mesh = in.get_mesh();
   unsigned int dim = mesh.mesh_dimension();
 
 
@@ -235,7 +235,7 @@ void
 Embracing::prepare_for_solve(void)
 {
   SimulationEnvironment& in = _inner->get_environment();
-  Mesh& mesh = in.get_mesh();
+  MeshBase& mesh = in.get_mesh();
 
   elem_iterator list_end(elem_end());
 
@@ -259,7 +259,7 @@ void
 Embracing::reactivate_all_elements(void)
 {
   SimulationEnvironment& in = _inner->get_environment();
-  Mesh& mesh = in.get_mesh();
+  MeshBase& mesh = in.get_mesh();
 
   const map<const Elem*, double>::iterator list_end(_elem_list.end());
 
@@ -282,7 +282,7 @@ Embracing::plot(void)
   if (!_do_plot) return;
 
   SimulationEnvironment& in = _inner->get_environment();
-  const Mesh& mesh = in.get_mesh();
+  const MeshBase& mesh = in.get_mesh();
 
   DataOutput data_output(mesh, (_inner->get_control()).get_output_format());
   data_output.set_output_directory((_inner->get_control()).get_output_dir());
@@ -369,7 +369,7 @@ Embracing::assembly(LaplaceEq& system)
   
   FEType fe_type = dof_map.variable_type(var);
 
-  const Mesh& mesh = system.get_mesh();
+  const MeshBase& mesh = system.get_mesh();
   unsigned int dim = mesh.mesh_dimension();
 
   AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
@@ -460,7 +460,7 @@ Embracing::LaplaceEq::build_nodal_results(vector<double>& results,
 
   const unsigned int s = number();
   const unsigned int var = variable_number("u");
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
 
   MeshBase::const_node_iterator       nd     = mesh.active_nodes_begin();
   const MeshBase::const_node_iterator nd_end = mesh.active_nodes_end();
@@ -516,7 +516,7 @@ Embracing::get_mixing_coefficient(const Elem* elem, const Point& p)
       DofMap& dof_map = system.get_dof_map();
       FEType fe_type = dof_map.variable_type(var);
 
-      const Mesh& mesh = system.get_mesh();
+      const MeshBase& mesh = system.get_mesh();
       unsigned int dim = mesh.mesh_dimension();
 
       vector<unsigned int> dof_indices;

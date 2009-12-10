@@ -180,7 +180,7 @@ class Macrostrain : public StrainSimulation
 
   //----------------------------------------------------------
 
-  Mesh* get_mesh(); //get pointer to the mesh
+  MeshBase* get_mesh(); //get pointer to the mesh
 
 
 
@@ -254,7 +254,7 @@ class Macrostrain : public StrainSimulation
 
 
   //!pointer to the mesh
-  Mesh*  mesh;
+  MeshBase*  mesh;
 
   //!calculate strain
   Tensor2Sym get_strain(const Elem* el, bool crystal_system = false);
@@ -564,7 +564,7 @@ inline bool Macrostrain::element_on_boundary(const Elem* element)
 {
   bool result = false;
 
-  const Mesh& mesh = equation_systems->get_mesh();
+  const MeshBase& mesh = equation_systems->get_mesh();
 
 
   unsigned int n_sides ;

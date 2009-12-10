@@ -9,7 +9,7 @@
 
 #include <set>
 
-class Mesh;
+class MeshBase;
 class MeshData_elements;
 
 
@@ -27,7 +27,7 @@ class MeshUtils
      * \param mesh the mesh itself
      * \param meshdata the meshdata object
      */
-    static void assign_subdomain_ids(Mesh& mesh, MeshData_elements& meshdata);
+    static void assign_subdomain_ids(MeshBase& mesh, MeshData_elements& meshdata);
 
 
     //! Get all the subdomain IDs present in the mesh
@@ -35,7 +35,7 @@ class MeshUtils
      * This method iterates over all mesh elements and puts the subdomain id
      * into the provided set.
      */
-    static void get_subdomain_ids(Mesh& mesh, std::set<ID>& subdomain_ids);
+    static void get_subdomain_ids(MeshBase& mesh, std::set<ID>& subdomain_ids);
 
     //!Preliminary check to see if a point can belong to an element
     /*!

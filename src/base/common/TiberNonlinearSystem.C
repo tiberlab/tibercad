@@ -15,6 +15,7 @@
 #include "linear_solver.h"
 #include "equation_systems.h"
 
+#include <cassert>
 
 using namespace std;
 
@@ -22,7 +23,7 @@ using namespace std;
 TiberNonlinearSystem::TiberNonlinearSystem(EquationSystems& es,
     const string& name, const unsigned int number)
 : TiberEqSystem(),
-  ImplicitSystem(es, name, number),
+  Parent(es, name, number),
   _n_nonlin_iterations(0),
   _final_residual_norm(1e20),
   _last_step_size(1e20),

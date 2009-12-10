@@ -6,6 +6,7 @@
 #include <utility>
 #include <map>
 #include <limits.h>
+#include <limits.h>
 
 class Elem;
 

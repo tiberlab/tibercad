@@ -15,21 +15,13 @@
 #include "enum_order.h"
 #include "point.h"
 
-// PETSc include
-#ifndef USE_COMPLEX_NUMBERS
-extern "C" {
-# include <petscksp.h>
-}
-#else
-# include <petscksp.h>
-#endif
 
 // C++ includes
 #include <vector>
 #include <map>
 
 // forward declarations
-class Mesh;
+class MeshBase;
 class Elem;
 class EquationSystems;
 class ExcitonProperties;
@@ -185,7 +177,7 @@ class ExcitonTransport : public SimulationInterface
     /*!
      * \return a constant reference to the simulation mesh
      */
-    Mesh& get_mesh(void) const;
+    MeshBase& get_mesh(void) const;
     
     //! Set an initial guess
     void set_initial_guess(double guess);
@@ -425,7 +417,7 @@ ExcitonTransport::get_final_residual(void) const
 
 
 inline
-Mesh& 
+MeshBase& 
 ExcitonTransport::get_mesh(void) const
 {
   return _device->get_mesh();

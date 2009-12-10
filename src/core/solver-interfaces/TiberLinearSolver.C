@@ -8,6 +8,7 @@
 #endif
 #include "InitFailedException.h"
 #include "ModelOptions.h"
+#include "Messages.h"
 
 
 namespace
@@ -78,3 +79,29 @@ TiberLinearSolver::set_options(const ModelOptions& options)
 
   parse_options(options);
 }
+
+
+std::pair<unsigned int, Real>
+TiberLinearSolver::solve(const ShellMatrix<Number>&,
+    NumericVector<Number>&,
+    NumericVector<Number>&,
+    const double,
+    const unsigned int)
+{
+  Messages::error("Solving with shell matrix is not implemented");
+}
+  
+
+
+std::pair<unsigned int, Real>
+TiberLinearSolver::solve(const ShellMatrix<Number>& shell_matrix,
+    const SparseMatrix<Number>& precond_matrix,
+    NumericVector<Number>&,
+    NumericVector<Number>&,
+    const double,
+    const unsigned int)
+{
+  Messages::error("Solving with shell matrix is not implemented");
+}
+  
+

@@ -16,6 +16,7 @@
 #include <fstream>
 #include <sstream>
 #include <utility>
+#include <cstring>
 #include <map>
 #include <algorithm>
 #include "Material.h"

@@ -18,8 +18,9 @@ namespace
 }
 
 
-TiberNonlinearSolver::TiberNonlinearSolver(void)
-  : _nonlinear_rtol(default_nonlinear_rtol),
+TiberNonlinearSolver::TiberNonlinearSolver(sys_type& s)
+  : NonlinearSolver<double>(s),
+    _nonlinear_rtol(default_nonlinear_rtol),
     _nonlinear_atol(default_nonlinear_atol),
     _nonlinear_stol(default_nonlinear_stol),
     _nonlinear_max_it(default_nonlinear_max_it),
@@ -31,12 +32,13 @@ TiberNonlinearSolver::TiberNonlinearSolver(void)
 }
 
 
-
+/*
 TiberNonlinearSolver*
 TiberNonlinearSolver::create(const ModelOptions& options)
 {
   return new TiberPetscNonlinearSolver();
 }
+*/
 
 
 void

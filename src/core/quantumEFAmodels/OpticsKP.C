@@ -208,7 +208,7 @@ void OpticsKP::do_init()
 
 
   //--------------------------------------------------------------------------------------------------
-  const Mesh* mesh = &(es->get_mesh());
+  const MeshBase* mesh = &(es->get_mesh());
 
 
   es->add_system<LinearImplicitSystem> (system_name);
@@ -622,7 +622,7 @@ void OpticsKP::calculate_matrix(void)
 
 
   //--------------------------------------------------------------------------------------------------------//
-  const Mesh* mesh = &(es->get_mesh());
+  const MeshBase* mesh = &(es->get_mesh());
 
 
 
@@ -866,7 +866,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   vector<  PetscMatrix<Number>* > P_real_p(3);
   vector<  PetscMatrix<Number>* > P_imag_p(3);
 
-  const Mesh& mesh = system->get_mesh();
+  const MeshBase& mesh = system->get_mesh();
 
 
 

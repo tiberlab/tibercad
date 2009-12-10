@@ -135,9 +135,9 @@ void DDsemiconductor::do_init_alloy (const PhysicalModelInterface *comp_A, const
 
 void DDsemiconductor::set_strain(const Tensor2Sym& strain_1)
 {
-
-
-  if (norm( strain_1 ) > 5e-5 )
+ 
+  // attention: want norm() defined in tensor.h
+  if (::norm( strain_1 ) > 5e-5 ) 
     {
       strain = strain_1;
       strained = true;

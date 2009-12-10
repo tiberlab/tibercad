@@ -17,7 +17,7 @@
 
 class TiberLinearSystem;
 class Device;
-class Mesh;
+class MeshBase;
 
 
 //!  Class to solve heat transport problem
@@ -183,7 +183,7 @@ class MacroHeatBalance : public SimulationInterface
   
 
   //!Pointer to mesh
-  Mesh* mesh;
+  MeshBase* mesh;
 
  protected:
 

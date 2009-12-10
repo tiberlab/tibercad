@@ -42,5 +42,6 @@ $(libdir)/libeigen_solver$(shared_libext):  EigenSolver$(obj-suffix)
 
 
 
-include $(SLEPC_DIR)/bmake/slepc_common_variables
+#include $(SLEPC_DIR)/bmake/slepc_common_variables
+include $(SLEPC_DIR)/conf/slepc_common_variables
 include $(topdir)/Make.rules

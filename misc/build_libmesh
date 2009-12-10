@@ -7,6 +7,7 @@ fi
 
 . common.sh
 
+#export CXX=mpicxx
 
 echo "Compiling libMesh version $LIBMESHVERSION in $BUILDDIR ..."
 
@@ -16,36 +17,47 @@ if [ ! -d $BUILDDIR ]; then
   exit 1
 fi
 
-ARCHIVE=libmesh-${LIBMESHVERSION}.tar.gz
-PATCH=${PWD}/libmesh.patch
+ARCHIVE=libmesh${LIBMESHVERSION}.tar.gz
+PATCH=${PWD}/libmesh.patch${LIBMESHVERSION}
 
 cd $BUILDDIR
-if [ ! -e ${ARCHIVE} ]; then
-  wget http://dfn.dl.sourceforge.net/sourceforge/libmesh/${ARCHIVE}
+if [ ${LIBMESHVERSION} != "-svn" ]; then
+  if [ ! -e ${ARCHIVE} ]; then
+    wget http://dfn.dl.sourceforge.net/sourceforge/libmesh/${ARCHIVE}
+  fi
+
+  if [ ! -e ${ARCHIVE} ]; then
+    echo "Could not download libmesh."
+    exit 1
+  fi
+
+  if [ ! -d libmesh${LIBMESHVERSION} ]; then
+    tar zxf ${ARCHIVE}
+  fi
+
+else
+  if [ ! -d libmesh${LIBMESHVERSION} ]; then
+    svn co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh${LIBMESHVERSION}
+  fi
 fi
 
-if [ ! -e ${ARCHIVE} ]; then
-  echo "Could not download slepc."
-  exit 1
-fi
 
-tar zxf ${ARCHIVE}
 
-cd libmesh-${LIBMESHVERSION}
+cd libmesh${LIBMESHVERSION}
 
 if [ -e ${PATCH} ]; then
   patch -p0 < ${PATCH}
 fi
 
 
-export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL}
+export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 export PETSC_ARCH=${ARCH}-opt
 export CXXFLAGS=-fPIC
 export CFLAGS=-fPIC
 export FCFLAGS=-fPIC
 
   
-./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic --disable-shared --disable-second --disable-pfem
+./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic --disable-shared --disable-pfem --disable-second
 
 
 # delete the -pedantic flag because it makes problems with mpi

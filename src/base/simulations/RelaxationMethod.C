@@ -34,7 +34,7 @@ RelaxationMethod::do_solve(void)
   open_xmonitor();
 
   AutoPtr<NumericVector<double> > x_old = NumericVector<double>::build();
-  x_old->init(get_solution_vector().size());
+  x_old->init(get_solution_vector());
   x_old->close();
 
   for (unsigned int it = 0; it < get_maximum_iterations(); it++)

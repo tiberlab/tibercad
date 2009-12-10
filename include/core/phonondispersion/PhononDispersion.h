@@ -17,7 +17,7 @@
 
 class TiberLinearSystem;
 class Device;
-class Mesh;
+class MeshBase;
 
 
 //!  Class to solve heat transport problem
@@ -31,7 +31,7 @@ class PhononDispersion : public SimulationInterface
   
 
   //!Pointer to mesh
-  Mesh* mesh;
+  MeshBase* mesh;
 
 
     

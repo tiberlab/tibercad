@@ -24,8 +24,10 @@ class TiberNonlinearSolver : public NonlinearSolver<double>
 
   public:
 
+    typedef NonlinearImplicitSystem sys_type;
+
     //!  Constructor. Initializes  data structures
-    TiberNonlinearSolver(void);
+    TiberNonlinearSolver(sys_type& s);
 
 
     //! Destructor.
@@ -33,7 +35,7 @@ class TiberNonlinearSolver : public NonlinearSolver<double>
 
     
     //! Create a linear solver
-    static TiberNonlinearSolver* create(const ModelOptions& options);
+    //static TiberNonlinearSolver* create(const ModelOptions& options);
 
     
     //! Set options

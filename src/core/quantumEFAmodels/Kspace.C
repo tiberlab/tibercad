@@ -395,8 +395,8 @@ void Kspace::do_init()
 
     }
 
-    num_nodes.push_back(1);
-    num_nodes.push_back(1);
+    num_nodes.push_back(0);
+    num_nodes.push_back(0);
 
 
     define_k_space(vec, num_nodes[0]);
@@ -471,7 +471,7 @@ void Kspace::do_init()
 
 
 
-    num_nodes.push_back(1);
+    num_nodes.push_back(0);
 
     define_k_space(vec1, num_nodes[0],vec2, num_nodes[1] );
 

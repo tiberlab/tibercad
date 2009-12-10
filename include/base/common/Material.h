@@ -14,6 +14,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <cassert>
 
 // forward declarations
 class Dopant;

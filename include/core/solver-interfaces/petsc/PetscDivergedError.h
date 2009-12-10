@@ -5,14 +5,7 @@
 
 #include "PetscRuntimeError.h"
 
-// PETSc include
-#ifndef USE_COMPLEX_NUMBERS
-extern "C" {
-# include <petscerror.h>
-}
-#else
-# include <petscerror.h>
-#endif
+#include "petsc_macro.h"
 
 
 /**

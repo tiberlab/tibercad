@@ -23,7 +23,7 @@ cd ../
   --enable-hetero \
   --enable-uptight \
   $OTHEROPTS \
-  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}
+  --with-libmesh-prefix=${BUILDDIR}/libmesh${LIBMESHVERSION}
 
 
 #  --enable-license-check \

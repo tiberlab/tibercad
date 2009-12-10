@@ -1,22 +1,19 @@
 // $Id$
 
 #include "PardisoLinearSolver.h"
+#include "PardisoSolverException.h"
 
 
 #include "petsc_vector.h"
 #include "petsc_matrix.h"
-#include "PardisoSolverException.h"
-#include "petscmat.h"
+#include "petsc_macro.h"
 
-#ifndef USE_COMPLEX_NUMBERS
-extern "C" {
+EXTERN_C_FOR_PETSC_BEGIN
 # include <petscversion.h>
 # include <petscksp.h>
-}
-#else
-# include <petscversion.h>
-# include <petscksp.h>
-#endif
+EXTERN_C_FOR_PETSC_END
+
+#include <cassert>
 
 #if defined(_WIN32) || defined(_WIN64)
 #define pardiso_ PARDISO
@@ -156,7 +153,7 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 
   //Get n ia and ja
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
-      && (PETSC_VERSION_SUBMINOR >= 2))
+      && (PETSC_VERSION_SUBMINOR >= 2)) || (PETSC_VERSION_MAJOR >= 3)
   ierr = MatGetRowIJ(C,1, PETSC_FALSE, PETSC_FALSE, &nrows,&ia, &ja, &done);
 #else
   ierr = MatGetRowIJ(C,1, PETSC_FALSE,&nrows,&ia, &ja, &done);
@@ -182,7 +179,7 @@ PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
   }  
 
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
-      && (PETSC_VERSION_SUBMINOR >= 2))
+      && (PETSC_VERSION_SUBMINOR >= 2)) || (PETSC_VERSION_MAJOR >= 3)
   ierr = MatRestoreRowIJ(C, 1, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &done);
 #else
   ierr = MatRestoreRowIJ(C, 1, PETSC_FALSE, &nrows, &ia, &ja, &done);

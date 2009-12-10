@@ -124,7 +124,7 @@ void
 SimulationEnvironment::create_element_list(void)
 {
   _element_list.clear();
-  Mesh& mesh = _device->get_mesh();
+  MeshBase& mesh = _device->get_mesh();
 
   MeshBase::element_iterator it = mesh.active_elements_begin();
   const MeshBase::element_iterator end = mesh.active_elements_end();
@@ -156,12 +156,12 @@ SimulationEnvironment::create_bc_maps(void)
   BCMap::const_iterator bc_it;
   const BCMap::const_iterator bc_end(_bc_map.end());
 
-  const Mesh& mesh = _device->get_mesh();
+  const MeshBase& mesh = _device->get_mesh();
   const unsigned dim = mesh.mesh_dimension();
 
   // we only look on level zero
-  Mesh::const_element_iterator el(mesh.level_elements_begin(0));
-  const Mesh::const_element_iterator el_end(mesh.level_elements_end(0));
+  MeshBase::const_element_iterator el(mesh.level_elements_begin(0));
+  const MeshBase::const_element_iterator el_end(mesh.level_elements_end(0));
 
   for ( ; el != el_end; ++el)
   {
@@ -301,9 +301,9 @@ SimulationEnvironment::update_boundary_element_map(
   set<const Boundary*>::iterator ctit;
   const set<const Boundary*>::iterator ctend(boundaries.end());
 
-  Mesh& mesh = get_mesh();
-  Mesh::element_iterator it(mesh.active_elements_begin());
-  const Mesh::element_iterator end(mesh.active_elements_end());
+  MeshBase& mesh = get_mesh();
+  MeshBase::element_iterator it(mesh.active_elements_begin());
+  const MeshBase::element_iterator end(mesh.active_elements_end());
 
   for ( ; it != end; ++it)
   {
@@ -352,7 +352,7 @@ SimulationEnvironment::prepare_for_solve(void)
   if (!_is_initialized)
     init();
   
-  Mesh& mesh = _device->get_mesh();
+  MeshBase& mesh = _device->get_mesh();
 
   MeshBase::element_iterator it = mesh.elements_begin();
   const MeshBase::element_iterator end = mesh.elements_end();

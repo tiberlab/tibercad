@@ -17,8 +17,7 @@ if [ ! -d $BUILDDIR ]; then
   exit 1
 fi
 
-ARCHIVE=slepc-${PETSCVERSION}.tgz
-PATCH=slepc_patch_all-${VERSION}
+ARCHIVE=slepc-${PETSCVERSION}${SLEPCPATCHLEVEL}.tgz
 
 cd $BUILDDIR
 if [ ! -e ${ARCHIVE} ]; then
@@ -30,19 +29,16 @@ if [ ! -e ${ARCHIVE} ]; then
   exit 1
 fi
 
-tar zxf ${ARCHIVE}
-
-cd slepc-${PETSCVERSION}
-
-wget http://www.grycap.upv.es/slepc/download/patches/${PATCH}
-if [ -e ${PATCH} ]; then
-  patch -p0 < ${PATCH}
+if [ ! -d slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} ]; then
+  tar zxf ${ARCHIVE}
 fi
 
+cd slepc-${PETSCVERSION}${SLEPCPATCHLEVEL}
 
 
-export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL}
-export SLEPC_DIR=${BUILDDIR}/slepc-${PETSCVERSION}
+export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
+#export SLEPC_DIR=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL}
+export SLEPC_DIR=`pwd`
 
 
 export PETSC_ARCH=${ARCH}-opt

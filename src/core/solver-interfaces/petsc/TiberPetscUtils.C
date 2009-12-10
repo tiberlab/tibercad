@@ -84,3 +84,16 @@ TiberPetscUtils::extract_LSType(const ModelOptions& options)
 
   return ls_type;
 }
+
+
+void
+TiberPetscUtils::_checkerr(int errorcode, int line, const char* file)
+{
+  if (errorcode != 0)
+  {
+    std::cerr << "Error in " << file << ", line " << line << ":\n" << std::flush;
+    throw PetscRuntimeError(errorcode);
+  }
+}
+
+

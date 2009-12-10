@@ -91,7 +91,7 @@ inline ISE_Edge* ISE_Face::get_edge (unsigned int e)
   else
   {
     cerr << "The 'e' value for the 'ISE_Edge* ISE_Face::get_edge(unsigned int e)' method is incorrect" << endl;
-    exit(1);
+    std::exit(1);
   }
 }
 

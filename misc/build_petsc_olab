@@ -7,8 +7,8 @@ fi
 
 . common.sh
 
-ARCHIVE="petsc-lite-${PETSCVERSION}-${PATCHLEVEL}.tar.gz"
-PATCH=${PWD}/petsc.patch
+ARCHIVE="petsc-lite-${PETSCVERSION}${PETSCPATCHLEVEL}.tar.gz"
+PATCH=${PWD}/petsc.patch-${PETSCVERSION}
 
 echo "Compiling PETSc version $PETSCVERSION in $BUILDDIR ..."
 
@@ -30,7 +30,7 @@ fi
 
 tar zxf ${ARCHIVE}
 
-cd petsc-${PETSCVERSION}-${PATCHLEVEL}
+cd petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 
 if [ -e ${PATCH} ]; then
   patch -p0 < ${PATCH}
@@ -38,12 +38,12 @@ fi
 
 #export LAPACK=/scratch/maufder/TiberCAD/ARPACK
 #LAPACKLIBS="[${LAPACK}/libarpack.a]"
-LAPACK=/usr/pack/intel_mkl-8.0-ma/lib/32
-LAPACKLIBS="[${LAPACK}/libmkl_def.so,${LAPACK}/libguide.so,${LAPACK}/libmkl_lapack.a,-lm]"
+LAPACK=/usr/pack/intel_mkl-10.2-gp/lib/32
+LAPACKLIBS="[${LAPACK}/libmkl_intel.so,${LAPACK}/libmkl_sequential.so,${LAPACK}/libmkl_core.so,-lm]"
 
 #CONFIGOPTS="--with-matlab=0 --with-shared=0 --with-dynamic=0 --with-cc=$CC --with-cxx=$CXX  --with-fc=$F90 --with-fortran=1 --CFLAGS=-fexceptions --with-mpi=0 --download-f-blas-lapack"
 
-CONFIGOPTS="--with-matlab=0 --with-shared --with-fortran=0 --CFLAGS=-fexceptions --with-mpi-dir=${MPIDIR} --with-cc=$CC --with-cxx=$CXX --with-fc=$F90 --with-blas-lapack-lib=${LAPACKLIBS}"
+CONFIGOPTS="--with-matlab=0 --with-shared --with-fortran=0 --CFLAGS=-fexceptions --with-mpi-dir=${MPIDIR} --with-cc=$CC --with-cxx=$CXX --with-fc=$F90 --with-blas-lapack-lib=${LAPACKLIBS} --with-clanguage=C++"
 #CONFIGOPTS="--with-matlab=0 --with-shared --with-fortran=0 --CFLAGS=-fexceptions --with-mpi-dir=${MPIDIR} --with-cc=$CC --with-cxx=$CXX --with-fc=$F90"
 
 

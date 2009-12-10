@@ -24,7 +24,7 @@
 // forward declarations
 //class Device;
 class Boundary;
-class Mesh;
+class MeshBase;
 class Elem;
 class Point;
 class Node;
@@ -325,7 +325,7 @@ class DriftDiffusion : public SimulationInterface
     /*!
      * \return a constant reference to the simulation mesh
      */
-    Mesh& get_mesh(void) const;
+    MeshBase& get_mesh(void) const;
 
 
 
@@ -785,7 +785,7 @@ DriftDiffusion::get_boundary_currents() const
 
 
 inline
-Mesh&
+MeshBase&
 DriftDiffusion::get_mesh(void) const
 {
   return _device->get_mesh();

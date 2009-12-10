@@ -92,7 +92,7 @@ $Models
     physical_model recombination
     { 
       model = srh
-    }                
+    }
 
     
   
@@ -101,13 +101,13 @@ $Models
     physical_model electron_mobility
     { 
       model = doping_dependent
-    }                
+    }
 
 
     physical_model hole_mobility
     { 
       model = doping_dependent
-    }                
+    }
 
 
     BC_Regions  
@@ -130,7 +130,7 @@ $Models
 	voltage = @Vb[0.0]  
       }
  
-    }   
+    }
 
   }
 

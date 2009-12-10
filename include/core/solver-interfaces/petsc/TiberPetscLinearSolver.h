@@ -11,19 +11,13 @@
 // Libmesh includes
 #include "petsc_vector.h"
 #include "petsc_matrix.h"
+#include "petsc_macro.h"
 
 
-
-#ifndef USE_COMPLEX_NUMBERS
-extern "C" {
+EXTERN_C_FOR_PETSC_BEGIN
 # include <petscversion.h>
 # include <petscksp.h>
-}
-#else
-# include <petscversion.h>
-# include <petscksp.h>
-#endif
-
+EXTERN_C_FOR_PETSC_END
 
 
 //! The TiberCAD linear solver interface to PETSc
@@ -60,6 +54,26 @@ class TiberPetscLinearSolver : public TiberLinearSolver
           SparseMatrix<Number> &preconditioner,
           NumericVector<Number> &solution,
           NumericVector<Number> &rhs);
+
+
+    //! Dummy implementation
+    virtual std::pair<unsigned int, Real>
+      solve(const ShellMatrix<Number>&,
+          const SparseMatrix<Number>&,
+          NumericVector<Number>&,
+          NumericVector<Number>&, double, unsigned int) {};
+
+
+    //! Dummy implementation
+    virtual std::pair<unsigned int, Real>
+      solve(const ShellMatrix<Number>&,
+          NumericVector<Number>&,
+          NumericVector<Number>&, double, unsigned int) {};
+
+
+    //! Dummy implementation
+    virtual void print_converged_reason(void) {};
+
 
     /*!
      * \brief Fills the input vector with the sequence of residual norms
@@ -114,10 +128,6 @@ class TiberPetscLinearSolver : public TiberLinearSolver
     bool _xmonitor_open;
 
 
-    //! Check PETSc error code
-    static void _checkerr(int errorcode);
-
-
     //! Check convergence
     std::pair<unsigned int, double> check_convergence(void);
 
@@ -129,15 +139,6 @@ class TiberPetscLinearSolver : public TiberLinearSolver
 //
 // inline members
 //
-
-
-inline
-void
-TiberPetscLinearSolver::_checkerr(int errorcode)
-{
-  if (errorcode != 0)
-    throw(PetscRuntimeError(errorcode));
-}
 
 
 

@@ -9,9 +9,11 @@
 
 
 #include "equation_systems.h"
+#include "nonlinear_implicit_system.h"
 #include "mesh.h"
 
 #include "Messages.h"
+#include <cassert>
 
 
 using namespace std;
@@ -21,10 +23,10 @@ TiberNonlinPetsc::TiberNonlinPetsc(EquationSystems& es,
     const string& name, const unsigned int number)
   : Parent(es, name, number)
 {
-  _solver = new TiberPetscNonlinearSolver;
+  _solver = new TiberPetscNonlinearSolver(*this);
 
   if (_solver == NULL)
-    throw InitFailedException("Cannot create linear solver object.");
+    throw InitFailedException("Cannot create nonlinear solver object.");
 
 }
 

@@ -227,7 +227,7 @@ DSSC::compute_scaling(Scaling::ScalingType type)
   {
     default: // UNITS
 
-      const Mesh& mesh = get_mesh();
+      const MeshBase& mesh = get_mesh();
       MeshBase::const_node_iterator it = mesh.nodes_begin();
       const MeshBase::const_node_iterator end = mesh.nodes_end();
 
@@ -299,7 +299,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
   //double mesh_units = 100 * get_scaling().get_calc_mesh_units();
   //get_scaling().set_calc_mesh_units(mesh_units);
 
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
 
   _cond_scaling.n = 1;
   _cond_scaling.I = 1;
@@ -463,7 +463,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
   {
     default: // UNITS
 
-      const Mesh& mesh = get_mesh();
+      const MeshBase& mesh = get_mesh();
       MeshBase::const_node_iterator it = mesh.nodes_begin();
       const MeshBase::const_node_iterator end = mesh.nodes_end();
 
@@ -531,7 +531,7 @@ DSSC::get_OC_values(void)
 {
 
   // references for nicer code
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
   EquationSystems& eq_sys = get_equation_systems();
   TiberNonlinearSystem& system = static_cast<TiberNonlinearSystem&>(
       eq_sys.get_system(get_equation_system_name()));
@@ -1126,10 +1126,10 @@ DSSC::find_dirichlet_nodes(void)
 {
   SimulationEnvironment& env = get_environment();
 
-  Mesh& mesh = get_mesh();
+  MeshBase& mesh = get_mesh();
   unsigned int dim = mesh.mesh_dimension();
-  Mesh::element_iterator it = mesh.active_elements_begin();
-  const Mesh::element_iterator end = mesh.active_elements_end();
+  MeshBase::element_iterator it = mesh.active_elements_begin();
+  const MeshBase::element_iterator end = mesh.active_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -1874,7 +1874,7 @@ DSSC::calculate_currents_rstf(void)
   const NumericVector<Number>& solution = system->get_solution_vector();
 
   // aliases for nicer code
-  const Mesh& mesh = system->get_mesh();
+  const MeshBase& mesh = system->get_mesh();
   const Device& device = *(_device);
   const SimulationEnvironment& env = get_environment();
 
@@ -2066,7 +2066,7 @@ DSSC::build_local_scaling(void)
 
   // aliases for nicer code
   const Device& device = *(_device);
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
 
   const DofMap& dof_map = system->get_dof_map();
 
@@ -2257,7 +2257,7 @@ DSSC::build_nodal_results(const set<string>& variables,
 
   // aliases for nicer code
   const Device& device = *(_device);
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
 
   const DofMap& dof_map = system->get_dof_map();
 
@@ -2562,7 +2562,7 @@ DSSC::build_elemental_results(const set<string>& variables,
 
   // aliases for nicer code
   const Device& device = *(_device);
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
 
   const DofMap& dof_map = system->get_dof_map();
 
@@ -2984,9 +2984,9 @@ DSSC::do_maximum_norm_of_difference(ID id)
 void
 DSSC::find_internal_boundary_nodes(void)
 {
-  Mesh& mesh = get_mesh();
-  Mesh::element_iterator it = mesh.active_elements_begin();
-  const Mesh::element_iterator end = mesh.active_elements_end();
+  MeshBase& mesh = get_mesh();
+  MeshBase::element_iterator it = mesh.active_elements_begin();
+  const MeshBase::element_iterator end = mesh.active_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -3049,7 +3049,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   perf_log.start_event("assembly");
 
   // references for nicer code
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
   EquationSystems& eq_sys = get_equation_systems();
   TiberNonlinearSystem& system = static_cast<TiberNonlinearSystem&>(
       eq_sys.get_system(get_equation_system_name()));

@@ -299,7 +299,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     default: // UNITS
       C0 = (C0 > ni0) ? C0 : ni0;
 
-      const Mesh& mesh = get_mesh();
+      const MeshBase& mesh = get_mesh();
       MeshBase::const_node_iterator it = mesh.nodes_begin();
       const MeshBase::const_node_iterator end = mesh.nodes_end();
 
@@ -364,9 +364,9 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
   const double phi0 = get_scaling().get_potential_scaling();
   double level = -Ef_n / phi0;
 
-  Mesh& mesh = get_mesh();
-  Mesh::element_iterator it = mesh.active_elements_begin();
-  const Mesh::element_iterator end = mesh.active_elements_end();
+  MeshBase& mesh = get_mesh();
+  MeshBase::element_iterator it = mesh.active_elements_begin();
+  const MeshBase::element_iterator end = mesh.active_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -397,9 +397,9 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
   const double phi0 = get_scaling().get_potential_scaling();
   double level = -Ef_p / phi0;
 
-  Mesh& mesh = get_mesh();
-  Mesh::element_iterator it = mesh.active_elements_begin();
-  const Mesh::element_iterator end = mesh.active_elements_end();
+  MeshBase& mesh = get_mesh();
+  MeshBase::element_iterator it = mesh.active_elements_begin();
+  const MeshBase::element_iterator end = mesh.active_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -429,9 +429,9 @@ DriftDiffusion::set_electric_potential(double pot)
   const double phi0 = get_scaling().get_potential_scaling();
   double level = -pot / phi0;
 
-  Mesh& mesh = get_mesh();
-  Mesh::element_iterator it = mesh.active_elements_begin();
-  const Mesh::element_iterator end = mesh.active_elements_end();
+  MeshBase& mesh = get_mesh();
+  MeshBase::element_iterator it = mesh.active_elements_begin();
+  const MeshBase::element_iterator end = mesh.active_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -469,10 +469,10 @@ DriftDiffusion::find_dirichlet_nodes(void)
   vector<unsigned int> dof_indices_ep;
 
 
-  Mesh& mesh = get_mesh();
+  MeshBase& mesh = get_mesh();
   unsigned int dim = mesh.mesh_dimension();
-  Mesh::element_iterator it = mesh.active_elements_begin();
-  const Mesh::element_iterator end = mesh.active_elements_end();
+  MeshBase::element_iterator it = mesh.active_elements_begin();
+  const MeshBase::element_iterator end = mesh.active_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -568,9 +568,9 @@ DriftDiffusion::find_dirichlet_nodes(void)
 void
 DriftDiffusion::find_dielectric_boundary_nodes(void)
 {
-  Mesh& mesh = get_mesh();
-  Mesh::element_iterator it = mesh.active_elements_begin();
-  const Mesh::element_iterator end = mesh.active_elements_end();
+  MeshBase& mesh = get_mesh();
+  MeshBase::element_iterator it = mesh.active_elements_begin();
+  const MeshBase::element_iterator end = mesh.active_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -2107,7 +2107,7 @@ DriftDiffusion::calculate_currents_rstf(void)
   const NumericVector<Number>& solution = system->get_solution_vector();
 
   // aliases for nicer code
-  const Mesh& mesh = system->get_mesh();
+  const MeshBase& mesh = system->get_mesh();
   const Device& device = *(_device);
   SimulationEnvironment& env = get_environment();
 
@@ -2279,7 +2279,7 @@ DriftDiffusion::calculate_field_emission(void)
   const NumericVector<Number>& solution = system->get_solution_vector();
 
   // aliases for nicer code
-  const Mesh& mesh = system->get_mesh();
+  const MeshBase& mesh = system->get_mesh();
   const Device& device = *(_device);
   const SimulationEnvironment& env = get_environment();
 
@@ -2429,7 +2429,7 @@ DriftDiffusion::calculate_currents_surfint(void)
   const NumericVector<Number>& solution = system->get_solution_vector();
 
   // aliases for nicer code
-  const Mesh& mesh = system->get_mesh();
+  const MeshBase& mesh = system->get_mesh();
   const Device& device = *(_device);
   const SimulationEnvironment& env = get_environment();
 
@@ -2676,7 +2676,7 @@ DriftDiffusion::build_local_scaling(void)
 
   // aliases for nicer code
   const Device& device = *(_device);
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
 
   const DofMap& dof_map = system->get_dof_map();
 
@@ -2881,7 +2881,7 @@ DriftDiffusion::build_nodal_results(const set<string>& variables,
 
   // aliases for nicer code
   const Device& device = *(_device);
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
 
   const DofMap& dof_map = system->get_dof_map();
 
@@ -3415,7 +3415,7 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
 
   // aliases for nicer code
   const Device& device = *(_device);
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
 
   const DofMap& dof_map = system->get_dof_map();
 
@@ -4129,7 +4129,7 @@ DriftDiffusion::set_dirichlet_bc(void)
   EquationSystems& es = get_equation_systems();
 
   // references for nicer code
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
 
   TiberNonlinearSystem& system = es.get_system<TiberNonlinearSystem>(
       get_equation_system_name());
@@ -4282,7 +4282,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   perf_log.start_event("assembly");
 
   // references for nicer code
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
   EquationSystems& eq_sys = get_equation_systems();
   TiberNonlinearSystem& system = static_cast<TiberNonlinearSystem&>(
       eq_sys.get_system(get_equation_system_name()));
@@ -5523,7 +5523,7 @@ DriftDiffusion::save_data(const string& file)
   //using namespace boost::iostreams;
   //using namespace boost::iostreams::gzip;
 
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
   EquationSystems& eq_sys = get_equation_systems();
   TiberNonlinearSystem& system = static_cast<TiberNonlinearSystem&>(
       eq_sys.get_system(get_equation_system_name()));
@@ -5603,7 +5603,7 @@ DriftDiffusion::save_data(const string& file)
 void
 DriftDiffusion::load_data(const string& file)
 {
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
   EquationSystems& eq_sys = get_equation_systems();
   TiberNonlinearSystem& system = static_cast<TiberNonlinearSystem&>(
       eq_sys.get_system(get_equation_system_name()));
@@ -5711,8 +5711,8 @@ DriftDiffusion::load_data(const string& file)
   const unsigned int en_var = system.variable_number("fermi_e");
   const unsigned int ep_var = system.variable_number("fermi_h");
 
-  Mesh::const_node_iterator it(mesh.active_nodes_begin());
-  const Mesh::const_node_iterator end(mesh.active_nodes_end());
+  MeshBase::const_node_iterator it(mesh.active_nodes_begin());
+  const MeshBase::const_node_iterator end(mesh.active_nodes_end());
   for ( ; it != end; ++it)
   {
     const Node& node = *(*it);
@@ -5749,7 +5749,7 @@ DriftDiffusion::write_nodal_vector(const string& filename, const NumericVector<d
 
   // aliases for nicer code
   const Device& device = *(_device);
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
 
   const DofMap& dof_map = system->get_dof_map();
 

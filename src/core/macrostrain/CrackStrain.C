@@ -47,7 +47,7 @@ void CrackStrain::do_solve()
 
   result_strain.clear();
 
-  const Mesh& mesh = get_environment().get_mesh();
+  const MeshBase& mesh = get_environment().get_mesh();
 
   Tensor2Sym stress;
 
@@ -86,7 +86,7 @@ void CrackStrain::do_solve()
 
     strain  = sym(eps1); //result has to be symmetric
 
-    assert (norm(strain - eps1) < 1e-6); //is it really symmetric
+    assert (::norm(strain - eps1) < 1e-6); //is it really symmetric
 
 
     result_strain.insert(std::pair <const Elem*, Tensor2Sym>  (elem, strain));
@@ -286,7 +286,7 @@ void CrackStrain::build_elemental_results(const std::set<std::string>& variables
 void CrackStrain::prepare_strain_data_for_output( std::vector<std::string>& eps_names, std::vector<double>& eps_data )
 {
 
-  const Mesh& mesh = get_environment().get_mesh();
+  const MeshBase& mesh = get_environment().get_mesh();
 
   char num_i[2];
   char num_j[2];
@@ -375,7 +375,7 @@ void CrackStrain::prepare_polarization_data_for_output( std::vector<std::string>
 {
   char num_i[2];
 
-  const Mesh& mesh = get_environment().get_mesh();
+  const MeshBase& mesh = get_environment().get_mesh();
 
 
   unsigned int Number_of_elements = mesh.n_active_elem();
@@ -439,7 +439,7 @@ void
 CrackStrain::prepare_stress_data_for_output( std::vector<std::string>& stress_names, std::vector<double>& stress_data ) 
 {
 
-  const Mesh& mesh = get_environment().get_mesh();
+  const MeshBase& mesh = get_environment().get_mesh();
 
   char num_i[2];
   char num_j[2];

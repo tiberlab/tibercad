@@ -14,6 +14,8 @@
 namespace
 {
   Control* _control = NULL;
+
+  LibMeshInit* _libmeshinit;
 }
 
 char**
@@ -86,7 +88,8 @@ TiberCad::init(int argc, char** argv)
 
 
   // prepare libMesh
-  libMesh::init(cmdline_argc, cmdline_argv);
+  //libMesh::init(cmdline_argc, cmdline_argv);
+  _libmeshinit = new LibMeshInit(cmdline_argc, cmdline_argv);
 
   // prepare EigenSolver
   EigenSolver::slepc_init(cmdline_argc, cmdline_argv);
@@ -106,7 +109,9 @@ TiberCad::cleanup(void)
   EigenSolver::slepc_done();
 
   // close libMesh and return
-  return libMesh::close();
+  delete _libmeshinit;
+  //return libMesh::close();
+  return 0;
 }
 
 

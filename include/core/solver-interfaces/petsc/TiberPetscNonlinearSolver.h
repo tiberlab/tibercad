@@ -3,21 +3,16 @@
 #ifndef _TIBERPETSCNONLINEARSOLVER_H_
 #define _TIBERPETSCNONLINEARSOLVER_H_
 
+#include "TiberNonlinearSolver.h"
 #include "PetscRuntimeError.h"
 
 
 // Libmesh includes
-#include "TiberNonlinearSolver.h"
+#include "petsc_macro.h"
 
-
-#ifndef USE_COMPLEX_NUMBERS
-extern "C" {
+EXTERN_C_FOR_PETSC_BEGIN
 # include <petscsnes.h>
-}
-#else
-# include <petscsnes.h>
-#endif
-
+EXTERN_C_FOR_PETSC_END
 
 
 /**
@@ -31,7 +26,7 @@ class TiberPetscNonlinearSolver : public TiberNonlinearSolver
   public:
 
     //! Constructor. Initializes Petsc data structures
-    TiberPetscNonlinearSolver(void);
+    TiberPetscNonlinearSolver(sys_type& s);
 
      //! Destructor.
     ~TiberPetscNonlinearSolver(void);
@@ -92,8 +87,6 @@ class TiberPetscNonlinearSolver : public TiberNonlinearSolver
     //! Nonlinear solver context
     SNES _snes;
 
-    static void _checkerr(int errorcode);
-
 };
 
 
@@ -101,13 +94,6 @@ class TiberPetscNonlinearSolver : public TiberNonlinearSolver
 // inline methods
 // 
 
-inline
-void
-TiberPetscNonlinearSolver::_checkerr(int errorcode)
-{
-  if (errorcode != 0)
-    throw(PetscRuntimeError(errorcode));
-}
 
 inline
 TiberPetscNonlinearSolver::~TiberPetscNonlinearSolver(void)

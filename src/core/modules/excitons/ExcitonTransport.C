@@ -136,7 +136,7 @@ ExcitonTransport::compute_scaling(void)
   double mu0 = 1;
   double C0 = 1;
 
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
   MeshBase::const_node_iterator it = mesh.nodes_begin();
   const MeshBase::const_node_iterator end = mesh.nodes_end();
 
@@ -295,7 +295,7 @@ ExcitonTransport::build_local_scaling(void)
 
   // aliases for nicer code
   const Device& device = *(_device);
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
 
   const DofMap& dof_map = system->get_dof_map();
 
@@ -461,7 +461,7 @@ ExcitonTransport::build_nodal_results(const set<string>& variables,
 
   // aliases for nicer code
   const Device& device = *(_device);
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
   const NumericVector<Number>& solution = system->get_solution_vector();
 
   const DofMap& dof_map = system->get_dof_map();
@@ -718,7 +718,7 @@ ExcitonTransport::build_elemental_results(const set<string>& variables,
 
   // aliases for nicer code
   const Device& device = *(_device);
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
   const NumericVector<Number>& solution = system->get_solution_vector();
 
   const DofMap& dof_map = system->get_dof_map();
@@ -888,7 +888,7 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
 {
 
   // references for nicer code
-  const Mesh& mesh = get_mesh();
+  const MeshBase& mesh = get_mesh();
 
   EquationSystems& eq_sys = get_equation_systems();
   TiberNonlinearSystem& system =

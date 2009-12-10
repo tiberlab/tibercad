@@ -1,4 +1,4 @@
-
+// $Id$
 
 
 #include <iostream>
@@ -34,7 +34,6 @@ using namespace std;
 // .xta  file for  Libmesh
 //  needs .msh file name, dim. of simulation is  by  default  the one  defined  in  input  file
 //  but  is  taken  from  mesh  file  beginning  with    GMSH 2.4 !!
-
 
 Read_MSH::Read_MSH(string filename, int sim_dim )           
 {
@@ -2352,7 +2351,7 @@ void  Read_MSH::write_xta()
 
 // write  mesh  and  meshdata from  .xda and  .xta  files
 
-void   Read_MSH::read_mesh_and_data(Mesh& mesh, MeshData_elements&  mesh_data )
+void   Read_MSH::read_mesh_and_data(MeshBase& mesh, MeshData_elements&  mesh_data )
 
 {
 

@@ -13,6 +13,8 @@
 #include "linear_solver.h"
 #include "equation_systems.h"
 
+#include <cassert>
+
 #define DEBUG
 
 using namespace std;

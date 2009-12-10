@@ -7,8 +7,8 @@ fi
 
 . common.sh
 
-ARCHIVE="petsc-lite-${PETSCVERSION}-${PATCHLEVEL}.tar.gz"
-PATCH=${PWD}/petsc.patch
+ARCHIVE="petsc-lite-${PETSCVERSION}${PETSCPATCHLEVEL}.tar.gz"
+PATCH=${PWD}/petsc.patch-${PETSCVERSION}
 
 echo "Compiling PETSc version $PETSCVERSION in $BUILDDIR ..."
 
@@ -28,9 +28,11 @@ if [ ! -e ${ARCHIVE} ]; then
   exit 1
 fi
 
-tar zxf ${ARCHIVE}
+if [ ! -d petsc-${PETSCVERSION}${PETSCPATCHLEVEL} ]; then
+  tar zxf ${ARCHIVE}
+fi
 
-cd petsc-${PETSCVERSION}-${PATCHLEVEL}
+cd petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 
 if [ -e ${PATCH} ]; then
   patch -p0 < ${PATCH}
@@ -38,17 +40,24 @@ fi
 
 #export LAPACK=/scratch/maufder/TiberCAD/ARPACK
 #LAPACKLIBS="[${LAPACK}/libarpack.a]"
+LAPACK=/usr/pack/intel_mkl-8.0-ma/lib/32
+LAPACKLIBS="[${LAPACK}/libmkl_def.so,${LAPACK}/libguide.so,${LAPACK}/libmkl_lapack.a,-lm]"
+
 
 #CONFIGOPTS="--with-matlab=0 --with-shared=0 --with-dynamic=0 --with-cc=$CC --with-cxx=$CXX  --with-fc=$F90 --with-fortran=1 --CFLAGS=-fexceptions --with-mpi=0 --download-f-blas-lapack"
 
-CONFIGOPTS="--with-matlab=0 --with-shared=0 --with-dynamic=0 --with-fortran=0 --CFLAGS=-fexceptions --with-mpi=0 "
+COMPILERS="--with-cc=$CC --with-cxx=$CXX  --with-fc=$FC"
+
+MPI="--with-mpi-dir=${MPIDIR}"
+#MPI="--with-mpi=0 --with-fortran=0"
+CONFIGOPTS="--with-matlab=0 --with-shared=0 --with-dynamic=0 --CFLAGS=-fexceptions $MPI $COMPILERS"
 
 
 export PETSC_DIR=${PWD}
 
 if [ ! -e ${ARCH}-opt.ok ]; then
   export PETSC_ARCH=${ARCH}-opt
-  ./config/configure.py ${CONFIGOPTS} --with-debugging=0
+  ./config/configure.py ${CONFIGOPTS} --with-debugging=0 --with-mpi-compilers=0 --with-cc=$CC --with-cxx=$CXX 
   make |tee ${PETSC_ARCH}.log && touch ${ARCH}-opt.ok
 fi
 
@@ -69,7 +78,7 @@ if [ $DEBUG == 'y' ]; then
   if [ ! -e ${ARCH}-complex.ok ]; then
     export PETSC_ARCH=${ARCH}-complex
     ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=c++ --with-debugging=1
-    make |tee ${PETSC_ARCH}.log && touch ${ARCH}-complex.ok
+    make |tee ${PETSC_ARCH}.log #&& touch ${ARCH}-complex.ok
   fi
 
 fi

@@ -8,10 +8,6 @@
 #include <fstream>  //for file streaming
 #include <InitFailedException.h>
 
-/* #include <string>   //for strings */
- /* #include <set> */
- /* #include <map> */
-
 #include "ISE_Vertex.h"
 #include "ISE_Edge.h"
 #include "ISE_Face.h"
@@ -25,8 +21,9 @@
 #include "mesh_data_elements.h"
 #include "mesh_data.h"
 #include "libmesh.h"
-#include "mesh.h"
 #include "mesh_generation.h"
+
+class MeshBase;
 
 //!ISE Reading and Libmesh Writing Class.
 /*!
@@ -42,8 +39,6 @@ class ReadISEGrid
    *  Writes *.xda and *.xta files into default directory.
    * 
    */
- 
-  //  ReadISEGrid(const char* file_name , Mesh& mesh, MeshData_elements&  mesh_data );
   ReadISEGrid(const char* file_name);
 
 
@@ -127,7 +122,7 @@ class ReadISEGrid
   /*!
     Write  mesh  and  meshdata from  .xda and  .xta  files
   */
-  void   read_mesh_and_data(Mesh& mesh, MeshData_elements&  mesh_data );
+  void   read_mesh_and_data(MeshBase& mesh, MeshData_elements&  mesh_data );
 
   /*!
     Sets Boundary Condition Data.

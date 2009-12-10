@@ -1,5 +1,7 @@
 #!/bin/bash
  
+#export CC=mpicc
+#export CXX=mpicxx
 
 if [ ! -e common.sh ]; then
   echo "Need configuration file (common.sh)."
@@ -14,12 +16,12 @@ echo "Compiling TiberCAD ..."
 cd ../
 
 ./configure \
-  --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}-${PATCHLEVEL} \
+  --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL} \
   --with-petsc-arch=${ARCH}-complex \
-  --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION} \
+  --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} \
   --disable-modules \
   $OTHEROPTS \
-  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}
+  --with-libmesh-prefix=${BUILDDIR}/libmesh${LIBMESHVERSION}
 
 
 make

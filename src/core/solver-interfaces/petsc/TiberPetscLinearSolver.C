@@ -7,13 +7,15 @@
 
 #include "libmesh_common.h"
 
+#include <cassert>
 #include <cstring>
+
 
 
 TiberPetscLinearSolver::TiberPetscLinearSolver(void)
   : _ksp(NULL),
-    _ksp_type(KSPBCGS),
-    _pc_type(PCILU),
+    _ksp_type((char*) KSPBCGS),
+    _pc_type((char*) PCILU),
     _monitor(false),
     _xmonitor(true),
     _xmonitor_open(false)
@@ -36,7 +38,7 @@ void TiberPetscLinearSolver::clear(void)
       int ierr = 0;
       
       ierr = KSPDestroy(_ksp);
-      _checkerr(ierr);
+      TiberPetscUtils::checkerr(ierr);
 	     
       // Mimic PETSc default solver and preconditioner
       //_solver_type = GMRES;
@@ -62,19 +64,19 @@ void TiberPetscLinearSolver::init(void)
 
     // Create the linear solver context
     ierr = KSPCreate(libMesh::COMM_WORLD, &_ksp);
-    _checkerr(ierr);
+    TiberPetscUtils::checkerr(ierr);
 
     // Create the preconditioner context
     //ierr = KSPGetPC(_ksp, &_pc);
-    //_checkerr(ierr);
+    //TiberPetscUtils::checkerr(ierr);
 
     // We start with 0 for the correction
     //ierr = KSPSetInitialGuessNonzero(_ksp, PETSC_TRUE);
-    //_checkerr(ierr);
+    //TiberPetscUtils::checkerr(ierr);
 
     // Set the options from user-input (for tests only)
     //ierr = KSPSetFromOptions (_ksp);
-    //_checkerr(ierr);
+    //TiberPetscUtils::checkerr(ierr);
 
 
     // Notify PETSc of location to store residual history.
@@ -86,7 +88,7 @@ void TiberPetscLinearSolver::init(void)
         PETSC_NULL,   // pointer to the array which holds the history
         PETSC_DECIDE, // size of the array holding the history
         PETSC_TRUE);  // Whether or not to reset the history for each solve. 
-    _checkerr(ierr);
+    TiberPetscUtils::checkerr(ierr);
   }
 }
 
@@ -129,28 +131,28 @@ TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 
   // Set user-specified solver and preconditioner types
   ierr = KSPSetType(_ksp, _ksp_type);
-  _checkerr(ierr);
+  TiberPetscUtils::checkerr(ierr);
 
   PC pc;
   ierr = KSPGetPC(_ksp, &pc);
-  _checkerr(ierr);
+  TiberPetscUtils::checkerr(ierr);
 
   ierr = PCSetType(pc, _pc_type);
-  _checkerr(ierr);
+  TiberPetscUtils::checkerr(ierr);
   // for composite type, do some extra stuff
   if (strcmp(_pc_type, PCCOMPOSITE) == 0)
   {
     ierr = PCCompositeSetType(pc, PC_COMPOSITE_MULTIPLICATIVE);
-    _checkerr(ierr);
+    TiberPetscUtils::checkerr(ierr);
 
-    ierr = PCCompositeAddPC(pc, PCJACOBI);
-    _checkerr(ierr);
-    ierr = PCCompositeAddPC(pc, PCILU);
-    _checkerr(ierr);
+    ierr = PCCompositeAddPC(pc, (char*) PCJACOBI);
+    TiberPetscUtils::checkerr(ierr);
+    ierr = PCCompositeAddPC(pc, (char*) PCILU);
+    TiberPetscUtils::checkerr(ierr);
 
     PC sub_pc;
     ierr = PCCompositeGetPC(pc, 1, &sub_pc);
-    _checkerr(ierr);
+    TiberPetscUtils::checkerr(ierr);
 #if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
     PCILUSetZeroPivot(sub_pc, 1e-32);
     PCILUSetDamping(sub_pc, 1e-3);
@@ -177,7 +179,7 @@ TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
   // Set operators. The input matrix works as the preconditioning matrix
   ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat(),
 			 SAME_NONZERO_PATTERN);
-  _checkerr(ierr);
+  TiberPetscUtils::checkerr(ierr);
 
   // Set the tolerances for the iterative solver.  Use the user-supplied
   // tolerance for the relative residual & leave the others at default values.
@@ -189,7 +191,7 @@ TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
   //KSPConvergedReason reason;
   //KSPGetConvergedReason(_ksp, &reason);
   //std::cerr << "KSP convergence reason: " << reason << std::endl;
-  _checkerr(ierr);
+  TiberPetscUtils::checkerr(ierr);
 
   return check_convergence();
 
@@ -210,7 +212,7 @@ void TiberPetscLinearSolver::get_residual_history(std::vector<double>& hist)
   // example, TFQMR returns two residual values per iteration step.
   double* p;
   ierr = KSPGetResidualHistory(_ksp, &p, &its);
-  _checkerr(ierr);
+  TiberPetscUtils::checkerr(ierr);
 
   // Check for early return
   if (its == 0) return;
@@ -242,7 +244,7 @@ double TiberPetscLinearSolver::get_initial_residual(void)
   // example, TFQMR returns two residual values per iteration step.
   double* p;
   ierr = KSPGetResidualHistory(_ksp, &p, &its);
-  _checkerr(ierr);
+  TiberPetscUtils::checkerr(ierr);
 
   // Check no residual history
   if (its == 0)
@@ -290,7 +292,7 @@ TiberPetscLinearSolver::setup_monitors(void)
     if (_monitor)
     {
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
-    && (PETSC_VERSION_SUBMINOR > 2))
+    && (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
       ierr = KSPMonitorSet(_ksp, KSPMonitorDefault, PETSC_NULL, 0);
 #else
       ierr = KSPSetMonitor(_ksp, KSPDefaultMonitor, PETSC_NULL, 0);
@@ -301,7 +303,7 @@ TiberPetscLinearSolver::setup_monitors(void)
       // does not work:
       //ierr = KSPMonitorSet(_ksp, PETSC_NULL, PETSC_NULL, 0);
 
-    _checkerr(ierr);
+    TiberPetscUtils::checkerr(ierr);
 
 
     if (_xmonitor)
@@ -311,20 +313,20 @@ TiberPetscLinearSolver::setup_monitors(void)
         std::string sim_name(get_simulation_name());
         sim_name += ": Linear solver convergence monitor";
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
-    && (PETSC_VERSION_SUBMINOR > 2))
+    && (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
         ierr = KSPMonitorLGCreate(NULL, sim_name.c_str(),0,0,400,400, &_LG_monitor);
 #else
         ierr = KSPLGMonitorCreate(NULL, sim_name.c_str(),0,0,400,400, &_LG_monitor);
 #endif
-    _checkerr(ierr);
+        TiberPetscUtils::checkerr(ierr);
     
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
-    && (PETSC_VERSION_SUBMINOR > 2))
+    && (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
         ierr = KSPMonitorSet(_ksp, KSPMonitorLG, _LG_monitor, 0);
 #else
         ierr = KSPSetMonitor(_ksp, KSPLGMonitor, _LG_monitor, 0);
 #endif
-    _checkerr(ierr);
+        TiberPetscUtils::checkerr(ierr);
       
         _xmonitor_open = true;
       }

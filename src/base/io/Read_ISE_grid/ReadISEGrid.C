@@ -1,7 +1,9 @@
+// $Id$
+
 #include "ReadISEGrid.h"
 
+#include "mesh_base.h"
 
-//ReadISEGrid::ReadISEGrid(const char* file_name , Mesh& mesh, MeshData_elements&  mesh_data )
 ReadISEGrid::ReadISEGrid(const char* file_name)
 {
 	
@@ -2109,7 +2111,7 @@ void  ReadISEGrid::get_BC_data (map<unsigned int, vector<unsigned int> >& BoundC
 
 // write  mesh  and  meshdata from  .xda and  .xta  files
 
-void   ReadISEGrid::read_mesh_and_data(Mesh& mesh, MeshData_elements&  mesh_data )
+void   ReadISEGrid::read_mesh_and_data(MeshBase& mesh, MeshData_elements&  mesh_data )
 
 {
 

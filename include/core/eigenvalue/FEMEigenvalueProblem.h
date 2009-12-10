@@ -177,7 +177,7 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
 
 
   //!pointer to mesh of the equation systems
-  Mesh* mesh;
+  MeshBase* mesh;
 
 
    //!pointer the equation systems object

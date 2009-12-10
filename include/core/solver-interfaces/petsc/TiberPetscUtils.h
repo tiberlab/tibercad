@@ -33,27 +33,28 @@ class TiberPetscUtils
     /*!
      * Throws an exception if errorcode contains a PETSc error number
      */
-    static void checkerr(int errorcode);
-
+    static void _checkerr(int errorcode, int line, const char* file);
+#ifdef DEBUG
+#define checkerr(errcode) _checkerr(errcode, __LINE__, __FILE__);
+#else
+     static void checkerr(int errorcode)
+     {
+       if (errorcode != 0)
+         throw PetscRuntimeError(errorcode);
+     }
+#endif
 
 
   private:
 
     TiberPetscUtils();
+
 };
 
 
 //
 // inline members
 //
-
-inline
-void
-TiberPetscUtils::checkerr(int errorcode)
-{
-  if (errorcode != 0)
-    throw PetscRuntimeError(errorcode);
-}
 
 
 

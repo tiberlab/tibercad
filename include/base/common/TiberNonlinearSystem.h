@@ -5,7 +5,7 @@
 
 #include "TiberEqSystem.h"
 
-#include "implicit_system.h"
+#include "nonlinear_implicit_system.h"
 #include "enum_solver_type.h"
 #include "enum_preconditioner_type.h"
 
@@ -14,10 +14,12 @@ class XMonitor;
 
 
 //! Base class for TiberCAD nonlinear systems
-class TiberNonlinearSystem : public TiberEqSystem, public ImplicitSystem
+class TiberNonlinearSystem : public TiberEqSystem, public NonlinearImplicitSystem
 {
 
   public:
+
+    typedef NonlinearImplicitSystem Parent;
 
     //! The nonlinear solver implementations
     enum NonlinearSystemType

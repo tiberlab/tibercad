@@ -1,16 +1,15 @@
 // C++ includes
 #include <fstream>
 #include <iostream>
-//#include <stdlib.h>
+#include <iomanip>
+#include <cassert>
 
 // Local includes
-#include "tecplot_io.h"
+#include "tecplot_IO_cell.h"
 #include "mesh_base.h"
 #include "elem.h"
-//#include <stdio.h>
-#include <iomanip>
 
-#include "tecplot_IO_cell.h"
+
 void TecplotIO_cell::write_cell_data (const std::string& fname,
 				      const std::vector<Number>& soln,
 				      const std::vector<std::string>& names)
@@ -19,7 +18,7 @@ void TecplotIO_cell::write_cell_data (const std::string& fname,
     {
       if (this->binary())
 	{
-	  std::cerr << "ERROR : Not implemented \n" ;
+	  std::cerr << "ERROR : Binary format for TecplotIO not implemented \n" ;
 	  exit(1);
 	}
       //	this->write_binary (fname, &soln, &names);
@@ -44,7 +43,7 @@ void TecplotIO_cell::write_ascii_cell (const std::string& fname,
     {
       std::cerr << "ERROR: opening output file " << fname
 		<< std::endl;
-      error();
+      //libmesh_error();
     }
 
   // Get a constant reference to the mesh.
@@ -69,7 +68,7 @@ void TecplotIO_cell::write_ascii_cell (const std::string& fname,
     if (solution_names != NULL)
       for (unsigned int n=0; n<solution_names->size(); n++)
 	{
-#ifdef USE_REAL_NUMBERS
+#ifdef LIBMESH_USE_REAL_NUMBERS
 	  
 	  // Write variable names for real variables
 	  out << "," << (*solution_names)[n];
@@ -160,7 +159,7 @@ void TecplotIO_cell::write_ascii_cell (const std::string& fname,
 
       for (unsigned int c=0; c<n_vars; c++)
         {
-#ifdef USE_REAL_NUMBERS	      
+#ifdef LIBMESH_USE_REAL_NUMBERS	      
 	  // Write real data
 	  //    out << (*v)[i*n_vars + c] << " ";
 	 
@@ -178,7 +177,7 @@ void TecplotIO_cell::write_ascii_cell (const std::string& fname,
 	  //
 	  // Write complex data  ????????
 	  //
-	  std::cerr << "ERROR : Not implemented \n" ;
+	  std::cerr << "ERROR : Complex output not implemented for Tecplot format\n" ;
 	  exit(1);
 
 	  //   out << (*v)[i*n_vars + c].real() << " "
@@ -218,7 +217,7 @@ void TecplotIO_cell::write_ascii_cell (const std::string& fname,
 
 // 	  for (unsigned int c=0; c<n_vars; c++)
 // 	    {
-// #ifdef USE_REAL_NUMBERS	      
+// #ifdef LIBMESH_USE_REAL_NUMBERS	      
 // 	      // Write real data
 // 	      out << (*v)[i*n_vars + c] << " ";
 

@@ -217,14 +217,14 @@ $Solver
  
   driftdiffusion
   {
-    nonlin_max_it = 70
-    nonlin_rel_tol = 1e-10
-    nonlin_abs_tol = 1e-10
+    #nonlin_max_it = 70
+    #nonlin_rel_tol = 1e-10
+    #nonlin_abs_tol = 1e-10
     nonlin_step_tol = 1e-9
     ls_max_step = 4
     #ls_type = none
     #pc_type = composite
-    ksp_type = bcgs
+    #ksp_type = bcgs
 
   }
 

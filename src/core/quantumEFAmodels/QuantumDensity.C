@@ -176,7 +176,7 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
       
       //------------------------------------------------------------------------------------//
       //!from map to vector
-      Mesh & mesh = get_environment().get_mesh();
+      MeshBase& mesh = get_environment().get_mesh();
       
       map<const Elem*, double>::iterator it = real_space_density.begin();
       
@@ -408,7 +408,7 @@ void QuantumDensity:: do_solve()
       _solution_vector->init(real_space_density.size());
     }
 
-    Mesh & mesh = get_environment().get_mesh();
+    MeshBase& mesh = get_environment().get_mesh();
 
     MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
     const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
@@ -541,7 +541,7 @@ void QuantumDensity::estimate_analitic_density(void)
     Messages::info(os.str());
   }
 
-  const Mesh& mesh = get_equation_systems().get_mesh();
+  const MeshBase& mesh = get_equation_systems().get_mesh();
 
   if (	k_dim == 2 )
   {
@@ -735,7 +735,7 @@ void QuantumDensity::do_set_solution_vector(const NumericVector< double > & new_
 
   
 
-  Mesh & mesh = get_environment().get_mesh();
+  MeshBase& mesh = get_environment().get_mesh();
 
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();

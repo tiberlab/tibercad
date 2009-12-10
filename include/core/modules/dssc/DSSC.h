@@ -22,7 +22,7 @@
 // forward declarations
 //class Device;
 class Boundary;
-class Mesh;
+class MeshBase;
 class Elem;
 class Point;
 class Node;
@@ -77,7 +77,7 @@ class DSSC : public SimulationInterface
     /*!
      * \return a constant reference to the simulation mesh
      */
-    Mesh& get_mesh(void) const;
+    MeshBase& get_mesh(void) const;
 
 
     //! Makes a first guess of the equilibrium potential
@@ -458,7 +458,7 @@ DSSC::get_boundary_currents() const
 
 
 inline
-Mesh&
+MeshBase&
 DSSC::get_mesh(void) const
 {
   return _device->get_mesh();

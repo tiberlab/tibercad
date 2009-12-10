@@ -3,7 +3,7 @@
 #include "Device.h"
 #include "Material.h"
 #include "MeshUtils.h"
-#include "MeshInput.h"
+#include "MeshReader.h"
 #include "SimulationOptions.h"
 #include "AtomisticStructure.h"
 
@@ -94,7 +94,7 @@ Device::setup_mesh(void)
   delete _boundary_nodes;
   _boundary_nodes = new map<unsigned int, vector<ID> >();
 
-  MeshInput::read_mesh(meshfile, dim, _mesh, _meshdata, *_boundary_nodes,
+  MeshReader::read_mesh(meshfile, dim, _mesh, _meshdata, *_boundary_nodes,
                        _mesh_region_names, _boundary_region_names);
 
 

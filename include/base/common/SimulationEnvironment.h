@@ -74,7 +74,7 @@ class SimulationEnvironment
 
 
     //! Get a reference to the mesh
-    Mesh& get_mesh(void);
+    MeshBase& get_mesh(void);
 
     
     //! Add the boundary for a given boundary number
@@ -416,7 +416,7 @@ SimulationEnvironment::get_device(void) const
 
 
 inline
-Mesh&
+MeshBase&
 SimulationEnvironment::get_mesh(void)
 {
   return get_device().get_mesh();

@@ -952,7 +952,7 @@ void FEMEigenvalueProblem::do_init()
 
    EquationSystems* es = &(get_equation_systems());
 
-   Mesh& mesh1 = es->get_mesh();
+   MeshBase& mesh1 = es->get_mesh();
    
    MeshBase::const_element_iterator       el     = mesh1.active_elements_begin();
    const MeshBase::const_element_iterator end_el = mesh1.active_elements_end();

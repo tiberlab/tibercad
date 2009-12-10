@@ -1,0 +1,921 @@
+--- src/geom/elem.C.orig	2007-12-21 13:13:32.000000000 +0100
++++ src/geom/elem.C	2007-07-23 09:52:57.000000000 +0200
+@@ -560,6 +560,787 @@
+ 
+ 
+ 
++Point Elem::local_node(ElemType e, int n){
++
++  //By G. Penazzi and G. Romano, University of Rome Tor Vergata
++  //2nd May 2007
++
++  assert(n >= 0);
++
++  switch (e){
++
++  case EDGE2:
++
++    assert(n < 2);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, 0.0, 0.0);     
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case EDGE3:
++
++    assert(n < 3);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, 0.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 2:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case EDGE4:
++
++    assert (n < 4);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, 0.0, 0.0);
++      break;
++
++    case 2:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 3:
++      return Point(- 1.0 / 3.0, 0.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0 / 3.0, 0.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case TRI3:
++
++    assert (n < 3);
++
++    switch (n){
++
++    case 0:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case TRI6:
++
++    assert (n < 6);
++
++    switch (n){
++
++    case 0:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(0.5, 0.0, 0.0);
++      break;
++
++    case 4:
++      return Point(0.5, 0.5, 0.0);
++      break;
++
++    case 5:
++      return Point(0.0, 0.5, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case QUAD4:
++
++    assert (n < 4);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, -1.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++    case 4:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++  
++
++    }
++
++    break;
++
++  case QUAD8:
++
++    assert ( n < 8);
++
++  
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, -1.0, 0.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++    case 4:
++      return Point(0.0, -1.0, 0.0);
++      break;
++
++    case 5:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 6:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 7:
++      return Point(-1.0, 0.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case QUAD9:
++
++    assert (n < 9);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, -1.0, 0.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++    case 4:
++      return Point(0.0, -1.0, 0.0);
++      break;
++
++    case 5:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 6:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 7:
++      return Point(-1.0, 0.0, 0.0);
++      break;
++
++    case 8:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case TET4:
++
++    assert (n < 4);
++
++    switch (n){
++
++    case 0:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(0.0, 0.0, 1.0);
++      break;
++
++    }
++
++    break;
++
++  case TET10:
++
++    assert (n < 10);
++
++    switch (n){
++
++    case 0:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(0.0, 0.0, 1.0);
++      break;
++
++    case 4:
++      return Point(0.5, 0.0, 0.0);
++      break;
++
++    case 5:
++      return Point(0.5, 0.5, 0.0);
++      break;
++
++    case 6:
++      return Point(0.0, 0.5, 0.0);
++      break;
++
++    case 7:
++      return Point(0.0, 0.0, 0.5);
++      break;
++
++    case 8:
++      return Point(0.5, 0.0, 0.5);
++      break;
++
++    case 9:
++      return Point(0.0, 0.5, 0.5);
++      break;
++
++    }
++
++    break;
++
++  case HEX8:
++
++    assert (n < 8);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, -1.0);
++      break;
++
++    case 1:
++      return Point(1.0, -1.0, -1.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, -1.0);
++      break;
++
++    case 3:
++      return Point(-1.0, 1.0, -1.0);
++      break;
++
++    case 4:
++      return Point(-1.0, -1.0, 1.0);
++      break;
++
++    case 5:
++      return Point(1.0, -1.0, 1.0);
++      break;
++
++    case 6:
++      return Point(1.0, 1.0, 1.0);
++      break;
++
++    case 7:
++      return Point(-1.0, 1.0, 1.0);
++      break;
++ 
++    }
++
++    break;
++
++  case HEX20:
++
++    assert(n < 20);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, -1.0);
++      break;
++
++    case 1:
++      return Point(1.0, -1.0, -1.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, -1.0);
++      break;
++
++    case 3:
++      return Point(-1.0, 1.0, -1.0);
++      break;
++
++    case 4:
++      return Point(-1.0, -1.0, 1.0);
++      break;
++
++    case 5:
++      return Point(1.0, -1.0, 1.0);
++      break;
++
++    case 6:
++      return Point(1.0, 1.0, 1.0);
++      break;
++
++    case 7:
++      return Point(-1.0, 1.0, 1.0);
++      break;
++
++    case 8:
++      return Point(0.0, -1.0, -1.0);
++      break;
++
++    case 9:
++      return Point(1.0, 0.0, -1.0);
++      break;
++
++    case 10:
++      return Point(0.0, 1.0, -1.0);
++      break;
++
++    case 11:
++      return Point(-1.0, 0.0, -1.0);
++      break;
++
++    case 12:
++      return Point(-1.0, -1.0, 0.0);
++      break;
++
++    case 13:
++      return Point(1.0, -1.0, 0.0);
++      break;
++
++    case 14:
++      return Point(1.0, 1.0, 0.0);
++      break;
++
++    case 15:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++    case 16:
++      return Point(0.0, -1.0, 1.0);
++      break;
++
++    case 17:
++      return Point(1.0, 0.0, 1.0);
++      break;
++
++    case 18:
++      return Point(0.0, 1.0, 1.0);
++      break;
++
++    case 19:
++      return Point(-1.0, 0.0, 1.0);
++      break;
++
++    }
++
++    break;
++
++  case HEX27:
++
++    assert (n < 27);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, -1.0);
++      break;
++
++    case 1:
++      return Point(1.0, -1.0, -1.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, -1.0);
++      break;
++
++    case 3:
++      return Point(-1.0, 1.0, -1.0);
++      break;
++
++    case 4:
++      return Point(-1.0, -1.0, 1.0);
++      break;
++
++    case 5:
++      return Point(1.0, -1.0, 1.0);
++      break;
++
++    case 6:
++      return Point(1.0, 1.0, 1.0);
++      break;
++
++    case 7:
++      return Point(-1.0, 1.0, 1.0);
++      break;
++
++    case 8:
++      return Point(0.0, -1.0, -1.0);
++      break;
++
++    case 9:
++      return Point(1.0, 0.0, -1.0);
++      break;
++
++    case 10:
++      return Point(0.0, 1.0, -1.0);
++      break;
++
++    case 11:
++      return Point(-1.0, 0.0, -1.0);
++      break;
++
++    case 12:
++      return Point(-1.0, -1.0, 0.0);
++      break;
++
++    case 13:
++      return Point(1.0, -1.0, 0.0);
++      break;
++
++    case 14:
++      return Point(1.0, 1.0, 0.0);
++      break;
++
++    case 15:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++    case 16:
++      return Point(0.0, -1.0, 1.0);
++      break;
++
++    case 17:
++      return Point(1.0, 0.0, 1.0);
++      break;
++
++    case 18:
++      return Point(0.0, 1.0, 1.0);
++      break;
++
++    case 19:
++      return Point(-1.0, 0.0, 1.0);
++      break;
++
++    case 20:
++      return Point(0.0, 0.0, -1.0);
++      break;
++
++    case 21:
++      return Point(0.0, -1.0, 0.0);
++      break;
++
++    case 22:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 23:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 24:
++      return Point(-1.0, 0.0, 0.0);
++      break;
++
++    case 25:
++      return Point(0.0, 0.0, 1.0);
++      break;
++
++    case 26:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case PRISM6:
++
++    assert (n < 6);
++
++    switch(n){
++
++    }
++
++    break;
++
++  case PRISM15:
++
++    assert (n < 15);
++
++    switch (n){
++
++    case 0:
++      return Point(0.0, 0.0, -1.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, -1.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, -1.0);
++      break;
++
++    case 3:
++      return Point(0.0, 0.0, 1.0);
++      break;
++
++    case 4:
++      return Point(1.0, 0.0, 1.0);
++      break;
++
++    case 5:
++      return Point(0.0, 1.0, 1.0);
++      break;
++
++    case 6:
++      return Point(0.5, 0.0, -1.0);
++      break;
++
++    case 7:
++      return Point(0.5, 0.5, -1.0);
++      break;
++
++    case 8:
++      return Point(0.0, 0.5, -1.0);
++      break;
++
++    case 9:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    case 10:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 11:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 12:
++      return Point(0.5, 0.0, 1.0);
++      break;
++
++    case 13:
++      return Point(0.5, 0.5, 1.0);
++      break;
++
++    case 14:
++      return Point(0.0, 0.5, 1.0);
++      break;
++
++    }
++
++    break;
++
++  case PRISM18:
++
++    assert (n < 18);
++
++    switch (n) {
++
++    case 0:
++      return Point(0.0, 0.0, -1.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, -1.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, -1.0);
++      break;
++
++    case 3:
++      return Point(0.0, 0.0, 1.0);
++      break;
++
++    case 4:
++      return Point(1.0, 0.0, 1.0);
++      break;
++
++    case 5:
++      return Point(0.0, 1.0, 1.0);
++      break;
++
++    case 6:
++      return Point(0.5, 0.0, -1.0);
++      break;
++
++    case 7:
++      return Point(0.5, 0.5, -1.0);
++      break;
++
++    case 8:
++      return Point(0.0, 0.5, -1.0);
++      break;
++
++    case 9:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    case 10:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 11:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 12:
++      return Point(0.5, 0.0, 1.0);
++      break;
++
++    case 13:
++      return Point(0.5, 0.5, 1.0);
++      break;
++
++    case 14:
++      return Point(0.0, 0.5, 1.0);
++      break;
++
++    case 15:
++      return Point(0.5, 0.0, 0.0);
++      break;
++
++    case 16:
++      return Point(0.5, 0.5, 0.0);
++      break;
++
++    case 17:
++      return Point(0.0, 0.5, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case PYRAMID5:
++
++    assert (n < 5);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, 0.0);
++      break;
++
++    case 1:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(1.0, -1.0, 0.0);
++      break;
++
++    case 4:
++      return Point(0.0, 0.0, 1.0);
++
++    }
++
++    break;
++
++ default:
++
++   std::cerr << "ERROR: Unsupported element type!: " << e
++	     << std::endl;
++   libmesh_error();
++
++  }
++
++};
++
++
++
+ Real Elem::quality (const ElemQuality q) const
+ {
+   switch (q)
+--- extern/libmesh_svn/src/geom/elem.C.bkp      2009-06-20 15:56:09.000000000 +0200
++++ extern/libmesh_svn/src/geom/elem.C  2009-06-20 15:56:36.000000000 +0200
+@@ -1854,7 +1854,8 @@
+   // Or recurse into an ancestor element's children.
+   // Do not clear the vector any more.
+   else if (!this->active())
+-    for (unsigned int c=0; c<this->n_children(); c++)
++    if (this->has_children())
++      for (unsigned int c=0; c<this->n_children(); c++)
+       {
+         Elem *child = this->child(c);
+         if (child != remote_elem && child->has_neighbor(neighbor))
+--- ./src/mesh/mesh_refinement.C.orig	2007-10-23 01:23:25.000000000 +0200
++++ ./src/mesh/mesh_refinement.C	2008-04-24 11:52:04.000000000 +0200
+@@ -1276,9 +1276,12 @@
+ 
+       for ( ; elem_it != elem_end; ++elem_it)
+         {
+-	  (*elem_it)->set_refinement_flag(Elem::COARSEN);
+-          if ((*elem_it)->parent()) 
+-	    (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
++          if ((*elem_it)->level() != 0)
++          {
++            (*elem_it)->set_refinement_flag(Elem::COARSEN);
++            if ((*elem_it)->parent()) 
++              (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
++          }
+         }
+ 
+       // Coarsen all the elements we just flagged.
+--- ./include/geom/elem.h.orig	2007-10-21 22:48:41.000000000 +0200
++++ ./include/geom/elem.h	2008-04-24 11:52:04.000000000 +0200
+@@ -750,6 +750,13 @@
+ 
+ #endif
+ 
++  /**
++   *@returns a point describing node coordinates related to master 
++   *element, depending on which type of element and which node
++   *are passed.
++   */
++  static Point local_node(ElemType, int);
++
+ 
+ protected:
+   /**
+--- include/base/getpot.h.orig	2008-10-24 07:42:26.175053289 +0200
++++ include/base/getpot.h	2008-10-24 07:55:29.663296624 +0200
+@@ -259,6 +259,7 @@
+   inline void               __skip_whitespace(std::istream& istr);
+   inline const std::string  __get_next_token(std::istream& istr);
+   inline const std::string  __get_string(std::istream& istr);
++  inline const std::string  __get_until_closing_brace(std::istream& istr);
+   inline const std::string  __get_until_closing_bracket(std::istream& istr);
+ 
+   inline std::vector<std::string> __read_in_stream(std::istream& istr);
+@@ -543,10 +543,17 @@
+     // found a non whitespace 
+     if( tmp == '#' ) {
+       // comment => skip until end of line
+-      while( tmp != '\n' ) {
++      while( (tmp != '\n') && (tmp != '\r') ) {
+ 	if( ! istr ) { istr.unget(); return; }
+ 	tmp = istr.get();
+       }
++      int old = tmp;
++      tmp = istr.get();
++      if ((tmp != '\n') && (tmp != '\r'))
++      {
++        istr.unget();
++        tmp = old;
++      }
+       continue; 
+     }
+     else {
+@@ -569,7 +576,7 @@
+   while(1+1 == 2) {
+     last_letter = tmp; tmp = istr.get();
+     if( tmp == EOF 
+-	|| ((tmp == ' ' || tmp == '\t' || tmp == '\n') && last_letter != '\\') ) {
++	|| ((tmp == ' ' || tmp == '\t' || tmp == '\n' || tmp == '\r') && last_letter != '\\') ) {
+       return token;
+     }
+     else if( tmp == '\'' && last_letter != '\\' ) {
+@@ -577,6 +578,11 @@
+       token += __get_string(istr);
+       continue;
+     }
++    else if( tmp == '(' && last_letter != '\\' ) {
++      // it's a vector
++      token += '(' +__get_until_closing_brace(istr);
++      continue;
++    }
+     else if( tmp == '{' && last_letter == '$') {
+       token += '{' + __get_until_closing_bracket(istr);
+       continue;
+@@ -618,6 +624,34 @@
+ 
+ 
+ inline const std::string
++GetPot::__get_until_closing_brace(std::istream& istr)
++  // parse input until next matching )
++{
++  std::string str = ""; 
++  int    tmp = 0;
++  int    last_letter = 0;
++  int    braces = 1;
++  while(1 + 1 == 2) {
++    last_letter = tmp; tmp = istr.get();
++    if( tmp == EOF) return str;
++    else if( tmp == '(' && last_letter != '\\') braces += 1;
++    else if( tmp == ')' && last_letter != '\\') {
++      braces -= 1;
++      // un-backslashed brackets => it's the end of the string
++      if( braces == 0) return str + ')';
++      else if( tmp == '\\' && last_letter != '\\') 
++	continue;  // do not append an unbackslashed backslash
++    }
++    str += tmp;
++  }
++
++  return str;
++}
++
++
++
++
++inline const std::string
+ GetPot::__get_until_closing_bracket(std::istream& istr)
+   // parse input until next matching }
+ {

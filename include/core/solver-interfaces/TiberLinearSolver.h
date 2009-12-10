@@ -4,7 +4,7 @@
 #ifndef _TIBERLINEARSOLVER_H_
 #define _TIBERLINEARSOLVER_H_
 
-#include "TypeDefs.h"
+//#include "TypeDefs.h"
 
 // Libmesh includes
 #include "linear_solver.h"
@@ -83,11 +83,9 @@ class TiberLinearSolver : public LinearSolver<Number>
       solve(SparseMatrix<Number> &matrix,
           NumericVector<Number> &solution,
           NumericVector<Number> &rhs,
-          const double tol,
-          const unsigned int m_its)
+          const double,
+          const unsigned int)
       {
-        ignore_unused_variable(tol);
-        ignore_unused_variable(m_its);
         return this->solve(matrix, matrix, solution, rhs);
       }
 
@@ -101,11 +99,9 @@ class TiberLinearSolver : public LinearSolver<Number>
           SparseMatrix<Number> &preconditioner,
           NumericVector<Number> &solution,
           NumericVector<Number> &rhs,
-          const double tol,
-          const unsigned int m_its)
+          const double,
+          const unsigned int)
       {
-        ignore_unused_variable(tol);
-        ignore_unused_variable(m_its);
         return this->solve(matrix, preconditioner, solution, rhs);
       }
 
@@ -125,6 +121,28 @@ class TiberLinearSolver : public LinearSolver<Number>
 
 
 
+    //! This is not supported in TiberCAD
+    virtual std::pair<unsigned int, Real>
+      solve(const ShellMatrix<Number>&,
+        NumericVector<Number>&,
+        NumericVector<Number>&,
+          const double,
+          const unsigned int);
+  
+
+
+    //! This is not supported in TiberCAD
+    virtual std::pair<unsigned int, Real>
+      solve(const ShellMatrix<Number>&,
+          const SparseMatrix<Number>&,
+          NumericVector<Number>&,
+          NumericVector<Number>&,
+          const double,
+          const unsigned int);
+  
+
+
+
     //! Solve the linear system
     /*!
      * In TiberCAD, this method should be used instead of the
@@ -135,6 +153,9 @@ class TiberLinearSolver : public LinearSolver<Number>
           SparseMatrix<Number> &preconditioner,
           NumericVector<Number> &solution,
           NumericVector<Number> &rhs) = 0;
+
+    //! Print a message on convergence
+    virtual void print_converged_reason() {};
 
 
     //! Get the relative linear tolerance

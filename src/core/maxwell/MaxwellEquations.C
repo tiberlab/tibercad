@@ -97,7 +97,7 @@ void MaxwellEquations::build_nodal_results(const std::set<std::string>& variable
 
   const set<string>::const_iterator varend(variables.end());
 
-  const Mesh& mesh1 = system->get_mesh();
+  const MeshBase& mesh1 = system->get_mesh();
 
 
   const bool output = variables.find("OpticalModes") != varend ;

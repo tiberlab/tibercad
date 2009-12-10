@@ -2,6 +2,7 @@
 
 //#include <iomanip>
 #include <fstream>
+#include <cassert>
 
 #include "mesh_base.h"
 #include "elem.h"

@@ -59,7 +59,7 @@ void TunnelingCurrent::write_current()
  if (!current_file.good())
  {
    cerr << "TunnelingCurrent: output file problem\n";
-   error();
+   //error();
 
  }
 
@@ -86,7 +86,7 @@ void TunnelingCurrent::read_current()
   if (!current_file.good())
   {
     cerr << "TunnelingCurrent: input file problem\n";
-    error();
+    //error();
 
  }
 

@@ -1,4 +1,4 @@
-
+// $Id$
 
 #include <vector>
 #include <string>
@@ -39,7 +39,6 @@ class Read_MSH
 
  public:
 
- 
   //! Constructor. 
   /*!
    * Scans  GMSH .msh  file (v. 1.0 and 2.0),  parses it, gets nodes 
@@ -51,7 +50,6 @@ class Read_MSH
    */
   Read_MSH(std::string filename, int sim_dim ); 
   
-
 
   //! Destructor
   ~Read_MSH();
@@ -210,7 +208,6 @@ class Read_MSH
 
 
 
-  //  unsigned int  Read_MSH::find_pos( unsigned int  reg_id ,   std::vector<unsigned int>& BC_reg_ID );
 
   unsigned int  find_pos( unsigned int  reg_id , 
                           std::vector<unsigned int>& user_reg_ID );
@@ -265,7 +262,7 @@ class Read_MSH
   void  write_xta();
 
   //!  write  mesh  and  meshdata from  .xda and  .xta  files
-  void   read_mesh_and_data(Mesh& mesh, MeshData_elements&  mesh_data );
+  void   read_mesh_and_data(MeshBase& mesh, MeshData_elements&  mesh_data );
 
   //  check if orientation  of  nodes  is  positive,  otherwise swap  nodes  of  element
   void  check_orientation( std::vector<unsigned int>&  node_id_list,  unsigned  int type );

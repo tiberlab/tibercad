@@ -1,4 +1,4 @@
-
+// $Id$
  
 #include <iostream>
 #include <cassert>
@@ -558,7 +558,11 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
 
   
 
+#if (SLEPC_VERSION_MAJOR >= 3)
+  ierr = EPSSetDimensions(eps,opt.ev_number, ncv, PETSC_DECIDE); CHKERRQ(ierr);
+#else
   ierr = EPSSetDimensions(eps,opt.ev_number, ncv); CHKERRQ(ierr);
+#endif
 
    
   ierr = EPSSolve(eps);

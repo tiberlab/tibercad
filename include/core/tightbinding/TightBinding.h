@@ -11,7 +11,7 @@
 
 //forward declaration
 class Device;
-class Mesh;
+class MeshBase;
 class DftbpWrapper;
 class UptWrapper;
 
@@ -101,7 +101,7 @@ protected:
   std::vector<double> _mulliken_netcharges;
 
   //!Pointer to mesh
-  Mesh* _mesh;
+  MeshBase* _mesh;
 
   //! Build a vector of potential projection over atom orbitals
   void project_potential(const std::string providing_model, const std::string mode);

@@ -1,6 +1,123 @@
---- src/geom/elem.C.orig	2007-12-21 13:13:32.000000000 +0100
-+++ src/geom/elem.C	2007-07-23 09:52:57.000000000 +0200
-@@ -560,6 +560,787 @@
+Index: include/geom/elem.h
+===================================================================
+--- include/geom/elem.h	(revision 3286)
++++ include/geom/elem.h	(working copy)
+@@ -892,8 +892,15 @@
+ 
+ #endif
+ 
++  /**
++   *@returns a point describing node coordinates related to master 
++   *element, depending on which type of element and which node
++   *are passed.
++   */
++  static Point local_node(ElemType, int);
+ 
+ 
++
+   
+   /**
+    * Build an element of type \p type.  Since this method
+@@ -1321,6 +1328,7 @@
+ bool Elem::subactive() const
+ {
+ #ifdef LIBMESH_ENABLE_AMR
++  return false;
+   if (this->active())
+     return false;
+   if (!this->has_children())
+Index: include/base/getpot.h
+===================================================================
+--- include/base/getpot.h	(revision 3286)
++++ include/base/getpot.h	(working copy)
+@@ -261,6 +261,7 @@
+   inline void               __skip_whitespace(std::istream& istr);
+   inline const std::string  __get_next_token(std::istream& istr);
+   inline const std::string  __get_string(std::istream& istr);
++  inline const std::string  __get_until_closing_brace(std::istream& istr);
+   inline const std::string  __get_until_closing_bracket(std::istream& istr);
+ 
+   inline std::vector<std::string> __read_in_stream(std::istream& istr);
+@@ -545,10 +546,17 @@
+     // found a non whitespace 
+     if( tmp == '#' ) {
+       // comment => skip until end of line
+-      while( tmp != '\n' ) {
++      while( (tmp != '\n') && (tmp != '\r') ) {
+ 	if( ! istr ) { istr.unget(); return; }
+ 	tmp = istr.get();
+       }
++      int old = tmp;
++      tmp = istr.get();
++      if ((tmp != '\n') && (tmp != '\r'))
++      {
++        istr.unget();
++        tmp = old;
++      }
+       continue; 
+     }
+     else {
+@@ -571,7 +579,7 @@
+   while(1+1 == 2) {
+     last_letter = tmp; tmp = istr.get();
+     if( tmp == EOF 
+-	|| ((tmp == ' ' || tmp == '\t' || tmp == '\n') && last_letter != '\\') ) {
++	|| ((tmp == ' ' || tmp == '\t' || tmp == '\n' || tmp == '\r') && last_letter != '\\') ) {
+       return token;
+     }
+     else if( tmp == '\'' && last_letter != '\\' ) {
+@@ -579,6 +587,11 @@
+       token += __get_string(istr);
+       continue;
+     }
++    else if( tmp == '(' && last_letter != '\\' ) {
++      // it's a vector
++      token += '(' +__get_until_closing_brace(istr);
++      continue;
++    }
+     else if( tmp == '{' && last_letter == '$') {
+       token += '{' + __get_until_closing_bracket(istr);
+       continue;
+@@ -620,6 +633,34 @@
+ 
+ 
+ inline const std::string
++GetPot::__get_until_closing_brace(std::istream& istr)
++  // parse input until next matching )
++{
++  std::string str = ""; 
++  int    tmp = 0;
++  int    last_letter = 0;
++  int    braces = 1;
++  while(1 + 1 == 2) {
++    last_letter = tmp; tmp = istr.get();
++    if( tmp == EOF) return str;
++    else if( tmp == '(' && last_letter != '\\') braces += 1;
++    else if( tmp == ')' && last_letter != '\\') {
++      braces -= 1;
++      // un-backslashed brackets => it's the end of the string
++      if( braces == 0) return str + ')';
++      else if( tmp == '\\' && last_letter != '\\') 
++	continue;  // do not append an unbackslashed backslash
++    }
++    str += tmp;
++  }
++
++  return str;
++}
++
++
++
++
++inline const std::string
+ GetPot::__get_until_closing_bracket(std::istream& istr)
+   // parse input until next matching }
+ {
+Index: src/geom/elem.C
+===================================================================
+--- src/geom/elem.C	(revision 3286)
++++ src/geom/elem.C	(working copy)
+@@ -760,6 +760,787 @@
  
  
  
@@ -9,13 +126,13 @@
 +  //By G. Penazzi and G. Romano, University of Rome Tor Vergata
 +  //2nd May 2007
 +
-+  assert(n >= 0);
++  libmesh_assert(n >= 0);
 +
 +  switch (e){
 +
 +  case EDGE2:
 +
-+    assert(n < 2);
++    libmesh_assert(n < 2);
 +
 +    switch (n){
 +
@@ -33,7 +150,7 @@
 +
 +  case EDGE3:
 +
-+    assert(n < 3);
++    libmesh_assert(n < 3);
 +
 +    switch (n){
 +
@@ -55,7 +172,7 @@
 +
 +  case EDGE4:
 +
-+    assert (n < 4);
++    libmesh_assert (n < 4);
 +
 +    switch (n){
 +
@@ -81,7 +198,7 @@
 +
 +  case TRI3:
 +
-+    assert (n < 3);
++    libmesh_assert (n < 3);
 +
 +    switch (n){
 +
@@ -103,7 +220,7 @@
 +
 +  case TRI6:
 +
-+    assert (n < 6);
++    libmesh_assert (n < 6);
 +
 +    switch (n){
 +
@@ -137,7 +254,7 @@
 +
 +  case QUAD4:
 +
-+    assert (n < 4);
++    libmesh_assert (n < 4);
 +
 +    switch (n){
 +
@@ -169,7 +286,7 @@
 +
 +  case QUAD8:
 +
-+    assert ( n < 8);
++    libmesh_assert ( n < 8);
 +
 +  
 +    switch (n){
@@ -212,7 +329,7 @@
 +
 +  case QUAD9:
 +
-+    assert (n < 9);
++    libmesh_assert (n < 9);
 +
 +    switch (n){
 +
@@ -258,7 +375,7 @@
 +
 +  case TET4:
 +
-+    assert (n < 4);
++    libmesh_assert (n < 4);
 +
 +    switch (n){
 +
@@ -284,7 +401,7 @@
 +
 +  case TET10:
 +
-+    assert (n < 10);
++    libmesh_assert (n < 10);
 +
 +    switch (n){
 +
@@ -334,7 +451,7 @@
 +
 +  case HEX8:
 +
-+    assert (n < 8);
++    libmesh_assert (n < 8);
 +
 +    switch (n){
 +
@@ -376,7 +493,7 @@
 +
 +  case HEX20:
 +
-+    assert(n < 20);
++    libmesh_assert(n < 20);
 +
 +    switch (n){
 +
@@ -466,7 +583,7 @@
 +
 +  case HEX27:
 +
-+    assert (n < 27);
++    libmesh_assert (n < 27);
 +
 +    switch (n){
 +
@@ -584,7 +701,7 @@
 +
 +  case PRISM6:
 +
-+    assert (n < 6);
++    libmesh_assert (n < 6);
 +
 +    switch(n){
 +
@@ -594,7 +711,7 @@
 +
 +  case PRISM15:
 +
-+    assert (n < 15);
++    libmesh_assert (n < 15);
 +
 +    switch (n){
 +
@@ -664,7 +781,7 @@
 +
 +  case PRISM18:
 +
-+    assert (n < 18);
++    libmesh_assert (n < 18);
 +
 +    switch (n) {
 +
@@ -746,7 +863,7 @@
 +
 +  case PYRAMID5:
 +
-+    assert (n < 5);
++    libmesh_assert (n < 5);
 +
 +    switch (n){
 +
@@ -777,34 +894,32 @@
 +
 +   std::cerr << "ERROR: Unsupported element type!: " << e
 +	     << std::endl;
-+   error();
++   libmesh_error();
 +
 +  }
 +
-+};
++}
 +
 +
 +
  Real Elem::quality (const ElemQuality q) const
  {
    switch (q)
-@@ -749,9 +1530,10 @@
+@@ -1073,7 +1854,8 @@
    // Or recurse into an ancestor element's children.
    // Do not clear the vector any more.
-   else
+   else if (!this->active())
 -    for (unsigned int c=0; c<this->n_children(); c++)
--      if (this->child(c)->is_neighbor(neighbor))
--        this->child(c)->active_family_tree_by_neighbor (family, neighbor, false);
 +    if (this->has_children())
 +      for (unsigned int c=0; c<this->n_children(); c++)
-+        if (this->child(c)->is_neighbor(neighbor))
-+          this->child(c)->active_family_tree_by_neighbor (family, neighbor, false);
- }
- 
- 
---- ./src/mesh/mesh_refinement.C.orig	2007-10-23 01:23:25.000000000 +0200
-+++ ./src/mesh/mesh_refinement.C	2008-04-24 11:52:04.000000000 +0200
-@@ -1276,9 +1276,12 @@
+       {
+         Elem *child = this->child(c);
+         if (child != remote_elem && child->has_neighbor(neighbor))
+Index: src/mesh/mesh_refinement.C
+===================================================================
+--- src/mesh/mesh_refinement.C	(revision 3286)
++++ src/mesh/mesh_refinement.C	(working copy)
+@@ -1635,9 +1635,12 @@
  
        for ( ; elem_it != elem_end; ++elem_it)
          {
@@ -820,124 +935,14 @@
          }
  
        // Coarsen all the elements we just flagged.
---- ./include/geom/elem.h.orig	2007-10-21 22:48:41.000000000 +0200
-+++ ./include/geom/elem.h	2008-04-24 11:52:04.000000000 +0200
-@@ -750,6 +750,13 @@
- 
- #endif
- 
-+  /**
-+   *@returns a point describing node coordinates related to master 
-+   *element, depending on which type of element and which node
-+   *are passed.
-+   */
-+  static Point local_node(ElemType, int);
-+
- 
- protected:
-   /**
---- include/base/getpot.h.orig	2008-10-24 07:42:26.175053289 +0200
-+++ include/base/getpot.h	2008-10-24 07:55:29.663296624 +0200
-@@ -259,6 +259,7 @@
-   inline void               __skip_whitespace(std::istream& istr);
-   inline const std::string  __get_next_token(std::istream& istr);
-   inline const std::string  __get_string(std::istream& istr);
-+  inline const std::string  __get_until_closing_brace(std::istream& istr);
-   inline const std::string  __get_until_closing_bracket(std::istream& istr);
- 
-   inline std::vector<std::string> __read_in_stream(std::istream& istr);
-@@ -543,10 +543,17 @@
-     // found a non whitespace 
-     if( tmp == '#' ) {
-       // comment => skip until end of line
--      while( tmp != '\n' ) {
-+      while( (tmp != '\n') && (tmp != '\r') ) {
- 	if( ! istr ) { istr.unget(); return; }
- 	tmp = istr.get();
-       }
-+      int old = tmp;
-+      tmp = istr.get();
-+      if ((tmp != '\n') && (tmp != '\r'))
-+      {
-+        istr.unget();
-+        tmp = old;
-+      }
-       continue; 
-     }
-     else {
-@@ -569,7 +576,7 @@
-   while(1+1 == 2) {
-     last_letter = tmp; tmp = istr.get();
-     if( tmp == EOF 
--	|| ((tmp == ' ' || tmp == '\t' || tmp == '\n') && last_letter != '\\') ) {
-+	|| ((tmp == ' ' || tmp == '\t' || tmp == '\n' || tmp == '\r') && last_letter != '\\') ) {
-       return token;
-     }
-     else if( tmp == '\'' && last_letter != '\\' ) {
-@@ -577,6 +578,11 @@
-       token += __get_string(istr);
-       continue;
-     }
-+    else if( tmp == '(' && last_letter != '\\' ) {
-+      // it's a vector
-+      token += '(' +__get_until_closing_brace(istr);
-+      continue;
-+    }
-     else if( tmp == '{' && last_letter == '$') {
-       token += '{' + __get_until_closing_bracket(istr);
-       continue;
-@@ -618,6 +624,34 @@
- 
- 
- inline const std::string
-+GetPot::__get_until_closing_brace(std::istream& istr)
-+  // parse input until next matching )
-+{
-+  std::string str = ""; 
-+  int    tmp = 0;
-+  int    last_letter = 0;
-+  int    braces = 1;
-+  while(1 + 1 == 2) {
-+    last_letter = tmp; tmp = istr.get();
-+    if( tmp == EOF) return str;
-+    else if( tmp == '(' && last_letter != '\\') braces += 1;
-+    else if( tmp == ')' && last_letter != '\\') {
-+      braces -= 1;
-+      // un-backslashed brackets => it's the end of the string
-+      if( braces == 0) return str + ')';
-+      else if( tmp == '\\' && last_letter != '\\') 
-+	continue;  // do not append an unbackslashed backslash
-+    }
-+    str += tmp;
-+  }
-+
-+  return str;
-+}
-+
-+
-+
-+
-+inline const std::string
- GetPot::__get_until_closing_bracket(std::istream& istr)
-   // parse input until next matching }
- {
---- Make.common.in.orig	2009-04-21 11:01:14.000000000 +0200
-+++ Make.common.in	2009-04-21 11:00:58.000000000 +0200
-@@ -26,7 +26,9 @@
- hostos                = @host_os@
- 
- libmesh_CXX           = @CXX@
-+libmesh_CXXFLAGS      = @CXXFLAGS@
- libmesh_CC            = @CC@
-+libmesh_CFLAGS        = @CFLAGS@
- libmesh_LDFLAGS       = @LDFLAGS@
- libmesh_DLFLAGS       =
- libmesh_LIBS          = @LIBS@
-@@ -154,6 +154,7 @@
- endif
+--- Make.common.in.orig	2009-10-26 16:40:40.070747643 +0100
++++ Make.common.in	2009-10-26 16:40:19.742747715 +0100
+@@ -177,6 +177,8 @@
  ###############################################################################
  
+ 
 +libmesh_CXXFLAGS += -DMPICH_IGNORE_CXX_SEEK
++
  
  ###############################################################################
  # Compiler flags, different for optimized, debug, and profiler modes.

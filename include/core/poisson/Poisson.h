@@ -146,7 +146,7 @@ class Poisson : public SimulationInterface
   short dim;  
 
   //!Pointer to mesh
-  Mesh* mesh;
+  MeshBase* mesh;
 
  protected:
   
