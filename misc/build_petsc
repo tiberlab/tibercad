@@ -30,55 +30,71 @@ fi
 
 if [ ! -d petsc-${PETSCVERSION}${PETSCPATCHLEVEL} ]; then
   tar zxf ${ARCHIVE}
+
+  if [ -e ${PATCH} ]; then
+    patch -p0 -d petsc-${PETSCVERSION}${PETSCPATCHLEVEL} < ${PATCH}
+  fi
 fi
 
 cd petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 
-if [ -e ${PATCH} ]; then
-  patch -p0 < ${PATCH}
-fi
-
 #export LAPACK=/scratch/maufder/TiberCAD/ARPACK
 #LAPACKLIBS="[${LAPACK}/libarpack.a]"
-LAPACK=/usr/pack/intel_mkl-8.0-ma/lib/32
-LAPACKLIBS="[${LAPACK}/libmkl_def.so,${LAPACK}/libguide.so,${LAPACK}/libmkl_lapack.a,-lm]"
+LAPACK=/usr/pack/intel_mkl-10.2-gp/lib/em64t
+LAPACKLIBS="--with-blas-lapack-lib=[${LAPACK}/libmkl_intel_lp64.so,${LAPACK}/libmkl_sequential.so,${LAPACK}/libmkl_core.so,-lm]"
+#LAPACKLIBS="[${LAPACK}/libmkl_def.so,${LAPACK}/libguide.so,${LAPACK}/libmkl_lapack.a,-lm]"
 
 
 #CONFIGOPTS="--with-matlab=0 --with-shared=0 --with-dynamic=0 --with-cc=$CC --with-cxx=$CXX  --with-fc=$F90 --with-fortran=1 --CFLAGS=-fexceptions --with-mpi=0 --download-f-blas-lapack"
 
-COMPILERS="--with-cc=$CC --with-cxx=$CXX  --with-fc=$FC"
+SHARED=--with-shared
+if [ $shared_libs == "no" ]
+then
+  SHARED="--with-shared=0 --with-dynamic=0"
+fi
+  
 
-MPI="--with-mpi-dir=${MPIDIR}"
+#COMPILERS=
+COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC"
+
+MPI="--with-mpi=0"
+#MPI="--with-mpi-dir=${MPIDIR}"
 #MPI="--with-mpi=0 --with-fortran=0"
-CONFIGOPTS="--with-matlab=0 --with-shared=0 --with-dynamic=0 --CFLAGS=-fexceptions $MPI $COMPILERS"
+#CONFIGOPTS="--with-matlab=0 --with-shared=0 --with-dynamic=0 $MPI $COMPILERS --with-clanguage=C++"
+CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS}"
 
 
 export PETSC_DIR=${PWD}
 
+
 if [ ! -e ${ARCH}-opt.ok ]; then
   export PETSC_ARCH=${ARCH}-opt
-  ./config/configure.py ${CONFIGOPTS} --with-debugging=0 --with-mpi-compilers=0 --with-cc=$CC --with-cxx=$CXX 
-  make |tee ${PETSC_ARCH}.log && touch ${ARCH}-opt.ok
+  ./config/configure.py ${CONFIGOPTS} --with-debugging=0  --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}"
+  make |tee ${PETSC_ARCH}.log
+  #touch ${ARCH}-opt.ok
 fi
 
 if [ ! -e ${ARCH}-complex-opt.ok ]; then
   export PETSC_ARCH=${ARCH}-complex-opt
-  ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex --with-clanguage=C++ --with-debugging=0
-  make |tee ${PETSC_ARCH}.log && touch ${ARCH}-complex-opt.ok
+  ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex --with-clanguage=C++ --with-debugging=0 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}"
+  make |tee ${PETSC_ARCH}.log
+  #touch ${ARCH}-complex-opt.ok
 fi
 
 if [ $DEBUG == 'y' ]; then
 
   if [ ! -e ${ARCH}.ok ]; then
     export PETSC_ARCH=${ARCH}
-    ./config/configure.py ${CONFIGOPTS} --with-debugging=1
-    make |tee ${PETSC_ARCH}.log && touch ${ARCH}.ok
+    ./config/configure.py ${CONFIGOPTS} --with-debugging=1 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}"
+    make |tee ${PETSC_ARCH}.log
+    #touch ${ARCH}.ok
   fi
 
   if [ ! -e ${ARCH}-complex.ok ]; then
     export PETSC_ARCH=${ARCH}-complex
-    ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=c++ --with-debugging=1
-    make |tee ${PETSC_ARCH}.log #&& touch ${ARCH}-complex.ok
+    ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=C++ --with-debugging=1 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}"
+    make |tee ${PETSC_ARCH}.log
+    #touch ${ARCH}-complex.ok
   fi
 
 fi

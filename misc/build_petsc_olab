@@ -28,16 +28,21 @@ if [ ! -e ${ARCHIVE} ]; then
   exit 1
 fi
 
-tar zxf ${ARCHIVE}
+if [ ! -d petsc-${PETSCVERSION}${PETSCPATCHLEVEL} ]; then
+  tar zxf ${ARCHIVE}
+
+  if [ -e ${PATCH} ]; then
+    patch -p0 -d petsc-${PETSCVERSION}${PETSCPATCHLEVEL} < ${PATCH}
+  fi
+fi
 
 cd petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 
-if [ -e ${PATCH} ]; then
-  patch -p0 < ${PATCH}
-fi
 
 #export LAPACK=/scratch/maufder/TiberCAD/ARPACK
 #LAPACKLIBS="[${LAPACK}/libarpack.a]"
+#LAPACK=/usr/pack/intel_mkl-8.0-ma/lib/32
+#LAPACKLIBS="[${LAPACK}/libmkl_def.so,${LAPACK}/libguide.so,${LAPACK}/libmkl_lapack.a,-lm]"
 LAPACK=/usr/pack/intel_mkl-10.2-gp/lib/32
 LAPACKLIBS="[${LAPACK}/libmkl_intel.so,${LAPACK}/libmkl_sequential.so,${LAPACK}/libmkl_core.so,-lm]"
 
@@ -57,8 +62,9 @@ fi
 
 if [ ! -e ${ARCH}-complex-opt.ok ]; then
   export PETSC_ARCH=${ARCH}-complex-opt
-  ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex --with-clanguage=C++ --with-debugging=0
-  make |tee ${PETSC_ARCH}.log && touch ${ARCH}-complex-opt.ok
+  ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex --with-debugging=0
+  make |tee ${PETSC_ARCH}.log
+  #touch ${ARCH}-complex-opt.ok
 fi
 
 if [ $DEBUG == 'y' ]; then
@@ -66,13 +72,15 @@ if [ $DEBUG == 'y' ]; then
   if [ ! -e ${ARCH}.ok ]; then
     export PETSC_ARCH=${ARCH}
     ./config/configure.py ${CONFIGOPTS} --with-debugging=1
-    make |tee ${PETSC_ARCH}.log && touch ${ARCH}.ok
+    make |tee ${PETSC_ARCH}.log
+    #touch ${ARCH}.ok
   fi
 
   if [ ! -e ${ARCH}-complex.ok ]; then
     export PETSC_ARCH=${ARCH}-complex
-    ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=c++ --with-debugging=1
-    make |tee ${PETSC_ARCH}.log && touch ${ARCH}-complex.ok
+    ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-debugging=1
+    make |tee ${PETSC_ARCH}.log
+    #touch ${ARCH}-complex.ok
   fi
 
 fi

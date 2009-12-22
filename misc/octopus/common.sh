@@ -1,12 +1,16 @@
-# build directory (relative)
+# build directory
 BUILDDIR=`pwd`/../extern
 
 # PETSc version
-PETSCVERSION="2.3.3"
-PATCHLEVEL="p13"
+#PETSCVERSION="2.3.3"
+#PATCHLEVEL="p13"
+PETSCVERSION="3.0.0"
+PETSCPATCHLEVEL="-p9"
+SLEPCPATCHLEVEL="-p7"
 
 # libMesh version
-LIBMESHVERSION=0.6.1
+#LIBMESHVERSION=0.6.1
+LIBMESHVERSION="svn"
 
 # GMSH version
 GMSHVERSION=2.3.0
@@ -17,14 +21,26 @@ DEBUG=y
 # architecture
 ARCH=linux-gnu
 
-v=4.3.2
-#export CC=gcc-$v CXX=g++-$v F77=gfortran-$v F90=$F77 FC=$F77
-#CC=gcc-$v CXX=g++-$v
-CC=gcc CXX=g++
-F77=ifort-9.1 F90=$F77 FC=$F77
+# build shared libs
+shared_libs=yes
+
+# compilers
+v=-4.3.2
+CC=gcc$v
+CXX=g++$v
+F77=ifort-11.1
+F90=$F77
+FC=$F77
 export CC CXX F77 F90 FC
 
-OTHEROPTS="--enable-uptight --disable-license-check"
+# compiler flags
+export CXXFLAGS=-fPIC
+export CFLAGS="-fPIC -fexceptions"
+export FFLAGS="-fPIC -fexceptions -gcc-name=${CC} -gxx-name=${CXX} -nofor-main"
+export FCFLAGS="-fPIC -fexceptions -gcc-name=${CC} -gxx-name=${CXX} -nofor-main"
+
+#OTHEROPTS="--enable-uptight --disable-license-check"
+OTHEROPTS="--disable-uptight --disable-license-check --disable-hetero"
 
 #export MPICH_F90=$F90
 #export MPICH_F77=$F77

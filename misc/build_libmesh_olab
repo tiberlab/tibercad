@@ -16,37 +16,38 @@ if [ ! -d $BUILDDIR ]; then
   exit 1
 fi
 
-ARCHIVE=libmesh${LIBMESHVERSION}.tar.gz
-PATCH=${PWD}/libmesh.patch${LIBMESHVERSION}
+ARCHIVE=libmesh-${LIBMESHVERSION}.tar.gz
+PATCH=${PWD}/libmesh.patch-${LIBMESHVERSION}
 
 cd $BUILDDIR
-if [ ${LIBMESHVERSION} != "-svn" ]; then
+if [ ${LIBMESHVERSION} == "svn" ]; then
+  if [ ! -d libmesh-${LIBMESHVERSION} ]; then
+    svn co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}
+
+    if [ -e ${PATCH} ]; then
+      patch -p0 -d libmesh-${LIBMESHVERSION} < ${PATCH}
+    fi
+  fi
+else
   if [ ! -e ${ARCHIVE} ]; then
     wget http://dfn.dl.sourceforge.net/sourceforge/libmesh/${ARCHIVE}
   fi
+fi
 
+if [ ! -d libmesh-${LIBMESHVERSION} ]; then
   if [ ! -e ${ARCHIVE} ]; then
     echo "Could not download libmesh."
     exit 1
   fi
+  tar zxf ${ARCHIVE}
 
-  if [ ! -d libmesh${LIBMESHVERSION} ]; then
-    tar zxf ${ARCHIVE}
-  fi
-
-else
-  if [ ! -d libmesh${LIBMESHVERSION} ]; then
-    svn co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh${LIBMESHVERSION}
+  if [ -e ${PATCH} ]; then
+    patch -p0 -d libmesh-${LIBMESHVERSION} < ${PATCH}
   fi
 fi
 
+cd libmesh-${LIBMESHVERSION}
 
-
-cd libmesh${LIBMESHVERSION}
-
-if [ -e ${PATCH} ]; then
-  patch -p0 < ${PATCH}
-fi
 
 
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
