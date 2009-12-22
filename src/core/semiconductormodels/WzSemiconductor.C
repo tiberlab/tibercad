@@ -208,7 +208,6 @@ void WzSemiconductor::read_database( )
 void WzSemiconductor::do_do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 
-
   const WzSemiconductor* modA = dynamic_cast<const WzSemiconductor*> (comp_A);
   const WzSemiconductor* modB = dynamic_cast<const WzSemiconductor*> (comp_B);
 

@@ -160,7 +160,6 @@ KPparams   Semiconductor::calculate_6x6_kp_params (const Elem* element, const Po
 {
 
   _temperature = temp_interface.get_temperature ( element, point);
-
   return(calculate_6x6_kp_params());
 
 }

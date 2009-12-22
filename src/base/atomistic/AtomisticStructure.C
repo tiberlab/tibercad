@@ -177,7 +177,7 @@ AtomisticStructure::init()
     generate->do_init();
 
     std::string name;
-    name = _name + ".xyz" ;
+    name = _name + ".xyb" ;
     print_structure(name);
     name = _name + ".gen" ;
     print_structure(name);

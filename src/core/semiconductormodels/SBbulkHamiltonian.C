@@ -29,7 +29,6 @@ void SBbulkHamiltonian::calculate_Hamiltonian_gen(void)
  
   single_band_ham.constant =  edge;
   
-
   for (short i = 0; i < 3; i++) 
     {
       single_band_ham.linear_left[i]  = (0.0,0.0);

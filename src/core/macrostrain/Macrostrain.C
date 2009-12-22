@@ -362,7 +362,8 @@ void Macrostrain::parse_options( )
 //-----------------------------------------------------------------//
 void Macrostrain::do_init( )
 {
-
+  //if (!get_options().find_option("constant_strain"))
+  {
   StrainSimulation::do_init();
 
   const ModelOptions& options = get_options();
@@ -555,7 +556,7 @@ void Macrostrain::do_init( )
  }
 
 
-
+  }
   //------init is done---------------------------------------------------------------------//
 }
 
@@ -1466,7 +1467,8 @@ MeshBase* Macrostrain::get_mesh()
 void Macrostrain::do_solve()
 
 {
-
+  //if (!get_options().find_option("constant_strain"))
+  {
 
   int verbose = SimulationOptions::verbose();
 
@@ -1866,7 +1868,7 @@ void Macrostrain::do_solve()
 
 
 
-
+  }
   //--------------------------------------------------------------------------------------------------//
 }
 
@@ -2919,6 +2921,21 @@ Tensor2Sym Macrostrain::get_strain_crystal(const Elem* elem, const Point& quadra
 {
   Tensor2Sym eps(0);
   map <const Elem*, Tensor2Sym> :: iterator it;
+
+   if (get_options().find_option("constant_strain"))
+
+   {
+     std::vector<double> strain(6, 0.0);
+     get_options().get_option("constant_strain", strain);
+     //Note: upper part is given as Tensor is simmetric
+
+     eps(1,1) = strain[0]; eps(2,1) = strain[2]; eps(2,2) = strain[3];
+     eps(3,1) = strain[4]; eps(3,2) = strain[5]; eps(3,3) = strain[6];
+
+   return eps;
+   }
+
+
   it = result_strain.find(elem);
   //--------------------------------------------------------------------------------------------------
   //if the element elem is active for the strain simulation, it must be included in the map-----------
@@ -2992,7 +3009,20 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 {
 
   Tensor2Sym eps0;
-  Tensor2Sym eps;
+  Tensor2Sym eps(0);
+
+  if (get_options().find_option("constant_strain"))
+
+  {
+    std::vector<double> strain(6, 0.0);
+    get_options().get_option("constant_strain", strain);
+    eps(1,1) = strain[0]; eps(2,1) = strain[2]; eps(2,2) = strain[3];
+    eps(3,1) = strain[4]; eps(3,2) = strain[5]; eps(3,3) = strain[6];
+  }
+
+  else
+
+  {
 
 
   LinearImplicitSystem& system = *my_system;
@@ -3084,7 +3114,9 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
   eps += calculate_eps_lat_matching(elem);
   //------------------------------------------------------------------
 
-  if (crystal_system)
+  }
+
+   if (crystal_system)
     {//convert to crystal system
 
 
@@ -3103,10 +3135,25 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 
       assert (::norm(eps - eps1) < 1e-6); //is it really symmetric
 
+      for (unsigned int i = 0; i++; i<3)
+           {
+             for (unsigned int j = 0; j++; j<3)
+             {
+              std::cerr << "crystal_system_eps " << j + 1 << i + 1 << " " << eps(j + 1, i + 1);
+             }
+             }
+
       return(eps); //return strain tensor in crystal system
     }
   else
     {
+    for (unsigned int i = 0; i++; i<3)
+               {
+                 for (unsigned int j = 0; j++; j<3)
+                 {
+                  std::cerr << "crystal_system_eps " << j + 1 << i + 1 << " " << eps(j + 1, i + 1);
+                 }
+                 }
       //output in simulation system
       return(eps);
     }

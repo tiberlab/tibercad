@@ -142,6 +142,8 @@ inline
 void  KPbulkHamiltonian::set_temperature(double Temperature)
 {
   semiconductor->set_temperature(Temperature);
+  semiconductor->apply_temperature();
+  calculate_Hamiltonian_gen();
 }
 
 #endif

@@ -18,7 +18,6 @@ void SBWzCondBandBulkHamiltonian::do_init()
 //===========================================================================//
 void SBWzCondBandBulkHamiltonian::calculate_for_init( )
 {
-
   const WzSemiconductor::WzDDparameters& par = (dynamic_cast<WzSemiconductor*> (semiconductor)) -> get_parameters();
 
   wz_par = &par;
@@ -29,6 +28,7 @@ void SBWzCondBandBulkHamiltonian::calculate_for_init( )
   imass(1,1) = 1.0/par.m_c_xx;
   imass(2,2) = 1.0/par.m_c_xx;
   imass(3,3) = 1.0/par.m_c_zz;
+
 
   //--------------------------------------------------------------------------------/
 
