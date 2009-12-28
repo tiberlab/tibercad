@@ -26,4 +26,6 @@ fi
   --with-subversion=svn-1.6.5 \
   --disable-modules \
   --enable-uptight\
+  --enable-pardiso \
+  --with-boost-prefix=/usr/pack/boost-1.33.1-ma \
   --with-libmesh-prefix=/usr/pack/tibercad_dev-1.3-ma/${ARCH}/libmesh-svn
