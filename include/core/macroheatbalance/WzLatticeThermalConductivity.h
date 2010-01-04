@@ -28,6 +28,7 @@ class WzLatticeThermalConductivity: public LatticeThermalConductivity
 
   virtual void read_database(void);
 
+  virtual void read_database_alloy(void);
 
   virtual void do_init(void);
 

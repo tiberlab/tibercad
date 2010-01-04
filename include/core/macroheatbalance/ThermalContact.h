@@ -15,7 +15,11 @@ class ThermalContact: public BoundaryProperties
     Reservoir = 0,
     FluxContact = 1,
     ThermalSurfaceResistance = 2,
-    ThermalSurfaceConductance = 3
+    FourierBTE = 3,
+    BTEFourier = 4,
+    ThermalSurfaceConductance = 5,
+    Specular = 6,
+    Diffusive = 7
   };
 
  //!Constructor

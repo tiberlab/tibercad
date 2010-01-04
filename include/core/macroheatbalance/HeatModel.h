@@ -70,8 +70,20 @@ class HeatModel: public PhysicalModel
 
 
 
+  double get_lattice_thermal_capacity(void);
+  
+  double get_phonon_scattering(void);
+  
+  double get_phonon_group_velocity(void);
+
+ 
+
  private:
 
+  double tg;
+  double vg;
+  double cg;
+  double kg;
 
     enum dd_var_kpart
     {
@@ -147,11 +159,13 @@ class HeatModel: public PhysicalModel
  protected:
 
   virtual PhysicalModelInterface* create_new (void) const;
-
+  
+  virtual void do_init(void);
 
   virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
 
   virtual void create_submodels();
+
 
 };
 
@@ -234,6 +248,25 @@ if (it !=   _heat_source_models.end())
 
  }
 
+inline
+double
+HeatModel::get_lattice_thermal_capacity(void)
+{
+  return cg;
+}
 
+inline 
+double
+HeatModel::get_phonon_scattering(void)
+{
+  return tg;
+}
+
+inline
+double
+HeatModel::get_phonon_group_velocity(void)
+{
+  return vg;
+}
 
 #endif
