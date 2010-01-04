@@ -9,7 +9,7 @@
 
 
 //--------------------------------------------------------//
-void  WzLatticeThermalConductivity::read_database(void)
+void  WzLatticeThermalConductivity::read_database_alloy(void)
 {
 
   Database& db = get_database();
@@ -22,18 +22,28 @@ void  WzLatticeThermalConductivity::read_database(void)
 
 
 }
+//--------------------------------------------------------//
+void  WzLatticeThermalConductivity::read_database(void)
+{
+
+  Database& db = get_database();
+  db.set_section("thermal_conductivity/constant");
+
+ _kappa_x = db.get("therm_lat_cond_x", 0.0);
+ _kappa_z = db.get("therm_lat_cond_z", 0.0);
+
+}
 
 //---------------------------------------------------------//
 
 void WzLatticeThermalConductivity::do_init(void)
 {
 
-  ModelOptions & options = get_options ();
 
+   const ModelOptions& options = get_options();
   
   _kappa_x = options.get_option("therm_lat_cond_x",_kappa_x);
   _kappa_z = options.get_option("therm_lat_cond_z",_kappa_z);
-
 
   _conductivity(1,1) = _kappa_x;
   _conductivity(2,2) = _kappa_x;
@@ -45,7 +55,7 @@ void WzLatticeThermalConductivity::do_init(void)
 
   rotate_to_calculation_system(cr.RotMatrix);
 
-
+ 
 }
 
 
@@ -53,12 +63,13 @@ void WzLatticeThermalConductivity::do_init(void)
 void WzLatticeThermalConductivity::do_init_alloy (const PhysicalModelInterface *comp_A,
                                                 const PhysicalModelInterface *comp_B, double xa)
 {
-  const WzLatticeThermalConductivity* modA = dynamic_cast<const WzLatticeThermalConductivity*>(comp_A);
+ //  const WzLatticeThermalConductivity* modA = dynamic_cast<const WzLatticeThermalConductivity*>(comp_A);
 
-  const WzLatticeThermalConductivity* modB = dynamic_cast<const WzLatticeThermalConductivity*>(comp_B);
+//   const WzLatticeThermalConductivity* modB = dynamic_cast<const WzLatticeThermalConductivity*>(comp_B);
 
-  _kappa_x = alloy(modA->_kappa_x, modB->_kappa_x, xa);
-  _kappa_z = alloy(modA->_kappa_z, modB->_kappa_z, xa);
+//   _kappa_x = alloy(modA->_kappa_x, modB->_kappa_x, xa);
+//   _kappa_z = alloy(modA->_kappa_z, modB->_kappa_z, xa);
+
 
 
 }

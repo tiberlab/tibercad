@@ -14,6 +14,9 @@ HeatModel::HeatModel() :
   _lattice_thermal_conductivity(0),
   _heat_source_interface(NULL)
 {
+  tg = 0.0;
+  vg = 0.0;
+  cg = 0.0;
 }
 
 
@@ -56,8 +59,8 @@ void HeatModel::create_submodels()
 
   destroy(kappa);
 
-  it = get_options().submodels_begin("Lattice_thermal_condictivity");
-  end = get_options().submodels_end("Lattice_thermal_condictivity");
+  it = get_options().submodels_begin("Lattice_thermal_conductivity");
+  end = get_options().submodels_end("Lattice_thermal_conductivity");
 
 
   if (it != end)
@@ -87,15 +90,13 @@ void HeatModel::create_submodels()
     
     kappa->get_conductivity(_lattice_thermal_conductivity);
 
-    //std::cout<< _lattice_thermal_conductivity<<std::endl;
-
+      
 
 }
 
 
-
 //==========================================================================//
-void HeatModel::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
+void HeatModel::do_init_alloy(const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 
   const HeatModel* matA = dynamic_cast< const HeatModel*> (comp_A);
@@ -103,7 +104,9 @@ void HeatModel::do_init_alloy (const PhysicalModelInterface *comp_A, const Physi
 
   destroy(kappa);
   kappa = create_submodel_alloy(matA->kappa, matB->kappa, xa);
+  kappa->get_conductivity(_lattice_thermal_conductivity);
 
+  
   _heat_source_models.clear();
   std::vector<ID> source_ids;
   int n = matA->get_heat_source_IDs(source_ids);
@@ -114,6 +117,47 @@ void HeatModel::do_init_alloy (const PhysicalModelInterface *comp_A, const Physi
         matB->get_heat_source_model(id), xa);
   }
 
+  // tg =  alloy(matA->tg, matB->tg, xa);
+  vg =  alloy(matA->vg, matB->vg, xa);
+  cg =  alloy(matA->cg, matB->cg, xa);
+  //  kg=  alloy(matA->kg, matB->kg, xa);
+
+  // std::cout<<get_material()->get_name()<<std::endl;
+
+  //  std::cout<< _lattice_thermal_conductivity<<std::endl;
+}
+
+void
+HeatModel::do_init(void)
+{
+
+  Database& db = get_database();
+
+  db.set_section("phonon_velocity/constant");
+  vg = db.get("vg", vg);
+
+  //db.set_section("phonon_scattering/constant");
+  //tg = db.get("tau_g", tg);
+  
+  db.set_section("lattice_thermal_capacity/constant");
+  cg = db.get("C", cg);
+
+  //kg = _lattice_thermal_conductivity(1,1);
+  
+  db.set_section("thermal_conductivity/constant");
+  kg = db.get("therm_lat_cond_x", kg);
+
+  tg = 3.0 * kg / (vg * vg * cg);  //s
+
+   std::cout<<get_material()->get_name()<<std::endl;
+
+ 
+   std::cout<<"tg: "<<tg<<std::endl;
+   std::cout<<"cg: "<<cg<<std::endl;
+   std::cout<<"vg: "<<vg<<std::endl;
+   std::cout<<"kg: "<<kg<<std::endl;
+   std::cout<<" "<<std::endl;
+   //cg = 1;
 }
 
 
@@ -149,25 +193,33 @@ HeatModel::get_total_heat_source(const Elem*  elem, std::vector<Point> h_point,
 
   ID np = h_point.size();
 
+  // for (ID n = 0; n<np; n++)
+  //  h_point[n] *= 1e-7;
+
+
   total_heat_source.clear();
   total_heat_source.resize(np);
 
   outer_source_iterator it_outer = _heat_source_models.begin();
   outer_source_iterator end_outer = _heat_source_models.end();
   inner_source_iterator it_inner, end_inner;
- 
+
   for ( ; it_outer != end_outer; ++it_outer)
   {
     std::vector<std::map<ID,double> > heat_source;
     (it_outer->second)->get_heat_sources(elem,h_point,heat_source);
 
     for (ID n = 0;  n < np; ++n)
-    {
+    { 
+     
       it_inner =  heat_source[n].begin();
       end_inner = heat_source[n].end();
     
       for ( ; it_inner != end_inner; ++it_inner)
+      {
 	total_heat_source[n] += it_inner->second;
+	
+      }
     }
   }
 
@@ -226,7 +278,7 @@ void
 HeatModel::re_init(void)
 {
 
-   update_lattice_thermal_conductivity();
+  // update_lattice_thermal_conductivity();
 
 }
 

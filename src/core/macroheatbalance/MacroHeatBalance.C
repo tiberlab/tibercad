@@ -40,7 +40,7 @@
 #include "ThermalSurfaceResistance.h"
 #include "ThermalSurfaceConductance.h"
 #include "FluxContact.h"
-
+#include "BTEFourier.h"
 #include "Messages.h"
 
 using namespace std;
@@ -142,9 +142,11 @@ void  MacroHeatBalance::do_solve()
   static_this = this;
 
   my_system->set_options(get_solver_options());
+
   my_system->solve();
-   double power_emitted = calculate_power_emitted();
-   double power_dissipated_rstf = calculate_power_dissipated_rstf();
+
+  double power_emitted = calculate_power_emitted();
+  double power_dissipated_rstf = calculate_power_dissipated_rstf();
   //double power_dissipated = calculate_power_dissipated();
 
    double check = 100 - std::abs((power_emitted - power_dissipated_rstf)/(power_emitted));
@@ -152,9 +154,9 @@ void  MacroHeatBalance::do_solve()
      check = 0;
 
 
-     //std::cout<<"Power Emitted"   <<"          "<<power_emitted<<std::endl;
-    //std::cout<<"Power Dissipated"<<"       "   <<power_dissipated<<std::endl;
-     //std::cout<<"Power Dissipated rstf"<<"  "   <<power_dissipated_rstf<<std::endl;
+     std::cout<<"Power Emitted"   <<"          "<<power_emitted<<std::endl;
+     //td::cout<<"Power Dissipated"<<"       "   <<power_dissipated<<std::endl;
+    std::cout<<"Power Dissipated rstf"<<"  "   <<power_dissipated_rstf<<std::endl;
 
 
      if (SimulationOptions::verbose() > 1)
@@ -271,7 +273,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   // These might be useful for evaluating spatially varying material
   // properties at the quadrature points.
 
-  const std::vector<Point>& q_point = fe->get_xyz();
+   const std::vector<Point>& q_point = fe->get_xyz();
 
   // The element shape functions evaluated at the quadrature points.
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
@@ -322,7 +324,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   //Model Variables
 
   Tensor2Sym kappa;
-
+  
+  
 
 
   ThermalContact* contact;
@@ -367,7 +370,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     //    heat_model->get_total_power_flux(q_point,flux_power);
 
     heat_model->get_thermal_conductivity(kappa);
-
+    //std::cout<<kappa(1,1)<<std::endl;
 
     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
     { // loop over test function
@@ -399,10 +402,10 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	  }//end loop over direction (1)
 
 	  Ke(p1,p2) += value;
-
+	
 	} //loop over basis functions
 
-	  Fe(p1) +=JxW[qp] * heat_source[qp] * phi[p1][qp];
+	Fe(p1) +=JxW[qp] * heat_source[qp] * phi[p1][qp];
 
       }//end Loop over quadrature points
     } // end loop over test function
@@ -444,7 +447,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		for (unsigned int nc = 0; nc < n_dofs; nc++)
 		  Ke(n,nc) = 0.0;
 
-		Ke(n,n) = 1.0;
+		Ke(n,n) = 1;
 		Fe(n) = (dynamic_cast<Reservoir*> (contact) )->get_temperature();
 
 	      }
@@ -524,7 +527,29 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	      }// for (unsigned int qp=0; qp < qface.n_points(); qp++)
 	    }
 	    break;
+	  case  ThermalContact::BTEFourier :
+	    {
 
+	      for (unsigned int qp=0; qp<qface.n_points(); qp++)
+	      {
+
+		RealGradient heat_flux(0);
+		const Elem* neighbour = (elside.first)->neighbor(side);
+				heat_flux  =  (dynamic_cast<BTEFourier*> (contact))->get_heat_flux(neighbour,qface_point[qp]);
+ 
+				
+		for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
+		{ //minus means that the normal should be refereed to the other side
+		 
+		  Fe(p1) -=  JxW_face[qp] * (heat_flux * normal[qp]) *  phi_face[p1][qp];  
+
+		}//for (unsigned int p1=0; p1<n_dofs; p1++)
+		
+
+	      }// for (unsigned int qp=0; qp < qface.n_points(); qp++)
+	    }
+	    break;
+	    
 	  }//switch
 
 	}//  if (bd->get_boundary_properties( get_id() ) != NULL )
