@@ -14,6 +14,7 @@ subdirs += embracing
 subdirs += models
 subdirs += modules
 subdirs += phonondispersion
+subdirs += microheatbalance
 
 include $(topdir)/Make.common
 

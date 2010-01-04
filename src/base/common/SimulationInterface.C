@@ -27,7 +27,7 @@
 #include "MaxwellEquations.h"
 #include "PhononDispersion.h"
 #include "CrackStrain.h"
-
+#include "MicroHeatBalance.h"
 
 #include "Sweep.h"
 #include "RelaxationMethod.h"
@@ -150,6 +150,8 @@ SimulationInterface::create(const string& type,
     sim = MaxwellEquations::create();
   else if (type_name == "phonondispersion")
     sim = PhononDispersion::create();
+ else if (type_name == "gray_model")
+    sim = MicroHeatBalance::create();
 
   if (sim == NULL)
     create_from_library(type_name, sim);
