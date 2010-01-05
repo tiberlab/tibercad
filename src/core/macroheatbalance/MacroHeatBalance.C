@@ -370,7 +370,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     //    heat_model->get_total_power_flux(q_point,flux_power);
 
     heat_model->get_thermal_conductivity(kappa);
-    //std::cout<<kappa(1,1)<<std::endl;
+
+    //    std::cout<<kappa(1,1)<<std::endl;
 
     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
     { // loop over test function

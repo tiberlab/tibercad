@@ -149,14 +149,14 @@ HeatModel::do_init(void)
 
   tg = 3.0 * kg / (vg * vg * cg);  //s
 
-   std::cout<<get_material()->get_name()<<std::endl;
+//    std::cout<<get_material()->get_name()<<std::endl;
 
  
-   std::cout<<"tg: "<<tg<<std::endl;
-   std::cout<<"cg: "<<cg<<std::endl;
-   std::cout<<"vg: "<<vg<<std::endl;
-   std::cout<<"kg: "<<kg<<std::endl;
-   std::cout<<" "<<std::endl;
+//    std::cout<<"tg: "<<tg<<std::endl;
+//    std::cout<<"cg: "<<cg<<std::endl;
+//    std::cout<<"vg: "<<vg<<std::endl;
+//    std::cout<<"kg: "<<kg<<std::endl;
+//    std::cout<<" "<<std::endl;
    //cg = 1;
 }
 
