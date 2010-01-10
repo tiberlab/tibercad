@@ -2,7 +2,7 @@
 
 topdir = @abs_top_builddir@
 include $(topdir)/Make.defs
-
+ARCH = $(shell uname -m)
 
 CXXFLAGS = -fPIC -I $(topdir)/include/utils/UPTIGHT
 
@@ -15,7 +15,7 @@ $(libdir)/libuptight$(shared_libext) :  UptWrapper$(obj-suffix) libuptight.a
 	@$(CXX) -shared -o $@ $< \
 		-Wl,--version-script,export.map \
 		-Wl,-Bsymbolic -Wl,-Bstatic \
-		-L. libuptight.a \
+		-L. libuptight_$(ARCH).a \
 		-Wl,-Bdynamic
 
 
