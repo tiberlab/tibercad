@@ -41,6 +41,7 @@ class ETB : public TightBinding
     char* upt_filename;
     char* gen_outfile;
     char* sparse_fmt;
+    char* out_format;
     double* c_axis;
     //double vb_shift;
     double hl_chem_pot;
@@ -49,6 +50,7 @@ class ETB : public TightBinding
     double projection_length;
     double dg_scale;
     double dg_onsite;
+    double grid_step;
     bool hybrid_passivation;
   };
 

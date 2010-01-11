@@ -67,8 +67,10 @@ ETB::UptOptions::UptOptions(void)
   upt_filename = new char[UPT_MC];  memset(upt_filename, ' ', UPT_MC);
   gen_outfile = new char[UPT_MC];   memset(gen_outfile, ' ', UPT_MC);
   sparse_fmt = new char[UPT_MC];    memset(sparse_fmt, ' ', UPT_MC);
+  out_format = new char[UPT_SC];    memset(out_format, ' ', UPT_SC);
   dg_scale = 0.10;
   dg_onsite = -200.0;
+  grid_step = 0.5;
 }
 
 ETB::UptOptions::~UptOptions(void)
@@ -79,6 +81,7 @@ ETB::UptOptions::~UptOptions(void)
   delete[] upt_filename;
   delete[] gen_outfile;
   delete[] sparse_fmt;
+  delete[] out_format;
 }
 
 ETB::UptSolverOptions::UptSolverOptions(void)
@@ -238,6 +241,8 @@ void ETB::reinit(void){
 		   _upt_options.c_axis, _upt_options.check_bondmap,
                    _upt_options.dg_scale, _upt_options.dg_onsite,
                    _upt_options.hybrid_passivation);
+
+  inst->set_output(_upt_options.out_format,_upt_options.grid_step);
 
   std::cout << "(TC) fill parameter done" << std::endl;
 
@@ -589,6 +594,13 @@ void ETB::parse_options(void)
   _upt_solver_options.min_iter =  get_solver_options().get_option("min_iter", 2);
   _upt_solver_options.long_iter =  get_solver_options().get_option("long_iter", 30);
   _upt_solver_options.max_iter =  get_solver_options().get_option("max_iter", 100000);
+
+  //---------------------------------------------------------------------------------------
+  // output wavevetors format
+  std::string out_fmt = get_options().get_option("jmol_output_format", "jvxl");
+  out_fmt.copy(_upt_options.out_format, out_fmt.size() );
+  
+  _upt_options.grid_step = get_options().get_option("jmol_grid_step", 0.5);
 
   //---------------------------------------------------------------------------------------
   //computes educated guesses for valence and conduction bands edges
