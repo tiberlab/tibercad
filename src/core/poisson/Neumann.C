@@ -4,7 +4,8 @@
 
 
 //===================================================================================//
-Neumann::Neumann()
+Neumann::Neumann(const ModelOptions& options)
+ : PoissonContact(options)
 {
 
   set_type(PoissonContact::Neumann);

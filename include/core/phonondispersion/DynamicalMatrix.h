@@ -21,7 +21,7 @@ class DynamicalMatrix : public PhysicalModelInterface
 public:
   
   //!Constructor 
-   DynamicalMatrix();
+   DynamicalMatrix(const ModelOptions& options);
 
    //!Destructor
   ~DynamicalMatrix(){};

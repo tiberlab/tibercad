@@ -17,7 +17,7 @@ DSSCContact::create(const std::string& name,
 {
   DSSCContact* ct = NULL;
 
-  ct = new DSSCContact();
+  ct = new DSSCContact(options);
 
   if (ct != NULL)
     ct->set_options(options);

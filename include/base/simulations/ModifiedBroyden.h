@@ -14,13 +14,13 @@ class ModifiedBroyden:  public SelfconsistentSolver
  public:
 
   //! The constructor
-  ModifiedBroyden(void) {};
+  ModifiedBroyden(const ModelOptions& options);
   
   //! The destructor
   virtual ~ModifiedBroyden(void) {};
 
   //! Create a Sweep object
-  static ModifiedBroyden* create(void);
+  static ModifiedBroyden* create(const ModelOptions& options);
 
 
  protected:
@@ -252,10 +252,18 @@ class ModifiedBroyden:  public SelfconsistentSolver
 }; 
 
 
-inline 
-ModifiedBroyden* ModifiedBroyden::create(void)
+
+inline
+ModifiedBroyden::ModifiedBroyden(const ModelOptions& options)
+ : SelfconsistentSolver(options)
 {
-  return new ModifiedBroyden();
+}
+
+
+inline 
+ModifiedBroyden* ModifiedBroyden::create(const ModelOptions& options)
+{
+  return new ModifiedBroyden(options);
 }
 
 inline 

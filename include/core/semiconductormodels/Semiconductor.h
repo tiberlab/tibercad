@@ -16,9 +16,6 @@
 class Semiconductor : public PhysicalModelInterface
 {
  public:
-
-  //!Constructor
-   Semiconductor(void);
  
 
   //!Desctructor
@@ -62,14 +59,11 @@ class Semiconductor : public PhysicalModelInterface
   //! sets temperature from a simulation
   void set_temperature(const Elem* element, const Point& point);
 
-
- private:
-
-  //! Hartree energy in eV
-  static const double Hartree;
-   
   
  protected:
+
+  //!Constructor
+   Semiconductor(const ModelOptions& options);
 
   virtual PhysicalModelInterface* create_new(void) const = 0;
 
@@ -77,13 +71,7 @@ class Semiconductor : public PhysicalModelInterface
 
   virtual void read_database(void) = 0;
 
-  virtual void read_database_alloy(void) = 0;
- 
   virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
-
-
-  virtual void do_do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
-
 
   //! if true band gap is temperature 
   bool _consider_temperature;

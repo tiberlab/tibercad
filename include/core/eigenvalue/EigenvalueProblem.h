@@ -13,7 +13,7 @@ class EigenvalueProblem : public SimulationInterface
   public:
 
     //! Constructor
-    EigenvalueProblem(void) { };
+    EigenvalueProblem(const ModelOptions& options);
 
     //! Destructor
     ~EigenvalueProblem(void) { };
@@ -73,6 +73,13 @@ class EigenvalueProblem : public SimulationInterface
   private:
 
 };
+
+
+inline
+EigenvalueProblem::EigenvalueProblem(const ModelOptions& options)
+ : SimulationInterface(options)
+{
+}
 
 //inline 
 //const std::vector<eigen_problem_solution>& EigenvalueProblem::get_eigen_solution() const

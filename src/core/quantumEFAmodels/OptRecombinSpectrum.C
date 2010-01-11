@@ -91,7 +91,8 @@ void OptRecombinSpectrum::do_plot()
 //=====================================================================================//
 
 
-OptRecombinSpectrum::OptRecombinSpectrum()
+OptRecombinSpectrum::OptRecombinSpectrum(const ModelOptions& options)
+  : KspaceIntegration(options)
 {
   _quantum_model_initial_state = NULL;
   _quantum_model_final_state = NULL ;

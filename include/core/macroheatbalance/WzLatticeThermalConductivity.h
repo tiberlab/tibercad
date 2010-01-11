@@ -6,13 +6,13 @@ class WzLatticeThermalConductivity: public LatticeThermalConductivity
 {
  public:
   //!constructor
-  WzLatticeThermalConductivity() {};
+  WzLatticeThermalConductivity(const ModelOptions& options) : LatticeThermalConductivity(options) {};
 
   //!destructor
   ~WzLatticeThermalConductivity() {};
 
 
-  inline  static WzLatticeThermalConductivity* create();
+  inline  static WzLatticeThermalConductivity* create(const ModelOptions& options);
 
 
  //! Update the lattice thermal conductivity given the Temperature
@@ -40,15 +40,15 @@ class WzLatticeThermalConductivity: public LatticeThermalConductivity
 
 };
 
-WzLatticeThermalConductivity* WzLatticeThermalConductivity::create()
+WzLatticeThermalConductivity* WzLatticeThermalConductivity::create(const ModelOptions& options)
 {
-  return (new WzLatticeThermalConductivity());
+  return (new WzLatticeThermalConductivity(options));
 }
 
 
 PhysicalModelInterface* WzLatticeThermalConductivity::create_new (void) const
 {
-  return (new WzLatticeThermalConductivity() );
+  return (new WzLatticeThermalConductivity(get_options()) );
 }
 
 #endif

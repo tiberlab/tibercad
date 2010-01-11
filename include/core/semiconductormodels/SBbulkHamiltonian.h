@@ -14,8 +14,6 @@ class SBbulkHamiltonian : public EFAbulkHamiltonian
 {
 
  public:
-  //! default constructor
-  SBbulkHamiltonian(void);
 
   //! destructor
   ~SBbulkHamiltonian(void);
@@ -44,6 +42,9 @@ class SBbulkHamiltonian : public EFAbulkHamiltonian
 
  protected:
 
+  //! default constructor
+  SBbulkHamiltonian(const ModelOptions& options);
+
   //!band edge
   double edge;
 
@@ -62,10 +63,6 @@ class SBbulkHamiltonian : public EFAbulkHamiltonian
 
   virtual void do_init(void) = 0;
  
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
-
-  
-
 
  private:
 

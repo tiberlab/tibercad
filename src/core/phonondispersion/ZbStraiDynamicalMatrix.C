@@ -10,7 +10,8 @@
 
 //--------------------------------------------------------//
 
-ZbStrainDynamicalMatrix::ZbStrainDynamicalMatrix() :
+ZbStrainDynamicalMatrix::ZbStrainDynamicalMatrix(const ModelOptions& options) :
+  DynamicalMatrix(options),
   deformation_potential(0)
 {
 }

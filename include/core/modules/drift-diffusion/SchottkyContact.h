@@ -11,17 +11,17 @@ class SchottkyContact : public ElectricalContact
 {
   public:
 
-    //! The constructor
-    SchottkyContact(void);
-
     //! Create a schottky contact
-    static SchottkyContact* create(void);
+    static SchottkyContact* create(const ModelOptions& options);
 
     //! \copydoc ElectricalContact::get_boundary_value()
     virtual double get_boundary_value(DriftDiffusionDefs::DDVariable variable);
 
 
   protected:
+
+    //! The constructor
+    SchottkyContact(const ModelOptions& options);
 
     /*! \copydoc ElectricalContact::do_init() */
     virtual void do_init(void);
@@ -49,16 +49,18 @@ class SchottkyContact : public ElectricalContact
 
 inline
 SchottkyContact*
-SchottkyContact::create(void)
+SchottkyContact::create(const ModelOptions& options)
 {
-  return new SchottkyContact();
+  return new SchottkyContact(options);
 }
 
 
 
 inline
-SchottkyContact::SchottkyContact(void)
-  : _band('c'), _fixed_barrier(true)
+SchottkyContact::SchottkyContact(const ModelOptions& options)
+  : ElectricalContact(options),
+    _band('c'),
+    _fixed_barrier(true)
 {
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::DIRICHLET);
   set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::DIRICHLET);

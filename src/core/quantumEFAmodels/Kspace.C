@@ -3,7 +3,8 @@
 using namespace std;
 
 //------------------------------------------------------------------------------//
-Kspace::Kspace()
+Kspace::Kspace(const ModelOptions& options)
+ : SimulationInterface(options)
 {
   kmesh = NULL;
 }

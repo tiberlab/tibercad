@@ -10,7 +10,8 @@ using namespace std;
 
 //---------------------------------------------------------------//
 
-QuantumDispersion::QuantumDispersion()
+QuantumDispersion::QuantumDispersion(const ModelOptions& options)
+ : Kspace(options)
 {
   quantum_model = NULL;
 }

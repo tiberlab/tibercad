@@ -4,7 +4,8 @@
 #include "ModelErrorException.h"
 
 
-RotatedCrystal::RotatedCrystal() : PhysicalModelInterface()
+RotatedCrystal::RotatedCrystal(const ModelOptions& options)
+ : PhysicalModelInterface(options)
 {
   
 }

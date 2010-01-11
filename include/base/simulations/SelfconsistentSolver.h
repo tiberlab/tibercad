@@ -15,7 +15,7 @@ class SelfconsistentSolver : public SimulationInterface
   public:
 
     //! The destructor
-    virtual ~SelfconsistentSolver(void);
+    virtual ~SelfconsistentSolver();
 
 
   protected:
@@ -24,7 +24,7 @@ class SelfconsistentSolver : public SimulationInterface
     typedef std::vector<SimulationInterface*>::iterator SimulationIterator;
 
     //! The empty Constructor
-    SelfconsistentSolver(void);
+    SelfconsistentSolver(const ModelOptions& options);
 
     
     /*! \copydoc SimulationInterface::do_init() */
@@ -197,8 +197,9 @@ class SelfconsistentSolver : public SimulationInterface
 //
 
 inline
-SelfconsistentSolver::SelfconsistentSolver(void)
-  : _max_it(5),
+SelfconsistentSolver::SelfconsistentSolver(const ModelOptions& options)
+  : SimulationInterface(options),
+    _max_it(20),
     _rel_tol(1e-3),
     _abs_tol(1e-3),
     _xmonitor(NULL)

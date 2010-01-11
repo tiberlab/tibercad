@@ -277,7 +277,15 @@ TiberPetscLinearSolver::check_convergence(void)
   KSPGetConvergedReason(_ksp, &reason);
 
   if (reason <= 0)
-    throw(KSPDivergedError(reason, its, fnorm));
+  {
+    bool throw_ex = true;
+
+    if ((reason == -3) && (fnorm < 1e-9))
+      throw_ex = false;
+
+    if (throw_ex)
+      throw(KSPDivergedError(reason, its, fnorm));
+  }
 
   return std::pair<unsigned int, double>(its, fnorm);
 }

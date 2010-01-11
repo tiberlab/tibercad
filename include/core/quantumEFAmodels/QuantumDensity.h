@@ -106,7 +106,7 @@ class QuantumDensity : public KspaceIntegration
 
 
   //! Consructor
-  QuantumDensity();
+  QuantumDensity(const ModelOptions& options);
 
   //! Desructor
   ~QuantumDensity();
@@ -128,7 +128,7 @@ class QuantumDensity : public KspaceIntegration
  
 
   //!creates a new object 
-  static  QuantumDensity* create();
+  static  QuantumDensity* create(const ModelOptions& options);
 
 
 
@@ -235,9 +235,9 @@ class QuantumDensity : public KspaceIntegration
 
 //---------------------------------------------------------
 
-inline QuantumDensity*  QuantumDensity::create()
+inline QuantumDensity*  QuantumDensity::create(const ModelOptions& options)
 {
-  return (new QuantumDensity );
+  return (new QuantumDensity(options) );
 }
 
 //---------------------------------------------------------

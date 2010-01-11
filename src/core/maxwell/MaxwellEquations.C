@@ -15,7 +15,8 @@ using namespace Constants;
 
 Device* MaxwellEquations::_device;
 
-MaxwellEquations::MaxwellEquations()
+MaxwellEquations::MaxwellEquations(const ModelOptions& options)
+ : FEMEigenvalueProblem(options)
 {
 
   es = NULL;

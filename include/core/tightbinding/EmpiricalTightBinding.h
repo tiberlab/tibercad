@@ -75,13 +75,13 @@ class ETB : public TightBinding
   };
 
   //! Constructor
-  ETB(void);
+  ETB(const ModelOptions& options);
 
   //! Destructor
   ~ETB(void);
 
   //! Create object
-  static ETB* create();
+  static ETB* create(const ModelOptions& options);
 
   virtual PhysicalModel* create_physical_model(const ModelOptions &options,
       const Material* mat) const throw (ModelErrorException);
@@ -227,9 +227,9 @@ class ETB : public TightBinding
 //----------------------------
 
 inline
-ETB* ETB::create()
+ETB* ETB::create(const ModelOptions& options)
 {
-  return new ETB;
+  return new ETB(options);
 }
 
 inline

@@ -4,19 +4,12 @@
 #include "Material.h"
 #include "Database.h"
 
-ZbPiezoelectricity::ZbPiezoelectricity() : Piezoelectricity()
+ZbPiezoelectricity::ZbPiezoelectricity(const ModelOptions& options) : Piezoelectricity(options)
 {
   e14 = 0;
-
-  e14_bow = 0;
 }
 
-//---------------------------------------------------------------//
 
-ZbPiezoelectricity::ZbPiezoelectricity(double e14) : Piezoelectricity()
-{
-  set_piezo_module(e14);
-}
 
 //---------------------------------------------------------------//
 
@@ -38,17 +31,6 @@ void ZbPiezoelectricity::read_database ()
 }
 
 
-void
-ZbPiezoelectricity::read_database_alloy(void)
-{
-
-  Database& db = get_database();
-  db.set_section("piezoelectricity");
-
-  e14_bow = db.get("bow_e14", 0.0);
-}
-
-
 
 //---------------------------------------------------------------//
 
@@ -62,24 +44,9 @@ void ZbPiezoelectricity::do_init(void)
 //---------------------------------------------------------------//
 PhysicalModelInterface* ZbPiezoelectricity::create_new(void) const
 {
-  return (new ZbPiezoelectricity());
+  return (new ZbPiezoelectricity(get_options()));
 }
 
-
-//---------------------------------------------------------------//
-
-void ZbPiezoelectricity::do_init_alloy(const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
-{
-
-   const ZbPiezoelectricity* A = dynamic_cast<const ZbPiezoelectricity*>(comp_A);
-
-   const ZbPiezoelectricity* B = dynamic_cast<const ZbPiezoelectricity*>(comp_B);
-
-   get_parameter("bow_e14", e14_bow);
-
-   e14 = alloy(A->e14, B->e14, xa, e14_bow);
-
-}
 
 
 //---------------------------------------------------------------//

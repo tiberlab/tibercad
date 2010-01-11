@@ -59,17 +59,3 @@ DirectRecombination::get_net_recombination_rate_derivatives(
   recomb_e[1] = recomb_h[1] = C_ * n; // dR/dp
 }
 
-
-
-void
-DirectRecombination::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
-{
-  const DirectRecombination* scA =
-    dynamic_cast<const DirectRecombination*>(comp_A);
-  const DirectRecombination* scB =
-    dynamic_cast<const DirectRecombination*>(comp_B);
-
-  C_ = alloy(scA->C_, scB->C_, xa);
-}
-

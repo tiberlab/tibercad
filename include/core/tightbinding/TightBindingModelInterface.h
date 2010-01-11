@@ -10,7 +10,7 @@ class TightBindingModelInterface : public PhysicalModel
 public:
 
   //!Constructor
-  TightBindingModelInterface(void){};
+  TightBindingModelInterface(const ModelOptions& options);
 
   //!Destructor
   ~TightBindingModelInterface(){};
@@ -28,6 +28,12 @@ protected:
 
 };
 
+
+inline
+TightBindingModelInterface::TightBindingModelInterface(const ModelOptions& options) :
+  PhysicalModel(options)
+{
+}
 
 
 inline 

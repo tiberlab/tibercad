@@ -22,10 +22,10 @@ class ThermalContact: public BoundaryProperties
     Diffusive = 7
   };
 
- //!Constructor
-  ThermalContact() {};
+  //!Constructor
+  ThermalContact(const ModelOptions& options) : BoundaryProperties(options) {};
   //!Destructor
-  ~ThermalContact() {};
+  virtual ~ThermalContact() {};
 
   static  ThermalContact* create(const std::string& name,  const ModelOptions&   options );
 

@@ -21,14 +21,11 @@ class FieldDependentMobility : public MobilityModelInterface
 
   public:
 
-    //! constructor
-    FieldDependentMobility(void);
-
     //! Destructor
     virtual ~FieldDependentMobility(void);
 
     //! Create a FieldDependentMobility object
-    static FieldDependentMobility* create(void);
+    static FieldDependentMobility* create(const ModelOptions& options);
 
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
@@ -42,11 +39,17 @@ class FieldDependentMobility : public MobilityModelInterface
 
   protected:
 
+    //! constructor
+    FieldDependentMobility(const ModelOptions& options);
+
     //! \copydoc MobilityModelInterface::read_database()
     virtual void read_database(void);
 
     //! \copydoc MobilityModelInterface::do_init()
     virtual void do_init(void);
+
+    //! Create low field mobility model
+    virtual void create_submodels(void);
 
     //! \copydoc MobilityModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
@@ -103,8 +106,9 @@ class FieldDependentMobility : public MobilityModelInterface
 //
 
 inline
-FieldDependentMobility::FieldDependentMobility(void)
-  : _beta(1),
+FieldDependentMobility::FieldDependentMobility(const ModelOptions& options)
+  : MobilityModelInterface(options),
+    _beta(1),
     _betaexp(0.0),
     _vsat0(1.13e7),
     _vsat_b(1),
@@ -118,9 +122,9 @@ FieldDependentMobility::FieldDependentMobility(void)
 
 inline
 FieldDependentMobility*
-FieldDependentMobility::create(void)
+FieldDependentMobility::create(const ModelOptions& options)
 {
-  return new FieldDependentMobility();
+  return new FieldDependentMobility(options);
 }
 
 
@@ -128,7 +132,7 @@ inline
 PhysicalModelInterface*
 FieldDependentMobility::create_new(void) const
 {
-  return new FieldDependentMobility();
+  return new FieldDependentMobility(get_options());
 }
 
 

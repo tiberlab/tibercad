@@ -59,7 +59,8 @@ void  PhononDispersion::do_init( )
 
 }
 //---------------------------------------------------------------------------------//
- PhononDispersion::PhononDispersion()
+ PhononDispersion::PhononDispersion(const ModelOptions& options)
+ : SimulationInterface(options)
 {
   
 
@@ -83,9 +84,9 @@ PhononDispersion::create_physical_model(const ModelOptions &options,
 
 
 //----------------------------------------------------------------------------------//
-PhononDispersion*   PhononDispersion::create (void)
+PhononDispersion*   PhononDispersion::create (const ModelOptions& options)
 {
-  return new  PhononDispersion;
+  return new  PhononDispersion(options);
 }
 
 

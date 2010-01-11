@@ -16,14 +16,12 @@ class ZbDDsemiconductor  : public DDsemiconductor
   
    
  
- 
-  ZbDDsemiconductor(void) {};
   
   virtual ~ZbDDsemiconductor(void) {};
  
   
  
-  static ZbDDsemiconductor* create();
+  static ZbDDsemiconductor* create(const ModelOptions& options);
   
  private:
  
@@ -31,6 +29,8 @@ class ZbDDsemiconductor  : public DDsemiconductor
  
  protected:
  
+  ZbDDsemiconductor(const ModelOptions& options) : DDsemiconductor(options) {};
+
   virtual PhysicalModelInterface* create_new(void) const;
    
   
@@ -47,12 +47,12 @@ class ZbDDsemiconductor  : public DDsemiconductor
  
 inline PhysicalModelInterface* ZbDDsemiconductor::create_new( ) const
 {
-  return ( new ZbDDsemiconductor() );
+  return ( new ZbDDsemiconductor(get_options()) );
 }
  
-inline ZbDDsemiconductor* ZbDDsemiconductor::create()
+inline ZbDDsemiconductor* ZbDDsemiconductor::create(const ModelOptions& options)
 {
-  return new ZbDDsemiconductor();
+  return new ZbDDsemiconductor(options);
 }
  
 #endif

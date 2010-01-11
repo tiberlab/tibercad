@@ -46,14 +46,15 @@ private:
 
 protected:
 
-   HeatSourceInterface(void);
+   HeatSourceInterface(const ModelOptions& options);
  
  
 };
 
 
 inline
-HeatSourceInterface::HeatSourceInterface(void)
+HeatSourceInterface::HeatSourceInterface(const ModelOptions& options) :
+  PhysicalModelInterface(options)
 {
 }
 

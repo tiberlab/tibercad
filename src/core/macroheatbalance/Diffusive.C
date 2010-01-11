@@ -1,10 +1,13 @@
- #include "Diffusive.h"
- #include "SimulationOptions.h"
+// $Id$
+
+#include "Diffusive.h"
+#include "SimulationOptions.h"
 
 
 
 //===================================================================================//
-Diffusive::Diffusive()
+Diffusive::Diffusive(const ModelOptions& options)
+  : ThermalContact(options)
 {
 
   _temperature = SimulationOptions::temperature;

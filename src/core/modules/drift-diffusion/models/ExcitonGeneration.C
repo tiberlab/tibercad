@@ -40,17 +40,3 @@ ExcitonGeneration::get_net_recombination_rate_derivatives(
   recomb_e[0] = recomb_h[0] = C_ * p;
   recomb_e[1] = recomb_h[1] = C_ * n;
 }
-
-
-void
-ExcitonGeneration::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
-{
-  const ExcitonGeneration* scA =
-    dynamic_cast<const ExcitonGeneration*>(comp_A);
-  const ExcitonGeneration* scB =
-    dynamic_cast<const ExcitonGeneration*>(comp_B);
-
-  C_ = alloy(scA->C_, scB->C_, xa);
-}
-

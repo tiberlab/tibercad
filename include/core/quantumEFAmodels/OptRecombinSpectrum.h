@@ -60,14 +60,14 @@ class OptRecombinSpectrum : public KspaceIntegration
 
 
   //!Constructor
-  OptRecombinSpectrum();
+  OptRecombinSpectrum(const ModelOptions& options);
 
   //! Destructor 
   virtual ~OptRecombinSpectrum();
 
 
   //!creates a new object 
-  static  OptRecombinSpectrum* create();
+  static  OptRecombinSpectrum* create(const ModelOptions& options);
 
 
  private:
@@ -117,9 +117,9 @@ class OptRecombinSpectrum : public KspaceIntegration
 //---------------------------------------------------------
 
 
-inline OptRecombinSpectrum*  OptRecombinSpectrum::create()
+inline OptRecombinSpectrum*  OptRecombinSpectrum::create(const ModelOptions& options)
 {
-  return (new OptRecombinSpectrum );
+  return (new OptRecombinSpectrum(options) );
 }
 
 #endif

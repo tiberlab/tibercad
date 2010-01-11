@@ -4,10 +4,6 @@
 #define _DRIFTDIFFUSIONPROPERTIES_H_
 
 
-#ifndef TIBER_MODULE_PREFIX
-# define TIBER_MODULE_PREFIX dd
-#endif
-
 
 #include "PhysicalModel.h"
 
@@ -27,11 +23,9 @@
 #include "point.h"
 
 
-#include <float.h>
 #include <vector>
 #include <set>
 #include <map>
-#include <stack>
 
 
 // forward declarations
@@ -160,12 +154,6 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
         //! The derivatives of the net hole recombination rate
         std::vector<double> hole_recombination_rate_derivatives;
 
-
-
-      private:
-
-        //! We let DriftDiffusionProperties talk to it directly
-        friend class DriftDiffusionProperties;
     };
 
 
@@ -208,14 +196,14 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
      * You can provide a pointer to a PointData object created outside
      * or let it create one internally
      */
-    void lock(PointData* pd = NULL);
+    //void lock(PointData* pd = NULL);
 
 
     //! Unlock the parameters
     /*!
      * Call this after all calculations on the element hav been done
      */
-    void unlock(void);
+    //void unlock(void);
 
 
     //! (Re-)Initialize for the given element
@@ -728,7 +716,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
     };
 
     //! The empty constructor.
-    DriftDiffusionProperties(void);
+    DriftDiffusionProperties(const ModelOptions& options);
 
 
     /*! \copydoc PhysicalModel::read_database() */
@@ -744,10 +732,8 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
     virtual void do_init(void);
 
 
-    /*! \copydoc PhysicalModel::do_init_alloy() */
-    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
-
+    //! Create some of the submodels
+    virtual void create_submodels(void);
 
 
     //! This method gets called from reinit()
@@ -1033,12 +1019,6 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
     //! The relaxation factor for the polarization
     double _relax_polariz;
 
-
-    //! The stack for point data locking
-    /*!
-     * The second value tells whether to delete the data after use
-     */
-    std::stack<std::pair<PointData*, bool> > _pd_stack;
 
 };
 
@@ -1363,7 +1343,7 @@ inline
 PhysicalModelInterface*
 DriftDiffusionProperties::create_new(void) const
 {
-  return new DriftDiffusionProperties();
+  return new DriftDiffusionProperties(get_options());
 }
 
 

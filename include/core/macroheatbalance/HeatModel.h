@@ -17,14 +17,11 @@ class HeatModel: public PhysicalModel
  public:
 
 
-  //!Constructor
-  HeatModel();
-
   //!Destructor
   ~HeatModel();
 
    //! creates a new object
-  static HeatModel* create();
+  static HeatModel* create(const ModelOptions& options);
 
   //!Get the thermal lattice conductivity
   void get_thermal_conductivity(Tensor2Sym& thermal_conductivity);
@@ -153,16 +150,15 @@ class HeatModel: public PhysicalModel
    //! Clear all heat source models
    void clear_heat_sources(void);
 
-   //!copy constructor should not be used
-    HeatModel (const HeatModel &  t) {};
 
  protected:
+
+  //!Constructor
+  HeatModel(const ModelOptions& options);
 
   virtual PhysicalModelInterface* create_new (void) const;
   
   virtual void do_init(void);
-
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
 
   virtual void create_submodels();
 
@@ -172,9 +168,9 @@ class HeatModel: public PhysicalModel
 
 
 inline
-HeatModel* HeatModel::create()
+HeatModel* HeatModel::create(const ModelOptions& options)
 {
-  return new  HeatModel();
+  return new  HeatModel(options);
 }
 
 

@@ -12,9 +12,9 @@ class WzRotatedCrystal : public RotatedCrystal
     y [-1, 2, -1, 0]
     z [ 0, 0,  0, 1]
    */
-  WzRotatedCrystal();
+  WzRotatedCrystal(const ModelOptions& options);
 
-  WzRotatedCrystal(const double a, const double c);
+  //WzRotatedCrystal(const double a, const double c);
   
   void set_lat_const(const double a, const double c);
 
@@ -26,7 +26,7 @@ class WzRotatedCrystal : public RotatedCrystal
   void set_xyz_mil_direction(std::string dir, int h, int k, int i, int l );
 
 
-  static WzRotatedCrystal* create();
+  static WzRotatedCrystal* create(const ModelOptions& options);
 
  protected:
 
@@ -55,9 +55,9 @@ class WzRotatedCrystal : public RotatedCrystal
 
 
 
-inline WzRotatedCrystal* WzRotatedCrystal::create()
+inline WzRotatedCrystal* WzRotatedCrystal::create(const ModelOptions& options)
 {
-  return new WzRotatedCrystal();
+  return new WzRotatedCrystal(options);
 }
 
 #endif

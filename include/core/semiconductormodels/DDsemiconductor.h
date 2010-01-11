@@ -48,9 +48,6 @@ class DDsemiconductor : public PhysicalModelInterface
   double energy_cutoff;
   
 
-  //!Constructor
-  DDsemiconductor(void);
-
   //!Desctructor
   virtual ~DDsemiconductor(void);
 
@@ -114,6 +111,9 @@ class DDsemiconductor : public PhysicalModelInterface
 
  protected:
 
+  //!Constructor
+  DDsemiconductor(const ModelOptions& options);
+
 
   //!pointer to an object that can calculate the conduction band properties 
   Semiconductor* semiconductor;
@@ -136,9 +136,9 @@ class DDsemiconductor : public PhysicalModelInterface
 
   virtual void do_init (void);
 
-  virtual void read_database(void);
+  virtual void create_submodels(void);
 
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
+  virtual void read_database(void);
 
 
   //! calculate information about conduction bands

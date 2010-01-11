@@ -96,6 +96,11 @@ PhysicalModelInterface::~PhysicalModelInterface(void)
   os << "Delete model (ID = " << get_id() <<
     " name = " << get_name() << " type = " << get_type() << ")";
   Messages::debug(os.str());
+
+  SubmodelIterator it(submodels_begin());
+  const SubmodelIterator end(submodels_end());
+  for ( ; it != end; ++it)
+    destroy(it->second);
 }
 
 
@@ -105,135 +110,135 @@ PhysicalModelInterface::create(const string& name,
     const ModelOptions& options)
 {
 
+  // NOTE: for bulk models options contains the crystal structure
+
+
   PhysicalModelInterface* mod = NULL;
 
 #ifndef BUILD_TIBER_MODULES
-  if (name == "dd_rec_srh")
-    mod = SRHRecombination::create();
-  else if (name == "dd_rec_auger")
-    mod = AugerRecombination::create();
-  else if (name == "dd_rec_direct")
-    mod = DirectRecombination::create();
-  else if (name == "dd_rec_exciton_generation")
-    mod = ExcitonGeneration::create();
-  else if (name == "dd_rec_exciton_dissociation")
-    mod = ExcitonDissociation::create();
-  else if (name == "dd_rec_optical")
-    mod = OpticalGeneration::create();
-  else if (name == "dd_mob_constant")
-    mod = ConstantMobility::create();
-  else if (name == "dd_mob_doping_dependent")
-    mod = DopingDependentMobility::create();
-  else if (name == "dd_mob_field_dependent")
-    mod = FieldDependentMobility::create();
-  else if (name == "dd_mob_field_assisted")
-    mod = FieldAssistedMobility::create();
+  if (name == "recombination_srh")
+    mod = SRHRecombination::create(options);
+  else if (name == "recombination_auger")
+    mod = AugerRecombination::create(options);
+  else if (name == "recombination_direct")
+    mod = DirectRecombination::create(options);
+  else if (name == "recombination_exciton_generation")
+    mod = ExcitonGeneration::create(options);
+  else if (name == "recombination_exciton_dissociation")
+    mod = ExcitonDissociation::create(options);
+  else if (name == "generation_optical")
+    mod = OpticalGeneration::create(options);
+  else if (name == "mobility_constant")
+    mod = ConstantMobility::create(options);
+  else if (name == "mobility_doping_dependent")
+    mod = DopingDependentMobility::create(options);
+  else if (name == "mobility_field_dependent")
+    mod = FieldDependentMobility::create(options);
+  else if (name == "mobility_field_assisted")
+    mod = FieldAssistedMobility::create(options);
   else if (name == "dd_simple")
-    mod = SimpleSemiconductorModel::create();
+    mod = SimpleSemiconductorModel::create(options);
   else if (name == "dd_default")
-    mod = SemiconductorModel::create();
+    mod = SemiconductorModel::create(options);
   else if (name == "dssc_default")
-    mod = DSSCModel::create();
+    mod = DSSCModel::create(options);
   else if (name == "ex_simple")
-    mod = ExcitonModel::create();
+    mod = ExcitonModel::create(options);
   else if (name == "stiffness_zb")
 #else
   if (name == "stiffness_zb")
 #endif
-    mod = ZbStiffness::create();
+    mod = ZbStiffness::create(options);
   else if (name == "stiffness_wz")
-    mod = WzStiffness::create();
+    mod = WzStiffness::create(options);
   else if (name == "piezo_zb")
-    mod = ZbPiezoelectricity::create();
+    mod = ZbPiezoelectricity::create(options);
   else if (name == "piezo_wz")
-    mod = WzPiezoelectricity::create();
+    mod = WzPiezoelectricity::create(options);
   else if (name == "cryst_zb")
-    mod = ZbRotatedCrystal::create();
+    mod = ZbRotatedCrystal::create(options);
   else if (name == "cryst_wz")
-    mod = WzRotatedCrystal::create();
+    mod = WzRotatedCrystal::create(options);
   else if (name == "macrostrain")
-    mod = MacrostrainModel::create();
+    mod = MacrostrainModel::create(options);
   else if (name == "semicond_zb")
-    mod = ZbSemiconductor::create();
+    mod = ZbSemiconductor::create(options);
   else if (name == "semicond_wz")
-    mod = WzSemiconductor::create();
+    mod = WzSemiconductor::create(options);
   else if (name == "quantum_kp")
-    mod = KPbulkHamiltonian::create();
+    mod = KPbulkHamiltonian::create(options);
   else if (name == "quantum_cond_band_zb")
-    mod = SBZbCondBandBulkHamiltonian::create();
+    mod = SBZbCondBandBulkHamiltonian::create(options);
   else if (name == "quantum_cond_band_wz")
-    mod = SBWzCondBandBulkHamiltonian::create();
+    mod = SBWzCondBandBulkHamiltonian::create(options);
   else if (name == "quantum_user")
-    mod = SBuserHamiltonian::create();
+    mod = SBuserHamiltonian::create(options);
   else if (name == "DDsemicond_zb")
-    mod = ZbDDsemiconductor::create();
+    mod = ZbDDsemiconductor::create(options);
   else if (name == "DDsemicond_wz")
-    mod = WzDDsemiconductor::create();
+    mod = WzDDsemiconductor::create(options);
   else if (name == "EFAmodel")
-    mod = EFAbulkModel::create();
+    mod = EFAbulkModel::create(options);
   else if (name == "lat_therm_cond_zb")
-    mod = ZbLatticeThermalConductivity::create();
+    mod = ZbLatticeThermalConductivity::create(options);
   else if (name == "lat_therm_cond_wz")
-    mod = WzLatticeThermalConductivity::create();
+    mod = WzLatticeThermalConductivity::create(options);
   else if (name == "thermal")
-    mod = HeatModel::create();
+    mod = HeatModel::create(options);
   else if  (name == "poisson")
-    mod = PoissonModel::create();
+    mod = PoissonModel::create(options);
   else if (name == "dftb")
-    mod = DftbModel::create();
+    mod = DftbModel::create(options);
   else if (name == "etb")
-    mod = ETBModel::create();
+    mod = ETBModel::create(options);
   else if  (name == "charge_density_model")
-    mod = ChargeDensityModel::create();
+    mod = ChargeDensityModel::create(options);
   else if  (name == "dielectric_model")
-    mod = DielectricModel::create();
+    mod = DielectricModel::create(options);
   else if (name == "opt_dielectric_constant_zb")
-    mod = ZbOptDielectricConstant::create();
+    mod = ZbOptDielectricConstant::create(options);
   else if (name == "opt_dielectric_constant_wz")
-    mod = WzOptDielectricConstant::create();
+    mod = WzOptDielectricConstant::create(options);
   else if (name == "maxwell")
-    mod = MaxwellPhysicalModel::create();
+    mod = MaxwellPhysicalModel::create(options);
   else if (name == "pyropolarization_zb")
-    mod = PyroPolarization::create();
+    mod = PyroPolarization::create(options);
   else if (name == "pyropolarization_wz")
-    mod = WzPyroPolarization::create();
+    mod = WzPyroPolarization::create(options);
   else if  (name == "drift_diffusion_dissipation")
-    mod = DriftDiffusionHeatSource::create();
+    mod = DriftDiffusionHeatSource::create(options);
   else if  (name == "phonon")
-    mod = PhononModel::create();
+    mod = PhononModel::create(options);
   else if  (name == "free_dynamical_matrix_zb")
-    mod = ZbFreeDynamicalMatrix::create();
+    mod = ZbFreeDynamicalMatrix::create(options);
   else if  (name == "strain_dependent_zb")
-    mod = ZbStrainDynamicalMatrix::create();
+    mod = ZbStrainDynamicalMatrix::create(options);
   else if  (name == "raman_tensor_zb")
-    mod = ZbRamanTensor::create();
+    mod = ZbRamanTensor::create(options);
   else if  (name == "piezoelectric_model_zb")
-    mod = ZbPiezoelectricModel::create();
+    mod = ZbPiezoelectricModel::create(options);
   else if  (name == "piezoelectric_model_wz")
-    mod = WzPiezoelectricModel::create();
+    mod = WzPiezoelectricModel::create(options);
 
 
 
   if (mod == NULL)
-    create_from_library(name, mod);
+    mod = create_from_library<PhysicalModelInterface>(name, options);
 
   if (mod != NULL)
   {
-    register_model(mod);
+    _register_model(mod);
 
     // we let it know what's its identifier
-    mod->set_type(name);
-
-    mod->set_options(options);
+    mod->_set_type(name);
 
     //! set the name
     // 2007-08-17
     //    we don't set anymore a default name
     //string defaultname = mod->get_default_name();
     string defaultname = "";
-    //cerr << "*** " << mod->get_default_name() << endl;
     mod->_name = mod->get_options().get_option("name", defaultname);
-    mod->get_options().delete_option("name");
+    //mod->get_options().delete_option("name");
 
     ostringstream os;
     os << "Added model (ID = " << mod->get_id() <<
@@ -252,13 +257,11 @@ PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
     const ModelOptions& options)
 {
   PhysicalModelInterface* mod = dynamic_cast<PhysicalModelInterface*>(
-      create_from_function(create_fnc, destroy_fnc));
+      create_from_function(create_fnc, destroy_fnc, options));
 
   if (mod != NULL)
   {
-    register_model(mod);
-
-    mod->set_options(options);
+    _register_model(mod);
 
     //! set the name
     // 2007-08-17
@@ -283,7 +286,7 @@ PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
 
 
 void
-PhysicalModelInterface::register_model(
+PhysicalModelInterface::_register_model(
     PhysicalModelInterface* model)
 {
   const string name = typeid(*model).name();
@@ -316,8 +319,7 @@ PhysicalModelInterface::copy(void) const
   if (new_copy != NULL)
   {
     new_copy->_id = _id;
-    new_copy->_material = _material;
-    new_copy->set_options(get_options());
+    new_copy->_owner = _owner;
     new_copy->_name = _name;
     new_copy->_simulator_id = _simulator_id;
 
@@ -340,7 +342,7 @@ PhysicalModelInterface::get_default_name(void) const
 Database&
 PhysicalModelInterface::get_database(void)
 {
-  return _material->get_database();
+  return _owner->get_database();
 }
 
 
@@ -349,7 +351,7 @@ void
 PhysicalModelInterface::override_parameter_string(const std::string& name,
         std::string& s) const
 {
-  const Material* mat = get_material();
+  const PhysicalObject* mat = get_owner();
 
   if (mat != NULL)
   {
@@ -377,5 +379,137 @@ PhysicalModelInterface::override_parameter_string(const std::string& name,
   }
 }
 
+
+
+
+Material*
+PhysicalModelInterface::get_material(void)
+{
+  Material* mat = NULL;
+  if (_owner->get_type() == PhysicalObject::BULK)
+    mat = static_cast<Material*>(_owner);
+  return mat;
+}
+
+
+
+const Material*
+PhysicalModelInterface::get_material(void) const
+{
+  const Material* mat = NULL;
+  if (_owner->get_type() == PhysicalObject::BULK)
+    mat = static_cast<const Material*>(_owner);
+  return mat;
+}
+
+
+
+void
+PhysicalModelInterface::init(void)
+{
+  read_database();
+
+  _create_submodels();
+
+  // Now we initialize all "official" submodels
+  SubmodelIterator smit(submodels_begin());
+  const SubmodelIterator smend(submodels_end());
+  for ( ; smit != smend; ++smit)
+  {
+    PhysicalModelInterface* pm = smit->second;
+    pm->_simulator_id = _simulator_id;
+    Messages::debug("Initializing " + smit->first + " ...");
+    pm->init();
+  }
+
+  do_init();
+}
+
+
+
+
+void
+PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
+    const PhysicalModelInterface* comp_B, double xa)
+{
+  assert(typeid(*comp_A) == typeid(*comp_B));
+
+
+  read_database();
+
+  // some models might treat alloys in a special way
+  // disable alloy mixing
+  Database::AlloyMixing mixing = get_database().get_alloy_mixing();
+  get_database().set_alloy_mixing(Database::NONE);
+  read_database_alloy();
+  get_database().set_alloy_mixing(mixing);
+
+
+  // setup the submodels
+  _create_submodels();
+
+  SubmodelIterator it(submodels_begin());
+  ConstSubmodelIterator it_A(comp_A->submodels_begin());
+  ConstSubmodelIterator it_B(comp_B->submodels_begin());
+  const SubmodelIterator end(submodels_end());
+  for ( ; it != end; ++it, ++it_A, ++it_B)
+  {
+    PhysicalModelInterface* pm = it->second;
+    pm->init_alloy(it_A->second, it_B->second, xa);
+  }
+
+  // some models might treat alloys in a special way
+  do_init_alloy(comp_A, comp_B, xa);
+
+  do_init();
+}
+
+
+
+void
+PhysicalModelInterface::add_submodel(const std::string& key, PhysicalModelInterface* pm)
+{
+  assert(pm != NULL);
+  pm->set_simulator_id(get_simulator_id());
+  pm->set_owner(get_owner());
+  _submodels.insert(SubmodelMap::value_type(key, pm));
+}
+
+
+
+void
+PhysicalModelInterface::_create_submodels(void)
+{
+  // first call the user defined method
+  create_submodels();
+
+  // loop over all submodels
+  ModelOptions::submodel_iterator it(get_options().submodels_begin());
+  ModelOptions::submodel_iterator end(get_options().submodels_end());
+
+  for ( ; it != end; ++it)
+  {
+    string name(it->first);
+    string type((it->second).get_option("model", ""));
+    type = ((it->second).get_option("type", type));
+    if (type.size() > 0)
+      name += string("_") + type;
+
+    PhysicalModelInterface* pm = create(name, it->second);
+
+    if (pm == NULL)
+    {
+      ostringstream os;
+      os << "Unknown physical model \'" << it->first << "\' (type \'"
+        << type << "\')";
+      throw InitFailedException(os.str());
+    }
+
+    // we delete the options from the ModelOptions object
+    get_options().delete_submodel(it);
+
+    _submodels.insert(SubmodelMap::value_type(it->first, pm));
+  }
+}
 
 

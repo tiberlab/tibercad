@@ -2,18 +2,12 @@
 
 #include "SBWzCondBandBulkHamiltonian.h"
 #include "Material.h"
+#include "Constants.h"
 
 using namespace std;
+using namespace Constants;
 
-//=======================================================================//
-void SBWzCondBandBulkHamiltonian::do_init()
-{
 
-  SBCondBandBulkHamiltonian::do_init();
-
-  if (!(get_material()->is_alloy())) calculate_for_init( );
-
-}
 
 //===========================================================================//
 void SBWzCondBandBulkHamiltonian::calculate_for_init( )

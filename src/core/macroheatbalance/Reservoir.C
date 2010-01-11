@@ -4,7 +4,8 @@
 
 
 //===================================================================================//
-Reservoir::Reservoir()
+Reservoir::Reservoir(const ModelOptions& options)
+ : ThermalContact(options)
 {
 
   set_type(ThermalContact::Reservoir);

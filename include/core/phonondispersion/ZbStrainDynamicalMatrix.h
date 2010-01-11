@@ -14,13 +14,13 @@ class ZbStrainDynamicalMatrix: public DynamicalMatrix
 {
  public:
   //!constructor
-  ZbStrainDynamicalMatrix() ;
+  ZbStrainDynamicalMatrix(const ModelOptions& options) ;
 
   //!destructor
   ~ZbStrainDynamicalMatrix() {};
 
   //! Create a ZbLatticeThermalConductivity object
-  static  ZbStrainDynamicalMatrix* create();
+  static  ZbStrainDynamicalMatrix* create(const ModelOptions& options);
 
 
   //! Update the lattice thermal conductivity given the Temperature
@@ -71,15 +71,15 @@ class ZbStrainDynamicalMatrix: public DynamicalMatrix
 };
 
 inline
-ZbStrainDynamicalMatrix* ZbStrainDynamicalMatrix::create()
+ZbStrainDynamicalMatrix* ZbStrainDynamicalMatrix::create(const ModelOptions& options)
 {
-  return (new ZbStrainDynamicalMatrix());
+  return (new ZbStrainDynamicalMatrix(options));
 }
 
 inline
 PhysicalModelInterface*  ZbStrainDynamicalMatrix::create_new (void) const
 {
-  return (new  ZbStrainDynamicalMatrix() ); 
+  return (new  ZbStrainDynamicalMatrix(get_options()) );
 }
 
 inline

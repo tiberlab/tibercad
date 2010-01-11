@@ -1,17 +1,20 @@
-using namespace std;
-#include "SBbulkHamiltonian.h"
+// $Id$
 
-#include "getpot.h"
-#include "Alloy.h"
+#include "SBbulkHamiltonian.h"
+#include "Constants.h"
+
+using namespace std;
+using namespace Constants;
 
 //======================================================================//
-SBbulkHamiltonian::~SBbulkHamiltonian()
+SBbulkHamiltonian::~SBbulkHamiltonian(void)
 {
  
 }
 
 //=======================================================================//
-SBbulkHamiltonian::SBbulkHamiltonian(void)
+SBbulkHamiltonian::SBbulkHamiltonian(const ModelOptions& options)
+ : EFAbulkHamiltonian(options)
 {
  
 }

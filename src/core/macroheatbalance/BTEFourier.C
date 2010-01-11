@@ -1,10 +1,13 @@
- #include "BTEFourier.h"
- #include "SimulationOptions.h"
+// $Id$
+
+#include "BTEFourier.h"
+#include "SimulationOptions.h"
 
 
 
 //===================================================================================//
-BTEFourier::BTEFourier()
+BTEFourier::BTEFourier(const ModelOptions& options)
+  : ThermalContact(options)
 {
   
   set_type(ThermalContact::BTEFourier);

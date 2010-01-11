@@ -7,9 +7,8 @@ class ZbRotatedCrystal : public RotatedCrystal
 {
 
  public:
-  ZbRotatedCrystal();
 
-  ZbRotatedCrystal(const double a);
+  //ZbRotatedCrystal(const double a);
 
   void set_lat_const(const double a);
 
@@ -20,9 +19,11 @@ class ZbRotatedCrystal : public RotatedCrystal
   void set_xyz_mil_direction(std::string dir, int h, int k, int l);
 
 
-  static ZbRotatedCrystal* create();
+  static ZbRotatedCrystal* create(const ModelOptions& options);
 
  protected:
+
+  ZbRotatedCrystal(const ModelOptions& options);
 
   virtual void read_database ( ) ;
 
@@ -49,9 +50,9 @@ class ZbRotatedCrystal : public RotatedCrystal
 
 };
 
-inline ZbRotatedCrystal* ZbRotatedCrystal::create()
+inline ZbRotatedCrystal* ZbRotatedCrystal::create(const ModelOptions& options)
 {
-  return new ZbRotatedCrystal();
+  return new ZbRotatedCrystal(options);
 }
 
 #endif

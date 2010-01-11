@@ -4,8 +4,9 @@
 
 
 //===================================================================================//
-Dirichlet::Dirichlet()
-  : _potential(0.0)
+Dirichlet::Dirichlet(const ModelOptions& options)
+  : PoissonContact(options),
+    _potential(0.0)
 {
   
   set_type( PoissonContact::Dirichlet);

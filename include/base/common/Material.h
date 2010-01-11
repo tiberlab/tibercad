@@ -3,7 +3,7 @@
 #ifndef _MATERIAL_H_
 #define _MATERIAL_H_
 
-#include "TiberModelObject.h"
+#include "PhysicalObject.h"
 #include "TypeDefs.h"
 
 // LibMesh includes
@@ -11,16 +11,13 @@
 
 // C++ includes
 #include <string>
-#include <map>
 #include <set>
 #include <vector>
 #include <cassert>
 
 // forward declarations
 class Dopant;
-class Database;
 class RotatedCrystal;
-class PhysicalModel;
 
 
 //! Contains all needed data for a material
@@ -32,10 +29,11 @@ class PhysicalModel;
  * contains also the list of donors and acceptors (see Dopant) and a
  * RotatedCrystal object.
  */
-class Material : public TiberModelObject
+class Material : public PhysicalObject
 {
 
   public:
+
 
     //! An iterator to iterate over all dopants
     typedef std::set<Dopant*>::iterator dopant_iterator;
@@ -51,23 +49,12 @@ class Material : public TiberModelObject
     virtual ~Material(void);
 
 
-    //! Set the database to be used
-    /*!
-     * The database could in principle be overriden from the options
-     */
-    static void set_database(Database& database);
-
-
-    //! \deprecated Create a material with name \c name
-    static Material* create(const std::string& name);
-
-
-    //! Create a material with name \c name and options
+    //! Create a bulk material with name \c name and options
     static Material* create(const std::string& name,
         const ModelOptions& options);
 
 
-    //! Tells if this material is an alloy
+    //! Tells whether it is an alloy
     bool is_alloy(void) const;
 
 
@@ -75,40 +62,8 @@ class Material : public TiberModelObject
     void preinit(void);
 
 
-    //! Initialize the material
-    /*!
-     * Read all needed material data from the database
-     * It calls the \c read_database() of each \c PhysicalModel
-     * object
-     */
-    void init(void);
-
-
-    //! Add new physical model
-    /*!
-     * Add a new \c PhysicalModelInterface object for this material
-     *
-     * \param model the model to add
-     * \param simulator_id the id of the simulator this model is used for
-     */
-    void add_model(PhysicalModel* model, ID simulator_id);
-
-
     //! Add a dopant
     void add_dopant(Dopant* dopant);
-
-
-    //! Get physical model for simulator with ID id
-    /*!
-     *
-     * It will return the \c NULL pointer if the requested model
-     * is not in the list.
-     * \c id is a unique ID assigned to each simulator.
-     *
-     * \param id the identifier for simulator
-     * \return a pointer to the model object
-     */
-    PhysicalModel* get_model(ID id) const;
 
 
     //! Get the material name
@@ -125,22 +80,6 @@ class Material : public TiberModelObject
 
     //! Get a reference to the RotatedCrystal
     const RotatedCrystal& get_rotated_crystal(void) const;
-
-
-    //! Get a reference to the database
-    const Database& get_database(void) const;
-
-
-    //! Get a writable reference to the database
-    Database& get_database(void);
-
-
-    //! Get the options
-    //ModelOptions& get_options(void);
-
-
-    //! Get the options
-    //const ModelOptions& get_options(void) const;
 
 
     //! Get the total n-doping
@@ -181,17 +120,13 @@ class Material : public TiberModelObject
 
   protected:
 
-    //! a typedef for convenience
-    typedef std::map<ID, PhysicalModel*> ModelMap;
-
-
-    //! Construct a material with a given structure
+    //! Construct a material
     /*!
-     * At construction one has to specify the material name
      *
      * \param name the name of the Material
      */
-    Material(const std::string& name);
+    Material(const std::string& name, const ModelOptions& options,
+        bool alloy = false);
 
 
     //! The real preinit function
@@ -199,18 +134,11 @@ class Material : public TiberModelObject
 
 
     //! The real init function
-    /*!
-     * This one gets called from init(const Database& db)
-     */
     virtual void do_init(void);
 
 
     //! Setup the doping
     void setup_doping(void);
-
-
-    //! Set the model options
-    //void set_options(const ModelOptions& options);
 
 
     //! Get a writable pointer to the RotatedCrystal
@@ -220,17 +148,6 @@ class Material : public TiberModelObject
     //! Set the RotatedCrystal
     void set_crystal(RotatedCrystal* crystal);
 
-
-    //! Get an iterator to the first model
-    ModelMap::iterator models_begin(void);
-
-
-    //! Get an iterator to the last model
-    ModelMap::iterator models_end(void);
-
-
-    //! True if this is an alloy
-    bool _is_alloy;
 
 
   private:
@@ -249,16 +166,12 @@ class Material : public TiberModelObject
     std::string _structure;
 
 
+    //! True if this is an alloy
+    bool _is_alloy;
+
+
     //! The RotatedCrystal object
     RotatedCrystal* _rotated_crystal;
-
-
-    //! The map containing all \c PhysicalModelInterface objects
-    /*!
-     * This map containes the physical model of any simulation type
-     * requested.
-     */
-    ModelMap _models;
 
 
     //! The list of donors
@@ -268,16 +181,8 @@ class Material : public TiberModelObject
     std::set<Dopant*> _acceptors;
 
 
-    //! The default database to be used
-    static Database* _database;
-
-
     //! Clear all doping
     void clear_doping(void);
-
-
-    //! A flag to tell if the material is already initialized
-    bool _is_initialized;
 
 
 };
@@ -294,18 +199,6 @@ Material::is_alloy(void) const
   return _is_alloy;
 }
 
-
-inline
-PhysicalModel*
-Material::get_model(ID id) const
-{
-  const ModelMap::const_iterator end(_models.end());
-  ModelMap::const_iterator it(_models.find(id));
-  if (it != end)
-    return it->second;
-  else
-    return NULL;
-}
 
 
 inline
@@ -348,51 +241,6 @@ Material::set_structure(const std::string& structure)
 }
 
 
-inline
-void
-Material::preinit(void)
-{
-  do_preinit();
-}
-
-
-inline
-void
-Material::init(void)
-{
-  assert(_database != NULL);
-
-  if (!_is_initialized)
-  {
-    do_init();
-    _is_initialized = true;
-  }
-}
-
-
-inline
-void
-Material::set_database(Database& database)
-{
-  _database = &database;
-}
-
-
-
-inline
-Material::ModelMap::iterator
-Material::models_begin(void)
-{
-  return _models.begin();
-}
-
-
-inline
-Material::ModelMap::iterator
-Material::models_end(void)
-{
-  return _models.end();
-}
 
 
 inline

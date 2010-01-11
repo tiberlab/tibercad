@@ -3,7 +3,8 @@
 #include "WzRotatedCrystal.h"
 #include "Database.h"
 
-WzRotatedCrystal::WzRotatedCrystal() : RotatedCrystal()
+WzRotatedCrystal::WzRotatedCrystal(const ModelOptions& options) :
+  RotatedCrystal(options)
 {
   a_lat = 0;
   c_lat = 0;
@@ -18,14 +19,15 @@ WzRotatedCrystal::WzRotatedCrystal() : RotatedCrystal()
 
 //=======================================================//
 
-
+/*
 WzRotatedCrystal::WzRotatedCrystal(const double a, const double c)
 {
 
   set_lat_const(a, c);
 
 }
- 
+*/
+
 //======================================================//
 
 
@@ -178,7 +180,7 @@ void WzRotatedCrystal::read_database ( )
 
 PhysicalModelInterface* WzRotatedCrystal::create_new(void) const
 {
-  return ( new WzRotatedCrystal() );
+  return new WzRotatedCrystal(get_options());
 
 }
 

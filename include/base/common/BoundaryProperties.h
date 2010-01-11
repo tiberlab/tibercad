@@ -43,7 +43,7 @@ class BoundaryProperties : public TiberModelObject
     /*!
      * \c BoundaryType should not be instantiated directly
      */
-    BoundaryProperties(void);
+    BoundaryProperties(const ModelOptions& options);
 
 
     //! Initialize the model
@@ -85,7 +85,8 @@ class BoundaryProperties : public TiberModelObject
 //--------------------------------------------------------------
 
 inline
-BoundaryProperties::BoundaryProperties(void)
+BoundaryProperties::BoundaryProperties(const ModelOptions& options)
+ : TiberModelObject(options)
 {
 }
 

@@ -114,7 +114,8 @@ Poisson::~Poisson()
 
 }
 //---------------------------------------------------------------------------------//
-Poisson::Poisson()
+Poisson::Poisson(const ModelOptions& options)
+ : SimulationInterface(options)
 {
 
 
@@ -156,9 +157,9 @@ BoundaryProperties* Poisson::create_boundary_model (const ModelOptions &options)
 
 
 
-Poisson*  Poisson::create(void)
+Poisson*  Poisson::create(const ModelOptions& options)
 {
-  return new Poisson;
+  return new Poisson(options);
 }
 
 

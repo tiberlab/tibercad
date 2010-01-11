@@ -18,14 +18,11 @@ class ExcitonDissociation : public RecombinationModelInterface
 
   public:
 
-    //! Constructor
-    ExcitonDissociation(void);
-
     //! Destructor
     virtual ~ExcitonDissociation(void) {};
 
     //! Create a ConstantMobility object
-    static ExcitonDissociation* create(void);
+    static ExcitonDissociation* create(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     virtual void get_net_recombination_rates(double& recomb_e, double& recomb_h);
@@ -39,16 +36,15 @@ class ExcitonDissociation : public RecombinationModelInterface
 
     
   protected:
+
+    //! Constructor
+    ExcitonDissociation(const ModelOptions& options);
     
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
     //! \copydoc RecombinationModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
-
-    /*! \copydoc RecombinationModelInterface::do_init_alloy() */
-    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
 
 
   private:
@@ -71,17 +67,18 @@ class ExcitonDissociation : public RecombinationModelInterface
 // 
 
 inline
-ExcitonDissociation::ExcitonDissociation(void)
-  : d_(1.0),
+ExcitonDissociation::ExcitonDissociation(const ModelOptions& options)
+  : RecombinationModelInterface(options),
+    d_(1.0),
     _exciton_sim(NULL)
 {
 }
 
 inline
 ExcitonDissociation*
-ExcitonDissociation::create(void)
+ExcitonDissociation::create(const ModelOptions& options)
 {
-  return new ExcitonDissociation();
+  return new ExcitonDissociation(options);
 }
 
 
@@ -90,7 +87,7 @@ inline
 PhysicalModelInterface*
 ExcitonDissociation::create_new(void) const
 {
-  return new ExcitonDissociation();
+  return new ExcitonDissociation(get_options());
 }
 
 

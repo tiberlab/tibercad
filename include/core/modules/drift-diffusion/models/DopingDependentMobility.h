@@ -34,14 +34,11 @@ class DopingDependentMobility : public MobilityModelInterface
 
   public:
 
-    //! constructor
-    DopingDependentMobility(void);
-
     //! Destructor
     virtual ~DopingDependentMobility(void);
 
     //! Create a DopingDependentMobility object
-    static DopingDependentMobility* create(void);
+    static DopingDependentMobility* create(const ModelOptions& options);
 
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
@@ -52,18 +49,21 @@ class DopingDependentMobility : public MobilityModelInterface
 
   protected:
 
+    //! constructor
+    DopingDependentMobility(const ModelOptions& options);
+
     //! \copydoc MobilityModelInterface::read_database()
     virtual void read_database(void);
 
-    //! \copydoc MobilityModelInterface::create_submodels()
+    //! \copydoc MobilityModelInterface::do_init()
+    virtual void do_init(void);
+
+    //! Create submodels
     virtual void create_submodels(void);
 
     //! \copydoc MobilityModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    /*! \copydoc MobilityModelInterface::do_init_alloy() */
-    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
 
   private:
 
@@ -136,8 +136,9 @@ class DopingDependentMobility : public MobilityModelInterface
 //
 
 inline
-DopingDependentMobility::DopingDependentMobility(void)
-  : formula_(2),
+DopingDependentMobility::DopingDependentMobility(const ModelOptions& options)
+  : MobilityModelInterface(options),
+    formula_(2),
     mumin_(2000),
     am_(-1),
     mud_(6000),
@@ -153,9 +154,9 @@ DopingDependentMobility::DopingDependentMobility(void)
 
 inline
 DopingDependentMobility*
-DopingDependentMobility::create(void)
+DopingDependentMobility::create(const ModelOptions& options)
 {
-  return new DopingDependentMobility();
+  return new DopingDependentMobility(options);
 }
 
 
@@ -163,7 +164,7 @@ inline
 PhysicalModelInterface*
 DopingDependentMobility::create_new(void) const
 {
-  return new DopingDependentMobility();
+  return new DopingDependentMobility(get_options());
 }
 
 

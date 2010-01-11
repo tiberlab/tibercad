@@ -23,13 +23,13 @@ class PoissonModel: public PhysicalModel
  public:
 
   //!Constructor
-  PoissonModel(void);
+  PoissonModel(const ModelOptions& options);
 
   //!Destructor
   ~PoissonModel(void);
 
   //! creates a new object
-  static  PoissonModel* create(void);
+  static  PoissonModel* create(const ModelOptions& options);
 
   void 	re_init(void);
 
@@ -133,9 +133,6 @@ class PoissonModel: public PhysicalModel
    //! Current element
    const Elem* _elem;
 
-   //!copy constructor should not be used
-   PoissonModel (const PoissonModel&  t) {};
-
    //!relative dielectric constant
   Tensor2Sym _epsilon;
 
@@ -177,9 +174,9 @@ class PoissonModel: public PhysicalModel
 
 inline
 PoissonModel*
-PoissonModel::create(void)
+PoissonModel::create(const ModelOptions& options)
 {
-  return new PoissonModel;
+  return new PoissonModel(options);
 }
 
 inline

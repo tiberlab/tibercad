@@ -54,18 +54,3 @@ ConstantMobility::get_mobility_derivatives(std::vector<double>& dm)
 }
 
 
-
-void
-ConstantMobility::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
-{
-
-  const ConstantMobility* scA =
-    dynamic_cast<const ConstantMobility*>(comp_A);
-  const ConstantMobility* scB =
-    dynamic_cast<const ConstantMobility*>(comp_B);
-
-  mu0_ = alloy(scA->mu0_, scB->mu0_, xa);
-  exp_ = alloy(scA->exp_, scB->exp_, xa);
-}
-

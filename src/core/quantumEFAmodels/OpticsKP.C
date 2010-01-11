@@ -55,8 +55,8 @@ BoundaryProperties* OpticsKP::create_boundary_model(const ModelOptions& options)
 }
 
 //===============================================//
-OpticsKP::OpticsKP()
-
+OpticsKP::OpticsKP(const ModelOptions& options)
+ : Optics(options)
 {
   initial_state_model = NULL;
   final_state_model = NULL;

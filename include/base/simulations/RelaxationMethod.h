@@ -16,13 +16,13 @@ class RelaxationMethod : public SelfconsistentSolver
     virtual ~RelaxationMethod(void);
 
     //! Create a Sweep object
-    static RelaxationMethod* create(void);
+    static RelaxationMethod* create(const ModelOptions& options);
 
 
   protected:
 
     //! The empty Constructor
-    RelaxationMethod(void);
+    RelaxationMethod(const ModelOptions& options);
 
     
     /*! \copydoc SimulationInterface::do_solve() */
@@ -48,8 +48,9 @@ class RelaxationMethod : public SelfconsistentSolver
 //
 
 inline
-RelaxationMethod::RelaxationMethod(void)
-  : _relax(1.0)
+RelaxationMethod::RelaxationMethod(const ModelOptions& options)
+  : SelfconsistentSolver(options),
+    _relax(1.0)
 {
 }
 
@@ -60,9 +61,9 @@ RelaxationMethod::~RelaxationMethod(void)
 
 inline
 RelaxationMethod*
-RelaxationMethod::create(void)
+RelaxationMethod::create(const ModelOptions& options)
 {
-  return new RelaxationMethod();
+  return new RelaxationMethod(options);
 }
 
 

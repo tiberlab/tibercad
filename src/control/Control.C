@@ -64,6 +64,7 @@ Control::SignalHandler::activate_sigint(void)
 
 
 
+
 void
 Control::SignalHandler::deactivate_sigint(void)
 {
@@ -109,7 +110,6 @@ Control::SignalHandler::sigint(int sig)
 Control::Control(void)
   : _inputfile(""),
     _device(0),
-    _database(0),
     _outputdir(".")
 {
 
@@ -136,7 +136,6 @@ Control::~Control(void)
 
   Device::destroy(_device);
 
-  delete _database;
 }
 
 
@@ -173,8 +172,6 @@ Control::init(void) throw (InitFailedException,
   }
   infile.close();
 
-  _database = new Database();
-  Material::set_database(*_database);
 
   // create the device, simulations and models
   setup_globals();
@@ -226,7 +223,7 @@ Control::setup_globals(void)
   Messages::info("Input file: " + _inputfile);
   Messages::newline();
 
-  _database->set_search_path(opts.get_option("searchpath", ""));
+  Database::set_search_path(opts.get_option("searchpath", ""));
   opts.delete_option("searchpath");
 
   DLLoader::prepend_to_library_path(opts.get_option("modellibpath", "."));
@@ -250,7 +247,7 @@ Control::setup_globals(void)
     os << "Simulation temperature: "
       << SimulationOptions::temperature << " K" << endl
       << "Database search path  : "
-      << _database->get_search_path() << endl
+      << Database::get_search_path() << endl
       << "Output directory      : "
       << _outputdir << endl
       << "Log file              : "
@@ -669,7 +666,14 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       if (mat->get_model(sim->get_id()) == NULL)
       {
 
+        // the crystal structure
+        string crystal_structure(mat->get_structure());
+
         ModelOptions opts(physopts);
+        // we add the crystal structure for bulk materials as this could
+        // lead to different model implementations
+        opts["crystal_structure"] = crystal_structure;
+
         //
         // we parse the submodels for each region as they could be associated
         // one-by-one
@@ -699,11 +703,14 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
             if (add)
             {
+              // we add the crystal structure for bulk materials as this could
+              // lead to different model implementations
+              (mapit->second)["crystal_structure"] = crystal_structure;
+
               // we set the name to the model type if not explicitly
               // given by user
               if (!(mapit->second).find_option("name"))
                 (mapit->second)["name"] = mapit->first;
-
               opts.add_submodel(mapit->first, mapit->second);
             }
           }

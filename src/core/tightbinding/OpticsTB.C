@@ -12,8 +12,8 @@
 
 using namespace Constants;
 
-OpticsTB::OpticsTB()
-
+OpticsTB::OpticsTB(const ModelOptions& options)
+ : Optics(options)
 {
   _initial_state_model = NULL;
   _final_state_model = NULL;

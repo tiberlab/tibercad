@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _DIFFUSIVE_H_
 #define _DIFFUSIVE_H_
 
@@ -9,7 +11,7 @@ class Diffusive : public ThermalContact
 {
  public:
   //!Constructor	 
-  Diffusive();
+  Diffusive(const ModelOptions& options);
   //!Destructor 
   ~Diffusive(){};
   //!Return the temperature of the contact
@@ -25,7 +27,7 @@ class Diffusive : public ThermalContact
   void set_emittivity(double ems);
 
   //!Create a Reservoir object and return its pointer
-  static Diffusive* create(void);
+  static Diffusive* create(const ModelOptions& options);
 
  protected:
   //!Initialize the model
@@ -48,9 +50,9 @@ class Diffusive : public ThermalContact
 
 inline
 Diffusive* 
-Diffusive::create()
+Diffusive::create(const ModelOptions& options)
 {
-  return new Diffusive();
+  return new Diffusive(options);
 }
 
 inline 

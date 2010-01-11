@@ -2,7 +2,8 @@
 #include "Material.h"
 
 
-EFAbulkModel::EFAbulkModel()
+EFAbulkModel::EFAbulkModel(const ModelOptions& options) :
+  PhysicalModel(options)
 {
   _bulkHamiltonian = NULL;
 }

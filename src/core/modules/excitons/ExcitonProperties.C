@@ -12,8 +12,9 @@ ExcitonProperties::~ExcitonProperties(void)
 }
 
 
-ExcitonProperties::ExcitonProperties(void)
-  : _elem(NULL),
+ExcitonProperties::ExcitonProperties(const ModelOptions& options)
+  : PhysicalModel(options),
+    _elem(NULL),
     _statistics(TiberCad::BOLTZMANN)
 {
 }

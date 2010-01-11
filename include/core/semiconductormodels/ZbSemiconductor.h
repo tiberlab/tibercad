@@ -54,9 +54,6 @@ class ZbSemiconductor  : public Semiconductor
 
   
 
-
-  //!Constructor  
-  ZbSemiconductor(void);
   
 
   //! Get a  reference to the physical parameters
@@ -127,7 +124,7 @@ class ZbSemiconductor  : public Semiconductor
   //! apply varshni formulas
   virtual void apply_temperature(void) ;
 
-  static ZbSemiconductor* create();
+  static ZbSemiconductor* create(const ModelOptions& options);
 
  private:
 
@@ -145,15 +142,15 @@ class ZbSemiconductor  : public Semiconductor
   //---------------------------------------------------------------------------------//
   // k.p Hamiltonian section
 
-  //! Hartree energy in eV
-  static const double Hartree;
-
 
 
   //--------------------------------------------------------------------------------//
 
 
  protected:
+
+  //!Constructor
+  ZbSemiconductor(const ModelOptions& options);
 
   virtual PhysicalModelInterface* create_new(void) const;
 
@@ -163,8 +160,6 @@ class ZbSemiconductor  : public Semiconductor
 
   virtual void read_database_alloy(void);
  
-  virtual void do_do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
-  
 
  
 };
@@ -173,12 +168,12 @@ class ZbSemiconductor  : public Semiconductor
 
 inline PhysicalModelInterface* ZbSemiconductor::create_new(void) const
 {
-  return ( new ZbSemiconductor() );
+  return ( new ZbSemiconductor(get_options()) );
 }
 
-inline ZbSemiconductor* ZbSemiconductor::create()
+inline ZbSemiconductor* ZbSemiconductor::create(const ModelOptions& options)
 {
-  return new ZbSemiconductor();
+  return new ZbSemiconductor(options);
 }
 
 

@@ -39,13 +39,13 @@ public:
   };
 
   //! Constructor
-  TightBinding();
+  TightBinding(const ModelOptions& options);
 
   //! Destructor
   ~TightBinding();
 
   //! Create TightBinding object
-  static TightBinding* create();
+  static TightBinding* create(const ModelOptions& options);
 
   virtual BoundaryProperties* create_boundary_model(const ModelOptions &options) const
   throw (ModelErrorException);
@@ -122,9 +122,9 @@ protected:
 
 
 inline
-TightBinding* TightBinding::create()
+TightBinding* TightBinding::create(const ModelOptions& options)
 {
-  return new  TightBinding();
+  return new  TightBinding(options);
 }
 
 

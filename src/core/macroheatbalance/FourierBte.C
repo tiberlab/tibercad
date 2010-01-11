@@ -1,10 +1,13 @@
- #include "FourierBTE.h"
- #include "SimulationOptions.h"
+// $Id$
+
+#include "FourierBTE.h"
+#include "SimulationOptions.h"
 
 
 
 //===================================================================================//
-FourierBTE::FourierBTE()
+FourierBTE::FourierBTE(const ModelOptions& options)
+  : ThermalContact(options)
 {
 
   set_type(ThermalContact::FourierBTE);

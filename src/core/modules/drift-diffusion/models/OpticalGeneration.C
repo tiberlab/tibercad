@@ -39,15 +39,3 @@ OpticalGeneration::get_net_recombination_rate_derivatives(
 }
 
 
-void
-OpticalGeneration::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
-{
-  const OpticalGeneration* scA =
-    dynamic_cast<const OpticalGeneration*>(comp_A);
-  const OpticalGeneration* scB =
-    dynamic_cast<const OpticalGeneration*>(comp_B);
-
-  G_ = alloy(scA->G_, scB->G_, xa);
-}
-

@@ -60,13 +60,13 @@ public:
   };
 
   //! Constructor
-  Dftb(void);
+  Dftb(const ModelOptions& options);
 
   //! Destructor
   ~Dftb(void);
 
   //! Create object
-  static Dftb* create();
+  static Dftb* create(const ModelOptions& options);
 
   virtual PhysicalModel* create_physical_model(const ModelOptions &options,
       const Material* mat) const throw (ModelErrorException);
@@ -131,9 +131,9 @@ protected:
 
 
 inline
-Dftb* Dftb::create()
+Dftb* Dftb::create(const ModelOptions& options)
 {
-  return new Dftb;
+  return new Dftb(options);
 }
 
 

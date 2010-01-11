@@ -20,14 +20,11 @@ class LeakageCurrent : public ElectricalContact
 
   public:
 
-    //! The constructor
-    LeakageCurrent(void);
-
     //! The destructor
     ~LeakageCurrent(void) {};
 
     //! Create an object
-    static LeakageCurrent* create(void);
+    static LeakageCurrent* create(const ModelOptions& options);
 
     //! Get normal derivative
     virtual void get_normal_derivative(DriftDiffusionDefs::DDVariable variable,
@@ -36,14 +33,17 @@ class LeakageCurrent : public ElectricalContact
 
   protected:
 
+    //! The constructor
+    LeakageCurrent(const ModelOptions& options);
+
     /*! \copydoc ElectricalContact::do_init() */
     virtual void do_init(void);
 
 
   private:
 
-    double _c;
-    double _A;
+    double _c_param;
+    double _A_param;
     std::string _outer_voltage;
 
     TunnelingCurrent* _tc;
@@ -57,17 +57,18 @@ class LeakageCurrent : public ElectricalContact
 
 inline
 LeakageCurrent*
-LeakageCurrent::create(void)
+LeakageCurrent::create(const ModelOptions& options)
 {
-  return new LeakageCurrent();
+  return new LeakageCurrent(options);
 }
 
 
 
 inline
-LeakageCurrent::LeakageCurrent(void)
-  : _c(0.02585),
-    _A(1e-21),
+LeakageCurrent::LeakageCurrent(const ModelOptions& options)
+  : ElectricalContact(options),
+    _c_param(0.02585),
+    _A_param(1e-21),
     _tc(NULL)
 {
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::NEUMANN);

@@ -8,7 +8,8 @@
 
 
 
-HeatModel::HeatModel() :
+HeatModel::HeatModel(const ModelOptions& options) :
+  PhysicalModel(options),
   kappa(NULL),
   _elem(NULL),
   _lattice_thermal_conductivity(0),
@@ -24,18 +25,13 @@ HeatModel::HeatModel() :
 
 HeatModel::~HeatModel()
 {
-
-  destroy(kappa);
-  clear_heat_sources();
-
-
 }
 
 //==========================================================================//
 
 PhysicalModelInterface* HeatModel::create_new (void) const
 {
-  return new HeatModel();
+  return new HeatModel(get_options());
 }
 
 //==========================================================================//
@@ -54,15 +50,14 @@ void HeatModel::create_submodels()
     const std::string& name = (it->second).get_option("model", "");
     add_heat_source_model(name,it->second);
   }
+  get_options().delete_submodels("heat_source");
 
 
 
-  destroy(kappa);
+  assert(kappa == NULL);
 
   it = get_options().submodels_begin("Lattice_thermal_conductivity");
   end = get_options().submodels_end("Lattice_thermal_conductivity");
-
-
   if (it != end)
   {
 
@@ -84,48 +79,14 @@ void HeatModel::create_submodels()
 		get_material()->get_structure()));
 
    }
-    kappa->set_material(get_material());
+  add_submodel("lat_therm_cond", kappa);
+  get_options().delete_submodels("Lattice_thermal_conductivity");
 
-    kappa->init();
     
-    kappa->get_conductivity(_lattice_thermal_conductivity);
-
-      
+    //kappa->get_conductivity(_lattice_thermal_conductivity);
 
 }
 
-
-//==========================================================================//
-void HeatModel::do_init_alloy(const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
-{
-
-  const HeatModel* matA = dynamic_cast< const HeatModel*> (comp_A);
-  const HeatModel* matB = dynamic_cast< const HeatModel*> (comp_B);
-
-  destroy(kappa);
-  kappa = create_submodel_alloy(matA->kappa, matB->kappa, xa);
-  kappa->get_conductivity(_lattice_thermal_conductivity);
-
-  
-  _heat_source_models.clear();
-  std::vector<ID> source_ids;
-  int n = matA->get_heat_source_IDs(source_ids);
-  for (int i = 0; i < n; i++)
-  {
-    ID id = source_ids[i];
-    _heat_source_models[id] = create_submodel_alloy(matA->get_heat_source_model(id),
-        matB->get_heat_source_model(id), xa);
-  }
-
-  // tg =  alloy(matA->tg, matB->tg, xa);
-  vg =  alloy(matA->vg, matB->vg, xa);
-  cg =  alloy(matA->cg, matB->cg, xa);
-  //  kg=  alloy(matA->kg, matB->kg, xa);
-
-  // std::cout<<get_material()->get_name()<<std::endl;
-
-  //  std::cout<< _lattice_thermal_conductivity<<std::endl;
-}
 
 void
 HeatModel::do_init(void)
@@ -158,7 +119,10 @@ HeatModel::do_init(void)
 //    std::cout<<"kg: "<<kg<<std::endl;
 //    std::cout<<" "<<std::endl;
    //cg = 1;
+
+  kappa->get_conductivity(_lattice_thermal_conductivity);
 }
+
 
 
 
@@ -178,9 +142,7 @@ HeatModel::add_heat_source_model(const std::string& model_name,
   _heat_source_models[id] = model;
 
   model->set_heat_model(this);
-  model->set_material(get_material());
-  model->set_simulator_id(get_simulator_id());
-  model->init();
+  add_submodel("heat_source", model);
 
 
 }
@@ -214,7 +176,6 @@ HeatModel::get_total_heat_source(const Elem*  elem, std::vector<Point> h_point,
      
       it_inner =  heat_source[n].begin();
       end_inner = heat_source[n].end();
-    
       for ( ; it_inner != end_inner; ++it_inner)
       {
 	total_heat_source[n] += it_inner->second;

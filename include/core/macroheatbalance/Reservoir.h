@@ -9,7 +9,7 @@ class Reservoir : public ThermalContact
 {
  public:
   //!Constructor	 
-  Reservoir();
+  Reservoir(const ModelOptions& options);
   //!Destructor 
   ~Reservoir(){};
   //!Return the temperature of the contact
@@ -19,7 +19,7 @@ class Reservoir : public ThermalContact
   void set_temperature(double Temp);
    
   //!Create a Reservoir object and return its pointer
-  static Reservoir* create(void);
+  static Reservoir* create(const ModelOptions& options);
 
  protected:
   //!Initialize the model
@@ -42,9 +42,9 @@ class Reservoir : public ThermalContact
 
 inline
 Reservoir* 
-Reservoir::create()
+Reservoir::create(const ModelOptions& options)
 {
-  return new Reservoir();
+  return new Reservoir(options);
 }
 
 inline 

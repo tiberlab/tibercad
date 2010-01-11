@@ -51,14 +51,14 @@ class DSSC : public SimulationInterface
 
 
     //! Constructor
-    DSSC(void);
+    DSSC(const ModelOptions& options);
 
     //! Destructor
     virtual ~DSSC(void);
 
 
     //! Create an DSSC object
-    static DSSC* create(void);
+    static DSSC* create(const ModelOptions& options);
 
 
     /*! \copydoc SimulationInterface::create_physical_model() */
@@ -428,9 +428,9 @@ class DSSC : public SimulationInterface
 
 inline
 DSSC*
-DSSC::create(void)
+DSSC::create(const ModelOptions& options)
 {
-  return new DSSC();
+  return new DSSC(options);
 }
 
 

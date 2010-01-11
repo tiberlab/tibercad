@@ -18,14 +18,11 @@ class OpticalGeneration : public RecombinationModelInterface
 
   public:
 
-    //! Constructor
-    OpticalGeneration(void);
-
     //! Destructor
     virtual ~OpticalGeneration(void) {};
 
     //! Create a ConstantMobility object
-    static OpticalGeneration* create(void);
+    static OpticalGeneration* create(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
@@ -40,16 +37,14 @@ class OpticalGeneration : public RecombinationModelInterface
 
   protected:
 
+    //! Constructor
+    OpticalGeneration(const ModelOptions& options);
+
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
     //! \copydoc RecombinationModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
-
-    /*! \copydoc RecombinationModelInterface::do_init_alloy() */
-    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
-
 
 
   private:
@@ -66,17 +61,18 @@ class OpticalGeneration : public RecombinationModelInterface
 //
 
 inline
-OpticalGeneration::OpticalGeneration(void)
-  : G_(0.0)
+OpticalGeneration::OpticalGeneration(const ModelOptions& options)
+  : RecombinationModelInterface(options),
+    G_(0.0)
 {
 }
 
 
 inline
 OpticalGeneration*
-OpticalGeneration::create(void)
+OpticalGeneration::create(const ModelOptions& options)
 {
-  return new OpticalGeneration();
+  return new OpticalGeneration(options);
 }
 
 
@@ -85,7 +81,7 @@ inline
 PhysicalModelInterface*
 OpticalGeneration::create_new(void) const
 {
-  return new OpticalGeneration();
+  return new OpticalGeneration(get_options());
 }
 
 

@@ -11,9 +11,9 @@
 
 namespace
 {
-  TiberModelObject* thpow_create(void)
+  TiberModelObject* thpow_create(const ModelOptions& options)
   {
-    return new ThermoelectricPower();
+    return new ThermoelectricPower(options);
   }
 
   void thpow_destroy(TiberModelObject* mod)
@@ -23,8 +23,9 @@ namespace
 }
 
 
-ThermoelectricPower::ThermoelectricPower(void)
-  : _eQfermi(0.0),
+ThermoelectricPower::ThermoelectricPower(const ModelOptions& options)
+  : DriftDiffusionModelInterface(options),
+    _eQfermi(0.0),
     _hQfermi(0.0),
     _Ec(0.0),
     _Ev(0.0),
@@ -51,25 +52,6 @@ ThermoelectricPower::create_model(const std::string& model,
 
 
 
-
-
-void
-ThermoelectricPower::do_init_alloy (const PhysicalModelInterface *comp_A,
-    const PhysicalModelInterface *comp_B, double xa)
-{
-  const  ThermoelectricPower* modA =
-    dynamic_cast<const ThermoelectricPower*>(comp_A);
-
-  const ThermoelectricPower* modB =
-    dynamic_cast<const ThermoelectricPower*>(comp_B);
-
-  _TEmodel = modA->_TEmodel;
-
-  alloy(_eTEpower,modA->_eTEpower, modB->_eTEpower, xa);
-
-  alloy(_hTEpower,modA->_hTEpower, modB->_hTEpower, xa);
-
-}
 
 
 

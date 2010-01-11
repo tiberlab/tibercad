@@ -21,14 +21,11 @@ class ConstantMobility : public MobilityModelInterface
 
   public:
 
-    //! constructor
-    ConstantMobility(void);
-
     //! Destructor
     virtual ~ConstantMobility(void);
 
     //! Create a ConstantMobility object
-    static ConstantMobility* create(void);
+    static ConstantMobility* create(const ModelOptions& options);
 
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
@@ -39,6 +36,9 @@ class ConstantMobility : public MobilityModelInterface
 
   protected:
 
+    //! constructor
+    ConstantMobility(const ModelOptions& options);
+
     //! \copydoc MobilityModelInterface::read_database()
     virtual void read_database(void);
 
@@ -48,9 +48,6 @@ class ConstantMobility : public MobilityModelInterface
     //! \copydoc MobilityModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    /*! \copydoc MobilityModelInterface::do_init_alloy() */
-    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
 
   private:
 
@@ -67,8 +64,9 @@ class ConstantMobility : public MobilityModelInterface
 // 
 
 inline
-ConstantMobility::ConstantMobility(void)
-  : mu0_(1000),
+ConstantMobility::ConstantMobility(const ModelOptions& options)
+  : MobilityModelInterface(options),
+    mu0_(1000),
     exp_(1)
 {
 }
@@ -76,9 +74,9 @@ ConstantMobility::ConstantMobility(void)
 
 inline
 ConstantMobility*
-ConstantMobility::create(void)
+ConstantMobility::create(const ModelOptions& options)
 {
-  return new ConstantMobility();
+  return new ConstantMobility(options);
 }
 
 
@@ -86,7 +84,7 @@ inline
 PhysicalModelInterface*
 ConstantMobility::create_new(void) const
 {
-  return new ConstantMobility();
+  return new ConstantMobility(get_options());
 }
 
 

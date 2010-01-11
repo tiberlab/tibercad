@@ -19,13 +19,13 @@ class OpticsTB : public Optics
   public:
 
     //! The constructor
-    OpticsTB(void);
+    OpticsTB(const ModelOptions& options);
 
     //! The destructor
     virtual ~OpticsTB(void);
 
  
-    static OpticsTB* create();
+    static OpticsTB* create(const ModelOptions& options);
 
     void calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz, 
                           std::map<const Elem*, double>& spectrum);
@@ -95,9 +95,9 @@ class OpticsTB : public Optics
 };
 
 
-inline OpticsTB* OpticsTB::create()
+inline OpticsTB* OpticsTB::create(const ModelOptions& options)
 {
-  return (new OpticsTB);
+  return (new OpticsTB(options));
 }
 
 

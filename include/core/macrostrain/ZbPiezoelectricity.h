@@ -10,9 +10,6 @@ class ZbPiezoelectricity : public Piezoelectricity
  public:
 
 
-  //!Empty constructor
-  ZbPiezoelectricity();
-
   //! constructor that sets module
   ZbPiezoelectricity(double e14);
 
@@ -33,7 +30,7 @@ class ZbPiezoelectricity : public Piezoelectricity
  
 
 
-  static ZbPiezoelectricity* create();
+  static ZbPiezoelectricity* create(const ModelOptions& options);
 
 
  private:
@@ -41,22 +38,17 @@ class ZbPiezoelectricity : public Piezoelectricity
   //!piezoelectric constant
   double e14;
 
-  //!bowing parameter for the piezoelectric constant
-  double e14_bow;
-
  protected:
 
-  virtual void read_database(void) ;
+  //!Empty constructor
+  ZbPiezoelectricity(const ModelOptions& options);
 
-  virtual void read_database_alloy(void);
+  virtual void read_database(void) ;
 
 
   virtual void do_init(void);
 
 
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
-
-  
   virtual PhysicalModelInterface* create_new(void) const;
 
 
@@ -64,9 +56,9 @@ class ZbPiezoelectricity : public Piezoelectricity
 };
 
 
-inline ZbPiezoelectricity*  ZbPiezoelectricity::create()
+inline ZbPiezoelectricity*  ZbPiezoelectricity::create(const ModelOptions& options)
 {
-  return new ZbPiezoelectricity();
+  return new ZbPiezoelectricity(options);
 }
 
 #endif

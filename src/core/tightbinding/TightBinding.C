@@ -19,8 +19,9 @@
 
 //-----------------------------------------------------------------------
 
-TightBinding::TightBinding()
- : _atomistic_structure(NULL),
+TightBinding::TightBinding(const ModelOptions& options)
+ : EigenvalueProblem(options),
+   _atomistic_structure(NULL),
    _mulliken_netcharges(),
    _mesh(NULL)
 {

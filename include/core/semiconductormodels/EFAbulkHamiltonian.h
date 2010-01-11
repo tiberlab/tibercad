@@ -24,9 +24,6 @@ class EFAbulkHamiltonian: public PhysicalModelInterface
     
   };
 
-  //!constructor
-  EFAbulkHamiltonian();
-
 
   //!destructor
   virtual ~EFAbulkHamiltonian() {};
@@ -80,13 +77,16 @@ class EFAbulkHamiltonian: public PhysicalModelInterface
 
 
  protected:
+
+  //!constructor
+  EFAbulkHamiltonian(const ModelOptions& options);
   
 
   virtual PhysicalModelInterface* create_new(void) const = 0;
 
   virtual void do_init (void);
 
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
+  //virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
   
 
   //!result Hamiltonian in k representation 
@@ -98,10 +98,6 @@ class EFAbulkHamiltonian: public PhysicalModelInterface
 
   //! k-vector in simualtion system
   double k_vector[3];
-
-
-  //! Hartree energy in eV
-  static const double Hartree;
 
 
   //!rotation matrix

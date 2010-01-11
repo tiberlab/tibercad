@@ -455,6 +455,36 @@ class SimulationInterface : public TiberModelObject
     PhysicalModel* get_physical_model(ID region_id) const;
 
 
+    //! Get the physical model for a given element
+    /*!
+     * \return \c NULL if no model is present for \c elem
+     */
+    PhysicalModel* get_bulk_model(const Elem* elem) const;
+
+
+    //! Get the physical model associated to an element side
+    /*!
+     * \return \c NULL if no model is present for the given side
+     */
+    PhysicalModel* get_surface_model(const Elem*, int side) const;
+
+
+    //! Get the physical model associated to an element edge
+    /*!
+     * \return \c NULL if no model is present for the given edge
+     */
+    PhysicalModel* get_edge_model(const Elem*, int edge) const;
+
+
+    //! Get the physical model associated to an element node
+    /*!
+     * \return \c NULL if no model is present for the given node
+     */
+    PhysicalModel* get_node_model(const Elem*, int node) const;
+
+
+
+
     //! Get a reference to the set of all physical models
     const std::set<PhysicalModel*>& get_physical_models(void) const;
 
@@ -476,7 +506,7 @@ class SimulationInterface : public TiberModelObject
   protected:
 
     //! Empty constructor
-    SimulationInterface(void);
+    SimulationInterface(const ModelOptions& options);
 
 
     //! Get a reference to the equation system object
@@ -897,6 +927,12 @@ class SimulationInterface : public TiberModelObject
      */
     void set_type(const std::string& type);
 
+
+    //! Do not allow copy constructor
+    SimulationInterface(const SimulationInterface&);
+
+    //! Do not allow assignement operator
+    SimulationInterface& operator=(const SimulationInterface&);
 
 };
 

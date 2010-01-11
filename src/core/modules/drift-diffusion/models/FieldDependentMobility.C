@@ -57,6 +57,25 @@ FieldDependentMobility::read_database(void)
 }
 
 
+void
+FieldDependentMobility::create_submodels(void)
+{
+  assert(_low_field_mob == NULL);
+  std::string low_field_model = get_option("low_field_model", "doping_dependent");
+  _low_field_mob = MobilityModelInterface::create(low_field_model);
+  if (_low_field_mob == NULL)
+  {
+    std::string msg("FieldDependentMobility: Could not ");
+    msg += "create low-field mobility model '" + low_field_model + "'.";
+    throw InitFailedException(msg);
+  }
+
+  _low_field_mob->set_driftdiffusionproperties(&get_driftdiffusionproperties());
+  _low_field_mob->set_carrier_type(get_carrier_type());
+
+  add_submodel("lowfield_mob", _low_field_mob);
+}
+
 
 void
 FieldDependentMobility::do_init(void)
@@ -76,22 +95,6 @@ FieldDependentMobility::do_init(void)
     _vsat_min = get_option("vsat_min", _vsat_min);
   }
 
-  if (_low_field_mob == NULL)
-  {
-    std::string low_field_model = get_option("low_field_model", "doping_dependent");
-    _low_field_mob = MobilityModelInterface::create(low_field_model);
-    if (_low_field_mob == NULL)
-    {
-      std::string msg("FieldDependentMobility: Could not ");
-      msg += "create low-field mobility model '" + low_field_model + "'.";
-      throw InitFailedException(msg);
-    }
-
-    _low_field_mob->set_driftdiffusionproperties(&get_driftdiffusionproperties());
-    _low_field_mob->set_carrier_type(get_carrier_type());
-    _low_field_mob->set_material(get_material());
-    _low_field_mob->init();
-  }
 
   std::string force = get_option("driving_force", "grad_fermi");
   if (force == "efield")

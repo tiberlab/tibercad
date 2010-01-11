@@ -72,7 +72,7 @@ class KspaceIntegration : public Kspace
 
 
   
-  KspaceIntegration();
+  KspaceIntegration(const ModelOptions& options);
 
 
   virtual ~KspaceIntegration();

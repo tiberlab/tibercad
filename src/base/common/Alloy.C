@@ -8,13 +8,12 @@
 
 
 inline
-Alloy::Alloy(const std::string& name)
-  : Material(name),
+Alloy::Alloy(const std::string& name, const ModelOptions& options)
+  : Material(name, options, true),
     _molar_fraction(0.0),
     _mat_A(NULL),
     _mat_B(NULL)
 {
-  _is_alloy = true;
 }
 
 
@@ -33,28 +32,51 @@ Alloy::do_preinit(void)
   get_database().set_section("");
   get_database().get_alloy_components(name_A, name_B);
 
-  Messages::debug(get_name() + " is an alloy with components " +
-    name_A + " and " + name_B + ".");
+  _molar_fraction = get_options().get_option("x", 0.0);
+
+#ifdef DEBUG
+  std::ostringstream os;
+  os << get_name() << " is an alloy with components " <<
+    name_A << " and " << name_B << " and molar fraction of " << name_A
+    << " is " << _molar_fraction << ".";
+  Messages::debug(os.str());
+#endif
+
 
 
   _mat_A = Material::create(name_A, get_options());
   _mat_B = Material::create(name_B, get_options());
 
-  // to be sure we put the structure into the options
-  _mat_A->set_structure(get_structure());
-  _mat_B->set_structure(get_structure());
+
+  // TODO for now alloy has two components
+  assert(get_database().get_number_of_components() == 2);
+
+  std::vector<double> fracs(2);
+  fracs[0] = _molar_fraction;
+  fracs[1] = 1.0 - _molar_fraction;
+  get_database().set_alloy_composition(fracs);
+
+  _mat_A->set_database(get_database().get_component_database(0));
+  _mat_B->set_database(get_database().get_component_database(1));
+
+
+  // a sanity check on the crystal structure
+  if ((_mat_A->get_structure() != get_structure()) ||
+      (_mat_B->get_structure() != get_structure()))
+  {
+    std::ostringstream os;
+    os << "The crystal structures of the Alloy " << get_name()
+       << " and its components are inconsistent.";
+    throw InitFailedException(os.str());
+  }
 }
 
 
 void
 Alloy::do_init(void)
 {
-  // initialize the parent material
-  //Material::do_init();
 
   setup_doping();
-
-  _molar_fraction = get_options().get_option("x", 0.0);
 
   assert((_mat_A != NULL) && (_mat_B != NULL));
 
@@ -78,8 +100,6 @@ Alloy::do_init(void)
   // build VCA of the models
   //
 
-  get_database().set_material(get_name());
-
   RotatedCrystal* crystal = static_cast<RotatedCrystal*>(
       _mat_A->get_rotated_crystal().copy());
   crystal->set_material(this);
@@ -91,7 +111,7 @@ Alloy::do_init(void)
   for (it = models_begin(); it != end; ++it)
   {
     (it->second)->init_alloy(_mat_A->get_model(it->first),
-                              _mat_B->get_model(it->first), _molar_fraction);
+                             _mat_B->get_model(it->first), _molar_fraction);
   }
 }
 
@@ -100,11 +120,11 @@ Alloy::do_init(void)
 
 
 Alloy*
-Alloy::create(const std::string& name)
+Alloy::create(const std::string& name, const ModelOptions& options)
 {
   Alloy* mat = NULL;
 
-  mat = new Alloy(name);
+  mat = new Alloy(name, options);
 
   return mat;
 }

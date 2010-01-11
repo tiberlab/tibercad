@@ -1,14 +1,16 @@
 // $Id$
 
 #include "MaterialInterface.h"
+#include "Material.h"
 #include "Constants.h"
 #include "DriftDiffusionProperties.h"
 #include "RecombinationModelInterface.h"
 
 
 
-MaterialInterface::MaterialInterface(void)
-  : _Ns(0.0),
+MaterialInterface::MaterialInterface(const ModelOptions& options)
+  : ElectricalContact(options),
+    _Ns(0.0),
     _Es(-1.0),
     _g_factor(2.0),
     _srec(NULL)

@@ -86,7 +86,7 @@ class MacroHeatBalance : public SimulationInterface
   
 
   //!Constructor
-  MacroHeatBalance();
+  MacroHeatBalance(const ModelOptions& options);
   
   //!Destructor
   virtual ~MacroHeatBalance();
@@ -102,7 +102,7 @@ class MacroHeatBalance : public SimulationInterface
 				     const std::string& system_name);
 
   //!Create an MacroHeatBalance object 
-  static MacroHeatBalance*  create(void);
+  static MacroHeatBalance*  create(const ModelOptions& options);
   
   /*! \copydoc SimulationInterface::build_integrated_quantities() */
   virtual void build_integrated_quantities(

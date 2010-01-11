@@ -3,7 +3,8 @@
 #include "Piezoelectricity.h"
  
  
-Piezoelectricity::Piezoelectricity() : PhysicalModelInterface( )
+Piezoelectricity::Piezoelectricity(const ModelOptions& options)
+ : PhysicalModelInterface(options)
 {
 
 

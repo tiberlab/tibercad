@@ -6,7 +6,8 @@
 
 
 
-MacrostrainModel::MacrostrainModel() : MacrostrainModelInterface()
+MacrostrainModel::MacrostrainModel(const ModelOptions& options)
+ : MacrostrainModelInterface(options)
 {
   stiffness = NULL;
 
@@ -19,40 +20,36 @@ MacrostrainModel::MacrostrainModel() : MacrostrainModelInterface()
 
 MacrostrainModel::~MacrostrainModel()
 {
-
-  destroy(stiffness);
-  destroy(piezo);
-
 }
 
 //==========================================================================//
 
 PhysicalModelInterface* MacrostrainModel::create_new (void) const
 {
-  return new MacrostrainModel();
+  return new MacrostrainModel(get_options());
 }
+
+
+void
+MacrostrainModel::create_submodels(void)
+{
+  assert(stiffness == NULL);
+  assert(piezo == NULL);
+
+  ModelOptions opt(get_options());
+  opt.delete_all_submodels();
+  stiffness = Stiffness::create(get_material()->get_structure(), opt);
+  add_submodel("stiffness", stiffness);
+  piezo = Piezoelectricity::create(get_material()->get_structure(), opt);
+  add_submodel("piezo", piezo);
+}
+
 
 //==========================================================================//
 void MacrostrainModel::do_init()
 {
 
   const ModelOptions& opt =  get_options ();
-
-  if (stiffness == NULL)
-  {
-    stiffness = Stiffness::create( get_material() -> get_structure(), opt  );
-    stiffness->set_material(get_material());
-    stiffness->init();
-  }
-
-
-  if (piezo == NULL)
-  {
-    piezo = Piezoelectricity::create( get_material() -> get_structure(), opt  );
-    piezo->set_material(get_material());
-    piezo->init();
-  }
-
 
   std::string poisson_name = opt.get_option("poisson_equation" , "no_poisson" );
 
@@ -76,22 +73,6 @@ void MacrostrainModel::do_init()
 }
 
 
-
-//==========================================================================//
-void MacrostrainModel::do_init_alloy (const PhysicalModelInterface *comp_A,
-    const PhysicalModelInterface *comp_B, double xa)
-{
-
-  const MacrostrainModel* modA = dynamic_cast< const MacrostrainModel*> (comp_A);
-  const MacrostrainModel* modB = dynamic_cast< const MacrostrainModel*> (comp_B);
-
-  destroy(stiffness);
-  stiffness = create_submodel_alloy(modA->stiffness, modB->stiffness, xa);
-
-  destroy(piezo);
-  piezo = create_submodel_alloy(modA->piezo, modB->piezo, xa);
-
-}
 
 //==========================================================================//
 void MacrostrainModel::add_stiffness(Stiffness*  st)

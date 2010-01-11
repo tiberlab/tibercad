@@ -53,7 +53,7 @@ class PhononDispersion : public SimulationInterface
   
 
   //!Constructor
-  PhononDispersion();
+  PhononDispersion(const ModelOptions& options);
   
   //!Destructor
   virtual ~PhononDispersion();
@@ -66,7 +66,7 @@ class PhononDispersion : public SimulationInterface
     throw (ModelErrorException);
 
   //!Create an MacroHeatBalance object 
-  static PhononDispersion*  create(void);
+  static PhononDispersion*  create(const ModelOptions& options);
   
   /*! \copydoc SimulationInterface::build_integrated_quantities() */
   virtual void build_integrated_quantities(

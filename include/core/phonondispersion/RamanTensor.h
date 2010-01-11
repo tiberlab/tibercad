@@ -16,7 +16,7 @@ class RamanTensor : public PhysicalModelInterface
 public:
   
   //!Constructor 
-   RamanTensor();
+   RamanTensor(const ModelOptions& options);
 
    //!Destructor
   ~RamanTensor(){};

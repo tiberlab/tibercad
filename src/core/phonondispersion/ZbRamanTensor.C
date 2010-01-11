@@ -6,7 +6,8 @@
 #include "SimulationEnvironment.h" 
 //--------------------------------------------------------//
 
-ZbRamanTensor::ZbRamanTensor()
+ZbRamanTensor::ZbRamanTensor(const ModelOptions& options)
+ : RamanTensor(options)
 {
 }
 

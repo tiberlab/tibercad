@@ -20,16 +20,13 @@ ElectricalContact::create(const std::string& name,
   ElectricalContact* ct = NULL;
 
   if (name == "ohmic")
-    ct = OhmicContact::create();
+    ct = OhmicContact::create(options);
   else if (name == "schottky")
-    ct = SchottkyContact::create();
+    ct = SchottkyContact::create(options);
   else if (name == "leakage_current")
-    ct = LeakageCurrent::create();
+    ct = LeakageCurrent::create(options);
   else if (name == "interface")
-    ct = MaterialInterface::create();
-
-  if (ct != NULL)
-    ct->set_options(options);
+    ct = MaterialInterface::create(options);
 
   return ct;
 }

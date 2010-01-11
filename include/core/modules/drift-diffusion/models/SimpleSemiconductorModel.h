@@ -28,13 +28,13 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
      * A derived class can call this constructor to set a different
      * model name
      */
-    SimpleSemiconductorModel(void);
+    SimpleSemiconductorModel(const ModelOptions& options);
 
     //! The destructor
     virtual ~SimpleSemiconductorModel(void) {};
 
     //! This method creates a SimpleSemiconductorModel object
-    static SimpleSemiconductorModel* create(void);
+    static SimpleSemiconductorModel* create(const ModelOptions& options);
 
     //! Set conduction band properties
     /*!
@@ -92,9 +92,9 @@ class SimpleSemiconductorModel : public DriftDiffusionProperties
 
 inline
 SimpleSemiconductorModel*
-SimpleSemiconductorModel::create(void)
+SimpleSemiconductorModel::create(const ModelOptions& options)
 {
-  return new SimpleSemiconductorModel();
+  return new SimpleSemiconductorModel(options);
 }
 
 
@@ -132,7 +132,7 @@ inline
 PhysicalModelInterface*
 SimpleSemiconductorModel::create_new(void) const
 {
-  return new SimpleSemiconductorModel();
+  return new SimpleSemiconductorModel(get_options());
 }
 
 

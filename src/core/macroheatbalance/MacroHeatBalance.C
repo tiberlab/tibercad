@@ -176,7 +176,8 @@ MacroHeatBalance::~MacroHeatBalance()
 
 }
 //---------------------------------------------------------------------------------//
-MacroHeatBalance::MacroHeatBalance()
+MacroHeatBalance::MacroHeatBalance(const ModelOptions& options)
+ : SimulationInterface(options)
 {
 
 
@@ -214,9 +215,9 @@ BoundaryProperties* MacroHeatBalance::create_boundary_model (const ModelOptions 
 
 }
 //----------------------------------------------------------------------------------//
-MacroHeatBalance*  MacroHeatBalance::create (void)
+MacroHeatBalance*  MacroHeatBalance::create(const ModelOptions& options)
 {
-  return new MacroHeatBalance;
+  return new MacroHeatBalance(options);
 }
 
 

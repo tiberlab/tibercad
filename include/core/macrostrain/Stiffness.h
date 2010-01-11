@@ -15,8 +15,6 @@ class Stiffness : public PhysicalModelInterface
 {
  public:
 
-  Stiffness() ;
-
   void rotate_to_calc_system(const Tensor2Gen& RotMatrix);
   
   //! stiffness tensor in calculation system (rank 4, double symmetric, 21 independent components)
@@ -44,15 +42,14 @@ class Stiffness : public PhysicalModelInterface
  
  protected:
 
+  Stiffness(const ModelOptions& options) ;
+
   //! stiffness tensor in crystal system     (rank 4, double symmetric, 21 independent components) [GPa]
   Tensor4DSym     C_cr    ;    
 
 
 
   virtual void do_init(void)=0;
-
-
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
 
 
   virtual PhysicalModelInterface* create_new(void) const = 0;

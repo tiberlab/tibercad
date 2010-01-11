@@ -13,9 +13,11 @@ class CrackStrain : public StrainSimulation
   //				   std::vector<std::map<ID, double> >& values) {} ;
 
 
-  static CrackStrain* create(void);
+  static CrackStrain* create(const ModelOptions& options);
 
  protected:
+
+  CrackStrain(const ModelOptions& options);
 
   virtual void parse_options(void);
   
@@ -67,10 +69,20 @@ class CrackStrain : public StrainSimulation
 };
 
 
+
+
 inline
-CrackStrain* CrackStrain::create()
+CrackStrain::CrackStrain(const ModelOptions& options)
+ : StrainSimulation(options)
 {
-  return new CrackStrain();
+}
+
+
+
+inline
+CrackStrain* CrackStrain::create(const ModelOptions& options)
+{
+  return new CrackStrain(options);
 }
 
 #endif

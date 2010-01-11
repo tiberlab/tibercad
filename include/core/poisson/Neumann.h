@@ -9,7 +9,7 @@ class Neumann : public PoissonContact
 {
  public:
   //!Constructor	 
-   Neumann();
+   Neumann(const ModelOptions& options);
   //!Destructor 
   ~Neumann(){};
 
@@ -20,7 +20,7 @@ class Neumann : public PoissonContact
   void set_polarization(double field);
    
   //!Create a Dirichlet object and return its pointer
-  static  Neumann* create(void);
+  static  Neumann* create(const ModelOptions& options);
 
  protected:
 
@@ -38,9 +38,9 @@ class Neumann : public PoissonContact
 
 inline
 Neumann* 
-Neumann::create()
+Neumann::create(const ModelOptions& options)
 {
-  return new Neumann();
+  return new Neumann(options);
 }
 
 inline 

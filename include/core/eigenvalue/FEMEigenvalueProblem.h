@@ -110,7 +110,7 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   };
 
 
-  FEMEigenvalueProblem(void);
+  FEMEigenvalueProblem(const ModelOptions& options);
 
   virtual ~FEMEigenvalueProblem() {};
 

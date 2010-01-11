@@ -15,15 +15,13 @@
 class MacrostrainModel: public MacrostrainModelInterface
 {
  public:
-  //!Constructor
-  MacrostrainModel();
 
   //!Destructor
   ~MacrostrainModel();
 
 
   //! creates a new object
-  static MacrostrainModel* create();
+  static MacrostrainModel* create(const ModelOptions& options);
 
   //! define an object that stores Young moduli
   void add_stiffness(Stiffness*  st);
@@ -55,9 +53,6 @@ class MacrostrainModel: public MacrostrainModelInterface
   //! A pointer to the Poissons solver
   SimulationInterface* poisson;
   
-  //!copy constructor should not be used
-  MacrostrainModel (const MacrostrainModel &  t) {};
-
   //! set of ID's of the electric field components
   std::set< ID > Poisson_variables_ID;
 
@@ -68,21 +63,23 @@ class MacrostrainModel: public MacrostrainModelInterface
 
  protected:
 
+  //!Constructor
+  MacrostrainModel(const ModelOptions& options);
   
   virtual PhysicalModelInterface* create_new (void) const;
 
 
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
-
   virtual void do_init();
   
+  virtual void create_submodels();
+
 
 };
 
 
-inline MacrostrainModel* MacrostrainModel::create()
+inline MacrostrainModel* MacrostrainModel::create(const ModelOptions& options)
 {
-  return new  MacrostrainModel();
+  return new  MacrostrainModel(options);
 }
 
 

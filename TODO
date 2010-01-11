@@ -1,6 +1,10 @@
 2009-11-24 Auf der Maur
 	( ) in 1D/2D check if mesh is along x or in x/y
 
+2009-11-06 Auf der Maur
+	( ) put plot keyword into modules
+	( ) put mesh, dimension into $Device
+
 2009-09-4 Auf der Maur
 	( ) set crystal directions in Material in create() and add method
 	    to get them

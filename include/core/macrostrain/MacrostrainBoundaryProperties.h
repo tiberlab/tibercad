@@ -8,7 +8,7 @@ class MacrostrainBoundaryProperties: public BoundaryProperties
 {
  public:
 
-   MacrostrainBoundaryProperties();
+   MacrostrainBoundaryProperties(const ModelOptions& options);
 
    static  MacrostrainBoundaryProperties* create(const std::string & name,  const ModelOptions &   options );
 

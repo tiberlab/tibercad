@@ -3,27 +3,24 @@
 
 #include "Stiffness.h"
 
+/*! assembles stiffness tensor in crystal system for a zinc-blende crystal
+  \f$ c_{11} = C_{xxxx}, c_{12}=C_{xxyy}, c_{44}=C_{xyxy} \f$ (Voigt notation)
+*/
 class ZbStiffness : public Stiffness
 {
 
  public:
 
-  //!Empty constructor
-  ZbStiffness();  
-
-  //!Constructor that sets moduli
-  /*! assembles stiffness tensor in crystal system for a zinc-blende crystal 
-    \f$ c_{11} = C_{xxxx}, c_{12}=C_{xxyy}, c_{44}=C_{xyxy} \f$ (Voigt notation)
-   */ 
-  ZbStiffness(double c11, double c12, double c44);
-
   //!method that sets Young moduli
   void set_moduli(double c11, double c12, double c44);
 
 
-  static ZbStiffness* create(void);
+  static ZbStiffness* create(const ModelOptions& options);
 
  protected:
+
+  //!Empty constructor
+  ZbStiffness(const ModelOptions& options);
 
   //reads database
   void read_database ( );
@@ -38,13 +35,13 @@ class ZbStiffness : public Stiffness
 
 inline  PhysicalModelInterface* ZbStiffness::create_new(void) const
 {
-  return ( new ZbStiffness() ) ;
+  return ( new ZbStiffness(get_options()) ) ;
 }
 
 
-inline ZbStiffness* ZbStiffness::create()
+inline ZbStiffness* ZbStiffness::create(const ModelOptions& options)
 {
-   return new ZbStiffness() ;
+   return new ZbStiffness(options) ;
 }
 
 #endif

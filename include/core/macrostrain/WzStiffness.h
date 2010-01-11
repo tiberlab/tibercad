@@ -7,15 +7,7 @@ class WzStiffness : public Stiffness
 {
 
  public:
-
-  //!Empty constructor
-  WzStiffness();
   
-  //!Constructor that sets moduli
-
-  WzStiffness(double c11, double c12, double c13, double c33, double c44 );
-
-
   //! method that sets moduli
   /*!assembles stiffness tensor in crystal system for a wurtzite crystal
     following Eq (16) J. of Physics Condensed Matter v 14 p.3399 O. Ambacher et al 
@@ -26,9 +18,12 @@ class WzStiffness : public Stiffness
   void set_moduli(double c11, double c12, double c13, double c33, double c44 );
   
 
-  static WzStiffness* create(void);
+  static WzStiffness* create(const ModelOptions& options);
 
  protected:
+
+  //!Empty constructor
+  WzStiffness(const ModelOptions& options);
   
  
   virtual void read_database( );
@@ -43,12 +38,12 @@ class WzStiffness : public Stiffness
 
 inline PhysicalModelInterface* WzStiffness::create_new(void) const
 {
-  return ( new WzStiffness() );
+  return ( new WzStiffness(get_options()) );
 }
 
 
-inline WzStiffness* WzStiffness::create()
+inline WzStiffness* WzStiffness::create(const ModelOptions& options)
 {
-  return new WzStiffness();
+  return new WzStiffness(options);
 }
 #endif

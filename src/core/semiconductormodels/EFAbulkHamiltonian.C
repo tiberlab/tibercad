@@ -1,9 +1,10 @@
+// $Id$
+
 #include "EFAbulkHamiltonian.h"
 #include "RotatedCrystal.h"
 #include "Material.h" 
 using namespace std; 
 
-const double EFAbulkHamiltonian::Hartree = 27.2113961;
 //------------------------------------------------------------//
 void EFAbulkHamiltonian::do_init()
 {
@@ -24,7 +25,8 @@ void EFAbulkHamiltonian::do_init()
 
 
 //-------------------------------------------------------------//
-EFAbulkHamiltonian::EFAbulkHamiltonian() 
+EFAbulkHamiltonian::EFAbulkHamiltonian(const ModelOptions& options)
+ : PhysicalModelInterface(options)
 {
  
 

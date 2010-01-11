@@ -6,7 +6,8 @@
 using namespace std;
 
 //======================================================//
-MaxwellPhysicalModel::MaxwellPhysicalModel()
+MaxwellPhysicalModel::MaxwellPhysicalModel(const ModelOptions& options) :
+  PhysicalModel(options)
 {
   _epsilon_model = NULL;
 }
@@ -23,7 +24,7 @@ MaxwellPhysicalModel::~MaxwellPhysicalModel()
 //=======================================================//
 PhysicalModelInterface* MaxwellPhysicalModel::create_new (void) const
 {
-  return new MaxwellPhysicalModel();
+  return new MaxwellPhysicalModel(get_options());
 }
 
 //=======================================================//

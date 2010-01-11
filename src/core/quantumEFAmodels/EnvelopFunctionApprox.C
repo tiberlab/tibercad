@@ -425,7 +425,8 @@ double EnvelopFunctionApprox::get_band_edge() const
 }
 
 //===================================================//
-EnvelopFunctionApprox::EnvelopFunctionApprox()
+EnvelopFunctionApprox::EnvelopFunctionApprox(const ModelOptions& options)
+ : FEMEigenvalueProblem(options)
 {
   poisson_equation = NULL;
 

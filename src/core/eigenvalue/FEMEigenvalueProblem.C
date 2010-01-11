@@ -9,7 +9,8 @@
 
 using namespace std;
 
-FEMEigenvalueProblem::FEMEigenvalueProblem(void)
+FEMEigenvalueProblem::FEMEigenvalueProblem(const ModelOptions& options)
+ : EigenvalueProblem(options)
 {
 
   es = NULL;

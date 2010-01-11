@@ -14,7 +14,7 @@ class Kspace : public SimulationInterface
  public:
 
   //! Constructor
-  Kspace();
+  Kspace(const ModelOptions& options);
   
   //! Destructor
   virtual ~Kspace();

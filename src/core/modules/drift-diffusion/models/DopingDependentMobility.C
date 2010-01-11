@@ -99,25 +99,31 @@ DopingDependentMobility::read_database(void)
 }
 
 
-
 void
 DopingDependentMobility::create_submodels(void)
 {
   if (formula_ == 1)
-  {
-    const_mob_ = MobilityModelInterface::create("constant");
-    if (const_mob_ == NULL)
-    {
-      std::string msg("DopingDependentMobility: Could not ");
-      msg += "create constant mobility model needed for formula of Masetti.";
-      throw InitFailedException(msg);
-    }
+   {
+     const_mob_ = MobilityModelInterface::create("constant");
+     if (const_mob_ == NULL)
+     {
+       std::string msg("DopingDependentMobility: Could not ");
+       msg += "create constant mobility model needed for formula of Masetti.";
+       throw InitFailedException(msg);
+     }
 
-    const_mob_->set_driftdiffusionproperties(&get_driftdiffusionproperties());
-    const_mob_->set_carrier_type(get_carrier_type());
-    const_mob_->set_material(get_material());
-    const_mob_->init();
-  }
+     const_mob_->set_driftdiffusionproperties(&get_driftdiffusionproperties());
+     const_mob_->set_carrier_type(get_carrier_type());
+     const_mob_->set_material(get_material());
+     const_mob_->init();
+   }
+}
+
+
+
+void
+DopingDependentMobility::do_init(void)
+{
 
 }
 
@@ -170,39 +176,4 @@ DopingDependentMobility::get_mobility_derivatives(std::vector<double>& dm)
 }
 
 
-
-void
-DopingDependentMobility::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
-{
-
-  const DopingDependentMobility* scA =
-    dynamic_cast<const DopingDependentMobility*>(comp_A);
-  const DopingDependentMobility* scB =
-    dynamic_cast<const DopingDependentMobility*>(comp_B);
-
-  // formula should be the same, so we make some sanity check
-  if (scA->formula_ != scB->formula_)
-    throw InitFailedException("Doping dependent mobility has to use the same "
-        "formula for both components of the alloy " + get_material()->get_name());
-  formula_ = scA->formula_;
-  mumin_ = alloy(scA->mumin_, scB->mumin_ , xa);
-  am_ = alloy(scA->am_, scB->am_ , xa);
-  mud_ = alloy(scA->mud_, scB->mud_ , xa);
-  ad_ = alloy(scA->ad_, scB->ad_ , xa);
-  N0_ = alloy(scA->N0_, scB->N0_ , xa);
-  an_ = alloy(scA->an_, scB->an_ , xa);
-  a_ = alloy(scA->a_, scB->a_ , xa);
-  aa_ = alloy(scA->aa_, scB->aa_ , xa);
-
-  if (formula_ == 1)
-  {
-    assert(scA->const_mob_ != NULL);
-    assert(scB->const_mob_ != NULL);
-    destroy(const_mob_);
-    const_mob_ = create_submodel_copy(scA->const_mob_);
-    const_mob_->set_driftdiffusionproperties(&get_driftdiffusionproperties());
-    const_mob_->init_alloy(scA->const_mob_, scB->const_mob_, xa);
-  }
-}
 

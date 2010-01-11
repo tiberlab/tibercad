@@ -128,6 +128,13 @@ ModelOptions::clear(void)
 
 
 
+void
+ModelOptions::delete_all_submodels(void)
+{
+  _submodels.clear();
+}
+
+
 
 void
 ModelOptions::print_all(void) const
@@ -153,6 +160,20 @@ ModelOptions::print_all(void) const
   cout << "}" << endl;
 }
 
+
+
+void
+ModelOptions::delete_submodel(submodel_iterator it)
+{
+  _submodels.erase(it);
+}
+
+
+void
+ModelOptions::delete_submodels(const std::string& name)
+{
+  _submodels.erase(name);
+}
 
 
 

@@ -88,7 +88,7 @@ class RotatedCrystal : public PhysicalModelInterface
  protected:
 
   //! Constructor
-  RotatedCrystal();
+  RotatedCrystal(const ModelOptions& options);
 
   
 

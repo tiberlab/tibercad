@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _BTEFOURIER_H_
 #define _BTEFOURIER_H_
 
@@ -11,15 +13,15 @@ class BTEFourier : public ThermalContact
 {
  public:
   //!Constructor	 
-   BTEFourier();
+   BTEFourier(const ModelOptions& options);
   //!Destructor 
-  ~BTEFourier(){};
+  virtual ~BTEFourier(){};
   //!Return the electrons_resistivity of the contact
 
   RealGradient get_heat_flux(const Elem* elem, const Point& p);
 
   //!Create a Reservoir object and return its pointer
-  static  BTEFourier* create(void);
+  static  BTEFourier* create(const ModelOptions& options);
 
  protected:
   //!Initialize the model
@@ -45,9 +47,9 @@ class BTEFourier : public ThermalContact
 
 inline
 BTEFourier* 
-BTEFourier::create()
+BTEFourier::create(const ModelOptions& options)
 { 
-  return new BTEFourier();
+  return new BTEFourier(options);
 }
 
 

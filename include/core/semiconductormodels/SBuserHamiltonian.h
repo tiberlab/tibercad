@@ -14,18 +14,19 @@ class SBuserHamiltonian : public SBbulkHamiltonian
 {
 
  public:
-  //! default constructor
-  SBuserHamiltonian(void);
 
   //! destructor
   ~SBuserHamiltonian(void);
 
 
-  static  SBuserHamiltonian* create(void);
+  static  SBuserHamiltonian* create(const ModelOptions& options);
 
   
 
  protected:
+
+  //! default constructor
+  SBuserHamiltonian(const ModelOptions& options);
 
 
 
@@ -51,15 +52,15 @@ class SBuserHamiltonian : public SBbulkHamiltonian
 
 inline PhysicalModelInterface* SBuserHamiltonian::create_new() const
 {
-  return new SBuserHamiltonian();
+  return new SBuserHamiltonian(get_options());
 }
 
 
 
 
 
-inline SBuserHamiltonian* SBuserHamiltonian::create()
+inline SBuserHamiltonian* SBuserHamiltonian::create(const ModelOptions& options)
 {
-  return new SBuserHamiltonian();
+  return new SBuserHamiltonian(options);
 }
 #endif

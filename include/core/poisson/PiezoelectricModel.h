@@ -11,7 +11,7 @@ class PiezoelectricModel : public PhysicalModelInterface
 {
  public:
 
-  PiezoelectricModel();
+  PiezoelectricModel(const ModelOptions& options);
 
   ~PiezoelectricModel(){};
 

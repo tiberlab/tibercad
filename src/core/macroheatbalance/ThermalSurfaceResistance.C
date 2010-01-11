@@ -4,7 +4,8 @@
 
 
 //===================================================================================//
-ThermalSurfaceResistance::ThermalSurfaceResistance()
+ThermalSurfaceResistance::ThermalSurfaceResistance(const ModelOptions& options)
+ : ThermalContact(options)
 {
   
   set_type(ThermalContact::ThermalSurfaceResistance);

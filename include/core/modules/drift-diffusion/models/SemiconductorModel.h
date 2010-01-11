@@ -29,13 +29,13 @@ class SemiconductorModel : public DriftDiffusionProperties
   public:
     
     //! The constructor
-    SemiconductorModel(void);
+    SemiconductorModel(const ModelOptions& options);
     
     //! The destructor
     virtual ~SemiconductorModel(void);
 
     //! This method creates a SimpleSemiconductorModel object
-    static SemiconductorModel* create(void);
+    static SemiconductorModel* create(const ModelOptions& options);
 
     /*! \copydoc DriftDiffusionProperties::calculate_equilibrium_properties() */
     virtual void calculate_equilibrium_properties(void);
@@ -75,14 +75,11 @@ class SemiconductorModel : public DriftDiffusionProperties
     virtual void do_init();
 
     //! Read the from database
-    //virtual void read_database(void);
+    virtual void create_submodels(void);
 
     /*! \copydoc DriftDiffusionProperties::create_new() */
     virtual PhysicalModelInterface* create_new(void) const;
 
-    /*! \copydoc DriftDiffusionProperties::do_init_alloy() */
-    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
 
     //! Get the physical semiconductor model
     /*!
@@ -158,9 +155,9 @@ class SemiconductorModel : public DriftDiffusionProperties
 
 inline
 SemiconductorModel*
-SemiconductorModel::create(void)
+SemiconductorModel::create(const ModelOptions& options)
 {
-  return new SemiconductorModel();
+  return new SemiconductorModel(options);
 }
 
 
@@ -175,7 +172,7 @@ inline
 PhysicalModelInterface*
 SemiconductorModel::create_new(void) const
 {
-  return new SemiconductorModel();
+  return new SemiconductorModel(get_options());
 }
 
 

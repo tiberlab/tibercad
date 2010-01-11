@@ -14,8 +14,8 @@ LeakageCurrent::do_init(void)
 {
   ElectricalContact::do_init();
 
-  get_parameter("A", _A);
-  get_parameter("c", _c);
+  get_parameter("A", _A_param);
+  get_parameter("c", _c_param);
   _outer_voltage = get_option("outer_voltage", _outer_voltage);
 
   std::string tc_name = get_option("tunneling_simulation", "");
@@ -42,7 +42,7 @@ LeakageCurrent::get_normal_derivative(DriftDiffusionDefs::DDVariable variable,
 
   if (_tc == NULL)
   {
-    I = _A * Vdiff * Vdiff * std::exp(Vdiff / _c);
+    I = _A_param * Vdiff * Vdiff * std::exp(Vdiff / _c_param);
     if (Vdiff < 1.0)
       I = 0.0;
   }

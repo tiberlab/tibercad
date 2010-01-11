@@ -17,7 +17,7 @@ class Optics : public SimulationInterface
   public:
 
     //! The constructor
-    Optics(void) { };
+    Optics(const ModelOptions& options) : SimulationInterface(options) { };
 
     //! The destructor
     virtual ~Optics(void) { };

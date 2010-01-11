@@ -7,7 +7,8 @@
 #include "tensor.h"
 
 
-LatticeThermalConductivity::LatticeThermalConductivity() :
+LatticeThermalConductivity::LatticeThermalConductivity(const ModelOptions& options) :
+  PhysicalModelInterface(options),
   _conductivity(0)
 {
  _temperature =  SimulationOptions::temperature;

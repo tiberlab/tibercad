@@ -9,7 +9,7 @@ class FluxContact : public ThermalContact
 {
  public:
   //!Constructor	 
-   FluxContact();
+   FluxContact(const ModelOptions& options);
   //!Destructor 
   ~FluxContact(){};
   //!Return the electrons_resistivity of the contact
@@ -22,7 +22,7 @@ class FluxContact : public ThermalContact
   void set_heat_flux(double rho_e);
 
   //!Create a Reservoir object and return its pointer
-  static  FluxContact* create(void);
+  static  FluxContact* create(const ModelOptions& options);
 
  protected:
   //!Initialize the model
@@ -39,10 +39,10 @@ class FluxContact : public ThermalContact
 
 inline
 FluxContact* 
-FluxContact::create()
+FluxContact::create(const ModelOptions& options)
 { 
 
-  return new FluxContact();
+  return new FluxContact(options);
 }
 
 inline 

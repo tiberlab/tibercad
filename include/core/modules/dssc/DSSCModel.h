@@ -61,7 +61,7 @@ class DSSCModel : public PhysicalModel
 
 
     //! The empty constructor.
-    DSSCModel(void);
+    DSSCModel(const ModelOptions& options);
 
 
     //! A default (empty) destructor.
@@ -81,7 +81,7 @@ class DSSCModel : public PhysicalModel
         const ModelOptions& options = ModelOptions());
 
     //! Create an instance of this class
-    static DSSCModel* create(void);
+    static DSSCModel* create(const ModelOptions& options);
 
 
     //! (Re-)Initialize for the given element
@@ -508,9 +508,9 @@ DSSCModel::create(const std::string& name,
 
 inline
 DSSCModel*
-DSSCModel::create(void)
+DSSCModel::create(const ModelOptions& options)
 {
-  return new DSSCModel();
+  return new DSSCModel(options);
 }
 
 
@@ -735,7 +735,7 @@ inline
 PhysicalModelInterface*
 DSSCModel::create_new(void) const
 {
-  return new DSSCModel();
+  return new DSSCModel(get_options());
 }
 
 

@@ -13,7 +13,8 @@ class ConstantHeatSource : public HeatSourceInterface
 public:
   
   //!Constructor 
-  ConstantHeatSource(){}
+  ConstantHeatSource(const ModelOptions& options)
+  : HeatSourceInterface(options) {}
 
    //!Destructor
   ~ConstantHeatSource(){}
@@ -22,7 +23,7 @@ public:
   void get_total_heat_source();
 
   //! Costructor
-  static   ConstantHeatSource* create();
+  static   ConstantHeatSource* create(const ModelOptions& options);
  
   
   
@@ -105,14 +106,14 @@ protected:
 inline
 PhysicalModelInterface*  ConstantHeatSource::create_new () const
 {
-  return (new    ConstantHeatSource() ); 
+  return (new    ConstantHeatSource(get_options()) ); 
 }
 
 inline
 ConstantHeatSource*
-ConstantHeatSource::create()
+ConstantHeatSource::create(const ModelOptions& options)
 {
-  return new ConstantHeatSource(); 
+  return new ConstantHeatSource(options); 
 }
 
 

@@ -10,14 +10,12 @@ class  ZbOptDielectricConstant: public OptDielectricConstant
 
 {
  public:
-  //!constructor
-  ZbOptDielectricConstant() {};
  
   //!destructor
   virtual ~ZbOptDielectricConstant() {};
 
 
- inline  static ZbOptDielectricConstant* create();
+  static ZbOptDielectricConstant* create(const ModelOptions& options);
 
  
 
@@ -34,6 +32,9 @@ class  ZbOptDielectricConstant: public OptDielectricConstant
 
  protected:
  
+  //!constructor
+  ZbOptDielectricConstant(const ModelOptions& options);
+
   virtual void read_database(void);
 
 
@@ -46,18 +47,23 @@ class  ZbOptDielectricConstant: public OptDielectricConstant
 
 
 
+inline
+ZbOptDielectricConstant::ZbOptDielectricConstant(const ModelOptions& options) :
+  OptDielectricConstant(options)
+{
+}
 
 inline
-ZbOptDielectricConstant* ZbOptDielectricConstant::create()
+ZbOptDielectricConstant* ZbOptDielectricConstant::create(const ModelOptions& options)
 
 {
-  return (new ZbOptDielectricConstant());
+  return (new ZbOptDielectricConstant(options));
 }
 
 inline
 PhysicalModelInterface*  ZbOptDielectricConstant::create_new (void) const
 {
-  return (new ZbOptDielectricConstant() ); 
+  return (new ZbOptDielectricConstant(get_options()) );
 }
 
 

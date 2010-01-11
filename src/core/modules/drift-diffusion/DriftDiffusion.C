@@ -134,8 +134,9 @@ DriftDiffusion::Options::operator=(const Options& rhs)
 
 
 
-DriftDiffusion::DriftDiffusion(void)
-  : _rebuild_eq_system(true),
+DriftDiffusion::DriftDiffusion(const ModelOptions& options)
+  : SimulationInterface(options),
+    _rebuild_eq_system(true),
     _useparticle('b')
 {
 }

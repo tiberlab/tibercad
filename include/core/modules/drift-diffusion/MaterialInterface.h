@@ -17,14 +17,11 @@ class MaterialInterface : public ElectricalContact
 
   public:
 
-    //! The constructor
-    MaterialInterface(void);
-
     //! The destructor
     ~MaterialInterface(void);
 
     //! Create an object
-    static MaterialInterface* create(void);
+    static MaterialInterface* create(const ModelOptions& options);
 
     //! Get normal derivative
     virtual void get_normal_derivative(DriftDiffusionDefs::DDVariable variable,
@@ -37,6 +34,9 @@ class MaterialInterface : public ElectricalContact
 
 
   protected:
+
+    //! The constructor
+    MaterialInterface(const ModelOptions& options);
 
     /*! \copydoc ElectricalContact::do_init() */
     virtual void do_init(void);
@@ -65,9 +65,9 @@ class MaterialInterface : public ElectricalContact
 
 inline
 MaterialInterface*
-MaterialInterface::create(void)
+MaterialInterface::create(const ModelOptions& options)
 {
-  return new MaterialInterface();
+  return new MaterialInterface(options);
 }
 
 

@@ -9,7 +9,7 @@ class ThermalSurfaceResistance : public ThermalContact
 {
  public:
   //!Constructor	 
-  ThermalSurfaceResistance();
+  ThermalSurfaceResistance(const ModelOptions& options);
   //!Destructor 
   ~ ThermalSurfaceResistance(){};
   //!Return the electrons_resistivity of the contact
@@ -25,7 +25,7 @@ class ThermalSurfaceResistance : public ThermalContact
   void set_temperature(double text);
 
   //!Create a Reservoir object and return its pointer
-  static   ThermalSurfaceResistance* create(void);
+  static   ThermalSurfaceResistance* create(const ModelOptions& options);
 
  protected:
   //!Initialize the model
@@ -43,10 +43,10 @@ class ThermalSurfaceResistance : public ThermalContact
 
 inline
 ThermalSurfaceResistance* 
-ThermalSurfaceResistance::create()
+ThermalSurfaceResistance::create(const ModelOptions& options)
 { 
 
-  return new ThermalSurfaceResistance();
+  return new ThermalSurfaceResistance(options);
 }
 
 inline 

@@ -3,15 +3,15 @@
 #include "WzSemiconductor.h"
 #include "Database.h"
 #include "Material.h"
+#include "Constants.h"
 
 using namespace std;
 
 
-const double WzSemiconductor::Hartree = 27.2113961;
-
 
 //--------------------------------------------------//
-WzSemiconductor::WzSemiconductor()
+WzSemiconductor::WzSemiconductor(const ModelOptions& options)
+ : Semiconductor(options)
 {
 
 
@@ -59,47 +59,8 @@ void WzSemiconductor::do_init()
 
 
   }
-
-  {
-    get_parameter("bow_Eg_G", bow.EgGamma );
-    get_parameter("bow_E_v", bow.Ev );
-
-    bow.m_c_zz       = get_option("bow_m_c_zz", bow.m_c_zz);
-    bow.m_c_xx       = get_option("bow_m_c_xx", bow.m_c_xx);
-
-    bow.A1           = get_option("bow_A1", bow.A1);
-    bow.A2           = get_option("bow_A2", bow.A2);
-    bow.A3           = get_option("bow_A3", bow.A3);
-    bow.A4           = get_option("bow_A4", bow.A4);
-    bow.A5           = get_option("bow_A5", bow.A5);
-    bow.A6           = get_option("bow_A6", bow.A6);
-
-    bow.a_x          = get_option("bow_a_x", bow.a_x);
-    bow.a_z          = get_option("bow_a_z", bow.a_z);
-
-    bow.D1           = get_option("bow_D1", bow.D1 );
-    bow.D2           = get_option("bow_D2",bow.D2 );
-    bow.D3           = get_option("bow_D3", bow.D3 );
-    bow.D4           = get_option("bow_D4",  bow.D4);
-    bow.D5           = get_option("bow_D5", bow.D5);
-    bow.D6           = get_option("bow_D6", bow.D6 );
-    bow.delta_s      = get_option("bow_delta_s",  bow.delta_s);
-    bow.delta_cr     = get_option("bow_delta_cr",  bow.delta_cr);
-
-
-    bow.Ep_1 = get_option("bow_Ep_1", bow.Ep_1);
-    bow.Ep_2 = get_option("bow_Ep_2", bow.Ep_2);
-  }
-
-
-
-   {
-    //here zero temperature and work parameters coinside
-    par_initial = par;
-   }
-
-
 }
+
 
 //--------------------------------------------------//
 void  WzSemiconductor::read_database_alloy(void)
@@ -109,39 +70,6 @@ void  WzSemiconductor::read_database_alloy(void)
 
   db.set_section("bandgap");
   bow.EgGamma = db.get("bow_Eg_G", 0.0);
-
-
-  db.set_section("valenceband");
-  bow.Ev = db.get("bow_E_v", 0.0);
-
-  db.set_section("conductionband");
-  bow.m_c_zz = db.get("bow_m_c_zz", 0.0);
-  bow.m_c_xx = db.get("bow_m_c_xx", 0.0);
-
-  db.set_section("kdotp");
-  bow.A1 = db.get("bow_A1", 0.0);
-  bow.A2 = db.get("bow_A2", 0.0);
-  bow.A3 = db.get("bow_A3", 0.0);
-  bow.A4 = db.get("bow_A4", 0.0);
-  bow.A5 = db.get("bow_A5", 0.0);
-  bow.A6 = db.get("bow_A6", 0.0);
-
-  bow.delta_s = db.get("bow_delta_s", 0.0);
-  bow.delta_cr = db.get("bow_delta_cr", 0.0);
-
-  bow.Ep_1 = db.get("bow_Ep_1", 0.0);
-  bow.Ep_2 = db.get("bow_Ep_2", 0.0);
-
-  db.set_section("deformation_potentials");
-  bow.a_x = db.get("bow_a_x", 0.0);
-  bow.a_z = db.get("bow_a_z", 0.0);
-
-  bow.D1 = db.get("bow_D1", 0.0);
-  bow.D2 = db.get("bow_D2", 0.0);
-  bow.D3 = db.get("bow_D3", 0.0);
-  bow.D4 = db.get("bow_D4", 0.0);
-  bow.D5 = db.get("bow_D5", 0.0);
-  bow.D6 = db.get("bow_D6", 0.0);
 
 }
 
@@ -204,52 +132,7 @@ void WzSemiconductor::read_database( )
 }
 
 
-//--------------------------------------------------------------------//
-void WzSemiconductor::do_do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
-{
 
-  const WzSemiconductor* modA = dynamic_cast<const WzSemiconductor*> (comp_A);
-  const WzSemiconductor* modB = dynamic_cast<const WzSemiconductor*> (comp_B);
-
-  par.EgGamma      = alloy(modA->par.EgGamma, modB->par.EgGamma, xa, bow.EgGamma);
-  par.Ev           = alloy(modA->par.Ev, modB->par.Ev, xa, bow.Ev);
-
-  par.m_c_zz       = alloy(modA->par.m_c_zz, modB->par.m_c_zz, xa, bow.m_c_zz);
-  par.m_c_xx       = alloy(modA->par.m_c_xx, modB->par.m_c_xx, xa, bow.m_c_xx);
-
-  par.A1           = alloy( modA->par.A1, modB->par.A1, xa, bow.A1);
-  par.A2           = alloy( modA->par.A2, modB->par.A2, xa, bow.A2);
-  par.A3           = alloy( modA->par.A3, modB->par.A3, xa, bow.A3);
-  par.A4           = alloy( modA->par.A4, modB->par.A4, xa, bow.A4);
-  par.A5           = alloy( modA->par.A5, modB->par.A5, xa, bow.A5);
-  par.A6           = alloy( modA->par.A6, modB->par.A6, xa, bow.A6);
-
-  par.a_x          = alloy(modA->par.a_x, modB->par.a_x, xa, bow.a_x);
-  par.a_z          = alloy(modA->par.a_z, modB->par.a_z, xa, bow.a_z);
-
-  par.D1           = alloy( modA->par.D1, modB->par.D1, xa, bow.D1);
-  par.D2           = alloy( modA->par.D2, modB->par.D2, xa, bow.D2);
-  par.D3           = alloy( modA->par.D3, modB->par.D3, xa, bow.D3);
-  par.D4           = alloy( modA->par.D4, modB->par.D4, xa, bow.D4);
-  par.D5           = alloy( modA->par.D5, modB->par.D5, xa, bow.D5);
-  par.D6           = alloy( modA->par.D6, modB->par.D6, xa, bow.D6);
-
-  par.delta_s      = alloy(modA->par.delta_s, modB->par.delta_s, xa, bow.delta_s);
-  par.delta_cr     = alloy(modA->par.delta_cr, modB->par.delta_cr, xa, bow.delta_cr);
-
-
-  par.Ep_1 = alloy(modA->par.Ep_1, modB->par.Ep_1, xa, bow.Ep_1);
-  par.Ep_2 = alloy(modA->par.Ep_2, modB->par.Ep_2, xa, bow.Ep_2);
-
-
-  {
-    //here zero temperature and work parameters coinside
-    par_initial = par;
-  }
-
-
-
-}
 //--------------------------------------------------
 KPparams WzSemiconductor::do_calculate_8x8_kp_params (void )
 {
@@ -265,7 +148,7 @@ KPparams WzSemiconductor::do_calculate_8x8_kp_params (void )
   result.s1 = 1.0;
   result.s2 = 1.0;
 
-  result.E_c =  (par.Ev + par.EgGamma)/Hartree;
+  result.E_c =  (par.Ev + par.EgGamma)/Constants::Hartree;
 
 
 
@@ -276,10 +159,10 @@ KPparams WzSemiconductor::do_calculate_8x8_kp_params (void )
   double s = 1.0;
 
   Ep1 = s*(1.0/par.m_c_zz - 1.0)*
-    par.EgGamma * ( (par.EgGamma +  par.delta_s )/(par.EgGamma + 2.0/3.0 * par.delta_s ) ) / Hartree;
+    par.EgGamma * ( (par.EgGamma +  par.delta_s )/(par.EgGamma + 2.0/3.0 * par.delta_s ) ) / Constants::Hartree;
 
   Ep2 = s*(1.0/par.m_c_xx - 1.0)*
-    par.EgGamma * ( (par.EgGamma +  par.delta_s )/(par.EgGamma + 2.0/3.0 * par.delta_s ) ) / Hartree;
+    par.EgGamma * ( (par.EgGamma +  par.delta_s )/(par.EgGamma + 2.0/3.0 * par.delta_s ) ) / Constants::Hartree;
 
 
   result.P1 = std::sqrt(0.5 * Ep1);
@@ -291,8 +174,8 @@ KPparams WzSemiconductor::do_calculate_8x8_kp_params (void )
   //-----------------------------------------------------------------
   //to check !
   //rescale L and N
-  double t1 =   0.5*Ep1/( (par.EgGamma +  par.delta_s/3.0)/Hartree );
-  double t2 =   0.5*Ep2/( (par.EgGamma +  par.delta_s/3.0)/Hartree );
+  double t1 =   0.5*Ep1/( (par.EgGamma +  par.delta_s/3.0)/Constants::Hartree );
+  double t2 =   0.5*Ep2/( (par.EgGamma +  par.delta_s/3.0)/Constants::Hartree );
 
   result.L1 += t1;
   result.L2 += t2;
@@ -347,27 +230,27 @@ KPparams WzSemiconductor::do_calculate_6x6_kp_params (void )
   //-------------------------------------------------------------------------------//
   //-------------------------------------------------------------------------------//
 
-  result.l1s =  (par.D5 +  par.D4 + par.D2)/Hartree; result.l2s = par.D1/Hartree;
+  result.l1s =  (par.D5 +  par.D4 + par.D2)/Constants::Hartree; result.l2s = par.D1/Constants::Hartree;
 
-  result.m1s = (par.D4 + par.D2 - par.D5)/Hartree;  result.m2s = (par.D1 + par.D3)/Hartree;
+  result.m1s = (par.D4 + par.D2 - par.D5)/Constants::Hartree;  result.m2s = (par.D1 + par.D3)/Constants::Hartree;
 
-  result.m3s = par.D2/Hartree;
+  result.m3s = par.D2/Constants::Hartree;
 
-  result.n1s = 2.0 * par.D5/Hartree; result.n2s = sqrt(2.0) * par.D6/Hartree;
+  result.n1s = 2.0 * par.D5/Constants::Hartree; result.n2s = sqrt(2.0) * par.D6/Constants::Hartree;
 
 
   //------------------------------------------------------------------------------//
   // conduction band strain
-  result.axs = par.a_x / Hartree;
-  result.azs = par.a_z / Hartree;
+  result.axs = par.a_x / Constants::Hartree;
+  result.azs = par.a_z / Constants::Hartree;
 
 
 
   //------------------------------------------------------------------------------//
   //spin-orbit energy
-  result.d1 = par.delta_cr / Hartree ;
-  result.d2 = (par.delta_s/3) / Hartree;
-  result.d3 = (par.delta_s/3) / Hartree;
+  result.d1 = par.delta_cr / Constants::Hartree ;
+  result.d2 = (par.delta_s/3) / Constants::Hartree;
+  result.d3 = (par.delta_s/3) / Constants::Hartree;
 
 
   //------------------------------------------------------------------------------//
@@ -382,16 +265,16 @@ KPparams WzSemiconductor::do_calculate_6x6_kp_params (void )
       + sqrt( (d1 -  d2)*( d1 - d2) / 4.0 + 2.0 * d3 * d3 );
 
     if (E1 > E2)
-      result.E_v = par.Ev / Hartree - E1;
+      result.E_v = par.Ev / Constants::Hartree - E1;
     else
-      result.E_v = par.Ev / Hartree - E2;
+      result.E_v = par.Ev / Constants::Hartree - E2;
   }
 
 
 
   //conduction-valence band coupling. may be needed only for optics
-  result.P1 = std::sqrt(par.Ep_1 * 0.5 / Hartree);
-  result.P2 = std::sqrt(par.Ep_2 * 0.5 / Hartree);
+  result.P1 = std::sqrt(par.Ep_1 * 0.5 / Constants::Hartree);
+  result.P2 = std::sqrt(par.Ep_2 * 0.5 / Constants::Hartree);
 
 
   return(result);
@@ -403,8 +286,6 @@ void WzSemiconductor::apply_temperature(void)
 {
 
   par = par_initial;
-
-
 
   if (get_material()->is_alloy())
   {

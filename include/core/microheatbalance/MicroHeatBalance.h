@@ -82,7 +82,7 @@ class MicroHeatBalance : public SimulationInterface
   virtual  NumericVector< double > & do_get_solution_vector(void);
 
   //!Constructor
-  MicroHeatBalance();
+  MicroHeatBalance(const ModelOptions& options);
 
   //!Destructor
   virtual ~MicroHeatBalance();
@@ -101,7 +101,7 @@ class MicroHeatBalance : public SimulationInterface
 				  const std::string& system_name);
 
   //!Create an MacroHeatBalance object
-  static MicroHeatBalance*  create(void);
+  static MicroHeatBalance*  create(const ModelOptions& options);
 
   /*! \copydoc SimulationInterface::build_integrated_quantities() */
   virtual void build_integrated_quantities(

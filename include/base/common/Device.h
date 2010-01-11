@@ -16,6 +16,9 @@
 #include <set>
 
 class Material;
+class MaterialBoundary;
+class EdgeObject;
+class NodeObject;
 class Control;
 class MeshBase;
 class EquationSystems;
@@ -92,10 +95,6 @@ class Device
   //! Set the Control module which will control this device
   void set_control(Control* control);
 
-
-  /*! \copydoc get_material(ID) const */
-  Material* get_material(ID region_id);
-
     
   //! Get the material for a given region ID
   /*!
@@ -107,8 +106,8 @@ class Device
   const Material* get_material(ID region_id) const;
 
 
-  /*! \copydoc get_material(const std::string&) const */
-  Material* get_material(const std::string& name);
+    /*! \copydoc get_material(ID) const */
+    Material* get_material(ID region_id);
 
 
   //! Get the material for a region name
@@ -118,10 +117,34 @@ class Device
    * a valid region
    */
   const Material* get_material(const std::string& name) const;
+
+
+    /*! \copydoc get_material(const std::string&) const */
+    Material* get_material(const std::string& name);
+
+
+    //! Get the material for a given element
+    const Material* get_material(const Elem* elem) const;
+
+
+    /*! \copydoc get_material(const Elem*) const */
+    Material* get_material(const Elem* elem);
+
+
+    //! Get the MaterialBoundary object for a given element side
+    MaterialBoundary* get_boundary_object(const Elem*, int side);
+
+
+    //! Get the EdgeObject for a given element side
+    EdgeObject* get_edge_object(const Elem*, int edge);
+
+
+    //! Get the NodeObject for a given element side
+    NodeObject* get_node_object(const Elem*, int node);
     
     
-  //! Get the map that contains all boundary nodes for all boundaries
-  BCNodeMap& get_boundary_node_map(void) const;
+    //! Get the map that contains all boundary nodes for all boundaries
+    BCNodeMap& get_boundary_node_map(void) const;
 
     
   //! Get the mesh units
@@ -210,11 +233,21 @@ class Device
  private:
 
 
-  //! A typdef for convenience
-  typedef std::map<ID, Material*> MaterialMap;
+    //! A typdef for the bulk materials
+    typedef std::map<ID, Material*> MaterialMap;
 
-  //! A typdef for convenience
-  typedef std::map<std::string, std::vector<ID> > ClusterMap;
+    //! A typdef for the material boundaries
+    typedef std::map<ID, MaterialBoundary*> MaterialBoundayMap;
+
+    //! A typdef for the edge objects
+    typedef std::map<ID, EdgeObject*> EdgeObjMap;
+
+    //! A typdef for the node objects
+    typedef std::map<ID, NodeObject*> NodeObjMap;
+
+
+    //! A typdef for convenience
+    typedef std::map<std::string, std::vector<ID> > ClusterMap;
 
 
   //! Empty Constructor

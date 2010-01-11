@@ -11,18 +11,15 @@ class DriftDiffusionHeatSource : public HeatSourceInterface
 {
 
 public:
-  
-  //!Constructor 
-  DriftDiffusionHeatSource(){}
 
    //!Destructor
-  ~DriftDiffusionHeatSource(){}
+  ~DriftDiffusionHeatSource(){};
 
   //! set the electron conducibility;
   void get_total_heat_source();
 
   //! Costructor
-  static  DriftDiffusionHeatSource* create();
+  static  DriftDiffusionHeatSource* create(const ModelOptions& options);
  
   
   
@@ -102,12 +99,13 @@ private:
  
 protected:
 
+
+  //!Constructor
+  DriftDiffusionHeatSource(const ModelOptions& options);
     
 
   virtual void do_init (void);
 
-
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa); 
 
   virtual PhysicalModelInterface* create_new (void) const;
  
@@ -117,20 +115,25 @@ protected:
 
 
 
+inline
+DriftDiffusionHeatSource::DriftDiffusionHeatSource(const ModelOptions& options) :
+  HeatSourceInterface(options)
+{
+}
 
 
 
 inline
 PhysicalModelInterface*  DriftDiffusionHeatSource::create_new () const
 {
-  return (new    DriftDiffusionHeatSource() ); 
+  return (new    DriftDiffusionHeatSource(get_options()) );
 }
 
 inline
 DriftDiffusionHeatSource*
-DriftDiffusionHeatSource::create()
+DriftDiffusionHeatSource::create(const ModelOptions& options)
 {
-  return new DriftDiffusionHeatSource(); 
+  return new DriftDiffusionHeatSource(options);
 }
 
 

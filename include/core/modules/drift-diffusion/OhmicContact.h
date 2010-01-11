@@ -11,14 +11,17 @@ class OhmicContact : public ElectricalContact
 {
   public:
 
-    //! The constructor
-    OhmicContact(void);
-
     //! Create an ohmic contact
-    static OhmicContact* create(void);
+    static OhmicContact* create(const ModelOptions& options);
 
     //! \copydoc ElectricalContact::get_boundary_value()
     virtual double get_boundary_value(DriftDiffusionDefs::DDVariable variable);
+
+  protected:
+
+    //! The constructor
+    OhmicContact(const ModelOptions& options);
+
 };
 
 
@@ -28,14 +31,15 @@ class OhmicContact : public ElectricalContact
 
 inline
 OhmicContact*
-OhmicContact::create(void)
+OhmicContact::create(const ModelOptions& options)
 {
-  return new OhmicContact();
+  return new OhmicContact(options);
 }
 
 
 inline
-OhmicContact::OhmicContact(void)
+OhmicContact::OhmicContact(const ModelOptions& options)
+ : ElectricalContact(options)
 {
   set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::DIRICHLET);
   set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::DIRICHLET);

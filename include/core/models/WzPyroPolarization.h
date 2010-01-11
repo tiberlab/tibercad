@@ -13,13 +13,13 @@ class WzPyroPolarization : public PyroPolarization
   public:
 
     //! The create method
-    static WzPyroPolarization* create(void);
+    static WzPyroPolarization* create(const ModelOptions& options);
 
 
   protected:
 
     //! Constructor
-    WzPyroPolarization(void);
+    WzPyroPolarization(const ModelOptions& options);
 
     //! Destructor
     virtual ~WzPyroPolarization(void);
@@ -58,8 +58,9 @@ class WzPyroPolarization : public PyroPolarization
 // 
 
 inline
-WzPyroPolarization::WzPyroPolarization(void)
-  : _Pz(0.0),
+WzPyroPolarization::WzPyroPolarization(const ModelOptions& options)
+  : PyroPolarization(options),
+    _Pz(0.0),
     _Pz_bow(0.0)
 {
 }

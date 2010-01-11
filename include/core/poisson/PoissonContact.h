@@ -17,7 +17,7 @@ class PoissonContact: public BoundaryProperties
   };
 
  //!Constructor
-  PoissonContact() {};
+  PoissonContact(const ModelOptions& options) : BoundaryProperties(options) {};
   //!Destructor
   ~PoissonContact() {};
 

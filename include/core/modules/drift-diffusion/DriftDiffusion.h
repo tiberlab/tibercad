@@ -274,15 +274,12 @@ class DriftDiffusion : public SimulationInterface
 
 
 
-    //! Constructor
-    DriftDiffusion(void);
-
     //! Destructor
     virtual ~DriftDiffusion(void);
 
 
     //! Create an DriftDiffusion object
-    static DriftDiffusion* create(void);
+    static DriftDiffusion* create(const ModelOptions& options);
 
 
     /*! \copydoc SimulationInterface::create_physical_model() */
@@ -374,6 +371,9 @@ class DriftDiffusion : public SimulationInterface
 
 
   protected:
+
+    //! Constructor
+    DriftDiffusion(const ModelOptions& options);
 
 
     //! Initialize the equation system
@@ -726,9 +726,9 @@ class DriftDiffusion : public SimulationInterface
 
 inline
 DriftDiffusion*
-DriftDiffusion::create(void)
+DriftDiffusion::create(const ModelOptions& options)
 {
-  return new DriftDiffusion();
+  return new DriftDiffusion(options);
 }
 
 

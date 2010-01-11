@@ -18,14 +18,11 @@ class FieldAssistedMobility : public MobilityModelInterface
 
   public:
 
-    //! constructor
-    FieldAssistedMobility(void);
-
     //! Destructor
     virtual ~FieldAssistedMobility(void) {};
 
     //! Create a FieldAssistedMobility object
-    static FieldAssistedMobility* create(void);
+    static FieldAssistedMobility* create(const ModelOptions& options);
 
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
@@ -39,6 +36,9 @@ class FieldAssistedMobility : public MobilityModelInterface
 
   protected:
 
+    //! constructor
+    FieldAssistedMobility(const ModelOptions& options);
+
     //! \copydoc MobilityModelInterface::read_database()
     virtual void read_database(void);
 
@@ -48,9 +48,6 @@ class FieldAssistedMobility : public MobilityModelInterface
     //! \copydoc MobilityModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    /*! \copydoc MobilityModelInterface::do_init_alloy() */
-    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
 
   private:
 
@@ -80,8 +77,9 @@ class FieldAssistedMobility : public MobilityModelInterface
 //
 
 inline
-FieldAssistedMobility::FieldAssistedMobility(void)
-  : _mu0(0.0054),
+FieldAssistedMobility::FieldAssistedMobility(const ModelOptions& options)
+  : MobilityModelInterface(options),
+    _mu0(0.0054),
     _E0(3e5),
     _force(EFIELD)
 {
@@ -90,9 +88,9 @@ FieldAssistedMobility::FieldAssistedMobility(void)
 
 inline
 FieldAssistedMobility*
-FieldAssistedMobility::create(void)
+FieldAssistedMobility::create(const ModelOptions& options)
 {
-  return new FieldAssistedMobility();
+  return new FieldAssistedMobility(options);
 }
 
 
@@ -100,7 +98,7 @@ inline
 PhysicalModelInterface*
 FieldAssistedMobility::create_new(void) const
 {
-  return new FieldAssistedMobility();
+  return new FieldAssistedMobility(get_options());
 }
 
 

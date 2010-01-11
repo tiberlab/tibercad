@@ -28,7 +28,7 @@ class OpticsKP: public Optics
   typedef std::complex<double> Complex;
 
   //! constructor
-  OpticsKP();
+  OpticsKP(const ModelOptions& options);
 
   ~OpticsKP();
 
@@ -77,7 +77,7 @@ class OpticsKP: public Optics
 
  
 
-  static OpticsKP* create();
+  static OpticsKP* create(const ModelOptions& options);
   
   //!calculate spectrum 
   /*!
@@ -211,9 +211,9 @@ class OpticsKP: public Optics
 
 };
 
-inline OpticsKP* OpticsKP::create()
+inline OpticsKP* OpticsKP::create(const ModelOptions& options)
 {
-  return (new OpticsKP);
+  return (new OpticsKP(options));
 }
 
 inline 

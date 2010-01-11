@@ -8,7 +8,6 @@
 #include "PhysicalModelInterface.h"
 
 #include <cassert>
-#include <map>
 
 class DriftDiffusionProperties;
 
@@ -44,7 +43,7 @@ class TBDLEXPORT DriftDiffusionModelInterface : public PhysicalModelInterface
   protected:
 
     //! Empty constructor
-    DriftDiffusionModelInterface(void);
+    DriftDiffusionModelInterface(const ModelOptions& options);
 
     //! The standard reference temperature in eV
     /*!
@@ -70,8 +69,9 @@ class TBDLEXPORT DriftDiffusionModelInterface : public PhysicalModelInterface
 
 
 inline
-DriftDiffusionModelInterface::DriftDiffusionModelInterface(void)
-  : _dd_prop(0)
+DriftDiffusionModelInterface::DriftDiffusionModelInterface(const ModelOptions& options)
+  : PhysicalModelInterface(options),
+    _dd_prop(0)
 {
 }
 

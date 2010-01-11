@@ -7,7 +7,8 @@
 #include "Database.h"
 //-------------------------------------------------------------------------//
 
-ChargeDensityModel::ChargeDensityModel() :
+ChargeDensityModel::ChargeDensityModel(const ModelOptions& options) :
+  PhysicalModelInterface(options),
   _charge_density(0),
   _elem(NULL)
 {

@@ -4,9 +4,10 @@
 #define _MOBILITYMODELINTERFACE_H_
 
 
-#ifndef TIBER_MODULE_PREFIX
-# define TIBER_MODULE_PREFIX dd_mob
+#ifdef TIBER_MODULE_PREFIX
+# undef TIBER_MODULE_PREFIX
 #endif
+#define TIBER_MODULE_PREFIX mobility
 
 
 #include "DriftDiffusionModelInterface.h"
@@ -59,8 +60,8 @@ class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
 
   protected:
 
-    //! \copydoc DriftDiffusionProperties::DriftDiffusionProperties()
-    MobilityModelInterface(void);
+    //! Create a mobility model
+    MobilityModelInterface(const ModelOptions& options);
 
     //! \copydoc PhysicalModelInterfaceInterface::copy_from()
     virtual void copy_from(const PhysicalModelInterface* rhs);
@@ -84,9 +85,10 @@ class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
 
 
 inline
-MobilityModelInterface::MobilityModelInterface(void)
-  : _carrier('e')
+MobilityModelInterface::MobilityModelInterface(const ModelOptions& options)
+  : DriftDiffusionModelInterface(options)
 {
+  _carrier = options.get_option("particle", 'e');
 }
 
 
@@ -102,7 +104,7 @@ MobilityModelInterface::create(const std::string& name,
     const ModelOptions& options)
 {
   return dynamic_cast<MobilityModelInterface*>(
-      PhysicalModelInterface::create("dd_mob_" + name, options));
+      PhysicalModelInterface::create("mobility_" + name, options));
 }
 
 

@@ -67,7 +67,7 @@ class Poisson : public SimulationInterface
   std::vector<double> get_potential_node(const Elem* elem);
 
   //!Constructor
-   Poisson(void);
+   Poisson(const ModelOptions& options);
   
   //!Destructor
   virtual ~Poisson(void);
@@ -83,7 +83,7 @@ class Poisson : public SimulationInterface
 				     const std::string& system_name);
 
   //!Create an Poisson object 
-  static  Poisson*  create(void);
+  static  Poisson*  create(const ModelOptions& options);
 
  //  //!Get a solution given the element and the point
 //   void get_solution(const Elem* elem, const std::vector<Point>& p,

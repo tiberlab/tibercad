@@ -19,8 +19,9 @@ TIBER_MODULE(ExcitonModel, simple)
 
 
 
-ExcitonModel::ExcitonModel(void)
-  : _t_r(1e45),
+ExcitonModel::ExcitonModel(const ModelOptions& options)
+  : ExcitonProperties(options),
+    _t_r(1e45),
     _t_nr(1e45),
     _t_diss(1e45),
     _R(0.025),
@@ -150,14 +151,3 @@ ExcitonModel::do_init(void)
 
 }
 
-
-void
-ExcitonModel::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
-{
-  ignore_unused_variable(comp_A);
-  ignore_unused_variable(comp_B);
-  ignore_unused_variable(xa);
-
-  do_init();
-}

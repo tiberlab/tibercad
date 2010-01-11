@@ -19,19 +19,22 @@ class MacrostrainModelInterface : public PhysicalModel
 
  protected:
 
-  MacrostrainModelInterface(void) { };
+  MacrostrainModelInterface(const ModelOptions& options);
 
 
   virtual void do_init(void) = 0;
-
-
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0 ;
 
 
   virtual PhysicalModelInterface* create_new(void) const = 0;
 
 };
 
+
+inline
+MacrostrainModelInterface::MacrostrainModelInterface(const ModelOptions& options)
+ : PhysicalModel(options)
+{
+}
 
 
 inline MacrostrainModelInterface* MacrostrainModelInterface::create (const std::string& name,  const ModelOptions& options)

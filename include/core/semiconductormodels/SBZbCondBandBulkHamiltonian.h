@@ -12,9 +12,6 @@ class SBZbCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
 
  public:
 
-  //!Constructor
-  SBZbCondBandBulkHamiltonian(){};
-
   //!Destructor
   ~SBZbCondBandBulkHamiltonian(){};
   
@@ -32,7 +29,7 @@ class SBZbCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
   
   virtual void apply_strain_and_potential(Tensor2Sym& strain_crystal, double el_potential);
 
-  static SBZbCondBandBulkHamiltonian* create();
+  static SBZbCondBandBulkHamiltonian* create(const ModelOptions& options);
 
  private:
 
@@ -40,9 +37,12 @@ class SBZbCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
 
  protected:
 
+  //!Constructor
+  SBZbCondBandBulkHamiltonian(const ModelOptions& options)
+    : SBCondBandBulkHamiltonian(options) {};
+
   virtual PhysicalModelInterface* create_new(void) const;
 
-  virtual void do_init(void);
 
   virtual void calculate_for_init(void);
 
@@ -51,12 +51,12 @@ class SBZbCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
 
 inline PhysicalModelInterface* SBZbCondBandBulkHamiltonian::create_new() const
 {
-  return new SBZbCondBandBulkHamiltonian();
+  return new SBZbCondBandBulkHamiltonian(get_options());
 }
 
-inline SBZbCondBandBulkHamiltonian* SBZbCondBandBulkHamiltonian::create()
+inline SBZbCondBandBulkHamiltonian* SBZbCondBandBulkHamiltonian::create(const ModelOptions& options)
 {
-  return new SBZbCondBandBulkHamiltonian();
+  return new SBZbCondBandBulkHamiltonian(options);
 }
 
 #endif

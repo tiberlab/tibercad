@@ -9,16 +9,15 @@
 #include "Messages.h"
 
 
-Database*
-Material::_database;
 
 
-Material::Material(const std::string& name)
-  : _is_alloy(false),
+Material::Material(const std::string& name,
+    const ModelOptions& options, bool alloy)
+  : PhysicalObject(BULK, options),
     _name(name),
     _structure("zb"),
-    _rotated_crystal(NULL),
-    _is_initialized(false)
+    _is_alloy(alloy),
+    _rotated_crystal(NULL)
 {
 }
 
@@ -26,13 +25,6 @@ Material::Material(const std::string& name)
 
 Material::~Material(void)
 {
-  ModelMap::const_iterator it(_models.begin());
-  const ModelMap::const_iterator end(_models.end());
-  for ( ; it != end; ++it)
-    TiberModelObject::destroy(it->second);
-
-  _models.clear();
-
   clear_doping();
 
   destroy(_rotated_crystal);
@@ -90,12 +82,9 @@ Material::do_init(void)
 
   setup_doping();
 
-  ModelMap::iterator it = _models.begin();
-  const ModelMap::const_iterator end = _models.end();
-
-  for ( ; it != end; ++it)
-    (it->second)->init();
+  PhysicalObject::do_init();
 }
+
 
 
 void
@@ -106,25 +95,6 @@ Material::set_crystal(RotatedCrystal* crystal)
 }
 
 
-
-void
-Material::add_model(PhysicalModel* model, ID simulator_id)
-{
-  assert(model != NULL);
-  assert(simulator_id != 0);
-
-  ModelMap::iterator it = _models.find(simulator_id);
-  if (it != _models.end())
-  {
-    TiberModelObject::destroy(it->second);
-    it->second = model;
-  }
-  else
-    _models[simulator_id] = model;
-
-  model->set_material(this);
-  model->set_simulator_id(simulator_id);
-}
 
 
 
@@ -143,53 +113,45 @@ Material::add_dopant(Dopant* dopant)
 
 
 
-Material*
-Material::create(const std::string& name)
-{
-  assert(_database != NULL);
-
-  Material* mat = NULL;
-
-  if (_database->is_alloy(name))
-    mat = Alloy::create(name);
-  else
-    mat = new Material(name);
-
-  _database->set_material(name);
-
-  return mat;
-}
-
-
 
 Material*
 Material::create(const std::string& name, const ModelOptions& options)
 {
   Material* mat = NULL;
 
-  _database->set_material(name, options.get_option("datafile", ""));
-  _database->set_section("");
+  Database db(name, options.get_option("datafile", ""));
+  db.set_section("");
 
-  if (_database->is_alloy(name))
-    mat = Alloy::create(name);
+  if (db.is_alloy())
+    mat = Alloy::create(name, options);
   else
-    mat = new Material(name);
+    mat = new Material(name, options);
 
   if (mat != NULL)
   {
-    mat->set_options(options);
+    mat->set_database(db);
 
-    // set the crystal structure at this point
-    mat->_structure = mat->get_database().get("structure", "zb");
-
-
-    Messages::debug("Created Material " + mat->get_name() +
-      " (using parameter file " + _database->get_data_file() + ")");
+    Messages::debug("Created Material " + name +
+      " (using parameter file " + db.get_data_file() + ")");
 
     mat->preinit();
   }
 
   return mat;
+}
+
+
+
+void
+Material::preinit(void)
+{
+
+  // set the crystal structure at this point
+  _structure = get_database().get("structure", "zb");
+
+  do_preinit();
+
+  get_database().close();
 }
 
 
@@ -240,24 +202,5 @@ Material::clear_doping(void)
 }
 
 
-
-const Database&
-Material::get_database(void) const
-{
-  assert(_database != NULL);
-  _database->set_material(get_name(),
-      get_options().get_option("datafile", ""));
-  return *_database;
-}
-
-
-Database&
-Material::get_database(void)
-{
-  assert(_database != NULL);
-  _database->set_material(get_name(),
-      get_options().get_option("datafile", ""));
-  return *_database;
-}
 
 

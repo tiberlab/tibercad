@@ -16,6 +16,7 @@
 #include "PyroPolarization.h"
 #include "Embracing.h"
 #include "Messages.h"
+#include "TypeDefs.h"
 
 #include "elem.h"
 #include "getpot.h"
@@ -51,8 +52,9 @@ DriftDiffusionProperties::_DOS_factor = pow(2.0 * M_PI *
 
 
 
-DriftDiffusionProperties::DriftDiffusionProperties(void)
-  : equilibrium_fermi_level(0.0),
+DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
+  : PhysicalModel(options),
+    equilibrium_fermi_level(0.0),
     intrinsic_density(1e10),
     _is_inhomogeneous(false),
     _use_predictor(false),
@@ -78,7 +80,6 @@ DriftDiffusionProperties::DriftDiffusionProperties(void)
     _relax_polariz(1.0)
 {
   _pd = new PointData();
-  _pd_stack.push(pair<PointData*, bool>(_pd, 1));
 }
 
 
@@ -138,7 +139,7 @@ DriftDiffusionProperties::setup_electrons_and_holes(void)
   {
     vector<string> qd;
     get_option("electron_quantum_density", qd);
-    for (int i = 0; i < qd.size(); i++)
+    for (size_t i = 0; i < qd.size(); i++)
       _electrons.add_quantum_density(qd[i]);
 
     if (_electrons.get_quantum_simulation() != NULL)
@@ -151,7 +152,7 @@ DriftDiffusionProperties::setup_electrons_and_holes(void)
 
     qd.resize(0);
     get_option("hole_quantum_density", qd);
-    for (int i = 0; i < qd.size(); i++)
+    for (size_t i = 0; i < qd.size(); i++)
       _holes.add_quantum_density(qd[i]);
     if (_holes.get_quantum_simulation() != NULL)
     {
@@ -164,6 +165,107 @@ DriftDiffusionProperties::setup_electrons_and_holes(void)
 }
 
 
+void
+DriftDiffusionProperties::create_submodels(void)
+{
+  assert(_pyropolarization == NULL);
+  _pyropolarization = PyroPolarization::create(get_material(), ModelOptions());
+  add_submodel("pyropolarization", _pyropolarization);
+
+
+  if (!is_dielectric())
+  {
+
+    //
+    // mobilities
+    //
+    ModelOptions::submodel_iterator
+    it(get_options().submodels_begin("electron_mobility"));
+    ModelOptions::submodel_iterator
+    end(get_options().submodels_end("electron_mobility"));
+
+    // create electron mobility model
+    if (it != end)
+    {
+      (it->second).set_option("particle", "e");
+      _electron_mobility = create_mobility_model(it->second);
+    }
+    else
+    {
+      ModelOptions opts;
+      opts.set_option("particle", "e");
+      opts.set_option("name", string("electron_mobility"));
+      _electron_mobility = create_mobility_model(opts);
+    }
+
+    get_options().delete_submodels("electron_mobility");
+
+
+    // create hole mobility model
+    it = get_options().submodels_begin("hole_mobility");
+    end = get_options().submodels_end("hole_mobility");
+
+    if (it != end)
+    {
+      (it->second).set_option("particle", "h");
+      _hole_mobility = create_mobility_model(it->second);
+    }
+    else
+    {
+      ModelOptions opts;
+      opts.set_option("particle", "h");
+      opts.set_option("name", string("hole_mobility"));
+      _hole_mobility = create_mobility_model(opts);
+    }
+
+    get_options().delete_submodels("hole_mobility");
+
+    //
+    // Recombinations (we can have several models!)
+    //
+
+    // create recombination models
+    it = get_options().submodels_begin("recombination");
+    end = get_options().submodels_end("recombination");
+    for ( ; it != end; ++it)
+    {
+      const std::string& name = (it->second).get_option("model", "");
+      add_recombination_model(name, it->second);
+    }
+
+    // this is only a logical division
+    it = get_options().submodels_begin("generation");
+    end = get_options().submodels_end("generation");
+    for ( ; it != end; ++it)
+    {
+      const std::string& name = (it->second).get_option("model", "");
+      add_recombination_model(name, it->second);
+    }
+
+    get_options().delete_submodels("recombination");
+
+    //
+    // Thermoelectric power
+    //
+
+    it = get_options().submodels_begin("thermoelectric_power");
+    end = get_options().submodels_end("thermoelectric_power");
+    if (it != end)
+    {
+      _thermoelectric_power =
+          ThermoelectricPower::create_model("default", it->second);
+
+      if (_thermoelectric_power == NULL)
+        throw InitFailedException("Could not create thermoelectric power model");
+
+      _thermoelectric_power->set_material(get_material());
+      _thermoelectric_power->set_driftdiffusionproperties(this);
+      add_submodel("thermoelectricpower", _thermoelectric_power);
+    }
+    get_options().delete_submodels("thermoelectric_power");
+  }
+}
+
 
 void
 DriftDiffusionProperties::do_init(void)
@@ -174,13 +276,6 @@ DriftDiffusionProperties::do_init(void)
 
   setup_electrons_and_holes();
 
-  if (_pyropolarization == NULL)
-  {
-    _pyropolarization = PyroPolarization::create(get_material());
-    _pyropolarization->set_material(get_material());
-    _pyropolarization->set_simulator_id(get_simulator_id());
-    _pyropolarization->init();
-  }
 
   // read polarization from input
   if (has_parameter("polarization"))
@@ -201,95 +296,7 @@ DriftDiffusionProperties::do_init(void)
   }
 
 
-  if (!is_dielectric())
-  {
-    if (!get_material()->is_alloy())
-    {
-      // all this stuff has already been done in do_init_alloy()
 
-      //
-      // mobilities
-      //
-      ModelOptions::const_submodel_iterator
-        it(get_options().submodels_begin("electron_mobility"));
-      ModelOptions::const_submodel_iterator
-        end(get_options().submodels_end("electron_mobility"));
-
-      // create electron mobility model
-      if (it != end)
-        _electron_mobility = create_mobility_model(it->second);
-      else
-      {
-        ModelOptions opts;
-        opts.set_option("name", string("electron_mobility"));
-        _electron_mobility = create_mobility_model(opts);
-      }
-      _electron_mobility->set_carrier_type('e');
-      _electron_mobility->init();
-
-
-      // create hole mobility model
-      it = get_options().submodels_begin("hole_mobility");
-      end = get_options().submodels_end("hole_mobility");
-
-      if (it != end)
-        _hole_mobility = create_mobility_model(it->second);
-      else
-      {
-        ModelOptions opts;
-        opts.set_option("name", string("hole_mobility"));
-        _hole_mobility = create_mobility_model(opts);
-      }
-      _hole_mobility->set_carrier_type('h');
-      _hole_mobility->init();
-
-
-
-      //
-      // Recombinations (we can have several models!)
-      //
-
-      // create recombination models
-      it = get_options().submodels_begin("recombination");
-      end = get_options().submodels_end("recombination");
-      for ( ; it != end; ++it)
-      {
-        const std::string& name = (it->second).get_option("model", "");
-        add_recombination_model(name, it->second);
-      }
-
-      // this is only a logical division
-      it = get_options().submodels_begin("generation");
-      end = get_options().submodels_end("generation");
-      for ( ; it != end; ++it)
-      {
-        const std::string& name = (it->second).get_option("model", "");
-        add_recombination_model(name, it->second);
-      }
-
-      //
-      // Thermoelectric power
-      //
-
-      it = get_options().submodels_begin("thermoelectric_power");
-      end = get_options().submodels_end("thermoelectric_power");
-      if (it != end)
-      {
-        destroy(_thermoelectric_power);
-
-        _thermoelectric_power =
-          ThermoelectricPower::create_model("default", it->second);
-
-        if (_thermoelectric_power == NULL)
-          throw InitFailedException("Could not create thermoelectric power model");
-
-        _thermoelectric_power->set_material(get_material());
-        _thermoelectric_power->set_driftdiffusionproperties(this);
-        _thermoelectric_power->set_simulator_id(get_simulator_id());
-        _thermoelectric_power->init();
-      }
-    }
-  }
 
   // DOES NOT WORK
   // calculate the equilibrium
@@ -303,11 +310,6 @@ DriftDiffusionProperties::do_init(void)
 
 DriftDiffusionProperties::~DriftDiffusionProperties(void)
 {
-  clear_recombination();
-  destroy(_pyropolarization);
-  destroy(_electron_mobility);
-  destroy(_hole_mobility);
-  destroy(_thermoelectric_power);
 }
 
 
@@ -319,118 +321,6 @@ DriftDiffusionProperties::has_solution(void) const
 }
 
 
-
-
-void
-DriftDiffusionProperties::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
-{
-  const DriftDiffusionProperties* scA =
-    dynamic_cast<const DriftDiffusionProperties*>(comp_A);
-  const DriftDiffusionProperties* scB =
-    dynamic_cast<const DriftDiffusionProperties*>(comp_B);
-
-
-  assert((comp_A != NULL) && (comp_B != NULL));
-
-  parse_options();
-
-  // this is done in do_init()!!
-  //setup_electrons_and_holes();
-
-
-  permittivity = alloy(scA->permittivity, scB->permittivity, xa);
-
-  _is_dielectric = scA->_is_dielectric;
-
-  conduction_band.effective_mass =
-    alloy(scA->conduction_band.effective_mass,
-        scB->conduction_band.effective_mass, xa);
-  conduction_band.effective_DOS =
-    alloy(scA->conduction_band.effective_DOS,
-        scB->conduction_band.effective_DOS, xa);
-  conduction_band.band_edge =
-    alloy(scA->conduction_band.band_edge,
-        scB->conduction_band.band_edge, xa);
-
-  valence_band.effective_mass =
-    alloy(scA->valence_band.effective_mass,
-        scB->valence_band.effective_mass, xa);
-  valence_band.effective_DOS =
-    alloy(scA->valence_band.effective_DOS,
-        scB->valence_band.effective_DOS, xa);
-  valence_band.band_edge =
-    alloy(scA->valence_band.band_edge,
-        scB->valence_band.band_edge, xa);
-
-
-  if (!is_dielectric())
-  {
-    destroy(_electron_mobility);
-    _electron_mobility = create_submodel_copy(scA->_electron_mobility);
-    _electron_mobility->set_driftdiffusionproperties(this);
-    _electron_mobility->init_alloy(scA->_electron_mobility,
-        scB->_electron_mobility, xa);
-
-
-    destroy(_hole_mobility);
-    _hole_mobility = create_submodel_copy(scA->_hole_mobility);
-    _hole_mobility->set_driftdiffusionproperties(this);
-    _hole_mobility->init_alloy(scA->_hole_mobility, scB->_hole_mobility, xa);
-  }
-
-
-  clear_recombination();
-  const_recomb_iterator it = scA->_recombination_models.begin();
-  const_recomb_iterator end = scA->_recombination_models.end();
-  for ( ; it != end; ++it)
-  {
-    ID id = it->first;
-    RecombinationModelInterface* newrec =
-      create_submodel_copy(scA->get_recombination_model(id));
-    newrec->set_driftdiffusionproperties(this);
-    newrec->init_alloy(scA->get_recombination_model(id),
-            scB->get_recombination_model(id), xa);
-    _recombination_models[id] = newrec;
-  }
-
-
-  destroy(_pyropolarization);
-  _pyropolarization = create_submodel_alloy(scA->_pyropolarization,
-      scB->_pyropolarization, xa);
-
-
-  // read polarization from input
-  if (has_parameter("polarization"))
-  {
-    _user_defined_polarization = new RealGradient(0);
-    vector<double> pol(3, 0.0);
-    get_parameter("polarization", pol);
-    switch (pol.size())
-    {
-      case 3:
-        (*_user_defined_polarization)(2) = pol[2];
-      case 2:
-        (*_user_defined_polarization)(1) = pol[1];
-      default:
-        (*_user_defined_polarization)(0) = pol[0];
-        break;
-    }
-  }
-
-
-
-  if (scA->_thermoelectric_power != NULL)
-  {
-    assert(scB->_thermoelectric_power != NULL);
-    destroy(_thermoelectric_power);
-    _thermoelectric_power = create_submodel_copy(scA->_thermoelectric_power);
-    _thermoelectric_power->set_driftdiffusionproperties(this);
-    _thermoelectric_power->init_alloy(scA->_thermoelectric_power,
-        scB->_thermoelectric_power, xa);
-  }
-
-}
 
 
 
@@ -447,10 +337,11 @@ DriftDiffusionProperties::add_recombination_model(
 
   ID id = model->get_id();
   _recombination_models[id] = model;
+
   model->set_driftdiffusionproperties(this);
   model->set_material(get_material());
-  model->set_simulator_id(get_simulator_id());
-  model->init();
+
+  add_submodel("recombination", model);
 }
 
 
@@ -469,7 +360,8 @@ DriftDiffusionProperties::create_mobility_model(const ModelOptions& options)
 
   mobility_model->set_driftdiffusionproperties(this);
   mobility_model->set_material(get_material());
-  mobility_model->set_simulator_id(get_simulator_id());
+
+  add_submodel(options.get_option("name",""), mobility_model);
 
   return mobility_model;
 }
@@ -490,36 +382,6 @@ DriftDiffusionProperties::clear_recombination(void)
 }
 
 
-
-
-
-void
-DriftDiffusionProperties::lock(PointData* pd)
-{
-  bool del_after_use = false;
-  if (pd == NULL)
-  {
-    pd = new PointData();
-    del_after_use = true;
-  }
-
-  _pd_stack.push(pair<PointData*, bool>(pd, del_after_use));
-  _pd = pd;
-}
-
-
-
-void
-DriftDiffusionProperties::unlock(void)
-{
-  pair<PointData*, bool>& top = _pd_stack.top();
-  if (top.second)
-    delete top.first;
-
-  _pd_stack.pop();
-
-  _pd = (_pd_stack.top()).first;
-}
 
 
 
@@ -809,6 +671,7 @@ void
 DriftDiffusionProperties::get_net_recombination_rates(
     vector<double>& rates)
 {
+  ignore_unused_variable(rates);
 }
 
 
@@ -1031,7 +894,8 @@ DriftDiffusionProperties::compute_thermoelectric_power_gradient(void)
 {
    if (_thermoelectric_power != NULL)
    {
-     _thermoelectric_power->set_potential_gradients(_grad_fermi_e,_grad_fermi_h,_electric_field);
+     _thermoelectric_power->set_potential_gradients(_grad_fermi_e,
+         _grad_fermi_h,_electric_field);
 
      _thermoelectric_power->set_temperature(_lattice_vt);
 

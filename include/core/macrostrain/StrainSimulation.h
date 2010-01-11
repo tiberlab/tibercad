@@ -42,6 +42,8 @@ class StrainSimulation:  public SimulationInterface
 
  protected:
   
+  StrainSimulation(const ModelOptions& options);
+
   
   //!map betwen the element and the result strain in crystal system
   /*!
@@ -64,6 +66,11 @@ class StrainSimulation:  public SimulationInterface
 };
 
  
+inline
+StrainSimulation::StrainSimulation(const ModelOptions& options)
+ : SimulationInterface(options)
+ {
+ }
 
 
 #endif

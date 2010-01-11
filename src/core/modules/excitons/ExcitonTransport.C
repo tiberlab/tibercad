@@ -86,8 +86,9 @@ ExcitonTransport::Options::operator=(const Options& rhs)
 
 
 
-ExcitonTransport::ExcitonTransport(void)
-  : _rebuild_eq_system(true)
+ExcitonTransport::ExcitonTransport(const ModelOptions& options)
+  : SimulationInterface(options),
+    _rebuild_eq_system(true)
 {
 }
 

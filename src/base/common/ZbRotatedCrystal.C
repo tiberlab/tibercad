@@ -5,7 +5,8 @@
 #include "Material.h"
 #include "Database.h"
 
-ZbRotatedCrystal::ZbRotatedCrystal() : RotatedCrystal()
+ZbRotatedCrystal::ZbRotatedCrystal(const ModelOptions& options) :
+  RotatedCrystal(options)
 {
   a_lat = 0;
   set_xyz_mil_direction("x", 1, 0, 0);
@@ -15,12 +16,12 @@ ZbRotatedCrystal::ZbRotatedCrystal() : RotatedCrystal()
 
 //===============================================================//
 
-
+/*
 ZbRotatedCrystal::ZbRotatedCrystal(const double a) : RotatedCrystal()
 {
   set_lat_const(a);
 }
-
+*/
 //===============================================================//
 
 
@@ -185,7 +186,7 @@ void  ZbRotatedCrystal::do_init_alloy (const PhysicalModelInterface *comp_A, con
 //==================================================================//
 PhysicalModelInterface* ZbRotatedCrystal::create_new(void) const
 {
-  return ( new  ZbRotatedCrystal() );
+  return new  ZbRotatedCrystal(get_options());
 
 }
 

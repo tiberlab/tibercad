@@ -18,9 +18,6 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
  
 
 
-  //! default constructor. 
-  KPbulkHamiltonian(void);
-
 
  
   //! destructor. 
@@ -53,7 +50,7 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   const std::vector< std::vector <std::vector<MatrixElement> > > & get_optical_operator(void) const;
 
 
-  static KPbulkHamiltonian* create( );
+  static KPbulkHamiltonian* create(const ModelOptions& options);
 
 
   //!set semiconductor
@@ -116,26 +113,29 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
 
  protected:
 
+  //! default constructor.
+  KPbulkHamiltonian(const ModelOptions& options);
+
   virtual PhysicalModelInterface* create_new(void) const;
 
   virtual void do_init(void);
 
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) ;
- 
+  virtual void create_submodels(void);
+
 
  
   
 };
 
 
-inline   KPbulkHamiltonian* KPbulkHamiltonian::create( )
+inline   KPbulkHamiltonian* KPbulkHamiltonian::create(const ModelOptions& options)
 {
-  return new KPbulkHamiltonian();
+  return new KPbulkHamiltonian(options);
 }
 
 inline PhysicalModelInterface* KPbulkHamiltonian::create_new() const
 {
-  return new KPbulkHamiltonian();
+  return new KPbulkHamiltonian(get_options());
 }
 
 inline

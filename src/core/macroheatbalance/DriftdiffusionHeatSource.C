@@ -26,25 +26,7 @@
 
 
 
-//-------------------------------------------------------------------------//
 
-
-void   DriftDiffusionHeatSource::do_init_alloy (const PhysicalModelInterface *comp_A,
-                                                const PhysicalModelInterface *comp_B, double xa)
-{
-  const DriftDiffusionHeatSource* modA = dynamic_cast<const  DriftDiffusionHeatSource*>(comp_A);
-
-  const DriftDiffusionHeatSource* modB = dynamic_cast<const  DriftDiffusionHeatSource*>(comp_B);
-
-  // this is ok here
-  // is done by default
-  //do_init();
-
-  //alloy(_kappa_e,modA->_kappa_e, modB->_kappa_e, xa);
-
-  // alloy(_kappa_h,modA->_kappa_h, modB->_kappa_h, xa);
-
-}
 
 
 //---------------------------------------------------------//
@@ -122,7 +104,11 @@ DriftDiffusionHeatSource::get_heat_sources(const Elem*  elem, std::vector<Point>
       double hPelTh = solution[n].find(var_map[HPELTH])->second;
 
 
-      //  std::cout<<eJoule<<std::endl;
+      //std::cout << "eJoule " << eJoule << std::endl;
+      //std::cout << "hJoule " << hJoule << std::endl;
+      //std::cout << "RecHeat " << RecHeat << std::endl;
+      //std::cout << "ePelTh " << ePelTh << std::endl;
+      //std::cout << "hPelTh " << hPelTh << std::endl;
 
       //if  (ids.count(EJOULE))
       heat_sources[n][EJOULE]=eJoule;

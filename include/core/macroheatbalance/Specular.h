@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _SPECULAR_H_
 #define _SPECULAR_H_
 
@@ -9,13 +11,13 @@ class Specular : public ThermalContact
 {
  public:
   //!Constructor	 
-  Specular();
+  Specular(const ModelOptions& options);
   //!Destructor 
   ~Specular(){};
 
    
   //!Create a Reservoir object and return its pointer
-  static  Specular* create(void);
+  static  Specular* create(const ModelOptions& options);
 
  //!Return the temperature of the contact
   double get_temperature(void) const;
@@ -41,9 +43,9 @@ class Specular : public ThermalContact
 
 inline
 Specular* 
-Specular::create()
+Specular::create(const ModelOptions& options)
 {
-  return new  Specular();
+  return new  Specular(options);
 }
 
 

@@ -9,11 +9,11 @@ class WzPiezoelectricModel : public PiezoelectricModel
  public:
 
   //!Empty constructor
-  WzPiezoelectricModel(){};  
+  WzPiezoelectricModel(const ModelOptions& options) : PiezoelectricModel(options) {};
   ~WzPiezoelectricModel(){};  
 
 
- inline static WzPiezoelectricModel* create(void);
+ inline static WzPiezoelectricModel* create(const ModelOptions& options);
 
  void calculate_piezopolarization(const Elem* elem, const Point& p);
 
@@ -56,13 +56,13 @@ private:
 
 inline  PhysicalModelInterface* WzPiezoelectricModel::create_new(void) const
 {
-  return ( new WzPiezoelectricModel() ) ;
+  return ( new WzPiezoelectricModel(get_options()) ) ;
 }
 
 
-inline WzPiezoelectricModel* WzPiezoelectricModel::create()
+inline WzPiezoelectricModel* WzPiezoelectricModel::create(const ModelOptions& options)
 {
-   return new WzPiezoelectricModel() ;
+   return new WzPiezoelectricModel(options) ;
 }
 
 #endif

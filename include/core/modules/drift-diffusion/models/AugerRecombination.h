@@ -25,14 +25,11 @@ class TBDLEXPORT AugerRecombination : public RecombinationModelInterface
 
   public:
 
-    //! Constructor
-    TBDLLOCAL AugerRecombination(void);
-
     //! Destructor
     virtual ~AugerRecombination(void) {};
 
     //! Create a ConstantMobility object
-    static AugerRecombination* create(void);
+    static AugerRecombination* create(const ModelOptions& options);
 
     /*! \copydoc RecombinationModelInterface::get_net_recombination_rates() */
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
@@ -45,6 +42,9 @@ class TBDLEXPORT AugerRecombination : public RecombinationModelInterface
 
     
   protected:
+
+    //! Constructor
+    TBDLLOCAL AugerRecombination(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::read_database()
     virtual void read_database(void);
@@ -115,8 +115,9 @@ class TBDLEXPORT AugerRecombination : public RecombinationModelInterface
 
 
 inline
-AugerRecombination::AugerRecombination(void)
-  : _An(6.7000e-32),
+AugerRecombination::AugerRecombination(const ModelOptions& options)
+  : RecombinationModelInterface(options),
+    _An(6.7000e-32),
     _Ap(7.2000e-32),
     _Bn(2.4500e-31),
     _Bp(4.5000e-33),
@@ -134,9 +135,9 @@ AugerRecombination::AugerRecombination(void)
 
 inline
 AugerRecombination*
-AugerRecombination::create(void)
+AugerRecombination::create(const ModelOptions& options)
 {
-  return new AugerRecombination();
+  return new AugerRecombination(options);
 }
 
 
@@ -144,7 +145,7 @@ inline
 PhysicalModelInterface*
 AugerRecombination::create_new(void) const
 {
-  return new AugerRecombination();
+  return new AugerRecombination(get_options());
 }
 
 

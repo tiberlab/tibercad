@@ -26,7 +26,8 @@ class Alloy : public Material
 
 
     //! Create a material with name \c name
-    static Alloy* create(const std::string& name);
+    static Alloy* create(const std::string& name,
+        const ModelOptions& options);
 
 
     //! Get the molar fraction of the component A
@@ -50,7 +51,7 @@ class Alloy : public Material
   protected:
 
     //! Construct an  alloy material
-    Alloy(const std::string& name);
+    Alloy(const std::string& name, const ModelOptions& options);
 
 
     //! \copydoc Material::do_preinit()

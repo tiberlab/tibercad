@@ -9,18 +9,18 @@ class DIISMBmethod: public ModifiedBroyden
 {
  public:
 
-  //! The constructor
-  DIISMBmethod(void) {};
-
 
   //! The destructor
   virtual ~DIISMBmethod(void) {};
 
   //! Create a Sweep object
-  static DIISMBmethod* create(void);
+  static DIISMBmethod* create(const ModelOptions& options);
   
 
  protected:
+
+  //! The constructor
+  DIISMBmethod(const ModelOptions& options);
 
   //! DIISMB step: \f$ X_{n+1} = X_{n} + \alpha (s_{nn} - 1) F(X_n) + \alpha \sum_{i = 2}^{n-1} s_{ni}F(X_i)   \f$
   virtual void calculate_new_solution();
@@ -106,10 +106,18 @@ class DIISMBmethod: public ModifiedBroyden
 
 };
 
+
 inline
-DIISMBmethod* DIISMBmethod::create()
+DIISMBmethod::DIISMBmethod(const ModelOptions& options) :
+  ModifiedBroyden(options)
 {
-  return new DIISMBmethod();
+}
+
+
+inline
+DIISMBmethod* DIISMBmethod::create(const ModelOptions& options)
+{
+  return new DIISMBmethod(options);
 }
 
 

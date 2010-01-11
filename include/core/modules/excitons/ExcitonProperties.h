@@ -171,7 +171,7 @@ class ExcitonProperties : public PhysicalModel
   protected:
 
     //! The empty constructor.
-    ExcitonProperties(void);
+    ExcitonProperties(const ModelOptions& options);
 
 
     //! Initialize this model

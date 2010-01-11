@@ -3,24 +3,14 @@
 #include "Semiconductor.h"
 #include "Database.h"
 #include "Alloy.h"
-#include "getpot.h"
 #include "SimulationOptions.h"
 
-typedef std::complex<double> Complex;
-
-
-extern "C"
-{
-  //ZHEEV( JOBZ, UPLO,  N, A,           LDA, W, WORK, LWORK, RWORK,INFO )
-  void zheev_(char& jobs, char& UPLO, int& N, Complex* ham6x6matrix, int& LDA, double* eigvals,  Complex* WORK, int& LWORK, double* RWORK, int& info);
-};
-
-const double Semiconductor::Hartree = 27.2113961;
 
 
 using namespace std;
 
-Semiconductor::Semiconductor()
+Semiconductor::Semiconductor(const ModelOptions& options)
+ : PhysicalModelInterface(options)
 {
   modelA = NULL;
 
@@ -91,19 +81,10 @@ inline
 void Semiconductor::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
 {
 
-  modelA = dynamic_cast<const Semiconductor* > (comp_A);
+  modelA = dynamic_cast<const Semiconductor* >(comp_A);
 
-  modelB = dynamic_cast<const Semiconductor* > (comp_B);
-
+  modelB = dynamic_cast<const Semiconductor* >(comp_B);
 
   _xa = xa;
-
-
-  _consider_temperature = modelA->_consider_temperature;
-  _temperature = modelA->_temperature;
-  temp_interface = modelA->temp_interface;
-
-  do_do_init_alloy (comp_A, comp_B,  xa);
-
 
 }

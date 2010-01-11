@@ -151,15 +151,6 @@ class Control
     void clear_filename_suffix(void);
 
 
-    //! Set the suffix for the output filenames
-    /*!
-     * The filename suffix will be appended to all output files which
-     * contain plot data.
-     * The suffix itself will be prepended by a '_'
-     */
-    //void set_filename_suffix(const std::string& suffix);
-
-
     //! Append something to the suffix for the output filenames
     /*!
      * The filename suffix will be appended to all output files which
@@ -211,9 +202,6 @@ class Control
     //! Get the past-the-end iterator for the simulations
     simulation_iterator simulations_end(void);
 
-
-  //! Get a constant reference to database
-  const Database& get_database(void) const;
 
   private:
 
@@ -385,21 +373,6 @@ Control::clear_filename_suffix(void)
 }
 
 
-/*
-inline
-void
-Control::set_filename_suffix(const std::string& suffix)
-{
-  _filename_suffix = "";
-
-  if (suffix.size() > 0)
-    if (suffix[0] != '_')
-      _filename_suffix = "_" + suffix;
-    else if (suffix.size() > 1)
-      _filename_suffix = suffix;
-}
-*/
-
 
 inline
 void
@@ -464,12 +437,5 @@ Control::simulations_end(void)
 }
 
 
-inline
-const Database&
-Control::get_database(void) const
-{
-  assert(_database != NULL);
-  return *_database;
-}
 
 #endif // _CONTROL_H_

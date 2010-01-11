@@ -19,14 +19,11 @@ class ExcitonGeneration : public RecombinationModelInterface
 
   public:
 
-    //! Constructor
-    ExcitonGeneration(void);
-
     //! Destructor
     virtual ~ExcitonGeneration(void) {};
 
     //! Create a ConstantMobility object
-    static ExcitonGeneration* create(void);
+    static ExcitonGeneration* create(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
@@ -44,15 +41,14 @@ class ExcitonGeneration : public RecombinationModelInterface
 
   protected:
 
+    //! Constructor
+    ExcitonGeneration(const ModelOptions& options);
+
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
     //! \copydoc RecombinationModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
-
-    /*! \copydoc RecombinationModelInterface::do_init_alloy() */
-    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
 
     
   private:
@@ -69,17 +65,18 @@ class ExcitonGeneration : public RecombinationModelInterface
 
 
 inline
-ExcitonGeneration::ExcitonGeneration(void)
-  : C_(1e-10)
+ExcitonGeneration::ExcitonGeneration(const ModelOptions& options)
+  : RecombinationModelInterface(options),
+    C_(1e-10)
 {
 }
 
 
 inline
 ExcitonGeneration*
-ExcitonGeneration::create(void)
+ExcitonGeneration::create(const ModelOptions& options)
 {
-  return new ExcitonGeneration();
+  return new ExcitonGeneration(options);
 }
 
 
@@ -95,7 +92,7 @@ inline
 PhysicalModelInterface*
 ExcitonGeneration::create_new(void) const
 {
-  return new ExcitonGeneration();
+  return new ExcitonGeneration(get_options());
 }
 
 

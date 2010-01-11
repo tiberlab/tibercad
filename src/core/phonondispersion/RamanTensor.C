@@ -6,7 +6,8 @@
 #include "tensor.h"
 
 
-RamanTensor::RamanTensor()
+RamanTensor::RamanTensor(const ModelOptions& options)
+ : PhysicalModelInterface(options)
 {  
 }
 

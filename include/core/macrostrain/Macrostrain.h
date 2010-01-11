@@ -121,7 +121,7 @@ class Macrostrain : public StrainSimulation
 
 
   //!Constructor
-   Macrostrain(void );
+   Macrostrain(const ModelOptions& options);
 
 
 
@@ -192,7 +192,7 @@ class Macrostrain : public StrainSimulation
 
 
 
-  static Macrostrain* create(void);
+  static Macrostrain* create(const ModelOptions& options);
 
 
 
@@ -603,9 +603,9 @@ Macrostrain::get_strain_crystal(const Elem* el)
 }
 
 inline
-Macrostrain* Macrostrain::create(void)
+Macrostrain* Macrostrain::create(const ModelOptions& options)
 {
-  return new Macrostrain();
+  return new Macrostrain(options);
 }
 
 #endif

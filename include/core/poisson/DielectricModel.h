@@ -18,7 +18,7 @@ class DielectricModel : public PhysicalModelInterface
 public:
   
   //!Constructor 
-   DielectricModel();
+   DielectricModel(const ModelOptions& options);
  
    //!Destructor
   ~DielectricModel(){}
@@ -26,7 +26,7 @@ public:
    //!provides electrons thermoelectric power [V/K]
   Tensor2Sym  get_dielectric_constant(void) const;
   
-  static  DielectricModel* create();
+  static  DielectricModel* create(const ModelOptions& options);
 
 
 private:
@@ -66,15 +66,15 @@ DielectricModel::get_dielectric_constant(void) const
 
 
 inline
-DielectricModel*  DielectricModel::create()
+DielectricModel*  DielectricModel::create(const ModelOptions& options)
 {
-  return (new  DielectricModel());
+  return (new  DielectricModel(options));
 }
 
 inline
 PhysicalModelInterface*  DielectricModel::create_new () const
 {
-  return (new  DielectricModel() ); 
+  return (new  DielectricModel(get_options()) );
 }
 
 

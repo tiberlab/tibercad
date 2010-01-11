@@ -8,13 +8,13 @@ class MacrostrainSupport: public  MacrostrainBoundaryProperties
 {
  public:
 
-  MacrostrainSupport() {};
-
   virtual ~MacrostrainSupport() {};
 
-  static MacrostrainSupport* create(void);
+  static MacrostrainSupport* create(const ModelOptions& options);
 
  protected:
+
+  MacrostrainSupport(const ModelOptions& options);
 
     virtual void 	do_init (void);
 
@@ -23,9 +23,15 @@ class MacrostrainSupport: public  MacrostrainBoundaryProperties
 };
 
 
-inline MacrostrainSupport* MacrostrainSupport::create()
+inline
+MacrostrainSupport::MacrostrainSupport(const ModelOptions& options)
+ : MacrostrainBoundaryProperties(options)
 {
-  return new MacrostrainSupport;
+}
+
+inline MacrostrainSupport* MacrostrainSupport::create(const ModelOptions& options)
+{
+  return new MacrostrainSupport(options);
 }
 
 

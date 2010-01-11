@@ -4,9 +4,10 @@
 #define _RECOMBINATIONMODELINTERFACE_H_
 
 
-#ifndef TIBER_MODULE_PREFIX
-# define TIBER_MODULE_PREFIX dd_rec
+#ifdef TIBER_MODULE_PREFIX
+# undef TIBER_MODULE_PREFIX
 #endif
+#define TIBER_MODULE_PREFIX recombination
 
 
 #include "DriftDiffusionModelInterface.h"
@@ -59,7 +60,7 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
   protected:
 
     //! \copydoc DriftDiffusionProperties::DriftDiffusionProperties()
-    RecombinationModelInterface(void);
+    RecombinationModelInterface(const ModelOptions& options);
 
   private:
 
@@ -71,7 +72,8 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
 //
 
 inline
-RecombinationModelInterface::RecombinationModelInterface(void)
+RecombinationModelInterface::RecombinationModelInterface(const ModelOptions& options)
+ : DriftDiffusionModelInterface(options)
 {
 }
 
@@ -87,7 +89,7 @@ RecombinationModelInterface::create(const std::string& name,
     const ModelOptions& options)
 {
   return dynamic_cast<RecombinationModelInterface*>(
-      PhysicalModelInterface::create("dd_rec_" + name, options));
+      PhysicalModelInterface::create("recombination_" + name, options));
 }
 
 

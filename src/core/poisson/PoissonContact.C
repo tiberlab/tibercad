@@ -10,16 +10,11 @@ PoissonContact::create(const std::string & name,  const ModelOptions &   options
 
 
   if (name == "Dirichlet")
-    result = Dirichlet::create();
+    result = Dirichlet::create(options);
 
   if (name == "Neumann")
-    result = Neumann::create();
+    result = Neumann::create(options);
   
-
-
-  if (result != NULL)
-    result->set_options(options);
-
   return result;
 }
 

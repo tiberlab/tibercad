@@ -31,14 +31,11 @@ class TBDLEXPORT SRHRecombination : public RecombinationModelInterface
 
   public:
 
-    //! Constructor
-    TBDLLOCAL SRHRecombination(void);
-
     //! Destructor
     virtual ~SRHRecombination(void) {};
 
     //! Create a ConstantMobility object
-    static SRHRecombination* create(void);
+    static SRHRecombination* create(const ModelOptions& options);
 
     /*! \copydoc RecombinationModelInterface::get_net_recombination_rates() */
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
@@ -61,6 +58,9 @@ class TBDLEXPORT SRHRecombination : public RecombinationModelInterface
     
   protected:
 
+    //! Constructor
+    TBDLLOCAL SRHRecombination(const ModelOptions& options);
+
     //! \copydoc RecombinationModelInterface::read_database()
     virtual void read_database(void);
 
@@ -69,10 +69,6 @@ class TBDLEXPORT SRHRecombination : public RecombinationModelInterface
 
     //! \copydoc RecombinationModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
-
-    /*! \copydoc RecombinationModelInterface::do_init_alloy() */
-    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
 
     
   private:
@@ -107,8 +103,9 @@ class TBDLEXPORT SRHRecombination : public RecombinationModelInterface
 
 
 inline
-SRHRecombination::SRHRecombination(void)
-  : _tau_n(1e-9),
+SRHRecombination::SRHRecombination(const ModelOptions& options)
+  : RecombinationModelInterface(options),
+    _tau_n(1e-9),
     _tau_p(1e-9),
     _E_t(0.0),
     _Talpha_e(0.0),
@@ -121,9 +118,9 @@ SRHRecombination::SRHRecombination(void)
 
 inline
 SRHRecombination*
-SRHRecombination::create(void)
+SRHRecombination::create(const ModelOptions& options)
 {
-  return new SRHRecombination();
+  return new SRHRecombination(options);
 }
 
 
@@ -140,7 +137,7 @@ inline
 PhysicalModelInterface*
 SRHRecombination::create_new(void) const
 {
-  return new SRHRecombination();
+  return new SRHRecombination(get_options());
 }
 
 

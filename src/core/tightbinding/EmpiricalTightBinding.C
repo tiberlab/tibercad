@@ -30,8 +30,9 @@ using namespace std;
 
 //--------------------------------------------------------------
 
-ETB::ETB(void)
-: _upt_options()
+ETB::ETB(const ModelOptions& options)
+: TightBinding(options),
+  _upt_options()
 {
   inst = new UptWrapper;
 }

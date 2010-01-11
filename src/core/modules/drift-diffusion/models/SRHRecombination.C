@@ -124,20 +124,3 @@ SRHRecombination::get_net_recombination_rate_derivatives(
 }
 
 
-
-void
-SRHRecombination::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
-{
-  const SRHRecombination* scA =
-    dynamic_cast<const SRHRecombination*>(comp_A);
-  const SRHRecombination* scB =
-    dynamic_cast<const SRHRecombination*>(comp_B);
-
-  _tau_n = alloy(scA->_tau_n, scB->_tau_n, xa);
-  _tau_p = alloy(scA->_tau_p, scB->_tau_p, xa);
-  _E_t = alloy(scA->_E_t, scB->_E_t, xa);
-  _Talpha_e = alloy(scA->_Talpha_e, scB->_Talpha_e, xa);
-  _Talpha_h = alloy(scA->_Talpha_h, scB->_Talpha_h, xa);
-}
-

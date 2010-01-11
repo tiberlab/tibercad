@@ -10,7 +10,8 @@ SBuserHamiltonian::~SBuserHamiltonian()
 }
 
 //=======================================================================//
-SBuserHamiltonian::SBuserHamiltonian(void)
+SBuserHamiltonian::SBuserHamiltonian(const ModelOptions& options)
+  : SBbulkHamiltonian(options)
 {
   edge = 0.0;
  

@@ -113,7 +113,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
 
   //!constructor
-  EnvelopFunctionApprox(void);
+  EnvelopFunctionApprox(const ModelOptions& options);
 
 
   //!destructor
@@ -213,7 +213,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   unsigned int get_number_of_active_cells();
 
 
-  static  EnvelopFunctionApprox* create();
+  static  EnvelopFunctionApprox* create(const ModelOptions& options);
 
 
   virtual PhysicalModel*
@@ -577,9 +577,9 @@ inline void EnvelopFunctionApprox::set_initial_eigenstates_number(unsigned int n
 
 //---------------------------------------------------------
 
-inline EnvelopFunctionApprox*  EnvelopFunctionApprox::create()
+inline EnvelopFunctionApprox*  EnvelopFunctionApprox::create(const ModelOptions& options)
 {
-  return (new EnvelopFunctionApprox );
+  return (new EnvelopFunctionApprox(options) );
 }
 
 

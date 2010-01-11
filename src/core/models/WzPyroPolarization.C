@@ -9,9 +9,9 @@
 
 
 WzPyroPolarization*
-WzPyroPolarization::create(void)
+WzPyroPolarization::create(const ModelOptions& options)
 {
-  return new WzPyroPolarization();
+  return new WzPyroPolarization(options);
 }
 
 
@@ -77,5 +77,5 @@ WzPyroPolarization::do_init_alloy(const PhysicalModelInterface *comp_A,
 PhysicalModelInterface*
 WzPyroPolarization::create_new(void) const
 {
-  return new WzPyroPolarization();
+  return new WzPyroPolarization(get_options());
 }

@@ -3,12 +3,15 @@
 export CXX=g++-4.3.2
 export CC=gcc-4.3.2
 export FC=ifort-11.1
-export FCFLAGS="-fPIC -fexceptions -gcc-name=${CC} -gxx-name=${CXX} -nofor-main"
+export FCFLAGS="-fexceptions -gcc-name=${CC} -gxx-name=${CXX} -nofor-main"
 
 ARCH=`uname -m`
 if [ $ARCH == "i686" ]
 then
   ARCH=""
+  CONFIGOPTS="--with-boost-prefix=/usr/pack/boost-1.33.1-ma"
+else
+  FCFLAGS="-fPIC ${FCFLAGS}"
 fi
 
 
@@ -27,5 +30,5 @@ fi
   --disable-modules \
   --enable-uptight\
   --enable-pardiso \
-  --with-boost-prefix=/usr/pack/boost-1.33.1-ma \
+  ${CONFIGOPTS} \
   --with-libmesh-prefix=/usr/pack/tibercad_dev-1.3-ma/${ARCH}/libmesh-svn

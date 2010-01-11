@@ -11,13 +11,13 @@ class ZbRamanTensor: public RamanTensor
 {
  public:
   //!constructor
-  ZbRamanTensor() ;
+  ZbRamanTensor(const ModelOptions& options) ;
 
   //!destructor
   ~ZbRamanTensor() {};
 
   //! Create a ZbLatticeThermalConductivity object
-  static    ZbRamanTensor* create();
+  static    ZbRamanTensor* create(const ModelOptions& options);
 
  
   virtual void re_init(){}; 
@@ -42,15 +42,15 @@ class ZbRamanTensor: public RamanTensor
 };
 
 inline
-ZbRamanTensor* ZbRamanTensor::create()
+ZbRamanTensor* ZbRamanTensor::create(const ModelOptions& options)
 {
-  return (new ZbRamanTensor());
+  return (new ZbRamanTensor(options));
 }
 
 inline
 PhysicalModelInterface*  ZbRamanTensor::create_new (void) const
 {
-  return (new  ZbRamanTensor() ); 
+  return (new  ZbRamanTensor(get_options()) );
 }
 
 inline

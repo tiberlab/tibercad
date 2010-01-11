@@ -12,7 +12,7 @@ class DSSCContact : public BoundaryProperties
   public:
 
     //! Constructor
-    DSSCContact(void);
+    DSSCContact(const ModelOptions& options);
 
     //! Destructor
     ~DSSCContact(void) { };
@@ -87,9 +87,10 @@ class DSSCContact : public BoundaryProperties
 //
 
 inline
-DSSCContact::DSSCContact(void)
+DSSCContact::DSSCContact(const ModelOptions& options)
   // open circuit value
-  : _boundary_value(1e10),
+  : BoundaryProperties(options),
+    _boundary_value(1e10),
     _cathode(false),
     _j0(0.1),
     _beta(0.78),

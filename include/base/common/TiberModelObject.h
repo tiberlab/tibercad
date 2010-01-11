@@ -57,42 +57,37 @@ class TiberModelObject
 
 
     //! The creation method signature
-    typedef TiberModelObject* (*create_t)(void);
+    typedef TiberModelObject* (*create_t)(const ModelOptions&);
 
 
     //! The destruction method signature
     typedef void (*destroy_t)(TiberModelObject*);
 
 
-    //! Default constructor
-    TiberModelObject(void);
-
-    //! Copy constructor
-    TiberModelObject(const TiberModelObject& other);
+    //! The constructor
+    /*!
+     * \param options the options to be assigned to this object
+     */
+    TiberModelObject(const ModelOptions& options);
 
 
     //! Try to create an object from a dynamic link library
     /*!
      * \param name the name of the library <c>lib</c><it>name</it><c>.so</c>
-     * \param target where to put the pointer to the new object
+     * \param options the options to pass to the object (which could be used to
+     * create different objects depending on the options)
      *
-     * \target will be \c NULL if it could not find the library
+     * \return \c NULL if it could not find the library
      *
      */
     template <typename T>
-    static void create_from_library(const std::string& name, T*& target);
-
-
-    //! Try to create an object from a dynamic link library
-    /*!
-     * \param name the name of the library <c>lib</c><it>name</it><c>.so</c>
-     * \return \c NULL if library cannot be opened
-     */
-    static TiberModelObject* create_from_library(const std::string& name);
+    static T* create_from_library(const std::string& name,
+        const ModelOptions& options = ModelOptions());
 
 
     //! Create an object from a given creator function
-    static TiberModelObject* create_from_function(create_t create, destroy_t destroy);
+    static TiberModelObject* create_from_function(create_t create, destroy_t destroy,
+        const ModelOptions& options = ModelOptions());
 
 
     //! Tells if a parameter has been specified in the input file
@@ -217,8 +212,27 @@ class TiberModelObject
     typedef void* libhandle_t;
 
 
+    //! Don't allow default constructor
+    TiberModelObject(void);
+
+
+    //! Don't allow copy construction
+    TiberModelObject(const TiberModelObject& other);
+
+
     //! Don't allow assignment operator
     TiberModelObject& operator=(const TiberModelObject& rhs);
+
+
+    //! Try to create an object from a dynamic link library
+    /*!
+     * \param name the name of the library <c>lib</c><it>name</it><c>.so</c>
+     * \param options the options to pass to the object (which could be used to
+     * \return \c NULL if library cannot be opened
+     */
+    static TiberModelObject* _create_from_library(const std::string& name,
+        const ModelOptions& options = ModelOptions());
+
 
 
     //! The options for this model as read from the input file
@@ -245,23 +259,16 @@ class TiberModelObject
 //
 
 inline
-TiberModelObject::TiberModelObject(void)
+TiberModelObject::TiberModelObject(const ModelOptions& options)
   : ReferenceCountedObject<TiberModelObject>(),
+    _options(options),
     _libhandle(NULL),
     _create(NULL),
     _destroy(NULL)
 {
 }
 
-inline
-TiberModelObject::TiberModelObject(const TiberModelObject& other)
-  : ReferenceCountedObject<TiberModelObject>(),
-    _options(other._options),
-    _libhandle(other._libhandle),
-    _create(other._create),
-    _destroy(other._destroy)
-{
-}
+
 
 
 inline
@@ -320,13 +327,14 @@ TiberModelObject::initializer(void (T::*func)(void))
 
 template <typename T>
 inline
-void
-TiberModelObject::create_from_library(const std::string& name, T*& target)
+T*
+TiberModelObject::create_from_library(const std::string& name,
+    const ModelOptions& options)
 {
 #ifdef BUILD_TIBER_MODULES
-  target = dynamic_cast<T*>(create_from_library(name));
+  return dynamic_cast<T*>(_create_from_library(name, options));
 #else
-  target = NULL;
+  return NULL;
 #endif
 }
 

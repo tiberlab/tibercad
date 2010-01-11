@@ -4,15 +4,16 @@
 class MacrostrainSubstrate : public MacrostrainBoundaryProperties
 {
  public:
-  MacrostrainSubstrate();
   
   ~MacrostrainSubstrate();
 
   Material* get_material(void) const;
 
-  static MacrostrainSubstrate* create(void);
+  static MacrostrainSubstrate* create(const ModelOptions& options);
 
  protected:
+
+  MacrostrainSubstrate(const ModelOptions& options);
 
   virtual void 	do_init (void);
 
@@ -25,9 +26,9 @@ class MacrostrainSubstrate : public MacrostrainBoundaryProperties
 };
 
 
-inline MacrostrainSubstrate* MacrostrainSubstrate::create()
+inline MacrostrainSubstrate* MacrostrainSubstrate::create(const ModelOptions& options)
 {
-  return new MacrostrainSubstrate;
+  return new MacrostrainSubstrate(options);
 }
 //! returns a pointer to the substrate material 
 inline  Material* MacrostrainSubstrate::get_material( ) const

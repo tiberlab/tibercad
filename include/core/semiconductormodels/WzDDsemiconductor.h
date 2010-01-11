@@ -22,9 +22,6 @@ class  WzDDsemiconductor : public DDsemiconductor
 
   
 
-  //Constructor
-  WzDDsemiconductor(void) {};
-
   //Destructor
   virtual ~WzDDsemiconductor(void) {};
 
@@ -38,7 +35,7 @@ class  WzDDsemiconductor : public DDsemiconductor
  
 
  
-  static WzDDsemiconductor* create(void); 
+  static WzDDsemiconductor* create(const ModelOptions& options);
  
  private:
  
@@ -46,6 +43,9 @@ class  WzDDsemiconductor : public DDsemiconductor
   
 
  protected:
+
+  //Constructor
+  WzDDsemiconductor(const ModelOptions& options);
 
   PhysicalModelInterface* create_new(void) const;
   
@@ -63,14 +63,20 @@ class  WzDDsemiconductor : public DDsemiconductor
 
 };
 
-inline PhysicalModelInterface* WzDDsemiconductor::create_new( ) const
+inline
+WzDDsemiconductor::WzDDsemiconductor(const ModelOptions& options)
+ : DDsemiconductor(options)
 {
-  return ( new WzDDsemiconductor() );
 }
 
-inline WzDDsemiconductor* WzDDsemiconductor::create() 
+inline PhysicalModelInterface* WzDDsemiconductor::create_new( ) const
 {
-  return  new WzDDsemiconductor() ;
+  return ( new WzDDsemiconductor(get_options()) );
+}
+
+inline WzDDsemiconductor* WzDDsemiconductor::create(const ModelOptions& options)
+{
+  return  new WzDDsemiconductor(options) ;
 }
 
 

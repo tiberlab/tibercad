@@ -12,13 +12,13 @@ class DftbModel : public TightBindingModelInterface
 public:
 
   //!Constructor
-  DftbModel();
+  DftbModel(const ModelOptions& options);
 
   //!Destructor
   ~DftbModel();
 
   //!Create a new object
-  static DftbModel* create(void);
+  static DftbModel* create(const ModelOptions& options);
 
 
 protected:
@@ -32,16 +32,16 @@ protected:
 
 
 inline 
-DftbModel* DftbModel::create(void)
+DftbModel* DftbModel::create(const ModelOptions& options)
 {
-  return new  DftbModel();
+  return new  DftbModel(options);
 }
 
 
 inline 
 PhysicalModelInterface* DftbModel::create_new(void) const
 {
-  return new  DftbModel();
+  return new  DftbModel(get_options());
 }
 
 

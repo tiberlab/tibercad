@@ -2,9 +2,9 @@
 
 #include "DDsemiconductor.h"
 #include "EFAbulkHamiltonian.h"
+#include "Material.h"
 #include "Constants.h"
 #include "Database.h"
-#include "Alloy.h"
 
 
 typedef std::complex<double> Complex;
@@ -21,13 +21,12 @@ using namespace std;
 //---------------------------------------------------------------------------------------------//
 DDsemiconductor::~DDsemiconductor (void)
 {
-  destroy(semiconductor);
 
-  destroy(bulk_ham);
 }
 //---------------------------------------------------------------------------------------------//
-DDsemiconductor::DDsemiconductor (void)
-  : semiconductor(NULL),
+DDsemiconductor::DDsemiconductor(const ModelOptions& options)
+  : PhysicalModelInterface(options),
+    semiconductor(NULL),
     bulk_ham(NULL),
     energy_cutoff(4.0),
     strained(false),
@@ -35,6 +34,39 @@ DDsemiconductor::DDsemiconductor (void)
 {
 }
 
+
+void DDsemiconductor::create_submodels(void)
+{
+  assert(semiconductor == NULL);
+  assert(bulk_ham == NULL);
+
+  const ModelOptions& opt =  get_options();
+
+  semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
+  if (semiconductor == NULL)
+  {
+    string msg("Cannot create semiconductor model for ");
+    msg += get_material()->get_name() + " with ";
+    msg += get_material()->get_structure();
+    msg += " structure.";
+    throw InitFailedException(msg);
+  }
+  add_submodel("semiconductor", semiconductor);
+
+
+  ModelOptions  kp_options;
+  kp_options["model"] = "kp";
+  kp_options["kp_model"] = "6x6";
+
+  bulk_ham = dynamic_cast<KPbulkHamiltonian*>(
+      EFAbulkHamiltonian::create(get_material()->get_structure(), kp_options));
+
+  if (bulk_ham == NULL)
+    throw InitFailedException(string("Cannot create bulk hamiltonian for ")
+        + get_material()->get_name());
+
+  add_submodel("bulk_ham", bulk_ham);
+}
 
 //--------------------------------------------------------------------------------------------//
 void DDsemiconductor::do_init ()
@@ -47,44 +79,7 @@ void DDsemiconductor::do_init ()
   strained      = false;
   k_max         = opt.get_option("k_max", k_max);
 
-  if (semiconductor == NULL)
-  {
-    semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
 
-    if (semiconductor == NULL)
-    {
-      string msg("Cannot create semiconductor model for ");
-      msg += get_material()->get_name() + " with ";
-      msg += get_material()->get_structure();
-      msg += " structure.";
-      throw InitFailedException(msg);
-    }
-
-    semiconductor->set_material(get_material());
-
-    semiconductor->init();
-  }
-
-  if (bulk_ham == NULL)
-  {
-
-    ModelOptions  kp_options;
-    kp_options["model"] = "kp";
-    kp_options["kp_model"] = "6x6";
-
-
-
-    bulk_ham = dynamic_cast<KPbulkHamiltonian*>(
-        EFAbulkHamiltonian::create(get_material()->get_structure(), kp_options));
-
-    if (bulk_ham == NULL)
-      throw InitFailedException(string("Cannot create bulk hamiltonian for ")
-          + get_material()->get_name());
-
-    bulk_ham->set_material(get_material());
-
-    bulk_ham->init();
-  }
 
 }
 //---------------------------------------------------------------------------------------------//
@@ -101,34 +96,6 @@ void DDsemiconductor::read_database(void)
 }
 
 
-//--------------------------------------------------------------------------------------------//
-void DDsemiconductor::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
-{
-
-  const DDsemiconductor* modA = dynamic_cast<const DDsemiconductor*>(comp_A);
-  const DDsemiconductor* modB = dynamic_cast<const DDsemiconductor*>(comp_B);
-
-
-  energy_cutoff = alloy(modA->energy_cutoff,modB->energy_cutoff,xa);
-  k_max = alloy(modA->k_max, modB->k_max, xa);
-  strained = modA->strained;
-  strain = modA->strain;
-
-
-  destroy(semiconductor);
-  semiconductor = static_cast<Semiconductor*>(modA->semiconductor->copy());
-  assert(semiconductor != NULL);
-  semiconductor->set_material(get_material());
-  semiconductor->init_alloy(modA->semiconductor, modB->semiconductor, xa);
-
-
-  destroy(bulk_ham);
-  bulk_ham = static_cast<KPbulkHamiltonian*>(modA->bulk_ham->copy());
-  assert(bulk_ham != NULL);
-  bulk_ham->set_material(get_material());
-  bulk_ham->init_alloy(modA->bulk_ham, modB->bulk_ham, xa);
-
-}
 
 
 //----------------------------------------------------------------------------------------------//

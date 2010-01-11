@@ -20,7 +20,8 @@ extern "C"
 }
 //===================================================================================//
 
-TunnelingCurrent::TunnelingCurrent()
+TunnelingCurrent::TunnelingCurrent(const ModelOptions& options)
+ : KspaceIntegration(options)
 {
   Vmesh = NULL;
 
@@ -41,12 +42,12 @@ TunnelingCurrent:: ~TunnelingCurrent()
 
 
 
-TunnelingCurrent*  TunnelingCurrent::create()
+TunnelingCurrent*  TunnelingCurrent::create(const ModelOptions& options)
 {
 #ifndef ENABLE_HETERO
   throw InitFailedException("Cannot create TunnelinCurrent model: Hetero is disabled.");
 #endif
-  return (new TunnelingCurrent );
+  return (new TunnelingCurrent(options));
 }
 
 

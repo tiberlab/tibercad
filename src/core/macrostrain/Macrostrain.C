@@ -4539,8 +4539,9 @@ void Macrostrain::reallocate_matrix(void)
 
 }
 //-------------------------------------------------------------------------------------------//
-Macrostrain::Macrostrain(void )
-  : _is_reallocated(false),
+Macrostrain::Macrostrain(const ModelOptions& options)
+  : StrainSimulation(options),
+    _is_reallocated(false),
     _preallocate(false),
     _first_run(true),
     poisson_equation(NULL),

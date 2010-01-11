@@ -13,8 +13,9 @@ TIBER_MODULE(DSSCModel,default)
 using namespace std;
 
 
-DSSCModel::DSSCModel(void)
-  : _porosity(0.5),
+DSSCModel::DSSCModel(const ModelOptions& options)
+  : PhysicalModel(options),
+    _porosity(0.5),
     _is_electrolyte(true),
     _is_TiO2(true),
     _electrons("electron"),

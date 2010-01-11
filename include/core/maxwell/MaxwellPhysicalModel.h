@@ -10,16 +10,17 @@
 class MaxwellPhysicalModel: public PhysicalModel
 {
  public:
-  MaxwellPhysicalModel();
 
   virtual ~MaxwellPhysicalModel();
 
-  static  MaxwellPhysicalModel* create();
+  static  MaxwellPhysicalModel* create(const ModelOptions& options);
 
   //!return constant pointer to dielectric function model
   inline const OptDielectricConstant* get_dielectric_constant(void) const;
 
  protected:
+
+  MaxwellPhysicalModel(const ModelOptions& options);
 
   virtual PhysicalModelInterface* create_new (void) const;
  
@@ -32,8 +33,6 @@ class MaxwellPhysicalModel: public PhysicalModel
   //! dielectric function model
   OptDielectricConstant* _epsilon_model;
 
-  //! copy 
-  MaxwellPhysicalModel (const MaxwellPhysicalModel&  t) {};
 
 };
 
@@ -43,9 +42,9 @@ inline  const OptDielectricConstant* MaxwellPhysicalModel::get_dielectric_consta
 }
 
 
-inline MaxwellPhysicalModel* MaxwellPhysicalModel::create()
+inline MaxwellPhysicalModel* MaxwellPhysicalModel::create(const ModelOptions& options)
 {
-  return new MaxwellPhysicalModel();
+  return new MaxwellPhysicalModel(options);
 }
 
 #endif

@@ -24,7 +24,8 @@ class  OptDielectricConstant: public PhysicalModelInterface
   A real and an imaginary tensor are  initialized.
 
   */
-  OptDielectricConstant()
+  OptDielectricConstant(const ModelOptions& options) :
+    PhysicalModelInterface(options)
   {  
     _dielectric_constant_real=Tensor2Sym(0);
     _dielectric_constant_imag=Tensor2Sym(0);

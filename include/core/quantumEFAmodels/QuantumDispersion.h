@@ -29,7 +29,7 @@ class QuantumDispersion : public Kspace
   
 
   //! Consructor
-  QuantumDispersion();
+  QuantumDispersion(const ModelOptions& options);
 
   //! Desructor
   ~QuantumDispersion();
@@ -37,7 +37,7 @@ class QuantumDispersion : public Kspace
 
    
   //!creates a new object 
-  static  QuantumDispersion* create();
+  static  QuantumDispersion* create(const ModelOptions& options);
 
  private:
 
@@ -46,10 +46,6 @@ class QuantumDispersion : public Kspace
   //! name of the simulation that solves Schroedinger equation 
   EnvelopFunctionApprox*  quantum_model;
  
-
-  //! copy-constructor should not be used
-  QuantumDispersion(const QuantumDispersion& t ) {}; 
-
 
 
   //!spectra of eigenvalues
@@ -80,9 +76,9 @@ class QuantumDispersion : public Kspace
 
 //---------------------------------------------------------
 
-inline QuantumDispersion*  QuantumDispersion::create()
+inline QuantumDispersion*  QuantumDispersion::create(const ModelOptions& options)
 {
-  return (new QuantumDispersion );
+  return (new QuantumDispersion(options) );
 }
 
 #endif

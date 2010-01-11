@@ -9,13 +9,13 @@ class ZbFreeDynamicalMatrix: public DynamicalMatrix
 {
  public:
   //!constructor
-  ZbFreeDynamicalMatrix() {};
+  ZbFreeDynamicalMatrix(const ModelOptions& options) : DynamicalMatrix(options) {};
 
   //!destructor
   ~ZbFreeDynamicalMatrix() {};
 
   //! Create a ZbLatticeThermalConductivity object
- static  ZbFreeDynamicalMatrix* create();
+ static  ZbFreeDynamicalMatrix* create(const ModelOptions& options);
 
 
 //! Update the lattice thermal conductivity given the Temperature
@@ -40,15 +40,15 @@ class ZbFreeDynamicalMatrix: public DynamicalMatrix
 };
 
 inline
-ZbFreeDynamicalMatrix* ZbFreeDynamicalMatrix::create()
+ZbFreeDynamicalMatrix* ZbFreeDynamicalMatrix::create(const ModelOptions& options)
 {
-  return (new ZbFreeDynamicalMatrix());
+  return (new ZbFreeDynamicalMatrix(options));
 }
 
 inline
 PhysicalModelInterface*  ZbFreeDynamicalMatrix::create_new (void) const
 {
-  return (new  ZbFreeDynamicalMatrix() ); 
+  return (new  ZbFreeDynamicalMatrix(get_options()) );
 }
 
 inline

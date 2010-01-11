@@ -4,14 +4,15 @@
 class MacrostrainExtended : public MacrostrainBoundaryProperties
 {
  public:
-  MacrostrainExtended() {};
   
   virtual  ~MacrostrainExtended() {};
  
 
-  static MacrostrainExtended* create(void);
+  static MacrostrainExtended* create(const ModelOptions& options);
 
  protected:
+
+  MacrostrainExtended(const ModelOptions& options);
 
   virtual void 	do_init (void);
 
@@ -23,10 +24,19 @@ class MacrostrainExtended : public MacrostrainBoundaryProperties
 };
 
 
-inline MacrostrainExtended* MacrostrainExtended::create()
+inline
+MacrostrainExtended::MacrostrainExtended(const ModelOptions& options)
+ : MacrostrainBoundaryProperties(options)
 {
-  return new MacrostrainExtended;
 }
+
+
+inline MacrostrainExtended* MacrostrainExtended::create(const ModelOptions& options)
+{
+  return new MacrostrainExtended(options);
+}
+
+
 
 
 #endif

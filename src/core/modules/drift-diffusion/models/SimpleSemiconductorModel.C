@@ -13,8 +13,9 @@ using namespace std;
 using namespace DriftDiffusionDefs;
 
 
-SimpleSemiconductorModel::SimpleSemiconductorModel(void)
-  : is_prepared_(false)
+SimpleSemiconductorModel::SimpleSemiconductorModel(const ModelOptions& options)
+  : DriftDiffusionProperties(options),
+    is_prepared_(false)
 {
 }
 

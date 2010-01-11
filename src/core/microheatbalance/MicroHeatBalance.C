@@ -416,7 +416,8 @@ MicroHeatBalance::~MicroHeatBalance()
 
 }
 //---------------------------------------------------------------------------------//
-MicroHeatBalance::MicroHeatBalance()
+MicroHeatBalance::MicroHeatBalance(const ModelOptions& options)
+  : SimulationInterface(options)
 {
  
  
@@ -454,9 +455,9 @@ BoundaryProperties* MicroHeatBalance::create_boundary_model (const ModelOptions 
 
 }
 //----------------------------------------------------------------------------------//
-MicroHeatBalance*  MicroHeatBalance::create (void)
+MicroHeatBalance*  MicroHeatBalance::create (const ModelOptions& options)
 {
-  return new MicroHeatBalance;
+  return new MicroHeatBalance(options);
 }
 
 

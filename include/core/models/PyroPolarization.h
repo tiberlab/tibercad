@@ -21,10 +21,11 @@ class PyroPolarization : public PhysicalModelInterface
     const Tensor1& get_polarization(void) const;
 
     //! Create for material mat
-    static PyroPolarization* create(const Material* mat);
+    static PyroPolarization* create(const Material* mat,
+        const ModelOptions& options);
 
     //! The create method
-    static PyroPolarization* create(void);
+    static PyroPolarization* create(const ModelOptions& options);
 
     //! Calculate the polarization
     /*!
@@ -41,7 +42,7 @@ class PyroPolarization : public PhysicalModelInterface
   protected:
 
     //! Constructor
-    PyroPolarization(void);
+    PyroPolarization(const ModelOptions& options);
 
     //! Destructor
     virtual ~PyroPolarization(void);
@@ -80,8 +81,9 @@ class PyroPolarization : public PhysicalModelInterface
 
 
 inline
-PyroPolarization::PyroPolarization(void)
-  : _polarization(0)
+PyroPolarization::PyroPolarization(const ModelOptions& options)
+  : PhysicalModelInterface(options),
+    _polarization(0)
 {
   set_name("PyroPolarization");
 }

@@ -6,8 +6,8 @@
 #include "tiber_config.h"
 #include "TiberModelObject.h"
 #include "TypeDefs.h"
-#include "Database.h"
 #include "ModelOptions.h"
+#include "Database.h"
 #include "InitFailedException.h"
 
 #include <map>
@@ -21,6 +21,7 @@
 #include "TiberModule.h"
 
 
+class PhysicalObject;
 class Material;
 
 
@@ -28,6 +29,12 @@ class Material;
 /*!
  * This is the base class for all implementations of any kind of models
  * used in simulations.
+ *
+ * Any class derived from this one has to implement not only the needed
+ * virtual methods, but also
+ *  static PhysicalModelInterface* create(const ModelOptions&)
+ * This method could use the options for instantiation of specialized
+ * classes.
  */
 class PhysicalModelInterface : public TiberModelObject
 {
@@ -121,21 +128,40 @@ class PhysicalModelInterface : public TiberModelObject
 
 
     //! Get a reference to the database
-    /*!
-     * the database will already be setup for the material this model is
-     * associated to
-     */
     Database& get_database(void);
 
-    //! Set a reference to the material this model belongs to
-    void set_material(Material* material);
+
+    //! Set a reference to the Material this model belongs to
+    /*!
+     * \deprecated
+     * This can be used for bulk models only.
+     */
+    void set_material(PhysicalObject* owner);
+
+
+    //! Set a reference to the physical object this model belongs to
+    void set_owner(PhysicalObject* owner);
+
+
+    //! Get a reference to the physical object this model belongs to
+    PhysicalObject* get_owner(void);
+
+
+    //! Get a reference to the physical object this model belongs to
+     const PhysicalObject* get_owner(void) const;
 
 
     //! Get a reference to the material this model belongs to
+    /*!
+     * \return \c NULL if the owning object is not a bulk material (= Material)
+     */
     const Material* get_material(void) const;
 
 
     //! Get a writeable reference to the material this model belongs to
+    /*!
+     * \return \c NULL if the owning object is not a bulk material (= Material)
+     */
     Material* get_material(void);
 
 
@@ -181,8 +207,19 @@ class PhysicalModelInterface : public TiberModelObject
 
   protected:
 
-    //! Empty constructor
-    PhysicalModelInterface(void);
+
+    //! The type of the submodel list
+    typedef std::multimap<std::string, PhysicalModelInterface*> SubmodelMap;
+
+    //! An iterator for the submodels
+    typedef SubmodelMap::iterator SubmodelIterator;
+
+    //! An const iterator for the submodels
+    typedef SubmodelMap::const_iterator ConstSubmodelIterator;
+
+
+    //! The constructor
+    PhysicalModelInterface(const ModelOptions& options);
 
 
     //! Set the name of a model
@@ -202,11 +239,6 @@ class PhysicalModelInterface : public TiberModelObject
 
     //! Initialize the model
     /*!
-     * This method should set all model options and call
-     * \c init() of any associated model.
-     *
-     * It will be called \em only for non-alloy models!
-     *
      * This method should be implemented in derived classes.
      */
     virtual void do_init(void) {};
@@ -226,14 +258,14 @@ class PhysicalModelInterface : public TiberModelObject
      * of the base class, too. If not, you may not copy important
      * things.
      */
-    virtual void copy_from(const PhysicalModelInterface* rhs) {};
+    virtual void copy_from(const PhysicalModelInterface* rhs);
 
 
     //! Read the properties from the database
     /*!
-     * Reads all needed physical properties from the database for \em non alloy
-     * models.
-     * (The default behaviour is to do nothing at all.)
+     * Reads all needed physical properties from the database.
+     * In the case of alloys it will do also the mixing according
+     * to the chosen rule (VCA for now)
      * If you reimplement this in a derived class, call the method
      * of the base class, too.
      */
@@ -242,8 +274,9 @@ class PhysicalModelInterface : public TiberModelObject
 
     //! Read alloy parameters from the database
     /*!
-     * Read all parameters for an alloy model from the database.
-     * (The default behaviour is to do nothing at all.)
+     * Read parameters for an alloy model from the database.
+     * This method will read exclusively from the alloy database and not
+     * attempt to do any mixing.
      * If you reimplement this in a derived class, call the method
      * of the base class, too.
      */
@@ -277,12 +310,76 @@ class PhysicalModelInterface : public TiberModelObject
 
     //! Create submodels
     /*!
-     * This method is only called for non-alloy materials and should create
-     * all necessary submodels. For alloys, all submodels should be created as alloy
-     * models by using create_submodel_alloy()
+     * This method can be used to create special submodels, which for example
+     * are not provided as physical_model in the input file, or which do not
+     * follow the standard naming conventions.
+     *
+     * All models created have to be added to the submodel map and their options
+     * have to be deleted from the ModelOptions object.
+     *
+     * Subsequent operations on the submodels assume that they are ordered exactly
+     * the same way in models associated to alloy or interface components.
+     * This is assured as long as all submodels are created in create_submodels() in
+     * a way independent of the type of "owner" (PhysicalObject)
      */
     virtual void create_submodels(void) {};
 
+
+    //! Add an externally created submodel
+    /*!
+     * \param key the name of the model
+     * \param pm the pointer to the model
+     */
+    void add_submodel(const std::string& key, PhysicalModelInterface* pm);
+
+
+
+    //! Get the iterator to the first submodel
+    SubmodelIterator submodels_begin(void);
+
+
+    //! Get the iterator to the first submodel
+    ConstSubmodelIterator submodels_begin(void) const;
+
+
+    //! Get the submodels past-the-end iterator
+    SubmodelIterator submodels_end(void);
+
+
+    //! Get the submodels past-the-end iterator
+    ConstSubmodelIterator submodels_end(void) const;
+
+
+    //! Get the iterator for a certain submodel
+    /*!
+     * \param name the name of the model to look for
+     * \return the const iterator for the first appearance of the model
+     */
+    SubmodelIterator submodels_begin(const std::string& name);
+
+
+    //! Get the iterator for a certain submodel
+    /*!
+     * \param name the name of the model to look for
+     * \return the const iterator for the first appearance of the model
+     */
+    ConstSubmodelIterator submodels_begin(const std::string& name) const;
+
+
+    //! Get the past-the-end iterator for a certain submodel
+    /*!
+     * \param name the name of the model to look for
+     * \return the past-the-end iterator for the model
+     */
+    SubmodelIterator submodels_end(const std::string& name);
+
+
+    //! Get the past-the-end iterator for a certain submodel
+    /*!
+     * \param name the name of the model to look for
+     * \return the past-the-end iterator for the model
+     */
+    ConstSubmodelIterator submodels_end(const std::string& name) const;
 
     //! calculate an alloy parameter in VCA approximation
     /*!
@@ -355,11 +452,15 @@ class PhysicalModelInterface : public TiberModelObject
     std::string _type;
 
 
-    //! The material this properties belong to
+    //! The physical object this properties belong to
     /*!
-     * This pointer can be used by this or associated models
+     * This pointer can be used by this or associated models.
      */
-    Material* _material;
+    PhysicalObject* _owner;
+
+
+    //! A list of submodels
+    SubmodelMap _submodels;
 
 
     //! A map with ID/model name pairs
@@ -374,7 +475,7 @@ class PhysicalModelInterface : public TiberModelObject
      * This method registers every new model that gets created and assigns
      * it a unique model ID.
      */
-    static void register_model(PhysicalModelInterface* model);
+    static void _register_model(PhysicalModelInterface* model);
 
 
     //! Set the model type (= identifier)
@@ -382,7 +483,15 @@ class PhysicalModelInterface : public TiberModelObject
      * The identifier is used at creation time to know which type of
      * model to create.
      */
-    void set_type(const std::string& type);
+    void _set_type(const std::string& type);
+
+
+    //! Create automatically all submodels
+    /*!
+     * Calls create_submodels() which can be overridden by module developers.
+     */
+    void _create_submodels(void);
+
 
 
 };
@@ -393,18 +502,19 @@ class PhysicalModelInterface : public TiberModelObject
 //
 
 inline
-PhysicalModelInterface::PhysicalModelInterface(void)
-  : _id(INVALID_ID),
+PhysicalModelInterface::PhysicalModelInterface(const ModelOptions& options)
+  : TiberModelObject(options),
+    _id(INVALID_ID),
     _simulator_id(INVALID_ID),
     _name(""),
-    _material(NULL)
+    _owner(NULL)
 {
 }
 
 
 inline
 void
-PhysicalModelInterface::set_type(const std::string& type)
+PhysicalModelInterface::_set_type(const std::string& type)
 {
   _type = type;
 }
@@ -496,41 +606,36 @@ PhysicalModelInterface::set_name(const std::string& name)
 
 inline
 void
-PhysicalModelInterface::set_material(Material* material)
+PhysicalModelInterface::set_material(PhysicalObject* owner)
 {
-  _material = material;
+  _owner = owner;
 }
-
-
-
-
-inline
-Material*
-PhysicalModelInterface::get_material(void)
-{
-  return _material;
-}
-
-
-
-inline
-const Material*
-PhysicalModelInterface::get_material(void) const
-{
-  return _material;
-}
-
-
 
 
 inline
 void
-PhysicalModelInterface::init(void)
+PhysicalModelInterface::set_owner(PhysicalObject* owner)
 {
-  read_database();
-  do_init();
-  create_submodels();
+  _owner = owner;
 }
+
+
+inline
+PhysicalObject*
+PhysicalModelInterface::get_owner(void)
+{
+  return _owner;
+}
+
+
+inline
+const PhysicalObject*
+PhysicalModelInterface::get_owner(void) const
+{
+  return _owner;
+}
+
+
 
 
 
@@ -541,7 +646,7 @@ PhysicalModelInterface::create_submodel_copy(const T* other) const
   assert(other != NULL);
   T* newmod = static_cast<T*>(other->copy());
   assert(newmod != NULL);
-  newmod->set_material(_material);
+  newmod->set_owner(_owner);
   return newmod;
 }
 
@@ -559,18 +664,6 @@ PhysicalModelInterface::create_submodel_alloy(const T* comp_A,
 }
 
 
-
-
-inline
-void
-PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
-{
-  assert(typeid(*comp_A) == typeid(*comp_B));
-  read_database_alloy();
-  do_init_alloy(comp_A, comp_B, xa);
-  do_init();
-}
 
 
 
@@ -611,6 +704,82 @@ PhysicalModelInterface::get_id_from_name(const std::string& name)
 
   return id;
 }
+
+
+inline
+void
+PhysicalModelInterface::copy_from(const PhysicalModelInterface* rhs)
+{
+  ignore_unused_variable(rhs);
+}
+
+
+
+inline
+PhysicalModelInterface::SubmodelIterator
+PhysicalModelInterface::submodels_begin(void)
+{
+  return _submodels.begin();
+}
+
+
+inline
+PhysicalModelInterface::SubmodelIterator
+PhysicalModelInterface::submodels_end(void)
+{
+  return _submodels.end();
+}
+
+
+inline
+PhysicalModelInterface::SubmodelIterator
+PhysicalModelInterface::submodels_begin(const std::string& name)
+{
+  return _submodels.lower_bound(name);
+}
+
+
+
+inline
+PhysicalModelInterface::SubmodelIterator
+PhysicalModelInterface::submodels_end(const std::string& name)
+{
+  return _submodels.upper_bound(name);
+}
+
+
+inline
+PhysicalModelInterface::ConstSubmodelIterator
+PhysicalModelInterface::submodels_begin(void) const
+{
+  return _submodels.begin();
+}
+
+
+inline
+PhysicalModelInterface::ConstSubmodelIterator
+PhysicalModelInterface::submodels_end(void) const
+{
+  return _submodels.end();
+}
+
+
+inline
+PhysicalModelInterface::ConstSubmodelIterator
+PhysicalModelInterface::submodels_begin(const std::string& name) const
+{
+  return _submodels.lower_bound(name);
+}
+
+
+
+inline
+PhysicalModelInterface::ConstSubmodelIterator
+PhysicalModelInterface::submodels_end(const std::string& name) const
+{
+  return _submodels.upper_bound(name);
+}
+
 
 
 #endif // _PHYSICALMODELINTERFACE_H_

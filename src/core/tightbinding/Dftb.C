@@ -21,8 +21,9 @@ using namespace std;
 
 //--------------------------------------------------------------
 
-Dftb::Dftb(void)
-: _dftb_options()
+Dftb::Dftb(const ModelOptions& options)
+: TightBinding(options),
+  _dftb_options()
 {
   inst = new DftbpWrapper;
   _max_shell = 0;

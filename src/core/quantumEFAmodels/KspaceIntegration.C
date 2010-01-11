@@ -10,7 +10,8 @@
  
 using namespace std;
 
-KspaceIntegration::KspaceIntegration()
+KspaceIntegration::KspaceIntegration(const ModelOptions& options)
+ : Kspace(options)
 {
   eq = NULL;
 

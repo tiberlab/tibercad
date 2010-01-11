@@ -12,13 +12,13 @@ class ETBModel : public TightBindingModelInterface
 public:
 
   //!Constructor
-  ETBModel();
+  ETBModel(const ModelOptions& options);
 
   //!Destructor
   ~ETBModel();
 
   //!Create a new object
-  static ETBModel* create();
+  static ETBModel* create(const ModelOptions& options);
 
 
 protected:
@@ -32,16 +32,16 @@ protected:
 
 
 inline 
-ETBModel* ETBModel::create()
+ETBModel* ETBModel::create(const ModelOptions& options)
 {
-  return new  ETBModel();
+  return new  ETBModel(options);
 }
 
 
 inline
 PhysicalModelInterface* ETBModel::create_new (void) const
 {
-  return new ETBModel();
+  return new ETBModel(get_options());
 }
 
 

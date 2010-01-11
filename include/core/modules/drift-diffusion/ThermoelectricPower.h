@@ -37,7 +37,7 @@ class ThermoelectricPower : public DriftDiffusionModelInterface
   public:
 
     //! Constructor 
-    ThermoelectricPower(void);
+    ThermoelectricPower(const ModelOptions& options);
 
     //! Destructor
     ~ThermoelectricPower(void) { };
@@ -93,9 +93,6 @@ class ThermoelectricPower : public DriftDiffusionModelInterface
     virtual void do_init (void);
 
     virtual void read_database(void);
-
-    virtual void do_init_alloy(const PhysicalModelInterface *comp_A,
-        const PhysicalModelInterface *comp_B, double xa); 
 
     virtual PhysicalModelInterface* create_new(void) const;
 
@@ -228,7 +225,7 @@ inline
 PhysicalModelInterface*
 ThermoelectricPower::create_new(void) const
 {
-  return (new ThermoelectricPower()); 
+  return (new ThermoelectricPower(get_options()));
 }
 
 

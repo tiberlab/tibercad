@@ -28,7 +28,7 @@ void PiezoelectricModel:: do_init_alloy (const PhysicalModelInterface *comp_A, c
 //--------------------------------------------------------------------//
 
 //--------------------------------------------------------------------//
-PiezoelectricModel::PiezoelectricModel() : PhysicalModelInterface( )
+PiezoelectricModel::PiezoelectricModel(const ModelOptions& options) : PhysicalModelInterface(options)
 {
   _pol = 0;
   _strain = 0;

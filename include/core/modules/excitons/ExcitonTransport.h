@@ -136,13 +136,13 @@ class ExcitonTransport : public SimulationInterface
     
 
     //! Constructor
-    ExcitonTransport(void);
+    ExcitonTransport(const ModelOptions& options);
 
     //! Destructor
     ~ExcitonTransport(void);
 
     //! Create an ExcitonTransport object
-    static ExcitonTransport* create(void);
+    static ExcitonTransport* create(const ModelOptions& options);
   
     
     /*! \copydoc SimulationInterface::create_physical_model() */
@@ -366,9 +366,9 @@ class ExcitonTransport : public SimulationInterface
 
 inline
 ExcitonTransport*
-ExcitonTransport::create(void)
+ExcitonTransport::create(const ModelOptions& options)
 {
-  return new ExcitonTransport();
+  return new ExcitonTransport(options);
 }
 
 

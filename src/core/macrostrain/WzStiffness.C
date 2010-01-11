@@ -7,18 +7,12 @@
 
 //---------------------------------------------------//
 
-WzStiffness::WzStiffness() :Stiffness()
+WzStiffness::WzStiffness(const ModelOptions& options) :Stiffness(options)
 {
   set_moduli(0,0,0,0,0);
 }
 //---------------------------------------------------//
 
-WzStiffness::WzStiffness(double c11, double c12, double c13, double c33, double c44) :Stiffness()
-{
-  set_moduli(c11, c12,  c13,  c33,  c44);
-}
-
-//-----------------------------------------------//
 
 void WzStiffness::set_moduli(double c11, double c12, double c13, double c33, double c44)
 

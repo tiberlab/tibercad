@@ -18,7 +18,7 @@ class ChargeDensityModel : public PhysicalModelInterface
 public:
   
   //!Constructor 
-  ChargeDensityModel();
+  ChargeDensityModel(const ModelOptions& options);
  
    //!Destructor
   ~ChargeDensityModel(){}
@@ -26,7 +26,7 @@ public:
    //!provides electrons thermoelectric power [V/K]
   double  get_charge_density(void) const;
   
-  static ChargeDensityModel* create();
+  static ChargeDensityModel* create(const ModelOptions& options);
 
  //!Recompute the charge density
   void re_init(void);
@@ -72,15 +72,15 @@ double   ChargeDensityModel::get_charge_density(void) const
 
 
 inline
-ChargeDensityModel*  ChargeDensityModel::create()
+ChargeDensityModel*  ChargeDensityModel::create(const ModelOptions& options)
 {
-  return (new  ChargeDensityModel());
+  return (new  ChargeDensityModel(options));
 }
 
 inline
 PhysicalModelInterface*  ChargeDensityModel::create_new () const
 {
-  return (new  ChargeDensityModel() ); 
+  return (new  ChargeDensityModel(get_options()) );
 }
 
 inline

@@ -17,14 +17,11 @@ class DirectRecombination : public RecombinationModelInterface
 
   public:
 
-    //! Constructor
-    DirectRecombination(void);
-
     //! Destructor
     virtual ~DirectRecombination(void) {};
 
     //! Create a ConstantMobility object
-    static DirectRecombination* create(void);
+    static DirectRecombination* create(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::get_net_recombination_rates()
     void get_net_recombination_rates(double& recomb_e, double& recomb_h);
@@ -42,6 +39,9 @@ class DirectRecombination : public RecombinationModelInterface
     
   protected:
 
+    //! Constructor
+    DirectRecombination(const ModelOptions& options);
+
     //! \copydoc RecombinationModelInterface::read_database()
     virtual void read_database(void);
 
@@ -51,10 +51,6 @@ class DirectRecombination : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    /*! \copydoc RecombinationModelInterface::do_init_alloy() */
-    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
-    
 
   private:
 
@@ -70,17 +66,18 @@ class DirectRecombination : public RecombinationModelInterface
 // 
 
 inline
-DirectRecombination::DirectRecombination(void)
-  : C_(0.0)
+DirectRecombination::DirectRecombination(const ModelOptions& options)
+  : RecombinationModelInterface(options),
+    C_(0.0)
 {
 }
 
 
 inline
 DirectRecombination*
-DirectRecombination::create(void)
+DirectRecombination::create(const ModelOptions& options)
 {
-  return new DirectRecombination();
+  return new DirectRecombination(options);
 }
 
 
@@ -96,7 +93,7 @@ inline
 PhysicalModelInterface*
 DirectRecombination::create_new(void) const
 {
-  return new DirectRecombination();
+  return new DirectRecombination(get_options());
 }
 
 

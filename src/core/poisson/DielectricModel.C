@@ -7,7 +7,8 @@
 #include "getpot.h"
 //-------------------------------------------------------------------------//
 
-DielectricModel::DielectricModel() :
+DielectricModel::DielectricModel(const ModelOptions& options) :
+  PhysicalModelInterface(options),
   _dielectric_constant(0)
 {
 }

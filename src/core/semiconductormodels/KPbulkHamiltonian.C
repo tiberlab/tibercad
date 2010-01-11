@@ -1,8 +1,10 @@
-#include "KPbulkHamiltonian.h"
-#include "getpot.h"
-#include "Alloy.h"
-#include "PhysicalModelInterface.h"
+// $Id$
 
+#include "KPbulkHamiltonian.h"
+#include "Material.h"
+#include "Constants.h"
+
+using namespace Constants;
 
 
 
@@ -50,20 +52,30 @@ void KPbulkHamiltonian::nullify_parameters(void)
 //================================================================
 KPbulkHamiltonian::~KPbulkHamiltonian()
 {
-  destroy(semiconductor);
 }
 
 
 //================================================================
 
-KPbulkHamiltonian::KPbulkHamiltonian( )
-  : model_name("6x6"),
+KPbulkHamiltonian::KPbulkHamiltonian(const ModelOptions& options)
+  : EFAbulkHamiltonian(options),
+    model_name("6x6"),
     semiconductor(NULL),
     band_min(2),
     band_max(7)
 {
 }
 
+
+void KPbulkHamiltonian::create_submodels(void)
+{
+  assert(semiconductor == NULL);
+
+  ModelOptions opt =  get_options();
+  opt.delete_all_submodels();
+  semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
+  add_submodel("semiconductor", semiconductor);
+}
 
 
 //=================================================================
@@ -75,14 +87,6 @@ void KPbulkHamiltonian::do_init()
 
   const ModelOptions& opt =  get_options ();
 
-  if (semiconductor == NULL)
-  {
-    semiconductor = Semiconductor::create( get_material() -> get_structure(), opt  );
-
-    semiconductor->set_material(get_material());
-
-    semiconductor->init();
-  }
 
 
   model_name = opt.get_option("kp_model","6x6");
@@ -133,7 +137,7 @@ void KPbulkHamiltonian::do_init()
   strainM = Tensor2Sym(0);
 
   //prepare k.p parameter
-  par = semiconductor->calculate_kp_params (model_name);
+  par = semiconductor->calculate_kp_params(model_name);
 
   //calculate general Hamiltonian
   calculate_Hamiltonian_gen();
@@ -152,30 +156,6 @@ void KPbulkHamiltonian::do_init()
 
 
 
-//==================================================================//
-void KPbulkHamiltonian::do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
-{
-  const KPbulkHamiltonian* modA = dynamic_cast<const KPbulkHamiltonian*> (comp_A);
-  const KPbulkHamiltonian* modB = dynamic_cast<const KPbulkHamiltonian*> (comp_B);
-
-
-  destroy(semiconductor);
-  semiconductor = static_cast<Semiconductor*>(modA->semiconductor->copy());
-  assert(semiconductor != NULL);
-  semiconductor->set_material(get_material());
-  semiconductor->init_alloy(modA->semiconductor, modB->semiconductor, xa);
-
-  strainM = modA->strainM;
-  model_name = modA->model_name;
-  kpVVtermSymmetric = modA->kpVVtermSymmetric;
-  kpCVtermSymmetric = modA->kpCVtermSymmetric;
-  band_min = modA->band_min;
-  band_max = modA->band_max;
-  set_k_vector(modA->k_vector);
-
-  set_rotation_matrix();
-
-}
 
 //==================================================================//
 

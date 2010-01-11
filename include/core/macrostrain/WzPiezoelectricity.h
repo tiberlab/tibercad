@@ -10,9 +10,6 @@ class WzPiezoelectricity : public Piezoelectricity
 {
  public:
 
-  WzPiezoelectricity();
-
-  WzPiezoelectricity(double  e33, double e31, double e15);
 
   void set_moduli(double  e33, double e31, double e15);
   
@@ -31,7 +28,7 @@ class WzPiezoelectricity : public Piezoelectricity
   virtual void calculate_product_by_vector(const Tensor1& f, Tensor2Sym& r) const;
 
 
-  static WzPiezoelectricity* create();
+  static WzPiezoelectricity* create(const ModelOptions& options);
 
  private:
 
@@ -41,33 +38,24 @@ class WzPiezoelectricity : public Piezoelectricity
   double e15;
 
 
-  double e33_bow;
-  double e31_bow;
-  double e15_bow;
-    
-
  protected:
 
+  WzPiezoelectricity(const ModelOptions& options);
+
   virtual void read_database(void);
-
-  virtual void read_database_alloy(void);
-
 
   virtual void do_init(void);
 
 
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
-
-  
   virtual PhysicalModelInterface* create_new(void) const;
  
 
 };
 
 
-inline WzPiezoelectricity* WzPiezoelectricity::create()
+inline WzPiezoelectricity* WzPiezoelectricity::create(const ModelOptions& options)
 {
-  return new WzPiezoelectricity();
+  return new WzPiezoelectricity(options);
 }
 
 #endif

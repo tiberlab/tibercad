@@ -15,14 +15,11 @@ class PhononModel: public PhysicalModel
 {
  public:
 
-  //!Constructor
-  PhononModel();
-
   //!Destructor
   ~PhononModel();
    
    //! creates a new object
-  static  PhononModel* create();
+  static  PhononModel* create(const ModelOptions& options);
 
   //!Get the thermal lattice conductivity
   // void get_dynamical_tensor(Tensor2Sym& dynamical_tensor){};
@@ -61,8 +58,6 @@ class PhononModel: public PhysicalModel
 
 
   ID free_ID;
-   //!copy constructor should not be used
-   PhononModel (const PhononModel &  t) {};
 
   ID add_dynamical_matrix_model(const std::string& model_name, 
 				  const ModelOptions& options);
@@ -94,6 +89,9 @@ class PhononModel: public PhysicalModel
    
  protected:
 
+  //!Constructor
+  PhononModel(const ModelOptions& options);
+
   virtual PhysicalModelInterface* create_new (void) const;
 
   virtual void do_init();
@@ -101,10 +99,10 @@ class PhononModel: public PhysicalModel
 };
 
 inline
-PhononModel* PhononModel::create()
+PhononModel* PhononModel::create(const ModelOptions& options)
 {
   std::cout<<"OK"<<std::endl;
-  return new  PhononModel();
+  return new  PhononModel(options);
 }
 
 
@@ -112,7 +110,7 @@ inline
 PhysicalModelInterface*
 PhononModel::create_new(void) const
 {
-  return new  PhononModel();
+  return new  PhononModel(get_options());
 }
 
 

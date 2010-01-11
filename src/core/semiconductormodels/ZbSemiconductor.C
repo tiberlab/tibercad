@@ -3,18 +3,11 @@
 #include "ZbSemiconductor.h"
 #include "Database.h"
 #include "Material.h"
+#include "Constants.h"
 
 using namespace std;
 
-typedef std::complex<double> Complex;
-extern "C"
-{
-  //ZHEEV( JOBZ, UPLO,  N, A,           LDA, W, WORK, LWORK, RWORK,INFO )
-  void zheev_(char& jobs, char& UPLO, int& N, Complex* ham6x6matrix, int& LDA, double* eigvals,  Complex* WORK, int& LWORK, double* RWORK, int& info);
-};
 
-const double ZbSemiconductor::Hartree = 27.2113961;
-//---------------------------------------------//
 
 
 
@@ -26,88 +19,48 @@ void ZbSemiconductor::do_init()
 
   //-----------------------------------------------------------------------------
   //parameters
-  {
-    get_parameter("Eg_G",  par.EgGamma );
-    get_parameter("Eg_L",  par.EgL);
-    get_parameter("Eg_X",  par.EgX);
-    get_parameter("E_v",   par.Ev);
+  get_parameter("Eg_G",  par.EgGamma );
+  get_parameter("Eg_L",  par.EgL);
+  get_parameter("Eg_X",  par.EgX);
+  get_parameter("E_v",   par.Ev);
 
-    par.m_G     = get_option("m_G",    par.m_G);
-    par.m_l_L   = get_option("m_L_l",  par.m_l_L);
-    par.m_t_L   = get_option("m_L_t",  par.m_t_L);
-    par.m_l_X   = get_option("m_X_l",  par.m_l_X);
-    par.m_t_X   = get_option("m_X_t",  par.m_t_X);
+  par.m_G     = get_option("m_G",    par.m_G);
+  par.m_l_L   = get_option("m_L_l",  par.m_l_L);
+  par.m_t_L   = get_option("m_L_t",  par.m_t_L);
+  par.m_l_X   = get_option("m_X_l",  par.m_l_X);
+  par.m_t_X   = get_option("m_X_t",  par.m_t_X);
 
-    par.a_c     = get_option("a_c", par.a_c);
-    par.a_v     = get_option("a_v", par.a_v );
-    par.b       = get_option("b",   par.b);
-    par.d       = get_option("d",   par.d);
+  par.a_c     = get_option("a_c", par.a_c);
+  par.a_v     = get_option("a_v", par.a_v );
+  par.b       = get_option("b",   par.b);
+  par.d       = get_option("d",   par.d);
 
-    par.delta  = get_option("delta",   par.delta);
-    par.gamma1 = get_option("gamma1", par.gamma1);
-    par.gamma2 = get_option("gamma2", par.gamma2);
-    par.gamma3 = get_option("gamma3", par.gamma3);
+  par.delta  = get_option("delta",   par.delta);
+  par.gamma1 = get_option("gamma1", par.gamma1);
+  par.gamma2 = get_option("gamma2", par.gamma2);
+  par.gamma3 = get_option("gamma3", par.gamma3);
 
-    par.def_vol_X   = get_option("abs_def_pot_X",      par.def_vol_X );
-    par.def_uniax_X = get_option("uniax_def_pot_X",  par.def_uniax_X);
-    par.def_vol_L   = get_option("abs_def_pot_L",      par.def_vol_L);
-    par.def_uniax_L = get_option("uniax_def_pot_L",  par.def_uniax_L);
+  par.def_vol_X   = get_option("abs_def_pot_X",      par.def_vol_X );
+  par.def_uniax_X = get_option("uniax_def_pot_X",  par.def_uniax_X);
+  par.def_vol_L   = get_option("abs_def_pot_L",      par.def_vol_L);
+  par.def_uniax_L = get_option("uniax_def_pot_L",  par.def_uniax_L);
 
-    par.Ep = get_option("Ep", par.Ep);
-
-
-
-    par.varshni_alpha_G = get_option("varshni_alpha_G", par.varshni_alpha_G);
-    par.varshni_alpha_L = get_option("varshni_alpha_L", par.varshni_alpha_L);
-    par.varshni_alpha_X = get_option("varshni_alpha_X", par.varshni_alpha_X);
-
-
-    par.varshni_beta_G = get_option("varshni_beta_G",  par.varshni_beta_G);
-    par.varshni_beta_L = get_option("varshni_beta_L",  par.varshni_beta_L);
-    par.varshni_beta_X = get_option("varshni_beta_X",  par.varshni_beta_X);
-
-  }
-  //------------------------------------------------------------------------------
-  //bowing
-  {
-    get_parameter("bow_Eg_G",  bow.EgGamma );
-    bow.EgL     = get_option("bow_Eg_L",  bow.EgL);
-    bow.EgX     = get_option("bow_Eg_X",  bow.EgX);
-    get_parameter("bow_E_v",   bow.Ev);
-
-    bow.m_G     = get_option("bow_m_G",    bow.m_G);
-    bow.m_l_L   = get_option("bow_m_L_l",  bow.m_l_L);
-    bow.m_t_L   = get_option("bow_m_L_t",  bow.m_t_L);
-    bow.m_l_X   = get_option("bow_m_X_l",  bow.m_l_X);
-    bow.m_t_X   = get_option("bow_m_X_t",  bow.m_t_X);
-
-    bow.a_c     = get_option("bow_a_c", bow.a_c);
-    bow.a_v     = get_option("bow_a_v", bow.a_v );
-    bow.b       = get_option("bow_b",   bow.b);
-    bow.d       = get_option("bow_d",   bow.d);
-
-    bow.delta  = get_option("bow_delta",   bow.delta);
-    bow.gamma1 = get_option("bow_gamma1", bow.gamma1);
-    bow.gamma2 = get_option("bow_gamma2", bow.gamma2);
-    bow.gamma3 = get_option("bow_gamma3", bow.gamma3);
-
-    bow.def_vol_X   = get_option("abs_def_pot_X",      bow.def_vol_X );
-    bow.def_uniax_X = get_option("uniax_def_pot_X",  bow.def_uniax_X);
-    bow.def_vol_L   = get_option("abs_def_pot_L",      bow.def_vol_L);
-    bow.def_uniax_L = get_option("uniax_def_pot_L",  bow.def_uniax_L);
-
-    bow.Ep = get_option("bow_Ep_1", bow.Ep);
+  par.Ep = get_option("Ep", par.Ep);
 
 
 
-  }
+  par.varshni_alpha_G = get_option("varshni_alpha_G", par.varshni_alpha_G);
+  par.varshni_alpha_L = get_option("varshni_alpha_L", par.varshni_alpha_L);
+  par.varshni_alpha_X = get_option("varshni_alpha_X", par.varshni_alpha_X);
 
-  //----------------------------------------------------------------------------
-  {
-    //here zero temperature and work parameters coinside
-    par_initial = par;
-  }
 
+  par.varshni_beta_G = get_option("varshni_beta_G",  par.varshni_beta_G);
+  par.varshni_beta_L = get_option("varshni_beta_L",  par.varshni_beta_L);
+  par.varshni_beta_X = get_option("varshni_beta_X",  par.varshni_beta_X);
+
+
+  //here zero temperature and work parameters coinside
+  par_initial = par;
 
 }
 
@@ -120,7 +73,6 @@ void ZbSemiconductor::read_database( )
   Database& db = get_database();
 
   // defaults for GaAs
-
   db.set_section("bandgap");
   par.EgGamma = db.get("Eg_G", 1.519);
   par.EgL = db.get("Eg_L", 1.815);
@@ -169,16 +121,6 @@ void ZbSemiconductor::read_database( )
   par.def_vol_L = db.get("abs_def_pot_L", -4.91);
   par.def_uniax_L = db.get("uniax_def_pot_L", 6.5);
 
-
-
-
-  //----------------------------------------------------------------------------
-  {
-    //here zero temperature and work parameters coinside
-    par_initial = par;
-  }
-
-
 }
 
 
@@ -194,81 +136,14 @@ void ZbSemiconductor::read_database_alloy()
   bow.EgL = db.get("bow_Eg_L", 0.0);
   bow.EgX = db.get("bow_Eg_X", 0.0);
 
-
-
-  db.set_section("valenceband");
-  bow.Ev = db.get("bow_E_v", 0.0);
-
-  db.set_section("conductionband");
-  bow.m_G = db.get("bow_m_G", 0.0);
-  bow.m_l_L = db.get("bow_m_L_l", 0.0);
-  bow.m_t_L = db.get("bow_m_L_t", 0.0);
-  bow.m_l_X = db.get("bow_m_X_l", 0.0);
-  bow.m_t_X = db.get("bow_m_X_t", 0.0);
-
-  db.set_section("kdotp");
-  bow.delta = db.get("bow_delta", 0.0);
-  bow.gamma1 = db.get("bow_gamma1", 0.0);
-  bow.gamma2 = db.get("bow_gamma2", 0.0);
-  bow.gamma3 = db.get("bow_gamma3", 0.0);
-
-  bow.Ep = db.get("bow_Ep", 0.0);
-
-
-
-  db.set_section("deformation_potentials");
-  bow.a_c = db.get("bow_a_c", 0.0);
-  bow.a_v = db.get("bow_a_v", 0.0);
-  bow.b = db.get("bow_b", 0.0);
-  bow.d = db.get("bow_d", 0.0);
-
-  bow.def_vol_X = db.get("bow_abs_def_pot_X", 0.0);
-  bow.def_uniax_X = db.get("bow_uniax_def_pot_X", 0.0);
-  bow.def_vol_L = db.get("bow_abs_def_pot_L", 0.0);
-  bow.def_uniax_L = db.get("bow_uniax_def_pot_L", 0.0);
-
 }
 
 
-//---------------------------------------------//
-void ZbSemiconductor::do_do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
-{
 
-  const ZbSemiconductor* modA = dynamic_cast<const ZbSemiconductor*> (comp_A);
-  const ZbSemiconductor* modB = dynamic_cast<const ZbSemiconductor*> (comp_B);
-
-  par.EgGamma = alloy( modA->par.EgGamma, modB->par.EgGamma, xa, bow.EgGamma);
-  par.EgL     = alloy( modA->par.EgL, modB->par.EgL, xa, bow.EgL);
-  par.EgX     = alloy( modA->par.EgX, modB->par.EgX, xa, bow.EgX);
-  par.Ev      = alloy( modA->par.Ev, modB->par.Ev, xa, bow.Ev);
-
-  par.m_G     = alloy( modA->par.m_G, modB->par.m_G, xa, bow.m_G);
-  par.m_l_L   = alloy( modA->par.m_l_L, modB->par.m_l_L, xa, bow.m_l_L);
-  par.m_t_L   = alloy( modA->par.m_t_L, modB->par.m_t_L, xa, bow.m_t_L);
-  par.m_l_X   = alloy( modA->par.m_l_X, modB->par.m_l_X, xa, bow.m_l_X);
-  par.m_t_X   = alloy( modA->par.m_t_X, modB->par.m_t_X, xa, bow.m_t_X);
-
-  par.a_c     = alloy( modA->par.a_c, modB->par.a_c, xa, bow.a_c);
-  par.a_v     = alloy( modA->par.a_v, modB->par.a_v, xa, bow.a_v);
-  par.b       = alloy( modA->par.b, modB->par.b, xa, bow.b);
-  par.d       = alloy( modA->par.d, modB->par.d, xa, bow.d);
-
-  par.delta  =  alloy( modA->par.delta, modB->par.delta, xa, bow.delta);
-  par.gamma1 =  alloy( modA->par.gamma1, modB->par.gamma1, xa, bow.gamma1);
-  par.gamma2 =  alloy( modA->par.gamma2, modB->par.gamma2, xa, bow.gamma2);
-  par.gamma3 =  alloy( modA->par.gamma3, modB->par.gamma3, xa, bow.gamma3);
-
-  par.def_vol_X   = alloy( modA->par.def_vol_X, modB->par.def_vol_X, xa, bow.def_vol_X);
-  par.def_uniax_X = alloy( modA->par.def_uniax_X, modB->par.def_uniax_X , xa, bow.def_uniax_X);
-  par.def_vol_L   = alloy( modA->par.def_vol_L, modB->par.def_vol_L, xa, bow.def_vol_L);
-  par.def_uniax_L = alloy( modA->par.def_uniax_L, modB->par.def_uniax_L , xa, bow.def_uniax_L);
-
-  par_initial = par;
-
-}
 
 //--------------------------------------------//
-ZbSemiconductor::ZbSemiconductor( )
+ZbSemiconductor::ZbSemiconductor(const ModelOptions& options)
+ : Semiconductor(options)
 {
 
 
@@ -295,7 +170,7 @@ KPparams ZbSemiconductor::do_calculate_8x8_kp_params (void )
   // from database we get the valence band maximum (VBM)
   double Ev_top = par.Ev;
 
-  result.E_c =  (Ev_top + par.EgGamma)/Hartree;
+  result.E_c =  (Ev_top + par.EgGamma)/Constants::Hartree;
 
 
 
@@ -306,7 +181,7 @@ KPparams ZbSemiconductor::do_calculate_8x8_kp_params (void )
   double s = 1.0;
 
   Ep = s*(1.0/par.m_G - 1.0)*
-    par.EgGamma * ( (par.EgGamma +  par.delta )/(par.EgGamma + 2.0/3.0 * par.delta ) ) / Hartree;
+    par.EgGamma * ( (par.EgGamma +  par.delta )/(par.EgGamma + 2.0/3.0 * par.delta ) ) / Constants::Hartree;
 
 
 
@@ -318,7 +193,7 @@ KPparams ZbSemiconductor::do_calculate_8x8_kp_params (void )
 
   //rescale L and N
 
-  double t =   0.5*Ep/( (par.EgGamma +  par.delta/3.0)/Hartree );
+  double t =   0.5*Ep/( (par.EgGamma +  par.delta/3.0)/Constants::Hartree );
 
 
 
@@ -386,33 +261,33 @@ KPparams ZbSemiconductor::do_calculate_6x6_kp_params (void )
   //    m  =  a_v  - b;
   //    n  =  \sqrt{3} d.
   //
-  result.l1s = (par.a_v + 2.0 * par.b)/Hartree; result.l2s = result.l1s;
+  result.l1s = (par.a_v + 2.0 * par.b)/Constants::Hartree; result.l2s = result.l1s;
 
-  result.m1s = (par.a_v - par.b)/Hartree;  result.m2s = result.m1s; result.m3s = result.m1s;
+  result.m1s = (par.a_v - par.b)/Constants::Hartree;  result.m2s = result.m1s; result.m3s = result.m1s;
 
-  result.n1s = (sqrt(3.0) * par.d)/Hartree; result.n2s = result.n1s;
+  result.n1s = (sqrt(3.0) * par.d)/Constants::Hartree; result.n2s = result.n1s;
 
 
   //------------------------------------------------------------------------------//
   //Conduction band deformation potential
   //
-  result.axs = par.a_c / Hartree;
+  result.axs = par.a_c / Constants::Hartree;
   result.azs = result.axs;
 
 
   //------------------------------------------------------------------------------//
   //  Averaged valence band energy
   //
-  result.E_v = (par.Ev - par.delta / 3.0) / Hartree;
+  result.E_v = (par.Ev - par.delta / 3.0) / Constants::Hartree;
 
 
   //------------------------------------------------------------------------------//
   //spin-orbit energy
   result.d1 = 0.0 ; //no crystal field splitting
-  result.d2 = (par.delta/3) / Hartree;
-  result.d3 = (par.delta/3) / Hartree;
+  result.d2 = (par.delta/3) / Constants::Hartree;
+  result.d3 = (par.delta/3) / Constants::Hartree;
 
-  result.P1  = std::sqrt(par.Ep * 0.5 / Hartree);
+  result.P1  = std::sqrt(par.Ep * 0.5 / Constants::Hartree);
   result.P2  = result.P1;
 
   return(result);

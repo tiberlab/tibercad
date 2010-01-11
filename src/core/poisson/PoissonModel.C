@@ -7,7 +7,8 @@
 #include "PiezoelectricModel.h"
 
 
-PoissonModel::PoissonModel(void) :
+PoissonModel::PoissonModel(const ModelOptions& options) :
+  PhysicalModel(options),
   _pyropolarization(NULL),
   _strain_sim(NULL),
   _chd_sim(NULL),
@@ -32,7 +33,7 @@ PoissonModel::~PoissonModel(void)
 
 PhysicalModelInterface* PoissonModel::create_new (void) const
 {
-   return new PoissonModel;
+   return new PoissonModel(get_options());
 }
 
 //==========================================================================//

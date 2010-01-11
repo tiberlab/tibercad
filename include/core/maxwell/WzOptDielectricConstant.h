@@ -10,14 +10,12 @@ class  WzOptDielectricConstant: public OptDielectricConstant
 
 {
  public:
-  //!constructor
-  WzOptDielectricConstant() {};
  
  //!destructor
  virtual ~WzOptDielectricConstant() {};
 
 
- inline  static WzOptDielectricConstant* create();
+ inline  static WzOptDielectricConstant* create(const ModelOptions& options);
 
  
 
@@ -35,6 +33,9 @@ class  WzOptDielectricConstant: public OptDielectricConstant
 
  protected:
  
+  //!constructor
+  WzOptDielectricConstant(const ModelOptions& options);
+
   virtual void read_database(void);
 
 
@@ -46,19 +47,24 @@ class  WzOptDielectricConstant: public OptDielectricConstant
 };
 
 
+inline
+WzOptDielectricConstant::WzOptDielectricConstant(const ModelOptions& options) :
+  OptDielectricConstant(options)
+{
+}
 
 
 inline
-WzOptDielectricConstant* WzOptDielectricConstant::create()
+WzOptDielectricConstant* WzOptDielectricConstant::create(const ModelOptions& options)
 
 {
-  return (new WzOptDielectricConstant());
+  return new WzOptDielectricConstant(options);
 }
 
 inline
 PhysicalModelInterface*  WzOptDielectricConstant::create_new (void) const
 {
-  return (new WzOptDielectricConstant() ); 
+  return new WzOptDielectricConstant(get_options());
 }
 
 

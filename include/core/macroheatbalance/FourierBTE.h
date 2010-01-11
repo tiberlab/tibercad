@@ -9,7 +9,7 @@ class FourierBTE : public ThermalContact
 {
  public:
   //!Constructor	 
-  FourierBTE();
+  FourierBTE(const ModelOptions& options);
   //!Destructor 
   ~FourierBTE(){};
   //!Return the temperature of the contact
@@ -19,7 +19,7 @@ class FourierBTE : public ThermalContact
   void set_temperature(double Temp){};
    
   //!Create a Reservoir object and return its pointer
-  static  FourierBTE* create(void);
+  static  FourierBTE* create(const ModelOptions& options);
 
   //! The interface to the lattice temperature simulation
   TemperatureInterface _lattice_temp;
@@ -50,9 +50,9 @@ class FourierBTE : public ThermalContact
 
 inline
 FourierBTE* 
-FourierBTE::create()
+FourierBTE::create(const ModelOptions& options)
 {
-  return new  FourierBTE();
+  return new  FourierBTE(options);
 }
 
 

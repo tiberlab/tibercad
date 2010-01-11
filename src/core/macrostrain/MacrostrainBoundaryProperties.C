@@ -10,7 +10,8 @@
 #include "InitFailedException.h"
 
 
-MacrostrainBoundaryProperties::MacrostrainBoundaryProperties() : BoundaryProperties()
+MacrostrainBoundaryProperties::MacrostrainBoundaryProperties(const ModelOptions& options)
+ : BoundaryProperties(options)
 {
 
 
@@ -23,16 +24,13 @@ MacrostrainBoundaryProperties::create(const std::string & name,  const ModelOpti
   MacrostrainBoundaryProperties* result = NULL;
 
   if (name == "substrate")
-    result = MacrostrainSubstrate::create();
+    result = MacrostrainSubstrate::create(options);
   else if (name == "pressure")
-    result = MacrostrainPressure::create();
+    result = MacrostrainPressure::create(options);
   else if (name == "extended_material")
-    result = MacrostrainExtended::create();
+    result = MacrostrainExtended::create(options);
    else if (name == "support")
-    result = MacrostrainSupport::create();
-
-  if (result != NULL)
-    result->set_options(options);
+    result = MacrostrainSupport::create(options);
 
   return result;
 }
@@ -40,7 +38,8 @@ MacrostrainBoundaryProperties::create(const std::string & name,  const ModelOpti
 
 //==================================================================================//
 
-MacrostrainSubstrate::MacrostrainSubstrate()  :MacrostrainBoundaryProperties()
+MacrostrainSubstrate::MacrostrainSubstrate(const ModelOptions& options)
+ : MacrostrainBoundaryProperties(options)
 {
   material = NULL;
 }
@@ -74,7 +73,8 @@ void MacrostrainSubstrate::do_init()
 
 
 //====================================================================================//
-MacrostrainPressure::MacrostrainPressure() :  MacrostrainBoundaryProperties()
+MacrostrainPressure::MacrostrainPressure(const ModelOptions& options)
+ : MacrostrainBoundaryProperties(options)
 {
   value = 0;
 

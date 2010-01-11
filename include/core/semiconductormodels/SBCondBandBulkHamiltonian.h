@@ -14,7 +14,6 @@ class Semiconductor;
 class SBCondBandBulkHamiltonian: public SBbulkHamiltonian
 {
  public:
-  SBCondBandBulkHamiltonian(void);
 
 
  ~SBCondBandBulkHamiltonian(void);
@@ -29,14 +28,16 @@ class SBCondBandBulkHamiltonian: public SBbulkHamiltonian
 
  protected:
 
+  SBCondBandBulkHamiltonian(const ModelOptions& options);
+
  virtual PhysicalModelInterface* create_new(void) const = 0 ;
 
 
  virtual void do_init(void);
 
- 
- virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
+ virtual void create_submodels(void);
 
+ 
 
  //! a pointer to a semiconductor that contains parameters
  Semiconductor* semiconductor;
@@ -52,8 +53,9 @@ class SBCondBandBulkHamiltonian: public SBbulkHamiltonian
 };
 //----------------------------------------------------------------------------------------//
 
-inline SBCondBandBulkHamiltonian::SBCondBandBulkHamiltonian()
-  : semiconductor(NULL)
+inline SBCondBandBulkHamiltonian::SBCondBandBulkHamiltonian(const ModelOptions& options)
+  : SBbulkHamiltonian(options),
+    semiconductor(NULL)
 {
 }
 

@@ -8,18 +8,13 @@
 
 //---------------------------------------------------//
 
-ZbStiffness::ZbStiffness() :Stiffness()
+ZbStiffness::ZbStiffness(const ModelOptions& options) :Stiffness(options)
 {
 set_moduli(0, 0,  0);
 }
 //---------------------------------------------------//
 
-ZbStiffness::ZbStiffness(double c11, double c12, double c44) : Stiffness()
-{
 
-  set_moduli(c11,  c12,  c44);
-
-}
 
 //----------------------------------------------------//
 

@@ -28,28 +28,18 @@ class PhysicalModel : public PhysicalModelInterface
 
   protected:
 
-    //! The type of the submodel list
-    typedef std::map<std::string, PhysicalModelInterface*> SubmodelMap;
-
-    //! An iterator for the submodels
-    SubmodelMap::iterator SubmodelIterator;
-
-
     //! We don't want this to be instantiated directly
-    PhysicalModel(void);
+    PhysicalModel(const ModelOptions& options);
     
 
   private:
-
-
-    //! A list of submodels
-    SubmodelMap _submodels;
 
     
 };
 
 inline
-PhysicalModel::PhysicalModel(void)
+PhysicalModel::PhysicalModel(const ModelOptions& options)
+ : PhysicalModelInterface(options)
 {
 }
 

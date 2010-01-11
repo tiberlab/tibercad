@@ -6,8 +6,9 @@
 #include "tensor.h"
 
 
-DynamicalMatrix::DynamicalMatrix()
- :_dynamical_matrix(0)
+DynamicalMatrix::DynamicalMatrix(const ModelOptions& options)
+ : PhysicalModelInterface(options),
+   _dynamical_matrix(0)
 {  
   
 }

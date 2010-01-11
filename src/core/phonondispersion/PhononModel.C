@@ -6,7 +6,8 @@ void PhononModel::fake(void)
 }
 
 
-PhononModel::PhononModel() :
+PhononModel::PhononModel(const ModelOptions& options) :
+  PhysicalModel(options),
   _elem(NULL)
 {
 }

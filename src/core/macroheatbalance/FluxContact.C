@@ -4,7 +4,8 @@
 
 
 //===================================================================================//
-FluxContact::FluxContact()
+FluxContact::FluxContact(const ModelOptions& options)
+ : ThermalContact(options)
 {
   
   set_type(ThermalContact::FluxContact);

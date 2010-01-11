@@ -146,7 +146,7 @@ class ElectricalContact : public BoundaryProperties
   protected:
 
     //! This class is not intended for direct use
-    ElectricalContact(void);
+    ElectricalContact(const ModelOptions& options);
 
     //! Set the boundary condition type for \c variable
     void set_type(DriftDiffusionDefs::DDVariable variable,
@@ -246,8 +246,9 @@ class ElectricalContact : public BoundaryProperties
 
 
 inline
-ElectricalContact::ElectricalContact(void)
-  : _voltage(0.0),
+ElectricalContact::ElectricalContact(const ModelOptions& options)
+  : BoundaryProperties(options),
+    _voltage(0.0),
     _surfres(0.0),
     _properties(NULL),
     _real_contact(true),

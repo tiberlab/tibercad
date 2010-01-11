@@ -50,8 +50,9 @@ SimulationInterface::_simulation_map;
 
 
 
-SimulationInterface::SimulationInterface(void)
-  : _environment(0),
+SimulationInterface::SimulationInterface(const ModelOptions& options)
+  : TiberModelObject(options),
+    _environment(0),
     _is_initialized(false),
     _is_solved(false),
     _equilibrium_is_solved(false),
@@ -100,65 +101,64 @@ SimulationInterface::create(const string& type,
 
 #ifndef BUILD_TIBER_MODULES
   if (type_name == "driftdiffusion")
-    sim = DriftDiffusion::create();
+    sim = DriftDiffusion::create(options);
   else if (type_name == "dssc")
-    sim = DSSC::create();
+    sim = DSSC::create(options);
   else if (type_name == "excitontransport")
-    sim = ExcitonTransport::create();
+    sim = ExcitonTransport::create(options);
   else if (type_name == "macrostrain")
 #else
   if (type_name == "macrostrain")
 #endif
-    sim = Macrostrain::create();
+    sim = Macrostrain::create(options);
   else if (type_name == "crackstrain")
-    sim = CrackStrain::create();
+    sim = CrackStrain::create(options);
   else if (type_name == "efaschroedinger")
-    sim = EnvelopFunctionApprox::create();
+    sim = EnvelopFunctionApprox::create(options);
   else if (type_name == "sweep")
-    sim = Sweep::create();
+    sim = Sweep::create(options);
   else if (type_name == "thermal")
-    sim = MacroHeatBalance::create();
+    sim = MacroHeatBalance::create(options);
   else if (type_name == "selfconsistent")
-    sim = RelaxationMethod::create();
+    sim = RelaxationMethod::create(options);
   else if (type_name == "selfconsistent_relaxation")
-    sim = RelaxationMethod::create();
+    sim = RelaxationMethod::create(options);
   else if (type_name == "selfconsistent_broyden")
-    sim = ModifiedBroyden::create();
+    sim = ModifiedBroyden::create(options);
   else if (type_name == "quantumdensity")
-    sim = QuantumDensity::create();
+    sim = QuantumDensity::create(options);
   else if (type_name == "opticskp")
-    sim = OpticsKP::create();
+    sim = OpticsKP::create(options);
   else if (type_name == "quantumdispersion")
-    sim = QuantumDispersion::create();
+    sim = QuantumDispersion::create(options);
   else if (type_name == "tunnelingcurrent")
-    sim = TunnelingCurrent::create();
+    sim = TunnelingCurrent::create(options);
 #ifdef ENABLE_DFTB
   else if (type_name == "densityfunctional_tb")
-    sim = Dftb::create();
+    sim = Dftb::create(options);
 #endif
 #ifdef ENABLE_UPTIGHT
   else if (type_name == "empirical_tb")
-    sim = ETB::create();
+    sim = ETB::create(options);
   else if (type_name == "opticstb")
-    sim = OpticsTB::create();
+    sim = OpticsTB::create(options);
 #endif
   else if (type_name == "opticalspectrum")
-    sim = OptRecombinSpectrum::create();
+    sim = OptRecombinSpectrum::create(options);
   else if (type_name == "poisson")
-    sim = Poisson::create();
+    sim = Poisson::create(options);
   else if (type_name == "maxwell")
-    sim = MaxwellEquations::create();
+    sim = MaxwellEquations::create(options);
   else if (type_name == "phonondispersion")
-    sim = PhononDispersion::create();
+    sim = PhononDispersion::create(options);
  else if (type_name == "gray_model")
-    sim = MicroHeatBalance::create();
+    sim = MicroHeatBalance::create(options);
 
   if (sim == NULL)
-    create_from_library(type_name, sim);
+    sim = create_from_library<SimulationInterface>(type_name, options);
 
   if (sim != NULL)
   {
-    sim->set_options(options);
 
     // we let it know what's its identifier
     sim->set_type(type);
@@ -733,6 +733,9 @@ SimulationInterface::do_remember_current_solution(ID id)
     else
       id = (--end)->first + 1;
 
+    // the solution vector might be unclosed which produces an error
+    // in debug mode
+    get_solution_vector().close();
     _remembered_solutions[id] = get_solution_vector().clone().release();
   }
 
@@ -1241,6 +1244,7 @@ SimulationInterface::create_embracing_region(
 {
   Embracing* emb = NULL;
   if (other_simulation != NULL)
+  {
     if (_embracings.find(other_simulation) != _embracings.end())
       emb = _embracings[other_simulation];
     else
@@ -1250,6 +1254,7 @@ SimulationInterface::create_embracing_region(
       emb->need_mixing_coeff(need_mixing_coeff);
       emb->init(options);
     }
+  }
 
   return emb;
 }

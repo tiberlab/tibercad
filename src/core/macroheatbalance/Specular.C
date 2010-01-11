@@ -1,10 +1,13 @@
- #include "Specular.h"
- #include "SimulationOptions.h"
+// $Id$
+
+#include "Specular.h"
+#include "SimulationOptions.h"
 
 
 
 //===================================================================================//
-Specular::Specular()
+Specular::Specular(const ModelOptions& options)
+  : ThermalContact(options)
 {
 
   set_type(ThermalContact::Specular);

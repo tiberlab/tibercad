@@ -150,9 +150,27 @@ class ModelOptions
      * \param name the name of the model to be added
      * \param options the ModelOptions
      *
-     * \note { The model name doesn't have to be unique. }
+     * \note The model name doesn't have to be unique.
      */
     void add_submodel(const std::string& name, const ModelOptions& options);
+
+
+    //! Delete a certain submodel
+    /*!
+     * \param it the iterator to the submodel options to be deleted
+     */
+    void delete_submodel(submodel_iterator it);
+
+
+    //! Delete all submodels of a certain kind
+    /*!
+     * \param name the name of the model to be deleted
+     */
+    void delete_submodels(const std::string& name);
+
+
+    //! Delete all submodels
+    void delete_all_submodels(void);
 
 
     //! Check if there is a certain submodel

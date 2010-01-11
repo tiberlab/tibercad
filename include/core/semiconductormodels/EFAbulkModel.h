@@ -9,18 +9,19 @@ class EFAbulkModel: public PhysicalModel
 {
 
  public: 
-  //!Constructor
-  EFAbulkModel();
 
   //!Destructor
   ~EFAbulkModel();
 
   //!creates a new object
-  static EFAbulkModel* create();
+  static EFAbulkModel* create(const ModelOptions& options);
 
   EFAbulkHamiltonian* get_Hamiltonian_model(void) const;
 
  protected:
+
+  //!Constructor
+  EFAbulkModel(const ModelOptions& options);
 
   virtual PhysicalModelInterface* create_new (void) const;
 
@@ -36,20 +37,18 @@ class EFAbulkModel: public PhysicalModel
   //! a pointer to the bulk Hamiltonian
   EFAbulkHamiltonian*  _bulkHamiltonian;
 
-  //!copy constructor should not be used
-  EFAbulkModel(const EFAbulkModel & t ) {};
 
 };
 
 
-inline EFAbulkModel*  EFAbulkModel::create()
+inline EFAbulkModel*  EFAbulkModel::create(const ModelOptions& options)
 {
-  return new EFAbulkModel();
+  return new EFAbulkModel(options);
 }
 
 inline  PhysicalModelInterface* EFAbulkModel::create_new (void) const
 {
-  return new EFAbulkModel();
+  return new EFAbulkModel(get_options());
 }
 
 inline  EFAbulkHamiltonian* EFAbulkModel::get_Hamiltonian_model(void) const

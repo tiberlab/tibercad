@@ -49,8 +49,9 @@ DSSC::_this;
 
 
 
-DSSC::DSSC(void)
-  : _rebuild_eq_system(true),
+DSSC::DSSC(const ModelOptions& options)
+  : SimulationInterface(options),
+    _rebuild_eq_system(true),
     _poisson_only(false),
     _scaling_type(Scaling::UNITS)
 {

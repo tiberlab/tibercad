@@ -35,14 +35,14 @@ class TunnelingCurrent: public KspaceIntegration
 
 
   //! Consructor
-  TunnelingCurrent();
+  TunnelingCurrent(const ModelOptions& options);
 
   //! Destructor
   ~TunnelingCurrent();
 
 
   //!creates a new object 
-  static  TunnelingCurrent* create();
+  static  TunnelingCurrent* create(const ModelOptions& options);
 
 
  

@@ -10,7 +10,8 @@ using namespace std;
 
 //===================================================================================//
 
-QuantumDensity::QuantumDensity()
+QuantumDensity::QuantumDensity(const ModelOptions& options)
+ : KspaceIntegration(options)
 {
   quantum_model = NULL;
 

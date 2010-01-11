@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _WZSEMICONDUCTOR_H_
 #define _WZSEMICONDUCTOR_H_
 
@@ -95,9 +97,6 @@ class  WzSemiconductor : public Semiconductor
 
   };
 
-  //Constructor
-  WzSemiconductor(void);
-
  
   
 
@@ -151,7 +150,7 @@ class  WzSemiconductor : public Semiconductor
 
 
  
-  static WzSemiconductor* create(void); 
+  static WzSemiconductor* create(const ModelOptions& options);
  
   //! apply varshni formulas
   virtual void apply_temperature(void);
@@ -167,12 +166,12 @@ class  WzSemiconductor : public Semiconductor
   //!bowing parameters
   WzDDparameters bow; 
 
-  //! Hartree energy in eV
-  static const double Hartree;
-  
   
 
  protected:
+
+  //Constructor
+  WzSemiconductor(const ModelOptions& options);
 
   virtual PhysicalModelInterface* create_new(void) const;
 
@@ -182,19 +181,17 @@ class  WzSemiconductor : public Semiconductor
 
   virtual void read_database_alloy(void);
  
-  virtual void do_do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa);
-
 
 };
 
 inline PhysicalModelInterface* WzSemiconductor::create_new( ) const
 {
-  return ( new WzSemiconductor() );
+  return ( new WzSemiconductor(get_options()) );
 }
 
-inline WzSemiconductor* WzSemiconductor::create() 
+inline WzSemiconductor* WzSemiconductor::create(const ModelOptions& options)
 {
-  return  new WzSemiconductor() ;
+  return  new WzSemiconductor(options) ;
 }
 
 

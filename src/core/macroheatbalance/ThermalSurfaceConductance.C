@@ -4,7 +4,8 @@
 
 
 //===================================================================================//
-ThermalSurfaceConductance::ThermalSurfaceConductance()
+ThermalSurfaceConductance::ThermalSurfaceConductance(const ModelOptions& options)
+ : ThermalContact(options)
 {
   
   set_type(ThermalContact::ThermalSurfaceConductance);

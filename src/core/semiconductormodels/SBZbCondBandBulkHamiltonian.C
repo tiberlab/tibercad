@@ -2,27 +2,14 @@
 
 #include "SBZbCondBandBulkHamiltonian.h"
 #include "ZbSemiconductor.h"
+#include "Constants.h"
 
 using namespace std;
-
-
-
-//===========================================================================//
-void SBZbCondBandBulkHamiltonian::do_init()
-{
-
-
-
-  SBCondBandBulkHamiltonian::do_init();
-
-
-
-  calculate_for_init();
+using namespace Constants;
 
 
 
 
-}
 
 //===========================================================================//
 void SBZbCondBandBulkHamiltonian::calculate_for_init(void)

@@ -116,20 +116,3 @@ FieldAssistedMobility::get_derivative_grad_fermi(RealGradient& dm)
 */
 }
 
-
-void
-FieldAssistedMobility::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
-{
-
-  const FieldAssistedMobility* scA =
-    dynamic_cast<const FieldAssistedMobility*>(comp_A);
-  const FieldAssistedMobility* scB =
-    dynamic_cast<const FieldAssistedMobility*>(comp_B);
-
-  _force = scA->_force;
-
-  _mu0 = alloy(scA->_mu0, scB->_mu0, xa);
-  _E0 = alloy(scA->_E0, scB->_E0, xa);
-}
-

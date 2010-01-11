@@ -21,13 +21,13 @@ class ExcitonModel : public ExcitonProperties
   public:
   
     //! The empty constructor.
-    ExcitonModel(void);
+    ExcitonModel(const ModelOptions& options);
        
     //! A default (empty) destructor.
     virtual ~ExcitonModel(void);
 
     //! This method creates an ExcitonModel object
-    static ExcitonModel* create(void);
+    static ExcitonModel* create(const ModelOptions& options);
 
 
   protected:
@@ -37,10 +37,6 @@ class ExcitonModel : public ExcitonProperties
 
     /*! \copydoc PhysicalModel::create_new() */
     virtual PhysicalModelInterface* create_new(void) const;
-
-    /*! \copydoc PhysicalModel::do_init_alloy() */
-    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
 
     /*! \copydoc ExcitonProperties::read_database() */
     virtual void read_database(void);
@@ -112,15 +108,15 @@ inline
 PhysicalModelInterface*
 ExcitonModel::create_new(void) const
 {
-  return new ExcitonModel();
+  return new ExcitonModel(get_options());
 }
 
 
 inline
 ExcitonModel*
-ExcitonModel::create(void)
+ExcitonModel::create(const ModelOptions& options)
 {
-  return new ExcitonModel();
+  return new ExcitonModel(options);
 }
 
 

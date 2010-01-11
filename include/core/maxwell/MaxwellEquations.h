@@ -33,7 +33,7 @@ class MaxwellEquations : public FEMEigenvalueProblem
 
 
   //!constructor
-  MaxwellEquations(void);
+  MaxwellEquations(const ModelOptions& options);
   
   //!destructor
   virtual ~MaxwellEquations(void) {};
@@ -48,7 +48,7 @@ class MaxwellEquations : public FEMEigenvalueProblem
     throw (ModelErrorException);
 
 
-  static  MaxwellEquations* create();
+  static  MaxwellEquations* create(const ModelOptions& options);
 
 
 
@@ -197,9 +197,9 @@ inline int MaxwellEquations:: LeviCivita_product(int j, int k , int m, int n)
 
 //------------------------------------------------------------------------//
 
-inline MaxwellEquations* MaxwellEquations::create()
+inline MaxwellEquations* MaxwellEquations::create(const ModelOptions& options)
 {
- return (new MaxwellEquations);
+ return (new MaxwellEquations(options));
 }
 
 //------------------------------------------------------------------------//

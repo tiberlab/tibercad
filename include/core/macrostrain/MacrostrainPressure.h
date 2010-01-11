@@ -6,14 +6,14 @@ class MacrostrainPressure : public MacrostrainBoundaryProperties
 {
  public:
 
-  
-  MacrostrainPressure();
 
   double get_value(void) const;
 
-  static MacrostrainPressure* create();
+  static MacrostrainPressure* create(const ModelOptions& options);
 
  protected:
+
+  MacrostrainPressure(const ModelOptions& options);
 
   virtual void 	do_init (void);
 
@@ -27,9 +27,9 @@ class MacrostrainPressure : public MacrostrainBoundaryProperties
 
 }; 
 
-inline MacrostrainPressure* MacrostrainPressure::create()
+inline MacrostrainPressure* MacrostrainPressure::create(const ModelOptions& options)
 {
-  return new MacrostrainPressure;
+  return new MacrostrainPressure(options);
 }
 
 

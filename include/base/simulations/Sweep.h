@@ -29,7 +29,7 @@ class Sweep : public SimulationInterface
     virtual ~Sweep(void);
 
     //! Create a Sweep object
-    static Sweep* create(void);
+    static Sweep* create(const ModelOptions& options);
 
 
     //! Get the list of inner simulations
@@ -41,7 +41,7 @@ class Sweep : public SimulationInterface
   protected:
 
     //! Constructor
-    Sweep(void);
+    Sweep(const ModelOptions& options);
 
     /*! \copydoc SimulationInterface::do_init() */
     virtual void do_init(void);
@@ -184,8 +184,9 @@ class Sweep : public SimulationInterface
 
 
 inline
-Sweep::Sweep(void)
-  : _variable(""),
+Sweep::Sweep(const ModelOptions& options)
+  : SimulationInterface(options),
+    _variable(""),
     _min_step(1e-3),
     _max_step(10),
     _plot_data(false)
@@ -196,9 +197,9 @@ Sweep::Sweep(void)
 
 inline
 Sweep*
-Sweep::create(void)
+Sweep::create(const ModelOptions& options)
 {
-  return new Sweep();
+  return new Sweep(options);
 }
 
 

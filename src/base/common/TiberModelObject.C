@@ -100,7 +100,8 @@ TiberModelObject::get_option(const std::string& name,
 
 
 TiberModelObject*
-TiberModelObject::create_from_library(const std::string& name)
+TiberModelObject::_create_from_library(const std::string& name,
+    const ModelOptions& options)
 {
   TiberModelObject* obj = NULL;
 
@@ -113,7 +114,7 @@ TiberModelObject::create_from_library(const std::string& name)
     create_t create = (create_t) iface.create_fnc;
 
     assert(create != NULL);
-    obj = create();
+    obj = create(options);
 
     if (obj != NULL)
     {
@@ -131,12 +132,13 @@ TiberModelObject::create_from_library(const std::string& name)
 
 
 TiberModelObject*
-TiberModelObject::create_from_function(create_t create, destroy_t destroy)
+TiberModelObject::create_from_function(create_t create, destroy_t destroy,
+    const ModelOptions& options)
 {
   assert(create != NULL);
   assert(destroy != NULL);
 
-  TiberModelObject* obj = create();
+  TiberModelObject* obj = create(options);
 
   if (obj != NULL)
   {

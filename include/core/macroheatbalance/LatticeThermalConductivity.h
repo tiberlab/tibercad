@@ -21,7 +21,7 @@ class LatticeThermalConductivity : public PhysicalModelInterface
 public:
 
   //!Constructor
-  LatticeThermalConductivity();
+  LatticeThermalConductivity(const ModelOptions& options);
 
    //!Destructor
   ~LatticeThermalConductivity(){};

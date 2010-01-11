@@ -6,21 +6,9 @@
 #include "Material.h"
 
 
-//----------------------------------------------------------------------//
-void Stiffness:: do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)
-{
-  const Stiffness* modA = dynamic_cast<const Stiffness*>(comp_A);
-
-  const Stiffness* modB = dynamic_cast<const Stiffness*>(comp_B);
-
-  alloy(C_cr,  modA->C_cr, modB->C_cr, xa);
-
-}
 //--------------------------------------------------------------------//
 
-//--------------------------------------------------------------------//
-
-Stiffness::Stiffness() : PhysicalModelInterface( )
+Stiffness::Stiffness(const ModelOptions& options) : PhysicalModelInterface(options)
 {
   C_cr = 0;
 

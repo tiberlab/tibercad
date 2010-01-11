@@ -22,11 +22,11 @@ using namespace std;
 SemiconductorModel::~SemiconductorModel(void)
 {
   reset();
-  destroy(_bulk_model);
 }
 
-SemiconductorModel::SemiconductorModel(void)
-  : _bulk_model(NULL),
+SemiconductorModel::SemiconductorModel(const ModelOptions& options)
+  : DriftDiffusionProperties(options),
+    _bulk_model(NULL),
     _is_prepared(false),
     _recompute_band_parameters(false)
 {
@@ -41,16 +41,17 @@ SemiconductorModel::reset(void)
 }
 
 
+
 void
-SemiconductorModel::do_init(void)
+SemiconductorModel::create_submodels(void)
 {
 
-  Parent::do_init();
+  DriftDiffusionProperties::create_submodels();
 
-  const ModelOptions& opt = get_options();
-
-  _recompute_band_parameters = get_option("recompute_band_parameters",
-      _recompute_band_parameters);
+  // this is dirty as for now the band parameters are not given
+  // by a physical_model
+  ModelOptions opt(get_options());
+  opt.delete_all_submodels();
 
   if (_bulk_model == NULL)
   {
@@ -59,35 +60,24 @@ SemiconductorModel::do_init(void)
     if (_bulk_model == NULL)
       throw InitFailedException("Unknown structure for DDsemiconductor");
 
-    _bulk_model->set_material(get_material());
-    _bulk_model->set_simulator_id(get_simulator_id());
+    add_submodel("bandstructure", _bulk_model);
 
-    _bulk_model->init();
   }
 }
 
 
-
 void
-SemiconductorModel::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
+SemiconductorModel::do_init(void)
 {
-  Parent::do_init_alloy(comp_A, comp_B, xa);
 
-  const SemiconductorModel* scA =
-    dynamic_cast<const SemiconductorModel*>(comp_A);
-  const SemiconductorModel* scB =
-    dynamic_cast<const SemiconductorModel*>(comp_B);
+  Parent::do_init();
 
-  _recompute_band_parameters = scA->_recompute_band_parameters;
-
-  destroy(_bulk_model);
-  _bulk_model = static_cast<DDsemiconductor*>(scA->_bulk_model->copy());
-  assert(_bulk_model != NULL);
-  _bulk_model->set_material(get_material());
-  _bulk_model->init_alloy(scA->_bulk_model, scB->_bulk_model, xa);
+  _recompute_band_parameters = get_option("recompute_band_parameters",
+      _recompute_band_parameters);
 
 }
+
+
 
 
 

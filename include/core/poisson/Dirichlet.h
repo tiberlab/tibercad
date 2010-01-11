@@ -9,7 +9,7 @@ class Dirichlet : public PoissonContact
 {
  public:
   //!Constructor	 
-  Dirichlet();
+  Dirichlet(const ModelOptions& options);
   //!Destructor 
   ~Dirichlet(){};
 
@@ -20,7 +20,7 @@ class Dirichlet : public PoissonContact
   void set_potential(double potential);
    
   //!Create a Dirichlet object and return its pointer
-  static Dirichlet* create(void);
+  static Dirichlet* create(const ModelOptions& options);
 
  protected:
 
@@ -38,9 +38,9 @@ class Dirichlet : public PoissonContact
 
 inline
 Dirichlet* 
-Dirichlet::create()
+Dirichlet::create(const ModelOptions& options)
 {
-  return new Dirichlet();
+  return new Dirichlet(options);
 }
 
 inline 
