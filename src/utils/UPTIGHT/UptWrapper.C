@@ -63,7 +63,11 @@ void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath,
 
 }
 
-
+//! set output wavefunction parameters
+void UptWrapper::set_output(char *format, double step)
+{
+  f77_upt_setoutput(_handler, format, step);
+}
 
 //!Initialize UPT instance (allocations)
 int UptWrapper::inituptight() 
@@ -77,6 +81,7 @@ int UptWrapper::inituptight()
     else
     {
       f77_upt_inituptight(_handler);
+      f77_upt_getversion(_handler);
       return 0;
     }
 }

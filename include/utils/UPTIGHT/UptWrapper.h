@@ -46,13 +46,22 @@ public:
    * bool potential_flag       : add external potential
    * bool optmat_flag          : compute optical matrix
    * int poldir                : polarized light x = 1, y = 2, z = 3 
+   * c_axis                    : set direction of c-axis in wurtzites
+   * check_bondmap             : do check bondmap consistency
+   * dg_scale                  : scaling factor for dg-bonds
+   * dg_onsite                 : scaling factor for dg-onsite energies
+   * hybrid_passivation        : perform Boykin-type passivation
    */
-  void fill_param (int verbose_lev, char *databasePath, char *workPath, char *outPath, 
+  void fill_param(int verbose_lev, char *databasePath, char *workPath, char *outPath, 
                    char *gen_filename, char *gen_outname, char *sparse_fmt, 
 		   int max_n_n, bool harrison_flag, bool relat_flag, 
 		   bool potential_flag, bool optmat_flag, int poldir, 
 		   double *c_axis, bool check_bondmap, 
                    double dg_scale, double dg_onsite, bool hybrid_passivation);
+
+  //! Set parameters for eigenstates output format
+  void set_output(char *out_format, double scale);
+
 
   //! Set verbosity level for the library screen output
   void set_verbose(int verbose_lev);

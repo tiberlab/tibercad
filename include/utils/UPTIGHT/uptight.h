@@ -18,6 +18,7 @@
 #include "fortran.h"
 
 // Some defintions for constants used by Uptight
+const int UPT_SC = 100;
 const int UPT_MC = 200;
 const int UPT_LC = 500;
 const int UPT_HSIZE = 4;
@@ -52,6 +53,16 @@ extern "C" void upt_destructsession_ (f77_int*);
 inline void f77_upt_destructsession (f77_int* handler)
 {
   upt_destructsession_ (handler);
+}
+
+
+extern "C" void upt_getversion_ (f77_int const*);
+
+// Corresponding F77 arguments for f77_upt_getversion:
+// integer, intent(in) :: handler(DAC_handlerSize)
+inline void f77_upt_getversion (f77_int const* handler)
+{
+  upt_getversion_ (handler);
 }
 
 
@@ -98,6 +109,20 @@ inline void f77_upt_fillbasicparameters (f77_int const* handler, f77_int const&
       outPath, gen_filename, gen_outname, sparse_fmt, max_n_n, harrison_flag, 
       relat_flag, potential_flag, optmat_flag, poldir, c_axis_x, c_axis_y, 
       c_axis_z, check_bondmap, dg_coupl_scale, dg_onsite, hybrid_passivation);
+}
+
+
+extern "C" void upt_setoutput_ (f77_int const*, f77_char const*, f77_double 
+    const&);
+
+// Corresponding F77 arguments for f77_upt_setoutput:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// character(SST), intent(in) :: out_format(1)
+// real(dp), intent(in) :: step
+inline void f77_upt_setoutput (f77_int const* handler, f77_char const* 
+    out_format, f77_double const& step)
+{
+  upt_setoutput_ (handler, out_format, step);
 }
 
 

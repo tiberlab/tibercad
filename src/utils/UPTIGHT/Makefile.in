@@ -10,7 +10,7 @@ CXXFLAGS = -fPIC -I $(topdir)/include/utils/UPTIGHT
 target := $(libdir)/libuptight$(shared_libext)
 
 
-$(libdir)/libuptight$(shared_libext) :  UptWrapper$(obj-suffix) libuptight.a
+$(libdir)/libuptight$(shared_libext) :  UptWrapper$(obj-suffix) libuptight_$(ARCH).a
 	@echo "Linking libuptight$(shared_libext) ..."
 	@$(CXX) -shared -o $@ $< \
 		-Wl,--version-script,export.map \
