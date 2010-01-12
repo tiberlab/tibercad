@@ -64,6 +64,8 @@ LDFLAGS += -ltensor -lnewmat
 
 LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
 
+LDFLAGS += @LDFLAGS@
+
 # TODO fortran compiler libraries
 LDFLAGS += @FCLIBS@
 
