@@ -54,7 +54,7 @@ cd libmesh-${LIBMESHVERSION}
 
 
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
-export PETSC_ARCH=${ARCH}-opt
+export PETSC_ARCH=${ARCH}
 
 SHARED=--enable-shared
 if [ $shared_libs == "no" ]
@@ -63,7 +63,7 @@ then
 fi
   
 
-./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second
+./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second --disable-bzip2
 
 
 # delete the -pedantic flag because it makes problems with mpi
@@ -74,6 +74,6 @@ sed 's/-pedantic//g' Make.common.orig | sed 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' | s
 make |tee make_opt.log
 
 if [ $DEBUG == 'y' ]; then
-  make METHOD=dbg |tee make_dbg.log
+  make METHOD=dbg
 fi
 

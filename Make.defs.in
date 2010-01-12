@@ -13,6 +13,9 @@ libdir := @libdir@
 # The OS
 hostos := @host_os@
 
+# The architecture
+hostcpu := @host_cpu@
+
 
 # the compilers
 CXX := @CXX@

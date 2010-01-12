@@ -10,3 +10,13 @@
      }
      ierr = KSPGetIterationNumber(snes->ksp,&lits);CHKERRQ(ierr);
 
+--- include/mpiuni/mpi.h.orig	2010-01-11 14:05:13.000000000 +0100
++++ include/mpiuni/mpi.h	2010-01-11 14:05:27.000000000 +0100
+@@ -191,6 +191,7 @@
+ #define MPI_PACKED        0
+ #define MPI_MAX_ERROR_STRING 2056
+ #define MPI_STATUS_IGNORE (MPI_Status *)1
++#define MPI_STATUSES_IGNORE (MPI_Status *)1
+ #define MPI_ORDER_FORTRAN        57
+ #define MPI_IN_PLACE      (void *) -1
+ 
