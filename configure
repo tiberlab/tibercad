@@ -5568,18 +5568,16 @@ if test "${with_mkl+set}" = set; then
   withval=$with_mkl; tc_cv_mkl_dir="$with_mkl"
 fi
 
-  if test "x$tc_cv_mkl_dir" != "x"; then
-    MKL_LIBDIR="$tc_cv_mkl_dir/lib/32"
+  MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
+  HAVE_MKL="yes"
+  case $host in
+    x86_64-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/em64t" ;;
+    i?86-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/32" ;;
+    *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
+  esac
 
-    MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
 
-    HAVE_MKL="yes"
 
-  else
-    tc_cv_mkl_dir="no"
-    HAVE_MKL="no"
-
-  fi
 
 fi
 { echo "$as_me:$LINENO: result: $tc_cv_mkl_dir" >&5
@@ -6630,7 +6628,7 @@ _ACEOF
 
 	fi
 else
-  LICENSE_CHECK="no"
+  LICENSE_CHECK="yes"
 
 fi
 
