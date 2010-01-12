@@ -14,7 +14,7 @@ include Make.common
 #endif
 
 ifeq ($(enable_pardiso), yes)
- MODULE_LIBS += -lmkl_solver -lguide
+ MODULE_LIBS += -lmkl_core -lguide
 endif
 
 ifeq ($(enable_dftb), yes)
