@@ -37,7 +37,10 @@ RelaxationMethod::do_solve(void)
   x_old->init(get_solution_vector());
   x_old->close();
 
-  for (unsigned int it = 0; it < get_maximum_iterations(); it++)
+  bool converged = true;
+  unsigned int it = 0;
+
+  for ( ; it < get_maximum_iterations(); it++)
   {
     *x_old = get_solution_vector();
     x_old->close();
@@ -65,7 +68,7 @@ RelaxationMethod::do_solve(void)
     }
 
 
-    bool converged = true;
+    converged = true;
 
     if (get_monitor())
     {
@@ -91,6 +94,13 @@ RelaxationMethod::do_solve(void)
     if (converged)
       break;
 
+  }
+
+  if ((it == get_maximum_iterations()) && !converged)
+  {
+    Messages::warning("Selfconsistent loop reached maximum iterations "
+        "without meeting convergence criteria.");
+    Messages::warning("I will ignore this fact and continue anyway.");
   }
 
   close_xmonitor();

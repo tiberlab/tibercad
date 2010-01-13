@@ -198,7 +198,6 @@ DriftDiffusionProperties::create_submodels(void)
       _electron_mobility = create_mobility_model(opts);
     }
 
-    get_options().delete_submodels("electron_mobility");
 
 
     // create hole mobility model
@@ -218,7 +217,6 @@ DriftDiffusionProperties::create_submodels(void)
       _hole_mobility = create_mobility_model(opts);
     }
 
-    get_options().delete_submodels("hole_mobility");
 
     //
     // Recombinations (we can have several models!)
@@ -242,7 +240,6 @@ DriftDiffusionProperties::create_submodels(void)
       add_recombination_model(name, it->second);
     }
 
-    get_options().delete_submodels("recombination");
 
     //
     // Thermoelectric power
@@ -262,8 +259,13 @@ DriftDiffusionProperties::create_submodels(void)
       _thermoelectric_power->set_driftdiffusionproperties(this);
       add_submodel("thermoelectricpower", _thermoelectric_power);
     }
-    get_options().delete_submodels("thermoelectric_power");
   }
+
+  // eliminate them from the submodel list
+  get_options().delete_submodels("electron_mobility");
+  get_options().delete_submodels("hole_mobility");
+  get_options().delete_submodels("thermoelectric_power");
+  get_options().delete_submodels("recombination");
 }
 
 
