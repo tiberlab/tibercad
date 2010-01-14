@@ -946,10 +946,10 @@ Index: src/mesh/mesh_refinement.C
  
  ###############################################################################
  # Compiler flags, different for optimized, debug, and profiler modes.
-Index: /work/maufder/TiberCAD/tibercad/test/libmesh-svn/include/parallel/parallel.h
+Index: include/parallel/parallel.h
 ===================================================================
---- /work/maufder/TiberCAD/tibercad/test/libmesh-svn/include/parallel/parallel.h	(revision 3581)
-+++ /work/maufder/TiberCAD/tibercad/test/libmesh-svn/include/parallel/parallel.h	(working copy)
+--- include/parallel/parallel.h	(revision 3581)
++++ include/parallel/parallel.h	(working copy)
 @@ -1539,7 +1539,7 @@
  		src_processor_id,
  		tag,
