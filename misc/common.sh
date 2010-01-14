@@ -80,8 +80,8 @@ if [ $MKL == 'y' ]; then
     LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/em64t,-lmkl_intel_lp64,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
     LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/em64t -Wl,-rpath,${MKLDIR}/lib/em64t"
   else
-    LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/ia32,-lmkl_intel,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
-    LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/ia32 -Wl,-rpath,${MKLDIR}/lib/ia32"
+    LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/32,-lmkl_intel,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
+    LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/32 -Wl,-rpath,${MKLDIR}/lib/32"
   fi
 fi
 
