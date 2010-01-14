@@ -20,7 +20,7 @@ cd ../
   --with-petsc-arch=${ARCH}-complex \
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} \
   --disable-modules \
-  $OTHEROPTS \
+  $TIBEROPTS \
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}
 
 
