@@ -67,6 +67,10 @@ class TBDLEXPORT SRHRecombination : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
+    //! We do the VCA on the recombination times and not on the parameters
+    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
+        const PhysicalModelInterface* comp_B, double xa);
+
     //! \copydoc RecombinationModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
