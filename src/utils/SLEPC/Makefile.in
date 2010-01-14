@@ -18,9 +18,8 @@ SLEPC_DIR  = @SLEPC_DIR@
 CXXFLAGS += $(SLEPC_HAVE_ARPACK) -fPIC $(CC_INCLUDES) -I $(topdir)/include/utils/SLEPC
 
 
-ifneq ($(METHOD), dbg)
-PETSC_ARCH := $(PETSC_ARCH)-opt
-else
+ifeq ($(METHOD), dbg)
+PETSC_ARCH := $(PETSC_ARCH)-dbg
 CXXFLAGS += -g -DDEBUG -O0
 endif
 

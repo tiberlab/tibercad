@@ -57,7 +57,7 @@ PardisoLinearSolver::init(void)
 
     error = 0;  /* Initialize error flag */
 
-    msglvl = 1; /* Print statistical information in file */
+    msglvl = 0; /* Print statistical information in file */
 
 /* -------------------------------------------------------------------- */
 /* .. Setup Pardiso control parameters. */
