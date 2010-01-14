@@ -9,16 +9,17 @@ include Make.common
 
 MODULE_LIBS := -leigen_solver
 
-ifeq ($(enable_pardiso), yes)
- MODULE_LIBS += -lmkl_core -lguide
-endif
+# this is included by MKL
+#ifeq ($(enable_pardiso), yes)
+# MODULE_LIBS += -lmkl_core
+#endif
 
 ifeq ($(enable_dftb), yes)
- MODULE_LIBS += -ldftbpc -lsvml
+ MODULE_LIBS += -ldftbpc
 endif
 
 ifeq ($(enable_uptight), yes)
- MODULE_LIBS += -luptight -lguide
+ MODULE_LIBS += -luptight
 endif
 
 ifeq ($(enable_hetero), yes)
