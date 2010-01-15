@@ -63,10 +63,12 @@ $(subdirs):
 	
 
 
-.%.d: %.C %.h
-	@$(CC) -MT $(basename $<)$(obj-suffix) -MM $(CPPFLAGS) $(CXXFLAGS) $< > $@.$$$$; \
-	sed 's,\($*\)\$(obj-suffix)[ :]*,\1.\*\.o : $@ ,g' < $@.$$$$ > $@; \
-	rm -f $@.$$$$
+.%.d: %.C
+	@$(CC) -MG -MT $(basename $<)$(obj-suffix) -MM $(CPPFLAGS) $(CXXFLAGS) $< > $@.$$$$ ; \
+	 sed -e 's,\($*\)\$(obj-suffix)[ :]*,\1.\*\.o : $@ ,g' < $@.$$$$ > $@ ; \
+	 sed -e 's/.*://' -e 's/\\$$//' < $@.$$$$ | fmt -1 \
+	 | sed -e 's/^ *//' -e 's/$$/:/' >> $@ ; \
+	 rm -f $@.$$$$
 
 
 %.msh: %.geo
